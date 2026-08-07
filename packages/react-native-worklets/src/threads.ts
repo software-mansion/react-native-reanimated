@@ -1,13 +1,12 @@
 'use strict';
 
-import { IS_JEST } from './platformChecker';
 import { mockedRequestAnimationFrame } from './runLoop/uiRuntime/mockedRequestAnimationFrame';
 
 export function scheduleOnUI<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
 ): void {
-  enqueueUI(worklet, args);
+  requestAnimationFrame(() => worklet(...args));
 }
 
 export function runOnUI<Args extends unknown[], ReturnValue>(
@@ -59,67 +58,14 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
   ...args: Args
 ): Promise<ReturnValue> {
   return new Promise<ReturnValue>((resolve) => {
-    enqueueUI(worklet, args, resolve);
-  });
-}
-
-type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
-  worklet: (...args: Args) => ReturnValue,
-  args: Args,
-  resolve?: (value: ReturnValue) => void,
-];
-
-let runOnUIQueue: UIJob[] = [];
-
-function enqueueUI<Args extends unknown[], ReturnValue>(
-  worklet: (...args: Args) => ReturnValue,
-  args: Args,
-  resolve?: (value: ReturnValue) => void
-): void {
-  if (IS_JEST) {
-    mockedRequestAnimationFrame(() => {
+    requestAnimationFrame(() => {
       const result = worklet(...args);
       resolve?.(result);
     });
-  } else {
-    const job = [worklet, args, resolve];
-    runOnUIQueue.push(job as UIJob);
-    if (runOnUIQueue.length === 1) {
-      flushUIQueue();
-    }
-  }
-}
-
-let offset = 0;
-
-function flushUIQueue(): void {
-  queueMicrotask(() => {
-    const queue = runOnUIQueue;
-    runOnUIQueue = [];
-    requestAnimationFrameImpl(() => {
-      offset = 0;
-      while (queue.length > offset) {
-        try {
-          drainUIQueue(queue);
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    });
   });
 }
 
-function drainUIQueue(queue: UIJob[]): void {
-  while (queue.length > offset) {
-    const [workletFunction, workletArgs, jobResolve] = queue[offset];
-    offset++;
-    const result = workletFunction(...workletArgs);
-    if (jobResolve) {
-      jobResolve(result);
-    }
-  }
+if (!globalThis.requestAnimationFrame) {
+  globalThis.requestAnimationFrame =
+    mockedRequestAnimationFrame as unknown as typeof requestAnimationFrame;
 }
-
-const requestAnimationFrameImpl = !globalThis.requestAnimationFrame
-  ? mockedRequestAnimationFrame
-  : globalThis.requestAnimationFrame;
