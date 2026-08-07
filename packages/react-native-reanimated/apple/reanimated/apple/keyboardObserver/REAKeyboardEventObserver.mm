@@ -5,9 +5,10 @@
 #import <React/RCTUtils.h>
 
 #import <reanimated/apple/READisplayLink.h>
-#import <reanimated/apple/REASlowAnimations.h>
 #import <reanimated/apple/REAUIView.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
+
+#import <worklets/apple/SlowAnimations.h>
 
 typedef NS_ENUM(NSUInteger, KeyboardState) { // NOLINT(performance-enum-size,cppcoreguidelines-use-enum-class)
   UNKNOWN = 0,
@@ -106,7 +107,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) { // NOLINT(performance-enum-size,cpp
 - (float)getTargetTimestamp
 {
   float targetTimestamp = _displayLink.targetTimestamp;
-  return reanimated::calculateTimestampWithSlowAnimations(targetTimestamp) * 1000;
+  return worklets::calculateTimestampWithSlowAnimations(targetTimestamp) * 1000;
 }
 
 - (float)estimateProgressForDuration:(float)keyboardAnimationDuration
