@@ -3,6 +3,9 @@
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
+#include <folly/dynamic.h>
+#include <jsi/JSIDynamic.h>
+
 #include <memory>
 #include <ranges>
 #include <set>
@@ -120,7 +123,16 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::progressLayoutAnimation(i
 
   maybeRestoreOpacity(layoutAnimation, newStyle);
 
-  auto rawProps = std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
+  folly::dynamic mergedRawProps = folly::dynamic::object();
+  if (getLatestRegistryProps_) {
+    auto latestRegistryProps = getLatestRegistryProps_(tag);
+    if (latestRegistryProps.isObject()) {
+      mergedRawProps.update(latestRegistryProps);
+    }
+  }
+  mergedRawProps.update(jsi::dynamicFromValue(uiRuntime_, jsi::Value(uiRuntime_, newStyle)));
+
+  auto rawProps = std::make_shared<RawProps>(std::move(mergedRawProps));
 
   PropsParserContext propsParserContext{layoutAnimation.finalView.surfaceId, *contextContainer_};
 #ifdef RN_SERIALIZABLE_STATE

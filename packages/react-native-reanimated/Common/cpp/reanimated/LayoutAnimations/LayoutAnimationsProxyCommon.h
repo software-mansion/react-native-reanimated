@@ -9,6 +9,9 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
+#include <folly/dynamic.h>
+
+#include <functional>
 #include <memory>
 #include <optional>
 #include <unordered_map>
@@ -90,7 +93,12 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) = 0;
   virtual void startSurface(const SurfaceId surfaceId);
 
+  using GetLatestRegistryPropsFunction = std::function<folly::dynamic(Tag)>;
+  void setGetLatestRegistryPropsFunction(GetLatestRegistryPropsFunction getLatestRegistryProps);
+
  protected:
+  GetLatestRegistryPropsFunction getLatestRegistryProps_;
+
   mutable std::unordered_set<Tag> maybeSettledAnimationTags_;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
