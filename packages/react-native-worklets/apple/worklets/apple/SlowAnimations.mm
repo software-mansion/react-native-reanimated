@@ -23,19 +23,20 @@ CGFloat getUIAnimationDragCoefficient(void)
 CFTimeInterval calculateTimestampWithSlowAnimations(CFTimeInterval currentTimestamp)
 {
 #if TARGET_IPHONE_SIMULATOR
-  static CFTimeInterval dragCoefChangedTimestamp = CACurrentMediaTime();
-  static CGFloat previousDragCoef = getUIAnimationDragCoefficient();
+  // The virtual clock is rebased on every drag coefficient change so it stays
+  // continuous and ongoing animations don't jump when toggling Slow Animations.
+  static CFTimeInterval realBaseTimestamp = CACurrentMediaTime();
+  static CFTimeInterval virtualBaseTimestamp = realBaseTimestamp;
+  static CGFloat dragCoef = getUIAnimationDragCoefficient();
 
-  const CGFloat dragCoef = getUIAnimationDragCoefficient();
-  if (previousDragCoef != dragCoef) {
-    previousDragCoef = dragCoef;
-    dragCoefChangedTimestamp = CACurrentMediaTime();
+  const CGFloat newDragCoef = getUIAnimationDragCoefficient();
+  if (newDragCoef != dragCoef) {
+    virtualBaseTimestamp += (currentTimestamp - realBaseTimestamp) / dragCoef;
+    realBaseTimestamp = currentTimestamp;
+    dragCoef = newDragCoef;
   }
 
-  const bool areSlowAnimationsEnabled = dragCoef != 1.f;
-  if (areSlowAnimationsEnabled) {
-    currentTimestamp = (dragCoefChangedTimestamp + (currentTimestamp - dragCoefChangedTimestamp) / dragCoef);
-  }
+  currentTimestamp = virtualBaseTimestamp + (currentTimestamp - realBaseTimestamp) / dragCoef;
 #endif // TARGET_IPHONE_SIMULATOR
   return currentTimestamp;
 }

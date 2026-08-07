@@ -27,9 +27,9 @@ class NodesManager(
         fun onAnimationFrame(timestampMs: Double)
     }
 
-    private var mFirstUptime: Long = SystemClock.uptimeMillis()
-    private var mSlowAnimationsEnabled = false
-    private var mAnimationsDragFactor = 0
+    private var mVirtualBaseMs = SystemClock.uptimeMillis().toDouble()
+    private var mRealBaseMs = mVirtualBaseMs
+    private var mAnimationsDragFactor = 1.0
 
     private val mEventEmitter: DeviceEventManagerModule.RCTDeviceEventEmitter =
         context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
@@ -149,11 +149,8 @@ class NodesManager(
 
             mDrawPassDetector.initialize()
 
-            var currentFrameTimeMs = frameTimeNanos / 1000000.0
-            if (mSlowAnimationsEnabled) {
-                currentFrameTimeMs =
-                    mFirstUptime + (currentFrameTimeMs - mFirstUptime) / mAnimationsDragFactor
-            }
+            val currentFrameTimeMs =
+                mVirtualBaseMs + (frameTimeNanos / 1000000.0 - mRealBaseMs) / mAnimationsDragFactor
 
             if (currentFrameTimeMs > lastFrameTimeMs) {
                 // It is possible for ChoreographerCallback to be executed twice within the same frame
@@ -259,10 +256,11 @@ class NodesManager(
         slowAnimationsEnabled: Boolean,
         animationsDragFactor: Int,
     ) {
-        mSlowAnimationsEnabled = slowAnimationsEnabled
-        mAnimationsDragFactor = animationsDragFactor
-        if (slowAnimationsEnabled) {
-            mFirstUptime = SystemClock.uptimeMillis()
-        }
+        // The virtual clock is rebased on every toggle so it stays continuous
+        // and ongoing animations don't jump.
+        val nowMs = SystemClock.uptimeMillis().toDouble()
+        mVirtualBaseMs += (nowMs - mRealBaseMs) / mAnimationsDragFactor
+        mRealBaseMs = nowMs
+        mAnimationsDragFactor = if (slowAnimationsEnabled) animationsDragFactor.toDouble() else 1.0
     }
 }
