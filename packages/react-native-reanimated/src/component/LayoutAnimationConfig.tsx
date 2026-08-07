@@ -5,6 +5,7 @@ import {
   cloneElement,
   Component,
   createContext,
+  Fragment,
   isValidElement,
   useEffect,
   useRef,
@@ -97,7 +98,10 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
     }
 
     const child = Children.only(children);
-    if (!isValidElement<{ ref?: Ref<InstanceWithViewTag> }>(child)) {
+    if (
+      !isValidElement<{ ref?: Ref<InstanceWithViewTag> }>(child) ||
+      child.type === Fragment
+    ) {
       return children;
     }
 
