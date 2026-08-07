@@ -24,9 +24,9 @@ const INSTRUCTIONS = Platform.select({
     "select 'Toggle slow animations (Reanimated)' in the Dev Menu (press d in the Metro console)",
 });
 
-const ENTERING = FadeIn.duration(800);
-const EXITING = FadeOut.duration(800);
-const LAYOUT = LinearTransition.duration(800);
+const ENTERING = FadeIn.duration(200);
+const EXITING = FadeOut.duration(200);
+const LAYOUT = LinearTransition.duration(200);
 
 export default function SlowAnimationsExample() {
   const offset = useSharedValue(0);
