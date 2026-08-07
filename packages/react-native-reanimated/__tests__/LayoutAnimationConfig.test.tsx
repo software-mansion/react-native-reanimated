@@ -99,6 +99,19 @@ describe('LayoutAnimationConfig view tag resolution', () => {
     expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(43, false);
   });
 
+  test('falls back to findNodeHandle for a fragment child', () => {
+    const { unmount } = renderWrapped(
+      <>
+        <ForwardsHostInstance />
+      </>
+    );
+
+    unmount();
+
+    expect(findNodeHandle).toHaveBeenCalled();
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(1234, false);
+  });
+
   test('preserves a ref the child already had', () => {
     const childRef = jest.fn();
 

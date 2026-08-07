@@ -62,4 +62,20 @@ describe('LayoutAnimationConfig findNodeHandle deprecation', () => {
     );
     expect(warning).toContain('findNodeHandle');
   });
+
+  test('does not report an invalid ref on a fragment child', () => {
+    const { unmount } = renderInStrictMode(
+      <>
+        <ForwardsHostInstance />
+      </>
+    );
+
+    unmount();
+
+    expect(
+      consoleError.mock.calls.filter((call) =>
+        String(call[0]).includes('React.Fragment')
+      )
+    ).toHaveLength(0);
+  });
 });
