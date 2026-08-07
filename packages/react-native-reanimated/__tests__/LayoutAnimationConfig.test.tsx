@@ -9,15 +9,32 @@ jest.mock('../src/platformFunctions/findNodeHandle', () => ({
   findNodeHandle: jest.fn(() => 1234),
 }));
 
+jest.mock('../src/core', () => ({
+  ...jest.requireActual('../src/core'),
+  setShouldAnimateExitingForTag: jest.fn(),
+}));
+
 const { findNodeHandle }: { findNodeHandle: jest.Mock } = jest.requireMock(
   '../src/platformFunctions/findNodeHandle'
 );
 
+const {
+  setShouldAnimateExitingForTag,
+}: {
+  setShouldAnimateExitingForTag: jest.Mock;
+} = jest.requireMock('../src/core');
+
 // React Native components render as class wrappers under the jest preset, so
 // their refs never resolve to a host instance. These stand in for a child that
 // forwards its ref all the way down to one.
-function ForwardsHostInstance({ ref }: { ref?: Ref<unknown> }) {
-  useImperativeHandle(ref, () => ({ __nativeTag: 42 }), []);
+function ForwardsHostInstance({
+  ref,
+  tag = 42,
+}: {
+  ref?: Ref<unknown>;
+  tag?: number;
+}) {
+  useImperativeHandle(ref, () => ({ __nativeTag: tag }), [tag]);
   return <View />;
 }
 
@@ -36,6 +53,7 @@ const renderWrapped = (children: ReactNode) =>
 describe('LayoutAnimationConfig view tag resolution', () => {
   beforeEach(() => {
     findNodeHandle.mockClear();
+    setShouldAnimateExitingForTag.mockClear();
   });
 
   test('falls back to findNodeHandle when the child drops its ref', () => {
@@ -44,6 +62,7 @@ describe('LayoutAnimationConfig view tag resolution', () => {
     unmount();
 
     expect(findNodeHandle).toHaveBeenCalled();
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(1234, false);
   });
 
   test('resolves a forwarded host instance without findNodeHandle', () => {
@@ -52,6 +71,7 @@ describe('LayoutAnimationConfig view tag resolution', () => {
     unmount();
 
     expect(findNodeHandle).not.toHaveBeenCalled();
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(42, false);
   });
 
   test('resolves an animated component child without findNodeHandle', () => {
@@ -60,19 +80,23 @@ describe('LayoutAnimationConfig view tag resolution', () => {
     unmount();
 
     expect(findNodeHandle).not.toHaveBeenCalled();
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(7, false);
   });
 
   test('resolves each of multiple children without findNodeHandle', () => {
     const { unmount } = render(
       <LayoutAnimationConfig skipExiting>
-        <ForwardsHostInstance />
-        <ForwardsHostInstance />
+        <ForwardsHostInstance tag={42} />
+        <ForwardsHostInstance tag={43} />
       </LayoutAnimationConfig>
     );
 
     unmount();
 
     expect(findNodeHandle).not.toHaveBeenCalled();
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledTimes(2);
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(42, false);
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(43, false);
   });
 
   test('preserves a ref the child already had', () => {
@@ -85,5 +109,6 @@ describe('LayoutAnimationConfig view tag resolution', () => {
     unmount();
 
     expect(findNodeHandle).not.toHaveBeenCalled();
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(42, false);
   });
 });
