@@ -155,7 +155,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
   if (--layoutAnimation.count > 0) {
     return {};
   }
-  layoutAnimation.shouldRemove = shouldRemove;
+  layoutAnimation.isExitingWhenSettled = shouldRemove;
   maybeSettledAnimationTags_.insert(tag);
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
@@ -454,7 +454,7 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(SurfaceId surfaceId, Sha
     auto layoutAnimationIt = layoutAnimations_.find(tag);
 
     if (layoutAnimationIt == layoutAnimations_.end() ||
-        (layoutAnimationIt->second.isSettled() && layoutAnimationIt->second.shouldRemove)) {
+        (layoutAnimationIt->second.isSettled() && layoutAnimationIt->second.isExitingWhenSettled)) {
       continue;
     }
 
