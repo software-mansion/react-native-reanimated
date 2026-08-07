@@ -1,5 +1,6 @@
 #include <jsi/jsi.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 
 #include <atomic>
@@ -49,8 +50,7 @@ void AnimationFrameBatchinator::flush() {
       for (const auto &callback : callbacks) {
         uiWorkletRuntime->runSync(*callback, timestampMs);
       }
-      // Runs only Hermes microtasks, which we don't use - but calling this function makes Hermes clean WeakRefs.
-      uiWorkletRuntime->getJSIRuntime().drainMicrotasks();
+      jsi_utils::triggerWeakRefCleanup(uiWorkletRuntime->getJSIRuntime());
     });
   });
 }

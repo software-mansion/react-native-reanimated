@@ -50,7 +50,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   /**
    * Schedules a std::function to run asynchronously.
    *
-   * Does not run a microtask checkpoint.
+   * Runs a single microtask checkpoint on completion.
    */
   void schedule(std::function<void(jsi::Runtime &)> job) const;
 
@@ -60,14 +60,14 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    * The jsi::Function has to originate from this runtime, otherwise it will
    crash.
    *
-   * Does not run a microtask checkpoint.
+   * Runs a single microtask checkpoint on completion.
    */
   void schedule(jsi::Function &&function) const;
 
   /**
    * Schedules a serialized worklet to run asynchronously.
    *
-   * Does not run a microtask checkpoint.
+   * Runs a single microtask checkpoint on completion.
    */
   void schedule(std::shared_ptr<SerializableWorklet> worklet) const;
 
@@ -82,7 +82,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    * Schedules a serialized worklet to run asynchronously on the worklet runtime,
    * remembering the call site that scheduled it for error reporting.
    *
-   * Does not run a microtask checkpoint.
+   * Runs a single microtask checkpoint on completion.
    */
   void scheduleWithStack(std::shared_ptr<SerializableWorklet> worklet, std::optional<std::string> scheduleStack) const;
 
@@ -129,15 +129,14 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    * Runs a jsi::Function or SerializableWorklet synchronously and returns its
    * serialized result.
    *
-   * Does not run a microtask checkpoint. Drains only Hermes microtasks so
-   * Hermes can release WeakRef targets.
+   * Does not run a microtask checkpoint.
    */
   template <RuntimeCallable TCallable, typename... TArgs>
   auto runSyncSerialized(const TCallable &callable, TArgs &&...args) const -> std::shared_ptr<Serializable> {
     auto lock = acquireRuntimeLock();
-    auto result = runSyncImpl<MicrotaskCheckpoint::Skip, std::shared_ptr<Serializable>>(
-        callable, std::forward<TArgs>(args)...);
-    getJSIRuntime().drainMicrotasks();
+    auto result =
+        runSyncImpl<MicrotaskCheckpoint::Skip, std::shared_ptr<Serializable>>(callable, std::forward<TArgs>(args)...);
+    jsi_utils::triggerWeakRefCleanup(getJSIRuntime());
     return result;
   }
 
@@ -191,8 +190,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    *
    * TResult must be either jsi::Value or std::shared_ptr<Serializable>.
    *
-   * Does not run a microtask checkpoint. Drains only Hermes microtasks so
-   * Hermes can release WeakRef targets.
+   * Does not run a microtask checkpoint.
    */
   template <SyncCallResult TResult, RuntimeCallable TCallable, typename... TArgs>
   auto runSyncWithStack(const TCallable &callable, const std::optional<std::string> &scheduleStack, TArgs &&...args)
@@ -200,7 +198,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     auto lock = acquireRuntimeLock();
     auto result = runSyncImpl<MicrotaskCheckpoint::Skip, TResult, ScheduleStack::Requested>(
         callable, scheduleStack, std::forward<TArgs>(args)...);
-    getJSIRuntime().drainMicrotasks();
+    jsi_utils::triggerWeakRefCleanup(getJSIRuntime());
     return result;
   }
 
@@ -210,8 +208,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    * call site that scheduled it for error reporting.
    *
    * TResult must be either jsi::Value or std::shared_ptr<Serializable>.
-   *
-   * The runtime lock is held until the microtask checkpoint completes.
    */
   template <SyncCallResult TResult, RuntimeCallable TCallable, typename... TArgs>
   auto runSyncWithStackAndDrainMicrotasks(
@@ -374,18 +370,22 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    */
   template <MicrotaskCheckpoint TCheckpoint, typename TInvoker>
   auto invokeWithMicrotaskCheckpointPolicyImpl(TInvoker &&invoke) const -> std::invoke_result_t<TInvoker> {
-    if constexpr (TCheckpoint == MicrotaskCheckpoint::Skip) {
-      return std::forward<TInvoker>(invoke)();
-    } else {
-      using Result = std::invoke_result_t<TInvoker>;
+    using Result = std::invoke_result_t<TInvoker>;
+    [[maybe_unused]] auto result = [&]() {
       if constexpr (std::is_void_v<Result>) {
         std::forward<TInvoker>(invoke)();
-        drainMicrotasksImpl();
+        return std::monostate{};
       } else {
-        auto result = std::forward<TInvoker>(invoke)();
-        drainMicrotasksImpl();
-        return result;
+        return std::forward<TInvoker>(invoke)();
       }
+    }();
+    if constexpr (TCheckpoint == MicrotaskCheckpoint::Skip) {
+      jsi_utils::triggerWeakRefCleanup(getJSIRuntime());
+    } else {
+      drainMicrotasksImpl();
+    }
+    if constexpr (!std::is_void_v<Result>) {
+      return result;
     }
   }
 
