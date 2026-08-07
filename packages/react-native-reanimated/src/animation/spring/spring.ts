@@ -103,7 +103,7 @@ export const withSpring = ((
       }
       const { lastTimestamp, velocity } = animation;
 
-      const deltaTime = Math.min(now - lastTimestamp, 64);
+      const deltaTime = Math.min(Math.max(now - lastTimestamp, 0), 64);
       animation.lastTimestamp = now;
 
       const t = deltaTime / 1000;
@@ -184,6 +184,16 @@ export const withSpring = ((
             : previousAnimation?.velocity + config.velocity) || 0;
       } else {
         animation.velocity = config.velocity || 0;
+      }
+
+      // Clip velocity that would drive the first frame away from the new target.
+      // Inertia is only preserved when it already points toward toValue.
+      const toValueNum = Number(animation.toValue);
+      if (
+        (toValueNum > value && animation.velocity < 0) ||
+        (toValueNum < value && animation.velocity > 0)
+      ) {
+        animation.velocity = 0;
       }
 
       if (triggeredTwice) {
