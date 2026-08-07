@@ -129,13 +129,16 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    * Runs a jsi::Function or SerializableWorklet synchronously and returns its
    * serialized result.
    *
-   * Does not run a microtask checkpoint.
+   * Does not run a microtask checkpoint. Drains only Hermes microtasks so
+   * Hermes can release WeakRef targets.
    */
   template <RuntimeCallable TCallable, typename... TArgs>
   auto runSyncSerialized(const TCallable &callable, TArgs &&...args) const -> std::shared_ptr<Serializable> {
     auto lock = acquireRuntimeLock();
-    return runSyncImpl<MicrotaskCheckpoint::Skip, std::shared_ptr<Serializable>>(
+    auto result = runSyncImpl<MicrotaskCheckpoint::Skip, std::shared_ptr<Serializable>>(
         callable, std::forward<TArgs>(args)...);
+    getJSIRuntime().drainMicrotasks();
+    return result;
   }
 
   /**
@@ -188,14 +191,17 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    *
    * TResult must be either jsi::Value or std::shared_ptr<Serializable>.
    *
-   * Does not run a microtask checkpoint.
+   * Does not run a microtask checkpoint. Drains only Hermes microtasks so
+   * Hermes can release WeakRef targets.
    */
   template <SyncCallResult TResult, RuntimeCallable TCallable, typename... TArgs>
   auto runSyncWithStack(const TCallable &callable, const std::optional<std::string> &scheduleStack, TArgs &&...args)
       const -> TResult {
     auto lock = acquireRuntimeLock();
-    return runSyncImpl<MicrotaskCheckpoint::Skip, TResult, ScheduleStack::Requested>(
+    auto result = runSyncImpl<MicrotaskCheckpoint::Skip, TResult, ScheduleStack::Requested>(
         callable, scheduleStack, std::forward<TArgs>(args)...);
+    getJSIRuntime().drainMicrotasks();
+    return result;
   }
 
   /**

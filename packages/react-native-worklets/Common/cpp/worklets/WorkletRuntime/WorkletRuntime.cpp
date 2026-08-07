@@ -148,13 +148,14 @@ void WorkletRuntime::legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpac
 
 void WorkletRuntime::schedule(jsi::Function &&function) const {
   scheduleImpl([function = std::make_shared<jsi::Function>(std::move(function))](const WorkletRuntime &workletRuntime) {
-    workletRuntime.runSyncImpl(*function);
+    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>(*function);
   });
 }
 
 void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) const {
-  scheduleImpl(
-      [worklet = std::move(worklet)](const WorkletRuntime &workletRuntime) { workletRuntime.runSyncImpl(worklet); });
+  scheduleImpl([worklet = std::move(worklet)](const WorkletRuntime &workletRuntime) {
+    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>(worklet);
+  });
 }
 
 void WorkletRuntime::schedule(std::vector<std::shared_ptr<SerializableWorklet>> worklets) const {
@@ -174,7 +175,7 @@ void WorkletRuntime::scheduleWithStack(
     std::optional<std::string> scheduleStack) const {
   scheduleImpl([worklet = std::move(worklet),
                 scheduleStack = std::move(scheduleStack)](const WorkletRuntime &workletRuntime) {
-    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Skip, jsi::Value, ScheduleStack::Requested>(worklet, scheduleStack);
+    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run, jsi::Value, ScheduleStack::Requested>(worklet, scheduleStack);
   });
 }
 
@@ -196,7 +197,9 @@ void WorkletRuntime::scheduleWithStack(
 #endif // NDEBUG
 
 void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
-  scheduleImpl([job = std::move(job)](const WorkletRuntime &workletRuntime) { workletRuntime.runSyncImpl(job); });
+  scheduleImpl([job = std::move(job)](const WorkletRuntime &workletRuntime) {
+    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>(job);
+  });
 }
 
 void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
