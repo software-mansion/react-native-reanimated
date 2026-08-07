@@ -53,11 +53,17 @@ internal class CSSPlatformTransitionsManager(
 
     /** Monotonic so a token is never reused, even after its entry is dropped. */
     private var nextStartToken = 0L
-    private val interpolators = HashMap<InterpolatorKey, TimeInterpolator>()
+
+    /**
+     * Indexed by the easing id the C++ interner assigned; a define always precedes the
+     * first animate call using its id. Copy-on-append keeps reads lock-free.
+     */
+    @Volatile
+    private var easings = arrayOfNulls<TimeInterpolator>(0)
 
     private data class Key(
         val viewTag: Int,
-        val propertyName: String,
+        val propertyId: Int,
     )
 
     private class RunningTransition(
@@ -84,12 +90,6 @@ internal class CSSPlatformTransitionsManager(
             if (input <= delayFraction) 0f else inner.getInterpolation((input - delayFraction) / (1f - delayFraction))
     }
 
-    private data class InterpolatorKey(
-        val type: Int,
-        val pointsX: List<Float>,
-        val pointsY: List<Float>,
-    )
-
     /**
      * Returns whether the property is accepted for native playback, decided before the
      * hop to the UI thread. Playback itself can still fail there if the View never
@@ -98,24 +98,23 @@ internal class CSSPlatformTransitionsManager(
      */
     fun animateTransition(
         viewTag: Int,
-        propertyName: String,
+        propertyId: Int,
         fromValue: Double,
         toValue: Double,
         durationMs: Double,
         startTimestampMs: Double,
-        easingType: Int,
-        easingPointsX: FloatArray,
-        easingPointsY: FloatArray,
+        easingId: Int,
         persistent: Boolean,
     ): Boolean {
-        val writer = cssPropertyWriterFor(propertyName) ?: return false
+        val writer = cssPropertyWriterFor(propertyId) ?: return false
+        val interpolator = easings.getOrNull(easingId) ?: return false
         val context = reactContext.get() ?: return false
         val scale = DurationScale.effectiveScale(context)
         // Scale 0 means animations are off, and ValueAnimator would finish instantly.
         if (scale <= 0f) return false
 
         UiThreadUtil.runOnUiThread {
-            val key = Key(viewTag, propertyName)
+            val key = Key(viewTag, propertyId)
             // Claiming a fresh token invalidates any retry still queued for this key,
             // so a superseded request cannot start on a later frame.
             val token = ++nextStartToken
@@ -123,7 +122,6 @@ internal class CSSPlatformTransitionsManager(
 
             beginWhenMounted(key, token, startTimestampMs + durationMs) {
                 viewForTag(viewTag)?.also { view ->
-                    val interpolator = interpolatorFor(easingType, easingPointsX, easingPointsY)
                     start(view, key, writer, fromValue, toValue, durationMs, startTimestampMs, interpolator, scale, persistent)
                 } != null
             }
@@ -133,10 +131,10 @@ internal class CSSPlatformTransitionsManager(
 
     fun removeTransition(
         viewTag: Int,
-        propertyName: String,
+        propertyId: Int,
     ) {
         UiThreadUtil.runOnUiThread {
-            val key = Key(viewTag, propertyName)
+            val key = Key(viewTag, propertyId)
             // Also drops any queued retry for this key.
             startTokens.remove(key)
             animators.remove(key)?.animator?.cancel()
@@ -239,18 +237,18 @@ internal class CSSPlatformTransitionsManager(
         return animators.isNotEmpty()
     }
 
-    /**
-     * PathInterpolator flattens its curve natively on construction, so cache it. The
-     * type is part of the key because different families can share a point list:
-     * linear(0.5, 1) and cubicBezier(0, 1, 0.5, 1) both normalize to [0,1],[0.5,1].
-     */
-    private fun interpolatorFor(
-        type: Int,
-        pointsX: FloatArray,
-        pointsY: FloatArray,
-    ): TimeInterpolator {
-        val key = InterpolatorKey(type, pointsX.toList(), pointsY.toList())
-        return interpolators.getOrPut(key) { CSSEasing.interpolator(type, pointsX, pointsY) }
+    /** PathInterpolator flattens its curve natively on construction, so build once per id. */
+    fun defineEasing(
+        easingId: Int,
+        easingType: Int,
+        easingPointsX: FloatArray,
+        easingPointsY: FloatArray,
+    ) {
+        val interpolator = CSSEasing.interpolator(easingType, easingPointsX, easingPointsY)
+        val current = easings
+        val grown = if (easingId < current.size) current.copyOf() else current.copyOf(easingId + 1)
+        grown[easingId] = interpolator
+        easings = grown
     }
 
     private fun viewForTag(viewTag: Int): View? =
