@@ -12,6 +12,14 @@ using namespace facebook;
 namespace worklets::jsi_utils {
 
 /**
+ * Drains Hermes microtasks - we don't use these, but Hermes WeakRefs are
+ * cleaned during Hermes microtask checkpoint.
+ */
+inline void triggerWeakRefCleanup(jsi::Runtime &rt) {
+  rt.drainMicrotasks();
+}
+
+/**
  * Drains both Worklets and Hermes microtasks.
  */
 inline void drainMicrotasks(jsi::Runtime &rt) {
@@ -22,6 +30,8 @@ inline void drainMicrotasks(jsi::Runtime &rt) {
       callMicrotasksObject.getFunction(rt).call(rt);
     }
   }
+
+  triggerWeakRefCleanup(rt);
 }
 
 // `get` functions take a pointer to `jsi::Value` and

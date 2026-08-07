@@ -45,10 +45,10 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
         runtime_(std::move(runtime)) {}
 };
 
-static std::shared_ptr<jsi::Runtime> makeRuntime(
-    const std::shared_ptr<std::recursive_mutex> &runtimeMutex,
-    bool enableLocking) {
-  auto hermesRuntime = facebook::hermes::makeHermesRuntime();
+static std::shared_ptr<jsi::Runtime>
+makeRuntime(const std::shared_ptr<std::recursive_mutex> &runtimeMutex, bool enableLocking, bool enableMicrotaskQueue) {
+  auto config = ::hermes::vm::RuntimeConfig::Builder().withMicrotaskQueue(enableMicrotaskQueue).build();
+  auto hermesRuntime = facebook::hermes::makeHermesRuntime(config);
   std::shared_ptr<jsi::Runtime> jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
   if (!enableLocking) {
     return jsiRuntime;
@@ -67,7 +67,7 @@ WorkletRuntime::WorkletRuntime(
       enableLocking_(enableLocking),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       microtaskQueueEnabled_(enableEventLoop || runtimeKind == RuntimeData::RuntimeKind::UI),
-      runtime_(makeRuntime(runtimeMutex_, enableLocking_)),
+      runtime_(makeRuntime(runtimeMutex_, enableLocking_, microtaskQueueEnabled_)),
       runtimeKind_(runtimeKind),
       name_(name),
       queue_(queue) {

@@ -1,5 +1,6 @@
 #include <jsi/jsi.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 
 #include <atomic>
@@ -49,6 +50,7 @@ void AnimationFrameBatchinator::flush() {
       for (const auto &callback : callbacks) {
         uiWorkletRuntime->runSync(*callback, timestampMs);
       }
+      jsi_utils::triggerWeakRefCleanup(uiWorkletRuntime->getJSIRuntime());
     });
   });
 }
