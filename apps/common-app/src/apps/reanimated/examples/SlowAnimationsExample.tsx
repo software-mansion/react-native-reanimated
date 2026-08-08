@@ -41,7 +41,7 @@ const SPIN = css.keyframes({
 
 const TRANSITION = {
   transitionProperty: 'transform',
-  transitionDuration: 1500,
+  transitionDuration: 1000,
   transitionTimingFunction: 'linear',
 } satisfies CSSTransitionProperties;
 
@@ -83,7 +83,7 @@ export default function SlowAnimationsExample() {
   useEffect(() => {
     offset.value = 0;
     offset.value = withRepeat(
-      withTiming(250, { duration: 1500, easing: Easing.linear }),
+      withTiming(250, { duration: 1000, easing: Easing.linear }),
       -1,
       true
     );
