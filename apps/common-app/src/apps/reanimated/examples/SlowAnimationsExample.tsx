@@ -41,7 +41,7 @@ const SPIN = css.keyframes({
 
 const TRANSITION = {
   transitionProperty: 'transform',
-  transitionDuration: 1000,
+  transitionDuration: 1500,
   transitionTimingFunction: 'linear',
 } satisfies CSSTransitionProperties;
 
