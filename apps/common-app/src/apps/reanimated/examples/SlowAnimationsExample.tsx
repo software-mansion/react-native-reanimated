@@ -17,6 +17,7 @@ import Animated, {
   useAnimatedStyle,
   useFrameCallback,
   useSharedValue,
+  withDecay,
   withRepeat,
   withSpring,
   withTiming,
@@ -72,6 +73,7 @@ function useDetectSlowAnimations() {
 export default function SlowAnimationsExample() {
   const offset = useSharedValue(0);
   const springOffset = useSharedValue(0);
+  const decayOffset = useSharedValue(0);
   const [springOn, setSpringOn] = useState(false);
   const [transitionOn, setTransitionOn] = useState(false);
   const [ids, setIds] = useState([0, 1, 2]);
@@ -97,6 +99,10 @@ export default function SlowAnimationsExample() {
 
   const springStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: springOffset.value }],
+  }));
+
+  const decayStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: decayOffset.value }],
   }));
 
   return (
@@ -128,6 +134,20 @@ export default function SlowAnimationsExample() {
         <Button title="Toggle" onPress={() => setSpringOn((on) => !on)} />
       </View>
       <Animated.View style={[styles.box, springStyle]} />
+      <Text style={styles.heading}>Decay animation</Text>
+      <Text style={styles.text}>
+        The box is flung with an initial velocity and decays to a stop.
+      </Text>
+      <View style={styles.buttons}>
+        <Button
+          title="Fling"
+          onPress={() => {
+            decayOffset.value = 0;
+            decayOffset.value = withDecay({ velocity: 600, clamp: [0, 300] });
+          }}
+        />
+      </View>
+      <Animated.View style={[styles.box, decayStyle]} />
       <Text style={styles.heading}>CSS animation</Text>
       <Text style={styles.text}>
         The box rotates in a loop using a CSS animation.
