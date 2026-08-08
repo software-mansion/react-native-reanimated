@@ -83,14 +83,14 @@ export default function SlowAnimationsExample() {
   useEffect(() => {
     offset.value = 0;
     offset.value = withRepeat(
-      withTiming(300, { duration: 1500, easing: Easing.linear }),
+      withTiming(250, { duration: 1500, easing: Easing.linear }),
       -1,
       true
     );
   }, [offset]);
 
   useEffect(() => {
-    springOffset.value = withSpring(springOn ? 300 : 0);
+    springOffset.value = withSpring(springOn ? 250 : 0);
   }, [springOn, springOffset]);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -143,7 +143,7 @@ export default function SlowAnimationsExample() {
           title="Fling"
           onPress={() => {
             decayOffset.value = 0;
-            decayOffset.value = withDecay({ velocity: 600, clamp: [0, 300] });
+            decayOffset.value = withDecay({ velocity: 600, clamp: [0, 250] });
           }}
         />
       </View>
@@ -174,7 +174,7 @@ export default function SlowAnimationsExample() {
         style={[
           styles.box,
           TRANSITION,
-          { transform: [{ translateX: transitionOn ? 300 : 0 }] },
+          { transform: [{ translateX: transitionOn ? 250 : 0 }] },
         ]}
       />
       <Text style={styles.heading}>Layout animations</Text>
