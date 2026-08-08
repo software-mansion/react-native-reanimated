@@ -117,7 +117,7 @@ export default function SlowAnimationsExample() {
       <Text style={styles.text}>
         Slow animations are now{' '}
         {slowEnabled === null ? (
-          <Text style={styles.bold}>undetected yet</Text>
+          <Text style={styles.bold}>not yet detected</Text>
         ) : slowEnabled ? (
           <Text style={[styles.bold, styles.enabled]}>🐢 enabled</Text>
         ) : (
