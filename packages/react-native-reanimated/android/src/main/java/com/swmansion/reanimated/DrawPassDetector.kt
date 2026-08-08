@@ -23,6 +23,7 @@ internal class DrawPassDetector(
         }
 
     fun initialize() {
+        UiThreadUtil.assertOnUiThread()
         val activity = mContext.currentActivity ?: return
 
         val decorView = activity.window.decorView
@@ -59,6 +60,7 @@ internal class DrawPassDetector(
     }
 
     private fun invalidateOnUiThread() {
+        UiThreadUtil.assertOnUiThread()
         mDecorView?.let { view ->
             val observer = view.viewTreeObserver
             if (observer.isAlive) {
