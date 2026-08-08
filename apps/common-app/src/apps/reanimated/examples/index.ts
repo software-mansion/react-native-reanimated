@@ -436,6 +436,8 @@ const ShadowNodesCloningExample: React.FC = () =>
   );
 const SharedStyleExample: React.FC = () =>
   React.createElement(require('./SharedStyleExample').default as React.FC);
+const SlowAnimationsExample: React.FC = () =>
+  React.createElement(require('./SlowAnimationsExample').default as React.FC);
 const SpringLayoutAnimation: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/SpringLayoutAnimation').default
@@ -556,6 +558,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎞️',
     title: 'FPS',
     screen: FpsExample,
+  },
+  SlowAnimationsExample: {
+    icon: '🐢',
+    title: 'Slow animations',
+    screen: SlowAnimationsExample,
   },
   HermesSamplingProfilerExample: {
     icon: '📊',
