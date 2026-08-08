@@ -100,7 +100,9 @@ export default function SlowAnimationsExample() {
   }));
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      automaticallyAdjustsScrollIndicatorInsets={false}
+      contentContainerStyle={styles.container}>
       <Text style={styles.text}>
         While the animations below are running, {INSTRUCTIONS} to toggle slow
         animations. The animations should run slower (when enabled) or faster
