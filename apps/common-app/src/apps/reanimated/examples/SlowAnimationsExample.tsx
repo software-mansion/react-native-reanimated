@@ -15,11 +15,13 @@ import Animated, {
   FadeOut,
   LinearTransition,
   useAnimatedStyle,
+  useFrameCallback,
   useSharedValue,
   withRepeat,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 const INSTRUCTIONS = Platform.select({
   ios: 'select Debug > Slow Animations in the iOS Simulator menu bar',
@@ -42,6 +44,31 @@ const TRANSITION = {
   transitionTimingFunction: 'linear',
 } satisfies CSSTransitionProperties;
 
+// The frame clock (requestAnimationFrame timestamps) is slowed down by slow
+// animations while the wall clock (Date.now) is not, so a frame-to-wall time
+// ratio well below 1 means slow animations are enabled.
+function useDetectSlowAnimations() {
+  const [slowEnabled, setSlowEnabled] = useState<boolean | null>(null);
+  const detected = useSharedValue<boolean | null>(null);
+  const prevRealTime = useSharedValue(0);
+
+  useFrameCallback((frameInfo) => {
+    const realDelta = Date.now() - prevRealTime.value;
+    prevRealTime.value = Date.now();
+    const frameDelta = frameInfo.timeSincePreviousFrame;
+    if (frameDelta === null || realDelta > 1000) {
+      return; // first frame or the app was suspended
+    }
+    const slow = frameDelta / realDelta < 0.5;
+    if (slow !== detected.value) {
+      detected.value = slow;
+      scheduleOnRN(setSlowEnabled, slow);
+    }
+  });
+
+  return slowEnabled;
+}
+
 export default function SlowAnimationsExample() {
   const offset = useSharedValue(0);
   const springOffset = useSharedValue(0);
@@ -49,6 +76,7 @@ export default function SlowAnimationsExample() {
   const [transitionOn, setTransitionOn] = useState(false);
   const [ids, setIds] = useState([0, 1, 2]);
   const nextId = useRef(3);
+  const slowEnabled = useDetectSlowAnimations();
 
   useEffect(() => {
     offset.value = 0;
@@ -77,6 +105,17 @@ export default function SlowAnimationsExample() {
         While the animations below are running, {INSTRUCTIONS} to toggle slow
         animations. The animations should run slower (when enabled) or faster
         (when disabled).
+      </Text>
+      <Text style={styles.text}>
+        Slow animations are now{' '}
+        {slowEnabled === null ? (
+          <Text style={styles.bold}>undetected yet</Text>
+        ) : slowEnabled ? (
+          <Text style={[styles.bold, styles.enabled]}>🐢 enabled</Text>
+        ) : (
+          <Text style={[styles.bold, styles.disabled]}>❌ disabled</Text>
+        )}
+        {'\n'}(detected by comparing frame and wall clocks).
       </Text>
       <Text style={styles.heading}>Timing animation</Text>
       <Text style={styles.text}>The box moves back and forth in a loop.</Text>
@@ -157,6 +196,15 @@ const styles = StyleSheet.create({
   },
   text: {
     marginBottom: 12,
+  },
+  bold: {
+    fontWeight: 'bold',
+  },
+  enabled: {
+    color: 'forestgreen',
+  },
+  disabled: {
+    color: 'crimson',
   },
   box: {
     width: 60,
