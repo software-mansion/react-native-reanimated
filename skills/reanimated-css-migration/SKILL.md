@@ -1,6 +1,6 @@
 ---
 name: reanimated-css-migration
-description: "Converts React Native Reanimated hook-based animations into CSS animations and transitions. Use when migrating, converting or porting Reanimated animations to CSS. Use when replacing useAnimatedStyle, useSharedValue, withTiming, withRepeat or withSpring with animationName or transitionProperty. Use when auditing which animations could become CSS. Use this even if the user never says CSS, whenever they ask to simplify, modernize or remove worklets from animation code."
+description: "Converts React Native Reanimated hook-based animations into CSS animations and transitions, applying the conversions that are provably safe and leaving the rest for the user to decide on. Use when migrating, converting or porting Reanimated animations to CSS. Use when replacing useAnimatedStyle, useSharedValue, withTiming, withRepeat or withSpring with animationName or transitionProperty. Use when auditing which animations could become CSS. Use this even if the user never says CSS, whenever they ask to simplify, modernize or remove worklets from animation code."
 license: MIT
 compatibility: Requires Reanimated 4.x and the New Architecture
 ---
@@ -49,8 +49,8 @@ API signatures:
 
 | Request | Run |
 | --- | --- |
-| One call site in front of you | Phase 2 only. No inventory, report or ledger |
-| "Can this be CSS?", no edit asked for | Phase 2 reasoning, no edits |
+| One call site in front of you | Phase 2, then convert or explain. No inventory, ledger or tables |
+| "Can this be CSS?", no edit asked for | Phase 2 reasoning only. Never edit |
 | A directory, feature or app | All phases |
 
 Preconditions, refusals and the property check apply at every size.
@@ -88,43 +88,24 @@ Per call site:
 **Name the precondition permitting each migration.** Cannot name one, do not
 migrate.
 
-## Phase 3: report, before editing
+## Phase 3: apply the certain set
 
-Print as ordinary text. Not a plan object, not a collapsed block. Do not edit
-until the user agrees.
+Apply migratable sites without asking. Leave needs-review and refused untouched.
+The user reviews a diff, not a plan, so the bar for "migratable" is the whole
+safety model: all 7 preconditions pass, every property clears, and you can name
+the permitting precondition. Anything you are weighing goes to needs-review and
+is not edited.
 
-Four parts, all required. The report is incomplete without part 4, which is the
-only part showing code and the only one the user can judge the conversion from.
+Require a clean working tree first, or explicit acknowledgment. `git diff` is
+the user's undo.
 
-1. **Counts.** Migratable, needs-review, refused.
+Migrate 3 differing sites first and compare. Resolve any disagreement between
+them before continuing: a systematic mistake caught after 3 files is cheap,
+after 30 it is not.
 
-1. **Table, no code**, one row per site. Everything a site needs to say goes in
-   the Note column:
-
-   | File | Animates | Becomes | Note |
-   | --- | --- | --- | --- |
-   | `Card.tsx:34` | opacity, translateY on mount | animation | fillMode forwards |
-   | `Toggle.tsx:12` | backgroundColor on press | transition | shared value becomes state |
-
-1. **Refusals grouped by reason**, with counts. Forty gesture-driven components
-   are one line.
-
-1. **Before and after code for 2-3 representative sites**, covering the
-   different shapes in the table. Write it out; never promise a sample and omit
-   it. A diff for every site is the failure this replaces, not this itself.
-
-Keep out of this report: equivalence obligations to re-check, memoization
-advice, reduced-motion recipes, option menus. Those are Phase 4 and 5. Prose per
-site crowds out part 4 and makes the table unscannable.
-
-## Phase 4: apply
-
-Migrate 3 differing sites first, compare, resolve disagreements before
-continuing.
-
-Keep a status file on disk: every site as pending, done or refused, with its
-precondition or refusal reason. Conversation memory does not survive compaction;
-after an interruption trust the file and `git diff`, not recall.
+Keep a status file on disk: every site as pending, done, needs-review or
+refused, with its precondition or reason. Conversation memory does not survive
+compaction; after an interruption trust the file and `git diff`, not recall.
 
 Then per call site:
 
@@ -133,12 +114,48 @@ Then per call site:
 | Satisfy all 5 equivalence obligations | Leave an obligation unchecked |
 | Remove shared values, hooks, imports the conversion killed | Remove anything else |
 | Migrate inside each `Platform.select` arm, keeping structure | Collapse the arms |
-| Suggest `shadow*` to `boxShadow` in the report | Swap one API for another in this diff |
+| Note `shadow*` to `boxShadow` for later | Swap one API for another in this diff |
 
-Checkpoint per file: one line on what changed, then let the user stop you.
+Downgrade to needs-review and revert that site if anything turns up mid-edit
+that the classification missed: an unspotted property, a driver that is a
+worklet after all, an obligation you cannot satisfy. Do not push through.
 
-Stop and ask when a site differs from the agreed plan: an unspotted property, a
-driver that is a worklet after all, an obligation you cannot satisfy.
+## Phase 4: report what changed and what did not
+
+Report after applying, as ordinary text. Not a plan object, not a collapsed
+block.
+
+Lead with both numbers in one line, for example: `Migrated 14 sites across 9
+files. Left 23: 6 need a decision, 17 refused.` The user must see the size of
+what was skipped without reading further.
+
+1. **Applied.** File and what each became, one row per site. No diffs, the diff
+   is in the working tree.
+
+   | File | Animates | Became | Note |
+   | --- | --- | --- | --- |
+   | `Card.tsx:34` | opacity, translateY on mount | animation | fillMode forwards |
+   | `Toggle.tsx:12` | backgroundColor on press | transition | shared value became state |
+
+1. **Needs review, not applied.** One row per site with the specific question
+   the user has to answer, since these are the ones they can act on.
+
+   | File | Animates | Blocked on |
+   | --- | --- | --- |
+   | `Sheet.tsx:88` | height on expand | `interpolate` extrapolates past its range |
+
+1. **Refused, grouped by reason**, with counts. Forty gesture-driven components
+   are one line, not forty.
+
+1. **Before and after code for 2-3 applied sites**, covering the different
+   shapes in the table. Write it out; never promise a sample and omit it.
+
+Then ask which of the needs-review sites to take, offering the list by number so
+the user can answer "1, 3 and 5" or "none". Apply only what they name.
+
+Keep out of this report: equivalence obligations to re-check, memoization
+advice, reduced-motion recipes. Prose per site crowds out the code section and
+makes the tables unscannable.
 
 ## Phase 5: verify
 
