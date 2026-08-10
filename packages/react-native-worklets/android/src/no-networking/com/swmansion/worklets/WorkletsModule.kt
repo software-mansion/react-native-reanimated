@@ -42,10 +42,6 @@ class WorkletsModule(
     private val mAnimationFrameQueue = AnimationFrameQueue(reactContext)
     private var mSlowAnimationsEnabled = false
 
-    init {
-        reactContext.addLifecycleEventListener(this)
-    }
-
     /**
      * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
      * cost us much to add synchronization for extra safety.
@@ -119,6 +115,10 @@ class WorkletsModule(
         return mSlowAnimationsEnabled
     }
 
+    override fun initialize() {
+        reactApplicationContext.addLifecycleEventListener(this)
+    }
+
     override fun invalidate() {
         if (mInvalidated.getAndSet(true)) {
             return
@@ -135,10 +135,16 @@ class WorkletsModule(
     private external fun startCpp()
 
     override fun onHostResume() {
+        if (mInvalidated.get()) {
+            return
+        }
         mAnimationFrameQueue.resume()
     }
 
     override fun onHostPause() {
+        if (mInvalidated.get()) {
+            return
+        }
         mAnimationFrameQueue.pause()
     }
 
