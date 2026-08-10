@@ -24,9 +24,9 @@ things the tool cannot do.
 | Gesture-driven values | Gesture callbacks are workletized onto the UI thread by default, so reaching React state needs a `scheduleOnRN` hop per update | Keep it. This is exactly what the hooks API is for. A gesture with `.runOnJS(true)` runs on the JS thread and is migratable if its updates are discrete |
 | Scroll-driven values | Same reason | Keep it |
 | Sensor, keyboard, frame callback drivers | CSS animations advance on time only. There is no scroll, sensor or keyboard timeline | Keep it |
-| `measure`, `useAnimatedRef` reads | Targets depend on runtime layout, which cannot be written as a keyframe | Keep it |
+| `measure`, `useAnimatedRef` reads **feeding an animated value** | Targets depend on runtime layout, which cannot be written as a keyframe | Keep it. A measured value used for a static `top`/`left` in the same hook does not refuse the animated properties beside it |
 | `useAnimatedProps` for non-style props | CSS styles are keyed off view, text and image styles | Keep it. `react-native-svg` is the exception: geometry (`cx`, `r`, `d`, `points`) and appearance (`fill`, `stroke`, `opacity`) both animate via `animatedProps`. Platform coverage differs per prop, check [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg) |
-| Layout animations, `Keyframe`, shared element transitions | A separate subsystem with its own lifecycle | Leave untouched. Out of scope for this migration |
+| Layout animations, `Keyframe`, shared element transitions | A separate subsystem with its own lifecycle | Leave the `entering`/`exiting`/`layout` props untouched. They do not refuse the rest of the component: a `useAnimatedStyle` on the same element is judged on its own |
 | SVG `transform` and its parts | Not supported. Several forms still carry unfinished preprocessors and none are documented | Keep it on the hooks API |
 
 ## Lossy: an equivalent exists but changes behavior
@@ -39,7 +39,7 @@ The dangerous set: these compile and often appear to work.
 | `cancelAnimation`, or pausing, reversing, restarting from an effect or handler | `animationPlayState` suspends; it does not cancel or freeze at the current value | Refuse |
 | `reduceMotion` config, `ReduceMotion` enum, `useReducedMotion` | CSS has no reduced-motion support of its own | Not a refusal. Emit a `useReducedMotion()` guard and drive the duration from it, per precondition 4 |
 | Discrete keyword properties: `display`, `position`, `flexDirection`, `justifyContent`, `alignItems`, `overflow`, `fontWeight`, `textAlign` | Dropped from transitions unless `transitionBehavior: 'allow-discrete'`, and then they flip at the midpoint | Refuse, or set the behavior and warn about the midpoint flip |
-| Rapid re-triggering of the same target | `withTiming` inherits the original start time and value; CSS approximates but does not reproduce it | Refuse if the timing matters |
+| Rapid re-triggering with the same `toValue` | `withTiming` inherits the original start time and value, but only when the target is unchanged; CSS does not reproduce it | Refuse if the timing matters. A driver alternating between two targets, timer or toggle, does NOT hit this row: see the re-trigger table in `preconditions.md` |
 
 ## Properties that would regress
 

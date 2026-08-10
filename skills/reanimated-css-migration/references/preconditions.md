@@ -2,8 +2,8 @@
 
 ## Contents
 
-- Preconditions: check all 7 before converting a call site (2b covers derived values)
-- Equivalence obligations: check all 5 after converting
+- Preconditions: check all 7 before converting a call site (2b covers indirection)
+- Equivalence obligations: check all 5 after converting (3 has a re-trigger table)
 - Effective platforms
 
 ## Preconditions
@@ -54,15 +54,21 @@ equivalence obligation catches it. Refuse.
 Check independently of precondition 1: a migratable driver often has an
 inexpressible body.
 
-### 2b. Derived values resolve to the same driver
+### 2b. Indirection resolves to the same driver
 
-`useDerivedValue` is not itself a blocker. Classify what it derives from.
+`useDerivedValue`, and a shared value passed to a child as a prop, are not
+themselves blockers. Classify the root writer.
 
 | Shape | Verdict |
 | --- | --- |
 | Derives from one migratable driver, read only by this style | Inline it into the style and migrate |
 | Derives from a worklet-written value | Refuse, precondition 1 applies to the root driver |
 | Read by several consumers, or by a worklet | Refuse, the conversion would change more than this call site |
+| `SharedValue` passed to a child as a prop, root writer on the JS thread, one animated-style reader | Migrate. Replace the prop with the plain value the writer switches on, render the endpoints in the child, delete the shared value and its type |
+| `SharedValue` prop read in more than one component, or by any worklet | Refuse, same reason as the multi-consumer row |
+
+Prove the reader count before migrating a prop: grep the shared value's name
+across the scope. Crossing a file boundary is not itself a refusal.
 
 ### 3. Properties animatable on the effective platforms
 
@@ -140,9 +146,29 @@ needs-review.
 | --- | --- | --- |
 | 1 | First render identical | No flash of unstyled or final state. Mount animations usually need `animationFillMode: 'forwards'` |
 | 2 | End state identical | After completion, and after fill mode applies |
-| 3 | Re-trigger identical | Fire the driver twice quickly; second run starts where the hook version would |
+| 3 | Re-trigger identical | Fire the driver twice quickly. Start value **and** remaining duration must match; see the re-trigger table below |
 | 4 | Interrupt and unmount identical | Unmount mid-animation; nothing throws, nothing keeps running |
 | 5 | Nothing else changed | Same element tree, props, conditional logic. Swapping `Pressable` for `Animated.View` to use `:active` fails this: it drops the press handlers and the accessibility role |
+
+### Re-trigger, in detail
+
+`withTiming` inherits the previous run's start time and value only when the new
+`toValue` equals the running animation's (`animation/timing.ts:127`). A CSS
+transition applies a reversing-shortening factor whenever a new target reverses a
+transition that has not finished
+(`Common/cpp/reanimated/CSS/progress/TransitionProgressProvider.cpp`), so the
+reversed run is shortened in proportion to how far it had got.
+
+| Second write, mid-flight | Hooks | CSS transition | Action |
+| --- | --- | --- | --- |
+| same `toValue` | keeps the original start time and value | does not reproduce the inherited timeline | Refuse if the timing matters. The `refusals.md` rapid-re-trigger row covers this shape and only this shape |
+| reversed `toValue` | restarts from the current value, full duration | restarts from the current value, `duration * remaining fraction` | Endpoints and start value match, duration does not. Migrate and state the difference, or needs-review when the reversal is the interaction |
+| any write after the previous run finished | identical | identical | pass |
+
+The reversal is the interaction, not an edge case, when a tap toggles one target
+back and forth, or a timer's interval is shorter than the duration. Silence is
+the defect: state it on the applied row or park the site, never leave it
+unrecorded.
 
 ## Effective platforms
 
@@ -151,6 +177,7 @@ needs-review.
 | `.ios` / `.android` / `.web` suffix | that platform only |
 | `.native` suffix | iOS and Android, not web |
 | `Platform.OS` branch or `Platform.select` arm | that branch's platform only |
+| a platform constant short-circuiting the write, `if (IS_WEB) return` | the platforms that reach the write. Reproduce the gate in the converted style, do not widen coverage |
 | none of the above | every platform the project ships |
 
 Migrate inside each `Platform.select` arm; keep the structure. Collapsing a

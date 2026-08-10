@@ -8,7 +8,8 @@
 
 ## Transition or animation: which one
 
-Decide by what drives each step.
+Decide by what drives each step. Classify **per property and per edge**, never
+per call site: one element may legitimately need both mechanisms at once.
 
 **Transition** when something outside the element triggers every step: press,
 toggle, expand, theme change, selection. Step count is irrelevant, a stepper is
@@ -22,18 +23,38 @@ introducing that render by converting the shared value to state is part of the
 migration. The exception is a write inside a worklet, which stays on the hooks
 API.
 
-Two failure modes:
+### Mount edges outrank the trigger
+
+A transition needs a previously rendered value to move from. It never runs on the
+element's first render, so any step whose "before" value was never painted is an
+animation, whatever triggered it.
+
+| Site | Emit |
+| --- | --- |
+| Element conditionally rendered on the driver: `if (!open) return null` | Animation with `animationFillMode: 'forwards'` on the false to true edge. The true to false edge is unobservable, the element unmounts |
+| Mount `useEffect` writes a value different from the initial one | Animation for that edge, or migrate the rest as a transition and state the dropped mount step. Not a reason to park the site |
+| A mount step and a later driver step on the same element | Both: `animationName` for the mount, `transitionProperty` for the driver-changed properties |
+| Driver toggles while the element stays mounted | Transition |
+
+Emitting a transition where the element mounts is the silent-failure direction:
+it renders at the final value and nothing moves.
+
+Three failure modes:
 
 - A transition whose value never re-renders does nothing. Convert the driver to
   state.
 - An animation used for an interaction fires on mount instead of on the event.
+- A property listed in both `animationName` keyframes and `transitionProperty` on
+  one element. Split by property; never overlap them.
 
 ## The `with*` functions, mapped
 
 | Source | CSS | Notes |
 | --- | --- | --- |
 | `withTiming(v, {duration, easing})` | `transitionDuration` + `transitionTimingFunction`, or a two-keyframe animation | Which one depends on the section above, not on the call |
-| `withDelay(ms, anim)` | `transitionDelay` or `animationDelay` | Negative `animationDelay` pre-seeds a loop mid-cycle, which has no hook equivalent and is the idiomatic way to stagger |
+| `withDelay(ms, anim)` at the top level | `transitionDelay` or `animationDelay` | Negative `animationDelay` pre-seeds a loop mid-cycle, which has no hook equivalent and is the idiomatic way to stagger |
+| `withDelay(ms, x)` inside a `withSequence` | an `ms` hold before `x` | Not a leading delay. Add `ms` to the sequence total and repeat the previous keyframe value at the offset where `x` begins |
+| `withTiming(v, { duration: 0 })` | an instant step | Two keyframes at the same offset, or `steps(1, 'jump-end')` when every step in the sequence is instant |
 | `withRepeat(anim, -1)` | `animationIterationCount: 'infinite'` | Any count `<= 0` means infinite |
 | `withRepeat(anim, n)` | `animationIterationCount: n` | |
 | `withRepeat(anim, n, true)` | plus `animationDirection: 'alternate'` | The third argument is `reverse` |
