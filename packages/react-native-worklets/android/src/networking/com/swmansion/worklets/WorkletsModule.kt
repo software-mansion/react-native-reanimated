@@ -46,6 +46,10 @@ class WorkletsModule(
     private val mWorkletsNetworking = WorkletsNetworking()
     private var mSlowAnimationsEnabled = false
 
+    init {
+        reactContext.addLifecycleEventListener(this)
+    }
+
     /**
      * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
      * cost us much to add synchronization for extra safety.
@@ -163,6 +167,7 @@ class WorkletsModule(
         if (mInvalidated.getAndSet(true)) {
             return
         }
+        reactApplicationContext.removeLifecycleEventListener(this)
         if (mHybridData != null && mHybridData!!.isValid) {
             invalidateCpp()
         }
