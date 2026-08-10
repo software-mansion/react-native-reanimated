@@ -143,7 +143,7 @@ export default function SlowAnimationsExample() {
           title="Fling"
           onPress={() => {
             decayOffset.value = 0;
-            decayOffset.value = withDecay({ velocity: 600, clamp: [0, 250] });
+            decayOffset.value = withDecay({ velocity: 500, clamp: [0, 250] });
           }}
         />
       </View>
