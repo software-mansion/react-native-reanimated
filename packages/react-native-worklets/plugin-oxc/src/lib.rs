@@ -137,6 +137,11 @@ fn run(
 
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(filename).unwrap_or_else(|_| SourceType::cjs());
+    let source_type = if source_type.is_javascript() {
+        source_type.with_jsx(true)
+    } else {
+        source_type
+    };
 
     let parsed = Parser::new(&allocator, source_text, source_type).parse();
 

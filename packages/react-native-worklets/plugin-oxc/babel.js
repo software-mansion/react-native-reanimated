@@ -66,6 +66,21 @@ function writeEmittedFiles(files) {
   }
 }
 
+// `@babel/plugin-syntax-typescript` with `isTSX: false` turns JSX parsing
+// off, so pairing it with syntax-jsx breaks any non-`.tsx` file containing
+// JSX — including the `.js` worklet files this plugin emits itself.
+function reparseSyntaxPlugins(filename) {
+  if (filename.endsWith('.tsx')) {
+    return [[SYNTAX_TYPESCRIPT, { isTSX: true }]];
+  }
+  if (/\.(ts|mts|cts)$/.test(filename)) {
+    return [[SYNTAX_TYPESCRIPT, { isTSX: false }]];
+  }
+  return [[SYNTAX_JSX]];
+}
+
+const GENERATED_WORKLETS_DIR = 'react-native-worklets/.worklets';
+
 function workletsPluginOxcBabelShim(babelApi, options) {
   if (options && options.bundleMode === false) {
     throw new Error(
@@ -87,6 +102,11 @@ function workletsPluginOxcBabelShim(babelApi, options) {
           const sourceText = state.file.code;
           const filename =
             state.filename || state.file.opts.filename || 'unknown.js';
+
+          // Files this plugin emitted already hold finished factories.
+          if (filename.replace(/\\/g, '/').includes(GENERATED_WORKLETS_DIR)) {
+            return;
+          }
 
           let result;
           try {
@@ -118,10 +138,7 @@ function workletsPluginOxcBabelShim(babelApi, options) {
             sourceType: 'module',
             babelrc: false,
             configFile: false,
-            plugins: [
-              [SYNTAX_JSX],
-              [SYNTAX_TYPESCRIPT, { isTSX: filename.endsWith('.tsx') }],
-            ],
+            plugins: reparseSyntaxPlugins(filename),
           });
 
           programPath.replaceWith(newAst.program);

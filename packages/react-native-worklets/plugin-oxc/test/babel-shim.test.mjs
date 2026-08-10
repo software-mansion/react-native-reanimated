@@ -135,3 +135,45 @@ test(
   }
 );
 
+
+test(
+  'babel shim parses JSX in a .js file',
+  { skip: !babelCore },
+  () => {
+    delete require_.cache[require_.resolve('../babel.js')];
+    const shim = require_('../babel.js');
+    const result = babelCore.transformSync(
+      `import { Comp } from 'react-native-worklets';\nfunction renderView() { 'worklet'; return <Comp />; }`,
+      {
+        filename: 'plain.js',
+        babelrc: false,
+        configFile: false,
+        plugins: [
+          [shim, { importForwarding: { moduleNames: ['react-native-worklets'] } }],
+          require_.resolve('@babel/plugin-syntax-jsx'),
+        ],
+      }
+    );
+    assert.ok(result && result.code);
+    assert.match(result.code, /require\(["']react-native-worklets\/\.worklets/);
+  }
+);
+
+test(
+  'babel shim leaves generated worklet files alone',
+  { skip: !babelCore },
+  () => {
+    delete require_.cache[require_.resolve('../babel.js')];
+    const shim = require_('../babel.js');
+    const source = `export default (function f({}) {\n  const g = function () { return <Comp />; };\n  return g;\n});`;
+    const result = babelCore.transformSync(source, {
+      filename:
+        '/repo/packages/react-native-worklets/.worklets/123.js',
+      babelrc: false,
+      configFile: false,
+      plugins: [[shim, {}], require_.resolve('@babel/plugin-syntax-jsx')],
+    });
+    assert.ok(result && result.code);
+    assert.match(result.code, /<Comp \/>/);
+  }
+);
