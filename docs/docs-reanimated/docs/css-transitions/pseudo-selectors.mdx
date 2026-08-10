@@ -1,0 +1,243 @@
+---
+sidebar_position: 7
+---
+
+# Pseudo Selectors
+
+Pseudo selectors let you transition a style property based on an interaction state - **hovered**, **pressed**, or **focused** - without ever putting that state in React.
+
+import PseudoSelectorsBasic from '@site/src/examples/css-transitions/PseudoSelectorsBasic';
+import PseudoSelectorsBasicSrc from '!!raw-loader!@site/src/examples/css-transitions/PseudoSelectorsBasic';
+
+<InteractiveExample src={PseudoSelectorsBasicSrc} component={PseudoSelectorsBasic} label="Hover or press the box"/>
+
+Instead of writing the pseudo state as a selector that wraps a whole style block, like you would in CSS on the web, you write it _inside_ the property it affects:
+
+```jsx
+<Animated.View
+  style={{
+    // highlight-start
+    backgroundColor: {
+      default: '#b58df1',
+      ':hover': '#82cab2',
+    },
+    // highlight-end
+    transitionDuration: 300,
+  }}
+/>
+```
+
+There's no `useState` and no `onPressIn`/`onPressOut` here. Reanimated watches for the interaction itself, and when the state changes it transitions the property between the values you gave it - all off the JavaScript thread, without re-rendering your component.
+
+## Reference
+
+```javascript
+function App() {
+  return (
+    <Animated.View
+      style={{
+        // highlight-start
+        opacity: {
+          default: 0.6,
+          ':hover': 1,
+        },
+        // highlight-end
+        transitionDuration: 300,
+      }}
+    />
+  );
+}
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  type NativePseudoSelectorKey =
+    | ':hover'
+    | ':active'
+    | ':active-deepest'
+    | ':focus'
+    | ':focus-within';
+
+  type CSSPseudoSelectorKey =
+    | 'default'
+    | NativePseudoSelectorKey
+    | WebPseudoSelectorKey; // web-only selectors, see the table below
+
+  type CSSPseudoValue<T> = RequireAtLeastOne<{
+    [K in CSSPseudoSelectorKey]?: T;
+  }>;
+
+  type StyleWithPseudoValues<TStyle extends object> = {
+    [K in keyof TStyle]: TStyle[K] | CSSPseudoValue<TStyle[K]>;
+  };
+  ```
+</details>
+
+### Values
+
+#### `default`
+
+The value used when none of the listed selectors match - the resting state of the property.
+
+```typescript
+backgroundColor: {
+  default: '#b58df1',
+  ':hover': '#82cab2',
+},
+```
+
+#### `<pseudo selector>`
+
+The value used while that selector matches. You can list as many selectors as you want for a single property.
+
+```typescript
+transform: {
+  default: [{ scale: 1 }],
+  ':hover': [{ scale: 1.1 }],
+  ':active': [{ scale: 0.9 }],
+},
+```
+
+## How it works
+
+You write the property as an object: the keys are `default` and the selectors you care about, and the values are what the property should be in each of those states. Reanimated attaches the matching native listeners (a hover recognizer, a press recognizer, focus notifications) to the view, and swaps between the values as those listeners fire.
+
+Two things follow from that:
+
+1. **Timing comes from the component's transition settings.** Pseudo selectors animate as CSS transitions, so [`transitionDuration`](/docs/css-transitions/transition-duration), [`transitionTimingFunction`](/docs/css-transitions/transition-timing-function), and [`transitionDelay`](/docs/css-transitions/transition-delay) are read from the top level of the style, not from inside the pseudo object.
+1. **Nothing re-renders.** Hovering or pressing doesn't trigger a React render, so JavaScript work can't get in the way of the animation.
+
+When several selectors match at once, the one later in this list wins:
+
+```
+:focus-within  <  :focus  <  :hover  <  :active  <  :active-deepest
+```
+
+## Available selectors
+
+Five selectors describe interaction states that exist on every platform.
+
+### `:hover`
+
+Matches while a pointer - a mouse, a trackpad, or a stylus - sits over the element.
+
+import PseudoSelectorsHover from '@site/src/examples/css-transitions/PseudoSelectorsHover';
+import PseudoSelectorsHoverSrc from '!!raw-loader!@site/src/examples/css-transitions/PseudoSelectorsHover';
+
+<InteractiveExample src={PseudoSelectorsHoverSrc} component={PseudoSelectorsHover} label="Hover any box"/>
+
+:::note
+
+A finger isn't a pointer, so on touch devices `:hover` follows the model mobile browsers use: a tap commits the hover state, and a later touch somewhere else (or a scroll) clears it. A stylus is a real pointer, so it hovers just like a mouse. When you want press feedback that behaves the same on every input, reach for `:active`.
+
+:::
+
+### `:active`
+
+Matches while the element is held down. A press also activates every ancestor that declares `:active`.
+
+import PseudoSelectorsActive from '@site/src/examples/css-transitions/PseudoSelectorsActive';
+import PseudoSelectorsActiveSrc from '!!raw-loader!@site/src/examples/css-transitions/PseudoSelectorsActive';
+
+<InteractiveExample src={PseudoSelectorsActiveSrc} component={PseudoSelectorsActive} label="Press and hold the button"/>
+
+### `:active-deepest`
+
+The same press, but only the innermost element under the finger matches - it never travels up to ancestors.
+
+Both stacks below are a card wrapping a button, and in each one the card and the button declare the same selector. Press each button to see the difference:
+
+import PseudoSelectorsActiveDeepest from '@site/src/examples/css-transitions/PseudoSelectorsActiveDeepest';
+import PseudoSelectorsActiveDeepestSrc from '!!raw-loader!@site/src/examples/css-transitions/PseudoSelectorsActiveDeepest';
+
+<InteractiveExample src={PseudoSelectorsActiveDeepestSrc} component={PseudoSelectorsActiveDeepest} label="Press both buttons and watch the cards"/>
+
+### `:focus`
+
+Matches while the element itself has focus - most often a `TextInput` the user is typing into.
+
+import PseudoSelectorsFocus from '@site/src/examples/css-transitions/PseudoSelectorsFocus';
+import PseudoSelectorsFocusSrc from '!!raw-loader!@site/src/examples/css-transitions/PseudoSelectorsFocus';
+
+<InteractiveExample src={PseudoSelectorsFocusSrc} component={PseudoSelectorsFocus} label="Tap a field to focus it"/>
+
+:::note
+
+What counts as focused is each platform's own idea of focus. On iOS it's a text input being edited, and nothing else. On Android and on the web it's the full focus system, so anything focusable matches - a `View` with `focusable`, or an element reached with a keyboard or a D-pad. On the web that also means clicking a `Pressable` focuses it, and its `:focus` style stays on until focus moves somewhere else.
+
+:::
+
+### `:focus-within`
+
+Matches while the element _or anything inside it_ has focus, following the same platform rules as `:focus`.
+
+import PseudoSelectorsFocusWithin from '@site/src/examples/css-transitions/PseudoSelectorsFocusWithin';
+import PseudoSelectorsFocusWithinSrc from '!!raw-loader!@site/src/examples/css-transitions/PseudoSelectorsFocusWithin';
+
+<InteractiveExample src={PseudoSelectorsFocusWithinSrc} component={PseudoSelectorsFocusWithin} label="Focus a field to light up the card"/>
+
+### Web-only selectors
+
+The web supports many more selectors, like `:focus-visible`, `:disabled` and `:first-child`. Android and iOS ignore them with a warning in development builds - see [Supported selectors by platform](#supported-selectors-by-platform) for the full list.
+
+## Combining selectors
+
+A single property can list several selectors, and different properties on the same component can respond to different ones. Because timing lives at the top level, you can also give each property its own duration by lining up [`transitionProperty`](/docs/css-transitions/transition-property) with [`transitionDuration`](/docs/css-transitions/transition-duration):
+
+import PseudoSelectorsCombined from '@site/src/examples/css-transitions/PseudoSelectorsCombined';
+import PseudoSelectorsCombinedSrc from '!!raw-loader!@site/src/examples/css-transitions/PseudoSelectorsCombined';
+
+<InteractiveExample src={PseudoSelectorsCombinedSrc} component={PseudoSelectorsCombined} label="Hover the button, then press it"/>
+
+The button drifts between colors over 600ms, but snaps down in 100ms when pressed. `backgroundColor` lists both `:hover` and `:active`, and pressing wins over hovering because `:active` sits later in the priority list.
+
+## Animating SVG components
+
+Pseudo selectors work on [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components too. Put the pseudo objects for SVG attributes like `fill` or `r` in `style`, and keep the resting geometry on the props themselves so the shape still renders before any interaction. For everything else about animating SVG, see [Animating SVG](/docs/guides/animating-svg).
+
+import PseudoSelectorsSvg from '@site/src/examples/css-transitions/PseudoSelectorsSvg';
+import PseudoSelectorsSvgSrc from '!!raw-loader!@site/src/examples/css-transitions/PseudoSelectorsSvg';
+
+<InteractiveExample src={PseudoSelectorsSvgSrc} component={PseudoSelectorsSvg} label="Hover the circles"/>
+
+Reanimated hit-tests the front-most element, so when SVG shapes overlap only the one on top reacts.
+
+## Remarks
+
+- Set `transitionDuration` when you want the change animated. Without any transition settings the pseudo value still applies, it just switches over immediately, exactly like a transition of `0`.
+
+- `default` is optional. Leaving it out is a fine way to animate back to a property's own default value. What it won't do is bring back a value from your `StyleSheet`: once `backgroundColor` has a pseudo object, that object owns the property, and any `backgroundColor` from an earlier style in the array is dropped. Write the resting value as `default` instead.
+
+- Transition settings can't go inside a pseudo object. `transitionDuration`, `transitionTimingFunction`, and `transitionDelay` describe the component, not a single state.
+
+- While a selector matches, its properties win. A re-render or a regular transition can't override a value that a pseudo selector is currently applying.
+
+- Pseudo selectors are a feature of CSS styles. They don't work in [`useAnimatedStyle`](/docs/core/useAnimatedStyle), where the animation is driven by [shared values](/docs/fundamentals/glossary#shared-value) instead.
+
+- Every selector other than the five cross-platform ones is supported on the web only. Android and iOS ignore them, with a warning in development builds.
+
+- Not every style property can be animated. See [Supported style properties](/docs/guides/supported-properties) for the full list.
+
+## Supported selectors by platform
+
+| Selector                                                                     | Android | iOS | Web |
+| ---------------------------------------------------------------------------- | ------- | --- | --- |
+| `:hover`                                                                     | ✅      | ✅  | ✅  |
+| `:active`                                                                    | ✅      | ✅  | ✅  |
+| `:active-deepest`                                                            | ✅      | ✅  | ✅  |
+| `:focus`                                                                     | ✅      | ✅  | ✅  |
+| `:focus-within`                                                              | ✅      | ✅  | ✅  |
+| `:focus-visible`                                                             | ❌      | ❌  | ✅  |
+| `:link`, `:visited`, `:any-link`, `:target`                                  | ❌      | ❌  | ✅  |
+| `:disabled`, `:enabled`, `:checked`, `:indeterminate`, `:default`            | ❌      | ❌  | ✅  |
+| `:required`, `:optional`, `:valid`, `:invalid`, `:in-range`, `:out-of-range` | ❌      | ❌  | ✅  |
+| `:read-only`, `:read-write`, `:placeholder-shown`, `:autofill`               | ❌      | ❌  | ✅  |
+| `:first-child`, `:last-child`, `:only-child`, `:empty`                       | ❌      | ❌  | ✅  |
+| `:first-of-type`, `:last-of-type`, `:only-of-type`                           | ❌      | ❌  | ✅  |
+| `:root`, `:fullscreen`                                                       | ❌      | ❌  | ✅  |
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web/>
