@@ -258,6 +258,10 @@ Similarly to the text shadow styles - all shadow styles (i.e. `shadowColor`, `sh
 
 We highly recommend to use [the `boxShadow` property](https://reactnative.dev/blog/2024/10/23/release-0.76-new-architecture#boxshadow) which doesn't have this limitation and also works on Android.
 
+### Animating background image gradients
+
+The `backgroundImage` style property (linear and radial gradients) is available under this name since React Native 0.87. On older React Native versions use the `experimental_backgroundImage` property instead - both names are supported and animate the same way. Gradients interpolate smoothly when both keyframes use the same gradient type, direction kind, number of color stops and compatible units; otherwise the value changes discretely in the middle of the animation.
+
 ### Animating image tint color
 
 To animate the `tintColor` property on iOS, you must ensure that `tintColor` is included in the style object when the `Image` component is first rendered (mounted). If `tintColor` is not set initially, this property won't be updated via CSS animations or transitions.

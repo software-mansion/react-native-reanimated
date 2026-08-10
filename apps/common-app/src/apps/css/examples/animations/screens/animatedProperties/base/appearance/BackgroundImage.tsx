@@ -108,11 +108,11 @@ export default function BackgroundImage() {
                   keyframes: {
                     from: {
                       experimental_backgroundImage:
-                        'radial-gradient(circle 50% at 25% 25%, yellow, red)',
+                        'radial-gradient(circle 60px at 25% 25%, yellow, red)',
                     },
                     to: {
                       experimental_backgroundImage:
-                        'radial-gradient(circle 100% at 75% 75%, blue, green)',
+                        'radial-gradient(circle 120px at 75% 75%, blue, green)',
                     },
                   },
                   title: 'Moving highlight',

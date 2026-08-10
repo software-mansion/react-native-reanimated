@@ -443,6 +443,9 @@ function parseRadialGradientCSSString(
         size = { x: sizeX, y: sizeY };
       } else {
         hasExplicitSingleSize = true;
+        // The consumed token isn't a second size value (e.g. it starts the
+        // 'at <position>' clause), so put it back for the loop to re-process
+        firstPartTokens.unshift(token);
       }
     } else if (tokenTrimmed === 'at') {
       let top: string | number | undefined;
@@ -680,7 +683,7 @@ function parseBackgroundImageCSSString(
   for (const bgImageString of bgImageStrings) {
     const bgImage = bgImageString.toLowerCase();
     const match = GRADIENT_REGEX.exec(bgImage);
-    if (!match) {
+    if (!match || match[0].length !== bgImage.length) {
       throw new Error(
         `[Reanimated] ${ERROR_MESSAGES.invalidGradientString(bgImageString)}`
       );

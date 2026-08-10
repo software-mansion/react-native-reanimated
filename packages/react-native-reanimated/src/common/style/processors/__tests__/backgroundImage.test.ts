@@ -151,6 +151,34 @@ describe(processBackgroundImage, () => {
       ]);
     });
 
+    test('parses a radial gradient with an explicit size and position', () => {
+      expect(
+        processBackgroundImage(
+          'radial-gradient(circle 50% at 25% 25%, yellow, red)'
+        )
+      ).toEqual([
+        expect.objectContaining({
+          shape: 'circle',
+          size: { x: '50%', y: '50%' },
+          position: { top: '25%', left: '25%' },
+        }),
+      ]);
+    });
+
+    test('parses a radial gradient with a two-value size and position', () => {
+      expect(
+        processBackgroundImage(
+          'radial-gradient(100px 50% at left bottom, red, blue)'
+        )
+      ).toEqual([
+        expect.objectContaining({
+          shape: 'ellipse',
+          size: { x: 100, y: '50%' },
+          position: { top: '100%', left: '0%' },
+        }),
+      ]);
+    });
+
     test('parses a radial gradient with an edge offset position', () => {
       expect(
         processBackgroundImage(
@@ -174,6 +202,7 @@ describe(processBackgroundImage, () => {
 
     test.each([
       'gradient(red, blue)', // invalid gradient function
+      'linear-gradient(red, blue) trailing garbage', // trailing characters
       'linear-gradient(to nowhere, red, blue)', // invalid direction
       'linear-gradient(red 10rem, blue)', // invalid position unit
       'linear-gradient(20%, red, blue)', // hint without a preceding color
