@@ -1208,15 +1208,15 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
     strongThis->requestFlushRegistry();
   };
 
-  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // TODO: we don't use the mount hook here, but we still need a way to handleNodeRemovals
-    // for now we leave this to leak the memory, a fix will come in a follow-up
-  } else {
-    mountHook_ =
-        std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, viewStylesRepository_, request);
-  }
+  const auto surfaceTracker = std::make_shared<ReanimatedSurfaceTracker>();
 
-  commitHook_ = std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(
+      uiManager_, updatesRegistryManager_, layoutAnimationsProxy_, surfaceTracker);
+
+  // TODO: with the animation backend we still need a way to handleNodeRemovals,
+  // for now we leave this to leak the memory, a fix will come in a follow-up
+  mountHook_ = std::make_shared<ReanimatedMountHook>(
+      uiManager_, updatesRegistryManager_, viewStylesRepository_, surfaceTracker, request);
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {

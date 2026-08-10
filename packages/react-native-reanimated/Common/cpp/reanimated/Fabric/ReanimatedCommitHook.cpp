@@ -15,12 +15,13 @@ namespace reanimated {
 ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-    const std::shared_ptr<LayoutAnimationsProxyCommon> &layoutAnimationsProxy)
+    const std::shared_ptr<LayoutAnimationsProxyCommon> &layoutAnimationsProxy,
+    const std::shared_ptr<ReanimatedSurfaceTracker> &surfaceTracker)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
-      layoutAnimationsProxy_(layoutAnimationsProxy) {
+      layoutAnimationsProxy_(layoutAnimationsProxy),
+      surfaceTracker_(surfaceTracker) {
   uiManager_->registerCommitHook(*this);
-  uiManager_->registerMountHook(*this);
   // Pick up surfaces that existed before Reanimated initialized. We're not
   // on a commit stack here, so reading the registry is safe.
   uiManager_->getShadowTreeRegistry().enumerate(
@@ -28,16 +29,12 @@ ReanimatedCommitHook::ReanimatedCommitHook(
 }
 
 ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
-  uiManager_->unregisterMountHook(*this);
   uiManager_->unregisterCommitHook(*this);
 }
 
 void ReanimatedCommitHook::maybeInitializeLayoutAnimations(const ShadowTree &shadowTree) {
-  {
-    auto lock = std::unique_lock<std::mutex>(mutex_);
-    if (!seenSurfaces_.insert(shadowTree.getSurfaceId()).second) {
-      return;
-    }
+  if (!surfaceTracker_->add(shadowTree.getSurfaceId())) {
+    return;
   }
   // Don't read the ShadowTreeRegistry here — commits run under its shared
   // lock and a nested acquisition deadlocks with a queued writer (#8579).
@@ -46,12 +43,6 @@ void ReanimatedCommitHook::maybeInitializeLayoutAnimations(const ShadowTree &sha
   // surfaces.
   layoutAnimationsProxy_->startSurface(shadowTree.getSurfaceId());
   shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(layoutAnimationsProxy_);
-}
-
-void ReanimatedCommitHook::shadowTreeDidUnmount(SurfaceId surfaceId, HighResTimeStamp /*unmountTime*/) noexcept {
-  // Forget stopped surfaces so a reused surface id registers again.
-  auto lock = std::unique_lock<std::mutex>(mutex_);
-  seenSurfaces_.erase(surfaceId);
 }
 
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
