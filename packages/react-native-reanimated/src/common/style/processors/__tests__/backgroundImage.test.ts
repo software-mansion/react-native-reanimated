@@ -154,13 +154,24 @@ describe(processBackgroundImage, () => {
     test('parses a radial gradient with an explicit size and position', () => {
       expect(
         processBackgroundImage(
-          'radial-gradient(circle 50% at 25% 25%, yellow, red)'
+          'radial-gradient(circle 100px at 25% 75%, yellow, red)'
         )
       ).toEqual([
         expect.objectContaining({
           shape: 'circle',
-          size: { x: '50%', y: '50%' },
-          position: { top: '25%', left: '25%' },
+          size: { x: 100, y: 100 },
+          position: { top: '75%', left: '25%' },
+        }),
+      ]);
+    });
+
+    test('allows percentage sizes for ellipses', () => {
+      expect(
+        processBackgroundImage('radial-gradient(50% 20%, red, blue)')
+      ).toEqual([
+        expect.objectContaining({
+          shape: 'ellipse',
+          size: { x: '50%', y: '20%' },
         }),
       ]);
     });
@@ -208,6 +219,8 @@ describe(processBackgroundImage, () => {
       'linear-gradient(20%, red, blue)', // hint without a preceding color
       'radial-gradient(square, red, blue)', // invalid color
       'radial-gradient(ellipse 100px, red, blue)', // single size with ellipse
+      'radial-gradient(circle 50%, red, blue)', // circle with percentage radius
+      'radial-gradient(50%, red, blue)', // inferred circle with percentage radius
     ])('throws for invalid input "%s"', (input) => {
       expect(() => processBackgroundImage(input)).toThrow();
     });

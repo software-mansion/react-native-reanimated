@@ -443,8 +443,10 @@ function parseRadialGradientCSSString(
         size = { x: sizeX, y: sizeY };
       } else {
         hasExplicitSingleSize = true;
-        // The consumed token isn't a second size value (e.g. it starts the
-        // 'at <position>' clause), so put it back for the loop to re-process
+        // The token after the size is not a second size value (e.g. 'at' or a
+        // shape keyword). Put it back so the loop can process it, otherwise
+        // the position would be silently dropped and its values re-parsed as
+        // a new size.
         firstPartTokens.unshift(token);
       }
     } else if (tokenTrimmed === 'at') {
@@ -631,6 +633,18 @@ function parseRadialGradientCSSString(
     if (hasExplicitSingleSize && hasExplicitShape && shape === 'ellipse') {
       // A single size can be used only with the circle shape
       throw invalidGradient();
+    }
+
+    if (
+      shape === 'circle' &&
+      typeof size === 'object' &&
+      (typeof size.x === 'string' || typeof size.y === 'string')
+    ) {
+      // A circle radius must be a <length>. Percentages are only valid for
+      // ellipses, so browsers reject the whole declaration.
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidGradientSize(size)}`
+      );
     }
   }
 
