@@ -4,8 +4,6 @@ use oxc_ast::ast::Program;
 use oxc_semantic::Scoping;
 use oxc_traverse::{Traverse, TraverseCtx, traverse_mut};
 
-use crate::state::State;
-
 pub mod builders;
 mod bundle_mode;
 
@@ -15,10 +13,10 @@ pub struct Transformer<'a> {
 }
 
 impl<'a> Transformer<'a> {
-    pub fn new_with_builder(_state: State, builder: AstBuilder<'a>, filename: String) -> Self {
+    pub fn new_with_builder(builder: AstBuilder<'a>, filename: &str) -> Self {
         Self {
             builder,
-            is_bundle_mode_toggle_file: bundle_mode::is_toggle_target(&filename),
+            is_bundle_mode_toggle_file: bundle_mode::is_toggle_target(filename),
         }
     }
 

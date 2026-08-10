@@ -41,7 +41,6 @@ pub struct State {
 
     pub imports_by_symbol: HashMap<SymbolId, ImportInfo>,
 
-
     pub referenced_worklet_symbols: HashSet<SymbolId>,
 }
 
@@ -78,5 +77,4 @@ impl State {
         self.worklet_number += 1;
         n
     }
-
 }

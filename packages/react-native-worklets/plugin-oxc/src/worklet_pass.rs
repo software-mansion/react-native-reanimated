@@ -64,7 +64,6 @@ impl<'a> PrependCtx<'a> {
         }
     }
 
-
     pub fn push_frame(&mut self) {
         self.function_stack.push(Vec::new());
         self.injected_refs_stack

@@ -48,11 +48,6 @@ test('file-level directive does not error on classes (marker stripped)', () => {
   assert.doesNotMatch(code, /__classFactory/);
 });
 
-// Bundle-only mode does not workletize class methods. The Babel plugin's
-// `classMethod.ts` rewrites them into class properties, but that path can't
-// express a constructor (`class C { constructor = … }` is a SyntaxError) and
-// silently turns prototype methods into per-instance fields. Worklet classes
-// are unsupported in Bundle Mode anyway, so the method stays untouched.
 for (const [label, member] of [
   ['instance method', 'bar() { \'worklet\'; return 1; }'],
   ['static method', 'static bar() { \'worklet\'; return 1; }'],

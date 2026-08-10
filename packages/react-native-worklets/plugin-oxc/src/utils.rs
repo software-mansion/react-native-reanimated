@@ -109,25 +109,25 @@ fn strip_directives<'a>(
 ) {
     let old = std::mem::replace(&mut body.directives, builder.vec());
     let was_worklet = old.iter().any(|d| d.directive.as_str() == "worklet");
+    let has_no_memo = old
+        .iter()
+        .any(|d| d.directive.as_str() == NO_MEMO_DIRECTIVE);
     let mut new_directives = builder.vec_with_capacity(old.len() + 1);
-    if keep_no_memo && was_worklet {
-        new_directives.push(build_directive(builder, NO_MEMO_DIRECTIVE));
-    }
     for d in old {
         if WORKLET_DIRECTIVES.contains(&d.directive.as_str()) {
             continue;
         }
-        if !keep_no_memo || d.directive.as_str() == NO_MEMO_DIRECTIVE {
+        if !keep_no_memo {
             continue;
         }
         new_directives.push(d);
     }
+    if keep_no_memo && was_worklet && !has_no_memo {
+        new_directives.push(build_directive(builder, NO_MEMO_DIRECTIVE));
+    }
     body.directives = new_directives;
 }
 
-/// Walks every nested function so a plugin-only directive can't survive in a
-/// position the previous hand-rolled `match` didn't enumerate (`await`,
-/// `yield`, tagged templates, spreads, …).
 struct DirectiveStripper<'a> {
     builder: AstBuilder<'a>,
     keep_no_memo: bool,
@@ -188,7 +188,6 @@ pub fn normalize_path(p: &Path) -> PathBuf {
                 if can_pop {
                     out.pop();
                 } else if !is_absolute {
-                    // A relative path may legitimately escape its own root.
                     out.push(std::ffi::OsString::from(".."));
                 }
             }
@@ -200,8 +199,6 @@ pub fn normalize_path(p: &Path) -> PathBuf {
 }
 
 pub fn pathdiff(from: &Path, to: &Path) -> Option<PathBuf> {
-    // Walking between an absolute and a relative path can't produce a
-    // meaningful result — the relative one has no known anchor.
     if from.is_absolute() != to.is_absolute() {
         return None;
     }

@@ -41,8 +41,6 @@ pub fn remove_worklet_class_marker<'a>(body: &mut ClassBody<'a>, builder: AstBui
     body.body = new_body;
 }
 
-// Retained for re-enabling worklet classes in Bundle Mode; `class.ts`
-// bails out on `state.opts.bundleMode` today, so nothing calls this yet.
 #[allow(dead_code)]
 pub fn build_class_factory_pair<'a>(
     class: &mut Class<'a>,

@@ -11,7 +11,6 @@ use oxc_span::SPAN;
 use crate::transformer::builders::no_rest;
 use crate::utils::rewrite_implicit_return;
 
-
 pub fn build_worklet_body_string<'a>(
     worklet_name: &str,
     params: &FormalParameters<'a>,

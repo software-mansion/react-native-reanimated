@@ -2,7 +2,6 @@ use oxc_ast::AstBuilder;
 use oxc_ast::ast::{AssignmentTarget, Expression, ExpressionStatement};
 use oxc_span::SPAN;
 
-
 const TOGGLE_PATHS: &[&str] = &[
     "react-native-worklets/src/index.ts",
     "react-native-worklets/src/debug/bundleMode.native.ts",

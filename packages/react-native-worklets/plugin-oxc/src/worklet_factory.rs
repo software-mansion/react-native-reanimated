@@ -103,9 +103,6 @@ pub fn make_worklet_factory<'a>(
 
     let hash = worklet_hash(&body_string);
 
-
-
-
     let mut factory_expr = build_factory_expression(
         builder,
         allocator,

@@ -66,9 +66,6 @@ function writeEmittedFiles(files) {
   }
 }
 
-// `@babel/plugin-syntax-typescript` with `isTSX: false` turns JSX parsing
-// off, so pairing it with syntax-jsx breaks any non-`.tsx` file containing
-// JSX — including the `.js` worklet files this plugin emits itself.
 function reparseSyntaxPlugins(filename) {
   if (filename.endsWith('.tsx')) {
     return [[SYNTAX_TYPESCRIPT, { isTSX: true }]];
@@ -81,8 +78,9 @@ function reparseSyntaxPlugins(filename) {
 
 const GENERATED_WORKLETS_DIR = 'react-native-worklets/.worklets';
 
-// Must match the constant the native transform prefixes parse failures with.
 const PARSE_ERROR_CODE = 'WORKLETS_ERR_PARSE';
+
+const WORKLET_DIRECTIVE_RE = /(^|[\s;{(])['"]worklet['"]\s*;/m;
 
 function workletsPluginOxcBabelShim(babelApi, options) {
   if (options && options.bundleMode === false) {
@@ -106,7 +104,6 @@ function workletsPluginOxcBabelShim(babelApi, options) {
           const filename =
             state.filename || state.file.opts.filename || 'unknown.js';
 
-          // Files this plugin emitted already hold finished factories.
           if (filename.replace(/\\/g, '/').includes(GENERATED_WORKLETS_DIR)) {
             return;
           }
@@ -130,6 +127,13 @@ function workletsPluginOxcBabelShim(babelApi, options) {
           } catch (e) {
             const msg = (e && e.message) || '';
             if (msg.includes(PARSE_ERROR_CODE)) {
+              if (WORKLET_DIRECTIVE_RE.test(sourceText)) {
+                throw new Error(
+                  `[worklets-plugin-oxc] ${filename} carries a 'worklet' ` +
+                    'directive but could not be parsed, so none of its ' +
+                    `worklets were compiled.\n${msg}`
+                );
+              }
               return;
             }
             throw e;

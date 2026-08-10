@@ -25,8 +25,6 @@ mod worklet_class;
 mod worklet_factory;
 mod worklet_pass;
 
-/// Discriminator the JS shim matches on to tell a recoverable parse
-/// failure from an internal plugin error. Keep in sync with `babel.js`.
 const PARSE_ERROR_CODE: &str = "WORKLETS_ERR_PARSE";
 
 pub use options::PluginOptions;
@@ -209,7 +207,7 @@ fn run(
     let scoping_post = semantic_ret.semantic.into_scoping();
     let builder = oxc_ast::AstBuilder::new(&allocator);
 
-    let transformer = Transformer::new_with_builder(state, builder, filename.to_string());
+    let transformer = Transformer::new_with_builder(builder, filename);
     transformer.run(&mut program, scoping_post, &allocator);
 
     let printed = Codegen::new()

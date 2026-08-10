@@ -137,8 +137,6 @@ test('JSX element name is captured into closure', () => {
     }
   `;
   const { files } = transform(input, 'test.tsx', {});
-  // Bundle mode captures JSX element names so the emitted file can resolve
-  // the component on the worklet runtime.
   const closureMatch = joinedFiles(files).match(/__closure\s*=\s*\{([^}]*)\}/);
   assert.ok(closureMatch, '__closure not found');
   assert.match(closureMatch[1], /Custom/);
@@ -303,4 +301,8 @@ test('worklet-only directives are stripped from every nested expression position
   const content = joinedFiles(files);
   assert.doesNotMatch(content, /limit-init-data-hoisting/);
   assert.doesNotMatch(content, /no-worklet-closure/);
+  assert.match(content, /await \(async function\(\) \{\s*return 1;?\s*\}\)\(\)/);
+  assert.match(content, /return 2;/);
+  assert.match(content, /return 3;/);
+  assert.match(content, /return a \+ b \+ c;/);
 });

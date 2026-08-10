@@ -135,25 +135,35 @@ test(
   }
 );
 
-
 test(
   'babel shim parses JSX in a .js file',
   { skip: !babelCore },
   () => {
     delete require_.cache[require_.resolve('../babel.js')];
     const shim = require_('../babel.js');
-    const result = babelCore.transformSync(
-      `import { Comp } from 'react-native-worklets';\nfunction renderView() { 'worklet'; return <Comp />; }`,
-      {
-        filename: 'plain.js',
-        babelrc: false,
-        configFile: false,
-        plugins: [
-          [shim, { importForwarding: { moduleNames: ['react-native-worklets'] } }],
-          require_.resolve('@babel/plugin-syntax-jsx'),
-        ],
-      }
-    );
+    const fs = require_('fs');
+    const originalWrite = fs.writeFileSync;
+    const originalMkdir = fs.mkdirSync;
+    fs.writeFileSync = () => {};
+    fs.mkdirSync = () => {};
+    let result;
+    try {
+      result = babelCore.transformSync(
+        `import { Comp } from 'react-native-worklets';\nfunction renderView() { 'worklet'; return <Comp />; }`,
+        {
+          filename: 'plain.js',
+          babelrc: false,
+          configFile: false,
+          plugins: [
+            [shim, { importForwarding: { moduleNames: ['react-native-worklets'] } }],
+            require_.resolve('@babel/plugin-syntax-jsx'),
+          ],
+        }
+      );
+    } finally {
+      fs.writeFileSync = originalWrite;
+      fs.mkdirSync = originalMkdir;
+    }
     assert.ok(result && result.code);
     assert.match(result.code, /require\(["']react-native-worklets\/\.worklets/);
   }
@@ -175,5 +185,44 @@ test(
     });
     assert.ok(result && result.code);
     assert.match(result.code, /<Comp \/>/);
+  }
+);
+
+test(
+  'babel shim recovers from unparseable files without worklets',
+  { skip: !babelCore },
+  () => {
+    delete require_.cache[require_.resolve('../babel.js')];
+    const shim = require_('../babel.js');
+      const result = babelCore.transformSync('const a = (x: number): number => x;', {
+      filename: 'flowish.js',
+      babelrc: false,
+      configFile: false,
+      plugins: [[shim, {}], require_.resolve('@babel/plugin-syntax-flow')],
+    });
+    assert.ok(result && result.code);
+    assert.match(result.code, /const a =/);
+  }
+);
+
+test(
+  'babel shim refuses to silently skip an unparseable worklet file',
+  { skip: !babelCore },
+  () => {
+    delete require_.cache[require_.resolve('../babel.js')];
+    const shim = require_('../babel.js');
+    assert.throws(
+      () =>
+        babelCore.transformSync(
+          'function f(x: number) { \'worklet\'; return x; }\nconst b = (y: number): number => y;',
+          {
+            filename: 'flowish-worklet.js',
+            babelrc: false,
+            configFile: false,
+            plugins: [[shim, {}], require_.resolve('@babel/plugin-syntax-flow')],
+          }
+        ),
+      /carries a 'worklet' directive but could not be parsed/
+    );
   }
 );

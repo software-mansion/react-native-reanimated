@@ -12,13 +12,9 @@ const oxcPlugin = require('../babel.js');
 
 process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
 
-// Both plugins emit their worklet files through `fs.writeFileSync`. Capture
-// them instead of writing so a parity run leaves no artifacts behind.
 const realWriteFileSync = fs.writeFileSync;
 let captured = [];
 
-// TypeScript / JSX sources need the same syntax support both plugins get in a
-// real Metro chain, otherwise Babel can't even parse the input.
 function syntaxSupport(filename) {
   if (filename.endsWith('.tsx')) {
     return {
@@ -56,11 +52,6 @@ function run(plugin, source, filename, options) {
   }
 }
 
-// Worklet hashes are derived from each tool's own printed worklet string, so
-// they legitimately differ. Blank them out, then re-print through a single
-// generator so only structural differences survive. Dropping `extra` makes
-// the generator re-derive literal spelling instead of echoing each tool's
-// quote style and numeric formatting.
 function normalize(code) {
   const masked = code
     .replace(/\.worklets\/\d+\.js/g, '.worklets/HASH.js')
@@ -71,7 +62,6 @@ function normalize(code) {
     configFile: false,
     filename: 'normalized.js',
     sourceType: 'unambiguous',
-    // Transformed output can still contain JSX — neither plugin compiles it.
     plugins: [require.resolve('@babel/plugin-syntax-jsx')],
   });
   traverse(ast, {
@@ -82,10 +72,6 @@ function normalize(code) {
   return generate(ast, { compact: false, comments: false }).code;
 }
 
-// Walks the worklet graph outwards from the transformed source, so the
-// comparison covers *which* emitted file each require resolves to, not just
-// the multiset of file contents. Nested worklets are reached through their
-// parent's body, so the traversal order encodes the nesting too.
 function normalizeFiles(result) {
   const byHash = new Map();
   for (const file of result.files) {
@@ -120,7 +106,7 @@ function normalizeFiles(result) {
       ordered.push(`<orphaned worklet file>\n${normalize(content)}`);
     }
   }
-  return ordered.join('\n/* --- next worklet file --- */\n');
+  return ordered.join('\n\n');
 }
 
 const CORPUS = [
@@ -246,15 +232,6 @@ test('bundle-mode parity: bundle mode flag toggle', () => {
   }
 });
 
-// ---------------------------------------------------------------------------
-// Known divergences. Each is pinned so a future change to either plugin has to
-// acknowledge it rather than silently drift.
-// ---------------------------------------------------------------------------
-
-// The OXC shim hands Babel a freshly parsed Program, so a downstream
-// `@babel/preset-typescript` sees accurate scope info and elides the now
-// unreferenced import. The Babel plugin mutates in place, leaving stale
-// binding references that keep the import alive.
 test('known divergence: TS import elision after worklet extraction', () => {
   const source = `import { helper } from './helper';
 function foo() { 'worklet'; return helper(); }`;
@@ -267,19 +244,12 @@ function foo() { 'worklet'; return helper(); }`;
   const oxcResult = run(oxcPlugin, source, filename, options);
   assert.doesNotMatch(oxcResult.code, /import \{ helper \}/);
 
-  // The worklet file itself re-imports it either way, so the reference the
-  // worklet body needs is never lost.
   assert.equal(
     normalizeFiles(oxcResult),
     normalizeFiles(babelResult)
   );
 });
 
-// Bundle Mode does not support worklet classes at all — `class.ts` bails out
-// on `state.opts.bundleMode`. The OXC port extends that to `classMethod.ts`'s
-// method-level rewrite rather than reproducing it: that path turns prototype
-// methods into per-instance fields, and for a constructor it emits
-// `class C { constructor = … }`, which is a SyntaxError Babel cannot re-parse.
 const CLASS_MEMBERS = [
   ['instance method', `bar() { 'worklet'; return 1; }`],
   ['static method', `static bar() { 'worklet'; return 1; }`],
@@ -321,10 +291,6 @@ test('known divergence: Babel emits unparseable output for a worklet constructor
   assert.match(oxcResult.code, /constructor\(x\)/);
 });
 
-// Features the port deliberately leaves out: Bundle Mode never supported
-// Context Objects, the inline-styles warning belongs to Reanimated rather
-// than Worklets, web platform checks are out of scope for a native-only
-// port, and the plugin assumes `strictGlobal`.
 const OUT_OF_SCOPE = [
   [
     'context objects',
