@@ -6,4 +6,9 @@ export function bar(value: number): number {
 
 export type Baz = number;
 
-export type { Kind } from './kind';
+enum Kind {
+  A,
+  B,
+}
+
+export type { Kind };
