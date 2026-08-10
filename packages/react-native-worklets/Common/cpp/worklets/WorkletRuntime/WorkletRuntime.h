@@ -134,10 +134,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   template <RuntimeCallable TCallable, typename... TArgs>
   auto runSyncSerialized(const TCallable &callable, TArgs &&...args) const -> std::shared_ptr<Serializable> {
     auto lock = acquireRuntimeLock();
-    auto result =
-        runSyncImpl<MicrotaskCheckpoint::Skip, std::shared_ptr<Serializable>>(callable, std::forward<TArgs>(args)...);
-    jsi_utils::triggerWeakRefCleanup(getJSIRuntime());
-    return result;
+    return runSyncImpl<MicrotaskCheckpoint::Skip, std::shared_ptr<Serializable>>(
+        callable, std::forward<TArgs>(args)...);
   }
 
   /**
@@ -196,10 +194,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   auto runSyncWithStack(const TCallable &callable, const std::optional<std::string> &scheduleStack, TArgs &&...args)
       const -> TResult {
     auto lock = acquireRuntimeLock();
-    auto result = runSyncImpl<MicrotaskCheckpoint::Skip, TResult, ScheduleStack::Requested>(
+    return runSyncImpl<MicrotaskCheckpoint::Skip, TResult, ScheduleStack::Requested>(
         callable, scheduleStack, std::forward<TArgs>(args)...);
-    jsi_utils::triggerWeakRefCleanup(getJSIRuntime());
-    return result;
   }
 
   /**
@@ -378,9 +374,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   auto invokeWithMicrotaskCheckpointPolicyImpl(TInvoker &&invoke) const -> std::invoke_result_t<TInvoker> {
     using Result = std::invoke_result_t<TInvoker>;
     const auto checkpoint = [&]() {
-      if constexpr (TCheckpoint == MicrotaskCheckpoint::Skip) {
-        jsi_utils::triggerWeakRefCleanup(getJSIRuntime());
-      } else {
+      if constexpr (TCheckpoint == MicrotaskCheckpoint::Run) {
         drainMicrotasksImpl();
       }
     };

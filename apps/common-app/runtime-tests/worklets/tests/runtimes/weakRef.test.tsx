@@ -68,7 +68,7 @@ describe('WeakRef on Worklet Runtime', () => {
       expect(wasTargetCollected).toBe(true);
     });
 
-    test(`releases targets after synchronous execution on ${name} Runtime`, () => {
+    test(`does not release targets after synchronous execution on ${name} Runtime`, () => {
       runOnRuntimeSyncWithId(runtimeId, () => {
         'worklet';
         const target = {};
@@ -89,7 +89,7 @@ describe('WeakRef on Worklet Runtime', () => {
         return wasCollected;
       });
 
-      expect(wasTargetCollected).toBe(true);
+      expect(wasTargetCollected).toBe(false);
     });
   });
 
