@@ -1,21 +1,42 @@
 import path from 'node:path';
+import { parseArgs } from 'node:util';
 import ts from 'typescript';
 
+const USAGE =
+  'Usage: node --experimental-strip-types validate-mock.mts --source <exports-file> --mock <mock-file> --tsConfig <tsconfig-file>';
+
 function main(): void {
-  const [exportsArg, mockArg] = process.argv.slice(2);
-  if (!exportsArg || !mockArg) {
-    console.error(
-      'Usage: node --experimental-strip-types validate-mock.mts <exports-file> <mock-file>'
-    );
+  let source: string | undefined;
+  let mock: string | undefined;
+  let tsConfig: string | undefined;
+  try {
+    ({
+      values: { source, mock, tsConfig },
+    } = parseArgs({
+      options: {
+        source: { type: 'string' },
+        mock: { type: 'string' },
+        tsConfig: { type: 'string' },
+      },
+    }));
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    console.error(USAGE);
     process.exitCode = 1;
     return;
   }
-  const exportsPath = path.resolve(exportsArg);
-  const mockPath = path.resolve(mockArg);
+  if (!source || !mock || !tsConfig) {
+    console.error(USAGE);
+    process.exitCode = 1;
+    return;
+  }
+  const sourcePath = path.resolve(source);
+  const mockPath = path.resolve(mock);
+  const tsConfigPath = path.resolve(tsConfig);
 
-  const program = createProgram([exportsPath, mockPath]);
+  const program = createProgram([sourcePath, mockPath], tsConfigPath);
   const checker = program.getTypeChecker();
-  const valueExports = collectValueExports(program, checker, exportsPath);
+  const valueExports = collectValueExports(program, checker, sourcePath);
   const mockProperties = new Set(
     collectMockProperties(program, checker, mockPath)
   );
@@ -29,33 +50,29 @@ function main(): void {
 
   if (missingInMock.length > 0) {
     console.log(
-      `Exports of ${exportsArg} missing in ${mockArg} (${missingInMock.length}):`
+      `Exports of ${source} missing in ${mock} (${missingInMock.length}):`
     );
     for (const name of missingInMock) {
       console.log(`  - ${name}`);
     }
   } else {
-    console.log(
-      `All value exports of ${exportsArg} are present in ${mockArg}.`
-    );
+    console.log(`All value exports of ${source} are present in ${mock}.`);
   }
   if (extraInMock.length > 0) {
     console.log(
-      `Present in ${mockArg} but not exported from ${exportsArg} (${extraInMock.length}):`
+      `Present in ${mock} but not exported from ${source} (${extraInMock.length}):`
     );
     for (const name of extraInMock) {
       console.log(`  - ${name}`);
     }
   }
 
-  process.exitCode =
-    missingInMock.length > 0 || extraInMock.length > 0 ? 1 : 0;
+  process.exitCode = missingInMock.length > 0 || extraInMock.length > 0 ? 1 : 0;
 }
 
-function createProgram(rootFiles: string[]): ts.Program {
-  const configPath = path.resolve('tsconfig.native.json');
+function createProgram(rootFiles: string[], tsConfigPath: string): ts.Program {
   const parsed = ts.getParsedCommandLineOfConfigFile(
-    configPath,
+    tsConfigPath,
     { noEmit: true },
     {
       ...ts.sys,
@@ -67,11 +84,11 @@ function createProgram(rootFiles: string[]): ts.Program {
     }
   );
   if (!parsed) {
-    throw new Error(`Could not parse ${configPath}`);
+    throw new Error(`Could not parse ${tsConfigPath}`);
   }
   if (parsed.errors.length > 0) {
     throw new Error(
-      `Errors in ${configPath}:\n${ts.formatDiagnostics(parsed.errors, {
+      `Errors in ${tsConfigPath}:\n${ts.formatDiagnostics(parsed.errors, {
         getCanonicalFileName: (fileName) => fileName,
         getCurrentDirectory: ts.sys.getCurrentDirectory,
         getNewLine: () => ts.sys.newLine,
