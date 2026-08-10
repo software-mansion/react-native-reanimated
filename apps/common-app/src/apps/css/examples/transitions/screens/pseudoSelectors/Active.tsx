@@ -54,7 +54,6 @@ export default function Active() {
                   transitionTimingFunction: 'ease-in-out',
                 },
               ]}
-              onStartShouldSetResponder={() => true}
             />
           </VerticalExampleCard>
 
@@ -84,7 +83,6 @@ export default function Active() {
                   transitionDuration: '150ms',
                 },
               ]}
-              onStartShouldSetResponder={() => true}
             />
           </VerticalExampleCard>
 
@@ -126,7 +124,6 @@ borderWidth: {
                   transitionDuration: '120ms',
                 },
               ]}
-              onStartShouldSetResponder={() => true}
             />
           </VerticalExampleCard>
 
@@ -157,7 +154,6 @@ borderWidth: {
                   transitionDuration: '120ms',
                 },
               ]}
-              onStartShouldSetResponder={() => true}
             />
           </VerticalExampleCard>
 
@@ -201,7 +197,6 @@ transform: {
                   transitionTimingFunction: 'ease-in-out',
                 },
               ]}
-              onStartShouldSetResponder={() => true}
             />
           </VerticalExampleCard>
 
@@ -302,7 +297,6 @@ transform: {
                   transitionDuration: '150ms',
                 },
               ]}
-              onStartShouldSetResponder={() => true}
             />
           </VerticalExampleCard>
 
@@ -331,7 +325,6 @@ transform: {
                   transitionDuration: '150ms',
                 },
               ]}
-              onStartShouldSetResponder={() => true}
             />
           </VerticalExampleCard>
         </Section>
