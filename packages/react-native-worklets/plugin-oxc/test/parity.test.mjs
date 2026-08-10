@@ -82,11 +82,45 @@ function normalize(code) {
   return generate(ast, { compact: false, comments: false }).code;
 }
 
-function normalizeFiles(files) {
-  return files
-    .map((file) => normalize(file.content))
-    .sort()
-    .join('\n/* --- next worklet file --- */\n');
+// Walks the worklet graph outwards from the transformed source, so the
+// comparison covers *which* emitted file each require resolves to, not just
+// the multiset of file contents. Nested worklets are reached through their
+// parent's body, so the traversal order encodes the nesting too.
+function normalizeFiles(result) {
+  const byHash = new Map();
+  for (const file of result.files) {
+    const match = /\/(\d+)\.js$/.exec(file.path);
+    if (match) {
+      byHash.set(match[1], file.content);
+    }
+  }
+
+  const seen = new Set();
+  const ordered = [];
+  const queue = [result.code];
+  while (queue.length > 0) {
+    const source = queue.shift();
+    for (const match of source.matchAll(/\.worklets\/(\d+)\.js/g)) {
+      const hash = match[1];
+      if (seen.has(hash)) {
+        continue;
+      }
+      seen.add(hash);
+      const content = byHash.get(hash);
+      if (content === undefined) {
+        ordered.push('<missing worklet file for require>');
+        continue;
+      }
+      ordered.push(normalize(content));
+      queue.push(content);
+    }
+  }
+  for (const [hash, content] of byHash) {
+    if (!seen.has(hash)) {
+      ordered.push(`<orphaned worklet file>\n${normalize(content)}`);
+    }
+  }
+  return ordered.join('\n/* --- next worklet file --- */\n');
 }
 
 const CORPUS = [
@@ -172,8 +206,8 @@ for (const [name, source, config = {}] of CORPUS) {
       'transformed source differs'
     );
     assert.equal(
-      normalizeFiles(oxcResult.files),
-      normalizeFiles(babelResult.files),
+      normalizeFiles(oxcResult),
+      normalizeFiles(babelResult),
       'emitted worklet file contents differ'
     );
   });
@@ -188,8 +222,8 @@ function foo() { 'worklet'; return helper(); }`;
 
   assert.equal(normalize(oxcResult.code), normalize(babelResult.code));
   assert.equal(
-    normalizeFiles(oxcResult.files),
-    normalizeFiles(babelResult.files)
+    normalizeFiles(oxcResult),
+    normalizeFiles(babelResult)
   );
 });
 
@@ -236,8 +270,8 @@ function foo() { 'worklet'; return helper(); }`;
   // The worklet file itself re-imports it either way, so the reference the
   // worklet body needs is never lost.
   assert.equal(
-    normalizeFiles(oxcResult.files),
-    normalizeFiles(babelResult.files)
+    normalizeFiles(oxcResult),
+    normalizeFiles(babelResult)
   );
 });
 

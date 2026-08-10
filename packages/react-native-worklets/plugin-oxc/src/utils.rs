@@ -90,13 +90,25 @@ pub fn strip_worklet_directives_in_body<'a>(
     builder: AstBuilder<'a>,
     keep_no_memo: bool,
 ) {
-    use oxc_ast::ast::{
-        ClassElement, Expression, ObjectPropertyKind, Statement,
+    use oxc_ast_visit::VisitMut;
+
+    strip_directives(body, builder, keep_no_memo);
+    let mut stripper = DirectiveStripper {
+        builder,
+        keep_no_memo,
     };
+    for stmt in body.statements.iter_mut() {
+        stripper.visit_statement(stmt);
+    }
+}
+
+fn strip_directives<'a>(
+    body: &mut FunctionBody<'a>,
+    builder: AstBuilder<'a>,
+    keep_no_memo: bool,
+) {
     let old = std::mem::replace(&mut body.directives, builder.vec());
-    let was_worklet = old
-        .iter()
-        .any(|d| d.directive.as_str() == "worklet");
+    let was_worklet = old.iter().any(|d| d.directive.as_str() == "worklet");
     let mut new_directives = builder.vec_with_capacity(old.len() + 1);
     if keep_no_memo && was_worklet {
         new_directives.push(build_directive(builder, NO_MEMO_DIRECTIVE));
@@ -105,186 +117,26 @@ pub fn strip_worklet_directives_in_body<'a>(
         if WORKLET_DIRECTIVES.contains(&d.directive.as_str()) {
             continue;
         }
-        if !keep_no_memo {
-            continue;
-        }
-        if d.directive.as_str() == NO_MEMO_DIRECTIVE {
+        if !keep_no_memo || d.directive.as_str() == NO_MEMO_DIRECTIVE {
             continue;
         }
         new_directives.push(d);
     }
     body.directives = new_directives;
+}
 
-    for stmt in body.statements.iter_mut() {
-        strip_in_statement(stmt, builder, keep_no_memo);
-    }
+/// Walks every nested function so a plugin-only directive can't survive in a
+/// position the previous hand-rolled `match` didn't enumerate (`await`,
+/// `yield`, tagged templates, spreads, …).
+struct DirectiveStripper<'a> {
+    builder: AstBuilder<'a>,
+    keep_no_memo: bool,
+}
 
-    fn strip_in_statement<'a>(stmt: &mut Statement<'a>, builder: AstBuilder<'a>, keep_no_memo: bool) {
-        match stmt {
-            Statement::FunctionDeclaration(func) => {
-                if let Some(b) = func.body.as_mut() {
-                    strip_worklet_directives_in_body(b, builder, keep_no_memo);
-                }
-            }
-            Statement::BlockStatement(block) => {
-                for s in block.body.iter_mut() {
-                    strip_in_statement(s, builder, keep_no_memo);
-                }
-            }
-            Statement::ClassDeclaration(class) => {
-                for el in class.body.body.iter_mut() {
-                    strip_in_class_element(el, builder, keep_no_memo);
-                }
-            }
-            Statement::ExpressionStatement(es) => strip_in_expression(&mut es.expression, builder, keep_no_memo),
-            Statement::VariableDeclaration(vd) => {
-                for d in vd.declarations.iter_mut() {
-                    if let Some(init) = &mut d.init {
-                        strip_in_expression(init, builder, keep_no_memo);
-                    }
-                }
-            }
-            Statement::IfStatement(s) => {
-                strip_in_statement(&mut s.consequent, builder, keep_no_memo);
-                if let Some(a) = &mut s.alternate {
-                    strip_in_statement(a, builder, keep_no_memo);
-                }
-            }
-            Statement::WhileStatement(s) => strip_in_statement(&mut s.body, builder, keep_no_memo),
-            Statement::DoWhileStatement(s) => strip_in_statement(&mut s.body, builder, keep_no_memo),
-            Statement::ForStatement(s) => strip_in_statement(&mut s.body, builder, keep_no_memo),
-            Statement::ForInStatement(s) => strip_in_statement(&mut s.body, builder, keep_no_memo),
-            Statement::ForOfStatement(s) => strip_in_statement(&mut s.body, builder, keep_no_memo),
-            Statement::TryStatement(s) => {
-                for st in s.block.body.iter_mut() {
-                    strip_in_statement(st, builder, keep_no_memo);
-                }
-                if let Some(h) = &mut s.handler {
-                    for st in h.body.body.iter_mut() {
-                        strip_in_statement(st, builder, keep_no_memo);
-                    }
-                }
-                if let Some(f) = &mut s.finalizer {
-                    for st in f.body.iter_mut() {
-                        strip_in_statement(st, builder, keep_no_memo);
-                    }
-                }
-            }
-            Statement::SwitchStatement(s) => {
-                for c in s.cases.iter_mut() {
-                    for st in c.consequent.iter_mut() {
-                        strip_in_statement(st, builder, keep_no_memo);
-                    }
-                }
-            }
-            Statement::LabeledStatement(s) => strip_in_statement(&mut s.body, builder, keep_no_memo),
-            Statement::ReturnStatement(r) => {
-                if let Some(arg) = &mut r.argument {
-                    strip_in_expression(arg, builder, keep_no_memo);
-                }
-            }
-            Statement::ThrowStatement(t) => strip_in_expression(&mut t.argument, builder, keep_no_memo),
-            _ => {}
-        }
-    }
-
-    fn strip_in_class_element<'a>(el: &mut ClassElement<'a>, builder: AstBuilder<'a>, keep_no_memo: bool) {
-        match el {
-            ClassElement::MethodDefinition(m) => {
-                if let Some(b) = m.value.body.as_mut() {
-                    strip_worklet_directives_in_body(b, builder, keep_no_memo);
-                }
-            }
-            ClassElement::PropertyDefinition(p) => {
-                if let Some(v) = &mut p.value {
-                    strip_in_expression(v, builder, keep_no_memo);
-                }
-            }
-            ClassElement::AccessorProperty(a) => {
-                if let Some(v) = &mut a.value {
-                    strip_in_expression(v, builder, keep_no_memo);
-                }
-            }
-            ClassElement::StaticBlock(b) => {
-                for s in b.body.iter_mut() {
-                    strip_in_statement(s, builder, keep_no_memo);
-                }
-            }
-            _ => {}
-        }
-    }
-
-    fn strip_in_expression<'a>(expr: &mut Expression<'a>, builder: AstBuilder<'a>, keep_no_memo: bool) {
-        match expr {
-            Expression::FunctionExpression(func) => {
-                if let Some(b) = func.body.as_mut() {
-                    strip_worklet_directives_in_body(b, builder, keep_no_memo);
-                }
-            }
-            Expression::ArrowFunctionExpression(arrow) => {
-                strip_worklet_directives_in_body(&mut arrow.body, builder, keep_no_memo);
-            }
-            Expression::ClassExpression(class) => {
-                for el in class.body.body.iter_mut() {
-                    strip_in_class_element(el, builder, keep_no_memo);
-                }
-            }
-            Expression::ObjectExpression(obj) => {
-                for prop in obj.properties.iter_mut() {
-                    if let ObjectPropertyKind::ObjectProperty(p) = prop {
-                        strip_in_expression(&mut p.value, builder, keep_no_memo);
-                    }
-                }
-            }
-            Expression::ArrayExpression(arr) => {
-                for el in arr.elements.iter_mut() {
-                    if let Some(e) = el.as_expression_mut() {
-                        strip_in_expression(e, builder, keep_no_memo);
-                    }
-                }
-            }
-            Expression::CallExpression(c) => {
-                strip_in_expression(&mut c.callee, builder, keep_no_memo);
-                for a in c.arguments.iter_mut() {
-                    if let Some(e) = a.as_expression_mut() {
-                        strip_in_expression(e, builder, keep_no_memo);
-                    }
-                }
-            }
-            Expression::NewExpression(n) => {
-                strip_in_expression(&mut n.callee, builder, keep_no_memo);
-                for a in n.arguments.iter_mut() {
-                    if let Some(e) = a.as_expression_mut() {
-                        strip_in_expression(e, builder, keep_no_memo);
-                    }
-                }
-            }
-            Expression::AssignmentExpression(a) => strip_in_expression(&mut a.right, builder, keep_no_memo),
-            Expression::ConditionalExpression(c) => {
-                strip_in_expression(&mut c.test, builder, keep_no_memo);
-                strip_in_expression(&mut c.consequent, builder, keep_no_memo);
-                strip_in_expression(&mut c.alternate, builder, keep_no_memo);
-            }
-            Expression::LogicalExpression(l) => {
-                strip_in_expression(&mut l.left, builder, keep_no_memo);
-                strip_in_expression(&mut l.right, builder, keep_no_memo);
-            }
-            Expression::BinaryExpression(b) => {
-                strip_in_expression(&mut b.left, builder, keep_no_memo);
-                strip_in_expression(&mut b.right, builder, keep_no_memo);
-            }
-            Expression::SequenceExpression(s) => {
-                for e in s.expressions.iter_mut() {
-                    strip_in_expression(e, builder, keep_no_memo);
-                }
-            }
-            Expression::StaticMemberExpression(m) => strip_in_expression(&mut m.object, builder, keep_no_memo),
-            Expression::ComputedMemberExpression(m) => {
-                strip_in_expression(&mut m.object, builder, keep_no_memo);
-                strip_in_expression(&mut m.expression, builder, keep_no_memo);
-            }
-            _ => {}
-        }
+impl<'a> oxc_ast_visit::VisitMut<'a> for DirectiveStripper<'a> {
+    fn visit_function_body(&mut self, body: &mut FunctionBody<'a>) {
+        strip_directives(body, self.builder, self.keep_no_memo);
+        oxc_ast_visit::walk_mut::walk_function_body(self, body);
     }
 }
 
@@ -324,20 +176,35 @@ pub fn rewrite_implicit_return<'a>(body: &mut FunctionBody<'a>, builder: AstBuil
 }
 
 pub fn normalize_path(p: &Path) -> PathBuf {
-    let mut out = PathBuf::new();
+    let is_absolute = p.is_absolute();
+    let mut out: Vec<std::ffi::OsString> = Vec::new();
     for comp in p.components() {
         match comp {
             Component::ParentDir => {
-                out.pop();
+                let can_pop = out
+                    .last()
+                    .map(|last| last != std::ffi::OsStr::new(".."))
+                    .unwrap_or(false);
+                if can_pop {
+                    out.pop();
+                } else if !is_absolute {
+                    // A relative path may legitimately escape its own root.
+                    out.push(std::ffi::OsString::from(".."));
+                }
             }
             Component::CurDir => {}
-            other => out.push(other.as_os_str()),
+            other => out.push(other.as_os_str().to_os_string()),
         }
     }
-    out
+    out.iter().collect()
 }
 
 pub fn pathdiff(from: &Path, to: &Path) -> Option<PathBuf> {
+    // Walking between an absolute and a relative path can't produce a
+    // meaningful result — the relative one has no known anchor.
+    if from.is_absolute() != to.is_absolute() {
+        return None;
+    }
     let from = normalize_path(from);
     let to = normalize_path(to);
 

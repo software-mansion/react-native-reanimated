@@ -25,6 +25,10 @@ mod worklet_class;
 mod worklet_factory;
 mod worklet_pass;
 
+/// Discriminator the JS shim matches on to tell a recoverable parse
+/// failure from an internal plugin error. Keep in sync with `babel.js`.
+const PARSE_ERROR_CODE: &str = "WORKLETS_ERR_PARSE";
+
 pub use options::PluginOptions;
 use state::{ImportInfo, ImportShape, State};
 use transformer::Transformer;
@@ -147,7 +151,7 @@ fn run(
 
     if !parsed.errors.is_empty() {
         let first = &parsed.errors[0];
-        return Err(format!("Parse error in {filename}: {first}"));
+        return Err(format!("{PARSE_ERROR_CODE} in {filename}: {first}"));
     }
 
     let mut program = parsed.program;
@@ -167,12 +171,15 @@ fn run(
             },
             ..Default::default()
         };
-        let _ = oxc_transformer::Transformer::new(
+        let ret = oxc_transformer::Transformer::new(
             &allocator,
             std::path::Path::new(filename),
             &opts,
         )
         .build_with_scoping(semantic_for_strip, &mut program);
+        if let Some(first) = ret.errors.first() {
+            return Err(format!("{PARSE_ERROR_CODE} in {filename}: {first}"));
+        }
     }
 
     let mut state = State::new(options, source_text.to_string());
@@ -203,7 +210,7 @@ fn run(
     let builder = oxc_ast::AstBuilder::new(&allocator);
 
     let transformer = Transformer::new_with_builder(state, builder, filename.to_string());
-    transformer.run_and_take(&mut program, scoping_post, &allocator);
+    transformer.run(&mut program, scoping_post, &allocator);
 
     let printed = Codegen::new()
         .with_options(CodegenOptions::default())

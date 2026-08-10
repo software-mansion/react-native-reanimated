@@ -10,28 +10,25 @@ pub mod builders;
 mod bundle_mode;
 
 pub struct Transformer<'a> {
-    pub state: State,
     pub builder: AstBuilder<'a>,
-    pub filename: String,
+    pub is_bundle_mode_toggle_file: bool,
 }
 
 impl<'a> Transformer<'a> {
-    pub fn new_with_builder(state: State, builder: AstBuilder<'a>, filename: String) -> Self {
+    pub fn new_with_builder(_state: State, builder: AstBuilder<'a>, filename: String) -> Self {
         Self {
-            state,
             builder,
-            filename,
+            is_bundle_mode_toggle_file: bundle_mode::is_toggle_target(&filename),
         }
     }
 
-    pub fn run_and_take(
+    pub fn run(
         mut self,
         program: &mut Program<'a>,
         scoping: Scoping,
         allocator: &'a Allocator,
-    ) -> State {
+    ) {
         traverse_mut(&mut self, allocator, program, scoping, ());
-        self.state
     }
 }
 
@@ -41,6 +38,8 @@ impl<'a> Traverse<'a, ()> for Transformer<'a> {
         node: &mut oxc_ast::ast::ExpressionStatement<'a>,
         _ctx: &mut TraverseCtx<'a, ()>,
     ) {
-        bundle_mode::toggle_bundle_mode(node, &self.state, &self.filename, self.builder);
+        if self.is_bundle_mode_toggle_file {
+            bundle_mode::toggle_bundle_mode(node, self.builder);
+        }
     }
 }

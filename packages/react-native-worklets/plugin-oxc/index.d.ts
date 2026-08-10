@@ -18,6 +18,10 @@ export interface PluginOptions {
     relativePaths?: string[];
   };
   envName?: string;
+  /** Injected by the Babel shim; stamped as `__pluginVersion`. */
+  pluginVersion?: string;
+  /** Injected by the Babel shim; absolute path to the worklets package root. */
+  workletsPackageDir?: string;
 }
 
 export interface EmittedFile {

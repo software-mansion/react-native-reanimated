@@ -40,11 +40,20 @@ copyFileSync(src, dest);
 // import time. Rewrite the install_name so the loaded file references
 // itself, not its source.
 if (platform === 'darwin') {
-  execFileSync('install_name_tool', [
-    '-id',
-    `@rpath/worklets-plugin-oxc.${platform}-${arch}.node`,
-    dest,
-  ]);
+  try {
+    execFileSync('install_name_tool', [
+      '-id',
+      `@rpath/worklets-plugin-oxc.${platform}-${arch}.node`,
+      dest,
+    ]);
+  } catch (error) {
+    console.error(
+      `Failed to rewrite the install_name of ${dest}. Loading it would make ` +
+        `dyld also load ${src}, registering napi twice and crashing on import.\n` +
+        `install_name_tool failed: ${error && error.message}`
+    );
+    process.exit(1);
+  }
 }
 
 console.log(`Copied ${src} → ${dest}`);

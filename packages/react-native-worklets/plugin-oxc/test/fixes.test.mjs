@@ -288,3 +288,19 @@ test('cjs file extension parses as plain JS (no TSX cast handling)', () => {
   const { code } = transform(input, 'test.cjs', {});
   assert.match(code, /require\("y"\)/);
 });
+
+test('worklet-only directives are stripped from every nested expression position', () => {
+  const input = `
+    async function outer() {
+      'worklet';
+      const a = await (async function () { 'limit-init-data-hoisting'; return 1; })();
+      const b = tag\`x\${function () { 'no-worklet-closure'; return 2; }}\`;
+      const c = [...[function () { 'no-worklet-closure'; return 3; }]];
+      return a + b + c;
+    }
+  `;
+  const { files } = transform(input, 'test.js', {});
+  const content = joinedFiles(files);
+  assert.doesNotMatch(content, /limit-init-data-hoisting/);
+  assert.doesNotMatch(content, /no-worklet-closure/);
+});

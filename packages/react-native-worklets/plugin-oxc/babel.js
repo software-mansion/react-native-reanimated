@@ -21,9 +21,9 @@ function getPluginVersion() {
 
 const MOCK_VERSION = 'x.y.z';
 
-let cachedWorkletsPkgDir = null;
+let cachedWorkletsPkgDir = undefined;
 function resolveWorkletsPkgDir() {
-  if (cachedWorkletsPkgDir !== null) return cachedWorkletsPkgDir;
+  if (cachedWorkletsPkgDir !== undefined) return cachedWorkletsPkgDir;
   try {
     const pkgJsonPath = require.resolve('react-native-worklets/package.json');
     cachedWorkletsPkgDir = path.dirname(pkgJsonPath);
@@ -81,6 +81,9 @@ function reparseSyntaxPlugins(filename) {
 
 const GENERATED_WORKLETS_DIR = 'react-native-worklets/.worklets';
 
+// Must match the constant the native transform prefixes parse failures with.
+const PARSE_ERROR_CODE = 'WORKLETS_ERR_PARSE';
+
 function workletsPluginOxcBabelShim(babelApi, options) {
   if (options && options.bundleMode === false) {
     throw new Error(
@@ -89,7 +92,7 @@ function workletsPluginOxcBabelShim(babelApi, options) {
     );
   }
 
-  const { parse } = babelApi || require('@babel/core');
+  const parse = (babelApi && babelApi.parse) || require('@babel/core').parse;
 
   return {
     name: 'worklets-plugin-oxc',
@@ -126,7 +129,7 @@ function workletsPluginOxcBabelShim(babelApi, options) {
             result = oxc.transform(sourceText, filename, opts);
           } catch (e) {
             const msg = (e && e.message) || '';
-            if (msg.includes('Parse error in')) {
+            if (msg.includes(PARSE_ERROR_CODE)) {
               return;
             }
             throw e;

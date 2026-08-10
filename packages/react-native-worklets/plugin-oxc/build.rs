@@ -20,9 +20,10 @@ fn main() {
         .and_then(|s| {
             // Tiny ad-hoc parse so we don't drag serde_json into build.rs.
             // Looks for `"version": "..."` at the top level.
-            let key = "\"version\"";
-            let idx = s.find(key)?;
-            let after = &s[idx + key.len()..];
+            let line = s
+                .lines()
+                .find(|line| line.trim_start().starts_with("\"version\""))?;
+            let after = line.trim_start().strip_prefix("\"version\"")?;
             let colon = after.find(':')?;
             let rest = &after[colon + 1..];
             let q1 = rest.find('"')?;

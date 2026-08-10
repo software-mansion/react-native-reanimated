@@ -8,7 +8,7 @@ use oxc_ast::ast::{
 };
 use oxc_span::SPAN;
 
-const WORKLET_CLASS_MARKER: &str = "__workletClass";
+pub const WORKLET_CLASS_MARKER: &str = "__workletClass";
 const CLASS_FACTORY_SUFFIX: &str = "__classFactory";
 
 pub fn is_worklet_class(class: &Class<'_>) -> bool {
@@ -41,6 +41,9 @@ pub fn remove_worklet_class_marker<'a>(body: &mut ClassBody<'a>, builder: AstBui
     body.body = new_body;
 }
 
+// Retained for re-enabling worklet classes in Bundle Mode; `class.ts`
+// bails out on `state.opts.bundleMode` today, so nothing calls this yet.
+#[allow(dead_code)]
 pub fn build_class_factory_pair<'a>(
     class: &mut Class<'a>,
     class_name: &str,

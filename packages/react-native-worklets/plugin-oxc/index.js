@@ -7,35 +7,10 @@ const platform = process.platform;
 const arch = process.arch;
 
 function candidates() {
-  const localBindings = [
+  return [
     join(__dirname, `worklets-plugin-oxc.${platform}-${arch}.node`),
     join(__dirname, 'worklets-plugin-oxc.node'),
   ];
-
-  if (platform === 'darwin') {
-    localBindings.push(
-      join(__dirname, 'target', 'release', 'libworklets_plugin_oxc.dylib')
-    );
-    localBindings.push(
-      join(__dirname, 'target', 'debug', 'libworklets_plugin_oxc.dylib')
-    );
-  } else if (platform === 'linux') {
-    localBindings.push(
-      join(__dirname, 'target', 'release', 'libworklets_plugin_oxc.so')
-    );
-    localBindings.push(
-      join(__dirname, 'target', 'debug', 'libworklets_plugin_oxc.so')
-    );
-  } else if (platform === 'win32') {
-    localBindings.push(
-      join(__dirname, 'target', 'release', 'worklets_plugin_oxc.dll')
-    );
-    localBindings.push(
-      join(__dirname, 'target', 'debug', 'worklets_plugin_oxc.dll')
-    );
-  }
-
-  return localBindings;
 }
 
 let binding = null;

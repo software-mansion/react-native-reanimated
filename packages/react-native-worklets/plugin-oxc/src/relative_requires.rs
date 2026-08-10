@@ -90,9 +90,14 @@ pub fn rebase_to_worklets_dir_with(
 }
 
 fn derive_worklets_root(filename: &str) -> PathBuf {
-    if let Some(idx) = filename.find("/react-native-worklets") {
-        let end = idx + "/react-native-worklets".len();
-        return PathBuf::from(&filename[..end]);
+    const SEGMENT: &str = "/react-native-worklets";
+    let mut from = 0;
+    while let Some(idx) = filename[from..].find(SEGMENT) {
+        let end = from + idx + SEGMENT.len();
+        match filename[end..].chars().next() {
+            None | Some('/') => return PathBuf::from(&filename[..end]),
+            _ => from = end,
+        }
     }
-    PathBuf::from("/react-native-worklets")
+    PathBuf::from(SEGMENT)
 }

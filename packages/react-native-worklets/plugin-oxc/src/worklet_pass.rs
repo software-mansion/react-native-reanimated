@@ -52,7 +52,6 @@ fn is_object_hook_at_arg0(name: &str) -> bool {
 }
 
 pub struct PrependCtx<'a> {
-    pub top: Vec<Statement<'a>>,
     function_stack: Vec<Vec<Statement<'a>>>,
     pub injected_refs_stack: Vec<std::collections::HashSet<String>>,
 }
@@ -60,13 +59,11 @@ pub struct PrependCtx<'a> {
 impl<'a> PrependCtx<'a> {
     pub fn new() -> Self {
         Self {
-            top: Vec::new(),
             function_stack: Vec::new(),
             injected_refs_stack: Vec::new(),
         }
     }
 
-    pub fn top(&mut self) -> &mut Vec<Statement<'a>> { &mut self.top }
 
     pub fn push_frame(&mut self) {
         self.function_stack.push(Vec::new());
@@ -106,9 +103,6 @@ pub fn process_program<'a>(
         let processed = process_top_level_statement(
             stmt, &mut ctx, state, scoping, builder, allocator, filename,
         );
-        for p in ctx.top {
-            new_body.push(p);
-        }
         new_body.push(processed);
     }
 
@@ -363,26 +357,6 @@ fn process_top_level_statement<'a>(
         Statement::ClassDeclaration(mut class) => {
             if crate::worklet_class::is_worklet_class(&class) {
                 crate::worklet_class::remove_worklet_class_marker(&mut class.body, builder);
-            }
-            let is_worklet = false;
-            if is_worklet {
-                let class_name = class
-                    .id
-                    .as_ref()
-                    .expect("class.id.is_some() checked in is_worklet guard")
-                    .name
-                    .to_string();
-                if let Some((factory_decl, const_decl)) =
-                    crate::worklet_class::build_class_factory_pair(
-                        &mut class,
-                        &class_name,
-                        builder,
-                        allocator,
-                    )
-                {
-                    ctx.top().push(factory_decl);
-                    return const_decl;
-                }
             }
             process_class_body(
                 &mut class.body, ctx, state, scoping, builder, allocator, filename,
@@ -954,13 +928,13 @@ fn process_expression<'a>(
                         }
                     }
                     if is_object_hook_at_arg0(name) {
-                        if let Some(arg0) = call.arguments.get_mut(0) {
-                            if let Argument::ObjectExpression(obj) = arg0 {
-                                inject_worklet_directives_to_object_methods(obj, builder);
-                                process_object_expression(
-                                    obj, ctx, state, scoping, builder, allocator, filename,
-                                );
-                            }
+                        if let Some(Argument::ObjectExpression(obj)) =
+                            call.arguments.get_mut(0)
+                        {
+                            inject_worklet_directives_to_object_methods(obj, builder);
+                            process_object_expression(
+                                obj, ctx, state, scoping, builder, allocator, filename,
+                            );
                         }
                     }
                 }

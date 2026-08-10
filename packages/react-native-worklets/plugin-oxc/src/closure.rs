@@ -161,7 +161,7 @@ pub trait WalkFunctionBody<'a> {
     fn walk_into<V: Visit<'a>>(self, visitor: &mut V);
 }
 
-impl<'a, 'b> WalkFunctionBody<'a> for &'b Function<'a> {
+impl<'a> WalkFunctionBody<'a> for &Function<'a> {
     fn walk_into<V: Visit<'a>>(self, visitor: &mut V) {
         if let Some(body) = &self.body {
             visitor.visit_function_body(body);
@@ -170,7 +170,7 @@ impl<'a, 'b> WalkFunctionBody<'a> for &'b Function<'a> {
     }
 }
 
-impl<'a, 'b> WalkFunctionBody<'a> for &'b ArrowFunctionExpression<'a> {
+impl<'a> WalkFunctionBody<'a> for &ArrowFunctionExpression<'a> {
     fn walk_into<V: Visit<'a>>(self, visitor: &mut V) {
         visitor.visit_function_body(&self.body);
         visitor.visit_formal_parameters(&self.params);

@@ -6,6 +6,7 @@ use oxc_ast::ast::{
 };
 use oxc_span::SPAN;
 
+use crate::worklet_class::WORKLET_CLASS_MARKER;
 use crate::utils::inject_worklet_directive;
 
 pub fn process_file_directive<'a>(program: &mut Program<'a>, builder: AstBuilder<'a>) -> bool {
@@ -93,7 +94,7 @@ fn inject_class_marker<'a>(
     let already = body.body.iter().any(|el| {
         if let ClassElement::PropertyDefinition(prop) = el {
             if let PropertyKey::StaticIdentifier(id) = &prop.key {
-                return id.name.as_str() == "__workletClass";
+                return id.name.as_str() == WORKLET_CLASS_MARKER;
             }
         }
         false
@@ -103,7 +104,7 @@ fn inject_class_marker<'a>(
     }
     let marker_value = builder.expression_boolean_literal(SPAN, true);
     let key = PropertyKey::StaticIdentifier(
-        builder.alloc_identifier_name(SPAN, "__workletClass"),
+        builder.alloc_identifier_name(SPAN, WORKLET_CLASS_MARKER),
     );
     let prop = builder.class_element_property_definition(
         SPAN,
