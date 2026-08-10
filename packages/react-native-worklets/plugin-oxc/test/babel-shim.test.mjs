@@ -97,15 +97,9 @@ test(
 );
 
 test(
-  'babel shim delegates to legacy TS plugin when bundleMode is not set',
+  'babel shim runs the OXC pipeline without an explicit bundleMode flag',
   { skip: !babelCore },
   () => {
-    // Without `bundleMode: true`, the shim should forward to
-    // `react-native-worklets/plugin` so projects that haven't migrated keep
-    // working. The legacy plugin emits the worklet machinery inline (no
-    // `.worklets/<hash>.js` file emission) so the output should contain
-    // `__workletHash` directly in `result.code` and there should be no
-    // `require("react-native-worklets/.worklets/...")` call.
     delete require_.cache[require_.resolve('../babel.js')];
     const shim = require_('../babel.js');
     const result = babelCore.transformSync(
@@ -114,21 +108,30 @@ test(
         filename: 'test.js',
         babelrc: false,
         configFile: false,
-        // Legacy plugin reads the source file for source-map embedding; disable
-        // so the test doesn't need a real on-disk source.
         plugins: [[shim, { disableSourceMaps: true }]],
       }
     );
     assert.ok(result && result.code);
-    assert.match(
-      result.code,
-      /__workletHash/,
-      `expected inline workletization. Got:\n${result.code}`
-    );
-    assert.doesNotMatch(
-      result.code,
-      /require\(["']react-native-worklets\/\.worklets/,
-      'legacy path should not produce bundle-mode require calls'
+    assert.match(result.code, /require\(["']react-native-worklets\/\.worklets/);
+  }
+);
+
+test(
+  'babel shim rejects an explicit bundleMode: false',
+  { skip: !babelCore },
+  () => {
+    delete require_.cache[require_.resolve('../babel.js')];
+    const shim = require_('../babel.js');
+    assert.throws(
+      () =>
+        babelCore.transformSync(`function foo() { 'worklet'; return 1; }`, {
+          filename: 'test.js',
+          babelrc: false,
+          configFile: false,
+          plugins: [[shim, { bundleMode: false }]],
+        }),
+      /supports Bundle Mode only/
     );
   }
 );
+

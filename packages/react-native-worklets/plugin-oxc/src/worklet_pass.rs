@@ -12,10 +12,9 @@ use crate::auto_detect::{
     GESTURE_HANDLER_OBJECT_HOOKS, is_gesture_object_event_callback_method,
     is_layout_animation_callback_method,
 };
-use crate::context_object::process_context_object;
 use crate::state::State;
 use crate::utils::{has_worklet_directive, inject_worklet_directive};
-use crate::worklet_factory::{FactoryOutput, WorkletInput, make_worklet_factory};
+use crate::worklet_factory::{WorkletInput, make_worklet_factory};
 
 const FUNCTION_HOOKS_ARG0: &[&str] = &[
     "useFrameCallback",
@@ -31,10 +30,8 @@ const FUNCTION_HOOKS_ARG0: &[&str] = &[
     "runOnUIAsync",
 ];
 
-/// Hooks where indices 0+1 are both worklet callbacks (`useAnimatedReaction(state, callback)`).
 const FUNCTION_HOOKS_ARG01: &[&str] = &["useAnimatedReaction"];
 
-/// Hooks whose worklet callback is at index 1 (`withDecay(config, callback)`).
 const FUNCTION_HOOKS_ARG1: &[&str] = &[
     "withDecay",
     "runOnRuntime",
@@ -45,51 +42,18 @@ const FUNCTION_HOOKS_ARG1: &[&str] = &[
     "scheduleOnRuntimeWithId",
 ];
 
-/// Hooks whose worklet callback is at index 2 (`withTiming(value, config, callback)`).
 const FUNCTION_HOOKS_ARG2: &[&str] = &["withTiming", "withSpring"];
 
-/// Hooks whose worklet callback is at index 3 (`withRepeat(animation, n, reverse, callback)`).
 const FUNCTION_HOOKS_ARG3: &[&str] = &["withRepeat"];
 
-/// Every callee name that can trigger autoworkletization. Exposed so the JS
-/// shim's "can this file possibly contain worklets?" pre-filter is derived
-/// from the same lists the pass uses, instead of a hand-kept copy that
-/// silently drifts.
-pub fn autoworkletization_callee_names() -> Vec<&'static str> {
-    let mut names = Vec::new();
-    names.extend_from_slice(FUNCTION_HOOKS_ARG0);
-    names.extend_from_slice(FUNCTION_HOOKS_ARG01);
-    names.extend_from_slice(FUNCTION_HOOKS_ARG1);
-    names.extend_from_slice(FUNCTION_HOOKS_ARG2);
-    names.extend_from_slice(FUNCTION_HOOKS_ARG3);
-    names.extend_from_slice(crate::auto_detect::GESTURE_HANDLER_OBJECT_HOOKS);
-    names.extend_from_slice(crate::auto_detect::GESTURE_HANDLER_BUILDER_METHODS);
-    names
-}
-
-/// Hooks whose arg 0 is an object literal whose methods should each be
-/// workletized. Matches `reanimatedObjectHooks` in `autoworkletization.ts:16-19`.
 fn is_object_hook_at_arg0(name: &str) -> bool {
     name == "useAnimatedScrollHandler"
         || crate::auto_detect::GESTURE_HANDLER_OBJECT_HOOKS.contains(&name)
 }
 
-/// Tracks pending statements to prepend at two scopes:
-///   * `top` — file top level (default destination for init-data declarations)
-///   * `function_stack` — a stack of function-body frames; `local()` returns
-///     the topmost frame, falling back to `top` when none is open. Worklets
-///     marked `'limit-init-data-hoisting'` route their init-data here so it
-///     lands in the parent function's body, keeping the identifier in
-///     lexical scope when that body is serialized as a worklet string.
 pub struct PrependCtx<'a> {
     pub top: Vec<Statement<'a>>,
     function_stack: Vec<Vec<Statement<'a>>>,
-    /// Per-frame sets of identifier names that were *synthesized* into the
-    /// current function body by inner-first workletization (the param packs
-    /// of inner factory calls). They lack a `reference_id` so the outer
-    /// worklet's closure analysis can't resolve them via `oxc_semantic` —
-    /// we force-capture them as closure vars instead. Mirrors babel's
-    /// `path.scope.crawl()` after each mutation.
     pub injected_refs_stack: Vec<std::collections::HashSet<String>>,
 }
 
@@ -104,14 +68,6 @@ impl<'a> PrependCtx<'a> {
 
     pub fn top(&mut self) -> &mut Vec<Statement<'a>> { &mut self.top }
 
-    pub fn local(&mut self) -> &mut Vec<Statement<'a>> {
-        if let Some(last) = self.function_stack.last_mut() {
-            last
-        } else {
-            &mut self.top
-        }
-    }
-
     pub fn push_frame(&mut self) {
         self.function_stack.push(Vec::new());
         self.injected_refs_stack
@@ -125,8 +81,6 @@ impl<'a> PrependCtx<'a> {
         )
     }
 
-    /// Register names that we just wrote into the current frame's body
-    /// (e.g. closure vars passed to an inner factory call).
     pub fn record_injected_refs<I: IntoIterator<Item = String>>(&mut self, names: I) {
         if let Some(set) = self.injected_refs_stack.last_mut() {
             set.extend(names);
@@ -142,10 +96,6 @@ pub fn process_program<'a>(
     allocator: &'a Allocator,
     filename: &str,
 ) -> Vec<(String, String)> {
-    // Resolve identifier references that hit auto-workletizable arg slots
-    // back to their binding symbols. The main pass then injects the
-    // `'worklet'` directive on those bindings so plain
-    // `const f = () => {...}; useAnimatedStyle(f);` workletizes `f`.
     state.referenced_worklet_symbols = collect_referenced_worklet_symbols(program, scoping);
 
     let old_body = std::mem::replace(&mut program.body, builder.vec());
@@ -166,10 +116,6 @@ pub fn process_program<'a>(
     std::mem::take(&mut state.emitted_files)
 }
 
-/// One-shot walk: collect the `SymbolId`s of every top-level identifier
-/// declaration that's referenced from an auto-workletizable argument slot.
-/// Mirrors `referencedWorklets.ts` — but cheaper, since we leverage
-/// `oxc_semantic`'s reference graph instead of replicating babel's scope walk.
 fn collect_referenced_worklet_symbols<'a>(
     program: &Program<'a>,
     scoping: &Scoping,
@@ -194,9 +140,6 @@ fn collect_referenced_worklet_symbols<'a>(
             }
         }
 
-        /// Object-hook arg0 like `useAnimatedScrollHandler({ onScroll: fn })`.
-        /// Each property's value can be an identifier referencing a worklet —
-        /// mirrors `processWorkletizableObject` in `objectWorklets.ts:35-57`.
         fn note_object_arg_property_idents(&mut self, arg: &Argument<'a>) {
             let Argument::ObjectExpression(obj) = arg else {
                 return;
@@ -217,7 +160,6 @@ fn collect_referenced_worklet_symbols<'a>(
 
     impl<'a, 's> Visit<'a> for Pre<'s> {
         fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-            // Recurse first so nested calls register before we inspect ours.
             oxc_ast_visit::walk::walk_call_expression(self, call);
 
             let effective_callee: &Expression<'_> = match &call.callee {
@@ -260,9 +202,6 @@ fn collect_referenced_worklet_symbols<'a>(
                 }
             }
 
-            // Object hooks (`useAnimatedScrollHandler({ onScroll: fn })`) —
-            // identifier-valued properties on arg0 reference workletizable
-            // functions; record their symbols too.
             if let Some(name) = name.as_deref() {
                 if is_object_hook_at_arg0(name) {
                     if let Some(arg0) = call.arguments.first() {
@@ -271,10 +210,6 @@ fn collect_referenced_worklet_symbols<'a>(
                 }
             }
 
-            // Gesture-handler + layout-animation chain methods workletize
-            // *all* args. Identifier args at any position get registered;
-            // object-literal args have their property-value identifiers
-            // recorded too (`Gesture.Tap().onUpdate({ run: fn })`).
             if is_gesture_object_event_callback_method(effective_callee)
                 || is_layout_animation_callback_method(effective_callee)
             {
@@ -296,21 +231,10 @@ fn collect_referenced_worklet_symbols<'a>(
     pre.visit_program(program);
     let mut found = pre.found;
 
-    // Fixed-point expansion: chase identifier aliases like
-    //   const f = otherWorklet;
-    //   useAnimatedStyle(f);          // <- direct hit (already in `found`)
-    // so that `otherWorklet`'s own definition gets marked too. Mirrors
-    // `referencedWorklets.ts`'s recursive `findReferencedWorklet`. Bounded by
-    // number of bindings in the file.
     expand_aliases(program, scoping, &mut found);
     found
 }
 
-/// Walk every `VariableDeclarator { id: BindingIdentifier(x), init: Identifier(y) }`
-/// and every `AssignmentExpression { left: Identifier(x), right: Identifier(y) }`,
-/// recording `(x_symbol, y_symbol)` pairs. Then propagate set membership across
-/// pairs until stable: if `x ∈ set` then `y ∈ set`. Mirrors the recursive
-/// `findReferencedWorklet` chain in `referencedWorklets.ts`.
 fn expand_aliases<'a>(
     program: &Program<'a>,
     scoping: &Scoping,
@@ -387,9 +311,6 @@ fn expand_aliases<'a>(
     }
 }
 
-/// If this `BindingIdentifier`'s symbol was referenced from an
-/// auto-workletizable argument slot, inject the `'worklet'` directive on the
-/// supplied body so the main pass treats it as an explicit worklet.
 fn maybe_inject_referenced_directive<'a>(
     binding_symbol: Option<oxc_syntax::symbol::SymbolId>,
     body: &mut oxc_ast::ast::FunctionBody<'a>,
@@ -403,28 +324,6 @@ fn maybe_inject_referenced_directive<'a>(
     inject_worklet_directive(body, builder);
 }
 
-/// Drop `init_data_decl` into the right bucket: file-top-level by default,
-/// or the parent function-body frame when the worklet was marked
-/// `'limit-init-data-hoisting'`.
-fn route_init_data<'a>(
-    ctx: &mut PrependCtx<'a>,
-    out: &FactoryOutput<'a>,
-    init: Option<Statement<'a>>,
-) {
-    let Some(stmt) = init else { return };
-    if out.limit_init_data_hoisting {
-        ctx.local().push(stmt);
-    } else {
-        ctx.top().push(stmt);
-    }
-}
-
-/// Process a function/method body inside a fresh local-prepend frame, then
-/// prepend anything routed to that frame (via `'limit-init-data-hoisting'`)
-/// to the start of the body. Returns the set of identifier names that
-/// inner-first workletizations *injected* into the body (param packs of
-/// inner factory calls) so the caller can hand it to `make_worklet_factory`
-/// as the `force_capture` set when this body is itself a worklet.
 fn process_body_with_frame<'a>(
     body_stmts: &mut oxc_allocator::Vec<'a, Statement<'a>>,
     ctx: &mut PrependCtx<'a>,
@@ -462,9 +361,6 @@ fn process_top_level_statement<'a>(
 ) -> Statement<'a> {
     match stmt {
         Statement::ClassDeclaration(mut class) => {
-            // Worklet classes are not supported in bundle-only mode — strip
-            // the marker so it doesn't leak into the emitted code, then fall
-            // through. Mirrors `class.ts:49`'s `/* temporary */` short-circuit.
             if crate::worklet_class::is_worklet_class(&class) {
                 crate::worklet_class::remove_worklet_class_marker(&mut class.body, builder);
             }
@@ -488,31 +384,18 @@ fn process_top_level_statement<'a>(
                     return const_decl;
                 }
             }
-            // Not a worklet class — but still recurse into method/property
-            // bodies so nested worklets (e.g. `build = () => { 'worklet'; … }`
-            // on a layout-animation class) get workletized.
             process_class_body(
                 &mut class.body, ctx, state, scoping, builder, allocator, filename,
             );
             Statement::ClassDeclaration(class)
         }
         Statement::FunctionDeclaration(mut func) => {
-            // If this declaration was referenced from an auto-workletize arg
-            // slot somewhere in the file, retroactively inject the worklet
-            // directive on its body — `referencedWorklets.ts` parity.
             let func_id_sym = func.id.as_ref().and_then(|id| id.symbol_id.get());
             if let Some(body) = func.body.as_mut() {
                 maybe_inject_referenced_directive(func_id_sym, body, state, builder);
             }
             if let Some(body) = &func.body {
                 if has_worklet_directive(body) {
-                    // Inner-first inside a fresh local-prepend frame: nested
-                    // worklets marked `'limit-init-data-hoisting'` get their
-                    // init-data injected at the top of *this* body, which is
-                    // the body we're about to stringify. We also capture the
-                    // set of identifier names those inner factory calls now
-                    // reference, so our closure analysis can force-capture
-                    // them (they have no `reference_id`).
                     let injected = if let Some(body_mut) = func.body.as_mut() {
                         process_body_with_frame(
                             &mut body_mut.statements, ctx, state, scoping, builder, allocator, filename,
@@ -535,18 +418,14 @@ fn process_top_level_statement<'a>(
                         self_name: name.as_deref(),
                         is_expression_body: false,
                     };
-                    let mut out = make_worklet_factory(
+                    let out = make_worklet_factory(
                         input, state, scoping, builder, allocator, filename, &injected,
                     );
-                    // Tell the grandparent frame about names *we* now inject.
                     ctx.record_injected_refs(out.injected_ref_names.iter().cloned());
-                    let init = out.init_data_decl.take();
-                    route_init_data(ctx, &out, init);
                     let decl_name = name.unwrap_or_else(|| out.react_name.clone());
                     return build_const_decl(builder, &decl_name, out.factory_call);
                 }
             }
-            // Not a worklet — but recurse into its body for nested worklets / autoworkletization.
             if let Some(body) = func.body.as_mut() {
                 process_body_with_frame(
                     &mut body.statements, ctx, state, scoping, builder, allocator, filename,
@@ -670,8 +549,6 @@ fn process_top_level_statement<'a>(
                         .map(|b| has_worklet_directive(b))
                         .unwrap_or(false);
                     if is_worklet {
-                        // `export default function foo() { 'worklet'; ... }`
-                        // becomes `export default <factory_call>`.
                         let injected = if let Some(body_mut) = func.body.as_mut() {
                             process_body_with_frame(
                                 &mut body_mut.statements, ctx, state, scoping, builder, allocator, filename,
@@ -697,12 +574,10 @@ fn process_top_level_statement<'a>(
                             self_name: name.as_deref(),
                             is_expression_body: false,
                         };
-                        let mut out = make_worklet_factory(
+                        let out = make_worklet_factory(
                             input, state, scoping, builder, allocator, filename, &injected,
                         );
                         ctx.record_injected_refs(out.injected_ref_names.iter().cloned());
-                        let init = out.init_data_decl.take();
-                        route_init_data(ctx, &out, init);
                         decl.declaration =
                             ExportDefaultDeclarationKind::from(out.factory_call);
                     } else if let Some(body) = func.body.as_mut() {
@@ -723,8 +598,6 @@ fn process_top_level_statement<'a>(
                     );
                 }
                 _ => {
-                    // `export default <expression>` — fall through to the
-                    // generic expression walker.
                     if let Some(expr) = decl.declaration.as_expression_mut() {
                         process_expression(
                             expr, ctx, state, scoping, builder, allocator, filename,
@@ -735,15 +608,9 @@ fn process_top_level_statement<'a>(
             Statement::ExportDefaultDeclaration(decl)
         }
         Statement::ExportNamedDeclaration(mut decl) => {
-            // `export function foo() { 'worklet'; ... }` needs to become
-            // `export const foo = factoryCall(...)` after workletization. We
-            // build the inner factory + replace the export's `.declaration`
-            // with a fresh VariableDeclaration. Init-data goes into the
-            // shared `prepend` list (bubbles to top-level via process_program).
             if let Some(Declaration::FunctionDeclaration(func)) = &mut decl.declaration {
                 if let Some(body) = &func.body {
                     if has_worklet_directive(body) {
-                        // Inner-first recursion in a fresh frame.
                         let injected = if let Some(body_mut) = func.body.as_mut() {
                             process_body_with_frame(
                                 &mut body_mut.statements, ctx, state, scoping, builder, allocator, filename,
@@ -773,12 +640,10 @@ fn process_top_level_statement<'a>(
                             self_name: if name.is_empty() { None } else { Some(&name) },
                             is_expression_body: false,
                         };
-                        let mut out = make_worklet_factory(
+                        let out = make_worklet_factory(
                             input, state, scoping, builder, allocator, filename, &injected,
                         );
                         ctx.record_injected_refs(out.injected_ref_names.iter().cloned());
-                        let init = out.init_data_decl.take();
-                        route_init_data(ctx, &out, init);
                         let decl_name =
                             if name.is_empty() { out.react_name.clone() } else { name };
                         let new_stmt =
@@ -802,8 +667,6 @@ fn process_top_level_statement<'a>(
     }
 }
 
-/// Recurse into each method body and property initializer of a class so
-/// nested worklets / autoworkletizable calls inside class members get found.
 fn process_class_body<'a>(
     body: &mut oxc_ast::ast::ClassBody<'a>,
     ctx: &mut PrependCtx<'a>,
@@ -847,10 +710,6 @@ fn process_class_body<'a>(
     }
 }
 
-/// Take ownership of a single `Statement` slot, run it through
-/// `process_top_level_statement`, and write the result back in place. Used
-/// by control-flow handlers (if / while / for / …) which hold one inner
-/// statement rather than a `Vec<Statement>`.
 fn recurse_into_stmt<'a>(
     stmt: &mut Statement<'a>,
     ctx: &mut PrependCtx<'a>,
@@ -905,11 +764,6 @@ fn process_inner_declaration<'a>(
             }
         }
         Declaration::FunctionDeclaration(func) => {
-            // The function itself isn't a worklet (the worklet-directive case
-            // is handled at the ExportNamedDeclaration level); recurse into
-            // its body to catch worklets / autoworkletizable hook calls
-            // nested inside it (e.g. `runOnUISync(() => { 'worklet'; … })`
-            // inside an exported plain function).
             if let Some(body) = func.body.as_mut() {
                 process_body_with_frame(
                     &mut body.statements, ctx, state, scoping, builder, allocator, filename,
@@ -934,9 +788,6 @@ fn process_variable_declarator<'a>(
     allocator: &'a Allocator,
     filename: &str,
 ) {
-    // `const f = () => {…}; useAnimatedStyle(f);` — pre-pass found `f`'s
-    // symbol via the call site; inject the worklet directive here so the
-    // expression walker treats `f`'s body as an explicit worklet.
     let binding_symbol = match &declarator.id {
         oxc_ast::ast::BindingPattern::BindingIdentifier(bid) => bid.symbol_id.get(),
         _ => None,
@@ -974,8 +825,6 @@ fn process_expression<'a>(
     match expr {
         Expression::ArrowFunctionExpression(arrow) => {
             if has_worklet_directive(&arrow.body) {
-                // Process nested worklets first inside a fresh local frame so
-                // `'limit-init-data-hoisting'` items land in this arrow's body.
                 let injected = process_body_with_frame(
                     &mut arrow.body.statements,
                     ctx,
@@ -995,17 +844,12 @@ fn process_expression<'a>(
                     self_name: None,
                     is_expression_body: arrow.expression,
                 };
-                let mut out = make_worklet_factory(
+                let out = make_worklet_factory(
                     input, state, scoping, builder, allocator, filename, &injected,
                 );
                 ctx.record_injected_refs(out.injected_ref_names.iter().cloned());
-                let init = out.init_data_decl.take();
-                route_init_data(ctx, &out, init);
                 *expr = out.factory_call;
             } else {
-                // Recurse so we still catch nested worklets / autoworkletizable
-                // calls inside non-worklet arrow bodies, e.g.
-                // `() => scheduleOnUI(() => { 'worklet'; ... })`.
                 process_body_with_frame(
                     &mut arrow.body.statements,
                     ctx,
@@ -1020,7 +864,6 @@ fn process_expression<'a>(
         Expression::FunctionExpression(func) => {
             if let Some(body) = &func.body {
                 if has_worklet_directive(body) {
-                    // Inner-first ordering (see ArrowFunctionExpression branch).
                     let injected = if let Some(body_mut) = func.body.as_mut() {
                         process_body_with_frame(
                             &mut body_mut.statements,
@@ -1049,12 +892,10 @@ fn process_expression<'a>(
                         self_name: name.as_deref(),
                         is_expression_body: false,
                     };
-                    let mut out = make_worklet_factory(
+                    let out = make_worklet_factory(
                         input, state, scoping, builder, allocator, filename, &injected,
                     );
                     ctx.record_injected_refs(out.injected_ref_names.iter().cloned());
-                    let init = out.init_data_decl.take();
-                    route_init_data(ctx, &out, init);
                     *expr = out.factory_call;
                 } else if let Some(body) = func.body.as_mut() {
                     process_body_with_frame(
@@ -1070,23 +911,9 @@ fn process_expression<'a>(
             }
         }
         Expression::ObjectExpression(obj) => {
-            // Try the context-object conversion first (it injects a factory method
-            // that itself contains the 'worklet' directive — we still need to
-            // workletize that method afterwards).
-            // Context-object conversion: only act when the object is
-            // *explicitly* marked. Babel's plugin only does implicit
-            // detection (`this`-using methods) for files with the file-level
-            // `'worklet'` directive — outside that, regular object literals
-            // that happen to use `this` (like the FrameCallback registry)
-            // must be left alone.
-            process_context_object(obj, builder, allocator);
             process_object_expression(obj, ctx, state, scoping, builder, allocator, filename);
         }
         Expression::CallExpression(call) => {
-            // Unwrap sequence-expression callees like `(0, runOnUI)(arg)` —
-            // bundlers emit these for ESM-as-CJS interop and the auto-detection
-            // must look at the final expression. Mirrors
-            // autoworkletization.ts:91-93.
             let effective_callee: &Expression<'_> = match &call.callee {
                 Expression::SequenceExpression(seq) => seq
                     .expressions
@@ -1100,19 +927,9 @@ fn process_expression<'a>(
                 _ => None,
             };
 
-            // Gesture handler & layout animation callee patterns workletize all args.
             let is_gesture_callee = is_gesture_object_event_callback_method(effective_callee);
             let is_layout_animation_callee = is_layout_animation_callback_method(effective_callee);
 
-            // We always autoworkletize, even inside an enclosing worklet's
-            // body. Reason: a method like `close() { 'worklet'; if (_WORKLET)
-            // { ... } runOnUI(() => { ... })(); }` is callable from both JS
-            // and worklet runtimes — on the JS side the inner arrow must be
-            // a worklet or `runOnUI`'s validation throws.
-            //
-            // (Babel achieves this via a separate re-traversal after factory
-            // substitution. We achieve it by never suppressing the recursive
-            // visit.)
             {
                 if let Some(name) = callee_name.as_deref() {
                     let arg_indices: &[usize] =
@@ -1151,9 +968,6 @@ fn process_expression<'a>(
                 if is_gesture_callee || is_layout_animation_callee {
                     for i in 0..call.arguments.len() {
                         if let Some(arg) = call.arguments.get_mut(i) {
-                            // TS `processArgs(args, state, true, true)` —
-                            // gesture builder methods accept either a worklet
-                            // function or an object literal full of worklets.
                             if let Argument::ObjectExpression(obj) = arg {
                                 inject_worklet_directives_to_object_methods(obj, builder);
                                 process_object_expression(
@@ -1209,11 +1023,6 @@ fn process_expression<'a>(
             }
         }
         Expression::AssignmentExpression(assign) => {
-            // `let f; f = function() {}; useAnimatedStyle(f);` — when the LHS
-            // identifier's symbol was registered as a referenced worklet, the
-            // function expression on the RHS becomes an implicit worklet.
-            // Mirrors `findReferencedWorkletFromAssignmentExpression` in
-            // `referencedWorklets.ts`.
             if let oxc_ast::ast::AssignmentTarget::AssignmentTargetIdentifier(lhs) = &assign.left {
                 if let Some(rid) = lhs.reference_id.get() {
                     if let Some(sid) = scoping.get_reference(rid).symbol_id() {
@@ -1303,8 +1112,6 @@ fn process_object_expression<'a>(
     for prop in obj.properties.iter_mut() {
         if let ObjectPropertyKind::ObjectProperty(prop) = prop {
             if prop.method {
-                // Snapshot the key before grabbing `&mut prop.value` so the
-                // borrow checker doesn't object.
                 let method_name = match &prop.key {
                     PropertyKey::StaticIdentifier(id) => Some(id.name.to_string()),
                     _ => None,
@@ -1312,7 +1119,6 @@ fn process_object_expression<'a>(
                 if let Expression::FunctionExpression(func) = &mut prop.value {
                     if let Some(body) = &func.body {
                         if has_worklet_directive(body) {
-                            // Inner-first ordering.
                             let injected = if let Some(body_mut) = func.body.as_mut() {
                                 process_body_with_frame(
                                     &mut body_mut.statements, ctx, state, scoping, builder, allocator, filename,
@@ -1335,18 +1141,13 @@ fn process_object_expression<'a>(
                                 self_name: method_name_ref,
                                 is_expression_body: false,
                             };
-                            let mut out = make_worklet_factory(
+                            let out = make_worklet_factory(
                                 input, state, scoping, builder, allocator, filename, &injected,
                             );
                             ctx.record_injected_refs(out.injected_ref_names.iter().cloned());
-                            let init = out.init_data_decl.take();
-                            route_init_data(ctx, &out, init);
                             prop.value = out.factory_call;
                             prop.method = false;
                         } else if let Some(body_mut) = func.body.as_mut() {
-                            // Method shorthand without 'worklet' — recurse so
-                            // nested worklets / autoworkletizable calls in its
-                            // body still get processed.
                             process_body_with_frame(
                                 &mut body_mut.statements, ctx, state, scoping, builder, allocator, filename,
                             );
@@ -1409,9 +1210,6 @@ fn inject_worklet_directives_to_object_methods<'a>(
 ) {
     for prop in obj.properties.iter_mut() {
         if let ObjectPropertyKind::ObjectProperty(p) = prop {
-            // Method shorthand *and* plain properties holding a function or
-            // arrow — `{ onScroll(e) {…}, onBeginDrag: (e) => … }` both count.
-            // Mirrors `forEachWorkletizableObjectProperty` in `findWorklet.ts`.
             match &mut p.value {
                 Expression::FunctionExpression(func) => {
                     if let Some(body) = &mut func.body {

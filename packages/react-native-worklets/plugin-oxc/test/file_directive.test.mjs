@@ -57,19 +57,6 @@ test('file-level directive: export default function is workletized', () => {
   assert.equal(files.length, 1);
 });
 
-test('file-level directive: implicit this-using object becomes context object', () => {
-  const input = `
-    'worklet';
-    const ctx = { counter: 0, bump() { this.counter += 1; } };
-  `;
-  const { code } = transform(input, 'test.js', { disableSourceMaps: true });
-  assert.match(
-    code,
-    /__workletContextObjectFactory/,
-    `expected context-object factory. Got:\n${code}`
-  );
-});
-
 test('file-level directive: module.exports is NOT dehoisted (matches TS)', () => {
   const input = `
     'worklet';

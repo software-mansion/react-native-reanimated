@@ -7,10 +7,6 @@ use oxc_span::SPAN;
 
 use crate::utils::{normalize_path, pathdiff};
 
-/// Path resolution used when rewriting relative `require('./x')` calls inside
-/// a bundle-mode worklet body so that, after the body is hoisted into
-/// `react-native-worklets/.worklets/<hash>.js`, the require still resolves to
-/// the same module.
 pub fn rewrite_relative_requires<'a>(
     body: &mut FunctionBody<'a>,
     filename: &str,
@@ -70,32 +66,22 @@ impl<'a, 'b> VisitMut<'a> for RelativeRequireRewriter<'a, 'b> {
     }
 }
 
-/// Compute the relative path from
-/// `<react-native-worklets package root>/.worklets/`
-/// to `<directory of current file>/<original relative path>`.
-///
-/// Prefers `worklets_package_dir` (resolved by the JS shim via
-/// `require.resolve`) for filesystem-correct results, falling back to a
-/// substring-based heuristic on `filename` for direct napi callers (tests).
 pub fn rebase_to_worklets_dir_with(
     filename: &str,
     original: &str,
     worklets_package_dir: Option<&str>,
 ) -> Option<String> {
-    let filename_path = PathBuf::from(filename.replace('\\', "/"));
+    let filename_path = PathBuf::from(filename);
     let file_dir = filename_path.parent()?;
     let resolved = file_dir.join(original);
     let resolved = normalize_path(&resolved);
 
     let worklets_pkg_root = worklets_package_dir
-        .map(|s| PathBuf::from(s.replace('\\', "/")))
+        .map(PathBuf::from)
         .unwrap_or_else(|| derive_worklets_root(filename));
     let worklets_dir = worklets_pkg_root.join(".worklets");
 
     let rel = pathdiff(&worklets_dir, &resolved)?;
-    // `require()` / Metro want forward slashes on every platform — `to_posix`
-    // converts whatever `PathBuf` reconstructed natively into a clean URL-ish
-    // string before we hand it to codegen.
     let mut out = crate::utils::to_posix(&rel.to_string_lossy());
     if !out.starts_with('.') && !out.starts_with('/') {
         out = format!("./{out}");
@@ -104,10 +90,9 @@ pub fn rebase_to_worklets_dir_with(
 }
 
 fn derive_worklets_root(filename: &str) -> PathBuf {
-    let norm = filename.replace('\\', "/");
-    if let Some(idx) = norm.find("/react-native-worklets") {
+    if let Some(idx) = filename.find("/react-native-worklets") {
         let end = idx + "/react-native-worklets".len();
-        return PathBuf::from(&norm[..end]);
+        return PathBuf::from(&filename[..end]);
     }
     PathBuf::from("/react-native-worklets")
 }

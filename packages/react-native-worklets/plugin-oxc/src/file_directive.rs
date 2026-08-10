@@ -2,18 +2,12 @@ use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
 use oxc_ast::ast::{
     Declaration, Expression, ExportDefaultDeclarationKind, ObjectExpression, ObjectPropertyKind,
-    Program, PropertyKey, Statement, VariableDeclarator,
+    Program, Statement, VariableDeclarator,
 };
 use oxc_span::SPAN;
 
-use crate::context_object::{CONTEXT_OBJECT_MARKER, is_implicit_context_object};
 use crate::utils::inject_worklet_directive;
 
-/// Implements `processIfWorkletFile` from file.ts: when the Program has a
-/// top-level `'worklet'` directive, treat every viable top-level entity as a
-/// worklet by injecting `'worklet'` into its body.
-///
-/// Returns `true` if a file directive was present and removed.
 pub fn process_file_directive<'a>(program: &mut Program<'a>, builder: AstBuilder<'a>) -> bool {
     let has_directive = program
         .directives
@@ -23,7 +17,6 @@ pub fn process_file_directive<'a>(program: &mut Program<'a>, builder: AstBuilder
         return false;
     }
 
-    // Strip the file directive.
     let kept = program
         .directives
         .drain(..)
@@ -35,7 +28,6 @@ pub fn process_file_directive<'a>(program: &mut Program<'a>, builder: AstBuilder
     }
     program.directives = new_dirs;
 
-    // Inject 'worklet' into every viable top-level entity.
     dehoist_commonjs_exports(program, builder);
     for stmt in program.body.iter_mut() {
         process_top_level(stmt, builder);
@@ -52,8 +44,6 @@ fn process_top_level<'a>(stmt: &mut Statement<'a>, builder: AstBuilder<'a>) {
             return;
         }
         Statement::ExportDefaultDeclaration(decl) => {
-            // `export default <thing>` — mirror TS file.ts:71-80 which treats
-            // the inner declaration/expression as the candidate.
             match &mut decl.declaration {
                 ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
                     if let Some(body) = func.body.as_mut() {
@@ -181,13 +171,6 @@ fn inject_into_expression<'a>(expr: &mut Expression<'a>, builder: AstBuilder<'a>
 }
 
 fn inject_into_object_expression<'a>(obj: &mut ObjectExpression<'a>, builder: AstBuilder<'a>) {
-    // Implicit context-object: any `this`-using method makes the whole object
-    // a context object. Only file-level worklet directive enables this rule —
-    // and we are only called from that context. Matches file.ts:91-94.
-    if is_implicit_context_object(obj) {
-        append_context_object_marker(obj, builder);
-        return;
-    }
     for prop in obj.properties.iter_mut() {
         if let ObjectPropertyKind::ObjectProperty(prop) = prop {
             if prop.method {
@@ -203,38 +186,6 @@ fn inject_into_object_expression<'a>(obj: &mut ObjectExpression<'a>, builder: As
     }
 }
 
-fn append_context_object_marker<'a>(obj: &mut ObjectExpression<'a>, builder: AstBuilder<'a>) {
-    // Don't double-add if the marker is already present.
-    let already = obj.properties.iter().any(|p| {
-        if let ObjectPropertyKind::ObjectProperty(prop) = p {
-            if let PropertyKey::StaticIdentifier(id) = &prop.key {
-                return id.name.as_str() == CONTEXT_OBJECT_MARKER;
-            }
-        }
-        false
-    });
-    if already {
-        return;
-    }
-    let key = PropertyKey::StaticIdentifier(
-        builder.alloc_identifier_name(SPAN, CONTEXT_OBJECT_MARKER),
-    );
-    let value = builder.expression_boolean_literal(SPAN, true);
-    obj.properties
-        .push(builder.object_property_kind_object_property(
-            SPAN,
-            oxc_ast::ast::PropertyKind::Init,
-            key,
-            value,
-            false,
-            false,
-            false,
-        ));
-}
-
-/// Move `module.exports = …` / `exports.x = …` statements to the end of the
-/// program body so they appear after the synthesized factories that may
-/// reference them. Mirrors `dehoistCommonJSExports`.
 fn dehoist_commonjs_exports<'a>(program: &mut Program<'a>, builder: AstBuilder<'a>) {
     let body = std::mem::replace(&mut program.body, builder.vec());
     let mut keep = builder.vec_with_capacity(body.len());

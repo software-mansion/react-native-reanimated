@@ -14,25 +14,10 @@ use crate::utils::{can_forward_module_import, can_forward_relative_import};
 
 #[derive(Debug, Default)]
 pub struct ClosureResult {
-    /// Names captured by the worklet's closure, in order of first reference.
     pub closure_variables: Vec<String>,
-    /// Imports the worklet body depends on. In bundle mode each is re-emitted
-    /// as an `import` declaration at the top of the `.worklets/<hash>.js` file
-    /// so the worklet body's references resolve at module load time on the
-    /// worklet runtime side.
     pub imports: Vec<ImportInfo>,
 }
 
-/// Walk the function body, identify references that must be captured in the
-/// worklet's closure, and bucketize the rest.
-///
-/// `function_scope_id` is the scope created by the function. Bindings owned by
-/// this scope or any descendant are local and skipped.
-///
-/// `force_capture` is a set of names that must always be captured (even
-/// under `strictGlobal`). Used to honour identifier names that the worklet
-/// pass synthesized into the body — e.g. closure-var parameters of an inner
-/// factory call — which have no `reference_id` for `oxc_semantic` to resolve.
 pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
     body: B,
     function_scope_id: ScopeId,
@@ -74,21 +59,11 @@ pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
                 let flags = scoping.symbol_flags(symbol_id);
                 if flags.is_import() {
                     if let Some(info) = state.imports_by_symbol.get(&symbol_id) {
-                        // Skip namespace imports — TS `isImport` only accepts
-                        // ImportSpecifier / ImportDefaultSpecifier (imports.ts:46-48).
-                        // `import * as foo` falls through to plain closure capture.
                         if matches!(info.shape, ImportShape::Namespace) {
                             seen.insert(r.name.clone());
                             result.closure_variables.push(r.name);
                             continue;
                         }
-                        // Re-emit as an `import` in the bundle file ONLY when:
-                        //   - relative + the current file lives inside a
-                        //     workletizable module (so `..` paths resolve),
-                        //   - or the import source itself is a workletizable
-                        //     module (library import).
-                        // Otherwise fall through to closure capture, matching
-                        // babel-plugin-worklets/src/closure.ts.
                         let source = &info.source;
                         let is_rel = source.starts_with('.');
                         let allowed_for_rel = is_rel
@@ -106,7 +81,6 @@ pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
                             seen.insert(r.name);
                             continue;
                         }
-                        // Else: fall through to closure capture below.
                     }
                 }
 
@@ -114,20 +88,9 @@ pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
                 result.closure_variables.push(r.name);
             }
             None => {
-                // Synthesized identifier — has no SymbolId because it was
-                // minted by the worklet pass *after* semantic analysis.
-                // These include `_worklet_<hash>_init_data` and the closure
-                // vars injected into inner factory calls. Capture them so
-                // the body can dereference them on the UI thread, unless
-                // they shadow a binding local to this function.
                 let is_synthesized = is_synthesized_init_data(&r.name)
                     || force_capture.contains(&r.name);
                 if is_synthesized {
-                    // Re-resolve by name against the original scoping. If the
-                    // name binds to a symbol inside our function's scope
-                    // (e.g. one of our own params), it's local and must NOT
-                    // be captured — capturing it would over-include the
-                    // function's args in __closure.
                     if let Some(sym) = scoping
                         .find_binding(function_scope_id, r.name.as_str().into())
                     {
@@ -140,14 +103,7 @@ pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
                     result.closure_variables.push(r.name);
                     continue;
                 }
-                if state.opts.strict_global.unwrap_or(false) {
-                    continue;
-                }
-                if state.globals.contains(&r.name) {
-                    continue;
-                }
-                seen.insert(r.name.clone());
-                result.closure_variables.push(r.name);
+                continue;
             }
         }
     }
@@ -155,9 +111,6 @@ pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
     result
 }
 
-/// `_worklet_<digits>_init_data` — names minted by `worklet_factory.rs` when
-/// hoisting init-data declarations to top-level. Such references appear inside
-/// outer-worklet bodies after we inline an inner worklet's factory call.
 fn is_synthesized_init_data(name: &str) -> bool {
     let Some(rest) = name.strip_prefix("_worklet_") else {
         return false;
@@ -202,11 +155,8 @@ impl<'a, 's> Visit<'a> for ReferenceCollector<'s> {
             flags,
         });
     }
-
 }
 
-/// Drives visitor walks over a function's body + params, regardless of whether
-/// the function is a `Function` or `ArrowFunctionExpression`.
 pub trait WalkFunctionBody<'a> {
     fn walk_into<V: Visit<'a>>(self, visitor: &mut V);
 }

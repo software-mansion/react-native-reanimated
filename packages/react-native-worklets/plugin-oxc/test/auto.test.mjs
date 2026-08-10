@@ -43,27 +43,6 @@ test('layout animation callback is workletized', () => {
   assert.match(joinedFiles(files), /__workletHash/);
 });
 
-test('context object: explicit __workletContextObject marker turns obj into factory', () => {
-  // Implicit context-object detection (this-using methods → factory) only
-  // runs inside files with the file-level `'worklet'` directive in the babel
-  // plugin. Outside that, only the explicit marker triggers conversion.
-  const input = `
-    const ctx = {
-      __workletContextObject: true,
-      counter: 0,
-      bump() {
-        this.counter += 1;
-      },
-    };
-  `;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(
-    code,
-    /__workletContextObjectFactory/,
-    `expected context-object factory. Got:\n${code}`
-  );
-});
-
 test('useAnimatedReaction workletizes both args', () => {
   const input = `
     useAnimatedReaction(() => x.value, (curr, prev) => { console.log(curr, prev); });

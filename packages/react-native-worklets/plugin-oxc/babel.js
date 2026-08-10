@@ -1,37 +1,12 @@
 'use strict';
 
-/**
- * Babel plugin shim around the OXC-native worklets transform.
- *
- * When invoked as a Babel plugin (e.g. inside Metro), this:
- *   1. Calls the native OXC `transform()` on the file's source text
- *   2. Writes any bundle-mode `react-native-worklets/.worklets/<hash>.js`
- *      files the transform asked us to emit
- *   3. Parses the OXC output back into a Babel AST
- *   4. Replaces the current Program with the new AST so downstream Babel
- *      plugins / generators see the workletized code
- *
- * The shim runs once per file on `Program.enter`. After replacement we mark
- * the file so a second pass (e.g. from a different preset that re-includes
- * the same plugin) is a no-op.
- */
-
 const fs = require('fs');
 const path = require('path');
 
 const oxc = require('./index.js');
 
-// Sniff the real `react-native-worklets` version once per Node process so we
-// can stamp it onto every workletized function as `__pluginVersion`. The
-// runtime compares this with its own version at startup and refuses code
-// stamped by a mismatched plugin build. Resolves to `null` (left to the
-// Rust fallback) if the package isn't installed.
 let cachedPluginVersion = undefined;
 function getPluginVersion() {
-  // Read on every call, not once: Jest hands each worker its own copy of
-  // `process.env`, so the native side can't see this flag at all — the
-  // decision has to be made here in JS. Mirrors `shouldMockVersion()` in
-  // `workletFactory.ts`.
   if (process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION === '1') {
     return MOCK_VERSION;
   }
@@ -46,11 +21,6 @@ function getPluginVersion() {
 
 const MOCK_VERSION = 'x.y.z';
 
-// Resolve `react-native-worklets/.worklets/` to an absolute filesystem
-// directory once per Node process. The Rust transform returns module-style
-// paths (`react-native-worklets/.worklets/<hash>.js`) which the worklet
-// runtime resolves via `require()`; here on the build host we need a real
-// filesystem location to write to.
 let cachedWorkletsPkgDir = null;
 function resolveWorkletsPkgDir() {
   if (cachedWorkletsPkgDir !== null) return cachedWorkletsPkgDir;
@@ -69,9 +39,6 @@ function resolveWorkletsDir() {
 
 const WORKLETS_PREFIX = 'react-native-worklets/.worklets/';
 
-// Resolved from this file rather than passed by name: Babel resolves plugin
-// names against the *current working directory*, which for a bundler run is
-// the user's project and may not have these packages hoisted.
 const SYNTAX_JSX = require.resolve('@babel/plugin-syntax-jsx');
 const SYNTAX_TYPESCRIPT = require.resolve('@babel/plugin-syntax-typescript');
 
@@ -87,49 +54,24 @@ function writeEmittedFiles(files) {
   try {
     fs.mkdirSync(dir, { recursive: true });
   } catch {
-    /* writeFileSync below will surface a clearer error if creation truly failed */
-  }
+      }
   for (const file of files) {
     let absPath;
     if (file.path.startsWith(WORKLETS_PREFIX)) {
       absPath = path.join(dir, file.path.slice(WORKLETS_PREFIX.length));
     } else {
-      // Unknown shape — fall back to writing it literally inside .worklets/
       absPath = path.join(dir, path.basename(file.path));
     }
     fs.writeFileSync(absPath, file.content);
   }
 }
 
-// Quick reject: files with no plausible worklet content can skip the OXC
-// roundtrip entirely. The token list comes from the native side so it stays
-// in sync with the hooks the pass actually recognises.
-const WORKLET_TOKENS = oxc.workletSourceTokens();
-
-function mightContainWorklets(sourceText) {
-  for (const t of WORKLET_TOKENS) {
-    if (sourceText.indexOf(t) !== -1) return true;
-  }
-  return false;
-}
-
-// The Rust plugin only implements bundle mode. When `bundleMode` is not set
-// (or explicitly false) we delegate the whole file to the legacy TS plugin so
-// projects that haven't migrated keep working unchanged. This makes
-// `worklets-plugin-oxc/babel` a drop-in replacement for
-// `react-native-worklets/plugin`.
-let cachedLegacyPlugin = null;
-function loadLegacyPlugin() {
-  if (cachedLegacyPlugin !== null) return cachedLegacyPlugin;
-  cachedLegacyPlugin = require('react-native-worklets/plugin');
-  return cachedLegacyPlugin;
-}
-
 function workletsPluginOxcBabelShim(babelApi, options) {
-  const opts = options || {};
-  if (opts.bundleMode !== true) {
-    // Bundleless mode → legacy TS plugin. Forward args verbatim.
-    return loadLegacyPlugin()(babelApi, options);
+  if (options && options.bundleMode === false) {
+    throw new Error(
+      '[worklets-plugin-oxc] supports Bundle Mode only. Drop `bundleMode: false`, ' +
+        'or use `react-native-worklets/plugin` for the legacy pipeline.'
+    );
   }
 
   const { parse } = babelApi || require('@babel/core');
@@ -146,42 +88,23 @@ function workletsPluginOxcBabelShim(babelApi, options) {
           const filename =
             state.filename || state.file.opts.filename || 'unknown.js';
 
-          // Cheap pre-filter: skip files that obviously contain no worklet
-          // hooks/directives. Avoids OXC parsing Flow / weird syntax in
-          // dependencies that have nothing for us to do anyway.
-          if (!mightContainWorklets(sourceText)) {
-            return;
-          }
-
           let result;
           try {
-            // Merge in the sniffed version so the user doesn't have to set
-            // it in babel.config.js. Their explicit value wins if provided.
             const opts = { ...(state.opts || {}) };
             if (opts.pluginVersion == null) {
               const v = getPluginVersion();
               if (v != null) opts.pluginVersion = v;
             }
-            // Hand the resolved worklets package dir to the native layer so
-            // require rewriting can compute correct relative paths from
-            // <pkg>/.worklets/<hash>.js to the source file.
             if (opts.workletsPackageDir == null) {
               const pkgDir = resolveWorkletsPkgDir();
               if (pkgDir != null) opts.workletsPackageDir = pkgDir;
             }
-            // Babel's `envName` drives release detection (drops
-            // `__pluginVersion` / source locations in production builds).
             if (opts.envName == null) {
               const envName = state.file.opts.envName;
               if (envName != null) opts.envName = envName;
             }
             result = oxc.transform(sourceText, filename, opts);
           } catch (e) {
-            // Only swallow parse errors — Flow / exotic syntax that OXC can't
-            // chew through but Babel's downstream chain can. Internal plugin
-            // bugs (closure analysis failures, codegen panics surfaced via
-            // napi::Error) MUST propagate, otherwise broken workletization
-            // looks like "worklets just don't run" with no diagnostic.
             const msg = (e && e.message) || '';
             if (msg.includes('Parse error in')) {
               return;
@@ -189,9 +112,6 @@ function workletsPluginOxcBabelShim(babelApi, options) {
             throw e;
           }
 
-          // Side effect: bundle-mode file emission. Done BEFORE replacing the
-          // AST so that if writing fails we don't leave a partially-mutated
-          // file on disk + transformed program in memory mismatched.
           writeEmittedFiles(result.files);
 
           const newAst = parse(result.code, {
@@ -205,11 +125,6 @@ function workletsPluginOxcBabelShim(babelApi, options) {
           });
 
           programPath.replaceWith(newAst.program);
-          // Note: do NOT call `programPath.stop()` here — other plugins in
-          // the babel chain (e.g. `module-resolver` for path aliases) still
-          // need to traverse the rewritten program. The `__workletsOxcRan`
-          // flag above prevents us from re-entering this visitor on the
-          // freshly replaced node.
         },
       },
     },

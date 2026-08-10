@@ -1,9 +1,5 @@
 use oxc_ast::ast::Expression;
 
-/// Cap on chain-walking recursion in `contains_gesture_object` and
-/// `is_layout_animation_chainable_or_new`. Real-world animation/gesture chains
-/// stay well under this; anything longer is more likely to be a pathological
-/// input than legitimate code we should auto-workletize.
 const MAX_CHAIN_DEPTH: u32 = 64;
 
 const GESTURE_HANDLER_GESTURE_OBJECTS: &[&str] = &[
@@ -100,9 +96,6 @@ const DEFAULT_TRANSITION_CHAIN_METHODS: &[&str] = &[
 
 const LAYOUT_ANIMATION_CALLBACKS: &[&str] = &["withCallback"];
 
-/// Matches `Gesture.X()[*].onY` as a CallExpression callee, where Y is a
-/// gesture-handler builder method (onStart, onEnd, …) and the object trail
-/// contains a `Gesture.<TapKind>()` somewhere.
 pub fn is_gesture_object_event_callback_method(callee: &Expression<'_>) -> bool {
     let Expression::StaticMemberExpression(member) = callee else {
         return false;
@@ -145,9 +138,6 @@ fn is_gesture_object(expr: &Expression<'_>) -> bool {
         && GESTURE_HANDLER_GESTURE_OBJECTS.contains(&member.property.name.as_str())
 }
 
-/// Matches `<chainable>.withCallback` where `<chainable>` resolves up to a
-/// `BounceIn` / `FadeIn` / `LinearTransition` / etc identifier or
-/// `new <LayoutTransition>()`.
 pub fn is_layout_animation_callback_method(callee: &Expression<'_>) -> bool {
     let Expression::StaticMemberExpression(member) = callee else {
         return false;

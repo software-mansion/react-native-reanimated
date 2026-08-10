@@ -1,11 +1,6 @@
 use oxc_ast::ast::{Expression, JSXAttributeItem, JSXAttributeName, JSXOpeningElement};
 use oxc_ast_visit::{VisitMut, walk_mut::walk_jsx_opening_element};
 
-/// `@babel/preset-react` in development mode annotates every JSX element with
-/// `__self` / `__source`. Those props reference the enclosing component
-/// instance and absolute build-host paths, neither of which survives being
-/// hoisted into a `.worklets/<hash>.js` file. Mirrors the
-/// `worklets-strip-jsx-dev-attributes` plugin in `generate.ts`.
 pub fn strip_jsx_dev_attributes(factory: &mut Expression<'_>) {
     let mut stripper = JsxDevAttributeStripper;
     stripper.visit_expression(factory);

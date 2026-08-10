@@ -46,7 +46,7 @@ function run(plugin, source, filename, options) {
       compact: false,
       presets,
       plugins: [
-        [plugin, { disableSourceMaps: true, bundleMode: true, ...options }],
+        [plugin, { disableSourceMaps: true, bundleMode: true, strictGlobal: true, ...options }],
         ...plugins,
       ],
     });
@@ -133,20 +133,10 @@ const CORPUS = [
   ['scheduleOnUI', `const v = 1; scheduleOnUI(() => { 'worklet'; return v; });`],
   ['nested worklet in autoworkletized callback', `useAnimatedStyle(() => { const inner = () => { 'worklet'; return 1; }; return { width: inner() }; });`],
   ['worklet as class field arrow', `class Foo { bar = () => { 'worklet'; return 1; }; }`],
-  ['worklet context object', `const ctx = { __workletContextObject: true, m() { return 1; } };`],
   ['limit-init-data-hoisting', `function outer() { 'worklet'; const inner = function () { 'worklet'; 'limit-init-data-hoisting'; return 1; }; return inner(); }`],
-  ['inline styles warning', `const C = () => <View style={{ width: sv.value }} />;`, { filename: 'test.tsx' }],
-  ['inline styles warning in array', `const C = () => <View style={[{ width: sv.value }]} />;`, { filename: 'test.tsx' }],
   ['file-level worklet directive', `'worklet';\nfunction foo() { return 1; }\nconst bar = () => 2;`],
   ['typescript annotations', `function foo(a: number, b: string): number { 'worklet'; return a + b.length; }`, { filename: 'test.ts' }],
   ['typescript satisfies and as', `function foo(a: unknown) { 'worklet'; return (a as number) + 1; }`, { filename: 'test.ts' }],
-  ['strictGlobal', `function foo() { 'worklet'; return Math.round(unknownGlobal); }`, { options: { strictGlobal: true } }],
-  ['substituteWebPlatformChecks outside worklets', `const a = isWeb(); const b = shouldBeUseWeb();`, { options: { substituteWebPlatformChecks: true } }],
-  ['substituteWebPlatformChecks inside a worklet', `function foo() { 'worklet'; return isWeb() ? shouldBeUseWeb() : 2; }`, { options: { substituteWebPlatformChecks: true } }],
-  ['substituteWebPlatformChecks inside an autoworkletized callback', `useAnimatedStyle(() => { return { width: isWeb() ? 1 : 2 }; });`, { options: { substituteWebPlatformChecks: true } }],
-  ['substituteWebPlatformChecks disabled', `function foo() { 'worklet'; return isWeb(); }`],
-  ['inline styles warning inside a worklet', `function foo() { 'worklet'; return <View style={{ width: sv.value }} />; }`, { filename: 'test.tsx' }],
-  ['custom globals', `function foo() { 'worklet'; return myHostFunction(); }`, { options: { globals: ['myHostFunction'] } }],
   ['omitNativeOnlyData', `function foo() { 'worklet'; return 1; }`, { options: { omitNativeOnlyData: true } }],
   ['relative require in body', `function foo() { 'worklet'; const h = require('./helper'); return h.x; }`, { filename: '/some-library/src/file.ts', options: { importForwarding: { relativePaths: ['some-library'] } } }],
   ['non-forwardable relative require', `function foo() { 'worklet'; const h = require('./helper'); return h.x; }`, { filename: '/other-pkg/src/file.ts' }],
@@ -295,4 +285,54 @@ test('known divergence: Babel emits unparseable output for a worklet constructor
   const oxcResult = run(oxcPlugin, source, AUTOWORKLETIZATION_FILE);
   assert.equal(oxcResult.files.length, 0);
   assert.match(oxcResult.code, /constructor\(x\)/);
+});
+
+// Features the port deliberately leaves out: Bundle Mode never supported
+// Context Objects, the inline-styles warning belongs to Reanimated rather
+// than Worklets, web platform checks are out of scope for a native-only
+// port, and the plugin assumes `strictGlobal`.
+const OUT_OF_SCOPE = [
+  [
+    'context objects',
+    `const ctx = { __workletContextObject: true, m() { return 1; } };`,
+    {},
+    /__workletContextObjectFactory/,
+  ],
+  [
+    'inline styles warning',
+    `const C = () => <View style={{ width: sv.value }} />;`,
+    { filename: 'test.tsx' },
+    /getUseOfValueInStyleWarning/,
+  ],
+  [
+    'web platform checks',
+    `const a = isWeb();`,
+    { options: { substituteWebPlatformChecks: true } },
+    /=\s*true/,
+  ],
+];
+
+for (const [label, source, config, babelMarker] of OUT_OF_SCOPE) {
+  test(`out of scope: ${label}`, () => {
+    const filename = config.filename ?? AUTOWORKLETIZATION_FILE;
+    const babelResult = run(babelPlugin, source, filename, config.options);
+    const oxcResult = run(oxcPlugin, source, filename, config.options);
+
+    assert.match(babelResult.code, babelMarker);
+    assert.doesNotMatch(oxcResult.code, babelMarker);
+  });
+}
+
+test('out of scope: unbound globals are never captured (strictGlobal assumed)', () => {
+  const source = `function foo() { 'worklet'; return someGlobal(); }`;
+
+  const babelResult = run(babelPlugin, source, AUTOWORKLETIZATION_FILE, {
+    strictGlobal: false,
+  });
+  assert.match(babelResult.files[0].content, /__closure = \{\s*someGlobal\s*\}/);
+
+  const oxcResult = run(oxcPlugin, source, AUTOWORKLETIZATION_FILE, {
+    strictGlobal: false,
+  });
+  assert.match(oxcResult.files[0].content, /__closure = \{\}/);
 });

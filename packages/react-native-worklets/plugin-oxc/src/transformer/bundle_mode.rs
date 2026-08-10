@@ -11,18 +11,13 @@ const TOGGLE_PATHS: &[&str] = &[
     "react-native-worklets/lib/module/debug/bundleMode.native.js",
 ];
 
-/// Replaces `globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;` with `... = true;`
-/// in the Worklets toggle-target files. Bundle mode is the only mode this plugin
-/// supports — the toggle exists so the runtime side sees the flag set
-/// regardless of which entry-point variant was bundled.
 pub fn toggle_bundle_mode<'a>(
     node: &mut ExpressionStatement<'a>,
     _state: &State,
     filename: &str,
     builder: AstBuilder<'a>,
 ) {
-    let normalized = filename.replace('\\', "/");
-    if !TOGGLE_PATHS.iter().any(|path| normalized.ends_with(path)) {
+    if !TOGGLE_PATHS.iter().any(|path| filename.ends_with(path)) {
         return;
     }
 

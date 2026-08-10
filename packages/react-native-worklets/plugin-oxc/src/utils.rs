@@ -13,11 +13,6 @@ fn looks_like_release(value: &str) -> bool {
     RELEASE_NEEDLES.iter().any(|n| lower.contains(*n))
 }
 
-/// Release check mirroring `utils.ts:isRelease`. `env_name` is Babel's
-/// `state.file.opts.envName` and wins over the process env when it names a
-/// flavor. Environment variables are read fresh on every call: Jest / Metro
-/// flip them between transforms inside the same Node process, so a
-/// process-lifetime cache would lock the first-seen mode forever.
 pub fn is_release(env_name: Option<&str>) -> bool {
     if let Some(env_name) = env_name {
         if looks_like_release(env_name) {
@@ -34,8 +29,6 @@ pub fn is_release(env_name: Option<&str>) -> bool {
     matches("BABEL_ENV") || matches("NODE_ENV")
 }
 
-/// Whether an import of `module_name` should be forwarded into the emitted
-/// worklet file. Mirrors `imports.ts:canForwardModuleImport`.
 pub fn can_forward_module_import(module_name: &str, forwardable: &[String]) -> bool {
     forwardable.iter().any(|forwardable_name| {
         module_name == forwardable_name
@@ -43,8 +36,6 @@ pub fn can_forward_module_import(module_name: &str, forwardable: &[String]) -> b
     })
 }
 
-/// Whether relative imports inside `module_path`'s worklets should be
-/// forwarded. Mirrors `imports.ts:canForwardRelativeImport`.
 pub fn can_forward_relative_import(module_path: &str, relative_paths: &[String]) -> bool {
     if module_path.is_empty() {
         return false;
@@ -56,8 +47,7 @@ pub fn can_forward_relative_import(module_path: &str, relative_paths: &[String])
 
 fn matches_filename_segment(filename: &str, allowed_path: &str) -> bool {
     let allowed_segments: Vec<&str> = allowed_path.split('/').collect();
-    let normalized = filename.replace('\\', "/");
-    let mut file_segments: Vec<&str> = normalized.split('/').collect();
+    let mut file_segments: Vec<&str> = filename.split('/').collect();
     if let Some(index) = file_segments.iter().rposition(|s| *s == "node_modules") {
         file_segments = file_segments.split_off(index + 1);
     }
@@ -72,18 +62,12 @@ fn matches_filename_segment(filename: &str, allowed_path: &str) -> bool {
     })
 }
 
-/// Whether `body` carries the directive string `name`.
 pub fn body_has_directive(body: &FunctionBody<'_>, name: &str) -> bool {
     body.directives
         .iter()
         .any(|d| d.directive.as_str() == name)
 }
 
-/// Plugin-only directives that exist to communicate intent from source to
-/// this transform; they have no meaning at runtime and would survive into
-/// the stringified worklet body if not stripped from every nested function /
-/// arrow / class method along the way (mirrors
-/// `workletFactory.ts:433-446 stripWorkletDirectives`).
 const WORKLET_DIRECTIVES: &[&str] = &[
     "worklet",
     "no-worklet-closure",
@@ -91,9 +75,6 @@ const WORKLET_DIRECTIVES: &[&str] = &[
     "workletContext",
 ];
 
-/// React Compiler opt-out. Babel's `directives.ts` pairs it with every
-/// `'worklet'` directive it sees, and unlike the plugin-only directives above
-/// it survives into the emitted worklet body.
 const NO_MEMO_DIRECTIVE: &str = "use no memo";
 
 fn build_directive<'a>(
@@ -104,11 +85,6 @@ fn build_directive<'a>(
     builder.directive(SPAN, builder.string_literal(SPAN, dir_str, None), dir_str)
 }
 
-/// Recursively strip every plugin-only directive from `body` and from the
-/// bodies of any nested function / arrow / object-method / class-method. The
-/// outermost `worklet` directive on the function being workletized is also
-/// stripped — its presence on the body would round-trip into `__initData.code`
-/// and trigger the runtime to attempt a second workletization at eval time.
 pub fn strip_worklet_directives_in_body<'a>(
     body: &mut FunctionBody<'a>,
     builder: AstBuilder<'a>,
@@ -117,8 +93,6 @@ pub fn strip_worklet_directives_in_body<'a>(
     use oxc_ast::ast::{
         ClassElement, Expression, ObjectPropertyKind, Statement,
     };
-    // Strip directives on this body. `Directive` isn't `Clone`, so drain the
-    // existing arena vec, keep the ones we want, and put them back.
     let old = std::mem::replace(&mut body.directives, builder.vec());
     let was_worklet = old
         .iter()
@@ -131,8 +105,6 @@ pub fn strip_worklet_directives_in_body<'a>(
         if WORKLET_DIRECTIVES.contains(&d.directive.as_str()) {
             continue;
         }
-        // The stringified worklet body carries no directives at all — Babel
-        // drops every one of them in `workletStringCode.ts`.
         if !keep_no_memo {
             continue;
         }
@@ -316,12 +288,10 @@ pub fn strip_worklet_directives_in_body<'a>(
     }
 }
 
-/// Whether `body` is marked `'worklet'`.
 pub fn has_worklet_directive(body: &FunctionBody<'_>) -> bool {
     body_has_directive(body, "worklet")
 }
 
-/// Prepend the `'worklet'` directive to `body` (no-op if already present).
 pub fn inject_worklet_directive<'a>(body: &mut FunctionBody<'a>, builder: AstBuilder<'a>) {
     if has_worklet_directive(body) {
         return;
@@ -340,8 +310,6 @@ pub fn inject_worklet_directive<'a>(body: &mut FunctionBody<'a>, builder: AstBui
     body.directives = directives;
 }
 
-/// Convert an arrow expression body (single `ExpressionStatement`) into an
-/// explicit `ReturnStatement` so the workletized form preserves the value.
 pub fn rewrite_implicit_return<'a>(body: &mut FunctionBody<'a>, builder: AstBuilder<'a>) {
     if body.statements.len() != 1 {
         return;
@@ -355,7 +323,6 @@ pub fn rewrite_implicit_return<'a>(body: &mut FunctionBody<'a>, builder: AstBuil
     }
 }
 
-/// Collapse `.` and `..` segments lexically — does NOT touch the filesystem.
 pub fn normalize_path(p: &Path) -> PathBuf {
     let mut out = PathBuf::new();
     for comp in p.components() {
@@ -370,8 +337,6 @@ pub fn normalize_path(p: &Path) -> PathBuf {
     out
 }
 
-/// Lexical path diff: number of `..` segments to escape the common prefix +
-/// the remainder. Returns `Some(".")` when the paths are equal.
 pub fn pathdiff(from: &Path, to: &Path) -> Option<PathBuf> {
     let from = normalize_path(from);
     let to = normalize_path(to);
@@ -401,8 +366,6 @@ pub fn pathdiff(from: &Path, to: &Path) -> Option<PathBuf> {
     }
 }
 
-/// Normalise backslashes to forward slashes so emitted code stays valid on
-/// Windows (Metro / `require()` accept `/` everywhere; `\` only sometimes).
 pub fn to_posix(s: &str) -> String {
     s.replace('\\', "/")
 }

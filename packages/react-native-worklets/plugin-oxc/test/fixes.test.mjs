@@ -157,19 +157,6 @@ test('globals (null, this) are not captured into closure', () => {
   assert.doesNotMatch(closureMatch[1], /\bnull\b/);
 });
 
-test('shorthand-method getter using `this` triggers context-object detection', () => {
-  const input = `
-    'worklet';
-    const ctx = {
-      get value() { return this._v; },
-    };
-  `;
-  const { code } = transform(input, 'test.js', {});
-  // File-level worklet directive + implicit context-object detection should
-  // mint a __workletContextObjectFactory. The factory call site is in `code`.
-  assert.match(code, /__workletContextObjectFactory/);
-});
-
 test('extraPlugins option does not throw and emits a stderr warning', () => {
   const input = `function foo() { 'worklet'; return 1; }`;
   // The warning is emitted to stderr once per process. Just ensure transform
