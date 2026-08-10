@@ -39,7 +39,7 @@ function main(): void {
     }
   }
 
-  process.exit(missingInMock.length > 0 ? 1 : 0);
+  process.exitCode = missingInMock.length > 0 ? 1 : 0;
 }
 
 function createProgram(): ts.Program {
@@ -58,6 +58,15 @@ function createProgram(): ts.Program {
   );
   if (!parsed) {
     throw new Error('Could not parse tsconfig.native.json');
+  }
+  if (parsed.errors.length > 0) {
+    throw new Error(
+      `Errors in tsconfig.native.json:\n${ts.formatDiagnostics(parsed.errors, {
+        getCanonicalFileName: (fileName) => fileName,
+        getCurrentDirectory: ts.sys.getCurrentDirectory,
+        getNewLine: () => ts.sys.newLine,
+      })}`
+    );
   }
   return ts.createProgram([indexPath, mockPath], parsed.options);
 }
