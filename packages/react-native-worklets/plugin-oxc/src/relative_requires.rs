@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::path::PathBuf;
 
 use oxc_ast::AstBuilder;
@@ -15,14 +14,11 @@ use crate::utils::{normalize_path, pathdiff};
 pub fn rewrite_relative_requires<'a>(
     body: &mut FunctionBody<'a>,
     filename: &str,
-    workletizable_modules: &HashSet<String>,
+    forwardable_relative_paths: &[String],
     worklets_package_dir: Option<&str>,
     builder: AstBuilder<'a>,
 ) {
-    if !crate::utils::is_allowed_for_relative_imports(
-        filename,
-        workletizable_modules.iter().map(String::as_str),
-    ) {
+    if !crate::utils::can_forward_relative_import(filename, forwardable_relative_paths) {
         return;
     }
     let mut visitor = RelativeRequireRewriter {

@@ -237,22 +237,39 @@ describe('CSSTransitionsManager', () => {
       });
 
       describe('detach via null config', () => {
-        test('unregisters after a transition has run', () => {
+        test('unregisters and reports the detach after a transition has run', () => {
           manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 });
           manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 });
           jest.clearAllMocks();
 
-          manager.update(null);
+          expect(manager.update(null)).toBe(true);
 
           expect(runCSSTransition).not.toHaveBeenCalled();
           expect(unregisterCSSTransition).toHaveBeenCalledWith(viewTag);
         });
 
-        test('does not unregister when no transition has ever run', () => {
+        // The props are still present, but the 0ms config normalizes to empty, so
+        // CSSManager (which only sees the props) relies on this returned flag to
+        // record the revert base.
+        test('reports the detach when the config normalizes to empty (0ms)', () => {
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 });
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 });
+          jest.clearAllMocks();
+
+          const detached = manager.update(
+            { transitionProperty: 'opacity', transitionDuration: '0ms' },
+            { opacity: 1 }
+          );
+
+          expect(detached).toBe(true);
+          expect(unregisterCSSTransition).toHaveBeenCalledWith(viewTag);
+        });
+
+        test('does not unregister or report a detach when none has run', () => {
           manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 });
           jest.clearAllMocks();
 
-          manager.update(null);
+          expect(manager.update(null)).toBe(false);
 
           expect(runCSSTransition).not.toHaveBeenCalled();
           expect(unregisterCSSTransition).not.toHaveBeenCalled();

@@ -75,7 +75,7 @@ function RecursiveView(props: { depth: number; extraChildrenCount: number }) {
 export default function ShadowNodesCloningExample() {
   return (
     <View style={styles.container}>
-      <RecursiveView depth={100} extraChildrenCount={100} />
+      <RecursiveView depth={30} extraChildrenCount={100} />
     </View>
   );
 }

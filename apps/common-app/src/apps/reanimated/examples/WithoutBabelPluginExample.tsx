@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import {
+  GestureDetector,
+  GestureStateManager,
+  usePanGesture,
+} from 'react-native-gesture-handler';
 import Animated, {
   isWorkletFunction,
   useAnimatedStyle,
@@ -39,26 +43,28 @@ function WithBabel() {
     };
   });
 
-  const gesture = Gesture.Pan()
-    .manualActivation(true)
-    .onBegin(() => {
+  const gesture = usePanGesture({
+    manualActivation: true,
+    onBegin: () => {
       'worklet';
       isPressed.value = true;
-    })
-    .onChange((e) => {
+    },
+    onFinalize: () => {
+      'worklet';
+      isPressed.value = false;
+    },
+    onTouchesMove: (e) => {
+      'worklet';
+      GestureStateManager.activate(e.handlerTag);
+    },
+    onUpdate: (e) => {
       'worklet';
       offset.value = {
         x: e.changeX + offset.value.x,
         y: e.changeY + offset.value.y,
       };
-    })
-    .onFinalize(() => {
-      'worklet';
-      isPressed.value = false;
-    })
-    .onTouchesMove((_, state) => {
-      state.activate();
-    });
+    },
+  });
 
   return (
     <GestureDetector gesture={gesture}>
@@ -98,26 +104,28 @@ export function WithoutBabel() {
     };
   }, [isPressed, offset, stateObject, stateBoolean, stateNumber]);
 
-  const gesture = Gesture.Pan()
-    .manualActivation(true)
-    .onBegin(() => {
+  const gesture = usePanGesture({
+    manualActivation: true,
+    onBegin: () => {
       'worklet';
       isPressed.value = true;
-    })
-    .onChange((e) => {
+    },
+    onFinalize: () => {
+      'worklet';
+      isPressed.value = false;
+    },
+    onTouchesMove: (e) => {
+      'worklet';
+      GestureStateManager.activate(e.handlerTag);
+    },
+    onUpdate: (e) => {
       'worklet';
       offset.value = {
         x: e.changeX + offset.value.x,
         y: e.changeY + offset.value.y,
       };
-    })
-    .onFinalize(() => {
-      'worklet';
-      isPressed.value = false;
-    })
-    .onTouchesMove((_, state) => {
-      state.activate();
-    });
+    },
+  });
 
   return (
     <GestureDetector gesture={gesture}>

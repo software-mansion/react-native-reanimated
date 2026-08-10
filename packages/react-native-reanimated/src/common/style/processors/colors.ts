@@ -7,7 +7,11 @@ import type {
 import { ColorProperties, processColorInitially } from '../../../Colors';
 import type { StyleProps } from '../../../commonTypes';
 import { IS_ANDROID, IS_IOS } from '../../constants';
-import { type ValueProcessorContext, ValueProcessorTarget } from '../../types';
+import {
+  type MutuallyExclusiveUnion,
+  type ValueProcessorContext,
+  ValueProcessorTarget,
+} from '../../types';
 import { isRecord } from '../../utils';
 
 /**
@@ -22,9 +26,9 @@ export function PlatformColor(...names: string[]): OpaqueColorValue {
       { resource_paths: names }) as unknown as OpaqueColorValue;
 }
 
-type PlatformColorObject =
-  | { semantic: Array<string>; resource_paths?: never }
-  | { semantic?: never; resource_paths?: Array<string> };
+type PlatformColorObject = MutuallyExclusiveUnion<
+  [{ semantic: Array<string> }, { resource_paths?: Array<string> }]
+>;
 
 function isPlatformColorObject(value: unknown): value is PlatformColorObject {
   'worklet';

@@ -32,7 +32,6 @@ let config = {
 
 config = mergeConfig(defaultConfig, config);
 
-// Uncomment the following to enable bundle mode.
 const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
 config = mergeConfig(config, bundleModeMetroConfig);
 

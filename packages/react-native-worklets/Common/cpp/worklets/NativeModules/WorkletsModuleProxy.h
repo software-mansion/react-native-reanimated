@@ -7,6 +7,7 @@
 #include <worklets/SharedItems/UnpackerLoader.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
+#include <worklets/Tools/RNRuntimeStatus.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
@@ -28,7 +29,8 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
       const std::shared_ptr<UIScheduler> &uiScheduler,
       std::function<bool()> &&isJavaScriptQueue,
       const std::shared_ptr<RuntimeBindings> &runtimeBindings,
-      const BundleModeConfig &bundleModeConfig);
+      const BundleModeConfig &bundleModeConfig,
+      const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus);
 
   ~WorkletsModuleProxy();
 
@@ -62,6 +64,7 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
   const std::shared_ptr<MemoryManager> memoryManager_;
   const std::shared_ptr<RuntimeManager> runtimeManager_;
   const std::shared_ptr<UnpackerLoader> unpackerLoader_;
+  const std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
   const std::shared_ptr<JSIWorkletsModuleProxy> rnRuntimeProxy_;
   std::shared_ptr<AnimationFrameBatchinator> animationFrameBatchinator_;

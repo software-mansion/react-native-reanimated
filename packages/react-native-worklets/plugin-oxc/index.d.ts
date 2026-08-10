@@ -28,7 +28,11 @@ export interface PluginOptions {
   omitNativeOnlyData?: boolean;
   strictGlobal?: boolean;
   substituteWebPlatformChecks?: boolean;
-  workletizableModules?: string[];
+  importForwarding?: {
+    moduleNames?: string[];
+    relativePaths?: string[];
+  };
+  envName?: string;
 }
 
 export interface EmittedFile {

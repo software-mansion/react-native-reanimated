@@ -35,7 +35,7 @@ export default function DetachAnimatedStylesExample() {
 
   useDerivedValue(() => {
     console.log(sv.value);
-  }, []);
+  });
 
   const handleToggleSharedValue = useCallback(() => {
     ref.current = 1 - ref.current;

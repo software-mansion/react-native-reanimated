@@ -1,9 +1,9 @@
 #pragma once
 
-#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-
+#include <react/renderer/components/rnreanimated/Props.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
 #include <memory>
 #include <unordered_map>
@@ -133,6 +133,34 @@ static inline bool isRNSScreen(const std::shared_ptr<LightNode> &node) {
   const auto componentName = node->current.componentName;
   react_native_assert(componentName && "Component name is nullptr");
   return !std::strcmp(componentName, "RNSScreen") || !std::strcmp(componentName, "RNSModalScreen");
+}
+
+static inline std::shared_ptr<LightNode> findParentRNSScreen(const std::shared_ptr<LightNode> &node) {
+  auto current = node->parent.lock();
+  while (current && !isRNSScreen(current)) {
+    current = current->parent.lock();
+  }
+  return current;
+}
+
+static inline bool isSETBoundary(const std::shared_ptr<LightNode> &node) {
+  return !std::strcmp(node->current.componentName, "REASharedTransitionBoundary");
+}
+
+static inline bool isBoundaryActive(const std::shared_ptr<LightNode> &node) {
+  auto boundaryProps = std::static_pointer_cast<const REASharedTransitionBoundaryProps>(node->current.props);
+  return boundaryProps->isActive;
+}
+
+static inline bool isInsideInactiveBoundary(const std::shared_ptr<LightNode> &node) {
+  auto current = node->parent.lock();
+  while (current) {
+    if (isSETBoundary(current)) {
+      return !isBoundaryActive(current);
+    }
+    current = current->parent.lock();
+  }
+  return false;
 }
 
 static inline bool isRoot(const std::shared_ptr<LightNode> &node) {

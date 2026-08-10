@@ -1,2 +1,2 @@
 'use strict';
-export { CSSKeyframesRuleImpl, CSSManager } from './native';
+export { CSSKeyframesRuleImpl, CSSManager } from './web';

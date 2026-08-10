@@ -5,6 +5,13 @@ use oxc_syntax::symbol::SymbolId;
 use crate::globals::default_globals;
 use crate::options::PluginOptions;
 
+const DEFAULT_FORWARDABLE_MODULE_NAMES: &[&str] = &[
+    "react-native-worklets",
+    "react-native/Libraries/Core/setUpXHR",
+];
+
+const DEFAULT_FORWARDABLE_RELATIVE_PATHS: &[&str] = &["react-native-worklets"];
+
 /// Shape of an import binding so we can re-emit it in a bundle-mode
 /// `.worklets/<hash>.js` file.
 #[derive(Debug, Clone)]
@@ -36,7 +43,13 @@ pub struct State {
 
     pub globals: HashSet<String>,
 
-    pub workletizable_modules: HashSet<String>,
+    /// Module names whose imports are forwarded into emitted worklet files,
+    /// defaults included.
+    pub forwardable_module_names: Vec<String>,
+
+    /// Path fragments marking a source file as allowed to forward its own
+    /// relative imports, defaults included.
+    pub forwardable_relative_paths: Vec<String>,
 
     /// Full original source text. The worklet-body codegen builds mini-programs
     /// containing cloned AST nodes whose spans still index into the original
@@ -86,19 +99,26 @@ impl State {
             g
         };
 
-        let workletizable_modules: HashSet<String> = opts
-            .workletizable_modules
-            .as_deref()
-            .unwrap_or(&[])
+        let user_forwarding = opts.import_forwarding.clone().unwrap_or_default();
+        let mut forwardable_module_names: Vec<String> = DEFAULT_FORWARDABLE_MODULE_NAMES
             .iter()
-            .cloned()
+            .map(|s| (*s).to_string())
             .collect();
+        forwardable_module_names
+            .extend(user_forwarding.module_names.unwrap_or_default());
+        let mut forwardable_relative_paths: Vec<String> = DEFAULT_FORWARDABLE_RELATIVE_PATHS
+            .iter()
+            .map(|s| (*s).to_string())
+            .collect();
+        forwardable_relative_paths
+            .extend(user_forwarding.relative_paths.unwrap_or_default());
 
         Self {
             opts,
             worklet_number: 1,
             globals,
-            workletizable_modules,
+            forwardable_module_names,
+            forwardable_relative_paths,
             source_text,
             emitted_files: Vec::new(),
             imports_by_symbol: HashMap::new(),

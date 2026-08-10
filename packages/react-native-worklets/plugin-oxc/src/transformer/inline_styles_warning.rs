@@ -19,7 +19,7 @@ pub fn process_inline_styles_warning<'a>(
     builder: AstBuilder<'a>,
     ctx: &mut TraverseCtx<'a, ()>,
 ) {
-    if is_release() {
+    if is_release(state.opts.env_name.as_deref()) {
         return;
     }
     if state.opts.disable_inline_styles_warning.unwrap_or(false) {

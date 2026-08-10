@@ -23,8 +23,6 @@ class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
     return uiScheduler_;
   }
 
-  void scheduleTriggerOnUI();
-
  private:
   friend HybridBase;
 
@@ -32,7 +30,6 @@ class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
 
   void invalidate();
 
-  jni::global_ref<AndroidUIScheduler::javaobject> javaPart_;
   std::shared_ptr<UIScheduler> uiScheduler_;
 
   explicit AndroidUIScheduler(const jni::alias_ref<AndroidUIScheduler::jhybridobject> &jThis);

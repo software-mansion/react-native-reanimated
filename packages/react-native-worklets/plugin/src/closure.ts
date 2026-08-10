@@ -1,28 +1,42 @@
 import type { NodePath } from '@babel/core';
 import type { Binding } from '@babel/traverse';
-import type { Identifier, ImportDeclaration } from '@babel/types';
-import { cloneNode } from '@babel/types';
+import type {
+  Identifier,
+  ImportDeclaration,
+  JSXIdentifier,
+} from '@babel/types';
+import { cloneNode, identifier, isJSXIdentifier } from '@babel/types';
 
 import { globals } from './globals';
 import {
-  isAllowedForRelativeImports,
+  canForwardModuleImport,
+  canForwardRelativeImport,
   isImport,
   isImportRelative,
-  isWorkletizableModule,
 } from './imports';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
+
+/**
+ * In Bundle Mode JSX element names are captured too, and they reach us as
+ * `JSXIdentifier` nodes. `objectProperty()` only accepts an `Identifier`, so
+ * rebuild one — the name is always a valid identifier here, since Babel's
+ * `ReferencedIdentifier` filters out intrinsic (lower-case) tags.
+ */
+function toClosureIdentifier(node: Identifier | JSXIdentifier): Identifier {
+  return isJSXIdentifier(node) ? identifier(node.name) : cloneNode(node, true);
+}
 
 export function getClosure(
   funPath: NodePath<WorkletizableFunction>,
   state: WorkletsPluginPass
 ): {
   closureVariables: Identifier[];
-  libraryBindingsToImport: Set<Binding>;
+  moduleBindingsToImport: Set<Binding>;
   relativeBindingsToImport: Set<Binding>;
 } {
   const capturedNames = new Set<string>();
   const closureVariables = new Array<Identifier>();
-  const libraryBindingsToImport = new Set<Binding>();
+  const moduleBindingsToImport = new Set<Binding>();
   const relativeBindingsToImport = new Set<Binding>();
   let recrawled = false;
 
@@ -32,7 +46,7 @@ export function getClosure(
         typePath.skip();
       },
       ReferencedIdentifier(idPath) {
-        if (idPath.isJSXIdentifier()) {
+        if (idPath.isJSXIdentifier() && !state.opts.bundleMode) {
           return;
         }
 
@@ -65,7 +79,7 @@ export function getClosure(
             return;
           }
           capturedNames.add(name);
-          closureVariables.push(cloneNode(idPath.node as Identifier, true));
+          closureVariables.push(toClosureIdentifier(idPath.node));
           return;
         }
 
@@ -89,9 +103,9 @@ export function getClosure(
         if (state.opts.bundleMode && isImport(binding)) {
           if (
             isImportRelative(binding) &&
-            isAllowedForRelativeImports(
+            canForwardRelativeImport(
               state.filename,
-              state.opts.workletizableModules
+              state.importForwarding.relativePaths
             )
           ) {
             capturedNames.add(name);
@@ -102,15 +116,17 @@ export function getClosure(
             binding.path.parentPath as NodePath<ImportDeclaration>
           ).node.source.value;
 
-          if (isWorkletizableModule(source, state.opts.workletizableModules)) {
+          if (
+            canForwardModuleImport(source, state.importForwarding.moduleNames)
+          ) {
             capturedNames.add(name);
-            libraryBindingsToImport.add(binding);
+            moduleBindingsToImport.add(binding);
             return;
           }
         }
 
         capturedNames.add(name);
-        closureVariables.push(cloneNode(idPath.node as Identifier, true));
+        closureVariables.push(toClosureIdentifier(idPath.node));
       },
     },
     state
@@ -118,7 +134,7 @@ export function getClosure(
 
   return {
     closureVariables,
-    libraryBindingsToImport,
+    moduleBindingsToImport,
     relativeBindingsToImport,
   };
 }

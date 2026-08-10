@@ -15,6 +15,7 @@ mod closure;
 mod context_object;
 mod file_directive;
 mod globals;
+mod jsx_dev_attributes;
 mod relative_requires;
 mod naming;
 mod options;
@@ -129,12 +130,29 @@ fn maybe_warn_extras(options: &PluginOptions) {
     );
 }
 
+fn is_generated_worklet_file(filename: &str) -> bool {
+    filename
+        .replace('\\', "/")
+        .contains("react-native-worklets/.worklets")
+}
+
 fn run(
     source_text: &str,
     filename: &str,
     options: PluginOptions,
 ) -> Result<TransformResult, String> {
     maybe_warn_extras(&options);
+
+    // Files we generated ourselves already contain finished worklet factories.
+    // Re-running the pass over them would workletize the factory bodies a
+    // second time. Mirrors `globals.ts:isGeneratedWorkletFile`.
+    if is_generated_worklet_file(filename) {
+        return Ok(TransformResult {
+            code: source_text.to_string(),
+            files: Vec::new(),
+        });
+    }
+
     let allocator = Allocator::default();
     // `SourceType::from_path` recognises `.ts`/`.tsx`/`.js`/`.jsx`/`.mjs`/`.cjs`.
     // For genuinely unknown extensions we fall back to plain JS — falling back
@@ -170,8 +188,17 @@ fn run(
         // turns `<Foo />` into `_jsx(Foo)` and breaks downstream visitors
         // (e.g. our inline-styles warning, which looks for JSXAttribute
         // named "style"). Disable JSX so this pass *only* strips TS.
+        // `only_remove_type_imports` keeps value imports that look unused
+        // after workletization. A worklet body gets hoisted into its own
+        // file, so the import it referenced is left with no reader here —
+        // eliding it would drop the module's side effects, which the Babel
+        // plugin never does.
         let opts = oxc_transformer::TransformOptions {
             jsx: oxc_transformer::JsxOptions::disable(),
+            typescript: oxc_transformer::TypeScriptOptions {
+                only_remove_type_imports: true,
+                ..Default::default()
+            },
             ..Default::default()
         };
         let _ = oxc_transformer::Transformer::new(
@@ -182,24 +209,15 @@ fn run(
         .build_with_scoping(semantic_for_strip, &mut program);
     }
 
-    let semantic_ret = SemanticBuilder::new()
-        .with_check_syntax_error(false)
-        .build(&program);
-    let scoping = semantic_ret.semantic.into_scoping();
-
-    let state = State::new(options, source_text.to_string());
+    let mut state = State::new(options, source_text.to_string());
     let builder = oxc_ast::AstBuilder::new(&allocator);
 
     file_directive::process_file_directive(&mut program, builder);
 
-    let transformer = Transformer::new_with_builder(state, builder, filename.to_string());
-    let mut state = transformer.run_and_take(&mut program, scoping, &allocator);
-
     let semantic_ret = SemanticBuilder::new()
         .with_check_syntax_error(false)
         .build(&program);
-    let scoping_post = semantic_ret.semantic.into_scoping();
-    let builder = oxc_ast::AstBuilder::new(&allocator);
+    let scoping = semantic_ret.semantic.into_scoping();
 
     // Index top-level imports so bundle-mode emission can re-emit them
     // into each `.worklets/<hash>.js` file. Done once, after TS strip + any
@@ -209,11 +227,26 @@ fn run(
     let emitted = worklet_pass::process_program(
         &mut program,
         &mut state,
-        &scoping_post,
+        &scoping,
         builder,
         &allocator,
         filename,
     );
+
+    // Deliberately after worklet extraction. Babel replaces a worklet with
+    // its factory call on `Function` enter, so the visitors backing these
+    // passes never descend into a worklet body — `isWeb()` stays a call and
+    // an inline style inside a worklet goes unwrapped. Running them here,
+    // once every worklet body has been lifted out into its own file, gives
+    // the same reach without re-deriving which functions are worklets.
+    let semantic_ret = SemanticBuilder::new()
+        .with_check_syntax_error(false)
+        .build(&program);
+    let scoping_post = semantic_ret.semantic.into_scoping();
+    let builder = oxc_ast::AstBuilder::new(&allocator);
+
+    let transformer = Transformer::new_with_builder(state, builder, filename.to_string());
+    transformer.run_and_take(&mut program, scoping_post, &allocator);
 
     let printed = Codegen::new()
         .with_options(CodegenOptions::default())
@@ -228,6 +261,41 @@ fn run(
         code: printed.code,
         files,
     })
+}
+
+/// Every substring whose absence proves a file has nothing for this plugin to
+/// do. The JS shim scans source text against this list and skips the whole
+/// OXC round-trip when none match. Assembled from the pass's own constants so
+/// a new hook can't be added without the pre-filter learning about it.
+#[napi]
+pub fn worklet_source_tokens() -> Vec<String> {
+    let mut tokens: Vec<String> = vec![
+        "'worklet'".to_string(),
+        "\"worklet\"".to_string(),
+        context_object::CONTEXT_OBJECT_MARKER.to_string(),
+        "__workletClass".to_string(),
+        "_WORKLETS_BUNDLE_MODE_ENABLED".to_string(),
+        // Layout-animation callbacks are reached through this chain method
+        // regardless of which animation the chain started from.
+        "withCallback".to_string(),
+        // `substituteWebPlatformChecks` rewrites these two callees.
+        "isWeb".to_string(),
+        "shouldBeUseWeb".to_string(),
+        // The inline-styles warning only fires on a `style` JSX prop holding
+        // an object or array literal directly. Matching those two shapes
+        // keeps the filter selective — a bare `.value` token would match
+        // most of an app.
+        "style={{".to_string(),
+        "style={[".to_string(),
+    ];
+    tokens.extend(
+        worklet_pass::autoworkletization_callee_names()
+            .into_iter()
+            .map(str::to_string),
+    );
+    tokens.sort();
+    tokens.dedup();
+    tokens
 }
 
 #[napi]

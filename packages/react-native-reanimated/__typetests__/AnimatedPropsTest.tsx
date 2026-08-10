@@ -2,9 +2,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import type { FlatListProps } from 'react-native';
-import { FlatList } from 'react-native';
+import { FlatList, TextInput } from 'react-native';
 
-import Animated, { useAnimatedProps } from '..';
+import Animated, {
+  useAnimatedProps,
+  useDerivedValue,
+  useSharedValue,
+} from '..';
 
 function AnimatedPropsTest() {
   function AnimatedPropsTestClass1() {
@@ -35,6 +39,31 @@ function AnimatedPropsTest() {
     return (
       // @ts-expect-error
       <AnimatedPath animatedProps={animatedProps} />
+    );
+  }
+
+  function AnimatedPropsTestTextInputText() {
+    const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+    const text = useSharedValue('text');
+    const derivedText = useDerivedValue(() => text.value);
+    const numericValue = useSharedValue(0);
+    const animatedProps = useAnimatedProps(() => ({
+      text: text.value,
+      defaultValue: text.value,
+    }));
+    return (
+      <>
+        {/* `text` is accepted inline as a shared value */}
+        <AnimatedTextInput text={text} />
+        {/* `text` is accepted inline as a derived value */}
+        <AnimatedTextInput text={derivedText} />
+        {/* raw values are accepted via `useAnimatedProps` */}
+        <AnimatedTextInput animatedProps={animatedProps} />
+        {/* @ts-expect-error A static string is not accepted - use `value` or `defaultValue` instead. */}
+        <AnimatedTextInput text="some string" />
+        {/* @ts-expect-error A shared value of a non-string type is not accepted. */}
+        <AnimatedTextInput text={numericValue} />
+      </>
     );
   }
 

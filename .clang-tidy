@@ -29,6 +29,7 @@ Checks:
   - -cppcoreguidelines-init-variables
   - -cppcoreguidelines-pro-bounds-array-to-pointer-decay
   - -cppcoreguidelines-avoid-non-const-global-variables
+  - -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access
 
   # - google-*
   # - hicpp-*
@@ -43,3 +44,6 @@ Checks:
   # - portability-*
   # - readability-*
 WarningsAsErrors: '*'
+CheckOptions:
+  - key: cppcoreguidelines-avoid-do-while.IgnoreMacros
+    value: true

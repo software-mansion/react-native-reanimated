@@ -1,6 +1,6 @@
 import React from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, {
   clamp,
   SharedValue,
@@ -18,12 +18,8 @@ function ChatHeads({
   const transX = useSharedValue(0);
   const transY = useSharedValue(0);
 
-  const gesture = Gesture.Pan()
-    .onChange((event) => {
-      transX.value += event.changeX;
-      transY.value += event.changeY;
-    })
-    .onEnd((event) => {
+  const gesture = usePanGesture({
+    onDeactivate: (event) => {
       const width = windowWidth - 100 - 40; // minus margins & width
       const height = windowHeight - 100 - 40 - 128; // minus margins & height & header height
       const toss = 0.2;
@@ -55,7 +51,12 @@ function ChatHeads({
 
       transX.value = withSpring(snapX, { velocity: event.velocityX });
       transY.value = withSpring(snapY, { velocity: event.velocityY });
-    });
+    },
+    onUpdate: (event) => {
+      transX.value += event.changeX;
+      transY.value += event.changeY;
+    },
+  });
 
   const stylez = useAnimatedStyle(() => {
     return {

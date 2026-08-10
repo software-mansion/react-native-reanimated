@@ -13,12 +13,13 @@
 #include <react/jni/ReadableNativeMap.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/android/JWorkletRuntimeWrapper.h>
+
+#include <vector>
 #endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 namespace worklets {
 
@@ -33,13 +34,15 @@ WorkletsModule::WorkletsModule(
     const std::shared_ptr<UIScheduler> &uiScheduler)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
+      rnRuntimeStatus_(std::make_shared<RNRuntimeStatus>()),
       workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
           *rnRuntime,
           jsCallInvoker,
           uiScheduler,
           getIsOnJSQueueThread(),
           getRuntimeBindings(bundleModeConfig.enabled, *rnRuntime),
-          bundleModeConfig)) {}
+          bundleModeConfig,
+          rnRuntimeStatus_)) {}
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
@@ -174,11 +177,13 @@ RuntimeBindings::SendRequest WorkletsModule::getSendRequest() {
 
 std::function<bool()> WorkletsModule::getIsOnJSQueueThread() {
   return [javaPart = javaPart_]() -> bool {
-    return javaPart->getClass()->getMethod<jboolean()>("isOnJSQueueThread").operator()(javaPart);
+    static const auto jIsOnJSQueueThread = javaPart->getClass()->getMethod<jboolean()>("isOnJSQueueThread");
+    return jIsOnJSQueueThread(javaPart);
   };
 }
 
 void WorkletsModule::invalidateCpp() {
+  rnRuntimeStatus_->setDead();
   javaPart_.reset();
   workletsModuleProxy_.reset();
 }

@@ -1,3 +1,4 @@
+import type { TextStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -8,7 +9,7 @@ import { IS_ANDROID } from '@/utils';
 
 export default function FontVariant() {
   return (
-    <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
+    <ExamplesScreen<TextStyle, { keyframes: CSSAnimationKeyframes<TextStyle> }>
       CardComponent={VerticalExampleCard}
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',

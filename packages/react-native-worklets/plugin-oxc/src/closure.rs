@@ -10,7 +10,7 @@ use oxc_syntax::symbol::SymbolId;
 use oxc_syntax::scope::ScopeFlags;
 
 use crate::state::{ImportInfo, ImportShape, State};
-use crate::utils::{ALWAYS_ALLOWED, is_allowed_for_relative_imports};
+use crate::utils::{can_forward_module_import, can_forward_relative_import};
 
 #[derive(Debug, Default)]
 pub struct ClosureResult {
@@ -92,20 +92,14 @@ pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
                         let source = &info.source;
                         let is_rel = source.starts_with('.');
                         let allowed_for_rel = is_rel
-                            && is_allowed_for_relative_imports(
+                            && can_forward_relative_import(
                                 filename,
-                                state
-                                    .opts
-                                    .workletizable_modules
-                                    .as_deref()
-                                    .unwrap_or(&[])
-                                    .iter()
-                                    .map(String::as_str),
+                                &state.forwardable_relative_paths,
                             );
                         let lib_workletizable = !is_rel
-                            && is_workletizable_module(
+                            && can_forward_module_import(
                                 source,
-                                state.opts.workletizable_modules.as_deref(),
+                                &state.forwardable_module_names,
                             );
                         if allowed_for_rel || lib_workletizable {
                             result.imports.push(info.clone());
@@ -161,15 +155,6 @@ pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
     result
 }
 
-fn is_workletizable_module(source: &str, workletizable: Option<&[String]>) -> bool {
-    if ALWAYS_ALLOWED.iter().any(|m| source.starts_with(m)) {
-        return true;
-    }
-    workletizable
-        .map(|ms| ms.iter().any(|m| source.starts_with(m)))
-        .unwrap_or(false)
-}
-
 /// `_worklet_<digits>_init_data` — names minted by `worklet_factory.rs` when
 /// hoisting init-data declarations to top-level. Such references appear inside
 /// outer-worklet bodies after we inline an inner worklet's factory call.
@@ -218,13 +203,6 @@ impl<'a, 's> Visit<'a> for ReferenceCollector<'s> {
         });
     }
 
-    // JSX element / member-expression names walk into IdentifierReference by
-    // default in oxc, which would over-capture every `<Foo>` / `<Foo.Bar>` in
-    // a worklet body that returns JSX. The TS plugin filters these out
-    // explicitly (`closure.ts:35-37`). Skip the entire element-name subtree;
-    // JSX attribute *values* (JSXExpressionContainer) are still walked because
-    // those contain regular Expressions whose references must be captured.
-    fn visit_jsx_element_name(&mut self, _it: &oxc_ast::ast::JSXElementName<'a>) {}
 }
 
 /// Drives visitor walks over a function's body + params, regardless of whether

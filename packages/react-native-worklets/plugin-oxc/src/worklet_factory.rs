@@ -32,7 +32,7 @@ const REAL_VERSION: &str = env!("WORKLETS_PACKAGE_VERSION");
 /// `__pluginVersion` field with `MOCK_VERSION` instead. Matches the env gate
 /// in `workletFactory.ts:288, 448-452`.
 fn mock_version_active() -> bool {
-    std::env::var("REANIMATED_JEST_SHOULD_MOCK_VERSION")
+    std::env::var("WORKLETS_JEST_SHOULD_MOCK_VERSION")
         .map(|v| v == "1")
         .unwrap_or(false)
 }
@@ -51,13 +51,6 @@ pub struct WorkletInput<'a, 'b> {
 }
 
 impl<'a, 'b> WorkletInput<'a, 'b> {
-    /// Whether the original worklet body had a `'no-worklet-closure'`
-    /// directive. When set, closure analysis is bypassed and the worklet
-    /// is generated with an empty `__closure`.
-    pub fn no_worklet_closure(&self) -> bool {
-        body_has_directive(self.body, "no-worklet-closure")
-    }
-
     /// Whether the original worklet body had a `'limit-init-data-hoisting'`
     /// directive. When set, the init-data const is placed at the start of
     /// the parent function body rather than file-top-level — keeping the
@@ -101,11 +94,11 @@ pub fn make_worklet_factory<'a>(
         make_worklet_name(input.self_name, filename, n)
     };
 
-    // `'no-worklet-closure'` opts out of any closure capture (e.g. the
-    // installValueUnpacker / installShareableGuestUnpacker family).
-    let closure: ClosureResult = if input.no_worklet_closure() {
-        ClosureResult::default()
-    } else {
+    // `'no-worklet-closure'` is deliberately ignored: bundle mode always
+    // captures the closure, since the worklet body is hoisted into its own
+    // module and can't reach the original scope any other way. Mirrors
+    // `workletFactory.ts:66` (`state.opts.bundleMode || !hasDirective(…)`).
+    let closure: ClosureResult = {
         closure_for_function(
             ClosureWalk::new(input.params, input.body),
             input.function_scope_id,
@@ -125,8 +118,8 @@ pub fn make_worklet_factory<'a>(
     let rewritten_classes: Vec<String> = Vec::new();
 
     let include_source_map =
-        !is_release() && !state.opts.disable_source_maps.unwrap_or(false);
-    let mock_source_map = std::env::var("REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP")
+        !is_release(state.opts.env_name.as_deref()) && !state.opts.disable_source_maps.unwrap_or(false);
+    let mock_source_map = std::env::var("WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP")
         .map(|v| v == "1")
         .unwrap_or(false);
 
@@ -203,7 +196,7 @@ pub fn make_worklet_factory<'a>(
             crate::relative_requires::rewrite_relative_requires(
                 body,
                 filename,
-                &state.workletizable_modules,
+                &state.forwardable_relative_paths,
                 state.opts.worklets_package_dir.as_deref(),
                 builder,
             );
@@ -241,12 +234,14 @@ pub fn make_worklet_factory<'a>(
 ///   export default (<factory>);
 fn codegen_bundle_file<'a>(
     builder: AstBuilder<'a>,
-    factory: Expression<'a>,
+    mut factory: Expression<'a>,
     imports: &[crate::state::ImportInfo],
     filename: &str,
     worklets_package_dir: Option<&str>,
 ) -> String {
     use oxc_ast::ast::ExportDefaultDeclarationKind;
+
+    crate::jsx_dev_attributes::strip_jsx_dev_attributes(&mut factory);
 
     let mut body = builder.vec_with_capacity(imports.len() + 1);
     for info in imports {
@@ -299,6 +294,12 @@ fn codegen_bundle_file<'a>(
     let printed = oxc_codegen::Codegen::new()
         .with_options(oxc_codegen::CodegenOptions::default())
         .build(&program);
+
+    // Debug aid mirroring `generate.ts` — lets a human trace an emitted
+    // `<hash>.js` back to the file its worklet came from.
+    if std::env::var("WORKLETS_WRITE_ORIGIN").is_ok() {
+        return format!("// __workletOrigin: {filename}\n{}", printed.code);
+    }
     printed.code
 }
 
@@ -456,9 +457,9 @@ fn build_factory_expression<'a>(
         builder.expression_numeric_literal(SPAN, worklet_hash as f64, None, NumberBase::Decimal),
     ));
 
-    if !is_release() {
+    if !is_release(state.opts.env_name.as_deref()) {
         // Version resolution order, matching `workletFactory.ts:288, 448-452`:
-        //   1. `REANIMATED_JEST_SHOULD_MOCK_VERSION=1` → MOCK_VERSION ("x.y.z")
+        //   1. `WORKLETS_JEST_SHOULD_MOCK_VERSION=1` → MOCK_VERSION ("x.y.z")
         //   2. `opts.pluginVersion` (set by the JS shim from
         //      `react-native-worklets/package.json` at runtime)
         //   3. `REAL_VERSION` baked from `../package.json` at build time
@@ -518,7 +519,7 @@ fn build_inner_fn_decl<'a>(
     // directive (the old behaviour) left a stray `'no-worklet-closure'` /
     // `'limit-init-data-hoisting'` on any nested function/arrow that the
     // outer factory then printed verbatim.
-    crate::utils::strip_worklet_directives_in_body(&mut body_clone, builder);
+    crate::utils::strip_worklet_directives_in_body(&mut body_clone, builder, true);
     if input.is_expression_body {
         rewrite_implicit_return(&mut body_clone, builder);
     }

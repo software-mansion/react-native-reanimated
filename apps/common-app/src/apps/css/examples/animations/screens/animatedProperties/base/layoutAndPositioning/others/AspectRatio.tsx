@@ -1,3 +1,4 @@
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type {
   CSSAnimationKeyframes,
@@ -10,11 +11,14 @@ import { colors, radius, sizes } from '@/theme';
 
 export default function AspectRatio() {
   return (
-    <ExamplesScreen<{
-      keyframes: CSSAnimationKeyframes;
-      style?: StyleProps;
-      flexDirection?: 'column' | 'row';
-    }>
+    <ExamplesScreen<
+      ViewStyle,
+      {
+        keyframes: CSSAnimationKeyframes;
+        style?: StyleProps;
+        flexDirection?: 'column' | 'row';
+      }
+    >
       buildAnimation={({ keyframes }) => ({
         animationDuration: '2s',
         animationIterationCount: 'infinite',

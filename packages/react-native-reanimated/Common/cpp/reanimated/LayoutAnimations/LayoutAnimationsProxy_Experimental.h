@@ -53,6 +53,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable TransitionMap transitionMap_;
   mutable Transitions transitions_;
   mutable bool synchronized_ = true;
+  mutable Tag closingScreenTag_ = -1;
   mutable std::vector<std::shared_ptr<LightNode>> entering_, layout_, exiting_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
@@ -108,6 +109,9 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       const ShadowViewMutationList &mutations,
       ShadowViewMutationList &filteredMutations) const;
 
+  void reconcileContradictedRemovals(const ShadowViewMutationList &mutations, ShadowViewMutationList &filteredMutations)
+      const;
+
   void handleSharedTransitionsStart(
       const std::shared_ptr<LightNode> &afterTopScreen,
       const std::shared_ptr<LightNode> &beforeTopScreen,
@@ -145,7 +149,8 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
 
   void maybeCancelAnimation(const int tag) const;
 
-  std::shared_ptr<LightNode> findTopScreen(const std::shared_ptr<LightNode> &node) const;
+  std::shared_ptr<LightNode> findActiveBoundary(const std::shared_ptr<LightNode> &node) const;
+  std::shared_ptr<LightNode> findBoundaryGuess(const std::shared_ptr<LightNode> &node) const;
 
   void findSharedElementsOnScreen(
       const std::shared_ptr<LightNode> &node,

@@ -1,3 +1,4 @@
+import type { TextStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -6,7 +7,7 @@ import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
 
 export default function Cursor() {
   return (
-    <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
+    <ExamplesScreen<TextStyle, { keyframes: CSSAnimationKeyframes<TextStyle> }>
       CardComponent={VerticalExampleCard}
       buildAnimation={({ keyframes }) => ({
         animationDuration: '1s',

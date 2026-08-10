@@ -1,3 +1,4 @@
+import type { ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import type {
   CSSAnimationDelay,
@@ -10,10 +11,13 @@ import { colors, radius, sizes } from '@/theme';
 
 export default function Display() {
   return (
-    <ExamplesScreen<{
-      keyframes: CSSAnimationKeyframes;
-      animationDelay?: CSSAnimationDelay;
-    }>
+    <ExamplesScreen<
+      ViewStyle,
+      {
+        keyframes: CSSAnimationKeyframes;
+        animationDelay?: CSSAnimationDelay;
+      }
+    >
       buildAnimation={({ animationDelay, keyframes }) => ({
         animationDelay,
         animationDuration: '1s',

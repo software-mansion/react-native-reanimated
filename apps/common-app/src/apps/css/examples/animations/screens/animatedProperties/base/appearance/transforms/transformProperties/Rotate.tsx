@@ -1,3 +1,4 @@
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -7,7 +8,7 @@ import type { Transforms } from '@/types';
 
 export default function Rotate() {
   return (
-    <ExamplesScreen<{ from: Transforms; to: Transforms }>
+    <ExamplesScreen<ViewStyle, { from: Transforms; to: Transforms }>
       buildAnimation={({ from, to }) => ({
         animationDuration: '1s',
         animationIterationCount: 'infinite',

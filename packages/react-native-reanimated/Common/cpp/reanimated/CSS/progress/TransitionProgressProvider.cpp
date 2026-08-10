@@ -17,7 +17,7 @@ TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double duration,
     const double delay,
     EasingConfig easing)
-    : RawProgressProvider(timestamp, duration, delay),
+    : TimeProgressProvider(timestamp, duration, delay),
       easing_(std::move(easing)),
       easingFunction_(getEasingFunctionFromConfig(easing_)) {}
 
@@ -27,7 +27,7 @@ TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double delay,
     EasingConfig easing,
     const double reversingShorteningFactor)
-    : RawProgressProvider(timestamp, duration, delay),
+    : TimeProgressProvider(timestamp, duration, delay),
       easing_(std::move(easing)),
       easingFunction_(getEasingFunctionFromConfig(easing_)),
       reversingShorteningFactor_(reversingShorteningFactor) {}
@@ -53,7 +53,7 @@ ReversingState TransitionPropertyProgressProvider::getReversingState() const {
 
 TransitionProgressState TransitionPropertyProgressProvider::getState() const {
   // rawProgress_ is empty until the property's delay has passed
-  // (RawProgressProvider::update resets it while timestamp < creationTimestamp + delay)
+  // (TimeProgressProvider::update resets it while timestamp < creationTimestamp + delay)
   if (!rawProgress_.has_value()) {
     return TransitionProgressState::Pending;
   }
@@ -116,7 +116,7 @@ void TransitionProgressProvider::runProgressProvider(
     const bool isReversed,
     const double timestamp) {
 
-  const auto &settings = propertySettings_.at(propertyName);
+  const auto settings = getPropertySettings(propertyName);
 
   const auto providerIt = propertyProgressProviders_.find(propertyName);
 
@@ -192,7 +192,13 @@ void TransitionProgressProvider::setPropertySettings(const PropertiesSettingsMap
 }
 
 CSSTransitionPropertySettings TransitionProgressProvider::getPropertySettings(const std::string &propertyName) const {
-  return propertySettings_.at(propertyName);
+  const auto it = propertySettings_.find(propertyName);
+  if (it == propertySettings_.end()) {
+    // A pseudo toggle can run a property whose settings never parsed, e.g. a discrete
+    // property without allowDiscrete.
+    return CSSTransitionPropertySettings{};
+  }
+  return it->second;
 }
 
 } // namespace reanimated::css

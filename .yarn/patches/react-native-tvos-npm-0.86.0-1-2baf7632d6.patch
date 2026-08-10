@@ -1,0 +1,13 @@
+diff --git a/Libraries/LogBox/UI/LogBoxButton.js b/Libraries/LogBox/UI/LogBoxButton.js
+index 60316dd3f80eb3a88ca647fb2e7c8a7317f952b6..d86a7290c7fc5f965cd5f22c660c5f8239d82960 100644
+--- a/Libraries/LogBox/UI/LogBoxButton.js
++++ b/Libraries/LogBox/UI/LogBoxButton.js
+@@ -60,8 +60,6 @@ component LogBoxButton(
+       focusable={true}
+       hitSlop={hitSlop}
+       onPress={onPress}
+-      onPressIn={() => setPressed(true)}
+-      onPressOut={() => setPressed(false)}>
+       onFocus={() => {
+         setFocused(true);
+         onFocusChange?.(true);

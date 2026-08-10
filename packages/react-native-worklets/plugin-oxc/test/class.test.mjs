@@ -47,3 +47,49 @@ test('file-level directive does not error on classes (marker stripped)', () => {
   assert.doesNotMatch(code, /__workletClass/);
   assert.doesNotMatch(code, /__classFactory/);
 });
+
+// Bundle-only mode does not workletize class methods. The Babel plugin's
+// `classMethod.ts` rewrites them into class properties, but that path can't
+// express a constructor (`class C { constructor = … }` is a SyntaxError) and
+// silently turns prototype methods into per-instance fields. Worklet classes
+// are unsupported in Bundle Mode anyway, so the method stays untouched.
+for (const [label, member] of [
+  ['instance method', 'bar() { \'worklet\'; return 1; }'],
+  ['static method', 'static bar() { \'worklet\'; return 1; }'],
+  ['getter', 'get bar() { \'worklet\'; return 1; }'],
+  ['setter', 'set bar(v) { \'worklet\'; this.v = v; }'],
+  ['constructor', 'constructor(x) { \'worklet\'; this.x = x; }'],
+]) {
+  test(`class ${label} with worklet directive is left untouched`, () => {
+    const { code, files } = transform(`class Foo { ${member} }`, 'test.js', {});
+    assert.equal(files.length, 0);
+    assert.doesNotMatch(code, /\.worklets\//);
+    assert.match(code, /class Foo/);
+  });
+}
+
+test('worklet class field arrow is still workletized', () => {
+  const input = `
+    class Foo {
+      bar = () => {
+        'worklet';
+        return 1;
+      };
+    }
+  `;
+  const { code, files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 1);
+  assert.match(code, /bar = require\("react-native-worklets\/\.worklets\/\d+\.js"\)/);
+});
+
+test('class method without worklet directive is left as a method', () => {
+  const input = `
+    class Foo {
+      bar() {
+        return 1;
+      }
+    }
+  `;
+  const { code } = transform(input, 'test.js', {});
+  assert.match(code, /bar\(\)/);
+});

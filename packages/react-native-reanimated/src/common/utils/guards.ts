@@ -38,6 +38,11 @@ export const isRecord = <T extends UnknownRecord = UnknownRecord>(
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 };
 
+export const isEmptyObject = (value: unknown): boolean => {
+  'worklet';
+  return isRecord(value) && Object.keys(value).length === 0;
+};
+
 export const isConfigPropertyAlias = <P extends object>(
   value: unknown
 ): value is ConfigPropertyAlias<P> =>

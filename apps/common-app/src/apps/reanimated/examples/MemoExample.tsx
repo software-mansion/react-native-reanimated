@@ -1,5 +1,9 @@
 import React, { memo } from 'react';
-import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import type {
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ViewStyle,
+} from 'react-native';
 import { Button, StyleSheet, View } from 'react-native';
 import type {
   AnimatedStyle,
@@ -13,7 +17,7 @@ import Animated, {
 
 const MemoizedComponent = memo<{
   scrollHandler: EventHandlerProcessed<NativeSyntheticEvent<NativeScrollEvent>>;
-  animatedBoxStyle: AnimatedStyle;
+  animatedBoxStyle: AnimatedStyle<ViewStyle>;
 }>(({ scrollHandler, animatedBoxStyle }) => (
   <>
     <Animated.View style={[styles.box, animatedBoxStyle]} />

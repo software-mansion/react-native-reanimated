@@ -3,6 +3,10 @@ const { getWebPreset } = require('jest-expo/config');
 
 const sharedSetupFiles = ['<rootDir>/jest/setup.js'];
 const sharedSetupFilesAfterEnv = ['@testing-library/jest-native/extend-expect'];
+const sharedModuleNameMapper = {
+  '^react-native-reanimated$': '<rootDir>/src/index',
+  '^react-native-worklets$': '<rootDir>/../react-native-worklets/src/index',
+};
 
 /**
  * @param {import('jest').Config} presetConfig
@@ -12,9 +16,11 @@ const createProject = ({
   modulePathIgnorePatterns = [],
   setupFiles = [],
   setupFilesAfterEnv = [],
+  moduleNameMapper = {},
   ...rest
 } = {}) => ({
   ...rest,
+  moduleNameMapper: { ...moduleNameMapper, ...sharedModuleNameMapper },
   modulePathIgnorePatterns: [...modulePathIgnorePatterns, '<rootDir>/lib'],
   setupFiles: [...setupFiles, ...sharedSetupFiles],
   setupFilesAfterEnv: [...setupFilesAfterEnv, ...sharedSetupFilesAfterEnv],
@@ -28,7 +34,7 @@ const createReactNativeProject = (config = {}) =>
   createProject({
     preset: '@react-native/jest-preset',
     testEnvironment: 'node',
-    resolver: 'react-native-worklets/jest/resolver',
+    resolver: '<rootDir>/jest/resolver.js',
     transformIgnorePatterns: [
       'node_modules/(?!((jest-)?react-native|@react-native(-community)?|react-native-worklets)/)',
     ],
@@ -55,11 +61,13 @@ const androidProject = createReactNativeProject({
 const {
   snapshotResolver: _,
   watchPlugins: __,
+  moduleNameMapper: { '^react-native($|/.*)': ___, ...webModuleNameMapper },
   ...baseWebPreset
 } = getWebPreset();
 
 const webProject = createProject({
   ...baseWebPreset,
+  moduleNameMapper: webModuleNameMapper,
   setupFiles: [...baseWebPreset.setupFiles, '<rootDir>/jest/setup.web.js'],
   displayName: 'web',
   testMatch: ['**/*.web.test.@(js|jsx|ts|tsx)'],

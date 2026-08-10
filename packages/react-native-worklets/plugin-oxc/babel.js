@@ -28,6 +28,13 @@ const oxc = require('./index.js');
 // Rust fallback) if the package isn't installed.
 let cachedPluginVersion = undefined;
 function getPluginVersion() {
+  // Read on every call, not once: Jest hands each worker its own copy of
+  // `process.env`, so the native side can't see this flag at all — the
+  // decision has to be made here in JS. Mirrors `shouldMockVersion()` in
+  // `workletFactory.ts`.
+  if (process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION === '1') {
+    return MOCK_VERSION;
+  }
   if (cachedPluginVersion !== undefined) return cachedPluginVersion;
   try {
     cachedPluginVersion = require('react-native-worklets/package.json').version;
@@ -36,6 +43,8 @@ function getPluginVersion() {
   }
   return cachedPluginVersion;
 }
+
+const MOCK_VERSION = 'x.y.z';
 
 // Resolve `react-native-worklets/.worklets/` to an absolute filesystem
 // directory once per Node process. The Rust transform returns module-style
@@ -59,6 +68,12 @@ function resolveWorkletsDir() {
 }
 
 const WORKLETS_PREFIX = 'react-native-worklets/.worklets/';
+
+// Resolved from this file rather than passed by name: Babel resolves plugin
+// names against the *current working directory*, which for a bundler run is
+// the user's project and may not have these packages hoisted.
+const SYNTAX_JSX = require.resolve('@babel/plugin-syntax-jsx');
+const SYNTAX_TYPESCRIPT = require.resolve('@babel/plugin-syntax-typescript');
 
 function writeEmittedFiles(files) {
   if (!files || files.length === 0) return;
@@ -87,38 +102,9 @@ function writeEmittedFiles(files) {
 }
 
 // Quick reject: files with no plausible worklet content can skip the OXC
-// roundtrip entirely. Anything that uses worklets has one of these tokens
-// somewhere in the source text.
-const WORKLET_TOKENS = [
-  "'worklet'",
-  '"worklet"',
-  '_WORKLETS_BUNDLE_MODE_ENABLED',
-  '__workletClass',
-  'useAnimatedStyle',
-  'useAnimatedProps',
-  'useDerivedValue',
-  'useFrameCallback',
-  'useAnimatedScrollHandler',
-  'useAnimatedReaction',
-  'createAnimatedPropAdapter',
-  'runOnUI',
-  'executeOnUIRuntimeSync',
-  'scheduleOnUI',
-  'runOnUISync',
-  'runOnUIAsync',
-  'runOnRuntime',
-  'runOnRuntimeSync',
-  'runOnRuntimeAsync',
-  'scheduleOnRuntime',
-  'runOnRuntimeSyncWithId',
-  'scheduleOnRuntimeWithId',
-  'withTiming',
-  'withSpring',
-  'withDecay',
-  'withRepeat',
-  'Gesture.',
-  '.withCallback',
-];
+// roundtrip entirely. The token list comes from the native side so it stays
+// in sync with the hooks the pass actually recognises.
+const WORKLET_TOKENS = oxc.workletSourceTokens();
 
 function mightContainWorklets(sourceText) {
   for (const t of WORKLET_TOKENS) {
@@ -183,6 +169,12 @@ function workletsPluginOxcBabelShim(babelApi, options) {
               const pkgDir = resolveWorkletsPkgDir();
               if (pkgDir != null) opts.workletsPackageDir = pkgDir;
             }
+            // Babel's `envName` drives release detection (drops
+            // `__pluginVersion` / source locations in production builds).
+            if (opts.envName == null) {
+              const envName = state.file.opts.envName;
+              if (envName != null) opts.envName = envName;
+            }
             result = oxc.transform(sourceText, filename, opts);
           } catch (e) {
             // Only swallow parse errors — Flow / exotic syntax that OXC can't
@@ -207,11 +199,8 @@ function workletsPluginOxcBabelShim(babelApi, options) {
             babelrc: false,
             configFile: false,
             plugins: [
-              ['@babel/plugin-syntax-jsx'],
-              [
-                '@babel/plugin-syntax-typescript',
-                { isTSX: filename.endsWith('.tsx') },
-              ],
+              [SYNTAX_JSX],
+              [SYNTAX_TYPESCRIPT, { isTSX: filename.endsWith('.tsx') }],
             ],
           });
 

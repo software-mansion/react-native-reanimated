@@ -17,7 +17,7 @@ export type {
   CSSGradientStop,
   CSSKeyframesRule,
   CSSLinearGradientProps,
-  CSSPseudoSelectorStyle,
+  CSSPseudoSelectorKey,
   CSSRadialGradientProps,
   CSSStyle,
   CSSTransitionDelay,
@@ -27,5 +27,4 @@ export type {
   CSSTransitionSettings,
   CSSTransitionShorthand,
   CSSTransitionTimingFunction,
-  PseudoSelectorKey,
 } from './types';

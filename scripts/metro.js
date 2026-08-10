@@ -48,6 +48,7 @@ function getModuleBlocklist(moduleNames, defaultConfig) {
       blockedDirs.forEach((dir) => {
         acc.push(getBlockRegex(dir, moduleName));
       });
+      acc.push(getWorkspaceBlockRegex(moduleName));
       return acc;
     },
     []
@@ -66,6 +67,19 @@ function getModuleBlocklist(moduleNames, defaultConfig) {
 function getBlockRegex(directoryName, moduleName) {
   return new RegExp(
     `^${path.join(directoryName, 'node_modules', moduleName)}\\/.*$`
+  );
+}
+
+/**
+ * Workspace packages are symlinked into `node_modules`, so Metro resolves them
+ * through their real path, which `getBlockRegex` never matches.
+ *
+ * @param {string} moduleName
+ * @returns {RegExp}
+ */
+function getWorkspaceBlockRegex(moduleName) {
+  return new RegExp(
+    `^${path.join(monorepoRoot, 'packages', moduleName)}\\/.*$`
   );
 }
 

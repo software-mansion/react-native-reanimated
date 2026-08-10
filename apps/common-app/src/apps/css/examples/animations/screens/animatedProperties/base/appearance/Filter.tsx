@@ -1,3 +1,4 @@
+import type { ImageStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -12,12 +13,18 @@ function makeFilterExample(
   from: string,
   to: string,
   labelTypes: Array<LabelType> = ['Android']
-) {
+): {
+  keyframes: CSSAnimationKeyframes<ImageStyle>;
+  labelTypes: Array<LabelType>;
+  title: string;
+} {
   return {
+    // RN's TS types don't declare `filter` on `ImageStyle` even though it works
+    // on Image at runtime (it's applied at the view layer like any CSS filter).
     keyframes: {
       '0%, 100%': { filter: from },
       '50%': { filter: to },
-    },
+    } as CSSAnimationKeyframes<ImageStyle>,
     labelTypes,
     title,
   };
@@ -40,19 +47,25 @@ const EXAMPLES = [
   makeFilterExample('Sepia', 'sepia(0%)', 'sepia(100%)'),
 ];
 
-const STRUCTURE_EXAMPLES = [
+// RN's TS types don't declare `filter` on `ImageStyle` even though it works on
+// Image at runtime, so each keyframes literal is cast to satisfy the typed slot.
+const STRUCTURE_EXAMPLES: Array<{
+  keyframes: CSSAnimationKeyframes<ImageStyle>;
+  title: string;
+  description?: string;
+}> = [
   {
     keyframes: {
       '0%, 100%': { filter: 'blur(0px) brightness(0)' },
       '50%': { filter: 'blur(10px) brightness(150%)' },
-    },
+    } as CSSAnimationKeyframes<ImageStyle>,
     title: 'String syntax',
   },
   {
     keyframes: {
       '0%, 100%': { filter: [{ blur: 0 }, { brightness: 0 }] },
       '50%': { filter: [{ blur: 10 }, { brightness: 1.5 }] },
-    },
+    } as CSSAnimationKeyframes<ImageStyle>,
     title: 'Object syntax',
   },
   {
@@ -61,7 +74,7 @@ const STRUCTURE_EXAMPLES = [
     keyframes: {
       '0%, 100%': { filter: [{ blur: 3 }, { brightness: 1.5 }] },
       '50%': { filter: [{ blur: 10 }] },
-    },
+    } as CSSAnimationKeyframes<ImageStyle>,
     title: 'Missing properties',
   },
   {
@@ -72,14 +85,17 @@ const STRUCTURE_EXAMPLES = [
         filter: [{ blur: 0 }, { opacity: 0.5 }, { brightness: 0.7 }],
       },
       '50%': { filter: [{ blur: 10 }, { brightness: 1.5 }] },
-    },
+    } as CSSAnimationKeyframes<ImageStyle>,
     title: 'Properties not compatible',
   },
 ];
 
 export default function Filter() {
   return (
-    <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
+    <ExamplesScreen<
+      ImageStyle,
+      { keyframes: CSSAnimationKeyframes<ImageStyle> }
+    >
       CardComponent={VerticalExampleCard}
       buildAnimation={({ keyframes }) => ({
         animationDuration: '5s',

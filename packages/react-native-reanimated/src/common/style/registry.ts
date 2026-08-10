@@ -1,5 +1,6 @@
 'use strict';
 import type { UnknownRecord } from '../types';
+import { STYLE_PROPERTIES_CONFIG } from './config';
 import {
   createNativePropsBuilder,
   type NativePropsBuilder,
@@ -24,6 +25,14 @@ const PATTERN_PROPS_BUILDERS: Array<{
   matcher: RegExp | ((name: string) => boolean);
   entry: PropsBuilderEntry;
 }> = [];
+
+const SUPPORTED_BUILDER_PROPS = new Set<string>(
+  Object.keys(STYLE_PROPERTIES_CONFIG)
+);
+
+export function isSupportedStyleProp(prop: string): boolean {
+  return SUPPORTED_BUILDER_PROPS.has(prop);
+}
 
 function findEntry(compoundComponentName: string): PropsBuilderEntry | null {
   const [reactViewName] = compoundComponentName.split('$');
@@ -69,6 +78,10 @@ export function registerComponentPropsBuilder<P extends UnknownRecord>(
     separatelyInterpolatedNestedProperties?: readonly string[];
   } = {}
 ) {
+  for (const prop in config) {
+    SUPPORTED_BUILDER_PROPS.add(prop);
+  }
+
   const entry: PropsBuilderEntry = {
     builder: createNativePropsBuilder(config),
     separatelyInterpolatedNestedProperties: options

@@ -2,8 +2,8 @@
 
 import type { EasingFunction } from '../../commonTypes';
 import type { EasingFunctionFactory } from '../../Easing';
-import type { WebEasingsNames } from './Easing.web';
-import { WebEasings } from './Easing.web';
+import type { WebEasingsNames } from './Easing';
+import { WebEasings } from './Easing';
 
 export interface ReanimatedWebTransformProperties {
   translateX?: string;

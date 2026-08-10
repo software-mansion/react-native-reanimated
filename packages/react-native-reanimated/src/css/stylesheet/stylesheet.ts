@@ -1,4 +1,5 @@
 'use strict';
+import type { DefaultStyle } from '../../hook/commonTypes';
 import { CSSKeyframesRuleImpl } from '../platform';
 import type { CSSStyle } from '../types';
 import { isCSSKeyframesRule } from '../utils';
@@ -19,7 +20,10 @@ function parseAnimationName(
   return keyframesArray.map((keyframes) =>
     isCSSKeyframesRule(keyframes)
       ? keyframes
-      : new CSSKeyframesRuleImpl(keyframes)
+      : // `CSSStyle` defaults to the `DefaultStyle` union, so a bare
+        // `animationName` is a union of per-style keyframes. Pin the type
+        // argument so inference doesn't collapse it to a single style type.
+        new CSSKeyframesRuleImpl<DefaultStyle>(keyframes)
   );
 }
 

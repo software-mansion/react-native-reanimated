@@ -1,21 +1,31 @@
 'use strict';
-import type { PlainStyle } from '../../common';
 import { hasSuffix } from '../../common';
-import { webPropsBuilder } from '../../common/web';
+import { type WebPropsBuilder, webPropsBuilder } from '../../common/web';
+import { getWebSvgPropsBuilder } from '../svg/web';
 import type {
   CSSAnimationKeyframeBlock,
   CSSAnimationKeyframes,
 } from '../types';
+import { normalizeWebKeyframes } from './normalization';
 import { parseTimingFunction } from './utils';
 
-export function processKeyframeDefinitions(definitions: CSSAnimationKeyframes) {
-  return Object.entries(definitions)
+export function processKeyframeDefinitions<TStyle extends object>(
+  definitions: CSSAnimationKeyframes<TStyle>,
+  svgElementTag = ''
+) {
+  const propsBuilder = getWebSvgPropsBuilder(svgElementTag) ?? webPropsBuilder;
+
+  // Whole-set fixups (strokeDasharray endpoints, open/closed path Z-padding)
+  // before serializing each block.
+  const keyframes = normalizeWebKeyframes(definitions);
+
+  return Object.entries(keyframes)
     .reduce<string[]>((acc, [timestamp, rules]) => {
       const step = hasSuffix(timestamp)
         ? timestamp
         : `${parseFloat(timestamp) * 100}%`;
 
-      const processedBlock = processKeyframeBlock(rules);
+      const processedBlock = processKeyframeBlock(rules, propsBuilder);
 
       if (!processedBlock) {
         return acc;
@@ -28,11 +38,13 @@ export function processKeyframeDefinitions(definitions: CSSAnimationKeyframes) {
     .join(' ');
 }
 
-function processKeyframeBlock({
-  animationTimingFunction,
-  ...rules
-}: CSSAnimationKeyframeBlock<PlainStyle>): string | null {
-  const style = webPropsBuilder.build(rules);
+function processKeyframeBlock<S extends object>(
+  { animationTimingFunction, ...rules }: CSSAnimationKeyframeBlock<S>,
+  propsBuilder: WebPropsBuilder
+): string | null {
+  const style = propsBuilder.build(
+    rules as Parameters<typeof propsBuilder.build>[0]
+  );
 
   if (!style) {
     return null;

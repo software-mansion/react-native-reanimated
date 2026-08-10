@@ -11,9 +11,9 @@ import type {
 import type { PseudoStylesBySelector } from '../../utils';
 import { deepEqual } from '../../utils';
 import { normalizeCSSTransitionProperties } from '../normalization';
-import { registerPseudoStyle, unregisterPseudoStyle } from '../proxy';
+import { registerPseudoStyles, unregisterPseudoStyles } from '../proxy';
 import type {
-  CSSPseudoStyleConfig,
+  CSSPseudoStyleEntry,
   CSSTransitionConfig,
   NormalizedCSSTransitionConfig,
 } from '../types';
@@ -47,22 +47,45 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     ) {
       return;
     }
+    const removedSelector = hasRemovedNativeSelector(
+      this.prevPseudoStylesBySelector,
+      pseudoStylesBySelector
+    );
+
     this.prevPseudoStylesBySelector = pseudoStylesBySelector;
     this.prevTransitionProperties = transitionProperties;
 
-    if (this.isRegistered) {
-      this.detach();
+    if (!pseudoStylesBySelector) {
+      if (this.isRegistered) {
+        this.detach();
+      }
+      return;
     }
 
-    if (!pseudoStylesBySelector) {
-      return;
+    // Only a selector removal detaches; re-renders keep the registration alive.
+    if (this.isRegistered && removedSelector) {
+      this.detach();
     }
 
     const normalizedTransition = transitionProperties
       ? normalizeCSSTransitionProperties(transitionProperties)
       : null;
 
-    for (const [selector, { selectorStyle, defaultStyle }] of Object.entries(
+    const mergedDefaultStyle: UnknownRecord = {};
+    for (const [selector, { defaultStyle }] of Object.entries(
+      pseudoStylesBySelector
+    )) {
+      if (NATIVE_PSEUDO_SELECTORS.has(selector as NativePseudoSelectorKey)) {
+        Object.assign(mergedDefaultStyle, defaultStyle);
+      }
+    }
+    const builtDefaultStyle = this.propsBuilder.build(mergedDefaultStyle, {
+      includeUnprocessed: true,
+    });
+    nullifyUndefinedValues(builtDefaultStyle);
+
+    const selectors: CSSPseudoStyleEntry[] = [];
+    for (const [selector, { selectorStyle }] of Object.entries(
       pseudoStylesBySelector
     )) {
       if (!NATIVE_PSEUDO_SELECTORS.has(selector as NativePseudoSelectorKey)) {
@@ -73,13 +96,21 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
         }
         continue;
       }
-      const config = this.buildPseudoStyleConfig(
-        selector as NativePseudoSelectorKey,
-        selectorStyle,
-        defaultStyle,
-        normalizedTransition
+      selectors.push(
+        this.buildPseudoStyleEntry(
+          selector as NativePseudoSelectorKey,
+          selectorStyle,
+          builtDefaultStyle,
+          normalizedTransition
+        )
       );
-      registerPseudoStyle(this.shadowNodeWrapper, config);
+    }
+
+    if (selectors.length > 0) {
+      registerPseudoStyles(this.shadowNodeWrapper, {
+        defaultStyle: builtDefaultStyle,
+        selectors,
+      });
       this.isRegistered = true;
     }
   }
@@ -88,35 +119,35 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     if (this.isRegistered) {
       this.detach();
     }
+    this.prevPseudoStylesBySelector = null;
+    this.prevTransitionProperties = null;
   }
 
   private detach() {
-    unregisterPseudoStyle(this.viewTag);
+    unregisterPseudoStyles(this.viewTag);
     this.isRegistered = false;
   }
 
-  private buildPseudoStyleConfig(
+  private buildPseudoStyleEntry(
     selector: NativePseudoSelectorKey,
     selectorStyle: UnknownRecord,
-    defaultStyle: UnknownRecord,
+    mergedDefaultStyle: UnknownRecord,
     normalizedTransition: NormalizedCSSTransitionConfig | null
-  ): CSSPseudoStyleConfig {
-    const builtSelectorStyle = this.propsBuilder.build(selectorStyle);
-    const builtDefaultStyle = this.propsBuilder.build(defaultStyle);
+  ): CSSPseudoStyleEntry {
+    const builtSelectorStyle = this.propsBuilder.build(selectorStyle, {
+      includeUnprocessed: true,
+    });
+
+    nullifyUndefinedValues(builtSelectorStyle);
 
     const transition: CSSTransitionConfig = {};
-    const propsInTransition = new Set([
-      ...Object.keys(builtSelectorStyle),
-      ...Object.keys(builtDefaultStyle),
-    ]);
-
-    for (const prop of propsInTransition) {
+    for (const prop of Object.keys(builtSelectorStyle)) {
       const settings = getPropertyTransitionSettings(
         prop,
         normalizedTransition
       );
       transition[prop] = {
-        value: [builtDefaultStyle[prop], builtSelectorStyle[prop]],
+        value: [mergedDefaultStyle[prop], builtSelectorStyle[prop]],
         duration: settings?.duration ?? 0,
         delay: settings?.delay ?? 0,
         timingFunction: settings?.timingFunction ?? 'ease',
@@ -127,9 +158,31 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     return {
       selector,
       selectorStyle: builtSelectorStyle,
-      defaultStyle: builtDefaultStyle,
       transition,
     };
+  }
+}
+
+function hasRemovedNativeSelector(
+  prev: PseudoStylesBySelector | null,
+  next: PseudoStylesBySelector | null
+): boolean {
+  if (!prev) {
+    return false;
+  }
+  const nextKeys = next ? new Set(Object.keys(next)) : new Set<string>();
+  return Object.keys(prev).some(
+    (selector) =>
+      NATIVE_PSEUDO_SELECTORS.has(selector as NativePseudoSelectorKey) &&
+      !nextKeys.has(selector)
+  );
+}
+
+function nullifyUndefinedValues(style: UnknownRecord): void {
+  for (const key in style) {
+    if (style[key] === undefined) {
+      style[key] = null;
+    }
   }
 }
 

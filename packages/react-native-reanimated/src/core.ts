@@ -76,10 +76,10 @@ export function getViewProp<T>(
 }
 
 function getSensorContainer(): SensorContainer {
-  if (!global.__sensorContainer) {
-    global.__sensorContainer = new SensorContainer();
+  if (!globalThis.__sensorContainer) {
+    globalThis.__sensorContainer = new SensorContainer();
   }
-  return global.__sensorContainer;
+  return globalThis.__sensorContainer;
 }
 
 export function registerEventHandler<TEvent>(
@@ -91,7 +91,18 @@ export function registerEventHandler<TEvent>(
     'worklet';
     eventHandler(event);
     // We call mappers here to make sure view updates can be applied in the same frame after an event.
-    global.__mapperRun();
+    if (globalThis.__mapperRun) {
+      globalThis.__mapperRun();
+    } else {
+      function runMappers() {
+        if (globalThis.__mapperRun) {
+          globalThis.__mapperRun();
+        } else {
+          requestAnimationFrame(runMappers);
+        }
+      }
+      requestAnimationFrame(runMappers);
+    }
   }
   return ReanimatedModule.registerEventHandler(
     createSerializable(handleEvent as WorkletFunction),
@@ -114,7 +125,18 @@ export function subscribeForKeyboardEvents(
     'worklet';
     eventHandler(state, height);
     // We call mappers here to make sure view updates can be applied in the same frame after an event.
-    global.__mapperRun();
+    if (globalThis.__mapperRun) {
+      globalThis.__mapperRun();
+    } else {
+      function runMappers() {
+        if (globalThis.__mapperRun) {
+          globalThis.__mapperRun();
+        } else {
+          requestAnimationFrame(runMappers);
+        }
+      }
+      requestAnimationFrame(runMappers);
+    }
   }
 
   if (__DEV__) {

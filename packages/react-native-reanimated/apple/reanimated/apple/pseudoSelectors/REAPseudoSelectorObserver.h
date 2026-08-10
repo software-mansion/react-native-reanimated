@@ -19,7 +19,8 @@ NS_ASSUME_NONNULL_BEGIN
  *   Focus         - iOS: UITextField/UITextView editing notifications
  *                   macOS: NSWindow.firstResponder KVO observation
  *   FocusWithin   - Same as Focus, but matches any descendant gaining focus
- *   Hover         - iOS: UIHoverGestureRecognizer (iOS 13+)
+ *   Hover         - iOS: UIHoverGestureRecognizer (real pointer) + a shared touch
+ *                        coordinator for sticky touch hover (Chromium model)
  *                   macOS: NSTrackingArea (mouseEntered/mouseExited)
  *                   tvOS: no-op (UIHoverGestureRecognizer is unavailable);
  *                         the observer is constructed but never fires.

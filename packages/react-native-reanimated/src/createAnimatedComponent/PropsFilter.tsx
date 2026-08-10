@@ -2,7 +2,7 @@
 
 import { initialUpdaterRun } from '../animation';
 import type { StyleProps } from '../commonTypes';
-import { isCSSConfigProp } from '../css/utils';
+import { isCSSConfigProp, isPseudoSelectorValue } from '../css/utils';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import { isSharedValue } from '../isSharedValue';
 import { WorkletEventHandler } from '../WorkletEventHandler';
@@ -108,9 +108,19 @@ export class PropsFilter implements IPropsFilter {
           }
         } else {
           for (const animatedPropKey in animatedProps) {
-            if (!isCSSConfigProp(animatedPropKey)) {
-              props[animatedPropKey] = animatedProps[animatedPropKey];
+            if (isCSSConfigProp(animatedPropKey)) {
+              continue;
             }
+            const animatedPropValue = animatedProps[animatedPropKey];
+            if (isPseudoSelectorValue(animatedPropValue)) {
+              // Forward only the resting value; pseudo states are driven by
+              // the CSS manager, like pseudo values in style are.
+              if (animatedPropValue.default !== undefined) {
+                props[animatedPropKey] = animatedPropValue.default;
+              }
+              continue;
+            }
+            props[animatedPropKey] = animatedPropValue;
           }
         }
       });

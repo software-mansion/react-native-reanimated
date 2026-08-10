@@ -1,0 +1,342 @@
+import type { TestValue, TrackerCallCount } from '../types';
+import { ComparisonMode } from '../types';
+import { cyan, green, red, yellow } from '../utils/stringFormatUtils';
+import { SyncUIRunner } from '../utils/SyncUIRunner';
+import { getComparator } from './Comparators';
+import {
+  createSynchronizable,
+  getRuntimeKind,
+  RuntimeKind,
+} from 'react-native-worklets';
+
+type ToBeArgs = [TestValue, ComparisonMode?];
+export type ToThrowArgs = [string?];
+type ToBeNullArgs = [];
+type ToBeWithinRangeArgs = [number, number];
+type ToBeCalledArgs = [number];
+type ToIncludeArgs = [string];
+
+export type SyncMatcherArguments =
+  | ToBeArgs
+  | ToBeNullArgs
+  | ToBeCalledArgs
+  | ToBeWithinRangeArgs
+  | ToIncludeArgs;
+export type AsyncMatcherArguments = ToThrowArgs;
+export type MatcherReturn = {
+  pass: boolean;
+  message: string;
+};
+
+export type Matcher<Args extends SyncMatcherArguments> = (
+  currentValue: TestValue,
+  negation: boolean,
+  ...args: Args
+) => MatcherReturn;
+
+export type AsyncMatcher<Args extends AsyncMatcherArguments> = (
+  currentValue: TestValue,
+  negation: boolean,
+  ...args: Args
+) => Promise<MatcherReturn>;
+
+function assertValueIsCallTracker(
+  value: TrackerCallCount | TestValue
+): asserts value is TrackerCallCount {
+  if (
+    typeof value !== 'object' ||
+    !(value !== null && 'name' in value && 'onJS' in value && 'onUI' in value)
+  ) {
+    throw Error(
+      `Invalid value \`${value?.toString()}\`, expected a CallTracker. Use CallTracker returned by function \`getTrackerCallCount\` instead.`
+    );
+  }
+}
+
+export const toBeMatcher: Matcher<ToBeArgs> = (
+  currentValue,
+  negation,
+  expectedValue,
+  comparisonModeUnknown
+) => {
+  const comparisonMode: ComparisonMode =
+    typeof comparisonModeUnknown === 'string' &&
+    comparisonModeUnknown in ComparisonMode
+      ? comparisonModeUnknown
+      : ComparisonMode.AUTO;
+
+  const isEqual = getComparator(comparisonMode);
+  return {
+    pass: isEqual(expectedValue, currentValue),
+    message: `Expected${negation ? ' NOT' : ''} ${green(expectedValue)} received ${red(currentValue)}, mode: ${yellow(
+      comparisonMode
+    )}`,
+  };
+};
+
+export const toBeDefined: Matcher<ToBeNullArgs> = (currentValue, negation) => {
+  const coloredExpected = green('defined');
+  const coloredReceived = red(currentValue);
+
+  return {
+    pass: currentValue !== undefined,
+    message: `Expected${negation ? ' NOT' : ''} ${coloredExpected} received ${coloredReceived}`,
+  };
+};
+
+export const toBeUndefined: Matcher<ToBeNullArgs> = (
+  currentValue,
+  negation
+) => {
+  const coloredExpected = green('undefined');
+  const coloredReceived = red(currentValue);
+
+  return {
+    pass: currentValue === undefined,
+    message: `Expected${negation ? ' NOT' : ''} ${coloredExpected} received ${coloredReceived}`,
+  };
+};
+
+export const toBeNullableMatcher: Matcher<ToBeNullArgs> = (
+  currentValue,
+  negation
+) => {
+  const coloredExpected = green('nullable');
+  const coloredReceived = red(currentValue);
+
+  return {
+    pass: currentValue === null || currentValue === undefined,
+    message: `Expected${negation ? ' NOT' : ''} ${coloredExpected} received ${coloredReceived}`,
+  };
+};
+
+export const toBeWithinRangeMatcher: Matcher<ToBeWithinRangeArgs> = (
+  currentValue,
+  negation,
+  minimumValue,
+  maximumValue
+) => {
+  const currentValueAsNumber = Number(Number(currentValue));
+  const validInputTypes =
+    typeof minimumValue === 'number' && typeof maximumValue === 'number';
+  const isWithinRange =
+    Number(minimumValue) <= currentValueAsNumber &&
+    currentValueAsNumber <= Number(maximumValue);
+
+  return {
+    pass: isWithinRange && validInputTypes,
+    message: `Expected the value${negation ? ' NOT' : ''} to be in range ${green(
+      `[${minimumValue}, ${maximumValue}]`
+    )} received ${red(currentValue)}`,
+  };
+};
+
+const toBeCalledOnThreadMatcher = (
+  currentValue: TestValue,
+  negation: boolean,
+  times: number,
+  thread: 'ALL' | 'JS' | 'UI'
+) => {
+  assertValueIsCallTracker(currentValue);
+  const { onUI, onJS } = currentValue;
+  const callsCount = {
+    ALL: onUI + onJS,
+    JS: onJS,
+    UI: onUI,
+  }[thread];
+
+  return {
+    pass: callsCount === times,
+    message: `Expected ${cyan(currentValue.name)}${negation ? ' NOT' : ''} to be called ${green(times)} times${
+      thread === 'ALL' ? '' : cyan(` on ${thread} thread`)
+    }, but was called ${red(callsCount)} times`,
+  };
+};
+
+export const toBeCalledMatcher: Matcher<ToBeCalledArgs> = (
+  currentValue,
+  negation,
+  times
+) => {
+  return toBeCalledOnThreadMatcher(currentValue, negation, times, 'ALL');
+};
+
+export const toBeCalledUIMatcher: Matcher<ToBeCalledArgs> = (
+  currentValue,
+  negation,
+  times
+) => {
+  return toBeCalledOnThreadMatcher(currentValue, negation, times, 'UI');
+};
+
+export const toBeCalledJSMatcher: Matcher<ToBeCalledArgs> = (
+  currentValue,
+  negation,
+  times
+) => {
+  return toBeCalledOnThreadMatcher(currentValue, negation, times, 'JS');
+};
+
+export const toIncludeMatcher: Matcher<ToIncludeArgs> = (
+  currentValue,
+  negation,
+  substring
+) => {
+  const pass =
+    typeof currentValue === 'string' && currentValue.includes(substring);
+  return {
+    pass,
+    message:
+      typeof currentValue !== 'string'
+        ? `Expected a ${green('string')} received ${red(typeof currentValue)}`
+        : `Expected string${negation ? ' NOT' : ''} to include ${green(substring)}, received ${red(currentValue)}`,
+  };
+};
+
+export const toThrowMatcher: AsyncMatcher<ToThrowArgs> = async (
+  throwingFunction,
+  negation,
+  errorMessage
+) => {
+  if (typeof throwingFunction !== 'function') {
+    return {
+      pass: false,
+      message: `${throwingFunction?.toString()} is not a function`,
+    };
+  }
+  const [restoreConsole, getCapturedConsoleErrors] = await mockConsole();
+  let thrownException = false;
+  let thrownExceptionMessage = null;
+
+  const errorUtils = (
+    globalThis as {
+      ErrorUtils?: {
+        getGlobalHandler: () => (error: Error, isFatal?: boolean) => void;
+        setGlobalHandler: (
+          handler: (error: Error, isFatal?: boolean) => void
+        ) => void;
+      };
+    }
+  ).ErrorUtils;
+  let uncaughtErrorMessage: string | null = null;
+  const previousGlobalHandler = errorUtils?.getGlobalHandler();
+  errorUtils?.setGlobalHandler((error) => {
+    if (uncaughtErrorMessage === null) {
+      uncaughtErrorMessage = error?.message ?? String(error);
+    }
+  });
+
+  try {
+    try {
+      await throwingFunction();
+    } catch (e) {
+      thrownException = true;
+      thrownExceptionMessage = (e as Error)?.message || '';
+    }
+
+    const deadline = Date.now() + 500;
+    while (
+      !thrownException &&
+      uncaughtErrorMessage === null &&
+      getCapturedConsoleErrors().consoleErrorCount < 1 &&
+      Date.now() < deadline
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+  } finally {
+    if (previousGlobalHandler) {
+      errorUtils?.setGlobalHandler(previousGlobalHandler);
+    }
+    await restoreConsole();
+  }
+
+  const { consoleErrorCount, consoleErrorMessage } = getCapturedConsoleErrors();
+  const errorWasThrown =
+    thrownException || uncaughtErrorMessage !== null || consoleErrorCount >= 1;
+  const capturedMessage =
+    thrownExceptionMessage || uncaughtErrorMessage || consoleErrorMessage;
+  const messageIsCorrect = errorMessage
+    ? capturedMessage.includes(errorMessage)
+    : true;
+
+  return {
+    pass: errorWasThrown && messageIsCorrect,
+    message: messageIsCorrect
+      ? `Function was expected${negation ? ' NOT' : ''} to throw error or warning`
+      : `Function was expected${negation ? ' NOT' : ''} to throw the message "${green(errorMessage)}"${
+          negation ? '' : `, but received "${red(capturedMessage)}`
+        }"`,
+  };
+};
+
+async function mockConsole(): Promise<
+  [
+    () => Promise<void>,
+    () => { consoleErrorCount: number; consoleErrorMessage: string },
+  ]
+> {
+  const syncUIRunner = new SyncUIRunner();
+  let counterJS = 0;
+
+  const counterUI = createSynchronizable(0);
+  const recordedMessage = createSynchronizable('');
+
+  const originalError = console.error;
+  const originalWarning = console.warn;
+
+  const incrementJS = () => {
+    counterJS++;
+  };
+  const mockedConsoleFunction = (message: string | Error) => {
+    'worklet';
+    if (getRuntimeKind() === RuntimeKind.ReactNative) {
+      incrementJS();
+    } else {
+      counterUI.setBlocking((prev) => {
+        return prev + 1;
+      });
+    }
+    if (typeof message === 'object' && 'message' in message) {
+      recordedMessage.setBlocking(message.message);
+    } else {
+      recordedMessage.setBlocking(
+        message.split('\n\nThis error is located at:')[0]
+      );
+    }
+  };
+  console.error = mockedConsoleFunction;
+  console.warn = mockedConsoleFunction;
+  await syncUIRunner.runOnUIBlocking(() => {
+    'worklet';
+    (globalThis as Record<string, unknown>).__originalConsoleError =
+      console.error;
+    (globalThis as Record<string, unknown>).__originalConsoleWarn =
+      console.warn;
+    console.error = mockedConsoleFunction;
+    console.warn = mockedConsoleFunction;
+  });
+
+  const restoreConsole = async () => {
+    console.error = originalError;
+    console.warn = originalWarning;
+    await syncUIRunner.runOnUIBlocking(() => {
+      'worklet';
+      console.error = (globalThis as Record<string, unknown>)
+        .__originalConsoleError as typeof console.error;
+      console.warn = (globalThis as Record<string, unknown>)
+        .__originalConsoleWarn as typeof console.warn;
+      delete (globalThis as Record<string, unknown>).__originalConsoleError;
+      delete (globalThis as Record<string, unknown>).__originalConsoleWarn;
+    });
+  };
+
+  const getCapturedConsoleErrors = () => {
+    const count = counterUI.getBlocking() + counterJS;
+    return {
+      consoleErrorCount: count,
+      consoleErrorMessage: recordedMessage.getBlocking(),
+    };
+  };
+
+  return [restoreConsole, getCapturedConsoleErrors];
+}

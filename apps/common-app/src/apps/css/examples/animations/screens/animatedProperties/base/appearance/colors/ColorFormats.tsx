@@ -1,4 +1,4 @@
-import type { ColorValue } from 'react-native';
+import type { ColorValue, ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -7,7 +7,7 @@ import { radius, sizes } from '@/theme';
 
 export default function ColorsFormats() {
   return (
-    <ExamplesScreen<{ from: number | string; to: number | string }>
+    <ExamplesScreen<ViewStyle, { from: number | string; to: number | string }>
       CardComponent={VerticalExampleCard}
       buildAnimation={({ from, to }) => ({
         animationDirection: 'alternate',

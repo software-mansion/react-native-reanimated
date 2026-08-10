@@ -35,7 +35,7 @@ test('accepts all PluginOptions fields without throwing', () => {
     omitNativeOnlyData: true,
     strictGlobal: false,
     substituteWebPlatformChecks: false,
-    workletizableModules: ['my-lib'],
+    importForwarding: { moduleNames: ['my-lib'], relativePaths: ['my-lib'] },
   });
   assert.match(code, /const a = 1/);
 });

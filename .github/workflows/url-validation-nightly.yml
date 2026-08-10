@@ -10,6 +10,9 @@ on:
     - cron: '37 19 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   url-validation-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
@@ -21,7 +24,7 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           cache: 'yarn'
-          node-version: '22'
+          node-version-file: '.nvmrc'
 
       - name: Install monorepo node dependencies
         run: yarn install

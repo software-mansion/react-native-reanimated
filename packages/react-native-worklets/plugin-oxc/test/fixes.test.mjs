@@ -127,7 +127,7 @@ test('recursive worklet emits inner-fn binding that resolves naturally', () => {
   assert.match(content, /fact\(n - 1\)/);
 });
 
-test('JSX element name is not captured into closure', () => {
+test('JSX element name is captured into closure', () => {
   const input = `
     import React from 'react';
     function Custom(props) { return null; }
@@ -137,10 +137,11 @@ test('JSX element name is not captured into closure', () => {
     }
   `;
   const { files } = transform(input, 'test.tsx', {});
-  // Custom is a JSX element name — should not show up in __closure.
+  // Bundle mode captures JSX element names so the emitted file can resolve
+  // the component on the worklet runtime.
   const closureMatch = joinedFiles(files).match(/__closure\s*=\s*\{([^}]*)\}/);
   assert.ok(closureMatch, '__closure not found');
-  assert.doesNotMatch(closureMatch[1], /Custom/);
+  assert.match(closureMatch[1], /Custom/);
 });
 
 test('globals (null, this) are not captured into closure', () => {
@@ -178,7 +179,7 @@ test('extraPlugins option does not throw and emits a stderr warning', () => {
 });
 
 test('MOCK_VERSION env gate: without env, __pluginVersion comes from opts', () => {
-  delete process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION;
+  delete process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION;
   const input = `function foo() { 'worklet'; return 1; }`;
   const { files } = transform(input, 'test.js', { pluginVersion: '1.2.3' });
   const content = joinedFiles(files);
@@ -187,13 +188,13 @@ test('MOCK_VERSION env gate: without env, __pluginVersion comes from opts', () =
 });
 
 test('MOCK_VERSION env gate: with env=1, mock wins', () => {
-  process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION = '1';
+  process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
   try {
     const input = `function foo() { 'worklet'; return 1; }`;
     const { files } = transform(input, 'test.js', { pluginVersion: '1.2.3' });
     assert.match(joinedFiles(files), /__pluginVersion\s*=\s*"x\.y\.z"/);
   } finally {
-    delete process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION;
+    delete process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION;
   }
 });
 
@@ -202,7 +203,7 @@ test('MOCK_VERSION env gate: no env, no pluginVersion → fall back to baked ver
   // `package.json` version at build time (mirrors `REAL_VERSION` in the TS
   // plugin). Raw napi callers without an injected `pluginVersion` still get
   // a real version string instead of a silently-missing `__pluginVersion`.
-  delete process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION;
+  delete process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION;
   const input = `function foo() { 'worklet'; return 1; }`;
   const { files } = transform(input, 'test.js', {});
   assert.match(joinedFiles(files), /__pluginVersion\s*=\s*"[^"]+"/);

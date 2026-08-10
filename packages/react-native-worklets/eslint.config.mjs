@@ -60,6 +60,12 @@ const config = tsEslint.config(
       '@typescript-eslint/unbound-method': 'off',
       'jest/unbound-method': 'error',
     },
+  },
+  {
+    files: ['__tests__/**'],
+    rules: {
+      'reanimated/use-worklets-error': 'off',
+    },
   }
 );
 

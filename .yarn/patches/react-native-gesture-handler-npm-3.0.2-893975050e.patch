@@ -1,0 +1,32 @@
+diff --git a/android/build.gradle b/android/build.gradle
+index 3f5f514cc1a1561a729ec6792f2895cb329ae4dd..d8ae0a5471b077c9b17a897cd9e293ca356d3756 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -60,7 +60,6 @@ if (isNewArchitectureEnabled()) {
+ }
+ 
+ apply plugin: 'com.android.library'
+-apply plugin: 'kotlin-android'
+ 
+ if (project == rootProject) {
+     apply from: "spotless.gradle"
+@@ -183,6 +182,19 @@ android {
+     }
+ 
+     sourceSets.main {
++        kotlin {
++            if (shouldUseCommonInterfaceFromReanimated()) {
++                srcDirs += 'reanimated/src/main/java'
++            } else {
++                srcDirs += 'noreanimated/src/main/java'
++            }
++
++            if (shouldUseCommonInterfaceFromRNSVG()) {
++                srcDirs += 'svg/src/main/java'
++            } else {
++                srcDirs += 'nosvg/src/main/java'
++            }
++        }
+         java {
+             if (shouldUseCommonInterfaceFromReanimated()) {
+                 srcDirs += 'reanimated/src/main/java'

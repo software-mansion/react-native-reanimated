@@ -31,11 +31,8 @@ class JScriptBufferWrapper : public jni::HybridClass<JScriptBufferWrapper> {
       jni::alias_ref<jhybridobject> jThis,
       jni::alias_ref<JAssetManager::javaobject> assetManager,
       const std::string &assetURL);
-  static jni::local_ref<JScriptBufferWrapper::jhybriddata> initHybridFromFile(
-      jni::alias_ref<jhybridobject> jThis,
-      const std::string &fileName);
   static jni::local_ref<JScriptBufferWrapper::jhybriddata>
-  initHybridFromString(jni::alias_ref<jhybridobject> jThis, const std::string &script, const std::string &sourceURL);
+  initHybridFromFile(jni::alias_ref<jhybridobject> jThis, const std::string &fileName, const std::string &sourceURL);
 
   friend HybridBase;
 

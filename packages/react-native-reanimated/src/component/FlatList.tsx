@@ -79,14 +79,14 @@ interface ReanimatedFlatListPropsWithLayout<T> extends AnimatedProps<
    * rendered and its index and returns animated view styles.
    */
   CellRendererComponentStyle?:
-    | StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>
+    | StyleProp<AnimatedStyle<ViewStyle>>
     | (({
         item,
         index,
       }: {
         item: T;
         index: number;
-      }) => StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>)
+      }) => StyleProp<AnimatedStyle<ViewStyle>>)
     | undefined;
 }
 

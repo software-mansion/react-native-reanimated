@@ -1,9 +1,17 @@
-import React, { useReducer } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, Button } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+const COLORS = ['#87cce8', '#fa7f7c', '#82cab2', '#b58df1', '#ffd25f'];
+
 export default function App() {
-  const [isToggled, toggle] = useReducer((s) => !s, false);
+  const [width, setWidth] = useState(120);
+  const [backgroundColor, setBackgroundColor] = useState(COLORS[0]);
+
+  const randomize = () => {
+    setWidth(120 + Math.round(Math.random() * 140));
+    setBackgroundColor(COLORS[Math.floor(Math.random() * COLORS.length)]);
+  };
 
   return (
     <View style={styles.container}>
@@ -11,15 +19,15 @@ export default function App() {
         style={[
           styles.box,
           {
-            width: isToggled ? 240 : 120,
-            backgroundColor: isToggled ? '#fa7f7c' : '#87cce8',
+            width,
+            backgroundColor,
             // highlight-next-line
             transitionProperty: ['width', 'backgroundColor'],
             transitionDuration: 500,
           },
         ]}
       />
-      <Button onPress={toggle} title="Click me" />
+      <Button onPress={randomize} title="Randomize" />
     </View>
   );
 }

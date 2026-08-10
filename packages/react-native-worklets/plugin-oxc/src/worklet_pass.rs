@@ -51,6 +51,22 @@ const FUNCTION_HOOKS_ARG2: &[&str] = &["withTiming", "withSpring"];
 /// Hooks whose worklet callback is at index 3 (`withRepeat(animation, n, reverse, callback)`).
 const FUNCTION_HOOKS_ARG3: &[&str] = &["withRepeat"];
 
+/// Every callee name that can trigger autoworkletization. Exposed so the JS
+/// shim's "can this file possibly contain worklets?" pre-filter is derived
+/// from the same lists the pass uses, instead of a hand-kept copy that
+/// silently drifts.
+pub fn autoworkletization_callee_names() -> Vec<&'static str> {
+    let mut names = Vec::new();
+    names.extend_from_slice(FUNCTION_HOOKS_ARG0);
+    names.extend_from_slice(FUNCTION_HOOKS_ARG01);
+    names.extend_from_slice(FUNCTION_HOOKS_ARG1);
+    names.extend_from_slice(FUNCTION_HOOKS_ARG2);
+    names.extend_from_slice(FUNCTION_HOOKS_ARG3);
+    names.extend_from_slice(crate::auto_detect::GESTURE_HANDLER_OBJECT_HOOKS);
+    names.extend_from_slice(crate::auto_detect::GESTURE_HANDLER_BUILDER_METHODS);
+    names
+}
+
 /// Hooks whose arg 0 is an object literal whose methods should each be
 /// workletized. Matches `reanimatedObjectHooks` in `autoworkletization.ts:16-19`.
 fn is_object_hook_at_arg0(name: &str) -> bool {
@@ -1393,12 +1409,19 @@ fn inject_worklet_directives_to_object_methods<'a>(
 ) {
     for prop in obj.properties.iter_mut() {
         if let ObjectPropertyKind::ObjectProperty(p) = prop {
-            if p.method {
-                if let Expression::FunctionExpression(func) = &mut p.value {
+            // Method shorthand *and* plain properties holding a function or
+            // arrow — `{ onScroll(e) {…}, onBeginDrag: (e) => … }` both count.
+            // Mirrors `forEachWorkletizableObjectProperty` in `findWorklet.ts`.
+            match &mut p.value {
+                Expression::FunctionExpression(func) => {
                     if let Some(body) = &mut func.body {
                         inject_worklet_directive(body, builder);
                     }
                 }
+                Expression::ArrowFunctionExpression(arrow) => {
+                    inject_worklet_directive(&mut arrow.body, builder);
+                }
+                _ => {}
             }
         }
     }

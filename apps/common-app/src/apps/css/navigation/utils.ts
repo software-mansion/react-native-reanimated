@@ -1,7 +1,28 @@
-import type { Route, RouteWithRoutes } from './types';
+import type { Route, Routes, RouteWithRoutes, TabRoute } from './types';
 
 export function isRouteWithRoutes(route: Route): route is RouteWithRoutes {
   return route && typeof route === 'object' && 'routes' in route;
+}
+
+export function getExampleScreenPaths(tabRoutes: Array<TabRoute>): Set<string> {
+  const paths = new Set<string>();
+
+  const collect = (routes: Routes, prefix: string) => {
+    for (const [key, route] of Object.entries(routes)) {
+      const path = `${prefix}/${key}`;
+      if (isRouteWithRoutes(route)) {
+        collect(route.routes, path);
+      } else {
+        paths.add(path);
+      }
+    }
+  };
+
+  for (const tab of tabRoutes) {
+    collect(tab.routes, tab.name);
+  }
+
+  return paths;
 }
 
 const isUpperCase = (char: string) => char && char === char.toUpperCase();

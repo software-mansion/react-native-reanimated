@@ -17,9 +17,9 @@ class EventHandler : public HybridClass<EventHandler> {
   static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/nativeProxy/EventHandler;";
 
   void receiveEvent(
-      jni::alias_ref<JString> eventKey,
+      jni::alias_ref<JString> eventKey, // NOLINT(performance-unnecessary-value-param)
       jint emitterReactTag,
-      jni::alias_ref<react::WritableMap> event,
+      jni::alias_ref<react::WritableMap> event, // NOLINT(performance-unnecessary-value-param)
       jboolean isInDrawPass) {
     ReanimatedSystraceSection s("EventHandler::receiveEvent");
     handler_(eventKey, emitterReactTag, event, isInDrawPass);

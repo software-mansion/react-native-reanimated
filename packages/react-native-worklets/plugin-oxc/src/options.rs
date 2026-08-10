@@ -2,6 +2,16 @@ use napi_derive::napi;
 
 #[napi(object)]
 #[derive(Default, Clone, Debug)]
+pub struct ImportForwarding {
+    /// Exact module names whose imports are forwarded into worklet files.
+    pub module_names: Option<Vec<String>>,
+    /// Path fragments that mark a module as allowed to forward its own
+    /// relative imports into worklet files.
+    pub relative_paths: Option<Vec<String>>,
+}
+
+#[napi(object)]
+#[derive(Default, Clone, Debug)]
 pub struct PluginOptions {
     pub disable_inline_styles_warning: Option<bool>,
     pub disable_source_maps: Option<bool>,
@@ -20,7 +30,12 @@ pub struct PluginOptions {
     pub omit_native_only_data: Option<bool>,
     pub strict_global: Option<bool>,
     pub substitute_web_platform_checks: Option<bool>,
-    pub workletizable_modules: Option<Vec<String>>,
+    pub import_forwarding: Option<ImportForwarding>,
+
+    /// Babel's `state.file.opts.envName`, forwarded by the JS shim. Takes
+    /// precedence over `BABEL_ENV`/`NODE_ENV` when deciding whether this is a
+    /// release build.
+    pub env_name: Option<String>,
 
     /// Internal: the `react-native-worklets` package version, injected by the
     /// JS shim at transform time. Stamped onto every workletized function as

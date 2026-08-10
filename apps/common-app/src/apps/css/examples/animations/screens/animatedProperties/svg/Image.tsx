@@ -11,8 +11,8 @@ const AnimatedImage = Animated.createAnimatedComponent(Image);
 export default function ImageExample() {
   return (
     <ExamplesScreen<
-      { keyframes: CSSAnimationKeyframes<ImageProps>; viewBox?: string },
-      ImageProps
+      ImageProps,
+      { keyframes: CSSAnimationKeyframes<ImageProps>; viewBox?: string }
     >
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',

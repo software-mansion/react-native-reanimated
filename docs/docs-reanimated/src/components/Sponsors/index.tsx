@@ -10,10 +10,6 @@ const Sponsors = () => {
       light: useBaseUrl('/img/expo.svg'),
       dark: useBaseUrl('/img/expo-dark.svg'),
     },
-    shopify: {
-      light: useBaseUrl('/img/shopify.svg'),
-      dark: useBaseUrl('/img/shopify-dark.svg'),
-    },
   };
 
   return (
@@ -28,10 +24,6 @@ const Sponsors = () => {
       <div className={styles.sponsorsBrands}>
         <ThemedImage
           sources={sponsorsLogos.expo}
-          className={styles.sponsorsBrand}
-        />
-        <ThemedImage
-          sources={sponsorsLogos.shopify}
           className={styles.sponsorsBrand}
         />
       </div>

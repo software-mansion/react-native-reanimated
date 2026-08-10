@@ -6,6 +6,7 @@ import routeCards from './routeCards';
 import {
   AnimatedProperties,
   miscellaneous,
+  pseudoSelectors,
   realWorldExamples,
   testExamples,
   transitionSettings,
@@ -84,6 +85,61 @@ const routes = {
       HamburgerMenuButtons: {
         name: 'Hamburger Menu Buttons',
         Component: realWorldExamples.HamburgerMenuButtons,
+      },
+    },
+  },
+  PseudoSelectors: {
+    name: 'Pseudo Selectors',
+    CardComponent: routeCards.PseudoSelectorsCard,
+    routes: {
+      PseudoHover: {
+        name: ':hover',
+        Component: pseudoSelectors.Hover,
+      },
+      PseudoActive: {
+        name: ':active',
+        Component: pseudoSelectors.Active,
+      },
+      PseudoActiveBlocksRender: {
+        name: 'selectors block render transition',
+        Component: pseudoSelectors.ActiveBlocksRender,
+      },
+      PseudoActiveDeepest: {
+        name: ':active-deepest',
+        Component: pseudoSelectors.ActiveDeepest,
+      },
+      PseudoFocus: {
+        name: ':focus',
+        Component: pseudoSelectors.Focus,
+      },
+      PseudoFocusWithin: {
+        name: ':focus-within',
+        Component: pseudoSelectors.FocusWithin,
+      },
+      PseudoHoverWithLoop: {
+        name: 'Looping transition + :hover',
+        Component: pseudoSelectors.HoverWithLoop,
+      },
+      PseudoPerStateTransitionConfig: {
+        name: 'Per-state transition configs',
+        Component: pseudoSelectors.PerStateTransitionConfig,
+      },
+      PseudoArbitraryWebSelectors: {
+        name: 'Arbitrary web selectors',
+        Component: pseudoSelectors.ArbitraryWebSelectors,
+      },
+      PseudoShowcase: {
+        name: 'Showcase',
+        routes: {
+          PseudoShowcaseForm: {
+            name: 'Form',
+            Component: pseudoSelectors.Form,
+          },
+          PseudoShowcasePlanets: {
+            name: 'Planets',
+            Component: pseudoSelectors.Planets,
+          },
+        },
       },
     },
   },

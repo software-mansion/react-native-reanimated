@@ -4,11 +4,15 @@ use oxc_span::SPAN;
 
 use crate::state::State;
 
-const WORKLETS_SRC_ENTRY: &str = "react-native-worklets/src/index.ts";
-const WORKLETS_LIB_ENTRY: &str = "react-native-worklets/lib/module/index.js";
+const TOGGLE_PATHS: &[&str] = &[
+    "react-native-worklets/src/index.ts",
+    "react-native-worklets/src/debug/bundleMode.native.ts",
+    "react-native-worklets/lib/module/index.js",
+    "react-native-worklets/lib/module/debug/bundleMode.native.js",
+];
 
 /// Replaces `globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;` with `... = true;`
-/// in the Worklets entry-point file. Bundle mode is the only mode this plugin
+/// in the Worklets toggle-target files. Bundle mode is the only mode this plugin
 /// supports — the toggle exists so the runtime side sees the flag set
 /// regardless of which entry-point variant was bundled.
 pub fn toggle_bundle_mode<'a>(
@@ -18,7 +22,7 @@ pub fn toggle_bundle_mode<'a>(
     builder: AstBuilder<'a>,
 ) {
     let normalized = filename.replace('\\', "/");
-    if !normalized.ends_with(WORKLETS_SRC_ENTRY) && !normalized.ends_with(WORKLETS_LIB_ENTRY) {
+    if !TOGGLE_PATHS.iter().any(|path| normalized.ends_with(path)) {
         return;
     }
 

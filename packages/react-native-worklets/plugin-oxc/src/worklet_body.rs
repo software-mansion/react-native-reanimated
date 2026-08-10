@@ -47,7 +47,7 @@ pub fn build_worklet_body_string<'a>(
     // workletization on eval) as well as nested `no-worklet-closure` /
     // `limit-init-data-hoisting` directives on inner functions whose bodies
     // are now part of our stringified output.
-    crate::utils::strip_worklet_directives_in_body(&mut cloned_body, builder);
+    crate::utils::strip_worklet_directives_in_body(&mut cloned_body, builder, false);
     if is_expression_body {
         rewrite_implicit_return(&mut cloned_body, builder);
     }

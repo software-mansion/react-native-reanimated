@@ -12,6 +12,9 @@ on:
       - packages/react-native-worklets/compatibility.json
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   docs-publish:
     if: github.repository == 'software-mansion/react-native-reanimated'

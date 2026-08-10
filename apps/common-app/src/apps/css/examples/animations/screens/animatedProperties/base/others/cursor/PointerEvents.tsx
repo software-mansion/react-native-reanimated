@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { ViewStyle } from 'react-native';
 import { Pressable, StyleSheet } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -10,7 +11,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function PointerEvents() {
   return (
-    <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
+    <ExamplesScreen<ViewStyle, { keyframes: CSSAnimationKeyframes<ViewStyle> }>
       CardComponent={VerticalExampleCard}
       buildAnimation={({ keyframes }) => ({
         animationDuration: '3s',

@@ -23,13 +23,9 @@ import type {
 import { Animations, TransitionType } from './config';
 import { TransitionGenerator } from './createAnimation';
 import { scheduleAnimationCleanup } from './domUtils';
-import type { WebEasingsNames } from './Easing.web';
-import {
-  getEasingByName,
-  maybeGetBezierEasing,
-  WebEasings,
-} from './Easing.web';
-import { prepareCurvedTransition } from './transition/Curved.web';
+import type { WebEasingsNames } from './Easing';
+import { getEasingByName, maybeGetBezierEasing, WebEasings } from './Easing';
+import { prepareCurvedTransition } from './transition/Curved';
 
 function getSnapshotForElement(element: HTMLElement): ReanimatedSnapshot {
   const existingSnapshot = snapshots.get(element);
@@ -193,7 +189,7 @@ export function setElementAnimation(
   element: ReanimatedHTMLElement,
   animationConfig: AnimationConfig,
   shouldSavePosition = false,
-  parent: Element | null = null
+  originalElement?: ReanimatedHTMLElement
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 
@@ -219,11 +215,27 @@ export function setElementAnimation(
     configureAnimation();
   }
 
-  const maybeRemoveElement = () => {
-    if (element.isDummy && parent?.contains(element)) {
-      element.removedAfterAnimation = true;
-      parent.removeChild(element);
+  const maybeRunCleanup = () => {
+    if (!originalElement) {
+      return;
     }
+
+    // Moving elements in DOM resets their scroll positions,
+    // so we save them before reparenting and restore after.
+    const scrollPositions = saveScrollPositions(element);
+
+    originalElement.style.visibility = 'initial';
+
+    while (element.firstChild) {
+      originalElement.appendChild(element.firstChild);
+    }
+
+    restoreScrollPositions(originalElement, scrollPositions, element);
+
+    element.removedAfterAnimation = true;
+    element.remove();
+
+    delete originalElement.dummyClone;
   };
 
   let wasCallbackCalled = false;
@@ -239,14 +251,14 @@ export function setElementAnimation(
       saveSnapshot(element);
     }
 
-    maybeRemoveElement();
+    maybeRunCleanup();
     maybeCallCallback(true);
 
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
 
   const animationCancelHandler = () => {
-    maybeRemoveElement();
+    maybeRunCleanup();
     maybeCallCallback(false);
 
     element.removeEventListener('animationcancel', animationCancelHandler);
@@ -267,7 +279,7 @@ export function setElementAnimation(
         setElementPosition(element, getSnapshotForElement(element));
       }
 
-      maybeRemoveElement();
+      maybeRunCleanup();
       maybeCallCallback(false);
     });
   }
@@ -347,6 +359,38 @@ function getElementScrollValue(element: HTMLElement): ScrollOffsets {
   return scrollOffsets;
 }
 
+function saveScrollPositions(root: Element) {
+  const positions = new Map<Element, { top: number; left: number }>();
+
+  const savePositions = (node: Element) => {
+    positions.set(node, { top: node.scrollTop, left: node.scrollLeft });
+    for (const child of Array.from(node.children)) {
+      savePositions(child);
+    }
+  };
+
+  savePositions(root);
+
+  return positions;
+}
+
+function restoreScrollPositions(
+  root: Element,
+  positions: Map<Element, { top: number; left: number }>,
+  savedRoot?: Element
+) {
+  const position = positions.get(savedRoot ?? root);
+
+  if (position) {
+    root.scrollTop = position.top;
+    root.scrollLeft = position.left;
+  }
+
+  for (const child of Array.from(root.children)) {
+    restoreScrollPositions(child, positions);
+  }
+}
+
 function cleanupEnteringAnimations(element: HTMLElement) {
   const animationName = element.style.animationName;
 
@@ -372,22 +416,13 @@ export function handleExitingAnimation(
   dummy.isDummy = true;
   dummy.style.animationName = '';
 
+  element.style.visibility = 'hidden';
   element.dummyClone = dummy;
   element.style.animationName = '';
 
   // Moving elements in DOM resets their scroll positions
   // so we memorize them here and restore after
-  const scrollPositions = new Map<Element, { top: number; left: number }>();
-  const saveScrollPosition = (node: Element) => {
-    scrollPositions.set(node, {
-      top: node.scrollTop,
-      left: node.scrollLeft,
-    });
-    for (const child of Array.from(node.children)) {
-      saveScrollPosition(child);
-    }
-  };
-  saveScrollPosition(element);
+  const scrollPositions = saveScrollPositions(element);
 
   // Clean up entering animations on all descendants before moving them to the dummy.
   // This prevents entering animations from restarting when elements are moved to a new parent.
@@ -404,17 +439,7 @@ export function handleExitingAnimation(
 
   parent?.appendChild(dummy);
 
-  const restoreScrollPosition = (node: Element) => {
-    const scrollPosition = scrollPositions.get(node === dummy ? element : node);
-    if (scrollPosition) {
-      node.scrollTop = scrollPosition.top;
-      node.scrollLeft = scrollPosition.left;
-    }
-    for (const child of Array.from(node.children)) {
-      restoreScrollPosition(child);
-    }
-  };
-  restoreScrollPosition(dummy);
+  restoreScrollPositions(dummy, scrollPositions, element);
 
   const snapshot = getSnapshotForElement(element);
 
@@ -443,5 +468,5 @@ export function handleExitingAnimation(
 
   setElementPosition(dummy, snapshot);
 
-  setElementAnimation(dummy, animationConfig, false, parent);
+  setElementAnimation(dummy, animationConfig, false, element);
 }

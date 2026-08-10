@@ -112,7 +112,6 @@ declare global {
     unknown,
     unknown
   >;
-  var __remoteFunctionRegistry: Map<number, Function>;
   /** Only in Bundle Mode on Worklet Runtimes. */
   var TurboModules: Map<string, unknown>;
   /**

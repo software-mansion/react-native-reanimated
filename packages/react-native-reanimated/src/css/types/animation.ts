@@ -1,5 +1,5 @@
 'use strict';
-import type { PlainStyle } from '../../common';
+import type { DefaultStyle } from '../../hook/commonTypes';
 import type { CSSTimingFunction } from '../easing';
 import type { TimeUnit } from './common';
 import type { AddArrayPropertyType, AddArrayPropertyTypes } from './helpers';
@@ -16,7 +16,7 @@ export type CSSAnimationKeyframeBlock<S extends object> = S & {
   animationTimingFunction?: CSSAnimationTimingFunction;
 };
 
-export type CSSAnimationKeyframes<S extends object = PlainStyle> = Record<
+export type CSSAnimationKeyframes<S extends object = DefaultStyle> = Record<
   CSSAnimationKeyframeSelector,
   CSSAnimationKeyframeBlock<S>
 >;
@@ -32,6 +32,37 @@ export type CSSAnimationDirection =
 export type CSSAnimationFillMode = 'none' | 'forwards' | 'backwards' | 'both';
 export type CSSAnimationPlayState = 'running' | 'paused';
 
+/** Payload for a CSS animation callback. */
+export type CSSAnimationEvent = {
+  // TODO: add a JS-side view ref (e.g. `target`) once the right ref type is
+  // decided.
+  /**
+   * The name of the keyframes that fired the event (matches the `name` of a
+   * `css.keyframes(...)` rule).
+   */
+  animationName: string;
+  /**
+   * The amount of time the animation had been running, in seconds, when the
+   * event fired.
+   */
+  elapsedTime: number;
+};
+
+export type CSSAnimationCallback = (event: CSSAnimationEvent) => void;
+
+export type CSSAnimationCallbacks = {
+  /** Fired when the animation starts, after any `animationDelay`. */
+  onAnimationStart?: CSSAnimationCallback;
+  /** Fired when the animation completes. */
+  onAnimationEnd?: CSSAnimationCallback;
+  /** Fired at the end of each iteration except the last. */
+  onAnimationIteration?: CSSAnimationCallback;
+  /** Fired when the animation is interrupted before completing. */
+  onAnimationCancel?: CSSAnimationCallback;
+};
+
+export type CSSAnimationCallbackProp = keyof CSSAnimationCallbacks;
+
 export type SingleCSSAnimationSettings = {
   animationDuration?: CSSAnimationDuration;
   animationTimingFunction?: CSSAnimationTimingFunction;
@@ -43,7 +74,7 @@ export type SingleCSSAnimationSettings = {
   // animationTimeline?: // TODO - This is still experimental in browsers and we might not want to support it when CSS animations in reanimated are released
 };
 
-export type SingleCSSAnimationProperties<S extends object = PlainStyle> =
+export type SingleCSSAnimationProperties<S extends object = DefaultStyle> =
   SingleCSSAnimationSettings & {
     animationName: CSSKeyframesRule | CSSAnimationKeyframes<S>;
   };
@@ -51,14 +82,14 @@ export type SingleCSSAnimationProperties<S extends object = PlainStyle> =
 export type CSSAnimationSettings =
   AddArrayPropertyTypes<SingleCSSAnimationSettings>;
 
-export type CSSAnimationProperties<S extends object = PlainStyle> =
+export type CSSAnimationProperties<S extends object = DefaultStyle> =
   CSSAnimationSettings & {
     animationName:
       | AddArrayPropertyType<CSSKeyframesRule | CSSAnimationKeyframes<S>>
       | 'none';
   };
 
-export type ExistingCSSAnimationProperties<S extends object = PlainStyle> =
+export type ExistingCSSAnimationProperties<S extends object = DefaultStyle> =
   CSSAnimationProperties<S> & {
     animationName: AddArrayPropertyType<
       CSSKeyframesRule | CSSAnimationKeyframes<S>

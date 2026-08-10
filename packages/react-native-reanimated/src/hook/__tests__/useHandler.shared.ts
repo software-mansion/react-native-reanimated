@@ -1,10 +1,20 @@
 'use strict';
 
 import { Platform } from 'react-native';
+import * as Worklets from 'react-native-worklets';
 
 import { cloneWorklet, worklet } from '../../jestUtils';
 import type { DependencyList } from '../commonTypes';
 import { useHandler } from '../useHandler';
+
+jest.mock('react-native-worklets', () => {
+  const actual = jest.requireActual('react-native-worklets');
+  return {
+    __esModule: true,
+    ...actual,
+    makeShareable: jest.fn(actual.makeShareable),
+  };
+});
 
 type Handlers = Parameters<typeof useHandler>[0];
 
@@ -42,6 +52,35 @@ export function runCommonTests() {
 
       expect(result.current.context).toBe(context);
       expect(result.current.context.value).toBe(42);
+    });
+  });
+
+  describe('lazy context creation', () => {
+    const makeShareableMock = Worklets.makeShareable as jest.MockedFunction<
+      typeof Worklets.makeShareable
+    >;
+
+    beforeEach(() => {
+      makeShareableMock.mockClear();
+    });
+
+    test('does not call makeShareable when context is never read', () => {
+      const { rerender } = renderUseHandler({ onScroll: worklet() });
+
+      rerender({ handlers: { onScroll: worklet() } });
+
+      expect(makeShareableMock).not.toHaveBeenCalled();
+    });
+
+    test('calls makeShareable at most once across reads and re-renders', () => {
+      const { result, rerender } = renderUseHandler({ onScroll: worklet() });
+
+      void result.current.context;
+
+      rerender({ handlers: { onScroll: worklet() } });
+      void result.current.context;
+
+      expect(makeShareableMock).toHaveBeenCalledTimes(1);
     });
   });
 
