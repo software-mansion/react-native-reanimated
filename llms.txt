@@ -57,6 +57,7 @@
 ## css-transitions
 
 - [overview](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/overview)
+- [pseudo-selectors](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/pseudo-selectors)
 - [transition-behavior](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-behavior)
 - [transition-delay](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-delay)
 - [transition-duration](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-duration)

@@ -58,6 +58,7 @@ CSS transitions are *declarative*: you describe the result you want, not the ste
 * A CSS transition animates a style property when its value changes between renders.
 * You need [`transitionProperty`](/docs/css-transitions/transition-property) to say what to watch and [`transitionDuration`](/docs/css-transitions/transition-duration) to say how long it takes.
 * Transitions run on [Animated components](/docs/fundamentals/glossary#animated-component) and react to state or prop changes, not to shared value updates.
+* Interaction states like hovering, pressing, and focus don't need React state at all - [Pseudo Selectors](/docs/css-transitions/pseudo-selectors) transition on them directly.
 * Use CSS transitions for state-driven animations, and [`useAnimatedStyle`](/docs/core/useAnimatedStyle) for gesture-driven or orchestrated ones.
 
 ## What's next?
@@ -69,5 +70,7 @@ Now that you've got the basics, explore the individual properties to fine-tune y
 * [`transitionTimingFunction`](/docs/css-transitions/transition-timing-function)
 * [`transitionDelay`](/docs/css-transitions/transition-delay)
 * [`transitionBehavior`](/docs/css-transitions/transition-behavior)
+
+Want a style to react to hovering, pressing, or focus without wiring up any state? See [Pseudo Selectors](/docs/css-transitions/pseudo-selectors).
 
 Looking for animations that play on their own or loop through multiple steps? Head over to [CSS Animations](/docs/css-animations/overview).
