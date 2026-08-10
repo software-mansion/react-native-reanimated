@@ -70,7 +70,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
 #endif // NDEBUG
 
   if (initializer) {
-    workletRuntime->runSyncAndDrainMicrotasks(initializer);
+    workletRuntime->runSync(initializer);
   }
 
   registerRuntime(runtimeId, workletRuntime);

@@ -374,8 +374,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   auto invokeWithMicrotaskCheckpointPolicyImpl(TInvoker &&invoke) const -> std::invoke_result_t<TInvoker> {
     using Result = std::invoke_result_t<TInvoker>;
     const auto checkpoint = [&]() {
-      if constexpr (TCheckpoint == MicrotaskCheckpoint::Skip) {
-      } else {
+      if constexpr (TCheckpoint == MicrotaskCheckpoint::Run) {
         drainMicrotasksImpl();
       }
     };
