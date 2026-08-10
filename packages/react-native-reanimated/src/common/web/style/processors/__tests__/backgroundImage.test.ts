@@ -53,13 +53,44 @@ describe(processBackgroundImageWeb, () => {
       processBackgroundImageWeb([
         {
           type: 'radial-gradient',
-          shape: 'circle',
+          shape: 'ellipse',
           size: { x: 100, y: '50%' },
           position: { top: '10%', left: 20 },
           colorStops: [{ color: 'red' }, { color: 'blue' }],
         },
       ])
-    ).toBe('radial-gradient(circle 100px 50% at top 10% left 20px, red, blue)');
+    ).toBe(
+      'radial-gradient(ellipse 100px 50% at top 10% left 20px, red, blue)'
+    );
+  });
+
+  test('serializes a circle size as a single radius', () => {
+    expect(
+      processBackgroundImageWeb([
+        {
+          type: 'radial-gradient',
+          shape: 'circle',
+          size: { x: 100, y: 100 },
+          colorStops: [{ color: 'red' }, { color: 'blue' }],
+        },
+      ])
+    ).toBe('radial-gradient(circle 100px, red, blue)');
+  });
+
+  test.each([
+    [{ x: 100, y: 50 }], // unequal axes cannot describe a circle
+    [{ x: '50%', y: '50%' }], // a circle radius cannot be a percentage
+  ])('throws for an invalid circle size %j', (size) => {
+    expect(() =>
+      processBackgroundImageWeb([
+        {
+          type: 'radial-gradient',
+          shape: 'circle',
+          size,
+          colorStops: [{ color: 'red' }, { color: 'blue' }],
+        },
+      ])
+    ).toThrow();
   });
 
   test('serializes multiple gradients', () => {

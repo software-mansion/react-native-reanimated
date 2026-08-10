@@ -70,6 +70,18 @@ function serializeRadialGradientPrelude({
   if (size) {
     if (typeof size === 'string') {
       parts.push(size);
+    } else if (shape === 'circle') {
+      // The CSS grammar allows only a single non-negative <length> as an
+      // explicit circle radius - two values describe an ellipse and a
+      // percentage radius is invalid, so browsers would reject the whole
+      // declaration.
+      const isPercent = typeof size.x === 'string' && size.x.endsWith('%');
+      if (size.x !== size.y || isPercent) {
+        throw new Error(
+          `[Reanimated] Invalid circle size ${JSON.stringify(size)} in a radial gradient. A circle radius must be a single length (e.g. 100 or "100px").`
+        );
+      }
+      parts.push(maybeAddSuffix(size.x, 'px'));
     } else {
       parts.push(
         `${maybeAddSuffix(size.x, 'px')} ${maybeAddSuffix(size.y, 'px')}`
