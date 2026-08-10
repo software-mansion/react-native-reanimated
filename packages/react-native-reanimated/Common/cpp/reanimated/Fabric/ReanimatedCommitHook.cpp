@@ -33,6 +33,9 @@ ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
 }
 
 void ReanimatedCommitHook::maybeInitializeLayoutAnimations(const ShadowTree &shadowTree) {
+  if (!layoutAnimationsProxy_) {
+    return;
+  }
   if (!surfaceTracker_->add(shadowTree.getSurfaceId())) {
     return;
   }
