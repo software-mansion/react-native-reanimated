@@ -230,8 +230,8 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
 
   // UIManagerCommitHook
 
-  void commitHookWasRegistered(const UIManager &uiManager) noexcept override {}
-  void commitHookWasUnregistered(const UIManager &uiManager) noexcept override {}
+  void commitHookWasRegistered(const UIManager &) noexcept override {}
+  void commitHookWasUnregistered(const UIManager &) noexcept override {}
 
   RootShadowNode::Unshared shadowTreeWillCommit(
       const ShadowTree &shadowTree,

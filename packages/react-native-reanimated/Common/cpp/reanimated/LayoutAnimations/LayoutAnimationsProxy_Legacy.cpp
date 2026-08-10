@@ -1078,10 +1078,13 @@ inline bool MutationNode::isMutationNode() {
 
 void LayoutAnimationsProxy_Legacy::startSurface(const SurfaceId surfaceId) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  surfaceContext_[surfaceId] = SurfaceContext{};
+  surfaceContext_.try_emplace(surfaceId);
 }
 
 SurfaceContext &LayoutAnimationsProxy_Legacy::getSurfaceContext(const SurfaceId surfaceId) const {
+  // startSurface() creates the entry for a surface before any other method
+  // uses it. The proxy does not remove entries during its lifetime. Thus a
+  // missing entry is an initialization bug, not a stopped surface.
   const auto it = surfaceContext_.find(surfaceId);
   react_native_assert(it != surfaceContext_.end() && "surface must be registered by startSurface");
   return it->second;
