@@ -1078,10 +1078,14 @@ inline bool MutationNode::isMutationNode() {
 
 void LayoutAnimationsProxy_Legacy::startSurface(const SurfaceId surfaceId) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  surfaceContext_[surfaceId] = SurfaceContext{};
+  surfaceContext_.try_emplace(surfaceId);
 }
 
 SurfaceContext &LayoutAnimationsProxy_Legacy::getSurfaceContext(const SurfaceId surfaceId) const {
+  // Entries live for the proxy's lifetime (like SurfaceManager's per-surface
+  // state - proper per-surface cleanup is part of the per-surface proxy
+  // follow-up). Every caller runs after startSurface registered the surface,
+  // so a miss here means a broken invariant, not a torn-down surface.
   const auto it = surfaceContext_.find(surfaceId);
   react_native_assert(it != surfaceContext_.end() && "surface must be registered by startSurface");
   return it->second;
