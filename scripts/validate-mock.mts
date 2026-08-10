@@ -1,7 +1,7 @@
 import path from 'node:path';
 import ts from 'typescript';
 
-const packageDir = path.resolve(import.meta.dirname, '..');
+const packageDir = process.cwd();
 const indexPath = path.join(packageDir, 'src', 'index.ts');
 const mockPath = path.join(packageDir, 'src', 'mock.ts');
 
