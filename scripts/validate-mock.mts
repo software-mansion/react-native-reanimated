@@ -1,38 +1,47 @@
 import path from 'node:path';
 import ts from 'typescript';
 
-const packageDir = process.cwd();
-const indexPath = path.join(packageDir, 'src', 'index.ts');
-const mockPath = path.join(packageDir, 'src', 'mock.ts');
-
 function main(): void {
-  const program = createProgram();
-  const checker = program.getTypeChecker();
-  const indexExports = collectIndexValueExports(program, checker);
-  const mockProperties = new Set(collectMockProperties(program, checker));
+  const [exportsArg, mockArg] = process.argv.slice(2);
+  if (!exportsArg || !mockArg) {
+    console.error(
+      'Usage: node --experimental-strip-types validate-mock.mts <exports-file> <mock-file>'
+    );
+    process.exitCode = 1;
+    return;
+  }
+  const exportsPath = path.resolve(exportsArg);
+  const mockPath = path.resolve(mockArg);
 
-  const missingInMock = indexExports
+  const program = createProgram([exportsPath, mockPath]);
+  const checker = program.getTypeChecker();
+  const valueExports = collectValueExports(program, checker, exportsPath);
+  const mockProperties = new Set(
+    collectMockProperties(program, checker, mockPath)
+  );
+
+  const missingInMock = valueExports
     .filter((name) => !mockProperties.has(name))
     .sort();
   const extraInMock = [...mockProperties]
-    .filter((name) => !indexExports.includes(name))
+    .filter((name) => !valueExports.includes(name))
     .sort();
 
   if (missingInMock.length > 0) {
     console.log(
-      `Exports of src/index.ts missing in src/mock.ts (${missingInMock.length}):`
+      `Exports of ${exportsArg} missing in ${mockArg} (${missingInMock.length}):`
     );
     for (const name of missingInMock) {
       console.log(`  - ${name}`);
     }
   } else {
     console.log(
-      'All value exports of src/index.ts are present in src/mock.ts.'
+      `All value exports of ${exportsArg} are present in ${mockArg}.`
     );
   }
   if (extraInMock.length > 0) {
     console.log(
-      `Present in src/mock.ts but not exported from src/index.ts (${extraInMock.length}, informational):`
+      `Present in ${mockArg} but not exported from ${exportsArg} (${extraInMock.length}, informational):`
     );
     for (const name of extraInMock) {
       console.log(`  - ${name}`);
@@ -42,8 +51,8 @@ function main(): void {
   process.exitCode = missingInMock.length > 0 ? 1 : 0;
 }
 
-function createProgram(): ts.Program {
-  const configPath = path.join(packageDir, 'tsconfig.native.json');
+function createProgram(rootFiles: string[]): ts.Program {
+  const configPath = path.resolve('tsconfig.native.json');
   const parsed = ts.getParsedCommandLineOfConfigFile(
     configPath,
     { noEmit: true },
@@ -57,31 +66,32 @@ function createProgram(): ts.Program {
     }
   );
   if (!parsed) {
-    throw new Error('Could not parse tsconfig.native.json');
+    throw new Error(`Could not parse ${configPath}`);
   }
   if (parsed.errors.length > 0) {
     throw new Error(
-      `Errors in tsconfig.native.json:\n${ts.formatDiagnostics(parsed.errors, {
+      `Errors in ${configPath}:\n${ts.formatDiagnostics(parsed.errors, {
         getCanonicalFileName: (fileName) => fileName,
         getCurrentDirectory: ts.sys.getCurrentDirectory,
         getNewLine: () => ts.sys.newLine,
       })}`
     );
   }
-  return ts.createProgram([indexPath, mockPath], parsed.options);
+  return ts.createProgram(rootFiles, parsed.options);
 }
 
-function collectIndexValueExports(
+function collectValueExports(
   program: ts.Program,
-  checker: ts.TypeChecker
+  checker: ts.TypeChecker,
+  filePath: string
 ): string[] {
-  const sourceFile = program.getSourceFile(indexPath);
+  const sourceFile = program.getSourceFile(filePath);
   if (!sourceFile) {
-    throw new Error('Could not load src/index.ts');
+    throw new Error(`Could not load ${filePath}`);
   }
   const moduleSymbol = checker.getSymbolAtLocation(sourceFile);
   if (!moduleSymbol) {
-    throw new Error('Could not resolve the module symbol of src/index.ts');
+    throw new Error(`Could not resolve the module symbol of ${filePath}`);
   }
   const names: string[] = [];
   for (const symbol of checker.getExportsOfModule(moduleSymbol)) {
@@ -109,11 +119,12 @@ function isTypeOnlyExport(symbol: ts.Symbol): boolean {
 
 function collectMockProperties(
   program: ts.Program,
-  checker: ts.TypeChecker
+  checker: ts.TypeChecker,
+  filePath: string
 ): string[] {
-  const sourceFile = program.getSourceFile(mockPath);
+  const sourceFile = program.getSourceFile(filePath);
   if (!sourceFile) {
-    throw new Error('Could not load src/mock.ts');
+    throw new Error(`Could not load ${filePath}`);
   }
   for (const statement of sourceFile.statements) {
     if (
@@ -129,7 +140,7 @@ function collectMockProperties(
         .filter((name) => name !== '__esModule');
     }
   }
-  throw new Error('Could not find `module.exports = ...` in src/mock.ts');
+  throw new Error(`Could not find \`module.exports = ...\` in ${filePath}`);
 }
 
 main();

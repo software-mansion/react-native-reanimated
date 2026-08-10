@@ -44,7 +44,7 @@
     "type:check:legacy-rn-types:app": "yarn workspace common-app type:check:legacy-rn-types",
     "type:check:legacy-rn-types:tests": "../../scripts/test-ts.sh --customConditions react-native-legacy-deep-imports __typetests__",
     "tree-shake:check:web": "yarn is-tree-shakable --resolution web",
-    "validate-mock": "node --experimental-strip-types ../../scripts/validate-mock.mts",
+    "validate-mock": "node --experimental-strip-types ../../scripts/validate-mock.mts src/index.ts src/mock.ts",
     "validate-peers": "node ../../scripts/validate-compatibility-peer-dependencies.js"
   },
   "repository": {
