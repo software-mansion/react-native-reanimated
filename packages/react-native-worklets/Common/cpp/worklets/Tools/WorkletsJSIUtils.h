@@ -11,6 +11,19 @@ using namespace facebook;
 
 namespace worklets::jsi_utils {
 
+/**
+ * Drains both Worklets and Hermes microtasks.
+ */
+inline void drainMicrotasks(jsi::Runtime &rt) {
+  auto callMicrotasks = rt.global().getProperty(rt, "__callMicrotasks");
+  if (callMicrotasks.isObject()) {
+    auto callMicrotasksObject = callMicrotasks.getObject(rt);
+    if (callMicrotasksObject.isFunction(rt)) {
+      callMicrotasksObject.getFunction(rt).call(rt);
+    }
+  }
+}
+
 // `get` functions take a pointer to `jsi::Value` and
 // call an appropriate method to cast to the native type
 template <typename T>
