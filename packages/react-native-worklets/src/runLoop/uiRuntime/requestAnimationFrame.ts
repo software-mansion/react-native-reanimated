@@ -2,7 +2,6 @@
 
 export function setupRequestAnimationFrame() {
   'worklet';
-  const callMicrotasks = globalThis.__callMicrotasks;
 
   let queuedCallbacks: ((timestamp: number) => void)[] = [];
   let queuedCallbacksBegin = 0;
@@ -28,7 +27,7 @@ export function setupRequestAnimationFrame() {
 
     flushedCallbacksBegin = flushedCallbacksEnd;
 
-    callMicrotasks();
+    globalThis.__callMicrotasks();
 
     const finalizers = queuedFinalizers;
     queuedFinalizers = [];
