@@ -18,12 +18,14 @@ function runValidateMock(
 describe('validate-mock', () => {
   const covered = runValidateMock('covered');
   const missing = runValidateMock('missing');
+  const stale = runValidateMock('stale');
   const noArguments = runValidateMock('covered', []);
 
   it('passes when the mock covers all value exports', () => {
     expect(covered.stdout).toContain(
       'All value exports of src/index.ts are present in src/mock.ts.'
     );
+    expect(covered.stdout).not.toContain('Present in');
     expect(covered.status).toBe(0);
   });
 
@@ -32,12 +34,12 @@ describe('validate-mock', () => {
     expect(covered.stdout).not.toContain('Kind');
   });
 
-  it('reports mock properties that are not exported without failing', () => {
-    expect(covered.stdout).toContain(
-      'Present in src/mock.ts but not exported from src/index.ts (1, informational):'
+  it('fails and lists mock properties that are not exported', () => {
+    expect(stale.stdout).toContain(
+      'Present in src/mock.ts but not exported from src/index.ts (1):'
     );
-    expect(covered.stdout).toContain('- stale');
-    expect(covered.status).toBe(0);
+    expect(stale.stdout).toContain('- stale');
+    expect(stale.status).toBe(1);
   });
 
   it('fails and lists value exports missing from the mock', () => {

@@ -41,14 +41,15 @@ function main(): void {
   }
   if (extraInMock.length > 0) {
     console.log(
-      `Present in ${mockArg} but not exported from ${exportsArg} (${extraInMock.length}, informational):`
+      `Present in ${mockArg} but not exported from ${exportsArg} (${extraInMock.length}):`
     );
     for (const name of extraInMock) {
       console.log(`  - ${name}`);
     }
   }
 
-  process.exitCode = missingInMock.length > 0 ? 1 : 0;
+  process.exitCode =
+    missingInMock.length > 0 || extraInMock.length > 0 ? 1 : 0;
 }
 
 function createProgram(rootFiles: string[]): ts.Program {
