@@ -85,6 +85,9 @@ function collectIndexValueExports(
   }
   const names: string[] = [];
   for (const symbol of checker.getExportsOfModule(moduleSymbol)) {
+    if (isTypeOnlyExport(symbol)) {
+      continue;
+    }
     const resolved =
       symbol.flags & ts.SymbolFlags.Alias
         ? checker.getAliasedSymbol(symbol)
@@ -94,6 +97,14 @@ function collectIndexValueExports(
     }
   }
   return names;
+}
+
+function isTypeOnlyExport(symbol: ts.Symbol): boolean {
+  const declaration = symbol.declarations?.[0];
+  if (!declaration || !ts.isExportSpecifier(declaration)) {
+    return false;
+  }
+  return declaration.isTypeOnly || declaration.parent.parent.isTypeOnly;
 }
 
 function collectMockProperties(
