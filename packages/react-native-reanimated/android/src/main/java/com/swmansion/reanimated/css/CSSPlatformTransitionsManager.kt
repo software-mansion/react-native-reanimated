@@ -4,13 +4,15 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.animation.TimeInterpolator
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.FloatProperty
 import android.view.Choreographer
 import android.view.View
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UIManager
 import com.facebook.react.bridge.UIManagerListener
-import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.uimanager.IllegalViewOperationException
@@ -54,6 +56,12 @@ internal class CSSPlatformTransitionsManager(
     /** Monotonic so a token is never reused, even after its entry is dropped. */
     private var nextStartToken = 0L
 
+    private val commandLock = Any()
+    private var pendingCommands = ArrayList<Command>()
+    private var spareCommands = ArrayList<Command>()
+    private var flushScheduled = false
+    private val mainHandler = Handler(Looper.getMainLooper())
+
     /**
      * Indexed by the easing id the C++ interner assigned; a define always precedes the
      * first animate call using its id. Copy-on-append keeps reads lock-free.
@@ -79,6 +87,26 @@ internal class CSSPlatformTransitionsManager(
          * a start delay defers, so until then the property must show the start value.
          */
         fun currentValue(): Float = heldValue ?: if (animator.isRunning) animator.animatedValue as Float else startValue
+    }
+
+    private sealed class Command {
+        abstract val key: Key
+
+        class Start(
+            override val key: Key,
+            val writer: FloatProperty<View>,
+            val fromValue: Double,
+            val toValue: Double,
+            val durationMs: Double,
+            val startTimestampMs: Double,
+            val interpolator: TimeInterpolator,
+            val scale: Float,
+            val persistent: Boolean,
+        ) : Command()
+
+        class Remove(
+            override val key: Key,
+        ) : Command()
     }
 
     /** Holds the start value for the leading [delayFraction], then plays [inner] over the rest. */
@@ -110,19 +138,19 @@ internal class CSSPlatformTransitionsManager(
         val scale = DurationScale.effectiveScale(context)
         if (scale <= 0f) return false
 
-        UiThreadUtil.runOnUiThread {
-            val key = Key(viewTag, propertyId)
-            // Claiming a fresh token invalidates any retry still queued for this key,
-            // so a superseded request cannot start on a later frame.
-            val token = ++nextStartToken
-            startTokens[key] = token
-
-            beginWhenMounted(key, token, startTimestampMs + durationMs) {
-                viewForTag(viewTag)?.also { view ->
-                    start(view, key, writer, fromValue, toValue, durationMs, startTimestampMs, interpolator, scale, persistent)
-                } != null
-            }
-        }
+        enqueue(
+            Command.Start(
+                Key(viewTag, propertyId),
+                writer,
+                fromValue,
+                toValue,
+                durationMs,
+                startTimestampMs,
+                interpolator,
+                scale,
+                persistent,
+            ),
+        )
         return true
     }
 
@@ -130,10 +158,70 @@ internal class CSSPlatformTransitionsManager(
         viewTag: Int,
         propertyId: Int,
     ) {
-        UiThreadUtil.runOnUiThread {
-            val key = Key(viewTag, propertyId)
-            startTokens.remove(key)
-            animators.remove(key)?.animator?.cancel()
+        enqueue(Command.Remove(Key(viewTag, propertyId)))
+    }
+
+    /**
+     * One main-looper message per burst rather than one per transition: a commit can start
+     * a transition on every view on screen, and a message each floods the looper. The
+     * message is asynchronous so a traversal's sync barrier cannot defer it past the frame
+     * whose committed value it is meant to replace.
+     */
+    private fun enqueue(command: Command) {
+        val schedule: Boolean
+        synchronized(commandLock) {
+            pendingCommands.add(command)
+            schedule = !flushScheduled
+            if (schedule) flushScheduled = true
+        }
+        if (schedule) {
+            val message = Message.obtain(mainHandler) { flushCommands() }
+            message.isAsynchronous = true
+            mainHandler.sendMessage(message)
+        }
+    }
+
+    private fun flushCommands() {
+        val batch: ArrayList<Command>
+        synchronized(commandLock) {
+            batch = pendingCommands
+            pendingCommands = spareCommands
+            flushScheduled = false
+        }
+        for (command in batch) {
+            when (command) {
+                is Command.Start -> beginStart(command)
+                is Command.Remove -> {
+                    startTokens.remove(command.key)
+                    animators.remove(command.key)?.animator?.cancel()
+                }
+            }
+        }
+        batch.clear()
+        spareCommands = batch
+    }
+
+    private fun beginStart(command: Command.Start) {
+        val key = command.key
+        // Claiming a fresh token invalidates any retry still queued for this key,
+        // so a superseded request cannot start on a later frame.
+        val token = ++nextStartToken
+        startTokens[key] = token
+        beginWhenMounted(key, token, command.startTimestampMs + command.durationMs) {
+            viewForTag(key.viewTag)?.also { view ->
+                start(
+                    view,
+                    key,
+                    command.writer,
+                    command.fromValue,
+                    command.toValue,
+                    command.durationMs,
+                    command.startTimestampMs,
+                    command.interpolator,
+                    command.scale,
+                    command.persistent,
+                )
+            } != null
         }
     }
 
