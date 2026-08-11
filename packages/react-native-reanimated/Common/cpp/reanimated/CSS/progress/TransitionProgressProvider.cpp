@@ -213,18 +213,20 @@ void TransitionProgressProvider::runProgressProvider(
   observeProperty(propertyName, *provider);
 }
 
-void TransitionProgressProvider::removeProperties(const std::vector<std::string> &propertyNames) {
+void TransitionProgressProvider::removeProperties(
+    const std::vector<std::string> &propertyNames,
+    const double timestamp) {
   for (const auto &propertyName : propertyNames) {
-    removeProperty(propertyName);
+    removeProperty(propertyName, timestamp);
   }
 }
 
-void TransitionProgressProvider::removeProperty(const std::string &propertyName) {
+void TransitionProgressProvider::removeProperty(const std::string &propertyName, const double timestamp) {
   const auto it = propertyProgressProviders_.find(propertyName);
   if (it == propertyProgressProviders_.end()) {
     return;
   }
-  it->second->abort(lastTimestamp_);
+  it->second->abort(timestamp);
   propertyProgressProviders_.erase(it);
 }
 
@@ -245,7 +247,6 @@ void TransitionProgressProvider::discardFinishedProgressProviders() {
 }
 
 void TransitionProgressProvider::update(const double timestamp) {
-  lastTimestamp_ = timestamp;
   removedProperties_.clear();
 
   for (const auto &[propertyName, propertyProgressProvider] : propertyProgressProviders_) {

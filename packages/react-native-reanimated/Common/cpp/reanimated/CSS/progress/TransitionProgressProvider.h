@@ -74,8 +74,8 @@ class TransitionProgressProvider final {
 
   void runProgressProvider(const std::string &propertyName, bool isReversed, double timestamp);
   void abort(double timestamp);
-  void removeProperties(const std::vector<std::string> &propertyNames);
-  void removeProperty(const std::string &propertyName);
+  void removeProperties(const std::vector<std::string> &propertyNames, double timestamp);
+  void removeProperty(const std::string &propertyName, double timestamp);
   void discardFinishedProgressProviders();
   void update(double timestamp);
   void setPropertySettings(const PropertiesSettingsMap &changedPropertiesSettings);
@@ -84,8 +84,6 @@ class TransitionProgressProvider final {
  private:
   TransitionPropertyProgressProviders propertyProgressProviders_;
   MilestoneReporter reporter_;
-  // removeProperty() reports a cancel, which needs a timestamp its caller does not supply.
-  double lastTimestamp_ = 0;
 
   void observeProperty(const std::string &propertyName, TransitionPropertyProgressProvider &provider);
 
