@@ -68,8 +68,8 @@ AnimationProgressState AnimationProgressProvider::getState() const {
   return lifecycle_.hasStarted() ? AnimationProgressState::Running : AnimationProgressState::Pending;
 }
 
-void AnimationProgressProvider::onMilestone(RunLifecycle::Reporter reporter) {
-  lifecycle_.onMilestone(std::move(reporter));
+void AnimationProgressProvider::setMilestoneReporter(RunLifecycle::Reporter reporter) {
+  lifecycle_.setMilestoneReporter(std::move(reporter));
 }
 
 void AnimationProgressProvider::abort() {

@@ -5,7 +5,7 @@
 
 namespace reanimated::css {
 
-void RunLifecycle::onMilestone(Reporter reporter) {
+void RunLifecycle::setMilestoneReporter(Reporter reporter) {
   reporter_ = std::move(reporter);
 }
 

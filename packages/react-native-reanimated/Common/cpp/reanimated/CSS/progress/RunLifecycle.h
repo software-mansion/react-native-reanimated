@@ -25,7 +25,7 @@ class RunLifecycle {
  public:
   using Reporter = std::function<void(RunMilestone)>;
 
-  void onMilestone(Reporter reporter);
+  void setMilestoneReporter(Reporter reporter);
   void reachPosition(RunStage stage, unsigned repeat = 1);
   void abort();
 

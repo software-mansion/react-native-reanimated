@@ -38,7 +38,7 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
 
   AnimationProgressState getState() const;
-  void onMilestone(RunLifecycle::Reporter reporter);
+  void setMilestoneReporter(RunLifecycle::Reporter reporter);
   void abort();
   double getStartTimestamp(double timestamp) const;
 
