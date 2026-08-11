@@ -29,9 +29,13 @@ void RunLifecycle::reachPosition(const RunStage stage, const unsigned repeat) {
 }
 
 void RunLifecycle::abort() {
-  if (aborted_ || hasEnded() || reported_ == rank(RunStage::None)) {
+  if (aborted_ || hasEnded()) {
     return;
   }
+
+  // A run exists from the moment it is created, even while it waits out its
+  // delay, so one aborted before its first position still reports that much.
+  enterStagesUpTo(rank(RunStage::Created));
 
   aborted_ = true;
   report(RunMilestone::Aborted);

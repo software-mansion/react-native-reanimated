@@ -133,13 +133,18 @@ double AnimationProgressProvider::getTotalPausedTime(const double timestamp) con
 }
 
 bool AnimationProgressProvider::shouldFinish(const double timestamp) const {
-  if (iterationCount_ == 0) {
-    return true;
-  }
   if (iterationCount_ == -1) {
     return false;
   }
   const auto elapsedDuration = timestamp - getStartTimestamp(timestamp);
+  // A run still waiting out its delay cannot be over, however short it is. A
+  // paused run sits exactly at its start, so zero still finishes below.
+  if (elapsedDuration < 0) {
+    return false;
+  }
+  if (iterationCount_ == 0) {
+    return true;
+  }
   return elapsedDuration >= duration_ * iterationCount_;
 }
 
@@ -147,12 +152,10 @@ RunStage AnimationProgressProvider::computeStage(const double timestamp) const {
   if (shouldFinish(timestamp)) {
     return RunStage::Ended;
   }
+  // A paused run sits at its start timestamp, so this also covers a run paused
+  // before its delay ran out. One paused after that has started, and the web
+  // reports it as started too.
   if (timestamp < getStartTimestamp(timestamp) || !rawProgress_.has_value()) {
-    return RunStage::Created;
-  }
-  // A paused run sits at its start timestamp with a raw progress of 0, so it
-  // looks started. It cannot start until it is played.
-  if (pauseTimestamp_ > 0 && !lifecycle_.hasStarted()) {
     return RunStage::Created;
   }
   return RunStage::Started;
