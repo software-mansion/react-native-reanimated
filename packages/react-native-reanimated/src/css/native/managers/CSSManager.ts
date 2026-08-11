@@ -66,7 +66,7 @@ export default class CSSManager implements ICSSManager {
       transitionProperties,
       pseudoStylesBySelector,
       animationCallbacks,
-      ,
+      transitionCallbacks,
       filteredStyle,
     ] = filterCSSAndStyleProperties(style);
 
