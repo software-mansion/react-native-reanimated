@@ -25,7 +25,7 @@ CSSTransition::~CSSTransition() {
     // The loop co-owns the transition and removal is only enqueued, so a frame
     // already in flight can still tick it after we are gone. Drop the reporter
     // so that tick has nothing to call back into.
-    loopTransition_->onMilestone(nullptr);
+    loopTransition_->setMilestoneReporter(nullptr);
   }
 }
 
@@ -166,11 +166,11 @@ void CSSTransition::setEventMask(const CSSEventMask eventMask) {
 
 void CSSTransition::observeMilestones(CSSLoopTransition &loopTransition) {
   if (eventMask_ == 0) {
-    loopTransition.onMilestone(nullptr);
+    loopTransition.setMilestoneReporter(nullptr);
     return;
   }
 
-  loopTransition.onMilestone(
+  loopTransition.setMilestoneReporter(
       [this](const RunMilestone milestone, const std::string &propertyName, const double elapsedTime) {
         reportMilestone(milestone, propertyName, elapsedTime);
       });

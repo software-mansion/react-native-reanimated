@@ -28,7 +28,7 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
 
   double getMinDelay(double timestamp) const;
 
-  void onMilestone(MilestoneReporter reporter);
+  void setMilestoneReporter(MilestoneReporter reporter);
 
   bool update(double timestamp, OperationsLoop &loop) override;
 

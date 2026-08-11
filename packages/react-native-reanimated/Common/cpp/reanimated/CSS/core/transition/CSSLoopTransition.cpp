@@ -24,8 +24,8 @@ double CSSLoopTransition::getMinDelay(double timestamp) const {
   return progressProvider_.getMinDelay(timestamp);
 }
 
-void CSSLoopTransition::onMilestone(MilestoneReporter reporter) {
-  progressProvider_.onMilestone(std::move(reporter));
+void CSSLoopTransition::setMilestoneReporter(MilestoneReporter reporter) {
+  progressProvider_.setMilestoneReporter(std::move(reporter));
 }
 
 bool CSSLoopTransition::update(const double timestamp, OperationsLoop &loop) {
