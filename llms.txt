@@ -68,6 +68,7 @@
 
 - [accurate-call-stacks](https://docs.swmansion.com/react-native-reanimated/docs/debugging/accurate-call-stacks)
 - [logger-configuration](https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration)
+- [slow-animations](https://docs.swmansion.com/react-native-reanimated/docs/debugging/slow-animations)
 
 ## device
 
