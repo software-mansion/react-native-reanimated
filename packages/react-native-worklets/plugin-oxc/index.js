@@ -28,7 +28,7 @@ for (const p of candidates()) {
 
 if (!binding) {
   throw new Error(
-    `[worklets-plugin-oxc] Could not load native binding. Run \`yarn build\` (or \`cargo build --release\`) in ${__dirname}. Last error: ${lastError && lastError.message}`
+    `[Worklets] Could not load native binding. Run \`yarn build\` (or \`cargo build --release\`) in ${__dirname}. Last error: ${lastError && lastError.message}`
   );
 }
 

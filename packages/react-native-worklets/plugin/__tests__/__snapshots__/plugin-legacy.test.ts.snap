@@ -27,8 +27,8 @@ const foo = function foo_null1Factory({
   const foo = function (x) {
     "use no memo";
 
-    const bar = 'worklet'; // prettier-ignore
-    const baz = "worklet"; // prettier-ignore
+    const bar = "worklet";
+    const baz = "worklet";
   };
   foo.__closure = {};
   foo.__workletHash = 1;
@@ -52,7 +52,6 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function (x) {
-    // prettier-ignore
     "use no memo";
 
     return x + 2;
@@ -141,7 +140,7 @@ FadeIn.withCallback(function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    console.log('FadeIn with build after');
+    console.log("FadeIn with build after");
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -167,7 +166,7 @@ new FadeIn().withCallback(function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    console.log('FadeIn with build after');
+    console.log("FadeIn with build after");
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -193,7 +192,7 @@ FadeIn.build().withCallback(function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    console.log('FadeIn with build before');
+    console.log("FadeIn with build before");
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -219,7 +218,7 @@ new FadeIn().build().withCallback(function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    console.log('FadeIn with build before');
+    console.log("FadeIn with build before");
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -245,7 +244,7 @@ FadeIn.build().duration().withCallback(function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    console.log('FadeIn with build');
+    console.log("FadeIn with build");
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -271,7 +270,7 @@ new FadeIn().build().duration().withCallback(function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    console.log('FadeIn with build');
+    console.log("FadeIn with build");
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -297,7 +296,7 @@ FadeIn.withCallback(function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    console.log('FadeIn with AmogusIn after');
+    console.log("FadeIn with AmogusIn after");
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -323,7 +322,7 @@ new FadeIn().withCallback(function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    console.log('FadeIn with AmogusIn after');
+    console.log("FadeIn with AmogusIn after");
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -349,7 +348,7 @@ FadeIn.withCallback(function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    console.log('FadeIn');
+    console.log("FadeIn");
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -375,7 +374,7 @@ new FadeIn().withCallback(function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    console.log('FadeIn');
+    console.log("FadeIn");
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -860,7 +859,7 @@ exports[`babel plugin for context objects creates factories 1`] = `
 };
 const foo = {
   bar() {
-    return 'bar';
+    return "bar";
   },
   __workletContextObjectFactory: function null1Factory({
     _worklet_1_init_data
@@ -871,7 +870,7 @@ const foo = {
 
       return {
         bar() {
-          return 'bar';
+          return "bar";
         }
       };
     };
@@ -895,7 +894,7 @@ exports[`babel plugin for context objects preserves bindings 1`] = `
 };
 const foo = {
   bar() {
-    return 'bar';
+    return "bar";
   },
   foobar() {
     return this.bar();
@@ -909,7 +908,7 @@ const foo = {
 
       return {
         bar() {
-          return 'bar';
+          return "bar";
         },
         foobar() {
           return this.bar();
@@ -936,7 +935,7 @@ exports[`babel plugin for context objects removes marker 1`] = `
 };
 const foo = {
   bar() {
-    return 'bar';
+    return "bar";
   },
   __workletContextObjectFactory: function null1Factory({
     _worklet_1_init_data
@@ -947,7 +946,7 @@ const foo = {
 
       return {
         bar() {
-          return 'bar';
+          return "bar";
         }
       };
     };
@@ -971,7 +970,7 @@ exports[`babel plugin for context objects workletizes regardless of marker value
 };
 const foo = {
   bar() {
-    return 'bar';
+    return "bar";
   },
   __workletContextObjectFactory: function null1Factory({
     _worklet_1_init_data
@@ -982,7 +981,7 @@ const foo = {
 
       return {
         bar() {
-          return 'bar';
+          return "bar";
         }
       };
     };
@@ -1204,7 +1203,7 @@ const foo = function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    return 'bar';
+    return "bar";
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -1230,7 +1229,7 @@ export default (function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    return 'bar';
+    return "bar";
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -1256,7 +1255,7 @@ export const foo = function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    return 'bar';
+    return "bar";
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -1425,14 +1424,14 @@ const Clazz = function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = /*#__PURE__*/function () {
+      const Clazz = function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
         }
         return _createClass(Clazz, [{
           key: "foo",
           value: function foo() {
-            return 'bar';
+            return "bar";
           }
         }]);
       }();
@@ -1614,14 +1613,14 @@ export default (function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = /*#__PURE__*/function () {
+      const Clazz = function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
         }
         return _createClass(Clazz, [{
           key: "foo",
           value: function foo() {
-            return 'bar';
+            return "bar";
           }
         }]);
       }();
@@ -1803,14 +1802,14 @@ export const Clazz = function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = /*#__PURE__*/function () {
+      const Clazz = function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
         }
         return _createClass(Clazz, [{
           key: "foo",
           value: function foo() {
-            return 'bar';
+            return "bar";
           }
         }]);
       }();
@@ -1849,7 +1848,7 @@ const foo = function foo_null1Factory({
   const foo = function () {
     "use no memo";
 
-    return 'bar';
+    return "bar";
   };
   foo.__closure = {};
   foo.__workletHash = 1;
@@ -1875,7 +1874,7 @@ export default (function foo_null1Factory({
   const foo = function () {
     "use no memo";
 
-    return 'bar';
+    return "bar";
   };
   foo.__closure = {};
   foo.__workletHash = 1;
@@ -1901,7 +1900,7 @@ export const foo = function foo_null1Factory({
   const foo = function () {
     "use no memo";
 
-    return 'bar';
+    return "bar";
   };
   foo.__closure = {};
   foo.__workletHash = 1;
@@ -1927,7 +1926,7 @@ const foo = function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    return 'bar';
+    return "bar";
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -1953,7 +1952,7 @@ export default (function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    return 'bar';
+    return "bar";
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -1979,7 +1978,7 @@ export const foo = function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    return 'bar';
+    return "bar";
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -2006,7 +2005,7 @@ const foo = {
     const bar = function () {
       "use no memo";
 
-      return 'bar';
+      return "bar";
     };
     bar.__closure = {};
     bar.__workletHash = 1;
@@ -2034,7 +2033,7 @@ export default {
     const bar = function () {
       "use no memo";
 
-      return 'bar';
+      return "bar";
     };
     bar.__closure = {};
     bar.__workletHash = 1;
@@ -2062,7 +2061,7 @@ export const foo = {
     const bar = function () {
       "use no memo";
 
-      return 'bar';
+      return "bar";
     };
     bar.__closure = {};
     bar.__workletHash = 1;
@@ -2089,7 +2088,7 @@ const foo = function foo_null1Factory({
   const foo = function () {
     "use no memo";
 
-    return 'bar';
+    return "bar";
   };
   foo.__closure = {};
   foo.__workletHash = 1;
@@ -2110,7 +2109,7 @@ exports[`babel plugin for file workletization workletizes implicit WorkletContex
 };
 const foo = {
   bar() {
-    return 'bar';
+    return "bar";
   },
   foobar() {
     return this.bar();
@@ -2124,7 +2123,7 @@ const foo = {
 
       return {
         bar() {
-          return 'bar';
+          return "bar";
         },
         foobar() {
           return this.bar();
@@ -2151,7 +2150,7 @@ exports[`babel plugin for file workletization workletizes implicit WorkletContex
 };
 export default {
   bar() {
-    return 'bar';
+    return "bar";
   },
   foobar() {
     return this.bar();
@@ -2165,7 +2164,7 @@ export default {
 
       return {
         bar() {
-          return 'bar';
+          return "bar";
         },
         foobar() {
           return this.bar();
@@ -2192,7 +2191,7 @@ exports[`babel plugin for file workletization workletizes implicit WorkletContex
 };
 export const foo = {
   bar() {
-    return 'bar';
+    return "bar";
   },
   foobar() {
     return this.bar();
@@ -2206,7 +2205,7 @@ export const foo = {
 
       return {
         bar() {
-          return 'bar';
+          return "bar";
         },
         foobar() {
           return this.bar();
@@ -2238,7 +2237,7 @@ const foo = function foo_null1Factory({
   const foo = function () {
     "use no memo";
 
-    return 'bar';
+    return "bar";
   };
   foo.__closure = {};
   foo.__workletHash = 1;
@@ -2261,7 +2260,7 @@ const bar = function null2Factory({
   const null2 = function () {
     "use no memo";
 
-    return 'foobar';
+    return "foobar";
   };
   null2.__closure = {};
   null2.__workletHash = 2;
@@ -2344,8 +2343,8 @@ const style = function null1Factory({
     "use no memo";
 
     return {
-      color: 'red',
-      backgroundColor: 'blue'
+      color: "red",
+      backgroundColor: "blue"
     };
   };
   null1.__closure = {};
@@ -2373,8 +2372,8 @@ const foo = function foo_null1Factory({
   const foo = function* () {
     "use no memo";
 
-    yield 'hello';
-    yield 'world';
+    yield "hello";
+    yield "world";
   };
   foo.__closure = {};
   foo.__workletHash = 1;
@@ -2400,8 +2399,8 @@ const foo = function foo_null1Factory({
   const foo = function* () {
     "use no memo";
 
-    yield 'hello';
-    yield 'world';
+    yield "hello";
+    yield "world";
   };
   foo.__closure = {};
   foo.__workletHash = 1;
@@ -2940,7 +2939,7 @@ const foo = useTapGesture({
     const null1 = function () {
       "use no memo";
 
-      console.log('onBegin');
+      console.log("onBegin");
     };
     null1.__closure = {};
     null1.__workletHash = 1;
@@ -2958,7 +2957,7 @@ const foo = useTapGesture({
     const null2 = function (_event) {
       "use no memo";
 
-      console.log('onStart');
+      console.log("onStart");
     };
     null2.__closure = {};
     null2.__workletHash = 2;
@@ -2976,7 +2975,7 @@ const foo = useTapGesture({
     const null3 = function (_event, _success) {
       "use no memo";
 
-      console.log('onEnd');
+      console.log("onEnd");
     };
     null3.__closure = {};
     null3.__workletHash = 3;
@@ -3013,7 +3012,7 @@ const foo = Gesture.Tap().numberOfTaps(2).onBegin(function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    console.log('onBegin');
+    console.log("onBegin");
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -3030,7 +3029,7 @@ const foo = Gesture.Tap().numberOfTaps(2).onBegin(function null1Factory({
   const null2 = function (_event) {
     "use no memo";
 
-    console.log('onStart');
+    console.log("onStart");
   };
   null2.__closure = {};
   null2.__workletHash = 2;
@@ -3047,7 +3046,7 @@ const foo = Gesture.Tap().numberOfTaps(2).onBegin(function null1Factory({
   const null3 = function (_event, _success) {
     "use no memo";
 
-    console.log('onEnd');
+    console.log("onEnd");
   };
   null3.__closure = {};
   null3.__workletHash = 3;
@@ -3098,7 +3097,7 @@ const onBegin = function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    console.log('onBegin');
+    console.log("onBegin");
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -3128,7 +3127,7 @@ const onBegin = function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    console.log('onBegin');
+    console.log("onBegin");
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -3159,7 +3158,7 @@ styleFactory = function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    return 'AssignmentExpression';
+    return "AssignmentExpression";
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -3186,7 +3185,7 @@ const styleFactory = function styleFactory_null1Factory({
   const styleFactory = function () {
     "use no memo";
 
-    return 'FunctionDeclaration';
+    return "FunctionDeclaration";
   };
   styleFactory.__closure = {};
   styleFactory.__workletHash = 1;
@@ -3197,7 +3196,7 @@ const styleFactory = function styleFactory_null1Factory({
 }({
   _worklet_1_init_data
 });
-styleFactory = () => 'AssignmentExpression';
+styleFactory = () => "AssignmentExpression";
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
@@ -3271,7 +3270,7 @@ styleFactory = function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    return 'AssignmentExpression';
+    return "AssignmentExpression";
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -3384,7 +3383,7 @@ styleFactory = function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    return 'AssignmentExpression';
+    return "AssignmentExpression";
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -3471,7 +3470,7 @@ handler = {
     const null1 = function () {
       "use no memo";
 
-      return 'AssignmentExpression';
+      return "AssignmentExpression";
     };
     null1.__closure = {};
     null1.__workletHash = 1;
@@ -3501,7 +3500,7 @@ styleFactory = function null1Factory({
   const null1 = function () {
     "use no memo";
 
-    return 'AssignmentAfterUse';
+    return "AssignmentAfterUse";
   };
   null1.__closure = {};
   null1.__workletHash = 1;
@@ -3819,7 +3818,7 @@ const foo = function foo_null1Factory({
   const foo = function () {
     "use no memo";
 
-    var bar = 'bar';
+    var bar = "bar";
   };
   foo.__closure = {};
   foo.__workletHash = 1;
@@ -3838,7 +3837,7 @@ exports[`babel plugin for web configuration skips initData when omitNativeOnlyDa
   const foo = function () {
     "use no memo";
 
-    var foo = 'bar';
+    var foo = "bar";
   };
   foo.__closure = {};
   foo.__workletHash = 1;
@@ -4009,14 +4008,14 @@ const Clazz = function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = /*#__PURE__*/function () {
+      const Clazz = function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
         }
         return _createClass(Clazz, [{
           key: "foo",
           value: function foo() {
-            return 'bar';
+            return "bar";
           }
         }]);
       }();
@@ -4198,14 +4197,14 @@ const Clazz = function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = /*#__PURE__*/function () {
+      const Clazz = function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
         }
         return _createClass(Clazz, [{
           key: "foo",
           value: function foo() {
-            return 'bar';
+            return "bar";
           }
         }]);
       }();
@@ -4483,7 +4482,7 @@ const Clazz = function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = /*#__PURE__*/function () {
+      const Clazz = function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
           _defineProperty(this, "member", 1);
@@ -4705,14 +4704,14 @@ const Clazz = function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = /*#__PURE__*/function () {
+      const Clazz = function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
         }
         return _createClass(Clazz, [{
           key: "foo",
           value: function foo() {
-            return 'bar';
+            return "bar";
           }
         }]);
       }();
@@ -4894,14 +4893,14 @@ const Clazz = function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = /*#__PURE__*/function () {
+      const Clazz = function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
         }
         return _createClass(Clazz, [{
           key: "foo",
           value: function foo() {
-            return 'bar';
+            return "bar";
           }
         }]);
       }();
@@ -5083,14 +5082,14 @@ const Clazz = function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = /*#__PURE__*/function () {
+      const Clazz = function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
         }
         return _createClass(Clazz, [{
           key: "foo",
           value: function foo() {
-            return 'bar';
+            return "bar";
           }
         }]);
       }();
@@ -5295,7 +5294,7 @@ const foo = function null2Factory({
       const null1 = function () {
         "use no memo";
 
-        console.log('bar');
+        console.log("bar");
       };
       null1.__closure = {};
       null1.__workletHash = 1;
@@ -5342,7 +5341,7 @@ runOnUI(function null2Factory({
   const null2 = function () {
     "use no memo";
 
-    console.log('Hello from UI thread');
+    console.log("Hello from UI thread");
     runOnJS(function null1Factory({
       _worklet_1_init_data
     }) {
@@ -5350,7 +5349,7 @@ runOnUI(function null2Factory({
       const null1 = function () {
         "use no memo";
 
-        console.log('Hello from JS thread');
+        console.log("Hello from JS thread");
       };
       null1.__closure = {};
       null1.__workletHash = 1;
@@ -5405,7 +5404,7 @@ runOnUI(function null3Factory({
   const null3 = function () {
     "use no memo";
 
-    console.log('Hello from UI thread');
+    console.log("Hello from UI thread");
     runOnJS(function null2Factory({
       _worklet_2_init_data,
       runOnUI,
@@ -5415,7 +5414,7 @@ runOnUI(function null3Factory({
       const null2 = function () {
         "use no memo";
 
-        console.log('Hello from JS thread');
+        console.log("Hello from JS thread");
         runOnUI(function null1Factory({
           _worklet_1_init_data
         }) {
@@ -5423,7 +5422,7 @@ runOnUI(function null3Factory({
           const null1 = function () {
             "use no memo";
 
-            console.log('Hello from UI thread again');
+            console.log("Hello from UI thread again");
           };
           null1.__closure = {};
           null1.__workletHash = 1;
@@ -5510,7 +5509,7 @@ const foo = function null3Factory({
           const null1 = function () {
             "use no memo";
 
-            console.log('foobar');
+            console.log("foobar");
           };
           null1.__closure = {};
           null1.__workletHash = 1;
@@ -5585,7 +5584,7 @@ runOnUI(function null3Factory({
       const null1 = function () {
         "use no memo";
 
-        console.log('Good morning from JS thread!');
+        console.log("Good morning from JS thread!");
       };
       null1.__closure = {};
       null1.__workletHash = 1;
@@ -5603,7 +5602,7 @@ runOnUI(function null3Factory({
       const null2 = function () {
         "use no memo";
 
-        console.log('Good afternoon from JS thread');
+        console.log("Good afternoon from JS thread");
       };
       null2.__closure = {};
       null2.__workletHash = 2;
@@ -5648,7 +5647,7 @@ const foo = function foo_nullQuery1Factory({
   const foo = function () {
     "use no memo";
 
-    var foo = 'bar';
+    var foo = "bar";
   };
   foo.__closure = {};
   foo.__workletHash = 1;
@@ -5674,7 +5673,7 @@ const foo = function foo_nullHash1Factory({
   const foo = function () {
     "use no memo";
 
-    var foo = 'bar';
+    var foo = "bar";
   };
   foo.__closure = {};
   foo.__workletHash = 2;
@@ -5700,7 +5699,7 @@ const foo = function foo_nullQueryHash1Factory({
   const foo = function () {
     "use no memo";
 
-    var foo = 'bar';
+    var foo = "bar";
   };
   foo.__closure = {};
   foo.__workletHash = 3;
@@ -5747,7 +5746,7 @@ const foo = function foo_null1Factory({
 `;
 
 exports[`babel plugin generally transforms 1`] = `
-"import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+"import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 const _worklet_1_init_data = {
   code: "(function null1(){const{offset}=this.__closure;return{transform:[{translateX:offset.value*255}]};})",
   location: "/dev/null",

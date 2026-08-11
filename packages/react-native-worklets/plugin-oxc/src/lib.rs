@@ -112,7 +112,7 @@ fn maybe_warn_extras(options: &PluginOptions) {
         return;
     }
     eprintln!(
-        "[worklets-plugin-oxc] `extraPlugins`/`extraPresets` are accepted for option-surface \
+        "[Worklets] `extraPlugins`/`extraPresets` are accepted for option-surface \
          compatibility with `react-native-worklets/plugin` but ignored — the OXC transform \
          cannot dispatch arbitrary Babel plugins. Compose them around this plugin in \
          babel.config.js instead."

@@ -47,7 +47,7 @@ function writeEmittedFiles(files) {
   const dir = resolveWorkletsDir();
   if (!dir) {
     throw new Error(
-      "[worklets-plugin-oxc] emitted bundle files but couldn't find " +
+      "[Worklets] emitted bundle files but couldn't find " +
         "the react-native-worklets package on disk. Make sure it's installed."
     );
   }
@@ -85,7 +85,7 @@ const WORKLET_DIRECTIVE_RE = /(^|[\s;{(])['"]worklet['"]\s*;/m;
 function workletsPluginOxcBabelShim(babelApi, options) {
   if (options && options.bundleMode === false) {
     throw new Error(
-      '[worklets-plugin-oxc] supports Bundle Mode only. Drop `bundleMode: false`, ' +
+      '[Worklets] supports Bundle Mode only. Drop `bundleMode: false`, ' +
         'or use `react-native-worklets/plugin` for the legacy pipeline.'
     );
   }
@@ -129,7 +129,7 @@ function workletsPluginOxcBabelShim(babelApi, options) {
             if (msg.includes(PARSE_ERROR_CODE)) {
               if (WORKLET_DIRECTIVE_RE.test(sourceText)) {
                 throw new Error(
-                  `[worklets-plugin-oxc] ${filename} carries a 'worklet' ` +
+                  `[Worklets] ${filename} carries a 'worklet' ` +
                     'directive but could not be parsed, so none of its ' +
                     `worklets were compiled.\n${msg}`
                 );

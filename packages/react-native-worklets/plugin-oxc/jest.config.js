@@ -15,5 +15,4 @@ module.exports = {
   moduleNameMapper: {
     '^\\.\\./index$': path.join(__dirname, 'babel.js'),
   },
-  snapshotResolver: path.join(__dirname, 'jest', 'snapshotResolver.js'),
 };
