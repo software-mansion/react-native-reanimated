@@ -4,13 +4,9 @@ import android.animation.TimeInterpolator
 import android.view.animation.LinearInterpolator
 import android.view.animation.PathInterpolator
 
-/**
- * `steps()` and `linear()` stops are evaluated directly, so `steps()` keeps its
- * discontinuities at any duration. Cubic-bezier delegates to `PathInterpolator`,
- * which flattens the curve internally.
- */
+/** `steps()` and `linear()` stops are evaluated directly so steps keeps its discontinuities. */
 internal object CSSEasing {
-    // Must match PlatformEasing::Type.
+    // The easing type arrives as an int over JNI; 0 is linear and needs no points.
     private const val CUBIC_BEZIER = 1
     private const val STEPS = 2
     private const val LINEAR_STOPS = 3
@@ -27,11 +23,7 @@ internal object CSSEasing {
             else -> LinearInterpolator()
         }
 
-    /**
-     * Mirrors `firstSmallerOrEqual`: an upper bound stepped back one, so a run of equal
-     * x values resolves to its last entry rather than an arbitrary one.
-     */
-    private fun lastIndexAtOrBefore(
+    private fun firstSmallerOrEqual(
         x: Float,
         pointsX: FloatArray,
     ): Int {
@@ -48,7 +40,7 @@ internal object CSSEasing {
         private val pointsX: FloatArray,
         private val pointsY: FloatArray,
     ) : TimeInterpolator {
-        override fun getInterpolation(input: Float): Float = pointsY[lastIndexAtOrBefore(input, pointsX)]
+        override fun getInterpolation(input: Float): Float = pointsY[firstSmallerOrEqual(input, pointsX)]
     }
 
     private class LinearStopsInterpolator(
@@ -56,7 +48,7 @@ internal object CSSEasing {
         private val pointsY: FloatArray,
     ) : TimeInterpolator {
         override fun getInterpolation(input: Float): Float {
-            val left = lastIndexAtOrBefore(input, pointsX)
+            val left = firstSmallerOrEqual(input, pointsX)
             if (left == pointsX.size - 1) return pointsY[left]
             val slope = (pointsY[left + 1] - pointsY[left]) / (pointsX[left + 1] - pointsX[left])
             return pointsY[left] + slope * (input - pointsX[left])
