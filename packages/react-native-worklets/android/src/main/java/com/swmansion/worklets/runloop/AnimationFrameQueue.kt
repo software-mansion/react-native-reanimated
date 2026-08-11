@@ -9,10 +9,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 class AnimationFrameQueue(
     reactApplicationContext: ReactApplicationContext,
 ) {
-    private var mFirstUptime = SystemClock.uptimeMillis()
-    private var mSlowAnimationsEnabled = false
+    private var mVirtualBaseMs = SystemClock.uptimeMillis().toDouble()
+    private var mRealBaseMs = mVirtualBaseMs
     private var lastFrameTimeMs = 0.0
-    private var mAnimationsDragFactor = 1
+    private var mAnimationsDragFactor = 1.0
 
     // ReactChoreographer is
     // [thread safe](https://github.com/facebook/react-native/blob/main/packages/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/core/ReactChoreographer.kt#L21).
@@ -55,11 +55,12 @@ class AnimationFrameQueue(
         slowAnimationsEnabled: Boolean,
         animationsDragFactor: Int,
     ) {
-        mSlowAnimationsEnabled = slowAnimationsEnabled
-        mAnimationsDragFactor = animationsDragFactor
-        if (slowAnimationsEnabled) {
-            mFirstUptime = SystemClock.uptimeMillis()
-        }
+        // The virtual clock is rebased on every toggle so it stays continuous
+        // and ongoing animations don't jump.
+        val nowMs = SystemClock.uptimeMillis().toDouble()
+        mVirtualBaseMs += (nowMs - mRealBaseMs) / mAnimationsDragFactor
+        mRealBaseMs = nowMs
+        mAnimationsDragFactor = if (slowAnimationsEnabled) animationsDragFactor.toDouble() else 1.0
     }
 
     private fun scheduleQueueExecution() {
@@ -102,11 +103,7 @@ class AnimationFrameQueue(
 
     private fun calculateTimestamp(frameTimeNanos: Long): Double {
         val nanosecondsInMilliseconds = 1000000.0
-        var currentFrameTimeMs = frameTimeNanos / nanosecondsInMilliseconds
-        if (mSlowAnimationsEnabled) {
-            currentFrameTimeMs =
-                mFirstUptime + (currentFrameTimeMs - mFirstUptime) / mAnimationsDragFactor
-        }
-        return currentFrameTimeMs
+        val currentFrameTimeMs = frameTimeNanos / nanosecondsInMilliseconds
+        return mVirtualBaseMs + (currentFrameTimeMs - mRealBaseMs) / mAnimationsDragFactor
     }
 }
