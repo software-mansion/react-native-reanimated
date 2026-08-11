@@ -84,6 +84,7 @@ class NodesManager(
     }
 
     fun onHostPause() {
+        UiThreadUtil.assertOnUiThread()
         if (mCallbackPosted.get()) {
             stopUpdatingOnAnimationFrame()
             mCallbackPosted.set(true)
@@ -93,6 +94,7 @@ class NodesManager(
     fun isAnimationRunning(): Boolean = mCallbackPosted.get()
 
     fun onHostResume() {
+        UiThreadUtil.assertOnUiThread()
         if (mCallbackPosted.getAndSet(false)) {
             startUpdatingOnAnimationFrame()
         }
@@ -127,6 +129,7 @@ class NodesManager(
     }
 
     internal fun performOperationsRespectingDrawPass() {
+        UiThreadUtil.assertOnUiThread()
         mDrawPassDetector.initialize()
         if (isInDrawPass()) {
             performNonLayoutOperations()
@@ -189,6 +192,7 @@ class NodesManager(
     }
 
     fun postOnAnimation(onAnimationFrame: OnAnimationFrame) {
+        UiThreadUtil.assertOnUiThread()
         mFrameCallbacks.add(onAnimationFrame)
         startUpdatingOnAnimationFrame()
     }
