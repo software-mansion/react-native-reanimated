@@ -51,10 +51,13 @@ internal class CSSPlatformTransitionsManager(
     }
 
     private val reconciler = CSSPlatformTransitionReconciler(::repairClobberedValues)
-    private val startTokens = HashMap<Key, Long>()
 
-    /** Monotonic so a token is never reused, even after its entry is dropped. */
-    private var nextStartToken = 0L
+    /**
+     * Starts waiting for their View to mount, newest per key. A later start for the same
+     * key replaces the earlier one, so a superseded request can never begin.
+     */
+    private val pendingStarts = LinkedHashMap<Key, PendingStart>()
+    private var retryScheduled = false
 
     private val commandLock = Any()
     private var pendingCommands = ArrayList<Command>()
@@ -88,6 +91,11 @@ internal class CSSPlatformTransitionsManager(
          */
         fun currentValue(): Float = heldValue ?: if (animator.isRunning) animator.animatedValue as Float else startValue
     }
+
+    private class PendingStart(
+        val endTimestampMs: Double,
+        val begin: () -> Boolean,
+    )
 
     private sealed class Command {
         abstract val key: Key
@@ -192,7 +200,7 @@ internal class CSSPlatformTransitionsManager(
             when (command) {
                 is Command.Start -> beginStart(command)
                 is Command.Remove -> {
-                    startTokens.remove(command.key)
+                    pendingStarts.remove(command.key)
                     animators.remove(command.key)?.animator?.cancel()
                 }
             }
@@ -201,13 +209,15 @@ internal class CSSPlatformTransitionsManager(
         spareCommands = batch
     }
 
+    /**
+     * A tag can be registered before its View exists, with the mount still in flight.
+     * The start timestamp is absolute, so a late start seeks rather than drifting, and
+     * retrying needs no arbitrary timeout: once the transition would have ended there is
+     * nothing left to play.
+     */
     private fun beginStart(command: Command.Start) {
         val key = command.key
-        // Claiming a fresh token invalidates any retry still queued for this key,
-        // so a superseded request cannot start on a later frame.
-        val token = ++nextStartToken
-        startTokens[key] = token
-        beginWhenMounted(key, token, command.startTimestampMs + command.durationMs) {
+        val begin = {
             viewForTag(key.viewTag)?.also { view ->
                 start(
                     view,
@@ -223,25 +233,29 @@ internal class CSSPlatformTransitionsManager(
                 )
             } != null
         }
-    }
-
-    /**
-     * A tag can be registered before its View mounts. The absolute start timestamp makes a
-     * late start seek rather than drift, and retrying stops once the transition would have
-     * ended, so it needs no timeout.
-     */
-    private fun beginWhenMounted(
-        key: Key,
-        token: Long,
-        endTimestampMs: Double,
-        begin: () -> Boolean,
-    ) {
-        if (startTokens[key] != token) return
+        val endTimestampMs = command.startTimestampMs + command.durationMs
         if (begin() || animationTimestamp() >= endTimestampMs) {
-            startTokens.remove(key)
+            pendingStarts.remove(key)
             return
         }
-        Choreographer.getInstance().postFrameCallback { beginWhenMounted(key, token, endTimestampMs, begin) }
+        pendingStarts[key] = PendingStart(endTimestampMs, begin)
+        scheduleRetry()
+    }
+
+    /** All waiting starts share one frame callback; one each floods the Choreographer. */
+    private fun scheduleRetry() {
+        if (retryScheduled) return
+        retryScheduled = true
+        Choreographer.getInstance().postFrameCallback {
+            retryScheduled = false
+            val now = animationTimestamp()
+            val iterator = pendingStarts.entries.iterator()
+            while (iterator.hasNext()) {
+                val pending = iterator.next().value
+                if (pending.begin() || now >= pending.endTimestampMs) iterator.remove()
+            }
+            if (pendingStarts.isNotEmpty()) scheduleRetry()
+        }
     }
 
     private fun start(
