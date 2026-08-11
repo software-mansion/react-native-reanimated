@@ -52,6 +52,7 @@ class TransitionPropertyProgressProvider final : public KeyframeProgressProvider
   // The lifecycle reports an abort without a timestamp, so abort() leaves one here.
   double cancelTimestamp_ = 0;
 
+  double startElapsedTime() const;
   double getElapsedTime(double timestamp) const;
   RunStage computeStage() const;
 };

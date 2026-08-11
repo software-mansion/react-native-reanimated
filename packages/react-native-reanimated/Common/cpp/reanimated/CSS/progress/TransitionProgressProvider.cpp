@@ -81,6 +81,9 @@ RunStage TransitionPropertyProgressProvider::computeStage() const {
 
 double TransitionPropertyProgressProvider::elapsedTimeAt(const RunMilestone milestone) const {
   switch (milestone) {
+    case RunMilestone::Created:
+    case RunMilestone::Started:
+      return startElapsedTime();
     case RunMilestone::Ended:
       return duration_;
     case RunMilestone::Aborted:
@@ -88,6 +91,12 @@ double TransitionPropertyProgressProvider::elapsedTimeAt(const RunMilestone mile
     default:
       return 0;
   }
+}
+
+double TransitionPropertyProgressProvider::startElapsedTime() const {
+  // A negative delay starts the transition partway through, and the web reports
+  // that offset capped to the duration.
+  return std::min(std::max(0.0, -delay_), duration_);
 }
 
 TransitionProgressState TransitionPropertyProgressProvider::getState() const {
