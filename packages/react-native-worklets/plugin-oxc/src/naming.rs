@@ -1,5 +1,7 @@
 use std::path::Path;
 
+use oxc_syntax::identifier::{is_identifier_part, is_identifier_start};
+
 pub fn worklet_hash(s: &str) -> u64 {
     let units: Vec<u16> = s.encode_utf16().collect();
     let mut h1: i32 = 5381;
@@ -11,18 +13,44 @@ pub fn worklet_hash(s: &str) -> u64 {
     (h1 as u32 as u64) * 4096 + (h2 as u32 as u64)
 }
 
+/// Reserved words `@babel/types` `isValidIdentifier` rejects, which makes
+/// `toIdentifier` fall back to an `_` prefix.
+const RESERVED_WORDS: &[&str] = &[
+    "break", "case", "catch", "continue", "debugger", "default", "do", "else", "finally", "for",
+    "function", "if", "return", "switch", "throw", "try", "var", "const", "while", "with", "new",
+    "this", "super", "class", "extends", "export", "import", "null", "true", "false", "in",
+    "instanceof", "typeof", "void", "delete", "implements", "interface", "let", "package",
+    "private", "protected", "public", "static", "yield", "await", "enum",
+];
+
+fn is_valid_identifier(name: &str) -> bool {
+    let mut chars = name.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+    is_identifier_start(first)
+        && chars.all(is_identifier_part)
+        && !RESERVED_WORDS.contains(&name)
+}
+
+/// Mirrors `toIdentifier` in `@babel/types`.
 pub fn to_identifier(input: &str) -> String {
-    let mut buf = String::with_capacity(input.len());
-    for ch in input.chars() {
-        if ch.is_ascii_alphanumeric() || ch == '$' || ch == '_' {
-            buf.push(ch);
-        } else {
-            buf.push('-');
-        }
-    }
+    let mapped: String = input
+        .chars()
+        .map(|c| if is_identifier_part(c) { c } else { '-' })
+        .collect();
 
-    let trimmed: String = buf.chars().skip_while(|c| *c == '-').collect();
+    // `name.replace(/^[-0-9]+/, "")`
+    let trimmed: &str = {
+        let offset = mapped
+            .char_indices()
+            .find(|(_, c)| *c != '-' && !c.is_ascii_digit())
+            .map(|(i, _)| i)
+            .unwrap_or(mapped.len());
+        &mapped[offset..]
+    };
 
+    // `name.replace(/[-\s]+(.)?/g, (_, c) => (c ? c.toUpperCase() : ""))`
     let mut out = String::with_capacity(trimmed.len());
     let mut chars = trimmed.chars().peekable();
     while let Some(c) = chars.next() {
@@ -35,28 +63,17 @@ pub fn to_identifier(input: &str) -> String {
                 }
             }
             if let Some(next) = chars.next() {
-                for u in next.to_uppercase() {
-                    out.push(u);
-                }
+                out.extend(next.to_uppercase());
             }
         } else {
             out.push(c);
         }
     }
 
-    if out.is_empty() {
-        return "_".to_string();
+    if !is_valid_identifier(&out) {
+        out.insert(0, '_');
     }
-
-    if out
-        .chars()
-        .next()
-        .map(|c| c.is_ascii_digit())
-        .unwrap_or(false)
-    {
-        return format!("_{out}");
-    }
-    out
+    if out.is_empty() { "_".to_string() } else { out }
 }
 
 pub fn source_from_filename(filename: &str) -> String {
@@ -136,7 +153,10 @@ mod tests {
         assert_eq!(to_identifier("test.js1"), "testJs1");
         assert_eq!(to_identifier("foo_test.js1"), "foo_testJs1");
         assert_eq!(to_identifier("bar_test.js1"), "bar_testJs1");
-        assert_eq!(to_identifier("123abc"), "_123abc");
+        assert_eq!(to_identifier("123abc"), "abc");
+        assert_eq!(to_identifier("2dExample.js1"), "dExampleJs1");
+        assert_eq!(to_identifier("ünïcode"), "ünïcode");
+        assert_eq!(to_identifier("class"), "_class");
         assert_eq!(to_identifier(""), "_");
     }
 

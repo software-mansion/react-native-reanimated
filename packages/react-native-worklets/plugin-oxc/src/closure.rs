@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use oxc_ast::ast::{
     AssignmentTarget, AssignmentTargetPropertyIdentifier, ForInStatement, ForOfStatement,
-    FormalParameters, FunctionBody, IdentifierReference,
+    ForStatementLeft, FormalParameters, FunctionBody, IdentifierReference,
 };
 use oxc_ast_visit::{Visit, walk};
 use oxc_semantic::Scoping;
@@ -106,7 +106,7 @@ pub fn closure_for_function<'a>(
                     .peekable();
                 let is_injected = injected_scopes.peek().is_some();
 
-                let resolves_outside = if is_injected {
+                let resolves_outside = if is_injected && r.is_synthesized_node {
                     injected_scopes.any(|scope| {
                         binding_is_outside(scoping, scope, &r.name, function_scope_id)
                     })
@@ -147,6 +147,15 @@ fn is_synthesized_init_data(name: &str) -> bool {
     !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit())
 }
 
+/// Identifiers under an `ArrayPattern`/`ObjectPattern` are not referenced in
+/// Babel's `isReferenced`, even in a `for-of` head.
+fn is_bare_identifier_target(left: &ForStatementLeft<'_>) -> bool {
+    matches!(
+        left,
+        ForStatementLeft::AssignmentTargetIdentifier(_)
+    )
+}
+
 fn binding_is_outside(
     scoping: &Scoping,
     lookup_from: ScopeId,
@@ -175,6 +184,10 @@ struct CollectedRef {
     name: String,
     symbol_id: Option<SymbolId>,
     flags: ReferenceFlags,
+    /// Synthesized nodes — the factory calls a nested worklet left behind —
+    /// carry no `reference_id`, which is how they are told apart from a
+    /// genuinely unbound identifier that happens to share the name.
+    is_synthesized_node: bool,
 }
 
 struct ReferenceCollector<'s> {
@@ -210,7 +223,7 @@ impl<'a, 's> Visit<'a> for ReferenceCollector<'s> {
     }
 
     fn visit_for_of_statement(&mut self, stmt: &ForOfStatement<'a>) {
-        self.in_for_target = true;
+        self.in_for_target = is_bare_identifier_target(&stmt.left);
         self.visit_for_statement_left(&stmt.left);
         self.in_for_target = false;
         self.visit_expression(&stmt.right);
@@ -218,7 +231,7 @@ impl<'a, 's> Visit<'a> for ReferenceCollector<'s> {
     }
 
     fn visit_for_in_statement(&mut self, stmt: &ForInStatement<'a>) {
-        self.in_for_target = true;
+        self.in_for_target = is_bare_identifier_target(&stmt.left);
         self.visit_for_statement_left(&stmt.left);
         self.in_for_target = false;
         self.visit_expression(&stmt.right);
@@ -237,6 +250,7 @@ impl<'a, 's> Visit<'a> for ReferenceCollector<'s> {
             name: it.name.to_string(),
             symbol_id,
             flags,
+            is_synthesized_node: it.reference_id.get().is_none(),
         });
     }
 }

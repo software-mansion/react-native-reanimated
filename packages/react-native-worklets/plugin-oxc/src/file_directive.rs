@@ -217,10 +217,12 @@ fn is_common_js_export(stmt: &Statement<'_>) -> bool {
     let Expression::AssignmentExpression(assign) = &es.expression else {
         return false;
     };
-    let oxc_ast::ast::AssignmentTarget::StaticMemberExpression(member) = &assign.left else {
-        return false;
+    let object = match &assign.left {
+        oxc_ast::ast::AssignmentTarget::StaticMemberExpression(member) => &member.object,
+        oxc_ast::ast::AssignmentTarget::ComputedMemberExpression(member) => &member.object,
+        _ => return false,
     };
-    let Expression::Identifier(obj) = &member.object else {
+    let Expression::Identifier(obj) = object else {
         return false;
     };
     obj.name.as_str() == "exports"

@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
+use oxc_span::Span;
 use oxc_syntax::symbol::SymbolId;
 
 use crate::globals::DEFAULT_GLOBALS;
@@ -17,6 +18,24 @@ pub enum ImportShape {
     Default,
     Named { imported: String },
     Namespace,
+}
+
+/// Which shapes `findReferencedWorklet` is allowed to accept for a given
+/// binding — `acceptWorkletizableFunction` and `acceptObject` in
+/// `plugin/src/autoworkletization.ts`.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct WorkletizableKinds {
+    pub function: bool,
+    pub object: bool,
+}
+
+impl WorkletizableKinds {
+    pub fn union(self, other: Self) -> Self {
+        Self {
+            function: self.function || other.function,
+            object: self.object || other.object,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -46,7 +65,12 @@ pub struct State {
 
     pub imports_by_symbol: HashMap<SymbolId, ImportInfo>,
 
-    pub referenced_worklet_symbols: HashSet<SymbolId>,
+    pub referenced_worklet_symbols: HashMap<SymbolId, WorkletizableKinds>,
+
+    /// The single definition site each referenced binding resolves to, so a
+    /// rebound `let` only workletizes its last assignment the way Babel's
+    /// `constantViolations` lookup does.
+    pub referenced_worklet_sites: HashSet<Span>,
 
     pub error: Option<String>,
 }
@@ -86,7 +110,8 @@ impl State {
             source_text,
             emitted_files: Vec::new(),
             imports_by_symbol: HashMap::new(),
-            referenced_worklet_symbols: HashSet::new(),
+            referenced_worklet_symbols: HashMap::new(),
+            referenced_worklet_sites: HashSet::new(),
             error: None,
         }
     }

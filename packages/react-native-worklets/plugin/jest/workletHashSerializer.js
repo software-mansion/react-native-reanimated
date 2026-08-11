@@ -1,8 +1,13 @@
 const { parseSync, traverse } = require('@babel/core');
 const generate = require('@babel/generator').default;
 
-const HASH_TOKEN =
-  /(\.worklets\/)(\d+)(\.js)|(__workletHash = )(0x[0-9a-fA-F]+|\d+)|(_worklet_)(\d+)(_init_data)/;
+// oxc's codegen prints whichever numeric form is shortest, so the same hash can
+// arrive as `123`, `0x7b` or `123e3`.
+const HASH_NUMBER = String.raw`0x[0-9a-fA-F]+|\d+e\+?\d+|\d+`;
+
+const HASH_TOKEN = new RegExp(
+  String.raw`(\.worklets\/)(\d+)(\.js)|(__workletHash = )(${HASH_NUMBER})|(_worklet_)(\d+)(_init_data)`
+);
 
 let idByHash = new Map();
 let nextId = 1;
@@ -13,8 +18,18 @@ function resetWorkletHashIds() {
   nextId = 1;
 }
 
+function canonicalize(raw) {
+  if (raw.startsWith('0x')) {
+    return BigInt(raw).toString();
+  }
+  if (raw.includes('e') || raw.includes('E')) {
+    return BigInt(Number(raw)).toString();
+  }
+  return raw;
+}
+
 function idFor(raw) {
-  const canonical = raw.startsWith('0x') ? BigInt(raw).toString() : raw;
+  const canonical = canonicalize(raw);
   if (!idByHash.has(canonical)) {
     idByHash.set(canonical, nextId++);
   }
@@ -25,7 +40,7 @@ function renumber(code) {
   return code
     .replace(/(\.worklets\/)(\d+)(\.js)/g, (_, a, h, b) => a + idFor(h) + b)
     .replace(
-      /(__workletHash = )(0x[0-9a-fA-F]+|\d+)/g,
+      new RegExp(String.raw`(__workletHash = )(${HASH_NUMBER})`, 'g'),
       (_, a, h) => a + idFor(h)
     )
     .replace(/(_worklet_)(\d+)(_init_data)/g, (_, a, h, b) => a + idFor(h) + b);

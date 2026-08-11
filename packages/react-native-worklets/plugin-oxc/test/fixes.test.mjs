@@ -454,3 +454,179 @@ test('a genuine side-effect import survives', () => {
   const { code } = transform(`import 'side-effect';\nconst a = 1;`, 'test.ts', {});
   assert.match(code, /import "side-effect"/);
 });
+
+test('an exported function declaration referenced by a hook is workletized', () => {
+  const input = `
+    import { useAnimatedStyle } from 'react-native-reanimated';
+    export function styler() { return { width: 1 }; }
+    const s = useAnimatedStyle(styler);
+  `;
+  const { code, files } = transform(input, 'test.js', {});
+  assert.match(code, /export const styler = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
+  assert.equal(files.length, 1);
+});
+
+test('a hand-written worklet is left alone', () => {
+  const input = `
+    import { runOnUI } from 'react-native-worklets';
+    const cb = function () { return 1; };
+    cb.__workletHash = 1234;
+    cb.__closure = {};
+    runOnUI(cb)();
+  `;
+  const { code, files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 0);
+  assert.match(code, /const cb = function\(\)/);
+});
+
+test('gesture object hooks do not workletize a function argument', () => {
+  const input = `
+    import { useTapGesture } from 'react-native-gesture-handler';
+    const g = useTapGesture(() => { console.log(1); });
+  `;
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 0);
+});
+
+test('function hooks do not workletize an object argument', () => {
+  const input = `
+    import { useAnimatedStyle } from 'react-native-reanimated';
+    const h = { m() { return 1; } };
+    const s = useAnimatedStyle(h);
+  `;
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 0);
+});
+
+test('a layout animation callback passed by identifier is not workletized', () => {
+  const input = `
+    import { Layout } from 'react-native-reanimated';
+    const f = (v) => { console.log(v); };
+    const l = Layout.springify().withCallback(f);
+  `;
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 0);
+});
+
+test('only the last assignment to a rebound binding is workletized', () => {
+  const input = `
+    import { runOnUI } from 'react-native-worklets';
+    let cb = () => { return 1; };
+    cb = () => { return 2; };
+    runOnUI(cb)();
+  `;
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 1);
+});
+
+test('an unbound free variable survives a same-named nested injection', () => {
+  const input = `
+    const w = () => { 'worklet';
+      function h() { const zz = 1; return () => { 'worklet'; return zz; }; }
+      return [h, zz];
+    };
+  `;
+  const { files } = transform(input, 'test.js', {});
+  const outer = files.find((f) => f.content.includes('function h()'));
+  assert.match(outer.content, /__closure = \{ zz \}/);
+});
+
+test('destructuring for-of targets are not captured', () => {
+  const input = `function f(){ let a, b; const w = () => { 'worklet'; for ([a, b] of [[1, 2]]) {} }; return w; }`;
+  const { files } = transform(input, 'test.js', {});
+  assert.match(joinedFiles(files), /__closure = \{\}/);
+});
+
+test('computed exports assignments are dehoisted', () => {
+  const input = `'worklet';\nexports['foo'] = 1;\nfunction bar(){ return 2; }`;
+  const { code } = transform(input, 'test.js', {});
+  assert.ok(code.indexOf('const bar =') < code.indexOf('exports["foo"]'));
+});
+
+test('to_identifier matches @babel/types on leading digits and unicode', () => {
+  const { files: a } = transform(`const w = () => { 'worklet'; return 1; };`, '/proj/2dExample.js', {});
+  assert.match(a[0].content, /dExampleJs1Factory/);
+  const { files: b } = transform(`const w = function ünïcode(){ 'worklet'; return 1; };`, 'test.js', {});
+  assert.match(b[0].content, /ünïcode_testJs1Factory/);
+});
+
+test('an object reached by identifier workletizes identifier-valued properties', () => {
+  const input = `
+    import { usePanGesture } from 'react-native-gesture-handler';
+    const onStart = () => { console.log(1); };
+    const handlers = { onStart };
+    const g = usePanGesture(handlers);
+  `;
+  const { code, files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 1);
+  assert.match(code, /const onStart = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
+});
+
+test('a function declaration wins over a later reassignment', () => {
+  const input = `
+    import { useAnimatedStyle } from 'react-native-reanimated';
+    function styleFactory() { return { width: 1 }; }
+    styleFactory = () => ({ width: 2 });
+    const s = useAnimatedStyle(styleFactory);
+  `;
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 1);
+});
+
+test('a non-assignment rebind makes the binding unresolvable', () => {
+  const input = `
+    import { useAnimatedStyle } from 'react-native-reanimated';
+    let f = () => ({ width: 1 });
+    f++;
+    useAnimatedStyle(f);
+  `;
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 0);
+});
+
+test('the chosen definition site must match the accepted shape', () => {
+  const input = `
+    import { useAnimatedStyle } from 'react-native-reanimated';
+    let f;
+    f = () => ({ width: 1 });
+    f = { a: 1 };
+    useAnimatedStyle(f);
+  `;
+  const { code, files } = transform(input, 'test.js', {});
+  // The object assignment is last but `useAnimatedStyle` only accepts a
+  // function, so the earlier arrow is the site.
+  assert.equal(files.length, 1);
+  assert.match(code, /f = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
+});
+
+test('the __workletHash guard ignores optional chaining', () => {
+  const input = `
+    import { useAnimatedStyle } from 'react-native-reanimated';
+    const f = () => { return 1; };
+    if (f?.__workletHash) { console.log('x'); }
+    useAnimatedStyle(f);
+  `;
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 1);
+});
+
+test('a nested explicit context object is only processed once', () => {
+  const input = `
+    const obj = {
+      __workletContextObject: true,
+      inner: { __workletContextObject: true, m() { return this.x; } },
+      m() { return this.y; },
+    };
+  `;
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 2);
+});
+
+test('to_identifier rejects non-ID_Continue numerics', () => {
+  const { files } = transform(
+    `export const f = () => { 'worklet'; return 1; };`,
+    '/tmp/x².js',
+    {}
+  );
+  assert.match(files[0].content, /xJs1Factory/);
+});

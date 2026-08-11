@@ -28,11 +28,18 @@ struct ContextObjectPass<'a> {
 
 impl<'a> VisitMut<'a> for ContextObjectPass<'a> {
     fn visit_object_expression(&mut self, obj: &mut ObjectExpression<'a>) {
-        if is_context_object(obj) {
-            remove_marker(obj, self.builder);
-            append_factory(obj, self.builder, self.allocator);
+        if !is_context_object(obj) {
+            walk_mut::walk_object_expression(self, obj);
+            return;
         }
-        walk_mut::walk_object_expression(self, obj);
+        remove_marker(obj, self.builder);
+        append_factory(obj, self.builder, self.allocator);
+        // The appended factory carries a clone of the object as it stood, and
+        // Babel's pre-order traversal never revisits a node it just pushed.
+        let original = obj.properties.len() - 1;
+        for prop in obj.properties.iter_mut().take(original) {
+            self.visit_object_property_kind(prop);
+        }
     }
 }
 

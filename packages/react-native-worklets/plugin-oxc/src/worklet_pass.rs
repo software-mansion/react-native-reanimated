@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use oxc_allocator::Allocator;
 use oxc_ast::AstBuilder;
@@ -12,7 +12,7 @@ use oxc_ast::ast::{
 };
 use oxc_ast_visit::{VisitMut, walk_mut};
 use oxc_semantic::Scoping;
-use oxc_span::SPAN;
+use oxc_span::{GetSpan, SPAN, Span};
 use oxc_syntax::scope::ScopeFlags;
 use oxc_syntax::symbol::SymbolId;
 
@@ -21,7 +21,7 @@ use crate::auto_detect::{
     is_layout_animation_callback_method,
 };
 use crate::closure::InjectedRef;
-use crate::state::State;
+use crate::state::{State, WorkletizableKinds};
 use crate::utils::{has_worklet_directive, inject_worklet_directive};
 use crate::worklet_factory::{WorkletInput, make_worklet_factory};
 
@@ -58,6 +58,37 @@ const FUNCTION_HOOKS_ARG3: &[&str] = &["withRepeat"];
 fn is_object_hook_at_arg0(name: &str) -> bool {
     name == "useAnimatedScrollHandler" || GESTURE_HANDLER_OBJECT_HOOKS.contains(&name)
 }
+
+/// `reanimatedFunctionHooks` accepts a function, `reanimatedObjectHooks`
+/// accepts an object, and `useAnimatedScrollHandler` is in both.
+fn hook_kinds(name: &str) -> WorkletizableKinds {
+    let function = FUNCTION_HOOKS_ARG0.contains(&name)
+        || FUNCTION_HOOKS_ARG01.contains(&name)
+        || FUNCTION_HOOKS_ARG1.contains(&name)
+        || FUNCTION_HOOKS_ARG2.contains(&name)
+        || FUNCTION_HOOKS_ARG3.contains(&name);
+    WorkletizableKinds {
+        function,
+        object: is_object_hook_at_arg0(name),
+    }
+}
+
+const BOTH_KINDS: WorkletizableKinds = WorkletizableKinds {
+    function: true,
+    object: true,
+};
+
+const FUNCTION_KIND: WorkletizableKinds = WorkletizableKinds {
+    function: true,
+    object: false,
+};
+
+const OBJECT_KIND: WorkletizableKinds = WorkletizableKinds {
+    function: false,
+    object: true,
+};
+
+const WORKLET_HASH: &str = "__workletHash";
 
 fn hook_argument_indices(name: &str) -> &'static [usize] {
     if FUNCTION_HOOKS_ARG0.contains(&name) || GESTURE_HANDLER_OBJECT_HOOKS.contains(&name) {
@@ -98,7 +129,15 @@ pub fn process_program<'a>(
     allocator: &'a Allocator,
     filename: &str,
 ) -> Vec<(String, String)> {
-    state.referenced_worklet_symbols = collect_referenced_worklet_symbols(program, scoping);
+    let mut collector = Collector {
+        scoping,
+        out: ReferencedWorklets::default(),
+    };
+    oxc_ast_visit::Visit::visit_program(&mut collector, program);
+    let mut referenced = collector.out;
+    referenced.propagate();
+    state.referenced_worklet_sites = referenced.injection_sites(scoping);
+    state.referenced_worklet_symbols = referenced.kinds;
 
     {
         let mut pass = WorkletPass {
@@ -198,26 +237,25 @@ impl<'a, 'b> WorkletPass<'a, 'b> {
         let is_layout_animation = is_layout_animation_callback_method(callee);
 
         if let Some(name) = name.as_deref() {
+            let kinds = hook_kinds(name);
             for &index in hook_argument_indices(name) {
                 if let Some(arg) = call.arguments.get_mut(index) {
-                    inject_directive_into_argument(arg, self.builder);
-                }
-            }
-            if is_object_hook_at_arg0(name) {
-                if let Some(Argument::ObjectExpression(obj)) = call.arguments.get_mut(0) {
-                    inject_worklet_directives_to_object_methods(obj, self.builder);
+                    inject_directive_into_hook_argument(arg, kinds, self.builder);
                 }
             }
         }
 
-        if is_gesture || is_layout_animation {
+        if is_gesture {
             for arg in call.arguments.iter_mut() {
-                match arg {
-                    Argument::ObjectExpression(obj) => {
-                        inject_worklet_directives_to_object_methods(obj, self.builder);
-                    }
-                    other => inject_directive_into_argument(other, self.builder),
-                }
+                inject_directive_into_hook_argument(arg, BOTH_KINDS, self.builder);
+            }
+        }
+
+        // A layout animation callback is matched by Babel on the function node
+        // itself, so only an inline function qualifies.
+        if is_layout_animation {
+            for arg in call.arguments.iter_mut() {
+                inject_directive_into_hook_argument(arg, FUNCTION_KIND, self.builder);
             }
         }
     }
@@ -305,6 +343,11 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
             return;
         };
 
+        let binding_symbol = func.id.as_ref().and_then(|id| id.symbol_id.get());
+        if let Some(body) = func.body.as_mut() {
+            maybe_inject_referenced_directive(binding_symbol, body, self.state, self.builder);
+        }
+
         let injected = self.walk_function_scoped(func);
         let name = func.id.as_ref().map(|id| id.name.to_string());
         if let Some((factory_call, _)) = self.workletize_function(func, name.as_deref(), &injected) {
@@ -319,6 +362,11 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
             walk_mut::walk_export_named_declaration(self, decl);
             return;
         };
+
+        let binding_symbol = func.id.as_ref().and_then(|id| id.symbol_id.get());
+        if let Some(body) = func.body.as_mut() {
+            maybe_inject_referenced_directive(binding_symbol, body, self.state, self.builder);
+        }
 
         let injected = self.walk_function_scoped(func);
         let name = func.id.as_ref().map(|id| id.name.to_string());
@@ -407,8 +455,11 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
             _ => None,
         };
         if let (Some(symbol_id), Some(init)) = (binding_symbol, declarator.init.as_mut()) {
-            if self.state.referenced_worklet_symbols.contains(&symbol_id) {
-                inject_directive_into_expression(init, self.builder);
+            if let Some(kinds) = self.state.referenced_worklet_symbols.get(&symbol_id).copied()
+            {
+                if self.state.referenced_worklet_sites.contains(&init.span()) {
+                    inject_directive_into_expression(init, kinds, self.builder);
+                }
             }
         }
         walk_mut::walk_variable_declarator(self, declarator);
@@ -421,8 +472,12 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
                 .get()
                 .and_then(|rid| self.scoping.get_reference(rid).symbol_id());
             if let Some(symbol_id) = symbol_id {
-                if self.state.referenced_worklet_symbols.contains(&symbol_id) {
-                    inject_directive_into_expression(&mut assign.right, self.builder);
+                if let Some(kinds) =
+                    self.state.referenced_worklet_symbols.get(&symbol_id).copied()
+                {
+                    if self.state.referenced_worklet_sites.contains(&assign.right.span()) {
+                        inject_directive_into_expression(&mut assign.right, kinds, self.builder);
+                    }
                 }
             }
         }
@@ -431,154 +486,269 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
 
 }
 
-fn collect_referenced_worklet_symbols<'a>(
-    program: &Program<'a>,
-    scoping: &Scoping,
-) -> HashSet<SymbolId> {
-    use oxc_ast_visit::Visit;
-
-    struct Pre<'s> {
-        scoping: &'s Scoping,
-        found: HashSet<SymbolId>,
-    }
-
-    impl<'a, 's> Pre<'s> {
-        fn note_arg_identifier(&mut self, arg: &Argument<'a>) {
-            if let Argument::Identifier(id) = arg {
-                if let Some(rid) = id.reference_id.get() {
-                    if let Some(sid) = self.scoping.get_reference(rid).symbol_id() {
-                        self.found.insert(sid);
-                    }
-                }
-            }
-        }
-
-        fn note_object_arg_property_idents(&mut self, arg: &Argument<'a>) {
-            let Argument::ObjectExpression(obj) = arg else {
-                return;
-            };
-            for prop in obj.properties.iter() {
-                if let ObjectPropertyKind::ObjectProperty(p) = prop {
-                    if let Expression::Identifier(id) = &p.value {
-                        if let Some(rid) = id.reference_id.get() {
-                            if let Some(sid) = self.scoping.get_reference(rid).symbol_id() {
-                                self.found.insert(sid);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    impl<'a, 's> Visit<'a> for Pre<'s> {
-        fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-            oxc_ast_visit::walk::walk_call_expression(self, call);
-
-            let callee = effective_callee(&call.callee);
-            let name = callee_name(callee);
-
-            if let Some(name) = name.as_deref() {
-                for &index in hook_argument_indices(name) {
-                    if let Some(arg) = call.arguments.get(index) {
-                        self.note_arg_identifier(arg);
-                    }
-                }
-                if is_object_hook_at_arg0(name) {
-                    if let Some(arg0) = call.arguments.first() {
-                        self.note_object_arg_property_idents(arg0);
-                    }
-                }
-            }
-
-            if is_gesture_object_event_callback_method(callee)
-                || is_layout_animation_callback_method(callee)
-            {
-                for arg in call.arguments.iter() {
-                    self.note_arg_identifier(arg);
-                    self.note_object_arg_property_idents(arg);
-                }
-            }
-        }
-    }
-
-    let mut pre = Pre {
-        scoping,
-        found: HashSet::new(),
-    };
-    pre.visit_program(program);
-    let mut found = pre.found;
-
-    expand_aliases(program, scoping, &mut found);
-    found
+/// Everything `findReferencedWorklet` needs, gathered in one walk: which
+/// bindings a hook refers to and in what shape, which of them the user already
+/// tagged as hand-written worklets, and where each binding is defined.
+#[derive(Default)]
+struct ReferencedWorklets {
+    kinds: HashMap<SymbolId, WorkletizableKinds>,
+    hand_written: HashSet<SymbolId>,
+    function_declarations: HashSet<SymbolId>,
+    /// Every definition of a binding, in source order.
+    definitions: HashMap<SymbolId, Vec<Definition>>,
+    /// `lhs` is an alias for `rhs`.
+    aliases: Vec<(SymbolId, SymbolId)>,
+    /// `object` has an identifier-valued property bound to `value`.
+    object_properties: Vec<(SymbolId, SymbolId)>,
 }
 
-fn expand_aliases<'a>(program: &Program<'a>, scoping: &Scoping, set: &mut HashSet<SymbolId>) {
-    use oxc_ast_visit::Visit;
+struct Definition {
+    span: Span,
+    kinds: WorkletizableKinds,
+    is_declarator: bool,
+}
 
-    struct Aliases<'s> {
-        scoping: &'s Scoping,
-        edges: Vec<(SymbolId, SymbolId)>,
+struct Collector<'s> {
+    scoping: &'s Scoping,
+    out: ReferencedWorklets,
+}
+
+impl<'a, 's> Collector<'s> {
+    fn resolve(&self, id: &oxc_ast::ast::IdentifierReference<'a>) -> Option<SymbolId> {
+        let rid = id.reference_id.get()?;
+        self.scoping.get_reference(rid).symbol_id()
     }
 
-    impl<'s> Aliases<'s> {
-        fn resolve_ref(&self, ident: &oxc_ast::ast::IdentifierReference<'_>) -> Option<SymbolId> {
-            let rid = ident.reference_id.get()?;
-            self.scoping.get_reference(rid).symbol_id()
-        }
+    fn note(&mut self, sid: SymbolId, kinds: WorkletizableKinds) {
+        let entry = self.out.kinds.entry(sid).or_default();
+        *entry = entry.union(kinds);
     }
 
-    impl<'a, 's> Visit<'a> for Aliases<'s> {
-        fn visit_variable_declarator(&mut self, vd: &VariableDeclarator<'a>) {
-            oxc_ast_visit::walk::walk_variable_declarator(self, vd);
-            let BindingPattern::BindingIdentifier(lhs) = &vd.id else {
-                return;
-            };
-            let Some(lhs_sid) = lhs.symbol_id.get() else {
-                return;
-            };
-            let Some(Expression::Identifier(rhs)) = &vd.init else {
-                return;
-            };
-            if let Some(rhs_sid) = self.resolve_ref(rhs) {
-                self.edges.push((lhs_sid, rhs_sid));
+    fn note_arg(&mut self, arg: &Argument<'a>, kinds: WorkletizableKinds) {
+        if let Argument::Identifier(id) = arg {
+            if let Some(sid) = self.resolve(id) {
+                self.note(sid, kinds);
             }
         }
-
-        fn visit_assignment_expression(&mut self, ae: &AssignmentExpression<'a>) {
-            oxc_ast_visit::walk::walk_assignment_expression(self, ae);
-            let AssignmentTarget::AssignmentTargetIdentifier(lhs) = &ae.left else {
-                return;
-            };
-            let Some(lhs_sid) = self.resolve_ref(lhs) else {
-                return;
-            };
-            let Expression::Identifier(rhs) = &ae.right else {
-                return;
-            };
-            if let Some(rhs_sid) = self.resolve_ref(rhs) {
-                self.edges.push((lhs_sid, rhs_sid));
+        // `forEachWorkletizableObjectProperty` only ever accepts functions for
+        // the property values of an object argument.
+        if !kinds.object {
+            return;
+        }
+        let Argument::ObjectExpression(obj) = arg else {
+            return;
+        };
+        for value in object_property_identifiers(obj) {
+            if let Some(sid) = self.resolve(value) {
+                self.note(sid, FUNCTION_KIND);
             }
         }
     }
 
-    let mut visitor = Aliases {
-        scoping,
-        edges: Vec::new(),
-    };
-    visitor.visit_program(program);
-
-    loop {
-        let before = set.len();
-        for (lhs, rhs) in &visitor.edges {
-            if set.contains(lhs) {
-                set.insert(*rhs);
+    /// `bindingIsWorklet` — a binding the user already tagged with
+    /// `__workletHash` is hand-written and must be left alone. Babel's
+    /// `isMemberExpression` is false for an optional chain, and its
+    /// `isIdentifier(property)` is true for a computed identifier key.
+    fn note_hand_written(&mut self, object: &Expression<'a>) {
+        if let Expression::Identifier(object) = object {
+            if let Some(sid) = self.resolve(object) {
+                self.out.hand_written.insert(sid);
             }
         }
-        if set.len() == before {
-            break;
+    }
+
+    fn note_definition(&mut self, lhs: SymbolId, rhs: &Expression<'a>, is_declarator: bool) {
+        if let Some(kinds) = workletizable_shape(rhs) {
+            self.out.definitions.entry(lhs).or_default().push(Definition {
+                span: rhs.span(),
+                kinds,
+                is_declarator,
+            });
+        }
+        match rhs {
+            Expression::Identifier(rhs) => {
+                if let Some(rhs_sid) = self.resolve(rhs) {
+                    self.out.aliases.push((lhs, rhs_sid));
+                }
+            }
+            Expression::ObjectExpression(obj) => {
+                for value in object_property_identifiers(obj) {
+                    if let Some(value_sid) = self.resolve(value) {
+                        self.out.object_properties.push((lhs, value_sid));
+                    }
+                }
+            }
+            _ => {}
         }
     }
+}
+
+impl<'a, 's> oxc_ast_visit::Visit<'a> for Collector<'s> {
+    fn visit_static_member_expression(
+        &mut self,
+        member: &oxc_ast::ast::StaticMemberExpression<'a>,
+    ) {
+        oxc_ast_visit::walk::walk_static_member_expression(self, member);
+        if !member.optional && member.property.name.as_str() == WORKLET_HASH {
+            self.note_hand_written(&member.object);
+        }
+    }
+
+    fn visit_computed_member_expression(
+        &mut self,
+        member: &oxc_ast::ast::ComputedMemberExpression<'a>,
+    ) {
+        oxc_ast_visit::walk::walk_computed_member_expression(self, member);
+        let Expression::Identifier(key) = &member.expression else {
+            return;
+        };
+        if !member.optional && key.name.as_str() == WORKLET_HASH {
+            self.note_hand_written(&member.object);
+        }
+    }
+
+    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        oxc_ast_visit::walk::walk_call_expression(self, call);
+
+        let callee = effective_callee(&call.callee);
+        if let Some(name) = callee_name(callee).as_deref() {
+            let kinds = hook_kinds(name);
+            if kinds.function || kinds.object {
+                for &index in hook_argument_indices(name) {
+                    if let Some(arg) = call.arguments.get(index) {
+                        self.note_arg(arg, kinds);
+                    }
+                }
+            }
+        }
+        if is_gesture_object_event_callback_method(callee) {
+            for arg in call.arguments.iter() {
+                self.note_arg(arg, BOTH_KINDS);
+            }
+        }
+    }
+
+    fn visit_function(&mut self, func: &Function<'a>, flags: ScopeFlags) {
+        oxc_ast_visit::walk::walk_function(self, func, flags);
+        if !func.is_declaration() {
+            return;
+        }
+        if let Some(sid) = func.id.as_ref().and_then(|id| id.symbol_id.get()) {
+            self.out.function_declarations.insert(sid);
+        }
+    }
+
+    fn visit_variable_declarator(&mut self, vd: &VariableDeclarator<'a>) {
+        oxc_ast_visit::walk::walk_variable_declarator(self, vd);
+        let BindingPattern::BindingIdentifier(id) = &vd.id else {
+            return;
+        };
+        if let (Some(sid), Some(init)) = (id.symbol_id.get(), vd.init.as_ref()) {
+            self.note_definition(sid, init, true);
+        }
+    }
+
+    fn visit_assignment_expression(&mut self, ae: &AssignmentExpression<'a>) {
+        oxc_ast_visit::walk::walk_assignment_expression(self, ae);
+        let AssignmentTarget::AssignmentTargetIdentifier(lhs) = &ae.left else {
+            return;
+        };
+        if let Some(sid) = self.resolve(lhs) {
+            self.note_definition(sid, &ae.right, false);
+        }
+    }
+}
+
+fn object_property_identifiers<'e, 'a>(
+    obj: &'e ObjectExpression<'a>,
+) -> impl Iterator<Item = &'e oxc_ast::ast::IdentifierReference<'a>> {
+    obj.properties.iter().filter_map(|prop| match prop {
+        ObjectPropertyKind::ObjectProperty(p) => match &p.value {
+            Expression::Identifier(id) => Some(&**id),
+            _ => None,
+        },
+        _ => None,
+    })
+}
+
+fn workletizable_shape(expr: &Expression<'_>) -> Option<WorkletizableKinds> {
+    match expr {
+        Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_) => {
+            Some(FUNCTION_KIND)
+        }
+        Expression::ObjectExpression(_) => Some(OBJECT_KIND),
+        _ => None,
+    }
+}
+
+impl ReferencedWorklets {
+    /// The two ways `findReferencedWorklet` keeps looking past the binding it
+    /// landed on: an identifier definition is an alias to follow, and an object
+    /// it accepts has its identifier-valued properties workletized as functions.
+    fn propagate(&mut self) {
+        loop {
+            let mut changed = false;
+            let mut merge = |kinds: &mut HashMap<_, WorkletizableKinds>,
+                             target,
+                             extra: WorkletizableKinds| {
+                let entry = kinds.entry(target).or_default();
+                let merged = entry.union(extra);
+                if merged.function != entry.function || merged.object != entry.object {
+                    *entry = merged;
+                    changed = true;
+                }
+            };
+            for (lhs, rhs) in &self.aliases {
+                if let Some(kinds) = self.kinds.get(lhs).copied() {
+                    merge(&mut self.kinds, *rhs, kinds);
+                }
+            }
+            for (object, value) in &self.object_properties {
+                if self.kinds.get(object).is_some_and(|kinds| kinds.object) {
+                    merge(&mut self.kinds, *value, FUNCTION_KIND);
+                }
+            }
+            if !changed {
+                break;
+            }
+        }
+        self.kinds.retain(|sid, _| !self.hand_written.contains(sid));
+    }
+
+    /// A function-declaration binding wins outright; otherwise a constant
+    /// binding resolves to its declarator init and a rebound one to its last
+    /// definition of an accepted shape. Only that site gets a directive.
+    fn injection_sites(&self, scoping: &Scoping) -> HashSet<Span> {
+        let mut chosen = HashSet::new();
+        for (sid, wanted) in &self.kinds {
+            if self.function_declarations.contains(sid) {
+                continue;
+            }
+            let Some(definitions) = self.definitions.get(sid) else {
+                continue;
+            };
+            // `binding.constant` is false for any write, including ones whose
+            // value isn't workletizable, and then only the writes are consulted.
+            let rebound = is_rebound(scoping, *sid);
+            let site = definitions
+                .iter()
+                .rev()
+                .filter(|def| def.is_declarator != rebound)
+                .find(|def| {
+                    (wanted.function && def.kinds.function)
+                        || (wanted.object && def.kinds.object)
+                });
+            if let Some(def) = site {
+                chosen.insert(def.span);
+            }
+        }
+        chosen
+    }
+}
+
+fn is_rebound(scoping: &Scoping, symbol_id: SymbolId) -> bool {
+    scoping.symbol_is_mutated(symbol_id)
+        || !scoping.symbol_redeclarations(symbol_id).is_empty()
 }
 
 fn maybe_inject_referenced_directive<'a>(
@@ -588,7 +758,11 @@ fn maybe_inject_referenced_directive<'a>(
     builder: AstBuilder<'a>,
 ) {
     let Some(sid) = binding_symbol else { return };
-    if !state.referenced_worklet_symbols.contains(&sid) {
+    if !state
+        .referenced_worklet_symbols
+        .get(&sid)
+        .is_some_and(|kinds| kinds.function)
+    {
         return;
     }
     inject_worklet_directive(body, builder);
@@ -597,12 +771,30 @@ fn maybe_inject_referenced_directive<'a>(
 /// Mirrors `forEachWorkletizableFunction` with `acceptObject: true` — the
 /// referenced binding may resolve to an object literal of callbacks rather than
 /// to a function.
-fn inject_directive_into_expression<'a>(expr: &mut Expression<'a>, builder: AstBuilder<'a>) {
+fn inject_directive_into_hook_argument<'a>(
+    arg: &mut Argument<'a>,
+    kinds: WorkletizableKinds,
+    builder: AstBuilder<'a>,
+) {
+    if let Some(expr) = arg.as_expression_mut() {
+        inject_directive_into_expression(expr, kinds, builder);
+    }
+}
+
+fn inject_directive_into_expression<'a>(
+    expr: &mut Expression<'a>,
+    kinds: WorkletizableKinds,
+    builder: AstBuilder<'a>,
+) {
     if let Expression::ObjectExpression(obj) = expr {
-        inject_worklet_directives_to_object_methods(obj, builder);
+        if kinds.object {
+            inject_worklet_directives_to_object_methods(obj, builder);
+        }
         return;
     }
-    inject_directive_into_function_expression(expr, builder);
+    if kinds.function {
+        inject_directive_into_function_expression(expr, builder);
+    }
 }
 
 fn inject_directive_into_function_expression<'a>(
@@ -614,20 +806,6 @@ fn inject_directive_into_function_expression<'a>(
             inject_worklet_directive(&mut arrow.body, builder);
         }
         Expression::FunctionExpression(func) => {
-            if let Some(body) = func.body.as_mut() {
-                inject_worklet_directive(body, builder);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn inject_directive_into_argument<'a>(arg: &mut Argument<'a>, builder: AstBuilder<'a>) {
-    match arg {
-        Argument::ArrowFunctionExpression(arrow) => {
-            inject_worklet_directive(&mut arrow.body, builder);
-        }
-        Argument::FunctionExpression(func) => {
             if let Some(body) = func.body.as_mut() {
                 inject_worklet_directive(body, builder);
             }
