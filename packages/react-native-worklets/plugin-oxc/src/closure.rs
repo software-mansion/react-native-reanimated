@@ -1,7 +1,10 @@
 use std::collections::HashSet;
 
-use oxc_ast::ast::{FormalParameters, FunctionBody, IdentifierReference};
-use oxc_ast_visit::Visit;
+use oxc_ast::ast::{
+    AssignmentTarget, AssignmentTargetPropertyIdentifier, ForInStatement, ForOfStatement,
+    FormalParameters, FunctionBody, IdentifierReference,
+};
+use oxc_ast_visit::{Visit, walk};
 use oxc_semantic::Scoping;
 use oxc_syntax::reference::ReferenceFlags;
 use oxc_syntax::scope::ScopeId;
@@ -16,6 +19,13 @@ pub struct ClosureResult {
     pub imports: Vec<ImportInfo>,
 }
 
+/// A name that a nested worklet's synthesized factory call left behind in this
+/// function's body, paired with the scope that call now sits in. The name has
+/// no `symbol_id` — the node didn't exist when semantics were built — so the
+/// scope is the only way to tell an outer binding (capture it) from one
+/// declared somewhere inside this worklet (don't).
+pub type InjectedRef = (String, ScopeId);
+
 pub fn closure_for_function<'a>(
     params: &FormalParameters<'a>,
     body: &FunctionBody<'a>,
@@ -23,12 +33,13 @@ pub fn closure_for_function<'a>(
     self_function_name: Option<&str>,
     scoping: &Scoping,
     state: &State,
-    force_capture: &HashSet<String>,
+    force_capture: &HashSet<InjectedRef>,
     filename: &str,
 ) -> ClosureResult {
     let mut collector = ReferenceCollector {
         scoping,
         refs: Vec::new(),
+        in_for_target: false,
     };
     collector.visit_function_body(body);
     collector.visit_formal_parameters(params);
@@ -88,22 +99,37 @@ pub fn closure_for_function<'a>(
                 result.closure_variables.push(r.name);
             }
             None => {
-                let is_synthesized = is_synthesized_init_data(&r.name)
-                    || force_capture.contains(&r.name);
-                if is_synthesized {
-                    if let Some(sym) = scoping
-                        .find_binding(function_scope_id, r.name.as_str().into())
-                    {
-                        let sym_scope = scoping.symbol_scope_id(sym);
-                        if scope_is_inside(scoping, sym_scope, function_scope_id) {
-                            continue;
-                        }
-                    }
-                    seen.insert(r.name.clone());
-                    result.closure_variables.push(r.name);
+                let mut injected_scopes = force_capture
+                    .iter()
+                    .filter(|(name, _)| *name == r.name)
+                    .map(|(_, scope)| *scope)
+                    .peekable();
+                let is_injected = injected_scopes.peek().is_some();
+
+                let resolves_outside = if is_injected {
+                    injected_scopes.any(|scope| {
+                        binding_is_outside(scoping, scope, &r.name, function_scope_id)
+                    })
+                } else {
+                    binding_is_outside(
+                        scoping,
+                        function_scope_id,
+                        &r.name,
+                        function_scope_id,
+                    )
+                };
+                if !resolves_outside {
                     continue;
                 }
-                continue;
+
+                let is_synthesized = is_injected || is_synthesized_init_data(&r.name);
+                if !is_synthesized
+                    && (state.strict_global || state.globals.contains(&r.name))
+                {
+                    continue;
+                }
+                seen.insert(r.name.clone());
+                result.closure_variables.push(r.name);
             }
         }
     }
@@ -119,6 +145,22 @@ fn is_synthesized_init_data(name: &str) -> bool {
         return false;
     };
     !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit())
+}
+
+fn binding_is_outside(
+    scoping: &Scoping,
+    lookup_from: ScopeId,
+    name: &str,
+    function_scope_id: ScopeId,
+) -> bool {
+    match scoping.find_binding(lookup_from, name.into()) {
+        Some(symbol_id) => !scope_is_inside(
+            scoping,
+            scoping.symbol_scope_id(symbol_id),
+            function_scope_id,
+        ),
+        None => true,
+    }
 }
 
 fn scope_is_inside(scoping: &Scoping, inner: ScopeId, outer: ScopeId) -> bool {
@@ -138,9 +180,51 @@ struct CollectedRef {
 struct ReferenceCollector<'s> {
     scoping: &'s Scoping,
     refs: Vec<CollectedRef>,
+    /// `for (x of ...)` counts `x` as a reference in Babel's `isReferenced`,
+    /// while a plain assignment target does not.
+    in_for_target: bool,
 }
 
 impl<'a, 's> Visit<'a> for ReferenceCollector<'s> {
+    /// Mirrors `isReferenced`: the left-hand side of an assignment is written,
+    /// not referenced, so Babel keeps it out of the closure.
+    fn visit_assignment_target(&mut self, target: &AssignmentTarget<'a>) {
+        if !self.in_for_target
+            && matches!(target, AssignmentTarget::AssignmentTargetIdentifier(_))
+        {
+            return;
+        }
+        walk::walk_assignment_target(self, target);
+    }
+
+    fn visit_assignment_target_property_identifier(
+        &mut self,
+        prop: &AssignmentTargetPropertyIdentifier<'a>,
+    ) {
+        if self.in_for_target {
+            self.visit_identifier_reference(&prop.binding);
+        }
+        if let Some(init) = &prop.init {
+            self.visit_expression(init);
+        }
+    }
+
+    fn visit_for_of_statement(&mut self, stmt: &ForOfStatement<'a>) {
+        self.in_for_target = true;
+        self.visit_for_statement_left(&stmt.left);
+        self.in_for_target = false;
+        self.visit_expression(&stmt.right);
+        self.visit_statement(&stmt.body);
+    }
+
+    fn visit_for_in_statement(&mut self, stmt: &ForInStatement<'a>) {
+        self.in_for_target = true;
+        self.visit_for_statement_left(&stmt.left);
+        self.in_for_target = false;
+        self.visit_expression(&stmt.right);
+        self.visit_statement(&stmt.body);
+    }
+
     fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
         let (symbol_id, flags) = match it.reference_id.get() {
             Some(rid) => {

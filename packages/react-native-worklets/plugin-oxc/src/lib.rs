@@ -7,7 +7,7 @@ use oxc_ast::ast::{ImportDeclaration, ImportDeclarationSpecifier, Program, State
 use oxc_codegen::{Codegen, CodegenOptions};
 use oxc_parser::{ParseOptions, Parser};
 use oxc_semantic::SemanticBuilder;
-use oxc_span::SourceType;
+use oxc_span::{SourceType, Span};
 use oxc_syntax::symbol::SymbolId;
 
 mod auto_detect;
@@ -15,12 +15,15 @@ mod bundle_mode;
 mod closure;
 mod context_object;
 mod file_directive;
+mod globals;
+mod inline_styles_warning;
 mod jsx_dev_attributes;
 mod relative_requires;
 mod naming;
 mod options;
 mod state;
 mod utils;
+mod web_optimization;
 mod worklet_body;
 mod worklet_factory;
 mod worklet_pass;
@@ -160,6 +163,21 @@ fn run(
 
     let mut program = parsed.program;
 
+    // `only_remove_type_imports` strips inline `type` specifiers but leaves the
+    // now-empty declaration behind, which prints as a side-effect `import "x";`.
+    // `@babel/preset-typescript` drops the declaration outright, so remember
+    // which ones carried specifiers and prune the ones that end up empty.
+    let mut specifier_bearing_imports: Vec<Span> = Vec::new();
+    if source_type.is_typescript() {
+        for stmt in &program.body {
+            if let Statement::ImportDeclaration(import) = stmt {
+                if import.specifiers.as_ref().is_some_and(|s| !s.is_empty()) {
+                    specifier_bearing_imports.push(import.span);
+                }
+            }
+        }
+    }
+
     if source_type.is_typescript() {
         let semantic_for_strip = SemanticBuilder::new()
             .with_check_syntax_error(false)
@@ -184,6 +202,14 @@ fn run(
         if let Some(first) = ret.errors.first() {
             return Err(format!("{PARSE_ERROR_CODE} in {filename}: {first}"));
         }
+
+        program.body.retain(|stmt| {
+            let Statement::ImportDeclaration(import) = stmt else {
+                return true;
+            };
+            let now_empty = import.specifiers.as_ref().is_none_or(|s| s.is_empty());
+            !now_empty || !specifier_bearing_imports.contains(&import.span)
+        });
     }
 
     let mut state = State::new(options, source_text.to_string());
@@ -210,6 +236,19 @@ fn run(
 
     if let Some(message) = state.error.take() {
         return Err(message);
+    }
+
+    // Both of these run after worklet extraction so that they only touch code
+    // left in the host file — the Babel plugin visits `CallExpression` and
+    // `JSXAttribute` top-down, which likewise never reaches inside an already
+    // extracted worklet body.
+    if state.opts.substitute_web_platform_checks.unwrap_or(false) {
+        web_optimization::substitute_web_platform_checks(&mut program, builder);
+    }
+    if !state.opts.disable_inline_styles_warning.unwrap_or(false)
+        && !utils::is_release(state.opts.env_name.as_deref())
+    {
+        inline_styles_warning::process_inline_styles_warning(&mut program, builder);
     }
 
     bundle_mode::enable_flag(&mut program, builder, filename);

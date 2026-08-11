@@ -306,3 +306,151 @@ test('worklet-only directives are stripped from every nested expression position
   assert.match(content, /return 3;/);
   assert.match(content, /return a \+ b \+ c;/);
 });
+
+test('object of callbacks reached through an identifier gets workletized', () => {
+  const input = `
+    import { useAnimatedScrollHandler } from 'react-native-reanimated';
+    const handlers = { onScroll(e) { console.log(e); } };
+    function A() { return useAnimatedScrollHandler(handlers); }
+  `;
+  const { code, files } = transform(input, 'test.js', {});
+  assert.match(code, /onScroll: require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
+  assert.equal(files.length, 1);
+});
+
+test('nested worklet behind a non-worklet function propagates its closure', () => {
+  const input = `
+    const C = 1;
+    function outer() { 'worklet';
+      function h() { const i = () => { 'worklet'; return C; }; return i(); }
+      return h();
+    }
+  `;
+  const { code, files } = transform(input, 'test.js', {});
+  assert.match(code, /\.default\(\{ C \}\)/);
+  const outer = files.find((f) => f.content.includes('outer_'));
+  assert.match(outer.content, /outer\.__closure = \{ C \}/);
+});
+
+test('unbound identifiers are captured unless they are known globals', () => {
+  const input = `function f() { 'worklet'; return globalStuff(Math.max(console.log(1))); }`;
+  const { files } = transform(input, 'test.js', {});
+  assert.match(joinedFiles(files), /f\.__closure = \{ globalStuff \}/);
+});
+
+test('custom globals are not captured', () => {
+  const input = `function f() { 'worklet'; return myHostFn(); }`;
+  const { files } = transform(input, 'test.js', { globals: ['myHostFn'] });
+  assert.match(joinedFiles(files), /f\.__closure = \{\}/);
+});
+
+test('strictGlobal captures nothing unbound', () => {
+  const input = `function f() { 'worklet'; return globalStuff(); }`;
+  const { files } = transform(input, 'test.js', { strictGlobal: true });
+  assert.match(joinedFiles(files), /f\.__closure = \{\}/);
+});
+
+test('an object with an accessor is an implicit context object', () => {
+  const input = `'worklet';\nconst obj = { get foo() { return this.x; } };`;
+  const { code } = transform(input, 'test.js', {});
+  assert.match(code, /__workletContextObjectFactory/);
+});
+
+test('substituteWebPlatformChecks replaces platform checks outside worklets', () => {
+  const input = `const a = isWeb();\nconst b = shouldBeUseWeb();`;
+  const { code } = transform(input, 'test.js', {
+    substituteWebPlatformChecks: true,
+  });
+  assert.match(code, /const a = true/);
+  assert.match(code, /const b = true/);
+});
+
+test('substituteWebPlatformChecks is off by default', () => {
+  const { code } = transform(`const a = isWeb();`, 'test.js', {});
+  assert.match(code, /const a = isWeb\(\)/);
+});
+
+test('inline style shared value reads get a dev warning', () => {
+  const input = `const C = () => <View style={{ width: sv.value }} />;`;
+  const { code } = transform(input, 'test.jsx', {});
+  assert.match(code, /getUseOfValueInStyleWarning/);
+});
+
+test('disableInlineStylesWarning suppresses the warning', () => {
+  const input = `const C = () => <View style={{ width: sv.value }} />;`;
+  const { code } = transform(input, 'test.jsx', {
+    disableInlineStylesWarning: true,
+  });
+  assert.doesNotMatch(code, /getUseOfValueInStyleWarning/);
+});
+
+test('a name bound inside the outer worklet is not force-captured by it', () => {
+  const input = `
+    function outer() { 'worklet';
+      function mid(p) { return () => { 'worklet'; return p; }; }
+      return mid;
+    }
+  `;
+  const { code, files } = transform(input, 'test.js', {});
+  assert.match(code, /\.default\(\{\}\)/);
+  const outer = files.find((f) => f.content.includes('outer_'));
+  assert.match(outer.content, /outer\.__closure = \{\}/);
+});
+
+test('a block-scoped name inside the outer worklet is not force-captured', () => {
+  const input = `
+    function outer() { 'worklet';
+      { const dup = 2; return () => { 'worklet'; return dup; }; }
+    }
+  `;
+  const { files } = transform(input, 'test.js', {});
+  const outer = files.find((f) => f.content.includes('outer_'));
+  assert.match(outer.content, /outer\.__closure = \{\}/);
+});
+
+test('assignment targets are written, not referenced', () => {
+  const input = `let m = 0;\nfunction f() { 'worklet'; m = 1; }`;
+  const { files } = transform(input, 'test.js', {});
+  assert.match(joinedFiles(files), /f\.__closure = \{\}/);
+});
+
+test('an unbound assignment target is not captured either', () => {
+  const input = `function f() { 'worklet'; unboundA = 1; }`;
+  const { code } = transform(input, 'test.js', {});
+  assert.match(code, /\.default\(\{\}\)/);
+});
+
+test('for-of targets are still referenced', () => {
+  const input = `let m;\nfunction f() { 'worklet'; for (m of [1]) {} }`;
+  const { files } = transform(input, 'test.js', {});
+  assert.match(joinedFiles(files), /f\.__closure = \{ m \}/);
+});
+
+test('destructuring assignment captures defaults but not bindings', () => {
+  const input = `let m, d = 5;\nfunction f() { 'worklet'; ({ m = d } = {}); }`;
+  const { files } = transform(input, 'test.js', {});
+  const closure = joinedFiles(files).match(/f\.__closure = \{[^}]*\}/)[0];
+  assert.match(closure, /d/);
+  assert.doesNotMatch(closure, /\bm\b/);
+});
+
+test('a worklet in a computed method key is workletized', () => {
+  const input = `const g = 1;\nconst o = { [(() => { 'worklet'; return g; })()]() { return 1; } };`;
+  const { code, files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 1);
+  assert.match(code, /\[require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default\(\{ g \}\)\(\)\]/);
+});
+
+test('an import left empty by type-specifier stripping is dropped', () => {
+  const { code } = transform(
+    `import { type Props } from 'some-pkg';\nconst a = 1;`,
+    'test.ts',
+    {}
+  );
+  assert.doesNotMatch(code, /import "some-pkg"/);
+});
+
+test('a genuine side-effect import survives', () => {
+  const { code } = transform(`import 'side-effect';\nconst a = 1;`, 'test.ts', {});
+  assert.match(code, /import "side-effect"/);
+});

@@ -17,6 +17,23 @@ export interface PluginOptions {
     moduleNames?: string[];
     relativePaths?: string[];
   };
+  /**
+   * Extra identifiers that are never captured into `__closure` — host functions
+   * and the like. Added on top of the default global allowlist.
+   */
+  globals?: string[];
+  /**
+   * When set, no unbound identifier is captured into `__closure` at all and the
+   * `globals` option is ignored.
+   */
+  strictGlobal?: boolean;
+  /** Replaces `isWeb()` and `shouldBeUseWeb()` calls with `true`. */
+  substituteWebPlatformChecks?: boolean;
+  /**
+   * Suppresses the dev-only `console.warn` injected around shared values read
+   * directly in inline `style` props.
+   */
+  disableInlineStylesWarning?: boolean;
   envName?: string;
   pluginVersion?: string;
   workletsPackageDir?: string;

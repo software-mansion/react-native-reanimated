@@ -205,8 +205,18 @@ function workletsPluginOxcBabelShim(babelApi, options) {
             state.file.inputMap = { toObject: () => map };
           }
 
+          const parserOpts = state.file.opts.parserOpts || {};
           const newAst = parse(result.code, {
-            sourceType: 'module',
+            sourceType:
+              parserOpts.sourceType ??
+              state.file.opts.sourceType ??
+              'unambiguous',
+            parserOpts: {
+              allowReturnOutsideFunction: parserOpts.allowReturnOutsideFunction,
+              allowAwaitOutsideFunction: parserOpts.allowAwaitOutsideFunction,
+              allowSuperOutsideMethod: parserOpts.allowSuperOutsideMethod,
+              allowUndeclaredExports: parserOpts.allowUndeclaredExports,
+            },
             babelrc: false,
             configFile: false,
             plugins: reparseSyntaxPlugins(filename),

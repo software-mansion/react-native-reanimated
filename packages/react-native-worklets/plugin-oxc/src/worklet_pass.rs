@@ -20,6 +20,7 @@ use crate::auto_detect::{
     GESTURE_HANDLER_OBJECT_HOOKS, is_gesture_object_event_callback_method,
     is_layout_animation_callback_method,
 };
+use crate::closure::InjectedRef;
 use crate::state::State;
 use crate::utils::{has_worklet_directive, inject_worklet_directive};
 use crate::worklet_factory::{WorkletInput, make_worklet_factory};
@@ -107,7 +108,6 @@ pub fn process_program<'a>(
             allocator,
             filename,
             injected_refs_stack: Vec::new(),
-            last_injected_refs: HashSet::new(),
         };
         pass.visit_program(program);
     }
@@ -121,21 +121,40 @@ struct WorkletPass<'a, 'b> {
     builder: AstBuilder<'a>,
     allocator: &'a Allocator,
     filename: &'b str,
-    injected_refs_stack: Vec<HashSet<String>>,
-    last_injected_refs: HashSet<String>,
+    injected_refs_stack: Vec<HashSet<InjectedRef>>,
 }
 
 impl<'a, 'b> WorkletPass<'a, 'b> {
-    fn record_injected_refs<I: IntoIterator<Item = String>>(&mut self, names: I) {
+    fn record_injected_refs<I: IntoIterator<Item = InjectedRef>>(&mut self, refs: I) {
         if let Some(set) = self.injected_refs_stack.last_mut() {
-            set.extend(names);
+            set.extend(refs);
         }
+    }
+
+    /// Walks a function in its own frame and hands the frame back instead of
+    /// merging it into the parent. Callers that workletize the function pass it
+    /// as `force_capture`; callers that don't must merge it into the parent
+    /// themselves, otherwise the synthesized factory-call arguments left in the
+    /// function body reference names nobody captures.
+    fn walk_function_scoped(&mut self, func: &mut Function<'a>) -> HashSet<InjectedRef> {
+        self.injected_refs_stack.push(HashSet::new());
+        walk_mut::walk_function(self, func, ScopeFlags::Function);
+        self.injected_refs_stack.pop().unwrap_or_default()
+    }
+
+    fn walk_arrow_scoped(
+        &mut self,
+        arrow: &mut ArrowFunctionExpression<'a>,
+    ) -> HashSet<InjectedRef> {
+        self.injected_refs_stack.push(HashSet::new());
+        walk_mut::walk_arrow_function_expression(self, arrow);
+        self.injected_refs_stack.pop().unwrap_or_default()
     }
 
     fn build_factory(
         &mut self,
         input: WorkletInput<'a, '_>,
-        injected: &HashSet<String>,
+        injected: &HashSet<InjectedRef>,
     ) -> (Expression<'a>, String) {
         let out = make_worklet_factory(
             input,
@@ -146,7 +165,7 @@ impl<'a, 'b> WorkletPass<'a, 'b> {
             self.filename,
             injected,
         );
-        self.record_injected_refs(out.injected_ref_names.iter().cloned());
+        self.record_injected_refs(out.injected_refs.iter().cloned());
         (out.factory_call, out.react_name)
     }
 
@@ -154,7 +173,7 @@ impl<'a, 'b> WorkletPass<'a, 'b> {
         &mut self,
         func: &Function<'a>,
         self_name: Option<&str>,
-        injected: &HashSet<String>,
+        injected: &HashSet<InjectedRef>,
     ) -> Option<(Expression<'a>, String)> {
         let body = func.body.as_ref()?;
         if !has_worklet_directive(body) {
@@ -208,23 +227,25 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
     fn visit_function(&mut self, func: &mut Function<'a>, flags: ScopeFlags) {
         self.injected_refs_stack.push(HashSet::new());
         walk_mut::walk_function(self, func, flags);
-        self.last_injected_refs = self.injected_refs_stack.pop().unwrap_or_default();
+        let popped = self.injected_refs_stack.pop().unwrap_or_default();
+        self.record_injected_refs(popped);
     }
 
     fn visit_arrow_function_expression(&mut self, arrow: &mut ArrowFunctionExpression<'a>) {
         self.injected_refs_stack.push(HashSet::new());
         walk_mut::walk_arrow_function_expression(self, arrow);
-        self.last_injected_refs = self.injected_refs_stack.pop().unwrap_or_default();
+        let popped = self.injected_refs_stack.pop().unwrap_or_default();
+        self.record_injected_refs(popped);
     }
 
     fn visit_expression(&mut self, expr: &mut Expression<'a>) {
         match expr {
             Expression::ArrowFunctionExpression(arrow) => {
-                self.visit_arrow_function_expression(arrow);
+                let injected = self.walk_arrow_scoped(arrow);
                 if !has_worklet_directive(&arrow.body) {
+                    self.record_injected_refs(injected);
                     return;
                 }
-                let injected = std::mem::take(&mut self.last_injected_refs);
                 let input = WorkletInput {
                     params: &arrow.params,
                     body: &arrow.body,
@@ -241,13 +262,14 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
                 *expr = factory_call;
             }
             Expression::FunctionExpression(func) => {
-                self.visit_function(func, ScopeFlags::Function);
-                let injected = std::mem::take(&mut self.last_injected_refs);
+                let injected = self.walk_function_scoped(func);
                 let name = func.id.as_ref().map(|id| id.name.to_string());
                 if let Some((factory_call, _)) =
                     self.workletize_function(func, name.as_deref(), &injected)
                 {
                     *expr = factory_call;
+                } else {
+                    self.record_injected_refs(injected);
                 }
             }
             _ => walk_mut::walk_expression(self, expr),
@@ -265,12 +287,12 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
             maybe_inject_referenced_directive(binding_symbol, body, self.state, self.builder);
         }
 
-        self.visit_function(func, ScopeFlags::Function);
-        let injected = std::mem::take(&mut self.last_injected_refs);
+        let injected = self.walk_function_scoped(func);
         let name = func.id.as_ref().map(|id| id.name.to_string());
         let Some((factory_call, react_name)) =
             self.workletize_function(func, name.as_deref(), &injected)
         else {
+            self.record_injected_refs(injected);
             return;
         };
         let decl_name = name.unwrap_or(react_name);
@@ -283,11 +305,12 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
             return;
         };
 
-        self.visit_function(func, ScopeFlags::Function);
-        let injected = std::mem::take(&mut self.last_injected_refs);
+        let injected = self.walk_function_scoped(func);
         let name = func.id.as_ref().map(|id| id.name.to_string());
         if let Some((factory_call, _)) = self.workletize_function(func, name.as_deref(), &injected) {
             decl.declaration = ExportDefaultDeclarationKind::from(factory_call);
+        } else {
+            self.record_injected_refs(injected);
         }
     }
 
@@ -297,12 +320,12 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
             return;
         };
 
-        self.visit_function(func, ScopeFlags::Function);
-        let injected = std::mem::take(&mut self.last_injected_refs);
+        let injected = self.walk_function_scoped(func);
         let name = func.id.as_ref().map(|id| id.name.to_string());
         let Some((factory_call, react_name)) =
             self.workletize_function(func, name.as_deref(), &injected)
         else {
+            self.record_injected_refs(injected);
             return;
         };
         let decl_name = name.unwrap_or(react_name);
@@ -314,13 +337,16 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
     }
 
     fn visit_object_property(&mut self, prop: &mut ObjectProperty<'a>) {
-        let Expression::FunctionExpression(func) = &mut prop.value else {
+        if !matches!(prop.value, Expression::FunctionExpression(_)) {
             walk_mut::walk_object_property(self, prop);
             return;
-        };
+        }
         // An accessor can't be rewritten into a data property without losing
         // its get/set semantics, so refuse it the way the Babel plugin does.
         if prop.kind != PropertyKind::Init {
+            let Expression::FunctionExpression(func) = &prop.value else {
+                unreachable!()
+            };
             let is_worklet = func
                 .body
                 .as_ref()
@@ -353,13 +379,20 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
             PropertyKey::StaticIdentifier(id) => Some(id.name.to_string()),
             _ => None,
         };
-        self.visit_function(func, ScopeFlags::Function);
-        let injected = std::mem::take(&mut self.last_injected_refs);
+        if prop.computed {
+            self.visit_property_key(&mut prop.key);
+        }
+        let Expression::FunctionExpression(func) = &mut prop.value else {
+            unreachable!()
+        };
+        let injected = self.walk_function_scoped(func);
         if let Some((factory_call, _)) =
             self.workletize_function(func, method_name.as_deref(), &injected)
         {
             prop.value = factory_call;
             prop.method = false;
+        } else {
+            self.record_injected_refs(injected);
         }
     }
 
@@ -561,7 +594,21 @@ fn maybe_inject_referenced_directive<'a>(
     inject_worklet_directive(body, builder);
 }
 
+/// Mirrors `forEachWorkletizableFunction` with `acceptObject: true` — the
+/// referenced binding may resolve to an object literal of callbacks rather than
+/// to a function.
 fn inject_directive_into_expression<'a>(expr: &mut Expression<'a>, builder: AstBuilder<'a>) {
+    if let Expression::ObjectExpression(obj) = expr {
+        inject_worklet_directives_to_object_methods(obj, builder);
+        return;
+    }
+    inject_directive_into_function_expression(expr, builder);
+}
+
+fn inject_directive_into_function_expression<'a>(
+    expr: &mut Expression<'a>,
+    builder: AstBuilder<'a>,
+) {
     match expr {
         Expression::ArrowFunctionExpression(arrow) => {
             inject_worklet_directive(&mut arrow.body, builder);
@@ -595,7 +642,7 @@ fn inject_worklet_directives_to_object_methods<'a>(
 ) {
     for prop in obj.properties.iter_mut() {
         if let ObjectPropertyKind::ObjectProperty(p) = prop {
-            inject_directive_into_expression(&mut p.value, builder);
+            inject_directive_into_function_expression(&mut p.value, builder);
         }
     }
 }

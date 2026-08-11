@@ -11,7 +11,7 @@ use oxc_span::SPAN;
 use oxc_syntax::number::NumberBase;
 use oxc_syntax::scope::ScopeId;
 
-use crate::closure::{ClosureResult, closure_for_function};
+use crate::closure::{ClosureResult, InjectedRef, closure_for_function};
 use crate::naming::{WorkletNames, make_worklet_name};
 use crate::naming::worklet_hash;
 use crate::state::State;
@@ -41,7 +41,7 @@ pub struct WorkletInput<'a, 'b> {
 pub struct FactoryOutput<'a> {
     pub factory_call: Expression<'a>,
     pub react_name: String,
-    pub injected_ref_names: Vec<String>,
+    pub injected_refs: Vec<InjectedRef>,
 }
 
 pub fn make_worklet_factory<'a>(
@@ -51,7 +51,7 @@ pub fn make_worklet_factory<'a>(
     builder: AstBuilder<'a>,
     allocator: &'a Allocator,
     filename: &str,
-    force_capture: &std::collections::HashSet<String>,
+    force_capture: &std::collections::HashSet<InjectedRef>,
 ) -> FactoryOutput<'a> {
     let WorkletNames {
         worklet_name,
@@ -131,16 +131,22 @@ pub fn make_worklet_factory<'a>(
         build_require_factory_call(builder, &file_path, &closure.closure_variables);
     state.emitted_files.push((file_path, file_content));
 
-    let mut injected_ref_names: Vec<String> =
-        Vec::with_capacity(closure.closure_variables.len());
-    for name in &closure.closure_variables {
-        injected_ref_names.push(name.clone());
-    }
+    // The call we just built lands where the worklet used to sit, so its
+    // arguments resolve in the worklet's parent scope, not its own.
+    let call_scope = scoping
+        .scope_ancestors(input.function_scope_id)
+        .nth(1)
+        .unwrap_or_else(|| scoping.root_scope_id());
+    let injected_refs = closure
+        .closure_variables
+        .iter()
+        .map(|name| (name.clone(), call_scope))
+        .collect();
 
     FactoryOutput {
         factory_call,
         react_name,
-        injected_ref_names,
+        injected_refs,
     }
 }
 

@@ -67,7 +67,7 @@ pub fn is_implicit_context_object(obj: &ObjectExpression<'_>) -> bool {
         let ObjectPropertyKind::ObjectProperty(prop) = prop else {
             return false;
         };
-        if !prop.method {
+        if !is_object_method(prop) {
             return false;
         }
         let Expression::FunctionExpression(func) = &prop.value else {
@@ -79,6 +79,11 @@ pub fn is_implicit_context_object(obj: &ObjectExpression<'_>) -> bool {
             probe.found
         })
     })
+}
+
+/// Babel's `isObjectMethod()` covers shorthand methods and accessors alike.
+pub fn is_object_method(prop: &oxc_ast::ast::ObjectProperty<'_>) -> bool {
+    prop.method || prop.kind != PropertyKind::Init
 }
 
 fn is_marker_property(prop: &ObjectPropertyKind<'_>) -> bool {
