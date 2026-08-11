@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.animation.TimeInterpolator
+import android.util.FloatProperty
 import android.view.Choreographer
 import android.view.View
 import com.facebook.react.bridge.ReactApplicationContext
@@ -36,10 +37,8 @@ internal class CSSPlatformTransitionsManager(
     )
 
     /**
-     * Returns whether the property is accepted for native playback, decided before the
-     * hop to the UI thread. Playback itself can still fail there if the View never
-     * mounts, and there is no path back to demote the property afterwards - the same
-     * contract the Apple backend has.
+     * Whether the property is accepted for native playback. Playback can still fail later
+     * if the View never mounts, and there is no path back to demote it.
      */
     fun animateTransition(
         viewTag: Int,
@@ -55,7 +54,6 @@ internal class CSSPlatformTransitionsManager(
         val writer = cssPropertyWriterFor(propertyName) ?: return false
         val context = reactContext.get() ?: return false
         val scale = DurationScale.effectiveScale(context)
-        // Scale 0 means animations are off, and ValueAnimator would finish instantly.
         if (scale <= 0f) return false
 
         UiThreadUtil.runOnUiThread {
@@ -81,17 +79,15 @@ internal class CSSPlatformTransitionsManager(
     ) {
         UiThreadUtil.runOnUiThread {
             val key = Key(viewTag, propertyName)
-            // Also drops any queued retry for this key.
             startTokens.remove(key)
             animators.remove(key)?.cancel()
         }
     }
 
     /**
-     * A tag can be registered before its View exists, with the mount still in flight.
-     * The start timestamp is absolute, so a late start seeks rather than drifting, and
-     * retrying needs no arbitrary timeout: once the transition would have ended there
-     * is nothing left to play.
+     * A tag can be registered before its View mounts. The absolute start timestamp makes a
+     * late start seek rather than drift, and retrying stops once the transition would have
+     * ended, so it needs no timeout.
      */
     private fun beginWhenMounted(
         key: Key,
@@ -110,7 +106,7 @@ internal class CSSPlatformTransitionsManager(
     private fun start(
         view: View,
         key: Key,
-        writer: android.util.FloatProperty<View>,
+        writer: FloatProperty<View>,
         fromValue: Double,
         toValue: Double,
         durationMs: Double,
@@ -118,16 +114,14 @@ internal class CSSPlatformTransitionsManager(
         interpolator: TimeInterpolator,
         scale: Float,
     ) {
-        // On interruption resume from what is on screen: fromValue is the committed
-        // style value, so starting there would snap the view back to where the
-        // cancelled transition began.
+        // Resume from what is on screen: fromValue is the committed style, so starting
+        // there would snap back to where the cancelled transition began.
         val interrupted = animators.remove(key)
         val startValue = if (interrupted != null) writer.get(view) else fromValue.toFloat()
         interrupted?.cancel()
 
-        // React Native has already committed the target, and ObjectAnimator writes nothing
-        // until its first frame - which transition-delay defers. Without this the view
-        // would show the target for the whole delay and then jump back.
+        // The target is already committed and ObjectAnimator writes nothing until its
+        // first frame, so without this the view shows the target for the whole delay.
         writer.setValue(view, startValue)
 
         val animator = ObjectAnimator.ofFloat(view, writer, startValue, toValue.toFloat())
@@ -136,27 +130,26 @@ internal class CSSPlatformTransitionsManager(
         animator.addListener(
             object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
-                    // A replacement may already own the key.
                     if (animators[key] === animation) animators.remove(key)
                 }
             },
         )
-        // ObjectAnimator has no absolute start time, so resolve one against the clock
-        // here rather than in C++: the hop to this thread and the wait for the next
-        // frame would otherwise shift the whole timeline late.
+        // ObjectAnimator has no absolute start time; resolving it here rather than in C++
+        // keeps the hop to this thread from shifting the timeline late.
         val elapsedMs = animationTimestamp().toDouble() - startTimestampMs
         if (elapsedMs < 0) animator.startDelay = (-elapsedMs / scale).toLong()
-        animator.start()
-        animators[key] = animator
         if (elapsedMs > 0 && durationMs > 0) {
+            // Seek before starting: start() gates on `mSeekFraction >= 0` when deciding
+            // whether to begin immediately, so a later seek races the first frame.
             animator.setCurrentFraction((elapsedMs / durationMs).toFloat().coerceIn(0f, 1f))
         }
+        animator.start()
+        animators[key] = animator
     }
 
     /**
-     * PathInterpolator flattens its curve natively on construction, so cache it. The
-     * type is part of the key because different families can share a point list:
-     * linear(0.5, 1) and cubicBezier(0, 1, 0.5, 1) both normalize to [0,1],[0.5,1].
+     * PathInterpolator flattens its curve on construction, so cache it. The type belongs in
+     * the key because different families can share a point list.
      */
     private fun interpolatorFor(
         type: Int,
