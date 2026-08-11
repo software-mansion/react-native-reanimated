@@ -1,8 +1,10 @@
 #pragma once
 
+#include <react/debug/react_native_assert.h>
 #include <react/renderer/core/ReactPrimitives.h>
 
 #include <cstdint>
+#include <limits>
 #include <string>
 #include <utility>
 
@@ -24,8 +26,11 @@ enum class CSSEventType : std::uint8_t {
 
 using CSSEventMask = std::uint8_t;
 
-constexpr bool hasListener(const CSSEventMask mask, const CSSEventType type) {
-  return (mask & (1U << static_cast<std::uint8_t>(type))) != 0;
+inline bool hasListener(const CSSEventMask mask, const CSSEventType type) {
+  const auto bit = static_cast<std::uint8_t>(type);
+  // A type that does not fit the mask would silently never have a listener.
+  react_native_assert(bit < std::numeric_limits<CSSEventMask>::digits);
+  return (mask & (1U << bit)) != 0;
 }
 
 struct CSSEvent {
