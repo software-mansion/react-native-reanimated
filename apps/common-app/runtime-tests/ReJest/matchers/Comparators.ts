@@ -1,9 +1,20 @@
+import { PixelRatio } from 'react-native';
+
 import { colorsAreClose, isColor } from '../utils/colorUtils';
 
 import type { TestValue, ValidPropNames } from '../types';
 import { ComparisonMode, isValidPropName } from '../types';
 
 const DISTANCE_TOLERANCE = 0.5;
+
+const YOGA_PIXEL_GRID_ROUNDING_SLACK = 0.0001;
+
+const PIXEL_GRID_ROUNDED_EDGE_COUNT: Partial<Record<ValidPropNames, number>> = {
+  top: 1,
+  left: 1,
+  width: 2,
+  height: 2,
+};
 
 const COMPARATORS: {
   [Key: string]: (expected: TestValue, value: TestValue) => boolean;
@@ -44,11 +55,7 @@ const COMPARATORS: {
   },
 
   [ComparisonMode.PIXEL]: (expected, value) => {
-    const valueAsNumber = Number(value);
-    return (
-      !isNaN(valueAsNumber) &&
-      Math.abs(valueAsNumber - Number(expected)) < DISTANCE_TOLERANCE
-    );
+    return comparePixelValues(expected, value, DISTANCE_TOLERANCE);
   },
 
   [ComparisonMode.FLOAT_DISTANCE]: (expected, value) => {
@@ -132,6 +139,15 @@ export function getComparator(mode: ComparisonMode) {
   return COMPARATORS[mode];
 }
 
+export function getNativeComparator(mode: ComparisonMode, prop: string) {
+  if (mode !== ComparisonMode.PIXEL || !isValidPropName(prop)) {
+    return COMPARATORS[mode];
+  }
+  const tolerance = getPixelGridTolerance(prop);
+  return (expected: TestValue, value: TestValue) =>
+    comparePixelValues(expected, value, tolerance);
+}
+
 export function getComparisonModeForProp(prop: ValidPropNames): ComparisonMode {
   const propToComparisonModeDict = {
     zIndex: ComparisonMode.NUMBER,
@@ -144,4 +160,27 @@ export function getComparisonModeForProp(prop: ValidPropNames): ComparisonMode {
     boxShadow: ComparisonMode.ARRAY,
   };
   return propToComparisonModeDict[prop];
+}
+
+function getPixelGridTolerance(prop: ValidPropNames) {
+  const roundedEdgeCount = PIXEL_GRID_ROUNDED_EDGE_COUNT[prop];
+  if (roundedEdgeCount === undefined) {
+    return DISTANCE_TOLERANCE;
+  }
+  const pixelGridTolerance =
+    (roundedEdgeCount * (DISTANCE_TOLERANCE + YOGA_PIXEL_GRID_ROUNDING_SLACK)) /
+    PixelRatio.get();
+  return Math.max(DISTANCE_TOLERANCE, pixelGridTolerance);
+}
+
+function comparePixelValues(
+  expected: TestValue,
+  value: TestValue,
+  tolerance: number
+) {
+  const valueAsNumber = Number(value);
+  return (
+    !isNaN(valueAsNumber) &&
+    Math.abs(valueAsNumber - Number(expected)) < tolerance
+  );
 }
