@@ -1,3 +1,4 @@
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 
 #include <react/debug/react_native_assert.h>
@@ -32,11 +33,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   LOG(INFO) << std::endl;
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " " << surfaceId << std::endl;
 #endif
+  react_native_assert(surfaceId == surfaceId_ && "pull routed to the wrong surface's proxy");
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
-  auto &surfaceCtx = getSurfaceContext(surfaceId);
-  auto &deadNodes = surfaceCtx.deadNodes;
 
   std::vector<std::shared_ptr<MutationNode>> roots;
   std::unordered_map<Tag, Tag> movedViews;
@@ -70,12 +70,13 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
     return mutation.type == ShadowViewMutation::Remove && mutation.parentTag == surfaceId;
   });
   if (removesRootChildren) {
-    surfaceDropped = surfacesToRemove_.erase(surfaceId) != 0;
+    surfaceDropped = surfaceToRemove_;
+    surfaceToRemove_ = false;
   }
   const bool flushDeadNodes = shouldFlushDeadNodes(surfaceDropped);
-  handleRemovals(filteredMutations, roots, deadNodes, surfaceDropped, flushDeadNodes);
+  handleRemovals(filteredMutations, roots, deadNodes_, surfaceDropped, flushDeadNodes);
 #ifdef ANDROID
-  maybeScheduleCleanupPull(surfaceCtx, surfaceId, flushDeadNodes);
+  maybeScheduleCleanupPull(flushDeadNodes);
 #endif // ANDROID
 
   handleUpdatesAndEnterings(filteredMutations, movedViews, mutations, propsParserContext, surfaceId);
@@ -116,7 +117,6 @@ void LayoutAnimationsProxy_Legacy::reconcileContradictedRemovals(
     ShadowViewMutationList &mutations,
     ShadowViewMutationList &filteredMutations,
     SurfaceId surfaceId) const {
-  auto &deadNodes = getSurfaceContext(surfaceId).deadNodes;
   for (auto &mutation : mutations) {
     if (mutation.type != ShadowViewMutation::Type::Create && mutation.type != ShadowViewMutation::Type::Insert) {
       continue;
@@ -134,7 +134,7 @@ void LayoutAnimationsProxy_Legacy::reconcileContradictedRemovals(
     // the stale view before React's Create/Insert re-registers the same tag.
     endAnimationsRecursively(node, filteredMutations);
     maybeDropAncestors(node->unflattenedParent, node, filteredMutations);
-    deadNodes.erase(node);
+    deadNodes_.erase(node);
   }
 }
 
@@ -151,21 +151,18 @@ bool LayoutAnimationsProxy_Legacy::shouldFlushDeadNodes([[maybe_unused]] const b
 #ifdef ANDROID
 // We schedule a pullTransaction call to happen on the JS thread so it can safely remove dead nodes after exiting
 // finished
-void LayoutAnimationsProxy_Legacy::maybeScheduleCleanupPull(
-    SurfaceContext &surfaceCtx,
-    const SurfaceId surfaceId,
-    const bool flushedDeadNodes) const {
+void LayoutAnimationsProxy_Legacy::maybeScheduleCleanupPull(const bool flushedDeadNodes) const {
   if (flushedDeadNodes) {
-    surfaceCtx.cleanupPullScheduled = false;
-  } else if (!surfaceCtx.deadNodes.empty() && !surfaceCtx.cleanupPullScheduled) {
-    surfaceCtx.cleanupPullScheduled = true;
-    scheduleDeferredCleanupPull(surfaceId);
+    cleanupPullScheduled_ = false;
+  } else if (!deadNodes_.empty() && !cleanupPullScheduled_) {
+    cleanupPullScheduled_ = true;
+    scheduleDeferredCleanupPull();
   }
 }
 
-void LayoutAnimationsProxy_Legacy::scheduleDeferredCleanupPull(SurfaceId surfaceId) const {
+void LayoutAnimationsProxy_Legacy::scheduleDeferredCleanupPull() const {
   const std::weak_ptr<UIManager> weakUiManager = uiManager_;
-  jsInvoker_->invokeAsync([weakUiManager, surfaceId](jsi::Runtime &) {
+  jsInvoker_->invokeAsync([weakUiManager, surfaceId = surfaceId_](jsi::Runtime &) {
     auto uiManager = weakUiManager.lock();
     if (!uiManager) {
       return;
@@ -240,8 +237,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
   }
   auto mutationNode = std::static_pointer_cast<MutationNode>(node);
   mutationNode->state = ExitingState_Legacy::DEAD;
-  auto &deadNodes = getSurfaceContext(surfaceId).deadNodes;
-  deadNodes.insert(mutationNode);
+  deadNodes_.insert(mutationNode);
 
   return surfaceId;
 }
@@ -1076,37 +1072,53 @@ inline bool MutationNode::isMutationNode() {
   return true;
 }
 
-void LayoutAnimationsProxy_Legacy::startSurface(const SurfaceId surfaceId) {
+// Called by the registry right before the instance is dropped. The teardown
+// transaction already cancelled animations for the views it removed, but a
+// UI-thread callback or a deferred Android start can land between that pull
+// and the unmount notification. The instance is about to die, so the JS-side
+// cancellation can't go through weak_from_this like maybeCancelAnimation does.
+void LayoutAnimationsProxy_Legacy::cancelAllAnimations() const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  surfaceContext_.try_emplace(surfaceId);
-}
-
-SurfaceContext &LayoutAnimationsProxy_Legacy::getSurfaceContext(const SurfaceId surfaceId) const {
-  // Entries live for the proxy's lifetime (like SurfaceManager's per-surface
-  // state - proper per-surface cleanup is part of the per-surface proxy
-  // follow-up). Every caller runs after startSurface registered the surface,
-  // so a miss here means a broken invariant, not a torn-down surface.
-  const auto it = surfaceContext_.find(surfaceId);
-  react_native_assert(it != surfaceContext_.end() && "surface must be registered by startSurface");
-  return it->second;
-}
-
-// UIManagerCommitHook
-
-// Surface teardown commits an empty root (SurfaceHandler::stop) before the
-// teardown transaction is pulled — mark it so pullTransaction skips exit
-// animations. Reading the ShadowTreeRegistry here instead would deadlock.
-RootShadowNode::Unshared LayoutAnimationsProxy_Legacy::shadowTreeWillCommit(
-    const ShadowTree &shadowTree,
-    const RootShadowNode::Shared & /*oldRootShadowNode*/,
-    const RootShadowNode::Unshared &newRootShadowNode) noexcept {
-  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  if (newRootShadowNode->getChildren().empty()) {
-    surfacesToRemove_.insert(shadowTree.getSurfaceId());
-  } else {
-    surfacesToRemove_.erase(shadowTree.getSurfaceId());
+#ifdef ANDROID
+  // invalidate animation starts that are scheduled but haven't run yet
+  for (auto &[tag, pendingStart] : pendingStarts_) {
+    pendingStart.handle++;
   }
-  return newRootShadowNode;
+#endif
+  if (layoutAnimations_.empty()) {
+    return;
+  }
+  std::vector<Tag> tags;
+  tags.reserve(layoutAnimations_.size());
+  for (const auto &[tag, layoutAnimation] : layoutAnimations_) {
+    tags.push_back(tag);
+  }
+  layoutAnimations_.clear();
+  maybeSettledAnimationTags_.clear();
+  scheduleOnUI(
+      uiScheduler_,
+      [layoutAnimationsManager = layoutAnimationsManager_, &uiRuntime = uiRuntime_, tags = std::move(tags)]() {
+        for (const auto tag : tags) {
+          layoutAnimationsManager->cancelLayoutAnimation(uiRuntime, tag);
+        }
+      });
+}
+
+void LayoutAnimationsProxy_Legacy::shadowTreeWillCommit(const bool isSurfaceRemoval) {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  surfaceToRemove_ = isSurfaceRemoval;
+}
+
+void LayoutAnimationsProxy_Legacy::surfaceDidUnmount() {
+  cancelAllAnimations();
+}
+
+std::shared_ptr<LayoutAnimationsProxyRegistry> createLayoutAnimationsProxyLegacyRegistry(
+    const LayoutAnimationsProxyDependencies &dependencies) {
+  return std::make_shared<LayoutAnimationsProxyRegistry>(
+      [dependencies](const SurfaceId surfaceId) -> std::shared_ptr<LayoutAnimationsProxyCommon> {
+        return std::make_shared<LayoutAnimationsProxy_Legacy>(surfaceId, dependencies);
+      });
 }
 
 } // namespace reanimated

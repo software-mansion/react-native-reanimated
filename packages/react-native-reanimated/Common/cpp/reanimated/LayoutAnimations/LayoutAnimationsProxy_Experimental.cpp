@@ -1,4 +1,5 @@
 #include <react/renderer/mounting/ShadowViewMutation.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
@@ -15,6 +16,30 @@ namespace reanimated {
 using enum LayoutAnimationType;
 using enum ExitingState;
 
+std::shared_ptr<LayoutAnimationsProxyRegistry> createLayoutAnimationsProxyExperimentalRegistry(
+    const LayoutAnimationsProxyDependencies &dependencies) {
+  return std::make_shared<LayoutAnimationsProxyRegistry>(
+      [dependencies](const SurfaceId surfaceId) -> std::shared_ptr<LayoutAnimationsProxyCommon> {
+        return std::make_shared<LayoutAnimationsProxy_Experimental>(surfaceId, dependencies);
+      });
+}
+
+LayoutAnimationsProxy_Experimental::LayoutAnimationsProxy_Experimental(
+    const SurfaceId surfaceId,
+    const LayoutAnimationsProxyDependencies &dependencies)
+    : LayoutAnimationsProxyCommon(dependencies),
+      sharedTransitionManager_(dependencies.layoutAnimationsManager->getSharedTransitionManager()),
+      surfaceId_(surfaceId) {
+#ifdef __APPLE__
+  forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
+#endif
+  const auto node = std::make_shared<LightNode>();
+  node->current.componentName = "RootView";
+  node->current.tag = surfaceId;
+  node->current.props = std::make_shared<BaseViewProps>();
+  lightNodes_[surfaceId] = node;
+}
+
 // MARK: MountingOverrideDelegate
 
 std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTransaction(
@@ -23,6 +48,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
   ReanimatedSystraceSection d("pullTransaction");
+  react_native_assert(surfaceId == surfaceId_ && "pull routed to the wrong surface's proxy");
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
@@ -261,13 +287,18 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         parent->children.insert(parent->children.begin() + mutation.index, node);
         node->parent = parent;
         const auto tag = mutation.newChildShadowView.tag;
+        bool hasSharedTransition;
+        {
+          auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
+          hasSharedTransition = sharedTransitionManager_->tagToName_.contains(tag);
+        }
         if (moved.contains(tag) && layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
           filteredMutations.push_back(
               ShadowViewMutation::InsertMutation(mutation.parentTag, node->previous, mutation.index));
         } else if (layoutAnimationsManager_->hasLayoutAnimation(tag, ENTERING)) {
           entering_.push_back(node);
           filteredMutations.push_back(mutation);
-        } else if (sharedTransitionManager_->tagToName_.contains(tag) && isInsideInactiveBoundary(node)) {
+        } else if (hasSharedTransition && isInsideInactiveBoundary(node)) {
           filteredMutations.push_back(mutation);
           auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
           filteredMutations.push_back(
@@ -356,9 +387,16 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
   maybeSettledAnimationTags_.insert(tag);
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
-  if (sharedTransitionManager_->tagToName_.contains(tag)) {
-    auto sharedTag = sharedTransitionManager_->tagToName_[tag];
-    sharedTransitionManager_->containerTags_.erase(sharedTag);
+  std::optional<SharedTag> sharedTag;
+  {
+    auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
+    const auto it = sharedTransitionManager_->tagToName_.find(tag);
+    if (it != sharedTransitionManager_->tagToName_.end()) {
+      sharedTag = it->second;
+    }
+  }
+  if (sharedTag) {
+    containerTags_.erase(*sharedTag);
 
     sharedContainersToRemove_.push_back(tag);
     tagsToRestore_.push_back(restoreMap_[tag][1]);
@@ -647,6 +685,40 @@ void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) con
     auto &uiRuntime = strongThis->uiRuntime_;
     strongThis->layoutAnimationsManager_->cancelLayoutAnimation(uiRuntime, tag);
   });
+}
+
+void LayoutAnimationsProxy_Experimental::cancelAllAnimations() const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+#ifdef ANDROID
+  for (auto &[tag, pendingStart] : pendingStarts_) {
+    pendingStart.handle++;
+  }
+#endif
+  std::vector<Tag> tags;
+  tags.reserve(layoutAnimations_.size());
+  for (const auto &[tag, layoutAnimation] : layoutAnimations_) {
+    tags.push_back(tag);
+  }
+  layoutAnimations_.clear();
+  maybeSettledAnimationTags_.clear();
+  if (!tags.empty()) {
+    scheduleOnUI(
+        uiScheduler_,
+        [layoutAnimationsManager = layoutAnimationsManager_, &uiRuntime = uiRuntime_, tags = std::move(tags)]() {
+          for (const auto tag : tags) {
+            layoutAnimationsManager->cancelLayoutAnimation(uiRuntime, tag);
+          }
+        });
+  }
+}
+
+void LayoutAnimationsProxy_Experimental::surfaceDidUnmount() {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  cancelAllAnimations();
+  auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
+  for (const auto &[sharedTag, containerTag] : containerTags_) {
+    sharedTransitionManager_->tagToName_.erase(containerTag);
+  }
 }
 
 void LayoutAnimationsProxy_Experimental::transferConfigFromNativeID(const std::string &nativeIdString, const int tag)

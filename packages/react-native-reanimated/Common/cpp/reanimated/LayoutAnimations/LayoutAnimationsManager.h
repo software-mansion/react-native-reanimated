@@ -10,6 +10,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <stack>
 #include <string>
 #include <unordered_map>
@@ -32,9 +33,10 @@ struct Transition {
 };
 
 struct SharedTransitionManager {
-  std::unordered_map<std::string, Tag> containerTags_;
+  std::mutex mutex_;
   std::unordered_map<Tag, std::string> tagToName_;
   std::unordered_map<Tag, std::string> nativeIDToName_;
+  Tag nextContainerTag_{10000002};
 };
 
 using TransitionMap = std::unordered_map<SharedTag, Transition>;

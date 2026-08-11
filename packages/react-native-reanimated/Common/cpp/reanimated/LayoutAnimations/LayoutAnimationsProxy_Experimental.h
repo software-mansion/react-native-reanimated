@@ -23,6 +23,7 @@
 namespace reanimated {
 
 class ReanimatedModuleProxy;
+class LayoutAnimationsProxyRegistry;
 
 using namespace facebook;
 using namespace reanimated;
@@ -46,9 +47,9 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable TransitionState transitionState_ = TransitionState::NONE;
   mutable SurfaceId transitioningSurfaceId_ = -1;
   mutable std::unordered_map<SurfaceId, std::shared_ptr<LightNode>> topScreen;
-  mutable int containerTag_ = 10000002;
   mutable std::vector<Tag> sharedContainersToRemove_;
   mutable std::unordered_map<Tag, Tag[2]> restoreMap_;
+  mutable std::unordered_map<std::string, Tag> containerTags_;
   mutable std::vector<Tag> tagsToRestore_;
   mutable TransitionMap transitionMap_;
   mutable Transitions transitions_;
@@ -56,40 +57,14 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable Tag closingScreenTag_ = -1;
   mutable std::vector<std::shared_ptr<LightNode>> entering_, layout_, exiting_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
+  const SurfaceId surfaceId_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::vector<std::shared_ptr<LightNode>> containersToInsert_;
   mutable std::unordered_map<Tag, react::Transform> transformForNode_;
 
   mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
 
-  LayoutAnimationsProxy_Experimental(
-      const std::shared_ptr<LayoutAnimationsManager> &layoutAnimationsManager,
-      const SharedComponentDescriptorRegistry &componentDescriptorRegistry,
-      const std::shared_ptr<const ContextContainer> &contextContainer,
-      jsi::Runtime &uiRuntime,
-      const std::shared_ptr<UIScheduler> &uiScheduler,
-      const std::shared_ptr<UIManager> &uiManager
-#ifdef ANDROID
-      ,
-      const PreserveMountedTagsFunction &filterUnmountedTagsFunction,
-      const std::shared_ptr<CallInvoker> &jsInvoker
-#endif
-      )
-      : LayoutAnimationsProxyCommon(
-            layoutAnimationsManager,
-            componentDescriptorRegistry,
-            contextContainer,
-            uiRuntime,
-            uiScheduler,
-            uiManager
-#ifdef ANDROID
-            ,
-            filterUnmountedTagsFunction,
-            jsInvoker
-#endif
-            ),
-        sharedTransitionManager_(layoutAnimationsManager->getSharedTransitionManager()) {
-  }
+  LayoutAnimationsProxy_Experimental(SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies);
 
   void startEnteringAnimation(const std::shared_ptr<LightNode> &node) const;
   void startExitingAnimation(const std::shared_ptr<LightNode> &node) const;
@@ -130,9 +105,6 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       SurfaceId surfaceId) const;
 
 #ifdef __APPLE__
-  void setForceScreenSnapshotFunction(ForceScreenSnapshotFunction forceScreenSnapshot) {
-    forceScreenSnapshot_ = std::move(forceScreenSnapshot);
-  }
 #endif
 
   void hideTransitioningViews(
@@ -145,8 +117,9 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
   std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) override;
   std::optional<SurfaceId> onGestureCancel() override;
-  void startSurface(const SurfaceId surfaceId) override;
+  void surfaceDidUnmount() override;
 
+  void cancelAllAnimations() const;
   void maybeCancelAnimation(const int tag) const;
 
   std::shared_ptr<LightNode> findActiveBoundary(const std::shared_ptr<LightNode> &node) const;
@@ -214,5 +187,8 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       const TransactionTelemetry &telemetry,
       ShadowViewMutationList mutations) const override;
 };
+
+std::shared_ptr<LayoutAnimationsProxyRegistry> createLayoutAnimationsProxyExperimentalRegistry(
+    const LayoutAnimationsProxyDependencies &dependencies);
 
 } // namespace reanimated

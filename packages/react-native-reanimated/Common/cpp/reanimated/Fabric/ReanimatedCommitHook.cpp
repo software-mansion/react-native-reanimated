@@ -15,37 +15,26 @@ namespace reanimated {
 ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-    const std::shared_ptr<LayoutAnimationsProxyCommon> &layoutAnimationsProxy,
-    const std::shared_ptr<ReanimatedSurfaceTracker> &surfaceTracker)
+    const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
-      layoutAnimationsProxy_(layoutAnimationsProxy),
-      surfaceTracker_(surfaceTracker) {
+      layoutAnimationsProxyRegistry_(layoutAnimationsProxyRegistry) {
   uiManager_->registerCommitHook(*this);
-  // Pick up surfaces that existed before Reanimated initialized. We're not
-  // on a commit stack here, so reading the registry is safe.
   uiManager_->getShadowTreeRegistry().enumerate(
-      [this](const ShadowTree &shadowTree, bool & /*stop*/) { maybeInitializeLayoutAnimations(shadowTree); });
+      [this](const ShadowTree &shadowTree, bool & /*stop*/) { registerLayoutAnimations(shadowTree); });
 }
 
 ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
   uiManager_->unregisterCommitHook(*this);
 }
 
-void ReanimatedCommitHook::maybeInitializeLayoutAnimations(const ShadowTree &shadowTree) {
-  if (!layoutAnimationsProxy_) {
-    return;
+std::shared_ptr<LayoutAnimationsProxyCommon> ReanimatedCommitHook::registerLayoutAnimations(
+    const ShadowTree &shadowTree) {
+  if (!layoutAnimationsProxyRegistry_) {
+    return nullptr;
   }
-  if (!surfaceTracker_->add(shadowTree.getSurfaceId())) {
-    return;
-  }
-  // Don't read the ShadowTreeRegistry here — commits run under its shared
-  // lock and a nested acquisition deadlocks with a queued writer (#8579).
-  // TODO: We should consider registering a new instance of proxy for each surface.
-  // The current approach will encounter problems on platforms where it is more common to have multiple
-  // surfaces.
-  layoutAnimationsProxy_->startSurface(shadowTree.getSurfaceId());
-  shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(layoutAnimationsProxy_);
+
+  return layoutAnimationsProxyRegistry_->registerSurface(shadowTree);
 }
 
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
@@ -55,7 +44,9 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     const ShadowTreeCommitOptions &commitOptions) noexcept {
   ReanimatedSystraceSection s("ReanimatedCommitHook::shadowTreeWillCommit");
 
-  maybeInitializeLayoutAnimations(shadowTree);
+  if (const auto proxy = registerLayoutAnimations(shadowTree)) {
+    proxy->shadowTreeWillCommit(newRootShadowNode->getChildren().empty());
+  }
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     return newRootShadowNode;

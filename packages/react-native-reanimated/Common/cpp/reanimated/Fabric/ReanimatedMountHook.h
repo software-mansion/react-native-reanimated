@@ -1,9 +1,9 @@
 #pragma once
 
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
-#include <reanimated/Fabric/ReanimatedSurfaceTracker.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 
 #include <react/renderer/uimanager/UIManagerMountHook.h>
 
@@ -19,7 +19,7 @@ class ReanimatedMountHook : public UIManagerMountHook {
       const std::shared_ptr<UIManager> &uiManager,
       const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
       const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
-      const std::shared_ptr<ReanimatedSurfaceTracker> &surfaceTracker,
+      const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry,
       const std::function<void()> &requestFlush);
   ~ReanimatedMountHook() noexcept override;
 
@@ -31,7 +31,7 @@ class ReanimatedMountHook : public UIManagerMountHook {
   const std::shared_ptr<UIManager> uiManager_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   const std::shared_ptr<css::ViewStylesRepository> viewStylesRepository_;
-  const std::shared_ptr<ReanimatedSurfaceTracker> surfaceTracker_;
+  const std::shared_ptr<LayoutAnimationsProxyRegistry> layoutAnimationsProxyRegistry_;
   const std::function<void()> requestFlush_;
 };
 

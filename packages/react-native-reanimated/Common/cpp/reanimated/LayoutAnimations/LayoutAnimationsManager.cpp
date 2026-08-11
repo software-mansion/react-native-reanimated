@@ -9,6 +9,7 @@ namespace reanimated {
 
 void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
   for (const auto &layoutAnimationConfig : layoutAnimationsBatch) {
     const auto &[tag, type, config, sharedTag] = layoutAnimationConfig;
 
@@ -95,6 +96,7 @@ void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int 
 
 void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, const int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
   const auto config = enteringAnimationsForNativeID_[nativeId];
   if (config) {
     enteringAnimations_.insert_or_assign(tag, config);
