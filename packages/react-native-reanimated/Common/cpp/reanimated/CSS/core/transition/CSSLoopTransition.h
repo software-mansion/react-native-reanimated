@@ -57,6 +57,9 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
 
   folly::dynamic computeCurrentStyle(const std::shared_ptr<const ShadowNode> &shadowNode);
 
+  /// Reports a cancel for every property still transitioning.
+  void abort(double timestamp);
+
   void removeProperties(const std::vector<std::string> &propertyNames, double timestamp);
 
  private:

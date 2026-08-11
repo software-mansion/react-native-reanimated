@@ -119,6 +119,8 @@ void CSSTransition::setPseudoLockedProperties(TransitionProperties properties) {
 
 void CSSTransition::cancel() {
   if (loopTransition_) {
+    // Report the cancel before the operation goes away, as animations do.
+    loopTransition_->abort(loop_->resolveTimestamp());
     loop_->remove(loopTransition_);
   }
   platformTransitionProxy_->cancelAll(getViewTag(), routing_.platform);

@@ -159,6 +159,10 @@ void CSSLoopTransition::handleChangedProperties(
   }
 }
 
+void CSSLoopTransition::abort(const double timestamp) {
+  progressProvider_.abort(timestamp);
+}
+
 void CSSLoopTransition::removeProperties(const std::vector<std::string> &propertyNames, const double timestamp) {
   styleInterpolator_.removeProperties(propertyNames);
   progressProvider_.removeProperties(propertyNames, timestamp);
