@@ -61,10 +61,16 @@ bool CSSLoopAnimation::update(const double timestamp, OperationsLoop & /*loop*/)
 }
 
 void CSSLoopAnimation::schedule(OperationsLoop &loop) {
-  if (progressProvider_->getState() != AnimationProgressState::Paused) {
-    const auto timestamp = loop.resolveTimestamp();
-    loop.schedule(shared_from_this(), progressProvider_->getStartTimestamp(timestamp));
+  const auto timestamp = loop.resolveTimestamp();
+
+  // A paused run is never ticked, but the web still reports one whose delay has
+  // already elapsed as started, so position its lifecycle once instead.
+  if (progressProvider_->getState() == AnimationProgressState::Paused) {
+    progressProvider_->update(timestamp);
+    return;
   }
+
+  loop.schedule(shared_from_this(), progressProvider_->getStartTimestamp(timestamp));
 }
 
 void CSSLoopAnimation::unschedule(OperationsLoop &loop) {
