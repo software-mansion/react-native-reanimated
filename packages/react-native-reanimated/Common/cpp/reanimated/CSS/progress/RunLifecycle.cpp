@@ -33,8 +33,7 @@ void RunLifecycle::abort() {
     return;
   }
 
-  // A run exists from the moment it is created, even while it waits out its
-  // delay, so one aborted before its first position still reports that much.
+  // A run exists from creation, so an early abort still reports Created.
   enterStagesUpTo(rank(RunStage::Created));
 
   aborted_ = true;

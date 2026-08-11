@@ -137,8 +137,7 @@ bool AnimationProgressProvider::shouldFinish(const double timestamp) const {
     return false;
   }
   const auto elapsedDuration = timestamp - getStartTimestamp(timestamp);
-  // A run still waiting out its delay cannot be over, however short it is. A
-  // paused run sits exactly at its start, so zero still finishes below.
+  // Ordered first: a run still in its delay is not over, however short it is.
   if (elapsedDuration < 0) {
     return false;
   }
@@ -152,9 +151,7 @@ RunStage AnimationProgressProvider::computeStage(const double timestamp) const {
   if (shouldFinish(timestamp)) {
     return RunStage::Ended;
   }
-  // A paused run sits at its start timestamp, so this also covers a run paused
-  // before its delay ran out. One paused after that has started, and the web
-  // reports it as started too.
+  // A paused run sits at its start timestamp, so this covers it too.
   if (timestamp < getStartTimestamp(timestamp) || !rawProgress_.has_value()) {
     return RunStage::Created;
   }
