@@ -219,6 +219,12 @@ void TransitionProgressProvider::removeProperty(const std::string &propertyName)
   propertyProgressProviders_.erase(it);
 }
 
+void TransitionProgressProvider::abort(const double timestamp) {
+  for (const auto &[_, provider] : propertyProgressProviders_) {
+    provider->abort(timestamp);
+  }
+}
+
 void TransitionProgressProvider::discardFinishedProgressProviders() {
   for (auto it = propertyProgressProviders_.begin(); it != propertyProgressProviders_.end();) {
     if (it->second->getState() == TransitionProgressState::Idle) {
