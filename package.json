@@ -77,7 +77,7 @@
     "node-fetch": "3.3.2",
     "oxfmt": "0.45.0",
     "react": "19.2.3",
-    "react-native": "0.87.0-rc.4",
+    "react-native": "patch:react-native@npm%3A0.87.0-rc.4#~/.yarn/patches/react-native-npm-0.87.0-rc.4-5c97bcefe3.patch",
     "react-native-builder-bob": "0.41.0",
     "remark-cli": "12.0.1",
     "remark-frontmatter": "5.0.0",
