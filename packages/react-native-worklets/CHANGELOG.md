@@ -11,3 +11,5 @@
 ### 🐛 Bug fixes
 
 ### 💡 Others
+
+[general] - bump Worklets version to 0.13.0
