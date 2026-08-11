@@ -3,6 +3,8 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 
+#include <cstring>
+
 #include <functional>
 #include <memory>
 #include <utility>
@@ -15,7 +17,7 @@ LayoutAnimationsProxyCommon::onTransitionProgress(int tag, double progress, bool
   return std::nullopt;
 }
 
-std::optional<facebook::react::SurfaceId> LayoutAnimationsProxyCommon::onGestureCancel() {
+std::optional<facebook::react::SurfaceId> LayoutAnimationsProxyCommon::onGestureCancel(int tag) {
   return std::nullopt;
 }
 
@@ -37,6 +39,14 @@ void LayoutAnimationsProxyCommon::transferConfigFromNativeID(const std::string &
   layoutAnimationsManager_->transferConfigFromNativeID(nativeId, tag);
 }
 
+void LayoutAnimationsProxyCommon::maybeUpdateWindowDimensions(const ShadowViewMutation &mutation) const {
+  if (mutation.type == ShadowViewMutation::Update &&
+      !std::strcmp(mutation.oldChildShadowView.componentName, RootComponentName)) {
+    window_ = {
+        mutation.newChildShadowView.layoutMetrics.frame.size.width,
+        mutation.newChildShadowView.layoutMetrics.frame.size.height};
+  }
+}
 #ifdef ANDROID
 
 const facebook::react::ShadowNode *findInShadowTreeByTag(const facebook::react::ShadowNode &node, Tag tag) {

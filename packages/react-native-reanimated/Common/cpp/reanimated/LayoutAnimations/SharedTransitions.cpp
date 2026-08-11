@@ -50,14 +50,21 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     const std::shared_ptr<LightNode> &node,
     BeforeOrAfter index,
     const PropsParserContext &propsParserContext) const {
-  if (sharedTransitionManager_->tagToName_.contains(node->current.tag)) {
+  std::optional<SharedTag> sharedTag;
+  {
+    auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
+    const auto it = sharedTransitionManager_->tagToName_.find(node->current.tag);
+    if (it != sharedTransitionManager_->tagToName_.end()) {
+      sharedTag = it->second;
+    }
+  }
+  if (sharedTag) {
     ShadowView copy = node->current;
     std::vector<react::Point> absolutePositions;
     absolutePositions = getAbsolutePositionsForRootPathView(node);
     copy.layoutMetrics.frame.origin = absolutePositions[0];
 
-    auto sharedTag = sharedTransitionManager_->tagToName_[node->current.tag];
-    auto &transition = transitionMap_[sharedTag];
+    auto &transition = transitionMap_[*sharedTag];
     auto &[snapshot, parentTag, transform] = transition;
     auto newTransform = parseParentTransforms(node, absolutePositions);
     const auto &parent = node->parent.lock();
@@ -69,7 +76,7 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     parentTag[indexNum] = parent->current.tag;
 
     if (parentTag[BEFORE] && parentTag[AFTER]) {
-      transitions_.emplace_back(sharedTag, transition);
+      transitions_.emplace_back(*sharedTag, transition);
     } else if (parentTag[AFTER]) {
       // TODO (future): this is adding unnecessary views to the list
       tagsToRestore_.push_back(snapshot[AFTER].tag);
@@ -83,8 +90,7 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
 void LayoutAnimationsProxy_Experimental::handleProgressTransition(
     ShadowViewMutationList &filteredMutations,
     const ShadowViewMutationList &mutations,
-    const PropsParserContext &propsParserContext,
-    SurfaceId surfaceId) const {
+    const PropsParserContext &propsParserContext) const {
   if (!transitionUpdated_) {
     return;
   }
@@ -95,8 +101,7 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
   }
 
   if (transitionState_ == TransitionState::START) {
-    auto root = lightNodes_[surfaceId];
-    auto beforeTopScreen = topScreen[surfaceId];
+    auto beforeTopScreen = topScreen_;
     auto afterTopScreen = findBoundaryGuess(lightNodes_[transitionTag_]);
     if (beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen) {
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
@@ -109,7 +114,7 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
         const auto &transform = transition.transform;
         overrideTransform(before, transform[BEFORE], propsParserContext);
         overrideTransform(after, transform[AFTER], propsParserContext);
-        auto containerTag = getOrCreateContainer(before, sharedTag, filteredMutations, surfaceId);
+        auto containerTag = getOrCreateContainer(before, sharedTag, filteredMutations);
         transferConfigToContainer(containerTag, before.tag);
 
         restoreMap_[containerTag][BEFORE] = before.tag;
@@ -118,13 +123,13 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
         after.tag = containerTag;
         activeTransitions_.insert(containerTag);
 
-        startProgressTransition(containerTag, before, after, surfaceId);
+        startProgressTransition(containerTag, before, after);
       }
     }
   } else if (transitionState_ == TransitionState::ACTIVE) {
     for (auto tag : activeTransitions_) {
       auto layoutAnimation = layoutAnimations_[tag];
-      auto &updateMap = surfaceManager.getUpdateMap(layoutAnimation.finalView.surfaceId);
+      auto &updateMap = updateMap_;
       auto before = layoutAnimation.startView.layoutMetrics.frame;
       auto after = layoutAnimation.finalView.layoutMetrics.frame;
       auto x = before.origin.x + transitionProgress_ * (after.origin.x - before.origin.x);
@@ -168,7 +173,7 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
     if (transitionState_ == TransitionState::END) {
       synchronized_ = false;
     }
-    sharedTransitionManager_->containerTags_.clear();
+    containerTags_.clear();
     activeTransitions_.clear();
     transitionState_ = TransitionState::NONE;
   }
@@ -204,9 +209,8 @@ void LayoutAnimationsProxy_Experimental::transferConfigToContainer(Tag container
 Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
     const ShadowView &before,
     const SharedTag &sharedTag,
-    ShadowViewMutationList &filteredMutations,
-    SurfaceId surfaceId) const {
-  auto containerTag = sharedTransitionManager_->containerTags_[sharedTag];
+    ShadowViewMutationList &filteredMutations) const {
+  auto containerTag = containerTags_[sharedTag];
   auto shouldCreateContainer = true;
   if (containerTag != -1) {
     const auto layoutAnimationIt = layoutAnimations_.find(containerTag);
@@ -214,11 +218,14 @@ Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
   }
 
   if (shouldCreateContainer) {
-    containerTag = containerTag_;
-    containerTag_ += 2;
-    auto &root = lightNodes_[surfaceId];
+    {
+      auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
+      containerTag = sharedTransitionManager_->nextContainerTag_;
+      sharedTransitionManager_->nextContainerTag_ += 2;
+      sharedTransitionManager_->tagToName_[containerTag] = sharedTag;
+    }
+    auto &root = lightNodes_[surfaceId_];
     ShadowView container = before;
-    sharedTransitionManager_->tagToName_[containerTag] = sharedTag;
 
     container.tag = containerTag;
     auto node = std::make_shared<LightNode>();
@@ -227,7 +234,7 @@ Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
     containersToInsert_.push_back(node);
     lightNodes_[containerTag] = std::move(node);
 
-    sharedTransitionManager_->containerTags_[sharedTag] = containerTag;
+    containerTags_[sharedTag] = containerTag;
   }
   return containerTag;
 }
@@ -237,8 +244,7 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
     const std::shared_ptr<LightNode> &beforeTopScreen,
     ShadowViewMutationList &filteredMutations,
     const ShadowViewMutationList &mutations,
-    const PropsParserContext &propsParserContext,
-    SurfaceId surfaceId) const {
+    const PropsParserContext &propsParserContext) const {
   ReanimatedSystraceSection s1("LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart");
 
   if (!beforeTopScreen || !afterTopScreen) {
@@ -251,20 +257,20 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
       const auto &transform = transition.transform;
       overrideTransform(before, transform[BEFORE], propsParserContext);
       overrideTransform(after, transform[AFTER], propsParserContext);
-      auto containerTag = getOrCreateContainer(before, sharedTag, filteredMutations, surfaceId);
+      auto containerTag = getOrCreateContainer(before, sharedTag, filteredMutations);
 
       transferConfigToContainer(containerTag, before.tag);
       restoreMap_[containerTag][1] = after.tag;
       before.tag = containerTag;
       after.tag = containerTag;
 
-      startSharedTransition(containerTag, before, after, surfaceId);
+      startSharedTransition(containerTag, before, after);
     }
   } else if (!mutations.empty()) {
     for (auto &[sharedTag, transition] : transitions_) {
       auto &[_, after] = transition.snapshot;
 
-      auto containerTag = sharedTransitionManager_->containerTags_[sharedTag];
+      auto containerTag = containerTags_[sharedTag];
       const auto layoutAnimationIt = layoutAnimations_.find(containerTag);
       if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isSettled()) {
         continue;
@@ -273,7 +279,7 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
       const auto &la = layoutAnimationIt->second;
       if (la.finalView.layoutMetrics != after.layoutMetrics) {
         overrideTransform(after, transition.transform[AFTER], propsParserContext);
-        startSharedTransition(containerTag, la.currentView, after, surfaceId);
+        startSharedTransition(containerTag, la.currentView, after);
       }
     }
   }
@@ -299,6 +305,10 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
     bool isClosing,
     bool isGoingForward) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  const auto nodeIt = lightNodes_.find(tag);
+  if (nodeIt == lightNodes_.end() || !nodeIt->second) {
+    return {};
+  }
   transitionUpdated_ = true;
   bool isAndroid;
 #ifdef ANDROID
@@ -319,40 +329,34 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
     } else if (transitionState_ == TransitionState::ACTIVE && progress == 1) {
       transitionState_ = TransitionState::END;
     }
-    const auto &node = lightNodes_[tag];
-    react_native_assert(node && "LightNode is nullptr");
-
-    transitioningSurfaceId_ = node->current.surfaceId;
-    return transitioningSurfaceId_;
+    return surfaceId_;
   }
   return {};
 }
 
-std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onGestureCancel() {
+std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onGestureCancel(int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  const auto nodeIt = lightNodes_.find(tag);
+  if (nodeIt == lightNodes_.end() || !nodeIt->second) {
+    return {};
+  }
   if (static_cast<bool>(transitionState_)) {
     transitionState_ = TransitionState::CANCELLED;
     transitionUpdated_ = true;
-    react_native_assert(transitioningSurfaceId_ != -1 && "Cancelling non-observed transition");
-
-    const auto surfaceId = transitioningSurfaceId_;
-    transitioningSurfaceId_ = -1;
-    return surfaceId;
+    return surfaceId_;
   }
   return {};
 }
 
-void LayoutAnimationsProxy_Experimental::insertContainers(
-    ShadowViewMutationList &filteredMutations,
-    int &rootChildCount,
-    SurfaceId surfaceId) const {
+void LayoutAnimationsProxy_Experimental::insertContainers(ShadowViewMutationList &filteredMutations, int &rootChildCount)
+    const {
   ShadowViewMutationList currentMutations;
   std::swap(currentMutations, filteredMutations);
   filteredMutations.reserve(containersToInsert_.size() * 2);
-  auto root = lightNodes_[surfaceId];
+  auto root = lightNodes_[surfaceId_];
   for (auto &node : containersToInsert_) {
     filteredMutations.push_back(ShadowViewMutation::CreateMutation(node->current));
-    filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId, node->current, rootChildCount++));
+    filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId_, node->current, rootChildCount++));
   }
   filteredMutations.insert(filteredMutations.end(), currentMutations.begin(), currentMutations.end());
   containersToInsert_.clear();
@@ -360,8 +364,7 @@ void LayoutAnimationsProxy_Experimental::insertContainers(
 
 void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
     ShadowViewMutationList &filteredMutations,
-    const PropsParserContext &propsParserContext,
-    SurfaceId surfaceId) const {
+    const PropsParserContext &propsParserContext) const {
   ReanimatedSystraceSection s1("cleanupSharedTransitions");
   for (auto &tag : tagsToRestore_) {
     ReanimatedSystraceSection s("Restore tag");
@@ -380,11 +383,11 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
 
   ReanimatedSystraceSection s2("remove shared containers");
   for (auto &tag : sharedContainersToRemove_) {
-    auto root = lightNodes_[surfaceId];
+    auto root = lightNodes_[surfaceId_];
     for (int i = 0; i < root->children.size(); i++) {
       auto &child = root->children[i];
       if (child->current.tag == tag) {
-        filteredMutations.push_back(ShadowViewMutation::RemoveMutation(surfaceId, child->current, i));
+        filteredMutations.push_back(ShadowViewMutation::RemoveMutation(surfaceId_, child->current, i));
         filteredMutations.push_back(ShadowViewMutation::DeleteMutation(child->current));
         root->children.erase(root->children.begin() + i);
       }
