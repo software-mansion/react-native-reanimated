@@ -1,6 +1,7 @@
 /** @type {import('jest').Config} */
 module.exports = {
   testEnvironment: 'node',
+  setupFilesAfterEnv: ['<rootDir>/jest/setupSnapshots.js'],
   testMatch: ['<rootDir>/__tests__/**/*.test.ts'],
   transform: {
     '^.+\\.(js|ts)$': [

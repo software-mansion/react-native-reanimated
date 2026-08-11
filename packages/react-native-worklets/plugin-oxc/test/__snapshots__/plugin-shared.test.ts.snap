@@ -3,7 +3,7 @@
 exports[`babel plugin core (bundle mode) autoworkletization workletizes useAnimatedStyle callback 1`] = `
 "import { useAnimatedStyle } from "react-native-reanimated";
 function Box() {
-  const style = useAnimatedStyle(require("react-native-worklets/.worklets/3354083578045.js").default({}));
+  const style = useAnimatedStyle(require("react-native-worklets/.worklets/1.js").default({}));
 }"
 `;
 
@@ -14,7 +14,7 @@ exports[`babel plugin core (bundle mode) autoworkletization workletizes useAnima
 		return { width: 100 };
 	};
 	testJs1.__closure = {};
-	testJs1.__workletHash = 3354083578045;
+	testJs1.__workletHash = 1;
 	testJs1.__pluginVersion = "x.y.z";
 	return testJs1;
 });
@@ -28,7 +28,7 @@ exports[`babel plugin core (bundle mode) closure handling captures locally bound
 		console.log(console);
 	};
 	f.__closure = { console };
-	f.__workletHash = 6504327838341;
+	f.__workletHash = 1;
 	f.__pluginVersion = "x.y.z";
 	return f;
 });
@@ -45,7 +45,7 @@ exports[`babel plugin core (bundle mode) closure handling captures multiple clos
 		a,
 		b
 	};
-	foo.__workletHash = 6219009264116;
+	foo.__workletHash = 1;
 	foo.__pluginVersion = "x.y.z";
 	return foo;
 });
@@ -60,7 +60,7 @@ exports[`babel plugin core (bundle mode) closure handling does not capture defau
 		return Math.random();
 	};
 	f.__closure = {};
-	f.__workletHash = 2740404126381;
+	f.__workletHash = 1;
 	f.__pluginVersion = "x.y.z";
 	return f;
 });
@@ -78,7 +78,7 @@ exports[`babel plugin core (bundle mode) for react-compiler prevents outlining f
 		].map(() => null);
 	};
 	testJs1.__closure = {};
-	testJs1.__workletHash = 0xf67ad4eeaa;
+	testJs1.__workletHash = 1;
 	testJs1.__pluginVersion = "x.y.z";
 	return testJs1;
 });
@@ -91,7 +91,7 @@ exports[`babel plugin core (bundle mode) without worklets leaves code untouched 
 }"
 `;
 
-exports[`babel plugin core (bundle mode) worklet shapes workletizes ArrowFunctionExpression 1`] = `"const foo = require("react-native-worklets/.worklets/3525195110031.js").default({});"`;
+exports[`babel plugin core (bundle mode) worklet shapes workletizes ArrowFunctionExpression 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default({});"`;
 
 exports[`babel plugin core (bundle mode) worklet shapes workletizes ArrowFunctionExpression 2`] = `
 "export default (function testJs1Factory({}) {
@@ -100,14 +100,14 @@ exports[`babel plugin core (bundle mode) worklet shapes workletizes ArrowFunctio
 		return x + 2;
 	};
 	testJs1.__closure = {};
-	testJs1.__workletHash = 3525195110031;
+	testJs1.__workletHash = 1;
 	testJs1.__pluginVersion = "x.y.z";
 	return testJs1;
 });
 "
 `;
 
-exports[`babel plugin core (bundle mode) worklet shapes workletizes FunctionDeclaration 1`] = `"const foo = require("react-native-worklets/.worklets/5524938858134.js").default({});"`;
+exports[`babel plugin core (bundle mode) worklet shapes workletizes FunctionDeclaration 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default({});"`;
 
 exports[`babel plugin core (bundle mode) worklet shapes workletizes FunctionDeclaration 2`] = `
 "export default (function foo_testJs1Factory({}) {
@@ -116,7 +116,7 @@ exports[`babel plugin core (bundle mode) worklet shapes workletizes FunctionDecl
 		return x + 2;
 	};
 	foo.__closure = {};
-	foo.__workletHash = 5524938858134;
+	foo.__workletHash = 1;
 	foo.__pluginVersion = "x.y.z";
 	return foo;
 });
@@ -125,7 +125,7 @@ exports[`babel plugin core (bundle mode) worklet shapes workletizes FunctionDecl
 
 exports[`babel plugin core (bundle mode) worklet shapes workletizes ObjectMethod 1`] = `
 "const foo = {
-  bar: require("react-native-worklets/.worklets/6917080565601.js").default({})
+  bar: require("react-native-worklets/.worklets/1.js").default({})
 };"
 `;
 
@@ -136,14 +136,14 @@ exports[`babel plugin core (bundle mode) worklet shapes workletizes ObjectMethod
 		return x + 2;
 	};
 	bar.__closure = {};
-	bar.__workletHash = 6917080565601;
+	bar.__workletHash = 1;
 	bar.__pluginVersion = "x.y.z";
 	return bar;
 });
 "
 `;
 
-exports[`babel plugin core (bundle mode) worklet shapes workletizes named FunctionExpression 1`] = `"const foo = require("react-native-worklets/.worklets/5524938858134.js").default({});"`;
+exports[`babel plugin core (bundle mode) worklet shapes workletizes named FunctionExpression 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default({});"`;
 
 exports[`babel plugin core (bundle mode) worklet shapes workletizes named FunctionExpression 2`] = `
 "export default (function foo_testJs1Factory({}) {
@@ -152,14 +152,14 @@ exports[`babel plugin core (bundle mode) worklet shapes workletizes named Functi
 		return x + 2;
 	};
 	foo.__closure = {};
-	foo.__workletHash = 5524938858134;
+	foo.__workletHash = 1;
 	foo.__pluginVersion = "x.y.z";
 	return foo;
 });
 "
 `;
 
-exports[`babel plugin core (bundle mode) worklet shapes workletizes unnamed FunctionExpression 1`] = `"const foo = require("react-native-worklets/.worklets/3525195110031.js").default({});"`;
+exports[`babel plugin core (bundle mode) worklet shapes workletizes unnamed FunctionExpression 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default({});"`;
 
 exports[`babel plugin core (bundle mode) worklet shapes workletizes unnamed FunctionExpression 2`] = `
 "export default (function testJs1Factory({}) {
@@ -168,7 +168,7 @@ exports[`babel plugin core (bundle mode) worklet shapes workletizes unnamed Func
 		return x + 2;
 	};
 	testJs1.__closure = {};
-	testJs1.__workletHash = 3525195110031;
+	testJs1.__workletHash = 1;
 	testJs1.__pluginVersion = "x.y.z";
 	return testJs1;
 });
