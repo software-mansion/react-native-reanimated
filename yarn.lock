@@ -14400,6 +14400,7 @@ __metadata:
     typescript-eslint: "npm:8.46.0"
   peerDependencies:
     react-native: "*"
+    react-native-screens: "*"
   languageName: unknown
   linkType: soft
 
@@ -18396,6 +18397,7 @@ __metadata:
     eslint: "npm:9.37.0"
     react: "npm:19.2.8"
     react-native: "npm:0.87.0-rc.4"
+    react-native-screens: "npm:4.27.0"
     typescript: "npm:5.9.3"
     ws: "npm:8.21.0"
   languageName: unknown
@@ -23044,6 +23046,7 @@ __metadata:
     react-native: "npm:0.81.6"
     react-native-macos: "patch:react-native-macos@npm%3A0.81.9#~/.yarn/patches/react-native-macos-npm-0.81.9-aa583a0648.patch"
     react-native-reanimated: "workspace:*"
+    react-native-screens: "npm:4.24.0"
     react-native-worklets: "workspace:*"
     typescript: "npm:5.9.3"
   languageName: unknown
@@ -29229,6 +29232,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-screens@npm:4.24.0":
+  version: 4.24.0
+  resolution: "react-native-screens@npm:4.24.0"
+  dependencies:
+    react-freeze: "npm:^1.0.0"
+    warn-once: "npm:^0.1.0"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10/1ac705f7c0c37f62f0c29c5bf477b4a2360c37dec6b689e7fa9a768cc8a08d828ac7260d168a60638d207e0be21ae22bb3f170d55f0ae97837c2053ba8e38aff
+  languageName: node
+  linkType: hard
+
 "react-native-screens@npm:4.27.0":
   version: 4.27.0
   resolution: "react-native-screens@npm:4.27.0"
@@ -32961,6 +32977,7 @@ __metadata:
     react: "npm:19.2.8"
     react-native: "npm:react-native-tvos@0.86.2-0"
     react-native-reanimated: "workspace:*"
+    react-native-screens: "npm:4.27.0"
     react-native-worklets: "workspace:*"
     react-test-renderer: "npm:19.2.8"
     typescript: "npm:5.9.3"
@@ -34150,6 +34167,7 @@ __metadata:
     react: "npm:19.2.8"
     react-dom: "npm:19.2.8"
     react-native: "npm:0.87.0-rc.4"
+    react-native-screens: "npm:4.27.0"
     react-native-web: "npm:0.21.2"
     react-strict-dom: "npm:0.0.55"
     serve: "npm:14.2.6"

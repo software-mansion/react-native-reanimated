@@ -13,7 +13,8 @@
     "type:check:legacy-rn-types": "tsc --noEmit --customConditions react-native-legacy-deep-imports"
   },
   "peerDependencies": {
-    "react-native": "*"
+    "react-native": "*",
+    "react-native-screens": "*"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "6.5.2",
@@ -40,7 +41,6 @@
     "react-native-nitro-modules": "0.36.5",
     "react-native-reanimated": "workspace:*",
     "react-native-safe-area-context": "5.8.1",
-    "react-native-screens": "4.27.0",
     "react-native-svg": "15.15.5",
     "react-native-worklets": "workspace:*",
     "react-strict-dom": "0.0.55"
@@ -63,6 +63,7 @@
     "eslint": "9.37.0",
     "madge": "8.0.0",
     "react-native": "0.87.0-rc.4",
+    "react-native-screens": "4.27.0",
     "react-test-renderer": "19.2.8",
     "typescript": "5.9.3",
     "typescript-eslint": "8.46.0"
