@@ -42,6 +42,8 @@ pub struct State {
     pub imports_by_symbol: HashMap<SymbolId, ImportInfo>,
 
     pub referenced_worklet_symbols: HashSet<SymbolId>,
+
+    pub error: Option<String>,
 }
 
 impl State {
@@ -69,6 +71,7 @@ impl State {
             emitted_files: Vec::new(),
             imports_by_symbol: HashMap::new(),
             referenced_worklet_symbols: HashSet::new(),
+            error: None,
         }
     }
 

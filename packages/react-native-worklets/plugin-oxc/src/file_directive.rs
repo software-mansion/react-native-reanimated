@@ -6,8 +6,10 @@ use oxc_ast::ast::{
 };
 use oxc_span::SPAN;
 
-use crate::worklet_class::WORKLET_CLASS_MARKER;
+use crate::context_object::{append_marker, is_implicit_context_object};
 use crate::utils::inject_worklet_directive;
+
+pub const WORKLET_CLASS_MARKER: &str = "__workletClass";
 
 pub fn process_file_directive<'a>(program: &mut Program<'a>, builder: AstBuilder<'a>) -> bool {
     let has_directive = program
@@ -172,6 +174,10 @@ fn inject_into_expression<'a>(expr: &mut Expression<'a>, builder: AstBuilder<'a>
 }
 
 fn inject_into_object_expression<'a>(obj: &mut ObjectExpression<'a>, builder: AstBuilder<'a>) {
+    if is_implicit_context_object(obj) {
+        append_marker(obj, builder);
+        return;
+    }
     for prop in obj.properties.iter_mut() {
         if let ObjectPropertyKind::ObjectProperty(prop) = prop {
             if prop.method {

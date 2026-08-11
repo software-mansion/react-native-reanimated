@@ -77,6 +77,66 @@ const PARSE_ERROR_CODE = 'WORKLETS_ERR_PARSE';
 
 const WORKLET_DIRECTIVE_RE = /(^|[\s;{(])['"]worklet['"]\s*;/m;
 
+// Auto-workletized callbacks carry no directive of their own, so a file that
+// only uses them would slip through the parse-failure fallback unnoticed and
+// silently ship un-workletized callbacks. Mirrors the hook and callback names
+// `autoworkletization.ts` recognizes.
+const AUTO_WORKLETIZED_CALLEES = [
+  'useFrameCallback',
+  'useAnimatedStyle',
+  'useAnimatedProps',
+  'createAnimatedPropAdapter',
+  'useDerivedValue',
+  'useAnimatedScrollHandler',
+  'useAnimatedReaction',
+  'withTiming',
+  'withSpring',
+  'withDecay',
+  'withRepeat',
+  'withCallback',
+  'runOnUI',
+  'executeOnUIRuntimeSync',
+  'scheduleOnUI',
+  'runOnUISync',
+  'runOnUIAsync',
+  'runOnRuntime',
+  'runOnRuntimeSync',
+  'runOnRuntimeAsync',
+  'scheduleOnRuntime',
+  'runOnRuntimeSyncWithId',
+  'scheduleOnRuntimeWithId',
+  'useTapGesture',
+  'usePanGesture',
+  'usePinchGesture',
+  'useRotationGesture',
+  'useFlingGesture',
+  'useLongPressGesture',
+  'useNativeGesture',
+  'useManualGesture',
+  'useHoverGesture',
+  'onBegin',
+  'onStart',
+  'onEnd',
+  'onFinalize',
+  'onUpdate',
+  'onChange',
+  'onTouchesDown',
+  'onTouchesMove',
+  'onTouchesUp',
+  'onTouchesCancelled',
+];
+
+const AUTO_WORKLETIZED_RE = new RegExp(
+  `\\b(${AUTO_WORKLETIZED_CALLEES.join('|')})\\s*\\(`
+);
+
+function carriesWorklets(sourceText) {
+  return (
+    WORKLET_DIRECTIVE_RE.test(sourceText) ||
+    AUTO_WORKLETIZED_RE.test(sourceText)
+  );
+}
+
 function workletsPluginOxcBabelShim(babelApi, options) {
   if (options && options.bundleMode === false) {
     throw new Error(
@@ -122,11 +182,11 @@ function workletsPluginOxcBabelShim(babelApi, options) {
           } catch (e) {
             const msg = (e && e.message) || '';
             if (msg.includes(PARSE_ERROR_CODE)) {
-              if (WORKLET_DIRECTIVE_RE.test(sourceText)) {
+              if (carriesWorklets(sourceText)) {
                 throw new Error(
-                  `[Worklets] ${filename} carries a 'worklet' ` +
-                    'directive but could not be parsed, so none of its ' +
-                    `worklets were compiled.\n${msg}`
+                  `[Worklets] ${filename} contains worklets but could not ` +
+                    'be parsed, so none of them were compiled.\n' +
+                    msg
                 );
               }
               return;

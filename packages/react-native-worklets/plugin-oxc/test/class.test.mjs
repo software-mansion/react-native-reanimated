@@ -5,10 +5,10 @@ const { transform } = plugin;
 
 // Bundle-only mode does NOT support worklet classes (mirrors the
 // `state.opts.bundleMode /* temporary */` short-circuit in `class.ts:49`).
-// The plugin still strips the `__workletClass` marker so the class
-// declaration is emitted clean — but no factory wrap happens.
+// That short-circuit returns before `removeWorkletClassMarker`, so the marker
+// stays on the class — no factory wrap happens either.
 
-test('class with __workletClass marker has marker stripped, declaration intact', () => {
+test('class with __workletClass marker is left alone', () => {
   const input = `
     class Foo {
       __workletClass = true;
@@ -17,7 +17,7 @@ test('class with __workletClass marker has marker stripped, declaration intact',
   `;
   const { code } = transform(input, 'test.js', {});
   assert.match(code, /class Foo/, `Got:\n${code}`);
-  assert.doesNotMatch(code, /__workletClass/, 'marker should be stripped');
+  assert.match(code, /__workletClass/, 'marker should be preserved');
   assert.doesNotMatch(code, /__classFactory/, 'no factory wrap in bundle-only mode');
 });
 
@@ -32,10 +32,7 @@ test('class without marker is left alone', () => {
   assert.match(code, /class Foo/);
 });
 
-test('file-level directive does not error on classes (marker stripped)', () => {
-  // File-level `'worklet'` injects the marker on every top-level class.
-  // In bundle-only mode we just strip it back off — class declaration
-  // passes through unchanged otherwise.
+test('file-level directive marks top-level classes', () => {
   const input = `
     'worklet';
     class Foo {
@@ -44,7 +41,7 @@ test('file-level directive does not error on classes (marker stripped)', () => {
   `;
   const { code } = transform(input, 'test.js', {});
   assert.match(code, /class Foo/);
-  assert.doesNotMatch(code, /__workletClass/);
+  assert.match(code, /__workletClass = true/);
   assert.doesNotMatch(code, /__classFactory/);
 });
 

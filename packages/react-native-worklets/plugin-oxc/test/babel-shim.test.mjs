@@ -222,7 +222,29 @@ test(
             plugins: [[shim, {}], require_.resolve('@babel/plugin-syntax-flow')],
           }
         ),
-      /carries a 'worklet' directive but could not be parsed/
+      /contains worklets but could not be parsed/
+    );
+  }
+);
+
+test(
+  'babel shim refuses to silently skip an unparseable auto-workletized file',
+  { skip: !babelCore },
+  () => {
+    delete require_.cache[require_.resolve('../babel.js')];
+    const shim = require_('../babel.js');
+    assert.throws(
+      () =>
+        babelCore.transformSync(
+          'const s = useAnimatedStyle(() => ({ width: 1 }));\nconst b = (y: number): number => y;',
+          {
+            filename: 'flowish-hook.js',
+            babelrc: false,
+            configFile: false,
+            plugins: [[shim, {}], require_.resolve('@babel/plugin-syntax-flow')],
+          }
+        ),
+      /contains worklets but could not be parsed/
     );
   }
 );

@@ -13,6 +13,7 @@ use oxc_syntax::symbol::SymbolId;
 mod auto_detect;
 mod bundle_mode;
 mod closure;
+mod context_object;
 mod file_directive;
 mod jsx_dev_attributes;
 mod relative_requires;
@@ -21,7 +22,6 @@ mod options;
 mod state;
 mod utils;
 mod worklet_body;
-mod worklet_class;
 mod worklet_factory;
 mod worklet_pass;
 
@@ -190,6 +190,7 @@ fn run(
     let builder = oxc_ast::AstBuilder::new(&allocator);
 
     file_directive::process_file_directive(&mut program, builder);
+    context_object::process_context_objects(&mut program, builder, &allocator);
 
     let semantic_ret = SemanticBuilder::new()
         .with_check_syntax_error(false)
@@ -206,6 +207,10 @@ fn run(
         &allocator,
         filename,
     );
+
+    if let Some(message) = state.error.take() {
+        return Err(message);
+    }
 
     bundle_mode::enable_flag(&mut program, builder, filename);
 

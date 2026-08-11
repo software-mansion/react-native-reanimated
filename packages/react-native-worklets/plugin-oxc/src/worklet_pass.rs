@@ -5,9 +5,9 @@ use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
 use oxc_ast::ast::{
     Argument, ArrowFunctionExpression, AssignmentExpression, AssignmentTarget, BindingPattern,
-    CallExpression, Class, Declaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind,
+    CallExpression, Declaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind,
     ExportNamedDeclaration, Expression, Function, FunctionBody, ObjectExpression, ObjectProperty,
-    ObjectPropertyKind, Program, PropertyKey, Statement, VariableDeclarationKind,
+    ObjectPropertyKind, Program, PropertyKey, PropertyKind, Statement, VariableDeclarationKind,
     VariableDeclarator,
 };
 use oxc_ast_visit::{VisitMut, walk_mut};
@@ -318,6 +318,32 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
             walk_mut::walk_object_property(self, prop);
             return;
         };
+        // An accessor can't be rewritten into a data property without losing
+        // its get/set semantics, so refuse it the way the Babel plugin does.
+        if prop.kind != PropertyKind::Init {
+            let is_worklet = func
+                .body
+                .as_ref()
+                .is_some_and(|body| has_worklet_directive(body));
+            if is_worklet {
+                if self.state.error.is_none() {
+                    let kind = if prop.kind == PropertyKind::Get {
+                        "getter"
+                    } else {
+                        "setter"
+                    };
+                    let name = match &prop.key {
+                        PropertyKey::StaticIdentifier(id) => id.name.to_string(),
+                        _ => "<computed>".to_string(),
+                    };
+                    self.state.error =
+                        Some(format!("the `{name}` {kind} cannot be a worklet"));
+                }
+                return;
+            }
+            walk_mut::walk_object_property(self, prop);
+            return;
+        }
         if !prop.method {
             walk_mut::walk_object_property(self, prop);
             return;
@@ -370,12 +396,6 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
         walk_mut::walk_assignment_expression(self, assign);
     }
 
-    fn visit_class(&mut self, class: &mut Class<'a>) {
-        if crate::worklet_class::is_worklet_class(class) {
-            crate::worklet_class::remove_worklet_class_marker(&mut class.body, self.builder);
-        }
-        walk_mut::walk_class(self, class);
-    }
 }
 
 fn collect_referenced_worklet_symbols<'a>(
