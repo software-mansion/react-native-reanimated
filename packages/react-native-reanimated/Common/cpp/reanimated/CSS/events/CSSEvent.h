@@ -9,7 +9,8 @@
 namespace reanimated::css {
 
 /// Event kinds a view can subscribe to. The ordinal is the bit index in
-/// `CSSEventMask`, so the JS side must keep its bitmask constants in sync.
+/// `CSSEventMask`, so the JS side must keep its bitmask constants in sync, and
+/// a new kind has to fit the mask as well as the switches over this enum.
 enum class CSSEventType : std::uint8_t {
   AnimationStart = 0,
   AnimationEnd = 1,

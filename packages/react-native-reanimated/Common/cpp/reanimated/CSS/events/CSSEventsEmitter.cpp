@@ -29,7 +29,6 @@ const char *cssEventTypeName(const CSSEventType type) {
     case CSSEventType::TransitionCancel:
       return "transitionCancel";
   }
-  return "";
 }
 
 jsi::Array eventsToJSIArray(jsi::Runtime &rt, const std::vector<CSSEvent> &events) {
@@ -65,17 +64,28 @@ void CSSEventsEmitter::invalidate() {
 }
 
 void CSSEventsEmitter::emit(CSSEvent event) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  pending_.push_back(std::move(event));
-  requestDrain();
+  bool shouldScheduleDrain;
+
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    // Buffering before the handler is installed, or after it is gone, would
+    // grow `pending_` for events that can never be delivered.
+    if (!emitFunction_) {
+      return;
+    }
+    pending_.push_back(std::move(event));
+    shouldScheduleDrain = !drainRequested_ || pending_.size() % kDrainRetryBacklog == 0;
+    drainRequested_ = true;
+  }
+
+  // Scheduled after unlocking: `emit` already holds the updates registry lock,
+  // and reaching into the scheduler under both is how lock cycles start.
+  if (shouldScheduleDrain) {
+    scheduleDrain();
+  }
 }
 
-void CSSEventsEmitter::requestDrain() {
-  if (drainRequested_ || !emitFunction_) {
-    return;
-  }
-  drainRequested_ = true;
-
+void CSSEventsEmitter::scheduleDrain() {
   jsInvoker_->invokeAsync([weakThis = weak_from_this()](jsi::Runtime &rt) {
     if (const auto strongThis = weakThis.lock()) {
       strongThis->drain(rt);
@@ -90,14 +100,15 @@ void CSSEventsEmitter::drain(jsi::Runtime &rt) {
   {
     std::lock_guard<std::mutex> lock(mutex_);
     drainRequested_ = false;
-    if (pending_.empty() || !emitFunction_) {
-      pending_.clear();
-      return;
-    }
-    events = std::exchange(pending_, {});
+    events.swap(pending_);
     emitFunction = emitFunction_;
   }
 
+  if (events.empty() || !emitFunction) {
+    return;
+  }
+
+  // Called unlocked so a callback that synchronously emits again cannot deadlock.
   emitFunction->call(rt, eventsToJSIArray(rt, events));
 }
 
