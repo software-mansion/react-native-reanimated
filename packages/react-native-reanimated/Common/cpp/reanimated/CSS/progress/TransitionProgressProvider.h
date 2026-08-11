@@ -36,7 +36,7 @@ class TransitionPropertyProgressProvider final : public KeyframeProgressProvider
   /// Time the property has run by the given milestone, in milliseconds.
   double elapsedTimeAt(RunMilestone milestone) const;
 
-  void onMilestone(RunLifecycle::Reporter reporter);
+  void setMilestoneReporter(RunLifecycle::Reporter reporter);
   void abort(double timestamp);
   void update(double timestamp) override;
 
@@ -69,7 +69,7 @@ class TransitionProgressProvider final {
   TransitionPropertyProgressProviders getPropertyProgressProviders() const;
   std::unordered_set<std::string> getRemovedProperties() const;
 
-  void onMilestone(MilestoneReporter reporter);
+  void setMilestoneReporter(MilestoneReporter reporter);
 
   void runProgressProvider(const std::string &propertyName, bool isReversed, double timestamp);
   void removeProperties(const std::vector<std::string> &propertyNames);

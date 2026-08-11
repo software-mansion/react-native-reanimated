@@ -52,8 +52,8 @@ ReversingState TransitionPropertyProgressProvider::getReversingState() const {
   return {reversingShorteningFactor_, creationTimestamp_ + delay_, duration_, delay_, easing_};
 }
 
-void TransitionPropertyProgressProvider::onMilestone(RunLifecycle::Reporter reporter) {
-  lifecycle_.onMilestone(std::move(reporter));
+void TransitionPropertyProgressProvider::setMilestoneReporter(RunLifecycle::Reporter reporter) {
+  lifecycle_.setMilestoneReporter(std::move(reporter));
   lifecycle_.reachPosition(computeStage());
 }
 
@@ -150,7 +150,7 @@ std::unordered_set<std::string> TransitionProgressProvider::getRemovedProperties
   return removedProperties_;
 }
 
-void TransitionProgressProvider::onMilestone(MilestoneReporter reporter) {
+void TransitionProgressProvider::setMilestoneReporter(MilestoneReporter reporter) {
   reporter_ = std::move(reporter);
 
   for (const auto &[propertyName, propertyProgressProvider] : propertyProgressProviders_) {
@@ -162,12 +162,12 @@ void TransitionProgressProvider::observeProperty(
     const std::string &propertyName,
     TransitionPropertyProgressProvider &provider) {
   if (!reporter_) {
-    provider.onMilestone(nullptr);
+    provider.setMilestoneReporter(nullptr);
     return;
   }
 
   // The lambda lives inside the provider, so capturing it by reference is safe.
-  provider.onMilestone([this, propertyName, &provider](const RunMilestone milestone) {
+  provider.setMilestoneReporter([this, propertyName, &provider](const RunMilestone milestone) {
     reporter_(milestone, propertyName, provider.elapsedTimeAt(milestone));
   });
 }
