@@ -1,9 +1,6 @@
 name: Changelog check
 
 on:
-  merge_group:
-    branches:
-      - main
   pull_request:
 
 permissions:
@@ -23,5 +20,5 @@ jobs:
           node-version-file: '.nvmrc'
       - name: Require changelog entries
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: node --experimental-strip-types scripts/check-changelog.mts "$BASE_SHA"
