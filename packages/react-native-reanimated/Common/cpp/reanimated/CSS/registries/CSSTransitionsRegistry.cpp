@@ -98,7 +98,7 @@ void CSSTransitionsRegistry::reconcilePseudoStyledProperties(
   if (!evictedProperties.empty()) {
     // An in-flight transition would otherwise re-emit the evicted value on its next tick and
     // pin the property again.
-    transition->removeProperties(evictedProperties);
+    transition->removeProperties(evictedProperties, loop_->resolveTimestamp());
     setInUpdatesRegistry(transition->getShadowNodeFamily(), updates);
   }
   if (!corrections.empty()) {
