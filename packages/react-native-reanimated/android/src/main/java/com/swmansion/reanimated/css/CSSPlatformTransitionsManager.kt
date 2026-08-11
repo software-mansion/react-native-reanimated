@@ -210,10 +210,9 @@ internal class CSSPlatformTransitionsManager(
     }
 
     /**
-     * A tag can be registered before its View exists, with the mount still in flight.
-     * The start timestamp is absolute, so a late start seeks rather than drifting, and
-     * retrying needs no arbitrary timeout: once the transition would have ended there is
-     * nothing left to play.
+     * A tag can be registered before its View mounts. The absolute start timestamp makes a
+     * late start seek rather than drift, and retrying stops once the transition would have
+     * ended, so it needs no timeout.
      */
     private fun beginStart(command: Command.Start) {
         val key = command.key
