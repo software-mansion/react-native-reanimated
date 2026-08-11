@@ -33,7 +33,7 @@ class CSSLoopAnimation : public OperationsLoop::LoopOperation, public std::enabl
 
   void setAnimatedProperties(const std::unordered_set<std::string> &loopDrivenProperties);
 
-  void onMilestone(MilestoneReporter reporter);
+  void setMilestoneReporter(MilestoneReporter reporter);
   void abort(double timestamp);
 
   bool update(double timestamp, OperationsLoop &loop) override;

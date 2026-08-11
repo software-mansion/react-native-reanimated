@@ -37,7 +37,7 @@ CSSAnimation::~CSSAnimation() {
   // The loop co-owns the animation and unschedule() only enqueues the removal,
   // so a frame already in flight can still tick it after we are gone. Drop the
   // reporter so that tick has nothing to call back into.
-  loopAnimation_->onMilestone(nullptr);
+  loopAnimation_->setMilestoneReporter(nullptr);
 }
 
 AnimationProgressState CSSAnimation::getState() const {
@@ -51,10 +51,10 @@ void CSSAnimation::setEventMask(const CSSEventMask eventMask) {
   eventMask_ = eventMask;
 
   if (eventMask == 0) {
-    loopAnimation_->onMilestone(nullptr);
+    loopAnimation_->setMilestoneReporter(nullptr);
     return;
   }
-  loopAnimation_->onMilestone(
+  loopAnimation_->setMilestoneReporter(
       [this](const RunMilestone milestone, const double elapsedTime) { reportMilestone(milestone, elapsedTime); });
 }
 

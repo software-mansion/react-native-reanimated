@@ -54,7 +54,7 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   /// Time the animation has run by the given milestone, in milliseconds.
   double elapsedTimeAt(RunMilestone milestone) const;
 
-  void onMilestone(RunLifecycle::Reporter reporter);
+  void setMilestoneReporter(RunLifecycle::Reporter reporter);
   void abort(double timestamp);
 
   void pause(double timestamp);
