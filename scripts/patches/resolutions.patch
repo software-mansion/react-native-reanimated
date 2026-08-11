@@ -2,15 +2,13 @@ diff --git a/package.json b/package.json
 index 22d196a55d..775eecb0a8 100644
 --- a/package.json
 +++ b/package.json
-@@ -89,5 +89,11 @@
+@@ -89,5 +89,9 @@
      "spacer": {
        "spacer": "thanks to this spacer changes to dependencies won't require update of bundle mode toggling script patches"
      }
 +  },
 +  "resolutions": {
-+    "metro@npm:0.87.0": "patch:metro@npm%3A0.87.0#~/.yarn/patches/metro-npm-0.87.0-1c5c005545.patch",
-+    "metro@npm:^0.87.0": "patch:metro@npm%3A0.87.0#~/.yarn/patches/metro-npm-0.87.0-1c5c005545.patch",
-+    "metro-runtime@npm:0.87.0": "patch:metro-runtime@npm%3A0.87.0#~/.yarn/patches/metro-runtime-npm-0.87.0-2e4e60a54a.patch",
-+    "metro-runtime@npm:^0.87.0": "patch:metro-runtime@npm%3A0.87.0#~/.yarn/patches/metro-runtime-npm-0.87.0-2e4e60a54a.patch"
++    "metro": "patch:metro@npm%3A0.87.0#~/.yarn/patches/metro-npm-0.87.0-1c5c005545.patch",
++    "metro-runtime": "patch:metro-runtime@npm%3A0.87.0#~/.yarn/patches/metro-runtime-npm-0.87.0-2e4e60a54a.patch"
    }
  }
