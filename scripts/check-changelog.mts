@@ -1,26 +1,38 @@
 import { execFileSync } from 'node:child_process';
 
-const PACKAGE_CHANGELOGS = new Map([
-  [
-    'packages/react-native-reanimated',
-    'packages/react-native-reanimated/CHANGELOG.md',
-  ],
-  [
-    'packages/react-native-worklets',
-    'packages/react-native-worklets/CHANGELOG.md',
-  ],
-]);
+// These exemptions expire automatically when the packages move to their next versions.
+const PACKAGE_RULES = [
+  {
+    packagePath: 'packages/react-native-reanimated',
+    changelogPath: 'packages/react-native-reanimated/CHANGELOG.md',
+    exemptVersion: '4.6.0-main',
+  },
+  {
+    packagePath: 'packages/react-native-worklets',
+    changelogPath: 'packages/react-native-worklets/CHANGELOG.md',
+    exemptVersion: '0.12.0-main',
+  },
+];
 
-export function findMissingChangelogs(changedFiles: string[]) {
-  return [...PACKAGE_CHANGELOGS].flatMap(([packagePath, changelogPath]) => {
-    const packagePrefix = `${packagePath}/`;
-    const packageChanged = changedFiles.some((file) =>
-      file.startsWith(packagePrefix)
-    );
-    const changelogChanged = changedFiles.includes(changelogPath);
+export function findMissingChangelogs(
+  changedFiles: string[],
+  packageVersions = new Map<string, string>()
+) {
+  return PACKAGE_RULES.flatMap(
+    ({ packagePath, changelogPath, exemptVersion }) => {
+      if (packageVersions.get(packagePath) === exemptVersion) {
+        return [];
+      }
 
-    return packageChanged && !changelogChanged ? [changelogPath] : [];
-  });
+      const packagePrefix = `${packagePath}/`;
+      const packageChanged = changedFiles.some((file) =>
+        file.startsWith(packagePrefix)
+      );
+      const changelogChanged = changedFiles.includes(changelogPath);
+
+      return packageChanged && !changelogChanged ? [changelogPath] : [];
+    }
+  );
 }
 
 export function getChangedFiles(base: string, head = 'HEAD') {
@@ -31,6 +43,20 @@ export function getChangedFiles(base: string, head = 'HEAD') {
   )
     .split('\n')
     .filter(Boolean);
+}
+
+export function getPackageVersions(ref = 'HEAD') {
+  return new Map(
+    PACKAGE_RULES.map(({ packagePath }) => {
+      const packageJson = execFileSync(
+        'git',
+        ['show', `${ref}:${packagePath}/package.json`],
+        { encoding: 'utf8' }
+      );
+      const { version } = JSON.parse(packageJson) as { version: string };
+      return [packagePath, version];
+    })
+  );
 }
 
 function main() {
@@ -44,10 +70,15 @@ function main() {
     return;
   }
 
-  const missingChangelogs = findMissingChangelogs(getChangedFiles(base, head));
+  const missingChangelogs = findMissingChangelogs(
+    getChangedFiles(base, head),
+    getPackageVersions(head)
+  );
 
   if (missingChangelogs.length === 0) {
-    console.log('All changed packages include a changelog update.');
+    console.log(
+      'All changed packages include a changelog update or are temporarily exempt.'
+    );
     return;
   }
 

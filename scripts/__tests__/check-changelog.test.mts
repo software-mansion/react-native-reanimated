@@ -45,6 +45,61 @@ describe('check-changelog', () => {
     );
   });
 
+  it('temporarily exempts Reanimated 4.6.0-main', () => {
+    assert.deepEqual(
+      findMissingChangelogs(
+        ['packages/react-native-reanimated/src/index.ts'],
+        new Map([['packages/react-native-reanimated', '4.6.0-main']])
+      ),
+      []
+    );
+  });
+
+  it('temporarily exempts Worklets 0.12.0-main', () => {
+    assert.deepEqual(
+      findMissingChangelogs(
+        ['packages/react-native-worklets/src/index.ts'],
+        new Map([['packages/react-native-worklets', '0.12.0-main']])
+      ),
+      []
+    );
+  });
+
+  it('enables enforcement after both package versions change', () => {
+    assert.deepEqual(
+      findMissingChangelogs(
+        [
+          'packages/react-native-reanimated/src/index.ts',
+          'packages/react-native-worklets/src/index.ts',
+        ],
+        new Map([
+          ['packages/react-native-reanimated', '4.7.0-main'],
+          ['packages/react-native-worklets', '0.13.0-main'],
+        ])
+      ),
+      [
+        'packages/react-native-reanimated/CHANGELOG.md',
+        'packages/react-native-worklets/CHANGELOG.md',
+      ]
+    );
+  });
+
+  it('keeps enforcement package-specific', () => {
+    assert.deepEqual(
+      findMissingChangelogs(
+        [
+          'packages/react-native-reanimated/src/index.ts',
+          'packages/react-native-worklets/src/index.ts',
+        ],
+        new Map([
+          ['packages/react-native-reanimated', '4.6.0-main'],
+          ['packages/react-native-worklets', '0.13.0-main'],
+        ])
+      ),
+      ['packages/react-native-worklets/CHANGELOG.md']
+    );
+  });
+
   it('ignores changes outside the two published packages', () => {
     assert.deepEqual(
       findMissingChangelogs([
