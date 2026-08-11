@@ -1,12 +1,20 @@
+use std::collections::HashSet;
+
 use oxc_allocator::Allocator;
 use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
 use oxc_ast::ast::{
-    Argument, Declaration, Expression, ObjectExpression, ObjectPropertyKind, Program, PropertyKey,
-    Statement, VariableDeclarationKind, VariableDeclarator,
+    Argument, ArrowFunctionExpression, AssignmentExpression, AssignmentTarget, BindingPattern,
+    CallExpression, Class, Declaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind,
+    ExportNamedDeclaration, Expression, Function, FunctionBody, ObjectExpression, ObjectProperty,
+    ObjectPropertyKind, Program, PropertyKey, Statement, VariableDeclarationKind,
+    VariableDeclarator,
 };
+use oxc_ast_visit::{VisitMut, walk_mut};
 use oxc_semantic::Scoping;
 use oxc_span::SPAN;
+use oxc_syntax::scope::ScopeFlags;
+use oxc_syntax::symbol::SymbolId;
 
 use crate::auto_detect::{
     GESTURE_HANDLER_OBJECT_HOOKS, is_gesture_object_event_callback_method,
@@ -47,40 +55,37 @@ const FUNCTION_HOOKS_ARG2: &[&str] = &["withTiming", "withSpring"];
 const FUNCTION_HOOKS_ARG3: &[&str] = &["withRepeat"];
 
 fn is_object_hook_at_arg0(name: &str) -> bool {
-    name == "useAnimatedScrollHandler"
-        || crate::auto_detect::GESTURE_HANDLER_OBJECT_HOOKS.contains(&name)
+    name == "useAnimatedScrollHandler" || GESTURE_HANDLER_OBJECT_HOOKS.contains(&name)
 }
 
-pub struct PrependCtx<'a> {
-    function_stack: Vec<Vec<Statement<'a>>>,
-    pub injected_refs_stack: Vec<std::collections::HashSet<String>>,
+fn hook_argument_indices(name: &str) -> &'static [usize] {
+    if FUNCTION_HOOKS_ARG0.contains(&name) || GESTURE_HANDLER_OBJECT_HOOKS.contains(&name) {
+        &[0]
+    } else if FUNCTION_HOOKS_ARG01.contains(&name) {
+        &[0, 1]
+    } else if FUNCTION_HOOKS_ARG1.contains(&name) {
+        &[1]
+    } else if FUNCTION_HOOKS_ARG2.contains(&name) {
+        &[2]
+    } else if FUNCTION_HOOKS_ARG3.contains(&name) {
+        &[3]
+    } else {
+        &[]
+    }
 }
 
-impl<'a> PrependCtx<'a> {
-    pub fn new() -> Self {
-        Self {
-            function_stack: Vec::new(),
-            injected_refs_stack: Vec::new(),
-        }
+fn effective_callee<'e, 'a>(callee: &'e Expression<'a>) -> &'e Expression<'a> {
+    match callee {
+        Expression::SequenceExpression(seq) => seq.expressions.last().unwrap_or(callee),
+        other => other,
     }
+}
 
-    pub fn push_frame(&mut self) {
-        self.function_stack.push(Vec::new());
-        self.injected_refs_stack
-            .push(std::collections::HashSet::new());
-    }
-
-    pub fn pop_frame(&mut self) -> (Vec<Statement<'a>>, std::collections::HashSet<String>) {
-        (
-            self.function_stack.pop().unwrap_or_default(),
-            self.injected_refs_stack.pop().unwrap_or_default(),
-        )
-    }
-
-    pub fn record_injected_refs<I: IntoIterator<Item = String>>(&mut self, names: I) {
-        if let Some(set) = self.injected_refs_stack.last_mut() {
-            set.extend(names);
-        }
+fn callee_name(callee: &Expression<'_>) -> Option<String> {
+    match callee {
+        Expression::Identifier(id) => Some(id.name.to_string()),
+        Expression::StaticMemberExpression(m) => Some(m.property.name.to_string()),
+        _ => None,
     }
 }
 
@@ -94,32 +99,294 @@ pub fn process_program<'a>(
 ) -> Vec<(String, String)> {
     state.referenced_worklet_symbols = collect_referenced_worklet_symbols(program, scoping);
 
-    let old_body = std::mem::replace(&mut program.body, builder.vec());
-    let mut new_body = builder.vec_with_capacity(old_body.len());
-
-    for stmt in old_body {
-        let mut ctx = PrependCtx::new();
-        let processed = process_top_level_statement(
-            stmt, &mut ctx, state, scoping, builder, allocator, filename,
-        );
-        new_body.push(processed);
+    {
+        let mut pass = WorkletPass {
+            state,
+            scoping,
+            builder,
+            allocator,
+            filename,
+            injected_refs_stack: Vec::new(),
+            last_injected_refs: HashSet::new(),
+        };
+        pass.visit_program(program);
     }
 
-    program.body = new_body;
     std::mem::take(&mut state.emitted_files)
+}
+
+struct WorkletPass<'a, 'b> {
+    state: &'b mut State,
+    scoping: &'b Scoping,
+    builder: AstBuilder<'a>,
+    allocator: &'a Allocator,
+    filename: &'b str,
+    injected_refs_stack: Vec<HashSet<String>>,
+    last_injected_refs: HashSet<String>,
+}
+
+impl<'a, 'b> WorkletPass<'a, 'b> {
+    fn record_injected_refs<I: IntoIterator<Item = String>>(&mut self, names: I) {
+        if let Some(set) = self.injected_refs_stack.last_mut() {
+            set.extend(names);
+        }
+    }
+
+    fn build_factory(
+        &mut self,
+        input: WorkletInput<'a, '_>,
+        injected: &HashSet<String>,
+    ) -> (Expression<'a>, String) {
+        let out = make_worklet_factory(
+            input,
+            self.state,
+            self.scoping,
+            self.builder,
+            self.allocator,
+            self.filename,
+            injected,
+        );
+        self.record_injected_refs(out.injected_ref_names.iter().cloned());
+        (out.factory_call, out.react_name)
+    }
+
+    fn workletize_function(
+        &mut self,
+        func: &Function<'a>,
+        self_name: Option<&str>,
+        injected: &HashSet<String>,
+    ) -> Option<(Expression<'a>, String)> {
+        let body = func.body.as_ref()?;
+        if !has_worklet_directive(body) {
+            return None;
+        }
+        let input = WorkletInput {
+            params: &func.params,
+            body,
+            is_async: func.r#async,
+            is_generator: func.generator,
+            function_scope_id: func.scope_id.get().unwrap_or(self.scoping.root_scope_id()),
+            self_name,
+            is_expression_body: false,
+        };
+        Some(self.build_factory(input, injected))
+    }
+
+    fn inject_hook_directives(&mut self, call: &mut CallExpression<'a>) {
+        let callee = effective_callee(&call.callee);
+        let name = callee_name(callee);
+        let is_gesture = is_gesture_object_event_callback_method(callee);
+        let is_layout_animation = is_layout_animation_callback_method(callee);
+
+        if let Some(name) = name.as_deref() {
+            for &index in hook_argument_indices(name) {
+                if let Some(arg) = call.arguments.get_mut(index) {
+                    inject_directive_into_argument(arg, self.builder);
+                }
+            }
+            if is_object_hook_at_arg0(name) {
+                if let Some(Argument::ObjectExpression(obj)) = call.arguments.get_mut(0) {
+                    inject_worklet_directives_to_object_methods(obj, self.builder);
+                }
+            }
+        }
+
+        if is_gesture || is_layout_animation {
+            for arg in call.arguments.iter_mut() {
+                match arg {
+                    Argument::ObjectExpression(obj) => {
+                        inject_worklet_directives_to_object_methods(obj, self.builder);
+                    }
+                    other => inject_directive_into_argument(other, self.builder),
+                }
+            }
+        }
+    }
+}
+
+impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
+    fn visit_function(&mut self, func: &mut Function<'a>, flags: ScopeFlags) {
+        self.injected_refs_stack.push(HashSet::new());
+        walk_mut::walk_function(self, func, flags);
+        self.last_injected_refs = self.injected_refs_stack.pop().unwrap_or_default();
+    }
+
+    fn visit_arrow_function_expression(&mut self, arrow: &mut ArrowFunctionExpression<'a>) {
+        self.injected_refs_stack.push(HashSet::new());
+        walk_mut::walk_arrow_function_expression(self, arrow);
+        self.last_injected_refs = self.injected_refs_stack.pop().unwrap_or_default();
+    }
+
+    fn visit_expression(&mut self, expr: &mut Expression<'a>) {
+        match expr {
+            Expression::ArrowFunctionExpression(arrow) => {
+                self.visit_arrow_function_expression(arrow);
+                if !has_worklet_directive(&arrow.body) {
+                    return;
+                }
+                let injected = std::mem::take(&mut self.last_injected_refs);
+                let input = WorkletInput {
+                    params: &arrow.params,
+                    body: &arrow.body,
+                    is_async: arrow.r#async,
+                    is_generator: false,
+                    function_scope_id: arrow
+                        .scope_id
+                        .get()
+                        .unwrap_or(self.scoping.root_scope_id()),
+                    self_name: None,
+                    is_expression_body: arrow.expression,
+                };
+                let (factory_call, _) = self.build_factory(input, &injected);
+                *expr = factory_call;
+            }
+            Expression::FunctionExpression(func) => {
+                self.visit_function(func, ScopeFlags::Function);
+                let injected = std::mem::take(&mut self.last_injected_refs);
+                let name = func.id.as_ref().map(|id| id.name.to_string());
+                if let Some((factory_call, _)) =
+                    self.workletize_function(func, name.as_deref(), &injected)
+                {
+                    *expr = factory_call;
+                }
+            }
+            _ => walk_mut::walk_expression(self, expr),
+        }
+    }
+
+    fn visit_statement(&mut self, stmt: &mut Statement<'a>) {
+        let Statement::FunctionDeclaration(func) = stmt else {
+            walk_mut::walk_statement(self, stmt);
+            return;
+        };
+
+        let binding_symbol = func.id.as_ref().and_then(|id| id.symbol_id.get());
+        if let Some(body) = func.body.as_mut() {
+            maybe_inject_referenced_directive(binding_symbol, body, self.state, self.builder);
+        }
+
+        self.visit_function(func, ScopeFlags::Function);
+        let injected = std::mem::take(&mut self.last_injected_refs);
+        let name = func.id.as_ref().map(|id| id.name.to_string());
+        let Some((factory_call, react_name)) =
+            self.workletize_function(func, name.as_deref(), &injected)
+        else {
+            return;
+        };
+        let decl_name = name.unwrap_or(react_name);
+        *stmt = build_const_decl(self.builder, &decl_name, factory_call);
+    }
+
+    fn visit_export_default_declaration(&mut self, decl: &mut ExportDefaultDeclaration<'a>) {
+        let ExportDefaultDeclarationKind::FunctionDeclaration(func) = &mut decl.declaration else {
+            walk_mut::walk_export_default_declaration(self, decl);
+            return;
+        };
+
+        self.visit_function(func, ScopeFlags::Function);
+        let injected = std::mem::take(&mut self.last_injected_refs);
+        let name = func.id.as_ref().map(|id| id.name.to_string());
+        if let Some((factory_call, _)) = self.workletize_function(func, name.as_deref(), &injected) {
+            decl.declaration = ExportDefaultDeclarationKind::from(factory_call);
+        }
+    }
+
+    fn visit_export_named_declaration(&mut self, decl: &mut ExportNamedDeclaration<'a>) {
+        let Some(Declaration::FunctionDeclaration(func)) = &mut decl.declaration else {
+            walk_mut::walk_export_named_declaration(self, decl);
+            return;
+        };
+
+        self.visit_function(func, ScopeFlags::Function);
+        let injected = std::mem::take(&mut self.last_injected_refs);
+        let name = func.id.as_ref().map(|id| id.name.to_string());
+        let Some((factory_call, react_name)) =
+            self.workletize_function(func, name.as_deref(), &injected)
+        else {
+            return;
+        };
+        let decl_name = name.unwrap_or(react_name);
+        if let Statement::VariableDeclaration(vd) =
+            build_const_decl(self.builder, &decl_name, factory_call)
+        {
+            decl.declaration = Some(Declaration::VariableDeclaration(vd));
+        }
+    }
+
+    fn visit_object_property(&mut self, prop: &mut ObjectProperty<'a>) {
+        let Expression::FunctionExpression(func) = &mut prop.value else {
+            walk_mut::walk_object_property(self, prop);
+            return;
+        };
+        if !prop.method {
+            walk_mut::walk_object_property(self, prop);
+            return;
+        }
+
+        let method_name = match &prop.key {
+            PropertyKey::StaticIdentifier(id) => Some(id.name.to_string()),
+            _ => None,
+        };
+        self.visit_function(func, ScopeFlags::Function);
+        let injected = std::mem::take(&mut self.last_injected_refs);
+        if let Some((factory_call, _)) =
+            self.workletize_function(func, method_name.as_deref(), &injected)
+        {
+            prop.value = factory_call;
+            prop.method = false;
+        }
+    }
+
+    fn visit_call_expression(&mut self, call: &mut CallExpression<'a>) {
+        self.inject_hook_directives(call);
+        walk_mut::walk_call_expression(self, call);
+    }
+
+    fn visit_variable_declarator(&mut self, declarator: &mut VariableDeclarator<'a>) {
+        let binding_symbol = match &declarator.id {
+            BindingPattern::BindingIdentifier(bid) => bid.symbol_id.get(),
+            _ => None,
+        };
+        if let (Some(symbol_id), Some(init)) = (binding_symbol, declarator.init.as_mut()) {
+            if self.state.referenced_worklet_symbols.contains(&symbol_id) {
+                inject_directive_into_expression(init, self.builder);
+            }
+        }
+        walk_mut::walk_variable_declarator(self, declarator);
+    }
+
+    fn visit_assignment_expression(&mut self, assign: &mut AssignmentExpression<'a>) {
+        if let AssignmentTarget::AssignmentTargetIdentifier(lhs) = &assign.left {
+            let symbol_id = lhs
+                .reference_id
+                .get()
+                .and_then(|rid| self.scoping.get_reference(rid).symbol_id());
+            if let Some(symbol_id) = symbol_id {
+                if self.state.referenced_worklet_symbols.contains(&symbol_id) {
+                    inject_directive_into_expression(&mut assign.right, self.builder);
+                }
+            }
+        }
+        walk_mut::walk_assignment_expression(self, assign);
+    }
+
+    fn visit_class(&mut self, class: &mut Class<'a>) {
+        if crate::worklet_class::is_worklet_class(class) {
+            crate::worklet_class::remove_worklet_class_marker(&mut class.body, self.builder);
+        }
+        walk_mut::walk_class(self, class);
+    }
 }
 
 fn collect_referenced_worklet_symbols<'a>(
     program: &Program<'a>,
     scoping: &Scoping,
-) -> std::collections::HashSet<oxc_syntax::symbol::SymbolId> {
-    use oxc_ast::ast::{CallExpression, Expression};
+) -> HashSet<SymbolId> {
     use oxc_ast_visit::Visit;
-    use oxc_syntax::symbol::SymbolId;
 
     struct Pre<'s> {
         scoping: &'s Scoping,
-        found: std::collections::HashSet<SymbolId>,
+        found: HashSet<SymbolId>,
     }
 
     impl<'a, 's> Pre<'s> {
@@ -138,7 +405,7 @@ fn collect_referenced_worklet_symbols<'a>(
                 return;
             };
             for prop in obj.properties.iter() {
-                if let oxc_ast::ast::ObjectPropertyKind::ObjectProperty(p) = prop {
+                if let ObjectPropertyKind::ObjectProperty(p) = prop {
                     if let Expression::Identifier(id) = &p.value {
                         if let Some(rid) = id.reference_id.get() {
                             if let Some(sid) = self.scoping.get_reference(rid).symbol_id() {
@@ -155,47 +422,15 @@ fn collect_referenced_worklet_symbols<'a>(
         fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
             oxc_ast_visit::walk::walk_call_expression(self, call);
 
-            let effective_callee: &Expression<'_> = match &call.callee {
-                Expression::SequenceExpression(seq) => seq
-                    .expressions
-                    .last()
-                    .unwrap_or(&call.callee),
-                other => other,
-            };
-            let name = match effective_callee {
-                Expression::Identifier(id) => Some(id.name.as_str().to_string()),
-                Expression::StaticMemberExpression(m) => Some(m.property.name.as_str().to_string()),
-                _ => None,
-            };
-
-            let arg_indices_buf: Vec<usize>;
-            let arg_indices: &[usize] = if let Some(name) = name.as_deref() {
-                if FUNCTION_HOOKS_ARG0.contains(&name)
-                    || crate::auto_detect::GESTURE_HANDLER_OBJECT_HOOKS.contains(&name)
-                {
-                    &[0]
-                } else if FUNCTION_HOOKS_ARG01.contains(&name) {
-                    &[0, 1]
-                } else if FUNCTION_HOOKS_ARG1.contains(&name) {
-                    &[1]
-                } else if FUNCTION_HOOKS_ARG2.contains(&name) {
-                    &[2]
-                } else if FUNCTION_HOOKS_ARG3.contains(&name) {
-                    &[3]
-                } else {
-                    &[]
-                }
-            } else {
-                &[]
-            };
-
-            for &i in arg_indices {
-                if let Some(arg) = call.arguments.get(i) {
-                    self.note_arg_identifier(arg);
-                }
-            }
+            let callee = effective_callee(&call.callee);
+            let name = callee_name(callee);
 
             if let Some(name) = name.as_deref() {
+                for &index in hook_argument_indices(name) {
+                    if let Some(arg) = call.arguments.get(index) {
+                        self.note_arg_identifier(arg);
+                    }
+                }
                 if is_object_hook_at_arg0(name) {
                     if let Some(arg0) = call.arguments.first() {
                         self.note_object_arg_property_idents(arg0);
@@ -203,15 +438,12 @@ fn collect_referenced_worklet_symbols<'a>(
                 }
             }
 
-            if is_gesture_object_event_callback_method(effective_callee)
-                || is_layout_animation_callback_method(effective_callee)
+            if is_gesture_object_event_callback_method(callee)
+                || is_layout_animation_callback_method(callee)
             {
-                arg_indices_buf = (0..call.arguments.len()).collect();
-                for &i in &arg_indices_buf {
-                    if let Some(arg) = call.arguments.get(i) {
-                        self.note_arg_identifier(arg);
-                        self.note_object_arg_property_idents(arg);
-                    }
+                for arg in call.arguments.iter() {
+                    self.note_arg_identifier(arg);
+                    self.note_object_arg_property_idents(arg);
                 }
             }
         }
@@ -219,7 +451,7 @@ fn collect_referenced_worklet_symbols<'a>(
 
     let mut pre = Pre {
         scoping,
-        found: std::collections::HashSet::new(),
+        found: HashSet::new(),
     };
     pre.visit_program(program);
     let mut found = pre.found;
@@ -228,16 +460,8 @@ fn collect_referenced_worklet_symbols<'a>(
     found
 }
 
-fn expand_aliases<'a>(
-    program: &Program<'a>,
-    scoping: &Scoping,
-    set: &mut std::collections::HashSet<oxc_syntax::symbol::SymbolId>,
-) {
-    use oxc_ast::ast::{
-        AssignmentExpression, AssignmentTarget, BindingPattern, Expression, VariableDeclarator,
-    };
+fn expand_aliases<'a>(program: &Program<'a>, scoping: &Scoping, set: &mut HashSet<SymbolId>) {
     use oxc_ast_visit::Visit;
-    use oxc_syntax::symbol::SymbolId;
 
     struct Aliases<'s> {
         scoping: &'s Scoping,
@@ -305,8 +529,8 @@ fn expand_aliases<'a>(
 }
 
 fn maybe_inject_referenced_directive<'a>(
-    binding_symbol: Option<oxc_syntax::symbol::SymbolId>,
-    body: &mut oxc_ast::ast::FunctionBody<'a>,
+    binding_symbol: Option<SymbolId>,
+    body: &mut FunctionBody<'a>,
     state: &State,
     builder: AstBuilder<'a>,
 ) {
@@ -317,864 +541,32 @@ fn maybe_inject_referenced_directive<'a>(
     inject_worklet_directive(body, builder);
 }
 
-fn process_body_with_frame<'a>(
-    body_stmts: &mut oxc_allocator::Vec<'a, Statement<'a>>,
-    ctx: &mut PrependCtx<'a>,
-    state: &mut State,
-    scoping: &Scoping,
-    builder: AstBuilder<'a>,
-    allocator: &'a Allocator,
-    filename: &str,
-) -> std::collections::HashSet<String> {
-    ctx.push_frame();
-    process_statements(body_stmts, ctx, state, scoping, builder, allocator, filename);
-    let (local, injected) = ctx.pop_frame();
-    if !local.is_empty() {
-        let old = std::mem::replace(body_stmts, builder.vec());
-        let mut new = builder.vec_with_capacity(old.len() + local.len());
-        for s in local {
-            new.push(s);
-        }
-        for s in old {
-            new.push(s);
-        }
-        *body_stmts = new;
-    }
-    injected
-}
-
-fn process_top_level_statement<'a>(
-    stmt: Statement<'a>,
-    ctx: &mut PrependCtx<'a>,
-    state: &mut State,
-    scoping: &Scoping,
-    builder: AstBuilder<'a>,
-    allocator: &'a Allocator,
-    filename: &str,
-) -> Statement<'a> {
-    match stmt {
-        Statement::ClassDeclaration(mut class) => {
-            if crate::worklet_class::is_worklet_class(&class) {
-                crate::worklet_class::remove_worklet_class_marker(&mut class.body, builder);
-            }
-            process_class_body(
-                &mut class.body, ctx, state, scoping, builder, allocator, filename,
-            );
-            Statement::ClassDeclaration(class)
-        }
-        Statement::FunctionDeclaration(mut func) => {
-            let func_id_sym = func.id.as_ref().and_then(|id| id.symbol_id.get());
-            if let Some(body) = func.body.as_mut() {
-                maybe_inject_referenced_directive(func_id_sym, body, state, builder);
-            }
-            if let Some(body) = &func.body {
-                if has_worklet_directive(body) {
-                    let injected = if let Some(body_mut) = func.body.as_mut() {
-                        process_body_with_frame(
-                            &mut body_mut.statements, ctx, state, scoping, builder, allocator, filename,
-                        )
-                    } else {
-                        std::collections::HashSet::new()
-                    };
-                    let name = func.id.as_ref().map(|id| id.name.to_string());
-                    let scope_id = func.scope_id.get().unwrap_or(scoping.root_scope_id());
-                    let body_ref = func
-                        .body
-                        .as_ref()
-                        .expect("function body presence checked above");
-                    let input = WorkletInput {
-                        params: &func.params,
-                        body: body_ref,
-                        is_async: func.r#async,
-                        is_generator: func.generator,
-                        function_scope_id: scope_id,
-                        self_name: name.as_deref(),
-                        is_expression_body: false,
-                    };
-                    let out = make_worklet_factory(
-                        input, state, scoping, builder, allocator, filename, &injected,
-                    );
-                    ctx.record_injected_refs(out.injected_ref_names.iter().cloned());
-                    let decl_name = name.unwrap_or_else(|| out.react_name.clone());
-                    return build_const_decl(builder, &decl_name, out.factory_call);
-                }
-            }
-            if let Some(body) = func.body.as_mut() {
-                process_body_with_frame(
-                    &mut body.statements, ctx, state, scoping, builder, allocator, filename,
-                );
-            }
-            Statement::FunctionDeclaration(func)
-        }
-        Statement::VariableDeclaration(mut vd) => {
-            for declarator in vd.declarations.iter_mut() {
-                process_variable_declarator(
-                    declarator, ctx, state, scoping, builder, allocator, filename,
-                );
-            }
-            Statement::VariableDeclaration(vd)
-        }
-        Statement::ExpressionStatement(mut es) => {
-            process_expression(
-                &mut es.expression,
-                ctx,
-                state,
-                scoping,
-                builder,
-                allocator,
-                filename,
-            );
-            Statement::ExpressionStatement(es)
-        }
-        Statement::BlockStatement(mut block) => {
-            process_statements(
-                &mut block.body, ctx, state, scoping, builder, allocator, filename,
-            );
-            Statement::BlockStatement(block)
-        }
-        Statement::IfStatement(mut s) => {
-            process_expression(&mut s.test, ctx, state, scoping, builder, allocator, filename);
-            recurse_into_stmt(&mut s.consequent, ctx, state, scoping, builder, allocator, filename);
-            if let Some(alt) = &mut s.alternate {
-                recurse_into_stmt(alt, ctx, state, scoping, builder, allocator, filename);
-            }
-            Statement::IfStatement(s)
-        }
-        Statement::WhileStatement(mut s) => {
-            process_expression(&mut s.test, ctx, state, scoping, builder, allocator, filename);
-            recurse_into_stmt(&mut s.body, ctx, state, scoping, builder, allocator, filename);
-            Statement::WhileStatement(s)
-        }
-        Statement::DoWhileStatement(mut s) => {
-            process_expression(&mut s.test, ctx, state, scoping, builder, allocator, filename);
-            recurse_into_stmt(&mut s.body, ctx, state, scoping, builder, allocator, filename);
-            Statement::DoWhileStatement(s)
-        }
-        Statement::ForStatement(mut s) => {
-            if let Some(test) = &mut s.test {
-                process_expression(test, ctx, state, scoping, builder, allocator, filename);
-            }
-            if let Some(update) = &mut s.update {
-                process_expression(update, ctx, state, scoping, builder, allocator, filename);
-            }
-            recurse_into_stmt(&mut s.body, ctx, state, scoping, builder, allocator, filename);
-            Statement::ForStatement(s)
-        }
-        Statement::ForInStatement(mut s) => {
-            process_expression(&mut s.right, ctx, state, scoping, builder, allocator, filename);
-            recurse_into_stmt(&mut s.body, ctx, state, scoping, builder, allocator, filename);
-            Statement::ForInStatement(s)
-        }
-        Statement::ForOfStatement(mut s) => {
-            process_expression(&mut s.right, ctx, state, scoping, builder, allocator, filename);
-            recurse_into_stmt(&mut s.body, ctx, state, scoping, builder, allocator, filename);
-            Statement::ForOfStatement(s)
-        }
-        Statement::TryStatement(mut s) => {
-            process_statements(
-                &mut s.block.body, ctx, state, scoping, builder, allocator, filename,
-            );
-            if let Some(handler) = &mut s.handler {
-                process_statements(
-                    &mut handler.body.body, ctx, state, scoping, builder, allocator, filename,
-                );
-            }
-            if let Some(finalizer) = &mut s.finalizer {
-                process_statements(
-                    &mut finalizer.body, ctx, state, scoping, builder, allocator, filename,
-                );
-            }
-            Statement::TryStatement(s)
-        }
-        Statement::SwitchStatement(mut s) => {
-            process_expression(&mut s.discriminant, ctx, state, scoping, builder, allocator, filename);
-            for case in s.cases.iter_mut() {
-                if let Some(test) = &mut case.test {
-                    process_expression(test, ctx, state, scoping, builder, allocator, filename);
-                }
-                process_statements(
-                    &mut case.consequent, ctx, state, scoping, builder, allocator, filename,
-                );
-            }
-            Statement::SwitchStatement(s)
-        }
-        Statement::LabeledStatement(mut s) => {
-            recurse_into_stmt(&mut s.body, ctx, state, scoping, builder, allocator, filename);
-            Statement::LabeledStatement(s)
-        }
-        Statement::ThrowStatement(mut s) => {
-            process_expression(&mut s.argument, ctx, state, scoping, builder, allocator, filename);
-            Statement::ThrowStatement(s)
-        }
-        Statement::ReturnStatement(mut s) => {
-            if let Some(arg) = &mut s.argument {
-                process_expression(arg, ctx, state, scoping, builder, allocator, filename);
-            }
-            Statement::ReturnStatement(s)
-        }
-        Statement::ExportDefaultDeclaration(mut decl) => {
-            use oxc_ast::ast::ExportDefaultDeclarationKind;
-            match &mut decl.declaration {
-                ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
-                    let is_worklet = func
-                        .body
-                        .as_ref()
-                        .map(|b| has_worklet_directive(b))
-                        .unwrap_or(false);
-                    if is_worklet {
-                        let injected = if let Some(body_mut) = func.body.as_mut() {
-                            process_body_with_frame(
-                                &mut body_mut.statements, ctx, state, scoping, builder, allocator, filename,
-                            )
-                        } else {
-                            std::collections::HashSet::new()
-                        };
-                        let name = func.id.as_ref().map(|id| id.name.to_string());
-                        let scope_id = func
-                            .scope_id
-                            .get()
-                            .unwrap_or(scoping.root_scope_id());
-                        let body_ref = func
-                        .body
-                        .as_ref()
-                        .expect("function body presence checked above");
-                        let input = WorkletInput {
-                            params: &func.params,
-                            body: body_ref,
-                            is_async: func.r#async,
-                            is_generator: func.generator,
-                            function_scope_id: scope_id,
-                            self_name: name.as_deref(),
-                            is_expression_body: false,
-                        };
-                        let out = make_worklet_factory(
-                            input, state, scoping, builder, allocator, filename, &injected,
-                        );
-                        ctx.record_injected_refs(out.injected_ref_names.iter().cloned());
-                        decl.declaration =
-                            ExportDefaultDeclarationKind::from(out.factory_call);
-                    } else if let Some(body) = func.body.as_mut() {
-                        process_body_with_frame(
-                            &mut body.statements,
-                            ctx,
-                            state,
-                            scoping,
-                            builder,
-                            allocator,
-                            filename,
-                        );
-                    }
-                }
-                ExportDefaultDeclarationKind::ClassDeclaration(class) => {
-                    process_class_body(
-                        &mut class.body, ctx, state, scoping, builder, allocator, filename,
-                    );
-                }
-                _ => {
-                    if let Some(expr) = decl.declaration.as_expression_mut() {
-                        process_expression(
-                            expr, ctx, state, scoping, builder, allocator, filename,
-                        );
-                    }
-                }
-            }
-            Statement::ExportDefaultDeclaration(decl)
-        }
-        Statement::ExportNamedDeclaration(mut decl) => {
-            if let Some(Declaration::FunctionDeclaration(func)) = &mut decl.declaration {
-                if let Some(body) = &func.body {
-                    if has_worklet_directive(body) {
-                        let injected = if let Some(body_mut) = func.body.as_mut() {
-                            process_body_with_frame(
-                                &mut body_mut.statements, ctx, state, scoping, builder, allocator, filename,
-                            )
-                        } else {
-                            std::collections::HashSet::new()
-                        };
-                        let name = func
-                            .id
-                            .as_ref()
-                            .map(|id| id.name.to_string())
-                            .unwrap_or_default();
-                        let scope_id = func
-                            .scope_id
-                            .get()
-                            .unwrap_or(scoping.root_scope_id());
-                        let body_ref = func
-                        .body
-                        .as_ref()
-                        .expect("function body presence checked above");
-                        let input = WorkletInput {
-                            params: &func.params,
-                            body: body_ref,
-                            is_async: func.r#async,
-                            is_generator: func.generator,
-                            function_scope_id: scope_id,
-                            self_name: if name.is_empty() { None } else { Some(&name) },
-                            is_expression_body: false,
-                        };
-                        let out = make_worklet_factory(
-                            input, state, scoping, builder, allocator, filename, &injected,
-                        );
-                        ctx.record_injected_refs(out.injected_ref_names.iter().cloned());
-                        let decl_name =
-                            if name.is_empty() { out.react_name.clone() } else { name };
-                        let new_stmt =
-                            build_const_decl(builder, &decl_name, out.factory_call);
-                        if let Statement::VariableDeclaration(vd) = new_stmt {
-                            decl.declaration =
-                                Some(Declaration::VariableDeclaration(vd));
-                        }
-                        return Statement::ExportNamedDeclaration(decl);
-                    }
-                }
-            }
-            if let Some(declaration) = &mut decl.declaration {
-                process_inner_declaration(
-                    declaration, ctx, state, scoping, builder, allocator, filename,
-                );
-            }
-            Statement::ExportNamedDeclaration(decl)
-        }
-        other => other,
-    }
-}
-
-fn process_class_body<'a>(
-    body: &mut oxc_ast::ast::ClassBody<'a>,
-    ctx: &mut PrependCtx<'a>,
-    state: &mut State,
-    scoping: &Scoping,
-    builder: AstBuilder<'a>,
-    allocator: &'a Allocator,
-    filename: &str,
-) {
-    use oxc_ast::ast::ClassElement;
-    for el in body.body.iter_mut() {
-        match el {
-            ClassElement::MethodDefinition(m) => {
-                if let Some(body) = m.value.body.as_mut() {
-                    process_body_with_frame(
-                        &mut body.statements, ctx, state, scoping, builder, allocator, filename,
-                    );
-                }
-            }
-            ClassElement::PropertyDefinition(p) => {
-                if let Some(value) = &mut p.value {
-                    process_expression(
-                        value, ctx, state, scoping, builder, allocator, filename,
-                    );
-                }
-            }
-            ClassElement::AccessorProperty(a) => {
-                if let Some(value) = &mut a.value {
-                    process_expression(
-                        value, ctx, state, scoping, builder, allocator, filename,
-                    );
-                }
-            }
-            ClassElement::StaticBlock(b) => {
-                process_body_with_frame(
-                    &mut b.body, ctx, state, scoping, builder, allocator, filename,
-                );
-            }
-            _ => {}
-        }
-    }
-}
-
-fn recurse_into_stmt<'a>(
-    stmt: &mut Statement<'a>,
-    ctx: &mut PrependCtx<'a>,
-    state: &mut State,
-    scoping: &Scoping,
-    builder: AstBuilder<'a>,
-    allocator: &'a Allocator,
-    filename: &str,
-) {
-    use oxc_span::SPAN;
-    let placeholder = builder.statement_empty(SPAN);
-    let owned = std::mem::replace(stmt, placeholder);
-    *stmt = process_top_level_statement(
-        owned, ctx, state, scoping, builder, allocator, filename,
-    );
-}
-
-fn process_statements<'a>(
-    stmts: &mut oxc_allocator::Vec<'a, Statement<'a>>,
-    ctx: &mut PrependCtx<'a>,
-    state: &mut State,
-    scoping: &Scoping,
-    builder: AstBuilder<'a>,
-    allocator: &'a Allocator,
-    filename: &str,
-) {
-    let old = std::mem::replace(stmts, builder.vec());
-    let mut new_stmts = builder.vec_with_capacity(old.len());
-    for s in old {
-        let processed =
-            process_top_level_statement(s, ctx, state, scoping, builder, allocator, filename);
-        new_stmts.push(processed);
-    }
-    *stmts = new_stmts;
-}
-
-fn process_inner_declaration<'a>(
-    decl: &mut Declaration<'a>,
-    ctx: &mut PrependCtx<'a>,
-    state: &mut State,
-    scoping: &Scoping,
-    builder: AstBuilder<'a>,
-    allocator: &'a Allocator,
-    filename: &str,
-) {
-    match decl {
-        Declaration::VariableDeclaration(vd) => {
-            for declarator in vd.declarations.iter_mut() {
-                process_variable_declarator(
-                    declarator, ctx, state, scoping, builder, allocator, filename,
-                );
-            }
-        }
-        Declaration::FunctionDeclaration(func) => {
-            if let Some(body) = func.body.as_mut() {
-                process_body_with_frame(
-                    &mut body.statements, ctx, state, scoping, builder, allocator, filename,
-                );
-            }
-        }
-        Declaration::ClassDeclaration(class) => {
-            process_class_body(
-                &mut class.body, ctx, state, scoping, builder, allocator, filename,
-            );
-        }
-        _ => {}
-    }
-}
-
-fn process_variable_declarator<'a>(
-    declarator: &mut VariableDeclarator<'a>,
-    ctx: &mut PrependCtx<'a>,
-    state: &mut State,
-    scoping: &Scoping,
-    builder: AstBuilder<'a>,
-    allocator: &'a Allocator,
-    filename: &str,
-) {
-    let binding_symbol = match &declarator.id {
-        oxc_ast::ast::BindingPattern::BindingIdentifier(bid) => bid.symbol_id.get(),
-        _ => None,
-    };
-    if let (Some(sid), Some(init)) = (binding_symbol, declarator.init.as_mut()) {
-        if state.referenced_worklet_symbols.contains(&sid) {
-            match init {
-                oxc_ast::ast::Expression::ArrowFunctionExpression(arrow) => {
-                    inject_worklet_directive(&mut arrow.body, builder);
-                }
-                oxc_ast::ast::Expression::FunctionExpression(func) => {
-                    if let Some(body) = func.body.as_mut() {
-                        inject_worklet_directive(body, builder);
-                    }
-                }
-                _ => {}
-            }
-        }
-    }
-    let Some(init) = &mut declarator.init else {
-        return;
-    };
-    process_expression(init, ctx, state, scoping, builder, allocator, filename);
-}
-
-fn process_expression<'a>(
-    expr: &mut Expression<'a>,
-    ctx: &mut PrependCtx<'a>,
-    state: &mut State,
-    scoping: &Scoping,
-    builder: AstBuilder<'a>,
-    allocator: &'a Allocator,
-    filename: &str,
-) {
+fn inject_directive_into_expression<'a>(expr: &mut Expression<'a>, builder: AstBuilder<'a>) {
     match expr {
         Expression::ArrowFunctionExpression(arrow) => {
-            if has_worklet_directive(&arrow.body) {
-                let injected = process_body_with_frame(
-                    &mut arrow.body.statements,
-                    ctx,
-                    state,
-                    scoping,
-                    builder,
-                    allocator,
-                    filename,
-                );
-                let scope_id = arrow.scope_id.get().unwrap_or(scoping.root_scope_id());
-                let input = WorkletInput {
-                    params: &arrow.params,
-                    body: &arrow.body,
-                    is_async: arrow.r#async,
-                    is_generator: false,
-                    function_scope_id: scope_id,
-                    self_name: None,
-                    is_expression_body: arrow.expression,
-                };
-                let out = make_worklet_factory(
-                    input, state, scoping, builder, allocator, filename, &injected,
-                );
-                ctx.record_injected_refs(out.injected_ref_names.iter().cloned());
-                *expr = out.factory_call;
-            } else {
-                process_body_with_frame(
-                    &mut arrow.body.statements,
-                    ctx,
-                    state,
-                    scoping,
-                    builder,
-                    allocator,
-                    filename,
-                );
-            }
+            inject_worklet_directive(&mut arrow.body, builder);
         }
         Expression::FunctionExpression(func) => {
-            if let Some(body) = &func.body {
-                if has_worklet_directive(body) {
-                    let injected = if let Some(body_mut) = func.body.as_mut() {
-                        process_body_with_frame(
-                            &mut body_mut.statements,
-                            ctx,
-                            state,
-                            scoping,
-                            builder,
-                            allocator,
-                            filename,
-                        )
-                    } else {
-                        std::collections::HashSet::new()
-                    };
-                    let name = func.id.as_ref().map(|id| id.name.to_string());
-                    let scope_id = func.scope_id.get().unwrap_or(scoping.root_scope_id());
-                    let body_ref = func
-                        .body
-                        .as_ref()
-                        .expect("function body presence checked above");
-                    let input = WorkletInput {
-                        params: &func.params,
-                        body: body_ref,
-                        is_async: func.r#async,
-                        is_generator: func.generator,
-                        function_scope_id: scope_id,
-                        self_name: name.as_deref(),
-                        is_expression_body: false,
-                    };
-                    let out = make_worklet_factory(
-                        input, state, scoping, builder, allocator, filename, &injected,
-                    );
-                    ctx.record_injected_refs(out.injected_ref_names.iter().cloned());
-                    *expr = out.factory_call;
-                } else if let Some(body) = func.body.as_mut() {
-                    process_body_with_frame(
-                        &mut body.statements,
-                        ctx,
-                        state,
-                        scoping,
-                        builder,
-                        allocator,
-                        filename,
-                    );
-                }
-            }
-        }
-        Expression::ObjectExpression(obj) => {
-            process_object_expression(obj, ctx, state, scoping, builder, allocator, filename);
-        }
-        Expression::CallExpression(call) => {
-            let effective_callee: &Expression<'_> = match &call.callee {
-                Expression::SequenceExpression(seq) => seq
-                    .expressions
-                    .last()
-                    .unwrap_or(&call.callee),
-                other => other,
-            };
-            let callee_name = match effective_callee {
-                Expression::Identifier(id) => Some(id.name.to_string()),
-                Expression::StaticMemberExpression(m) => Some(m.property.name.to_string()),
-                _ => None,
-            };
-
-            let is_gesture_callee = is_gesture_object_event_callback_method(effective_callee);
-            let is_layout_animation_callee = is_layout_animation_callback_method(effective_callee);
-
-            {
-                if let Some(name) = callee_name.as_deref() {
-                    let arg_indices: &[usize] =
-                        if FUNCTION_HOOKS_ARG0.contains(&name) || GESTURE_HANDLER_OBJECT_HOOKS.contains(&name) {
-                            &[0]
-                        } else if FUNCTION_HOOKS_ARG01.contains(&name) {
-                            &[0, 1]
-                        } else if FUNCTION_HOOKS_ARG1.contains(&name) {
-                            &[1]
-                        } else if FUNCTION_HOOKS_ARG2.contains(&name) {
-                            &[2]
-                        } else if FUNCTION_HOOKS_ARG3.contains(&name) {
-                            &[3]
-                        } else {
-                            &[]
-                        };
-                    for &i in arg_indices {
-                        if let Some(arg) = call.arguments.get_mut(i) {
-                            autoworkletize_function_arg(
-                                arg, ctx, state, scoping, builder, allocator, filename,
-                            );
-                        }
-                    }
-                    if is_object_hook_at_arg0(name) {
-                        if let Some(Argument::ObjectExpression(obj)) =
-                            call.arguments.get_mut(0)
-                        {
-                            inject_worklet_directives_to_object_methods(obj, builder);
-                            process_object_expression(
-                                obj, ctx, state, scoping, builder, allocator, filename,
-                            );
-                        }
-                    }
-                }
-
-                if is_gesture_callee || is_layout_animation_callee {
-                    for i in 0..call.arguments.len() {
-                        if let Some(arg) = call.arguments.get_mut(i) {
-                            if let Argument::ObjectExpression(obj) = arg {
-                                inject_worklet_directives_to_object_methods(obj, builder);
-                                process_object_expression(
-                                    obj, ctx, state, scoping, builder, allocator, filename,
-                                );
-                            } else {
-                                autoworkletize_function_arg(
-                                    arg, ctx, state, scoping, builder, allocator, filename,
-                                );
-                            }
-                        }
-                    }
-                }
-            }
-
-            process_expression(
-                &mut call.callee,
-                ctx,
-                state,
-                scoping,
-                builder,
-                allocator,
-                filename,
-            );
-            for arg in call.arguments.iter_mut() {
-                if let Some(arg_expr) = arg.as_expression_mut() {
-                    process_expression(
-                        arg_expr, ctx, state, scoping, builder, allocator, filename,
-                    );
-                }
-            }
-        }
-        Expression::StaticMemberExpression(m) => {
-            process_expression(&mut m.object, ctx, state, scoping, builder, allocator, filename);
-        }
-        Expression::ComputedMemberExpression(m) => {
-            process_expression(&mut m.object, ctx, state, scoping, builder, allocator, filename);
-            process_expression(&mut m.expression, ctx, state, scoping, builder, allocator, filename);
-        }
-        Expression::ArrayExpression(arr) => {
-            for el in arr.elements.iter_mut() {
-                if let Some(e) = el.as_expression_mut() {
-                    process_expression(e, ctx, state, scoping, builder, allocator, filename);
-                }
-            }
-        }
-        Expression::NewExpression(new_expr) => {
-            process_expression(&mut new_expr.callee, ctx, state, scoping, builder, allocator, filename);
-            for arg in new_expr.arguments.iter_mut() {
-                if let Some(e) = arg.as_expression_mut() {
-                    process_expression(e, ctx, state, scoping, builder, allocator, filename);
-                }
-            }
-        }
-        Expression::AssignmentExpression(assign) => {
-            if let oxc_ast::ast::AssignmentTarget::AssignmentTargetIdentifier(lhs) = &assign.left {
-                if let Some(rid) = lhs.reference_id.get() {
-                    if let Some(sid) = scoping.get_reference(rid).symbol_id() {
-                        if state.referenced_worklet_symbols.contains(&sid) {
-                            match &mut assign.right {
-                                Expression::ArrowFunctionExpression(arrow) => {
-                                    inject_worklet_directive(&mut arrow.body, builder);
-                                }
-                                Expression::FunctionExpression(func) => {
-                                    if let Some(body) = func.body.as_mut() {
-                                        inject_worklet_directive(body, builder);
-                                    }
-                                }
-                                _ => {}
-                            }
-                        }
-                    }
-                }
-            }
-            process_expression(&mut assign.right, ctx, state, scoping, builder, allocator, filename);
-        }
-        Expression::ConditionalExpression(cond) => {
-            process_expression(&mut cond.test, ctx, state, scoping, builder, allocator, filename);
-            process_expression(&mut cond.consequent, ctx, state, scoping, builder, allocator, filename);
-            process_expression(&mut cond.alternate, ctx, state, scoping, builder, allocator, filename);
-        }
-        Expression::LogicalExpression(l) => {
-            process_expression(&mut l.left, ctx, state, scoping, builder, allocator, filename);
-            process_expression(&mut l.right, ctx, state, scoping, builder, allocator, filename);
-        }
-        Expression::BinaryExpression(b) => {
-            process_expression(&mut b.left, ctx, state, scoping, builder, allocator, filename);
-            process_expression(&mut b.right, ctx, state, scoping, builder, allocator, filename);
-        }
-        Expression::SequenceExpression(seq) => {
-            for e in seq.expressions.iter_mut() {
-                process_expression(e, ctx, state, scoping, builder, allocator, filename);
-            }
-        }
-        Expression::AwaitExpression(a) => {
-            process_expression(&mut a.argument, ctx, state, scoping, builder, allocator, filename);
-        }
-        Expression::YieldExpression(y) => {
-            if let Some(arg) = &mut y.argument {
-                process_expression(arg, ctx, state, scoping, builder, allocator, filename);
-            }
-        }
-        Expression::UnaryExpression(u) => {
-            process_expression(&mut u.argument, ctx, state, scoping, builder, allocator, filename);
-        }
-        Expression::ParenthesizedExpression(p) => {
-            process_expression(&mut p.expression, ctx, state, scoping, builder, allocator, filename);
-        }
-        Expression::ChainExpression(c) => {
-            if let oxc_ast::ast::ChainElement::CallExpression(call) = &mut c.expression {
-                process_expression(
-                    &mut call.callee, ctx, state, scoping, builder, allocator, filename,
-                );
-                for arg in call.arguments.iter_mut() {
-                    if let Some(arg_expr) = arg.as_expression_mut() {
-                        process_expression(
-                            arg_expr, ctx, state, scoping, builder, allocator, filename,
-                        );
-                    }
-                }
-            }
-        }
-        Expression::TaggedTemplateExpression(t) => {
-            process_expression(&mut t.tag, ctx, state, scoping, builder, allocator, filename);
-            for e in t.quasi.expressions.iter_mut() {
-                process_expression(e, ctx, state, scoping, builder, allocator, filename);
+            if let Some(body) = func.body.as_mut() {
+                inject_worklet_directive(body, builder);
             }
         }
         _ => {}
     }
 }
 
-fn process_object_expression<'a>(
-    obj: &mut ObjectExpression<'a>,
-    ctx: &mut PrependCtx<'a>,
-    state: &mut State,
-    scoping: &Scoping,
-    builder: AstBuilder<'a>,
-    allocator: &'a Allocator,
-    filename: &str,
-) {
-    for prop in obj.properties.iter_mut() {
-        if let ObjectPropertyKind::ObjectProperty(prop) = prop {
-            if prop.method {
-                let method_name = match &prop.key {
-                    PropertyKey::StaticIdentifier(id) => Some(id.name.to_string()),
-                    _ => None,
-                };
-                if let Expression::FunctionExpression(func) = &mut prop.value {
-                    if let Some(body) = &func.body {
-                        if has_worklet_directive(body) {
-                            let injected = if let Some(body_mut) = func.body.as_mut() {
-                                process_body_with_frame(
-                                    &mut body_mut.statements, ctx, state, scoping, builder, allocator, filename,
-                                )
-                            } else {
-                                std::collections::HashSet::new()
-                            };
-                            let scope_id = func.scope_id.get().unwrap_or(scoping.root_scope_id());
-                            let body_ref = func
-                        .body
-                        .as_ref()
-                        .expect("function body presence checked above");
-                            let method_name_ref = method_name.as_deref();
-                            let input = WorkletInput {
-                                params: &func.params,
-                                body: body_ref,
-                                is_async: func.r#async,
-                                is_generator: func.generator,
-                                function_scope_id: scope_id,
-                                self_name: method_name_ref,
-                                is_expression_body: false,
-                            };
-                            let out = make_worklet_factory(
-                                input, state, scoping, builder, allocator, filename, &injected,
-                            );
-                            ctx.record_injected_refs(out.injected_ref_names.iter().cloned());
-                            prop.value = out.factory_call;
-                            prop.method = false;
-                        } else if let Some(body_mut) = func.body.as_mut() {
-                            process_body_with_frame(
-                                &mut body_mut.statements, ctx, state, scoping, builder, allocator, filename,
-                            );
-                        }
-                    }
-                }
-            } else {
-                process_expression(
-                    &mut prop.value, ctx, state, scoping, builder, allocator, filename,
-                );
-            }
-        }
-    }
-}
-
-fn autoworkletize_function_arg<'a>(
-    arg: &mut Argument<'a>,
-    ctx: &mut PrependCtx<'a>,
-    state: &mut State,
-    scoping: &Scoping,
-    builder: AstBuilder<'a>,
-    allocator: &'a Allocator,
-    filename: &str,
-) {
-    let took_expr = match arg {
+fn inject_directive_into_argument<'a>(arg: &mut Argument<'a>, builder: AstBuilder<'a>) {
+    match arg {
         Argument::ArrowFunctionExpression(arrow) => {
             inject_worklet_directive(&mut arrow.body, builder);
-            true
         }
         Argument::FunctionExpression(func) => {
-            if let Some(body) = &mut func.body {
+            if let Some(body) = func.body.as_mut() {
                 inject_worklet_directive(body, builder);
-                true
-            } else {
-                false
             }
         }
-        _ => false,
-    };
-    if !took_expr {
-        return;
+        _ => {}
     }
-
-    let dummy = builder.expression_null_literal(SPAN);
-    let taken = std::mem::replace(arg, Argument::from(dummy));
-    let mut as_expr = match taken {
-        Argument::ArrowFunctionExpression(arrow) => Expression::ArrowFunctionExpression(arrow),
-        Argument::FunctionExpression(func) => Expression::FunctionExpression(func),
-        _ => unreachable!(),
-    };
-    process_expression(
-        &mut as_expr, ctx, state, scoping, builder, allocator, filename,
-    );
-    *arg = Argument::from(as_expr);
 }
 
 fn inject_worklet_directives_to_object_methods<'a>(
@@ -1183,17 +575,7 @@ fn inject_worklet_directives_to_object_methods<'a>(
 ) {
     for prop in obj.properties.iter_mut() {
         if let ObjectPropertyKind::ObjectProperty(p) = prop {
-            match &mut p.value {
-                Expression::FunctionExpression(func) => {
-                    if let Some(body) = &mut func.body {
-                        inject_worklet_directive(body, builder);
-                    }
-                }
-                Expression::ArrowFunctionExpression(arrow) => {
-                    inject_worklet_directive(&mut arrow.body, builder);
-                }
-                _ => {}
-            }
+            inject_directive_into_expression(&mut p.value, builder);
         }
     }
 }

@@ -1,13 +1,11 @@
 use std::collections::HashSet;
 
-use oxc_ast::ast::{ArrowFunctionExpression, Function, IdentifierReference};
+use oxc_ast::ast::{FormalParameters, FunctionBody, IdentifierReference};
 use oxc_ast_visit::Visit;
 use oxc_semantic::Scoping;
 use oxc_syntax::reference::ReferenceFlags;
 use oxc_syntax::scope::ScopeId;
 use oxc_syntax::symbol::SymbolId;
-#[allow(unused_imports)]
-use oxc_syntax::scope::ScopeFlags;
 
 use crate::state::{ImportInfo, ImportShape, State};
 use crate::utils::{can_forward_module_import, can_forward_relative_import};
@@ -18,8 +16,9 @@ pub struct ClosureResult {
     pub imports: Vec<ImportInfo>,
 }
 
-pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
-    body: B,
+pub fn closure_for_function<'a>(
+    params: &FormalParameters<'a>,
+    body: &FunctionBody<'a>,
     function_scope_id: ScopeId,
     self_function_name: Option<&str>,
     scoping: &Scoping,
@@ -31,7 +30,8 @@ pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
         scoping,
         refs: Vec::new(),
     };
-    body.walk_into(&mut collector);
+    collector.visit_function_body(body);
+    collector.visit_formal_parameters(params);
 
     let mut seen: HashSet<String> = HashSet::new();
     let mut result = ClosureResult::default();
@@ -154,25 +154,5 @@ impl<'a, 's> Visit<'a> for ReferenceCollector<'s> {
             symbol_id,
             flags,
         });
-    }
-}
-
-pub trait WalkFunctionBody<'a> {
-    fn walk_into<V: Visit<'a>>(self, visitor: &mut V);
-}
-
-impl<'a> WalkFunctionBody<'a> for &Function<'a> {
-    fn walk_into<V: Visit<'a>>(self, visitor: &mut V) {
-        if let Some(body) = &self.body {
-            visitor.visit_function_body(body);
-        }
-        visitor.visit_formal_parameters(&self.params);
-    }
-}
-
-impl<'a> WalkFunctionBody<'a> for &ArrowFunctionExpression<'a> {
-    fn walk_into<V: Visit<'a>>(self, visitor: &mut V) {
-        visitor.visit_function_body(&self.body);
-        visitor.visit_formal_parameters(&self.params);
     }
 }

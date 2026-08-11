@@ -5,6 +5,8 @@ const path = require('path');
 
 const oxc = require('./index.js');
 
+const MOCK_VERSION = 'x.y.z';
+
 let cachedPluginVersion = undefined;
 function getPluginVersion() {
   if (process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION === '1') {
@@ -18,8 +20,6 @@ function getPluginVersion() {
   }
   return cachedPluginVersion;
 }
-
-const MOCK_VERSION = 'x.y.z';
 
 let cachedWorkletsPkgDir = undefined;
 function resolveWorkletsPkgDir() {
@@ -37,10 +37,10 @@ function resolveWorkletsDir() {
   return pkg ? path.join(pkg, '.worklets') : null;
 }
 
-const WORKLETS_PREFIX = 'react-native-worklets/.worklets/';
-
 const SYNTAX_JSX = require.resolve('@babel/plugin-syntax-jsx');
 const SYNTAX_TYPESCRIPT = require.resolve('@babel/plugin-syntax-typescript');
+
+const GENERATED_WORKLETS_DIR = 'react-native-worklets/.worklets';
 
 function writeEmittedFiles(files) {
   if (!files || files.length === 0) return;
@@ -51,14 +51,11 @@ function writeEmittedFiles(files) {
         "the react-native-worklets package on disk. Make sure it's installed."
     );
   }
-  try {
-    fs.mkdirSync(dir, { recursive: true });
-  } catch {
-      }
+  fs.mkdirSync(dir, { recursive: true });
   for (const file of files) {
     let absPath;
-    if (file.path.startsWith(WORKLETS_PREFIX)) {
-      absPath = path.join(dir, file.path.slice(WORKLETS_PREFIX.length));
+    if (file.path.startsWith(`${GENERATED_WORKLETS_DIR}/`)) {
+      absPath = path.join(dir, file.path.slice(GENERATED_WORKLETS_DIR.length + 1));
     } else {
       absPath = path.join(dir, path.basename(file.path));
     }
@@ -75,8 +72,6 @@ function reparseSyntaxPlugins(filename) {
   }
   return [[SYNTAX_JSX]];
 }
-
-const GENERATED_WORKLETS_DIR = 'react-native-worklets/.worklets';
 
 const PARSE_ERROR_CODE = 'WORKLETS_ERR_PARSE';
 
@@ -140,6 +135,15 @@ function workletsPluginOxcBabelShim(babelApi, options) {
           }
 
           writeEmittedFiles(result.files);
+
+          if (result.map && !state.file.inputMap) {
+            const map = JSON.parse(result.map);
+            const generatorOpts = state.file.opts.generatorOpts;
+            if (generatorOpts && generatorOpts.sourceFileName) {
+              map.sources = [generatorOpts.sourceFileName];
+            }
+            state.file.inputMap = { toObject: () => map };
+          }
 
           const newAst = parse(result.code, {
             sourceType: 'module',

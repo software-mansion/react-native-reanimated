@@ -481,26 +481,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d211803b9b6b570f68772237e415a029d5a50c65d382910b879fb19d3271f94d"
 
 [[package]]
-name = "oxc"
-version = "0.132.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fecf76aaae6c29dd8dcde82e8a526ba8e7859ecfa98a2b8b5d54fc17965a241"
-dependencies = [
- "oxc_allocator",
- "oxc_ast",
- "oxc_ast_visit",
- "oxc_codegen",
- "oxc_diagnostics",
- "oxc_parser",
- "oxc_regular_expression",
- "oxc_semantic",
- "oxc_span",
- "oxc_syntax",
- "oxc_transformer",
- "oxc_transformer_plugins",
-]
-
-[[package]]
 name = "oxc-browserslist"
 version = "3.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -829,29 +809,6 @@ dependencies = [
  "serde",
  "serde_json",
  "sha1",
-]
-
-[[package]]
-name = "oxc_transformer_plugins"
-version = "0.132.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "152910d2c114c4e6c38ea49b77dd5a2d56b704c5fe0f81167759282dc0054e81"
-dependencies = [
- "cow-utils",
- "itoa",
- "oxc_allocator",
- "oxc_ast",
- "oxc_ast_visit",
- "oxc_diagnostics",
- "oxc_ecmascript",
- "oxc_parser",
- "oxc_semantic",
- "oxc_span",
- "oxc_str",
- "oxc_syntax",
- "oxc_transformer",
- "oxc_traverse",
- "rustc-hash",
 ]
 
 [[package]]
@@ -1197,20 +1154,15 @@ dependencies = [
  "napi",
  "napi-build",
  "napi-derive",
- "oxc",
  "oxc_allocator",
  "oxc_ast",
  "oxc_ast_visit",
  "oxc_codegen",
  "oxc_parser",
  "oxc_semantic",
- "oxc_sourcemap",
  "oxc_span",
  "oxc_syntax",
  "oxc_transformer",
- "oxc_traverse",
- "serde",
- "serde_json",
 ]
 
 [[package]]

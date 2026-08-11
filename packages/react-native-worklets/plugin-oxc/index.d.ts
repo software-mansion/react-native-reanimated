@@ -29,6 +29,7 @@ export interface EmittedFile {
 
 export interface TransformResult {
   code: string;
+  map?: string;
   files: EmittedFile[];
 }
 

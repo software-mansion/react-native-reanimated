@@ -15,7 +15,6 @@ use crate::closure::{ClosureResult, closure_for_function};
 use crate::naming::{WorkletNames, make_worklet_name};
 use crate::naming::worklet_hash;
 use crate::state::State;
-use crate::transformer::builders::no_rest;
 use crate::utils::{is_release, rewrite_implicit_return};
 use crate::worklet_body::build_worklet_body_string;
 
@@ -37,9 +36,6 @@ pub struct WorkletInput<'a, 'b> {
     pub function_scope_id: ScopeId,
     pub self_name: Option<&'b str>,
     pub is_expression_body: bool,
-}
-
-impl<'a, 'b> WorkletInput<'a, 'b> {
 }
 
 pub struct FactoryOutput<'a> {
@@ -67,7 +63,8 @@ pub fn make_worklet_factory<'a>(
 
     let closure: ClosureResult = {
         closure_for_function(
-            ClosureWalk::new(input.params, input.body),
+            input.params,
+            input.body,
             input.function_scope_id,
             input.self_name,
             scoping,
@@ -76,8 +73,6 @@ pub fn make_worklet_factory<'a>(
             filename,
         )
     };
-
-    let rewritten_classes: Vec<String> = Vec::new();
 
     let recursive_name = input.self_name.and_then(|name| {
         if body_references_name(input.body, name, scoping, input.function_scope_id) {
@@ -96,7 +91,6 @@ pub fn make_worklet_factory<'a>(
         input.is_expression_body,
         &closure.closure_variables,
         recursive_name,
-        &rewritten_classes,
         allocator,
         &state.source_text,
     );
@@ -324,7 +318,7 @@ fn build_factory_expression<'a>(
         ));
     }
 
-    let pat = builder.binding_pattern_object_pattern(SPAN, binding_props, no_rest());
+    let pat = builder.binding_pattern_object_pattern(SPAN, binding_props, NONE);
     let factory_param = builder.plain_formal_parameter(SPAN, pat);
     let mut params_vec = builder.vec_with_capacity(1);
     params_vec.push(factory_param);
@@ -534,25 +528,3 @@ fn scope_is_inside(scoping: &Scoping, inner: ScopeId, outer: ScopeId) -> bool {
     }
     scoping.scope_ancestors(inner).any(|s| s == outer)
 }
-
-pub struct ClosureWalk<'a, 'b> {
-    params: &'b FormalParameters<'a>,
-    body: &'b FunctionBody<'a>,
-}
-
-impl<'a, 'b> ClosureWalk<'a, 'b> {
-    pub fn new(
-        params: &'b FormalParameters<'a>,
-        body: &'b FunctionBody<'a>,
-    ) -> Self {
-        Self { params, body }
-    }
-}
-
-impl<'a, 'b> crate::closure::WalkFunctionBody<'a> for ClosureWalk<'a, 'b> {
-    fn walk_into<V: oxc_ast_visit::Visit<'a>>(self, visitor: &mut V) {
-        visitor.visit_function_body(self.body);
-        visitor.visit_formal_parameters(self.params);
-    }
-}
-

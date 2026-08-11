@@ -5,12 +5,13 @@ use napi_derive::napi;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{ImportDeclaration, ImportDeclarationSpecifier, Program, Statement};
 use oxc_codegen::{Codegen, CodegenOptions};
-use oxc_parser::Parser;
+use oxc_parser::{ParseOptions, Parser};
 use oxc_semantic::SemanticBuilder;
 use oxc_span::SourceType;
 use oxc_syntax::symbol::SymbolId;
 
 mod auto_detect;
+mod bundle_mode;
 mod closure;
 mod file_directive;
 mod jsx_dev_attributes;
@@ -18,7 +19,6 @@ mod relative_requires;
 mod naming;
 mod options;
 mod state;
-mod transformer;
 mod utils;
 mod worklet_body;
 mod worklet_class;
@@ -29,7 +29,6 @@ const PARSE_ERROR_CODE: &str = "WORKLETS_ERR_PARSE";
 
 pub use options::PluginOptions;
 use state::{ImportInfo, ImportShape, State};
-use transformer::Transformer;
 
 fn build_imports_index<'a>(program: &Program<'a>) -> HashMap<SymbolId, ImportInfo> {
     let mut out = HashMap::new();
@@ -90,6 +89,7 @@ pub struct EmittedFile {
 #[napi(object)]
 pub struct TransformResult {
     pub code: String,
+    pub map: Option<String>,
     pub files: Vec<EmittedFile>,
 }
 
@@ -133,6 +133,7 @@ fn run(
     if is_generated_worklet_file(filename) {
         return Ok(TransformResult {
             code: source_text.to_string(),
+            map: None,
             files: Vec::new(),
         });
     }
@@ -145,7 +146,12 @@ fn run(
         source_type
     };
 
-    let parsed = Parser::new(&allocator, source_text, source_type).parse();
+    let parsed = Parser::new(&allocator, source_text, source_type)
+        .with_options(ParseOptions {
+            preserve_parens: false,
+            ..ParseOptions::default()
+        })
+        .parse();
 
     if !parsed.errors.is_empty() {
         let first = &parsed.errors[0];
@@ -201,17 +207,13 @@ fn run(
         filename,
     );
 
-    let semantic_ret = SemanticBuilder::new()
-        .with_check_syntax_error(false)
-        .build(&program);
-    let scoping_post = semantic_ret.semantic.into_scoping();
-    let builder = oxc_ast::AstBuilder::new(&allocator);
-
-    let transformer = Transformer::new_with_builder(builder, filename);
-    transformer.run(&mut program, scoping_post, &allocator);
+    bundle_mode::enable_flag(&mut program, builder, filename);
 
     let printed = Codegen::new()
-        .with_options(CodegenOptions::default())
+        .with_options(CodegenOptions {
+            source_map_path: Some(std::path::PathBuf::from(filename)),
+            ..CodegenOptions::default()
+        })
         .build(&program);
 
     let files = emitted
@@ -221,6 +223,7 @@ fn run(
 
     Ok(TransformResult {
         code: printed.code,
+        map: printed.map.map(|map| map.to_json_string()),
         files,
     })
 }
