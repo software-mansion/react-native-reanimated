@@ -15,11 +15,11 @@
   },
   "dependencies": {
     "common-app": "workspace:*",
-    "react": "19.2.3",
+    "react": "19.2.8",
     "react-native": "0.87.0-rc.4"
   },
   "devDependencies": {
-    "@types/react": "19.2.2",
+    "@types/react": "19.2.18",
     "eslint": "9.37.0",
     "typescript": "5.9.3",
     "ws": "8.21.0"
