@@ -49,6 +49,7 @@ void AnimationFrameBatchinator::flush() {
       for (const auto &callback : callbacks) {
         uiWorkletRuntime->runSync(*callback, timestampMs);
       }
+      jsi_utils::triggerWeakRefCleanup(uiWorkletRuntime->getJSIRuntime());
     });
   });
 }

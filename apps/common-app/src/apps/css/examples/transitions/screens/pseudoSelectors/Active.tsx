@@ -54,7 +54,6 @@ export default function Active() {
                   transitionTimingFunction: 'ease-in-out',
                 },
               ]}
-              onStartShouldSetResponder={() => true}
             />
           </VerticalExampleCard>
 
@@ -84,7 +83,6 @@ export default function Active() {
                   transitionDuration: '150ms',
                 },
               ]}
-              onStartShouldSetResponder={() => true}
             />
           </VerticalExampleCard>
 
@@ -126,7 +124,6 @@ borderWidth: {
                   transitionDuration: '120ms',
                 },
               ]}
-              onStartShouldSetResponder={() => true}
             />
           </VerticalExampleCard>
 
@@ -157,7 +154,6 @@ borderWidth: {
                   transitionDuration: '120ms',
                 },
               ]}
-              onStartShouldSetResponder={() => true}
             />
           </VerticalExampleCard>
 
@@ -201,7 +197,6 @@ transform: {
                   transitionTimingFunction: 'ease-in-out',
                 },
               ]}
-              onStartShouldSetResponder={() => true}
             />
           </VerticalExampleCard>
 
@@ -244,26 +239,26 @@ transform: {
             title="SVG radius"
             code={`// r needs a base prop value, otherwise it renders at 0.
 <AnimatedCircle
-  cx={25} cy={25} fill={colors.primary}
-  r={12}
+  cx={24} cy={24} fill={colors.primary}
+  r={22}
   style={{
-    r: { default: 12, ':active': 24 },
+    r: { default: 22, ':active': 12 },
     transitionDuration: '200ms',
   }}
   onStartShouldSetResponder={() => true}
 />`}
             collapsedCode={`r: {
-  default: 12,
-  ':active': 24,
+  default: 22,
+  ':active': 12,
 },`}>
             <Svg height={sizes.md} width={sizes.md}>
               <AnimatedCircle
                 cx={sizes.md / 2}
                 cy={sizes.md / 2}
                 fill={colors.primary}
-                r={sizes.md / 4}
+                r={sizes.md / 2 - 2}
                 style={{
-                  r: { ':active': sizes.md / 2 - 2, default: sizes.md / 4 },
+                  r: { ':active': sizes.md / 4, default: sizes.md / 2 - 2 },
                   transitionDuration: '200ms',
                 }}
                 onStartShouldSetResponder={() => true}
@@ -302,7 +297,6 @@ transform: {
                   transitionDuration: '150ms',
                 },
               ]}
-              onStartShouldSetResponder={() => true}
             />
           </VerticalExampleCard>
 
@@ -331,7 +325,6 @@ transform: {
                   transitionDuration: '150ms',
                 },
               ]}
-              onStartShouldSetResponder={() => true}
             />
           </VerticalExampleCard>
         </Section>
