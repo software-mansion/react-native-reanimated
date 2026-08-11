@@ -256,23 +256,51 @@ async function getDailyDigest(): Promise<DigestStatus> {
     .toISOString()
     .replace(/\.\d{3}Z$/, 'Z');
 
-  const [mergedPullRequests, newIssues, closedIssues] = await Promise.all([
-    searchDigestItems(`repo:${DIGEST_REPO} type:pr is:merged merged:>=${since}`),
-    searchDigestItems(`repo:${DIGEST_REPO} type:issue created:>=${since}`),
-    searchDigestItems(`repo:${DIGEST_REPO} type:issue is:closed closed:>=${since}`),
+  const [
+    mergedPullRequests,
+    newIssues,
+    closedIssues,
+    openPullRequests,
+    openIssues,
+  ] = await Promise.all([
+    searchDigestItems(
+      `repo:${DIGEST_REPO} type:pr is:merged merged:>=${since}`
+    ),
+    searchDigestItems(
+      `repo:${DIGEST_REPO} type:issue is:open created:>=${since}`
+    ),
+    searchDigestItems(
+      `repo:${DIGEST_REPO} type:issue is:closed closed:>=${since}`
+    ),
+    countMatches(`repo:${DIGEST_REPO} type:pr is:open`),
+    countMatches(`repo:${DIGEST_REPO} type:issue is:open`),
   ]);
 
-  if (!mergedPullRequests || !newIssues || !closedIssues) {
+  if (
+    !mergedPullRequests ||
+    !newIssues ||
+    !closedIssues ||
+    openPullRequests === null ||
+    openIssues === null
+  ) {
     return { kind: 'unknown' };
   }
 
   return {
     kind: 'ok',
-    digest: { mergedPullRequests, newIssues, closedIssues },
+    digest: {
+      mergedPullRequests,
+      newIssues,
+      closedIssues: annotateOpenedInWindow(closedIssues, since),
+      openPullRequests,
+      openIssues,
+    },
   };
 }
 
-async function searchDigestItems(query: string): Promise<DigestCategory | null> {
+async function searchDigestItems(
+  query: string
+): Promise<DigestCategory | null> {
   const response = await githubApi<IssueSearchResponse>(
     `/search/issues?q=${encodeURIComponent(query)}&per_page=${DIGEST_LIST_LIMIT}`
   );
@@ -286,7 +314,30 @@ async function searchDigestItems(query: string): Promise<DigestCategory | null> 
       number: item.number,
       title: item.title,
       url: item.html_url,
+      createdAt: item.created_at,
     })),
+  };
+}
+
+async function countMatches(query: string): Promise<number | null> {
+  const response = await githubApi<IssueSearchResponse>(
+    `/search/issues?q=${encodeURIComponent(query)}&per_page=1`
+  );
+  return response ? response.total_count : null;
+}
+
+function annotateOpenedInWindow(
+  category: DigestCategory,
+  since: string
+): DigestCategory {
+  const cutoff = new Date(since).getTime();
+  return {
+    total: category.total,
+    items: category.items.map((item) =>
+      new Date(item.createdAt).getTime() >= cutoff
+        ? { ...item, note: 'opened same day' }
+        : item
+    ),
   };
 }
 
@@ -363,12 +414,19 @@ function formatDigestSection(status: DigestStatus): string {
     ].join('\n');
   }
 
-  const { mergedPullRequests, newIssues, closedIssues } = status.digest;
+  const {
+    mergedPullRequests,
+    newIssues,
+    closedIssues,
+    openPullRequests,
+    openIssues,
+  } = status.digest;
   return [
     '*Daily digest (last 24h)*',
     formatDigestCategory('🔀 Merged pull requests', mergedPullRequests),
     formatDigestCategory('🆕 New issues', newIssues),
     formatDigestCategory('☑️ Closed issues', closedIssues),
+    `📂 Currently open: ${openPullRequests} pull requests · ${openIssues} issues`,
   ].join('\n\n');
 }
 
@@ -379,8 +437,9 @@ function formatDigestCategory(
   const lines = [`${heading}: ${category.total}`];
 
   for (const item of category.items) {
+    const note = item.note ? ` — ${item.note}` : '';
     lines.push(
-      `• <${item.url}|#${item.number}> ${escapeSlackText(item.title)}`
+      `• <${item.url}|#${item.number}> ${escapeSlackText(item.title)}${note}`
     );
   }
 
@@ -472,6 +531,8 @@ type DigestItem = {
   number: number;
   title: string;
   url: string;
+  createdAt: string;
+  note?: string;
 };
 
 type DigestCategory = {
@@ -483,16 +544,17 @@ type DailyDigest = {
   mergedPullRequests: DigestCategory;
   newIssues: DigestCategory;
   closedIssues: DigestCategory;
+  openPullRequests: number;
+  openIssues: number;
 };
 
-type DigestStatus =
-  | { kind: 'ok'; digest: DailyDigest }
-  | { kind: 'unknown' };
+type DigestStatus = { kind: 'ok'; digest: DailyDigest } | { kind: 'unknown' };
 
 type IssueSearchItem = {
   number: number;
   title: string;
   html_url: string;
+  created_at: string;
 };
 
 type IssueSearchResponse = {
