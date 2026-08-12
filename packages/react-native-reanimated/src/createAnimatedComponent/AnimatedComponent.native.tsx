@@ -409,16 +409,6 @@ export default class AnimatedComponent
 
   render() {
     const filteredProps = this._PropsFilter.filterNonAnimatedProps(this);
-    // Reported by the filtering above, so `animatedProps` aren't walked twice.
-    // `??` keeps a real handler, but survives one passed as `undefined`.
-    const { onStartShouldSetResponder } = this._PropsFilter;
-    const pseudoSelectorProps = onStartShouldSetResponder
-      ? {
-          onStartShouldSetResponder:
-            filteredProps.onStartShouldSetResponder ??
-            onStartShouldSetResponder,
-        }
-      : {};
 
     if (IS_JEST) {
       filteredProps.jestAnimatedStyle = this.jestAnimatedStyle;
@@ -456,7 +446,6 @@ export default class AnimatedComponent
       return super.render({
         nativeID,
         ...filteredProps,
-        ...pseudoSelectorProps,
         ...this.state.settledProps,
         style: [...flattenArray(filteredProps.style), this.state.settledStyle],
         ...jestProps,
@@ -466,7 +455,6 @@ export default class AnimatedComponent
     return super.render({
       nativeID,
       ...filteredProps,
-      ...pseudoSelectorProps,
       ...jestProps,
     });
   }

@@ -1,6 +1,7 @@
 'use strict';
 
 import { initialUpdaterRun } from '../animation';
+import { IS_WEB } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { isCSSConfigProp, isPseudoSelectorValue } from '../css/utils';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
@@ -28,19 +29,13 @@ const neverClaimResponder = () => false;
 export class PropsFilter implements IPropsFilter {
   private _initialPropsMap = new Map<AnimatedStyleHandle, StyleProps>();
 
-  /**
-   * Set while filtering `animatedProps` that carry pseudo selectors. Kept off
-   * the filtered props because only native platforms accept this handler.
-   */
-  public onStartShouldSetResponder?: () => boolean;
-
   public filterNonAnimatedProps(
     component: AnimatedComponentTypeInternal
   ): Record<string, unknown> {
     const inputProps =
       component.props as AnimatedComponentProps<InitialComponentProps>;
     const props: Record<string, unknown> = {};
-    this.onStartShouldSetResponder = undefined;
+    let hasPseudoSelectors = false;
 
     for (const key in inputProps) {
       const value = inputProps[key];
@@ -124,7 +119,7 @@ export class PropsFilter implements IPropsFilter {
             }
             const animatedPropValue = animatedProps[animatedPropKey];
             if (isPseudoSelectorValue(animatedPropValue)) {
-              this.onStartShouldSetResponder = neverClaimResponder;
+              hasPseudoSelectors = true;
               // Forward only the resting value; pseudo states are driven by
               // the CSS manager, like pseudo values in style are.
               if (animatedPropValue.default !== undefined) {
@@ -136,6 +131,16 @@ export class PropsFilter implements IPropsFilter {
           }
         }
       });
+    }
+
+    // Web drives pseudo selectors through real CSS, and react-native-svg's web
+    // layer would forward the handler to the DOM, so only native needs it.
+    if (
+      !IS_WEB &&
+      hasPseudoSelectors &&
+      props.onStartShouldSetResponder == null
+    ) {
+      props.onStartShouldSetResponder = neverClaimResponder;
     }
 
     return props;
