@@ -10,6 +10,7 @@ import Animated, {
 import {
   describe,
   expect,
+  expectEventually,
   getTestComponent,
   render,
   test,
@@ -100,11 +101,9 @@ describe('withTiming animation of COLOR 🎨', () => {
       '#6495ed',
       ComparisonMode.COLOR
     );
-    await wait(1000);
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(
-      '#ff7f50',
-      ComparisonMode.COLOR
-    );
+    await expectEventually(() =>
+      componentActive.getAnimatedStyle('backgroundColor')
+    ).toBe('#ff7f50', ComparisonMode.COLOR);
     expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(
       '#ff7f50',
       ComparisonMode.COLOR
@@ -124,11 +123,9 @@ describe('withTiming animation of COLOR 🎨', () => {
       '#ff7f50',
       ComparisonMode.COLOR
     );
-    await wait(1000);
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(
-      '#6495ed',
-      ComparisonMode.COLOR
-    );
+    await expectEventually(() =>
+      componentActive.getAnimatedStyle('backgroundColor')
+    ).toBe('#6495ed', ComparisonMode.COLOR);
     expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(
       '#6495ed',
       ComparisonMode.COLOR
@@ -180,11 +177,9 @@ describe('withTiming animation of COLOR 🎨', () => {
       from,
       ComparisonMode.COLOR
     );
-    await wait(1000);
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(
-      to,
-      ComparisonMode.COLOR
-    );
+    await expectEventually(() =>
+      componentActive.getAnimatedStyle('backgroundColor')
+    ).toBe(to, ComparisonMode.COLOR);
     expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(
       to,
       ComparisonMode.COLOR

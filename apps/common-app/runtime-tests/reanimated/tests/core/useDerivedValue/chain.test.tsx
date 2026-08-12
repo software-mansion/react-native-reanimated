@@ -10,11 +10,11 @@ import Animated, {
 import {
   describe,
   expect,
+  expectEventually,
   getTestComponent,
   render,
   test,
   useTestRef,
-  wait,
 } from '../../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../../ReJest/types';
 
@@ -173,7 +173,6 @@ const ChainComponent = () => {
 describe('Test chained useDerivedValue', () => {
   test('Test chain of 10 components', async () => {
     await render(<ChainComponent />);
-    await wait(1000);
     const components = COMPONENT_REF_ARRAY.map((refString) =>
       getTestComponent(refString)
     );
@@ -188,10 +187,9 @@ describe('Test chained useDerivedValue', () => {
     });
 
     for (let i = 0; i < 10; i++) {
-      expect(await components[i].getAnimatedStyle('width')).toBe(
-        expectedValues[i],
-        ComparisonMode.PIXEL
-      );
+      await expectEventually(() =>
+        components[i].getAnimatedStyle('width')
+      ).toBe(expectedValues[i], ComparisonMode.PIXEL);
     }
   });
 });

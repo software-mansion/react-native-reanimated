@@ -10,6 +10,7 @@ import Animated, {
 import {
   describe,
   expect,
+  expectEventually,
   getTestComponent,
   render,
   test,
@@ -54,9 +55,8 @@ describe(`Test cancelling animation `, () => {
 
   test('Test animation running without interruption', async () => {
     await render(<CancelComponent />);
-    await wait(500);
     const component = getTestComponent(COMPONENT_REF);
-    expect(await component.getAnimatedStyle('width')).toBe(
+    await expectEventually(() => component.getAnimatedStyle('width')).toBe(
       50,
       ComparisonMode.PIXEL
     );
