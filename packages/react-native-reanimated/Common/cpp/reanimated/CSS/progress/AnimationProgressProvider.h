@@ -52,7 +52,7 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   void setEasingFunction(const EasingFunction &easingFunction);
 
   /// Time the animation has run by the given milestone, in milliseconds.
-  double elapsedTimeAt(RunMilestone milestone) const;
+  double elapsedTimeAt(MilestoneTime time) const;
 
   void setMilestoneReporter(RunLifecycle::Reporter reporter);
   void abort(double timestamp);
@@ -86,10 +86,10 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   bool shouldFinish(double timestamp) const;
   RunPhase computePhase(double timestamp) const;
 
-  double startElapsedTime() const;
-  double iterationElapsedTime() const;
-  double endElapsedTime() const;
-  double cancelElapsedTime() const;
+  double intervalStart() const;
+  double iterationBoundary() const;
+  double intervalEnd() const;
+  double activeTimeAtCancel() const;
 
   double updateIterationProgress(double currentIterationElapsedTime);
   double applyAnimationDirection(double iterationProgress) const;

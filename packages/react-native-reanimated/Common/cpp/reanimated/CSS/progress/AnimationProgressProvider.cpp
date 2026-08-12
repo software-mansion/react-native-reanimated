@@ -77,22 +77,20 @@ void AnimationProgressProvider::abort(const double timestamp) {
   lifecycle_.abort();
 }
 
-double AnimationProgressProvider::elapsedTimeAt(const RunMilestone milestone) const {
-  switch (milestone) {
-    case RunMilestone::Started:
-      return startElapsedTime();
-    case RunMilestone::Repeated:
-      return iterationElapsedTime();
-    case RunMilestone::Ended:
-      return endElapsedTime();
-    case RunMilestone::Aborted:
-      return cancelElapsedTime();
-    case RunMilestone::Created:
-      return 0;
+double AnimationProgressProvider::elapsedTimeAt(const MilestoneTime time) const {
+  switch (time) {
+    case MilestoneTime::IntervalStart:
+      return intervalStart();
+    case MilestoneTime::IntervalEnd:
+      return intervalEnd();
+    case MilestoneTime::IterationBoundary:
+      return iterationBoundary();
+    case MilestoneTime::ActiveTime:
+      return activeTimeAtCancel();
   }
 }
 
-double AnimationProgressProvider::startElapsedTime() const {
+double AnimationProgressProvider::intervalStart() const {
   // A negative delay starts the animation partway through.
   const auto elapsedTime = std::max(0.0, -delay_);
 
@@ -103,15 +101,17 @@ double AnimationProgressProvider::startElapsedTime() const {
   return std::min(elapsedTime, duration_ * iterationCount_);
 }
 
-double AnimationProgressProvider::iterationElapsedTime() const {
+double AnimationProgressProvider::iterationBoundary() const {
   return (currentIteration_ - 1) * duration_;
 }
 
-double AnimationProgressProvider::endElapsedTime() const {
-  return duration_ * iterationCount_;
+double AnimationProgressProvider::intervalEnd() const {
+  // An infinite run has no interval to end. It only reaches here by being made
+  // infinite after it had already finished, where the product is negative.
+  return std::max(0.0, duration_ * iterationCount_);
 }
 
-double AnimationProgressProvider::cancelElapsedTime() const {
+double AnimationProgressProvider::activeTimeAtCancel() const {
   return std::max(0.0, cancelTimestamp_ - getStartTimestamp(cancelTimestamp_));
 }
 

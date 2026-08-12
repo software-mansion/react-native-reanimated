@@ -35,9 +35,10 @@ void CSSLoopAnimation::setMilestoneReporter(MilestoneReporter reporter) {
     return;
   }
   // The provider is a member, so capturing `this` cannot outlive it.
-  progressProvider_->setMilestoneReporter([this, reporter = std::move(reporter)](const RunMilestone milestone) {
-    reporter(milestone, progressProvider_->elapsedTimeAt(milestone));
-  });
+  progressProvider_->setMilestoneReporter(
+      [this, reporter = std::move(reporter)](const RunMilestone milestone, const MilestoneTime time) {
+        reporter(milestone, progressProvider_->elapsedTimeAt(time));
+      });
 }
 
 void CSSLoopAnimation::abort(const double timestamp) {
