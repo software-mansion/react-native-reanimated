@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <utility>
 
@@ -72,8 +73,57 @@ void AnimationProgressProvider::setMilestoneReporter(RunLifecycle::Reporter repo
   lifecycle_.setMilestoneReporter(std::move(reporter));
 }
 
-void AnimationProgressProvider::abort() {
+void AnimationProgressProvider::abort(const double timestamp) {
+  cancelTimestamp_ = timestamp;
   lifecycle_.abort();
+}
+
+double AnimationProgressProvider::elapsedTimeAt(const MilestoneTime time) const {
+  switch (time) {
+    case MilestoneTime::IntervalStart:
+      return intervalStart();
+    case MilestoneTime::IntervalEnd:
+      return intervalEnd();
+    case MilestoneTime::IterationStart:
+      return iterationStart();
+    case MilestoneTime::IterationEnd:
+      return iterationEnd();
+    case MilestoneTime::ActiveTime:
+      return activeTimeAtCancel();
+  }
+}
+
+double AnimationProgressProvider::intervalStart() const {
+  // A negative delay starts the animation partway through.
+  const auto elapsedTime = std::max(0.0, -delay_);
+
+  // An infinite animation has no total duration to be capped against.
+  if (iterationCount_ < 0) {
+    return elapsedTime;
+  }
+  return std::min(elapsedTime, duration_ * iterationCount_);
+}
+
+double AnimationProgressProvider::iterationStart() const {
+  return (currentIteration_ - 1) * duration_;
+}
+
+double AnimationProgressProvider::iterationEnd() const {
+  return currentIteration_ * duration_;
+}
+
+double AnimationProgressProvider::intervalEnd() const {
+  // An infinite run reaches here by being made infinite after it had already
+  // finished, which starts it again. Its interval never ends, and the web
+  // reports that literally.
+  if (iterationCount_ < 0) {
+    return std::numeric_limits<double>::infinity();
+  }
+  return duration_ * iterationCount_;
+}
+
+double AnimationProgressProvider::activeTimeAtCancel() const {
+  return std::max(0.0, cancelTimestamp_ - getStartTimestamp(cancelTimestamp_));
 }
 
 double AnimationProgressProvider::getStartTimestamp(const double timestamp) const {
