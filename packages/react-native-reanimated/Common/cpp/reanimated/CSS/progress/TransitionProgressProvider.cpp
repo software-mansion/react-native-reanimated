@@ -87,7 +87,8 @@ double TransitionPropertyProgressProvider::elapsedTimeAt(const MilestoneTime tim
       return duration_;
     case MilestoneTime::ActiveTime:
       return std::max(0.0, cancelTimestamp_ - (creationTimestamp_ + delay_));
-    case MilestoneTime::IterationBoundary:
+    case MilestoneTime::IterationStart:
+    case MilestoneTime::IterationEnd:
       // A transition has no iterations, so it never reaches a boundary.
       return 0;
   }
