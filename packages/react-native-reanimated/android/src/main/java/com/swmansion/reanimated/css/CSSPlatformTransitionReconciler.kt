@@ -4,12 +4,9 @@ import android.view.View
 import android.view.ViewTreeObserver
 
 /**
- * A platform transition animates the property React Native itself writes, so a commit can
- * overwrite it mid-flight. Re-asserting just before the frame is drawn covers every writer -
- * a Fabric mount, the synchronous props path, the animation backend - without knowing which
- * one ran, since they all run earlier in the same frame.
- *
- * [repair] returns whether anything is still animating.
+ * React writes the same property the animator drives, so a commit can overwrite it mid-flight.
+ * Re-asserting just before the draw covers every writer without knowing which one ran, since
+ * they all run earlier in the frame. [repair] returns whether anything is still animating.
  */
 internal class CSSPlatformTransitionReconciler(
     private val repair: () -> Boolean,
@@ -29,9 +26,8 @@ internal class CSSPlatformTransitionReconciler(
                 override fun onPreDraw(): Boolean {
                     if (repair()) return true
 
-                    // Retiring here rather than when the registry empties: cancelling an
-                    // animator runs its end callback part way through installing the
-                    // replacement, when the registry is briefly empty.
+                    // Retire here, not when the registry empties: a cancel fires its end
+                    // callback mid-replacement, when the registry is briefly empty.
                     if (observer.isAlive) observer.removeOnPreDrawListener(this)
                     tracked.remove(observer)
                     return true

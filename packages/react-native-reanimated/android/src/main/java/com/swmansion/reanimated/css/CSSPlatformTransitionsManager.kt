@@ -35,10 +35,7 @@ internal class CSSPlatformTransitionsManager(
         val writer: FloatProperty<View>,
         val startValue: Float,
     ) {
-        /**
-         * ObjectAnimator leaves its animated value uninitialised until its first frame, which
-         * a start delay defers, so until then the property must show the start value.
-         */
+        /** Uninitialised until the first frame, which a start delay defers, so show startValue. */
         fun currentValue(): Float = if (animator.isRunning) animator.animatedValue as Float else startValue
     }
 
