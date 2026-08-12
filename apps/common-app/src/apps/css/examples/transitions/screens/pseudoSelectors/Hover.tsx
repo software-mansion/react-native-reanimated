@@ -306,6 +306,10 @@ shadowOpacity: {
             <View style={styles.stage}>
               <Svg height={180} width={240}>
                 <AnimatedCircle
+                  cx={95}
+                  cy={90}
+                  fill="#fca5a5"
+                  r={65}
                   animatedProps={{
                     fill: {
                       ':hover': '#dc2626',
@@ -313,13 +317,13 @@ shadowOpacity: {
                     },
                     transitionDuration: '150ms',
                   }}
-                  cx={95}
-                  cy={90}
-                  fill="#fca5a5"
-                  r={65}
                   onStartShouldSetResponder={() => true}
                 />
                 <AnimatedCircle
+                  cx={145}
+                  cy={90}
+                  fill="#93c5fd"
+                  r={65}
                   animatedProps={{
                     fill: {
                       ':hover': '#2563eb',
@@ -327,10 +331,6 @@ shadowOpacity: {
                     },
                     transitionDuration: '150ms',
                   }}
-                  cx={145}
-                  cy={90}
-                  fill="#93c5fd"
-                  r={65}
                   onStartShouldSetResponder={() => true}
                 />
               </Svg>

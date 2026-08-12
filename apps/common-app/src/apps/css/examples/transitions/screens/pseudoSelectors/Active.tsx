@@ -217,6 +217,10 @@ transform: {
 },`}>
             <Svg height={sizes.md} width={sizes.md}>
               <AnimatedCircle
+                cx={sizes.md / 2}
+                cy={sizes.md / 2}
+                fill={colors.primary}
+                r={sizes.md / 2 - 2}
                 animatedProps={{
                   fill: {
                     ':active': colors.primaryDark,
@@ -224,10 +228,6 @@ transform: {
                   },
                   transitionDuration: '200ms',
                 }}
-                cx={sizes.md / 2}
-                cy={sizes.md / 2}
-                fill={colors.primary}
-                r={sizes.md / 2 - 2}
                 onStartShouldSetResponder={() => true}
               />
             </Svg>
@@ -251,14 +251,14 @@ transform: {
 },`}>
             <Svg height={sizes.md} width={sizes.md}>
               <AnimatedCircle
-                animatedProps={{
-                  r: { ':active': sizes.md / 4, default: sizes.md / 2 - 2 },
-                  transitionDuration: '200ms',
-                }}
                 cx={sizes.md / 2}
                 cy={sizes.md / 2}
                 fill={colors.primary}
                 r={sizes.md / 2 - 2}
+                animatedProps={{
+                  r: { ':active': sizes.md / 4, default: sizes.md / 2 - 2 },
+                  transitionDuration: '200ms',
+                }}
                 onStartShouldSetResponder={() => true}
               />
             </Svg>
