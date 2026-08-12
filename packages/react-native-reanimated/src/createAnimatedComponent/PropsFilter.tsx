@@ -1,7 +1,6 @@
 'use strict';
 
 import { initialUpdaterRun } from '../animation';
-import { IS_WEB } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { isCSSConfigProp, isPseudoSelectorValue } from '../css/utils';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
@@ -15,16 +14,13 @@ import type {
   IPropsFilter,
 } from './commonTypes';
 import { getInlineStyle, hasInlineStyles } from './InlinePropManager';
+import { addPseudoSelectorResponder } from './pseudoSelectorResponder';
 import { flattenArray, has } from './utils';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
   // event is used.
 }
-
-// react-native-svg hit-tests a shape only once a responder prop marked it
-// responsible, and accepts any truthy one. False claims nothing.
-const neverClaimResponder = () => false;
 
 export class PropsFilter implements IPropsFilter {
   private _initialPropsMap = new Map<AnimatedStyleHandle, StyleProps>();
@@ -133,10 +129,8 @@ export class PropsFilter implements IPropsFilter {
       });
     }
 
-    // Makes react-native-svg shapes hit-testable, so their pseudo selectors
-    // receive presses at all. Web resolves those states with plain CSS.
-    if (!IS_WEB && hasPseudoSelectors && !props.onStartShouldSetResponder) {
-      props.onStartShouldSetResponder = neverClaimResponder;
+    if (hasPseudoSelectors) {
+      addPseudoSelectorResponder(props);
     }
 
     return props;
