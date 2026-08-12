@@ -14,7 +14,7 @@ import type {
   IPropsFilter,
 } from './commonTypes';
 import { getInlineStyle, hasInlineStyles } from './InlinePropManager';
-import { svgHitTestResponder } from './svgHitTestResponder';
+import { svgHitTestResponder } from './platform';
 import { flattenArray, has } from './utils';
 
 function dummyListener() {
