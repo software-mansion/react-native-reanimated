@@ -54,7 +54,7 @@ ReversingState TransitionPropertyProgressProvider::getReversingState() const {
 
 void TransitionPropertyProgressProvider::setMilestoneReporter(RunLifecycle::Reporter reporter) {
   lifecycle_.setMilestoneReporter(std::move(reporter));
-  lifecycle_.reachPosition(computeStage());
+  lifecycle_.reachPhase(computePhase());
 }
 
 void TransitionPropertyProgressProvider::abort(const double timestamp) {
@@ -64,36 +64,36 @@ void TransitionPropertyProgressProvider::abort(const double timestamp) {
 
 void TransitionPropertyProgressProvider::update(const double timestamp) {
   TimeProgressProvider::update(timestamp);
-  lifecycle_.reachPosition(computeStage());
+  lifecycle_.reachPhase(computePhase());
 }
 
-RunStage TransitionPropertyProgressProvider::computeStage() const {
+RunPhase TransitionPropertyProgressProvider::computePhase() const {
   switch (getState()) {
     case TransitionProgressState::Pending:
-      return RunStage::Created;
+      return RunPhase::Before;
     case TransitionProgressState::Running:
-      return RunStage::Started;
+      return RunPhase::Active;
     case TransitionProgressState::Idle:
-      return RunStage::Ended;
+      return RunPhase::After;
   }
-  return RunStage::None;
+  return RunPhase::Idle;
 }
 
-double TransitionPropertyProgressProvider::elapsedTimeAt(const RunMilestone milestone) const {
-  switch (milestone) {
-    case RunMilestone::Created:
-    case RunMilestone::Started:
-      return startElapsedTime();
-    case RunMilestone::Ended:
+double TransitionPropertyProgressProvider::elapsedTimeAt(const MilestoneTime time) const {
+  switch (time) {
+    case MilestoneTime::IntervalStart:
+      return intervalStart();
+    case MilestoneTime::IntervalEnd:
       return duration_;
-    case RunMilestone::Aborted:
+    case MilestoneTime::ActiveTime:
       return std::max(0.0, cancelTimestamp_ - (creationTimestamp_ + delay_));
-    default:
+    case MilestoneTime::IterationBoundary:
+      // A transition has no iterations, so it never reaches a boundary.
       return 0;
   }
 }
 
-double TransitionPropertyProgressProvider::startElapsedTime() const {
+double TransitionPropertyProgressProvider::intervalStart() const {
   // A negative delay starts the transition partway through, and the web reports
   // that offset capped to the duration.
   return std::min(std::max(0.0, -delay_), duration_);
@@ -176,9 +176,10 @@ void TransitionProgressProvider::observeProperty(
   }
 
   // The lambda lives inside the provider, so capturing it by reference is safe.
-  provider.setMilestoneReporter([this, propertyName, &provider](const RunMilestone milestone) {
-    reporter_(milestone, propertyName, provider.elapsedTimeAt(milestone));
-  });
+  provider.setMilestoneReporter(
+      [this, propertyName, &provider](const RunMilestone milestone, const MilestoneTime time) {
+        reporter_(milestone, propertyName, provider.elapsedTimeAt(time));
+      });
 }
 
 void TransitionProgressProvider::runProgressProvider(

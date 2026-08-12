@@ -34,7 +34,7 @@ class TransitionPropertyProgressProvider final : public KeyframeProgressProvider
   TransitionProgressState getState() const;
 
   /// Time the property has run by the given milestone, in milliseconds.
-  double elapsedTimeAt(RunMilestone milestone) const;
+  double elapsedTimeAt(MilestoneTime time) const;
 
   void setMilestoneReporter(RunLifecycle::Reporter reporter);
   void abort(double timestamp);
@@ -52,9 +52,9 @@ class TransitionPropertyProgressProvider final : public KeyframeProgressProvider
   // The lifecycle reports an abort without a timestamp, so abort() leaves one here.
   double cancelTimestamp_ = 0;
 
-  double startElapsedTime() const;
+  double intervalStart() const;
   double getElapsedTime(double timestamp) const;
-  RunStage computeStage() const;
+  RunPhase computePhase() const;
 };
 
 using TransitionPropertyProgressProviders =
