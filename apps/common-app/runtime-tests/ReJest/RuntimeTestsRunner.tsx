@@ -9,7 +9,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 
 import { configure, runTests } from './RuntimeTestsApi';
-import { RenderLock } from './utils/SyncUIRunner';
+import { RenderLock } from './utils/RenderLock';
 
 export class ErrorBoundary extends React.Component<
   { children: React.JSX.Element | Array<React.JSX.Element> },

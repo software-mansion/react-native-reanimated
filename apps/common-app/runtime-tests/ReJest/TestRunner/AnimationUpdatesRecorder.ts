@@ -1,5 +1,5 @@
 import type { Operation } from '../types';
-import { SyncUIRunner } from '../utils/SyncUIRunner';
+import { runOnUIBlocking } from '../utils/runOnUIBlocking';
 import { sleep, waitFor } from '../utils/waitFor';
 import { assertMockedAnimationTimestamp } from './Asserts';
 import { createUpdatesContainer } from './UpdatesContainer';
@@ -7,15 +7,13 @@ import { createUpdatesContainer } from './UpdatesContainer';
 const MAX_WAIT_TIME_MS = 10000;
 
 export class AnimationUpdatesRecorder {
-  private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
-
   public async recordAnimationUpdates() {
     const updatesContainer = createUpdatesContainer();
     const recordAnimationUpdates = updatesContainer.pushAnimationUpdates;
     const recordLayoutAnimationUpdates =
       updatesContainer.pushLayoutAnimationUpdates;
 
-    await this._syncUIRunner.runOnUIBlocking(() => {
+    await runOnUIBlocking(() => {
       'worklet';
       global.animationUpdatesRecordingStarted = false;
 
@@ -53,7 +51,7 @@ export class AnimationUpdatesRecorder {
   }
 
   public async stopRecordingAnimationUpdates(maxWaitTime = MAX_WAIT_TIME_MS) {
-    await this._syncUIRunner.runOnUIBlocking(() => {
+    await runOnUIBlocking(() => {
       'worklet';
       if (global.originalUpdateProps) {
         global._updateProps = global.originalUpdateProps;
@@ -68,7 +66,7 @@ export class AnimationUpdatesRecorder {
   }
 
   public async mockAnimationTimer() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
+    await runOnUIBlocking(() => {
       'worklet';
       global.mockedAnimationTimestamp = 0;
       global.originalGetAnimationTimestamp = global._getAnimationTimestamp;
@@ -108,7 +106,7 @@ export class AnimationUpdatesRecorder {
   }
 
   public async unmockAnimationTimer(maxWaitTime = MAX_WAIT_TIME_MS) {
-    await this._syncUIRunner.runOnUIBlocking(() => {
+    await runOnUIBlocking(() => {
       'worklet';
       if (global.originalGetAnimationTimestamp) {
         global._getAnimationTimestamp = global.originalGetAnimationTimestamp;
@@ -145,7 +143,7 @@ export class AnimationUpdatesRecorder {
       const shouldAssertMock = isFirstPoll;
       isFirstPoll = false;
 
-      return this._syncUIRunner.runOnUIBlocking(
+      return runOnUIBlocking(
         () => {
           'worklet';
           if (shouldAssertMock) {

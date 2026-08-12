@@ -3,7 +3,7 @@ import { makeMutable } from 'react-native-reanimated';
 import type { TestComponent } from '../TestComponent';
 import type { Operation, OperationUpdate } from '../types';
 import { isValidPropName } from '../types';
-import { SyncUIRunner } from '../utils/SyncUIRunner';
+import { runOnUIBlocking } from '../utils/runOnUIBlocking';
 import { convertDecimalColor } from '../utils/util';
 
 export type SingleViewSnapshot = Array<OperationUpdate>;
@@ -22,7 +22,6 @@ type NativeUpdate = {
 };
 
 export function createUpdatesContainer() {
-  const syncUIRunner = new SyncUIRunner();
   const jsUpdates = makeMutable<Array<JsUpdate>>([]);
   const nativeSnapshots = makeMutable<Array<NativeUpdate>>([]);
 
@@ -163,7 +162,7 @@ export function createUpdatesContainer() {
   }
 
   function _readRecorded() {
-    return syncUIRunner.runOnUIBlocking(
+    return runOnUIBlocking(
       () => {
         'worklet';
         return {
@@ -193,7 +192,7 @@ export function createUpdatesContainer() {
     const nativeSnapshotsCount = recorded.nativeSnapshots.length;
     const jsUpdatesCount = recorded.jsUpdates.length;
     if (jsUpdatesCount === nativeSnapshotsCount) {
-      await syncUIRunner.runOnUIBlocking(() => {
+      await runOnUIBlocking(() => {
         'worklet';
         const lastSnapshot = nativeSnapshots.value[nativeSnapshotsCount - 1];
         if (lastSnapshot) {

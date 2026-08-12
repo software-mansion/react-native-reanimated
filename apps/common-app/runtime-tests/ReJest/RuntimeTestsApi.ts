@@ -4,6 +4,10 @@ import type { SharedValue } from 'react-native-reanimated';
 import type { ValueGetter } from './matchers/EventualMatchers';
 import type { TestComponent } from './TestComponent';
 import { TestRunner } from './TestRunner/TestRunner';
+import {
+  waitForFrames as waitForFramesImpl,
+  waitUntilSettled as waitUntilSettledImpl,
+} from './utils/waitForFrames';
 import type {
   DefaultValue,
   MaybeAsync,
@@ -161,6 +165,17 @@ export function getTestComponent(name: string): TestComponent {
 
 export async function runTests() {
   return testRunner.runTests();
+}
+
+export async function waitForFrames(count?: number, timeout?: number) {
+  return waitForFramesImpl(count, timeout);
+}
+
+export async function waitUntilSettled<TValue>(
+  read: () => TValue | Promise<TValue>,
+  options?: { timeout?: number; stableFrames?: number }
+) {
+  return waitUntilSettledImpl(read, options);
 }
 
 export async function wait(delay: number) {

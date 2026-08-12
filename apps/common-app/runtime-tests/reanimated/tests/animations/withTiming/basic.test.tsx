@@ -18,7 +18,7 @@ import {
   render,
   test,
   useTestRef,
-  wait,
+  waitUntilSettled,
 } from '../../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../../ReJest/types';
 
@@ -165,11 +165,9 @@ describe('withTiming animation of WIDTH', () => {
       const WidthComponentPassive = getTestComponent(
         WIDTH_COMPONENT_PASSIVE_REF
       );
-      await wait(1000);
-      expect(await componentActive.getAnimatedStyle('width')).toBe(
-        finalWidthInPixels,
-        ComparisonMode.PIXEL
-      );
+      await expectEventually(() =>
+        componentActive.getAnimatedStyle('width')
+      ).toBe(finalWidthInPixels, ComparisonMode.PIXEL);
       expect(await WidthComponentPassive.getAnimatedStyle('width')).toBe(
         finalWidthInPixels,
         ComparisonMode.PIXEL
@@ -183,15 +181,15 @@ describe('withTiming animation of WIDTH', () => {
     );
     const componentActive = getTestComponent(WIDTH_COMPONENT_ACTIVE_REF);
     const WidthComponentPassive = getTestComponent(WIDTH_COMPONENT_PASSIVE_REF);
-    await wait(1000);
-    expect(await componentActive.getAnimatedStyle('width')).not.toBe(
-      100,
-      ComparisonMode.PIXEL
+    const settledActive = await waitUntilSettled(() =>
+      componentActive.getAnimatedStyle('width')
     );
-    expect(await WidthComponentPassive.getAnimatedStyle('width')).not.toBe(
-      100,
-      ComparisonMode.PIXEL
+    const settledPassive = await waitUntilSettled(() =>
+      WidthComponentPassive.getAnimatedStyle('width')
     );
+
+    expect(settledActive).not.toBe(100, ComparisonMode.PIXEL);
+    expect(settledPassive).not.toBe(100, ComparisonMode.PIXEL);
   });
 });
 

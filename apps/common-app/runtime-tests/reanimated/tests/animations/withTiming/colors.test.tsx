@@ -15,7 +15,7 @@ import {
   render,
   test,
   useTestRef,
-  wait,
+  waitUntilSettled,
 } from '../../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../../ReJest/types';
 
@@ -145,15 +145,15 @@ describe('withTiming animation of COLOR 🎨', () => {
       '#ff7f50',
       ComparisonMode.COLOR
     );
-    await wait(1000);
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).not.toBe(
-      '#6495ed',
-      ComparisonMode.COLOR
+    const settledActive = await waitUntilSettled(() =>
+      componentActive.getAnimatedStyle('backgroundColor')
     );
-    expect(await componentPassive.getAnimatedStyle('backgroundColor')).not.toBe(
-      '#6495ed',
-      ComparisonMode.COLOR
+    const settledPassive = await waitUntilSettled(() =>
+      componentPassive.getAnimatedStyle('backgroundColor')
     );
+
+    expect(settledActive).not.toBe('#6495ed', ComparisonMode.COLOR);
+    expect(settledPassive).not.toBe('#6495ed', ComparisonMode.COLOR);
   });
 
   test.each([

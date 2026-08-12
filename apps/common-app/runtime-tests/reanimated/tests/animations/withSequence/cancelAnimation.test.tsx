@@ -15,7 +15,7 @@ import {
   render,
   test,
   useTestRef,
-  wait,
+  waitUntilSettled,
 } from '../../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../../ReJest/types';
 
@@ -64,22 +64,22 @@ describe(`Test cancelling animation `, () => {
 
   test('Cancelling animation with *****cancelAnimation***** finishes the whole sequence', async () => {
     await render(<CancelComponent shouldCancelAnimation />);
-    await wait(500);
     const component = getTestComponent(COMPONENT_REF);
-    expect(await component.getAnimatedStyle('width')).not.toBe(
-      50,
-      ComparisonMode.PIXEL
+    const settledWidth = await waitUntilSettled(() =>
+      component.getAnimatedStyle('width')
     );
+
+    expect(settledWidth).not.toBe(50, ComparisonMode.PIXEL);
   });
 
   test('Cancelling animation by *****starting new animation***** finishes the whole sequence', async () => {
     await render(<CancelComponent shouldStartNewAnimation />);
-    await wait(500);
     const component = getTestComponent(COMPONENT_REF);
-    expect(await component.getAnimatedStyle('width')).not.toBe(
-      50,
-      ComparisonMode.PIXEL
+    const settledWidth = await waitUntilSettled(() =>
+      component.getAnimatedStyle('width')
     );
+
+    expect(settledWidth).not.toBe(50, ComparisonMode.PIXEL);
   });
 });
 

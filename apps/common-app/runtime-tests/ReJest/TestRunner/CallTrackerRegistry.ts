@@ -1,7 +1,7 @@
 import { createSynchronizable } from 'react-native-worklets';
 
 import type { TrackerCallCount } from '../types';
-import { SyncUIRunner } from '../utils/SyncUIRunner';
+import { runOnUIBlocking } from '../utils/runOnUIBlocking';
 
 let callCallTrackerRegistryJS: Record<string, number> = {};
 const callCallTrackerRegistryUI = createSynchronizable<Record<string, number>>(
@@ -15,8 +15,6 @@ function callTrackerJS(name: string) {
 }
 
 export class CallTrackerRegistry {
-  private _syncUIRunner = new SyncUIRunner();
-
   public callTracker(name: string) {
     'worklet';
     if (_WORKLET) {
@@ -29,7 +27,7 @@ export class CallTrackerRegistry {
   }
 
   public async getTrackerCallCount(name: string): Promise<TrackerCallCount> {
-    const onUI = await this._syncUIRunner.runOnUIBlocking(
+    const onUI = await runOnUIBlocking(
       () => {
         'worklet';
         return callCallTrackerRegistryUI.getBlocking()[name] ?? 0;

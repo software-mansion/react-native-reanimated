@@ -15,7 +15,7 @@ import type {
   TestValue,
 } from '../types';
 import { TestDecorator } from '../types';
-import { RenderLock } from '../utils/SyncUIRunner';
+import { RenderLock } from '../utils/RenderLock';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
 import { assertTestCase } from './Asserts';
 import { CallTrackerRegistry } from './CallTrackerRegistry';

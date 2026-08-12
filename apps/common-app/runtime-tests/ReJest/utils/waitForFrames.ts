@@ -1,0 +1,56 @@
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
+
+import { DEFAULT_TIMEOUT_MS, withTimeout } from './waitFor';
+
+export function waitForFrames(
+  count: number = 1,
+  timeout: number = DEFAULT_TIMEOUT_MS
+) {
+  const framesRendered = new Promise<void>((resolve) => {
+    scheduleOnUI(() => {
+      'worklet';
+      let remaining = count;
+      const onFrame = () => {
+        'worklet';
+        remaining -= 1;
+        if (remaining > 0) {
+          requestAnimationFrame(onFrame);
+        } else {
+          scheduleOnRN(resolve);
+        }
+      };
+      requestAnimationFrame(onFrame);
+    });
+  });
+
+  return withTimeout(framesRendered, {
+    description: `${count} animation frame${count === 1 ? '' : 's'}`,
+    timeout,
+  });
+}
+
+export async function waitUntilSettled<TValue>(
+  read: () => TValue | Promise<TValue>,
+  {
+    timeout = DEFAULT_TIMEOUT_MS,
+    stableFrames = 2,
+  }: { timeout?: number; stableFrames?: number } = {}
+): Promise<TValue> {
+  const startTime = performance.now();
+  let previous = await read();
+  let stable = 0;
+
+  while (stable < stableFrames) {
+    if (performance.now() - startTime > timeout) {
+      throw new Error(
+        `Timed out after ${timeout}ms while waiting for the value to settle. Last observed: ${String(previous)}.`
+      );
+    }
+    await waitForFrames(1, timeout);
+    const current = await read();
+    stable = Object.is(current, previous) ? stable + 1 : 0;
+    previous = current;
+  }
+
+  return previous;
+}

@@ -5,7 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import type { RuntimeTestSuite } from '../types';
 import { runWithRemoteReporter } from './utils/remoteReporter';
-import { RenderLock } from './utils/SyncUIRunner';
+import { RenderLock } from './utils/RenderLock';
 
 // IMPORTANT: do not statically import `./RuntimeTestsApi` or anything else that pulls in
 // react-native-reanimated. The framework is loaded lazily once the host sends `start`, so

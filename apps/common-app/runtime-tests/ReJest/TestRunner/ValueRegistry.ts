@@ -1,11 +1,10 @@
 import type { SharedValue } from 'react-native-reanimated';
 
 import type { SharedValueSnapshot, TestValue } from '../types';
-import { SyncUIRunner } from '../utils/SyncUIRunner';
+import { runOnUIBlocking } from '../utils/runOnUIBlocking';
 
 export class ValueRegistry {
   private _valueRegistry: Record<string, SharedValue> = {};
-  private _syncUIRunner = new SyncUIRunner();
 
   public registerValue<TValue = unknown>(
     name: string,
@@ -19,7 +18,7 @@ export class ValueRegistry {
     name: string
   ): Promise<SharedValueSnapshot<TValue>> {
     const sharedValue = this._valueRegistry[name];
-    const uiValue = await this._syncUIRunner.runOnUIBlocking(
+    const uiValue = await runOnUIBlocking(
       () => {
         'worklet';
         return sharedValue.value;
