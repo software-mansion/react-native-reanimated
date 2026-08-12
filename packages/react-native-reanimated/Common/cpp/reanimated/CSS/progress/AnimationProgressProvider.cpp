@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <utility>
 
@@ -112,9 +113,13 @@ double AnimationProgressProvider::iterationEnd() const {
 }
 
 double AnimationProgressProvider::intervalEnd() const {
-  // An infinite run has no interval to end. It only reaches here by being made
-  // infinite after it had already finished, where the product is negative.
-  return std::max(0.0, duration_ * iterationCount_);
+  // An infinite run reaches here by being made infinite after it had already
+  // finished, which starts it again. Its interval never ends, and the web
+  // reports that literally.
+  if (iterationCount_ < 0) {
+    return std::numeric_limits<double>::infinity();
+  }
+  return duration_ * iterationCount_;
 }
 
 double AnimationProgressProvider::activeTimeAtCancel() const {
