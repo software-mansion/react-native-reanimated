@@ -117,6 +117,13 @@ bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &ea
   // CAMediaTimingFunction can express only linear and cubic-bezier curves;
   // steps / linear-stops easings have to interpolate per-frame on the loop.
   return std::holds_alternative<LinearEasing>(easing) || std::holds_alternative<CubicBezierEasing>(easing);
+#elif defined(ANDROID)
+  if constexpr (!StaticFeatureFlags::getFlag("ANDROID_CSS_PLATFORM_TRANSITIONS")) {
+    return false;
+  }
+  // Any TimeInterpolator can carry a curve, so every easing routes and this is unused.
+  (void)easing;
+  return propertyName == "opacity";
 #else
   // No native routing backend on this platform yet; every property runs on the loop.
   return false;
