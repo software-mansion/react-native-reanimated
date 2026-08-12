@@ -7,6 +7,7 @@ import { installCustomSerializableUnpacker } from '../memory/customSerializableU
 import { installRemoteFunctionUnpacker } from '../memory/remoteFunctionUnpacker';
 import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
+import { installSynchronizableFixedUnpacker } from '../memory/synchronizableFixedUnpacker';
 import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
 import type {
   RemoteFunction,
@@ -347,6 +348,12 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.createSynchronizable(value);
   }
 
+  createSynchronizableFixed<TValue extends number | boolean>(
+    value: TValue
+  ): SynchronizableRef<TValue> {
+    return this.#workletsModuleProxy.createSynchronizableFixed(value);
+  }
+
   synchronizableGetDirty<TValue>(
     synchronizableRef: SynchronizableRef<TValue>
   ): TValue {
@@ -363,9 +370,19 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   synchronizableSetBlocking<TValue>(
     synchronizableRef: SynchronizableRef<TValue>,
-    value: SerializableRef<TValue>
+    value: SerializableRef<TValue> | TValue
   ) {
     return this.#workletsModuleProxy.synchronizableSetBlocking(
+      synchronizableRef,
+      value
+    );
+  }
+
+  synchronizableSetDirty<TValue extends number | boolean>(
+    synchronizableRef: SynchronizableRef<TValue>,
+    value: TValue
+  ): void {
+    return this.#workletsModuleProxy.synchronizableSetDirty(
       synchronizableRef,
       value
     );
@@ -414,6 +431,9 @@ function installUnpackers(workletsModuleProxy: WorkletsModuleProxy) {
   const value = (installValueUnpacker as WorkletFunction).__initData!;
   const synchronizable = (installSynchronizableUnpacker as WorkletFunction)
     .__initData!;
+  const synchronizableFixed = (
+    installSynchronizableFixedUnpacker as WorkletFunction
+  ).__initData!;
   const customSerializable = (
     installCustomSerializableUnpacker as WorkletFunction
   ).__initData!;
@@ -433,6 +453,7 @@ function installUnpackers(workletsModuleProxy: WorkletsModuleProxy) {
     workletsModuleProxy.loadUnpackersWithBytecode(
       value.bytecode,
       synchronizable.bytecode!,
+      synchronizableFixed.bytecode!,
       customSerializable.bytecode!,
       shareableHost.bytecode!,
       shareableGuest.bytecode!,
@@ -446,6 +467,9 @@ function installUnpackers(workletsModuleProxy: WorkletsModuleProxy) {
       synchronizable.code!,
       synchronizable.location ?? '',
       synchronizable.sourceMap ?? '',
+      synchronizableFixed.code!,
+      synchronizableFixed.location ?? '',
+      synchronizableFixed.sourceMap ?? '',
       customSerializable.code!,
       customSerializable.location ?? '',
       customSerializable.sourceMap ?? '',

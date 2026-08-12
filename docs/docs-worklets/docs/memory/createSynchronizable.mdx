@@ -15,15 +15,26 @@ Creates a new [Synchronizable](/docs/memory/synchronizable) holding the provided
 import { createSynchronizable } from 'react-native-worklets';
 
 const synchronizable = createSynchronizable({ a: 42 });
+const counter = createSynchronizable(0, { fixedType: true });
 ```
 
 <details>
   <summary>Type definitions</summary>
 
   ```typescript
+  function createSynchronizable<TValue extends number | boolean>(
+    initialValue: TValue,
+    config: SynchronizableConfig & { fixedType: true }
+  ): FixedSynchronizable<TValue extends boolean ? boolean : number>;
+
   function createSynchronizable<TValue>(
-    initialValue: TValue
+    initialValue: TValue,
+    config?: SynchronizableConfig
   ): Synchronizable<TValue>;
+
+  type SynchronizableConfig = {
+    fixedType?: boolean;
+  };
   ```
 </details>
 
@@ -33,6 +44,13 @@ const synchronizable = createSynchronizable({ a: 42 });
 
 The initial value to be held by the created Synchronizable. As it has to be serialized before passing to C++, it must be one of the supported types listed in the [Serializable](/docs/memory/serializable) documentation.
 
+### config <Optional />
+
+An object with the following properties:
+
+- `fixedType` - when `true`, the created Synchronizable stores its `number` or `boolean` value directly in native memory, without serialization, and exposes the additional [`setDirty`](/docs/memory/synchronizable#setdirty) method. The initial value must be a `number` or a `boolean` and the value type cannot change afterwards. Defaults to `false`.
+
 ## Remarks
 
 - In [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode), `createSynchronizable` can be called only on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime). In Bundle Mode, it can be called on any Runtime.
+- Passing `fixedType: true` with an initial value that isn't a `number` or a `boolean` throws in development builds. In production builds, a regular Synchronizable is created instead, without the `setDirty` method.

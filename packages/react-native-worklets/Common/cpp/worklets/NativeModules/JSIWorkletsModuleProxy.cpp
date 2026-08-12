@@ -8,6 +8,8 @@
 #include <worklets/SharedItems/SerializableRemoteFunction.h>
 #include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
+#include <worklets/SharedItems/SynchronizableDynamic.h>
+#include <worklets/SharedItems/SynchronizableFixed.h>
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
@@ -193,11 +195,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   auto obj = jsi::Object(rt);
   using jsi_utils::at;
 
-  jsi_utils::addMethod<18>(
+  jsi_utils::addMethod<21>(
       rt,
       obj,
       "loadUnpackersWithCode",
-      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[18]) {
+      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[21]) {
         const auto str = [&](size_t i) {
           return args[i].getString(rt).utf8(rt);
         };
@@ -208,14 +210,15 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             CodeUnpacker{.code = str(9), .location = str(10), .sourceMap = str(11)},
             CodeUnpacker{.code = str(12), .location = str(13), .sourceMap = str(14)},
             CodeUnpacker{.code = str(15), .location = str(16), .sourceMap = str(17)},
+            CodeUnpacker{.code = str(18), .location = str(19), .sourceMap = str(20)},
         });
       });
 
-  jsi_utils::addMethod<6>(
+  jsi_utils::addMethod<7>(
       rt,
       obj,
       "loadUnpackersWithBytecode",
-      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[6]) {
+      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[7]) {
         const auto bytecode = [&](size_t i) {
           const auto buffer = args[i].getObject(rt).getArrayBuffer(rt);
           return std::vector<uint8_t>(buffer.data(rt), buffer.data(rt) + buffer.size(rt));
@@ -227,6 +230,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             BytecodeUnpacker{.bytecode = bytecode(3)},
             BytecodeUnpacker{.bytecode = bytecode(4)},
             BytecodeUnpacker{.bytecode = bytecode(5)},
+            BytecodeUnpacker{.bytecode = bytecode(6)},
         });
       });
 
@@ -599,27 +603,33 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   jsi_utils::addMethod<1>(
       rt, obj, "createSynchronizable", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         auto initial = extractSerializableOrThrow(rt, at<0>(args), "[Worklets] Value must be a Serializable.");
-        auto synchronizable = std::make_shared<Synchronizable>(initial);
+        auto synchronizable = std::make_shared<SynchronizableDynamic>(initial);
         return SerializableJSRef::newNativeStateObject(rt, synchronizable);
       });
 
   jsi_utils::addMethod<1>(
+      rt, obj, "createSynchronizableFixed", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        return SerializableJSRef::newNativeStateObject(rt, SynchronizableFixed::make(at<0>(args)));
+      });
+
+  jsi_utils::addMethod<1>(
       rt, obj, "synchronizableGetDirty", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto synchronizable = extractSynchronizableOrThrow(rt, at<0>(args));
-        return synchronizable->getDirty()->toJSValue(rt);
+        return extractSynchronizableOrThrow(rt, at<0>(args))->getDirty(rt);
       });
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableGetBlocking", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto synchronizable = extractSynchronizableOrThrow(rt, at<0>(args));
-        return synchronizable->getBlocking()->toJSValue(rt);
+        return extractSynchronizableOrThrow(rt, at<0>(args))->getBlocking(rt);
+      });
+
+  jsi_utils::addMethod<2>(
+      rt, obj, "synchronizableSetDirty", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        extractSynchronizableOrThrow(rt, at<0>(args))->setDirty(rt, at<1>(args));
       });
 
   jsi_utils::addMethod<2>(
       rt, obj, "synchronizableSetBlocking", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        auto synchronizable = extractSynchronizableOrThrow(rt, at<0>(args));
-        auto newValue = extractSerializableOrThrow(rt, at<1>(args), "[Worklets] Value must be a Serializable.");
-        synchronizable->setBlocking(newValue);
+        extractSynchronizableOrThrow(rt, at<0>(args))->setBlocking(rt, at<1>(args));
       });
 
   jsi_utils::addMethod<1>(

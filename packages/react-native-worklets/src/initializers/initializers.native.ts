@@ -10,6 +10,7 @@ import { installRemoteFunctionUnpacker } from '../memory/remoteFunctionUnpacker'
 import { makeShareableCloneOnUIRecursive } from '../memory/serializable';
 import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
+import { installSynchronizableFixedUnpacker } from '../memory/synchronizableFixedUnpacker';
 import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
 import { installValueUnpacker } from '../memory/valueUnpacker';
 import { setupSetImmediate } from '../runLoop/common/setImmediatePolyfill';
@@ -143,6 +144,7 @@ function initializeRuntime() {
     installValueUnpacker();
   }
   installSynchronizableUnpacker();
+  installSynchronizableFixedUnpacker();
   installCustomSerializableUnpacker();
   installShareableHostUnpacker();
   installShareableGuestUnpacker();

@@ -16,6 +16,9 @@ export interface WorkletsModuleProxy {
     synchronizableUnpackerCode: string,
     synchronizableUnpackerLocation: string,
     synchronizableUnpackerSourceMap: string,
+    synchronizableFixedUnpackerCode: string,
+    synchronizableFixedUnpackerLocation: string,
+    synchronizableFixedUnpackerSourceMap: string,
     customSerializableUnpackerCode: string,
     customSerializableUnpackerLocation: string,
     customSerializableUnpackerSourceMap: string,
@@ -33,6 +36,7 @@ export interface WorkletsModuleProxy {
   loadUnpackersWithBytecode(
     valueUnpackerBytecode: ArrayBuffer,
     synchronizableUnpackerBytecode: ArrayBuffer,
+    synchronizableFixedUnpackerBytecode: ArrayBuffer,
     customSerializableUnpackerBytecode: ArrayBuffer,
     shareableHostUnpackerBytecode: ArrayBuffer,
     shareableGuestUnpackerBytecode: ArrayBuffer,
@@ -199,6 +203,10 @@ export interface WorkletsModuleProxy {
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue>;
 
+  createSynchronizableFixed<TValue extends number | boolean>(
+    value: TValue
+  ): SynchronizableRef<TValue>;
+
   synchronizableGetDirty<TValue>(
     synchronizableRef: SynchronizableRef<TValue>
   ): TValue;
@@ -209,7 +217,12 @@ export interface WorkletsModuleProxy {
 
   synchronizableSetBlocking<TValue>(
     synchronizableRef: SynchronizableRef<TValue>,
-    value: SerializableRef<TValue>
+    value: SerializableRef<TValue> | TValue
+  ): void;
+
+  synchronizableSetDirty<TValue extends number | boolean>(
+    synchronizableRef: SynchronizableRef<TValue>,
+    value: TValue
   ): void;
 
   synchronizableLock<TValue>(

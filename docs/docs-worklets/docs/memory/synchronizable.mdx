@@ -31,6 +31,11 @@ Synchronizable can be accessed both non-exclusively or exclusively - meaning tha
     lock(): void;
     unlock(): void;
   };
+
+  type FixedSynchronizable<TValue extends number | boolean = number | boolean> =
+    Synchronizable<TValue> & {
+      setDirty(value: TValue): void;
+    };
   ```
 </details>
 
@@ -85,6 +90,19 @@ synchronizable.setBlocking((prev) => prev + 1);
 
 The value provided to `setBlocking` is serialized automatically.
 
+### setDirty
+
+Available only on Synchronizables created with the [`fixedType` option](/docs/memory/createSynchronizable#config). Sets the value without any locking. It never blocks and doesn't respect the explicit lock, so it can interleave with a transaction. When multiple threads write concurrently, the last write wins.
+
+You can also pass a setter function that receives the previous value and returns the new value. Unlike `setBlocking`, the read and the write are **not atomic** - a concurrent write that happens between them is overwritten.
+
+```tsx
+// Set the value to 42
+synchronizable.setDirty(42);
+// Increment the value by 1 - not atomic, may lose concurrent writes
+synchronizable.setDirty((prev) => prev + 1);
+```
+
 ### lock
 
 Exclusively locks the Synchronizable - other threads are blocked when calling `getBlocking`, `setBlocking` or `lock` until the Synchronizable is unlocked. Multiple calls on the same thread do nothing.
@@ -99,7 +117,7 @@ Synchronizable can be created and accessed from C++ code. The C++ API doesn't su
 
 ## Remarks
 
-- While Synchronizable can hold any [Serializable](/docs/memory/serializable) JavaScript value, we recommend to use primitives like `number`, `string` or `boolean` for best performance, to minimize the amount of data being copied for each access.
+- While Synchronizable can hold any [Serializable](/docs/memory/serializable) JavaScript value, we recommend to use primitives like `number`, `string` or `boolean` for best performance, to minimize the amount of data being copied for each access. For `number` and `boolean` values, use the [`fixedType` option](/docs/memory/createSynchronizable#config) to skip serialization entirely.
 - We recommend to avoid changing the type of the value held by Synchronizable, instead opt to create a new Synchronizable for different types.
 - Synchronizable is not reactive, meaning that there are no built-in mechanisms to notify Runtimes when its value changes. Runtimes need to poll the value to detect changes.
-- Synchronizable on a JavaScript Runtime is a wrapper to a reference to the actual Synchronizable living in C++. The value held by Synchronizable is copied to/from C++ on each access.
+- Synchronizable on a JavaScript Runtime is a wrapper to a reference to the actual Synchronizable living in C++. For non-fixed-type Synchronizables, the value is copied to/from C++ on each access.

@@ -25,11 +25,11 @@ struct BytecodeUnpacker {
 
 class UnpackerLoader {
  public:
-  void loadCodeUnpackers(std::array<CodeUnpacker, 6> unpackers) {
+  void loadCodeUnpackers(std::array<CodeUnpacker, 7> unpackers) {
     codeUnpackers_ = std::move(unpackers);
   }
 
-  void loadBytecodeUnpackers(std::array<BytecodeUnpacker, 6> unpackers) {
+  void loadBytecodeUnpackers(std::array<BytecodeUnpacker, 7> unpackers) {
     bytecodeUnpackers_ = std::move(unpackers);
   }
 
@@ -71,8 +71,8 @@ class UnpackerLoader {
     rt.evaluateJavaScript(buffer, "").getObject(rt).getFunction(rt).call(rt);
   }
 
-  std::optional<std::array<CodeUnpacker, 6>> codeUnpackers_;
-  std::optional<std::array<BytecodeUnpacker, 6>> bytecodeUnpackers_;
+  std::optional<std::array<CodeUnpacker, 7>> codeUnpackers_;
+  std::optional<std::array<BytecodeUnpacker, 7>> bytecodeUnpackers_;
 };
 
 } // namespace worklets

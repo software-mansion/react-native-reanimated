@@ -9,6 +9,7 @@ import type { RemoteFunctionUnpacker } from './memory/remoteFunctionUnpacker';
 import type { makeShareableCloneOnUIRecursive } from './memory/serializable';
 import type { ShareableGuestUnpacker } from './memory/shareableGuestUnpacker';
 import type { ShareableHostUnpacker } from './memory/shareableHostUnpacker';
+import type { SynchronizableFixedUnpacker } from './memory/synchronizableFixedUnpacker';
 import type { SynchronizableUnpacker } from './memory/synchronizableUnpacker';
 import type { CustomSerializationRegistry } from './memory/types';
 import type { Queue } from './runLoop/workletRuntime/taskQueue';
@@ -73,6 +74,7 @@ declare global {
   var __reportFatalRemoteError: typeof reportFatalRemoteError | undefined;
   var __valueUnpacker: ValueUnpacker;
   var __synchronizableUnpacker: SynchronizableUnpacker;
+  var __synchronizableFixedUnpacker: SynchronizableFixedUnpacker;
   var __customSerializationRegistry: CustomSerializationRegistry;
   var __customSerializableUnpacker: CustomSerializableUnpacker;
   var __remoteFunctionUnpacker: RemoteFunctionUnpacker;
