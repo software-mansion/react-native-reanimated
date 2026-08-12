@@ -10,6 +10,12 @@ void RunLifecycle::setMilestoneReporter(Reporter reporter) {
 }
 
 void RunLifecycle::reachPosition(const RunStage stage, const unsigned repeat) {
+  // An abort ends the run for good. Removal from the loop is only enqueued, so
+  // a frame already in flight can still position an aborted run.
+  if (aborted_) {
+    return;
+  }
+
   const auto target = rank(stage);
 
   // Longer settings pull a finished run back so it can reach the end again.
@@ -49,7 +55,8 @@ bool RunLifecycle::hasEnded() const {
 }
 
 void RunLifecycle::enterStagesUpTo(const std::size_t target) {
-  while (reported_ < target) {
+  // A reporter may abort from inside a milestone, which ends the ladder here.
+  while (reported_ < target && !aborted_) {
     report(static_cast<RunMilestone>(++reported_));
   }
 }
