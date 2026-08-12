@@ -1,6 +1,7 @@
 import type { Component, ReactElement } from 'react';
 import type { SharedValue } from 'react-native-reanimated';
 
+import type { ValueGetter } from './matchers/EventualMatchers';
 import type { TestComponent } from './TestComponent';
 import { TestRunner } from './TestRunner/TestRunner';
 import type {
@@ -197,6 +198,10 @@ export function getWorkletRuntimeFromPool(name: string) {
 
 export function expect(value: TestValue) {
   return testRunner.expect(value);
+}
+
+export function expectEventually(getValue: ValueGetter, timeout?: number) {
+  return testRunner.expectEventually(getValue, timeout);
 }
 
 export function configure(config: TestConfiguration) {

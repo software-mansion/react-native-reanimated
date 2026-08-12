@@ -1,6 +1,8 @@
 import type { Component, ReactElement, RefObject } from 'react';
 import { useRef } from 'react';
 
+import type { ValueGetter } from '../matchers/EventualMatchers';
+import { EventualMatchers } from '../matchers/EventualMatchers';
 import { Matchers } from '../matchers/Matchers';
 import { TestComponent } from '../TestComponent';
 import type {
@@ -276,5 +278,13 @@ export class TestRunner {
   public expect(currentValue: TestValue): Matchers {
     assertTestCase(this._currentTestCase);
     return new Matchers(currentValue, this._currentTestCase);
+  }
+
+  public expectEventually(
+    getValue: ValueGetter,
+    timeout?: number
+  ): EventualMatchers {
+    assertTestCase(this._currentTestCase);
+    return new EventualMatchers(getValue, this._currentTestCase, timeout);
   }
 }
