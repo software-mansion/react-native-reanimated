@@ -6,7 +6,7 @@ import android.view.animation.PathInterpolator
 
 /** `steps()` and `linear()` stops are evaluated directly so steps keeps its discontinuities. */
 internal object CSSEasing {
-    // The easing type arrives as an int over JNI; 0 is linear and needs no points.
+    // 0 is linear and carries no points, so it needs no constant.
     private const val CUBIC_BEZIER = 1
     private const val STEPS = 2
     private const val LINEAR_STOPS = 3

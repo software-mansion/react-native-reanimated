@@ -6,14 +6,12 @@ import android.os.Build
 import android.provider.Settings
 
 /**
- * `ValueAnimator` scales every duration by a process-global factor, so callers pre-divide
- * by this to keep the authored duration. Opting a single animator out would need
- * `overrideDurationScale`, which is `@hide` with no greylist entry.
+ * `ValueAnimator` scales every duration by a process-global factor, so callers pre-divide by
+ * this. Opting one animator out would need `overrideDurationScale`, which is `@hide`.
  */
 internal object DurationScale {
     fun effectiveScale(context: Context): Float {
-        // Battery saver disables animations without touching Settings.Global, and
-        // areAnimatorsEnabled() (literally `scale != 0`) is the only signal for it.
+        // Battery saver disables animations without touching Settings.Global.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !ValueAnimator.areAnimatorsEnabled()) {
             return 0f
         }
