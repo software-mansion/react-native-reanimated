@@ -410,11 +410,16 @@ export default class AnimatedComponent
   render() {
     const filteredProps = this._PropsFilter.filterNonAnimatedProps(this);
     // Emitted while the props above were filtered, so the pseudo selectors
-    // carried by `animatedProps` are not looked for a second time. Styles are
-    // handled by the CSS component, which processes them on the way to the child.
+    // carried by `animatedProps` are not looked for a second time. Only a
+    // handler that can actually run takes precedence, so passing the prop
+    // explicitly as `undefined` doesn't leave the shape unhittable.
     const { onStartShouldSetResponder } = this._PropsFilter;
     const pseudoSelectorProps = onStartShouldSetResponder
-      ? { onStartShouldSetResponder }
+      ? {
+          onStartShouldSetResponder:
+            filteredProps.onStartShouldSetResponder ??
+            onStartShouldSetResponder,
+        }
       : {};
 
     if (IS_JEST) {
@@ -452,9 +457,8 @@ export default class AnimatedComponent
     if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS && this.state.settledStyle) {
       return super.render({
         nativeID,
-        // Spread before `filteredProps` so a handler the user passed always wins.
-        ...pseudoSelectorProps,
         ...filteredProps,
+        ...pseudoSelectorProps,
         ...this.state.settledProps,
         style: [...flattenArray(filteredProps.style), this.state.settledStyle],
         ...jestProps,
@@ -463,9 +467,8 @@ export default class AnimatedComponent
 
     return super.render({
       nativeID,
-      // Spread before `filteredProps` so a handler the user passed always wins.
-      ...pseudoSelectorProps,
       ...filteredProps,
+      ...pseudoSelectorProps,
       ...jestProps,
     });
   }

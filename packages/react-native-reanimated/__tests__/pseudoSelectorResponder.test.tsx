@@ -51,6 +51,21 @@ describe('responder prop injected for pseudo selectors in animatedProps', () => 
     ).toBeUndefined();
   });
 
+  it('still injects when the handler prop is passed as undefined', () => {
+    const { getByTestId } = render(
+      <AnimatedView
+        animatedProps={{ fill: { ':active': 'red', default: 'blue' } }}
+        onStartShouldSetResponder={undefined}
+        testID="subject"
+      />
+    );
+
+    // A handler that cannot run must not leave the shape unhittable.
+    expect(
+      getByTestId('subject').props.onStartShouldSetResponder
+    ).toBeInstanceOf(Function);
+  });
+
   it('keeps a user-supplied handler', () => {
     const userHandler = () => true;
     const { getByTestId } = render(
