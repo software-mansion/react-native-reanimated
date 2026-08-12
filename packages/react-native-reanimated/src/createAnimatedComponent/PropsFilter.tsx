@@ -21,18 +21,16 @@ function dummyListener() {
   // event is used.
 }
 
-// Marks the shape responsible for react-native-svg's hit test, which accepts
-// any truthy responder prop, while false leaves the responder to its ancestors.
+// react-native-svg hit-tests a shape only once a responder prop marked it
+// responsible, and accepts any truthy one. False claims nothing.
 const neverClaimResponder = () => false;
 
 export class PropsFilter implements IPropsFilter {
   private _initialPropsMap = new Map<AnimatedStyleHandle, StyleProps>();
 
   /**
-   * Emitted while filtering `animatedProps` that carry pseudo selectors - the
-   * channel SVG components use, since they are styled through top level props
-   * rather than `style`. Kept off the filtered props because only native
-   * platforms accept this handler.
+   * Set while filtering `animatedProps` that carry pseudo selectors. Kept off
+   * the filtered props because only native platforms accept this handler.
    */
   public onStartShouldSetResponder?: () => boolean;
 

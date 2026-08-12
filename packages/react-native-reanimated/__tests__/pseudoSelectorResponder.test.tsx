@@ -5,10 +5,8 @@ import Animated from '../src';
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 
-// react-native-svg hit-tests a shape only once a responder prop marked it
-// responsible, so pseudo selectors on SVG elements would otherwise never see
-// the press. SVG components are styled through props, which makes
-// `animatedProps` their CSS channel and the only one that needs the handler.
+// SVG components are styled through props, so `animatedProps` is their CSS
+// channel and the only one that needs the handler.
 describe('responder prop injected for pseudo selectors in animatedProps', () => {
   it('injects an inert handler and still forwards the resting value', () => {
     const { getByTestId } = render(
@@ -60,7 +58,6 @@ describe('responder prop injected for pseudo selectors in animatedProps', () => 
       />
     );
 
-    // A handler that cannot run must not leave the shape unhittable.
     expect(
       getByTestId('subject').props.onStartShouldSetResponder
     ).toBeInstanceOf(Function);

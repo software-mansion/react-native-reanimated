@@ -409,10 +409,8 @@ export default class AnimatedComponent
 
   render() {
     const filteredProps = this._PropsFilter.filterNonAnimatedProps(this);
-    // Emitted while the props above were filtered, so the pseudo selectors
-    // carried by `animatedProps` are not looked for a second time. Only a
-    // handler that can actually run takes precedence, so passing the prop
-    // explicitly as `undefined` doesn't leave the shape unhittable.
+    // Reported by the filtering above, so `animatedProps` aren't walked twice.
+    // `??` keeps a real handler, but survives one passed as `undefined`.
     const { onStartShouldSetResponder } = this._PropsFilter;
     const pseudoSelectorProps = onStartShouldSetResponder
       ? {
