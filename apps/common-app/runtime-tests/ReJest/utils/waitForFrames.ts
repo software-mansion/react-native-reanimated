@@ -37,7 +37,21 @@ export async function waitUntilSettled<TValue>(
   }: { timeout?: number; stableFrames?: number } = {}
 ): Promise<TValue> {
   const startTime = performance.now();
-  let previous = await read();
+
+  const readWithTimeout = () => {
+    const remainingTime = timeout - (performance.now() - startTime);
+    if (remainingTime <= 0) {
+      throw new Error(
+        `Timed out after ${timeout}ms while waiting for the value to settle.`
+      );
+    }
+    return withTimeout((async () => read())(), {
+      description: 'the value to be read',
+      timeout: remainingTime,
+    });
+  };
+
+  let previous = await readWithTimeout();
   let stable = 0;
 
   while (stable < stableFrames) {
@@ -47,7 +61,7 @@ export async function waitUntilSettled<TValue>(
       );
     }
     await waitForFrames(1, timeout);
-    const current = await read();
+    const current = await readWithTimeout();
     stable = Object.is(current, previous) ? stable + 1 : 0;
     previous = current;
   }

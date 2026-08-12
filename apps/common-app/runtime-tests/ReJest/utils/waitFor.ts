@@ -1,5 +1,6 @@
 export const DEFAULT_TIMEOUT_MS = 10000;
 const DEFAULT_POLL_INTERVAL_MS = 10;
+const STATE_DESCRIPTION_TIMEOUT_MS = 1000;
 
 type WaitForOptions = {
   description: string;
@@ -29,18 +30,29 @@ export async function waitFor(
   const startTime = performance.now();
 
   for (;;) {
-    if (await predicate()) {
-      return;
+    const remainingTime = timeout - (performance.now() - startTime);
+
+    if (remainingTime > 0) {
+      const satisfied = await withTimeout((async () => predicate())(), {
+        description,
+        timeout: remainingTime,
+      }).catch(() => false);
+
+      if (satisfied) {
+        return;
+      }
     }
+
     if (performance.now() - startTime >= timeout) {
-      throw new Error(
-        timeoutMessage(
-          timeout,
-          description,
-          describeState ? await describeState() : undefined
-        )
-      );
+      const state = describeState
+        ? await withTimeout((async () => describeState())(), {
+            description: `${description} state`,
+            timeout: STATE_DESCRIPTION_TIMEOUT_MS,
+          }).catch(() => 'unavailable')
+        : undefined;
+      throw new Error(timeoutMessage(timeout, description, state));
     }
+
     await sleep(interval);
   }
 }
