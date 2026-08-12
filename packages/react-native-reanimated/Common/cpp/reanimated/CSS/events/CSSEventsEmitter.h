@@ -5,7 +5,6 @@
 #include <ReactCommon/CallInvoker.h>
 #include <jsi/jsi.h>
 
-#include <cstddef>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -28,19 +27,11 @@ class CSSEventsEmitter : public std::enable_shared_from_this<CSSEventsEmitter> {
   void emit(CSSEvent event);
 
  private:
-  /// A drain request can be dropped before it runs (the runtime scheduler
-  /// clears its queue on a task error when
-  /// `enableRuntimeSchedulerQueueClearingOnError` is on), which would leave
-  /// `drainRequested_` latched with no drain left to clear it. Re-request once
-  /// the backlog says the request never arrived.
-  static constexpr std::size_t kDrainRetryBacklog = 64;
-
   const std::shared_ptr<facebook::react::CallInvoker> jsInvoker_;
 
   std::mutex mutex_;
   std::shared_ptr<facebook::jsi::Function> emitFunction_;
   std::vector<CSSEvent> pending_;
-  bool drainRequested_{false};
 
   void scheduleDrain();
   void drain(facebook::jsi::Runtime &rt);

@@ -60,12 +60,9 @@ void CSSEventsEmitter::invalidate() {
   std::lock_guard<std::mutex> lock(mutex_);
   emitFunction_.reset();
   pending_.clear();
-  drainRequested_ = false;
 }
 
 void CSSEventsEmitter::emit(CSSEvent event) {
-  bool shouldScheduleDrain;
-
   {
     std::lock_guard<std::mutex> lock(mutex_);
     // Buffering before the handler is installed, or after it is gone, would
@@ -74,15 +71,17 @@ void CSSEventsEmitter::emit(CSSEvent event) {
       return;
     }
     pending_.push_back(std::move(event));
-    shouldScheduleDrain = !drainRequested_ || pending_.size() % kDrainRetryBacklog == 0;
-    drainRequested_ = true;
   }
 
   // Scheduled after unlocking: `emit` already holds the updates registry lock,
   // and reaching into the scheduler under both is how lock cycles start.
-  if (shouldScheduleDrain) {
-    scheduleDrain();
-  }
+  //
+  // One request per event rather than one per batch. A request can be dropped
+  // before it runs, since the runtime scheduler clears its queue on a task
+  // error, and there is no signal for that: anything that remembers a request
+  // is outstanding strands the buffer for good. Delivery is still batched, as
+  // the first drain to run takes every pending event and the rest find none.
+  scheduleDrain();
 }
 
 void CSSEventsEmitter::scheduleDrain() {
@@ -99,7 +98,6 @@ void CSSEventsEmitter::drain(jsi::Runtime &rt) {
 
   {
     std::lock_guard<std::mutex> lock(mutex_);
-    drainRequested_ = false;
     events.swap(pending_);
     emitFunction = emitFunction_;
   }
