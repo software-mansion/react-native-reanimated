@@ -133,8 +133,8 @@ export class PropsFilter implements IPropsFilter {
       });
     }
 
-    // Web drives pseudo selectors through real CSS, and react-native-svg's web
-    // layer would forward the handler to the DOM, so only native needs it.
+    // Only native presses go through that hit test - on web the pseudo states
+    // are plain CSS, so the shape never has to become a touch target.
     if (!IS_WEB && hasPseudoSelectors && !props.onStartShouldSetResponder) {
       props.onStartShouldSetResponder = neverClaimResponder;
     }
