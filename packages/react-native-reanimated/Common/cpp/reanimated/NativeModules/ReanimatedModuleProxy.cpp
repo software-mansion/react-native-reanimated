@@ -212,6 +212,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           updatesRegistryManager_)),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(staticPropsRegistry_, animatedPropsRegistry_)),
+      cssEventsEmitter_(std::make_shared<CSSEventsEmitter>(jsCallInvoker)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>(
           operationsLoop_,
@@ -393,6 +394,9 @@ ReanimatedModuleProxy::~ReanimatedModuleProxy() {
   // event handler registry and frame callbacks store some JSI values from UI
   // runtime, so they have to go away before we tear down the runtime
   eventHandlerRegistry_.reset();
+  // The emitter holds a function from the RN runtime and is still reachable
+  // from a frame in flight, so stop it before that runtime goes away.
+  cssEventsEmitter_->invalidate();
 }
 
 jsi::Value ReanimatedModuleProxy::registerEventHandler(
@@ -586,6 +590,10 @@ void ReanimatedModuleProxy::applyCSSAnimations(
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
   auto lock = updatesRegistryManager_->lock();
   cssAnimationsRegistry_->remove(viewTag.asNumber());
+}
+
+void ReanimatedModuleProxy::setCSSEventHandler(jsi::Runtime &rt, const jsi::Value &handler) {
+  cssEventsEmitter_->setEmitFunction(std::make_shared<jsi::Function>(handler.asObject(rt).asFunction(rt)));
 }
 
 void ReanimatedModuleProxy::runCSSTransition(
@@ -1538,6 +1546,18 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
           return;
         }
         strongThis->applyCSSAnimations(rt, at<0>(args), at<1>(args), at<2>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "setCSSEventHandler",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->setCSSEventHandler(rt, at<0>(args));
       });
 
   addMethod<1>(
