@@ -161,7 +161,8 @@ export interface WorkletsModuleProxy {
     useDefaultQueue: boolean,
     customQueue: object | undefined,
     enableEventLoop: boolean,
-    enableLocking: boolean
+    enableLocking: boolean,
+    enableNetworking: boolean
   ): WorkletRuntime;
 
   scheduleOnRuntime<TValue>(
