@@ -59,9 +59,13 @@ void RunLifecycle::abort() {
     return;
   }
 
-  // A run exists from creation, so an early abort still reports it first.
+  // A run exists from creation, so an early abort still reports it first. That
+  // report can abort the run itself, leaving nothing for this call to do.
   if (phase_ == RunPhase::Idle) {
     reachPhase(RunPhase::Before);
+    if (aborted_) {
+      return;
+    }
   }
 
   aborted_ = true;
