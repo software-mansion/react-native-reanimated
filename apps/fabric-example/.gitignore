@@ -68,3 +68,6 @@ yarn-error.log
 
 # Sanitizer reports from scripts/runtime-tests-server.js --sanitizer
 sanitizer-reports/
+
+# Packaged app artifacts from scripts/export-runtime-tests-app.js
+dist/
