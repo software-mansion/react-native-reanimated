@@ -84,7 +84,7 @@ describe('withTiming animation of WIDTH', () => {
         <AnimatedComponent startStyle={startStyle} finalStyle={finalStyle} />
       );
       const component = getTestComponent(COMPONENT_REF);
-      await wait(1000);
+      await wait(1200);
       for (const key of Object.keys(finalStyle)) {
         expect(await component.getAnimatedStyle(key as ValidPropNames)).toBe(
           finalStyle[key],

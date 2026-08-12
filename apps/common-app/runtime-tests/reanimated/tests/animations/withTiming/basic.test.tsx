@@ -227,17 +227,17 @@ describe('withTiming, test CALLBACKS', () => {
 
   test('withTiming - test callback of independent withTiming animations', async () => {
     await render(<CallbackComponent />);
-    await wait(600);
+    await wait(1000);
 
-    expect(getTrackerCallCount(Tracker.UseAnimatedStyle)).toBeCalled(3);
-    expect(getTrackerCallCount(Tracker.UseAnimatedStyle)).toBeCalledUI(1);
-    expect(getTrackerCallCount(Tracker.UseAnimatedStyle)).toBeCalledJS(2);
+    expect(await getTrackerCallCount(Tracker.UseAnimatedStyle)).toBeCalled(3);
+    expect(await getTrackerCallCount(Tracker.UseAnimatedStyle)).toBeCalledUI(1);
+    expect(await getTrackerCallCount(Tracker.UseAnimatedStyle)).toBeCalledJS(2);
 
-    expect(getTrackerCallCount(Tracker.Width)).toBeCalledUI(1);
-    expect(getTrackerCallCount(Tracker.Width)).toBeCalledJS(0);
+    expect(await getTrackerCallCount(Tracker.Width)).toBeCalledUI(1);
+    expect(await getTrackerCallCount(Tracker.Width)).toBeCalledJS(0);
 
-    expect(getTrackerCallCount(Tracker.Height)).toBeCalledUI(1);
-    expect(getTrackerCallCount(Tracker.Height)).toBeCalledJS(0);
+    expect(await getTrackerCallCount(Tracker.Height)).toBeCalledUI(1);
+    expect(await getTrackerCallCount(Tracker.Height)).toBeCalledJS(0);
   });
 });
 

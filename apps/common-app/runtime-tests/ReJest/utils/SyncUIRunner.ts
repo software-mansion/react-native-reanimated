@@ -1,5 +1,6 @@
-import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
+import { runOnUIAsync } from 'react-native-worklets';
 import type { LockObject } from '../types';
+import { DEFAULT_TIMEOUT_MS, withTimeout } from './waitFor';
 
 class WaitForUnlock {
   private _lock: LockObject = {
@@ -27,16 +28,16 @@ class WaitForUnlock {
   }
 }
 
-export class SyncUIRunner extends WaitForUnlock {
-  public async runOnUIBlocking(worklet: () => void, maxWaitTime?: number) {
-    const unlock = () => this._setLock(false);
-    this._setLock(true);
-    scheduleOnUI(() => {
-      'worklet';
-      worklet();
-      scheduleOnRN(unlock);
+export class SyncUIRunner {
+  public async runOnUIBlocking<TReturn>(
+    worklet: () => TReturn,
+    maxWaitTime: number = DEFAULT_TIMEOUT_MS,
+    description = 'a worklet to run on the UI runtime'
+  ) {
+    return withTimeout(runOnUIAsync(worklet), {
+      description,
+      timeout: maxWaitTime,
     });
-    await this._waitForUnlock(maxWaitTime);
   }
 }
 

@@ -109,17 +109,16 @@ describe(`Cascade of callbacks`, () => {
     expect((await getRegisteredValue(SV.callbackArgument0)).onJS).toBe(0);
     expect((await getRegisteredValue(SV.callbackArgument1)).onJS).toBe(0);
 
-    (
-      [
-        [Tracker.animationNotExecuted, 2],
-        [Tracker.interruptedAnimation, 1],
-        [Tracker.callbackAnimation, 3],
-      ] as const
-    ).forEach(([trackerRef, counts]) => {
-      expect(getTrackerCallCount(trackerRef)).toBeCalled(counts);
-      expect(getTrackerCallCount(trackerRef)).toBeCalledUI(counts);
-      expect(getTrackerCallCount(trackerRef)).toBeCalledJS(0);
-    });
+    for (const [trackerRef, counts] of [
+      [Tracker.animationNotExecuted, 2],
+      [Tracker.interruptedAnimation, 1],
+      [Tracker.callbackAnimation, 3],
+    ] as const) {
+      const trackerCallCount = await getTrackerCallCount(trackerRef);
+      expect(trackerCallCount).toBeCalled(counts);
+      expect(trackerCallCount).toBeCalledUI(counts);
+      expect(trackerCallCount).toBeCalledJS(0);
+    }
   });
 });
 

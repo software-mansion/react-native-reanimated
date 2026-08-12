@@ -2,6 +2,7 @@ import { makeMutable } from 'react-native-reanimated';
 
 import type { Operation } from '../types';
 import { SyncUIRunner } from '../utils/SyncUIRunner';
+import { sleep } from '../utils/waitFor';
 import { assertMockedAnimationTimestamp } from './Asserts';
 import { createUpdatesContainer } from './UpdatesContainer';
 
@@ -131,9 +132,7 @@ export class AnimationUpdatesRecorder {
   }
 
   public wait(delay: number) {
-    return new Promise((resolve) => {
-      setTimeout(resolve, delay);
-    });
+    return sleep(delay);
   }
 
   public async waitForAnimationUpdates(
@@ -162,6 +161,9 @@ export class AnimationUpdatesRecorder {
         if (shouldAssertMock) {
           assertMockedAnimationTimestamp(global.framesCount);
         } else if (global.framesCount === undefined) {
+          return;
+        }
+        if (global.animationUpdatesRecordingStarted === false) {
           return;
         }
         framesSeen.value = global.framesCount;

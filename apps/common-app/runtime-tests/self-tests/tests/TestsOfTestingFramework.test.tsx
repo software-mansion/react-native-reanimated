@@ -271,13 +271,17 @@ describe('Tests of Test Framework', () => {
   test.failing('withTiming - expect callback call - ❌', async () => {
     await render(<AnimatedComponent />);
     await wait(600);
-    expect(getTrackerCallCount('useAnimatedStyleTracker')).toBeCalled(4);
+    expect(await getTrackerCallCount('useAnimatedStyleTracker')).toBeCalled(4);
 
-    expect(getTrackerCallCount('useAnimatedStyleTracker')).toBeCalledUI(0);
-    expect(getTrackerCallCount('useAnimatedStyleTracker')).toBeCalledJS(1);
+    expect(await getTrackerCallCount('useAnimatedStyleTracker')).toBeCalledUI(
+      0
+    );
+    expect(await getTrackerCallCount('useAnimatedStyleTracker')).toBeCalledJS(
+      1
+    );
 
-    expect(getTrackerCallCount('withTimingTracker')).toBeCalledUI(2);
-    expect(getTrackerCallCount('withTimingTracker')).toBeCalledJS(100);
+    expect(await getTrackerCallCount('withTimingTracker')).toBeCalledUI(2);
+    expect(await getTrackerCallCount('withTimingTracker')).toBeCalledJS(100);
   });
 
   test('withTiming - test number preset - ✅', async () => {

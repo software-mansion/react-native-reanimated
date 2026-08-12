@@ -137,8 +137,8 @@ export function callTrackerFn(name: string) {
   };
 }
 
-export function getTrackerCallCount(name: string) {
-  return callTrackerRegistry.getTrackerCallCount(name);
+export async function getTrackerCallCount(name: string) {
+  return await callTrackerRegistry.getTrackerCallCount(name);
 }
 
 export function registerValue<TValue = unknown>(
