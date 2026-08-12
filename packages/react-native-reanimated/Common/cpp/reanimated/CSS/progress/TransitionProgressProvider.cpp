@@ -58,6 +58,10 @@ void TransitionPropertyProgressProvider::setMilestoneReporter(RunLifecycle::Repo
 }
 
 void TransitionPropertyProgressProvider::abort(const double timestamp) {
+  // A cancel can arrive at a timestamp the provider has not been ticked to, and
+  // the run still owes the milestones it crossed in between. Advancing first
+  // also lets a run that has since finished report its end instead of a cancel.
+  update(timestamp);
   cancelTimestamp_ = timestamp;
   lifecycle_.abort();
 }
