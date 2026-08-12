@@ -24,8 +24,10 @@ bool CSSPlatformTransitionProxy::apply(
     const PlatformValue &fromValue,
     const PlatformValue &toValue,
     const CSSTransitionPropertySettings *settings,
+    const bool persistent,
     const double timestamp) const {
-  return applyTransition_ && applyTransition_(viewTag, propertyName, fromValue, toValue, settings, timestamp);
+  return applyTransition_ &&
+      applyTransition_(viewTag, propertyName, fromValue, toValue, settings, persistent, timestamp);
 }
 
 void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &propertyName) const {
@@ -57,7 +59,8 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
     bool routable = canRoute(propertyName, settings.easingConfig);
     if (routable && hasValue) {
       const auto values = parsePlatformValues(rt, propertyName, valueIt->second.first, valueIt->second.second);
-      routable = values && apply(viewTag, propertyName, values->first, values->second, &settings, timestamp);
+      // React commits the config path's target, so there is nothing to hold afterwards.
+      routable = values && apply(viewTag, propertyName, values->first, values->second, &settings, false, timestamp);
     } else if (routable) {
       // Settings-only: stay on the platform only if already animating there.
       routable = routing.platform.contains(propertyName);
@@ -102,6 +105,7 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
 PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
     const Tag viewTag,
     const PropertyValueDynamicDiffsMap &propertyDiffs,
+    const TransitionProperties &pseudoLockedProperties,
     CSSTransitionRouting &routing,
     const double timestamp) const {
   PropertyValueDynamicDiffsMap loopDiffs;
@@ -110,7 +114,9 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
     // still express the toggled value; otherwise it migrates to the loop.
     if (routing.platform.contains(propertyName)) {
       const auto values = parsePlatformValues(propertyName, propertyDiff.first, propertyDiff.second);
-      if (values && apply(viewTag, propertyName, values->first, values->second, nullptr, timestamp)) {
+      // Releasing the last selector targets the committed style, which needs no hold.
+      const bool persistent = pseudoLockedProperties.contains(propertyName);
+      if (values && apply(viewTag, propertyName, values->first, values->second, nullptr, persistent, timestamp)) {
         continue;
       }
       routing.platform.erase(propertyName);
