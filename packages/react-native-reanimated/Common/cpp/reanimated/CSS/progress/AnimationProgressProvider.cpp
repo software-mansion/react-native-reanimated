@@ -83,8 +83,10 @@ double AnimationProgressProvider::elapsedTimeAt(const MilestoneTime time) const 
       return intervalStart();
     case MilestoneTime::IntervalEnd:
       return intervalEnd();
-    case MilestoneTime::IterationBoundary:
-      return iterationBoundary();
+    case MilestoneTime::IterationStart:
+      return iterationStart();
+    case MilestoneTime::IterationEnd:
+      return iterationEnd();
     case MilestoneTime::ActiveTime:
       return activeTimeAtCancel();
   }
@@ -101,8 +103,12 @@ double AnimationProgressProvider::intervalStart() const {
   return std::min(elapsedTime, duration_ * iterationCount_);
 }
 
-double AnimationProgressProvider::iterationBoundary() const {
+double AnimationProgressProvider::iterationStart() const {
   return (currentIteration_ - 1) * duration_;
+}
+
+double AnimationProgressProvider::iterationEnd() const {
+  return currentIteration_ * duration_;
 }
 
 double AnimationProgressProvider::intervalEnd() const {

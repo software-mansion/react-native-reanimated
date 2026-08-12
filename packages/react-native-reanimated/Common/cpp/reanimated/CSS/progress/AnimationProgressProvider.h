@@ -87,7 +87,8 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   RunPhase computePhase(double timestamp) const;
 
   double intervalStart() const;
-  double iterationBoundary() const;
+  double iterationStart() const;
+  double iterationEnd() const;
   double intervalEnd() const;
   double activeTimeAtCancel() const;
 
