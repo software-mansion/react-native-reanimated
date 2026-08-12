@@ -1,8 +1,6 @@
-import { makeMutable } from 'react-native-reanimated';
-
 import type { Operation } from '../types';
 import { SyncUIRunner } from '../utils/SyncUIRunner';
-import { sleep } from '../utils/waitFor';
+import { sleep, waitFor } from '../utils/waitFor';
 import { assertMockedAnimationTimestamp } from './Asserts';
 import { createUpdatesContainer } from './UpdatesContainer';
 
@@ -138,43 +136,46 @@ export class AnimationUpdatesRecorder {
   public async waitForAnimationUpdates(
     updatesCount: number,
     maxWaitTime = MAX_WAIT_TIME_MS
-  ): Promise<boolean> {
+  ) {
     const CHECK_INTERVAL = 20;
-    const flag = makeMutable(false);
-    const framesSeen = makeMutable(0);
-    const startTime = performance.now();
+    let framesSeen = 0;
     let isFirstPoll = true;
 
-    for (;;) {
-      const remainingWaitTime = maxWaitTime - (performance.now() - startTime);
-      if (remainingWaitTime <= 0) {
-        throw new Error(
-          `Timed out after ${maxWaitTime}ms while waiting for ${updatesCount} animation updates, got ${framesSeen.value}.`
-        );
-      }
-
+    const readFramesCount = async () => {
       const shouldAssertMock = isFirstPoll;
       isFirstPoll = false;
 
-      await new SyncUIRunner().runOnUIBlocking(() => {
-        'worklet';
-        if (shouldAssertMock) {
-          assertMockedAnimationTimestamp(global.framesCount);
-        } else if (global.framesCount === undefined) {
-          return;
-        }
-        if (global.animationUpdatesRecordingStarted === false) {
-          return;
-        }
-        framesSeen.value = global.framesCount;
-        flag.value = global.framesCount >= updatesCount - 1;
-      }, remainingWaitTime);
+      return this._syncUIRunner.runOnUIBlocking(
+        () => {
+          'worklet';
+          if (shouldAssertMock) {
+            assertMockedAnimationTimestamp(global.framesCount);
+          }
+          if (global.animationUpdatesRecordingStarted !== true) {
+            return undefined;
+          }
+          return global.framesCount;
+        },
+        maxWaitTime,
+        'the UI runtime to report the recorded frame count'
+      );
+    };
 
-      if (flag.value) {
-        return true;
+    await waitFor(
+      async () => {
+        const framesCount = await readFramesCount();
+        if (framesCount === undefined) {
+          return false;
+        }
+        framesSeen = framesCount;
+        return framesCount >= updatesCount - 1;
+      },
+      {
+        description: `${updatesCount} animation updates`,
+        timeout: maxWaitTime,
+        interval: CHECK_INTERVAL,
+        describeState: () => `${framesSeen} updates`,
       }
-
-      await this.wait(CHECK_INTERVAL);
-    }
+    );
   }
 }

@@ -322,13 +322,13 @@ describe('Tests of Test Framework', () => {
 
   //   const brownComponent = getTestComponent('BrownComponent');
   //   const brownNative = await updatesContainer.getNativeSnapshots(brownComponent);
-  //   expect(updatesContainer.getUpdates(brownComponent)).toMatchSnapshots(Snapshots.brownComponent);
-  //   expect(updatesContainer.getUpdates(brownComponent)).toMatchNativeSnapshots(brownNative);
+  //   expect(await updatesContainer.getUpdates(brownComponent)).toMatchSnapshots(Snapshots.brownComponent);
+  //   expect(await updatesContainer.getUpdates(brownComponent)).toMatchNativeSnapshots(brownNative);
 
   //   const greenComponent = getTestComponent('GreenComponent');
   //   const greenNative = await updatesContainer.getNativeSnapshots(greenComponent);
-  //   expect(updatesContainer.getUpdates(greenComponent)).toMatchSnapshots(Snapshots.greenComponent);
-  //   expect(updatesContainer.getUpdates(greenComponent)).toMatchNativeSnapshots(greenNative);
+  //   expect(await updatesContainer.getUpdates(greenComponent)).toMatchSnapshots(Snapshots.greenComponent);
+  //   expect(await updatesContainer.getUpdates(greenComponent)).toMatchNativeSnapshots(greenNative);
   // });
 
   // test('withTiming - match snapshot - ❌', async () => {
@@ -340,10 +340,10 @@ describe('Tests of Test Framework', () => {
   //   const brownComponent = getTestComponent('BrownComponent');
   //   const greenComponent = getTestComponent('GreenComponent');
 
-  //   expect(updatesContainer.getUpdates(brownComponent)).toMatchSnapshots(Snapshots.greenComponent);
+  //   expect(await updatesContainer.getUpdates(brownComponent)).toMatchSnapshots(Snapshots.greenComponent);
 
   //   const greenNative = await updatesContainer.getNativeSnapshots(greenComponent);
-  //   expect(updatesContainer.getUpdates(brownComponent)).toMatchNativeSnapshots(greenNative);
+  //   expect(await updatesContainer.getUpdates(brownComponent)).toMatchNativeSnapshots(greenNative);
   // });
 
   // test('layoutAnimation - entering - ✅', async () => {
@@ -351,7 +351,7 @@ describe('Tests of Test Framework', () => {
   //   const updatesContainer = await recordAnimationUpdates();
   //   await render(<LayoutAnimation />);
   //   await wait(600);
-  //   expect(updatesContainer.getUpdates()).toMatchSnapshots(Snapshots.layoutAnimation);
+  //   expect(await updatesContainer.getUpdates()).toMatchSnapshots(Snapshots.layoutAnimation);
   // });
 
   test('withTiming - notify - ✅', async () => {

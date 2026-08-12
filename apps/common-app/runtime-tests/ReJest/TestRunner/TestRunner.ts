@@ -139,14 +139,10 @@ export class TestRunner {
     } catch (e) {
       console.log(e);
     }
-    const stillLocked = await this._renderLock.waitForUnlock(
-      RENDER_MAX_WAIT_TIME_MS
-    );
-    if (stillLocked) {
+    try {
+      await this._renderLock.waitForRender(RENDER_MAX_WAIT_TIME_MS);
+    } finally {
       this._renderLock.unlock();
-      throw new Error(
-        `Timed out after ${RENDER_MAX_WAIT_TIME_MS}ms while waiting for the component to render.`
-      );
     }
   }
 

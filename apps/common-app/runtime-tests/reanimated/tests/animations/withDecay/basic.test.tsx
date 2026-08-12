@@ -40,7 +40,7 @@ describe('withDecay animation, test various config', () => {
 
     await waitForAnimationUpdates(Snapshots[snapshotName].length);
 
-    const updates = updatesContainer.getUpdates();
+    const updates = await updatesContainer.getUpdates();
     const nativeUpdates = await updatesContainer.getNativeSnapshots();
     await unmockAnimationTimer();
 

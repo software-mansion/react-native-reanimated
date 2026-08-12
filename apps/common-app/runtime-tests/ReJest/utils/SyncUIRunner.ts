@@ -1,32 +1,6 @@
 import { runOnUIAsync } from 'react-native-worklets';
-import type { LockObject } from '../types';
+
 import { DEFAULT_TIMEOUT_MS, withTimeout } from './waitFor';
-
-class WaitForUnlock {
-  private _lock: LockObject = {
-    lock: false,
-  };
-
-  _setLock(value: boolean) {
-    this._lock = { lock: value };
-  }
-
-  _waitForUnlock(maxWaitTime?: number) {
-    const defaultPollingRate = 10;
-    return new Promise((resolve) => {
-      const startTime = performance.now();
-      const interval = setInterval(() => {
-        const currentTime = performance.now();
-        const waitTimeExceeded =
-          maxWaitTime && maxWaitTime < currentTime - startTime;
-        if (this._lock.lock !== true || waitTimeExceeded) {
-          clearInterval(interval);
-          resolve(this._lock.lock);
-        }
-      }, defaultPollingRate);
-    });
-  }
-}
 
 export class SyncUIRunner {
   public async runOnUIBlocking<TReturn>(
@@ -41,15 +15,24 @@ export class SyncUIRunner {
   }
 }
 
-export class RenderLock extends WaitForUnlock {
+export class RenderLock {
   private _wasRenderedNull: boolean = true;
+  private _resolveRender: (() => void) | null = null;
+  private _renderPromise: Promise<void> | null = null;
 
   public lock() {
-    this._setLock(true);
+    if (this._resolveRender) {
+      return;
+    }
+    this._renderPromise = new Promise<void>((resolve) => {
+      this._resolveRender = resolve;
+    });
   }
 
   public unlock() {
-    this._setLock(false);
+    this._resolveRender?.();
+    this._resolveRender = null;
+    this._renderPromise = null;
   }
 
   public wasRenderedNull() {
@@ -60,7 +43,13 @@ export class RenderLock extends WaitForUnlock {
     this._wasRenderedNull = wasRenderedNull;
   }
 
-  public async waitForUnlock(maxWaitTime?: number): Promise<boolean> {
-    return (await this._waitForUnlock(maxWaitTime)) as boolean;
+  public async waitForRender(maxWaitTime: number = DEFAULT_TIMEOUT_MS) {
+    if (!this._renderPromise) {
+      return;
+    }
+    await withTimeout(this._renderPromise, {
+      description: 'the component to render',
+      timeout: maxWaitTime,
+    });
   }
 }

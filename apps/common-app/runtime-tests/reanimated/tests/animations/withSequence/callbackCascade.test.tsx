@@ -99,7 +99,7 @@ describe(`Cascade of callbacks`, () => {
 
     await render(<CallbackComponent />);
     await waitForAnimationUpdates(Snapshots.CallbackCascade.length);
-    const updates = updatesContainerActive.getUpdates();
+    const updates = await updatesContainerActive.getUpdates();
     const nativeUpdates = await updatesContainerActive.getNativeSnapshots();
 
     expect(updates).toMatchSnapshots(Snapshots.CallbackCascade);
@@ -205,7 +205,7 @@ describe(`Cascade of callbacks`, () => {
 //   const updatesContainerActive = await recordAnimationUpdates();
 //   await render(<CallbackComponent />);
 //   await waitForAnimationUpdates(Snapshots.CallbackOrder.length);
-//   const updates = updatesContainerActive.getUpdates();
+//   const updates = await updatesContainerActive.getUpdates();
 //   const nativeUpdates = await updatesContainerActive.getNativeSnapshots();
 //   expect(updates).toMatchSnapshots(Snapshots.CallbackOrder);
 //   expect(updates).toMatchNativeSnapshots(nativeUpdates);

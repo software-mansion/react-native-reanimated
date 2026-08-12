@@ -108,8 +108,6 @@ export enum ComparisonMode {
   AUTO = 'AUTO',
 }
 
-export type LockObject = { lock: boolean };
-
 type Writable<T> = {
   -readonly [P in keyof T]: T[P];
 };
