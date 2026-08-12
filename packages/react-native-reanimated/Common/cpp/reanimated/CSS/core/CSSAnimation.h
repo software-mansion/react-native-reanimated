@@ -19,14 +19,12 @@ class CSSLoopAnimation;
 
 class CSSAnimation {
  public:
-  using Observer = CSSAnimationObserver;
-
   CSSAnimation(
       Tag viewTag,
       std::string animationName,
       const CSSKeyframesConfig &cssKeyframesConfig,
       const CSSAnimationSettings &settings,
-      Observer &observer,
+      CSSAnimationObserver &observer,
       const std::shared_ptr<CSSPlatformAnimationFactory> &platformAnimationFactory,
       double timestamp);
 
@@ -62,7 +60,7 @@ class CSSAnimation {
  private:
   const Tag viewTag_;
   const std::string name_;
-  Observer &observer_;
+  CSSAnimationObserver &observer_;
   const CSSKeyframesConfig keyframesConfig_;
   const std::shared_ptr<CSSAnimationSettings> settings_;
   const std::shared_ptr<OperationsLoop> loop_;
@@ -76,8 +74,8 @@ class CSSAnimation {
   bool isReversed() const;
   void updatePropertyRouting();
 
-  void reportMilestone(RunMilestone milestone, double elapsedTime);
-  void emitEvent(CSSEventType type, double elapsedTime) const;
+  void reportMilestone(RunMilestone milestone, double elapsedTimeMs);
+  void emitEvent(CSSEventType type, double elapsedTimeMs) const;
 };
 
 } // namespace reanimated::css

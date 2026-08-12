@@ -2,6 +2,7 @@
 
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
+#include <reanimated/CSS/core/CSSAnimationObserver.h>
 #include <reanimated/CSS/core/CSSAnimationsGroup.h>
 #include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
 #include <reanimated/CSS/events/CSSEventsEmitter.h>
@@ -42,7 +43,7 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
 #endif
 
  private:
-  class AnimationObserver : public CSSAnimation::Observer {
+  class AnimationObserver : public CSSAnimationObserver {
    public:
     explicit AnimationObserver(CSSAnimationsRegistry &owner);
     void onAnimationUpdate(Tag viewTag) override;

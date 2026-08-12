@@ -2,7 +2,6 @@
 #include <reanimated/CSS/core/CSSLoopAnimation.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
-#include <algorithm>
 #include <memory>
 #include <utility>
 
@@ -13,7 +12,7 @@ CSSAnimation::CSSAnimation(
     std::string animationName,
     const CSSKeyframesConfig &cssKeyframesConfig,
     const CSSAnimationSettings &settings,
-    Observer &observer,
+    CSSAnimationObserver &observer,
     const std::shared_ptr<CSSPlatformAnimationFactory> &platformAnimationFactory,
     const double timestamp)
     : viewTag_(viewTag),
@@ -55,26 +54,26 @@ void CSSAnimation::setEventMask(const CSSEventMask eventMask) {
     return;
   }
   loopAnimation_->setMilestoneReporter(
-      [this](const RunMilestone milestone, const double elapsedTime) { reportMilestone(milestone, elapsedTime); });
+      [this](const RunMilestone milestone, const double elapsedTimeMs) { reportMilestone(milestone, elapsedTimeMs); });
 }
 
 void CSSAnimation::reportCancellation(const double timestamp) {
   loopAnimation_->abort(timestamp);
 }
 
-void CSSAnimation::reportMilestone(const RunMilestone milestone, const double elapsedTime) {
+void CSSAnimation::reportMilestone(const RunMilestone milestone, const double elapsedTimeMs) {
   switch (milestone) {
     case RunMilestone::Started:
-      emitEvent(CSSEventType::AnimationStart, elapsedTime);
+      emitEvent(CSSEventType::AnimationStart, elapsedTimeMs);
       break;
     case RunMilestone::Repeated:
-      emitEvent(CSSEventType::AnimationIteration, elapsedTime);
+      emitEvent(CSSEventType::AnimationIteration, elapsedTimeMs);
       break;
     case RunMilestone::Ended:
-      emitEvent(CSSEventType::AnimationEnd, elapsedTime);
+      emitEvent(CSSEventType::AnimationEnd, elapsedTimeMs);
       break;
     case RunMilestone::Aborted:
-      emitEvent(CSSEventType::AnimationCancel, elapsedTime);
+      emitEvent(CSSEventType::AnimationCancel, elapsedTimeMs);
       break;
     case RunMilestone::Created:
       // Animations have no creation event, unlike transitions.
@@ -82,11 +81,11 @@ void CSSAnimation::reportMilestone(const RunMilestone milestone, const double el
   }
 }
 
-void CSSAnimation::emitEvent(const CSSEventType type, const double elapsedTime) const {
+void CSSAnimation::emitEvent(const CSSEventType type, const double elapsedTimeMs) const {
   if (!hasListener(eventMask_, type)) {
     return;
   }
-  observer_.onAnimationEvent(viewTag_, name_, type, elapsedTime);
+  observer_.onAnimationEvent(viewTag_, name_, type, elapsedTimeMs);
 }
 
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {

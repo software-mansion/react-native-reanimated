@@ -16,7 +16,7 @@ namespace reanimated::css {
 class CSSLoopAnimation : public OperationsLoop::LoopOperation, public std::enable_shared_from_this<CSSLoopAnimation> {
  public:
   /// Reports a milestone of the run together with the time elapsed by then.
-  using MilestoneReporter = std::function<void(RunMilestone, double elapsedTime)>;
+  using MilestoneReporter = std::function<void(RunMilestone, double elapsedTimeMs)>;
 
   CSSLoopAnimation(
       Tag viewTag,
