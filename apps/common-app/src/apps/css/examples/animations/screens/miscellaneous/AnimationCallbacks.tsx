@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import type { CSSAnimationProperties } from 'react-native-reanimated';
 import Animated, { css } from 'react-native-reanimated';
@@ -47,17 +47,43 @@ export default function AnimationCallbacks() {
     ]);
   }, []);
 
+  // A queued re-attach would otherwise land after a cancel and undo it.
+  const restartFrame = useRef<number | null>(null);
+
+  const cancelPendingRestart = useCallback(() => {
+    if (restartFrame.current !== null) {
+      cancelAnimationFrame(restartFrame.current);
+      restartFrame.current = null;
+    }
+  }, []);
+
+  useEffect(() => cancelPendingRestart, [cancelPendingRestart]);
+
   const restart = useCallback(
     (properties: CSSAnimationProperties) => {
+      cancelPendingRestart();
       setEvents([]);
       setIsMounted(true);
       // Detaching first guarantees a fresh animation rather than a settings
       // update on the running one.
       setAnimation(null);
-      requestAnimationFrame(() => setAnimation(properties));
+      restartFrame.current = requestAnimationFrame(() => {
+        restartFrame.current = null;
+        setAnimation(properties);
+      });
     },
-    [setAnimation]
+    [cancelPendingRestart]
   );
+
+  const cancel = useCallback(() => {
+    cancelPendingRestart();
+    setAnimation(null);
+  }, [cancelPendingRestart]);
+
+  const unmount = useCallback(() => {
+    cancelPendingRestart();
+    setIsMounted(false);
+  }, [cancelPendingRestart]);
 
   return (
     <Screen style={styles.screen}>
@@ -76,16 +102,8 @@ export default function AnimationCallbacks() {
               title="Infinite"
               onPress={() => restart(INFINITE)}
             />
-            <Button
-              style={flex.grow}
-              title="Cancel"
-              onPress={() => setAnimation(null)}
-            />
-            <Button
-              style={flex.grow}
-              title="Unmount"
-              onPress={() => setIsMounted(false)}
-            />
+            <Button style={flex.grow} title="Cancel" onPress={cancel} />
+            <Button style={flex.grow} title="Unmount" onPress={unmount} />
             <Button
               style={flex.grow}
               title="Clear log"
