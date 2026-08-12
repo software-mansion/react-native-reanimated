@@ -112,7 +112,7 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
       nativeLoggingHook);
 
   if (bundleModeEnabled) {
-    bundleModeInit(jsScheduler, script, sourceUrl, runtimeBindings);
+    bundleModeInit(jsScheduler, script, sourceUrl);
   } else {
     legacyModeInit(unpackerLoader);
   }
@@ -127,8 +127,7 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
 void WorkletRuntime::bundleModeInit(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<const ScriptBuffer> &script,
-    const std::string &sourceUrl,
-    const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
+    const std::string &sourceUrl) {
   jsi::Runtime &rt = *runtime_;
 
   if (!script) {
@@ -136,8 +135,6 @@ void WorkletRuntime::bundleModeInit(
   }
 
   ScriptLoader::loadScript(rt, script, sourceUrl);
-
-  WorkletRuntimeDecorator::postEvaluateScript(rt, runtimeBindings);
 }
 
 void WorkletRuntime::legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader) {

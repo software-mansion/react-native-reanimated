@@ -198,8 +198,6 @@ const SuspenseLayoutAnimationCrashExample: React.FC = () =>
   );
 const ExtrapolationExample: React.FC = () =>
   React.createElement(require('./ExtrapolationExample').default as React.FC);
-const FetchExample: React.FC = () =>
-  React.createElement(require('./FetchExample').default as React.FC);
 const FilterExample: React.FC = () =>
   React.createElement(require('./FilterExample').default as React.FC);
 const FlatListExample: React.FC = () =>
@@ -609,12 +607,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '❄️',
     title: 'React freeze',
     screen: FreezeExample,
-  },
-  FetchExample: {
-    icon: '📡',
-    title: 'Fetch & XHR (Bundle Mode)',
-    screen: FetchExample,
-    needsBundleMode: true,
   },
   ModifyExample: {
     icon: '🪛',

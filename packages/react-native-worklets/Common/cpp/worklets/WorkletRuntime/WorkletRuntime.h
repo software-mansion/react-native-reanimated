@@ -426,8 +426,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   void bundleModeInit(
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<const ScriptBuffer> &script,
-      const std::string &sourceUrl,
-      const std::shared_ptr<RuntimeBindings> &runtimeBindings);
+      const std::string &sourceUrl);
 
   void legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader);
 

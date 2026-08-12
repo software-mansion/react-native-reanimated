@@ -1,9 +1,7 @@
 'use strict';
 
 import { silenceHMRWarnings } from '../bundleMode/metroOverrides';
-import { initializeNetworking } from '../bundleMode/network';
 import { registerReportFatalRemoteError } from '../debug/errors';
-import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
 import { installRemoteFunctionUnpacker } from '../memory/remoteFunctionUnpacker';
@@ -170,10 +168,6 @@ function initializeWorkletRuntime() {
   if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     if (__DEV__) {
       silenceHMRWarnings();
-    }
-
-    if (getStaticFeatureFlag('FETCH_PREVIEW_ENABLED')) {
-      initializeNetworking();
     }
   }
 }

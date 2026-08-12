@@ -57,11 +57,6 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   std::shared_ptr<RuntimeBindings> getRuntimeBindings(bool bundleModeEnabled, jsi::Runtime &rnRuntime);
 
   RuntimeBindings::RequestAnimationFrame getRequestAnimationFrame();
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-  RuntimeBindings::AbortRequest getAbortRequest();
-  RuntimeBindings::ClearCookies getClearCookies();
-  RuntimeBindings::SendRequest getSendRequest();
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
   std::function<bool()> getIsOnJSQueueThread();
 

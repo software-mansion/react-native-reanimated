@@ -112,8 +112,6 @@ declare global {
     unknown,
     unknown
   >;
-  /** Only in Bundle Mode on Worklet Runtimes. */
-  var TurboModules: Map<string, unknown>;
   /**
    * Native logging hook installed by React Native on the RN Runtime and
    * propagated to Worklet Runtimes in Bundle Mode. Level values match RN's

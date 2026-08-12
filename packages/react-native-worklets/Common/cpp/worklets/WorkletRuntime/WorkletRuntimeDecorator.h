@@ -24,13 +24,6 @@ class WorkletRuntimeDecorator {
       jsi::Object &&jsiWorkletsModuleProxy,
       const std::shared_ptr<EventLoop> &eventLoop,
       const RuntimeBindings::NativeLoggingHook &nativeLoggingHook);
-
-  static void postEvaluateScript(jsi::Runtime &rt, const std::shared_ptr<RuntimeBindings> &runtimeBindings);
-
- private:
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-  static void installNetworking(jsi::Runtime &rt, const std::shared_ptr<RuntimeBindings> &runtimeBindings);
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 };
 
 } // namespace worklets

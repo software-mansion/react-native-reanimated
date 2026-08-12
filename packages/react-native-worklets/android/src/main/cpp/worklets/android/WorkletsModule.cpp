@@ -4,19 +4,6 @@
 #include <worklets/android/AnimationFrameCallback.h>
 #include <worklets/android/WorkletsModule.h>
 
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-#include <folly/json/dynamic.h>
-#include <jni.h>
-#include <jsi/JSIDynamic.h>
-#include <react/jni/JCallback.h>
-#include <react/jni/ReadableNativeArray.h>
-#include <react/jni/ReadableNativeMap.h>
-#include <worklets/WorkletRuntime/WorkletRuntime.h>
-#include <worklets/android/JWorkletRuntimeWrapper.h>
-
-#include <vector>
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
-
 #include <memory>
 #include <string>
 #include <utility>
@@ -83,14 +70,7 @@ std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(
   return std::make_shared<RuntimeBindings>(RuntimeBindings{
       .requestAnimationFrame = getRequestAnimationFrame(),
       .nativeLoggingHook =
-          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{}
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-      ,
-      .abortRequest = getAbortRequest(),
-      .clearCookies = getClearCookies(),
-      .sendRequest = getSendRequest()
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
-  });
+          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{}});
 }
 
 RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame() {
