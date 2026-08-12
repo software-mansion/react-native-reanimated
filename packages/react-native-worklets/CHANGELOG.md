@@ -6,6 +6,8 @@
 
 ### 🛠 Breaking changes
 
+- Removed the networking preview together with its `FETCH_PREVIEW_ENABLED` feature flag. ([#10250](https://github.com/software-mansion/react-native-reanimated/pull/10250) by [@tjzel](https://github.com/tjzel))
+
 ### 🎉 New features
 
 ### 🐛 Bug fixes
