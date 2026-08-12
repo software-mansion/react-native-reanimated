@@ -67,7 +67,7 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
 
   double getTotalPausedTime(double timestamp) const;
   bool shouldFinish(double timestamp) const;
-  RunStage computeStage(double timestamp) const;
+  RunPhase computePhase(double timestamp) const;
 
   double updateIterationProgress(double currentIterationElapsedTime);
   double applyAnimationDirection(double iterationProgress) const;

@@ -96,7 +96,7 @@ void AnimationProgressProvider::play(const double timestamp) {
 
 void AnimationProgressProvider::update(const double timestamp) {
   TimeProgressProvider::update(timestamp);
-  lifecycle_.reachPosition(computeStage(timestamp), currentIteration_);
+  lifecycle_.reachPhase(computePhase(timestamp), currentIteration_);
 }
 
 void AnimationProgressProvider::resetProgress() {
@@ -147,15 +147,15 @@ bool AnimationProgressProvider::shouldFinish(const double timestamp) const {
   return elapsedDuration >= duration_ * iterationCount_;
 }
 
-RunStage AnimationProgressProvider::computeStage(const double timestamp) const {
+RunPhase AnimationProgressProvider::computePhase(const double timestamp) const {
   if (shouldFinish(timestamp)) {
-    return RunStage::Ended;
+    return RunPhase::After;
   }
   // A paused run sits at its start timestamp, so this covers it too.
   if (timestamp < getStartTimestamp(timestamp) || !rawProgress_.has_value()) {
-    return RunStage::Created;
+    return RunPhase::Before;
   }
-  return RunStage::Started;
+  return RunPhase::Active;
 }
 
 double AnimationProgressProvider::updateIterationProgress(const double currentIterationElapsedTime) {

@@ -1,47 +1,45 @@
 #pragma once
 
-#include <cstddef>
 #include <cstdint>
 #include <functional>
 
 namespace reanimated::css {
 
-enum class RunStage : std::uint8_t { None, Created, Started, Ended };
+/// The phases a run moves through, named after the CSS event tables. A run is
+/// Idle before it exists, Before while its delay has yet to pass, Active while
+/// it produces values, and After once it is done.
+enum class RunPhase : std::uint8_t { Idle, Before, Active, After };
 
-/// Stage values share their rank with RunStage so the ladder can report a
-/// stage without translating it.
-enum class RunMilestone : std::uint8_t {
-  Created = static_cast<std::uint8_t>(RunStage::Created),
-  Started = static_cast<std::uint8_t>(RunStage::Started),
-  Ended = static_cast<std::uint8_t>(RunStage::Ended),
-  Repeated,
-  Aborted,
-};
+enum class RunMilestone : std::uint8_t { Created, Started, Ended, Repeated, Aborted };
 
-/// Reports each milestone of a run once, in the order it is reached. Knows
-/// nothing about animations or transitions: the owner maps milestones to its
-/// own events, and a kind without repeats never passes one.
+/// Which of the run's times a milestone carries. The same milestone reports a
+/// different one depending on the phase change that produced it, so the owner
+/// cannot derive this from the milestone alone.
+enum class MilestoneTime : std::uint8_t { IntervalStart, IntervalEnd, IterationBoundary, ActiveTime };
+
+/// Reports the milestones a run crosses, following the phase change tables in
+/// css-animations-2 and css-transitions-2. Both tables agree on the phase
+/// changes and the times, so this knows nothing about animations or
+/// transitions: the owner maps milestones to its own events, and a kind
+/// without iterations never passes one.
 class RunLifecycle {
  public:
-  using Reporter = std::function<void(RunMilestone)>;
+  using Reporter = std::function<void(RunMilestone, MilestoneTime)>;
 
   void setMilestoneReporter(Reporter reporter);
-  void reachPosition(RunStage stage, unsigned repeat = 1);
+  void reachPhase(RunPhase phase, unsigned iteration = 1);
   void abort();
 
   bool hasStarted() const;
   bool hasEnded() const;
 
  private:
-  static constexpr std::size_t rank(RunStage stage) {
-    return static_cast<std::size_t>(stage);
-  }
+  void report(RunMilestone milestone, MilestoneTime time);
+  void reportIterationBoundary(unsigned iteration);
 
-  void report(RunMilestone milestone) const;
-  void enterStagesUpTo(std::size_t target);
-
-  std::size_t reported_{rank(RunStage::None)};
-  unsigned repeat_{1};
+  RunPhase phase_{RunPhase::Idle};
+  unsigned iteration_{1};
+  bool endReported_{false};
   bool aborted_{false};
   Reporter reporter_;
 };
