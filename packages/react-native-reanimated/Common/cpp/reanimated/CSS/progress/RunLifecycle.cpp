@@ -9,8 +9,8 @@ void RunLifecycle::setMilestoneReporter(Reporter reporter) {
 }
 
 void RunLifecycle::reachPhase(const RunPhase phase, const unsigned iteration) {
-  // An abort ends the run for good. Removal from the loop is only enqueued, so
-  // a frame already in flight can still phase an aborted run.
+  // Removal from the loop is only enqueued, so a frame already in flight can
+  // still tick a run that was just aborted.
   if (aborted_) {
     return;
   }
@@ -52,9 +52,8 @@ void RunLifecycle::reachPhase(const RunPhase phase, const unsigned iteration) {
 }
 
 void RunLifecycle::abort() {
-  // A run that already told its owner it ended is past the point where a cancel
-  // applies. This tracks the report rather than the phase because a reporter
-  // can abort part way through a phase change that has yet to reach its end.
+  // Tracks the report rather than the phase: a reporter can abort part way
+  // through a phase change that has not reached its end yet.
   if (aborted_ || endReported_) {
     return;
   }
@@ -81,9 +80,8 @@ bool RunLifecycle::hasEnded() const {
 }
 
 void RunLifecycle::reportIterationBoundary(const unsigned iteration) {
-  // The boundary is against the iteration of the previous sample, not the
-  // furthest the run has ever got, and one sample reports one boundary however
-  // many it stepped over.
+  // Against the previous sample, not the furthest the run has ever got, and
+  // one sample reports one boundary however many it stepped over.
   if (phase_ != RunPhase::Active || iteration == iteration_) {
     return;
   }

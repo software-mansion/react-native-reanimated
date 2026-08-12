@@ -56,8 +56,8 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   EasingFunction easingFunction_;
   std::shared_ptr<KeyframeEasingConfigs> keyframeEasingConfigs_;
 
-  // Survives resetProgress: the replay updateSettings performs re-times the run
-  // rather than starting a new one, so its phase carries over.
+  // Survives resetProgress, because updateSettings re-times the run rather than
+  // starting a new one.
   RunLifecycle lifecycle_;
 
   unsigned currentIteration_ = 1;
