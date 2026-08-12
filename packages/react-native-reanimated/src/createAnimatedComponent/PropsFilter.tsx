@@ -129,9 +129,10 @@ export class PropsFilter implements IPropsFilter {
       });
     }
 
+    // Undefined on web, so this whole tail is skipped on the first operand.
     if (
-      hasPseudoSelectors &&
       svgHitTestResponder &&
+      hasPseudoSelectors &&
       !props.onStartShouldSetResponder
     ) {
       props.onStartShouldSetResponder = svgHitTestResponder;
