@@ -15,7 +15,7 @@ enum class RunMilestone : std::uint8_t { Created, Started, Ended, Repeated, Abor
 /// Which of the run's times a milestone carries. The same milestone reports a
 /// different one depending on the phase change that produced it, so the owner
 /// cannot derive this from the milestone alone.
-enum class MilestoneTime : std::uint8_t { IntervalStart, IntervalEnd, IterationBoundary, ActiveTime };
+enum class MilestoneTime : std::uint8_t { IntervalStart, IntervalEnd, IterationStart, IterationEnd, ActiveTime };
 
 /// Reports the milestones a run crosses, following the phase change tables in
 /// css-animations-2 and css-transitions-2. Both tables agree on the phase

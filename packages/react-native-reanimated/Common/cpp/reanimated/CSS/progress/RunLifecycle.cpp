@@ -77,12 +77,18 @@ bool RunLifecycle::hasEnded() const {
 }
 
 void RunLifecycle::reportIterationBoundary(const unsigned iteration) {
-  // One sample reports one boundary however many the run stepped over.
-  if (phase_ != RunPhase::Active || iteration <= iteration_) {
+  // The boundary is against the iteration of the previous sample, not the
+  // furthest the run has ever got, and one sample reports one boundary however
+  // many it stepped over.
+  if (phase_ != RunPhase::Active || iteration == iteration_) {
     return;
   }
+
+  // Re-timing a run can drop it back an iteration, and the boundary it crossed
+  // is then the end of the one it landed in rather than the start.
+  const auto time = iteration < iteration_ ? MilestoneTime::IterationEnd : MilestoneTime::IterationStart;
   iteration_ = iteration;
-  report(RunMilestone::Repeated, MilestoneTime::IterationBoundary);
+  report(RunMilestone::Repeated, time);
 }
 
 void RunLifecycle::report(const RunMilestone milestone, const MilestoneTime time) {
