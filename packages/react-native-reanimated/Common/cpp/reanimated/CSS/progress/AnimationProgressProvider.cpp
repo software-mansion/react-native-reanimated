@@ -59,7 +59,21 @@ double AnimationProgressProvider::getKeyframeProgress(const double fromOffset, c
 }
 
 AnimationProgressState AnimationProgressProvider::getState() const {
-  return state_;
+  if (lifecycle_.hasEnded()) {
+    return AnimationProgressState::Finished;
+  }
+  if (pauseTimestamp_ > 0) {
+    return AnimationProgressState::Paused;
+  }
+  return lifecycle_.hasStarted() ? AnimationProgressState::Running : AnimationProgressState::Pending;
+}
+
+void AnimationProgressProvider::setMilestoneReporter(RunLifecycle::Reporter reporter) {
+  lifecycle_.setMilestoneReporter(std::move(reporter));
+}
+
+void AnimationProgressProvider::abort() {
+  lifecycle_.abort();
 }
 
 double AnimationProgressProvider::getStartTimestamp(const double timestamp) const {
@@ -82,14 +96,13 @@ void AnimationProgressProvider::play(const double timestamp) {
 
 void AnimationProgressProvider::update(const double timestamp) {
   TimeProgressProvider::update(timestamp);
-  state_ = computeState(timestamp);
+  lifecycle_.reachPhase(computePhase(timestamp), currentIteration_);
 }
 
 void AnimationProgressProvider::resetProgress() {
   TimeProgressProvider::resetProgress();
   currentIteration_ = 1;
   previousIterationsDuration_ = 0;
-  state_ = AnimationProgressState::Pending;
 }
 
 std::optional<double> AnimationProgressProvider::calculateRawProgress(const double timestamp) {
@@ -120,27 +133,29 @@ double AnimationProgressProvider::getTotalPausedTime(const double timestamp) con
 }
 
 bool AnimationProgressProvider::shouldFinish(const double timestamp) const {
-  if (iterationCount_ == 0) {
-    return true;
-  }
   if (iterationCount_ == -1) {
     return false;
   }
   const auto elapsedDuration = timestamp - getStartTimestamp(timestamp);
+  // Ordered first: a run still in its delay is not over, however short it is.
+  if (elapsedDuration < 0) {
+    return false;
+  }
+  if (iterationCount_ == 0) {
+    return true;
+  }
   return elapsedDuration >= duration_ * iterationCount_;
 }
 
-AnimationProgressState AnimationProgressProvider::computeState(const double timestamp) const {
+RunPhase AnimationProgressProvider::computePhase(const double timestamp) const {
   if (shouldFinish(timestamp)) {
-    return AnimationProgressState::Finished;
+    return RunPhase::After;
   }
-  if (pauseTimestamp_ > 0) {
-    return AnimationProgressState::Paused;
-  }
+  // A paused run sits at its start timestamp, so this covers it too.
   if (timestamp < getStartTimestamp(timestamp) || !rawProgress_.has_value()) {
-    return AnimationProgressState::Pending;
+    return RunPhase::Before;
   }
-  return AnimationProgressState::Running;
+  return RunPhase::Active;
 }
 
 double AnimationProgressProvider::updateIterationProgress(const double currentIterationElapsedTime) {

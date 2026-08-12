@@ -4,6 +4,7 @@
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
+#include <reanimated/CSS/progress/RunLifecycle.h>
 #include <reanimated/CSS/progress/TimeProgressProvider.h>
 
 #include <memory>
@@ -37,6 +38,8 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
 
   AnimationProgressState getState() const;
+  void setMilestoneReporter(RunLifecycle::Reporter reporter);
+  void abort();
   double getStartTimestamp(double timestamp) const;
 
   void pause(double timestamp);
@@ -53,7 +56,10 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   EasingFunction easingFunction_;
   std::shared_ptr<KeyframeEasingConfigs> keyframeEasingConfigs_;
 
-  AnimationProgressState state_ = AnimationProgressState::Pending;
+  // Survives resetProgress, because updateSettings re-times the run rather than
+  // starting a new one.
+  RunLifecycle lifecycle_;
+
   unsigned currentIteration_ = 1;
   double previousIterationsDuration_ = 0;
   double pauseTimestamp_ = 0;
@@ -61,7 +67,7 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
 
   double getTotalPausedTime(double timestamp) const;
   bool shouldFinish(double timestamp) const;
-  AnimationProgressState computeState(double timestamp) const;
+  RunPhase computePhase(double timestamp) const;
 
   double updateIterationProgress(double currentIterationElapsedTime);
   double applyAnimationDirection(double iterationProgress) const;
