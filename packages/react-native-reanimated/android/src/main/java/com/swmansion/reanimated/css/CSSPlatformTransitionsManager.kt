@@ -18,7 +18,8 @@ internal class CSSPlatformTransitionsManager(
     private val reactContext: WeakReference<ReactApplicationContext>,
     private val animationTimestamp: () -> Long,
 ) {
-    private val animators = HashMap<Key, ObjectAnimator>()
+    private val animators = HashMap<Key, RunningTransition>()
+    private val reconciler = CSSPlatformTransitionReconciler(::repairClobberedValues)
     private val startTokens = HashMap<Key, Long>()
 
     private var nextStartToken = 0L
@@ -28,6 +29,15 @@ internal class CSSPlatformTransitionsManager(
         val viewTag: Int,
         val propertyName: String,
     )
+
+    private class RunningTransition(
+        val animator: ObjectAnimator,
+        val writer: FloatProperty<View>,
+        val startValue: Float,
+    ) {
+        /** Uninitialised until the first frame, which a start delay defers, so show startValue. */
+        fun currentValue(): Float = if (animator.isRunning) animator.animatedValue as Float else startValue
+    }
 
     private data class InterpolatorKey(
         val type: Int,
@@ -75,7 +85,7 @@ internal class CSSPlatformTransitionsManager(
         UiThreadUtil.runOnUiThread {
             val key = Key(viewTag, propertyName)
             startTokens.remove(key)
-            animators.remove(key)?.cancel()
+            animators.remove(key)?.animator?.cancel()
         }
     }
 
@@ -111,7 +121,7 @@ internal class CSSPlatformTransitionsManager(
         // Resume from what is on screen; fromValue is the committed style, which would snap back.
         val interrupted = animators.remove(key)
         val startValue = if (interrupted != null) writer.get(view) else fromValue.toFloat()
-        interrupted?.cancel()
+        interrupted?.animator?.cancel()
 
         // ObjectAnimator writes nothing until its first frame, so the view would show the
         // already-committed target for the whole delay.
@@ -123,7 +133,7 @@ internal class CSSPlatformTransitionsManager(
         animator.addListener(
             object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
-                    if (animators[key] === animation) animators.remove(key)
+                    if (animators[key]?.animator === animation) animators.remove(key)
                 }
             },
         )
@@ -136,7 +146,19 @@ internal class CSSPlatformTransitionsManager(
             animator.setCurrentFraction((elapsedMs / durationMs).toFloat().coerceIn(0f, 1f))
         }
         animator.start()
-        animators[key] = animator
+        animators[key] = RunningTransition(animator, writer, startValue)
+        reconciler.track(view)
+    }
+
+    /** Re-asserts each animator's own value wherever a commit overwrote it. */
+    private fun repairClobberedValues(): Boolean {
+        animators.values.forEach { running ->
+            // target is held weakly, so read the View through it rather than keeping one.
+            val view = running.animator.target as? View ?: return@forEach
+            val current = running.currentValue()
+            if (running.writer.get(view) != current) running.writer.setValue(view, current)
+        }
+        return animators.isNotEmpty()
     }
 
     /** PathInterpolator flattens its curve on construction, so cache it. Type is in the key
