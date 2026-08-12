@@ -91,6 +91,18 @@ internal class CSSPlatformTransitionsManager(
         return true
     }
 
+    /** Nothing here is owned by the React context, so teardown has to be explicit. */
+    fun invalidate() {
+        UiThreadUtil.runOnUiThread {
+            startTokens.clear()
+            // Snapshot first: cancel() runs onAnimationEnd, which reads the map.
+            val running = animators.values.toList()
+            animators.clear()
+            running.forEach { it.animator.cancel() }
+            reconciler.invalidate()
+        }
+    }
+
     fun removeTransition(
         viewTag: Int,
         propertyName: String,

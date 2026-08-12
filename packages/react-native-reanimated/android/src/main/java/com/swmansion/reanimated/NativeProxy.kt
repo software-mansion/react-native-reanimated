@@ -139,6 +139,7 @@ open class NativeProxy {
             return
         }
         pseudoSelectorManager.invalidate()
+        cssPlatformTransitionsManager.invalidate()
         if (mHybridData.isValid) {
             invalidateCpp()
         }
