@@ -91,7 +91,7 @@ internal class CSSPlatformTransitionsManager(
         return true
     }
 
-    /** Nothing here is owned by the React context, so teardown has to be explicit. */
+    /** Animators keep ticking on their own, so a dead context has to stop them. */
     fun invalidate() {
         UiThreadUtil.runOnUiThread {
             startTokens.clear()
@@ -173,10 +173,9 @@ internal class CSSPlatformTransitionsManager(
         // rather than in C++, which would shift the timeline late.
         val elapsedMs = animationTimestamp().toDouble() - startTimestampMs
         val delayMs = if (elapsedMs < 0) -elapsedMs else 0.0
-        // Play through the delay rather than using startDelay. A delayed ObjectAnimator
-        // writes nothing while it waits, so any commit landing in that window stays on
-        // screen; holding the start value inside the curve makes the animator rewrite the
-        // property every frame instead. This is what kCAFillModeBackwards gives us on Apple.
+        // Play through the delay rather than using startDelay: a delayed ObjectAnimator
+        // writes nothing while it waits, so a commit landing in that window would stay on
+        // screen. Holding the start value inside the curve rewrites the property instead.
         animator.duration = ((delayMs + durationMs) / scale).toLong().coerceAtLeast(1L)
         animator.interpolator =
             if (delayMs > 0) HoldThenEase((delayMs / (delayMs + durationMs)).toFloat(), interpolator) else interpolator
