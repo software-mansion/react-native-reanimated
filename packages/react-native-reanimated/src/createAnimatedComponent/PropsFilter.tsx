@@ -14,7 +14,7 @@ import type {
   IPropsFilter,
 } from './commonTypes';
 import { getInlineStyle, hasInlineStyles } from './InlinePropManager';
-import { addPseudoSelectorResponder } from './pseudoSelectorResponder';
+import { svgHitTestResponder } from './svgHitTestResponder';
 import { flattenArray, has } from './utils';
 
 function dummyListener() {
@@ -129,8 +129,12 @@ export class PropsFilter implements IPropsFilter {
       });
     }
 
-    if (hasPseudoSelectors) {
-      addPseudoSelectorResponder(props);
+    if (
+      hasPseudoSelectors &&
+      svgHitTestResponder &&
+      !props.onStartShouldSetResponder
+    ) {
+      props.onStartShouldSetResponder = svgHitTestResponder;
     }
 
     return props;
