@@ -17,6 +17,7 @@ import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.common.UIManagerType
 import com.facebook.soloader.SoLoader
 import com.swmansion.common.GestureHandlerStateManager
+import com.swmansion.reanimated.css.CSSPlatformTransitionsManager
 import com.swmansion.reanimated.keyboard.KeyboardAnimationManager
 import com.swmansion.reanimated.keyboard.KeyboardWorkletWrapper
 import com.swmansion.reanimated.nativeProxy.AnimationFrameCallback
@@ -46,6 +47,7 @@ open class NativeProxy {
     private val gestureHandlerStateManager: GestureHandlerStateManager?
     private val keyboardAnimationManager: KeyboardAnimationManager
     private val pseudoSelectorManager: PseudoSelectorManager
+    private val cssPlatformTransitionsManager: CSSPlatformTransitionsManager
     private var firstUptime: Long = SystemClock.uptimeMillis()
     private var slowAnimationsEnabled = false
     private val animationsDragFactor = 10
@@ -94,6 +96,8 @@ open class NativeProxy {
         mFabricUIManager =
             UIManagerHelper.getUIManager(context, UIManagerType.FABRIC) as FabricUIManager
         pseudoSelectorManager = PseudoSelectorManager(mFabricUIManager, mContext)
+        cssPlatformTransitionsManager =
+            CSSPlatformTransitionsManager(mFabricUIManager, mContext, ::getAnimationTimestamp)
 
         val callInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
         mHybridData =
@@ -262,6 +266,40 @@ open class NativeProxy {
                 mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, props)
             }
         }
+    }
+
+    @DoNotStrip
+    fun cssAnimateTransition(
+        viewTag: Int,
+        propertyName: String,
+        fromValue: Double,
+        toValue: Double,
+        durationMs: Double,
+        startTimestampMs: Double,
+        easingType: Int,
+        easingPointsX: FloatArray,
+        easingPointsY: FloatArray,
+        persistent: Boolean,
+    ): Boolean =
+        cssPlatformTransitionsManager.animateTransition(
+            viewTag,
+            propertyName,
+            fromValue,
+            toValue,
+            durationMs,
+            startTimestampMs,
+            easingType,
+            easingPointsX,
+            easingPointsY,
+            persistent,
+        )
+
+    @DoNotStrip
+    fun cssRemoveTransition(
+        viewTag: Int,
+        propertyName: String,
+    ) {
+        cssPlatformTransitionsManager.removeTransition(viewTag, propertyName)
     }
 
     @DoNotStrip
