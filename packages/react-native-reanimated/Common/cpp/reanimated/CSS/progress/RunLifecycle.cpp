@@ -55,16 +55,20 @@ bool RunLifecycle::hasEnded() const {
 }
 
 void RunLifecycle::enterStagesUpTo(const std::size_t target) {
-  // A reporter may abort from inside a milestone, which ends the ladder here.
+  // A reporter may abort from inside a milestone, which leaves the run on the
+  // stage it aborted at.
   while (reported_ < target && !aborted_) {
     report(static_cast<RunMilestone>(++reported_));
   }
 }
 
 void RunLifecycle::report(const RunMilestone milestone) const {
-  if (reporter_) {
-    reporter_(milestone);
+  // An abort is the last thing a run reports, including when a reporter
+  // triggers it from inside an earlier milestone.
+  if (!reporter_ || (aborted_ && milestone != RunMilestone::Aborted)) {
+    return;
   }
+  reporter_(milestone);
 }
 
 } // namespace reanimated::css
