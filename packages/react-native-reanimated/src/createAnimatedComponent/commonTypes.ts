@@ -47,6 +47,8 @@ export type AnimatedComponentTypeInternal = Component &
 export type PropUpdates = StyleProps | AnimatedStyle<any>;
 
 export interface IPropsFilter {
+  /** Set when the last filtered `animatedProps` carried pseudo selectors. */
+  onStartShouldSetResponder?: () => boolean;
   filterNonAnimatedProps: (
     component: AnimatedComponentTypeInternal
   ) => Record<string, unknown>;

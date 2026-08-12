@@ -21,8 +21,20 @@ function dummyListener() {
   // event is used.
 }
 
+// Marks the shape responsible for react-native-svg's hit test, which accepts
+// any truthy responder prop, while false leaves the responder to its ancestors.
+const neverClaimResponder = () => false;
+
 export class PropsFilter implements IPropsFilter {
   private _initialPropsMap = new Map<AnimatedStyleHandle, StyleProps>();
+
+  /**
+   * Emitted while filtering `animatedProps` that carry pseudo selectors - the
+   * channel SVG components use, since they are styled through top level props
+   * rather than `style`. Kept off the filtered props because only native
+   * platforms accept this handler.
+   */
+  public onStartShouldSetResponder?: () => boolean;
 
   public filterNonAnimatedProps(
     component: AnimatedComponentTypeInternal
@@ -30,6 +42,7 @@ export class PropsFilter implements IPropsFilter {
     const inputProps =
       component.props as AnimatedComponentProps<InitialComponentProps>;
     const props: Record<string, unknown> = {};
+    this.onStartShouldSetResponder = undefined;
 
     for (const key in inputProps) {
       const value = inputProps[key];
@@ -113,6 +126,7 @@ export class PropsFilter implements IPropsFilter {
             }
             const animatedPropValue = animatedProps[animatedPropKey];
             if (isPseudoSelectorValue(animatedPropValue)) {
+              this.onStartShouldSetResponder = neverClaimResponder;
               // Forward only the resting value; pseudo states are driven by
               // the CSS manager, like pseudo values in style are.
               if (animatedPropValue.default !== undefined) {
