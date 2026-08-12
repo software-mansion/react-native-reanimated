@@ -10,7 +10,6 @@ import {
 } from 'react-native-worklets';
 
 import type { Mutable } from './commonTypes';
-import { getStaticFeatureFlag } from './featureFlags';
 import {
   addCompilerSafeGetAndSet,
   checkInvalidReadDuringRender,
@@ -18,14 +17,10 @@ import {
   mutableHostDecorator,
 } from './mutablesCommon';
 
-const USE_SYNCHRONIZABLE_FOR_MUTABLES = getStaticFeatureFlag(
-  'USE_SYNCHRONIZABLE_FOR_MUTABLES'
-);
-
 function mutableGuestDecorator<TValue>(
   initial: TValue,
   mutable: ShareableGuest<TValue> & Mutable<TValue>,
-  dirtyFlag?: Synchronizable<boolean>
+  dirtyFlag: Synchronizable<boolean>
 ): ShareableGuest<TValue> & Mutable<TValue> {
   'worklet';
   let latest = initial;
@@ -37,7 +32,7 @@ function mutableGuestDecorator<TValue>(
           checkInvalidReadDuringRender();
         }
 
-        if (globalThis.__RUNTIME_KIND !== 1 || dirtyFlag === undefined) {
+        if (globalThis.__RUNTIME_KIND !== 1) {
           latest = mutable.getSync();
         } else if (dirtyFlag.getBlocking()) {
           const uiValueGetter = (svArg: Mutable<TValue>) =>
@@ -123,9 +118,7 @@ function mutableGuestDecorator<TValue>(
 }
 
 export function makeMutable<TValue>(initial: TValue): Mutable<TValue> {
-  const dirtyFlag = USE_SYNCHRONIZABLE_FOR_MUTABLES
-    ? createSynchronizable(false)
-    : undefined;
+  const dirtyFlag = createSynchronizable(false);
 
   const shareable = createShareable<TValue, Mutable<TValue>, Mutable<TValue>>(
     UIRuntimeId,
