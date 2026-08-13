@@ -2,12 +2,6 @@ name: Runtime tests iOS
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  pull_request:
-    paths:
-      - .github/workflows/runtime-tests-ios.yml
-      - apps/common-app/runtime-tests/**
-      - apps/fabric-example/scripts/runtime-tests-server.js
-      - apps/fabric-example/ios/**
   workflow_call:
     inputs:
       bundleMode:
@@ -49,10 +43,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The workflow-name check is required: the nightly caller also runs on
-        # pull_request, and its workflow_call legs must keep their explicit
-        # inputs.bundleMode instead of fanning out both modes.
-        bundleMode: ${{ fromJSON((github.event_name == 'pull_request' && github.workflow == 'Runtime tests iOS') && '[false, true]' || format('[{0}]', inputs.bundleMode)) }}
+        bundleMode: ${{ fromJSON(format('[{0}]', inputs.bundleMode)) }}
     env:
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated
