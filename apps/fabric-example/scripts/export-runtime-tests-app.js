@@ -23,16 +23,26 @@ const iosDir = path.join(projectRoot, 'ios');
 
 const args = {};
 const BOOLEAN_FLAGS = new Set(['print-path', 'allow-debug', 'help']);
+
 for (let i = 2; i < process.argv.length; i++) {
   const arg = process.argv[i];
+
   if (!arg.startsWith('--')) {
     fail(`unexpected argument: ${arg} (see --help)`);
   }
+
   const name = arg.slice(2);
+
   if (BOOLEAN_FLAGS.has(name)) {
     args[name] = true;
   } else {
-    args[name] = process.argv[++i];
+    const value = process.argv[++i];
+
+    if (value == undefined || value.startsWith('--')) {
+      fail(`missing value for --${name} (see --help)`);
+    }
+
+    args[name] = value;
   }
 }
 
@@ -96,12 +106,26 @@ async function resolveAppPath() {
     ],
     { cwd: iosDir }
   );
-  const entries = JSON.parse(stdout.slice(stdout.indexOf('[')));
+
+  const jsonStart = stdout.indexOf('[');
+
+  if (jsonStart < 0) {
+    fail(`xcodebuild -showBuildSettings returned no JSON payload`);
+  }
+
+  const entries = JSON.parse(stdout.slice(jsonStart));
+
   const entry =
     entries.find(
       (candidate) => candidate.buildSettings.WRAPPER_NAME === 'FabricExample.app'
     ) ?? entries[0];
+
+  if (!entry?.buildSettings) {
+    fail(`no build settings for configuration ${CONFIGURATION}`);
+  }
+
   const { TARGET_BUILD_DIR, WRAPPER_NAME } = entry.buildSettings;
+
   return path.join(TARGET_BUILD_DIR, WRAPPER_NAME);
 }
 
@@ -112,6 +136,7 @@ function assertExportable(app) {
         `[export-app] build it first: node scripts/runtime-tests-server.js --build-only --configuration ${CONFIGURATION}`
     );
   }
+
   if (!/^Release/.test(CONFIGURATION)) {
     if (!args['allow-debug']) {
       fail(
@@ -119,13 +144,16 @@ function assertExportable(app) {
           'export a Release* configuration, or pass --allow-debug if you know what you are doing'
       );
     }
+
     return;
   }
+
   // A Release* runtime-tests app must carry all three embedded bundles —
   // catch a mispackaged artifact here rather than as a connect-timeout in CI.
   const missing = LIBRARIES.map(
     (library) => `main.runtimeTests.${library}.jsbundle`
   ).filter((bundle) => !fs.existsSync(path.join(app, bundle)));
+
   if (missing.length > 0) {
     fail(
       `built app at ${app} is missing embedded bundles: ${missing.join(', ')}\n` +
@@ -136,17 +164,21 @@ function assertExportable(app) {
 
 async function main() {
   const app = await resolveAppPath();
+
   if (args['print-path']) {
     console.log(app);
     return;
   }
+
   assertExportable(app);
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   fs.rmSync(OUT, { force: true });
+
   // ditto preserves resource forks, symlinks, and permissions inside .app
   // bundles; --keepParent makes the zip unpack to <dir>/FabricExample.app.
   await run('ditto', ['-c', '-k', '--keepParent', app, OUT]);
   const sizeMb = (fs.statSync(OUT).size / (1024 * 1024)).toFixed(1);
+
   console.log(`[export-app] exported ${app}`);
   console.log(`[export-app] -> ${OUT} (${sizeMb} MB)`);
 }
