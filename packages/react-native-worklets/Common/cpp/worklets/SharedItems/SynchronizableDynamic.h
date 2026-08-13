@@ -11,8 +11,6 @@ class SynchronizableDynamic final : public Synchronizable {
  public:
   explicit SynchronizableDynamic(const std::shared_ptr<Serializable> &value);
 
-  bool isFixed() const override;
-
   jsi::Value getDirty(jsi::Runtime &rt) override;
 
   jsi::Value getBlocking(jsi::Runtime &rt) override;

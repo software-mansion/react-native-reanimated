@@ -5,7 +5,7 @@
 
 namespace worklets {
 
-Synchronizable::Synchronizable() : Serializable(ValueType::SynchronizableType) {}
+Synchronizable::Synchronizable(bool isFixed) : Serializable(ValueType::SynchronizableType), isFixed_(isFixed) {}
 
 jsi::Value Synchronizable::toJSValue(jsi::Runtime &rt) {
   auto synchronizableUnpacker = rt.global().getProperty(rt, "__synchronizableUnpacker");

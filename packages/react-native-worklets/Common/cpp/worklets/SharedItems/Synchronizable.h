@@ -14,7 +14,9 @@ class Synchronizable : public SynchronizableAccess,
                        public jsi::NativeState,
                        public std::enable_shared_from_this<Synchronizable> {
  public:
-  virtual bool isFixed() const = 0;
+  bool isFixed() const {
+    return isFixed_;
+  }
 
   virtual jsi::Value getDirty(jsi::Runtime &rt) = 0;
 
@@ -29,7 +31,10 @@ class Synchronizable : public SynchronizableAccess,
   ~Synchronizable() override = default;
 
  protected:
-  Synchronizable();
+  explicit Synchronizable(bool isFixed);
+
+ private:
+  const bool isFixed_;
 };
 
 inline std::shared_ptr<Synchronizable> extractSynchronizableOrThrow(jsi::Runtime &rt, const jsi::Value &value) {

@@ -7,9 +7,11 @@
 
 namespace worklets {
 
-SynchronizableFixed::SynchronizableFixed(double value) : value_(std::in_place_type<std::atomic<double>>, value) {}
+SynchronizableFixed::SynchronizableFixed(double value)
+    : Synchronizable(true), value_(std::in_place_type<std::atomic<double>>, value) {}
 
-SynchronizableFixed::SynchronizableFixed(bool value) : value_(std::in_place_type<std::atomic<bool>>, value) {}
+SynchronizableFixed::SynchronizableFixed(bool value)
+    : Synchronizable(true), value_(std::in_place_type<std::atomic<bool>>, value) {}
 
 std::shared_ptr<SynchronizableFixed> SynchronizableFixed::make(const jsi::Value &initialValue) {
   react_native_assert(
@@ -19,10 +21,6 @@ std::shared_ptr<SynchronizableFixed> SynchronizableFixed::make(const jsi::Value 
     return std::make_shared<SynchronizableFixed>(initialValue.getBool());
   }
   return std::make_shared<SynchronizableFixed>(initialValue.isNumber() ? initialValue.getNumber() : 0.0);
-}
-
-bool SynchronizableFixed::isFixed() const {
-  return true;
 }
 
 jsi::Value SynchronizableFixed::getDirty(jsi::Runtime &) {

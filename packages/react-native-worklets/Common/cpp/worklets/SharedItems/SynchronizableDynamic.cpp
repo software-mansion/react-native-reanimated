@@ -5,11 +5,8 @@
 
 namespace worklets {
 
-SynchronizableDynamic::SynchronizableDynamic(const std::shared_ptr<Serializable> &value) : value_(value) {}
-
-bool SynchronizableDynamic::isFixed() const {
-  return false;
-}
+SynchronizableDynamic::SynchronizableDynamic(const std::shared_ptr<Serializable> &value)
+    : Synchronizable(false), value_(value) {}
 
 jsi::Value SynchronizableDynamic::getDirty(jsi::Runtime &rt) {
   auto value = value_;

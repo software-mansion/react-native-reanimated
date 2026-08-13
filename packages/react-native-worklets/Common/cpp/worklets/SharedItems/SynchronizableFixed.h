@@ -17,8 +17,6 @@ class SynchronizableFixed final : public Synchronizable {
 
   static std::shared_ptr<SynchronizableFixed> make(const jsi::Value &initialValue);
 
-  bool isFixed() const override;
-
   jsi::Value getDirty(jsi::Runtime &rt) override;
 
   jsi::Value getBlocking(jsi::Runtime &rt) override;
