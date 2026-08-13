@@ -1,10 +1,28 @@
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
+#include <charconv>
 #include <memory>
+#include <optional>
 #include <string>
+#include <system_error>
 
 namespace reanimated::css {
+
+namespace {
+
+std::optional<size_t> tryParseArrayIndex(const std::string &pathSegment) {
+  size_t index = 0;
+  const auto *const end = pathSegment.data() + pathSegment.size();
+  const auto [parseEnd, errorCode] = std::from_chars(pathSegment.data(), end, index);
+
+  if (errorCode != std::errc{} || parseEnd != end) {
+    return std::nullopt;
+  }
+  return index;
+}
+
+} // namespace
 
 ViewStylesRepository::ViewStylesRepository(
     const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
@@ -134,6 +152,17 @@ folly::dynamic ViewStylesRepository::getPropertyValue(const folly::dynamic &valu
     }
 
     const auto &propName = propertyPath[i];
+
+    // Array-typed props (boxShadow, backgroundImage, transformOrigin) get a
+    // numeric path segment from createPropertyInterpolator.
+    if (currentValue->isArray()) {
+      const auto index = tryParseArrayIndex(propName);
+      if (!index.has_value() || *index >= currentValue->size()) {
+        return {};
+      }
+      currentValue = &(*currentValue)[*index];
+      continue;
+    }
 
     if (!currentValue->isObject()) {
       return {};
