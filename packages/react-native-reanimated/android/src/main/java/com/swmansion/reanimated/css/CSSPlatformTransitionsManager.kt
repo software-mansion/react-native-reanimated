@@ -22,6 +22,9 @@ internal class CSSPlatformTransitionsManager(
     private val reconciler = CSSPlatformTransitionReconciler(::repairClobberedValues)
     private val startTokens = HashMap<Key, Long>()
 
+    @Volatile
+    private var invalidated = false
+
     private var nextStartToken = 0L
     private val interpolators = HashMap<InterpolatorKey, TimeInterpolator>()
 
@@ -75,12 +78,14 @@ internal class CSSPlatformTransitionsManager(
         easingPointsY: FloatArray,
         persistent: Boolean,
     ): Boolean {
+        if (invalidated) return false
         val writer = cssPropertyWriterFor(propertyName) ?: return false
         val context = reactContext.get() ?: return false
         val scale = DurationScale.effectiveScale(context)
         if (scale <= 0f) return false
 
         UiThreadUtil.runOnUiThread {
+            if (invalidated) return@runOnUiThread
             val key = Key(viewTag, propertyName)
             // A fresh token invalidates any retry still queued for this key.
             val token = ++nextStartToken
@@ -94,6 +99,21 @@ internal class CSSPlatformTransitionsManager(
             }
         }
         return true
+    }
+
+    /** Animators keep ticking on their own, so a dead context has to stop them. */
+    fun invalidate() {
+        // Set before posting: a start already queued would otherwise register a new
+        // animator and listener behind the cleanup.
+        invalidated = true
+        UiThreadUtil.runOnUiThread {
+            startTokens.clear()
+            // Snapshot first: cancel() runs onAnimationEnd, which reads the map.
+            val running = animators.values.toList()
+            animators.clear()
+            running.forEach { it.animator.cancel() }
+            reconciler.invalidate()
+        }
     }
 
     fun removeTransition(
