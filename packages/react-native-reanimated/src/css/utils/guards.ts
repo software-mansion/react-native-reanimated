@@ -57,33 +57,31 @@ export const isTransitionProp = (key: string): key is CSSTransitionProp => {
   }
 };
 
-export const isTransitionCallbackProp = (
-  key: string
-): key is CSSTransitionCallbackProp => {
-  switch (key) {
-    case 'onCSSTransitionRun':
-    case 'onCSSTransitionStart':
-    case 'onCSSTransitionEnd':
-    case 'onCSSTransitionCancel':
-      return true;
-    default:
-      return false;
-  }
-};
+/**
+ * Listed rather than matched by a predicate so that a caller looking for the
+ * callbacks among a component's props can read these few prop names instead of
+ * walking every prop it was given.
+ */
+export const ANIMATION_CALLBACK_PROPS = [
+  'onCSSAnimationStart',
+  'onCSSAnimationEnd',
+  'onCSSAnimationIteration',
+  'onCSSAnimationCancel',
+] as const satisfies readonly CSSAnimationCallbackProp[];
 
-export const isAnimationCallbackProp = (
-  key: string
-): key is CSSAnimationCallbackProp => {
-  switch (key) {
-    case 'onCSSAnimationStart':
-    case 'onCSSAnimationEnd':
-    case 'onCSSAnimationIteration':
-    case 'onCSSAnimationCancel':
-      return true;
-    default:
-      return false;
-  }
-};
+export const TRANSITION_CALLBACK_PROPS = [
+  'onCSSTransitionRun',
+  'onCSSTransitionStart',
+  'onCSSTransitionEnd',
+  'onCSSTransitionCancel',
+] as const satisfies readonly CSSTransitionCallbackProp[];
+
+export const CSS_CALLBACK_PROPS = [
+  ...ANIMATION_CALLBACK_PROPS,
+  ...TRANSITION_CALLBACK_PROPS,
+] as const satisfies readonly CSSCallbackProp[];
+
+const CSS_CALLBACK_PROP_SET: ReadonlySet<string> = new Set(CSS_CALLBACK_PROPS);
 
 export const isStepsModifier = (value: string): value is StepsModifier => {
   switch (value) {
@@ -102,8 +100,10 @@ export const isStepsModifier = (value: string): value is StepsModifier => {
 export const isCSSConfigProp = (key: string): key is CSSConfigProp =>
   isTransitionProp(key) || isAnimationProp(key);
 
+// A set rather than an object table: this is asked about arbitrary user prop
+// names, and every object literal answers true for `'toString' in it`.
 export const isCSSCallbackProp = (key: string): key is CSSCallbackProp =>
-  isAnimationCallbackProp(key) || isTransitionCallbackProp(key);
+  CSS_CALLBACK_PROP_SET.has(key);
 
 export const isTimeUnit = (value: unknown): value is TimeUnit =>
   // TODO: implement more strict check

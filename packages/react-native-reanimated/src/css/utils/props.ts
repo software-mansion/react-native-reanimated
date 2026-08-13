@@ -13,13 +13,13 @@ import type {
   ExistingCSSAnimationProperties,
 } from '../types';
 import {
-  isAnimationCallbackProp,
+  ANIMATION_CALLBACK_PROPS,
   isAnimationProp,
   isCSSKeyframesObject,
   isCSSKeyframesRule,
   isPseudoSelectorValue,
-  isTransitionCallbackProp,
   isTransitionProp,
+  TRANSITION_CALLBACK_PROPS,
 } from './guards';
 
 export type PseudoStylesBySelector = Record<
@@ -178,8 +178,8 @@ function validateCSSCallbacks(
  * in dev about a kind that is subscribed to but never configured.
  */
 export function splitCSSCallbacks(
-  // Takes the component's props as they are: every prop is checked by name
-  // anyway, so picking the callbacks out first only walks them twice.
+  // Takes the component's props as they are and reads the callbacks it knows
+  // by name, so the cost does not grow with how many props the view has.
   props: Readonly<UnknownRecord>,
   hasAnimationConfig: boolean,
   hasTransitionConfig: boolean
@@ -187,13 +187,16 @@ export function splitCSSCallbacks(
   const animationCallbacks: CSSAnimationCallbacks = {};
   const transitionCallbacks: CSSTransitionCallbacks = {};
 
-  for (const [prop, value] of Object.entries(props)) {
-    if (value === undefined) {
-      continue;
-    }
-    if (isAnimationCallbackProp(prop)) {
+  for (const prop of ANIMATION_CALLBACK_PROPS) {
+    const value = props[prop];
+    if (value !== undefined) {
       animationCallbacks[prop] = value as CSSAnimationCallback;
-    } else if (isTransitionCallbackProp(prop)) {
+    }
+  }
+
+  for (const prop of TRANSITION_CALLBACK_PROPS) {
+    const value = props[prop];
+    if (value !== undefined) {
       transitionCallbacks[prop] = value as CSSTransitionCallback;
     }
   }
