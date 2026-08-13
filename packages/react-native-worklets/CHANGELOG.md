@@ -7,6 +7,7 @@
 ### 🛠 Breaking changes
 
 ### 🎉 New features
+[General] Per-runtime caching for RetainingSerializable
 
 ### 🐛 Bug fixes
 
