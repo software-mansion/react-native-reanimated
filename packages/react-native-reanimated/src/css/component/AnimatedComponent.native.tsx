@@ -5,7 +5,6 @@ import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
 import type { AnyComponent, UnknownRecord } from '../../common';
-import { NO_VIEW_TAG } from '../../common';
 import type { InternalHostInstance } from '../../commonTypes';
 import type {
   AnimatedComponentRef,
@@ -79,7 +78,7 @@ export default class AnimatedComponent<
     }
 
     const viewInfo = getViewInfo(hostInstance);
-    const viewTag = viewInfo.viewTag ?? NO_VIEW_TAG;
+    const viewTag = viewInfo.viewTag ?? -1;
     const reactViewName = viewInfo.reactViewName;
     const shadowNodeWrapper = getShadowNodeWrapperFromRef(
       this as InternalHostInstance,

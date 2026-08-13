@@ -1,5 +1,4 @@
 'use strict';
-import { NO_VIEW_TAG } from '../../../common';
 import { CSSCallbackStore } from '../../models';
 import type { CSSAnimationCallbackProp, CSSAnimationEvent } from '../../types';
 import type {
@@ -61,7 +60,7 @@ export default class CSSCallbacksManager
   ): void {
     this.eventMask = getAnimationEventMaskFromProps(present);
 
-    if (this.viewTag === NO_VIEW_TAG) {
+    if (this.viewTag === -1) {
       return;
     }
     if (present.size > 0) {

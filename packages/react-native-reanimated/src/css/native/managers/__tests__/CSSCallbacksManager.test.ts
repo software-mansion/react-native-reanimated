@@ -1,5 +1,4 @@
 'use strict';
-import { NO_VIEW_TAG } from '../../../../common';
 import type { CSSEventType, NativeCSSEvent } from '../../events';
 import { CSS_EVENT_MASK, cssCallbacksRegistry } from '../../events';
 import CSSCallbacksManager from '../CSSCallbacksManager';
@@ -137,7 +136,7 @@ describe('CSSCallbacksManager', () => {
 
     test('does not register a view that has no tag yet', () => {
       const registerSpy = jest.spyOn(cssCallbacksRegistry, 'register');
-      const tagless = new CSSCallbacksManager(NO_VIEW_TAG);
+      const tagless = new CSSCallbacksManager(-1);
 
       const onAnimationEnd = jest.fn();
       tagless.sync({ onAnimationEnd });
@@ -145,9 +144,7 @@ describe('CSSCallbacksManager', () => {
       expect(registerSpy).not.toHaveBeenCalled();
       expect(tagless.getMask()).toBe(CSS_EVENT_MASK.animationEnd);
 
-      cssCallbacksRegistry.dispatch([
-        event('animationEnd', { tag: NO_VIEW_TAG }),
-      ]);
+      cssCallbacksRegistry.dispatch([event('animationEnd', { tag: -1 })]);
       expect(onAnimationEnd).not.toHaveBeenCalled();
 
       registerSpy.mockRestore();
