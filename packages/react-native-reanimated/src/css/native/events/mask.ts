@@ -7,17 +7,17 @@ import type { CSSAnimationEventType, CSSTransitionEventType } from './types';
 import { CSS_EVENT_MASK } from './types';
 
 export const ANIMATION_CALLBACK_PROP_BY_EVENT_TYPE = {
-  animationStart: 'onAnimationStart',
-  animationEnd: 'onAnimationEnd',
-  animationIteration: 'onAnimationIteration',
-  animationCancel: 'onAnimationCancel',
+  animationStart: 'onCSSAnimationStart',
+  animationEnd: 'onCSSAnimationEnd',
+  animationIteration: 'onCSSAnimationIteration',
+  animationCancel: 'onCSSAnimationCancel',
 } as const satisfies Record<CSSAnimationEventType, CSSAnimationCallbackProp>;
 
 export const TRANSITION_CALLBACK_PROP_BY_EVENT_TYPE = {
-  transitionRun: 'onTransitionRun',
-  transitionStart: 'onTransitionStart',
-  transitionEnd: 'onTransitionEnd',
-  transitionCancel: 'onTransitionCancel',
+  transitionRun: 'onCSSTransitionRun',
+  transitionStart: 'onCSSTransitionStart',
+  transitionEnd: 'onCSSTransitionEnd',
+  transitionCancel: 'onCSSTransitionCancel',
 } as const satisfies Record<CSSTransitionEventType, CSSTransitionCallbackProp>;
 
 /** Inverse of a prop table, so each pairing is written down only once. */

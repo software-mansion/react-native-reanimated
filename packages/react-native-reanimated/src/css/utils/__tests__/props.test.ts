@@ -556,24 +556,27 @@ describe(filterCSSAndStyleProperties, () => {
     });
 
     test('extracts callback props and keeps them out of the style object', () => {
-      const onTransitionEnd = jest.fn();
-      const onTransitionRun = jest.fn();
+      const onCSSTransitionEnd = jest.fn();
+      const onCSSTransitionRun = jest.fn();
       const style: CSSStyle = {
         width: 100,
         transitionProperty: 'opacity',
         transitionDuration: 100,
-        onTransitionRun,
-        onTransitionEnd,
+        onCSSTransitionRun,
+        onCSSTransitionEnd,
       };
 
       const [, transitionConfig, , , transitionCallbacks, filteredStyle] =
         filterCSSAndStyleProperties(style);
 
-      expect(transitionCallbacks).toEqual({ onTransitionRun, onTransitionEnd });
+      expect(transitionCallbacks).toEqual({
+        onCSSTransitionRun,
+        onCSSTransitionEnd,
+      });
       // Callbacks must not leak into the plain style nor the transition config.
       expect(filteredStyle).toEqual({ width: 100 });
-      expect(transitionConfig).not.toHaveProperty('onTransitionRun');
-      expect(transitionConfig).not.toHaveProperty('onTransitionEnd');
+      expect(transitionConfig).not.toHaveProperty('onCSSTransitionRun');
+      expect(transitionConfig).not.toHaveProperty('onCSSTransitionEnd');
     });
   });
 
@@ -590,9 +593,11 @@ describe(filterCSSAndStyleProperties, () => {
       });
 
       test('warns when transition callbacks are used without any transition props', () => {
-        filterCSSAndStyleProperties({ onTransitionEnd: jest.fn() } as CSSStyle);
+        filterCSSAndStyleProperties({
+          onCSSTransitionEnd: jest.fn(),
+        } as CSSStyle);
         expect(console.warn).toHaveBeenCalledWith(
-          expect.stringContaining('onTransitionEnd')
+          expect.stringContaining('onCSSTransitionEnd')
         );
       });
 
@@ -600,7 +605,7 @@ describe(filterCSSAndStyleProperties, () => {
         filterCSSAndStyleProperties({
           transitionProperty: 'opacity',
           transitionDuration: 100,
-          onTransitionEnd: jest.fn(),
+          onCSSTransitionEnd: jest.fn(),
         } as CSSStyle);
         expect(console.warn).not.toHaveBeenCalled();
       });
@@ -608,7 +613,7 @@ describe(filterCSSAndStyleProperties, () => {
       test('does not warn when only the transition shorthand is provided', () => {
         filterCSSAndStyleProperties({
           transition: 'opacity 2s',
-          onTransitionEnd: jest.fn(),
+          onCSSTransitionEnd: jest.fn(),
         } as CSSStyle);
         expect(console.warn).not.toHaveBeenCalled();
       });
@@ -620,7 +625,9 @@ describe(filterCSSAndStyleProperties, () => {
       });
 
       test('skips validation entirely - never warns, even without transition props', () => {
-        filterCSSAndStyleProperties({ onTransitionEnd: jest.fn() } as CSSStyle);
+        filterCSSAndStyleProperties({
+          onCSSTransitionEnd: jest.fn(),
+        } as CSSStyle);
         expect(console.warn).not.toHaveBeenCalled();
       });
     });
@@ -646,8 +653,8 @@ describe(filterCSSAndStyleProperties, () => {
     });
 
     test('extracts callback props and keeps them out of the style object', () => {
-      const onAnimationStart = jest.fn();
-      const onAnimationEnd = jest.fn();
+      const onCSSAnimationStart = jest.fn();
+      const onCSSAnimationEnd = jest.fn();
       const style: CSSStyle = {
         width: 100,
         animationName: css.keyframes({
@@ -655,18 +662,21 @@ describe(filterCSSAndStyleProperties, () => {
           to: { opacity: 1 },
         }),
         animationDuration: 100,
-        onAnimationStart,
-        onAnimationEnd,
+        onCSSAnimationStart,
+        onCSSAnimationEnd,
       };
 
       const [animationConfig, , , animationCallbacks, , filteredStyle] =
         filterCSSAndStyleProperties(style);
 
-      expect(animationCallbacks).toEqual({ onAnimationStart, onAnimationEnd });
+      expect(animationCallbacks).toEqual({
+        onCSSAnimationStart,
+        onCSSAnimationEnd,
+      });
       // Callbacks must not leak into the plain style nor the animation config.
       expect(filteredStyle).toEqual({ width: 100 });
-      expect(animationConfig).not.toHaveProperty('onAnimationStart');
-      expect(animationConfig).not.toHaveProperty('onAnimationEnd');
+      expect(animationConfig).not.toHaveProperty('onCSSAnimationStart');
+      expect(animationConfig).not.toHaveProperty('onCSSAnimationEnd');
     });
   });
 
@@ -683,9 +693,11 @@ describe(filterCSSAndStyleProperties, () => {
       });
 
       test('warns when animation callbacks are used without any animation props', () => {
-        filterCSSAndStyleProperties({ onAnimationEnd: jest.fn() } as CSSStyle);
+        filterCSSAndStyleProperties({
+          onCSSAnimationEnd: jest.fn(),
+        } as CSSStyle);
         expect(console.warn).toHaveBeenCalledWith(
-          expect.stringContaining('onAnimationEnd')
+          expect.stringContaining('onCSSAnimationEnd')
         );
       });
 
@@ -696,7 +708,7 @@ describe(filterCSSAndStyleProperties, () => {
             to: { opacity: 1 },
           }),
           animationDuration: 100,
-          onAnimationEnd: jest.fn(),
+          onCSSAnimationEnd: jest.fn(),
         } as CSSStyle);
         expect(console.warn).not.toHaveBeenCalled();
       });
@@ -705,7 +717,7 @@ describe(filterCSSAndStyleProperties, () => {
         filterCSSAndStyleProperties({
           animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
           animationDuration: 100,
-          onAnimationEnd: jest.fn(),
+          onCSSAnimationEnd: jest.fn(),
         } as CSSStyle);
         expect(console.warn).not.toHaveBeenCalled();
       });
@@ -716,10 +728,10 @@ describe(filterCSSAndStyleProperties, () => {
         filterCSSAndStyleProperties({
           animationName: {},
           animationDuration: 100,
-          onAnimationEnd: jest.fn(),
+          onCSSAnimationEnd: jest.fn(),
         } as CSSStyle);
         expect(console.warn).toHaveBeenCalledWith(
-          expect.stringContaining('onAnimationEnd')
+          expect.stringContaining('onCSSAnimationEnd')
         );
       });
     });
@@ -730,7 +742,9 @@ describe(filterCSSAndStyleProperties, () => {
       });
 
       test('skips validation entirely - never warns, even without animation props', () => {
-        filterCSSAndStyleProperties({ onAnimationEnd: jest.fn() } as CSSStyle);
+        filterCSSAndStyleProperties({
+          onCSSAnimationEnd: jest.fn(),
+        } as CSSStyle);
         expect(console.warn).not.toHaveBeenCalled();
       });
     });

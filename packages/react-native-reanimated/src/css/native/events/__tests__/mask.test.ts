@@ -10,7 +10,7 @@ describe('getAnimationEventMaskFromProps', () => {
   test('combines the bits of every present prop', () => {
     expect(
       getAnimationEventMaskFromProps(
-        new Set(['onAnimationStart', 'onAnimationCancel'] as const)
+        new Set(['onCSSAnimationStart', 'onCSSAnimationCancel'] as const)
       )
     ).toBe(CSS_EVENT_MASK.animationStart | CSS_EVENT_MASK.animationCancel);
   });

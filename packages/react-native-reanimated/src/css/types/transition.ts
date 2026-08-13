@@ -35,13 +35,13 @@ export type CSSTransitionCallback = (event: CSSTransitionEvent) => void;
 
 export type CSSTransitionCallbacks = {
   /** Fired when the transition is triggered, before any `transitionDelay`. */
-  onTransitionRun?: CSSTransitionCallback;
+  onCSSTransitionRun?: CSSTransitionCallback;
   /** Fired after `transitionDelay`, when the property starts animating. */
-  onTransitionStart?: CSSTransitionCallback;
+  onCSSTransitionStart?: CSSTransitionCallback;
   /** Fired when the transition completes. */
-  onTransitionEnd?: CSSTransitionCallback;
+  onCSSTransitionEnd?: CSSTransitionCallback;
   /** Fired when the transition is interrupted before completing. */
-  onTransitionCancel?: CSSTransitionCallback;
+  onCSSTransitionCancel?: CSSTransitionCallback;
 };
 
 export type CSSTransitionCallbackProp = keyof CSSTransitionCallbacks;
