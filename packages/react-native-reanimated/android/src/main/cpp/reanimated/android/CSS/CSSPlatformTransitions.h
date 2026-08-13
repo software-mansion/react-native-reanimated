@@ -29,12 +29,14 @@ struct PlatformEasing {
   bool operator==(const PlatformEasing &other) const = default;
 };
 
+struct PlatformEasingHash {
+  std::size_t operator()(const PlatformEasing &easing) const;
+};
+
 class CSSPlatformTransitions {
  public:
-  /// False means the view can't carry the animation and the property falls back to
-  /// the loop. All-primitive (easing and property pre-registered by id), so the hot
-  /// per-transition JNI hop allocates nothing. A `persistent` value must outlive the
-  /// animation itself.
+  /// False means the property falls back to the loop. Ids and scalars only, so the
+  /// per-transition JNI hop allocates nothing.
   using AnimateFunction = std::function<bool(
       int viewTag,
       int propertyId,
@@ -46,7 +48,7 @@ class CSSPlatformTransitions {
       bool persistent)>;
   using RemoveFunction = std::function<void(int viewTag, int propertyId)>;
 
-  /// Registers an easing curve once; later transitions reference it by id.
+  /// Registers a curve on the platform under an id.
   using DefineEasingFunction =
       std::function<void(int easingId, int type, const std::vector<float> &pointsX, const std::vector<float> &pointsY)>;
 
@@ -76,14 +78,13 @@ class CSSPlatformTransitions {
 
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
 
-  /// Interns the curve, registering it on first sight; the id is its index. Returns
-  /// nullopt once the table is full (an app computing easing points at runtime could
-  /// otherwise grow it forever); such transitions fall back to the loop, which plays
-  /// any easing.
+  /// Interns the curve, registering it on first sight. Returns nullopt once the table is
+  /// full, which an app computing easing points at runtime could otherwise grow forever;
+  /// those transitions fall back to the loop, which plays any easing.
   std::optional<int> easingIdFor(const PlatformEasing &easing);
 
   std::unordered_map<Tag, std::unordered_map<std::string, ActiveTransition>> active_;
-  std::vector<PlatformEasing> internedEasings_;
+  std::unordered_map<PlatformEasing, int, PlatformEasingHash> easingIds_;
   AnimateFunction animate_;
   RemoveFunction remove_;
   DefineEasingFunction defineEasing_;
