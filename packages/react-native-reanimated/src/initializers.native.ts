@@ -6,6 +6,7 @@ import {
   toggleSlowAnimationsOnUIRuntime,
 } from 'react-native-worklets';
 
+import { cssCallbacksRegistry, setCSSEventHandler } from './css/native';
 import { initSvgCssSupport } from './css/svg';
 import { getStaticFeatureFlag } from './featureFlags';
 import type { IReanimatedModule } from './ReanimatedModule';
@@ -18,6 +19,7 @@ export function initializeReanimatedModule(
       '[Reanimated] Tried to initialize Reanimated without a valid ReanimatedModule'
     );
   }
+  setCSSEventHandler((events) => cssCallbacksRegistry.dispatch(events));
   if (getStaticFeatureFlag('EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS')) {
     initSvgCssSupport();
   }

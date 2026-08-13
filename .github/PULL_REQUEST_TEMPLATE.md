@@ -20,3 +20,7 @@
 ## Test plan
 
 <!-- Provide a minimal but complete code snippet that can be used to test out this change along with instructions how to run it and a description of the expected behavior. -->
+
+## Changelog
+
+- [ ] I added an entry to the `Unpublished` section of each changed package's `CHANGELOG.md`, or this PR does not change `react-native-reanimated` or `react-native-worklets`.
