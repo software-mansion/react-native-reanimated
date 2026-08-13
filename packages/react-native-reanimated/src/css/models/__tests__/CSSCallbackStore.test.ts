@@ -69,6 +69,14 @@ describe('CSSCallbackStore', () => {
     expect(store.changes[1]).toEqual(['onBar']);
   });
 
+  // Every other case reports a set that happens to equal the props just added.
+  test('reports a prop that was already present alongside the new one', () => {
+    store.sync({ onFoo: jest.fn() });
+    store.sync({ onBar: jest.fn(), onFoo: jest.fn() });
+
+    expect(store.changes[1]).toEqual(['onFoo', 'onBar']);
+  });
+
   test('ignores props that the store does not manage', () => {
     store.sync({ onBaz: jest.fn() } as never);
 
