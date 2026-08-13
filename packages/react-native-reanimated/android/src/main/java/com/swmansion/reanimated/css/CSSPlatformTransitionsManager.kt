@@ -24,10 +24,10 @@ internal class CSSPlatformTransitionsManager(
     private val animators = HashMap<Key, RunningTransition>()
 
     /**
-     * React can overwrite an animated value only on frames where a mount ran, so the
+     * React can overwrite an animated value only on frames where it wrote props, so the
      * pre-draw repair is skipped on all others. Everything here runs on the UI thread.
      */
-    private var mountedSinceLastDraw = true
+    private var reactWroteSinceLastDraw = true
 
     @OptIn(UnstableReactNativeAPI::class)
     private val mountListener =
@@ -37,7 +37,7 @@ internal class CSSPlatformTransitionsManager(
             override fun willMountItems(uiManager: UIManager) = Unit
 
             override fun didMountItems(uiManager: UIManager) {
-                mountedSinceLastDraw = true
+                reactWroteSinceLastDraw = true
             }
 
             override fun didDispatchMountItems(uiManager: UIManager) = Unit
@@ -233,10 +233,15 @@ internal class CSSPlatformTransitionsManager(
         reconciler.track(view)
     }
 
+    /** Synchronous prop writes run their mount item inline, so no listener reports them. */
+    fun onPropsWrittenSynchronously() {
+        reactWroteSinceLastDraw = true
+    }
+
     /** Re-asserts each animator's own value wherever a commit overwrote it. */
     private fun repairClobberedValues(): Boolean {
-        if (!mountedSinceLastDraw) return animators.isNotEmpty()
-        mountedSinceLastDraw = false
+        if (!reactWroteSinceLastDraw) return animators.isNotEmpty()
+        reactWroteSinceLastDraw = false
         animators.values.forEach { running ->
             // target is held weakly, so read the View through it rather than keeping one.
             val view = running.animator.target as? View ?: return@forEach
