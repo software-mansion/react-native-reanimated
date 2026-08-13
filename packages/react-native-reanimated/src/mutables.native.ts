@@ -1,9 +1,6 @@
 'use strict';
 
-import type {
-  FixedSynchronizable,
-  ShareableGuest,
-} from 'react-native-worklets';
+import type { ShareableGuest, Synchronizable } from 'react-native-worklets';
 import {
   createShareable,
   createSynchronizable,
@@ -23,7 +20,7 @@ import {
 function mutableGuestDecorator<TValue>(
   initial: TValue,
   mutable: ShareableGuest<TValue> & Mutable<TValue>,
-  dirtyFlag: FixedSynchronizable<boolean>
+  dirtyFlag: Synchronizable<boolean>
 ): ShareableGuest<TValue> & Mutable<TValue> {
   'worklet';
   let latest = initial;
@@ -37,10 +34,10 @@ function mutableGuestDecorator<TValue>(
 
         if (globalThis.__RUNTIME_KIND !== 1) {
           latest = mutable.getSync();
-        } else if (dirtyFlag.getDirty()) {
+        } else if (dirtyFlag.getBlocking()) {
           const uiValueGetter = (svArg: Mutable<TValue>) =>
             runOnUISync((sv) => {
-              sv.markDirty(false);
+              sv.markDirty?.(false);
               return sv.value;
             }, svArg);
           latest = uiValueGetter(mutable as Mutable<TValue>);
@@ -121,7 +118,7 @@ function mutableGuestDecorator<TValue>(
 }
 
 export function makeMutable<TValue>(initial: TValue): Mutable<TValue> {
-  const dirtyFlag = createSynchronizable(false, { fixedType: true });
+  const dirtyFlag = createSynchronizable(false);
 
   const shareable = createShareable<TValue, Mutable<TValue>, Mutable<TValue>>(
     UIRuntimeId,

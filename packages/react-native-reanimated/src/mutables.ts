@@ -56,8 +56,6 @@ export function makeMutable<TValue>(initial: TValue): Mutable<TValue> {
       listeners.delete(id);
     },
 
-    markDirty: () => undefined,
-
     _isReanimatedSharedValue: true,
   };
 
