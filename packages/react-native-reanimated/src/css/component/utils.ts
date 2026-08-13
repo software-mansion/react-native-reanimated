@@ -44,12 +44,12 @@ function filterStyleRecursive(style: StyleProp<CSSStyle>): StyleProp<CSSStyle> {
   return result;
 }
 
-function omitCSSCallbackProps(props: object): UnknownRecord {
+function omitCSSCallbackProps(props: UnknownRecord): UnknownRecord {
   const result: UnknownRecord = {};
 
-  for (const [key, value] of Object.entries(props)) {
+  for (const key in props) {
     if (!isCSSCallbackProp(key)) {
-      result[key] = value;
+      result[key] = props[key];
     }
   }
 
@@ -64,7 +64,7 @@ export function filterCSSProps<P extends object>(props: P): P {
   // A view with no callbacks has nothing to drop, so it is copied in one go
   // instead of being rebuilt key by key on every render.
   const result = CSS_CALLBACK_PROPS.some((prop) => prop in props)
-    ? omitCSSCallbackProps(props)
+    ? omitCSSCallbackProps(props as UnknownRecord)
     : ({ ...props } as UnknownRecord);
 
   if ('style' in props) {

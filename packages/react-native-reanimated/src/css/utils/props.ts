@@ -40,10 +40,13 @@ export function filterCSSAndStyleProperties<S extends object>(
   const filteredStyle: UnknownRecord = {};
   const pseudoStylesBySelector: PseudoStylesBySelector = {};
 
+  const styleObject = style as UnknownRecord;
+
   // The CSS / transition / animation buckets are strongly typed but at this
   // point we are dynamically splitting an opaque style object by prop name;
   // values are validated downstream by the normalizers.
-  for (const [prop, value] of Object.entries(style)) {
+  for (const prop in styleObject) {
+    const value = styleObject[prop];
     if (value === undefined) {
       // If the user explicitly sets a property to undefined (e.g. when they want
       // to remove CSS transition or animation), we treat the property as if it was not
@@ -72,7 +75,7 @@ export function filterCSSAndStyleProperties<S extends object>(
       if (defaultValue !== undefined) {
         filteredStyle[prop] = defaultValue;
       }
-      for (const [selector, selectorValue] of Object.entries(value)) {
+      for (const selector in value) {
         if (selector === 'default') {
           continue;
         }
@@ -80,7 +83,7 @@ export function filterCSSAndStyleProperties<S extends object>(
           selectorStyle: {},
           defaultStyle: {},
         });
-        branch.selectorStyle[prop] = selectorValue;
+        branch.selectorStyle[prop] = value[selector];
         branch.defaultStyle[prop] = defaultValue;
       }
     } else if (isEmptyObject(value) && isSupportedStyleProp(prop)) {
