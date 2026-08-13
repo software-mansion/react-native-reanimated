@@ -57,11 +57,6 @@ export const isTransitionProp = (key: string): key is CSSTransitionProp => {
   }
 };
 
-/**
- * Listed rather than matched by a predicate so that a caller looking for the
- * callbacks among a component's props can read these few prop names instead of
- * walking every prop it was given.
- */
 export const ANIMATION_CALLBACK_PROPS = [
   'onCSSAnimationStart',
   'onCSSAnimationEnd',

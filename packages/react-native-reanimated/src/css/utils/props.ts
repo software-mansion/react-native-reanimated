@@ -178,8 +178,6 @@ function validateCSSCallbacks(
  * in dev about a kind that is subscribed to but never configured.
  */
 export function splitCSSCallbacks(
-  // Takes the component's props as they are and reads the callbacks it knows
-  // by name, so the cost does not grow with how many props the view has.
   props: Readonly<UnknownRecord>,
   hasAnimationConfig: boolean,
   hasTransitionConfig: boolean

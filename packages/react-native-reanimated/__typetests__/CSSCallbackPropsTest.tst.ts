@@ -4,10 +4,8 @@ import { describe, expect, test } from 'tstyche';
 import type { CSSAnimationEvent, CSSTransitionEvent } from '..';
 import Animated, { createCSSAnimatedComponent } from '..';
 
-// The callbacks reach an animated component as inline props rather than through
-// the style object, and every way of making one has to accept them - the props
-// interfaces of `Animated.FlatList` and `createCSSAnimatedComponent` are
-// hand-written, so they do not inherit them from `AnimatedComponentType`.
+// `Animated.FlatList` and `createCSSAnimatedComponent` have hand-written props
+// interfaces, so they do not inherit these from `AnimatedComponentType`.
 describe('CSS callback props', () => {
   const onAnimation = (event: CSSAnimationEvent) => String(event.elapsedTime);
   const onTransition = (event: CSSTransitionEvent) => String(event.elapsedTime);
