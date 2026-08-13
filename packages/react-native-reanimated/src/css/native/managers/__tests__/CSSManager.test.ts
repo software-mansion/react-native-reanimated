@@ -95,7 +95,7 @@ describe('CSSManager', () => {
 
     test('delivers a native event to the provided callback', () => {
       const onCSSAnimationEnd = jest.fn();
-      manager.update({ ...ANIMATION, onCSSAnimationEnd });
+      manager.update({ ...ANIMATION }, { onCSSAnimationEnd });
 
       cssCallbacksRegistry.dispatch([event('animationEnd')]);
 
@@ -108,7 +108,7 @@ describe('CSSManager', () => {
     test('starts delivering when a callback appears after the first update', () => {
       const onCSSAnimationEnd = jest.fn();
       manager.update(ANIMATION);
-      manager.update({ ...ANIMATION, onCSSAnimationEnd });
+      manager.update({ ...ANIMATION }, { onCSSAnimationEnd });
 
       cssCallbacksRegistry.dispatch([event('animationEnd')]);
 
@@ -120,8 +120,8 @@ describe('CSSManager', () => {
 
     test('keeps delivering events while the animation detaches', () => {
       const onCSSAnimationCancel = jest.fn();
-      manager.update({ ...ANIMATION, onCSSAnimationCancel });
-      manager.update({ onCSSAnimationCancel });
+      manager.update({ ...ANIMATION }, { onCSSAnimationCancel });
+      manager.update({}, { onCSSAnimationCancel });
 
       cssCallbacksRegistry.dispatch([event('animationCancel')]);
 
@@ -130,7 +130,7 @@ describe('CSSManager', () => {
 
     test('drops a cancel emitted for an animation removed together with its callbacks', () => {
       const onCSSAnimationCancel = jest.fn();
-      manager.update({ ...ANIMATION, onCSSAnimationCancel });
+      manager.update({ ...ANIMATION }, { onCSSAnimationCancel });
       // The animation and its callbacks go away in the same update, so the
       // native side may still emit a cancel using the mask it had before.
       manager.update({});
@@ -142,7 +142,7 @@ describe('CSSManager', () => {
 
     test('delivers the cancel the engine emits while the view unmounts', () => {
       const onCSSAnimationCancel = jest.fn();
-      manager.update({ ...ANIMATION, onCSSAnimationCancel });
+      manager.update({ ...ANIMATION }, { onCSSAnimationCancel });
       // The engine emits the cancel during cleanup, but its batch is dispatched
       // after cleanup has already returned.
       manager.unmountCleanup();
@@ -154,12 +154,14 @@ describe('CSSManager', () => {
 
     test('delivers a transition event to the provided callback', () => {
       const onCSSTransitionEnd = jest.fn();
-      manager.update({
-        opacity: 0,
-        transitionProperty: 'opacity',
-        transitionDuration: '300ms',
-        onCSSTransitionEnd,
-      });
+      manager.update(
+        {
+          opacity: 0,
+          transitionProperty: 'opacity',
+          transitionDuration: '300ms',
+        },
+        { onCSSTransitionEnd }
+      );
 
       cssCallbacksRegistry.dispatch([
         {

@@ -9,6 +9,7 @@ import type {
   CSSAnimationCallbackProp,
   CSSAnimationKeyframes,
   CSSAnimationProp,
+  CSSCallbackProp,
   CSSConfigProp,
   CSSKeyframesRule,
   CSSTransitionCallbackProp,
@@ -99,10 +100,10 @@ export const isStepsModifier = (value: string): value is StepsModifier => {
 };
 
 export const isCSSConfigProp = (key: string): key is CSSConfigProp =>
-  isTransitionProp(key) ||
-  isAnimationProp(key) ||
-  isTransitionCallbackProp(key) ||
-  isAnimationCallbackProp(key);
+  isTransitionProp(key) || isAnimationProp(key);
+
+export const isCSSCallbackProp = (key: string): key is CSSCallbackProp =>
+  isAnimationCallbackProp(key) || isTransitionCallbackProp(key);
 
 export const isTimeUnit = (value: unknown): value is TimeUnit =>
   // TODO: implement more strict check

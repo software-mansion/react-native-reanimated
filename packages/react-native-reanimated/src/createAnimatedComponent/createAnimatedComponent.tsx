@@ -13,6 +13,7 @@ import type {
   InstanceOrElement,
   SharedValueDisableContravariance,
 } from '../commonTypes';
+import type { CSSCallbackProps } from '../css/types';
 import type { AnimatedProps } from '../helperTypes';
 import type { AnimatedRef } from '../hook';
 import type { ExtractElementRef } from '../hook/commonTypes';
@@ -36,7 +37,7 @@ export type AnimatedComponentType<
   // Extra props accepted only when passed inline on the animated component.
   // They are not part of the base component props, so they don't affect the
   // `animatedProps` typing.
-  ExtraProps extends object = object,
+  ExtraProps extends object = CSSCallbackProps,
 > = {
   (
     props: Omit<AnimatedProps<Props>, 'ref'> &
