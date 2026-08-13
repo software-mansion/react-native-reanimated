@@ -55,7 +55,7 @@ class CSSTransition {
   void cancel();
   /// Drops the properties from the transition, so neither the loop nor a native animation keeps
   /// writing them once their value has been evicted from the updates registry.
-  void removeProperties(const std::vector<std::string> &propertyNames);
+  void removeProperties(const std::vector<std::string> &propertyNames, double timestamp);
 
   void setPseudoLockedProperties(TransitionProperties properties);
 

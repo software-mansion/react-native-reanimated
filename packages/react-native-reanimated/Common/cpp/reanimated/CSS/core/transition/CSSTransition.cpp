@@ -44,7 +44,7 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
   }
 
   auto &loopTransition = ensureLoopTransition();
-  loopTransition.updateSettings(loopConfig.changedPropertiesSettings, loopConfig.removedProperties);
+  loopTransition.updateSettings(loopConfig.changedPropertiesSettings, loopConfig.removedProperties, timestamp);
 
   // Settings-only configs reconfigure without running.
   if (!loopConfig.hasValueUpdates()) {
@@ -90,7 +90,7 @@ void CSSTransition::cancel() {
   platformTransitionProxy_->cancelAll(getViewTag(), routing_.platform);
 }
 
-void CSSTransition::removeProperties(const std::vector<std::string> &propertyNames) {
+void CSSTransition::removeProperties(const std::vector<std::string> &propertyNames, const double timestamp) {
   TransitionProperties platformProperties;
   for (const auto &propertyName : propertyNames) {
     if (routing_.platform.erase(propertyName) > 0) {
@@ -103,7 +103,7 @@ void CSSTransition::removeProperties(const std::vector<std::string> &propertyNam
     platformTransitionProxy_->cancelAll(getViewTag(), platformProperties);
   }
   if (loopTransition_) {
-    loopTransition_->removeProperties(propertyNames);
+    loopTransition_->removeProperties(propertyNames, timestamp);
   }
 }
 
