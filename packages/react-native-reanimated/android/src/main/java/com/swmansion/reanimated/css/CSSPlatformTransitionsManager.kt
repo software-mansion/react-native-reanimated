@@ -238,20 +238,7 @@ internal class CSSPlatformTransitionsManager(
         val token = ++nextStartToken
         startTokens[key] = token
         beginWhenMounted(key, token, command.startTimestampMs + command.durationMs) {
-            viewForTag(key.viewTag)?.also { view ->
-                start(
-                    view,
-                    key,
-                    command.writer,
-                    command.fromValue,
-                    command.toValue,
-                    command.durationMs,
-                    command.startTimestampMs,
-                    command.interpolator,
-                    command.scale,
-                    command.persistent,
-                )
-            } != null
+            viewForTag(key.viewTag)?.also { view -> start(view, command) } != null
         }
     }
 
@@ -275,26 +262,23 @@ internal class CSSPlatformTransitionsManager(
 
     private fun start(
         view: View,
-        key: Key,
-        writer: FloatProperty<View>,
-        fromValue: Double,
-        toValue: Double,
-        durationMs: Double,
-        startTimestampMs: Double,
-        interpolator: TimeInterpolator,
-        scale: Float,
-        persistent: Boolean,
+        command: Command.Start,
     ) {
+        val key = command.key
+        val writer = command.writer
+        val durationMs = command.durationMs
+        val interpolator = command.interpolator
+
         // Resume from what is on screen; fromValue is the committed style, which would snap back.
         val interrupted = animators.remove(key)
-        val startValue = if (interrupted != null) writer.get(view) else fromValue.toFloat()
+        val startValue = if (interrupted != null) writer.get(view) else command.fromValue.toFloat()
         interrupted?.animator?.cancel()
 
         // ObjectAnimator writes nothing until its first frame, so the view would show the
         // already-committed target for the whole delay.
         writer.setValue(view, startValue)
 
-        val animator = ObjectAnimator.ofFloat(view, writer, startValue, toValue.toFloat())
+        val animator = ObjectAnimator.ofFloat(view, writer, startValue, command.toValue.toFloat())
         animator.addListener(
             object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
@@ -302,7 +286,7 @@ internal class CSSPlatformTransitionsManager(
                     if (running.animator !== animation) return
                     // A persistent value has no committed style behind it, so dropping the entry
                     // would let the next commit revert the view.
-                    if (persistent) {
+                    if (command.persistent) {
                         running.heldValue = animator.animatedValue as Float
                     } else {
                         animators.remove(key)
@@ -312,11 +296,11 @@ internal class CSSPlatformTransitionsManager(
         )
         // ObjectAnimator has no absolute start time, so resolve it after the thread hop
         // rather than in C++, which would shift the timeline late.
-        val elapsedMs = animationTimestamp().toDouble() - startTimestampMs
+        val elapsedMs = animationTimestamp().toDouble() - command.startTimestampMs
         val delayMs = if (elapsedMs < 0) -elapsedMs else 0.0
         // startDelay writes nothing while it waits, so a commit landing in the delay would
         // stay on screen. Folding the delay into the curve rewrites the property instead.
-        animator.duration = ((delayMs + durationMs) / scale).toLong().coerceAtLeast(1L)
+        animator.duration = ((delayMs + durationMs) / command.scale).toLong().coerceAtLeast(1L)
         animator.interpolator =
             if (delayMs > 0) HoldThenEase((delayMs / (delayMs + durationMs)).toFloat(), interpolator) else interpolator
         if (elapsedMs > 0 && durationMs > 0) {
