@@ -6,6 +6,7 @@
 #include <worklets/SharedItems/SynchronizableAccess.h>
 
 #include <memory>
+#include <utility>
 
 namespace worklets {
 
@@ -26,12 +27,17 @@ class Synchronizable : public SynchronizableAccess,
 
   virtual void setBlocking(jsi::Runtime &rt, const jsi::Value &value) = 0;
 
-  jsi::Value toJSValue(jsi::Runtime &rt) final;
+  jsi::Value toJSValue(jsi::Runtime &rt) final {
+    auto synchronizableUnpacker = rt.global().getProperty(rt, "__synchronizableUnpacker");
+    react_native_assert(synchronizableUnpacker.isObject() && "synchronizableUnpacker not found");
+    auto ref = SerializableJSRef::newNativeStateObject(rt, this->shared_from_this());
+    return synchronizableUnpacker.getObject(rt).getFunction(rt).call(rt, std::move(ref), jsi::Value(isFixed()));
+  }
 
   ~Synchronizable() override = default;
 
  protected:
-  explicit Synchronizable(bool isFixed);
+  explicit Synchronizable(bool isFixed) : Serializable(ValueType::SynchronizableType), isFixed_(isFixed) {}
 
  private:
   const bool isFixed_;

@@ -1,11 +1,9 @@
 #include <worklets/SharedItems/SynchronizableDynamic.h>
 
 #include <memory>
+#include <stdexcept>
 
 namespace worklets {
-
-SynchronizableDynamic::SynchronizableDynamic(const std::shared_ptr<Serializable> &value)
-    : Synchronizable(false), value_(value) {}
 
 jsi::Value SynchronizableDynamic::getDirty(jsi::Runtime &rt) {
   auto value = value_;
