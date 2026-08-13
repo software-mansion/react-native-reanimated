@@ -2,6 +2,7 @@
 
 #include <reanimated/CSS/easing/EasingConfigs.h>
 
+#include <algorithm>
 #include <variant>
 #include <vector>
 
@@ -69,13 +70,34 @@ std::optional<int> CSSPlatformTransitions::easingIdFor(const PlatformEasing &eas
   if (it != easingIds_.end()) {
     return it->second;
   }
-  if (easingIds_.size() >= kMaxInternedEasings) {
-    return std::nullopt;
+
+  int easingId;
+  if (easingKeys_.size() < kMaxInternedEasings) {
+    easingId = static_cast<int>(easingKeys_.size());
+    easingKeys_.push_back(easing);
+    easingRefs_.push_back(0);
+  } else {
+    // Only reached once kMaxInternedEasings distinct curves exist, so the scan is not a hot path.
+    const auto unused = std::find(easingRefs_.begin(), easingRefs_.end(), 0);
+    if (unused == easingRefs_.end()) {
+      return std::nullopt;
+    }
+    easingId = static_cast<int>(std::distance(easingRefs_.begin(), unused));
+    easingIds_.erase(easingKeys_[easingId]);
+    easingKeys_[easingId] = easing;
   }
-  const int easingId = static_cast<int>(easingIds_.size());
+
   defineEasing_(easingId, static_cast<int>(easing.type), easing.pointsX, easing.pointsY);
   easingIds_.emplace(easing, easingId);
   return easingId;
+}
+
+void CSSPlatformTransitions::retainEasing(const int easingId) {
+  ++easingRefs_[easingId];
+}
+
+void CSSPlatformTransitions::releaseEasing(const int easingId) {
+  --easingRefs_[easingId];
 }
 
 const CSSPlatformTransitions::ActiveTransition *CSSPlatformTransitions::activeTransitionFor(
@@ -116,6 +138,7 @@ bool CSSPlatformTransitions::applyTransition(
   }
   // Copy: the active entry is re-assigned below.
   const css::CSSTransitionPropertySettings resolvedSettings = settings == nullptr ? active->settings : *settings;
+  const int replacedEasingId = active != nullptr ? active->easingId : -1;
 
   // Targeting the in-flight transition's start value means this is a reversal.
   const bool isReversal = active != nullptr && active->adjustedStart && toValue == *active->adjustedStart;
@@ -156,14 +179,25 @@ bool CSSPlatformTransitions::applyTransition(
     return false;
   }
 
-  active_[viewTag][propertyName] = ActiveTransition{adjustedStart, toValue, std::move(reversing), resolvedSettings};
+  // Retain before releasing, so replacing a transition with the same curve never frees it.
+  retainEasing(*easingId);
+  if (replacedEasingId >= 0) {
+    releaseEasing(replacedEasingId);
+  }
+
+  active_[viewTag][propertyName] =
+      ActiveTransition{adjustedStart, toValue, std::move(reversing), resolvedSettings, *easingId};
   return true;
 }
 
 void CSSPlatformTransitions::removeTransition(const Tag viewTag, const std::string &propertyName) {
   const auto propertiesIt = active_.find(viewTag);
   if (propertiesIt != active_.end()) {
-    propertiesIt->second.erase(propertyName);
+    const auto activeIt = propertiesIt->second.find(propertyName);
+    if (activeIt != propertiesIt->second.end()) {
+      releaseEasing(activeIt->second.easingId);
+      propertiesIt->second.erase(activeIt);
+    }
     if (propertiesIt->second.empty()) {
       active_.erase(propertiesIt);
     }

@@ -74,17 +74,28 @@ class CSSPlatformTransitions {
     css::PlatformValue adjustedEnd;
     css::ReversingState reversing;
     css::CSSTransitionPropertySettings settings;
+    /// Keeps the curve's slot alive for as long as this property is routed.
+    int easingId;
   };
 
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
 
-  /// Interns the curve, registering it on first sight. Returns nullopt once the table is
-  /// full, which an app computing easing points at runtime could otherwise grow forever;
-  /// those transitions fall back to the loop, which plays any easing.
+  /// Interns the curve, registering it with the platform on first sight. An unused curve stays
+  /// cached so a screen returning to it reuses the flattened interpolator; a full table instead
+  /// reclaims the slot of one nothing routes any more. Returns nullopt only when all
+  /// `kMaxInternedEasings` are simultaneously in use, and that property then runs on the loop.
   std::optional<int> easingIdFor(const PlatformEasing &easing);
+
+  void retainEasing(int easingId);
+
+  /// The slot stays populated at zero references; it is only reclaimed under pressure.
+  void releaseEasing(int easingId);
 
   std::unordered_map<Tag, std::unordered_map<std::string, ActiveTransition>> active_;
   std::unordered_map<PlatformEasing, int, PlatformEasingHash> easingIds_;
+  /// Indexed by easing id: the curve occupying the slot, and how many properties route with it.
+  std::vector<PlatformEasing> easingKeys_;
+  std::vector<int> easingRefs_;
   AnimateFunction animate_;
   RemoveFunction remove_;
   DefineEasingFunction defineEasing_;
