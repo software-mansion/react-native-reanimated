@@ -184,11 +184,14 @@ export function splitCSSCallbacks(
 ): [CSSAnimationCallbacks | null, CSSTransitionCallbacks | null] {
   const animationCallbacks: CSSAnimationCallbacks = {};
   const transitionCallbacks: CSSTransitionCallbacks = {};
+  let hasAnimationCallbacks = false;
+  let hasTransitionCallbacks = false;
 
   for (const prop of ANIMATION_CALLBACK_PROPS) {
     const value = props[prop];
     if (value !== undefined) {
       animationCallbacks[prop] = value as CSSAnimationCallback;
+      hasAnimationCallbacks = true;
     }
   }
 
@@ -196,6 +199,7 @@ export function splitCSSCallbacks(
     const value = props[prop];
     if (value !== undefined) {
       transitionCallbacks[prop] = value as CSSTransitionCallback;
+      hasTransitionCallbacks = true;
     }
   }
 
@@ -215,7 +219,7 @@ export function splitCSSCallbacks(
   }
 
   return [
-    Object.keys(animationCallbacks).length > 0 ? animationCallbacks : null,
-    Object.keys(transitionCallbacks).length > 0 ? transitionCallbacks : null,
+    hasAnimationCallbacks ? animationCallbacks : null,
+    hasTransitionCallbacks ? transitionCallbacks : null,
   ];
 }
