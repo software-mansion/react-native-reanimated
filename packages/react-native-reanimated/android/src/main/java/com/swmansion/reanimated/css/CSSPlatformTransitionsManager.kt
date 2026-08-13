@@ -210,20 +210,24 @@ internal class CSSPlatformTransitionsManager(
             pendingCommands = spareCommands
             flushScheduled = false
         }
-        // A start enqueued before invalidate() must not register an animator behind the cleanup.
-        if (!invalidated) {
-            for (command in batch) {
-                when (command) {
-                    is Command.Start -> beginStart(command)
-                    is Command.Remove -> {
-                        startTokens.remove(command.key)
-                        animators.remove(command.key)?.animator?.cancel()
+        try {
+            // A start enqueued before invalidate() must not register an animator behind the cleanup.
+            if (!invalidated) {
+                for (command in batch) {
+                    when (command) {
+                        is Command.Start -> beginStart(command)
+                        is Command.Remove -> {
+                            startTokens.remove(command.key)
+                            animators.remove(command.key)?.animator?.cancel()
+                        }
                     }
                 }
             }
+        } finally {
+            // A command that throws would otherwise leave the spare holding stale starts.
+            batch.clear()
+            spareCommands = batch
         }
-        batch.clear()
-        spareCommands = batch
     }
 
     private fun beginStart(command: Command.Start) {
