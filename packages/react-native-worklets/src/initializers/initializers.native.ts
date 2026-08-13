@@ -11,12 +11,13 @@ import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
 import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
 import { installValueUnpacker } from '../memory/valueUnpacker';
 import { installNetworking } from '../networking/install';
+import { setupQueueMicrotask } from '../runLoop/common/queueMicrotaskPolyfill';
 import { setupSetImmediate } from '../runLoop/common/setImmediatePolyfill';
 import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
 import { setupRequestAnimationFrame } from '../runLoop/uiRuntime/requestAnimationFrame';
 import { setupSetTimeout } from '../runLoop/uiRuntime/setTimeoutPolyfill';
 import { RuntimeKind } from '../runtimeKind';
-import { runOnUISync, scheduleOnRN, setupMicrotasks } from '../threads';
+import { runOnUISync, scheduleOnRN } from '../threads';
 import type { ValueUnpacker } from '../types';
 import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
@@ -193,19 +194,13 @@ function installRNBindingsOnUIRuntime() {
 
   runOnUISync(() => {
     'worklet';
-    /**
-     * TODO: Move `setupMicrotasks` and `setupRequestAnimationFrame` to a
-     * separate function once we have a better way to distinguish between
-     * Worklet Runtimes.
-     */
-
     if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
       setupConsole(runtimeBoundCapturableConsole!);
     } else if (__DEV__) {
       setupConsoleForwarding(runtimeBoundCapturableConsole!);
     }
 
-    setupMicrotasks();
+    setupQueueMicrotask();
     setupRequestAnimationFrame();
     setupSetTimeout();
     setupSetImmediate();
