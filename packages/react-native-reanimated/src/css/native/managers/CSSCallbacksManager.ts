@@ -39,6 +39,16 @@ export default class CSSCallbacksManager
     return this.eventMask;
   }
 
+  /**
+   * Unsubscribes without dropping the callbacks, so a cancel already emitted
+   * for the unmounting view still reaches the user.
+   */
+  retire(): void {
+    if (this.viewTag !== -1) {
+      cssCallbacksRegistry.retire(this.viewTag, this);
+    }
+  }
+
   handleCSSEvent(event: NativeCSSEvent): void {
     // TODO: transition events arrive here too and are dropped, so transition
     // callbacks never fire on native. They should reach the user once the

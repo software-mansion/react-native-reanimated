@@ -80,7 +80,7 @@ describe('cssCallbacksRegistry', () => {
     cssCallbacksRegistry.unregister(1, sub);
 
     // @ts-expect-error - reading a private field to assert there is no leak
-    expect(cssCallbacksRegistry.subscribersByTag_.has(1)).toBe(false);
+    expect(cssCallbacksRegistry.subscribersByTag.has(1)).toBe(false);
   });
 
   test('unregistering an unknown tag or subscriber is a no-op', () => {
@@ -181,5 +181,82 @@ describe('cssCallbacksRegistry', () => {
     cssCallbacksRegistry.dispatch([event(1)]);
 
     expect(sub.handleCSSEvent).not.toHaveBeenCalled();
+  });
+
+  describe('retire', () => {
+    test('a retired subscriber still hears the batch emitted during teardown', () => {
+      const sub = subscriber();
+      cssCallbacksRegistry.register(1, sub);
+      cssCallbacksRegistry.retire(1, sub);
+
+      cssCallbacksRegistry.dispatch([event(1)]);
+
+      expect(sub.handleCSSEvent).toHaveBeenCalledTimes(1);
+    });
+
+    test('and stops hearing from the batch after that', () => {
+      const sub = subscriber();
+      cssCallbacksRegistry.register(1, sub);
+      cssCallbacksRegistry.retire(1, sub);
+
+      cssCallbacksRegistry.dispatch([event(1)]);
+      cssCallbacksRegistry.dispatch([event(1)]);
+
+      expect(sub.handleCSSEvent).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not disturb a subscriber still attached to the same tag', () => {
+      const outer = subscriber();
+      const inner = subscriber();
+      cssCallbacksRegistry.register(1, outer);
+      cssCallbacksRegistry.register(1, inner);
+      cssCallbacksRegistry.retire(1, outer);
+
+      cssCallbacksRegistry.dispatch([event(1)]);
+      cssCallbacksRegistry.dispatch([event(1)]);
+
+      expect(outer.handleCSSEvent).toHaveBeenCalledTimes(1);
+      expect(inner.handleCSSEvent).toHaveBeenCalledTimes(2);
+    });
+
+    // A frozen view is retired and then mounted again on the same manager.
+    test('a subscriber that registers again stays subscribed', () => {
+      const sub = subscriber();
+      cssCallbacksRegistry.register(1, sub);
+      cssCallbacksRegistry.retire(1, sub);
+      cssCallbacksRegistry.register(1, sub);
+
+      cssCallbacksRegistry.dispatch([event(1)]);
+      cssCallbacksRegistry.dispatch([event(1)]);
+
+      expect(sub.handleCSSEvent).toHaveBeenCalledTimes(2);
+    });
+
+    test('and hears the batch it registered again for exactly once', () => {
+      const sub = subscriber();
+      cssCallbacksRegistry.register(1, sub);
+      cssCallbacksRegistry.retire(1, sub);
+      cssCallbacksRegistry.register(1, sub);
+
+      cssCallbacksRegistry.dispatch([event(1)]);
+
+      expect(sub.handleCSSEvent).toHaveBeenCalledTimes(1);
+    });
+
+    test('and hears it once even when registered again mid batch', () => {
+      const remounted = subscriber();
+      const remounting: CSSEventSubscriber = {
+        handleCSSEvent: jest.fn(() => {
+          cssCallbacksRegistry.register(1, remounted);
+        }),
+      };
+      cssCallbacksRegistry.register(1, remounting);
+      cssCallbacksRegistry.register(1, remounted);
+      cssCallbacksRegistry.retire(1, remounted);
+
+      cssCallbacksRegistry.dispatch([event(1)]);
+
+      expect(remounted.handleCSSEvent).toHaveBeenCalledTimes(1);
+    });
   });
 });
