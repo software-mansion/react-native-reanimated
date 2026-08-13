@@ -64,7 +64,9 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     );
 
     if (Object.keys(config).length) {
-      runCSSTransition(this.shadowNodeWrapper, config);
+      // TODO: the mask is always empty because transition callbacks do not
+      // reach this manager yet; they should subscribe the view here.
+      runCSSTransition(this.shadowNodeWrapper, config, 0);
       this.hasTransition = true;
     }
 

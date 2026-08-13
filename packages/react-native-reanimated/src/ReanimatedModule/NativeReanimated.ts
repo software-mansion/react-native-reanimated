@@ -233,11 +233,13 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   runCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,
-    transitionConfig: CSSTransitionConfig
+    transitionConfig: CSSTransitionConfig,
+    eventMask: number
   ): void {
     this.#reanimatedModuleProxy.runCSSTransition(
       shadowNodeWrapper,
-      transitionConfig
+      transitionConfig,
+      eventMask
     );
   }
 
