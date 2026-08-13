@@ -11,7 +11,6 @@ import type {
 import type {
   CSSAnimationEventType,
   CSSEventSubscriber,
-  CSSEventType,
   CSSTransitionEventType,
   NativeCSSEvent,
 } from '../events';
@@ -23,15 +22,22 @@ import {
   TRANSITION_CALLBACK_PROP_BY_EVENT_TYPE,
 } from '../events';
 
-// Every CSS event for a view reaches both stores, so each table doubles as the
-// check for whether the event is the kind that store owns.
-const isAnimationEvent = (type: CSSEventType): type is CSSAnimationEventType =>
-  type in ANIMATION_CALLBACK_PROP_BY_EVENT_TYPE;
+// The registry routes by view tag, so a view with both kinds gets all of its
+// events here. Each table doubles as the check for which kind an event is.
+type NativeCSSAnimationEvent = NativeCSSEvent & { type: CSSAnimationEventType };
+type NativeCSSTransitionEvent = NativeCSSEvent & {
+  type: CSSTransitionEventType;
+};
+
+const isAnimationEvent = (
+  event: NativeCSSEvent
+): event is NativeCSSAnimationEvent =>
+  event.type in ANIMATION_CALLBACK_PROP_BY_EVENT_TYPE;
 
 const isTransitionEvent = (
-  type: CSSEventType
-): type is CSSTransitionEventType =>
-  type in TRANSITION_CALLBACK_PROP_BY_EVENT_TYPE;
+  event: NativeCSSEvent
+): event is NativeCSSTransitionEvent =>
+  event.type in TRANSITION_CALLBACK_PROP_BY_EVENT_TYPE;
 
 /** The view's animation callbacks, and the mask of the events they need. */
 class AnimationCallbacks extends CSSCallbackStore<
@@ -48,17 +54,11 @@ class AnimationCallbacks extends CSSCallbackStore<
     return this.eventMask;
   }
 
-  /** Returns false for an event of the other kind, which this must not touch. */
-  handleEvent(event: NativeCSSEvent): boolean {
-    if (!isAnimationEvent(event.type)) {
-      return false;
-    }
-
+  handleEvent(event: NativeCSSAnimationEvent): void {
     this.invoke(ANIMATION_CALLBACK_PROP_BY_EVENT_TYPE[event.type], {
       animationName: event.name,
       elapsedTime: event.elapsedTime,
     });
-    return true;
   }
 
   protected onPresenceChanged(
@@ -84,17 +84,11 @@ class TransitionCallbacks extends CSSCallbackStore<
     return this.eventMask;
   }
 
-  /** Returns false for an event of the other kind, which this must not touch. */
-  handleEvent(event: NativeCSSEvent): boolean {
-    if (!isTransitionEvent(event.type)) {
-      return false;
-    }
-
+  handleEvent(event: NativeCSSTransitionEvent): void {
     this.invoke(TRANSITION_CALLBACK_PROP_BY_EVENT_TYPE[event.type], {
       propertyName: event.name,
       elapsedTime: event.elapsedTime,
     });
-    return true;
   }
 
   protected onPresenceChanged(
@@ -150,7 +144,9 @@ export default class CSSCallbacksManager implements CSSEventSubscriber {
   }
 
   handleCSSEvent(event: NativeCSSEvent): void {
-    if (!this.animationCallbacks.handleEvent(event)) {
+    if (isAnimationEvent(event)) {
+      this.animationCallbacks.handleEvent(event);
+    } else if (isTransitionEvent(event)) {
       this.transitionCallbacks.handleEvent(event);
     }
   }
