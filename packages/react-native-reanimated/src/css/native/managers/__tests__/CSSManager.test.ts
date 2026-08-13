@@ -140,14 +140,16 @@ describe('CSSManager', () => {
       expect(onAnimationCancel).not.toHaveBeenCalled();
     });
 
-    test('stops delivering events after unmount cleanup', () => {
-      const onAnimationEnd = jest.fn();
-      manager.update({ ...ANIMATION, onAnimationEnd });
+    test('delivers the cancel the engine emits while the view unmounts', () => {
+      const onAnimationCancel = jest.fn();
+      manager.update({ ...ANIMATION, onAnimationCancel });
+      // The engine emits the cancel during cleanup, but its batch is dispatched
+      // after cleanup has already returned.
       manager.unmountCleanup();
 
-      cssCallbacksRegistry.dispatch([event('animationEnd')]);
+      cssCallbacksRegistry.dispatch([event('animationCancel')]);
 
-      expect(onAnimationEnd).not.toHaveBeenCalled();
+      expect(onAnimationCancel).toHaveBeenCalledTimes(1);
     });
   });
 });
