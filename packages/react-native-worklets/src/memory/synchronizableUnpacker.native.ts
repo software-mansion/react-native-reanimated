@@ -20,7 +20,7 @@ export function installSynchronizableUnpacker() {
 
   function synchronizableUnpacker<TValue>(
     synchronizableRef: SynchronizableRef<TValue>,
-    isFixed?: boolean
+    isFixed: boolean
   ): Synchronizable<TValue> {
     const synchronizable =
       synchronizableRef as unknown as Synchronizable<TValue>;
@@ -83,5 +83,5 @@ export function installSynchronizableUnpacker() {
 
 export type SynchronizableUnpacker = <TValue>(
   synchronizableRef: SynchronizableRef<TValue>,
-  isFixed?: boolean
+  isFixed: boolean
 ) => Synchronizable<TValue>;
