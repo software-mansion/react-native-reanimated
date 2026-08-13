@@ -616,8 +616,9 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
 
   jsi_utils::addMethod<2>(
       rt, obj, "synchronizableSetBlocking", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto synchronizable = Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args));
         auto newValue = extractSerializableOrThrow(rt, at<1>(args), "[Worklets] Value must be a Serializable.");
-        Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->setBlocking(newValue);
+        synchronizable->setBlocking(newValue);
       });
 
   jsi_utils::addMethod<1>(
