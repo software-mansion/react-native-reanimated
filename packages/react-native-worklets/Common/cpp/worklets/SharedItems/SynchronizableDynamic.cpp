@@ -1,4 +1,3 @@
-#include <react/debug/react_native_assert.h>
 #include <worklets/SharedItems/SynchronizableDynamic.h>
 
 #include <memory>
@@ -21,7 +20,8 @@ jsi::Value SynchronizableDynamic::getBlocking(jsi::Runtime &rt) {
 }
 
 void SynchronizableDynamic::setDirty(jsi::Runtime &, const jsi::Value &) {
-  react_native_assert(false && "[Worklets] Expected a fixed-type Synchronizable.");
+  throw std::runtime_error(
+      "[Worklets] Cannot invoke setDirty on a dynamic-type Synchronizable. Use setBlocking instead.");
 }
 
 void SynchronizableDynamic::setBlocking(jsi::Runtime &rt, const jsi::Value &value) {

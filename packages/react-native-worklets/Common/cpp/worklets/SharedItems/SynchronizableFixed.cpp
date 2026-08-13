@@ -14,13 +14,13 @@ SynchronizableFixed::SynchronizableFixed(bool value)
     : Synchronizable(true), value_(std::in_place_type<std::atomic<bool>>, value) {}
 
 std::shared_ptr<SynchronizableFixed> SynchronizableFixed::make(const jsi::Value &initialValue) {
-  react_native_assert(
-      (initialValue.isNumber() || initialValue.isBool()) &&
-      "[Worklets] Expected a number or boolean for a fixed-type Synchronizable.");
   if (initialValue.isBool()) {
     return std::make_shared<SynchronizableFixed>(initialValue.getBool());
+  } else if (initialValue.isNumber()) {
+    return std::make_shared<SynchronizableFixed>(initialValue.getNumber());
+  } else [[unlikely]] {
+    throw std::runtime_error("[Worklets] Expected a number or boolean for a fixed-type Synchronizable.");
   }
-  return std::make_shared<SynchronizableFixed>(initialValue.isNumber() ? initialValue.getNumber() : 0.0);
 }
 
 jsi::Value SynchronizableFixed::getDirty(jsi::Runtime &) {
