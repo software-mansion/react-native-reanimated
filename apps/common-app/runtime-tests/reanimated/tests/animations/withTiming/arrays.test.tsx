@@ -51,7 +51,7 @@ const IndependentComponents = ({
 
   useEffect(() => {
     widths.value = withDelay(
-      100,
+      400,
       withTiming(finalWidths, {
         duration,
       })

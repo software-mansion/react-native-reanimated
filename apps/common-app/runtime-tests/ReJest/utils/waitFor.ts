@@ -2,6 +2,8 @@ export const DEFAULT_TIMEOUT_MS = 10000;
 const DEFAULT_POLL_INTERVAL_MS = 10;
 const STATE_DESCRIPTION_TIMEOUT_MS = 1000;
 
+class TimeoutError extends Error {}
+
 type WaitForOptions = {
   description: string;
   timeout?: number;
@@ -33,10 +35,17 @@ export async function waitFor(
     const remainingTime = timeout - (performance.now() - startTime);
 
     if (remainingTime > 0) {
-      const satisfied = await withTimeout((async () => predicate())(), {
-        description,
-        timeout: remainingTime,
-      }).catch(() => false);
+      let satisfied = false;
+      try {
+        satisfied = await withTimeout((async () => predicate())(), {
+          description,
+          timeout: remainingTime,
+        });
+      } catch (error) {
+        if (!(error instanceof TimeoutError)) {
+          throw error;
+        }
+      }
 
       if (satisfied) {
         return;
@@ -65,7 +74,7 @@ export async function withTimeout<TValue>(
 
   const timeoutPromise = new Promise<never>((_resolve, reject) => {
     timeoutHandle = setTimeout(() => {
-      reject(new Error(timeoutMessage(timeout, description)));
+      reject(new TimeoutError(timeoutMessage(timeout, description)));
     }, timeout);
   });
 
