@@ -175,6 +175,5 @@ describe('CSSManager', () => {
         elapsedTime: 0.3,
       });
     });
-
   });
 });

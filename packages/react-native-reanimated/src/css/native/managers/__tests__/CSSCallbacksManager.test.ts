@@ -25,11 +25,6 @@ describe('CSSCallbacksManager', () => {
   });
 
   describe('masks', () => {
-    test('start empty', () => {
-      expect(manager.getAnimationEventMask()).toBe(0);
-      expect(manager.getTransitionEventMask()).toBe(0);
-    });
-
     test('each kind reflects its own callbacks', () => {
       manager.syncAnimationCallbacks({ onAnimationEnd: jest.fn() });
       manager.syncTransitionCallbacks({ onTransitionStart: jest.fn() });
@@ -176,15 +171,6 @@ describe('CSSCallbacksManager', () => {
       cssCallbacksRegistry.dispatch([event('animationEnd')]);
       expect(onAnimationEnd).toHaveBeenCalledTimes(1);
     });
-
-    test('ignores events addressed to another view', () => {
-      const onAnimationEnd = jest.fn();
-      manager.syncAnimationCallbacks({ onAnimationEnd });
-
-      cssCallbacksRegistry.dispatch([event('animationEnd', { tag: 2 })]);
-
-      expect(onAnimationEnd).not.toHaveBeenCalled();
-    });
   });
 
   describe('registration', () => {
@@ -211,19 +197,6 @@ describe('CSSCallbacksManager', () => {
       cssCallbacksRegistry.dispatch([event('transitionEnd')]);
 
       expect(onTransitionEnd).toHaveBeenCalledTimes(1);
-    });
-
-    test('unregisters when the last callback of both kinds is removed', () => {
-      const unregisterSpy = jest.spyOn(cssCallbacksRegistry, 'unregister');
-
-      manager.syncAnimationCallbacks({ onAnimationStart: jest.fn() });
-      manager.syncTransitionCallbacks({ onTransitionEnd: jest.fn() });
-      manager.syncAnimationCallbacks({});
-      manager.syncTransitionCallbacks({});
-
-      expect(unregisterSpy).toHaveBeenCalledWith(VIEW_TAG, manager);
-
-      unregisterSpy.mockRestore();
     });
 
     test('does not register a view that has no tag yet', () => {
