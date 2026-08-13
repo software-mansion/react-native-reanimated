@@ -39,7 +39,7 @@ export type Synchronizable<TValue = unknown> = SerializableRef<TValue> &
 export type FixedSynchronizable<
   TValue extends number | boolean = number | boolean,
 > = Synchronizable<TValue> & {
-  setDirty(value: TValue | ((prev: TValue) => TValue)): void;
+  setDirty(value: TValue): void;
 };
 
 export type SynchronizableConfig = {

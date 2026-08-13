@@ -379,13 +379,6 @@ describe('Test fixed-type Synchronizable writes', () => {
     expect(synchronizable.getDirty()).toBe(2);
   });
 
-  test('functional setDirty updates the value', () => {
-    const synchronizable = createSynchronizable(1, { fixedType: true });
-
-    synchronizable.setDirty((prev) => prev + 41);
-
-    expect(synchronizable.getDirty()).toBe(42);
-  });
 });
 
 describe('Test fixed-type Synchronizable serialization', () => {

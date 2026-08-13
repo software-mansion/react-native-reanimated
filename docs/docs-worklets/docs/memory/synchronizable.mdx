@@ -92,16 +92,7 @@ The value provided to `setBlocking` is serialized automatically.
 
 ### setDirty
 
-Available only on Synchronizables created with the [`fixedType` option](/docs/memory/createSynchronizable#config). Sets the value without any locking. It never blocks and doesn't respect the explicit lock, so it can interleave with a transaction. When multiple threads write concurrently, the last write wins.
-
-You can also pass a setter function that receives the previous value and returns the new value. Unlike `setBlocking`, the read and the write are **not atomic** - a concurrent write that happens between them is overwritten.
-
-```tsx
-// Set the value to 42
-synchronizable.setDirty(42);
-// Increment the value by 1 - not atomic, may lose concurrent writes
-synchronizable.setDirty((prev) => prev + 1);
-```
+Available only on Synchronizables created with the [`fixedType` option](/docs/memory/createSynchronizable#config). Sets the value without any locking. It never blocks and doesn't respect the explicit lock, so it can interleave with a transaction. When multiple threads write concurrently, the last write wins. Accepts a plain value only, not a setter function.
 
 ### lock
 
