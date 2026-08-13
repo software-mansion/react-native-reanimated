@@ -4,8 +4,6 @@
 
 namespace worklets {
 
-SynchronizableDynamic::SynchronizableDynamic(const std::shared_ptr<Serializable> &value) : value_(value) {}
-
 jsi::Value SynchronizableDynamic::getDirty(jsi::Runtime &rt) {
   auto value = value_;
   return value->toJSValue(rt);
