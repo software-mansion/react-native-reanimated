@@ -39,6 +39,7 @@ std::optional<int> platformPropertyId(const std::string &propertyName) {
   return std::nullopt;
 }
 
+/// Must match MAX_INTERNED_EASINGS on the Kotlin side, which sizes its table to it.
 constexpr size_t kMaxInternedEasings = 256;
 
 } // namespace
