@@ -76,7 +76,6 @@ export function addCompilerSafeGetAndSet<TValue>(
 
 export function mutableHostDecorator<TValue>(
   mutable: ShareableHost<TValue> & Mutable<TValue>,
-  /** Defined only for UI Runtime host. */
   dirtyFlag?: FixedSynchronizable<boolean>
 ): ShareableHost<TValue> & Mutable<TValue> {
   'worklet';
