@@ -42,13 +42,8 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: runtime-tests-ios-remote-${{ github.ref }}-${{ inputs.bundleMode }}-${{ inputs.configuration || 'ReleaseRuntimeTests' }}
-  cancel-in-progress: true
-
 jobs:
   # Check if we have all must-have credentials before running the workflow.
-  # Also the fork guard: skipping preflight skips every job that needs it.
   preflight:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
@@ -64,11 +59,15 @@ jobs:
             exit 1
           fi
 
+  # Build on macos runner
   build-app:
     needs: preflight
     name: Build app (${{ matrix.configuration }}, ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }})
     runs-on: macos-26
     timeout-minutes: 90
+    concurrency:
+      group: runtime-tests-ios-remote-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}
+      cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
@@ -157,11 +156,15 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
+  # Test on remote simulator running on Argent Cloud
   run-tests-remote:
     needs: build-app
     name: Remote tests (${{ matrix.configuration }}, ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }})
     runs-on: ubuntu-latest # <- the whole point: no macOS, no local simulator
     timeout-minutes: 60
+    concurrency:
+      group: runtime-tests-ios-remote-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}
+      cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
@@ -181,10 +184,12 @@ jobs:
       - name: Install monorepo node dependencies
         run: yarn install --immutable
 
-      # Debug legs serve JS from Metro running on THIS runner, so this
-      # checkout's JS must match the native app's bundle mode: the build job
-      # toggled its own tree before compiling the Legacy binary, and Metro
-      # would otherwise serve Bundle Mode JS (the checked-in default) to it.
+      # Debug legs serve JS from Metro running on this runner, so this
+      # checkout's js must match the native app's bundle mode.
+      #
+      # The build job toggled its own tree before compiling the Legacy binary,
+      # and Metro would otherwise serve Bundle Mode JS (the checked-in default) to it.
+      #
       # Release legs never execute this checkout's JS — no toggle needed.
       - name: Toggle Bundle Mode off (Legacy Eval Metro parity)
         if: ${{ !matrix.bundleMode && startsWith(matrix.configuration, 'Debug') }}
@@ -194,7 +199,7 @@ jobs:
         uses: ./.github/actions/install-sim-remote
 
       - name: Log in and acquire a cloud machine
-        shell: bash # explicit: adds pipefail, so the sim-remote|jq pipe can't hide a failure
+        shell: bash
         run: |
           # --timeout is the queue: when all pool machines are busy (e.g.
           # sibling matrix legs hold them), this leg waits up to 30 min for
