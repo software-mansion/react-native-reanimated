@@ -182,10 +182,6 @@ const ERROR_MESSAGES = {
     'worklet';
     return `Invalid size ${JSON.stringify(size)} in a radial gradient. Expected an extent keyword (e.g. "farthest-corner"), a single non-negative length, or a pair of non-negative lengths.`;
   },
-  invalidGradientPosition(position: unknown) {
-    'worklet';
-    return `Invalid position ${JSON.stringify(position)} in a radial gradient.`;
-  },
   invalidColorStopPosition(position: unknown) {
     'worklet';
     return `Invalid color stop position ${JSON.stringify(position)} in a gradient. Expected a number (pixels) or a percentage string.`;
