@@ -118,13 +118,13 @@ export default function AnimationCallbacks() {
                   styles.box,
                   animation,
                   {
-                    onAnimationCancel: ({ elapsedTime }) =>
+                    onCSSAnimationCancel: ({ elapsedTime }) =>
                       log('cancel', elapsedTime),
-                    onAnimationEnd: ({ elapsedTime }) =>
+                    onCSSAnimationEnd: ({ elapsedTime }) =>
                       log('end', elapsedTime),
-                    onAnimationIteration: ({ elapsedTime }) =>
+                    onCSSAnimationIteration: ({ elapsedTime }) =>
                       log('iteration', elapsedTime),
-                    onAnimationStart: ({ elapsedTime }) =>
+                    onCSSAnimationStart: ({ elapsedTime }) =>
                       log('start', elapsedTime),
                   },
                 ]}
