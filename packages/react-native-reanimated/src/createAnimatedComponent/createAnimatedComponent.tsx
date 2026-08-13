@@ -36,17 +36,20 @@ export type AnimatedComponentType<
   Instance = unknown,
   // Extra props accepted only when passed inline on the animated component.
   // They are not part of the base component props, so they don't affect the
-  // `animatedProps` typing.
-  ExtraProps extends object = CSSCallbackProps,
+  // `animatedProps` typing. The CSS callbacks are always accepted, so extra
+  // props of your own add to them rather than replacing them.
+  ExtraProps extends object = object,
 > = {
   (
     props: Omit<AnimatedProps<Props>, 'ref'> &
+      CSSCallbackProps &
       ExtraProps & {
         ref?: AnimatedComponentRef<Instance>;
       }
   ): ReactNode;
   (
     props: Omit<AnimatedProps<Props>, 'ref'> &
+      CSSCallbackProps &
       ExtraProps &
       RefAttributes<ExtractElementRef<Instance>>
   ): ReactNode;
