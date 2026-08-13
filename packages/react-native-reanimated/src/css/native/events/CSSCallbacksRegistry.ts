@@ -5,22 +5,21 @@ import type { CSSEventSubscriber, NativeCSSEvent } from './types';
  * Routes CSS events emitted by the native side to the objects interested in a
  * given view. Nested animated components can share a view tag, so every tag
  * keeps a set of subscribers rather than a single one.
+ *
+ * A view that unmounts is retired instead of unregistered: it stops being a
+ * subscriber, but still hears the batch after, because the engine emits its
+ * cancel as it tears down and that batch arrives once the view is gone.
  */
 class CSSCallbacksRegistry {
   private readonly subscribersByTag = new Map<
     number,
     Set<CSSEventSubscriber>
   >();
-
-  /**
-   * Unsubscribed views that still hear one batch, because the engine emits
-   * their cancel as they tear down but the batch carrying it arrives later.
-   */
   private retiringByTag = new Map<number, Set<CSSEventSubscriber>>();
 
   register(viewTag: number, subscriber: CSSEventSubscriber): void {
     this.retiringByTag.get(viewTag)?.delete(subscriber);
-    addToTag(this.subscribersByTag, viewTag, subscriber);
+    addSubscriber(this.subscribersByTag, viewTag, subscriber);
   }
 
   unregister(viewTag: number, subscriber: CSSEventSubscriber): void {
@@ -36,22 +35,42 @@ class CSSCallbacksRegistry {
   }
 
   /**
-   * Unsubscribing here, rather than after the batch, is what lets a view that
-   * mounts again stay subscribed by simply registering.
+   * Unregistering now, rather than after the batch it still hears, is what lets
+   * a view that mounts again stay subscribed by simply registering.
    */
   retire(viewTag: number, subscriber: CSSEventSubscriber): void {
     this.unregister(viewTag, subscriber);
-    addToTag(this.retiringByTag, viewTag, subscriber);
+    addSubscriber(this.retiringByTag, viewTag, subscriber);
   }
 
   dispatch(events: NativeCSSEvent[]): void {
-    // Taken up front, so a view retired by a callback in this batch is heard in
-    // the next one rather than this one.
+    // Taken up front, so a view retired by a callback in this batch hears the
+    // next one rather than this one.
     const retiring = this.retiringByTag;
     this.retiringByTag = new Map();
 
     for (const event of events) {
-      this.notifySubscribers(this.listenersFor(event.tag, retiring), event);
+      const subscribers = subscribersFor(
+        event.tag,
+        this.subscribersByTag,
+        retiring
+      );
+
+      // Absent once the event outlives the view it was emitted for.
+      if (!subscribers) {
+        continue;
+      }
+
+      for (const subscriber of subscribers) {
+        try {
+          subscriber.handleCSSEvent(event);
+        } catch (error) {
+          // Reported the way an uncaught error would be anyway, so one broken
+          // callback stays fatal without starving the views queued behind it.
+          // @ts-expect-error React Native's `ErrorUtils` are hidden from the global scope.
+          globalThis.ErrorUtils.reportFatalError(error);
+        }
+      }
     }
   }
 
@@ -59,47 +78,9 @@ class CSSCallbacksRegistry {
     this.subscribersByTag.clear();
     this.retiringByTag.clear();
   }
-
-  /**
-   * Everyone a view's event goes to. Taken as one set because a view that
-   * registers again while retiring is in both, and must still be heard once.
-   */
-  private listenersFor(
-    viewTag: number,
-    retiring: Map<number, Set<CSSEventSubscriber>>
-  ): Set<CSSEventSubscriber> | undefined {
-    const subscribed = this.subscribersByTag.get(viewTag);
-    const retired = retiring.get(viewTag);
-
-    if (!retired) {
-      return subscribed;
-    }
-    return subscribed ? new Set([...subscribed, ...retired]) : retired;
-  }
-
-  /** Missing when the event outlived the view it was emitted for. */
-  private notifySubscribers(
-    subscribers: Set<CSSEventSubscriber> | undefined,
-    event: NativeCSSEvent
-  ): void {
-    if (!subscribers) {
-      return;
-    }
-
-    for (const subscriber of subscribers) {
-      try {
-        subscriber.handleCSSEvent(event);
-      } catch (error) {
-        // Reported the way an uncaught error would be anyway, so one broken
-        // callback stays fatal without starving the views queued behind it.
-        // @ts-expect-error React Native's `ErrorUtils` are hidden from the global scope.
-        globalThis.ErrorUtils.reportFatalError(error);
-      }
-    }
-  }
 }
 
-function addToTag(
+function addSubscriber(
   byTag: Map<number, Set<CSSEventSubscriber>>,
   viewTag: number,
   subscriber: CSSEventSubscriber
@@ -110,6 +91,21 @@ function addToTag(
   } else {
     byTag.set(viewTag, new Set([subscriber]));
   }
+}
+
+/** One set, because a view that registers again while retiring is in both. */
+function subscribersFor(
+  viewTag: number,
+  subscribed: Map<number, Set<CSSEventSubscriber>>,
+  retiring: Map<number, Set<CSSEventSubscriber>>
+): Set<CSSEventSubscriber> | undefined {
+  const current = subscribed.get(viewTag);
+  const retired = retiring.get(viewTag);
+
+  if (!retired) {
+    return current;
+  }
+  return current ? new Set([...current, ...retired]) : retired;
 }
 
 const cssCallbacksRegistry = new CSSCallbacksRegistry();
