@@ -14,6 +14,9 @@ class UIScheduler {
   virtual void triggerUI();
   virtual ~UIScheduler() = default;
 
+  // True on the thread that runs UI-scheduled jobs.
+  static bool isOnUIThread();
+
  protected:
   std::atomic<bool> scheduledOnUI_{false};
   ThreadSafeQueue<std::function<void()>> uiJobs_;

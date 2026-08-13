@@ -7,8 +7,6 @@ namespace worklets {
 using namespace facebook;
 using namespace react;
 
-static thread_local bool tls_isOnUIThread = false;
-
 class UISchedulerWrapper : public UIScheduler {
  private:
   jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler_;
@@ -18,7 +16,7 @@ class UISchedulerWrapper : public UIScheduler {
       : androidUiScheduler_(std::move(androidUiScheduler)) {}
 
   void scheduleOnUI(std::function<void()> job) override {
-    if (tls_isOnUIThread) {
+    if (isOnUIThread()) {
       job();
       return;
     }
@@ -28,11 +26,6 @@ class UISchedulerWrapper : public UIScheduler {
       static const auto method = androidUiScheduler_->getClass()->getMethod<void()>("scheduleTriggerOnUI");
       method(androidUiScheduler_);
     }
-  }
-
-  void triggerUI() override {
-    tls_isOnUIThread = true;
-    UIScheduler::triggerUI();
   }
 };
 

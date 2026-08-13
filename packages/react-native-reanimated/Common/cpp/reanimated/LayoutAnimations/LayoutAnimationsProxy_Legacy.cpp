@@ -144,7 +144,7 @@ void LayoutAnimationsProxy_Legacy::reconcileContradictedRemovals(
 // we can safely cleanup on the UI thread since the surface is gone and no more mutations will be produced for it.
 bool LayoutAnimationsProxy_Legacy::shouldFlushDeadNodes([[maybe_unused]] const bool surfaceDropped) const {
 #ifdef ANDROID
-  return surfaceDropped || std::this_thread::get_id() != uiThreadId_;
+  return surfaceDropped || !UIScheduler::isOnUIThread();
 #else
   return true;
 #endif
@@ -791,7 +791,6 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
           auto &mutex = strongThis->mutex;
           auto lock = std::unique_lock<std::recursive_mutex>(mutex);
 #ifdef ANDROID
-          strongThis->uiThreadId_ = std::this_thread::get_id();
           if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
             // the view was removed before this start could run
             return;
@@ -852,7 +851,6 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
           auto &mutex = strongThis->mutex;
           auto lock = std::unique_lock<std::recursive_mutex>(mutex);
 #ifdef ANDROID
-          strongThis->uiThreadId_ = std::this_thread::get_id();
           if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
             // The view was removed before this start could run. Deliberately no
             // clearLayoutAnimationConfig: with tag reuse the config maps already
@@ -915,7 +913,6 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
           auto &mutex = strongThis->mutex;
           auto lock = std::unique_lock<std::recursive_mutex>(mutex);
 #ifdef ANDROID
-          strongThis->uiThreadId_ = std::this_thread::get_id();
           if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
             // the view was removed before this start could run
             return;
