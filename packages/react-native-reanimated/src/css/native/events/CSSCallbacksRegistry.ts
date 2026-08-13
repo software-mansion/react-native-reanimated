@@ -51,10 +51,7 @@ class CSSCallbacksRegistry {
     this.retiringByTag = new Map();
 
     for (const event of events) {
-      const subscribed = this.subscribersByTag.get(event.tag);
-      this.notifySubscribers(subscribed, event);
-      // Registering again during the batch puts a view in both sets.
-      this.notifySubscribers(retiring.get(event.tag), event, subscribed);
+      this.notifySubscribers(this.listenersFor(event.tag, retiring), event);
     }
   }
 
@@ -63,21 +60,33 @@ class CSSCallbacksRegistry {
     this.retiringByTag.clear();
   }
 
+  /**
+   * Everyone a view's event goes to. Taken as one set because a view that
+   * registers again while retiring is in both, and must still be heard once.
+   */
+  private listenersFor(
+    viewTag: number,
+    retiring: Map<number, Set<CSSEventSubscriber>>
+  ): Set<CSSEventSubscriber> | undefined {
+    const subscribed = this.subscribersByTag.get(viewTag);
+    const retired = retiring.get(viewTag);
+
+    if (!retired) {
+      return subscribed;
+    }
+    return subscribed ? new Set([...subscribed, ...retired]) : retired;
+  }
+
   /** Missing when the event outlived the view it was emitted for. */
   private notifySubscribers(
     subscribers: Set<CSSEventSubscriber> | undefined,
-    event: NativeCSSEvent,
-    alreadyNotified?: Set<CSSEventSubscriber>
+    event: NativeCSSEvent
   ): void {
     if (!subscribers) {
       return;
     }
 
     for (const subscriber of subscribers) {
-      if (alreadyNotified?.has(subscriber)) {
-        continue;
-      }
-
       try {
         subscriber.handleCSSEvent(event);
       } catch (error) {
