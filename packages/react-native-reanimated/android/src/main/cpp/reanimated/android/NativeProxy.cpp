@@ -257,32 +257,9 @@ bool NativeProxy::cssAnimateTransition(
     const double durationMs,
     const double startTimestampMs,
     const int easingId,
-    const PlatformEasing &easing,
     const bool persistent) {
-  static const auto method = getJniMethod<jboolean(
-      int,
-      int,
-      double,
-      double,
-      double,
-      double,
-      int,
-      int,
-      jni::alias_ref<jni::JArrayFloat>,
-      jni::alias_ref<jni::JArrayFloat>,
-      jboolean)>("cssAnimateTransition");
-
-  // An interned curve already lives on the platform, so only its id crosses and the arrays
-  // stay null; a null reference costs nothing here, unlike allocating one per start.
-  jni::local_ref<jni::JArrayFloat> jPointsX;
-  jni::local_ref<jni::JArrayFloat> jPointsY;
-  if (easingId < 0) {
-    jPointsX = jni::JArrayFloat::newArray(easing.pointsX.size());
-    jPointsX->setRegion(0, easing.pointsX.size(), easing.pointsX.data());
-    jPointsY = jni::JArrayFloat::newArray(easing.pointsY.size());
-    jPointsY->setRegion(0, easing.pointsY.size(), easing.pointsY.data());
-  }
-
+  static const auto method =
+      getJniMethod<jboolean(int, int, double, double, double, double, int, jboolean)>("cssAnimateTransition");
   return method(
              javaPart_.get(),
              viewTag,
@@ -292,9 +269,6 @@ bool NativeProxy::cssAnimateTransition(
              durationMs,
              startTimestampMs,
              easingId,
-             static_cast<int>(easing.type),
-             jPointsX,
-             jPointsY,
              static_cast<jboolean>(persistent)) != JNI_FALSE;
 }
 

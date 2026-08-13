@@ -40,8 +40,8 @@ std::optional<int> platformPropertyId(const std::string &propertyName) {
   return std::nullopt;
 }
 
-/// Must match MAX_INTERNED_EASINGS on the Kotlin side, which sizes its table to it.
-constexpr size_t kMaxInternedEasings = 256;
+/// Not a ceiling: past this many curves the table prefers reclaiming an unused slot to growing.
+constexpr size_t kEasingReuseThreshold = 256;
 
 } // namespace
 
@@ -65,28 +65,29 @@ std::size_t PlatformEasingHash::operator()(const PlatformEasing &easing) const {
   return seed;
 }
 
-std::optional<int> CSSPlatformTransitions::easingIdFor(const PlatformEasing &easing) {
+int CSSPlatformTransitions::easingIdFor(const PlatformEasing &easing) {
   const auto it = easingIds_.find(easing);
   if (it != easingIds_.end()) {
     return it->second;
   }
 
-  int easingId;
-  if (easingKeys_.size() < kMaxInternedEasings) {
-    easingId = static_cast<int>(easingKeys_.size());
-    easingKeys_.push_back(easing);
-    easingRefs_.push_back(0);
-  } else {
-    // Only reached once kMaxInternedEasings distinct curves exist, so the scan is not a hot path.
+  // Past the threshold, reclaim a curve nothing routes with before adding a slot, so a table
+  // that grew once settles back down. The scan needs that many distinct curves to run at all.
+  if (easingKeys_.size() >= kEasingReuseThreshold) {
     const auto unused = std::find(easingRefs_.begin(), easingRefs_.end(), 0);
-    if (unused == easingRefs_.end()) {
-      return std::nullopt;
+    if (unused != easingRefs_.end()) {
+      const auto easingId = static_cast<int>(std::distance(easingRefs_.begin(), unused));
+      easingIds_.erase(easingKeys_[easingId]);
+      easingKeys_[easingId] = easing;
+      defineEasing_(easingId, static_cast<int>(easing.type), easing.pointsX, easing.pointsY);
+      easingIds_.emplace(easing, easingId);
+      return easingId;
     }
-    easingId = static_cast<int>(std::distance(easingRefs_.begin(), unused));
-    easingIds_.erase(easingKeys_[easingId]);
-    easingKeys_[easingId] = easing;
   }
 
+  const auto easingId = static_cast<int>(easingKeys_.size());
+  easingKeys_.push_back(easing);
+  easingRefs_.push_back(0);
   defineEasing_(easingId, static_cast<int>(easing.type), easing.pointsX, easing.pointsY);
   easingIds_.emplace(easing, easingId);
   return easingId;
@@ -162,11 +163,8 @@ bool CSSPlatformTransitions::applyTransition(
     adjustedStart = active->adjustedEnd;
   }
 
-  const auto easing = toPlatformEasing(resolvedSettings.easingConfig);
-  const auto easingId = easingIdFor(easing);
+  const auto easingId = easingIdFor(toPlatformEasing(resolvedSettings.easingConfig));
 
-  // An id is only an optimisation, so a full table sends the curve along rather than handing a
-  // platform-animatable property back to the loop.
   if (!animate_(
           static_cast<int>(viewTag),
           *propertyId,
@@ -174,22 +172,19 @@ bool CSSPlatformTransitions::applyTransition(
           *to,
           reversing.duration,
           reversing.startTimestamp,
-          easingId.value_or(-1),
-          easing,
+          easingId,
           persistent)) {
     return false;
   }
 
   // Retain before releasing, so replacing a transition with the same curve never frees it.
-  if (easingId.has_value()) {
-    retainEasing(*easingId);
-  }
+  retainEasing(easingId);
   if (replacedEasingId >= 0) {
     releaseEasing(replacedEasingId);
   }
 
   active_[viewTag][propertyName] =
-      ActiveTransition{adjustedStart, toValue, std::move(reversing), resolvedSettings, easingId.value_or(-1)};
+      ActiveTransition{adjustedStart, toValue, std::move(reversing), resolvedSettings, easingId};
   return true;
 }
 

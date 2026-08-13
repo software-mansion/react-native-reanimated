@@ -35,9 +35,8 @@ struct PlatformEasingHash {
 
 class CSSPlatformTransitions {
  public:
-  /// False means the property falls back to the loop. An interned `easingId` sends scalars only,
-  /// so the per-transition JNI hop allocates nothing; -1 means the table was full and `easing`
-  /// travels with the start instead, which costs marshalling but still plays on the platform.
+  /// False means the property falls back to the loop. Ids and scalars only, so the
+  /// per-transition JNI hop allocates nothing.
   using AnimateFunction = std::function<bool(
       int viewTag,
       int propertyId,
@@ -46,7 +45,6 @@ class CSSPlatformTransitions {
       double durationMs,
       double startTimestampMs,
       int easingId,
-      const PlatformEasing &easing,
       bool persistent)>;
   using RemoveFunction = std::function<void(int viewTag, int propertyId)>;
 
@@ -76,18 +74,16 @@ class CSSPlatformTransitions {
     css::PlatformValue adjustedEnd;
     css::ReversingState reversing;
     css::CSSTransitionPropertySettings settings;
-    /// Keeps the curve's slot alive for as long as this property is routed, or -1 when the
-    /// table was full and the curve travelled with the start instead of being interned.
+    /// Keeps the curve's slot alive for as long as this property is routed.
     int easingId;
   };
 
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
 
   /// Interns the curve, registering it with the platform on first sight. An unused curve stays
-  /// cached so a screen returning to it reuses the flattened interpolator; a full table instead
-  /// reclaims the slot of one nothing routes any more. Returns nullopt only when all
-  /// `kMaxInternedEasings` are simultaneously in use, and the curve then travels with the start.
-  std::optional<int> easingIdFor(const PlatformEasing &easing);
+  /// cached so a screen returning to it reuses the flattened interpolator, and a grown table
+  /// reclaims those slots before adding more. Always succeeds: the table has no ceiling.
+  int easingIdFor(const PlatformEasing &easing);
 
   void retainEasing(int easingId);
 

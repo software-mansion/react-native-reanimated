@@ -15,7 +15,7 @@ import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.uimanager.IllegalViewOperationException
 import java.lang.ref.WeakReference
-import java.util.concurrent.atomic.AtomicReferenceArray
+import java.util.concurrent.ConcurrentHashMap
 
 internal class CSSPlatformTransitionsManager(
     private val fabricUIManager: FabricUIManager,
@@ -60,11 +60,11 @@ internal class CSSPlatformTransitionsManager(
     private var nextStartToken = 0L
 
     /**
-     * Indexed by the easing id the C++ interner assigned; a define always precedes the first
+     * Keyed by the easing id the C++ interner assigned; a define always precedes the first
      * animate call using its id. The C++ side serialises its callers on a mutex, which is not
-     * a happens-before edge for Java, so each slot publishes itself instead.
+     * a happens-before edge for Java, so the map supplies that ordering itself.
      */
-    private val easings = AtomicReferenceArray<TimeInterpolator>(MAX_INTERNED_EASINGS)
+    private val easings = ConcurrentHashMap<Int, TimeInterpolator>()
 
     private data class Key(
         val viewTag: Int,
@@ -106,14 +106,11 @@ internal class CSSPlatformTransitionsManager(
         durationMs: Double,
         startTimestampMs: Double,
         easingId: Int,
-        easingType: Int,
-        easingPointsX: FloatArray?,
-        easingPointsY: FloatArray?,
         persistent: Boolean,
     ): Boolean {
         if (invalidated) return false
         val writer = cssPropertyWriterFor(propertyId) ?: return false
-        val interpolator = interpolatorFor(easingId, easingType, easingPointsX, easingPointsY) ?: return false
+        val interpolator = easings[easingId] ?: return false
         val context = reactContext.get() ?: return false
         val scale = DurationScale.effectiveScale(context)
         if (scale <= 0f) return false
@@ -150,7 +147,7 @@ internal class CSSPlatformTransitionsManager(
             reconciler.invalidate()
             // Interpolators outlive every animation that used them, so a flattened curve per
             // easing would otherwise sit here until the manager itself is collected.
-            for (easingId in 0 until easings.length()) easings.set(easingId, null)
+            easings.clear()
         }
     }
 
@@ -263,22 +260,7 @@ internal class CSSPlatformTransitionsManager(
         easingPointsX: FloatArray,
         easingPointsY: FloatArray,
     ) {
-        easings.set(easingId, CSSEasing.interpolator(easingType, easingPointsX, easingPointsY))
-    }
-
-    /**
-     * An id means the interner registered the curve; -1 means its table was full and the points
-     * came along with the start, so this one is built fresh and not cached.
-     */
-    private fun interpolatorFor(
-        easingId: Int,
-        easingType: Int,
-        easingPointsX: FloatArray?,
-        easingPointsY: FloatArray?,
-    ): TimeInterpolator? {
-        if (easingId in 0 until easings.length()) return easings.get(easingId)
-        if (easingPointsX == null || easingPointsY == null) return null
-        return CSSEasing.interpolator(easingType, easingPointsX, easingPointsY)
+        easings[easingId] = CSSEasing.interpolator(easingType, easingPointsX, easingPointsY)
     }
 
     private fun viewForTag(viewTag: Int): View? =
@@ -288,9 +270,4 @@ internal class CSSPlatformTransitionsManager(
             // Thrown, not null, when the tag is registered but the View does not exist yet.
             null
         }
-
-    private companion object {
-        /** Must match `kMaxInternedEasings` in CSSPlatformTransitions.cpp. */
-        const val MAX_INTERNED_EASINGS = 256
-    }
 }

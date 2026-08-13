@@ -289,9 +289,6 @@ open class NativeProxy {
         durationMs: Double,
         startTimestampMs: Double,
         easingId: Int,
-        easingType: Int,
-        easingPointsX: FloatArray?,
-        easingPointsY: FloatArray?,
         persistent: Boolean,
     ): Boolean =
         cssPlatformTransitionsManager.animateTransition(
@@ -302,9 +299,6 @@ open class NativeProxy {
             durationMs,
             startTimestampMs,
             easingId,
-            easingType,
-            easingPointsX,
-            easingPointsY,
             persistent,
         )
 
