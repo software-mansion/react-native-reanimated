@@ -44,7 +44,14 @@ export class FileReader {
 
   private read(produceResult: () => string | ArrayBuffer) {
     this.readyState = LOADING;
-    queueMicrotask(() => {
+    /**
+     * `setTimeout` rather than `queueMicrotask` on purpose. Reads are started
+     * from Promise continuations, which run in the Hermes microtask checkpoint
+     * - that is after the Worklets microtask queue has already been drained for
+     * the current task, so a microtask queued here would wait for an unrelated
+     * task to run.
+     */
+    setTimeout(() => {
       try {
         this.result = produceResult();
         this.readyState = DONE;
