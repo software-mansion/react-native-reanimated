@@ -81,8 +81,8 @@ class CSSPlatformTransitions {
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
 
   /// Interns the curve, registering it with the platform on first sight. An unused curve stays
-  /// cached so a screen returning to it reuses the flattened interpolator, and a grown table
-  /// reclaims those slots before adding more. Always succeeds: the table has no ceiling.
+  /// cached so a screen returning to it reuses the flattened interpolator, and its slot is only
+  /// taken when another curve needs one. Always succeeds: the table has no ceiling.
   int easingIdFor(const PlatformEasing &easing);
 
   void retainEasing(int easingId);
@@ -95,6 +95,8 @@ class CSSPlatformTransitions {
   /// Indexed by easing id: the curve occupying the slot, and how many properties route with it.
   std::vector<PlatformEasing> easingKeys_;
   std::vector<int> easingRefs_;
+  /// Slots at zero references, newest first. May name a slot since re-retained, so re-check.
+  std::vector<int> freeEasingIds_;
   AnimateFunction animate_;
   RemoveFunction remove_;
   DefineEasingFunction defineEasing_;

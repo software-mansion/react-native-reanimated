@@ -2,7 +2,6 @@
 
 #include <reanimated/CSS/easing/EasingConfigs.h>
 
-#include <algorithm>
 #include <variant>
 #include <vector>
 
@@ -40,9 +39,6 @@ std::optional<int> platformPropertyId(const std::string &propertyName) {
   return std::nullopt;
 }
 
-/// Not a ceiling: past this many curves the table prefers reclaiming an unused slot to growing.
-constexpr size_t kEasingReuseThreshold = 256;
-
 } // namespace
 
 CSSPlatformTransitions::CSSPlatformTransitions(
@@ -71,23 +67,25 @@ int CSSPlatformTransitions::easingIdFor(const PlatformEasing &easing) {
     return it->second;
   }
 
-  // Past the threshold, reclaim a curve nothing routes with before adding a slot, so a table
-  // that grew once settles back down. The scan needs that many distinct curves to run at all.
-  if (easingKeys_.size() >= kEasingReuseThreshold) {
-    const auto unused = std::find(easingRefs_.begin(), easingRefs_.end(), 0);
-    if (unused != easingRefs_.end()) {
-      const auto easingId = static_cast<int>(std::distance(easingRefs_.begin(), unused));
+  // Take back a slot nothing routes with before adding one, so the table settles at the most
+  // curves ever animating at once. Freed ids can be stale, hence the reference re-check.
+  int easingId = -1;
+  while (!freeEasingIds_.empty()) {
+    const int candidate = freeEasingIds_.back();
+    freeEasingIds_.pop_back();
+    if (easingRefs_[candidate] == 0) {
+      easingId = candidate;
       easingIds_.erase(easingKeys_[easingId]);
       easingKeys_[easingId] = easing;
-      defineEasing_(easingId, static_cast<int>(easing.type), easing.pointsX, easing.pointsY);
-      easingIds_.emplace(easing, easingId);
-      return easingId;
+      break;
     }
   }
+  if (easingId < 0) {
+    easingId = static_cast<int>(easingKeys_.size());
+    easingKeys_.push_back(easing);
+    easingRefs_.push_back(0);
+  }
 
-  const auto easingId = static_cast<int>(easingKeys_.size());
-  easingKeys_.push_back(easing);
-  easingRefs_.push_back(0);
   defineEasing_(easingId, static_cast<int>(easing.type), easing.pointsX, easing.pointsY);
   easingIds_.emplace(easing, easingId);
   return easingId;
@@ -98,7 +96,10 @@ void CSSPlatformTransitions::retainEasing(const int easingId) {
 }
 
 void CSSPlatformTransitions::releaseEasing(const int easingId) {
-  --easingRefs_[easingId];
+  // Still cached at zero references: only a curve needing a slot actually takes it.
+  if (--easingRefs_[easingId] == 0) {
+    freeEasingIds_.push_back(easingId);
+  }
 }
 
 const CSSPlatformTransitions::ActiveTransition *CSSPlatformTransitions::activeTransitionFor(
