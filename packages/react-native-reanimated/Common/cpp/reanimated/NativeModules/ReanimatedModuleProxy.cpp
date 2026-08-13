@@ -1225,44 +1225,46 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
       scheduler->getContextContainer()
           ->at<std::weak_ptr<const ComponentDescriptorRegistry>>("ComponentDescriptorRegistry_DO_NOT_USE_PRETTY_PLEASE")
           .lock();
+  // The Scheduler owns the registry and outlives this module, so the weak_ptr
+  // always locks here. Everything downstream (the commit hook included)
+  // relies on layoutAnimationsProxy_ being non-null.
+  react_native_assert(componentDescriptorRegistry && "ComponentDescriptorRegistry must be alive during initialization");
 
-  if (componentDescriptorRegistry) {
-    if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-      auto layoutAnimationsProxyExperimental = std::make_shared<LayoutAnimationsProxy_Experimental>(
-          layoutAnimationsManager_,
-          componentDescriptorRegistry,
-          scheduler->getContextContainer(),
-          getJSIRuntimeFromWorkletRuntime(uiRuntime_),
-          uiScheduler_
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    auto layoutAnimationsProxyExperimental = std::make_shared<LayoutAnimationsProxy_Experimental>(
+        layoutAnimationsManager_,
+        componentDescriptorRegistry,
+        scheduler->getContextContainer(),
+        getJSIRuntimeFromWorkletRuntime(uiRuntime_),
+        uiScheduler_
 #ifdef ANDROID
-          ,
-          filterUnmountedTagsFunction_,
-          uiManager_,
-          jsInvoker_
+        ,
+        filterUnmountedTagsFunction_,
+        uiManager_,
+        jsInvoker_
 #endif
-      );
+    );
 #ifdef __APPLE__
-      layoutAnimationsProxyExperimental->setForceScreenSnapshotFunction(forceScreenSnapshot_);
+    layoutAnimationsProxyExperimental->setForceScreenSnapshotFunction(forceScreenSnapshot_);
 #endif
-      layoutAnimationsProxy_ = std::move(layoutAnimationsProxyExperimental);
-    } else {
-      auto layoutAnimationsProxyLegacy = std::make_shared<LayoutAnimationsProxy_Legacy>(
-          layoutAnimationsManager_,
-          componentDescriptorRegistry,
-          scheduler->getContextContainer(),
-          getJSIRuntimeFromWorkletRuntime(uiRuntime_),
-          uiScheduler_
+    layoutAnimationsProxy_ = std::move(layoutAnimationsProxyExperimental);
+  } else {
+    auto layoutAnimationsProxyLegacy = std::make_shared<LayoutAnimationsProxy_Legacy>(
+        layoutAnimationsManager_,
+        componentDescriptorRegistry,
+        scheduler->getContextContainer(),
+        getJSIRuntimeFromWorkletRuntime(uiRuntime_),
+        uiScheduler_
 #ifdef ANDROID
-          ,
-          filterUnmountedTagsFunction_,
-          uiManager_,
-          jsInvoker_
+        ,
+        filterUnmountedTagsFunction_,
+        uiManager_,
+        jsInvoker_
 #endif
-      );
-      // TODO (future): support in experimental
-      uiManager_->setAnimationDelegate(layoutAnimationsProxyLegacy.get());
-      layoutAnimationsProxy_ = std::move(layoutAnimationsProxyLegacy);
-    }
+    );
+    // TODO (future): support in experimental
+    uiManager_->setAnimationDelegate(layoutAnimationsProxyLegacy.get());
+    layoutAnimationsProxy_ = std::move(layoutAnimationsProxyLegacy);
   }
 }
 

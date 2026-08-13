@@ -33,14 +33,9 @@ ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
 }
 
 void ReanimatedCommitHook::maybeInitializeLayoutAnimations(const ShadowTree &shadowTree) {
-  if (!layoutAnimationsProxy_) {
-    return;
-  }
   if (!surfaceTracker_->add(shadowTree.getSurfaceId())) {
     return;
   }
-  // Don't read the ShadowTreeRegistry here — commits run under its shared
-  // lock and a nested acquisition deadlocks with a queued writer (#8579).
   // TODO: We should consider registering a new instance of proxy for each surface.
   // The current approach will encounter problems on platforms where it is more common to have multiple
   // surfaces.
