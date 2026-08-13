@@ -16,8 +16,6 @@ export class CSSCallbackListeners<
     super(Object.keys(eventNameByProp) as Prop[]);
   }
 
-  // What is attached is already recorded, so the set of present callbacks is
-  // all this needs to work out which listeners to drop and which to add.
   protected onPresenceChanged(present: ReadonlySet<Prop>): void {
     for (const [prop, listener] of [...this.attachedListeners]) {
       if (!present.has(prop)) {
