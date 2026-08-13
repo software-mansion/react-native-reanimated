@@ -80,7 +80,7 @@ describe('cssCallbacksRegistry', () => {
     cssCallbacksRegistry.unregister(1, sub);
 
     // @ts-expect-error - reading a private field to assert there is no leak
-    expect(cssCallbacksRegistry.subscribersByTag_.has(1)).toBe(false);
+    expect(cssCallbacksRegistry.subscribersByTag.has(1)).toBe(false);
   });
 
   test('unregistering an unknown tag or subscriber is a no-op', () => {

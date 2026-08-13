@@ -7,79 +7,66 @@ import type { CSSEventSubscriber, NativeCSSEvent } from './types';
  * keeps a set of subscribers rather than a single one.
  */
 class CSSCallbacksRegistry {
-  private readonly subscribersByTag_ = new Map<
+  private readonly subscribersByTag = new Map<
     number,
     Set<CSSEventSubscriber>
   >();
 
   /**
-   * Subscribers of views being torn down. The engine emits their cancel while
-   * they unmount, but the batch carrying it is dispatched afterwards, so they
-   * keep receiving until one batch has gone out.
+   * Subscribers of unmounting views, kept until one batch has been dispatched.
+   * The engine emits their cancel as the view tears down, but the batch
+   * carrying it arrives after the view is already gone.
    */
-  private retiringByTag_ = new Map<number, Set<CSSEventSubscriber>>();
+  private retiringByTag = new Map<number, Set<CSSEventSubscriber>>();
 
   register(viewTag: number, subscriber: CSSEventSubscriber): void {
-    // A view that mounts again is no longer retiring, and must not be heard
-    // twice for the batch it comes back in.
-    this.retiringByTag_.get(viewTag)?.delete(subscriber);
-
-    const subscribers = this.subscribersByTag_.get(viewTag);
-    if (subscribers) {
-      subscribers.add(subscriber);
-    } else {
-      this.subscribersByTag_.set(viewTag, new Set([subscriber]));
-    }
+    // A view that mounts again is no longer retiring, so it stays in one set.
+    this.retiringByTag.get(viewTag)?.delete(subscriber);
+    addToTag(this.subscribersByTag, viewTag, subscriber);
   }
 
   unregister(viewTag: number, subscriber: CSSEventSubscriber): void {
-    const subscribers = this.subscribersByTag_.get(viewTag);
+    const subscribers = this.subscribersByTag.get(viewTag);
     if (!subscribers) {
       return;
     }
 
     subscribers.delete(subscriber);
     if (subscribers.size === 0) {
-      this.subscribersByTag_.delete(viewTag);
+      this.subscribersByTag.delete(viewTag);
     }
   }
 
   /**
-   * Unsubscribes a view being torn down without dropping it from the next
-   * batch. Removing it eagerly, rather than queueing the removal, is what lets
-   * a frozen view that remounts re-register itself and stay subscribed.
+   * Unsubscribes an unmounting view, but lets it hear one more batch so the
+   * cancel already emitted for it still arrives. Unsubscribing right away,
+   * rather than queueing the removal, is what lets a view that mounts again
+   * stay subscribed by simply registering.
    */
   retire(viewTag: number, subscriber: CSSEventSubscriber): void {
     this.unregister(viewTag, subscriber);
-
-    const retiring = this.retiringByTag_.get(viewTag);
-    if (retiring) {
-      retiring.add(subscriber);
-    } else {
-      this.retiringByTag_.set(viewTag, new Set([subscriber]));
-    }
+    addToTag(this.retiringByTag, viewTag, subscriber);
   }
 
   dispatch(events: NativeCSSEvent[]): void {
-    // Swapped before dispatching, so a view retired by a callback in this batch
-    // is still heard in the next one rather than this one.
-    const retiring = this.retiringByTag_;
-    this.retiringByTag_ = new Map();
+    // Taken before dispatching, so a view retired by a callback in this batch
+    // is heard in the next one rather than this one.
+    const retiring = this.retiringByTag;
+    this.retiringByTag = new Map();
 
     for (const event of events) {
-      // An event can outlive the view it was emitted for, so either set may be
-      // missing. They never share a subscriber: registering again un-retires it.
-      this.deliver_(this.subscribersByTag_.get(event.tag), event);
-      this.deliver_(retiring.get(event.tag), event);
+      this.notifySubscribers(this.subscribersByTag.get(event.tag), event);
+      this.notifySubscribers(retiring.get(event.tag), event);
     }
   }
 
   clear(): void {
-    this.subscribersByTag_.clear();
-    this.retiringByTag_.clear();
+    this.subscribersByTag.clear();
+    this.retiringByTag.clear();
   }
 
-  private deliver_(
+  /** Missing when the event outlived the view it was emitted for. */
+  private notifySubscribers(
     subscribers: Set<CSSEventSubscriber> | undefined,
     event: NativeCSSEvent
   ): void {
@@ -91,13 +78,25 @@ class CSSCallbacksRegistry {
       try {
         subscriber.handleCSSEvent(event);
       } catch (error) {
-        // A batch carries events for unrelated views, so the error is
-        // reported the way an uncaught one would be anyway. That keeps a
-        // broken callback fatal without starving the views queued behind it.
+        // Reported the way an uncaught error would be anyway, so one broken
+        // callback stays fatal without starving the views queued behind it.
         // @ts-expect-error React Native's `ErrorUtils` are hidden from the global scope.
         globalThis.ErrorUtils.reportFatalError(error);
       }
     }
+  }
+}
+
+function addToTag(
+  byTag: Map<number, Set<CSSEventSubscriber>>,
+  viewTag: number,
+  subscriber: CSSEventSubscriber
+): void {
+  const subscribers = byTag.get(viewTag);
+  if (subscribers) {
+    subscribers.add(subscriber);
+  } else {
+    byTag.set(viewTag, new Set([subscriber]));
   }
 }
 
