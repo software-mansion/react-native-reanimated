@@ -10,6 +10,8 @@ import {
   toIncludeMatcher,
 } from './rawMatchers';
 
+const POLL_INTERVAL_MS = 32;
+
 export type ValueGetter = () => TestValue | Promise<TestValue>;
 
 export class EventualMatchers {
@@ -48,6 +50,7 @@ export class EventualMatchers {
           {
             description: `\`${matcherName}\` to be satisfied`,
             timeout: this._timeout,
+            interval: POLL_INTERVAL_MS,
           }
         );
       } catch {
