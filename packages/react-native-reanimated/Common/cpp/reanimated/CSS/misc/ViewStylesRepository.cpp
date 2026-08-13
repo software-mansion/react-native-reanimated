@@ -129,12 +129,15 @@ folly::dynamic ViewStylesRepository::getStyleProp(const Tag tag, const PropertyP
 folly::dynamic ViewStylesRepository::getPropertyValue(const folly::dynamic &value, const PropertyPath &propertyPath) {
   const folly::dynamic *currentValue = &value;
 
-  for (size_t i = 0; i < propertyPath.size(); ++i) {
-    if (currentValue->isNull() || currentValue->empty()) {
+  for (const auto &segment : propertyPath) {
+    // folly::dynamic::empty() throws for scalars, and the animated props
+    // registry stores unnormalized worklet output, so a path can descend onto
+    // one.
+    if (!currentValue->isObject() && !currentValue->isArray()) {
       return {};
     }
 
-    if (const auto *arrayIndex = std::get_if<size_t>(&propertyPath[i])) {
+    if (const auto *arrayIndex = std::get_if<size_t>(&segment)) {
       if (!currentValue->isArray() || *arrayIndex >= currentValue->size()) {
         return {};
       }
@@ -142,7 +145,7 @@ folly::dynamic ViewStylesRepository::getPropertyValue(const folly::dynamic &valu
       continue;
     }
 
-    const auto &propName = std::get<std::string>(propertyPath[i]);
+    const auto &propName = std::get<std::string>(segment);
 
     if (!currentValue->isObject()) {
       return {};
@@ -159,25 +162,7 @@ folly::dynamic ViewStylesRepository::getPropertyValue(const folly::dynamic &valu
         return {};
       }
 
-      if (i + 1 >= propertyPath.size()) {
-        return transform;
-      }
-
-      const auto *transformPropName = std::get_if<std::string>(&propertyPath[i + 1]);
-      if (transformPropName == nullptr) {
-        return {};
-      }
-
-      for (const auto &transformEntry : transform) {
-        if (transformEntry.isObject()) {
-          auto transformPropIt = transformEntry.find(*transformPropName);
-          if (transformPropIt != transformEntry.items().end()) {
-            return transformPropIt->second;
-          }
-        }
-      }
-
-      return {};
+      return transform;
     }
 
     auto propIt = currentValue->find(propName);
