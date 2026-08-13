@@ -20,23 +20,17 @@ class Synchronizable : public SynchronizableAccess,
    */
   virtual std::shared_ptr<Serializable> getDirty() = 0;
 
-  virtual jsi::Value getDirty(jsi::Runtime &rt) = 0;
-
   /**
    * Can run concurrently with getDirty, getBlocking.
    * Can't run concurrently with setBlocking.
    */
   virtual std::shared_ptr<Serializable> getBlocking() = 0;
 
-  virtual jsi::Value getBlocking(jsi::Runtime &rt) = 0;
-
   /**
    * Can run concurrently with getDirty.
    * Can't run concurrently with getBlocking, setBlocking.
    */
   virtual void setBlocking(const std::shared_ptr<Serializable> &value) = 0;
-
-  virtual void setBlocking(jsi::Runtime &rt, const jsi::Value &value) = 0;
 
   jsi::Value toJSValue(jsi::Runtime &rt) final {
     auto synchronizableUnpacker = rt.global().getProperty(rt, "__synchronizableUnpacker");
