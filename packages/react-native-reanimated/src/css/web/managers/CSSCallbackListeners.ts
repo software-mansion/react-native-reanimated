@@ -17,7 +17,7 @@ export class CSSCallbackListeners<
   }
 
   protected onPresenceChanged(present: ReadonlySet<Prop>): void {
-    for (const [prop, listener] of [...this.attachedListeners]) {
+    for (const [prop, listener] of this.attachedListeners) {
       if (!present.has(prop)) {
         this.attachedListeners.delete(prop);
         this.element.removeEventListener(this.eventNameByProp[prop], listener);
