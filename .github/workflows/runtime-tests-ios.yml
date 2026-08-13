@@ -2,6 +2,9 @@ name: Runtime tests iOS
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
+  pull_request:
+    paths:
+      - .github/workflows/runtime-tests-ios.yml
   workflow_call:
     inputs:
       bundleMode:

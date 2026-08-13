@@ -19,7 +19,7 @@ jobs:
       matrix:
         configuration: [DebugRuntimeTests, ReleaseRuntimeTests]
         bundleMode: [false, true]
-    uses: ./.github/workflows/runtime-tests-ios-remote.yml
+    uses: ./.github/workflows/runtime-tests-ios-argent.yml
     with:
       configuration: ${{ matrix.configuration }}
       bundleMode: ${{ matrix.bundleMode }}
