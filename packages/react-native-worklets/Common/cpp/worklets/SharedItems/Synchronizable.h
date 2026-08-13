@@ -15,10 +15,21 @@ class Synchronizable : public SynchronizableAccess,
                        public jsi::NativeState,
                        public std::enable_shared_from_this<Synchronizable> {
  public:
+  /**
+   * Can run concurrently with getDirty, getBlocking, setBlocking.
+   */
   virtual jsi::Value getDirty(jsi::Runtime &rt) = 0;
 
+  /**
+   * Can run concurrently with getDirty, getBlocking.
+   * Can't run concurrently with setBlocking.
+   */
   virtual jsi::Value getBlocking(jsi::Runtime &rt) = 0;
 
+  /**
+   * Can run concurrently with getDirty.
+   * Can't run concurrently with getBlocking, setBlocking.
+   */
   virtual void setBlocking(jsi::Runtime &rt, const jsi::Value &value) = 0;
 
   jsi::Value toJSValue(jsi::Runtime &rt) final {
