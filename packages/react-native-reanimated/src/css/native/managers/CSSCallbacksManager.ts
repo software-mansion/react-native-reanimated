@@ -9,8 +9,10 @@ import type {
   CSSTransitionEvent,
 } from '../../types';
 import type {
+  CSSAnimationEventType,
   CSSEventSubscriber,
   CSSEventType,
+  CSSTransitionEventType,
   NativeCSSEvent,
 } from '../events';
 import {
@@ -21,68 +23,99 @@ import {
   TRANSITION_CALLBACK_PROP_BY_EVENT_TYPE,
 } from '../events';
 
-/** Callbacks of one CSS kind: routes its own events and keeps its own mask. */
-class CSSCallbackSlot<Prop extends string, Payload> extends CSSCallbackStore<
-  Prop,
-  Payload
+// Every CSS event for a view reaches both stores, so each table doubles as the
+// check for whether the event is the kind that store owns.
+const isAnimationEvent = (type: CSSEventType): type is CSSAnimationEventType =>
+  type in ANIMATION_CALLBACK_PROP_BY_EVENT_TYPE;
+
+const isTransitionEvent = (
+  type: CSSEventType
+): type is CSSTransitionEventType =>
+  type in TRANSITION_CALLBACK_PROP_BY_EVENT_TYPE;
+
+/** The view's animation callbacks, and the mask of the events they need. */
+class AnimationCallbacks extends CSSCallbackStore<
+  CSSAnimationCallbackProp,
+  CSSAnimationEvent
 > {
   private eventMask = 0;
 
-  constructor(
-    private readonly propByEventType: Partial<Record<CSSEventType, Prop>>,
-    private readonly maskFromProps: (props: Iterable<Prop>) => number,
-    private readonly buildPayload: (event: NativeCSSEvent) => Payload,
-    private readonly onMaskChange: () => void
-  ) {
-    super(Object.values(propByEventType));
+  constructor(private readonly onMaskChange: () => void) {
+    super(Object.values(ANIMATION_CALLBACK_PROP_BY_EVENT_TYPE));
   }
 
   getMask(): number {
     return this.eventMask;
   }
 
-  handleOwnEvent(event: NativeCSSEvent): boolean {
-    const prop = this.propByEventType[event.type];
-    if (!prop) {
+  /** Returns false for an event of the other kind, which this must not touch. */
+  handleEvent(event: NativeCSSEvent): boolean {
+    if (!isAnimationEvent(event.type)) {
       return false;
     }
-    this.invoke(prop, this.buildPayload(event));
+
+    this.invoke(ANIMATION_CALLBACK_PROP_BY_EVENT_TYPE[event.type], {
+      animationName: event.name,
+      elapsedTime: event.elapsedTime,
+    });
     return true;
   }
 
-  protected onPresenceChanged(present: ReadonlySet<Prop>): void {
-    this.eventMask = this.maskFromProps(present);
+  protected onPresenceChanged(
+    present: ReadonlySet<CSSAnimationCallbackProp>
+  ): void {
+    this.eventMask = getAnimationEventMaskFromProps(present);
+    this.onMaskChange();
+  }
+}
+
+/** The view's transition callbacks, and the mask of the events they need. */
+class TransitionCallbacks extends CSSCallbackStore<
+  CSSTransitionCallbackProp,
+  CSSTransitionEvent
+> {
+  private eventMask = 0;
+
+  constructor(private readonly onMaskChange: () => void) {
+    super(Object.values(TRANSITION_CALLBACK_PROP_BY_EVENT_TYPE));
+  }
+
+  getMask(): number {
+    return this.eventMask;
+  }
+
+  /** Returns false for an event of the other kind, which this must not touch. */
+  handleEvent(event: NativeCSSEvent): boolean {
+    if (!isTransitionEvent(event.type)) {
+      return false;
+    }
+
+    this.invoke(TRANSITION_CALLBACK_PROP_BY_EVENT_TYPE[event.type], {
+      propertyName: event.name,
+      elapsedTime: event.elapsedTime,
+    });
+    return true;
+  }
+
+  protected onPresenceChanged(
+    present: ReadonlySet<CSSTransitionCallbackProp>
+  ): void {
+    this.eventMask = getTransitionEventMaskFromProps(present);
     this.onMaskChange();
   }
 }
 
 export default class CSSCallbacksManager implements CSSEventSubscriber {
   private readonly viewTag: number;
-  private readonly animationCallbacks: CSSCallbackSlot<
-    CSSAnimationCallbackProp,
-    CSSAnimationEvent
-  >;
-  private readonly transitionCallbacks: CSSCallbackSlot<
-    CSSTransitionCallbackProp,
-    CSSTransitionEvent
-  >;
+  private readonly animationCallbacks: AnimationCallbacks;
+  private readonly transitionCallbacks: TransitionCallbacks;
 
   constructor(viewTag: number) {
     this.viewTag = viewTag;
     const updateRegistration = () => this.updateRegistration();
 
-    this.animationCallbacks = new CSSCallbackSlot(
-      ANIMATION_CALLBACK_PROP_BY_EVENT_TYPE,
-      getAnimationEventMaskFromProps,
-      ({ name, elapsedTime }) => ({ animationName: name, elapsedTime }),
-      updateRegistration
-    );
-    this.transitionCallbacks = new CSSCallbackSlot(
-      TRANSITION_CALLBACK_PROP_BY_EVENT_TYPE,
-      getTransitionEventMaskFromProps,
-      ({ name, elapsedTime }) => ({ propertyName: name, elapsedTime }),
-      updateRegistration
-    );
+    this.animationCallbacks = new AnimationCallbacks(updateRegistration);
+    this.transitionCallbacks = new TransitionCallbacks(updateRegistration);
   }
 
   getAnimationEventMask(): number {
@@ -117,8 +150,8 @@ export default class CSSCallbacksManager implements CSSEventSubscriber {
   }
 
   handleCSSEvent(event: NativeCSSEvent): void {
-    if (!this.animationCallbacks.handleOwnEvent(event)) {
-      this.transitionCallbacks.handleOwnEvent(event);
+    if (!this.animationCallbacks.handleEvent(event)) {
+      this.transitionCallbacks.handleEvent(event);
     }
   }
 
@@ -126,6 +159,7 @@ export default class CSSCallbacksManager implements CSSEventSubscriber {
     if (this.viewTag === -1) {
       return;
     }
+
     if (this.getAnimationEventMask() | this.getTransitionEventMask()) {
       cssCallbacksRegistry.register(this.viewTag, this);
     } else {
