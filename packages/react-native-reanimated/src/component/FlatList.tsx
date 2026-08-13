@@ -59,9 +59,6 @@ const createCellRendererComponent = (
   return CellRendererComponent;
 };
 
-// `AnimatedComponentType` is what gives every other animated component its CSS
-// callbacks, and this hand-written props interface bypasses it, so they have to
-// be mixed in here as well.
 interface ReanimatedFlatListPropsWithLayout<T>
   extends AnimatedProps<FlatListProps<T>>, CSSCallbackProps {
   /**
