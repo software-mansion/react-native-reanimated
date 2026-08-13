@@ -70,6 +70,12 @@ export class AnimationUpdatesRecorder {
       'worklet';
       global.mockedAnimationTimestamp = 0;
       global.originalGetAnimationTimestamp = global._getAnimationTimestamp;
+
+      Object.defineProperty(global, '__frameTimestamp', {
+        configurable: true,
+        get: () => global.mockedAnimationTimestamp,
+        set: () => {},
+      });
       global._getAnimationTimestamp = () => {
         if (global.mockedAnimationTimestamp === undefined) {
           throw new Error("Animation timestamp wasn't initialized");
@@ -124,6 +130,11 @@ export class AnimationUpdatesRecorder {
       }
       global.mockedAnimationTimestamp = undefined;
       global.framesCount = undefined;
+      Object.defineProperty(global, '__frameTimestamp', {
+        configurable: true,
+        writable: true,
+        value: undefined,
+      });
     }, maxWaitTime);
   }
 
