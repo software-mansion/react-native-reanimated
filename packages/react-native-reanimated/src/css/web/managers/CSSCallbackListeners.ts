@@ -1,6 +1,5 @@
 'use strict';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
-import type { CSSCallbackPresenceChange } from '../../models';
 import { CSSCallbackStore } from '../../models';
 
 export class CSSCallbackListeners<
@@ -17,19 +16,20 @@ export class CSSCallbackListeners<
     super(Object.keys(eventNameByProp) as Prop[]);
   }
 
-  protected onPresenceChanged({
-    added,
-    removed,
-  }: CSSCallbackPresenceChange<Prop>): void {
-    for (const prop of removed) {
-      const listener = this.attachedListeners.get(prop);
-      if (listener) {
+  // What is attached is already recorded, so the set of present callbacks is
+  // all this needs to work out which listeners to drop and which to add.
+  protected onPresenceChanged(present: ReadonlySet<Prop>): void {
+    for (const [prop, listener] of [...this.attachedListeners]) {
+      if (!present.has(prop)) {
         this.attachedListeners.delete(prop);
         this.element.removeEventListener(this.eventNameByProp[prop], listener);
       }
     }
 
-    for (const prop of added) {
+    for (const prop of present) {
+      if (this.attachedListeners.has(prop)) {
+        continue;
+      }
       const listener = this.createListener(prop);
       this.attachedListeners.set(prop, listener);
       this.element.addEventListener(this.eventNameByProp[prop], listener);
