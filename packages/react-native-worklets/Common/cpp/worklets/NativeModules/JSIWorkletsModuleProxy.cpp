@@ -609,33 +609,33 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableGetDirty", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        return extractSynchronizableOrThrow(rt, at<0>(args))->getDirty(rt);
+        return Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->getDirty(rt);
       });
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableGetBlocking", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        return extractSynchronizableOrThrow(rt, at<0>(args))->getBlocking(rt);
+        return Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->getBlocking(rt);
       });
 
   jsi_utils::addMethod<2>(
       rt, obj, "synchronizableSetDirty", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        extractSynchronizableOrThrow(rt, at<0>(args))->setDirty(rt, at<1>(args));
+        Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->setDirty(rt, at<1>(args));
       });
 
   jsi_utils::addMethod<2>(
       rt, obj, "synchronizableSetBlocking", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        extractSynchronizableOrThrow(rt, at<0>(args))->setBlocking(rt, at<1>(args));
+        Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->setBlocking(rt, at<1>(args));
       });
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableLock", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto synchronizable = extractSynchronizableOrThrow(rt, at<0>(args));
+        auto synchronizable = Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args));
         synchronizable->lock();
       });
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableUnlock", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto synchronizable = extractSynchronizableOrThrow(rt, at<0>(args));
+        auto synchronizable = Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args));
         synchronizable->unlock();
       });
 
