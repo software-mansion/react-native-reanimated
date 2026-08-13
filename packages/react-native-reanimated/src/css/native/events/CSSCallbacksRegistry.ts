@@ -13,14 +13,12 @@ class CSSCallbacksRegistry {
   >();
 
   /**
-   * Subscribers of unmounting views, kept until one batch has been dispatched.
-   * The engine emits their cancel as the view tears down, but the batch
-   * carrying it arrives after the view is already gone.
+   * Unsubscribed views that still hear one batch, because the engine emits
+   * their cancel as they tear down but the batch carrying it arrives later.
    */
   private retiringByTag = new Map<number, Set<CSSEventSubscriber>>();
 
   register(viewTag: number, subscriber: CSSEventSubscriber): void {
-    // A view that mounts again is no longer retiring, so it stays in one set.
     this.retiringByTag.get(viewTag)?.delete(subscriber);
     addToTag(this.subscribersByTag, viewTag, subscriber);
   }
@@ -38,10 +36,8 @@ class CSSCallbacksRegistry {
   }
 
   /**
-   * Unsubscribes an unmounting view, but lets it hear one more batch so the
-   * cancel already emitted for it still arrives. Unsubscribing right away,
-   * rather than queueing the removal, is what lets a view that mounts again
-   * stay subscribed by simply registering.
+   * Unsubscribing here, rather than after the batch, is what lets a view that
+   * mounts again stay subscribed by simply registering.
    */
   retire(viewTag: number, subscriber: CSSEventSubscriber): void {
     this.unregister(viewTag, subscriber);
@@ -49,16 +45,15 @@ class CSSCallbacksRegistry {
   }
 
   dispatch(events: NativeCSSEvent[]): void {
-    // Taken before dispatching, so a view retired by a callback in this batch
-    // is heard in the next one rather than this one.
+    // Taken up front, so a view retired by a callback in this batch is heard in
+    // the next one rather than this one.
     const retiring = this.retiringByTag;
     this.retiringByTag = new Map();
 
     for (const event of events) {
       const subscribed = this.subscribersByTag.get(event.tag);
       this.notifySubscribers(subscribed, event);
-      // A callback in this batch can register a retiring view again, and it is
-      // then in both, so the ones just notified are skipped here.
+      // Registering again during the batch puts a view in both sets.
       this.notifySubscribers(retiring.get(event.tag), event, subscribed);
     }
   }
