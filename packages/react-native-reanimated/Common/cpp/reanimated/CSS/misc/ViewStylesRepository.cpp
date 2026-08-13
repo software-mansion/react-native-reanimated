@@ -130,13 +130,6 @@ folly::dynamic ViewStylesRepository::getPropertyValue(const folly::dynamic &valu
   const folly::dynamic *currentValue = &value;
 
   for (const auto &segment : propertyPath) {
-    // folly::dynamic::empty() throws for scalars, and the animated props
-    // registry stores unnormalized worklet output, so a path can descend onto
-    // one.
-    if (!currentValue->isObject() && !currentValue->isArray()) {
-      return {};
-    }
-
     if (const auto *arrayIndex = std::get_if<size_t>(&segment)) {
       if (!currentValue->isArray() || *arrayIndex >= currentValue->size()) {
         return {};
