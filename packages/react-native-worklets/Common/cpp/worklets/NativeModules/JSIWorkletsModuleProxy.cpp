@@ -600,7 +600,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
 
   jsi_utils::addMethod<2>(
       rt, obj, "createSynchronizable", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        if (at<1>(args).asBool()) {
+        if (at<1>(args).getBool()) {
           return SerializableJSRef::newNativeStateObject(rt, SynchronizableFixed::make(at<0>(args)));
         }
         auto initial = extractSerializableOrThrow(rt, at<0>(args), "[Worklets] Value must be a Serializable.");
