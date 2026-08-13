@@ -15,6 +15,16 @@ class Synchronizable : public SynchronizableAccess,
                        public jsi::NativeState,
                        public std::enable_shared_from_this<Synchronizable> {
  public:
+  static std::shared_ptr<Synchronizable> extractSynchronizableOrThrow(jsi::Runtime &rt, const jsi::Value &value) {
+    auto serializable =
+        extractSerializableOrThrow(rt, value, "[Worklets] Expecting the object to be of type SerializableJSRef.");
+
+    auto synchronizable = std::dynamic_pointer_cast<Synchronizable>(serializable);
+    react_native_assert(synchronizable != nullptr && "[Worklets] Expected the object to be a Synchronizable.");
+
+    return synchronizable;
+  }
+
   /**
    * Can run concurrently with getDirty, setDirty, getBlocking, setBlocking.
    */
@@ -52,15 +62,5 @@ class Synchronizable : public SynchronizableAccess,
  protected:
   Synchronizable() : Serializable(ValueType::SynchronizableType) {}
 };
-
-inline std::shared_ptr<Synchronizable> extractSynchronizableOrThrow(jsi::Runtime &rt, const jsi::Value &value) {
-  auto serializable =
-      extractSerializableOrThrow(rt, value, "[Worklets] Expecting the object to be of type SerializableJSRef.");
-
-  auto synchronizable = std::dynamic_pointer_cast<Synchronizable>(serializable);
-  react_native_assert(synchronizable != nullptr && "[Worklets] Expected the object to be a Synchronizable.");
-
-  return synchronizable;
-}
 
 }; // namespace worklets

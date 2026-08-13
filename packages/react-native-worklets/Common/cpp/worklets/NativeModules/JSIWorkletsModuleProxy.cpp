@@ -606,29 +606,29 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableGetDirty", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        return extractSynchronizableOrThrow(rt, at<0>(args))->getDirty()->toJSValue(rt);
+        return Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->getDirty()->toJSValue(rt);
       });
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableGetBlocking", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        return extractSynchronizableOrThrow(rt, at<0>(args))->getBlocking()->toJSValue(rt);
+        return Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->getBlocking()->toJSValue(rt);
       });
 
   jsi_utils::addMethod<2>(
       rt, obj, "synchronizableSetBlocking", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         auto newValue = extractSerializableOrThrow(rt, at<1>(args), "[Worklets] Value must be a Serializable.");
-        extractSynchronizableOrThrow(rt, at<0>(args))->setBlocking(newValue);
+        Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->setBlocking(newValue);
       });
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableLock", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto synchronizable = extractSynchronizableOrThrow(rt, at<0>(args));
+        auto synchronizable = Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args));
         synchronizable->lock();
       });
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableUnlock", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto synchronizable = extractSynchronizableOrThrow(rt, at<0>(args));
+        auto synchronizable = Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args));
         synchronizable->unlock();
       });
 
