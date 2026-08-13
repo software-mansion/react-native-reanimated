@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Packages the runtime-tests FabricExample.app into a zip for the CI artifact
-// hand-off between a build job and a test job (see runtime-tests-ios-split.yml).
+// hand-off between a build job and a test job (see runtime-tests-ios-remote.yml).
 //
 // Build the app first:
 //   node scripts/runtime-tests-server.js --build-only --configuration ReleaseRuntimeTests

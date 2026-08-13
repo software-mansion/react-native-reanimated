@@ -70,9 +70,20 @@ const APP_PATH = args['app-path'] ?? '';
 const LIBRARY = args.library ?? '';
 const CONFIGURATION = args.configuration ?? 'ReleaseRuntimeTests';
 const ONLY = args.only ?? '';
-const METRO_PORT = Number(args['metro-port'] ?? 8081);
-const CONNECT_TIMEOUT = Number(args['connect-timeout'] ?? 900);
-const IDLE_TIMEOUT = Number(args['idle-timeout'] ?? 900);
+
+function positiveInt(name, value) {
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    fail(`--${name} must be a positive integer, got: ${value}`)
+  }
+
+  return parsed;
+}
+
+const METRO_PORT = positiveInt('metro-port', args['metro-port'] ?? 8081)
+const CONNECT_TIMEOUT = positiveInt('connect-timeout', args['connect-timeout'] ?? 900)
+const IDLE_TIMEOUT = positiveInt('idle-timeout', args['idle-timeout'] ?? 900)
 
 // ── process helpers ──
 
@@ -253,7 +264,16 @@ async function runLibrary() {
   if (ONLY) {
     serverArgs.push('--only', ONLY);
   }
-  const server = spawn('node', serverArgs, { stdio: 'inherit' });
+
+  const server = spawn('node', serverArgs, { cwd: projectRoot, stdio: 'inherit' });
+
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.once(signal, () => {
+      server.kill(signal);
+      process.exit(1);
+    });
+  }
+
   const serverExit = new Promise((resolve) => {
     server.on('exit', (code) => resolve(code ?? 1));
   });
