@@ -150,8 +150,8 @@ bool CSSPlatformTransitions::applyTransition(
           *to,
           reversing.duration,
           reversing.startTimestamp,
-              *easingId,
-              persistent)) {
+          *easingId,
+          persistent)) {
     return false;
   }
 
