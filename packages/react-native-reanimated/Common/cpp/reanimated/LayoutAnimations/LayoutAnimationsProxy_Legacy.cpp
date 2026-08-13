@@ -138,8 +138,9 @@ void LayoutAnimationsProxy_Legacy::reconcileContradictedRemovals(
   }
 }
 
-// We don't change the view hierarchy when on the main thread unless the surface is dropped. This is won't be necessary
-// under the pull model
+// On android mutations that alter the view hierarchy are only produced on the JS thread (the push model), so to not
+// race with those, we apply the dead nodes cleanup only on the JS thread, unless there is a surface drop, in which case
+// we can safely cleanup on the UI thread since the surface is gone and no more mutations will be produced for it.
 bool LayoutAnimationsProxy_Legacy::shouldFlushDeadNodes([[maybe_unused]] const bool surfaceDropped) const {
 #ifdef ANDROID
   return surfaceDropped || std::this_thread::get_id() != uiThreadId_;
@@ -1099,11 +1100,12 @@ RootShadowNode::Unshared LayoutAnimationsProxy_Legacy::shadowTreeWillCommit(
     const ShadowTree &shadowTree,
     const RootShadowNode::Shared & /*oldRootShadowNode*/,
     const RootShadowNode::Unshared &newRootShadowNode) noexcept {
+  const auto surfaceId = shadowTree.getSurfaceId();
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   if (newRootShadowNode->getChildren().empty()) {
-    surfacesToRemove_.insert(shadowTree.getSurfaceId());
+    surfacesToRemove_.insert(surfaceId);
   } else {
-    surfacesToRemove_.erase(shadowTree.getSurfaceId());
+    surfacesToRemove_.erase(surfaceId);
   }
   return newRootShadowNode;
 }
