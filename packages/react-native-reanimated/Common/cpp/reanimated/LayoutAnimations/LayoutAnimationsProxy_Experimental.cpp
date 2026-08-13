@@ -608,9 +608,6 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
   } else {
     layoutAnimationsManager_->clearLayoutAnimationConfig(node->current.tag);
     if (hasAnimatedChildren) {
-      // This node is also withheld even though only one of its descendants is
-      // animating. Track it so contradicted removals can be reconciled and the
-      // node can be dropped after its last animated child is deleted.
       node->state = WAITING;
       lightNodes_[node->current.tag] = node;
     }
