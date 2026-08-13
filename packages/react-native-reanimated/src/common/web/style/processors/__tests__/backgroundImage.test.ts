@@ -60,9 +60,33 @@ describe(processBackgroundImageWeb, () => {
         },
       ])
     ).toBe(
-      'radial-gradient(ellipse 100px 50% at top 10% left 20px, red, blue)'
+      'radial-gradient(ellipse 100px 50% at left 20px top 10%, red, blue)'
     );
   });
+
+  test.each([
+    [{ top: '10%' }, 'at left 50% top 10%'],
+    [{ left: '10%' }, 'at left 10% top 50%'],
+    [{ bottom: '10%' }, 'at left 50% bottom 10%'],
+    [{ right: 20 }, 'at right 20px top 50%'],
+    [{ bottom: '10%', right: 20 }, 'at right 20px bottom 10%'],
+    // Native prefers left over right and top over bottom
+    [{ left: 10, right: 20, top: 30, bottom: 40 }, 'at left 10px top 30px'],
+    [{}, ''],
+  ])(
+    'serializes the partial radial gradient position %j with both axes',
+    (position, expected) => {
+      expect(
+        processBackgroundImageWeb([
+          {
+            type: 'radial-gradient',
+            position,
+            colorStops: [{ color: 'red' }, { color: 'blue' }],
+          },
+        ])
+      ).toBe(`radial-gradient(${expected ? `${expected}, ` : ''}red, blue)`);
+    }
+  );
 
   test('serializes a circle size as a single radius', () => {
     expect(
@@ -78,10 +102,13 @@ describe(processBackgroundImageWeb, () => {
   });
 
   test.each([
-    [{ x: 100, y: 50 }], // unequal axes cannot describe a circle
-    [{ x: '50%', y: '50%' }], // a circle radius cannot be a percentage
-  ])('throws for an invalid circle size %j', (size) => {
-    expect(() =>
+    [{ x: 100, y: 50 }, 'circle 100px'], // max(x, y)
+    [{ x: '100px', y: '50px' }, 'circle 100px'],
+    [{ x: '100', y: '100' }, 'circle 100px'],
+    [{ x: '50%', y: '50%' }, '50% 50%'], // no CSS spelling, degrades to an ellipse
+    [{ x: '50%', y: 100 }, '50% 100px'],
+  ])('serializes the circle size %j as %s', (size, expected) => {
+    expect(
       processBackgroundImageWeb([
         {
           type: 'radial-gradient',
@@ -90,7 +117,7 @@ describe(processBackgroundImageWeb, () => {
           colorStops: [{ color: 'red' }, { color: 'blue' }],
         },
       ])
-    ).toThrow();
+    ).toBe(`radial-gradient(${expected}, red, blue)`);
   });
 
   test('serializes multiple gradients', () => {

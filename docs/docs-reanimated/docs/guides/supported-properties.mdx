@@ -260,7 +260,9 @@ We highly recommend to use [the `boxShadow` property](https://reactnative.dev/bl
 
 ### Animating background image gradients
 
-The `backgroundImage` style property (linear and radial gradients) is available under this name since React Native 0.87. On older React Native versions use the `experimental_backgroundImage` property instead - both names are supported and animate the same way. Gradients interpolate smoothly when both keyframes use the same gradient type, direction kind, number of color stops and compatible units; otherwise the value changes discretely in the middle of the animation.
+The `backgroundImage` style property (linear and radial gradients) is available under this name since React Native 0.87. On older React Native versions use the `experimental_backgroundImage` property instead - both names are supported and animate the same way.
+
+Two gradients interpolate smoothly only when they line up: the same gradient type, the same number of color stops, and the same unit on every length. Angles, radial sizes and radial positions all interpolate, as long as the sizes and positions use the same units and the same edges. What has to match exactly is the corner keyword (e.g. `to top right`), the radial shape, and the extent keyword (e.g. `farthest-corner`). Anything else steps from one gradient to the other instead of interpolating: halfway between the surrounding keyframes in an animation, and at the very start of a transition, or halfway through it with [`transitionBehavior: 'allow-discrete'`](/docs/css-transitions/transition-behavior).
 
 ### Animating image tint color
 

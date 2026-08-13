@@ -34,6 +34,57 @@ bool hasGradientType(jsi::Runtime &rt, const jsi::Value &jsiValue, const char *g
   return type.isString() && type.asString(rt).utf8(rt) == gradientType;
 }
 
+/// A stop with no color is a transition hint, so a color CSSColor cannot
+/// represent has to reject the whole gradient rather than be serialized back
+/// as a hint.
+bool areColorStopsConstructible(const folly::dynamic &value) {
+  const auto stopsIt = value.find("colorStops");
+  if (stopsIt == value.items().end()) {
+    return true;
+  }
+  if (!stopsIt->second.isArray()) {
+    return false;
+  }
+
+  for (const auto &stop : stopsIt->second) {
+    if (!stop.isObject()) {
+      return false;
+    }
+    const auto colorIt = stop.find("color");
+    if (colorIt != stop.items().end() && !colorIt->second.isNull() && !CSSColor::canConstruct(colorIt->second)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool areColorStopsConstructible(jsi::Runtime &rt, const jsi::Value &jsiValue) {
+  const auto stops = jsiValue.asObject(rt).getProperty(rt, "colorStops");
+  if (stops.isUndefined() || stops.isNull()) {
+    return true;
+  }
+  if (!stops.isObject() || !stops.asObject(rt).isArray(rt)) {
+    return false;
+  }
+
+  const auto stopsArray = stops.asObject(rt).asArray(rt);
+  const auto stopsCount = stopsArray.size(rt);
+
+  for (size_t i = 0; i < stopsCount; ++i) {
+    const auto stop = stopsArray.getValueAtIndex(rt, i);
+    if (!stop.isObject()) {
+      return false;
+    }
+    const auto color = stop.asObject(rt).getProperty(rt, "color");
+    if (!color.isUndefined() && !color.isNull() && !CSSColor::canConstruct(rt, color)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 std::vector<GradientColorStop> colorStopsFromDynamic(const folly::dynamic &value) {
   std::vector<GradientColorStop> result;
 
@@ -206,11 +257,11 @@ CSSLinearGradient::CSSLinearGradient(const folly::dynamic &value) {
 }
 
 bool CSSLinearGradient::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  return hasGradientType(rt, jsiValue, LINEAR_GRADIENT_TYPE);
+  return hasGradientType(rt, jsiValue, LINEAR_GRADIENT_TYPE) && areColorStopsConstructible(rt, jsiValue);
 }
 
 bool CSSLinearGradient::canConstruct(const folly::dynamic &value) {
-  return hasGradientType(value, LINEAR_GRADIENT_TYPE);
+  return hasGradientType(value, LINEAR_GRADIENT_TYPE) && areColorStopsConstructible(value);
 }
 
 folly::dynamic CSSLinearGradient::toDynamic() const {
@@ -330,11 +381,11 @@ CSSRadialGradient::CSSRadialGradient(const folly::dynamic &value) {
 }
 
 bool CSSRadialGradient::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  return hasGradientType(rt, jsiValue, RADIAL_GRADIENT_TYPE);
+  return hasGradientType(rt, jsiValue, RADIAL_GRADIENT_TYPE) && areColorStopsConstructible(rt, jsiValue);
 }
 
 bool CSSRadialGradient::canConstruct(const folly::dynamic &value) {
-  return hasGradientType(value, RADIAL_GRADIENT_TYPE);
+  return hasGradientType(value, RADIAL_GRADIENT_TYPE) && areColorStopsConstructible(value);
 }
 
 folly::dynamic CSSRadialGradient::toDynamic() const {

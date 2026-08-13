@@ -219,11 +219,47 @@ describe(processBackgroundImage, () => {
       'linear-gradient(20%, red, blue)', // hint without a preceding color
       'radial-gradient(square, red, blue)', // invalid color
       'radial-gradient(ellipse 100px, red, blue)', // single size with ellipse
-      'radial-gradient(circle 50%, red, blue)', // circle with percentage radius
-      'radial-gradient(50%, red, blue)', // inferred circle with percentage radius
+      'radial-gradient(ellipse -50px 60px, red, blue)', // negative length size
     ])('throws for invalid input "%s"', (input) => {
       expect(() => processBackgroundImage(input)).toThrow();
     });
+
+    // Invalid CSS that React Native renders anyway - it must not start throwing
+    // once the same style is animated
+    test.each([
+      ['radial-gradient(circle 50%, red, blue)', { x: '50%', y: '50%' }],
+      ['radial-gradient(50%, red, blue)', { x: '50%', y: '50%' }],
+      ['radial-gradient(circle 50% 100px, red, blue)', { x: '50%', y: 100 }],
+      ['radial-gradient(circle 100px 50%, red, blue)', { x: 100, y: '50%' }],
+    ])('accepts the percentage circle radius in "%s"', (input, size) => {
+      expect(processBackgroundImage(input)).toEqual([
+        expect.objectContaining({
+          type: 'radial-gradient',
+          shape: 'circle',
+          size,
+        }),
+      ]);
+    });
+
+    test.each(['\t', '\v', '\f', '  '])(
+      'accepts %j between "to" and the direction keyword',
+      (whitespace) => {
+        expect(
+          processBackgroundImage(
+            `linear-gradient(to${whitespace}right, red, blue)`
+          )
+        ).toEqual([
+          {
+            type: 'linear-gradient',
+            direction: { type: 'angle', value: 90 },
+            colorStops: [
+              { color: 0xffff0000, position: null },
+              { color: 0xff0000ff, position: null },
+            ],
+          },
+        ]);
+      }
+    );
   });
 
   describe('when input is an array of objects', () => {
@@ -364,6 +400,38 @@ describe(processBackgroundImage, () => {
       [{ type: 'radial-gradient', shape: 'square', colorStops: [] }],
       [{ type: 'radial-gradient', size: 'huge', colorStops: [] }],
       [{ type: 'conic-gradient', colorStops: [] }],
+      // A transition hint must sit between two color stops
+      [
+        {
+          type: 'linear-gradient',
+          colorStops: [
+            { color: null, positions: ['20%'] },
+            { color: 'red' },
+            { color: 'blue' },
+          ],
+        },
+      ],
+      [
+        {
+          type: 'linear-gradient',
+          colorStops: [
+            { color: 'red' },
+            { color: 'blue' },
+            { color: null, positions: ['80%'] },
+          ],
+        },
+      ],
+      [
+        {
+          type: 'linear-gradient',
+          colorStops: [
+            { color: 'red' },
+            { color: null, positions: ['20%'] },
+            { color: null, positions: ['80%'] },
+            { color: 'blue' },
+          ],
+        },
+      ],
     ] as unknown as [BackgroundImageValue][])(
       'throws for invalid input %j',
       (input) => {

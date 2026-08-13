@@ -89,6 +89,7 @@ const WHITESPACE_NORMALIZE_REGEX = /\s+/g;
 
 const LINEAR_GRADIENT_ANGLE_UNIT_REGEX =
   /^([+-]?\d*\.?\d+)(deg|grad|rad|turn)$/;
+const LINEAR_GRADIENT_DIRECTION_PREFIX_REGEX = /^to\s/;
 
 const DEFAULT_LINEAR_GRADIENT_DIRECTION: ProcessedLinearGradientDirection = {
   type: 'angle',
@@ -255,6 +256,22 @@ function processColorStops(
     }
   }
 
+  // React Native does not fix up an edge stop with no color: iOS throws on a
+  // leading one and silently draws a trailing one as transparent.
+  for (let i = 0; i < processedColorStops.length; i++) {
+    const { color, position } = processedColorStops[i];
+    if (
+      color === null &&
+      (i === 0 ||
+        i === processedColorStops.length - 1 ||
+        processedColorStops[i - 1].color === null)
+    ) {
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidTransitionHint(position)}`
+      );
+    }
+  }
+
   return processedColorStops;
 }
 
@@ -358,7 +375,7 @@ function parseLinearGradientCSSString(
     }
     direction = { type: 'angle', value: parsedAngle };
     parts.shift();
-  } else if (trimmedDirection.startsWith('to ')) {
+  } else if (LINEAR_GRADIENT_DIRECTION_PREFIX_REGEX.test(trimmedDirection)) {
     const parsedDirection = getDirectionForKeyword(trimmedDirection);
     if (parsedDirection == null) {
       throw new Error(
@@ -633,18 +650,6 @@ function parseRadialGradientCSSString(
     if (hasExplicitSingleSize && hasExplicitShape && shape === 'ellipse') {
       // A single size can be used only with the circle shape
       throw invalidGradient();
-    }
-
-    if (
-      shape === 'circle' &&
-      typeof size === 'object' &&
-      (typeof size.x === 'string' || typeof size.y === 'string')
-    ) {
-      // A circle radius must be a <length>. Percentages are only valid for
-      // ellipses, so browsers reject the whole declaration.
-      throw new Error(
-        `[Reanimated] ${ERROR_MESSAGES.invalidGradientSize(size)}`
-      );
     }
   }
 

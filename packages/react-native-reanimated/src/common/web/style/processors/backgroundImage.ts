@@ -57,6 +57,60 @@ function serializeColorStops(
     .join(', ');
 }
 
+type RadialGradientPosition = NonNullable<RadialGradientValue['position']>;
+
+// A one-axis clause means something else in CSS: `at top 10%` is invalid and
+// `at left 10%` reads as x=0%, y=10% rather than the x=10%, y=50% native
+// resolves it to. Both axes are spelled out so the two agree.
+function serializeRadialGradientPosition({
+  top,
+  left,
+  bottom,
+  right,
+}: RadialGradientPosition): string {
+  if (top == null && left == null && bottom == null && right == null) {
+    return '';
+  }
+
+  const horizontal =
+    right != null && left == null
+      ? `right ${maybeAddSuffix(right, 'px')}`
+      : `left ${maybeAddSuffix(left ?? '50%', 'px')}`;
+  const vertical =
+    bottom != null && top == null
+      ? `bottom ${maybeAddSuffix(bottom, 'px')}`
+      : `top ${maybeAddSuffix(top ?? '50%', 'px')}`;
+
+  return `at ${horizontal} ${vertical}`;
+}
+
+function isPercentage(value: string | number): boolean {
+  return typeof value === 'string' && value.endsWith('%');
+}
+
+// CSS allows only one non-negative <length> as an explicit circle radius, while
+// React Native draws max(x, y). A percentage radius has no CSS spelling at all,
+// so it degrades to the equivalent ellipse rather than making the browser drop
+// the whole declaration.
+function serializeRadialGradientLengthSize(
+  shape: RadialGradientValue['shape'],
+  size: Exclude<NonNullable<RadialGradientValue['size']>, string>
+): string {
+  const radii = `${maybeAddSuffix(size.x, 'px')} ${maybeAddSuffix(size.y, 'px')}`;
+
+  if (shape !== 'circle') {
+    return shape ? `${shape} ${radii}` : radii;
+  }
+  if (isPercentage(size.x) || isPercentage(size.y)) {
+    return radii;
+  }
+  const radius = Math.max(
+    parseFloat(String(size.x)),
+    parseFloat(String(size.y))
+  );
+  return `circle ${maybeAddSuffix(radius, 'px')}`;
+}
+
 function serializeRadialGradientPrelude({
   shape,
   size,
@@ -64,36 +118,20 @@ function serializeRadialGradientPrelude({
 }: RadialGradientValue): string {
   const parts: string[] = [];
 
-  if (shape) {
-    parts.push(shape);
-  }
-  if (size) {
-    if (typeof size === 'string') {
+  if (size != null && typeof size === 'object') {
+    parts.push(serializeRadialGradientLengthSize(shape, size));
+  } else {
+    if (shape) {
+      parts.push(shape);
+    }
+    if (size) {
       parts.push(size);
-    } else if (shape === 'circle') {
-      // The CSS grammar allows only a single non-negative <length> as an
-      // explicit circle radius - two values describe an ellipse and a
-      // percentage radius is invalid, so browsers would reject the whole
-      // declaration.
-      const isPercent = typeof size.x === 'string' && size.x.endsWith('%');
-      if (size.x !== size.y || isPercent) {
-        throw new Error(
-          `[Reanimated] Invalid circle size ${JSON.stringify(size)} in a radial gradient. A circle radius must be a single length (e.g. 100 or "100px").`
-        );
-      }
-      parts.push(maybeAddSuffix(size.x, 'px'));
-    } else {
-      parts.push(
-        `${maybeAddSuffix(size.x, 'px')} ${maybeAddSuffix(size.y, 'px')}`
-      );
     }
   }
   if (position) {
-    const positionParts = Object.entries(position).map(
-      ([side, value]) => `${side} ${maybeAddSuffix(value, 'px')}`
-    );
-    if (positionParts.length > 0) {
-      parts.push(`at ${positionParts.join(' ')}`);
+    const serializedPosition = serializeRadialGradientPosition(position);
+    if (serializedPosition) {
+      parts.push(serializedPosition);
     }
   }
 
