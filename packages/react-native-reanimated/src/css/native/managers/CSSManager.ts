@@ -104,7 +104,7 @@ export default class CSSManager implements ICSSManager {
   }
 
   unmountCleanup(): void {
-    this.cssCallbacksManager?.detach();
+    this.cssCallbacksManager?.retire();
     this.cssAnimationsManager.unmountCleanup();
     this.cssTransitionsManager.unmountCleanup();
     this.cssPseudoStylesManager.unmountCleanup();

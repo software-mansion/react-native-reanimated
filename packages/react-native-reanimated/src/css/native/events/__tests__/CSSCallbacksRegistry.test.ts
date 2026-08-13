@@ -182,4 +182,41 @@ describe('cssCallbacksRegistry', () => {
 
     expect(sub.handleCSSEvent).not.toHaveBeenCalled();
   });
+
+  describe('retire', () => {
+    test('a retired subscriber still hears the batch emitted during teardown', () => {
+      const sub = subscriber();
+      cssCallbacksRegistry.register(1, sub);
+      cssCallbacksRegistry.retire(1, sub);
+
+      cssCallbacksRegistry.dispatch([event(1)]);
+
+      expect(sub.handleCSSEvent).toHaveBeenCalledTimes(1);
+    });
+
+    test('and stops hearing from the batch after that', () => {
+      const sub = subscriber();
+      cssCallbacksRegistry.register(1, sub);
+      cssCallbacksRegistry.retire(1, sub);
+
+      cssCallbacksRegistry.dispatch([event(1)]);
+      cssCallbacksRegistry.dispatch([event(1)]);
+
+      expect(sub.handleCSSEvent).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not disturb a subscriber still attached to the same tag', () => {
+      const outer = subscriber();
+      const inner = subscriber();
+      cssCallbacksRegistry.register(1, outer);
+      cssCallbacksRegistry.register(1, inner);
+      cssCallbacksRegistry.retire(1, outer);
+
+      cssCallbacksRegistry.dispatch([event(1)]);
+      cssCallbacksRegistry.dispatch([event(1)]);
+
+      expect(outer.handleCSSEvent).toHaveBeenCalledTimes(1);
+      expect(inner.handleCSSEvent).toHaveBeenCalledTimes(2);
+    });
+  });
 });

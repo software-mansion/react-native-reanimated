@@ -12,6 +12,9 @@ class CSSCallbacksRegistry {
     Set<CSSEventSubscriber>
   >();
 
+  /** Subscribers to unregister once the batch in flight has been delivered. */
+  private expiringByTag_ = new Map<number, Set<CSSEventSubscriber>>();
+
   register(viewTag: number, subscriber: CSSEventSubscriber): void {
     const subscribers = this.subscribersByTag_.get(viewTag);
     if (subscribers) {
@@ -33,7 +36,25 @@ class CSSCallbacksRegistry {
     }
   }
 
+  /**
+   * Unregisters a subscriber only after the next batch. The engine emits the
+   * cancel of an unmounting view while it tears down, but the batch carrying it
+   * is dispatched afterwards, so removing the subscriber now would drop it.
+   * Only called while a view unmounts, which never re-registers.
+   */
+  retire(viewTag: number, subscriber: CSSEventSubscriber): void {
+    const expiring = this.expiringByTag_.get(viewTag);
+    if (expiring) {
+      expiring.add(subscriber);
+    } else {
+      this.expiringByTag_.set(viewTag, new Set([subscriber]));
+    }
+  }
+
   dispatch(events: NativeCSSEvent[]): void {
+    const expiring = this.expiringByTag_;
+    this.expiringByTag_ = new Map();
+
     for (const event of events) {
       const subscribers = this.subscribersByTag_.get(event.tag);
       if (!subscribers) {
@@ -53,10 +74,17 @@ class CSSCallbacksRegistry {
         }
       }
     }
+
+    for (const [viewTag, subscribers] of expiring) {
+      for (const subscriber of subscribers) {
+        this.unregister(viewTag, subscriber);
+      }
+    }
   }
 
   clear(): void {
     this.subscribersByTag_.clear();
+    this.expiringByTag_.clear();
   }
 }
 
