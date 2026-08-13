@@ -87,7 +87,7 @@ class CSSPlatformTransitions {
 
   void retainEasing(int easingId);
 
-  /// The slot stays populated at zero references; it is only reclaimed under pressure.
+  /// The slot stays populated at zero references; another curve only takes it when it needs one.
   void releaseEasing(int easingId);
 
   std::unordered_map<Tag, std::unordered_map<std::string, ActiveTransition>> active_;
@@ -95,8 +95,6 @@ class CSSPlatformTransitions {
   /// Indexed by easing id: the curve occupying the slot, and how many properties route with it.
   std::vector<PlatformEasing> easingKeys_;
   std::vector<int> easingRefs_;
-  /// Slots at zero references, newest first. May name a slot since re-retained, so re-check.
-  std::vector<int> freeEasingIds_;
   AnimateFunction animate_;
   RemoveFunction remove_;
   DefineEasingFunction defineEasing_;

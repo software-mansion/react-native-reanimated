@@ -2,6 +2,8 @@
 
 #include <reanimated/CSS/easing/EasingConfigs.h>
 
+#include <algorithm>
+
 #include <variant>
 #include <vector>
 
@@ -68,19 +70,16 @@ int CSSPlatformTransitions::easingIdFor(const PlatformEasing &easing) {
   }
 
   // Take back a slot nothing routes with before adding one, so the table settles at the most
-  // curves ever animating at once. Freed ids can be stale, hence the reference re-check.
-  int easingId = -1;
-  while (!freeEasingIds_.empty()) {
-    const int candidate = freeEasingIds_.back();
-    freeEasingIds_.pop_back();
-    if (easingRefs_[candidate] == 0) {
-      easingId = candidate;
-      easingIds_.erase(easingKeys_[easingId]);
-      easingKeys_[easingId] = easing;
-      break;
-    }
-  }
-  if (easingId < 0) {
+  // curves ever animating at once. Scanning rather than tracking freed ids also reclaims a slot
+  // interned for a start that then failed, which never passed through releaseEasing. Only runs
+  // when a curve is seen for the first time.
+  const auto unused = std::find(easingRefs_.begin(), easingRefs_.end(), 0);
+  int easingId;
+  if (unused != easingRefs_.end()) {
+    easingId = static_cast<int>(std::distance(easingRefs_.begin(), unused));
+    easingIds_.erase(easingKeys_[easingId]);
+    easingKeys_[easingId] = easing;
+  } else {
     easingId = static_cast<int>(easingKeys_.size());
     easingKeys_.push_back(easing);
     easingRefs_.push_back(0);
@@ -96,10 +95,7 @@ void CSSPlatformTransitions::retainEasing(const int easingId) {
 }
 
 void CSSPlatformTransitions::releaseEasing(const int easingId) {
-  // Still cached at zero references: only a curve needing a slot actually takes it.
-  if (--easingRefs_[easingId] == 0) {
-    freeEasingIds_.push_back(easingId);
-  }
+  --easingRefs_[easingId];
 }
 
 const CSSPlatformTransitions::ActiveTransition *CSSPlatformTransitions::activeTransitionFor(
@@ -194,9 +190,7 @@ void CSSPlatformTransitions::removeTransition(const Tag viewTag, const std::stri
   if (propertiesIt != active_.end()) {
     const auto activeIt = propertiesIt->second.find(propertyName);
     if (activeIt != propertiesIt->second.end()) {
-      if (activeIt->second.easingId >= 0) {
-        releaseEasing(activeIt->second.easingId);
-      }
+      releaseEasing(activeIt->second.easingId);
       propertiesIt->second.erase(activeIt);
     }
     if (propertiesIt->second.empty()) {
