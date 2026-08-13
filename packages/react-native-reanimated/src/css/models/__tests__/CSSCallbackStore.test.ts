@@ -1,4 +1,5 @@
 'use strict';
+import type { CSSCallbackPresenceChange } from '../CSSCallbackStore';
 import CSSCallbackStore from '../CSSCallbackStore';
 
 type Prop = 'onFoo' | 'onBar';
@@ -22,11 +23,11 @@ class TestStore extends CSSCallbackStore<Prop, Payload> {
     this.invoke(prop, payload);
   }
 
-  protected onPresenceChanged(
-    present: ReadonlySet<Prop>,
-    added: readonly Prop[],
-    removed: readonly Prop[]
-  ): void {
+  protected onPresenceChanged({
+    present,
+    added,
+    removed,
+  }: CSSCallbackPresenceChange<Prop>): void {
     this.changes.push({
       added: [...added],
       present: [...present],

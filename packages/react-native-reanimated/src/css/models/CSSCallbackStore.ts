@@ -5,6 +5,17 @@ type CSSCallbackMap<Prop extends string, Payload> = Partial<
 >;
 
 /**
+ * Which callbacks a sync changed, and which are present after it. Subclasses
+ * need different parts of this, so it arrives as one object rather than as
+ * positional arguments that half of them would have to name and ignore.
+ */
+export type CSSCallbackPresenceChange<Prop extends string> = {
+  present: ReadonlySet<Prop>;
+  added: readonly Prop[];
+  removed: readonly Prop[];
+};
+
+/**
  * Holds the user's CSS callbacks and tracks which of them are present.
  *
  * Callbacks are read from a mutable slot at fire time, so a callback replaced
@@ -40,7 +51,7 @@ export default abstract class CSSCallbackStore<Prop extends string, Payload> {
     }
 
     if (added.length > 0 || removed.length > 0) {
-      this.onPresenceChanged(this.present, added, removed);
+      this.onPresenceChanged({ present: this.present, added, removed });
     }
   }
 
@@ -52,14 +63,7 @@ export default abstract class CSSCallbackStore<Prop extends string, Payload> {
     this.callbacks[prop]?.(payload);
   }
 
-  /**
-   * The set comes first because a subclass whose subscription is derived from
-   * all of the present props can then take it alone, and leave the rest of the
-   * signature off.
-   */
   protected abstract onPresenceChanged(
-    present: ReadonlySet<Prop>,
-    added: readonly Prop[],
-    removed: readonly Prop[]
+    change: CSSCallbackPresenceChange<Prop>
   ): void;
 }
