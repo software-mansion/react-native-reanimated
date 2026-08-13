@@ -25,6 +25,8 @@ struct PlatformEasing {
   Type type;
   std::vector<float> pointsX;
   std::vector<float> pointsY;
+
+  bool operator==(const PlatformEasing &other) const = default;
 };
 
 class CSSPlatformTransitions {
@@ -72,27 +74,16 @@ class CSSPlatformTransitions {
     css::CSSTransitionPropertySettings settings;
   };
 
-  struct EasingKey {
-    std::uint8_t type;
-    std::vector<float> pointsX;
-    std::vector<float> pointsY;
-
-    bool operator==(const EasingKey &other) const = default;
-  };
-
-  struct EasingKeyHash {
-    std::size_t operator()(const EasingKey &key) const;
-  };
-
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
 
-  /// Interns the curve, registering it on first sight. Returns nullopt once the
-  /// table is full (an app computing easing points at runtime could otherwise grow
-  /// it forever); such transitions fall back to the loop, which plays any easing.
+  /// Interns the curve, registering it on first sight; the id is its index. Returns
+  /// nullopt once the table is full (an app computing easing points at runtime could
+  /// otherwise grow it forever); such transitions fall back to the loop, which plays
+  /// any easing.
   std::optional<int> easingIdFor(const PlatformEasing &easing);
 
   std::unordered_map<Tag, std::unordered_map<std::string, ActiveTransition>> active_;
-  std::unordered_map<EasingKey, int, EasingKeyHash> easingIds_;
+  std::vector<PlatformEasing> internedEasings_;
   AnimateFunction animate_;
   RemoveFunction remove_;
   DefineEasingFunction defineEasing_;

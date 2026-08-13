@@ -43,20 +43,6 @@ constexpr size_t kMaxInternedEasings = 256;
 
 } // namespace
 
-std::size_t CSSPlatformTransitions::EasingKeyHash::operator()(const EasingKey &key) const {
-  std::size_t seed = std::hash<int>{}(key.type);
-  const auto combine = [&seed](const float value) {
-    seed ^= std::hash<float>{}(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-  };
-  for (const float value : key.pointsX) {
-    combine(value);
-  }
-  for (const float value : key.pointsY) {
-    combine(value);
-  }
-  return seed;
-}
-
 CSSPlatformTransitions::CSSPlatformTransitions(
     AnimateFunction animate,
     RemoveFunction remove,
@@ -64,17 +50,18 @@ CSSPlatformTransitions::CSSPlatformTransitions(
     : animate_(std::move(animate)), remove_(std::move(remove)), defineEasing_(std::move(defineEasing)) {}
 
 std::optional<int> CSSPlatformTransitions::easingIdFor(const PlatformEasing &easing) {
-  EasingKey key{static_cast<std::uint8_t>(easing.type), easing.pointsX, easing.pointsY};
-  const auto it = easingIds_.find(key);
-  if (it != easingIds_.end()) {
-    return it->second;
+  // A handful of curves in practice, so a scan beats hashing the point lists.
+  for (size_t i = 0; i < internedEasings_.size(); i++) {
+    if (internedEasings_[i] == easing) {
+      return static_cast<int>(i);
+    }
   }
-  if (easingIds_.size() >= kMaxInternedEasings) {
+  if (internedEasings_.size() >= kMaxInternedEasings) {
     return std::nullopt;
   }
-  const int easingId = static_cast<int>(easingIds_.size());
+  const int easingId = static_cast<int>(internedEasings_.size());
   defineEasing_(easingId, static_cast<int>(easing.type), easing.pointsX, easing.pointsY);
-  easingIds_.emplace(std::move(key), easingId);
+  internedEasings_.push_back(easing);
   return easingId;
 }
 
