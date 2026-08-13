@@ -25,7 +25,7 @@ class RetainingSerializableStore {
 
   struct Slot {
     std::atomic<jsi::Runtime *> runtime{nullptr};
-    jsi::Value value{jsi::Value::undefined()};
+    std::unique_ptr<jsi::Value> value{};
   };
 
   std::array<Slot, kSlotsPerChunk> slots_{};
@@ -36,7 +36,7 @@ class RetainingSerializableStore {
   const jsi::Value *find(jsi::Runtime *rt) {
     for (auto &slot : slots_) {
       if (slot.runtime.load(std::memory_order_acquire) == rt) {
-        return &slot.value;
+        return slot.value.get();
       }
     }
     if (auto *next = nextChunk_.load(std::memory_order_acquire)) {
@@ -45,7 +45,7 @@ class RetainingSerializableStore {
     return nullptr;
   }
 
-  void store(jsi::Runtime *rt, jsi::Value value) {
+  void store(jsi::Runtime *rt, std::unique_ptr<jsi::Value> value) {
     for (auto &slot : slots_) {
       if (slot.runtime.load(std::memory_order_relaxed) != nullptr) {
         continue;
@@ -72,13 +72,19 @@ class RetainingSerializableStore {
  public:
   RetainingSerializableStore() = default;
 
+  ~RetainingSerializableStore() {
+    for (auto &slot : slots_) {
+      cleanupRuntimeAware(slot.runtime.load(std::memory_order_relaxed), slot.value);
+    }
+  }
+
   jsi::Value getOrStore(jsi::Runtime &rt, TSerializable &serializable) {
     if (const auto *cachedValue = find(&rt)) {
       return jsi::Value(rt, *cachedValue);
     }
 
     auto jsValue = serializable.TSerializable::toJSValue(rt);
-    store(&rt, jsi::Value(rt, jsValue));
+    store(&rt, std::make_unique<jsi::Value>(rt, jsValue));
 
     return jsValue;
   }
