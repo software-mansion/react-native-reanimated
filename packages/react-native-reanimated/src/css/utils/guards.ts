@@ -95,8 +95,6 @@ export const isStepsModifier = (value: string): value is StepsModifier => {
 export const isCSSConfigProp = (key: string): key is CSSConfigProp =>
   isTransitionProp(key) || isAnimationProp(key);
 
-// A set rather than an object table: this is asked about arbitrary user prop
-// names, and every object literal answers true for `'toString' in it`.
 export const isCSSCallbackProp = (key: string): key is CSSCallbackProp =>
   CSS_CALLBACK_PROP_SET.has(key);
 

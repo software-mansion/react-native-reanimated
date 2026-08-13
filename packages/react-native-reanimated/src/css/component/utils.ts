@@ -24,8 +24,6 @@ function filterStyleRecursive(style: StyleProp<CSSStyle>): StyleProp<CSSStyle> {
   const styleObject = style as UnknownRecord;
   const result: UnknownRecord = {};
 
-  // `for...in` rather than `Object.entries`, which allocates a pair array per
-  // key on a walk that runs for every animated view on every render.
   for (const key in styleObject) {
     if (isCSSConfigProp(key)) {
       continue;
@@ -61,8 +59,6 @@ function omitCSSCallbackProps(props: UnknownRecord): UnknownRecord {
  * lifecycle callbacks are ours to act on, so neither reaches the host view.
  */
 export function filterCSSProps<P extends object>(props: P): P {
-  // A view with no callbacks has nothing to drop, so it is copied in one go
-  // instead of being rebuilt key by key on every render.
   const result = CSS_CALLBACK_PROPS.some((prop) => prop in props)
     ? omitCSSCallbackProps(props as UnknownRecord)
     : ({ ...props } as UnknownRecord);
