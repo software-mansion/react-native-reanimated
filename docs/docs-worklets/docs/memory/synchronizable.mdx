@@ -92,7 +92,7 @@ The value provided to `setBlocking` is serialized automatically.
 
 ### setDirty
 
-Available only on Synchronizables created with the [`fixedType` option](/docs/memory/createSynchronizable#config). Sets the value without any locking. It never blocks and doesn't respect the explicit lock, so it can interleave with a transaction. When multiple threads write concurrently, the last write wins. Accepts a plain value only, not a setter function.
+Available only on Synchronizables created with the [`fixedType` option](/docs/memory/createSynchronizable#config). Non-exclusively obtains the Synchronizable and sets it to the provided value, potentially blocking if `getBlocking` or `setBlocking` are being executed on another thread. It doesn't block when `setDirty` is being executed on another thread, therefore could result in a [lost update](https://en.wikipedia.org/wiki/Write%E2%80%93write_conflict). Accepts a plain value only, not a setter function.
 
 ### lock
 

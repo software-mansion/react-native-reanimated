@@ -2,16 +2,11 @@
 #include <worklets/SharedItems/SynchronizableFixed.h>
 
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 #include <variant>
 
 namespace worklets {
-
-SynchronizableFixed::SynchronizableFixed(double value)
-    : Synchronizable(true), value_(std::in_place_type<std::atomic<double>>, value) {}
-
-SynchronizableFixed::SynchronizableFixed(bool value)
-    : Synchronizable(true), value_(std::in_place_type<std::atomic<bool>>, value) {}
 
 std::shared_ptr<SynchronizableFixed> SynchronizableFixed::make(const jsi::Value &initialValue) {
   if (initialValue.isBool()) {
@@ -35,7 +30,9 @@ jsi::Value SynchronizableFixed::getBlocking(jsi::Runtime &) {
 }
 
 void SynchronizableFixed::setDirty(jsi::Runtime &, const jsi::Value &value) {
+  setDirtyBefore();
   storeChecked(value);
+  setDirtyAfter();
 }
 
 void SynchronizableFixed::setBlocking(jsi::Runtime &, const jsi::Value &value) {

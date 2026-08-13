@@ -11,9 +11,11 @@ namespace worklets {
 
 class SynchronizableFixed final : public Synchronizable {
  public:
-  explicit SynchronizableFixed(double value);
+  explicit SynchronizableFixed(double value)
+      : Synchronizable(true), value_(std::in_place_type<std::atomic<double>>, value) {}
 
-  explicit SynchronizableFixed(bool value);
+  explicit SynchronizableFixed(bool value)
+      : Synchronizable(true), value_(std::in_place_type<std::atomic<bool>>, value) {}
 
   static std::shared_ptr<SynchronizableFixed> make(const jsi::Value &initialValue);
 
