@@ -12,17 +12,21 @@ permissions:
   contents: read
 
 jobs:
-  ios:
+  ios-remote:
     if: github.repository == 'software-mansion/react-native-reanimated'
     strategy:
       fail-fast: false
       matrix:
         configuration: [DebugRuntimeTests, ReleaseRuntimeTests]
         bundleMode: [false, true]
-    uses: ./.github/workflows/runtime-tests-ios.yml
+    uses: ./.github/workflows/runtime-tests-ios-remote.yml
     with:
       configuration: ${{ matrix.configuration }}
       bundleMode: ${{ matrix.bundleMode }}
+    secrets:
+      # Explicit secrets match contract declared in runtime-tests-ios-remote.yaml
+      SIM_ROUTER_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME }}
+      SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
 
   android:
     if: github.repository == 'software-mansion/react-native-reanimated'
