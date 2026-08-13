@@ -44,7 +44,7 @@ export default class CSSCallbacksManager
    * for the unmounting view still reaches the user.
    */
   retire(): void {
-    if (this.viewTag !== NO_VIEW_TAG) {
+    if (this.viewTag !== -1) {
       cssCallbacksRegistry.retire(this.viewTag, this);
     }
   }
