@@ -17,8 +17,7 @@ function patchFile(filePath: string, find: string, replace: string): void {
 }
 
 function patchExpoModulesCore(): void {
-  const iosSourcePath =
-    'ios/WorkletsAdapter/ExpoWorkletsBridgeProvider.mm';
+  const iosSourcePath = 'ios/WorkletsAdapter/ExpoWorkletsBridgeProvider.mm';
   const androidSourcePath =
     'android/src/main/cpp/worklets/WorkletJSCallInvoker.cpp';
   const candidates = [
