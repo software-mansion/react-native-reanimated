@@ -8,7 +8,10 @@ import android.util.FloatProperty
 import android.view.Choreographer
 import android.view.View
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.UIManager
+import com.facebook.react.bridge.UIManagerListener
 import com.facebook.react.bridge.UiThreadUtil
+import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.uimanager.IllegalViewOperationException
 import java.lang.ref.WeakReference
@@ -19,6 +22,34 @@ internal class CSSPlatformTransitionsManager(
     private val animationTimestamp: () -> Long,
 ) {
     private val animators = HashMap<Key, RunningTransition>()
+
+    /**
+     * React can overwrite an animated value only on frames where it wrote props, so the
+     * pre-draw repair is skipped on all others. Everything here runs on the UI thread.
+     */
+    private var reactWroteSinceLastDraw = true
+
+    @OptIn(UnstableReactNativeAPI::class)
+    private val mountListener =
+        object : UIManagerListener {
+            override fun willDispatchViewUpdates(uiManager: UIManager) = Unit
+
+            override fun willMountItems(uiManager: UIManager) = Unit
+
+            override fun didMountItems(uiManager: UIManager) {
+                reactWroteSinceLastDraw = true
+            }
+
+            override fun didDispatchMountItems(uiManager: UIManager) = Unit
+
+            override fun didScheduleMountItems(uiManager: UIManager) = Unit
+        }
+
+    init {
+        @OptIn(UnstableReactNativeAPI::class)
+        fabricUIManager.addUIManagerEventListener(mountListener)
+    }
+
     private val reconciler = CSSPlatformTransitionReconciler(::repairClobberedValues)
     private val startTokens = HashMap<Key, Long>()
 
@@ -106,6 +137,8 @@ internal class CSSPlatformTransitionsManager(
         // Set before posting: a start already queued would otherwise register a new
         // animator and listener behind the cleanup.
         invalidated = true
+        @OptIn(UnstableReactNativeAPI::class)
+        fabricUIManager.removeUIManagerEventListener(mountListener)
         UiThreadUtil.runOnUiThread {
             startTokens.clear()
             // Snapshot first: cancel() runs onAnimationEnd, which reads the map.
@@ -200,8 +233,15 @@ internal class CSSPlatformTransitionsManager(
         reconciler.track(view)
     }
 
+    /** Synchronous prop writes run their mount item inline, so no listener reports them. */
+    fun onPropsWrittenSynchronously() {
+        reactWroteSinceLastDraw = true
+    }
+
     /** Re-asserts each animator's own value wherever a commit overwrote it. */
     private fun repairClobberedValues(): Boolean {
+        if (!reactWroteSinceLastDraw) return animators.isNotEmpty()
+        reactWroteSinceLastDraw = false
         animators.values.forEach { running ->
             // target is held weakly, so read the View through it rather than keeping one.
             val view = running.animator.target as? View ?: return@forEach
