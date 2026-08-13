@@ -343,14 +343,11 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {
-    return this.#workletsModuleProxy.createSynchronizable(value);
-  }
-
-  createSynchronizableFixed<TValue extends number | boolean>(
-    value: TValue
+  createSynchronizable<TValue>(
+    value: SerializableRef<TValue> | TValue,
+    isFixed: boolean
   ): SynchronizableRef<TValue> {
-    return this.#workletsModuleProxy.createSynchronizableFixed(value);
+    return this.#workletsModuleProxy.createSynchronizable(value, isFixed);
   }
 
   synchronizableGetDirty<TValue>(

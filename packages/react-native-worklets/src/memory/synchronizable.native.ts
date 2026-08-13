@@ -6,7 +6,6 @@ import type {
   FixedSynchronizable,
   Synchronizable,
   SynchronizableConfig,
-  SynchronizableRef,
 } from './types';
 
 export function createSynchronizable<TValue extends number | boolean>(
@@ -35,13 +34,10 @@ export function createSynchronizable<TValue = unknown>(
     );
   }
 
-  const synchronizableRef = (
+  const synchronizableRef = WorkletsModule.createSynchronizable(
+    isFixed ? initialValue : createSerializable(initialValue),
     isFixed
-      ? WorkletsModule.createSynchronizableFixed(
-          initialValue as number | boolean
-        )
-      : WorkletsModule.createSynchronizable(createSerializable(initialValue))
-  ) as SynchronizableRef<TValue>;
+  );
 
   return globalThis.__synchronizableUnpacker(
     synchronizableRef,

@@ -598,16 +598,13 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             /* value */ at<1>(args).asBool());
       });
 
-  jsi_utils::addMethod<1>(
-      rt, obj, "createSynchronizable", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+  jsi_utils::addMethod<2>(
+      rt, obj, "createSynchronizable", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        if (at<1>(args).asBool()) {
+          return SerializableJSRef::newNativeStateObject(rt, SynchronizableFixed::make(at<0>(args)));
+        }
         auto initial = extractSerializableOrThrow(rt, at<0>(args), "[Worklets] Value must be a Serializable.");
-        auto synchronizable = std::make_shared<SynchronizableDynamic>(initial);
-        return SerializableJSRef::newNativeStateObject(rt, synchronizable);
-      });
-
-  jsi_utils::addMethod<1>(
-      rt, obj, "createSynchronizableFixed", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        return SerializableJSRef::newNativeStateObject(rt, SynchronizableFixed::make(at<0>(args)));
+        return SerializableJSRef::newNativeStateObject(rt, std::make_shared<SynchronizableDynamic>(initial));
       });
 
   jsi_utils::addMethod<1>(

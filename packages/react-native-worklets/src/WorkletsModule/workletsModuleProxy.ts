@@ -197,10 +197,9 @@ export interface WorkletsModuleProxy {
 
   reportFatalErrorOnJS(message: string, stack: string, name: string): void;
 
-  createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue>;
-
-  createSynchronizableFixed<TValue extends number | boolean>(
-    value: TValue
+  createSynchronizable<TValue>(
+    value: SerializableRef<TValue> | TValue,
+    isFixed: boolean
   ): SynchronizableRef<TValue>;
 
   synchronizableGetDirty<TValue>(
