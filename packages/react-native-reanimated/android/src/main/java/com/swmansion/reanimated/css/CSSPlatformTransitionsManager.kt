@@ -108,9 +108,39 @@ internal class CSSPlatformTransitionsManager(
         easingId: Int,
         persistent: Boolean,
     ): Boolean {
+        val interpolator = easingFor(easingId) ?: return false
+        return animateWith(viewTag, propertyId, fromValue, toValue, durationMs, startTimestampMs, interpolator, persistent)
+    }
+
+    /** For a start the C++ interner had no slot for: same animation, just an uncached curve. */
+    fun animateTransitionWithEasing(
+        viewTag: Int,
+        propertyId: Int,
+        fromValue: Double,
+        toValue: Double,
+        durationMs: Double,
+        startTimestampMs: Double,
+        easingType: Int,
+        easingPointsX: FloatArray,
+        easingPointsY: FloatArray,
+        persistent: Boolean,
+    ): Boolean {
+        val interpolator = CSSEasing.interpolator(easingType, easingPointsX, easingPointsY)
+        return animateWith(viewTag, propertyId, fromValue, toValue, durationMs, startTimestampMs, interpolator, persistent)
+    }
+
+    private fun animateWith(
+        viewTag: Int,
+        propertyId: Int,
+        fromValue: Double,
+        toValue: Double,
+        durationMs: Double,
+        startTimestampMs: Double,
+        interpolator: TimeInterpolator,
+        persistent: Boolean,
+    ): Boolean {
         if (invalidated) return false
         val writer = cssPropertyWriterFor(propertyId) ?: return false
-        val interpolator = easingFor(easingId) ?: return false
         val context = reactContext.get() ?: return false
         val scale = DurationScale.effectiveScale(context)
         if (scale <= 0f) return false

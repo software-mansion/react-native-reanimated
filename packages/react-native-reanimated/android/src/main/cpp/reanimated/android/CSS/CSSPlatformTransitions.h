@@ -48,11 +48,29 @@ class CSSPlatformTransitions {
       bool persistent)>;
   using RemoveFunction = std::function<void(int viewTag, int propertyId)>;
 
+  /// Carries the curve with the transition, for the rare start that finds no interning slot.
+  /// The platform still plays it; only the marshalling saving is lost.
+  using AnimateWithEasingFunction = std::function<bool(
+      int viewTag,
+      int propertyId,
+      double fromValue,
+      double toValue,
+      double durationMs,
+      double startTimestampMs,
+      int easingType,
+      const std::vector<float> &pointsX,
+      const std::vector<float> &pointsY,
+      bool persistent)>;
+
   /// Registers a curve on the platform under an id.
   using DefineEasingFunction =
       std::function<void(int easingId, int type, const std::vector<float> &pointsX, const std::vector<float> &pointsY)>;
 
-  CSSPlatformTransitions(AnimateFunction animate, RemoveFunction remove, DefineEasingFunction defineEasing);
+  CSSPlatformTransitions(
+      AnimateFunction animate,
+      AnimateWithEasingFunction animateWithEasing,
+      RemoveFunction remove,
+      DefineEasingFunction defineEasing);
 
   /// A null `settings` marks the pseudo-selector toggle path, which carries none of
   /// its own and reuses whatever the last config apply stored. A settings-only config
@@ -74,7 +92,8 @@ class CSSPlatformTransitions {
     css::PlatformValue adjustedEnd;
     css::ReversingState reversing;
     css::CSSTransitionPropertySettings settings;
-    /// Keeps the curve's slot alive for as long as this property is routed.
+    /// Keeps the curve's slot alive for as long as this property is routed, or -1 when the
+    /// table was full and the curve travelled with the start instead of being interned.
     int easingId;
   };
 
@@ -83,7 +102,7 @@ class CSSPlatformTransitions {
   /// Interns the curve, registering it with the platform on first sight. An unused curve stays
   /// cached so a screen returning to it reuses the flattened interpolator; a full table instead
   /// reclaims the slot of one nothing routes any more. Returns nullopt only when all
-  /// `kMaxInternedEasings` are simultaneously in use, and that property then runs on the loop.
+  /// `kMaxInternedEasings` are simultaneously in use, and the curve then travels with the start.
   std::optional<int> easingIdFor(const PlatformEasing &easing);
 
   void retainEasing(int easingId);
@@ -97,6 +116,7 @@ class CSSPlatformTransitions {
   std::vector<PlatformEasing> easingKeys_;
   std::vector<int> easingRefs_;
   AnimateFunction animate_;
+  AnimateWithEasingFunction animateWithEasing_;
   RemoveFunction remove_;
   DefineEasingFunction defineEasing_;
 };

@@ -47,9 +47,13 @@ constexpr size_t kMaxInternedEasings = 256;
 
 CSSPlatformTransitions::CSSPlatformTransitions(
     AnimateFunction animate,
+    AnimateWithEasingFunction animateWithEasing,
     RemoveFunction remove,
     DefineEasingFunction defineEasing)
-    : animate_(std::move(animate)), remove_(std::move(remove)), defineEasing_(std::move(defineEasing)) {}
+    : animate_(std::move(animate)),
+      animateWithEasing_(std::move(animateWithEasing)),
+      remove_(std::move(remove)),
+      defineEasing_(std::move(defineEasing)) {}
 
 std::size_t PlatformEasingHash::operator()(const PlatformEasing &easing) const {
   std::size_t seed = std::hash<std::uint8_t>{}(static_cast<std::uint8_t>(easing.type));
@@ -162,31 +166,49 @@ bool CSSPlatformTransitions::applyTransition(
     adjustedStart = active->adjustedEnd;
   }
 
-  const auto easingId = easingIdFor(toPlatformEasing(resolvedSettings.easingConfig));
-  if (!easingId) {
-    return false;
-  }
+  const auto easing = toPlatformEasing(resolvedSettings.easingConfig);
+  const auto easingId = easingIdFor(easing);
 
-  if (!animate_(
-          static_cast<int>(viewTag),
-          *propertyId,
-          *from,
-          *to,
-          reversing.duration,
-          reversing.startTimestamp,
-          *easingId,
-          persistent)) {
+  bool started;
+  if (easingId.has_value()) {
+    started = animate_(
+        static_cast<int>(viewTag),
+        *propertyId,
+        *from,
+        *to,
+        reversing.duration,
+        reversing.startTimestamp,
+        *easingId,
+        persistent);
+  } else {
+    // An id is only an optimisation, so a full table sends the curve along rather than
+    // handing a platform-animatable property back to the loop.
+    started = animateWithEasing_(
+        static_cast<int>(viewTag),
+        *propertyId,
+        *from,
+        *to,
+        reversing.duration,
+        reversing.startTimestamp,
+        static_cast<int>(easing.type),
+        easing.pointsX,
+        easing.pointsY,
+        persistent);
+  }
+  if (!started) {
     return false;
   }
 
   // Retain before releasing, so replacing a transition with the same curve never frees it.
-  retainEasing(*easingId);
+  if (easingId.has_value()) {
+    retainEasing(*easingId);
+  }
   if (replacedEasingId >= 0) {
     releaseEasing(replacedEasingId);
   }
 
   active_[viewTag][propertyName] =
-      ActiveTransition{adjustedStart, toValue, std::move(reversing), resolvedSettings, *easingId};
+      ActiveTransition{adjustedStart, toValue, std::move(reversing), resolvedSettings, easingId.value_or(-1)};
   return true;
 }
 
@@ -195,7 +217,9 @@ void CSSPlatformTransitions::removeTransition(const Tag viewTag, const std::stri
   if (propertiesIt != active_.end()) {
     const auto activeIt = propertiesIt->second.find(propertyName);
     if (activeIt != propertiesIt->second.end()) {
-      releaseEasing(activeIt->second.easingId);
+      if (activeIt->second.easingId >= 0) {
+        releaseEasing(activeIt->second.easingId);
+      }
       propertiesIt->second.erase(activeIt);
     }
     if (propertiesIt->second.empty()) {

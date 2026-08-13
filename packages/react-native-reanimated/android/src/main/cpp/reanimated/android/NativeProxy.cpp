@@ -272,6 +272,46 @@ bool NativeProxy::cssAnimateTransition(
              static_cast<jboolean>(persistent)) != JNI_FALSE;
 }
 
+bool NativeProxy::cssAnimateTransitionWithEasing(
+    const int viewTag,
+    const int propertyId,
+    const double fromValue,
+    const double toValue,
+    const double durationMs,
+    const double startTimestampMs,
+    const int easingType,
+    const std::vector<float> &pointsX,
+    const std::vector<float> &pointsY,
+    const bool persistent) {
+  static const auto method = getJniMethod<jboolean(
+      int,
+      int,
+      double,
+      double,
+      double,
+      double,
+      int,
+      jni::alias_ref<jni::JArrayFloat>,
+      jni::alias_ref<jni::JArrayFloat>,
+      jboolean)>("cssAnimateTransitionWithEasing");
+  auto jPointsX = jni::JArrayFloat::newArray(pointsX.size());
+  jPointsX->setRegion(0, pointsX.size(), pointsX.data());
+  auto jPointsY = jni::JArrayFloat::newArray(pointsY.size());
+  jPointsY->setRegion(0, pointsY.size(), pointsY.data());
+  return method(
+             javaPart_.get(),
+             viewTag,
+             propertyId,
+             fromValue,
+             toValue,
+             durationMs,
+             startTimestampMs,
+             easingType,
+             jPointsX,
+             jPointsY,
+             static_cast<jboolean>(persistent)) != JNI_FALSE;
+}
+
 void NativeProxy::cssRemoveTransition(const int viewTag, const int propertyId) {
   static const auto method = getJniMethod<void(int, int)>("cssRemoveTransition");
   method(javaPart_.get(), viewTag, propertyId);
@@ -379,6 +419,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   // memory.
   auto cssPlatformTransitions = std::make_shared<CSSPlatformTransitions>(
       bindThis(&NativeProxy::cssAnimateTransition),
+      bindThis(&NativeProxy::cssAnimateTransitionWithEasing),
       bindThis(&NativeProxy::cssRemoveTransition),
       bindThis(&NativeProxy::cssDefineEasing));
 
