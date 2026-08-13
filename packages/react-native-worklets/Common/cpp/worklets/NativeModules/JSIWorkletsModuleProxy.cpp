@@ -8,6 +8,7 @@
 #include <worklets/SharedItems/SerializableRemoteFunction.h>
 #include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
+#include <worklets/SharedItems/SynchronizableDynamic.h>
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
@@ -599,27 +600,23 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   jsi_utils::addMethod<1>(
       rt, obj, "createSynchronizable", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         auto initial = extractSerializableOrThrow(rt, at<0>(args), "[Worklets] Value must be a Serializable.");
-        auto synchronizable = std::make_shared<Synchronizable>(initial);
+        auto synchronizable = std::make_shared<SynchronizableDynamic>(initial);
         return SerializableJSRef::newNativeStateObject(rt, synchronizable);
       });
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableGetDirty", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto synchronizable = extractSynchronizableOrThrow(rt, at<0>(args));
-        return synchronizable->getDirty()->toJSValue(rt);
+        return extractSynchronizableOrThrow(rt, at<0>(args))->getDirty(rt);
       });
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableGetBlocking", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto synchronizable = extractSynchronizableOrThrow(rt, at<0>(args));
-        return synchronizable->getBlocking()->toJSValue(rt);
+        return extractSynchronizableOrThrow(rt, at<0>(args))->getBlocking(rt);
       });
 
   jsi_utils::addMethod<2>(
       rt, obj, "synchronizableSetBlocking", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        auto synchronizable = extractSynchronizableOrThrow(rt, at<0>(args));
-        auto newValue = extractSerializableOrThrow(rt, at<1>(args), "[Worklets] Value must be a Serializable.");
-        synchronizable->setBlocking(newValue);
+        extractSynchronizableOrThrow(rt, at<0>(args))->setBlocking(rt, at<1>(args));
       });
 
   jsi_utils::addMethod<1>(
