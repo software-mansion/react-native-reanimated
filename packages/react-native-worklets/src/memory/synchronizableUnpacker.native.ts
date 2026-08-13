@@ -24,6 +24,9 @@ export function installSynchronizableUnpacker() {
   ): Synchronizable<TValue> {
     const synchronizable =
       synchronizableRef as unknown as Synchronizable<TValue>;
+    const fixedRef = synchronizableRef as unknown as SynchronizableRef<
+      number | boolean
+    >;
     const proxy = globalThis.__workletsModuleProxy;
 
     synchronizable.__synchronizableRef = true;
@@ -33,29 +36,23 @@ export function installSynchronizableUnpacker() {
     synchronizable.getBlocking = () => {
       return proxy.synchronizableGetBlocking(synchronizable);
     };
+    const setBlockingValue = (newValue: TValue) => {
+      proxy.synchronizableSetBlocking(
+        synchronizable,
+        isFixed ? newValue : serializer(newValue)
+      );
+    };
     synchronizable.setBlocking = (
       valueOrFunction: TValue | ((prev: TValue) => TValue)
     ) => {
-      let newValue: TValue;
       if (typeof valueOrFunction === 'function') {
         const func = valueOrFunction as (prev: TValue) => TValue;
         synchronizable.lock();
         const prev = synchronizable.getBlocking();
-        newValue = func(prev);
-
-        proxy.synchronizableSetBlocking(
-          synchronizable,
-          isFixed ? newValue : serializer(newValue)
-        );
-
+        setBlockingValue(func(prev));
         synchronizable.unlock();
       } else {
-        const value = valueOrFunction;
-        newValue = value;
-        proxy.synchronizableSetBlocking(
-          synchronizable,
-          isFixed ? newValue : serializer(newValue)
-        );
+        setBlockingValue(valueOrFunction);
       }
     };
     synchronizable.lock = () => {
@@ -68,10 +65,7 @@ export function installSynchronizableUnpacker() {
       (
         synchronizable as unknown as FixedSynchronizable<number | boolean>
       ).setDirty = (value: number | boolean) => {
-        proxy.synchronizableSetDirty(
-          synchronizable as unknown as Synchronizable<number | boolean>,
-          value
-        );
+        proxy.synchronizableSetDirty(fixedRef, value);
       };
     }
 

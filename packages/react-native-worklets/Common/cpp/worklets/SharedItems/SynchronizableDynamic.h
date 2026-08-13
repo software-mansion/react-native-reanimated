@@ -1,6 +1,5 @@
 #pragma once
 
-#include <jsi/jsi.h>
 #include <worklets/SharedItems/Synchronizable.h>
 
 #include <memory>
@@ -11,21 +10,15 @@ class SynchronizableDynamic final : public Synchronizable {
  public:
   explicit SynchronizableDynamic(const std::shared_ptr<Serializable> &value) : Synchronizable(false), value_(value) {}
 
-  std::shared_ptr<Serializable> getDirty() override;
+  SynchronizableValue getDirty() override;
 
-  jsi::Value getDirty(jsi::Runtime &rt) override;
+  SynchronizableValue getBlocking() override;
 
-  std::shared_ptr<Serializable> getBlocking() override;
-
-  jsi::Value getBlocking(jsi::Runtime &rt) override;
-
-  void setDirty(const std::shared_ptr<Serializable> &value) override;
-
-  void setDirty(jsi::Runtime &rt, const jsi::Value &value) override;
+  void setDirty(const SynchronizableFixedValue &value) override;
 
   void setBlocking(const std::shared_ptr<Serializable> &value) override;
 
-  void setBlocking(jsi::Runtime &rt, const jsi::Value &value) override;
+  void setBlocking(const SynchronizableFixedValue &value) override;
 
  private:
   std::shared_ptr<Serializable> value_;

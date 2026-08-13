@@ -23,7 +23,9 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 using namespace facebook;
@@ -168,6 +170,29 @@ inline std::shared_ptr<AsyncQueue> extractAsyncQueue(jsi::Runtime &rt, const jsi
   auto asyncQueue = std::dynamic_pointer_cast<AsyncQueue>(nativeState);
 
   return asyncQueue;
+}
+
+inline jsi::Value synchronizableValueToJSValue(jsi::Runtime &rt, const SynchronizableValue &value) {
+  return std::visit(
+      [&rt](const auto &alternative) -> jsi::Value {
+        using TAlternative = std::decay_t<decltype(alternative)>;
+        if constexpr (std::is_same_v<TAlternative, std::shared_ptr<Serializable>>) {
+          return alternative->toJSValue(rt);
+        } else {
+          return jsi::Value(alternative);
+        }
+      },
+      value);
+}
+
+inline SynchronizableFixedValue jsValueToSynchronizableFixedValue(const jsi::Value &value) {
+  if (value.isBool()) {
+    return value.getBool();
+  }
+  if (value.isNumber()) {
+    return value.getNumber();
+  }
+  throw std::runtime_error("[Worklets] Expected a number or boolean for a fixed-type Synchronizable.");
 }
 
 inline void registerCustomSerializable(
@@ -601,30 +626,42 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   jsi_utils::addMethod<2>(
       rt, obj, "createSynchronizable", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         if (at<1>(args).getBool()) {
-          return SerializableJSRef::newNativeStateObject(rt, SynchronizableFixed::make(at<0>(args)));
+          return SerializableJSRef::newNativeStateObject(
+              rt, SynchronizableFixed::make(jsValueToSynchronizableFixedValue(at<0>(args))));
+        } else {
+          auto initial = extractSerializableOrThrow(rt, at<0>(args), "[Worklets] Value must be a Serializable.");
+          return SerializableJSRef::newNativeStateObject(rt, std::make_shared<SynchronizableDynamic>(initial));
         }
-        auto initial = extractSerializableOrThrow(rt, at<0>(args), "[Worklets] Value must be a Serializable.");
-        return SerializableJSRef::newNativeStateObject(rt, std::make_shared<SynchronizableDynamic>(initial));
       });
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableGetDirty", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        return Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->getDirty(rt);
+        return synchronizableValueToJSValue(
+            rt, Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->getDirty());
       });
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableGetBlocking", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        return Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->getBlocking(rt);
-      });
-
-  jsi_utils::addMethod<2>(
-      rt, obj, "synchronizableSetDirty", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->setDirty(rt, at<1>(args));
+        return synchronizableValueToJSValue(
+            rt, Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->getBlocking());
       });
 
   jsi_utils::addMethod<2>(
       rt, obj, "synchronizableSetBlocking", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->setBlocking(rt, at<1>(args));
+        auto synchronizable = Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args));
+        const auto &newValue = at<1>(args);
+        if (newValue.isBool() || newValue.isNumber()) {
+          synchronizable->setBlocking(jsValueToSynchronizableFixedValue(newValue));
+        } else {
+          synchronizable->setBlocking(
+              extractSerializableOrThrow(rt, newValue, "[Worklets] Value must be a Serializable."));
+        }
+      });
+
+  jsi_utils::addMethod<2>(
+      rt, obj, "synchronizableSetDirty", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))
+            ->setDirty(jsValueToSynchronizableFixedValue(at<1>(args)));
       });
 
   jsi_utils::addMethod<1>(

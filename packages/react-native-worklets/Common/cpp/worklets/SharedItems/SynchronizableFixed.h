@@ -1,6 +1,5 @@
 #pragma once
 
-#include <jsi/jsi.h>
 #include <worklets/SharedItems/Synchronizable.h>
 
 #include <atomic>
@@ -17,27 +16,21 @@ class SynchronizableFixed final : public Synchronizable {
   explicit SynchronizableFixed(bool value)
       : Synchronizable(true), value_(std::in_place_type<std::atomic<bool>>, value) {}
 
-  static std::shared_ptr<SynchronizableFixed> make(const jsi::Value &initialValue);
+  static std::shared_ptr<SynchronizableFixed> make(const SynchronizableFixedValue &initialValue);
 
-  std::shared_ptr<Serializable> getDirty() override;
+  SynchronizableValue getDirty() override;
 
-  jsi::Value getDirty(jsi::Runtime &rt) override;
+  SynchronizableValue getBlocking() override;
 
-  std::shared_ptr<Serializable> getBlocking() override;
-
-  jsi::Value getBlocking(jsi::Runtime &rt) override;
-
-  void setDirty(const std::shared_ptr<Serializable> &value) override;
-
-  void setDirty(jsi::Runtime &rt, const jsi::Value &value) override;
+  void setDirty(const SynchronizableFixedValue &value) override;
 
   void setBlocking(const std::shared_ptr<Serializable> &value) override;
 
-  void setBlocking(jsi::Runtime &rt, const jsi::Value &value) override;
+  void setBlocking(const SynchronizableFixedValue &value) override;
 
  private:
-  void storeChecked(const jsi::Value &value);
-  jsi::Value load() const;
+  void store(const SynchronizableFixedValue &value);
+  SynchronizableValue load() const;
 
   std::variant<std::atomic<double>, std::atomic<bool>> value_;
 };

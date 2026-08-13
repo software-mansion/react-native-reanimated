@@ -7,42 +7,25 @@
 
 namespace worklets {
 
-std::shared_ptr<SynchronizableFixed> SynchronizableFixed::make(const jsi::Value &initialValue) {
-  if (initialValue.isBool()) {
-    return std::make_shared<SynchronizableFixed>(initialValue.getBool());
-  } else if (initialValue.isNumber()) {
-    return std::make_shared<SynchronizableFixed>(initialValue.getNumber());
-  } else [[unlikely]] {
-    throw std::runtime_error("[Worklets] Expected a number or boolean for a fixed-type Synchronizable.");
-  }
+std::shared_ptr<SynchronizableFixed> SynchronizableFixed::make(const SynchronizableFixedValue &initialValue) {
+  return std::visit(
+      [](const auto &alternative) { return std::make_shared<SynchronizableFixed>(alternative); }, initialValue);
 }
 
-std::shared_ptr<Serializable> SynchronizableFixed::getDirty() {
-  throw std::runtime_error("[Worklets] Fixed-type Synchronizable operates on plain values, not Serializables.");
-}
-
-jsi::Value SynchronizableFixed::getDirty(jsi::Runtime &) {
+SynchronizableValue SynchronizableFixed::getDirty() {
   return load();
 }
 
-std::shared_ptr<Serializable> SynchronizableFixed::getBlocking() {
-  throw std::runtime_error("[Worklets] Fixed-type Synchronizable operates on plain values, not Serializables.");
-}
-
-jsi::Value SynchronizableFixed::getBlocking(jsi::Runtime &) {
+SynchronizableValue SynchronizableFixed::getBlocking() {
   getBlockingBefore();
   auto value = load();
   getBlockingAfter();
   return value;
 }
 
-void SynchronizableFixed::setDirty(const std::shared_ptr<Serializable> &) {
-  throw std::runtime_error("[Worklets] Fixed-type Synchronizable operates on plain values, not Serializables.");
-}
-
-void SynchronizableFixed::setDirty(jsi::Runtime &, const jsi::Value &value) {
+void SynchronizableFixed::setDirty(const SynchronizableFixedValue &value) {
   setDirtyBefore();
-  storeChecked(value);
+  store(value);
   setDirtyAfter();
 }
 
@@ -50,33 +33,31 @@ void SynchronizableFixed::setBlocking(const std::shared_ptr<Serializable> &) {
   throw std::runtime_error("[Worklets] Fixed-type Synchronizable operates on plain values, not Serializables.");
 }
 
-void SynchronizableFixed::setBlocking(jsi::Runtime &, const jsi::Value &value) {
+void SynchronizableFixed::setBlocking(const SynchronizableFixedValue &value) {
   setBlockingBefore();
-  storeChecked(value);
+  store(value);
   setBlockingAfter();
 }
 
-void SynchronizableFixed::storeChecked(const jsi::Value &value) {
+void SynchronizableFixed::store(const SynchronizableFixedValue &value) {
   std::visit(
-      [&value](auto &atomic) {
+      [](auto &atomic, const auto &alternative) {
         using TAtomic = std::decay_t<decltype(atomic)>;
-        if constexpr (std::is_same_v<TAtomic, std::atomic<double>>) {
-          react_native_assert(value.isNumber() && "[Worklets] Expected a number for a fixed-type Synchronizable.");
-          if (value.isNumber()) {
-            atomic.store(value.getNumber());
-          }
+        using TAlternative = std::decay_t<decltype(alternative)>;
+        if constexpr (std::is_same_v<TAtomic, std::atomic<TAlternative>>) {
+          atomic.store(alternative);
+        } else if constexpr (std::is_same_v<TAtomic, std::atomic<double>>) {
+          react_native_assert(false && "[Worklets] Expected a number for a fixed-type Synchronizable.");
         } else {
-          react_native_assert(value.isBool() && "[Worklets] Expected a boolean for a fixed-type Synchronizable.");
-          if (value.isBool()) {
-            atomic.store(value.getBool());
-          }
+          react_native_assert(false && "[Worklets] Expected a boolean for a fixed-type Synchronizable.");
         }
       },
-      value_);
+      value_,
+      value);
 }
 
-jsi::Value SynchronizableFixed::load() const {
-  return std::visit([](const auto &atomic) { return jsi::Value(atomic.load()); }, value_);
+SynchronizableValue SynchronizableFixed::load() const {
+  return std::visit([](const auto &atomic) { return SynchronizableValue(atomic.load()); }, value_);
 }
 
 } // namespace worklets

@@ -7,8 +7,12 @@
 
 #include <memory>
 #include <utility>
+#include <variant>
 
 namespace worklets {
+
+using SynchronizableValue = std::variant<std::shared_ptr<Serializable>, double, bool>;
+using SynchronizableFixedValue = std::variant<double, bool>;
 
 class Synchronizable : public SynchronizableAccess,
                        public Serializable,
@@ -32,25 +36,19 @@ class Synchronizable : public SynchronizableAccess,
   /**
    * Can run concurrently with getDirty, setDirty, getBlocking, setBlocking.
    */
-  virtual std::shared_ptr<Serializable> getDirty() = 0;
-
-  virtual jsi::Value getDirty(jsi::Runtime &rt) = 0;
+  virtual SynchronizableValue getDirty() = 0;
 
   /**
    * Can run concurrently with getDirty, getBlocking.
    * Can't run concurrently with setDirty, setBlocking.
    */
-  virtual std::shared_ptr<Serializable> getBlocking() = 0;
-
-  virtual jsi::Value getBlocking(jsi::Runtime &rt) = 0;
+  virtual SynchronizableValue getBlocking() = 0;
 
   /**
    * Can run concurrently with getDirty, setDirty.
    * Can't run concurrently with getBlocking, setBlocking.
    */
-  virtual void setDirty(const std::shared_ptr<Serializable> &value) = 0;
-
-  virtual void setDirty(jsi::Runtime &rt, const jsi::Value &value) = 0;
+  virtual void setDirty(const SynchronizableFixedValue &value) = 0;
 
   /**
    * Can run concurrently with getDirty.
@@ -58,7 +56,7 @@ class Synchronizable : public SynchronizableAccess,
    */
   virtual void setBlocking(const std::shared_ptr<Serializable> &value) = 0;
 
-  virtual void setBlocking(jsi::Runtime &rt, const jsi::Value &value) = 0;
+  virtual void setBlocking(const SynchronizableFixedValue &value) = 0;
 
   jsi::Value toJSValue(jsi::Runtime &rt) final {
     auto synchronizableUnpacker = rt.global().getProperty(rt, "__synchronizableUnpacker");
