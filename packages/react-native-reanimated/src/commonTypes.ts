@@ -229,7 +229,7 @@ export interface Mutable<Value = unknown> extends SharedValue<Value> {
    * method.
    */
   _value: Value;
-  markDirty: (dirty: boolean) => void;
+  setDirty: (dirty: boolean) => void;
 }
 
 export type MapperRawInputs = unknown[];

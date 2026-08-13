@@ -102,7 +102,7 @@ export function mutableHostDecorator<TValue>(
       },
       set(newValue: TValue) {
         if (!isDirty) {
-          this.markDirty(true);
+          this.setDirty(true);
         }
         value = newValue;
         listeners.forEach((listener) => {
@@ -142,7 +142,7 @@ export function mutableHostDecorator<TValue>(
       configurable: true,
     },
 
-    markDirty: {
+    setDirty: {
       value: (dirty: boolean) => {
         dirtyFlag?.setDirty(dirty);
         isDirty = dirty;
