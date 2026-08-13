@@ -14,6 +14,8 @@ class Synchronizable : public SynchronizableAccess,
                        public jsi::NativeState,
                        public std::enable_shared_from_this<Synchronizable> {
  public:
+  virtual bool isFixed() const = 0;
+
   virtual jsi::Value getDirty(jsi::Runtime &rt) = 0;
 
   virtual jsi::Value getBlocking(jsi::Runtime &rt) = 0;
@@ -28,14 +30,6 @@ class Synchronizable : public SynchronizableAccess,
 
  protected:
   Synchronizable();
-
-  virtual jsi::Function unpacker(jsi::Runtime &rt) = 0;
-
-  static jsi::Function getUnpackerByName(jsi::Runtime &rt, const char *unpackerName) {
-    auto unpacker = rt.global().getProperty(rt, unpackerName);
-    react_native_assert(unpacker.isObject() && "synchronizableUnpacker not found");
-    return unpacker.getObject(rt).getFunction(rt);
-  }
 };
 
 inline std::shared_ptr<Synchronizable> extractSynchronizableOrThrow(jsi::Runtime &rt, const jsi::Value &value) {

@@ -35,20 +35,16 @@ export function createSynchronizable<TValue = unknown>(
     );
   }
 
-  if (isFixed) {
-    const synchronizableRef = WorkletsModule.createSynchronizableFixed(
-      initialValue as number | boolean
-    );
-    return globalThis.__synchronizableFixedUnpacker(
-      synchronizableRef
-    ) as unknown as Synchronizable<TValue>;
-  } else {
-    const synchronizableRef = WorkletsModule.createSynchronizable(
-      createSerializable(initialValue)
-    ) as SynchronizableRef<TValue>;
+  const synchronizableRef = (
+    isFixed
+      ? WorkletsModule.createSynchronizableFixed(
+          initialValue as number | boolean
+        )
+      : WorkletsModule.createSynchronizable(createSerializable(initialValue))
+  ) as SynchronizableRef<TValue>;
 
-    return globalThis.__synchronizableUnpacker(
-      synchronizableRef
-    ) as unknown as Synchronizable<TValue>;
-  }
+  return globalThis.__synchronizableUnpacker(
+    synchronizableRef,
+    isFixed
+  ) as unknown as Synchronizable<TValue>;
 }

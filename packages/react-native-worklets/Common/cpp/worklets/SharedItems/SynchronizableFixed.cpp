@@ -21,8 +21,8 @@ std::shared_ptr<SynchronizableFixed> SynchronizableFixed::make(const jsi::Value 
   return std::make_shared<SynchronizableFixed>(initialValue.isNumber() ? initialValue.getNumber() : 0.0);
 }
 
-jsi::Function SynchronizableFixed::getUnpacker(jsi::Runtime &rt) {
-  return getUnpackerByName(rt, "__synchronizableFixedUnpacker");
+bool SynchronizableFixed::isFixed() const {
+  return true;
 }
 
 jsi::Value SynchronizableFixed::getDirty(jsi::Runtime &) {
@@ -44,10 +44,6 @@ void SynchronizableFixed::setBlocking(jsi::Runtime &, const jsi::Value &value) {
   setBlockingBefore();
   storeChecked(value);
   setBlockingAfter();
-}
-
-jsi::Function SynchronizableFixed::unpacker(jsi::Runtime &rt) {
-  return getUnpacker(rt);
 }
 
 void SynchronizableFixed::storeChecked(const jsi::Value &value) {

@@ -17,7 +17,7 @@ class SynchronizableFixed final : public Synchronizable {
 
   static std::shared_ptr<SynchronizableFixed> make(const jsi::Value &initialValue);
 
-  static jsi::Function getUnpacker(jsi::Runtime &rt);
+  bool isFixed() const override;
 
   jsi::Value getDirty(jsi::Runtime &rt) override;
 
@@ -26,9 +26,6 @@ class SynchronizableFixed final : public Synchronizable {
   void setDirty(jsi::Runtime &rt, const jsi::Value &value) override;
 
   void setBlocking(jsi::Runtime &rt, const jsi::Value &value) override;
-
- protected:
-  jsi::Function unpacker(jsi::Runtime &rt) override;
 
  private:
   void storeChecked(const jsi::Value &value);

@@ -16,9 +16,6 @@ export interface WorkletsModuleProxy {
     synchronizableUnpackerCode: string,
     synchronizableUnpackerLocation: string,
     synchronizableUnpackerSourceMap: string,
-    synchronizableFixedUnpackerCode: string,
-    synchronizableFixedUnpackerLocation: string,
-    synchronizableFixedUnpackerSourceMap: string,
     customSerializableUnpackerCode: string,
     customSerializableUnpackerLocation: string,
     customSerializableUnpackerSourceMap: string,
@@ -36,7 +33,6 @@ export interface WorkletsModuleProxy {
   loadUnpackersWithBytecode(
     valueUnpackerBytecode: ArrayBuffer,
     synchronizableUnpackerBytecode: ArrayBuffer,
-    synchronizableFixedUnpackerBytecode: ArrayBuffer,
     customSerializableUnpackerBytecode: ArrayBuffer,
     shareableHostUnpackerBytecode: ArrayBuffer,
     shareableGuestUnpackerBytecode: ArrayBuffer,

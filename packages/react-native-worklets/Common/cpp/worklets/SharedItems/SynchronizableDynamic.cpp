@@ -7,8 +7,8 @@ namespace worklets {
 
 SynchronizableDynamic::SynchronizableDynamic(const std::shared_ptr<Serializable> &value) : value_(value) {}
 
-jsi::Function SynchronizableDynamic::getUnpacker(jsi::Runtime &rt) {
-  return getUnpackerByName(rt, "__synchronizableUnpacker");
+bool SynchronizableDynamic::isFixed() const {
+  return false;
 }
 
 jsi::Value SynchronizableDynamic::getDirty(jsi::Runtime &rt) {
@@ -32,10 +32,6 @@ void SynchronizableDynamic::setBlocking(jsi::Runtime &rt, const jsi::Value &valu
   setBlockingBefore();
   value_ = newValue;
   setBlockingAfter();
-}
-
-jsi::Function SynchronizableDynamic::unpacker(jsi::Runtime &rt) {
-  return getUnpacker(rt);
 }
 
 } // namespace worklets

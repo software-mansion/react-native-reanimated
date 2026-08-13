@@ -195,11 +195,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   auto obj = jsi::Object(rt);
   using jsi_utils::at;
 
-  jsi_utils::addMethod<21>(
+  jsi_utils::addMethod<18>(
       rt,
       obj,
       "loadUnpackersWithCode",
-      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[21]) {
+      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[18]) {
         const auto str = [&](size_t i) {
           return args[i].getString(rt).utf8(rt);
         };
@@ -210,15 +210,14 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             CodeUnpacker{.code = str(9), .location = str(10), .sourceMap = str(11)},
             CodeUnpacker{.code = str(12), .location = str(13), .sourceMap = str(14)},
             CodeUnpacker{.code = str(15), .location = str(16), .sourceMap = str(17)},
-            CodeUnpacker{.code = str(18), .location = str(19), .sourceMap = str(20)},
         });
       });
 
-  jsi_utils::addMethod<7>(
+  jsi_utils::addMethod<6>(
       rt,
       obj,
       "loadUnpackersWithBytecode",
-      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[7]) {
+      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[6]) {
         const auto bytecode = [&](size_t i) {
           const auto buffer = args[i].getObject(rt).getArrayBuffer(rt);
           return std::vector<uint8_t>(buffer.data(rt), buffer.data(rt) + buffer.size(rt));
@@ -230,7 +229,6 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             BytecodeUnpacker{.bytecode = bytecode(3)},
             BytecodeUnpacker{.bytecode = bytecode(4)},
             BytecodeUnpacker{.bytecode = bytecode(5)},
-            BytecodeUnpacker{.bytecode = bytecode(6)},
         });
       });
 
