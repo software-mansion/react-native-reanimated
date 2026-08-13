@@ -47,13 +47,9 @@ constexpr size_t kMaxInternedEasings = 256;
 
 CSSPlatformTransitions::CSSPlatformTransitions(
     AnimateFunction animate,
-    AnimateWithEasingFunction animateWithEasing,
     RemoveFunction remove,
     DefineEasingFunction defineEasing)
-    : animate_(std::move(animate)),
-      animateWithEasing_(std::move(animateWithEasing)),
-      remove_(std::move(remove)),
-      defineEasing_(std::move(defineEasing)) {}
+    : animate_(std::move(animate)), remove_(std::move(remove)), defineEasing_(std::move(defineEasing)) {}
 
 std::size_t PlatformEasingHash::operator()(const PlatformEasing &easing) const {
   std::size_t seed = std::hash<std::uint8_t>{}(static_cast<std::uint8_t>(easing.type));
@@ -169,33 +165,18 @@ bool CSSPlatformTransitions::applyTransition(
   const auto easing = toPlatformEasing(resolvedSettings.easingConfig);
   const auto easingId = easingIdFor(easing);
 
-  bool started;
-  if (easingId.has_value()) {
-    started = animate_(
-        static_cast<int>(viewTag),
-        *propertyId,
-        *from,
-        *to,
-        reversing.duration,
-        reversing.startTimestamp,
-        *easingId,
-        persistent);
-  } else {
-    // An id is only an optimisation, so a full table sends the curve along rather than
-    // handing a platform-animatable property back to the loop.
-    started = animateWithEasing_(
-        static_cast<int>(viewTag),
-        *propertyId,
-        *from,
-        *to,
-        reversing.duration,
-        reversing.startTimestamp,
-        static_cast<int>(easing.type),
-        easing.pointsX,
-        easing.pointsY,
-        persistent);
-  }
-  if (!started) {
+  // An id is only an optimisation, so a full table sends the curve along rather than handing a
+  // platform-animatable property back to the loop.
+  if (!animate_(
+          static_cast<int>(viewTag),
+          *propertyId,
+          *from,
+          *to,
+          reversing.duration,
+          reversing.startTimestamp,
+          easingId.value_or(-1),
+          easing,
+          persistent)) {
     return false;
   }
 

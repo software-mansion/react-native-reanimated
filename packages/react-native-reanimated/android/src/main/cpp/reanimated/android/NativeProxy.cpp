@@ -257,31 +257,7 @@ bool NativeProxy::cssAnimateTransition(
     const double durationMs,
     const double startTimestampMs,
     const int easingId,
-    const bool persistent) {
-  static const auto method =
-      getJniMethod<jboolean(int, int, double, double, double, double, int, jboolean)>("cssAnimateTransition");
-  return method(
-             javaPart_.get(),
-             viewTag,
-             propertyId,
-             fromValue,
-             toValue,
-             durationMs,
-             startTimestampMs,
-             easingId,
-             static_cast<jboolean>(persistent)) != JNI_FALSE;
-}
-
-bool NativeProxy::cssAnimateTransitionWithEasing(
-    const int viewTag,
-    const int propertyId,
-    const double fromValue,
-    const double toValue,
-    const double durationMs,
-    const double startTimestampMs,
-    const int easingType,
-    const std::vector<float> &pointsX,
-    const std::vector<float> &pointsY,
+    const PlatformEasing &easing,
     const bool persistent) {
   static const auto method = getJniMethod<jboolean(
       int,
@@ -291,13 +267,22 @@ bool NativeProxy::cssAnimateTransitionWithEasing(
       double,
       double,
       int,
+      int,
       jni::alias_ref<jni::JArrayFloat>,
       jni::alias_ref<jni::JArrayFloat>,
-      jboolean)>("cssAnimateTransitionWithEasing");
-  auto jPointsX = jni::JArrayFloat::newArray(pointsX.size());
-  jPointsX->setRegion(0, pointsX.size(), pointsX.data());
-  auto jPointsY = jni::JArrayFloat::newArray(pointsY.size());
-  jPointsY->setRegion(0, pointsY.size(), pointsY.data());
+      jboolean)>("cssAnimateTransition");
+
+  // An interned curve already lives on the platform, so only its id crosses and the arrays
+  // stay null; a null reference costs nothing here, unlike allocating one per start.
+  jni::local_ref<jni::JArrayFloat> jPointsX;
+  jni::local_ref<jni::JArrayFloat> jPointsY;
+  if (easingId < 0) {
+    jPointsX = jni::JArrayFloat::newArray(easing.pointsX.size());
+    jPointsX->setRegion(0, easing.pointsX.size(), easing.pointsX.data());
+    jPointsY = jni::JArrayFloat::newArray(easing.pointsY.size());
+    jPointsY->setRegion(0, easing.pointsY.size(), easing.pointsY.data());
+  }
+
   return method(
              javaPart_.get(),
              viewTag,
@@ -306,7 +291,8 @@ bool NativeProxy::cssAnimateTransitionWithEasing(
              toValue,
              durationMs,
              startTimestampMs,
-             easingType,
+             easingId,
+             static_cast<int>(easing.type),
              jPointsX,
              jPointsY,
              static_cast<jboolean>(persistent)) != JNI_FALSE;
@@ -419,7 +405,6 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   // memory.
   auto cssPlatformTransitions = std::make_shared<CSSPlatformTransitions>(
       bindThis(&NativeProxy::cssAnimateTransition),
-      bindThis(&NativeProxy::cssAnimateTransitionWithEasing),
       bindThis(&NativeProxy::cssRemoveTransition),
       bindThis(&NativeProxy::cssDefineEasing));
 

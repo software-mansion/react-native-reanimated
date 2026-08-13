@@ -35,8 +35,9 @@ struct PlatformEasingHash {
 
 class CSSPlatformTransitions {
  public:
-  /// False means the property falls back to the loop. Ids and scalars only, so the
-  /// per-transition JNI hop allocates nothing.
+  /// False means the property falls back to the loop. An interned `easingId` sends scalars only,
+  /// so the per-transition JNI hop allocates nothing; -1 means the table was full and `easing`
+  /// travels with the start instead, which costs marshalling but still plays on the platform.
   using AnimateFunction = std::function<bool(
       int viewTag,
       int propertyId,
@@ -45,32 +46,15 @@ class CSSPlatformTransitions {
       double durationMs,
       double startTimestampMs,
       int easingId,
+      const PlatformEasing &easing,
       bool persistent)>;
   using RemoveFunction = std::function<void(int viewTag, int propertyId)>;
-
-  /// Carries the curve with the transition, for the rare start that finds no interning slot.
-  /// The platform still plays it; only the marshalling saving is lost.
-  using AnimateWithEasingFunction = std::function<bool(
-      int viewTag,
-      int propertyId,
-      double fromValue,
-      double toValue,
-      double durationMs,
-      double startTimestampMs,
-      int easingType,
-      const std::vector<float> &pointsX,
-      const std::vector<float> &pointsY,
-      bool persistent)>;
 
   /// Registers a curve on the platform under an id.
   using DefineEasingFunction =
       std::function<void(int easingId, int type, const std::vector<float> &pointsX, const std::vector<float> &pointsY)>;
 
-  CSSPlatformTransitions(
-      AnimateFunction animate,
-      AnimateWithEasingFunction animateWithEasing,
-      RemoveFunction remove,
-      DefineEasingFunction defineEasing);
+  CSSPlatformTransitions(AnimateFunction animate, RemoveFunction remove, DefineEasingFunction defineEasing);
 
   /// A null `settings` marks the pseudo-selector toggle path, which carries none of
   /// its own and reuses whatever the last config apply stored. A settings-only config
@@ -116,7 +100,6 @@ class CSSPlatformTransitions {
   std::vector<PlatformEasing> easingKeys_;
   std::vector<int> easingRefs_;
   AnimateFunction animate_;
-  AnimateWithEasingFunction animateWithEasing_;
   RemoveFunction remove_;
   DefineEasingFunction defineEasing_;
 };

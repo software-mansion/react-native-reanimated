@@ -281,32 +281,6 @@ open class NativeProxy {
     }
 
     @DoNotStrip
-    fun cssAnimateTransitionWithEasing(
-        viewTag: Int,
-        propertyId: Int,
-        fromValue: Double,
-        toValue: Double,
-        durationMs: Double,
-        startTimestampMs: Double,
-        easingType: Int,
-        easingPointsX: FloatArray,
-        easingPointsY: FloatArray,
-        persistent: Boolean,
-    ): Boolean =
-        cssPlatformTransitionsManager.animateTransitionWithEasing(
-            viewTag,
-            propertyId,
-            fromValue,
-            toValue,
-            durationMs,
-            startTimestampMs,
-            easingType,
-            easingPointsX,
-            easingPointsY,
-            persistent,
-        )
-
-    @DoNotStrip
     fun cssAnimateTransition(
         viewTag: Int,
         propertyId: Int,
@@ -315,6 +289,9 @@ open class NativeProxy {
         durationMs: Double,
         startTimestampMs: Double,
         easingId: Int,
+        easingType: Int,
+        easingPointsX: FloatArray?,
+        easingPointsY: FloatArray?,
         persistent: Boolean,
     ): Boolean =
         cssPlatformTransitionsManager.animateTransition(
@@ -325,6 +302,9 @@ open class NativeProxy {
             durationMs,
             startTimestampMs,
             easingId,
+            easingType,
+            easingPointsX,
+            easingPointsY,
             persistent,
         )
 
