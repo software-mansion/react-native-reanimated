@@ -242,5 +242,21 @@ describe('cssCallbacksRegistry', () => {
 
       expect(sub.handleCSSEvent).toHaveBeenCalledTimes(1);
     });
+
+    test('and hears it once even when registered again mid batch', () => {
+      const remounted = subscriber();
+      const remounting: CSSEventSubscriber = {
+        handleCSSEvent: jest.fn(() => {
+          cssCallbacksRegistry.register(1, remounted);
+        }),
+      };
+      cssCallbacksRegistry.register(1, remounting);
+      cssCallbacksRegistry.register(1, remounted);
+      cssCallbacksRegistry.retire(1, remounted);
+
+      cssCallbacksRegistry.dispatch([event(1)]);
+
+      expect(remounted.handleCSSEvent).toHaveBeenCalledTimes(1);
+    });
   });
 });

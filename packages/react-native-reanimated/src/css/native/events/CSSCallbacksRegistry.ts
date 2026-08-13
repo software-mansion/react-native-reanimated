@@ -55,8 +55,11 @@ class CSSCallbacksRegistry {
     this.retiringByTag = new Map();
 
     for (const event of events) {
-      this.notifySubscribers(this.subscribersByTag.get(event.tag), event);
-      this.notifySubscribers(retiring.get(event.tag), event);
+      const subscribed = this.subscribersByTag.get(event.tag);
+      this.notifySubscribers(subscribed, event);
+      // A callback in this batch can register a retiring view again, and it is
+      // then in both, so the ones just notified are skipped here.
+      this.notifySubscribers(retiring.get(event.tag), event, subscribed);
     }
   }
 
@@ -68,13 +71,18 @@ class CSSCallbacksRegistry {
   /** Missing when the event outlived the view it was emitted for. */
   private notifySubscribers(
     subscribers: Set<CSSEventSubscriber> | undefined,
-    event: NativeCSSEvent
+    event: NativeCSSEvent,
+    alreadyNotified?: Set<CSSEventSubscriber>
   ): void {
     if (!subscribers) {
       return;
     }
 
     for (const subscriber of subscribers) {
+      if (alreadyNotified?.has(subscriber)) {
+        continue;
+      }
+
       try {
         subscriber.handleCSSEvent(event);
       } catch (error) {
