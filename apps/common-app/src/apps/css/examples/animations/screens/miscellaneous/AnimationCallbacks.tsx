@@ -88,7 +88,7 @@ export default function AnimationCallbacks() {
   return (
     <Screen style={styles.screen}>
       <Section
-        description="Animation lifecycle callbacks fired by the **native** CSS engine. `elapsedTime` is reported in **seconds**."
+        description="Lifecycle callbacks of a **CSS animation**. `elapsedTime` is reported in **seconds**."
         title="Animation Callbacks">
         <View style={styles.content}>
           <View style={styles.buttons}>
