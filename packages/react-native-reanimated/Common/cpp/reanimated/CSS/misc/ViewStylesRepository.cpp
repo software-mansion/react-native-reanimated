@@ -1,28 +1,11 @@
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
-#include <charconv>
 #include <memory>
-#include <optional>
 #include <string>
-#include <system_error>
+#include <variant>
 
 namespace reanimated::css {
-
-namespace {
-
-std::optional<size_t> tryParseArrayIndex(const std::string &pathSegment) {
-  size_t index = 0;
-  const auto *const end = pathSegment.data() + pathSegment.size();
-  const auto [parseEnd, errorCode] = std::from_chars(pathSegment.data(), end, index);
-
-  if (errorCode != std::errc{} || parseEnd != end) {
-    return std::nullopt;
-  }
-  return index;
-}
-
-} // namespace
 
 ViewStylesRepository::ViewStylesRepository(
     const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
@@ -151,18 +134,15 @@ folly::dynamic ViewStylesRepository::getPropertyValue(const folly::dynamic &valu
       return {};
     }
 
-    const auto &propName = propertyPath[i];
-
-    // Array-typed props (boxShadow, backgroundImage, transformOrigin) get a
-    // numeric path segment from createPropertyInterpolator.
-    if (currentValue->isArray()) {
-      const auto index = tryParseArrayIndex(propName);
-      if (!index.has_value() || *index >= currentValue->size()) {
+    if (const auto *arrayIndex = std::get_if<size_t>(&propertyPath[i])) {
+      if (!currentValue->isArray() || *arrayIndex >= currentValue->size()) {
         return {};
       }
-      currentValue = &(*currentValue)[*index];
+      currentValue = &(*currentValue)[*arrayIndex];
       continue;
     }
+
+    const auto &propName = std::get<std::string>(propertyPath[i]);
 
     if (!currentValue->isObject()) {
       return {};
@@ -183,11 +163,14 @@ folly::dynamic ViewStylesRepository::getPropertyValue(const folly::dynamic &valu
         return transform;
       }
 
-      const std::string &transformPropName = propertyPath[i + 1];
+      const auto *transformPropName = std::get_if<std::string>(&propertyPath[i + 1]);
+      if (transformPropName == nullptr) {
+        return {};
+      }
 
       for (const auto &transformEntry : transform) {
         if (transformEntry.isObject()) {
-          auto transformPropIt = transformEntry.find(transformPropName);
+          auto transformPropIt = transformEntry.find(*transformPropName);
           if (transformPropIt != transformEntry.items().end()) {
             return transformPropIt->second;
           }
