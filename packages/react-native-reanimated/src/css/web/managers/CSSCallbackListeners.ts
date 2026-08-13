@@ -1,6 +1,5 @@
 'use strict';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
-import type { CSSCallbackPresenceChange } from '../../models';
 import { CSSCallbackStore } from '../../models';
 
 export class CSSCallbackListeners<
@@ -17,10 +16,11 @@ export class CSSCallbackListeners<
     super(Object.keys(eventNameByProp) as Prop[]);
   }
 
-  protected onPresenceChanged({
-    added,
-    removed,
-  }: CSSCallbackPresenceChange<Prop>): void {
+  protected onPresenceChanged(
+    _present: ReadonlySet<Prop>,
+    added: readonly Prop[],
+    removed: readonly Prop[]
+  ): void {
     for (const prop of removed) {
       const listener = this.attachedListeners.get(prop);
       if (listener) {
