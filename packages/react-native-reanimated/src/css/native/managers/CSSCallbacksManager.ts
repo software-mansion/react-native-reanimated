@@ -54,8 +54,6 @@ export default class CSSCallbacksManager
   }
 
   protected onPresenceChanged(
-    _added: readonly CSSAnimationCallbackProp[],
-    _removed: readonly CSSAnimationCallbackProp[],
     present: ReadonlySet<CSSAnimationCallbackProp>
   ): void {
     this.eventMask = getAnimationEventMaskFromProps(present);
