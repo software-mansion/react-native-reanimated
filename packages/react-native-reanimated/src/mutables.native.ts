@@ -28,19 +28,18 @@ function mutableGuestDecorator<TValue>(
   Object.defineProperties(mutable, {
     value: {
       get() {
-        if (globalThis.__RUNTIME_KIND === 1) {
-          checkInvalidReadDuringRender();
-        }
-
         if (globalThis.__RUNTIME_KIND !== 1) {
           latest = mutable.getSync();
-        } else if (dirtyFlag.getBlocking()) {
-          const uiValueGetter = (svArg: Mutable<TValue>) =>
-            runOnUISync((sv) => {
-              sv.setDirty?.(false);
-              return sv.value;
-            }, svArg);
-          latest = uiValueGetter(mutable as Mutable<TValue>);
+        } else {
+          checkInvalidReadDuringRender();
+          if (dirtyFlag.getBlocking()) {
+            const uiValueGetter = (svArg: Mutable<TValue>) =>
+              runOnUISync((sv) => {
+                sv.setDirty?.(false);
+                return sv.value;
+              }, svArg);
+            latest = uiValueGetter(mutable as Mutable<TValue>);
+          }
         }
         return latest;
       },
