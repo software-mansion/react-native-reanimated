@@ -20,7 +20,7 @@ on:
       udid:
         required: false
         type: string
-        default: ""
+        default: ''
   workflow_dispatch:
     inputs:
       bundleMode:
@@ -37,7 +37,7 @@ on:
         description: Remote simulator UUID (blank = first available iPhone)
         required: false
         type: string
-        default: ""
+        default: ''
 
 permissions:
   contents: read

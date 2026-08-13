@@ -5,10 +5,10 @@ inputs:
   release-tag:
     description: Release tag in software-mansion/sim-remote-releases to install
     required: false
-    default: "softu"
+    default: 'softu'
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Install sim-remote CLI + daemon
       shell: bash
