@@ -144,6 +144,9 @@ internal class CSSPlatformTransitionsManager(
             animators.clear()
             running.forEach { it.animator.cancel() }
             reconciler.invalidate()
+            // Interpolators outlive every animation that used them, so a flattened curve per
+            // easing would otherwise sit here until the manager itself is collected.
+            easings = arrayOfNulls(0)
         }
     }
 
