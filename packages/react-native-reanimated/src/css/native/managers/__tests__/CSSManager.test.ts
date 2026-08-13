@@ -151,5 +151,29 @@ describe('CSSManager', () => {
 
       expect(onAnimationCancel).toHaveBeenCalledTimes(1);
     });
+
+    test('delivers a transition event to the provided callback', () => {
+      const onTransitionEnd = jest.fn();
+      manager.update({
+        opacity: 0,
+        transitionProperty: 'opacity',
+        transitionDuration: '300ms',
+        onTransitionEnd,
+      });
+
+      cssCallbacksRegistry.dispatch([
+        {
+          tag: viewTag,
+          type: 'transitionEnd',
+          name: 'opacity',
+          elapsedTime: 0.3,
+        },
+      ]);
+
+      expect(onTransitionEnd).toHaveBeenCalledWith({
+        propertyName: 'opacity',
+        elapsedTime: 0.3,
+      });
+    });
   });
 });
