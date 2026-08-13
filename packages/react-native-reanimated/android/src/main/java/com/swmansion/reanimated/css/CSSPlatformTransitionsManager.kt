@@ -210,12 +210,15 @@ internal class CSSPlatformTransitionsManager(
             pendingCommands = spareCommands
             flushScheduled = false
         }
-        for (command in batch) {
-            when (command) {
-                is Command.Start -> beginStart(command)
-                is Command.Remove -> {
-                    startTokens.remove(command.key)
-                    animators.remove(command.key)?.animator?.cancel()
+        // A start enqueued before invalidate() must not register an animator behind the cleanup.
+        if (!invalidated) {
+            for (command in batch) {
+                when (command) {
+                    is Command.Start -> beginStart(command)
+                    is Command.Remove -> {
+                        startTokens.remove(command.key)
+                        animators.remove(command.key)?.animator?.cancel()
+                    }
                 }
             }
         }
