@@ -34,9 +34,8 @@ bool hasGradientType(jsi::Runtime &rt, const jsi::Value &jsiValue, const char *g
   return type.isString() && type.asString(rt).utf8(rt) == gradientType;
 }
 
-/// A stop with no color is a transition hint, so a color CSSColor cannot
-/// represent has to reject the whole gradient rather than be serialized back
-/// as a hint.
+/// A stop with no color is a transition hint. Serializing an unsupported color
+/// back would drop it and turn the stop into one, so reject the gradient.
 bool areColorStopsConstructible(const folly::dynamic &value) {
   const auto stopsIt = value.find("colorStops");
   if (stopsIt == value.items().end()) {

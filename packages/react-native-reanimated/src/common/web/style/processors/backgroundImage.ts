@@ -59,9 +59,8 @@ function serializeColorStops(
 
 type RadialGradientPosition = NonNullable<RadialGradientValue['position']>;
 
-// A one-axis clause means something else in CSS: `at top 10%` is invalid and
-// `at left 10%` reads as x=0%, y=10% rather than the x=10%, y=50% native
-// resolves it to. Both axes are spelled out so the two agree.
+// CSS reads a one-axis clause differently: `at top 10%` is invalid and
+// `at left 10%` means x=0%, y=10%, not the x=10%, y=50% native resolves.
 function serializeRadialGradientPosition({
   top,
   left,
@@ -88,10 +87,8 @@ function isPercentage(value: string | number): boolean {
   return typeof value === 'string' && value.endsWith('%');
 }
 
-// CSS allows only one non-negative <length> as an explicit circle radius, while
-// React Native draws max(x, y). A percentage radius has no CSS spelling at all,
-// so it degrades to the equivalent ellipse rather than making the browser drop
-// the whole declaration.
+// CSS allows only one non-negative <length> as a circle radius, React Native
+// draws max(x, y), and a percentage radius has no CSS spelling at all.
 function serializeRadialGradientLengthSize(
   shape: RadialGradientValue['shape'],
   size: Exclude<NonNullable<RadialGradientValue['size']>, string>
