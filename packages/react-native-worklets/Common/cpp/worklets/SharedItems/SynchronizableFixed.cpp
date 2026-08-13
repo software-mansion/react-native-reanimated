@@ -17,8 +17,16 @@ std::shared_ptr<SynchronizableFixed> SynchronizableFixed::make(const jsi::Value 
   }
 }
 
+std::shared_ptr<Serializable> SynchronizableFixed::getDirty() {
+  throw std::runtime_error("[Worklets] Fixed-type Synchronizable operates on plain values, not Serializables.");
+}
+
 jsi::Value SynchronizableFixed::getDirty(jsi::Runtime &) {
   return load();
+}
+
+std::shared_ptr<Serializable> SynchronizableFixed::getBlocking() {
+  throw std::runtime_error("[Worklets] Fixed-type Synchronizable operates on plain values, not Serializables.");
 }
 
 jsi::Value SynchronizableFixed::getBlocking(jsi::Runtime &) {
@@ -28,10 +36,18 @@ jsi::Value SynchronizableFixed::getBlocking(jsi::Runtime &) {
   return value;
 }
 
+void SynchronizableFixed::setDirty(const std::shared_ptr<Serializable> &) {
+  throw std::runtime_error("[Worklets] Fixed-type Synchronizable operates on plain values, not Serializables.");
+}
+
 void SynchronizableFixed::setDirty(jsi::Runtime &, const jsi::Value &value) {
   setDirtyBefore();
   storeChecked(value);
   setDirtyAfter();
+}
+
+void SynchronizableFixed::setBlocking(const std::shared_ptr<Serializable> &) {
+  throw std::runtime_error("[Worklets] Fixed-type Synchronizable operates on plain values, not Serializables.");
 }
 
 void SynchronizableFixed::setBlocking(jsi::Runtime &, const jsi::Value &value) {
