@@ -231,5 +231,16 @@ describe('cssCallbacksRegistry', () => {
 
       expect(sub.handleCSSEvent).toHaveBeenCalledTimes(2);
     });
+
+    test('and hears the batch it registered again for exactly once', () => {
+      const sub = subscriber();
+      cssCallbacksRegistry.register(1, sub);
+      cssCallbacksRegistry.retire(1, sub);
+      cssCallbacksRegistry.register(1, sub);
+
+      cssCallbacksRegistry.dispatch([event(1)]);
+
+      expect(sub.handleCSSEvent).toHaveBeenCalledTimes(1);
+    });
   });
 });
