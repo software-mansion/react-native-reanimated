@@ -61,7 +61,8 @@ folly::dynamic CSSTransition::run(
     const folly::dynamic &lastUpdates) {
   const auto timestamp = loop_->resolveTimestamp();
 
-  auto loopDiffs = platformTransitionProxy_->processDynamicDiffs(getViewTag(), propertyDiffs, routing_, timestamp);
+  auto loopDiffs = platformTransitionProxy_->processDynamicDiffs(
+      getViewTag(), propertyDiffs, pseudoLockedProperties_, routing_, timestamp);
   if (loopDiffs.empty() && !loopTransition_) {
     return folly::dynamic::object();
   }

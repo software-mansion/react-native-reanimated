@@ -54,6 +54,7 @@ class CSSPlatformTransitions {
       const css::PlatformValue &fromValue,
       const css::PlatformValue &toValue,
       const css::CSSTransitionPropertySettings *settings,
+      bool persistent,
       double timestamp);
 
   void removeTransition(Tag viewTag, const std::string &propertyName);

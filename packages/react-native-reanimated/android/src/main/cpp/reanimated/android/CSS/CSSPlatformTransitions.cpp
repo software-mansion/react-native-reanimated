@@ -53,6 +53,7 @@ bool CSSPlatformTransitions::applyTransition(
     const css::PlatformValue &fromValue,
     const css::PlatformValue &toValue,
     const css::CSSTransitionPropertySettings *settings,
+    const bool persistent,
     const double timestamp) {
   // Only scalars are routed today (opacity); anything else stays on the loop.
   const auto *from = std::get_if<double>(&fromValue);
@@ -99,7 +100,7 @@ bool CSSPlatformTransitions::applyTransition(
           reversing.duration,
           reversing.startTimestamp,
           toPlatformEasing(resolvedSettings.easingConfig),
-          settings == nullptr)) {
+          persistent)) {
     return false;
   }
 
