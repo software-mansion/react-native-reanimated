@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import type { ValueGetter } from '../matchers/EventualMatchers';
 import { EventualMatchers } from '../matchers/EventualMatchers';
 import { Matchers } from '../matchers/Matchers';
+import { SharedValueMatchers } from '../matchers/SharedValueMatchers';
 import { TestComponent } from '../TestComponent';
 import type {
   DefaultValue,
@@ -274,6 +275,15 @@ export class TestRunner {
   public expect(currentValue: TestValue): Matchers {
     assertTestCase(this._currentTestCase);
     return new Matchers(currentValue, this._currentTestCase);
+  }
+
+  public expectSharedValue(name: string): SharedValueMatchers {
+    assertTestCase(this._currentTestCase);
+    return new SharedValueMatchers(
+      this._valueRegistry,
+      name,
+      this._currentTestCase
+    );
   }
 
   public expectEventually(

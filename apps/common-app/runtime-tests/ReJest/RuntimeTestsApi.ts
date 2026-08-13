@@ -153,10 +153,12 @@ export function registerValue<TValue = unknown>(
   return valueRegistry.registerValue(name, value);
 }
 
-export async function getRegisteredValue<TValue extends TestValue>(
-  name: string
-) {
-  return await valueRegistry.getRegisteredValue<TValue>(name);
+export function expectSharedValue(name: string) {
+  return testRunner.expectSharedValue(name);
+}
+
+export async function getSharedValue<TValue extends TestValue>(name: string) {
+  return valueRegistry.getOnJS<TValue>(name);
 }
 
 export function getTestComponent(name: string): TestComponent {

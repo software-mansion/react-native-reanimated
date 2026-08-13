@@ -13,7 +13,7 @@ import {
   clearRenderOutput,
   describe,
   expect,
-  getRegisteredValue,
+  expectSharedValue,
   getTestComponent,
   getTrackerCallCount,
   getWorkletRuntimeFromPool,
@@ -291,9 +291,7 @@ describe('Tests of Test Framework', () => {
       */
       await clearRenderOutput();
       await render(<SharedValueComponent initialValue={preset} />);
-      const sharedValue = await getRegisteredValue('sv');
-      expect(sharedValue.onJS).toBe(preset, ComparisonMode.NUMBER);
-      expect(sharedValue.onUI).toBe(preset, ComparisonMode.NUMBER);
+      await expectSharedValue('sv').toBe(preset, ComparisonMode.NUMBER);
     }
   });
 

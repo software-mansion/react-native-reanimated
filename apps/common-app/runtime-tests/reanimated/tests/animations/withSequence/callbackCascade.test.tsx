@@ -13,6 +13,7 @@ import {
   createTestValue,
   describe,
   expect,
+  expectSharedValue,
   getTrackerCallCount,
   mockAnimationTimer,
   recordAnimationUpdates,
@@ -215,7 +216,7 @@ describe(`Cascade of callbacks`, () => {
 //   expect(updates).toMatchSnapshots(Snapshots.CallbackOrder);
 //   expect(updates).toMatchNativeSnapshots(nativeUpdates);
 
-//   expect((await getRegisteredValue(SV_REF)).onJS).toBe([
+//   await expectSharedValue(SV_REF).onJS.toBe([
 //     'ONE',
 //     'TWO',
 //     'THREE',

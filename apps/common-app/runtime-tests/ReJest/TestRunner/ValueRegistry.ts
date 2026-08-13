@@ -1,6 +1,6 @@
 import type { SharedValue } from 'react-native-reanimated';
 
-import type { SharedValueSnapshot, TestValue } from '../types';
+import type { TestValue } from '../types';
 import { runOnUIBlocking } from '../utils/runOnUIBlocking';
 
 export class ValueRegistry {
@@ -14,9 +14,22 @@ export class ValueRegistry {
     this._valueRegistry[name] = value as SharedValue;
   }
 
-  public async getRegisteredValue<TValue extends TestValue>(
+  public async getOnJS<TValue extends TestValue>(
     name: string
-  ): Promise<SharedValueSnapshot<TValue>> {
+  ): Promise<TValue> {
+    await runOnUIBlocking(
+      () => {
+        'worklet';
+      },
+      1000,
+      `the UI runtime to drain before reading '${name}' on the JS runtime`
+    );
+    return this._valueRegistry[name].value as TValue;
+  }
+
+  public async getOnUI<TValue extends TestValue>(
+    name: string
+  ): Promise<TValue> {
     const sharedValue = this._valueRegistry[name];
     const uiValue = await runOnUIBlocking(
       () => {
@@ -26,11 +39,6 @@ export class ValueRegistry {
       1000,
       `the UI runtime to report the value of '${name}'`
     );
-    const jsValue = sharedValue.value;
-
-    return {
-      onJS: jsValue as TValue,
-      onUI: uiValue as TValue,
-    };
+    return uiValue as TValue;
   }
 }
