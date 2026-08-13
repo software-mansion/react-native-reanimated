@@ -6,31 +6,29 @@ import Animated, {
   getRelativeCoords,
   measure,
   useAnimatedRef,
-  useSharedValue,
 } from 'react-native-reanimated';
 
 import {
+  createTestValue,
   describe,
   expect,
-  getRegisteredValue,
-  registerValue,
   render,
   test,
-  wait,
+  waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { scheduleOnUI } from 'react-native-worklets';
 
-const REGISTERED_VALUE_KEY = 'sv';
+const MEASURED_NOTIFICATION = 'measured';
 
 const CoordsComponent = ({
   justifyContent,
   alignItems,
+  setCoords,
 }: {
   justifyContent: ViewStyle['justifyContent'];
   alignItems: ViewStyle['alignItems'];
+  setCoords: (coords: ComponentCoords | null, notification?: string) => void;
 }) => {
-  const coordsSv = useSharedValue<ComponentCoords | null>(null);
-  registerValue(REGISTERED_VALUE_KEY, coordsSv);
   const bRef = useAnimatedRef();
   const sRef = useAnimatedRef();
 
@@ -38,10 +36,9 @@ const CoordsComponent = ({
     scheduleOnUI(() => {
       const measured = measure(sRef);
       if (measured !== null) {
-        coordsSv.value = getRelativeCoords(
-          bRef,
-          measured.pageX,
-          measured.pageY
+        setCoords(
+          getRelativeCoords(bRef, measured.pageX, measured.pageY),
+          MEASURED_NOTIFICATION
         );
       }
     });
@@ -81,23 +78,21 @@ describe('getRelativeCoords', () => {
   >)(
     'getCoords %s',
     async ([justifyContent, alignItems, expectedValueX, expectedValueY]) => {
+      const [coords, setCoords] = createTestValue<ComponentCoords | null>(null);
+
       await render(
         <CoordsComponent
           justifyContent={justifyContent}
           alignItems={alignItems}
+          setCoords={setCoords}
         />
       );
-      await wait(300);
-      const coords = (await getRegisteredValue(REGISTERED_VALUE_KEY)).onUI;
-      expect(coords).not.toBeNullable();
-      if (coords) {
-        expect(Math.round((coords as unknown as ComponentCoords).x)).toBe(
-          expectedValueX
-        );
-        expect(Math.round((coords as unknown as ComponentCoords).y)).toBe(
-          expectedValueY
-        );
-      }
+      await waitForNotification(MEASURED_NOTIFICATION);
+
+      const measured = coords.value as ComponentCoords;
+      expect(measured).not.toBeNullable();
+      expect(Math.round(measured.x)).toBe(expectedValueX);
+      expect(Math.round(measured.y)).toBe(expectedValueY);
     }
   );
 });

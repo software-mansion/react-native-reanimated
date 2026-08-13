@@ -27,7 +27,6 @@ export type TrackerCallCount = {
 };
 
 export type SharedValueSnapshot<TValue extends TestValue> = {
-  name: string;
   onJS: TValue;
   onUI: TValue;
 };

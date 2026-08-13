@@ -29,7 +29,6 @@ export class ValueRegistry {
     const jsValue = sharedValue.value;
 
     return {
-      name,
       onJS: jsValue as TValue,
       onUI: uiValue as TValue,
     };
