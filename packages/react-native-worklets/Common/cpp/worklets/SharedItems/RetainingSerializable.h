@@ -33,16 +33,16 @@ class RetainingSerializableStore {
   std::atomic<RetainingSerializableStore *> nextChunk_{nullptr};
   std::unique_ptr<RetainingSerializableStore> nextChunkOwner_{};
 
-  std::pair<bool, const jsi::Value &> find(jsi::Runtime *rt) {
+  const jsi::Value *find(jsi::Runtime *rt) {
     for (auto &slot : slots_) {
       if (slot.runtime.load(std::memory_order_acquire) == rt) {
-        return {true, slot.value};
+        return &slot.value;
       }
     }
     if (auto *next = nextChunk_.load(std::memory_order_acquire)) {
       return next->find(rt);
     }
-    return {false, jsi::Value::undefined()};
+    return nullptr;
   }
 
   void store(jsi::Runtime *rt, jsi::Value value) {
@@ -73,9 +73,8 @@ class RetainingSerializableStore {
   RetainingSerializableStore() = default;
 
   jsi::Value getOrStore(jsi::Runtime &rt, TSerializable &serializable) {
-    auto [isCached, cachedValue] = find(&rt);
-    if (isCached) {
-      return jsi::Value(rt, cachedValue);
+    if (const auto *cachedValue = find(&rt)) {
+      return jsi::Value(rt, *cachedValue);
     }
 
     auto jsValue = serializable.TSerializable::toJSValue(rt);
