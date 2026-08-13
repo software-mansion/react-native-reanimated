@@ -12,8 +12,12 @@ class CSSCallbacksRegistry {
     Set<CSSEventSubscriber>
   >();
 
-  /** Subscribers to unregister once the batch in flight has been delivered. */
-  private expiringByTag_ = new Map<number, Set<CSSEventSubscriber>>();
+  /**
+   * Subscribers of views being torn down. The engine emits their cancel while
+   * they unmount, but the batch carrying it is dispatched afterwards, so they
+   * keep receiving until one batch has gone out.
+   */
+  private retiringByTag_ = new Map<number, Set<CSSEventSubscriber>>();
 
   register(viewTag: number, subscriber: CSSEventSubscriber): void {
     const subscribers = this.subscribersByTag_.get(viewTag);
@@ -37,26 +41,29 @@ class CSSCallbacksRegistry {
   }
 
   /**
-   * Unregisters a subscriber only after the next batch. The engine emits the
-   * cancel of an unmounting view while it tears down, but the batch carrying it
-   * is dispatched afterwards, so removing the subscriber now would drop it.
-   * Only called while a view unmounts, which never re-registers.
+   * Unsubscribes a view being torn down without dropping it from the next
+   * batch. Removing it eagerly, rather than queueing the removal, is what lets
+   * a frozen view that remounts re-register itself and stay subscribed.
    */
   retire(viewTag: number, subscriber: CSSEventSubscriber): void {
-    const expiring = this.expiringByTag_.get(viewTag);
-    if (expiring) {
-      expiring.add(subscriber);
+    this.unregister(viewTag, subscriber);
+
+    const retiring = this.retiringByTag_.get(viewTag);
+    if (retiring) {
+      retiring.add(subscriber);
     } else {
-      this.expiringByTag_.set(viewTag, new Set([subscriber]));
+      this.retiringByTag_.set(viewTag, new Set([subscriber]));
     }
   }
 
   dispatch(events: NativeCSSEvent[]): void {
-    const expiring = this.expiringByTag_;
-    this.expiringByTag_ = new Map();
+    // Swapped before dispatching, so a view retired by a callback in this batch
+    // is still heard in the next one rather than this one.
+    const retiring = this.retiringByTag_;
+    this.retiringByTag_ = new Map();
 
     for (const event of events) {
-      const subscribers = this.subscribersByTag_.get(event.tag);
+      const subscribers = this.subscribersFor_(event.tag, retiring);
       if (!subscribers) {
         // An event can outlive the view it was emitted for.
         continue;
@@ -74,17 +81,24 @@ class CSSCallbacksRegistry {
         }
       }
     }
-
-    for (const [viewTag, subscribers] of expiring) {
-      for (const subscriber of subscribers) {
-        this.unregister(viewTag, subscriber);
-      }
-    }
   }
 
   clear(): void {
     this.subscribersByTag_.clear();
-    this.expiringByTag_.clear();
+    this.retiringByTag_.clear();
+  }
+
+  private subscribersFor_(
+    viewTag: number,
+    retiring: Map<number, Set<CSSEventSubscriber>>
+  ): Set<CSSEventSubscriber> | undefined {
+    const active = this.subscribersByTag_.get(viewTag);
+    const retired = retiring.get(viewTag);
+    if (!retired) {
+      return active;
+    }
+    // A remounted view is in both, and must still be heard exactly once.
+    return active ? new Set([...active, ...retired]) : retired;
   }
 }
 

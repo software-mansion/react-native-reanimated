@@ -218,5 +218,18 @@ describe('cssCallbacksRegistry', () => {
       expect(outer.handleCSSEvent).toHaveBeenCalledTimes(1);
       expect(inner.handleCSSEvent).toHaveBeenCalledTimes(2);
     });
+
+    // A frozen view is retired and then mounted again on the same manager.
+    test('a subscriber that registers again stays subscribed', () => {
+      const sub = subscriber();
+      cssCallbacksRegistry.register(1, sub);
+      cssCallbacksRegistry.retire(1, sub);
+      cssCallbacksRegistry.register(1, sub);
+
+      cssCallbacksRegistry.dispatch([event(1)]);
+      cssCallbacksRegistry.dispatch([event(1)]);
+
+      expect(sub.handleCSSEvent).toHaveBeenCalledTimes(2);
+    });
   });
 });
