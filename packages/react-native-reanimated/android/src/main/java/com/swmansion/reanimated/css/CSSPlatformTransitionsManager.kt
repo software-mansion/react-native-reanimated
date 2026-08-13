@@ -224,7 +224,8 @@ internal class CSSPlatformTransitionsManager(
                 }
             }
         } finally {
-            // A command that throws would otherwise leave the spare holding stale starts.
+            // Recycle even when a command throws: until then the spare still aliases the live
+            // queue, and the next flush would clear commands out from under enqueue().
             batch.clear()
             spareCommands = batch
         }
