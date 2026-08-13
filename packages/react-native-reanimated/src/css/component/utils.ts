@@ -21,20 +21,27 @@ function filterStyleRecursive(style: StyleProp<CSSStyle>): StyleProp<CSSStyle> {
     return style;
   }
 
-  return Object.entries(style).reduce<UnknownRecord>((acc, [key, value]) => {
+  const styleObject = style as UnknownRecord;
+  const result: UnknownRecord = {};
+
+  // `for...in` rather than `Object.entries`, which allocates a pair array per
+  // key on a walk that runs for every animated view on every render.
+  for (const key in styleObject) {
     if (isCSSConfigProp(key)) {
-      return acc;
+      continue;
     }
+    const value = styleObject[key];
     if (isPseudoSelectorValue(value)) {
       const defaultValue = (value as { default?: unknown }).default;
       if (defaultValue !== undefined) {
-        acc[key] = defaultValue;
+        result[key] = defaultValue;
       }
-      return acc;
+      continue;
     }
-    acc[key] = value;
-    return acc;
-  }, {});
+    result[key] = value;
+  }
+
+  return result;
 }
 
 function omitCSSCallbackProps(props: object): UnknownRecord {

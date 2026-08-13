@@ -36,8 +36,7 @@ export type AnimatedComponentType<
   Instance = unknown,
   // Extra props accepted only when passed inline on the animated component.
   // They are not part of the base component props, so they don't affect the
-  // `animatedProps` typing. The CSS callbacks are always accepted, so extra
-  // props of your own add to them rather than replacing them.
+  // `animatedProps` typing.
   ExtraProps extends object = object,
 > = {
   (
