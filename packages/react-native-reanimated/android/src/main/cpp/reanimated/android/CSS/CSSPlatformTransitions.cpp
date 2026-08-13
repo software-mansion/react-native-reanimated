@@ -2,8 +2,6 @@
 
 #include <reanimated/CSS/easing/EasingConfigs.h>
 
-#include <algorithm>
-
 #include <variant>
 #include <vector>
 
@@ -46,8 +44,12 @@ std::optional<int> platformPropertyId(const std::string &propertyName) {
 CSSPlatformTransitions::CSSPlatformTransitions(
     AnimateFunction animate,
     RemoveFunction remove,
-    DefineEasingFunction defineEasing)
-    : animate_(std::move(animate)), remove_(std::move(remove)), defineEasing_(std::move(defineEasing)) {}
+    DefineEasingFunction defineEasing,
+    UndefineEasingFunction undefineEasing)
+    : animate_(std::move(animate)),
+      remove_(std::move(remove)),
+      defineEasing_(std::move(defineEasing)),
+      undefineEasing_(std::move(undefineEasing)) {}
 
 std::size_t PlatformEasingHash::operator()(const PlatformEasing &easing) const {
   std::size_t seed = std::hash<std::uint8_t>{}(static_cast<std::uint8_t>(easing.type));
@@ -69,33 +71,25 @@ int CSSPlatformTransitions::easingIdFor(const PlatformEasing &easing) {
     return it->second;
   }
 
-  // Take back a slot nothing routes with before adding one, so the table settles at the most
-  // curves ever animating at once. Scanning rather than tracking freed ids also reclaims a slot
-  // interned for a start that then failed, which never passed through releaseEasing. Only runs
-  // when a curve is seen for the first time.
-  const auto unused = std::find(easingRefs_.begin(), easingRefs_.end(), 0);
-  int easingId;
-  if (unused != easingRefs_.end()) {
-    easingId = static_cast<int>(std::distance(easingRefs_.begin(), unused));
-    easingIds_.erase(easingKeys_[easingId]);
-    easingKeys_[easingId] = easing;
-  } else {
-    easingId = static_cast<int>(easingKeys_.size());
-    easingKeys_.push_back(easing);
-    easingRefs_.push_back(0);
-  }
-
+  const int easingId = nextEasingId_++;
   defineEasing_(easingId, static_cast<int>(easing.type), easing.pointsX, easing.pointsY);
   easingIds_.emplace(easing, easingId);
+  internedEasings_.emplace(easingId, InternedEasing{easing, 0});
   return easingId;
 }
 
 void CSSPlatformTransitions::retainEasing(const int easingId) {
-  ++easingRefs_[easingId];
+  ++internedEasings_.at(easingId).refCount;
 }
 
 void CSSPlatformTransitions::releaseEasing(const int easingId) {
-  --easingRefs_[easingId];
+  const auto it = internedEasings_.find(easingId);
+  if (--it->second.refCount > 0) {
+    return;
+  }
+  easingIds_.erase(it->second.easing);
+  internedEasings_.erase(it);
+  undefineEasing_(easingId);
 }
 
 const CSSPlatformTransitions::ActiveTransition *CSSPlatformTransitions::activeTransitionFor(
@@ -161,6 +155,8 @@ bool CSSPlatformTransitions::applyTransition(
   }
 
   const auto easingId = easingIdFor(toPlatformEasing(resolvedSettings.easingConfig));
+  // Retain before the start can fail, so a rejected start drops the curve it just interned.
+  retainEasing(easingId);
 
   if (!animate_(
           static_cast<int>(viewTag),
@@ -171,11 +167,11 @@ bool CSSPlatformTransitions::applyTransition(
           reversing.startTimestamp,
           easingId,
           persistent)) {
+    releaseEasing(easingId);
     return false;
   }
 
-  // Retain before releasing, so replacing a transition with the same curve never frees it.
-  retainEasing(easingId);
+  // Released after the retain above, so replacing a transition with the same curve never drops it.
   if (replacedEasingId >= 0) {
     releaseEasing(replacedEasingId);
   }

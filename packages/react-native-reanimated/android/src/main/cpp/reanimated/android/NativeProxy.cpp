@@ -292,6 +292,11 @@ void NativeProxy::cssDefineEasing(
   method(javaPart_.get(), easingId, type, jPointsX, jPointsY);
 }
 
+void NativeProxy::cssUndefineEasing(const int easingId) {
+  static const auto method = getJniMethod<void(int)>("cssUndefineEasing");
+  method(javaPart_.get(), easingId);
+}
+
 void NativeProxy::detachPseudoSelector(Tag tag, PseudoSelector selector) {
   static const auto method = getJniMethod<void(int, int)>("detachPseudoSelector");
   method(javaPart_.get(), static_cast<int>(tag), static_cast<int>(selector));
@@ -380,7 +385,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto cssPlatformTransitions = std::make_shared<CSSPlatformTransitions>(
       bindThis(&NativeProxy::cssAnimateTransition),
       bindThis(&NativeProxy::cssRemoveTransition),
-      bindThis(&NativeProxy::cssDefineEasing));
+      bindThis(&NativeProxy::cssDefineEasing),
+      bindThis(&NativeProxy::cssUndefineEasing));
 
   auto cssCanRouteProperty = css::CSSCanRoutePropertyFunction(&css::canRouteCSSProperty);
 

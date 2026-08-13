@@ -281,6 +281,11 @@ open class NativeProxy {
     }
 
     @DoNotStrip
+    fun cssUndefineEasing(easingId: Int) {
+        cssPlatformTransitionsManager.undefineEasing(easingId)
+    }
+
+    @DoNotStrip
     fun cssAnimateTransition(
         viewTag: Int,
         propertyId: Int,

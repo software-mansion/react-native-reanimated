@@ -52,7 +52,14 @@ class CSSPlatformTransitions {
   using DefineEasingFunction =
       std::function<void(int easingId, int type, const std::vector<float> &pointsX, const std::vector<float> &pointsY)>;
 
-  CSSPlatformTransitions(AnimateFunction animate, RemoveFunction remove, DefineEasingFunction defineEasing);
+  /// Drops a curve the platform no longer needs. Ids are never reused, so nothing overwrites it.
+  using UndefineEasingFunction = std::function<void(int easingId)>;
+
+  CSSPlatformTransitions(
+      AnimateFunction animate,
+      RemoveFunction remove,
+      DefineEasingFunction defineEasing,
+      UndefineEasingFunction undefineEasing);
 
   /// A null `settings` marks the pseudo-selector toggle path, which carries none of
   /// its own and reuses whatever the last config apply stored. A settings-only config
@@ -80,24 +87,29 @@ class CSSPlatformTransitions {
 
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
 
-  /// Interns the curve, registering it with the platform on first sight. An unused curve stays
-  /// cached so a screen returning to it reuses the flattened interpolator, and its slot is only
-  /// taken when another curve needs one. Always succeeds: the table has no ceiling.
+  /// Interns the curve, registering it with the platform on first sight and handing back the id
+  /// the JNI hop carries in place of the points. Always succeeds: ids just keep counting up.
   int easingIdFor(const PlatformEasing &easing);
 
   void retainEasing(int easingId);
 
-  /// The slot stays populated at zero references; another curve only takes it when it needs one.
+  /// Drops the curve once no property routes with it, on both sides of the boundary.
   void releaseEasing(int easingId);
+
+  /// The curve behind an id, and how many routed properties still animate with it.
+  struct InternedEasing {
+    PlatformEasing easing;
+    int refCount;
+  };
 
   std::unordered_map<Tag, std::unordered_map<std::string, ActiveTransition>> active_;
   std::unordered_map<PlatformEasing, int, PlatformEasingHash> easingIds_;
-  /// Indexed by easing id: the curve occupying the slot, and how many properties route with it.
-  std::vector<PlatformEasing> easingKeys_;
-  std::vector<int> easingRefs_;
+  std::unordered_map<int, InternedEasing> internedEasings_;
+  int nextEasingId_{0};
   AnimateFunction animate_;
   RemoveFunction remove_;
   DefineEasingFunction defineEasing_;
+  UndefineEasingFunction undefineEasing_;
 };
 
 } // namespace reanimated

@@ -85,6 +85,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
       bool persistent);
   void cssRemoveTransition(int viewTag, int propertyId);
   void cssDefineEasing(int easingId, int type, const std::vector<float> &pointsX, const std::vector<float> &pointsY);
+  void cssUndefineEasing(int easingId);
 
   /***
    * Wraps a method of `NativeProxy` in a function object capturing `this`

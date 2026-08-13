@@ -263,6 +263,11 @@ internal class CSSPlatformTransitionsManager(
         easings[easingId] = CSSEasing.interpolator(easingType, easingPointsX, easingPointsY)
     }
 
+    /** The C++ interner drops a curve once nothing routes with it; ids are never handed out twice. */
+    fun undefineEasing(easingId: Int) {
+        easings.remove(easingId)
+    }
+
     private fun viewForTag(viewTag: Int): View? =
         try {
             fabricUIManager.resolveView(viewTag)
