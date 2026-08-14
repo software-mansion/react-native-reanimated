@@ -31,6 +31,10 @@ class Synchronizable : public SynchronizableAccess,
     return synchronizable;
   }
 
+  bool isFixed() const {
+    return isFixed_;
+  }
+
   /**
    * Can run concurrently with getDirty, setDirty, getBlocking, setBlocking.
    */
@@ -60,13 +64,17 @@ class Synchronizable : public SynchronizableAccess,
     auto synchronizableUnpacker = rt.global().getProperty(rt, "__synchronizableUnpacker");
     react_native_assert(synchronizableUnpacker.isObject() && "synchronizableUnpacker not found");
     auto ref = SerializableJSRef::newNativeStateObject(rt, this->shared_from_this());
-    return synchronizableUnpacker.getObject(rt).getFunction(rt).call(rt, std::move(ref));
+    return synchronizableUnpacker.getObject(rt).getFunction(rt).call(
+        rt, std::move(ref), facebook::jsi::Value(isFixed()));
   }
 
   ~Synchronizable() override = default;
 
  protected:
-  Synchronizable() : Serializable(ValueType::SynchronizableType) {}
+  explicit Synchronizable(bool isFixed) : Serializable(ValueType::SynchronizableType), isFixed_(isFixed) {}
+
+ private:
+  const bool isFixed_;
 };
 
 } // namespace worklets
