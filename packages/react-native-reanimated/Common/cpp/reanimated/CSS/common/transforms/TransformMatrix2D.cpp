@@ -71,12 +71,12 @@ TransformMatrix2D::TransformMatrix2D(const folly::dynamic &array)
 }
 
 bool TransformMatrix2D::canConstruct(jsi::Runtime &rt, const jsi::Value &value) {
-  if (!isJSIArray(rt, value)) {
+  const auto array = asJSIArray(rt, value);
+  if (!array) {
     return false;
   }
 
-  const auto array = value.asObject(rt).asArray(rt);
-  const auto size = array.size(rt);
+  const auto size = array->size(rt);
 
   // Check if it's a 3x3 matrix (9 elements)
   if (size == 9) {
@@ -91,9 +91,9 @@ bool TransformMatrix2D::canConstruct(jsi::Runtime &rt, const jsi::Value &value) 
     // [x, x, 0, x]
     // [0, 0, 1, 0]
     // [x, x, 0, x]
-    return array.getValueAtIndex(rt, 2).asNumber() == 0.0 && array.getValueAtIndex(rt, 6).asNumber() == 0.0 &&
-        array.getValueAtIndex(rt, 10).asNumber() == 1.0 && array.getValueAtIndex(rt, 11).asNumber() == 0.0 &&
-        array.getValueAtIndex(rt, 14).asNumber() == 0.0 && array.getValueAtIndex(rt, 15).asNumber() == 1.0;
+    return array->getValueAtIndex(rt, 2).asNumber() == 0.0 && array->getValueAtIndex(rt, 6).asNumber() == 0.0 &&
+        array->getValueAtIndex(rt, 10).asNumber() == 1.0 && array->getValueAtIndex(rt, 11).asNumber() == 0.0 &&
+        array->getValueAtIndex(rt, 14).asNumber() == 0.0 && array->getValueAtIndex(rt, 15).asNumber() == 1.0;
   }
 
   return false;

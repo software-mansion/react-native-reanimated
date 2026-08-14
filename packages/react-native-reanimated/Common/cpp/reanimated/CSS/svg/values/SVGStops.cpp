@@ -35,12 +35,12 @@ SVGStops::SVGStops(const folly::dynamic &value) {
 }
 
 bool SVGStops::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  if (!isJSIArray(rt, jsiValue)) {
+  const auto array = asJSIArray(rt, jsiValue);
+  if (!array) {
     return false;
   }
 
-  auto array = jsiValue.asObject(rt).asArray(rt);
-  size_t length = array.size(rt);
+  const size_t length = array->size(rt);
 
   if (length == 0) {
     return true;
@@ -51,8 +51,8 @@ bool SVGStops::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
     return false;
   }
 
-  auto firstOffset = array.getValueAtIndex(rt, 0);
-  auto firstBrush = array.getValueAtIndex(rt, 1);
+  auto firstOffset = array->getValueAtIndex(rt, 0);
+  auto firstBrush = array->getValueAtIndex(rt, 1);
 
   return firstOffset.isNumber() && SVGBrush::canConstruct(rt, firstBrush);
 }
