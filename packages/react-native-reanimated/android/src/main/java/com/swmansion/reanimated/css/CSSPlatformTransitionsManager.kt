@@ -258,8 +258,8 @@ internal class CSSPlatformTransitionsManager(
         val elapsedMs = animationTimestamp().toDouble() - command.startTimestampMs
 
         // ObjectAnimator writes nothing until its first frame, so the view would show the
-        // already-committed target for the whole delay. A start that is already past its end
-        // has no delay left to cover, so priming it would only be a wasted write.
+        // already-committed target for the whole delay. A start past its end skips the prime:
+        // it would flash the stale start value for one frame over the correct target.
         if (elapsedMs < durationMs) writer.setValue(view, startValue)
 
         val animator = ObjectAnimator.ofFloat(view, writer, startValue, command.toValue.toFloat())
