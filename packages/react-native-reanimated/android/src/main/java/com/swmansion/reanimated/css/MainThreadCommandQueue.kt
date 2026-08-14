@@ -24,13 +24,12 @@ internal class MainThreadCommandQueue<T : Any>(
     private val drainRunnable = Runnable { drain() }
 
     fun enqueue(command: T) {
-        val schedule: Boolean
         synchronized(lock) {
             pending.add(command)
-            schedule = !scheduled
-            if (schedule) scheduled = true
-        }
-        if (schedule) {
+            if (scheduled) return
+            scheduled = true
+            // Posted under the lock: a drain between deciding and posting would reset
+            // `scheduled`, and the next enqueue would post a second message for this burst.
             val message = Message.obtain(mainHandler, drainRunnable)
             message.isAsynchronous = true
             mainHandler.sendMessage(message)
