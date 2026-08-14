@@ -28,7 +28,7 @@ class CSSPlatformEasings {
   using DefineFunction =
       std::function<void(int easingId, int type, const std::vector<float> &pointsX, const std::vector<float> &pointsY)>;
 
-  /// Ids are never reused, so a curve nobody needs has to be removed explicitly.
+  /// A live id is never handed to another curve, so nothing overwrites the platform's entry.
   using UndefineFunction = std::function<void(int easingId)>;
 
   CSSPlatformEasings(DefineFunction define, UndefineFunction undefine);
