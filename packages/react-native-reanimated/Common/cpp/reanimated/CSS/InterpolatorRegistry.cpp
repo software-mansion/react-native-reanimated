@@ -8,6 +8,7 @@
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/common/values/CSSPlatformColor.h>
 #include <reanimated/CSS/common/values/CSSValue.h>
 
 #include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
@@ -126,7 +127,7 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
     {"direction", value<CSSKeyword>("inherit")},
 
     // Shadow (iOS)
-    {"shadowColor", value<CSSColor>(BLACK)},
+    {"shadowColor", value<CSSPlatformColor, CSSColor>(BLACK)},
     {"shadowOffset", record({{"width", value<CSSDouble>(0)}, {"height", value<CSSDouble>(0)}})},
     {"shadowRadius", value<CSSDouble>(0)},
     {"shadowOpacity", value<CSSDouble>(1)},
@@ -169,33 +170,33 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
 
     // View
     {"backfaceVisibility", value<CSSKeyword>("visible")},
-    {"backgroundColor", value<CSSColor>(TRANSPARENT)},
-    {"borderBlockColor", value<CSSColor>(BLACK)},
-    {"borderBlockEndColor", value<CSSColor>(BLACK)},
-    {"borderBlockStartColor", value<CSSColor>(BLACK)},
-    {"borderBottomColor", value<CSSColor>(BLACK)},
+    {"backgroundColor", value<CSSPlatformColor, CSSColor>(TRANSPARENT)},
+    {"borderBlockColor", value<CSSPlatformColor, CSSColor>(BLACK)},
+    {"borderBlockEndColor", value<CSSPlatformColor, CSSColor>(BLACK)},
+    {"borderBlockStartColor", value<CSSPlatformColor, CSSColor>(BLACK)},
+    {"borderBottomColor", value<CSSPlatformColor, CSSColor>(BLACK)},
     {"borderBottomEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
     {"borderBottomLeftRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
     {"borderBottomRightRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
     {"borderBottomStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-    {"borderColor", value<CSSColor>(BLACK)},
+    {"borderColor", value<CSSPlatformColor, CSSColor>(BLACK)},
     {"borderCurve", value<CSSKeyword>("circular")},
-    {"borderEndColor", value<CSSColor>(BLACK)},
+    {"borderEndColor", value<CSSPlatformColor, CSSColor>(BLACK)},
     {"borderEndEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
     {"borderEndStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-    {"borderLeftColor", value<CSSColor>(BLACK)},
+    {"borderLeftColor", value<CSSPlatformColor, CSSColor>(BLACK)},
     {"borderRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-    {"borderRightColor", value<CSSColor>(BLACK)},
-    {"borderStartColor", value<CSSColor>(BLACK)},
+    {"borderRightColor", value<CSSPlatformColor, CSSColor>(BLACK)},
+    {"borderStartColor", value<CSSPlatformColor, CSSColor>(BLACK)},
     {"borderStartEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
     {"borderStartStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
     {"borderStyle", value<CSSKeyword>("solid")},
-    {"borderTopColor", value<CSSColor>(BLACK)},
+    {"borderTopColor", value<CSSPlatformColor, CSSColor>(BLACK)},
     {"borderTopEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
     {"borderTopLeftRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
     {"borderTopRightRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
     {"borderTopStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-    {"outlineColor", value<CSSColor>(BLACK)},
+    {"outlineColor", value<CSSPlatformColor, CSSColor>(BLACK)},
     {"outlineOffset", value<CSSDouble>(0)},
     {"outlineStyle", value<CSSKeyword>("solid")},
     {"outlineWidth", value<CSSDouble>(0)},
@@ -208,7 +209,7 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
     {"mixBlendMode", value<CSSKeyword>("normal")},
 
     // Text
-    {"color", value<CSSColor>(BLACK)},
+    {"color", value<CSSPlatformColor, CSSColor>(BLACK)},
     {"fontFamily", value<CSSKeyword>("inherit")},
     {"fontSize", value<CSSDouble>(14)},
     {"fontStyle", value<CSSKeyword>("normal")},
@@ -217,7 +218,7 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
     {"lineHeight", value<CSSDouble>(14)}, // TODO - should inherit from fontSize
     {"textAlign", value<CSSKeyword>("auto")},
     {"textDecorationLine", value<CSSKeyword>("none")},
-    {"textShadowColor", value<CSSColor>(BLACK)},
+    {"textShadowColor", value<CSSPlatformColor, CSSColor>(BLACK)},
     {"textShadowOffset", record({{"width", value<CSSDouble>(0)}, {"height", value<CSSDouble>(0)}})},
     {"textShadowRadius", value<CSSDouble>(0)},
     {"textTransform", value<CSSKeyword>("none")},
@@ -225,7 +226,7 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
 
     // Text (iOS)
     {"fontVariant", value<CSSDiscreteArray<CSSKeyword>>(std::vector<CSSKeyword>{})},
-    {"textDecorationColor", value<CSSColor>(BLACK)},
+    {"textDecorationColor", value<CSSPlatformColor, CSSColor>(BLACK)},
     {"textDecorationStyle", value<CSSKeyword>("solid")},
     {"writingDirection", value<CSSKeyword>("auto")},
 
@@ -236,8 +237,8 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
 
     // Image
     {"resizeMode", value<CSSKeyword>("cover")},
-    {"overlayColor", value<CSSColor>(BLACK)},
-    {"tintColor", value<CSSColor>(BLACK)},
+    {"overlayColor", value<CSSPlatformColor, CSSColor>(BLACK)},
+    {"tintColor", value<CSSPlatformColor, CSSColor>(BLACK)},
 };
 
 // =================
