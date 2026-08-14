@@ -139,7 +139,6 @@ template class CSSValueVariant<CSSIndex>;
 template class CSSValueVariant<CSSKeyword>;
 template class CSSValueVariant<CSSAngle>;
 template class CSSValueVariant<CSSBoolean>;
-template class CSSValueVariant<CSSColor>;
 template class CSSValueVariant<CSSColor, CSSPlatformColor>;
 template class CSSValueVariant<CSSDisplay>;
 template class CSSValueVariant<CSSBoxShadow>;
