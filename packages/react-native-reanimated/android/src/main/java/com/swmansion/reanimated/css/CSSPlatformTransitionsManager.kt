@@ -6,7 +6,6 @@ import android.animation.ObjectAnimator
 import android.animation.TimeInterpolator
 import android.os.Handler
 import android.os.Looper
-import android.os.Message
 import android.util.FloatProperty
 import android.view.Choreographer
 import android.view.View
