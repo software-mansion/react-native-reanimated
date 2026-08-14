@@ -5,11 +5,11 @@ import android.view.ViewTreeObserver
 
 /**
  * React writes the same property the animator drives, so a commit can overwrite it mid-flight.
- * Running [onPreDraw] just before the draw puts it after every writer without knowing which one
- * ran, since they all run earlier in the frame. Its return says whether the listener stays.
+ * Running [beforeDraw] at that point puts it after every writer without knowing which one ran,
+ * since they all run earlier in the frame. Its return says whether the listener stays.
  */
 internal class CSSPlatformTransitionReconciler(
-    private val onPreDraw: () -> Boolean,
+    private val beforeDraw: () -> Boolean,
 ) {
     /** Keyed by window: getViewTreeObserver is per window, not per view. */
     private val tracked = HashMap<ViewTreeObserver, ViewTreeObserver.OnPreDrawListener>()
@@ -28,7 +28,7 @@ internal class CSSPlatformTransitionReconciler(
         val listener =
             object : ViewTreeObserver.OnPreDrawListener {
                 override fun onPreDraw(): Boolean {
-                    if (this@CSSPlatformTransitionReconciler.onPreDraw()) return true
+                    if (beforeDraw()) return true
 
                     // Retire here, not when the registry empties: a cancel fires its end
                     // callback mid-replacement, when the registry is briefly empty.
