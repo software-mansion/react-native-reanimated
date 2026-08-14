@@ -33,11 +33,7 @@ export default class CSSManager implements ICSSManager {
     const [animationProperties, transitionProperties, pseudoStylesBySelector] =
       filterCSSAndStyleProperties(style);
 
-    const [animationCallbacks, transitionCallbacks] = splitCSSCallbacks(
-      props,
-      animationProperties !== null,
-      transitionProperties !== null
-    );
+    const [animationCallbacks, transitionCallbacks] = splitCSSCallbacks(props);
 
     this.animationsManager.update(animationProperties, animationCallbacks);
     this.transitionsManager.update(transitionProperties, transitionCallbacks);

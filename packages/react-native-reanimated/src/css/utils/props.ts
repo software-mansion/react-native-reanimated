@@ -155,35 +155,9 @@ function validateCSSTransitionProps(props: Partial<CSSTransitionProperties>) {
   }
 }
 
-function validateCSSCallbacks(
-  kind: 'animation' | 'transition',
-  exampleProp: string,
-  callbacks: CSSAnimationCallbacks | CSSTransitionCallbacks,
-  hasConfig: boolean
-) {
-  // These callbacks are driven by an actual CSS animation/transition; without
-  // the matching properties configured there is nothing that could fire them.
-  const callbackNames = Object.keys(callbacks);
-  if (callbackNames.length === 0 || hasConfig) {
-    return;
-  }
-
-  const isPlural = callbackNames.length > 1;
-  logger.warn(
-    `CSS ${kind} ${isPlural ? 'callbacks' : 'callback'} (${callbackNames.join(', ')}) ` +
-      `${isPlural ? 'were' : 'was'} provided without any CSS ${kind} properties ` +
-      `(e.g. ${exampleProp}), so ${isPlural ? 'they' : 'it'} will never be called.`
-  );
-}
-
-/**
- * Splits the callback props into their animation and transition halves, warning
- * in dev about a kind that is subscribed to but never configured.
- */
+/** Splits the callback props into their animation and transition halves. */
 export function splitCSSCallbacks(
-  props: Readonly<UnknownRecord>,
-  hasAnimationConfig: boolean,
-  hasTransitionConfig: boolean
+  props: Readonly<UnknownRecord>
 ): [CSSAnimationCallbacks | null, CSSTransitionCallbacks | null] {
   const animationCallbacks: CSSAnimationCallbacks = {};
   const transitionCallbacks: CSSTransitionCallbacks = {};
@@ -204,21 +178,6 @@ export function splitCSSCallbacks(
       transitionCallbacks[prop] = value as CSSTransitionCallback;
       hasTransitionCallbacks = true;
     }
-  }
-
-  if (__DEV__) {
-    validateCSSCallbacks(
-      'animation',
-      'animationName',
-      animationCallbacks,
-      hasAnimationConfig
-    );
-    validateCSSCallbacks(
-      'transition',
-      'transitionDuration',
-      transitionCallbacks,
-      hasTransitionConfig
-    );
   }
 
   return [
