@@ -10,11 +10,13 @@ class SynchronizableDynamic final : public Synchronizable {
  public:
   explicit SynchronizableDynamic(const std::shared_ptr<Serializable> &value) : value_(value) {}
 
-  std::shared_ptr<Serializable> getDirty() override;
+  SynchronizableValue getDirty() override;
 
-  std::shared_ptr<Serializable> getBlocking() override;
+  SynchronizableValue getBlocking() override;
 
   void setBlocking(const std::shared_ptr<Serializable> &value) override;
+
+  void setBlocking(const SynchronizableFixedValue &value) override;
 
  private:
   std::shared_ptr<Serializable> value_;
