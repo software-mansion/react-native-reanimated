@@ -4,6 +4,15 @@ namespace reanimated::css {
 
 namespace {
 
+bool isPlainObject(jsi::Runtime &rt, const jsi::Value &value) {
+  if (!value.isObject()) {
+    return false;
+  }
+
+  const auto object = value.getObject(rt);
+  return !object.isArray(rt) && !object.isFunction(rt);
+}
+
 bool isArrayProperty(const folly::dynamic &value, const char *name) {
   const auto *property = value.get_ptr(name);
   return property != nullptr && property->isArray();
@@ -30,21 +39,16 @@ bool isPlatformColorPayload(const folly::dynamic &value) {
 }
 
 bool isPlatformColorPayload(jsi::Runtime &rt, const jsi::Value &value) {
-  if (!value.isObject()) {
+  if (!isPlainObject(rt, value)) {
     return false;
   }
 
   const auto object = value.getObject(rt);
-  if (object.isArray(rt) || object.isFunction(rt)) {
-    return false;
-  }
-
   if (isArrayProperty(rt, object, "semantic") || isArrayProperty(rt, object, "resource_paths")) {
     return true;
   }
 
-  const auto dynamicColor = object.getProperty(rt, "dynamic");
-  return dynamicColor.isObject() && !dynamicColor.getObject(rt).isArray(rt);
+  return isPlainObject(rt, object.getProperty(rt, "dynamic"));
 }
 
 } // namespace reanimated::css
