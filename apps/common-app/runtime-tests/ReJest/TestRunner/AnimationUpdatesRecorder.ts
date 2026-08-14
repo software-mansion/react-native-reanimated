@@ -69,6 +69,12 @@ export class AnimationUpdatesRecorder {
     await runOnUIBlocking(() => {
       'worklet';
       global.mockedAnimationTimestamp = 0;
+      global.framesCount = 0;
+
+      if (global.originalGetAnimationTimestamp !== undefined) {
+        return;
+      }
+
       global.originalGetAnimationTimestamp = global._getAnimationTimestamp;
 
       Object.defineProperty(global, '__frameTimestamp', {
@@ -82,7 +88,6 @@ export class AnimationUpdatesRecorder {
         }
         return global.mockedAnimationTimestamp;
       };
-      global.framesCount = 0;
 
       const originalRequestAnimationFrame = global.requestAnimationFrame;
       global.originalRequestAnimationFrame = originalRequestAnimationFrame;
