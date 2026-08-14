@@ -44,8 +44,7 @@ void CSSPlatformEasings::release(const int easingId) {
   interned_.erase(it);
   undefine_(easingId);
   if (interned_.empty()) {
-    // Nothing holds an id, so counting from zero again keeps them inside the range the
-    // platform side can look up without boxing.
+    // Small ids stay inside the platform side's key cache, so restart while none are in use.
     nextId_ = 0;
   }
 }

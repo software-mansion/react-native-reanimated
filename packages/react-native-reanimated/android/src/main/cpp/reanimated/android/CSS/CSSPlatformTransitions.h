@@ -56,14 +56,14 @@ class CSSPlatformTransitions {
     css::PlatformValue adjustedEnd;
     css::ReversingState reversing;
     css::CSSTransitionPropertySettings settings;
-    /// Keeps the curve's slot alive for as long as this property is routed.
+    /// Holds a reference to the curve for as long as this property is routed.
     int easingId;
   };
 
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
 
   std::unordered_map<Tag, std::unordered_map<std::string, ActiveTransition>> active_;
-  /// Shared, so a future platform animation kind interns against the same table.
+  /// Shared so every platform animation kind interns against one table.
   std::shared_ptr<CSSPlatformEasings> easings_;
   AnimateFunction animate_;
   RemoveFunction remove_;
