@@ -63,9 +63,12 @@ internal class CSSPlatformTransitionsManager(
 
     private val commandLock = Any()
     private var pendingCommands = ArrayList<Command>()
-    private var spareCommands = ArrayList<Command>()
+
+    /** Null while the flush holds it, so the two buffers can never be the same list. */
+    private var spareCommands: ArrayList<Command>? = ArrayList()
     private var flushScheduled = false
     private val mainHandler = Handler(Looper.getMainLooper())
+    private val flushRunnable = Runnable { flushCommands() }
 
     /**
      * A C++ mutex serialises the callers but is not a happens-before edge for Java, so the
@@ -190,6 +193,9 @@ internal class CSSPlatformTransitionsManager(
      * whose committed value it is meant to replace.
      */
     private fun enqueue(command: Command) {
+        // Teardown streams a removal per routed property, and each would post its own message.
+        if (invalidated) return
+
         val schedule: Boolean
         synchronized(commandLock) {
             pendingCommands.add(command)
@@ -197,7 +203,7 @@ internal class CSSPlatformTransitionsManager(
             if (schedule) flushScheduled = true
         }
         if (schedule) {
-            val message = Message.obtain(mainHandler) { flushCommands() }
+            val message = Message.obtain(mainHandler, flushRunnable)
             message.isAsynchronous = true
             mainHandler.sendMessage(message)
         }
@@ -207,27 +213,25 @@ internal class CSSPlatformTransitionsManager(
         val batch: ArrayList<Command>
         synchronized(commandLock) {
             batch = pendingCommands
-            pendingCommands = spareCommands
+            pendingCommands = spareCommands ?: ArrayList()
+            spareCommands = null
             flushScheduled = false
         }
         try {
-            // A start enqueued before invalidate() must not register an animator behind the cleanup.
-            if (!invalidated) {
-                for (command in batch) {
-                    when (command) {
-                        is Command.Start -> beginStart(command)
-                        is Command.Remove -> {
-                            startTokens.remove(command.key)
-                            animators.remove(command.key)?.animator?.cancel()
-                        }
+            for (command in batch) {
+                // A start must not register an animator behind cleanup that is already posted.
+                if (invalidated) break
+                when (command) {
+                    is Command.Start -> beginStart(command)
+                    is Command.Remove -> {
+                        startTokens.remove(command.key)
+                        animators.remove(command.key)?.animator?.cancel()
                     }
                 }
             }
         } finally {
-            // Recycle even when a command throws: until then the spare still aliases the live
-            // queue, and the next flush would clear commands out from under enqueue().
             batch.clear()
-            spareCommands = batch
+            synchronized(commandLock) { spareCommands = batch }
         }
     }
 
