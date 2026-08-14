@@ -223,16 +223,18 @@ internal class CSSPlatformTransitionsManager(
                 if (invalidated) break
                 when (command) {
                     is Command.Start -> beginStart(command)
-                    is Command.Remove -> {
-                        startTokens.remove(command.key)
-                        animators.remove(command.key)?.animator?.cancel()
-                    }
+                    is Command.Remove -> removeNow(command.key)
                 }
             }
         } finally {
             batch.clear()
             synchronized(commandLock) { spareCommands = batch }
         }
+    }
+
+    private fun removeNow(key: Key) {
+        startTokens.remove(key)
+        animators.remove(key)?.animator?.cancel()
     }
 
     private fun beginStart(command: Command.Start) {
