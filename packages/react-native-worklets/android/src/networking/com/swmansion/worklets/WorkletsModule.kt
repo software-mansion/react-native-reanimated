@@ -171,9 +171,6 @@ class WorkletsModule(
             mInvalidated = true
             reactApplicationContext.removeLifecycleEventListener(this)
         }
-        // Must run before invalidateCpp(). The queued callbacks reach into the native module that
-        // invalidateCpp() tears down, and removing the lifecycle event listener above means
-        // onHostPause() can no longer stop the frame loop for us.
         mAnimationFrameQueue.invalidate()
         if (mHybridData != null && mHybridData!!.isValid) {
             invalidateCpp()

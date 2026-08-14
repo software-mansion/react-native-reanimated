@@ -10,7 +10,7 @@
 
 ### 🐛 Bug fixes
 
-- Fix `AnimationFrameQueue` continuing to deliver frames after `WorkletsModule` is invalidated, which aborted the process with `JNI DETECTED ERROR IN APPLICATION: obj == null` on Android when the React instance was recreated while animations were running. ([#10278](https://github.com/software-mansion/react-native-reanimated/pull/10278) by [@shubhamdeol](https://github.com/shubhamdeol))
+- Fix a crash on Android when the React instance is recreated while animations are running - `AnimationFrameQueue` kept delivering frames after `WorkletsModule` was invalidated. ([#10278](https://github.com/software-mansion/react-native-reanimated/pull/10278) by [@shubhamdeol](https://github.com/shubhamdeol))
 
 ### 💡 Others
 

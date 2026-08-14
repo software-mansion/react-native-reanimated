@@ -27,6 +27,7 @@ class AnimationFrameQueue(
     private val mPaused = AtomicBoolean()
     private val mInvalidated = AtomicBoolean()
     private val mFrameCallbacks = mutableListOf<AnimationFrameCallback>()
+    private val mDispatchLock = Any()
 
     fun resume() {
         if (mPaused.getAndSet(false)) {
@@ -45,22 +46,13 @@ class AnimationFrameQueue(
         }
     }
 
-    /**
-     * Permanently stops the queue. Called when the owning `WorkletsModule` is invalidated, i.e. when
-     * the React instance is being destroyed.
-     *
-     * Unlike [pause], this cannot be undone by [resume] — after this returns, no further frame is
-     * delivered and no new callback is accepted. Every [AnimationFrameCallback] holds a `HybridData`
-     * handle into native state that module teardown is about to release, so a frame delivered
-     * afterwards would call into a dead native module.
-     */
     fun invalidate() {
-        // Unsubscribes from the Choreographer and latches mPaused, so scheduleQueueExecution()
-        // cannot post a new callback either.
-        pause()
-        synchronized(mFrameCallbacks) {
-            mInvalidated.set(true)
-            mFrameCallbacks.clear()
+        mInvalidated.set(true)
+        removePostedFrameCallback()
+        synchronized(mDispatchLock) {
+            synchronized(mFrameCallbacks) {
+                mFrameCallbacks.clear()
+            }
         }
     }
 
@@ -87,12 +79,24 @@ class AnimationFrameQueue(
 
     private fun scheduleQueueExecution() {
         synchronized(mPaused) {
+            if (mInvalidated.get()) {
+                return
+            }
             if (!mPaused.get() && !mCallbackPosted.getAndSet(true)) {
                 mReactChoreographer.postFrameCallback(
                     ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE,
                     mChoreographerCallback,
                 )
             }
+        }
+    }
+
+    private fun removePostedFrameCallback() {
+        if (mCallbackPosted.getAndSet(false)) {
+            mReactChoreographer.removeFrameCallback(
+                ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE,
+                mChoreographerCallback,
+            )
         }
     }
 
@@ -106,12 +110,17 @@ class AnimationFrameQueue(
             return
         }
 
-        val frameCallbacks = pullCallbacks()
-        mCallbackPosted.set(false)
+        synchronized(mDispatchLock) {
+            val frameCallbacks = pullCallbacks()
+            mCallbackPosted.set(false)
+            if (mInvalidated.get()) {
+                return
+            }
 
-        lastFrameTimeMs = currentFrameTimeMs
-        for (callback in frameCallbacks) {
-            callback.onAnimationFrame(currentFrameTimeMs)
+            lastFrameTimeMs = currentFrameTimeMs
+            for (callback in frameCallbacks) {
+                callback.onAnimationFrame(currentFrameTimeMs)
+            }
         }
     }
 
