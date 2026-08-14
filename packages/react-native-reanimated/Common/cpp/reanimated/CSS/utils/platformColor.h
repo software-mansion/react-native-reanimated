@@ -8,8 +8,8 @@
 namespace reanimated::css {
 
 /// Matches the payload shapes RN emits for PlatformColor and DynamicColorIOS.
-/// CSSPlatformColor is tried before CSSColor, so a loose match here would
-/// swallow ordinary colors.
+/// Keep it strict: any other object should still fail to construct rather than
+/// be taken for a platform color and handed back to RN unresolved.
 bool isPlatformColorPayload(const folly::dynamic &value);
 bool isPlatformColorPayload(jsi::Runtime &rt, const jsi::Value &value);
 
