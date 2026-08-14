@@ -4,6 +4,7 @@
 
 #include <folly/json.h>
 
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -45,6 +46,14 @@ template <typename TCSSValue>
 concept DynamicConstructibleCSSValue = requires(const folly::dynamic &value) {
   { TCSSValue::canConstruct(value) } -> std::same_as<bool>;
   { TCSSValue(value) } -> std::same_as<TCSSValue>;
+}; // NOLINT(readability/braces)
+
+// Checks whether a type resolves into one of the variant's alternatives (e.g.
+// CSSPlatformColor into CSSColor). Selecting on the return type keeps CSSLength
+// out: its resolve() yields a bare double, not an alternative.
+template <typename TCSSValue, typename TContext, typename... TAlternatives>
+concept ResolvesToAlternative = requires(const TCSSValue &value, const TContext &context) {
+  requires(std::is_same_v<decltype(value.resolve(context)), std::optional<TAlternatives>> || ...);
 }; // NOLINT(readability/braces)
 
 /**
@@ -98,7 +107,17 @@ class CSSValueVariant final : public CSSValue {
       const InterpolationContextFor<AllowedTypes...> &context) const;
 
  private:
+  using ContextType = InterpolationContextFor<AllowedTypes...>;
+
   std::variant<AllowedTypes...> storage_;
+
+  /// A copy with any ResolvesToAlternative value replaced by its resolution, so
+  /// e.g. a platform color can blend with a plain one. Unresolvable values stay
+  /// as they are and take the fallback path below.
+  CSSValueVariant resolved(const ContextType &context) const;
+
+  CSSValueVariant interpolateResolved(const double progress, const CSSValueVariant &to, const ContextType &context)
+      const;
 
   CSSValueVariant
   fallbackInterpolate(const double progress, const CSSValueVariant &to, double fallbackInterpolateThreshold) const;

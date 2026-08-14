@@ -101,6 +101,33 @@ CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::interpolate(
     const double progress,
     const CSSValueVariant &to,
     const InterpolationContextFor<AllowedTypes...> &context) const {
+  if constexpr ((ResolvesToAlternative<AllowedTypes, ContextType, AllowedTypes...> || ...)) {
+    return resolved(context).interpolateResolved(progress, to.resolved(context), context);
+  } else {
+    return interpolateResolved(progress, to, context);
+  }
+}
+
+template <CSSValueDerived... AllowedTypes>
+CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::resolved(const ContextType &context) const {
+  return std::visit(
+      [&](const auto &value) -> CSSValueVariant {
+        using TCSSValue = std::remove_cvref_t<decltype(value)>;
+        if constexpr (ResolvesToAlternative<TCSSValue, ContextType, AllowedTypes...>) {
+          if (auto resolvedValue = value.resolve(context)) {
+            return CSSValueVariant(std::variant<AllowedTypes...>(std::move(*resolvedValue)));
+          }
+        }
+        return *this;
+      },
+      storage_);
+}
+
+template <CSSValueDerived... AllowedTypes>
+CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::interpolateResolved(
+    const double progress,
+    const CSSValueVariant &to,
+    const ContextType &context) const {
   if (storage_.index() != to.storage_.index()) {
     return fallbackInterpolate(progress, to, context.fallbackInterpolateThreshold);
   }

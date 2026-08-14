@@ -5,6 +5,7 @@
 #if !TARGET_OS_OSX
 
 #import <React/RCTConstants.h>
+#import <React/RCTUtils.h>
 #import <UIKit/UIKit.h>
 #import <react/renderer/graphics/HostPlatformColor.h>
 #import <react/renderer/graphics/RCTPlatformColorUtils.h>
@@ -22,29 +23,30 @@ namespace detail {
 
 namespace {
 
-std::mutex &traitsMutex()
-{
-  static std::mutex mutex;
-  return mutex;
-}
-
+std::mutex traitsMutex;
 UITraitCollection *storedTraits = nil;
+id<NSObject> traitsObserver = nil;
 std::atomic<uint64_t> appearanceCounter{0};
 
-/// The notification also fires for orientation and font-size changes, hence the
-/// explicit color-appearance check.
-void observeAppearanceChanges()
+/// Seeds from the key window, whose traits honour overrideUserInterfaceStyle,
+/// then follows RN's appearance notification. The notification also fires for
+/// orientation changes, hence the explicit color-appearance check.
+void watchAppearance()
 {
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
-    [NSNotificationCenter.defaultCenter
+    RCTUnsafeExecuteOnMainQueueSync(^{
+      std::lock_guard<std::mutex> lock(traitsMutex);
+      storedTraits = RCTKeyWindow().traitCollection;
+    });
+    traitsObserver = [NSNotificationCenter.defaultCenter
         addObserverForName:RCTUserInterfaceStyleDidChangeNotification
                     object:nil
                      queue:NSOperationQueue.mainQueue
                 usingBlock:^(NSNotification *notification) {
                   UITraitCollection *next =
                       notification.userInfo[RCTUserInterfaceStyleDidChangeNotificationTraitCollectionKey];
-                  std::lock_guard<std::mutex> lock(traitsMutex());
+                  std::lock_guard<std::mutex> lock(traitsMutex);
 
                   if (next == nil ||
                       (storedTraits != nil &&
@@ -57,13 +59,13 @@ void observeAppearanceChanges()
   });
 }
 
-int32_t colorField(const folly::dynamic &value, const char *name, const int32_t fallback)
+int32_t colorField(const folly::dynamic &value, const char *name)
 {
   const auto *field = value.get_ptr(name);
-  return field != nullptr && field->isNumber() ? static_cast<int32_t>(field->asInt()) : fallback;
+  return field != nullptr && field->isNumber() ? static_cast<int32_t>(field->asInt()) : 0;
 }
 
-UIColor *unresolvedColor(const folly::dynamic &value)
+UIColor *payloadUIColor(const folly::dynamic &value)
 {
   if (const auto *semantic = value.get_ptr("semantic")) {
     std::vector<std::string> names;
@@ -81,38 +83,38 @@ UIColor *unresolvedColor(const folly::dynamic &value)
     return nil;
   }
 
-  const auto light = colorField(*dynamicColor, "light", 0);
-  // Color(const DynamicColor &) yields a nil UIColor when a side is missing.
-  const auto dark = colorField(*dynamicColor, "dark", light);
+  // Missing sides stay 0 (transparent), matching how RN renders the same
+  // payload when it is not animated.
   return RCTPlatformColorFromColor(facebook::react::Color(facebook::react::DynamicColor{
-      .lightColor = light,
-      .darkColor = dark,
-      .highContrastLightColor = colorField(*dynamicColor, "highContrastLight", light),
-      .highContrastDarkColor = colorField(*dynamicColor, "highContrastDark", dark)}));
+      .lightColor = colorField(*dynamicColor, "light"),
+      .darkColor = colorField(*dynamicColor, "dark"),
+      .highContrastLightColor = colorField(*dynamicColor, "highContrastLight"),
+      .highContrastDarkColor = colorField(*dynamicColor, "highContrastDark")}));
 }
 
 } // namespace
 
-std::optional<ColorChannels> resolvePlatformColorForNode(
+bool canResolvePlatformColors()
+{
+  return true;
+}
+
+std::optional<ColorChannels> resolvePlatformColorUncached(
     const folly::dynamic &value,
     const std::shared_ptr<const facebook::react::ShadowNode> & /*node*/)
 {
-  observeAppearanceChanges();
+  watchAppearance();
 
-  UIColor *color = unresolvedColor(value);
+  UIColor *color = payloadUIColor(value);
   if (color == nil) {
     return std::nullopt;
   }
 
   UITraitCollection *traits = nil;
   {
-    std::lock_guard<std::mutex> lock(traitsMutex());
-    if (storedTraits == nil) {
-      storedTraits = UITraitCollection.currentTraitCollection;
-    }
+    std::lock_guard<std::mutex> lock(traitsMutex);
     traits = storedTraits;
   }
-
   UIColor *resolved = traits != nil ? [color resolvedColorWithTraitCollection:traits] : color;
 
   CGFloat red = 0, green = 0, blue = 0, alpha = 0;
@@ -128,7 +130,7 @@ std::optional<ColorChannels> resolvePlatformColorForNode(
 
 uint64_t appearanceGeneration()
 {
-  observeAppearanceChanges();
+  watchAppearance();
   return appearanceCounter.load();
 }
 
@@ -142,7 +144,12 @@ namespace reanimated::css {
 
 namespace detail {
 
-std::optional<ColorChannels> resolvePlatformColorForNode(
+bool canResolvePlatformColors()
+{
+  return false;
+}
+
+std::optional<ColorChannels> resolvePlatformColorUncached(
     const folly::dynamic & /*value*/,
     const std::shared_ptr<const facebook::react::ShadowNode> & /*node*/)
 {

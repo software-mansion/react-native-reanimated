@@ -1,22 +1,17 @@
 #include <reanimated/CSS/utils/platformColor.h>
 
 #include <folly/json.h>
+#include <glog/logging.h>
 
 #include <mutex>
 #include <string>
 #include <unordered_map>
 
-#ifndef NDEBUG
-#ifdef ANDROID
-#include <android/log.h>
-#else
-#include <iostream>
-#endif // ANDROID
-#endif // NDEBUG
-
 namespace reanimated::css {
 
 namespace {
+
+constexpr size_t maxCachedResolutions = 256;
 
 bool isPlainObject(jsi::Runtime &rt, const jsi::Value &value) {
   if (!value.isObject()) {
@@ -45,6 +40,8 @@ cacheKey(const folly::dynamic &value, const facebook::react::SurfaceId surfaceId
 
   for (const auto *name : {"semantic", "resource_paths"}) {
     if (const auto *names = value.get_ptr(name)) {
+      key += '\x1f';
+      key += name;
       for (const auto &entry : *names) {
         key += '\x1f' + (entry.isString() ? entry.getString() : "?");
       }
@@ -61,19 +58,12 @@ cacheKey(const folly::dynamic &value, const facebook::react::SurfaceId surfaceId
   return key;
 }
 
-/// Once per process: where no implementation exists every payload fails, and
-/// this runs on every interpolated frame.
 void warnUnresolvable([[maybe_unused]] const folly::dynamic &value) {
 #ifndef NDEBUG
   static std::once_flag warned;
   std::call_once(warned, [&value] {
-    const auto message = "[Reanimated] Cannot resolve the platform color " + folly::toJson(value) +
-        " while animating it, so the animation steps between its endpoints.";
-#ifdef ANDROID
-    __android_log_print(ANDROID_LOG_WARN, "Reanimated", "%s", message.c_str());
-#else
-    std::cerr << message << std::endl;
-#endif // ANDROID
+    LOG(WARNING) << "[Reanimated] Cannot resolve the platform color " << folly::toJson(value)
+                 << " while animating it, so the animation steps between its endpoints.";
   });
 #endif // NDEBUG
 }
@@ -109,7 +99,8 @@ bool isPlatformColorPayload(jsi::Runtime &rt, const jsi::Value &value) {
 std::optional<ColorChannels> resolvePlatformColor(
     const folly::dynamic &value,
     const std::shared_ptr<const facebook::react::ShadowNode> &node) {
-  if (node == nullptr) {
+  if (node == nullptr || !detail::canResolvePlatformColors()) {
+    warnUnresolvable(value);
     return std::nullopt;
   }
 
@@ -117,9 +108,8 @@ std::optional<ColorChannels> resolvePlatformColor(
   static std::unordered_map<std::string, ColorChannels> cache;
   static uint64_t cachedGeneration = 0;
 
-  const auto surfaceId = node->getSurfaceId();
   const auto generation = detail::appearanceGeneration();
-  const auto key = cacheKey(value, surfaceId, generation);
+  const auto key = cacheKey(value, node->getSurfaceId(), generation);
   {
     std::lock_guard<std::mutex> lock(mutex);
     if (generation != cachedGeneration) {
@@ -132,7 +122,7 @@ std::optional<ColorChannels> resolvePlatformColor(
     }
   }
 
-  const auto channels = detail::resolvePlatformColorForNode(value, node);
+  const auto channels = detail::resolvePlatformColorUncached(value, node);
   if (!channels) {
     warnUnresolvable(value);
     return std::nullopt;
@@ -140,6 +130,10 @@ std::optional<ColorChannels> resolvePlatformColor(
 
   std::lock_guard<std::mutex> lock(mutex);
   if (generation == cachedGeneration) {
+    // The key space is app-supplied, so cap it instead of trusting it.
+    if (cache.size() >= maxCachedResolutions) {
+      cache.clear();
+    }
     cache.emplace(key, *channels);
   }
   return channels;
@@ -149,9 +143,11 @@ std::optional<ColorChannels> resolvePlatformColor(
 
 namespace detail {
 
-/// Resolution is Apple-only so far - everything else keeps the discrete switch
-/// and the one-time warning above.
-std::optional<ColorChannels> resolvePlatformColorForNode(
+bool canResolvePlatformColors() {
+  return false;
+}
+
+std::optional<ColorChannels> resolvePlatformColorUncached(
     const folly::dynamic & /*value*/,
     const std::shared_ptr<const facebook::react::ShadowNode> & /*node*/) {
   return std::nullopt;

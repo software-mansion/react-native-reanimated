@@ -19,22 +19,23 @@ bool isPlatformColorPayload(jsi::Runtime &rt, const jsi::Value &value);
 
 namespace detail {
 
+/// False where no resolver exists, so callers skip the memoization entirely.
+bool canResolvePlatformColors();
+
 /// Raw per-platform resolution, called only on a cache miss. Apple ignores the
-/// surface: a window with its own overrideUserInterfaceStyle is not honoured.
-std::optional<ColorChannels> resolvePlatformColorForNode(
+/// node: a window with its own overrideUserInterfaceStyle is not honoured.
+std::optional<ColorChannels> resolvePlatformColorUncached(
     const folly::dynamic &value,
     const std::shared_ptr<const facebook::react::ShadowNode> &node);
 
-/// Bumped whenever previously resolved colors stop being valid. Apple tracks
-/// appearance changes; Android has no equivalent signal, so a theme change
-/// there is only picked up when the surface is recreated.
+/// Bumped whenever previously resolved colors stop being valid. Constant where
+/// canResolvePlatformColors() is false.
 uint64_t appearanceGeneration();
 
 } // namespace detail
 
 /// Memoized per (payload, surface, appearance): an animated color resolves on
-/// every interpolated frame. Returns nullopt, and warns once, when the platform
-/// cannot resolve the payload.
+/// every interpolated frame.
 std::optional<ColorChannels> resolvePlatformColor(
     const folly::dynamic &value,
     const std::shared_ptr<const facebook::react::ShadowNode> &node);
