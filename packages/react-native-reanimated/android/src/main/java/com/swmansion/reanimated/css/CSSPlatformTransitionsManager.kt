@@ -252,7 +252,8 @@ internal class CSSPlatformTransitionsManager(
         endTimestampMs: Double,
         begin: () -> Boolean,
     ) {
-        if (startTokens[key] != token) return
+        // A queued callback can outlive invalidate(), which only posts its cleanup.
+        if (invalidated || startTokens[key] != token) return
         if (begin() || animationTimestamp() >= endTimestampMs) {
             startTokens.remove(key)
             return
