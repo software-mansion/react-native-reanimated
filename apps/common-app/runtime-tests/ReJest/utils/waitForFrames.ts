@@ -1,6 +1,8 @@
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
-import { DEFAULT_TIMEOUT_MS, withTimeout } from './waitFor';
+import { DEFAULT_TIMEOUT_MS, sleep, withTimeout } from './waitFor';
+
+const FRAME_INTERVAL_MS = 16;
 
 export function waitForFrames(
   count: number = 1,
@@ -60,7 +62,7 @@ export async function waitUntilSettled<TValue>(
         `Timed out after ${timeout}ms while waiting for the value to settle. Last observed: ${String(previous)}.`
       );
     }
-    await waitForFrames(1, timeout);
+    await sleep(FRAME_INTERVAL_MS);
     const current = await readWithTimeout();
     stable = Object.is(current, previous) ? stable + 1 : 0;
     previous = current;
