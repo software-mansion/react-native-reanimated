@@ -190,7 +190,8 @@ internal class CSSPlatformTransitionsManager(
      * One main-looper message per burst rather than one per transition: a commit can start
      * a transition on every view on screen, and a message each floods the looper. The
      * message is asynchronous so a traversal's sync barrier cannot defer it past the frame
-     * whose committed value it is meant to replace.
+     * whose committed value it is meant to replace. Whichever comes first, this message or
+     * the pre-draw pass, drains the queue; the other then finds it empty.
      */
     private fun enqueue(command: Command) {
         // Teardown streams a removal per routed property, and each would post its own message.
@@ -324,7 +325,12 @@ internal class CSSPlatformTransitionsManager(
 
     /** Re-asserts each animator's own value wherever a commit overwrote it. */
     private fun repairClobberedValues(): Boolean {
-        if (!reactWroteSinceLastDraw) return animators.isNotEmpty()
+        // Drain here too, not only from the posted message: this runs after the commit that
+        // wrote the target and before the draw, so a queued start replaces it in the same
+        // frame instead of showing it once. Ahead of the repair, so those starts are covered.
+        flushCommands()
+
+        if (!reactWroteSinceLastDraw) return isAnimating()
         reactWroteSinceLastDraw = false
         animators.values.forEach { running ->
             // target is held weakly, so read the View through it rather than keeping one.
@@ -332,7 +338,13 @@ internal class CSSPlatformTransitionsManager(
             val current = running.currentValue()
             if (running.writer.get(view) != current) running.writer.setValue(view, current)
         }
-        return animators.isNotEmpty()
+        return isAnimating()
+    }
+
+    /** Retiring with commands still queued would drop the drain above along with the listener. */
+    private fun isAnimating(): Boolean {
+        if (animators.isNotEmpty()) return true
+        synchronized(commandLock) { return pendingCommands.isNotEmpty() }
     }
 
     /** PathInterpolator flattens its curve natively on construction, so build once per id. */
