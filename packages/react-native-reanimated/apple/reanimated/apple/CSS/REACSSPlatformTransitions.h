@@ -1,11 +1,10 @@
 #pragma once
 
 #import <reanimated/CSS/configs/CSSTransitionConfig.h>
+#import <reanimated/CSS/utils/platform.h>
 
 #import <React/RCTSurfacePresenter.h>
 
-#import <folly/dynamic.h>
-#import <jsi/jsi.h>
 #import <react/renderer/core/ReactPrimitives.h>
 
 #import <Foundation/Foundation.h>
@@ -18,25 +17,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter;
 
-/// Config path: animates the property natively and remembers its settings for
-/// later toggles. Returns NO if the value can't be animated natively, in which
-/// case it runs on the loop instead.
+/// Animates the property natively and remembers its settings for later toggles.
+/// A null `settings` marks the toggle path, where the stored settings are reused;
+/// returns NO when there are none. `persistent` holds the value past the animation.
 - (BOOL)applyTransitionForTag:(facebook::react::Tag)viewTag
                  propertyName:(const std::string &)propertyName
-                    fromValue:(const facebook::jsi::Value &)fromValue
-                      toValue:(const facebook::jsi::Value &)toValue
-                      runtime:(facebook::jsi::Runtime &)runtime
-                     settings:(const reanimated::css::CSSTransitionPropertySettings &)settings
+                    fromValue:(const reanimated::css::PlatformValue &)fromValue
+                      toValue:(const reanimated::css::PlatformValue &)toValue
+                     settings:(nullable const reanimated::css::CSSTransitionPropertySettings *)settings
+                   persistent:(BOOL)persistent
                     timestamp:(double)timestamp;
-
-/// Toggle path: a runtime-free version that reuses the settings stored by the
-/// config apply. Returns NO if there are no stored settings or the value can't be
-/// animated natively.
-- (BOOL)applyDynamicTransitionForTag:(facebook::react::Tag)viewTag
-                        propertyName:(const std::string &)propertyName
-                           fromValue:(const folly::dynamic &)fromValue
-                             toValue:(const folly::dynamic &)toValue
-                           timestamp:(double)timestamp;
 
 - (void)removeTransitionForTag:(facebook::react::Tag)viewTag propertyName:(const std::string &)propertyName;
 

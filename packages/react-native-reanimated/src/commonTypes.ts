@@ -14,7 +14,12 @@ import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 import type { Maybe, MutuallyExclusiveUnion } from './common';
 import type { CSSStyle } from './css';
 import type { EasingFunctionFactory } from './Easing';
-import type { AnimatedStyleHandle } from './hook/commonTypes';
+import type { AnimatedStyleHandle, Descriptor } from './hook/commonTypes';
+import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
+
+export interface ViewDescriptorsWrapper {
+  value: Readonly<Descriptor[]>;
+}
 
 type LayoutAnimationOptions =
   | 'originX'
@@ -109,6 +114,11 @@ export type LayoutAnimationStartFunction = (
   config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
 ) => void;
 
+export type LayoutAnimationsManager = {
+  start: LayoutAnimationStartFunction;
+  stop: (tag: number) => void;
+};
+
 export interface ILayoutAnimationBuilder {
   build: () => LayoutAnimationFunction;
 }
@@ -163,7 +173,9 @@ export type StylePropsWithArrayTransform = StyleProps & {
 export interface LayoutAnimationBatchItem {
   viewTag: number;
   type: LayoutAnimationType;
-  config: SerializableRef<Keyframe | LayoutAnimationFunction> | undefined;
+  config:
+    | SerializableRef<ReanimatedKeyframe | LayoutAnimationFunction>
+    | undefined;
   sharedTransitionTag?: string;
 }
 
@@ -201,7 +213,7 @@ export interface SharedValue<Value = unknown> {
  * Instead of refactoring the code with small chances of success, we just
  * disable contravariance for `SharedValue` in this problematic case.
  */
-type SharedValueDisableContravariance<Value = unknown> = Omit<
+export type SharedValueDisableContravariance<Value = unknown> = Omit<
   SharedValue<Value>,
   'set' | 'modify'
 >;

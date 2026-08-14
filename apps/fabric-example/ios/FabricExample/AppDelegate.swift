@@ -48,8 +48,13 @@ class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
 #if RUNTIME_TESTS
     let library =
       ProcessInfo.processInfo.environment["RUNTIME_TESTS_LIBRARY"] ?? "reanimated"
+#if DEBUG
     return RCTBundleURLProvider.sharedSettings()
       .jsBundleURL(forBundleRoot: "index.runtimeTests.\(library)")
+#else
+    return Bundle.main.url(
+      forResource: "main.runtimeTests.\(library)", withExtension: "jsbundle")
+#endif
 #elseif DEBUG
     return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
 #else

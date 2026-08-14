@@ -65,11 +65,11 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       const SharedComponentDescriptorRegistry &componentDescriptorRegistry,
       const std::shared_ptr<const ContextContainer> &contextContainer,
       jsi::Runtime &uiRuntime,
-      const std::shared_ptr<UIScheduler> &uiScheduler
+      const std::shared_ptr<UIScheduler> &uiScheduler,
+      const std::shared_ptr<facebook::react::UIManager> &uiManager
 #ifdef ANDROID
       ,
       const PreserveMountedTagsFunction &filterUnmountedTagsFunction,
-      const std::shared_ptr<facebook::react::UIManager> &uiManager,
       const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker
 #endif
       )
@@ -77,11 +77,11 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
         contextContainer_(contextContainer),
         componentDescriptorRegistry_(componentDescriptorRegistry),
         uiRuntime_(uiRuntime),
-        uiScheduler_(uiScheduler)
+        uiScheduler_(uiScheduler),
+        uiManager_(uiManager)
 #ifdef ANDROID
         ,
         preserveMountedTags_(filterUnmountedTagsFunction),
-        uiManager_(uiManager),
         jsInvoker_(jsInvoker)
 #endif
   {
@@ -98,6 +98,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 
  protected:
   GetLatestRegistryPropsFunction getLatestRegistryProps_;
+  void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
 
   mutable std::unordered_set<Tag> maybeSettledAnimationTags_;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
@@ -106,10 +107,10 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
   jsi::Runtime &uiRuntime_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
+  std::shared_ptr<facebook::react::UIManager> uiManager_;
   PreserveMountedTagsFunction preserveMountedTags_;
 
 #ifdef ANDROID
-  std::shared_ptr<facebook::react::UIManager> uiManager_;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker_;
 
   void restoreOpacityInCaseOfFlakyEnteringAnimation(SurfaceId surfaceId) const;

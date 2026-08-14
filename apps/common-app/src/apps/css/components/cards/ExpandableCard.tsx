@@ -1,6 +1,6 @@
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import type { PropsWithChildren } from 'react';
+import type { ComponentRef, PropsWithChildren, Ref } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { Pressable, StyleSheet } from 'react-native';
 import Animated, {
@@ -19,6 +19,7 @@ export type ExpandableCardProps = PropsWithChildren<{
   showExpandOverlay?: boolean;
   overlayHeight?: number;
   style?: StyleProp<ViewStyle>;
+  ref?: Ref<ComponentRef<typeof Animated.View>>;
 }>;
 
 export default function ExpandableCard({
@@ -26,6 +27,7 @@ export default function ExpandableCard({
   expanded,
   onChange,
   overlayHeight = sizes.lg,
+  ref,
   showExpandOverlay,
   style,
 }: ExpandableCardProps) {
@@ -36,6 +38,7 @@ export default function ExpandableCard({
   return (
     <Animated.View
       layout={LinearTransition}
+      ref={ref}
       style={[
         styles.container,
         { paddingBottom: showExpandOverlay ? spacing.lg : spacing.sm },

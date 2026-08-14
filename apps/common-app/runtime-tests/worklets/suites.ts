@@ -31,6 +31,8 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runtimes/runOnRuntimeAsyncWithId.test');
       require('./tests/runtimes/runOnRuntimeSyncWithId.test');
       require('./tests/runtimes/scheduleOnRuntimeWithId.test');
+      require('./tests/runtimes/microtaskDrains.test');
+      require('./tests/runtimes/weakRef.test');
     },
   },
   {
@@ -39,8 +41,9 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runtimes/reactNativeImportShim.test');
       require('./tests/runtimes/turboModuleRegistryShim.test');
     },
-    disabled: !isBundleModeEnabled(),
-    skipByDefault: true,
+    // The shims these tests assert on are only active in __DEV__, so the suite
+    // stays out of Release builds until Bundle Mode supports them there.
+    disabled: !isBundleModeEnabled() || !__DEV__,
   },
   {
     testSuiteName: 'run loop',
@@ -55,6 +58,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runLoop/clearInterval.test');
       require('./tests/runLoop/queueMicrotask.test');
       require('./tests/runLoop/executionOrder.test');
+      require('./tests/runLoop/finalizers.test');
     },
   },
   {

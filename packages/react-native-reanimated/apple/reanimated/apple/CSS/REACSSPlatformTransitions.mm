@@ -58,99 +58,64 @@ struct ActiveTransition {
   return view.layer;
 }
 
-// Reverse-shortens against any in-flight transition, animates natively, and
-// records the new active state. fromValue/toValue are already parsed.
-- (void)applyForTag:(Tag)viewTag
-       propertyName:(const std::string &)propertyName
-          fromValue:(const PlatformValue &)fromValue
-            toValue:(const PlatformValue &)toValue
-           settings:(const CSSTransitionPropertySettings &)settings
-          timestamp:(double)timestamp
-         persistent:(BOOL)persistent
+- (const ActiveTransition *)activeTransitionForTag:(Tag)viewTag propertyName:(const std::string &)propertyName
 {
-  auto &properties = _active[viewTag];
-  const auto activeIt = properties.find(propertyName);
+  const auto propertiesIt = _active.find(viewTag);
+  if (propertiesIt == _active.end()) {
+    return nullptr;
+  }
+  const auto activeIt = propertiesIt->second.find(propertyName);
+  return activeIt != propertiesIt->second.end() ? &activeIt->second : nullptr;
+}
+
+- (BOOL)applyTransitionForTag:(Tag)viewTag
+                 propertyName:(const std::string &)propertyName
+                    fromValue:(const PlatformValue &)fromValue
+                      toValue:(const PlatformValue &)toValue
+                     settings:(const CSSTransitionPropertySettings *)settings
+                   persistent:(BOOL)persistent
+                    timestamp:(double)timestamp
+{
+  const ActiveTransition *active = [self activeTransitionForTag:viewTag propertyName:propertyName];
+
+  // The toggle path has no settings of its own, so it reuses the stored ones.
+  const BOOL reusesStoredSettings = settings == nullptr;
+  if (reusesStoredSettings && active == nullptr) {
+    return NO;
+  }
+  // Copy: the active entry is re-assigned below.
+  const CSSTransitionPropertySettings resolvedSettings = reusesStoredSettings ? active->settings : *settings;
+
   // Targeting the in-flight transition's start value means this is a reversal.
-  const ActiveTransition *previous =
-      (activeIt != properties.end() && activeIt->second.adjustedStart && toValue == *activeIt->second.adjustedStart)
-      ? &activeIt->second
-      : nullptr;
-  ReversingState reversing = previous
-      ? reverseShorten(previous->reversing, timestamp, settings.duration, settings.delay, settings.easingConfig)
-      : makeReversingState(timestamp, settings.duration, settings.delay, settings.easingConfig);
+  const bool isReversal = active != nullptr && active->adjustedStart && toValue == *active->adjustedStart;
+  ReversingState reversing = isReversal
+      ? reverseShorten(
+            active->reversing,
+            timestamp,
+            resolvedSettings.duration,
+            resolvedSettings.delay,
+            resolvedSettings.easingConfig)
+      : makeReversingState(timestamp, resolvedSettings.duration, resolvedSettings.delay, resolvedSettings.easingConfig);
 
   // https://drafts.csswg.org/css-transitions/#reversing
   std::optional<PlatformValue> adjustedStart;
-  if (previous) {
-    adjustedStart = previous->adjustedEnd;
-  } else if (activeIt == properties.end()) {
+  if (isReversal) {
+    adjustedStart = active->adjustedEnd;
+  } else if (active == nullptr) {
     adjustedStart = fromValue;
-  } else if (timestamp >= activeIt->second.reversing.startTimestamp + activeIt->second.reversing.duration) {
-    adjustedStart = activeIt->second.adjustedEnd;
+  } else if (timestamp >= active->reversing.startTimestamp + active->reversing.duration) {
+    adjustedStart = active->adjustedEnd;
   }
+
   [self animateTag:viewTag
       propertyName:propertyName
          fromValue:fromValue
            toValue:toValue
         durationMs:reversing.duration
        startTimeMs:reversing.startTimestamp
-            easing:settings.easingConfig
+            easing:resolvedSettings.easingConfig
         persistent:persistent];
-  properties[propertyName] = ActiveTransition{adjustedStart, toValue, std::move(reversing), settings};
-}
-
-- (BOOL)applyTransitionForTag:(Tag)viewTag
-                 propertyName:(const std::string &)propertyName
-                    fromValue:(const jsi::Value &)fromValue
-                      toValue:(const jsi::Value &)toValue
-                      runtime:(jsi::Runtime &)runtime
-                     settings:(const CSSTransitionPropertySettings &)settings
-                    timestamp:(double)timestamp
-{
-  const auto from = parsePlatformValue(runtime, propertyName, fromValue);
-  const auto to = parsePlatformValue(runtime, propertyName, toValue);
-  if (!from || !to) {
-    return NO;
-  }
-  [self applyForTag:viewTag
-       propertyName:propertyName
-          fromValue:*from
-            toValue:*to
-           settings:settings
-          timestamp:timestamp
-         persistent:NO];
-  return YES;
-}
-
-- (BOOL)applyDynamicTransitionForTag:(Tag)viewTag
-                        propertyName:(const std::string &)propertyName
-                           fromValue:(const folly::dynamic &)fromValue
-                             toValue:(const folly::dynamic &)toValue
-                           timestamp:(double)timestamp
-{
-  const auto propertiesIt = _active.find(viewTag);
-  if (propertiesIt == _active.end()) {
-    return NO;
-  }
-  const auto activeIt = propertiesIt->second.find(propertyName);
-  if (activeIt == propertiesIt->second.end()) {
-    // No config apply ran for this property, so there are no settings to reuse.
-    return NO;
-  }
-  const auto from = parsePlatformValue(propertyName, fromValue);
-  const auto to = parsePlatformValue(propertyName, toValue);
-  if (!from || !to) {
-    return NO;
-  }
-  // Copy: applyForTag re-assigns this property's active entry below.
-  const CSSTransitionPropertySettings settings = activeIt->second.settings;
-  [self applyForTag:viewTag
-       propertyName:propertyName
-          fromValue:*from
-            toValue:*to
-           settings:settings
-          timestamp:timestamp
-         persistent:YES];
+  _active[viewTag][propertyName] = ActiveTransition{adjustedStart, toValue, std::move(reversing), resolvedSettings};
   return YES;
 }
 

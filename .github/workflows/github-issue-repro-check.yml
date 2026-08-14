@@ -5,6 +5,10 @@ on:
   issue_comment:
     types: [created, edited, deleted]
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   github-issue-repro-check:
     if: ${{ github.repository == 'software-mansion/react-native-reanimated' && !contains(github.event.issue.labels.*.name, 'Maintainer issue') }}

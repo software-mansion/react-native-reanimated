@@ -6,6 +6,7 @@
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -46,8 +47,9 @@ template <typename BaseClass>
 class RetainingSerializable : virtual public BaseClass {
  private:
   jsi::Runtime *primaryRuntime_;
-  jsi::Runtime *secondaryRuntime_;
   std::unique_ptr<jsi::Value> secondaryValue_;
+  std::atomic<jsi::Runtime *> secondaryRuntime_{nullptr};
+  std::mutex secondaryCacheMutex_;
 
  public:
   template <typename... Args>
@@ -56,28 +58,24 @@ class RetainingSerializable : virtual public BaseClass {
 
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     if (&rt == primaryRuntime_) {
-      // TODO: it is suboptimal to generate new object every time getJS is
-      // called on host runtime – the objects we are generating already exists
-      // and we should possibly just grab a hold of such object and use it here
-      // instead of creating a new JS representation. As far as I understand the
-      // only case where it can be realistically called this way is when a
-      // shared value is created and then accessed on the same runtime
       return BaseClass::toJSValue(rt);
     }
-    if (secondaryValue_ == nullptr) {
-      auto value = BaseClass::toJSValue(rt);
-      secondaryValue_ = std::make_unique<jsi::Value>(rt, value);
-      secondaryRuntime_ = &rt;
-      return value;
-    }
-    if (&rt == secondaryRuntime_) {
+    if (secondaryRuntime_.load(std::memory_order_acquire) == &rt) {
       return jsi::Value(rt, *secondaryValue_);
     }
-    return BaseClass::toJSValue(rt);
+    auto value = BaseClass::toJSValue(rt);
+    {
+      std::lock_guard<std::mutex> lock(secondaryCacheMutex_);
+      if (secondaryRuntime_.load(std::memory_order_relaxed) == nullptr) {
+        secondaryValue_ = std::make_unique<jsi::Value>(rt, value);
+        secondaryRuntime_.store(&rt, std::memory_order_release);
+      }
+    }
+    return value;
   }
 
   ~RetainingSerializable() override {
-    cleanupRuntimeAware(secondaryRuntime_, secondaryValue_);
+    cleanupRuntimeAware(secondaryRuntime_.load(std::memory_order_relaxed), secondaryValue_);
   }
 };
 

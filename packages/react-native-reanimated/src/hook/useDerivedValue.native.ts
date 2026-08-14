@@ -1,6 +1,7 @@
 'use strict';
 import type { WorkletFunction } from 'react-native-worklets';
 
+import { logger } from '../common';
 import type { DependencyList } from './commonTypes';
 import type { DerivedValue } from './useDerivedValueCommon';
 import { useDerivedValueBase } from './useDerivedValueCommon';
@@ -29,6 +30,10 @@ export function useDerivedValue<Value>(
   updater: WorkletFunction<[], Value>,
   _dependencies?: DependencyList
 ): DerivedValue<Value> {
+  if (__DEV__ && _dependencies !== undefined) {
+    logger.warn('dependencies should only be used in web implementation.');
+  }
+
   const inputs = Object.values(updater.__closure ?? {});
 
   return useDerivedValueBase(updater, undefined, inputs);

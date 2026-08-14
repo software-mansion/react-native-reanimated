@@ -28,6 +28,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private readonly compoundComponentName: string;
 
   private attachedAnimations: ProcessedAnimation[] = [];
+  private appliedEventMask = 0;
 
   constructor(
     shadowNodeWrapper: ShadowNodeWrapper,
@@ -39,7 +40,10 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     this.compoundComponentName = compoundComponentName;
   }
 
-  update(animationProperties: ExistingCSSAnimationProperties | null): void {
+  update(
+    animationProperties: ExistingCSSAnimationProperties | null,
+    eventMask = 0
+  ): void {
     if (!animationProperties) {
       this.detach();
       return;
@@ -60,11 +64,10 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
         return;
       }
 
-      applyCSSAnimations(
-        this.shadowNodeWrapper,
-        this.compoundComponentName,
-        animationUpdates
-      );
+      this.apply(animationUpdates, eventMask);
+    } else if (eventMask !== this.appliedEventMask) {
+      // Only the mask changed, but the native side still has to learn about it.
+      this.apply({}, eventMask);
     }
   }
 
@@ -72,11 +75,20 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     this.unregisterKeyframesUsage();
   }
 
+  private apply(animationUpdates: CSSAnimationUpdates, eventMask: number) {
+    this.appliedEventMask = eventMask;
+    applyCSSAnimations(this.shadowNodeWrapper, this.compoundComponentName, {
+      ...animationUpdates,
+      eventMask,
+    });
+  }
+
   private detach() {
     if (this.attachedAnimations.length > 0) {
       unregisterCSSAnimations(this.viewTag);
       this.unregisterKeyframesUsage();
       this.attachedAnimations = [];
+      this.appliedEventMask = 0;
     }
   }
 

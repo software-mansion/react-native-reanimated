@@ -59,7 +59,7 @@ export class RenderLock extends WaitForUnlock {
     this._wasRenderedNull = wasRenderedNull;
   }
 
-  public async waitForUnlock(maxWaitTime?: number) {
-    await this._waitForUnlock(maxWaitTime);
+  public async waitForUnlock(maxWaitTime?: number): Promise<boolean> {
+    return (await this._waitForUnlock(maxWaitTime)) as boolean;
   }
 }

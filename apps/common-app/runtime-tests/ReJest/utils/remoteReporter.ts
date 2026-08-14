@@ -92,8 +92,7 @@ export function runWithRemoteReporter({
   }
 
   const ws = socket;
-  const originalConsole: Partial<Record<ConsoleLevel, typeof console.log>> =
-    {};
+  const originalConsole: Partial<Record<ConsoleLevel, typeof console.log>> = {};
   let consolePatched = false;
   let runStarted = false;
   let runFinishedEnvelopeSent = false;
@@ -187,10 +186,7 @@ export function runWithRemoteReporter({
     runFinishedEnvelopeSent = true;
     safeSend(envelope);
     setTimeout(() => {
-      if (
-        ws.readyState === 1 ||
-        ws.readyState === 0
-      ) {
+      if (ws.readyState === 1 || ws.readyState === 0) {
         try {
           ws.close();
         } catch {

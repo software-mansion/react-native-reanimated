@@ -1,17 +1,14 @@
 'use strict';
-import '../layoutReanimation/animationsManager';
-
 import type React from 'react';
 import { Fragment } from 'react';
 
-import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
-import { IS_JEST, IS_WEB, logger } from '../common';
+import { maybeBuild } from '../animationBuilder';
+import { logger } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import { getStaticFeatureFlag } from '../featureFlags';
-import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import { type BaseAnimationBuilder } from '../layoutReanimation';
 import { SharedTransition } from '../layoutReanimation/SharedTransition';
 import {
@@ -23,7 +20,6 @@ import {
 } from '../layoutReanimation/web';
 import type { CustomConfig } from '../layoutReanimation/web/config';
 import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
-import { PropsRegistryGarbageCollector } from '../PropsRegistryGarbageCollector';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type {
@@ -39,21 +35,13 @@ import type {
 } from './commonTypes';
 import { InlinePropManager } from './InlinePropManager';
 import jsPropsUpdater from './JSPropsUpdater';
-import { NativeEventsManager } from './NativeEventsManager';
 import { PropsFilter } from './PropsFilter';
 import { filterStyles, flattenArray } from './utils';
 
 let id = 0;
 
 // is-tree-shakable-suppress
-if (IS_WEB) {
-  configureWebLayoutAnimations();
-}
-
-const FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS =
-  getStaticFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS') &&
-  !getStaticFeatureFlag('USE_ANIMATION_BACKEND') &&
-  !IS_WEB;
+configureWebLayoutAnimations();
 
 export type Options<P> = {
   setNativeProps?: (ref: AnimatedComponentRef, props: P) => void;
@@ -63,7 +51,7 @@ export type Options<P> = {
 export default class AnimatedComponent
   extends ReanimatedAnimatedComponent<
     AnimatedComponentProps<InitialComponentProps>,
-    { settledProps: StyleProps }
+    { settledProps?: StyleProps; settledStyle?: StyleProps }
   >
   implements IAnimatedComponentInternal
 {
@@ -97,14 +85,6 @@ export default class AnimatedComponent
     this._options = options;
     this._displayName = displayName;
 
-    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
-      this.state = { settledProps: {} };
-    }
-
-    if (IS_JEST) {
-      this.jestAnimatedStyle = { value: {} };
-      this.jestAnimatedProps = { value: {} };
-    }
     this._configureSharedTransition(true);
     const entering = this.props.entering;
     const skipEntering = this.context?.current;
@@ -115,20 +95,9 @@ export default class AnimatedComponent
 
   componentDidMount() {
     super.componentDidMount();
-    if (!IS_WEB) {
-      // It exists only on native platforms. We initialize it here because the ref to the animated component is available only post-mount
-      this._NativeEventsManager = new NativeEventsManager(this, this._options);
-    }
     this._NativeEventsManager?.attachEvents();
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
-
-    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
-      const viewTag = this.getComponentViewTag();
-      if (viewTag !== -1) {
-        PropsRegistryGarbageCollector.registerView(viewTag, this);
-      }
-    }
 
     if (this._options?.jsProps?.length) {
       jsPropsUpdater.registerComponent(this, this._options.jsProps);
@@ -143,7 +112,7 @@ export default class AnimatedComponent
       this.props.exiting
     );
 
-    if (IS_WEB && this._componentDOMRef) {
+    if (this._componentDOMRef) {
       const element = this._componentDOMRef as ReanimatedHTMLElement;
       const dummyClone = element.dummyClone;
       // If the element was cloned (because of the exiting animation), we need to bring it back to the DOM
@@ -188,20 +157,13 @@ export default class AnimatedComponent
     this._detachStyles();
     this._InlinePropManager.detachInlineProps();
 
-    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
-      const viewTag = this.getComponentViewTag();
-      if (viewTag !== -1) {
-        PropsRegistryGarbageCollector.unregisterView(viewTag);
-      }
-    }
-
     if (this._options?.jsProps?.length) {
       jsPropsUpdater.unregisterComponent(this);
     }
 
     const exiting = this.props.exiting;
 
-    if (IS_WEB && this._componentDOMRef && exiting) {
+    if (this._componentDOMRef && exiting) {
       if (getReducedMotionFromConfig(exiting as CustomConfig)) {
         (exiting as BaseAnimationBuilder).callbackV?.(true);
         return;
@@ -217,13 +179,8 @@ export default class AnimatedComponent
     }
   }
 
-  _syncStylePropsBackToReact(props: StyleProps) {
-    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
-      this.setState((state) => ({
-        settledProps: { ...state.settledProps, ...props },
-      }));
-      // TODO(future): revert changes when animated styles are detached
-    }
+  _syncStylePropsBackToReact(_props: StyleProps) {
+    // noop
   }
 
   _detachStyles() {
@@ -252,7 +209,7 @@ export default class AnimatedComponent
   _handleAnimatedStylesUpdate(
     prevStyles: StyleProps[],
     currentStyles: StyleProps[],
-    jestAnimatedStyleOrProps: { value: StyleProps }
+    _jestAnimatedStyleOrProps: { value: StyleProps }
   ) {
     const { viewTag, shadowNodeWrapper } = this._getViewInfo();
     const newStyles = new Set<StyleProps>(currentStyles);
@@ -295,17 +252,6 @@ export default class AnimatedComponent
         },
         style.styleUpdaterContainer
       );
-      if (IS_JEST) {
-        /**
-         * We need to connect Jest's TestObject instance whose contains just
-         * props object with the updateProps() function where we update the
-         * properties of the component. We can't update props object directly
-         * because TestObject contains a copy of props - look at render
-         * function: const props = this._filterNonAnimatedProps(this.props);
-         */
-        Object.assign(jestAnimatedStyleOrProps.value, style.initial.value);
-        style.jestAnimatedValues.current = jestAnimatedStyleOrProps;
-      }
     });
   }
 
@@ -343,11 +289,11 @@ export default class AnimatedComponent
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
-    if (IS_WEB && this.props.exiting && this._componentDOMRef) {
+    if (this.props.exiting && this._componentDOMRef) {
       saveSnapshot(this._componentDOMRef);
     }
 
-    if (IS_WEB && snapshot && this.props.layout) {
+    if (snapshot && this.props.layout) {
       if (getReducedMotionFromConfig(this.props.layout as CustomConfig)) {
         (this.props.layout as BaseAnimationBuilder).callbackV?.(true);
 
@@ -396,38 +342,11 @@ export default class AnimatedComponent
     }
   }
   _configureLayoutAnimation(
-    type: LayoutAnimationType,
-    currentConfig: LayoutAnimationOrBuilder | undefined,
-    previousConfig?: LayoutAnimationOrBuilder
+    _type: LayoutAnimationType,
+    _currentConfig: LayoutAnimationOrBuilder | undefined,
+    _previousConfig?: LayoutAnimationOrBuilder
   ) {
-    if (IS_WEB || currentConfig === previousConfig) {
-      return;
-    }
-
-    if (
-      __DEV__ &&
-      currentConfig &&
-      type !== LayoutAnimationType.LAYOUT &&
-      this.props.style &&
-      !this._hasWarnedAboutLayoutAnimationStyleOverwriting
-    ) {
-      const onWarn = () =>
-        (this._hasWarnedAboutLayoutAnimationStyleOverwriting = true);
-      checkStyleOverwriting(
-        currentConfig,
-        this.props.style,
-        this._displayName,
-        onWarn
-      );
-    }
-
-    updateLayoutAnimations(
-      type === LayoutAnimationType.ENTERING
-        ? this.reanimatedID
-        : this.getComponentViewTag(),
-      type,
-      currentConfig && maybeBuild(currentConfig)
-    );
+    // noop
   }
 
   _configureSharedTransition(useNativeId?: boolean) {
@@ -472,11 +391,7 @@ export default class AnimatedComponent
   // It is called before the component gets rerendered. This way we can access components' position before it changed
   // and later on, in componentDidUpdate, calculate translation for layout transition.
   getSnapshotBeforeUpdate() {
-    if (
-      IS_WEB &&
-      this.props.layout &&
-      this._componentDOMRef?.getBoundingClientRect
-    ) {
+    if (this.props.layout && this._componentDOMRef?.getBoundingClientRect) {
       return this._componentDOMRef.getBoundingClientRect();
     }
 
@@ -487,18 +402,12 @@ export default class AnimatedComponent
   render() {
     const filteredProps = this._PropsFilter.filterNonAnimatedProps(this);
 
-    if (IS_JEST) {
-      filteredProps.jestAnimatedStyle = this.jestAnimatedStyle;
-      filteredProps.jestAnimatedProps = this.jestAnimatedProps;
-    }
-
     // Layout animations on web are set inside `componentDidMount` method, which is called after first render.
     // Because of that we can encounter a situation in which component is visible for a short amount of time, and later on animation triggers.
     // I've tested that on various browsers and devices and it did not happen to me. To be sure that it won't happen to someone else,
     // I've decided to hide component at first render. Its visibility is reset in `componentDidMount`.
     if (
       this._isFirstRender &&
-      IS_WEB &&
       filteredProps.entering &&
       !getReducedMotionFromConfig(filteredProps.entering as CustomConfig)
     ) {
@@ -510,19 +419,7 @@ export default class AnimatedComponent
           };
     }
 
-    const skipEntering = this.context?.current;
-    let nativeID, jestProps;
-
-    if (IS_JEST) {
-      jestProps = {
-        jestInlineStyle:
-          this.props.style && filterOutAnimatedStyles(this.props.style),
-        jestAnimatedStyle: this.jestAnimatedStyle,
-        jestAnimatedProps: this.jestAnimatedProps,
-      };
-    } else if (!skipEntering && !IS_WEB) {
-      nativeID = `${this.reanimatedID}`;
-    }
+    let nativeID;
 
     // TODO: Remove need for this \/\/\/\/.
     // RNSVG expects Gradient elem to have stops passed as children. When we want to animate them,
@@ -537,41 +434,9 @@ export default class AnimatedComponent
       }
     }
 
-    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
-      return super.render({
-        nativeID,
-        ...filteredProps,
-        ...this.state.settledProps,
-        style: [...flattenArray(filteredProps.style), this.state.settledProps],
-        ...jestProps,
-      });
-    }
-
     return super.render({
       nativeID,
       ...filteredProps,
-      ...jestProps,
     });
   }
-}
-
-function filterOutAnimatedStyles(
-  style: NestedArray<StyleProps | AnimatedStyleHandle | null | undefined>
-): NestedArray<StyleProps | null | undefined> {
-  if (!style) {
-    return style;
-  }
-  if (!Array.isArray(style)) {
-    return style?.viewDescriptors ? {} : style;
-  }
-  return style
-    .filter(
-      (styleElement) => !(styleElement && 'viewDescriptors' in styleElement)
-    )
-    .map((styleElement) => {
-      if (Array.isArray(styleElement)) {
-        return filterOutAnimatedStyles(styleElement);
-      }
-      return styleElement;
-    });
 }

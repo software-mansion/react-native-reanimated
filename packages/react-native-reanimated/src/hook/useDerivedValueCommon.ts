@@ -29,7 +29,7 @@ export function useDerivedValueBase<Value>(
   if (dependencies === undefined) {
     dependencies = [...inputs, updater.__workletHash];
   } else {
-    dependencies.push(updater.__workletHash);
+    dependencies = [...dependencies, updater.__workletHash];
   }
 
   if (initRef.current === null) {

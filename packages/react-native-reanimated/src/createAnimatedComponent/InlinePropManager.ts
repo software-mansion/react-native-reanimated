@@ -1,4 +1,5 @@
 'use strict';
+import type { UnknownRecord } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { isSharedValue } from '../isSharedValue';
 import { startMapper, stopMapper } from '../mappers';
@@ -22,15 +23,15 @@ function isInlineStyleTransform(transform: unknown): boolean {
 }
 
 function inlinePropsHasChanged(
-  styles1: StyleProps,
-  styles2: StyleProps
+  props1: UnknownRecord,
+  props2: UnknownRecord
 ): boolean {
-  if (Object.keys(styles1).length !== Object.keys(styles2).length) {
+  if (Object.keys(props1).length !== Object.keys(props2).length) {
     return true;
   }
 
-  for (const key of Object.keys(styles1)) {
-    if (styles1[key] !== styles2[key]) {
+  for (const key of Object.keys(props1)) {
+    if (props1[key] !== props2[key]) {
       return true;
     }
   }
@@ -60,8 +61,12 @@ function extractSharedValuesMapFromProps(
   props: AnimatedComponentProps<
     Record<string, unknown> /* Initial component props */
   >
-): Record<string, unknown> {
-  const inlineProps: Record<string, unknown> = {};
+): {
+  inlineStyleProps: Record<string, unknown>;
+  inlineTopLevelProps: Record<string, unknown>;
+} {
+  const inlineStyleProps: Record<string, unknown> = {};
+  const inlineTopLevelProps: Record<string, unknown> = {};
 
   for (const key in props) {
     const value = props[key];
@@ -76,21 +81,21 @@ function extractSharedValuesMapFromProps(
         }
         for (const [styleKey, styleValue] of Object.entries(style)) {
           if (isSharedValue(styleValue)) {
-            inlineProps[styleKey] = styleValue;
+            inlineStyleProps[styleKey] = styleValue;
           } else if (
             styleKey === 'transform' &&
             isInlineStyleTransform(styleValue)
           ) {
-            inlineProps[styleKey] = styleValue;
+            inlineStyleProps[styleKey] = styleValue;
           }
         }
       });
     } else if (isSharedValue(value)) {
-      inlineProps[key] = value;
+      inlineTopLevelProps[key] = value;
     }
   }
 
-  return inlineProps;
+  return { inlineStyleProps, inlineTopLevelProps };
 }
 
 export function hasInlineStyles(style: StyleProps): boolean {
@@ -128,15 +133,18 @@ export function getInlineStyle(
 export class InlinePropManager implements IInlinePropManager {
   _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
   _inlinePropsMapperId: number | null = null;
-  _inlineProps: StyleProps = {};
+  _inlineStyleProps: UnknownRecord = {};
+  _inlineTopLevelProps: UnknownRecord = {};
 
   public attachInlineProps(
     animatedComponent: AnimatedComponentTypeInternal,
     viewInfo: ViewInfo
   ) {
-    const newInlineProps: Record<string, unknown> =
+    const { inlineStyleProps, inlineTopLevelProps } =
       extractSharedValuesMapFromProps(animatedComponent.props);
-    const hasChanged = inlinePropsHasChanged(newInlineProps, this._inlineProps);
+    const hasChanged =
+      inlinePropsHasChanged(inlineStyleProps, this._inlineStyleProps) ||
+      inlinePropsHasChanged(inlineTopLevelProps, this._inlineTopLevelProps);
 
     if (hasChanged) {
       if (!this._inlinePropsViewDescriptors) {
@@ -152,21 +160,42 @@ export class InlinePropManager implements IInlinePropManager {
       const shareableViewDescriptors =
         this._inlinePropsViewDescriptors.shareableViewDescriptors;
 
+      const hasInlineStyleProps = Object.keys(inlineStyleProps).length > 0;
+      const hasInlineTopLevelProps =
+        Object.keys(inlineTopLevelProps).length > 0;
+      const hasInlineProps = hasInlineStyleProps || hasInlineTopLevelProps;
       const updaterFunction = () => {
         'worklet';
-        const update = getInlinePropsUpdate(newInlineProps);
-        updateProps(shareableViewDescriptors, update);
+        if (hasInlineStyleProps) {
+          updateProps(
+            shareableViewDescriptors,
+            getInlinePropsUpdate(inlineStyleProps) as StyleProps
+          );
+        }
+        if (hasInlineTopLevelProps) {
+          // Shared values passed directly as top-level props are animated
+          // props, not styles — process them like `useAnimatedProps` updates
+          // (in particular, don't run them through the style props builder,
+          // which drops non-style keys).
+          updateProps(
+            shareableViewDescriptors,
+            getInlinePropsUpdate(inlineTopLevelProps) as StyleProps,
+            true
+          );
+        }
       };
-      this._inlineProps = newInlineProps;
+      this._inlineStyleProps = inlineStyleProps;
+      this._inlineTopLevelProps = inlineTopLevelProps;
+
       if (this._inlinePropsMapperId) {
         stopMapper(this._inlinePropsMapperId);
       }
       this._inlinePropsMapperId = null;
-      if (Object.keys(newInlineProps).length) {
-        this._inlinePropsMapperId = startMapper(
-          updaterFunction,
-          Object.values(newInlineProps)
-        );
+      if (hasInlineProps) {
+        this._inlinePropsMapperId = startMapper(updaterFunction, [
+          inlineStyleProps,
+          inlineTopLevelProps,
+        ]);
       }
     }
   }
@@ -174,6 +203,10 @@ export class InlinePropManager implements IInlinePropManager {
   public detachInlineProps() {
     if (this._inlinePropsMapperId) {
       stopMapper(this._inlinePropsMapperId);
+      this._inlinePropsMapperId = null;
     }
+    this._inlinePropsViewDescriptors = null;
+    this._inlineStyleProps = {};
+    this._inlineTopLevelProps = {};
   }
 }

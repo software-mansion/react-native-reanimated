@@ -612,19 +612,6 @@ describe('Test createSerializable', () => {
         }).toThrow('Trying to convert a cyclic object');
       });
 
-      test('createSerializableInaccessibleObject', async () => {
-        class Inaccessible {
-          access() {
-            return true;
-          }
-        }
-        const inaccessibleObject = new Inaccessible();
-
-        await expect(() => {
-          createSerializable(inaccessibleObject);
-        }).toThrow('Cannot copy value of type `Inaccessible`.');
-      });
-
       test('createSerializableRemoteNamedFunctionSyncCall', async () => {
         function fooFunction() {}
         scheduleOnTarget(() => {

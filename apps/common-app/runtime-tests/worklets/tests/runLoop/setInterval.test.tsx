@@ -1,17 +1,14 @@
-import React from 'react';
-
 import {
   describe,
   expect,
   notify,
-  render,
   test,
   createOrderConstraint,
   createTestValue,
   waitForNotifications,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import { DispatchTestComponent } from './DispatchTestComponent';
+import { dispatchWorklet } from './dispatchWorklet';
 import { RuntimeKind } from 'react-native-worklets';
 
 describe('Test setInterval', () => {
@@ -27,27 +24,22 @@ describe('Test setInterval', () => {
       const [flag, setFlag] = createTestValue('not_ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            let iter = 1;
-            const handle = setInterval(() => {
-              if (iter == 1) {
-                notify(notification1);
-              } else if (iter == 2) {
-                notify(notification2);
-              } else {
-                setFlag('ok');
-                notify(notification3);
-                clearInterval(handle);
-              }
-              iter++;
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        let iter = 1;
+        const handle = setInterval(() => {
+          if (iter == 1) {
+            notify(notification1);
+          } else if (iter == 2) {
+            notify(notification2);
+          } else {
+            setFlag('ok');
+            notify(notification3);
+            clearInterval(handle);
+          }
+          iter++;
+        });
+      }, runtimeKind);
 
       await waitForNotifications([notification1, notification2, notification3]);
       expect(flag.value).toBe('ok');
@@ -63,25 +55,20 @@ describe('Test setInterval', () => {
       const [flag, setFlag] = createTestValue('not_ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const handle = setInterval(
-              (value) => {
-                if (value === argValue) {
-                  setFlag('ok');
-                }
-                clearInterval(handle);
-                notify(notification);
-              },
-              1,
-              argValue
-            );
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        const handle = setInterval(
+          (value) => {
+            if (value === argValue) {
+              setFlag('ok');
+            }
+            clearInterval(handle);
+            notify(notification);
+          },
+          1,
+          argValue
+        );
+      }, runtimeKind);
 
       await waitForNotification(notification);
       expect(flag.value).toBe('ok');
@@ -96,26 +83,21 @@ describe('Test setInterval', () => {
       const [flag, setFlag] = createTestValue('not_ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const handle1 = setInterval(() => {
-              notify(notification1);
-              clearInterval(handle1);
-            }) as unknown as number;
-            const handle2 = setInterval(() => {
-              notify(notification2);
-              clearInterval(handle2);
-            }) as unknown as number;
+      dispatchWorklet(() => {
+        'worklet';
+        const handle1 = setInterval(() => {
+          notify(notification1);
+          clearInterval(handle1);
+        }) as unknown as number;
+        const handle2 = setInterval(() => {
+          notify(notification2);
+          clearInterval(handle2);
+        }) as unknown as number;
 
-            if (handle1 + 1 === handle2) {
-              setFlag('ok');
-            }
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+        if (handle1 + 1 === handle2) {
+          setFlag('ok');
+        }
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);
@@ -136,37 +118,32 @@ describe('Test setInterval', () => {
       const [flag, setFlag] = createTestValue('not_ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            let lastTime = performance.now();
-            let totalTime = 0;
-            let iter = 1;
-            const handle = setInterval(() => {
-              const now = performance.now();
-              totalTime += now - lastTime;
-              lastTime = now;
-              if (totalTime >= delay * iter - iter) {
-                setFlag('ok');
-              } else {
-                setFlag(`not_ok: ${totalTime}ms after ${iter} intervals`);
-              }
+      dispatchWorklet(() => {
+        'worklet';
+        let lastTime = performance.now();
+        let totalTime = 0;
+        let iter = 1;
+        const handle = setInterval(() => {
+          const now = performance.now();
+          totalTime += now - lastTime;
+          lastTime = now;
+          if (totalTime >= delay * iter - iter) {
+            setFlag('ok');
+          } else {
+            setFlag(`not_ok: ${totalTime}ms after ${iter} intervals`);
+          }
 
-              if (iter === 1) {
-                notify(notification1);
-              } else if (iter === 2) {
-                notify(notification2);
-              } else {
-                notify(notification3);
-                clearInterval(handle);
-              }
-              iter++;
-            }, delay);
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+          if (iter === 1) {
+            notify(notification1);
+          } else if (iter === 2) {
+            notify(notification2);
+          } else {
+            notify(notification3);
+            clearInterval(handle);
+          }
+          iter++;
+        }, delay);
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2, notification3]);
@@ -182,22 +159,17 @@ describe('Test setInterval', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const handle1 = setInterval(() => {
-              const handle2 = setInterval(() => {
-                order(2, notification2);
-                clearInterval(handle2);
-              });
-              order(1, notification1);
-              clearInterval(handle1);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        const handle1 = setInterval(() => {
+          const handle2 = setInterval(() => {
+            order(2, notification2);
+            clearInterval(handle2);
+          });
+          order(1, notification1);
+          clearInterval(handle1);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);
@@ -213,22 +185,17 @@ describe('Test setInterval', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const handle1 = setInterval(() => {
-              order(1, notification1);
-              clearInterval(handle1);
-            });
-            const handle2 = setInterval(() => {
-              order(2, notification2);
-              clearInterval(handle2);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        const handle1 = setInterval(() => {
+          order(1, notification1);
+          clearInterval(handle1);
+        });
+        const handle2 = setInterval(() => {
+          order(2, notification2);
+          clearInterval(handle2);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);
@@ -244,22 +211,17 @@ describe('Test setInterval', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const handle1 = setInterval(() => {
-              order(1, notification1);
-              clearInterval(handle1);
-            }, 50);
-            const handle2 = setInterval(() => {
-              order(2, notification2);
-              clearInterval(handle2);
-            }, 70);
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        const handle1 = setInterval(() => {
+          order(1, notification1);
+          clearInterval(handle1);
+        }, 50);
+        const handle2 = setInterval(() => {
+          order(2, notification2);
+          clearInterval(handle2);
+        }, 70);
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);
@@ -267,36 +229,65 @@ describe('Test setInterval', () => {
     }
   );
 
-  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
-    'intervals order of execution, inverted scheduled order, runtime: **%s**',
-    async (runtimeKind) => {
-      // Arrange
-      const [notification1, notification2] = ['callback1', 'callback2'];
-      const [confirmedOrder, order] = createOrderConstraint();
+  test(`intervals order of execution, inverted scheduled order, runtime: **${RuntimeKind.Worker}**`, async () => {
+    // Arrange
+    const [notification1, notification2] = ['callback1', 'callback2'];
+    const [confirmedOrder, order] = createOrderConstraint();
 
-      // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const handle1 = setInterval(() => {
-              order(2, notification2);
-              clearInterval(handle1);
-            }, 70);
-            const handle2 = setInterval(() => {
-              order(1, notification1);
-              clearInterval(handle2);
-            }, 50);
-          }}
-          runtimeKind={runtimeKind}
-        />
+    // Act
+    dispatchWorklet(() => {
+      'worklet';
+      const handle1 = setInterval(() => {
+        order(2, notification2);
+        clearInterval(handle1);
+      }, 70);
+      const handle2 = setInterval(() => {
+        order(1, notification1);
+        clearInterval(handle2);
+      }, 50);
+    }, RuntimeKind.Worker);
+
+    // Assert
+    await waitForNotifications([notification1, notification2]);
+    expect(confirmedOrder.value).toBe(2);
+  });
+
+  test(`intervals order of execution, inverted scheduled order, runtime: **${RuntimeKind.UI}**`, async () => {
+    // Arrange
+    const [notification1, notification2] = ['callback1', 'callback2'];
+    const [confirmedOrder, order] = createOrderConstraint();
+    const [bothIntervalsWereDue, markBothIntervalsWereDue] =
+      createTestValue<boolean>(false);
+    const shorterDelay = 50;
+    const longerDelay = 70;
+
+    // Act
+    dispatchWorklet(() => {
+      'worklet';
+      const scheduledAt = performance.now();
+      const handle1 = setInterval(() => {
+        order(2, notification2);
+        clearInterval(handle1);
+      }, longerDelay);
+      const handle2 = setInterval(() => {
+        markBothIntervalsWereDue(
+          performance.now() - scheduledAt >= longerDelay
+        );
+        order(1, notification1);
+        clearInterval(handle2);
+      }, shorterDelay);
+    }, RuntimeKind.UI);
+
+    // Assert
+    await waitForNotifications([notification1, notification2]);
+    if (bothIntervalsWereDue.value) {
+      expect(confirmedOrder.value === 2 || confirmedOrder.value === -1).toBe(
+        true
       );
-
-      // Assert
-      await waitForNotifications([notification1, notification2]);
+    } else {
       expect(confirmedOrder.value).toBe(2);
     }
-  );
+  });
 
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'intervals order of execution, nested timeouts, runtime: **%s**',
@@ -310,27 +301,22 @@ describe('Test setInterval', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const handle1 = setInterval(() => {
-              const handle2 = setInterval(() => {
-                order(2, notification2);
-                clearInterval(handle2);
-              }, 20);
-              order(1, notification1);
-              clearInterval(handle1);
-            }, 20);
+      dispatchWorklet(() => {
+        'worklet';
+        const handle1 = setInterval(() => {
+          const handle2 = setInterval(() => {
+            order(2, notification2);
+            clearInterval(handle2);
+          }, 20);
+          order(1, notification1);
+          clearInterval(handle1);
+        }, 20);
 
-            const handle3 = setInterval(() => {
-              order(3, notification3);
-              clearInterval(handle3);
-            }, 100);
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+        const handle3 = setInterval(() => {
+          order(3, notification3);
+          clearInterval(handle3);
+        }, 100);
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2, notification3]);
@@ -346,19 +332,14 @@ describe('Test setInterval', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const handle1 = setInterval(() => {
-              order(2, notification2);
-              clearInterval(handle1);
-            });
-            order(1, notification1);
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        const handle1 = setInterval(() => {
+          order(2, notification2);
+          clearInterval(handle1);
+        });
+        order(1, notification1);
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);

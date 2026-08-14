@@ -3,9 +3,9 @@ import { createSynchronizable } from 'react-native-worklets';
 import type { TrackerCallCount } from '../types';
 
 let callCallTrackerRegistryJS: Record<string, number> = {};
-const callCallTrackerRegistryUI = createSynchronizable<
-  Record<string, number>
->({});
+const callCallTrackerRegistryUI = createSynchronizable<Record<string, number>>(
+  {}
+);
 function callTrackerJS(name: string) {
   if (!callCallTrackerRegistryJS[name]) {
     callCallTrackerRegistryJS[name] = 0;

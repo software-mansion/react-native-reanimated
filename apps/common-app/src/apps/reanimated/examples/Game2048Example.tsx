@@ -2,9 +2,9 @@ import React from 'react';
 import type { ColorValue } from 'react-native';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import {
-  Gesture,
   GestureDetector,
   GestureHandlerRootView,
+  usePanGesture,
 } from 'react-native-gesture-handler';
 import Animated, { LinearTransition, ZoomIn } from 'react-native-reanimated';
 
@@ -230,9 +230,8 @@ export default function Game2048Example() {
     setGameOver(false);
   }, []);
 
-  const fling = Gesture.Pan()
-    .runOnJS(true)
-    .onEnd((e) => {
+  const fling = usePanGesture({
+    onDeactivate: (e) => {
       if (gameOver) {
         return;
       }
@@ -247,7 +246,9 @@ export default function Game2048Example() {
           ]);
         }, 500);
       }
-    });
+    },
+    runOnJS: true,
+  });
 
   return (
     <GestureHandlerRootView style={styles.container}>

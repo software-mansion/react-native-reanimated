@@ -1,13 +1,12 @@
 diff --git a/apps/fabric-example/babel.config.js b/apps/fabric-example/babel.config.js
-index a696887cc7..3d189bf4a2 100644
+index ec37dacc04..1782f028e2 100644
 --- a/apps/fabric-example/babel.config.js
 +++ b/apps/fabric-example/babel.config.js
-@@ -1,7 +1,7 @@
+@@ -1,6 +1,6 @@
  /** @type {import('react-native-worklets/plugin').PluginOptions} */
  const workletsPluginOptions = {
-   strictGlobal: true,
 -  bundleMode: false,
 +  bundleMode: true,
+   strictGlobal: true,
    hermesBytecode: false,
    getHBCBinary,
- };

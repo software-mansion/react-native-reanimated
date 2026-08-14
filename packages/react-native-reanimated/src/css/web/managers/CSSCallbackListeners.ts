@@ -1,44 +1,37 @@
 'use strict';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
+import { CSSCallbackStore } from '../../models';
 
-type CallbackMap<Prop extends string, Payload> = Partial<
-  Record<Prop, ((payload: Payload) => void) | undefined>
->;
-
-export class CSSCallbackListeners<Prop extends string, Payload> {
-  private callbacks: CallbackMap<Prop, Payload> = {};
+export class CSSCallbackListeners<
+  Prop extends string,
+  Payload,
+> extends CSSCallbackStore<Prop, Payload> {
   private readonly attachedListeners = new Map<Prop, EventListener>();
-  private readonly props: Prop[];
 
   constructor(
     private readonly element: ReanimatedHTMLElement,
     private readonly eventNameByProp: Record<Prop, string>,
     private readonly buildPayload: (event: Event) => Payload
   ) {
-    this.props = Object.keys(eventNameByProp) as Prop[];
+    super(Object.keys(eventNameByProp) as Prop[]);
   }
 
-  sync(callbacks: CallbackMap<Prop, Payload>): void {
-    this.callbacks = callbacks;
-
-    for (const prop of this.props) {
-      const eventName = this.eventNameByProp[prop];
-      const hasCallback = typeof callbacks[prop] === 'function';
-      const listener = this.attachedListeners.get(prop);
-
-      if (hasCallback && !listener) {
-        const newListener = this.createListener(prop);
-        this.attachedListeners.set(prop, newListener);
-        this.element.addEventListener(eventName, newListener);
-      } else if (!hasCallback && listener) {
-        this.element.removeEventListener(eventName, listener);
+  protected onPresenceChanged(present: ReadonlySet<Prop>): void {
+    for (const [prop, listener] of this.attachedListeners) {
+      if (!present.has(prop)) {
         this.attachedListeners.delete(prop);
+        this.element.removeEventListener(this.eventNameByProp[prop], listener);
       }
     }
-  }
 
-  detach(): void {
-    this.sync({});
+    for (const prop of present) {
+      if (this.attachedListeners.has(prop)) {
+        continue;
+      }
+      const listener = this.createListener(prop);
+      this.attachedListeners.set(prop, listener);
+      this.element.addEventListener(this.eventNameByProp[prop], listener);
+    }
   }
 
   private createListener(prop: Prop): EventListener {
@@ -47,7 +40,7 @@ export class CSSCallbackListeners<Prop extends string, Payload> {
       if (event.target !== this.element) {
         return;
       }
-      this.callbacks[prop]?.(this.buildPayload(event));
+      this.invoke(prop, this.buildPayload(event));
     };
   }
 }
