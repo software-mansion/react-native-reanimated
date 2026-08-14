@@ -1,31 +1,24 @@
 #include <worklets/SharedItems/SynchronizableDynamic.h>
 
+#include <atomic>
 #include <memory>
 
 namespace worklets {
 
 std::shared_ptr<Serializable> SynchronizableDynamic::getDirty() {
-  return value_;
+  return std::atomic_load(&value_);
 }
 
 std::shared_ptr<Serializable> SynchronizableDynamic::getBlocking() {
   getBlockingBefore();
-  auto value = value_;
+  auto value = std::atomic_load(&value_);
   getBlockingAfter();
   return value;
 }
 
-// TODO: Shared pointer members (unless they're atomic) can't be assigned
-// in a non thread-safe manner, therefore `setDirty` has little sense now.
-// void SynchronizableDynamic::setDirty(const std::shared_ptr<Serializable> &value) {
-//   setDirtyBefore();
-//   value_ = value;
-//   setDirtyAfter();
-// }
-
 void SynchronizableDynamic::setBlocking(const std::shared_ptr<Serializable> &value) {
   setBlockingBefore();
-  value_ = value;
+  std::atomic_store(&value_, value);
   setBlockingAfter();
 }
 
