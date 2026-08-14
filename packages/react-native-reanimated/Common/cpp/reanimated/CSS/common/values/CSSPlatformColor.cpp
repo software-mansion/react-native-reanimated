@@ -23,31 +23,41 @@ bool CSSPlatformColor::canConstruct(const folly::dynamic &value) {
 }
 
 folly::dynamic CSSPlatformColor::toDynamic() const {
+  if (blended) {
+    return blended->toDynamic();
+  }
   return payload ? *payload : folly::dynamic();
 }
 
 std::string CSSPlatformColor::toString() const {
+  if (blended) {
+    return blended->toString();
+  }
   return payload ? folly::toJson(*payload) : "";
-}
-
-bool CSSPlatformColor::canInterpolateTo(const CSSPlatformColor & /*to*/) const {
-  // TODO: a platform color carries no channels to blend, since the payload is
-  // only resolved once React Native applies it to a view. Two of them switch
-  // over at the fallback threshold today; they should blend like any other
-  // color once a resolved value is reachable from here.
-  return false;
 }
 
 CSSPlatformColor CSSPlatformColor::interpolate(
     const double progress,
     const CSSPlatformColor &to,
     const ValueInterpolationContext &context) const {
-  // Unreachable while canInterpolateTo() is false, and deliberately the same
-  // switch the variant would have applied, so behaviour holds either way.
-  return progress < context.fallbackInterpolateThreshold ? *this : to;
+  // Both endpoints hold payloads here: a blended value only exists mid-flight
+  // and never becomes an endpoint. Resolution is memoized, so past the first
+  // frame this is a lookup, not a platform call.
+  const auto fromChannels = payload ? resolvePlatformColor(*payload, context.node) : std::nullopt;
+  const auto toChannels = to.payload ? resolvePlatformColor(*to.payload, context.node) : std::nullopt;
+  if (!fromChannels || !toChannels) {
+    return progress < context.fallbackInterpolateThreshold ? *this : to;
+  }
+
+  CSSPlatformColor result = progress < 0.5 ? *this : to;
+  result.blended = CSSColor(*fromChannels).interpolate(progress, CSSColor(*toChannels));
+  return result;
 }
 
 bool CSSPlatformColor::operator==(const CSSPlatformColor &other) const {
+  if (blended != other.blended) {
+    return false;
+  }
   if (!payload || !other.payload) {
     return payload == other.payload;
   }

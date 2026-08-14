@@ -4,19 +4,19 @@
 #include <reanimated/CSS/common/values/CSSValue.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace reanimated::css {
 
-/// A PlatformColor or DynamicColorIOS payload, kept unresolved so toDynamic()
-/// hands it back to RN, which resolves it against the surface's own theme.
-///
-/// TODO: nothing resolves a payload yet, so this is resolvable in name only. It
-/// is declared that way because blending needs the payload turned into channels
-/// for the view being animated, and keyframes are shared by every view using an
-/// animation - so the value cannot be resolved once and cached on the keyframe.
+/// A PlatformColor or DynamicColorIOS payload. It stays unresolved at rest, so
+/// toDynamic() hands it back to RN, which resolves it against the surface's own
+/// theme. Only interpolation resolves it into channels - per frame, against the
+/// animated view, since keyframes are shared by every view using an animation -
+/// and a mid-flight blend is carried here as a plain color.
 struct CSSPlatformColor : public CSSResolvableValue<CSSPlatformColor, ValueInterpolationContext> {
   std::shared_ptr<const folly::dynamic> payload;
+  std::optional<CSSColor> blended;
 
   CSSPlatformColor() = default;
   explicit CSSPlatformColor(const folly::dynamic &value);
@@ -28,7 +28,6 @@ struct CSSPlatformColor : public CSSResolvableValue<CSSPlatformColor, ValueInter
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
 
-  bool canInterpolateTo(const CSSPlatformColor &to) const override;
   CSSPlatformColor interpolate(double progress, const CSSPlatformColor &to, const ValueInterpolationContext &context)
       const override;
 
