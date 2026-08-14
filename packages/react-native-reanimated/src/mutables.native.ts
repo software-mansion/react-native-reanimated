@@ -12,7 +12,6 @@ import {
 import type { Mutable } from './commonTypes';
 import { getStaticFeatureFlag } from './featureFlags';
 import {
-  addCompilerSafeGetAndSet,
   checkInvalidReadDuringRender,
   checkInvalidWriteDuringRender,
   mutableHostDecorator,
@@ -61,6 +60,31 @@ function mutableGuestDecorator<TValue>(
       },
       enumerable: true,
       configurable: true,
+    },
+
+    get: {
+      value() {
+        return mutable.value;
+      },
+      configurable: false,
+      enumerable: false,
+    },
+
+    set: {
+      value(newValue: TValue | ((value: TValue) => TValue)) {
+        if (
+          typeof newValue === 'function' &&
+          !(newValue as Record<string, unknown>).__isAnimationDefinition
+        ) {
+          mutable.value = (newValue as (value: TValue) => TValue)(
+            mutable.value
+          );
+        } else {
+          mutable.value = newValue as TValue;
+        }
+      },
+      configurable: false,
+      enumerable: false,
     },
 
     _value: {
@@ -116,8 +140,6 @@ function mutableGuestDecorator<TValue>(
       configurable: true,
     },
   });
-
-  addCompilerSafeGetAndSet(mutable);
 
   return mutable;
 }

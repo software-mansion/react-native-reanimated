@@ -3,6 +3,7 @@ import { isColor } from './colorUtils';
 import {
   getComparator,
   getComparisonModeForProp,
+  getNativeComparator,
 } from '../matchers/Comparators';
 import type { Mismatch, TestValue } from '../types';
 import { ComparisonMode, isValidPropName } from '../types';
@@ -117,7 +118,11 @@ function withSideBorders(line: string) {
   return VERTICAL_LINE + line + VERTICAL_LINE;
 }
 
-function getComparisonRow(mismatch: Mismatch, keys: Array<string>) {
+function getComparisonRow(
+  mismatch: Mismatch,
+  keys: Array<string>,
+  native: boolean
+) {
   const { index, capturedSnapshot, expectedSnapshot } = mismatch;
   const indexColumn = adjustValueToLength(index.toString(), INDEX_COLUMN_WIDTH);
   const formattedCells = keys.map((key) => {
@@ -130,7 +135,11 @@ function getComparisonRow(mismatch: Mismatch, keys: Array<string>) {
       ? getComparisonModeForProp(key)
       : ComparisonMode.AUTO;
 
-    const match = getComparator(comparisonMode)(expectedValue, capturedValue);
+    const comparator = native
+      ? getNativeComparator(comparisonMode, key)
+      : getComparator(comparisonMode);
+
+    const match = comparator(expectedValue, capturedValue);
 
     const expectedAdjusted = adjustValueToLength(
       expectedValue,
@@ -179,7 +188,7 @@ export function formatSnapshotMismatch(
   const lowerHeader = withSideBorders(getLowerTableHeader(keysToPrint, native));
   const separatorLine = getBorderLine(keysToPrint, 'mid');
   const mismatchRows = mismatches.map((mismatch) =>
-    withSideBorders(getComparisonRow(mismatch, keysToPrint))
+    withSideBorders(getComparisonRow(mismatch, keysToPrint, native))
   );
   const bottomLine = getBorderLine(keysToPrint, 'bottom');
 

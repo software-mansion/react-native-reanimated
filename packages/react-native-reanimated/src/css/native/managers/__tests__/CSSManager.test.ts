@@ -1,5 +1,6 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../../../commonTypes';
+import { cssCallbacksRegistry } from '../../events';
 import { setViewStyle } from '../../proxy';
 import CSSManager from '../CSSManager';
 
@@ -73,5 +74,106 @@ describe('CSSManager', () => {
     });
 
     expect(setViewStyle).not.toHaveBeenCalled();
+  });
+
+  describe('animation callbacks', () => {
+    const ANIMATION = {
+      animationName: { from: { opacity: 0 } },
+      animationDuration: '2s',
+    } as const;
+
+    const event = (type: 'animationEnd' | 'animationCancel') => ({
+      tag: viewTag,
+      type,
+      name: 'fadeIn',
+      elapsedTime: 2,
+    });
+
+    beforeEach(() => {
+      cssCallbacksRegistry.clear();
+    });
+
+    test('delivers a native event to the provided callback', () => {
+      const onCSSAnimationEnd = jest.fn();
+      manager.update({ ...ANIMATION, onCSSAnimationEnd });
+
+      cssCallbacksRegistry.dispatch([event('animationEnd')]);
+
+      expect(onCSSAnimationEnd).toHaveBeenCalledWith({
+        animationName: 'fadeIn',
+        elapsedTime: 2,
+      });
+    });
+
+    test('starts delivering when a callback appears after the first update', () => {
+      const onCSSAnimationEnd = jest.fn();
+      manager.update(ANIMATION);
+      manager.update({ ...ANIMATION, onCSSAnimationEnd });
+
+      cssCallbacksRegistry.dispatch([event('animationEnd')]);
+
+      expect(onCSSAnimationEnd).toHaveBeenCalledWith({
+        animationName: 'fadeIn',
+        elapsedTime: 2,
+      });
+    });
+
+    test('keeps delivering events while the animation detaches', () => {
+      const onCSSAnimationCancel = jest.fn();
+      manager.update({ ...ANIMATION, onCSSAnimationCancel });
+      manager.update({ onCSSAnimationCancel });
+
+      cssCallbacksRegistry.dispatch([event('animationCancel')]);
+
+      expect(onCSSAnimationCancel).toHaveBeenCalledTimes(1);
+    });
+
+    test('drops a cancel emitted for an animation removed together with its callbacks', () => {
+      const onCSSAnimationCancel = jest.fn();
+      manager.update({ ...ANIMATION, onCSSAnimationCancel });
+      // The animation and its callbacks go away in the same update, so the
+      // native side may still emit a cancel using the mask it had before.
+      manager.update({});
+
+      cssCallbacksRegistry.dispatch([event('animationCancel')]);
+
+      expect(onCSSAnimationCancel).not.toHaveBeenCalled();
+    });
+
+    test('delivers the cancel the engine emits while the view unmounts', () => {
+      const onCSSAnimationCancel = jest.fn();
+      manager.update({ ...ANIMATION, onCSSAnimationCancel });
+      // The engine emits the cancel during cleanup, but its batch is dispatched
+      // after cleanup has already returned.
+      manager.unmountCleanup();
+
+      cssCallbacksRegistry.dispatch([event('animationCancel')]);
+
+      expect(onCSSAnimationCancel).toHaveBeenCalledTimes(1);
+    });
+
+    test('delivers a transition event to the provided callback', () => {
+      const onCSSTransitionEnd = jest.fn();
+      manager.update({
+        opacity: 0,
+        transitionProperty: 'opacity',
+        transitionDuration: '300ms',
+        onCSSTransitionEnd,
+      });
+
+      cssCallbacksRegistry.dispatch([
+        {
+          tag: viewTag,
+          type: 'transitionEnd',
+          name: 'opacity',
+          elapsedTime: 0.3,
+        },
+      ]);
+
+      expect(onCSSTransitionEnd).toHaveBeenCalledWith({
+        propertyName: 'opacity',
+        elapsedTime: 0.3,
+      });
+    });
   });
 });

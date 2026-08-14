@@ -417,10 +417,6 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
       filteredMutations.push_back(
           ShadowViewMutation::InsertMutation(parent->current.tag, current, static_cast<int>(parent->children.size())));
       parent->children.push_back(node);
-      if (node->state == UNDEFINED) {
-        node->state = WAITING;
-        lightNodes_[node->current.tag] = node;
-      }
     } else {
       maybeCancelAnimation(node->current.tag);
       filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
@@ -611,6 +607,10 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
     startExitingAnimation(node);
   } else {
     layoutAnimationsManager_->clearLayoutAnimationConfig(node->current.tag);
+    if (hasAnimatedChildren) {
+      node->state = WAITING;
+      lightNodes_[node->current.tag] = node;
+    }
   }
 
   return wantAnimateExit;
@@ -647,23 +647,6 @@ void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) con
     auto &uiRuntime = strongThis->uiRuntime_;
     strongThis->layoutAnimationsManager_->cancelLayoutAnimation(uiRuntime, tag);
   });
-}
-
-void LayoutAnimationsProxy_Experimental::transferConfigFromNativeID(const std::string &nativeIdString, const int tag)
-    const {
-  if (nativeIdString.empty() || nativeIdString.length() > 9) {
-    return;
-  }
-  auto nativeId = 0;
-  for (int i = 0; i < nativeIdString.length(); i++) {
-    if (nativeIdString[i] < '0' || nativeIdString[i] > '9') {
-      return;
-    }
-    nativeId *= 10;
-    nativeId += nativeIdString[i] - '0';
-  }
-
-  layoutAnimationsManager_->transferConfigFromNativeID(nativeId, tag);
 }
 
 // When entering animations start, we temporarily set opacity to 0

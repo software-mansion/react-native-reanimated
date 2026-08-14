@@ -8,6 +8,7 @@
 #include <react/renderer/scheduler/Scheduler.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
+#include <reanimated/android/CSS/CSSPlatformTransitions.h>
 
 #include <memory>
 #include <string>
@@ -73,6 +74,16 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
       jboolean isInDrawPass);
   void attachPseudoSelector(Tag tag, PseudoSelector selector, std::function<void(bool)> callback);
   void detachPseudoSelector(Tag tag, PseudoSelector selector);
+  bool cssAnimateTransition(
+      int viewTag,
+      const std::string &propertyName,
+      double fromValue,
+      double toValue,
+      double durationMs,
+      double startTimestampMs,
+      const PlatformEasing &easing,
+      bool persistent);
+  void cssRemoveTransition(int viewTag, const std::string &propertyName);
 
   /***
    * Wraps a method of `NativeProxy` in a function object capturing `this`

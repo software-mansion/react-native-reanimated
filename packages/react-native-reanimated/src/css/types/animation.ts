@@ -52,13 +52,13 @@ export type CSSAnimationCallback = (event: CSSAnimationEvent) => void;
 
 export type CSSAnimationCallbacks = {
   /** Fired when the animation starts, after any `animationDelay`. */
-  onAnimationStart?: CSSAnimationCallback;
+  onCSSAnimationStart?: CSSAnimationCallback;
   /** Fired when the animation completes. */
-  onAnimationEnd?: CSSAnimationCallback;
+  onCSSAnimationEnd?: CSSAnimationCallback;
   /** Fired at the end of each iteration except the last. */
-  onAnimationIteration?: CSSAnimationCallback;
+  onCSSAnimationIteration?: CSSAnimationCallback;
   /** Fired when the animation is interrupted before completing. */
-  onAnimationCancel?: CSSAnimationCallback;
+  onCSSAnimationCancel?: CSSAnimationCallback;
 };
 
 export type CSSAnimationCallbackProp = keyof CSSAnimationCallbacks;
