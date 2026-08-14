@@ -24,7 +24,7 @@ function filterStyleRecursive(style: StyleProp<CSSStyle>): StyleProp<CSSStyle> {
   const styleObject = style as UnknownRecord;
   const result: UnknownRecord = {};
 
-  for (const key of Object.keys(styleObject)) {
+  for (const key in styleObject) {
     if (isCSSConfigProp(key)) {
       continue;
     }
@@ -45,7 +45,7 @@ function filterStyleRecursive(style: StyleProp<CSSStyle>): StyleProp<CSSStyle> {
 function omitCSSCallbackProps(props: UnknownRecord): UnknownRecord {
   const result: UnknownRecord = {};
 
-  for (const key of Object.keys(props)) {
+  for (const key in props) {
     if (!isCSSCallbackProp(key)) {
       result[key] = props[key];
     }

@@ -45,7 +45,7 @@ export function filterCSSAndStyleProperties<S extends object>(
   // The CSS / transition / animation buckets are strongly typed but at this
   // point we are dynamically splitting an opaque style object by prop name;
   // values are validated downstream by the normalizers.
-  for (const prop of Object.keys(styleObject)) {
+  for (const prop in styleObject) {
     const value = styleObject[prop];
     if (value === undefined) {
       // If the user explicitly sets a property to undefined (e.g. when they want
@@ -75,7 +75,7 @@ export function filterCSSAndStyleProperties<S extends object>(
       if (defaultValue !== undefined) {
         filteredStyle[prop] = defaultValue;
       }
-      for (const selector of Object.keys(value)) {
+      for (const selector in value) {
         if (selector === 'default') {
           continue;
         }
