@@ -87,19 +87,15 @@ class CSSValueVariant final : public CSSValue {
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
 
-  /**
-   * Interpolate (non-resolvable)
-   */
-  CSSValueVariant
-  interpolate(const double progress, const CSSValueVariant &to, const ValueInterpolationContext &context) const;
+  static_assert(
+      (InterpolatesWith<AllowedTypes, InterpolationContextFor<AllowedTypes...>> && ...),
+      "A resolvable value type must be listed first - the variant takes its interpolation context from the "
+      "first alternative (e.g. <CSSLength, CSSKeyword> rather than <CSSKeyword, CSSLength>).");
 
-  /**
-   * Interpolate (resolvable)
-   */
   CSSValueVariant interpolate(
       const double progress,
       const CSSValueVariant &to,
-      const ResolvableValueInterpolationContext &context) const;
+      const InterpolationContextFor<AllowedTypes...> &context) const;
 
  private:
   std::variant<AllowedTypes...> storage_;

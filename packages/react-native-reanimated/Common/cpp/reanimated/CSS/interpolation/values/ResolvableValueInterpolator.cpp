@@ -35,11 +35,12 @@ folly::dynamic ResolvableValueInterpolator<AllowedTypes...>::interpolateValue(
       ->interpolate(
           progress,
           *to,
-          {.node = context.node,
-           .fallbackInterpolateThreshold = context.fallbackInterpolateThreshold,
-           .viewStylesRepository = this->viewStylesRepository_,
-           .relativeProperty = config_.relativeProperty,
-           .relativeTo = config_.relativeTo})
+          RelativeValueInterpolationContext{
+              .node = context.node,
+              .fallbackInterpolateThreshold = context.fallbackInterpolateThreshold,
+              .viewStylesRepository = this->viewStylesRepository_,
+              .relativeProperty = config_.relativeProperty,
+              .relativeTo = config_.relativeTo})
       .toDynamic();
 }
 
