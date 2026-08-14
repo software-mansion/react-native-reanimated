@@ -126,7 +126,8 @@ auto value(const auto &defaultValue, RelativeValueInterpolatorConfig config) -> 
     (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
     std::shared_ptr<PropertyInterpolatorFactory>> {
   static_assert(
-      (InterpolatesWith<AllowedTypes, RelativeValueInterpolationContext> && ...) && (Resolvable<AllowedTypes> || ...),
+      (InterpolatesWith<AllowedTypes, RelativeValueInterpolationContext> && ...) &&
+          (ResolvesWith<AllowedTypes, RelativeValueInterpolationContext> || ...),
       "This overload is for value types that resolve against a relative property (e.g. CSSLength). Types that "
       "resolve against something else, or that need no resolution at all, use the value(defaultValue) overload.");
   // Create a concrete CSSValue from the defaultValue
