@@ -2,8 +2,10 @@
 
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
+#include <reanimated/CSS/core/CSSAnimationObserver.h>
 #include <reanimated/CSS/core/CSSAnimationsGroup.h>
 #include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
+#include <reanimated/CSS/events/CSSEventsEmitter.h>
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/utils/props.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
@@ -25,7 +27,8 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
   CSSAnimationsRegistry(
       const std::shared_ptr<OperationsLoop> &loop,
       const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
-      const std::shared_ptr<CSSPlatformAnimationFactory> &platformAnimationFactory);
+      const std::shared_ptr<CSSPlatformAnimationFactory> &platformAnimationFactory,
+      const std::shared_ptr<CSSEventsEmitter> &eventsEmitter);
 
   bool needsFlush() const;
 
@@ -40,11 +43,13 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
 #endif
 
  private:
-  class AnimationObserver : public CSSAnimation::Observer {
+  class AnimationObserver : public CSSAnimationObserver {
    public:
     explicit AnimationObserver(CSSAnimationsRegistry &owner);
     void onAnimationUpdate(Tag viewTag) override;
     void onAnimationNeedsRevert(Tag viewTag) override;
+    void onAnimationEvent(Tag viewTag, const std::string &animationName, CSSEventType type, double elapsedTimeMs)
+        override;
 
    private:
     CSSAnimationsRegistry &owner_;
@@ -53,6 +58,7 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
   const std::shared_ptr<OperationsLoop> loop_;
   const std::shared_ptr<CSSKeyframesRegistry> keyframesRegistry_;
   const std::shared_ptr<CSSPlatformAnimationFactory> platformAnimationFactory_;
+  const std::shared_ptr<CSSEventsEmitter> eventsEmitter_;
 
   AnimationObserver animationObserver_{*this};
 

@@ -17,9 +17,9 @@ namespace reanimated::css {
 /// colors (normalized to [0, 1]).
 using PlatformValue = std::variant<double, std::array<double, 2>, std::array<double, 4>>;
 
-/// Whether the property can animate natively for the given easing. Routing is
-/// platform specific: platforms without a native backend (e.g. Android) never
-/// route, so every property runs on the C++ loop.
+/// Whether the property can animate natively for the given easing. Every backend
+/// needs an easing its interpolators can carry, and each platform routes its own
+/// subset of properties; everything else runs on the C++ loop.
 bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &easing);
 
 /// Parses a transition's endpoints, looking the property up once. Null/undefined
