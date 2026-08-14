@@ -6,6 +6,8 @@
 
 ### 🛠 Breaking changes
 
+- Remove the `USE_SYNCHRONIZABLE_FOR_MUTABLES` feature flag. Mutables always use Synchronizable state now. ([#10298](https://github.com/software-mansion/react-native-reanimated/pull/10298) by [@tjzel](https://github.com/tjzel))
+
 ### 🎉 New features
 
 ### 🐛 Bug fixes
