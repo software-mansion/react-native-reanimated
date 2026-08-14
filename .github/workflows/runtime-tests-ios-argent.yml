@@ -2,15 +2,6 @@ name: Remote runtime tests iOS
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  pull_request:
-    paths:
-      - .github/workflows/runtime-tests-ios-remote.yml
-      - .github/actions/install-sim-remote/**
-      - apps/common-app/runtime-tests/**
-      - apps/fabric-example/scripts/runtime-tests-server.js
-      - apps/fabric-example/scripts/runtime-tests-remote.mjs
-      - apps/fabric-example/scripts/export-runtime-tests-app.js
-      - apps/fabric-example/ios/**
   workflow_call:
     secrets:
       SIM_ROUTER_USERNAME:
@@ -75,16 +66,12 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 90
     concurrency:
-      group: runtime-tests-ios-remote-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}
+      group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
-        # Direct PR runs gate both bundle modes on the default (Release)
-        # configuration. The workflow-name check is required: legs called by
-        # another workflow that itself runs on pull_request must keep their
-        # explicit inputs.bundleMode instead of fanning out both modes.
-        bundleMode: ${{ fromJSON((github.event_name == 'pull_request' && github.workflow == 'Remote runtime tests iOS') && '[false, true]' || format('[{0}]', inputs.bundleMode || false)) }}
+        bundleMode: ${{ fromJSON(format('[{0}]', inputs.bundleMode || false)) }}
         configuration: ${{ fromJSON(format('["{0}"]', inputs.configuration || 'ReleaseRuntimeTests')) }}
     env:
       WORKING_DIRECTORY: apps/fabric-example
@@ -176,13 +163,13 @@ jobs:
     runs-on: ubuntu-latest # <- the whole point: no macOS, no local simulator
     timeout-minutes: 60
     concurrency:
-      group: runtime-tests-ios-remote-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}
+      group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
-        # Must mirror build-app's matrix exactly — see the comment there.
-        bundleMode: ${{ fromJSON((github.event_name == 'pull_request' && github.workflow == 'Remote runtime tests iOS') && '[false, true]' || format('[{0}]', inputs.bundleMode || false)) }}
+        # Must mirror build-app's matrix exactly.
+        bundleMode: ${{ fromJSON(format('[{0}]', inputs.bundleMode || false)) }}
         configuration: ${{ fromJSON(format('["{0}"]', inputs.configuration || 'ReleaseRuntimeTests')) }}
     env:
       WORKING_DIRECTORY: apps/fabric-example
@@ -204,7 +191,7 @@ jobs:
       # The build job toggled its own tree before compiling the Legacy binary,
       # and Metro would otherwise serve Bundle Mode JS (the checked-in default) to it.
       #
-      # Release legs never execute this checkout's JS — no toggle needed.
+      # Release legs never execute this checkout's JS, so toggle isn't needed.
       - name: Toggle Bundle Mode off (Legacy Eval Metro parity)
         if: ${{ !matrix.bundleMode && startsWith(matrix.configuration, 'Debug') }}
         run: yarn toggle-bundle-mode
