@@ -53,12 +53,13 @@ internal class CSSPlatformTransitionsManager(
     }
 
     private val reconciler = CSSPlatformTransitionReconciler(::onPreDraw)
-    private val startTokens = HashMap<Key, Long>()
 
     @Volatile
     private var invalidated = false
 
-    private var nextStartToken = 0L
+    /** Starts waiting for their View to mount, newest per key so a superseded start never begins. */
+    private val pendingStarts = LinkedHashMap<Key, Command.Start>()
+    private var retryScheduled = false
 
     private val commands = MainThreadCommandQueue<Command>(::executeCommand)
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -99,7 +100,9 @@ internal class CSSPlatformTransitionsManager(
             val interpolator: TimeInterpolator,
             val scale: Float,
             val persistent: Boolean,
-        ) : Command()
+        ) : Command() {
+            val endTimestampMs: Double get() = startTimestampMs + durationMs
+        }
 
         class Remove(
             override val key: Key,
@@ -162,7 +165,7 @@ internal class CSSPlatformTransitionsManager(
         @OptIn(UnstableReactNativeAPI::class)
         fabricUIManager.removeUIManagerEventListener(mountListener)
         mainHandler.post {
-            startTokens.clear()
+            pendingStarts.clear()
             // Snapshot first: cancel() runs onAnimationEnd, which reads the map.
             val running = animators.values.toList()
             animators.clear()
@@ -191,38 +194,49 @@ internal class CSSPlatformTransitionsManager(
     }
 
     private fun removeNow(key: Key) {
-        startTokens.remove(key)
+        pendingStarts.remove(key)
         animators.remove(key)?.animator?.cancel()
     }
 
-    private fun beginStart(command: Command.Start) {
-        val key = command.key
-        // Claiming a fresh token invalidates any retry still queued for this key,
-        // so a superseded request cannot start on a later frame.
-        val token = ++nextStartToken
-        startTokens[key] = token
-        beginWhenMounted(key, token, command.startTimestampMs + command.durationMs) {
-            viewForTag(key.viewTag)?.also { view -> start(view, command) } != null
-        }
-    }
-
     /**
-     * A tag can be registered before its View mounts. The start timestamp is absolute, so a
-     * late start seeks rather than drifts, and retries stop once the transition would have ended.
+     * A tag can be registered before its View mounts. The absolute start timestamp makes a
+     * late start seek rather than drift, and retrying stops once the transition would have
+     * ended, so it needs no timeout.
      */
-    private fun beginWhenMounted(
-        key: Key,
-        token: Long,
-        endTimestampMs: Double,
-        begin: () -> Boolean,
-    ) {
-        // A queued callback can outlive invalidate(), which only posts its cleanup.
-        if (invalidated || startTokens[key] != token) return
-        if (begin() || animationTimestamp() >= endTimestampMs) {
-            startTokens.remove(key)
+    private fun beginStart(command: Command.Start) {
+        if (startIfMounted(command) || animationTimestamp() >= command.endTimestampMs) {
+            pendingStarts.remove(command.key)
             return
         }
-        Choreographer.getInstance().postFrameCallback { beginWhenMounted(key, token, endTimestampMs, begin) }
+        pendingStarts[command.key] = command
+        scheduleRetry()
+    }
+
+    /** False while the View is still unmounted, which leaves the start pending. */
+    private fun startIfMounted(command: Command.Start): Boolean {
+        val view = viewForTag(command.key.viewTag) ?: return false
+        start(view, command)
+        return true
+    }
+
+    /** All waiting starts share one frame callback; one each floods the Choreographer. */
+    private fun scheduleRetry() {
+        if (retryScheduled) return
+        retryScheduled = true
+        Choreographer.getInstance().postFrameCallback {
+            retryScheduled = false
+            if (invalidated) {
+                pendingStarts.clear()
+                return@postFrameCallback
+            }
+            val now = animationTimestamp()
+            val iterator = pendingStarts.entries.iterator()
+            while (iterator.hasNext()) {
+                val pending = iterator.next().value
+                if (startIfMounted(pending) || now >= pending.endTimestampMs) iterator.remove()
+            }
+            if (pendingStarts.isNotEmpty()) scheduleRetry()
+        }
     }
 
     private fun start(
@@ -239,9 +253,14 @@ internal class CSSPlatformTransitionsManager(
         val startValue = if (interrupted != null) writer.get(view) else command.fromValue.toFloat()
         interrupted?.animator?.cancel()
 
+        // ObjectAnimator has no absolute start time, so resolve it after the thread hop
+        // rather than in C++, which would shift the timeline late.
+        val elapsedMs = animationTimestamp().toDouble() - command.startTimestampMs
+
         // ObjectAnimator writes nothing until its first frame, so the view would show the
-        // already-committed target for the whole delay.
-        writer.setValue(view, startValue)
+        // already-committed target for the whole delay. A start that is already past its end
+        // has no delay left to cover, so priming it would only be a wasted write.
+        if (elapsedMs < durationMs) writer.setValue(view, startValue)
 
         val animator = ObjectAnimator.ofFloat(view, writer, startValue, command.toValue.toFloat())
         animator.addListener(
@@ -259,9 +278,6 @@ internal class CSSPlatformTransitionsManager(
                 }
             },
         )
-        // ObjectAnimator has no absolute start time, so resolve it after the thread hop
-        // rather than in C++, which would shift the timeline late.
-        val elapsedMs = animationTimestamp().toDouble() - command.startTimestampMs
         val delayMs = if (elapsedMs < 0) -elapsedMs else 0.0
         // startDelay writes nothing while it waits, so a commit landing in the delay would
         // stay on screen. Folding the delay into the curve rewrites the property instead.
