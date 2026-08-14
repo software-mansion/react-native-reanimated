@@ -57,6 +57,10 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       runtimeManager_(std::make_shared<RuntimeManager>()),
       unpackerLoader_(std::make_shared<UnpackerLoader>()),
       rnRuntimeStatus_(rnRuntimeStatus),
+      networking_(
+          bundleModeConfig.enabled && runtimeBindings->networkingBackend
+              ? std::make_shared<Networking>(runtimeBindings->networkingBackend)
+              : nullptr),
       uiWorkletRuntime_(runtimeManager_->createUninitializedUIRuntime(std::make_shared<AsyncQueueUI>(uiScheduler_))),
       rnRuntimeProxy_(std::make_shared<JSIWorkletsModuleProxy>(
           isDevBundle_,
@@ -66,6 +70,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           runtimeManager_,
           uiWorkletRuntime_,
           runtimeBindings_,
+          networking_,
           bundleModeConfig_,
           unpackerLoader_,
           rnRuntimeStatus_,
@@ -74,6 +79,9 @@ WorkletsModuleProxy::WorkletsModuleProxy(
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {
+  if (networking_) {
+    networking_->abortAll();
+  }
   animationFrameBatchinator_.reset();
   uiWorkletRuntime_.reset();
 }

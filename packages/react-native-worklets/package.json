@@ -78,7 +78,8 @@
     "@babel/traverse": "^7.27.1",
     "@babel/types": "^7.27.1",
     "convert-source-map": "^2.0.0",
-    "semver": "^7.7.4"
+    "semver": "^7.7.4",
+    "whatwg-fetch": "^3.6.20"
   },
   "devDependencies": {
     "@babel/cli": "7.28.3",

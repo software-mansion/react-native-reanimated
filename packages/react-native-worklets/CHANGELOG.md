@@ -10,6 +10,8 @@
 
 ### 🎉 New features
 
+- Added a standalone networking module for Worklet Runtimes in Bundle Mode - `fetch` and `XMLHttpRequest` are now always available there. ([#10251](https://github.com/software-mansion/react-native-reanimated/pull/10251) by [@tjzel](https://github.com/tjzel))
+
 ### 🐛 Bug fixes
 
 ### 💡 Others

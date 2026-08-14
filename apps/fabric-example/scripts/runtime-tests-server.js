@@ -123,9 +123,93 @@ let connectTimer = null;
 let idleTimer = null;
 let metroChild = null;
 
-const wss = new WebSocketServer({ port: PORT, host: '0.0.0.0' });
+// UTF-8 payload with multi-byte characters, used by the networking runtime
+// tests to detect any Latin-1 / mojibake decoding path.
+const ECHO_TEXT = 'Zażółć gęślą jaźń — 中文字 — 🦄';
 
-wss.on('error', (error) => {
+// Plain-HTTP endpoints served on the same port as the WebSocket harness.
+// The networking runtime tests fetch these instead of external services.
+function handleEchoRequest(req, res) {
+  const url = new URL(req.url, `http://${req.headers.host ?? 'localhost'}`);
+  const chunks = [];
+  req.on('data', (chunk) => chunks.push(chunk));
+  req.on('end', () => {
+    const body = Buffer.concat(chunks);
+    switch (url.pathname) {
+      case '/echo/text': {
+        res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end(ECHO_TEXT);
+        return;
+      }
+      case '/echo/json': {
+        res.writeHead(200, {
+          'Content-Type': 'application/json; charset=utf-8',
+        });
+        res.end(JSON.stringify({ id: 1, title: ECHO_TEXT, completed: false }));
+        return;
+      }
+      case '/echo/binary': {
+        const size = Math.min(
+          Number(url.searchParams.get('size') ?? 1024),
+          16 * 1024 * 1024
+        );
+        const bytes = Buffer.alloc(size);
+        for (let i = 0; i < size; i++) {
+          bytes[i] = i % 256;
+        }
+        res.writeHead(200, {
+          'Content-Type': 'application/octet-stream',
+          'Content-Length': String(size),
+        });
+        res.end(bytes);
+        return;
+      }
+      case '/echo/body': {
+        res.writeHead(200, {
+          'Content-Type': 'application/json; charset=utf-8',
+        });
+        res.end(
+          JSON.stringify({
+            method: req.method,
+            contentType: req.headers['content-type'] ?? null,
+            byteLength: body.byteLength,
+            body: body.toString('utf8'),
+          })
+        );
+        return;
+      }
+      case '/echo/delay': {
+        const ms = Math.min(Number(url.searchParams.get('ms') ?? 1000), 60000);
+        res.on('error', () => {});
+        setTimeout(() => {
+          if (res.destroyed || res.writableEnded) {
+            return;
+          }
+          res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end('delayed');
+        }, ms);
+        return;
+      }
+      case '/echo/status': {
+        const code = Number(url.searchParams.get('code') ?? 200);
+        res.writeHead(code >= 200 && code <= 599 ? code : 200, {
+          'Content-Type': 'text/plain; charset=utf-8',
+        });
+        res.end(`status ${code}`);
+        return;
+      }
+      default: {
+        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('not found');
+      }
+    }
+  });
+}
+
+const httpServer = http.createServer(handleEchoRequest);
+const wss = new WebSocketServer({ server: httpServer });
+
+httpServer.on('error', (error) => {
   if (error.code === 'EADDRINUSE') {
     console.error(
       `[runtime-tests] port ${PORT} is already in use — is another runtime-tests server (or Metro) running there? Stop it or pass --port.`
@@ -135,6 +219,12 @@ wss.on('error', (error) => {
   }
   process.exit(1);
 });
+
+wss.on('error', (error) => {
+  console.error(`[runtime-tests] websocket error: ${error.message}`);
+});
+
+httpServer.listen(PORT, '0.0.0.0');
 
 console.log(
   `[runtime-tests] listening on ws://0.0.0.0:${PORT} (library: ${LIBRARY})`

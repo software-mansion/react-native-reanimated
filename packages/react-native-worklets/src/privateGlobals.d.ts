@@ -112,6 +112,25 @@ declare global {
    * `LOG_LEVELS`: 0 = trace, 1 = info, 2 = warn, 3 = error.
    */
   var nativeLoggingHook: ((message: string, level: number) => void) | undefined;
+  /** Only in Bundle Mode on Worklet Runtimes. */
+  var __workletsNetworking:
+    | {
+        sendRequest(
+          config: {
+            method: string;
+            url: string;
+            headers: Array<[string, string]>;
+            body?: string | ArrayBuffer;
+            responseKind: 'text' | 'bytes';
+            timeoutMs: number;
+            withCredentials: boolean;
+          },
+          onEvent: (type: string, payload: unknown) => void
+        ): number;
+        abortRequest(requestId: number): void;
+        decodeText(buffer: ArrayBuffer, encoding?: string): string;
+      }
+    | undefined;
   interface NodeRequire {
     resolveWeak(id: string): number;
     getModules(): Map<number, unknown>;

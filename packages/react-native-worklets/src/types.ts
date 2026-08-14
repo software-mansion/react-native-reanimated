@@ -121,6 +121,12 @@ type WorkletRuntimeConfigBase = {
    * by requestAnimationFrame. If not specified, it defaults to 16 ms.
    */
   animationQueuePollingRate?: number;
+  /**
+   * Determines whether the networking API (`fetch`, `XMLHttpRequest` and
+   * their supporting globals) is installed on the runtime. Effective only in
+   * Bundle Mode. If not specified, it defaults to `true`.
+   */
+  enableNetworking?: boolean;
 };
 
 /** Configuration object for creating a worklet runtime. */

@@ -13,12 +13,12 @@ namespace worklets {
 using namespace facebook;
 using namespace react;
 
-WorkletsModule::WorkletsModule(
-    jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
-    const BundleModeConfig &bundleModeConfig,
-    jsi::Runtime *rnRuntime,
-    const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-    const std::shared_ptr<UIScheduler> &uiScheduler)
+WorkletsModule::WorkletsModule(jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
+                               const BundleModeConfig &bundleModeConfig,
+                               jsi::Runtime *rnRuntime,
+                               const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
+                               const std::shared_ptr<UIScheduler> &uiScheduler,
+                               jni::global_ref<JWorkletsNetworking::javaobject> jWorkletsNetworking)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       rnRuntimeStatus_(std::make_shared<RNRuntimeStatus>()),
@@ -27,7 +27,7 @@ WorkletsModule::WorkletsModule(
           jsCallInvoker,
           uiScheduler,
           getIsOnJSQueueThread(),
-          getRuntimeBindings(bundleModeConfig.enabled, *rnRuntime),
+          getRuntimeBindings(bundleModeConfig.enabled, *rnRuntime, std::move(jWorkletsNetworking)),
           bundleModeConfig,
           rnRuntimeStatus_)) {}
 
@@ -38,7 +38,9 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
     jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
     jni::alias_ref<JScriptBufferWrapper::javaobject>
-        jScriptBufferWrapper // NOLINT //(performance-unnecessary-value-param)
+        jScriptBufferWrapper, // NOLINT //(performance-unnecessary-value-param)
+    jni::alias_ref<JWorkletsNetworking::javaobject>
+        jWorkletsNetworking // NOLINT //(performance-unnecessary-value-param)
 ) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT //(performance-no-int-to-ptr)
@@ -52,25 +54,28 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     sourceURL = cxxWrapper->getSourceUrl();
   }
 
-  return makeCxxInstance(
-      jThis,
-      BundleModeConfig{
-          .enabled = static_cast<bool>(bundleModeEnabled),
-          .script = script,
-          .sourceURL = sourceURL,
-      },
-      rnRuntime,
-      jsCallInvoker,
-      uiScheduler);
+  return makeCxxInstance(jThis,
+                         BundleModeConfig{
+                             .enabled = static_cast<bool>(bundleModeEnabled),
+                             .script = script,
+                             .sourceURL = sourceURL,
+                         },
+                         rnRuntime,
+                         jsCallInvoker,
+                         uiScheduler,
+                         jni::make_global(jWorkletsNetworking));
 }
 
 std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(
     const bool bundleModeEnabled,
-    jsi::Runtime &rnRuntime) {
+    jsi::Runtime &rnRuntime,
+    jni::global_ref<JWorkletsNetworking::javaobject> jWorkletsNetworking) {
   return std::make_shared<RuntimeBindings>(RuntimeBindings{
       .requestAnimationFrame = getRequestAnimationFrame(),
       .nativeLoggingHook =
-          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{}});
+          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{},
+      .networkingBackend =
+          bundleModeEnabled ? std::make_shared<AndroidNetworkingBackend>(std::move(jWorkletsNetworking)) : nullptr});
 }
 
 RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame() {
@@ -80,80 +85,6 @@ RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame(
     jRequestAnimationFrame(javaPart.get(), AnimationFrameCallback::newObjectCxxArgs(std::move(callback)).get());
   };
 }
-
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-RuntimeBindings::AbortRequest WorkletsModule::getAbortRequest() {
-  return [javaPart = javaPart_](jsi::Runtime &rt, double requestId) -> void {
-    static const auto jAbortRequest = javaPart->getClass()->getMethod<void(int, double)>("abortRequest");
-    auto workletRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt).lock();
-    jAbortRequest(javaPart.get(), static_cast<int>(workletRuntime->getRuntimeId()), requestId);
-  };
-}
-
-RuntimeBindings::ClearCookies WorkletsModule::getClearCookies() {
-  return [javaPart = javaPart_](jsi::Runtime &rt, jsi::Function &&responseSender) {
-    static const auto jClearCookies = javaPart->getClass()->getMethod<void(JCallback::javaobject)>("clearCookies");
-    auto jsiFunction = std::make_shared<jsi::Function>(std::move(responseSender));
-    auto workletRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt);
-    auto callback = [jsiFunction, workletRuntime](folly::dynamic args) {
-      if (auto runtime = workletRuntime.lock()) {
-        runtime->schedule([jsiFunction, args = std::move(args)](jsi::Runtime &rt) {
-          std::vector<jsi::Value> jsArgs;
-          for (auto &arg : args) {
-            jsArgs.push_back(jsi::valueFromDynamic(rt, arg));
-          }
-          const jsi::Value *rawData = jsArgs.data();
-          size_t size = jsArgs.size();
-          jsiFunction->call(rt, rawData, size);
-        });
-      }
-    };
-    jClearCookies(javaPart.get(), JCxxCallbackImpl::newObjectCxxArgs(std::move(callback)).get());
-  };
-}
-
-RuntimeBindings::SendRequest WorkletsModule::getSendRequest() {
-  return [javaPart = javaPart_](
-             jsi::Runtime &rt,
-             jsi::String &method,
-             jsi::String &url,
-             double requestId,
-             jsi::Array &headers,
-             jsi::Object &data,
-             jsi::String &responseType,
-             bool incrementalUpdates,
-             double timeout,
-             bool withCredentials) {
-    static const auto jSendRequest = javaPart->getClass()
-                                         ->getMethod<void(
-                                             JWorkletRuntimeWrapper::javaobject,
-                                             std::string /* method */,
-                                             std::string /* url */,
-                                             double /* requestId */,
-                                             ReadableNativeArray::javaobject /* headers */,
-                                             ReadableNativeMap::javaobject /* data */,
-                                             std::string /* responseType */,
-                                             bool /* incrementalUpdates */,
-                                             double /* timeout */,
-                                             bool /* withCredentials */
-                                             )>("sendRequest");
-    auto workletRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt).lock();
-
-    jSendRequest(
-        javaPart.get(),
-        JWorkletRuntimeWrapper::makeJWorkletRuntimeWrapper(workletRuntime).get(),
-        method.utf8(rt),
-        url.utf8(rt),
-        requestId,
-        ReadableNativeArray::newObjectCxxArgs(jsi::dynamicFromValue(rt, jsi::Value(std::move(headers)))).get(),
-        ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, jsi::Value(std::move(data)))).get(),
-        responseType.utf8(rt),
-        incrementalUpdates,
-        timeout,
-        withCredentials);
-  };
-}
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
 std::function<bool()> WorkletsModule::getIsOnJSQueueThread() {
   return [javaPart = javaPart_]() -> bool {

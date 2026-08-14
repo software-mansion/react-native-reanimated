@@ -137,9 +137,10 @@ inline jsi::Value createWorkletRuntime(
     std::shared_ptr<SerializableWorklet> &initializer,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop,
-    bool enableLocking) {
-  const auto workletRuntime =
-      runtimeManager->createWorkletRuntime(sourceProxy, name, initializer, queue, enableEventLoop, enableLocking);
+    bool enableLocking,
+    bool enableNetworking) {
+  const auto workletRuntime = runtimeManager->createWorkletRuntime(
+      sourceProxy, name, initializer, queue, enableEventLoop, enableLocking, enableNetworking);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
@@ -493,11 +494,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return serializedResult->toJSValue(rt);
       });
 
-  jsi_utils::addMethod<6>(
+  jsi_utils::addMethod<7>(
       rt,
       obj,
       "createWorkletRuntime",
-      [sourceProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[6]) {
+      [sourceProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[7]) {
         const auto name = at<0>(args).getString(rt).utf8(rt);
         auto serializableInitializer = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Initializer must be a worklet.");
@@ -512,10 +513,19 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
 
         const auto enableEventLoop = at<4>(args).getBool();
         const auto enableLocking = at<5>(args).getBool();
+        const auto enableNetworking = at<6>(args).getBool();
         const auto runtimeManager = sourceProxy->getRuntimeManager();
 
         return createWorkletRuntime(
-            rt, runtimeManager, sourceProxy, name, serializableInitializer, asyncQueue, enableEventLoop, enableLocking);
+            rt,
+            runtimeManager,
+            sourceProxy,
+            name,
+            serializableInitializer,
+            asyncQueue,
+            enableEventLoop,
+            enableLocking,
+            enableNetworking);
       });
 
   jsi_utils::addMethod<3>(
