@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <mutex>
+#include <new>
 #include <optional>
 #include <string>
 #include <utility>
@@ -39,6 +40,18 @@ inline void cleanupRuntimeAware(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &v
     } else {
       freeWithoutCallingDestructor(value);
     }
+  });
+}
+
+inline void cleanupRuntimeAware(jsi::Runtime *rt, jsi::Value &value) {
+  if (rt == nullptr || value.isUndefined()) {
+    return;
+  }
+  WorkletRuntimeRegistry::runWhileLocked(rt, [&value](bool isAlive) {
+    if (isAlive) {
+      value.~Value();
+    }
+    new (&value) jsi::Value(jsi::Value::undefined());
   });
 }
 
