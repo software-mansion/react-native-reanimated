@@ -105,6 +105,16 @@ static NSInteger sActiveTouchCount;
   recognizer.delegate = self;
   [view addGestureRecognizer:recognizer];
   _gestureRecognizer = recognizer;
+#if !TARGET_OS_OSX && !TARGET_OS_TV
+  // UIKit never delivers touches to views with alpha < ~0.01 (e.g. `opacity: {default: 0, ':active': 1}`),
+  // so the recognizer alone cannot engage them. The coordinator activates exactly those views through
+  // its alpha-bumped hit-test; reachable views stay on the recognizer path.
+  [[REATouchHoverCoordinator sharedCoordinator]
+      registerPressObserver:self
+                       view:view
+                    deepest:_selector == reanimated::PseudoSelector::ActiveDeepest
+                   callback:_callback];
+#endif
 }
 
 - (void)attachHoverToView:(REAUIView *)view
@@ -455,6 +465,9 @@ static int _focusObserverContext;
 #if !TARGET_OS_TV
   if (_selector == reanimated::PseudoSelector::Hover) {
     [[REATouchHoverCoordinator sharedCoordinator] unregisterObserver:self];
+  }
+  if ([self isPressSelector]) {
+    [[REATouchHoverCoordinator sharedCoordinator] unregisterPressObserver:self];
   }
 #endif
 #endif

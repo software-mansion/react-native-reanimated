@@ -15,12 +15,25 @@
 @implementation REATouchHoverEntry
 @end
 
+@interface REATouchPressEntry : NSObject {
+ @public
+  __weak id owner;
+  __weak UIView *view;
+  std::function<void(bool)> callback;
+  BOOL deepest;
+  BOOL activated;
+}
+@end
+@implementation REATouchPressEntry
+@end
+
 @interface REAHoverTouchObserver : UIGestureRecognizer
 @property (nonatomic, weak) REATouchHoverCoordinator *coordinator;
 @end
 
 @interface REATouchHoverCoordinator () <UIGestureRecognizerDelegate>
 - (void)primaryTouchBegan:(NSSet<UITouch *> *)touches;
+- (void)primaryTouchMoved:(NSSet<UITouch *> *)touches;
 - (void)primaryTouchEnded:(NSSet<UITouch *> *)touches;
 - (void)touchSequenceEnded;
 @end
@@ -29,6 +42,10 @@
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
   [self.coordinator primaryTouchBegan:touches];
+}
+- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
+{
+  [self.coordinator primaryTouchMoved:touches];
 }
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
@@ -55,6 +72,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 
 @implementation REATouchHoverCoordinator {
   NSMutableArray<REATouchHoverEntry *> *_entries;
+  NSMutableArray<REATouchPressEntry *> *_pressEntries;
   REAHoverTouchObserver *_windowObserver;
   __weak UIWindow *_observedWindow;
   __weak UITouch *_primaryTouch;
@@ -73,6 +91,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 {
   if (self = [super init]) {
     _entries = [NSMutableArray array];
+    _pressEntries = [NSMutableArray array];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(refreshWindowObserver)
                                                  name:UIWindowDidBecomeKeyNotification
@@ -105,6 +124,40 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   [self purgeEntries:removed];
 }
 
+- (void)registerPressObserver:(id)owner
+                         view:(UIView *)view
+                      deepest:(BOOL)deepest
+                     callback:(std::function<void(bool)>)callback
+{
+  [self unregisterPressObserver:owner];
+  REATouchPressEntry *entry = [REATouchPressEntry new];
+  entry->owner = owner;
+  entry->view = view;
+  entry->callback = std::move(callback);
+  entry->deepest = deepest;
+  entry->activated = NO;
+  [_pressEntries addObject:entry];
+  [self refreshWindowObserver];
+}
+
+- (void)unregisterPressObserver:(id)owner
+{
+  NSMutableArray<REATouchPressEntry *> *removed = [NSMutableArray array];
+  for (REATouchPressEntry *entry in _pressEntries) {
+    if (entry->owner == nil || entry->owner == owner) {
+      [self setPressEntry:entry activated:NO];
+      [removed addObject:entry];
+    }
+  }
+  if (removed.count == 0) {
+    return;
+  }
+  [_pressEntries removeObjectsInArray:removed];
+  if (_entries.count == 0 && _pressEntries.count == 0) {
+    [self removeWindowObserver];
+  }
+}
+
 - (UIWindow *)activeKeyWindow
 {
   for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
@@ -122,7 +175,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 
 - (void)refreshWindowObserver
 {
-  if (_entries.count == 0) {
+  if (_entries.count == 0 && _pressEntries.count == 0) {
     return;
   }
   UIWindow *keyWindow = [self activeKeyWindow];
@@ -150,6 +203,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   _observedWindow = nil;
   _primaryTouch = nil;
   [self clearAll];
+  [self deactivateAllPressEntries];
 }
 
 - (void)purgeEntries:(NSArray<REATouchHoverEntry *> *)batch
@@ -158,7 +212,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
     return;
   }
   [_entries removeObjectsInArray:batch];
-  if (_entries.count == 0) {
+  if (_entries.count == 0 && _pressEntries.count == 0) {
     [self removeWindowObserver];
   }
 }
@@ -179,6 +233,24 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   _primaryTouchDownPoint = [touch locationInView:window];
   UIView *hit = [self hitTestInWindow:window atPoint:_primaryTouchDownPoint];
   [self hoverBranchOfHitView:hit];
+  [self activateRescuedPressEntriesInWindow:window bumpedHit:hit];
+}
+
+- (void)primaryTouchMoved:(NSSet<UITouch *> *)touches
+{
+  if (_primaryTouch == nil || ![touches containsObject:_primaryTouch]) {
+    return;
+  }
+  UIWindow *window = _observedWindow;
+  if (window == nil) {
+    return;
+  }
+  CGPoint point = [_primaryTouch locationInView:window];
+  CGFloat dx = point.x - _primaryTouchDownPoint.x;
+  CGFloat dy = point.y - _primaryTouchDownPoint.y;
+  if (dx * dx + dy * dy > kPrimaryTouchTapMovement * kPrimaryTouchTapMovement) {
+    [self deactivateAllPressEntries];
+  }
 }
 
 - (void)primaryTouchEnded:(NSSet<UITouch *> *)touches
@@ -186,6 +258,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   if (_primaryTouch == nil || ![touches containsObject:_primaryTouch]) {
     return;
   }
+  [self deactivateAllPressEntries];
   UIWindow *window = _observedWindow;
   if (window != nil) {
     CGPoint releasePoint = [_primaryTouch locationInView:window];
@@ -206,6 +279,58 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 - (void)touchSequenceEnded
 {
   _primaryTouch = nil;
+  [self deactivateAllPressEntries];
+}
+
+#pragma mark - Fallback press path
+
+// Activates press entries whose views only became hit-testable thanks to the alpha bump. Views
+// UIKit can reach on its own are excluded here: their UILongPressGestureRecognizer handles the
+// press, so the two paths never both fire for one view.
+- (void)activateRescuedPressEntriesInWindow:(UIWindow *)window bumpedHit:(UIView *)bumpedHit
+{
+  if (_pressEntries.count == 0 || bumpedHit == nil) {
+    return;
+  }
+  UIView *plainHit = [window hitTest:_primaryTouchDownPoint withEvent:nil];
+  UIView *deepestPressView = nil;
+  for (UIView *current = bumpedHit; current != nil && deepestPressView == nil; current = current.superview) {
+    for (REATouchPressEntry *entry in _pressEntries) {
+      if (entry->view == current) {
+        deepestPressView = current;
+        break;
+      }
+    }
+  }
+  for (REATouchPressEntry *entry in _pressEntries) {
+    UIView *view = entry->view;
+    if (view == nil || ![self isView:view onBranchOfHitView:bumpedHit] ||
+        [self isView:view onBranchOfHitView:plainHit]) {
+      continue;
+    }
+    if (entry->deepest && view != deepestPressView) {
+      continue;
+    }
+    [self setPressEntry:entry activated:YES];
+  }
+}
+
+- (void)deactivateAllPressEntries
+{
+  for (REATouchPressEntry *entry in _pressEntries) {
+    [self setPressEntry:entry activated:NO];
+  }
+}
+
+- (void)setPressEntry:(REATouchPressEntry *)entry activated:(BOOL)activated
+{
+  if (entry->activated == activated) {
+    return;
+  }
+  entry->activated = activated;
+  if (entry->callback) {
+    entry->callback(activated);
+  }
 }
 
 #pragma mark - State reconciliation
@@ -226,11 +351,21 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 - (UIView *)hitTestInWindow:(UIWindow *)window atPoint:(CGPoint)point
 {
   static const CGFloat kHitTestableAlpha = 0.02;
+  NSMutableArray<UIView *> *candidates = [NSMutableArray arrayWithCapacity:_entries.count + _pressEntries.count];
+  for (REATouchHoverEntry *entry in _entries) {
+    if (entry->view != nil) {
+      [candidates addObject:entry->view];
+    }
+  }
+  for (REATouchPressEntry *entry in _pressEntries) {
+    if (entry->view != nil) {
+      [candidates addObject:entry->view];
+    }
+  }
   NSMutableArray<UIView *> *lifted = nil;
   NSMutableArray<NSNumber *> *savedAlphas = nil;
-  for (REATouchHoverEntry *entry in _entries) {
-    UIView *view = entry->view;
-    if (view == nil || view.alpha >= kHitTestableAlpha || [lifted containsObject:view]) {
+  for (UIView *view in candidates) {
+    if (view.alpha >= kHitTestableAlpha || [lifted containsObject:view]) {
       continue;
     }
     if (lifted == nil) {
