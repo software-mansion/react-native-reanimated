@@ -110,7 +110,6 @@ bool CSSPlatformTransitions::applyTransition(
     adjustedStart = active->adjustedEnd;
   }
 
-  // Acquired before the start can fail, so a rejected start hands the curve straight back.
   const int easingId = easings_->acquire(toPlatformEasing(resolvedSettings.easingConfig));
 
   if (!animate_(
@@ -126,7 +125,8 @@ bool CSSPlatformTransitions::applyTransition(
     return false;
   }
 
-  // Released after the acquire above, so replacing a transition with the same curve never drops it.
+  // After the acquire above: a retrigger with the same curve would otherwise drop it to zero
+  // and rebuild the interpolator.
   if (replacedEasingId >= 0) {
     easings_->release(replacedEasingId);
   }

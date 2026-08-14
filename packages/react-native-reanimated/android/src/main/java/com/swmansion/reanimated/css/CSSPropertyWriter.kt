@@ -4,9 +4,7 @@ import android.util.FloatProperty
 import android.view.View
 
 /**
- * The View property React Native itself writes, so a commit can overwrite a running
- * animation, which the pre-draw reconciliation repairs.
- *
+ * The View property React Native itself writes, so a commit can overwrite a running animation.
  * Ids must match `platformPropertyId` in CSSPlatformTransitions.cpp.
  */
 internal fun cssPropertyWriterFor(propertyId: Int): FloatProperty<View>? =

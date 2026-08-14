@@ -60,9 +60,8 @@ internal class CSSPlatformTransitionsManager(
     private var nextStartToken = 0L
 
     /**
-     * Keyed by the easing id the C++ interner assigned; a define always precedes the first
-     * animate call using its id. The C++ side serialises its callers on a mutex, which is not
-     * a happens-before edge for Java, so the map supplies that ordering itself.
+     * A C++ mutex serialises the callers but is not a happens-before edge for Java, so the
+     * map supplies that ordering itself.
      */
     private val easings = ConcurrentHashMap<Int, TimeInterpolator>()
 
@@ -145,7 +144,6 @@ internal class CSSPlatformTransitionsManager(
             animators.clear()
             running.forEach { it.animator.cancel() }
             reconciler.invalidate()
-            // Whatever a live transition still held, since the map is its only owner.
             easings.clear()
         }
     }
@@ -262,7 +260,6 @@ internal class CSSPlatformTransitionsManager(
         easings[easingId] = CSSEasing.interpolator(easingType, easingPointsX, easingPointsY)
     }
 
-    /** The C++ interner drops a curve once nothing routes with it; ids are never handed out twice. */
     fun undefineEasing(easingId: Int) {
         easings.remove(easingId)
     }

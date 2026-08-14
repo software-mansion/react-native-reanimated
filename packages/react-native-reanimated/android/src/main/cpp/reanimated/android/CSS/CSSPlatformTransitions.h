@@ -21,8 +21,7 @@ using namespace facebook::react;
 
 class CSSPlatformTransitions {
  public:
-  /// False means the property falls back to the loop. Ids and scalars only, so the
-  /// per-transition JNI hop allocates nothing.
+  /// False means the property falls back to the loop.
   using AnimateFunction = std::function<bool(
       int viewTag,
       int propertyId,
@@ -56,14 +55,12 @@ class CSSPlatformTransitions {
     css::PlatformValue adjustedEnd;
     css::ReversingState reversing;
     css::CSSTransitionPropertySettings settings;
-    /// Holds a reference to the curve for as long as this property is routed.
     int easingId;
   };
 
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
 
   std::unordered_map<Tag, std::unordered_map<std::string, ActiveTransition>> active_;
-  /// Shared so every platform animation kind interns against one table.
   std::shared_ptr<CSSPlatformEasings> easings_;
   AnimateFunction animate_;
   RemoveFunction remove_;

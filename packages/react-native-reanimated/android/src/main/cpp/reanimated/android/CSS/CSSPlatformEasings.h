@@ -7,8 +7,7 @@
 
 namespace reanimated {
 
-/// Carries the curve's own points rather than a sampled table, so a discontinuous
-/// steps() survives at any duration.
+/// Raw points rather than a sampled table, so steps() keeps its discontinuities.
 struct PlatformEasing {
   enum class Type : std::uint8_t { Linear = 0, CubicBezier = 1, Steps = 2, LinearStops = 3 };
 
@@ -23,9 +22,7 @@ struct PlatformEasingHash {
   std::size_t operator()(const PlatformEasing &easing) const;
 };
 
-/// Registers each distinct curve with the platform once and hands back an id, so a start crosses
-/// JNI carrying an int rather than two float arrays. Knows nothing about what is animating, so
-/// every platform-driven animation kind can share one instance.
+/// Registers each distinct curve once so a start carries an id instead of its points.
 class CSSPlatformEasings {
  public:
   using DefineFunction =
@@ -36,11 +33,9 @@ class CSSPlatformEasings {
 
   CSSPlatformEasings(DefineFunction define, UndefineFunction undefine);
 
-  /// Interns on first sight and takes a reference; pair every call with release(). Always
-  /// succeeds, so a caller never has to handle a curve it could not register.
+  /// Interns on first sight and takes a reference; pair every call with release().
   int acquire(const PlatformEasing &easing);
 
-  /// Hands a reference back, dropping the curve from both sides once none remain.
   void release(int easingId);
 
  private:
