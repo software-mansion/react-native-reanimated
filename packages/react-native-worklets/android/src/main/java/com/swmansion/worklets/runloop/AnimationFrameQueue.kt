@@ -25,6 +25,7 @@ class AnimationFrameQueue(
         }
     private val mCallbackPosted = AtomicBoolean()
     private val mPaused = AtomicBoolean()
+    private val mInvalidated = AtomicBoolean()
     private val mFrameCallbacks = mutableListOf<AnimationFrameCallback>()
 
     fun resume() {
@@ -44,8 +45,30 @@ class AnimationFrameQueue(
         }
     }
 
+    /**
+     * Permanently stops the queue. Called when the owning `WorkletsModule` is invalidated, i.e. when
+     * the React instance is being destroyed.
+     *
+     * Unlike [pause], this cannot be undone by [resume] — after this returns, no further frame is
+     * delivered and no new callback is accepted. Every [AnimationFrameCallback] holds a `HybridData`
+     * handle into native state that module teardown is about to release, so a frame delivered
+     * afterwards would call into a dead native module.
+     */
+    fun invalidate() {
+        // Unsubscribes from the Choreographer and latches mPaused, so scheduleQueueExecution()
+        // cannot post a new callback either.
+        pause()
+        synchronized(mFrameCallbacks) {
+            mInvalidated.set(true)
+            mFrameCallbacks.clear()
+        }
+    }
+
     fun requestAnimationFrame(animationFrameCallback: AnimationFrameCallback) {
         synchronized(mFrameCallbacks) {
+            if (mInvalidated.get()) {
+                return
+            }
             mFrameCallbacks.add(animationFrameCallback)
         }
         scheduleQueueExecution()
