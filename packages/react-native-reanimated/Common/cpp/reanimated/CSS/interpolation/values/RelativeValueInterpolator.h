@@ -15,19 +15,19 @@ namespace reanimated::css {
  * can occur.
  */
 template <typename... AllowedTypes>
-class ResolvableValueInterpolator final : public SimpleValueInterpolator<AllowedTypes...> {
+class RelativeValueInterpolator final : public SimpleValueInterpolator<AllowedTypes...> {
   static_assert(
       (... && std::is_base_of<CSSValue, AllowedTypes>::value),
-      "[Reanimated] ResolvableValueInterpolator: All interpolated types must inherit from CSSValue");
+      "[Reanimated] RelativeValueInterpolator: All interpolated types must inherit from CSSValue");
 
  public:
   using ValueType = typename SimpleValueInterpolator<AllowedTypes...>::ValueType;
 
-  explicit ResolvableValueInterpolator(
+  explicit RelativeValueInterpolator(
       const PropertyPath &propertyPath,
       const ValueType &defaultStyleValue,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const ResolvableValueInterpolatorConfig &config);
+      const RelativeValueInterpolatorConfig &config);
 
  protected:
   folly::dynamic interpolateValue(
@@ -37,7 +37,7 @@ class ResolvableValueInterpolator final : public SimpleValueInterpolator<Allowed
       const ValueInterpolationContext &context) const override;
 
  private:
-  const ResolvableValueInterpolatorConfig &config_;
+  const RelativeValueInterpolatorConfig &config_;
 };
 
 } // namespace reanimated::css

@@ -152,7 +152,7 @@ template TransformMatrix3D TransformOperationInterpolator<MatrixOperation>::inte
 template <ResolvableOp TOperation>
 TransformOperationInterpolator<TOperation>::TransformOperationInterpolator(
     const std::shared_ptr<TOperation> &defaultOperation,
-    ResolvableValueInterpolatorConfig config)
+    RelativeValueInterpolatorConfig config)
     : StyleOperationInterpolator(defaultOperation), config_(std::move(config)) {}
 
 template <ResolvableOp TOperation>

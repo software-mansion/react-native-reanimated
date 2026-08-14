@@ -52,7 +52,7 @@ folly::dynamic SimpleValueInterpolator<AllowedTypes...>::interpolateValue(
     const auto &to = std::static_pointer_cast<ValueType>(toValue);
     return from->interpolate(progress, *to, context).toDynamic();
   } else {
-    // Only instantiated as ResolvableValueInterpolator's base, which overrides
+    // Only instantiated as RelativeValueInterpolator's base, which overrides
     // this and can build the context these values ask for.
     throw std::runtime_error(
         "[Reanimated] Cannot interpolate " + fromValue->toString() + " to " + toValue->toString() +
