@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  ios-remote:
+  ios-argent:
     if: github.repository == 'software-mansion/react-native-reanimated'
     strategy:
       fail-fast: false
