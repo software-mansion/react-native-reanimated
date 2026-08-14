@@ -17,6 +17,11 @@ SynchronizableValue SynchronizableDynamic::getBlocking() {
   return value;
 }
 
+void SynchronizableDynamic::setDirty(const SynchronizableFixedValue &) {
+  throw std::runtime_error(
+      "[Worklets] Cannot invoke setDirty on a dynamic-type Synchronizable. Use setBlocking instead.");
+}
+
 void SynchronizableDynamic::setBlocking(const std::shared_ptr<Serializable> &value) {
   setBlockingBefore();
   std::atomic_store(&value_, value);
