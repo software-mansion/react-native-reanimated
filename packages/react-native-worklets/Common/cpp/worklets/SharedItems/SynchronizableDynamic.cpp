@@ -1,17 +1,18 @@
 #include <worklets/SharedItems/SynchronizableDynamic.h>
 
+#include <atomic>
 #include <memory>
 #include <stdexcept>
 
 namespace worklets {
 
 SynchronizableValue SynchronizableDynamic::getDirty() {
-  return value_;
+  return std::atomic_load(&value_);
 }
 
 SynchronizableValue SynchronizableDynamic::getBlocking() {
   getBlockingBefore();
-  auto value = value_;
+  auto value = std::atomic_load(&value_);
   getBlockingAfter();
   return value;
 }
@@ -23,7 +24,7 @@ void SynchronizableDynamic::setDirty(const SynchronizableFixedValue &) {
 
 void SynchronizableDynamic::setBlocking(const std::shared_ptr<Serializable> &value) {
   setBlockingBefore();
-  value_ = value;
+  std::atomic_store(&value_, value);
   setBlockingAfter();
 }
 
