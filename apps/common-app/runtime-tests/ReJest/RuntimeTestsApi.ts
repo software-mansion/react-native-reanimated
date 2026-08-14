@@ -195,6 +195,10 @@ export function getWorkletRuntimeFromPool(name: string) {
   return workletRuntimePool.getOrCreateWorkletRuntime(name);
 }
 
+export function getWorkletRuntimesFromPool(count: number) {
+  return workletRuntimePool.getOrCreateWorkletRuntimes(count);
+}
+
 export function expect(value: TestValue) {
   return testRunner.expect(value);
 }
