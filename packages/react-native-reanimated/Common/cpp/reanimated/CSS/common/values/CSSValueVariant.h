@@ -89,8 +89,8 @@ class CSSValueVariant final : public CSSValue {
 
   static_assert(
       (InterpolatesWith<AllowedTypes, InterpolationContextFor<AllowedTypes...>> && ...),
-      "A resolvable value type must be listed first - the variant takes its interpolation context from the "
-      "first alternative (e.g. <CSSLength, CSSKeyword> rather than <CSSKeyword, CSSLength>).");
+      "Alternatives may be listed in any order, but the resolvable ones must all declare the same interpolation "
+      "context - a variant cannot mix value types that resolve against different things.");
 
   CSSValueVariant interpolate(
       const double progress,

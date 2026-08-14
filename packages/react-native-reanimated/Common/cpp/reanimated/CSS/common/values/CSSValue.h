@@ -90,11 +90,17 @@ concept Resolvable = requires {
   requires TCSSValue::is_resolvable_value == true;
 };
 
-/// The context needed to interpolate these types together: the resolvable
-/// one's, or the plain context when none of them resolve.
+/// The context needed to interpolate these types together: the one declared by
+/// the resolvable alternative, wherever it sits in the list, or the plain
+/// context when none of them resolve.
 template <typename... TCSSValues>
 struct InterpolationContext {
   using Type = ValueInterpolationContext;
+};
+
+template <typename TCSSValue, typename... TRest>
+struct InterpolationContext<TCSSValue, TRest...> {
+  using Type = typename InterpolationContext<TRest...>::Type;
 };
 
 template <Resolvable TCSSValue, typename... TRest>
