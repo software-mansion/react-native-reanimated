@@ -90,6 +90,11 @@ void CSSPlatformTransitions::releaseEasing(const int easingId) {
   easingIds_.erase(it->second.easing);
   internedEasings_.erase(it);
   undefineEasing_(easingId);
+  if (internedEasings_.empty()) {
+    // Nothing holds an id, so counting from zero again keeps them inside the range the
+    // platform side can look up without boxing.
+    nextEasingId_ = 0;
+  }
 }
 
 const CSSPlatformTransitions::ActiveTransition *CSSPlatformTransitions::activeTransitionFor(
