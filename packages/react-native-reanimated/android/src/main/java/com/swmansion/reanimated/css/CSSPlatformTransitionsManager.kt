@@ -53,7 +53,7 @@ internal class CSSPlatformTransitionsManager(
         fabricUIManager.addUIManagerEventListener(mountListener)
     }
 
-    private val reconciler = CSSPlatformTransitionReconciler(::repairClobberedValues)
+    private val reconciler = CSSPlatformTransitionReconciler(::onPreDraw)
     private val startTokens = HashMap<Key, Long>()
 
     @Volatile
@@ -190,8 +190,7 @@ internal class CSSPlatformTransitionsManager(
      * One main-looper message per burst rather than one per transition: a commit can start
      * a transition on every view on screen, and a message each floods the looper. The
      * message is asynchronous so a traversal's sync barrier cannot defer it past the frame
-     * whose committed value it is meant to replace. Whichever comes first, this message or
-     * the pre-draw pass, drains the queue; the other then finds it empty.
+     * whose committed value it is meant to replace.
      */
     private fun enqueue(command: Command) {
         // Teardown streams a removal per routed property, and each would post its own message.
@@ -323,14 +322,20 @@ internal class CSSPlatformTransitionsManager(
         reactWroteSinceLastDraw = true
     }
 
-    /** Re-asserts each animator's own value wherever a commit overwrote it. */
-    private fun repairClobberedValues(): Boolean {
-        // Drain here too, not only from the posted message: this runs after the commit that
-        // wrote the target and before the draw, so a queued start replaces it in the same
-        // frame instead of showing it once. Ahead of the repair, so those starts are covered.
+    /**
+     * Draining here as well as from the posted message puts a queued start after the commit
+     * that wrote the target and before the draw, so it replaces the target in the same frame
+     * rather than showing it once. Returns whether the listener is still needed.
+     */
+    private fun onPreDraw(): Boolean {
         flushCommands()
+        repairClobberedValues()
+        return animators.isNotEmpty() || hasQueuedCommands()
+    }
 
-        if (!reactWroteSinceLastDraw) return isAnimating()
+    /** Re-asserts each animator's own value wherever a commit overwrote it. */
+    private fun repairClobberedValues() {
+        if (!reactWroteSinceLastDraw) return
         reactWroteSinceLastDraw = false
         animators.values.forEach { running ->
             // target is held weakly, so read the View through it rather than keeping one.
@@ -338,14 +343,10 @@ internal class CSSPlatformTransitionsManager(
             val current = running.currentValue()
             if (running.writer.get(view) != current) running.writer.setValue(view, current)
         }
-        return isAnimating()
     }
 
-    /** Retiring with commands still queued would drop the drain above along with the listener. */
-    private fun isAnimating(): Boolean {
-        if (animators.isNotEmpty()) return true
-        synchronized(commandLock) { return pendingCommands.isNotEmpty() }
-    }
+    /** Retiring with commands still queued would take the pre-draw drain with the listener. */
+    private fun hasQueuedCommands(): Boolean = synchronized(commandLock) { pendingCommands.isNotEmpty() }
 
     /** PathInterpolator flattens its curve natively on construction, so build once per id. */
     fun defineEasing(
