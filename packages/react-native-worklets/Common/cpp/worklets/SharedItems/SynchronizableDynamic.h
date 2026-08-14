@@ -24,4 +24,4 @@ class SynchronizableDynamic final : public Synchronizable {
   std::shared_ptr<Serializable> value_;
 };
 
-}; // namespace worklets
+} // namespace worklets

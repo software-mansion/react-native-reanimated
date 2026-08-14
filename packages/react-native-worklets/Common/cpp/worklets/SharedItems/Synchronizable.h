@@ -16,10 +16,12 @@ using SynchronizableFixedValue = std::variant<double, bool>;
 
 class Synchronizable : public SynchronizableAccess,
                        public Serializable,
-                       public jsi::NativeState,
+                       public facebook::jsi::NativeState,
                        public std::enable_shared_from_this<Synchronizable> {
  public:
-  static std::shared_ptr<Synchronizable> extractSynchronizableOrThrow(jsi::Runtime &rt, const jsi::Value &value) {
+  static std::shared_ptr<Synchronizable> extractSynchronizableOrThrow(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &value) {
     auto serializable =
         extractSerializableOrThrow(rt, value, "[Worklets] Expecting the object to be of type SerializableJSRef.");
 
@@ -58,11 +60,12 @@ class Synchronizable : public SynchronizableAccess,
 
   virtual void setBlocking(const SynchronizableFixedValue &value) = 0;
 
-  jsi::Value toJSValue(jsi::Runtime &rt) final {
+  facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) final {
     auto synchronizableUnpacker = rt.global().getProperty(rt, "__synchronizableUnpacker");
     react_native_assert(synchronizableUnpacker.isObject() && "synchronizableUnpacker not found");
     auto ref = SerializableJSRef::newNativeStateObject(rt, this->shared_from_this());
-    return synchronizableUnpacker.getObject(rt).getFunction(rt).call(rt, std::move(ref), jsi::Value(isFixed()));
+    return synchronizableUnpacker.getObject(rt).getFunction(rt).call(
+        rt, std::move(ref), facebook::jsi::Value(isFixed()));
   }
 
   ~Synchronizable() override = default;
@@ -74,4 +77,4 @@ class Synchronizable : public SynchronizableAccess,
   const bool isFixed_;
 };
 
-}; // namespace worklets
+} // namespace worklets
