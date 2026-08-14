@@ -1,5 +1,6 @@
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
+#include <worklets/SharedItems/RetainingSerializable.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>

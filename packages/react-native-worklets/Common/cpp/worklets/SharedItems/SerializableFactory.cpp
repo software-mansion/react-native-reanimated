@@ -1,4 +1,5 @@
 #include <jsi/jsi.h>
+#include <worklets/SharedItems/RetainingSerializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
 #include <worklets/SharedItems/SerializableRemoteFunction.h>
 
