@@ -61,14 +61,8 @@ internal class CSSPlatformTransitionsManager(
 
     private var nextStartToken = 0L
 
-    private val commandLock = Any()
-    private var pendingCommands = ArrayList<Command>()
-
-    /** Null while the flush holds it, so the two buffers can never be the same list. */
-    private var spareCommands: ArrayList<Command>? = ArrayList()
-    private var flushScheduled = false
+    private val commands = MainThreadCommandQueue<Command>(::executeCommand)
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val flushRunnable = Runnable { flushCommands() }
 
     /**
      * A C++ mutex serialises the callers but is not a happens-before edge for Java, so the
@@ -145,7 +139,7 @@ internal class CSSPlatformTransitionsManager(
         val scale = DurationScale.effectiveScale(context)
         if (scale <= 0f) return false
 
-        enqueue(
+        commands.enqueue(
             Command.Start(
                 Key(viewTag, propertyId),
                 writer,
@@ -183,52 +177,17 @@ internal class CSSPlatformTransitionsManager(
         viewTag: Int,
         propertyId: Int,
     ) {
-        enqueue(Command.Remove(Key(viewTag, propertyId)))
-    }
-
-    /**
-     * One main-looper message per burst rather than one per transition: a commit can start
-     * a transition on every view on screen, and a message each floods the looper. The
-     * message is asynchronous so a traversal's sync barrier cannot defer it past the frame
-     * whose committed value it is meant to replace.
-     */
-    private fun enqueue(command: Command) {
         // Teardown streams a removal per routed property, and each would post its own message.
         if (invalidated) return
-
-        val schedule: Boolean
-        synchronized(commandLock) {
-            pendingCommands.add(command)
-            schedule = !flushScheduled
-            if (schedule) flushScheduled = true
-        }
-        if (schedule) {
-            val message = Message.obtain(mainHandler, flushRunnable)
-            message.isAsynchronous = true
-            mainHandler.sendMessage(message)
-        }
+        commands.enqueue(Command.Remove(Key(viewTag, propertyId)))
     }
 
-    private fun flushCommands() {
-        val batch: ArrayList<Command>
-        synchronized(commandLock) {
-            batch = pendingCommands
-            pendingCommands = spareCommands ?: ArrayList()
-            spareCommands = null
-            flushScheduled = false
-        }
-        try {
-            for (command in batch) {
-                // A start must not register an animator behind cleanup that is already posted.
-                if (invalidated) break
-                when (command) {
-                    is Command.Start -> beginStart(command)
-                    is Command.Remove -> removeNow(command.key)
-                }
-            }
-        } finally {
-            batch.clear()
-            synchronized(commandLock) { spareCommands = batch }
+    private fun executeCommand(command: Command) {
+        // A start must not register an animator behind cleanup that is already posted.
+        if (invalidated) return
+        when (command) {
+            is Command.Start -> beginStart(command)
+            is Command.Remove -> removeNow(command.key)
         }
     }
 
@@ -330,9 +289,9 @@ internal class CSSPlatformTransitionsManager(
      * rather than showing it once. Returns whether the listener is still needed.
      */
     private fun onPreDraw(): Boolean {
-        flushCommands()
+        commands.drain()
         repairClobberedValues()
-        return animators.isNotEmpty() || hasQueuedCommands()
+        return animators.isNotEmpty() || commands.hasPending()
     }
 
     /** Re-asserts each animator's own value wherever a commit overwrote it. */
@@ -346,9 +305,6 @@ internal class CSSPlatformTransitionsManager(
             if (running.writer.get(view) != current) running.writer.setValue(view, current)
         }
     }
-
-    /** Retiring with commands still queued would take the pre-draw drain with the listener. */
-    private fun hasQueuedCommands(): Boolean = synchronized(commandLock) { pendingCommands.isNotEmpty() }
 
     /** PathInterpolator flattens its curve natively on construction, so build once per id. */
     fun defineEasing(
