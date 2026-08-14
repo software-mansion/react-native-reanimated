@@ -36,9 +36,8 @@ export type Synchronizable<TValue = unknown> = SerializableRef<TValue> &
     unlock(): void;
   };
 
-export type FixedSynchronizable<
-  TValue extends number | boolean = number | boolean,
-> = Synchronizable<TValue> & {
+export type FixedSynchronizable<TValue extends number | boolean> =
+  Synchronizable<TValue> & {
   setDirty(value: TValue): void;
 };
 

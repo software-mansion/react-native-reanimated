@@ -24,9 +24,6 @@ export function installSynchronizableUnpacker() {
   ): Synchronizable<TValue> {
     const synchronizable =
       synchronizableRef as unknown as Synchronizable<TValue>;
-    const fixedRef = synchronizableRef as unknown as SynchronizableRef<
-      number | boolean
-    >;
     const proxy = globalThis.__workletsModuleProxy;
 
     synchronizable.__synchronizableRef = true;
@@ -74,7 +71,10 @@ export function installSynchronizableUnpacker() {
       (
         synchronizable as unknown as FixedSynchronizable<number | boolean>
       ).setDirty = (value: number | boolean) => {
-        proxy.synchronizableSetDirty(fixedRef, value);
+        proxy.synchronizableSetDirty(
+          synchronizable as unknown as SynchronizableRef<number | boolean>,
+          value
+        );
       };
     }
 

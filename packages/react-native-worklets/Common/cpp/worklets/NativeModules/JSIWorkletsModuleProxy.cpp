@@ -650,7 +650,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       rt, obj, "synchronizableSetBlocking", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         auto synchronizable = Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args));
         const auto &newValue = at<1>(args);
-        if (newValue.isBool() || newValue.isNumber()) {
+        if (synchronizable->isFixed()) {
           synchronizable->setBlocking(jsValueToSynchronizableFixedValue(newValue));
         } else {
           synchronizable->setBlocking(

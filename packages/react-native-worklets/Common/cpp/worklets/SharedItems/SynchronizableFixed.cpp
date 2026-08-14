@@ -1,3 +1,4 @@
+#include <react/debug/react_native_assert.h>
 #include <worklets/SharedItems/SynchronizableFixed.h>
 
 #include <memory>

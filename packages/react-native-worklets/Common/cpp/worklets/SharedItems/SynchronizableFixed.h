@@ -4,6 +4,7 @@
 
 #include <atomic>
 #include <memory>
+#include <type_traits>
 #include <variant>
 
 namespace worklets {
@@ -15,6 +16,11 @@ class SynchronizableFixed final : public Synchronizable {
 
   explicit SynchronizableFixed(bool value)
       : Synchronizable(true), value_(std::in_place_type<std::atomic<bool>>, value) {}
+
+  template <
+      typename TInteger,
+      typename = std::enable_if_t<std::is_integral_v<TInteger> && !std::is_same_v<TInteger, bool>>>
+  explicit SynchronizableFixed(TInteger value) = delete;
 
   static std::shared_ptr<SynchronizableFixed> make(const SynchronizableFixedValue &initialValue);
 
@@ -38,4 +44,4 @@ class SynchronizableFixed final : public Synchronizable {
 static_assert(std::atomic<double>::is_always_lock_free);
 static_assert(std::atomic<bool>::is_always_lock_free);
 
-}; // namespace worklets
+} // namespace worklets
