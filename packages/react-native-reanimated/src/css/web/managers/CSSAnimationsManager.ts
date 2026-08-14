@@ -25,10 +25,10 @@ import { maybeAddSuffixes, parseTimingFunction } from '../utils';
 import { CSSCallbackListeners } from './CSSCallbackListeners';
 
 const ANIMATION_EVENT_NAME: Record<CSSAnimationCallbackProp, string> = {
-  onAnimationStart: 'animationstart',
-  onAnimationEnd: 'animationend',
-  onAnimationIteration: 'animationiteration',
-  onAnimationCancel: 'animationcancel',
+  onCSSAnimationStart: 'animationstart',
+  onCSSAnimationEnd: 'animationend',
+  onCSSAnimationIteration: 'animationiteration',
+  onCSSAnimationCancel: 'animationcancel',
 };
 
 const isCSSKeyframesRuleImpl = (

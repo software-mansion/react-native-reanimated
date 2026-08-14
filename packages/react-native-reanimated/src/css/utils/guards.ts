@@ -60,10 +60,10 @@ export const isTransitionCallbackProp = (
   key: string
 ): key is CSSTransitionCallbackProp => {
   switch (key) {
-    case 'onTransitionRun':
-    case 'onTransitionStart':
-    case 'onTransitionEnd':
-    case 'onTransitionCancel':
+    case 'onCSSTransitionRun':
+    case 'onCSSTransitionStart':
+    case 'onCSSTransitionEnd':
+    case 'onCSSTransitionCancel':
       return true;
     default:
       return false;
@@ -74,10 +74,10 @@ export const isAnimationCallbackProp = (
   key: string
 ): key is CSSAnimationCallbackProp => {
   switch (key) {
-    case 'onAnimationStart':
-    case 'onAnimationEnd':
-    case 'onAnimationIteration':
-    case 'onAnimationCancel':
+    case 'onCSSAnimationStart':
+    case 'onCSSAnimationEnd':
+    case 'onCSSAnimationIteration':
+    case 'onCSSAnimationCancel':
       return true;
     default:
       return false;
