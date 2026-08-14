@@ -4,13 +4,14 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.animation.TimeInterpolator
+import android.os.Handler
+import android.os.Looper
 import android.util.FloatProperty
 import android.view.Choreographer
 import android.view.View
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UIManager
 import com.facebook.react.bridge.UIManagerListener
-import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.uimanager.IllegalViewOperationException
@@ -51,13 +52,16 @@ internal class CSSPlatformTransitionsManager(
         fabricUIManager.addUIManagerEventListener(mountListener)
     }
 
-    private val reconciler = CSSPlatformTransitionReconciler(::repairClobberedValues)
+    private val reconciler = CSSPlatformTransitionReconciler(::onPreDraw)
     private val startTokens = HashMap<Key, Long>()
 
     @Volatile
     private var invalidated = false
 
     private var nextStartToken = 0L
+
+    private val commands = MainThreadCommandQueue<Command>(::executeCommand)
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     /**
      * A C++ mutex serialises the callers but is not a happens-before edge for Java, so the
@@ -80,6 +84,26 @@ internal class CSSPlatformTransitionsManager(
 
         /** Uninitialised until the first frame, which a start delay defers, so show startValue. */
         fun currentValue(): Float = heldValue ?: if (animator.isRunning) animator.animatedValue as Float else startValue
+    }
+
+    private sealed class Command {
+        abstract val key: Key
+
+        class Start(
+            override val key: Key,
+            val writer: FloatProperty<View>,
+            val fromValue: Double,
+            val toValue: Double,
+            val durationMs: Double,
+            val startTimestampMs: Double,
+            val interpolator: TimeInterpolator,
+            val scale: Float,
+            val persistent: Boolean,
+        ) : Command()
+
+        class Remove(
+            override val key: Key,
+        ) : Command()
     }
 
     /** Holds the start value for [delayFraction], then plays [inner] over the rest. */
@@ -114,19 +138,19 @@ internal class CSSPlatformTransitionsManager(
         val scale = DurationScale.effectiveScale(context)
         if (scale <= 0f) return false
 
-        UiThreadUtil.runOnUiThread {
-            if (invalidated) return@runOnUiThread
-            val key = Key(viewTag, propertyId)
-            // A fresh token invalidates any retry still queued for this key.
-            val token = ++nextStartToken
-            startTokens[key] = token
-
-            beginWhenMounted(key, token, startTimestampMs + durationMs) {
-                viewForTag(viewTag)?.also { view ->
-                    start(view, key, writer, fromValue, toValue, durationMs, startTimestampMs, interpolator, scale, persistent)
-                } != null
-            }
-        }
+        commands.enqueue(
+            Command.Start(
+                Key(viewTag, propertyId),
+                writer,
+                fromValue,
+                toValue,
+                durationMs,
+                startTimestampMs,
+                interpolator,
+                scale,
+                persistent,
+            ),
+        )
         return true
     }
 
@@ -137,7 +161,7 @@ internal class CSSPlatformTransitionsManager(
         invalidated = true
         @OptIn(UnstableReactNativeAPI::class)
         fabricUIManager.removeUIManagerEventListener(mountListener)
-        UiThreadUtil.runOnUiThread {
+        mainHandler.post {
             startTokens.clear()
             // Snapshot first: cancel() runs onAnimationEnd, which reads the map.
             val running = animators.values.toList()
@@ -152,10 +176,33 @@ internal class CSSPlatformTransitionsManager(
         viewTag: Int,
         propertyId: Int,
     ) {
-        UiThreadUtil.runOnUiThread {
-            val key = Key(viewTag, propertyId)
-            startTokens.remove(key)
-            animators.remove(key)?.animator?.cancel()
+        // Teardown streams a removal per routed property, and each would post its own message.
+        if (invalidated) return
+        commands.enqueue(Command.Remove(Key(viewTag, propertyId)))
+    }
+
+    private fun executeCommand(command: Command) {
+        // A start must not register an animator behind cleanup that is already posted.
+        if (invalidated) return
+        when (command) {
+            is Command.Start -> beginStart(command)
+            is Command.Remove -> removeNow(command.key)
+        }
+    }
+
+    private fun removeNow(key: Key) {
+        startTokens.remove(key)
+        animators.remove(key)?.animator?.cancel()
+    }
+
+    private fun beginStart(command: Command.Start) {
+        val key = command.key
+        // Claiming a fresh token invalidates any retry still queued for this key,
+        // so a superseded request cannot start on a later frame.
+        val token = ++nextStartToken
+        startTokens[key] = token
+        beginWhenMounted(key, token, command.startTimestampMs + command.durationMs) {
+            viewForTag(key.viewTag)?.also { view -> start(view, command) } != null
         }
     }
 
@@ -169,7 +216,8 @@ internal class CSSPlatformTransitionsManager(
         endTimestampMs: Double,
         begin: () -> Boolean,
     ) {
-        if (startTokens[key] != token) return
+        // A queued callback can outlive invalidate(), which only posts its cleanup.
+        if (invalidated || startTokens[key] != token) return
         if (begin() || animationTimestamp() >= endTimestampMs) {
             startTokens.remove(key)
             return
@@ -179,26 +227,23 @@ internal class CSSPlatformTransitionsManager(
 
     private fun start(
         view: View,
-        key: Key,
-        writer: FloatProperty<View>,
-        fromValue: Double,
-        toValue: Double,
-        durationMs: Double,
-        startTimestampMs: Double,
-        interpolator: TimeInterpolator,
-        scale: Float,
-        persistent: Boolean,
+        command: Command.Start,
     ) {
+        val key = command.key
+        val writer = command.writer
+        val durationMs = command.durationMs
+        val interpolator = command.interpolator
+
         // Resume from what is on screen; fromValue is the committed style, which would snap back.
         val interrupted = animators.remove(key)
-        val startValue = if (interrupted != null) writer.get(view) else fromValue.toFloat()
+        val startValue = if (interrupted != null) writer.get(view) else command.fromValue.toFloat()
         interrupted?.animator?.cancel()
 
         // ObjectAnimator writes nothing until its first frame, so the view would show the
         // already-committed target for the whole delay.
         writer.setValue(view, startValue)
 
-        val animator = ObjectAnimator.ofFloat(view, writer, startValue, toValue.toFloat())
+        val animator = ObjectAnimator.ofFloat(view, writer, startValue, command.toValue.toFloat())
         animator.addListener(
             object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
@@ -206,7 +251,7 @@ internal class CSSPlatformTransitionsManager(
                     if (running.animator !== animation) return
                     // A persistent value has no committed style behind it, so dropping the entry
                     // would let the next commit revert the view.
-                    if (persistent) {
+                    if (command.persistent) {
                         running.heldValue = animator.animatedValue as Float
                     } else {
                         animators.remove(key)
@@ -216,11 +261,11 @@ internal class CSSPlatformTransitionsManager(
         )
         // ObjectAnimator has no absolute start time, so resolve it after the thread hop
         // rather than in C++, which would shift the timeline late.
-        val elapsedMs = animationTimestamp().toDouble() - startTimestampMs
+        val elapsedMs = animationTimestamp().toDouble() - command.startTimestampMs
         val delayMs = if (elapsedMs < 0) -elapsedMs else 0.0
         // startDelay writes nothing while it waits, so a commit landing in the delay would
         // stay on screen. Folding the delay into the curve rewrites the property instead.
-        animator.duration = ((delayMs + durationMs) / scale).toLong().coerceAtLeast(1L)
+        animator.duration = ((delayMs + durationMs) / command.scale).toLong().coerceAtLeast(1L)
         animator.interpolator =
             if (delayMs > 0) HoldThenEase((delayMs / (delayMs + durationMs)).toFloat(), interpolator) else interpolator
         if (elapsedMs > 0 && durationMs > 0) {
@@ -237,9 +282,20 @@ internal class CSSPlatformTransitionsManager(
         reactWroteSinceLastDraw = true
     }
 
+    /**
+     * Draining here as well as from the posted message puts a queued start after the commit
+     * that wrote the target and before the draw, so it replaces the target in the same frame
+     * rather than showing it once. Returns whether the listener is still needed.
+     */
+    private fun onPreDraw(): Boolean {
+        commands.drain()
+        repairClobberedValues()
+        return animators.isNotEmpty() || commands.hasPending()
+    }
+
     /** Re-asserts each animator's own value wherever a commit overwrote it. */
-    private fun repairClobberedValues(): Boolean {
-        if (!reactWroteSinceLastDraw) return animators.isNotEmpty()
+    private fun repairClobberedValues() {
+        if (!reactWroteSinceLastDraw) return
         reactWroteSinceLastDraw = false
         animators.values.forEach { running ->
             // target is held weakly, so read the View through it rather than keeping one.
@@ -247,7 +303,6 @@ internal class CSSPlatformTransitionsManager(
             val current = running.currentValue()
             if (running.writer.get(view) != current) running.writer.setValue(view, current)
         }
-        return animators.isNotEmpty()
     }
 
     /** PathInterpolator flattens its curve natively on construction, so build once per id. */
