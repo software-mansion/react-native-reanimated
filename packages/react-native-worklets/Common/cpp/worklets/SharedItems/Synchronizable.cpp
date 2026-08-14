@@ -1,18 +1,19 @@
 #include <react/debug/react_native_assert.h>
 #include <worklets/SharedItems/Synchronizable.h>
 
+#include <atomic>
 #include <memory>
 #include <utility>
 
 namespace worklets {
 
 std::shared_ptr<Serializable> Synchronizable::getDirty() {
-  return value_;
+  return std::atomic_load(&value_);
 }
 
 std::shared_ptr<Serializable> Synchronizable::getBlocking() {
   getBlockingBefore();
-  auto value = value_;
+  auto value = std::atomic_load(&value_);
   getBlockingAfter();
   return value;
 }
@@ -27,7 +28,7 @@ std::shared_ptr<Serializable> Synchronizable::getBlocking() {
 
 void Synchronizable::setBlocking(const std::shared_ptr<Serializable> &value) {
   setBlockingBefore();
-  value_ = value;
+  std::atomic_store(&value_, value);
   setBlockingAfter();
 }
 
