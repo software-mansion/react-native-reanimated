@@ -21,6 +21,22 @@ std::optional<facebook::react::SurfaceId> LayoutAnimationsProxyCommon::onGesture
 
 void LayoutAnimationsProxyCommon::startSurface(const SurfaceId surfaceId) {}
 
+void LayoutAnimationsProxyCommon::transferConfigFromNativeID(const std::string &nativeIdString, const int tag) const {
+  if (nativeIdString.empty() || nativeIdString.length() > 9) {
+    return;
+  }
+
+  auto nativeId = 0;
+  for (const auto character : nativeIdString) {
+    if (character < '0' || character > '9') {
+      return;
+    }
+    nativeId = nativeId * 10 + character - '0';
+  }
+
+  layoutAnimationsManager_->transferConfigFromNativeID(nativeId, tag);
+}
+
 #ifdef ANDROID
 
 const facebook::react::ShadowNode *findInShadowTreeByTag(const facebook::react::ShadowNode &node, Tag tag) {
