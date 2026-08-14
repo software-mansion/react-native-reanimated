@@ -79,7 +79,6 @@ class CSSTransition {
 
   CSSLoopTransition &ensureLoopTransition();
   void scheduleLoop(double timestamp);
-  void trackPlatformLifecycles(const CSSTransitionConfig &config, double timestamp);
   void observeMilestones(CSSLoopTransition &loopTransition);
   void reportMilestone(RunMilestone milestone, const std::string &propertyName, double elapsedTime);
   void emitEvent(CSSEventType type, const std::string &propertyName, double elapsedTime) const;
