@@ -10,8 +10,11 @@ namespace reanimated::css {
 
 /// A PlatformColor or DynamicColorIOS payload, kept unresolved so toDynamic()
 /// hands it back to RN, which resolves it against the surface's own theme.
-/// Resolving one here needs the animated view, since keyframes are shared by
-/// every view using an animation.
+///
+/// TODO: nothing resolves a payload yet, so this is resolvable in name only. It
+/// is declared that way because blending needs the payload turned into channels
+/// for the view being animated, and keyframes are shared by every view using an
+/// animation - so the value cannot be resolved once and cached on the keyframe.
 struct CSSPlatformColor : public CSSResolvableValue<CSSPlatformColor, ValueInterpolationContext> {
   std::shared_ptr<const folly::dynamic> payload;
 

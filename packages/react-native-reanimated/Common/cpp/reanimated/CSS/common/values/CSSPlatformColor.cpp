@@ -31,9 +31,10 @@ std::string CSSPlatformColor::toString() const {
 }
 
 bool CSSPlatformColor::canInterpolateTo(const CSSPlatformColor & /*to*/) const {
-  // Blending needs the payload resolved against the animated view, which isn't
-  // implemented yet, so the variant switches over instead - the same thing it
-  // does for a platform color paired with a plain one.
+  // TODO: a platform color carries no channels to blend, since the payload is
+  // only resolved once React Native applies it to a view. Two of them switch
+  // over at the fallback threshold today; they should blend like any other
+  // color once a resolved value is reachable from here.
   return false;
 }
 
@@ -41,6 +42,8 @@ CSSPlatformColor CSSPlatformColor::interpolate(
     const double progress,
     const CSSPlatformColor &to,
     const ValueInterpolationContext &context) const {
+  // Unreachable while canInterpolateTo() is false, and deliberately the same
+  // switch the variant would have applied, so behaviour holds either way.
   return progress < context.fallbackInterpolateThreshold ? *this : to;
 }
 
