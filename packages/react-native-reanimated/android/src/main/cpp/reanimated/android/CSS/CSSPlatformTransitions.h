@@ -3,11 +3,13 @@
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/utils/platform.h>
 #include <reanimated/CSS/utils/reversingShortening.h>
+#include <reanimated/android/CSS/CSSPlatformEasings.h>
 
 #include <react/renderer/core/ReactPrimitives.h>
 
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -16,22 +18,6 @@
 namespace reanimated {
 
 using namespace facebook::react;
-
-/// Carries the curve's own points rather than a sampled table, so a discontinuous
-/// steps() survives at any duration.
-struct PlatformEasing {
-  enum class Type : std::uint8_t { Linear = 0, CubicBezier = 1, Steps = 2, LinearStops = 3 };
-
-  Type type;
-  std::vector<float> pointsX;
-  std::vector<float> pointsY;
-
-  bool operator==(const PlatformEasing &other) const = default;
-};
-
-struct PlatformEasingHash {
-  std::size_t operator()(const PlatformEasing &easing) const;
-};
 
 class CSSPlatformTransitions {
  public:
@@ -48,18 +34,7 @@ class CSSPlatformTransitions {
       bool persistent)>;
   using RemoveFunction = std::function<void(int viewTag, int propertyId)>;
 
-  /// Registers a curve on the platform under an id.
-  using DefineEasingFunction =
-      std::function<void(int easingId, int type, const std::vector<float> &pointsX, const std::vector<float> &pointsY)>;
-
-  /// Drops a curve the platform no longer needs. Ids are never reused, so nothing overwrites it.
-  using UndefineEasingFunction = std::function<void(int easingId)>;
-
-  CSSPlatformTransitions(
-      AnimateFunction animate,
-      RemoveFunction remove,
-      DefineEasingFunction defineEasing,
-      UndefineEasingFunction undefineEasing);
+  CSSPlatformTransitions(AnimateFunction animate, RemoveFunction remove, std::shared_ptr<CSSPlatformEasings> easings);
 
   /// A null `settings` marks the pseudo-selector toggle path, which carries none of
   /// its own and reuses whatever the last config apply stored. A settings-only config
@@ -87,29 +62,11 @@ class CSSPlatformTransitions {
 
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
 
-  /// Interns the curve, registering it with the platform on first sight and handing back the id
-  /// the JNI hop carries in place of the points. Always succeeds: ids just keep counting up.
-  int easingIdFor(const PlatformEasing &easing);
-
-  void retainEasing(int easingId);
-
-  /// Drops the curve once no property routes with it, on both sides of the boundary.
-  void releaseEasing(int easingId);
-
-  /// The curve behind an id, and how many routed properties still animate with it.
-  struct InternedEasing {
-    PlatformEasing easing;
-    int refCount;
-  };
-
   std::unordered_map<Tag, std::unordered_map<std::string, ActiveTransition>> active_;
-  std::unordered_map<PlatformEasing, int, PlatformEasingHash> easingIds_;
-  std::unordered_map<int, InternedEasing> internedEasings_;
-  int nextEasingId_{0};
+  /// Shared, so a future platform animation kind interns against the same table.
+  std::shared_ptr<CSSPlatformEasings> easings_;
   AnimateFunction animate_;
   RemoveFunction remove_;
-  DefineEasingFunction defineEasing_;
-  UndefineEasingFunction undefineEasing_;
 };
 
 } // namespace reanimated

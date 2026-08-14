@@ -382,11 +382,12 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   // Owned by the two callbacks below rather than by NativeProxy: this runs from
   // the constructor's member-initializer list, where a member would still be raw
   // memory.
+  auto cssPlatformEasings = std::make_shared<CSSPlatformEasings>(
+      bindThis(&NativeProxy::cssDefineEasing), bindThis(&NativeProxy::cssUndefineEasing));
   auto cssPlatformTransitions = std::make_shared<CSSPlatformTransitions>(
       bindThis(&NativeProxy::cssAnimateTransition),
       bindThis(&NativeProxy::cssRemoveTransition),
-      bindThis(&NativeProxy::cssDefineEasing),
-      bindThis(&NativeProxy::cssUndefineEasing));
+      std::move(cssPlatformEasings));
 
   auto cssCanRouteProperty = css::CSSCanRoutePropertyFunction(&css::canRouteCSSProperty);
 

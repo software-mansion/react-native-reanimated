@@ -44,58 +44,8 @@ std::optional<int> platformPropertyId(const std::string &propertyName) {
 CSSPlatformTransitions::CSSPlatformTransitions(
     AnimateFunction animate,
     RemoveFunction remove,
-    DefineEasingFunction defineEasing,
-    UndefineEasingFunction undefineEasing)
-    : animate_(std::move(animate)),
-      remove_(std::move(remove)),
-      defineEasing_(std::move(defineEasing)),
-      undefineEasing_(std::move(undefineEasing)) {}
-
-std::size_t PlatformEasingHash::operator()(const PlatformEasing &easing) const {
-  std::size_t seed = std::hash<std::uint8_t>{}(static_cast<std::uint8_t>(easing.type));
-  const auto combine = [&seed](const float value) {
-    seed ^= std::hash<float>{}(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-  };
-  for (const float value : easing.pointsX) {
-    combine(value);
-  }
-  for (const float value : easing.pointsY) {
-    combine(value);
-  }
-  return seed;
-}
-
-int CSSPlatformTransitions::easingIdFor(const PlatformEasing &easing) {
-  const auto it = easingIds_.find(easing);
-  if (it != easingIds_.end()) {
-    return it->second;
-  }
-
-  const int easingId = nextEasingId_++;
-  defineEasing_(easingId, static_cast<int>(easing.type), easing.pointsX, easing.pointsY);
-  easingIds_.emplace(easing, easingId);
-  internedEasings_.emplace(easingId, InternedEasing{easing, 0});
-  return easingId;
-}
-
-void CSSPlatformTransitions::retainEasing(const int easingId) {
-  ++internedEasings_.at(easingId).refCount;
-}
-
-void CSSPlatformTransitions::releaseEasing(const int easingId) {
-  const auto it = internedEasings_.find(easingId);
-  if (--it->second.refCount > 0) {
-    return;
-  }
-  easingIds_.erase(it->second.easing);
-  internedEasings_.erase(it);
-  undefineEasing_(easingId);
-  if (internedEasings_.empty()) {
-    // Nothing holds an id, so counting from zero again keeps them inside the range the
-    // platform side can look up without boxing.
-    nextEasingId_ = 0;
-  }
-}
+    std::shared_ptr<CSSPlatformEasings> easings)
+    : easings_(std::move(easings)), animate_(std::move(animate)), remove_(std::move(remove)) {}
 
 const CSSPlatformTransitions::ActiveTransition *CSSPlatformTransitions::activeTransitionFor(
     const Tag viewTag,
@@ -160,9 +110,8 @@ bool CSSPlatformTransitions::applyTransition(
     adjustedStart = active->adjustedEnd;
   }
 
-  const auto easingId = easingIdFor(toPlatformEasing(resolvedSettings.easingConfig));
-  // Retain before the start can fail, so a rejected start drops the curve it just interned.
-  retainEasing(easingId);
+  // Acquired before the start can fail, so a rejected start hands the curve straight back.
+  const int easingId = easings_->acquire(toPlatformEasing(resolvedSettings.easingConfig));
 
   if (!animate_(
           static_cast<int>(viewTag),
@@ -173,13 +122,13 @@ bool CSSPlatformTransitions::applyTransition(
           reversing.startTimestamp,
           easingId,
           persistent)) {
-    releaseEasing(easingId);
+    easings_->release(easingId);
     return false;
   }
 
-  // Released after the retain above, so replacing a transition with the same curve never drops it.
+  // Released after the acquire above, so replacing a transition with the same curve never drops it.
   if (replacedEasingId >= 0) {
-    releaseEasing(replacedEasingId);
+    easings_->release(replacedEasingId);
   }
 
   active_[viewTag][propertyName] =
@@ -192,7 +141,7 @@ void CSSPlatformTransitions::removeTransition(const Tag viewTag, const std::stri
   if (propertiesIt != active_.end()) {
     const auto activeIt = propertiesIt->second.find(propertyName);
     if (activeIt != propertiesIt->second.end()) {
-      releaseEasing(activeIt->second.easingId);
+      easings_->release(activeIt->second.easingId);
       propertiesIt->second.erase(activeIt);
     }
     if (propertiesIt->second.empty()) {
