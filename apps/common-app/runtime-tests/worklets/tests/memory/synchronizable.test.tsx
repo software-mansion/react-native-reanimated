@@ -213,11 +213,9 @@ for (const { variantName, config } of VARIANTS) {
   });
 
   describe(`Test Synchronizable access (${variantName})`, () => {
-    // The fixed variant writes so fast that the three runtimes can
-    // complete their loops without overlapping, keeping every update.
-    const intermediateUpperBound = config?.fixedType
-      ? targetValue * 3
-      : targetValue * 3 - 1;
+    // The three runtimes can complete their loops without overlapping,
+    // keeping every update.
+    const intermediateUpperBound = targetValue * 3;
 
     test('dirty reading yields intermediate values', async () => {
       const { valueRN, valueUI, valueBG } = await runDispatched(
@@ -378,7 +376,6 @@ describe('Test fixed-type Synchronizable writes', () => {
 
     expect(synchronizable.getDirty()).toBe(2);
   });
-
 });
 
 describe('Test fixed-type Synchronizable serialization', () => {
@@ -399,6 +396,35 @@ describe('Test fixed-type Synchronizable serialization', () => {
       synchronizable.setBlocking(3);
     });
     expect(synchronizable.getDirty()).toBe(3);
+  });
+
+  test('fixed boolean Synchronizable works across RN, UI and Worker Runtimes', async () => {
+    const synchronizable = createSynchronizable(false, { fixedType: true });
+
+    runOnUISync(() => {
+      'worklet';
+      synchronizable.setDirty(true);
+    });
+    expect(typeof synchronizable.getBlocking()).toBe('boolean');
+    expect(synchronizable.getBlocking()).toBe(true);
+
+    let readValue: boolean | undefined;
+    const onJSCallback = (value: boolean) => {
+      readValue = value;
+      notify(NOTIFICATION);
+    };
+
+    scheduleOnRuntime(workletRuntime, () => {
+      'worklet';
+      const value = synchronizable.getDirty();
+      synchronizable.setBlocking(false);
+      scheduleOnRN(onJSCallback, value);
+    });
+    await waitForNotification(NOTIFICATION);
+
+    expect(readValue).toBe(true);
+    expect(typeof synchronizable.getDirty()).toBe('boolean');
+    expect(synchronizable.getDirty()).toBe(false);
   });
 
   test('fixed Synchronizable keeps setDirty after RN to UI to RN roundtrip', () => {
@@ -473,4 +499,77 @@ describe('Test fixed-type Synchronizable access', () => {
     const final = synchronizable.getDirty();
     expect(final === evenValue || final === oddValue).toBe(true);
   });
+
+  test('setDirty waits for a foreign lock', async () => {
+    const LOCK_HOLDER_DONE = 'LOCK_HOLDER_DONE';
+    const DIRTY_WRITER_DONE = 'DIRTY_WRITER_DONE';
+    const holdDurationMs = 200;
+
+    const synchronizable = createSynchronizable(0, { fixedType: true });
+    const lockTaken = createSynchronizable(false, { fixedType: true });
+
+    let lockHolderResult = { firstRead: -1, secondRead: -1, unlockedAt: -1 };
+    let dirtyWriterReturnedAt = -1;
+
+    const onLockHolderDone = (result: typeof lockHolderResult) => {
+      lockHolderResult = result;
+      notify(LOCK_HOLDER_DONE);
+    };
+    const onDirtyWriterDone = (returnedAt: number) => {
+      dirtyWriterReturnedAt = returnedAt;
+      notify(DIRTY_WRITER_DONE);
+    };
+
+    scheduleOnRuntime(workletRuntime, () => {
+      'worklet';
+      synchronizable.lock();
+      lockTaken.setDirty(true);
+      const firstRead = synchronizable.getBlocking();
+      const start = Date.now();
+      let now = start;
+      while (now - start < holdDurationMs) {
+        now = Date.now();
+      }
+      const secondRead = synchronizable.getBlocking();
+      synchronizable.unlock();
+      const unlockedAt = Date.now();
+      scheduleOnRN(onLockHolderDone, { firstRead, secondRead, unlockedAt });
+    });
+
+    scheduleOnUI(() => {
+      'worklet';
+      let taken = lockTaken.getDirty();
+      while (!taken) {
+        taken = lockTaken.getDirty();
+      }
+      synchronizable.setDirty(42);
+      const returnedAt = Date.now();
+      scheduleOnRN(onDirtyWriterDone, returnedAt);
+    });
+
+    await waitForNotification(LOCK_HOLDER_DONE);
+    await waitForNotification(DIRTY_WRITER_DONE);
+
+    expect(lockHolderResult.firstRead).toBe(0);
+    expect(lockHolderResult.secondRead).toBe(0);
+    expect(dirtyWriterReturnedAt >= lockHolderResult.unlockedAt).toBe(true);
+    expect(synchronizable.getBlocking()).toBe(42);
+  });
+});
+
+describe('Test Synchronizable error handling', () => {
+  for (const { variantName, config } of VARIANTS) {
+    test(`a throwing setter function releases the lock (${variantName})`, async () => {
+      const synchronizable = createSynchronizable(initialValue, config);
+
+      await expect(() => {
+        synchronizable.setBlocking(() => {
+          throw new Error('setter failure');
+        });
+      }).toThrow('setter failure');
+
+      synchronizable.setBlocking(1);
+      expect(synchronizable.getBlocking()).toBe(1);
+    });
+  }
 });

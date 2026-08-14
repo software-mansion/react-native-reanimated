@@ -1,6 +1,9 @@
 import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
-import type { Synchronizable } from 'react-native-worklets';
+import type {
+  FixedSynchronizable,
+  Synchronizable,
+} from 'react-native-worklets';
 import {
   createSynchronizable,
   createWorkletRuntime,
@@ -37,9 +40,12 @@ export default function SynchronizablePerformanceExample() {
     React.useState<VariantKey>('dynamic');
   const [runningRuntimes, setRunningRuntimes] = React.useState(0);
 
+  const fixedSynchronizable: FixedSynchronizable<number> =
+    createSynchronizable(initialValue, { fixedType: true });
+
   const synchronizables: Record<VariantKey, Synchronizable<number>> = {
     dynamic: createSynchronizable(initialValue),
-    fixed: createSynchronizable(initialValue, { fixedType: true }),
+    fixed: fixedSynchronizable,
   };
 
   const runtime = createWorkletRuntime({ name: 'SynchronizableExample' });
@@ -123,6 +129,18 @@ export default function SynchronizablePerformanceExample() {
     setValueAndDuration(variant, synchronizable.getBlocking(), durationMS);
   }
 
+  function getDirtySetDirty(variant: VariantKey) {
+    'worklet';
+    const start = performance.now();
+    for (let i = 0; i < targetValue; i++) {
+      const value = fixedSynchronizable.getDirty();
+      fixedSynchronizable.setDirty(value + 1);
+    }
+    const end = performance.now();
+    const durationMS = end - start;
+    setValueAndDuration(variant, fixedSynchronizable.getBlocking(), durationMS);
+  }
+
   function imperativeLocking(variant: VariantKey) {
     'worklet';
     const synchronizable = synchronizables[variant];
@@ -202,6 +220,11 @@ export default function SynchronizablePerformanceExample() {
       <Button
         onPress={() => runBenchmark(setBlockingSetBlockingTransaction)}
         title=".setBlocking() with setter on two threads - transaction"
+      />
+      <Button
+        disabled={selectedVariant !== 'fixed'}
+        onPress={() => runBenchmark(getDirtySetDirty)}
+        title=".getDirty() & .setDirty() on two threads - fixed only"
       />
       <Button
         onPress={() => runBenchmark(imperativeLocking)}

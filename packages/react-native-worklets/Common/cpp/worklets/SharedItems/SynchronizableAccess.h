@@ -1,5 +1,7 @@
 #pragma once
 
+#include <pthread.h>
+
 #include <condition_variable>
 #include <mutex>
 
@@ -36,7 +38,6 @@ class SynchronizableAccess {
   bool imperativelyLocked_{false};
   pthread_t imperativeOwner_{};
   std::mutex accessLock_;
-  std::recursive_mutex imperativeLock_;
   std::condition_variable queue_;
 };
 

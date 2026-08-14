@@ -45,7 +45,7 @@ void SynchronizableFixed::store(const SynchronizableFixedValue &value) {
         using TAtomic = std::decay_t<decltype(atomic)>;
         using TAlternative = std::decay_t<decltype(alternative)>;
         if constexpr (std::is_same_v<TAtomic, std::atomic<TAlternative>>) {
-          atomic.store(alternative);
+          atomic.store(alternative, std::memory_order_relaxed);
         } else if constexpr (std::is_same_v<TAtomic, std::atomic<double>>) {
           react_native_assert(false && "[Worklets] Expected a number for a fixed-type Synchronizable.");
         } else {
@@ -57,7 +57,8 @@ void SynchronizableFixed::store(const SynchronizableFixedValue &value) {
 }
 
 SynchronizableValue SynchronizableFixed::load() const {
-  return std::visit([](const auto &atomic) { return SynchronizableValue(atomic.load()); }, value_);
+  return std::visit(
+      [](const auto &atomic) { return SynchronizableValue(atomic.load(std::memory_order_relaxed)); }, value_);
 }
 
 } // namespace worklets

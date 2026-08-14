@@ -48,9 +48,18 @@ export function installSynchronizableUnpacker() {
       if (typeof valueOrFunction === 'function') {
         const func = valueOrFunction as (prev: TValue) => TValue;
         synchronizable.lock();
-        const prev = synchronizable.getBlocking();
-        setBlockingValue(func(prev));
-        synchronizable.unlock();
+        if (__DEV__) {
+          try {
+            const prev = synchronizable.getBlocking();
+            setBlockingValue(func(prev));
+          } finally {
+            synchronizable.unlock();
+          }
+        } else {
+          const prev = synchronizable.getBlocking();
+          setBlockingValue(func(prev));
+          synchronizable.unlock();
+        }
       } else {
         setBlockingValue(valueOrFunction);
       }
