@@ -73,17 +73,18 @@ struct ActiveTransition {
                     fromValue:(const PlatformValue &)fromValue
                       toValue:(const PlatformValue &)toValue
                      settings:(const CSSTransitionPropertySettings *)settings
+                   persistent:(BOOL)persistent
                     timestamp:(double)timestamp
 {
   const ActiveTransition *active = [self activeTransitionForTag:viewTag propertyName:propertyName];
 
-  // The toggle path has no settings of its own and holds its value indefinitely.
-  const BOOL persistent = settings == nullptr;
-  if (persistent && active == nullptr) {
+  // The toggle path has no settings of its own, so it reuses the stored ones.
+  const BOOL reusesStoredSettings = settings == nullptr;
+  if (reusesStoredSettings && active == nullptr) {
     return NO;
   }
   // Copy: the active entry is re-assigned below.
-  const CSSTransitionPropertySettings resolvedSettings = persistent ? active->settings : *settings;
+  const CSSTransitionPropertySettings resolvedSettings = reusesStoredSettings ? active->settings : *settings;
 
   // Targeting the in-flight transition's start value means this is a reversal.
   const bool isReversal = active != nullptr && active->adjustedStart && toValue == *active->adjustedStart;
