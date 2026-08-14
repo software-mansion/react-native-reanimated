@@ -30,13 +30,18 @@ std::string CSSPlatformColor::toString() const {
   return payload ? folly::toJson(*payload) : "";
 }
 
+bool CSSPlatformColor::canInterpolateTo(const CSSPlatformColor & /*to*/) const {
+  // Blending needs the payload resolved against the animated view, which isn't
+  // implemented yet, so the variant switches over instead - the same thing it
+  // does for a platform color paired with a plain one.
+  return false;
+}
+
 CSSPlatformColor CSSPlatformColor::interpolate(
-    const double /*progress*/,
-    const CSSPlatformColor & /*to*/,
-    const ValueInterpolationContext & /*context*/) const {
-  // Resolving a payload against the view is not implemented yet, so there are
-  // no channels to blend.
-  throw std::runtime_error("[Reanimated] Animating the platform color " + toString() + " is not supported yet");
+    const double progress,
+    const CSSPlatformColor &to,
+    const ValueInterpolationContext &context) const {
+  return progress < context.fallbackInterpolateThreshold ? *this : to;
 }
 
 bool CSSPlatformColor::operator==(const CSSPlatformColor &other) const {

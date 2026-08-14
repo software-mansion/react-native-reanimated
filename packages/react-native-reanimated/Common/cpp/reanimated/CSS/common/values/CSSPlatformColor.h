@@ -25,6 +25,7 @@ struct CSSPlatformColor : public CSSResolvableValue<CSSPlatformColor, ValueInter
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
 
+  bool canInterpolateTo(const CSSPlatformColor &to) const override;
   CSSPlatformColor interpolate(double progress, const CSSPlatformColor &to, const ValueInterpolationContext &context)
       const override;
 
