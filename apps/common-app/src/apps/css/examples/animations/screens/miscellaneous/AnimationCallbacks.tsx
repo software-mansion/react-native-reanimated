@@ -114,20 +114,17 @@ export default function AnimationCallbacks() {
           <View style={styles.preview}>
             {isMounted && (
               <Animated.View
-                style={[
-                  styles.box,
-                  animation,
-                  {
-                    onCSSAnimationCancel: ({ elapsedTime }) =>
-                      log('cancel', elapsedTime),
-                    onCSSAnimationEnd: ({ elapsedTime }) =>
-                      log('end', elapsedTime),
-                    onCSSAnimationIteration: ({ elapsedTime }) =>
-                      log('iteration', elapsedTime),
-                    onCSSAnimationStart: ({ elapsedTime }) =>
-                      log('start', elapsedTime),
-                  },
-                ]}
+                style={[styles.box, animation]}
+                onCSSAnimationEnd={({ elapsedTime }) => log('end', elapsedTime)}
+                onCSSAnimationCancel={({ elapsedTime }) =>
+                  log('cancel', elapsedTime)
+                }
+                onCSSAnimationIteration={({ elapsedTime }) =>
+                  log('iteration', elapsedTime)
+                }
+                onCSSAnimationStart={({ elapsedTime }) =>
+                  log('start', elapsedTime)
+                }
               />
             )}
           </View>
