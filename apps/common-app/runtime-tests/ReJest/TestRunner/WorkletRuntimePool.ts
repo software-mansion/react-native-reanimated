@@ -13,4 +13,12 @@ export class WorkletRuntimePool {
     this._runtimes.set(name, runtime);
     return runtime;
   }
+
+  public getOrCreateWorkletRuntimes(count: number): WorkletRuntime[] {
+    const runtimes = Array.from(this._runtimes.values()).slice(0, count);
+    while (runtimes.length < count) {
+      runtimes.push(this.getOrCreateWorkletRuntime(`pooled${runtimes.length}`));
+    }
+    return runtimes;
+  }
 }
