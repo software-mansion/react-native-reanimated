@@ -477,7 +477,8 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceI
 
     const auto layoutAnimationIt = layoutAnimations_.find(tag);
 
-    if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isSettled()) {
+    if (layoutAnimationIt == layoutAnimations_.end() ||
+        (layoutAnimationIt->second.isSettled() && !layoutAnimationIt->second.opacity.has_value())) {
       continue;
     }
 
