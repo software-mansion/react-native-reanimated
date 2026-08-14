@@ -15,6 +15,7 @@ import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.uimanager.IllegalViewOperationException
 import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentHashMap
 
 internal class CSSPlatformTransitionsManager(
     private val fabricUIManager: FabricUIManager,
@@ -57,11 +58,16 @@ internal class CSSPlatformTransitionsManager(
     private var invalidated = false
 
     private var nextStartToken = 0L
-    private val interpolators = HashMap<InterpolatorKey, TimeInterpolator>()
+
+    /**
+     * A C++ mutex serialises the callers but is not a happens-before edge for Java, so the
+     * map supplies that ordering itself.
+     */
+    private val easings = ConcurrentHashMap<Int, TimeInterpolator>()
 
     private data class Key(
         val viewTag: Int,
-        val propertyName: String,
+        val propertyId: Int,
     )
 
     private class RunningTransition(
@@ -90,41 +96,33 @@ internal class CSSPlatformTransitionsManager(
         }
     }
 
-    private data class InterpolatorKey(
-        val type: Int,
-        val pointsX: List<Float>,
-        val pointsY: List<Float>,
-    )
-
     /** Whether the property is accepted; it can still fail later if the View never mounts. */
     fun animateTransition(
         viewTag: Int,
-        propertyName: String,
+        propertyId: Int,
         fromValue: Double,
         toValue: Double,
         durationMs: Double,
         startTimestampMs: Double,
-        easingType: Int,
-        easingPointsX: FloatArray,
-        easingPointsY: FloatArray,
+        easingId: Int,
         persistent: Boolean,
     ): Boolean {
         if (invalidated) return false
-        val writer = cssPropertyWriterFor(propertyName) ?: return false
+        val writer = cssPropertyWriterFor(propertyId) ?: return false
+        val interpolator = easings[easingId] ?: return false
         val context = reactContext.get() ?: return false
         val scale = DurationScale.effectiveScale(context)
         if (scale <= 0f) return false
 
         UiThreadUtil.runOnUiThread {
             if (invalidated) return@runOnUiThread
-            val key = Key(viewTag, propertyName)
+            val key = Key(viewTag, propertyId)
             // A fresh token invalidates any retry still queued for this key.
             val token = ++nextStartToken
             startTokens[key] = token
 
             beginWhenMounted(key, token, startTimestampMs + durationMs) {
                 viewForTag(viewTag)?.also { view ->
-                    val interpolator = interpolatorFor(easingType, easingPointsX, easingPointsY)
                     start(view, key, writer, fromValue, toValue, durationMs, startTimestampMs, interpolator, scale, persistent)
                 } != null
             }
@@ -146,15 +144,16 @@ internal class CSSPlatformTransitionsManager(
             animators.clear()
             running.forEach { it.animator.cancel() }
             reconciler.invalidate()
+            easings.clear()
         }
     }
 
     fun removeTransition(
         viewTag: Int,
-        propertyName: String,
+        propertyId: Int,
     ) {
         UiThreadUtil.runOnUiThread {
-            val key = Key(viewTag, propertyName)
+            val key = Key(viewTag, propertyId)
             startTokens.remove(key)
             animators.remove(key)?.animator?.cancel()
         }
@@ -251,15 +250,18 @@ internal class CSSPlatformTransitionsManager(
         return animators.isNotEmpty()
     }
 
-    /** PathInterpolator flattens its curve on construction, so cache it. Type is in the key
-     * because families share point lists. */
-    private fun interpolatorFor(
-        type: Int,
-        pointsX: FloatArray,
-        pointsY: FloatArray,
-    ): TimeInterpolator {
-        val key = InterpolatorKey(type, pointsX.toList(), pointsY.toList())
-        return interpolators.getOrPut(key) { CSSEasing.interpolator(type, pointsX, pointsY) }
+    /** PathInterpolator flattens its curve natively on construction, so build once per id. */
+    fun defineEasing(
+        easingId: Int,
+        easingType: Int,
+        easingPointsX: FloatArray,
+        easingPointsY: FloatArray,
+    ) {
+        easings[easingId] = CSSEasing.interpolator(easingType, easingPointsX, easingPointsY)
+    }
+
+    fun undefineEasing(easingId: Int) {
+        easings.remove(easingId)
     }
 
     private fun viewForTag(viewTag: Int): View? =

@@ -76,14 +76,16 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
   void detachPseudoSelector(Tag tag, PseudoSelector selector);
   bool cssAnimateTransition(
       int viewTag,
-      const std::string &propertyName,
+      int propertyId,
       double fromValue,
       double toValue,
       double durationMs,
       double startTimestampMs,
-      const PlatformEasing &easing,
+      int easingId,
       bool persistent);
-  void cssRemoveTransition(int viewTag, const std::string &propertyName);
+  void cssRemoveTransition(int viewTag, int propertyId);
+  void cssDefineEasing(int easingId, int type, const std::vector<float> &pointsX, const std::vector<float> &pointsY);
+  void cssUndefineEasing(int easingId);
 
   /***
    * Wraps a method of `NativeProxy` in a function object capturing `this`
