@@ -1,4 +1,5 @@
 #include <reanimated/CSS/common/values/CSSLength.h>
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
 
 #include <string>
 
@@ -69,7 +70,7 @@ std::string CSSLength::toString() const {
 CSSLength CSSLength::interpolate(
     const double progress,
     const CSSLength &to,
-    const ResolvableValueInterpolationContext &context) const {
+    const RelativeValueInterpolationContext &context) const {
   // If both value types are the same, we can interpolate without reading the
   // relative value from the shadow node
   // (also, when one of the values is 0, and the other is relative)
@@ -87,7 +88,7 @@ CSSLength CSSLength::interpolate(
   return CSSLength(resolvedFrom.value() + (resolvedTo.value() - resolvedFrom.value()) * progress);
 }
 
-std::optional<double> CSSLength::resolve(const ResolvableValueInterpolationContext &context) const {
+std::optional<double> CSSLength::resolve(const RelativeValueInterpolationContext &context) const {
   if (!isRelative) {
     return value;
   }

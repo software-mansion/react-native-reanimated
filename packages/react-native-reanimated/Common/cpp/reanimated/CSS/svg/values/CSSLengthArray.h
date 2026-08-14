@@ -14,7 +14,7 @@ struct CSSLengthArray : public CSSLengthVector<CSSLengthArray> {
   CSSLengthArray interpolate(
       double progress,
       const CSSLengthArray &to,
-      const ResolvableValueInterpolationContext &context) const override;
+      const RelativeValueInterpolationContext &context) const override;
 
 #ifndef NDEBUG
   friend std::ostream &operator<<(std::ostream &os, const CSSLengthArray &value);

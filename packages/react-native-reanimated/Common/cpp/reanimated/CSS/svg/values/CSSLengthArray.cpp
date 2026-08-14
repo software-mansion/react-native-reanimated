@@ -10,7 +10,7 @@ namespace reanimated::css {
 CSSLengthArray CSSLengthArray::interpolate(
     double progress,
     const CSSLengthArray &to,
-    const ResolvableValueInterpolationContext &context) const {
+    const RelativeValueInterpolationContext &context) const {
   // Treat an empty list as a single zero.
   static const std::vector<CSSLength> fallback{CSSLength(0.0)};
   const auto &fromLengths = values.empty() ? fallback : values;
