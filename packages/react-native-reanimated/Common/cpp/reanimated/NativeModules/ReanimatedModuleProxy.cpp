@@ -775,11 +775,30 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
 }
 
 void ReanimatedModuleProxy::executeLayoutAnimationsRequests() {
+  latestRegistryPropsSnapshot_.reset();
+
   std::set<SurfaceId> flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
   for (const auto surfaceId : flushRequestsCopy) {
     uiManager_->getShadowTreeRegistry().visit(
         surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
   }
+}
+
+folly::dynamic ReanimatedModuleProxy::getLatestRegistryPropsForTag(Tag tag) {
+  if (!latestRegistryPropsSnapshot_.has_value()) {
+    if (UpdatesRegistryManager::isLockedByCurrentThread()) {
+      latestRegistryPropsSnapshot_ = updatesRegistryManager_->collectPropsByTag();
+    } else {
+      auto lock = updatesRegistryManager_->lock();
+      latestRegistryPropsSnapshot_ = updatesRegistryManager_->collectPropsByTag();
+    }
+  }
+
+  const auto it = latestRegistryPropsSnapshot_->find(tag);
+  if (it == latestRegistryPropsSnapshot_->end()) {
+    return nullptr;
+  }
+  return it->second;
 }
 
 void ReanimatedModuleProxy::performOperations() {
@@ -1282,12 +1301,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
     if (!strongThis) {
       return nullptr;
     }
-    const auto &updatesRegistryManager = strongThis->updatesRegistryManager_;
-    if (UpdatesRegistryManager::isLockedByCurrentThread()) {
-      return updatesRegistryManager->collectPropsForTag(tag);
-    }
-    auto lock = updatesRegistryManager->lock();
-    return updatesRegistryManager->collectPropsForTag(tag);
+    return strongThis->getLatestRegistryPropsForTag(tag);
   });
 }
 

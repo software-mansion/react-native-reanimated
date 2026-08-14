@@ -106,20 +106,13 @@ PropsMap UpdatesRegistryManager::collectProps() {
   return propsMap;
 }
 
-folly::dynamic UpdatesRegistryManager::collectPropsForTag(Tag tag) {
+PropsByTagMap UpdatesRegistryManager::collectPropsByTag() {
   react_native_assert(isLockedByCurrentThread());
-  folly::dynamic merged = nullptr;
+  PropsByTagMap propsByTag;
   for (auto &registry : registries_) {
-    const auto &props = registry->get(tag);
-    if (!props.isObject()) {
-      continue;
-    }
-    if (!merged.isObject()) {
-      merged = folly::dynamic::object();
-    }
-    merged.update(props);
+    registry->collectPropsByTag(propsByTag);
   }
-  return merged;
+  return propsByTag;
 }
 
 #ifdef ANDROID

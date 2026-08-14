@@ -35,6 +35,7 @@ using UpdatesBatchAnimatedProps = std::vector<AnimatedPropsEntry>;
 #endif
 
 using RegistryMap = std::unordered_map<Tag, std::pair<ShadowNodeFamily::Shared, folly::dynamic>>;
+using PropsByTagMap = std::unordered_map<Tag, folly::dynamic>;
 
 #ifdef ANDROID
 struct PropsToRevert {
@@ -81,6 +82,7 @@ class UpdatesRegistry {
 #endif
 
   void collectProps(PropsMap &propsMap);
+  void collectPropsByTag(PropsByTagMap &propsByTag) const;
   UpdatesBatch getPendingUpdates();
 
  protected:
