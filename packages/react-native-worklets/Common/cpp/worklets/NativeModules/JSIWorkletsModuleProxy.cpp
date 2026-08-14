@@ -22,7 +22,9 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 using namespace facebook;
@@ -167,6 +169,19 @@ inline std::shared_ptr<AsyncQueue> extractAsyncQueue(jsi::Runtime &rt, const jsi
   auto asyncQueue = std::dynamic_pointer_cast<AsyncQueue>(nativeState);
 
   return asyncQueue;
+}
+
+inline jsi::Value synchronizableValueToJSValue(jsi::Runtime &rt, const SynchronizableValue &value) {
+  return std::visit(
+      [&rt](const auto &alternative) -> jsi::Value {
+        using TAlternative = std::decay_t<decltype(alternative)>;
+        if constexpr (std::is_same_v<TAlternative, std::shared_ptr<Serializable>>) {
+          return alternative->toJSValue(rt);
+        } else {
+          return jsi::Value(alternative);
+        }
+      },
+      value);
 }
 
 inline void registerCustomSerializable(
@@ -606,12 +621,14 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableGetDirty", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        return Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->getDirty()->toJSValue(rt);
+        return synchronizableValueToJSValue(
+            rt, Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->getDirty());
       });
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableGetBlocking", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        return Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->getBlocking()->toJSValue(rt);
+        return synchronizableValueToJSValue(
+            rt, Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->getBlocking());
       });
 
   jsi_utils::addMethod<2>(
