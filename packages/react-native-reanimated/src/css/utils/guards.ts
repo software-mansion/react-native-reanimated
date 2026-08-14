@@ -1,4 +1,5 @@
 'use strict';
+import type { UnknownRecord } from '../../common';
 import { isNumber, isPercentage } from '../../common';
 import {
   VALID_PARAMETRIZED_TIMING_FUNCTIONS,
@@ -77,6 +78,18 @@ export const CSS_CALLBACK_PROPS = [
 ] as const satisfies readonly CSSCallbackProp[];
 
 const CSS_CALLBACK_PROP_SET: ReadonlySet<string> = new Set(CSS_CALLBACK_PROPS);
+
+// Spelled out so each read hits an inline cache. Looping the names instead
+// makes every lookup dynamic and costs 5x on a check that runs per render.
+export const hasCSSCallbackProp = (props: UnknownRecord): boolean =>
+  props.onCSSAnimationStart !== undefined ||
+  props.onCSSAnimationEnd !== undefined ||
+  props.onCSSAnimationIteration !== undefined ||
+  props.onCSSAnimationCancel !== undefined ||
+  props.onCSSTransitionRun !== undefined ||
+  props.onCSSTransitionStart !== undefined ||
+  props.onCSSTransitionEnd !== undefined ||
+  props.onCSSTransitionCancel !== undefined;
 
 export const isStepsModifier = (value: string): value is StepsModifier => {
   switch (value) {

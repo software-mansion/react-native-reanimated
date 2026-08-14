@@ -4,7 +4,7 @@ import type { StyleProp } from 'react-native';
 import type { UnknownRecord } from '../../common';
 import type { CSSStyle } from '../types';
 import {
-  CSS_CALLBACK_PROPS,
+  hasCSSCallbackProp,
   isCSSCallbackProp,
   isCSSConfigProp,
   isPseudoSelectorValue,
@@ -59,7 +59,7 @@ function omitCSSCallbackProps(props: UnknownRecord): UnknownRecord {
  * lifecycle callbacks are ours to act on, so neither reaches the host view.
  */
 export function filterCSSProps<P extends object>(props: P): P {
-  const result = CSS_CALLBACK_PROPS.some((prop) => prop in props)
+  const result = hasCSSCallbackProp(props as UnknownRecord)
     ? omitCSSCallbackProps(props as UnknownRecord)
     : ({ ...props } as UnknownRecord);
 
