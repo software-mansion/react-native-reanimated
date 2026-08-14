@@ -15,6 +15,10 @@
 #include <unordered_set>
 #include <vector>
 
+namespace facebook::react {
+class ShadowTree;
+}
+
 namespace reanimated {
 
 struct LayoutAnimation {
@@ -88,7 +92,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual std::optional<facebook::react::SurfaceId> onGestureCancel();
   virtual std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) = 0;
   virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) = 0;
-  virtual void startSurface(const SurfaceId surfaceId);
+  virtual void startSurface(const facebook::react::ShadowTree &shadowTree);
 
  protected:
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;

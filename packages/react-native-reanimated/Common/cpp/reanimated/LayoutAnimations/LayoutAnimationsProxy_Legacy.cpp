@@ -1067,9 +1067,12 @@ inline bool MutationNode::isMutationNode() {
   return true;
 }
 
-void LayoutAnimationsProxy_Legacy::startSurface(const SurfaceId surfaceId) {
-  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  surfaceContext_.try_emplace(surfaceId);
+void LayoutAnimationsProxy_Legacy::startSurface(const ShadowTree &shadowTree) {
+  {
+    auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+    surfaceContext_.try_emplace(shadowTree.getSurfaceId());
+  }
+  shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(weak_from_this());
 }
 
 SurfaceContext &LayoutAnimationsProxy_Legacy::getSurfaceContext(const SurfaceId surfaceId) const {
