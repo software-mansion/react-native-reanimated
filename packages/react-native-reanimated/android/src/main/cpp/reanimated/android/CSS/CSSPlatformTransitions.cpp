@@ -123,8 +123,9 @@ bool CSSPlatformTransitions::applyTransition(
     return false;
   }
 
+  // has_value(), not a truthiness test: opacity's id is 0.
   const auto propertyId = platformPropertyId(propertyName);
-  if (!propertyId) {
+  if (!propertyId.has_value()) {
     return false;
   }
 
@@ -199,7 +200,7 @@ void CSSPlatformTransitions::removeTransition(const Tag viewTag, const std::stri
     }
   }
   // A property without an id was never routed, so there is nothing to remove.
-  if (const auto propertyId = platformPropertyId(propertyName)) {
+  if (const auto propertyId = platformPropertyId(propertyName); propertyId.has_value()) {
     remove_(static_cast<int>(viewTag), *propertyId);
   }
 }
