@@ -775,13 +775,12 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
 }
 
 void ReanimatedModuleProxy::executeLayoutAnimationsRequests() {
-  latestRegistryPropsSnapshot_.reset();
-
   std::set<SurfaceId> flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
   for (const auto surfaceId : flushRequestsCopy) {
     uiManager_->getShadowTreeRegistry().visit(
         surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
   }
+  latestRegistryPropsSnapshot_.reset();
 }
 
 folly::dynamic ReanimatedModuleProxy::getLatestRegistryPropsForTag(Tag tag) {
