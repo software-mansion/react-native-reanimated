@@ -59,6 +59,7 @@ class CSSPlatformTransitionProxy {
       Tag viewTag,
       const CSSTransitionConfig &config,
       CSSTransitionRouting &routing,
+      bool allowPlatform,
       double timestamp) const;
 
   /// Re-routes pseudo-selector toggle diffs: a property the platform can no longer
@@ -69,6 +70,7 @@ class CSSPlatformTransitionProxy {
       const PropertyValueDynamicDiffsMap &propertyDiffs,
       const TransitionProperties &pseudoLockedProperties,
       CSSTransitionRouting &routing,
+      bool allowPlatform,
       double timestamp) const;
 
   /// Cancels the native transition of every given property (teardown).
