@@ -43,6 +43,12 @@ class Synchronizable : public SynchronizableAccess,
   virtual SynchronizableValue getBlocking() = 0;
 
   /**
+   * Can run concurrently with getDirty, setDirty.
+   * Can't run concurrently with getBlocking, setBlocking.
+   */
+  virtual void setDirty(const SynchronizableFixedValue &value) = 0;
+
+  /**
    * Can run concurrently with getDirty.
    * Can't run concurrently with getBlocking, setDirty, setBlocking.
    */

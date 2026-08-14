@@ -14,6 +14,8 @@ class SynchronizableDynamic final : public Synchronizable {
 
   SynchronizableValue getBlocking() override;
 
+  void setDirty(const SynchronizableFixedValue &value) override;
+
   void setBlocking(const std::shared_ptr<Serializable> &value) override;
 
   void setBlocking(const SynchronizableFixedValue &value) override;
