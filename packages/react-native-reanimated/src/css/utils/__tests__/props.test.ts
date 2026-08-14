@@ -531,62 +531,16 @@ describe(filterCSSAndStyleProperties, () => {
       const onCSSTransitionEnd = jest.fn();
       const onCSSTransitionRun = jest.fn();
 
-      const [animationCallbacks, transitionCallbacks] = splitCSSCallbacks(
-        { onCSSTransitionRun, onCSSTransitionEnd },
-        false,
-        true
-      );
+      const [animationCallbacks, transitionCallbacks] = splitCSSCallbacks({
+        onCSSTransitionRun,
+        onCSSTransitionEnd,
+      });
 
       expect(transitionCallbacks).toEqual({
         onCSSTransitionRun,
         onCSSTransitionEnd,
       });
       expect(animationCallbacks).toBeNull();
-    });
-  });
-
-  describe('transition callbacks validation', () => {
-    const globalWithDev = globalThis as unknown as { __DEV__: boolean };
-
-    beforeEach(() => {
-      (console.warn as jest.Mock).mockClear();
-    });
-
-    describe('in development (__DEV__)', () => {
-      beforeEach(() => {
-        globalWithDev.__DEV__ = true;
-      });
-
-      test('warns when transition callbacks are used without any transition props', () => {
-        splitCSSCallbacks({ onCSSTransitionEnd: jest.fn() }, false, false);
-        expect(console.warn).toHaveBeenCalledWith(
-          expect.stringContaining('onCSSTransitionEnd')
-        );
-      });
-
-      test('does not warn when a transition is configured alongside callbacks', () => {
-        splitCSSCallbacks({ onCSSTransitionEnd: jest.fn() }, false, true);
-        expect(console.warn).not.toHaveBeenCalled();
-      });
-
-      test('does not warn when only the transition shorthand is provided', () => {
-        filterCSSAndStyleProperties({
-          transition: 'opacity 2s',
-          onCSSTransitionEnd: jest.fn(),
-        } as CSSStyle);
-        expect(console.warn).not.toHaveBeenCalled();
-      });
-    });
-
-    describe('in production (!__DEV__)', () => {
-      beforeEach(() => {
-        globalWithDev.__DEV__ = false;
-      });
-
-      test('skips validation entirely - never warns, even without transition props', () => {
-        splitCSSCallbacks({ onCSSTransitionEnd: jest.fn() }, false, false);
-        expect(console.warn).not.toHaveBeenCalled();
-      });
     });
   });
 
@@ -611,72 +565,16 @@ describe(filterCSSAndStyleProperties, () => {
       const onCSSAnimationStart = jest.fn();
       const onCSSAnimationEnd = jest.fn();
 
-      const [animationCallbacks, transitionCallbacks] = splitCSSCallbacks(
-        { onCSSAnimationStart, onCSSAnimationEnd },
-        true,
-        false
-      );
+      const [animationCallbacks, transitionCallbacks] = splitCSSCallbacks({
+        onCSSAnimationStart,
+        onCSSAnimationEnd,
+      });
 
       expect(animationCallbacks).toEqual({
         onCSSAnimationStart,
         onCSSAnimationEnd,
       });
       expect(transitionCallbacks).toBeNull();
-    });
-  });
-
-  describe('animation callbacks validation', () => {
-    const globalWithDev = globalThis as unknown as { __DEV__: boolean };
-
-    beforeEach(() => {
-      (console.warn as jest.Mock).mockClear();
-    });
-
-    describe('in development (__DEV__)', () => {
-      beforeEach(() => {
-        globalWithDev.__DEV__ = true;
-      });
-
-      test('warns when animation callbacks are used without any animation props', () => {
-        splitCSSCallbacks({ onCSSAnimationEnd: jest.fn() }, false, false);
-        expect(console.warn).toHaveBeenCalledWith(
-          expect.stringContaining('onCSSAnimationEnd')
-        );
-      });
-
-      test('does not warn when an animation is configured alongside callbacks', () => {
-        splitCSSCallbacks({ onCSSAnimationEnd: jest.fn() }, true, false);
-        expect(console.warn).not.toHaveBeenCalled();
-      });
-
-      test('does not warn when animationName is a plain keyframes object', () => {
-        filterCSSAndStyleProperties({
-          animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
-          animationDuration: 100,
-          onCSSAnimationEnd: jest.fn(),
-        } as CSSStyle);
-        expect(console.warn).not.toHaveBeenCalled();
-      });
-
-      test('warns when callbacks are used but animationName has no valid keyframes', () => {
-        // An empty keyframes object means no animation actually runs, so the
-        // callbacks can never fire and the warning must still be emitted.
-        splitCSSCallbacks({ onCSSAnimationEnd: jest.fn() }, false, false);
-        expect(console.warn).toHaveBeenCalledWith(
-          expect.stringContaining('onCSSAnimationEnd')
-        );
-      });
-    });
-
-    describe('in production (!__DEV__)', () => {
-      beforeEach(() => {
-        globalWithDev.__DEV__ = false;
-      });
-
-      test('skips validation entirely - never warns, even without animation props', () => {
-        splitCSSCallbacks({ onCSSAnimationEnd: jest.fn() }, false, false);
-        expect(console.warn).not.toHaveBeenCalled();
-      });
     });
   });
 });

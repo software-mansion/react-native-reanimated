@@ -72,11 +72,7 @@ export default class CSSManager implements ICSSManager {
     const hasAnimation = animationProperties !== null;
     const hasTransition = transitionProperties !== null;
 
-    const [animationCallbacks, transitionCallbacks] = splitCSSCallbacks(
-      props,
-      hasAnimation,
-      hasTransition
-    );
+    const [animationCallbacks, transitionCallbacks] = splitCSSCallbacks(props);
 
     // Synced before either manager runs so a cancel emitted while detaching
     // still reaches the user.
