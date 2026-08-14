@@ -8,6 +8,8 @@
 
 ### 🎉 New features
 
+- Animate `PlatformColor` and `DynamicColorIOS` values in CSS animations and transitions on iOS. ([#10305](https://github.com/software-mansion/react-native-reanimated/pull/10305) by [@MatiPl01](https://github.com/MatiPl01))
+
 ### 🐛 Bug fixes
 
 - Fix `EXC_BAD_ACCESS` crash in `-[REANodesManager performOperations]` when called before the `_performOperations` block is registered on iOS. ([#10229](https://github.com/software-mansion/react-native-reanimated/pull/10229) by [@tomekzaw](https://github.com/tomekzaw))
