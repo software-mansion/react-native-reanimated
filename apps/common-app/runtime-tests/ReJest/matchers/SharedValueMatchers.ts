@@ -2,6 +2,8 @@ import type { ValueRegistry } from '../TestRunner/ValueRegistry';
 import type { TestCase, TestValue } from '../types';
 import type { ComparisonMode } from '../types';
 import { Matchers } from './Matchers';
+import { toBeMatcher } from './rawMatchers';
+import { waitFor } from '../utils/waitFor';
 
 class SharedValueSideMatchers {
   constructor(
@@ -39,5 +41,29 @@ export class SharedValueMatchers {
   public async toBe(expected: TestValue, comparisonMode?: ComparisonMode) {
     await this.onJS.toBe(expected, comparisonMode);
     await this.onUI.toBe(expected, comparisonMode);
+  }
+
+  public async toConverge(
+    expected: TestValue,
+    comparisonMode?: ComparisonMode,
+    timeout = 1000
+  ) {
+    let observed = this._valueRegistry.peekOnJS(this._name);
+
+    try {
+      await waitFor(
+        () => {
+          observed = this._valueRegistry.peekOnJS(this._name);
+          return toBeMatcher(observed, false, expected, comparisonMode).pass;
+        },
+        {
+          description: `'${this._name}' to converge on the JS runtime`,
+          timeout,
+          describeState: () => String(observed),
+        }
+      );
+    } catch {
+      new Matchers(observed, this._testCase).toBe(expected, comparisonMode);
+    }
   }
 }

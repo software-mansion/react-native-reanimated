@@ -14,6 +14,10 @@ export class ValueRegistry {
     this._valueRegistry[name] = value as SharedValue;
   }
 
+  public peekOnJS<TValue extends TestValue>(name: string): TValue {
+    return this._valueRegistry[name].value as TValue;
+  }
+
   public async getOnJS<TValue extends TestValue>(
     name: string
   ): Promise<TValue> {

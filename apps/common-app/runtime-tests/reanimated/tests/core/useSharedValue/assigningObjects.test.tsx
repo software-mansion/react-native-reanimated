@@ -58,7 +58,10 @@ describe('Test setting different values as sharedValue', () => {
           />
         );
 
-        await expectSharedValue(SHARED_VALUE_REF).toBe(preset, comparisonMode);
+        await expectSharedValue(SHARED_VALUE_REF).onUI.toBe(
+          preset,
+          comparisonMode
+        );
         /*
           This test checks the value of sharedValue after the component mounts. Therefore, we need to clear the render output
           to ensure that a new component will be fully mounted, not just rerendered.

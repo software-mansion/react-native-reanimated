@@ -111,7 +111,7 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     );
     await waitForNotification(MULTIPLICATION_NOTIFICATION_NAME);
     const expected = initialValue * factor;
-    await expectSharedValue(SHARED_VALUE_REF).toBe(
+    await expectSharedValue(SHARED_VALUE_REF).onUI.toBe(
       expected,
       ComparisonMode.NUMBER
     );

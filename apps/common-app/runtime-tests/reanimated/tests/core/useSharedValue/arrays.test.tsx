@@ -76,7 +76,7 @@ describe(`_Array operations_ on sharedValue`, () => {
     );
     const expected = [...initialArray, ...appendedArray];
     await waitForNotification(ARRAY_OPERATION_NOTIFICATION_NAME);
-    await expectSharedValue(SHARED_VALUE_REF).toBe(
+    await expectSharedValue(SHARED_VALUE_REF).onUI.toBe(
       expected,
       ComparisonMode.ARRAY
     );

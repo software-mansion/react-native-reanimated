@@ -91,7 +91,7 @@ describe('Tests of objects as sharedValue', () => {
         />
       );
       const expected = { ...initialValue, [key]: newVal };
-      await expectSharedValue(SHARED_VALUE_REF).onJS.toBe(
+      await expectSharedValue(SHARED_VALUE_REF).onUI.toBe(
         expected,
         ComparisonMode.OBJECT
       );
@@ -111,7 +111,7 @@ describe('Tests of objects as sharedValue', () => {
         />
       );
       const expected = { ...initialValue, [key]: newVal };
-      await expectSharedValue(SHARED_VALUE_REF).onJS.toBe(
+      await expectSharedValue(SHARED_VALUE_REF).onUI.toBe(
         expected,
         ComparisonMode.OBJECT
       );
