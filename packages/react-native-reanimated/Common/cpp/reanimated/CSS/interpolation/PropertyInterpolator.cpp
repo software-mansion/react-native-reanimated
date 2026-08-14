@@ -1,4 +1,5 @@
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
+#include <reanimated/CSS/utils/jsiShapes.h>
 #include <reanimated/Compat/WorkletsApi.h>
 
 #include <memory>
@@ -37,7 +38,7 @@ std::string PropertyInterpolator::getPropertyPathString() const {
 std::vector<std::pair<double, jsi::Value>> PropertyInterpolator::parseJSIKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &keyframes) const {
-  if (!keyframes.isObject() || !keyframes.asObject(rt).isArray(rt)) {
+  if (!isJSIArray(rt, keyframes)) {
     throw std::invalid_argument(
         "[Reanimated] Received invalid keyframes object for property: " + getPropertyPathString() +
         ".\n\nExpected an array of objects with 'offset' and 'value' properties, got: " +

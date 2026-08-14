@@ -1,4 +1,5 @@
 #include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
+#include <reanimated/CSS/utils/jsiShapes.h>
 
 #include <cmath>
 
@@ -70,16 +71,11 @@ TransformMatrix2D::TransformMatrix2D(const folly::dynamic &array)
 }
 
 bool TransformMatrix2D::canConstruct(jsi::Runtime &rt, const jsi::Value &value) {
-  if (!value.isObject()) {
+  if (!isJSIArray(rt, value)) {
     return false;
   }
 
-  const auto &obj = value.asObject(rt);
-  if (!obj.isArray(rt)) {
-    return false;
-  }
-
-  const auto &array = obj.asArray(rt);
+  const auto array = value.asObject(rt).asArray(rt);
   const auto size = array.size(rt);
 
   // Check if it's a 3x3 matrix (9 elements)

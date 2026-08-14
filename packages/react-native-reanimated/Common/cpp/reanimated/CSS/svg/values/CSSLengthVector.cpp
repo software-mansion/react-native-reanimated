@@ -1,6 +1,7 @@
 #include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/CSSLengthVector.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
+#include <reanimated/CSS/utils/jsiShapes.h>
 
 #include <algorithm>
 #include <sstream>
@@ -33,7 +34,7 @@ CSSLengthVector<Derived>::CSSLengthVector(const folly::dynamic &value) {
 
 template <typename Derived>
 bool CSSLengthVector<Derived>::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  if (!jsiValue.isObject() || !jsiValue.asObject(rt).isArray(rt)) {
+  if (!isJSIArray(rt, jsiValue)) {
     return false;
   }
   const auto array = jsiValue.asObject(rt).asArray(rt);

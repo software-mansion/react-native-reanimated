@@ -1,4 +1,5 @@
 #include <reanimated/CSS/common/values/CSSDiscreteArray.h>
+#include <reanimated/CSS/utils/jsiShapes.h>
 
 #include <string>
 #include <vector>
@@ -33,7 +34,7 @@ CSSDiscreteArray<TValue>::CSSDiscreteArray(const folly::dynamic &array) {
 template <CSSValueDerived TValue>
 bool CSSDiscreteArray<TValue>::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   // TODO - maybe add better validation
-  return jsiValue.isObject() && jsiValue.asObject(rt).isArray(rt);
+  return isJSIArray(rt, jsiValue);
 }
 
 template <CSSValueDerived TValue>

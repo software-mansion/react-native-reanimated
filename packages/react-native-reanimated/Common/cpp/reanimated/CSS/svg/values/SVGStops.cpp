@@ -1,5 +1,6 @@
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGStops.h>
+#include <reanimated/CSS/utils/jsiShapes.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -34,16 +35,11 @@ SVGStops::SVGStops(const folly::dynamic &value) {
 }
 
 bool SVGStops::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  if (!jsiValue.isObject()) {
+  if (!isJSIArray(rt, jsiValue)) {
     return false;
   }
 
-  auto obj = jsiValue.asObject(rt);
-  if (!obj.isArray(rt)) {
-    return false;
-  }
-
-  auto array = obj.asArray(rt);
+  auto array = jsiValue.asObject(rt).asArray(rt);
   size_t length = array.size(rt);
 
   if (length == 0) {
