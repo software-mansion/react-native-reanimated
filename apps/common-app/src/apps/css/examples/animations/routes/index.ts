@@ -70,6 +70,10 @@ const routes = {
         Component: miscellaneous.MultipleAnimations,
         name: 'Multiple Animations',
       },
+      PlatformColors: {
+        Component: miscellaneous.PlatformColors,
+        name: 'Platform Colors',
+      },
       UpdatingAnimationSettings: {
         Component: miscellaneous.UpdatingAnimationSettings,
         name: 'Updating Animation Settings',
