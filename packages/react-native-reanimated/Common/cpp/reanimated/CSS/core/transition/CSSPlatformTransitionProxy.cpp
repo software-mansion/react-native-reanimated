@@ -9,10 +9,12 @@ namespace reanimated::css {
 CSSPlatformTransitionProxy::CSSPlatformTransitionProxy(
     CSSCanRoutePropertyFunction canRoute,
     CSSApplyTransitionFunction applyTransition,
-    CSSRemoveTransitionFunction removeTransition)
+    CSSRemoveTransitionFunction removeTransition,
+    CSSCurrentPlatformValueFunction currentPlatformValue)
     : canRoute_(std::move(canRoute)),
       applyTransition_(std::move(applyTransition)),
-      removeTransition_(std::move(removeTransition)) {}
+      removeTransition_(std::move(removeTransition)),
+      currentPlatformValue_(std::move(currentPlatformValue)) {}
 
 bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const EasingConfig &easing) const {
   return canRoute_ && canRoute_(propertyName, easing);
@@ -74,15 +76,26 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
       }
       routing.platform.insert(propertyName);
     } else {
-      // platform -> loop migration cancels on the platform side.
+      // platform -> loop migration cancels on the platform side. The loop diff
+      // carries the committed from-value, which the platform animator has long
+      // painted past, so resume from the platform's computed current value.
+      std::optional<double> resumeFrom;
       if (routing.platform.erase(propertyName) > 0) {
+        if (hasValue && currentPlatformValue_) {
+          const auto liveValue = currentPlatformValue_(viewTag, propertyName, timestamp);
+          if (liveValue) {
+            if (const auto *scalar = std::get_if<double>(&*liveValue)) {
+              resumeFrom = *scalar;
+            }
+          }
+        }
         remove(viewTag, propertyName);
       }
       routing.loop.insert(propertyName);
       if (hasValue) {
+        auto fromValue = resumeFrom ? jsi::Value(*resumeFrom) : jsi::Value(rt, valueIt->second.first);
         loopConfig.changedProperties.emplace(
-            propertyName,
-            std::make_pair(jsi::Value(rt, valueIt->second.first), jsi::Value(rt, valueIt->second.second)));
+            propertyName, std::make_pair(std::move(fromValue), jsi::Value(rt, valueIt->second.second)));
       }
       loopConfig.changedPropertiesSettings.emplace(propertyName, settings);
     }

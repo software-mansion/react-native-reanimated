@@ -190,13 +190,16 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
     const folly::dynamic &updates) {
   const auto &shadowNode = transition->getShadowNode();
   const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
-  const auto &transitionProperties = transition->getProperties();
+  if (updates.empty() && lastUpdates.empty()) {
+    return;
+  }
+  const auto &transitionProperties = transition->getLoopProperties();
 
   folly::dynamic filteredUpdates = folly::dynamic::object;
 
   if (!lastUpdates.empty()) {
-    // Otherwise, we keep only allowed properties from the last updates
-    // and update the object with the new transition starting values
+    // Keep only loop-routed properties from the last updates and overlay the
+    // new transition starting values.
     for (const auto &prop : transitionProperties) {
       if (lastUpdates.count(prop)) {
         filteredUpdates[prop] = lastUpdates[prop];
@@ -207,7 +210,11 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
   // updated object contains only allowed properties so we don't need
   // to do additional filtering here
   filteredUpdates.update(updates);
-  setInUpdatesRegistry(shadowNode->getFamilyShared(), filteredUpdates);
+  if (filteredUpdates.empty()) {
+    removeFromUpdatesRegistry(shadowNode->getTag());
+  } else {
+    setInUpdatesRegistry(shadowNode->getFamilyShared(), filteredUpdates);
+  }
 }
 
 const std::shared_ptr<CSSTransition> &CSSTransitionsRegistry::getOrCreateTransition(
@@ -225,11 +232,13 @@ const std::shared_ptr<CSSTransition> &CSSTransitionsRegistry::getOrCreateTransit
 void CSSTransitionsRegistry::recordInitialUpdate(
     const std::shared_ptr<CSSTransition> &transition,
     const folly::dynamic &initialUpdate) {
-  if (initialUpdate.empty()) {
-    return;
-  }
+  // Run the filter even with no new updates: a run that moved a property off
+  // the loop must evict its retained value, or the commit hook keeps
+  // re-injecting the pre-routing value over later committed styles.
   updateInUpdatesRegistry(transition, initialUpdate);
-  updatedTags_.insert(transition->getViewTag());
+  if (!initialUpdate.empty()) {
+    updatedTags_.insert(transition->getViewTag());
+  }
 }
 
 } // namespace reanimated::css

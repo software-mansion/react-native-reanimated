@@ -33,6 +33,11 @@ using CSSApplyTransitionFunction = std::function<bool(
     double timestamp)>;
 /// Cancels the property's native transition and drops its platform-side state.
 using CSSRemoveTransitionFunction = std::function<void(Tag viewTag, const std::string &propertyName)>;
+/// The property's current animated value computed from the platform-side
+/// timeline, so a platform -> loop migration can resume from what is on screen.
+/// Absent (or nullopt) when the backend cannot reconstruct it.
+using CSSCurrentPlatformValueFunction =
+    std::function<std::optional<PlatformValue>(Tag viewTag, const std::string &propertyName, double timestamp)>;
 
 /// A view's transition partition: which properties animate on the platform vs the
 /// C++ loop. Owned per-view by CSSTransition; updated by the proxy on migrations.
@@ -50,7 +55,8 @@ class CSSPlatformTransitionProxy {
   CSSPlatformTransitionProxy(
       CSSCanRoutePropertyFunction canRoute,
       CSSApplyTransitionFunction applyTransition,
-      CSSRemoveTransitionFunction removeTransition);
+      CSSRemoveTransitionFunction removeTransition,
+      CSSCurrentPlatformValueFunction currentPlatformValue);
 
   /// Routes the config between platform and loop, updating `routing` and returning
   /// the loop-routed remainder to run.
@@ -91,6 +97,7 @@ class CSSPlatformTransitionProxy {
   CSSCanRoutePropertyFunction canRoute_;
   CSSApplyTransitionFunction applyTransition_;
   CSSRemoveTransitionFunction removeTransition_;
+  CSSCurrentPlatformValueFunction currentPlatformValue_;
 };
 
 } // namespace reanimated::css

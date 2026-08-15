@@ -29,10 +29,8 @@ CSSTransition::~CSSTransition() {
   }
 }
 
-TransitionProperties CSSTransition::getProperties() const {
-  TransitionProperties result = routing_.loop;
-  result.insert(routing_.platform.begin(), routing_.platform.end());
-  return result;
+TransitionProperties CSSTransition::getLoopProperties() const {
+  return routing_.loop;
 }
 
 folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config, const folly::dynamic &lastUpdates) {
