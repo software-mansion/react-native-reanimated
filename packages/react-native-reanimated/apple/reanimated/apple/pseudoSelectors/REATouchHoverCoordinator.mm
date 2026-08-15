@@ -204,7 +204,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   _observedWindow = nil;
   _primaryTouch = nil;
   [self clearAll];
-  [self deactivateAllPressEntries];
+  [self endPressSequence];
 }
 
 - (void)purgeEntries:(NSArray<REATouchHoverEntry *> *)batch
@@ -259,7 +259,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 - (void)primaryTouchCancelled:(NSSet<UITouch *> *)touches
 {
   if (_primaryTouch != nil && [touches containsObject:_primaryTouch]) {
-    [self deactivateAllPressEntries];
+    [self endPressSequence];
   }
 }
 
@@ -268,7 +268,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   if (_primaryTouch == nil || ![touches containsObject:_primaryTouch]) {
     return;
   }
-  [self deactivateAllPressEntries];
+  [self endPressSequence];
   UIWindow *window = _observedWindow;
   if (window != nil && [self isPointWithinTapSlop:[_primaryTouch locationInView:window]]) {
     return;
@@ -284,7 +284,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 - (void)touchSequenceEnded
 {
   _primaryTouch = nil;
-  [self deactivateAllPressEntries];
+  [self endPressSequence];
 }
 
 - (BOOL)isPointWithinTapSlop:(CGPoint)point
@@ -338,6 +338,13 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   for (REATouchPressEntry *entry in _pressEntries) {
     [self setEntry:entry engaged:NO];
   }
+}
+
+// The gate outlives the engaged state on purpose: a press dismissed by dragging keeps the touch
+// sequence in charge, exactly as the recognizer path keeps its own claim until the gesture ends.
+- (void)endPressSequence
+{
+  [self deactivateAllPressEntries];
   if (_pressGateHeld) {
     _pressGateHeld = NO;
     REAPseudoPressGateRelease();

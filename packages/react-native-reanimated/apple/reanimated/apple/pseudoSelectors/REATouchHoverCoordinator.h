@@ -19,12 +19,17 @@
                       deepest:(BOOL)deepest
                      callback:(std::function<void(bool)>)callback;
 - (void)unregisterPressObserver:(id)owner;
+
+/// Topmost view at `point`, treating registered near-zero-alpha views as hit-testable. The
+/// `:active-deepest` recognizers arbitrate over this rather than UIKit's own hit-test, so an
+/// invisible press-registered descendant still outranks a visible ancestor.
+- (UIView *)hitTestInWindow:(UIWindow *)window atPoint:(CGPoint)point;
 @end
 
 /// One touch drives all presses globally: the recognizers share a gate that admits a single
-/// touch, and the coordinator holds the same gate while a fallback press is engaged so a
-/// recognizer press cannot start from another finger meanwhile. Defined with the gate state
-/// in REAPseudoSelectorObserver.mm.
+/// touch, and the coordinator holds the same gate from the moment a fallback press engages
+/// until the touch sequence ends - dismissing the press by dragging must not let another
+/// finger start one. Defined with the gate state in REAPseudoSelectorObserver.mm.
 void REAPseudoPressGateRetain(UITouch *touch);
 void REAPseudoPressGateRelease(void);
 

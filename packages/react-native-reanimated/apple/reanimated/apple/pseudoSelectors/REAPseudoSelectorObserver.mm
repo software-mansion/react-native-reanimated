@@ -419,6 +419,27 @@ static int _focusObserverContext;
 }
 
 #if !TARGET_OS_OSX
+// UIKit's own hit-test cannot see a press-registered descendant with near-zero alpha, so asking it
+// which view is deepest would let this view win over a descendant the coordinator is about to
+// engage. Arbitrate over the coordinator's alpha-bumped hit-test instead, and only when it lands
+// inside this view - anything else keeps UIKit's answer.
+- (UIView *)deepestPressCandidateAt:(CGPoint)location
+                             inView:(REAUIView *)view
+                      forRecognizer:(UIGestureRecognizer *)recognizer
+{
+#if !TARGET_OS_TV
+  UIWindow *window = view.window;
+  if (window != nil) {
+    UIView *bumpedHit = [[REATouchHoverCoordinator sharedCoordinator] hitTestInWindow:window
+                                                                             atPoint:[recognizer locationInView:window]];
+    if (bumpedHit != nil && [bumpedHit isDescendantOfView:view]) {
+      return bumpedHit;
+    }
+  }
+#endif
+  return [view hitTest:location withEvent:nil];
+}
+
 - (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
 #else
 - (BOOL)gestureRecognizerShouldBegin:(NSGestureRecognizer *)gestureRecognizer
@@ -433,7 +454,7 @@ static int _focusObserverContext;
   }
   CGPoint location = [gestureRecognizer locationInView:view];
 #if !TARGET_OS_OSX
-  UIView *current = [view hitTest:location withEvent:nil];
+  UIView *current = [self deepestPressCandidateAt:location inView:view forRecognizer:gestureRecognizer];
   while (current && current != view) {
     for (UIGestureRecognizer *gr in current.gestureRecognizers) {
       if ([gr.delegate isKindOfClass:[REAPseudoSelectorObserver class]] &&
