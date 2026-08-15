@@ -37,6 +37,7 @@
 - (void)primaryTouchBegan:(NSSet<UITouch *> *)touches;
 - (void)primaryTouchMoved:(NSSet<UITouch *> *)touches;
 - (void)primaryTouchEnded:(NSSet<UITouch *> *)touches;
+- (void)primaryTouchCancelled:(NSSet<UITouch *> *)touches;
 - (void)touchSequenceEnded;
 @end
 
@@ -56,6 +57,7 @@
 }
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
+  [self.coordinator primaryTouchCancelled:touches];
   [self failIfSequenceEnded:event];
 }
 - (void)failIfSequenceEnded:(UIEvent *)event
@@ -79,6 +81,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   __weak UIWindow *_observedWindow;
   __weak UITouch *_primaryTouch;
   CGPoint _primaryTouchDownPoint;
+  BOOL _pressGateHeld;
 }
 
 + (instancetype)sharedCoordinator
@@ -253,6 +256,13 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   }
 }
 
+- (void)primaryTouchCancelled:(NSSet<UITouch *> *)touches
+{
+  if (_primaryTouch != nil && [touches containsObject:_primaryTouch]) {
+    [self deactivateAllPressEntries];
+  }
+}
+
 - (void)primaryTouchEnded:(NSSet<UITouch *> *)touches
 {
   if (_primaryTouch == nil || ![touches containsObject:_primaryTouch]) {
@@ -304,6 +314,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
       }
     }
   }
+  BOOL engagedAny = NO;
   for (REATouchPressEntry *entry in _pressEntries) {
     UIView *view = entry->view;
     if (view == nil || ![self isView:view onBranchOfHitView:bumpedHit] ||
@@ -314,6 +325,11 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
       continue;
     }
     [self setEntry:entry engaged:YES];
+    engagedAny = YES;
+  }
+  if (engagedAny && !_pressGateHeld) {
+    _pressGateHeld = YES;
+    REAPseudoPressGateRetain(_primaryTouch);
   }
 }
 
@@ -321,6 +337,10 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 {
   for (REATouchPressEntry *entry in _pressEntries) {
     [self setEntry:entry engaged:NO];
+  }
+  if (_pressGateHeld) {
+    _pressGateHeld = NO;
+    REAPseudoPressGateRelease();
   }
 }
 

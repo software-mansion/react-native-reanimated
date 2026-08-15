@@ -21,4 +21,11 @@
 - (void)unregisterPressObserver:(id)owner;
 @end
 
+/// One touch drives all presses globally: the recognizers share a gate that admits a single
+/// touch, and the coordinator holds the same gate while a fallback press is engaged so a
+/// recognizer press cannot start from another finger meanwhile. Defined with the gate state
+/// in REAPseudoSelectorObserver.mm.
+void REAPseudoPressGateRetain(UITouch *touch);
+void REAPseudoPressGateRelease(void);
+
 #endif

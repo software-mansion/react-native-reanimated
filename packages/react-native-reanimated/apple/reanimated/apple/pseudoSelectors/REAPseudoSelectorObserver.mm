@@ -50,6 +50,22 @@ static const CGFloat kActivePressMovementThreshold = 10.0;
 #if !TARGET_OS_OSX
 static __weak UITouch *sActivePrimaryTouch;
 static NSInteger sActiveTouchCount;
+
+void REAPseudoPressGateRetain(UITouch *touch)
+{
+  if (sActivePrimaryTouch == nil) {
+    sActivePrimaryTouch = touch;
+  }
+  sActiveTouchCount++;
+}
+
+void REAPseudoPressGateRelease(void)
+{
+  if (--sActiveTouchCount <= 0) {
+    sActiveTouchCount = 0;
+    sActivePrimaryTouch = nil;
+  }
+}
 #endif
 
 - (instancetype)initWithView:(REAUIView *)view
