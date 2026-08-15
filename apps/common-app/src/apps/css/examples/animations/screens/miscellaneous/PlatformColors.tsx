@@ -22,11 +22,11 @@ const label = IS_WEB
     ? PlatformColor('labelColor')
     : PlatformColor('?attr/colorOnBackground');
 
-const NOTE = IS_WEB
-  ? ' PlatformColor does not exist on web, so this screen shows literal fallbacks.'
+const FIRST_SECTION_DESCRIPTION = IS_WEB
+  ? 'PlatformColor does not exist on web, so this screen animates literal fallbacks instead.'
   : IS_IOS
-    ? ''
-    : ' Resolution is iOS-only so far, so on this platform the color steps between the endpoints instead.';
+    ? 'Both endpoints are platform colors, blended against the current appearance - toggle dark mode while it runs.'
+    : 'Both endpoints are platform colors. Resolution is iOS-only so far, so on this platform the color steps between them instead of blending.';
 
 const bothPlatform = css.keyframes({
   from: { backgroundColor: blue },
@@ -59,7 +59,7 @@ export default function PlatformColors() {
     <ScrollScreen>
       <Stagger>
         <Section
-          description={`Both endpoints are platform colors, blended against the current appearance.${NOTE}`}
+          description={FIRST_SECTION_DESCRIPTION}
           title="Between two platform colors">
           <Animated.View
             style={[animation.box, { animationName: bothPlatform }]}
