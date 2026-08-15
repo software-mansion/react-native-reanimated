@@ -430,8 +430,9 @@ static int _focusObserverContext;
 #if !TARGET_OS_TV
   UIWindow *window = view.window;
   if (window != nil) {
-    UIView *bumpedHit = [[REATouchHoverCoordinator sharedCoordinator] hitTestInWindow:window
-                                                                             atPoint:[recognizer locationInView:window]];
+    UIView *bumpedHit =
+        [[REATouchHoverCoordinator sharedCoordinator] hitTestInWindow:window
+                                                              atPoint:[recognizer locationInView:window]];
     if (bumpedHit != nil && [bumpedHit isDescendantOfView:view]) {
       return bumpedHit;
     }
