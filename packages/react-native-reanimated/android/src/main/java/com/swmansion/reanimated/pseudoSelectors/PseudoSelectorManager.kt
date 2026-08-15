@@ -42,7 +42,13 @@ class PseudoSelectorManager(
         // Dialog windows announce their creation only to listeners that already exist, so the
         // bridge must be listening before the first Modal can open. Installing it on the first
         // pseudo registration is too late for a registration that happens inside that Modal.
-        UiThreadUtil.runOnUiThread { ensureExtraWindowBridge() }
+        UiThreadUtil.runOnUiThread {
+            if (BuildConfig.IS_REACT_NATIVE_86_OR_NEWER) {
+                reactContext.get()?.let { context ->
+                    extraWindowBridge = ExtraWindowObserverBridge(context, hover).also { it.install() }
+                }
+            }
+        }
     }
 
     private val pendingAttaches = LinkedHashMap<String, PendingAttach>()
@@ -168,13 +174,6 @@ class PseudoSelectorManager(
             }
     }
 
-    private fun ensureExtraWindowBridge() {
-        if (!BuildConfig.IS_REACT_NATIVE_86_OR_NEWER || extraWindowBridge != null) {
-            return
-        }
-        val context = reactContext.get() ?: return
-        extraWindowBridge = ExtraWindowObserverBridge(context, hover).also { it.install() }
-    }
 
     private fun attachPressSelector(
         view: View,
