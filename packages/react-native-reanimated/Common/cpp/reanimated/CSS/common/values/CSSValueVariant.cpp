@@ -102,7 +102,15 @@ CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::interpolate(
     const CSSValueVariant &to,
     const InterpolationContextFor<AllowedTypes...> &context) const {
   if constexpr ((ResolvesToAlternative<AllowedTypes, ContextType, AllowedTypes...> || ...)) {
-    return resolved(context).interpolateResolved(progress, to.resolved(context), context);
+    const auto resolvedFrom = resolved(context);
+    const auto resolvedTo = to.resolved(context);
+    // Blend only when both sides ended up on the same alternative. When just one
+    // of them resolved, switching the originals over keeps the unresolved
+    // payload intact for RN to resolve against the view.
+    if (resolvedFrom.storage_.index() != resolvedTo.storage_.index()) {
+      return fallbackInterpolate(progress, to, context.fallbackInterpolateThreshold);
+    }
+    return resolvedFrom.interpolateResolved(progress, resolvedTo, context);
   } else {
     return interpolateResolved(progress, to, context);
   }
