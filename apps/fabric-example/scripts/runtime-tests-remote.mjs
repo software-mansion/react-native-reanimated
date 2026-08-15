@@ -242,7 +242,7 @@ async function runLibrary() {
     // means the remote Mac — the tunnel makes this address land here).
     await simRemote([
       'spawn', UDID, '--',
-      'defaults', 'write', BUNDLE_ID, 'RCT_jsLocation', `localhost:${METRO_PORT}`,
+      'defaults', 'write', BUNDLE_ID, 'RCT_jsLocation', `127.0.0.1:${METRO_PORT}`,
     ]);
   }
   await ensureTunnel(wsPort);
