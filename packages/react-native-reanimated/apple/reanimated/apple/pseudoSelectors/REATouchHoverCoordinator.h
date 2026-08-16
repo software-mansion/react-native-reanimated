@@ -20,10 +20,11 @@
                      callback:(std::function<void(bool)>)callback;
 - (void)unregisterPressObserver:(id)owner;
 
-/// Topmost view at `point`, treating registered near-zero-alpha views as hit-testable. The
-/// `:active-deepest` recognizers arbitrate over this rather than UIKit's own hit-test, so an
-/// invisible press-registered descendant still outranks a visible ancestor.
-- (UIView *)hitTestInWindow:(UIWindow *)window atPoint:(CGPoint)point;
+/// The view this coordinator would drive `:active` for at `point`, or nil when it would not act
+/// there. `:active-deepest` recognizers ask this before claiming a press: a descendant the
+/// coordinator is about to engage outranks them, exactly as a UIKit-reachable descendant does.
+/// Answers nil for windows it does not observe, so it never suppresses a press nobody rescues.
+- (UIView *)rescuedPressViewInWindow:(UIWindow *)window atPoint:(CGPoint)point;
 @end
 
 /// One touch drives all presses globally: the recognizers share a gate that admits a single

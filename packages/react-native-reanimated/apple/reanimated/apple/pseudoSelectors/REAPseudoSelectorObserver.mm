@@ -419,26 +419,23 @@ static int _focusObserverContext;
 }
 
 #if !TARGET_OS_OSX
-// UIKit's own hit-test cannot see a press-registered descendant with near-zero alpha, so asking it
-// which view is deepest would let this view win over a descendant the coordinator is about to
-// engage. Arbitrate over the coordinator's alpha-bumped hit-test instead, and only when it lands
-// inside this view - anything else keeps UIKit's answer.
-- (UIView *)deepestPressCandidateAt:(CGPoint)location
-                             inView:(REAUIView *)view
-                      forRecognizer:(UIGestureRecognizer *)recognizer
+// UIKit's hit-test cannot see a press-registered descendant with near-zero alpha, so on its own it
+// would report this view as the deepest one and let it claim a press the coordinator is about to
+// give that descendant. Ask the coordinator whether it will act here first.
+- (BOOL)isOutrankedByRescuedPressAt:(CGPoint)location inView:(REAUIView *)view
 {
 #if !TARGET_OS_TV
   UIWindow *window = view.window;
-  if (window != nil) {
-    UIView *bumpedHit =
-        [[REATouchHoverCoordinator sharedCoordinator] hitTestInWindow:window
-                                                              atPoint:[recognizer locationInView:window]];
-    if (bumpedHit != nil && [bumpedHit isDescendantOfView:view]) {
-      return bumpedHit;
-    }
+  if (window == nil) {
+    return NO;
   }
+  UIView *rescued = [[REATouchHoverCoordinator sharedCoordinator] rescuedPressViewInWindow:window
+                                                                                   atPoint:[view convertPoint:location
+                                                                                                       toView:window]];
+  return rescued != nil && rescued != view && [rescued isDescendantOfView:view];
+#else
+  return NO;
 #endif
-  return [view hitTest:location withEvent:nil];
 }
 
 - (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
@@ -455,7 +452,10 @@ static int _focusObserverContext;
   }
   CGPoint location = [gestureRecognizer locationInView:view];
 #if !TARGET_OS_OSX
-  UIView *current = [self deepestPressCandidateAt:location inView:view forRecognizer:gestureRecognizer];
+  if ([self isOutrankedByRescuedPressAt:location inView:view]) {
+    return NO;
+  }
+  UIView *current = [view hitTest:location withEvent:nil];
   while (current && current != view) {
     for (UIGestureRecognizer *gr in current.gestureRecognizers) {
       if ([gr.delegate isKindOfClass:[REAPseudoSelectorObserver class]] &&

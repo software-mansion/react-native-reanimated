@@ -364,12 +364,49 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   }
 }
 
-// UIKit's -hitTest: skips views with alpha below ~0.01, so an `opacity: 0` view is unreachable. Bump each
-// near-zero registered view over the threshold for the hit-test, restoring before compositing (never drawn).
+- (UIView *)rescuedPressViewInWindow:(UIWindow *)window atPoint:(CGPoint)point
+{
+  // Only this coordinator's own window gets a fallback press, so anywhere else the recognizers must
+  // keep deciding on their own - suppressing a press nothing would rescue leaves the touch dead.
+  if (window == nil || window != _observedWindow || _pressEntries.count == 0) {
+    return nil;
+  }
+  UIView *bumpedHit = [self hitTestInWindow:window atPoint:point pressEntriesOnly:YES];
+  if (bumpedHit == nil) {
+    return nil;
+  }
+  UIView *plainHit = [window hitTest:point withEvent:nil];
+  for (UIView *current = bumpedHit; current != nil; current = current.superview) {
+    if ([self isPressRegisteredView:current] && ![self isView:current onBranchOfHitView:plainHit]) {
+      return current;
+    }
+  }
+  return nil;
+}
+
+- (BOOL)isPressRegisteredView:(UIView *)view
+{
+  for (REATouchPressEntry *entry in _pressEntries) {
+    if (entry->view == view) {
+      return YES;
+    }
+  }
+  return NO;
+}
+
 - (UIView *)hitTestInWindow:(UIWindow *)window atPoint:(CGPoint)point
 {
+  return [self hitTestInWindow:window atPoint:point pressEntriesOnly:NO];
+}
+
+// UIKit's -hitTest: skips views with alpha below ~0.01, so an `opacity: 0` view is unreachable. Bump each
+// near-zero registered view over the threshold for the hit-test, restoring before compositing (never drawn).
+// Press arbitration passes `pressEntriesOnly` so a hover-registered view - which may read alpha 0 merely
+// because a fade is in flight - cannot displace the pressed view in the answer.
+- (UIView *)hitTestInWindow:(UIWindow *)window atPoint:(CGPoint)point pressEntriesOnly:(BOOL)pressEntriesOnly
+{
   static const CGFloat kHitTestableAlpha = 0.02;
-  NSArray<REATouchEntryBase *> *entryLists[] = {_entries, _pressEntries};
+  NSArray<REATouchEntryBase *> *entryLists[] = {pressEntriesOnly ? @[] : _entries, _pressEntries};
   NSMutableArray<UIView *> *lifted = nil;
   NSMutableArray<NSNumber *> *savedAlphas = nil;
   for (NSUInteger listIndex = 0; listIndex < 2; listIndex++) {
