@@ -20,11 +20,11 @@
                      callback:(std::function<void(bool)>)callback;
 - (void)unregisterPressObserver:(id)owner;
 
-/// The view this coordinator would drive `:active` for at `point`, or nil when it would not act
-/// there. `:active-deepest` recognizers ask this before claiming a press: a descendant the
-/// coordinator is about to engage outranks them, exactly as a UIKit-reachable descendant does.
-/// Answers nil for windows it does not observe, so it never suppresses a press nobody rescues.
-- (UIView *)rescuedPressViewInWindow:(UIWindow *)window atPoint:(CGPoint)point;
+/// The view this coordinator would drive `:active` for, or nil when it would not act on this touch.
+/// `:active-deepest` recognizers ask before claiming a press: a descendant the coordinator is about
+/// to engage outranks them, exactly as a UIKit-reachable descendant does. Answers nil for windows it
+/// does not observe and for touches it is not driving, so it never suppresses a press nobody rescues.
+- (UIView *)rescuedPressViewForTouch:(UITouch *)touch inWindow:(UIWindow *)window atPoint:(CGPoint)point;
 @end
 
 /// One touch drives all presses globally: the recognizers share a gate that admits a single

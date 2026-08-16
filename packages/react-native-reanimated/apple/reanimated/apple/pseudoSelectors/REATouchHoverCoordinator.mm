@@ -364,14 +364,19 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   }
 }
 
-- (UIView *)rescuedPressViewInWindow:(UIWindow *)window atPoint:(CGPoint)point
+- (UIView *)rescuedPressViewForTouch:(UITouch *)touch inWindow:(UIWindow *)window atPoint:(CGPoint)point
 {
-  // Only this coordinator's own window gets a fallback press, so anywhere else the recognizers must
-  // keep deciding on their own - suppressing a press nothing would rescue leaves the touch dead.
+  // Answer only where a fallback press can actually follow: this coordinator's own window, and the
+  // touch it is driving. Vetoing a recognizer for a press nothing then engages leaves the touch dead.
   if (window == nil || window != _observedWindow || _pressEntries.count == 0) {
     return nil;
   }
-  UIView *bumpedHit = [self hitTestInWindow:window atPoint:point pressEntriesOnly:YES];
+  if (_primaryTouch != nil && _primaryTouch != touch) {
+    return nil;
+  }
+  // Deliberately the same hit-test the engaging path uses: deciding over a different one lets the
+  // two disagree, which is how a press ends up suppressed here and never engaged there.
+  UIView *bumpedHit = [self hitTestInWindow:window atPoint:point];
   if (bumpedHit == nil) {
     return nil;
   }
@@ -394,19 +399,12 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   return NO;
 }
 
-- (UIView *)hitTestInWindow:(UIWindow *)window atPoint:(CGPoint)point
-{
-  return [self hitTestInWindow:window atPoint:point pressEntriesOnly:NO];
-}
-
 // UIKit's -hitTest: skips views with alpha below ~0.01, so an `opacity: 0` view is unreachable. Bump each
 // near-zero registered view over the threshold for the hit-test, restoring before compositing (never drawn).
-// Press arbitration passes `pressEntriesOnly` so a hover-registered view - which may read alpha 0 merely
-// because a fade is in flight - cannot displace the pressed view in the answer.
-- (UIView *)hitTestInWindow:(UIWindow *)window atPoint:(CGPoint)point pressEntriesOnly:(BOOL)pressEntriesOnly
+- (UIView *)hitTestInWindow:(UIWindow *)window atPoint:(CGPoint)point
 {
   static const CGFloat kHitTestableAlpha = 0.02;
-  NSArray<REATouchEntryBase *> *entryLists[] = {pressEntriesOnly ? @[] : _entries, _pressEntries};
+  NSArray<REATouchEntryBase *> *entryLists[] = {_entries, _pressEntries};
   NSMutableArray<UIView *> *lifted = nil;
   NSMutableArray<NSNumber *> *savedAlphas = nil;
   for (NSUInteger listIndex = 0; listIndex < 2; listIndex++) {

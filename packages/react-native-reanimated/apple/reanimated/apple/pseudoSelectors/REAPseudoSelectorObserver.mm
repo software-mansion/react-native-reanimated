@@ -429,7 +429,9 @@ static int _focusObserverContext;
   if (window == nil) {
     return NO;
   }
-  UIView *rescued = [[REATouchHoverCoordinator sharedCoordinator] rescuedPressViewInWindow:window
+  // sActivePrimaryTouch is the touch this recognizer was just admitted for by -shouldReceiveTouch:.
+  UIView *rescued = [[REATouchHoverCoordinator sharedCoordinator] rescuedPressViewForTouch:sActivePrimaryTouch
+                                                                                  inWindow:window
                                                                                    atPoint:[view convertPoint:location
                                                                                                        toView:window]];
   return rescued != nil && rescued != view && [rescued isDescendantOfView:view];
