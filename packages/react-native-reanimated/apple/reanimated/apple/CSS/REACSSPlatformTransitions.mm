@@ -13,6 +13,8 @@
 
 #import <QuartzCore/QuartzCore.h>
 
+#import <algorithm>
+#import <optional>
 #import <string>
 #import <unordered_map>
 #import <utility>
@@ -175,6 +177,21 @@ struct ActiveTransition {
     [layer addAnimation:anim forKey:keyPath];
     [CATransaction commit];
   });
+}
+
+- (std::optional<PlatformValue>)currentValueForTag:(Tag)viewTag
+                                      propertyName:(const std::string &)propertyName
+                                         timestamp:(double)timestamp
+{
+  const ActiveTransition *active = [self activeTransitionForTag:viewTag propertyName:propertyName];
+  if (active == nullptr || !active->adjustedStart) {
+    return std::nullopt;
+  }
+  const auto &reversing = active->reversing;
+  const double progress =
+      reversing.duration > 0 ? std::clamp((timestamp - reversing.startTimestamp) / reversing.duration, 0.0, 1.0) : 1.0;
+  return lerpPlatformValues(
+      *active->adjustedStart, active->adjustedEnd, getEasingFunctionFromConfig(reversing.easing)(progress));
 }
 
 - (void)removeTransitionForTag:(Tag)viewTag propertyName:(const std::string &)propertyName

@@ -143,15 +143,10 @@ CSSPlatformTransitions::currentValue(const Tag viewTag, const std::string &prope
     return std::nullopt;
   }
   const auto &reversing = active->reversing;
-  const double linearProgress =
+  const double progress =
       reversing.duration > 0 ? std::clamp((timestamp - reversing.startTimestamp) / reversing.duration, 0.0, 1.0) : 1.0;
-  const double easedProgress = css::getEasingFunctionFromConfig(reversing.easing)(linearProgress);
-  const auto *from = std::get_if<double>(&*active->adjustedStart);
-  const auto *to = std::get_if<double>(&active->adjustedEnd);
-  if (from == nullptr || to == nullptr) {
-    return std::nullopt;
-  }
-  return *from + (*to - *from) * easedProgress;
+  return css::lerpPlatformValues(
+      *active->adjustedStart, active->adjustedEnd, css::getEasingFunctionFromConfig(reversing.easing)(progress));
 }
 
 void CSSPlatformTransitions::removeTransition(const Tag viewTag, const std::string &propertyName) {

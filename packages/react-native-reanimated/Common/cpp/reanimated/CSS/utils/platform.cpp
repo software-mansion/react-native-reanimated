@@ -4,7 +4,9 @@
 
 #include <array>
 #include <cstdint>
+#include <type_traits>
 #include <unordered_map>
+#include <variant>
 
 namespace reanimated::css {
 
@@ -128,6 +130,30 @@ bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &ea
   // No native routing backend on this platform yet; every property runs on the loop.
   return false;
 #endif // __APPLE__
+}
+
+std::optional<PlatformValue>
+lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, const double progress) {
+  const auto lerp = [progress](const double start, const double end) {
+    return start + (end - start) * progress;
+  };
+  return std::visit(
+      [&lerp](const auto &fromValue, const auto &toValue) -> std::optional<PlatformValue> {
+        using Kind = std::decay_t<decltype(fromValue)>;
+        if constexpr (!std::is_same_v<Kind, std::decay_t<decltype(toValue)>>) {
+          return std::nullopt;
+        } else if constexpr (std::is_same_v<Kind, double>) {
+          return lerp(fromValue, toValue);
+        } else {
+          Kind blended{};
+          for (size_t i = 0; i < blended.size(); ++i) {
+            blended[i] = lerp(fromValue[i], toValue[i]);
+          }
+          return blended;
+        }
+      },
+      from,
+      to);
 }
 
 std::optional<PlatformValuePair> parsePlatformValues(

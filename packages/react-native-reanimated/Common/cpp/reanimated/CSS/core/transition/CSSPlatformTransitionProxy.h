@@ -93,6 +93,9 @@ class CSSPlatformTransitionProxy {
       bool persistent,
       double timestamp) const;
   void remove(Tag viewTag, const std::string &propertyName) const;
+  /// Where a demoted property has to pick up: its diff carries the committed style,
+  /// which the native animation has already painted past. nullopt keeps the diff.
+  std::optional<double> resumeValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
 
   CSSCanRoutePropertyFunction canRoute_;
   CSSApplyTransitionFunction applyTransition_;

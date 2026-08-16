@@ -73,10 +73,9 @@ struct PlatformDepMethodsHolder {
   css::CSSCanRoutePropertyFunction cssCanRouteProperty;
   css::CSSApplyTransitionFunction cssApplyTransition;
   css::CSSRemoveTransitionFunction cssRemoveTransition;
-  // The trailing members are optional: platform initializers that don't supply
-  // them (iOS omits both, Android supplies only cssCurrentPlatformValue) rely
-  // on value-init (= null function / null shared_ptr).
   css::CSSCurrentPlatformValueFunction cssCurrentPlatformValue;
+  // Last so a platform initializer that does not supply it can omit it and rely
+  // on value-init (= null shared_ptr).
   std::shared_ptr<css::CSSPlatformAnimationFactory> platformAnimationFactory;
 };
 
