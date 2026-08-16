@@ -103,31 +103,6 @@ std::optional<PlatformValue> parseValue(const CSSPropertyTraits &traits, const f
   return std::nullopt;
 }
 
-// A color endpoint that is only there because the property is unset carries no hue
-// of its own, so CSSColor::interpolate fades the other endpoint's hue out instead of
-// sliding through black. The platform backends interpolate the raw channels, so the
-// substitution has to happen here for them to match the loop.
-void applyTransparentEndpointRule(
-    const CSSPropertyTraits &traits,
-    const bool fromIsUnset,
-    const bool toIsUnset,
-    PlatformValue &from,
-    PlatformValue &to) {
-  if (traits.kind != CSSValueKind::Color) {
-    return;
-  }
-  auto *fromChannels = std::get_if<std::array<double, 4>>(&from);
-  auto *toChannels = std::get_if<std::array<double, 4>>(&to);
-  if (fromChannels == nullptr || toChannels == nullptr) {
-    return;
-  }
-  if (fromIsUnset) {
-    *fromChannels = {(*toChannels)[0], (*toChannels)[1], (*toChannels)[2], 0.0};
-  } else if (toIsUnset) {
-    *toChannels = {(*fromChannels)[0], (*fromChannels)[1], (*fromChannels)[2], 0.0};
-  }
-}
-
 } // namespace
 
 bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &easing) {
@@ -190,13 +165,11 @@ std::optional<PlatformValuePair> parsePlatformValues(
   if (traits == nullptr) {
     return std::nullopt;
   }
-  auto from = parseValue(*traits, rt, fromValue);
-  auto to = parseValue(*traits, rt, toValue);
+  const auto from = parseValue(*traits, rt, fromValue);
+  const auto to = parseValue(*traits, rt, toValue);
   if (!from || !to) {
     return std::nullopt;
   }
-  applyTransparentEndpointRule(
-      *traits, fromValue.isNull() || fromValue.isUndefined(), toValue.isNull() || toValue.isUndefined(), *from, *to);
   return PlatformValuePair{*from, *to};
 }
 
@@ -206,12 +179,11 @@ parsePlatformValues(const std::string &propertyName, const folly::dynamic &fromV
   if (traits == nullptr) {
     return std::nullopt;
   }
-  auto from = parseValue(*traits, fromValue);
-  auto to = parseValue(*traits, toValue);
+  const auto from = parseValue(*traits, fromValue);
+  const auto to = parseValue(*traits, toValue);
   if (!from || !to) {
     return std::nullopt;
   }
-  applyTransparentEndpointRule(*traits, fromValue.isNull(), toValue.isNull(), *from, *to);
   return PlatformValuePair{*from, *to};
 }
 
