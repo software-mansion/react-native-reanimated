@@ -37,15 +37,19 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
    */
   update(
     transitionProperties: CSSTransitionProperties | null,
-    nextProps: UnknownRecord = {},
+    nextStyle?: UnknownRecord,
     eventMask = 0
   ): boolean {
     const transitionConfig =
       transitionProperties &&
       normalizeCSSTransitionProperties(transitionProperties);
 
+    const nextProps = nextStyle ?? {};
     const prevProps = this.prevProps;
-    this.prevProps = nextProps;
+    // Only a real style snapshot can serve as a baseline. Keeping the empty
+    // stand-in the caller passes when it builds none would make a later attach
+    // diff every property against undefined, animating it from its default.
+    this.prevProps = nextStyle ?? null;
 
     // If there were no previous props, the view is just mounted so we
     // don't trigger any transitions yet. Also, when there is no transition
