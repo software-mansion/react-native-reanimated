@@ -18,7 +18,6 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
-#include <utility>
 #include <vector>
 
 namespace reanimated {
@@ -35,50 +34,61 @@ struct StartAnimationsRecursivelyConfig {
   bool isScreenPop;
 };
 
-struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
-                                            public std::enable_shared_from_this<LayoutAnimationsProxy_Experimental> {
-  mutable std::unordered_set<std::shared_ptr<LightNode>> deadNodes;
-  mutable std::unordered_map<Tag, int> leastRemoved;
+struct PendingNodeAnimation {
+  std::shared_ptr<LightNode> node;
+  std::shared_ptr<Serializable> config;
+};
+
+struct TransactionMeta {
+  ShadowViewMutationList filteredMutations;
+  ShadowViewMutationList teardownMutations;
+  TransitionMap transitionMap;
+  Transitions transitions;
+  std::vector<PendingNodeAnimation> entering, layout;
+  std::vector<PendingNodeAnimation> exiting;
+  std::vector<std::shared_ptr<LightNode>> containersToInsert;
+  std::vector<Tag> tagsToRestore;
+  std::vector<Tag> sharedContainersToRemove;
+};
+
+struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
   mutable std::unordered_set<Tag> activeTransitions_;
   mutable Tag transitionTag_;
   mutable double transitionProgress_;
   mutable bool transitionUpdated_;
   mutable TransitionState transitionState_ = TransitionState::NONE;
   mutable std::shared_ptr<LightNode> topScreen_;
-  mutable std::vector<Tag> sharedContainersToRemove_;
   mutable std::unordered_map<Tag, Tag[2]> restoreMap_;
   mutable std::unordered_map<std::string, Tag> containerTags_;
-  mutable std::vector<Tag> tagsToRestore_;
-  mutable TransitionMap transitionMap_;
-  mutable Transitions transitions_;
   mutable bool synchronized_ = true;
   mutable Tag closingScreenTag_ = -1;
-  mutable std::vector<std::shared_ptr<LightNode>> entering_, layout_, exiting_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
-  mutable std::vector<std::shared_ptr<LightNode>> containersToInsert_;
-  mutable std::unordered_map<Tag, react::Transform> transformForNode_;
 
   mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
 
   LayoutAnimationsProxy_Experimental(SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies);
 
-  void startEnteringAnimation(const std::shared_ptr<LightNode> &node) const;
-  void startExitingAnimation(const std::shared_ptr<LightNode> &node) const;
-  void startLayoutAnimation(const std::shared_ptr<LightNode> &node) const;
-  void startSharedTransition(const int tag, const ShadowView &before, const ShadowView &after) const;
+  void startEnteringAnimation(const std::shared_ptr<LightNode> &node, const std::shared_ptr<Serializable> &config)
+      const;
+  void startExitingAnimation(const std::shared_ptr<LightNode> &node, const std::shared_ptr<Serializable> &config) const;
+  void startLayoutAnimation(const std::shared_ptr<LightNode> &node, const std::shared_ptr<Serializable> &config) const;
+  void startSharedTransition(
+      int tag,
+      const ShadowView &before,
+      const ShadowView &after,
+      const std::shared_ptr<Serializable> &config) const;
   void startProgressTransition(const int tag, const ShadowView &before, const ShadowView &after) const;
   void handleProgressTransition(
-      ShadowViewMutationList &filteredMutations,
+      TransactionMeta &transaction,
       const ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
 
   void updateLightTree(
       const PropsParserContext &propsParserContext,
       const ShadowViewMutationList &mutations,
-      ShadowViewMutationList &filteredMutations,
-      ShadowViewMutationList &teardownMutations) const;
+      TransactionMeta &transaction) const;
 
   void applyInitialMutationsToLightTree(const ShadowViewMutationList &mutations) const;
   void initializeLightTree(const ShadowTreeRevision &baseRevision);
@@ -92,20 +102,19 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   void handleSharedTransitionsStart(
       const std::shared_ptr<LightNode> &afterTopScreen,
       const std::shared_ptr<LightNode> &beforeTopScreen,
-      ShadowViewMutationList &filteredMutations,
+      TransactionMeta &transaction,
       const ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
 
-  void cleanupAnimations(ShadowViewMutationList &filteredMutations, const PropsParserContext &propsParserContext) const;
-  void cleanupSharedTransitions(ShadowViewMutationList &filteredMutations, const PropsParserContext &propsParserContext)
-      const;
+  void cleanupAnimations(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
+  void cleanupSharedTransitions(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
 
   void hideTransitioningViews(
       BeforeOrAfter index,
-      ShadowViewMutationList &filteredMutations,
+      const Transitions &transitions,
+      ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
 
-  std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) override;
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
   void startSurface(
       const facebook::react::ShadowTree &shadowTree,
@@ -122,18 +131,16 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   void findSharedElementsOnScreen(
       const std::shared_ptr<LightNode> &node,
       BeforeOrAfter index,
-      const PropsParserContext &propsParserContext) const;
+      const PropsParserContext &propsParserContext,
+      TransactionMeta &transaction) const;
 
-  void insertContainers(ShadowViewMutationList &filteredMutations, int &rootChildCount) const;
+  void insertContainers(TransactionMeta &transaction, int &rootChildCount) const;
+
+  void removeSharedContainer(Tag containerTag, TransactionMeta &transaction) const;
 
   std::vector<react::Point> getAbsolutePositionsForRootPathView(const std::shared_ptr<LightNode> &node) const;
 
-  void transferConfigToContainer(Tag containerTag, Tag beforeTag) const;
-
-  Tag getOrCreateContainer(
-      const ShadowView &before,
-      const SharedTag &sharedTag,
-      ShadowViewMutationList &filteredMutations) const;
+  Tag getOrCreateContainer(const ShadowView &before, const SharedTag &sharedTag, TransactionMeta &transaction) const;
 
   void overrideTransform(
       ShadowView &shadowView,
@@ -154,21 +161,15 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       const std::shared_ptr<LightNode> &node,
       const std::shared_ptr<LightNode> &parent,
       int hostIndex,
-      ShadowViewMutationList &filteredMutations,
-      ShadowViewMutationList &teardownMutations) const;
-  void flushDeadNodes(ShadowViewMutationList &filteredMutations) const;
+      TransactionMeta &transaction) const;
+  void handleRemovals(ShadowViewMutationList &filteredMutations) const;
 
   void addOngoingAnimations(ShadowViewMutationList &mutations) const;
-  void updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation) const;
   ShadowView cloneViewWithoutOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;
-
-  ShadowView cloneViewWithOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;
-  void maybeRestoreOpacity(reanimated::LayoutAnimation &layoutAnimation, const jsi::Object &newStyle) const;
-  ShadowView maybeCreateLayoutAnimation(ShadowView &before, const ShadowView &after, const Tag parentTag) const;
 
   bool startAnimationsRecursively(
       const std::shared_ptr<LightNode> &node,
-      ShadowViewMutationList &mutations,
+      TransactionMeta &transaction,
       StartAnimationsRecursivelyConfig config) const;
   void endAnimationsRecursively(const std::shared_ptr<LightNode> &node, int index, ShadowViewMutationList &mutations)
       const;

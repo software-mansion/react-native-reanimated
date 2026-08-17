@@ -1,15 +1,15 @@
 #pragma once
 
+#include <react/debug/react_native_assert.h>
 #include <react/renderer/components/rnreanimated/Props.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
 #include <algorithm>
+#include <cstring>
 #include <memory>
-#include <unordered_map>
-#include <unordered_set>
-#include <utility>
+#include <optional>
 #include <vector>
 
 namespace reanimated {
