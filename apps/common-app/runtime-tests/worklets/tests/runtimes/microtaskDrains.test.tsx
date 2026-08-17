@@ -17,7 +17,7 @@ import {
   beforeEach,
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
@@ -26,7 +26,7 @@ import {
 const DONE_NOTIFICATION = 'DONE';
 
 describe('microtask draining', () => {
-  const workletRuntime = getWorkletRuntimeFromPool('test');
+  const [workletRuntime] = getWorkletRuntimesFromPool(1);
 
   const microtaskDrainCount = createSynchronizable(0);
 
