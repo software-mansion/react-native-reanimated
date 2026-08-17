@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import type { EasingFunction } from 'react-native-reanimated';
-import Animated, { Easing, LinearTransition } from 'react-native-reanimated';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import type {
+  EasingFunction,
+  EntryOrExitLayoutType,
+} from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  FadeInLeft,
+  LinearTransition,
+} from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Every row travels the same distance with the same trigger; only the easing
-// and the duration differ. Each square should come to rest exactly inside the
-// dashed outline at the far end.
+// The layout rows travel the full track. The opacity rows replay FadeInLeft,
+// which animates opacity and a 25 px translation. Each square should come to
+// rest exactly inside the dashed outline at its target.
 //
 // A layout animation's last keyframe is the one that puts the view exactly on
 // its target, and it is the keyframe most at risk of being dropped. What that
@@ -17,12 +25,16 @@ const FRAME_MS = 1000 / 60;
 
 const SQUARE_SIZE = 36;
 const TRACK_PADDING = 4;
+const OPACITY_TRAVEL = 25;
+const IN_CUBIC = Easing.in(Easing.cubic);
 
 type Row = {
   label: string;
   easing: EasingFunction;
   duration: number;
   color: string;
+  entering?: EntryOrExitLayoutType;
+  travel?: number;
 };
 
 const ROWS: Array<Row> = [
@@ -41,7 +53,7 @@ const ROWS: Array<Row> = [
   {
     color: '#FFD93D',
     duration: 300,
-    easing: Easing.in(Easing.cubic),
+    easing: IN_CUBIC,
     label: 'in(cubic)',
   },
   {
@@ -56,6 +68,22 @@ const ROWS: Array<Row> = [
     easing: Easing.exp,
     label: 'exp (half the duration)',
   },
+  {
+    color: '#9C6ADE',
+    duration: 150,
+    easing: IN_CUBIC,
+    entering: FadeInLeft.duration(150).easing(IN_CUBIC),
+    label: 'opacity + in(cubic)',
+    travel: OPACITY_TRAVEL,
+  },
+  {
+    color: '#D84A9B',
+    duration: 150,
+    easing: Easing.exp,
+    entering: FadeInLeft.duration(150).easing(Easing.exp),
+    label: 'opacity + exp',
+    travel: OPACITY_TRAVEL,
+  },
 ];
 
 // Share of the distance still left to travel one frame before the end.
@@ -66,19 +94,24 @@ function missingFraction({ duration, easing }: Row) {
 export default function FinalFrameAccuracyExample() {
   const [toggled, setToggled] = useState(false);
   const [travel, setTravel] = useState(0);
+  const insets = useSafeAreaInsets();
 
   const onTrackLayout = (event: LayoutChangeEvent) => {
     setTravel(event.nativeEvent.layout.width - 2 * TRACK_PADDING - SQUARE_SIZE);
   };
 
   return (
-    <View style={styles.root}>
+    <ScrollView
+      style={styles.root}
+      contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
       <Text style={styles.title}>Where does the last keyframe land?</Text>
       <Text style={styles.hint}>
         Each square must end up inside the dashed outline. A dropped final
         keyframe leaves it `1 - easing(1 - frame/duration)` of the way short -
         negligible for ease-out, huge for ease-in, and worse the shorter the
-        duration. Figures assume 60 fps; on a 120 Hz display they halve.
+        duration. The opacity rows use entering animations that the old
+        opacity-based check allowed. Figures assume 60 fps; on a 120 Hz display
+        they halve.
       </Text>
 
       <Pressable
@@ -89,6 +122,7 @@ export default function FinalFrameAccuracyExample() {
 
       {ROWS.map((row) => {
         const missing = missingFraction(row);
+        const animatedTravel = row.travel ?? travel;
 
         return (
           <View key={row.label} style={styles.row}>
@@ -98,7 +132,9 @@ export default function FinalFrameAccuracyExample() {
               </Text>
               <Text style={styles.rowValue}>
                 {(missing * 100).toFixed(missing < 0.01 ? 2 : 1)}%
-                {travel > 0 ? ` · ${(missing * travel).toFixed(1)} px` : ''}
+                {animatedTravel > 0
+                  ? ` · ${(missing * animatedTravel).toFixed(1)} px`
+                  : ''}
               </Text>
             </View>
 
@@ -117,16 +153,20 @@ export default function FinalFrameAccuracyExample() {
                 style={[styles.ghost, styles.ghostRight]}
               />
               <Animated.View
+                key={row.entering ? String(toggled) : row.label}
+                entering={row.entering}
                 style={[styles.square, { backgroundColor: row.color }]}
-                layout={LinearTransition.easing(row.easing).duration(
-                  row.duration
-                )}
+                layout={
+                  row.entering
+                    ? undefined
+                    : LinearTransition.easing(row.easing).duration(row.duration)
+                }
               />
             </View>
           </View>
         );
       })}
-    </View>
+    </ScrollView>
   );
 }
 
