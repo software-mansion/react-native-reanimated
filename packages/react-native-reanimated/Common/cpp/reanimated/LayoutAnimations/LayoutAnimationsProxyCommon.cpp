@@ -16,6 +16,74 @@ size_t LayoutAnimationsProxyCommon::FrameDrivenLeaseKeyHash::operator()(const Fr
   return facebook::react::hash_combine(key.surfaceId, key.tag);
 }
 
+namespace {
+
+struct LayoutPendingViewSnapshot final : public PendingLayoutViewSnapshot {
+  LayoutPendingViewSnapshot(ShadowView oldView, ShadowView finalView)
+      : oldView(std::move(oldView)), finalView(std::move(finalView)) {}
+
+  ShadowView oldView;
+  ShadowView finalView;
+};
+
+} // namespace
+
+std::shared_ptr<PendingNativeLayoutStarts> LayoutAnimationsProxyCommon::makePendingNativeLayoutStarts(
+    const std::shared_ptr<native_animation::NativeAnimationService> &nativeAnimationService,
+    const std::shared_ptr<LayoutMountBoundary> &layoutMountBoundary) {
+  if (!useNativeLayoutAnimations() || !nativeAnimationService || !layoutMountBoundary) {
+    return nullptr;
+  }
+  auto pendingStarts = std::make_shared<PendingNativeLayoutStarts>(nativeAnimationService, layoutMountBoundary);
+  layoutMountBoundary->setPostMountObserver(
+      [weakPendingStarts = std::weak_ptr<PendingNativeLayoutStarts>(pendingStarts)](const SurfaceId surfaceId) {
+        if (const auto pendingStarts = weakPendingStarts.lock()) {
+          pendingStarts->drainAfterMount(surfaceId);
+        }
+      });
+  return pendingStarts;
+}
+
+void LayoutAnimationsProxyCommon::enqueueNativeLayoutStart(
+    const LayoutAnimationType type,
+    const ShadowView &oldView,
+    const ShadowView &finalView,
+    const MountingTransaction::Number transactionNumber,
+    native_animation::AnimationRequest request,
+    native_animation::AnimationCallbacks callbacks) const {
+  react_native_assert(pendingNativeStarts_ != nullptr && "native layout start delivery is not available");
+  const auto handle = request.handle;
+  pendingNativeStarts_->enqueue({
+      handle,
+      transactionNumber,
+      type,
+      finalView.layoutMetrics.frame,
+      // The snapshot below keeps this props object alive while pending.
+      reinterpret_cast<uintptr_t>(finalView.props.get()),
+      std::make_unique<LayoutPendingViewSnapshot>(oldView, finalView),
+      std::move(request),
+      std::move(callbacks),
+  });
+}
+
+void LayoutAnimationsProxyCommon::cancelNativeLayoutStart(const native_animation::AnimationHandle &handle) const {
+  if (pendingNativeStarts_) {
+    pendingNativeStarts_->cancel(handle);
+  }
+}
+
+void LayoutAnimationsProxyCommon::notifyNativeStartsSurfaceStarted(const SurfaceId surfaceId) const {
+  if (pendingNativeStarts_) {
+    pendingNativeStarts_->notifySurfaceStarted(surfaceId);
+  }
+}
+
+void LayoutAnimationsProxyCommon::cancelNativeStartsSurface(const SurfaceId surfaceId) const {
+  if (pendingNativeStarts_) {
+    pendingNativeStarts_->cancelSurface(surfaceId);
+  }
+}
+
 std::optional<facebook::react::SurfaceId>
 LayoutAnimationsProxyCommon::onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) {
   return std::nullopt;

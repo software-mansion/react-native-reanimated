@@ -9,7 +9,9 @@
 #include <reanimated/LayoutAnimations/FrameDrivenAnimationLease.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/LayoutAnimations/LayoutMountBoundary.h>
 #include <reanimated/LayoutAnimations/LayoutNativeAnimationAdapter.h>
+#include <reanimated/LayoutAnimations/PendingNativeLayoutStarts.h>
 #include <reanimated/NativeAnimations/NativeAnimationService.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
@@ -78,6 +80,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       jsi::Runtime &uiRuntime,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<native_animation::NativeAnimationService> &nativeAnimationService,
+      const std::shared_ptr<LayoutMountBoundary> &layoutMountBoundary,
       const std::shared_ptr<facebook::react::UIManager> &uiManager
 #ifdef ANDROID
       ,
@@ -98,7 +101,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
                       [uiScheduler](const native_animation::CallbackOperation &operation) {
                         scheduleOnUI(uiScheduler, operation);
                       })
-                : nullptr)
+                : nullptr),
+        pendingNativeStarts_(makePendingNativeLayoutStarts(nativeAnimationService, layoutMountBoundary))
 #ifdef ANDROID
         ,
         preserveMountedTags_(filterUnmountedTagsFunction),
@@ -125,7 +129,24 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void releaseFrameDrivenLayoutAnimation(SurfaceId surfaceId, Tag tag, native_animation::AnimationOutcome outcome)
       const;
 
+  // Final-state-first delivery: stores an owned prepared request during
+  // interception; the pending store submits it after the intended mount.
+  void enqueueNativeLayoutStart(
+      LayoutAnimationType type,
+      const ShadowView &oldView,
+      const ShadowView &finalView,
+      MountingTransaction::Number transactionNumber,
+      native_animation::AnimationRequest request,
+      native_animation::AnimationCallbacks callbacks) const;
+  void cancelNativeLayoutStart(const native_animation::AnimationHandle &handle) const;
+  void notifyNativeStartsSurfaceStarted(SurfaceId surfaceId) const;
+  void cancelNativeStartsSurface(SurfaceId surfaceId) const;
+
  protected:
+  static std::shared_ptr<PendingNativeLayoutStarts> makePendingNativeLayoutStarts(
+      const std::shared_ptr<native_animation::NativeAnimationService> &nativeAnimationService,
+      const std::shared_ptr<LayoutMountBoundary> &layoutMountBoundary);
+
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
 
   mutable std::unordered_set<Tag> maybeSettledAnimationTags_;
@@ -137,6 +158,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   const std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<facebook::react::UIManager> uiManager_;
   const std::shared_ptr<LayoutNativeAnimationAdapter> nativeAnimationAdapter_;
+  const std::shared_ptr<PendingNativeLayoutStarts> pendingNativeStarts_;
   PreserveMountedTagsFunction preserveMountedTags_;
 
   struct FrameDrivenLeaseKey {

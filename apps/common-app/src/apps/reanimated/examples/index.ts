@@ -210,6 +210,10 @@ const FlatListExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/FlatList').default as React.FC
   );
+const FinalStateFirstBench: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/FinalStateFirstBenchExample').default
+  );
 const FlatListSkipEnteringExiting: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/FlatListSkipEnteringExiting').default
@@ -1191,6 +1195,10 @@ export const EXAMPLES: Record<string, Example> = {
   StrictModeComparison: {
     title: '[LA] Strict Mode Comparison',
     screen: StrictModeComparison,
+  },
+  FinalStateFirstBench: {
+    title: '[LA] Final-state-first bench',
+    screen: FinalStateFirstBench,
   },
   ReactionsCounterExample: {
     title: '[LA] Reactions counter',

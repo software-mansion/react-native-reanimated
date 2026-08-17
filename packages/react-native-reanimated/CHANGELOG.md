@@ -9,6 +9,7 @@
 ### 🎉 New features
 
 - Add feature-flagged Shared Native Animation Boundary for CSS Transitions and future Layout Animations ([#10276](https://github.com/software-mansion/react-native-reanimated/pull/10276) by [@pawicao](https://github.com/pawicao))
+- Add feature-flagged final-state-first mount delivery for future native Layout Animations on iOS (by [@pawicao](https://github.com/pawicao))
 
 ### 🐛 Bug fixes
 

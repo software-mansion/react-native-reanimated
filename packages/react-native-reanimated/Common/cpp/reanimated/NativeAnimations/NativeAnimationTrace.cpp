@@ -12,13 +12,15 @@ void recordNativeAnimationTrace(
     const AnimationHandle handle,
     std::optional<AnimationTargetClaim> target,
     std::optional<AnimationOutcome> outcome,
-    std::optional<AnimationResultReason> reason) {
+    std::optional<AnimationResultReason> reason,
+    const uint8_t objective) {
   const auto now = std::chrono::steady_clock::now().time_since_epoch();
   sink.record(NativeAnimationTraceEvent{
       .monotonicTimeMs = std::chrono::duration<double, std::milli>(now).count(),
       .event = event,
       .handle = handle,
       .target = target,
+      .objective = objective,
       .outcome = outcome,
       .reason = reason,
   });

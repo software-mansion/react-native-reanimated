@@ -11,7 +11,9 @@ set(REACT_NATIVE_ROOT "${REANIMATED_PACKAGE_ROOT}/../../node_modules/react-nativ
 add_executable(
   native_animation_service_test
   NativeAnimationServiceTest.cc
+  PendingNativeLayoutStartsTest.cc
   ../../LayoutAnimations/LayoutNativeAnimationAdapter.cpp
+  ../../LayoutAnimations/PendingNativeLayoutStarts.cpp
   ../NativeAnimationConflictPolicy.cpp
   ../NativeAnimationCoordinator.cpp
   ../NativeAnimationDispatcher.cpp
@@ -24,7 +26,11 @@ add_executable(
 
 target_include_directories(
   native_animation_service_test
-  PRIVATE "${REANIMATED_PACKAGE_ROOT}/Common/cpp" "${REACT_NATIVE_ROOT}/ReactCommon")
+  PRIVATE
+    "${REANIMATED_PACKAGE_ROOT}/Common/cpp"
+    "${REACT_NATIVE_ROOT}/ReactCommon"
+    # Graphics primitives live outside the main ReactCommon include root.
+    "${REACT_NATIVE_ROOT}/ReactCommon/react/renderer/graphics/platform/cxx")
 
 # In debug builds react_native_assert needs glog, which this standalone build
 # does not have. This flag turns it into a no-op; the suite's own assert()

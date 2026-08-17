@@ -13,6 +13,8 @@
 using namespace reanimated::native_animation;
 using namespace reanimated::native_animation::testing;
 
+void runPendingNativeLayoutStartsTests();
+
 namespace {
 
 CallbackScheduler immediateScheduler() {
@@ -799,4 +801,5 @@ int main() {
   testCommonFixturesUseAppleAndAndroidExecutors();
   testExternalTraceEnvelope();
   std::cout << "NativeAnimationServiceTest passed\n";
+  runPendingNativeLayoutStartsTests();
 }

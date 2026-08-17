@@ -15,6 +15,9 @@ enum class NativeAnimationTraceEventType : uint8_t {
   Claim,
   Rejection,
   Terminal,
+  // Objective 06 layout mount-order events.
+  MountEnqueue,
+  MountDrain,
 };
 
 struct NativeAnimationTraceEvent {
@@ -53,7 +56,8 @@ void recordNativeAnimationTrace(
     AnimationHandle handle,
     std::optional<AnimationTargetClaim> target = std::nullopt,
     std::optional<AnimationOutcome> outcome = std::nullopt,
-    std::optional<AnimationResultReason> reason = std::nullopt);
+    std::optional<AnimationResultReason> reason = std::nullopt,
+    uint8_t objective = 5);
 
 #else
 
