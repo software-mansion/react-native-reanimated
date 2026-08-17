@@ -1,36 +1,42 @@
-use oxc_ast::AstBuilder;
-use oxc_ast::NONE;
 use oxc_ast::ast::{
     Argument, ArrayExpressionElement, Expression, FormalParameterKind, JSXAttribute,
     JSXAttributeName, JSXAttributeValue, JSXExpression, ObjectExpression, ObjectPropertyKind,
-    Program, PropertyKey,
+    Program,
 };
-use oxc_ast_visit::{VisitMut, walk_mut};
+use oxc_ast::AstBuilder;
+use oxc_ast::NONE;
+use oxc_ast_visit::{walk_mut, VisitMut};
 use oxc_span::SPAN;
+
+use crate::type_assertions::TypeAssertions;
 
 const WARNING_MODULE: &str = "react-native-reanimated";
 const WARNING_GETTER: &str = "getUseOfValueInStyleWarning";
 
-/// Mirrors `processInlineStylesWarning` in `plugin/src/inlineStylesWarning.ts`.
-pub fn process_inline_styles_warning<'a>(program: &mut Program<'a>, builder: AstBuilder<'a>) {
-    InlineStylesWarningPass { builder }.visit_program(program);
-}
-
-struct InlineStylesWarningPass<'a> {
+pub fn process_inline_styles_warning<'a>(
+    program: &mut Program<'a>,
     builder: AstBuilder<'a>,
+    assertions: &TypeAssertions,
+) {
+    InlineStylesWarningPass {
+        builder,
+        assertions,
+    }
+    .visit_program(program);
 }
 
-impl<'a> InlineStylesWarningPass<'a> {
+struct InlineStylesWarningPass<'a, 'b> {
+    builder: AstBuilder<'a>,
+    assertions: &'b TypeAssertions,
+}
+
+impl<'a, 'b> InlineStylesWarningPass<'a, 'b> {
     fn process_style_object(&mut self, obj: &mut ObjectExpression<'a>) {
         for prop in obj.properties.iter_mut() {
             let ObjectPropertyKind::ObjectProperty(prop) = prop else {
                 continue;
             };
-            let is_transform = matches!(
-                &prop.key,
-                PropertyKey::StaticIdentifier(id) if id.name.as_str() == "transform"
-            );
-            if is_transform {
+            if self.assertions.property_name(&prop.key) == Some("transform") {
                 self.process_transform_property(&mut prop.value);
             } else {
                 self.process_property_value(&mut prop.value);
@@ -39,17 +45,30 @@ impl<'a> InlineStylesWarningPass<'a> {
     }
 
     fn process_transform_property(&mut self, value: &mut Expression<'a>) {
+        if self.assertions.hides(value) {
+            return;
+        }
         let Expression::ArrayExpression(array) = value else {
             return;
         };
+        self.process_style_array(array);
+    }
+
+    fn process_style_array(&mut self, array: &mut oxc_ast::ast::ArrayExpression<'a>) {
         for element in array.elements.iter_mut() {
-            if let ArrayExpressionElement::ObjectExpression(obj) = element {
+            let ArrayExpressionElement::ObjectExpression(obj) = element else {
+                continue;
+            };
+            if !self.assertions.hides_span(obj.span) {
                 self.process_style_object(obj);
             }
         }
     }
 
     fn process_property_value(&mut self, value: &mut Expression<'a>) {
+        if self.assertions.hides(value) {
+            return;
+        }
         let Expression::StaticMemberExpression(member) = value else {
             return;
         };
@@ -81,9 +100,9 @@ impl<'a> InlineStylesWarningPass<'a> {
             self.builder.identifier_name(SPAN, WARNING_GETTER),
             false,
         ));
-        let warning =
-            self.builder
-                .expression_call(SPAN, getter, NONE, self.builder.vec(), false);
+        let warning = self
+            .builder
+            .expression_call(SPAN, getter, NONE, self.builder.vec(), false);
 
         let console_warn = Expression::from(self.builder.member_expression_static(
             SPAN,
@@ -120,7 +139,8 @@ impl<'a> InlineStylesWarningPass<'a> {
             NONE,
             params,
             NONE,
-            self.builder.function_body(SPAN, self.builder.vec(), statements),
+            self.builder
+                .function_body(SPAN, self.builder.vec(), statements),
         );
 
         self.builder
@@ -128,7 +148,7 @@ impl<'a> InlineStylesWarningPass<'a> {
     }
 }
 
-impl<'a> VisitMut<'a> for InlineStylesWarningPass<'a> {
+impl<'a, 'b> VisitMut<'a> for InlineStylesWarningPass<'a, 'b> {
     fn visit_jsx_attribute(&mut self, attr: &mut JSXAttribute<'a>) {
         walk_mut::walk_jsx_attribute(self, attr);
 
@@ -141,14 +161,15 @@ impl<'a> VisitMut<'a> for InlineStylesWarningPass<'a> {
         let Some(JSXAttributeValue::ExpressionContainer(container)) = attr.value.as_mut() else {
             return;
         };
+        if container
+            .expression
+            .as_expression()
+            .is_some_and(|expr| self.assertions.hides(expr))
+        {
+            return;
+        }
         match &mut container.expression {
-            JSXExpression::ArrayExpression(array) => {
-                for element in array.elements.iter_mut() {
-                    if let ArrayExpressionElement::ObjectExpression(obj) = element {
-                        self.process_style_object(obj);
-                    }
-                }
-            }
+            JSXExpression::ArrayExpression(array) => self.process_style_array(array),
             JSXExpression::ObjectExpression(obj) => self.process_style_object(obj),
             _ => {}
         }

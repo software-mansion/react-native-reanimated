@@ -1,54 +1,74 @@
 use oxc_allocator::{Allocator, CloneIn};
+use oxc_ast::ast::{
+    Expression, FormalParameterKind, FunctionType, ObjectExpression, ObjectPropertyKind, Program,
+    PropertyKey, PropertyKind,
+};
 use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
-use oxc_ast::ast::{
-    Expression, FormalParameterKind, FunctionType, ObjectExpression, ObjectPropertyKind,
-    PropertyKey, PropertyKind, Program,
-};
-use oxc_ast_visit::{Visit, VisitMut, walk_mut};
+use oxc_ast_visit::{walk_mut, Visit, VisitMut};
 use oxc_span::SPAN;
 
-use crate::utils::inject_worklet_directive;
+use crate::type_assertions::TypeAssertions;
+use crate::utils::is_object_method;
+use crate::utils::{has_worklet_directive, inject_worklet_directive};
 
-pub const CONTEXT_OBJECT_MARKER: &str = "__workletContextObject";
+const CONTEXT_OBJECT_MARKER: &str = "__workletContextObject";
 const CONTEXT_OBJECT_FACTORY: &str = "__workletContextObjectFactory";
 
 pub fn process_context_objects<'a>(
     program: &mut Program<'a>,
     builder: AstBuilder<'a>,
     allocator: &'a Allocator,
+    assertions: &TypeAssertions,
 ) {
-    ContextObjectPass { builder, allocator }.visit_program(program);
+    ContextObjectPass {
+        builder,
+        allocator,
+        assertions,
+    }
+    .visit_program(program);
 }
 
-struct ContextObjectPass<'a> {
+struct ContextObjectPass<'a, 'b> {
     builder: AstBuilder<'a>,
     allocator: &'a Allocator,
+    assertions: &'b TypeAssertions,
 }
 
-impl<'a> VisitMut<'a> for ContextObjectPass<'a> {
+impl<'a, 'b> VisitMut<'a> for ContextObjectPass<'a, 'b> {
+    fn visit_function_body(&mut self, body: &mut oxc_ast::ast::FunctionBody<'a>) {
+        if has_worklet_directive(body) {
+            return;
+        }
+        walk_mut::walk_function_body(self, body);
+    }
+
     fn visit_object_expression(&mut self, obj: &mut ObjectExpression<'a>) {
-        if !is_context_object(obj) {
+        if !is_context_object(obj, self.assertions) {
             walk_mut::walk_object_expression(self, obj);
             return;
         }
-        remove_marker(obj, self.builder);
+        remove_marker(obj, self.assertions);
+        let original = obj.properties.len();
         append_factory(obj, self.builder, self.allocator);
-        // The appended factory carries a clone of the object as it stood, and
-        // Babel's pre-order traversal never revisits a node it just pushed.
-        let original = obj.properties.len() - 1;
         for prop in obj.properties.iter_mut().take(original) {
             self.visit_object_property_kind(prop);
         }
     }
 }
 
-pub fn is_context_object(obj: &ObjectExpression<'_>) -> bool {
-    obj.properties.iter().any(is_marker_property)
+pub fn is_context_object(obj: &ObjectExpression<'_>, assertions: &TypeAssertions) -> bool {
+    obj.properties
+        .iter()
+        .any(|prop| assertions.is_named_data_property(prop, CONTEXT_OBJECT_MARKER))
 }
 
-pub fn append_marker<'a>(obj: &mut ObjectExpression<'a>, builder: AstBuilder<'a>) {
-    if is_context_object(obj) {
+pub fn append_marker<'a>(
+    obj: &mut ObjectExpression<'a>,
+    builder: AstBuilder<'a>,
+    assertions: &TypeAssertions,
+) {
+    if is_context_object(obj, assertions) {
         return;
     }
     let key = PropertyKey::StaticIdentifier(
@@ -80,38 +100,19 @@ pub fn is_implicit_context_object(obj: &ObjectExpression<'_>) -> bool {
         let Expression::FunctionExpression(func) = &prop.value else {
             return false;
         };
-        func.body.as_ref().is_some_and(|body| {
-            let mut probe = ThisProbe { found: false };
+        let mut probe = ThisProbe { found: false };
+        probe.visit_property_key(&prop.key);
+        probe.visit_formal_parameters(&func.params);
+        if let Some(body) = func.body.as_ref() {
             probe.visit_function_body(body);
-            probe.found
-        })
+        }
+        probe.found
     })
 }
 
-/// Babel's `isObjectMethod()` covers shorthand methods and accessors alike.
-pub fn is_object_method(prop: &oxc_ast::ast::ObjectProperty<'_>) -> bool {
-    prop.method || prop.kind != PropertyKind::Init
-}
-
-fn is_marker_property(prop: &ObjectPropertyKind<'_>) -> bool {
-    let ObjectPropertyKind::ObjectProperty(prop) = prop else {
-        return false;
-    };
-    if prop.method {
-        return false;
-    }
-    matches!(&prop.key, PropertyKey::StaticIdentifier(id) if id.name.as_str() == CONTEXT_OBJECT_MARKER)
-}
-
-fn remove_marker<'a>(obj: &mut ObjectExpression<'a>, builder: AstBuilder<'a>) {
-    let old = std::mem::replace(&mut obj.properties, builder.vec());
-    let mut kept = builder.vec_with_capacity(old.len());
-    for prop in old {
-        if !is_marker_property(&prop) {
-            kept.push(prop);
-        }
-    }
-    obj.properties = kept;
+fn remove_marker(obj: &mut ObjectExpression<'_>, assertions: &TypeAssertions) {
+    obj.properties
+        .retain(|prop| !assertions.is_named_data_property(prop, CONTEXT_OBJECT_MARKER));
 }
 
 fn append_factory<'a>(
@@ -125,9 +126,7 @@ fn append_factory<'a>(
     }
 
     let mut stmts = builder.vec_with_capacity(1);
-    stmts.push(
-        builder.statement_return(SPAN, Some(builder.expression_object(SPAN, cloned))),
-    );
+    stmts.push(builder.statement_return(SPAN, Some(builder.expression_object(SPAN, cloned))));
     let mut body = builder.function_body(SPAN, builder.vec(), stmts);
     inject_worklet_directive(&mut body, builder);
 

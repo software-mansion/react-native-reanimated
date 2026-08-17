@@ -1,21 +1,21 @@
 use oxc_allocator::{Allocator, CloneIn};
-use oxc_ast::AstBuilder;
-use oxc_ast::NONE;
 use oxc_ast::ast::{
     Argument, AssignmentOperator, AssignmentTarget, Expression, FormalParameterKind,
     FormalParameters, FunctionBody, FunctionType, PropertyKey, PropertyKind, Statement,
-    VariableDeclarationKind,
 };
+use oxc_ast::AstBuilder;
+use oxc_ast::NONE;
 use oxc_semantic::Scoping;
 use oxc_span::SPAN;
 use oxc_syntax::number::NumberBase;
 use oxc_syntax::scope::ScopeId;
 
-use crate::closure::{ClosureResult, InjectedRef, closure_for_function};
-use crate::naming::{WorkletNames, make_worklet_name};
+use crate::closure::{closure_for_function, scope_is_inside, InjectedRef};
 use crate::naming::worklet_hash;
+use crate::naming::{make_worklet_name, WorkletNames};
 use crate::state::State;
-use crate::utils::{is_release, rewrite_implicit_return};
+use crate::type_assertions::TypeAssertions;
+use crate::utils::{closure_binding_pattern, const_decl, is_release, rewrite_implicit_return};
 use crate::worklet_body::build_worklet_body_string;
 
 const MOCK_VERSION: &str = "x.y.z";
@@ -44,51 +44,46 @@ pub struct FactoryOutput<'a> {
     pub injected_refs: Vec<InjectedRef>,
 }
 
+#[derive(Clone, Copy)]
+pub struct FactoryContext<'a, 'b> {
+    pub scoping: &'b Scoping,
+    pub builder: AstBuilder<'a>,
+    pub allocator: &'a Allocator,
+    pub filename: &'b str,
+    pub assertions: &'b TypeAssertions,
+}
+
 pub fn make_worklet_factory<'a>(
     input: WorkletInput<'a, '_>,
     state: &mut State,
-    scoping: &Scoping,
-    builder: AstBuilder<'a>,
-    allocator: &'a Allocator,
-    filename: &str,
+    ctx: FactoryContext<'a, '_>,
     force_capture: &std::collections::HashSet<InjectedRef>,
 ) -> FactoryOutput<'a> {
-    let WorkletNames {
-        worklet_name,
-        react_name,
-    } = {
+    let FactoryContext {
+        scoping,
+        builder,
+        allocator,
+        filename,
+        assertions,
+    } = ctx;
+    let names = {
         let n = state.next_worklet_number();
         make_worklet_name(input.self_name, filename, n)
     };
 
-    let closure: ClosureResult = {
-        closure_for_function(
-            input.params,
-            input.body,
-            input.function_scope_id,
-            input.self_name,
-            scoping,
-            state,
-            force_capture,
-            filename,
-        )
-    };
+    let closure = closure_for_function(&input, scoping, state, force_capture, filename, assertions);
 
     let recursive_name = input.self_name.and_then(|name| {
         if body_references_name(input.body, name, scoping, input.function_scope_id) {
-            Some(react_name.as_str())
+            Some(names.react_name.as_str())
         } else {
             None
         }
     });
 
     let body_string = build_worklet_body_string(
-        &worklet_name,
-        input.params,
-        input.body,
-        input.is_async,
-        input.is_generator,
-        input.is_expression_body,
+        &names.worklet_name,
+        &input,
         &closure.closure_variables,
         recursive_name,
         allocator,
@@ -100,8 +95,7 @@ pub fn make_worklet_factory<'a>(
     let mut factory_expr = build_factory_expression(
         builder,
         allocator,
-        &worklet_name,
-        &react_name,
+        &names,
         &input,
         &closure.closure_variables,
         hash,
@@ -116,6 +110,7 @@ pub fn make_worklet_factory<'a>(
                 &state.forwardable_relative_paths,
                 state.opts.worklets_package_dir.as_deref(),
                 builder,
+                assertions,
             );
         }
     }
@@ -127,12 +122,9 @@ pub fn make_worklet_factory<'a>(
         state.opts.worklets_package_dir.as_deref(),
     );
     let file_path = format!("react-native-worklets/.worklets/{hash}.js");
-    let factory_call =
-        build_require_factory_call(builder, &file_path, &closure.closure_variables);
+    let factory_call = build_require_factory_call(builder, &file_path, &closure.closure_variables);
     state.emitted_files.push((file_path, file_content));
 
-    // The call we just built lands where the worklet used to sit, so its
-    // arguments resolve in the worklet's parent scope, not its own.
     let call_scope = scoping
         .scope_ancestors(input.function_scope_id)
         .nth(1)
@@ -145,7 +137,7 @@ pub fn make_worklet_factory<'a>(
 
     FactoryOutput {
         factory_call,
-        react_name,
+        react_name: names.react_name,
         injected_refs,
     }
 }
@@ -164,12 +156,7 @@ fn codegen_bundle_file<'a>(
     let mut body = builder.vec_with_capacity(imports.len() + 1);
     for info in imports {
         let is_rel = info.source.starts_with('.');
-        let keep = match (&info.shape, is_rel) {
-            (crate::state::ImportShape::Namespace, _) => false,
-            (crate::state::ImportShape::Default, true) => false,
-            _ => true,
-        };
-        if !keep {
+        if matches!(info.shape, crate::state::ImportShape::Default) && is_rel {
             continue;
         }
         let mut rebased = info.clone();
@@ -184,10 +171,8 @@ fn codegen_bundle_file<'a>(
         }
         body.push(build_import_declaration(builder, &rebased));
     }
-    let export = builder.alloc_export_default_declaration(
-        SPAN,
-        ExportDefaultDeclarationKind::from(factory),
-    );
+    let export =
+        builder.alloc_export_default_declaration(SPAN, ExportDefaultDeclarationKind::from(factory));
     body.push(Statement::ExportDefaultDeclaration(export));
 
     let program = builder.program(
@@ -279,70 +264,34 @@ fn build_require_factory_call<'a>(
         false,
     ));
 
-    let mut props = builder.vec_with_capacity(closure_variables.len());
-    for name in closure_variables {
-        let ident = builder.ident(name);
-        let key = PropertyKey::StaticIdentifier(builder.alloc_identifier_name(SPAN, ident));
-        let value = builder.expression_identifier(SPAN, ident);
-        props.push(builder.object_property_kind_object_property(
-            SPAN,
-            PropertyKind::Init,
-            key,
-            value,
-            false,
-            true,
-            false,
-        ));
-    }
-    let pack = builder.expression_object(SPAN, props);
-
     let mut args = builder.vec_with_capacity(1);
-    args.push(Argument::from(pack));
+    args.push(Argument::from(build_closure_object(
+        builder,
+        closure_variables,
+    )));
     builder.expression_call(SPAN, dot_default, NONE, args, false)
 }
 
 fn build_factory_expression<'a>(
     builder: AstBuilder<'a>,
     allocator: &'a Allocator,
-    worklet_name: &str,
-    react_name: &str,
+    names: &WorkletNames,
     input: &WorkletInput<'a, '_>,
     closure_variables: &[String],
     worklet_hash: u64,
     state: &State,
 ) -> Expression<'a> {
-    let mut binding_props = builder.vec_with_capacity(closure_variables.len());
-
-    for name in closure_variables {
-        let ident = builder.ident(name);
-        binding_props.push(builder.binding_property(
-            SPAN,
-            PropertyKey::StaticIdentifier(builder.alloc_identifier_name(SPAN, ident)),
-            builder.binding_pattern_binding_identifier(SPAN, ident),
-            true,
-            false,
-        ));
-    }
-
-    let pat = builder.binding_pattern_object_pattern(SPAN, binding_props, NONE);
+    let (worklet_name, react_name) = (names.worklet_name.as_str(), names.react_name.as_str());
+    let pat = closure_binding_pattern(builder, closure_variables);
     let factory_param = builder.plain_formal_parameter(SPAN, pat);
     let mut params_vec = builder.vec_with_capacity(1);
     params_vec.push(factory_param);
-    let factory_params = builder.formal_parameters(
-        SPAN,
-        FormalParameterKind::FormalParameter,
-        params_vec,
-        NONE,
-    );
+    let factory_params =
+        builder.formal_parameters(SPAN, FormalParameterKind::FormalParameter, params_vec, NONE);
 
     let mut stmts = builder.vec_with_capacity(8);
 
-    stmts.push(build_inner_fn_decl(
-        builder,
-        allocator,
-        react_name,
-        input,
-    ));
+    stmts.push(build_inner_fn_decl(builder, allocator, react_name, input));
 
     stmts.push(build_member_assign(
         builder,
@@ -426,22 +375,7 @@ fn build_inner_fn_decl<'a>(
     ));
 
     let id_pat = builder.binding_pattern_binding_identifier(SPAN, builder.ident(react_name));
-    let declarator = builder.variable_declarator(
-        SPAN,
-        VariableDeclarationKind::Const,
-        id_pat,
-        NONE,
-        Some(init),
-        false,
-    );
-    let mut decls = builder.vec_with_capacity(1);
-    decls.push(declarator);
-    Statement::VariableDeclaration(builder.alloc_variable_declaration(
-        SPAN,
-        VariableDeclarationKind::Const,
-        decls,
-        false,
-    ))
+    const_decl(builder, id_pat, init)
 }
 
 fn build_member_assign<'a>(
@@ -526,11 +460,4 @@ fn body_references_name(
     };
     probe.visit_function_body(body);
     probe.found
-}
-
-fn scope_is_inside(scoping: &Scoping, inner: ScopeId, outer: ScopeId) -> bool {
-    if inner == outer {
-        return true;
-    }
-    scoping.scope_ancestors(inner).any(|s| s == outer)
 }

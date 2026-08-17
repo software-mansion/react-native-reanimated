@@ -75,17 +75,14 @@ test('no-worklet-closure directive is stripped from outer body', () => {
       return 1;
     }
   `;
-  const { files } = transform(input, 'test.js', { disableSourceMaps: true });
+  const { files } = transform(input, 'test.js', {});
   const content = joinedFiles(files);
-  // Directive must not survive into the stringified worklet body. Source
-  // maps embed the original source verbatim (which contains the directive),
-  // so disable them when grepping the output for parity.
   assert.doesNotMatch(content, /no-worklet-closure/);
   // __closure must be empty literal.
   assert.match(content, /__closure\s*=\s*\{\s*\}/);
 });
 
-test('no-worklet-closure directive is stripped from nested inner function', () => {
+test('a nested function keeps its own directives', () => {
   const input = `
     function outer() {
       'worklet';
@@ -96,8 +93,8 @@ test('no-worklet-closure directive is stripped from nested inner function', () =
       return inner();
     }
   `;
-  const { files } = transform(input, 'test.js', { disableSourceMaps: true });
-  assert.doesNotMatch(joinedFiles(files), /no-worklet-closure/);
+  const { files } = transform(input, 'test.js', {});
+  assert.match(joinedFiles(files), /no-worklet-closure/);
 });
 
 test('idempotent: running plugin twice equals running once', () => {
@@ -287,7 +284,7 @@ test('cjs file extension parses as plain JS (no TSX cast handling)', () => {
   assert.match(code, /require\("y"\)/);
 });
 
-test('worklet-only directives are stripped from every nested expression position', () => {
+test('nested expression positions keep their directives', () => {
   const input = `
     async function outer() {
       'worklet';
@@ -299,9 +296,9 @@ test('worklet-only directives are stripped from every nested expression position
   `;
   const { files } = transform(input, 'test.js', {});
   const content = joinedFiles(files);
-  assert.doesNotMatch(content, /limit-init-data-hoisting/);
-  assert.doesNotMatch(content, /no-worklet-closure/);
-  assert.match(content, /await \(async function\(\) \{\s*return 1;?\s*\}\)\(\)/);
+  assert.match(content, /limit-init-data-hoisting/);
+  assert.match(content, /no-worklet-closure/);
+  assert.match(content, /return 1;/);
   assert.match(content, /return 2;/);
   assert.match(content, /return 3;/);
   assert.match(content, /return a \+ b \+ c;/);
@@ -593,8 +590,6 @@ test('the chosen definition site must match the accepted shape', () => {
     useAnimatedStyle(f);
   `;
   const { code, files } = transform(input, 'test.js', {});
-  // The object assignment is last but `useAnimatedStyle` only accepts a
-  // function, so the earlier arrow is the site.
   assert.equal(files.length, 1);
   assert.match(code, /f = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
 });
@@ -629,4 +624,288 @@ test('to_identifier rejects non-ID_Continue numerics', () => {
     {}
   );
   assert.match(files[0].content, /xJs1Factory/);
+});
+
+test('a hand-written worklet stops the alias chain', () => {
+  const input = `
+    import { useAnimatedStyle } from 'react-native-reanimated';
+    const g = () => ({ w: 1 });
+    const h = g;
+    h.__workletHash = 1;
+    useAnimatedStyle(h);
+  `;
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 0);
+});
+
+test('an alias is only followed out of a constant declarator', () => {
+  const input = `
+    import { useAnimatedStyle } from 'react-native-reanimated';
+    const g = () => ({ w: 1 });
+    let h;
+    h = g;
+    useAnimatedStyle(h);
+  `;
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 0);
+});
+
+test('this in a parameter default makes an implicit context object', () => {
+  const input = `'worklet';\nexport const o = { x: 1, m(a = this.x) { return a; } };`;
+  const { code } = transform(input, 'test.js', {});
+  assert.match(code, /__workletContextObjectFactory/);
+});
+
+test('a computed transform key still gets the inline style warning', () => {
+  const input = `const transform = 'transform';\nconst E = () => <View style={{ [transform]: [{ scale: sv.value }] }} />;`;
+  const { code } = transform(input, 'test.jsx', {});
+  assert.match(code, /getUseOfValueInStyleWarning/);
+});
+
+test('a rebound object resolves its identifier-valued properties', () => {
+  const input = `
+    import { useAnimatedScrollHandler } from 'react-native-reanimated';
+    const cb = () => { console.log(1); };
+    let t;
+    t = { onScroll: cb };
+    useAnimatedScrollHandler(t);
+  `;
+  const { code, files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 1);
+  assert.match(code, /const cb = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default\(\{\}\)/);
+});
+
+test('a destructured binding resolves through its declarator init', () => {
+  const input = `
+    import { useAnimatedScrollHandler } from 'react-native-reanimated';
+    const handlers = { onScroll: () => { console.log(1); } };
+    const { onScroll } = handlers;
+    useAnimatedScrollHandler(onScroll);
+  `;
+  const { code, files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 1);
+  assert.match(code, /onScroll: require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default\(\{\}\)/);
+});
+
+test('an optional call is not auto-workletized', () => {
+  const input = `
+    import { runOnUI } from 'react-native-worklets';
+    runOnUI?.(() => { console.log(1); });
+  `;
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 0);
+});
+
+test('a spread in an object hook argument is rejected', () => {
+  const input = `
+    import { useAnimatedScrollHandler } from 'react-native-reanimated';
+    const rest = {};
+    useAnimatedScrollHandler({ ...rest, onScroll() { console.log(1); } });
+  `;
+  assert.throws(
+    () => transform(input, 'test.js', {}),
+    /'SpreadElement' as to-be workletized argument is not supported for object hooks\./
+  );
+});
+
+test('a getter named like the context object marker is not a marker', () => {
+  const input = `const o = { get __workletContextObject() { return true; }, m() { return 1; } };`;
+  const { code, files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 0);
+  assert.doesNotMatch(code, /__workletContextObjectFactory/);
+});
+
+test('a computed identifier marker key still marks a context object', () => {
+  const input = `const __workletContextObject = 'k';\nconst o = { [__workletContextObject]: true, m() { return 1; } };`;
+  const { code } = transform(input, 'test.js', {});
+  assert.match(code, /__workletContextObjectFactory/);
+});
+
+test('a self-recursive worklet does not capture its own name', () => {
+  const input = `
+    function walk(node) {
+      'worklet';
+      node.children.forEach((c) => { 'worklet'; walk(c); });
+    }
+  `;
+  const { code } = transform(input, 'test.js', {});
+  assert.match(code, /const walk = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default\(\{\}\)/);
+});
+
+test('a call below an optional link is still auto-workletized', () => {
+  const input = `
+    import { useAnimatedStyle } from 'react-native-reanimated';
+    useAnimatedStyle(() => ({ width: 1 }))?.foo;
+  `;
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 1);
+});
+
+test('a function declaration in an unscopable position is not given a const', () => {
+  const input = `switch (x) { case 1: function h() { 'worklet'; return 1; } default: break; }`;
+  const { code } = transform(input, 'test.js', {});
+  assert.doesNotMatch(code, /const h =/);
+  assert.match(code, /require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default\(\{\}\)/);
+});
+
+test('a computed identifier callee is auto-detected', () => {
+  const input = `
+    import { Layout } from 'react-native-reanimated';
+    const withCallback = 'withCallback';
+    const l = Layout[withCallback]((v) => { console.log(v); });
+  `;
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 1);
+});
+
+test('a layout callback is not matched through a sequence expression', () => {
+  const input = `
+    import { Layout } from 'react-native-reanimated';
+    (0, Layout.withCallback)(() => { console.log(1); });
+  `;
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 0);
+});
+
+test('statement position of a workletized declaration', () => {
+  const cases = [
+    ['switch (x) { case 1: function h() { "worklet"; return 1; } }', false],
+    ['if (x) function h() { "worklet"; return 1; }', false],
+    ['lbl: function h() { "worklet"; return 1; }', false],
+    ['function h() { "worklet"; return 1; }', true],
+    ['{ function h() { "worklet"; return 1; } }', true],
+    ['for (;;) { function h() { "worklet"; return 1; } }', true],
+  ];
+  for (const [input, expectsConst] of cases) {
+    const { code } = transform(input, 'test.js', {});
+    assert.equal(/const h =/.test(code), expectsConst, `for: ${input}`);
+  }
+});
+
+test('an unscopable position does not leak into the declaration body', () => {
+  const input = `
+    switch (x) {
+      case 1:
+        function outer() {
+          function f() { 'worklet'; return 1; }
+          return f;
+        }
+    }
+  `;
+  const { code } = transform(input, 'test.js', {});
+  assert.match(code, /const f = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
+});
+
+test('a TypeScript assertion hides a callback from auto-workletization', () => {
+  const cases = [
+    `useAnimatedStyle((() => ({ width: 1 })) as any);`,
+    `useAnimatedStyle((() => ({ width: 1 })) satisfies any);`,
+    `useAnimatedStyle((() => ({ width: 1 }))!);`,
+    `const cb = (() => ({ width: 1 })) as any; useAnimatedStyle(cb);`,
+    `const cb = () => ({ width: 1 }); useAnimatedStyle!(cb);`,
+  ];
+  for (const body of cases) {
+    const input = `import { useAnimatedStyle } from 'react-native-reanimated';\n${body}`;
+    const { files } = transform(input, 'test.ts', {});
+    assert.equal(files.length, 0, `for: ${body}`);
+  }
+});
+
+test('a TypeScript assertion also hides the __workletHash guard', () => {
+  const input = `
+    import { useAnimatedStyle } from 'react-native-reanimated';
+    const updater = () => ({ width: 1 });
+    console.log((updater as any).__workletHash);
+    export const s = useAnimatedStyle(updater);
+  `;
+  const { files } = transform(input, 'test.ts', {});
+  assert.equal(files.length, 1);
+});
+
+test('a TypeScript assertion breaks a gesture or layout chain', () => {
+  const cases = [
+    `import { Gesture } from 'react-native-gesture-handler';\nexport const g = (Gesture.Pan() as any).onStart(() => { console.log(1); });`,
+    `import { Gesture } from 'react-native-gesture-handler';\nexport const g = (Gesture as any).Pan().onStart(() => { console.log(1); });`,
+    `import { FadeIn } from 'react-native-reanimated';\nexport const l = (FadeIn.duration(1) as any).withCallback(() => { console.log(1); });`,
+  ];
+  for (const input of cases) {
+    const { files } = transform(input, 'test.ts', {});
+    assert.equal(files.length, 0, `for: ${input}`);
+  }
+});
+
+test('an unasserted gesture chain still workletizes', () => {
+  const input = `
+    import { Gesture } from 'react-native-gesture-handler';
+    export const g = Gesture.Pan().enabled(true).onStart(() => { console.log(1); });
+  `;
+  const { files } = transform(input, 'test.ts', {});
+  assert.equal(files.length, 1);
+});
+
+test('a TypeScript assertion hides an entity from the file directive', () => {
+  const cases = [
+    `'worklet';\nexport const handlers = { onTap() { return 1; } } as const;`,
+    `'worklet';\nexport const f = (() => 1) as any;`,
+    `'worklet';\nexport const o = ({ m() { return this.x; } }) as any;`,
+  ];
+  for (const input of cases) {
+    const { code, files } = transform(input, 'test.ts', {});
+    assert.equal(files.length, 0, `for: ${input}`);
+    assert.doesNotMatch(code, /__workletContextObject/);
+  }
+});
+
+test('a TypeScript assertion suppresses the inline style warning', () => {
+  const asserted = transform(
+    `const C = () => <View style={{ width: sv.value as number }} />;`,
+    'test.tsx',
+    {}
+  );
+  assert.doesNotMatch(asserted.code, /getUseOfValueInStyleWarning/);
+  const plain = transform(
+    `const C = () => <View style={{ width: sv.value }} />;`,
+    'test.tsx',
+    {}
+  );
+  assert.match(plain.code, /getUseOfValueInStyleWarning/);
+});
+
+test('a TypeScript assertion suppresses web platform substitution', () => {
+  const { code } = transform(`const a = (isWeb as any)();`, 'test.ts', {
+    substituteWebPlatformChecks: true,
+  });
+  assert.match(code, /const a = isWeb\(\)/);
+});
+
+test('a computed key still chains a gesture object', () => {
+  const input = `
+    import { Gesture } from 'react-native-gesture-handler';
+    const g = Gesture.Pan()['enabled'](true).onStart((e) => { console.log(e); });
+  `;
+  const { files } = transform(input, 'test.ts', {});
+  assert.equal(files.length, 1);
+});
+
+test('a TypeScript assertion is respected at every node position', () => {
+  const cases = [
+    [`import { Gesture } from 'react-native-gesture-handler';\nconst Pan = 'Pan';\nconst g = Gesture[(Pan as any)]().onStart(() => { console.log(1); });`, 'test.ts'],
+    [`import { Gesture } from 'react-native-gesture-handler';\nconst g = (Gesture.Pan as any)().onStart(() => { console.log(1); });`, 'test.ts'],
+    [`import { Gesture } from 'react-native-gesture-handler';\nconst g = (Gesture.Pan().enabled as any)(true).onStart(() => { console.log(1); });`, 'test.ts'],
+    [`import { FadeIn } from 'react-native-reanimated';\nconst l = (FadeIn.duration as any)(100).withCallback(() => { console.log(1); });`, 'test.ts'],
+    [`import { useAnimatedStyle } from 'react-native-reanimated';\nconst s = ((0, useAnimatedStyle)!)(() => ({ w: 1 }));`, 'test.ts'],
+  ];
+  for (const [input, filename] of cases) {
+    const { files } = transform(input, filename, {});
+    assert.equal(files.length, 0, `for: ${input}`);
+  }
+});
+
+test('an asserted style array element is skipped, the rest are not', () => {
+  const { code } = transform(
+    `const C = () => <Animated.View style={[{ width: sv.value } as any, { height: sv.value }]} />;`,
+    'test.tsx',
+    {}
+  );
+  assert.equal(code.match(/getUseOfValueInStyleWarning/g).length, 1);
 });

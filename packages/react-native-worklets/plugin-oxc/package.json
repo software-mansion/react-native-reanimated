@@ -13,8 +13,8 @@
   "scripts": {
     "build": "cargo build --release && node scripts/post-build.mjs release",
     "build:debug": "cargo build && node scripts/post-build.mjs debug",
-    "test": "yarn build:debug && node --test \"test/**/*.test.mjs\"",
-    "test:parity": "yarn build:debug && cd ../plugin && yarn run -T jest --ci --config ../plugin-oxc/jest.config.js -t '^(?!.*bundleless)(?!.*does not flip the flag without bundleMode option)'"
+    "test": "yarn build:debug && cargo test && node --test \"test/**/*.test.mjs\"",
+    "test:parity": "yarn build:debug && cd ../plugin && yarn run -T jest --ci --config ../plugin-oxc/jest.config.js"
   },
   "installConfig": {
     "selfReferences": false

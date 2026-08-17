@@ -13,14 +13,53 @@ pub fn worklet_hash(s: &str) -> u64 {
     (h1 as u32 as u64) * 4096 + (h2 as u32 as u64)
 }
 
-/// Reserved words `@babel/types` `isValidIdentifier` rejects, which makes
-/// `toIdentifier` fall back to an `_` prefix.
 const RESERVED_WORDS: &[&str] = &[
-    "break", "case", "catch", "continue", "debugger", "default", "do", "else", "finally", "for",
-    "function", "if", "return", "switch", "throw", "try", "var", "const", "while", "with", "new",
-    "this", "super", "class", "extends", "export", "import", "null", "true", "false", "in",
-    "instanceof", "typeof", "void", "delete", "implements", "interface", "let", "package",
-    "private", "protected", "public", "static", "yield", "await", "enum",
+    "break",
+    "case",
+    "catch",
+    "continue",
+    "debugger",
+    "default",
+    "do",
+    "else",
+    "finally",
+    "for",
+    "function",
+    "if",
+    "return",
+    "switch",
+    "throw",
+    "try",
+    "var",
+    "const",
+    "while",
+    "with",
+    "new",
+    "this",
+    "super",
+    "class",
+    "extends",
+    "export",
+    "import",
+    "null",
+    "true",
+    "false",
+    "in",
+    "instanceof",
+    "typeof",
+    "void",
+    "delete",
+    "implements",
+    "interface",
+    "let",
+    "package",
+    "private",
+    "protected",
+    "public",
+    "static",
+    "yield",
+    "await",
+    "enum",
 ];
 
 fn is_valid_identifier(name: &str) -> bool {
@@ -28,19 +67,15 @@ fn is_valid_identifier(name: &str) -> bool {
     let Some(first) = chars.next() else {
         return false;
     };
-    is_identifier_start(first)
-        && chars.all(is_identifier_part)
-        && !RESERVED_WORDS.contains(&name)
+    is_identifier_start(first) && chars.all(is_identifier_part) && !RESERVED_WORDS.contains(&name)
 }
 
-/// Mirrors `toIdentifier` in `@babel/types`.
 pub fn to_identifier(input: &str) -> String {
     let mapped: String = input
         .chars()
         .map(|c| if is_identifier_part(c) { c } else { '-' })
         .collect();
 
-    // `name.replace(/^[-0-9]+/, "")`
     let trimmed: &str = {
         let offset = mapped
             .char_indices()
@@ -50,7 +85,6 @@ pub fn to_identifier(input: &str) -> String {
         &mapped[offset..]
     };
 
-    // `name.replace(/[-\s]+(.)?/g, (_, c) => (c ? c.toUpperCase() : ""))`
     let mut out = String::with_capacity(trimmed.len());
     let mut chars = trimmed.chars().peekable();
     while let Some(c) = chars.next() {
@@ -73,7 +107,7 @@ pub fn to_identifier(input: &str) -> String {
     if !is_valid_identifier(&out) {
         out.insert(0, '_');
     }
-    if out.is_empty() { "_".to_string() } else { out }
+    out
 }
 
 pub fn source_from_filename(filename: &str) -> String {
@@ -110,15 +144,14 @@ pub fn make_worklet_name(
     let suffix = format!("{source}{worklet_number}");
 
     let react_raw = function_name.unwrap_or("");
-    let worklet_name = if react_raw.is_empty() {
-        to_identifier(&suffix)
+    let (worklet_name, react_name) = if react_raw.is_empty() {
+        let generated = to_identifier(&suffix);
+        (generated.clone(), generated)
     } else {
-        to_identifier(&format!("{react_raw}_{suffix}"))
-    };
-    let react_name = if react_raw.is_empty() {
-        to_identifier(&suffix)
-    } else {
-        react_raw.to_string()
+        (
+            to_identifier(&format!("{react_raw}_{suffix}")),
+            react_raw.to_string(),
+        )
     };
 
     WorkletNames {
@@ -133,7 +166,10 @@ mod tests {
 
     #[test]
     fn hash_matches_known_values() {
-        assert_eq!(worklet_hash("function testJs1(x){return x+2;}"), 919891681460);
+        assert_eq!(
+            worklet_hash("function testJs1(x){return x+2;}"),
+            919891681460
+        );
         assert_eq!(
             worklet_hash("function foo_testJs1(x){return x+2;}"),
             11633341088429

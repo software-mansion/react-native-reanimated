@@ -1,13 +1,17 @@
 use oxc_ast::ast::Expression;
 
+use crate::type_assertions::TypeAssertions;
+
 const MAX_CHAIN_DEPTH: u32 = 64;
 
+#[rustfmt::skip]
 const GESTURE_HANDLER_GESTURE_OBJECTS: &[&str] = &[
     "Tap", "Pan", "Pinch", "Rotation", "Fling", "LongPress", "ForceTouch", "Native", "Manual",
     "Race", "Simultaneous", "Exclusive", "Hover",
 ];
 
-pub const GESTURE_HANDLER_BUILDER_METHODS: &[&str] = &[
+#[rustfmt::skip]
+const GESTURE_HANDLER_BUILDER_METHODS: &[&str] = &[
     "onBegin",
     "onStart",
     "onEnd",
@@ -20,6 +24,7 @@ pub const GESTURE_HANDLER_BUILDER_METHODS: &[&str] = &[
     "onTouchesCancelled",
 ];
 
+#[rustfmt::skip]
 pub const GESTURE_HANDLER_OBJECT_HOOKS: &[&str] = &[
     "useTapGesture",
     "usePanGesture",
@@ -32,7 +37,8 @@ pub const GESTURE_HANDLER_OBJECT_HOOKS: &[&str] = &[
     "useHoverGesture",
 ];
 
-const ENTRY_EXIT_ANIMATIONS: &[&str] = &[
+#[rustfmt::skip]
+const LAYOUT_ANIMATIONS: &[&str] = &[
     "BounceIn", "BounceInDown", "BounceInLeft", "BounceInRight", "BounceInUp", "BounceOut",
     "BounceOutDown", "BounceOutLeft", "BounceOutRight", "BounceOutUp", "FadeIn", "FadeInDown",
     "FadeInLeft", "FadeInRight", "FadeInUp", "FadeOut", "FadeOutDown", "FadeOutLeft",
@@ -47,9 +53,6 @@ const ENTRY_EXIT_ANIMATIONS: &[&str] = &[
     "ZoomIn", "ZoomInDown", "ZoomInEasyDown", "ZoomInEasyUp", "ZoomInLeft", "ZoomInRight",
     "ZoomInRotate", "ZoomInUp", "ZoomOut", "ZoomOutDown", "ZoomOutEasyDown", "ZoomOutEasyUp",
     "ZoomOutLeft", "ZoomOutRight", "ZoomOutRotate", "ZoomOutUp",
-];
-
-const LAYOUT_TRANSITIONS: &[&str] = &[
     "Layout",
     "LinearTransition",
     "SequencedTransition",
@@ -59,7 +62,8 @@ const LAYOUT_TRANSITIONS: &[&str] = &[
     "EntryExitTransition",
 ];
 
-const BASE_ANIMATION_CHAIN_METHODS: &[&str] = &[
+#[rustfmt::skip]
+const LAYOUT_ANIMATION_CHAIN_METHODS: &[&str] = &[
     "build",
     "duration",
     "delay",
@@ -67,9 +71,6 @@ const BASE_ANIMATION_CHAIN_METHODS: &[&str] = &[
     "randomDelay",
     "getDelay",
     "getDelayFunction",
-];
-
-const COMPLEX_ANIMATION_CHAIN_METHODS: &[&str] = &[
     "easing",
     "rotate",
     "springify",
@@ -82,9 +83,6 @@ const COMPLEX_ANIMATION_CHAIN_METHODS: &[&str] = &[
     "restSpeedThreshold",
     "withInitialValues",
     "getAnimationAndConfig",
-];
-
-const DEFAULT_TRANSITION_CHAIN_METHODS: &[&str] = &[
     "easingX",
     "easingY",
     "easingWidth",
@@ -96,27 +94,29 @@ const DEFAULT_TRANSITION_CHAIN_METHODS: &[&str] = &[
 
 const LAYOUT_ANIMATION_CALLBACKS: &[&str] = &["withCallback"];
 
-pub fn is_gesture_object_event_callback_method(callee: &Expression<'_>) -> bool {
-    let Expression::StaticMemberExpression(member) = callee else {
+pub fn is_gesture_object_event_callback_method(
+    callee: &Expression<'_>,
+    assertions: &TypeAssertions,
+) -> bool {
+    let Some((object, name)) = assertions.member_property(callee) else {
         return false;
     };
-    let name = member.property.name.as_str();
     if !GESTURE_HANDLER_BUILDER_METHODS.contains(&name) {
         return false;
     }
-    contains_gesture_object(&member.object, MAX_CHAIN_DEPTH)
+    contains_gesture_object(object, MAX_CHAIN_DEPTH, assertions)
 }
 
-fn contains_gesture_object(expr: &Expression<'_>, depth: u32) -> bool {
+fn contains_gesture_object(expr: &Expression<'_>, depth: u32, assertions: &TypeAssertions) -> bool {
     if depth == 0 {
         return false;
     }
-    if is_gesture_object(expr) {
+    if is_gesture_object(expr, assertions) {
         return true;
     }
-    if let Expression::CallExpression(call) = expr {
-        if let Expression::StaticMemberExpression(member) = &call.callee {
-            if contains_gesture_object(&member.object, depth - 1) {
+    if let Some(call) = assertions.call(expr) {
+        if let Some(object) = assertions.member_object(&call.callee) {
+            if contains_gesture_object(object, depth - 1, assertions) {
                 return true;
             }
         }
@@ -124,58 +124,52 @@ fn contains_gesture_object(expr: &Expression<'_>, depth: u32) -> bool {
     false
 }
 
-fn is_gesture_object(expr: &Expression<'_>) -> bool {
-    let Expression::CallExpression(call) = expr else {
+fn is_gesture_object(expr: &Expression<'_>, assertions: &TypeAssertions) -> bool {
+    let Some(call) = assertions.call(expr) else {
         return false;
     };
-    let Expression::StaticMemberExpression(member) = &call.callee else {
+    let Some((object, name)) = assertions.member_property(&call.callee) else {
         return false;
     };
-    let Expression::Identifier(obj) = &member.object else {
-        return false;
-    };
-    obj.name.as_str() == "Gesture"
-        && GESTURE_HANDLER_GESTURE_OBJECTS.contains(&member.property.name.as_str())
+    assertions.identifier(object) == Some("Gesture")
+        && GESTURE_HANDLER_GESTURE_OBJECTS.contains(&name)
 }
 
-pub fn is_layout_animation_callback_method(callee: &Expression<'_>) -> bool {
-    let Expression::StaticMemberExpression(member) = callee else {
+pub fn is_layout_animation_callback_method(
+    callee: &Expression<'_>,
+    assertions: &TypeAssertions,
+) -> bool {
+    let Some((object, name)) = assertions.member_property(callee) else {
         return false;
     };
-    if !LAYOUT_ANIMATION_CALLBACKS.contains(&member.property.name.as_str()) {
+    if !LAYOUT_ANIMATION_CALLBACKS.contains(&name) {
         return false;
     }
-    is_layout_animation_chainable_or_new(&member.object, MAX_CHAIN_DEPTH)
+    is_layout_animation_chainable_or_new(object, MAX_CHAIN_DEPTH, assertions)
 }
 
-fn is_layout_animation_chainable_or_new(expr: &Expression<'_>, depth: u32) -> bool {
-    if depth == 0 {
+fn is_layout_animation_chainable_or_new(
+    expr: &Expression<'_>,
+    depth: u32,
+    assertions: &TypeAssertions,
+) -> bool {
+    if depth == 0 || assertions.hides(expr) {
         return false;
     }
-    match expr {
-        Expression::Identifier(id) => {
-            let n = id.name.as_str();
-            ENTRY_EXIT_ANIMATIONS.contains(&n) || LAYOUT_TRANSITIONS.contains(&n)
-        }
-        Expression::NewExpression(new_expr) => {
-            if let Expression::Identifier(id) = &new_expr.callee {
-                let n = id.name.as_str();
-                return ENTRY_EXIT_ANIMATIONS.contains(&n) || LAYOUT_TRANSITIONS.contains(&n);
-            }
-            false
-        }
-        Expression::CallExpression(call) => {
-            if let Expression::StaticMemberExpression(member) = &call.callee {
-                let n = member.property.name.as_str();
-                let valid_method = BASE_ANIMATION_CHAIN_METHODS.contains(&n)
-                    || COMPLEX_ANIMATION_CHAIN_METHODS.contains(&n)
-                    || DEFAULT_TRANSITION_CHAIN_METHODS.contains(&n);
-                if valid_method {
-                    return is_layout_animation_chainable_or_new(&member.object, depth - 1);
-                }
-            }
-            false
-        }
-        _ => false,
+    if let Some(name) = assertions.identifier(expr) {
+        return LAYOUT_ANIMATIONS.contains(&name);
     }
+    if let Expression::NewExpression(new_expr) = expr {
+        return assertions
+            .identifier(&new_expr.callee)
+            .is_some_and(|name| LAYOUT_ANIMATIONS.contains(&name));
+    }
+    if let Some(call) = assertions.call(expr) {
+        if let Some((object, name)) = assertions.member_property(&call.callee) {
+            if LAYOUT_ANIMATION_CHAIN_METHODS.contains(&name) {
+                return is_layout_animation_chainable_or_new(object, depth - 1, assertions);
+            }
+        }
+    }
+    false
 }

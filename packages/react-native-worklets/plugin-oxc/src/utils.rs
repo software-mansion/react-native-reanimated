@@ -2,8 +2,9 @@ use std::env;
 use std::path::{Component, Path, PathBuf};
 
 use oxc_allocator::TakeIn;
+use oxc_ast::ast::{Expression, FunctionBody, Statement, VariableDeclarationKind};
 use oxc_ast::AstBuilder;
-use oxc_ast::ast::{FunctionBody, Statement};
+use oxc_ast::NONE;
 use oxc_span::SPAN;
 
 const RELEASE_NEEDLES: &[&str] = &["prod", "release", "stage", "stagi"];
@@ -31,8 +32,9 @@ pub fn is_release(env_name: Option<&str>) -> bool {
 
 pub fn can_forward_module_import(module_name: &str, forwardable: &[String]) -> bool {
     forwardable.iter().any(|forwardable_name| {
-        module_name == forwardable_name
-            || module_name.starts_with(&format!("{forwardable_name}/"))
+        module_name
+            .strip_prefix(forwardable_name.as_str())
+            .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'))
     })
 }
 
@@ -62,25 +64,11 @@ fn matches_filename_segment(filename: &str, allowed_path: &str) -> bool {
     })
 }
 
-pub fn body_has_directive(body: &FunctionBody<'_>, name: &str) -> bool {
-    body.directives
-        .iter()
-        .any(|d| d.directive.as_str() == name)
-}
-
-const WORKLET_DIRECTIVES: &[&str] = &[
-    "worklet",
-    "no-worklet-closure",
-    "limit-init-data-hoisting",
-    "workletContext",
-];
+const WORKLET_DIRECTIVES: &[&str] = &["worklet", "no-worklet-closure", "limit-init-data-hoisting"];
 
 const NO_MEMO_DIRECTIVE: &str = "use no memo";
 
-fn build_directive<'a>(
-    builder: AstBuilder<'a>,
-    value: &str,
-) -> oxc_ast::ast::Directive<'a> {
+fn build_directive<'a>(builder: AstBuilder<'a>, value: &str) -> oxc_ast::ast::Directive<'a> {
     let dir_str = builder.str(value);
     builder.directive(SPAN, builder.string_literal(SPAN, dir_str, None), dir_str)
 }
@@ -90,76 +78,86 @@ pub fn strip_worklet_directives_in_body<'a>(
     builder: AstBuilder<'a>,
     keep_no_memo: bool,
 ) {
-    use oxc_ast_visit::VisitMut;
-
-    strip_directives(body, builder, keep_no_memo);
-    let mut stripper = DirectiveStripper {
-        builder,
-        keep_no_memo,
-    };
-    for stmt in body.statements.iter_mut() {
-        stripper.visit_statement(stmt);
-    }
-}
-
-fn strip_directives<'a>(
-    body: &mut FunctionBody<'a>,
-    builder: AstBuilder<'a>,
-    keep_no_memo: bool,
-) {
-    let old = std::mem::replace(&mut body.directives, builder.vec());
-    let was_worklet = old.iter().any(|d| d.directive.as_str() == "worklet");
-    let has_no_memo = old
+    let was_worklet = body
+        .directives
+        .iter()
+        .any(|d| d.directive.as_str() == "worklet");
+    let has_no_memo = body
+        .directives
         .iter()
         .any(|d| d.directive.as_str() == NO_MEMO_DIRECTIVE);
-    let mut new_directives = builder.vec_with_capacity(old.len() + 1);
-    for d in old {
-        if WORKLET_DIRECTIVES.contains(&d.directive.as_str()) {
-            continue;
-        }
-        if !keep_no_memo {
-            continue;
-        }
-        new_directives.push(d);
+    if keep_no_memo {
+        body.directives
+            .retain(|d| !WORKLET_DIRECTIVES.contains(&d.directive.as_str()));
+    } else {
+        body.directives.clear();
     }
     if keep_no_memo && was_worklet && !has_no_memo {
-        new_directives.push(build_directive(builder, NO_MEMO_DIRECTIVE));
+        body.directives
+            .push(build_directive(builder, NO_MEMO_DIRECTIVE));
     }
-    body.directives = new_directives;
 }
 
-struct DirectiveStripper<'a> {
+pub fn const_decl<'a>(
     builder: AstBuilder<'a>,
-    keep_no_memo: bool,
+    pattern: oxc_ast::ast::BindingPattern<'a>,
+    init: Expression<'a>,
+) -> Statement<'a> {
+    Statement::VariableDeclaration(const_declaration(builder, pattern, init))
 }
 
-impl<'a> oxc_ast_visit::VisitMut<'a> for DirectiveStripper<'a> {
-    fn visit_function_body(&mut self, body: &mut FunctionBody<'a>) {
-        strip_directives(body, self.builder, self.keep_no_memo);
-        oxc_ast_visit::walk_mut::walk_function_body(self, body);
-    }
-}
-
-pub fn has_worklet_directive(body: &FunctionBody<'_>) -> bool {
-    body_has_directive(body, "worklet")
+pub fn const_declaration<'a>(
+    builder: AstBuilder<'a>,
+    pattern: oxc_ast::ast::BindingPattern<'a>,
+    init: Expression<'a>,
+) -> oxc_allocator::Box<'a, oxc_ast::ast::VariableDeclaration<'a>> {
+    let declarator = builder.variable_declarator(
+        SPAN,
+        VariableDeclarationKind::Const,
+        pattern,
+        NONE,
+        Some(init),
+        false,
+    );
+    let mut declarations = builder.vec_with_capacity(1);
+    declarations.push(declarator);
+    builder.alloc_variable_declaration(SPAN, VariableDeclarationKind::Const, declarations, false)
 }
 
 pub fn inject_worklet_directive<'a>(body: &mut FunctionBody<'a>, builder: AstBuilder<'a>) {
     if has_worklet_directive(body) {
         return;
     }
-    let dir_str = builder.str("worklet");
-    let directive = builder.directive(
-        SPAN,
-        builder.string_literal(SPAN, dir_str, None),
-        dir_str,
-    );
-    let mut directives = builder.vec_with_capacity(body.directives.len() + 1);
-    directives.push(directive);
-    for d in body.directives.drain(..) {
-        directives.push(d);
+    body.directives
+        .insert(0, build_directive(builder, "worklet"));
+}
+
+pub fn closure_binding_pattern<'a>(
+    builder: AstBuilder<'a>,
+    closure_variables: &[String],
+) -> oxc_ast::ast::BindingPattern<'a> {
+    let mut properties = builder.vec_with_capacity(closure_variables.len());
+    for name in closure_variables {
+        let ident = builder.ident(name);
+        properties.push(builder.binding_property(
+            SPAN,
+            oxc_ast::ast::PropertyKey::StaticIdentifier(builder.alloc_identifier_name(SPAN, ident)),
+            builder.binding_pattern_binding_identifier(SPAN, ident),
+            true,
+            false,
+        ));
     }
-    body.directives = directives;
+    builder.binding_pattern_object_pattern(SPAN, properties, NONE)
+}
+
+pub fn is_object_method(prop: &oxc_ast::ast::ObjectProperty<'_>) -> bool {
+    prop.method || prop.kind != oxc_ast::ast::PropertyKind::Init
+}
+
+pub fn has_worklet_directive(body: &FunctionBody<'_>) -> bool {
+    body.directives
+        .iter()
+        .any(|d| d.directive.as_str() == "worklet")
 }
 
 pub fn rewrite_implicit_return<'a>(body: &mut FunctionBody<'a>, builder: AstBuilder<'a>) {

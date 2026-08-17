@@ -75,13 +75,15 @@ function reparseSyntaxPlugins(filename) {
 
 const PARSE_ERROR_CODE = 'WORKLETS_ERR_PARSE';
 
-const WORKLET_DIRECTIVE_RE = /(^|[\s;{(])['"]worklet['"]\s*;/m;
+const WORKLET_DIRECTIVE_RE = /(^|[\s;{(])['"]worklet['"]\s*;?/m;
+
+const CONTEXT_OBJECT_MARKER = '__workletContextObject';
 
 // Auto-workletized callbacks carry no directive of their own, so a file that
 // only uses them would slip through the parse-failure fallback unnoticed and
 // silently ship un-workletized callbacks. Mirrors the hook and callback names
 // `autoworkletization.ts` recognizes.
-const AUTO_WORKLETIZED_CALLEES = [
+const AUTO_WORKLETIZED_HOOKS = [
   'useFrameCallback',
   'useAnimatedStyle',
   'useAnimatedProps',
@@ -93,7 +95,6 @@ const AUTO_WORKLETIZED_CALLEES = [
   'withSpring',
   'withDecay',
   'withRepeat',
-  'withCallback',
   'runOnUI',
   'executeOnUIRuntimeSync',
   'scheduleOnUI',
@@ -114,6 +115,10 @@ const AUTO_WORKLETIZED_CALLEES = [
   'useNativeGesture',
   'useManualGesture',
   'useHoverGesture',
+];
+
+const AUTO_WORKLETIZED_METHODS = [
+  'withCallback',
   'onBegin',
   'onStart',
   'onEnd',
@@ -126,14 +131,24 @@ const AUTO_WORKLETIZED_CALLEES = [
   'onTouchesCancelled',
 ];
 
-const AUTO_WORKLETIZED_RE = new RegExp(
-  `\\b(${AUTO_WORKLETIZED_CALLEES.join('|')})\\s*\\(`
+const AUTO_WORKLETIZED_HOOKS_RE = new RegExp(
+  `\\b(${AUTO_WORKLETIZED_HOOKS.join('|')})\\s*\\(`
 );
+
+const AUTO_WORKLETIZED_METHODS_RE = new RegExp(
+  `\\.\\s*(${AUTO_WORKLETIZED_METHODS.join('|')})\\s*\\(`
+);
+
+const WORKLET_PACKAGE_RE =
+  /react-native-(gesture-handler|reanimated|worklets)/;
 
 function carriesWorklets(sourceText) {
   return (
     WORKLET_DIRECTIVE_RE.test(sourceText) ||
-    AUTO_WORKLETIZED_RE.test(sourceText)
+    sourceText.includes(CONTEXT_OBJECT_MARKER) ||
+    AUTO_WORKLETIZED_HOOKS_RE.test(sourceText) ||
+    (AUTO_WORKLETIZED_METHODS_RE.test(sourceText) &&
+      WORKLET_PACKAGE_RE.test(sourceText))
   );
 }
 

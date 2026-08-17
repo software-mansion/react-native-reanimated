@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use oxc_span::Span;
+use oxc_semantic::Scoping;
 use oxc_syntax::symbol::SymbolId;
 
 use crate::globals::DEFAULT_GLOBALS;
@@ -18,24 +18,6 @@ pub enum ImportShape {
     Default,
     Named { imported: String },
     Namespace,
-}
-
-/// Which shapes `findReferencedWorklet` is allowed to accept for a given
-/// binding — `acceptWorkletizableFunction` and `acceptObject` in
-/// `plugin/src/autoworkletization.ts`.
-#[derive(Debug, Clone, Copy, Default)]
-pub struct WorkletizableKinds {
-    pub function: bool,
-    pub object: bool,
-}
-
-impl WorkletizableKinds {
-    pub fn union(self, other: Self) -> Self {
-        Self {
-            function: self.function || other.function,
-            object: self.object || other.object,
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -65,14 +47,24 @@ pub struct State {
 
     pub imports_by_symbol: HashMap<SymbolId, ImportInfo>,
 
-    pub referenced_worklet_symbols: HashMap<SymbolId, WorkletizableKinds>,
-
-    /// The single definition site each referenced binding resolves to, so a
-    /// rebound `let` only workletizes its last assignment the way Babel's
-    /// `constantViolations` lookup does.
-    pub referenced_worklet_sites: HashSet<Span>,
+    pub hidden_writes: HashMap<SymbolId, usize>,
 
     pub error: Option<String>,
+}
+
+pub fn binding_is_rebound(
+    scoping: &Scoping,
+    hidden_writes: &HashMap<SymbolId, usize>,
+    symbol_id: SymbolId,
+) -> bool {
+    if !scoping.symbol_redeclarations(symbol_id).is_empty() {
+        return true;
+    }
+    let writes = scoping
+        .get_resolved_references(symbol_id)
+        .filter(|reference| reference.is_write())
+        .count();
+    writes > hidden_writes.get(&symbol_id).copied().unwrap_or(0)
 }
 
 impl State {
@@ -82,14 +74,12 @@ impl State {
             .iter()
             .map(|s| (*s).to_string())
             .collect();
-        forwardable_module_names
-            .extend(user_forwarding.module_names.unwrap_or_default());
+        forwardable_module_names.extend(user_forwarding.module_names.unwrap_or_default());
         let mut forwardable_relative_paths: Vec<String> = DEFAULT_FORWARDABLE_RELATIVE_PATHS
             .iter()
             .map(|s| (*s).to_string())
             .collect();
-        forwardable_relative_paths
-            .extend(user_forwarding.relative_paths.unwrap_or_default());
+        forwardable_relative_paths.extend(user_forwarding.relative_paths.unwrap_or_default());
 
         let strict_global = opts.strict_global.unwrap_or(false);
         let mut globals: HashSet<String> = HashSet::new();
@@ -110,8 +100,7 @@ impl State {
             source_text,
             emitted_files: Vec::new(),
             imports_by_symbol: HashMap::new(),
-            referenced_worklet_symbols: HashMap::new(),
-            referenced_worklet_sites: HashSet::new(),
+            hidden_writes: HashMap::new(),
             error: None,
         }
     }

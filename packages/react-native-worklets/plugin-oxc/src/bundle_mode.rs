@@ -1,7 +1,9 @@
-use oxc_ast::AstBuilder;
 use oxc_ast::ast::{AssignmentTarget, Expression, ExpressionStatement, Program};
-use oxc_ast_visit::{VisitMut, walk_mut};
-use oxc_span::SPAN;
+use oxc_ast::AstBuilder;
+use oxc_ast_visit::{walk_mut, VisitMut};
+use oxc_span::{GetSpan, SPAN};
+
+use crate::type_assertions::TypeAssertions;
 
 const TOGGLE_PATHS: &[&str] = &[
     "react-native-worklets/src/index.ts",
@@ -10,35 +12,46 @@ const TOGGLE_PATHS: &[&str] = &[
     "react-native-worklets/lib/module/debug/bundleMode.native.js",
 ];
 
-pub fn is_toggle_target(filename: &str) -> bool {
+fn is_toggle_target(filename: &str) -> bool {
     TOGGLE_PATHS.iter().any(|path| filename.ends_with(path))
 }
 
-pub fn enable_flag<'a>(program: &mut Program<'a>, builder: AstBuilder<'a>, filename: &str) {
+pub fn enable_flag<'a>(
+    program: &mut Program<'a>,
+    builder: AstBuilder<'a>,
+    filename: &str,
+    assertions: &TypeAssertions,
+) {
     if !is_toggle_target(filename) {
         return;
     }
-    FlagEnabler { builder }.visit_program(program);
+    FlagEnabler {
+        builder,
+        assertions,
+    }
+    .visit_program(program);
 }
 
-struct FlagEnabler<'a> {
+struct FlagEnabler<'a, 'b> {
     builder: AstBuilder<'a>,
+    assertions: &'b TypeAssertions,
 }
 
-impl<'a> VisitMut<'a> for FlagEnabler<'a> {
+impl<'a, 'b> VisitMut<'a> for FlagEnabler<'a, 'b> {
     fn visit_expression_statement(&mut self, statement: &mut ExpressionStatement<'a>) {
         walk_mut::walk_expression_statement(self, statement);
 
+        if self.assertions.hides(&statement.expression) {
+            return;
+        }
         let Expression::AssignmentExpression(assign) = &mut statement.expression else {
             return;
         };
         let AssignmentTarget::StaticMemberExpression(member) = &assign.left else {
             return;
         };
-        let Expression::Identifier(object) = &member.object else {
-            return;
-        };
-        if object.name.as_str() != "globalThis"
+        if self.assertions.hides_span(assign.left.span())
+            || self.assertions.identifier(&member.object) != Some("globalThis")
             || member.property.name.as_str() != "_WORKLETS_BUNDLE_MODE_ENABLED"
         {
             return;

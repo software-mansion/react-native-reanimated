@@ -1,5 +1,5 @@
 use oxc_ast::ast::{Expression, JSXAttributeItem, JSXAttributeName, JSXOpeningElement};
-use oxc_ast_visit::{VisitMut, walk_mut::walk_jsx_opening_element};
+use oxc_ast_visit::{walk_mut::walk_jsx_opening_element, VisitMut};
 
 pub fn strip_jsx_dev_attributes(factory: &mut Expression<'_>) {
     let mut stripper = JsxDevAttributeStripper;

@@ -1,11 +1,9 @@
-/// Mirrors `notCapturedIdentifiers` in `plugin/src/globals.ts`.
+#[rustfmt::skip]
 pub const DEFAULT_GLOBALS: &[&str] = &[
-    // Value properties
     "globalThis",
     "Infinity",
     "NaN",
     "undefined",
-    // Function properties
     "eval",
     "isFinite",
     "isNaN",
@@ -17,12 +15,10 @@ pub const DEFAULT_GLOBALS: &[&str] = &[
     "encodeURIComponent",
     "escape",
     "unescape",
-    // Fundamental objects
     "Object",
     "Function",
     "Boolean",
     "Symbol",
-    // Error objects
     "Error",
     "AggregateError",
     "EvalError",
@@ -32,15 +28,12 @@ pub const DEFAULT_GLOBALS: &[&str] = &[
     "TypeError",
     "URIError",
     "InternalError",
-    // Numbers and dates
     "Number",
     "BigInt",
     "Math",
     "Date",
-    // Text processing
     "String",
     "RegExp",
-    // Indexed collections
     "Array",
     "Int8Array",
     "Uint8Array",
@@ -53,21 +46,17 @@ pub const DEFAULT_GLOBALS: &[&str] = &[
     "BigUint64Array",
     "Float32Array",
     "Float64Array",
-    // Keyed collections
     "Map",
     "Set",
     "WeakMap",
     "WeakSet",
-    // Structured data
     "ArrayBuffer",
     "SharedArrayBuffer",
     "DataView",
     "Atomics",
     "JSON",
-    // Managing memory
     "WeakRef",
     "FinalizationRegistry",
-    // Control abstraction objects
     "Iterator",
     "AsyncIterator",
     "Promise",
@@ -76,12 +65,9 @@ pub const DEFAULT_GLOBALS: &[&str] = &[
     "Generator",
     "AsyncGenerator",
     "AsyncFunction",
-    // Reflection
     "Reflect",
     "Proxy",
-    // Internationalization
     "Intl",
-    // Other stuff
     "null",
     "this",
     "global",
@@ -95,7 +81,6 @@ pub const DEFAULT_GLOBALS: &[&str] = &[
     "fetch",
     "XMLHttpRequest",
     "WebSocket",
-    // Run loop
     "queueMicrotask",
     "requestAnimationFrame",
     "cancelAnimationFrame",
@@ -105,8 +90,6 @@ pub const DEFAULT_GLOBALS: &[&str] = &[
     "clearImmediate",
     "setInterval",
     "clearInterval",
-    // Hermes
     "HermesInternal",
-    // Worklets
     "_WORKLET",
 ];

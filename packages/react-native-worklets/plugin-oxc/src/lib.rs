@@ -18,10 +18,12 @@ mod file_directive;
 mod globals;
 mod inline_styles_warning;
 mod jsx_dev_attributes;
-mod relative_requires;
 mod naming;
 mod options;
+mod referenced_worklets;
+mod relative_requires;
 mod state;
+mod type_assertions;
 mod utils;
 mod web_optimization;
 mod worklet_body;
@@ -126,6 +128,55 @@ fn is_generated_worklet_file(filename: &str) -> bool {
     filename.contains("react-native-worklets/.worklets")
 }
 
+fn strip_typescript<'a>(
+    program: &mut Program<'a>,
+    allocator: &'a Allocator,
+    filename: &str,
+) -> Result<(), String> {
+    let specifier_bearing_imports: Vec<Span> = program
+        .body
+        .iter()
+        .filter_map(|stmt| match stmt {
+            Statement::ImportDeclaration(import)
+                if import.specifiers.as_ref().is_some_and(|s| !s.is_empty()) =>
+            {
+                Some(import.span)
+            }
+            _ => None,
+        })
+        .collect();
+
+    let semantic_for_strip = SemanticBuilder::new()
+        .with_check_syntax_error(false)
+        .with_enum_eval(true)
+        .build(program)
+        .semantic
+        .into_scoping();
+    let opts = oxc_transformer::TransformOptions {
+        jsx: oxc_transformer::JsxOptions::disable(),
+        typescript: oxc_transformer::TypeScriptOptions {
+            only_remove_type_imports: true,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let ret = oxc_transformer::Transformer::new(allocator, std::path::Path::new(filename), &opts)
+        .build_with_scoping(semantic_for_strip, program);
+    if let Some(first) = ret.errors.first() {
+        return Err(format!("{PARSE_ERROR_CODE} in {filename}: {first}"));
+    }
+
+    program.body.retain(|stmt| {
+        let Statement::ImportDeclaration(import) = stmt else {
+            return true;
+        };
+        let now_empty = import.specifiers.as_ref().is_none_or(|s| s.is_empty());
+        !now_empty || !specifier_bearing_imports.contains(&import.span)
+    });
+
+    Ok(())
+}
+
 fn run(
     source_text: &str,
     filename: &str,
@@ -163,60 +214,17 @@ fn run(
 
     let mut program = parsed.program;
 
-    // `only_remove_type_imports` strips inline `type` specifiers but leaves the
-    // now-empty declaration behind, which prints as a side-effect `import "x";`.
-    // `@babel/preset-typescript` drops the declaration outright, so remember
-    // which ones carried specifiers and prune the ones that end up empty.
-    let mut specifier_bearing_imports: Vec<Span> = Vec::new();
-    if source_type.is_typescript() {
-        for stmt in &program.body {
-            if let Statement::ImportDeclaration(import) = stmt {
-                if import.specifiers.as_ref().is_some_and(|s| !s.is_empty()) {
-                    specifier_bearing_imports.push(import.span);
-                }
-            }
-        }
-    }
+    let type_asserted = type_assertions::TypeAssertions::collect(&program);
 
     if source_type.is_typescript() {
-        let semantic_for_strip = SemanticBuilder::new()
-            .with_check_syntax_error(false)
-            .with_enum_eval(true)
-            .build(&program)
-            .semantic
-            .into_scoping();
-        let opts = oxc_transformer::TransformOptions {
-            jsx: oxc_transformer::JsxOptions::disable(),
-            typescript: oxc_transformer::TypeScriptOptions {
-                only_remove_type_imports: true,
-                ..Default::default()
-            },
-            ..Default::default()
-        };
-        let ret = oxc_transformer::Transformer::new(
-            &allocator,
-            std::path::Path::new(filename),
-            &opts,
-        )
-        .build_with_scoping(semantic_for_strip, &mut program);
-        if let Some(first) = ret.errors.first() {
-            return Err(format!("{PARSE_ERROR_CODE} in {filename}: {first}"));
-        }
-
-        program.body.retain(|stmt| {
-            let Statement::ImportDeclaration(import) = stmt else {
-                return true;
-            };
-            let now_empty = import.specifiers.as_ref().is_none_or(|s| s.is_empty());
-            !now_empty || !specifier_bearing_imports.contains(&import.span)
-        });
+        strip_typescript(&mut program, &allocator, filename)?;
     }
 
     let mut state = State::new(options, source_text.to_string());
     let builder = oxc_ast::AstBuilder::new(&allocator);
 
-    file_directive::process_file_directive(&mut program, builder);
-    context_object::process_context_objects(&mut program, builder, &allocator);
+    file_directive::process_file_directive(&mut program, builder, &type_asserted);
+    context_object::process_context_objects(&mut program, builder, &allocator, &type_asserted);
 
     let semantic_ret = SemanticBuilder::new()
         .with_check_syntax_error(false)
@@ -232,26 +240,23 @@ fn run(
         builder,
         &allocator,
         filename,
+        &type_asserted,
     );
 
     if let Some(message) = state.error.take() {
         return Err(message);
     }
 
-    // Both of these run after worklet extraction so that they only touch code
-    // left in the host file — the Babel plugin visits `CallExpression` and
-    // `JSXAttribute` top-down, which likewise never reaches inside an already
-    // extracted worklet body.
     if state.opts.substitute_web_platform_checks.unwrap_or(false) {
-        web_optimization::substitute_web_platform_checks(&mut program, builder);
+        web_optimization::substitute_web_platform_checks(&mut program, builder, &type_asserted);
     }
     if !state.opts.disable_inline_styles_warning.unwrap_or(false)
         && !utils::is_release(state.opts.env_name.as_deref())
     {
-        inline_styles_warning::process_inline_styles_warning(&mut program, builder);
+        inline_styles_warning::process_inline_styles_warning(&mut program, builder, &type_asserted);
     }
 
-    bundle_mode::enable_flag(&mut program, builder, filename);
+    bundle_mode::enable_flag(&mut program, builder, filename, &type_asserted);
 
     let printed = Codegen::new()
         .with_options(CodegenOptions {

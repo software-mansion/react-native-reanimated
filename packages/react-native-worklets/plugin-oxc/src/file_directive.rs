@@ -1,48 +1,49 @@
-use oxc_ast::AstBuilder;
-use oxc_ast::NONE;
 use oxc_ast::ast::{
-    Declaration, Expression, ExportDefaultDeclarationKind, ObjectExpression, ObjectPropertyKind,
+    Declaration, ExportDefaultDeclarationKind, Expression, ObjectExpression, ObjectPropertyKind,
     Program, Statement, VariableDeclarator,
 };
+use oxc_ast::AstBuilder;
+use oxc_ast::NONE;
 use oxc_span::SPAN;
 
 use crate::context_object::{append_marker, is_implicit_context_object};
-use crate::utils::inject_worklet_directive;
+use crate::type_assertions::TypeAssertions;
+use crate::utils::{inject_worklet_directive, is_object_method};
 
-pub const WORKLET_CLASS_MARKER: &str = "__workletClass";
+const WORKLET_CLASS_MARKER: &str = "__workletClass";
 
-pub fn process_file_directive<'a>(program: &mut Program<'a>, builder: AstBuilder<'a>) -> bool {
+pub fn process_file_directive<'a>(
+    program: &mut Program<'a>,
+    builder: AstBuilder<'a>,
+    assertions: &TypeAssertions,
+) {
     let has_directive = program
         .directives
         .iter()
         .any(|d| d.directive.as_str() == "worklet");
     if !has_directive {
-        return false;
+        return;
     }
 
-    let kept = program
+    program
         .directives
-        .drain(..)
-        .filter(|d| d.directive.as_str() != "worklet")
-        .collect::<Vec<_>>();
-    let mut new_dirs = builder.vec_with_capacity(kept.len());
-    for d in kept {
-        new_dirs.push(d);
-    }
-    program.directives = new_dirs;
+        .retain(|d| d.directive.as_str() != "worklet");
 
-    dehoist_commonjs_exports(program, builder);
+    dehoist_commonjs_exports(program, builder, assertions);
     for stmt in program.body.iter_mut() {
-        process_top_level(stmt, builder);
+        process_top_level(stmt, builder, assertions);
     }
-    true
 }
 
-fn process_top_level<'a>(stmt: &mut Statement<'a>, builder: AstBuilder<'a>) {
+fn process_top_level<'a>(
+    stmt: &mut Statement<'a>,
+    builder: AstBuilder<'a>,
+    assertions: &TypeAssertions,
+) {
     let candidate = match stmt {
         Statement::ExportNamedDeclaration(decl) => {
             if let Some(decl) = &mut decl.declaration {
-                inject_into_declaration(decl, builder);
+                inject_into_declaration(decl, builder, assertions);
             }
             return;
         }
@@ -58,7 +59,7 @@ fn process_top_level<'a>(stmt: &mut Statement<'a>, builder: AstBuilder<'a>) {
                 }
                 other => {
                     if let Some(expr) = other.as_expression_mut() {
-                        inject_into_expression(expr, builder);
+                        inject_into_expression(expr, builder, assertions);
                     }
                 }
             }
@@ -66,32 +67,20 @@ fn process_top_level<'a>(stmt: &mut Statement<'a>, builder: AstBuilder<'a>) {
         }
         s => s,
     };
-    inject_into_statement(candidate, builder);
+    inject_into_statement(candidate, builder, assertions);
 }
 
-fn inject_into_statement<'a>(stmt: &mut Statement<'a>, builder: AstBuilder<'a>) {
-    match stmt {
-        Statement::FunctionDeclaration(func) => {
-            if let Some(body) = func.body.as_mut() {
-                inject_worklet_directive(body, builder);
-            }
-        }
-        Statement::VariableDeclaration(vd) => {
-            for decl in vd.declarations.iter_mut() {
-                inject_into_variable_declarator(decl, builder);
-            }
-        }
-        Statement::ClassDeclaration(class) => {
-            inject_class_marker(&mut class.body, builder);
-        }
-        _ => {}
+fn inject_into_statement<'a>(
+    stmt: &mut Statement<'a>,
+    builder: AstBuilder<'a>,
+    assertions: &TypeAssertions,
+) {
+    if let Some(decl) = stmt.as_declaration_mut() {
+        inject_into_declaration(decl, builder, assertions);
     }
 }
 
-fn inject_class_marker<'a>(
-    body: &mut oxc_ast::ast::ClassBody<'a>,
-    builder: AstBuilder<'a>,
-) {
+fn inject_class_marker<'a>(body: &mut oxc_ast::ast::ClassBody<'a>, builder: AstBuilder<'a>) {
     use oxc_ast::ast::{ClassElement, PropertyKey};
     let already = body.body.iter().any(|el| {
         if let ClassElement::PropertyDefinition(prop) = el {
@@ -105,9 +94,8 @@ fn inject_class_marker<'a>(
         return;
     }
     let marker_value = builder.expression_boolean_literal(SPAN, true);
-    let key = PropertyKey::StaticIdentifier(
-        builder.alloc_identifier_name(SPAN, WORKLET_CLASS_MARKER),
-    );
+    let key =
+        PropertyKey::StaticIdentifier(builder.alloc_identifier_name(SPAN, WORKLET_CLASS_MARKER));
     let prop = builder.class_element_property_definition(
         SPAN,
         oxc_ast::ast::PropertyDefinitionType::PropertyDefinition,
@@ -127,7 +115,11 @@ fn inject_class_marker<'a>(
     body.body.push(prop);
 }
 
-fn inject_into_declaration<'a>(decl: &mut Declaration<'a>, builder: AstBuilder<'a>) {
+fn inject_into_declaration<'a>(
+    decl: &mut Declaration<'a>,
+    builder: AstBuilder<'a>,
+    assertions: &TypeAssertions,
+) {
     match decl {
         Declaration::FunctionDeclaration(func) => {
             if let Some(body) = func.body.as_mut() {
@@ -136,7 +128,7 @@ fn inject_into_declaration<'a>(decl: &mut Declaration<'a>, builder: AstBuilder<'
         }
         Declaration::VariableDeclaration(vd) => {
             for d in vd.declarations.iter_mut() {
-                inject_into_variable_declarator(d, builder);
+                inject_into_variable_declarator(d, builder, assertions);
             }
         }
         Declaration::ClassDeclaration(class) => {
@@ -149,14 +141,22 @@ fn inject_into_declaration<'a>(decl: &mut Declaration<'a>, builder: AstBuilder<'
 fn inject_into_variable_declarator<'a>(
     declarator: &mut VariableDeclarator<'a>,
     builder: AstBuilder<'a>,
+    assertions: &TypeAssertions,
 ) {
     let Some(init) = &mut declarator.init else {
         return;
     };
-    inject_into_expression(init, builder);
+    inject_into_expression(init, builder, assertions);
 }
 
-fn inject_into_expression<'a>(expr: &mut Expression<'a>, builder: AstBuilder<'a>) {
+fn inject_into_expression<'a>(
+    expr: &mut Expression<'a>,
+    builder: AstBuilder<'a>,
+    assertions: &TypeAssertions,
+) {
+    if assertions.hides(expr) {
+        return;
+    }
     match expr {
         Expression::ArrowFunctionExpression(arrow) => {
             inject_worklet_directive(&mut arrow.body, builder);
@@ -167,64 +167,67 @@ fn inject_into_expression<'a>(expr: &mut Expression<'a>, builder: AstBuilder<'a>
             }
         }
         Expression::ObjectExpression(obj) => {
-            inject_into_object_expression(obj, builder);
+            inject_into_object_expression(obj, builder, assertions);
         }
         _ => {}
     }
 }
 
-fn inject_into_object_expression<'a>(obj: &mut ObjectExpression<'a>, builder: AstBuilder<'a>) {
+fn inject_into_object_expression<'a>(
+    obj: &mut ObjectExpression<'a>,
+    builder: AstBuilder<'a>,
+    assertions: &TypeAssertions,
+) {
     if is_implicit_context_object(obj) {
-        append_marker(obj, builder);
+        append_marker(obj, builder, assertions);
         return;
     }
     for prop in obj.properties.iter_mut() {
         if let ObjectPropertyKind::ObjectProperty(prop) = prop {
-            if prop.method {
+            if is_object_method(prop) {
                 if let Expression::FunctionExpression(func) = &mut prop.value {
                     if let Some(body) = func.body.as_mut() {
                         inject_worklet_directive(body, builder);
                     }
                 }
             } else {
-                inject_into_expression(&mut prop.value, builder);
+                inject_into_expression(&mut prop.value, builder, assertions);
             }
         }
     }
 }
 
-fn dehoist_commonjs_exports<'a>(program: &mut Program<'a>, builder: AstBuilder<'a>) {
+fn dehoist_commonjs_exports<'a>(
+    program: &mut Program<'a>,
+    builder: AstBuilder<'a>,
+    assertions: &TypeAssertions,
+) {
     let body = std::mem::replace(&mut program.body, builder.vec());
     let mut keep = builder.vec_with_capacity(body.len());
     let mut tail = Vec::new();
     for stmt in body {
-        if is_common_js_export(&stmt) {
+        if is_common_js_export(&stmt, assertions) {
             tail.push(stmt);
         } else {
             keep.push(stmt);
         }
     }
-    for s in tail {
-        keep.push(s);
-    }
+    keep.extend(tail);
     program.body = keep;
 }
 
-fn is_common_js_export(stmt: &Statement<'_>) -> bool {
+fn is_common_js_export(stmt: &Statement<'_>, assertions: &TypeAssertions) -> bool {
     let Statement::ExpressionStatement(es) = stmt else {
         return false;
     };
+    if assertions.hides(&es.expression) {
+        return false;
+    }
     let Expression::AssignmentExpression(assign) = &es.expression else {
         return false;
     };
-    let object = match &assign.left {
-        oxc_ast::ast::AssignmentTarget::StaticMemberExpression(member) => &member.object,
-        oxc_ast::ast::AssignmentTarget::ComputedMemberExpression(member) => &member.object,
-        _ => return false,
-    };
-    let Expression::Identifier(obj) = object else {
-        return false;
-    };
-    obj.name.as_str() == "exports"
+    assertions
+        .assignment_member_object(&assign.left)
+        .and_then(|object| assertions.identifier(object))
+        == Some("exports")
 }
-

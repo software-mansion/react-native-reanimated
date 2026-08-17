@@ -12,6 +12,10 @@ module.exports = {
     '<rootDir>/__tests__/plugin-bundleMode.test.ts',
     '<rootDir>/__tests__/plugin-shared.test.ts',
   ],
+  // Bundle Mode is the only supported mode, so the `bundleMode: false` cases
+  // can never pass here.
+  testNamePattern:
+    '^(?!.*bundleless)(?!.*does not flip the flag without bundleMode option)',
   moduleNameMapper: {
     '^\\.\\./index$': path.join(__dirname, 'babel.js'),
   },

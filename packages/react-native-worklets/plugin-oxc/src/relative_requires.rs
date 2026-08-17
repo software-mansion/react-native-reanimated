@@ -1,8 +1,10 @@
 use std::path::PathBuf;
 
 use oxc_ast::AstBuilder;
-use oxc_ast::ast::{Argument, Expression, FunctionBody};
-use oxc_ast_visit::{VisitMut, walk_mut::walk_function_body};
+
+use crate::type_assertions::TypeAssertions;
+use oxc_ast::ast::{Argument, FunctionBody};
+use oxc_ast_visit::{walk_mut::walk_function_body, VisitMut};
 use oxc_span::SPAN;
 
 use crate::utils::{normalize_path, pathdiff};
@@ -13,6 +15,7 @@ pub fn rewrite_relative_requires<'a>(
     forwardable_relative_paths: &[String],
     worklets_package_dir: Option<&str>,
     builder: AstBuilder<'a>,
+    assertions: &TypeAssertions,
 ) {
     if !crate::utils::can_forward_relative_import(filename, forwardable_relative_paths) {
         return;
@@ -20,6 +23,7 @@ pub fn rewrite_relative_requires<'a>(
     let mut visitor = RelativeRequireRewriter {
         filename,
         worklets_package_dir,
+        assertions,
         builder,
     };
     walk_function_body(&mut visitor, body);
@@ -29,40 +33,34 @@ struct RelativeRequireRewriter<'a, 'b> {
     filename: &'b str,
     worklets_package_dir: Option<&'b str>,
     builder: AstBuilder<'a>,
+    assertions: &'b TypeAssertions,
 }
 
 impl<'a, 'b> VisitMut<'a> for RelativeRequireRewriter<'a, 'b> {
-    fn visit_call_expression(
-        &mut self,
-        call: &mut oxc_ast::ast::CallExpression<'a>,
-    ) {
+    fn visit_call_expression(&mut self, call: &mut oxc_ast::ast::CallExpression<'a>) {
         oxc_ast_visit::walk_mut::walk_call_expression(self, call);
 
-        let Expression::Identifier(callee) = &call.callee else {
-            return;
-        };
-        if callee.name.as_str() != "require" {
+        if self.assertions.identifier(&call.callee) != Some("require") {
             return;
         }
         let Some(Argument::StringLiteral(arg)) = call.arguments.first_mut() else {
             return;
         };
+        if self.assertions.hides_span(arg.span) {
+            return;
+        }
         let value = arg.value.as_str();
         if !value.starts_with('.') {
             return;
         }
 
-        let Some(rebased) = rebase_to_worklets_dir_with(
-            self.filename,
-            value,
-            self.worklets_package_dir,
-        ) else {
+        let Some(rebased) =
+            rebase_to_worklets_dir_with(self.filename, value, self.worklets_package_dir)
+        else {
             return;
         };
         let new_str = self.builder.str(&rebased);
-        *arg = self
-            .builder
-            .alloc_string_literal(SPAN, new_str, None);
+        *arg = self.builder.alloc_string_literal(SPAN, new_str, None);
     }
 }
 

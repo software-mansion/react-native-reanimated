@@ -2,16 +2,18 @@ use std::collections::HashSet;
 
 use oxc_ast::ast::{
     AssignmentTarget, AssignmentTargetPropertyIdentifier, ForInStatement, ForOfStatement,
-    ForStatementLeft, FormalParameters, FunctionBody, IdentifierReference,
+    ForStatementLeft, IdentifierReference,
 };
-use oxc_ast_visit::{Visit, walk};
+use oxc_ast_visit::{walk, Visit};
 use oxc_semantic::Scoping;
 use oxc_syntax::reference::ReferenceFlags;
 use oxc_syntax::scope::ScopeId;
 use oxc_syntax::symbol::SymbolId;
 
-use crate::state::{ImportInfo, ImportShape, State};
+use crate::state::{binding_is_rebound, ImportInfo, ImportShape, State};
+use crate::type_assertions::TypeAssertions;
 use crate::utils::{can_forward_module_import, can_forward_relative_import};
+use crate::worklet_factory::WorkletInput;
 
 #[derive(Debug, Default)]
 pub struct ClosureResult {
@@ -19,30 +21,29 @@ pub struct ClosureResult {
     pub imports: Vec<ImportInfo>,
 }
 
-/// A name that a nested worklet's synthesized factory call left behind in this
-/// function's body, paired with the scope that call now sits in. The name has
-/// no `symbol_id` — the node didn't exist when semantics were built — so the
-/// scope is the only way to tell an outer binding (capture it) from one
-/// declared somewhere inside this worklet (don't).
 pub type InjectedRef = (String, ScopeId);
 
 pub fn closure_for_function<'a>(
-    params: &FormalParameters<'a>,
-    body: &FunctionBody<'a>,
-    function_scope_id: ScopeId,
-    self_function_name: Option<&str>,
+    input: &WorkletInput<'a, '_>,
     scoping: &Scoping,
     state: &State,
     force_capture: &HashSet<InjectedRef>,
     filename: &str,
+    assertions: &TypeAssertions,
 ) -> ClosureResult {
+    let WorkletInput {
+        function_scope_id,
+        self_name: self_function_name,
+        ..
+    } = *input;
     let mut collector = ReferenceCollector {
         scoping,
+        assertions,
         refs: Vec::new(),
         in_for_target: false,
     };
-    collector.visit_function_body(body);
-    collector.visit_formal_parameters(params);
+    collector.visit_function_body(input.body);
+    collector.visit_formal_parameters(input.params);
 
     let mut seen: HashSet<String> = HashSet::new();
     let mut result = ClosureResult::default();
@@ -68,7 +69,9 @@ pub fn closure_for_function<'a>(
                 }
 
                 let flags = scoping.symbol_flags(symbol_id);
-                if flags.is_import() {
+                if flags.is_import()
+                    && !binding_is_rebound(scoping, &state.hidden_writes, symbol_id)
+                {
                     if let Some(info) = state.imports_by_symbol.get(&symbol_id) {
                         if matches!(info.shape, ImportShape::Namespace) {
                             seen.insert(r.name.clone());
@@ -83,10 +86,7 @@ pub fn closure_for_function<'a>(
                                 &state.forwardable_relative_paths,
                             );
                         let lib_workletizable = !is_rel
-                            && can_forward_module_import(
-                                source,
-                                &state.forwardable_module_names,
-                            );
+                            && can_forward_module_import(source, &state.forwardable_module_names);
                         if allowed_for_rel || lib_workletizable {
                             result.imports.push(info.clone());
                             seen.insert(r.name);
@@ -107,25 +107,20 @@ pub fn closure_for_function<'a>(
                 let is_injected = injected_scopes.peek().is_some();
 
                 let resolves_outside = if is_injected && r.is_synthesized_node {
-                    injected_scopes.any(|scope| {
-                        binding_is_outside(scoping, scope, &r.name, function_scope_id)
-                    })
+                    injected_scopes
+                        .any(|scope| binding_is_outside(scoping, scope, &r.name, function_scope_id))
                 } else {
-                    binding_is_outside(
-                        scoping,
-                        function_scope_id,
-                        &r.name,
-                        function_scope_id,
-                    )
+                    binding_is_outside(scoping, function_scope_id, &r.name, function_scope_id)
                 };
                 if !resolves_outside {
                     continue;
                 }
 
+                if self_function_name == Some(r.name.as_str()) {
+                    continue;
+                }
                 let is_synthesized = is_injected || is_synthesized_init_data(&r.name);
-                if !is_synthesized
-                    && (state.strict_global || state.globals.contains(&r.name))
-                {
+                if !is_synthesized && (state.strict_global || state.globals.contains(&r.name)) {
                     continue;
                 }
                 seen.insert(r.name.clone());
@@ -147,15 +142,6 @@ fn is_synthesized_init_data(name: &str) -> bool {
     !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit())
 }
 
-/// Identifiers under an `ArrayPattern`/`ObjectPattern` are not referenced in
-/// Babel's `isReferenced`, even in a `for-of` head.
-fn is_bare_identifier_target(left: &ForStatementLeft<'_>) -> bool {
-    matches!(
-        left,
-        ForStatementLeft::AssignmentTargetIdentifier(_)
-    )
-}
-
 fn binding_is_outside(
     scoping: &Scoping,
     lookup_from: ScopeId,
@@ -172,7 +158,7 @@ fn binding_is_outside(
     }
 }
 
-fn scope_is_inside(scoping: &Scoping, inner: ScopeId, outer: ScopeId) -> bool {
+pub fn scope_is_inside(scoping: &Scoping, inner: ScopeId, outer: ScopeId) -> bool {
     if inner == outer {
         return true;
     }
@@ -184,27 +170,19 @@ struct CollectedRef {
     name: String,
     symbol_id: Option<SymbolId>,
     flags: ReferenceFlags,
-    /// Synthesized nodes — the factory calls a nested worklet left behind —
-    /// carry no `reference_id`, which is how they are told apart from a
-    /// genuinely unbound identifier that happens to share the name.
     is_synthesized_node: bool,
 }
 
 struct ReferenceCollector<'s> {
     scoping: &'s Scoping,
+    assertions: &'s TypeAssertions,
     refs: Vec<CollectedRef>,
-    /// `for (x of ...)` counts `x` as a reference in Babel's `isReferenced`,
-    /// while a plain assignment target does not.
     in_for_target: bool,
 }
 
 impl<'a, 's> Visit<'a> for ReferenceCollector<'s> {
-    /// Mirrors `isReferenced`: the left-hand side of an assignment is written,
-    /// not referenced, so Babel keeps it out of the closure.
     fn visit_assignment_target(&mut self, target: &AssignmentTarget<'a>) {
-        if !self.in_for_target
-            && matches!(target, AssignmentTarget::AssignmentTargetIdentifier(_))
-        {
+        if !self.in_for_target && self.assertions.assignment_identifier(target).is_some() {
             return;
         }
         walk::walk_assignment_target(self, target);
@@ -223,7 +201,7 @@ impl<'a, 's> Visit<'a> for ReferenceCollector<'s> {
     }
 
     fn visit_for_of_statement(&mut self, stmt: &ForOfStatement<'a>) {
-        self.in_for_target = is_bare_identifier_target(&stmt.left);
+        self.in_for_target = matches!(&stmt.left, ForStatementLeft::AssignmentTargetIdentifier(_));
         self.visit_for_statement_left(&stmt.left);
         self.in_for_target = false;
         self.visit_expression(&stmt.right);
@@ -231,7 +209,7 @@ impl<'a, 's> Visit<'a> for ReferenceCollector<'s> {
     }
 
     fn visit_for_in_statement(&mut self, stmt: &ForInStatement<'a>) {
-        self.in_for_target = is_bare_identifier_target(&stmt.left);
+        self.in_for_target = matches!(&stmt.left, ForStatementLeft::AssignmentTargetIdentifier(_));
         self.visit_for_statement_left(&stmt.left);
         self.in_for_target = false;
         self.visit_expression(&stmt.right);

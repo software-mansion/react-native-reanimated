@@ -33,7 +33,7 @@ function run(plugin, source, filename) {
         ],
       ],
       plugins: [
-        [plugin, { bundleMode: true, disableSourceMaps: true }],
+        [plugin, { bundleMode: true }],
         require.resolve('@babel/plugin-syntax-jsx'),
       ],
     });

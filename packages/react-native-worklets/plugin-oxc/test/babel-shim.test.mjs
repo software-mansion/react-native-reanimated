@@ -30,7 +30,7 @@ test(
           filename: 'test.js',
           babelrc: false,
           configFile: false,
-          plugins: [[shim, { bundleMode: true, disableSourceMaps: true }]],
+          plugins: [[shim, { bundleMode: true }]],
         }
       );
       assert.ok(result && result.code);
@@ -108,7 +108,7 @@ test(
         filename: 'test.js',
         babelrc: false,
         configFile: false,
-        plugins: [[shim, { disableSourceMaps: true }]],
+        plugins: [[shim, {}]],
       }
     );
     assert.ok(result && result.code);
@@ -246,5 +246,69 @@ test(
         ),
       /contains worklets but could not be parsed/
     );
+  }
+);
+
+test('the parse-failure net lists every callee the Rust tables auto-workletize', () => {
+  const fs = require_('node:fs');
+  const read = (name) =>
+    fs.readFileSync(new URL(`../src/${name}`, import.meta.url), 'utf8');
+  const shim = fs.readFileSync(new URL('../babel.js', import.meta.url), 'utf8');
+  const listed = new Set(
+    [...shim.matchAll(/^\s*'([A-Za-z]+)',$/gm)].map((m) => m[1])
+  );
+
+  const constBody = (source, name) =>
+    source.slice(source.indexOf(`${name}:`)).split('];')[0];
+  const referenced = read('referenced_worklets.rs');
+  const autoDetect = read('auto_detect.rs');
+  const expected = [
+    ...constBody(referenced, 'const FUNCTION_HOOKS').matchAll(/\("([A-Za-z]+)"/g),
+    ...constBody(autoDetect, 'const GESTURE_HANDLER_OBJECT_HOOKS').matchAll(/"([A-Za-z]+)"/g),
+    ...constBody(autoDetect, 'const GESTURE_HANDLER_BUILDER_METHODS').matchAll(/"([A-Za-z]+)"/g),
+    ...constBody(autoDetect, 'const LAYOUT_ANIMATION_CALLBACKS').matchAll(/"([A-Za-z]+)"/g),
+  ].map((m) => m[1]);
+
+  assert.ok(expected.length > 30, `parsed too few names: ${expected.length}`);
+  const missing = expected.filter((name) => !listed.has(name));
+  assert.deepEqual(missing, [], `babel.js is missing: ${missing.join(', ')}`);
+
+  const marker = shim.match(/CONTEXT_OBJECT_MARKER = '([^']+)'/)[1];
+  assert.match(
+    read('context_object.rs'),
+    new RegExp(`CONTEXT_OBJECT_MARKER: &str = "${marker}"`)
+  );
+});
+
+test(
+  'the parse-failure net does not fire on ordinary React callbacks',
+  { skip: !babelCore },
+  () => {
+  const shim = require_('../babel.js');
+  const flow = 'function f(x: ?number) {}\n';
+  const run = (source) =>
+    babelCore.transformSync(source, {
+      filename: 'test.js',
+      babelrc: false,
+      configFile: false,
+      parserOpts: { plugins: ['flow'] },
+      plugins: [[shim, { bundleMode: true }]],
+    });
+
+  run(`${flow}props.onChange(1);`);
+  run(`${flow}this.onUpdate();`);
+
+  assert.throws(
+    () =>
+      run(
+        `${flow}import { Gesture } from 'react-native-gesture-handler';\n` +
+          `Gesture.Tap().onStart(() => {});`
+      ),
+    /contains worklets but could not be parsed/
+  );
+  assert.throws(
+    () => run(`${flow}useAnimatedStyle(() => ({}));`),
+    /contains worklets but could not be parsed/
+  );
   }
 );

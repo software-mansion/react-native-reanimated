@@ -36,7 +36,7 @@ test('file-level directive: CJS exports get dehoisted to end', () => {
     exports.foo = foo;
     function foo(x) { return x; }
   `;
-  const { code } = transform(input, 'test.js', { disableSourceMaps: true });
+  const { code } = transform(input, 'test.js', {});
   // The require-factory binding of `foo` must precede `exports.foo = foo`
   // — mirrors the TS plugin's CJS-exports dehoist.
   const fooIdx = code.search(/const foo = require\(/);
@@ -52,7 +52,7 @@ test('file-level directive: export default function is workletized', () => {
     'worklet';
     export default function foo(x) { return x + 1; }
   `;
-  const { code, files } = transform(input, 'test.js', { disableSourceMaps: true });
+  const { code, files } = transform(input, 'test.js', {});
   assert.match(code, REQUIRE_FACTORY);
   assert.equal(files.length, 1);
 });
@@ -63,7 +63,7 @@ test('file-level directive: module.exports is NOT dehoisted (matches TS)', () =>
     module.exports = foo;
     function foo(x) { return x; }
   `;
-  const { code } = transform(input, 'test.js', { disableSourceMaps: true });
+  const { code } = transform(input, 'test.js', {});
   // module.exports stays put — the TS plugin only dehoists `exports.*`.
   const fooIdx = code.search(/const foo = require\(/);
   const exportIdx = code.indexOf('module.exports');
