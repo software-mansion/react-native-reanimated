@@ -1,4 +1,4 @@
-import { contrastColor } from '../src/Colors';
+import { contrastColor } from '../src';
 
 describe('contrastColor', () => {
   test.each([
