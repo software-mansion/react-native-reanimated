@@ -642,6 +642,9 @@ void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) con
   }
   if (layoutAnimationIt->second.isSettled()) {
     // Already settled - cleanupAnimations will erase it together with its updateMap entry.
+    // Mark it as exiting so addOngoingAnimations doesn't flush a pending Update
+    // after the caller has queued this view for removal.
+    layoutAnimationIt->second.isExitingWhenSettled = true;
     return;
   }
   layoutAnimations_.erase(layoutAnimationIt);
