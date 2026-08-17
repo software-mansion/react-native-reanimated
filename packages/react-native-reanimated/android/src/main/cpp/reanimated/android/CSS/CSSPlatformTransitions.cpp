@@ -102,12 +102,16 @@ bool CSSPlatformTransitions::applyTransition(
 
   // https://drafts.csswg.org/css-transitions/#reversing
   std::optional<css::PlatformValue> adjustedStart;
+  std::optional<css::PlatformValue> startValue;
   if (isReversal) {
     adjustedStart = active->adjustedEnd;
+    // The backend resumes a reversal from the live value, which the outgoing
+    // timeline still describes; active_ is only re-assigned below.
+    startValue = currentValue(viewTag, propertyName, timestamp);
   } else if (active == nullptr) {
-    adjustedStart = fromValue;
+    adjustedStart = startValue = fromValue;
   } else if (timestamp >= active->reversing.startTimestamp + active->reversing.duration) {
-    adjustedStart = active->adjustedEnd;
+    adjustedStart = startValue = active->adjustedEnd;
   }
 
   const int easingId = easings_->acquire(toPlatformEasing(resolvedSettings.easingConfig));
@@ -132,21 +136,21 @@ bool CSSPlatformTransitions::applyTransition(
   }
 
   active_[viewTag][propertyName] =
-      ActiveTransition{adjustedStart, toValue, std::move(reversing), resolvedSettings, easingId};
+      ActiveTransition{adjustedStart, startValue, toValue, std::move(reversing), resolvedSettings, easingId};
   return true;
 }
 
 std::optional<css::PlatformValue>
 CSSPlatformTransitions::currentValue(const Tag viewTag, const std::string &propertyName, const double timestamp) const {
   const auto *active = activeTransitionFor(viewTag, propertyName);
-  if (active == nullptr || !active->adjustedStart) {
+  if (active == nullptr || !active->startValue) {
     return std::nullopt;
   }
   const auto &reversing = active->reversing;
   const double progress =
       reversing.duration > 0 ? std::clamp((timestamp - reversing.startTimestamp) / reversing.duration, 0.0, 1.0) : 1.0;
   return css::lerpPlatformValues(
-      *active->adjustedStart, active->adjustedEnd, css::getEasingFunctionFromConfig(reversing.easing)(progress));
+      *active->startValue, active->adjustedEnd, css::getEasingFunctionFromConfig(reversing.easing)(progress));
 }
 
 void CSSPlatformTransitions::removeTransition(const Tag viewTag, const std::string &propertyName) {

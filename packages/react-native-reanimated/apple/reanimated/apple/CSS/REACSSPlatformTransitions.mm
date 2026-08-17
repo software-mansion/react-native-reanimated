@@ -29,8 +29,12 @@ namespace {
 // and the reversing snapshot handle interruptions; settings are reused by the
 // toggle path.
 struct ActiveTransition {
-  // Unset after a mid-flight interruption - the live start value can't match any target.
+  /// Reversing-adjusted start value: what a later reversal has to target. A reversal
+  /// resumes from the live value, so this is not where the animation started.
+  /// Unset after a non-reversing interruption - the live value can't match any target.
   std::optional<PlatformValue> adjustedStart;
+  /// Where the animation started, so currentValue can retrace what it plays.
+  std::optional<PlatformValue> startValue;
   PlatformValue adjustedEnd;
   ReversingState reversing;
   CSSTransitionPropertySettings settings;
@@ -101,12 +105,16 @@ struct ActiveTransition {
 
   // https://drafts.csswg.org/css-transitions/#reversing
   std::optional<PlatformValue> adjustedStart;
+  std::optional<PlatformValue> startValue;
   if (isReversal) {
     adjustedStart = active->adjustedEnd;
+    // A reversal resumes from the presentation value, which the outgoing timeline
+    // still describes; _active is only re-assigned below.
+    startValue = [self currentValueForTag:viewTag propertyName:propertyName timestamp:timestamp];
   } else if (active == nullptr) {
-    adjustedStart = fromValue;
+    adjustedStart = startValue = fromValue;
   } else if (timestamp >= active->reversing.startTimestamp + active->reversing.duration) {
-    adjustedStart = active->adjustedEnd;
+    adjustedStart = startValue = active->adjustedEnd;
   }
 
   [self animateTag:viewTag
@@ -117,7 +125,8 @@ struct ActiveTransition {
        startTimeMs:reversing.startTimestamp
             easing:resolvedSettings.easingConfig
         persistent:persistent];
-  _active[viewTag][propertyName] = ActiveTransition{adjustedStart, toValue, std::move(reversing), resolvedSettings};
+  _active[viewTag][propertyName] =
+      ActiveTransition{adjustedStart, startValue, toValue, std::move(reversing), resolvedSettings};
   return YES;
 }
 
@@ -184,14 +193,14 @@ struct ActiveTransition {
                                          timestamp:(double)timestamp
 {
   const ActiveTransition *active = [self activeTransitionForTag:viewTag propertyName:propertyName];
-  if (active == nullptr || !active->adjustedStart) {
+  if (active == nullptr || !active->startValue) {
     return std::nullopt;
   }
   const auto &reversing = active->reversing;
   const double progress =
       reversing.duration > 0 ? std::clamp((timestamp - reversing.startTimestamp) / reversing.duration, 0.0, 1.0) : 1.0;
   return lerpPlatformValues(
-      *active->adjustedStart, active->adjustedEnd, getEasingFunctionFromConfig(reversing.easing)(progress));
+      *active->startValue, active->adjustedEnd, getEasingFunctionFromConfig(reversing.easing)(progress));
 }
 
 - (void)removeTransitionForTag:(Tag)viewTag propertyName:(const std::string &)propertyName
