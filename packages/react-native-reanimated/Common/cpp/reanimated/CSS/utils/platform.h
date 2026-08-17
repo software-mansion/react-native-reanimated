@@ -1,11 +1,11 @@
 #pragma once
 
 #include <reanimated/CSS/easing/EasingConfigs.h>
+#include <reanimated/NativeAnimations/NativeAnimationTypes.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 
-#include <array>
 #include <optional>
 #include <string>
 #include <utility>
@@ -13,9 +13,9 @@
 
 namespace reanimated::css {
 
-/// The value kinds the platform can animate natively: scalars, sizes, and RGBA
-/// colors (normalized to [0, 1]).
-using PlatformValue = std::variant<double, std::array<double, 2>, std::array<double, 4>>;
+/// CSS keeps this compatibility name while its parser produces the shared,
+/// owned value type. The value has no JSI or platform object after parsing.
+using PlatformValue = native_animation::AnimationValue;
 
 /// Whether the property can animate natively for the given easing. Every backend
 /// needs an easing its interpolators can carry, and each platform routes its own

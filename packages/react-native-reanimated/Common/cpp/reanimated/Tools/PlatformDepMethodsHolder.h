@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
+#include <reanimated/NativeAnimations/NativeAnimationService.h>
 #include <reanimated/PseudoStyles/PseudoSelector.h>
 
 #include <folly/dynamic.h>
@@ -73,9 +74,10 @@ struct PlatformDepMethodsHolder {
   css::CSSCanRoutePropertyFunction cssCanRouteProperty;
   css::CSSApplyTransitionFunction cssApplyTransition;
   css::CSSRemoveTransitionFunction cssRemoveTransition;
-  // Last so platform initializers that don't supply it (iOS, Android today)
-  // can omit it and rely on value-init (= null shared_ptr).
+  // Keep these two last so platform initializers that don't supply them
+  // can omit them and rely on value-init (= null shared_ptr).
   std::shared_ptr<css::CSSPlatformAnimationFactory> platformAnimationFactory;
+  std::shared_ptr<native_animation::NativeAnimationService> nativeAnimationService;
 };
 
 } // namespace reanimated

@@ -24,6 +24,7 @@ using CSSCanRoutePropertyFunction = std::function<bool(const std::string &proper
 /// the settings captured at config-apply time. `persistent` means the target has no
 /// committed style behind it, so the backend must hold the value past the animation.
 using CSSApplyTransitionFunction = std::function<bool(
+    SurfaceId surfaceId,
     Tag viewTag,
     const std::string &propertyName,
     const PlatformValue &fromValue,
@@ -32,7 +33,8 @@ using CSSApplyTransitionFunction = std::function<bool(
     bool persistent,
     double timestamp)>;
 /// Cancels the property's native transition and drops its platform-side state.
-using CSSRemoveTransitionFunction = std::function<void(Tag viewTag, const std::string &propertyName)>;
+using CSSRemoveTransitionFunction =
+    std::function<void(SurfaceId surfaceId, Tag viewTag, const std::string &propertyName)>;
 
 /// A view's transition partition: which properties animate on the platform vs the
 /// C++ loop. Owned per-view by CSSTransition; updated by the proxy on migrations.
@@ -56,6 +58,7 @@ class CSSPlatformTransitionProxy {
   /// the loop-routed remainder to run.
   CSSTransitionConfig processConfig(
       jsi::Runtime &rt,
+      SurfaceId surfaceId,
       Tag viewTag,
       const CSSTransitionConfig &config,
       CSSTransitionRouting &routing,
@@ -66,6 +69,7 @@ class CSSPlatformTransitionProxy {
   /// express migrates to the loop. Updates `routing`, returns the loop diffs.
   /// Only a property still pseudo-locked after the toggle needs its value held.
   PropertyValueDynamicDiffsMap processDynamicDiffs(
+      SurfaceId surfaceId,
       Tag viewTag,
       const PropertyValueDynamicDiffsMap &propertyDiffs,
       const TransitionProperties &pseudoLockedProperties,
@@ -74,11 +78,12 @@ class CSSPlatformTransitionProxy {
       double timestamp) const;
 
   /// Cancels the native transition of every given property (teardown).
-  void cancelAll(Tag viewTag, const TransitionProperties &properties) const;
+  void cancelAll(SurfaceId surfaceId, Tag viewTag, const TransitionProperties &properties) const;
 
  private:
   bool canRoute(const std::string &propertyName, const EasingConfig &easing) const;
   bool apply(
+      SurfaceId surfaceId,
       Tag viewTag,
       const std::string &propertyName,
       const PlatformValue &fromValue,
@@ -86,7 +91,7 @@ class CSSPlatformTransitionProxy {
       const CSSTransitionPropertySettings *settings,
       bool persistent,
       double timestamp) const;
-  void remove(Tag viewTag, const std::string &propertyName) const;
+  void remove(SurfaceId surfaceId, Tag viewTag, const std::string &propertyName) const;
 
   CSSCanRoutePropertyFunction canRoute_;
   CSSApplyTransitionFunction applyTransition_;

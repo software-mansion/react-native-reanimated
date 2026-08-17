@@ -2,7 +2,6 @@
 #include <reanimated/CSS/utils/props.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
-#include <array>
 #include <cstdint>
 #include <unordered_map>
 
@@ -23,8 +22,8 @@ struct CSSPropertyTraits {
 // Value kind and CSS default per property (mirrors InterpolatorRegistry.cpp).
 // Which of them a platform actually routes is canRouteCSSProperty's decision.
 const CSSPropertyTraits *traitsFor(const std::string &propertyName) {
-  constexpr std::array<double, 4> kTransparentColor = {0, 0, 0, 0};
-  constexpr std::array<double, 4> kBlackColor = {0, 0, 0, 1};
+  constexpr native_animation::AnimationColor kTransparentColor = {0, 0, 0, 0};
+  constexpr native_animation::AnimationColor kBlackColor = {0, 0, 0, 1};
   static const std::unordered_map<std::string, CSSPropertyTraits> kProperties = {
       {"opacity", {CSSValueKind::Scalar, 1.0}},
       {"backgroundColor", {CSSValueKind::Color, kTransparentColor}},
@@ -34,7 +33,7 @@ const CSSPropertyTraits *traitsFor(const std::string &propertyName) {
       {"shadowColor", {CSSValueKind::Color, kBlackColor}},
       {"shadowOpacity", {CSSValueKind::Scalar, 1.0}},
       {"shadowRadius", {CSSValueKind::Scalar, 0.0}},
-      {"shadowOffset", {CSSValueKind::Size, std::array<double, 2>{0.0, 0.0}}},
+      {"shadowOffset", {CSSValueKind::Size, native_animation::AnimationSize{0.0, 0.0}}},
   };
   const auto it = kProperties.find(propertyName);
   return it != kProperties.end() ? &it->second : nullptr;
@@ -44,7 +43,7 @@ const CSSPropertyTraits *traitsFor(const std::string &propertyName) {
 // number; PlatformColor-like objects are not expressible.
 PlatformValue parseColorNumber(const double number) {
   const auto channels = extractColorChannels(static_cast<int64_t>(number));
-  return std::array<double, 4>{
+  return native_animation::AnimationColor{
       channels[0] / 255.0,
       channels[1] / 255.0,
       channels[2] / 255.0,
@@ -68,7 +67,7 @@ std::optional<PlatformValue> parseValue(const CSSPropertyTraits &traits, jsi::Ru
       const auto object = value.asObject(rt);
       const auto width = object.getProperty(rt, "width");
       const auto height = object.getProperty(rt, "height");
-      return std::array<double, 2>{
+      return native_animation::AnimationSize{
           width.isNumber() ? width.asNumber() : 0.0,
           height.isNumber() ? height.asNumber() : 0.0,
       };
@@ -92,7 +91,7 @@ std::optional<PlatformValue> parseValue(const CSSPropertyTraits &traits, const f
       }
       const auto *width = value.get_ptr("width");
       const auto *height = value.get_ptr("height");
-      return std::array<double, 2>{
+      return native_animation::AnimationSize{
           width != nullptr && width->isNumber() ? width->asDouble() : 0.0,
           height != nullptr && height->isNumber() ? height->asDouble() : 0.0,
       };

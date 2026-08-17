@@ -6,16 +6,30 @@
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/Compat/WorkletsApi.h>
+#include <reanimated/LayoutAnimations/FrameDrivenAnimationLease.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/LayoutAnimations/LayoutNativeAnimationAdapter.h>
+#include <reanimated/NativeAnimations/NativeAnimationService.h>
+#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 namespace reanimated {
+
+constexpr bool useNativeLayoutAnimations() {
+#ifdef __APPLE__
+  return StaticFeatureFlags::getFlag("IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION");
+#else
+  return false;
+#endif
+}
 
 struct LayoutAnimation {
   ShadowView finalView, currentView, startView;
@@ -63,6 +77,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       const std::shared_ptr<const ContextContainer> &contextContainer,
       jsi::Runtime &uiRuntime,
       const std::shared_ptr<UIScheduler> &uiScheduler,
+      const std::shared_ptr<native_animation::NativeAnimationService> &nativeAnimationService,
       const std::shared_ptr<facebook::react::UIManager> &uiManager
 #ifdef ANDROID
       ,
@@ -75,7 +90,15 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
         componentDescriptorRegistry_(componentDescriptorRegistry),
         uiRuntime_(uiRuntime),
         uiScheduler_(uiScheduler),
-        uiManager_(uiManager)
+        uiManager_(uiManager),
+        nativeAnimationAdapter_(
+            useNativeLayoutAnimations() && nativeAnimationService
+                ? std::make_shared<LayoutNativeAnimationAdapter>(
+                      nativeAnimationService,
+                      [uiScheduler](native_animation::CallbackOperation operation) {
+                        scheduleOnUI(uiScheduler, std::move(operation));
+                      })
+                : nullptr)
 #ifdef ANDROID
         ,
         preserveMountedTags_(filterUnmountedTagsFunction),
@@ -90,6 +113,18 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) = 0;
   virtual void startSurface(const SurfaceId surfaceId);
 
+  // `onGranted` must capture the proxy weakly and lock it again. A strong
+  // capture would keep the proxy alive while the claim is pending and would
+  // make the expired-owner release path in the grant callback unreachable.
+  void claimFrameDrivenLayoutAnimation(
+      SurfaceId surfaceId,
+      Tag tag,
+      LayoutAnimationType type,
+      const std::weak_ptr<const LayoutAnimationsProxyCommon> &weakOwner,
+      std::function<void()> onGranted) const;
+  void releaseFrameDrivenLayoutAnimation(SurfaceId surfaceId, Tag tag, native_animation::AnimationOutcome outcome)
+      const;
+
  protected:
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
 
@@ -101,7 +136,38 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   jsi::Runtime &uiRuntime_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<facebook::react::UIManager> uiManager_;
+  const std::shared_ptr<LayoutNativeAnimationAdapter> nativeAnimationAdapter_;
   PreserveMountedTagsFunction preserveMountedTags_;
+
+  struct FrameDrivenLeaseKey {
+    SurfaceId surfaceId;
+    Tag tag;
+
+    bool operator==(const FrameDrivenLeaseKey &) const = default;
+  };
+
+  struct FrameDrivenLeaseKeyHash {
+    size_t operator()(const FrameDrivenLeaseKey &key) const noexcept;
+  };
+
+  // Every access to this map runs on the platform main thread today: the
+  // grant, terminal, progress, end, and cancel paths all reach it there, and
+  // Android compiles the native route out. Guard it with a mutex before any
+  // of those paths can run on another thread.
+  mutable std::unordered_map<FrameDrivenLeaseKey, std::shared_ptr<FrameDrivenAnimationLease>, FrameDrivenLeaseKeyHash>
+      frameDrivenLeases_;
+  mutable uint64_t frameDrivenGeneration_{0};
+  // Entering claims that the coordinator rejected. The claim resolves inline
+  // on iOS, so the mount code consumes the tag in the same transaction and
+  // keeps the view visible instead of mounting it with zero opacity.
+  mutable std::unordered_set<Tag> rejectedEnteringClaimTags_;
+
+  void handleRejectedFrameDrivenLayoutAnimation(
+      Tag tag,
+      LayoutAnimationType type,
+      native_animation::AnimationResultReason reason) const;
+  bool consumeRejectedEnteringClaim(Tag tag) const;
+  std::optional<FrameDrivenAnimationLeaseWriteGuard> lockFrameDrivenLayoutAnimation(SurfaceId surfaceId, Tag tag) const;
 
 #ifdef ANDROID
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker_;

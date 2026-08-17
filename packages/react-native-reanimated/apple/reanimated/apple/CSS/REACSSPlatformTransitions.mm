@@ -69,6 +69,7 @@ struct ActiveTransition {
 }
 
 - (BOOL)applyTransitionForTag:(Tag)viewTag
+                    surfaceId:(SurfaceId)surfaceId
                  propertyName:(const std::string &)propertyName
                     fromValue:(const PlatformValue &)fromValue
                       toValue:(const PlatformValue &)toValue
@@ -76,6 +77,8 @@ struct ActiveTransition {
                    persistent:(BOOL)persistent
                     timestamp:(double)timestamp
 {
+  // The direct host keeps the pre-service tag-only behavior.
+  (void)surfaceId;
   const ActiveTransition *active = [self activeTransitionForTag:viewTag propertyName:propertyName];
 
   // The toggle path has no settings of its own, so it reuses the stored ones.
@@ -177,8 +180,12 @@ struct ActiveTransition {
   });
 }
 
-- (void)removeTransitionForTag:(Tag)viewTag propertyName:(const std::string &)propertyName
+- (void)removeTransitionForTag:(Tag)viewTag
+                     surfaceId:(SurfaceId)surfaceId
+                  propertyName:(const std::string &)propertyName
 {
+  // The direct host keeps the pre-service tag-only behavior.
+  (void)surfaceId;
   const auto propertiesIt = _active.find(viewTag);
   if (propertiesIt != _active.end()) {
     propertiesIt->second.erase(propertyName);

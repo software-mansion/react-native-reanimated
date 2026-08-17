@@ -19,6 +19,7 @@ bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const
 }
 
 bool CSSPlatformTransitionProxy::apply(
+    const SurfaceId surfaceId,
     const Tag viewTag,
     const std::string &propertyName,
     const PlatformValue &fromValue,
@@ -27,17 +28,19 @@ bool CSSPlatformTransitionProxy::apply(
     const bool persistent,
     const double timestamp) const {
   return applyTransition_ &&
-      applyTransition_(viewTag, propertyName, fromValue, toValue, settings, persistent, timestamp);
+      applyTransition_(surfaceId, viewTag, propertyName, fromValue, toValue, settings, persistent, timestamp);
 }
 
-void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &propertyName) const {
+void CSSPlatformTransitionProxy::remove(const SurfaceId surfaceId, const Tag viewTag, const std::string &propertyName)
+    const {
   if (removeTransition_) {
-    removeTransition_(viewTag, propertyName);
+    removeTransition_(surfaceId, viewTag, propertyName);
   }
 }
 
 CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
     jsi::Runtime &rt,
+    const SurfaceId surfaceId,
     const Tag viewTag,
     const CSSTransitionConfig &config,
     CSSTransitionRouting &routing,
@@ -61,7 +64,8 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
     if (routable && hasValue) {
       const auto values = parsePlatformValues(rt, propertyName, valueIt->second.first, valueIt->second.second);
       // React commits the config path's target, so there is nothing to hold afterwards.
-      routable = values && apply(viewTag, propertyName, values->first, values->second, &settings, false, timestamp);
+      routable =
+          values && apply(surfaceId, viewTag, propertyName, values->first, values->second, &settings, false, timestamp);
     } else if (routable) {
       // Settings-only: stay on the platform only if already animating there.
       routable = routing.platform.contains(propertyName);
@@ -76,7 +80,7 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
     } else {
       // platform -> loop migration cancels on the platform side.
       if (routing.platform.erase(propertyName) > 0) {
-        remove(viewTag, propertyName);
+        remove(surfaceId, viewTag, propertyName);
       }
       routing.loop.insert(propertyName);
       if (hasValue) {
@@ -94,7 +98,7 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
 
   for (const auto &propertyName : config.removedProperties) {
     if (routing.platform.erase(propertyName) > 0) {
-      remove(viewTag, propertyName);
+      remove(surfaceId, viewTag, propertyName);
     } else if (routing.loop.erase(propertyName) > 0) {
       loopConfig.removedProperties.push_back(propertyName);
     }
@@ -104,6 +108,7 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
 }
 
 PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
+    const SurfaceId surfaceId,
     const Tag viewTag,
     const PropertyValueDynamicDiffsMap &propertyDiffs,
     const TransitionProperties &pseudoLockedProperties,
@@ -119,12 +124,13 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
         const auto values = parsePlatformValues(propertyName, propertyDiff.first, propertyDiff.second);
         // Releasing the last selector targets the committed style, which needs no hold.
         const bool persistent = pseudoLockedProperties.contains(propertyName);
-        if (values && apply(viewTag, propertyName, values->first, values->second, nullptr, persistent, timestamp)) {
+        if (values &&
+            apply(surfaceId, viewTag, propertyName, values->first, values->second, nullptr, persistent, timestamp)) {
           continue;
         }
       }
       routing.platform.erase(propertyName);
-      remove(viewTag, propertyName);
+      remove(surfaceId, viewTag, propertyName);
       routing.loop.insert(propertyName);
     }
     loopDiffs.emplace(propertyName, propertyDiff);
@@ -132,9 +138,12 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
   return loopDiffs;
 }
 
-void CSSPlatformTransitionProxy::cancelAll(const Tag viewTag, const TransitionProperties &properties) const {
+void CSSPlatformTransitionProxy::cancelAll(
+    const SurfaceId surfaceId,
+    const Tag viewTag,
+    const TransitionProperties &properties) const {
   for (const auto &propertyName : properties) {
-    remove(viewTag, propertyName);
+    remove(surfaceId, viewTag, propertyName);
   }
 }
 

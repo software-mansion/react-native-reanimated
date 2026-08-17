@@ -13,6 +13,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+// The direct CSS Core Animation host. This remains the default while the
+// shared native-animation service is behind its layout animation feature flag.
 @interface REACSSPlatformTransitions : NSObject
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter;
@@ -21,6 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// A null `settings` marks the toggle path, where the stored settings are reused;
 /// returns NO when there are none. `persistent` holds the value past the animation.
 - (BOOL)applyTransitionForTag:(facebook::react::Tag)viewTag
+                    surfaceId:(facebook::react::SurfaceId)surfaceId
                  propertyName:(const std::string &)propertyName
                     fromValue:(const reanimated::css::PlatformValue &)fromValue
                       toValue:(const reanimated::css::PlatformValue &)toValue
@@ -28,7 +31,9 @@ NS_ASSUME_NONNULL_BEGIN
                    persistent:(BOOL)persistent
                     timestamp:(double)timestamp;
 
-- (void)removeTransitionForTag:(facebook::react::Tag)viewTag propertyName:(const std::string &)propertyName;
+- (void)removeTransitionForTag:(facebook::react::Tag)viewTag
+                     surfaceId:(facebook::react::SurfaceId)surfaceId
+                  propertyName:(const std::string &)propertyName;
 
 @end
 

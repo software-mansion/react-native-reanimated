@@ -16,11 +16,13 @@ ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
     const std::shared_ptr<LayoutAnimationsProxyCommon> &layoutAnimationsProxy,
-    const std::shared_ptr<ReanimatedSurfaceTracker> &surfaceTracker)
+    const std::shared_ptr<ReanimatedSurfaceTracker> &surfaceTracker,
+    const std::function<void(SurfaceId)> &surfaceDidStart)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
       layoutAnimationsProxy_(layoutAnimationsProxy),
-      surfaceTracker_(surfaceTracker) {
+      surfaceTracker_(surfaceTracker),
+      surfaceDidStart_(surfaceDidStart) {
   uiManager_->registerCommitHook(*this);
   // Pick up surfaces that existed before Reanimated initialized. We're not
   // on a commit stack here, so reading the registry is safe.
@@ -35,6 +37,9 @@ ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
 void ReanimatedCommitHook::maybeInitializeLayoutAnimations(const ShadowTree &shadowTree) {
   if (!surfaceTracker_->add(shadowTree.getSurfaceId())) {
     return;
+  }
+  if (surfaceDidStart_) {
+    surfaceDidStart_(shadowTree.getSurfaceId());
   }
   // TODO: We should consider registering a new instance of proxy for each surface.
   // The current approach will encounter problems on platforms where it is more common to have multiple
