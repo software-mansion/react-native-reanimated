@@ -79,10 +79,6 @@ const WORKLET_DIRECTIVE_RE = /(^|[\s;{(])['"]worklet['"]\s*;?/m;
 
 const CONTEXT_OBJECT_MARKER = '__workletContextObject';
 
-// Auto-workletized callbacks carry no directive of their own, so a file that
-// only uses them would slip through the parse-failure fallback unnoticed and
-// silently ship un-workletized callbacks. Mirrors the hook and callback names
-// `autoworkletization.ts` recognizes.
 const AUTO_WORKLETIZED_HOOKS = [
   'useFrameCallback',
   'useAnimatedStyle',

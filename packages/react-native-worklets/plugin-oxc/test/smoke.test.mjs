@@ -50,9 +50,6 @@ test('accepts undefined options', () => {
 });
 
 test('toggleBundleMode flips false to true in worklets entry-point', () => {
-  // Bundle mode is the only mode this plugin supports; the toggle fires
-  // unconditionally in the worklets package entry-point so the runtime sees
-  // the flag set regardless of which entry-point variant was bundled.
   const input = 'globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;';
   const { code } = transform(
     input,

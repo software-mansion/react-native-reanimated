@@ -3,15 +3,6 @@ import assert from 'node:assert/strict';
 import plugin from '../index.js';
 const { transform } = plugin;
 
-// Coverage for the fixes applied alongside this file. Each block targets a
-// concrete bug the smoke tests didn't catch — keep them surgical so a future
-// regression diff points at the right block.
-//
-// Bundle-only mode: the inner factory definition lives in
-// `result.files[<n>].content`. The main `code` only contains
-// `require("react-native-worklets/.worklets/<hash>.js").default(...)`
-// calls. Assertions therefore target whichever output owns the signal.
-
 const REQUIRE_FACTORY = /require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/;
 
 function joinedFiles(files) {
@@ -27,7 +18,6 @@ test('referenced worklet: const f = () => {...}; useAnimatedStyle(f) workletizes
     }
   `;
   const { code } = transform(input, 'test.js', {});
-  // The `handler` declaration itself must be replaced with a factory require.
   assert.match(code, /const handler = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
 });
 
@@ -52,7 +42,6 @@ test('async worklet preserves async on inner factory function', () => {
     }
   `;
   const { files } = transform(input, 'test.js', {});
-  // Inner-fn declaration inside the factory should be `async function`.
   assert.match(joinedFiles(files), /const fetchSomething = async function/);
 });
 
@@ -78,7 +67,6 @@ test('no-worklet-closure directive is stripped from outer body', () => {
   const { files } = transform(input, 'test.js', {});
   const content = joinedFiles(files);
   assert.doesNotMatch(content, /no-worklet-closure/);
-  // __closure must be empty literal.
   assert.match(content, /__closure\s*=\s*\{\s*\}/);
 });
 
@@ -108,10 +96,6 @@ test('idempotent: running plugin twice equals running once', () => {
 });
 
 test('recursive worklet emits inner-fn binding that resolves naturally', () => {
-  // Bundle mode keeps the inner factory in a real JS file, so recursive
-  // references to the worklet name resolve via the inner `const fact = ...`
-  // binding directly — no `this._recur` indirection needed (that was a
-  // workaround for the old body-string-evaluated-on-UI-thread path).
   const input = `
     function fact(n) {
       'worklet';
@@ -154,8 +138,6 @@ test('globals (null, this) are not captured into closure', () => {
 
 test('extraPlugins option does not throw and emits a stderr warning', () => {
   const input = `function foo() { 'worklet'; return 1; }`;
-  // The warning is emitted to stderr once per process. Just ensure transform
-  // doesn't reject the option.
   const { files } = transform(input, 'test.js', { extraPlugins: ['babel-plugin-foo'] });
   assert.match(joinedFiles(files), /__workletHash/);
 });
@@ -181,10 +163,6 @@ test('MOCK_VERSION env gate: with env=1, mock wins', () => {
 });
 
 test('MOCK_VERSION env gate: no env, no pluginVersion → fall back to baked version', () => {
-  // The plugin lives inside the worklets package and bakes its
-  // `package.json` version at build time (mirrors `REAL_VERSION` in the TS
-  // plugin). Raw napi callers without an injected `pluginVersion` still get
-  // a real version string instead of a silently-missing `__pluginVersion`.
   delete process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION;
   const input = `function foo() { 'worklet'; return 1; }`;
   const { files } = transform(input, 'test.js', {});
@@ -230,10 +208,6 @@ test('referenced worklet survives through gesture chain', () => {
 });
 
 test('referenced worklet: alias chain through identifier-only assignment', () => {
-  // `findReferencedWorklet` in the TS plugin recurses through identifier
-  // aliases. The rewrite mirrors this via fixed-point set expansion: when
-  // `useAnimatedStyle(alias)` records `alias`'s symbol, the
-  // `const alias = handler` declarator propagates membership to `handler`.
   const input = `
     import { useAnimatedStyle } from 'react-native-reanimated';
     const handler = () => ({ width: 100 });
@@ -247,8 +221,6 @@ test('referenced worklet: alias chain through identifier-only assignment', () =>
 });
 
 test('referenced worklet: object-hook arg0 identifier-valued property', () => {
-  // Mirrors `processWorkletizableObject` — `useAnimatedScrollHandler({ onScroll: fn })`
-  // where `fn` is an identifier reference, not an inline function.
   const input = `
     import { useAnimatedScrollHandler } from 'react-native-reanimated';
     const onScroll = (e) => e.contentOffset.y;
@@ -261,9 +233,6 @@ test('referenced worklet: object-hook arg0 identifier-valued property', () => {
 });
 
 test('referenced worklet: non-const binding via assignment expression', () => {
-  // `let f; f = () => ...; useAnimatedStyle(f);` — TS handles this via
-  // `findReferencedWorkletFromAssignmentExpression`. Rewrite walks the
-  // assignment and injects the worklet directive on the RHS arrow.
   const input = `
     import { useAnimatedStyle } from 'react-native-reanimated';
     let handler;
@@ -277,8 +246,6 @@ test('referenced worklet: non-const binding via assignment expression', () => {
 });
 
 test('cjs file extension parses as plain JS (no TSX cast handling)', () => {
-  // .cjs / .mjs used to fall back to TSX parser which accepts unusual syntax.
-  // The cjs path must work as ordinary JS — round-trip a plain require.
   const input = `const x = require('y');`;
   const { code } = transform(input, 'test.cjs', {});
   assert.match(code, /require\("y"\)/);

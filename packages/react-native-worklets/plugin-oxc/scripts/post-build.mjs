@@ -33,12 +33,6 @@ if (!existsSync(src)) {
 
 copyFileSync(src, dest);
 
-// On macOS the built cdylib has an absolute `install_name` pointing at the
-// original `target/release/libworklets_plugin_oxc.dylib`. When Node loads
-// the `.node` copy, dyld dutifully *also* loads the original via that path,
-// duplicating napi's static registrations and crashing the process at
-// import time. Rewrite the install_name so the loaded file references
-// itself, not its source.
 if (platform === 'darwin') {
   try {
     execFileSync('install_name_tool', [

@@ -13,6 +13,15 @@ test('bundle mode: factory call becomes require(path).default(...)', () => {
   assert.match(files[0].content, /__workletHash/);
 });
 
+test('bundle mode: `bundleMode: false` is rejected by the transform itself', () => {
+  const input = `function foo(x) { 'worklet'; return x + 1; }`;
+  assert.throws(
+    () => transform(input, 'test.js', { bundleMode: false }),
+    /`bundleMode: false` is not supported/
+  );
+  assert.doesNotThrow(() => transform(input, 'test.js', { bundleMode: true }));
+});
+
 test('bundle mode: emitted file has no __initData / __stackDetails', () => {
   const input = `function foo(x) { 'worklet'; return x + 1; }`;
   const { files } = transform(input, 'test.js', {});

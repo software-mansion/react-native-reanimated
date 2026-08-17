@@ -3,9 +3,6 @@ import assert from 'node:assert/strict';
 import plugin from '../index.js';
 const { transform } = plugin;
 
-// Bundle-only mode: each workletized function becomes one emitted file.
-// `__workletHash` is asserted against the joined files content.
-
 function joinedFiles(files) {
   return files.map((f) => f.content).join('\n');
 }

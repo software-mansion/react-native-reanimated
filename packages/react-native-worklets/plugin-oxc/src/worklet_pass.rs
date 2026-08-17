@@ -3,8 +3,8 @@ use std::collections::HashSet;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     ArrowFunctionExpression, Declaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind,
-    ExportNamedDeclaration, Expression, Function, ObjectProperty, Program, PropertyKey,
-    PropertyKind, Statement,
+    ExportNamedDeclaration, Expression, Function, MethodDefinition, MethodDefinitionKind,
+    ObjectProperty, Program, PropertyKey, PropertyKind, Statement,
 };
 use oxc_ast::AstBuilder;
 use oxc_ast_visit::{walk_mut, VisitMut};
@@ -157,6 +157,29 @@ impl<'a, 'b> WorkletPass<'a, 'b> {
         self.state.error = Some(format!("the `{name}` {kind} cannot be a worklet"));
     }
 
+    fn reject_class_method(&mut self, method: &MethodDefinition<'a>) {
+        if self.state.error.is_some() {
+            return;
+        }
+        if method.kind == MethodDefinitionKind::Constructor {
+            self.state.error = Some("a class constructor cannot be a worklet".to_string());
+            return;
+        }
+        let kind = match method.kind {
+            MethodDefinitionKind::Get => "class getter",
+            MethodDefinitionKind::Set => "class setter",
+            _ => "class method",
+        };
+        let name = match &method.key {
+            PropertyKey::StaticIdentifier(id) => id.name.to_string(),
+            _ => "<computed>".to_string(),
+        };
+        self.state.error = Some(format!(
+            "the `{name}` {kind} cannot be a worklet — Bundle Mode does not workletize class \
+             members. Use a class field with an arrow function instead."
+        ));
+    }
+
     fn workletize_function(
         &mut self,
         func: &Function<'a>,
@@ -282,6 +305,19 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
         )));
     }
 
+    fn visit_method_definition(&mut self, method: &mut MethodDefinition<'a>) {
+        let has_directive = method
+            .value
+            .body
+            .as_ref()
+            .is_some_and(|body| has_worklet_directive(body));
+        if has_directive {
+            self.reject_class_method(method);
+            return;
+        }
+        walk_mut::walk_method_definition(self, method);
+    }
+
     fn visit_object_property(&mut self, prop: &mut ObjectProperty<'a>) {
         let is_accessor = prop.kind != PropertyKind::Init;
         if !prop.method && !is_accessor {
@@ -293,8 +329,6 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
             return;
         };
 
-        // An accessor can't be rewritten into a data property without losing
-        // its get/set semantics, so refuse it the way the Babel plugin does.
         if is_accessor {
             if is_worklet_accessor(prop) {
                 self.reject_accessor(prop);

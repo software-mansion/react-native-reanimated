@@ -87,8 +87,6 @@ pub fn append_marker<'a>(
         ));
 }
 
-/// Mirrors `isImplicitContextObject` in `plugin/src/file.ts` — an object is an
-/// implicit context object when any of its methods reaches for `this`.
 pub fn is_implicit_context_object(obj: &ObjectExpression<'_>) -> bool {
     obj.properties.iter().any(|prop| {
         let ObjectPropertyKind::ObjectProperty(prop) = prop else {

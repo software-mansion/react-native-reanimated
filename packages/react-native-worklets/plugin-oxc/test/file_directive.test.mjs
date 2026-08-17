@@ -3,10 +3,6 @@ import assert from 'node:assert/strict';
 import plugin from '../index.js';
 const { transform } = plugin;
 
-// Bundle-only mode: every workletized top-level function becomes a
-// `const <name> = require(".worklets/<hash>.js").default(...)` in the main
-// code, and the inner factory definition lives in `files[<n>].content`.
-
 const REQUIRE_FACTORY = /require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/;
 
 test('file-level worklet directive workletizes every top-level function', () => {
@@ -37,8 +33,6 @@ test('file-level directive: CJS exports get dehoisted to end', () => {
     function foo(x) { return x; }
   `;
   const { code } = transform(input, 'test.js', {});
-  // The require-factory binding of `foo` must precede `exports.foo = foo`
-  // — mirrors the TS plugin's CJS-exports dehoist.
   const fooIdx = code.search(/const foo = require\(/);
   const exportIdx = code.indexOf('exports.foo');
   assert.ok(
@@ -64,7 +58,6 @@ test('file-level directive: module.exports is NOT dehoisted (matches TS)', () =>
     function foo(x) { return x; }
   `;
   const { code } = transform(input, 'test.js', {});
-  // module.exports stays put — the TS plugin only dehoists `exports.*`.
   const fooIdx = code.search(/const foo = require\(/);
   const exportIdx = code.indexOf('module.exports');
   assert.ok(

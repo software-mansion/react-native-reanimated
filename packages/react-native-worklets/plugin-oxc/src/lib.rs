@@ -182,6 +182,14 @@ fn run(
     filename: &str,
     options: PluginOptions,
 ) -> Result<TransformResult, String> {
+    if options.bundle_mode == Some(false) {
+        return Err(
+            "`bundleMode: false` is not supported — this plugin supports Bundle Mode only. \
+             Use `react-native-worklets/plugin` for the legacy pipeline."
+                .to_string(),
+        );
+    }
+
     maybe_warn_extras(&options);
 
     if is_generated_worklet_file(filename) {
