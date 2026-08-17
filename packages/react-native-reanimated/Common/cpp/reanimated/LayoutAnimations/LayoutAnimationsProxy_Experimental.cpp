@@ -296,8 +296,10 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         const auto parentTag = mutation.parentTag;
         const auto &parent = lightNodes_[parentTag];
         const auto actualIndex = mutation.index + parent->countExitingChildrenAffectingIndex(mutation.index);
+        const bool isRemoveIndexValid = actualIndex < static_cast<int>(parent->children.size()) &&
+            parent->children[actualIndex]->current.tag == mutation.oldChildShadowView.tag;
 
-        if (parent->children[actualIndex]->current.tag != mutation.oldChildShadowView.tag) {
+        if (!isRemoveIndexValid) {
           std::string childTags;
           for (std::size_t i = 0; i < parent->children.size(); i++) {
             if (i > 0) {
@@ -309,14 +311,10 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
             }
           }
           LOG(WARNING) << "Remove mutation index mismatch: expected tag " << mutation.oldChildShadowView.tag
-                       << " at actualIndex " << actualIndex << " under parent tag " << parentTag << ", but found tag "
-                       << parent->children[actualIndex]->current.tag << " (rnIndex=" << mutation.index
-                       << "); children=[" << childTags << "]"
-                       << " count=" << parent->countExitingChildrenAffectingIndex(mutation.index);
+                       << " at actualIndex " << actualIndex << " under parent tag " << parentTag
+                       << " (rnIndex=" << mutation.index << "); children=[" << childTags << "]";
         }
-        react_native_assert(
-            parent->children[actualIndex]->current.tag == mutation.oldChildShadowView.tag &&
-            "Indicies are wrong in Remove mutation");
+        react_native_assert(isRemoveIndexValid && "Indicies are wrong in Remove mutation");
 
         if (deleted.contains(tag) && !deleted.contains(parentTag)) {
           exiting_.push_back(node);
