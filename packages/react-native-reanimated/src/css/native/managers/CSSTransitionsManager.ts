@@ -24,16 +24,22 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private propsWithTransitions = new Set<string>();
   // Indicates whether a CSS transition is currently attached to the view
   private hasTransition = false;
+  private appliedEventMask = 0;
 
   constructor(shadowNodeWrapper: ShadowNodeWrapper, viewTag: number) {
     this.viewTag = viewTag;
     this.shadowNodeWrapper = shadowNodeWrapper;
   }
 
+  /**
+   * @returns Whether this update detached a running transition (its props were
+   *   removed, or normalized to an empty config, e.g. when duration is 0).
+   */
   update(
     transitionProperties: CSSTransitionProperties | null,
-    nextProps: UnknownRecord = {}
-  ): void {
+    nextProps: UnknownRecord = {},
+    eventMask = 0
+  ): boolean {
     const transitionConfig =
       transitionProperties &&
       normalizeCSSTransitionProperties(transitionProperties);
@@ -47,8 +53,9 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     if (!prevProps || !transitionConfig) {
       if (this.hasTransition) {
         this.detach();
+        return true;
       }
-      return;
+      return false;
     }
 
     // Trigger transition for changed properties only
@@ -59,9 +66,16 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     );
 
     if (Object.keys(config).length) {
-      runCSSTransition(this.shadowNodeWrapper, config);
+      this.appliedEventMask = eventMask;
+      runCSSTransition(this.shadowNodeWrapper, config, eventMask);
       this.hasTransition = true;
+    } else if (this.hasTransition && eventMask !== this.appliedEventMask) {
+      // Only the mask changed, but the native side still has to learn about it.
+      this.appliedEventMask = eventMask;
+      runCSSTransition(this.shadowNodeWrapper, {}, eventMask);
     }
+
+    return false;
   }
 
   unmountCleanup(): void {
@@ -72,6 +86,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     unregisterCSSTransition(this.viewTag);
     this.propsWithTransitions.clear();
     this.hasTransition = false;
+    this.appliedEventMask = 0;
   }
 
   private processTransitionConfig(

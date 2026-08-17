@@ -7,6 +7,27 @@ const darkCodeTheme = require('./src/theme/CodeBlock/highlighting-dark.js');
 const webpack = require('webpack');
 const path = require('path');
 
+const {
+  topbarBannerReservationScript,
+} = require('@swmansion/t-rex-ui/topbar-banner');
+// @ts-expect-error -- .ts extension is intentional; not type-checked by tsc here.
+const { TOP_BAR_BANNER } = require('./src/components/topbarBanner.config.ts');
+
+const firstBannerZone = TOP_BAR_BANNER.zones[0];
+const bannerReservationHeadTags = firstBannerZone
+  ? [
+      {
+        tagName: 'script',
+        attributes: { type: 'text/javascript' },
+        innerHTML: topbarBannerReservationScript(
+          firstBannerZone.zoneId,
+          firstBannerZone.contentId,
+          TOP_BAR_BANNER.hiddenPaths
+        ),
+      },
+    ]
+  : [];
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'React Native Reanimated',
@@ -22,6 +43,8 @@ const config = {
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'software-mansion', // Usually your GitHub org/user name.
   projectName: 'react-native-reanimated', // Usually your repo name.
+
+  headTags: bannerReservationHeadTags,
 
   scripts: [
     {
@@ -80,6 +103,7 @@ const config = {
         },
       }),
     ],
+    require.resolve('@swmansion/t-rex-ui/preset'),
   ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
@@ -219,6 +243,16 @@ const config = {
                   exclude: /\.yarn[\\/]unprocessed/,
                   use: 'babel-loader',
                 },
+                {
+                  test: /\.m?js$/,
+                  resolve: {
+                    fullySpecified: false,
+                  },
+                },
+                {
+                  test: /react-native-(worklets|reanimated)[\\/]lib[\\/]module[\\/].*\.js$/,
+                  type: 'javascript/auto',
+                },
               ],
             },
             resolve: {
@@ -230,6 +264,7 @@ const config = {
                 ),
               },
               extensions: ['.web.js', '...'],
+              fullySpecified: false,
             },
             ignoreWarnings: [
               (error) => {

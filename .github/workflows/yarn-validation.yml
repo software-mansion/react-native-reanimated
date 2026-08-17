@@ -22,6 +22,9 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   yarn-validation:
     if: github.repository == 'software-mansion/react-native-reanimated'

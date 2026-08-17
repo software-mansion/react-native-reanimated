@@ -21,6 +21,22 @@ std::optional<facebook::react::SurfaceId> LayoutAnimationsProxyCommon::onGesture
 
 void LayoutAnimationsProxyCommon::startSurface(const SurfaceId surfaceId) {}
 
+void LayoutAnimationsProxyCommon::transferConfigFromNativeID(const std::string &nativeIdString, const int tag) const {
+  if (nativeIdString.empty() || nativeIdString.length() > 9) {
+    return;
+  }
+
+  auto nativeId = 0;
+  for (const auto character : nativeIdString) {
+    if (character < '0' || character > '9') {
+      return;
+    }
+    nativeId = nativeId * 10 + character - '0';
+  }
+
+  layoutAnimationsManager_->transferConfigFromNativeID(nativeId, tag);
+}
+
 #ifdef ANDROID
 
 const facebook::react::ShadowNode *findInShadowTreeByTag(const facebook::react::ShadowNode &node, Tag tag) {
@@ -37,8 +53,12 @@ const facebook::react::ShadowNode *findInShadowTreeByTag(const facebook::react::
 
 void LayoutAnimationsProxyCommon::restoreOpacityInCaseOfFlakyEnteringAnimation(SurfaceId surfaceId) const {
   std::vector<std::pair<double, Tag>> opacityToRestore;
-  for (const auto tag : finishedAnimationTags_) {
-    const auto &opacity = layoutAnimations_[tag].opacity;
+  for (const auto tag : maybeSettledAnimationTags_) {
+    const auto layoutAnimationIt = layoutAnimations_.find(tag);
+    if (layoutAnimationIt == layoutAnimations_.end() || !layoutAnimationIt->second.isSettled()) {
+      continue;
+    }
+    const auto &opacity = layoutAnimationIt->second.opacity;
     if (opacity.has_value()) {
       opacityToRestore.emplace_back(std::pair<double, Tag>{opacity.value(), tag});
     }

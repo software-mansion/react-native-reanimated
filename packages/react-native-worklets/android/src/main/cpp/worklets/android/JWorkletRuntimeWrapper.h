@@ -33,7 +33,7 @@ class JWorkletRuntimeWrapper : public jni::HybridClass<JWorkletRuntimeWrapper> {
  private:
   friend HybridBase;
 
-  JWorkletRuntimeWrapper(std::shared_ptr<WorkletRuntime> workletRuntime, uint64_t runtimeId);
+  explicit JWorkletRuntimeWrapper(std::shared_ptr<WorkletRuntime> workletRuntime);
 
   const std::shared_ptr<WorkletRuntime> workletRuntime_;
 };

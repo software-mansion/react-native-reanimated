@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type {
   CSSTransitionProperties,
@@ -112,8 +113,8 @@ export default function ChangingTransitionProperty() {
       ? transitionProperty.includes(propertyName)
       : transitionProperty === propertyName;
 
-  const transitionProperties: CSSTransitionProperties = {
-    transitionProperty: transitionProperty as CSSTransitionProperty,
+  const transitionProperties: CSSTransitionProperties<ViewStyle> = {
+    transitionProperty: transitionProperty as CSSTransitionProperty<ViewStyle>,
     ...transitionSettings,
   };
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { ColorValue } from 'react-native';
 import { StyleSheet, TextInput, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, {
   interpolate,
   useAnimatedProps,
@@ -114,16 +114,17 @@ function CircularSlider(props: CircularSliderProps) {
     return { text, defaultValue: text };
   });
 
-  const gesture = Gesture.Pan()
-    .minDistance(0)
-    .onUpdate(({ x, y }) => {
-      currentAngle.value = cartesianToPolar({ x, y }, center);
-    })
-    .onFinalize(() => {
+  const gesture = usePanGesture({
+    minDistance: 0,
+    onFinalize: () => {
       if (onValueChange) {
         scheduleOnRN(onValueChange, currentValue.value);
       }
-    });
+    },
+    onUpdate: ({ x, y }) => {
+      currentAngle.value = cartesianToPolar({ x, y }, center);
+    },
+  });
 
   return (
     <>

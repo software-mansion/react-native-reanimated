@@ -1,4 +1,5 @@
 'use strict';
+import type { UnknownRecord } from '../../../common';
 import {
   getCompoundComponentName,
   getPropsBuilder,
@@ -6,16 +7,24 @@ import {
 } from '../../../common';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
-import type { CSSStyle } from '../../types';
+import type {
+  CSSAnimationCallbacks,
+  CSSStyle,
+  CSSTransitionCallbacks,
+} from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
-import { filterCSSAndStyleProperties } from '../../utils';
+import { filterCSSAndStyleProperties, splitCSSCallbacks } from '../../utils';
 import { setViewStyle } from '../proxy';
 import CSSAnimationsManager from './CSSAnimationsManager';
+import CSSCallbacksManager from './CSSCallbacksManager';
+import CSSPseudoStylesManager from './CSSPseudoStylesManager';
 import CSSTransitionsManager from './CSSTransitionsManager';
 
 export default class CSSManager implements ICSSManager {
   private readonly cssAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionsManager: CSSTransitionsManager;
+  private readonly cssPseudoStylesManager: CSSPseudoStylesManager;
+  private cssCallbacksManager: CSSCallbacksManager | null = null;
   private readonly viewTag: number;
   private readonly propsBuilder: ReturnType<typeof getPropsBuilder>;
   /**
@@ -45,14 +54,32 @@ export default class CSSManager implements ICSSManager {
       compoundComponentName
     );
     this.cssTransitionsManager = new CSSTransitionsManager(wrapper, tag);
+    this.cssPseudoStylesManager = new CSSPseudoStylesManager(
+      wrapper,
+      tag,
+      this.propsBuilder
+    );
   }
 
-  update(style: CSSStyle): void {
-    const [animationProperties, transitionProperties, filteredStyle] =
-      filterCSSAndStyleProperties(style);
+  update(style: CSSStyle, props: Readonly<UnknownRecord> = {}): void {
+    const [
+      animationProperties,
+      transitionProperties,
+      pseudoStylesBySelector,
+      filteredStyle,
+    ] = filterCSSAndStyleProperties(style);
 
     const hasAnimation = animationProperties !== null;
     const hasTransition = transitionProperties !== null;
+
+    const [animationCallbacks, transitionCallbacks] = splitCSSCallbacks(props);
+
+    // Synced before either manager runs so a cancel emitted while detaching
+    // still reaches the user.
+    const { animationEventMask, transitionEventMask } = this.syncCallbacks(
+      animationCallbacks,
+      transitionCallbacks
+    );
 
     const normalizedStyle =
       hasAnimation ||
@@ -61,27 +88,53 @@ export default class CSSManager implements ICSSManager {
         ? this.propsBuilder.build(filteredStyle)
         : undefined;
 
+    const transitionDetached = this.cssTransitionsManager.update(
+      transitionProperties,
+      normalizedStyle ?? {},
+      transitionEventMask
+    );
+
+    // Record the committed style as the base so animations and (on Android) a
+    // detaching transition can revert to it instead of interpolator defaults.
     if (
       normalizedStyle &&
-      (hasAnimation ||
-        // We also need to update the current style on Android when the
-        // transition is detached.
-        (IS_ANDROID && !hasTransition && this.hadTransitionLastUpdate))
+      (hasAnimation || (IS_ANDROID && transitionDetached))
     ) {
       setViewStyle(this.viewTag, normalizedStyle);
     }
 
-    this.cssTransitionsManager.update(
-      transitionProperties,
-      normalizedStyle ?? {}
+    this.cssAnimationsManager.update(animationProperties, animationEventMask);
+    this.cssPseudoStylesManager.update(
+      pseudoStylesBySelector,
+      transitionProperties
     );
-    this.cssAnimationsManager.update(animationProperties);
 
     this.hadTransitionLastUpdate = hasTransition;
   }
 
   unmountCleanup(): void {
+    this.cssCallbacksManager?.retire();
     this.cssAnimationsManager.unmountCleanup();
     this.cssTransitionsManager.unmountCleanup();
+    this.cssPseudoStylesManager.unmountCleanup();
+  }
+
+  private syncCallbacks(
+    animationCallbacks: CSSAnimationCallbacks | null,
+    transitionCallbacks: CSSTransitionCallbacks | null
+  ): { animationEventMask: number; transitionEventMask: number } {
+    if (!this.cssCallbacksManager) {
+      if (!animationCallbacks && !transitionCallbacks) {
+        return { animationEventMask: 0, transitionEventMask: 0 };
+      }
+      this.cssCallbacksManager = new CSSCallbacksManager(this.viewTag);
+    }
+
+    this.cssCallbacksManager.syncAnimationCallbacks(animationCallbacks);
+    this.cssCallbacksManager.syncTransitionCallbacks(transitionCallbacks);
+    return {
+      animationEventMask: this.cssCallbacksManager.getAnimationEventMask(),
+      transitionEventMask: this.cssCallbacksManager.getTransitionEventMask(),
+    };
   }
 }

@@ -1,11 +1,37 @@
 const path = require('path');
 
 const workletsPackageParentDir = path.resolve(__dirname, '../..');
+const reactNativeShimPath = path.join(__dirname, 'shims', 'reactNativeShim.js');
+const turboModuleRegistryShimPath = path.join(
+  __dirname,
+  'shims',
+  'turboModuleRegistryShim.js'
+);
+const turboModuleRegistryModuleName =
+  'react-native/Libraries/TurboModule/TurboModuleRegistry';
+const turboModuleRegistryFileSuffix = path.join(
+  'react-native',
+  'Libraries',
+  'TurboModule',
+  'TurboModuleRegistry.js'
+);
+
+function isResolvedTurboModuleRegistry(/** @type {any} */ result) {
+  return (
+    result?.type === 'sourceFile' &&
+    typeof result.filePath === 'string' &&
+    result.filePath.endsWith(turboModuleRegistryFileSuffix)
+  );
+}
 
 const workletsPackageName = 'react-native-worklets';
-const workletsDirPath = path.join(workletsPackageName, '.worklets');
-const workletsSrcEntryPath = path.join(workletsPackageName, 'src', 'index.ts');
-const workletsLibEntryPath = path.join(
+const workletsDirPath = path.posix.join(workletsPackageName, '.worklets');
+const workletsSrcEntryPath = path.posix.join(
+  workletsPackageName,
+  'src',
+  'index.ts'
+);
+const workletsLibEntryPath = path.posix.join(
   workletsPackageName,
   'lib',
   'module',
@@ -15,13 +41,37 @@ const workletsLibEntryPath = path.join(
 function bundleModeResolveRequest(
   /** @type {any} */ context,
   /** @type {string} */ moduleName,
-  /** @type {any} */ platform
+  /** @type {any} */ platform,
+  /** @type {any} */ userConfigResolveRequest
 ) {
   if (moduleName.startsWith(workletsDirPath)) {
     const fullModuleName = path.join(workletsPackageParentDir, moduleName);
     return { type: 'sourceFile', filePath: fullModuleName };
   }
-  return context.resolveRequest(context, moduleName, platform);
+  if (
+    moduleName === 'react-native' &&
+    context.originModulePath !== reactNativeShimPath
+  ) {
+    return { type: 'sourceFile', filePath: reactNativeShimPath };
+  }
+  if (
+    moduleName === turboModuleRegistryModuleName &&
+    context.originModulePath !== turboModuleRegistryShimPath
+  ) {
+    return { type: 'sourceFile', filePath: turboModuleRegistryShimPath };
+  }
+  const resolved = (userConfigResolveRequest || context.resolveRequest)(
+    context,
+    moduleName,
+    platform
+  );
+  if (
+    context.originModulePath !== turboModuleRegistryShimPath &&
+    isResolvedTurboModuleRegistry(resolved)
+  ) {
+    return { type: 'sourceFile', filePath: turboModuleRegistryShimPath };
+  }
+  return resolved;
 }
 
 /** Use in React Native Community projects. */
@@ -39,7 +89,26 @@ const bundleModeMetroConfig = {
         const fullModuleName = path.join(workletsPackageParentDir, moduleName);
         return { type: 'sourceFile', filePath: fullModuleName };
       }
-      return context.resolveRequest(context, moduleName, platform);
+      if (
+        moduleName === 'react-native' &&
+        context.originModulePath !== reactNativeShimPath
+      ) {
+        return { type: 'sourceFile', filePath: reactNativeShimPath };
+      }
+      if (
+        moduleName === turboModuleRegistryModuleName &&
+        context.originModulePath !== turboModuleRegistryShimPath
+      ) {
+        return { type: 'sourceFile', filePath: turboModuleRegistryShimPath };
+      }
+      const resolved = context.resolveRequest(context, moduleName, platform);
+      if (
+        context.originModulePath !== turboModuleRegistryShimPath &&
+        isResolvedTurboModuleRegistry(resolved)
+      ) {
+        return { type: 'sourceFile', filePath: turboModuleRegistryShimPath };
+      }
+      return resolved;
     },
   },
 };
@@ -49,12 +118,23 @@ const bundleModeMetroConfig = {
 function getBundleModeMetroConfig(/** @type {any} */ config) {
   config.serializer.createModuleIdFactory = bundleModeCreateModuleIdFactory;
 
-  config.resolver.resolveRequest = bundleModeResolveRequest;
+  const currentResolveRequest = config?.resolver?.resolveRequest;
+  config.resolver.resolveRequest = (
+    /** @type {any} */ context,
+    /** @type {string} */ moduleName,
+    /** @type {any} */ platform
+  ) =>
+    bundleModeResolveRequest(
+      context,
+      moduleName,
+      platform,
+      currentResolveRequest
+    );
 
   const currentGetTransformOptions = config?.transformer?.getTransformOptions;
-  config.transformer.getTransformOptions = async () => {
+  config.transformer.getTransformOptions = async (...args) => {
     const options = currentGetTransformOptions
-      ? await currentGetTransformOptions()
+      ? await currentGetTransformOptions(...args)
       : {};
     return {
       ...options,
@@ -71,7 +151,8 @@ function getBundleModeMetroConfig(/** @type {any} */ config) {
 function bundleModeCreateModuleIdFactory() {
   let nextId = 0;
   const idFileMap = new Map();
-  return (/** @type {string} */ moduleName) => {
+  return (/** @type {string} */ moduleNameRaw) => {
+    const moduleName = moduleNameRaw.replace(/\\/g, '/');
     if (idFileMap.has(moduleName)) {
       return idFileMap.get(moduleName);
     }

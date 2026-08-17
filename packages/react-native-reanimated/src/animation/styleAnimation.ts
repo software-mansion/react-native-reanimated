@@ -73,7 +73,8 @@ interface NestedObjectEntry<T> {
 
 export function withStyleAnimation(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  styleAnimations: AnimatedStyle<any>
+  styleAnimations: AnimatedStyle<any>,
+  callback?: (finished: boolean) => void
 ): StyleLayoutAnimation {
   'worklet';
   return defineAnimation<StyleLayoutAnimation>({}, () => {
@@ -236,7 +237,7 @@ export function withStyleAnimation(
       }
     };
 
-    const callback = (finished: boolean): void => {
+    const styleAnimationCallback = (finished: boolean): void => {
       if (!finished) {
         const animationsToCheck: NestedObjectValues<AnimationObject>[] = [
           styleAnimations,
@@ -267,6 +268,7 @@ export function withStyleAnimation(
           }
         }
       }
+      callback?.(finished);
     };
 
     return {
@@ -275,7 +277,7 @@ export function withStyleAnimation(
       onStart,
       current: {},
       styleAnimations,
-      callback,
+      callback: styleAnimationCallback,
     } as StyleLayoutAnimation;
   });
 }

@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type {
   CSSTransitionDelay,
@@ -58,15 +59,15 @@ const getTimeout = (settings: CSSTransitionSettings): number => {
 
 export type ExampleItemProps = {
   label: string;
-} & Partial<CSSTransitionProperties>;
+} & Partial<CSSTransitionProperties<ViewStyle>>;
 
 type ExamplesListCardProps = {
-  transitionProperties: Partial<CSSTransitionProperties>;
+  transitionProperties: Partial<CSSTransitionProperties<ViewStyle>>;
   transitionStyles: Array<StyleProps>;
   items: Array<ExampleItemProps>;
   displayStyleChanges: boolean;
   renderExample: (
-    transition: CSSTransitionProperties,
+    transition: CSSTransitionProperties<ViewStyle>,
     style: StyleProps
   ) => JSX.Element;
 };
@@ -133,12 +134,12 @@ type ExampleRef = {
 };
 
 type ExampleProps = {
-  transitionProperties: Partial<CSSTransitionProperties>;
+  transitionProperties: Partial<CSSTransitionProperties<ViewStyle>>;
   transitionStyles: Array<StyleProps>;
   item: ExampleItemProps;
   displayStyleChanges: boolean;
   renderExample: (
-    config: CSSTransitionProperties,
+    config: CSSTransitionProperties<ViewStyle>,
     style: StyleProps
   ) => JSX.Element;
   ref: React.Ref<ExampleRef>;

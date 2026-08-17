@@ -29,7 +29,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
 1. Set the new version by running the following script in the repository root:
 
-   - `cd packages/react-native-reanimated && yarn set-version x.y.z`
+   - `cd packages/react-native-reanimated && yarn set-version --version x.y.z`
 
 1. Update the **Compatibility** in `packages/react-native-reanimated/compatibility.json`
 

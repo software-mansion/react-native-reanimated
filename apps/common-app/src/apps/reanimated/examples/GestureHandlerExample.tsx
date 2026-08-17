@@ -1,15 +1,14 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import type {
-  GestureStateManager,
   GestureTouchEvent,
-  GestureUpdateEvent,
-  PanGestureChangeEventPayload,
+  PanGestureActiveEvent,
 } from 'react-native-gesture-handler';
 import {
-  Gesture,
   GestureDetector,
   GestureHandlerRootView,
+  GestureStateManager,
+  usePanGesture,
 } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -32,26 +31,27 @@ function Ball() {
     };
   });
 
-  const gesture = Gesture.Pan()
-    .manualActivation(true)
-    .onBegin(() => {
+  const gesture = usePanGesture({
+    manualActivation: true,
+    onBegin: () => {
       'worklet';
       isPressed.value = true;
-    })
-    .onChange((e: GestureUpdateEvent<PanGestureChangeEventPayload>) => {
+    },
+    onFinalize: () => {
+      'worklet';
+      isPressed.value = false;
+    },
+    onTouchesMove: (e: GestureTouchEvent) => {
+      GestureStateManager.activate(e.handlerTag);
+    },
+    onUpdate: (e: PanGestureActiveEvent) => {
       'worklet';
       offset.value = {
         x: e.changeX + offset.value.x,
         y: e.changeY + offset.value.y,
       };
-    })
-    .onFinalize(() => {
-      'worklet';
-      isPressed.value = false;
-    })
-    .onTouchesMove((e: GestureTouchEvent, state: GestureStateManager) => {
-      state.activate();
-    });
+    },
+  });
 
   return (
     <GestureDetector gesture={gesture}>

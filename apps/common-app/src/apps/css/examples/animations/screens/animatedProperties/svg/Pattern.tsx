@@ -27,11 +27,11 @@ const MIXED_UNITS_NOTE =
 export default function PatternExample() {
   return (
     <ExamplesScreen<
+      PatternProps,
       {
         keyframes: CSSAnimationKeyframes<PatternProps>;
         props?: PatternExtraProps;
-      },
-      PatternProps
+      }
     >
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',
@@ -178,6 +178,7 @@ export default function PatternExample() {
                   title: 'Mixed',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Tile Width',
             },
             {
@@ -211,6 +212,7 @@ export default function PatternExample() {
                   title: 'Mixed',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Tile Height',
             },
           ],
@@ -238,6 +240,7 @@ export default function PatternExample() {
                   title: 'patternUnits interpolation',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Coordinate systems',
             },
           ],

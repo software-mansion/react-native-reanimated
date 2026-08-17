@@ -4,13 +4,17 @@
 #include <jsi/jsi.h>
 #include <string>
 #include <unordered_set>
+#include <variant>
 #include <vector>
 
 namespace reanimated::css {
 
 using namespace facebook;
 
-using PropertyPath = std::vector<std::string>;
+/// A record key (e.g. "boxShadow") or an index into an array-typed property
+/// (e.g. the 0 in boxShadow[0]).
+using PropertyPathSegment = std::variant<std::string, size_t>;
+using PropertyPath = std::vector<PropertyPathSegment>;
 using TransitionProperties = std::unordered_set<std::string>;
 
 using EasingFunction = std::function<double(double)>;

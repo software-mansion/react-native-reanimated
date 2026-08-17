@@ -1,0 +1,143 @@
+---
+title: Sharing memory
+---
+
+# Sharing memory
+
+Worklets let you run JavaScript on more than one thread. The moment you do that, you have to answer a question that
+single-threaded JavaScript has always let you ignore: **how do two pieces of code, running at the same time, look at the
+same data?**
+
+This page explains why that question has no cheap answer in JavaScript, and why Worklets expose three distinct shared
+memory primitives — the [Serializable](/docs/memory/serializable), the [Synchronizable](/docs/memory/synchronizable),
+and the [Shareable](/docs/memory/shareable) — instead of one.
+
+## JavaScript is single-threaded on purpose
+
+JavaScript is designed around a single-threaded execution model. One call stack, one event loop, one piece of code
+running at a time, all neatly packed into **an abstraction called the JavaScript Virtual Machine — JSVM, which we'll call
+a "Runtime" from here on**. That choice is load-bearing: it means a function that reads and mutates a variable
+cannot be interrupted halfway through by another function doing the same thing. There are no data races, no torn reads,
+no half-written objects. You never need a mutex to increment a counter.
+
+The language leans on this guarantee everywhere. Closures capture variables by reference and expect those references to
+stay coherent. Objects are mutable, passed by reference, and shared freely across the program. None of this would be
+safe if two threads could touch the same heap at the same time — but in single-threaded JavaScript, it is safe by
+construction.
+
+## Parallelism and memory
+
+So what exactly happens when we add another thread into the equation? The naive approach: just tell two threads to do
+some work on the same Runtime. They might work for a short while, but very soon we'll hit an EXC\_BAD\_ACCESS exception —
+at some point one thread is bound to change some underlying reference that the other thread assumes is stable.
+
+The only thing we can do at this point is to give each thread its own Runtime. The crashes go away, everything runs in
+parallel, but we have a new problem: the two Runtimes are like two separate worlds.
+
+For example, you can't just "hand" a JavaScript object from one Runtime to another. A JavaScript object is a collection
+of pointers into one specific engine's heap. Its prototype chain, its hidden class, its property storage or even the
+garbage collector or the global object — all of it is engine-internal state that another Runtime has no way to
+interpret. Force-interpreting such a collection of pointers in another Runtime would be like trying to read a pointer from one
+process and dereference it in another process — it just doesn't work. At this point, probably the simplest way of
+communicating and sharing data between these Runtimes is to connect via a WebSocket — but again, that's very naive.
+
+How, then, do we share this data the right way — with the least overhead, in RAM, and preferably without unnecessary
+copies? It depends on the context and the kind of data we want to share.
+
+## Kinds of shared memory
+
+We can categorize shared memory into three types, based on how they are implemented and how they behave across Runtimes:
+
+### Copy-only memory — Serializable
+
+The simplest of them all: a way to move any value from Runtime A to Runtime B as-is — a number, an object, a string,
+essentially any value that can be expressed as data. However, changes to such a value on any Runtime aren't visible in
+the other Runtimes. Each Runtime is unaware that it has a copy and simply treats its value as the original. **This is
+the [Serializable](/docs/memory/serializable) primitive.**
+
+Each to-be-copied value is serialized into a byte stream and sent through C++ to the other Runtime, where it's
+reconstructed. This is straightforward for primitives like numbers and strings, but for objects it can be more
+complex — for example, how do you handle an object that contains a circular reference? Or a function? The implementation
+of the Serializable has to cover all these edge cases and at least produce a meaningful error when a value can't be
+serialized.
+
+<SVGDiagram>![Serializable](/img/model-serializable.svg)</SVGDiagram>
+
+<figcaption style={{ textAlign: "center" }}>
+  High-level overview of the Serializable memory model — no Runtime holds ownership of the value, they just exchange
+  copies of it.
+</figcaption>
+
+From the user's perspective, a Serializable is an opaque C++ value that Worklets know how to pass around and turn into
+regular JavaScript values on the other side. In all cases, this is done implicitly by the library APIs, and you never
+need to create Serializables directly.
+
+### Unbound memory — Synchronizable
+
+The simpler type of memory that is actually shared — meaning that changes to it on Runtime A will be seen by Runtime B
+and all the other Runtimes — but not tied to any particular Runtime, _unbound_. This is achieved by keeping the actual
+"real" value outside of any Runtime, in C++, guarded by mutexes and other synchronization primitives. Each JavaScript
+Runtime holds just a specific kind of reference to the C++ value. Each read or write means crossing the boundary between
+JavaScript and C++. Because the memory is thread-safe, each Runtime can safely access it at its own discretion. **This
+is the [Synchronizable](/docs/memory/synchronizable) primitive.**
+
+<SVGDiagram>![Synchronizable](/img/model-synchronizable.svg)</SVGDiagram>
+
+<figcaption style={{ textAlign: "center" }}>
+  High-level overview of the Synchronizable memory model — the value is kept outside of any Runtime, and each Runtime
+  holds a reference to it.
+</figcaption>
+
+While it might seem like an ideal solution, the cost of keeping the value outside of a Runtime is significant. Each
+access to the Synchronizable means a round trip through C++ and conversions — because our Runtime can't just use the
+C++ type directly, the value has to be converted (to a Serializable) before it can be used in JavaScript. You're also
+severely limited in what you can do with the value — you can't store anything Runtime-specific in it, like a function or
+an object with a prototype chain, because it wouldn't make sense in another Runtime.
+
+### Bound memory — Shareable
+
+This more complex type of shared memory overcomes some issues of unbound memory, but at the cost of being _asymmetric and
+bound to a particular Runtime_.
+
+Operations on unbound memory are much more expensive than operations on plain JavaScript values, because each access has
+to cross the boundary between JavaScript and C++ via JSI. Runtime-bound memory optimizes access time on a single
+designated JavaScript Runtime, called the Host Runtime, by simply holding the value there as a plain JavaScript value.
+Other Runtimes, called Guest Runtimes, only have a specific kind of reference that "knows" that the actual value lives
+on another Runtime — if you want to access it with that reference, you must go to C++, lock the Host Runtime
+exclusively, read the actual value, and return it to the Guest Runtime that initiated the read. **This is the
+[Shareable](/docs/memory/shareable) primitive.**
+
+<SVGDiagram>![Shareable](/img/model-shareable.svg)</SVGDiagram>
+
+<figcaption style={{ textAlign: "center" }}>
+  High-level overview of the Shareable memory model — the value is kept on the Host Runtime, and the Guest Runtimes hold
+  a reference to it.
+</figcaption>
+
+**The Shareable should be the preferred way of handling non-trivial data sharing since it comes with the least overhead
+when used correctly**. However, it requires a more careful design of your data flow and access patterns, to avoid too many
+round trips between the Guest Runtimes and the Host Runtime.
+
+## Choosing between them
+
+Each of these primitives has its own use cases, and the right one to use depends on your specific needs. Here are some
+general guidelines:
+
+- **You are passing a value across Runtimes once, and the other side does not need to observe further changes.** For
+  example, you want to pass a configuration object between Runtimes.
+  - Use a Serializable. Copy, pass and forget.
+- **You need a value that multiple Runtimes read and write with similar frequency, and you need them to see each other's
+  updates.** For example, you want to keep your application state in a single place and have all Runtimes be able to
+  synchronize on it.
+  - Use a Synchronizable. Read and write only when you need to, maybe even add an event-emitting layer on top of it to
+    avoid polling.
+- **One Runtime dominates access to the value, and other Runtimes only reach in occasionally.** For example, you have an
+  animation engine that reads an animation state on every frame during a critical phase of the rendering pipeline, but
+  sometimes you want to change that state based on user input. Basically, you're writing Reanimated.
+  - Use a Shareable. Keep the value on the Host Runtime and let the Guest Runtimes read it when they need to, but limit
+    the amount of reads and writes of the Guest to avoid too many round trips. Cache the value on the Guest Runtimes if
+    you allow for eventual consistency.
+
+The rest of this section documents each primitive in detail, along with the APIs —
+[createSerializable](/docs/memory/createSerializable), [createSynchronizable](/docs/memory/createSynchronizable),
+[createShareable](/docs/memory/createShareable) — for producing them.

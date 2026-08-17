@@ -1,3 +1,4 @@
+import type { TextStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -6,11 +7,11 @@ import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
 import type { ExampleScreenProps } from '@/apps/css/navigation/types';
 import { colors } from '@/theme';
 
-export default function TextDecorationStyle({
+export default function TextDecorationColor({
   labelTypes,
 }: ExampleScreenProps) {
   return (
-    <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
+    <ExamplesScreen<TextStyle, { keyframes: CSSAnimationKeyframes<TextStyle> }>
       CardComponent={VerticalExampleCard}
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',

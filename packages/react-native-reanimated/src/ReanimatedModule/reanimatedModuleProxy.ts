@@ -13,6 +13,8 @@ import type {
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSEventHandler,
+  CSSPseudoStyleConfig,
   CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
 } from '../css/native';
@@ -62,6 +64,9 @@ export interface ReanimatedModuleProxy {
 
   setViewStyle(viewTag: number, style: StyleProps): void;
 
+  /** Registers the single handler receiving every CSS event batch. */
+  setCSSEventHandler(handler: CSSEventHandler): void;
+
   markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper): void;
   unmarkNodeAsRemovable(viewTag: number): void;
 
@@ -86,12 +91,20 @@ export interface ReanimatedModuleProxy {
 
   runCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,
-    transitionConfig: CSSTransitionConfig
+    transitionConfig: CSSTransitionConfig,
+    eventMask: number
   ): void;
 
   unregisterCSSTransition(viewTag: number): void;
 
   getSettledUpdates(): SettledUpdate[];
+
+  registerPseudoStyles(
+    shadowNodeWrapper: ShadowNodeWrapper,
+    config: CSSPseudoStyleConfig
+  ): void;
+
+  unregisterPseudoStyles(viewTag: number): void;
 }
 
 export interface IReanimatedModule extends Omit<

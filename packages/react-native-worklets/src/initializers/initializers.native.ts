@@ -1,10 +1,6 @@
 'use strict';
 
-import {
-  disallowRNImports,
-  mockTurboModuleRegistry,
-  silenceHMRWarnings,
-} from '../bundleMode/metroOverrides';
+import { silenceHMRWarnings } from '../bundleMode/metroOverrides';
 import { initializeNetworking } from '../bundleMode/network';
 import { registerReportFatalRemoteError } from '../debug/errors';
 import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
@@ -174,11 +170,9 @@ function initializeWorkletRuntime() {
   if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     if (__DEV__) {
       silenceHMRWarnings();
-      disallowRNImports();
     }
 
     if (getStaticFeatureFlag('FETCH_PREVIEW_ENABLED')) {
-      mockTurboModuleRegistry();
       initializeNetworking();
     }
   }

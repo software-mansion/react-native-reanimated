@@ -9,6 +9,20 @@
 
 namespace worklets {
 
+#ifndef NDEBUG
+namespace {
+void evaluateModuleUpdate(
+    const std::shared_ptr<WorkletRuntime> &workletRuntime,
+    const std::string &code,
+    const std::string &sourceUrl) {
+  workletRuntime->runSync([&code, &sourceUrl](jsi::Runtime &rt) -> void {
+    const auto buffer = std::make_shared<jsi::StringBuffer>(code);
+    rt.evaluateJavaScript(buffer, sourceUrl);
+  });
+}
+} // namespace
+#endif // NDEBUG
+
 std::shared_ptr<WorkletRuntime> RuntimeManager::getRuntime(uint64_t runtimeId) {
   std::shared_lock lock(weakRuntimesMutex_);
   if (weakRuntimes_.contains(runtimeId)) {
@@ -41,14 +55,19 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     const std::string &name,
     const std::shared_ptr<SerializableWorklet> &initializer,
     const std::shared_ptr<AsyncQueue> &queue,
-    bool enableEventLoop) {
+    bool enableEventLoop,
+    bool enableLocking) {
   const auto runtimeId = getNextRuntimeId();
 
-  const auto workletRuntime =
-      std::make_shared<WorkletRuntime>(runtimeId, RuntimeData::RuntimeKind::Worker, name, queue, enableEventLoop);
+  const auto workletRuntime = std::make_shared<WorkletRuntime>(
+      runtimeId, RuntimeData::RuntimeKind::Worker, name, queue, enableEventLoop, enableLocking);
   const auto targetProxy = JSIWorkletsModuleProxy::createForNewRuntime(sourceProxy, runtimeId);
 
   workletRuntime->init(targetProxy);
+
+#ifndef NDEBUG
+  withRegistrationPaused([&] { loadModuleUpdates(workletRuntime); });
+#endif // NDEBUG
 
   if (initializer) {
     workletRuntime->runSync(initializer);
@@ -58,6 +77,26 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
 
   return workletRuntime;
 }
+
+#ifndef NDEBUG
+void RuntimeManager::propagateModuleUpdate(const std::string &code, const std::string &sourceUrl) {
+  std::unique_lock registrationLock(registrationMutex_);
+
+  moduleUpdates_.push_back(ModuleUpdate{.sourceUrl = sourceUrl, .code = code});
+
+  for (const auto &runtime : getAllRuntimes()) {
+    if (runtime->isLockingEnabled()) {
+      evaluateModuleUpdate(runtime, code, sourceUrl);
+    }
+  }
+}
+
+void RuntimeManager::loadModuleUpdates(const std::shared_ptr<WorkletRuntime> &workletRuntime) {
+  for (const auto &update : moduleUpdates_) {
+    evaluateModuleUpdate(workletRuntime, update.code, update.sourceUrl);
+  }
+}
+#endif // NDEBUG
 
 std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
     const std::shared_ptr<AsyncQueue> &uiAsyncQueue) {

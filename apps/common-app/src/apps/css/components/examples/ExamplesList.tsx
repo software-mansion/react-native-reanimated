@@ -2,7 +2,6 @@ import type { ComponentType, JSX } from 'react';
 import type { CSSAnimationProperties } from 'react-native-reanimated';
 
 import { stringifyConfig } from '@/apps/css/utils';
-import type { AnyRecord, PlainStyle } from '@/types';
 
 import Scroll from '../layout/Scroll';
 import { Section } from '../layout/Section';
@@ -10,8 +9,11 @@ import type { LabelType } from '../misc/Label';
 import type { ExampleCardProps } from './ExampleCard';
 import ExampleCard from './ExampleCard';
 
-export type ExamplesListProps<P extends AnyRecord, S extends AnyRecord> = Pick<
-  ExampleProps<P, S>,
+export type ExamplesListProps<
+  TStyle extends object,
+  TExampleProps extends object = object,
+> = Pick<
+  ExampleProps<TStyle, TExampleProps>,
   'buildAnimation' | 'renderExample'
 > & {
   CardComponent?: ComponentType<ExampleCardProps>;
@@ -24,20 +26,20 @@ export type ExamplesListProps<P extends AnyRecord, S extends AnyRecord> = Pick<
       {
         CardComponent?: ComponentType<ExampleCardProps>;
       } & Omit<ExampleCardProps, 'children' | 'code' | 'collapsedCode'> &
-        P
+        TExampleProps
     >;
   }>;
 };
 
 export default function ExamplesList<
-  P extends AnyRecord,
-  S extends AnyRecord = PlainStyle,
+  TStyle extends object,
+  TExampleProps extends object = object,
 >({
   buildAnimation,
   CardComponent = ExampleCard,
   renderExample,
   sections,
-}: ExamplesListProps<P, S>) {
+}: ExamplesListProps<TStyle, TExampleProps>) {
   return (
     <Scroll withBottomBarSpacing>
       {sections.map(
@@ -66,29 +68,38 @@ export default function ExamplesList<
   );
 }
 
-type ExampleProps<P, S extends AnyRecord> = {
+type ExampleProps<TStyle extends object, TExampleProps> = {
   CardComponent: ComponentType<ExampleCardProps>;
   denseCode?: boolean;
-  buildAnimation: (props: P) => CSSAnimationProperties<S>;
+  // `NoInfer` keeps `buildAnimation`'s body from contributing to `TStyle`
+  // inference - the keyframes literal is often narrow and would otherwise
+  // hijack inference. `TStyle` is instead solved from `renderExample`'s
+  // contextual flow (i.e. the component the user passes `animation` to).
+  buildAnimation: (
+    props: TExampleProps
+  ) => CSSAnimationProperties<NoInfer<TStyle>>;
   renderExample: (
-    props: Omit<P, 'animation'> & { animation: CSSAnimationProperties<S> }
+    props: Omit<TExampleProps, 'animation'> & {
+      animation: CSSAnimationProperties<TStyle>;
+    }
   ) => JSX.Element;
 } & Omit<ExampleCardProps, 'code'> &
-  P;
+  TExampleProps;
 
-function Example<P extends AnyRecord, S extends AnyRecord>({
+function Example<TStyle extends object, TExampleProps extends object>({
   buildAnimation,
   CardComponent,
   collapsedExampleHeight,
   denseCode = true,
   description,
+  labelTypes,
   minExampleHeight,
   renderExample,
   showRestartButton,
   title,
   ...rest
-}: ExampleProps<P, S>) {
-  const userProps = rest as P;
+}: ExampleProps<TStyle, TExampleProps>) {
+  const userProps = rest as TExampleProps;
   const animation = buildAnimation(userProps);
 
   return (
@@ -97,6 +108,7 @@ function Example<P extends AnyRecord, S extends AnyRecord>({
       collapsedCode={stringifyConfig(animation.animationName, denseCode)}
       collapsedExampleHeight={collapsedExampleHeight}
       description={description}
+      labelTypes={labelTypes}
       minExampleHeight={minExampleHeight}
       showRestartButton={showRestartButton}
       title={title}>

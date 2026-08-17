@@ -17,6 +17,10 @@ const AnimatedListExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/AnimatedList').default as React.FC
   );
+const AnimatedTouchables: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/AnimatedTouchables').default as React.FC
+  );
 const AnimatedPropsExample: React.FC = () =>
   React.createElement(require('./AnimatedPropsExample').default as React.FC);
 const AnimatedSensorAccelerometerExample: React.FC = () =>
@@ -171,12 +175,31 @@ const DurationZeroExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DurationZero').default as React.FC
   );
+const ExitingTagReuseStressExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/ExitingTagReuseStressExample')
+      .default as React.FC
+  );
 const DynamicColorIOSExample: React.FC = () =>
   React.createElement(require('./DynamicColorIOSExample').default as React.FC);
 const EmojiWaterfallExample: React.FC = () =>
   React.createElement(require('./EmojiWaterfallExample').default as React.FC);
 const EmptyExample: React.FC = () =>
   React.createElement(require('./EmptyExample').default as React.FC);
+const SettledPropsLeakExample: React.FC = () =>
+  React.createElement(require('./SettledPropsLeakExample').default as React.FC);
+const InlineStylesAndPropsExample: React.FC = () =>
+  React.createElement(
+    require('./InlineStylesAndPropsExample').default as React.FC
+  );
+const SuspenseLayoutAnimationCrashExample: React.FC = () =>
+  React.createElement(
+    require('./SuspenseLayoutAnimationCrashExample').default as React.FC
+  );
+const NestedExitingCleanupExample: React.FC = () =>
+  React.createElement(
+    require('./NestedExitingCleanupExample').default as React.FC
+  );
 const ExtrapolationExample: React.FC = () =>
   React.createElement(require('./ExtrapolationExample').default as React.FC);
 const FetchExample: React.FC = () =>
@@ -233,6 +256,10 @@ const InvalidValueAccessExample: React.FC = () =>
   React.createElement(
     require('./InvalidValueAccessExample').default as React.FC
   );
+const InterruptedExitingExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/InterruptedExitingExample').default as React.FC
+  );
 const InvertedFlatListExample: React.FC = () =>
   React.createElement(require('./InvertedFlatListExample').default as React.FC);
 const KeyframeAnimation: React.FC = () =>
@@ -242,6 +269,11 @@ const KeyframeAnimation: React.FC = () =>
 const LayoutAnimationExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/LayoutAnimation').default
+  );
+const LayoutAnimationBatchSyncExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/LayoutAnimationBatchSyncExample')
+      .default as React.FC
   );
 const LayoutTransitionExample: React.FC = () =>
   React.createElement(
@@ -381,9 +413,9 @@ const RestoreStateExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/RestoreState').default
   );
-const RuntimeTestsExample: React.FC = () =>
+const ScreenlessBasic: React.FC = () =>
   React.createElement(
-    require('./RuntimeTests/RuntimeTestsExample').default as React.FC
+    require('./SharedElementTransitions/ScreenlessBasic').default as React.FC
   );
 const ScreenStackExample: React.FC = () =>
   React.createElement(require('./ScreenStackExample').default as React.FC);
@@ -413,6 +445,8 @@ const ShadowNodesCloningExample: React.FC = () =>
   );
 const SharedStyleExample: React.FC = () =>
   React.createElement(require('./SharedStyleExample').default as React.FC);
+const SlowAnimationsExample: React.FC = () =>
+  React.createElement(require('./SlowAnimationsExample').default as React.FC);
 const SpringLayoutAnimation: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/SpringLayoutAnimation').default
@@ -507,16 +541,37 @@ export const EXAMPLES: Record<string, Example> = {
     screen: AboutExample,
   },
 
+  SuspenseLayoutAnimationCrashExample: {
+    icon: '💥',
+    title: 'Suspense + Layout Animation Crash',
+    screen: SuspenseLayoutAnimationCrashExample,
+  },
+  SettledPropsLeakExample: {
+    icon: '🚿',
+    title: 'Settled props leak',
+    screen: SettledPropsLeakExample,
+  },
+
   // Empty example for test purposes
   EmptyExample: {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
   },
+  InlineStylesAndPropsExample: {
+    icon: '🎛️',
+    title: 'Inline styles and props',
+    screen: InlineStylesAndPropsExample,
+  },
   FpsExample: {
     icon: '🎞️',
     title: 'FPS',
     screen: FpsExample,
+  },
+  SlowAnimationsExample: {
+    icon: '🐢',
+    title: 'Slow animations',
+    screen: SlowAnimationsExample,
   },
   HermesSamplingProfilerExample: {
     icon: '📊',
@@ -552,12 +607,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '3️⃣',
     title: 'Third party components',
     screen: ThirdPartyComponentsExample,
-  },
-  RuntimeTests: {
-    icon: '⚙️',
-    title: 'RuntimeTestsExample',
-    screen: RuntimeTestsExample,
-    disabledPlatforms: [REAPlatform.WEB],
   },
   Synchronizable: {
     icon: '🔄',
@@ -1067,6 +1116,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Deleting view with an exiting animation',
     screen: DeleteAncestorOfExiting,
   },
+  InterruptedExiting: {
+    title: '[LA] Interrupted exiting animation (#7493)',
+    screen: InterruptedExitingExample,
+  },
   NestedNativeStacksWithLayout: {
     title: '[LA] Nested NativeStacks with layout',
     screen: NestedNativeStacksWithLayout,
@@ -1074,6 +1127,10 @@ export const EXAMPLES: Record<string, Example> = {
   BasicLayoutAnimation: {
     title: '[LA] Basic layout animation',
     screen: BasicLayoutAnimation,
+  },
+  LayoutAnimationBatchSync: {
+    title: '[LA] Batch synchronization',
+    screen: LayoutAnimationBatchSyncExample,
   },
   BasicNestedAnimation: {
     title: '[LA] Basic nested animation',
@@ -1106,6 +1163,10 @@ export const EXAMPLES: Record<string, Example> = {
   ParticipantList: {
     title: '[LA] Participant List',
     screen: AnimatedListExample,
+  },
+  AnimatedTouchables: {
+    title: '[LA] Animated Touchables',
+    screen: AnimatedTouchables,
   },
   OlympicAnimation: {
     title: '[LA] Olympic animation',
@@ -1199,9 +1260,18 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Duration zero',
     screen: DurationZeroExample,
   },
+  ExitingTagReuseStressExample: {
+    title: '[LA] Exiting tag reuse stress',
+    screen: ExitingTagReuseStressExample,
+  },
   DefaultAnimationsOverrides: {
     title: '[LA] Default layout animations overrides',
     screen: DefaultAnimationsOverrides,
+  },
+  NestedExitingCleanupExample: {
+    icon: '🧹',
+    title: '[LA] Nested exiting cleanup',
+    screen: NestedExitingCleanupExample,
   },
 
   // Shared Element Transitions
@@ -1330,9 +1400,16 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[SET] Tab Navigator',
     screen: TabNavigatorExample,
     shouldWork: {
-      // not implemented
-      ios: false,
-      android: false,
+      ios: true,
+      android: true,
+    },
+  },
+  ScreenlessBasic: {
+    title: '[SET] Screenless Basic',
+    screen: ScreenlessBasic,
+    shouldWork: {
+      ios: true,
+      android: true,
     },
   },
 } as const;

@@ -1,3 +1,4 @@
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, Text } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -7,7 +8,10 @@ import type { Transforms } from '@/types';
 
 export default function Perspective() {
   return (
-    <ExamplesScreen<{ from: Transforms; to: Transforms; num: number }>
+    <ExamplesScreen<
+      ViewStyle,
+      { from: Transforms; to: Transforms; num: number }
+    >
       CardComponent={VerticalExampleCard}
       buildAnimation={({ from, to }) => ({
         animationDirection: 'alternate',

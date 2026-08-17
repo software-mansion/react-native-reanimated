@@ -1,9 +1,9 @@
 'use strict';
 
-import type { PatternProps } from 'react-native-svg';
-
 // TODO: Fix me
 // @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
+import type { PatternProps } from 'react-native-svg';
+
 import type { SvgStyleBuilderConfig } from './common';
 
 // TODO: Fix me

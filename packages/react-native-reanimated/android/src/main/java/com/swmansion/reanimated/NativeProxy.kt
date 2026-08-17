@@ -3,6 +3,7 @@ package com.swmansion.reanimated
 import android.content.ContentResolver
 import android.os.SystemClock
 import android.provider.Settings
+import android.util.Log
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.bridge.NativeModule
@@ -11,10 +12,12 @@ import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.common.annotations.FrameworkAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
+import com.facebook.react.uimanager.IllegalViewOperationException
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.common.UIManagerType
 import com.facebook.soloader.SoLoader
 import com.swmansion.common.GestureHandlerStateManager
+import com.swmansion.reanimated.css.CSSPlatformTransitionsManager
 import com.swmansion.reanimated.keyboard.KeyboardAnimationManager
 import com.swmansion.reanimated.keyboard.KeyboardWorkletWrapper
 import com.swmansion.reanimated.nativeProxy.AnimationFrameCallback
@@ -44,6 +47,7 @@ open class NativeProxy {
     private val gestureHandlerStateManager: GestureHandlerStateManager?
     private val keyboardAnimationManager: KeyboardAnimationManager
     private val pseudoSelectorManager: PseudoSelectorManager
+    private val cssPlatformTransitionsManager: CSSPlatformTransitionsManager
     private var firstUptime: Long = SystemClock.uptimeMillis()
     private var slowAnimationsEnabled = false
     private val animationsDragFactor = 10
@@ -91,7 +95,9 @@ open class NativeProxy {
 
         mFabricUIManager =
             UIManagerHelper.getUIManager(context, UIManagerType.FABRIC) as FabricUIManager
-        pseudoSelectorManager = PseudoSelectorManager(mFabricUIManager)
+        pseudoSelectorManager = PseudoSelectorManager(mFabricUIManager, mContext)
+        cssPlatformTransitionsManager =
+            CSSPlatformTransitionsManager(mFabricUIManager, mContext, ::getAnimationTimestamp)
 
         val callInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
         mHybridData =
@@ -132,6 +138,8 @@ open class NativeProxy {
         if (mInvalidated.getAndSet(true)) {
             return
         }
+        pseudoSelectorManager.invalidate()
+        cssPlatformTransitionsManager.invalidate()
         if (mHybridData.isValid) {
             invalidateCpp()
         }
@@ -201,7 +209,19 @@ open class NativeProxy {
         }
 
         for (i in tags.indices) {
-            if (mFabricUIManager.resolveView(tags[i]) == null) {
+            try {
+                if (mFabricUIManager.resolveView(tags[i]) == null) {
+                    tags[i] = -1
+                }
+            } catch (e: IllegalViewOperationException) {
+                // `resolveView` is expected to return `null` for a tag without a
+                // mounted view, but it instead throws when the tag's `ViewState` is
+                // already registered while the Android view hasn't been created yet.
+                // This happens when a view is mid-preallocation and a third-party view
+                // manager (e.g. lottie-react-native) dispatches an event synchronously
+                // from within `createView`, re-entering this code path. Treat it the
+                // same as a missing view.
+                // See https://github.com/software-mansion/react-native-reanimated/issues/9636.
                 tags[i] = -1
             }
         }
@@ -209,14 +229,90 @@ open class NativeProxy {
         return true
     }
 
+    // TODO(#9681): Temporary workaround for RN >= 0.86. Since RN 0.86,
+    // overrideBySynchronousMountPropsAtMountingAndroid defaults on, so RN's only public
+    // synchronous-update API (synchronouslyUpdateViewOnUIThread) seeds the tagToSynchronousMountProps
+    // cache that then clamps later commits and freezes animations. On RN >= 0.86 we instead call
+    // MountingManager.updatePropsSynchronously directly (apply without cache seeding) via reflection, since
+    // MountingManager is internal. On older RN the flag is off, so we keep the original RN path
+    // unchanged (gated by BuildConfig.IS_REACT_NATIVE_86_OR_NEWER, derived from the RN version at
+    // build time). Remove once RN exposes a non-seeding synchronous-update API.
+    private val mountingManager: Any by lazy {
+        FabricUIManager::class.java.getDeclaredField("mMountingManager").run {
+            isAccessible = true
+            get(mFabricUIManager)
+        }
+    }
+
+    private val updatePropsSynchronouslyMethod by lazy {
+        mountingManager.javaClass.methods
+            .first {
+                it.name.startsWith("updatePropsSynchronously") && it.parameterTypes.size == 2
+            }.apply { isAccessible = true }
+    }
+
     @DoNotStrip
     fun synchronouslyUpdateUIProps(
         intBuffer: IntArray,
         doubleBuffer: DoubleArray,
     ) {
+        cssPlatformTransitionsManager.onPropsWrittenSynchronously()
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
-            mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, props)
+            if (BuildConfig.IS_REACT_NATIVE_86_OR_NEWER) {
+                try {
+                    updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
+                } catch (e: Exception) {
+                    Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag", e)
+                }
+            } else {
+                mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, props)
+            }
         }
+    }
+
+    @DoNotStrip
+    fun cssDefineEasing(
+        easingId: Int,
+        easingType: Int,
+        easingPointsX: FloatArray,
+        easingPointsY: FloatArray,
+    ) {
+        cssPlatformTransitionsManager.defineEasing(easingId, easingType, easingPointsX, easingPointsY)
+    }
+
+    @DoNotStrip
+    fun cssUndefineEasing(easingId: Int) {
+        cssPlatformTransitionsManager.undefineEasing(easingId)
+    }
+
+    @DoNotStrip
+    fun cssAnimateTransition(
+        viewTag: Int,
+        propertyId: Int,
+        fromValue: Double,
+        toValue: Double,
+        durationMs: Double,
+        startTimestampMs: Double,
+        easingId: Int,
+        persistent: Boolean,
+    ): Boolean =
+        cssPlatformTransitionsManager.animateTransition(
+            viewTag,
+            propertyId,
+            fromValue,
+            toValue,
+            durationMs,
+            startTimestampMs,
+            easingId,
+            persistent,
+        )
+
+    @DoNotStrip
+    fun cssRemoveTransition(
+        viewTag: Int,
+        propertyId: Int,
+    ) {
+        cssPlatformTransitionsManager.removeTransition(viewTag, propertyId)
     }
 
     @DoNotStrip

@@ -53,7 +53,7 @@ function SecondScreen() {
 
   const animatedStyle = useAnimatedStyle(() => {
     return { width: (1 + Math.sin(sv.value)) * 150 };
-  }, [sv]);
+  });
 
   return (
     <View style={styles.container}>

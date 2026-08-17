@@ -1,5 +1,6 @@
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
-#include <reanimated/Tools/FeatureFlags.h>
+
+#include <react/debug/react_native_assert.h>
 
 #include <utility>
 
@@ -14,16 +15,19 @@ CSSPlatformTransitionProxy::CSSPlatformTransitionProxy(
       removeTransition_(std::move(removeTransition)) {}
 
 bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const EasingConfig &easing) const {
-  if constexpr (!StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
-    return false;
-  }
   return canRoute_ && canRoute_(propertyName, easing);
 }
 
-void CSSPlatformTransitionProxy::run(const CSSPlatformTransitionPropertyConfig &config) const {
-  if (applyTransition_) {
-    applyTransition_(config);
-  }
+bool CSSPlatformTransitionProxy::apply(
+    const Tag viewTag,
+    const std::string &propertyName,
+    const PlatformValue &fromValue,
+    const PlatformValue &toValue,
+    const CSSTransitionPropertySettings *settings,
+    const bool persistent,
+    const double timestamp) const {
+  return applyTransition_ &&
+      applyTransition_(viewTag, propertyName, fromValue, toValue, settings, persistent, timestamp);
 }
 
 void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &propertyName) const {
@@ -32,72 +36,106 @@ void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &pr
   }
 }
 
-// Splits the new split-shape config into loop / platform buckets. result.routing
-// starts as a copy of the previous call's routing and is updated as we route
-// each prop; erasing from the *other* side's set returns nonzero exactly when
-// the prop is migrating sides - that's how we emit cancels.
-CSSPlatformTransitionProxy::ProcessedConfig CSSPlatformTransitionProxy::processConfig(
-    CSSTransitionConfig &&config,
-    const CSSTransitionRouting &previousRouting) const {
-  ProcessedConfig result;
-  result.routing = previousRouting;
+CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
+    jsi::Runtime &rt,
+    const Tag viewTag,
+    const CSSTransitionConfig &config,
+    CSSTransitionRouting &routing,
+    const bool allowPlatform,
+    const double timestamp) const {
+  CSSTransitionConfig loopConfig;
+#ifndef NDEBUG
+  size_t matchedValues = 0;
+#endif // NDEBUG
 
-  // Drain changedPropertiesSettings; for each, decide routing and bucket.
-  // extract() preserves move-only PropertyValueDiff (jsi::Value pair).
-  while (!config.changedPropertiesSettings.empty()) {
-    auto settingsNode = config.changedPropertiesSettings.extract(config.changedPropertiesSettings.begin());
-    const auto &propertyName = settingsNode.key();
-    const auto &settings = settingsNode.mapped();
+  for (const auto &[propertyName, settings] : config.changedPropertiesSettings) {
     const auto valueIt = config.changedProperties.find(propertyName);
+    const bool hasValue = valueIt != config.changedProperties.end();
+#ifndef NDEBUG
+    if (hasValue) {
+      ++matchedValues;
+    }
+#endif // NDEBUG
 
-    if (canRoute(propertyName, settings.easingConfig)) {
-      // loop -> platform migration: cancel on loop.
-      if (result.routing.loop.erase(propertyName) > 0) {
-        result.loop.removedProperties.push_back(propertyName);
-      }
-      result.routing.platform.insert(propertyName);
+    bool routable = allowPlatform && canRoute(propertyName, settings.easingConfig);
+    if (routable && hasValue) {
+      const auto values = parsePlatformValues(rt, propertyName, valueIt->second.first, valueIt->second.second);
+      // React commits the config path's target, so there is nothing to hold afterwards.
+      routable = values && apply(viewTag, propertyName, values->first, values->second, &settings, false, timestamp);
+    } else if (routable) {
+      // Settings-only: stay on the platform only if already animating there.
+      routable = routing.platform.contains(propertyName);
+    }
 
-      if (valueIt != config.changedProperties.end()) {
-        auto valueNode = config.changedProperties.extract(valueIt);
-        result.platform.changedProperties.push_back(
-            CSSPlatformTransitionRawEntry{propertyName, std::move(valueNode.mapped()), settingsNode.mapped()});
+    if (routable) {
+      // loop -> platform migration cancels on the loop side.
+      if (routing.loop.erase(propertyName) > 0) {
+        loopConfig.removedProperties.push_back(propertyName);
       }
+      routing.platform.insert(propertyName);
     } else {
-      // platform -> loop migration: cancel on platform.
-      if (result.routing.platform.erase(propertyName) > 0) {
-        result.platform.removedProperties.push_back(propertyName);
+      // platform -> loop migration cancels on the platform side.
+      if (routing.platform.erase(propertyName) > 0) {
+        remove(viewTag, propertyName);
       }
-      result.routing.loop.insert(propertyName);
-
-      if (valueIt != config.changedProperties.end()) {
-        auto valueNode = config.changedProperties.extract(valueIt);
-        result.loop.changedProperties.insert(std::move(valueNode));
+      routing.loop.insert(propertyName);
+      if (hasValue) {
+        loopConfig.changedProperties.emplace(
+            propertyName,
+            std::make_pair(jsi::Value(rt, valueIt->second.first), jsi::Value(rt, valueIt->second.second)));
       }
-      result.loop.changedPropertiesSettings.insert(std::move(settingsNode));
+      loopConfig.changedPropertiesSettings.emplace(propertyName, settings);
     }
   }
 
-  // Any value diffs without matching settings - forward to whichever side they
-  // were last on. (Practically rare: parser emits settings + values together.)
-  while (!config.changedProperties.empty()) {
-    auto valueNode = config.changedProperties.extract(config.changedProperties.begin());
-    if (!result.routing.platform.contains(valueNode.key())) {
-      result.routing.loop.insert(valueNode.key());
-      result.loop.changedProperties.insert(std::move(valueNode));
+  // The parser pairs every value diff with settings, so all must have matched one.
+  react_native_assert(
+      matchedValues == config.changedProperties.size() && "[Reanimated] CSS transition value diff without settings");
+
+  for (const auto &propertyName : config.removedProperties) {
+    if (routing.platform.erase(propertyName) > 0) {
+      remove(viewTag, propertyName);
+    } else if (routing.loop.erase(propertyName) > 0) {
+      loopConfig.removedProperties.push_back(propertyName);
     }
   }
 
-  // Props JS asked to stop transitioning: look up the owning side in routing
-  // and forward the cancel there.
-  for (auto &propertyName : config.removedProperties) {
-    if (result.routing.platform.erase(propertyName) > 0) {
-      result.platform.removedProperties.push_back(std::move(propertyName));
-    } else if (result.routing.loop.erase(propertyName) > 0) {
-      result.loop.removedProperties.push_back(std::move(propertyName));
-    }
-  }
+  return loopConfig;
+}
 
-  return result;
+PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
+    const Tag viewTag,
+    const PropertyValueDynamicDiffsMap &propertyDiffs,
+    const TransitionProperties &pseudoLockedProperties,
+    CSSTransitionRouting &routing,
+    const bool allowPlatform,
+    const double timestamp) const {
+  PropertyValueDynamicDiffsMap loopDiffs;
+  for (const auto &[propertyName, propertyDiff] : propertyDiffs) {
+    // A platform-routed property keeps animating natively while the platform can
+    // still express the toggled value; otherwise it migrates to the loop.
+    if (routing.platform.contains(propertyName)) {
+      if (allowPlatform) {
+        const auto values = parsePlatformValues(propertyName, propertyDiff.first, propertyDiff.second);
+        // Releasing the last selector targets the committed style, which needs no hold.
+        const bool persistent = pseudoLockedProperties.contains(propertyName);
+        if (values && apply(viewTag, propertyName, values->first, values->second, nullptr, persistent, timestamp)) {
+          continue;
+        }
+      }
+      routing.platform.erase(propertyName);
+      remove(viewTag, propertyName);
+      routing.loop.insert(propertyName);
+    }
+    loopDiffs.emplace(propertyName, propertyDiff);
+  }
+  return loopDiffs;
+}
+
+void CSSPlatformTransitionProxy::cancelAll(const Tag viewTag, const TransitionProperties &properties) const {
+  for (const auto &propertyName : properties) {
+    remove(viewTag, propertyName);
+  }
 }
 
 } // namespace reanimated::css

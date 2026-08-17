@@ -1,8 +1,27 @@
 'use strict';
 
-import { MILLISECONDS_REGEX, SECONDS_REGEX } from '../constants';
+import {
+  MILLISECONDS_REGEX,
+  PERCENTAGE_REGEX,
+  SECONDS_REGEX,
+} from '../constants';
 import type { SingleCSSTransitionConfig, TimeUnit } from '../types';
 import { isTimeUnit, smellsLikeTimingFunction } from './guards';
+
+export const offsetOf = (selector: number | string): number | null => {
+  if (selector === 'from') {
+    return 0;
+  }
+  if (selector === 'to') {
+    return 1;
+  }
+  if (!isNaN(+selector)) {
+    return +selector;
+  }
+  return PERCENTAGE_REGEX.test(`${selector}`)
+    ? parseFloat(`${selector}`) / 100
+    : null;
+};
 
 export function splitByComma(str: string) {
   // split by comma not enclosed in parentheses

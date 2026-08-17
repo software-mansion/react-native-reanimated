@@ -8,6 +8,7 @@ import Animated from 'react-native-reanimated';
 import florence from './assets/florence.jpg';
 import countryside from './assets/countryside.jpg';
 import dawn from './assets/dawn.jpg';
+import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
 
 type ParamList = {
   Screen1?: object;
@@ -74,7 +75,7 @@ export function ImageStack({
   );
 }
 
-export function ScreenOne({
+export function ScreenOneContent({
   navigation,
 }: NativeStackScreenProps<ParamList, 'Screen1'>) {
   return (
@@ -94,7 +95,7 @@ export function ScreenOne({
   );
 }
 
-export function ScreenTwo({
+export function ScreenTwoContent({
   navigation,
 }: NativeStackScreenProps<ParamList, 'Screen2'>) {
   return (
@@ -114,7 +115,7 @@ export function ScreenTwo({
   );
 }
 
-export function ScreenThree({
+export function ScreenThreeContent({
   navigation,
   route,
 }: NativeStackScreenProps<ParamList, 'Screen3'>) {
@@ -130,6 +131,10 @@ export function ScreenThree({
     </View>
   );
 }
+
+const ScreenOne = withSharedTransitionBoundary(ScreenOneContent);
+const ScreenTwo = withSharedTransitionBoundary(ScreenTwoContent);
+const ScreenThree = withSharedTransitionBoundary(ScreenThreeContent);
 
 export default function ImageStackExample() {
   return (

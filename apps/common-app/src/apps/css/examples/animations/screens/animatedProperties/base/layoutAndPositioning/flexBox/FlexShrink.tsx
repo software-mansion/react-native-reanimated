@@ -1,3 +1,4 @@
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -7,7 +8,7 @@ import { colors, flex, radius, sizes } from '@/theme';
 
 export default function FlexShrink() {
   return (
-    <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
+    <ExamplesScreen<ViewStyle, { keyframes: CSSAnimationKeyframes<ViewStyle> }>
       CardComponent={VerticalExampleCard}
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',

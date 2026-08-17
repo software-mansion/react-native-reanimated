@@ -11,8 +11,8 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
 export default function PathExample() {
   return (
     <ExamplesScreen<
-      { keyframes: CSSAnimationKeyframes<PathProps>; viewBox?: string },
-      PathProps
+      PathProps,
+      { keyframes: CSSAnimationKeyframes<PathProps>; viewBox?: string }
     >
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',
@@ -185,6 +185,7 @@ export default function PathExample() {
                       stroke: '#06c034ff',
                     },
                   },
+                  labelTypes: ['iOS', 'Android'],
                   title: '✅ to ❌',
                 },
               ],
@@ -230,6 +231,7 @@ export default function PathExample() {
                       d: 'M30,25 C45,33.333,60,41.667,75,50 C60,58.333,45,66.667,30,75 C30,58.333,30,41.667,30,25 Z',
                     },
                   },
+                  labelTypes: ['iOS', 'Android'],
                   title: 'Pause to Play',
                   viewBox: '0 0 100 100',
                 },

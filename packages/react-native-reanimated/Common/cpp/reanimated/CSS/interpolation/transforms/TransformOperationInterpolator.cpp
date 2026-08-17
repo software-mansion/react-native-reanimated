@@ -5,6 +5,8 @@
 #include <reanimated/CSS/interpolation/transforms/operations/skew.h>
 #include <reanimated/CSS/interpolation/transforms/operations/translate.h>
 
+#include <cmath>
+#include <limits>
 #include <utility>
 
 namespace reanimated::css {
@@ -31,14 +33,19 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperat
     const std::shared_ptr<StyleOperation> &from,
     const std::shared_ptr<StyleOperation> &to,
     const StyleOperationsInterpolationContext & /* context */) const {
-  // TODO - check if this implementation is correct
   const auto &fromValue = std::static_pointer_cast<PerspectiveOperation>(from)->value;
   const auto &toValue = std::static_pointer_cast<PerspectiveOperation>(to)->value;
 
-  if (fromValue.value == 0)
-    return std::make_unique<PerspectiveOperation>(toValue);
-  if (toValue.value == 0)
-    return std::make_unique<PerspectiveOperation>(fromValue);
+  // The default "no perspective" is infinity, so interpolating the distance
+  // directly gives inf + t*(d - inf) = NaN. Interpolate in reciprocal space
+  // instead (1/inf = 0, matching how perspective enters the matrix as -1/d).
+  if (std::isinf(fromValue.value) || std::isinf(toValue.value)) {
+    const double fromReciprocal = 1.0 / fromValue.value;
+    const double toReciprocal = 1.0 / toValue.value;
+    const double reciprocal = fromReciprocal + progress * (toReciprocal - fromReciprocal);
+    return std::make_unique<PerspectiveOperation>(
+        reciprocal == 0.0 ? std::numeric_limits<double>::infinity() : 1.0 / reciprocal);
+  }
 
   return std::make_unique<PerspectiveOperation>(fromValue.interpolate(progress, toValue));
 }
@@ -157,8 +164,7 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::inte
   const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
   const auto &toOp = *std::static_pointer_cast<TOperation>(to);
 
-  return std::make_unique<TOperation>(
-      fromOp.value.interpolate(progress, toOp.value, getResolvableValueContext(context)));
+  return std::make_unique<TOperation>(fromOp.value.interpolate(progress, toOp.value, getRelativeValueContext(context)));
 }
 
 template <ResolvableOp TOperation>
@@ -166,7 +172,7 @@ std::shared_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::reso
     const std::shared_ptr<StyleOperation> &operation,
     const StyleOperationsInterpolationContext &context) const {
   const auto &resolvableOp = std::static_pointer_cast<TOperation>(operation);
-  const auto &resolved = resolvableOp->value.resolve(getResolvableValueContext(context));
+  const auto &resolved = resolvableOp->value.resolve(getRelativeValueContext(context));
 
   if (!resolved.has_value()) {
     throw std::invalid_argument(
@@ -178,9 +184,9 @@ std::shared_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::reso
 }
 
 template <ResolvableOp TOperation>
-ResolvableValueInterpolationContext TransformOperationInterpolator<TOperation>::getResolvableValueContext(
+RelativeValueInterpolationContext TransformOperationInterpolator<TOperation>::getRelativeValueContext(
     const StyleOperationsInterpolationContext &context) const {
-  return ResolvableValueInterpolationContext{
+  return RelativeValueInterpolationContext{
       .node = context.node,
       .fallbackInterpolateThreshold = context.fallbackInterpolateThreshold,
       .viewStylesRepository = context.viewStylesRepository,

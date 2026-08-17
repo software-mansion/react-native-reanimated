@@ -1,47 +1,18 @@
 'use strict';
-import type { PredefinedTimingFunction, StepsModifier } from '../easing';
-import type { CSSAnimationProp, CSSTransitionProp } from '../types';
+import type { PredefinedTimingFunction } from '../easing';
 
-export const ANIMATION_PROPS: CSSAnimationProp[] = [
-  'animationName',
-  'animationDuration',
-  'animationTimingFunction',
-  'animationDelay',
-  'animationIterationCount',
-  'animationDirection',
-  'animationFillMode',
-  'animationPlayState',
-];
+export const VALID_PREDEFINED_TIMING_FUNCTIONS: readonly PredefinedTimingFunction[] =
+  [
+    'linear',
+    'ease',
+    'ease-in',
+    'ease-out',
+    'ease-in-out',
+    'step-start',
+    'step-end',
+  ];
 
-export const TRANSITION_PROPS: CSSTransitionProp[] = [
-  'transitionProperty',
-  'transitionDuration',
-  'transitionTimingFunction',
-  'transitionDelay',
-  'transitionBehavior',
-  'transition',
-];
-
-export const VALID_STEPS_MODIFIERS: StepsModifier[] = [
-  'jump-start',
-  'start',
-  'jump-end',
-  'end',
-  'jump-none',
-  'jump-both',
-];
-
-export const VALID_PREDEFINED_TIMING_FUNCTIONS: PredefinedTimingFunction[] = [
-  'linear',
-  'ease',
-  'ease-in',
-  'ease-out',
-  'ease-in-out',
-  'step-start',
-  'step-end',
-];
-
-export const VALID_PARAMETRIZED_TIMING_FUNCTIONS: string[] = [
+export const VALID_PARAMETRIZED_TIMING_FUNCTIONS: readonly string[] = [
   'cubic-bezier',
   'steps',
   'linear',

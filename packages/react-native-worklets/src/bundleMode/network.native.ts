@@ -6,6 +6,8 @@
  * The NetworkingModule itself is injected via C++.
  */
 export function initializeNetworking() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require('react-native/Libraries/TurboModule/TurboModuleRegistry');
   const TurboModules = globalThis.TurboModules;
 
   TurboModules.set('FileReaderModule', makeMockTurboModule('FileReaderModule'));
@@ -14,6 +16,10 @@ export function initializeNetworking() {
     makeMockTurboModule('PlatformConstants')
   );
   TurboModules.set('WebSocketModule', makeMockTurboModule('WebSocketModule'));
+  TurboModules.set(
+    'NativeReactNativeFeatureFlagsCxx',
+    new Proxy({}, { get: () => () => undefined })
+  );
   TurboModules.set(
     'BlobModule',
     makeMockTurboModule('BlobModule', ['addNetworkingHandler'])

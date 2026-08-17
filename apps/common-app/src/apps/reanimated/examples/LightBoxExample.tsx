@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   Extrapolation,
@@ -141,26 +141,8 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
 
-  const gesture = Gesture.Pan()
-    .onChange((event) => {
-      translateX.value = event.translationX;
-      translateY.value = event.translationY;
-
-      scale.value = interpolate(
-        translateY.value,
-        [-200, 0, 200],
-        [0.65, 1, 0.65],
-        Extrapolation.CLAMP
-      );
-
-      backdropOpacity.value = interpolate(
-        translateY.value,
-        [-100, 0, 100],
-        [0, 1, 0],
-        Extrapolation.CLAMP
-      );
-    })
-    .onEnd(() => {
+  const gesture = usePanGesture({
+    onDeactivate: () => {
       if (Math.abs(translateY.value) > 40) {
         targetX.value = translateX.value - targetX.value * -1;
         targetY.value = translateY.value - targetY.value * -1;
@@ -181,7 +163,26 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
       }
 
       scale.value = withTiming(1, timingConfig);
-    });
+    },
+    onUpdate: (event) => {
+      translateX.value = event.translationX;
+      translateY.value = event.translationY;
+
+      scale.value = interpolate(
+        translateY.value,
+        [-200, 0, 200],
+        [0.65, 1, 0.65],
+        Extrapolation.CLAMP
+      );
+
+      backdropOpacity.value = interpolate(
+        translateY.value,
+        [-100, 0, 100],
+        [0, 1, 0],
+        Extrapolation.CLAMP
+      );
+    },
+  });
 
   const imageStyles = useAnimatedStyle(() => {
     const interpolateProgress = (range: [number, number]) =>

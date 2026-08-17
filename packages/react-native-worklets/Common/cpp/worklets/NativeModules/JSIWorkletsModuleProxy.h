@@ -4,6 +4,7 @@
 #include <worklets/SharedItems/MemoryManager.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/UnpackerLoader.h>
+#include <worklets/Tools/RNRuntimeStatus.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
@@ -31,6 +32,7 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
       const std::shared_ptr<RuntimeBindings> &runtimeBindings,
       const BundleModeConfig &bundleModeConfig,
       const std::shared_ptr<UnpackerLoader> &unpackerLoader,
+      const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus,
       RuntimeData::RuntimeId hostRuntimeId)
       : isDevBundle_(isDevBundle),
         bundleModeConfig_(bundleModeConfig),
@@ -41,6 +43,7 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
         uiWorkletRuntime_(uiWorkletRuntime),
         runtimeBindings_(runtimeBindings),
         unpackerLoader_(unpackerLoader),
+        rnRuntimeStatus_(rnRuntimeStatus),
         hostRuntimeId_(hostRuntimeId) {}
 
   static std::shared_ptr<JSIWorkletsModuleProxy> createForNewRuntime(
@@ -56,6 +59,7 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
         sourceProxy->runtimeBindings_,
         sourceProxy->bundleModeConfig_,
         sourceProxy->unpackerLoader_,
+        sourceProxy->rnRuntimeStatus_,
         hostRuntimeId);
   }
 
@@ -115,6 +119,7 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
   const std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
   const std::shared_ptr<RuntimeBindings> runtimeBindings_;
   const std::shared_ptr<UnpackerLoader> unpackerLoader_;
+  const std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
   const RuntimeData::RuntimeId hostRuntimeId_;
 };
 

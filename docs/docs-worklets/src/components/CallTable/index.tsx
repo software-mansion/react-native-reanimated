@@ -27,12 +27,12 @@ function renderCellValue(value: boolean) {
 export function CallTable({ bundleMode, noBundleMode }: CallTableProps) {
   const rows = [
     {
-      label: 'Enabled',
+      label: 'Bundle Mode',
       data: bundleMode,
       className: styles.bundleEnabled,
     },
     {
-      label: 'Disabled',
+      label: 'Legacy Eval Mode',
       data: noBundleMode,
       className: styles.bundleDisabled,
     },
@@ -43,7 +43,7 @@ export function CallTable({ bundleMode, noBundleMode }: CallTableProps) {
       <table className={styles.table}>
         <thead>
           <tr>
-            <th scope="col">Bundle Mode</th>
+            <th scope="col">Mode</th>
             <th scope="col">RN Runtime</th>
             <th scope="col">UI Runtime</th>
             <th scope="col">Worker Runtime</th>

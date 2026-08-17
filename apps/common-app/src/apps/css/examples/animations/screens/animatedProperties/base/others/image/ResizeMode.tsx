@@ -1,3 +1,4 @@
+import type { ImageStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -9,7 +10,10 @@ import { radius, sizes } from '@/theme';
 
 export default function ResizeMode({ labelTypes }: ExampleScreenProps) {
   return (
-    <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
+    <ExamplesScreen<
+      ImageStyle,
+      { keyframes: CSSAnimationKeyframes<ImageStyle> }
+    >
       CardComponent={VerticalExampleCard}
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',

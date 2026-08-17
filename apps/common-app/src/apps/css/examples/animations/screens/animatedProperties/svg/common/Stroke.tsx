@@ -16,6 +16,7 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
 export default function StrokeExample() {
   return (
     <ExamplesScreen<
+      StrokeProps,
       {
         keyframes: CSSAnimationKeyframes<StrokeProps>;
         animationProps?: Omit<CSSAnimationProperties, 'animationName'>;
@@ -25,8 +26,7 @@ export default function StrokeExample() {
             animatedProps: CSSAnimationProperties<StrokeProps>;
           }
         ) => JSX.Element;
-      },
-      StrokeProps
+      }
     >
       buildAnimation={({ animationProps, keyframes }) => ({
         animationDuration: '1s',

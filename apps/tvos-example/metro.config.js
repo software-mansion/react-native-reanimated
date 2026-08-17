@@ -10,13 +10,13 @@ const defaultConfig = getDefaultConfig(__dirname);
 const { blockList, extraNodeModules } = getMonorepoMetroOptions(
   modulesToFilter,
   __dirname,
-  defaultConfig
+  /** @type {Parameters<typeof getMonorepoMetroOptions>[2]} */ (defaultConfig)
 );
 
 const monorepoRoot = path.resolve(__dirname, '../..');
 
 /** @type {import('@react-native/metro-config').MetroConfig} */
-const config = {
+let config = {
   projectRoot: __dirname,
   watchFolders: [monorepoRoot],
 
@@ -27,6 +27,9 @@ const config = {
     extraNodeModules,
   },
 };
+
+const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
+config = mergeConfig(config, bundleModeMetroConfig);
 
 module.exports = wrapWithReanimatedMetroConfig(
   mergeConfig(defaultConfig, config)

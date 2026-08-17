@@ -8,11 +8,23 @@ import {
   variableDeclarator,
 } from '@babel/types';
 
-export function isRelease() {
-  const pattern = /(prod|release|stag[ei])/i;
+import type { WorkletsPluginPass } from './types';
+
+export function isRelease(state: WorkletsPluginPass) {
+  const releasePattern = /(prod|release|stag[ei])/i;
+  const developmentPattern = /dev/i;
+  const envName = state.file.opts.envName;
+  if (envName) {
+    if (envName.match(releasePattern)) {
+      return true;
+    }
+    if (envName.match(developmentPattern)) {
+      return false;
+    }
+  }
   return !!(
-    process.env.BABEL_ENV?.match(pattern) ||
-    process.env.NODE_ENV?.match(pattern)
+    process.env.BABEL_ENV?.match(releasePattern) ||
+    process.env.NODE_ENV?.match(releasePattern)
   );
 }
 

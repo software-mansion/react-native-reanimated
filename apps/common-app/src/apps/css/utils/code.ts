@@ -1,7 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-import type { AnyRecord } from '@/types';
+import type { UnknownRecord } from '@/types';
 
 export function isValidPropertyName(propertyName: string): boolean {
   const validPropertyNamePattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
@@ -20,6 +17,13 @@ export const isLeafValue = (value: unknown): boolean =>
   Array.isArray(value) ||
   'normalize' in value ||
   'normalizedKeyframes' in value;
+
+const isObjectRecord = (value: unknown): value is UnknownRecord =>
+  typeof value === 'object' &&
+  value !== null &&
+  !Array.isArray(value) &&
+  !('normalize' in value) &&
+  !('normalizedKeyframes' in value);
 
 export const formatLeafValue = (
   value: unknown,
@@ -44,8 +48,8 @@ export const formatLeafValue = (
 
 export const MAX_NOT_WRAPPED_LENGTH = 48;
 
-const stringifyConfigObject = <T extends AnyRecord>(
-  object: T,
+const stringifyConfigObject = (
+  inputObject: UnknownRecord,
   dense = false,
   depth = 0
 ): string => {
@@ -53,36 +57,41 @@ const stringifyConfigObject = <T extends AnyRecord>(
     throw new Error('Object nesting is too deep');
   }
 
-  if ('cssRules' in object) {
-    object = object.cssRules;
-  }
+  const object = isObjectRecord(inputObject.cssRules)
+    ? inputObject.cssRules
+    : inputObject;
 
   const formatValue = (
     key: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any,
+    value: unknown,
     currentDepth: number,
     makeDense: boolean
-  ) => {
+  ): string => {
     const nextTab = '  '.repeat(currentDepth);
 
     if (key === 'animationName') {
-      return Array.isArray(value) && value.length > 0
-        ? `[\n${nextTab}  ${value
-            .map((item) => stringifyConfigObject(item, makeDense, depth + 2))
-            .join(`,\n${nextTab}  `)}\n${nextTab}]`
-        : stringifyConfigObject(value, makeDense, currentDepth);
+      if (Array.isArray(value) && value.length > 0) {
+        return `[\n${nextTab}  ${value
+          .map((item) =>
+            isObjectRecord(item)
+              ? stringifyConfigObject(item, makeDense, depth + 2)
+              : formatLeafValue(item, nextTab, makeDense)
+          )
+          .join(`,\n${nextTab}  `)}\n${nextTab}]`;
+      }
+      return isObjectRecord(value)
+        ? stringifyConfigObject(value, makeDense, currentDepth)
+        : formatLeafValue(value, nextTab, makeDense);
     }
 
-    return isLeafValue(value)
-      ? formatLeafValue(value, nextTab, makeDense)
-      : stringifyConfigObject(value, makeDense, currentDepth);
+    return isObjectRecord(value)
+      ? stringifyConfigObject(value, makeDense, currentDepth)
+      : formatLeafValue(value, nextTab, makeDense);
   };
 
   const formatLine = (
     key: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any,
+    value: unknown,
     depth_: number,
     makeDense: boolean
   ) => {
@@ -107,25 +116,34 @@ const stringifyConfigObject = <T extends AnyRecord>(
     .join(',\n')}\n${currentTab}}`;
 };
 
-export const stringifyConfig = <T extends AnyRecord>(
-  object: 'none' | T,
+export const stringifyConfig = (
+  object: unknown,
   dense = false,
   depth = 0
 ): string => {
-  return object === 'none'
-    ? 'none'
-    : stringifyConfigObject(object, dense, depth);
+  if (object === 'none') {
+    return 'none';
+  }
+  return isObjectRecord(object)
+    ? stringifyConfigObject(object, dense, depth)
+    : formatLeafValue(object, '  '.repeat(depth), dense);
 };
 
-export const getCodeWithOverrides = <C extends AnyRecord, O extends AnyRecord>(
+export const getCodeWithOverrides = <C extends object, O extends object>(
   sharedConfig: C,
   overrides: Array<O> = [],
   excludeKeys: Array<string> = []
 ): string => {
-  const propertyOverrides: AnyRecord = {};
+  // The generic constraint accepts any object shape from callers; treat it
+  // as an indexable record once at the boundary so the dynamic prop reads
+  // inside don't each need their own cast.
+  const config = sharedConfig as UnknownRecord;
+  const items = overrides as Array<UnknownRecord>;
+
+  const propertyOverrides: Record<string, Array<unknown>> = {};
   const excludeSet = new Set(excludeKeys);
 
-  const isQuoted = (value: unknown) =>
+  const isQuoted = (value: unknown): value is string =>
     typeof value === 'string' && value[0] === '"' && value.slice(-1) === '"';
 
   const parseOverrideValue = (value: unknown) => {
@@ -143,7 +161,7 @@ export const getCodeWithOverrides = <C extends AnyRecord, O extends AnyRecord>(
     return parseOverrideValue(value);
   };
 
-  for (const item of overrides) {
+  for (const item of items) {
     for (const key in item) {
       if (!excludeSet.has(key)) {
         propertyOverrides[key] ??= [];
@@ -154,14 +172,9 @@ export const getCodeWithOverrides = <C extends AnyRecord, O extends AnyRecord>(
 
   return (
     '{\n  ' +
-    [
-      ...new Set([
-        ...Object.keys(sharedConfig),
-        ...Object.keys(propertyOverrides),
-      ]),
-    ]
+    [...new Set([...Object.keys(config), ...Object.keys(propertyOverrides)])]
       .map((key) => {
-        const value = sharedConfig[key] ?? propertyOverrides[key]?.[0] ?? '';
+        const value = config[key] ?? propertyOverrides[key]?.[0] ?? '';
 
         let parsedValue;
         if (key === 'animationName') {

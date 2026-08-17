@@ -5,8 +5,10 @@
 
 #include <react/debug/react_native_assert.h>
 
+#include <functional>
 #include <memory>
 #include <utility>
+#include <vector>
 
 namespace reanimated {
 
@@ -35,26 +37,65 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
       addUpdatesToBatch(shadowNode->getFamilyShared(), jsi::dynamicFromValue(rt, updates));
     }
 
-    if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
-      timestampMap_[shadowNode->getTag()] = timestamp;
+    // When USE_ANIMATION_BACKEND is enabled, updates bypass `updatesRegistry_`,
+    // so entries added to `timestampMap_` would never be synced and thus never
+    // evicted, leaking until view unmount.
+    if constexpr (
+        StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
+        !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+      const auto tag = shadowNode->getTag();
+      timestampMap_[tag] = timestamp;
+      // If JS already has a `settledProps` snapshot for this tag, it is now
+      // stale — schedule a refresh on the next `collectSettledUpdates`.
+      if (syncedTags_.erase(tag) > 0) {
+        invalidatedTags_.insert(tag);
+      }
     }
   }
 }
 
-jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(
-    jsi::Runtime &rt,
-    const double timestamp,
-    const double cleanupTimestamp) {
+jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const double settledTimestamp) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
-  removeUpdatesOlderThanTimestamp(cleanupTimestamp);
 
   std::vector<std::pair<Tag, std::reference_wrapper<const folly::dynamic>>> updates;
 
-  for (const auto &[viewTag, pair] : updatesRegistry_) {
-    auto it = timestampMap_.find(viewTag);
-    if (it != timestampMap_.end() && it->second < timestamp) {
-      updates.emplace_back(viewTag, std::cref(pair.second));
+  for (auto it = updatesRegistry_.begin(); it != updatesRegistry_.end();) {
+    const auto viewTag = it->first;
+
+    if (syncedTags_.contains(viewTag)) {
+      // React already has the latest value for this tag (synced on a previous
+      // call, so the `settledProps` state is committed by now) — the registry
+      // entry is redundant. `syncedTags_` is intentionally retained to detect
+      // re-animation staleness. Note that `syncedTags_` and `invalidatedTags_`
+      // are disjoint — `update()` moves tags from the former to the latter.
+      timestampMap_.erase(viewTag);
+      it = updatesRegistry_.erase(it);
+      continue;
     }
+
+    const auto timestampIt = timestampMap_.find(viewTag);
+    if (timestampIt == timestampMap_.end()) {
+      ++it;
+      continue;
+    }
+    const bool isSettled = timestampIt->second < settledTimestamp;
+    const auto invalidatedIt = invalidatedTags_.find(viewTag);
+    const bool isInvalidated = invalidatedIt != invalidatedTags_.end();
+    if (isSettled || isInvalidated) {
+      updates.emplace_back(viewTag, std::cref(it->second.second));
+      if (isSettled) {
+        // Only settled-path tags are tracked as "synced" so that an ongoing
+        // animation doesn't re-trigger an invalidation/sync on every GC tick.
+        syncedTags_.insert(viewTag);
+      }
+      if (isInvalidated) {
+        // Only erase serviced invalidations; if a tag was invalidated but the
+        // matching update batch hasn't been flushed into updatesRegistry_ yet,
+        // we leave the entry so the next sync picks it up.
+        invalidatedTags_.erase(invalidatedIt);
+      }
+    }
+    ++it;
   }
 
   const jsi::Array array(rt, updates.size());
@@ -69,22 +110,11 @@ jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(
   return jsi::Value(rt, array);
 }
 
-void AnimatedPropsRegistry::removeUpdatesOlderThanTimestamp(const double timestamp) {
-  for (auto it = timestampMap_.begin(); it != timestampMap_.end();) {
-    const auto viewTag = it->first;
-    const auto viewTimestamp = it->second;
-    if (viewTimestamp < timestamp) {
-      it = timestampMap_.erase(it);
-      updatesRegistry_.erase(viewTag);
-    } else {
-      it++;
-    }
-  }
-}
-
 void AnimatedPropsRegistry::removeTag(const Tag tag) {
   updatesRegistry_.erase(tag);
   timestampMap_.erase(tag);
+  syncedTags_.erase(tag);
+  invalidatedTags_.erase(tag);
 }
 
 } // namespace reanimated

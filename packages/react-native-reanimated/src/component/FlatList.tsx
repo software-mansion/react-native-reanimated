@@ -11,6 +11,7 @@ import { FlatList } from 'react-native';
 
 import type { AnimatedStyle, ILayoutAnimationBuilder } from '../commonTypes';
 import { createAnimatedComponent } from '../createAnimatedComponent';
+import type { CSSCallbackProps } from '../css/types';
 import type { AnimatedProps } from '../helperTypes';
 import { LayoutAnimationConfig } from './LayoutAnimationConfig';
 import { AnimatedView } from './View';
@@ -58,9 +59,8 @@ const createCellRendererComponent = (
   return CellRendererComponent;
 };
 
-interface ReanimatedFlatListPropsWithLayout<T> extends AnimatedProps<
-  FlatListProps<T>
-> {
+interface ReanimatedFlatListPropsWithLayout<T>
+  extends AnimatedProps<FlatListProps<T>>, CSSCallbackProps {
   /**
    * Lets you pass layout animation directly to the FlatList item. Works only
    * with a single-column `Animated.FlatList`, `numColumns` property cannot be
@@ -79,14 +79,14 @@ interface ReanimatedFlatListPropsWithLayout<T> extends AnimatedProps<
    * rendered and its index and returns animated view styles.
    */
   CellRendererComponentStyle?:
-    | StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>
+    | StyleProp<AnimatedStyle<ViewStyle>>
     | (({
         item,
         index,
       }: {
         item: T;
         index: number;
-      }) => StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>)
+      }) => StyleProp<AnimatedStyle<ViewStyle>>)
     | undefined;
 }
 

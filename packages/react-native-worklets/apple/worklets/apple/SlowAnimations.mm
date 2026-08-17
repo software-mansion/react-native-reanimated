@@ -14,7 +14,7 @@ CGFloat getUIAnimationDragCoefficient(void)
 #if TARGET_IPHONE_SIMULATOR
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
-    UIAnimationDragCoefficient = (float (*)(void))dlsym(RTLD_DEFAULT, "UIAnimationDragCoefficient");
+    UIAnimationDragCoefficient = reinterpret_cast<float (*)(void)>(dlsym(RTLD_DEFAULT, "UIAnimationDragCoefficient"));
   });
 #endif
   return UIAnimationDragCoefficient ? UIAnimationDragCoefficient() : 1.f;

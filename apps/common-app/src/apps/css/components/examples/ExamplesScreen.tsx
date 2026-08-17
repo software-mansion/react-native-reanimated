@@ -1,4 +1,4 @@
-import type { AnyRecord, PartialBy, PlainStyle } from '@/types';
+import type { PartialBy } from '@/types';
 
 import { Screen } from '../layout/Screens';
 import TabView from '../layout/TabView';
@@ -6,43 +6,59 @@ import type { ExamplesListProps } from './ExamplesList';
 import ExamplesList from './ExamplesList';
 
 type ExamplesScreenProps<
-  P extends AnyRecord | Array<AnyRecord>,
-  S extends AnyRecord,
+  TStyle extends object,
+  TExampleProps extends object | Array<object>,
 > =
-  P extends Array<infer T>
-    ? T extends AnyRecord
-      ? DifferentTypeTabsScreenProps<T, S>
+  TExampleProps extends Array<infer T>
+    ? T extends object
+      ? DifferentTypeTabsScreenProps<TStyle, T>
       : never
     :
-        | DifferentTypeTabsScreenProps<P, S>
-        | ExamplesListProps<P, S>
-        | SameTypeTabsScreenProps<P, S>;
+        | DifferentTypeTabsScreenProps<TStyle, TExampleProps>
+        | ExamplesListProps<TStyle, TExampleProps>
+        | SameTypeTabsScreenProps<TStyle, TExampleProps>;
 
-type DifferentTypeTabsScreenProps<P extends AnyRecord, S extends AnyRecord> = {
-  tabs: Array<{ name: string } & ExamplesListProps<P, S>>;
+type DifferentTypeTabsScreenProps<
+  TStyle extends object,
+  TExampleProps extends object,
+> = {
+  tabs: Array<{ name: string } & ExamplesListProps<TStyle, TExampleProps>>;
 };
 
 type PartialExamplesListProps<
-  P extends AnyRecord,
-  S extends AnyRecord,
-  K extends keyof ExamplesListProps<P, S>,
+  TStyle extends object,
+  TExampleProps extends object,
+  K extends keyof ExamplesListProps<TStyle, TExampleProps>,
 > = {
-  tabs: Array<{ name: string } & PartialBy<ExamplesListProps<P, S>, K>>;
-} & Pick<ExamplesListProps<P, S>, K>;
+  tabs: Array<
+    { name: string } & PartialBy<ExamplesListProps<TStyle, TExampleProps>, K>
+  >;
+} & Pick<ExamplesListProps<TStyle, TExampleProps>, K>;
 
-type SameTypeTabsScreenProps<P extends AnyRecord, S extends AnyRecord> =
-  | PartialExamplesListProps<P, S, 'buildAnimation' | 'renderExample'>
-  | PartialExamplesListProps<P, S, 'buildAnimation'>
-  | PartialExamplesListProps<P, S, 'renderExample'>;
+type SameTypeTabsScreenProps<
+  TStyle extends object,
+  TExampleProps extends object,
+> =
+  | PartialExamplesListProps<
+      TStyle,
+      TExampleProps,
+      'buildAnimation' | 'renderExample'
+    >
+  | PartialExamplesListProps<TStyle, TExampleProps, 'buildAnimation'>
+  | PartialExamplesListProps<TStyle, TExampleProps, 'renderExample'>;
 
 export default function ExamplesScreen<
-  P extends AnyRecord | Array<AnyRecord>,
-  S extends AnyRecord = PlainStyle,
->(props: ExamplesScreenProps<P, S>) {
+  TStyle extends object,
+  TExampleProps extends object | Array<object> = object,
+>(props: ExamplesScreenProps<TStyle, TExampleProps>) {
   if ('tabs' in props) {
     const renderTab = (
       name: string,
-      { buildAnimation, renderExample, ...rest }: ExamplesListProps<P, S>
+      {
+        buildAnimation,
+        renderExample,
+        ...rest
+      }: ExamplesListProps<TStyle, TExampleProps>
     ) => {
       return (
         <TabView.Tab name={name}>
@@ -68,7 +84,7 @@ export default function ExamplesScreen<
       <Screen>
         <TabView>
           {props.tabs.map(({ name, ...rest }) =>
-            renderTab(name, rest as ExamplesListProps<P, S>)
+            renderTab(name, rest as ExamplesListProps<TStyle, TExampleProps>)
           )}
         </TabView>
       </Screen>

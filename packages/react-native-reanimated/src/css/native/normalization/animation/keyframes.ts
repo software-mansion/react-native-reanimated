@@ -1,21 +1,16 @@
 'use strict';
-import type {
-  AnyRecord,
-  NativePropsBuilder,
-  UnknownRecord,
-} from '../../../../common';
+import type { NativePropsBuilder, UnknownRecord } from '../../../../common';
 import {
   getPropsBuilder,
   getSeparatelyInterpolatedNestedProperties,
   isDefined,
-  isNumber,
 } from '../../../../common';
-import { PERCENTAGE_REGEX } from '../../../constants';
 import type {
   CSSAnimationKeyframes,
   CSSAnimationKeyframeSelector,
   CSSAnimationTimingFunction,
 } from '../../../types';
+import { offsetOf } from '../../../utils';
 import type {
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSKeyframeTimingFunctions,
@@ -38,23 +33,10 @@ export function normalizeKeyframeSelector(
       ? keyframeSelector.split(',').map((k) => k.trim())
       : [keyframeSelector];
 
-  const offsets = selectors.map((selector) => {
-    if (selector === 'from') {
-      return 0;
-    }
-    if (selector === 'to') {
-      return 1;
-    }
+  return selectors.map((selector) => {
+    const offset = offsetOf(selector);
 
-    let offset: number | undefined;
-
-    if (typeof selector === 'number' || !isNaN(+selector)) {
-      offset = +selector;
-    } else if (PERCENTAGE_REGEX.test(selector)) {
-      offset = parseFloat(selector) / 100;
-    }
-
-    if (!isNumber(offset)) {
+    if (offset === null) {
       throw new Error(
         `[Reanimated] ${ERROR_MESSAGES.invalidOffsetType(selector)}`
       );
@@ -67,8 +49,6 @@ export function normalizeKeyframeSelector(
 
     return offset;
   });
-
-  return offsets;
 }
 
 type ProcessedKeyframes = Array<{
@@ -110,15 +90,17 @@ export function processKeyframes(
     }, []);
 }
 
+type KeyframeLeafEntries = Array<{ offset: number; value: unknown }>;
+
 function processProps(
   offset: number,
   props: object,
-  keyframeProps: AnyRecord,
+  keyframeProps: UnknownRecord,
   separatelyInterpolatedNestedProperties: ReadonlySet<string>
 ) {
-  Object.entries(props).forEach(([property, value]) => {
+  for (const [property, value] of Object.entries(props)) {
     if (!isDefined(value)) {
-      return;
+      continue;
     }
 
     if (
@@ -126,23 +108,21 @@ function processProps(
       typeof value === 'object' &&
       separatelyInterpolatedNestedProperties.has(property)
     ) {
-      if (!keyframeProps[property]) {
-        keyframeProps[property] = Array.isArray(value) ? [] : {};
-      }
+      const subBuilder = (keyframeProps[property] ??= Array.isArray(value)
+        ? []
+        : {}) as UnknownRecord;
       processProps(
         offset,
         value,
-        keyframeProps[property],
+        subBuilder,
         separatelyInterpolatedNestedProperties
       );
-      return;
+      continue;
     }
 
-    if (!keyframeProps[property]) {
-      keyframeProps[property] = [];
-    }
-    keyframeProps[property].push({ offset, value });
-  });
+    const entries = (keyframeProps[property] ??= []) as KeyframeLeafEntries;
+    entries.push({ offset, value });
+  }
 }
 
 export function normalizeAnimationKeyframes(

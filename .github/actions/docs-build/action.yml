@@ -13,6 +13,10 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Check docs packages share dependency versions
+      shell: bash
+      run: node ./scripts/validate-docs-versions.js
+
     - name: Lint check Reanimated docs
       shell: bash
       working-directory: ${{ inputs.REANIMATED_DOCS_DIR }}

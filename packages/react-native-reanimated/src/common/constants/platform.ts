@@ -10,13 +10,13 @@ function isWindowAvailable() {
 }
 
 export const IS_ANDROID: boolean = /* @__PURE__ */ (() =>
-  Platform.OS === 'android')();
-export const IS_IOS: boolean = /* @__PURE__ */ (() => Platform.OS === 'ios')();
-export const IS_WEB: boolean = Platform.OS === 'web';
-export const IS_JEST: boolean = !!process.env.JEST_WORKER_ID;
+  Platform?.OS === 'android')();
+export const IS_IOS: boolean = /* @__PURE__ */ (() => Platform?.OS === 'ios')();
+export const IS_WEB: boolean = Platform?.OS === 'web';
+export const IS_JEST: boolean =
+  typeof globalThis.jest !== 'undefined' || process.env.NODE_ENV === 'test';
 /** @knipIgnore */
-export const IS_WINDOWS: boolean = Platform.OS === 'windows';
+export const IS_WINDOWS: boolean = /* @__PURE__ */ (() =>
+  Platform?.OS === 'windows')();
 
 export const IS_WINDOW_AVAILABLE: boolean = isWindowAvailable();
-
-export const SHOULD_BE_USE_WEB = IS_JEST || IS_WEB || IS_WINDOWS;

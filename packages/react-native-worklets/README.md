@@ -1,5 +1,9 @@
 <img src="https://github.com/user-attachments/assets/41b37472-e55a-4c54-9064-31258e03870c" alt="React Native Worklets by Software Mansion" width="100%">
 
+[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-worklets-1?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-worklets-1\&n=1)
+[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-worklets-2?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-worklets-2\&n=1)
+[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-worklets-3?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-worklets-3\&n=1)
+
 ### The React Native multithreading library
 
 React Native Worklets is a library that allows you to run JavaScript code in parallel on multiple threads and runtimes, without writing any native code.
@@ -20,9 +24,8 @@ Worklets library is licensed under [The MIT License](LICENSE).
 
 ## Credits
 
-This project has been built and is maintained thanks to the support from [Shopify](https://shopify.com), [Expo.io](https://expo.io) and [Software Mansion](https://swmansion.com)
+This project has been built and is maintained thanks to the support from [Expo.io](https://expo.io) and [Software Mansion](https://swmansion.com)
 
-[![shopify](https://avatars1.githubusercontent.com/u/8085?v=3\&s=100 'Shopify.com')](https://shopify.com)
 [![expo](https://avatars2.githubusercontent.com/u/12504344?v=3\&s=100 'Expo.io')](https://expo.io)
 [![swm](https://logo.swmansion.com/logo?color=white\&variant=desktop\&width=150\&tag=react-native-reanimated-github 'Software Mansion')](https://swmansion.com)
 

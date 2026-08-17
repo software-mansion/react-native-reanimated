@@ -83,19 +83,25 @@ Flickering/jittering while scrolling will be ultimately fixed by branching mecha
 
 ### `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`
 
-When enabled, non-layout styles will be applied using the `synchronouslyUpdateViewOnUIThread` method (which doesn't involve layout recalculation) instead of than `ShadowTree::commit` method (which requires layout recalculation). In an artificial benchmark, it can lead to up to 4x increase of frames per second. Even though we don't expect such high speedups in the production apps, there should be a visible improvements in the smoothness of some animations. However, there are some unwanted side effects that one needs to take into account and properly compensate for:
-
-1. The changes applied via `synchronouslyUpdateViewOnUIThread` are not respected by the touch gesture system of Fabric renderer which can lead to incorrect behavior, in particular if transforms are applied. In that case, it's advisable to use `Pressable` or `Touchable` component from `react-native-gesture-handler` (which attaches to the underlying platform view rather than using `ShadowTree` to determine the component present at given point) rather than its original counterpart from `react-native`.
-
-1. The changes are applied via `synchronouslyUpdateViewOnUIThread` are not synchronized with changes applied by `ShadowTree::commit` which may lead to minor inconsistencies of animated styles or animated components in a single animation frame.
+When enabled, non-layout styles will be applied using the `synchronouslyUpdateViewOnUIThread` method (which doesn't involve layout recalculation) instead of the `ShadowTree::commit` method (which requires layout recalculation). In an artificial benchmark, it can lead to up to 4x increase of frames per second. Even though we don't expect such high speedups in the production apps, there should be a visible improvement in the smoothness of some animations.
 
 Currently, the following styles can be updated using the fast path: `opacity`, `elevation`, `zIndex`, `backgroundColor` (excluding `PlatformColor` values, same for all color props), `tintColor`, `placeholderTextColor`, `shadowColor`, `borderColor` (all sides, including `borderBlockColor`, `borderBlockStartColor` and `borderBlockEndColor`), `borderRadius` (all sides), `outlineColor`, `outlineOffset`, `outlineWidth` and `transform` (all transforms). All remaining styles, if present, will be updated via `ShadowTree::commit`.
 
 This feature flag works only on Android and has no effect on iOS. For more details, see the original [PR #7823](https://github.com/software-mansion/react-native-reanimated/pull/7823).
 
+However, there are some unwanted side effects that one needs to take into account and properly compensate for:
+
+1. The changes applied via `synchronouslyUpdateViewOnUIThread` are not respected by the touch gesture system of Fabric renderer which can lead to incorrect behavior, in particular if transforms are applied. For example, `Pressable` from `react-native` inside an `Animated.View` may fire `onPressIn` but silently drops `onPress` when pressed mid- or post-animation. We recommend using `Pressable`, `Touchable` or `GestureDetector` component from `react-native-gesture-handler` (which attaches to the underlying platform view rather than using `ShadowTree` to determine the component present at given point) rather than its original counterpart from `react-native`. This bug is tracked in [issue #10121](https://github.com/software-mansion/react-native-reanimated/issues/10121).
+
+1. Changes applied via `synchronouslyUpdateViewOnUIThread` are not synchronized with changes applied by `ShadowTree::commit` which may lead to minor inconsistencies of animated styles or animated components in a single animation frame.
+
 ### `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`
 
-When enabled, non-layout styles will be applied using the `[RCTSurfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:props:]` method (which doesn't involve layout recalculation) instead of than `ShadowTree::commit` method (which requires layout recalculation). Limitations and unwanted side effects are the same as for `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`. The set of supported styles is the same as for `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`, with the addition of `shadowOffset`, `shadowOpacity` and `shadowRadius`, which are iOS-only. For more details, see the original [PR #8367](https://github.com/software-mansion/react-native-reanimated/pull/8367).
+When enabled, non-layout styles will be applied using the `[RCTSurfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:props:]` method (which doesn't involve layout recalculation) instead of the `ShadowTree::commit` method (which requires layout recalculation), which may result in better performance of animations.
+
+The set of supported styles is the same as for `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`, with the addition of `shadowOffset`, `shadowOpacity` and `shadowRadius`, which are iOS-only. For more details, see the original [PR #8367](https://github.com/software-mansion/react-native-reanimated/pull/8367).
+
+The limitations and side effects described for `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` apply here as well.
 
 ### `EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`
 
@@ -117,11 +123,27 @@ When enabled, Shared Element Transitions are available to use, also the synchron
 
 This feature flag enables a mechanism that periodically synchronizes animated style updates back to React by triggering a React render for animated components with accumulated animated styles and evicting them from the registry on the C++ side. It is supposed to improve performance by decreasing the number of `ShadowNode` clone operations in `ReanimatedCommitHook` for React commits. When enabled, it also alters the behavior when detaching animated styles from animated components—the animated styles are not reverted to the original styles. If your app depends on that previous behavior, set this flag to `false` in `reanimated.staticFeatureFlags` in your app's `package.json`.
 
+This feature flag conflicts with [`USE_ANIMATION_BACKEND`](#use_animation_backend) and they cannot be enabled simultaneously. The animation backend keeps animated changes in sync with the React tree on its own, so the settled animations synchronization mechanism is unnecessary. Since `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS` is enabled by default, so if you want to use the animation backend, you need to explicitly disable this flag in your app's `package.json`.
+
 ### `USE_ANIMATION_BACKEND`
 
 When enabled, Reanimated will use the React Native's new Animation Backend for applying animated changes. The backend will now be responsible for keeping animation changes in sync with the current React tree. This is meant to help with long-term stability and unlock new performance optimizations.
 
 This flag is experimental and defaults to `false`. To use it, you must run React Native 0.85.2 or newer with `useSharedAnimatedBackend` feature flag enabled (which is achieved by using React Native's Experimental release level in development).
+
+This feature flag conflicts with [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#force_react_render_for_settled_animations) and they cannot be enabled simultaneously. Since `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS` is enabled by default, you need to explicitly disable it in your app's `package.json` when enabling `USE_ANIMATION_BACKEND`:
+
+```json
+{
+  // ...
+  "reanimated": {
+    "staticFeatureFlags": {
+      "USE_ANIMATION_BACKEND": true,
+      "FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS": false
+    }
+  }
+}
+```
 
 ### `IOS_CSS_CORE_ANIMATION`
 

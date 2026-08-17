@@ -6,13 +6,17 @@ on:
       - 'apps/**/Gemfile.lock'
       - 'apps/**/**/Podfile.lock'
 
+permissions:
+  contents: read
+
 jobs:
   ruby-pods-version-check:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        working-directory: [fabric-example, macos-example, tvos-example]
+        # TODO: bring back macos-example once they update to RN 0.83
+        working-directory: [fabric-example, tvos-example]
     concurrency:
       group: ruby-pods-version-check-${{ matrix.working-directory }}-${{ github.ref }}
       cancel-in-progress: true

@@ -11,7 +11,6 @@ import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
 import com.facebook.soloader.SoLoader
 import com.swmansion.worklets.runloop.AnimationFrameCallback
 import com.swmansion.worklets.runloop.AnimationFrameQueue
-import java.util.concurrent.atomic.AtomicBoolean
 
 @Suppress("KotlinJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME)
@@ -46,7 +45,8 @@ class WorkletsModule(
      * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
      * cost us much to add synchronization for extra safety.
      */
-    private val mInvalidated = AtomicBoolean(false)
+    private val mInvalidationLock = Any()
+    private var mInvalidated = false
 
     @OptIn(FrameworkAPI::class)
     private external fun initHybrid(
@@ -67,11 +67,9 @@ class WorkletsModule(
         val jsContext = checkNotNull(context.javaScriptContextHolder).get()
         val jsCallInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
 
-        val sourceURL = context.sourceURL
-
         val scriptBufferWrapper: ScriptBufferWrapper? =
             if (bundleModeEnabled) {
-                ScriptBufferWrapper(sourceURL!!, context.assets)
+                ScriptBufferWrapper(context.sourceURL, context)
             } else {
                 null
             }
@@ -117,14 +115,20 @@ class WorkletsModule(
         return mSlowAnimationsEnabled
     }
 
+    override fun initialize() {
+        reactApplicationContext.addLifecycleEventListener(this)
+    }
+
     override fun invalidate() {
-        if (mInvalidated.getAndSet(true)) {
-            return
+        synchronized(mInvalidationLock) {
+            if (mInvalidated) {
+                return
+            }
+            mInvalidated = true
+            reactApplicationContext.removeLifecycleEventListener(this)
         }
+        mAnimationFrameQueue.invalidate()
         if (mHybridData != null && mHybridData!!.isValid) {
-            // We have to destroy extra runtimes when invalidate is called. If we clean
-            // it up later instead there's a chance the runtime will retain references
-            // to invalidated memory and will crash on its destruction.
             invalidateCpp()
         }
         mAndroidUIScheduler.deactivate()
@@ -135,11 +139,21 @@ class WorkletsModule(
     private external fun startCpp()
 
     override fun onHostResume() {
-        mAnimationFrameQueue.resume()
+        synchronized(mInvalidationLock) {
+            if (mInvalidated) {
+                return
+            }
+            mAnimationFrameQueue.resume()
+        }
     }
 
     override fun onHostPause() {
-        mAnimationFrameQueue.pause()
+        synchronized(mInvalidationLock) {
+            if (mInvalidated) {
+                return
+            }
+            mAnimationFrameQueue.pause()
+        }
     }
 
     override fun onHostDestroy() {}

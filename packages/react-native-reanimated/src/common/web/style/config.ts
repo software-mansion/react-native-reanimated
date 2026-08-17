@@ -1,5 +1,5 @@
 'use strict';
-import type { PlainStyle } from '../../types';
+import type { AllStyleProps } from '../../style/types';
 import {
   boxShadowBuilder,
   processTransform,
@@ -21,7 +21,7 @@ import type { PropsBuilderConfig } from './types';
 
 const colorAttributes = { process: processColor };
 
-export const PROPERTIES_CONFIG: PropsBuilderConfig<PlainStyle> = {
+export const PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   /** Layout and Positioning */
   // FLEXBOX
   flex: true,

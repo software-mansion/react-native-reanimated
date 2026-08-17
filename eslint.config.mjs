@@ -73,6 +73,7 @@ const jsDocRules = {
   'jsdoc/require-param-description': 'off',
   'jsdoc/require-returns-description': 'off',
   'jsdoc/require-jsdoc': 'off',
+  'jsdoc/require-property-description': 'off',
 };
 
 /** @type {import('typescript-eslint').ConfigWithExtends['rules']} */
@@ -91,6 +92,18 @@ const nodeRules = {
   'n/no-unpublished-require': 'warn',
   'n/no-extraneous-import': 'off',
   'n/no-extraneous-require': 'off',
+  'n/no-unsupported-features/es-syntax': [
+    'error',
+    {
+      version: '>=21.1.0',
+    },
+  ],
+  'n/no-unsupported-features/es-builtins': [
+    'error',
+    {
+      version: '>=21.1.0',
+    },
+  ],
   'n/no-unsupported-features/node-builtins': [
     'error',
     {
@@ -140,7 +153,7 @@ const config = tsEslint.config(
     languageOptions: {
       globals: {
         React: true,
-        ...reactNative.environments['react-native']['react-native'],
+        ...reactNative.environments['react-native'].globals,
         ...jest.environments.globals.globals,
         ...globals.node,
       },

@@ -20,7 +20,7 @@ import {
 } from '@/apps/css/utils';
 import { useStableCallback } from '@/hooks';
 import { colors, flex, radius, sizes, spacing } from '@/theme';
-import type { AnyRecord, UnpackArray } from '@/types';
+import type { UnknownRecord, UnpackArray } from '@/types';
 import { deepEqual, typedMemo } from '@/utils';
 
 import Text from '../core/Text';
@@ -29,14 +29,14 @@ import Scroll from '../layout/Scroll';
 import ActionSheetDropdown from './ActionSheetDropdown';
 import RotatableChevron from './RotatableChevron';
 
-const convertSelectableConfigToConfig = <T extends AnyRecord>(
+const convertSelectableConfigToConfig = <T extends object>(
   config: SelectableConfig<T>
 ): T => {
-  const convertedConfig: AnyRecord = {};
+  const convertedConfig: UnknownRecord = {};
 
   for (const [key, value] of Object.entries(config)) {
     if (key.startsWith('$')) {
-      const options = value as SelectableConfigPropertyOptions<T>;
+      const options = value as SelectableConfigPropertyOptions<unknown>;
       if (!options.disabled) {
         convertedConfig[key.slice(1)] = options.value;
       }
@@ -44,7 +44,7 @@ const convertSelectableConfigToConfig = <T extends AnyRecord>(
       convertedConfig[key] = value;
     } else {
       convertedConfig[key] = convertSelectableConfigToConfig(
-        value as AnyRecord
+        value as SelectableConfig<object>
       );
     }
   }
@@ -52,7 +52,7 @@ const convertSelectableConfigToConfig = <T extends AnyRecord>(
   return convertedConfig as T;
 };
 
-export function useSelectableConfig<T extends AnyRecord>(
+export function useSelectableConfig<T extends object>(
   config: SelectableConfig<T>
 ): T {
   return useMemo(() => convertSelectableConfigToConfig(config), [config]);
@@ -73,23 +73,23 @@ export type SelectableConfigPropertyOptions<T> = {
   | { maxNumberOfValues: number; options: Array<UnpackArray<T>> }
 );
 
-export type SelectableConfig<C extends AnyRecord> = {
-  [K in keyof C as `$${K & string}`]?: C[K] extends AnyRecord
+export type SelectableConfig<C extends object> = {
+  [K in keyof C as `$${K & string}`]?: C[K] extends object
     ? SelectableConfig<C[K]>
     : SelectableConfigPropertyOptions<C[K]>;
 } & {
   [K in keyof C]: C[K] extends infer U
-    ? U extends AnyRecord
+    ? U extends object
       ? SelectableConfig<U>
       : C[K]
     : never;
 };
 
-type ConfigSelectorProps<T extends AnyRecord> = {
+type ConfigSelectorProps<T extends object> = {
   onChange: (config: T) => void;
 } & Omit<BlockProps<T>, 'objectKey' | 'onChange'>;
 
-function ConfigSelector<T extends AnyRecord>({
+function ConfigSelector<T extends object>({
   onChange,
   ...props
 }: ConfigSelectorProps<T>) {
@@ -122,15 +122,15 @@ function ConfigSelector<T extends AnyRecord>({
   );
 }
 
-type BlockProps<T extends AnyRecord> = {
+type BlockProps<T extends object> = {
   config: SelectableConfig<T>;
   objectKey: string;
   dropdownStyle?: StyleProp<ViewStyle>;
   blockStyle?: StyleProp<ViewStyle>;
-  onChange: (key: string, config: AnyRecord) => void;
+  onChange: (key: string, config: UnknownRecord) => void;
 };
 
-const Block = typedMemo(function Block<T extends AnyRecord>({
+const Block = typedMemo(function Block<T extends object>({
   blockStyle,
   config,
   dropdownStyle,
@@ -138,7 +138,7 @@ const Block = typedMemo(function Block<T extends AnyRecord>({
   onChange,
 }: BlockProps<T>) {
   const stableOnChange = useStableCallback(
-    (key: string, newValue: AnyRecord) => {
+    (key: string, newValue: UnknownRecord) => {
       onChange(objectKey, { ...config, [key]: newValue });
     }
   );
@@ -162,7 +162,7 @@ const Block = typedMemo(function Block<T extends AnyRecord>({
               formattedKey={formattedKey}
               key={key}
               objectKey={key}
-              options={value}
+              options={value as SelectableConfigPropertyOptions<unknown>}
               onChange={stableOnChange}
             />
           );
@@ -178,7 +178,7 @@ const Block = typedMemo(function Block<T extends AnyRecord>({
 
         return (
           <CollapsibleBlock
-            config={value}
+            config={value as SelectableConfig<object>}
             formattedKey={formattedKey}
             key={key}
             objectKey={key}
@@ -192,9 +192,9 @@ const Block = typedMemo(function Block<T extends AnyRecord>({
 
 type CollapsibleBlockProps = {
   formattedKey: string;
-  config: AnyRecord;
+  config: SelectableConfig<object>;
   objectKey: string;
-  onChange: (key: string, config: AnyRecord) => void;
+  onChange: (key: string, config: UnknownRecord) => void;
 };
 
 const CollapsibleBlock = memo(function CollapsibleBlock({
@@ -243,7 +243,7 @@ type SelectableOptionRowProps<T> = {
   formattedKey: string;
   objectKey: string;
   dropdownStyle?: StyleProp<ViewStyle>;
-  onChange: (key: string, config: AnyRecord) => void;
+  onChange: (key: string, config: UnknownRecord) => void;
 };
 
 const SelectableOptionRow = memo(function SelectableOptionRow<T>({
@@ -334,7 +334,7 @@ type MultipleOptionsOptionSelectorProps<T> = {
   dropdownStyle?: StyleProp<ViewStyle>;
   options: SelectableConfigPropertyOptions<T>;
   objectKey: string;
-  onChange: (key: string, config: AnyRecord) => void;
+  onChange: (key: string, config: UnknownRecord) => void;
 };
 
 const MultipleOptionsOptionSelector = typedMemo(

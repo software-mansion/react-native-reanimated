@@ -195,10 +195,11 @@
 - (int)getInterfaceOrientation
 {
   UIInterfaceOrientation orientation = UIInterfaceOrientationPortrait;
-  if (@available(iOS 13.0, *)) {
-    orientation = UIApplication.sharedApplication.windows.firstObject.windowScene.interfaceOrientation;
-  } else {
-    orientation = UIApplication.sharedApplication.statusBarOrientation;
+  for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
+    if ([scene isKindOfClass:[UIWindowScene class]]) {
+      orientation = ((UIWindowScene *)scene).interfaceOrientation;
+      break;
+    }
   }
   switch (orientation) {
     case UIInterfaceOrientationLandscapeLeft:

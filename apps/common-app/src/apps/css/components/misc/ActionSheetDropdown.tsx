@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   FadeIn,
@@ -24,22 +24,22 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { radius, spacing } from '@/theme';
-import type { AnyRecord } from '@/types';
 import { IS_ANDROID } from '@/utils';
 
 const filterPaddingAndMarginProps = (
   style: ViewStyle
 ): [ViewStyle, ViewStyle] => {
-  const paddingAndMargin: AnyRecord = {};
-  const rest: AnyRecord = {};
+  const paddingAndMargin: ViewStyle = {};
+  const rest: ViewStyle = {};
 
   for (const key in style) {
     const k = key as keyof ViewStyle;
-    if (key.startsWith('padding') || key.startsWith('margin')) {
-      paddingAndMargin[key] = style[k];
-    } else {
-      rest[key] = style[k];
-    }
+    Object.assign(
+      key.startsWith('padding') || key.startsWith('margin')
+        ? paddingAndMargin
+        : rest,
+      { [k]: style[k] }
+    );
   }
 
   return [paddingAndMargin, rest];
@@ -125,6 +125,11 @@ export default function ActionSheetDropdown({
     setState({ isOpen: false, toggleMeasurements: null });
   };
 
+  const blockScrollGesture = usePanGesture({
+    onActivate: closeDropdown,
+    runOnJS: true,
+  });
+
   return (
     <>
       <Pressable hitSlop={hitSlop} onPress={openDropdown}>
@@ -139,8 +144,7 @@ export default function ActionSheetDropdown({
         {isOpen && toggleMeasurements && (
           // This gesture detector blocks scrolling when the dropdown is open
           // (this is needed for Android)
-          <GestureDetector
-            gesture={Gesture.Pan().onStart(closeDropdown).runOnJS(true)}>
+          <GestureDetector gesture={blockScrollGesture}>
             <View style={StyleSheet.absoluteFill}>
               <Backdrop handleClose={closeDropdown} />
               <DropdownContent

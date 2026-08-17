@@ -95,7 +95,7 @@ const EXAMPLES = [
     title: 'Vertical Margin',
   },
 ] satisfies Array<{
-  property?: string;
+  property?: keyof ViewStyle;
   containerStyle?: ViewStyle;
   description: Array<string> | string;
   title: string;
@@ -105,7 +105,7 @@ const renderExample = ({
   animation,
   containerStyle,
 }: {
-  animation: CSSAnimationProperties;
+  animation: CSSAnimationProperties<ViewStyle>;
   containerStyle?: ViewStyle;
 }) => (
   <View style={[styles.container, containerStyle]}>
@@ -125,11 +125,14 @@ const renderExample = ({
 
 export default function Margins() {
   return (
-    <ExamplesScreen<{
-      property?: string;
-      keyframes?: CSSAnimationKeyframes;
-      containerStyle?: ViewStyle;
-    }>
+    <ExamplesScreen<
+      ViewStyle,
+      {
+        property?: keyof ViewStyle;
+        keyframes?: CSSAnimationKeyframes;
+        containerStyle?: ViewStyle;
+      }
+    >
       renderExample={renderExample}
       tabs={[
         {

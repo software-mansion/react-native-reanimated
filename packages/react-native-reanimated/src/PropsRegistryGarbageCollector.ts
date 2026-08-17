@@ -11,7 +11,6 @@ import { ReanimatedModule } from './ReanimatedModule';
 const FLUSH_INTERVAL_MS = 500;
 
 export const PropsRegistryGarbageCollector = {
-  viewsCount: 0,
   viewsMap: new Map<number, IAnimatedComponentInternal>(),
   intervalId: null as NodeJS.Timeout | null,
 
@@ -25,16 +24,14 @@ export const PropsRegistryGarbageCollector = {
       return;
     }
     this.viewsMap.set(viewTag, component);
-    this.viewsCount++;
-    if (this.viewsCount === 1) {
+    if (this.viewsMap.size === 1) {
       this.registerInterval();
     }
   },
 
   unregisterView(viewTag: number) {
-    this.viewsMap.delete(viewTag);
-    this.viewsCount--;
-    if (this.viewsCount === 0) {
+    const deleted = this.viewsMap.delete(viewTag);
+    if (deleted && this.viewsMap.size === 0) {
       this.unregisterInterval();
     }
   },

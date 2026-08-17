@@ -55,7 +55,9 @@ bool ValueInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &from
   auto to = toValue.isUndefined() ? defaultStyleValue_ : createValue(rt, toValue);
 
   const auto equalsReversingAdjustedStartValue = reversingAdjustedStartValue_ && (*to == *reversingAdjustedStartValue_);
-  reversingAdjustedStartValue_ = keyframes_.empty() ? from : keyframes_[1].value.value();
+  // https://drafts.csswg.org/css-transitions/#reversing
+  reversingAdjustedStartValue_ =
+      (equalsReversingAdjustedStartValue && !keyframes_.empty()) ? keyframes_[1].value.value() : from;
 
   keyframes_ = {ValueKeyframe{0, std::move(from)}, ValueKeyframe{1, std::move(to)}};
 
@@ -67,7 +69,8 @@ bool ValueInterpolator::updateKeyframes(const folly::dynamic &fromValue, const f
   auto to = toValue.isNull() ? defaultStyleValue_ : createValue(toValue);
 
   const auto equalsReversingAdjustedStartValue = reversingAdjustedStartValue_ && (*to == *reversingAdjustedStartValue_);
-  reversingAdjustedStartValue_ = keyframes_.empty() ? from : keyframes_[1].value.value();
+  reversingAdjustedStartValue_ =
+      (equalsReversingAdjustedStartValue && !keyframes_.empty()) ? keyframes_[1].value.value() : from;
 
   keyframes_ = {ValueKeyframe{0, std::move(from)}, ValueKeyframe{1, std::move(to)}};
 

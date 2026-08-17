@@ -1,9 +1,9 @@
 import React from 'react';
 import { Dimensions, StyleSheet } from 'react-native';
 import {
-  Gesture,
   GestureDetector,
   GestureHandlerRootView,
+  usePanGesture,
 } from 'react-native-gesture-handler';
 import Animated, {
   cancelAnimation,
@@ -35,20 +35,26 @@ export default function LiquidSwipe() {
   const isBack = useSharedValue(false);
   const centerY = useSharedValue(initialWaveCenter);
   const progress = useSharedValue(0);
-  const dragX = useSharedValue(0);
   const startY = useSharedValue(0);
 
   const maxDist = width - initialSideWidth;
 
-  const gesture = Gesture.Pan()
-    .onStart((event) => {
+  const gesture = usePanGesture({
+    onActivate: (event) => {
       // stop animating progress, this will also place "isBack" value in the
       // final state (we update isBack in progress animation callback)
       cancelAnimation(progress);
-      dragX.value = 0;
       startY.value = isBack.value ? event.y : centerY.value;
-    })
-    .onChange((event) => {
+    },
+    onDeactivate: () => {
+      const threshold = isBack.value ? 0.5 : 0.2;
+      const goBack = progress.value > threshold;
+      centerY.value = withSpring(initialWaveCenter);
+      progress.value = withSpring(goBack ? 1 : 0, {}, () => {
+        isBack.value = goBack;
+      });
+    },
+    onUpdate: (event) => {
       centerY.value = startY.value + event.translationY;
       if (isBack.value) {
         progress.value = interpolate(
@@ -65,15 +71,8 @@ export default function LiquidSwipe() {
           Extrapolation.CLAMP
         );
       }
-    })
-    .onEnd(() => {
-      const threshold = isBack.value ? 0.5 : 0.2;
-      const goBack = progress.value > threshold;
-      centerY.value = withSpring(initialWaveCenter);
-      progress.value = withSpring(goBack ? 1 : 0, {}, () => {
-        isBack.value = goBack;
-      });
-    });
+    },
+  });
 
   return (
     <GestureHandlerRootView style={styles.container}>

@@ -51,7 +51,6 @@ class Node {
   ['scrollTo()']?: string;
   ['__internalInstanceHandle']?: string | Node;
   ['findHostInstance_DEPRECATED()']?: string | Node;
-  ['_hasAnimatedRef']?: string;
   ['_componentRef']?: string | Node;
   ['stateNode.node']?: string | Node;
   ['_reactInternals']?: string | undefined;
@@ -155,23 +154,18 @@ function comparator(node: Node) {
     }
   }
 
-  if (ref._hasAnimatedRef) {
-    node._hasAnimatedRef = '"YES"';
-    const derivedRef = ref._componentRef;
-    if (derivedRef) {
-      if (foundRefToId.has(derivedRef)) {
-        node['_componentRef'] = `"OBJECT ${foundRefToId.get(derivedRef)}"`;
-      } else {
-        const id = refId++;
-        foundRefToId.set(derivedRef, id);
-        const propName = '_componentRef';
-        const derivedSource = `${source}.${propName}`;
-        const newNode = new Node(id, derivedSource, derivedRef);
-        node[propName] = newNode;
-        nodesToCheck.push(newNode);
-      }
+  const derivedRef = ref._componentRef;
+  if (derivedRef) {
+    if (foundRefToId.has(derivedRef)) {
+      node['_componentRef'] = `"OBJECT ${foundRefToId.get(derivedRef)}"`;
     } else {
-      node['_componentRef'] = '"NO"';
+      const id = refId++;
+      foundRefToId.set(derivedRef, id);
+      const propName = '_componentRef';
+      const derivedSource = `${source}.${propName}`;
+      const newNode = new Node(id, derivedSource, derivedRef);
+      node[propName] = newNode;
+      nodesToCheck.push(newNode);
     }
   }
 }
@@ -193,7 +187,6 @@ const printableProps = [
   'getScrollRef()',
   'scrollTo()',
   '__internalInstanceHandle',
-  '_hasAnimatedRef',
   '_componentRef',
   'stateNode.node',
   '_reactInternals',

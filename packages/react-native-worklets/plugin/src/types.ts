@@ -25,6 +25,8 @@ export interface WorkletsPluginPass {
   filename: string | undefined;
   workletNumber: number;
   classesToWorkletize: { node: BabelNode; name: string }[];
+  skipFile: boolean;
+  importForwarding: InitializedImportForwarding;
 }
 
 export type WorkletizableFunction =
@@ -77,3 +79,7 @@ export function isWorkletizableObjectNode(
 export const workletClassFactorySuffix = '__classFactory';
 
 export const generatedWorkletsDir = '.worklets';
+
+type InitializedImportForwarding = Required<
+  NonNullable<PluginOptions['importForwarding']>
+>;

@@ -7,12 +7,16 @@ on:
       - '.github/workflows/docs-build.yml'
       - '.github/workflows/docs-publish.yml'
       - '.github/actions/docs-build/**'
+      - 'scripts/validate-docs-versions.js'
       - docs/docs-reanimated/**
       - packages/react-native-reanimated/compatibility.json
       - docs/docs-worklets/**
       - packages/react-native-worklets/compatibility.json
   workflow_call:
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   docs-build:

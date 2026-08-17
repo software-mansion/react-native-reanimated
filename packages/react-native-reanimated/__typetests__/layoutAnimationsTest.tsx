@@ -19,6 +19,7 @@ import Animated, {
   RollInLeft,
   RotateInDownLeft,
   SequencedTransition,
+  SharedTransition,
   SlideInRight,
   StretchInX,
   ZoomIn,
@@ -461,5 +462,51 @@ function LayoutAnimationsTest() {
     CurvedTransition.withInitialValues({ originY: 420 });
     // @ts-expect-error Layout transitions don't support custom target values.
     CurvedTransition.withTargetValues({ originY: 0 });
+  }
+
+  function StaticModifiersPreserveSubclassTest() {
+    // Regression test for
+    // https://github.com/software-mansion/react-native-reanimated/issues/9706.
+    // Static config modifiers on `AnimationConfigBuilder` must preserve the
+    // receiver subclass instead of collapsing it to `AnimationConfigBuilder`.
+
+    // `SharedTransition.springify(...).dampingRatio(...)` must stay a
+    // `SharedTransition` so it remains assignable to `sharedTransitionStyle`.
+    const sharedTransition = SharedTransition.springify(400).dampingRatio(1);
+
+    // `withInitialValues` / `withTargetValues` (defined on
+    // `ComplexAnimationBuilder`) must survive a static modifier chain.
+    const sharedTransitionWithOverrides = SharedTransition.springify(400)
+      .withInitialValues({ opacity: 0 })
+      .withTargetValues({ opacity: 1 });
+
+    // Entering/exiting subclasses keep their concrete value type after a static
+    // modifier, so `withInitialValues` still rejects unknown props.
+    const fadeInChainedFromStaticModifier =
+      FadeIn.springify().withInitialValues({ opacity: 0.2 });
+
+    return (
+      <View>
+        <Animated.View
+          sharedTransitionTag="tag"
+          sharedTransitionStyle={sharedTransition}
+        />
+        <Animated.View
+          sharedTransitionTag="tag"
+          sharedTransitionStyle={sharedTransitionWithOverrides}
+        />
+      </View>
+    );
+  }
+
+  function LayoutTransitionStaticModifiersStayConfigOnlyTest() {
+    // Preserving the subclass through static modifiers must not leak
+    // `withInitialValues` / `withTargetValues` onto layout transitions, which
+    // extend `AnimationConfigBuilder` directly (see #9259).
+
+    // @ts-expect-error Layout transitions don't support custom initial values.
+    LinearTransition.springify().withInitialValues({ originY: 420 });
+    // @ts-expect-error Layout transitions don't support custom target values.
+    LinearTransition.duration(100).withTargetValues({ originY: 0 });
   }
 }

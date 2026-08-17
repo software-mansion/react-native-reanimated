@@ -18,9 +18,11 @@ import type {
 import { SensorType } from '../../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSEventHandler,
   CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
 } from '../../css/native';
+import { DefaultStaticFeatureFlags } from '../../featureFlags/staticFeatureFlags';
 import { assertWorkletsVersion } from '../../platform-specific/workletsVersion';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
@@ -258,9 +260,16 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
-  getStaticFeatureFlag(): boolean {
-    // mock implementation
-    return false;
+  getStaticFeatureFlag(name: string): boolean {
+    // In Jest, JSReanimated replaces the native module but lacks native-only
+    // methods (e.g. getSettledUpdates) that some flags hit, so they stay off
+    // in tests. On web, return the real staticFlags.json values.
+    if (IS_JEST) {
+      return false;
+    }
+    return (
+      (DefaultStaticFeatureFlags as Record<string, boolean>)[name] ?? false
+    );
   }
 
   setDynamicFeatureFlag(): void {
@@ -270,6 +279,12 @@ class JSReanimated implements IReanimatedModule {
   setViewStyle(_viewTag: number, _style: StyleProps): void {
     throw new Error(
       '[Reanimated] setViewStyle is not available in JSReanimated.'
+    );
+  }
+
+  setCSSEventHandler(_handler: CSSEventHandler): void {
+    throw new Error(
+      '[Reanimated] `setCSSEventHandler` is not available in JSReanimated.'
     );
   }
 
@@ -322,7 +337,8 @@ class JSReanimated implements IReanimatedModule {
 
   runCSSTransition(
     _shadowNodeWrapper: ShadowNodeWrapper,
-    _transitionConfig: CSSTransitionConfig
+    _transitionConfig: CSSTransitionConfig,
+    _eventMask: number
   ): void {
     throw new Error(
       '[Reanimated] `runCSSTransition` is not available in JSReanimated.'
@@ -338,6 +354,18 @@ class JSReanimated implements IReanimatedModule {
   getSettledUpdates(): SettledUpdate[] {
     throw new Error(
       '[Reanimated] `getSettledUpdates` is not available in JSReanimated.'
+    );
+  }
+
+  registerPseudoStyles(): void {
+    throw new Error(
+      '[Reanimated] `registerPseudoStyles` is not available in JSReanimated.'
+    );
+  }
+
+  unregisterPseudoStyles(): void {
+    throw new Error(
+      '[Reanimated] `unregisterPseudoStyles` is not available in JSReanimated.'
     );
   }
 }

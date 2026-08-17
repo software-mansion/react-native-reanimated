@@ -35,7 +35,7 @@ function Bubble({ row, col }: BubbleProps) {
       height: width.value,
       borderRadius: width.value / 2,
     };
-  }, []);
+  });
 
   return <Animated.View style={[{ backgroundColor }, animatedStyle]} />;
 }

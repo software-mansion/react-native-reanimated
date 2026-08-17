@@ -1,5 +1,6 @@
 'use strict';
 
+import { isBundleModeEnabled } from '../debug/bundleMode';
 import { registerWorkletStackDetails } from '../debug/errors';
 import { jsVersion } from '../debug/jsVersion';
 import { logger } from '../debug/logger';
@@ -9,16 +10,11 @@ import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 import { isSynchronizable } from './isSynchronizable';
 import {
-  nextRemoteFunctionId,
-  registerRemoteFunction,
-} from './remoteFunctionRegistry';
-import {
   serializableMappingCache,
   serializableMappingFlag,
 } from './serializableMappingCache';
 import type {
   FlatSerializableRef,
-  RegisteredRemoteFunction,
   RegistrationData,
   RemoteFunction,
   SerializableRef,
@@ -73,51 +69,6 @@ function getFromCache(value: object) {
   return cached;
 }
 
-// The below object is used as a replacement for objects that cannot be transferred
-// as serializable values. In createSerializable we detect if an object is of
-// a plain Object.prototype and only allow such objects to be transferred. This lets
-// us avoid all sorts of react internals from leaking into the UI runtime. To make it
-// possible to catch errors when someone actually tries to access such object on the UI
-// runtime, we use the below Proxy object which is instantiated on the UI runtime and
-// throws whenever someone tries to access its fields.
-const INACCESSIBLE_OBJECT = {
-  __init: () => {
-    'worklet';
-    return new Proxy(
-      {},
-      {
-        get: (_: unknown, prop: string | symbol) => {
-          if (
-            prop === '_isReanimatedSharedValue' ||
-            prop === '__remoteFunction' ||
-            prop === '__synchronizableRef'
-          ) {
-            // not very happy about this check here, but we need to allow for
-            // "inaccessible" objects to be tested with isSerializableRef check
-            // as it is being used in the mappers when extracting inputs recursively
-            // as well as with isRemoteFunction when cloning objects recursively.
-            // Apparently we can't check if a key exists there as HostObjects always
-            // return true for such tests, so the only possibility for us is to
-            // actually access that key and see if it is set to true. We therefore
-            // need to allow for this key to be accessed here.
-            return false;
-          }
-          throw new Error(
-            `[Worklets] Trying to access property \`${String(
-              prop
-            )}\` of an object which cannot be sent to the UI runtime.`
-          );
-        },
-        set: () => {
-          throw new Error(
-            '[Worklets] Trying to write to an object which cannot be sent to the UI runtime.'
-          );
-        },
-      }
-    );
-  },
-};
-
 const VALID_ARRAY_VIEWS_NAMES = [
   'Int8Array',
   'Uint8Array',
@@ -137,6 +88,21 @@ const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // Below variable stores object that we process in createSerializable at the specified depth.
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: unknown;
+
+const serializationPathStack: string[] = [];
+
+function withPathSegment<TValue>(segment: string, serialize: () => TValue) {
+  serializationPathStack.push(segment);
+  try {
+    return serialize();
+  } finally {
+    serializationPathStack.pop();
+  }
+}
+
+function formatSerializationPath(): string {
+  return serializationPathStack.join('');
+}
 
 export function createSerializable<TValue>(
   value: TValue,
@@ -177,7 +143,15 @@ export function createSerializable<TValue>(
 
   const cached = getFromCache(value);
   if (cached !== undefined) {
-    return cached as SerializableRef<TValue>;
+    if (globalThis.WeakRef && cached instanceof WeakRef) {
+      // WeakRef is installed on runtimes only with Hermes microtaskQueue enabled.
+      const deref = cached.deref();
+      if (deref !== undefined) {
+        return deref as SerializableRef<TValue>;
+      }
+    } else {
+      return cached as SerializableRef<TValue>;
+    }
   }
 
   if (Array.isArray(value)) {
@@ -251,13 +225,22 @@ export function createSerializable<TValue>(
       return cloneCustom(value, pack, i) as SerializableRef<TValue>;
     }
   }
-  if (__DEV__ && value instanceof Promise) {
-    throw new Error('[Worklets] Promises cannot be converted to serializable.');
+
+  if (__DEV__) {
+    const constructorName =
+      (value as { constructor?: { name?: string } })?.constructor?.name ||
+      'unknown';
+    const path = formatSerializationPath();
+    const location = path ? ` It was located at \`${path}\`.` : '';
+    console.warn(
+      `[Worklets] Cannot copy value of type \`${constructorName}\`.${location}`
+    );
   }
-  return inaccessibleObject(value);
+
+  return cloneUndefined() as SerializableRef<TValue>;
 }
 
-if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+if (isBundleModeEnabled()) {
   // TODO: Do it programmatically.
   createSerializable.__bundleData = {
     imported: 'createSerializable',
@@ -399,11 +382,17 @@ function cloneObjectProperties<T extends object>(
     if (key === '__initData' && clonedProps.__initData !== undefined) {
       continue;
     }
-    clonedProps[key] = createSerializable(
-      element,
-      shouldPersistRemote,
-      depth + 1
-    );
+    if (__DEV__) {
+      clonedProps[key] = withPathSegment(`[${JSON.stringify(key)}]`, () =>
+        createSerializable(element, shouldPersistRemote, depth + 1)
+      );
+    } else {
+      clonedProps[key] = createSerializable(
+        element,
+        shouldPersistRemote,
+        depth + 1
+      );
+    }
   }
   return clonedProps;
 }
@@ -426,8 +415,12 @@ function cloneArray<T extends unknown[]>(
   shouldPersistRemote: boolean,
   depth: number
 ): SerializableRef<T> {
-  const clonedElements = value.map((element) =>
-    createSerializable(element, shouldPersistRemote, depth + 1)
+  const clonedElements = value.map((element, index) =>
+    __DEV__
+      ? withPathSegment(`[${index}]`, () =>
+          createSerializable(element, shouldPersistRemote, depth + 1)
+        )
+      : createSerializable(element, shouldPersistRemote, depth + 1)
   );
   const clone = WorkletsModule.createSerializableArray(
     clonedElements,
@@ -443,19 +436,18 @@ function cloneArray<T extends unknown[]>(
 function cloneNonWorkletFunction<TArgs extends unknown[], TReturn>(
   fun: (...args: TArgs) => TReturn
 ): SerializableRef<(...args: TArgs) => TReturn> {
-  const functionId = nextRemoteFunctionId;
   const clone = WorkletsModule.createSerializableNonWorkletFunction(
     fun,
-    functionId,
     __DEV__ ? fun.name : undefined
   ) as SerializableRef<(...args: TArgs) => TReturn>;
-  if ((clone as RegisteredRemoteFunction).__keepAlive) {
-    registerRemoteFunction(fun);
-  }
-  serializableMappingCache.set(fun, clone);
-  serializableMappingCache.set(clone);
 
+  if (globalThis.WeakRef) {
+    // WeakRef is installed on runtimes only with Hermes microtaskQueue enabled.
+    serializableMappingCache.set(fun, new WeakRef(clone));
+  }
+  serializableMappingCache.set(clone);
   freezeObjectInDev(fun);
+
   return clone;
 }
 
@@ -496,33 +488,39 @@ function cloneWorklet<TValue extends WorkletFunction>(
     // seems more elegant to handle it this way.
     delete (value as WorkletFunction).__stackDetails;
   }
-  const clonedProps: Record<string, unknown> = cloneObjectProperties(
-    value,
-    shouldPersistRemote,
-    depth
-  );
-  // to save on transferring static __initData field of worklet structure
-  // we request serializable value to persist its UI counterpart. This means
-  // that the __initData field that contains long strings representing the
-  // worklet code, source map, and location, will always be
-  // serialized/deserialized once.
-  clonedProps.__initData = createSerializable(
-    value.__initData,
-    true,
-    depth + 1
-  );
+  const buildClone = (): SerializableRef<TValue> => {
+    const clonedProps: Record<string, unknown> = cloneObjectProperties(
+      value,
+      shouldPersistRemote,
+      depth
+    );
+    // to save on transferring static __initData field of worklet structure
+    // we request serializable value to persist its UI counterpart. This means
+    // that the __initData field that contains long strings representing the
+    // worklet code, source map, and location, will always be
+    // serialized/deserialized once.
+    clonedProps.__initData = __DEV__
+      ? withPathSegment('["__initData"]', () =>
+          createSerializable(value.__initData, true, depth + 1)
+        )
+      : createSerializable(value.__initData, true, depth + 1);
 
-  const clone = WorkletsModule.createSerializableWorklet(
-    clonedProps,
-    // TODO: Check after refactor if we can remove shouldPersistRemote parameter (imho it's redundant here since worklets are always persistent)
-    // retain all worklets
-    true
-  ) as SerializableRef<TValue>;
-  serializableMappingCache.set(value, clone);
-  serializableMappingCache.set(clone);
+    const clone = WorkletsModule.createSerializableWorklet(
+      clonedProps,
+      // TODO: Check after refactor if we can remove shouldPersistRemote parameter (imho it's redundant here since worklets are always persistent)
+      // retain all worklets
+      true
+    ) as SerializableRef<TValue>;
+    serializableMappingCache.set(value, clone);
+    serializableMappingCache.set(clone);
 
-  freezeObjectInDev(value);
-  return clone;
+    freezeObjectInDev(value);
+    return clone;
+  };
+
+  return __DEV__
+    ? withPathSegment(`<worklet ${value.name || 'anonymous'}>`, buildClone)
+    : buildClone();
 }
 
 /**
@@ -585,9 +583,22 @@ function cloneMap(
 ): SerializableRef<Map<unknown, unknown>> {
   const clonedKeys: unknown[] = [];
   const clonedValues: unknown[] = [];
+  let index = 0;
   for (const [key, element] of value.entries()) {
-    clonedKeys.push(createSerializable(key));
-    clonedValues.push(createSerializable(element));
+    if (__DEV__) {
+      clonedKeys.push(
+        withPathSegment(`.keys()[${index}]`, () => createSerializable(key))
+      );
+      clonedValues.push(
+        withPathSegment(`.values()[${index}]`, () =>
+          createSerializable(element)
+        )
+      );
+      index++;
+    } else {
+      clonedKeys.push(createSerializable(key));
+      clonedValues.push(createSerializable(element));
+    }
   }
   const clone = WorkletsModule.createSerializableMap(clonedKeys, clonedValues);
   serializableMappingCache.set(value, clone);
@@ -599,8 +610,18 @@ function cloneMap(
 
 function cloneSet(value: Set<unknown>): SerializableRef<Set<unknown>> {
   const clonedElements: unknown[] = [];
+  let index = 0;
   for (const element of value) {
-    clonedElements.push(createSerializable(element));
+    if (__DEV__) {
+      clonedElements.push(
+        withPathSegment(`.values()[${index}]`, () =>
+          createSerializable(element)
+        )
+      );
+      index++;
+    } else {
+      clonedElements.push(createSerializable(element));
+    }
   }
   const clone = WorkletsModule.createSerializableSet(clonedElements);
   serializableMappingCache.set(value, clone);
@@ -639,26 +660,22 @@ function cloneArrayBuffer(
 function cloneArrayBufferView<TValue extends ArrayBufferView>(
   value: TValue
 ): SerializableRef<TValue> {
-  const buffer = value.buffer;
   const typeName = value.constructor.name;
-  const handle = cloneInitializer({
-    __init: () => {
-      'worklet';
-      if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
-        throw new Error(`[Worklets] Invalid array view name \`${typeName}\`.`);
-      }
-      const constructor = global[typeName as keyof typeof global];
-      if (constructor === undefined) {
-        throw new Error(
-          `[Worklets] Constructor for \`${typeName}\` not found.`
-        );
-      }
-      return new constructor(buffer);
-    },
-  }) as unknown as SerializableRef<TValue>;
-  serializableMappingCache.set(value, handle);
-
-  return handle;
+  if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
+    throw new Error(`[Worklets] Invalid array view name \`${typeName}\`.`);
+  }
+  const length =
+    typeName === 'DataView'
+      ? value.byteLength
+      : (value as unknown as { length: number }).length;
+  const clone = WorkletsModule.createSerializableArrayBufferView<TValue>(
+    typeName,
+    value.buffer as ArrayBuffer,
+    value.byteOffset,
+    length
+  );
+  serializableMappingCache.set(value, clone);
+  return clone;
 }
 
 function cloneSynchronizable<TValue>(
@@ -686,28 +703,14 @@ function cloneCustom<TValue extends object, TPacked = unknown>(
   typeId: number
 ): SerializableRef<TValue> {
   const packedData = pack(data);
-  const serialized = createSerializable(packedData);
+  const serialized = __DEV__
+    ? withPathSegment('.pack()', () => createSerializable(packedData))
+    : createSerializable(packedData);
 
   return WorkletsModule.createCustomSerializable(
     serialized,
     typeId
   ) as SerializableRef<TValue>;
-}
-
-function inaccessibleObject<TValue extends object>(
-  value: TValue
-): SerializableRef<TValue> {
-  // This is reached for object types that are not of plain Object.prototype.
-  // We don't support such objects from being transferred as serializables to
-  // the UI runtime and hence we replace them with "inaccessible object"
-  // which is implemented as a Proxy object that throws on any attempt
-  // of accessing its fields. We argue that such objects can sometimes leak
-  // as attributes of objects being captured by worklets but should never
-  // be used on the UI runtime regardless. If they are being accessed, the user
-  // will get an appropriate error message.
-  const clone = createSerializable<TValue>(INACCESSIBLE_OBJECT as TValue);
-  serializableMappingCache.set(value, clone);
-  return clone;
 }
 
 const WORKLET_CODE_THRESHOLD = 255;
@@ -821,6 +824,29 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
           value.flags
         ) as FlatSerializableRef<TValue>;
       }
+      if (value instanceof ArrayBuffer) {
+        return globalThis.__workletsModuleProxy.createSerializableArrayBuffer(
+          value
+        ) as FlatSerializableRef<TValue>;
+      }
+      if (ArrayBuffer.isView(value)) {
+        const typeName = value.constructor.name;
+        if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
+          throw new Error(
+            `[Worklets] Invalid array view name \`${typeName}\`.`
+          );
+        }
+        const length =
+          typeName === 'DataView'
+            ? value.byteLength
+            : (value as unknown as { length: number }).length;
+        return globalThis.__workletsModuleProxy.createSerializableArrayBufferView(
+          typeName,
+          value.buffer as ArrayBuffer,
+          value.byteOffset,
+          length
+        ) as FlatSerializableRef<TValue>;
+      }
       if (value instanceof Map) {
         const keys: unknown[] = [];
         const values: unknown[] = [];
@@ -903,7 +929,7 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
 
 /** @deprecated This function is no longer supported. */
 export const makeShareableCloneOnUIRecursive = (
-  globalThis._WORKLETS_BUNDLE_MODE_ENABLED
+  isBundleModeEnabled()
     ? createSerializable
     : makeShareableCloneOnUIRecursiveLEGACY
 ) as typeof makeShareableCloneOnUIRecursiveLEGACY;

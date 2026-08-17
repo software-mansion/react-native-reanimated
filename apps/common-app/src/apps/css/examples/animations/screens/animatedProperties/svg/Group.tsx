@@ -12,8 +12,8 @@ const AnimatedG = Animated.createAnimatedComponent(G);
 export default function GroupExample() {
   return (
     <ExamplesScreen<
-      { keyframes: CSSAnimationKeyframes<GProps>; props?: GProps },
-      GProps
+      GProps,
+      { keyframes: CSSAnimationKeyframes<GProps>; props?: GProps }
     >
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',

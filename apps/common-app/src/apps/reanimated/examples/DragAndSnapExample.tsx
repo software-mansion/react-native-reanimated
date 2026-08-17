@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -13,15 +13,16 @@ export default function DragAndSnapExample() {
   const translationX = useSharedValue(0);
   const translationY = useSharedValue(0);
 
-  const gesture = Gesture.Pan()
-    .onChange((event) => {
-      translationX.value += event.changeX;
-      translationY.value += event.changeY;
-    })
-    .onEnd(() => {
+  const gesture = usePanGesture({
+    onDeactivate: () => {
       translationX.value = withSpring(0);
       translationY.value = withSpring(0);
-    });
+    },
+    onUpdate: (event) => {
+      translationX.value += event.changeX;
+      translationY.value += event.changeY;
+    },
+  });
 
   const stylez = useAnimatedStyle(() => {
     const H = Math.round(

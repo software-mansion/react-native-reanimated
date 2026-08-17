@@ -47,7 +47,9 @@ function App() {
 
 The value you want to store initially in the shared value. It can be any JavaScript value like `number`, `string` or `boolean` but also data structures such as `array` and `object`.
 
-<AvailableFrom version={'4.4.0'}/> You can also pass a function as `initialValue`. It will be called once on mount and its return value used as the initial shared value. Useful when the initial value is expensive to compute.
+<Badges version="4.4.0">
+  You can also pass a function as `initialValue`. It will be called once on mount and its return value used as the initial shared value. Useful when the initial value is expensive to compute.
+</Badges>
 
 ```javascript
 const sv = useSharedValue(() => computeExpensiveInitialValue());

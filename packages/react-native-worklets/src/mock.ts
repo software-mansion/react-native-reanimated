@@ -6,6 +6,8 @@ import { isWorkletFunction } from './workletFunction';
 
 const NOOP = () => {};
 const NOOP_FACTORY = () => NOOP;
+const UI_RUNTIME_HOLDER = {};
+const UI_SCHEDULER_HOLDER = {};
 const ID = <TValue>(value: TValue) => value;
 const IMMEDIATE_CALLBACK_INVOCATION = <TCallback>(callback: () => TCallback) =>
   callback();
@@ -23,32 +25,50 @@ globalThis._getAnimationTimestamp = () => performance.now();
 globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
 
 const WorkletAPI = {
+  callMicrotasks: NOOP,
+  createSerializable: ID,
+  createShareable<TValue>(_hostRuntimeId: number, initial: TValue) {
+    let value = initial;
+    const set = (next: TValue | ((prev: TValue) => TValue)) => {
+      value =
+        typeof next === 'function'
+          ? (next as (prev: TValue) => TValue)(value)
+          : next;
+    };
+    return {
+      isHost: false,
+      __shareableRef: true,
+      getAsync: () => Promise.resolve(value),
+      getSync: () => value,
+      setAsync: set,
+      setSync: set,
+    };
+  },
+  createSynchronizable: ID,
+  createWorkletRuntime: NOOP_FACTORY,
+  executeOnUIRuntimeSync: ID,
+  getDynamicFeatureFlag: () => false,
+  getRuntimeKind: () => RuntimeKind.ReactNative,
+  getStaticFeatureFlag: () => false,
+  getUIRuntimeHolder: () => UI_RUNTIME_HOLDER,
+  getUISchedulerHolder: () => UI_SCHEDULER_HOLDER,
+  isBundleModeEnabled: () => false,
+  isRNRuntime: () => true,
+  isSerializableRef: ID,
+  isShareable: (value: unknown) =>
+    typeof value === 'object' &&
+    value !== null &&
+    !!(value as Record<string, unknown>).__shareableRef,
   isShareableRef: () => true,
+  isSynchronizable: () => false,
+  isUIRuntime: () => false, // maybe it should be true?
+  isWorkerRuntime: () => false,
+  isWorkletFunction: isWorkletFunction,
+  isWorkletRuntime: () => false,
   makeShareable: ID,
   makeShareableCloneOnUIRecursive: ID,
   makeShareableCloneRecursive: ID,
-  shareableMappingCache: new Map(),
-  getStaticFeatureFlag: () => false,
-  setDynamicFeatureFlag: NOOP,
-  isSynchronizable: () => false,
-  getRuntimeKind: () => RuntimeKind.ReactNative,
-  RuntimeKind: RuntimeKind,
-  createWorkletRuntime: NOOP_FACTORY,
-  runOnRuntime: ID,
-  runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
-    _workletRuntime: unknown,
-    worklet: (...args: Args) => ReturnValue,
-    ...args: Args
-  ): Promise<ReturnValue> {
-    return WorkletAPI.runOnUIAsync(worklet, ...args);
-  },
-  scheduleOnRuntime: IMMEDIATE_CALLBACK_INVOCATION,
-  createSerializable: ID,
-  isSerializableRef: ID,
-  serializableMappingCache: new Map(),
-  createSynchronizable: ID,
-  callMicrotasks: NOOP,
-  executeOnUIRuntimeSync: ID,
+  registerCustomSerializable: NOOP,
   runOnJS<Args extends unknown[], ReturnValue>(
     fun: (...args: Args) => ReturnValue
   ): (...args: Args) => void {
@@ -58,6 +78,35 @@ const WorkletAPI = {
           ? () => (fun as (...args: Args) => ReturnValue)(...args)
           : (fun as () => ReturnValue)
       );
+  },
+  runOnRuntime: ID,
+  runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
+    _workletRuntime: unknown,
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): Promise<ReturnValue> {
+    return WorkletAPI.runOnUIAsync(worklet, ...args);
+  },
+  runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
+    _runtimeId: number,
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): Promise<ReturnValue> {
+    return WorkletAPI.runOnUIAsync(worklet, ...args);
+  },
+  runOnRuntimeSync<Args extends unknown[], ReturnValue>(
+    _workletRuntime: unknown,
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): ReturnValue {
+    return worklet(...args);
+  },
+  runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
+    _runtimeId: number,
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): ReturnValue {
+    return worklet(...args);
   },
   runOnUI<Args extends unknown[], ReturnValue>(
     worklet: (...args: Args) => ReturnValue
@@ -89,11 +138,20 @@ const WorkletAPI = {
     });
   },
   runOnUISync: IMMEDIATE_CALLBACK_INVOCATION,
+  RuntimeKind: RuntimeKind,
   scheduleOnRN<Args extends unknown[], ReturnValue>(
     fun: (...args: Args) => ReturnValue,
     ...args: Args
   ): void {
     WorkletAPI.runOnJS(fun)(...args);
+  },
+  scheduleOnRuntime: IMMEDIATE_CALLBACK_INVOCATION,
+  scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
+    _runtimeId: number,
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): void {
+    WorkletAPI.scheduleOnUI(worklet, ...args);
   },
   scheduleOnUI<Args extends unknown[], ReturnValue>(
     worklet: (...args: Args) => ReturnValue,
@@ -101,7 +159,11 @@ const WorkletAPI = {
   ): void {
     WorkletAPI.runOnUI(worklet)(...args);
   },
-  isWorkletFunction: isWorkletFunction,
+  serializableMappingCache: new Map(),
+  setDynamicFeatureFlag: NOOP,
+  shareableMappingCache: new Map(),
+  toggleSlowAnimationsOnUIRuntime: () => false,
+  UIRuntimeId: RuntimeKind.UI,
   WorkletsModule: {},
 };
 

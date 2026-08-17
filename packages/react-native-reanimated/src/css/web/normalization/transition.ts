@@ -1,5 +1,5 @@
 'use strict';
-import { type AnyRecord, convertPropertyToArray } from '../../../common';
+import { convertPropertyToArray, type UnknownRecord } from '../../../common';
 import type { CSSTransitionProp, CSSTransitionProperties } from '../../types';
 import { parseSingleTransitionShorthand, splitByComma } from '../../utils';
 
@@ -41,7 +41,7 @@ export function parseTransitionShorthand(value: string) {
 export function normalizeCSSTransitionProperties(
   config: CSSTransitionProperties
 ): ExpandedCSSTransitionConfigProperties {
-  const result: AnyRecord = config.transition
+  const result: UnknownRecord = config.transition
     ? parseTransitionShorthand(config.transition)
     : createEmptyTransitionConfig();
 

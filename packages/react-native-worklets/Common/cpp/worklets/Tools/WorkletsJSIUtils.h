@@ -2,8 +2,6 @@
 
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
-#include <concepts>
-#include <memory>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -12,6 +10,29 @@
 using namespace facebook;
 
 namespace worklets::jsi_utils {
+
+/**
+ * Drains Hermes microtasks - we don't use these, but Hermes WeakRefs are
+ * cleaned during Hermes microtask checkpoint.
+ */
+inline void triggerWeakRefCleanup(jsi::Runtime &rt) {
+  rt.drainMicrotasks();
+}
+
+/**
+ * Drains both Worklets and Hermes microtasks.
+ */
+inline void drainMicrotasks(jsi::Runtime &rt) {
+  auto callMicrotasks = rt.global().getProperty(rt, "__callMicrotasks");
+  if (callMicrotasks.isObject()) {
+    auto callMicrotasksObject = callMicrotasks.getObject(rt);
+    if (callMicrotasksObject.isFunction(rt)) {
+      callMicrotasksObject.getFunction(rt).call(rt);
+    }
+  }
+
+  triggerWeakRefCleanup(rt);
+}
 
 // `get` functions take a pointer to `jsi::Value` and
 // call an appropriate method to cast to the native type
@@ -154,7 +175,7 @@ struct takes_runtime<jsi::Runtime &, Rest...> {
 template <typename Ret, typename... Args>
 void installJsiFunction(jsi::Runtime &rt, std::string_view name, const std::function<Ret(Args...)> &function) {
   auto clb = createHostFunction(function);
-  auto argsCount = sizeof...(Args) - takes_runtime<Args...>::value;
+  auto argsCount = static_cast<unsigned int>(sizeof...(Args) - takes_runtime<Args...>::value);
   jsi::Value jsiFunction =
       jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, name.data()), argsCount, clb);
   rt.global().setProperty(rt, name.data(), jsiFunction);

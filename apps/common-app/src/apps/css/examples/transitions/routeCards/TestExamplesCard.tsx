@@ -16,11 +16,11 @@ const TestExamplesCard: RouteCardComponent = (props) => (
   </RouteCard>
 );
 
-const TRANSITION_CONFIG: CSSTransitionProperties = {
+const TRANSITION_CONFIG = {
   transitionDuration: 500,
   transitionProperty: 'transform',
   transitionTimingFunction: 'ease-in-out',
-};
+} satisfies CSSTransitionProperties;
 
 function Showcase() {
   const [open, setOpen] = useState(false);

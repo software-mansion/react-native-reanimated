@@ -19,7 +19,6 @@ export function setupTaskQueue() {
     const task = queue.timeoutCallbacks.get(handlerId);
     task?.();
     queue.timeoutCallbacks.delete(handlerId);
-    globalThis.__callMicrotasks();
   };
 
   globalThis.__callMicrotasks = function callMicrotasks() {

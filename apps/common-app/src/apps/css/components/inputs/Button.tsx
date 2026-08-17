@@ -2,7 +2,7 @@ import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, TouchableOpacity } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, useTapGesture } from 'react-native-gesture-handler';
 import Animated, {
   FadeInRight,
   FadeOutLeft,
@@ -80,9 +80,11 @@ export default function Button({
 }: ButtonProps) {
   const { buttonStyle, fontVariant, iconSize } = BUTTON_VARIANTS[size];
 
+  const tapGesture = useTapGesture({ onDeactivate: onPress, runOnJS: true });
+
   return (
     <LayoutAnimationConfig skipEntering skipExiting>
-      <GestureDetector gesture={Gesture.Tap().onEnd(onPress).runOnJS(true)}>
+      <GestureDetector gesture={tapGesture}>
         <AnimatedTouchableOpacity
           activeOpacity={activeOpacity}
           disabled={disabled}

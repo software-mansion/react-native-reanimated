@@ -1,3 +1,4 @@
+import type { TextStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -7,7 +8,7 @@ import { colors } from '@/theme';
 
 export default function LetterSpacing() {
   return (
-    <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
+    <ExamplesScreen<TextStyle, { keyframes: CSSAnimationKeyframes<TextStyle> }>
       CardComponent={VerticalExampleCard}
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',

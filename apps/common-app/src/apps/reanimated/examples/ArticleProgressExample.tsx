@@ -44,7 +44,7 @@ export default function ArticleProgressExample() {
     const width = clampedProgress * maxWidth;
 
     return { width };
-  }, []);
+  });
 
   return (
     <SafeAreaView>

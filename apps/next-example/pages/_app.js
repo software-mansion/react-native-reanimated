@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 
 export default function App({ Component, pageProps }) {
   useEffect(() => {
-    window.__NEXT_HYDRATED__ = true;
+    globalThis.__NEXT_HYDRATED__ = true;
   }, []);
 
   return (

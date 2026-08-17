@@ -1,9 +1,7 @@
 {
   "extends": "./tsconfig.native.json",
   "compilerOptions": {
-    "paths": {
-      "moduleSuffixes": [".web", ""]
-    }
+    "moduleSuffixes": [".web", ""]
   },
   "exclude": [
     "**/*.native.ts",

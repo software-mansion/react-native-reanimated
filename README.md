@@ -1,5 +1,9 @@
 <img src="https://github.com/user-attachments/assets/a516a6ef-fc1e-4d38-a4d8-6d53d6e51a21" alt="React Native Reanimated and React Native Worklets by Software Mansion" width="100%">
 
+[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-reanimated-1?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-reanimated-1\&n=1)
+[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-reanimated-2?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-reanimated-2\&n=1)
+[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-reanimated-3?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-reanimated-3\&n=1)
+
 # Reanimated & Worklets
 
 This repository contains two main packages:
@@ -13,6 +17,7 @@ This repository contains two main packages:
 
 ## Nightly CI state
 
+[![Main branch build](https://github.com/software-mansion/react-native-reanimated/actions/workflows/main-branch-build.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/main-branch-build.yml)
 [![NPM Reanimated publish \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml)
 [![NPM Worklets publish \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml)
 [![Reanimated + Worklets compatibility check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-worklets-compatibility-check.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-worklets-compatibility-check.yml)
@@ -23,10 +28,12 @@ This repository contains two main packages:
 [![Reanimated TypeScript compatibility test](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-typescript-compatibility-test-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-typescript-compatibility-test-nightly.yml)
 [![Windows hosted app Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/windows-hosted-app-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/windows-hosted-app-reanimated-build-check-nightly.yml)
 [![URL validation](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml)
+[![Runtime tests nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/runtime-tests-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/runtime-tests-nightly.yml)
+[![Runtime tests sanitizers nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/runtime-tests-sanitizers-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/runtime-tests-sanitizers-nightly.yml)
 
 ## Installation
 
-Check out the detailed installation [instructions for Reanimated](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#installation) and [instructions for Worklets](https://docs.swmansion.com/react-native-worklets/docs/) their dedicated documentation pages.
+Check out the detailed installation [instructions for Reanimated](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#installation) and [instructions for Worklets](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/getting-started/#installation) on their dedicated documentation pages.
 
 ## Compatibility
 
@@ -52,9 +59,8 @@ Reanimated and Worklets libraries are licensed under [The MIT License](LICENSE).
 
 ## Credits
 
-This project has been built and is maintained thanks to the support from [Shopify](https://shopify.com), [Expo.io](https://expo.io) and [Software Mansion](https://swmansion.com)
+This project has been built and is maintained thanks to the support from [Expo.io](https://expo.io) and [Software Mansion](https://swmansion.com)
 
-[![shopify](https://avatars1.githubusercontent.com/u/8085?v=3\&s=100 'Shopify.com')](https://shopify.com)
 [![expo](https://avatars2.githubusercontent.com/u/12504344?v=3\&s=100 'Expo.io')](https://expo.io)
 [![swm](https://logo.swmansion.com/logo?color=white\&variant=desktop\&width=150\&tag=react-native-reanimated-github 'Software Mansion')](https://swmansion.com)
 
