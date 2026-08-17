@@ -227,6 +227,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
   if (--layoutAnimation.count > 0) {
     return {};
   }
+  layoutAnimation.isExitingWhenSettled = shouldRemove;
   maybeSettledAnimationTags_.insert(tag);
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
@@ -530,15 +531,12 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(SurfaceId surfaceId, Sha
     auto layoutAnimationIt = layoutAnimations_.find(tag);
 
     if (layoutAnimationIt == layoutAnimations_.end() ||
-        // A settled animation is normally cleaned up without applying further
-        // updates. The exception is a flaky entering animation whose opacity was
-        // never restored (the view wasn't mounted in time) - we still need to
-        // apply that pending opacity, otherwise the view stays invisible. Only
-        // entering animations carry an opacity value.
-        (layoutAnimationIt->second.isSettled() && !layoutAnimationIt->second.opacity.has_value())) {
+        (layoutAnimationIt->second.isSettled() && layoutAnimationIt->second.isExitingWhenSettled)) {
       continue;
     }
 
+    // A settled non-exiting animation still has its exact final update in
+    // updateMap. Apply it before the entry is cleaned up later in this transaction.
     auto &layoutAnimation = layoutAnimationIt->second;
     layoutAnimation.isViewAlreadyMounted = true;
     auto newView = layoutAnimation.finalView;
