@@ -82,6 +82,10 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   __weak UITouch *_primaryTouch;
   CGPoint _primaryTouchDownPoint;
   BOOL _pressGateHeld;
+  __weak UITouch *_resolvedHitsTouch;
+  CGPoint _resolvedHitsPoint;
+  __weak UIView *_resolvedBumpedHit;
+  __weak UIView *_resolvedPlainHit;
 }
 
 + (instancetype)sharedCoordinator
@@ -237,9 +241,11 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   }
   _primaryTouch = touch;
   _primaryTouchDownPoint = [touch locationInView:window];
-  UIView *hit = [self hitTestInWindow:window atPoint:_primaryTouchDownPoint];
-  [self hoverBranchOfHitView:hit];
-  [self activateRescuedPressEntriesInWindow:window bumpedHit:hit];
+  UIView *bumpedHit = nil;
+  UIView *plainHit = nil;
+  [self resolveHitsForTouch:touch inWindow:window atPoint:_primaryTouchDownPoint bumped:&bumpedHit plain:&plainHit];
+  [self hoverBranchOfHitView:bumpedHit];
+  [self activateRescuedPressEntriesWithBumpedHit:bumpedHit plainHit:plainHit];
 }
 
 - (void)primaryTouchMoved:(NSSet<UITouch *> *)touches
@@ -284,6 +290,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 - (void)touchSequenceEnded
 {
   _primaryTouch = nil;
+  _resolvedHitsTouch = nil;
   [self endPressSequence];
 }
 
@@ -299,21 +306,12 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 // Activates press entries whose views only became hit-testable thanks to the alpha bump. Views
 // UIKit can reach on its own are excluded here: their UILongPressGestureRecognizer handles the
 // press, so the two paths never both fire for one view.
-- (void)activateRescuedPressEntriesInWindow:(UIWindow *)window bumpedHit:(UIView *)bumpedHit
+- (void)activateRescuedPressEntriesWithBumpedHit:(UIView *)bumpedHit plainHit:(UIView *)plainHit
 {
   if (_pressEntries.count == 0 || bumpedHit == nil) {
     return;
   }
-  UIView *plainHit = [window hitTest:_primaryTouchDownPoint withEvent:nil];
-  UIView *deepestPressView = nil;
-  for (UIView *current = bumpedHit; current != nil && deepestPressView == nil; current = current.superview) {
-    for (REATouchPressEntry *entry in _pressEntries) {
-      if (entry->view == current) {
-        deepestPressView = current;
-        break;
-      }
-    }
-  }
+  UIView *deepestPressView = [self deepestRescuedPressViewUnder:bumpedHit reachableHit:plainHit];
   BOOL engagedAny = NO;
   for (REATouchPressEntry *entry in _pressEntries) {
     UIView *view = entry->view;
@@ -366,27 +364,48 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 
 - (UIView *)rescuedPressViewForTouch:(UITouch *)touch inWindow:(UIWindow *)window atPoint:(CGPoint)point
 {
-  // Answer only where a fallback press can actually follow: this coordinator's own window, and the
-  // touch it is driving. Vetoing a recognizer for a press nothing then engages leaves the touch dead.
+  // Vetoing a recognizer for a press that nothing then engages would leave the touch dead.
   if (window == nil || window != _observedWindow || _pressEntries.count == 0) {
     return nil;
   }
   if (_primaryTouch != nil && _primaryTouch != touch) {
     return nil;
   }
-  // Deliberately the same hit-test the engaging path uses: deciding over a different one lets the
-  // two disagree, which is how a press ends up suppressed here and never engaged there.
-  UIView *bumpedHit = [self hitTestInWindow:window atPoint:point];
-  if (bumpedHit == nil) {
-    return nil;
-  }
-  UIView *plainHit = [window hitTest:point withEvent:nil];
+  UIView *bumpedHit = nil;
+  UIView *plainHit = nil;
+  [self resolveHitsForTouch:touch inWindow:window atPoint:point bumped:&bumpedHit plain:&plainHit];
+  return [self deepestRescuedPressViewUnder:bumpedHit reachableHit:plainHit];
+}
+
+// The view the press fallback owns at this point: the innermost registered one the alpha bump
+// revealed. Anything UIKit can reach unaided is left to its own recognizer.
+- (UIView *)deepestRescuedPressViewUnder:(UIView *)bumpedHit reachableHit:(UIView *)plainHit
+{
   for (UIView *current = bumpedHit; current != nil; current = current.superview) {
     if ([self isPressRegisteredView:current] && ![self isView:current onBranchOfHitView:plainHit]) {
       return current;
     }
   }
   return nil;
+}
+
+// Both hit tests the press paths need. The engaging path and every :active-deepest recognizer on
+// the way down ask for the same point, so resolving once per touch saves a full window walk each
+// and leaves them no way to decide over different answers.
+- (void)resolveHitsForTouch:(UITouch *)touch
+                   inWindow:(UIWindow *)window
+                    atPoint:(CGPoint)point
+                     bumped:(UIView **)bumpedHit
+                      plain:(UIView **)plainHit
+{
+  if (touch == nil || touch != _resolvedHitsTouch || !CGPointEqualToPoint(point, _resolvedHitsPoint)) {
+    _resolvedHitsTouch = touch;
+    _resolvedHitsPoint = point;
+    _resolvedBumpedHit = [self hitTestInWindow:window atPoint:point];
+    _resolvedPlainHit = [window hitTest:point withEvent:nil];
+  }
+  *bumpedHit = _resolvedBumpedHit;
+  *plainHit = _resolvedPlainHit;
 }
 
 - (BOOL)isPressRegisteredView:(UIView *)view
@@ -410,7 +429,8 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   for (NSUInteger listIndex = 0; listIndex < 2; listIndex++) {
     for (REATouchEntryBase *entry in entryLists[listIndex]) {
       UIView *view = entry->view;
-      if (view == nil || view.alpha >= kHitTestableAlpha || [lifted containsObject:view]) {
+      // A view registered twice is skipped the second time by its own lifted alpha.
+      if (view == nil || view.alpha >= kHitTestableAlpha) {
         continue;
       }
       if (lifted == nil) {
