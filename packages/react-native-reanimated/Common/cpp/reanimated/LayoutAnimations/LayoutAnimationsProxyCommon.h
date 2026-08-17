@@ -4,6 +4,7 @@
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
+#include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
@@ -14,10 +15,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-namespace facebook::react {
-class ShadowTree;
-}
 
 namespace reanimated {
 
