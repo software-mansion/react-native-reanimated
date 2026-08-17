@@ -199,6 +199,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       requestRender_(platformDepMethodsHolder.requestRender),
       animatedSensorModule_(platformDepMethodsHolder),
       nativeAnimationService_(platformDepMethodsHolder.nativeAnimationService),
+      layoutMountBoundary_(platformDepMethodsHolder.layoutMountBoundary),
       layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>()),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef __APPLE__
@@ -1226,10 +1227,15 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
   std::function<void(SurfaceId)> nativeAnimationSurfaceDidStart;
   std::function<void(SurfaceId)> nativeAnimationSurfaceDidStop;
   if constexpr (useNativeLayoutAnimations()) {
-    nativeAnimationSurfaceDidStart = [service = nativeAnimationService_](const SurfaceId surfaceId) {
+    nativeAnimationSurfaceDidStart = [service = nativeAnimationService_,
+                                      layoutProxy = layoutAnimationsProxy_](const SurfaceId surfaceId) {
       service->notifySurfaceStarted(surfaceId);
+      layoutProxy->notifyNativeStartsSurfaceStarted(surfaceId);
     };
-    nativeAnimationSurfaceDidStop = [service = nativeAnimationService_](const SurfaceId surfaceId) {
+    nativeAnimationSurfaceDidStop = [service = nativeAnimationService_,
+                                     layoutProxy = layoutAnimationsProxy_](const SurfaceId surfaceId) {
+      // Drop layout-owned queued starts before shared teardown.
+      layoutProxy->cancelNativeStartsSurface(surfaceId);
       service->cancelSurface(surfaceId);
     };
   }
@@ -1267,6 +1273,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         getJSIRuntimeFromWorkletRuntime(uiRuntime_),
         uiScheduler_,
         nativeAnimationService_,
+        layoutMountBoundary_,
         uiManager_
 #ifdef ANDROID
         ,
@@ -1286,6 +1293,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         getJSIRuntimeFromWorkletRuntime(uiRuntime_),
         uiScheduler_,
         nativeAnimationService_,
+        layoutMountBoundary_,
         uiManager_
 #ifdef ANDROID
         ,

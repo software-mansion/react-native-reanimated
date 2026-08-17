@@ -3,6 +3,7 @@
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
 #import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 #import <reanimated/apple/CSS/REACSSSharedNativeTransitions.h>
+#import <reanimated/apple/NativeAnimations/AppleLayoutMountBoundary.h>
 #import <reanimated/apple/NativeAnimations/AppleNativeAnimationHost.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
@@ -197,11 +198,13 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto detachPseudoSelectorFunction = makeDetachPseudoSelectorFunction(attachQueue);
 
   std::shared_ptr<native_animation::NativeAnimationService> nativeAnimationService;
+  std::shared_ptr<LayoutMountBoundary> layoutMountBoundary;
   auto cssCanRouteProperty = makeCSSCanRouteProperty();
   css::CSSApplyTransitionFunction cssApplyTransition;
   css::CSSRemoveTransitionFunction cssRemoveTransition;
   if constexpr (StaticFeatureFlags::getFlag("IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION")) {
     nativeAnimationService = native_animation::makeAppleNativeAnimationService(nodesManager.surfacePresenter);
+    layoutMountBoundary = makeAppleLayoutMountBoundary(nodesManager.surfacePresenter);
     REACSSSharedNativeTransitions *platformTransitions =
         [[REACSSSharedNativeTransitions alloc] initWithSurfacePresenter:nodesManager.surfacePresenter
                                                  nativeAnimationService:nativeAnimationService];
@@ -270,6 +273,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       cssRemoveTransition,
       nullptr,
       nativeAnimationService,
+      layoutMountBoundary,
   };
   return platformDepMethodsHolder;
 }

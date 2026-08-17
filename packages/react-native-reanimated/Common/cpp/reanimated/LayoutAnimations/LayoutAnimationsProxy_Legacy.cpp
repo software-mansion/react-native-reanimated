@@ -9,6 +9,7 @@
 #include <ranges>
 #include <set>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <unordered_map>
 #include <unordered_set>
@@ -34,6 +35,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " " << surfaceId << std::endl;
 #endif
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+#if defined(IS_REANIMATED_EXAMPLE_APP)
+  benchTransactionNumber_ = transactionNumber;
+#endif
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
   auto &surfaceCtx = getSurfaceContext(surfaceId);
@@ -447,6 +451,12 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
         }
 
         transferConfigFromNativeID(mutation.newChildShadowView.props->nativeId, mutation.newChildShadowView.tag);
+#if defined(IS_REANIMATED_EXAMPLE_APP)
+        if (maybeEnqueueFinalStateFirstBenchEntering(mutation)) {
+          filteredMutations.push_back(mutation);
+          continue;
+        }
+#endif
         if (!layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::ENTERING)) {
           filteredMutations.push_back(mutation);
           continue;
@@ -474,6 +484,12 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
       }
 
       case ShadowViewMutation::Type::Update: {
+#if defined(IS_REANIMATED_EXAMPLE_APP)
+        if (maybeEnqueueFinalStateFirstBenchLayout(mutation)) {
+          filteredMutations.push_back(mutation);
+          continue;
+        }
+#endif
         auto shouldAnimate = hasLayoutChanged(mutation);
         if (!layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::LAYOUT) ||
             (!shouldAnimate && !layoutAnimations_.contains(tag))) {
@@ -1242,6 +1258,99 @@ inline bool Node::isMutationNode() {
 inline bool MutationNode::isMutationNode() {
   return true;
 }
+
+#if defined(IS_REANIMATED_EXAMPLE_APP)
+
+// Final-state-first bench helpers. They never parse a Layout Animations
+// builder and never route production animations.
+
+namespace {
+
+constexpr std::string_view kFinalStateFirstBenchLayoutNativeId = "fsf-bench-layout";
+constexpr std::string_view kFinalStateFirstBenchEnteringNativeId = "fsf-bench-entering";
+
+bool hasBenchNativeId(const ShadowView &view, const std::string_view marker) {
+  return view.props != nullptr && view.props->nativeId == marker;
+}
+
+native_animation::AnimationPoint centerOfFrame(const facebook::react::Rect &frame) {
+  return {
+      frame.origin.x + frame.size.width / 2.0,
+      frame.origin.y + frame.size.height / 2.0,
+  };
+}
+
+} // namespace
+
+bool LayoutAnimationsProxy_Legacy::maybeEnqueueFinalStateFirstBenchLayout(const ShadowViewMutation &mutation) const {
+  if constexpr (!useNativeLayoutAnimations()) {
+    return false;
+  }
+  if (!pendingNativeStarts_ || !hasBenchNativeId(mutation.newChildShadowView, kFinalStateFirstBenchLayoutNativeId)) {
+    return false;
+  }
+  const auto &oldFrame = mutation.oldChildShadowView.layoutMetrics.frame;
+  const auto &finalFrame = mutation.newChildShadowView.layoutMetrics.frame;
+  if (oldFrame == finalFrame) {
+    return false;
+  }
+  const native_animation::AnimationHandle handle{
+      mutation.newChildShadowView.surfaceId,
+      mutation.newChildShadowView.tag,
+      native_animation::AnimationOwner::Layout,
+      ++frameDrivenGeneration_,
+  };
+  native_animation::AnimationTrack positionTrack{
+      {native_animation::AnimationTargetKind::Position},
+      native_animation::AnimationValue{centerOfFrame(oldFrame)},
+      {{1.0, native_animation::AnimationValue{centerOfFrame(finalFrame)}, native_animation::LinearTiming{}}},
+      0,
+      5000,
+  };
+  enqueueNativeLayoutStart(
+      LayoutAnimationType::LAYOUT,
+      mutation.oldChildShadowView,
+      mutation.newChildShadowView,
+      benchTransactionNumber_,
+      {handle, {{std::move(positionTrack)}}, native_animation::AnimationAdmissionMode::Normal},
+      {});
+  return true;
+}
+
+bool LayoutAnimationsProxy_Legacy::maybeEnqueueFinalStateFirstBenchEntering(const ShadowViewMutation &mutation) const {
+  if constexpr (!useNativeLayoutAnimations()) {
+    return false;
+  }
+  if (!pendingNativeStarts_ || !hasBenchNativeId(mutation.newChildShadowView, kFinalStateFirstBenchEnteringNativeId)) {
+    return false;
+  }
+  const auto &viewProps = static_cast<const ViewProps &>(*mutation.newChildShadowView.props);
+  const native_animation::AnimationHandle handle{
+      mutation.newChildShadowView.surfaceId,
+      mutation.newChildShadowView.tag,
+      native_animation::AnimationOwner::Layout,
+      ++frameDrivenGeneration_,
+  };
+  native_animation::AnimationTrack opacityTrack{
+      {native_animation::AnimationTargetKind::Opacity},
+      native_animation::AnimationValue{0.0},
+      {{1.0,
+        native_animation::AnimationValue{static_cast<double>(viewProps.opacity)},
+        native_animation::LinearTiming{}}},
+      1000,
+      2000,
+  };
+  enqueueNativeLayoutStart(
+      LayoutAnimationType::ENTERING,
+      mutation.newChildShadowView,
+      mutation.newChildShadowView,
+      benchTransactionNumber_,
+      {handle, {{std::move(opacityTrack)}}, native_animation::AnimationAdmissionMode::Normal},
+      {});
+  return true;
+}
+
+#endif // IS_REANIMATED_EXAMPLE_APP
 
 void LayoutAnimationsProxy_Legacy::startSurface(const SurfaceId surfaceId) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);

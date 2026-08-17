@@ -240,6 +240,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   std::vector<std::function<void(double)>> pendingFrameCallbacks_;
   AnimatedSensorModule animatedSensorModule_;
   std::shared_ptr<native_animation::NativeAnimationService> nativeAnimationService_;
+  std::shared_ptr<LayoutMountBoundary> layoutMountBoundary_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
   std::function<void(double)> pendingAnimationFrameCallbackFromWorklets_;

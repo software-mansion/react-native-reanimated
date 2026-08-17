@@ -131,6 +131,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
       jsi::Runtime &uiRuntime,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<native_animation::NativeAnimationService> &nativeAnimationService,
+      const std::shared_ptr<LayoutMountBoundary> &layoutMountBoundary,
       const std::shared_ptr<UIManager> &uiManager
 #ifdef ANDROID
       ,
@@ -145,6 +146,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
             uiRuntime,
             uiScheduler,
             nativeAnimationService,
+            layoutMountBoundary,
             uiManager
 #ifdef ANDROID
             ,
@@ -162,6 +164,14 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
   void startEnteringAnimation(const int tag, ShadowViewMutation &mutation) const;
   void startExitingAnimation(const int tag, ShadowViewMutation &mutation) const;
   void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation) const;
+
+#if defined(IS_REANIMATED_EXAMPLE_APP)
+  // Final-state-first bench: views with a bench nativeID get a controlled
+  // prepared request through the pending-start mechanism.
+  mutable MountingTransaction::Number benchTransactionNumber_{0};
+  bool maybeEnqueueFinalStateFirstBenchLayout(const ShadowViewMutation &mutation) const;
+  bool maybeEnqueueFinalStateFirstBenchEntering(const ShadowViewMutation &mutation) const;
+#endif
 
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) override;
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
