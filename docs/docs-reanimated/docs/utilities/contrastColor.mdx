@@ -9,7 +9,12 @@ sidebar_position: 4
 ## Reference
 
 ```jsx
-import { contrastColor, interpolateColor } from 'react-native-reanimated';
+import Animated, {
+  contrastColor,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
 
 function App() {
   const progress = useSharedValue(0);
@@ -54,7 +59,7 @@ The background color to contrast against. Accepts any color format supported by 
 ## Remarks
 
 - `contrastColor` is a worklet, so it can be used inside `useAnimatedStyle`, `useDerivedValue` and other worklets, as well as on the JavaScript thread.
-- Just like CSS `contrast-color()`, the result is guaranteed to be the better of the two options but not necessarily to meet the WCAG AA (4.5:1) threshold – mid-tone backgrounds (e.g. `#767676`) don't have enough contrast with either black or white.
+- Just like CSS `contrast-color()`, the result is the better of the two options. With the WCAG 2.x formula, the selected color always has a contrast ratio of at least ~4.58:1 (which meets WCAG AA for normal text), but it doesn't guarantee the WCAG AAA (7:1) threshold – mid-tone backgrounds (e.g. `#767676`) are barely readable with either black or white.
 - Pure red (`#ff0000`) returns `'black'` – this is the correct WCAG result (5.25:1 vs 4:1 for white), even if white may look more natural.
 
 ## Platform compatibility

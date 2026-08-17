@@ -16,6 +16,13 @@ describe('contrastColor', () => {
     ['magenta', 'black'],
     ['rgb(255, 0, 0)', 'black'],
     ['rgba(255, 0, 0, 1)', 'black'],
+    ['rgba(255, 0, 0, 0)', 'black'], // alpha is ignored
+    ['rgba(0, 0, 0, 0.5)', 'white'],
+    ['rgba(255 0 0 / 0.5)', 'black'],
+    ['#f00', 'black'],
+    ['#00f8', 'white'],
+    ['#ff000080', 'black'],
+    ['hwb(0 0% 0%)', 'black'],
     ['hsl(0, 100%, 50%)', 'black'],
     [0x000000ff, 'white'],
   ])('contrastColor(%p) === %p', (input, expected) => {
