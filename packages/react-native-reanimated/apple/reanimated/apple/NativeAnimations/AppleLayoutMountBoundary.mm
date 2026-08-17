@@ -45,12 +45,12 @@ struct PostMountObserverSlot {
 
 facebook::react::SurfaceId surfaceIdForMountedView(REAUIView *view)
 {
-  do {
+  while (view != nil) {
     if (RCTIsReactRootView(@(view.tag))) {
       return static_cast<facebook::react::SurfaceId>(view.tag);
     }
     view = view.superview;
-  } while (view != nil);
+  }
   return -1;
 }
 
