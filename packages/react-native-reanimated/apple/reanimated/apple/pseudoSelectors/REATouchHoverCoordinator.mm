@@ -429,8 +429,9 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   for (NSUInteger listIndex = 0; listIndex < 2; listIndex++) {
     for (REATouchEntryBase *entry in entryLists[listIndex]) {
       UIView *view = entry->view;
-      // A view registered twice is skipped the second time by its own lifted alpha.
-      if (view == nil || view.alpha >= kHitTestableAlpha) {
+      // A view carrying both `:hover` and `:active` is in both lists, and the bumped alpha reads
+      // back a hair below the threshold, so only this check keeps its original alpha restorable.
+      if (view == nil || view.alpha >= kHitTestableAlpha || [lifted containsObject:view]) {
         continue;
       }
       if (lifted == nil) {
