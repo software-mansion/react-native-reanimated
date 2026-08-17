@@ -8,6 +8,8 @@
 
 ### 🎉 New features
 
+- Add feature-flagged Shared Native Animation Boundary for CSS Transitions and future Layout Animations ([#10276](https://github.com/software-mansion/react-native-reanimated/pull/10276) by [@pawicao](https://github.com/pawicao))
+
 ### 🐛 Bug fixes
 
 - Fix `EXC_BAD_ACCESS` crash in `-[REANodesManager performOperations]` when called before the `_performOperations` block is registered on iOS. ([#10229](https://github.com/software-mansion/react-native-reanimated/pull/10229) by [@tomekzaw](https://github.com/tomekzaw))

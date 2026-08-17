@@ -1,6 +1,5 @@
 #import <reanimated/apple/CSS/REACSSPlatformProps.h>
 
-#import <array>
 #import <string>
 #import <variant>
 
@@ -24,16 +23,16 @@ id idFromPlatformValue(const PlatformValue &value)
   if (const auto *scalar = std::get_if<double>(&value)) {
     return @(*scalar);
   }
-  if (const auto *size = std::get_if<std::array<double, 2>>(&value)) {
+  if (const auto *size = std::get_if<native_animation::AnimationSize>(&value)) {
     // +[NSValue valueWithCGSize:] is UIKit-only; AppKit boxes the same CGSize via valueWithSize:.
 #if TARGET_OS_OSX
-    return [NSValue valueWithSize:NSMakeSize((*size)[0], (*size)[1])];
+    return [NSValue valueWithSize:NSMakeSize(size->width, size->height)];
 #else
-    return [NSValue valueWithCGSize:CGSizeMake((*size)[0], (*size)[1])];
+    return [NSValue valueWithCGSize:CGSizeMake(size->width, size->height)];
 #endif
   }
-  const auto &color = std::get<std::array<double, 4>>(value);
-  const CGFloat components[4] = {color[0], color[1], color[2], color[3]};
+  const auto &color = std::get<native_animation::AnimationColor>(value);
+  const CGFloat components[4] = {color.red, color.green, color.blue, color.alpha};
   // CGColorCreate returns +1 retained; __bridge_transfer hands the retain to ARC.
   return (__bridge_transfer id)CGColorCreate(sharedSRGBColorSpace(), components);
 }

@@ -6,6 +6,7 @@
 
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
 
+#include <functional>
 #include <memory>
 
 using namespace facebook::react;
@@ -18,7 +19,8 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
       const std::shared_ptr<UIManager> &uiManager,
       const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
       const std::shared_ptr<LayoutAnimationsProxyCommon> &layoutAnimationsProxy,
-      const std::shared_ptr<ReanimatedSurfaceTracker> &surfaceTracker);
+      const std::shared_ptr<ReanimatedSurfaceTracker> &surfaceTracker,
+      const std::function<void(SurfaceId)> &surfaceDidStart);
 
   ~ReanimatedCommitHook() noexcept override;
 
@@ -39,6 +41,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   std::shared_ptr<LayoutAnimationsProxyCommon> layoutAnimationsProxy_;
   std::shared_ptr<ReanimatedSurfaceTracker> surfaceTracker_;
+  const std::function<void(SurfaceId)> surfaceDidStart_;
 };
 
 } // namespace reanimated

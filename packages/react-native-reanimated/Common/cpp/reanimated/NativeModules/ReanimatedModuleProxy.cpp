@@ -198,6 +198,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       eventHandlerRegistry_(std::make_unique<UIEventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       animatedSensorModule_(platformDepMethodsHolder),
+      nativeAnimationService_(platformDepMethodsHolder.nativeAnimationService),
       layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>()),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef __APPLE__
@@ -1222,14 +1223,29 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
   };
 
   const auto surfaceTracker = std::make_shared<ReanimatedSurfaceTracker>();
+  std::function<void(SurfaceId)> nativeAnimationSurfaceDidStart;
+  std::function<void(SurfaceId)> nativeAnimationSurfaceDidStop;
+  if constexpr (useNativeLayoutAnimations()) {
+    nativeAnimationSurfaceDidStart = [service = nativeAnimationService_](const SurfaceId surfaceId) {
+      service->notifySurfaceStarted(surfaceId);
+    };
+    nativeAnimationSurfaceDidStop = [service = nativeAnimationService_](const SurfaceId surfaceId) {
+      service->cancelSurface(surfaceId);
+    };
+  }
 
   // TODO: with the animation backend we still need a way to handleNodeRemovals,
   // for now we leave this to leak the memory, a fix will come in a follow-up
   mountHook_ = std::make_shared<ReanimatedMountHook>(
-      uiManager_, updatesRegistryManager_, viewStylesRepository_, surfaceTracker, request);
+      uiManager_,
+      updatesRegistryManager_,
+      viewStylesRepository_,
+      surfaceTracker,
+      nativeAnimationSurfaceDidStop,
+      request);
 
   commitHook_ = std::make_shared<ReanimatedCommitHook>(
-      uiManager_, updatesRegistryManager_, layoutAnimationsProxy_, surfaceTracker);
+      uiManager_, updatesRegistryManager_, layoutAnimationsProxy_, surfaceTracker, nativeAnimationSurfaceDidStart);
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
@@ -1250,6 +1266,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         scheduler->getContextContainer(),
         getJSIRuntimeFromWorkletRuntime(uiRuntime_),
         uiScheduler_,
+        nativeAnimationService_,
         uiManager_
 #ifdef ANDROID
         ,
@@ -1268,6 +1285,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         scheduler->getContextContainer(),
         getJSIRuntimeFromWorkletRuntime(uiRuntime_),
         uiScheduler_,
+        nativeAnimationService_,
         uiManager_
 #ifdef ANDROID
         ,

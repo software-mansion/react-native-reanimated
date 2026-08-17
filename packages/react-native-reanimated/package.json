@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "test": "yarn run --top-level jest",
+    "test:native-animations": "cmake -S Common/cpp/reanimated/NativeAnimations/tests -B build/native-animation-tests -DCMAKE_BUILD_TYPE=Debug && cmake --build build/native-animation-tests && build/native-animation-tests/native_animation_service_test",
     "lint": "yarn lint:js && yarn lint:android && yarn lint:apple && yarn lint:clang-tidy",
     "lint:js": "eslint src __tests__ __typetests__ && yarn run --top-level oxfmt --check src __tests__ __typetests__ && yarn validate-mock",
     "lint:android": "../../scripts/validate-android.sh && ../../scripts/validate-common.sh && yarn validate-includes Common && yarn validate-includes android && ./android/gradlew -p android spotlessCheck -q && yarn format:common --dry-run -Werror && yarn format:android:cpp --dry-run -Werror && yarn lint:cmake",

@@ -1,6 +1,9 @@
 #import <reanimated/CSS/utils/platform.h>
+#import <reanimated/Tools/FeatureFlags.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
 #import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
+#import <reanimated/apple/CSS/REACSSSharedNativeTransitions.h>
+#import <reanimated/apple/NativeAnimations/AppleNativeAnimationHost.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REASlowAnimations.h>
@@ -132,33 +135,6 @@ css::CSSCanRoutePropertyFunction makeCSSCanRouteProperty()
   return &css::canRouteCSSProperty;
 }
 
-css::CSSApplyTransitionFunction makeCSSApplyTransition(REACSSPlatformTransitions *platformTransitions)
-{
-  return [platformTransitions](
-             Tag viewTag,
-             const std::string &propertyName,
-             const css::PlatformValue &fromValue,
-             const css::PlatformValue &toValue,
-             const css::CSSTransitionPropertySettings *settings,
-             bool persistent,
-             double timestamp) {
-    return [platformTransitions applyTransitionForTag:viewTag
-                                         propertyName:propertyName
-                                            fromValue:fromValue
-                                              toValue:toValue
-                                             settings:settings
-                                           persistent:persistent
-                                            timestamp:timestamp];
-  };
-}
-
-css::CSSRemoveTransitionFunction makeCSSRemoveTransition(REACSSPlatformTransitions *platformTransitions)
-{
-  return [platformTransitions](Tag viewTag, const std::string &propertyName) {
-    [platformTransitions removeTransitionForTag:viewTag propertyName:propertyName];
-  };
-}
-
 ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
 {
   auto forceScreenSnapshot = [=](Tag tag) {
@@ -220,11 +196,61 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(attachQueue);
   auto detachPseudoSelectorFunction = makeDetachPseudoSelectorFunction(attachQueue);
 
-  REACSSPlatformTransitions *platformTransitions =
-      [[REACSSPlatformTransitions alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
+  std::shared_ptr<native_animation::NativeAnimationService> nativeAnimationService;
   auto cssCanRouteProperty = makeCSSCanRouteProperty();
-  auto cssApplyTransition = makeCSSApplyTransition(platformTransitions);
-  auto cssRemoveTransition = makeCSSRemoveTransition(platformTransitions);
+  css::CSSApplyTransitionFunction cssApplyTransition;
+  css::CSSRemoveTransitionFunction cssRemoveTransition;
+  if constexpr (StaticFeatureFlags::getFlag("IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION")) {
+    nativeAnimationService = native_animation::makeAppleNativeAnimationService(nodesManager.surfacePresenter);
+    REACSSSharedNativeTransitions *platformTransitions =
+        [[REACSSSharedNativeTransitions alloc] initWithSurfacePresenter:nodesManager.surfacePresenter
+                                                 nativeAnimationService:nativeAnimationService];
+    cssApplyTransition = [platformTransitions](
+                             SurfaceId surfaceId,
+                             Tag viewTag,
+                             const std::string &propertyName,
+                             const css::PlatformValue &fromValue,
+                             const css::PlatformValue &toValue,
+                             const css::CSSTransitionPropertySettings *settings,
+                             bool persistent,
+                             double timestamp) {
+      return [platformTransitions applyTransitionForTag:viewTag
+                                              surfaceId:surfaceId
+                                           propertyName:propertyName
+                                              fromValue:fromValue
+                                                toValue:toValue
+                                               settings:settings
+                                             persistent:persistent
+                                              timestamp:timestamp];
+    };
+    cssRemoveTransition = [platformTransitions](SurfaceId surfaceId, Tag viewTag, const std::string &propertyName) {
+      [platformTransitions removeTransitionForTag:viewTag surfaceId:surfaceId propertyName:propertyName];
+    };
+  } else {
+    REACSSPlatformTransitions *platformTransitions =
+        [[REACSSPlatformTransitions alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
+    cssApplyTransition = [platformTransitions](
+                             SurfaceId surfaceId,
+                             Tag viewTag,
+                             const std::string &propertyName,
+                             const css::PlatformValue &fromValue,
+                             const css::PlatformValue &toValue,
+                             const css::CSSTransitionPropertySettings *settings,
+                             bool persistent,
+                             double timestamp) {
+      return [platformTransitions applyTransitionForTag:viewTag
+                                              surfaceId:surfaceId
+                                           propertyName:propertyName
+                                              fromValue:fromValue
+                                                toValue:toValue
+                                               settings:settings
+                                             persistent:persistent
+                                              timestamp:timestamp];
+    };
+    cssRemoveTransition = [platformTransitions](SurfaceId surfaceId, Tag viewTag, const std::string &propertyName) {
+      [platformTransitions removeTransitionForTag:viewTag surfaceId:surfaceId propertyName:propertyName];
+    };
+  }
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
@@ -242,6 +268,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       cssCanRouteProperty,
       cssApplyTransition,
       cssRemoveTransition,
+      nullptr,
+      nativeAnimationService,
   };
   return platformDepMethodsHolder;
 }

@@ -39,6 +39,10 @@ class CSSTransition {
     return shadowNode_->getTag();
   }
 
+  SurfaceId getSurfaceId() const {
+    return shadowNode_->getSurfaceId();
+  }
+
   std::shared_ptr<const ShadowNode> getShadowNode() const {
     return shadowNode_;
   }

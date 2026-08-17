@@ -20,7 +20,7 @@ CSSTransition::CSSTransition(
       observer_(observer) {}
 
 CSSTransition::~CSSTransition() {
-  platformTransitionProxy_->cancelAll(getViewTag(), routing_.platform);
+  platformTransitionProxy_->cancelAll(getSurfaceId(), getViewTag(), routing_.platform);
   if (loopTransition_) {
     // The loop co-owns the transition and removal is only enqueued, so a frame
     // already in flight can still tick it after we are gone. Drop the reporter
@@ -47,8 +47,8 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
   // TODO: add support for events reported by the platform itself; until then
   // a view with transition callbacks keeps every property on the loop, where
   // timing and events already pair up.
-  auto loopConfig =
-      platformTransitionProxy_->processConfig(rt, getViewTag(), config, routing_, eventMask_ == 0, timestamp);
+  auto loopConfig = platformTransitionProxy_->processConfig(
+      rt, getSurfaceId(), getViewTag(), config, routing_, eventMask_ == 0, timestamp);
 
   if (!loopConfig.empty()) {
     ensureLoopTransition().updateSettings(
@@ -72,7 +72,7 @@ folly::dynamic CSSTransition::run(
   const auto timestamp = loop_->resolveTimestamp();
 
   auto loopDiffs = platformTransitionProxy_->processDynamicDiffs(
-      getViewTag(), propertyDiffs, pseudoLockedProperties_, routing_, eventMask_ == 0, timestamp);
+      getSurfaceId(), getViewTag(), propertyDiffs, pseudoLockedProperties_, routing_, eventMask_ == 0, timestamp);
   if (loopDiffs.empty() && !loopTransition_) {
     return folly::dynamic::object();
   }
@@ -99,7 +99,7 @@ void CSSTransition::cancel() {
     loopTransition_->abort(loop_->resolveTimestamp());
     loop_->remove(loopTransition_);
   }
-  platformTransitionProxy_->cancelAll(getViewTag(), routing_.platform);
+  platformTransitionProxy_->cancelAll(getSurfaceId(), getViewTag(), routing_.platform);
 }
 
 void CSSTransition::removeProperties(const std::vector<std::string> &propertyNames, const double timestamp) {
@@ -112,7 +112,7 @@ void CSSTransition::removeProperties(const std::vector<std::string> &propertyNam
   }
 
   if (!platformProperties.empty()) {
-    platformTransitionProxy_->cancelAll(getViewTag(), platformProperties);
+    platformTransitionProxy_->cancelAll(getSurfaceId(), getViewTag(), platformProperties);
   }
   if (loopTransition_) {
     loopTransition_->removeProperties(propertyNames, timestamp);

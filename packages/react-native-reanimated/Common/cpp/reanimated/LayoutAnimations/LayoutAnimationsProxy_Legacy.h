@@ -130,6 +130,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
       const std::shared_ptr<const ContextContainer> &contextContainer,
       jsi::Runtime &uiRuntime,
       const std::shared_ptr<UIScheduler> &uiScheduler,
+      const std::shared_ptr<native_animation::NativeAnimationService> &nativeAnimationService,
       const std::shared_ptr<UIManager> &uiManager
 #ifdef ANDROID
       ,
@@ -143,6 +144,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
             contextContainer,
             uiRuntime,
             uiScheduler,
+            nativeAnimationService,
             uiManager
 #ifdef ANDROID
             ,

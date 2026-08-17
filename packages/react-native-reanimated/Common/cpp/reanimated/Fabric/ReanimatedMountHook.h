@@ -7,6 +7,7 @@
 
 #include <react/renderer/uimanager/UIManagerMountHook.h>
 
+#include <functional>
 #include <memory>
 
 namespace reanimated {
@@ -20,6 +21,7 @@ class ReanimatedMountHook : public UIManagerMountHook {
       const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
       const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
       const std::shared_ptr<ReanimatedSurfaceTracker> &surfaceTracker,
+      const std::function<void(SurfaceId)> &surfaceDidStop,
       const std::function<void()> &requestFlush);
   ~ReanimatedMountHook() noexcept override;
 
@@ -32,6 +34,7 @@ class ReanimatedMountHook : public UIManagerMountHook {
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   const std::shared_ptr<css::ViewStylesRepository> viewStylesRepository_;
   const std::shared_ptr<ReanimatedSurfaceTracker> surfaceTracker_;
+  const std::function<void(SurfaceId)> surfaceDidStop_;
   const std::function<void()> requestFlush_;
 };
 
