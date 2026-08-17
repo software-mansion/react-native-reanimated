@@ -122,9 +122,6 @@ void REAPseudoPressGateRelease(void)
   [view addGestureRecognizer:recognizer];
   _gestureRecognizer = recognizer;
 #if !TARGET_OS_OSX && !TARGET_OS_TV
-  // UIKit never delivers touches to views with alpha < ~0.01 (e.g. `opacity: {default: 0, ':active': 1}`),
-  // so the recognizer alone cannot engage them. The coordinator activates exactly those views through
-  // its alpha-bumped hit-test; reachable views stay on the recognizer path.
   [[REATouchHoverCoordinator sharedCoordinator]
       registerPressObserver:self
                        view:view
@@ -419,9 +416,8 @@ static int _focusObserverContext;
 }
 
 #if !TARGET_OS_OSX
-// UIKit's hit-test cannot see a press-registered descendant with near-zero alpha, so on its own it
-// would report this view as the deepest one and let it claim a press the coordinator is about to
-// give that descendant. Ask the coordinator whether it will act here first.
+// UIKit's hit-test cannot see a near-zero-alpha descendant, so on its own it would report this view
+// as the deepest and let it claim a press the coordinator is about to give that descendant.
 - (BOOL)isOutrankedByRescuedPressAt:(CGPoint)location inView:(REAUIView *)view
 {
 #if !TARGET_OS_TV
