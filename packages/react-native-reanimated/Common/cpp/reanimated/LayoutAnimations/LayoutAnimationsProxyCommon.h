@@ -95,8 +95,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
             useNativeLayoutAnimations() && nativeAnimationService
                 ? std::make_shared<LayoutNativeAnimationAdapter>(
                       nativeAnimationService,
-                      [uiScheduler](native_animation::CallbackOperation operation) {
-                        scheduleOnUI(uiScheduler, std::move(operation));
+                      [uiScheduler](const native_animation::CallbackOperation &operation) {
+                        scheduleOnUI(uiScheduler, operation);
                       })
                 : nullptr)
 #ifdef ANDROID

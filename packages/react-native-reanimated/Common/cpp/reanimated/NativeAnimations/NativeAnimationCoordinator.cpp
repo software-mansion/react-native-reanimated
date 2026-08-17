@@ -62,7 +62,7 @@ void runCallbacks(const std::vector<std::function<void()>> &callbacks) {
 }
 
 template <typename Callback, typename Result>
-void deliverResult(CallbackScheduler scheduler, Callback callback, Result result) {
+void deliverResult(const CallbackScheduler &scheduler, Callback callback, Result result) {
   if (!callback) {
     return;
   }
@@ -72,18 +72,18 @@ void deliverResult(CallbackScheduler scheduler, Callback callback, Result result
 }
 
 void deliverHandoffResult(HandoffCallbacks callbacks, HandoffResult result) {
-  deliverResult(std::move(callbacks.driver.scheduler), std::move(callbacks.onResult), std::move(result));
+  deliverResult(callbacks.driver.scheduler, std::move(callbacks.onResult), std::move(result));
 }
 
 void deliverAnimationAdmission(
-    CallbackScheduler scheduler,
+    const CallbackScheduler &scheduler,
     AnimationAdmissionCallback callback,
     const AnimationAdmissionResult result) {
-  deliverResult(std::move(scheduler), std::move(callback), result);
+  deliverResult(scheduler, std::move(callback), result);
 }
 
 void deliverExternalClaimResult(ExternalClaimCallbacks callbacks, const ExternalClaimResult result) {
-  deliverResult(std::move(callbacks.driver.scheduler), std::move(callbacks.onResult), result);
+  deliverResult(callbacks.driver.scheduler, std::move(callbacks.onResult), result);
 }
 
 } // namespace
@@ -193,7 +193,7 @@ void NativeAnimationCoordinator::schedule(AnimationRequest request, AnimationCal
   runCallbacks(replacement.externalRevocations);
   runCallbacks(replacement.terminalCallbacks);
   deliverAnimationAdmission(
-      std::move(admissionScheduler),
+      admissionScheduler,
       std::move(admissionCallback),
       {AnimationAdmissionStatus::Granted, AnimationResultReason::None});
 

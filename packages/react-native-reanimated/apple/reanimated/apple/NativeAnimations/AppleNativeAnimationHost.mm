@@ -303,6 +303,9 @@ class ApplePlatformUIScheduler final : public PlatformUIScheduler,
     RCTAssertMainQueue();
     if (isExecuting_) {
       const std::weak_ptr<ApplePlatformUIScheduler> weakScheduler = weak_from_this();
+      // The block captures C++ references as references, so it must copy the
+      // shared_ptr to keep the operation alive after execute() returns.
+      // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
       const auto deferredOperation = operation;
       dispatch_async(dispatch_get_main_queue(), ^{
         if (const auto scheduler = weakScheduler.lock()) {
