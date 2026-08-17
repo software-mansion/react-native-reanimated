@@ -66,7 +66,7 @@ void deliverResult(CallbackScheduler scheduler, Callback callback, Result result
   if (!callback) {
     return;
   }
-  scheduleCallback(std::move(scheduler), [callback = std::move(callback), result = std::move(result)]() mutable {
+  scheduleCallback(scheduler, [callback = std::move(callback), result = std::move(result)]() mutable {
     callback(std::move(result));
   });
 }
@@ -186,12 +186,12 @@ void NativeAnimationCoordinator::schedule(AnimationRequest request, AnimationCal
   if (request.admissionMode == AnimationAdmissionMode::RetainedExit) {
     targetRegistry_->addRetainedExitGuard(handle);
   }
-  for (const auto &target : targets) {
+  for ([[maybe_unused]] const auto &target : targets) {
     recordNativeAnimationTrace(*traceSink_, NativeAnimationTraceEventType::Claim, handle, target);
   }
 
-  runCallbacks(std::move(replacement.externalRevocations));
-  runCallbacks(std::move(replacement.terminalCallbacks));
+  runCallbacks(replacement.externalRevocations);
+  runCallbacks(replacement.terminalCallbacks);
   deliverAnimationAdmission(
       std::move(admissionScheduler),
       std::move(admissionCallback),
@@ -291,12 +291,12 @@ void NativeAnimationCoordinator::handoffToExternal(
   if (replacement.admissionMode == AnimationAdmissionMode::RetainedExit) {
     targetRegistry_->addRetainedExitGuard(replacement.handle);
   }
-  for (const auto &target : replacement.targets) {
+  for ([[maybe_unused]] const auto &target : replacement.targets) {
     recordNativeAnimationTrace(*traceSink_, NativeAnimationTraceEventType::Claim, replacement.handle, target);
   }
   stopNativeInterruptions(conflictReplacement.interruptions);
-  runCallbacks(std::move(conflictReplacement.externalRevocations));
-  runCallbacks(std::move(conflictReplacement.terminalCallbacks));
+  runCallbacks(conflictReplacement.externalRevocations);
+  runCallbacks(conflictReplacement.terminalCallbacks);
   if (nativeTerminal) {
     nativeTerminal();
   }
@@ -357,12 +357,12 @@ void NativeAnimationCoordinator::claimExternal(const ExternalClaimRequest &reque
   if (request.admissionMode == AnimationAdmissionMode::RetainedExit) {
     targetRegistry_->addRetainedExitGuard(handle);
   }
-  for (const auto &target : request.targets) {
+  for ([[maybe_unused]] const auto &target : request.targets) {
     recordNativeAnimationTrace(*traceSink_, NativeAnimationTraceEventType::Claim, handle, target);
   }
   stopNativeInterruptions(replacement.interruptions);
-  runCallbacks(std::move(replacement.externalRevocations));
-  runCallbacks(std::move(replacement.terminalCallbacks));
+  runCallbacks(replacement.externalRevocations);
+  runCallbacks(replacement.terminalCallbacks);
   const ExternalClaimResult result{ExternalClaimStatus::Granted, AnimationResultReason::None};
   deliverExternalClaimResult(std::move(callbacks), result);
 }
@@ -406,8 +406,8 @@ void NativeAnimationCoordinator::cancelSurface(const SurfaceId surfaceId) {
   targetRegistry_->clearSurface(surfaceId);
   std::erase_if(generationMarks_, [surfaceId](const auto &entry) { return entry.first.surfaceId == surfaceId; });
   std::erase_if(usedHandles_, [surfaceId](const AnimationHandle &handle) { return handle.surfaceId == surfaceId; });
-  runCallbacks(std::move(externalRevocations));
-  runCallbacks(std::move(callbacks));
+  runCallbacks(externalRevocations);
+  runCallbacks(callbacks);
 }
 
 std::optional<AnimationResultReason> NativeAnimationCoordinator::validateExternalRequest(
@@ -566,7 +566,7 @@ NativeAnimationCoordinator::DeferredCallback NativeAnimationCoordinator::takeTer
     return {};
   }
   return [scheduler = std::move(scheduler), terminal = std::move(terminal), result]() mutable {
-    scheduleCallback(std::move(scheduler), [terminal = std::move(terminal), result]() mutable { terminal(result); });
+    scheduleCallback(scheduler, [terminal = std::move(terminal), result]() mutable { terminal(result); });
   };
 }
 
@@ -580,7 +580,7 @@ void NativeAnimationCoordinator::reject(
       *traceSink_, NativeAnimationTraceEventType::Terminal, handle, std::nullopt, AnimationOutcome::Rejected, reason);
   if (callbacks.onAdmission || callbacks.onTerminal) {
     scheduleCallback(
-        std::move(callbacks.scheduler),
+        callbacks.scheduler,
         [admission = std::move(callbacks.onAdmission), terminal = std::move(callbacks.onTerminal), reason]() mutable {
           if (admission) {
             admission({AnimationAdmissionStatus::Rejected, reason});

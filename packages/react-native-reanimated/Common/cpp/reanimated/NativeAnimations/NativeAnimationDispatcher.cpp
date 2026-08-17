@@ -31,7 +31,7 @@ void NativeAnimationDispatcher::handoffToExternal(
   auto coordinator = coordinator_;
   platformUIScheduler_->schedule(
       [coordinator, nativeHandle, replacement = std::move(replacement), callbacks = std::move(callbacks)]() mutable {
-        coordinator->handoffToExternal(nativeHandle, std::move(replacement), std::move(callbacks));
+        coordinator->handoffToExternal(nativeHandle, replacement, std::move(callbacks));
       });
 }
 
@@ -39,7 +39,7 @@ void NativeAnimationDispatcher::claimExternal(ExternalClaimRequest request, Exte
   auto coordinator = coordinator_;
   platformUIScheduler_->schedule(
       [coordinator, request = std::move(request), callbacks = std::move(callbacks)]() mutable {
-        coordinator->claimExternal(std::move(request), std::move(callbacks));
+        coordinator->claimExternal(request, std::move(callbacks));
       });
 }
 
