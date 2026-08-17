@@ -88,7 +88,7 @@ enum class Intent : std::uint8_t {
 struct LightNode {
   ShadowView previous;
   ShadowView current;
-  ExitingState exitingState = ExitingState::UNDEFINED;
+  ExitingState state = ExitingState::UNDEFINED;
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
 
@@ -116,7 +116,7 @@ struct LightNode {
     int remainingNonExitingChildrenToCheck = index;
     int exitingCount = 0;
     for (std::size_t i = 0; i < children.size(); i++) {
-      if (children[i]->exitingState != ExitingState::UNDEFINED) {
+      if (children[i]->state != ExitingState::UNDEFINED) {
         exitingCount++;
         continue;
       }

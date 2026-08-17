@@ -16,7 +16,7 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findActiveBoundar
     const std::shared_ptr<LightNode> &node) const {
   std::shared_ptr<LightNode> result = nullptr;
 
-  if (isSETBoundary(node) && isBoundaryActive(node) && node->exitingState == ExitingState::UNDEFINED) {
+  if (isSETBoundary(node) && isBoundaryActive(node) && node->state == ExitingState::UNDEFINED) {
     return node;
   }
   for (const auto &child : std::views::reverse(node->children)) {
