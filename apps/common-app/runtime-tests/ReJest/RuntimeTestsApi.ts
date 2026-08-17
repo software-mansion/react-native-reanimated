@@ -191,10 +191,6 @@ export async function waitForNotifications(
   return notificationRegistry.waitForNotifications(names, timeout);
 }
 
-export function getWorkletRuntimeFromPool(name: string) {
-  return workletRuntimePool.getOrCreateWorkletRuntime(name);
-}
-
 export function getWorkletRuntimesFromPool(count: number) {
   return workletRuntimePool.getOrCreateWorkletRuntimes(count);
 }
