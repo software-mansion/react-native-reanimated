@@ -270,6 +270,11 @@ const LayoutAnimationExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/LayoutAnimation').default
   );
+const LayoutAnimationBatchSyncExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/LayoutAnimationBatchSyncExample')
+      .default as React.FC
+  );
 const LayoutTransitionExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/LayoutTransitionExample').default
@@ -1122,6 +1127,10 @@ export const EXAMPLES: Record<string, Example> = {
   BasicLayoutAnimation: {
     title: '[LA] Basic layout animation',
     screen: BasicLayoutAnimation,
+  },
+  LayoutAnimationBatchSync: {
+    title: '[LA] Batch synchronization',
+    screen: LayoutAnimationBatchSyncExample,
   },
   BasicNestedAnimation: {
     title: '[LA] Basic nested animation',
