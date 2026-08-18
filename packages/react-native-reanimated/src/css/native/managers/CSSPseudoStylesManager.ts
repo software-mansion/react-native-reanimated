@@ -112,7 +112,7 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     }
 
     if (selectors.length > 0) {
-      if (__DEV__ && !this.isRegistered) {
+      if (__DEV__) {
         validatePseudoStyles(
           pseudoStylesBySelector,
           mergedDefaultStyle,

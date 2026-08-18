@@ -7,5 +7,5 @@ export function validatePseudoStyles(
   _defaultStyle: UnknownRecord,
   _componentName: string
 ) {
-  // Only iOS restricts which views may receive input, so there is nothing to check anywhere else.
+  // Only iOS gates input on opacity, so there is nothing to check elsewhere.
 }

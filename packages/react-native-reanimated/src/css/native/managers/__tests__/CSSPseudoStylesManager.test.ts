@@ -50,12 +50,35 @@ describe('CSSPseudoStylesManager', () => {
       );
     });
 
-    test('warns once per registration, even when the style keeps changing', () => {
+    test('does not repeat while the style is unchanged', () => {
       pushStyle(manager, { opacity: { default: 0, ':active': 1 } });
-      pushStyle(manager, { opacity: { default: 0, ':active': 0.9 } });
-      pushStyle(manager, { opacity: { default: 0, ':active': 0.8 } });
+      pushStyle(manager, { opacity: { default: 0, ':active': 1 } });
 
       expect(console.warn).toHaveBeenCalledTimes(1);
+    });
+
+    test('warns when a view only becomes transparent on a later render', () => {
+      pushStyle(manager, { opacity: { default: 1, ':active': 0.5 } });
+      expect(console.warn).not.toHaveBeenCalled();
+
+      pushStyle(manager, { opacity: { default: 0, ':active': 1 } });
+
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining("won't receive presses on iOS")
+      );
+    });
+
+    test('warns when a press selector is added to an already transparent view', () => {
+      pushStyle(manager, { opacity: { default: 0, ':hover': 1 } });
+      expect(console.warn).not.toHaveBeenCalled();
+
+      pushStyle(manager, {
+        opacity: { default: 0, ':hover': 1, ':active': 1 },
+      });
+
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining("won't receive presses on iOS")
+      );
     });
 
     test('warns at 0.01, which the float-backed alpha puts under the threshold', () => {

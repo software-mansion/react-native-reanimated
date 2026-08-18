@@ -4,11 +4,10 @@ import { logger } from '../../../common';
 import { PRESS_PSEUDO_SELECTORS } from '../../constants';
 import type { PseudoStylesBySelector } from '../../utils';
 
-// UIKit skips views below this alpha when hit-testing, so one under it never receives the touch
-// its press selector is written for. Android and the web deliver it either way.
+// UIKit skips views under this alpha when hit-testing, so a press selector on one never fires.
 const HIT_TEST_ALPHA_THRESHOLD = 0.01;
-// The alpha is stored in a float, which puts a written 0.01 just under the threshold. This is the
-// alpha the touch `:hover` hit test bumps to for the same reason.
+// The alpha is float-backed, so a written 0.01 lands just below the threshold. Same value the
+// touch `:hover` hit test bumps to.
 const REACHABLE_OPACITY = 0.02;
 
 export function validatePseudoStyles(
@@ -19,9 +18,9 @@ export function validatePseudoStyles(
   const opacity = defaultStyle.opacity;
   if (
     typeof opacity !== 'number' ||
-    // Mirrors the float the alpha is narrowed to natively, so this matches to the last bit.
+    // Matches the float narrowing the alpha goes through natively.
     Math.fround(opacity) >= HIT_TEST_ALPHA_THRESHOLD ||
-    // SVG shapes are reached through the SVG hit test, which ignores opacity entirely.
+    // SVG hit-tests through its own path, which ignores opacity.
     componentName.startsWith('RNSVG') ||
     !PRESS_PSEUDO_SELECTORS.some(
       (selector) => selector in pseudoStylesBySelector
