@@ -109,7 +109,7 @@ struct ActiveTransition {
     adjustedStart = active->adjustedEnd;
     // A reversal resumes from the presentation value, which the outgoing timeline
     // still describes; _active is only re-assigned below.
-    startValue = [self currentValueForTag:viewTag propertyName:propertyName timestamp:timestamp];
+    startValue = [self getCurrentValueForTag:viewTag propertyName:propertyName timestamp:timestamp];
   } else if (active == nullptr) {
     adjustedStart = startValue = fromValue;
   } else if (timestamp >= active->reversing.startTimestamp + active->reversing.duration) {
@@ -187,9 +187,9 @@ struct ActiveTransition {
   });
 }
 
-- (std::optional<PlatformValue>)currentValueForTag:(Tag)viewTag
-                                      propertyName:(const std::string &)propertyName
-                                         timestamp:(double)timestamp
+- (std::optional<PlatformValue>)getCurrentValueForTag:(Tag)viewTag
+                                         propertyName:(const std::string &)propertyName
+                                            timestamp:(double)timestamp
 {
   const ActiveTransition *active = [self activeTransitionForTag:viewTag propertyName:propertyName];
   if (active == nullptr || !active->startValue) {

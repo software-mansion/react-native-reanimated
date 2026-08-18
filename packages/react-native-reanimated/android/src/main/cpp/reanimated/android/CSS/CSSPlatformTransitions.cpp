@@ -107,7 +107,7 @@ bool CSSPlatformTransitions::applyTransition(
     adjustedStart = active->adjustedEnd;
     // The backend resumes a reversal from the live value, which the outgoing
     // timeline still describes; active_ is only re-assigned below.
-    startValue = currentValue(viewTag, propertyName, timestamp);
+    startValue = getCurrentValue(viewTag, propertyName, timestamp);
   } else if (active == nullptr) {
     adjustedStart = startValue = fromValue;
   } else if (timestamp >= active->reversing.startTimestamp + active->reversing.duration) {
@@ -140,8 +140,10 @@ bool CSSPlatformTransitions::applyTransition(
   return true;
 }
 
-std::optional<css::PlatformValue>
-CSSPlatformTransitions::currentValue(const Tag viewTag, const std::string &propertyName, const double timestamp) const {
+std::optional<css::PlatformValue> CSSPlatformTransitions::getCurrentValue(
+    const Tag viewTag,
+    const std::string &propertyName,
+    const double timestamp) const {
   const auto *active = activeTransitionFor(viewTag, propertyName);
   if (active == nullptr || !active->startValue) {
     return std::nullopt;

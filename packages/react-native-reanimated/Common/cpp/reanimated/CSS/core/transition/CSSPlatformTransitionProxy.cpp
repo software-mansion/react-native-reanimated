@@ -10,11 +10,11 @@ CSSPlatformTransitionProxy::CSSPlatformTransitionProxy(
     CSSCanRoutePropertyFunction canRoute,
     CSSApplyTransitionFunction applyTransition,
     CSSRemoveTransitionFunction removeTransition,
-    CSSCurrentPlatformValueFunction currentPlatformValue)
+    CSSGetPlatformValueFunction getPlatformValue)
     : canRoute_(std::move(canRoute)),
       applyTransition_(std::move(applyTransition)),
       removeTransition_(std::move(removeTransition)),
-      currentPlatformValue_(std::move(currentPlatformValue)) {}
+      getPlatformValue_(std::move(getPlatformValue)) {}
 
 bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const EasingConfig &easing) const {
   return canRoute_ && canRoute_(propertyName, easing);
@@ -80,7 +80,7 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
       std::optional<double> resumeFrom;
       if (routing.platform.erase(propertyName) > 0) {
         if (hasValue) {
-          resumeFrom = resumeValue(viewTag, propertyName, timestamp);
+          resumeFrom = getResumeValue(viewTag, propertyName, timestamp);
         }
         remove(viewTag, propertyName);
       }
@@ -131,7 +131,7 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
       }
       routing.platform.erase(propertyName);
       // Read before remove(): it drops the platform-side state this resumes from.
-      const auto resumeFrom = resumeValue(viewTag, propertyName, timestamp);
+      const auto resumeFrom = getResumeValue(viewTag, propertyName, timestamp);
       remove(viewTag, propertyName);
       routing.loop.insert(propertyName);
       if (resumeFrom) {
@@ -144,14 +144,14 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
   return loopDiffs;
 }
 
-std::optional<double> CSSPlatformTransitionProxy::resumeValue(
+std::optional<double> CSSPlatformTransitionProxy::getResumeValue(
     const Tag viewTag,
     const std::string &propertyName,
     const double timestamp) const {
-  if (!currentPlatformValue_) {
+  if (!getPlatformValue_) {
     return std::nullopt;
   }
-  const auto value = currentPlatformValue_(viewTag, propertyName, timestamp);
+  const auto value = getPlatformValue_(viewTag, propertyName, timestamp);
   if (!value) {
     return std::nullopt;
   }

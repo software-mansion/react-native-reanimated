@@ -159,10 +159,10 @@ css::CSSRemoveTransitionFunction makeCSSRemoveTransition(REACSSPlatformTransitio
   };
 }
 
-css::CSSCurrentPlatformValueFunction makeCSSCurrentPlatformValue(REACSSPlatformTransitions *platformTransitions)
+css::CSSGetPlatformValueFunction makeCSSGetPlatformValue(REACSSPlatformTransitions *platformTransitions)
 {
   return [platformTransitions](Tag viewTag, const std::string &propertyName, double timestamp) {
-    return [platformTransitions currentValueForTag:viewTag propertyName:propertyName timestamp:timestamp];
+    return [platformTransitions getCurrentValueForTag:viewTag propertyName:propertyName timestamp:timestamp];
   };
 }
 
@@ -232,7 +232,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto cssCanRouteProperty = makeCSSCanRouteProperty();
   auto cssApplyTransition = makeCSSApplyTransition(platformTransitions);
   auto cssRemoveTransition = makeCSSRemoveTransition(platformTransitions);
-  auto cssCurrentPlatformValue = makeCSSCurrentPlatformValue(platformTransitions);
+  auto cssGetPlatformValue = makeCSSGetPlatformValue(platformTransitions);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
@@ -250,7 +250,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       cssCanRouteProperty,
       cssApplyTransition,
       cssRemoveTransition,
-      cssCurrentPlatformValue,
+      cssGetPlatformValue,
   };
   return platformDepMethodsHolder;
 }

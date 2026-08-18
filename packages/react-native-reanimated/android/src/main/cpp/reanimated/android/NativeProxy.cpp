@@ -399,8 +399,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
     transitions->removeTransition(std::forward<decltype(args)>(args)...);
   };
 
-  auto cssCurrentPlatformValue = [transitions = cssPlatformTransitions](auto &&...args) {
-    return transitions->currentValue(std::forward<decltype(args)>(args)...);
+  auto cssGetPlatformValue = [transitions = cssPlatformTransitions](auto &&...args) {
+    return transitions->getCurrentValue(std::forward<decltype(args)>(args)...);
   };
 
   return {
@@ -419,7 +419,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       cssCanRouteProperty,
       cssApplyTransition,
       cssRemoveTransition,
-      cssCurrentPlatformValue,
+      cssGetPlatformValue,
   };
 }
 

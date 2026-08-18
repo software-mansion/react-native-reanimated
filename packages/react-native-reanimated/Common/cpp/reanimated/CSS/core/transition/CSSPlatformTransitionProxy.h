@@ -34,7 +34,7 @@ using CSSApplyTransitionFunction = std::function<bool(
 /// Cancels the property's native transition and drops its platform-side state.
 using CSSRemoveTransitionFunction = std::function<void(Tag viewTag, const std::string &propertyName)>;
 /// The value the platform animation currently shows, so a demotion can resume from it.
-using CSSCurrentPlatformValueFunction =
+using CSSGetPlatformValueFunction =
     std::function<std::optional<PlatformValue>(Tag viewTag, const std::string &propertyName, double timestamp)>;
 
 /// A view's transition partition: which properties animate on the platform vs the
@@ -54,7 +54,7 @@ class CSSPlatformTransitionProxy {
       CSSCanRoutePropertyFunction canRoute,
       CSSApplyTransitionFunction applyTransition,
       CSSRemoveTransitionFunction removeTransition,
-      CSSCurrentPlatformValueFunction currentPlatformValue);
+      CSSGetPlatformValueFunction getPlatformValue);
 
   /// Routes the config between platform and loop, updating `routing` and returning
   /// the loop-routed remainder to run.
@@ -91,14 +91,13 @@ class CSSPlatformTransitionProxy {
       bool persistent,
       double timestamp) const;
   void remove(Tag viewTag, const std::string &propertyName) const;
-  /// The diff's from-value is the committed style the animation already painted past;
-  /// nullopt keeps that diff untouched.
-  std::optional<double> resumeValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
+  /// nullopt keeps the diff's own from-value, which the animation has painted past.
+  std::optional<double> getResumeValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
 
   CSSCanRoutePropertyFunction canRoute_;
   CSSApplyTransitionFunction applyTransition_;
   CSSRemoveTransitionFunction removeTransition_;
-  CSSCurrentPlatformValueFunction currentPlatformValue_;
+  CSSGetPlatformValueFunction getPlatformValue_;
 };
 
 } // namespace reanimated::css
