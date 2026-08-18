@@ -99,10 +99,11 @@ struct LightNode {
     // states never return to UNDEFINED, so only the first transition increments; removeChild decrements
     const bool startsExiting = state == ExitingState::UNDEFINED && newState != ExitingState::UNDEFINED;
     state = newState;
-    if (startsExiting) {
-      if (const auto parentNode = parent.lock()) {
-        parentNode->exitingChildrenCount++;
-      }
+    if (!startsExiting) {
+      return;
+    }
+    if (const auto parentNode = parent.lock()) {
+      parentNode->exitingChildrenCount++;
     }
   }
 
