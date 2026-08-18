@@ -1,5 +1,7 @@
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
 
+#include <jsi/JSIDynamic.h>
+
 #include <react/debug/react_native_assert.h>
 
 #include <utility>
@@ -74,7 +76,16 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
       if (routing.loop.erase(propertyName) > 0) {
         loopConfig.removedProperties.push_back(propertyName);
       }
-      routing.platform.insert(propertyName);
+      // A settings-only config leaves the run that is already on the platform.
+      if (hasValue) {
+        routing.platform.insert_or_assign(
+            propertyName,
+            CSSPlatformRun{
+                jsi::dynamicFromValue(rt, valueIt->second.first),
+                jsi::dynamicFromValue(rt, valueIt->second.second),
+                settings,
+                timestamp});
+      }
     } else {
       // platform -> loop migration cancels on the platform side.
       std::optional<double> resumeFrom;
@@ -109,14 +120,14 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
   return loopConfig;
 }
 
-PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
+CSSLoopHandover CSSPlatformTransitionProxy::processDynamicDiffs(
     const Tag viewTag,
     const PropertyValueDynamicDiffsMap &propertyDiffs,
     const TransitionProperties &pseudoLockedProperties,
     CSSTransitionRouting &routing,
     const bool allowPlatform,
     const double timestamp) const {
-  PropertyValueDynamicDiffsMap loopDiffs;
+  CSSLoopHandover handover;
   for (const auto &[propertyName, propertyDiff] : propertyDiffs) {
     // A platform-routed property keeps animating natively while the platform can
     // still express the toggled value; otherwise it migrates to the loop.
@@ -126,22 +137,30 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
         // Releasing the last selector targets the committed style, which needs no hold.
         const bool persistent = pseudoLockedProperties.contains(propertyName);
         if (values && apply(viewTag, propertyName, values->first, values->second, nullptr, persistent, timestamp)) {
+          // The backend keeps the settings captured when the config was applied.
+          auto &run = routing.platform.at(propertyName);
+          run.fromValue = propertyDiff.first;
+          run.toValue = propertyDiff.second;
+          run.startTimestamp = timestamp;
           continue;
         }
       }
+      // The loop has never seen this run, so it needs the captured settings to
+      // keep animating it instead of snapping with a zero duration.
+      handover.settings.emplace(propertyName, routing.platform.at(propertyName).settings);
       routing.platform.erase(propertyName);
       // Read before remove(): it drops the platform-side state this resumes from.
       const auto resumeFrom = getResumeValue(viewTag, propertyName, timestamp);
       remove(viewTag, propertyName);
       routing.loop.insert(propertyName);
       if (resumeFrom) {
-        loopDiffs.emplace(propertyName, std::make_pair(folly::dynamic(*resumeFrom), propertyDiff.second));
+        handover.diffs.emplace(propertyName, std::make_pair(folly::dynamic(*resumeFrom), propertyDiff.second));
         continue;
       }
     }
-    loopDiffs.emplace(propertyName, propertyDiff);
+    handover.diffs.emplace(propertyName, propertyDiff);
   }
-  return loopDiffs;
+  return handover;
 }
 
 std::optional<double> CSSPlatformTransitionProxy::getResumeValue(
@@ -159,8 +178,8 @@ std::optional<double> CSSPlatformTransitionProxy::getResumeValue(
   return scalar != nullptr ? std::optional(*scalar) : std::nullopt;
 }
 
-void CSSPlatformTransitionProxy::cancelAll(const Tag viewTag, const TransitionProperties &properties) const {
-  for (const auto &propertyName : properties) {
+void CSSPlatformTransitionProxy::cancelAll(const Tag viewTag, const CSSPlatformRuns &runs) const {
+  for (const auto &[propertyName, run] : runs) {
     remove(viewTag, propertyName);
   }
 }
