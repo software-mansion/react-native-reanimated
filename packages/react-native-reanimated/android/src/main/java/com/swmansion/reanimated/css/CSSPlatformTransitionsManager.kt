@@ -306,7 +306,10 @@ internal class CSSPlatformTransitionsManager(
     private fun onPreDraw(): Boolean {
         commands.drain()
         repairClobberedValues()
-        return animators.isNotEmpty() || commands.hasPending()
+        // Retiring while idle leaves the next start with only its posted message to beat the
+        // draw that React's commit triggers, and losing that race shows the committed target
+        // for a frame. Both calls above are no-ops while nothing is queued or running.
+        return !invalidated
     }
 
     /** Re-asserts each animator's own value wherever a commit overwrote it. */
