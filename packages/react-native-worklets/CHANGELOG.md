@@ -6,6 +6,8 @@
 
 ### 🛠 Breaking changes
 
+- Change the C++ `Synchronizable` interface to operate on `std::variant` values. Getters return a `Serializable`, a `double` or a `bool`, and `setBlocking` takes either a `Serializable` or a plain value. ([#10294](https://github.com/software-mansion/react-native-reanimated/pull/10294) by [@tjzel](https://github.com/tjzel))
+
 ### 🎉 New features
 
 \[General] Per-runtime caching for RetainingSerializable
@@ -20,4 +22,3 @@
 \[general] - bump Worklets version to 0.13.0
 
 - Split `Synchronizable` into an interface and a `SynchronizableDynamic` implementation. ([#10293](https://github.com/software-mansion/react-native-reanimated/pull/10293) by [@tjzel](https://github.com/tjzel))
-- Make the C++ `Synchronizable` interface operate on `std::variant` values instead of Serializables. ([#10294](https://github.com/software-mansion/react-native-reanimated/pull/10294) by [@tjzel](https://github.com/tjzel))
