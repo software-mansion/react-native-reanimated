@@ -80,9 +80,6 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
         Object.assign(mergedDefaultStyle, defaultStyle);
       }
     }
-    if (__DEV__) {
-      validatePseudoStyles(pseudoStylesBySelector, mergedDefaultStyle);
-    }
 
     const builtDefaultStyle = this.propsBuilder.build(mergedDefaultStyle, {
       includeUnprocessed: true,
@@ -112,6 +109,9 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     }
 
     if (selectors.length > 0) {
+      if (__DEV__ && !this.isRegistered) {
+        validatePseudoStyles(pseudoStylesBySelector, mergedDefaultStyle);
+      }
       registerPseudoStyles(this.shadowNodeWrapper, {
         defaultStyle: builtDefaultStyle,
         selectors,

@@ -214,7 +214,7 @@ Reanimated hit-tests the front-most element, so when SVG shapes overlap only the
 
 - While a selector matches, its properties win. A re-render or a regular transition can't override a value that a pseudo selector is currently applying.
 
-- A fully transparent view can't be pressed on iOS. The system stops delivering touches below 1% opacity, so `opacity: { default: 0, ':active': 1 }` never activates there, while the same style works on Android and the web. Write `opacity: { default: 0.01, ':active': 1 }` instead - indistinguishable on screen, and still touchable. Development builds warn when they spot this.
+- iOS stops delivering input to a view below 1% opacity, so anything that relies on the system routing input to it breaks there: `opacity: { default: 0, ':active': 1 }` never activates, a mouse, trackpad or pencil never hovers the view, and it can't be tapped to take `:focus`. Touch `:hover` is the exception, as Reanimated resolves that one itself. Android and the web have no such rule. Write `opacity: { default: 0.01, ':active': 1 }` instead - indistinguishable on screen, and still reachable. Development builds warn about press selectors.
 
 - Pseudo selectors are a feature of CSS styles. They don't work in [`useAnimatedStyle`](/docs/core/useAnimatedStyle), where the animation is driven by [shared values](/docs/fundamentals/glossary#shared-value) instead.
 

@@ -49,9 +49,10 @@ describe('CSSPseudoStylesManager', () => {
       );
     });
 
-    test('does not warn again while the style is unchanged', () => {
+    test('warns once per registration, even when the style keeps changing', () => {
       pushStyle(manager, { opacity: { default: 0, ':active': 1 } });
-      pushStyle(manager, { opacity: { default: 0, ':active': 1 } });
+      pushStyle(manager, { opacity: { default: 0, ':active': 0.9 } });
+      pushStyle(manager, { opacity: { default: 0, ':active': 0.8 } });
 
       expect(console.warn).toHaveBeenCalledTimes(1);
     });
