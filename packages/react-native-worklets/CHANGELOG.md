@@ -6,6 +6,8 @@
 
 ### 🛠 Breaking changes
 
+- Change the C++ `Synchronizable` interface to operate on `std::variant` values. Getters return a `Serializable`, a `double` or a `bool`, and `setBlocking` takes either a `Serializable` or a plain value. ([#10294](https://github.com/software-mansion/react-native-reanimated/pull/10294) by [@tjzel](https://github.com/tjzel))
+
 ### 🎉 New features
 
 \[General] Per-runtime caching for RetainingSerializable
