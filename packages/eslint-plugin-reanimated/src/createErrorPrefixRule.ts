@@ -2,6 +2,12 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 // eslint-disable-next-line import/no-unresolved
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
+function leftmostOperand(node: TSESTree.Node): TSESTree.Node {
+  return node.type === AST_NODE_TYPES.BinaryExpression && node.operator === '+'
+    ? leftmostOperand(node.left)
+    : node;
+}
+
 export function createErrorPrefixRule<MessageId extends string>(
   prefix: string,
   messageId: MessageId
@@ -27,7 +33,9 @@ export function createErrorPrefixRule<MessageId extends string>(
             return;
           }
 
-          const first = args[0];
+          // A concatenated message (`'[Prefix] a' + 'b'`) carries its prefix in
+          // the left-most operand, so that's the node to check and to fix.
+          const first = leftmostOperand(args[0]);
 
           if (
             first.type === AST_NODE_TYPES.Literal &&
