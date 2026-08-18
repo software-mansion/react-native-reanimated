@@ -123,63 +123,6 @@ exports[`babel plugin for async functions makes an async worklet factory 1`] = `
 });"
 `;
 
-exports[`babel plugin for class worklets workletizes class field 1`] = `
-"class Foo {
-  bar = require("react-native-worklets/.worklets/5242161306529.js").default({});
-}"
-`;
-
-exports[`babel plugin for class worklets workletizes constructor 1`] = `
-"class Foo {
-  constructor = require("react-native-worklets/.worklets/12770959706952.js").default({});
-}"
-`;
-
-exports[`babel plugin for class worklets workletizes getter 1`] = `
-"const x = 5;
-class Foo {
-  bar = require("react-native-worklets/.worklets/3641425857427.js").default({
-    x
-  });
-}"
-`;
-
-exports[`babel plugin for class worklets workletizes instance method 1`] = `
-"class Foo {
-  bar = require("react-native-worklets/.worklets/17127187394127.js").default({});
-}"
-`;
-
-exports[`babel plugin for class worklets workletizes instance method 2`] = `
-"export default (function bar_null1Factory({}) {
-  const bar = function (x) {
-    return x + 2;
-  };
-  bar.__closure = {};
-  bar.__workletHash = 17127187394127;
-  bar.__pluginVersion = "x.y.z";
-  return bar;
-});"
-`;
-
-exports[`babel plugin for class worklets workletizes setter 1`] = `
-"class Foo {
-  bar = require("react-native-worklets/.worklets/13746008877832.js").default({});
-}"
-`;
-
-exports[`babel plugin for class worklets workletizes static class field 1`] = `
-"class Foo {
-  static bar = require("react-native-worklets/.worklets/5242161306529.js").default({});
-}"
-`;
-
-exports[`babel plugin for class worklets workletizes static method 1`] = `
-"class Foo {
-  bar = require("react-native-worklets/.worklets/17127187394127.js").default({});
-}"
-`;
-
 exports[`babel plugin for closure capturing captures worklets environment 1`] = `
 "const x = 5;
 const objX = {
@@ -213,15 +156,6 @@ exports[`babel plugin for closure capturing captures worklets environment 2`] = 
 
 exports[`babel plugin for closure capturing doesn't capture arguments 1`] = `"const f = require("react-native-worklets/.worklets/17546282635735.js").default({});"`;
 
-exports[`babel plugin for closure capturing doesn't capture custom globals 1`] = `"const f = require("react-native-worklets/.worklets/6576012734481.js").default({});"`;
-
-exports[`babel plugin for closure capturing doesn't capture locally bound variables named like custom globals 1`] = `
-"const foo = 42;
-const f = require("react-native-worklets/.worklets/12399805416363.js").default({
-  foo
-});"
-`;
-
 exports[`babel plugin for closure capturing doesn't capture objects' properties 1`] = `
 "const foo = {
   bar: 42
@@ -229,81 +163,6 @@ exports[`babel plugin for closure capturing doesn't capture objects' properties 
 const f = require("react-native-worklets/.worklets/105746754388.js").default({
   foo
 });"
-`;
-
-exports[`babel plugin for closure capturing doesn't implicitly captures globals in strict mode 1`] = `"const f = require("react-native-worklets/.worklets/11257575550579.js").default({});"`;
-
-exports[`babel plugin for closure capturing doesn't implicitly captures globals in strict mode 2`] = `
-"export default (function f_null1Factory({}) {
-  const f = function () {
-    globalStuff();
-  };
-  f.__closure = {};
-  f.__workletHash = 11257575550579;
-  f.__pluginVersion = "x.y.z";
-  return f;
-});"
-`;
-
-exports[`babel plugin for closure capturing implicitly captures globals with strictGlobal disabled 1`] = `
-"const f = require("react-native-worklets/.worklets/6596166861206.js").default({
-  globalStuff
-});"
-`;
-
-exports[`babel plugin for closure capturing implicitly captures globals with strictGlobal disabled 2`] = `
-"export default (function f_null1Factory({
-  globalStuff
-}) {
-  const f = function () {
-    globalStuff();
-  };
-  f.__closure = {
-    globalStuff
-  };
-  f.__workletHash = 6596166861206;
-  f.__pluginVersion = "x.y.z";
-  return f;
-});"
-`;
-
-exports[`babel plugin for context objects creates factories 1`] = `
-"const foo = {
-  bar() {
-    return 'bar';
-  },
-  __workletContextObjectFactory: require("react-native-worklets/.worklets/3929819179120.js").default({})
-};"
-`;
-
-exports[`babel plugin for context objects preserves bindings 1`] = `
-"const foo = {
-  bar() {
-    return 'bar';
-  },
-  foobar() {
-    return this.bar();
-  },
-  __workletContextObjectFactory: require("react-native-worklets/.worklets/13763170431677.js").default({})
-};"
-`;
-
-exports[`babel plugin for context objects removes marker 1`] = `
-"const foo = {
-  bar() {
-    return 'bar';
-  },
-  __workletContextObjectFactory: require("react-native-worklets/.worklets/3929819179120.js").default({})
-};"
-`;
-
-exports[`babel plugin for context objects workletizes regardless of marker value 1`] = `
-"const foo = {
-  bar() {
-    return 'bar';
-  },
-  __workletContextObjectFactory: require("react-native-worklets/.worklets/3929819179120.js").default({})
-};"
 `;
 
 exports[`babel plugin for debugging doesn't inject version for worklets in production builds 1`] = `
@@ -315,137 +174,6 @@ exports[`babel plugin for debugging doesn't inject version for worklets in produ
   null1.__workletHash = 317748698275;
   return null1;
 });"
-`;
-
-exports[`babel plugin for file workletization doesn't workletize function outside of top level scope 1`] = `
-"{
-  function foo() {
-    return 'bar';
-  }
-}"
-`;
-
-exports[`babel plugin for file workletization marks ClassDeclaration in default export with __workletClass 1`] = `
-"export default class Clazz {
-  foo() {
-    return 'bar';
-  }
-  __workletClass = true;
-}"
-`;
-
-exports[`babel plugin for file workletization marks ClassDeclaration in named export with __workletClass 1`] = `
-"export class Clazz {
-  foo() {
-    return 'bar';
-  }
-  __workletClass = true;
-}"
-`;
-
-exports[`babel plugin for file workletization marks ClassDeclaration with __workletClass 1`] = `
-"class Clazz {
-  foo() {
-    return 'bar';
-  }
-  __workletClass = true;
-}"
-`;
-
-exports[`babel plugin for file workletization moves CommonJS export to the bottom of the file 1`] = `
-"const foo = require("react-native-worklets/.worklets/7222489488656.js").default({});
-const bar = 1;
-exports.foo = foo;"
-`;
-
-exports[`babel plugin for file workletization moves multiple CommonJS exports to the bottom of the file 1`] = `
-"const foo = require("react-native-worklets/.worklets/7222489488656.js").default({});
-const bar = require("react-native-worklets/.worklets/6929869424900.js").default({});
-const baz = require("react-native-worklets/.worklets/195120228813.js").default({});
-const foobar = require("react-native-worklets/.worklets/6972205995780.js").default({});
-exports.foo = foo;
-exports.bar = bar;
-exports.baz = baz;
-exports.foobar = foobar;"
-`;
-
-exports[`babel plugin for file workletization workletizes ArrowFunctionExpression 1`] = `"const foo = require("react-native-worklets/.worklets/598741038089.js").default({});"`;
-
-exports[`babel plugin for file workletization workletizes ArrowFunctionExpression in default export 1`] = `"export default require("react-native-worklets/.worklets/598741038089.js").default({});"`;
-
-exports[`babel plugin for file workletization workletizes ArrowFunctionExpression in named export 1`] = `"export const foo = require("react-native-worklets/.worklets/598741038089.js").default({});"`;
-
-exports[`babel plugin for file workletization workletizes FunctionDeclaration 1`] = `"const foo = require("react-native-worklets/.worklets/8267719815216.js").default({});"`;
-
-exports[`babel plugin for file workletization workletizes FunctionDeclaration in default export 1`] = `"export default require("react-native-worklets/.worklets/8267719815216.js").default({});"`;
-
-exports[`babel plugin for file workletization workletizes FunctionDeclaration in named export 1`] = `"export const foo = require("react-native-worklets/.worklets/8267719815216.js").default({});"`;
-
-exports[`babel plugin for file workletization workletizes FunctionExpression 1`] = `"const foo = require("react-native-worklets/.worklets/598741038089.js").default({});"`;
-
-exports[`babel plugin for file workletization workletizes FunctionExpression in default export 1`] = `"export default require("react-native-worklets/.worklets/598741038089.js").default({});"`;
-
-exports[`babel plugin for file workletization workletizes FunctionExpression in named export 1`] = `"export const foo = require("react-native-worklets/.worklets/598741038089.js").default({});"`;
-
-exports[`babel plugin for file workletization workletizes ObjectMethod 1`] = `
-"const foo = {
-  bar: require("react-native-worklets/.worklets/10297630573799.js").default({})
-};"
-`;
-
-exports[`babel plugin for file workletization workletizes ObjectMethod in default export 1`] = `
-"export default {
-  bar: require("react-native-worklets/.worklets/10297630573799.js").default({})
-};"
-`;
-
-exports[`babel plugin for file workletization workletizes ObjectMethod in named export 1`] = `
-"export const foo = {
-  bar: require("react-native-worklets/.worklets/10297630573799.js").default({})
-};"
-`;
-
-exports[`babel plugin for file workletization workletizes assigned FunctionDeclaration 1`] = `"const foo = require("react-native-worklets/.worklets/8267719815216.js").default({});"`;
-
-exports[`babel plugin for file workletization workletizes implicit WorkletContextObject 1`] = `
-"const foo = {
-  bar() {
-    return 'bar';
-  },
-  foobar() {
-    return this.bar();
-  },
-  __workletContextObjectFactory: require("react-native-worklets/.worklets/13763170431677.js").default({})
-};"
-`;
-
-exports[`babel plugin for file workletization workletizes implicit WorkletContextObject in default export 1`] = `
-"export default {
-  bar() {
-    return 'bar';
-  },
-  foobar() {
-    return this.bar();
-  },
-  __workletContextObjectFactory: require("react-native-worklets/.worklets/13763170431677.js").default({})
-};"
-`;
-
-exports[`babel plugin for file workletization workletizes implicit WorkletContextObject in named export 1`] = `
-"export const foo = {
-  bar() {
-    return 'bar';
-  },
-  foobar() {
-    return this.bar();
-  },
-  __workletContextObjectFactory: require("react-native-worklets/.worklets/13763170431677.js").default({})
-};"
-`;
-
-exports[`babel plugin for file workletization workletizes multiple functions 1`] = `
-"const foo = require("react-native-worklets/.worklets/8267719815216.js").default({});
-const bar = require("react-native-worklets/.worklets/6769067074636.js").default({});"
 `;
 
 exports[`babel plugin for function hooks workletizes hook wrapped named FunctionExpression automatically 1`] = `"const animatedStyle = useAnimatedStyle(require("react-native-worklets/.worklets/17573641830910.js").default({}));"`;
@@ -511,63 +239,6 @@ exports[`babel plugin for generators makes a generator worklet factory 1`] = `
   foo.__pluginVersion = "x.y.z";
   return foo;
 });"
-`;
-
-exports[`babel plugin for inline styles doesn't show a warning if the user uses ['value'] inside inline style 1`] = `
-"function App() {
-  return <Animated.View style={{
-    width: object['value']
-  }} />;
-}"
-`;
-
-exports[`babel plugin for inline styles doesn't show a warning if the user uses [value] inside inline style 1`] = `
-"function App() {
-  return <Animated.View style={{
-    width: object[value]
-  }} />;
-}"
-`;
-
-exports[`babel plugin for inline styles doesn't show a warning if user writes something like style={styles.value} 1`] = `
-"function App() {
-  return <Animated.View style={styles.value} />;
-}"
-`;
-
-exports[`babel plugin for inline styles shows a warning if user uses .value inside inline style 1`] = `
-"function App() {
-  return <Animated.View style={{
-    width: (() => {
-      console.warn(require("react-native-reanimated").getUseOfValueInStyleWarning());
-      return sharedValue.value;
-    })()
-  }} />;
-}"
-`;
-
-exports[`babel plugin for inline styles shows a warning if user uses .value inside inline style, style array 1`] = `
-"function App() {
-  return <Animated.View style={[style, {
-    width: (() => {
-      console.warn(require("react-native-reanimated").getUseOfValueInStyleWarning());
-      return sharedValue.value;
-    })()
-  }]} />;
-}"
-`;
-
-exports[`babel plugin for inline styles shows a warning if user uses .value inside inline style, transforms 1`] = `
-"function App() {
-  return <Animated.View style={{
-    transform: [{
-      translateX: (() => {
-        console.warn(require("react-native-reanimated").getUseOfValueInStyleWarning());
-        return sharedValue.value;
-      })()
-    }]
-  }} />;
-}"
 `;
 
 exports[`babel plugin for object hooks supports empty object in useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler({});"`;
@@ -887,40 +558,6 @@ exports[`babel plugin for sequence expressions supports SequenceExpression, with
     })
   }, []);
 }"
-`;
-
-exports[`babel plugin for web configuration doesn't substitute isWeb and shouldBeUseWeb in worklets 1`] = `
-"export default (function foo_null1Factory({
-  isWeb,
-  shouldBeUseWeb
-}) {
-  const foo = function () {
-    const x = isWeb();
-    const y = shouldBeUseWeb();
-  };
-  foo.__closure = {
-    isWeb,
-    shouldBeUseWeb
-  };
-  foo.__workletHash = 6025589628865;
-  foo.__pluginVersion = "x.y.z";
-  return foo;
-});"
-`;
-
-exports[`babel plugin for web configuration doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to false 1`] = `
-"const x = isWeb();
-const y = shouldBeUseWeb();"
-`;
-
-exports[`babel plugin for web configuration doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is undefined 1`] = `
-"const x = isWeb();
-const y = shouldBeUseWeb();"
-`;
-
-exports[`babel plugin for web configuration substitutes isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to true 1`] = `
-"const x = true;
-const y = true;"
 `;
 
 exports[`babel plugin for worklet names appends file name to function name 1`] = `"const foo = require("react-native-worklets/.worklets/13429356329999.js").default({});"`;

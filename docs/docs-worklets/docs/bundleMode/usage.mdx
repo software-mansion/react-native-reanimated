@@ -13,7 +13,6 @@ To add a library to the allow-list you only need to set `importForwarding.module
 ```javascript
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
 const workletsPluginOptions = {
-  strictGlobal: true, // optional, but recommended
   // highlight-next-line
   importForwarding: { moduleNames: ['my-library'] },
 };

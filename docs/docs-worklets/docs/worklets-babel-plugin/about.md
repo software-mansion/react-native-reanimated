@@ -4,7 +4,11 @@ title: 'About'
 sidebar_label: 'About'
 ---
 
+import Anchor from '@site/src/components/Anchor';
+
 # Worklets Babel Plugin
+
+<Anchor id="experimental-worklet-classes" />
 
 ## What is Worklets Babel Plugin?
 
@@ -76,78 +80,6 @@ const obj = {
 };
 ```
 
-### Reanimated terms
-
-#### \[Experimental] Worklet Context Objects
-
-_Object methods_ called on UI thread lose their `this` binding.
-
-```ts
-const obj = {
-  foo: 1,
-  bar() {
-    'worklet';
-    console.log(this.foo); // undefined - the binding was lost.
-  },
-};
-```
-
-**Worklet Context Objects** are special terms that preserve that binding. Don't mistake them for objects created with `useSharedValue`. All changes to Worklet Context Objects on the UI thread are visible only on the UI thread. The same applies to the JS thread.
-
-```ts
-const obj = {
-  __workletContextObject: true,
-  foo: 1,
-  bar() {
-    console.log(this.foo);
-  },
-};
-
-obj.foo = 2;
-obj.bar(); // Logs 2
-scheduleOnUI(() => obj.bar()); // Logs 1
-
-scheduleOnUI(() => (obj.foo = 3));
-obj.bar(); // Logs 2
-scheduleOnUI(() => obj.bar()); // Logs 3
-```
-
-`__workletContextObject` is a special property that marks an object as a Worklet Context Object. It's value doesn't matter, but it's a good practice to use `true` as a value. `'worklet'` directive in methods will be ignored if the object has this property.
-
-```ts
-const workletContextObject = {
-  __workletContextObject: true,
-  message: 'Hello from WorkletContextObject',
-  foo() {
-    console.log(this.message);
-  },
-};
-```
-
-#### \[Experimental] Worklet Classes
-
-[Hermes](https://github.com/facebook/hermes), the JavaScript engine used by React Native, doesn't support classes. Class syntax requires [polyfilling](https://en.wikipedia.org/wiki/Polyfill_%28programming%29) before it can be used, which is problematic for the UI thread. To work around this, we coined the term of **Worklet Classes**. Worklet classes can be instantiated on the UI thread.
-
-`__workletClass` is a special property that marks a class as a Worklet Class. It's value doesn't matter, but it's a good practice to use `true` as a value. `'worklet'` directive in methods will be ignored if the class has this property.
-
-```ts
-class Clazz {
-  __workletClass = true;
-  message = 'Hello from WorkletClass';
-  foo() {
-    console.log(this.message);
-  }
-}
-
-scheduleOnUI(() => new Clazz().foo()); // Logs 'Hello from WorkletClass'
-```
-
-**Pitfalls:**
-
-- Worklet Classes don't support inheritance.
-- Worklet Classes don't support static methods and properties.
-- Class instances cannot be shared between JS and UI threads.
-
 ## Autoworkletization
 
 To reduce boilerplate code and provide a safer API, Worklets Babel Plugin detects automatically whether a function should be workletized. Thanks to that, you don't need to add the `'worklet'` directive to your callbacks:
@@ -198,31 +130,6 @@ const handlerObject = {
 };
 
 const handler = useAnimatedScrollHandler(handlerObject);
-```
-
-### \[Experimental] Workletizing whole files
-
-You can mark a file as a workletizable file by adding the `'worklet'` directive to the top of the file.
-
-This will workletize all _top-level_ [JavaScript terms](#javascript-terms) and [Reanimated terms](#reanimated-terms) automatically. It can come in handy for files that contain multiple worklets.
-
-```ts
-// file.ts
-'worklet';
-
-function foo() {
-  // Function 'foo' will be autoworkletized.
-  return { width: 100 };
-}
-
-function bar() {
-  // Function 'bar' will be autoworkletized.
-  function foobar() {
-    // Function 'foobar' won't since it's not defined in top-level scope.
-    console.log("I'm not a worklet");
-  }
-  return { width: 100 };
-}
 ```
 
 ## Limits of autoworkletization

@@ -1,5 +1,3 @@
-import '../src/jestMatchers';
-
 import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
 import { strict as assert } from 'assert';
