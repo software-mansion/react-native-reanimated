@@ -39,8 +39,7 @@ void ReanimatedCommitHook::maybeInitializeLayoutAnimations(const ShadowTree &sha
   // TODO: We should consider registering a new instance of proxy for each surface.
   // The current approach will encounter problems on platforms where it is more common to have multiple
   // surfaces.
-  layoutAnimationsProxy_->startSurface(shadowTree.getSurfaceId());
-  shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(layoutAnimationsProxy_);
+  layoutAnimationsProxy_->startSurface(shadowTree);
 }
 
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(

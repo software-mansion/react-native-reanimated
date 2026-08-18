@@ -15,7 +15,7 @@ import {
 import {
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
@@ -118,7 +118,7 @@ const callbackFail = (rea: string) => {
 };
 
 describe('Shareable hosted on UI', () => {
-  const runtime = getWorkletRuntimeFromPool('test');
+  const [runtime] = getWorkletRuntimesFromPool(1);
 
   test.each(initModes)('can be hosted on UI (%s)', async (initMode) => {
     const fn = () => createShareable(UIRuntimeId, 0, getInitOptions(initMode));
@@ -379,7 +379,7 @@ describe('Shareable hosted on UI', () => {
         ...getInitOptions(initMode),
         guestDecorator: decorateGuestProperty,
       });
-      const runtime = getWorkletRuntimeFromPool('test');
+      const [runtime] = getWorkletRuntimesFromPool(1);
 
       const decoration = runOnRuntimeSync(runtime, () => {
         'worklet';
@@ -397,7 +397,7 @@ describe('Shareable hosted on UI', () => {
         ...getInitOptions(initMode),
         guestDecorator: decorateGuestFunction,
       });
-      const runtime = getWorkletRuntimeFromPool('test');
+      const [runtime] = getWorkletRuntimesFromPool(1);
 
       const decorationResult = runOnRuntimeSync(runtime, () => {
         'worklet';
@@ -415,7 +415,7 @@ describe('Shareable hosted on UI', () => {
         ...getInitOptions(initMode),
         guestDecorator: decorateGuestOverride,
       });
-      const runtime = getWorkletRuntimeFromPool('test');
+      const [runtime] = getWorkletRuntimesFromPool(1);
 
       const getSyncValue = runOnRuntimeSync(runtime, () => {
         'worklet';
@@ -428,8 +428,7 @@ describe('Shareable hosted on UI', () => {
 });
 
 describe('Shareable hosted on Worker Runtime', () => {
-  const host = getWorkletRuntimeFromPool('test');
-  const otherGuest = getWorkletRuntimeFromPool('test2');
+  const [host, otherGuest] = getWorkletRuntimesFromPool(2);
 
   beforeEach(() => {
     value = 0;

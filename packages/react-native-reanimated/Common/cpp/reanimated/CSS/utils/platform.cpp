@@ -3,8 +3,11 @@
 #include <reanimated/Tools/FeatureFlags.h>
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
+#include <type_traits>
 #include <unordered_map>
+#include <variant>
 
 namespace reanimated::css {
 
@@ -101,6 +104,20 @@ std::optional<PlatformValue> parseValue(const CSSPropertyTraits &traits, const f
   return std::nullopt;
 }
 
+double lerpValue(const double from, const double to, const double progress) {
+  return from + (to - from) * progress;
+}
+
+template <std::size_t N>
+std::array<double, N>
+lerpValue(const std::array<double, N> &from, const std::array<double, N> &to, const double progress) {
+  std::array<double, N> result{};
+  for (std::size_t i = 0; i < N; ++i) {
+    result[i] = lerpValue(from[i], to[i], progress);
+  }
+  return result;
+}
+
 } // namespace
 
 bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &easing) {
@@ -128,6 +145,19 @@ bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &ea
   // No native routing backend on this platform yet; every property runs on the loop.
   return false;
 #endif // __APPLE__
+}
+
+std::optional<PlatformValue>
+lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, const double progress) {
+  return std::visit(
+      [&to, progress](const auto &fromValue) -> std::optional<PlatformValue> {
+        const auto *toValue = std::get_if<std::decay_t<decltype(fromValue)>>(&to);
+        if (toValue == nullptr) {
+          return std::nullopt;
+        }
+        return lerpValue(fromValue, *toValue, progress);
+      },
+      from);
 }
 
 std::optional<PlatformValuePair> parsePlatformValues(

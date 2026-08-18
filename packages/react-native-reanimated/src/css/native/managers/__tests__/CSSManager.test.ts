@@ -1,7 +1,7 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../../../commonTypes';
 import { cssCallbacksRegistry } from '../../events';
-import { setViewStyle } from '../../proxy';
+import { runCSSTransition, setViewStyle } from '../../proxy';
 import CSSManager from '../CSSManager';
 
 jest.mock('../../proxy');
@@ -176,6 +176,55 @@ describe('CSSManager', () => {
         propertyName: 'opacity',
         elapsedTime: 0.3,
       });
+    });
+  });
+
+  describe('transition baseline', () => {
+    const ANIMATION = {
+      animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
+      animationDuration: '1s',
+    } as const;
+
+    const transitionedValues = () =>
+      (runCSSTransition as jest.Mock).mock.calls
+        .map(([, config]) => config?.opacity?.value)
+        .filter(Boolean);
+
+    test('keeps the baseline of an animation-only view for a later transition', () => {
+      manager.update({ opacity: 0, ...ANIMATION });
+      jest.clearAllMocks();
+
+      manager.update({ opacity: 1, ...ANIMATION, ...TRANSITION });
+
+      expect(transitionedValues()).toEqual([[0, 1]]);
+    });
+
+    test('keeps the baseline across a commit whose config normalizes to none', () => {
+      manager.update({ opacity: 0.5, ...TRANSITION });
+      manager.update({
+        opacity: 0.5,
+        transitionProperty: 'opacity',
+        transitionDuration: '0ms',
+      });
+      jest.clearAllMocks();
+
+      manager.update({ opacity: 1, ...TRANSITION });
+
+      expect(transitionedValues()).toEqual([[0.5, 1]]);
+    });
+
+    test('does not transition from default values when a config is attached', () => {
+      manager.update({ opacity: 0.2 });
+      jest.clearAllMocks();
+
+      manager.update({ opacity: 0.2, ...TRANSITION });
+
+      expect(transitionedValues()).toEqual([]);
+
+      // The attached config still takes 0.2 as the baseline of the next change.
+      manager.update({ opacity: 1, ...TRANSITION });
+
+      expect(transitionedValues()).toEqual([[0.2, 1]]);
     });
   });
 });

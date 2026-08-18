@@ -29,10 +29,8 @@ CSSTransition::~CSSTransition() {
   }
 }
 
-TransitionProperties CSSTransition::getProperties() const {
-  TransitionProperties result = routing_.loop;
-  result.insert(routing_.platform.begin(), routing_.platform.end());
-  return result;
+TransitionProperties CSSTransition::getLoopProperties() const {
+  return routing_.loop;
 }
 
 folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config, const folly::dynamic &lastUpdates) {
@@ -44,13 +42,16 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
     std::erase(config.removedProperties, propertyName);
   }
 
-  auto loopConfig = platformTransitionProxy_->processConfig(rt, getViewTag(), config, routing_, timestamp);
+  // TODO: add support for events reported by the platform itself; until then
+  // a view with transition callbacks keeps every property on the loop, where
+  // timing and events already pair up.
+  auto loopConfig =
+      platformTransitionProxy_->processConfig(rt, getViewTag(), config, routing_, eventMask_ == 0, timestamp);
 
   if (!loopConfig.empty()) {
     ensureLoopTransition().updateSettings(
         loopConfig.changedPropertiesSettings, loopConfig.removedProperties, timestamp);
   }
-  trackPlatformLifecycles(config, timestamp);
 
   // Settings-only configs reconfigure without running.
   if (!loopConfig.hasValueUpdates()) {
@@ -63,40 +64,13 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
   return initialUpdate;
 }
 
-// TODO: add support for events reported by the platform itself; until then
-// the lifecycle of platform-routed properties temporarily runs on the loop path.
-void CSSTransition::trackPlatformLifecycles(const CSSTransitionConfig &config, const double timestamp) {
-  if (eventMask_ == 0) {
-    return;
-  }
-
-  if (loopTransition_ && !config.removedProperties.empty()) {
-    loopTransition_->removeProperties(config.removedProperties, timestamp);
-  }
-
-  PropertiesSettingsMap propertiesSettings;
-  std::vector<std::string> propertyNames;
-  for (const auto &[propertyName, value] : config.changedProperties) {
-    if (routing_.platform.contains(propertyName)) {
-      propertyNames.push_back(propertyName);
-      propertiesSettings.emplace(propertyName, config.changedPropertiesSettings.at(propertyName));
-    }
-  }
-  if (propertyNames.empty()) {
-    return;
-  }
-
-  ensureLoopTransition().trackProperties(propertiesSettings, propertyNames, timestamp);
-  scheduleLoop(timestamp);
-}
-
 folly::dynamic CSSTransition::run(
     const PropertyValueDynamicDiffsMap &propertyDiffs,
     const folly::dynamic &lastUpdates) {
   const auto timestamp = loop_->resolveTimestamp();
 
   auto loopDiffs = platformTransitionProxy_->processDynamicDiffs(
-      getViewTag(), propertyDiffs, pseudoLockedProperties_, routing_, timestamp);
+      getViewTag(), propertyDiffs, pseudoLockedProperties_, routing_, eventMask_ == 0, timestamp);
   if (loopDiffs.empty() && !loopTransition_) {
     return folly::dynamic::object();
   }
