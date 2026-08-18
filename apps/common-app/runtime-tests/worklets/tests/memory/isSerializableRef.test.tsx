@@ -3,7 +3,7 @@ import { isSerializableRef, createSerializable } from 'react-native-worklets';
 import {
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   test,
 } from '../../../ReJest/RuntimeTestsApi';
 
@@ -157,7 +157,7 @@ describe('Test isSerializableRef', () => {
   });
 
   test('check if createSerializable<host object> returns serializable ref', () => {
-    const hostObjectValue = getWorkletRuntimeFromPool('test');
+    const [hostObjectValue] = getWorkletRuntimesFromPool(1);
     const serializableRef = createSerializable(hostObjectValue);
 
     expect(isSerializableRef(serializableRef)).toBe(true);

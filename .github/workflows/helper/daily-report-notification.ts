@@ -249,7 +249,7 @@ async function getRNNightlyFailures(): Promise<NightlyStatus> {
 
 const DIGEST_REPO = 'software-mansion/react-native-reanimated';
 const DIGEST_WINDOW_HOURS = 24;
-const DIGEST_LIST_LIMIT = 10;
+const DIGEST_LIST_LIMIT = 100;
 
 async function getDailyDigest(): Promise<DigestStatus> {
   const since = new Date(Date.now() - DIGEST_WINDOW_HOURS * 60 * 60 * 1000)

@@ -31,49 +31,6 @@ export function checkInvalidWriteDuringRender() {
 
 export type Listener<TValue> = (newValue: TValue) => void;
 
-export type PartialMutable<TValue> = Omit<Mutable<TValue>, 'get' | 'set'>;
-
-/**
- * Adds `get` and `set` methods to the mutable object to handle access to
- * `value` property.
- *
- * React Compiler disallows modifying return values of hooks. Even though
- * assignment to `value` is a setter invocation, Compiler's static analysis
- * doesn't detect it. That's why we provide a second API for users using the
- * Compiler.
- */
-export function addCompilerSafeGetAndSet<TValue>(
-  mutable: PartialMutable<TValue>
-): void {
-  'worklet';
-  Object.defineProperties(mutable, {
-    get: {
-      value() {
-        return mutable.value;
-      },
-      configurable: false,
-      enumerable: false,
-    },
-    set: {
-      value(newValue: TValue | ((value: TValue) => TValue)) {
-        if (
-          typeof newValue === 'function' &&
-          // If we have an animation definition, we don't want to call it here.
-          !(newValue as Record<string, unknown>).__isAnimationDefinition
-        ) {
-          mutable.value = (newValue as (value: TValue) => TValue)(
-            mutable.value
-          );
-        } else {
-          mutable.value = newValue as TValue;
-        }
-      },
-      configurable: false,
-      enumerable: false,
-    },
-  });
-}
-
 export function mutableHostDecorator<TValue>(
   mutable: ShareableHost<TValue> & Mutable<TValue>,
   dirtyFlag?: Synchronizable<boolean>
@@ -93,6 +50,31 @@ export function mutableHostDecorator<TValue>(
       },
       enumerable: true,
       configurable: true,
+    },
+
+    get: {
+      value() {
+        return mutable.value;
+      },
+      configurable: false,
+      enumerable: false,
+    },
+
+    set: {
+      value(newValue: TValue | ((value: TValue) => TValue)) {
+        if (
+          typeof newValue === 'function' &&
+          !(newValue as Record<string, unknown>).__isAnimationDefinition
+        ) {
+          mutable.value = (newValue as (value: TValue) => TValue)(
+            mutable.value
+          );
+        } else {
+          mutable.value = newValue as TValue;
+        }
+      },
+      configurable: false,
+      enumerable: false,
     },
 
     _value: {
@@ -165,8 +147,6 @@ export function mutableHostDecorator<TValue>(
       configurable: true,
     },
   });
-
-  addCompilerSafeGetAndSet(mutable);
 
   return mutable;
 }

@@ -17,6 +17,7 @@ import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.common.UIManagerType
 import com.facebook.soloader.SoLoader
 import com.swmansion.common.GestureHandlerStateManager
+import com.swmansion.reanimated.css.CSSPlatformTransitionsManager
 import com.swmansion.reanimated.keyboard.KeyboardAnimationManager
 import com.swmansion.reanimated.keyboard.KeyboardWorkletWrapper
 import com.swmansion.reanimated.nativeProxy.AnimationFrameCallback
@@ -46,6 +47,7 @@ open class NativeProxy {
     private val gestureHandlerStateManager: GestureHandlerStateManager?
     private val keyboardAnimationManager: KeyboardAnimationManager
     private val pseudoSelectorManager: PseudoSelectorManager
+    private val cssPlatformTransitionsManager: CSSPlatformTransitionsManager
     private var firstUptime: Long = SystemClock.uptimeMillis()
     private var slowAnimationsEnabled = false
     private val animationsDragFactor = 10
@@ -94,6 +96,8 @@ open class NativeProxy {
         mFabricUIManager =
             UIManagerHelper.getUIManager(context, UIManagerType.FABRIC) as FabricUIManager
         pseudoSelectorManager = PseudoSelectorManager(mFabricUIManager, mContext)
+        cssPlatformTransitionsManager =
+            CSSPlatformTransitionsManager(mFabricUIManager, mContext, ::getAnimationTimestamp)
 
         val callInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
         mHybridData =
@@ -135,6 +139,7 @@ open class NativeProxy {
             return
         }
         pseudoSelectorManager.invalidate()
+        cssPlatformTransitionsManager.invalidate()
         if (mHybridData.isValid) {
             invalidateCpp()
         }
@@ -251,6 +256,7 @@ open class NativeProxy {
         intBuffer: IntArray,
         doubleBuffer: DoubleArray,
     ) {
+        cssPlatformTransitionsManager.onPropsWrittenSynchronously()
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
             if (BuildConfig.IS_REACT_NATIVE_86_OR_NEWER) {
                 try {
@@ -262,6 +268,51 @@ open class NativeProxy {
                 mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, props)
             }
         }
+    }
+
+    @DoNotStrip
+    fun cssDefineEasing(
+        easingId: Int,
+        easingType: Int,
+        easingPointsX: FloatArray,
+        easingPointsY: FloatArray,
+    ) {
+        cssPlatformTransitionsManager.defineEasing(easingId, easingType, easingPointsX, easingPointsY)
+    }
+
+    @DoNotStrip
+    fun cssUndefineEasing(easingId: Int) {
+        cssPlatformTransitionsManager.undefineEasing(easingId)
+    }
+
+    @DoNotStrip
+    fun cssAnimateTransition(
+        viewTag: Int,
+        propertyId: Int,
+        fromValue: Double,
+        toValue: Double,
+        durationMs: Double,
+        startTimestampMs: Double,
+        easingId: Int,
+        persistent: Boolean,
+    ): Boolean =
+        cssPlatformTransitionsManager.animateTransition(
+            viewTag,
+            propertyId,
+            fromValue,
+            toValue,
+            durationMs,
+            startTimestampMs,
+            easingId,
+            persistent,
+        )
+
+    @DoNotStrip
+    fun cssRemoveTransition(
+        viewTag: Int,
+        propertyId: Int,
+    ) {
+        cssPlatformTransitionsManager.removeTransition(viewTag, propertyId)
     }
 
     @DoNotStrip

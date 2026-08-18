@@ -16,7 +16,7 @@ import {
   expectSharedValue,
   getTestComponent,
   getTrackerCallCount,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   notify,
   Presets,
   registerValue,
@@ -435,7 +435,7 @@ describe('Tests of Test Framework', () => {
 
       const [state3, setState3] = createTestValue('not_ok');
       const notification3 = 'notification3';
-      const rt = getWorkletRuntimeFromPool('test');
+      const [rt] = getWorkletRuntimesFromPool(1);
       scheduleOnRuntime(rt, () => {
         'worklet';
         setState3('ok', notification3);

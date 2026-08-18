@@ -18,13 +18,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter;
 
 /// Animates the property natively and remembers its settings for later toggles.
-/// A null `settings` marks the toggle path: the stored settings are reused and the
-/// animation is held persistently. Returns NO when there are none to reuse.
+/// A null `settings` marks the toggle path, where the stored settings are reused;
+/// returns NO when there are none. `persistent` holds the value past the animation.
 - (BOOL)applyTransitionForTag:(facebook::react::Tag)viewTag
                  propertyName:(const std::string &)propertyName
                     fromValue:(const reanimated::css::PlatformValue &)fromValue
                       toValue:(const reanimated::css::PlatformValue &)toValue
                      settings:(nullable const reanimated::css::CSSTransitionPropertySettings *)settings
+                   persistent:(BOOL)persistent
                     timestamp:(double)timestamp;
 
 - (void)removeTransitionForTag:(facebook::react::Tag)viewTag propertyName:(const std::string &)propertyName;

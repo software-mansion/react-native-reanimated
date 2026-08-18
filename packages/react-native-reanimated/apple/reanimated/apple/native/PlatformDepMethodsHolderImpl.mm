@@ -140,12 +140,14 @@ css::CSSApplyTransitionFunction makeCSSApplyTransition(REACSSPlatformTransitions
              const css::PlatformValue &fromValue,
              const css::PlatformValue &toValue,
              const css::CSSTransitionPropertySettings *settings,
+             bool persistent,
              double timestamp) {
     return [platformTransitions applyTransitionForTag:viewTag
                                          propertyName:propertyName
                                             fromValue:fromValue
                                               toValue:toValue
                                              settings:settings
+                                           persistent:persistent
                                             timestamp:timestamp];
   };
 }

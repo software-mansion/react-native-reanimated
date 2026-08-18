@@ -127,6 +127,7 @@ class WorkletsModule(
             mInvalidated = true
             reactApplicationContext.removeLifecycleEventListener(this)
         }
+        mAnimationFrameQueue.invalidate()
         if (mHybridData != null && mHybridData!!.isValid) {
             invalidateCpp()
         }

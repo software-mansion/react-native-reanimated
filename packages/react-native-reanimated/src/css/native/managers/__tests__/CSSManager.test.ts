@@ -1,6 +1,7 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../../../commonTypes';
-import { setViewStyle } from '../../proxy';
+import { cssCallbacksRegistry } from '../../events';
+import { runCSSTransition, setViewStyle } from '../../proxy';
 import CSSManager from '../CSSManager';
 
 jest.mock('../../proxy');
@@ -73,5 +74,157 @@ describe('CSSManager', () => {
     });
 
     expect(setViewStyle).not.toHaveBeenCalled();
+  });
+
+  describe('animation callbacks', () => {
+    const ANIMATION = {
+      animationName: { from: { opacity: 0 } },
+      animationDuration: '2s',
+    } as const;
+
+    const event = (type: 'animationEnd' | 'animationCancel') => ({
+      tag: viewTag,
+      type,
+      name: 'fadeIn',
+      elapsedTime: 2,
+    });
+
+    beforeEach(() => {
+      cssCallbacksRegistry.clear();
+    });
+
+    test('delivers a native event to the provided callback', () => {
+      const onCSSAnimationEnd = jest.fn();
+      manager.update({ ...ANIMATION }, { onCSSAnimationEnd });
+
+      cssCallbacksRegistry.dispatch([event('animationEnd')]);
+
+      expect(onCSSAnimationEnd).toHaveBeenCalledWith({
+        animationName: 'fadeIn',
+        elapsedTime: 2,
+      });
+    });
+
+    test('starts delivering when a callback appears after the first update', () => {
+      const onCSSAnimationEnd = jest.fn();
+      manager.update(ANIMATION);
+      manager.update({ ...ANIMATION }, { onCSSAnimationEnd });
+
+      cssCallbacksRegistry.dispatch([event('animationEnd')]);
+
+      expect(onCSSAnimationEnd).toHaveBeenCalledWith({
+        animationName: 'fadeIn',
+        elapsedTime: 2,
+      });
+    });
+
+    test('keeps delivering events while the animation detaches', () => {
+      const onCSSAnimationCancel = jest.fn();
+      manager.update({ ...ANIMATION }, { onCSSAnimationCancel });
+      manager.update({}, { onCSSAnimationCancel });
+
+      cssCallbacksRegistry.dispatch([event('animationCancel')]);
+
+      expect(onCSSAnimationCancel).toHaveBeenCalledTimes(1);
+    });
+
+    test('drops a cancel emitted for an animation removed together with its callbacks', () => {
+      const onCSSAnimationCancel = jest.fn();
+      manager.update({ ...ANIMATION }, { onCSSAnimationCancel });
+      // The animation and its callbacks go away in the same update, so the
+      // native side may still emit a cancel using the mask it had before.
+      manager.update({});
+
+      cssCallbacksRegistry.dispatch([event('animationCancel')]);
+
+      expect(onCSSAnimationCancel).not.toHaveBeenCalled();
+    });
+
+    test('delivers the cancel the engine emits while the view unmounts', () => {
+      const onCSSAnimationCancel = jest.fn();
+      manager.update({ ...ANIMATION }, { onCSSAnimationCancel });
+      // The engine emits the cancel during cleanup, but its batch is dispatched
+      // after cleanup has already returned.
+      manager.unmountCleanup();
+
+      cssCallbacksRegistry.dispatch([event('animationCancel')]);
+
+      expect(onCSSAnimationCancel).toHaveBeenCalledTimes(1);
+    });
+
+    test('delivers a transition event to the provided callback', () => {
+      const onCSSTransitionEnd = jest.fn();
+      manager.update(
+        {
+          opacity: 0,
+          transitionProperty: 'opacity',
+          transitionDuration: '300ms',
+        },
+        { onCSSTransitionEnd }
+      );
+
+      cssCallbacksRegistry.dispatch([
+        {
+          tag: viewTag,
+          type: 'transitionEnd',
+          name: 'opacity',
+          elapsedTime: 0.3,
+        },
+      ]);
+
+      expect(onCSSTransitionEnd).toHaveBeenCalledWith({
+        propertyName: 'opacity',
+        elapsedTime: 0.3,
+      });
+    });
+  });
+
+  describe('transition baseline', () => {
+    const ANIMATION = {
+      animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
+      animationDuration: '1s',
+    } as const;
+
+    const transitionedValues = () =>
+      (runCSSTransition as jest.Mock).mock.calls
+        .map(([, config]) => config?.opacity?.value)
+        .filter(Boolean);
+
+    test('keeps the baseline of an animation-only view for a later transition', () => {
+      manager.update({ opacity: 0, ...ANIMATION });
+      jest.clearAllMocks();
+
+      manager.update({ opacity: 1, ...ANIMATION, ...TRANSITION });
+
+      expect(transitionedValues()).toEqual([[0, 1]]);
+    });
+
+    test('keeps the baseline across a commit whose config normalizes to none', () => {
+      manager.update({ opacity: 0.5, ...TRANSITION });
+      manager.update({
+        opacity: 0.5,
+        transitionProperty: 'opacity',
+        transitionDuration: '0ms',
+      });
+      jest.clearAllMocks();
+
+      manager.update({ opacity: 1, ...TRANSITION });
+
+      expect(transitionedValues()).toEqual([[0.5, 1]]);
+    });
+
+    test('does not transition from default values when a config is attached', () => {
+      manager.update({ opacity: 0.2 });
+      jest.clearAllMocks();
+
+      manager.update({ opacity: 0.2, ...TRANSITION });
+
+      expect(transitionedValues()).toEqual([]);
+
+      // The attached config still takes 0.2 as the baseline of the next change.
+      manager.update({ opacity: 1, ...TRANSITION });
+
+      expect(transitionedValues()).toEqual([[0.2, 1]]);
+    });
   });
 });

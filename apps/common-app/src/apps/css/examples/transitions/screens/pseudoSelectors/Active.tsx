@@ -1,4 +1,3 @@
-import type { ComponentType } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 // TODO: Fix me
@@ -14,9 +13,7 @@ import {
 } from '@/apps/css/components';
 import { colors, radius, sizes, spacing } from '@/theme';
 
-const AnimatedCircle = Animated.createAnimatedComponent(
-  Circle
-) as ComponentType<Record<string, unknown>>;
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 export default function Active() {
   return (
@@ -202,16 +199,16 @@ transform: {
 
           <VerticalExampleCard
             title="SVG fill"
-            code={`// Base geometry stays as real props so it renders at rest;
-// the ':active' style only swaps the changing prop.
+            code={`// SVG components are styled through props, so their CSS goes
+// in 'animatedProps'. Base geometry stays as real props so the
+// circle renders at rest.
 <AnimatedCircle
   cx={20} cy={20} r={18}
   fill={colors.primary}
-  style={{
+  animatedProps={{
     fill: { default: colors.primary, ':active': colors.primaryDark },
     transitionDuration: '200ms',
   }}
-  onStartShouldSetResponder={() => true}
 />`}
             collapsedCode={`fill: {
   default: colors.primary,
@@ -223,14 +220,13 @@ transform: {
                 cy={sizes.md / 2}
                 fill={colors.primary}
                 r={sizes.md / 2 - 2}
-                style={{
+                animatedProps={{
                   fill: {
                     ':active': colors.primaryDark,
                     default: colors.primary,
                   },
                   transitionDuration: '200ms',
                 }}
-                onStartShouldSetResponder={() => true}
               />
             </Svg>
           </VerticalExampleCard>
@@ -241,11 +237,10 @@ transform: {
 <AnimatedCircle
   cx={24} cy={24} fill={colors.primary}
   r={22}
-  style={{
+  animatedProps={{
     r: { default: 22, ':active': 12 },
     transitionDuration: '200ms',
   }}
-  onStartShouldSetResponder={() => true}
 />`}
             collapsedCode={`r: {
   default: 22,
@@ -257,11 +252,10 @@ transform: {
                 cy={sizes.md / 2}
                 fill={colors.primary}
                 r={sizes.md / 2 - 2}
-                style={{
+                animatedProps={{
                   r: { ':active': sizes.md / 4, default: sizes.md / 2 - 2 },
                   transitionDuration: '200ms',
                 }}
-                onStartShouldSetResponder={() => true}
               />
             </Svg>
           </VerticalExampleCard>

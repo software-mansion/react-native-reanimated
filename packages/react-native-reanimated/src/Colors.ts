@@ -699,3 +699,33 @@ export function toGammaSpace(
   res.push(RGBA[3]);
   return res as ParsedColorArray;
 }
+
+function toLinearChannel(c: number): number {
+  'worklet';
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+
+/**
+ * Lets you pick a text color that stays readable on a given background,
+ * mirroring the CSS `contrast-color()` function.
+ *
+ * Returns `'white'` or `'black'`, whichever has the greater WCAG contrast ratio
+ * against `color` (white wins ties). Can be used in worklets, e.g. inside
+ * `useAnimatedStyle`.
+ *
+ * @param color - Any color accepted by Reanimated (`'#ff0000'`, `'rgb(...)'`,
+ *   `'hsl(...)'`, named colors, numbers, etc.). Alpha is ignored. Invalid
+ *   colors are treated as transparent black, so `'white'` is returned.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/utilities/contrastColor
+ */
+export function contrastColor(color: string | number): 'white' | 'black' {
+  'worklet';
+  const [r, g, b] = convertToRGBA(color);
+  // WCAG 2.x relative luminance
+  const luminance =
+    0.2126 * toLinearChannel(r) +
+    0.7152 * toLinearChannel(g) +
+    0.0722 * toLinearChannel(b);
+  // contrast(white, bg) >= contrast(bg, black)  <=>  1.05 / (L + 0.05) >= (L + 0.05) / 0.05
+  return 1.05 * 0.05 >= (luminance + 0.05) ** 2 ? 'white' : 'black';
+}

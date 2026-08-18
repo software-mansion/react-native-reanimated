@@ -16,19 +16,18 @@ export class CSSCallbackListeners<
     super(Object.keys(eventNameByProp) as Prop[]);
   }
 
-  protected onPresenceChanged(
-    added: readonly Prop[],
-    removed: readonly Prop[]
-  ): void {
-    for (const prop of removed) {
-      const listener = this.attachedListeners.get(prop);
-      if (listener) {
+  protected onPresenceChanged(present: ReadonlySet<Prop>): void {
+    for (const [prop, listener] of this.attachedListeners) {
+      if (!present.has(prop)) {
         this.attachedListeners.delete(prop);
         this.element.removeEventListener(this.eventNameByProp[prop], listener);
       }
     }
 
-    for (const prop of added) {
+    for (const prop of present) {
+      if (this.attachedListeners.has(prop)) {
+        continue;
+      }
       const listener = this.createListener(prop);
       this.attachedListeners.set(prop, listener);
       this.element.addEventListener(this.eventNameByProp[prop], listener);

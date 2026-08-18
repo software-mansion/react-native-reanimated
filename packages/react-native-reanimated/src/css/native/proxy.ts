@@ -1,6 +1,7 @@
 'use strict';
 import type { ShadowNodeWrapper, StyleProps } from '../../commonTypes';
 import { ReanimatedModule } from '../../ReanimatedModule';
+import type { CSSEventHandler } from './events';
 import type {
   CSSAnimationUpdates,
   CSSPseudoStyleConfig,
@@ -12,6 +13,12 @@ import type {
 
 export function setViewStyle(viewTag: number, style: StyleProps) {
   ReanimatedModule.setViewStyle(viewTag, style);
+}
+
+// EVENTS
+
+export function setCSSEventHandler(handler: CSSEventHandler) {
+  ReanimatedModule.setCSSEventHandler(handler);
 }
 
 export function markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper) {
@@ -67,9 +74,14 @@ export function unregisterCSSAnimations(viewTag: number) {
 
 export function runCSSTransition(
   shadowNodeWrapper: ShadowNodeWrapper,
-  transitionConfig: CSSTransitionConfig
+  transitionConfig: CSSTransitionConfig,
+  eventMask: number
 ) {
-  ReanimatedModule.runCSSTransition(shadowNodeWrapper, transitionConfig);
+  ReanimatedModule.runCSSTransition(
+    shadowNodeWrapper,
+    transitionConfig,
+    eventMask
+  );
 }
 
 export function unregisterCSSTransition(viewTag: number) {

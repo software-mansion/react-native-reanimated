@@ -2,7 +2,9 @@
 #include <reanimated/Compat/WorkletsApi.h>
 
 #include <memory>
+#include <string>
 #include <utility>
+#include <variant>
 
 namespace reanimated::css {
 
@@ -16,14 +18,19 @@ bool PropertyInterpolatorFactory::isDiscreteProperty() const {
 }
 
 std::string PropertyInterpolator::getPropertyPathString() const {
-  if (propertyPath_.empty()) {
-    return "";
+  std::string result;
+
+  for (const auto &segment : propertyPath_) {
+    if (const auto *arrayIndex = std::get_if<size_t>(&segment)) {
+      result += "[" + std::to_string(*arrayIndex) + "]";
+    } else {
+      if (!result.empty()) {
+        result += ".";
+      }
+      result += std::get<std::string>(segment);
+    }
   }
 
-  std::string result = propertyPath_[0];
-  for (size_t i = 1; i < propertyPath_.size(); ++i) {
-    result += "." + propertyPath_[i];
-  }
   return result;
 }
 
