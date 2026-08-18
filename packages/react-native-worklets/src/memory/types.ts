@@ -58,7 +58,8 @@ export type SynchronizableConfig = {
    * in native memory, without serialization. The value type is inferred from
    * the initial value and cannot change - a write with a value of the other
    * type fails an assertion in development builds and is ignored in production
-   * builds. Fixed-type Synchronizables expose the additional `setDirty` method.
+   * builds. Fixed-type Synchronizables expose the additional `setDirty`
+   * method.
    *
    * @defaultValue `false`
    */

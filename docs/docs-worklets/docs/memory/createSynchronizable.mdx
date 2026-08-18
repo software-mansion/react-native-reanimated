@@ -44,9 +44,9 @@ const counter = createSynchronizable(0, { fixedType: true });
 
 The initial value to be held by the created Synchronizable. As it has to be serialized before passing to C++, it must be one of the supported types listed in the [Serializable](/docs/memory/serializable) documentation. With the [`fixedType` option](#config) it isn't serialized and must be a `number` or a `boolean`.
 
-### config <Optional />
+### config
 
-An object with the following properties:
+Optional configuration for the Synchronizable. An object with the following properties:
 
 - `fixedType` - when `true`, the created Synchronizable stores its `number` or `boolean` value directly in native memory, without serialization, and exposes the additional [`setDirty`](/docs/memory/synchronizable#setdirty) method. The initial value must be a `number` or a `boolean` and the value type cannot change afterwards - a write with a value of the other type fails an assertion in development builds and is ignored in production builds. Defaults to `false`.
 
