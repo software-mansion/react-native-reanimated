@@ -100,18 +100,18 @@ bool CSSPlatformTransitions::applyTransition(
       : css::makeReversingState(
             timestamp, resolvedSettings.duration, resolvedSettings.delay, resolvedSettings.easingConfig);
 
-  // https://drafts.csswg.org/css-transitions/#reversing
   std::optional<css::PlatformValue> adjustedStart;
   std::optional<css::PlatformValue> startValue;
-  if (isReversal) {
-    adjustedStart = active->adjustedEnd;
-    // The backend resumes a reversal from the live value, which the outgoing
-    // timeline still describes; active_ is only re-assigned below.
-    startValue = getCurrentValue(viewTag, propertyName, timestamp);
-  } else if (active == nullptr) {
+  if (active == nullptr) {
     adjustedStart = startValue = fromValue;
-  } else if (timestamp >= active->reversing.startTimestamp + active->reversing.duration) {
-    adjustedStart = startValue = active->adjustedEnd;
+  } else {
+    // An interruption starts from the value on screen, which the outgoing timeline
+    // still describes; active_ is only re-assigned below. A finished transition
+    // retraces to its own end, so this covers that case too.
+    startValue = getCurrentValue(viewTag, propertyName, timestamp);
+    // https://drafts.csswg.org/css-transitions/#reversing: a reversal has to target
+    // where the interrupted one began, anything else starts its own reversing run.
+    adjustedStart = isReversal ? active->adjustedEnd : startValue;
   }
 
   const int easingId = easings_->acquire(toPlatformEasing(resolvedSettings.easingConfig));

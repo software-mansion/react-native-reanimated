@@ -105,15 +105,16 @@ struct ActiveTransition {
   // https://drafts.csswg.org/css-transitions/#reversing
   std::optional<PlatformValue> adjustedStart;
   std::optional<PlatformValue> startValue;
-  if (isReversal) {
-    adjustedStart = active->adjustedEnd;
-    // A reversal resumes from the presentation value, which the outgoing timeline
-    // still describes; _active is only re-assigned below.
-    startValue = [self getCurrentValueForTag:viewTag propertyName:propertyName timestamp:timestamp];
-  } else if (active == nullptr) {
+  if (active == nullptr) {
     adjustedStart = startValue = fromValue;
-  } else if (timestamp >= active->reversing.startTimestamp + active->reversing.duration) {
-    adjustedStart = startValue = active->adjustedEnd;
+  } else {
+    // An interruption starts from the presentation value, which the outgoing timeline
+    // still describes; _active is only re-assigned below. A finished animation
+    // retraces to its own end, so this covers that case too.
+    startValue = [self getCurrentValueForTag:viewTag propertyName:propertyName timestamp:timestamp];
+    // https://drafts.csswg.org/css-transitions/#reversing: a reversal has to target
+    // where the interrupted one began, anything else starts its own reversing run.
+    adjustedStart = isReversal ? active->adjustedEnd : startValue;
   }
 
   [self animateTag:viewTag
