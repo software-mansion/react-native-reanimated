@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import plugin from '../index.js';
 const { transform } = plugin;
 
@@ -11,11 +14,14 @@ test('relative require inside worklet body gets rebased when source lives in wor
       return h.go();
     }
   `;
-  const { files } = transform(
-    input,
-    '/proj/node_modules/react-native-worklets/src/foo.js',
-    {}
+  const packageDir = path.join(
+    fs.mkdtempSync(path.join(os.tmpdir(), 'worklets-pkg-')),
+    'node_modules',
+    'react-native-worklets'
   );
+  const { files } = transform(input, path.join(packageDir, 'src', 'foo.js'), {
+    workletsPackageDir: packageDir,
+  });
   assert.equal(files.length, 1);
   assert.match(
     files[0].content,

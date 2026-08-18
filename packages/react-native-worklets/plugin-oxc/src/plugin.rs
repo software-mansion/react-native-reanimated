@@ -105,12 +105,6 @@ impl<'a, 'b> WorkletPass<'a, 'b> {
             .binding_pattern_binding_identifier(SPAN, self.builder.ident(name))
     }
 
-    fn in_scopable_body(&mut self, walk: impl FnOnce(&mut Self)) {
-        let previous = std::mem::replace(&mut self.parent_is_scopable, true);
-        walk(self);
-        self.parent_is_scopable = previous;
-    }
-
     fn build_factory(
         &mut self,
         input: WorkletInput<'a, '_>,
@@ -229,16 +223,19 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
         }
     }
 
-    fn visit_program(&mut self, program: &mut Program<'a>) {
-        self.in_scopable_body(|pass| walk_mut::walk_program(pass, program));
+    fn visit_statements(&mut self, statements: &mut oxc_allocator::Vec<'a, Statement<'a>>) {
+        let previous = std::mem::replace(&mut self.parent_is_scopable, true);
+        walk_mut::walk_statements(self, statements);
+        self.parent_is_scopable = previous;
     }
 
-    fn visit_block_statement(&mut self, block: &mut oxc_ast::ast::BlockStatement<'a>) {
-        self.in_scopable_body(|pass| walk_mut::walk_block_statement(pass, block));
-    }
-
-    fn visit_function_body(&mut self, body: &mut oxc_ast::ast::FunctionBody<'a>) {
-        self.in_scopable_body(|pass| walk_mut::walk_function_body(pass, body));
+    fn visit_switch_case(&mut self, case: &mut oxc_ast::ast::SwitchCase<'a>) {
+        if let Some(test) = case.test.as_mut() {
+            self.visit_expression(test);
+        }
+        for statement in case.consequent.iter_mut() {
+            self.visit_statement(statement);
+        }
     }
 
     fn visit_statement(&mut self, stmt: &mut Statement<'a>) {

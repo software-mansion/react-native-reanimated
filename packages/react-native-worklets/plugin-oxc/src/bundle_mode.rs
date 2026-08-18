@@ -1,9 +1,10 @@
-use oxc_ast::ast::{AssignmentTarget, Expression, ExpressionStatement, Program};
+use oxc_ast::ast::{AssignmentTarget, Expression, Program, Statement};
 use oxc_ast::AstBuilder;
-use oxc_ast_visit::{walk_mut, VisitMut};
 use oxc_span::SPAN;
 
 use crate::utils::identifier_name;
+
+const FLAG: &str = "_WORKLETS_BUNDLE_MODE_ENABLED";
 
 const TOGGLE_PATHS: &[&str] = &[
     "react-native-worklets/src/index.ts",
@@ -20,35 +21,25 @@ pub fn enable_flag<'a>(program: &mut Program<'a>, builder: AstBuilder<'a>, filen
     if !is_toggle_target(filename) {
         return false;
     }
-    let mut enabler = FlagEnabler {
-        builder,
-        enabled: false,
-    };
-    enabler.visit_program(program);
-    enabler.enabled
-}
 
-struct FlagEnabler<'a> {
-    builder: AstBuilder<'a>,
-    enabled: bool,
-}
-
-impl<'a> VisitMut<'a> for FlagEnabler<'a> {
-    fn visit_expression_statement(&mut self, statement: &mut ExpressionStatement<'a>) {
-        walk_mut::walk_expression_statement(self, statement);
-
+    let mut enabled = false;
+    for statement in program.body.iter_mut() {
+        let Statement::ExpressionStatement(statement) = statement else {
+            continue;
+        };
         let Expression::AssignmentExpression(assign) = &mut statement.expression else {
-            return;
+            continue;
         };
         let AssignmentTarget::StaticMemberExpression(member) = &assign.left else {
-            return;
+            continue;
         };
         if identifier_name(&member.object) != Some("globalThis")
-            || member.property.name.as_str() != "_WORKLETS_BUNDLE_MODE_ENABLED"
+            || member.property.name.as_str() != FLAG
         {
-            return;
+            continue;
         }
-        assign.right = self.builder.expression_boolean_literal(SPAN, true);
-        self.enabled = true;
+        assign.right = builder.expression_boolean_literal(SPAN, true);
+        enabled = true;
     }
+    enabled
 }

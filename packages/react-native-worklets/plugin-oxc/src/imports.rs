@@ -67,10 +67,7 @@ pub fn rebase_to_worklets_dir_with(
     let resolved = file_dir.join(original);
     let resolved = normalize_path(&resolved);
 
-    let worklets_pkg_root = worklets_package_dir
-        .map(PathBuf::from)
-        .unwrap_or_else(|| derive_worklets_root(filename));
-    let worklets_dir = worklets_pkg_root.join(".worklets");
+    let worklets_dir = PathBuf::from(worklets_package_dir?).join(".worklets");
 
     let rel = pathdiff(&worklets_dir, &resolved)?;
     let mut out = crate::utils::to_posix(&rel.to_string_lossy());
@@ -78,17 +75,4 @@ pub fn rebase_to_worklets_dir_with(
         out = format!("./{out}");
     }
     Some(out)
-}
-
-fn derive_worklets_root(filename: &str) -> PathBuf {
-    const SEGMENT: &str = "/react-native-worklets";
-    let mut from = 0;
-    while let Some(idx) = filename[from..].find(SEGMENT) {
-        let end = from + idx + SEGMENT.len();
-        match filename[end..].chars().next() {
-            None | Some('/') => return PathBuf::from(&filename[..end]),
-            _ => from = end,
-        }
-    }
-    PathBuf::from(SEGMENT)
 }
