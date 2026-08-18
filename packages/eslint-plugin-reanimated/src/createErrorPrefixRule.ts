@@ -33,8 +33,6 @@ export function createErrorPrefixRule<MessageId extends string>(
             return;
           }
 
-          // A concatenated message (`'[Prefix] a' + 'b'`) carries its prefix in
-          // the left-most operand, so that's the node to check and to fix.
           const first = leftmostOperand(args[0]);
 
           if (
