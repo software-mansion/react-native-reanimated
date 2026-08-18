@@ -117,6 +117,8 @@ const ColorInterpolationExample: React.FC = () =>
   React.createElement(
     require('./ColorInterpolationExample').default as React.FC
   );
+const ContrastColorExample: React.FC = () =>
+  React.createElement(require('./ContrastColorExample').default as React.FC);
 const CombinedTest: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/Combined').default as React.FC
@@ -206,6 +208,10 @@ const FetchExample: React.FC = () =>
   React.createElement(require('./FetchExample').default as React.FC);
 const FilterExample: React.FC = () =>
   React.createElement(require('./FilterExample').default as React.FC);
+const FinalFrameAccuracyExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/FinalFrameAccuracy').default as React.FC
+  );
 const FlatListExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/FlatList').default as React.FC
@@ -269,6 +275,11 @@ const KeyframeAnimation: React.FC = () =>
 const LayoutAnimationExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/LayoutAnimation').default
+  );
+const LayoutAnimationBatchSyncExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/LayoutAnimationBatchSyncExample')
+      .default as React.FC
   );
 const LayoutTransitionExample: React.FC = () =>
   React.createElement(
@@ -1073,6 +1084,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Color interpolation',
     screen: ColorInterpolationExample,
   },
+  ContrastColorExample: {
+    icon: '🔲',
+    title: 'Contrast color',
+    screen: ContrastColorExample,
+  },
   ExtrapolationExample: {
     title: 'Extrapolation example',
     screen: ExtrapolationExample,
@@ -1122,6 +1138,10 @@ export const EXAMPLES: Record<string, Example> = {
   BasicLayoutAnimation: {
     title: '[LA] Basic layout animation',
     screen: BasicLayoutAnimation,
+  },
+  LayoutAnimationBatchSync: {
+    title: '[LA] Batch synchronization',
+    screen: LayoutAnimationBatchSyncExample,
   },
   BasicNestedAnimation: {
     title: '[LA] Basic nested animation',
@@ -1263,6 +1283,10 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🧹',
     title: '[LA] Nested exiting cleanup',
     screen: NestedExitingCleanupExample,
+  },
+  FinalFrameAccuracyExample: {
+    screen: FinalFrameAccuracyExample,
+    title: '[LA] Final frame accuracy',
   },
 
   // Shared Element Transitions

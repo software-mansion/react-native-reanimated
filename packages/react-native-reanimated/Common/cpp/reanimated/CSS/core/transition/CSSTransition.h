@@ -47,7 +47,9 @@ class CSSTransition {
     return shadowNode_->getFamilyShared();
   }
 
-  TransitionProperties getProperties() const;
+  /// Properties animating on the C++ loop. The updates registry retains only these:
+  /// a platform-routed value lives natively, and a stale copy would be re-injected.
+  TransitionProperties getLoopProperties() const;
 
   folly::dynamic computeCurrentLoopStyle();
 
@@ -79,7 +81,6 @@ class CSSTransition {
 
   CSSLoopTransition &ensureLoopTransition();
   void scheduleLoop(double timestamp);
-  void trackPlatformLifecycles(const CSSTransitionConfig &config, double timestamp);
   void observeMilestones(CSSLoopTransition &loopTransition);
   void reportMilestone(RunMilestone milestone, const std::string &propertyName, double elapsedTime);
   void emitEvent(CSSEventType type, const std::string &propertyName, double elapsedTime) const;
