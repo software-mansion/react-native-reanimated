@@ -31,10 +31,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)removeTransitionForTag:(facebook::react::Tag)viewTag propertyName:(const std::string &)propertyName;
 
-/// The value the native animation shows at `timestamp`, reconstructed from the
-/// stored timeline. The presentation layer holds the same value, but only the main
-/// thread may read it, and routing needs the answer inline. nullopt once a
-/// mid-flight interruption has dropped the start value.
+/// The value the animation shows at `timestamp`, retraced from the stored timeline;
+/// the presentation layer has it too, but only the main thread may read that and
+/// routing needs the answer inline. nullopt after a non-reversing interruption.
 - (std::optional<reanimated::css::PlatformValue>)currentValueForTag:(facebook::react::Tag)viewTag
                                                        propertyName:(const std::string &)propertyName
                                                           timestamp:(double)timestamp;
