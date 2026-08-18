@@ -13,7 +13,6 @@
 
 #include <memory>
 #include <string>
-#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -118,8 +117,6 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
   mutable std::unordered_set<SurfaceId> surfacesToRemove_;
   bool shouldFlushDeadNodes(bool surfaceDropped) const;
 #ifdef ANDROID
-  mutable std::thread::id uiThreadId_;
-
   void maybeScheduleCleanupPull(SurfaceContext &surfaceCtx, SurfaceId surfaceId, bool flushedDeadNodes) const;
   void scheduleDeferredCleanupPull(SurfaceId surfaceId) const;
 #endif
