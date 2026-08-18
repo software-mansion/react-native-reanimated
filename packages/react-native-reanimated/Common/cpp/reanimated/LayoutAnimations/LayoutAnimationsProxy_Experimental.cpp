@@ -102,9 +102,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       // To keep things simple, we put mutations related to source views before all muatations
       // and mutations to hide target views after all mutations.
       std::vector<ShadowViewMutation> mergedMutations;
-      hideTransitioningViews(BEFORE, transaction.transitions, mergedMutations, propsParserContext);
+      hideTransitioningViews(BEFORE, mergedMutations, transaction, propsParserContext);
       mergedMutations.insert(mergedMutations.end(), filteredMutations.begin(), filteredMutations.end());
-      hideTransitioningViews(AFTER, transaction.transitions, mergedMutations, propsParserContext);
+      hideTransitioningViews(AFTER, mergedMutations, transaction, propsParserContext);
       std::swap(filteredMutations, mergedMutations);
     }
 
@@ -707,13 +707,8 @@ void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) con
 
 void LayoutAnimationsProxy_Experimental::surfaceDidUnmount() {
   LayoutAnimationsProxyCommon::surfaceDidUnmount();
-  {
-    auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-    auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
-    for (const auto &[_, containerTag] : containerTags_) {
-      sharedTransitionManager_->tagToName_.erase(containerTag);
-    }
-  }
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  sharedContainers_.clear();
 }
 
 // When entering animations start, we temporarily set opacity to 0
@@ -737,14 +732,16 @@ void LayoutAnimationsProxy_Experimental::cleanupAnimations(
     const PropsParserContext &propsParserContext) const {
   ReanimatedSystraceSection s("cleanupAnimations");
   for (const auto &[tag, completedAnimation] : completedAnimations_) {
-    if (hasPendingLayoutAnimation(tag)) {
+    if (hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag)) {
       continue;
     }
-    const auto restoreIt = restoreMap_.find(tag);
-    if (restoreIt == restoreMap_.end()) {
+    const auto containerIt = sharedContainers_.find(tag);
+    if (containerIt == sharedContainers_.end()) {
       continue;
     }
-    transaction.tagsToRestore.push_back(restoreIt->second[AFTER]);
+    if (containerIt->second.restoreAfterNode) {
+      transaction.nodesToRestore.push_back(containerIt->second.restoreAfterNode);
+    }
     removeSharedContainer(tag, transaction);
   }
 
