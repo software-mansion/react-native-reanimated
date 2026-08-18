@@ -4,29 +4,18 @@
 
 #import <UIKit/UIKit.h>
 
-@interface REATouchEntryBase : NSObject {
+/// One registration. Hover entries live in `_entries`, press entries in `_pressEntries`;
+/// `deepest` distinguishes `:active-deepest` from `:active` and is unused for hover.
+@interface REATouchEntry : NSObject {
  @public
   __weak id owner;
   __weak UIView *view;
   std::function<void(bool)> callback;
-  /// Last state delivered to the callback: hover for hover entries, press for press entries.
   BOOL engaged;
-}
-@end
-@implementation REATouchEntryBase
-@end
-
-@interface REATouchHoverEntry : REATouchEntryBase
-@end
-@implementation REATouchHoverEntry
-@end
-
-@interface REATouchPressEntry : REATouchEntryBase {
- @public
   BOOL deepest;
 }
 @end
-@implementation REATouchPressEntry
+@implementation REATouchEntry
 @end
 
 @interface REAHoverTouchObserver : UIGestureRecognizer
@@ -75,8 +64,8 @@
 static const CGFloat kPrimaryTouchTapMovement = 10.0;
 
 @implementation REATouchHoverCoordinator {
-  NSMutableArray<REATouchHoverEntry *> *_entries;
-  NSMutableArray<REATouchPressEntry *> *_pressEntries;
+  NSMutableArray<REATouchEntry *> *_entries;
+  NSMutableArray<REATouchEntry *> *_pressEntries;
   REAHoverTouchObserver *_windowObserver;
   __weak UIWindow *_observedWindow;
   __weak UITouch *_primaryTouch;
@@ -112,7 +101,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 - (void)registerObserver:(id)owner view:(UIView *)view callback:(std::function<void(bool)>)callback
 {
   [self unregisterObserver:owner];
-  REATouchHoverEntry *entry = [REATouchHoverEntry new];
+  REATouchEntry *entry = [REATouchEntry new];
   entry->owner = owner;
   entry->view = view;
   entry->callback = std::move(callback);
@@ -122,8 +111,8 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 
 - (void)unregisterObserver:(id)owner
 {
-  NSMutableArray<REATouchHoverEntry *> *removed = [NSMutableArray array];
-  for (REATouchHoverEntry *entry in _entries) {
+  NSMutableArray<REATouchEntry *> *removed = [NSMutableArray array];
+  for (REATouchEntry *entry in _entries) {
     if (entry->owner == nil || entry->owner == owner) {
       [self setEntry:entry engaged:NO];
       [removed addObject:entry];
@@ -138,7 +127,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
                      callback:(std::function<void(bool)>)callback
 {
   [self unregisterPressObserver:owner];
-  REATouchPressEntry *entry = [REATouchPressEntry new];
+  REATouchEntry *entry = [REATouchEntry new];
   entry->owner = owner;
   entry->view = view;
   entry->callback = std::move(callback);
@@ -149,8 +138,8 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 
 - (void)unregisterPressObserver:(id)owner
 {
-  NSMutableArray<REATouchPressEntry *> *removed = [NSMutableArray array];
-  for (REATouchPressEntry *entry in _pressEntries) {
+  NSMutableArray<REATouchEntry *> *removed = [NSMutableArray array];
+  for (REATouchEntry *entry in _pressEntries) {
     if (entry->owner == nil || entry->owner == owner) {
       [self setEntry:entry engaged:NO];
       [removed addObject:entry];
@@ -211,7 +200,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   [self endPressSequence];
 }
 
-- (void)purgeEntries:(NSArray<REATouchHoverEntry *> *)batch
+- (void)purgeEntries:(NSArray<REATouchEntry *> *)batch
 {
   if (batch.count == 0) {
     return;
@@ -280,7 +269,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
     return;
   }
   UIView *hit = window != nil ? [self hitTestInWindow:window atPoint:[_primaryTouch locationInView:window]] : nil;
-  for (REATouchHoverEntry *entry in _entries) {
+  for (REATouchEntry *entry in _entries) {
     if (entry->engaged && ![self isView:entry->view onBranchOfHitView:hit]) {
       [self setEntry:entry engaged:NO];
     }
@@ -313,7 +302,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   }
   UIView *deepestPressView = [self deepestRescuedPressViewUnder:bumpedHit reachableHit:plainHit];
   BOOL engagedAny = NO;
-  for (REATouchPressEntry *entry in _pressEntries) {
+  for (REATouchEntry *entry in _pressEntries) {
     UIView *view = entry->view;
     if (view == nil || ![self isView:view onBranchOfHitView:bumpedHit] ||
         [self isView:view onBranchOfHitView:plainHit]) {
@@ -333,7 +322,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 
 - (void)deactivateAllPressEntries
 {
-  for (REATouchPressEntry *entry in _pressEntries) {
+  for (REATouchEntry *entry in _pressEntries) {
     [self setEntry:entry engaged:NO];
   }
 }
@@ -351,7 +340,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 
 #pragma mark - State reconciliation
 
-- (void)setEntry:(REATouchEntryBase *)entry engaged:(BOOL)engaged
+- (void)setEntry:(REATouchEntry *)entry engaged:(BOOL)engaged
 {
   if (entry->engaged == engaged) {
     return;
@@ -410,7 +399,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 
 - (BOOL)isPressRegisteredView:(UIView *)view
 {
-  for (REATouchPressEntry *entry in _pressEntries) {
+  for (REATouchEntry *entry in _pressEntries) {
     if (entry->view == view) {
       return YES;
     }
@@ -423,11 +412,11 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 - (UIView *)hitTestInWindow:(UIWindow *)window atPoint:(CGPoint)point
 {
   static const CGFloat kHitTestableAlpha = 0.02;
-  NSArray<REATouchEntryBase *> *entryLists[] = {_entries, _pressEntries};
+  NSArray<REATouchEntry *> *entryLists[] = {_entries, _pressEntries};
   NSMutableArray<UIView *> *lifted = nil;
   NSMutableArray<NSNumber *> *savedAlphas = nil;
   for (NSUInteger listIndex = 0; listIndex < 2; listIndex++) {
-    for (REATouchEntryBase *entry in entryLists[listIndex]) {
+    for (REATouchEntry *entry in entryLists[listIndex]) {
       UIView *view = entry->view;
       // A view carrying both `:hover` and `:active` is in both lists, and the bumped alpha reads
       // back a hair below the threshold, so only this check keeps its original alpha restorable.
@@ -452,8 +441,8 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 
 - (void)hoverBranchOfHitView:(UIView *)hit
 {
-  NSMutableArray<REATouchHoverEntry *> *dead = nil;
-  for (REATouchHoverEntry *entry in _entries) {
+  NSMutableArray<REATouchEntry *> *dead = nil;
+  for (REATouchEntry *entry in _entries) {
     UIView *view = entry->view;
     if (view == nil) {
       [self setEntry:entry engaged:NO];
@@ -480,7 +469,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 
 - (void)clearAll
 {
-  for (REATouchHoverEntry *entry in _entries) {
+  for (REATouchEntry *entry in _entries) {
     [self setEntry:entry engaged:NO];
   }
 }
