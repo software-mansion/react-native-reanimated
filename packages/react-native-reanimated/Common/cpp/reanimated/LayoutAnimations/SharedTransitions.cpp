@@ -11,12 +11,16 @@ namespace reanimated {
 // MARK: Shared Element Transitions
 
 // A boundary is active when its `isActive` prop (controlled from JS,
-// e.g. with `useIsFocused`) is true and it's not currently exiting.
+// e.g. with `useIsFocused`) is true and it's not inside an exiting subtree.
 std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findActiveBoundary(
     const std::shared_ptr<LightNode> &node) const {
   std::shared_ptr<LightNode> result = nullptr;
 
-  if (isSETBoundary(node) && isBoundaryActive(node) && node->state == ExitingState::UNDEFINED) {
+  if (node->state != ExitingState::UNDEFINED) {
+    // exiting subtrees stay in the light tree until their removal is flushed, but they are not part of the new UI
+    return nullptr;
+  }
+  if (isSETBoundary(node) && isBoundaryActive(node)) {
     return node;
   }
   for (const auto &child : std::views::reverse(node->children)) {
