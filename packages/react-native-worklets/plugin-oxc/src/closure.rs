@@ -10,8 +10,8 @@ use oxc_syntax::reference::ReferenceFlags;
 use oxc_syntax::scope::ScopeId;
 use oxc_syntax::symbol::SymbolId;
 
-use crate::state::{binding_is_rebound, ImportInfo, ImportShape, State};
 use crate::type_assertions::TypeAssertions;
+use crate::types::{binding_is_rebound, ImportInfo, ImportShape, State};
 use crate::utils::{can_forward_module_import, can_forward_relative_import};
 use crate::worklet_factory::WorkletInput;
 

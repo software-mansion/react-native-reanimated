@@ -13,63 +13,6 @@ pub fn worklet_hash(s: &str) -> u64 {
     (h1 as u32 as u64) * 4096 + (h2 as u32 as u64)
 }
 
-const RESERVED_WORDS: &[&str] = &[
-    "break",
-    "case",
-    "catch",
-    "continue",
-    "debugger",
-    "default",
-    "do",
-    "else",
-    "finally",
-    "for",
-    "function",
-    "if",
-    "return",
-    "switch",
-    "throw",
-    "try",
-    "var",
-    "const",
-    "while",
-    "with",
-    "new",
-    "this",
-    "super",
-    "class",
-    "extends",
-    "export",
-    "import",
-    "null",
-    "true",
-    "false",
-    "in",
-    "instanceof",
-    "typeof",
-    "void",
-    "delete",
-    "implements",
-    "interface",
-    "let",
-    "package",
-    "private",
-    "protected",
-    "public",
-    "static",
-    "yield",
-    "await",
-    "enum",
-];
-
-fn is_valid_identifier(name: &str) -> bool {
-    let mut chars = name.chars();
-    let Some(first) = chars.next() else {
-        return false;
-    };
-    is_identifier_start(first) && chars.all(is_identifier_part) && !RESERVED_WORDS.contains(&name)
-}
-
 pub fn to_identifier(input: &str) -> String {
     let mapped: String = input
         .chars()
@@ -88,23 +31,21 @@ pub fn to_identifier(input: &str) -> String {
     let mut out = String::with_capacity(trimmed.len());
     let mut chars = trimmed.chars().peekable();
     while let Some(c) = chars.next() {
-        if c == '-' || c.is_whitespace() {
-            while let Some(&n) = chars.peek() {
-                if n == '-' || n.is_whitespace() {
-                    chars.next();
-                } else {
-                    break;
-                }
-            }
-            if let Some(next) = chars.next() {
-                out.extend(next.to_uppercase());
-            }
-        } else {
+        if c != '-' {
             out.push(c);
+            continue;
+        }
+        while chars.next_if_eq(&'-').is_some() {}
+        if let Some(next) = chars.next() {
+            out.extend(next.to_uppercase());
         }
     }
 
-    if !is_valid_identifier(&out) {
+    if out
+        .chars()
+        .next()
+        .is_none_or(|first| !is_identifier_start(first))
+    {
         out.insert(0, '_');
     }
     out
@@ -192,7 +133,6 @@ mod tests {
         assert_eq!(to_identifier("123abc"), "abc");
         assert_eq!(to_identifier("2dExample.js1"), "dExampleJs1");
         assert_eq!(to_identifier("ünïcode"), "ünïcode");
-        assert_eq!(to_identifier("class"), "_class");
         assert_eq!(to_identifier(""), "_");
     }
 

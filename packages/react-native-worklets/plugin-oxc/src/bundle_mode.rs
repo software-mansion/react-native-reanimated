@@ -21,20 +21,23 @@ pub fn enable_flag<'a>(
     builder: AstBuilder<'a>,
     filename: &str,
     assertions: &TypeAssertions,
-) {
+) -> bool {
     if !is_toggle_target(filename) {
-        return;
+        return false;
     }
-    FlagEnabler {
+    let mut enabler = FlagEnabler {
         builder,
         assertions,
-    }
-    .visit_program(program);
+        enabled: false,
+    };
+    enabler.visit_program(program);
+    enabler.enabled
 }
 
 struct FlagEnabler<'a, 'b> {
     builder: AstBuilder<'a>,
     assertions: &'b TypeAssertions,
+    enabled: bool,
 }
 
 impl<'a, 'b> VisitMut<'a> for FlagEnabler<'a, 'b> {
@@ -57,5 +60,6 @@ impl<'a, 'b> VisitMut<'a> for FlagEnabler<'a, 'b> {
             return;
         }
         assign.right = self.builder.expression_boolean_literal(SPAN, true);
+        self.enabled = true;
     }
 }

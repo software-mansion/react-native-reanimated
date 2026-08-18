@@ -13,10 +13,10 @@ use oxc_syntax::scope::ScopeId;
 use crate::closure::{closure_for_function, scope_is_inside, InjectedRef};
 use crate::naming::worklet_hash;
 use crate::naming::{make_worklet_name, WorkletNames};
-use crate::state::State;
 use crate::type_assertions::TypeAssertions;
+use crate::types::State;
 use crate::utils::{closure_binding_pattern, const_decl, is_release, rewrite_implicit_return};
-use crate::worklet_body::build_worklet_body_string;
+use crate::worklet_string_code::build_worklet_body_string;
 
 const MOCK_VERSION: &str = "x.y.z";
 
@@ -104,7 +104,7 @@ pub fn make_worklet_factory<'a>(
 
     if let Expression::FunctionExpression(func) = &mut factory_expr {
         if let Some(body) = func.body.as_mut() {
-            crate::relative_requires::rewrite_relative_requires(
+            crate::imports::rewrite_relative_requires(
                 body,
                 filename,
                 &state.forwardable_relative_paths,
@@ -145,7 +145,7 @@ pub fn make_worklet_factory<'a>(
 fn codegen_bundle_file<'a>(
     builder: AstBuilder<'a>,
     mut factory: Expression<'a>,
-    imports: &[crate::state::ImportInfo],
+    imports: &[crate::types::ImportInfo],
     filename: &str,
     worklets_package_dir: Option<&str>,
 ) -> String {
@@ -156,12 +156,12 @@ fn codegen_bundle_file<'a>(
     let mut body = builder.vec_with_capacity(imports.len() + 1);
     for info in imports {
         let is_rel = info.source.starts_with('.');
-        if matches!(info.shape, crate::state::ImportShape::Default) && is_rel {
+        if matches!(info.shape, crate::types::ImportShape::Default) && is_rel {
             continue;
         }
         let mut rebased = info.clone();
         if rebased.source.starts_with('.') {
-            if let Some(p) = crate::relative_requires::rebase_to_worklets_dir_with(
+            if let Some(p) = crate::imports::rebase_to_worklets_dir_with(
                 filename,
                 &rebased.source,
                 worklets_package_dir,
@@ -196,9 +196,9 @@ fn codegen_bundle_file<'a>(
 
 fn build_import_declaration<'a>(
     builder: AstBuilder<'a>,
-    info: &crate::state::ImportInfo,
+    info: &crate::types::ImportInfo,
 ) -> Statement<'a> {
-    use crate::state::ImportShape;
+    use crate::types::ImportShape;
     use oxc_ast::ast::{ImportDeclarationSpecifier, ImportOrExportKind, ModuleExportName};
 
     let local_atom = builder.ident(&info.local);

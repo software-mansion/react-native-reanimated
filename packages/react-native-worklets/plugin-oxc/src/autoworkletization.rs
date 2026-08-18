@@ -11,7 +11,7 @@ const GESTURE_HANDLER_GESTURE_OBJECTS: &[&str] = &[
 ];
 
 #[rustfmt::skip]
-const GESTURE_HANDLER_BUILDER_METHODS: &[&str] = &[
+pub const GESTURE_HANDLER_BUILDER_METHODS: &[&str] = &[
     "onBegin",
     "onStart",
     "onEnd",
@@ -92,7 +92,7 @@ const LAYOUT_ANIMATION_CHAIN_METHODS: &[&str] = &[
     "reverse",
 ];
 
-const LAYOUT_ANIMATION_CALLBACKS: &[&str] = &["withCallback"];
+pub const LAYOUT_ANIMATION_CALLBACKS: &[&str] = &["withCallback"];
 
 pub fn is_gesture_object_event_callback_method(
     callee: &Expression<'_>,

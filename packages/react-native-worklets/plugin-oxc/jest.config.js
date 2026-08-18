@@ -13,6 +13,10 @@ module.exports = {
   ],
   testNamePattern:
     '^(?!.*bundleless)(?!.*does not flip the flag without bundleMode option)',
+  setupFilesAfterEnv: [
+    ...(require('../plugin/jest.config.js').setupFilesAfterEnv ?? []),
+    path.join(__dirname, 'jest', 'captureEmittedFiles.js'),
+  ],
   moduleNameMapper: {
     '^\\.\\./index$': path.join(__dirname, 'babel.js'),
   },

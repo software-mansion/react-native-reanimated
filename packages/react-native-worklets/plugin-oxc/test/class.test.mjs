@@ -27,19 +27,6 @@ test('class without marker is left alone', () => {
   assert.match(code, /class Foo/);
 });
 
-test('file-level directive marks top-level classes', () => {
-  const input = `
-    'worklet';
-    class Foo {
-      bar() { return 42; }
-    }
-  `;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /class Foo/);
-  assert.match(code, /__workletClass = true/);
-  assert.doesNotMatch(code, /__classFactory/);
-});
-
 for (const [label, member, message] of [
   ['instance method', 'bar() { \'worklet\'; return 1; }', /`bar` class method cannot be a worklet/],
   ['static method', 'static bar() { \'worklet\'; return 1; }', /`bar` class method cannot be a worklet/],

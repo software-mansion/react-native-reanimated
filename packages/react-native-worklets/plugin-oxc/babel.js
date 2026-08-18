@@ -1,6 +1,5 @@
 'use strict';
 
-const fs = require('fs');
 const path = require('path');
 
 const oxc = require('./index.js');
@@ -32,36 +31,11 @@ function resolveWorkletsPkgDir() {
   }
   return cachedWorkletsPkgDir;
 }
-function resolveWorkletsDir() {
-  const pkg = resolveWorkletsPkgDir();
-  return pkg ? path.join(pkg, '.worklets') : null;
-}
 
 const SYNTAX_JSX = require.resolve('@babel/plugin-syntax-jsx');
 const SYNTAX_TYPESCRIPT = require.resolve('@babel/plugin-syntax-typescript');
 
 const GENERATED_WORKLETS_DIR = 'react-native-worklets/.worklets';
-
-function writeEmittedFiles(files) {
-  if (!files || files.length === 0) return;
-  const dir = resolveWorkletsDir();
-  if (!dir) {
-    throw new Error(
-      "[Worklets] emitted bundle files but couldn't find " +
-        "the react-native-worklets package on disk. Make sure it's installed."
-    );
-  }
-  fs.mkdirSync(dir, { recursive: true });
-  for (const file of files) {
-    let absPath;
-    if (file.path.startsWith(`${GENERATED_WORKLETS_DIR}/`)) {
-      absPath = path.join(dir, file.path.slice(GENERATED_WORKLETS_DIR.length + 1));
-    } else {
-      absPath = path.join(dir, path.basename(file.path));
-    }
-    fs.writeFileSync(absPath, file.content);
-  }
-}
 
 function reparseSyntaxPlugins(filename) {
   if (filename.endsWith('.tsx')) {
@@ -77,60 +51,12 @@ const PARSE_ERROR_CODE = 'WORKLETS_ERR_PARSE';
 
 const WORKLET_DIRECTIVE_RE = /(^|[\s;{(])['"]worklet['"]\s*;?/m;
 
-const AUTO_WORKLETIZED_HOOKS = [
-  'useFrameCallback',
-  'useAnimatedStyle',
-  'useAnimatedProps',
-  'createAnimatedPropAdapter',
-  'useDerivedValue',
-  'useAnimatedScrollHandler',
-  'useAnimatedReaction',
-  'withTiming',
-  'withSpring',
-  'withDecay',
-  'withRepeat',
-  'runOnUI',
-  'executeOnUIRuntimeSync',
-  'scheduleOnUI',
-  'runOnUISync',
-  'runOnUIAsync',
-  'runOnRuntime',
-  'runOnRuntimeSync',
-  'runOnRuntimeAsync',
-  'scheduleOnRuntime',
-  'runOnRuntimeSyncWithId',
-  'scheduleOnRuntimeWithId',
-  'useTapGesture',
-  'usePanGesture',
-  'usePinchGesture',
-  'useRotationGesture',
-  'useFlingGesture',
-  'useLongPressGesture',
-  'useNativeGesture',
-  'useManualGesture',
-  'useHoverGesture',
-];
+const { hooks, methods } = oxc.workletSourceTokens();
 
-const AUTO_WORKLETIZED_METHODS = [
-  'withCallback',
-  'onBegin',
-  'onStart',
-  'onEnd',
-  'onFinalize',
-  'onUpdate',
-  'onChange',
-  'onTouchesDown',
-  'onTouchesMove',
-  'onTouchesUp',
-  'onTouchesCancelled',
-];
-
-const AUTO_WORKLETIZED_HOOKS_RE = new RegExp(
-  `\\b(${AUTO_WORKLETIZED_HOOKS.join('|')})\\s*\\(`
-);
+const AUTO_WORKLETIZED_HOOKS_RE = new RegExp(`\\b(${hooks.join('|')})\\s*\\(`);
 
 const AUTO_WORKLETIZED_METHODS_RE = new RegExp(
-  `\\.\\s*(${AUTO_WORKLETIZED_METHODS.join('|')})\\s*\\(`
+  `\\.\\s*(${methods.join('|')})\\s*\\(`
 );
 
 const WORKLET_PACKAGE_RE =
@@ -180,7 +106,14 @@ function workletsPluginOxcBabelShim(babelApi, options) {
             }
             if (opts.workletsPackageDir == null) {
               const pkgDir = resolveWorkletsPkgDir();
-              if (pkgDir != null) opts.workletsPackageDir = pkgDir;
+              if (pkgDir == null) {
+                throw new Error(
+                  "[Worklets] couldn't find the react-native-worklets package " +
+                    "on disk, so the generated worklet files have nowhere to go. " +
+                    "Make sure it's installed."
+                );
+              }
+              opts.workletsPackageDir = pkgDir;
             }
             if (opts.envName == null) {
               const envName = state.file.opts.envName;
@@ -202,7 +135,9 @@ function workletsPluginOxcBabelShim(babelApi, options) {
             throw e;
           }
 
-          writeEmittedFiles(result.files);
+          if (!result.changed) {
+            return;
+          }
 
           if (result.map && !state.file.inputMap) {
             const map = JSON.parse(result.map);

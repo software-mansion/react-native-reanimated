@@ -13,7 +13,7 @@ use oxc_span::SPAN;
 use oxc_syntax::scope::ScopeFlags;
 
 use crate::closure::InjectedRef;
-use crate::state::State;
+use crate::types::State;
 use crate::utils::{const_decl, const_declaration, has_worklet_directive};
 use crate::worklet_factory::{make_worklet_factory, FactoryContext, WorkletInput};
 
@@ -114,9 +114,9 @@ impl<'a, 'b> WorkletPass<'a, 'b> {
             .binding_pattern_binding_identifier(SPAN, self.builder.ident(name))
     }
 
-    fn visit_unscopable_statement(&mut self, stmt: &mut Statement<'a>) {
-        let previous = std::mem::replace(&mut self.parent_is_scopable, false);
-        self.visit_statement(stmt);
+    fn in_scopable_body(&mut self, walk: impl FnOnce(&mut Self)) {
+        let previous = std::mem::replace(&mut self.parent_is_scopable, true);
+        walk(self);
         self.parent_is_scopable = previous;
     }
 
@@ -239,9 +239,21 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
         }
     }
 
+    fn visit_program(&mut self, program: &mut Program<'a>) {
+        self.in_scopable_body(|pass| walk_mut::walk_program(pass, program));
+    }
+
+    fn visit_block_statement(&mut self, block: &mut oxc_ast::ast::BlockStatement<'a>) {
+        self.in_scopable_body(|pass| walk_mut::walk_block_statement(pass, block));
+    }
+
+    fn visit_function_body(&mut self, body: &mut oxc_ast::ast::FunctionBody<'a>) {
+        self.in_scopable_body(|pass| walk_mut::walk_function_body(pass, body));
+    }
+
     fn visit_statement(&mut self, stmt: &mut Statement<'a>) {
         let Statement::FunctionDeclaration(func) = stmt else {
-            let previous = std::mem::replace(&mut self.parent_is_scopable, true);
+            let previous = std::mem::replace(&mut self.parent_is_scopable, false);
             walk_mut::walk_statement(self, stmt);
             self.parent_is_scopable = previous;
             return;
@@ -255,27 +267,6 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
             return;
         }
         *stmt = const_decl(self.builder, self.binding_pattern(&decl_name), factory_call);
-    }
-
-    fn visit_if_statement(&mut self, stmt: &mut oxc_ast::ast::IfStatement<'a>) {
-        self.visit_expression(&mut stmt.test);
-        self.visit_unscopable_statement(&mut stmt.consequent);
-        if let Some(alternate) = stmt.alternate.as_mut() {
-            self.visit_unscopable_statement(alternate);
-        }
-    }
-
-    fn visit_labeled_statement(&mut self, stmt: &mut oxc_ast::ast::LabeledStatement<'a>) {
-        self.visit_unscopable_statement(&mut stmt.body);
-    }
-
-    fn visit_switch_case(&mut self, case: &mut oxc_ast::ast::SwitchCase<'a>) {
-        if let Some(test) = case.test.as_mut() {
-            self.visit_expression(test);
-        }
-        for stmt in case.consequent.iter_mut() {
-            self.visit_unscopable_statement(stmt);
-        }
     }
 
     fn visit_export_default_declaration(&mut self, decl: &mut ExportDefaultDeclaration<'a>) {

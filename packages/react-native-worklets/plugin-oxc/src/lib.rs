@@ -10,76 +10,27 @@ use oxc_semantic::SemanticBuilder;
 use oxc_span::{SourceType, Span};
 use oxc_syntax::symbol::SymbolId;
 
-mod auto_detect;
+mod autoworkletization;
 mod bundle_mode;
 mod closure;
-mod file_directive;
+mod imports;
 mod jsx_dev_attributes;
 mod naming;
 mod options;
+mod plugin;
 mod referenced_worklets;
-mod relative_requires;
-mod state;
 mod type_assertions;
+mod types;
 mod utils;
-mod worklet_body;
 mod worklet_factory;
-mod worklet_pass;
+mod worklet_string_code;
 
 const PARSE_ERROR_CODE: &str = "WORKLETS_ERR_PARSE";
 
-pub use options::PluginOptions;
-use state::{ImportInfo, ImportShape, State};
+const GENERATED_WORKLETS_DIR: &str = ".worklets";
 
-fn build_imports_index<'a>(program: &Program<'a>) -> HashMap<SymbolId, ImportInfo> {
-    let mut out = HashMap::new();
-    for stmt in &program.body {
-        let import: &ImportDeclaration = match stmt {
-            Statement::ImportDeclaration(d) => d,
-            _ => continue,
-        };
-        let source = import.source.value.as_str().to_string();
-        let Some(specifiers) = &import.specifiers else {
-            continue;
-        };
-        for spec in specifiers {
-            let (local_id, shape) = match spec {
-                ImportDeclarationSpecifier::ImportSpecifier(s) => {
-                    let imported_name = match &s.imported {
-                        oxc_ast::ast::ModuleExportName::IdentifierName(n) => n.name.to_string(),
-                        oxc_ast::ast::ModuleExportName::IdentifierReference(n) => {
-                            n.name.to_string()
-                        }
-                        oxc_ast::ast::ModuleExportName::StringLiteral(n) => n.value.to_string(),
-                    };
-                    (
-                        &s.local,
-                        ImportShape::Named {
-                            imported: imported_name,
-                        },
-                    )
-                }
-                ImportDeclarationSpecifier::ImportDefaultSpecifier(s) => {
-                    (&s.local, ImportShape::Default)
-                }
-                ImportDeclarationSpecifier::ImportNamespaceSpecifier(s) => {
-                    (&s.local, ImportShape::Namespace)
-                }
-            };
-            if let Some(sid) = local_id.symbol_id.get() {
-                out.insert(
-                    sid,
-                    ImportInfo {
-                        source: source.clone(),
-                        local: local_id.name.to_string(),
-                        shape,
-                    },
-                );
-            }
-        }
-    }
-    out
-}
+pub use options::PluginOptions;
+use types::{ImportInfo, ImportShape, State};
 
 #[napi(object)]
 pub struct EmittedFile {
@@ -92,36 +43,178 @@ pub struct TransformResult {
     pub code: String,
     pub map: Option<String>,
     pub files: Vec<EmittedFile>,
+    pub changed: bool,
 }
 
-fn maybe_warn_extras(options: &PluginOptions) {
-    static WARNED: AtomicBool = AtomicBool::new(false);
-    let has_extras = options
-        .extra_plugins
-        .as_ref()
-        .map(|v| !v.is_empty())
-        .unwrap_or(false)
-        || options
-            .extra_presets
-            .as_ref()
-            .map(|v| !v.is_empty())
-            .unwrap_or(false);
-    if !has_extras {
-        return;
+#[napi(object)]
+pub struct WorkletSourceTokens {
+    pub hooks: Vec<String>,
+    pub methods: Vec<String>,
+}
+
+#[napi]
+pub fn worklet_source_tokens() -> WorkletSourceTokens {
+    let hooks = referenced_worklets::FUNCTION_HOOKS
+        .iter()
+        .map(|(name, _)| (*name).to_string())
+        .chain(
+            autoworkletization::GESTURE_HANDLER_OBJECT_HOOKS
+                .iter()
+                .map(|name| (*name).to_string()),
+        )
+        .collect();
+    let methods = autoworkletization::LAYOUT_ANIMATION_CALLBACKS
+        .iter()
+        .chain(autoworkletization::GESTURE_HANDLER_BUILDER_METHODS.iter())
+        .map(|name| (*name).to_string())
+        .collect();
+    WorkletSourceTokens { hooks, methods }
+}
+
+#[napi]
+pub fn transform(
+    source_text: String,
+    filename: String,
+    options: Option<PluginOptions>,
+) -> napi::Result<TransformResult> {
+    let filename = filename.replace('\\', "/");
+    let mut opts = options.unwrap_or_default();
+    if let Some(dir) = opts.worklets_package_dir.take() {
+        opts.worklets_package_dir = Some(dir.replace('\\', "/"));
     }
-    if WARNED.swap(true, Ordering::Relaxed) {
-        return;
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        run(&source_text, &filename, opts)
+    }));
+    match result {
+        Ok(Ok(value)) => Ok(value),
+        Ok(Err(msg)) => Err(napi::Error::from_reason(format!(
+            "[Worklets] Babel plugin exception: {msg}"
+        ))),
+        Err(payload) => {
+            let msg = panic_payload_to_string(payload);
+            Err(napi::Error::from_reason(format!(
+                "[Worklets] Babel plugin exception (panic): {msg} (file: {filename})"
+            )))
+        }
     }
-    eprintln!(
-        "[Worklets] `extraPlugins`/`extraPresets` are accepted for option-surface \
-         compatibility with `react-native-worklets/plugin` but ignored — the OXC transform \
-         cannot dispatch arbitrary Babel plugins. Compose them around this plugin in \
-         babel.config.js instead."
+}
+
+fn run(
+    source_text: &str,
+    filename: &str,
+    options: PluginOptions,
+) -> Result<TransformResult, String> {
+    if options.bundle_mode == Some(false) {
+        return Err(
+            "`bundleMode: false` is not supported — this plugin supports Bundle Mode only. \
+             Use `react-native-worklets/plugin` for the legacy pipeline."
+                .to_string(),
+        );
+    }
+
+    maybe_warn_extras(&options);
+
+    if is_generated_worklet_file(filename) {
+        return Ok(TransformResult {
+            code: source_text.to_string(),
+            map: None,
+            files: Vec::new(),
+            changed: false,
+        });
+    }
+
+    let allocator = Allocator::default();
+    let source_type = SourceType::from_path(filename).unwrap_or_else(|_| SourceType::cjs());
+    let source_type = if source_type.is_javascript() {
+        source_type.with_jsx(true)
+    } else {
+        source_type
+    };
+
+    let parsed = Parser::new(&allocator, source_text, source_type)
+        .with_options(ParseOptions {
+            preserve_parens: false,
+            ..ParseOptions::default()
+        })
+        .parse();
+
+    if !parsed.errors.is_empty() {
+        let first = &parsed.errors[0];
+        return Err(format!("{PARSE_ERROR_CODE} in {filename}: {first}"));
+    }
+
+    let mut program = parsed.program;
+
+    let type_asserted = type_assertions::TypeAssertions::collect(&program);
+
+    if source_type.is_typescript() {
+        strip_typescript(&mut program, &allocator, filename)?;
+    }
+
+    let mut state = State::new(options, source_text.to_string());
+    let builder = oxc_ast::AstBuilder::new(&allocator);
+
+    let semantic_ret = SemanticBuilder::new()
+        .with_check_syntax_error(false)
+        .build(&program);
+    let scoping = semantic_ret.semantic.into_scoping();
+
+    state.imports_by_symbol = build_imports_index(&program);
+
+    let emitted = plugin::process_program(
+        &mut program,
+        &mut state,
+        &scoping,
+        builder,
+        &allocator,
+        filename,
+        &type_asserted,
     );
+
+    if let Some(message) = state.error.take() {
+        return Err(message);
+    }
+
+    let flag_enabled = bundle_mode::enable_flag(&mut program, builder, filename, &type_asserted);
+
+    let printed = Codegen::new()
+        .with_options(CodegenOptions {
+            source_map_path: Some(std::path::PathBuf::from(filename)),
+            ..CodegenOptions::default()
+        })
+        .build(&program);
+
+    let files: Vec<EmittedFile> = emitted
+        .into_iter()
+        .map(|(path, content)| EmittedFile { path, content })
+        .collect();
+
+    if let Some(package_dir) = state.opts.worklets_package_dir.as_deref() {
+        write_emitted_files(&files, package_dir)?;
+    }
+
+    Ok(TransformResult {
+        code: printed.code,
+        map: printed.map.map(|map| map.to_json_string()),
+        changed: flag_enabled || !files.is_empty(),
+        files,
+    })
 }
 
-fn is_generated_worklet_file(filename: &str) -> bool {
-    filename.contains("react-native-worklets/.worklets")
+fn write_emitted_files(files: &[EmittedFile], worklets_package_dir: &str) -> Result<(), String> {
+    if files.is_empty() {
+        return Ok(());
+    }
+    let dir = std::path::Path::new(worklets_package_dir).join(GENERATED_WORKLETS_DIR);
+    std::fs::create_dir_all(&dir)
+        .map_err(|error| format!("could not create {}: {error}", dir.display()))?;
+    for file in files {
+        let name = file.path.rsplit('/').next().unwrap_or(&file.path);
+        let path = dir.join(name);
+        std::fs::write(&path, &file.content)
+            .map_err(|error| format!("could not write {}: {error}", path.display()))?;
+    }
+    Ok(())
 }
 
 fn strip_typescript<'a>(
@@ -173,130 +266,84 @@ fn strip_typescript<'a>(
     Ok(())
 }
 
-fn run(
-    source_text: &str,
-    filename: &str,
-    options: PluginOptions,
-) -> Result<TransformResult, String> {
-    if options.bundle_mode == Some(false) {
-        return Err(
-            "`bundleMode: false` is not supported — this plugin supports Bundle Mode only. \
-             Use `react-native-worklets/plugin` for the legacy pipeline."
-                .to_string(),
-        );
-    }
-
-    maybe_warn_extras(&options);
-
-    if is_generated_worklet_file(filename) {
-        return Ok(TransformResult {
-            code: source_text.to_string(),
-            map: None,
-            files: Vec::new(),
-        });
-    }
-
-    let allocator = Allocator::default();
-    let source_type = SourceType::from_path(filename).unwrap_or_else(|_| SourceType::cjs());
-    let source_type = if source_type.is_javascript() {
-        source_type.with_jsx(true)
-    } else {
-        source_type
-    };
-
-    let parsed = Parser::new(&allocator, source_text, source_type)
-        .with_options(ParseOptions {
-            preserve_parens: false,
-            ..ParseOptions::default()
-        })
-        .parse();
-
-    if !parsed.errors.is_empty() {
-        let first = &parsed.errors[0];
-        return Err(format!("{PARSE_ERROR_CODE} in {filename}: {first}"));
-    }
-
-    let mut program = parsed.program;
-
-    let type_asserted = type_assertions::TypeAssertions::collect(&program);
-
-    if source_type.is_typescript() {
-        strip_typescript(&mut program, &allocator, filename)?;
-    }
-
-    let mut state = State::new(options, source_text.to_string());
-    let builder = oxc_ast::AstBuilder::new(&allocator);
-
-    file_directive::process_file_directive(&mut program, builder, &type_asserted);
-
-    let semantic_ret = SemanticBuilder::new()
-        .with_check_syntax_error(false)
-        .build(&program);
-    let scoping = semantic_ret.semantic.into_scoping();
-
-    state.imports_by_symbol = build_imports_index(&program);
-
-    let emitted = worklet_pass::process_program(
-        &mut program,
-        &mut state,
-        &scoping,
-        builder,
-        &allocator,
-        filename,
-        &type_asserted,
-    );
-
-    if let Some(message) = state.error.take() {
-        return Err(message);
-    }
-
-    bundle_mode::enable_flag(&mut program, builder, filename, &type_asserted);
-
-    let printed = Codegen::new()
-        .with_options(CodegenOptions {
-            source_map_path: Some(std::path::PathBuf::from(filename)),
-            ..CodegenOptions::default()
-        })
-        .build(&program);
-
-    let files = emitted
-        .into_iter()
-        .map(|(path, content)| EmittedFile { path, content })
-        .collect();
-
-    Ok(TransformResult {
-        code: printed.code,
-        map: printed.map.map(|map| map.to_json_string()),
-        files,
-    })
-}
-
-#[napi]
-pub fn transform(
-    source_text: String,
-    filename: String,
-    options: Option<PluginOptions>,
-) -> napi::Result<TransformResult> {
-    let filename = filename.replace('\\', "/");
-    let mut opts = options.unwrap_or_default();
-    if let Some(dir) = opts.worklets_package_dir.take() {
-        opts.worklets_package_dir = Some(dir.replace('\\', "/"));
-    }
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        run(&source_text, &filename, opts)
-    }));
-    match result {
-        Ok(Ok(value)) => Ok(value),
-        Ok(Err(msg)) => Err(napi::Error::from_reason(format!(
-            "[Worklets] Babel plugin exception: {msg}"
-        ))),
-        Err(payload) => {
-            let msg = panic_payload_to_string(payload);
-            Err(napi::Error::from_reason(format!(
-                "[Worklets] Babel plugin exception (panic): {msg} (file: {filename})"
-            )))
+fn build_imports_index<'a>(program: &Program<'a>) -> HashMap<SymbolId, ImportInfo> {
+    let mut out = HashMap::new();
+    for stmt in &program.body {
+        let import: &ImportDeclaration = match stmt {
+            Statement::ImportDeclaration(d) => d,
+            _ => continue,
+        };
+        let source = import.source.value.as_str().to_string();
+        let Some(specifiers) = &import.specifiers else {
+            continue;
+        };
+        for spec in specifiers {
+            let (local_id, shape) = match spec {
+                ImportDeclarationSpecifier::ImportSpecifier(s) => {
+                    let imported_name = match &s.imported {
+                        oxc_ast::ast::ModuleExportName::IdentifierName(n) => n.name.to_string(),
+                        oxc_ast::ast::ModuleExportName::IdentifierReference(n) => {
+                            n.name.to_string()
+                        }
+                        oxc_ast::ast::ModuleExportName::StringLiteral(n) => n.value.to_string(),
+                    };
+                    (
+                        &s.local,
+                        ImportShape::Named {
+                            imported: imported_name,
+                        },
+                    )
+                }
+                ImportDeclarationSpecifier::ImportDefaultSpecifier(s) => {
+                    (&s.local, ImportShape::Default)
+                }
+                ImportDeclarationSpecifier::ImportNamespaceSpecifier(s) => {
+                    (&s.local, ImportShape::Namespace)
+                }
+            };
+            if let Some(sid) = local_id.symbol_id.get() {
+                out.insert(
+                    sid,
+                    ImportInfo {
+                        source: source.clone(),
+                        local: local_id.name.to_string(),
+                        shape,
+                    },
+                );
+            }
         }
     }
+    out
+}
+
+fn is_generated_worklet_file(filename: &str) -> bool {
+    filename.contains("react-native-worklets/.worklets")
+}
+
+fn maybe_warn_extras(options: &PluginOptions) {
+    static WARNED: AtomicBool = AtomicBool::new(false);
+    let has_extras = options
+        .extra_plugins
+        .as_ref()
+        .map(|v| !v.is_empty())
+        .unwrap_or(false)
+        || options
+            .extra_presets
+            .as_ref()
+            .map(|v| !v.is_empty())
+            .unwrap_or(false);
+    if !has_extras {
+        return;
+    }
+    if WARNED.swap(true, Ordering::Relaxed) {
+        return;
+    }
+    eprintln!(
+        "[Worklets] `extraPlugins`/`extraPresets` are accepted for option-surface \
+         compatibility with `react-native-worklets/plugin` but ignored — the OXC transform \
+         cannot dispatch arbitrary Babel plugins. Compose them around this plugin in \
+         babel.config.js instead."
+    );
 }
 
 fn panic_payload_to_string(payload: Box<dyn std::any::Any + Send>) -> String {

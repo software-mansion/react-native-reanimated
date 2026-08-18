@@ -12,12 +12,12 @@ use oxc_span::{GetSpan, Span};
 use oxc_syntax::scope::ScopeFlags;
 use oxc_syntax::symbol::SymbolId;
 
-use crate::auto_detect::{
+use crate::autoworkletization::{
     is_gesture_object_event_callback_method, is_layout_animation_callback_method,
     GESTURE_HANDLER_OBJECT_HOOKS,
 };
-use crate::state::binding_is_rebound;
 use crate::type_assertions::TypeAssertions;
+use crate::types::binding_is_rebound;
 use crate::utils::inject_worklet_directive;
 use crate::utils::is_object_method;
 
@@ -54,7 +54,7 @@ enum Property {
 }
 
 #[rustfmt::skip]
-const FUNCTION_HOOKS: &[(&str, &[usize])] = &[
+pub const FUNCTION_HOOKS: &[(&str, &[usize])] = &[
     ("useFrameCallback", &[0]),
     ("useAnimatedStyle", &[0]),
     ("useAnimatedProps", &[0]),

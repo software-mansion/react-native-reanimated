@@ -10,6 +10,15 @@ const require = createRequire(path.join(pluginDir, 'package.json'));
 const { transformSync } = require('@babel/core');
 const babelPlugin = require(path.join(pluginDir, 'index.js'));
 const oxcShim = require(path.join(here, '..', 'babel.js'));
+const oxcBinding = require(path.join(here, '..', 'index.js'));
+
+const emittedByOxc = [];
+const nativeTransform = oxcBinding.transform;
+oxcBinding.transform = (...args) => {
+  const result = nativeTransform(...args);
+  emittedByOxc.push(...result.files.map((file) => file.content));
+  return result;
+};
 const {
   normalizeSnapshot,
   resetWorkletHashIds,
@@ -32,6 +41,7 @@ function run(plugin, source, filename, pluginOptions) {
   const emitted = [];
   const realWriteFileSync = fs.writeFileSync;
   fs.writeFileSync = (_, content) => emitted.push(String(content));
+  emittedByOxc.length = 0;
   resetWorkletHashIds();
   try {
     const { code } = transformSync(source, {
@@ -47,7 +57,8 @@ function run(plugin, source, filename, pluginOptions) {
         [plugin, { ...PLUGIN_OPTIONS, ...pluginOptions }],
       ],
     });
-    return [code, ...emitted].map(normalize).join(`\n${EMITTED_MARKER}\n`);
+    const files = emitted.length > 0 ? emitted : emittedByOxc;
+    return [code, ...files].map(normalize).join(`\n${EMITTED_MARKER}\n`);
   } catch (error) {
     return `ERROR: ${error.message.split('\n')[0]}`;
   } finally {

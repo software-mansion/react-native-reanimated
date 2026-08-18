@@ -45,44 +45,32 @@ test(
 );
 
 test(
-  'babel shim writes emitted bundle files to disk',
+  'the transform writes emitted bundle files under the worklets package',
   { skip: !babelCore },
   () => {
     const fs = require_('fs');
-    const captured = [];
-    const original = fs.writeFileSync;
-    fs.writeFileSync = (filepath, content) => {
-      captured.push({ path: String(filepath), content: String(content) });
-    };
-    const originalMkdir = fs.mkdirSync;
-    fs.mkdirSync = () => {};
+    const os = require_('os');
+    const pathMod = require_('path');
+    const packageDir = fs.mkdtempSync(pathMod.join(os.tmpdir(), 'worklets-pkg-'));
 
-    try {
-      delete require_.cache[require_.resolve('../babel.js')];
-      const shim = require_('../babel.js');
-      babelCore.transformSync(`function foo(x) { 'worklet'; return x + 1; }`, {
-        filename: 'test.js',
-        babelrc: false,
-        configFile: false,
-        plugins: [[shim, { bundleMode: true }]],
-      });
-    } finally {
-      fs.writeFileSync = original;
-      fs.mkdirSync = originalMkdir;
-      delete require_.cache[require_.resolve('../babel.js')];
-    }
+    babelCore.transformSync(`function foo(x) { 'worklet'; return x + 1; }`, {
+      filename: 'test.js',
+      babelrc: false,
+      configFile: false,
+      plugins: [
+        [require_('../babel.js'), { bundleMode: true, workletsPackageDir: packageDir }],
+      ],
+    });
 
-    assert.equal(captured.length, 1, 'expected one emitted file');
+    const dir = pathMod.join(packageDir, '.worklets');
+    const written = fs.readdirSync(dir);
+    assert.equal(written.length, 1, `expected one emitted file, got ${written}`);
+    assert.match(written[0], /^\d+\.js$/);
     assert.match(
-      captured[0].path,
-      /\.worklets[\\/]\d+\.js$/,
-      `bad path: ${captured[0].path}`
+      fs.readFileSync(pathMod.join(dir, written[0]), 'utf8'),
+      /__workletHash/
     );
-    assert.match(
-      captured[0].content,
-      /__workletHash/,
-      `bad content:\n${captured[0].content}`
-    );
+    fs.rmSync(packageDir, { recursive: true, force: true });
   }
 );
 
@@ -239,29 +227,16 @@ test(
   }
 );
 
-test('the parse-failure net lists every callee the Rust tables auto-workletize', () => {
-  const fs = require_('node:fs');
-  const read = (name) =>
-    fs.readFileSync(new URL(`../src/${name}`, import.meta.url), 'utf8');
-  const shim = fs.readFileSync(new URL('../babel.js', import.meta.url), 'utf8');
-  const listed = new Set(
-    [...shim.matchAll(/^\s*'([A-Za-z]+)',$/gm)].map((m) => m[1])
-  );
-
-  const constBody = (source, name) =>
-    source.slice(source.indexOf(`${name}:`)).split('];')[0];
-  const referenced = read('referenced_worklets.rs');
-  const autoDetect = read('auto_detect.rs');
-  const expected = [
-    ...constBody(referenced, 'const FUNCTION_HOOKS').matchAll(/\("([A-Za-z]+)"/g),
-    ...constBody(autoDetect, 'const GESTURE_HANDLER_OBJECT_HOOKS').matchAll(/"([A-Za-z]+)"/g),
-    ...constBody(autoDetect, 'const GESTURE_HANDLER_BUILDER_METHODS').matchAll(/"([A-Za-z]+)"/g),
-    ...constBody(autoDetect, 'const LAYOUT_ANIMATION_CALLBACKS').matchAll(/"([A-Za-z]+)"/g),
-  ].map((m) => m[1]);
-
-  assert.ok(expected.length > 30, `parsed too few names: ${expected.length}`);
-  const missing = expected.filter((name) => !listed.has(name));
-  assert.deepEqual(missing, [], `babel.js is missing: ${missing.join(', ')}`);
+test('the parse-failure net takes its callee list from the Rust tables', () => {
+  const { hooks, methods } = require_('../index.js').workletSourceTokens();
+  assert.ok(hooks.length > 20, `too few hooks: ${hooks.length}`);
+  assert.ok(methods.length > 5, `too few methods: ${methods.length}`);
+  for (const name of ['useAnimatedStyle', 'runOnUI', 'useTapGesture']) {
+    assert.ok(hooks.includes(name), `missing hook: ${name}`);
+  }
+  for (const name of ['withCallback', 'onStart']) {
+    assert.ok(methods.includes(name), `missing method: ${name}`);
+  }
 });
 
 test(
