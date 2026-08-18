@@ -47,7 +47,9 @@ class CSSTransition {
     return shadowNode_->getFamilyShared();
   }
 
-  TransitionProperties getProperties() const;
+  /// Properties animating on the C++ loop. The updates registry retains only these:
+  /// a platform-routed value lives natively, and a stale copy would be re-injected.
+  TransitionProperties getLoopProperties() const;
 
   folly::dynamic computeCurrentLoopStyle();
 

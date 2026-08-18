@@ -9,10 +9,12 @@ namespace reanimated::css {
 CSSPlatformTransitionProxy::CSSPlatformTransitionProxy(
     CSSCanRoutePropertyFunction canRoute,
     CSSApplyTransitionFunction applyTransition,
-    CSSRemoveTransitionFunction removeTransition)
+    CSSRemoveTransitionFunction removeTransition,
+    CSSGetPlatformValueFunction getPlatformValue)
     : canRoute_(std::move(canRoute)),
       applyTransition_(std::move(applyTransition)),
-      removeTransition_(std::move(removeTransition)) {}
+      removeTransition_(std::move(removeTransition)),
+      getPlatformValue_(std::move(getPlatformValue)) {}
 
 bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const EasingConfig &easing) const {
   return canRoute_ && canRoute_(propertyName, easing);
@@ -75,14 +77,18 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
       routing.platform.insert(propertyName);
     } else {
       // platform -> loop migration cancels on the platform side.
+      std::optional<double> resumeFrom;
       if (routing.platform.erase(propertyName) > 0) {
+        if (hasValue) {
+          resumeFrom = getResumeValue(viewTag, propertyName, timestamp);
+        }
         remove(viewTag, propertyName);
       }
       routing.loop.insert(propertyName);
       if (hasValue) {
+        auto fromValue = resumeFrom ? jsi::Value(*resumeFrom) : jsi::Value(rt, valueIt->second.first);
         loopConfig.changedProperties.emplace(
-            propertyName,
-            std::make_pair(jsi::Value(rt, valueIt->second.first), jsi::Value(rt, valueIt->second.second)));
+            propertyName, std::make_pair(std::move(fromValue), jsi::Value(rt, valueIt->second.second)));
       }
       loopConfig.changedPropertiesSettings.emplace(propertyName, settings);
     }
@@ -124,12 +130,33 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
         }
       }
       routing.platform.erase(propertyName);
+      // Read before remove(): it drops the platform-side state this resumes from.
+      const auto resumeFrom = getResumeValue(viewTag, propertyName, timestamp);
       remove(viewTag, propertyName);
       routing.loop.insert(propertyName);
+      if (resumeFrom) {
+        loopDiffs.emplace(propertyName, std::make_pair(folly::dynamic(*resumeFrom), propertyDiff.second));
+        continue;
+      }
     }
     loopDiffs.emplace(propertyName, propertyDiff);
   }
   return loopDiffs;
+}
+
+std::optional<double> CSSPlatformTransitionProxy::getResumeValue(
+    const Tag viewTag,
+    const std::string &propertyName,
+    const double timestamp) const {
+  if (!getPlatformValue_) {
+    return std::nullopt;
+  }
+  const auto value = getPlatformValue_(viewTag, propertyName, timestamp);
+  if (!value) {
+    return std::nullopt;
+  }
+  const auto *scalar = std::get_if<double>(&*value);
+  return scalar != nullptr ? std::optional(*scalar) : std::nullopt;
 }
 
 void CSSPlatformTransitionProxy::cancelAll(const Tag viewTag, const TransitionProperties &properties) const {

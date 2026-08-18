@@ -100,14 +100,18 @@ bool CSSPlatformTransitions::applyTransition(
       : css::makeReversingState(
             timestamp, resolvedSettings.duration, resolvedSettings.delay, resolvedSettings.easingConfig);
 
-  // https://drafts.csswg.org/css-transitions/#reversing
   std::optional<css::PlatformValue> adjustedStart;
-  if (isReversal) {
-    adjustedStart = active->adjustedEnd;
-  } else if (active == nullptr) {
-    adjustedStart = fromValue;
-  } else if (timestamp >= active->reversing.startTimestamp + active->reversing.duration) {
-    adjustedStart = active->adjustedEnd;
+  std::optional<css::PlatformValue> startValue;
+  if (active == nullptr) {
+    adjustedStart = startValue = fromValue;
+  } else {
+    // An interruption starts from the value on screen, which the outgoing timeline
+    // still describes; active_ is only re-assigned below. A finished transition
+    // retraces to its own end, so this covers that case too.
+    startValue = getCurrentValue(viewTag, propertyName, timestamp);
+    // https://drafts.csswg.org/css-transitions/#reversing: a reversal has to target
+    // where the interrupted one began, anything else starts its own reversing run.
+    adjustedStart = isReversal ? active->adjustedEnd : startValue;
   }
 
   const int easingId = easings_->acquire(toPlatformEasing(resolvedSettings.easingConfig));
@@ -132,8 +136,23 @@ bool CSSPlatformTransitions::applyTransition(
   }
 
   active_[viewTag][propertyName] =
-      ActiveTransition{adjustedStart, toValue, std::move(reversing), resolvedSettings, easingId};
+      ActiveTransition{adjustedStart, startValue, toValue, std::move(reversing), resolvedSettings, easingId};
   return true;
+}
+
+std::optional<css::PlatformValue> CSSPlatformTransitions::getCurrentValue(
+    const Tag viewTag,
+    const std::string &propertyName,
+    const double timestamp) const {
+  const auto *active = activeTransitionFor(viewTag, propertyName);
+  if (active == nullptr || !active->startValue) {
+    return std::nullopt;
+  }
+  const auto &reversing = active->reversing;
+  const double progress =
+      reversing.duration > 0 ? std::clamp((timestamp - reversing.startTimestamp) / reversing.duration, 0.0, 1.0) : 1.0;
+  return css::lerpPlatformValues(
+      *active->startValue, active->adjustedEnd, css::getEasingFunctionFromConfig(reversing.easing)(progress));
 }
 
 void CSSPlatformTransitions::removeTransition(const Tag viewTag, const std::string &propertyName) {
