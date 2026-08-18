@@ -7,3 +7,8 @@ export const NATIVE_PSEUDO_SELECTORS_PRIORITY: readonly NativePseudoSelectorKey[
 
 export const NATIVE_PSEUDO_SELECTORS: ReadonlySet<NativePseudoSelectorKey> =
   new Set(NATIVE_PSEUDO_SELECTORS_PRIORITY);
+
+export const PRESS_PSEUDO_SELECTORS: readonly NativePseudoSelectorKey[] = [
+  ':active',
+  ':active-deepest',
+];
