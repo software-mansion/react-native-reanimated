@@ -14,7 +14,7 @@ import {
   beforeEach,
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
@@ -26,7 +26,7 @@ describe('Test createSerializable', () => {
   let result = false;
   let errorMessage = '';
 
-  const workletRuntime = getWorkletRuntimeFromPool('test');
+  const [workletRuntime] = getWorkletRuntimesFromPool(1);
 
   const targets = [
     {
@@ -42,7 +42,7 @@ describe('Test createSerializable', () => {
         scheduleOnRuntime(workletRuntime, worklet);
       },
       targetRuntime: 'Worker',
-      runtimeName: 'test',
+      runtimeName: workletRuntime.name,
     },
   ];
 
@@ -182,9 +182,8 @@ describe('Test createSerializable', () => {
       });
 
       test('createSerializableHostObject', async () => {
-        const hostObjectValue = getWorkletRuntimeFromPool(
-          'test'
-        ) as unknown as Record<string, unknown>;
+        const [runtime] = getWorkletRuntimesFromPool(1);
+        const hostObjectValue = runtime as unknown as Record<string, unknown>;
         const hostObjectKeys = Object.keys(hostObjectValue);
         scheduleOnTarget(() => {
           'worklet';

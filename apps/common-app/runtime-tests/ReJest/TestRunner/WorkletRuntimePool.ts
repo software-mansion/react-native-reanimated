@@ -4,7 +4,7 @@ import { createWorkletRuntime } from 'react-native-worklets';
 export class WorkletRuntimePool {
   private _runtimes: Map<string, WorkletRuntime> = new Map();
 
-  public getOrCreateWorkletRuntime(name: string): WorkletRuntime {
+  private getOrCreateWorkletRuntime(name: string): WorkletRuntime {
     const existing = this._runtimes.get(name);
     if (existing) {
       return existing;

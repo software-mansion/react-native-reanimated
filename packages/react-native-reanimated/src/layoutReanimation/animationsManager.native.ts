@@ -55,6 +55,22 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
 
+  // Layout animation starts are scheduled separately on the UI runtime. With
+  // a large number of views, sampling the clock for every start noticeably
+  // staggers animations which belong to the same frame. Cache the first start
+  // timestamp until the frame finalizers run so the whole batch shares one
+  // timeline.
+  let layoutAnimationStartTimestamp: number | undefined;
+  const getLayoutAnimationStartTimestamp = () => {
+    if (layoutAnimationStartTimestamp === undefined) {
+      layoutAnimationStartTimestamp = global._getAnimationTimestamp();
+      globalThis.requestAnimationFrameFinalizer(() => {
+        layoutAnimationStartTimestamp = undefined;
+      });
+    }
+    return layoutAnimationStartTimestamp;
+  };
+
   // Flush layout-animation progress once per frame via the frame finalizer
   // (after all `requestAnimationFrame` callbacks), reusing the same
   // `_maybeFlushUIUpdatesQueue` path as animated-prop updates.
@@ -120,7 +136,10 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       });
 
       startObservingProgress(tag, value, scheduleFlush);
+      const previousFrameTimestamp = global.__frameTimestamp;
+      global.__frameTimestamp ??= getLayoutAnimationStartTimestamp();
       value.value = animation;
+      global.__frameTimestamp = previousFrameTimestamp;
     },
     stop(tag: number) {
       const value = mutableValuesForTag.get(tag);
