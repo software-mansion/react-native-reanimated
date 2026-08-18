@@ -9,7 +9,10 @@ const workletsPluginOptions = {
   },
 };
 
-const workletsPlugin = require.resolve('worklets-plugin-oxc/babel')
+const workletsPlugin =
+  process.env.WORKLETS_PLUGIN === 'babel'
+    ? 'react-native-worklets/plugin'
+    : require.resolve('worklets-plugin-oxc/babel');
 
 /** @type {import('@babel/core').TransformOptions} */
 module.exports = {

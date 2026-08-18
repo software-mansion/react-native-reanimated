@@ -111,7 +111,7 @@ export class TestRunner {
     return [state, setter];
   }
 
-  public createOrderConstraint() {
+  public createOrderConstraint = () => {
     'worklet';
     return this.createTestValue<number>(0, (prev: number, current: number) => {
       'worklet';
@@ -122,7 +122,7 @@ export class TestRunner {
       }
       return prev;
     });
-  }
+  };
 
   public async render(component: ReactElement<Component> | null) {
     if (!component && this._renderLock.wasRenderedNull()) {
