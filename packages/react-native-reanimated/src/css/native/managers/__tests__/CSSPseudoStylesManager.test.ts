@@ -57,9 +57,27 @@ describe('CSSPseudoStylesManager', () => {
       expect(console.warn).toHaveBeenCalledTimes(1);
     });
 
-    test('stays quiet when the resting opacity is hit-testable', () => {
+    test('warns at 0.01, which the float-backed alpha puts under the threshold', () => {
       pushStyle(manager, {
         opacity: { default: 0.01, ':active': 1 },
+      });
+
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining("won't receive presses on iOS")
+      );
+    });
+
+    test('stays quiet when the resting opacity is hit-testable', () => {
+      pushStyle(manager, {
+        opacity: { default: 0.02, ':active': 1 },
+      });
+
+      expect(console.warn).not.toHaveBeenCalled();
+    });
+
+    test('stays quiet just above the threshold, where presses still land', () => {
+      pushStyle(manager, {
+        opacity: { default: 0.011, ':active': 1 },
       });
 
       expect(console.warn).not.toHaveBeenCalled();
