@@ -26,6 +26,7 @@ Feature flags are available since Reanimated 4.
 | [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#force_react_render_for_settled_animations)           | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+ <br/> `false` otherwise |
 | [`USE_ANIMATION_BACKEND`](#use_animation_backend)                                                   | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
 | [`IOS_CSS_CORE_ANIMATION`](#ios_css_core_animation)                                                 | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
+| [`ANDROID_CSS_PLATFORM_TRANSITIONS`](#android_css_platform_transitions)                             | [static](#static-feature-flags) |  4.6.0   |  –   |                  `false`                  |
 
 :::info
 
@@ -147,7 +148,43 @@ This feature flag conflicts with [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#
 
 ### `IOS_CSS_CORE_ANIMATION`
 
-When enabled, Reanimated may route CSS transitions to platform-native animation APIs instead of running them on the JS-driven animation loop. Currently, only the `opacity` property is routed, and only on iOS, where the platform path uses Core Animation. Support for additional properties, CSS animations (not just transitions), and Android will be added in the future. This feature flag is experimental and defaults to `false`.
+When enabled, Reanimated may run CSS transitions with Core Animation instead of its own animation loop. The platform drives every frame on its own, so Reanimated no longer recomputes and commits the transitioned values on each of them. This feature flag is experimental and defaults to `false`.
+
+Routing is decided per property, so a single transition may run partly on the platform and partly on the loop. A property is routed only when:
+
+- it is listed in the table below,
+- its timing function is `linear` or a cubic Bezier curve, since `CAMediaTimingFunction` cannot express `steps` or `linear` easing with stops,
+- the animated component has no CSS transition callbacks, since the platform doesn't report transition events yet. A component with callbacks keeps all of its properties on the loop.
+
+CSS animations always run on the loop, regardless of this flag.
+
+:::note
+Border properties are routed even when React Native rasterizes the border instead of drawing it with Core Animation. In that case the transition snaps to its final value instead of animating.
+:::
+
+#### Properties routed to the platform
+
+| Property          |    iOS    |  Android  |
+| ----------------- | :-------: | :-------: |
+| `opacity`         |    ✅     |    ✅     |
+| `backgroundColor` |    ✅     |    ❌     |
+| `borderColor`     |    ✅     |    ❌     |
+| `borderRadius`    |    ✅     |    ❌     |
+| `borderWidth`     |    ✅     |    ❌     |
+| `shadowColor`     |    ✅     |    ❌     |
+| `shadowOffset`    |    ✅     |    ❌     |
+| `shadowOpacity`   |    ✅     |    ❌     |
+| `shadowRadius`    |    ✅     |    ❌     |
+
+Each column needs its own feature flag to be enabled, [`IOS_CSS_CORE_ANIMATION`](#ios_css_core_animation) on iOS and [`ANDROID_CSS_PLATFORM_TRANSITIONS`](#android_css_platform_transitions) on Android. Properties that aren't routed keep running on the animation loop, which supports all of them. The `shadow*` properties aren't rendered on Android by React Native itself.
+
+### `ANDROID_CSS_PLATFORM_TRANSITIONS`
+
+When enabled, Reanimated may run CSS transitions with `ObjectAnimator` instead of its own animation loop, writing the animated value directly to the platform view. It is the Android counterpart of [`IOS_CSS_CORE_ANIMATION`](#ios_css_core_animation), is experimental as well and defaults to `false`.
+
+Only `opacity` is routed for now, as listed in the table above. Support for more properties will be added in the future.
+
+Routing follows the same rules as on iOS, except for the timing function, since `TimeInterpolator` can carry any curve that CSS transitions support.
 
 ## Static feature flags
 
