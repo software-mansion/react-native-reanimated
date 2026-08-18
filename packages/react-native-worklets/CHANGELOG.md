@@ -16,6 +16,7 @@
 ### 💡 Others
 
 \[general] - bump Worklets version to 0.13.0
+
 - Split `Synchronizable` into an interface and a `SynchronizableDynamic` implementation. ([#10293](https://github.com/software-mansion/react-native-reanimated/pull/10293) by [@tjzel](https://github.com/tjzel))
 - Make the C++ `Synchronizable` interface operate on `std::variant` values instead of Serializables. ([#10294](https://github.com/software-mansion/react-native-reanimated/pull/10294) by [@tjzel](https://github.com/tjzel))
 - Add `setDirty` to the C++ `Synchronizable` interface. ([#10295](https://github.com/software-mansion/react-native-reanimated/pull/10295) by [@tjzel](https://github.com/tjzel))
