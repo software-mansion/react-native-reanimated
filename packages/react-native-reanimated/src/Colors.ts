@@ -717,7 +717,7 @@ function toLinearChannel(c: number): number {
  *   `'hsl(...)'`, named colors, numbers, etc.). Alpha is ignored.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/utilities/contrastColor
  */
-export function contrastColor(color: unknown): 'white' | 'black' {
+export function contrastColor(color: string | number): 'white' | 'black' {
   'worklet';
   const [r, g, b] = convertToRGBA(color);
   // WCAG 2.x relative luminance
