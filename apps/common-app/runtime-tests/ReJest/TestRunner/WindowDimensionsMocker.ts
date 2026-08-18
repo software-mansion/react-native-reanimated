@@ -5,11 +5,11 @@ import type {
   LayoutAnimationType,
 } from 'react-native-reanimated';
 
-import { SyncUIRunner } from '../utils/SyncUIRunner';
+import { runOnUIBlocking } from '../utils/runOnUIBlocking';
 
 export class WindowDimensionsMocker {
   public async unmockWindowDimensions() {
-    await new SyncUIRunner().runOnUIBlocking(() => {
+    await runOnUIBlocking(() => {
       'worklet';
       if (global.originalLayoutAnimationsManager) {
         global.LayoutAnimationsManager = global.originalLayoutAnimationsManager;
@@ -18,7 +18,7 @@ export class WindowDimensionsMocker {
   }
 
   public async mockWindowDimensions() {
-    await new SyncUIRunner().runOnUIBlocking(() => {
+    await runOnUIBlocking(() => {
       'worklet';
       const originalLayoutAnimationsManager = global.LayoutAnimationsManager;
 

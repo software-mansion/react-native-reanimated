@@ -55,6 +55,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/core/useSharedValue/arrays.test');
       require('./tests/core/useSharedValue/objects.test');
       require('./tests/core/useSharedValue/assigningObjects.test');
+      require('./tests/core/useSharedValue/convergence.test');
       require('./tests/core/useAnimatedStyle/reuseAnimatedStyle.test');
       require('./tests/core/useDerivedValue/basic.test');
       require('./tests/core/useDerivedValue/chain.test');
