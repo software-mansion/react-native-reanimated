@@ -178,6 +178,7 @@ describe('CSSManager', () => {
       });
     });
   });
+  
   describe('transition baseline', () => {
     const ANIMATION = {
       animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
