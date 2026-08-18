@@ -434,13 +434,7 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
         .isScreenPop = false,
     };
 
-    if (startAnimationsRecursively(node, filteredMutations, config)) {
-      auto parent = node->parent.lock();
-      react_native_assert(parent && "Parent node is nullptr");
-      if (node->state == UNDEFINED || node->state == ExitingState::TRIAGE) {
-        node->setState(WAITING);
-      }
-    } else {
+    if (!startAnimationsRecursively(node, filteredMutations, config)) {
       maybeCancelAnimation(node->current.tag);
       auto parent = node->parent.lock();
       react_native_assert(parent && "Parent node is nullptr");

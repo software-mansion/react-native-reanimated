@@ -119,15 +119,6 @@ struct LightNode {
     return -1;
   }
 
-  int findChildIndexByTag(Tag tag) const {
-    for (std::size_t i = 0; i < children.size(); i++) {
-      if (children[i]->current.tag == tag) {
-        return static_cast<int>(i);
-      }
-    }
-    return -1;
-  }
-
   int countExitingChildrenAffectingIndex(int index) const {
     react_native_assert(index >= 0 && "index must be non-negative");
     react_native_assert(
