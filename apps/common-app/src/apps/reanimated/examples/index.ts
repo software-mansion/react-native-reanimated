@@ -208,6 +208,10 @@ const FetchExample: React.FC = () =>
   React.createElement(require('./FetchExample').default as React.FC);
 const FilterExample: React.FC = () =>
   React.createElement(require('./FilterExample').default as React.FC);
+const FinalFrameAccuracyExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/FinalFrameAccuracy').default as React.FC
+  );
 const FlatListExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/FlatList').default as React.FC
@@ -1279,6 +1283,10 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🧹',
     title: '[LA] Nested exiting cleanup',
     screen: NestedExitingCleanupExample,
+  },
+  FinalFrameAccuracyExample: {
+    screen: FinalFrameAccuracyExample,
+    title: '[LA] Final frame accuracy',
   },
 
   // Shared Element Transitions

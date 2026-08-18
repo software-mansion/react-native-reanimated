@@ -356,6 +356,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
   if (--layoutAnimation.count > 0) {
     return {};
   }
+  layoutAnimation.isExitingWhenSettled = shouldRemove;
   maybeSettledAnimationTags_.insert(tag);
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
@@ -478,7 +479,7 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceI
     const auto layoutAnimationIt = layoutAnimations_.find(tag);
 
     if (layoutAnimationIt == layoutAnimations_.end() ||
-        (layoutAnimationIt->second.isSettled() && !layoutAnimationIt->second.opacity.has_value())) {
+        (layoutAnimationIt->second.isSettled() && layoutAnimationIt->second.isExitingWhenSettled)) {
       continue;
     }
 
@@ -639,6 +640,9 @@ void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) con
   }
   if (layoutAnimationIt->second.isSettled()) {
     // Already settled - cleanupAnimations will erase it together with its updateMap entry.
+    // Mark it as exiting so addOngoingAnimations doesn't flush a pending Update
+    // after the caller has queued this view for removal.
+    layoutAnimationIt->second.isExitingWhenSettled = true;
     return;
   }
   layoutAnimations_.erase(layoutAnimationIt);
