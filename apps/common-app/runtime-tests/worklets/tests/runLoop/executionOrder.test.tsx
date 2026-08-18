@@ -3,7 +3,7 @@ import {
   expect,
   createOrderConstraint,
   createTestValue,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   test,
   waitForNotifications,
 } from '../../../ReJest/RuntimeTestsApi';
@@ -37,7 +37,7 @@ const NESTED_TIMER_BEFORE_ANIMATION_FRAME: [MethodsName, MethodsName][] =
   );
 
 describe('Test mixed order of execution', () => {
-  const rt = getWorkletRuntimeFromPool('test');
+  const [rt] = getWorkletRuntimesFromPool(1);
 
   test.each(EXPECTED_ORDER_OF_EXECUTION_2_METHODS)(
     'two methods, **${0}**[**${1}**], **${2}**[**${3}**], runtime: **${4}**',

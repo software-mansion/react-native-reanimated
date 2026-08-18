@@ -4,6 +4,7 @@
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
+#include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
@@ -22,6 +23,7 @@ struct LayoutAnimation {
   Tag parentTag;
   std::optional<double> opacity;
   bool isViewAlreadyMounted = false;
+  bool isExitingWhenSettled = false;
   int count = 1;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 
@@ -88,7 +90,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual std::optional<facebook::react::SurfaceId> onGestureCancel();
   virtual std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) = 0;
   virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) = 0;
-  virtual void startSurface(const SurfaceId surfaceId);
+  virtual void startSurface(const facebook::react::ShadowTree &shadowTree);
 
  protected:
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
