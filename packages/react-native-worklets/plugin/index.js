@@ -533,175 +533,6 @@ var require_autoworkletization = __commonJS({
   }
 });
 
-// lib/classMethod.js
-var require_classMethod = __commonJS({
-  "lib/classMethod.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.processIfWorkletMethod = processIfWorkletMethod;
-    var types_12 = require("@babel/types");
-    var assert_1 = require("assert");
-    function processIfWorkletMethod(path) {
-      if (path.node.body.directives.some((d) => d.value.value === "worklet")) {
-        (0, assert_1.strict)((0, types_12.isIdentifier)(path.node.key), "ClassMethod key must be an Identifier");
-        const methodIdentifier = path.node.key;
-        path.replaceWith((0, types_12.classProperty)((0, types_12.cloneNode)(methodIdentifier, true), (0, types_12.functionExpression)((0, types_12.cloneNode)(methodIdentifier, true), path.node.params.filter((p) => (0, types_12.isFunctionParameter)(p)).map((p) => (0, types_12.cloneNode)(p, true)), (0, types_12.cloneNode)(path.node.body, true), path.node.generator, path.node.async)));
-      }
-    }
-  }
-});
-
-// lib/contextObject.js
-var require_contextObject = __commonJS({
-  "lib/contextObject.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.contextObjectMarker = void 0;
-    exports2.processIfWorkletContextObject = processIfWorkletContextObject;
-    exports2.isContextObject = isContextObject;
-    var types_12 = require("@babel/types");
-    var directives_12 = require_directives();
-    exports2.contextObjectMarker = "__workletContextObject";
-    function processIfWorkletContextObject(path, _state) {
-      if (!isContextObject(path.node)) {
-        return false;
-      }
-      removeContextObjectMarker(path.node);
-      processWorkletContextObject(path.node);
-      return true;
-    }
-    function isContextObject(objectExpression) {
-      return objectExpression.properties.some((property) => (0, types_12.isObjectProperty)(property) && (0, types_12.isIdentifier)(property.key) && property.key.name === exports2.contextObjectMarker);
-    }
-    function processWorkletContextObject(objectExpression) {
-      const workletObjectFactory = (0, types_12.functionExpression)(null, [], (0, types_12.blockStatement)([(0, types_12.returnStatement)((0, types_12.cloneNode)(objectExpression))]));
-      (0, directives_12.addWorkletDirectivesToFunctionBody)(workletObjectFactory.body);
-      objectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)(`${exports2.contextObjectMarker}Factory`), workletObjectFactory));
-    }
-    function removeContextObjectMarker(objectExpression) {
-      objectExpression.properties = objectExpression.properties.filter((property) => !((0, types_12.isObjectProperty)(property) && (0, types_12.isIdentifier)(property.key) && property.key.name === exports2.contextObjectMarker));
-    }
-  }
-});
-
-// lib/file.js
-var require_file = __commonJS({
-  "lib/file.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.processIfWorkletFile = processIfWorkletFile;
-    exports2.isImplicitContextObject = isImplicitContextObject;
-    var types_12 = require("@babel/types");
-    var contextObject_12 = require_contextObject();
-    var directives_12 = require_directives();
-    var types_2 = require_types();
-    function processIfWorkletFile(path, state) {
-      if (!path.node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
-        return false;
-      }
-      path.node.directives = path.node.directives.filter((functionDirective) => functionDirective.value.value !== "worklet");
-      processWorkletFile(path, state);
-      return true;
-    }
-    function processWorkletFile(programPath, state) {
-      const statements = programPath.get("body");
-      dehoistCommonJSExports(programPath.node);
-      statements.forEach((statement) => {
-        const candidatePath = getCandidate(statement);
-        processWorkletizableEntity(candidatePath, state);
-      });
-    }
-    function getCandidate(statementPath) {
-      if (statementPath.isExportNamedDeclaration() || statementPath.isExportDefaultDeclaration()) {
-        return statementPath.get("declaration");
-      } else {
-        return statementPath;
-      }
-    }
-    function processWorkletizableEntity(nodePath, state) {
-      if ((0, types_2.isWorkletizableFunctionPath)(nodePath)) {
-        (0, directives_12.addWorkletDirectivesToPath)(nodePath);
-      } else if ((0, types_2.isWorkletizableObjectPath)(nodePath)) {
-        if (isImplicitContextObject(nodePath)) {
-          appendWorkletContextObjectMarker(nodePath.node);
-        } else {
-          processWorkletAggregator(nodePath, state);
-        }
-      } else if (nodePath.isVariableDeclaration()) {
-        processVariableDeclaration(nodePath, state);
-      } else if (nodePath.isClassDeclaration()) {
-        appendWorkletClassMarker(nodePath.node.body);
-      }
-    }
-    function processVariableDeclaration(variableDeclarationPath, state) {
-      const declarations = variableDeclarationPath.get("declarations");
-      declarations.forEach((declaration) => {
-        const initPath = declaration.get("init");
-        if (initPath.isExpression()) {
-          processWorkletizableEntity(initPath, state);
-        }
-      });
-    }
-    function processWorkletAggregator(objectPath, state) {
-      const properties = objectPath.get("properties");
-      properties.forEach((property) => {
-        if (property.isObjectMethod()) {
-          (0, directives_12.addWorkletDirectivesToPath)(property);
-        } else if (property.isObjectProperty()) {
-          const valuePath = property.get("value");
-          processWorkletizableEntity(valuePath, state);
-        }
-      });
-    }
-    function appendWorkletContextObjectMarker(objectExpression) {
-      if (objectExpression.properties.some((value) => (0, types_12.isObjectProperty)(value) && (0, types_12.isIdentifier)(value.key) && value.key.name === contextObject_12.contextObjectMarker)) {
-        return;
-      }
-      objectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)(`${contextObject_12.contextObjectMarker}`), (0, types_12.booleanLiteral)(true)));
-    }
-    function isImplicitContextObject(path) {
-      const propertyPaths = path.get("properties");
-      return propertyPaths.some((propertyPath) => {
-        if (!propertyPath.isObjectMethod()) {
-          return false;
-        }
-        return hasThisExpression(propertyPath);
-      });
-    }
-    function hasThisExpression(path) {
-      let result = false;
-      path.traverse({
-        ThisExpression(thisPath) {
-          result = true;
-          thisPath.stop();
-        }
-      });
-      return result;
-    }
-    function appendWorkletClassMarker(classBody) {
-      classBody.body.push((0, types_12.classProperty)((0, types_12.identifier)("__workletClass"), (0, types_12.booleanLiteral)(true)));
-    }
-    function dehoistCommonJSExports(program) {
-      const statements = program.body;
-      let end = statements.length;
-      let current = 0;
-      while (current < end) {
-        const statement = statements[current];
-        if (!isCommonJSExport(statement)) {
-          current++;
-          continue;
-        }
-        const exportStatement = statements.splice(current, 1);
-        statements.push(...exportStatement);
-        end--;
-      }
-    }
-    function isCommonJSExport(statement) {
-      return (0, types_12.isExpressionStatement)(statement) && (0, types_12.isAssignmentExpression)(statement.expression) && (0, types_12.isMemberExpression)(statement.expression.left) && (0, types_12.isIdentifier)(statement.expression.left.object) && statement.expression.left.object.name === "exports";
-    }
-  }
-});
-
 // lib/globals.js
 var require_globals = __commonJS({
   "lib/globals.js"(exports2) {
@@ -710,129 +541,11 @@ var require_globals = __commonJS({
       return mod && mod.__esModule ? mod : { "default": mod };
     };
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.globals = exports2.defaultGlobals = void 0;
     exports2.initializeState = initializeState;
     exports2.isGeneratedWorkletFile = isGeneratedWorkletFile;
-    exports2.initializeGlobals = initializeGlobals;
-    exports2.addCustomGlobals = addCustomGlobals;
     var assert_1 = require("assert");
     var path_1 = __importDefault(require("path"));
     var types_12 = require_types();
-    var notCapturedIdentifiers = [
-      // Based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
-      // Note that objects' properties don't need to be listed since we always only capture the whole object,
-      // e.g. `global.__ErrorUtils` or `Intl.DateTimeFormat`.
-      // Value properties
-      "globalThis",
-      "Infinity",
-      "NaN",
-      "undefined",
-      // Function properties
-      "eval",
-      "isFinite",
-      "isNaN",
-      "parseFloat",
-      "parseInt",
-      "decodeURI",
-      "decodeURIComponent",
-      "encodeURI",
-      "encodeURIComponent",
-      "escape",
-      "unescape",
-      // Fundamental objects
-      "Object",
-      "Function",
-      "Boolean",
-      "Symbol",
-      // Error objects
-      "Error",
-      "AggregateError",
-      "EvalError",
-      "RangeError",
-      "ReferenceError",
-      "SyntaxError",
-      "TypeError",
-      "URIError",
-      "InternalError",
-      // Numbers and dates
-      "Number",
-      "BigInt",
-      "Math",
-      "Date",
-      // Text processing
-      "String",
-      "RegExp",
-      // Indexed collections
-      "Array",
-      "Int8Array",
-      "Uint8Array",
-      "Uint8ClampedArray",
-      "Int16Array",
-      "Uint16Array",
-      "Int32Array",
-      "Uint32Array",
-      "BigInt64Array",
-      "BigUint64Array",
-      "Float32Array",
-      "Float64Array",
-      // Keyed collections
-      "Map",
-      "Set",
-      "WeakMap",
-      "WeakSet",
-      // Structured data
-      "ArrayBuffer",
-      "SharedArrayBuffer",
-      "DataView",
-      "Atomics",
-      "JSON",
-      // Managing memory
-      "WeakRef",
-      "FinalizationRegistry",
-      // Control abstraction objects
-      "Iterator",
-      "AsyncIterator",
-      "Promise",
-      "GeneratorFunction",
-      "AsyncGeneratorFunction",
-      "Generator",
-      "AsyncGenerator",
-      "AsyncFunction",
-      // Reflection
-      "Reflect",
-      "Proxy",
-      // Internationalization
-      "Intl",
-      // Other stuff
-      "null",
-      "this",
-      "global",
-      "window",
-      "globalThis",
-      "self",
-      "console",
-      "performance",
-      "arguments",
-      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
-      "require",
-      "fetch",
-      "XMLHttpRequest",
-      "WebSocket",
-      // Run loop
-      "queueMicrotask",
-      "requestAnimationFrame",
-      "cancelAnimationFrame",
-      "setTimeout",
-      "clearTimeout",
-      "setImmediate",
-      "clearImmediate",
-      "setInterval",
-      "clearInterval",
-      // Hermes
-      "HermesInternal",
-      // Worklets
-      "_WORKLET"
-    ];
     function initializeState(state) {
       var _a, _b;
       state.skipFile = isGeneratedWorkletFile(state.file.opts.filename);
@@ -840,10 +553,6 @@ var require_globals = __commonJS({
         return;
       }
       state.workletNumber = 1;
-      if (!state.opts.strictGlobal) {
-        initializeGlobals();
-        addCustomGlobals(state);
-      }
       const userImportForwarding = state.opts.importForwarding;
       (0, assert_1.strict)(state.importForwarding === void 0, "state.importForwarding should be undefined at this point");
       state.importForwarding = {
@@ -864,22 +573,11 @@ var require_globals = __commonJS({
       const generatedWorkletsDirPath = path_1.default.join("react-native-worklets", types_12.generatedWorkletsDir);
       return filename.includes(generatedWorkletsDirPath);
     }
-    exports2.defaultGlobals = new Set(notCapturedIdentifiers);
-    function initializeGlobals() {
-      exports2.globals = new Set(exports2.defaultGlobals);
-    }
     var defaultAllowedPaths = ["react-native-worklets"];
     var defaultAllowedModules = [
       "react-native-worklets",
       "react-native/Libraries/Core/setUpXHR"
     ];
-    function addCustomGlobals(state) {
-      if (state.opts && Array.isArray(state.opts.globals)) {
-        state.opts.globals.forEach((name) => {
-          exports2.globals.add(name);
-        });
-      }
-    }
   }
 });
 
@@ -918,105 +616,6 @@ var require_utils = __commonJS({
     }
     function needsDeclaration(nodePath) {
       return (0, types_12.isScopable)(nodePath.parent) || (0, types_12.isExportNamedDeclaration)(nodePath.parent);
-    }
-  }
-});
-
-// lib/inlineStylesWarning.js
-var require_inlineStylesWarning = __commonJS({
-  "lib/inlineStylesWarning.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.processInlineStylesWarning = processInlineStylesWarning;
-    var types_12 = require("@babel/types");
-    var assert_1 = require("assert");
-    var utils_1 = require_utils();
-    function generateInlineStylesWarning(path) {
-      return (0, types_12.callExpression)((0, types_12.arrowFunctionExpression)([], (0, types_12.blockStatement)([
-        (0, types_12.expressionStatement)((0, types_12.callExpression)((0, types_12.memberExpression)((0, types_12.identifier)("console"), (0, types_12.identifier)("warn")), [
-          (0, types_12.callExpression)((0, types_12.memberExpression)((0, types_12.callExpression)((0, types_12.identifier)("require"), [
-            (0, types_12.stringLiteral)("react-native-reanimated")
-          ]), (0, types_12.identifier)("getUseOfValueInStyleWarning")), [])
-        ])),
-        (0, types_12.returnStatement)(path.node)
-      ])), []);
-    }
-    function processPropertyValueForInlineStylesWarning(path) {
-      if (path.isMemberExpression() && (0, types_12.isIdentifier)(path.node.property)) {
-        if (!path.node.computed && path.node.property.name === "value") {
-          path.replaceWith(generateInlineStylesWarning(path));
-        }
-      }
-    }
-    function processTransformPropertyForInlineStylesWarning(path) {
-      if ((0, types_12.isArrayExpression)(path.node)) {
-        const elements = path.get("elements");
-        (0, assert_1.strict)(Array.isArray(elements), "`elements` should be an array.");
-        for (const element of elements) {
-          if (element.isObjectExpression()) {
-            processStyleObjectForInlineStylesWarning(element);
-          }
-        }
-      }
-    }
-    function processStyleObjectForInlineStylesWarning(path) {
-      const properties = path.get("properties");
-      for (const property of properties) {
-        if (property.isObjectProperty()) {
-          const value = property.get("value");
-          if ((0, types_12.isIdentifier)(property.node.key) && property.node.key.name === "transform") {
-            processTransformPropertyForInlineStylesWarning(value);
-          } else {
-            processPropertyValueForInlineStylesWarning(value);
-          }
-        }
-      }
-    }
-    function processInlineStylesWarning(path, state) {
-      if ((0, utils_1.isRelease)(state)) {
-        return;
-      }
-      if (state.opts.disableInlineStylesWarning) {
-        return;
-      }
-      if (path.node.name.name !== "style") {
-        return;
-      }
-      if (!(0, types_12.isJSXExpressionContainer)(path.node.value)) {
-        return;
-      }
-      const expression = path.get("value").get("expression");
-      (0, assert_1.strict)(!Array.isArray(expression), "`expression` should not be an array.");
-      if (expression.isArrayExpression()) {
-        const elements = expression.get("elements");
-        (0, assert_1.strict)(Array.isArray(elements), "`elements` should be an array.");
-        for (const element of elements) {
-          if (element.isObjectExpression()) {
-            processStyleObjectForInlineStylesWarning(element);
-          }
-        }
-      } else if (expression.isObjectExpression()) {
-        processStyleObjectForInlineStylesWarning(expression);
-      }
-    }
-  }
-});
-
-// lib/webOptimization.js
-var require_webOptimization = __commonJS({
-  "lib/webOptimization.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.substituteWebCallExpression = substituteWebCallExpression;
-    var types_12 = require("@babel/types");
-    function substituteWebCallExpression(path) {
-      const callee = path.node.callee;
-      if ((0, types_12.isIdentifier)(callee)) {
-        const name = callee.name;
-        if (name === "isWeb" || name === "shouldBeUseWeb") {
-          path.replaceWith((0, types_12.booleanLiteral)(true));
-        }
-      }
     }
   }
 });
@@ -1092,7 +691,6 @@ var require_closure = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.getClosure = getClosure;
     var types_12 = require("@babel/types");
-    var globals_12 = require_globals();
     var imports_1 = require_imports();
     function getClosure(funPath, state) {
       const capturedNames = /* @__PURE__ */ new Set();
@@ -1116,11 +714,6 @@ var require_closure = __commonJS({
             binding = idPath.scope.getBinding(name);
           }
           if (!binding) {
-            if (state.opts.strictGlobal || globals_12.globals.has(name)) {
-              return;
-            }
-            capturedNames.add(name);
-            closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
             return;
           }
           if ("id" in funPath.node) {
@@ -1565,14 +1158,9 @@ var require_workletSubstitution = __commonJS({
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAutoworkletizationMicroPlugin = getAutoworkletizationMicroPlugin;
 var autoworkletization_1 = require_autoworkletization();
-var classMethod_1 = require_classMethod();
-var contextObject_1 = require_contextObject();
 var directives_1 = require_directives();
-var file_1 = require_file();
 var globals_1 = require_globals();
-var inlineStylesWarning_1 = require_inlineStylesWarning();
 var types_1 = require_types();
-var webOptimization_1 = require_webOptimization();
 var workletSubstitution_1 = require_workletSubstitution();
 module.exports = function WorkletsBabelPlugin() {
   function runWithTaggedExceptions(state, fun) {
@@ -1597,46 +1185,11 @@ module.exports = function WorkletsBabelPlugin() {
       });
     },
     visitor: {
-      CallExpression: {
-        enter(path, state) {
-          runWithTaggedExceptions(state, () => {
-            if (state.opts.substituteWebPlatformChecks) {
-              (0, webOptimization_1.substituteWebCallExpression)(path);
-            }
-          });
-        }
-      },
       [types_1.WorkletizableFunction]: {
         enter(path, state) {
           runWithTaggedExceptions(state, () => {
             (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state);
           });
-        }
-      },
-      ObjectExpression: {
-        enter(path, state) {
-          runWithTaggedExceptions(state, () => {
-            (0, contextObject_1.processIfWorkletContextObject)(path, state);
-          });
-        }
-      },
-      ClassMethod: {
-        enter(path, state) {
-          runWithTaggedExceptions(state, () => {
-            (0, classMethod_1.processIfWorkletMethod)(path);
-          });
-        }
-      },
-      Program: {
-        enter(path, state) {
-          runWithTaggedExceptions(state, () => {
-            (0, file_1.processIfWorkletFile)(path, state);
-          });
-        }
-      },
-      JSXAttribute: {
-        enter(path, state) {
-          runWithTaggedExceptions(state, () => (0, inlineStylesWarning_1.processInlineStylesWarning)(path, state));
         }
       }
     }

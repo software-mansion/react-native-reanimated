@@ -1,15 +1,5 @@
 export interface PluginOptions {
   /**
-   * Turning on this option suppresses a helpful warning when you use [inline
-   * shared
-   * values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animations-in-inline-styling).
-   *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#disableinlinestyleswarning}
-   *
-   * - Defaults to `false`.
-   */
-  disableInlineStylesWarning?: boolean;
-  /**
    * This is a list of Babel plugins that will be used when transforming
    * worklets' code with Worklets Babel Plugin.
    *
@@ -27,36 +17,6 @@ export interface PluginOptions {
    * - Defaults to an empty array `[]`.
    */
   extraPresets?: string[];
-  /**
-   * This is a list of identifiers (objects) that will not be copied to the UI
-   * thread if a worklet requires them.
-   *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#globals}
-   *
-   * - Defaults to an empty array `[]`.
-   */
-  globals?: string[];
-  /**
-   * This option makes it so no global identifiers are implicitly captured in
-   * worklets' closures between runtimes.
-   *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#strictglobal}
-   *
-   * Defaults to `false`.
-   */
-  strictGlobal?: boolean;
-  /**
-   * This option can also be useful for Web apps. In Reanimated, there are
-   * numerous checks to determine the right function implementation for a
-   * specific target platform. Enabling this option changes all the checks
-   * that identify if the target is a Web app to `true`. This alteration can
-   * aid in tree-shaking and contribute to reducing the bundle size.
-   *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#substitutewebplatformchecks}
-   *
-   * - Defaults to `false`.
-   */
-  substituteWebPlatformChecks?: boolean;
   /**
    * Configures [import
    * forwarding](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/importForwarding)

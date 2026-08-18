@@ -3,7 +3,6 @@ import type { Binding } from '@babel/traverse';
 import type { Identifier, ImportDeclaration } from '@babel/types';
 import { cloneNode } from '@babel/types';
 
-import { globals } from './globals';
 import {
   canForwardModuleImport,
   canForwardRelativeImport,
@@ -52,16 +51,6 @@ export function getClosure(
         }
 
         if (!binding) {
-          /**
-           * The variable is unbound - it's either a mistake or implicit capture
-           * from the global scope. In this case we have to avoid capturing
-           * certain identifiers.
-           */
-          if (state.opts.strictGlobal || globals.has(name)) {
-            return;
-          }
-          capturedNames.add(name);
-          closureVariables.push(cloneNode(idPath.node as Identifier, true));
           return;
         }
 
