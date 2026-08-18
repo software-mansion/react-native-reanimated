@@ -90,7 +90,7 @@ export default class CSSManager implements ICSSManager {
 
     const transitionDetached = this.cssTransitionsManager.update(
       transitionProperties,
-      normalizedStyle ?? {},
+      normalizedStyle,
       transitionEventMask
     );
 

@@ -49,9 +49,17 @@ class CSSPlatformTransitions {
 
   void removeTransition(Tag viewTag, const std::string &propertyName);
 
+  /// nullopt after a non-reversing interruption, which resumed from the live view value.
+  std::optional<css::PlatformValue> getCurrentValue(Tag viewTag, const std::string &propertyName, double timestamp)
+      const;
+
  private:
   struct ActiveTransition {
+    /// Reversing-adjusted start value: what a later reversal has to target. A reversal
+    /// resumes from the live value, so this is not where the animator started.
     std::optional<css::PlatformValue> adjustedStart;
+    /// Where the animator started, so getCurrentValue can retrace what it plays.
+    std::optional<css::PlatformValue> startValue;
     css::PlatformValue adjustedEnd;
     css::ReversingState reversing;
     css::CSSTransitionPropertySettings settings;
