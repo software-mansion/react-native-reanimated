@@ -25,6 +25,7 @@ describe('contrastColor', () => {
     ['hwb(0 0% 0%)', 'black'],
     ['hsl(0, 100%, 50%)', 'black'],
     [0x000000ff, 'white'],
+    ['not-a-color', 'white'], // invalid colors are treated as transparent black
   ])('contrastColor(%p) === %p', (input, expected) => {
     expect(contrastColor(input)).toBe(expected);
   });

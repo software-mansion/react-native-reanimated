@@ -50,7 +50,7 @@ function App() {
 
 #### `color`
 
-The background color to contrast against. Accepts any color format supported by Reanimated – e.g. `'red'`, `'#ff0000'`, `'rgb(255, 0, 0)'`, `'rgba(255, 0, 0, 0.5)'`, `'hsl(0, 100%, 50%)'` or a number. The alpha channel is ignored.
+The background color to contrast against. Accepts any color format supported by Reanimated – e.g. `'red'`, `'#ff0000'`, `'rgb(255, 0, 0)'`, `'rgba(255, 0, 0, 0.5)'`, `'hsl(0, 100%, 50%)'` or a number. The alpha channel is ignored. Invalid colors are treated as transparent black, so `'white'` is returned.
 
 ### Returns
 

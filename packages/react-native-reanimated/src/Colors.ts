@@ -714,7 +714,8 @@ function toLinearChannel(c: number): number {
  * `useAnimatedStyle`.
  *
  * @param color - Any color accepted by Reanimated (`'#ff0000'`, `'rgb(...)'`,
- *   `'hsl(...)'`, named colors, numbers, etc.). Alpha is ignored.
+ *   `'hsl(...)'`, named colors, numbers, etc.). Alpha is ignored. Invalid
+ *   colors are treated as transparent black, so `'white'` is returned.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/utilities/contrastColor
  */
 export function contrastColor(color: string | number): 'white' | 'black' {
