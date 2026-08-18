@@ -155,8 +155,13 @@ std::optional<double> CSSPlatformTransitionProxy::getResumeValue(
   if (!value) {
     return std::nullopt;
   }
-  const auto *scalar = std::get_if<double>(&*value);
-  return scalar != nullptr ? std::optional(*scalar) : std::nullopt;
+  if (const auto *scalar = std::get_if<double>(&*value)) {
+    return *scalar;
+  }
+  if (const auto *channels = std::get_if<std::array<double, 4>>(&*value)) {
+    return packColorChannels(*channels);
+  }
+  return std::nullopt;
 }
 
 void CSSPlatformTransitionProxy::cancelAll(const Tag viewTag, const TransitionProperties &properties) const {

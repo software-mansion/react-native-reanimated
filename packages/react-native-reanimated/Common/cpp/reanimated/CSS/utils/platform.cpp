@@ -2,7 +2,9 @@
 #include <reanimated/CSS/utils/props.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
+#include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -140,7 +142,9 @@ bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &ea
   }
   // Any TimeInterpolator can carry a curve, so every easing routes and this is unused.
   (void)easing;
-  return propertyName == "opacity";
+  // borderWidth moves layout on Android and the shadow* props are iOS-only, so
+  // neither can be driven from a view-level setter.
+  return std::ranges::find(kAndroidPlatformProperties, propertyName) != kAndroidPlatformProperties.end();
 #else
   // No native routing backend on this platform yet; every property runs on the loop.
   return false;
@@ -158,6 +162,16 @@ lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, const dou
         return lerpValue(fromValue, *toValue, progress);
       },
       from);
+}
+
+double packColorChannels(const std::array<double, 4> &channels) {
+  const auto toByte = [](double channel) {
+    const auto clamped = std::clamp(channel, 0.0, 1.0);
+    return static_cast<uint32_t>(std::lround(clamped * 255.0));
+  };
+  const uint32_t packed =
+      (toByte(channels[3]) << 24) | (toByte(channels[0]) << 16) | (toByte(channels[1]) << 8) | toByte(channels[2]);
+  return static_cast<double>(packed);
 }
 
 std::optional<PlatformValuePair> parsePlatformValues(
