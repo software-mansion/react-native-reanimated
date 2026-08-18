@@ -10,9 +10,8 @@ use oxc_syntax::reference::ReferenceFlags;
 use oxc_syntax::scope::ScopeId;
 use oxc_syntax::symbol::SymbolId;
 
-use crate::type_assertions::TypeAssertions;
 use crate::types::{binding_is_rebound, ImportInfo, ImportShape, State};
-use crate::utils::{can_forward_module_import, can_forward_relative_import};
+use crate::utils::{assignment_identifier, can_forward_module_import, can_forward_relative_import};
 use crate::worklet_factory::WorkletInput;
 
 #[derive(Debug, Default)]
@@ -29,7 +28,6 @@ pub fn closure_for_function<'a>(
     state: &State,
     force_capture: &HashSet<InjectedRef>,
     filename: &str,
-    assertions: &TypeAssertions,
 ) -> ClosureResult {
     let WorkletInput {
         function_scope_id,
@@ -38,7 +36,6 @@ pub fn closure_for_function<'a>(
     } = *input;
     let mut collector = ReferenceCollector {
         scoping,
-        assertions,
         refs: Vec::new(),
         in_for_target: false,
     };
@@ -69,9 +66,7 @@ pub fn closure_for_function<'a>(
                 }
 
                 let flags = scoping.symbol_flags(symbol_id);
-                if flags.is_import()
-                    && !binding_is_rebound(scoping, &state.hidden_writes, symbol_id)
-                {
+                if flags.is_import() && !binding_is_rebound(scoping, symbol_id) {
                     if let Some(info) = state.imports_by_symbol.get(&symbol_id) {
                         if matches!(info.shape, ImportShape::Namespace) {
                             seen.insert(r.name.clone());
@@ -174,14 +169,13 @@ struct CollectedRef {
 
 struct ReferenceCollector<'s> {
     scoping: &'s Scoping,
-    assertions: &'s TypeAssertions,
     refs: Vec<CollectedRef>,
     in_for_target: bool,
 }
 
 impl<'a, 's> Visit<'a> for ReferenceCollector<'s> {
     fn visit_assignment_target(&mut self, target: &AssignmentTarget<'a>) {
-        if !self.in_for_target && self.assertions.assignment_identifier(target).is_some() {
+        if !self.in_for_target && assignment_identifier(target).is_some() {
             return;
         }
         walk::walk_assignment_target(self, target);

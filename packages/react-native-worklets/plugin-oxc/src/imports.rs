@@ -2,12 +2,11 @@ use std::path::PathBuf;
 
 use oxc_ast::AstBuilder;
 
-use crate::type_assertions::TypeAssertions;
 use oxc_ast::ast::{Argument, FunctionBody};
 use oxc_ast_visit::{walk_mut::walk_function_body, VisitMut};
 use oxc_span::SPAN;
 
-use crate::utils::{normalize_path, pathdiff};
+use crate::utils::{identifier_name, normalize_path, pathdiff};
 
 pub fn rewrite_relative_requires<'a>(
     body: &mut FunctionBody<'a>,
@@ -15,7 +14,6 @@ pub fn rewrite_relative_requires<'a>(
     forwardable_relative_paths: &[String],
     worklets_package_dir: Option<&str>,
     builder: AstBuilder<'a>,
-    assertions: &TypeAssertions,
 ) {
     if !crate::utils::can_forward_relative_import(filename, forwardable_relative_paths) {
         return;
@@ -23,7 +21,6 @@ pub fn rewrite_relative_requires<'a>(
     let mut visitor = RelativeRequireRewriter {
         filename,
         worklets_package_dir,
-        assertions,
         builder,
     };
     walk_function_body(&mut visitor, body);
@@ -33,22 +30,18 @@ struct RelativeRequireRewriter<'a, 'b> {
     filename: &'b str,
     worklets_package_dir: Option<&'b str>,
     builder: AstBuilder<'a>,
-    assertions: &'b TypeAssertions,
 }
 
 impl<'a, 'b> VisitMut<'a> for RelativeRequireRewriter<'a, 'b> {
     fn visit_call_expression(&mut self, call: &mut oxc_ast::ast::CallExpression<'a>) {
         oxc_ast_visit::walk_mut::walk_call_expression(self, call);
 
-        if self.assertions.identifier(&call.callee) != Some("require") {
+        if identifier_name(&call.callee) != Some("require") {
             return;
         }
         let Some(Argument::StringLiteral(arg)) = call.arguments.first_mut() else {
             return;
         };
-        if self.assertions.hides_span(arg.span) {
-            return;
-        }
         let value = arg.value.as_str();
         if !value.starts_with('.') {
             return;

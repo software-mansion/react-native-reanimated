@@ -682,7 +682,7 @@ test('an unscopable position does not leak into the declaration body', () => {
   assert.match(code, /const f = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
 });
 
-test('a TypeScript assertion hides a callback from auto-workletization', () => {
+test('a TypeScript assertion does not hide a callback from auto-workletization', () => {
   const cases = [
     `useAnimatedStyle((() => ({ width: 1 })) as any);`,
     `useAnimatedStyle((() => ({ width: 1 })) satisfies any);`,
@@ -693,11 +693,11 @@ test('a TypeScript assertion hides a callback from auto-workletization', () => {
   for (const body of cases) {
     const input = `import { useAnimatedStyle } from 'react-native-reanimated';\n${body}`;
     const { files } = transform(input, 'test.ts', {});
-    assert.equal(files.length, 0, `for: ${body}`);
+    assert.equal(files.length, 1, `for: ${body}`);
   }
 });
 
-test('a TypeScript assertion also hides the __workletHash guard', () => {
+test('a TypeScript assertion does not hide the __workletHash guard', () => {
   const input = `
     import { useAnimatedStyle } from 'react-native-reanimated';
     const updater = () => ({ width: 1 });
@@ -705,10 +705,10 @@ test('a TypeScript assertion also hides the __workletHash guard', () => {
     export const s = useAnimatedStyle(updater);
   `;
   const { files } = transform(input, 'test.ts', {});
-  assert.equal(files.length, 1);
+  assert.equal(files.length, 0);
 });
 
-test('a TypeScript assertion breaks a gesture or layout chain', () => {
+test('a TypeScript assertion does not break a gesture or layout chain', () => {
   const cases = [
     `import { Gesture } from 'react-native-gesture-handler';\nexport const g = (Gesture.Pan() as any).onStart(() => { console.log(1); });`,
     `import { Gesture } from 'react-native-gesture-handler';\nexport const g = (Gesture as any).Pan().onStart(() => { console.log(1); });`,
@@ -716,7 +716,7 @@ test('a TypeScript assertion breaks a gesture or layout chain', () => {
   ];
   for (const input of cases) {
     const { files } = transform(input, 'test.ts', {});
-    assert.equal(files.length, 0, `for: ${input}`);
+    assert.equal(files.length, 1, `for: ${input}`);
   }
 });
 
@@ -729,26 +729,6 @@ test('an unasserted gesture chain still workletizes', () => {
   assert.equal(files.length, 1);
 });
 
-test('a TypeScript assertion hides an entity from the file directive', () => {
-  const cases = [
-    `'worklet';\nexport const handlers = { onTap() { return 1; } } as const;`,
-    `'worklet';\nexport const f = (() => 1) as any;`,
-    `'worklet';\nexport const o = ({ m() { return this.x; } }) as any;`,
-  ];
-  for (const input of cases) {
-    const { code, files } = transform(input, 'test.ts', {});
-    assert.equal(files.length, 0, `for: ${input}`);
-    assert.doesNotMatch(code, /__workletContextObject/);
-  }
-});
-
-test('a TypeScript assertion suppresses web platform substitution', () => {
-  const { code } = transform(`const a = (isWeb as any)();`, 'test.ts', {
-    substituteWebPlatformChecks: true,
-  });
-  assert.match(code, /const a = isWeb\(\)/);
-});
-
 test('a computed key still chains a gesture object', () => {
   const input = `
     import { Gesture } from 'react-native-gesture-handler';
@@ -758,17 +738,23 @@ test('a computed key still chains a gesture object', () => {
   assert.equal(files.length, 1);
 });
 
-test('a TypeScript assertion is respected at every node position', () => {
+test('a TypeScript assertion is transparent at every node position', () => {
   const cases = [
-    [`import { Gesture } from 'react-native-gesture-handler';\nconst Pan = 'Pan';\nconst g = Gesture[(Pan as any)]().onStart(() => { console.log(1); });`, 'test.ts'],
-    [`import { Gesture } from 'react-native-gesture-handler';\nconst g = (Gesture.Pan as any)().onStart(() => { console.log(1); });`, 'test.ts'],
-    [`import { Gesture } from 'react-native-gesture-handler';\nconst g = (Gesture.Pan().enabled as any)(true).onStart(() => { console.log(1); });`, 'test.ts'],
-    [`import { FadeIn } from 'react-native-reanimated';\nconst l = (FadeIn.duration as any)(100).withCallback(() => { console.log(1); });`, 'test.ts'],
-    [`import { useAnimatedStyle } from 'react-native-reanimated';\nconst s = ((0, useAnimatedStyle)!)(() => ({ w: 1 }));`, 'test.ts'],
+    `import { Gesture } from 'react-native-gesture-handler';\nconst Pan = 'Pan';\nconst g = Gesture[(Pan as any)]().onStart(() => { console.log(1); });`,
+    `import { Gesture } from 'react-native-gesture-handler';\nconst g = (Gesture.Pan as any)().onStart(() => { console.log(1); });`,
+    `import { Gesture } from 'react-native-gesture-handler';\nconst g = (Gesture.Pan().enabled as any)(true).onStart(() => { console.log(1); });`,
+    `import { FadeIn } from 'react-native-reanimated';\nconst l = (FadeIn.duration as any)(100).withCallback(() => { console.log(1); });`,
+    `import { useAnimatedStyle } from 'react-native-reanimated';\nconst s = ((0, useAnimatedStyle)!)(() => ({ w: 1 }));`,
   ];
-  for (const [input, filename] of cases) {
-    const { files } = transform(input, filename, {});
-    assert.equal(files.length, 0, `for: ${input}`);
+  for (const input of cases) {
+    const { files } = transform(input, 'test.ts', {});
+    assert.equal(files.length, 1, `for: ${input}`);
   }
 });
 
+test('__self and __source are stripped from emitted worklet files', () => {
+  const input = `function F() { 'worklet'; return <View __self={this} __source={{ fileName: 'a' }} x={1} />; }`;
+  const { files } = transform(input, 'test.tsx', {});
+  assert.doesNotMatch(files[0].content, /__self|__source/);
+  assert.match(files[0].content, /<View x=\{1\} \/>/);
+});

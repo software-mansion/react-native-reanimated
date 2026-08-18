@@ -24,16 +24,9 @@ pub fn process_program<'a>(
     builder: AstBuilder<'a>,
     allocator: &'a Allocator,
     filename: &str,
-    type_asserted: &crate::type_assertions::TypeAssertions,
 ) -> Vec<(String, String)> {
-    let (error, hidden_writes) = crate::referenced_worklets::add_directives_to_known_callbacks(
-        program,
-        scoping,
-        builder,
-        type_asserted,
-    );
-    state.error = error;
-    state.hidden_writes = hidden_writes;
+    state.error =
+        crate::autoworkletization::add_directives_to_known_callbacks(program, scoping, builder);
 
     {
         let mut pass = WorkletPass {
@@ -42,7 +35,6 @@ pub fn process_program<'a>(
             builder,
             allocator,
             filename,
-            assertions: type_asserted,
             injected_refs_stack: Vec::new(),
             parent_is_scopable: true,
         };
@@ -58,7 +50,6 @@ struct WorkletPass<'a, 'b> {
     builder: AstBuilder<'a>,
     allocator: &'a Allocator,
     filename: &'b str,
-    assertions: &'b crate::type_assertions::TypeAssertions,
     injected_refs_stack: Vec<HashSet<InjectedRef>>,
     parent_is_scopable: bool,
 }
@@ -133,7 +124,6 @@ impl<'a, 'b> WorkletPass<'a, 'b> {
                 builder: self.builder,
                 allocator: self.allocator,
                 filename: self.filename,
-                assertions: self.assertions,
             },
             injected,
         );

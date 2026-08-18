@@ -42,24 +42,14 @@ pub struct State {
 
     pub imports_by_symbol: HashMap<SymbolId, ImportInfo>,
 
-    pub hidden_writes: HashMap<SymbolId, usize>,
-
     pub error: Option<String>,
 }
 
-pub fn binding_is_rebound(
-    scoping: &Scoping,
-    hidden_writes: &HashMap<SymbolId, usize>,
-    symbol_id: SymbolId,
-) -> bool {
-    if !scoping.symbol_redeclarations(symbol_id).is_empty() {
-        return true;
-    }
-    let writes = scoping
-        .get_resolved_references(symbol_id)
-        .filter(|reference| reference.is_write())
-        .count();
-    writes > hidden_writes.get(&symbol_id).copied().unwrap_or(0)
+pub fn binding_is_rebound(scoping: &Scoping, symbol_id: SymbolId) -> bool {
+    !scoping.symbol_redeclarations(symbol_id).is_empty()
+        || scoping
+            .get_resolved_references(symbol_id)
+            .any(|reference| reference.is_write())
 }
 
 impl State {
@@ -84,7 +74,6 @@ impl State {
             source_text,
             emitted_files: Vec::new(),
             imports_by_symbol: HashMap::new(),
-            hidden_writes: HashMap::new(),
             error: None,
         }
     }

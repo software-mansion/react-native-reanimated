@@ -13,7 +13,6 @@ use oxc_syntax::scope::ScopeId;
 use crate::closure::{closure_for_function, scope_is_inside, InjectedRef};
 use crate::naming::worklet_hash;
 use crate::naming::{make_worklet_name, WorkletNames};
-use crate::type_assertions::TypeAssertions;
 use crate::types::State;
 use crate::utils::{closure_binding_pattern, const_decl, is_release, rewrite_implicit_return};
 use crate::worklet_string_code::build_worklet_body_string;
@@ -50,7 +49,6 @@ pub struct FactoryContext<'a, 'b> {
     pub builder: AstBuilder<'a>,
     pub allocator: &'a Allocator,
     pub filename: &'b str,
-    pub assertions: &'b TypeAssertions,
 }
 
 pub fn make_worklet_factory<'a>(
@@ -64,14 +62,13 @@ pub fn make_worklet_factory<'a>(
         builder,
         allocator,
         filename,
-        assertions,
     } = ctx;
     let names = {
         let n = state.next_worklet_number();
         make_worklet_name(input.self_name, filename, n)
     };
 
-    let closure = closure_for_function(&input, scoping, state, force_capture, filename, assertions);
+    let closure = closure_for_function(&input, scoping, state, force_capture, filename);
 
     let recursive_name = input.self_name.and_then(|name| {
         if body_references_name(input.body, name, scoping, input.function_scope_id) {
@@ -110,7 +107,6 @@ pub fn make_worklet_factory<'a>(
                 &state.forwardable_relative_paths,
                 state.opts.worklets_package_dir.as_deref(),
                 builder,
-                assertions,
             );
         }
     }

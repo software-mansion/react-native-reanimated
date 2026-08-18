@@ -13,13 +13,14 @@ use oxc_syntax::symbol::SymbolId;
 mod autoworkletization;
 mod bundle_mode;
 mod closure;
+mod gesture_handler_autoworkletization;
 mod imports;
 mod jsx_dev_attributes;
+mod layout_animation_autoworkletization;
 mod naming;
 mod options;
 mod plugin;
 mod referenced_worklets;
-mod type_assertions;
 mod types;
 mod utils;
 mod worklet_factory;
@@ -54,18 +55,18 @@ pub struct WorkletSourceTokens {
 
 #[napi]
 pub fn worklet_source_tokens() -> WorkletSourceTokens {
-    let hooks = referenced_worklets::FUNCTION_HOOKS
+    let hooks = autoworkletization::FUNCTION_HOOKS
         .iter()
         .map(|(name, _)| (*name).to_string())
         .chain(
-            autoworkletization::GESTURE_HANDLER_OBJECT_HOOKS
+            gesture_handler_autoworkletization::GESTURE_HANDLER_OBJECT_HOOKS
                 .iter()
                 .map(|name| (*name).to_string()),
         )
         .collect();
-    let methods = autoworkletization::LAYOUT_ANIMATION_CALLBACKS
+    let methods = layout_animation_autoworkletization::LAYOUT_ANIMATION_CALLBACKS
         .iter()
-        .chain(autoworkletization::GESTURE_HANDLER_BUILDER_METHODS.iter())
+        .chain(gesture_handler_autoworkletization::GESTURE_HANDLER_BUILDER_METHODS.iter())
         .map(|name| (*name).to_string())
         .collect();
     WorkletSourceTokens { hooks, methods }
@@ -145,14 +146,14 @@ fn run(
 
     let mut program = parsed.program;
 
-    let type_asserted = type_assertions::TypeAssertions::collect(&program);
-
     if source_type.is_typescript() {
         strip_typescript(&mut program, &allocator, filename)?;
     }
 
     let mut state = State::new(options, source_text.to_string());
     let builder = oxc_ast::AstBuilder::new(&allocator);
+
+    let flag_enabled = bundle_mode::enable_flag(&mut program, builder, filename);
 
     let semantic_ret = SemanticBuilder::new()
         .with_check_syntax_error(false)
@@ -168,14 +169,11 @@ fn run(
         builder,
         &allocator,
         filename,
-        &type_asserted,
     );
 
     if let Some(message) = state.error.take() {
         return Err(message);
     }
-
-    let flag_enabled = bundle_mode::enable_flag(&mut program, builder, filename, &type_asserted);
 
     let printed = Codegen::new()
         .with_options(CodegenOptions {

@@ -2,7 +2,10 @@ use std::env;
 use std::path::{Component, Path, PathBuf};
 
 use oxc_allocator::TakeIn;
-use oxc_ast::ast::{Expression, FunctionBody, Statement, VariableDeclarationKind};
+use oxc_ast::ast::{
+    AssignmentTarget, CallExpression, Expression, FunctionBody, IdentifierReference,
+    ObjectExpression, Statement, VariableDeclarationKind,
+};
 use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
 use oxc_span::SPAN;
@@ -230,4 +233,50 @@ pub fn pathdiff(from: &Path, to: &Path) -> Option<PathBuf> {
 
 pub fn to_posix(s: &str) -> String {
     s.replace('\\', "/")
+}
+
+pub fn identifier_name<'a>(expr: &Expression<'a>) -> Option<&'a str> {
+    match expr {
+        Expression::Identifier(id) => Some(id.name.as_str()),
+        _ => None,
+    }
+}
+
+pub fn call_expression<'e, 'a>(expr: &'e Expression<'a>) -> Option<&'e CallExpression<'a>> {
+    match expr {
+        Expression::CallExpression(call) => Some(call),
+        _ => None,
+    }
+}
+
+pub fn object_expression<'e, 'a>(expr: &'e Expression<'a>) -> Option<&'e ObjectExpression<'a>> {
+    match expr {
+        Expression::ObjectExpression(object) => Some(object),
+        _ => None,
+    }
+}
+
+pub fn member_property<'e, 'a>(expr: &'e Expression<'a>) -> Option<(&'e Expression<'a>, &'a str)> {
+    match expr {
+        Expression::StaticMemberExpression(member) => {
+            Some((&member.object, member.property.name.as_str()))
+        }
+        Expression::ComputedMemberExpression(member) => {
+            identifier_name(&member.expression).map(|name| (&member.object, name))
+        }
+        _ => None,
+    }
+}
+
+pub fn member_object<'e, 'a>(expr: &'e Expression<'a>) -> Option<&'e Expression<'a>> {
+    expr.as_member_expression().map(|member| member.object())
+}
+
+pub fn assignment_identifier<'e, 'a>(
+    target: &'e AssignmentTarget<'a>,
+) -> Option<&'e IdentifierReference<'a>> {
+    match target {
+        AssignmentTarget::AssignmentTargetIdentifier(id) => Some(id),
+        _ => None,
+    }
 }
