@@ -133,6 +133,7 @@
 
 - [DynamicColorIOS](https://docs.swmansion.com/react-native-reanimated/docs/utilities/DynamicColorIOS)
 - [clamp](https://docs.swmansion.com/react-native-reanimated/docs/utilities/clamp)
+- [contrastColor](https://docs.swmansion.com/react-native-reanimated/docs/utilities/contrastColor)
 - [getRelativeCoords](https://docs.swmansion.com/react-native-reanimated/docs/utilities/getRelativeCoords)
 - [interpolate](https://docs.swmansion.com/react-native-reanimated/docs/utilities/interpolate)
 - [interpolateColor](https://docs.swmansion.com/react-native-reanimated/docs/utilities/interpolateColor)
