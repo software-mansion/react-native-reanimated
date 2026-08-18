@@ -22,7 +22,7 @@
     "react-native": "0.87.0",
     "react-native-reanimated": "workspace:*",
     "react-native-web": "0.21.2",
-    "react-native-worklets": "workspace:*",
+    "react-native-worklets": "0.12.1",
     "webpack": "5.105.4"
   },
   "devDependencies": {

@@ -42,7 +42,7 @@
     "react-native-reanimated": "workspace:*",
     "react-native-safe-area-context": "5.8.1",
     "react-native-svg": "15.15.5",
-    "react-native-worklets": "workspace:*",
+    "react-native-worklets": "0.12.1",
     "react-strict-dom": "0.0.55"
   },
   "devDependencies": {
