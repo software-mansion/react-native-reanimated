@@ -12,7 +12,3 @@ export const PRESS_PSEUDO_SELECTORS: readonly NativePseudoSelectorKey[] = [
   ':active',
   ':active-deepest',
 ];
-
-// UIKit skips views below this alpha when hit-testing, so a fully transparent one never receives
-// the touch its press selector is written for. Android and the web deliver it either way.
-export const IOS_MIN_HIT_TESTABLE_OPACITY = 0.01;

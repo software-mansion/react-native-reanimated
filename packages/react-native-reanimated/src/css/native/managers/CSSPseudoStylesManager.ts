@@ -1,12 +1,8 @@
 'use strict';
 import type { NativePropsBuilder, UnknownRecord } from '../../../common';
-import { IS_IOS, logger } from '../../../common';
+import { logger } from '../../../common';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
-import {
-  IOS_MIN_HIT_TESTABLE_OPACITY,
-  NATIVE_PSEUDO_SELECTORS,
-  PRESS_PSEUDO_SELECTORS,
-} from '../../constants';
+import { NATIVE_PSEUDO_SELECTORS } from '../../constants';
 import type {
   CSSTransitionProperties,
   ICSSPseudoStylesManager,
@@ -21,6 +17,7 @@ import type {
   CSSTransitionConfig,
   NormalizedCSSTransitionConfig,
 } from '../types';
+import { validatePseudoStyles } from './validatePseudoStyles';
 
 export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   private readonly viewTag: number;
@@ -30,7 +27,7 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   private prevPseudoStylesBySelector: PseudoStylesBySelector | null = null;
   private prevTransitionProperties: CSSTransitionProperties | null = null;
   private isRegistered = false;
-  private hasWarnedAboutTransparentPress = false;
+  private hasValidated = false;
 
   constructor(
     shadowNodeWrapper: ShadowNodeWrapper,
@@ -84,10 +81,10 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
         Object.assign(mergedDefaultStyle, defaultStyle);
       }
     }
-    this.warnIfPressedWhileFullyTransparent(
-      pseudoStylesBySelector,
-      mergedDefaultStyle
-    );
+    if (__DEV__ && !this.hasValidated) {
+      this.hasValidated = true;
+      validatePseudoStyles(pseudoStylesBySelector, mergedDefaultStyle);
+    }
 
     const builtDefaultStyle = this.propsBuilder.build(mergedDefaultStyle, {
       includeUnprocessed: true,
@@ -123,33 +120,6 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
       });
       this.isRegistered = true;
     }
-  }
-
-  // iOS refuses to deliver touches to a fully transparent view, so its press selector would never
-  // run while the same style works on Android and the web. Nothing here can fix that without
-  // rewriting the opacity the user asked for, so point at the one-character workaround instead.
-  private warnIfPressedWhileFullyTransparent(
-    pseudoStylesBySelector: PseudoStylesBySelector,
-    defaultStyle: UnknownRecord
-  ) {
-    if (!__DEV__ || !IS_IOS || this.hasWarnedAboutTransparentPress) {
-      return;
-    }
-    const opacity = defaultStyle.opacity;
-    if (
-      typeof opacity !== 'number' ||
-      opacity >= IOS_MIN_HIT_TESTABLE_OPACITY ||
-      !PRESS_PSEUDO_SELECTORS.some(
-        (selector) => selector in pseudoStylesBySelector
-      )
-    ) {
-      return;
-    }
-    this.hasWarnedAboutTransparentPress = true;
-    logger.warn(
-      `A view with "opacity: ${opacity}" won't receive presses on iOS, so its press selector will never activate. ` +
-        `Use "opacity: ${IOS_MIN_HIT_TESTABLE_OPACITY}" instead - it is indistinguishable on screen and stays touchable.`
-    );
   }
 
   unmountCleanup(): void {
