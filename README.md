@@ -33,7 +33,7 @@ This repository contains two main packages:
 
 ## Installation
 
-Check out the detailed installation [instructions for Reanimated](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#installation) and [instructions for Worklets](https://docs.swmansion.com/react-native-worklets/docs/) their dedicated documentation pages.
+Check out the detailed installation [instructions for Reanimated](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#installation) and [instructions for Worklets](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/getting-started/#installation) on their dedicated documentation pages.
 
 ## Compatibility
 

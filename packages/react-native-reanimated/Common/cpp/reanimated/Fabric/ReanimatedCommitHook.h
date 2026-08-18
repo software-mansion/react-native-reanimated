@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/Fabric/ReanimatedSurfaceTracker.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 
@@ -11,12 +12,13 @@ using namespace facebook::react;
 
 namespace reanimated {
 
-class ReanimatedCommitHook : public UIManagerCommitHook, public std::enable_shared_from_this<ReanimatedCommitHook> {
+class ReanimatedCommitHook : public UIManagerCommitHook {
  public:
   ReanimatedCommitHook(
       const std::shared_ptr<UIManager> &uiManager,
       const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-      const std::shared_ptr<LayoutAnimationsProxyCommon> &layoutAnimationsProxy);
+      const std::shared_ptr<LayoutAnimationsProxyCommon> &layoutAnimationsProxy,
+      const std::shared_ptr<ReanimatedSurfaceTracker> &surfaceTracker);
 
   ~ReanimatedCommitHook() noexcept override;
 
@@ -24,7 +26,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook, public std::enable_shar
 
   void commitHookWasUnregistered(UIManager const &) noexcept override {}
 
-  void maybeInitializeLayoutAnimations(SurfaceId surfaceId);
+  void maybeInitializeLayoutAnimations(const ShadowTree &shadowTree);
 
   RootShadowNode::Unshared shadowTreeWillCommit(
       ShadowTree const &shadowTree,
@@ -36,10 +38,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook, public std::enable_shar
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   std::shared_ptr<LayoutAnimationsProxyCommon> layoutAnimationsProxy_;
-
-  SurfaceId currentMaxSurfaceId_ = -1;
-
-  std::mutex mutex_; // Protects `currentMaxSurfaceId_`.
+  std::shared_ptr<ReanimatedSurfaceTracker> surfaceTracker_;
 };
 
 } // namespace reanimated

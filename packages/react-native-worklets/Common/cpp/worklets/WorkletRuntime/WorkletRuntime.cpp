@@ -45,10 +45,10 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
         runtime_(std::move(runtime)) {}
 };
 
-static std::shared_ptr<jsi::Runtime> makeRuntime(
-    const std::shared_ptr<std::recursive_mutex> &runtimeMutex,
-    bool enableLocking) {
-  auto hermesRuntime = facebook::hermes::makeHermesRuntime();
+static std::shared_ptr<jsi::Runtime>
+makeRuntime(const std::shared_ptr<std::recursive_mutex> &runtimeMutex, bool enableLocking, bool enableMicrotaskQueue) {
+  auto config = ::hermes::vm::RuntimeConfig::Builder().withMicrotaskQueue(enableMicrotaskQueue).build();
+  auto hermesRuntime = facebook::hermes::makeHermesRuntime(config);
   std::shared_ptr<jsi::Runtime> jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
   if (!enableLocking) {
     return jsiRuntime;
@@ -66,7 +66,8 @@ WorkletRuntime::WorkletRuntime(
     : runtimeId_(runtimeId),
       enableLocking_(enableLocking),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
-      runtime_(makeRuntime(runtimeMutex_, enableLocking_)),
+      microtaskQueueEnabled_(enableEventLoop || runtimeKind == RuntimeData::RuntimeKind::UI),
+      runtime_(makeRuntime(runtimeMutex_, enableLocking_, microtaskQueueEnabled_)),
       runtimeKind_(runtimeKind),
       name_(name),
       queue_(queue) {
@@ -77,7 +78,7 @@ WorkletRuntime::WorkletRuntime(
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
   if (enableEventLoop) {
-    eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_);
+    eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_, runtimeMutex_);
     eventLoop_->run();
   }
 }
@@ -147,13 +148,14 @@ void WorkletRuntime::legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpac
 
 void WorkletRuntime::schedule(jsi::Function &&function) const {
   scheduleImpl([function = std::make_shared<jsi::Function>(std::move(function))](const WorkletRuntime &workletRuntime) {
-    workletRuntime.runSyncImpl(*function);
+    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>(*function);
   });
 }
 
 void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) const {
-  scheduleImpl(
-      [worklet = std::move(worklet)](const WorkletRuntime &workletRuntime) { workletRuntime.runSyncImpl(worklet); });
+  scheduleImpl([worklet = std::move(worklet)](const WorkletRuntime &workletRuntime) {
+    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>(worklet);
+  });
 }
 
 void WorkletRuntime::schedule(std::vector<std::shared_ptr<SerializableWorklet>> worklets) const {
@@ -173,7 +175,7 @@ void WorkletRuntime::scheduleWithStack(
     std::optional<std::string> scheduleStack) const {
   scheduleImpl([worklet = std::move(worklet),
                 scheduleStack = std::move(scheduleStack)](const WorkletRuntime &workletRuntime) {
-    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Skip, jsi::Value, ScheduleStack::Requested>(worklet, scheduleStack);
+    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run, jsi::Value, ScheduleStack::Requested>(worklet, scheduleStack);
   });
 }
 
@@ -195,7 +197,9 @@ void WorkletRuntime::scheduleWithStack(
 #endif // NDEBUG
 
 void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
-  scheduleImpl([job = std::move(job)](const WorkletRuntime &workletRuntime) { workletRuntime.runSyncImpl(job); });
+  scheduleImpl([job = std::move(job)](const WorkletRuntime &workletRuntime) {
+    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>(job);
+  });
 }
 
 void WorkletRuntime::scheduleImpl(ScheduledJob job) const {

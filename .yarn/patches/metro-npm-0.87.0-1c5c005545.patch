@@ -1,8 +1,8 @@
 diff --git a/src/node-haste/DependencyGraph.js b/src/node-haste/DependencyGraph.js
-index 8222d8c69059bfb3fe444acba9f96ab2cc7bec0b..e36770d2932e08c467c28f1796092a88e10fbc9f 100644
+index 8222d8c69059bfb3fe444acba9f96ab2cc7bec0b..c4816d0c1ea52bd5965b6038ff1a159dd789cfd8 100644
 --- a/src/node-haste/DependencyGraph.js
 +++ b/src/node-haste/DependencyGraph.js
-@@ -32,6 +32,11 @@ function getOrCreateMap(map, field) {
+@@ -32,6 +32,12 @@ function getOrCreateMap(map, field) {
    }
    return subMap;
  }
@@ -11,10 +11,11 @@ index 8222d8c69059bfb3fe444acba9f96ab2cc7bec0b..e36770d2932e08c467c28f1796092a88
 +  "react-native-worklets",
 +  ".worklets",
 +);
++
  class DependencyGraph extends _events.default {
    #packageCache;
    #dependencyPlugin;
-@@ -197,6 +202,14 @@ class DependencyGraph extends _events.default {
+@@ -197,6 +203,14 @@ class DependencyGraph extends _events.default {
      return (0, _nullthrows.default)(this._fileSystem).getAllFiles();
    }
    async getOrComputeSha1(mixedPath) {

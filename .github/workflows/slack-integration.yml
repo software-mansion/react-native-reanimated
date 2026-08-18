@@ -156,6 +156,8 @@ jobs:
     permissions:
       contents: read
       actions: read
+      issues: read
+      pull-requests: read
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
@@ -176,14 +178,14 @@ jobs:
           pattern: bundle-cost-*
         continue-on-error: true
 
-      - name: Report failing badges, RN nightly tests and bundle cost
+      - name: Report failing badges, RN nightly tests, bundle cost and daily digest
         env:
           BUNDLE_COST_DIR: /tmp/bundle-cost-results
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           EXPECTED_MATRIX: ${{ needs.read-bundle-cost-matrix.outputs.matrix }}
           MEASURE_RESULT: ${{ needs.measure-bundle-cost.result }}
-        run: node --experimental-strip-types .github/workflows/helper/nightly-fail-notification.ts
+        run: node --experimental-strip-types .github/workflows/helper/daily-report-notification.ts
 
   issue-opened-report:
     if: github.repository == 'software-mansion/react-native-reanimated' && github.event_name == 'issues'

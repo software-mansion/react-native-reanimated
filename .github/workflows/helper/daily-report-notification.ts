@@ -7,12 +7,14 @@ import { postToSlack } from './slack.ts';
 
 async function main(): Promise<void> {
   const badges = await getActionsBadgesFromReadme();
-  const [failingBadges, nightly] = await Promise.all([
+  const [failingBadges, nightly, digest] = await Promise.all([
     getFailingBadges(badges),
     getRNNightlyFailures(),
+    getDailyDigest(),
   ]);
   const text = [
     formatSlackMessage(failingBadges, nightly),
+    formatDigestSection(digest),
     buildBundleCostSection(),
   ].join('\n\n');
 
@@ -245,6 +247,100 @@ async function getRNNightlyFailures(): Promise<NightlyStatus> {
   return { kind: 'ok', failures };
 }
 
+const DIGEST_REPO = 'software-mansion/react-native-reanimated';
+const DIGEST_WINDOW_HOURS = 24;
+const DIGEST_LIST_LIMIT = 100;
+
+async function getDailyDigest(): Promise<DigestStatus> {
+  const since = new Date(Date.now() - DIGEST_WINDOW_HOURS * 60 * 60 * 1000)
+    .toISOString()
+    .replace(/\.\d{3}Z$/, 'Z');
+
+  const [
+    mergedPullRequests,
+    newIssues,
+    closedIssues,
+    openPullRequests,
+    openIssues,
+  ] = await Promise.all([
+    searchDigestItems(
+      `repo:${DIGEST_REPO} type:pr is:merged merged:>=${since}`
+    ),
+    searchDigestItems(
+      `repo:${DIGEST_REPO} type:issue is:open created:>=${since}`
+    ),
+    searchDigestItems(
+      `repo:${DIGEST_REPO} type:issue is:closed closed:>=${since}`
+    ),
+    countMatches(`repo:${DIGEST_REPO} type:pr is:open`),
+    countMatches(`repo:${DIGEST_REPO} type:issue is:open`),
+  ]);
+
+  if (
+    !mergedPullRequests ||
+    !newIssues ||
+    !closedIssues ||
+    openPullRequests === null ||
+    openIssues === null
+  ) {
+    return { kind: 'unknown' };
+  }
+
+  return {
+    kind: 'ok',
+    digest: {
+      mergedPullRequests,
+      newIssues,
+      closedIssues: annotateOpenedInWindow(closedIssues, since),
+      openPullRequests,
+      openIssues,
+    },
+  };
+}
+
+async function searchDigestItems(
+  query: string
+): Promise<DigestCategory | null> {
+  const response = await githubApi<IssueSearchResponse>(
+    `/search/issues?q=${encodeURIComponent(query)}&per_page=${DIGEST_LIST_LIMIT}`
+  );
+  if (!response) {
+    return null;
+  }
+
+  return {
+    total: response.total_count,
+    items: response.items.map((item) => ({
+      number: item.number,
+      title: item.title,
+      url: item.html_url,
+      createdAt: item.created_at,
+    })),
+  };
+}
+
+async function countMatches(query: string): Promise<number | null> {
+  const response = await githubApi<IssueSearchResponse>(
+    `/search/issues?q=${encodeURIComponent(query)}&per_page=1`
+  );
+  return response ? response.total_count : null;
+}
+
+function annotateOpenedInWindow(
+  category: DigestCategory,
+  since: string
+): DigestCategory {
+  const cutoff = new Date(since).getTime();
+  return {
+    total: category.total,
+    items: category.items.map((item) =>
+      new Date(item.createdAt).getTime() >= cutoff
+        ? { ...item, note: 'opened same day' }
+        : item
+    ),
+  };
+}
+
 const NIGHTLY_TESTS_WEBSITE_URL =
   'https://react-native-community.github.io/nightly-tests/';
 
@@ -310,8 +406,60 @@ function formatFailingBadge(badge: BadgeResult): string[] {
   return lines;
 }
 
+function formatDigestSection(status: DigestStatus): string {
+  if (status.kind === 'unknown') {
+    return [
+      '*Daily digest (last 24h)*',
+      '⚠️ Could not fetch repository activity from the GitHub API.',
+    ].join('\n');
+  }
+
+  const {
+    mergedPullRequests,
+    newIssues,
+    closedIssues,
+    openPullRequests,
+    openIssues,
+  } = status.digest;
+  return [
+    '*Daily digest (last 24h)*',
+    formatDigestCategory('🔀 Merged pull requests', mergedPullRequests),
+    formatDigestCategory('🆕 New issues', newIssues),
+    formatDigestCategory('☑️ Closed issues', closedIssues),
+    `📂 Currently open: ${openPullRequests} pull requests · ${openIssues} issues`,
+  ].join('\n\n');
+}
+
+function formatDigestCategory(
+  heading: string,
+  category: DigestCategory
+): string {
+  const lines = [`${heading}: ${category.total}`];
+
+  for (const item of category.items) {
+    const note = item.note ? ` — ${item.note}` : '';
+    lines.push(
+      `• <${item.url}|#${item.number}> ${escapeSlackText(item.title)}${note}`
+    );
+  }
+
+  const hidden = category.total - category.items.length;
+  if (hidden > 0) {
+    lines.push(`• …and ${hidden} more`);
+  }
+
+  return lines.join('\n');
+}
+
+function escapeSlackText(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 main().catch((err: unknown) => {
-  console.error('Error posting GitHub Actions badge status to Slack:', err);
+  console.error('Error posting daily report to Slack:', err);
   process.exitCode = 1;
 });
 
@@ -378,3 +526,38 @@ type NightlyFailure = {
 type NightlyStatus =
   | { kind: 'ok'; failures: NightlyFailure[] }
   | { kind: 'unknown' };
+
+type DigestItem = {
+  number: number;
+  title: string;
+  url: string;
+  createdAt: string;
+  note?: string;
+};
+
+type DigestCategory = {
+  total: number;
+  items: DigestItem[];
+};
+
+type DailyDigest = {
+  mergedPullRequests: DigestCategory;
+  newIssues: DigestCategory;
+  closedIssues: DigestCategory;
+  openPullRequests: number;
+  openIssues: number;
+};
+
+type DigestStatus = { kind: 'ok'; digest: DailyDigest } | { kind: 'unknown' };
+
+type IssueSearchItem = {
+  number: number;
+  title: string;
+  html_url: string;
+  created_at: string;
+};
+
+type IssueSearchResponse = {
+  total_count: number;
+  items: IssueSearchItem[];
+};

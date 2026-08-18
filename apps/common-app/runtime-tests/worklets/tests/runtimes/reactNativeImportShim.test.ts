@@ -4,12 +4,12 @@ import { runOnUISync, runOnRuntimeSync } from 'react-native-worklets';
 import {
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   test,
 } from '../../../ReJest/RuntimeTestsApi';
 
 describe("importing 'react-native' on Worklet Runtimes", () => {
-  const workerRuntime = getWorkletRuntimeFromPool('test');
+  const [workerRuntime] = getWorkletRuntimesFromPool(1);
 
   const testFn = globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? test : test.skip;
 

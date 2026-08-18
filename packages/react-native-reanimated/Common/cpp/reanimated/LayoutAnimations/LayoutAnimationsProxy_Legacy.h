@@ -3,8 +3,8 @@
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/scheduler/Scheduler.h>
-#include <react/renderer/uimanager/UIManagerAnimationDelegate.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
+#include <react/renderer/uimanager/UIManagerCommitHook.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
@@ -13,6 +13,7 @@
 
 #include <memory>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -97,12 +98,17 @@ static inline void mergeAndSwap(
   std::swap(A, merged);
 }
 
+// Created by startSurface before the proxy can pull for that surface.
+// Entries are never erased, so stray pulls after teardown always find state.
 struct SurfaceContext {
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
+#ifdef ANDROID
+  mutable bool cleanupPullScheduled = false;
+#endif
 };
 
 struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
-                                      public UIManagerAnimationDelegate,
+                                      public UIManagerCommitHook,
                                       public std::enable_shared_from_this<LayoutAnimationsProxy_Legacy> {
   mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag_;
   mutable std::recursive_mutex mutex;
@@ -110,17 +116,24 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
   mutable std::unordered_map<SurfaceId, SurfaceContext> surfaceContext_;
   mutable std::unordered_map<Tag, int> leastRemoved;
   mutable std::unordered_set<SurfaceId> surfacesToRemove_;
+  bool shouldFlushDeadNodes(bool surfaceDropped) const;
+#ifdef ANDROID
+  mutable std::thread::id uiThreadId_;
+
+  void maybeScheduleCleanupPull(SurfaceContext &surfaceCtx, SurfaceId surfaceId, bool flushedDeadNodes) const;
+  void scheduleDeferredCleanupPull(SurfaceId surfaceId) const;
+#endif
 
   LayoutAnimationsProxy_Legacy(
       const std::shared_ptr<LayoutAnimationsManager> &layoutAnimationsManager,
       const SharedComponentDescriptorRegistry &componentDescriptorRegistry,
       const std::shared_ptr<const ContextContainer> &contextContainer,
       jsi::Runtime &uiRuntime,
-      const std::shared_ptr<UIScheduler> &uiScheduler
+      const std::shared_ptr<UIScheduler> &uiScheduler,
+      const std::shared_ptr<UIManager> &uiManager
 #ifdef ANDROID
       ,
       const PreserveMountedTagsFunction &filterUnmountedTagsFunction,
-      const std::shared_ptr<UIManager> &uiManager,
       const std::shared_ptr<CallInvoker> &jsInvoker
 #endif
       )
@@ -129,23 +142,29 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
             componentDescriptorRegistry,
             contextContainer,
             uiRuntime,
-            uiScheduler
+            uiScheduler,
+            uiManager
 #ifdef ANDROID
             ,
             filterUnmountedTagsFunction,
-            uiManager,
             jsInvoker
 #endif
         ) {
+    uiManager->registerCommitHook(*this);
+  }
+
+  ~LayoutAnimationsProxy_Legacy() override {
+    uiManager_->unregisterCommitHook(*this);
   }
 
   void startEnteringAnimation(const int tag, ShadowViewMutation &mutation) const;
   void startExitingAnimation(const int tag, ShadowViewMutation &mutation) const;
   void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation) const;
 
-  void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) override;
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
+  void startSurface(const SurfaceId surfaceId) override;
+  SurfaceContext &getSurfaceContext(SurfaceId surfaceId) const;
   void maybeCancelAnimation(const int tag) const;
 
   void reconcileContradictedRemovals(
@@ -160,7 +179,8 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
       ShadowViewMutationList &filteredMutations,
       std::vector<std::shared_ptr<MutationNode>> &roots,
       std::unordered_set<std::shared_ptr<MutationNode>> &deadNodes,
-      bool shouldAnimate) const;
+      bool surfaceDropped,
+      bool flushDeadNodes) const;
 
   void handleUpdatesAndEnterings(
       ShadowViewMutationList &filteredMutations,
@@ -169,6 +189,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
       const PropsParserContext &propsParserContext,
       SurfaceId surfaceId) const;
   void addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList &mutations) const;
+  void dropUpdatesForDeletedViews(ShadowViewMutationList &filteredMutations) const;
   void updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation) const;
   std::shared_ptr<ShadowView> cloneViewWithoutOpacity(
       facebook::react::ShadowViewMutation &mutation,
@@ -206,19 +227,15 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
       const TransactionTelemetry &telemetry,
       ShadowViewMutationList mutations) const override;
 
-  // UIManagerAnimationDelegate
+  // UIManagerCommitHook
 
-  void uiManagerDidConfigureNextLayoutAnimation(
-      jsi::Runtime &runtime,
-      const RawValue &config,
-      const jsi::Value &successCallbackValue,
-      const jsi::Value &failureCallbackValue) const override;
+  void commitHookWasRegistered(const UIManager &) noexcept override {}
+  void commitHookWasUnregistered(const UIManager &) noexcept override {}
 
-  void setComponentDescriptorRegistry(const SharedComponentDescriptorRegistry &componentDescriptorRegistry) override;
-
-  bool shouldAnimateFrame() const override;
-
-  void stopSurface(SurfaceId surfaceId) override;
+  RootShadowNode::Unshared shadowTreeWillCommit(
+      const ShadowTree &shadowTree,
+      const RootShadowNode::Shared &oldRootShadowNode,
+      const RootShadowNode::Unshared &newRootShadowNode) noexcept override;
 };
 
 } // namespace reanimated

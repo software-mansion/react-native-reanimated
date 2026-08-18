@@ -24,6 +24,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private propsWithTransitions = new Set<string>();
   // Indicates whether a CSS transition is currently attached to the view
   private hasTransition = false;
+  private appliedEventMask = 0;
 
   constructor(shadowNodeWrapper: ShadowNodeWrapper, viewTag: number) {
     this.viewTag = viewTag;
@@ -36,14 +37,19 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
    */
   update(
     transitionProperties: CSSTransitionProperties | null,
-    nextProps: UnknownRecord = {}
+    nextStyle?: UnknownRecord,
+    eventMask = 0
   ): boolean {
     const transitionConfig =
       transitionProperties &&
       normalizeCSSTransitionProperties(transitionProperties);
 
+    const nextProps = nextStyle ?? {};
     const prevProps = this.prevProps;
-    this.prevProps = nextProps;
+    // Only a real style snapshot can serve as a baseline. Keeping the empty
+    // stand-in the caller passes when it builds none would make a later attach
+    // diff every property against undefined, animating it from its default.
+    this.prevProps = nextStyle ?? null;
 
     // If there were no previous props, the view is just mounted so we
     // don't trigger any transitions yet. Also, when there is no transition
@@ -64,8 +70,13 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     );
 
     if (Object.keys(config).length) {
-      runCSSTransition(this.shadowNodeWrapper, config);
+      this.appliedEventMask = eventMask;
+      runCSSTransition(this.shadowNodeWrapper, config, eventMask);
       this.hasTransition = true;
+    } else if (this.hasTransition && eventMask !== this.appliedEventMask) {
+      // Only the mask changed, but the native side still has to learn about it.
+      this.appliedEventMask = eventMask;
+      runCSSTransition(this.shadowNodeWrapper, {}, eventMask);
     }
 
     return false;
@@ -79,6 +90,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     unregisterCSSTransition(this.viewTag);
     this.propsWithTransitions.clear();
     this.hasTransition = false;
+    this.appliedEventMask = 0;
   }
 
   private processTransitionConfig(

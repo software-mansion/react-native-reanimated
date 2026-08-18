@@ -267,6 +267,9 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         } else if (layoutAnimationsManager_->hasLayoutAnimation(tag, ENTERING)) {
           entering_.push_back(node);
           filteredMutations.push_back(mutation);
+          auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
+          filteredMutations.push_back(
+              ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, hiddenView, mutation.parentTag));
         } else if (sharedTransitionManager_->tagToName_.contains(tag) && isInsideInactiveBoundary(node)) {
           filteredMutations.push_back(mutation);
           auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
@@ -353,6 +356,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
   if (--layoutAnimation.count > 0) {
     return {};
   }
+  layoutAnimation.isExitingWhenSettled = shouldRemove;
   maybeSettledAnimationTags_.insert(tag);
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
@@ -417,10 +421,6 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
       filteredMutations.push_back(
           ShadowViewMutation::InsertMutation(parent->current.tag, current, static_cast<int>(parent->children.size())));
       parent->children.push_back(node);
-      if (node->state == UNDEFINED) {
-        node->state = WAITING;
-        lightNodes_[node->current.tag] = node;
-      }
     } else {
       maybeCancelAnimation(node->current.tag);
       filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
@@ -478,7 +478,8 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceI
 
     const auto layoutAnimationIt = layoutAnimations_.find(tag);
 
-    if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isSettled()) {
+    if (layoutAnimationIt == layoutAnimations_.end() ||
+        (layoutAnimationIt->second.isSettled() && layoutAnimationIt->second.isExitingWhenSettled)) {
       continue;
     }
 
@@ -611,6 +612,10 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
     startExitingAnimation(node);
   } else {
     layoutAnimationsManager_->clearLayoutAnimationConfig(node->current.tag);
+    if (hasAnimatedChildren) {
+      node->state = WAITING;
+      lightNodes_[node->current.tag] = node;
+    }
   }
 
   return wantAnimateExit;
@@ -635,6 +640,9 @@ void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) con
   }
   if (layoutAnimationIt->second.isSettled()) {
     // Already settled - cleanupAnimations will erase it together with its updateMap entry.
+    // Mark it as exiting so addOngoingAnimations doesn't flush a pending Update
+    // after the caller has queued this view for removal.
+    layoutAnimationIt->second.isExitingWhenSettled = true;
     return;
   }
   layoutAnimations_.erase(layoutAnimationIt);
@@ -647,23 +655,6 @@ void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) con
     auto &uiRuntime = strongThis->uiRuntime_;
     strongThis->layoutAnimationsManager_->cancelLayoutAnimation(uiRuntime, tag);
   });
-}
-
-void LayoutAnimationsProxy_Experimental::transferConfigFromNativeID(const std::string &nativeIdString, const int tag)
-    const {
-  if (nativeIdString.empty() || nativeIdString.length() > 9) {
-    return;
-  }
-  auto nativeId = 0;
-  for (int i = 0; i < nativeIdString.length(); i++) {
-    if (nativeIdString[i] < '0' || nativeIdString[i] > '9') {
-      return;
-    }
-    nativeId *= 10;
-    nativeId += nativeIdString[i] - '0';
-  }
-
-  layoutAnimationsManager_->transferConfigFromNativeID(nativeId, tag);
 }
 
 // When entering animations start, we temporarily set opacity to 0
