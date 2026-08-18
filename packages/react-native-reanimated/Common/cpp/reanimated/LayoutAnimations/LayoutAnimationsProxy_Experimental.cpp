@@ -175,6 +175,27 @@ bool LayoutAnimationsProxy_Experimental::shouldOverridePullTransaction() const {
 
 // MARK: Light Tree
 
+namespace {
+void logRemoveMutationIndexMismatch(
+    const std::shared_ptr<LightNode> &parent,
+    const ShadowViewMutation &mutation,
+    const int actualIndex) {
+  std::string childTags;
+  for (std::size_t i = 0; i < parent->children.size(); i++) {
+    if (i > 0) {
+      childTags += ", ";
+    }
+    childTags += std::to_string(parent->children[i]->current.tag);
+    if (parent->children[i]->state != ExitingState::UNDEFINED) {
+      childTags += "(exiting)";
+    }
+  }
+  SYSLOG(WARNING) << "Remove mutation index mismatch: expected tag " << mutation.oldChildShadowView.tag
+                  << " at actualIndex " << actualIndex << " under parent tag " << mutation.parentTag
+                  << " (rnIndex=" << mutation.index << "); children=[" << childTags << "]";
+}
+} // namespace
+
 void LayoutAnimationsProxy_Experimental::updateLightTree(
     const PropsParserContext &propsParserContext,
     const ShadowViewMutationList &mutations,
@@ -249,12 +270,8 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         break;
       }
       case ShadowViewMutation::Delete: {
-        const auto deletedTag = mutation.oldChildShadowView.tag;
-        const auto it = lightNodes_.find(deletedTag);
+        const auto it = lightNodes_.find(mutation.oldChildShadowView.tag);
         react_native_assert(it != lightNodes_.end() && "Delete mutation for unknown tag");
-        if (it == lightNodes_.end()) {
-          break;
-        }
         if (it->second->state != ExitingState::TRIAGE) {
           lightNodes_.erase(it);
         }
@@ -300,19 +317,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
             parent->children[actualIndex]->current.tag == mutation.oldChildShadowView.tag;
 
         if (!isRemoveIndexValid) {
-          std::string childTags;
-          for (std::size_t i = 0; i < parent->children.size(); i++) {
-            if (i > 0) {
-              childTags += ", ";
-            }
-            childTags += std::to_string(parent->children[i]->current.tag);
-            if (parent->children[i]->state != ExitingState::UNDEFINED) {
-              childTags += "(exiting)";
-            }
-          }
-          LOG(WARNING) << "Remove mutation index mismatch: expected tag " << mutation.oldChildShadowView.tag
-                       << " at actualIndex " << actualIndex << " under parent tag " << parentTag
-                       << " (rnIndex=" << mutation.index << "); children=[" << childTags << "]";
+          logRemoveMutationIndexMismatch(parent, mutation, actualIndex);
         }
         react_native_assert(isRemoveIndexValid && "Indicies are wrong in Remove mutation");
 
