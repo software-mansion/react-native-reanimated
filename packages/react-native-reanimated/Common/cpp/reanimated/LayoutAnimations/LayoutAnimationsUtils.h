@@ -5,6 +5,7 @@
 #include <react/renderer/mounting/ShadowView.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
+#include <algorithm>
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
@@ -91,10 +92,26 @@ struct LightNode {
   ExitingState state = ExitingState::UNDEFINED;
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
+  // count of children with state != UNDEFINED, maintained by setState and removeChild
+  int exitingChildrenCount = 0;
+
+  void setState(ExitingState newState) {
+    // states never return to UNDEFINED, so only the first transition increments; removeChild decrements
+    const bool startsExiting = state == ExitingState::UNDEFINED && newState != ExitingState::UNDEFINED;
+    state = newState;
+    if (startsExiting) {
+      if (const auto parentNode = parent.lock()) {
+        parentNode->exitingChildrenCount++;
+      }
+    }
+  }
 
   int removeChild(const std::shared_ptr<LightNode> &child) {
     for (int i = static_cast<int>(children.size()) - 1; i >= 0; i--) {
       if (children[i]->current.tag == child->current.tag) {
+        if (children[i]->state != ExitingState::UNDEFINED) {
+          exitingChildrenCount--;
+        }
         children.erase(children.begin() + i);
         return i;
       }
@@ -113,11 +130,25 @@ struct LightNode {
 
   int countExitingChildrenAffectingIndex(int index) const {
     react_native_assert(index >= 0 && "index must be non-negative");
+    react_native_assert(
+        exitingChildrenCount ==
+            std::count_if(
+                children.begin(),
+                children.end(),
+                [](const auto &child) { return child->state != ExitingState::UNDEFINED; }) &&
+        "exitingChildrenCount is out of sync");
+    if (exitingChildrenCount == 0) {
+      return 0;
+    }
     int remainingNonExitingChildrenToCheck = index;
     int exitingCount = 0;
     for (std::size_t i = 0; i < children.size(); i++) {
       if (children[i]->state != ExitingState::UNDEFINED) {
         exitingCount++;
+        if (exitingCount == exitingChildrenCount) {
+          // no exiting children remain past this point
+          return exitingCount;
+        }
         continue;
       }
       if (remainingNonExitingChildrenToCheck == 0) {
