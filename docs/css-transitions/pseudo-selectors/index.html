@@ -21,7 +21,7 @@
 
 <script>!function(){try{var e=location.pathname;if(["/react-native-reanimated/docs","/react-native-reanimated/cheatsheet","/react-native-reanimated/examples","/react-native-reanimated/privacy-policy","/react-native-reanimated/search"].some(function(t){return e===t||0===e.indexOf(t+"/")}))return;var t=localStorage.getItem("swm.topbarbanner.v1.react-native-reanimated-topbar-1.ea15c4216158c4097b65fe6504a4b3b7");if(!t)return;var a=JSON.parse(t);if(!a||"number"!=typeof a.height||a.height<5)return;if(Date.now()-a.timestamp>=2592e6)return;var r=document.documentElement;r.style.setProperty("--banner-height-react-native-reanimated-topbar-1-ea15c4216158c4097b65fe6504a4b3b7",a.height+"px"),"string"==typeof a.bgColor&&r.style.setProperty("--banner-bg-react-native-reanimated-topbar-1-ea15c4216158c4097b65fe6504a4b3b7",a.bgColor)}catch(e){}}()</script>
 <script src="/react-native-reanimated/js/snack-helpers.js" async></script><link rel="stylesheet" href="/react-native-reanimated/assets/css/styles.bd64899a.css">
-<script src="/react-native-reanimated/assets/js/runtime~main.ce6e46f7.js" defer="defer"></script>
+<script src="/react-native-reanimated/assets/js/runtime~main.df799e44.js" defer="defer"></script>
 <script src="/react-native-reanimated/assets/js/main.144fb914.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -108,6 +108,9 @@
 </li>
 <li>
 <p>While a selector matches, its properties win. A re-render or a regular transition can&#x27;t override a value that a pseudo selector is currently applying.</p>
+</li>
+<li>
+<p>iOS won&#x27;t deliver input to a view at or below 1% opacity, so <code>opacity: { default: 0, &#x27;:active&#x27;: 1 }</code> never activates there, while the same style works on Android and the web. Write <code>opacity: { default: 0.02, &#x27;:active&#x27;: 1 }</code> instead - indistinguishable on screen, and still reachable. Touch <code>:hover</code> is the exception and keeps working.</p>
 </li>
 <li>
 <p>Pseudo selectors are a feature of CSS styles. They don&#x27;t work in <a href="/react-native-reanimated/docs/core/useAnimatedStyle"><code>useAnimatedStyle</code></a>, where the animation is driven by <a href="/react-native-reanimated/docs/fundamentals/glossary#shared-value">shared values</a> instead.</p>
