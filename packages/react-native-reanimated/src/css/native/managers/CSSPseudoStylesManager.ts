@@ -27,7 +27,6 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   private prevPseudoStylesBySelector: PseudoStylesBySelector | null = null;
   private prevTransitionProperties: CSSTransitionProperties | null = null;
   private isRegistered = false;
-  private hasValidated = false;
 
   constructor(
     shadowNodeWrapper: ShadowNodeWrapper,
@@ -81,8 +80,7 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
         Object.assign(mergedDefaultStyle, defaultStyle);
       }
     }
-    if (__DEV__ && !this.hasValidated) {
-      this.hasValidated = true;
+    if (__DEV__) {
       validatePseudoStyles(pseudoStylesBySelector, mergedDefaultStyle);
     }
 
