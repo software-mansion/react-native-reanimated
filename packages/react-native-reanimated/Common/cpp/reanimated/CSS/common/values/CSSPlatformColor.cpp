@@ -30,20 +30,26 @@ std::string CSSPlatformColor::toString() const {
   return payload ? folly::toJson(*payload) : "";
 }
 
-bool CSSPlatformColor::canInterpolateTo(const CSSPlatformColor & /*to*/) const {
-  // TODO: a platform color carries no channels to blend, since the payload is
-  // only resolved once React Native applies it to a view. Two of them switch
-  // over at the fallback threshold today; they should blend like any other
-  // color once a resolved value is reachable from here.
-  return false;
+std::optional<CSSColor> CSSPlatformColor::resolve(const ValueInterpolationContext &context) const {
+  if (!payload) {
+    return std::nullopt;
+  }
+
+  const auto channels = resolvePlatformColor(*payload, context.node);
+  if (!channels) {
+    return std::nullopt;
+  }
+  // A transparent-typed result keeps the counterpart's hue when fading, the
+  // same way a literal 'transparent' endpoint does.
+  return (*channels)[3] == 0 ? CSSColor(CSSColorType::Transparent) : CSSColor(*channels);
 }
 
 CSSPlatformColor CSSPlatformColor::interpolate(
     const double progress,
     const CSSPlatformColor &to,
     const ValueInterpolationContext &context) const {
-  // Unreachable while canInterpolateTo() is false, and deliberately the same
-  // switch the variant would have applied, so behaviour holds either way.
+  // Reached only when resolve() failed for both endpoints - with no channels to
+  // blend, the value switches over like any other incompatible pair.
   return progress < context.fallbackInterpolateThreshold ? *this : to;
 }
 

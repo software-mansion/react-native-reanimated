@@ -82,7 +82,11 @@ export default config(
       'lines-around-comment': ['error'],
       'new-cap': [
         'error',
-        { capIsNewExceptionPattern: '^Gesture\\.', newIsCap: true },
+        {
+          capIsNewExceptionPattern: '^Gesture\\.',
+          capIsNewExceptions: ['PlatformColor'],
+          newIsCap: true,
+        },
       ],
       'new-parens': ['off'],
       'no-async-promise-executor': ['error'],

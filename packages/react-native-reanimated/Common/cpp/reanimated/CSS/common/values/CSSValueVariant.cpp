@@ -101,6 +101,41 @@ CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::interpolate(
     const double progress,
     const CSSValueVariant &to,
     const InterpolationContextFor<AllowedTypes...> &context) const {
+  if constexpr ((ResolvesToAlternative<AllowedTypes, ContextType, AllowedTypes...> || ...)) {
+    const auto resolvedFrom = resolved(context);
+    const auto resolvedTo = to.resolved(context);
+    // Blend only when both sides ended up on the same alternative. When just one
+    // of them resolved, switching the originals over keeps the unresolved
+    // payload intact for RN to resolve against the view.
+    if (resolvedFrom.storage_.index() != resolvedTo.storage_.index()) {
+      return fallbackInterpolate(progress, to, context.fallbackInterpolateThreshold);
+    }
+    return resolvedFrom.interpolateResolved(progress, resolvedTo, context);
+  } else {
+    return interpolateResolved(progress, to, context);
+  }
+}
+
+template <CSSValueDerived... AllowedTypes>
+CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::resolved(const ContextType &context) const {
+  return std::visit(
+      [&](const auto &value) -> CSSValueVariant {
+        using TCSSValue = std::remove_cvref_t<decltype(value)>;
+        if constexpr (ResolvesToAlternative<TCSSValue, ContextType, AllowedTypes...>) {
+          if (auto resolvedValue = value.resolve(context)) {
+            return CSSValueVariant(std::variant<AllowedTypes...>(std::move(*resolvedValue)));
+          }
+        }
+        return *this;
+      },
+      storage_);
+}
+
+template <CSSValueDerived... AllowedTypes>
+CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::interpolateResolved(
+    const double progress,
+    const CSSValueVariant &to,
+    const ContextType &context) const {
   if (storage_.index() != to.storage_.index()) {
     return fallbackInterpolate(progress, to, context.fallbackInterpolateThreshold);
   }
