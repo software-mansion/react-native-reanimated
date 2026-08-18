@@ -4,7 +4,7 @@ use oxc_ast::ast::{
 };
 use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
-use oxc_span::SPAN;
+use oxc_span::{GetSpan, SPAN};
 
 use crate::context_object::{append_marker, is_implicit_context_object};
 use crate::type_assertions::TypeAssertions;
@@ -226,8 +226,27 @@ fn is_common_js_export(stmt: &Statement<'_>, assertions: &TypeAssertions) -> boo
     let Expression::AssignmentExpression(assign) = &es.expression else {
         return false;
     };
-    assertions
-        .assignment_member_object(&assign.left)
-        .and_then(|object| assertions.identifier(object))
-        == Some("exports")
+    let Some(member) = assign.left.as_member_expression() else {
+        return false;
+    };
+    if assertions.hides_span(assign.left.span()) {
+        return false;
+    }
+    is_common_js_export_target(member.object(), member.static_property_name(), assertions)
+}
+
+fn is_common_js_export_target(
+    object: &Expression<'_>,
+    property: Option<&str>,
+    assertions: &TypeAssertions,
+) -> bool {
+    if let Some(name) = assertions.identifier(object) {
+        return name == "exports" || (name == "module" && property == Some("exports"));
+    }
+    match assertions.member_property(object) {
+        Some((inner_object, inner_property)) => {
+            is_common_js_export_target(inner_object, Some(inner_property), assertions)
+        }
+        None => false,
+    }
 }

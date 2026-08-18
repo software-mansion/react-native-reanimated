@@ -848,6 +848,9 @@ var require_classMethod = __commonJS({
       if (!path.node.body.directives.some((d) => d.value.value === "worklet")) {
         return;
       }
+      if (path.node.kind !== "method" || (0, types_12.isPrivateName)(path.node.key)) {
+        return;
+      }
       const key = path.node.key;
       const functionId = !path.node.computed && (0, types_12.isIdentifier)(key) ? (0, types_12.cloneNode)(key, true) : null;
       path.replaceWith((0, types_12.classProperty)((0, types_12.cloneNode)(key, true), (0, types_12.functionExpression)(functionId, path.node.params.filter((p) => (0, types_12.isFunctionParameter)(p)).map((p) => (0, types_12.cloneNode)(p, true)), (0, types_12.cloneNode)(path.node.body, true), path.node.generator, path.node.async), null, null, path.node.computed, path.node.static));
@@ -1008,7 +1011,14 @@ var require_file = __commonJS({
       }
     }
     function isCommonJSExport(statement) {
-      return (0, types_12.isExpressionStatement)(statement) && (0, types_12.isAssignmentExpression)(statement.expression) && (0, types_12.isMemberExpression)(statement.expression.left) && (0, types_12.isIdentifier)(statement.expression.left.object) && statement.expression.left.object.name === "exports";
+      return (0, types_12.isExpressionStatement)(statement) && (0, types_12.isAssignmentExpression)(statement.expression) && (0, types_12.isMemberExpression)(statement.expression.left) && isCommonJSExportTarget(statement.expression.left);
+    }
+    function isCommonJSExportTarget(target) {
+      const object = target.object;
+      if ((0, types_12.isIdentifier)(object)) {
+        return object.name === "exports" || object.name === "module" && (0, types_12.isIdentifier)(target.property, { name: "exports" });
+      }
+      return (0, types_12.isMemberExpression)(object) && isCommonJSExportTarget(object);
     }
   }
 });

@@ -92,16 +92,6 @@ impl TypeAssertions {
         }
     }
 
-    pub fn assignment_member_object<'e, 'a>(
-        &self,
-        target: &'e AssignmentTarget<'a>,
-    ) -> Option<&'e Expression<'a>> {
-        if self.hides_span(target.span()) {
-            return None;
-        }
-        target.as_member_expression().map(|member| member.object())
-    }
-
     pub fn is_named_data_property(&self, prop: &ObjectPropertyKind<'_>, name: &str) -> bool {
         let ObjectPropertyKind::ObjectProperty(prop) = prop else {
             return false;

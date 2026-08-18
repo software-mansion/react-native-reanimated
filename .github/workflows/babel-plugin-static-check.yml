@@ -128,6 +128,8 @@ jobs:
         if: matrix.plugin != 'oxc'
         shell: bash
         working-directory: ${{ env.EXAMPLE_DIR }}
+        env:
+          WORKLETS_PLUGIN: babel
         run:
           yarn react-native bundle --reset-cache --entry-file='App.tsx' --bundle-output='${{ matrix.bundle_output }}'
           --dev=true --platform=android

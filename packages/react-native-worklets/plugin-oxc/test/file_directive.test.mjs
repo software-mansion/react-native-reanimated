@@ -51,17 +51,19 @@ test('file-level directive: export default function is workletized', () => {
   assert.equal(files.length, 1);
 });
 
-test('file-level directive: module.exports is NOT dehoisted (matches TS)', () => {
-  const input = `
-    'worklet';
-    module.exports = foo;
-    function foo(x) { return x; }
-  `;
-  const { code } = transform(input, 'test.js', {});
-  const fooIdx = code.search(/const foo = require\(/);
-  const exportIdx = code.indexOf('module.exports');
-  assert.ok(
-    exportIdx >= 0 && fooIdx > exportIdx,
-    `module.exports should appear before the require-factory binding. Got:\n${code}`
-  );
+test('file-level directive: module.exports is dehoisted below the factory binding', () => {
+  for (const assignment of ['module.exports = foo;', 'module.exports.foo = foo;']) {
+    const input = `
+      'worklet';
+      ${assignment}
+      function foo(x) { return x; }
+    `;
+    const { code } = transform(input, 'test.js', {});
+    const fooIdx = code.search(/const foo = require\(/);
+    const exportIdx = code.indexOf('module.exports');
+    assert.ok(
+      fooIdx >= 0 && exportIdx > fooIdx,
+      `${assignment} should follow the require-factory binding. Got:\n${code}`
+    );
+  }
 });
