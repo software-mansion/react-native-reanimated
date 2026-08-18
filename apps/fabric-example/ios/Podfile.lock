@@ -2441,7 +2441,7 @@ SPEC CHECKSUMS:
   RNCClipboard: f2c861be2669e65f3efa4618c22c95ba1b6dadda
   RNCMaskedView: d4884d6b3b256bd1830a211db3d5f551def82e36
   RNGestureHandler: f09eca0b47053142f7543f5c71d183f215ba5d81
-  RNReanimated: eafd4d6a9bb890ca2b498d42942d9c83c2f6f30e
+  RNReanimated: 35517ebb4bfbc278c5384a92cedc61a8f6a1c685
   RNScreens: a2103f13fa603c405092daf70ca4eb3a6291fd6d
   RNSVG: 6c9bcbf53822153be6f6c1484f6b0b57c0040d21
   RNWorklets: da0d13711190e9ecee4d78b1f16790502ccb5ba3
