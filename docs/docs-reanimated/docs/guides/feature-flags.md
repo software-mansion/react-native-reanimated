@@ -175,7 +175,7 @@ Routing is decided per property, so a single transition may run partly on the pl
 | `shadowOpacity`   |    ✅     |    ❌     |
 | `shadowRadius`    |    ✅     |    ❌     |
 
-Properties that aren't routed keep running on the animation loop, which supports all of them. Android routes `opacity` for now, support for more properties will be added in the future. The `shadow*` properties aren't rendered on Android by React Native itself.
+Properties that aren't routed keep running on the animation loop, which supports all of them. Android routes `opacity` for now, support for more properties will be added in the future. `shadowOffset`, `shadowOpacity` and `shadowRadius` are iOS-only styles in React Native.
 
 :::note
 On iOS, border properties are routed even when React Native rasterizes the border instead of drawing it with Core Animation. In that case the transition snaps to its final value instead of animating.
