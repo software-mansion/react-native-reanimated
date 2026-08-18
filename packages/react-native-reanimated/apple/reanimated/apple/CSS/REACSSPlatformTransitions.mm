@@ -31,7 +31,6 @@ namespace {
 struct ActiveTransition {
   /// Reversing-adjusted start value: what a later reversal has to target. A reversal
   /// resumes from the live value, so this is not where the animation started.
-  /// Unset after a non-reversing interruption - the live value can't match any target.
   std::optional<PlatformValue> adjustedStart;
   /// Where the animation started, so currentValue can retrace what it plays.
   std::optional<PlatformValue> startValue;

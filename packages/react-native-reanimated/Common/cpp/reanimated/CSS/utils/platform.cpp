@@ -151,7 +151,6 @@ std::optional<PlatformValue>
 lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, const double progress) {
   return std::visit(
       [&to, progress](const auto &fromValue) -> std::optional<PlatformValue> {
-        // Endpoints of different kinds have nothing to interpolate along.
         const auto *toValue = std::get_if<std::decay_t<decltype(fromValue)>>(&to);
         if (toValue == nullptr) {
           return std::nullopt;

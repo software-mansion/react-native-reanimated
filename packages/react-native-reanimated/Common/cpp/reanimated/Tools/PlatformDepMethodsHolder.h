@@ -74,8 +74,7 @@ struct PlatformDepMethodsHolder {
   css::CSSApplyTransitionFunction cssApplyTransition;
   css::CSSRemoveTransitionFunction cssRemoveTransition;
   css::CSSCurrentPlatformValueFunction cssCurrentPlatformValue;
-  // Last so a platform initializer that does not supply it can omit it and rely
-  // on value-init (= null shared_ptr).
+  // Last so a platform that does not supply it can omit it and get value-init.
   std::shared_ptr<css::CSSPlatformAnimationFactory> platformAnimationFactory;
 };
 

@@ -34,7 +34,6 @@ using CSSApplyTransitionFunction = std::function<bool(
 /// Cancels the property's native transition and drops its platform-side state.
 using CSSRemoveTransitionFunction = std::function<void(Tag viewTag, const std::string &propertyName)>;
 /// The value the platform animation currently shows, so a demotion can resume from it.
-/// Unset, or nullopt, when the backend cannot reconstruct it.
 using CSSCurrentPlatformValueFunction =
     std::function<std::optional<PlatformValue>(Tag viewTag, const std::string &propertyName, double timestamp)>;
 
@@ -92,8 +91,8 @@ class CSSPlatformTransitionProxy {
       bool persistent,
       double timestamp) const;
   void remove(Tag viewTag, const std::string &propertyName) const;
-  /// Where a demoted property has to pick up: its diff carries the committed style,
-  /// which the native animation has already painted past. nullopt keeps the diff.
+  /// The diff's from-value is the committed style the animation already painted past;
+  /// nullopt keeps that diff untouched.
   std::optional<double> resumeValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
 
   CSSCanRoutePropertyFunction canRoute_;
