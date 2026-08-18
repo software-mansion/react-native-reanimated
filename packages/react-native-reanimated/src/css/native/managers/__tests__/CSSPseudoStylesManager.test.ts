@@ -38,6 +38,41 @@ describe('CSSPseudoStylesManager', () => {
     );
   });
 
+  describe('fully transparent press warning', () => {
+    test('warns when a press selector is styled on a fully transparent view', () => {
+      pushStyle(manager, {
+        opacity: { default: 0, ':active': 1 },
+      });
+
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining("won't receive presses on iOS")
+      );
+    });
+
+    test('warns only once for the same view', () => {
+      pushStyle(manager, { opacity: { default: 0, ':active': 1 } });
+      pushStyle(manager, { opacity: { default: 0, ':active': 0.5 } });
+
+      expect(console.warn).toHaveBeenCalledTimes(1);
+    });
+
+    test('stays quiet when the resting opacity is hit-testable', () => {
+      pushStyle(manager, {
+        opacity: { default: 0.01, ':active': 1 },
+      });
+
+      expect(console.warn).not.toHaveBeenCalled();
+    });
+
+    test('stays quiet for a transparent view without a press selector', () => {
+      pushStyle(manager, {
+        opacity: { default: 0, ':hover': 1 },
+      });
+
+      expect(console.warn).not.toHaveBeenCalled();
+    });
+  });
+
   describe('register', () => {
     test('registers a pseudo style on first update', () => {
       pushStyle(manager, {
