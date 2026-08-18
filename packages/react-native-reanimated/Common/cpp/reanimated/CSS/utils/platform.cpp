@@ -3,6 +3,7 @@
 #include <reanimated/Tools/FeatureFlags.h>
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <type_traits>
 #include <unordered_map>
@@ -103,6 +104,20 @@ std::optional<PlatformValue> parseValue(const CSSPropertyTraits &traits, const f
   return std::nullopt;
 }
 
+double lerpValue(const double from, const double to, const double progress) {
+  return from + (to - from) * progress;
+}
+
+template <std::size_t N>
+std::array<double, N>
+lerpValue(const std::array<double, N> &from, const std::array<double, N> &to, const double progress) {
+  std::array<double, N> result{};
+  for (std::size_t i = 0; i < N; ++i) {
+    result[i] = lerpValue(from[i], to[i], progress);
+  }
+  return result;
+}
+
 } // namespace
 
 bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &easing) {
@@ -134,26 +149,16 @@ bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &ea
 
 std::optional<PlatformValue>
 lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, const double progress) {
-  const auto lerp = [progress](const double start, const double end) {
-    return start + (end - start) * progress;
-  };
   return std::visit(
-      [&lerp](const auto &fromValue, const auto &toValue) -> std::optional<PlatformValue> {
-        using Kind = std::decay_t<decltype(fromValue)>;
-        if constexpr (!std::is_same_v<Kind, std::decay_t<decltype(toValue)>>) {
+      [&to, progress](const auto &fromValue) -> std::optional<PlatformValue> {
+        // Endpoints of different kinds have nothing to interpolate along.
+        const auto *toValue = std::get_if<std::decay_t<decltype(fromValue)>>(&to);
+        if (toValue == nullptr) {
           return std::nullopt;
-        } else if constexpr (std::is_same_v<Kind, double>) {
-          return lerp(fromValue, toValue);
-        } else {
-          Kind blended{};
-          for (size_t i = 0; i < blended.size(); ++i) {
-            blended[i] = lerp(fromValue[i], toValue[i]);
-          }
-          return blended;
         }
+        return lerpValue(fromValue, *toValue, progress);
       },
-      from,
-      to);
+      from);
 }
 
 std::optional<PlatformValuePair> parsePlatformValues(

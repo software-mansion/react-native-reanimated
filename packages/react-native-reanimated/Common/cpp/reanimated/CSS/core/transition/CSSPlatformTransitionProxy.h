@@ -33,9 +33,8 @@ using CSSApplyTransitionFunction = std::function<bool(
     double timestamp)>;
 /// Cancels the property's native transition and drops its platform-side state.
 using CSSRemoveTransitionFunction = std::function<void(Tag viewTag, const std::string &propertyName)>;
-/// The property's current animated value computed from the platform-side
-/// timeline, so a platform -> loop migration can resume from what is on screen.
-/// Absent (or nullopt) when the backend cannot reconstruct it.
+/// The value the platform animation currently shows, so a demotion can resume from it.
+/// Unset, or nullopt, when the backend cannot reconstruct it.
 using CSSCurrentPlatformValueFunction =
     std::function<std::optional<PlatformValue>(Tag viewTag, const std::string &propertyName, double timestamp)>;
 

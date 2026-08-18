@@ -198,8 +198,6 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
   folly::dynamic filteredUpdates = folly::dynamic::object;
 
   if (!lastUpdates.empty()) {
-    // Keep only loop-routed properties from the last updates and overlay the
-    // new transition starting values.
     for (const auto &prop : transitionProperties) {
       if (lastUpdates.count(prop)) {
         filteredUpdates[prop] = lastUpdates[prop];
@@ -232,9 +230,8 @@ const std::shared_ptr<CSSTransition> &CSSTransitionsRegistry::getOrCreateTransit
 void CSSTransitionsRegistry::recordInitialUpdate(
     const std::shared_ptr<CSSTransition> &transition,
     const folly::dynamic &initialUpdate) {
-  // Run the filter even with no new updates: a run that moved a property off
-  // the loop must evict its retained value, or the commit hook keeps
-  // re-injecting the pre-routing value over later committed styles.
+  // Filter even with no new updates: a run that moved a property off the loop
+  // must evict its retained value, which the commit hook would keep re-injecting.
   updateInUpdatesRegistry(transition, initialUpdate);
   if (!initialUpdate.empty()) {
     updatedTags_.insert(transition->getViewTag());

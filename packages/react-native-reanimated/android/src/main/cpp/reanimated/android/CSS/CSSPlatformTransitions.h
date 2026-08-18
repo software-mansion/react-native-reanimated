@@ -49,9 +49,8 @@ class CSSPlatformTransitions {
 
   void removeTransition(Tag viewTag, const std::string &propertyName);
 
-  /// The value the animator shows at `timestamp`, reconstructed from the stored
-  /// timeline. nullopt when the start value is not known on this side (a
-  /// non-reversing mid-flight interruption resumed from the live view value).
+  /// The value the animator shows at `timestamp`, retraced from the stored timeline.
+  /// nullopt after a non-reversing interruption, which resumed from the live view value.
   std::optional<css::PlatformValue> currentValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
 
  private:

@@ -19,9 +19,8 @@ private object AlphaProperty : FloatProperty<View>("alpha") {
         view: View,
         value: Float,
     ) {
-        // ReactViewGroup owns opacity: it hides the view when backfaceVisibility is hidden and
-        // a rotation turns it away, and re-applies the value it stored on every transform
-        // commit. Writing alpha directly would defeat the first and be reverted by the second.
+        // ReactViewGroup owns opacity: it zeroes alpha when a hidden backface turns away, and
+        // re-applies its stored value on every transform commit. A direct alpha write loses both.
         if (view is ReactViewGroup) {
             view.setOpacityIfPossible(value)
         } else {
