@@ -6,7 +6,6 @@ use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
 use oxc_span::{GetSpan, SPAN};
 
-use crate::context_object::{append_marker, is_implicit_context_object};
 use crate::type_assertions::TypeAssertions;
 use crate::utils::{inject_worklet_directive, is_object_method};
 
@@ -178,10 +177,6 @@ fn inject_into_object_expression<'a>(
     builder: AstBuilder<'a>,
     assertions: &TypeAssertions,
 ) {
-    if is_implicit_context_object(obj) {
-        append_marker(obj, builder, assertions);
-        return;
-    }
     for prop in obj.properties.iter_mut() {
         if let ObjectPropertyKind::ObjectProperty(prop) = prop {
             if is_object_method(prop) {

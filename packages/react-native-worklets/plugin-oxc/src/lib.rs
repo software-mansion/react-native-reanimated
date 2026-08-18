@@ -13,10 +13,7 @@ use oxc_syntax::symbol::SymbolId;
 mod auto_detect;
 mod bundle_mode;
 mod closure;
-mod context_object;
 mod file_directive;
-mod globals;
-mod inline_styles_warning;
 mod jsx_dev_attributes;
 mod naming;
 mod options;
@@ -25,7 +22,6 @@ mod relative_requires;
 mod state;
 mod type_assertions;
 mod utils;
-mod web_optimization;
 mod worklet_body;
 mod worklet_factory;
 mod worklet_pass;
@@ -232,7 +228,6 @@ fn run(
     let builder = oxc_ast::AstBuilder::new(&allocator);
 
     file_directive::process_file_directive(&mut program, builder, &type_asserted);
-    context_object::process_context_objects(&mut program, builder, &allocator, &type_asserted);
 
     let semantic_ret = SemanticBuilder::new()
         .with_check_syntax_error(false)
@@ -253,15 +248,6 @@ fn run(
 
     if let Some(message) = state.error.take() {
         return Err(message);
-    }
-
-    if state.opts.substitute_web_platform_checks.unwrap_or(false) {
-        web_optimization::substitute_web_platform_checks(&mut program, builder, &type_asserted);
-    }
-    if !state.opts.disable_inline_styles_warning.unwrap_or(false)
-        && !utils::is_release(state.opts.env_name.as_deref())
-    {
-        inline_styles_warning::process_inline_styles_warning(&mut program, builder, &type_asserted);
     }
 
     bundle_mode::enable_flag(&mut program, builder, filename, &type_asserted);

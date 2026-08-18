@@ -16,12 +16,6 @@ pub struct PluginOptions {
     pub extra_presets: Option<Vec<String>>,
     pub import_forwarding: Option<ImportForwarding>,
 
-    pub globals: Option<Vec<String>>,
-    pub strict_global: Option<bool>,
-
-    pub substitute_web_platform_checks: Option<bool>,
-    pub disable_inline_styles_warning: Option<bool>,
-
     pub env_name: Option<String>,
 
     pub plugin_version: Option<String>,

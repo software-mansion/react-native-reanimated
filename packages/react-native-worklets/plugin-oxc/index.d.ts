@@ -6,10 +6,6 @@ export interface PluginOptions {
     moduleNames?: string[];
     relativePaths?: string[];
   };
-  globals?: string[];
-  strictGlobal?: boolean;
-  substituteWebPlatformChecks?: boolean;
-  disableInlineStylesWarning?: boolean;
   envName?: string;
   pluginVersion?: string;
   workletsPackageDir?: string;

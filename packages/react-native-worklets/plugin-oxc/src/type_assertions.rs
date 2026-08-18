@@ -1,8 +1,7 @@
 use std::collections::HashSet;
 
 use oxc_ast::ast::{
-    AssignmentTarget, CallExpression, Expression, ObjectExpression, ObjectPropertyKind, Program,
-    PropertyKey, SimpleAssignmentTarget,
+    AssignmentTarget, CallExpression, Expression, ObjectExpression, Program, SimpleAssignmentTarget,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::{GetSpan, Span};
@@ -73,13 +72,6 @@ impl TypeAssertions {
         expr.as_member_expression().map(|member| member.object())
     }
 
-    pub fn property_name<'a>(&self, key: &PropertyKey<'a>) -> Option<&'a str> {
-        match key {
-            PropertyKey::StaticIdentifier(id) => Some(id.name.as_str()),
-            key => key.as_expression().and_then(|expr| self.identifier(expr)),
-        }
-    }
-
     pub fn assignment_identifier<'e, 'a>(
         &self,
         target: &'e AssignmentTarget<'a>,
@@ -90,13 +82,6 @@ impl TypeAssertions {
             }
             _ => None,
         }
-    }
-
-    pub fn is_named_data_property(&self, prop: &ObjectPropertyKind<'_>, name: &str) -> bool {
-        let ObjectPropertyKind::ObjectProperty(prop) = prop else {
-            return false;
-        };
-        !crate::utils::is_object_method(prop) && self.property_name(&prop.key) == Some(name)
     }
 }
 

@@ -77,8 +77,6 @@ const PARSE_ERROR_CODE = 'WORKLETS_ERR_PARSE';
 
 const WORKLET_DIRECTIVE_RE = /(^|[\s;{(])['"]worklet['"]\s*;?/m;
 
-const CONTEXT_OBJECT_MARKER = '__workletContextObject';
-
 const AUTO_WORKLETIZED_HOOKS = [
   'useFrameCallback',
   'useAnimatedStyle',
@@ -141,7 +139,6 @@ const WORKLET_PACKAGE_RE =
 function carriesWorklets(sourceText) {
   return (
     WORKLET_DIRECTIVE_RE.test(sourceText) ||
-    sourceText.includes(CONTEXT_OBJECT_MARKER) ||
     AUTO_WORKLETIZED_HOOKS_RE.test(sourceText) ||
     (AUTO_WORKLETIZED_METHODS_RE.test(sourceText) &&
       WORKLET_PACKAGE_RE.test(sourceText))

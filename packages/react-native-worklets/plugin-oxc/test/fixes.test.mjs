@@ -296,50 +296,6 @@ test('nested worklet behind a non-worklet function propagates its closure', () =
   assert.match(outer.content, /outer\.__closure = \{ C \}/);
 });
 
-test('unbound identifiers are captured unless they are known globals', () => {
-  const input = `function f() { 'worklet'; return globalStuff(Math.max(console.log(1))); }`;
-  const { files } = transform(input, 'test.js', {});
-  assert.match(joinedFiles(files), /f\.__closure = \{ globalStuff \}/);
-});
-
-test('custom globals are not captured', () => {
-  const input = `function f() { 'worklet'; return myHostFn(); }`;
-  const { files } = transform(input, 'test.js', { globals: ['myHostFn'] });
-  assert.match(joinedFiles(files), /f\.__closure = \{\}/);
-});
-
-test('strictGlobal captures nothing unbound', () => {
-  const input = `function f() { 'worklet'; return globalStuff(); }`;
-  const { files } = transform(input, 'test.js', { strictGlobal: true });
-  assert.match(joinedFiles(files), /f\.__closure = \{\}/);
-});
-
-test('an object with an accessor is an implicit context object', () => {
-  const input = `'worklet';\nconst obj = { get foo() { return this.x; } };`;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /__workletContextObjectFactory/);
-});
-
-test('substituteWebPlatformChecks replaces platform checks outside worklets', () => {
-  const input = `const a = isWeb();\nconst b = shouldBeUseWeb();`;
-  const { code } = transform(input, 'test.js', {
-    substituteWebPlatformChecks: true,
-  });
-  assert.match(code, /const a = true/);
-  assert.match(code, /const b = true/);
-});
-
-test('substituteWebPlatformChecks is off by default', () => {
-  const { code } = transform(`const a = isWeb();`, 'test.js', {});
-  assert.match(code, /const a = isWeb\(\)/);
-});
-
-test('inline style shared value reads get a dev warning', () => {
-  const input = `const C = () => <View style={{ width: sv.value }} />;`;
-  const { code } = transform(input, 'test.jsx', {});
-  assert.match(code, /getUseOfValueInStyleWarning/);
-});
-
 test('disableInlineStylesWarning suppresses the warning', () => {
   const input = `const C = () => <View style={{ width: sv.value }} />;`;
   const { code } = transform(input, 'test.jsx', {
@@ -572,18 +528,6 @@ test('the __workletHash guard ignores optional chaining', () => {
   assert.equal(files.length, 1);
 });
 
-test('a nested explicit context object is only processed once', () => {
-  const input = `
-    const obj = {
-      __workletContextObject: true,
-      inner: { __workletContextObject: true, m() { return this.x; } },
-      m() { return this.y; },
-    };
-  `;
-  const { files } = transform(input, 'test.js', {});
-  assert.equal(files.length, 2);
-});
-
 test('to_identifier rejects non-ID_Continue numerics', () => {
   const { files } = transform(
     `export const f = () => { 'worklet'; return 1; };`,
@@ -615,18 +559,6 @@ test('an alias is only followed out of a constant declarator', () => {
   `;
   const { files } = transform(input, 'test.js', {});
   assert.equal(files.length, 0);
-});
-
-test('this in a parameter default makes an implicit context object', () => {
-  const input = `'worklet';\nexport const o = { x: 1, m(a = this.x) { return a; } };`;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /__workletContextObjectFactory/);
-});
-
-test('a computed transform key still gets the inline style warning', () => {
-  const input = `const transform = 'transform';\nconst E = () => <View style={{ [transform]: [{ scale: sv.value }] }} />;`;
-  const { code } = transform(input, 'test.jsx', {});
-  assert.match(code, /getUseOfValueInStyleWarning/);
 });
 
 test('a rebound object resolves its identifier-valued properties', () => {
@@ -673,19 +605,6 @@ test('a spread in an object hook argument is rejected', () => {
     () => transform(input, 'test.js', {}),
     /'SpreadElement' as to-be workletized argument is not supported for object hooks\./
   );
-});
-
-test('a getter named like the context object marker is not a marker', () => {
-  const input = `const o = { get __workletContextObject() { return true; }, m() { return 1; } };`;
-  const { code, files } = transform(input, 'test.js', {});
-  assert.equal(files.length, 0);
-  assert.doesNotMatch(code, /__workletContextObjectFactory/);
-});
-
-test('a computed identifier marker key still marks a context object', () => {
-  const input = `const __workletContextObject = 'k';\nconst o = { [__workletContextObject]: true, m() { return 1; } };`;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /__workletContextObjectFactory/);
 });
 
 test('a self-recursive worklet does not capture its own name', () => {
@@ -823,21 +742,6 @@ test('a TypeScript assertion hides an entity from the file directive', () => {
   }
 });
 
-test('a TypeScript assertion suppresses the inline style warning', () => {
-  const asserted = transform(
-    `const C = () => <View style={{ width: sv.value as number }} />;`,
-    'test.tsx',
-    {}
-  );
-  assert.doesNotMatch(asserted.code, /getUseOfValueInStyleWarning/);
-  const plain = transform(
-    `const C = () => <View style={{ width: sv.value }} />;`,
-    'test.tsx',
-    {}
-  );
-  assert.match(plain.code, /getUseOfValueInStyleWarning/);
-});
-
 test('a TypeScript assertion suppresses web platform substitution', () => {
   const { code } = transform(`const a = (isWeb as any)();`, 'test.ts', {
     substituteWebPlatformChecks: true,
@@ -868,11 +772,3 @@ test('a TypeScript assertion is respected at every node position', () => {
   }
 });
 
-test('an asserted style array element is skipped, the rest are not', () => {
-  const { code } = transform(
-    `const C = () => <Animated.View style={[{ width: sv.value } as any, { height: sv.value }]} />;`,
-    'test.tsx',
-    {}
-  );
-  assert.equal(code.match(/getUseOfValueInStyleWarning/g).length, 1);
-});

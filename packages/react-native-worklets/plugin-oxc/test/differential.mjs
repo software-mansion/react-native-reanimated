@@ -24,6 +24,8 @@ const PLUGIN_OPTIONS = {
   bundleMode: true,
   disableSourceMaps: true,
   relativeSourceLocation: true,
+  strictGlobal: true,
+  disableInlineStylesWarning: true,
 };
 
 function run(plugin, source, filename, pluginOptions) {

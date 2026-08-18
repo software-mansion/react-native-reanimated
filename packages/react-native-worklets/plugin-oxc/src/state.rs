@@ -1,9 +1,8 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use oxc_semantic::Scoping;
 use oxc_syntax::symbol::SymbolId;
 
-use crate::globals::DEFAULT_GLOBALS;
 use crate::options::PluginOptions;
 
 const DEFAULT_FORWARDABLE_MODULE_NAMES: &[&str] = &[
@@ -36,10 +35,6 @@ pub struct State {
     pub forwardable_module_names: Vec<String>,
 
     pub forwardable_relative_paths: Vec<String>,
-
-    pub strict_global: bool,
-
-    pub globals: HashSet<String>,
 
     pub source_text: String,
 
@@ -81,22 +76,11 @@ impl State {
             .collect();
         forwardable_relative_paths.extend(user_forwarding.relative_paths.unwrap_or_default());
 
-        let strict_global = opts.strict_global.unwrap_or(false);
-        let mut globals: HashSet<String> = HashSet::new();
-        if !strict_global {
-            globals.extend(DEFAULT_GLOBALS.iter().map(|s| (*s).to_string()));
-            if let Some(custom) = &opts.globals {
-                globals.extend(custom.iter().cloned());
-            }
-        }
-
         Self {
             opts,
             worklet_number: 1,
             forwardable_module_names,
             forwardable_relative_paths,
-            strict_global,
-            globals,
             source_text,
             emitted_files: Vec::new(),
             imports_by_symbol: HashMap::new(),

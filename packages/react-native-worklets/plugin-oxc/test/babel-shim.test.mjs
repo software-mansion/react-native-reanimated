@@ -262,12 +262,6 @@ test('the parse-failure net lists every callee the Rust tables auto-workletize',
   assert.ok(expected.length > 30, `parsed too few names: ${expected.length}`);
   const missing = expected.filter((name) => !listed.has(name));
   assert.deepEqual(missing, [], `babel.js is missing: ${missing.join(', ')}`);
-
-  const marker = shim.match(/CONTEXT_OBJECT_MARKER = '([^']+)'/)[1];
-  assert.match(
-    read('context_object.rs'),
-    new RegExp(`CONTEXT_OBJECT_MARKER: &str = "${marker}"`)
-  );
 });
 
 test(

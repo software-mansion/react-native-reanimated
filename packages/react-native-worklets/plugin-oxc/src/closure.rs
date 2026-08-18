@@ -119,8 +119,7 @@ pub fn closure_for_function<'a>(
                 if self_function_name == Some(r.name.as_str()) {
                     continue;
                 }
-                let is_synthesized = is_injected || is_synthesized_init_data(&r.name);
-                if !is_synthesized && (state.strict_global || state.globals.contains(&r.name)) {
+                if !is_injected && !is_synthesized_init_data(&r.name) {
                     continue;
                 }
                 seen.insert(r.name.clone());
