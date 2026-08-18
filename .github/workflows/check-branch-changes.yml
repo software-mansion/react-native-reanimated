@@ -9,6 +9,9 @@ on:
       has_changes:
         value: ${{ jobs.check.outputs.has_changes }}
 
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest

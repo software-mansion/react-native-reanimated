@@ -15,6 +15,16 @@ using namespace facebook::react;
   return concreteComponentDescriptorProvider<REASharedTransitionBoundaryComponentDescriptor>();
 }
 
+- (instancetype)initWithFrame:(CGRect)frame
+{
+  if (self = [super initWithFrame:frame]) {
+    static const auto defaultProps = std::make_shared<const REASharedTransitionBoundaryProps>();
+    _props = defaultProps;
+  }
+
+  return self;
+}
+
 - (void)updateLayoutMetrics:(const facebook::react::LayoutMetrics &)layoutMetrics
            oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics
 {

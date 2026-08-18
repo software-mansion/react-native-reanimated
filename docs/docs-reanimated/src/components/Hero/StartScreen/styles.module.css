@@ -5,6 +5,7 @@
   height: 100vh;
   min-height: 70vw;
   background-color: transparent;
+  overflow-x: clip;
 }
 
 .heading {

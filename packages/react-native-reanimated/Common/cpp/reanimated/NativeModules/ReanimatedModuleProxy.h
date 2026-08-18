@@ -8,6 +8,7 @@
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/transition/CSSTransition.h>
+#include <reanimated/CSS/events/CSSEventsEmitter.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
@@ -141,7 +142,13 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
       const jsi::Value &animationUpdates);
   void unregisterCSSAnimations(const jsi::Value &viewTag);
 
-  void runCSSTransition(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &transitionConfig);
+  void setCSSEventHandler(jsi::Runtime &rt, const jsi::Value &handler);
+
+  void runCSSTransition(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &transitionConfig,
+      const jsi::Value &eventMask);
   void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag);
 
   void registerPseudoStyles(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &config);
@@ -246,6 +253,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   const std::shared_ptr<OperationsLoop> operationsLoop_;
   const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+  const std::shared_ptr<css::CSSEventsEmitter> cssEventsEmitter_;
   const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;

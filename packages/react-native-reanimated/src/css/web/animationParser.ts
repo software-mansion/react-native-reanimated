@@ -11,9 +11,9 @@ import { parseTimingFunction } from './utils';
 
 export function processKeyframeDefinitions<TStyle extends object>(
   definitions: CSSAnimationKeyframes<TStyle>,
-  componentName = ''
+  svgElementTag = ''
 ) {
-  const propsBuilder = getWebSvgPropsBuilder(componentName) ?? webPropsBuilder;
+  const propsBuilder = getWebSvgPropsBuilder(svgElementTag) ?? webPropsBuilder;
 
   // Whole-set fixups (strokeDasharray endpoints, open/closed path Z-padding)
   // before serializing each block.

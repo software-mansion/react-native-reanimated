@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 MONOREPO_ROOT=$(git rev-parse --show-toplevel)
 PATCHES_DIR="$MONOREPO_ROOT/scripts/patches"
 
@@ -13,6 +15,19 @@ for p in "${PATCHES[@]}"; do
   git apply --check "$p" 2>/dev/null || can_apply_all=false
   git apply --reverse --check "$p" 2>/dev/null || can_reverse_all=false
 done
+
+if [[ "${1:-}" == "--off" ]]; then
+  if $can_reverse_all; then
+    for p in "${PATCHES[@]}"; do git apply --reverse "$p"; done
+    YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install
+    echo "[Worklets] Bundle mode has been toggled off."
+    exit 0
+  elif $can_apply_all; then
+    YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install
+    echo "[Worklets] Bundle mode is already disabled and dependencies are installed."
+    exit 0
+  fi
+fi
 
 if $can_apply_all; then
   for p in "${PATCHES[@]}"; do git apply "$p"; done

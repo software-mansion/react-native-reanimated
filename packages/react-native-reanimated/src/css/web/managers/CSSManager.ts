@@ -1,9 +1,10 @@
 'use strict';
+import type { UnknownRecord } from '../../../common';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import type { CSSStyle } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
-import { filterCSSAndStyleProperties } from '../../utils';
+import { filterCSSAndStyleProperties, splitCSSCallbacks } from '../../utils';
 import { configureWebCSS } from '../domUtils';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSPseudoSelectorsManager from './CSSPseudoSelectorsManager';
@@ -18,27 +19,23 @@ export default class CSSManager implements ICSSManager {
     configureWebCSS();
 
     const element = viewInfo.DOMElement as ReanimatedHTMLElement;
+    const svgElementTag = element?.tagName ?? componentDisplayName;
 
-    this.animationsManager = new CSSAnimationsManager(
-      element,
-      componentDisplayName
-    );
+    this.animationsManager = new CSSAnimationsManager(element, svgElementTag);
     this.transitionsManager = new CSSTransitionsManager(element);
     this.pseudoSelectorsManager = new CSSPseudoSelectorsManager(
       element,
-      componentDisplayName
+      svgElementTag
     );
   }
 
-  update(style: CSSStyle): void {
-    const [
-      animationProperties,
-      transitionProperties,
-      pseudoStylesBySelector,
-      transitionCallbacks,
-    ] = filterCSSAndStyleProperties(style);
+  update(style: CSSStyle, props: Readonly<UnknownRecord> = {}): void {
+    const [animationProperties, transitionProperties, pseudoStylesBySelector] =
+      filterCSSAndStyleProperties(style);
 
-    this.animationsManager.update(animationProperties);
+    const [animationCallbacks, transitionCallbacks] = splitCSSCallbacks(props);
+
+    this.animationsManager.update(animationProperties, animationCallbacks);
     this.transitionsManager.update(transitionProperties, transitionCallbacks);
     this.pseudoSelectorsManager.update(pseudoStylesBySelector);
   }

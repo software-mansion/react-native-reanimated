@@ -33,7 +33,7 @@ if (
   function getPolyfill(/** @type {string} */ name) {
     if (__DEV__ && !TurboModulesPolyfill?.has(name)) {
       throw new Error(
-        '[Worklets] Accessing TurboModules is not allowed on Worklet Runtimes.'
+        `[Worklets] Accessing TurboModules is not allowed on Worklet Runtimes. Requested: "${String(name)}".`
       );
     } else {
       return TurboModulesPolyfill?.get(name);

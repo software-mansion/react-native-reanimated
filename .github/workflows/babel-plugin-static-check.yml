@@ -18,6 +18,9 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   babel-plugin-static-check:
     if: github.repository == 'software-mansion/react-native-reanimated'
@@ -72,8 +75,8 @@ jobs:
         run: yarn lint
 
       - name: Unit tests
-        working-directory: ${{ env.WORKLETS_DIR }}
-        run: yarn jest plugin
+        working-directory: ${{ env.PLUGIN_DIR }}
+        run: yarn test
       - name: Check Example App bundling
         shell: bash
         working-directory: ${{ env.EXAMPLE_DIR }}

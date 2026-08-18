@@ -13,7 +13,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn,
   SharedTransition,
@@ -375,8 +375,12 @@ function DetailsScreenContent({
     navigation.goBack();
   };
 
-  const pan = Gesture.Pan()
-    .onChange((event) => {
+  const pan = usePanGesture({
+    onFinalize: () => {
+      translation.x.value = withSpring(0, springOptions);
+      translation.y.value = withSpring(0, springOptions);
+    },
+    onUpdate: (event) => {
       translation.x.value += event.changeX;
       translation.y.value += event.changeY;
 
@@ -391,11 +395,8 @@ function DetailsScreenContent({
           scheduleOnRN(goBack);
         }
       }
-    })
-    .onFinalize(() => {
-      translation.x.value = withSpring(0, springOptions);
-      translation.y.value = withSpring(0, springOptions);
-    });
+    },
+  });
 
   const animatedStyle = useAnimatedStyle(() => {
     return {

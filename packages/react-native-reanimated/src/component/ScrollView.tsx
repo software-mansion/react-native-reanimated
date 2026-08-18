@@ -1,21 +1,27 @@
 'use strict';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ComponentRef } from 'react';
 import React from 'react';
 import { ScrollView } from 'react-native';
 
 import type { SharedValue } from '../commonTypes';
-import { createAnimatedComponent } from '../createAnimatedComponent';
+import {
+  type AnimatedComponentType,
+  createAnimatedComponent,
+} from '../createAnimatedComponent';
 import type { AnimatedRef } from '../hook';
 import { useAnimatedRef, useScrollOffset } from '../hook';
 
 // Since createAnimatedComponent return type is ComponentClass that has the props of the argument,
 // but not things like NativeMethods, etc. we need to add them manually by extending the type.
-interface AnimatedScrollViewComplement extends ScrollView {
-  getNode(): ScrollView;
-}
+type AnimatedScrollViewComplement = ComponentRef<typeof ScrollView> & {
+  getNode(): ComponentRef<typeof ScrollView>;
+};
 
 // is-tree-shakable-suppress
-const AnimatedScrollViewComponent = createAnimatedComponent(ScrollView);
+const AnimatedScrollViewComponent: AnimatedComponentType<
+  Readonly<ComponentProps<typeof ScrollView>>,
+  ComponentRef<typeof ScrollView>
+> = createAnimatedComponent(ScrollView);
 
 export type AnimatedScrollViewProps = ComponentProps<
   typeof AnimatedScrollViewComponent

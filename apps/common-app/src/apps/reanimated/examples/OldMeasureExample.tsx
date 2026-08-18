@@ -3,7 +3,7 @@ import '../types';
 import type { ReactElement, ReactNode } from 'react';
 import React, { useRef } from 'react';
 import { Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, useTapGesture } from 'react-native-gesture-handler';
 import type { AnimatedRef, SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
@@ -198,7 +198,7 @@ function SectionHeader({
     };
   }
 
-  const gesture = Gesture.Tap().onBegin(onActiveImpl);
+  const gesture = useTapGesture({ onBegin: onActiveImpl });
 
   return (
     <View style={styles.sectionHeader}>

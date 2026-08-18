@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -48,15 +48,16 @@ export default function StrictDOMExample() {
     };
   }) as css.StyleXStyles;
 
-  const panGesture = Gesture.Pan()
-    .onUpdate((e) => {
-      x.value = e.translationX;
-      y.value = e.translationY;
-    })
-    .onEnd(() => {
+  const panGesture = usePanGesture({
+    onDeactivate: () => {
       x.value = withSpring(0);
       y.value = withSpring(0);
-    });
+    },
+    onUpdate: (e) => {
+      x.value = e.translationX;
+      y.value = e.translationY;
+    },
+  });
 
   useEffect(() => {
     opacity.value = withRepeat(withTiming(0.3, { duration: 800 }), -1, true);

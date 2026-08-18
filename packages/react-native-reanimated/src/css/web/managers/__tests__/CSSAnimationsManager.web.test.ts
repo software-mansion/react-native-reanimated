@@ -25,6 +25,16 @@ const animation = (
     ...overrides,
   }) as unknown as ExistingCSSAnimationProperties;
 
+const animationEvent = (
+  eventType: string,
+  animationName: string,
+  elapsedTime: number
+): Event =>
+  Object.assign(new Event(eventType, { bubbles: true }), {
+    animationName,
+    elapsedTime,
+  });
+
 describe('CSSAnimationsManager (web)', () => {
   let element: ReanimatedHTMLElement;
   let manager: CSSAnimationsManager;
@@ -83,10 +93,11 @@ describe('CSSAnimationsManager (web)', () => {
 
     test('builds SVG keyframes with the SVG props builder for SVG components', () => {
       // Path wraps `d` in path() - a transform only the SVG builder does - so
-      // this verifies the manager threads its componentName into the keyframe
-      // pipeline for SVG components (not just the generic one).
-      registerWebSvgPropsBuilder('Path', SVG_PATH_WEB_PROPERTIES_CONFIG);
-      const svgManager = new CSSAnimationsManager(element, 'Path');
+      // this verifies the manager threads its svgElementTag into the keyframe
+      // pipeline for SVG components (not just the generic one). The tag is the
+      // rendered element's lowercase DOM tag name (`<path>`).
+      registerWebSvgPropsBuilder('path', SVG_PATH_WEB_PROPERTIES_CONFIG);
+      const svgManager = new CSSAnimationsManager(element, 'path');
 
       svgManager.update({
         animationName: {
@@ -164,6 +175,101 @@ describe('CSSAnimationsManager (web)', () => {
 
       jest.runAllTimers();
       expect(removeCSSAnimation).toHaveBeenCalledWith(attachedName);
+    });
+  });
+
+  describe('animation callbacks', () => {
+    test('attaches a listener when its callback is set and detaches the same one when it is removed', () => {
+      const addSpy = jest.spyOn(element, 'addEventListener');
+      const removeSpy = jest.spyOn(element, 'removeEventListener');
+
+      manager.update(animation(), { onCSSAnimationEnd: jest.fn() });
+      expect(addSpy).toHaveBeenCalledWith('animationend', expect.any(Function));
+
+      // Removing the callback on the next update must detach the exact same
+      // listener (removeEventListener only works with the same reference).
+      manager.update(animation(), {});
+      expect(removeSpy.mock.calls).toEqual(addSpy.mock.calls);
+    });
+
+    test('subscribes to the matching DOM event for each callback prop', () => {
+      const addSpy = jest.spyOn(element, 'addEventListener');
+
+      manager.update(animation(), {
+        onCSSAnimationStart: jest.fn(),
+        onCSSAnimationEnd: jest.fn(),
+        onCSSAnimationIteration: jest.fn(),
+        onCSSAnimationCancel: jest.fn(),
+      });
+
+      for (const eventName of [
+        'animationstart',
+        'animationend',
+        'animationiteration',
+        'animationcancel',
+      ]) {
+        expect(addSpy).toHaveBeenCalledWith(eventName, expect.any(Function));
+      }
+    });
+
+    test('forwards the animationName and elapsedTime when the event fires', () => {
+      const onCSSAnimationEnd = jest.fn();
+      manager.update(animation(), { onCSSAnimationEnd });
+
+      element.dispatchEvent(
+        animationEvent('animationend', 'my-animation', 0.3)
+      );
+
+      expect(onCSSAnimationEnd).toHaveBeenCalledWith({
+        animationName: 'my-animation',
+        elapsedTime: 0.3,
+      });
+    });
+
+    test('ignores events that bubble up from descendant nodes', () => {
+      const child = document.createElement('div');
+      element.appendChild(child);
+      const onCSSAnimationEnd = jest.fn();
+      manager.update(animation(), { onCSSAnimationEnd });
+
+      // The event bubbles from the child to the element's listener.
+      child.dispatchEvent(animationEvent('animationend', 'my-animation', 0.1));
+
+      expect(onCSSAnimationEnd).not.toHaveBeenCalled();
+    });
+
+    test('uses the latest callback without re-subscribing on re-render', () => {
+      const addSpy = jest.spyOn(element, 'addEventListener');
+      const first = jest.fn();
+      const second = jest.fn();
+
+      manager.update(animation(), { onCSSAnimationEnd: first });
+      manager.update(animation(), { onCSSAnimationEnd: second });
+
+      const endSubscriptions = addSpy.mock.calls.filter(
+        ([eventName]) => eventName === 'animationend'
+      );
+      expect(endSubscriptions).toHaveLength(1);
+
+      element.dispatchEvent(
+        animationEvent('animationend', 'my-animation', 0.1)
+      );
+      expect(first).not.toHaveBeenCalled();
+      expect(second).toHaveBeenCalledTimes(1);
+    });
+
+    test('detaches the same listeners it attached on unmount cleanup', () => {
+      const addSpy = jest.spyOn(element, 'addEventListener');
+      const removeSpy = jest.spyOn(element, 'removeEventListener');
+
+      manager.update(animation(), {
+        onCSSAnimationStart: jest.fn(),
+        onCSSAnimationEnd: jest.fn(),
+      });
+      manager.unmountCleanup();
+
+      // Every listener that was attached is detached with the same reference.
+      expect(removeSpy.mock.calls).toEqual(addSpy.mock.calls);
     });
   });
 });

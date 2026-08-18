@@ -78,13 +78,13 @@ function buildRules(
 
 export default class CSSPseudoSelectorsManager {
   private readonly element: ReanimatedHTMLElement;
-  private readonly componentName: string;
+  private readonly svgElementTag: string;
   private viewId: string | null = null;
   private prevPseudoStylesBySelector: PseudoStylesBySelector | null = null;
 
-  constructor(element: ReanimatedHTMLElement, componentName = '') {
+  constructor(element: ReanimatedHTMLElement, svgElementTag = '') {
     this.element = element;
-    this.componentName = componentName;
+    this.svgElementTag = svgElementTag;
   }
 
   update(pseudoStylesBySelector: PseudoStylesBySelector | null): void {
@@ -99,7 +99,7 @@ export default class CSSPseudoSelectorsManager {
     }
 
     const propsBuilder =
-      getWebSvgPropsBuilder(this.componentName) ?? webPropsBuilder;
+      getWebSvgPropsBuilder(this.svgElementTag) ?? webPropsBuilder;
 
     const viewId = this.ensureViewId();
     this.syncActiveMarker(pseudoStylesBySelector);

@@ -41,6 +41,7 @@ export default function Skew() {
               to: [{ skewX: `-${Math.PI / 3}rad` }],
             },
           ],
+          labelTypes: ['iOS', 'web'],
           title: 'X skew',
         },
         {

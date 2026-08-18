@@ -28,7 +28,7 @@ std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
     const InterpolatorFactoriesArray &factories,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
   PropertyPath newPath = propertyPath;
-  newPath.emplace_back(std::to_string(arrayIndex));
+  newPath.emplace_back(arrayIndex);
 
   return factories[arrayIndex % factories.size()]->create(newPath, viewStylesRepository);
 }

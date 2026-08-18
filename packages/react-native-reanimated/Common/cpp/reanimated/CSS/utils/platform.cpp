@@ -1,7 +1,4 @@
 #include <reanimated/CSS/utils/platform.h>
-
-#if __APPLE__
-
 #include <reanimated/CSS/utils/props.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
@@ -23,8 +20,8 @@ struct CSSPropertyTraits {
   PlatformValue defaultValue;
 };
 
-// The natively animatable properties: each one's value kind and CSS default
-// (mirrors InterpolatorRegistry.cpp). Grows as more properties are routed.
+// Value kind and CSS default per property (mirrors InterpolatorRegistry.cpp).
+// Which of them a platform actually routes is canRouteCSSProperty's decision.
 const CSSPropertyTraits *traitsFor(const std::string &propertyName) {
   constexpr std::array<double, 4> kTransparentColor = {0, 0, 0, 0};
   constexpr std::array<double, 4> kBlackColor = {0, 0, 0, 1};
@@ -55,33 +52,11 @@ PlatformValue parseColorNumber(const double number) {
   };
 }
 
-} // namespace
-
-bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &easing) {
-  if constexpr (!StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
-    return false;
-  }
-  if (traitsFor(propertyName) == nullptr) {
-    return false;
-  }
-  // TODO: border props route unconditionally, but snap when RN rasterizes the
-  // border (view fails useCoreAnimationBorderRendering); they should route only
-  // when the platform can render them correctly (follow-up PR).
-  // CAMediaTimingFunction can express only linear and cubic-bezier curves;
-  // steps / linear-stops easings have to interpolate per-frame on the loop.
-  return std::holds_alternative<LinearEasing>(easing) || std::holds_alternative<CubicBezierEasing>(easing);
-}
-
-std::optional<PlatformValue>
-parsePlatformValue(jsi::Runtime &rt, const std::string &propertyName, const jsi::Value &value) {
-  const auto *traits = traitsFor(propertyName);
-  if (traits == nullptr) {
-    return std::nullopt;
-  }
+std::optional<PlatformValue> parseValue(const CSSPropertyTraits &traits, jsi::Runtime &rt, const jsi::Value &value) {
   if (value.isNull() || value.isUndefined()) {
-    return traits->defaultValue;
+    return traits.defaultValue;
   }
-  switch (traits->kind) {
+  switch (traits.kind) {
     case CSSValueKind::Scalar:
       return value.isNumber() ? std::optional<PlatformValue>(value.asNumber()) : std::nullopt;
     case CSSValueKind::Color:
@@ -102,15 +77,11 @@ parsePlatformValue(jsi::Runtime &rt, const std::string &propertyName, const jsi:
   return std::nullopt;
 }
 
-std::optional<PlatformValue> parsePlatformValue(const std::string &propertyName, const folly::dynamic &value) {
-  const auto *traits = traitsFor(propertyName);
-  if (traits == nullptr) {
-    return std::nullopt;
-  }
+std::optional<PlatformValue> parseValue(const CSSPropertyTraits &traits, const folly::dynamic &value) {
   if (value.isNull()) {
-    return traits->defaultValue;
+    return traits.defaultValue;
   }
-  switch (traits->kind) {
+  switch (traits.kind) {
     case CSSValueKind::Scalar:
       return value.isNumber() ? std::optional<PlatformValue>(value.asDouble()) : std::nullopt;
     case CSSValueKind::Color:
@@ -130,26 +101,64 @@ std::optional<PlatformValue> parsePlatformValue(const std::string &propertyName,
   return std::nullopt;
 }
 
-} // namespace reanimated::css
+} // namespace
 
-#else // !__APPLE__
-
-namespace reanimated::css {
-
-// No native routing backend on this platform yet; every property runs on the loop.
-bool canRouteCSSProperty(const std::string &, const EasingConfig &) {
+bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &easing) {
+#if __APPLE__
+  if constexpr (!StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
+    return false;
+  }
+  if (traitsFor(propertyName) == nullptr) {
+    return false;
+  }
+  // TODO: border props route unconditionally, but snap when RN rasterizes the
+  // border (view fails useCoreAnimationBorderRendering); they should route only
+  // when the platform can render them correctly (follow-up PR).
+  // CAMediaTimingFunction can express only linear and cubic-bezier curves;
+  // steps / linear-stops easings have to interpolate per-frame on the loop.
+  return std::holds_alternative<LinearEasing>(easing) || std::holds_alternative<CubicBezierEasing>(easing);
+#elif defined(ANDROID)
+  if constexpr (!StaticFeatureFlags::getFlag("ANDROID_CSS_PLATFORM_TRANSITIONS")) {
+    return false;
+  }
+  // Any TimeInterpolator can carry a curve, so every easing routes and this is unused.
+  (void)easing;
+  return propertyName == "opacity";
+#else
+  // No native routing backend on this platform yet; every property runs on the loop.
   return false;
+#endif // __APPLE__
 }
 
-std::optional<PlatformValue>
-parsePlatformValue(facebook::jsi::Runtime &, const std::string &, const facebook::jsi::Value &) {
-  return std::nullopt;
+std::optional<PlatformValuePair> parsePlatformValues(
+    jsi::Runtime &rt,
+    const std::string &propertyName,
+    const jsi::Value &fromValue,
+    const jsi::Value &toValue) {
+  const auto *traits = traitsFor(propertyName);
+  if (traits == nullptr) {
+    return std::nullopt;
+  }
+  const auto from = parseValue(*traits, rt, fromValue);
+  const auto to = parseValue(*traits, rt, toValue);
+  if (!from || !to) {
+    return std::nullopt;
+  }
+  return PlatformValuePair{*from, *to};
 }
 
-std::optional<PlatformValue> parsePlatformValue(const std::string &, const folly::dynamic &) {
-  return std::nullopt;
+std::optional<PlatformValuePair>
+parsePlatformValues(const std::string &propertyName, const folly::dynamic &fromValue, const folly::dynamic &toValue) {
+  const auto *traits = traitsFor(propertyName);
+  if (traits == nullptr) {
+    return std::nullopt;
+  }
+  const auto from = parseValue(*traits, fromValue);
+  const auto to = parseValue(*traits, toValue);
+  if (!from || !to) {
+    return std::nullopt;
+  }
+  return PlatformValuePair{*from, *to};
 }
 
 } // namespace reanimated::css
-
-#endif // __APPLE__

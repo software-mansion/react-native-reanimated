@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import type { ComponentRef } from 'react';
 import React, { useRef } from 'react';
 import { Button, FlatList, ScrollView } from 'react-native';
 
@@ -6,7 +7,7 @@ import Animated, { useAnimatedRef, useScrollOffset } from '..';
 
 function useScrollOffsetTest() {
   function useScrollOffsetTest1() {
-    const scrollViewRef = useRef<ScrollView>(null);
+    const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
     // @ts-expect-error Funny enough, it works like this in runtime,
     // but we call TS error here for extra safety anyway.
     const offset = useScrollOffset(scrollViewRef);

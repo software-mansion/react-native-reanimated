@@ -24,6 +24,10 @@ double CSSLoopTransition::getMinDelay(double timestamp) const {
   return progressProvider_.getMinDelay(timestamp);
 }
 
+void CSSLoopTransition::setMilestoneReporter(MilestoneReporter reporter) {
+  progressProvider_.setMilestoneReporter(std::move(reporter));
+}
+
 bool CSSLoopTransition::update(const double timestamp, OperationsLoop &loop) {
   progressProvider_.update(timestamp);
   onUpdate_(viewTag_);
@@ -62,10 +66,11 @@ folly::dynamic CSSLoopTransition::run(
 
 void CSSLoopTransition::updateSettings(
     const PropertiesSettingsMap &changedPropertiesSettings,
-    const std::vector<std::string> &removedProperties) {
+    const std::vector<std::string> &removedProperties,
+    const double timestamp) {
 
   // Remove interpolators and progress providers for no longer transitioned props
-  removeProperties(removedProperties);
+  removeProperties(removedProperties, timestamp);
 
   // Update the settings saved in progress provider
   progressProvider_.setPropertySettings(changedPropertiesSettings);
@@ -93,7 +98,7 @@ void CSSLoopTransition::handleChangedProperties(
     const auto allowDiscrete = progressProvider_.getPropertySettings(propertyName).allowDiscrete;
 
     if (!allowDiscrete && isDiscreteProperty(propertyName, componentName_)) {
-      removeProperty(propertyName);
+      removeProperty(propertyName, timestamp);
       continue;
     }
 
@@ -125,7 +130,7 @@ void CSSLoopTransition::handleChangedProperties(
     const auto allowDiscrete = progressProvider_.getPropertySettings(propertyName).allowDiscrete;
 
     if (!allowDiscrete && isDiscreteProperty(propertyName, componentName_)) {
-      removeProperty(propertyName);
+      removeProperty(propertyName, timestamp);
       continue;
     }
 
@@ -143,14 +148,18 @@ void CSSLoopTransition::handleChangedProperties(
   }
 }
 
-void CSSLoopTransition::removeProperties(const std::vector<std::string> &propertyNames) {
-  styleInterpolator_.removeProperties(propertyNames);
-  progressProvider_.removeProperties(propertyNames);
+void CSSLoopTransition::abort(const double timestamp) {
+  progressProvider_.abort(timestamp);
 }
 
-void CSSLoopTransition::removeProperty(const std::string &propertyName) {
+void CSSLoopTransition::removeProperties(const std::vector<std::string> &propertyNames, const double timestamp) {
+  styleInterpolator_.removeProperties(propertyNames);
+  progressProvider_.removeProperties(propertyNames, timestamp);
+}
+
+void CSSLoopTransition::removeProperty(const std::string &propertyName, const double timestamp) {
   styleInterpolator_.removeProperty(propertyName);
-  progressProvider_.removeProperty(propertyName);
+  progressProvider_.removeProperty(propertyName, timestamp);
 }
 
 } // namespace reanimated::css

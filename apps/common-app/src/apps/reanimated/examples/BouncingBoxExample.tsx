@@ -1,9 +1,11 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
-  Gesture,
   GestureDetector,
   GestureHandlerRootView,
+  usePanGesture,
+  useRotationGesture,
+  useSimultaneousGestures,
 } from 'react-native-gesture-handler';
 import Animated, {
   interpolate,
@@ -16,32 +18,34 @@ export default function BouncingBoxExample() {
   const offset = useSharedValue(0);
   const angle = useSharedValue(0);
 
-  const pan = Gesture.Pan()
-    .minDistance(0)
-    .onChange((event) => {
+  const pan = usePanGesture({
+    minDistance: 0,
+    onFinalize: () => {
+      offset.value = withSpring(0, { damping: 20 });
+    },
+    onUpdate: (event) => {
       'worklet';
       offset.value = interpolate(
         event.translationX,
         [-100, -50, 0, 50, 100],
         [-30, -10, 0, 10, 30]
       );
-    })
-    .onFinalize(() => {
-      offset.value = withSpring(0, { damping: 20 });
-    });
+    },
+  });
 
-  const rotation = Gesture.Rotation()
-    .onChange((event) => {
+  const rotation = useRotationGesture({
+    onFinalize: () => {
+      angle.value = withSpring(0, { damping: 20 });
+    },
+    onUpdate: (event) => {
       'worklet';
       angle.value = interpolate(
         event.rotation,
         [-1.2, -1, -0.5, 0, 0.5, 1, 1.2],
         [-0.52, -0.5, -0.3, 0, 0.3, 0.5, 0.52]
       );
-    })
-    .onFinalize(() => {
-      angle.value = withSpring(0, { damping: 20 });
-    });
+    },
+  });
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
@@ -52,7 +56,7 @@ export default function BouncingBoxExample() {
     };
   });
 
-  const gesture = Gesture.Simultaneous(pan, rotation);
+  const gesture = useSimultaneousGestures(pan, rotation);
 
   return (
     <GestureHandlerRootView style={styles.container}>

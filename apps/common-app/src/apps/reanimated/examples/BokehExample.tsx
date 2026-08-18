@@ -49,13 +49,10 @@ function Circle({
     hue.value = withRepeat(withTiming(endHue, config), -1, true);
   }, [duration, startX, startY, startHue, endX, endY, endHue, hue, left, top]);
 
-  const animatedStyle = useAnimatedStyle(
-    () => ({
-      backgroundColor: `hsl(${hue.value},100%,50%)`,
-      transform: [{ translateX: left.value }, { translateY: top.value }],
-    }),
-    []
-  );
+  const animatedStyle = useAnimatedStyle(() => ({
+    backgroundColor: `hsl(${hue.value},100%,50%)`,
+    transform: [{ translateX: left.value }, { translateY: top.value }],
+  }));
 
   return (
     <Animated.View

@@ -164,6 +164,11 @@ code {
   padding: 0.25rem;
 }
 
+strong code,
+b code {
+  font-weight: 700;
+}
+
 .markdown a code {
   text-decoration: underline;
   text-underline-offset: 2px;

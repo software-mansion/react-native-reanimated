@@ -32,12 +32,8 @@ export const PropsRegistryGarbageCollector = {
   },
 
   unregisterView(viewTag: number) {
-    // `delete` returns false when the tag wasn't tracked (the nested-component
-    // case registerView skipped above); bail to keep the count symmetric.
-    if (!this.viewsMap.delete(viewTag)) {
-      return;
-    }
-    if (this.viewsMap.size === 0) {
+    const deleted = this.viewsMap.delete(viewTag);
+    if (deleted && this.viewsMap.size === 0) {
       this.unregisterInterval();
       scheduleOrphanedPropsCleanup();
     }

@@ -42,7 +42,7 @@ function InlineStylesTest() {
   }
 
   function InlineStylesTest4() {
-    const sv = useSharedValue('0');
+    const sv = useSharedValue(false);
     // @ts-expect-error properly detects illegal type
     return <Animated.View style={{ width: sv }} />;
   }
@@ -53,7 +53,7 @@ function InlineStylesTest() {
   }
 
   function InlineStylesTest6() {
-    const sv = useSharedValue({ width: '0' });
+    const sv = useSharedValue({ width: false });
     // @ts-expect-error properly detects illegal type
     return <Animated.View style={sv} />;
   }
@@ -128,7 +128,7 @@ function InlineStylesTest() {
   }
 
   function InlineStylesTest16() {
-    const sv = useSharedValue(0);
+    const sv = useSharedValue('0');
 
     return (
       <>
@@ -172,7 +172,7 @@ function InlineStylesTest() {
   }
 
   function InlineStylesTest18() {
-    const sv = useSharedValue({ width: 0 });
+    const sv = useSharedValue({ width: '0' });
 
     return (
       <>
@@ -246,8 +246,7 @@ function InlineStylesTest() {
   }
 
   function InlineStylesTest25() {
-    // @ts-expect-error Passing a number here will work,
-    // but we don't allow for it as a part of API.
-    return <Animated.View style={{ backgroundColor: 0x000000 }} />;
+    // @ts-expect-error properly detects illegal type
+    return <Animated.View style={{ backgroundColor: true }} />;
   }
 }

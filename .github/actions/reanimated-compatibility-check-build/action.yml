@@ -40,6 +40,7 @@ runs:
         yarn set version berry
         yarn config set nodeLinker node-modules
         yarn config set approvedGitRepositories --json '["https://github.com/software-mansion/react-native-reanimated.git"]'
+        yarn config set npmMinimalAgeGate 0
     - name: Install Reanimated
       working-directory: ${{ inputs.app-name }}
       shell: bash

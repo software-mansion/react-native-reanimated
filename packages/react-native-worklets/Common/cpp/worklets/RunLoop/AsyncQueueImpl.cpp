@@ -9,11 +9,40 @@
 #include <thread>
 #include <utility>
 
+#if __APPLE__
+extern "C" {
+void *objc_autoreleasePoolPush(void);
+void objc_autoreleasePoolPop(void *pool);
+}
+#endif // __APPLE__
+
 namespace worklets {
 
 using namespace facebook;
 
+#if __APPLE__
+namespace {
+
+class ScopedAutoreleasePool {
+ public:
+  ScopedAutoreleasePool() : pool_(objc_autoreleasePoolPush()) {}
+  ~ScopedAutoreleasePool() {
+    objc_autoreleasePoolPop(pool_);
+  }
+  ScopedAutoreleasePool(const ScopedAutoreleasePool &) = delete;
+  ScopedAutoreleasePool &operator=(const ScopedAutoreleasePool &) = delete;
+
+ private:
+  void *const pool_;
+};
+
+} // namespace
+#endif // __APPLE__
+
 void AsyncQueueImpl::runLoop(const std::shared_ptr<AsyncQueueState> &state) {
+#if __APPLE__
+  const ScopedAutoreleasePool threadAutoreleasePool;
+#endif // __APPLE__
   while (state->running) {
     std::unique_lock<std::mutex> lock(state->mutex);
     state->cv.wait(lock, [state] { return !state->queue.empty() || !state->running; });
@@ -26,6 +55,9 @@ void AsyncQueueImpl::runLoop(const std::shared_ptr<AsyncQueueState> &state) {
     auto job = std::move(state->queue.front());
     state->queue.pop();
     lock.unlock();
+#if __APPLE__
+    const ScopedAutoreleasePool autoreleasePool;
+#endif // __APPLE__
     job();
   }
 }

@@ -8,10 +8,10 @@
 
 #include <memory>
 #include <mutex>
+#include <new>
 #include <optional>
 #include <string>
 #include <utility>
-#include <variant>
 #include <vector>
 
 using namespace facebook;
@@ -31,49 +31,29 @@ inline void freeWithoutCallingDestructor(std::unique_ptr<jsi::Value> &value) {
 }
 
 inline void cleanupRuntimeAware(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {
-  if (rt != nullptr && !WorkletRuntimeRegistry::isRuntimeAlive(rt)) {
-    freeWithoutCallingDestructor(value);
+  if (value == nullptr || rt == nullptr) {
+    return;
   }
+  WorkletRuntimeRegistry::runWhileLocked(rt, [&value](bool isAlive) {
+    if (isAlive) {
+      value.reset();
+    } else {
+      freeWithoutCallingDestructor(value);
+    }
+  });
 }
 
-template <typename BaseClass>
-class RetainingSerializable : virtual public BaseClass {
- private:
-  jsi::Runtime *primaryRuntime_;
-  jsi::Runtime *secondaryRuntime_;
-  std::unique_ptr<jsi::Value> secondaryValue_;
-
- public:
-  template <typename... Args>
-  explicit RetainingSerializable(jsi::Runtime &rt, Args &&...args)
-      : BaseClass(rt, std::forward<Args>(args)...), primaryRuntime_(&rt) {}
-
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    if (&rt == primaryRuntime_) {
-      // TODO: it is suboptimal to generate new object every time getJS is
-      // called on host runtime – the objects we are generating already exists
-      // and we should possibly just grab a hold of such object and use it here
-      // instead of creating a new JS representation. As far as I understand the
-      // only case where it can be realistically called this way is when a
-      // shared value is created and then accessed on the same runtime
-      return BaseClass::toJSValue(rt);
-    }
-    if (secondaryValue_ == nullptr) {
-      auto value = BaseClass::toJSValue(rt);
-      secondaryValue_ = std::make_unique<jsi::Value>(rt, value);
-      secondaryRuntime_ = &rt;
-      return value;
-    }
-    if (&rt == secondaryRuntime_) {
-      return jsi::Value(rt, *secondaryValue_);
-    }
-    return BaseClass::toJSValue(rt);
+inline void cleanupRuntimeAware(jsi::Runtime *rt, jsi::Value &value) {
+  if (rt == nullptr || value.isUndefined()) {
+    return;
   }
-
-  ~RetainingSerializable() override {
-    cleanupRuntimeAware(secondaryRuntime_, secondaryValue_);
-  }
-};
+  WorkletRuntimeRegistry::runWhileLocked(rt, [&value](bool isAlive) {
+    if (isAlive) {
+      value.~Value();
+    }
+    new (&value) jsi::Value(jsi::Value::undefined());
+  });
+}
 
 class SerializableJSRef : public jsi::NativeState {
  private:

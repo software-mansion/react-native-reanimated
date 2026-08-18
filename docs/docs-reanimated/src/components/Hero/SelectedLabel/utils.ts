@@ -17,8 +17,42 @@ export type TextScaleStyles = {
   y: number;
 };
 
+export type SelectionBounds = {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+};
+
 const SCALING_OFFSET_X = 1.0;
 const SCALING_OFFSET_Y = 1.22;
+
+export const clampMovementDelta = (
+  movementDelta: { x: number; y: number },
+  draggableIdentifier: DraggableId,
+  selectionBounds: SelectionBounds,
+  viewport: { width: number; height: number }
+): { x: number; y: number } => {
+  const isLeft =
+    draggableIdentifier === DraggableId.BOTTOM_LEFT ||
+    draggableIdentifier === DraggableId.TOP_LEFT;
+  const isTop =
+    draggableIdentifier === DraggableId.TOP_LEFT ||
+    draggableIdentifier === DraggableId.TOP_RIGHT;
+  const isCenter = draggableIdentifier === DraggableId.CENTER;
+
+  let x = movementDelta.x;
+  let y = movementDelta.y;
+
+  if (isCenter || isLeft) x = Math.max(x, -selectionBounds.left);
+  if (isCenter || !isLeft)
+    x = Math.min(x, viewport.width - selectionBounds.right);
+  if (isCenter || isTop) y = Math.max(y, -selectionBounds.top);
+  if (isCenter || !isTop)
+    y = Math.min(y, viewport.height - selectionBounds.bottom);
+
+  return { x, y };
+};
 
 export const computeSelectionStyles = (
   position: { x: number; y: number },

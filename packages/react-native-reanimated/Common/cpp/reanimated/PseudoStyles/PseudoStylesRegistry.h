@@ -66,6 +66,8 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
 
   static std::array<folly::dynamic, (1u << kPseudoSelectorBits)> recomputeAllStyles(const TagEntry &entry);
+  /// Union of properties styled by the currently active selectors.
+  static css::TransitionProperties collectPseudoLockedProperties(const TagEntry &entry);
 
   void onSelectorStateChanged(Tag tag, PseudoSelector selector, bool isActive);
 };

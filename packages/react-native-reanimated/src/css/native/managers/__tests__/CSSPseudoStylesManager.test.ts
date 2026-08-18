@@ -356,7 +356,7 @@ describe('CSSPseudoStylesManager', () => {
       expect(unregisterPseudoStyles).not.toHaveBeenCalled();
     });
 
-    test('detaches and re-registers when selector style changes', () => {
+    test('updates in place without detaching when only selector style changes', () => {
       pushStyle(manager, {
         opacity: { default: 0, ':hover': 1 },
       });
@@ -366,7 +366,7 @@ describe('CSSPseudoStylesManager', () => {
         opacity: { default: 0, ':hover': 0.5 },
       });
 
-      expect(unregisterPseudoStyles).toHaveBeenCalledWith(viewTag);
+      expect(unregisterPseudoStyles).not.toHaveBeenCalled();
       expect(registerPseudoStyles).toHaveBeenCalledWith(
         shadowNodeWrapper,
         expect.objectContaining({
@@ -377,7 +377,7 @@ describe('CSSPseudoStylesManager', () => {
       );
     });
 
-    test('detaches and re-registers when only the transition changes', () => {
+    test('updates in place without detaching when only the transition changes', () => {
       pushStyle(manager, {
         opacity: { default: 0, ':hover': 1 },
         transitionProperty: 'opacity',
@@ -391,7 +391,7 @@ describe('CSSPseudoStylesManager', () => {
         transitionDuration: '500ms',
       });
 
-      expect(unregisterPseudoStyles).toHaveBeenCalledWith(viewTag);
+      expect(unregisterPseudoStyles).not.toHaveBeenCalled();
       expect(registerPseudoStyles).toHaveBeenCalledWith(
         shadowNodeWrapper,
         expect.objectContaining({
@@ -404,6 +404,20 @@ describe('CSSPseudoStylesManager', () => {
           ],
         })
       );
+    });
+
+    test('detaches and re-registers when a selector is removed', () => {
+      pushStyle(manager, {
+        opacity: { default: 0, ':hover': 1, ':active': 0.5 },
+      });
+      jest.clearAllMocks();
+
+      pushStyle(manager, {
+        opacity: { default: 0, ':hover': 1 },
+      });
+
+      expect(unregisterPseudoStyles).toHaveBeenCalledWith(viewTag);
+      expect(registerPseudoStyles).toHaveBeenCalled();
     });
   });
 
@@ -456,6 +470,23 @@ describe('CSSPseudoStylesManager', () => {
       manager.unmountCleanup();
 
       expect(unregisterPseudoStyles).not.toHaveBeenCalled();
+    });
+
+    test('re-registers identical styles after unmountCleanup (reused instance remount)', () => {
+      const style: CSSStyle = {
+        opacity: { default: 0, ':hover': 1 },
+      };
+
+      pushStyle(manager, style);
+      manager.unmountCleanup();
+      jest.clearAllMocks();
+
+      // The same manager instance is reused (e.g. a frozen subtree thaws and the
+      // AnimatedComponent's CSSManager is kept). An identical-styles update must not
+      // be swallowed by the deepEqual early-return; it has to re-register natively.
+      pushStyle(manager, { ...style });
+
+      expect(registerPseudoStyles).toHaveBeenCalledTimes(1);
     });
   });
 });

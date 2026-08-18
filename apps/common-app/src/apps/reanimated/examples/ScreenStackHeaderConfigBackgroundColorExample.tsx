@@ -1,13 +1,10 @@
 import React, { useCallback } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
-import type {
-  GestureUpdateEvent,
-  PanGestureChangeEventPayload,
-} from 'react-native-gesture-handler';
+import type { PanGestureActiveEvent } from 'react-native-gesture-handler';
 import {
-  Gesture,
   GestureDetector,
   GestureHandlerRootView,
+  usePanGesture,
 } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedProps,
@@ -28,23 +25,24 @@ export default function ScreenStackHeaderConfigBackgroundColorExample() {
   const isPressed = useSharedValue(false);
   const offset = useSharedValue({ x: 0, y: 0 });
 
-  const gesture = Gesture.Pan()
-    .minDistance(0)
-    .onBegin(() => {
+  const gesture = usePanGesture({
+    minDistance: 0,
+    onBegin: () => {
       'worklet';
       isPressed.value = true;
-    })
-    .onChange((e: GestureUpdateEvent<PanGestureChangeEventPayload>) => {
+    },
+    onFinalize: () => {
+      'worklet';
+      isPressed.value = false;
+    },
+    onUpdate: (e: PanGestureActiveEvent) => {
       'worklet';
       offset.value = {
         x: e.changeX + offset.value.x,
         y: e.changeY + offset.value.y,
       };
-    })
-    .onFinalize(() => {
-      'worklet';
-      isPressed.value = false;
-    });
+    },
+  });
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
@@ -64,7 +62,7 @@ export default function ScreenStackHeaderConfigBackgroundColorExample() {
       backgroundColor: color,
       title: color,
     };
-  }, [offset]);
+  });
 
   const [counter, setCounter] = React.useState(0);
 

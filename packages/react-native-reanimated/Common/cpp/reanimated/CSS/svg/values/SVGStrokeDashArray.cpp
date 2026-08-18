@@ -8,7 +8,7 @@ namespace reanimated::css {
 SVGStrokeDashArray SVGStrokeDashArray::interpolate(
     double progress,
     const SVGStrokeDashArray &to,
-    const ResolvableValueInterpolationContext &context) const {
+    const RelativeValueInterpolationContext &context) const {
   std::vector<CSSLength> result;
   auto fromValues = values;
   auto toValues = to.values;
@@ -36,6 +36,15 @@ SVGStrokeDashArray SVGStrokeDashArray::interpolate(
   }
 
   return SVGStrokeDashArray(result);
+}
+
+folly::dynamic SVGStrokeDashArray::toDynamic() const {
+  // Empty means "no dashing" - emit null instead of [], which react-native-svg
+  // would feed to Android's DashPathEffect that requires at least 2 intervals.
+  if (values.empty()) {
+    return nullptr;
+  }
+  return CSSLengthVector::toDynamic();
 }
 
 #ifndef NDEBUG

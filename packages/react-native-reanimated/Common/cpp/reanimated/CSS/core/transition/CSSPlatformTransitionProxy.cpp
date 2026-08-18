@@ -8,12 +8,10 @@ namespace reanimated::css {
 
 CSSPlatformTransitionProxy::CSSPlatformTransitionProxy(
     CSSCanRoutePropertyFunction canRoute,
-    CSSApplyTransitionJSIFunction applyJSI,
-    CSSApplyTransitionDynamicFunction applyDynamic,
+    CSSApplyTransitionFunction applyTransition,
     CSSRemoveTransitionFunction removeTransition)
     : canRoute_(std::move(canRoute)),
-      applyJSI_(std::move(applyJSI)),
-      applyDynamic_(std::move(applyDynamic)),
+      applyTransition_(std::move(applyTransition)),
       removeTransition_(std::move(removeTransition)) {}
 
 bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const EasingConfig &easing) const {
@@ -21,23 +19,15 @@ bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const
 }
 
 bool CSSPlatformTransitionProxy::apply(
-    jsi::Runtime &rt,
     const Tag viewTag,
     const std::string &propertyName,
-    const jsi::Value &fromValue,
-    const jsi::Value &toValue,
-    const CSSTransitionPropertySettings &settings,
+    const PlatformValue &fromValue,
+    const PlatformValue &toValue,
+    const CSSTransitionPropertySettings *settings,
+    const bool persistent,
     const double timestamp) const {
-  return applyJSI_ && applyJSI_(rt, viewTag, propertyName, fromValue, toValue, settings, timestamp);
-}
-
-bool CSSPlatformTransitionProxy::apply(
-    const Tag viewTag,
-    const std::string &propertyName,
-    const folly::dynamic &fromValue,
-    const folly::dynamic &toValue,
-    const double timestamp) const {
-  return applyDynamic_ && applyDynamic_(viewTag, propertyName, fromValue, toValue, timestamp);
+  return applyTransition_ &&
+      applyTransition_(viewTag, propertyName, fromValue, toValue, settings, persistent, timestamp);
 }
 
 void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &propertyName) const {
@@ -51,6 +41,7 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
     const Tag viewTag,
     const CSSTransitionConfig &config,
     CSSTransitionRouting &routing,
+    const bool allowPlatform,
     const double timestamp) const {
   CSSTransitionConfig loopConfig;
 #ifndef NDEBUG
@@ -66,9 +57,11 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
     }
 #endif // NDEBUG
 
-    bool routable = canRoute(propertyName, settings.easingConfig);
+    bool routable = allowPlatform && canRoute(propertyName, settings.easingConfig);
     if (routable && hasValue) {
-      routable = apply(rt, viewTag, propertyName, valueIt->second.first, valueIt->second.second, settings, timestamp);
+      const auto values = parsePlatformValues(rt, propertyName, valueIt->second.first, valueIt->second.second);
+      // React commits the config path's target, so there is nothing to hold afterwards.
+      routable = values && apply(viewTag, propertyName, values->first, values->second, &settings, false, timestamp);
     } else if (routable) {
       // Settings-only: stay on the platform only if already animating there.
       routable = routing.platform.contains(propertyName);
@@ -113,15 +106,22 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
 PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
     const Tag viewTag,
     const PropertyValueDynamicDiffsMap &propertyDiffs,
+    const TransitionProperties &pseudoLockedProperties,
     CSSTransitionRouting &routing,
+    const bool allowPlatform,
     const double timestamp) const {
   PropertyValueDynamicDiffsMap loopDiffs;
   for (const auto &[propertyName, propertyDiff] : propertyDiffs) {
     // A platform-routed property keeps animating natively while the platform can
     // still express the toggled value; otherwise it migrates to the loop.
     if (routing.platform.contains(propertyName)) {
-      if (apply(viewTag, propertyName, propertyDiff.first, propertyDiff.second, timestamp)) {
-        continue;
+      if (allowPlatform) {
+        const auto values = parsePlatformValues(propertyName, propertyDiff.first, propertyDiff.second);
+        // Releasing the last selector targets the committed style, which needs no hold.
+        const bool persistent = pseudoLockedProperties.contains(propertyName);
+        if (values && apply(viewTag, propertyName, values->first, values->second, nullptr, persistent, timestamp)) {
+          continue;
+        }
       }
       routing.platform.erase(propertyName);
       remove(viewTag, propertyName);

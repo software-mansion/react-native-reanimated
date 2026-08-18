@@ -14,8 +14,8 @@ ENV['IS_WORKLETS_PROFILING'] = '1'
 
 # Using prebuilt React Native iOS binaries for faster builds
 # disable if you need to dive in and tweak into React Native native code
-ENV['RCT_USE_PREBUILT_RNCORE'] = '1'
-ENV['RCT_USE_RN_DEP'] = '1'
+ENV['RCT_USE_PREBUILT_RNCORE'] ||= '1'
+ENV['RCT_USE_RN_DEP'] ||= '1'
 
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
@@ -25,6 +25,11 @@ if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
   use_frameworks! :linkage => linkage.to_sym
 end
+
+project 'FabricExample.xcodeproj',
+        'Debug' => :debug,
+        'DebugRuntimeTests' => :debug,
+        'Release' => :release
 
 target 'FabricExample' do
   config = use_native_modules!

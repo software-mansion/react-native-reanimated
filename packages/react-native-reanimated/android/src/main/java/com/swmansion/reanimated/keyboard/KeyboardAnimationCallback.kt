@@ -12,6 +12,8 @@ class KeyboardAnimationCallback(
         private val CONTENT_TYPE_MASK = WindowInsetsCompat.Type.ime()
     }
 
+    private var mPendingStartDispatch = false
+
     override fun onStart(
         animation: WindowInsetsAnimationCompat,
         bounds: WindowInsetsAnimationCompat.BoundsCompat,
@@ -20,7 +22,7 @@ class KeyboardAnimationCallback(
             return bounds
         }
         mKeyboard.onAnimationStart()
-        mNotifyAboutKeyboardChange.call()
+        mPendingStartDispatch = true
         return super.onStart(animation, bounds)
     }
 
@@ -36,6 +38,7 @@ class KeyboardAnimationCallback(
             }
         }
         if (isAnyKeyboardAnimationRunning) {
+            mPendingStartDispatch = false
             mKeyboard.updateHeight(insets, mIsNavigationBarTranslucent)
             mNotifyAboutKeyboardChange.call()
         }
@@ -44,6 +47,10 @@ class KeyboardAnimationCallback(
 
     override fun onEnd(animation: WindowInsetsAnimationCompat) {
         if (isKeyboardAnimation(animation)) {
+            if (mPendingStartDispatch) {
+                mNotifyAboutKeyboardChange.call()
+            }
+            mPendingStartDispatch = false
             mKeyboard.onAnimationEnd()
             mNotifyAboutKeyboardChange.call()
         }

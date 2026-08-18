@@ -10,7 +10,9 @@ struct SVGStrokeDashArray : public CSSLengthVector<SVGStrokeDashArray> {
   SVGStrokeDashArray interpolate(
       double progress,
       const SVGStrokeDashArray &to,
-      const ResolvableValueInterpolationContext &context) const override;
+      const RelativeValueInterpolationContext &context) const override;
+
+  folly::dynamic toDynamic() const override;
 
 #ifndef NDEBUG
   friend std::ostream &operator<<(std::ostream &os, const SVGStrokeDashArray &strokeDashArray);

@@ -11,6 +11,9 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   use-frameworks-reanimated-build-check-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
@@ -52,6 +55,7 @@ jobs:
           yarn set version berry
           yarn config set nodeLinker node-modules
           yarn config set approvedGitRepositories --json '["https://github.com/software-mansion/react-native-reanimated.git"]'
+          yarn config set npmMinimalAgeGate 0
       - name: Install dependencies
         working-directory: ${{ env.APP_NAME }}
         run: yarn install

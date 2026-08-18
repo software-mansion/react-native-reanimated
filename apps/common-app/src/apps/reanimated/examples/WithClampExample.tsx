@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { Button, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import {
+  Button,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle,
+} from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -130,7 +137,9 @@ export default function AnimatedStyleUpdateExample() {
   });
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={styles.container}>
       <Example
         testedStyle={clampedStyleWithAnimationModifier}
         description="Clamped spring with withClamp HOC"
@@ -156,13 +165,16 @@ export default function AnimatedStyleUpdateExample() {
           setToggle(!toggle);
         }}
       />
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scrollView: {
     flex: 1,
+  },
+  container: {
+    flexGrow: 1,
     flexDirection: 'column',
     padding: CLAMP_MARKER_HEIGHT,
   },

@@ -32,6 +32,44 @@ export type CSSAnimationDirection =
 export type CSSAnimationFillMode = 'none' | 'forwards' | 'backwards' | 'both';
 export type CSSAnimationPlayState = 'running' | 'paused';
 
+/** Payload for a CSS animation callback. */
+export type CSSAnimationEvent = {
+  // TODO: add a JS-side view ref (e.g. `target`) once the right ref type is
+  // decided.
+  /**
+   * The name of the keyframes that fired the event (matches the `name` of a
+   * `css.keyframes(...)` rule).
+   */
+  animationName: string;
+  /**
+   * The amount of time the animation had been running, in seconds, when the
+   * event fired.
+   */
+  elapsedTime: number;
+};
+
+export type CSSAnimationCallback = (event: CSSAnimationEvent) => void;
+
+/**
+ * Lifecycle callbacks of a **CSS animation**. `withTiming`, `withSpring` and
+ * layout animations never fire them.
+ */
+export type CSSAnimationCallbacks = {
+  /** Fired when the CSS animation starts, after any `animationDelay`. */
+  onCSSAnimationStart?: CSSAnimationCallback;
+  /** Fired when the CSS animation completes. */
+  onCSSAnimationEnd?: CSSAnimationCallback;
+  /** Fired at the end of each CSS animation iteration except the last. */
+  onCSSAnimationIteration?: CSSAnimationCallback;
+  /**
+   * Fired when the CSS animation is interrupted before completing, including
+   * when the component unmounts.
+   */
+  onCSSAnimationCancel?: CSSAnimationCallback;
+};
+
+export type CSSAnimationCallbackProp = keyof CSSAnimationCallbacks;
+
 export type SingleCSSAnimationSettings = {
   animationDuration?: CSSAnimationDuration;
   animationTimingFunction?: CSSAnimationTimingFunction;

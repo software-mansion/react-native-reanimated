@@ -43,3 +43,18 @@ runs:
       shell: bash
       working-directory: packages/react-native-reanimated
       run: yarn type:check:tests
+
+    - name: Check source types (legacy React Native types)
+      shell: bash
+      working-directory: packages/react-native-reanimated
+      run: yarn type:check:legacy-rn-types:src
+
+    - name: Check API (legacy React Native types)
+      shell: bash
+      working-directory: packages/react-native-reanimated
+      run: yarn type:check:legacy-rn-types:app
+
+    - name: Run type tests (legacy React Native types)
+      shell: bash
+      working-directory: packages/react-native-reanimated
+      run: yarn type:check:legacy-rn-types:tests

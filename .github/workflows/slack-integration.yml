@@ -1,0 +1,245 @@
+name: Slack integration
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # 08:00 CEST (UTC+2)
+  workflow_dispatch:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  contents: read
+
+jobs:
+  read-bundle-cost-matrix:
+    if: github.repository == 'software-mansion/react-native-reanimated' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-outputs.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            /.nvmrc
+            /.github/workflows/helper
+            /packages/react-native-reanimated/compatibility.json
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Resolve versions to measure
+        run: node --experimental-strip-types .github/workflows/helper/read-bundle-cost-matrix.ts
+
+      - name: Set outputs
+        id: set-outputs
+        run: echo "matrix=$(cat /tmp/bundle-cost-matrix.json)" >> "$GITHUB_OUTPUT"
+
+  measure-bundle-cost:
+    if: github.repository == 'software-mansion/react-native-reanimated' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    needs: read-bundle-cost-matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.read-bundle-cost-matrix.outputs.matrix) }}
+    env:
+      APP_DIR: apps/fabric-example
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Set up the requested bundle mode
+        run: |
+          if grep -q 'bundleMode: true' "${APP_DIR}/babel.config.js"; then
+            committed=true
+          else
+            committed=false
+          fi
+          echo "committed bundle mode: ${committed}, this job measures: ${{ matrix.bundleMode }}"
+          if [ "${committed}" = "${{ matrix.bundleMode }}" ]; then
+            yarn install --immutable
+          else
+            # Toggling runs its own install, so no separate one is needed.
+            bash scripts/toggle-bundle-mode.sh
+          fi
+
+      - name: Resolve Reanimated and Worklets from the app
+        if: matrix.reanimatedRange != 'main'
+        run: node --experimental-strip-types .github/workflows/helper/use-app-local-reanimated.ts
+
+      - name: Install released Reanimated and Worklets
+        if: matrix.reanimatedRange != 'main'
+        run: |
+          YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn workspace fabric-example add \
+            "react-native-reanimated@${{ matrix.reanimatedVersion }}" \
+            "react-native-worklets@${{ matrix.workletsVersion }}"
+
+      - name: Make the released Worklets plugin write worklet origins
+        if: matrix.reanimatedRange != 'main' && matrix.bundleMode
+        run: node --experimental-strip-types .github/workflows/helper/patch-worklets-attribution.ts
+
+      - name: Report what is actually installed
+        id: installed
+        run: |
+          resolve() {
+            node -p "require(require.resolve('$1/package.json', { paths: ['${APP_DIR}'] })).version"
+          }
+          reanimated=$(resolve react-native-reanimated)
+          worklets=$(resolve react-native-worklets)
+          react_native=$(resolve react-native)
+          echo "reanimated=${reanimated}, worklets=${worklets}, react-native=${react_native}"
+          if [ "${{ matrix.reanimatedRange }}" != "main" ]; then
+            if [ "${reanimated}" != "${{ matrix.reanimatedVersion }}" ] || [ "${worklets}" != "${{ matrix.workletsVersion }}" ]; then
+              echo "::error::the app resolves reanimated ${reanimated} / worklets ${worklets}, expected ${{ matrix.reanimatedVersion }} / ${{ matrix.workletsVersion }}"
+              exit 1
+            fi
+          fi
+          {
+            echo "reanimated=${reanimated}"
+            echo "worklets=${worklets}"
+            echo "react-native=${react_native}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Measure bundle cost
+        run: |
+          node scripts/measure-bundle-cost.mts \
+            --platform=ios,android \
+            --bundle-mode=${{ matrix.bundleMode }} \
+            --json > /tmp/raw.json
+          cat /tmp/raw.json
+
+      - name: Attach version metadata
+        env:
+          REANIMATED_VERSION: ${{ matrix.reanimatedVersion }}
+          WORKLETS_VERSION: ${{ matrix.workletsVersion }}
+          REACT_NATIVE_VERSION: ${{ steps.installed.outputs.react-native }}
+          BUNDLE_MODE: ${{ matrix.bundleMode }}
+        run: |
+          mkdir -p /tmp/bundle-cost-results
+          jq \
+            --arg reanimated "$REANIMATED_VERSION" \
+            --arg worklets "$WORKLETS_VERSION" \
+            --arg reactNative "$REACT_NATIVE_VERSION" \
+            --argjson bundleMode "$BUNDLE_MODE" \
+            'del(.mode) as $results | {
+               reanimatedVersion: $reanimated,
+               workletsVersion: $worklets,
+               reactNativeVersion: $reactNative,
+               bundleMode: $bundleMode,
+               results: $results
+             }' /tmp/raw.json > "/tmp/bundle-cost-results/${REANIMATED_VERSION}-bundle-mode-${BUNDLE_MODE}.json"
+
+      - name: Upload result
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bundle-cost-${{ matrix.reanimatedVersion }}-bundle-mode-${{ matrix.bundleMode }}
+          path: /tmp/bundle-cost-results/*.json
+
+  daily-status-report:
+    if: ${{ always() && github.repository == 'software-mansion/react-native-reanimated' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-latest
+    needs: [read-bundle-cost-matrix, measure-bundle-cost]
+    permissions:
+      contents: read
+      actions: read
+      issues: read
+      pull-requests: read
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          sparse-checkout: .github/workflows/helper
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Download bundle cost results
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          path: /tmp/bundle-cost-results
+          pattern: bundle-cost-*
+        continue-on-error: true
+
+      - name: Report failing badges, RN nightly tests, bundle cost and daily digest
+        env:
+          BUNDLE_COST_DIR: /tmp/bundle-cost-results
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          EXPECTED_MATRIX: ${{ needs.read-bundle-cost-matrix.outputs.matrix }}
+          MEASURE_RESULT: ${{ needs.measure-bundle-cost.result }}
+        run: node --experimental-strip-types .github/workflows/helper/daily-report-notification.ts
+
+  issue-opened-report:
+    if: github.repository == 'software-mansion/react-native-reanimated' && github.event_name == 'issues'
+    runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          sparse-checkout: .github/workflows/helper
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Report new issue to Slack
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+        run: node --experimental-strip-types .github/workflows/helper/issue-opened-notification.ts
+
+  pull-request-opened-report:
+    if: >-
+      github.repository == 'software-mansion/react-native-reanimated' &&
+      github.event_name == 'pull_request_target' &&
+      github.event.pull_request.user.type != 'Bot' &&
+      github.event.pull_request.author_association != 'OWNER' &&
+      github.event.pull_request.author_association != 'MEMBER' &&
+      github.event.pull_request.author_association != 'COLLABORATOR'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          sparse-checkout: .github/workflows/helper
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Report new pull request to Slack
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
+        run: node --experimental-strip-types .github/workflows/helper/pull-request-opened-notification.ts

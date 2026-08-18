@@ -2,6 +2,7 @@
 
 #include <reanimated/CSS/utils/reversingShortening.h>
 
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <string>
@@ -17,7 +18,7 @@ TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double duration,
     const double delay,
     EasingConfig easing)
-    : RawProgressProvider(timestamp, duration, delay),
+    : TimeProgressProvider(timestamp, duration, delay),
       easing_(std::move(easing)),
       easingFunction_(getEasingFunctionFromConfig(easing_)) {}
 
@@ -27,7 +28,7 @@ TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double delay,
     EasingConfig easing,
     const double reversingShorteningFactor)
-    : RawProgressProvider(timestamp, duration, delay),
+    : TimeProgressProvider(timestamp, duration, delay),
       easing_(std::move(easing)),
       easingFunction_(getEasingFunctionFromConfig(easing_)),
       reversingShorteningFactor_(reversingShorteningFactor) {}
@@ -51,9 +52,61 @@ ReversingState TransitionPropertyProgressProvider::getReversingState() const {
   return {reversingShorteningFactor_, creationTimestamp_ + delay_, duration_, delay_, easing_};
 }
 
+void TransitionPropertyProgressProvider::setMilestoneReporter(RunLifecycle::Reporter reporter) {
+  lifecycle_.setMilestoneReporter(std::move(reporter));
+  lifecycle_.reachPhase(computePhase());
+}
+
+void TransitionPropertyProgressProvider::abort(const double timestamp) {
+  // A cancel can arrive at a timestamp the provider has not been ticked to, and
+  // the run still owes the milestones it crossed in between. Advancing first
+  // also lets a run that has since finished report its end instead of a cancel.
+  update(timestamp);
+  cancelTimestamp_ = timestamp;
+  lifecycle_.abort();
+}
+
+void TransitionPropertyProgressProvider::update(const double timestamp) {
+  TimeProgressProvider::update(timestamp);
+  lifecycle_.reachPhase(computePhase());
+}
+
+RunPhase TransitionPropertyProgressProvider::computePhase() const {
+  switch (getState()) {
+    case TransitionProgressState::Pending:
+      return RunPhase::Before;
+    case TransitionProgressState::Running:
+      return RunPhase::Active;
+    case TransitionProgressState::Idle:
+      return RunPhase::After;
+  }
+  return RunPhase::Idle;
+}
+
+double TransitionPropertyProgressProvider::elapsedTimeAt(const MilestoneTime time) const {
+  switch (time) {
+    case MilestoneTime::IntervalStart:
+      return intervalStart();
+    case MilestoneTime::IntervalEnd:
+      return duration_;
+    case MilestoneTime::ActiveTime:
+      return std::max(0.0, cancelTimestamp_ - (creationTimestamp_ + delay_));
+    case MilestoneTime::IterationStart:
+    case MilestoneTime::IterationEnd:
+      // A transition has no iterations, so it never reaches a boundary.
+      return 0;
+  }
+}
+
+double TransitionPropertyProgressProvider::intervalStart() const {
+  // A negative delay starts the transition partway through, and the web reports
+  // that offset capped to the duration.
+  return std::min(std::max(0.0, -delay_), duration_);
+}
+
 TransitionProgressState TransitionPropertyProgressProvider::getState() const {
   // rawProgress_ is empty until the property's delay has passed
-  // (RawProgressProvider::update resets it while timestamp < creationTimestamp + delay)
+  // (TimeProgressProvider::update resets it while timestamp < creationTimestamp + delay)
   if (!rawProgress_.has_value()) {
     return TransitionProgressState::Pending;
   }
@@ -111,14 +164,38 @@ std::unordered_set<std::string> TransitionProgressProvider::getRemovedProperties
   return removedProperties_;
 }
 
+void TransitionProgressProvider::setMilestoneReporter(MilestoneReporter reporter) {
+  reporter_ = std::move(reporter);
+
+  for (const auto &[propertyName, propertyProgressProvider] : propertyProgressProviders_) {
+    observeProperty(propertyName, *propertyProgressProvider);
+  }
+}
+
+void TransitionProgressProvider::observeProperty(
+    const std::string &propertyName,
+    TransitionPropertyProgressProvider &provider) {
+  if (!reporter_) {
+    provider.setMilestoneReporter(nullptr);
+    return;
+  }
+
+  // The lambda lives inside the provider, so capturing it by reference is safe.
+  provider.setMilestoneReporter(
+      [this, propertyName, &provider](const RunMilestone milestone, const MilestoneTime time) {
+        reporter_(milestone, propertyName, provider.elapsedTimeAt(time));
+      });
+}
+
 void TransitionProgressProvider::runProgressProvider(
     const std::string &propertyName,
     const bool isReversed,
     const double timestamp) {
 
-  const auto &settings = propertySettings_.at(propertyName);
+  const auto settings = getPropertySettings(propertyName);
 
   const auto providerIt = propertyProgressProviders_.find(propertyName);
+  std::shared_ptr<TransitionPropertyProgressProvider> provider;
 
   if (providerIt != propertyProgressProviders_.end()) {
     const auto &progressProvider = providerIt->second;
@@ -126,27 +203,43 @@ void TransitionProgressProvider::runProgressProvider(
 
     if (isReversed && progressProvider->getState() != TransitionProgressState::Idle) {
       // Create reversing shortening progress provider for interrupted reversing transition
-      propertyProgressProviders_.insert_or_assign(
-          propertyName, createReversingShorteningProgressProvider(timestamp, settings, *progressProvider));
-      return;
+      provider = createReversingShorteningProgressProvider(timestamp, settings, *progressProvider);
     }
+
+    progressProvider->abort(timestamp);
   }
 
-  // Create progress provider with the new settings
-  propertyProgressProviders_.insert_or_assign(
-      propertyName,
-      std::make_shared<TransitionPropertyProgressProvider>(
-          timestamp, settings.duration, settings.delay, settings.easingConfig));
+  if (!provider) {
+    // Create progress provider with the new settings
+    provider = std::make_shared<TransitionPropertyProgressProvider>(
+        timestamp, settings.duration, settings.delay, settings.easingConfig);
+  }
+
+  propertyProgressProviders_.insert_or_assign(propertyName, provider);
+  observeProperty(propertyName, *provider);
 }
 
-void TransitionProgressProvider::removeProperties(const std::vector<std::string> &propertyNames) {
+void TransitionProgressProvider::removeProperties(
+    const std::vector<std::string> &propertyNames,
+    const double timestamp) {
   for (const auto &propertyName : propertyNames) {
-    propertyProgressProviders_.erase(propertyName);
+    removeProperty(propertyName, timestamp);
   }
 }
 
-void TransitionProgressProvider::removeProperty(const std::string &propertyName) {
-  propertyProgressProviders_.erase(propertyName);
+void TransitionProgressProvider::removeProperty(const std::string &propertyName, const double timestamp) {
+  const auto it = propertyProgressProviders_.find(propertyName);
+  if (it == propertyProgressProviders_.end()) {
+    return;
+  }
+  it->second->abort(timestamp);
+  propertyProgressProviders_.erase(it);
+}
+
+void TransitionProgressProvider::abort(const double timestamp) {
+  for (const auto &[_, provider] : propertyProgressProviders_) {
+    provider->abort(timestamp);
+  }
 }
 
 void TransitionProgressProvider::discardFinishedProgressProviders() {
@@ -192,7 +285,13 @@ void TransitionProgressProvider::setPropertySettings(const PropertiesSettingsMap
 }
 
 CSSTransitionPropertySettings TransitionProgressProvider::getPropertySettings(const std::string &propertyName) const {
-  return propertySettings_.at(propertyName);
+  const auto it = propertySettings_.find(propertyName);
+  if (it == propertySettings_.end()) {
+    // A pseudo toggle can run a property whose settings never parsed, e.g. a discrete
+    // property without allowDiscrete.
+    return CSSTransitionPropertySettings{};
+  }
+  return it->second;
 }
 
 } // namespace reanimated::css

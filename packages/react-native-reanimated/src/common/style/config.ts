@@ -191,6 +191,8 @@ export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   opacity: true,
   mixBlendMode: true,
 
+  // @ts-ignore Available since RN 0.87
+  backgroundImage: false, // TODO
   experimental_backgroundImage: false, // TODO
   // @ts-ignore This type doesn't exist on non-strict-api
   experimental_backgroundPosition: false, // TODO

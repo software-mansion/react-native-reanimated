@@ -1,9 +1,9 @@
 import React from 'react';
 import { Button, StyleSheet, TextInput } from 'react-native';
 import {
-  Gesture,
   GestureDetector,
   GestureHandlerRootView,
+  useTapGesture,
 } from 'react-native-gesture-handler';
 import Animated, {
   setNativeProps,
@@ -31,13 +31,15 @@ export default function SetNativePropsExample() {
     setText(''); // calling setText affects the JS state but doesn't update the native view
   };
 
-  const tap = Gesture.Tap().onEnd(() => {
-    'worklet';
-    setNativeProps(animatedRef, {
-      text: '',
-      backgroundColor: `hsl(${Math.random() * 360}, 100%, 50%)`,
-    });
-    scheduleOnRN(send);
+  const tap = useTapGesture({
+    onDeactivate: () => {
+      'worklet';
+      setNativeProps(animatedRef, {
+        text: '',
+        backgroundColor: `hsl(${Math.random() * 360}, 100%, 50%)`,
+      });
+      scheduleOnRN(send);
+    },
   });
 
   return (

@@ -5,13 +5,13 @@
 
 import type { LoggerConfigInternal } from './common';
 import type {
+  LayoutAnimationsManager,
   MapperRegistry,
   MeasuredDimensions,
   ShadowNodeWrapper,
 } from './commonTypes';
 import type { PropUpdates } from './createAnimatedComponent/commonTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
-import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
 import type { RNScreensTurboModuleType } from './screenTransition/commonTypes';
 import type { SensorContainer } from './SensorContainer';

@@ -1,7 +1,12 @@
 import { isValidElement, useEffect, useMemo } from 'react';
 import type { ScrollViewProps, StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import {
+  GestureDetector,
+  useNativeGesture,
+  usePanGesture,
+  useSimultaneousGestures,
+} from 'react-native-gesture-handler';
 import type { AnimatedRef, WithSpringConfig } from 'react-native-reanimated';
 import Animated, {
   Extrapolation,
@@ -144,55 +149,44 @@ export default function ExpandableHeaderScreen({
     },
   });
 
-  const gesture = useMemo(
-    () =>
-      Gesture.Simultaneous(
-        Gesture.Native(),
-        Gesture.Pan()
-          .onBegin(() => {
-            dragStartTranslateY.value = null;
-          })
-          .onChange((e) => {
-            dragStartTranslateY.value ??= translateY.value;
-            if (e.translationY > 0 && scrollOffsetY.value === 0) {
-              translateY.value =
-                (dragStartTranslateY.value ?? 0) +
-                Math.pow(e.translationY, 0.9);
-            } else if (
-              !isScrolling.value &&
-              e.translationY < 0 &&
-              translateY.value > 0 &&
-              scrollOffsetY.value === 0
-            ) {
-              translateY.value = Math.max(
-                0,
-                dragStartTranslateY.value + e.translationY
-              );
-            }
-          })
-          .onEnd(() => {
-            if (scrollOffsetY.value < 0 || isScrolling.value) {
-              return;
-            }
+  const nativeGesture = useNativeGesture();
 
-            if (headerShowProgress.value === 1) {
-              translateY.value = withSpring(headerHeight.value, SPRING);
-            } else {
-              translateY.value = withSpring(0, SPRING);
-            }
-          })
-          .enabled(expandEnabled)
-      ),
-    [
-      dragStartTranslateY,
-      expandEnabled,
-      headerHeight,
-      headerShowProgress,
-      isScrolling,
-      scrollOffsetY,
-      translateY,
-    ]
-  );
+  const panGesture = usePanGesture({
+    enabled: expandEnabled,
+    onBegin: () => {
+      dragStartTranslateY.value = null;
+    },
+    onDeactivate: () => {
+      if (scrollOffsetY.value < 0 || isScrolling.value) {
+        return;
+      }
+
+      if (headerShowProgress.value === 1) {
+        translateY.value = withSpring(headerHeight.value, SPRING);
+      } else {
+        translateY.value = withSpring(0, SPRING);
+      }
+    },
+    onUpdate: (e) => {
+      dragStartTranslateY.value ??= translateY.value;
+      if (e.translationY > 0 && scrollOffsetY.value === 0) {
+        translateY.value =
+          (dragStartTranslateY.value ?? 0) + Math.pow(e.translationY, 0.9);
+      } else if (
+        !isScrolling.value &&
+        e.translationY < 0 &&
+        translateY.value > 0 &&
+        scrollOffsetY.value === 0
+      ) {
+        translateY.value = Math.max(
+          0,
+          dragStartTranslateY.value + e.translationY
+        );
+      }
+    },
+  });
+
+  const gesture = useSimultaneousGestures(nativeGesture, panGesture);
 
   const animatedHeaderContainerStyle = useAnimatedStyle(() => ({
     height: Math.max(0, -totalOffsetY.value),

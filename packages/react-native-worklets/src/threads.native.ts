@@ -1,5 +1,6 @@
 'use strict';
 
+import { isBundleModeEnabled } from './debug/bundleMode';
 import { getStaticFeatureFlag } from './featureFlags/featureFlags';
 import { addNoBundleModeGuardImplementation } from './guardImplementation';
 import {
@@ -396,7 +397,7 @@ function flushUIQueue(): void {
   });
 }
 
-if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+if (__DEV__ && !isBundleModeEnabled()) {
   /**
    * QoL guards to give a meaningful error message when the user tries to call
    * these functions on Worklet Runtimes outside of the Bundle Mode.
