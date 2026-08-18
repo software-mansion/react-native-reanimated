@@ -535,8 +535,6 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(SurfaceId surfaceId, Sha
       continue;
     }
 
-    // A settled non-exiting animation still has its exact final update in
-    // updateMap. Apply it before the entry is cleaned up later in this transaction.
     auto &layoutAnimation = layoutAnimationIt->second;
     layoutAnimation.isViewAlreadyMounted = true;
     auto newView = layoutAnimation.finalView;
