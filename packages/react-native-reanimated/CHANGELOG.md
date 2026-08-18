@@ -8,6 +8,8 @@
 
 ### 🎉 New features
 
+- Add `contrastColor` worklet that returns `'white'` or `'black'`, whichever has the higher WCAG contrast ratio against a given color, mirroring CSS `contrast-color()`. ([#10320](https://github.com/software-mansion/react-native-reanimated/pull/10320) by [@tomekzaw](https://github.com/tomekzaw))
+
 ### 🐛 Bug fixes
 
 - Fix `EXC_BAD_ACCESS` crash in `-[REANodesManager performOperations]` when called before the `_performOperations` block is registered on iOS. ([#10229](https://github.com/software-mansion/react-native-reanimated/pull/10229) by [@tomekzaw](https://github.com/tomekzaw))
