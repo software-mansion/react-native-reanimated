@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   FadeIn,
@@ -125,6 +125,11 @@ export default function ActionSheetDropdown({
     setState({ isOpen: false, toggleMeasurements: null });
   };
 
+  const blockScrollGesture = usePanGesture({
+    onActivate: closeDropdown,
+    runOnJS: true,
+  });
+
   return (
     <>
       <Pressable hitSlop={hitSlop} onPress={openDropdown}>
@@ -139,8 +144,7 @@ export default function ActionSheetDropdown({
         {isOpen && toggleMeasurements && (
           // This gesture detector blocks scrolling when the dropdown is open
           // (this is needed for Android)
-          <GestureDetector
-            gesture={Gesture.Pan().onStart(closeDropdown).runOnJS(true)}>
+          <GestureDetector gesture={blockScrollGesture}>
             <View style={StyleSheet.absoluteFill}>
               <Backdrop handleClose={closeDropdown} />
               <DropdownContent

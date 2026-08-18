@@ -28,22 +28,19 @@ function List({ horizontal }: { horizontal?: boolean }) {
   const scrollPosition = useSharedValue(0);
   const isScrolling = useSharedValue(false);
 
-  const scrollHandler = useAnimatedScrollHandler(
-    {
-      onScroll: (event) => {
-        scrollPosition.value = horizontal
-          ? event.contentOffset.x
-          : event.contentOffset.y;
-      },
-      onBeginDrag: () => {
-        isScrolling.value = true;
-      },
-      onEndDrag: () => {
-        isScrolling.value = false;
-      },
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollPosition.value = horizontal
+        ? event.contentOffset.x
+        : event.contentOffset.y;
     },
-    [horizontal]
-  );
+    onBeginDrag: () => {
+      isScrolling.value = true;
+    },
+    onEndDrag: () => {
+      isScrolling.value = false;
+    },
+  });
 
   const inset = (scrollViewSize - cardInterval) / 2;
   const containerPadding = horizontal

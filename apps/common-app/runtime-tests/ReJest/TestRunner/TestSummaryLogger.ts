@@ -53,6 +53,16 @@ export class TestSummaryLogger {
     }
   }
 
+  public getSummary() {
+    return {
+      passed: this._passed,
+      failed: this._failed,
+      skipped: this._skipped,
+      failedTests: [...this._failedTests],
+      durationMs: Date.now() - this._startTime,
+    };
+  }
+
   public printSummary() {
     const endTime = Date.now();
     const timeInSeconds = Math.round((endTime - this._startTime) / 1000);

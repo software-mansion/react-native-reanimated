@@ -1,0 +1,30 @@
+name: Runtime tests sanitizers nightly
+on:
+  schedule:
+    # 04:53 UTC — an hour after the runtime tests nightly, so the two iOS
+    # matrices do not compete for macOS runners.
+    - cron: '53 4 * * *'
+  pull_request:
+    paths:
+      - .github/workflows/runtime-tests-sanitizers-nightly.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ios-tsan:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: ./.github/workflows/runtime-tests-ios.yml
+    with:
+      configuration: ReleaseRuntimeTests
+      bundleMode: true
+      sanitizer: thread
+
+  ios-asan:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: ./.github/workflows/runtime-tests-ios.yml
+    with:
+      configuration: ReleaseRuntimeTests
+      bundleMode: true
+      sanitizer: address

@@ -2,11 +2,30 @@
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-ARGS=("$@")
+PATHS=()
+TSC_ARGS=()
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --customConditions)
+      if [ "$#" -lt 2 ]; then
+        echo "Missing value for --customConditions" >&2
+        exit 1
+      fi
+      TSC_ARGS+=("--customConditions" "$2")
+      shift 2
+      ;;
+    *)
+      PATHS+=("$1")
+      shift
+      ;;
+  esac
+done
+
 FILES=()
 TSTYCHE_FILES=()
 
-for path in "${ARGS[@]}"; do
+for path in "${PATHS[@]}"; do
   if [ -d "$path" ]; then
     for file in "$path"/*.ts "$path"/*.tsx "$path"/*.d.ts; do
       if [ -f "$file" ]; then
@@ -25,7 +44,7 @@ STATUS=0
 
 check_types() {
   local suffixes="$1"
-  yarn tsc --noEmit --target es6 --module ESNext --jsx react-native --skipLibCheck true --allowSyntheticDefaultImports true --moduleResolution bundler --customConditions react-native-legacy-deep-imports --esModuleInterop true --strict true --forceConsistentCasingInFileNames true --moduleSuffixes "$suffixes" --resolveJsonModule "${FILES[@]}" || STATUS=1
+  yarn tsc --noEmit --target es6 --module ESNext --jsx react-native --skipLibCheck true --allowSyntheticDefaultImports true --moduleResolution bundler --esModuleInterop true --strict true --forceConsistentCasingInFileNames true --moduleSuffixes "$suffixes" --resolveJsonModule "${TSC_ARGS[@]}" "${FILES[@]}" || STATUS=1
 }
 
 if [ ${#FILES[@]} -gt 0 ]; then
@@ -40,7 +59,7 @@ fi
 # moduleSuffixes pass above.
 if [ ${#TSTYCHE_FILES[@]} -gt 0 ]; then
   "$ROOT_DIR/node_modules/.bin/tstyche" "${TSTYCHE_FILES[@]}" || STATUS=1
-  for path in "${ARGS[@]}"; do
+  for path in "${PATHS[@]}"; do
     if [ -f "$path/tsconfig.web.json" ]; then
       "$ROOT_DIR/node_modules/.bin/tstyche" --tsconfig "./$path/tsconfig.web.json" "${TSTYCHE_FILES[@]}" || STATUS=1
       break

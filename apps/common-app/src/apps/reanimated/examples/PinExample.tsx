@@ -1,6 +1,6 @@
 import React from 'react';
 import { Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import { SharedValue } from 'react-native-reanimated';
 import Animated, {
   scrollTo,
@@ -95,19 +95,20 @@ function ProgressBar({ progress }: { progress: SharedValue<number> }) {
   const startX = useSharedValue(0);
   const max = useSharedValue(0);
 
-  const gesture = Gesture.Pan()
-    .onStart(() => {
+  const gesture = usePanGesture({
+    onActivate: () => {
       startX.value = x.value;
-    })
-    .onUpdate((e) => {
+    },
+    onDeactivate: () => {
+      progress.value = x.value / max.value;
+    },
+    onUpdate: (e) => {
       let newVal = startX.value + e.translationX;
       newVal = Math.min(max.value, newVal);
       newVal = Math.max(0, newVal);
       x.value = newVal;
-    })
-    .onEnd(() => {
-      progress.value = x.value / max.value;
-    });
+    },
+  });
 
   const stylez = useAnimatedStyle(() => {
     return {

@@ -3,7 +3,9 @@ package com.swmansion.reanimated.pseudoSelectors
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
+import android.view.ViewGroup
 import android.view.ViewParent
+import android.view.ViewTreeObserver
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UIManager
 import com.facebook.react.bridge.UIManagerListener
@@ -23,18 +25,31 @@ class PseudoSelectorManager(
 ) {
     private val detachActions = HashMap<String, Runnable>()
 
+    // Run on invalidation, unlike the rest: removing a focus listener is the only teardown action
+    // that neither notifies C++ nor is already covered by the direct teardown.
+    private val focusDetachActions = HashMap<String, Runnable>()
+
     private val activeCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
     private val deepestCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
 
     private val touchHostRefs = HashMap<View, Int>()
+    private val gestureByHost = HashMap<View, HostGesture>()
 
-    private val gestureDownLeaf = HashMap<View, View>()
-
-    private val gestureDownPoint = HashMap<View, FloatArray>()
-
-    private val hover = TouchHoverCoordinator()
-
+    private val hover = TouchHoverCoordinator(::onWindowPressTouch)
     private var extraWindowBridge: ExtraWindowObserverBridge? = null
+
+    init {
+        // Dialog windows announce their creation only to listeners that already exist, so the
+        // bridge must be listening before the first Modal can open. Installing it on the first
+        // pseudo registration is too late for a registration that happens inside that Modal.
+        UiThreadUtil.runOnUiThread {
+            if (BuildConfig.IS_REACT_NATIVE_86_OR_NEWER) {
+                reactContext.get()?.let { context ->
+                    extraWindowBridge = ExtraWindowObserverBridge(context, hover).also { it.install() }
+                }
+            }
+        }
+    }
 
     private val pendingAttaches = LinkedHashMap<String, PendingAttach>()
     private var mountListenerRegistered = false
@@ -43,6 +58,12 @@ class PseudoSelectorManager(
         val tag: Int,
         val selector: Int,
         val callback: PseudoSelectorCallback,
+    )
+
+    private class HostGesture(
+        val leaf: View,
+        val downX: Float,
+        val downY: Float,
     )
 
     private val mountListener =
@@ -82,11 +103,11 @@ class PseudoSelectorManager(
     ) {
         val key = "$tag:$selector"
         when (selector) {
-            0 -> attachFocusWithin(view, key, callback)
-            1 -> attachFocus(view, key, callback)
+            0 -> attachFocusListener(view, key, callback) { view.hasFocus() }
+            1 -> attachFocusListener(view, key, callback) { it === view }
             2 -> attachHover(view, key, callback)
-            3 -> attachActive(view, key, callback)
-            4 -> attachActiveDeepest(view, key, callback)
+            3 -> attachPressSelector(view, key, callback, activeCallbacks)
+            4 -> attachPressSelector(view, key, callback, deepestCallbacks)
         }
     }
 
@@ -118,47 +139,23 @@ class PseudoSelectorManager(
         }
     }
 
-    private fun attachFocusWithin(
+    private fun attachFocusListener(
         view: View,
         key: String,
         callback: PseudoSelectorCallback,
+        isFocused: (newFocus: View?) -> Boolean,
     ) {
-        var isFocused = false
+        var focused = false
         val listener =
-            android.view.ViewTreeObserver.OnGlobalFocusChangeListener { _, _ ->
-                val hasFocus = view.hasFocus()
-                if (hasFocus && !isFocused) {
-                    isFocused = true
-                    callback.onSelectorStateChanged(true)
-                } else if (!hasFocus && isFocused) {
-                    isFocused = false
-                    callback.onSelectorStateChanged(false)
+            ViewTreeObserver.OnGlobalFocusChangeListener { _, newFocus ->
+                val nowFocused = isFocused(newFocus)
+                if (nowFocused != focused) {
+                    focused = nowFocused
+                    callback.onSelectorStateChanged(nowFocused)
                 }
             }
         view.viewTreeObserver.addOnGlobalFocusChangeListener(listener)
-        detachActions[key] =
-            Runnable { view.viewTreeObserver.removeOnGlobalFocusChangeListener(listener) }
-    }
-
-    private fun attachFocus(
-        view: View,
-        key: String,
-        callback: PseudoSelectorCallback,
-    ) {
-        var isFocused = false
-        val listener =
-            android.view.ViewTreeObserver.OnGlobalFocusChangeListener { _, newFocus ->
-                val directFocus = newFocus == view
-                if (directFocus && !isFocused) {
-                    isFocused = true
-                    callback.onSelectorStateChanged(true)
-                } else if (!directFocus && isFocused) {
-                    isFocused = false
-                    callback.onSelectorStateChanged(false)
-                }
-            }
-        view.viewTreeObserver.addOnGlobalFocusChangeListener(listener)
-        detachActions[key] =
+        focusDetachActions[key] =
             Runnable { view.viewTreeObserver.removeOnGlobalFocusChangeListener(listener) }
     }
 
@@ -169,52 +166,94 @@ class PseudoSelectorManager(
     ) {
         val host = findTouchHost(view)
         acquireTouchListener(host)
-        hover.register(view, callback)
-        ensureExtraWindowBridge()
+        hover.register(view, host, callback)
         detachActions[key] =
             Runnable {
-                hover.unregister(view)
+                hover.unregister(view, host)
                 releaseTouchListener(host)
             }
     }
 
-    private fun ensureExtraWindowBridge() {
-        if (!BuildConfig.IS_REACT_NATIVE_86_OR_NEWER || extraWindowBridge != null) {
+    private fun attachPressSelector(
+        view: View,
+        key: String,
+        callback: PseudoSelectorCallback,
+        callbacks: MutableMap<View, PseudoSelectorCallback>,
+    ) {
+        val host = findTouchHost(view)
+        callbacks[view] = callback
+        acquireTouchListener(host)
+        hover.retainWindowObserver(view)
+        detachActions[key] =
+            Runnable {
+                callbacks.remove(view)
+                releaseTouchListener(host)
+                hover.releaseWindowObserver()
+            }
+    }
+
+    private fun onWindowPressTouch(
+        root: ViewGroup?,
+        event: MotionEvent,
+    ) {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> windowPressDown(root, event)
+            MotionEvent.ACTION_MOVE -> gestureByHost.keys.toList().forEach { onHostMove(it, event) }
+            // A secondary finger lifting does not end a press started by the primary one.
+            MotionEvent.ACTION_POINTER_UP ->
+                if (event.getPointerId(event.actionIndex) == 0) {
+                    releaseAllHostGestures()
+                }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> releaseAllHostGestures()
+        }
+    }
+
+    private fun windowPressDown(
+        root: ViewGroup?,
+        event: MotionEvent,
+    ) {
+        if (root == null || (activeCallbacks.isEmpty() && deepestCallbacks.isEmpty())) {
             return
         }
-        val context = reactContext.get() ?: return
-        extraWindowBridge = ExtraWindowObserverBridge(context, hover).also { it.install() }
+        val hostsById = pressHostsById()
+        val hitTags = hover.hitTestTagsAt(root, event.rawX, event.rawY)
+        // Ordered target first, so the first host on the path is the deepest one.
+        val host = hitTags.firstNotNullOfOrNull { hostsById[it] } ?: return
+        if (gestureByHost.containsKey(host)) {
+            return
+        }
+        val leaf = findTouchedLeaf(host, hitTags) ?: return
+        beginPress(host, leaf, event.rawX, event.rawY, hitTags)
     }
 
-    private fun attachActive(
-        view: View,
-        key: String,
-        callback: PseudoSelectorCallback,
+    private fun beginPress(
+        host: View,
+        leaf: View,
+        rawX: Float,
+        rawY: Float,
+        hitTags: List<Int>,
     ) {
-        val host = findTouchHost(view)
-        activeCallbacks[view] = callback
-        acquireTouchListener(host)
-        detachActions[key] =
-            Runnable {
-                activeCallbacks.remove(view)
-                releaseTouchListener(host)
-            }
+        gestureByHost[host] = HostGesture(leaf, rawX, rawY)
+        fireActiveCallbacksUpTree(leaf, true)
+        fireDeepestIfHit(leaf, hitTags)
     }
 
-    private fun attachActiveDeepest(
-        view: View,
-        key: String,
-        callback: PseudoSelectorCallback,
-    ) {
-        val host = findTouchHost(view)
-        deepestCallbacks[view] = callback
-        acquireTouchListener(host)
-        detachActions[key] =
-            Runnable {
-                deepestCallbacks.remove(view)
-                releaseTouchListener(host)
-            }
-    }
+    private fun pressHostsById(): Map<Int, View> =
+        (activeCallbacks.keys + deepestCallbacks.keys).map { findTouchHost(it) }.associateBy { it.id }
+
+    // Raw coordinates cannot be made host-local without the ancestors' transforms, which the
+    // touch path has already applied when it resolved the compound child.
+    private fun findTouchedLeaf(
+        host: View,
+        hitTags: List<Int>,
+    ): View? =
+        if (host is ReactCompoundView) {
+            hitTags.firstOrNull()?.let { tryResolveView(it) }
+        } else {
+            host
+        }
+
+    private fun releaseAllHostGestures() = gestureByHost.keys.toList().forEach { onHostRelease(it) }
 
     private fun findTouchHost(view: View): View {
         var parent: ViewParent? = view.parent
@@ -226,16 +265,6 @@ class PseudoSelectorManager(
         }
         return view
     }
-
-    private fun findTouchedLeaf(
-        host: View,
-        event: MotionEvent,
-    ): View? =
-        if (host is ReactCompoundView) {
-            tryResolveView(host.reactTagForTouch(event.x, event.y))
-        } else {
-            host
-        }
 
     private fun acquireTouchListener(host: View) {
         val count = touchHostRefs.getOrDefault(host, 0)
@@ -252,8 +281,9 @@ class PseudoSelectorManager(
             return
         }
         touchHostRefs.remove(host)
-        gestureDownLeaf.remove(host)
-        gestureDownPoint.remove(host)
+        // The press covers every ancestor, so dropping it silently when a descendant unmounts
+        // mid-press would leave them all active with no event left to end it.
+        onHostRelease(host)
         host.setOnTouchListener(null)
     }
 
@@ -261,6 +291,9 @@ class PseudoSelectorManager(
         host: View,
         event: MotionEvent,
     ): Boolean {
+        if (hover.isWindowObserved(host)) {
+            return false
+        }
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN ->
                 if (!hover.isGestureSettled(event)) {
@@ -293,22 +326,20 @@ class PseudoSelectorManager(
         host: View,
         event: MotionEvent,
     ) {
-        findTouchedLeaf(host, event)?.let {
-            gestureDownLeaf[host] = it
-            gestureDownPoint[host] = floatArrayOf(event.rawX, event.rawY)
-            fireActiveCallbacksUpTree(it, true)
-            fireDeepestIfHit(it, event.rawX, event.rawY)
+        val hitTags = hover.hitTestTagsAt(host, event.rawX, event.rawY)
+        findTouchedLeaf(host, hitTags)?.let {
+            beginPress(host, it, event.rawX, event.rawY, hitTags)
         }
-        hover.onViewTouchDown(host, event)
+        hover.recompute(host, event.rawX, event.rawY)
     }
 
     private fun onHostMove(
         host: View,
         event: MotionEvent,
     ) {
-        val down = gestureDownPoint[host] ?: return
-        val dx = event.rawX - down[0]
-        val dy = event.rawY - down[1]
+        val gesture = gestureByHost[host] ?: return
+        val dx = event.rawX - gesture.downX
+        val dy = event.rawY - gesture.downY
         val slop = ViewConfiguration.get(host.context).scaledTouchSlop.toFloat()
         if (dx * dx + dy * dy > slop * slop) {
             onHostRelease(host)
@@ -316,19 +347,17 @@ class PseudoSelectorManager(
     }
 
     private fun onHostRelease(host: View) {
-        gestureDownPoint.remove(host)
-        val leaf = gestureDownLeaf.remove(host) ?: return
+        val leaf = gestureByHost.remove(host)?.leaf ?: return
         fireActiveCallbacksUpTree(leaf, false)
         deepestCallbacks[leaf]?.onSelectorStateChanged(false)
     }
 
     private fun fireDeepestIfHit(
         leaf: View,
-        rawX: Float,
-        rawY: Float,
+        hitTags: List<Int>,
     ) {
         val deepest = deepestCallbacks[leaf] ?: return
-        if (!hasDeepestDescendantAt(leaf, rawX, rawY)) {
+        if (!hasDeepestDescendantAt(leaf, hitTags)) {
             deepest.onSelectorStateChanged(true)
         }
     }
@@ -340,32 +369,38 @@ class PseudoSelectorManager(
         UiThreadUtil.runOnUiThread {
             val key = "$tag:$selector"
             pendingAttaches.remove(key)
+            focusDetachActions.remove(key)?.run()
             detachActions.remove(key)?.run()
         }
     }
 
+    // The dev menu keeps this manager alive a generation past its own React context, so the views
+    // and callbacks are dropped explicitly. Only the focus listeners can be detached properly;
+    // the other actions notify C++ over JNI, which is being torn down concurrently.
+    fun invalidate() {
+        UiThreadUtil.runOnUiThread {
+            fabricUIManager.removeUIManagerEventListener(mountListener)
+            mountListenerRegistered = false
+            extraWindowBridge?.uninstall()
+            extraWindowBridge = null
+            hover.uninstall()
+            touchHostRefs.keys.forEach { it.setOnTouchListener(null) }
+            touchHostRefs.clear()
+            gestureByHost.clear()
+            activeCallbacks.clear()
+            deepestCallbacks.clear()
+            pendingAttaches.clear()
+            focusDetachActions.values.forEach { it.run() }
+            focusDetachActions.clear()
+            detachActions.clear()
+        }
+    }
+
+    // TODO: Optimize so we don't iterate over all the views with :active-deepest every time.
     private fun hasDeepestDescendantAt(
         ancestor: View,
-        rawX: Float,
-        rawY: Float,
-    ): Boolean {
-        if (deepestCallbacks.size < 2) {
-            return false
-        }
-        val loc = IntArray(2)
-        // TODO: Optimize so we don't iterate over all the views with :active-deepest every time.
-        for (candidate in deepestCallbacks.keys) {
-            if (candidate === ancestor) continue
-            if (!isDescendantOf(candidate, ancestor)) continue
-            candidate.getLocationOnScreen(loc)
-            if (rawX >= loc[0] && rawX <= loc[0] + candidate.width &&
-                rawY >= loc[1] && rawY <= loc[1] + candidate.height
-            ) {
-                return true
-            }
-        }
-        return false
-    }
+        hitTags: List<Int>,
+    ): Boolean = deepestCallbacks.keys.any { it !== ancestor && it.id in hitTags && isDescendantOf(it, ancestor) }
 
     private fun fireActiveCallbacksUpTree(
         source: View,

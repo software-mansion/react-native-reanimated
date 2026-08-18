@@ -59,35 +59,53 @@ describe('withSequence animation of array', () => {
       switch (animationNumber) {
         case 0:
           return withSequence(
-            withTiming(finalValues, { duration: 200 }, () =>
-              notify(START_NOTIFICATION_NAME)
-            ),
+            withTiming(finalValues, { duration: 200 }, (finished) => {
+              if (finished) {
+                notify(START_NOTIFICATION_NAME);
+              }
+            }),
             withDelay(
               DELAY,
               withTiming(
                 middleValues,
                 { duration: 300, easing: Easing.exp },
-                () => notify(MIDDLE_NOTIFICATION_NAME)
+                (finished) => {
+                  if (finished) {
+                    notify(MIDDLE_NOTIFICATION_NAME);
+                  }
+                }
               )
             ),
             withDelay(
               DELAY,
-              withTiming(finalValuesPlus20, { duration: 200 }, () =>
-                notify(FINAL_NOTIFICATION_NAME)
-              )
+              withTiming(finalValuesPlus20, { duration: 200 }, (finished) => {
+                if (finished) {
+                  notify(FINAL_NOTIFICATION_NAME);
+                }
+              })
             )
           );
         case 1:
           return withSequence(
-            withSpring(finalValues, { duration: 200, dampingRatio: 1 }, () =>
-              notify(START_NOTIFICATION_NAME)
+            withSpring(
+              finalValues,
+              { duration: 200, dampingRatio: 1 },
+              (finished) => {
+                if (finished) {
+                  notify(START_NOTIFICATION_NAME);
+                }
+              }
             ),
             withDelay(
               DELAY,
               withSpring(
                 middleValues,
                 { duration: 300, dampingRatio: 1.5 },
-                () => notify(MIDDLE_NOTIFICATION_NAME)
+                (finished) => {
+                  if (finished) {
+                    notify(MIDDLE_NOTIFICATION_NAME);
+                  }
+                }
               )
             ),
             withDelay(
@@ -95,27 +113,43 @@ describe('withSequence animation of array', () => {
               withSpring(
                 finalValuesPlus20,
                 { duration: 200, dampingRatio: 0.9 },
-                () => notify(FINAL_NOTIFICATION_NAME)
+                (finished) => {
+                  if (finished) {
+                    notify(FINAL_NOTIFICATION_NAME);
+                  }
+                }
               )
             )
           );
         case 2:
           return withSequence(
-            withSpring(finalValues, { duration: 200, dampingRatio: 1 }, () =>
-              notify(START_NOTIFICATION_NAME)
+            withSpring(
+              finalValues,
+              { duration: 200, dampingRatio: 1 },
+              (finished) => {
+                if (finished) {
+                  notify(START_NOTIFICATION_NAME);
+                }
+              }
             ),
             withDelay(
               DELAY,
-              withTiming(middleValues, { duration: 300 }, () =>
-                notify(MIDDLE_NOTIFICATION_NAME)
-              )
+              withTiming(middleValues, { duration: 300 }, (finished) => {
+                if (finished) {
+                  notify(MIDDLE_NOTIFICATION_NAME);
+                }
+              })
             ),
             withDelay(
               DELAY,
               withSpring(
                 finalValuesPlus20,
                 { duration: 200, dampingRatio: 1 },
-                () => notify(FINAL_NOTIFICATION_NAME)
+                (finished) => {
+                  if (finished) {
+                    notify(FINAL_NOTIFICATION_NAME);
+                  }
+                }
               )
             )
           );

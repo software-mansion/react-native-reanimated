@@ -136,9 +136,7 @@ export function formatTestName(
   if (Array.isArray(variableObject)) {
     variableObject.forEach((value, index) => {
       // python-like syntax ${1} {2}
-      testName = testName
-        .split('${' + index + '}')
-        .join(valueToString(value));
+      testName = testName.split('${' + index + '}').join(valueToString(value));
     });
   }
   if (typeof variableObject === 'object') {
@@ -147,9 +145,7 @@ export function formatTestName(
       // Typical object literal syntax
       testName = testName
         .split('${' + k + '}')
-        .join(
-          valueToString(variableObject[k as keyof typeof variableObject])
-        );
+        .join(valueToString(variableObject[k as keyof typeof variableObject]));
     });
   }
 

@@ -34,15 +34,23 @@ function UseAnimatedScrollHandlerTest() {
         <Animated.FlatList
           onScroll={scrollHandler1}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <Animated.FlatList
           onScroll={scrollHandler2}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
-        <CustomFlatList onScroll={scrollHandler1} data={[]} renderItem={null} />
-        <CustomFlatList onScroll={scrollHandler2} data={[]} renderItem={null} />
+        <CustomFlatList
+          onScroll={scrollHandler1}
+          data={[]}
+          renderItem={() => null}
+        />
+        <CustomFlatList
+          onScroll={scrollHandler2}
+          data={[]}
+          renderItem={() => null}
+        />
       </>
     );
   }
@@ -66,9 +74,13 @@ function UseAnimatedScrollHandlerTest() {
         <Animated.FlatList
           onScroll={scrollHandler}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
-        <CustomFlatList onScroll={scrollHandler} data={[]} renderItem={null} />
+        <CustomFlatList
+          onScroll={scrollHandler}
+          data={[]}
+          renderItem={() => null}
+        />
       </>
     );
   }
@@ -93,9 +105,13 @@ function UseAnimatedScrollHandlerTest() {
         <Animated.FlatList
           onScroll={scrollHandler}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
-        <CustomFlatList onScroll={scrollHandler} data={[]} renderItem={null} />
+        <CustomFlatList
+          onScroll={scrollHandler}
+          data={[]}
+          renderItem={() => null}
+        />
       </>
     );
   }

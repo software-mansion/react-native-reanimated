@@ -11,7 +11,7 @@ import {
   useState,
 } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   cancelAnimation,
@@ -126,50 +126,46 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
 
   const numberOfTabs = tabNames.length;
 
-  const swipeGesture = useMemo(
-    () =>
-      Gesture.Pan()
-        .enabled(numberOfTabs > 1)
-        .activeOffsetX([-SWIPE_ACTIVATION_DISTANCE, SWIPE_ACTIVATION_DISTANCE])
-        .failOffsetY([-SWIPE_FAIL_DISTANCE, SWIPE_FAIL_DISTANCE])
-        .onStart(() => {
-          cancelAnimation(tabProgress);
-          dragStartProgress.value = tabProgress.value;
-        })
-        .onUpdate((event) => {
-          const lastIndex = numberOfTabs - 1;
-          const raw =
-            dragStartProgress.value - event.translationX / WINDOW_WIDTH;
-          // Rubber-band past the first / last tab.
-          if (raw < 0) {
-            tabProgress.value = raw * EDGE_RESISTANCE;
-          } else if (raw > lastIndex) {
-            tabProgress.value = lastIndex + (raw - lastIndex) * EDGE_RESISTANCE;
-          } else {
-            tabProgress.value = raw;
-          }
-        })
-        .onEnd((event) => {
-          const current = selectedTabIndex.value;
-          const goNext =
-            (-event.translationX > SWIPE_DISTANCE_THRESHOLD ||
-              -event.velocityX > SWIPE_VELOCITY_THRESHOLD) &&
-            current < numberOfTabs - 1;
-          const goPrev =
-            (event.translationX > SWIPE_DISTANCE_THRESHOLD ||
-              event.velocityX > SWIPE_VELOCITY_THRESHOLD) &&
-            current > 0;
+  const swipeGesture = usePanGesture({
+    activeOffsetX: [-SWIPE_ACTIVATION_DISTANCE, SWIPE_ACTIVATION_DISTANCE],
+    enabled: numberOfTabs > 1,
+    failOffsetY: [-SWIPE_FAIL_DISTANCE, SWIPE_FAIL_DISTANCE],
+    onActivate: () => {
+      cancelAnimation(tabProgress);
+      dragStartProgress.value = tabProgress.value;
+    },
+    onDeactivate: (event) => {
+      const current = selectedTabIndex.value;
+      const goNext =
+        (-event.translationX > SWIPE_DISTANCE_THRESHOLD ||
+          -event.velocityX > SWIPE_VELOCITY_THRESHOLD) &&
+        current < numberOfTabs - 1;
+      const goPrev =
+        (event.translationX > SWIPE_DISTANCE_THRESHOLD ||
+          event.velocityX > SWIPE_VELOCITY_THRESHOLD) &&
+        current > 0;
 
-          const target = goNext ? current + 1 : goPrev ? current - 1 : current;
+      const target = goNext ? current + 1 : goPrev ? current - 1 : current;
 
-          if (target !== current) {
-            selectedTabIndex.value = target;
-            scheduleOnRN(setSelectedTabName, tabNames[target]);
-          }
-          tabProgress.value = withTiming(target);
-        }),
-    [numberOfTabs, tabNames, tabProgress, dragStartProgress, selectedTabIndex]
-  );
+      if (target !== current) {
+        selectedTabIndex.value = target;
+        scheduleOnRN(setSelectedTabName, tabNames[target]);
+      }
+      tabProgress.value = withTiming(target);
+    },
+    onUpdate: (event) => {
+      const lastIndex = numberOfTabs - 1;
+      const raw = dragStartProgress.value - event.translationX / WINDOW_WIDTH;
+      // Rubber-band past the first / last tab.
+      if (raw < 0) {
+        tabProgress.value = raw * EDGE_RESISTANCE;
+      } else if (raw > lastIndex) {
+        tabProgress.value = lastIndex + (raw - lastIndex) * EDGE_RESISTANCE;
+      } else {
+        tabProgress.value = raw;
+      }
+    },
+  });
 
   useEffect(() => {
     if (IS_WEB) {

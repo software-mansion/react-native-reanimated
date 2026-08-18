@@ -18,20 +18,17 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
         // TODO: Fix this test - tag is not passed to _updateProps, so the recordAnimationUpdates function always receives tag as undefined
         // Uncomment test when fixed
         // require('./tests/animations/withTiming/easing.test');
-        // TODO: investigate and fix, it hangs
+        // TODO: snapshots are stale - the test records 63 updates, the snapshot has 64
         // require('./tests/animations/withTiming/transformMatrices.test');
       });
       describe('*****withSpring*****', () => {
-        // TODO: investigate and fix, it hangs
-        // require('./tests/animations/withSpring/variousConfig.test');
+        require('./tests/animations/withSpring/variousConfig.test');
       });
       describe('*****withDecay*****', () => {
-        // TODO: investigate and fix, it hangs
-        // require('./tests/animations/withDecay/basic.test');
+        require('./tests/animations/withDecay/basic.test');
       });
       describe('*****withSequence*****', () => {
-        // TODO: investigate and fix, it hangs
-        // require('./tests/animations/withSequence/callbackCascade.test');
+        require('./tests/animations/withSequence/callbackCascade.test');
         require('./tests/animations/withSequence/cancelAnimation.test');
         require('./tests/animations/withSequence/numbers.test');
         require('./tests/animations/withSequence/arrays.test');
@@ -59,8 +56,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/core/useSharedValue/objects.test');
       require('./tests/core/useSharedValue/assigningObjects.test');
       require('./tests/core/useAnimatedStyle/reuseAnimatedStyle.test');
-      // TODO: investigate and fix, it hangs
-      // require('./tests/core/useDerivedValue/basic.test');
+      require('./tests/core/useDerivedValue/basic.test');
       require('./tests/core/useDerivedValue/chain.test');
       require('./tests/core/useSharedValue/animationsCompilerApi.test');
       // TODO: onLayout event isn't working on Android

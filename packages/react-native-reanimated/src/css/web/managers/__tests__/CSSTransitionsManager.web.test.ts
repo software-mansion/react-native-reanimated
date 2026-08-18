@@ -87,7 +87,7 @@ describe('CSSTransitionsManager (web)', () => {
       const addSpy = jest.spyOn(element, 'addEventListener');
       const removeSpy = jest.spyOn(element, 'removeEventListener');
 
-      manager.update(transition(), { onTransitionEnd: jest.fn() });
+      manager.update(transition(), { onCSSTransitionEnd: jest.fn() });
       expect(addSpy).toHaveBeenCalledWith(
         'transitionend',
         expect.any(Function)
@@ -103,10 +103,10 @@ describe('CSSTransitionsManager (web)', () => {
       const addSpy = jest.spyOn(element, 'addEventListener');
 
       manager.update(transition(), {
-        onTransitionRun: jest.fn(),
-        onTransitionStart: jest.fn(),
-        onTransitionEnd: jest.fn(),
-        onTransitionCancel: jest.fn(),
+        onCSSTransitionRun: jest.fn(),
+        onCSSTransitionStart: jest.fn(),
+        onCSSTransitionEnd: jest.fn(),
+        onCSSTransitionCancel: jest.fn(),
       });
 
       for (const eventName of [
@@ -120,14 +120,14 @@ describe('CSSTransitionsManager (web)', () => {
     });
 
     test('forwards a camelCased propertyName and elapsedTime when the event fires', () => {
-      const onTransitionEnd = jest.fn();
-      manager.update(transition(), { onTransitionEnd });
+      const onCSSTransitionEnd = jest.fn();
+      manager.update(transition(), { onCSSTransitionEnd });
 
       element.dispatchEvent(
         transitionEvent('transitionend', 'background-color', 0.3)
       );
 
-      expect(onTransitionEnd).toHaveBeenCalledWith({
+      expect(onCSSTransitionEnd).toHaveBeenCalledWith({
         propertyName: 'backgroundColor',
         elapsedTime: 0.3,
       });
@@ -136,13 +136,13 @@ describe('CSSTransitionsManager (web)', () => {
     test('ignores events that bubble up from descendant nodes', () => {
       const child = document.createElement('div');
       element.appendChild(child);
-      const onTransitionEnd = jest.fn();
-      manager.update(transition(), { onTransitionEnd });
+      const onCSSTransitionEnd = jest.fn();
+      manager.update(transition(), { onCSSTransitionEnd });
 
       // The event bubbles from the child to the element's listener.
       child.dispatchEvent(transitionEvent('transitionend', 'opacity', 0.1));
 
-      expect(onTransitionEnd).not.toHaveBeenCalled();
+      expect(onCSSTransitionEnd).not.toHaveBeenCalled();
     });
 
     test('uses the latest callback without re-subscribing on re-render', () => {
@@ -150,8 +150,8 @@ describe('CSSTransitionsManager (web)', () => {
       const first = jest.fn();
       const second = jest.fn();
 
-      manager.update(transition(), { onTransitionEnd: first });
-      manager.update(transition(), { onTransitionEnd: second });
+      manager.update(transition(), { onCSSTransitionEnd: first });
+      manager.update(transition(), { onCSSTransitionEnd: second });
 
       const endSubscriptions = addSpy.mock.calls.filter(
         ([eventName]) => eventName === 'transitionend'
@@ -168,8 +168,8 @@ describe('CSSTransitionsManager (web)', () => {
       const removeSpy = jest.spyOn(element, 'removeEventListener');
 
       manager.update(transition(), {
-        onTransitionStart: jest.fn(),
-        onTransitionEnd: jest.fn(),
+        onCSSTransitionStart: jest.fn(),
+        onCSSTransitionEnd: jest.fn(),
       });
       manager.unmountCleanup();
 

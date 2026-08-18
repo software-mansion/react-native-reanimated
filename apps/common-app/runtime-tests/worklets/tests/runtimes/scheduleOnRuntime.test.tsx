@@ -8,22 +8,17 @@ import {
   beforeEach,
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 
-type localGlobal = typeof globalThis & {
-  scheduleOnRN: typeof scheduleOnRN;
-};
-
 describe('scheduleOnRuntime', () => {
   const PASS_NOTIFICATION = 'PASS';
   let value = 0;
 
-  const workletRuntime1 = getWorkletRuntimeFromPool('test');
-  const workletRuntime2 = getWorkletRuntimeFromPool('test2');
+  const [workletRuntime1, workletRuntime2] = getWorkletRuntimesFromPool(2);
 
   const callbackPass = (num: number) => {
     value = num;
@@ -36,7 +31,7 @@ describe('scheduleOnRuntime', () => {
     [workletRuntime1, workletRuntime2].forEach((runtime) => {
       runOnRuntimeSync(runtime, () => {
         'worklet';
-        (globalThis as localGlobal).scheduleOnRN = scheduleOnRN;
+        globalThis.scheduleOnRN = scheduleOnRN;
       });
     });
   });
@@ -57,7 +52,7 @@ describe('scheduleOnRuntime', () => {
 
       scheduleOnRuntime(workletRuntime1, () => {
         'worklet';
-        (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
+        globalThis.scheduleOnRN(callbackPass, 42);
       });
     });
 
@@ -71,7 +66,7 @@ describe('scheduleOnRuntime', () => {
 
       scheduleOnRuntime(workletRuntime2, () => {
         'worklet';
-        (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
+        globalThis.scheduleOnRN(callbackPass, 42);
       });
     });
 

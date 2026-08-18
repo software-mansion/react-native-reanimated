@@ -57,7 +57,7 @@ function ReactionsCounter({
         duration: COLOR_ANIMATION_DURATION,
       }),
     };
-  }, [you]);
+  });
 
   const entering = (values: EntryAnimationsValues) => {
     'worklet';

@@ -48,7 +48,7 @@ export default function ChessboardExample() {
       width: 10 + sv.value * 20,
       height: 10 + sv.value * 20,
     };
-  }, []);
+  });
 
   return (
     <View style={styles.workaround} collapsable={false}>

@@ -132,39 +132,23 @@ css::CSSCanRoutePropertyFunction makeCSSCanRouteProperty()
   return &css::canRouteCSSProperty;
 }
 
-css::CSSApplyTransitionJSIFunction makeCSSApplyTransitionJSI(REACSSPlatformTransitions *platformTransitions)
+css::CSSApplyTransitionFunction makeCSSApplyTransition(REACSSPlatformTransitions *platformTransitions)
 {
   return [platformTransitions](
-             jsi::Runtime &rt,
              Tag viewTag,
              const std::string &propertyName,
-             const jsi::Value &fromValue,
-             const jsi::Value &toValue,
-             const css::CSSTransitionPropertySettings &settings,
+             const css::PlatformValue &fromValue,
+             const css::PlatformValue &toValue,
+             const css::CSSTransitionPropertySettings *settings,
+             bool persistent,
              double timestamp) {
     return [platformTransitions applyTransitionForTag:viewTag
                                          propertyName:propertyName
                                             fromValue:fromValue
                                               toValue:toValue
-                                              runtime:rt
                                              settings:settings
+                                           persistent:persistent
                                             timestamp:timestamp];
-  };
-}
-
-css::CSSApplyTransitionDynamicFunction makeCSSApplyTransitionDynamic(REACSSPlatformTransitions *platformTransitions)
-{
-  return [platformTransitions](
-             Tag viewTag,
-             const std::string &propertyName,
-             const folly::dynamic &fromValue,
-             const folly::dynamic &toValue,
-             double timestamp) {
-    return [platformTransitions applyDynamicTransitionForTag:viewTag
-                                                propertyName:propertyName
-                                                   fromValue:fromValue
-                                                     toValue:toValue
-                                                   timestamp:timestamp];
   };
 }
 
@@ -239,8 +223,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   REACSSPlatformTransitions *platformTransitions =
       [[REACSSPlatformTransitions alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
   auto cssCanRouteProperty = makeCSSCanRouteProperty();
-  auto cssApplyTransitionJSI = makeCSSApplyTransitionJSI(platformTransitions);
-  auto cssApplyTransitionDynamic = makeCSSApplyTransitionDynamic(platformTransitions);
+  auto cssApplyTransition = makeCSSApplyTransition(platformTransitions);
   auto cssRemoveTransition = makeCSSRemoveTransition(platformTransitions);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
@@ -257,8 +240,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
       cssCanRouteProperty,
-      cssApplyTransitionJSI,
-      cssApplyTransitionDynamic,
+      cssApplyTransition,
       cssRemoveTransition,
   };
   return platformDepMethodsHolder;

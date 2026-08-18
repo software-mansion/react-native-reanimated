@@ -84,12 +84,16 @@ export function generateWorkletFile(
 
   const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
 
+  const output = process.env.WORKLETS_WRITE_ORIGIN
+    ? `// __workletOrigin: ${state.file.opts.filename ?? 'unknown'}\n${transformedProg}`
+    : transformedProg;
+
   // Multiple bundler or test workers can process files referencing the same
   // worklet concurrently. A plain write could be observed half-done by a
   // worker that requires the file, so we write to a per-process temporary
   // file and atomically move it into place.
   const temporaryFilePath = `${dedicatedFilePath}.${process.pid}.tmp`;
-  writeFileSync(temporaryFilePath, transformedProg);
+  writeFileSync(temporaryFilePath, output);
   renameSync(temporaryFilePath, dedicatedFilePath);
 }
 

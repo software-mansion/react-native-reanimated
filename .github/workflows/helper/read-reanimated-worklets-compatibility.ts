@@ -1,37 +1,8 @@
-import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-function resolveNpmVersion(
-  pkgName: string,
-  versionRange: string
-): string | null {
-  const spec = `${pkgName}@${versionRange}`;
-  try {
-    const rawOutput = execSync(`npm view "${spec}" version --json`, {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-    }).trim();
-
-    if (!rawOutput) {
-      return null;
-    }
-
-    const parsed = JSON.parse(rawOutput);
-    if (Array.isArray(parsed)) {
-      return parsed[parsed.length - 1];
-    }
-
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-function toRange(version: string): string {
-  return version.includes('x') ? version : `${version}.x`;
-}
+import { resolveNpmVersion, toRange } from './npm-versions.ts';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 

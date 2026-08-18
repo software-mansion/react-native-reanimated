@@ -17,6 +17,10 @@ const AnimatedListExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/AnimatedList').default as React.FC
   );
+const AnimatedTouchables: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/AnimatedTouchables').default as React.FC
+  );
 const AnimatedPropsExample: React.FC = () =>
   React.createElement(require('./AnimatedPropsExample').default as React.FC);
 const AnimatedSensorAccelerometerExample: React.FC = () =>
@@ -113,6 +117,8 @@ const ColorInterpolationExample: React.FC = () =>
   React.createElement(
     require('./ColorInterpolationExample').default as React.FC
   );
+const ContrastColorExample: React.FC = () =>
+  React.createElement(require('./ContrastColorExample').default as React.FC);
 const CombinedTest: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/Combined').default as React.FC
@@ -182,9 +188,19 @@ const EmojiWaterfallExample: React.FC = () =>
   React.createElement(require('./EmojiWaterfallExample').default as React.FC);
 const EmptyExample: React.FC = () =>
   React.createElement(require('./EmptyExample').default as React.FC);
+const SettledPropsLeakExample: React.FC = () =>
+  React.createElement(require('./SettledPropsLeakExample').default as React.FC);
+const InlineStylesAndPropsExample: React.FC = () =>
+  React.createElement(
+    require('./InlineStylesAndPropsExample').default as React.FC
+  );
 const SuspenseLayoutAnimationCrashExample: React.FC = () =>
   React.createElement(
     require('./SuspenseLayoutAnimationCrashExample').default as React.FC
+  );
+const NestedExitingCleanupExample: React.FC = () =>
+  React.createElement(
+    require('./NestedExitingCleanupExample').default as React.FC
   );
 const ExtrapolationExample: React.FC = () =>
   React.createElement(require('./ExtrapolationExample').default as React.FC);
@@ -192,6 +208,10 @@ const FetchExample: React.FC = () =>
   React.createElement(require('./FetchExample').default as React.FC);
 const FilterExample: React.FC = () =>
   React.createElement(require('./FilterExample').default as React.FC);
+const FinalFrameAccuracyExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/FinalFrameAccuracy').default as React.FC
+  );
 const FlatListExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/FlatList').default as React.FC
@@ -255,6 +275,11 @@ const KeyframeAnimation: React.FC = () =>
 const LayoutAnimationExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/LayoutAnimation').default
+  );
+const LayoutAnimationBatchSyncExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/LayoutAnimationBatchSyncExample')
+      .default as React.FC
   );
 const LayoutTransitionExample: React.FC = () =>
   React.createElement(
@@ -426,6 +451,8 @@ const ShadowNodesCloningExample: React.FC = () =>
   );
 const SharedStyleExample: React.FC = () =>
   React.createElement(require('./SharedStyleExample').default as React.FC);
+const SlowAnimationsExample: React.FC = () =>
+  React.createElement(require('./SlowAnimationsExample').default as React.FC);
 const SpringLayoutAnimation: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/SpringLayoutAnimation').default
@@ -524,6 +551,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Suspense + Layout Animation Crash',
     screen: SuspenseLayoutAnimationCrashExample,
   },
+  SettledPropsLeakExample: {
+    icon: '🚿',
+    title: 'Settled props leak',
+    screen: SettledPropsLeakExample,
+  },
 
   // Empty example for test purposes
   EmptyExample: {
@@ -531,10 +563,20 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Empty',
     screen: EmptyExample,
   },
+  InlineStylesAndPropsExample: {
+    icon: '🎛️',
+    title: 'Inline styles and props',
+    screen: InlineStylesAndPropsExample,
+  },
   FpsExample: {
     icon: '🎞️',
     title: 'FPS',
     screen: FpsExample,
+  },
+  SlowAnimationsExample: {
+    icon: '🐢',
+    title: 'Slow animations',
+    screen: SlowAnimationsExample,
   },
   HermesSamplingProfilerExample: {
     icon: '📊',
@@ -1040,6 +1082,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Color interpolation',
     screen: ColorInterpolationExample,
   },
+  ContrastColorExample: {
+    icon: '🔲',
+    title: 'Contrast color',
+    screen: ContrastColorExample,
+  },
   ExtrapolationExample: {
     title: 'Extrapolation example',
     screen: ExtrapolationExample,
@@ -1090,6 +1137,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Basic layout animation',
     screen: BasicLayoutAnimation,
   },
+  LayoutAnimationBatchSync: {
+    title: '[LA] Batch synchronization',
+    screen: LayoutAnimationBatchSyncExample,
+  },
   BasicNestedAnimation: {
     title: '[LA] Basic nested animation',
     screen: BasicNestedAnimation,
@@ -1121,6 +1172,10 @@ export const EXAMPLES: Record<string, Example> = {
   ParticipantList: {
     title: '[LA] Participant List',
     screen: AnimatedListExample,
+  },
+  AnimatedTouchables: {
+    title: '[LA] Animated Touchables',
+    screen: AnimatedTouchables,
   },
   OlympicAnimation: {
     title: '[LA] Olympic animation',
@@ -1221,6 +1276,15 @@ export const EXAMPLES: Record<string, Example> = {
   DefaultAnimationsOverrides: {
     title: '[LA] Default layout animations overrides',
     screen: DefaultAnimationsOverrides,
+  },
+  NestedExitingCleanupExample: {
+    icon: '🧹',
+    title: '[LA] Nested exiting cleanup',
+    screen: NestedExitingCleanupExample,
+  },
+  FinalFrameAccuracyExample: {
+    screen: FinalFrameAccuracyExample,
+    title: '[LA] Final frame accuracy',
   },
 
   // Shared Element Transitions

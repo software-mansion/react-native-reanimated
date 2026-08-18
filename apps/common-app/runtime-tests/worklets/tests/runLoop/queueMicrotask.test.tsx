@@ -1,16 +1,13 @@
-import React from 'react';
-
 import {
   describe,
   expect,
-  render,
   test,
   createOrderConstraint,
   createTestValue,
   waitForNotifications,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import { DispatchTestComponent } from './DispatchTestComponent';
+import { dispatchWorklet } from './dispatchWorklet';
 import { RuntimeKind } from 'react-native-worklets';
 
 describe('Test queueMicrotask', () => {
@@ -22,15 +19,10 @@ describe('Test queueMicrotask', () => {
       const [flag, setFlag] = createTestValue('not_ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            queueMicrotask(() => setFlag('ok', notification));
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        queueMicrotask(() => setFlag('ok', notification));
+      }, runtimeKind);
 
       await waitForNotification(notification);
       expect(flag.value).toBe('ok');
@@ -45,20 +37,15 @@ describe('Test queueMicrotask', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            queueMicrotask(() => {
-              queueMicrotask(() => {
-                order(2, notification2);
-              });
-              order(1, notification1);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        queueMicrotask(() => {
+          queueMicrotask(() => {
+            order(2, notification2);
+          });
+          order(1, notification1);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);
@@ -74,20 +61,15 @@ describe('Test queueMicrotask', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            queueMicrotask(() => {
-              order(1, notification1);
-            });
-            queueMicrotask(() => {
-              order(2, notification2);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        queueMicrotask(() => {
+          order(1, notification1);
+        });
+        queueMicrotask(() => {
+          order(2, notification2);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);
@@ -107,24 +89,19 @@ describe('Test queueMicrotask', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            queueMicrotask(() => {
-              queueMicrotask(() => {
-                order(3, notification2);
-              });
-              order(1, notification1);
-            });
+      dispatchWorklet(() => {
+        'worklet';
+        queueMicrotask(() => {
+          queueMicrotask(() => {
+            order(3, notification2);
+          });
+          order(1, notification1);
+        });
 
-            queueMicrotask(() => {
-              order(2, notification3);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+        queueMicrotask(() => {
+          order(2, notification3);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2, notification3]);
@@ -140,18 +117,13 @@ describe('Test queueMicrotask', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            queueMicrotask(() => {
-              order(2, notification2);
-            });
-            order(1, notification1);
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        queueMicrotask(() => {
+          order(2, notification2);
+        });
+        order(1, notification1);
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);

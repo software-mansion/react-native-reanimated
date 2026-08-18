@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import {
-  Gesture,
   GestureDetector,
   GestureHandlerRootView,
+  usePanGesture,
 } from 'react-native-gesture-handler';
 import Animated, {
   ReducedMotionConfig,
@@ -215,16 +215,17 @@ function Example(props: { animation: () => number; text: string }) {
 function DecayExample() {
   const offset = useSharedValue(0);
 
-  const pan = Gesture.Pan()
-    .onChange((event) => {
-      offset.value += event.changeX;
-    })
-    .onFinalize((event) => {
+  const pan = usePanGesture({
+    onDeactivate: (event) => {
       offset.value = withDecay({
         velocity: event.velocityX,
         clamp: [initialValue, toValue],
       });
-    });
+    },
+    onUpdate: (event) => {
+      offset.value += event.changeX;
+    },
+  });
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],

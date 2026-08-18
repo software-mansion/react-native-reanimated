@@ -45,6 +45,9 @@ on:
         default: Debug
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   example-ios-build-check:
     if: github.repository == 'software-mansion/react-native-reanimated'

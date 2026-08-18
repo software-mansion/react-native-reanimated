@@ -1,6 +1,9 @@
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
 const workletsPluginOptions = {
   strictGlobal: true,
+  importForwarding: {
+    moduleNames: ['axios'],
+  },
 };
 
 /** @type {import('@babel/core').TransformOptions} */

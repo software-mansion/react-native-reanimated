@@ -8,6 +8,10 @@ on:
     types: [created, edited]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   github-close-when-stale-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'

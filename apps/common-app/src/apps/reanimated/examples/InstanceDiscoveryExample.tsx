@@ -361,7 +361,7 @@ function checkFindNodeHandle(node: Node) {
     }
     if (typeof handle !== 'number') {
       throw new Error(
-        'findNodeHandle returned a non-number' + typeof handle + handle
+        'findNodeHandle returned a non-number' + typeof handle + String(handle)
       );
     }
     const id = handleToHandleId.get(handle) ?? handleId++;

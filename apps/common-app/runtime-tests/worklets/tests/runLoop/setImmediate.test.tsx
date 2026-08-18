@@ -1,17 +1,14 @@
-import React from 'react';
-
 import {
   describe,
   expect,
   notify,
-  render,
   test,
   createOrderConstraint,
   createTestValue,
   waitForNotifications,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import { DispatchTestComponent } from './DispatchTestComponent';
+import { dispatchWorklet } from './dispatchWorklet';
 import { RuntimeKind } from 'react-native-worklets';
 
 describe('Test setImmediate', () => {
@@ -23,15 +20,10 @@ describe('Test setImmediate', () => {
       const [flag, setFlag] = createTestValue('not_ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            setImmediate(() => setFlag('ok', notification));
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        setImmediate(() => setFlag('ok', notification));
+      }, runtimeKind);
 
       await waitForNotification(notification);
       expect(flag.value).toBe('ok');
@@ -47,20 +39,15 @@ describe('Test setImmediate', () => {
       const [flag, setFlag] = createTestValue('not_ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            setImmediate((value) => {
-              if (value === argValue) {
-                setFlag('ok');
-              }
-              notify(notification);
-            }, argValue);
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        setImmediate((value) => {
+          if (value === argValue) {
+            setFlag('ok');
+          }
+          notify(notification);
+        }, argValue);
+      }, runtimeKind);
 
       await waitForNotification(notification);
       expect(flag.value).toBe('ok');
@@ -75,24 +62,19 @@ describe('Test setImmediate', () => {
       const [flag, setFlag] = createTestValue('not_ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const handle1 = setImmediate(() =>
-              notify(notification1)
-            ) as unknown as number;
-            const handle2 = setImmediate(() =>
-              notify(notification2)
-            ) as unknown as number;
+      dispatchWorklet(() => {
+        'worklet';
+        const handle1 = setImmediate(() =>
+          notify(notification1)
+        ) as unknown as number;
+        const handle2 = setImmediate(() =>
+          notify(notification2)
+        ) as unknown as number;
 
-            if (handle1 + 1 === handle2) {
-              setFlag('ok');
-            }
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+        if (handle1 + 1 === handle2) {
+          setFlag('ok');
+        }
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);
@@ -108,20 +90,15 @@ describe('Test setImmediate', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            setImmediate(() => {
-              setImmediate(() => {
-                order(2, notification2);
-              });
-              order(1, notification1);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        setImmediate(() => {
+          setImmediate(() => {
+            order(2, notification2);
+          });
+          order(1, notification1);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);
@@ -137,20 +114,15 @@ describe('Test setImmediate', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            setImmediate(() => {
-              order(1, notification1);
-            });
-            setImmediate(() => {
-              order(2, notification2);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        setImmediate(() => {
+          order(1, notification1);
+        });
+        setImmediate(() => {
+          order(2, notification2);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);
@@ -170,23 +142,18 @@ describe('Test setImmediate', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            setImmediate(() => {
-              setImmediate(() => {
-                order(3, notification2);
-              });
-              order(1, notification1);
-            });
-            setImmediate(() => {
-              order(2, notification3);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        setImmediate(() => {
+          setImmediate(() => {
+            order(3, notification2);
+          });
+          order(1, notification1);
+        });
+        setImmediate(() => {
+          order(2, notification3);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2, notification3]);
@@ -202,18 +169,13 @@ describe('Test setImmediate', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            setImmediate(() => {
-              order(2, notification2);
-            });
-            order(1, notification1);
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        setImmediate(() => {
+          order(2, notification2);
+        });
+        order(1, notification1);
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);

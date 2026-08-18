@@ -63,6 +63,12 @@ export function buildWorkletString(
     expression.async
   );
 
+  traverse(fun, {
+    Directive(path) {
+      path.remove();
+    },
+  });
+
   const code = generate(workletFunction).code;
 
   const transformed = workletTransformSync(code, {

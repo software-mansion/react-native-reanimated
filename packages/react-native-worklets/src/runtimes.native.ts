@@ -175,7 +175,6 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
     createSerializable(() => {
       'worklet';
       worklet(...args);
-      globalThis.__callMicrotasks?.();
     }),
     SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
   );
@@ -224,7 +223,6 @@ export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
     createSerializable(() => {
       'worklet';
       worklet(...args);
-      globalThis.__callMicrotasks?.();
     }),
     SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
   );
@@ -400,7 +398,6 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
             serializedError
           );
         }
-        globalThis.__callMicrotasks?.();
       }),
       scheduleStack
     );
@@ -475,7 +472,6 @@ export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
             serializedError
           );
         }
-        globalThis.__callMicrotasks?.();
       }),
       scheduleStack
     );

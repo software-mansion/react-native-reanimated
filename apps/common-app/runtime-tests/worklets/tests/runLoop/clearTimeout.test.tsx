@@ -1,16 +1,13 @@
-import React from 'react';
-
 import {
   describe,
   expect,
   notify,
-  render,
   test,
   createTestValue,
   waitForNotifications,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import { DispatchTestComponent } from './DispatchTestComponent';
+import { dispatchWorklet } from './dispatchWorklet';
 import { RuntimeKind } from 'react-native-worklets';
 
 describe('Test clearTimeout', () => {
@@ -21,16 +18,11 @@ describe('Test clearTimeout', () => {
       const notification = 'callback';
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            clearTimeout(2137);
-            setTimeout(() => notify(notification));
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        clearTimeout(2137);
+        setTimeout(() => notify(notification));
+      }, runtimeKind);
 
       // Assert
       await waitForNotification(notification);
@@ -45,19 +37,14 @@ describe('Test clearTimeout', () => {
       const [flag, setFlag] = createTestValue('ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const handle = setTimeout(() => {
-              setFlag('not_ok');
-            }) as unknown as number;
-            setTimeout(() => notify(notification));
-            clearTimeout(handle);
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        const handle = setTimeout(() => {
+          setFlag('not_ok');
+        }) as unknown as number;
+        setTimeout(() => notify(notification));
+        clearTimeout(handle);
+      }, runtimeKind);
 
       // Assert
       await waitForNotification(notification);
@@ -73,23 +60,18 @@ describe('Test clearTimeout', () => {
       const [flag, setFlag] = createTestValue('ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            let handle = 0;
-            setTimeout(() => {
-              clearTimeout(handle);
-              notify(notification1);
-            }) as unknown as number;
-            handle = setTimeout(() => {
-              setFlag('not_ok');
-            }) as unknown as number;
-            setTimeout(() => notify(notification2));
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        let handle = 0;
+        setTimeout(() => {
+          clearTimeout(handle);
+          notify(notification1);
+        }) as unknown as number;
+        handle = setTimeout(() => {
+          setFlag('not_ok');
+        }) as unknown as number;
+        setTimeout(() => notify(notification2));
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);
@@ -109,26 +91,21 @@ describe('Test clearTimeout', () => {
       const [flag, setFlag] = createTestValue('ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            let handle = 0;
-            setTimeout(() => {
-              handle = setTimeout(() => {
-                setFlag('not_ok');
-              }) as unknown as number;
-              notify(notification1);
-            });
-            setTimeout(() => {
-              clearTimeout(handle);
-              setTimeout(() => notify(notification3));
-              notify(notification2);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        let handle = 0;
+        setTimeout(() => {
+          handle = setTimeout(() => {
+            setFlag('not_ok');
+          }) as unknown as number;
+          notify(notification1);
+        });
+        setTimeout(() => {
+          clearTimeout(handle);
+          setTimeout(() => notify(notification3));
+          notify(notification2);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2, notification3]);

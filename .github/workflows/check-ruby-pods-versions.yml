@@ -6,6 +6,9 @@ on:
       - 'apps/**/Gemfile.lock'
       - 'apps/**/**/Podfile.lock'
 
+permissions:
+  contents: read
+
 jobs:
   ruby-pods-version-check:
     if: github.repository == 'software-mansion/react-native-reanimated'

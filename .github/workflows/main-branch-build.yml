@@ -8,6 +8,9 @@ on:
       - .github/workflows/main-branch-build.yml
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   android:
     if: github.repository == 'software-mansion/react-native-reanimated'

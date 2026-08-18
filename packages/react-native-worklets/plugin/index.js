@@ -30,9 +30,26 @@ var require_directives = __commonJS({
   "lib/directives.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.handleWorkletDirective = handleWorkletDirective;
+    exports2.addWorkletDirectivesToPath = addWorkletDirectivesToPath;
+    exports2.addWorkletDirectivesToFunctionBody = addWorkletDirectivesToFunctionBody;
     exports2.addDirective = addDirective;
-    exports2.replaceImplicitReturnWithBlock = replaceImplicitReturnWithBlock;
     var types_12 = require("@babel/types");
+    function handleWorkletDirective(path) {
+      if (path.node.value.value === "worklet" && path.parentPath.isBlockStatement()) {
+        addDirective(path.parentPath.node, "use no memo");
+      }
+    }
+    function addWorkletDirectivesToPath(path) {
+      if (path.isArrowFunctionExpression()) {
+        replaceImplicitReturnWithBlock(path.node);
+      }
+      addWorkletDirectivesToFunctionBody(path.node.body);
+    }
+    function addWorkletDirectivesToFunctionBody(node) {
+      addDirective(node, "worklet");
+      addDirective(node, "use no memo");
+    }
     function addDirective(node, dir) {
       if (!node.directives.some((functionDirective) => functionDirective.value.value === dir)) {
         node.directives.push((0, types_12.directive)((0, types_12.directiveLiteral)(dir)));
@@ -426,7 +443,7 @@ var require_autoworkletization = __commonJS({
     exports2.addDirectivesToKnownCallback = addDirectivesToKnownCallback;
     exports2.handleWorkletizableCallback = handleWorkletizableCallback;
     var types_12 = require("@babel/types");
-    var directives_1 = require_directives();
+    var directives_12 = require_directives();
     var findWorklet_1 = require_findWorklet();
     var gestureHandlerAutoworkletization_1 = require_gestureHandlerAutoworkletization();
     var layoutAnimationAutoworkletization_1 = require_layoutAnimationAutoworkletization();
@@ -488,7 +505,7 @@ var require_autoworkletization = __commonJS({
     ]);
     function addDirectivesToKnownCallback(path) {
       if ((0, gestureHandlerAutoworkletization_1.isGestureHandlerEventCallback)(path) || (0, layoutAnimationAutoworkletization_1.isLayoutAnimationCallback)(path)) {
-        addDirectives(path);
+        (0, directives_12.addWorkletDirectivesToPath)(path);
       }
     }
     function handleWorkletizableCallback(path, state) {
@@ -510,14 +527,8 @@ var require_autoworkletization = __commonJS({
     }
     function addDirectivesToArgs(args, state, acceptWorkletizableFunction, acceptObject) {
       args.forEach((arg) => {
-        (0, findWorklet_1.forEachWorkletizableFunction)(arg, state, acceptWorkletizableFunction, acceptObject, addDirectives);
+        (0, findWorklet_1.forEachWorkletizableFunction)(arg, state, acceptWorkletizableFunction, acceptObject, directives_12.addWorkletDirectivesToPath);
       });
-    }
-    function addDirectives(path) {
-      if (path.isArrowFunctionExpression()) {
-        (0, directives_1.replaceImplicitReturnWithBlock)(path.node);
-      }
-      (0, directives_1.addDirective)(path.node.body, "worklet");
     }
   }
 });
@@ -549,6 +560,7 @@ var require_contextObject = __commonJS({
     exports2.processIfWorkletContextObject = processIfWorkletContextObject;
     exports2.isContextObject = isContextObject;
     var types_12 = require("@babel/types");
+    var directives_12 = require_directives();
     exports2.contextObjectMarker = "__workletContextObject";
     function processIfWorkletContextObject(path, _state) {
       if (!isContextObject(path.node)) {
@@ -562,7 +574,8 @@ var require_contextObject = __commonJS({
       return objectExpression.properties.some((property) => (0, types_12.isObjectProperty)(property) && (0, types_12.isIdentifier)(property.key) && property.key.name === exports2.contextObjectMarker);
     }
     function processWorkletContextObject(objectExpression) {
-      const workletObjectFactory = (0, types_12.functionExpression)(null, [], (0, types_12.blockStatement)([(0, types_12.returnStatement)((0, types_12.cloneNode)(objectExpression))], [(0, types_12.directive)((0, types_12.directiveLiteral)("worklet"))]));
+      const workletObjectFactory = (0, types_12.functionExpression)(null, [], (0, types_12.blockStatement)([(0, types_12.returnStatement)((0, types_12.cloneNode)(objectExpression))]));
+      (0, directives_12.addWorkletDirectivesToFunctionBody)(workletObjectFactory.body);
       objectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)(`${exports2.contextObjectMarker}Factory`), workletObjectFactory));
     }
     function removeContextObjectMarker(objectExpression) {
@@ -580,7 +593,7 @@ var require_file = __commonJS({
     exports2.isImplicitContextObject = isImplicitContextObject;
     var types_12 = require("@babel/types");
     var contextObject_12 = require_contextObject();
-    var directives_1 = require_directives();
+    var directives_12 = require_directives();
     var types_2 = require_types();
     function processIfWorkletFile(path, state) {
       if (!path.node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
@@ -607,10 +620,7 @@ var require_file = __commonJS({
     }
     function processWorkletizableEntity(nodePath, state) {
       if ((0, types_2.isWorkletizableFunctionPath)(nodePath)) {
-        if (nodePath.isArrowFunctionExpression()) {
-          (0, directives_1.replaceImplicitReturnWithBlock)(nodePath.node);
-        }
-        (0, directives_1.addDirective)(nodePath.node.body, "worklet");
+        (0, directives_12.addWorkletDirectivesToPath)(nodePath);
       } else if ((0, types_2.isWorkletizableObjectPath)(nodePath)) {
         if (isImplicitContextObject(nodePath)) {
           appendWorkletContextObjectMarker(nodePath.node);
@@ -636,7 +646,7 @@ var require_file = __commonJS({
       const properties = objectPath.get("properties");
       properties.forEach((property) => {
         if (property.isObjectMethod()) {
-          (0, directives_1.addDirective)(property.node.body, "worklet");
+          (0, directives_12.addWorkletDirectivesToPath)(property);
         } else if (property.isObjectProperty()) {
           const valuePath = property.get("value");
           processWorkletizableEntity(valuePath, state);
@@ -705,6 +715,7 @@ var require_globals = __commonJS({
     exports2.isGeneratedWorkletFile = isGeneratedWorkletFile;
     exports2.initializeGlobals = initializeGlobals;
     exports2.addCustomGlobals = addCustomGlobals;
+    var assert_1 = require("assert");
     var path_1 = __importDefault(require("path"));
     var types_12 = require_types();
     var notCapturedIdentifiers = [
@@ -834,7 +845,8 @@ var require_globals = __commonJS({
         addCustomGlobals(state);
       }
       const userImportForwarding = state.opts.importForwarding;
-      state.opts.importForwarding = {
+      (0, assert_1.strict)(state.importForwarding === void 0, "state.importForwarding should be undefined at this point");
+      state.importForwarding = {
         relativePaths: [
           ...defaultAllowedPaths,
           ...(_a = userImportForwarding === null || userImportForwarding === void 0 ? void 0 : userImportForwarding.relativePaths) !== null && _a !== void 0 ? _a : []
@@ -880,9 +892,19 @@ var require_utils = __commonJS({
     exports2.replaceWithFactoryCall = replaceWithFactoryCall;
     var types_12 = require("@babel/types");
     function isRelease(state) {
-      var _a, _b, _c;
-      const pattern = /(prod|release|stag[ei])/i;
-      return !!(((_a = state.file.opts.envName) === null || _a === void 0 ? void 0 : _a.match(pattern)) || ((_b = process.env.BABEL_ENV) === null || _b === void 0 ? void 0 : _b.match(pattern)) || ((_c = process.env.NODE_ENV) === null || _c === void 0 ? void 0 : _c.match(pattern)));
+      var _a, _b;
+      const releasePattern = /(prod|release|stag[ei])/i;
+      const developmentPattern = /dev/i;
+      const envName = state.file.opts.envName;
+      if (envName) {
+        if (envName.match(releasePattern)) {
+          return true;
+        }
+        if (envName.match(developmentPattern)) {
+          return false;
+        }
+      }
+      return !!(((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.match(releasePattern)) || ((_b = process.env.NODE_ENV) === null || _b === void 0 ? void 0 : _b.match(releasePattern)));
     }
     function replaceWithFactoryCall(toReplace, name, factoryCall) {
       if (!name || !needsDeclaration(toReplace)) {
@@ -1021,7 +1043,7 @@ var require_imports = __commonJS({
           var _a;
           if (nodePath.get("callee").isIdentifier({ name: "require" }) && ((_a = nodePath.get("arguments")[0]) === null || _a === void 0 ? void 0 : _a.isStringLiteral())) {
             const requiredModule = nodePath.get("arguments")[0];
-            if (requiredModule.node.value.startsWith(".") && canForwardRelativeImport(state.file.opts.filename || "", state.opts.importForwarding.relativePaths)) {
+            if (requiredModule.node.value.startsWith(".") && canForwardRelativeImport(state.file.opts.filename || "", state.importForwarding.relativePaths)) {
               requiredModule.replaceWith(createImportPathLiteral(requiredModule.node.value, state));
             }
           }
@@ -1115,13 +1137,13 @@ var require_closure = __commonJS({
             scope = scope.parent;
           }
           if ((0, imports_1.isImport)(binding)) {
-            if ((0, imports_1.isImportRelative)(binding) && (0, imports_1.canForwardRelativeImport)(state.filename, state.opts.importForwarding.relativePaths)) {
+            if ((0, imports_1.isImportRelative)(binding) && (0, imports_1.canForwardRelativeImport)(state.filename, state.importForwarding.relativePaths)) {
               capturedNames.add(name);
               relativeBindingsToImport.add(binding);
               return;
             }
             const source = binding.path.parentPath.node.source.value;
-            if ((0, imports_1.canForwardModuleImport)(source, state.opts.importForwarding.moduleNames)) {
+            if ((0, imports_1.canForwardModuleImport)(source, state.importForwarding.moduleNames)) {
               capturedNames.add(name);
               moduleBindingsToImport.add(binding);
               return;
@@ -1157,7 +1179,7 @@ var require_generate = __commonJS({
     var imports_1 = require_imports();
     var types_2 = require_types();
     function generateWorkletFile(moduleBindingsToImport, relativeBindingsToImport, factory, workletHash, state) {
-      var _a;
+      var _a, _b;
       const libraryImports = Array.from(moduleBindingsToImport).filter((binding) => (binding.path.isImportSpecifier() || binding.path.isImportDefaultSpecifier()) && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
       const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
       const relativeImports = Array.from(relativeBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, imports_1.createImportPathLiteral)(binding.path.parentPath.node.source.value, state)));
@@ -1174,8 +1196,10 @@ var require_generate = __commonJS({
       })) === null || _a === void 0 ? void 0 : _a.code;
       (0, assert_1.default)(transformedProg, "[Worklets] `transformedProg` is undefined.");
       const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
+      const output = process.env.WORKLETS_WRITE_ORIGIN ? `// __workletOrigin: ${(_b = state.file.opts.filename) !== null && _b !== void 0 ? _b : "unknown"}
+${transformedProg}` : transformedProg;
       const temporaryFilePath = `${dedicatedFilePath}.${process.pid}.tmp`;
-      (0, fs_1.writeFileSync)(temporaryFilePath, transformedProg);
+      (0, fs_1.writeFileSync)(temporaryFilePath, output);
       (0, fs_1.renameSync)(temporaryFilePath, dedicatedFilePath);
     }
     function resolvePresetTypescript() {
@@ -1257,6 +1281,11 @@ var require_workletStringCode = __commonJS({
       (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
       (0, assert_1.strict)((0, types_12.isBlockStatement)(expression.body), "`expression.body` is not a `BlockStatement`");
       const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(workletName), expression.params, expression.body, expression.generator, expression.async);
+      (0, core_1.traverse)(fun, {
+        Directive(path) {
+          path.remove();
+        }
+      });
       const code = (0, generator_1.default)(workletFunction).code;
       const transformed = (0, transform_1.workletTransformSync)(code, {
         filename: state.file.opts.filename,
@@ -1538,6 +1567,7 @@ exports.getAutoworkletizationMicroPlugin = getAutoworkletizationMicroPlugin;
 var autoworkletization_1 = require_autoworkletization();
 var classMethod_1 = require_classMethod();
 var contextObject_1 = require_contextObject();
+var directives_1 = require_directives();
 var file_1 = require_file();
 var globals_1 = require_globals();
 var inlineStylesWarning_1 = require_inlineStylesWarning();
@@ -1622,6 +1652,11 @@ function getAutoworkletizationMicroPlugin() {
     [types_1.WorkletizableFunction]: {
       enter(path) {
         (0, autoworkletization_1.addDirectivesToKnownCallback)(path);
+      }
+    },
+    Directive: {
+      enter(path) {
+        (0, directives_1.handleWorkletDirective)(path);
       }
     }
   };

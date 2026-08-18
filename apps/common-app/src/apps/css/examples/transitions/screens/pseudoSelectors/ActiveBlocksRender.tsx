@@ -40,7 +40,6 @@ export default function ActiveBlocksRender() {
     transitionDuration: '900ms',
     transitionTimingFunction: 'linear',
   }}
-  onStartShouldSetResponder={() => true}
 />`}
             collapsedCode={`backgroundColor: {
   default: renderColor,
@@ -58,7 +57,6 @@ export default function ActiveBlocksRender() {
                   transitionTimingFunction: 'linear',
                 },
               ]}
-              onStartShouldSetResponder={() => true}
             />
           </VerticalExampleCard>
         </Section>

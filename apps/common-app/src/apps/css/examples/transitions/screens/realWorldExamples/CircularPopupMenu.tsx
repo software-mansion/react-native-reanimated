@@ -10,7 +10,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, useTapGesture } from 'react-native-gesture-handler';
 import type { CSSTransitionProperties } from 'react-native-reanimated';
 import Animated, { cubicBezier } from 'react-native-reanimated';
 
@@ -40,15 +40,17 @@ const MENU_ITEMS = [
 function CircularMenu() {
   const [open, setOpen] = useState(false);
 
+  const tapGesture = useTapGesture({
+    onDeactivate: () => setOpen(!open),
+    runOnJS: true,
+  });
+
   return (
     <Screen style={flex.center}>
       {MENU_ITEMS.map((item, index) => (
         <MenuItem icon={item.icon} index={index} key={index} open={open} />
       ))}
-      <GestureDetector
-        gesture={Gesture.Tap()
-          .onEnd(() => setOpen(!open))
-          .runOnJS(true)}>
+      <GestureDetector gesture={tapGesture}>
         <Animated.View
           style={[
             styles.menuButtonWrapper,

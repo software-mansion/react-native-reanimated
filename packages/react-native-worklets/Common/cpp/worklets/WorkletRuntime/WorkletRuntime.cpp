@@ -2,7 +2,6 @@
 #include <jsi/jsi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Tools/JSLogger.h>
-#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
 #include <worklets/WorkletRuntime/ScriptLoader.h>
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
@@ -46,10 +45,10 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
         runtime_(std::move(runtime)) {}
 };
 
-static std::shared_ptr<jsi::Runtime> makeRuntime(
-    const std::shared_ptr<std::recursive_mutex> &runtimeMutex,
-    bool enableLocking) {
-  auto hermesRuntime = facebook::hermes::makeHermesRuntime();
+static std::shared_ptr<jsi::Runtime>
+makeRuntime(const std::shared_ptr<std::recursive_mutex> &runtimeMutex, bool enableLocking, bool enableMicrotaskQueue) {
+  auto config = ::hermes::vm::RuntimeConfig::Builder().withMicrotaskQueue(enableMicrotaskQueue).build();
+  auto hermesRuntime = facebook::hermes::makeHermesRuntime(config);
   std::shared_ptr<jsi::Runtime> jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
   if (!enableLocking) {
     return jsiRuntime;
@@ -67,7 +66,8 @@ WorkletRuntime::WorkletRuntime(
     : runtimeId_(runtimeId),
       enableLocking_(enableLocking),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
-      runtime_(makeRuntime(runtimeMutex_, enableLocking_)),
+      microtaskQueueEnabled_(enableEventLoop || runtimeKind == RuntimeData::RuntimeKind::UI),
+      runtime_(makeRuntime(runtimeMutex_, enableLocking_, microtaskQueueEnabled_)),
       runtimeKind_(runtimeKind),
       name_(name),
       queue_(queue) {
@@ -78,7 +78,7 @@ WorkletRuntime::WorkletRuntime(
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
   if (enableEventLoop) {
-    eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_);
+    eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_, runtimeMutex_);
     eventLoop_->run();
   }
 }
@@ -137,91 +137,75 @@ void WorkletRuntime::bundleModeInit(
 /* #region schedule */
 
 void WorkletRuntime::schedule(jsi::Function &&function) const {
-  react_native_assert(
-      queue_ &&
-      "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
-      "async queue is not set. Recreate the runtime with a valid async queue.");
-  queue_->push([function = std::make_shared<jsi::Function>(std::move(function)), weakThis = weak_from_this()]() {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-
-    strongThis->runSync(*function);
+  scheduleImpl([function = std::make_shared<jsi::Function>(std::move(function))](const WorkletRuntime &workletRuntime) {
+    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>(*function);
   });
 }
 
 void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) const {
-  react_native_assert(
-      queue_ &&
-      "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
-      "async queue is not set. Recreate the runtime with a valid async queue.");
+  scheduleImpl([worklet = std::move(worklet)](const WorkletRuntime &workletRuntime) {
+    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>(worklet);
+  });
+}
 
-  queue_->push([worklet = std::move(worklet), weakThis = weak_from_this()] {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-
-    strongThis->runSync(worklet);
+void WorkletRuntime::schedule(std::vector<std::shared_ptr<SerializableWorklet>> worklets) const {
+  scheduleImpl([worklets = std::move(worklets)](const WorkletRuntime &workletRuntime) {
+    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>([&](jsi::Runtime &rt) {
+      const auto scope = jsi::Scope(rt);
+      for (const auto &worklet : worklets) {
+        workletRuntime.runSyncImpl(worklet);
+      }
+    });
   });
 }
 
 #ifndef NDEBUG
-void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std::optional<std::string> scheduleStack)
-    const {
-  react_native_assert(
-      queue_ &&
-      "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
-      "async queue is not set. Recreate the runtime with a valid async queue.");
+void WorkletRuntime::scheduleWithStack(
+    std::shared_ptr<SerializableWorklet> worklet,
+    std::optional<std::string> scheduleStack) const {
+  scheduleImpl([worklet = std::move(worklet),
+                scheduleStack = std::move(scheduleStack)](const WorkletRuntime &workletRuntime) {
+    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run, jsi::Value, ScheduleStack::Requested>(worklet, scheduleStack);
+  });
+}
 
-  queue_->push([worklet = std::move(worklet), scheduleStack = std::move(scheduleStack), weakThis = weak_from_this()] {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-
-    strongThis->runSyncWithStack(worklet, scheduleStack);
+void WorkletRuntime::scheduleWithStack(
+    std::vector<std::shared_ptr<SerializableWorklet>> worklets,
+    std::vector<std::optional<std::string>> scheduleStacks) const {
+  react_native_assert(worklets.size() == scheduleStacks.size());
+  scheduleImpl([worklets = std::move(worklets),
+                scheduleStacks = std::move(scheduleStacks)](const WorkletRuntime &workletRuntime) {
+    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>([&](jsi::Runtime &rt) {
+      const auto scope = jsi::Scope(rt);
+      for (size_t i = 0; i < worklets.size(); i++) {
+        workletRuntime.runSyncImpl<MicrotaskCheckpoint::Skip, jsi::Value, ScheduleStack::Requested>(
+            worklets[i], scheduleStacks[i]);
+      }
+    });
   });
 }
 #endif // NDEBUG
 
-void WorkletRuntime::callMicrotasks() const {
-  runSync([](jsi::Runtime &rt) {
-    auto callMicrotasks = rt.global().getProperty(rt, "__callMicrotasks");
-    if (callMicrotasks.isObject()) {
-      auto callMicrotasksObject = callMicrotasks.asObject(rt);
-      if (callMicrotasksObject.isFunction(rt)) {
-        callMicrotasksObject.asFunction(rt).call(rt);
-      }
-    }
+void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
+  scheduleImpl([job = std::move(job)](const WorkletRuntime &workletRuntime) {
+    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>(job);
   });
 }
 
-void WorkletRuntime::schedule(std::function<void()> job) const {
+void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
   react_native_assert(
       queue_ &&
       "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
       "async queue is not set. Recreate the runtime with a valid async queue.");
 
-  queue_->push(std::move(job));
-}
-
-void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
-  react_native_assert(
-      queue_ &&
-      "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
-      "async queue is not set. Recreate the runtime with a valid async queue.");
-
-  queue_->push([job = std::move(job), weakThis = weak_from_this()]() {
-    auto strongThis = weakThis.lock();
+  queue_->push([job = std::move(job), weakThis = weak_from_this()] {
+    const auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
     }
 
     auto lock = strongThis->acquireRuntimeLock();
-    jsi::Runtime &runtime = strongThis->getJSIRuntime();
-    job(runtime);
+    job(*strongThis);
   });
 }
 
@@ -283,7 +267,7 @@ void scheduleOnRuntime(
   auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Function passed to `scheduleOnRuntime` is not a serializable worklet.");
-  workletRuntime->schedule(serializableWorklet, scheduleStack);
+  workletRuntime->scheduleWithStack(serializableWorklet, scheduleStack);
 }
 #endif // NDEBUG
 
@@ -297,28 +281,5 @@ std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::
   auto weakHolder = std::static_pointer_cast<WeakRuntimeHolder>(runtimeData);
   return weakHolder->weakRuntime;
 }
-
-/* #region deprecated */
-
-void WorkletRuntime::runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet) {
-  schedule(worklet);
-}
-
-jsi::Value WorkletRuntime::executeSync(jsi::Runtime &caller, const jsi::Value &worklet) const {
-  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-      caller, worklet, "[Worklets] Only worklets can be executed synchronously on UI runtime.");
-  auto result = runSyncSerialized(serializableWorklet);
-  return result->toJSValue(caller);
-}
-
-jsi::Value WorkletRuntime::executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const {
-  return runSync(job);
-}
-
-jsi::Value WorkletRuntime::executeSync(const std::function<jsi::Value(jsi::Runtime &)> &job) const {
-  return runSync(job);
-}
-
-/* #endregion */
 
 } // namespace worklets

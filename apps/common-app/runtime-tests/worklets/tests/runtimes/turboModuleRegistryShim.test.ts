@@ -3,7 +3,7 @@ import { runOnUISync, runOnRuntimeSync } from 'react-native-worklets';
 import {
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   test,
 } from '../../../ReJest/RuntimeTestsApi';
 
@@ -18,7 +18,7 @@ const fetchPreviewEnabled = !!proxy?.getStaticFeatureFlag(
 );
 
 describe('accessing Turbo Modules on Worklet Runtimes', () => {
-  const workerRuntime = getWorkletRuntimeFromPool('test');
+  const [workerRuntime] = getWorkletRuntimesFromPool(1);
 
   const previewOnFn = fetchPreviewEnabled ? test : test.skip;
   const previewOffFn = !fetchPreviewEnabled ? test : test.skip;

@@ -7,13 +7,15 @@
 #import <worklets/apple/AssertJavaScriptQueue.h>
 #import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/IOSUIScheduler.h>
+#import <worklets/apple/ScriptLoader.h>
 #import <worklets/apple/WorkletsModule.h>
+
+#import <Foundation/Foundation.h>
 
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
 
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-#import <FBReactNativeSpec/FBReactNativeSpec.h>
 #import <React/RCTNetworking.h>
 #import <ReactCommon/RCTTurboModule.h>
 #import <worklets/apple/Networking/WorkletsNetworking.h>
@@ -61,7 +63,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
   NSURL *url = bundleManager_.bundleURL;
-  std::shared_ptr<const ScriptBuffer> script = [self getScript:url];
+  std::shared_ptr<const ScriptBuffer> script = getScript(url);
   std::string sourceURL = [[url absoluteString] UTF8String];
 
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
@@ -121,21 +123,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
 {
   AssertJavaScriptQueue();
   return std::make_shared<facebook::react::NativeWorkletsModuleSpecJSI>(params);
-}
-
-- (std::shared_ptr<const ScriptBuffer>)getScript:(NSURL *)url
-{
-  NSData *data = [NSData dataWithContentsOfURL:url];
-
-  if (!data) [[unlikely]] {
-    NSString *errorMsg = [NSString stringWithFormat:@"[Worklets] Failed to load worklets bundle from URL: %@", url];
-    NSLog(@"%@", errorMsg);
-    throw std::runtime_error([errorMsg UTF8String]);
-  }
-
-  auto str = std::string(reinterpret_cast<const char *>([data bytes]), [data length]);
-  auto bigString = std::make_shared<const JSBigStdString>(str);
-  return std::make_shared<const ScriptBuffer>(bigString);
 }
 
 - (std::shared_ptr<RuntimeBindings>)getRuntimeBindings:(jsi::Runtime &)rnRuntime

@@ -14,7 +14,7 @@ import {
   beforeEach,
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
@@ -26,7 +26,7 @@ describe('Test createSerializable', () => {
   let result = false;
   let errorMessage = '';
 
-  const workletRuntime = getWorkletRuntimeFromPool('test');
+  const [workletRuntime] = getWorkletRuntimesFromPool(1);
 
   const targets = [
     {
@@ -42,7 +42,7 @@ describe('Test createSerializable', () => {
         scheduleOnRuntime(workletRuntime, worklet);
       },
       targetRuntime: 'Worker',
-      runtimeName: 'test',
+      runtimeName: workletRuntime.name,
     },
   ];
 
@@ -182,9 +182,8 @@ describe('Test createSerializable', () => {
       });
 
       test('createSerializableHostObject', async () => {
-        const hostObjectValue = getWorkletRuntimeFromPool(
-          'test'
-        ) as unknown as Record<string, unknown>;
+        const [runtime] = getWorkletRuntimesFromPool(1);
+        const hostObjectValue = runtime as unknown as Record<string, unknown>;
         const hostObjectKeys = Object.keys(hostObjectValue);
         scheduleOnTarget(() => {
           'worklet';
@@ -612,19 +611,6 @@ describe('Test createSerializable', () => {
         }).toThrow('Trying to convert a cyclic object');
       });
 
-      test('createSerializableInaccessibleObject', async () => {
-        class Inaccessible {
-          access() {
-            return true;
-          }
-        }
-        const inaccessibleObject = new Inaccessible();
-
-        await expect(() => {
-          createSerializable(inaccessibleObject);
-        }).toThrow('Cannot copy value of type `Inaccessible`.');
-      });
-
       test('createSerializableRemoteNamedFunctionSyncCall', async () => {
         function fooFunction() {}
         scheduleOnTarget(() => {
@@ -686,6 +672,16 @@ if (__DEV__) {
       await expect(() => {
         createSerializable(proxy);
       }).toThrow('Cannot copy value of type');
+    });
+
+    test('warns when passing an unserializable value to a worklet', async () => {
+      class Clazz {}
+      const nestedMap = new Map([[0, [{ someKey: new Clazz() }]]]);
+      await expect(() => {
+        createSerializable(nestedMap);
+      }).toThrow(
+        'Cannot copy value of type `Clazz`. It was located at `.values()[0][0]["someKey"]`.'
+      );
     });
   });
 

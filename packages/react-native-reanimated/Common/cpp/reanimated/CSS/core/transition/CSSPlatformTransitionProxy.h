@@ -3,6 +3,7 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingConfigs.h>
+#include <reanimated/CSS/utils/platform.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
@@ -18,22 +19,17 @@ using namespace react;
 
 /// Whether the platform can animate the property natively for the given easing.
 using CSSCanRoutePropertyFunction = std::function<bool(const std::string &propertyName, const EasingConfig &easing)>;
-/// Animates a routed property natively; a false (no-op) return means the platform
-/// can't express the value, so it falls back to the loop. The jsi overload is the
-/// config path (carries a runtime + settings); the folly overload, the toggle path.
-using CSSApplyTransitionJSIFunction = std::function<bool(
-    jsi::Runtime &rt,
+/// Animates a routed property natively; a false return falls back to the loop.
+/// `settings` is null on the pseudo-selector toggle path, where the backend reuses
+/// the settings captured at config-apply time. `persistent` means the target has no
+/// committed style behind it, so the backend must hold the value past the animation.
+using CSSApplyTransitionFunction = std::function<bool(
     Tag viewTag,
     const std::string &propertyName,
-    const jsi::Value &fromValue,
-    const jsi::Value &toValue,
-    const CSSTransitionPropertySettings &settings,
-    double timestamp)>;
-using CSSApplyTransitionDynamicFunction = std::function<bool(
-    Tag viewTag,
-    const std::string &propertyName,
-    const folly::dynamic &fromValue,
-    const folly::dynamic &toValue,
+    const PlatformValue &fromValue,
+    const PlatformValue &toValue,
+    const CSSTransitionPropertySettings *settings,
+    bool persistent,
     double timestamp)>;
 /// Cancels the property's native transition and drops its platform-side state.
 using CSSRemoveTransitionFunction = std::function<void(Tag viewTag, const std::string &propertyName)>;
@@ -46,15 +42,14 @@ struct CSSTransitionRouting {
 };
 
 /// Stateless, shared routing engine: per property it routes a view's CSS transition
-/// to the platform (animated natively via the hooks above) or the C++ loop, never
-/// seeing the value - it forwards the raw JS source to the platform. Per-view routing
-/// state is passed in; an absent hook keeps that property on the loop.
+/// to the platform or the C++ loop. Endpoints are parsed here, so a value the
+/// platform can't express never crosses the seam. Per-view routing state is passed
+/// in; an absent hook keeps that property on the loop.
 class CSSPlatformTransitionProxy {
  public:
   CSSPlatformTransitionProxy(
       CSSCanRoutePropertyFunction canRoute,
-      CSSApplyTransitionJSIFunction applyJSI,
-      CSSApplyTransitionDynamicFunction applyDynamic,
+      CSSApplyTransitionFunction applyTransition,
       CSSRemoveTransitionFunction removeTransition);
 
   /// Routes the config between platform and loop, updating `routing` and returning
@@ -64,14 +59,18 @@ class CSSPlatformTransitionProxy {
       Tag viewTag,
       const CSSTransitionConfig &config,
       CSSTransitionRouting &routing,
+      bool allowPlatform,
       double timestamp) const;
 
   /// Re-routes pseudo-selector toggle diffs: a property the platform can no longer
   /// express migrates to the loop. Updates `routing`, returns the loop diffs.
+  /// Only a property still pseudo-locked after the toggle needs its value held.
   PropertyValueDynamicDiffsMap processDynamicDiffs(
       Tag viewTag,
       const PropertyValueDynamicDiffsMap &propertyDiffs,
+      const TransitionProperties &pseudoLockedProperties,
       CSSTransitionRouting &routing,
+      bool allowPlatform,
       double timestamp) const;
 
   /// Cancels the native transition of every given property (teardown).
@@ -80,24 +79,17 @@ class CSSPlatformTransitionProxy {
  private:
   bool canRoute(const std::string &propertyName, const EasingConfig &easing) const;
   bool apply(
-      jsi::Runtime &rt,
       Tag viewTag,
       const std::string &propertyName,
-      const jsi::Value &fromValue,
-      const jsi::Value &toValue,
-      const CSSTransitionPropertySettings &settings,
-      double timestamp) const;
-  bool apply(
-      Tag viewTag,
-      const std::string &propertyName,
-      const folly::dynamic &fromValue,
-      const folly::dynamic &toValue,
+      const PlatformValue &fromValue,
+      const PlatformValue &toValue,
+      const CSSTransitionPropertySettings *settings,
+      bool persistent,
       double timestamp) const;
   void remove(Tag viewTag, const std::string &propertyName) const;
 
   CSSCanRoutePropertyFunction canRoute_;
-  CSSApplyTransitionJSIFunction applyJSI_;
-  CSSApplyTransitionDynamicFunction applyDynamic_;
+  CSSApplyTransitionFunction applyTransition_;
   CSSRemoveTransitionFunction removeTransition_;
 };
 

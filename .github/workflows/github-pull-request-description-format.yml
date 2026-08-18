@@ -4,6 +4,9 @@ on:
     types:
       - opened
 
+permissions:
+  pull-requests: write
+
 jobs:
   github-pull-request-description-format:
     runs-on: ubuntu-latest

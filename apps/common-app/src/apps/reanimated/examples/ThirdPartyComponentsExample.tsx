@@ -19,7 +19,7 @@ function TextInputDemo({ sv }: { sv: SharedValue<number> }) {
       text: `${Math.round(sv.value * 100)}`,
       defaultValue: `${Math.round(sv.value * 100)}`,
     };
-  }, []);
+  });
 
   return (
     <View style={styles.demo}>
@@ -45,7 +45,7 @@ function SvgCircleDemo({ sv }: { sv: SharedValue<number> }) {
       fill: interpolateColor(sv.value, [0, 1], ['red', 'lime'], 'HSV'),
       stroke: interpolateColor(sv.value, [0, 1], ['black', 'white'], 'HSV'),
     };
-  }, []);
+  });
 
   return (
     <View style={styles.demo}>
@@ -70,7 +70,7 @@ function SvgRectDemo({ sv }: { sv: SharedValue<number> }) {
       fill: interpolateColor(sv.value, [0, 1], ['red', 'lime'], 'HSV'),
       stroke: interpolateColor(sv.value, [0, 1], ['black', 'white'], 'HSV'),
     };
-  }, []);
+  });
 
   return (
     <View style={styles.demo}>
@@ -90,7 +90,7 @@ function SvgPathDemo({ sv }: { sv: SharedValue<number> }) {
       d: `M 0 0 C 50 ${sv.value * 200}, 150 ${sv.value * 200}, 200 0`,
       stroke: interpolateColor(sv.value, [0, 1], ['red', 'lime'], 'HSV'),
     };
-  }, []);
+  });
 
   return (
     <View style={styles.demo}>
@@ -122,7 +122,7 @@ function SvgPolygonsDemo({ sv }: { sv: SharedValue<number> }) {
       points: `50 ${topY}, ${leftX} 125, ${rightX} 125`, // this is a JS prop
       stroke: interpolateColor(sv.value, [0, 1], ['black', 'white'], 'HSV'),
     };
-  }, []);
+  });
 
   return (
     <View style={styles.demo}>

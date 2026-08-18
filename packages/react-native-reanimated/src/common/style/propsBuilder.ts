@@ -49,6 +49,6 @@ export function createNativePropsBuilder<TProps extends UnknownRecord>(
 
 export type NativePropsBuilder = ReturnType<typeof createNativePropsBuilder>;
 
-export const stylePropsBuilder = createNativePropsBuilder(
+export const stylePropsBuilder = /* @__PURE__ */ createNativePropsBuilder(
   STYLE_PROPERTIES_CONFIG
 );

@@ -89,3 +89,9 @@ playwright/.cache/
 # Claude
 .claude
 CLAUDE.md
+
+# Other agents
+.agents
+.codex
+AGENTS.md
+.tmp

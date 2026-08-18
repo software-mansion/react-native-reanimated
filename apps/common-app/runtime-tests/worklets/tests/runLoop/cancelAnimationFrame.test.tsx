@@ -1,16 +1,13 @@
-import React from 'react';
-
 import {
   describe,
   expect,
   notify,
-  render,
   test,
   createTestValue,
   waitForNotifications,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import { DispatchTestComponent } from './DispatchTestComponent';
+import { dispatchWorklet } from './dispatchWorklet';
 import { RuntimeKind } from 'react-native-worklets';
 
 describe('Test cancelAnimationFrame', () => {
@@ -21,16 +18,11 @@ describe('Test cancelAnimationFrame', () => {
       const notification = 'callback';
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            cancelAnimationFrame(2137);
-            requestAnimationFrame(() => notify(notification));
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        cancelAnimationFrame(2137);
+        requestAnimationFrame(() => notify(notification));
+      }, runtimeKind);
 
       // Assert
       await waitForNotification(notification);
@@ -45,19 +37,14 @@ describe('Test cancelAnimationFrame', () => {
       const [flag, setFlag] = createTestValue('ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const handle = requestAnimationFrame(() => {
-              setFlag('not_ok');
-            });
-            requestAnimationFrame(() => notify(notification));
-            cancelAnimationFrame(handle);
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        const handle = requestAnimationFrame(() => {
+          setFlag('not_ok');
+        });
+        requestAnimationFrame(() => notify(notification));
+        cancelAnimationFrame(handle);
+      }, runtimeKind);
 
       // Assert
       await waitForNotification(notification);
@@ -73,23 +60,18 @@ describe('Test cancelAnimationFrame', () => {
       const [flag, setFlag] = createTestValue('ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            let handle = 0;
-            requestAnimationFrame(() => {
-              cancelAnimationFrame(handle);
-              notify(notification1);
-            });
-            handle = requestAnimationFrame(() => {
-              setFlag('not_ok');
-            });
-            requestAnimationFrame(() => notify(notification2));
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        let handle = 0;
+        requestAnimationFrame(() => {
+          cancelAnimationFrame(handle);
+          notify(notification1);
+        });
+        handle = requestAnimationFrame(() => {
+          setFlag('not_ok');
+        });
+        requestAnimationFrame(() => notify(notification2));
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);
@@ -109,26 +91,21 @@ describe('Test cancelAnimationFrame', () => {
       const [flag, setFlag] = createTestValue('ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            let handle = 0;
-            requestAnimationFrame(() => {
-              handle = requestAnimationFrame(() => {
-                setFlag('not_ok');
-              });
-              notify(notification1);
-            });
-            requestAnimationFrame(() => {
-              cancelAnimationFrame(handle);
-              requestAnimationFrame(() => notify(notification3));
-              notify(notification2);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        let handle = 0;
+        requestAnimationFrame(() => {
+          handle = requestAnimationFrame(() => {
+            setFlag('not_ok');
+          });
+          notify(notification1);
+        });
+        requestAnimationFrame(() => {
+          cancelAnimationFrame(handle);
+          requestAnimationFrame(() => notify(notification3));
+          notify(notification2);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2, notification3]);
