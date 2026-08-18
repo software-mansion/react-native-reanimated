@@ -48,6 +48,10 @@ describe('CSSPseudoStylesManager', () => {
       expect(console.warn).toHaveBeenCalledWith(
         expect.stringContaining("won't receive presses on iOS")
       );
+      // 0.01 reads back below the threshold, so it must not be the value we suggest.
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Use "opacity: 0.02"')
+      );
     });
 
     test('does not repeat while the style is unchanged', () => {
