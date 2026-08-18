@@ -34,7 +34,8 @@ describe('CSSPseudoStylesManager', () => {
     manager = new CSSPseudoStylesManager(
       shadowNodeWrapper,
       viewTag,
-      propsBuilder
+      propsBuilder,
+      'RCTView$View'
     );
   });
 
@@ -79,6 +80,19 @@ describe('CSSPseudoStylesManager', () => {
       pushStyle(manager, {
         opacity: { default: 0.011, ':active': 1 },
       });
+
+      expect(console.warn).not.toHaveBeenCalled();
+    });
+
+    test('stays quiet for an SVG shape, which is hit-tested without opacity', () => {
+      const svgManager = new CSSPseudoStylesManager(
+        shadowNodeWrapper,
+        viewTag,
+        propsBuilder,
+        'RNSVGCircle$Circle'
+      );
+
+      pushStyle(svgManager, { opacity: { default: 0, ':active': 1 } });
 
       expect(console.warn).not.toHaveBeenCalled();
     });

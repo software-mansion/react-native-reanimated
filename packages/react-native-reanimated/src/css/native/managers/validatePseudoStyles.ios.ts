@@ -13,13 +13,16 @@ const REACHABLE_OPACITY = 0.02;
 
 export function validatePseudoStyles(
   pseudoStylesBySelector: PseudoStylesBySelector,
-  defaultStyle: UnknownRecord
+  defaultStyle: UnknownRecord,
+  componentName: string
 ) {
   const opacity = defaultStyle.opacity;
   if (
     typeof opacity !== 'number' ||
     // Mirrors the float the alpha is narrowed to natively, so this matches to the last bit.
     Math.fround(opacity) >= HIT_TEST_ALPHA_THRESHOLD ||
+    // SVG shapes are reached through the SVG hit test, which ignores opacity entirely.
+    componentName.startsWith('RNSVG') ||
     !PRESS_PSEUDO_SELECTORS.some(
       (selector) => selector in pseudoStylesBySelector
     )

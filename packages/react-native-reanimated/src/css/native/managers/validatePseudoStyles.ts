@@ -4,7 +4,8 @@ import type { PseudoStylesBySelector } from '../../utils';
 
 export function validatePseudoStyles(
   _pseudoStylesBySelector: PseudoStylesBySelector,
-  _defaultStyle: UnknownRecord
+  _defaultStyle: UnknownRecord,
+  _componentName: string
 ) {
   // Only iOS restricts which views may receive input, so there is nothing to check anywhere else.
 }

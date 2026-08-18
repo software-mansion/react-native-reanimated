@@ -23,6 +23,7 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   private readonly viewTag: number;
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
   private readonly propsBuilder: NativePropsBuilder;
+  private readonly componentName: string;
 
   private prevPseudoStylesBySelector: PseudoStylesBySelector | null = null;
   private prevTransitionProperties: CSSTransitionProperties | null = null;
@@ -31,11 +32,13 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   constructor(
     shadowNodeWrapper: ShadowNodeWrapper,
     viewTag: number,
-    propsBuilder: NativePropsBuilder
+    propsBuilder: NativePropsBuilder,
+    componentName: string
   ) {
     this.shadowNodeWrapper = shadowNodeWrapper;
     this.viewTag = viewTag;
     this.propsBuilder = propsBuilder;
+    this.componentName = componentName;
   }
 
   update(
@@ -110,7 +113,11 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
 
     if (selectors.length > 0) {
       if (__DEV__ && !this.isRegistered) {
-        validatePseudoStyles(pseudoStylesBySelector, mergedDefaultStyle);
+        validatePseudoStyles(
+          pseudoStylesBySelector,
+          mergedDefaultStyle,
+          this.componentName
+        );
       }
       registerPseudoStyles(this.shadowNodeWrapper, {
         defaultStyle: builtDefaultStyle,
