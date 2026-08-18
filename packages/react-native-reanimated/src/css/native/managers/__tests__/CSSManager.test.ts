@@ -178,7 +178,7 @@ describe('CSSManager', () => {
       });
     });
   });
-  
+
   describe('transition baseline', () => {
     const ANIMATION = {
       animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
@@ -220,6 +220,11 @@ describe('CSSManager', () => {
       manager.update({ opacity: 0.2, ...TRANSITION });
 
       expect(transitionedValues()).toEqual([]);
+
+      // The attached config still takes 0.2 as the baseline of the next change.
+      manager.update({ opacity: 1, ...TRANSITION });
+
+      expect(transitionedValues()).toEqual([[0.2, 1]]);
     });
   });
 });
