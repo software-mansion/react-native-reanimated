@@ -1,10 +1,10 @@
+#include <react/debug/react_native_assert.h>
 #include <react/renderer/mounting/Differentiator.h>
 #include <react/renderer/mounting/MountingCoordinator.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
-#include <reanimated/LayoutAnimations/PropsDiffer.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <algorithm>
@@ -55,27 +55,19 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   TransactionMeta transaction;
   auto &filteredMutations = transaction.filteredMutations;
   auto rootChildCount = static_cast<int>(lightNodes_[surfaceId_]->children.size());
-  const std::vector<std::shared_ptr<MutationNode>> roots;
-  const bool isInTransition = static_cast<bool>(transitionState_);
+
   reconcileContradictedRemovals(mutations, filteredMutations);
 
-  if (isInTransition) {
+  if (transition_ || uncommittedScreenPop_) {
     updateLightTree(propsParserContext, mutations, transaction);
-    handleProgressTransition(transaction, mutations, propsParserContext);
-  } else if (!synchronized_) {
-    updateLightTree(propsParserContext, mutations, transaction);
-    if (!lightNodes_.contains(closingScreenTag_)) {
-      topScreen_ = findActiveBoundary(lightNodes_[surfaceId_]);
-      synchronized_ = true;
-      closingScreenTag_ = -1;
-    }
+    resolveTransitionLifecycle(transaction, mutations, propsParserContext);
   } else if (!mutations.empty()) {
     auto root = lightNodes_[surfaceId_];
     react_native_assert(root && "Root node not found");
     auto beforeTopScreen = topScreen_;
     if (beforeTopScreen) {
       ReanimatedSystraceSection s("find before elements");
-      findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext, transaction);
+      findSharedElementsOnScreen(beforeTopScreen, BEFORE, transaction);
     }
 
     updateLightTree(propsParserContext, mutations, transaction);
@@ -84,7 +76,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     topScreen_ = afterTopScreen;
     if (afterTopScreen) {
       ReanimatedSystraceSection s("find after elements");
-      findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext, transaction);
+      findSharedElementsOnScreen(afterTopScreen, AFTER, transaction);
 #ifdef __APPLE__
       // TODO (future): this is a temporary workaround for RNScreens on iOS,
       // which takes the snapshot of the popped screen before we hide the
@@ -98,14 +90,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     const bool hasScreenChanged = beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen;
 
     if (hasScreenChanged) {
-      // We want to add mutations to hide the views that will start their transitions.
-      // To keep things simple, we put mutations related to source views before all muatations
-      // and mutations to hide target views after all mutations.
-      std::vector<ShadowViewMutation> mergedMutations;
-      hideTransitioningViews(BEFORE, mergedMutations, transaction, propsParserContext);
-      mergedMutations.insert(mergedMutations.end(), filteredMutations.begin(), filteredMutations.end());
-      hideTransitioningViews(AFTER, mergedMutations, transaction, propsParserContext);
-      std::swap(filteredMutations, mergedMutations);
+      hideTransitioningViews(BEFORE, transaction, propsParserContext);
+      hideTransitioningViews(AFTER, transaction, propsParserContext);
     }
 
     handleSharedTransitionsStart(afterTopScreen, beforeTopScreen, transaction, mutations, propsParserContext);
@@ -135,6 +121,14 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   insertContainers(transaction, rootChildCount);
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
+}
+
+bool LayoutAnimationsProxy_Experimental::isLightNodeMapped(const std::shared_ptr<LightNode> &node) const {
+  if (!node) {
+    return false;
+  }
+  const auto nodeIt = lightNodes_.find(node->current.tag);
+  return nodeIt != lightNodes_.end() && nodeIt->second == node;
 }
 
 // If React re-creates or re-inserts a tag whose exiting removal we are still
@@ -240,7 +234,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
           auto mergedRawProps = folly::dynamic::merge(currentRawProps, mutation.newChildShadowView.props->rawProps);
           node->current = mutation.newChildShadowView;
           node->current.props =
-              getComponentDescriptorForShadowView(node->current)
+              componentDescriptorRegistry_->at(node->current.componentHandle)
                   .cloneProps(propsParserContext, mutation.newChildShadowView.props, RawProps(mergedRawProps));
         } else {
           node->current = mutation.newChildShadowView;
@@ -392,6 +386,7 @@ void LayoutAnimationsProxy_Experimental::applyInitialMutationsToLightTree(
 void LayoutAnimationsProxy_Experimental::startSurface(
     const ShadowTree &shadowTree,
     std::weak_ptr<const MountingOverrideDelegate> mountingOverrideDelegate) {
+  react_native_assert(shadowTree.getSurfaceId() == surfaceId_ && "surface registered with the wrong proxy");
   const auto mountingCoordinator = shadowTree.getMountingCoordinator();
   mountingCoordinator->setMountingOverrideDelegate(std::move(mountingOverrideDelegate));
   // The delegate must be set before the base revision is read, so that every
@@ -428,6 +423,8 @@ void LayoutAnimationsProxy_Experimental::initializeLightTree(const ShadowTreeRev
   topScreen_ = findActiveBoundary(lightNodes_.at(surfaceId_));
 }
 
+// MARK: Layout Animation Updates
+
 std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(int tag, bool shouldRemove) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   auto layoutAnimationIt = layoutAnimations_.find(tag);
@@ -436,13 +433,12 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
     return {};
   }
 
-  const auto surfaceId = layoutAnimationIt->second.finalView.surfaceId;
   completedAnimations_.insert_or_assign(
       tag, CompletedLayoutAnimation{.animation = layoutAnimationIt->second, .shouldRemove = shouldRemove});
   layoutAnimations_.erase(layoutAnimationIt);
 
   if (!shouldRemove) {
-    return surfaceId;
+    return surfaceId_;
   }
 
   const auto nodeIt = lightNodes_.find(tag);
@@ -451,11 +447,11 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
   // and operator[] would insert a null node here
   if (nodeIt == lightNodes_.end() || !nodeIt->second) {
     react_native_assert(false && "LightNode not found");
-    return surfaceId;
+    return surfaceId_;
   }
   nodeIt->second->setExitingState(DEAD);
 
-  return surfaceId;
+  return surfaceId_;
 }
 
 // A subtree that animates keeps its place in the host tree, so nothing is emitted for its root.
@@ -476,7 +472,7 @@ void LayoutAnimationsProxy_Experimental::handleSubtreeRemoval(
     return;
   }
   react_native_assert(!node->isExiting() && "A subtree that does not animate must stay UNDEFINED");
-  maybeCancelAnimation(node->current.tag);
+  cancelLayoutAnimation(node->current.tag);
   transaction.filteredMutations.push_back(
       ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, hostIndex));
   transaction.teardownMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
@@ -485,6 +481,7 @@ void LayoutAnimationsProxy_Experimental::handleSubtreeRemoval(
 
 void LayoutAnimationsProxy_Experimental::flushCompletedRemovals(ShadowViewMutationList &filteredMutations) const {
   ReanimatedSystraceSection s("flushCompletedRemovals");
+
   std::vector<Tag> completedRemovalTags;
   completedRemovalTags.reserve(completedAnimations_.size());
   for (const auto &[tag, completedAnimation] : completedAnimations_) {
@@ -578,7 +575,7 @@ void LayoutAnimationsProxy_Experimental::endAnimationsRecursively(
     int index,
     ShadowViewMutationList &mutations) const {
   const auto tag = node->current.tag;
-  maybeCancelAnimation(tag);
+  cancelLayoutAnimation(tag);
   node->setExitingState(DELETED);
   // drop the tag mapping unless it was already re-registered for a new node
   if (const auto it = lightNodes_.find(tag); it != lightNodes_.end() && it->second == node) {
@@ -618,15 +615,10 @@ void LayoutAnimationsProxy_Experimental::maybeDropAncestors(
   if (const auto it = lightNodes_.find(node->current.tag); it != lightNodes_.end() && it->second == node) {
     lightNodes_.erase(it);
   }
-  maybeCancelAnimation(node->current.tag);
+  cancelLayoutAnimation(node->current.tag);
   cleanupMutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, index));
   cleanupMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
   maybeDropAncestors(parent, cleanupMutations);
-}
-
-const ComponentDescriptor &LayoutAnimationsProxy_Experimental::getComponentDescriptorForShadowView(
-    const ShadowView &shadowView) const {
-  return componentDescriptorRegistry_->at(shadowView.componentHandle);
 }
 
 bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
@@ -665,7 +657,7 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
     } else if (startAnimationsRecursively(subNode, transaction, config)) {
       hasAnimatedChildren = true;
     } else if (shouldRemoveSubviewsWithoutAnimations) {
-      maybeCancelAnimation(subNode->current.tag);
+      cancelLayoutAnimation(subNode->current.tag);
       mutations.push_back(ShadowViewMutation::RemoveMutation(node->current.tag, subNode->current, index));
       toBeRemoved.push_back(subNode);
       subNode->setExitingState(DELETED);
@@ -701,14 +693,12 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
   return wantAnimateExit;
 }
 
-void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) const {
-  cancelLayoutAnimation(tag);
-}
-
 void LayoutAnimationsProxy_Experimental::surfaceDidUnmount() {
   LayoutAnimationsProxyCommon::surfaceDidUnmount();
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   sharedContainers_.clear();
+  transition_.reset();
+  uncommittedScreenPop_.reset();
 }
 
 // When entering animations start, we temporarily set opacity to 0
@@ -719,8 +709,8 @@ ShadowView LayoutAnimationsProxy_Experimental::cloneViewWithoutOpacity(
     const PropsParserContext &propsParserContext) const {
   auto newView = shadowView;
   const folly::dynamic opacity = folly::dynamic::object("opacity", 0);
-  auto newProps =
-      getComponentDescriptorForShadowView(newView).cloneProps(propsParserContext, newView.props, RawProps(opacity));
+  auto newProps = componentDescriptorRegistry_->at(newView.componentHandle)
+                      .cloneProps(propsParserContext, newView.props, RawProps(opacity));
   auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
   viewProps->opacity = 0;
   newView.props = newProps;
@@ -731,8 +721,9 @@ void LayoutAnimationsProxy_Experimental::cleanupAnimations(
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
   ReanimatedSystraceSection s("cleanupAnimations");
-  for (const auto &[tag, completedAnimation] : completedAnimations_) {
-    if (hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag)) {
+  for (const auto &entry : completedAnimations_) {
+    const auto tag = entry.first;
+    if (hasPendingLayoutAnimation(tag)) {
       continue;
     }
     const auto containerIt = sharedContainers_.find(tag);
