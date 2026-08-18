@@ -1,4 +1,5 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <ReactCommon/CallInvoker.h>
 #include <react/debug/react_native_assert.h>
@@ -144,7 +145,7 @@ void LayoutAnimationsProxy_Legacy::reconcileContradictedRemovals(
 // we can safely cleanup on the UI thread since the surface is gone and no more mutations will be produced for it.
 bool LayoutAnimationsProxy_Legacy::shouldFlushDeadNodes([[maybe_unused]] const bool surfaceDropped) const {
 #ifdef ANDROID
-  return surfaceDropped || !UIScheduler::isOnUIThread();
+  return surfaceDropped || !worklets::isOnUIThread(uiScheduler_);
 #else
   return true;
 #endif

@@ -11,9 +11,18 @@ class UISchedulerWrapper : public UIScheduler {
  private:
   jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler_;
 
+  bool queryIsOnUIThread() const override {
+    static const auto method = androidUiScheduler_->getClass()->getMethod<jboolean()>("isOnUIThread");
+    return method(androidUiScheduler_);
+  }
+
  public:
   explicit UISchedulerWrapper(jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler)
       : androidUiScheduler_(std::move(androidUiScheduler)) {}
+
+  void triggerUI() override {
+    UIScheduler::triggerUI();
+  }
 
   void scheduleOnUI(std::function<void()> job) override {
     if (isOnUIThread()) {
