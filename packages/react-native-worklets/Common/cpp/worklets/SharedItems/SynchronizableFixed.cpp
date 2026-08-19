@@ -1,4 +1,3 @@
-#include <react/debug/react_native_assert.h>
 #include <worklets/SharedItems/SynchronizableFixed.h>
 
 #include <memory>
@@ -26,8 +25,11 @@ SynchronizableValue SynchronizableFixed::getBlocking() {
 
 void SynchronizableFixed::setDirty(const SynchronizableFixedValue &value) {
   setDirtyBefore();
-  store(value);
+  const auto stored = store(value);
   setDirtyAfter();
+  if (!stored) {
+    throwTypeMismatch();
+  }
 }
 
 void SynchronizableFixed::setBlocking(const std::shared_ptr<Serializable> &) {
@@ -36,21 +38,23 @@ void SynchronizableFixed::setBlocking(const std::shared_ptr<Serializable> &) {
 
 void SynchronizableFixed::setBlocking(const SynchronizableFixedValue &value) {
   setBlockingBefore();
-  store(value);
+  const auto stored = store(value);
   setBlockingAfter();
+  if (!stored) {
+    throwTypeMismatch();
+  }
 }
 
-void SynchronizableFixed::store(const SynchronizableFixedValue &value) {
-  std::visit(
+bool SynchronizableFixed::store(const SynchronizableFixedValue &value) {
+  return std::visit(
       [](auto &atomic, const auto &alternative) {
         using TAtomic = std::decay_t<decltype(atomic)>;
         using TAlternative = std::decay_t<decltype(alternative)>;
         if constexpr (std::is_same_v<TAtomic, std::atomic<TAlternative>>) {
           atomic.store(alternative, std::memory_order_relaxed);
-        } else if constexpr (std::is_same_v<TAtomic, std::atomic<double>>) {
-          react_native_assert(false && "[Worklets] Expected a number for a fixed-type Synchronizable.");
+          return true;
         } else {
-          react_native_assert(false && "[Worklets] Expected a boolean for a fixed-type Synchronizable.");
+          return false;
         }
       },
       value_,
@@ -60,6 +64,13 @@ void SynchronizableFixed::store(const SynchronizableFixedValue &value) {
 SynchronizableValue SynchronizableFixed::load() const {
   return std::visit(
       [](const auto &atomic) { return SynchronizableValue(atomic.load(std::memory_order_relaxed)); }, value_);
+}
+
+void SynchronizableFixed::throwTypeMismatch() const {
+  throw std::runtime_error(
+      std::holds_alternative<std::atomic<double>>(value_)
+          ? "[Worklets] Expected a number for a fixed-type Synchronizable."
+          : "[Worklets] Expected a boolean for a fixed-type Synchronizable.");
 }
 
 } // namespace worklets
