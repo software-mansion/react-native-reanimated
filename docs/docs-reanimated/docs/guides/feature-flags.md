@@ -178,9 +178,13 @@ Routing is decided per property, so a single transition may run partly on the pl
 Properties that aren't routed keep running on the animation loop, which supports all of them. Android routes `opacity` for now, support for more properties will be added in the future. `shadowOffset`, `shadowOpacity` and `shadowRadius` are iOS-only styles in React Native.
 
 :::warning
-Known limitation on iOS. `backgroundColor`, `borderColor`, `borderWidth` and `borderRadius` are routed even when React Native cannot draw them on the view's own layer. It draws them there only when the border is uniform, meaning the same color, the same width and the solid style on every side, with a single circular radius, and the view either has no visible border or clips its children with `overflow: 'hidden'`. Otherwise the background and the border go to separate layers, where the routed animation doesn't reach them, and the new value shows up at once instead of animating.
+Known limitation on iOS. `backgroundColor`, `borderColor`, `borderWidth` and `borderRadius` are routed even when React Native draws them on separate layers rather than on the view's own one. The routed animation doesn't reach those layers, so the new value shows up at once instead of animating. React Native keeps the four properties on the view's own layer only when:
 
-All four properties share that layer, so this is easiest to hit with a combination of them. A view with a visible border and the default `overflow` doesn't animate its `backgroundColor` either, even though the transition changes nothing about the border. `opacity` and the `shadow*` properties aren't affected by this, React Native keeps them on the view's own layer.
+- the border has the same color, the same width and the solid style on every side,
+- the radius is the same on every corner and circular rather than elliptical,
+- the view either has no visible border or clips its children with `overflow: 'hidden'`.
+
+All four share that layer, so this is easiest to hit with a combination of them. A view with a visible border and the default `overflow` doesn't animate its `backgroundColor` either, even though the transition changes nothing about the border. `opacity` and the `shadow*` properties aren't affected, React Native always keeps them on the view's own layer.
 :::
 
 ## Static feature flags
