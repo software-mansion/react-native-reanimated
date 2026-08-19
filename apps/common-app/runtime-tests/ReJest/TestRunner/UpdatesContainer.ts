@@ -3,7 +3,7 @@ import { makeMutable } from 'react-native-reanimated';
 import type { TestComponent } from '../TestComponent';
 import type { Operation, OperationUpdate } from '../types';
 import { isValidPropName } from '../types';
-import { SyncUIRunner } from '../utils/SyncUIRunner';
+import { runOnUIBlocking } from '../utils/runOnUIBlocking';
 import { convertDecimalColor } from '../utils/util';
 
 export type SingleViewSnapshot = Array<OperationUpdate>;
@@ -161,11 +161,26 @@ export function createUpdatesContainer() {
     }
   }
 
-  function getUpdates(
+  function _readRecorded() {
+    return runOnUIBlocking(
+      () => {
+        'worklet';
+        return {
+          jsUpdates: jsUpdates.value,
+          nativeSnapshots: nativeSnapshots.value,
+        };
+      },
+      undefined,
+      'the UI runtime to report the recorded animation updates'
+    );
+  }
+
+  async function getUpdates(
     component?: TestComponent,
     propsNames: string[] = []
-  ): SingleViewSnapshot {
-    const sortedUpdates = _sortUpdatesByViewTag(jsUpdates.value, propsNames);
+  ): Promise<SingleViewSnapshot> {
+    const recorded = await _readRecorded();
+    const sortedUpdates = _sortUpdatesByViewTag(recorded.jsUpdates, propsNames);
     return _getComponentFromSortedUpdates(sortedUpdates, component);
   }
 
@@ -173,10 +188,11 @@ export function createUpdatesContainer() {
     component?: TestComponent,
     propsNames: string[] = []
   ): Promise<SingleViewSnapshot> {
-    const nativeSnapshotsCount = nativeSnapshots.value.length;
-    const jsUpdatesCount = jsUpdates.value.length;
+    let recorded = await _readRecorded();
+    const nativeSnapshotsCount = recorded.nativeSnapshots.length;
+    const jsUpdatesCount = recorded.jsUpdates.length;
     if (jsUpdatesCount === nativeSnapshotsCount) {
-      await new SyncUIRunner().runOnUIBlocking(() => {
+      await runOnUIBlocking(() => {
         'worklet';
         const lastSnapshot = nativeSnapshots.value[nativeSnapshotsCount - 1];
         if (lastSnapshot) {
@@ -192,9 +208,10 @@ export function createUpdatesContainer() {
           );
         }
       });
+      recorded = await _readRecorded();
     }
     const sortedUpdates = _sortUpdatesByViewTag(
-      nativeSnapshots.value,
+      recorded.nativeSnapshots,
       propsNames
     );
     return _getComponentFromSortedUpdates(sortedUpdates, component);

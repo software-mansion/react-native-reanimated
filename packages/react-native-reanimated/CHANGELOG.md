@@ -23,4 +23,5 @@
 
 ### 💡 Others
 
+- Use Worklets' `isOnUIThread` Stable API when scheduling Layout Animations cleanup on Android.
 - Rename the internal `Mutable.setDirty` to `Mutable.setDirtyFlag`. ([#10261](https://github.com/software-mansion/react-native-reanimated/pull/10261) by [@tjzel](https://github.com/tjzel))

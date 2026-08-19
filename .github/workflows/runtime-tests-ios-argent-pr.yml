@@ -1,0 +1,30 @@
+name: Argent Cloud iOS runtime tests (PR)
+on:
+  pull_request:
+    paths:
+      - .github/workflows/runtime-tests-ios-argent.yml
+      - .github/workflows/runtime-tests-ios-argent-pr.yml
+      - .github/actions/install-sim-remote/**
+      - apps/common-app/runtime-tests/**
+      - apps/fabric-example/scripts/runtime-tests-server.js
+      - apps/fabric-example/scripts/runtime-tests-remote.mjs
+      - apps/fabric-example/scripts/export-runtime-tests-app.js
+      - apps/fabric-example/ios/**
+
+permissions:
+  contents: read
+
+jobs:
+  ios-argent:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    strategy:
+      fail-fast: false
+      matrix:
+        bundleMode: [false, true]
+    uses: ./.github/workflows/runtime-tests-ios-argent.yml
+    with:
+      configuration: ReleaseRuntimeTests
+      bundleMode: ${{ matrix.bundleMode }}
+    secrets:
+      SIM_ROUTER_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME }}
+      SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}

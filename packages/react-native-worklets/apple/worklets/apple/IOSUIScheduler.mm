@@ -5,9 +5,14 @@ namespace worklets {
 using namespace facebook;
 using namespace react;
 
+bool IOSUIScheduler::queryIsOnUIThread() const
+{
+  return [NSThread isMainThread];
+}
+
 void IOSUIScheduler::scheduleOnUI(std::function<void()> job)
 {
-  if ([NSThread isMainThread]) {
+  if (isOnUIThread()) {
     job();
     return;
   }
