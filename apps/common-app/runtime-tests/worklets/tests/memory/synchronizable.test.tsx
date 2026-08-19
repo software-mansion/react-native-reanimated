@@ -348,15 +348,20 @@ describe('Test fixed-type Synchronizable creation', () => {
     expect(synchronizable.getDirty()).toBe(false);
   });
 
-  test('fixedType with an unsupported initial value throws in dev', async () => {
-    await expect(() => {
-      createSynchronizable('string' as unknown as number, {
-        fixedType: true,
-      });
-    }).toThrow(
-      '[Worklets] `fixedType` requires a number or boolean initial value.'
-    );
-  });
+  const unsupportedInitialValueTest = __DEV__ ? test : test.skip;
+
+  unsupportedInitialValueTest(
+    'fixedType with an unsupported initial value throws in dev',
+    async () => {
+      await expect(() => {
+        createSynchronizable('string' as unknown as number, {
+          fixedType: true,
+        });
+      }).toThrow(
+        '[Worklets] `fixedType` requires a number or boolean initial value.'
+      );
+    }
+  );
 });
 
 describe('Test fixed-type Synchronizable writes', () => {
