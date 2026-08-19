@@ -15,14 +15,14 @@ import {
 import {
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 
 const NOTIFICATION = 'NOTIFICATION';
-const workletRuntime = getWorkletRuntimeFromPool('test');
+const [workletRuntime] = getWorkletRuntimesFromPool(1);
 
 type SynchronizableVariant = {
   variantName: string;
@@ -558,18 +558,35 @@ describe('Test fixed-type Synchronizable access', () => {
 });
 
 describe('Test Synchronizable error handling', () => {
+  const lockReleaseTest = __DEV__ ? test : test.skip;
+
   for (const { variantName, config } of VARIANTS) {
-    test(`a throwing setter function releases the lock (${variantName})`, async () => {
-      const synchronizable = createSynchronizable(initialValue, config);
+    lockReleaseTest(
+      `a throwing setter function releases the lock (${variantName})`,
+      async () => {
+        const READ_DONE = 'READ_DONE';
+        const synchronizable = createSynchronizable(initialValue, config);
 
-      await expect(() => {
-        synchronizable.setBlocking(() => {
-          throw new Error('setter failure');
+        await expect(() => {
+          synchronizable.setBlocking(() => {
+            throw new Error('setter failure');
+          });
+        }).toThrow('setter failure');
+
+        let observed = -1;
+        const onReadDone = (value: number) => {
+          observed = value;
+          notify(READ_DONE);
+        };
+
+        scheduleOnRuntime(workletRuntime, () => {
+          'worklet';
+          scheduleOnRN(onReadDone, synchronizable.getBlocking());
         });
-      }).toThrow('setter failure');
 
-      synchronizable.setBlocking(1);
-      expect(synchronizable.getBlocking()).toBe(1);
-    });
+        await waitForNotification(READ_DONE);
+        expect(observed).toBe(initialValue);
+      }
+    );
   }
 });
