@@ -58,10 +58,11 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
     return folly::dynamic::object();
   }
 
-  pendingInitialUpdate_ =
+  auto initialUpdate =
       ensureLoopTransition().run(rt, shadowNode_, loopConfig.changedProperties, lastUpdates, timestamp);
   scheduleLoop(timestamp);
-  return pendingInitialUpdate_;
+  pendingInitialUpdate_.update(initialUpdate);
+  return initialUpdate;
 }
 
 folly::dynamic CSSTransition::run(
@@ -75,14 +76,15 @@ folly::dynamic CSSTransition::run(
     return folly::dynamic::object();
   }
 
-  pendingInitialUpdate_ = ensureLoopTransition().run(shadowNode_, loopDiffs, lastUpdates, timestamp);
+  auto initialUpdate = ensureLoopTransition().run(shadowNode_, loopDiffs, lastUpdates, timestamp);
   scheduleLoop(timestamp);
-  return pendingInitialUpdate_;
+  pendingInitialUpdate_.update(initialUpdate);
+  return initialUpdate;
 }
 
-folly::dynamic CSSTransition::computeCurrentLoopStyle() {
-  // Hand over the settled frame here, where the flush can still commit it, and let whatever is
-  // running override it.
+folly::dynamic CSSTransition::takeUpdates() {
+  // Runs that already settled hand their frame over here, where the flush can still commit it,
+  // and whatever is still running overrides them.
   auto updates = std::exchange(pendingInitialUpdate_, folly::dynamic::object());
   if (loopTransition_) {
     updates.update(loopTransition_->computeCurrentStyle(shadowNode_));

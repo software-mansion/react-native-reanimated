@@ -51,7 +51,7 @@ class CSSTransition {
   /// a platform-routed value lives natively, and a stale copy would be re-injected.
   TransitionProperties getLoopProperties() const;
 
-  folly::dynamic computeCurrentLoopStyle();
+  folly::dynamic takeUpdates();
 
   /// Applies a config: routes props between the platform and loop sides and runs them.
   folly::dynamic run(jsi::Runtime &rt, CSSTransitionConfig &&config, const folly::dynamic &lastUpdates);
@@ -78,8 +78,9 @@ class CSSTransition {
   std::shared_ptr<CSSLoopTransition> loopTransition_;
 
   CSSEventMask eventMask_{0};
-  // The frame a run settles on. Its interpolator is retired in the same call that produces it, so
-  // a run finishing within its starting frame leaves nothing to recompute afterwards.
+  // What runs have settled since the last flush. An interpolator is retired by the same call that
+  // produces its final frame, so a run finishing within its starting frame leaves nothing to
+  // recompute afterwards. Several runs can land before one flush, so they accumulate here.
   folly::dynamic pendingInitialUpdate_ = folly::dynamic::object();
 
   CSSLoopTransition &ensureLoopTransition();
