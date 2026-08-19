@@ -137,7 +137,7 @@ jobs:
         if: steps.result-cache.outputs.cache-hit != 'true'
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios
         shell: bash -eo pipefail {0}
-        run: xcodebuild -workspace FabricExample.xcworkspace -configuration "$CONFIGURATION" -scheme "$CONFIGURATION FabricExample" -destination "generic/platform=iOS Simulator" 2>&1 | xcode-build-server parse -o compile_commands.json
+        run: xcodebuild -workspace FabricExample.xcworkspace -configuration "$CONFIGURATION" -scheme "$CONFIGURATION FabricExample" -destination "generic/platform=iOS Simulator" 2>&1 | sed -E 's|^([[:space:]]*)[^[:space:]]*/ccache |\1|' | xcode-build-server parse -o compile_commands.json
 
       - name: Save ccache
         if: steps.result-cache.outputs.cache-hit != 'true'
