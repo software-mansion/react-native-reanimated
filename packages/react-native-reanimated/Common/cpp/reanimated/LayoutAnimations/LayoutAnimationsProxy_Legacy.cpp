@@ -83,7 +83,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   maybeScheduleCleanupPull(surfaceCtx, surfaceId, flushDeadNodes);
 #endif // ANDROID
 
-  handleUpdatesAndEnterings(filteredMutations, movedViews, mutations, propsParserContext, surfaceId);
+  handleUpdatesAndEnterings(filteredMutations, movedViews, mutations, propsParserContext, surfaceId, transactionNumber);
 
   addOngoingAnimations(surfaceId, filteredMutations);
 
@@ -407,7 +407,8 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
     const std::unordered_map<Tag, Tag> &movedViews,
     ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext,
-    SurfaceId surfaceId) const {
+    SurfaceId surfaceId,
+    [[maybe_unused]] const MountingTransaction::Number transactionNumber) const {
   std::unordered_map<Tag, ShadowView> oldShadowViewsForReparentings;
   for (auto &mutation : mutations) {
     maybeUpdateWindowDimensions(mutation, surfaceId);
@@ -514,7 +515,30 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
           mutation.parentTag = movedViews.at(tag);
         }
         if (mutation.parentTag != -1) {
-          startLayoutAnimation(tag, mutation);
+          uint64_t buildId = 0;
+          if constexpr (useNativeLayoutAnimations()) {
+            // A moved view re-inserts its old ShadowView; it needs the
+            // frame-driven update stream.
+            if (!movedViews.contains(tag)) {
+              const auto window = surfaceManager.getWindow(surfaceId);
+              const auto attempt = tryStartNativeLayoutAnimation(
+                  mutation.oldChildShadowView,
+                  mutation.newChildShadowView,
+                  mutation.parentTag,
+                  transactionNumber,
+                  Snapshot(mutation.oldChildShadowView, window),
+                  Snapshot(mutation.newChildShadowView, window),
+                  weak_from_this());
+              if (attempt.routedNative) {
+                // Final-state-first: mount the final Update now; the native
+                // start animates presentation after the mount.
+                filteredMutations.push_back(mutation);
+                break;
+              }
+              buildId = attempt.buildId;
+            }
+          }
+          startLayoutAnimation(tag, mutation, buildId);
         }
         break;
       }
@@ -1021,7 +1045,10 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
       });
 }
 
-void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const ShadowViewMutation &mutation) const {
+void LayoutAnimationsProxy_Legacy::startLayoutAnimation(
+    const int tag,
+    const ShadowViewMutation &mutation,
+    const uint64_t buildId) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "start layout animation for tag " << tag << std::endl;
 #endif
@@ -1036,7 +1063,8 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
       [weakThis = weak_from_this(),
        mutation,
        surfaceId,
-       tag
+       tag,
+       buildId
 #ifdef ANDROID
        ,
        handle
@@ -1101,7 +1129,11 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
 #endif
 
         strongThis->claimFrameDrivenLayoutAnimation(
-            surfaceId, tag, LayoutAnimationType::LAYOUT, strongThis, [weakThis, mutation, surfaceId, tag]() {
+            surfaceId,
+            tag,
+            LayoutAnimationType::LAYOUT,
+            strongThis,
+            [weakThis, mutation, surfaceId, tag, buildId]() {
               auto strongThis = weakThis.lock();
               if (!strongThis) {
                 return;
@@ -1132,9 +1164,15 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
               yogaValues.setProperty(uiRuntime, "windowWidth", targetValues.windowWidth);
               yogaValues.setProperty(uiRuntime, "windowHeight", targetValues.windowHeight);
               strongThis->layoutAnimationsManager_->startLayoutAnimation(
-                  uiRuntime, tag, LayoutAnimationType::LAYOUT, yogaValues);
-            });
+                  uiRuntime, tag, LayoutAnimationType::LAYOUT, yogaValues, buildId);
+            },
+            buildId);
       });
+}
+
+void LayoutAnimationsProxy_Legacy::startNativeLayoutFallback(const ActiveNativeLayoutAnimation &record) const {
+  const auto mutation = ShadowViewMutation::UpdateMutation(record.oldView, record.finalView, record.parentTag);
+  startLayoutAnimation(record.handle.tag, mutation, record.handle.generation);
 }
 
 void LayoutAnimationsProxy_Legacy::updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation)
@@ -1150,6 +1188,9 @@ void LayoutAnimationsProxy_Legacy::maybeCancelAnimation(const int tag) const {
     it->second.handle++;
   }
 #endif
+  if constexpr (useNativeLayoutAnimations()) {
+    cancelActiveNativeLayoutAnimationsForTag(tag);
+  }
   const auto layoutAnimationIt = layoutAnimations_.find(tag);
   if (layoutAnimationIt == layoutAnimations_.end()) {
     return;
@@ -1298,7 +1339,7 @@ bool LayoutAnimationsProxy_Legacy::maybeEnqueueFinalStateFirstBenchLayout(const 
       mutation.newChildShadowView.surfaceId,
       mutation.newChildShadowView.tag,
       native_animation::AnimationOwner::Layout,
-      ++frameDrivenGeneration_,
+      ++commandGeneration_,
   };
   native_animation::AnimationTrack positionTrack{
       {native_animation::AnimationTargetKind::Position},
@@ -1329,7 +1370,7 @@ bool LayoutAnimationsProxy_Legacy::maybeEnqueueFinalStateFirstBenchEntering(cons
       mutation.newChildShadowView.surfaceId,
       mutation.newChildShadowView.tag,
       native_animation::AnimationOwner::Layout,
-      ++frameDrivenGeneration_,
+      ++commandGeneration_,
   };
   native_animation::AnimationTrack opacityTrack{
       {native_animation::AnimationTargetKind::Opacity},

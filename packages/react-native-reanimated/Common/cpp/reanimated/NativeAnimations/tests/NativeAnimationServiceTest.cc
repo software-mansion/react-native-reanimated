@@ -13,6 +13,7 @@
 using namespace reanimated::native_animation;
 using namespace reanimated::native_animation::testing;
 
+void runLayoutNativeAnimationAdapterTests();
 void runPendingNativeLayoutStartsTests();
 
 namespace {
@@ -136,29 +137,82 @@ void testTrackBuildAndWholePlanFallback() {
   assert(std::holds_alternative<TrackBuildFailure>(plan));
 }
 
-void testProvisionalResourceLimitBoundaries() {
-  auto trackAtLimit = opacityTrack();
-  const auto keyframe = trackAtLimit.keyframes.front();
-  trackAtLimit.keyframes.assign(4096, keyframe);
-  assert(
-      std::holds_alternative<AnimationTrack>(
-          buildAnimationTrack(trackAtLimit)));
+// One named aggregate budget covers tracks, keyframes, timing points, and
+// encoded value cost across the whole plan, with typed failures at each
+// boundary. The limits stay provisional until Objective 12 measures the
+// sampled-keyframe part.
+void testAggregateResourceBudgetBoundaries() {
+  constexpr auto budget = kDefaultResourceBudget;
 
-  trackAtLimit.keyframes.push_back(trackAtLimit.keyframes.front());
-  const auto trackAboveLimit = buildAnimationTrack(std::move(trackAtLimit));
+  // Keyframes count across the plan, not for one track. Split the aggregate
+  // limit between two disjoint tracks: at the limit the plan validates, one
+  // keyframe above it returns ResourceLimit.
+  const auto keyframe = opacityTrack().keyframes.front();
+  auto opacityAtHalf = opacityTrack();
+  opacityAtHalf.keyframes.assign(budget.maxKeyframesPerPlan / 2, keyframe);
+  auto positionAtHalf = positionTrack();
+  positionAtHalf.keyframes.assign(
+      budget.maxKeyframesPerPlan - opacityAtHalf.keyframes.size(),
+      positionTrack().keyframes.front());
+  AnimationPlan keyframePlan;
+  keyframePlan.tracks = {opacityAtHalf, positionAtHalf};
+  assert(validateAnimationPlan(keyframePlan) == std::nullopt);
+  keyframePlan.tracks.back().keyframes.push_back(
+      positionTrack().keyframes.front());
   assert(
-      std::get<TrackBuildFailure>(trackAboveLimit).reason ==
-      TrackBuildFailureReason::ResourceLimit);
-
-  AnimationPlan planAtLimit;
-  planAtLimit.tracks.assign(128, opacityTrack());
-  assert(
-      validateAnimationPlan(planAtLimit) == AnimationResultReason::InvalidPlan);
-
-  planAtLimit.tracks.push_back(opacityTrack());
-  assert(
-      validateAnimationPlan(planAtLimit) ==
+      validateAnimationPlan(keyframePlan) ==
       AnimationResultReason::ResourceLimit);
+
+  // One track alone can also exceed the aggregate keyframe budget.
+  auto trackAboveLimit = opacityTrack();
+  trackAboveLimit.keyframes.assign(budget.maxKeyframesPerPlan + 1, keyframe);
+  assert(
+      std::get<TrackBuildFailure>(
+          buildAnimationTrack(std::move(trackAboveLimit)))
+          .reason == TrackBuildFailureReason::ResourceLimit);
+
+  // Timing points from step timing count against their own aggregate bound.
+  StepsTiming stepsAtLimit;
+  stepsAtLimit.points.reserve(budget.maxTimingPointsPerPlan);
+  for (size_t index = 0; index < budget.maxTimingPointsPerPlan; ++index) {
+    const double progress =
+        static_cast<double>(index) /
+        static_cast<double>(budget.maxTimingPointsPerPlan);
+    stepsAtLimit.points.push_back({progress, progress});
+  }
+  auto stepsTrack = opacityTrack();
+  stepsTrack.keyframes.front().timingToNext = stepsAtLimit;
+  assert(std::holds_alternative<AnimationTrack>(
+      buildAnimationTrack(stepsTrack)));
+  std::get<StepsTiming>(stepsTrack.keyframes.front().timingToNext)
+      .points.push_back({1.0, 1.0});
+  assert(
+      std::get<TrackBuildFailure>(buildAnimationTrack(std::move(stepsTrack)))
+          .reason == TrackBuildFailureReason::ResourceLimit);
+
+  // The encoded value cost counts scalar components; a small custom budget
+  // makes the track boundary reachable without conflicting targets.
+  const NativeAnimationResourceBudget smallBudget{
+      .maxTracksPerPlan = 1,
+      .maxKeyframesPerPlan = 4,
+      .maxTimingPointsPerPlan = 4,
+      .maxEncodedScalarsPerPlan = 4,
+  };
+  NativeAnimationResourceUsage usage;
+  // One position track costs two start scalars and two keyframe scalars.
+  assert(accumulateTrackUsage(positionTrack(), smallBudget, usage));
+  NativeAnimationResourceUsage overTracksUsage = usage;
+  assert(!accumulateTrackUsage(positionTrack(), smallBudget, overTracksUsage));
+  NativeAnimationResourceUsage overScalarsUsage;
+  assert(
+      !accumulateTrackUsage(
+          {{AnimationTargetKind::Transform},
+           AnimationValue{AnimationMatrix4{}},
+           {{1.0, AnimationValue{AnimationMatrix4{}}, LinearTiming{}}},
+           0,
+           100},
+          smallBudget,
+          overScalarsUsage));
 }
 
 void testSurfaceIdentityAndDisjointGenerations() {
@@ -773,7 +827,7 @@ void testExternalTraceEnvelope() {
 int main() {
   testOwnedRequestAndExactlyOnceTerminal();
   testTrackBuildAndWholePlanFallback();
-  testProvisionalResourceLimitBoundaries();
+  testAggregateResourceBudgetBoundaries();
   testSurfaceIdentityAndDisjointGenerations();
   testTargetRegistryScopesClaimsAndRetainedExitsByView();
   testMultiTrackCommandUsesOneBatchResolution();
@@ -801,5 +855,6 @@ int main() {
   testCommonFixturesUseAppleAndAndroidExecutors();
   testExternalTraceEnvelope();
   std::cout << "NativeAnimationServiceTest passed\n";
+  runLayoutNativeAnimationAdapterTests();
   runPendingNativeLayoutStartsTests();
 }

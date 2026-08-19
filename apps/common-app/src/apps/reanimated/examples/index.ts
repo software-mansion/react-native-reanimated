@@ -214,6 +214,10 @@ const FinalStateFirstBench: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/FinalStateFirstBenchExample').default
   );
+const NativeRoutingBench: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/NativeRoutingBenchExample').default
+  );
 const FlatListSkipEnteringExiting: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/FlatListSkipEnteringExiting').default
@@ -1199,6 +1203,10 @@ export const EXAMPLES: Record<string, Example> = {
   FinalStateFirstBench: {
     title: '[LA] Final-state-first bench',
     screen: FinalStateFirstBench,
+  },
+  NativeRoutingBench: {
+    title: '[LA] Native IR routing bench',
+    screen: NativeRoutingBench,
   },
   ReactionsCounterExample: {
     title: '[LA] Reactions counter',

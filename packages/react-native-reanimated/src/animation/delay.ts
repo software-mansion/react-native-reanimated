@@ -7,6 +7,7 @@ import type {
   Timestamp,
 } from '../commonTypes';
 import type { DelayAnimation } from './commonTypes';
+import { nativeDelayStructure } from './nativeAnimationStructure';
 import { defineAnimation, getReduceMotionForAnimation } from './util';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
@@ -103,7 +104,7 @@ export const withDelay = function <T extends AnimationObject>(
         }
       };
 
-      return {
+      const animation: DelayAnimation = {
         isHigherOrder: true,
         onFrame: delay,
         onStart,
@@ -114,6 +115,15 @@ export const withDelay = function <T extends AnimationObject>(
         started: false,
         reduceMotion: getReduceMotionForAnimation(reduceMotion),
       };
+      const nativeAnimation = nativeDelayStructure(
+        delayMs,
+        nextAnimation,
+        reduceMotion
+      );
+      if (nativeAnimation !== undefined) {
+        animation.__nativeAnimation = nativeAnimation;
+      }
+      return animation;
     }
   );
 } as withDelayType;

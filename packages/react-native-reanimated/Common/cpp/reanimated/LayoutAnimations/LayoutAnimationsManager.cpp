@@ -68,7 +68,8 @@ void LayoutAnimationsManager::startLayoutAnimation(
     jsi::Runtime &rt,
     const int tag,
     const LayoutAnimationType type,
-    const jsi::Object &values) {
+    const jsi::Object &values,
+    const uint64_t buildId) {
   std::shared_ptr<Serializable> config;
   {
     auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
@@ -82,7 +83,62 @@ void LayoutAnimationsManager::startLayoutAnimation(
       rt.global().getPropertyAsObject(rt, "global").getProperty(rt, "LayoutAnimationsManager");
   jsi::Function startAnimationForTag =
       layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "start");
-  startAnimationForTag.call(rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, config->toJSValue(rt));
+  if (buildId == 0) {
+    startAnimationForTag.call(rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, config->toJSValue(rt));
+  } else {
+    startAnimationForTag.call(
+        rt,
+        jsi::Value(tag),
+        jsi::Value(static_cast<int>(type)),
+        values,
+        config->toJSValue(rt),
+        jsi::Value(static_cast<double>(buildId)));
+  }
+}
+
+jsi::Value LayoutAnimationsManager::buildLayoutAnimation(
+    jsi::Runtime &rt,
+    const int tag,
+    const LayoutAnimationType type,
+    const jsi::Object &values,
+    const uint64_t buildId,
+    const size_t maxProperties) {
+  std::shared_ptr<Serializable> config;
+  {
+    auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+    if (!getConfigsForType(type).contains(tag)) {
+      return jsi::Value::undefined();
+    }
+    config = getConfigsForType(type)[tag];
+  }
+  try {
+    jsi::Value layoutAnimationRepositoryAsValue =
+        rt.global().getPropertyAsObject(rt, "global").getProperty(rt, "LayoutAnimationsManager");
+    jsi::Function buildForTag = layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "build");
+    return buildForTag.call(
+        rt,
+        jsi::Value(tag),
+        jsi::Value(static_cast<int>(type)),
+        values,
+        config->toJSValue(rt),
+        jsi::Value(static_cast<double>(buildId)),
+        jsi::Value(static_cast<double>(maxProperties)));
+  } catch (const std::exception &) {
+    // The frame-driven start runs the builder again and reports the error.
+    return jsi::Value::undefined();
+  }
+}
+
+void LayoutAnimationsManager::completeNativeBuild(
+    jsi::Runtime &rt,
+    const int tag,
+    const uint64_t buildId,
+    const bool finished) const {
+  jsi::Value layoutAnimationRepositoryAsValue =
+      rt.global().getPropertyAsObject(rt, "global").getProperty(rt, "LayoutAnimationsManager");
+  jsi::Function complete =
+      layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "completeNativeBuild");
+  complete.call(rt, jsi::Value(tag), jsi::Value(static_cast<double>(buildId)), jsi::Value(finished));
 }
 
 void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const {

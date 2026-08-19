@@ -5,10 +5,12 @@ import { runOnUISync } from 'react-native-worklets';
 
 import { cancelAnimation, withStyleAnimation } from '../animation';
 import type {
+  AnimationObject,
   LayoutAnimation,
   LayoutAnimationsManager,
   LayoutAnimationValues,
   Mutable,
+  NativeLayoutAnimationBuildSummary,
   SharedValue,
 } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
@@ -54,6 +56,11 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   'worklet';
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
+  // Builder results stored by the native route, keyed `tag:buildId`. Exactly
+  // one later call consumes each entry: `start` with the same build id, or
+  // `completeNativeBuild`. Per-build keys keep concurrent builds for one tag
+  // apart, so a replacement cannot orphan a build or its callback.
+  const nativeBuildForKey = new Map<string, LayoutAnimation>();
 
   // Layout animation starts are scheduled separately on the UI runtime. With
   // a large number of views, sampling the clock for every start noticeably
@@ -101,9 +108,21 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
        * animations.
        */
       yogaValues: Partial<LayoutAnimationValues>,
-      config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
+      config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
+      buildId?: number
     ) {
-      const style = config(yogaValues);
+      // Reuse the stored result of `build` instead of running the builder
+      // again.
+      let style: LayoutAnimation | undefined;
+      if (buildId !== undefined) {
+        const buildKey = `${tag}:${buildId}`;
+        const storedBuild = nativeBuildForKey.get(buildKey);
+        if (storedBuild) {
+          nativeBuildForKey.delete(buildKey);
+          style = storedBuild;
+        }
+      }
+      style ??= config(yogaValues);
       let currentAnimation = style.animations;
 
       // When layout animation is requested, but a previous one is still running, we merge
@@ -151,6 +170,59 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       cancelAnimation(value);
       currentAnimationForTag.delete(tag);
       mutableValuesForTag.delete(tag);
+    },
+    build(
+      tag: number,
+      _type: LayoutAnimationType,
+      yogaValues: Partial<LayoutAnimationValues>,
+      config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
+      buildId: number,
+      maxProperties: number
+    ): NativeLayoutAnimationBuildSummary {
+      const style = config(yogaValues);
+
+      // Store the style only on a successful return; after a throw nothing
+      // consumes the entry.
+      const animations = style.animations as Record<string, unknown>;
+      const animatedProperties = Object.keys(animations);
+      // Report the resource limit before any per-property work.
+      if (animatedProperties.length > maxProperties) {
+        nativeBuildForKey.set(`${tag}:${buildId}`, style);
+        return { limitExceeded: true };
+      }
+      const initialValues = (style.initialValues ?? {}) as Record<
+        string,
+        unknown
+      >;
+      let hasUnanimatedInitialValues = false;
+      for (const key of Object.keys(initialValues)) {
+        if (!(key in animations)) {
+          hasUnanimatedInitialValues = true;
+        }
+      }
+      const properties = animatedProperties.map((key) => {
+        const animation = animations[key];
+        const initialValue = initialValues[key];
+        return {
+          property: key,
+          initialValue:
+            typeof initialValue === 'number' ? initialValue : undefined,
+          node:
+            animation !== null &&
+            typeof animation === 'object' &&
+            !Array.isArray(animation)
+              ? (animation as AnimationObject).__nativeAnimation
+              : undefined,
+        };
+      });
+      nativeBuildForKey.set(`${tag}:${buildId}`, style);
+      return { properties, hasUnanimatedInitialValues };
+    },
+    completeNativeBuild(tag: number, buildId: number, finished: boolean) {
+      const key = `${tag}:${buildId}`;
+      const storedBuild = nativeBuildForKey.get(key);
+      nativeBuildForKey.delete(key);
+      storedBuild?.callback?.(finished);
     },
   };
 }

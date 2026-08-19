@@ -39,6 +39,16 @@ struct ResolvedAnimationTrack {
   std::unique_ptr<ResolvedAnimationTarget> target;
 };
 
+// The track forms one platform executor can realize. Routing and executor
+// preparation must read the same platform-owned instance.
+struct NativeTrackFormSupport {
+  bool linearTiming{false};
+  bool cubicBezierTiming{false};
+  bool stepsTiming{false};
+  bool linearStopsTiming{false};
+  size_t maxKeyframesPerTrack{0};
+};
+
 class PreparedNativeAnimation {
  public:
   virtual ~PreparedNativeAnimation() = default;

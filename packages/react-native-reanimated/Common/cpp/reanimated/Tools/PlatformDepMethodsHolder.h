@@ -2,6 +2,7 @@
 
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
 #include <reanimated/LayoutAnimations/LayoutMountBoundary.h>
+#include <reanimated/NativeAnimations/NativeAnimationInterfaces.h>
 #include <reanimated/NativeAnimations/NativeAnimationService.h>
 #include <reanimated/PseudoStyles/PseudoSelector.h>
 
@@ -75,11 +76,12 @@ struct PlatformDepMethodsHolder {
   css::CSSCanRoutePropertyFunction cssCanRouteProperty;
   css::CSSApplyTransitionFunction cssApplyTransition;
   css::CSSRemoveTransitionFunction cssRemoveTransition;
-  // Keep these three last so platform initializers that don't supply them
-  // can omit them and rely on value-init (= null shared_ptr).
+  // Keep these last: platform initializers that do not supply them rely on
+  // value-init.
   std::shared_ptr<css::CSSPlatformAnimationFactory> platformAnimationFactory;
   std::shared_ptr<native_animation::NativeAnimationService> nativeAnimationService;
   std::shared_ptr<LayoutMountBoundary> layoutMountBoundary;
+  native_animation::NativeTrackFormSupport nativeTrackFormSupport;
 };
 
 } // namespace reanimated

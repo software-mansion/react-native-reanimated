@@ -18,6 +18,8 @@ enum class NativeAnimationTraceEventType : uint8_t {
   // Objective 06 layout mount-order events.
   MountEnqueue,
   MountDrain,
+  // Objective 07 layout route decision.
+  RouteDecision,
 };
 
 struct NativeAnimationTraceEvent {
@@ -36,6 +38,11 @@ struct NativeAnimationTraceEvent {
   uint8_t objective{5};
   std::optional<AnimationOutcome> outcome;
   std::optional<AnimationResultReason> reason;
+  // RouteDecision payload. The domain that records the event owns the route
+  // value meaning; the envelope stays domain-neutral.
+  std::optional<uint8_t> requestedRoute;
+  std::optional<uint8_t> selectedRoute;
+  std::optional<TrackBuildFailureReason> trackBuildFailureReason;
 };
 
 class NativeAnimationTraceSink {
@@ -59,9 +66,17 @@ void recordNativeAnimationTrace(
     std::optional<AnimationResultReason> reason = std::nullopt,
     uint8_t objective = 5);
 
+void recordNativeAnimationRouteTrace(
+    NativeAnimationTraceSink &sink,
+    AnimationHandle handle,
+    uint8_t requestedRoute,
+    uint8_t selectedRoute,
+    std::optional<TrackBuildFailureReason> trackBuildFailureReason);
+
 #else
 
 #define recordNativeAnimationTrace(...) ((void)0)
+#define recordNativeAnimationRouteTrace(...) ((void)0)
 
 #endif
 

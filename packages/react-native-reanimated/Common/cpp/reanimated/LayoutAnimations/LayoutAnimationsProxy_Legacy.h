@@ -132,6 +132,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<native_animation::NativeAnimationService> &nativeAnimationService,
       const std::shared_ptr<LayoutMountBoundary> &layoutMountBoundary,
+      const native_animation::NativeTrackFormSupport &nativeTrackFormSupport,
       const std::shared_ptr<UIManager> &uiManager
 #ifdef ANDROID
       ,
@@ -147,6 +148,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
             uiScheduler,
             nativeAnimationService,
             layoutMountBoundary,
+            nativeTrackFormSupport,
             uiManager
 #ifdef ANDROID
             ,
@@ -163,7 +165,8 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
 
   void startEnteringAnimation(const int tag, ShadowViewMutation &mutation) const;
   void startExitingAnimation(const int tag, ShadowViewMutation &mutation) const;
-  void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation) const;
+  void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation, const uint64_t buildId = 0) const;
+  void startNativeLayoutFallback(const ActiveNativeLayoutAnimation &record) const override;
 
 #if defined(IS_REANIMATED_EXAMPLE_APP)
   // Final-state-first bench: views with a bench nativeID get a controlled
@@ -199,7 +202,8 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
       const std::unordered_map<Tag, Tag> &movedViews,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext,
-      SurfaceId surfaceId) const;
+      SurfaceId surfaceId,
+      MountingTransaction::Number transactionNumber) const;
   void addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList &mutations) const;
   void dropUpdatesForDeletedViews(ShadowViewMutationList &filteredMutations) const;
   void updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation) const;

@@ -200,6 +200,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       animatedSensorModule_(platformDepMethodsHolder),
       nativeAnimationService_(platformDepMethodsHolder.nativeAnimationService),
       layoutMountBoundary_(platformDepMethodsHolder.layoutMountBoundary),
+      nativeTrackFormSupport_(platformDepMethodsHolder.nativeTrackFormSupport),
       layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>()),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef __APPLE__
@@ -1274,6 +1275,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         uiScheduler_,
         nativeAnimationService_,
         layoutMountBoundary_,
+        nativeTrackFormSupport_,
         uiManager_
 #ifdef ANDROID
         ,
@@ -1294,6 +1296,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         uiScheduler_,
         nativeAnimationService_,
         layoutMountBoundary_,
+        nativeTrackFormSupport_,
         uiManager_
 #ifdef ANDROID
         ,

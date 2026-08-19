@@ -1,6 +1,9 @@
 'use strict';
 import { Bezier } from './Bezier';
-import type { EasingFunction } from './commonTypes';
+import type {
+  EasingFunction,
+  NativeAnimationTimingStructure,
+} from './commonTypes';
 
 /**
  * The `Easing` module implements common easing functions. This module is used
@@ -48,7 +51,10 @@ import type { EasingFunction } from './commonTypes';
  * - [`out`](docs/easing.html#out) runs an easing function backwards
  */
 
-export type EasingFunctionFactory = { factory: () => EasingFunction };
+export type EasingFunctionFactory = {
+  factory: () => EasingFunction;
+  __nativeTiming?: NativeAnimationTimingStructure;
+};
 
 /**
  * A linear function, `f(t) = t`. Position correlates to elapsed time one to
@@ -211,6 +217,7 @@ function bezier(
       'worklet';
       return Bezier(x1, y1, x2, y2);
     },
+    __nativeTiming: { kind: 'cubicBezier', x1, y1, x2, y2 },
   };
 }
 

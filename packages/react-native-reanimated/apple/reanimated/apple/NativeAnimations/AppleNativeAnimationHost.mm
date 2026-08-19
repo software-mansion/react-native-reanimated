@@ -2,6 +2,7 @@
 
 #import <reanimated/NativeAnimations/NativeAnimationHost.h>
 #import <reanimated/NativeAnimations/NativeAnimationInterfaces.h>
+#import <reanimated/NativeAnimations/NativeAnimationValidation.h>
 #import <reanimated/apple/REAUIView.h>
 
 #import <React/RCTAssert.h>
@@ -110,22 +111,6 @@ NSString *keyPathForTarget(const AnimationTarget target)
       return @"shadowOffset";
     case AnimationTargetKind::Transform:
       return @"transform";
-  }
-}
-
-bool mountedViewSupportsTarget(const AnimationTarget target)
-{
-  switch (target.kind) {
-    case AnimationTargetKind::BorderColor:
-    case AnimationTargetKind::BorderRadius:
-    case AnimationTargetKind::BorderWidth:
-      // React Native can rasterize borders into layer contents. In that case,
-      // changes to CALayer border properties are not visible.
-      // TODO: Move this rule to Apple capability routing if all component types
-      // remain unsupported. Otherwise, inspect the mounted component here.
-      return false;
-    default:
-      return true;
   }
 }
 
@@ -360,12 +345,11 @@ class AppleNativeAnimationTargetResolver final : public NativeAnimationTargetRes
     if (view == nil || surfaceIdForView(view) != handle.surfaceId || view.layer == nil) {
       return AnimationResultReason::TargetUnavailable;
     }
+    // Border targets never reach this resolver; the domain adapters refuse
+    // them during static capability routing.
     ResolvedAnimationTargets resolvedTargets;
     resolvedTargets.reserve(targets.size());
     for (const auto target : targets) {
-      if (!mountedViewSupportsTarget(target)) {
-        return AnimationResultReason::UnsupportedTargetRealization;
-      }
       resolvedTargets.push_back(std::make_unique<AppleResolvedAnimationTarget>(view.layer, keyPathForTarget(target)));
     }
     return resolvedTargets;
@@ -400,12 +384,16 @@ class AppleNativeAnimationExecutor final : public NativeAnimationExecutor,
   NativeAnimationPreparation prepare(const AnimationHandle &, std::vector<ResolvedAnimationTrack> tracks) override
   {
     RCTAssertMainQueue();
+    const auto formSupport = appleNativeTrackFormSupport();
     std::vector<PreparedTrack> preparedTracks;
     preparedTracks.reserve(tracks.size());
     for (const auto &resolvedTrack : tracks) {
       const auto &track = resolvedTrack.track;
       // TODO: add structured and sampled keyframe tracks. for now this is just the basic case
-      if (track.keyframes.size() != 1 || track.keyframes.front().offset != 1) {
+      if (track.keyframes.size() > formSupport.maxKeyframesPerTrack || track.keyframes.front().offset != 1) {
+        return AnimationResultReason::UnsupportedTargetRealization;
+      }
+      if (!supportsTiming(formSupport, track.keyframes.front().timingToNext)) {
         return AnimationResultReason::UnsupportedTargetRealization;
       }
       CAMediaTimingFunction *timing = timingFunction(track.keyframes.front().timingToNext);
@@ -647,6 +635,19 @@ std::shared_ptr<NativeAnimationService> makeAppleNativeAnimationService(RCTSurfa
   auto resolver = std::make_shared<AppleNativeAnimationTargetResolver>(surfacePresenter);
   auto executor = std::make_shared<AppleNativeAnimationExecutor>();
   return makeNativeAnimationService(scheduler, resolver, executor);
+}
+
+NativeTrackFormSupport appleNativeTrackFormSupport()
+{
+  // The Apple executor realizes single-segment CABasicAnimation tracks with
+  // CAMediaTimingFunction curves. Objective 08 expands this form.
+  return {
+      .linearTiming = true,
+      .cubicBezierTiming = true,
+      .stepsTiming = false,
+      .linearStopsTiming = false,
+      .maxKeyframesPerTrack = 1,
+  };
 }
 
 } // namespace reanimated::native_animation

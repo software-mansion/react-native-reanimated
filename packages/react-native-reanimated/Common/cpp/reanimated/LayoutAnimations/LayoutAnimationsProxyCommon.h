@@ -9,10 +9,12 @@
 #include <reanimated/LayoutAnimations/FrameDrivenAnimationLease.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/LayoutAnimations/LayoutMountBoundary.h>
 #include <reanimated/LayoutAnimations/LayoutNativeAnimationAdapter.h>
 #include <reanimated/LayoutAnimations/PendingNativeLayoutStarts.h>
 #include <reanimated/NativeAnimations/NativeAnimationService.h>
+#include <reanimated/NativeAnimations/NativeAnimationTrace.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
@@ -81,6 +83,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<native_animation::NativeAnimationService> &nativeAnimationService,
       const std::shared_ptr<LayoutMountBoundary> &layoutMountBoundary,
+      const native_animation::NativeTrackFormSupport &nativeTrackFormSupport,
       const std::shared_ptr<facebook::react::UIManager> &uiManager
 #ifdef ANDROID
       ,
@@ -102,7 +105,14 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
                         scheduleOnUI(uiScheduler, operation);
                       })
                 : nullptr),
+        nativeTrackFormSupport_(nativeTrackFormSupport),
+#ifndef NDEBUG
+        layoutTraceSink_(makeLayoutTraceSink()),
+        pendingNativeStarts_(
+            makePendingNativeLayoutStarts(nativeAnimationService, layoutMountBoundary, layoutTraceSink_))
+#else
         pendingNativeStarts_(makePendingNativeLayoutStarts(nativeAnimationService, layoutMountBoundary))
+#endif
 #ifdef ANDROID
         ,
         preserveMountedTags_(filterUnmountedTagsFunction),
@@ -117,17 +127,38 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) = 0;
   virtual void startSurface(const SurfaceId surfaceId);
 
-  // `onGranted` must capture the proxy weakly and lock it again. A strong
-  // capture would keep the proxy alive while the claim is pending and would
-  // make the expired-owner release path in the grant callback unreachable.
+  // `onGranted` must capture the proxy weakly; a strong capture would keep
+  // the proxy alive while the claim is pending. A rejected claim settles the
+  // stored build named by `pendingBuildId` with `false`; zero names no build.
   void claimFrameDrivenLayoutAnimation(
       SurfaceId surfaceId,
       Tag tag,
       LayoutAnimationType type,
       const std::weak_ptr<const LayoutAnimationsProxyCommon> &weakOwner,
-      std::function<void()> onGranted) const;
+      std::function<void()> onGranted,
+      uint64_t pendingBuildId = 0) const;
   void releaseFrameDrivenLayoutAnimation(SurfaceId surfaceId, Tag tag, native_animation::AnimationOutcome outcome)
       const;
+
+  // Result of one routing attempt. With `routedNative` the caller mounts the
+  // final Update mutation and skips the frame-driven start; a non-zero
+  // `buildId` names the stored builder result the frame-driven start reuses.
+  struct NativeLayoutRouteAttempt {
+    bool routedNative{false};
+    uint64_t buildId{0};
+  };
+
+  // Runs the builder once, builds one owned plan, and selects the
+  // whole-animation route. Runs inside `pullTransaction` on the platform main
+  // thread.
+  NativeLayoutRouteAttempt tryStartNativeLayoutAnimation(
+      const ShadowView &oldView,
+      const ShadowView &finalView,
+      Tag parentTag,
+      MountingTransaction::Number transactionNumber,
+      const Snapshot &currentValues,
+      const Snapshot &targetValues,
+      const std::weak_ptr<const LayoutAnimationsProxyCommon> &weakSelf) const;
 
   // Final-state-first delivery: stores an owned prepared request during
   // interception; the pending store submits it after the intended mount.
@@ -145,9 +176,52 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
  protected:
   static std::shared_ptr<PendingNativeLayoutStarts> makePendingNativeLayoutStarts(
       const std::shared_ptr<native_animation::NativeAnimationService> &nativeAnimationService,
-      const std::shared_ptr<LayoutMountBoundary> &layoutMountBoundary);
+      const std::shared_ptr<LayoutMountBoundary> &layoutMountBoundary
+#ifndef NDEBUG
+      ,
+      const std::shared_ptr<native_animation::NativeAnimationTraceSink> &traceSink = nullptr
+#endif
+  );
+#ifndef NDEBUG
+  static std::shared_ptr<native_animation::NativeAnimationTraceSink> makeLayoutTraceSink();
+#endif
 
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
+
+  // One native layout command for a view, from submission to its terminal
+  // result. Access follows the same main-thread rule as `frameDrivenLeases_`.
+  struct ActiveNativeLayoutAnimation {
+    native_animation::AnimationHandle handle;
+    LayoutAnimationType type{LayoutAnimationType::LAYOUT};
+    std::vector<native_animation::AnimationTarget> targets;
+    ShadowView oldView;
+    ShadowView finalView;
+    Tag parentTag{0};
+    bool admissionGranted{false};
+  };
+
+  // Starts the frame-driven animation for a command that a pre-start
+  // rejection returned to layout. `record.handle.generation` names the stored
+  // build to reuse.
+  virtual void startNativeLayoutFallback(const ActiveNativeLayoutAnimation &record) const = 0;
+
+  void handleNativeLayoutAdmission(
+      SurfaceId surfaceId,
+      Tag tag,
+      const native_animation::AnimationHandle &handle,
+      native_animation::AnimationAdmissionResult result) const;
+  void handleNativeLayoutTerminal(
+      SurfaceId surfaceId,
+      Tag tag,
+      const native_animation::AnimationHandle &handle,
+      native_animation::AnimationResult result) const;
+  // True when an active claim makes this track a replacement, which must
+  // start from the current visible value.
+  bool shouldStartFromCurrentVisual(SurfaceId surfaceId, Tag tag, const native_animation::AnimationTarget &target)
+      const;
+  // Cancels every native layout command for this tag. Each terminal result
+  // still delivers its public callback.
+  void cancelActiveNativeLayoutAnimationsForTag(Tag tag) const;
 
   mutable std::unordered_set<Tag> maybeSettledAnimationTags_;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
@@ -158,6 +232,10 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   const std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<facebook::react::UIManager> uiManager_;
   const std::shared_ptr<LayoutNativeAnimationAdapter> nativeAnimationAdapter_;
+  const native_animation::NativeTrackFormSupport nativeTrackFormSupport_;
+#ifndef NDEBUG
+  const std::shared_ptr<native_animation::NativeAnimationTraceSink> layoutTraceSink_;
+#endif
   const std::shared_ptr<PendingNativeLayoutStarts> pendingNativeStarts_;
   PreserveMountedTagsFunction preserveMountedTags_;
 
@@ -178,7 +256,12 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   // of those paths can run on another thread.
   mutable std::unordered_map<FrameDrivenLeaseKey, std::shared_ptr<FrameDrivenAnimationLease>, FrameDrivenLeaseKeyHash>
       frameDrivenLeases_;
-  mutable uint64_t frameDrivenGeneration_{0};
+  // One slot per view. A newer command replaces the slot; the replaced
+  // command still receives its own terminal result through its handle.
+  mutable std::unordered_map<FrameDrivenLeaseKey, ActiveNativeLayoutAnimation, FrameDrivenLeaseKeyHash>
+      activeNativeLayoutAnimations_;
+  // One monotonic source for command generations and build ids.
+  mutable uint64_t commandGeneration_{0};
   // Entering claims that the coordinator rejected. The claim resolves inline
   // on iOS, so the mount code consumes the tag in the same transaction and
   // keeps the view visible instead of mounting it with zero opacity.

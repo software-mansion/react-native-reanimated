@@ -37,8 +37,8 @@ std::optional<AnimationTarget> targetForProperty(const std::string &propertyName
       {"shadowRadius", AnimationTargetKind::ShadowRadius},
       {"shadowOffset", AnimationTargetKind::ShadowOffset},
   };
-  // The Apple resolver conservatively rejects border targets until capability
-  // routing can prove that a mounted component exposes visible layer fields.
+  // Border targets stay off this map: React Native can rasterize borders into
+  // layer contents, so a native border track could animate a stale surface.
   const auto it = targets.find(propertyName);
   return it == targets.end() ? std::nullopt : std::optional<AnimationTarget>{{it->second}};
 }

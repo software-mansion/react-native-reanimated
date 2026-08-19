@@ -10,6 +10,7 @@ set(REACT_NATIVE_ROOT "${REANIMATED_PACKAGE_ROOT}/../../node_modules/react-nativ
 
 add_executable(
   native_animation_service_test
+  LayoutNativeAnimationAdapterTest.cc
   NativeAnimationServiceTest.cc
   PendingNativeLayoutStartsTest.cc
   ../../LayoutAnimations/LayoutNativeAnimationAdapter.cpp

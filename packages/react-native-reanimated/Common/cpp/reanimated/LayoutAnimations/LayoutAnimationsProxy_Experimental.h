@@ -54,7 +54,12 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable Transitions transitions_;
   mutable bool synchronized_ = true;
   mutable Tag closingScreenTag_ = -1;
-  mutable std::vector<std::shared_ptr<LightNode>> entering_, layout_, exiting_;
+  mutable std::vector<std::shared_ptr<LightNode>> entering_, exiting_;
+  struct FrameDrivenLayoutUpdate {
+    std::shared_ptr<LightNode> node;
+    uint64_t buildId{0};
+  };
+  mutable std::vector<FrameDrivenLayoutUpdate> layout_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::vector<std::shared_ptr<LightNode>> containersToInsert_;
@@ -70,6 +75,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<native_animation::NativeAnimationService> &nativeAnimationService,
       const std::shared_ptr<LayoutMountBoundary> &layoutMountBoundary,
+      const native_animation::NativeTrackFormSupport &nativeTrackFormSupport,
       const std::shared_ptr<UIManager> &uiManager
 #ifdef ANDROID
       ,
@@ -85,6 +91,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
             uiScheduler,
             nativeAnimationService,
             layoutMountBoundary,
+            nativeTrackFormSupport,
             uiManager
 #ifdef ANDROID
             ,
@@ -97,7 +104,13 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
 
   void startEnteringAnimation(const std::shared_ptr<LightNode> &node) const;
   void startExitingAnimation(const std::shared_ptr<LightNode> &node) const;
-  void startLayoutAnimation(const std::shared_ptr<LightNode> &node) const;
+  void startLayoutAnimation(const std::shared_ptr<LightNode> &node, uint64_t buildId) const;
+  void startFrameDrivenLayoutAnimation(
+      const ShadowView &oldView,
+      const ShadowView &finalView,
+      Tag parentTag,
+      uint64_t buildId) const;
+  void startNativeLayoutFallback(const ActiveNativeLayoutAnimation &record) const override;
   void startSharedTransition(const int tag, const ShadowView &before, const ShadowView &after, SurfaceId surfaceId)
       const;
   void startProgressTransition(const int tag, const ShadowView &before, const ShadowView &after, SurfaceId surfaceId)
@@ -111,7 +124,8 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   void updateLightTree(
       const PropsParserContext &propsParserContext,
       const ShadowViewMutationList &mutations,
-      ShadowViewMutationList &filteredMutations) const;
+      ShadowViewMutationList &filteredMutations,
+      MountingTransaction::Number transactionNumber) const;
 
   void reconcileContradictedRemovals(const ShadowViewMutationList &mutations, ShadowViewMutationList &filteredMutations)
       const;

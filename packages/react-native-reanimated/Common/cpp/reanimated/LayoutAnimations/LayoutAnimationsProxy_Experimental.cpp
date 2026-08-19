@@ -33,10 +33,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   reconcileContradictedRemovals(mutations, filteredMutations);
 
   if (isInTransition) {
-    updateLightTree(propsParserContext, mutations, filteredMutations);
+    updateLightTree(propsParserContext, mutations, filteredMutations, transactionNumber);
     handleProgressTransition(filteredMutations, mutations, propsParserContext, surfaceId);
   } else if (!synchronized_) {
-    updateLightTree(propsParserContext, mutations, filteredMutations);
+    updateLightTree(propsParserContext, mutations, filteredMutations, transactionNumber);
     if (!lightNodes_.contains(closingScreenTag_)) {
       topScreen[surfaceId] = findActiveBoundary(lightNodes_[surfaceId]);
       synchronized_ = true;
@@ -51,7 +51,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
     }
 
-    updateLightTree(propsParserContext, mutations, filteredMutations);
+    updateLightTree(propsParserContext, mutations, filteredMutations, transactionNumber);
 
     auto afterTopScreen = findActiveBoundary(root);
     topScreen[surfaceId] = afterTopScreen;
@@ -93,8 +93,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       consumeRejectedEnteringClaim(node->current.tag);
     }
   }
-  for (auto &node : layout_) {
-    startLayoutAnimation(node);
+  for (auto &[node, buildId] : layout_) {
+    startLayoutAnimation(node, buildId);
   }
   entering_.clear();
   layout_.clear();
@@ -185,7 +185,8 @@ bool LayoutAnimationsProxy_Experimental::shouldOverridePullTransaction() const {
 void LayoutAnimationsProxy_Experimental::updateLightTree(
     const PropsParserContext &propsParserContext,
     const ShadowViewMutationList &mutations,
-    ShadowViewMutationList &filteredMutations) const {
+    ShadowViewMutationList &filteredMutations,
+    [[maybe_unused]] const MountingTransaction::Number transactionNumber) const {
   ReanimatedSystraceSection s("updateLightTree");
   std::unordered_set<Tag> inserted, moved, deleted;
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
@@ -240,7 +241,26 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
 #endif // ANDROID
         auto tag = mutation.newChildShadowView.tag;
         if (layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
-          layout_.push_back(node);
+          uint64_t buildId = 0;
+          if constexpr (useNativeLayoutAnimations()) {
+            const auto window = surfaceManager.getWindow(mutation.newChildShadowView.surfaceId);
+            const auto attempt = tryStartNativeLayoutAnimation(
+                mutation.oldChildShadowView,
+                mutation.newChildShadowView,
+                mutation.parentTag,
+                transactionNumber,
+                Snapshot(mutation.oldChildShadowView, window),
+                Snapshot(mutation.newChildShadowView, window),
+                weak_from_this());
+            if (attempt.routedNative) {
+              // Final-state-first: mount the final Update now; the native
+              // start animates presentation after the mount.
+              filteredMutations.push_back(mutation);
+              break;
+            }
+            buildId = attempt.buildId;
+          }
+          layout_.push_back({node, buildId});
         } else {
           filteredMutations.push_back(mutation);
         }
@@ -648,6 +668,9 @@ void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) con
     it->second.handle++;
   }
 #endif
+  if constexpr (useNativeLayoutAnimations()) {
+    cancelActiveNativeLayoutAnimationsForTag(tag);
+  }
   const auto layoutAnimationIt = layoutAnimations_.find(tag);
   if (layoutAnimationIt == layoutAnimations_.end()) {
     return;
@@ -1018,14 +1041,25 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(const std::shared
       });
 }
 
-void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const std::shared_ptr<LightNode> &node) const {
-  auto oldChildShadowView = node->previous;
-  auto newChildShadowView = node->current;
-  auto surfaceId = oldChildShadowView.surfaceId;
-  const auto tag = oldChildShadowView.tag;
+void LayoutAnimationsProxy_Experimental::startLayoutAnimation(
+    const std::shared_ptr<LightNode> &node,
+    const uint64_t buildId) const {
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
-  const auto parentTag = parent->current.tag;
+  startFrameDrivenLayoutAnimation(node->previous, node->current, parent->current.tag, buildId);
+}
+
+void LayoutAnimationsProxy_Experimental::startNativeLayoutFallback(const ActiveNativeLayoutAnimation &record) const {
+  startFrameDrivenLayoutAnimation(record.oldView, record.finalView, record.parentTag, record.handle.generation);
+}
+
+void LayoutAnimationsProxy_Experimental::startFrameDrivenLayoutAnimation(
+    const ShadowView &oldView,
+    const ShadowView &finalView,
+    const Tag parentTag,
+    const uint64_t buildId) const {
+  auto surfaceId = oldView.surfaceId;
+  const auto tag = oldView.tag;
 #ifdef ANDROID
   const auto handle = pendingStarts_[tag].handle;
   pendingStarts_[tag].count++;
@@ -1035,10 +1069,11 @@ void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const std::shared_
       uiScheduler_,
       [weakThis = weak_from_this(),
        surfaceId,
-       oldChildShadowView,
-       newChildShadowView,
+       oldChildShadowView = oldView,
+       newChildShadowView = finalView,
        parentTag,
-       tag
+       tag,
+       buildId
 #ifdef ANDROID
        ,
        handle
@@ -1105,7 +1140,7 @@ void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const std::shared_
             tag,
             LayoutAnimationType::LAYOUT,
             strongThis,
-            [weakThis, oldChildShadowView, newChildShadowView, parentTag, surfaceId, tag]() {
+            [weakThis, oldChildShadowView, newChildShadowView, parentTag, surfaceId, tag, buildId]() {
               auto strongThis = weakThis.lock();
               if (!strongThis) {
                 return;
@@ -1136,8 +1171,9 @@ void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const std::shared_
               yogaValues.setProperty(uiRuntime, "windowWidth", targetValues.windowWidth);
               yogaValues.setProperty(uiRuntime, "windowHeight", targetValues.windowHeight);
               strongThis->layoutAnimationsManager_->startLayoutAnimation(
-                  uiRuntime, tag, LayoutAnimationType::LAYOUT, yogaValues);
-            });
+                  uiRuntime, tag, LayoutAnimationType::LAYOUT, yogaValues, buildId);
+            },
+            buildId);
       });
 }
 

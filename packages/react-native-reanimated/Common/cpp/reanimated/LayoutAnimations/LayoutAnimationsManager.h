@@ -7,6 +7,7 @@
 
 #include <jsi/jsi.h>
 #include <stdio.h>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -54,7 +55,27 @@ class LayoutAnimationsManager {
   void setShouldAnimateExiting(const int tag, const bool value);
   bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
   bool hasLayoutAnimation(const int tag, const LayoutAnimationType type);
-  void startLayoutAnimation(jsi::Runtime &rt, const int tag, const LayoutAnimationType type, const jsi::Object &values);
+  void startLayoutAnimation(
+      jsi::Runtime &rt,
+      const int tag,
+      const LayoutAnimationType type,
+      const jsi::Object &values,
+      const uint64_t buildId = 0);
+  // Runs the stored builder once on the UI runtime and returns the structure
+  // summary. Returns undefined when no config exists or the builder throws;
+  // the frame-driven start then runs the builder itself. More than
+  // `maxProperties` properties returns only the resource-limit marker.
+  jsi::Value buildLayoutAnimation(
+      jsi::Runtime &rt,
+      const int tag,
+      const LayoutAnimationType type,
+      const jsi::Object &values,
+      const uint64_t buildId,
+      const size_t maxProperties);
+  // Consumes the stored build and fires its callback. The terminal result
+  // reports its outcome; a rejected frame-driven claim settles the build with
+  // `finished = false`. A repeated call for one build is a no-op.
+  void completeNativeBuild(jsi::Runtime &rt, const int tag, const uint64_t buildId, const bool finished) const;
   void clearLayoutAnimationConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);

@@ -2,11 +2,19 @@
 #include <folly/dynamic.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
+#include <reanimated/LayoutAnimations/LayoutNativeAnimationStructureParser.h>
 
 #include <react/utils/hash_combine.h>
 
+#if !defined(NDEBUG) && defined(IS_REANIMATED_EXAMPLE_APP)
+#include <cstdio>
+#endif
+
+#include <algorithm>
 #include <functional>
 #include <memory>
+#include <optional>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -26,15 +34,87 @@ struct LayoutPendingViewSnapshot final : public PendingLayoutViewSnapshot {
   ShadowView finalView;
 };
 
+// Fallback is permitted only for a reason that does not mean a missing view,
+// a superseded command, or denied ownership.
+bool layoutPermitsFallback(const native_animation::AnimationResultReason reason) {
+  switch (reason) {
+    case native_animation::AnimationResultReason::UnsupportedTargetRealization:
+    case native_animation::AnimationResultReason::CurrentValueUnavailable:
+    case native_animation::AnimationResultReason::ExecutorError:
+    case native_animation::AnimationResultReason::InvalidPlan:
+    case native_animation::AnimationResultReason::ResourceLimit:
+      return true;
+    default:
+      return false;
+  }
+}
+
+#if !defined(NDEBUG) && defined(IS_REANIMATED_EXAMPLE_APP)
+
+// Development sink that prints trace events to the console for bench evidence.
+class StderrNativeAnimationTraceSink final : public native_animation::NativeAnimationTraceSink {
+ public:
+  void record(native_animation::NativeAnimationTraceEvent event) override {
+    event.sequence = ++sequence_;
+    std::fprintf(
+        stderr,
+        "[Reanimated.native-animation] seq=%llu event=%u surface=%d tag=%d owner=%u generation=%llu%s%s%s%s\n",
+        static_cast<unsigned long long>(event.sequence),
+        static_cast<unsigned>(event.event),
+        event.handle.surfaceId,
+        event.handle.tag,
+        static_cast<unsigned>(event.handle.owner),
+        static_cast<unsigned long long>(event.handle.generation),
+        event.requestedRoute ? (" requestedRoute=" + std::to_string(*event.requestedRoute)).c_str() : "",
+        event.selectedRoute ? (" selectedRoute=" + std::to_string(*event.selectedRoute)).c_str() : "",
+        event.trackBuildFailureReason
+            ? (" buildFailure=" + std::to_string(static_cast<unsigned>(*event.trackBuildFailureReason))).c_str()
+            : "",
+        event.outcome ? (" outcome=" + std::to_string(static_cast<unsigned>(*event.outcome)) + " reason=" +
+                         std::to_string(static_cast<unsigned>(
+                             event.reason.value_or(native_animation::AnimationResultReason::None))))
+                            .c_str()
+                      : "");
+  }
+
+ private:
+  uint64_t sequence_{0};
+};
+
+#endif
+
 } // namespace
+
+#ifndef NDEBUG
+std::shared_ptr<native_animation::NativeAnimationTraceSink> LayoutAnimationsProxyCommon::makeLayoutTraceSink() {
+#ifdef IS_REANIMATED_EXAMPLE_APP
+  if (useNativeLayoutAnimations()) {
+    return std::make_shared<StderrNativeAnimationTraceSink>();
+  }
+#endif
+  return std::make_shared<native_animation::NullNativeAnimationTraceSink>();
+}
+#endif
 
 std::shared_ptr<PendingNativeLayoutStarts> LayoutAnimationsProxyCommon::makePendingNativeLayoutStarts(
     const std::shared_ptr<native_animation::NativeAnimationService> &nativeAnimationService,
-    const std::shared_ptr<LayoutMountBoundary> &layoutMountBoundary) {
+    const std::shared_ptr<LayoutMountBoundary> &layoutMountBoundary
+#ifndef NDEBUG
+    ,
+    const std::shared_ptr<native_animation::NativeAnimationTraceSink> &traceSink
+#endif
+) {
   if (!useNativeLayoutAnimations() || !nativeAnimationService || !layoutMountBoundary) {
     return nullptr;
   }
+#ifndef NDEBUG
+  auto pendingStarts = std::make_shared<PendingNativeLayoutStarts>(
+      nativeAnimationService,
+      layoutMountBoundary,
+      traceSink ? traceSink : std::make_shared<native_animation::NullNativeAnimationTraceSink>());
+#else
   auto pendingStarts = std::make_shared<PendingNativeLayoutStarts>(nativeAnimationService, layoutMountBoundary);
+#endif
   layoutMountBoundary->setPostMountObserver(
       [weakPendingStarts = std::weak_ptr<PendingNativeLayoutStarts>(pendingStarts)](const SurfaceId surfaceId) {
         if (const auto pendingStarts = weakPendingStarts.lock()) {
@@ -69,6 +149,188 @@ void LayoutAnimationsProxyCommon::enqueueNativeLayoutStart(
 void LayoutAnimationsProxyCommon::cancelNativeLayoutStart(const native_animation::AnimationHandle &handle) const {
   if (pendingNativeStarts_) {
     pendingNativeStarts_->cancel(handle);
+  }
+}
+
+LayoutAnimationsProxyCommon::NativeLayoutRouteAttempt LayoutAnimationsProxyCommon::tryStartNativeLayoutAnimation(
+    const ShadowView &oldView,
+    const ShadowView &finalView,
+    const Tag parentTag,
+    const MountingTransaction::Number transactionNumber,
+    const Snapshot &currentValues,
+    const Snapshot &targetValues,
+    const std::weak_ptr<const LayoutAnimationsProxyCommon> &weakSelf) const {
+  NativeLayoutRouteAttempt attempt;
+  if (!nativeAnimationAdapter_ || !pendingNativeStarts_) {
+    return attempt;
+  }
+  const auto surfaceId = finalView.surfaceId;
+  const auto tag = finalView.tag;
+  const uint64_t buildId = ++commandGeneration_;
+
+  auto &uiRuntime = uiRuntime_;
+  const jsi::Object yogaValues(uiRuntime);
+  yogaValues.setProperty(uiRuntime, "currentOriginX", currentValues.x);
+  yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", currentValues.x);
+  yogaValues.setProperty(uiRuntime, "currentOriginY", currentValues.y);
+  yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", currentValues.y);
+  yogaValues.setProperty(uiRuntime, "currentWidth", currentValues.width);
+  yogaValues.setProperty(uiRuntime, "currentHeight", currentValues.height);
+  yogaValues.setProperty(uiRuntime, "targetOriginX", targetValues.x);
+  yogaValues.setProperty(uiRuntime, "targetGlobalOriginX", targetValues.x);
+  yogaValues.setProperty(uiRuntime, "targetOriginY", targetValues.y);
+  yogaValues.setProperty(uiRuntime, "targetGlobalOriginY", targetValues.y);
+  yogaValues.setProperty(uiRuntime, "targetWidth", targetValues.width);
+  yogaValues.setProperty(uiRuntime, "targetHeight", targetValues.height);
+  yogaValues.setProperty(uiRuntime, "windowWidth", targetValues.windowWidth);
+  yogaValues.setProperty(uiRuntime, "windowHeight", targetValues.windowHeight);
+  const auto summary = layoutAnimationsManager_->buildLayoutAnimation(
+      uiRuntime,
+      tag,
+      LayoutAnimationType::LAYOUT,
+      yogaValues,
+      buildId,
+      native_animation::kDefaultResourceBudget.maxTracksPerPlan);
+  if (summary.isUndefined()) {
+    // No stored build exists; the frame-driven start runs the builder itself.
+    return attempt;
+  }
+  attempt.buildId = buildId;
+
+  const native_animation::AnimationHandle handle{surfaceId, tag, native_animation::AnimationOwner::Layout, buildId};
+  auto parsed =
+      parseLayoutNativeAnimationBuild(uiRuntime, summary, native_animation::kDefaultResourceBudget.maxTracksPerPlan);
+  auto planResult = std::holds_alternative<LayoutNativeAnimationBuildInput>(parsed)
+      ? buildLayoutNativeAnimationPlan(
+            std::get<LayoutNativeAnimationBuildInput>(parsed),
+            {finalView.layoutMetrics.frame.size.width,
+             finalView.layoutMetrics.frame.size.height,
+             nativeTrackFormSupport_})
+      : LayoutPlanBuildResult{std::get<native_animation::TrackBuildFailure>(parsed)};
+  if (const auto *failure = std::get_if<native_animation::TrackBuildFailure>(&planResult)) {
+    // One failed track routes the whole animation to frame-driven.
+    recordNativeAnimationRouteTrace(
+        *layoutTraceSink_,
+        handle,
+        static_cast<uint8_t>(LayoutNativeAnimationRoute::DirectBasic),
+        static_cast<uint8_t>(LayoutNativeAnimationRoute::FrameDriven),
+        failure->reason);
+    return attempt;
+  }
+  auto plan = std::move(std::get<native_animation::AnimationPlan>(planResult));
+
+  // A replacement continues from what the user sees; a fresh animation starts
+  // from the owned builder value.
+  std::vector<native_animation::AnimationTarget> targets;
+  targets.reserve(plan.tracks.size());
+  for (auto &track : plan.tracks) {
+    targets.push_back(track.target);
+    if (shouldStartFromCurrentVisual(surfaceId, tag, track.target)) {
+      track.start = native_animation::CurrentVisualValue{};
+    }
+  }
+
+  recordNativeAnimationRouteTrace(
+      *layoutTraceSink_,
+      handle,
+      static_cast<uint8_t>(LayoutNativeAnimationRoute::DirectBasic),
+      static_cast<uint8_t>(LayoutNativeAnimationRoute::DirectBasic),
+      std::nullopt);
+  activeNativeLayoutAnimations_[{surfaceId, tag}] = ActiveNativeLayoutAnimation{
+      handle, LayoutAnimationType::LAYOUT, std::move(targets), oldView, finalView, parentTag};
+
+  const FrameDrivenLeaseKey key{surfaceId, tag};
+  native_animation::AnimationCallbacks callbacks{
+      [uiScheduler = uiScheduler_](const native_animation::CallbackOperation &operation) {
+        scheduleOnUI(uiScheduler, operation);
+      },
+      [weakSelf, key, handle](const native_animation::AnimationAdmissionResult result) {
+        if (const auto self = weakSelf.lock()) {
+          self->handleNativeLayoutAdmission(key.surfaceId, key.tag, handle, result);
+        }
+      },
+      [weakSelf, key, handle](const native_animation::AnimationResult result) {
+        if (const auto self = weakSelf.lock()) {
+          self->handleNativeLayoutTerminal(key.surfaceId, key.tag, handle, result);
+        }
+      },
+  };
+  enqueueNativeLayoutStart(
+      LayoutAnimationType::LAYOUT,
+      oldView,
+      finalView,
+      transactionNumber,
+      {handle, std::move(plan), native_animation::AnimationAdmissionMode::Normal},
+      std::move(callbacks));
+  attempt.routedNative = true;
+  return attempt;
+}
+
+void LayoutAnimationsProxyCommon::handleNativeLayoutAdmission(
+    const SurfaceId surfaceId,
+    const Tag tag,
+    const native_animation::AnimationHandle &handle,
+    const native_animation::AnimationAdmissionResult result) const {
+  if (result.status != native_animation::AnimationAdmissionStatus::Granted) {
+    // The terminal result after a rejection owns fallback and the callback.
+    return;
+  }
+  const auto it = activeNativeLayoutAnimations_.find({surfaceId, tag});
+  if (it != activeNativeLayoutAnimations_.end() && it->second.handle == handle) {
+    it->second.admissionGranted = true;
+  }
+}
+
+void LayoutAnimationsProxyCommon::handleNativeLayoutTerminal(
+    const SurfaceId surfaceId,
+    const Tag tag,
+    const native_animation::AnimationHandle &handle,
+    const native_animation::AnimationResult result) const {
+  std::optional<ActiveNativeLayoutAnimation> record;
+  const auto it = activeNativeLayoutAnimations_.find({surfaceId, tag});
+  if (it != activeNativeLayoutAnimations_.end() && it->second.handle == handle) {
+    record = std::move(it->second);
+    activeNativeLayoutAnimations_.erase(it);
+  }
+  if (result.outcome == native_animation::AnimationOutcome::Rejected && record && !record->admissionGranted &&
+      layoutPermitsFallback(result.reason)) {
+    // The fallback run delivers the public callback.
+    startNativeLayoutFallback(*record);
+    return;
+  }
+  layoutAnimationsManager_->completeNativeBuild(
+      uiRuntime_, tag, handle.generation, result.outcome == native_animation::AnimationOutcome::Finished);
+}
+
+bool LayoutAnimationsProxyCommon::shouldStartFromCurrentVisual(
+    const SurfaceId surfaceId,
+    const Tag tag,
+    const native_animation::AnimationTarget &target) const {
+  const FrameDrivenLeaseKey key{surfaceId, tag};
+  if (frameDrivenLeases_.contains(key)) {
+    // The lease claims every visual target of the view.
+    return true;
+  }
+  const auto it = activeNativeLayoutAnimations_.find(key);
+  if (it == activeNativeLayoutAnimations_.end()) {
+    return false;
+  }
+  return std::ranges::any_of(it->second.targets, [&](const native_animation::AnimationTarget &owned) {
+    return native_animation::targetsConflict(owned, target);
+  });
+}
+
+void LayoutAnimationsProxyCommon::cancelActiveNativeLayoutAnimationsForTag(const Tag tag) const {
+  if (!nativeAnimationAdapter_) {
+    return;
+  }
+  for (const auto &[key, record] : activeNativeLayoutAnimations_) {
+    if (key.tag != tag) {
+      continue;
+    }
+    // The terminal result consumes the record and delivers the callback.
+    cancelNativeLayoutStart(record.handle);
+    nativeAnimationAdapter_->cancel(record.handle);
   }
 }
 
@@ -116,7 +378,8 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
     const Tag tag,
     const LayoutAnimationType type,
     const std::weak_ptr<const LayoutAnimationsProxyCommon> &weakOwner,
-    std::function<void()> onGranted) const {
+    std::function<void()> onGranted,
+    const uint64_t pendingBuildId) const {
   if (!nativeAnimationAdapter_) {
     onGranted();
     return;
@@ -129,7 +392,7 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
       surfaceId,
       tag,
       native_animation::AnimationOwner::Layout,
-      ++frameDrivenGeneration_,
+      ++commandGeneration_,
   };
   const auto admissionMode = type == LayoutAnimationType::EXITING
       ? native_animation::AnimationAdmissionMode::RetainedExit
@@ -144,11 +407,16 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
            tag,
            type,
            lease,
+           pendingBuildId,
            adapter = nativeAnimationAdapter_,
            onGranted = std::move(onGranted)](const native_animation::ExternalClaimResult result) {
             const auto owner = weakOwner.lock();
             if (result.status == native_animation::ExternalClaimStatus::Rejected) {
               if (owner) {
+                if (pendingBuildId != 0) {
+                  // The animation never starts; this is its one terminal result.
+                  owner->layoutAnimationsManager_->completeNativeBuild(owner->uiRuntime_, tag, pendingBuildId, false);
+                }
                 owner->handleRejectedFrameDrivenLayoutAnimation(tag, type, result.reason);
               }
               return;

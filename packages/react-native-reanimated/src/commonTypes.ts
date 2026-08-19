@@ -111,12 +111,54 @@ export type LayoutAnimationStartFunction = (
   tag: number,
   type: LayoutAnimationType,
   yogaValues: Partial<LayoutAnimationValues>,
-  config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
+  config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
+  buildId?: number
 ) => void;
+
+/**
+ * Stable per-property structure for the native layout-animation router. A
+ * missing node keeps the whole animation frame-driven; `limitExceeded` marks
+ * more properties than the resource budget permits and carries no entries.
+ */
+export type NativeLayoutAnimationBuildSummary =
+  | { limitExceeded: true }
+  | {
+      limitExceeded?: undefined;
+      properties: {
+        property: string;
+        initialValue?: number;
+        node?: NativeAnimationNode;
+      }[];
+      hasUnanimatedInitialValues: boolean;
+    };
 
 export type LayoutAnimationsManager = {
   start: LayoutAnimationStartFunction;
   stop: (tag: number) => void;
+  /**
+   * Runs the builder once and stores its result under `(tag, buildId)`.
+   * Exactly one later call consumes it: `start` with the same `buildId`, or
+   * `completeNativeBuild`. More than `maxProperties` animated properties
+   * returns only the `limitExceeded` marker.
+   */
+  build?: (
+    tag: number,
+    type: LayoutAnimationType,
+    yogaValues: Partial<LayoutAnimationValues>,
+    config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
+    buildId: number,
+    maxProperties: number
+  ) => NativeLayoutAnimationBuildSummary;
+  /**
+   * Consumes a stored build and fires its callback once: the terminal result
+   * reports its outcome, and a rejected frame-driven claim settles with
+   * `finished: false`. A repeated call is a no-op.
+   */
+  completeNativeBuild?: (
+    tag: number,
+    buildId: number,
+    finished: boolean
+  ) => void;
 };
 
 export interface ILayoutAnimationBuilder {
@@ -284,10 +326,35 @@ export type AnimatableValueObject = { [key: string]: Animatable };
 
 export type AnimatableValue = Animatable | AnimatableValueObject;
 
+/**
+ * Stable timing-curve data carried by identifiable easings. `opaque` marks a
+ * deterministic curve that has no common timing representation.
+ */
+export type NativeAnimationTimingStructure =
+  | { kind: 'linear' }
+  | { kind: 'cubicBezier'; x1: number; y1: number; x2: number; y2: number }
+  | { kind: 'opaque' };
+
+/**
+ * Stable structure an animation factory attaches beside its runtime worklets.
+ * The native layout-animation route reads it to build owned tracks without
+ * executing the animation. A factory that cannot describe its animation
+ * attaches nothing and the animation stays frame-driven.
+ */
+export type NativeAnimationNode =
+  | {
+      kind: 'timing';
+      toValue: number;
+      durationMs: number;
+      easing: NativeAnimationTimingStructure;
+    }
+  | { kind: 'delay'; delayMs: number; node: NativeAnimationNode };
+
 export interface AnimationObject<T = AnimatableValue> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
   callback?: AnimationCallback;
+  __nativeAnimation?: NativeAnimationNode;
   current?: T;
   toValue?: AnimationObject<T>['current'];
   startValue?: AnimationObject<T>['current'];
