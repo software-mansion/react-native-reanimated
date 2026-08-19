@@ -133,6 +133,10 @@ jobs:
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: ios
 
+      # The ccache launcher prefixes every compile command, which
+      # xcode-build-server does not recognise as a compiler, so the sed keeps
+      # the parsed compile database from coming out empty and leaving
+      # clang-tidy with nothing to lint.
       - name: Build app (piped through xcode-build-server)
         if: steps.result-cache.outputs.cache-hit != 'true'
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios
