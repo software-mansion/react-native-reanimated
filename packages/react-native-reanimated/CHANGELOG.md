@@ -22,3 +22,5 @@
 - Fix layout animations getting out of sync across many simultaneously animated views ([#10317](https://github.com/software-mansion/react-native-reanimated/pull/10317) by [@pawicao](https://github.com/pawicao))
 
 ### 💡 Others
+
+- Use Worklets' `isOnUIThread` Stable API when scheduling Layout Animations cleanup on Android.

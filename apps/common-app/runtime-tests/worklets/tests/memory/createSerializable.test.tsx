@@ -297,6 +297,47 @@ describe('Test createSerializable', () => {
         expect(result).toBe(true);
       });
 
+      test('createSerializableUnicodeString', async () => {
+        const emojiString =
+          '\u{1F643}\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}';
+        const ligatureString = '\uFB01\uFB02\u00E6\u0153';
+        const nonLatinString = '\u4F60\u597D\u0645\u0631\u062D\u0431\u0430';
+
+        scheduleOnTarget(() => {
+          'worklet';
+          const checks = [
+            emojiString ===
+              '\u{1F643}\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}',
+            ligatureString === '\uFB01\uFB02\u00E6\u0153',
+            nonLatinString === '\u4F60\u597D\u0645\u0631\u062D\u0431\u0430',
+          ];
+          scheduleOnRN(callbackPass, checks.every(Boolean));
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
+      test('createSerializableFloat32Array', async () => {
+        const floatArrayValue = new Float32Array(3);
+        floatArrayValue[0] = 0.5;
+        floatArrayValue[1] = -1.25;
+        floatArrayValue[2] = 3.75;
+
+        scheduleOnTarget(() => {
+          'worklet';
+          const checks = [
+            floatArrayValue instanceof Float32Array,
+            floatArrayValue.length === 3,
+            floatArrayValue[0] === 0.5,
+            floatArrayValue[1] === -1.25,
+            floatArrayValue[2] === 3.75,
+          ];
+          scheduleOnRN(callbackPass, checks.every(Boolean));
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
       test('createSerializableTypedArray', async () => {
         const typedArrayValue = new Uint8Array(4);
         typedArrayValue[0] = 1;
