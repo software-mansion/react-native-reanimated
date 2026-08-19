@@ -49,8 +49,6 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
       const std::vector<std::string> &removedProperties,
       double timestamp);
 
-  /// Tracks the lifecycle of properties whose rendering is routed to the platform.
-
   folly::dynamic computeCurrentStyle(const std::shared_ptr<const ShadowNode> &shadowNode);
 
   /// Reports a cancel for every property still transitioning.

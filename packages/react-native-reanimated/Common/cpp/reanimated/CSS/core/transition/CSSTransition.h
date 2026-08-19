@@ -13,6 +13,7 @@
 #include <jsi/jsi.h>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace reanimated::css {
@@ -81,6 +82,10 @@ class CSSTransition {
 
   CSSLoopTransition &ensureLoopTransition();
   void scheduleLoop(double timestamp);
+  void migratePlatformRunsToLoop();
+  /// Cancels the native run and, unless it already ended, restarts it on the
+  /// loop backdated to its start. Returns whether the loop took it over.
+  bool takeOverPlatformRun(const std::string &propertyName, const CSSPlatformRun &platformRun, double timestamp);
   void observeMilestones(CSSLoopTransition &loopTransition);
   void reportMilestone(RunMilestone milestone, const std::string &propertyName, double elapsedTime);
   void emitEvent(CSSEventType type, const std::string &propertyName, double elapsedTime) const;
