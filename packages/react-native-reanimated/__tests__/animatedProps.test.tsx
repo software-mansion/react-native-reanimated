@@ -3,14 +3,14 @@ import type { ComponentProps } from 'react';
 import React from 'react';
 import type { TextInputProps } from 'react-native';
 import { Button, TextInput, View } from 'react-native';
+import { Circle, Svg } from 'react-native-svg';
+
 import Animated, {
   type CSSAnimationProperties,
   type CSSTransitionProperties,
   useAnimatedProps,
   useSharedValue,
-} from 'react-native-reanimated';
-import { Circle, Svg } from 'react-native-svg';
-
+} from '../src';
 import type { JestAnimatedStyleHandle } from '../src/hook/commonTypes';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports

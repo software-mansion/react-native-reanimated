@@ -1,12 +1,8 @@
-import '../src/jestMatchers';
-
 import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
-import { describe, expect, test } from '@jest/globals';
+import { beforeEach, describe, expect, test } from '@jest/globals';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
-
-import { countOccurrences } from '../jest/pluginTestUtils';
 
 type CapturedFile = { path: string; content: string };
 
@@ -14,10 +10,18 @@ const capturedFiles: CapturedFile[] = [];
 
 jest.mock('fs', () => {
   const actual: object = jest.requireActual('fs');
+  const stagedFiles = new Map<string, string>();
   return {
     ...actual,
     writeFileSync: (filepath: string, content: string) => {
-      capturedFiles.push({ path: String(filepath), content: String(content) });
+      stagedFiles.set(String(filepath), String(content));
+    },
+    renameSync: (from: string, to: string) => {
+      capturedFiles.push({
+        path: String(to),
+        content: stagedFiles.get(String(from))!,
+      });
+      stagedFiles.delete(String(from));
     },
   };
 });
@@ -36,7 +40,7 @@ type RunResult = {
 
 function runPlugin(
   input: string,
-  pluginOpts: PluginOptions,
+  pluginOpts: PluginOptions = {},
   transformOpts: TransformOptions = {}
 ): RunResult {
   capturedFiles.length = 0;
@@ -47,36 +51,19 @@ function runPlugin(
     babelrc: false,
     configFile: false,
     ...transformOpts,
-    plugins: [
-      ...(transformOpts.plugins ?? []),
-      [
-        plugin,
-        {
-          disableSourceMaps: true,
-          relativeSourceLocation: true,
-          ...pluginOpts,
-        },
-      ],
-    ],
+    plugins: [...(transformOpts.plugins ?? []), [plugin, pluginOpts]],
   });
   assert(transformed);
   return { code: transformed.code ?? '', files: [...capturedFiles] };
 }
 
-function workletText(result: RunResult, bundleMode: boolean): string {
-  if (bundleMode) {
-    return result.files.map((f) => f.content).join('\n');
-  }
-  return result.code;
+function workletText(result: RunResult): string {
+  return result.files.map((f) => f.content).join('\n');
 }
 
-describe.each([
-  { label: 'bundleless', bundleMode: false },
-  { label: 'bundle', bundleMode: true },
-])('babel plugin core ($label mode)', ({ bundleMode }) => {
+describe('babel plugin core', () => {
   beforeEach(() => {
     process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
-    process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '1';
     capturedFiles.length = 0;
   });
 
@@ -132,15 +119,10 @@ describe.each([
     ];
 
     test.each(cases)('workletizes $name', ({ input }) => {
-      const result = runPlugin(input, { bundleMode });
-      const factoryCount = bundleMode
-        ? result.files.length
-        : countOccurrences(result.code, 'Factory(');
-      expect(factoryCount).toBe(1);
+      const result = runPlugin(input);
+      expect(result.files).toHaveLength(1);
       expect(result.code).toMatchSnapshot();
-      if (bundleMode) {
-        expect(result.files[0].content).toMatchSnapshot();
-      }
+      expect(result.files[0].content).toMatchSnapshot();
     });
   });
 
@@ -154,8 +136,8 @@ describe.each([
         }
       </script>`;
 
-      const result = runPlugin(input, { bundleMode });
-      expect(workletText(result, bundleMode)).toMatchSnapshot();
+      const result = runPlugin(input);
+      expect(workletText(result)).toMatchSnapshot();
     });
 
     test('captures locally bound variables shadowing globals', () => {
@@ -170,8 +152,8 @@ describe.each([
         }
       </script>`;
 
-      const result = runPlugin(input, { bundleMode });
-      expect(workletText(result, bundleMode)).toMatchSnapshot();
+      const result = runPlugin(input);
+      expect(workletText(result)).toMatchSnapshot();
     });
 
     test('captures multiple closure variables', () => {
@@ -184,8 +166,8 @@ describe.each([
         }
       </script>`;
 
-      const result = runPlugin(input, { bundleMode });
-      expect(workletText(result, bundleMode)).toMatchSnapshot();
+      const result = runPlugin(input);
+      expect(workletText(result)).toMatchSnapshot();
     });
   });
 
@@ -198,11 +180,9 @@ describe.each([
         }
       </script>`;
 
-      const result = runPlugin(input, { bundleMode });
+      const result = runPlugin(input);
       expect(result.code).toMatchSnapshot();
-      if (bundleMode) {
-        expect(result.files[0].content).toMatchSnapshot();
-      }
+      expect(result.files[0].content).toMatchSnapshot();
     });
   });
 
@@ -214,7 +194,7 @@ describe.each([
         }
       </script>`;
 
-      const result = runPlugin(input, { bundleMode });
+      const result = runPlugin(input);
       expect(result.files).toHaveLength(0);
       expect(result.code).toMatchSnapshot();
     });
@@ -229,8 +209,8 @@ describe.each([
     </script>`;
 
     function transformWithEnvName(envName: string): string {
-      const result = runPlugin(sampleInput, { bundleMode }, { envName });
-      return workletText(result, bundleMode);
+      const result = runPlugin(sampleInput, {}, { envName });
+      return workletText(result);
     }
 
     test('envName "production" is detected as release', () => {
@@ -256,12 +236,12 @@ describe.each([
 
       const result = runPlugin(
         input,
-        { bundleMode },
+        {},
         { envName: 'development', plugins: ['babel-plugin-react-compiler'] }
       );
 
       const notOutlinedFunction = '.map(() => null);';
-      const output = bundleMode ? result.files[0].content : result.code;
+      const output = result.files[0].content;
 
       expect(output).toMatch(notOutlinedFunction);
       expect(output).toMatchSnapshot();

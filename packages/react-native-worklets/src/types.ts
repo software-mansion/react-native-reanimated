@@ -49,34 +49,13 @@ export type WorkletRuntime = {
   readonly runtimeId: number;
 };
 
-export type WorkletStackDetails = [
-  error: Error,
-  lineOffset: number,
-  columnOffset: number,
-];
-
 type WorkletClosure = Record<string, unknown>;
-
-interface WorkletInitData {
-  /** Only when bytecode isn't toggled. */
-  code?: string;
-  /** Only in production builds and explicitly toggled. */
-  bytecode?: ArrayBuffer;
-  /** Only in dev builds. */
-  location?: string;
-  /** Only in dev builds. */
-  sourceMap?: string;
-}
 
 interface WorkletProps {
   __closure: WorkletClosure;
   __workletHash: number;
-  /** Only in Legacy Eval Mode. */
-  __initData?: WorkletInitData;
   /** Only for Handles. */
   __init?: () => unknown;
-  /** `__stackDetails` is removed after parsing. */
-  __stackDetails?: WorkletStackDetails;
   /** Only in dev builds. */
   __pluginVersion?: string;
 }

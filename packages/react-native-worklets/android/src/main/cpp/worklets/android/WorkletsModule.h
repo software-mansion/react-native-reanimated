@@ -25,7 +25,6 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
 
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis,
-      jboolean bundleModeEnabled,
       jlong jsContext,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
       jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
@@ -54,7 +53,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
     return javaPart_->getClass()->getMethod<Signature>(methodName.c_str());
   }
 
-  std::shared_ptr<RuntimeBindings> getRuntimeBindings(bool bundleModeEnabled, jsi::Runtime &rnRuntime);
+  std::shared_ptr<RuntimeBindings> getRuntimeBindings(jsi::Runtime &rnRuntime);
 
   RuntimeBindings::RequestAnimationFrame getRequestAnimationFrame();
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED

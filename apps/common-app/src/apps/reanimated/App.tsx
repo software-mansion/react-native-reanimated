@@ -75,11 +75,7 @@ function HomeScreen({ navigation }: HomeScreenProps) {
           shouldWork={
             platform ? EXAMPLES[name].shouldWork?.[platform] : undefined
           }
-          disabled={
-            EXAMPLES[name].disabledPlatforms?.includes(Platform.OS) ||
-            (EXAMPLES[name]?.needsBundleMode &&
-              !globalThis._WORKLETS_BUNDLE_MODE_ENABLED)
-          }
+          disabled={EXAMPLES[name].disabledPlatforms?.includes(Platform.OS)}
           wasClicked={wasClicked.includes(name)}
         />
       )}
@@ -157,9 +153,6 @@ function Navigator() {
         options={{
           headerTitle: '🐎 Reanimated examples',
           title: 'Reanimated examples',
-          headerStyle: globalThis._WORKLETS_BUNDLE_MODE_ENABLED
-            ? { backgroundColor: '#f9f9d9' }
-            : undefined,
         }}
       />
       {EXAMPLES_NAMES.map((name) => (
@@ -180,10 +173,6 @@ function Navigator() {
 
 function App() {
   return <Navigator />;
-}
-
-declare global {
-  var _WORKLETS_BUNDLE_MODE_ENABLED: boolean | undefined;
 }
 
 const styles = StyleSheet.create({

@@ -1,7 +1,5 @@
 'use strict';
 
-import { isBundleModeEnabled } from '../debug/bundleMode';
-import { addNoBundleModeGuardImplementation } from '../guardImplementation';
 import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 import { createSerializable } from './serializable';
@@ -61,8 +59,4 @@ export function createShareable<
     shareableRef,
     guestDecorator
   );
-}
-
-if (__DEV__ && !isBundleModeEnabled()) {
-  addNoBundleModeGuardImplementation(createShareable);
 }

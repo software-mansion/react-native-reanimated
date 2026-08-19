@@ -182,9 +182,7 @@ describe('Test createSerializableOnUI', () => {
     expect(typeof arrayValue[index.object]).toBe('object');
     expect(arrayValue[index.object].a).toBe(1);
     // remote function
-    expect(typeof arrayValue[index.remoteFunction]).toBe(
-      globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? 'function' : 'object'
-    );
+    expect(typeof arrayValue[index.remoteFunction]).toBe('function');
     // array
     expect(arrayValue[index.array].length).toBe(1);
     expect(arrayValue[index.array][0]).toBe(1);
@@ -406,9 +404,7 @@ describe('Test createSerializableOnUI', () => {
     expect(typeof obj[key.object]).toBe('object');
     expect(obj[key.object].f).toBe(4);
     expect(obj[key.object].g).toBe('test');
-    expect(typeof obj[key.remoteFunction]).toBe(
-      globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? 'function' : 'object'
-    );
+    expect(typeof obj[key.remoteFunction]).toBe('function');
     expect(obj[key.array].length).toBe(1);
     expect(obj[key.array][0]).toBe(1);
     expect(typeof obj[key.initializer]).toBe('object');

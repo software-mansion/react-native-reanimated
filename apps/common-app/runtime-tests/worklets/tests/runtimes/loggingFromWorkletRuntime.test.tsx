@@ -2,14 +2,11 @@ import {
   describe,
   expect,
   test,
-  notify,
-  waitForNotification,
   beforeEach,
   afterEach,
 } from '../../../ReJest/RuntimeTestsApi';
 import {
   runOnUISync,
-  scheduleOnRN,
   createShareable,
   createSynchronizable,
   UIRuntimeId,
@@ -25,21 +22,10 @@ declare global {
 
 type TestCase = {
   factory: () => unknown;
-  /** Expected output; identical in both modes. */
-  expected?: string;
-  /** Expected output in bundle mode (when it differs from no-bundle mode). */
-  bundleMode?: string;
-  /** Expected output in no-bundle mode (when it differs from bundle mode). */
-  noBundleMode?: string;
-  /** Assert the expected string is (or isn't) a substring of the output. */
-  checkIncludes?: boolean | { bundleMode: boolean; noBundleMode: boolean };
-  /**
-   * In no-bundle mode console.log throws on the UI thread; the caught error
-   * message is logged instead.
-   */
-  errorsOnNoBundleMode?: boolean;
-  /** Test only runs in bundle mode (skipped otherwise). */
-  bundleModeOnly?: boolean;
+  /** Expected output. */
+  expected: string;
+  /** Assert the expected string is a substring of the output. */
+  checkIncludes?: boolean;
 };
 
 // For closure
@@ -100,8 +86,7 @@ const testCases: Record<string, TestCase> = {
   },
   // Symbol is not serialized, loses type on transfer and arrives as {}
   symbol: {
-    bundleMode: '{}',
-    noBundleMode: 'Symbol(test)',
+    expected: '{}',
     factory: () => {
       'worklet';
       return Symbol('test');
@@ -136,7 +121,6 @@ const testCases: Record<string, TestCase> = {
     },
   },
   workletFunction: {
-    bundleModeOnly: true,
     expected: '[Function: workletFn]',
     checkIncludes: true,
     factory: () => {
@@ -149,23 +133,21 @@ const testCases: Record<string, TestCase> = {
   },
   hostObject: {
     expected: 'HO',
-    checkIncludes: { bundleMode: true, noBundleMode: true },
+    checkIncludes: true,
     factory: () => {
       'worklet';
       return hostObject;
     },
   },
   hostFunction: {
-    bundleMode: '[Function: createSerializableNumber]',
-    noBundleMode: '{}',
+    expected: '[Function: createSerializableNumber]',
     factory: () => {
       'worklet';
       return globalThis.__workletsModuleProxy.createSerializableNumber;
     },
   },
   generatorFunction: {
-    bundleMode: '[Function: gen]',
-    noBundleMode: '{}',
+    expected: '[Function: gen]',
     factory: () => {
       'worklet';
       function* gen() {
@@ -175,8 +157,7 @@ const testCases: Record<string, TestCase> = {
     },
   },
   asyncFunction: {
-    bundleMode: '[Function: asyncFn]',
-    noBundleMode: '{}',
+    expected: '[Function: asyncFn]',
     factory: () => {
       'worklet';
       // eslint-disable-next-line no-empty-function
@@ -185,8 +166,7 @@ const testCases: Record<string, TestCase> = {
     },
   },
   asyncGeneratorFunction: {
-    bundleMode: '[Function: asyncGenFn]',
-    noBundleMode: '{}',
+    expected: '[Function: asyncGenFn]',
     factory: () => {
       'worklet';
       // eslint-disable-next-line @typescript-eslint/require-await
@@ -197,16 +177,14 @@ const testCases: Record<string, TestCase> = {
     },
   },
   error: {
-    bundleMode: '[Error: oops]',
-    noBundleMode: "{ [Error: oops] name: 'Error' }",
+    expected: '[Error: oops]',
     factory: () => {
       'worklet';
       return new Error('oops');
     },
   },
   rangeError: {
-    bundleMode: '[RangeError: out of range]',
-    noBundleMode: "{ [RangeError: out of range] name: 'RangeError' }",
+    expected: '[RangeError: out of range]',
     factory: () => {
       'worklet';
       return new RangeError('out of range');
@@ -237,7 +215,6 @@ const testCases: Record<string, TestCase> = {
   },
   promise: {
     expected: '{ _x: 0, _y: 1, _z: undefined, _A: null }',
-    errorsOnNoBundleMode: true,
     factory: () => {
       'worklet';
       return new Promise<void>((r) => {
@@ -247,9 +224,7 @@ const testCases: Record<string, TestCase> = {
   },
   date: {
     expected: '1970',
-    bundleMode: 'Thu Jan 01 1970 00:00:00 GMT+0000 (UTC)',
-    noBundleMode: '{}',
-    checkIncludes: { bundleMode: true, noBundleMode: false },
+    checkIncludes: true,
     factory: () => {
       'worklet';
       return new Date(0);
@@ -264,8 +239,7 @@ const testCases: Record<string, TestCase> = {
   },
   circularReference: {
     expected: '[Circular',
-    checkIncludes: { bundleMode: true, noBundleMode: false },
-    errorsOnNoBundleMode: true,
+    checkIncludes: true,
     factory: () => {
       'worklet';
       const circular: Record<string, unknown> = { x: null };
@@ -275,7 +249,7 @@ const testCases: Record<string, TestCase> = {
   },
   objectWithGetter: {
     expected: '[Getter]',
-    checkIncludes: { bundleMode: true, noBundleMode: false },
+    checkIncludes: true,
     factory: () => {
       'worklet';
       const myObject = {
@@ -289,7 +263,6 @@ const testCases: Record<string, TestCase> = {
   },
   turboModuleLike: {
     expected: '{ a: 1 }',
-    errorsOnNoBundleMode: true,
     factory: () => {
       'worklet';
       const obj: Record<string, unknown> = { a: 1 };
@@ -298,8 +271,7 @@ const testCases: Record<string, TestCase> = {
     },
   },
   serializableRef: {
-    bundleMode: `{ __serializableRef: true }`,
-    noBundleMode: '42',
+    expected: `{ __serializableRef: true }`,
     factory: () => {
       'worklet';
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -309,8 +281,7 @@ const testCases: Record<string, TestCase> = {
     },
   },
   shareable: {
-    bundleMode: `{ __serializableRef: true,\n  isHost: false,\n  __shareableRef: true,\n  getAsync: [Function],\n  getSync: [Function],\n  setAsync: [Function],\n  setSync: [Function] }`,
-    noBundleMode: '{ isHost: true, __shareableRef: true, value: 42 }',
+    expected: `{ __serializableRef: true,\n  isHost: false,\n  __shareableRef: true,\n  getAsync: [Function],\n  getSync: [Function],\n  setAsync: [Function],\n  setSync: [Function] }`,
     factory: () => {
       'worklet';
       return shareable;
@@ -326,9 +297,6 @@ const testCases: Record<string, TestCase> = {
   },
 };
 
-// eslint-disable-next-line no-underscore-dangle
-const isBundleMode = globalThis._WORKLETS_BUNDLE_MODE_ENABLED;
-const modeKey = isBundleMode ? 'bundleMode' : 'noBundleMode';
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const originalHook = globalThis.nativeLoggingHook;
 
@@ -350,31 +318,16 @@ describe('loggingFromWorkletRuntime', () => {
     globalThis.nativeLoggingHook = originalHook;
   });
 
-  const captureSerializedLog = async (
+  const captureSerializedLog = (
     factory: () => unknown,
     method: ConsoleMethod = 'log'
-  ): Promise<string> => {
-    if (isBundleMode) {
-      try {
-        console[method](factory());
-      } catch (e) {
-        console[method](`Error: ${(e as Error).message}`);
-      }
-      return message;
-    } else {
-      const notifyWrapper = () => notify('LOG_CAPTURED');
-      runOnUISync(() => {
-        'worklet';
-        try {
-          console[method](factory());
-        } catch (e) {
-          console[method](`Error: ${(e as Error).message}`);
-        }
-        scheduleOnRN(notifyWrapper);
-      });
-      await waitForNotification('LOG_CAPTURED');
-      return message;
+  ): string => {
+    try {
+      console[method](factory());
+    } catch (e) {
+      console[method](`Error: ${(e as Error).message}`);
     }
+    return message;
   };
 
   test('nativeLoggingHook is defined on worklets runtime in bundle mode', () => {
@@ -384,34 +337,23 @@ describe('loggingFromWorkletRuntime', () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return globalThis.nativeLoggingHook;
     }) as undefined | ((serializedMessage: string, level: number) => void);
-    expect(workletsNativeLoggingHook !== undefined).toBe(!!isBundleMode);
+    expect(workletsNativeLoggingHook !== undefined).toBe(true);
   });
 
-  const testKeys = Object.keys(testCases).filter(
-    (key) => !testCases[key].bundleModeOnly || isBundleMode
-  );
-
-  test.each(testKeys)('%s serializes as expected', async (key) => {
+  test.each(Object.keys(testCases))('%s serializes as expected', (key) => {
     const entry = testCases[key];
-    const expected = entry.expected ?? entry[modeKey]!;
-    const result = await captureSerializedLog(entry.factory);
-    const checkIncludes =
-      typeof entry.checkIncludes === 'object'
-        ? entry.checkIncludes[modeKey]
-        : entry.checkIncludes;
-    if (entry.errorsOnNoBundleMode && !isBundleMode) {
-      expect(result.startsWith('Error:')).toBe(true);
-    } else if (checkIncludes !== undefined) {
-      expect(result.includes(expected)).toBe(checkIncludes);
+    const result = captureSerializedLog(entry.factory);
+    if (entry.checkIncludes !== undefined) {
+      expect(result.includes(entry.expected)).toBe(entry.checkIncludes);
     } else {
-      expect(result).toBe(expected);
+      expect(result).toBe(entry.expected);
     }
   });
 
   test.each(['warn', 'error', 'debug'] as const)(
     'console.%s is routed through nativeLoggingHook',
-    async (method) => {
-      const result = await captureSerializedLog(() => {
+    (method) => {
+      const result = captureSerializedLog(() => {
         'worklet';
         return { a: 1 };
       }, method);

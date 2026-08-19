@@ -60,123 +60,77 @@ describe('runOnUIAsync', () => {
     expect(reason).toBe('test error');
   });
 
-  if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-    test('schedules on UI Runtime to UI Runtime', async () => {
-      scheduleOnUI(() => {
+  test('schedules on UI Runtime to UI Runtime', async () => {
+    scheduleOnUI(() => {
+      'worklet';
+      runOnUIAsync(() => {
         'worklet';
-        runOnUIAsync(() => {
-          'worklet';
-          return 42;
-        }).then((result) => {
+        return 42;
+      }).then((result) => {
+        scheduleOnRN(callbackPass, result);
+      });
+    });
+
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(value).toBe(42);
+  });
+
+  test('rejects when scheduling on UI Runtime to UI Runtime with error', async () => {
+    scheduleOnUI(() => {
+      'worklet';
+      runOnUIAsync(() => {
+        'worklet';
+        throw new Error('test error');
+      })
+        .then((result) => {
           scheduleOnRN(callbackPass, result);
-        });
-      });
-
-      await waitForNotification(PASS_NOTIFICATION);
-      expect(value).toBe(42);
-    });
-
-    test('rejects when scheduling on UI Runtime to UI Runtime with error', async () => {
-      scheduleOnUI(() => {
-        'worklet';
-        runOnUIAsync(() => {
-          'worklet';
-          throw new Error('test error');
         })
-          .then((result) => {
-            scheduleOnRN(callbackPass, result);
-          })
-          .catch((error: unknown) => {
-            scheduleOnRN(
-              callbackFail,
-              error instanceof Error ? error.message : String(error)
-            );
-          });
-      });
-
-      await waitForNotification(FAIL_NOTIFICATION);
-      expect(reason).toBe('test error');
-    });
-
-    test('schedules on Worker Runtime to UI Runtime', async () => {
-      scheduleOnRuntime(workletRuntime, () => {
-        'worklet';
-        runOnUIAsync(() => {
-          'worklet';
-          return 42;
-        }).then((result) => {
-          scheduleOnRN(callbackPass, result);
-        });
-      });
-
-      await waitForNotification(PASS_NOTIFICATION);
-      expect(value).toBe(42);
-    });
-
-    test('rejects when scheduling on Worker Runtime to UI Runtime with error', async () => {
-      scheduleOnRuntime(workletRuntime, () => {
-        'worklet';
-        runOnUIAsync(() => {
-          'worklet';
-          throw new Error('test error');
-        })
-          .then((result) => {
-            scheduleOnRN(callbackPass, result);
-          })
-          .catch((error: unknown) => {
-            scheduleOnRN(
-              callbackFail,
-              error instanceof Error ? error.message : String(error)
-            );
-          });
-      });
-
-      await waitForNotification(FAIL_NOTIFICATION);
-      expect(reason).toBe('test error');
-    });
-  } else if (__DEV__) {
-    test('throws when scheduling on UI Runtime to UI Runtime without worklets bundle mode enabled', async () => {
-      scheduleOnUI(() => {
-        'worklet';
-        try {
-          runOnUIAsync(() => {
-            'worklet';
-            return 42;
-          });
-        } catch (error) {
+        .catch((error: unknown) => {
           scheduleOnRN(
             callbackFail,
             error instanceof Error ? error.message : String(error)
           );
-        }
-      });
-
-      await waitForNotification(FAIL_NOTIFICATION);
-      expect(reason).toInclude(
-        '[Worklets] runOnUIAsync cannot be called on Worklet Runtimes outside of the Bundle Mode.'
-      );
+        });
     });
 
-    test('throws when scheduling on Worker Runtime to UI Runtime without worklets bundle mode enabled', async () => {
-      scheduleOnRuntime(workletRuntime, () => {
+    await waitForNotification(FAIL_NOTIFICATION);
+    expect(reason).toBe('test error');
+  });
+
+  test('schedules on Worker Runtime to UI Runtime', async () => {
+    scheduleOnRuntime(workletRuntime, () => {
+      'worklet';
+      runOnUIAsync(() => {
         'worklet';
-        try {
-          runOnUIAsync(() => {
-            'worklet';
-            return 42;
-          });
-        } catch (error) {
+        return 42;
+      }).then((result) => {
+        scheduleOnRN(callbackPass, result);
+      });
+    });
+
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(value).toBe(42);
+  });
+
+  test('rejects when scheduling on Worker Runtime to UI Runtime with error', async () => {
+    scheduleOnRuntime(workletRuntime, () => {
+      'worklet';
+      runOnUIAsync(() => {
+        'worklet';
+        throw new Error('test error');
+      })
+        .then((result) => {
+          scheduleOnRN(callbackPass, result);
+        })
+        .catch((error: unknown) => {
           scheduleOnRN(
             callbackFail,
             error instanceof Error ? error.message : String(error)
           );
-        }
-      });
-
-      await waitForNotification(FAIL_NOTIFICATION);
-      expect(reason).toInclude(
-        '[Worklets] runOnUIAsync cannot be called on Worklet Runtimes outside of the Bundle Mode.'
-      );
+        });
     });
-  }
+
+    await waitForNotification(FAIL_NOTIFICATION);
+    expect(reason).toBe('test error');
+  });
 });

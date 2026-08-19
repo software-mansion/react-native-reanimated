@@ -50,16 +50,15 @@ class WorkletsModule(
 
     @OptIn(FrameworkAPI::class)
     private external fun initHybrid(
-        bundleModeEnabled: Boolean,
         jsContext: Long,
         jsCallInvokerHolder: CallInvokerHolderImpl,
         androidUIScheduler: AndroidUIScheduler,
-        scriptBufferWrapper: ScriptBufferWrapper?,
+        scriptBufferWrapper: ScriptBufferWrapper,
     ): HybridData
 
     @OptIn(FrameworkAPI::class)
     @ReactMethod(isBlockingSynchronousMethod = true)
-    override fun installTurboModule(bundleModeEnabled: Boolean): Boolean {
+    override fun installTurboModule(): Boolean {
         val context = reactApplicationContext
 
         context.assertOnJSQueueThread()
@@ -67,16 +66,10 @@ class WorkletsModule(
         val jsContext = checkNotNull(context.javaScriptContextHolder).get()
         val jsCallInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
 
-        val scriptBufferWrapper: ScriptBufferWrapper? =
-            if (bundleModeEnabled) {
-                ScriptBufferWrapper(context.sourceURL, context)
-            } else {
-                null
-            }
+        val scriptBufferWrapper = ScriptBufferWrapper(context.sourceURL, context)
 
         mHybridData =
             initHybrid(
-                bundleModeEnabled,
                 jsContext,
                 jsCallInvokerHolder,
                 mAndroidUIScheduler,

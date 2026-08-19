@@ -7,12 +7,8 @@ import { type Synchronizable, type SynchronizableRef } from './types';
 
 export function installSynchronizableUnpacker() {
   'worklet';
-  'no-worklet-closure';
   // TODO: Add cache for synchronizables.
-  const serializer =
-    globalThis.__RUNTIME_KIND === 1 || globalThis._WORKLETS_BUNDLE_MODE_ENABLED
-      ? require('./serializable').createSerializable
-      : (value: unknown) => globalThis.__serializer(value);
+  const serializer = require('./serializable').createSerializable;
 
   function synchronizableUnpacker<TValue>(
     synchronizableRef: SynchronizableRef<TValue>

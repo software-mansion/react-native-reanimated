@@ -72,23 +72,6 @@ void WorkletRuntimeDecorator::decorate(
 
   rt.global().setProperty(rt, "__workletsModuleProxy", std::move(jsiWorkletsModuleProxy));
 
-#ifndef NDEBUG
-  auto evalWithSourceUrl =
-      [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
-    auto code = std::make_shared<const jsi::StringBuffer>(args[0].asString(rt).utf8(rt));
-    std::string url;
-    if (count > 1 && args[1].isString()) {
-      url = args[1].asString(rt).utf8(rt);
-    }
-    return rt.evaluateJavaScript(code, url);
-  };
-  rt.global().setProperty(
-      rt,
-      "evalWithSourceUrl",
-      jsi::Function::createFromHostFunction(
-          rt, jsi::PropNameID::forAscii(rt, "evalWithSourceUrl"), 1, evalWithSourceUrl));
-#endif // NDEBUG
-
   jsi_utils::installJsiFunction(
       rt, "_log", [](jsi::Runtime &rt, const jsi::Value &value) { PlatformLogger::log(stringifyJSIValue(rt, value)); });
 
@@ -130,65 +113,6 @@ void WorkletRuntimeDecorator::decorate(
 #endif
     return jsi::Value::undefined();
   });
-
-  jsi_utils::installJsiFunction(rt, "_createSerializableHostObject", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return makeSerializableHostObject(rt, value.asObject(rt).asHostObject(rt));
-  });
-
-  jsi_utils::installJsiFunction(rt, "_createSerializableString", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return makeSerializableString(rt, value.asString(rt));
-  });
-
-  jsi_utils::installJsiFunction(rt, "_createSerializableNumber", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return makeSerializableNumber(rt, value.asNumber());
-  });
-
-  jsi_utils::installJsiFunction(rt, "_createSerializableBoolean", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return makeSerializableBoolean(rt, value.asBool());
-  });
-
-  jsi_utils::installJsiFunction(rt, "_createSerializableBigInt", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return makeSerializableBigInt(rt, value.asBigInt(rt));
-  });
-
-  jsi_utils::installJsiFunction(
-      rt, "_createSerializableUndefined", [](jsi::Runtime &rt) { return makeSerializableUndefined(rt); });
-
-  jsi_utils::installJsiFunction(rt, "_createSerializableArray", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return makeSerializableArray(rt, value.asObject(rt).asArray(rt), false);
-  });
-
-  jsi_utils::installJsiFunction(
-      rt, "_createSerializableNull", [](jsi::Runtime &rt) { return makeSerializableNull(rt); });
-
-  jsi_utils::installJsiFunction(
-      rt,
-      "_createSerializableObject",
-      [](jsi::Runtime &rt,
-         const jsi::Value &value,
-         const jsi::Value &shouldRetainRemote,
-         const jsi::Value &nativeStateSource) {
-        return makeSerializableObject(rt, value.getObject(rt), shouldRetainRemote.getBool(), nativeStateSource);
-      });
-
-  jsi_utils::installJsiFunction(rt, "_createSerializableWorklet", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return makeSerializableWorklet(rt, value.asObject(rt), false);
-  });
-
-  jsi_utils::installJsiFunction(rt, "_createSerializableInitializer", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return makeSerializableInitializer(rt, value.asObject(rt));
-  });
-
-  jsi_utils::installJsiFunction(rt, "_createSerializableSynchronizable", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return SerializableJSRef::newNativeStateObject(rt, extractSerializableOrThrow(rt, value));
-  });
-
-  jsi_utils::installJsiFunction(
-      rt,
-      "_scheduleOnRuntime",
-      [](jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const jsi::Value &serializableWorkletValue) {
-        scheduleOnRuntime(rt, workletRuntimeValue, serializableWorkletValue);
-      });
 
   jsi::Object performance(rt);
   performance.setProperty(

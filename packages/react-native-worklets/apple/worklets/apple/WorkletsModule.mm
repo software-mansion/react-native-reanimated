@@ -53,7 +53,7 @@ using namespace worklets;
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnabled)
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
   react_native_assert(self.bridge != nullptr);
   react_native_assert(self.bridge.runtime != nullptr);
@@ -62,14 +62,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
 
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
-  std::string sourceURL = "";
-  std::shared_ptr<const ScriptBuffer> script = nullptr;
-
-  if (bundleModeEnabled) {
-    NSURL *url = bundleManager_.bundleURL;
-    script = getScript(url);
-    sourceURL = [[url absoluteString] UTF8String];
-  }
+  NSURL *url = bundleManager_.bundleURL;
+  std::shared_ptr<const ScriptBuffer> script = getScript(url);
+  std::string sourceURL = [[url absoluteString] UTF8String];
 
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
   id networkingModule = [moduleRegistry_ moduleForClass:RCTNetworking.class];
@@ -82,7 +77,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
     return IsJavaScriptQueue();
   };
   animationFrameQueue_ = [AnimationFrameQueue new];
-  auto runtimeBindings = [self getRuntimeBindings:rnRuntime bundleModeEnabled:bundleModeEnabled];
+  auto runtimeBindings = [self getRuntimeBindings:rnRuntime];
   rnRuntimeStatus_ = std::make_shared<RNRuntimeStatus>();
 
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
@@ -91,7 +86,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
       uiScheduler,
       std::move(isJavaScriptQueue),
       runtimeBindings,
-      BundleModeConfig{.enabled = static_cast<bool>(bundleModeEnabled), .script = script, .sourceURL = sourceURL},
+      BundleModeConfig{.script = script, .sourceURL = sourceURL},
       rnRuntimeStatus_);
 
   return @YES;
@@ -131,17 +126,15 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
 }
 
 - (std::shared_ptr<RuntimeBindings>)getRuntimeBindings:(jsi::Runtime &)rnRuntime
-                                     bundleModeEnabled:(BOOL)bundleModeEnabled
 {
   return std::make_shared<RuntimeBindings>(RuntimeBindings{
       .requestAnimationFrame = [animationFrameQueue =
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
       },
-      .nativeLoggingHook =
-          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{}
+      .nativeLoggingHook = extractNativeLoggingHookFromRNRuntime(rnRuntime)
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-      ,
+          ,
       .abortRequest =
           [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, const jsi::Value &requestID) {
             [workletsNetworking jsiAbortRequest:requestID.asNumber()];

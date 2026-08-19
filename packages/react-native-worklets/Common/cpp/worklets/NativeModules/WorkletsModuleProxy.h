@@ -4,7 +4,6 @@
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/SharedItems/MemoryManager.h>
-#include <worklets/SharedItems/UnpackerLoader.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/RNRuntimeStatus.h>
@@ -63,7 +62,6 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
   const BundleModeConfig bundleModeConfig_;
   const std::shared_ptr<MemoryManager> memoryManager_;
   const std::shared_ptr<RuntimeManager> runtimeManager_;
-  const std::shared_ptr<UnpackerLoader> unpackerLoader_;
   const std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
   const std::shared_ptr<JSIWorkletsModuleProxy> rnRuntimeProxy_;

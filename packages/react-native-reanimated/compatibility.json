@@ -6,7 +6,7 @@
     },
     "4.6.x": {
       "react-native": ["0.83", "0.84", "0.85", "0.86", "0.87"],
-      "react-native-worklets": ["0.12.x"]
+      "react-native-worklets": ["0.12.x", "1.0.x"]
     },
     "4.5.x": {
       "react-native": ["0.83", "0.84", "0.85", "0.86"],

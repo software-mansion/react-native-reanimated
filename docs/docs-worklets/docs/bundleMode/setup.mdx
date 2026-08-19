@@ -9,33 +9,11 @@ import ThemedImage from '@theme/ThemedImage';
 
 # Setup
 
-To use `react-native-worklets`'s Bundle Mode feature, you need to make the following changes in your repository:
-
-## Configure Babel
-
-1. **Modify your Babel configuration**. [Worklets Babel Plugin](/docs/worklets-babel-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. This is also the source of truth for your app to know if the Bundle Mode is enabled. In your `babel.config.js` file, add the following:
-
-   ```javascript {2-5,13}
-   /** @type {import('react-native-worklets/plugin').PluginOptions} */
-   const workletsPluginOptions = {
-     bundleMode: true,
-     strictGlobal: true, // optional, but recommended
-   }
-
-   module.exports = {
-     presets: [
-       ... // don't add it here :)
-     ],
-     plugins: [
-       ...
-       ['react-native-worklets/plugin', workletsPluginOptions],
-     ],
-   };
-   ```
+Bundle Mode is the only mode of running worklets, so every native app using `react-native-worklets` has to be configured as follows:
 
 ## Configure Metro
 
-2. **Modify your Metro configuration**. Metro needs to be configured pre-load Bundle Mode entry points into your JavaScript bundle. In your `metro.config.js` file, apply the config required for the bundle mode. For example:
+**Modify your Metro configuration**. Metro needs to be configured to pre-load Bundle Mode entry points into your JavaScript bundle. In your `metro.config.js` file, apply the config required for Bundle Mode. For example:
 
 <Tabs groupId="framework">
   <TabItem value="expo" label="Expo">
@@ -79,7 +57,7 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
 
 ## Enable seamless Metro bundling
 
-_This step is optional but highly recommended._
+_This step is technically optional, but seamless bundling doesn't work without it._
 
 If you run the app after just executing the above steps, you will see an error "Failed to get the SHA-1 for ...":
 
@@ -102,7 +80,7 @@ This patch is a temporary workaround until necessary changes are merged into Met
 
 ## Enable fast refresh on Worklet Runtimes
 
-_This step is optional but highly recommended._
+_This step is technically optional, but Fast Refresh doesn't reach Worklet Runtimes without it._
 
 React Native's Fast Refresh (hot reload) feature doesn't apply to Worklet Runtimes out of the box. Therefore, when you change worklet's code you will see an error "\[Worklets] Unable to resolve worklet with hash ...".
 
@@ -141,7 +119,7 @@ Make sure to clear your Metro bundler's cache to ensure that all the changes are
   </TabItem>
 </Tabs>
 
-And that's it! You can now happily enjoy the Bundle Mode! You can learn more about using the Bundle Mode [here](/docs/bundleMode/usage).
+And that's it! You can now happily enjoy worklets! You can learn more about using Bundle Mode [here](/docs/bundleMode/usage).
 
 ## Reference
 

@@ -9,36 +9,6 @@ import type { WorkletRuntime } from '../types';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
 export interface WorkletsModuleProxy {
-  loadUnpackersWithCode(
-    valueUnpackerCode: string,
-    valueUnpackerLocation: string,
-    valueUnpackerSourceMap: string,
-    synchronizableUnpackerCode: string,
-    synchronizableUnpackerLocation: string,
-    synchronizableUnpackerSourceMap: string,
-    customSerializableUnpackerCode: string,
-    customSerializableUnpackerLocation: string,
-    customSerializableUnpackerSourceMap: string,
-    shareableHostUnpackerCode: string,
-    shareableHostUnpackerLocation: string,
-    shareableHostUnpackerSourceMap: string,
-    shareableGuestUnpackerCode: string,
-    shareableGuestUnpackerLocation: string,
-    shareableGuestUnpackerSourceMap: string,
-    remoteFunctionUnpackerCode: string,
-    remoteFunctionUnpackerLocation: string,
-    remoteFunctionUnpackerSourceMap: string
-  ): void;
-
-  loadUnpackersWithBytecode(
-    valueUnpackerBytecode: ArrayBuffer,
-    synchronizableUnpackerBytecode: ArrayBuffer,
-    customSerializableUnpackerBytecode: ArrayBuffer,
-    shareableHostUnpackerBytecode: ArrayBuffer,
-    shareableGuestUnpackerBytecode: ArrayBuffer,
-    remoteFunctionUnpackerBytecode: ArrayBuffer
-  ): void;
-
   createSerializableImport<TValue>(
     source: string,
     imported: string
@@ -227,22 +197,10 @@ export interface WorkletsModuleProxy {
   getUIRuntimeHolder(): object;
 
   getUISchedulerHolder(): object;
-
-  /** @deprecated Don't use unless you have to. */
-  createSerializableLEGACY<TValue>(
-    value: TValue,
-    nativeStateSource: object | undefined
-  ): SerializableRef<TValue>;
 }
-
-type InternalMethods =
-  | 'loadUnpackersWithCode'
-  | 'loadUnpackersWithBytecode'
-  | 'createSerializableLEGACY';
 
 type TurboModulePublic = {
   toggleSlowAnimationsOnUIRuntime(): boolean;
 };
 
-export type IWorkletsModule = Omit<WorkletsModuleProxy, InternalMethods> &
-  TurboModulePublic;
+export type IWorkletsModule = WorkletsModuleProxy & TurboModulePublic;
