@@ -22,6 +22,10 @@ void scheduleOnUI(const std::shared_ptr<UIScheduler> &uiScheduler, const std::fu
   uiScheduler->scheduleOnUI(job);
 }
 
+bool isOnUIThread(const std::shared_ptr<UIScheduler> &uiScheduler) {
+  return uiScheduler->isOnUIThread();
+}
+
 facebook::jsi::Runtime &getJSIRuntimeFromWorkletRuntime(const std::shared_ptr<WorkletRuntime> &workletRuntime) {
   return workletRuntime->getJSIRuntime();
 }

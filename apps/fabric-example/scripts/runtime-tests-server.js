@@ -628,7 +628,7 @@ async function installAndLaunch(udid) {
     'write',
     BUNDLE_ID,
     'RCT_jsLocation',
-    `localhost:${METRO_PORT}`,
+    `127.0.0.1:${METRO_PORT}`,
   ]);
 
   await run('xcrun', ['simctl', 'terminate', udid, BUNDLE_ID]).catch(() => {});
