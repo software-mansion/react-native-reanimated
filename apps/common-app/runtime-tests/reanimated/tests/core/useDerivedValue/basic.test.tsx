@@ -155,7 +155,7 @@ describe('Test useDerivedValue changing width', () => {
           derivedFun(finalWidth),
           ComparisonMode.PIXEL
         );
-        const updates = updatesContainerActive.getUpdates();
+        const updates = await updatesContainerActive.getUpdates();
         const naiveUpdates = await updatesContainerActive.getNativeSnapshots();
         await unmockAnimationTimer();
         return [updates, naiveUpdates];

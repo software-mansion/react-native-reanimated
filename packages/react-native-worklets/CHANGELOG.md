@@ -7,12 +7,13 @@
 ### 🛠 Breaking changes
 
 - Change the C++ `Synchronizable` interface to operate on `std::variant` values. Getters return a `Serializable`, a `double` or a `bool`, and `setBlocking` takes either a `Serializable` or a plain value. ([#10294](https://github.com/software-mansion/react-native-reanimated/pull/10294) by [@tjzel](https://github.com/tjzel))
-- Add `setDirty` to the C++ `Synchronizable` interface. It's pure virtual, so C++ implementations of the interface have to provide it. `SynchronizableDynamic` throws from it - write a dynamic Synchronizable with `setBlocking` and a `Serializable` value. ([#10295](https://github.com/software-mansion/react-native-reanimated/pull/10295) by [@tjzel](https://github.com/tjzel))
+- Add virtual `setDirty` to the C++ `Synchronizable` interface. `SynchronizableDynamic` throws from it. ([#10295](https://github.com/software-mansion/react-native-reanimated/pull/10295) by [@tjzel](https://github.com/tjzel))
 
 ### 🎉 New features
 
 \[General] Per-runtime caching for RetainingSerializable
 
+- Add `isOnUIThread` to the Worklets Stable API.
 - Add the `fixedType` option to `createSynchronizable`. A fixed-type Synchronizable holds a number or a boolean without serialization and exposes `setDirty`, a non-exclusive write that doesn't wait for other `setDirty` calls. ([#10296](https://github.com/software-mansion/react-native-reanimated/pull/10296) by [@tjzel](https://github.com/tjzel))
 
 ### 🐛 Bug fixes
