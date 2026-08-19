@@ -218,6 +218,7 @@ const config = {
         },
       ],
     ].filter(Boolean),
+    require('./plugins/llms-txt')(),
     function svgModulePlugin() {
       return {
         name: 'svg-module-plugin',
