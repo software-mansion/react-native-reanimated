@@ -34,7 +34,7 @@ runs:
           echo "::error::$file is missing or empty"
           exit 1
         fi
-        count=$(grep -c '^- \[.*docs\.swmansion\.com/react-native-reanimated/docs/' "$file" || true)
+        count=$(grep -cE '^- \[[^]]+\]\(https://docs\.swmansion\.com/react-native-reanimated/docs/[^)]*\)' "$file" || true)
         if [ "$count" -eq 0 ]; then
           echo "::error::$file lists no documentation pages"
           exit 1
