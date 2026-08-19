@@ -6,17 +6,23 @@ on:
     paths:
       - .github/workflows/example-ios-build-check.yml
       - .github/actions/install-pods/**
-      - .github/actions/cache-derived-data/**
+      - .github/actions/setup-ccache/**
+      - .github/actions/save-ccache/**
       - scripts/llvm-tools/**
       - packages/react-native-reanimated/RNReanimated.podspec
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
+      - packages/react-native-reanimated/package.json
+      - packages/react-native-reanimated/src/specs/**
       - packages/react-native-reanimated/Common/**
       - packages/react-native-worklets/RNWorklets.podspec
       - packages/react-native-worklets/scripts/worklets_utils.rb
       - packages/react-native-worklets/apple/**
+      - packages/react-native-worklets/package.json
+      - packages/react-native-worklets/src/specs/**
       - packages/react-native-worklets/Common/**
       - apps/fabric-example/**
+      - apps/common-app/package.json
   merge_group:
     branches:
       - main
@@ -26,17 +32,23 @@ on:
     paths:
       - .github/workflows/example-ios-build-check.yml
       - .github/actions/install-pods/**
-      - .github/actions/cache-derived-data/**
+      - .github/actions/setup-ccache/**
+      - .github/actions/save-ccache/**
       - scripts/llvm-tools/**
       - packages/react-native-reanimated/RNReanimated.podspec
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
+      - packages/react-native-reanimated/package.json
+      - packages/react-native-reanimated/src/specs/**
       - packages/react-native-reanimated/Common/**
       - packages/react-native-worklets/RNWorklets.podspec
       - packages/react-native-worklets/scripts/worklets_utils.rb
       - packages/react-native-worklets/apple/**
+      - packages/react-native-worklets/package.json
+      - packages/react-native-worklets/src/specs/**
       - packages/react-native-worklets/Common/**
       - apps/fabric-example/**
+      - apps/common-app/package.json
   workflow_call:
     inputs:
       bundleMode:
@@ -61,6 +73,7 @@ jobs:
       REANIMATED_DIR: packages/react-native-reanimated
       CONFIGURATION: ${{ inputs.configuration || 'Debug' }}
       BUILD_MARKER_DIR: .build-markers
+      USE_CCACHE_LAUNCHER: 1
       CACHE_KEY: ios-${{ github.sha }}-${{ inputs.configuration || 'Debug' }}-${{ inputs.bundleMode || false }}
     concurrency:
       group: ios-${{ github.ref }}-${{ inputs.bundleMode }}-${{ inputs.configuration || 'Debug' }}
@@ -89,6 +102,13 @@ jobs:
         if: steps.result-cache.outputs.cache-hit != 'true'
         run: brew install xcode-build-server llvm
 
+      - name: Use Node.js
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'yarn'
+
       - name: Install monorepo node dependencies
         if: steps.result-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
@@ -100,18 +120,16 @@ jobs:
         working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn build
 
+      - name: Setup ccache
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/setup-ccache
+        with:
+          key-prefix: ios-${{ env.CONFIGURATION }}
+
       - name: Install Pods (with caching)
         if: steps.result-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/install-pods
         with:
-          working-directory: ${{ env.WORKING_DIRECTORY }}
-          pod-directory: ios
-
-      - name: Cache DerivedData
-        if: steps.result-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/cache-derived-data
-        with:
-          platform: ios
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: ios
 
@@ -120,6 +138,12 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios
         shell: bash -eo pipefail {0}
         run: xcodebuild -workspace FabricExample.xcworkspace -configuration "$CONFIGURATION" -scheme "$CONFIGURATION FabricExample" -destination "generic/platform=iOS Simulator" 2>&1 | xcode-build-server parse -o compile_commands.json
+
+      - name: Save ccache
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/save-ccache
+        with:
+          key-prefix: ios-${{ env.CONFIGURATION }}
 
       - name: Generate per-package compile_commands.json
         if: steps.result-cache.outputs.cache-hit != 'true'
