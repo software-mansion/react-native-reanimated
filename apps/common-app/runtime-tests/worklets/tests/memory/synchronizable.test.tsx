@@ -13,6 +13,7 @@ import {
 import {
   describe,
   expect,
+  getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
@@ -390,5 +391,35 @@ describe('Test Synchronizable serialization', () => {
       synchronizable.setBlocking({ a: 3 });
     });
     expect(synchronizable.getBlocking().a).toBe(3);
+  });
+});
+
+describe('Test Synchronizable error handling', () => {
+  const lockReleaseTest = __DEV__ ? test : test.skip;
+
+  lockReleaseTest('a throwing setter function releases the lock', async () => {
+    const READ_DONE = 'READ_DONE';
+    const synchronizable = createSynchronizable(initialValue);
+    const [observerRuntime] = getWorkletRuntimesFromPool(1);
+
+    await expect(() => {
+      synchronizable.setBlocking(() => {
+        throw new Error('setter failure');
+      });
+    }).toThrow('setter failure');
+
+    let observed = -1;
+    const onReadDone = (value: number) => {
+      observed = value;
+      notify(READ_DONE);
+    };
+
+    scheduleOnRuntime(observerRuntime, () => {
+      'worklet';
+      scheduleOnRN(onReadDone, synchronizable.getBlocking());
+    });
+
+    await waitForNotification(READ_DONE);
+    expect(observed).toBe(initialValue);
   });
 });
