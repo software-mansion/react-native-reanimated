@@ -84,6 +84,7 @@ class CSSTransition {
   folly::dynamic pendingInitialUpdate_ = folly::dynamic::object();
 
   CSSLoopTransition &ensureLoopTransition();
+  void dropPending(const std::vector<std::string> &propertyNames);
   void scheduleLoop(double timestamp);
   void observeMilestones(CSSLoopTransition &loopTransition);
   void reportMilestone(RunMilestone milestone, const std::string &propertyName, double elapsedTime);
