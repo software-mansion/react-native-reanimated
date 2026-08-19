@@ -158,7 +158,7 @@ Both are experimental and default to `false`. CSS animations always run on the l
 Routing is decided per property, so a single transition may run partly on the platform and partly on the loop. A property is routed only when:
 
 - it is listed in the table below,
-- the animated component has no CSS transition callbacks (`onCSSTransitionRun`, `onCSSTransitionStart`, `onCSSTransitionEnd`, `onCSSTransitionCancel`), since the platform doesn't report transition events yet. A component with any of them keeps all of its properties on the loop,
+- the animated component has no CSS transition callbacks. `onCSSTransitionRun`, `onCSSTransitionStart`, `onCSSTransitionEnd` and `onCSSTransitionCancel` work as usual, but only the animation loop reports them, so a component using any of them keeps all of its properties there,
 - on iOS, its timing function is `linear` or a cubic Bezier curve, since `CAMediaTimingFunction` cannot express `steps` or `linear` easing with stops. There is no such limitation on Android, where `TimeInterpolator` carries any curve that CSS transitions support.
 
 #### Properties routed to the platform
