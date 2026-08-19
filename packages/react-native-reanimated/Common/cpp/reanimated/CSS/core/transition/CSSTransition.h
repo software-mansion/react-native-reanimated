@@ -78,6 +78,9 @@ class CSSTransition {
   std::shared_ptr<CSSLoopTransition> loopTransition_;
 
   CSSEventMask eventMask_{0};
+  // The frame a run settles on. Its interpolator is retired in the same call that produces it, so
+  // a run finishing within its starting frame leaves nothing to recompute afterwards.
+  folly::dynamic pendingInitialUpdate_ = folly::dynamic::object();
 
   CSSLoopTransition &ensureLoopTransition();
   void scheduleLoop(double timestamp);

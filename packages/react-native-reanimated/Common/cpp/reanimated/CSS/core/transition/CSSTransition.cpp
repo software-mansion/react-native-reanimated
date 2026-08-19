@@ -58,10 +58,10 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
     return folly::dynamic::object();
   }
 
-  auto initialUpdate =
+  pendingInitialUpdate_ =
       ensureLoopTransition().run(rt, shadowNode_, loopConfig.changedProperties, lastUpdates, timestamp);
   scheduleLoop(timestamp);
-  return initialUpdate;
+  return pendingInitialUpdate_;
 }
 
 folly::dynamic CSSTransition::run(
@@ -75,16 +75,19 @@ folly::dynamic CSSTransition::run(
     return folly::dynamic::object();
   }
 
-  auto initialUpdate = ensureLoopTransition().run(shadowNode_, loopDiffs, lastUpdates, timestamp);
+  pendingInitialUpdate_ = ensureLoopTransition().run(shadowNode_, loopDiffs, lastUpdates, timestamp);
   scheduleLoop(timestamp);
-  return initialUpdate;
+  return pendingInitialUpdate_;
 }
 
 folly::dynamic CSSTransition::computeCurrentLoopStyle() {
-  if (!loopTransition_) {
-    return folly::dynamic::object();
+  // Hand over the settled frame here, where the flush can still commit it, and let whatever is
+  // running override it.
+  auto updates = std::exchange(pendingInitialUpdate_, folly::dynamic::object());
+  if (loopTransition_) {
+    updates.update(loopTransition_->computeCurrentStyle(shadowNode_));
   }
-  return loopTransition_->computeCurrentStyle(shadowNode_);
+  return updates;
 }
 
 void CSSTransition::setPseudoLockedProperties(TransitionProperties properties) {
@@ -92,6 +95,7 @@ void CSSTransition::setPseudoLockedProperties(TransitionProperties properties) {
 }
 
 void CSSTransition::cancel() {
+  pendingInitialUpdate_ = folly::dynamic::object();
   if (loopTransition_) {
     // Report the cancel before the operation goes away, as animations do.
     loopTransition_->abort(loop_->resolveTimestamp());
@@ -101,6 +105,10 @@ void CSSTransition::cancel() {
 }
 
 void CSSTransition::removeProperties(const std::vector<std::string> &propertyNames, const double timestamp) {
+  for (const auto &propertyName : propertyNames) {
+    pendingInitialUpdate_.erase(propertyName);
+  }
+
   TransitionProperties platformProperties;
   for (const auto &propertyName : propertyNames) {
     if (routing_.platform.erase(propertyName) > 0) {
