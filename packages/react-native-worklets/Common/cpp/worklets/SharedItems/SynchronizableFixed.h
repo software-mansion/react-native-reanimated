@@ -35,8 +35,9 @@ class SynchronizableFixed final : public Synchronizable {
   void setBlocking(const SynchronizableFixedValue &value) override;
 
  private:
-  void store(const SynchronizableFixedValue &value);
+  bool store(const SynchronizableFixedValue &value);
   SynchronizableValue load() const;
+  [[noreturn]] void throwTypeMismatch() const;
 
   std::variant<std::atomic<double>, std::atomic<bool>> value_;
 };
