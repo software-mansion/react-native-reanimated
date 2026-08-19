@@ -36,7 +36,7 @@
     "fuse.js": "7.5.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "react-native-gesture-handler": "3.1.0",
+    "react-native-gesture-handler": "3.2.1",
     "react-native-mmkv": "4.3.2",
     "react-native-nitro-modules": "0.36.5",
     "react-native-reanimated": "workspace:*",
