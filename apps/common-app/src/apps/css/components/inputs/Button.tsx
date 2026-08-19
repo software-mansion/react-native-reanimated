@@ -80,7 +80,10 @@ export default function Button({
 }: ButtonProps) {
   const { buttonStyle, fontVariant, iconSize } = BUTTON_VARIANTS[size];
 
-  const tapGesture = useTapGesture({ onDeactivate: onPress, runOnJS: true });
+  const tapGesture = useTapGesture({
+    onDeactivate: () => onPress(),
+    runOnJS: true,
+  });
 
   return (
     <LayoutAnimationConfig skipEntering skipExiting>
