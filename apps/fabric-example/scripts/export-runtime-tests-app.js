@@ -21,6 +21,7 @@ const LIBRARIES = ['reanimated', 'worklets', 'self-tests'];
 const projectRoot = path.resolve(__dirname, '..');
 const iosDir = path.join(projectRoot, 'ios');
 
+/** @type {Record<string, string | true>} */
 const args = {};
 const BOOLEAN_FLAGS = new Set(['print-path', 'allow-debug', 'help']);
 
@@ -59,17 +60,32 @@ Options:
   process.exit(0);
 }
 
-const CONFIGURATION = args.configuration ?? 'ReleaseRuntimeTests';
+const CONFIGURATION =
+  typeof args.configuration === 'string'
+    ? args.configuration
+    : 'ReleaseRuntimeTests';
 const OUT = path.resolve(
   projectRoot,
-  args.out ?? path.join('dist', `FabricExample-${CONFIGURATION}.app.zip`)
+  typeof args.out === 'string'
+    ? args.out
+    : path.join('dist', `FabricExample-${CONFIGURATION}.app.zip`)
 );
 
+/**
+ * @param {string} message
+ * @returns {never}
+ */
 function fail(message) {
   console.error(`[export-app] ${message}`);
   process.exit(1);
 }
 
+/**
+ * @param {string} command
+ * @param {string[]} argv
+ * @param {import('child_process').ExecFileOptions} [options]
+ * @returns {Promise<{ stdout: string; stderr: string }>}
+ */
 function run(command, argv, options = {}) {
   return new Promise((resolve, reject) => {
     execFile(
@@ -113,11 +129,13 @@ async function resolveAppPath() {
     fail(`xcodebuild -showBuildSettings returned no JSON payload`);
   }
 
+  /** @type {{ buildSettings?: Record<string, string> }[]} */
   const entries = JSON.parse(stdout.slice(jsonStart));
 
   const entry =
     entries.find(
-      (candidate) => candidate.buildSettings.WRAPPER_NAME === 'FabricExample.app'
+      (candidate) =>
+        candidate.buildSettings?.WRAPPER_NAME === 'FabricExample.app'
     ) ?? entries[0];
 
   if (!entry?.buildSettings) {
@@ -129,6 +147,7 @@ async function resolveAppPath() {
   return path.join(TARGET_BUILD_DIR, WRAPPER_NAME);
 }
 
+/** @param {string} app */
 function assertExportable(app) {
   if (!fs.existsSync(app)) {
     fail(
