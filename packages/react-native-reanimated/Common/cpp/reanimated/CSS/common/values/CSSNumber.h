@@ -2,6 +2,8 @@
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 
+#include <react/utils/FloatComparison.h>
+
 #include <string>
 
 namespace reanimated::css {
@@ -43,11 +45,11 @@ struct CSSDouble : public CSSNumberBase<CSSDouble, double> {
 struct CSSTextDouble : public CSSNumberBase<CSSTextDouble, double> {
   using CSSNumberBase::CSSNumberBase;
 
-  /// React Native compares text attributes with a 0.005 epsilon but lays them
-  /// out exactly, so a smaller step moves the frame while the text keeps its
-  /// old metrics. Interpolation lands on the endpoint once it gets that close.
+  /// React Native compares text attributes with this epsilon but lays them out
+  /// exactly, so a smaller step moves the frame while the text keeps its old
+  /// metrics. Interpolation lands on the endpoint once it gets that close.
   /// https://github.com/facebook/react-native/blob/v0.87.0/packages/react-native/ReactCommon/react/renderer/attributedstring/TextAttributes.cpp#L174-L177
-  static constexpr double epsilon = 0.005;
+  static constexpr double epsilon = facebook::react::kDefaultEpsilon;
 };
 
 struct CSSInteger : public CSSNumberBase<CSSInteger, int> {
