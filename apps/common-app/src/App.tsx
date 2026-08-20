@@ -14,7 +14,13 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { colors, flex, radius, text } from '@/theme';
 import { IS_MACOS, IS_WEB, noop } from '@/utils';
 
-import { CSSApp, ReanimatedApp, RuntimeTestsApp, WorkletsApp } from './apps';
+import {
+  CSSApp,
+  MacosApp,
+  ReanimatedApp,
+  RuntimeTestsApp,
+  WorkletsApp,
+} from './apps';
 import { LeakCheck, NukeContext } from './components';
 
 LogBox.ignoreLogs([
@@ -41,6 +47,8 @@ export default function App() {
       </View>
     );
   }
+
+  const RootApp = IS_MACOS ? MacosApp : Navigator;
 
   return (
     <NukeContext value={() => setNuked(true)}>
@@ -74,9 +82,13 @@ export default function App() {
           }}
           onStateChange={updateNavigationState}>
           <PortalProvider>
-            <SafeAreaProvider>
-              <Navigator />
-            </SafeAreaProvider>
+            {IS_MACOS ? (
+              <RootApp />
+            ) : (
+              <SafeAreaProvider>
+                <RootApp />
+              </SafeAreaProvider>
+            )}
           </PortalProvider>
         </NavigationContainer>
       </GestureHandlerRootView>
