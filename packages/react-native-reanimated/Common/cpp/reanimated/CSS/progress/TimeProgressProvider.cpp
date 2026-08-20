@@ -32,9 +32,8 @@ void TimeProgressProvider::update(const double timestamp) {
     return;
   }
 
-  // Every ordered comparison against NaN is false, so a bare `< 0` / `>= 1`
-  // pair would let one through and the interpolators would turn it into a NaN
-  // style value. Testing for it by name keeps both bounds reading normally.
+  // Every ordered comparison against NaN is false, so a NaN would clear both
+  // bounds and reach the interpolators as a NaN style value.
   const double progress = rawProgress_.value();
   if (std::isnan(progress) || progress < 0) {
     rawProgress_.reset();
