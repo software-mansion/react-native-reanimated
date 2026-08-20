@@ -10202,7 +10202,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/ws@npm:^8.5.10":
+"@types/ws@npm:8.18.1, @types/ws@npm:^8.5.10":
   version: 8.18.1
   resolution: "@types/ws@npm:8.18.1"
   dependencies:
@@ -18360,6 +18360,7 @@ __metadata:
   resolution: "fabric-example@workspace:apps/fabric-example"
   dependencies:
     "@types/react": "npm:19.2.18"
+    "@types/ws": "npm:8.18.1"
     common-app: "workspace:*"
     eslint: "npm:9.37.0"
     react: "npm:19.2.8"

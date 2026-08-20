@@ -14,7 +14,13 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { colors, flex, radius, text } from '@/theme';
 import { IS_MACOS, IS_WEB, noop } from '@/utils';
 
-import { CSSApp, ReanimatedApp, RuntimeTestsApp } from './apps';
+import {
+  CSSApp,
+  MacosApp,
+  ReanimatedApp,
+  RuntimeTestsApp,
+  WorkletsApp,
+} from './apps';
 import { LeakCheck, NukeContext } from './components';
 
 LogBox.ignoreLogs([
@@ -42,7 +48,7 @@ export default function App() {
     );
   }
 
-  const RootApp = IS_MACOS ? ReanimatedApp : Navigator;
+  const RootApp = IS_MACOS ? MacosApp : Navigator;
 
   return (
     <NukeContext value={() => setNuked(true)}>
@@ -101,6 +107,10 @@ const SCREENS = [
         {
           component: RuntimeTestsApp,
           name: 'Runtime Tests',
+        },
+        {
+          component: WorkletsApp,
+          name: 'Worklets',
         },
       ]),
   {
