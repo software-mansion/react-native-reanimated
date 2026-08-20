@@ -81,7 +81,7 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 }
 #endif
 
-std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch updatesBatch, const bool allowPartialUpdates) {
+std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBatch, const bool allowPartialUpdates) {
   static const std::unordered_set<std::string> synchronousPropNames = {
       "opacity",
       "elevation",
