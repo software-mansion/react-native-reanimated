@@ -1,10 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ViewStyle } from 'react-native';
-import { FlatList, StyleSheet, View } from 'react-native';
-import type { CSSTransitionProperties } from 'react-native-reanimated';
+import { StyleSheet, View } from 'react-native';
+import type {
+  CSSTransitionProperties,
+  StyleProps,
+} from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
-import { Button, Screen, Section, Text } from '@/apps/css/components';
+import {
+  Button,
+  ScrollScreen,
+  Section,
+  Stagger,
+  Text,
+} from '@/apps/css/components';
+import { TransitionConfiguration } from '@/apps/css/examples/transitions/components';
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 
 const SIMPLE: CSSTransitionProperties<ViewStyle> = {
@@ -22,6 +32,11 @@ const MULTIPLE: CSSTransitionProperties<ViewStyle> = {
   transitionDuration: '1s',
   transitionProperty: ['width', 'opacity'],
 };
+
+const TRANSITION_STYLES: Array<StyleProps> = [
+  { opacity: 0.25, width: sizes.md },
+  { opacity: 1, width: sizes.xl },
+];
 
 type LoggedEvent = {
   id: number;
@@ -63,13 +78,13 @@ export default function TransitionCallbacks() {
     []
   );
 
-  const run = useCallback(
+  const changeStyle = useCallback(
     (properties: CSSTransitionProperties<ViewStyle>) => {
       cancelPendingTrigger();
       setEvents([]);
       setIsMounted(true);
       // The settings have to reach the view before the value changes, or the
-      // browser starts the transition with whatever was configured before.
+      // transition starts with whatever was configured before.
       setTransition(properties);
       triggerFrame.current = requestAnimationFrame(() => {
         triggerFrame.current = null;
@@ -80,87 +95,109 @@ export default function TransitionCallbacks() {
     [cancelPendingTrigger]
   );
 
-  return (
-    <Screen style={styles.screen}>
-      <Section
-        description="Transition lifecycle callbacks fired by the **native** CSS engine. They are reported **per property**. `elapsedTime` is in **seconds** and excludes the delay, while the value in brackets is the time since the change that started the transition."
-        title="Transition Callbacks">
-        <View style={styles.content}>
-          <View style={styles.buttons}>
-            <Button style={flex.grow} title="Run" onPress={() => run(SIMPLE)} />
-            <Button
-              style={flex.grow}
-              title="With delay"
-              onPress={() => run(DELAYED)}
-            />
-            <Button
-              style={flex.grow}
-              title="Two properties"
-              onPress={() => run(MULTIPLE)}
-            />
-            <Button
-              style={flex.grow}
-              title="Cancel"
-              onPress={() => {
-                cancelPendingTrigger();
-                setTransition(null);
-              }}
-            />
-            <Button
-              style={flex.grow}
-              title="Unmount"
-              onPress={() => {
-                cancelPendingTrigger();
-                setIsMounted(false);
-              }}
-            />
-            <Button
-              style={flex.grow}
-              title="Clear log"
-              onPress={() => setEvents([])}
-            />
-          </View>
+  const removeTransition = useCallback(() => {
+    cancelPendingTrigger();
+    setTransition(null);
+  }, [cancelPendingTrigger]);
 
-          <View style={styles.preview}>
-            {isMounted && (
-              <Animated.View
-                style={[
-                  styles.box,
-                  transition,
-                  {
-                    opacity: isExpanded ? 1 : 0.25,
-                    width: isExpanded ? sizes.xl : sizes.md,
-                  },
-                ]}
-                onCSSTransitionCancel={({ elapsedTime, propertyName }) =>
-                  log('cancel', propertyName, elapsedTime)
-                }
-                onCSSTransitionEnd={({ elapsedTime, propertyName }) =>
-                  log('end', propertyName, elapsedTime)
-                }
-                onCSSTransitionRun={({ elapsedTime, propertyName }) =>
-                  log('run', propertyName, elapsedTime)
-                }
-                onCSSTransitionStart={({ elapsedTime, propertyName }) =>
-                  log('start', propertyName, elapsedTime)
-                }
+  const unmountView = useCallback(() => {
+    cancelPendingTrigger();
+    setIsMounted(false);
+  }, [cancelPendingTrigger]);
+
+  return (
+    <ScrollScreen>
+      <Stagger>
+        <Section
+          description="Transition lifecycle callbacks fired by the **native** CSS engine. They are reported **per property**. `elapsedTime` is in **seconds** and excludes the delay, while the value in brackets is the time since the change that started the transition."
+          title="Transition Callbacks">
+          <View style={styles.content}>
+            <View style={styles.buttons}>
+              <Button
+                style={flex.grow}
+                title="Change width"
+                onPress={() => changeStyle(SIMPLE)}
               />
+              <Button
+                style={flex.grow}
+                title="Change width (delayed)"
+                onPress={() => changeStyle(DELAYED)}
+              />
+              <Button
+                style={flex.grow}
+                title="Change width + opacity"
+                onPress={() => changeStyle(MULTIPLE)}
+              />
+              <Button
+                style={flex.grow}
+                title="Remove transition"
+                onPress={removeTransition}
+              />
+              <Button
+                style={flex.grow}
+                title="Unmount view"
+                onPress={unmountView}
+              />
+              <Button
+                style={flex.grow}
+                title="Clear log"
+                onPress={() => setEvents([])}
+              />
+            </View>
+
+            <View style={styles.preview}>
+              {isMounted && (
+                <Animated.View
+                  style={[
+                    styles.box,
+                    transition,
+                    {
+                      opacity: isExpanded ? 1 : 0.25,
+                      width: isExpanded ? sizes.xl : sizes.md,
+                    },
+                  ]}
+                  onCSSTransitionCancel={({ elapsedTime, propertyName }) =>
+                    log('cancel', propertyName, elapsedTime)
+                  }
+                  onCSSTransitionEnd={({ elapsedTime, propertyName }) =>
+                    log('end', propertyName, elapsedTime)
+                  }
+                  onCSSTransitionRun={({ elapsedTime, propertyName }) =>
+                    log('run', propertyName, elapsedTime)
+                  }
+                  onCSSTransitionStart={({ elapsedTime, propertyName }) =>
+                    log('start', propertyName, elapsedTime)
+                  }
+                />
+              )}
+            </View>
+          </View>
+        </Section>
+
+        <Section description="In order of arrival" title="Event Log">
+          <View style={styles.log}>
+            {events.length === 0 ? (
+              <Text variant="subHeading3">No events yet</Text>
+            ) : (
+              events.map((event) => (
+                <Text key={event.id} variant="body1">
+                  {event.label}
+                </Text>
+              ))
             )}
           </View>
-        </View>
-      </Section>
+        </Section>
 
-      <Section description="In order of arrival" title="Event Log" fill>
-        <FlatList
-          contentContainerStyle={styles.logContent}
-          data={events}
-          keyExtractor={(event) => String(event.id)}
-          ListEmptyComponent={<Text variant="subHeading2">No events yet</Text>}
-          renderItem={({ item }) => <Text variant="body1">{item.label}</Text>}
-          style={styles.log}
-        />
-      </Section>
-    </Screen>
+        <Section
+          description="Transition configuration consists of the style changes that will be animated and the transition settings."
+          title="Transition configuration">
+          <TransitionConfiguration
+            transitionProperties={transition ?? {}}
+            transitionStyles={TRANSITION_STYLES}
+          />
+        </Section>
+      </Stagger>
+    </ScrollScreen>
   );
 }
 
@@ -182,10 +219,8 @@ const styles = StyleSheet.create({
   log: {
     backgroundColor: colors.background2,
     borderRadius: radius.sm,
-    flex: 1,
-  },
-  logContent: {
     gap: spacing.xxxs,
+    minHeight: sizes.xxl,
     padding: spacing.xs,
   },
   preview: {
@@ -193,9 +228,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background2,
     borderRadius: radius.md,
     height: sizes.xxl,
-  },
-  screen: {
-    gap: spacing.sm,
-    padding: spacing.sm,
   },
 });
