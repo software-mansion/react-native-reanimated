@@ -3,6 +3,7 @@
 #include <reanimated/CSS/easing/EasingConfigs.h>
 
 #include <algorithm>
+#include <cmath>
 #include <utility>
 
 namespace reanimated::css {
@@ -32,7 +33,10 @@ reverseShorten(const ReversingState &previous, double timestamp, double duration
   const double elapsed = std::clamp(timestamp - previous.startTimestamp, 0.0, previous.duration);
   const double linearProgress = previous.duration > 0 ? elapsed / previous.duration : 1.0;
   const double easedProgress = getEasingFunctionFromConfig(previous.easing)(linearProgress);
-  const double factor = easedProgress * previous.factor + (1 - previous.factor);
+  // The spec takes the absolute value and clamps to [0, 1]. Only the x control
+  // points of a cubic bezier are restricted to [0, 1], so an easing may
+  // legally overshoot, and an unclamped factor turns the duration negative.
+  const double factor = std::clamp(std::abs(easedProgress * previous.factor + (1 - previous.factor)), 0.0, 1.0);
   duration *= factor;
   if (delay < 0) {
     delay *= factor;
