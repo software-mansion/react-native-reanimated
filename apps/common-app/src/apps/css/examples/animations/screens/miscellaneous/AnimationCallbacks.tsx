@@ -72,6 +72,10 @@ const DEFAULT_ANIMATION_CONFIG: SelectableConfig<AnimationSettings> = {
   },
 };
 
+// An infinite animation reports iterations forever, so the log keeps only the
+// most recent ones.
+const MAX_LOGGED_EVENTS = 50;
+
 type LoggedEvent = {
   id: number;
   label: string;
@@ -92,6 +96,8 @@ export default function AnimationCallbacks() {
   // deliberately leaves out.
   const startedAt = useRef(Date.now());
   const restartFrame = useRef<null | number>(null);
+  // Monotonic, so trimming the log never reuses a React key.
+  const nextEventId = useRef(0);
 
   const cancelPendingRestart = useCallback(() => {
     if (restartFrame.current !== null) {
@@ -104,13 +110,15 @@ export default function AnimationCallbacks() {
 
   const log = useCallback((type: string, name: string, elapsedTime: number) => {
     const sinceStart = (Date.now() - startedAt.current) / 1000;
-    setEvents((current) => [
-      ...current,
-      {
-        id: current.length,
-        label: `${type} (${ANIMATION_NAMES.get(name) ?? name}) at ${elapsedTime.toFixed(2)}s (+${sinceStart.toFixed(2)}s)`,
-      },
-    ]);
+    setEvents((current) =>
+      [
+        ...current,
+        {
+          id: nextEventId.current++,
+          label: `${type} (${ANIMATION_NAMES.get(name) ?? name}) at ${elapsedTime.toFixed(2)}s (+${sinceStart.toFixed(2)}s)`,
+        },
+      ].slice(-MAX_LOGGED_EVENTS)
+    );
   }, []);
 
   // An animation restarts only when it is detached and attached again, so the
