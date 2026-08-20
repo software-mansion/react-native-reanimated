@@ -34,7 +34,7 @@ export default function SettledPropsLeakExample() {
   return (
     <View style={styles.container}>
       <Text>
-        The boxes below animates from red to lime and from 0 to 100. Once the
+        The boxes below animate from red to lime and from 0 to 100. Once the
         animations settle, the input should stay lime and display 100.
       </Text>
       <View style={styles.examples}>
