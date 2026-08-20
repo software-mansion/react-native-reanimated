@@ -23,3 +23,4 @@
 ### 💡 Others
 
 - Use Worklets' `isOnUIThread` Stable API when scheduling Layout Animations cleanup on Android.
+- Add `backgroundPosition`, `backgroundRepeat` and `backgroundSize` to the style properties config, so the package type-checks against React Native 0.88. ([#10354](https://github.com/software-mansion/react-native-reanimated/pull/10354) by [@tjzel](https://github.com/tjzel))
