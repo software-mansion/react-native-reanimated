@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@types/react": "19.2.18",
+    "@types/ws": "8.18.1",
     "eslint": "9.37.0",
     "typescript": "5.9.3",
     "ws": "8.21.0"

@@ -3,7 +3,7 @@
 #include <jsi/jsi.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/Registries/WorkletRuntimeRegistry.h>
-#include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/WorkletsSystraceSection.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
@@ -24,8 +24,8 @@ class RetainingSerializableStore {
   static constexpr std::size_t kSlotsPerChunk = 4;
 
   struct Slot {
-    std::atomic<jsi::Runtime *> runtime{nullptr};
-    jsi::Value value{jsi::Value::undefined()};
+    std::atomic<facebook::jsi::Runtime *> runtime{nullptr};
+    facebook::jsi::Value value{facebook::jsi::Value::undefined()};
   };
 
   std::array<Slot, kSlotsPerChunk> slots_{};
@@ -33,7 +33,7 @@ class RetainingSerializableStore {
   std::atomic<RetainingSerializableStore *> nextChunk_{nullptr};
   std::unique_ptr<RetainingSerializableStore> nextChunkOwner_{};
 
-  const jsi::Value *find(jsi::Runtime *rt) {
+  const facebook::jsi::Value *find(facebook::jsi::Runtime *rt) {
     for (auto &slot : slots_) {
       if (slot.runtime.load(std::memory_order_acquire) == rt) {
         return &slot.value;
@@ -45,12 +45,12 @@ class RetainingSerializableStore {
     return nullptr;
   }
 
-  void store(jsi::Runtime *rt, jsi::Value value) {
+  void store(facebook::jsi::Runtime *rt, facebook::jsi::Value value) {
     for (auto &slot : slots_) {
       if (slot.runtime.load(std::memory_order_relaxed) != nullptr) {
         continue;
       }
-      jsi::Runtime *expected = nullptr;
+      facebook::jsi::Runtime *expected = nullptr;
       if (slot.runtime.compare_exchange_strong(expected, rt, std::memory_order_acq_rel)) {
         slot.value = std::move(value);
         return;
@@ -78,13 +78,13 @@ class RetainingSerializableStore {
     }
   }
 
-  jsi::Value getOrStore(jsi::Runtime &rt, TSerializable &serializable) {
+  facebook::jsi::Value getOrStore(facebook::jsi::Runtime &rt, TSerializable &serializable) {
     if (const auto *cachedValue = find(&rt)) {
-      return jsi::Value(rt, *cachedValue);
+      return facebook::jsi::Value(rt, *cachedValue);
     }
 
     auto jsValue = serializable.TSerializable::toJSValue(rt);
-    store(&rt, jsi::Value(rt, jsValue));
+    store(&rt, facebook::jsi::Value(rt, jsValue));
 
     return jsValue;
   }
@@ -99,11 +99,12 @@ class RetainingSerializable : virtual public TSerializable {
 
  public:
   template <typename... Args>
-  explicit RetainingSerializable(jsi::Runtime &rt, Args &&...args) : TSerializable(rt, std::forward<Args>(args)...) {}
+  explicit RetainingSerializable(facebook::jsi::Runtime &rt, Args &&...args)
+      : TSerializable(rt, std::forward<Args>(args)...) {}
 
   ~RetainingSerializable() override = default;
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
+  facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) override {
     return store_->getOrStore(rt, *this);
   }
 };
