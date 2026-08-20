@@ -109,8 +109,8 @@ class CSSPlatformTransitionProxy {
 
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
   /// The value the platform shows now, retraced from the stored timeline rather than read
-  /// back from the view, which only the UI thread may touch. nullopt after a non-reversing
-  /// interruption, which resumed from the live value.
+  /// back from the view, which only the UI thread may touch. nullopt when the property is
+  /// not routed to the platform.
   std::optional<PlatformValue> getCurrentValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
   /// nullopt keeps the diff's own from-value, which the animation has painted past.
   std::optional<double> getResumeValue(Tag viewTag, const std::string &propertyName, double timestamp) const;

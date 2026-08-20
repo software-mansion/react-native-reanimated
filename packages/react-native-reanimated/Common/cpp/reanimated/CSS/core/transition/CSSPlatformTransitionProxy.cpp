@@ -2,7 +2,6 @@
 
 #include <react/debug/react_native_assert.h>
 
-#include <algorithm>
 #include <utility>
 
 namespace reanimated::css {
@@ -113,11 +112,7 @@ std::optional<PlatformValue> CSSPlatformTransitionProxy::getCurrentValue(
   if (active == nullptr || !active->startValue) {
     return std::nullopt;
   }
-  const auto &reversing = active->reversing;
-  const double progress =
-      reversing.duration > 0 ? std::clamp((timestamp - reversing.startTimestamp) / reversing.duration, 0.0, 1.0) : 1.0;
-  return lerpPlatformValues(
-      *active->startValue, active->adjustedEnd, getEasingFunctionFromConfig(reversing.easing)(progress));
+  return lerpPlatformValues(*active->startValue, active->adjustedEnd, easedProgressAt(active->reversing, timestamp));
 }
 
 CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
