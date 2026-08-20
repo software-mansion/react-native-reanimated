@@ -40,8 +40,10 @@ export default function SynchronizablePerformanceExample() {
     React.useState<VariantKey>('dynamic');
   const [runningRuntimes, setRunningRuntimes] = React.useState(0);
 
-  const fixedSynchronizable: FixedSynchronizable<number> =
-    createSynchronizable(initialValue, { fixedType: true });
+  const fixedSynchronizable: FixedSynchronizable<number> = createSynchronizable(
+    initialValue,
+    { fixedType: true }
+  );
 
   const synchronizables: Record<VariantKey, Synchronizable<number>> = {
     dynamic: createSynchronizable(initialValue),
