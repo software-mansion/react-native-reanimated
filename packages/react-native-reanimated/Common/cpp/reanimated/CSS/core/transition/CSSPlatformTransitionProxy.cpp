@@ -70,7 +70,8 @@ bool CSSPlatformTransitionProxy::apply(
     adjustedStart = isReversal ? active->adjustedEnd : startValue;
   }
 
-  if (!startTransition_(
+  if (!startTransition_ ||
+      !startTransition_(
           viewTag,
           propertyName,
           fromValue,
