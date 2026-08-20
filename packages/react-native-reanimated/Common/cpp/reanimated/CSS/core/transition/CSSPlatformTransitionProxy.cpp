@@ -35,6 +35,10 @@ bool CSSPlatformTransitionProxy::apply(
     const CSSTransitionPropertySettings *settings,
     const bool persistent,
     const double timestamp) {
+  if (!startTransition_) {
+    return false;
+  }
+
   const ActiveTransition *active = activeTransitionFor(viewTag, propertyName);
 
   // The toggle path has no settings of its own, so it reuses the stored ones.
@@ -70,8 +74,7 @@ bool CSSPlatformTransitionProxy::apply(
     adjustedStart = isReversal ? active->adjustedEnd : startValue;
   }
 
-  if (!startTransition_ ||
-      !startTransition_(
+  if (!startTransition_(
           viewTag,
           propertyName,
           fromValue,

@@ -15,10 +15,9 @@ namespace reanimated {
 
 using namespace facebook::react;
 
-/// ObjectAnimator backend for platform-routed CSS transitions. It only plays and cancels
-/// what the shared routing engine hands it; the CSS reversing bookkeeping lives there.
-/// Curves cross the JNI seam as interned ids, so this owns the reference each routed
-/// property holds on its curve.
+/// ObjectAnimator backend for platform-routed CSS transitions; the reversing bookkeeping
+/// lives in CSSPlatformTransitionProxy. Curves cross the JNI seam as interned ids, so this
+/// owns the reference each routed property holds.
 class CSSPlatformTransitions {
  public:
   /// False means the property falls back to the loop.
@@ -35,9 +34,7 @@ class CSSPlatformTransitions {
 
   CSSPlatformTransitions(AnimateFunction animate, RemoveFunction remove, std::shared_ptr<CSSPlatformEasings> easings);
 
-  /// Plays the property on the view. `startTimestampMs` may lie in the past, which the
-  /// player seeks to, or in the future, which it holds `fromValue` through. False when the
-  /// platform cannot express the property or the player refuses the start.
+  /// False when the platform cannot express the property or the player refuses the start.
   bool startTransition(
       Tag viewTag,
       const std::string &propertyName,
@@ -48,7 +45,6 @@ class CSSPlatformTransitions {
       const css::EasingConfig &easing,
       bool persistent);
 
-  /// Cancels the property's animator, leaving the last painted frame on screen.
   void stopTransition(Tag viewTag, const std::string &propertyName);
 
  private:
