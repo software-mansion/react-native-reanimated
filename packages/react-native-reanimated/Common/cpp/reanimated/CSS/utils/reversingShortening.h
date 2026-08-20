@@ -33,9 +33,9 @@ reverseShorten(const ReversingState &previous, double timestamp, double duration
   const double elapsed = std::clamp(timestamp - previous.startTimestamp, 0.0, previous.duration);
   const double linearProgress = previous.duration > 0 ? elapsed / previous.duration : 1.0;
   const double easedProgress = getEasingFunctionFromConfig(previous.easing)(linearProgress);
-  // The spec takes the absolute value and clamps to [0, 1]. Only the x control
-  // points of a cubic bezier are restricted to [0, 1], so an easing may
-  // legally overshoot, and an unclamped factor turns the duration negative.
+  // "the absolute value, clamped to the range [0, 1]" - both exist, per the
+  // spec's own note, "to handle timing functions that have y1 or y2 outside
+  // the range [0, 1]", which only the y control points may be.
   const double factor = std::clamp(std::abs(easedProgress * previous.factor + (1 - previous.factor)), 0.0, 1.0);
   duration *= factor;
   if (delay < 0) {
