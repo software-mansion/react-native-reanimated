@@ -115,10 +115,6 @@
 - [layout-transitions](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions)
 - [List Layout Animations](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/list-layout-animations)
 
-## reanimated-babel-plugin
-
-- [About](https://docs.swmansion.com/react-native-reanimated/docs/reanimated-babel-plugin/about)
-
 ## scroll
 
 - [scrollTo](https://docs.swmansion.com/react-native-reanimated/docs/scroll/scrollTo)
