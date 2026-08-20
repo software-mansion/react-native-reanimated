@@ -11,17 +11,15 @@ namespace {
 constexpr double kEpsilon = 1e-6;
 constexpr std::uint8_t kMaxNewtonIterations = 8;
 
-/// One axis of a unit cubic Bezier in Horner form, as in WebKit's UnitBezier:
+/// One axis of a unit cubic Bezier in Horner form, as in WebKit's UnitBezier.
+/// The derivative shares these coefficients so the two cannot disagree.
 /// https://www.w3.org/TR/css-easing-1/#cubic-bezier-easing-functions
 /// https://github.com/WebKit/WebKit/blob/main/Source/WebCore/platform/graphics/UnitBezier.h
-/// The derivative shares these coefficients, so the two cannot disagree - a
-/// separately expanded one is easy to get wrong, and a wrong one sends Newton's
-/// method outside [0, 1].
-struct Coefficients {
+struct CurveCoefficients {
   // Declared in initialisation order: b needs c, a needs both.
   double c, b, a;
 
-  constexpr Coefficients(const double p1, const double p2) : c(3.0 * p1), b(3.0 * (p2 - p1) - c), a(1.0 - c - b) {}
+  constexpr CurveCoefficients(const double p1, const double p2) : c(3.0 * p1), b(3.0 * (p2 - p1) - c), a(1.0 - c - b) {}
 
   constexpr double sample(const double t) const {
     return ((a * t + b) * t + c) * t;
@@ -32,15 +30,15 @@ struct Coefficients {
   }
 };
 
-/// Inverts x over the curve's own domain, where CSS control points make it
-/// monotonic and the root unique.
-double solveCurve(const double x, const Coefficients &curve) {
+/// Inverts x over [0, 1], where CSS control points keep the curve monotonic and
+/// the root unique.
+double solveCurve(const double x, const CurveCoefficients &curve) {
   double t = x;
 
   for (std::uint8_t iteration = 0; iteration < kMaxNewtonIterations; ++iteration) {
     const double distance = curve.sample(t) - x;
     if (std::abs(distance) < kEpsilon) {
-      // A cubic also crosses x outside [0, 1]; such a root is not a solution.
+      // A cubic also crosses x outside [0, 1]; that root is not a solution.
       if (t >= 0.0 && t <= 1.0) {
         return t;
       }
@@ -75,10 +73,9 @@ double solveCurve(const double x, const Coefficients &curve) {
 } // namespace
 
 EasingFunction cubicBezier(const double x1, const double y1, const double x2, const double y2) {
-  // Both axes are fixed for the lifetime of the easing, so their coefficients
-  // are computed here rather than on every sample.
-  const Coefficients xCurve(x1, x2);
-  const Coefficients yCurve(y1, y2);
+  // Fixed for the lifetime of the easing, so not recomputed per sample.
+  const CurveCoefficients xCurve(x1, x2);
+  const CurveCoefficients yCurve(y1, y2);
 
   return [xCurve, yCurve](const double x) {
     return yCurve.sample(solveCurve(x, xCurve));
