@@ -190,7 +190,7 @@ export default function TransitionCallbacks() {
             <View style={styles.logHeader}>
               <View>
                 <Text variant="label2">{events.length} events</Text>
-                <Text style={styles.legend} variant="body3">
+                <Text style={styles.legend} variant="body2">
                   at `elapsedTime` (+ time since **Trigger**)
                 </Text>
               </View>
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   legend: {
-    color: colors.foreground2,
+    color: colors.foreground1,
   },
   log: {
     backgroundColor: colors.background2,
