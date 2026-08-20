@@ -1,6 +1,6 @@
 #pragma once
 
-#import <reanimated/CSS/configs/CSSTransitionConfig.h>
+#import <reanimated/CSS/easing/EasingConfigs.h>
 #import <reanimated/CSS/utils/platform.h>
 
 #import <React/RCTSurfacePresenter.h>
@@ -9,33 +9,31 @@
 
 #import <Foundation/Foundation.h>
 
-#import <optional>
 #import <string>
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// Core Animation backend for platform-routed CSS transitions. It only plays and cancels
+/// what the shared routing engine hands it; the CSS reversing bookkeeping lives there.
 @interface REACSSPlatformTransitions : NSObject
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter;
 
-/// Animates the property natively and remembers its settings for later toggles.
-/// A null `settings` marks the toggle path, where the stored settings are reused;
-/// returns NO when there are none. `persistent` holds the value past the animation.
-- (BOOL)applyTransitionForTag:(facebook::react::Tag)viewTag
+/// Plays the property on the view's layer. `startTimestampMs` may lie in the past, which
+/// CoreAnimation seeks to, or in the future, which it holds `fromValue` through.
+/// `persistent` keeps the final value once the animation ends. Always succeeds: the layer
+/// is resolved on the main thread, and a view that has none leaves nothing to animate.
+- (BOOL)startTransitionForTag:(facebook::react::Tag)viewTag
                  propertyName:(const std::string &)propertyName
                     fromValue:(const reanimated::css::PlatformValue &)fromValue
                       toValue:(const reanimated::css::PlatformValue &)toValue
-                     settings:(nullable const reanimated::css::CSSTransitionPropertySettings *)settings
-                   persistent:(BOOL)persistent
-                    timestamp:(double)timestamp;
+                   durationMs:(double)durationMs
+             startTimestampMs:(double)startTimestampMs
+                       easing:(const reanimated::css::EasingConfig &)easing
+                   persistent:(BOOL)persistent;
 
-- (void)removeTransitionForTag:(facebook::react::Tag)viewTag propertyName:(const std::string &)propertyName;
-
-/// Retraced from the stored timeline: the presentation layer has this value, but only
-/// the main thread may read it. nullopt after a non-reversing interruption.
-- (std::optional<reanimated::css::PlatformValue>)getCurrentValueForTag:(facebook::react::Tag)viewTag
-                                                          propertyName:(const std::string &)propertyName
-                                                             timestamp:(double)timestamp;
+/// Cancels the property's animation, leaving the last painted frame on screen.
+- (void)stopTransitionForTag:(facebook::react::Tag)viewTag propertyName:(const std::string &)propertyName;
 
 @end
 
