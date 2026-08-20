@@ -1,5 +1,7 @@
 #pragma once
 
+#import <Foundation/Foundation.h>
+
 #if !TARGET_OS_OSX
 
 #import <QuartzCore/CADisplayLink.h>
