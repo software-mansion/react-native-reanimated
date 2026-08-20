@@ -2,6 +2,7 @@
 
 #include <condition_variable>
 #include <mutex>
+#include <thread>
 
 namespace worklets {
 
@@ -36,7 +37,7 @@ class SynchronizableAccess {
   // int dirtyWriters_{0};
   bool blockingWriter_{false};
   bool imperativelyLocked_{false};
-  pthread_t imperativeOwner_{};
+  std::thread::id imperativeOwner_{};
   std::mutex accessLock_;
   std::recursive_mutex imperativeLock_;
   std::condition_variable queue_;

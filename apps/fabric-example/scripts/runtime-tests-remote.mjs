@@ -44,11 +44,21 @@ const projectRoot = path.resolve(scriptDir, '..');
 const SERVER_SCRIPT = path.join(scriptDir, 'runtime-tests-server.js');
 const METRO_LOG = path.join(os.tmpdir(), 'metro-runtime-tests.log');
 
+/**
+ * @param {string} message
+ * @returns {never}
+ */
 function fail(message) {
   console.error(`[runtime-tests-remote] ${message}`);
   process.exit(1);
 }
 
+/** @param {unknown} error */
+function errorMessage(error) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+/** @param {string} message */
 function log(message) {
   console.log(`[runtime-tests-remote] ${message}`);
 }
@@ -56,6 +66,7 @@ function log(message) {
 // ── argument parsing ──
 
 const [SUBCOMMAND, ...rest] = process.argv.slice(2);
+/** @type {Record<string, string>} */
 const args = {};
 for (let i = 0; i < rest.length; i++) {
   const flag = rest[i];
@@ -71,22 +82,35 @@ const LIBRARY = args.library ?? '';
 const CONFIGURATION = args.configuration ?? 'ReleaseRuntimeTests';
 const ONLY = args.only ?? '';
 
+/**
+ * @param {string} name
+ * @param {string | number} value
+ */
 function positiveInt(name, value) {
   const parsed = Number(value);
 
   if (!Number.isInteger(parsed) || parsed <= 0) {
-    fail(`--${name} must be a positive integer, got: ${value}`)
+    fail(`--${name} must be a positive integer, got: ${value}`);
   }
 
   return parsed;
 }
 
-const METRO_PORT = positiveInt('metro-port', args['metro-port'] ?? 8081)
-const CONNECT_TIMEOUT = positiveInt('connect-timeout', args['connect-timeout'] ?? 900)
-const IDLE_TIMEOUT = positiveInt('idle-timeout', args['idle-timeout'] ?? 900)
+const METRO_PORT = positiveInt('metro-port', args['metro-port'] ?? 8081);
+const CONNECT_TIMEOUT = positiveInt(
+  'connect-timeout',
+  args['connect-timeout'] ?? 900
+);
+const IDLE_TIMEOUT = positiveInt('idle-timeout', args['idle-timeout'] ?? 900);
 
 // ── process helpers ──
 
+/**
+ * @param {string} command
+ * @param {string[]} cmdArgs
+ * @param {import('node:child_process').ExecFileOptions} [options]
+ * @returns {Promise<{ stdout: string; stderr: string }>}
+ */
 function run(command, cmdArgs, options = {}) {
   return new Promise((resolve, reject) => {
     execFile(
@@ -108,6 +132,10 @@ function run(command, cmdArgs, options = {}) {
   });
 }
 
+/**
+ * @param {string[]} cmdArgs
+ * @param {import('node:child_process').ExecFileOptions} [options]
+ */
 const simRemote = (cmdArgs, options) => run('sim-remote', cmdArgs, options);
 
 function assertSimRemote() {
@@ -124,12 +152,13 @@ function assertSimRemote() {
 // errors with "tunnel already active" on re-runs — tolerate that (same
 // semantics as argent's proxyStart wrapper) so runs can blindly ensure
 // their tunnels exist.
+/** @param {number} port */
 async function ensureTunnel(port) {
   log(`ensuring reverse tunnel for port ${port}`);
   try {
     await simRemote(['proxy', 'start', UDID, String(port)]);
   } catch (error) {
-    if (/already/i.test(error.message)) {
+    if (/already/i.test(errorMessage(error))) {
       log(`tunnel already active on port ${port}`);
       return;
     }
@@ -157,6 +186,7 @@ function metroRunning() {
   });
 }
 
+/** @param {number} ms */
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Start Metro on this host unless one is already serving. Mirrors the local
@@ -199,7 +229,9 @@ async function pick() {
   const candidates = devices
     .filter((device) => device.isAvailable !== false)
     .filter((device) => device.name.startsWith('iPhone'))
-    .sort((a, b) => (a.state === 'Booted' ? 0 : 1) - (b.state === 'Booted' ? 0 : 1));
+    .sort(
+      (a, b) => (a.state === 'Booted' ? 0 : 1) - (b.state === 'Booted' ? 0 : 1)
+    );
   if (candidates.length === 0) {
     fail('no available remote iPhone simulator found');
   }
@@ -241,8 +273,14 @@ async function runLibrary() {
     // Explicitly point the app at this Metro (inside the sim, localhost
     // means the remote Mac — the tunnel makes this address land here).
     await simRemote([
-      'spawn', UDID, '--',
-      'defaults', 'write', BUNDLE_ID, 'RCT_jsLocation', `127.0.0.1:${METRO_PORT}`,
+      'spawn',
+      UDID,
+      '--',
+      'defaults',
+      'write',
+      BUNDLE_ID,
+      'RCT_jsLocation',
+      `127.0.0.1:${METRO_PORT}`,
     ]);
   }
   await ensureTunnel(wsPort);
@@ -254,20 +292,32 @@ async function runLibrary() {
   // cannot race the listener. Server mode: no --launch, the device is ours.
   const serverArgs = [
     SERVER_SCRIPT,
-    '--library', LIBRARY,
-    '--platform', 'ios',
-    '--configuration', CONFIGURATION,
-    '--port', String(wsPort),
-    '--connect-timeout', String(CONNECT_TIMEOUT),
-    '--idle-timeout', String(IDLE_TIMEOUT),
+    '--library',
+    LIBRARY,
+    '--platform',
+    'ios',
+    '--configuration',
+    CONFIGURATION,
+    '--port',
+    String(wsPort),
+    '--connect-timeout',
+    String(CONNECT_TIMEOUT),
+    '--idle-timeout',
+    String(IDLE_TIMEOUT),
   ];
   if (ONLY) {
     serverArgs.push('--only', ONLY);
   }
 
-  const server = spawn('node', serverArgs, { cwd: projectRoot, stdio: 'inherit' });
+  const server = spawn('node', serverArgs, {
+    cwd: projectRoot,
+    stdio: 'inherit',
+  });
 
-  for (const signal of ['SIGINT', 'SIGTERM']) {
+  /** @type {('SIGINT' | 'SIGTERM')[]} */
+  const signals = ['SIGINT', 'SIGTERM'];
+
+  for (const signal of signals) {
     process.once(signal, () => {
       server.kill(signal);
       process.exit(1);
@@ -285,7 +335,7 @@ async function runLibrary() {
   } catch (error) {
     // Don't leave the collector hanging for the full connect timeout.
     server.kill();
-    fail(`launch failed: ${error.message}`);
+    fail(`launch failed: ${errorMessage(error)}`);
   }
 
   const exitCode = await serverExit;
@@ -295,11 +345,14 @@ async function runLibrary() {
 
 // ── dispatch ──
 
+/** @type {Record<string, () => Promise<void>>} */
 const subcommands = { pick, install, run: runLibrary };
 if (!subcommands[SUBCOMMAND]) {
-  fail(`unknown subcommand: ${SUBCOMMAND ?? '(none)'} (expected pick | install | run)`);
+  fail(
+    `unknown subcommand: ${SUBCOMMAND ?? '(none)'} (expected pick | install | run)`
+  );
 }
 assertSimRemote();
 subcommands[SUBCOMMAND]().catch((error) => {
-  fail(error.message);
+  fail(errorMessage(error));
 });
