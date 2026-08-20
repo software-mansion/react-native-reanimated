@@ -54,6 +54,20 @@ struct CSSIndex : public CSSNumberBase<CSSIndex, int> {
   CSSIndex interpolate(double progress, const CSSIndex &other) const override;
 };
 
+/// A number for text attributes (`fontSize`, `letterSpacing`, `lineHeight`).
+///
+/// React Native compares these with a 0.005 epsilon when deciding whether to
+/// rebuild a paragraph's text state, but lays them out exactly, so a smaller
+/// step moves the frame while the text keeps its old metrics and its trailing
+/// word wraps out of view on Android. Interpolation lands on the endpoint once
+/// it gets that close, keeping consecutive committed values distinguishable.
+struct CSSTextDouble : public CSSNumberBase<CSSTextDouble, double> {
+  // Inherit all constructors from the base class
+  using CSSNumberBase::CSSNumberBase;
+
+  CSSTextDouble interpolate(double progress, const CSSTextDouble &other) const override;
+};
+
 #ifdef ANDROID
 
 // For some reason Android crashes when blurRadius is smaller than 1 so we use a
