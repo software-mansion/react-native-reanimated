@@ -160,6 +160,11 @@ export default function TransitionCallbacks() {
                   }
                 />
               )}
+              {!isMounted && (
+                <Text style={styles.placeholder} variant="body2">
+                  View unmounted. Press **Trigger** to mount it again.
+                </Text>
+              )}
             </View>
 
             <Animated.View
@@ -185,7 +190,7 @@ export default function TransitionCallbacks() {
             <View style={styles.logHeader}>
               <View>
                 <Text variant="label2">{events.length} events</Text>
-                <Text variant="body3">
+                <Text style={styles.legend} variant="body3">
                   at `elapsedTime` (+ time since **Trigger**)
                 </Text>
               </View>
@@ -226,6 +231,9 @@ const styles = StyleSheet.create({
   content: {
     gap: spacing.sm,
   },
+  legend: {
+    color: colors.foreground2,
+  },
   log: {
     backgroundColor: colors.background2,
     borderRadius: radius.sm,
@@ -237,6 +245,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  placeholder: {
+    color: colors.foreground3,
+    textAlign: 'center',
   },
   preview: {
     ...flex.center,
