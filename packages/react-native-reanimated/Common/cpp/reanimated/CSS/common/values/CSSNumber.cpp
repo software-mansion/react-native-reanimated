@@ -44,7 +44,15 @@ std::string CSSNumberBase<TDerived, TValue>::toString() const {
 
 template <typename TDerived, typename TValue>
 TDerived CSSNumberBase<TDerived, TValue>::interpolate(double progress, const TDerived &other) const {
-  return TDerived(value + progress * (other.value - value));
+  const auto interpolated = value + progress * (other.value - value);
+
+  if constexpr (requires { TDerived::epsilon; }) {
+    if (std::abs(other.value - interpolated) < TDerived::epsilon) {
+      return other;
+    }
+  }
+
+  return TDerived(interpolated);
 }
 
 template <typename TDerived, typename TValue>
@@ -60,25 +68,10 @@ CSSIndex CSSIndex::interpolate(double progress, const CSSIndex &other) const {
   return CSSIndex(progress < 0.5 ? value : other.value);
 }
 
-template <typename TDerived>
-TDerived CSSDoubleBase<TDerived>::interpolate(double progress, const TDerived &other) const {
-  const auto interpolated = CSSNumberBase<TDerived, double>::interpolate(progress, other);
-
-  if constexpr (TDerived::epsilon > 0) {
-    if (std::abs(other.value - interpolated.value) < TDerived::epsilon) {
-      return other;
-    }
-  }
-
-  return interpolated;
-}
-
 template struct CSSNumberBase<CSSDouble, double>;
 template struct CSSNumberBase<CSSTextDouble, double>;
 template struct CSSNumberBase<CSSInteger, int>;
 template struct CSSNumberBase<CSSIndex, int>;
-template struct CSSDoubleBase<CSSDouble>;
-template struct CSSDoubleBase<CSSTextDouble>;
 
 #ifdef ANDROID
 

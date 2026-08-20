@@ -35,34 +35,17 @@ std::ostream &operator<<(std::ostream &os, const CSSNumberBase<TDerived, TValue>
 
 #endif // NDEBUG
 
-/// A double that lands on the endpoint once it gets within `TDerived::epsilon`
-/// of it. Emitting a value the platform cannot tell apart from the endpoint
-/// makes the final, exact value read as no change at all. An epsilon of 0
-/// interpolates exactly and compiles the check away.
-template <typename TDerived>
-struct CSSDoubleBase : public CSSNumberBase<TDerived, double> {
+struct CSSDouble : public CSSNumberBase<CSSDouble, double> {
   // Inherit all constructors from the base class
-  using CSSNumberBase<TDerived, double>::CSSNumberBase;
-
-  TDerived interpolate(double progress, const TDerived &other) const override;
+  using CSSNumberBase::CSSNumberBase;
 };
 
-struct CSSDouble : public CSSDoubleBase<CSSDouble> {
-  // Inherit all constructors from the base class
-  using CSSDoubleBase::CSSDoubleBase;
+struct CSSTextDouble : public CSSNumberBase<CSSTextDouble, double> {
+  using CSSNumberBase::CSSNumberBase;
 
-  static constexpr double epsilon = 0;
-};
-
-struct CSSTextDouble : public CSSDoubleBase<CSSTextDouble> {
-  // Inherit all constructors from the base class
-  using CSSDoubleBase::CSSDoubleBase;
-
-  /// React Native compares text attributes with `floatEquality`, whose epsilon
-  /// is 0.005, when deciding whether to rebuild a paragraph's text state, but
-  /// lays them out exactly. Below that epsilon the frame moves to the new
-  /// metrics while the text keeps the old ones, and on Android the trailing
-  /// word wraps out of view.
+  /// React Native compares text attributes with a 0.005 epsilon but lays them
+  /// out exactly, so a smaller step moves the frame while the text keeps its
+  /// old metrics. Interpolation lands on the endpoint once it gets that close.
   /// https://github.com/facebook/react-native/blob/v0.87.0/packages/react-native/ReactCommon/react/renderer/attributedstring/TextAttributes.cpp#L174-L177
   static constexpr double epsilon = 0.005;
 };
