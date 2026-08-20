@@ -8,7 +8,7 @@ use oxc_span::SPAN;
 
 use crate::utils::{identifier_name, normalize_path, pathdiff};
 
-pub fn rewrite_relative_requires<'a>(
+pub fn update_relative_requires<'a>(
     body: &mut FunctionBody<'a>,
     filename: &str,
     forwardable_relative_paths: &[String],
@@ -47,8 +47,7 @@ impl<'a, 'b> VisitMut<'a> for RelativeRequireRewriter<'a, 'b> {
             return;
         }
 
-        let Some(rebased) =
-            rebase_to_worklets_dir_with(self.filename, value, self.worklets_package_dir)
+        let Some(rebased) = create_import_path(self.filename, value, self.worklets_package_dir)
         else {
             return;
         };
@@ -57,7 +56,7 @@ impl<'a, 'b> VisitMut<'a> for RelativeRequireRewriter<'a, 'b> {
     }
 }
 
-pub fn rebase_to_worklets_dir_with(
+pub fn create_import_path(
     filename: &str,
     original: &str,
     worklets_package_dir: Option<&str>,

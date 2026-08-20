@@ -13,7 +13,7 @@ use crate::gesture_handler_autoworkletization::{
 };
 use crate::layout_animation_autoworkletization::is_layout_animation_callback_method;
 use crate::referenced_worklets::{Definitions, Property, Shape};
-use crate::utils::{identifier_name, inject_worklet_directive, member_property};
+use crate::utils::{add_worklet_directives_to_function_body, identifier_name, member_property};
 
 #[derive(Clone, Copy)]
 struct Kinds {
@@ -275,7 +275,7 @@ impl<'a> VisitMut<'a> for DirectiveInjector<'a> {
     fn visit_function(&mut self, func: &mut Function<'a>, flags: ScopeFlags) {
         if self.sites.contains(&func.span) {
             if let Some(body) = func.body.as_mut() {
-                inject_worklet_directive(body, self.builder);
+                add_worklet_directives_to_function_body(body, self.builder);
             }
         }
         walk_mut::walk_function(self, func, flags);
@@ -283,7 +283,7 @@ impl<'a> VisitMut<'a> for DirectiveInjector<'a> {
 
     fn visit_arrow_function_expression(&mut self, arrow: &mut ArrowFunctionExpression<'a>) {
         if self.sites.contains(&arrow.span) {
-            inject_worklet_directive(&mut arrow.body, self.builder);
+            add_worklet_directives_to_function_body(&mut arrow.body, self.builder);
         }
         walk_mut::walk_arrow_function_expression(self, arrow);
     }

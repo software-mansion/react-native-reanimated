@@ -10,18 +10,22 @@ use oxc_span::SPAN;
 use oxc_syntax::number::NumberBase;
 use oxc_syntax::scope::ScopeId;
 
-use crate::closure::{closure_for_function, scope_is_inside, InjectedRef};
+use crate::closure::{get_closure, scope_is_inside, InjectedRef};
 use crate::naming::worklet_hash;
 use crate::naming::{make_worklet_name, WorkletNames};
 use crate::types::State;
-use crate::utils::{closure_binding_pattern, const_decl, is_release, rewrite_implicit_return};
-use crate::worklet_string_code::build_worklet_body_string;
+use crate::utils::{
+    closure_binding_pattern, const_decl, is_release, replace_implicit_return_with_block,
+};
+use crate::worklet_string_code::build_worklet_string;
 
 const MOCK_VERSION: &str = "x.y.z";
 
 const REAL_VERSION: &str = env!("WORKLETS_PACKAGE_VERSION");
 
-fn mock_version_active() -> bool {
+// We don't want to pollute tests with current version number so we mock it
+// for all tests (except one)
+fn should_mock_version() -> bool {
     std::env::var("WORKLETS_JEST_SHOULD_MOCK_VERSION")
         .map(|v| v == "1")
         .unwrap_or(false)
@@ -68,7 +72,7 @@ pub fn make_worklet_factory<'a>(
         make_worklet_name(input.self_name, filename, n)
     };
 
-    let closure = closure_for_function(&input, scoping, state, force_capture, filename);
+    let closure = get_closure(&input, scoping, state, force_capture, filename);
 
     let recursive_name = input.self_name.and_then(|name| {
         if body_references_name(input.body, name, scoping, input.function_scope_id) {
@@ -78,7 +82,7 @@ pub fn make_worklet_factory<'a>(
         }
     });
 
-    let body_string = build_worklet_body_string(
+    let body_string = build_worklet_string(
         &names.worklet_name,
         &input,
         &closure.closure_variables,
@@ -101,7 +105,7 @@ pub fn make_worklet_factory<'a>(
 
     if let Expression::FunctionExpression(func) = &mut factory_expr {
         if let Some(body) = func.body.as_mut() {
-            crate::imports::rewrite_relative_requires(
+            crate::imports::update_relative_requires(
                 body,
                 filename,
                 &state.forwardable_relative_paths,
@@ -110,7 +114,7 @@ pub fn make_worklet_factory<'a>(
             );
         }
     }
-    let file_content = codegen_bundle_file(
+    let file_content = generate_worklet_file(
         builder,
         factory_expr,
         &closure.imports,
@@ -118,7 +122,7 @@ pub fn make_worklet_factory<'a>(
         state.opts.worklets_package_dir.as_deref(),
     );
     let file_path = format!("react-native-worklets/.worklets/{hash}.js");
-    let factory_call = build_require_factory_call(builder, &file_path, &closure.closure_variables);
+    let factory_call = make_worklet_factory_call(builder, &file_path, &closure.closure_variables);
     state.emitted_files.push((file_path, file_content));
 
     let call_scope = scoping
@@ -138,7 +142,7 @@ pub fn make_worklet_factory<'a>(
     }
 }
 
-fn codegen_bundle_file<'a>(
+fn generate_worklet_file<'a>(
     builder: AstBuilder<'a>,
     mut factory: Expression<'a>,
     imports: &[crate::types::ImportInfo],
@@ -157,11 +161,9 @@ fn codegen_bundle_file<'a>(
         }
         let mut rebased = info.clone();
         if rebased.source.starts_with('.') {
-            if let Some(p) = crate::imports::rebase_to_worklets_dir_with(
-                filename,
-                &rebased.source,
-                worklets_package_dir,
-            ) {
+            if let Some(p) =
+                crate::imports::create_import_path(filename, &rebased.source, worklets_package_dir)
+            {
                 rebased.source = p;
             }
         }
@@ -234,7 +236,7 @@ fn build_import_declaration<'a>(
     Statement::ImportDeclaration(decl)
 }
 
-fn build_require_factory_call<'a>(
+fn make_worklet_factory_call<'a>(
     builder: AstBuilder<'a>,
     file_path: &str,
     closure_variables: &[String],
@@ -304,7 +306,7 @@ fn build_factory_expression<'a>(
     ));
 
     if !is_release(state.opts.env_name.as_deref()) {
-        let version: &str = if mock_version_active() {
+        let version: &str = if should_mock_version() {
             MOCK_VERSION
         } else {
             state.opts.plugin_version.as_deref().unwrap_or(REAL_VERSION)
@@ -351,9 +353,9 @@ fn build_inner_fn_decl<'a>(
 ) -> Statement<'a> {
     let params_clone: FormalParameters<'a> = input.params.clone_in(allocator);
     let mut body_clone: FunctionBody<'a> = input.body.clone_in(allocator);
-    crate::utils::strip_worklet_directives_in_body(&mut body_clone, builder, true);
+    crate::utils::strip_worklet_directives(&mut body_clone, builder, true);
     if input.is_expression_body {
-        rewrite_implicit_return(&mut body_clone, builder);
+        replace_implicit_return_with_block(&mut body_clone, builder);
     }
 
     let init = Expression::FunctionExpression(builder.alloc_function(

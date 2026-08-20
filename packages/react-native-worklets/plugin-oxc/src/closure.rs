@@ -22,7 +22,7 @@ pub struct ClosureResult {
 
 pub type InjectedRef = (String, ScopeId);
 
-pub fn closure_for_function<'a>(
+pub fn get_closure<'a>(
     input: &WorkletInput<'a, '_>,
     scoping: &Scoping,
     state: &State,
@@ -59,6 +59,8 @@ pub fn closure_for_function<'a>(
                 if scope_is_inside(scoping, symbol_scope, function_scope_id) {
                     continue;
                 }
+                // We must handle recursion and
+                // not capture the function itself.
                 if let Some(fn_name) = self_function_name {
                     if fn_name == r.name && scoping.symbol_name(symbol_id) == fn_name {
                         continue;

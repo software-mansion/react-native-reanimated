@@ -37,7 +37,12 @@ pub const GESTURE_HANDLER_OBJECT_HOOKS: &[&str] = &[
     "useHoverGesture",
 ];
 
+// Auto-workletizes React Native Gesture Handler callback functions.
+// Detects `Gesture.Tap().onEnd(<fun>)` or similar, but skips `something.onEnd(<fun>)`.
+// Supports method chaining as well, e.g. `Gesture.Tap().onStart(<fun1>).onUpdate(<fun2>).onEnd(<fun3>)`.
 pub fn is_gesture_object_event_callback_method(callee: &Expression<'_>) -> bool {
+    // Checks if node matches the pattern `Gesture.Foo()[*].onBar`
+    // where `[*]` represents any number of method calls.
     let Some((object, name)) = member_property(callee) else {
         return false;
     };
@@ -48,6 +53,8 @@ pub fn is_gesture_object_event_callback_method(callee: &Expression<'_>) -> bool 
 }
 
 fn contains_gesture_object(expr: &Expression<'_>, depth: u32) -> bool {
+    // Checks if node matches the pattern `Gesture.Foo()[*]`
+    // where `[*]` represents any number of chained method calls, like `.something(42)`.
     if depth == 0 {
         return false;
     }
@@ -65,6 +72,7 @@ fn contains_gesture_object(expr: &Expression<'_>, depth: u32) -> bool {
 }
 
 fn is_gesture_object(expr: &Expression<'_>) -> bool {
+    // Checks if node matches `Gesture.Tap()` or similar.
     let Some(call) = call_expression(expr) else {
         return false;
     };

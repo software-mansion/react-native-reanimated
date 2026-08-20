@@ -76,7 +76,7 @@ fn build_directive<'a>(builder: AstBuilder<'a>, value: &str) -> oxc_ast::ast::Di
     builder.directive(SPAN, builder.string_literal(SPAN, dir_str, None), dir_str)
 }
 
-pub fn strip_worklet_directives_in_body<'a>(
+pub fn strip_worklet_directives<'a>(
     body: &mut FunctionBody<'a>,
     builder: AstBuilder<'a>,
     keep_no_memo: bool,
@@ -127,7 +127,10 @@ pub fn const_declaration<'a>(
     builder.alloc_variable_declaration(SPAN, VariableDeclarationKind::Const, declarations, false)
 }
 
-pub fn inject_worklet_directive<'a>(body: &mut FunctionBody<'a>, builder: AstBuilder<'a>) {
+pub fn add_worklet_directives_to_function_body<'a>(
+    body: &mut FunctionBody<'a>,
+    builder: AstBuilder<'a>,
+) {
     if has_worklet_directive(body) {
         return;
     }
@@ -163,7 +166,10 @@ pub fn has_worklet_directive(body: &FunctionBody<'_>) -> bool {
         .any(|d| d.directive.as_str() == "worklet")
 }
 
-pub fn rewrite_implicit_return<'a>(body: &mut FunctionBody<'a>, builder: AstBuilder<'a>) {
+pub fn replace_implicit_return_with_block<'a>(
+    body: &mut FunctionBody<'a>,
+    builder: AstBuilder<'a>,
+) {
     if body.statements.len() != 1 {
         return;
     }

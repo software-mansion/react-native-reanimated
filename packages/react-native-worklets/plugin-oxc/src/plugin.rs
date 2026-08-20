@@ -238,6 +238,27 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
         }
     }
 
+    /// Replaces the node with a factory call while making sure that it's a legal
+    /// operation. If the node cannot be simply replaced with a factory call, it
+    /// will be replaced with a variable declaration.
+    ///
+    /// For example:
+    ///
+    /// ```js
+    /// export function foo() {
+    ///   'worklet';
+    ///   return 1;
+    /// }
+    /// ```
+    ///
+    /// Becomes
+    ///
+    /// ```js
+    /// export const foo = factoryCall();
+    /// ```
+    ///
+    /// But a declaration in a position that takes no declarations, like
+    /// `if (x) function foo() { 'worklet'; }`, becomes a bare factory call.
     fn visit_statement(&mut self, stmt: &mut Statement<'a>) {
         let Statement::FunctionDeclaration(func) = stmt else {
             let previous = std::mem::replace(&mut self.parent_is_scopable, false);
