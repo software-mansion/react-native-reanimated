@@ -4,38 +4,38 @@
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingConfigs.h>
 #include <reanimated/CSS/utils/platform.h>
+#include <reanimated/CSS/utils/reversingShortening.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
 
 #include <functional>
+#include <optional>
 #include <string>
+#include <unordered_map>
+#include <variant>
 
 namespace reanimated::css {
 
 using namespace facebook;
 using namespace react;
 
-/// Whether the platform can animate the property natively for the given easing.
-using CSSCanRoutePropertyFunction = std::function<bool(const std::string &propertyName, const EasingConfig &easing)>;
-/// Animates a routed property natively; a false return falls back to the loop.
-/// `settings` is null on the pseudo-selector toggle path, where the backend reuses
-/// the settings captured at config-apply time. `persistent` means the target has no
-/// committed style behind it, so the backend must hold the value past the animation.
-using CSSApplyTransitionFunction = std::function<bool(
+/// Starts the property's native animation; false falls back to the loop. The timeline
+/// is already reversing-adjusted, so `startTimestampMs` can lie in the past (the backend
+/// seeks) or in the future (the backend holds `fromValue` until then). `persistent` means
+/// no committed style backs the target, so the backend must hold the value past the end.
+using CSSStartTransitionFunction = std::function<bool(
     Tag viewTag,
     const std::string &propertyName,
     const PlatformValue &fromValue,
     const PlatformValue &toValue,
-    const CSSTransitionPropertySettings *settings,
-    bool persistent,
-    double timestamp)>;
-/// Cancels the property's native transition and drops its platform-side state.
-using CSSRemoveTransitionFunction = std::function<void(Tag viewTag, const std::string &propertyName)>;
-/// The value the platform animation currently shows, so a demotion can resume from it.
-using CSSGetPlatformValueFunction =
-    std::function<std::optional<PlatformValue>(Tag viewTag, const std::string &propertyName, double timestamp)>;
+    double durationMs,
+    double startTimestampMs,
+    const EasingConfig &easing,
+    bool persistent)>;
+/// Cancels the property's native animation, leaving the last painted value on screen.
+using CSSStopTransitionFunction = std::function<void(Tag viewTag, const std::string &propertyName)>;
 
 /// A view's transition partition: which properties animate on the platform vs the
 /// C++ loop. Owned per-view by CSSTransition; updated by the proxy on migrations.
@@ -44,17 +44,15 @@ struct CSSTransitionRouting {
   TransitionProperties loop;
 };
 
-/// Stateless, shared routing engine: per property it routes a view's CSS transition
-/// to the platform or the C++ loop. Endpoints are parsed here, so a value the
-/// platform can't express never crosses the seam. Per-view routing state is passed
-/// in; an absent hook keeps that property on the loop.
+/// Shared routing engine: per property it routes a view's CSS transition to the platform
+/// or the C++ loop, and owns the timeline of everything it routed. Endpoints are parsed
+/// here, so a value the platform can't express never crosses the seam. Backends only start
+/// and stop animations; the reversing bookkeeping the CSS spec requires lives here once for
+/// every platform. Per-view routing state is passed in; an absent hook keeps that property
+/// on the loop.
 class CSSPlatformTransitionProxy {
  public:
-  CSSPlatformTransitionProxy(
-      CSSCanRoutePropertyFunction canRoute,
-      CSSApplyTransitionFunction applyTransition,
-      CSSRemoveTransitionFunction removeTransition,
-      CSSGetPlatformValueFunction getPlatformValue);
+  CSSPlatformTransitionProxy(CSSStartTransitionFunction startTransition, CSSStopTransitionFunction stopTransition);
 
   /// Routes the config between platform and loop, updating `routing` and returning
   /// the loop-routed remainder to run.
@@ -64,7 +62,7 @@ class CSSPlatformTransitionProxy {
       const CSSTransitionConfig &config,
       CSSTransitionRouting &routing,
       bool allowPlatform,
-      double timestamp) const;
+      double timestamp);
 
   /// Re-routes pseudo-selector toggle diffs: a property the platform can no longer
   /// express migrates to the loop. Updates `routing`, returns the loop diffs.
@@ -75,13 +73,31 @@ class CSSPlatformTransitionProxy {
       const TransitionProperties &pseudoLockedProperties,
       CSSTransitionRouting &routing,
       bool allowPlatform,
-      double timestamp) const;
+      double timestamp);
 
   /// Cancels the native transition of every given property (teardown).
-  void cancelAll(Tag viewTag, const TransitionProperties &properties) const;
+  void cancelAll(Tag viewTag, const TransitionProperties &properties);
 
  private:
+  /// A transition the platform is playing. adjustedStart and the reversing snapshot
+  /// handle interruptions; settings are reused by the pseudo-selector toggle path,
+  /// which carries none of its own.
+  struct ActiveTransition {
+    /// Reversing-adjusted start value: what a later reversal has to target. A reversal
+    /// resumes from the live value, so this is not where the animation started.
+    std::optional<PlatformValue> adjustedStart;
+    /// Where the animation started, so getCurrentValue can retrace what it plays.
+    std::optional<PlatformValue> startValue;
+    PlatformValue adjustedEnd;
+    ReversingState reversing;
+    CSSTransitionPropertySettings settings;
+  };
+
+  /// Whether the property routes natively for this easing. A platform that supplies no
+  /// start hook keeps every property on the loop.
   bool canRoute(const std::string &propertyName, const EasingConfig &easing) const;
+  /// A null `settings` marks the pseudo-selector toggle path, which reuses whatever the
+  /// last config apply stored; false when there is nothing stored to reuse.
   bool apply(
       Tag viewTag,
       const std::string &propertyName,
@@ -89,15 +105,22 @@ class CSSPlatformTransitionProxy {
       const PlatformValue &toValue,
       const CSSTransitionPropertySettings *settings,
       bool persistent,
-      double timestamp) const;
-  void remove(Tag viewTag, const std::string &propertyName) const;
+      double timestamp);
+  void remove(Tag viewTag, const std::string &propertyName);
+
+  const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
+  /// The value the platform shows now, retraced from the stored timeline rather than read
+  /// back from the view, which only the UI thread may touch. nullopt after a non-reversing
+  /// interruption, which resumed from the live value.
+  std::optional<PlatformValue> getCurrentValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
   /// nullopt keeps the diff's own from-value, which the animation has painted past.
   std::optional<double> getResumeValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
 
-  CSSCanRoutePropertyFunction canRoute_;
-  CSSApplyTransitionFunction applyTransition_;
-  CSSRemoveTransitionFunction removeTransition_;
-  CSSGetPlatformValueFunction getPlatformValue_;
+  CSSStartTransitionFunction startTransition_;
+  CSSStopTransitionFunction stopTransition_;
+  /// viewTag -> propertyName -> timeline, for every property currently routed to the
+  /// platform. Touched only from the thread that drives routing.
+  std::unordered_map<Tag, std::unordered_map<std::string, ActiveTransition>> active_;
 };
 
 } // namespace reanimated::css
