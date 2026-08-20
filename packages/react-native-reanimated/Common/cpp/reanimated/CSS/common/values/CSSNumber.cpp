@@ -1,6 +1,7 @@
 #include <reanimated/CSS/common/values/CSSNumber.h>
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 
 namespace reanimated::css {
@@ -43,7 +44,15 @@ std::string CSSNumberBase<TDerived, TValue>::toString() const {
 
 template <typename TDerived, typename TValue>
 TDerived CSSNumberBase<TDerived, TValue>::interpolate(double progress, const TDerived &other) const {
-  return TDerived(value + progress * (other.value - value));
+  const auto interpolated = value + progress * (other.value - value);
+
+  if constexpr (requires { TDerived::epsilon; }) {
+    if (std::abs(other.value - interpolated) < TDerived::epsilon) {
+      return other;
+    }
+  }
+
+  return TDerived(interpolated);
 }
 
 template <typename TDerived, typename TValue>
@@ -60,6 +69,7 @@ CSSIndex CSSIndex::interpolate(double progress, const CSSIndex &other) const {
 }
 
 template struct CSSNumberBase<CSSDouble, double>;
+template struct CSSNumberBase<CSSTextDouble, double>;
 template struct CSSNumberBase<CSSInteger, int>;
 template struct CSSNumberBase<CSSIndex, int>;
 
