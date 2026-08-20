@@ -33,15 +33,17 @@ const DEFAULT_TRANSITION_CONFIG: SelectableConfig<
   // eslint-disable-next-line perfectionist/sort-objects
   $transitionDuration: {
     canDisable: true,
+    maxNumberOfValues: 2,
     options: ['0s', '0.5s', '1s', '2s'],
-    value: '1s',
+    value: ['1s', '2s'],
   },
   // eslint-disable-next-line perfectionist/sort-objects
   $transitionDelay: {
     canDisable: true,
     disabled: true,
+    maxNumberOfValues: 2,
     options: ['0s', '250ms', '500ms', '1s'],
-    value: '500ms',
+    value: ['0s', '500ms'],
   },
 };
 
@@ -120,7 +122,7 @@ export default function TransitionCallbacks() {
           title="Transition Callbacks"
           description={[
             'Transition lifecycle callbacks fired by the **native** CSS engine, reported **per property**.',
-            '- press a **checkbox** to add or remove a transition setting',
+            '- press a **checkbox** to add or remove a transition setting, or add a second value to give each property its own timing',
             '- press **Trigger** to change the style, or **Unmount view** to interrupt a running transition, which reports `cancel` instead of `end`',
           ]}>
           <View style={styles.content}>
