@@ -60,6 +60,14 @@ void LayoutAnimationsProxyCommon::surfaceDidUnmount() {
   cancelAllLayoutAnimations();
 }
 
+void LayoutAnimationsProxyCommon::clearSurfaceState() const {
+  layoutAnimationOperations_.clear();
+  pendingLayoutAnimations_.clear();
+  updateMap_.clear();
+  layoutAnimations_.clear();
+  completedAnimations_.clear();
+}
+
 std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
     const int tag,
     const jsi::Object &newStyle) {
@@ -138,7 +146,8 @@ ShadowView LayoutAnimationsProxyCommon::materializeLayoutAnimation(
     const ShadowView &after,
     const Tag parentTag,
     const std::optional<double> opacity,
-    const LayoutAnimationType type) const {
+    const LayoutAnimationType type,
+    const std::shared_ptr<Serializable> &config) const {
   auto currentView = before;
   const auto activeAnimationIt = layoutAnimations_.find(tag);
   if (type == LayoutAnimationType::ENTERING) {
@@ -171,6 +180,7 @@ ShadowView LayoutAnimationsProxyCommon::materializeLayoutAnimation(
           .parentTag = parentTag,
           .opacity = opacity,
           .type = type,
+          .config = config,
       });
   return currentView;
 }
@@ -190,7 +200,8 @@ LayoutAnimationsProxyCommon::takeNextLayoutAnimationOperation(std::deque<LayoutA
         managedStart->after,
         managedStart->parentTag,
         managedStart->opacity,
-        managedStart->type);
+        managedStart->type,
+        managedStart->config);
     return PreparedLayoutAnimationStart{
         .start = std::move(*managedStart),
         .window = window_,
@@ -211,7 +222,8 @@ LayoutAnimationsProxyCommon::takeNextLayoutAnimationOperation(std::deque<LayoutA
         progressStart->after,
         progressStart->parentTag,
         std::nullopt,
-        LayoutAnimationType::PROGRESS);
+        LayoutAnimationType::PROGRESS,
+        nullptr);
     return std::monostate{};
   }
   const auto cancellation = std::get<LayoutAnimationCancellation>(operation);
@@ -327,16 +339,12 @@ void LayoutAnimationsProxyCommon::cancelAllLayoutAnimations() const {
         stops.push_back(cancellation->tag);
       }
     }
-    layoutAnimationOperations_.clear();
-    pendingLayoutAnimations_.clear();
     for (const auto &[tag, animation] : layoutAnimations_) {
       if (animation.type != LayoutAnimationType::PROGRESS && stoppedTags.insert(tag).second) {
         stops.push_back(tag);
       }
     }
-    updateMap_.clear();
-    layoutAnimations_.clear();
-    completedAnimations_.clear();
+    clearSurfaceState();
   }
   if (!stops.empty()) {
     scheduleOnUI(
@@ -381,6 +389,50 @@ void LayoutAnimationsProxyCommon::updateLayoutAnimationTarget(
   react_native_assert(false && "Layout animation not found");
 }
 
+std::shared_ptr<Serializable> LayoutAnimationsProxyCommon::getRetargetLayoutAnimationConfig(const Tag tag) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (const auto animationIt = layoutAnimations_.find(tag);
+      animationIt != layoutAnimations_.end() && animationIt->second.type == LayoutAnimationType::LAYOUT) {
+    return animationIt->second.config;
+  }
+  if (const auto completedAnimationIt = completedAnimations_.find(tag);
+      completedAnimationIt != completedAnimations_.end() && !completedAnimationIt->second.shouldRemove &&
+      completedAnimationIt->second.animation.type == LayoutAnimationType::LAYOUT) {
+    return completedAnimationIt->second.animation.config;
+  }
+  return nullptr;
+}
+
+bool LayoutAnimationsProxyCommon::updateEnteringAnimationTarget(const Tag tag, const ShadowView &finalView) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  const auto opacity = static_cast<const ViewProps &>(*finalView.props).opacity;
+  if (const auto pendingIt = pendingLayoutAnimations_.find(tag);
+      pendingIt != pendingLayoutAnimations_.end() && pendingIt->second.type == LayoutAnimationType::ENTERING) {
+    const auto operationIndex = pendingIt->second.operationIndex;
+    react_native_assert(operationIndex < layoutAnimationOperations_.size());
+    if (auto *start = std::get_if<ManagedLayoutAnimationStart>(&layoutAnimationOperations_[operationIndex])) {
+      start->after = finalView;
+      start->opacity = opacity;
+      return true;
+    }
+    react_native_assert(false && "Pending managed layout animation not found");
+  }
+  if (const auto animationIt = layoutAnimations_.find(tag);
+      animationIt != layoutAnimations_.end() && animationIt->second.type == LayoutAnimationType::ENTERING) {
+    animationIt->second.finalView = finalView;
+    animationIt->second.opacity = opacity;
+    return true;
+  }
+  if (const auto completedAnimationIt = completedAnimations_.find(tag);
+      completedAnimationIt != completedAnimations_.end() && !completedAnimationIt->second.shouldRemove &&
+      completedAnimationIt->second.animation.type == LayoutAnimationType::ENTERING) {
+    completedAnimationIt->second.animation.finalView = finalView;
+    completedAnimationIt->second.animation.opacity = opacity;
+    return true;
+  }
+  return false;
+}
+
 std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentLayoutAnimation(const Tag tag, const Tag parentTag)
     const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
@@ -402,6 +454,7 @@ std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentLayoutAnimation(c
   }
   if (const auto completedAnimationIt = completedAnimations_.find(tag);
       completedAnimationIt != completedAnimations_.end() && !completedAnimationIt->second.shouldRemove) {
+    completedAnimationIt->second.animation.parentTag = parentTag;
     return completedAnimationIt->second.animation.currentView;
   }
   return pendingCurrentView;
@@ -426,17 +479,28 @@ void LayoutAnimationsProxyCommon::cleanupCompletedAnimations(
       ++it;
       continue;
     }
-    if (!completedAnimation.shouldRemove && completedAnimation.animation.opacity) {
-      auto &animation = completedAnimation.animation;
+    auto &animation = completedAnimation.animation;
+    const bool reconcileFinalView = animation.type == LayoutAnimationType::ENTERING;
+    if (!completedAnimation.shouldRemove && animation.opacity) {
 #ifdef ANDROID
       opacityRestorations.push_back(OpacityRestoration{
           .shadowView = animation.finalView,
           .opacity = *animation.opacity,
       });
 #else
-      auto restoredView = cloneViewWithOpacity(animation.currentView, *animation.opacity, propsParserContext);
-      mutations.push_back(ShadowViewMutation::UpdateMutation(animation.currentView, restoredView, animation.parentTag));
+      if (!reconcileFinalView) {
+        auto restoredView = cloneViewWithOpacity(animation.currentView, *animation.opacity, propsParserContext);
+        mutations.push_back(
+            ShadowViewMutation::UpdateMutation(animation.currentView, restoredView, animation.parentTag));
+      }
 #endif
+    }
+    if (!completedAnimation.shouldRemove &&
+        (reconcileFinalView ||
+         (needsFinalFrameReconciliation(animation.type) &&
+          animation.currentView.layoutMetrics != animation.finalView.layoutMetrics))) {
+      mutations.push_back(
+          ShadowViewMutation::UpdateMutation(animation.currentView, animation.finalView, animation.parentTag));
     }
     updateMap_.erase(tag);
     it = completedAnimations_.erase(it);
