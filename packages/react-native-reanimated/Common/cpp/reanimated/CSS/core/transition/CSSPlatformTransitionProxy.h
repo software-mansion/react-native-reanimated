@@ -91,11 +91,12 @@ class CSSPlatformTransitionProxy {
     CSSTransitionPropertySettings settings;
   };
 
-  /// Whether the property routes natively for this easing. A platform that supplies no
-  /// start hook keeps every property on the loop.
+  /// Whether the property routes natively for this easing. A platform missing either hook
+  /// keeps every property on the loop, so nothing is started that cannot be cancelled.
   bool canRoute(const std::string &propertyName, const EasingConfig &easing) const;
   /// A null `settings` marks the pseudo-selector toggle path, which reuses whatever the
-  /// last config apply stored; false when there is nothing stored to reuse.
+  /// last value-carrying config stored - a settings-only config does not re-apply, so those
+  /// can be a revision behind. False when there is nothing stored to reuse.
   bool apply(
       Tag viewTag,
       const std::string &propertyName,

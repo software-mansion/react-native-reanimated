@@ -13,7 +13,7 @@ CSSPlatformTransitionProxy::CSSPlatformTransitionProxy(
     : startTransition_(std::move(startTransition)), stopTransition_(std::move(stopTransition)) {}
 
 bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const EasingConfig &easing) const {
-  return startTransition_ && canRouteCSSProperty(propertyName, easing);
+  return startTransition_ && stopTransition_ && canRouteCSSProperty(propertyName, easing);
 }
 
 const CSSPlatformTransitionProxy::ActiveTransition *CSSPlatformTransitionProxy::activeTransitionFor(
