@@ -53,6 +53,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   ReanimatedSystraceSection d("pullTransaction");
   react_native_assert(surfaceId == surfaceId_ && "pull routed to the wrong surface's proxy");
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  auto configLock = layoutAnimationsManager_->lockAndFlushConfigUpdates();
   if (!isLightTreeInitialized()) {
     pendingTransactions_.emplace_back(telemetry.getRevisionNumber(), mutations);
     return MountingTransaction{surfaceId, transactionNumber, std::move(mutations), telemetry};
@@ -121,6 +122,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     flushCompletedRemovals(filteredMutations);
   }
 
+  configLock.unlock();
   flushLayoutAnimationOperations(lock);
 
   addOngoingAnimations(filteredMutations);

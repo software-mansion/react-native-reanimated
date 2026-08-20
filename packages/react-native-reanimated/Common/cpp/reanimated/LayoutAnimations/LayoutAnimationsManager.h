@@ -48,6 +48,7 @@ class LayoutAnimationsManager {
  public:
   LayoutAnimationsManager() : sharedTransitionManager_(std::make_shared<SharedTransitionManager>()) {}
   void configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
+  std::unique_lock<std::recursive_mutex> lockAndFlushConfigUpdates();
   void setShouldAnimateExiting(const int tag, const bool value);
   bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
   std::shared_ptr<Serializable> getLayoutAnimationConfig(const int tag, const LayoutAnimationType type);
@@ -74,6 +75,8 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::shared_ptr<Serializable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> layoutAnimations_;
   std::unordered_map<int, bool> shouldAnimateExitingForTag_;
+  std::mutex pendingConfigUpdatesMutex_;
+  std::vector<LayoutAnimationConfig> pendingConfigUpdates_;
   mutable std::recursive_mutex animationsMutex_; // Protects `enteringAnimationsForNativeID_`,
   // `sharedTransitionsForNativeID_`, `sharedTransitions_`, `enteringAnimations_`, `exitingAnimations_`,
   // `layoutAnimations_` and `shouldAnimateExitingForTag_`.

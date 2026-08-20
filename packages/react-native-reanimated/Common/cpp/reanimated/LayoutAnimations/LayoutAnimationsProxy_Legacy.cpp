@@ -41,6 +41,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 #endif
   react_native_assert(surfaceId == surfaceId_ && "pull routed to the wrong surface's proxy");
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  auto configLock = layoutAnimationsManager_->lockAndFlushConfigUpdates();
   PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
   ShadowViewMutationList filteredMutations;
 
@@ -71,6 +72,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 
   handleUpdatesAndEnterings(filteredMutations, movedViews, mutations, propsParserContext);
 
+  configLock.unlock();
   flushLayoutAnimationOperations(lock);
 
   addOngoingAnimations(filteredMutations);
