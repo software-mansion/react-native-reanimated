@@ -14,7 +14,7 @@ import {
   beforeEach,
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
@@ -26,7 +26,7 @@ describe('Test createSerializable', () => {
   let result = false;
   let errorMessage = '';
 
-  const workletRuntime = getWorkletRuntimeFromPool('test');
+  const [workletRuntime] = getWorkletRuntimesFromPool(1);
 
   const targets = [
     {
@@ -42,7 +42,7 @@ describe('Test createSerializable', () => {
         scheduleOnRuntime(workletRuntime, worklet);
       },
       targetRuntime: 'Worker',
-      runtimeName: 'test',
+      runtimeName: workletRuntime.name,
     },
   ];
 
@@ -182,9 +182,8 @@ describe('Test createSerializable', () => {
       });
 
       test('createSerializableHostObject', async () => {
-        const hostObjectValue = getWorkletRuntimeFromPool(
-          'test'
-        ) as unknown as Record<string, unknown>;
+        const [runtime] = getWorkletRuntimesFromPool(1);
+        const hostObjectValue = runtime as unknown as Record<string, unknown>;
         const hostObjectKeys = Object.keys(hostObjectValue);
         scheduleOnTarget(() => {
           'worklet';
@@ -291,6 +290,47 @@ describe('Test createSerializable', () => {
             uint8ArrayUI[0] === 1,
             uint8ArrayUI[1] === 2,
             uint8ArrayUI[2] === 3,
+          ];
+          scheduleOnRN(callbackPass, checks.every(Boolean));
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
+      test('createSerializableUnicodeString', async () => {
+        const emojiString =
+          '\u{1F643}\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}';
+        const ligatureString = '\uFB01\uFB02\u00E6\u0153';
+        const nonLatinString = '\u4F60\u597D\u0645\u0631\u062D\u0431\u0430';
+
+        scheduleOnTarget(() => {
+          'worklet';
+          const checks = [
+            emojiString ===
+              '\u{1F643}\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}',
+            ligatureString === '\uFB01\uFB02\u00E6\u0153',
+            nonLatinString === '\u4F60\u597D\u0645\u0631\u062D\u0431\u0430',
+          ];
+          scheduleOnRN(callbackPass, checks.every(Boolean));
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
+      test('createSerializableFloat32Array', async () => {
+        const floatArrayValue = new Float32Array(3);
+        floatArrayValue[0] = 0.5;
+        floatArrayValue[1] = -1.25;
+        floatArrayValue[2] = 3.75;
+
+        scheduleOnTarget(() => {
+          'worklet';
+          const checks = [
+            floatArrayValue instanceof Float32Array,
+            floatArrayValue.length === 3,
+            floatArrayValue[0] === 0.5,
+            floatArrayValue[1] === -1.25,
+            floatArrayValue[2] === 3.75,
           ];
           scheduleOnRN(callbackPass, checks.every(Boolean));
         });

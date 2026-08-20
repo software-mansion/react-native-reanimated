@@ -6,7 +6,7 @@ import android.view.animation.PathInterpolator
 
 /** `steps()` and `linear()` stops are evaluated directly so steps keeps its discontinuities. */
 internal object CSSEasing {
-    // 0 is linear and carries no points, so it needs no constant.
+    // Must match `PlatformEasing::Type` in CSSPlatformTransitions.h; 0 is linear, no constant needed.
     private const val CUBIC_BEZIER = 1
     private const val STEPS = 2
     private const val LINEAR_STOPS = 3

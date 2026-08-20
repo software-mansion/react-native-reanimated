@@ -21,16 +21,21 @@ using namespace react;
 using CSSCanRoutePropertyFunction = std::function<bool(const std::string &propertyName, const EasingConfig &easing)>;
 /// Animates a routed property natively; a false return falls back to the loop.
 /// `settings` is null on the pseudo-selector toggle path, where the backend reuses
-/// the settings captured at config-apply time and holds the animation persistently.
+/// the settings captured at config-apply time. `persistent` means the target has no
+/// committed style behind it, so the backend must hold the value past the animation.
 using CSSApplyTransitionFunction = std::function<bool(
     Tag viewTag,
     const std::string &propertyName,
     const PlatformValue &fromValue,
     const PlatformValue &toValue,
     const CSSTransitionPropertySettings *settings,
+    bool persistent,
     double timestamp)>;
 /// Cancels the property's native transition and drops its platform-side state.
 using CSSRemoveTransitionFunction = std::function<void(Tag viewTag, const std::string &propertyName)>;
+/// The value the platform animation currently shows, so a demotion can resume from it.
+using CSSGetPlatformValueFunction =
+    std::function<std::optional<PlatformValue>(Tag viewTag, const std::string &propertyName, double timestamp)>;
 
 /// A view's transition partition: which properties animate on the platform vs the
 /// C++ loop. Owned per-view by CSSTransition; updated by the proxy on migrations.
@@ -48,7 +53,8 @@ class CSSPlatformTransitionProxy {
   CSSPlatformTransitionProxy(
       CSSCanRoutePropertyFunction canRoute,
       CSSApplyTransitionFunction applyTransition,
-      CSSRemoveTransitionFunction removeTransition);
+      CSSRemoveTransitionFunction removeTransition,
+      CSSGetPlatformValueFunction getPlatformValue);
 
   /// Routes the config between platform and loop, updating `routing` and returning
   /// the loop-routed remainder to run.
@@ -57,14 +63,18 @@ class CSSPlatformTransitionProxy {
       Tag viewTag,
       const CSSTransitionConfig &config,
       CSSTransitionRouting &routing,
+      bool allowPlatform,
       double timestamp) const;
 
   /// Re-routes pseudo-selector toggle diffs: a property the platform can no longer
   /// express migrates to the loop. Updates `routing`, returns the loop diffs.
+  /// Only a property still pseudo-locked after the toggle needs its value held.
   PropertyValueDynamicDiffsMap processDynamicDiffs(
       Tag viewTag,
       const PropertyValueDynamicDiffsMap &propertyDiffs,
+      const TransitionProperties &pseudoLockedProperties,
       CSSTransitionRouting &routing,
+      bool allowPlatform,
       double timestamp) const;
 
   /// Cancels the native transition of every given property (teardown).
@@ -78,12 +88,16 @@ class CSSPlatformTransitionProxy {
       const PlatformValue &fromValue,
       const PlatformValue &toValue,
       const CSSTransitionPropertySettings *settings,
+      bool persistent,
       double timestamp) const;
   void remove(Tag viewTag, const std::string &propertyName) const;
+  /// nullopt keeps the diff's own from-value, which the animation has painted past.
+  std::optional<double> getResumeValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
 
   CSSCanRoutePropertyFunction canRoute_;
   CSSApplyTransitionFunction applyTransition_;
   CSSRemoveTransitionFunction removeTransition_;
+  CSSGetPlatformValueFunction getPlatformValue_;
 };
 
 } // namespace reanimated::css

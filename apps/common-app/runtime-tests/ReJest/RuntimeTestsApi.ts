@@ -1,8 +1,13 @@
 import type { Component, ReactElement } from 'react';
 import type { SharedValue } from 'react-native-reanimated';
 
+import type { ValueGetter } from './matchers/EventualMatchers';
 import type { TestComponent } from './TestComponent';
 import { TestRunner } from './TestRunner/TestRunner';
+import {
+  waitForFrames as waitForFramesImpl,
+  waitUntilSettled as waitUntilSettledImpl,
+} from './utils/waitForFrames';
 import type {
   DefaultValue,
   MaybeAsync,
@@ -137,8 +142,8 @@ export function callTrackerFn(name: string) {
   };
 }
 
-export function getTrackerCallCount(name: string) {
-  return callTrackerRegistry.getTrackerCallCount(name);
+export async function getTrackerCallCount(name: string) {
+  return await callTrackerRegistry.getTrackerCallCount(name);
 }
 
 export function registerValue<TValue = unknown>(
@@ -148,10 +153,12 @@ export function registerValue<TValue = unknown>(
   return valueRegistry.registerValue(name, value);
 }
 
-export async function getRegisteredValue<TValue extends TestValue>(
-  name: string
-) {
-  return await valueRegistry.getRegisteredValue<TValue>(name);
+export function expectSharedValue(name: string) {
+  return testRunner.expectSharedValue(name);
+}
+
+export async function getSharedValue<TValue extends TestValue>(name: string) {
+  return valueRegistry.getOnJS<TValue>(name);
 }
 
 export function getTestComponent(name: string): TestComponent {
@@ -160,6 +167,17 @@ export function getTestComponent(name: string): TestComponent {
 
 export async function runTests() {
   return testRunner.runTests();
+}
+
+export async function waitForFrames(count?: number, timeout?: number) {
+  return waitForFramesImpl(count, timeout);
+}
+
+export async function waitUntilSettled<TValue>(
+  read: () => TValue | Promise<TValue>,
+  options?: { timeout?: number; stableFrames?: number }
+) {
+  return waitUntilSettledImpl(read, options);
 }
 
 export async function wait(delay: number) {
@@ -191,12 +209,16 @@ export async function waitForNotifications(
   return notificationRegistry.waitForNotifications(names, timeout);
 }
 
-export function getWorkletRuntimeFromPool(name: string) {
-  return workletRuntimePool.getOrCreateWorkletRuntime(name);
+export function getWorkletRuntimesFromPool(count: number) {
+  return workletRuntimePool.getOrCreateWorkletRuntimes(count);
 }
 
 export function expect(value: TestValue) {
   return testRunner.expect(value);
+}
+
+export function expectEventually(getValue: ValueGetter, timeout?: number) {
+  return testRunner.expectEventually(getValue, timeout);
 }
 
 export function configure(config: TestConfiguration) {

@@ -27,7 +27,6 @@ export type TrackerCallCount = {
 };
 
 export type SharedValueSnapshot<TValue extends TestValue> = {
-  name: string;
   onJS: TValue;
   onUI: TValue;
 };
@@ -107,8 +106,6 @@ export enum ComparisonMode {
   OBJECT = 'OBJECT',
   AUTO = 'AUTO',
 }
-
-export type LockObject = { lock: boolean };
 
 type Writable<T> = {
   -readonly [P in keyof T]: T[P];

@@ -150,7 +150,7 @@ async function getSnapshotUpdates(
   await render(<ExitingComponent exiting={componentExiting} />);
 
   await waitForAnimationUpdates(snapshot.length);
-  const updates = updatesContainer.getUpdates();
+  const updates = await updatesContainer.getUpdates();
 
   await unmockAnimationTimer();
   await unmockWindowDimensions();

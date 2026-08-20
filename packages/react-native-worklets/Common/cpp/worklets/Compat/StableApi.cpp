@@ -1,8 +1,25 @@
 #include <jsi/jsi.h>
 #include <worklets/Compat/Holders.h>
 #include <worklets/Compat/StableApi.h>
-#include <worklets/SharedItems/Serializable.h>
-#include <worklets/SharedItems/SerializableRemoteFunction.h>
+#include <worklets/SharedItems/Serializable/CustomSerializable.h>
+#include <worklets/SharedItems/Serializable/Serializable.h>
+#include <worklets/SharedItems/Serializable/SerializableArray.h>
+#include <worklets/SharedItems/Serializable/SerializableArrayBuffer.h>
+#include <worklets/SharedItems/Serializable/SerializableBigInt.h>
+#include <worklets/SharedItems/Serializable/SerializableError.h>
+#include <worklets/SharedItems/Serializable/SerializableHostFunction.h>
+#include <worklets/SharedItems/Serializable/SerializableHostObject.h>
+#include <worklets/SharedItems/Serializable/SerializableImport.h>
+#include <worklets/SharedItems/Serializable/SerializableInitializer.h>
+#include <worklets/SharedItems/Serializable/SerializableMap.h>
+#include <worklets/SharedItems/Serializable/SerializableObject.h>
+#include <worklets/SharedItems/Serializable/SerializableRegExp.h>
+#include <worklets/SharedItems/Serializable/SerializableRemoteFunction.h>
+#include <worklets/SharedItems/Serializable/SerializableScalar.h>
+#include <worklets/SharedItems/Serializable/SerializableSet.h>
+#include <worklets/SharedItems/Serializable/SerializableString.h>
+#include <worklets/SharedItems/Serializable/SerializableTurboModuleLike.h>
+#include <worklets/SharedItems/Serializable/SerializableWorklet.h>
 #include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/JSISerializer.h>
@@ -20,6 +37,10 @@ std::string JSIValueToStdString(facebook::jsi::Runtime &rt, const facebook::jsi:
 
 void scheduleOnUI(const std::shared_ptr<UIScheduler> &uiScheduler, const std::function<void()> &job) {
   uiScheduler->scheduleOnUI(job);
+}
+
+bool isOnUIThread(const std::shared_ptr<UIScheduler> &uiScheduler) {
+  return uiScheduler->isOnUIThread();
 }
 
 facebook::jsi::Runtime &getJSIRuntimeFromWorkletRuntime(const std::shared_ptr<WorkletRuntime> &workletRuntime) {

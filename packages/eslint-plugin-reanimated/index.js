@@ -360,6 +360,12 @@ var useLogger_default = rule4;
 
 // public/createErrorPrefixRule.js
 var import_utils5 = require('@typescript-eslint/utils');
+function leftmostOperand(node) {
+  return node.type === import_utils5.AST_NODE_TYPES.BinaryExpression &&
+    node.operator === '+'
+    ? leftmostOperand(node.left)
+    : node;
+}
 function createErrorPrefixRule(prefix, messageId) {
   var _a;
   return {
@@ -378,7 +384,7 @@ function createErrorPrefixRule(prefix, messageId) {
           if (args.length === 0) {
             return;
           }
-          var first = args[0];
+          var first = leftmostOperand(args[0]);
           if (
             first.type === import_utils5.AST_NODE_TYPES.Literal &&
             typeof first.value === 'string'

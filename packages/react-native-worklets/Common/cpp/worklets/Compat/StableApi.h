@@ -5,7 +5,7 @@
  * It can be used by libraries to verify they use a compatible version
  * of `react-native-worklets` installed when integrating in C++.
  */
-#define WORKLETS_STABLE_API_VERSION "0.9.0"
+#define WORKLETS_STABLE_API_VERSION "0.12.1"
 
 #include <cstdint>
 #include <functional>
@@ -82,6 +82,8 @@ extern facebook::jsi::Runtime &getJSIRuntimeFromWorkletRuntime(const std::shared
 extern std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(facebook::jsi::Runtime &rt);
 
 extern void scheduleOnUI(const std::shared_ptr<UIScheduler> &uiScheduler, const std::function<void()> &job);
+
+extern bool isOnUIThread(const std::shared_ptr<UIScheduler> &uiScheduler);
 
 extern std::string JSIValueToStdString(facebook::jsi::Runtime &rt, const facebook::jsi::Value &value);
 
