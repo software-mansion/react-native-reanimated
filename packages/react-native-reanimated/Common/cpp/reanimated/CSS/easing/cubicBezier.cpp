@@ -1,6 +1,5 @@
 #include <reanimated/CSS/easing/cubicBezier.h>
 
-#include <algorithm>
 #include <cmath>
 #include <cstdint>
 
@@ -10,6 +9,8 @@ namespace {
 
 constexpr double kEpsilon = 1e-6;
 constexpr std::uint8_t kMaxNewtonIterations = 8;
+/// Enough halvings of [0, 1] to reach double precision.
+constexpr std::uint8_t kMaxBisectionIterations = 60;
 
 /// One axis of a unit cubic Bezier in Horner form, as in WebKit's UnitBezier.
 /// The derivative shares these coefficients so the two cannot disagree.
@@ -51,23 +52,21 @@ double solveCurve(const double x, const CurveCoefficients &curve) {
     t -= distance / slope;
   }
 
+  // Bisection converges on the unique root, and on the nearest endpoint when x
+  // falls outside [0, 1]. Running it to full precision rather than stopping at
+  // the first sample within kEpsilon keeps the fallback accurate on curves with
+  // a near-flat region, where a small error in x is a large one in t.
   double low = 0.0, high = 1.0;
-  t = std::clamp(x, low, high);
-
-  while (low < high) {
-    const double sampled = curve.sample(t);
-    if (std::abs(sampled - x) < kEpsilon) {
-      return t;
+  for (std::uint8_t iteration = 0; iteration < kMaxBisectionIterations; ++iteration) {
+    const double middle = (low + high) / 2.0;
+    if (curve.sample(middle) < x) {
+      low = middle;
+    } else {
+      high = middle;
     }
-    (x > sampled ? low : high) = t;
-    const double next = (low + high) / 2.0;
-    if (next == t) {
-      break;
-    }
-    t = next;
   }
 
-  return t;
+  return (low + high) / 2.0;
 }
 
 } // namespace
