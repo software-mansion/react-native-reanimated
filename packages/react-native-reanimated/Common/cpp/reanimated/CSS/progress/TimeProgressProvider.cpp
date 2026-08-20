@@ -30,9 +30,13 @@ void TimeProgressProvider::update(const double timestamp) {
     return;
   }
 
-  if (rawProgress_.value() < 0) {
+  // Negated so that a NaN fails both tests and is discarded: every ordered
+  // comparison against NaN is false, so `< 0` and `>= 1` would both let one
+  // through, and the interpolators would turn it into a NaN style value.
+  const double progress = rawProgress_.value();
+  if (!(progress >= 0)) {
     rawProgress_.reset();
-  } else if (rawProgress_.value() >= 1) {
+  } else if (!(progress < 1)) {
     rawProgress_ = 1;
   }
 }
