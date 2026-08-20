@@ -171,10 +171,10 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBat
 
   std::unordered_set<const ShadowNodeFamily *> familiesRequiringCommit;
   for (const auto &[shadowNodeFamily, props] : updatesBatch) {
-    const bool hasNonSynchronousProps = std::any_of(props.items().begin(), props.items().end(), [&](const auto &kv) {
-      return !isSynchronous(kv.first.asString(), kv.second);
+    const bool hasOnlySynchronousProps = std::all_of(props.items().begin(), props.items().end(), [&](const auto &kv) {
+      return isSynchronous(kv.first.asString(), kv.second);
     });
-    if (hasNonSynchronousProps) {
+    if (!hasOnlySynchronousProps) {
       familiesRequiringCommit.insert(shadowNodeFamily.get());
     }
   }
