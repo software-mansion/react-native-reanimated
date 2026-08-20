@@ -49,13 +49,14 @@ double solveCurve(const double x, const CurveCoefficients &curve) {
     if (std::abs(slope) < kEpsilon) {
       break;
     }
-    if (std::abs(distance) < kEpsilon) {
+    const double step = distance / slope;
+    if (std::abs(distance) < kEpsilon && std::abs(step) < kEpsilon) {
       if (t >= 0.0 && t <= 1.0) {
         return t;
       }
       break;
     }
-    t -= distance / slope;
+    t -= step;
   }
 
   // Bisection converges on the unique root, and on the nearest endpoint when x
