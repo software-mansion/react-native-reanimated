@@ -44,12 +44,10 @@ struct CSSTransitionRouting {
   TransitionProperties loop;
 };
 
-/// Shared routing engine: per property it routes a view's CSS transition to the platform
-/// or the C++ loop, and owns the timeline of everything it routed. Endpoints are parsed
-/// here, so a value the platform can't express never crosses the seam. Backends only start
-/// and stop animations; the reversing bookkeeping the CSS spec requires lives here once for
-/// every platform. Per-view routing state is passed in; an absent hook keeps that property
-/// on the loop.
+/// Shared routing engine: per property it routes a view's CSS transition to the platform or
+/// the C++ loop, and owns the timeline of everything it routed, so the reversing bookkeeping
+/// the CSS spec requires lives here once for every backend. Endpoints are parsed here, so a
+/// value the platform can't express never crosses the seam.
 class CSSPlatformTransitionProxy {
  public:
   CSSPlatformTransitionProxy(CSSStartTransitionFunction startTransition, CSSStopTransitionFunction stopTransition);

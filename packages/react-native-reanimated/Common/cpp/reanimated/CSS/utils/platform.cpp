@@ -153,8 +153,7 @@ bool canRouteCSSAnimations() {
   constexpr bool CORE_ANIMATION_ENABLED = StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION");
   return CORE_ANIMATION_ENABLED;
 #else
-  // Android's flag covers transitions only, and no other platform has a backend
-  // either, so there is nothing here for them to gate yet.
+  // No animation backend outside Apple yet; the Android flag covers transitions only.
   return false;
 #endif // __APPLE__
 }
