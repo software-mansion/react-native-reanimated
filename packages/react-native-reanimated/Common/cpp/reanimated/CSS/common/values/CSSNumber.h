@@ -2,6 +2,8 @@
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 
+#include <react/utils/FloatComparison.h>
+
 #include <string>
 
 namespace reanimated::css {
@@ -36,19 +38,26 @@ std::ostream &operator<<(std::ostream &os, const CSSNumberBase<TDerived, TValue>
 #endif // NDEBUG
 
 struct CSSDouble : public CSSNumberBase<CSSDouble, double> {
-  // Inherit all constructors from the base class
   using CSSNumberBase::CSSNumberBase;
 };
 
+struct CSSTextDouble : public CSSNumberBase<CSSTextDouble, double> {
+  using CSSNumberBase::CSSNumberBase;
+
+  /// React Native compares text attributes with this epsilon but lays them out
+  /// exactly, so a smaller step moves the frame while the text keeps its old
+  /// metrics. Interpolation lands on the endpoint once it gets that close.
+  /// https://github.com/facebook/react-native/blob/v0.87.0/packages/react-native/ReactCommon/react/renderer/attributedstring/TextAttributes.cpp#L174-L177
+  static constexpr double epsilon = facebook::react::kDefaultEpsilon;
+};
+
 struct CSSInteger : public CSSNumberBase<CSSInteger, int> {
-  // Inherit all constructors from the base class
   using CSSNumberBase::CSSNumberBase;
 
   CSSInteger interpolate(double progress, const CSSInteger &other) const override;
 };
 
 struct CSSIndex : public CSSNumberBase<CSSIndex, int> {
-  // Inherit all constructors from the base class
   using CSSNumberBase::CSSNumberBase;
 
   CSSIndex interpolate(double progress, const CSSIndex &other) const override;
