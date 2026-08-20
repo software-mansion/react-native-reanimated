@@ -9,8 +9,9 @@ namespace {
 
 constexpr double kEpsilon = 1e-6;
 constexpr std::uint8_t kMaxNewtonIterations = 8;
-/// Enough halvings of [0, 1] to reach double precision.
-constexpr std::uint8_t kMaxBisectionIterations = 60;
+/// Halving [0, 1] this many times takes the interval below kEpsilon, which is
+/// the tolerance the solver works to; further halving cannot improve on it.
+constexpr std::uint8_t kMaxBisectionIterations = 20;
 
 /// One axis of a unit cubic Bezier in Horner form, as in WebKit's UnitBezier.
 /// The derivative shares these coefficients so the two cannot disagree.
@@ -53,9 +54,9 @@ double solveCurve(const double x, const CurveCoefficients &curve) {
   }
 
   // Bisection converges on the unique root, and on the nearest endpoint when x
-  // falls outside [0, 1]. Running it to full precision rather than stopping at
-  // the first sample within kEpsilon keeps the fallback accurate on curves with
-  // a near-flat region, where a small error in x is a large one in t.
+  // falls outside [0, 1]. Narrowing the interval rather than returning the first
+  // sample within kEpsilon keeps the fallback accurate on curves with a
+  // near-flat region, where a small error in x is a large one in t.
   double low = 0.0, high = 1.0;
   for (std::uint8_t iteration = 0; iteration < kMaxBisectionIterations; ++iteration) {
     const double middle = (low + high) / 2.0;
