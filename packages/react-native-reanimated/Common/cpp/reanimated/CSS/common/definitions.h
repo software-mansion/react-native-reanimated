@@ -47,7 +47,7 @@ canConstructFields(jsi::Runtime &rt, const jsi::Value &jsiValue, const std::vect
   }
   const auto &obj = jsiValue.asObject(rt);
   for (const auto &validator : validators) {
-    const auto &fieldName = validator.fieldName.c_str();
+    const auto *fieldName = validator.fieldName.c_str();
     if (obj.hasProperty(rt, fieldName) && !validator.validateJSI(rt, obj.getProperty(rt, fieldName))) {
       return false;
     }
