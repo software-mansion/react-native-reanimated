@@ -1,30 +1,90 @@
 #include <reanimated/CSS/easing/cubicBezier.h>
 
 #include <algorithm>
+#include <cmath>
+#include <cstdint>
 
 namespace reanimated::css {
 
 namespace {
 
-/// Polynomial coefficients of a unit cubic Bezier with control points
-/// (0,0), (p1, ...), (p2, ...), (1,1), as used by WebKit's UnitBezier.
-/// Deriving the curve and its derivative from the same coefficients keeps them
-/// consistent - an independently expanded derivative is easy to get wrong, and
-/// a wrong one sends Newton's method outside [0, 1].
+/// Newton's method converges within a few steps for the curves CSS allows;
+/// the bisection fallback covers the rest.
+constexpr std::uint8_t kMaxNewtonIterations = 8;
+
+/// Polynomial coefficients of one axis of a unit cubic Bezier with control
+/// points (0, 0), (p1, ...), (p2, ...), (1, 1):
+///
+///   f(t) = ((a * t + b) * t + c) * t   with c = 3 * p1,
+///                                          b = 3 * (p2 - p1) - c,
+///                                          a = 1 - c - b
+///
+/// Expanding that gives the Bernstein polynomial the CSS easing spec defines,
+/// and it is the form WebKit's UnitBezier uses:
+/// https://www.w3.org/TR/css-easing-1/#cubic-bezier-easing-functions
+/// https://github.com/WebKit/WebKit/blob/main/Source/WebCore/platform/graphics/UnitBezier.h
+///
+/// The derivative comes from the same coefficients so the two cannot disagree -
+/// a separately expanded derivative is easy to get wrong, and a wrong one sends
+/// Newton's method outside [0, 1].
 struct Coefficients {
   // Declared in initialisation order: b depends on c, a depends on both.
   double c, b, a;
 
-  explicit Coefficients(const double p1, const double p2) : c(3.0 * p1), b(3.0 * (p2 - p1) - c), a(1.0 - c - b) {}
+  constexpr Coefficients(const double p1, const double p2) : c(3.0 * p1), b(3.0 * (p2 - p1) - c), a(1.0 - c - b) {}
 
-  double sample(const double t) const {
+  constexpr double sample(const double t) const {
     return ((a * t + b) * t + c) * t;
   }
 
-  double sampleDerivative(const double t) const {
+  constexpr double sampleDerivative(const double t) const {
     return (3.0 * a * t + 2.0 * b) * t + c;
   }
 };
+
+/// Inverts x over the curve's own domain. x is monotonic on [0, 1] for the
+/// control points CSS permits, so the root there is unique.
+double solveCurve(const double x, const Coefficients &curve, const double epsilon) {
+  double t = x;
+
+  for (std::uint8_t iteration = 0; iteration < kMaxNewtonIterations; ++iteration) {
+    const double distance = curve.sample(t) - x;
+    if (std::abs(distance) < epsilon) {
+      // A cubic can also cross x outside [0, 1]; such a root is not a solution.
+      if (t >= 0.0 && t <= 1.0) {
+        return t;
+      }
+      break;
+    }
+    const double slope = curve.sampleDerivative(t);
+    if (std::abs(slope) < epsilon) {
+      break;
+    }
+    t = t - distance / slope;
+  }
+
+  double low = 0.0, high = 1.0;
+  t = std::clamp(x, low, high);
+
+  while (low < high) {
+    const double sampled = curve.sample(t);
+    if (std::abs(sampled - x) < epsilon) {
+      return t;
+    }
+    if (x > sampled) {
+      low = t;
+    } else {
+      high = t;
+    }
+    const double next = (low + high) / 2.0;
+    if (next == t) {
+      break;
+    }
+    t = next;
+  }
+
+  return t;
+}
 
 } // namespace
 
@@ -41,53 +101,17 @@ double sampleCurveDerivativeX(const double t, const double x1, const double x2) 
 }
 
 double solveCurveX(const double x, const double x1, const double x2, const double epsilon) {
-  const Coefficients coefficients(x1, x2);
-  double t2 = x;
-
-  for (int iterations = 0; iterations < 8; ++iterations) {
-    const double xValue = coefficients.sample(t2) - x;
-    if (std::abs(xValue) < epsilon) {
-      // A cubic can also cross x outside [0, 1]; only a root within the curve's
-      // own domain is a valid solution.
-      if (t2 >= 0.0 && t2 <= 1.0) {
-        return t2;
-      }
-      break;
-    }
-    const double dX = coefficients.sampleDerivative(t2);
-    if (std::abs(dX) < epsilon) {
-      break;
-    }
-    t2 = t2 - xValue / dX;
-  }
-
-  double t0 = 0.0, t1 = 1.0;
-  t2 = std::clamp(x, t0, t1);
-
-  while (t0 < t1) {
-    const double xValue = coefficients.sample(t2);
-    if (std::abs(xValue - x) < epsilon) {
-      return t2;
-    }
-    if (x > xValue) {
-      t0 = t2;
-    } else {
-      t1 = t2;
-    }
-    const double next = (t0 + t1) / 2.0;
-    if (next == t2) {
-      break;
-    }
-    t2 = next;
-  }
-
-  return t2;
+  return solveCurve(x, Coefficients(x1, x2), epsilon);
 }
 
 EasingFunction cubicBezier(const double x1, const double y1, const double x2, const double y2) {
-  return [=](double x) {
-    const double t = solveCurveX(x, x1, x2);
-    return sampleCurveY(t, y1, y2);
+  // Both axes are fixed for the lifetime of the easing, so their coefficients
+  // are computed here rather than on every sample.
+  const Coefficients xCurve(x1, x2);
+  const Coefficients yCurve(y1, y2);
+
+  return [xCurve, yCurve](const double x) {
+    return yCurve.sample(solveCurve(x, xCurve, kCubicBezierEpsilon));
   };
 }
 
