@@ -50,19 +50,20 @@ double solveCurve(const double x, const CurveCoefficients &curve) {
       break;
     }
     const double step = distance / slope;
+    t -= step;
     if (std::abs(distance) < kEpsilon && std::abs(step) < kEpsilon) {
       if (t >= 0.0 && t <= 1.0) {
         return t;
       }
       break;
     }
-    t -= step;
   }
 
   // Bisection converges on the unique root, and on the nearest endpoint when x
   // falls outside [0, 1]. Running it to full precision rather than stopping at
   // the first sample within kEpsilon keeps the fallback accurate on curves with
   // a near-flat region, where a small error in x is a large one in t.
+  // Callers clamp x to [0, 1]. CSS requires tangent extension outside this range.
   double low = 0.0, high = 1.0;
   for (std::uint8_t iteration = 0; iteration < kMaxBisectionIterations; ++iteration) {
     const double middle = (low + high) / 2.0;
