@@ -22,6 +22,10 @@ using PlatformValue = std::variant<double, std::array<double, 2>, std::array<dou
 /// subset of properties; everything else runs on the C++ loop.
 bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &easing);
 
+/// Whether the platform has a native CSS animation backend enabled. Each platform reads
+/// only its own flag, so the two can be toggled independently.
+bool canRouteCSSAnimations();
+
 std::optional<PlatformValue> lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, double progress);
 
 /// Parses a transition's endpoints, looking the property up once. Null/undefined

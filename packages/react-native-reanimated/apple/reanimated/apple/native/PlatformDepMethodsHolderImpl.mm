@@ -127,42 +127,32 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
   return unsubscribeFromKeyboardEventsFunction;
 }
 
-css::CSSCanRoutePropertyFunction makeCSSCanRouteProperty()
-{
-  return &css::canRouteCSSProperty;
-}
-
-css::CSSApplyTransitionFunction makeCSSApplyTransition(REACSSPlatformTransitions *platformTransitions)
+css::CSSStartTransitionFunction makeCSSStartTransition(REACSSPlatformTransitions *platformTransitions)
 {
   return [platformTransitions](
              Tag viewTag,
              const std::string &propertyName,
              const css::PlatformValue &fromValue,
              const css::PlatformValue &toValue,
-             const css::CSSTransitionPropertySettings *settings,
-             bool persistent,
-             double timestamp) {
-    return [platformTransitions applyTransitionForTag:viewTag
+             double durationMs,
+             double startTimestampMs,
+             const css::EasingConfig &easing,
+             bool persistent) {
+    return [platformTransitions startTransitionForTag:viewTag
                                          propertyName:propertyName
                                             fromValue:fromValue
                                               toValue:toValue
-                                             settings:settings
-                                           persistent:persistent
-                                            timestamp:timestamp];
+                                           durationMs:durationMs
+                                     startTimestampMs:startTimestampMs
+                                               easing:easing
+                                           persistent:persistent];
   };
 }
 
-css::CSSRemoveTransitionFunction makeCSSRemoveTransition(REACSSPlatformTransitions *platformTransitions)
+css::CSSStopTransitionFunction makeCSSStopTransition(REACSSPlatformTransitions *platformTransitions)
 {
   return [platformTransitions](Tag viewTag, const std::string &propertyName) {
-    [platformTransitions removeTransitionForTag:viewTag propertyName:propertyName];
-  };
-}
-
-css::CSSGetPlatformValueFunction makeCSSGetPlatformValue(REACSSPlatformTransitions *platformTransitions)
-{
-  return [platformTransitions](Tag viewTag, const std::string &propertyName, double timestamp) {
-    return [platformTransitions getCurrentValueForTag:viewTag propertyName:propertyName timestamp:timestamp];
+    [platformTransitions stopTransitionForTag:viewTag propertyName:propertyName];
   };
 }
 
@@ -229,10 +219,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   REACSSPlatformTransitions *platformTransitions =
       [[REACSSPlatformTransitions alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
-  auto cssCanRouteProperty = makeCSSCanRouteProperty();
-  auto cssApplyTransition = makeCSSApplyTransition(platformTransitions);
-  auto cssRemoveTransition = makeCSSRemoveTransition(platformTransitions);
-  auto cssGetPlatformValue = makeCSSGetPlatformValue(platformTransitions);
+  auto cssStartTransition = makeCSSStartTransition(platformTransitions);
+  auto cssStopTransition = makeCSSStopTransition(platformTransitions);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
@@ -247,10 +235,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       maybeFlushUIUpdatesQueueFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
-      cssCanRouteProperty,
-      cssApplyTransition,
-      cssRemoveTransition,
-      cssGetPlatformValue,
+      cssStartTransition,
+      cssStopTransition,
   };
   return platformDepMethodsHolder;
 }

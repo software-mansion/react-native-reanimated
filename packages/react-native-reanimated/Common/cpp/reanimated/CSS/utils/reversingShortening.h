@@ -23,16 +23,21 @@ inline ReversingState makeReversingState(double timestamp, double duration, doub
   return {1.0, timestamp + delay, duration, delay, std::move(easing)};
 }
 
+// Both the shortening factor below and a demoted transition's resume value are
+// sampled off this same curve.
+inline double easedProgressAt(const ReversingState &state, double timestamp) {
+  const double linearProgress =
+      state.duration > 0 ? std::clamp((timestamp - state.startTimestamp) / state.duration, 0.0, 1.0) : 1.0;
+  return getEasingFunctionFromConfig(state.easing)(linearProgress);
+}
+
 // When a transition reverses an in-flight one, the new transition's duration
 // (and negative delay) shorten by an accumulating factor based on how far the
 // running transition had progressed.
 // See https://drafts.csswg.org/css-transitions/#reversing
 inline ReversingState
 reverseShorten(const ReversingState &previous, double timestamp, double duration, double delay, EasingConfig easing) {
-  const double elapsed = std::clamp(timestamp - previous.startTimestamp, 0.0, previous.duration);
-  const double linearProgress = previous.duration > 0 ? elapsed / previous.duration : 1.0;
-  const double easedProgress = getEasingFunctionFromConfig(previous.easing)(linearProgress);
-  const double factor = easedProgress * previous.factor + (1 - previous.factor);
+  const double factor = easedProgressAt(previous, timestamp) * previous.factor + (1 - previous.factor);
   duration *= factor;
   if (delay < 0) {
     delay *= factor;

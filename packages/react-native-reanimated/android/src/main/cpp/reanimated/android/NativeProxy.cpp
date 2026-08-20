@@ -389,18 +389,12 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       bindThis(&NativeProxy::cssRemoveTransition),
       std::move(cssPlatformEasings));
 
-  auto cssCanRouteProperty = css::CSSCanRoutePropertyFunction(&css::canRouteCSSProperty);
-
-  auto cssApplyTransition = [transitions = cssPlatformTransitions](auto &&...args) {
-    return transitions->applyTransition(std::forward<decltype(args)>(args)...);
+  auto cssStartTransition = [transitions = cssPlatformTransitions](auto &&...args) {
+    return transitions->startTransition(std::forward<decltype(args)>(args)...);
   };
 
-  auto cssRemoveTransition = [transitions = cssPlatformTransitions](auto &&...args) {
-    transitions->removeTransition(std::forward<decltype(args)>(args)...);
-  };
-
-  auto cssGetPlatformValue = [transitions = cssPlatformTransitions](auto &&...args) {
-    return transitions->getCurrentValue(std::forward<decltype(args)>(args)...);
+  auto cssStopTransition = [transitions = cssPlatformTransitions](auto &&...args) {
+    transitions->stopTransition(std::forward<decltype(args)>(args)...);
   };
 
   return {
@@ -416,10 +410,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       maybeFlushUiUpdatesQueueFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
-      cssCanRouteProperty,
-      cssApplyTransition,
-      cssRemoveTransition,
-      cssGetPlatformValue,
+      cssStartTransition,
+      cssStopTransition,
   };
 }
 
