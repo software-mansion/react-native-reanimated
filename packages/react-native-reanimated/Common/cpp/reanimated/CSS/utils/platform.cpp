@@ -147,6 +147,16 @@ bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &ea
 #endif // __APPLE__
 }
 
+bool canRouteCSSKeyframeAnimations() {
+#if __APPLE__
+  constexpr bool CORE_ANIMATION_ENABLED = StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION");
+  return CORE_ANIMATION_ENABLED;
+#else
+  // Android only routes CSS transitions natively.
+  return false;
+#endif // __APPLE__
+}
+
 std::optional<PlatformValue>
 lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, const double progress) {
   return std::visit(
