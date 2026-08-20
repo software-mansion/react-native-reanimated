@@ -41,7 +41,10 @@ const ANIMATION_NAMES = new Map<string, AnimationKey>(
   ANIMATION_KEYS.map((key) => [ANIMATIONS[key].name, key])
 );
 
-const DEFAULT_ANIMATION_CONFIG: SelectableConfig<CSSAnimationProperties> = {
+// The keyframes come from the dropdown, so only the settings are selectable.
+type AnimationSettings = Omit<CSSAnimationProperties, 'animationName'>;
+
+const DEFAULT_ANIMATION_CONFIG: SelectableConfig<AnimationSettings> = {
   $animationDuration: {
     canDisable: true,
     options: ['0.5s', '1s', '2s'],
