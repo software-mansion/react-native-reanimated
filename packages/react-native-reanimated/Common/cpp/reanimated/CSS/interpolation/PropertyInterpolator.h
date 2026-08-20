@@ -19,8 +19,6 @@ class PropertyInterpolator {
       PropertyPath propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  /// The value React last committed for this property. Group interpolators override
-  /// it to gather their children's values instead.
   virtual folly::dynamic getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const;
   virtual folly::dynamic getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const = 0;
   virtual folly::dynamic getFirstKeyframeValue() const = 0;

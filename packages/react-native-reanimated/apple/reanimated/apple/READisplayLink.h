@@ -22,9 +22,7 @@ typedef RCTPlatformDisplayLink READisplayLink;
 
 #endif // ] TARGET_OS_OSX
 
-/// Creates a display link driving `selector` on `target` from the main run loop,
-/// asking for the highest refresh rate the device offers. Must be called on the
-/// main queue, and the caller owns the returned link.
+/// Creates a display link and registers it on the main run loop.
 static inline READisplayLink *REAMakeDisplayLink(id target, SEL selector)
 {
   READisplayLink *displayLink = [READisplayLink displayLinkWithTarget:target selector:selector];

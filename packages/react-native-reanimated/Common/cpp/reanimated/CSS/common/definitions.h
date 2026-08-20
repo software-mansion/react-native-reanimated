@@ -26,8 +26,7 @@ struct FieldValidator {
   std::function<bool(jsi::Runtime &, const jsi::Value &)> validateJSI;
 };
 
-/// Whether every field the object does carry passes its validator. Absent fields
-/// are fine: complex CSS values keep their defaults for anything left out.
+/// Absent fields pass: complex CSS values keep their defaults for anything left out.
 inline bool canConstructFields(const folly::dynamic &value, const std::vector<FieldValidator> &validators) {
   if (!value.isObject()) {
     return false;
