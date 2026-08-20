@@ -64,7 +64,7 @@ export default function TransitionCallbacks() {
   const [events, setEvents] = useState<Array<LoggedEvent>>([]);
   const [styleIndex, setStyleIndex] = useState(0);
   const [isMounted, setIsMounted] = useState(true);
-  const [displayStyleChanges, setDisplayStyleChanges] = useState(true);
+  const [displayStyleChanges, setDisplayStyleChanges] = useState(false);
 
   // Time of the change that started the transition, so the log can show the
   // delay that `elapsedTime` deliberately leaves out.
@@ -107,9 +107,7 @@ export default function TransitionCallbacks() {
     });
   }, [cancelPendingTrigger]);
 
-  // Unmounting is one of the two ways a running transition gets interrupted.
-  // The other one is removing `transitionProperty` in the settings above, and
-  // both report `cancel` instead of `end`.
+  // Interrupts a running transition, which reports `cancel` instead of `end`.
   const unmountView = useCallback(() => {
     cancelPendingTrigger();
     setIsMounted(false);
@@ -121,9 +119,9 @@ export default function TransitionCallbacks() {
         <Section
           title="Transition Callbacks"
           description={[
-            'Transition lifecycle callbacks fired by the **native** CSS engine. They are reported **per property**. `elapsedTime` is in **seconds** and excludes the delay, while the value in brackets is the time since the change that started the transition.',
+            'Transition lifecycle callbacks fired by the **native** CSS engine, reported **per property**.',
             '- press a **checkbox** to add or remove a transition setting',
-            '- press **Trigger** to change the style, or interrupt a running transition by unmounting the view or removing `transitionProperty`',
+            '- press **Trigger** to change the style, or **Unmount view** to interrupt a running transition, which reports `cancel` instead of `end`',
           ]}>
           <View style={styles.content}>
             <ConfigSelector
@@ -182,10 +180,15 @@ export default function TransitionCallbacks() {
           </View>
         </Section>
 
-        <Section description="In order of arrival" title="Event Log">
+        <Section title="Event Log">
           <View style={styles.content}>
             <View style={styles.logHeader}>
-              <Text variant="label2">{events.length} events</Text>
+              <View>
+                <Text variant="label2">{events.length} events</Text>
+                <Text variant="body3">
+                  at `elapsedTime` (+ time since **Trigger**)
+                </Text>
+              </View>
               <Button
                 size="small"
                 title="Clear"
