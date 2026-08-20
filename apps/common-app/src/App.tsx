@@ -96,11 +96,11 @@ const SCREENS = [
           component: RuntimeTestsApp,
           name: 'Runtime Tests',
         },
+        {
+          component: WorkletsApp,
+          name: 'Worklets',
+        },
       ]),
-  {
-    component: WorkletsApp,
-    name: 'Worklets',
-  },
   {
     component: ReanimatedApp,
     name: 'Reanimated',
