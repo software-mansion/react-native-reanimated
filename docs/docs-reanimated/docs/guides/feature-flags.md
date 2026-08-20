@@ -159,6 +159,7 @@ Routing is decided per property, so a single transition may run partly on the pl
 
 - it is listed in the table below,
 - the animated component has no CSS transition callbacks. `onCSSTransitionRun`, `onCSSTransitionStart`, `onCSSTransitionEnd` and `onCSSTransitionCancel` work as usual, but only the animation loop reports them, so a component using any of them keeps all of its properties there,
+- for a color property, both of its endpoints are plain colors. `PlatformColor` and `DynamicColorIOS` values don't reduce to the single number the platform animation takes, so they keep the property on the loop,
 - on iOS, its timing function is `linear` or a cubic Bezier curve, since `CAMediaTimingFunction` cannot express `steps` or `linear` easing with stops. There is no such limitation on Android, where `TimeInterpolator` carries any curve that CSS transitions support.
 
 #### Properties routed to the platform
