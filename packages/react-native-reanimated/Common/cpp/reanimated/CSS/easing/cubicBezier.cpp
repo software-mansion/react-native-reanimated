@@ -63,7 +63,10 @@ double solveCurve(const double x, const CurveCoefficients &curve) {
   // falls outside [0, 1]. Running it to full precision rather than stopping at
   // the first sample within kEpsilon keeps the fallback accurate on curves with
   // a near-flat region, where a small error in x is a large one in t.
-  // Callers clamp x to [0, 1]. CSS requires tangent extension outside this range.
+  // For x outside [0, 1], css-easing-1 prescribes extension along the endpoint
+  // tangents instead of this nearest-endpoint clamp; callers clamp progress to
+  // [0, 1] today, so the difference is unobservable. Implement the tangent
+  // extension if that clamp ever goes away.
   double low = 0.0, high = 1.0;
   for (std::uint8_t iteration = 0; iteration < kMaxBisectionIterations; ++iteration) {
     const double middle = (low + high) / 2.0;
