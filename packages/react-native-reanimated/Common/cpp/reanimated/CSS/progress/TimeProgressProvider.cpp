@@ -1,5 +1,7 @@
 #include <reanimated/CSS/progress/TimeProgressProvider.h>
 
+#include <cmath>
+
 namespace reanimated::css {
 
 TimeProgressProvider::TimeProgressProvider(const double timestamp, const double duration, const double delay)
@@ -30,13 +32,13 @@ void TimeProgressProvider::update(const double timestamp) {
     return;
   }
 
-  // Negated so that a NaN fails both tests and is discarded: every ordered
-  // comparison against NaN is false, so `< 0` and `>= 1` would both let one
-  // through, and the interpolators would turn it into a NaN style value.
+  // Every ordered comparison against NaN is false, so a bare `< 0` / `>= 1`
+  // pair would let one through and the interpolators would turn it into a NaN
+  // style value. Testing for it by name keeps both bounds reading normally.
   const double progress = rawProgress_.value();
-  if (!(progress >= 0)) {
+  if (std::isnan(progress) || progress < 0) {
     rawProgress_.reset();
-  } else if (!(progress < 1)) {
+  } else if (progress >= 1) {
     rawProgress_ = 1;
   }
 }
