@@ -17,10 +17,6 @@ OperationsStyleInterpolator::OperationsStyleInterpolator(
       defaultStyleValueDynamic_(defaultStyleValueDynamic),
       reversingAdjustedStartValue_(std::nullopt) {}
 
-folly::dynamic OperationsStyleInterpolator::getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const {
-  return viewStylesRepository_->getStyleProp(shadowNode->getTag(), propertyPath_);
-}
-
 folly::dynamic OperationsStyleInterpolator::getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const {
   auto styleValue = getStyleValue(shadowNode);
 
