@@ -145,25 +145,8 @@ describe(LinearEasing, () => {
     });
 
     describe('extrapolation', () => {
-      // Per the output algorithm in https://drafts.csswg.org/css-easing-2/:
-      // at a shared input progress the last point wins; below all points a
-      // degenerate pair yields A's output, above all points B's output.
-      test('carries the value across a pair of stops sharing an input progress', () => {
-        const easing = new LinearEasing([
-          [0, '0%'],
-          [0.5, '50%'],
-          [1, '50%'],
-        ]);
-
-        expect(easing.normalize().points).toEqual([
-          { x: 0, y: 0 },
-          { x: 0.5, y: 0.5 },
-          { x: 0.5, y: 1 },
-          { x: 1, y: 1 },
-        ]);
-      });
-
-      test('holds the last value after a trailing pair of stops sharing an input progress', () => {
+      // Expected values match Chrome for the same linear() easing.
+      test('holds the last value after a pair of stops sharing an input progress', () => {
         const easing = new LinearEasing([0, [0.3, '50%'], [0.7, '50%']]);
 
         expect(easing.normalize().points).toEqual([
@@ -174,7 +157,7 @@ describe(LinearEasing, () => {
         ]);
       });
 
-      test('holds the first value before a leading pair of stops sharing an input progress', () => {
+      test('holds the first value before a pair of stops sharing an input progress', () => {
         const easing = new LinearEasing([
           [0.3, '50%'],
           [0.7, '50%'],

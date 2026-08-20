@@ -38,9 +38,8 @@ const parsePercentage = (percentage: string | number): number => {
 };
 
 const extrapolate = (x: number, point1: Point, point2: Point) => {
-  // Two stops sharing an input progress are a jump, not a slope. Per the
-  // css-easing-2 output algorithm, a degenerate pair below all points yields
-  // A's output and above all points B's output.
+  // Two stops at the same input progress are a jump, not a slope: below such
+  // a pair the first output applies, above it the second.
   // https://drafts.csswg.org/css-easing-2/#linear-easing-function-output
   if (point1.x === point2.x) {
     return x <= point1.x ? point1.y : point2.y;
