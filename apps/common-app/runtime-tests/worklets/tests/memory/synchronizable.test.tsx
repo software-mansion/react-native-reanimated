@@ -24,8 +24,10 @@ import {
 const NOTIFICATION = 'NOTIFICATION';
 const [workletRuntime] = getWorkletRuntimesFromPool(1);
 
+type VariantName = 'dynamic' | 'fixed';
+
 type SynchronizableVariant = {
-  variantName: string;
+  variantName: VariantName;
   config?: SynchronizableConfig;
 };
 
