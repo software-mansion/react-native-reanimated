@@ -1,6 +1,6 @@
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSLoopAnimation.h>
-#include <reanimated/Tools/FeatureFlags.h>
+#include <reanimated/CSS/utils/platform.h>
 
 #include <memory>
 #include <utility>
@@ -124,10 +124,7 @@ bool CSSAnimation::isReversed() const {
 }
 
 void CSSAnimation::updatePropertyRouting() {
-  if (!platformAnimationFactory_) {
-    return;
-  }
-  if constexpr (!StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
+  if (!platformAnimationFactory_ || !canRouteCSSAnimations()) {
     return;
   }
   const auto &allProperties = keyframesConfig_.styleInterpolatorFactory->getAllPropertyNames();

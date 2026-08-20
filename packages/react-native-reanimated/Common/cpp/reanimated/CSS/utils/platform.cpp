@@ -147,6 +147,18 @@ bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &ea
 #endif // __APPLE__
 }
 
+bool canRouteCSSAnimations() {
+#if __APPLE__
+  // constexpr so the flag lookup folds away instead of running on every call.
+  constexpr bool CORE_ANIMATION_ENABLED = StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION");
+  return CORE_ANIMATION_ENABLED;
+#else
+  // Android's flag covers transitions only, and no other platform has a backend
+  // either, so there is nothing here for them to gate yet.
+  return false;
+#endif // __APPLE__
+}
+
 std::optional<PlatformValue>
 lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, const double progress) {
   return std::visit(
