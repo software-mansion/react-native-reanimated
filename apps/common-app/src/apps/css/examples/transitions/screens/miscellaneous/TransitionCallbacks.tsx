@@ -5,32 +5,44 @@ import type {
   CSSTransitionProperties,
   StyleProps,
 } from 'react-native-reanimated';
-import Animated from 'react-native-reanimated';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 
+import type { SelectableConfig } from '@/apps/css/components';
 import {
   Button,
+  Checkbox,
+  ConfigSelector,
   ScrollScreen,
   Section,
   Stagger,
   Text,
+  useSelectableConfig,
 } from '@/apps/css/components';
-import { TransitionConfiguration } from '@/apps/css/examples/transitions/components';
+import { TransitionStyleChange } from '@/apps/css/examples/transitions/components';
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 
-const SIMPLE: CSSTransitionProperties<ViewStyle> = {
-  transitionDuration: '1s',
-  transitionProperty: 'width',
-};
-
-const DELAYED: CSSTransitionProperties<ViewStyle> = {
-  transitionDelay: '500ms',
-  transitionDuration: '1s',
-  transitionProperty: 'width',
-};
-
-const MULTIPLE: CSSTransitionProperties<ViewStyle> = {
-  transitionDuration: '1s',
-  transitionProperty: ['width', 'opacity'],
+const DEFAULT_TRANSITION_CONFIG: SelectableConfig<
+  CSSTransitionProperties<ViewStyle>
+> = {
+  $transitionProperty: {
+    canDisable: true,
+    maxNumberOfValues: 2,
+    options: ['width', 'opacity'],
+    value: ['width', 'opacity'],
+  },
+  // eslint-disable-next-line perfectionist/sort-objects
+  $transitionDuration: {
+    canDisable: true,
+    options: ['0s', '0.5s', '1s', '2s'],
+    value: '1s',
+  },
+  // eslint-disable-next-line perfectionist/sort-objects
+  $transitionDelay: {
+    canDisable: true,
+    disabled: true,
+    options: ['0s', '250ms', '500ms', '1s'],
+    value: '500ms',
+  },
 };
 
 const TRANSITION_STYLES: Array<StyleProps> = [
@@ -44,11 +56,15 @@ type LoggedEvent = {
 };
 
 export default function TransitionCallbacks() {
+  const [selectableConfig, setSelectableConfig] = useState(
+    DEFAULT_TRANSITION_CONFIG
+  );
+  const transition = useSelectableConfig(selectableConfig);
+
   const [events, setEvents] = useState<Array<LoggedEvent>>([]);
-  const [transition, setTransition] =
-    useState<CSSTransitionProperties<ViewStyle> | null>(SIMPLE);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [styleIndex, setStyleIndex] = useState(0);
   const [isMounted, setIsMounted] = useState(true);
+  const [displayStyleChanges, setDisplayStyleChanges] = useState(true);
 
   // Time of the change that started the transition, so the log can show the
   // delay that `elapsedTime` deliberately leaves out.
@@ -78,28 +94,22 @@ export default function TransitionCallbacks() {
     []
   );
 
-  const changeStyle = useCallback(
-    (properties: CSSTransitionProperties<ViewStyle>) => {
-      cancelPendingTrigger();
-      setEvents([]);
-      setIsMounted(true);
-      // The settings have to reach the view before the value changes, or the
-      // transition starts with whatever was configured before.
-      setTransition(properties);
-      triggerFrame.current = requestAnimationFrame(() => {
-        triggerFrame.current = null;
-        triggeredAt.current = Date.now();
-        setIsExpanded((expanded) => !expanded);
-      });
-    },
-    [cancelPendingTrigger]
-  );
-
-  const removeTransition = useCallback(() => {
+  const trigger = useCallback(() => {
     cancelPendingTrigger();
-    setTransition(null);
+    setEvents([]);
+    setIsMounted(true);
+    // A remounted view has to reach the screen with its current style before
+    // the value flips, otherwise there is nothing to transition from.
+    triggerFrame.current = requestAnimationFrame(() => {
+      triggerFrame.current = null;
+      triggeredAt.current = Date.now();
+      setStyleIndex((index) => (index + 1) % TRANSITION_STYLES.length);
+    });
   }, [cancelPendingTrigger]);
 
+  // Unmounting is one of the two ways a running transition gets interrupted.
+  // The other one is removing `transitionProperty` in the settings above, and
+  // both report `cancel` instead of `end`.
   const unmountView = useCallback(() => {
     cancelPendingTrigger();
     setIsMounted(false);
@@ -109,39 +119,24 @@ export default function TransitionCallbacks() {
     <ScrollScreen>
       <Stagger>
         <Section
-          description="Transition lifecycle callbacks fired by the **native** CSS engine. They are reported **per property**. `elapsedTime` is in **seconds** and excludes the delay, while the value in brackets is the time since the change that started the transition."
-          title="Transition Callbacks">
+          title="Transition Callbacks"
+          description={[
+            'Transition lifecycle callbacks fired by the **native** CSS engine. They are reported **per property**. `elapsedTime` is in **seconds** and excludes the delay, while the value in brackets is the time since the change that started the transition.',
+            '- press a **checkbox** to add or remove a transition setting',
+            '- press **Trigger** to change the style, or interrupt a running transition by unmounting the view or removing `transitionProperty`',
+          ]}>
           <View style={styles.content}>
-            <View style={styles.buttons}>
+            <ConfigSelector
+              config={selectableConfig}
+              onChange={setSelectableConfig}
+            />
+
+            <View style={styles.row}>
+              <Button style={styles.action} title="Trigger" onPress={trigger} />
               <Button
-                style={flex.grow}
-                title="Change width"
-                onPress={() => changeStyle(SIMPLE)}
-              />
-              <Button
-                style={flex.grow}
-                title="Change width (delayed)"
-                onPress={() => changeStyle(DELAYED)}
-              />
-              <Button
-                style={flex.grow}
-                title="Change width + opacity"
-                onPress={() => changeStyle(MULTIPLE)}
-              />
-              <Button
-                style={flex.grow}
-                title="Remove transition"
-                onPress={removeTransition}
-              />
-              <Button
-                style={flex.grow}
+                style={styles.action}
                 title="Unmount view"
                 onPress={unmountView}
-              />
-              <Button
-                style={flex.grow}
-                title="Clear log"
-                onPress={() => setEvents([])}
               />
             </View>
 
@@ -151,10 +146,7 @@ export default function TransitionCallbacks() {
                   style={[
                     styles.box,
                     transition,
-                    {
-                      opacity: isExpanded ? 1 : 0.25,
-                      width: isExpanded ? sizes.xl : sizes.md,
-                    },
+                    TRANSITION_STYLES[styleIndex],
                   ]}
                   onCSSTransitionCancel={({ elapsedTime, propertyName }) =>
                     log('cancel', propertyName, elapsedTime)
@@ -171,30 +163,47 @@ export default function TransitionCallbacks() {
                 />
               )}
             </View>
+
+            <Animated.View
+              layout={LinearTransition}
+              style={styles.styleChangeWrapper}>
+              {displayStyleChanges && (
+                <TransitionStyleChange
+                  activeStyleIndex={styleIndex}
+                  transitionStyles={TRANSITION_STYLES}
+                />
+              )}
+            </Animated.View>
+            <Checkbox
+              label="Display style changes"
+              selected={displayStyleChanges}
+              onChange={setDisplayStyleChanges}
+            />
           </View>
         </Section>
 
         <Section description="In order of arrival" title="Event Log">
-          <View style={styles.log}>
-            {events.length === 0 ? (
-              <Text variant="subHeading3">No events yet</Text>
-            ) : (
-              events.map((event) => (
-                <Text key={event.id} variant="body1">
-                  {event.label}
-                </Text>
-              ))
-            )}
+          <View style={styles.content}>
+            <View style={styles.logHeader}>
+              <Text variant="label2">{events.length} events</Text>
+              <Button
+                size="small"
+                title="Clear"
+                onPress={() => setEvents([])}
+              />
+            </View>
+            <View style={styles.log}>
+              {events.length === 0 ? (
+                <Text variant="body1">No events yet</Text>
+              ) : (
+                events.map((event) => (
+                  <Text key={event.id} variant="body1">
+                    {event.label}
+                  </Text>
+                ))
+              )}
+            </View>
           </View>
-        </Section>
-
-        <Section
-          description="Transition configuration consists of the style changes that will be animated and the transition settings."
-          title="Transition configuration">
-          <TransitionConfiguration
-            transitionProperties={transition ?? {}}
-            transitionStyles={TRANSITION_STYLES}
-          />
         </Section>
       </Stagger>
     </ScrollScreen>
@@ -202,19 +211,17 @@ export default function TransitionCallbacks() {
 }
 
 const styles = StyleSheet.create({
+  action: {
+    flexBasis: 0,
+    flexGrow: 1,
+  },
   box: {
     backgroundColor: colors.primary,
     borderRadius: radius.sm,
     height: sizes.md,
   },
-  buttons: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xxs,
-    justifyContent: 'space-between',
-  },
   content: {
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   log: {
     backgroundColor: colors.background2,
@@ -223,10 +230,22 @@ const styles = StyleSheet.create({
     minHeight: sizes.xxl,
     padding: spacing.xs,
   },
+  logHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   preview: {
     ...flex.center,
     backgroundColor: colors.background2,
     borderRadius: radius.md,
     height: sizes.xxl,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: spacing.xxs,
+  },
+  styleChangeWrapper: {
+    overflow: 'hidden',
   },
 });
