@@ -27,6 +27,7 @@ jobs:
       REANIMATED_DIR: packages/react-native-reanimated
       CONFIGURATION: ${{ inputs.configuration || 'Debug' }}
       BUILD_MARKER_DIR: .build-markers
+      USE_CCACHE_LAUNCHER: 1
       CACHE_KEY: tvos-${{ github.sha }}-${{ inputs.configuration || 'Debug' }}
     concurrency:
       group: tvos-${{ github.ref }}-${{ inputs.configuration || 'Debug' }}
@@ -51,6 +52,13 @@ jobs:
         with:
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
+      - name: Use Node.js
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'yarn'
+
       - name: Install monorepo node dependencies
         if: steps.result-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
@@ -59,6 +67,13 @@ jobs:
         working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn build
 
+      - name: Setup ccache
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/setup-ccache
+        with:
+          key-prefix: tvos-${{ env.CONFIGURATION }}
+          needs-compile-database: 'false'
+
       - name: Install Pods (with caching)
         if: steps.result-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/install-pods
@@ -66,18 +81,16 @@ jobs:
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: ios
 
-      - name: Cache DerivedData
-        if: steps.result-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/cache-derived-data
-        with:
-          platform: tvos
-          working-directory: ${{ env.WORKING_DIRECTORY }}
-          pod-directory: ios
-
       - name: Build app
         if: steps.result-cache.outputs.cache-hit != 'true'
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios
         run: xcodebuild -workspace TVOSExample.xcworkspace -configuration "$CONFIGURATION" -scheme "$CONFIGURATION TVOSExample" -destination "generic/platform=tvOS Simulator" -quiet
+
+      - name: Save ccache
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/save-ccache
+        with:
+          key-prefix: tvos-${{ env.CONFIGURATION }}
 
       - name: Mark build successful
         if: steps.result-cache.outputs.cache-hit != 'true'

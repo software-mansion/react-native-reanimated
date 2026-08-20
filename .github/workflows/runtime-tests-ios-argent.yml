@@ -76,6 +76,7 @@ jobs:
     env:
       WORKING_DIRECTORY: apps/fabric-example
       CONFIGURATION: ${{ matrix.configuration }}
+      USE_CCACHE_LAUNCHER: 1
     steps:
       - name: checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
@@ -116,6 +117,13 @@ jobs:
         working-directory: packages/react-native-reanimated
         run: yarn build
 
+      - name: Setup ccache
+        if: steps.appcache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/setup-ccache
+        with:
+          key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
+          needs-compile-database: 'false'
+
       - name: Install Pods
         if: steps.appcache.outputs.cache-hit != 'true'
         uses: ./.github/actions/install-pods
@@ -123,18 +131,16 @@ jobs:
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: ios
 
-      - name: Cache DerivedData
-        if: steps.appcache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/cache-derived-data
-        with:
-          platform: ios
-          working-directory: ${{ env.WORKING_DIRECTORY }}
-          pod-directory: ios
-
       - name: Build runtime-tests app
         if: steps.appcache.outputs.cache-hit != 'true'
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: node scripts/runtime-tests-server.js --build-only --configuration "$CONFIGURATION"
+
+      - name: Save ccache
+        if: steps.appcache.outputs.cache-hit != 'true' && inputs.bundleMode
+        uses: ./.github/actions/save-ccache
+        with:
+          key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
 
       - name: Package app artifact
         if: steps.appcache.outputs.cache-hit != 'true'
