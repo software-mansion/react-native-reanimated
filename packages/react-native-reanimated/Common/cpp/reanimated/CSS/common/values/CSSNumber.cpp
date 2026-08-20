@@ -60,12 +60,12 @@ CSSIndex CSSIndex::interpolate(double progress, const CSSIndex &other) const {
   return CSSIndex(progress < 0.5 ? value : other.value);
 }
 
-template <typename TPrecision>
-CSSDoubleBase<TPrecision> CSSDoubleBase<TPrecision>::interpolate(double progress, const CSSDoubleBase &other) const {
-  const auto interpolated = CSSNumberBase<CSSDoubleBase<TPrecision>, double>::interpolate(progress, other);
+template <typename TDerived>
+TDerived CSSDoubleBase<TDerived>::interpolate(double progress, const TDerived &other) const {
+  const auto interpolated = CSSNumberBase<TDerived, double>::interpolate(progress, other);
 
-  if constexpr (TPrecision::epsilon > 0) {
-    if (std::abs(other.value - interpolated.value) < TPrecision::epsilon) {
+  if constexpr (TDerived::epsilon > 0) {
+    if (std::abs(other.value - interpolated.value) < TDerived::epsilon) {
       return other;
     }
   }
@@ -77,8 +77,8 @@ template struct CSSNumberBase<CSSDouble, double>;
 template struct CSSNumberBase<CSSTextDouble, double>;
 template struct CSSNumberBase<CSSInteger, int>;
 template struct CSSNumberBase<CSSIndex, int>;
-template struct CSSDoubleBase<CSSExactPrecision>;
-template struct CSSDoubleBase<CSSTextPrecision>;
+template struct CSSDoubleBase<CSSDouble>;
+template struct CSSDoubleBase<CSSTextDouble>;
 
 #ifdef ANDROID
 
