@@ -15,14 +15,20 @@ const decode = (value) =>
     .replace(/&#(?:39|x27);/g, "'")
     .trim();
 
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const metaOf = (html, name) =>
-  new RegExp(`<meta[^>]+name="${name}"[^>]+content="([^"]*)"`, 'i').exec(
-    html,
-  )?.[1] ?? '';
+  new RegExp(
+    `<meta[^>]+name="${escapeRegExp(name)}"[^>]+content="([^"]*)"`,
+    'i',
+  ).exec(html)?.[1] ?? '';
 
 function describe(html, siteTitle) {
   const raw = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1] ?? '';
-  const title = decode(raw).replace(new RegExp(`\\s*\\|\\s*${siteTitle}$`), '');
+  const title = decode(raw).replace(
+    new RegExp(`\\s*\\|\\s*${escapeRegExp(siteTitle)}$`),
+    '',
+  );
   return { title, description: decode(metaOf(html, 'description')) };
 }
 
