@@ -35,10 +35,37 @@ std::ostream &operator<<(std::ostream &os, const CSSNumberBase<TDerived, TValue>
 
 #endif // NDEBUG
 
-struct CSSDouble : public CSSNumberBase<CSSDouble, double> {
-  // Inherit all constructors from the base class
-  using CSSNumberBase::CSSNumberBase;
+/// Interpolate exactly - `CSSDoubleBase` compiles its epsilon check away.
+struct CSSExactPrecision {
+  static constexpr double epsilon = 0;
 };
+
+/// React Native compares text attributes with `floatEquality`, whose epsilon is
+/// 0.005, when deciding whether to rebuild a paragraph's text state, but lays
+/// them out exactly. Below that epsilon the frame moves to the new metrics
+/// while the text keeps the old ones, and on Android the trailing word wraps
+/// out of view.
+/// https://github.com/facebook/react-native/blob/v0.87.0/packages/react-native/ReactCommon/react/renderer/attributedstring/TextAttributes.cpp#L174-L177
+struct CSSTextPrecision {
+  static constexpr double epsilon = 0.005;
+};
+
+/// A double that stops short of `TPrecision::epsilon` from the endpoint and
+/// lands on it instead. Emitting a value the platform cannot tell apart from
+/// the endpoint makes the final, exact value read as no change at all.
+///
+/// A precision tag rather than a `double` template argument because floating
+/// point non-type template parameters are not supported by the NDK's compiler.
+template <typename TPrecision>
+struct CSSDoubleBase : public CSSNumberBase<CSSDoubleBase<TPrecision>, double> {
+  // Inherit all constructors from the base class
+  using CSSNumberBase<CSSDoubleBase<TPrecision>, double>::CSSNumberBase;
+
+  CSSDoubleBase interpolate(double progress, const CSSDoubleBase &other) const override;
+};
+
+using CSSDouble = CSSDoubleBase<CSSExactPrecision>;
+using CSSTextDouble = CSSDoubleBase<CSSTextPrecision>;
 
 struct CSSInteger : public CSSNumberBase<CSSInteger, int> {
   // Inherit all constructors from the base class
@@ -52,20 +79,6 @@ struct CSSIndex : public CSSNumberBase<CSSIndex, int> {
   using CSSNumberBase::CSSNumberBase;
 
   CSSIndex interpolate(double progress, const CSSIndex &other) const override;
-};
-
-/// A number for text attributes (`fontSize`, `letterSpacing`, `lineHeight`).
-///
-/// React Native compares these with a 0.005 epsilon when deciding whether to
-/// rebuild a paragraph's text state, but lays them out exactly, so a smaller
-/// step moves the frame while the text keeps its old metrics and its trailing
-/// word wraps out of view on Android. Interpolation lands on the endpoint once
-/// it gets that close, keeping consecutive committed values distinguishable.
-struct CSSTextDouble : public CSSNumberBase<CSSTextDouble, double> {
-  // Inherit all constructors from the base class
-  using CSSNumberBase::CSSNumberBase;
-
-  CSSTextDouble interpolate(double progress, const CSSTextDouble &other) const override;
 };
 
 #ifdef ANDROID

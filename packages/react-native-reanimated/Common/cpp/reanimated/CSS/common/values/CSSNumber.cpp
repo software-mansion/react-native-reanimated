@@ -6,11 +6,6 @@
 
 namespace reanimated::css {
 
-namespace {
-/// Mirrors `facebook::react::kDefaultEpsilon`, React Native's float-equality tolerance.
-constexpr double RN_FLOAT_EQUALITY_EPSILON = 0.005;
-} // namespace
-
 template <typename TDerived, typename TValue>
 CSSNumberBase<TDerived, TValue>::CSSNumberBase() : value(0) {}
 
@@ -65,15 +60,25 @@ CSSIndex CSSIndex::interpolate(double progress, const CSSIndex &other) const {
   return CSSIndex(progress < 0.5 ? value : other.value);
 }
 
-CSSTextDouble CSSTextDouble::interpolate(double progress, const CSSTextDouble &other) const {
-  const auto interpolated = value + progress * (other.value - value);
-  return std::abs(other.value - interpolated) < RN_FLOAT_EQUALITY_EPSILON ? other : CSSTextDouble(interpolated);
+template <typename TPrecision>
+CSSDoubleBase<TPrecision> CSSDoubleBase<TPrecision>::interpolate(double progress, const CSSDoubleBase &other) const {
+  const auto interpolated = CSSNumberBase<CSSDoubleBase<TPrecision>, double>::interpolate(progress, other);
+
+  if constexpr (TPrecision::epsilon > 0) {
+    if (std::abs(other.value - interpolated.value) < TPrecision::epsilon) {
+      return other;
+    }
+  }
+
+  return interpolated;
 }
 
 template struct CSSNumberBase<CSSDouble, double>;
+template struct CSSNumberBase<CSSTextDouble, double>;
 template struct CSSNumberBase<CSSInteger, int>;
 template struct CSSNumberBase<CSSIndex, int>;
-template struct CSSNumberBase<CSSTextDouble, double>;
+template struct CSSDoubleBase<CSSExactPrecision>;
+template struct CSSDoubleBase<CSSTextPrecision>;
 
 #ifdef ANDROID
 
