@@ -29,6 +29,14 @@ TransformOperationInterpolator<PerspectiveOperation>::TransformOperationInterpol
     const std::shared_ptr<PerspectiveOperation> &defaultOperation)
     : StyleOperationInterpolator(defaultOperation) {}
 
+namespace {
+
+double clampPerspectiveDepth(const double depth) {
+  return depth >= 0.0 && depth < 1.0 ? 1.0 : depth;
+}
+
+} // namespace
+
 std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperation>::interpolate(
     double progress,
     const std::shared_ptr<StyleOperation> &from,
@@ -43,10 +51,12 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperat
   if (std::isinf(fromValue.value) || std::isinf(toValue.value)) {
     // css-transforms-2: a depth below 1px "must be treated as 1px ... when
     // used as the endpoint of interpolation", which also keeps 1/0 from
-    // reintroducing the inf - inf = NaN this branch exists to avoid.
+    // reintroducing the inf - inf = NaN this branch exists to avoid. Negative
+    // depths are invalid on the web, but React Native accepts them and they
+    // interpolate finitely, so they pass through unchanged.
     // https://drafts.csswg.org/css-transforms-2/#perspective
-    const double fromReciprocal = 1.0 / std::max(fromValue.value, 1.0);
-    const double toReciprocal = 1.0 / std::max(toValue.value, 1.0);
+    const double fromReciprocal = 1.0 / clampPerspectiveDepth(fromValue.value);
+    const double toReciprocal = 1.0 / clampPerspectiveDepth(toValue.value);
     const double reciprocal = fromReciprocal + progress * (toReciprocal - fromReciprocal);
     return std::make_unique<PerspectiveOperation>(
         reciprocal == 0.0 ? std::numeric_limits<double>::infinity() : 1.0 / reciprocal);
