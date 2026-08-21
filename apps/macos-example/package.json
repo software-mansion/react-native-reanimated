@@ -17,7 +17,7 @@
     "react-native-macos": "patch:react-native-macos@npm%3A0.81.9#~/.yarn/patches/react-native-macos-npm-0.81.9-aa583a0648.patch",
     "react-native-reanimated": "workspace:*",
     "react-native-screens": "4.24.0",
-    "react-native-worklets": "workspace:*"
+    "react-native-worklets": "0.12.1"
   },
   "devDependencies": {
     "@babel/core": "7.29.6",
