@@ -186,6 +186,6 @@ Depending on the sensor type the measurement is a number in radians per second, 
 
 * Most of the sensors operate in resolutions up to 100Hz.
 
-* You can read the sensor data on both [UI thread](/docs/fundamentals/glossary#ui-thread) and \[JavaScript th(/docs/docs/fundamentals/glossary#javascript-thread).
+* You can read the sensor data on both [UI thread](/docs/fundamentals/glossary#ui-thread) and [JavaScript thread](/docs/fundamentals/glossary#javascript-thread).
 
 ## Platform compatibility
