@@ -64,7 +64,7 @@ const structuredDataHeadTag = {
         maintainer: { '@id': ORGANIZATION_ID },
       },
     ],
-  }),
+  }).replace(/</g, '\\u003c'),
 };
 
 /** @type {import('@docusaurus/types').Config} */
