@@ -5,6 +5,7 @@
 #include <reanimated/CSS/interpolation/transforms/operations/skew.h>
 #include <reanimated/CSS/interpolation/transforms/operations/translate.h>
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <utility>
@@ -40,8 +41,12 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperat
   // directly gives inf + t*(d - inf) = NaN. Interpolate in reciprocal space
   // instead (1/inf = 0, matching how perspective enters the matrix as -1/d).
   if (std::isinf(fromValue.value) || std::isinf(toValue.value)) {
-    const double fromReciprocal = 1.0 / fromValue.value;
-    const double toReciprocal = 1.0 / toValue.value;
+    // css-transforms-2: a depth below 1px "must be treated as 1px ... when
+    // used as the endpoint of interpolation", which also keeps 1/0 from
+    // reintroducing the inf - inf = NaN this branch exists to avoid.
+    // https://drafts.csswg.org/css-transforms-2/#perspective
+    const double fromReciprocal = 1.0 / std::max(fromValue.value, 1.0);
+    const double toReciprocal = 1.0 / std::max(toValue.value, 1.0);
     const double reciprocal = fromReciprocal + progress * (toReciprocal - fromReciprocal);
     return std::make_unique<PerspectiveOperation>(
         reciprocal == 0.0 ? std::numeric_limits<double>::infinity() : 1.0 / reciprocal);
