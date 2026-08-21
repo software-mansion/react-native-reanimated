@@ -102,7 +102,9 @@ export function parseSingleTransitionShorthand(
 
 export function normalizeTimeUnit(timeUnit: TimeUnit): number | null {
   if (typeof timeUnit === 'number') {
-    return timeUnit;
+    // A non-finite value would reach the C++ timing math and make every
+    // progress it computes NaN, which lands on the view as a NaN style value.
+    return Number.isFinite(timeUnit) ? timeUnit : null;
   } else if (MILLISECONDS_REGEX.test(timeUnit)) {
     return parseInt(timeUnit, 10);
   } else if (SECONDS_REGEX.test(timeUnit)) {
