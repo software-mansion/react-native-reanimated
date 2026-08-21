@@ -64,7 +64,7 @@ class TransformOperationInterpolator<TOperation> : public StyleOperationInterpol
  public:
   TransformOperationInterpolator(
       const std::shared_ptr<TOperation> &defaultOperation,
-      ResolvableValueInterpolatorConfig config);
+      RelativeValueInterpolatorConfig config);
 
   std::unique_ptr<StyleOperation> interpolate(
       double progress,
@@ -77,7 +77,7 @@ class TransformOperationInterpolator<TOperation> : public StyleOperationInterpol
       const StyleOperationsInterpolationContext &context) const override;
 
  protected:
-  const ResolvableValueInterpolatorConfig config_;
+  const RelativeValueInterpolatorConfig config_;
 
   RelativeValueInterpolationContext getRelativeValueContext(const StyleOperationsInterpolationContext &context) const;
 };

@@ -10,6 +10,7 @@
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/common/values/CSSPlatformColor.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
 #include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
@@ -51,7 +52,7 @@ folly::dynamic SimpleValueInterpolator<AllowedTypes...>::interpolateValue(
     const auto &to = std::static_pointer_cast<ValueType>(toValue);
     return from->interpolate(progress, *to, context).toDynamic();
   } else {
-    // Only instantiated as ResolvableValueInterpolator's base, which overrides
+    // Only instantiated as RelativeValueInterpolator's base, which overrides
     // this and can build the context these values ask for.
     throw std::runtime_error(
         "[Reanimated] Cannot interpolate " + fromValue->toString() + " to " + toValue->toString() +
@@ -67,7 +68,7 @@ template class SimpleValueInterpolator<CSSTextDouble>;
 template class SimpleValueInterpolator<CSSInteger>;
 template class SimpleValueInterpolator<CSSIndex>;
 template class SimpleValueInterpolator<CSSAngle>;
-template class SimpleValueInterpolator<CSSColor>;
+template class SimpleValueInterpolator<CSSColor, CSSPlatformColor>;
 template class SimpleValueInterpolator<CSSBoolean>;
 template class SimpleValueInterpolator<CSSDisplay>;
 template class SimpleValueInterpolator<CSSKeyword>;

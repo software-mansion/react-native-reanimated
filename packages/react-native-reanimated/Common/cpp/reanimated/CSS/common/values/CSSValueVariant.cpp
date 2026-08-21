@@ -5,6 +5,7 @@
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/common/values/CSSPlatformColor.h>
 #include <reanimated/CSS/common/values/CSSValueVariant.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
 #include <reanimated/CSS/svg/values/CSSLengthArray.h>
@@ -139,7 +140,7 @@ template class CSSValueVariant<CSSIndex>;
 template class CSSValueVariant<CSSKeyword>;
 template class CSSValueVariant<CSSAngle>;
 template class CSSValueVariant<CSSBoolean>;
-template class CSSValueVariant<CSSColor>;
+template class CSSValueVariant<CSSColor, CSSPlatformColor>;
 template class CSSValueVariant<CSSDisplay>;
 template class CSSValueVariant<CSSBoxShadow>;
 template class CSSValueVariant<CSSDiscreteArray<CSSKeyword>>;

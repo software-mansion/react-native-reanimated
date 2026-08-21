@@ -21,6 +21,7 @@
 - Fix Android flashes at the start of entering animations in experimental Layout Animations Proxy by temporarily setting opacity 0 at the start of an insert mutation ([#10198](https://github.com/software-mansion/react-native-reanimated/pull/10198) by [@pawicao](https://github.com/pawicao))
 - Fix preserving layout animations final updates during batch sync ([#10171](https://github.com/software-mansion/react-native-reanimated/pull/10171) by [@pawicao](https://github.com/pawicao))
 - Fix layout animations getting out of sync across many simultaneously animated views ([#10317](https://github.com/software-mansion/react-native-reanimated/pull/10317) by [@pawicao](https://github.com/pawicao))
+- Fix crash when a CSS animation or transition uses a `PlatformColor` or `DynamicColorIOS` value. ([#10282](https://github.com/software-mansion/react-native-reanimated/pull/10282) by [@MatiPl01](https://github.com/MatiPl01))
 
 ### 💡 Others
 

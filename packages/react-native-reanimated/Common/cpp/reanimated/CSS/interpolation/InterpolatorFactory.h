@@ -10,7 +10,7 @@
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformsStyleInterpolator.h>
-#include <reanimated/CSS/interpolation/values/ResolvableValueInterpolator.h>
+#include <reanimated/CSS/interpolation/values/RelativeValueInterpolator.h>
 #include <reanimated/CSS/interpolation/values/SimpleValueInterpolator.h>
 
 #include <memory>
@@ -50,10 +50,10 @@ class SimpleValueInterpolatorFactory : public PropertyInterpolatorFactory {
 };
 
 template <typename... AllowedTypes>
-class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
+class RelativeValueInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   template <typename TValue>
-  explicit ResolvableValueInterpolatorFactory(const TValue &defaultValue, ResolvableValueInterpolatorConfig config)
+  explicit RelativeValueInterpolatorFactory(const TValue &defaultValue, RelativeValueInterpolatorConfig config)
       : PropertyInterpolatorFactory(), defaultValue_(defaultValue), config_(std::move(config)) {}
 
   const CSSValue &getDefaultValue() const override {
@@ -63,13 +63,13 @@ class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
-    return std::make_shared<ResolvableValueInterpolator<AllowedTypes...>>(
+    return std::make_shared<RelativeValueInterpolator<AllowedTypes...>>(
         propertyPath, defaultValue_, viewStylesRepository, config_);
   }
 
  private:
   const CSSValueVariant<AllowedTypes...> defaultValue_;
-  ResolvableValueInterpolatorConfig config_;
+  RelativeValueInterpolatorConfig config_;
 };
 
 /**
@@ -113,26 +113,26 @@ auto value(const auto &defaultValue) -> std::enable_if_t<
     (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
     std::shared_ptr<PropertyInterpolatorFactory>> {
   static_assert(
-      !(Resolvable<AllowedTypes> || ...),
-      "Resolvable value types (e.g. CSSLength) require a "
-      "ResolvableValueInterpolatorConfig — use the value(defaultValue, "
-      "{RelativeTo::..., \"...\"}) overload instead");
+      (InterpolatesWith<AllowedTypes, ValueInterpolationContext> && ...),
+      "Value types that resolve against a relative property (e.g. CSSLength) need a "
+      "RelativeValueInterpolatorConfig - use the value(defaultValue, {RelativeTo::..., \"...\"}) overload instead");
   // Create a concrete CSSValue from the defaultValue
   auto cssValue = createCSSValue<AllowedTypes...>(defaultValue);
   return std::make_shared<SimpleValueInterpolatorFactory<AllowedTypes...>>(std::move(cssValue));
 }
 
 template <typename... AllowedTypes>
-auto value(const auto &defaultValue, ResolvableValueInterpolatorConfig config) -> std::enable_if_t<
+auto value(const auto &defaultValue, RelativeValueInterpolatorConfig config) -> std::enable_if_t<
     (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
     std::shared_ptr<PropertyInterpolatorFactory>> {
   static_assert(
-      (Resolvable<AllowedTypes> || ...),
-      "None of the value types are resolvable — use the value(defaultValue) "
-      "overload without ResolvableValueInterpolatorConfig instead");
+      (InterpolatesWith<AllowedTypes, RelativeValueInterpolationContext> && ...) &&
+          (ResolvesWith<AllowedTypes, RelativeValueInterpolationContext> || ...),
+      "This overload is for value types that resolve against a relative property (e.g. CSSLength). Types that "
+      "resolve against something else, or that need no resolution at all, use the value(defaultValue) overload.");
   // Create a concrete CSSValue from the defaultValue
   auto cssValue = createCSSValue<AllowedTypes...>(defaultValue);
-  return std::make_shared<ResolvableValueInterpolatorFactory<AllowedTypes...>>(std::move(cssValue), std::move(config));
+  return std::make_shared<RelativeValueInterpolatorFactory<AllowedTypes...>>(std::move(cssValue), std::move(config));
 }
 
 /**
@@ -146,7 +146,7 @@ auto transformOp(const auto &defaultValue) -> std::enable_if_t<
 }
 
 template <typename TOperation>
-auto transformOp(const auto &defaultValue, ResolvableValueInterpolatorConfig config) -> std::enable_if_t<
+auto transformOp(const auto &defaultValue, RelativeValueInterpolatorConfig config) -> std::enable_if_t<
     std::is_base_of_v<TransformOperation, TOperation> && std::is_constructible_v<TOperation, decltype(defaultValue)> &&
         ResolvableOp<TOperation>,
     std::shared_ptr<StyleOperationInterpolator>> {
@@ -165,7 +165,7 @@ auto filterOp(const auto &defaultValue) -> std::enable_if_t<
 }
 
 template <typename TOperation>
-auto filterOp(const auto &defaultValue, ResolvableValueInterpolatorConfig config) -> std::enable_if_t<
+auto filterOp(const auto &defaultValue, RelativeValueInterpolatorConfig config) -> std::enable_if_t<
     std::is_base_of_v<FilterOperation, TOperation> && std::is_constructible_v<TOperation, decltype(defaultValue)> &&
         ResolvableOp<TOperation>,
     std::shared_ptr<StyleOperationInterpolator>> {
