@@ -244,6 +244,9 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         if (layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
           layout_.push_back(node);
         } else {
+          if (layoutAnimations_.contains(tag)) {
+            updateOngoingAnimationTarget(tag, node->current);
+          }
           filteredMutations.push_back(mutation);
         }
         break;
@@ -713,9 +716,9 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
   return wantAnimateExit;
 }
 
-void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation)
+void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(const int tag, const ShadowView &finalView)
     const {
-  layoutAnimations_[tag].finalView = mutation.newChildShadowView;
+  layoutAnimations_[tag].finalView = finalView;
 }
 
 void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) const {
