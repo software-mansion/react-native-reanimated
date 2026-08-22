@@ -33,8 +33,20 @@ test('reference', () => {
 
 ## Setup
 
-:::note
-Before you begin, make sure to follow the respective Jest guide for [React Native Worklets](https://docs.swmansion.com/react-native-worklets/docs/guides/testing).
+Point Jest at Reanimated's resolver in your `jest.config.js` file, so the parts of Reanimated that require a real native module are replaced by their web implementations under Jest:
+
+```js
+...
+preset: 'react-native',
+resolver: 'react-native-reanimated/jest/resolver',
+setupFilesAfterEnv: ['./jest-setup.js'],
+...
+```
+
+The resolver also enforces the web implementation of [React Native Worklets](https://docs.swmansion.com/react-native-worklets/docs/guides/testing), so no additional Worklets setup is needed.
+
+:::info
+If your project already uses a custom resolver, call Reanimated's resolver from it and forward the `(request, options)` arguments instead of replacing it.
 :::
 
 Add the following line to your `jest-setup.js` file:
@@ -44,15 +56,6 @@ require('react-native-reanimated').setUpTests();
 ```
 
 - `setUpTests()` can take optional config argument. Default config is `{ fps: 60 }`.
-
-To be sure, check if your `jest.config.js` file contains:
-
-```js
-...
-preset: 'react-native',
-setupFilesAfterEnv: ['./jest-setup.js'],
-...
-```
 
 :::caution
 
