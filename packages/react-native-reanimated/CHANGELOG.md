@@ -12,6 +12,7 @@
 
 ### 🐛 Bug fixes
 
+- Fix views with an exiting animation staying mounted, and still absorbing touches, when several layout animations overlap on the same tag: the removal intent is now latched until the tag settles instead of being dropped by whichever animation finishes last. ([#10376](https://github.com/software-mansion/react-native-reanimated/pull/10376) by [@dennytosp](https://github.com/dennytosp))
 - Fix animated styles on sticky headers throwing an immutable-object mutation error in development. ([#10389](https://github.com/software-mansion/react-native-reanimated/pull/10389) by [@ngocdevv](https://github.com/ngocdevv))
 - Fix shared element transitions never running on Android for npm installs by publishing `react-native.config.js`, which registers the Shared Transition Boundary component descriptor for autolinking. ([#10375](https://github.com/software-mansion/react-native-reanimated/pull/10375) by [@dennytosp](https://github.com/dennytosp))
 - Keep exiting views at their position in the host tree, so they no longer draw above later siblings. ([#10392](https://github.com/software-mansion/react-native-reanimated/pull/10392) by [@pawicao](https://github.com/pawicao))
