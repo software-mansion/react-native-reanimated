@@ -7,7 +7,11 @@ export function SequencedTransition(
 ) {
   const { translateX, translateY, scaleX, scaleY, reversed } = transitionData;
 
-  const scaleValue = reversed ? `1,${scaleX}` : `${scaleY},1`;
+  // At the midpoint one axis has finished and the other has not started yet.
+  // Without `reversed` that is the X axis and the width, so the X component
+  // is already 1 while the Y component still holds its starting ratio - the
+  // same split the translate values below use.
+  const scaleValue = reversed ? `${scaleX},1` : `1,${scaleY}`;
 
   const sequencedTransition = {
     name,
