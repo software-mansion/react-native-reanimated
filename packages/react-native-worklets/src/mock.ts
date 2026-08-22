@@ -1,5 +1,11 @@
 'use strict';
 
+import type {
+  Shareable,
+  ShareableConfig,
+  ShareableGuest,
+  ShareableHost,
+} from './memory/types';
 import { mockedRequestAnimationFrame } from './runLoop/uiRuntime/mockedRequestAnimationFrame';
 import { RuntimeKind } from './runtimeKind';
 import { isWorkletFunction } from './workletFunction';
@@ -27,22 +33,48 @@ globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
 const WorkletAPI = {
   callMicrotasks: NOOP,
   createSerializable: ID,
-  createShareable<TValue>(_hostRuntimeId: number, initial: TValue) {
-    let value = initial;
+  createShareable<TValue, THostDecorated, TGuestDecorated>(
+    _hostRuntimeId: number,
+    initial: TValue,
+    config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
+  ) {
     const set = (next: TValue | ((prev: TValue) => TValue)) => {
-      value =
+      shareable.value =
         typeof next === 'function'
-          ? (next as (prev: TValue) => TValue)(value)
+          ? (next as (prev: TValue) => TValue)(shareable.value)
           : next;
     };
-    return {
+    // The mock has a single runtime, so one object plays both the host and
+    // the guest role. `value` is a plain property so decorators that read it
+    // before redefining it see the initial value, and the accessors go
+    // through `shareable.value` so they stay correct after a decorator turns
+    // it into a getter/setter pair.
+    const shareable = {
       isHost: false,
       __shareableRef: true,
-      getAsync: () => Promise.resolve(value),
-      getSync: () => value,
+      value: initial,
+      getAsync: () => Promise.resolve(shareable.value),
+      getSync: () => shareable.value,
       setAsync: set,
       setSync: set,
     };
+    // The guest decorator is applied first: guest-side definitions delegate
+    // to the host through the UI scheduler, which on a single runtime would
+    // call back into themselves, so host-side definitions must win.
+    let decorated: unknown = shareable;
+    if (config?.guestDecorator) {
+      decorated =
+        config.guestDecorator(
+          decorated as ShareableGuest<TValue> & TGuestDecorated
+        ) ?? decorated;
+    }
+    if (config?.hostDecorator) {
+      decorated =
+        config.hostDecorator(
+          decorated as ShareableHost<TValue> & THostDecorated
+        ) ?? decorated;
+    }
+    return decorated as Shareable<TValue, THostDecorated, TGuestDecorated>;
   },
   createSynchronizable: <TValue>(
     initialValue: TValue,
