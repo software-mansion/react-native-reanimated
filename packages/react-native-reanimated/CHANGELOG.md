@@ -12,6 +12,7 @@
 
 ### 🐛 Bug fixes
 
+- Fix layout changes made during entering animations being overwritten by stale animation frames. ([#10382](https://github.com/software-mansion/react-native-reanimated/pull/10382) by [@ngocdevv](https://github.com/ngocdevv))
 - Fix other window-relative layout animations not moving on iOS when Reanimated initializes after the surface is laid out: read the window size from the base revision when the Layout Animations Proxy attaches. ([#10362](https://github.com/software-mansion/react-native-reanimated/pull/10362) by [@pawicao](https://github.com/pawicao))
 - Fix the predefined `ease` easing function using `cubicBezier(0.25, 0.1, 0.25, 0.1)` instead of the spec-defined `cubic-bezier(0.25, 0.1, 0.25, 1)`. ([#10353](https://github.com/software-mansion/react-native-reanimated/pull/10353) by [@tjzel](https://github.com/tjzel))
 - Fix text losing its trailing word on Android after a CSS `fontSize` transition. ([#10342](https://github.com/software-mansion/react-native-reanimated/pull/10342) by [@MatiPl01](https://github.com/MatiPl01))
