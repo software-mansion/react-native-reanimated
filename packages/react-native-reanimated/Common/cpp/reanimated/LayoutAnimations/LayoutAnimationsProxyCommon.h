@@ -23,6 +23,11 @@ struct LayoutAnimation {
   Tag parentTag;
   std::optional<double> opacity;
   bool isViewAlreadyMounted = false;
+  // Latched removal intent. `endLayoutAnimation` is called once per animation
+  // outstanding for the tag, but only the exiting one passes
+  // `shouldRemove == true`, so the flag has to survive until `count` drops to
+  // zero — otherwise whichever animation happens to finish last decides whether
+  // the view is removed.
   bool isExitingWhenSettled = false;
   int count = 1;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;

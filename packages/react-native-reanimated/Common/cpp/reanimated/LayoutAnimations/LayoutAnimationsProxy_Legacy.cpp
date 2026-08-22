@@ -222,6 +222,13 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
 
   auto &layoutAnimation = layoutAnimationIt->second;
 
+  // Only the exiting animation passes `shouldRemove`, and it is not necessarily
+  // the one that settles the tag, so latch the intent before the counter below
+  // can return early and drop it.
+  if (shouldRemove) {
+    layoutAnimation.isExitingWhenSettled = true;
+  }
+
   // multiple layout animations can be triggered for a view
   // one after the other, so we need to keep count of how many
   // were actually triggered, so that we don't cleanup necessary
@@ -229,11 +236,10 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
   if (--layoutAnimation.count > 0) {
     return {};
   }
-  layoutAnimation.isExitingWhenSettled = shouldRemove;
   maybeSettledAnimationTags_.insert(tag);
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
-  if (!shouldRemove || !nodeForTag_.contains(tag)) {
+  if (!layoutAnimation.isExitingWhenSettled || !nodeForTag_.contains(tag)) {
     return {};
   }
 
