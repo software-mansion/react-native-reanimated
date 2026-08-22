@@ -95,6 +95,42 @@ describe(LinearEasing, () => {
         ]);
       });
 
+      test('clamps the last point to the largest preceding input progress', () => {
+        const easing = new LinearEasing([0, [1, '80%'], [0.5, '30%']]);
+
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0 },
+          { x: 0.8, y: 1 },
+          { x: 0.8, y: 0.5 },
+          { x: 1, y: 0.5 },
+        ]);
+      });
+
+      test('treats the input progress of the first point as preceding', () => {
+        const easing = new LinearEasing([[0, '50%'], [1, '20%'], 0.5]);
+
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0 },
+          { x: 0.5, y: 0 },
+          { x: 0.5, y: 1 },
+          { x: 1, y: 0.5 },
+        ]);
+      });
+
+      test('keeps the output progress within the declared values for two decreasing points', () => {
+        const easing = new LinearEasing([
+          [0, '50%'],
+          [1, '20%'],
+        ]);
+
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0 },
+          { x: 0.5, y: 0 },
+          { x: 0.5, y: 1 },
+          { x: 1, y: 1 },
+        ]);
+      });
+
       test('warns if the input progress of the point is less than the input progress of the preceding point and is overridden', () => {
         new LinearEasing([
           0,
