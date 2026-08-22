@@ -12,6 +12,7 @@
 
 ### 🐛 Bug fixes
 
+- Fix shared element transitions never running on Android for npm installs by publishing `react-native.config.js`, which registers the Shared Transition Boundary component descriptor for autolinking. ([#10375](https://github.com/software-mansion/react-native-reanimated/pull/10375) by [@dennytosp](https://github.com/dennytosp))
 - Fix other window-relative layout animations not moving on iOS when Reanimated initializes after the surface is laid out: read the window size from the base revision when the Layout Animations Proxy attaches. ([#10362](https://github.com/software-mansion/react-native-reanimated/pull/10362) by [@pawicao](https://github.com/pawicao))
 - Fix the predefined `ease` easing function using `cubicBezier(0.25, 0.1, 0.25, 0.1)` instead of the spec-defined `cubic-bezier(0.25, 0.1, 0.25, 1)`. ([#10353](https://github.com/software-mansion/react-native-reanimated/pull/10353) by [@tjzel](https://github.com/tjzel))
 - Fix text losing its trailing word on Android after a CSS `fontSize` transition. ([#10342](https://github.com/software-mansion/react-native-reanimated/pull/10342) by [@MatiPl01](https://github.com/MatiPl01))
