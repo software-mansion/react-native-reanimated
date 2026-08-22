@@ -109,8 +109,16 @@ describe(normalizeTimeUnit, () => {
     ['100ms', 100],
     ['0ms', 0],
     ['-100ms', -100],
+    // A fractional millisecond value has to keep its fractional part - the
+    // same amount of time is read correctly when it is spelled in seconds.
+    ['0.5ms', 0.5],
+    ['1.5ms', 1.5],
+    ['.5ms', 0.5],
+    ['-1.5ms', -1.5],
     ['1s', 1000],
     ['0.1s', 100],
+    ['0.0005s', 0.5],
+    ['.5s', 500],
     ['-1s', -1000],
   ] satisfies [TimeUnit, number][])('converts %p to %p', (value, expected) => {
     expect(normalizeTimeUnit(value)).toBe(expected);
