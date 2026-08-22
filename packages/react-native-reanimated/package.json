@@ -67,6 +67,7 @@
     "scripts/validate-react-native-version.js",
     "compatibility.json",
     "mock.js",
+    "jest/resolver.js",
     "plugin/index.js",
     "plugin/index.d.ts",
     "metro-config",
