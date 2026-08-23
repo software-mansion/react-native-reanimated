@@ -54,4 +54,45 @@ bool isFinite(const AnimationValue &value) {
       value);
 }
 
+namespace {
+
+bool withinTolerance(const double expected, const double actual, const double tolerance) {
+  return std::abs(expected - actual) <= tolerance;
+}
+
+} // namespace
+
+bool valuesMatch(const AnimationValue &expected, const AnimationValue &actual, const double tolerance) {
+  if (expected.index() != actual.index()) {
+    return false;
+  }
+  return std::visit(
+      [&](const auto &expectedValue) {
+        using T = std::decay_t<decltype(expectedValue)>;
+        const auto &actualValue = std::get<T>(actual);
+        if constexpr (std::is_same_v<T, double>) {
+          return withinTolerance(expectedValue, actualValue, tolerance);
+        } else if constexpr (std::is_same_v<T, AnimationPoint>) {
+          return withinTolerance(expectedValue.x, actualValue.x, tolerance) &&
+              withinTolerance(expectedValue.y, actualValue.y, tolerance);
+        } else if constexpr (std::is_same_v<T, AnimationSize>) {
+          return withinTolerance(expectedValue.width, actualValue.width, tolerance) &&
+              withinTolerance(expectedValue.height, actualValue.height, tolerance);
+        } else if constexpr (std::is_same_v<T, AnimationColor>) {
+          return withinTolerance(expectedValue.red, actualValue.red, tolerance) &&
+              withinTolerance(expectedValue.green, actualValue.green, tolerance) &&
+              withinTolerance(expectedValue.blue, actualValue.blue, tolerance) &&
+              withinTolerance(expectedValue.alpha, actualValue.alpha, tolerance);
+        } else {
+          for (size_t index = 0; index < expectedValue.values.size(); ++index) {
+            if (!withinTolerance(expectedValue.values[index], actualValue.values[index], tolerance)) {
+              return false;
+            }
+          }
+          return true;
+        }
+      },
+      expected);
+}
+
 } // namespace reanimated::native_animation

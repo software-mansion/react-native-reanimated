@@ -154,6 +154,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
     uint64_t buildId{0};
   };
 
+  LayoutNativeConversionContext layoutConversionContext(const ShadowView &finalView) const;
+
   // Runs the builder once, builds one owned plan, and selects the
   // whole-animation route. Runs inside `pullTransaction` on the platform main
   // thread.

@@ -46,5 +46,8 @@ using AnimationStart = std::variant<AnimationValue, CurrentVisualValue>;
 
 bool valueMatchesTarget(const AnimationValue &value, AnimationTarget target);
 bool isFinite(const AnimationValue &value);
+// True when every component of `actual` is within `tolerance` of `expected`.
+// Values of different kinds never match.
+bool valuesMatch(const AnimationValue &expected, const AnimationValue &actual, double tolerance);
 
 } // namespace reanimated::native_animation

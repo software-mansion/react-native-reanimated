@@ -161,7 +161,7 @@ void NativeAnimationCoordinator::schedule(AnimationRequest request, AnimationCal
         ResolvedAnimationTrack{std::move(request.plan.tracks[index]), std::move(resolvedTargets[index])});
   }
 
-  auto preparation = executor_->prepare(handle, std::move(resolvedTracks));
+  auto preparation = executor_->prepare(handle, std::move(resolvedTracks), request.modelPolicy);
   if (const auto *reason = std::get_if<AnimationResultReason>(&preparation)) {
     reject(handle, std::move(callbacks), *reason);
     return;

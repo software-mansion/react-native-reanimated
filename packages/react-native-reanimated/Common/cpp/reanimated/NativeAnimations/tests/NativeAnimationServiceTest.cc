@@ -241,6 +241,29 @@ void testAggregateResourceBudgetBoundaries() {
           overScalarsUsage));
 }
 
+void testMountedEndpointPolicy() {
+  Fixture fixture;
+  const AnimationHandle handle{1, 10, AnimationOwner::Layout, 1};
+  std::optional<AnimationResult> result;
+  fixture.service->schedule(
+      {handle, {{opacityTrack()}}, AnimationAdmissionMode::Normal},
+      animationCallbacks([&](const AnimationResult value) { result = value; }));
+  fixture.scheduler->flush();
+  assert(fixture.executor->modelPolicies.back() == AnimationModelPolicy::ExecutorCommitsEndpoint);
+  assert(!result);
+
+  fixture.executor->endpointMismatchTargets.insert(AnimationTargetKind::Opacity);
+  const AnimationHandle mounted{1, 11, AnimationOwner::Layout, 2};
+  std::optional<AnimationResult> mountedResult;
+  fixture.service->schedule(
+      {mounted, {{opacityTrack()}}, AnimationAdmissionMode::Normal, AnimationModelPolicy::MountedModelMustMatchEndpoint},
+      animationCallbacks([&](const AnimationResult value) { mountedResult = value; }));
+  fixture.scheduler->flush();
+  assert(fixture.executor->modelPolicies.back() == AnimationModelPolicy::MountedModelMustMatchEndpoint);
+  assert((mountedResult == AnimationResult{AnimationOutcome::Rejected, AnimationResultReason::EndpointMismatch}));
+  assert(fixture.executor->started.size() == 1);
+}
+
 void testSurfaceIdentityAndDisjointGenerations() {
   Fixture fixture;
   const AnimationHandle firstSurface{1, 10, AnimationOwner::Layout, 1};
@@ -841,6 +864,7 @@ int main() {
   testTrackBuildAndWholePlanFallback();
   testSegmentRules();
   testAggregateResourceBudgetBoundaries();
+  testMountedEndpointPolicy();
   testSurfaceIdentityAndDisjointGenerations();
   testTargetRegistryScopesClaimsAndRetainedExitsByView();
   testMultiTrackCommandUsesOneBatchResolution();

@@ -4,6 +4,8 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/LayoutNativeAnimationStructureParser.h>
 
+#include <react/renderer/components/view/ViewProps.h>
+
 #include <react/utils/hash_combine.h>
 
 #include <algorithm>
@@ -39,6 +41,7 @@ bool layoutPermitsFallback(const native_animation::AnimationResultReason reason)
     case native_animation::AnimationResultReason::ExecutorError:
     case native_animation::AnimationResultReason::InvalidPlan:
     case native_animation::AnimationResultReason::ResourceLimit:
+    case native_animation::AnimationResultReason::EndpointMismatch:
       return true;
     default:
       return false;
@@ -123,6 +126,19 @@ void LayoutAnimationsProxyCommon::cancelNativeLayoutStart(const native_animation
   }
 }
 
+LayoutNativeConversionContext LayoutAnimationsProxyCommon::layoutConversionContext(const ShadowView &finalView) const {
+  const auto &frame = finalView.layoutMetrics.frame;
+  const auto &viewProps = static_cast<const ViewProps &>(*finalView.props);
+  return {
+      .finalWidth = frame.size.width,
+      .finalHeight = frame.size.height,
+      .finalOriginX = frame.origin.x,
+      .finalOriginY = frame.origin.y,
+      .finalOpacity = static_cast<double>(viewProps.opacity),
+      .formSupport = nativeTrackFormSupport_,
+  };
+}
+
 LayoutAnimationsProxyCommon::NativeLayoutRouteAttempt LayoutAnimationsProxyCommon::tryStartNativeLayoutAnimation(
     const ShadowView &oldView,
     const ShadowView &finalView,
@@ -172,10 +188,7 @@ LayoutAnimationsProxyCommon::NativeLayoutRouteAttempt LayoutAnimationsProxyCommo
       parseLayoutNativeAnimationBuild(uiRuntime, summary, native_animation::kDefaultResourceBudget.maxTracksPerPlan);
   auto planResult = std::holds_alternative<LayoutNativeAnimationBuildInput>(parsed)
       ? buildLayoutNativeAnimationPlan(
-            std::get<LayoutNativeAnimationBuildInput>(parsed),
-            {finalView.layoutMetrics.frame.size.width,
-             finalView.layoutMetrics.frame.size.height,
-             nativeTrackFormSupport_})
+            std::get<LayoutNativeAnimationBuildInput>(parsed), layoutConversionContext(finalView))
       : LayoutPlanBuildResult{std::get<native_animation::TrackBuildFailure>(parsed)};
   if (const auto *failure = std::get_if<native_animation::TrackBuildFailure>(&planResult)) {
     // One failed track routes the whole animation to frame-driven.
@@ -228,7 +241,10 @@ LayoutAnimationsProxyCommon::NativeLayoutRouteAttempt LayoutAnimationsProxyCommo
   enqueueNativeLayoutStart(
       oldView,
       finalView,
-      {handle, std::move(plan), native_animation::AnimationAdmissionMode::Normal},
+      {handle,
+       std::move(plan),
+       native_animation::AnimationAdmissionMode::Normal,
+       native_animation::AnimationModelPolicy::MountedModelMustMatchEndpoint},
       std::move(callbacks));
   attempt.routedNative = true;
   return attempt;

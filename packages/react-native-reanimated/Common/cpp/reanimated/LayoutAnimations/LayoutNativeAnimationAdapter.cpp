@@ -9,11 +9,16 @@ namespace {
 
 using namespace native_animation;
 
+// Host-state tolerance from the semantic contract.
+constexpr double kEndpointTolerance = 0.01;
+
 struct LayoutTargetMapping {
   AnimationTargetKind kind;
   // Added to frame-origin values to reach the layer center position that the
   // platform animates.
   double valueOffset;
+  // The value Fabric mounted for this property, in builder units.
+  double mountedValue;
 };
 
 std::optional<LayoutTargetMapping> targetForProperty(
@@ -22,13 +27,13 @@ std::optional<LayoutTargetMapping> targetForProperty(
   // Only targets the platform host realizes correctly route natively.
   // Objectives 10 and 11 extend this set.
   if (property == "opacity") {
-    return LayoutTargetMapping{AnimationTargetKind::Opacity, 0};
+    return LayoutTargetMapping{AnimationTargetKind::Opacity, 0, context.finalOpacity};
   }
   if (property == "originX") {
-    return LayoutTargetMapping{AnimationTargetKind::PositionX, context.finalWidth / 2};
+    return LayoutTargetMapping{AnimationTargetKind::PositionX, context.finalWidth / 2, context.finalOriginX};
   }
   if (property == "originY") {
-    return LayoutTargetMapping{AnimationTargetKind::PositionY, context.finalHeight / 2};
+    return LayoutTargetMapping{AnimationTargetKind::PositionY, context.finalHeight / 2, context.finalOriginY};
   }
   return std::nullopt;
 }
@@ -66,7 +71,6 @@ TrackBuildResult buildLayoutTrack(
   if (!std::isfinite(property.delayMs) || !std::isfinite(timingLeaf->durationMs)) {
     return TrackBuildFailure{TrackBuildFailureReason::InvalidValue};
   }
-
   // Frame-driven runs a negative delay or duration at once, so both clamp to
   // zero.
   const double delayMs = std::max(property.delayMs, 0.0);
@@ -79,10 +83,17 @@ TrackBuildResult buildLayoutTrack(
       delayMs,
       durationMs,
   };
-  if (!accumulateTrackUsage(track, context.budget, usage)) {
+  auto built = buildAnimationTrack(std::move(track));
+  if (std::holds_alternative<TrackBuildFailure>(built)) {
+    return built;
+  }
+  if (std::abs(timingLeaf->toValue - mapping->mountedValue) > kEndpointTolerance) {
+    return TrackBuildFailure{TrackBuildFailureReason::EndpointMismatch};
+  }
+  if (!accumulateTrackUsage(std::get<AnimationTrack>(built), context.budget, usage)) {
     return TrackBuildFailure{TrackBuildFailureReason::ResourceLimit};
   }
-  return buildAnimationTrack(std::move(track));
+  return built;
 }
 
 } // namespace

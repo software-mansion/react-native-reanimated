@@ -40,10 +40,19 @@ enum class AnimationAdmissionMode : uint8_t {
   RetainedExit,
 };
 
+// Who owns the endpoint value in the platform model. The executor writes it
+// for a domain that has not mounted it; a domain that mounted it first wants
+// the executor to check the mounted value and change nothing.
+enum class AnimationModelPolicy : uint8_t {
+  ExecutorCommitsEndpoint,
+  MountedModelMustMatchEndpoint,
+};
+
 struct AnimationRequest {
   AnimationHandle handle;
   AnimationPlan plan;
   AnimationAdmissionMode admissionMode{AnimationAdmissionMode::Normal};
+  AnimationModelPolicy modelPolicy{AnimationModelPolicy::ExecutorCommitsEndpoint};
 };
 
 enum class TrackBuildFailureReason : uint8_t {
@@ -53,6 +62,7 @@ enum class TrackBuildFailureReason : uint8_t {
   UnsupportedTrackForm,
   InvalidValue,
   ResourceLimit,
+  EndpointMismatch,
 };
 
 struct TrackBuildFailure {
@@ -80,6 +90,7 @@ enum class AnimationResultReason : uint8_t {
   RetainedExitActive,
   ExecutorError,
   ResourceLimit,
+  EndpointMismatch,
 };
 
 struct AnimationResult {

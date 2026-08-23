@@ -54,6 +54,9 @@ struct ActiveTrackKeyHash {
   }
 };
 
+// Host-state tolerance from the semantic contract.
+constexpr double kMountedEndpointTolerance = 0.01;
+
 NSString *coreAnimationKey(const AnimationHandle &handle, const AnimationTarget target)
 {
   return [NSString stringWithFormat:@"reanimated.native.%d.%d.%u.%llu.%u",
@@ -353,6 +356,7 @@ struct PreparedTrack {
   __strong CAMediaTimingFunction *timingFunction;
   double delayMs;
   double durationMs;
+  bool commitsEndpoint;
 };
 
 class ApplePreparedNativeAnimation final : public PreparedNativeAnimation {
@@ -365,14 +369,26 @@ class ApplePreparedNativeAnimation final : public PreparedNativeAnimation {
 class AppleNativeAnimationExecutor final : public NativeAnimationExecutor,
                                            public std::enable_shared_from_this<AppleNativeAnimationExecutor> {
  public:
-  NativeAnimationPreparation prepare(const AnimationHandle &, std::vector<ResolvedAnimationTrack> tracks) override
+  NativeAnimationPreparation prepare(
+      const AnimationHandle &,
+      std::vector<ResolvedAnimationTrack> tracks,
+      const AnimationModelPolicy modelPolicy) override
   {
     RCTAssertMainQueue();
     const auto formSupport = appleNativeTrackFormSupport();
+    const bool commitsEndpoint = modelPolicy == AnimationModelPolicy::ExecutorCommitsEndpoint;
     std::vector<PreparedTrack> preparedTracks;
     preparedTracks.reserve(tracks.size());
     for (const auto &resolvedTrack : tracks) {
       const auto &track = resolvedTrack.track;
+      const auto &resolved = static_cast<const AppleResolvedAnimationTarget &>(*resolvedTrack.target);
+      const auto &endValue = track.segments.back().endValue;
+      if (!commitsEndpoint) {
+        const auto mountedValue = valueFromObject([resolved.layer() valueForKeyPath:resolved.keyPath()], track.target);
+        if (!mountedValue || !valuesMatch(endValue, *mountedValue, kMountedEndpointTolerance)) {
+          return AnimationResultReason::EndpointMismatch;
+        }
+      }
       // TODO: add structured and sampled multi-segment tracks. for now this is just the basic case
       if (track.segments.size() > formSupport.maxSegmentsPerTrack) {
         return AnimationResultReason::UnsupportedTargetRealization;
@@ -384,7 +400,6 @@ class AppleNativeAnimationExecutor final : public NativeAnimationExecutor,
       if (timing == nil) {
         return AnimationResultReason::UnsupportedTargetRealization;
       }
-      const auto &resolved = static_cast<const AppleResolvedAnimationTarget &>(*resolvedTrack.target);
       id fromValue;
       if (const auto *explicitStart = std::get_if<AnimationValue>(&track.start)) {
         fromValue = objectFromValue(*explicitStart);
@@ -403,6 +418,7 @@ class AppleNativeAnimationExecutor final : public NativeAnimationExecutor,
           timing,
           track.delayMs,
           track.durationMs,
+          commitsEndpoint,
       });
     }
     return std::make_unique<ApplePreparedNativeAnimation>(std::move(preparedTracks));
@@ -424,7 +440,9 @@ class AppleNativeAnimationExecutor final : public NativeAnimationExecutor,
     auto &applePrepared = static_cast<ApplePreparedNativeAnimation &>(*prepared);
     std::vector<AnimationTarget> completedTargets;
     for (const auto &track : applePrepared.tracks) {
-      [track.layer setValue:track.toValue forKeyPath:track.keyPath];
+      if (track.commitsEndpoint) {
+        [track.layer setValue:track.toValue forKeyPath:track.keyPath];
+      }
       if (track.durationMs == 0 && track.delayMs <= 0) {
         completedTargets.push_back(track.target);
         continue;

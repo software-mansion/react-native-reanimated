@@ -38,8 +38,16 @@ NativeTrackFormSupport fakeAndroidFormSupport() {
   };
 }
 
+// The mounted final values match the endpoints of the fixtures below.
 LayoutNativeConversionContext appleContext(const double finalWidth = 100, const double finalHeight = 50) {
-  return {finalWidth, finalHeight, fakeAppleFormSupport()};
+  return {
+      .finalWidth = finalWidth,
+      .finalHeight = finalHeight,
+      .finalOriginX = 60,
+      .finalOriginY = 40,
+      .finalOpacity = 1,
+      .formSupport = fakeAppleFormSupport(),
+  };
 }
 
 LayoutNativeAnimatedProperty timingProperty(
@@ -126,6 +134,12 @@ void testConstructionTable() {
     assert(failureOf(build(timingProperty(property, 0, 1))) == TrackBuildFailureReason::UnsupportedTarget);
   }
 
+  // An endpoint that differs from the mounted final value by more than the
+  // host-state tolerance routes frame-driven.
+  assert(failureOf(build(timingProperty("opacity", 0, 0.5))) == TrackBuildFailureReason::EndpointMismatch);
+  assert(failureOf(build(timingProperty("originX", 10, 61))) == TrackBuildFailureReason::EndpointMismatch);
+  assert(std::holds_alternative<AnimationPlan>(build(timingProperty("originX", 10, 60.005))));
+
   // A property without stable structure has no native form.
   LayoutNativeAnimatedProperty unsupportedLeaf;
   unsupportedLeaf.property = "opacity";
@@ -145,7 +159,8 @@ void testConstructionTable() {
       failureOf(build(timingProperty("opacity", 0, 1, 300, steps))) == TrackBuildFailureReason::UnsupportedTiming);
   assert(
       failureOf(build(timingProperty("opacity", 0, 1, 300, stops))) == TrackBuildFailureReason::UnsupportedTiming);
-  const LayoutNativeConversionContext androidContext{100, 50, fakeAndroidFormSupport()};
+  LayoutNativeConversionContext androidContext = appleContext();
+  androidContext.formSupport = fakeAndroidFormSupport();
   assert(std::holds_alternative<AnimationPlan>(build(timingProperty("opacity", 0, 1, 300, steps), androidContext)));
   assert(std::holds_alternative<AnimationPlan>(build(timingProperty("opacity", 0, 1, 300, stops), androidContext)));
 
@@ -205,6 +220,8 @@ void testWholePlanRouting() {
 // at, below, and above the boundary.
 void testConstructionResourceBudget() {
   LayoutNativeConversionContext context = appleContext();
+  context.finalOriginX = 10;
+  context.finalOriginY = 10;
   context.budget = {
       .maxTracksPerPlan = 2,
       .maxSegmentsPerPlan = 2,
@@ -348,7 +365,14 @@ void testFuzzedConstruction() {
     }
 
     const auto result =
-        buildLayoutNativeAnimationPlan(input, {random.nextDouble(), random.nextDouble(), fakeAppleFormSupport()});
+        buildLayoutNativeAnimationPlan(
+            input,
+            {.finalWidth = random.nextDouble(),
+             .finalHeight = random.nextDouble(),
+             .finalOriginX = random.nextDouble(),
+             .finalOriginY = random.nextDouble(),
+             .finalOpacity = random.nextDouble(),
+             .formSupport = fakeAppleFormSupport()});
     if (const auto *plan = std::get_if<AnimationPlan>(&result)) {
       assert(!plan->tracks.empty());
       assert(validateAnimationPlan(*plan) == std::nullopt && "fuzz seed 20260818 built an invalid plan");
@@ -366,19 +390,21 @@ void testFuzzedConstruction() {
 // The same supported common input builds with the fake Apple and Android
 // hosts; an Android-only timing form builds on exactly one of them.
 void testCrossHostConstruction() {
+  auto appleHost = appleContext();
+  appleHost.finalOriginX = 10;
+  auto androidHost = appleHost;
+  androidHost.formSupport = fakeAndroidFormSupport();
   const auto shared = inputOf({timingProperty("opacity", 0, 1), timingProperty("originX", 0, 10)});
-  assert(std::holds_alternative<AnimationPlan>(
-      buildLayoutNativeAnimationPlan(shared, {100, 50, fakeAppleFormSupport()})));
-  assert(std::holds_alternative<AnimationPlan>(
-      buildLayoutNativeAnimationPlan(shared, {100, 50, fakeAndroidFormSupport()})));
+  assert(std::holds_alternative<AnimationPlan>(buildLayoutNativeAnimationPlan(shared, appleHost)));
+  assert(std::holds_alternative<AnimationPlan>(buildLayoutNativeAnimationPlan(shared, androidHost)));
 
   const auto stepsOnly =
       inputOf({timingProperty("opacity", 0, 1, 300, StepsTiming{{{0, 0}, {1, 1}}})});
   assert(
-      failureOf(buildLayoutNativeAnimationPlan(stepsOnly, {100, 50, fakeAppleFormSupport()})) ==
+      failureOf(buildLayoutNativeAnimationPlan(stepsOnly, appleHost)) ==
       TrackBuildFailureReason::UnsupportedTiming);
   assert(std::holds_alternative<AnimationPlan>(
-      buildLayoutNativeAnimationPlan(stepsOnly, {100, 50, fakeAndroidFormSupport()})));
+      buildLayoutNativeAnimationPlan(stepsOnly, androidHost)));
 }
 
 } // namespace

@@ -70,7 +70,8 @@ class NativeAnimationExecutor {
   // must not change model values, claims, or physical animation state.
   virtual NativeAnimationPreparation prepare(
       const AnimationHandle &handle,
-      std::vector<ResolvedAnimationTrack> tracks) = 0;
+      std::vector<ResolvedAnimationTrack> tracks,
+      AnimationModelPolicy modelPolicy) = 0;
 
   // prepare() has made start infallible. This method replaces the listed
   // physical tracks and starts the prepared command in one UI operation.

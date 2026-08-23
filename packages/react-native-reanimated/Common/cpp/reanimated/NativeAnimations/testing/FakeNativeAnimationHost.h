@@ -66,9 +66,20 @@ class TestPreparedNativeAnimation final : public PreparedNativeAnimation {
 
 class TestNativeAnimationExecutor : public NativeAnimationExecutor {
  public:
-  NativeAnimationPreparation prepare(const AnimationHandle &, std::vector<ResolvedAnimationTrack> tracks) override {
+  NativeAnimationPreparation prepare(
+      const AnimationHandle &,
+      std::vector<ResolvedAnimationTrack> tracks,
+      const AnimationModelPolicy modelPolicy) override {
+    modelPolicies.push_back(modelPolicy);
     if (preparationFailure) {
       return *preparationFailure;
+    }
+    if (modelPolicy == AnimationModelPolicy::MountedModelMustMatchEndpoint) {
+      for (const auto &track : tracks) {
+        if (endpointMismatchTargets.contains(track.track.target.kind)) {
+          return AnimationResultReason::EndpointMismatch;
+        }
+      }
     }
     std::vector<AnimationTrack> preparedTracks;
     for (auto &track : tracks) {
@@ -168,6 +179,8 @@ class TestNativeAnimationExecutor : public NativeAnimationExecutor {
   };
 
   std::optional<AnimationResultReason> preparationFailure;
+  std::unordered_set<AnimationTargetKind> endpointMismatchTargets;
+  std::vector<AnimationModelPolicy> modelPolicies;
   std::optional<AnimationResultReason> handoffFailure;
   std::function<void(AnimationHandle)> onStart;
   std::vector<AnimationHandle> started;

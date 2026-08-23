@@ -57,6 +57,11 @@ struct LayoutNativeAnimationBuildInput {
 struct LayoutNativeConversionContext {
   double finalWidth{0};
   double finalHeight{0};
+  // Mounted final values in the same units as the builder values. A plan
+  // endpoint that differs from them routes frame-driven.
+  double finalOriginX{0};
+  double finalOriginY{0};
+  double finalOpacity{1};
   native_animation::NativeTrackFormSupport formSupport;
   native_animation::NativeAnimationResourceBudget budget{native_animation::kDefaultResourceBudget};
 };
