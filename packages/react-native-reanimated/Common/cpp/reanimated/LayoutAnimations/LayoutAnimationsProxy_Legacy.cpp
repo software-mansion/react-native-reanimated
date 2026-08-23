@@ -35,9 +35,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " " << surfaceId << std::endl;
 #endif
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-#if defined(IS_REANIMATED_EXAMPLE_APP)
-  benchTransactionNumber_ = transactionNumber;
-#endif
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
   auto &surfaceCtx = getSurfaceContext(surfaceId);
@@ -83,7 +80,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   maybeScheduleCleanupPull(surfaceCtx, surfaceId, flushDeadNodes);
 #endif // ANDROID
 
-  handleUpdatesAndEnterings(filteredMutations, movedViews, mutations, propsParserContext, surfaceId, transactionNumber);
+  handleUpdatesAndEnterings(filteredMutations, movedViews, mutations, propsParserContext, surfaceId);
 
   addOngoingAnimations(surfaceId, filteredMutations);
 
@@ -407,8 +404,7 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
     const std::unordered_map<Tag, Tag> &movedViews,
     ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext,
-    SurfaceId surfaceId,
-    [[maybe_unused]] const MountingTransaction::Number transactionNumber) const {
+    SurfaceId surfaceId) const {
   std::unordered_map<Tag, ShadowView> oldShadowViewsForReparentings;
   for (auto &mutation : mutations) {
     maybeUpdateWindowDimensions(mutation, surfaceId);
@@ -525,7 +521,6 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
                   mutation.oldChildShadowView,
                   mutation.newChildShadowView,
                   mutation.parentTag,
-                  transactionNumber,
                   Snapshot(mutation.oldChildShadowView, window),
                   Snapshot(mutation.newChildShadowView, window),
                   weak_from_this());
@@ -1197,10 +1192,8 @@ bool LayoutAnimationsProxy_Legacy::maybeEnqueueFinalStateFirstBenchLayout(const 
       5000,
   };
   enqueueNativeLayoutStart(
-      LayoutAnimationType::LAYOUT,
       mutation.oldChildShadowView,
       mutation.newChildShadowView,
-      benchTransactionNumber_,
       {handle, {{std::move(positionTrack)}}, native_animation::AnimationAdmissionMode::Normal},
       {});
   return true;
@@ -1230,10 +1223,8 @@ bool LayoutAnimationsProxy_Legacy::maybeEnqueueFinalStateFirstBenchEntering(cons
       2000,
   };
   enqueueNativeLayoutStart(
-      LayoutAnimationType::ENTERING,
       mutation.newChildShadowView,
       mutation.newChildShadowView,
-      benchTransactionNumber_,
       {handle, {{std::move(opacityTrack)}}, native_animation::AnimationAdmissionMode::Normal},
       {});
   return true;

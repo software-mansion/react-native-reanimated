@@ -33,10 +33,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   reconcileContradictedRemovals(mutations, filteredMutations);
 
   if (isInTransition) {
-    updateLightTree(propsParserContext, mutations, filteredMutations, transactionNumber);
+    updateLightTree(propsParserContext, mutations, filteredMutations);
     handleProgressTransition(filteredMutations, mutations, propsParserContext, surfaceId);
   } else if (!synchronized_) {
-    updateLightTree(propsParserContext, mutations, filteredMutations, transactionNumber);
+    updateLightTree(propsParserContext, mutations, filteredMutations);
     if (!lightNodes_.contains(closingScreenTag_)) {
       topScreen[surfaceId] = findActiveBoundary(lightNodes_[surfaceId]);
       synchronized_ = true;
@@ -51,7 +51,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
     }
 
-    updateLightTree(propsParserContext, mutations, filteredMutations, transactionNumber);
+    updateLightTree(propsParserContext, mutations, filteredMutations);
 
     auto afterTopScreen = findActiveBoundary(root);
     topScreen[surfaceId] = afterTopScreen;
@@ -185,8 +185,7 @@ bool LayoutAnimationsProxy_Experimental::shouldOverridePullTransaction() const {
 void LayoutAnimationsProxy_Experimental::updateLightTree(
     const PropsParserContext &propsParserContext,
     const ShadowViewMutationList &mutations,
-    ShadowViewMutationList &filteredMutations,
-    [[maybe_unused]] const MountingTransaction::Number transactionNumber) const {
+    ShadowViewMutationList &filteredMutations) const {
   ReanimatedSystraceSection s("updateLightTree");
   std::unordered_set<Tag> inserted, moved, deleted;
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
@@ -248,7 +247,6 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
                 mutation.oldChildShadowView,
                 mutation.newChildShadowView,
                 mutation.parentTag,
-                transactionNumber,
                 Snapshot(mutation.oldChildShadowView, window),
                 Snapshot(mutation.newChildShadowView, window),
                 weak_from_this());

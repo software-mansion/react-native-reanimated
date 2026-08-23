@@ -171,7 +171,6 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
 #if defined(IS_REANIMATED_EXAMPLE_APP)
   // Final-state-first bench: views with a bench nativeID get a controlled
   // prepared request through the pending-start mechanism.
-  mutable MountingTransaction::Number benchTransactionNumber_{0};
   bool maybeEnqueueFinalStateFirstBenchLayout(const ShadowViewMutation &mutation) const;
   bool maybeEnqueueFinalStateFirstBenchEntering(const ShadowViewMutation &mutation) const;
 #endif
@@ -203,8 +202,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
       const std::unordered_map<Tag, Tag> &movedViews,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext,
-      SurfaceId surfaceId,
-      MountingTransaction::Number transactionNumber) const;
+      SurfaceId surfaceId) const;
   void addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList &mutations) const;
   void dropUpdatesForDeletedViews(ShadowViewMutationList &filteredMutations) const;
   void updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation) const;

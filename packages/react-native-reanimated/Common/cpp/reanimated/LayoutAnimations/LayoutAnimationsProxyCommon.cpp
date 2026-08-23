@@ -140,18 +140,14 @@ std::shared_ptr<PendingNativeLayoutStarts> LayoutAnimationsProxyCommon::makePend
 }
 
 void LayoutAnimationsProxyCommon::enqueueNativeLayoutStart(
-    const LayoutAnimationType type,
     const ShadowView &oldView,
     const ShadowView &finalView,
-    const MountingTransaction::Number transactionNumber,
     native_animation::AnimationRequest request,
     native_animation::AnimationCallbacks callbacks) const {
   react_native_assert(pendingNativeStarts_ != nullptr && "native layout start delivery is not available");
   const auto handle = request.handle;
   pendingNativeStarts_->enqueue({
       handle,
-      transactionNumber,
-      type,
       finalView.layoutMetrics.frame,
       // The snapshot below keeps this props object alive while pending.
       reinterpret_cast<uintptr_t>(finalView.props.get()),
@@ -171,7 +167,6 @@ LayoutAnimationsProxyCommon::NativeLayoutRouteAttempt LayoutAnimationsProxyCommo
     const ShadowView &oldView,
     const ShadowView &finalView,
     const Tag parentTag,
-    const MountingTransaction::Number transactionNumber,
     const Snapshot &currentValues,
     const Snapshot &targetValues,
     const std::weak_ptr<const LayoutAnimationsProxyCommon> &weakSelf) const {
@@ -271,10 +266,8 @@ LayoutAnimationsProxyCommon::NativeLayoutRouteAttempt LayoutAnimationsProxyCommo
       },
   };
   enqueueNativeLayoutStart(
-      LayoutAnimationType::LAYOUT,
       oldView,
       finalView,
-      transactionNumber,
       {handle, std::move(plan), native_animation::AnimationAdmissionMode::Normal},
       std::move(callbacks));
   attempt.routedNative = true;

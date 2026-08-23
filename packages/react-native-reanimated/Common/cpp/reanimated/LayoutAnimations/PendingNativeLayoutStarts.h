@@ -1,6 +1,5 @@
 #pragma once
 
-#include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 #include <reanimated/LayoutAnimations/LayoutMountBoundary.h>
 #include <reanimated/NativeAnimations/NativeAnimationService.h>
 #include <reanimated/NativeAnimations/NativeAnimationTrace.h>
@@ -23,9 +22,6 @@ class PendingLayoutViewSnapshot {
 
 struct PendingNativeLayoutStart {
   native_animation::AnimationHandle handle;
-  // MountingTransaction::Number without its heavy header dependency.
-  int64_t transactionNumber{0};
-  LayoutAnimationType type{LayoutAnimationType::LAYOUT};
   facebook::react::Rect expectedFinalLayout;
   // Identity of the expected final props object; zero skips the props check.
   uintptr_t expectedFinalPropsToken{0};

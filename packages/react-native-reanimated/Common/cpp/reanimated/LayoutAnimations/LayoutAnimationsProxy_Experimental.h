@@ -124,8 +124,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   void updateLightTree(
       const PropsParserContext &propsParserContext,
       const ShadowViewMutationList &mutations,
-      ShadowViewMutationList &filteredMutations,
-      MountingTransaction::Number transactionNumber) const;
+      ShadowViewMutationList &filteredMutations) const;
 
   void reconcileContradictedRemovals(const ShadowViewMutationList &mutations, ShadowViewMutationList &filteredMutations)
       const;
