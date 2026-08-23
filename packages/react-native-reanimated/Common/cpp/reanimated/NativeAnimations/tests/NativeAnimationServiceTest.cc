@@ -681,11 +681,15 @@ void testZeroDurationKeepsItsDeclaredDelay() {
       animationCallbacks([&](const AnimationResult value) { result = value; }));
   fixture.scheduler->flush();
 
-  // The plan accepts the positive delay, ownership resolves, and the delay
-  // reaches the executor unchanged. The wait itself is platform behavior.
-  assert((result == AnimationResult{AnimationOutcome::Finished, AnimationResultReason::None}));
+  // The delay reaches the executor unchanged, and the track stays active as a
+  // hold until the delay ends.
+  assert(!result);
   assert(fixture.executor->zeroDuration.size() == 1);
   assert(fixture.executor->zeroDuration.front().delayMs == 40);
+  assert(fixture.executor->active.contains(handle));
+
+  fixture.executor->complete(handle, {AnimationTargetKind::Opacity});
+  assert((result == AnimationResult{AnimationOutcome::Finished, AnimationResultReason::None}));
   assert(!fixture.executor->active.contains(handle));
 }
 
