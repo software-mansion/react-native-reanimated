@@ -103,6 +103,7 @@ jsi::Value LayoutAnimationsManager::buildLayoutAnimation(
     const jsi::Object &values,
     const uint64_t buildId,
     const size_t maxProperties) {
+  react_native_assert(buildId < (uint64_t{1} << 53) && "build id must stay exact as a JS number");
   std::shared_ptr<Serializable> config;
   {
     auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);

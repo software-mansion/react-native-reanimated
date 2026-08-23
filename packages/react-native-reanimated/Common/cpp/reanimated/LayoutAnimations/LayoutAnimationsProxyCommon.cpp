@@ -366,7 +366,7 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
     const LayoutAnimationType type,
     const std::weak_ptr<const LayoutAnimationsProxyCommon> &weakOwner,
     std::function<void()> onGranted,
-    const uint64_t pendingBuildId) const {
+    const FrameDrivenBuild build) const {
   if (!nativeAnimationAdapter_) {
     onGranted();
     return;
@@ -394,7 +394,7 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
       surfaceId,
       tag,
       native_animation::AnimationOwner::Layout,
-      ++commandGeneration_,
+      build.id != 0 && !build.generationSubmitted ? build.id : ++commandGeneration_,
   };
   const auto admissionMode =
       existing && existing->getAdmissionMode() == native_animation::AnimationAdmissionMode::RetainedExit
@@ -414,7 +414,7 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
            type,
            lease,
            existing,
-           pendingBuildId,
+           build,
            adapter = nativeAnimationAdapter_,
            onGranted = std::move(onGranted)](const native_animation::ExternalClaimResult result) {
             const auto owner = weakOwner.lock();
@@ -424,9 +424,9 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
                 existing->setSuperseded(false);
               }
               if (owner) {
-                if (pendingBuildId != 0) {
+                if (build.id != 0) {
                   // The animation never starts; this is its one terminal result.
-                  owner->layoutAnimationsManager_->completeNativeBuild(owner->uiRuntime_, tag, pendingBuildId, false);
+                  owner->layoutAnimationsManager_->completeNativeBuild(owner->uiRuntime_, tag, build.id, false);
                 }
                 owner->handleRejectedFrameDrivenLayoutAnimation(tag, type, result.reason);
                 if (existing && type == LayoutAnimationType::EXITING) {

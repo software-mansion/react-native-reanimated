@@ -80,6 +80,15 @@ consumeIsCancelled(std::unordered_map<Tag, PendingStart> &pendingStarts, const T
 }
 #endif
 
+// The stored JS build that a frame-driven start reuses. When a native request
+// already used the build id as its handle generation, the lease takes a new
+// generation; otherwise the build id is the logical generation of the
+// animation.
+struct FrameDrivenBuild {
+  uint64_t id{0};
+  bool generationSubmitted{false};
+};
+
 class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDelegate {
  public:
   LayoutAnimationsProxyCommon(
@@ -136,14 +145,14 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 
   // `onGranted` must capture the proxy weakly; a strong capture would keep
   // the proxy alive while the claim is pending. A rejected claim settles the
-  // stored build named by `pendingBuildId` with `false`; zero names no build.
+  // stored build with `false`; a zero id names no build.
   void claimFrameDrivenLayoutAnimation(
       SurfaceId surfaceId,
       Tag tag,
       LayoutAnimationType type,
       const std::weak_ptr<const LayoutAnimationsProxyCommon> &weakOwner,
       std::function<void()> onGranted,
-      uint64_t pendingBuildId = 0) const;
+      FrameDrivenBuild build = {}) const;
   void releaseFrameDrivenLayoutAnimation(SurfaceId surfaceId, Tag tag, native_animation::AnimationOutcome outcome)
       const;
 

@@ -57,7 +57,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable std::vector<std::shared_ptr<LightNode>> entering_, exiting_;
   struct FrameDrivenLayoutUpdate {
     std::shared_ptr<LightNode> node;
-    uint64_t buildId{0};
+    FrameDrivenBuild build;
   };
   mutable std::vector<FrameDrivenLayoutUpdate> layout_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
@@ -104,12 +104,12 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
 
   void startEnteringAnimation(const std::shared_ptr<LightNode> &node) const;
   void startExitingAnimation(const std::shared_ptr<LightNode> &node) const;
-  void startLayoutAnimation(const std::shared_ptr<LightNode> &node, uint64_t buildId) const;
+  void startLayoutAnimation(const std::shared_ptr<LightNode> &node, FrameDrivenBuild build) const;
   void startFrameDrivenLayoutAnimation(
       const ShadowView &oldView,
       const ShadowView &finalView,
       Tag parentTag,
-      uint64_t buildId) const;
+      FrameDrivenBuild build) const;
   void startNativeLayoutFallback(const ActiveNativeLayoutAnimation &record) const override;
   void startSharedTransition(const int tag, const ShadowView &before, const ShadowView &after, SurfaceId surfaceId)
       const;
