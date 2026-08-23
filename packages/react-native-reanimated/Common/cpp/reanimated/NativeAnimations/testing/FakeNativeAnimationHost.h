@@ -177,9 +177,6 @@ class TestNativeAnimationExecutor : public NativeAnimationExecutor {
   std::unordered_map<AnimationHandle, ActiveCommand, AnimationHandleHash> active;
 };
 
-class TestAppleNativeAnimationExecutor final : public TestNativeAnimationExecutor {};
-class TestAndroidNativeAnimationExecutor final : public TestNativeAnimationExecutor {};
-
 #ifndef NDEBUG
 
 class TestNativeAnimationTraceRecorder final : public NativeAnimationTraceSink {
