@@ -9,6 +9,7 @@
 #include <reanimated/LayoutAnimations/FrameDrivenAnimationLease.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/LayoutAnimations/LayoutNativeAnimationAdapter.h>
 #include <reanimated/NativeAnimations/NativeAnimationService.h>
 #include <reanimated/Tools/FeatureFlags.h>
@@ -126,6 +127,10 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       const;
 
  protected:
+  static jsi::Object makeEnteringYogaValues(jsi::Runtime &rt, const Snapshot &target);
+  static jsi::Object makeExitingYogaValues(jsi::Runtime &rt, const Snapshot &current);
+  static jsi::Object makeLayoutYogaValues(jsi::Runtime &rt, const Snapshot &current, const Snapshot &target);
+
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
 
   mutable std::unordered_set<Tag> maybeSettledAnimationTags_;

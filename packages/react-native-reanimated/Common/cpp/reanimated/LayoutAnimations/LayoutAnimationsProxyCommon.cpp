@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -14,6 +15,45 @@ namespace reanimated {
 
 size_t LayoutAnimationsProxyCommon::FrameDrivenLeaseKeyHash::operator()(const FrameDrivenLeaseKey &key) const noexcept {
   return facebook::react::hash_combine(key.surfaceId, key.tag);
+}
+
+namespace {
+
+void setSnapshotProperties(
+    jsi::Runtime &rt,
+    const jsi::Object &values,
+    const std::string &prefix,
+    const Snapshot &snapshot) {
+  values.setProperty(rt, (prefix + "OriginX").c_str(), snapshot.x);
+  values.setProperty(rt, (prefix + "GlobalOriginX").c_str(), snapshot.x);
+  values.setProperty(rt, (prefix + "OriginY").c_str(), snapshot.y);
+  values.setProperty(rt, (prefix + "GlobalOriginY").c_str(), snapshot.y);
+  values.setProperty(rt, (prefix + "Width").c_str(), snapshot.width);
+  values.setProperty(rt, (prefix + "Height").c_str(), snapshot.height);
+  values.setProperty(rt, "windowWidth", snapshot.windowWidth);
+  values.setProperty(rt, "windowHeight", snapshot.windowHeight);
+}
+
+} // namespace
+
+jsi::Object LayoutAnimationsProxyCommon::makeEnteringYogaValues(jsi::Runtime &rt, const Snapshot &target) {
+  jsi::Object values(rt);
+  setSnapshotProperties(rt, values, "target", target);
+  return values;
+}
+
+jsi::Object LayoutAnimationsProxyCommon::makeExitingYogaValues(jsi::Runtime &rt, const Snapshot &current) {
+  jsi::Object values(rt);
+  setSnapshotProperties(rt, values, "current", current);
+  return values;
+}
+
+jsi::Object
+LayoutAnimationsProxyCommon::makeLayoutYogaValues(jsi::Runtime &rt, const Snapshot &current, const Snapshot &target) {
+  jsi::Object values(rt);
+  setSnapshotProperties(rt, values, "current", current);
+  setSnapshotProperties(rt, values, "target", target);
+  return values;
 }
 
 std::optional<facebook::react::SurfaceId>
