@@ -2,6 +2,7 @@
 
 #import <reanimated/NativeAnimations/NativeAnimationHost.h>
 #import <reanimated/NativeAnimations/NativeAnimationInterfaces.h>
+#import <reanimated/apple/NativeAnimations/REAMountedViewSurfaceId.h>
 #import <reanimated/apple/REAUIView.h>
 
 #import <React/RCTAssert.h>
@@ -60,17 +61,6 @@ NSString *coreAnimationKey(const AnimationHandle &handle, const AnimationTarget 
                                     static_cast<unsigned>(handle.owner),
                                     handle.generation,
                                     static_cast<unsigned>(target.kind)];
-}
-
-SurfaceId surfaceIdForView(REAUIView *view)
-{
-  while (view != nil) {
-    if (RCTIsReactRootView(@(view.tag))) {
-      return static_cast<SurfaceId>(view.tag);
-    }
-    view = view.superview;
-  }
-  return -1;
 }
 
 NSString *keyPathForTarget(const AnimationTarget target)
@@ -346,7 +336,7 @@ class AppleNativeAnimationTargetResolver final : public NativeAnimationTargetRes
     }
     REAUIView<RCTComponentViewProtocol> *view =
         [surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:handle.tag];
-    if (view == nil || surfaceIdForView(view) != handle.surfaceId || view.layer == nil) {
+    if (view == nil || surfaceIdForMountedView(view) != handle.surfaceId || view.layer == nil) {
       return AnimationResultReason::TargetUnavailable;
     }
     ResolvedAnimationTargets resolvedTargets;
