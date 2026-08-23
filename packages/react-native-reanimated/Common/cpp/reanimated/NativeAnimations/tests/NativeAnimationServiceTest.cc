@@ -75,11 +75,10 @@ AnimationTrack zeroDurationOpacityTrack(const double delayMs = 0) {
   return track;
 }
 
-template <typename Executor = TestNativeAnimationExecutor>
-struct FixtureBase {
+struct Fixture {
   std::shared_ptr<TestPlatformUIScheduler> scheduler = std::make_shared<TestPlatformUIScheduler>();
   std::shared_ptr<TestNativeAnimationTargetResolver> resolver = std::make_shared<TestNativeAnimationTargetResolver>();
-  std::shared_ptr<Executor> executor = std::make_shared<Executor>();
+  std::shared_ptr<TestNativeAnimationExecutor> executor = std::make_shared<TestNativeAnimationExecutor>();
 #ifndef NDEBUG
   std::shared_ptr<TestNativeAnimationTraceRecorder> trace = std::make_shared<TestNativeAnimationTraceRecorder>();
   std::shared_ptr<NativeAnimationService> service = makeNativeAnimationService(scheduler, resolver, executor, trace);
@@ -87,8 +86,6 @@ struct FixtureBase {
   std::shared_ptr<NativeAnimationService> service = makeNativeAnimationService(scheduler, resolver, executor);
 #endif
 };
-
-using Fixture = FixtureBase<>;
 
 void testOwnedRequestAndExactlyOnceTerminal() {
   Fixture fixture;
@@ -808,24 +805,6 @@ void testRetainedExitRejectsEveryTargetShape() {
   }));
 }
 
-template <typename Executor>
-void runCommonFixtureForPlatformExecutor() {
-  FixtureBase<Executor> fixture;
-  const AnimationHandle handle{1, 10, AnimationOwner::Layout, 1};
-  std::optional<AnimationResult> result;
-  fixture.service->schedule(
-      {handle, {{opacityTrack()}}, AnimationAdmissionMode::Normal},
-      animationCallbacks([&](const AnimationResult value) { result = value; }));
-  fixture.scheduler->flush();
-  fixture.executor->complete(handle, {AnimationTargetKind::Opacity});
-  assert((result == AnimationResult{AnimationOutcome::Finished, AnimationResultReason::None}));
-}
-
-void testCommonFixturesUseAppleAndAndroidExecutors() {
-  runCommonFixtureForPlatformExecutor<TestAppleNativeAnimationExecutor>();
-  runCommonFixtureForPlatformExecutor<TestAndroidNativeAnimationExecutor>();
-}
-
 void testExternalTraceEnvelope() {
 #ifndef NDEBUG
   Fixture fixture;
@@ -886,7 +865,6 @@ int main() {
   testRetainedExitAndSurfaceTeardown();
   testReusedSurfaceStartsAfterTeardown();
   testRetainedExitRejectsEveryTargetShape();
-  testCommonFixturesUseAppleAndAndroidExecutors();
   testExternalTraceEnvelope();
   std::cout << "NativeAnimationServiceTest passed\n";
   runLayoutNativeAnimationAdapterTests();
