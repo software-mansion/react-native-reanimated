@@ -9,6 +9,7 @@
 #include <reanimated/LayoutAnimations/FrameDrivenAnimationLease.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/LayoutAnimations/LayoutMountBoundary.h>
 #include <reanimated/LayoutAnimations/LayoutNativeAnimationAdapter.h>
 #include <reanimated/LayoutAnimations/PendingNativeLayoutStarts.h>
@@ -146,6 +147,9 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   static std::shared_ptr<PendingNativeLayoutStarts> makePendingNativeLayoutStarts(
       const std::shared_ptr<native_animation::NativeAnimationService> &nativeAnimationService,
       const std::shared_ptr<LayoutMountBoundary> &layoutMountBoundary);
+  static jsi::Object makeEnteringYogaValues(jsi::Runtime &rt, const Snapshot &target);
+  static jsi::Object makeExitingYogaValues(jsi::Runtime &rt, const Snapshot &current);
+  static jsi::Object makeLayoutYogaValues(jsi::Runtime &rt, const Snapshot &current, const Snapshot &target);
 
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
 
