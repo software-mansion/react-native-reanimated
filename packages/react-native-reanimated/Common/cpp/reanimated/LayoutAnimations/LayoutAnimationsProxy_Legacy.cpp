@@ -216,7 +216,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::progressLayoutAnimation(i
   return layoutAnimation.finalView.surfaceId;
 }
 
-std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int tag, bool shouldRemove) {
+std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int tag, bool shouldRemove) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "end layout animation for " << tag << " - should remove " << shouldRemove << std::endl;
 #endif
@@ -871,8 +871,7 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
                 window = strongThis->surfaceManager.getWindow(mutation.newChildShadowView.surfaceId);
               }
               auto &uiRuntime = strongThis->uiRuntime_;
-              strongThis->layoutAnimationsManager_->startLayoutAnimation(
-                  uiRuntime,
+              strongThis->runLayoutAnimationStart(
                   tag,
                   LayoutAnimationType::ENTERING,
                   makeEnteringYogaValues(uiRuntime, Snapshot(mutation.newChildShadowView, window)));
@@ -930,11 +929,8 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
                 window = strongThis->surfaceManager.getWindow(surfaceId);
               }
               auto &uiRuntime = strongThis->uiRuntime_;
-              strongThis->layoutAnimationsManager_->startLayoutAnimation(
-                  uiRuntime,
-                  tag,
-                  LayoutAnimationType::EXITING,
-                  makeExitingYogaValues(uiRuntime, Snapshot(oldView, window)));
+              strongThis->runLayoutAnimationStart(
+                  tag, LayoutAnimationType::EXITING, makeExitingYogaValues(uiRuntime, Snapshot(oldView, window)));
               strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
             });
       });
@@ -995,8 +991,7 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(
                 window = strongThis->surfaceManager.getWindow(surfaceId);
               }
               auto &uiRuntime = strongThis->uiRuntime_;
-              strongThis->layoutAnimationsManager_->startLayoutAnimation(
-                  uiRuntime,
+              strongThis->runLayoutAnimationStart(
                   tag,
                   LayoutAnimationType::LAYOUT,
                   makeLayoutYogaValues(

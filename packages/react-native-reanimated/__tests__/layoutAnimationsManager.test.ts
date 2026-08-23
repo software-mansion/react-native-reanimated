@@ -205,7 +205,9 @@ describe('LayoutAnimationsManager', () => {
             durationMs: 300,
             easing: { kind: 'linear' },
           },
-          onStart() {},
+          onStart(started: AnimationObject) {
+            started.current = 0;
+          },
           onFrame() {
             return true;
           },
@@ -231,6 +233,46 @@ describe('LayoutAnimationsManager', () => {
       });
     });
 
+    test('runs a throwing builder once and reports the error on the start', () => {
+      const error = new Error('[Reanimated] builder failed');
+      let runs = 0;
+      const config = (): LayoutAnimation => {
+        runs += 1;
+        throw error;
+      };
+
+      const summary = manager.build!(
+        21,
+        LayoutAnimationType.LAYOUT,
+        {},
+        config,
+        1,
+        32
+      );
+
+      expect(summary).toEqual({ builderThrew: true });
+      expect(() =>
+        manager.start(21, LayoutAnimationType.LAYOUT, {}, config, 1)
+      ).toThrow(error);
+      expect(runs).toBe(1);
+      expect(() =>
+        manager.start(21, LayoutAnimationType.LAYOUT, {}, config, 1)
+      ).toThrow('No stored layout animation build');
+      expect(runs).toBe(1);
+    });
+
+    test('settles a failed build without a callback', () => {
+      const config = (): LayoutAnimation => {
+        throw new Error('[Reanimated] builder failed');
+      };
+
+      manager.build!(22, LayoutAnimationType.LAYOUT, {}, config, 1, 32);
+      expect(() => manager.completeNativeBuild!(22, 1, false)).not.toThrow();
+      expect(() =>
+        manager.start(22, LayoutAnimationType.LAYOUT, {}, config, 1)
+      ).toThrow('No stored layout animation build');
+    });
+
     test('keeps concurrent builds for one tag apart', () => {
       const { config, runs } = makeBuildConfig();
 
@@ -251,20 +293,16 @@ describe('LayoutAnimationsManager', () => {
       });
       const { config, runs } = makeBuildConfig();
 
-      expect(() =>
-        manager.build!(
-          15,
-          LayoutAnimationType.LAYOUT,
-          {},
-          malformedConfig,
-          7,
-          32
-        )
-      ).toThrow();
+      expect(
+        manager.build!(15, LayoutAnimationType.LAYOUT, {}, malformedConfig, 7, 32)
+      ).toEqual({ builderThrew: true });
 
-      // No entry exists for the failed build, so the start runs its builder.
-      manager.start(15, LayoutAnimationType.LAYOUT, {}, config, 7);
-      expect(runs()).toBe(1);
+      // The stored failure reaches the frame-driven start; the builder of the
+      // failed build never runs again.
+      expect(() =>
+        manager.start(15, LayoutAnimationType.LAYOUT, {}, config, 7)
+      ).toThrow();
+      expect(runs()).toBe(0);
 
       manager.completeNativeBuild!(15, 7, false);
       expect(callback).not.toHaveBeenCalled();

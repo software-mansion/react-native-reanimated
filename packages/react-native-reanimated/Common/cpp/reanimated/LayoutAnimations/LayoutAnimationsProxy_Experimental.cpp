@@ -369,7 +369,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::progressLayoutAnima
   return layoutAnimation.finalView.surfaceId;
 }
 
-std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(int tag, bool shouldRemove) {
+std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(int tag, bool shouldRemove) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   auto layoutAnimationIt = layoutAnimations_.find(tag);
 
@@ -867,8 +867,7 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
                 window = strongThis->surfaceManager.getWindow(newChildShadowView.surfaceId);
               }
               auto &uiRuntime = strongThis->uiRuntime_;
-              strongThis->layoutAnimationsManager_->startLayoutAnimation(
-                  uiRuntime,
+              strongThis->runLayoutAnimationStart(
                   tag,
                   LayoutAnimationType::ENTERING,
                   makeEnteringYogaValues(uiRuntime, Snapshot(newChildShadowView, window)));
@@ -933,11 +932,8 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(const std::shared
                 window = strongThis->surfaceManager.getWindow(surfaceId);
               }
               auto &uiRuntime = strongThis->uiRuntime_;
-              strongThis->layoutAnimationsManager_->startLayoutAnimation(
-                  uiRuntime,
-                  tag,
-                  LayoutAnimationType::EXITING,
-                  makeExitingYogaValues(uiRuntime, Snapshot(oldView, window)));
+              strongThis->runLayoutAnimationStart(
+                  tag, LayoutAnimationType::EXITING, makeExitingYogaValues(uiRuntime, Snapshot(oldView, window)));
               strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
             });
       });
@@ -1010,8 +1006,7 @@ void LayoutAnimationsProxy_Experimental::startFrameDrivenLayoutAnimation(
                 window = strongThis->surfaceManager.getWindow(surfaceId);
               }
               auto &uiRuntime = strongThis->uiRuntime_;
-              strongThis->layoutAnimationsManager_->startLayoutAnimation(
-                  uiRuntime,
+              strongThis->runLayoutAnimationStart(
                   tag,
                   LayoutAnimationType::LAYOUT,
                   makeLayoutYogaValues(uiRuntime, Snapshot(oldView, window), Snapshot(newChildShadowView, window)),
@@ -1053,8 +1048,7 @@ void LayoutAnimationsProxy_Experimental::startSharedTransition(
           const auto &propsDiff = propsDiffer.computeDiff(uiRuntime);
           propsDiff.setProperty(uiRuntime, "windowWidth", window.width);
           propsDiff.setProperty(uiRuntime, "windowHeight", window.height);
-          strongThis->layoutAnimationsManager_->startLayoutAnimation(
-              uiRuntime, tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION, propsDiff);
+          strongThis->runLayoutAnimationStart(tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION, propsDiff);
         });
   });
 }

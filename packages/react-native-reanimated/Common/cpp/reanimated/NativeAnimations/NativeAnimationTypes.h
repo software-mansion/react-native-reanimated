@@ -63,6 +63,7 @@ enum class TrackBuildFailureReason : uint8_t {
   InvalidValue,
   ResourceLimit,
   EndpointMismatch,
+  BuilderError,
 };
 
 struct TrackBuildFailure {

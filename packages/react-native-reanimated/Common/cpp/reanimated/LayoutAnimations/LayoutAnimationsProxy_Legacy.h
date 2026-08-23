@@ -176,7 +176,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
 #endif
 
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) override;
-  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
+  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) const override;
   void settleRevokedLayoutAnimation(SurfaceId surfaceId, Tag tag) const override;
   void startSurface(const SurfaceId surfaceId) override;
   SurfaceContext &getSurfaceContext(SurfaceId surfaceId) const;

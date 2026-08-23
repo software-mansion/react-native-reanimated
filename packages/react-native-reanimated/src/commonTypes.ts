@@ -121,8 +121,10 @@ export type LayoutAnimationStartFunction = (
  * more properties than the resource budget permits and carries no entries.
  */
 export type NativeLayoutAnimationBuildSummary =
+  | { builderThrew: true }
   | { limitExceeded: true }
   | {
+      builderThrew?: undefined;
       limitExceeded?: undefined;
       properties: {
         property: string;

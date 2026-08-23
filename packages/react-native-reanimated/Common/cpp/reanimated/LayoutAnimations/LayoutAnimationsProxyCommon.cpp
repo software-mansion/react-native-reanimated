@@ -155,26 +155,11 @@ LayoutAnimationsProxyCommon::NativeLayoutRouteAttempt LayoutAnimationsProxyCommo
   const uint64_t buildId = ++commandGeneration_;
 
   auto &uiRuntime = uiRuntime_;
-  const jsi::Object yogaValues(uiRuntime);
-  yogaValues.setProperty(uiRuntime, "currentOriginX", currentValues.x);
-  yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", currentValues.x);
-  yogaValues.setProperty(uiRuntime, "currentOriginY", currentValues.y);
-  yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", currentValues.y);
-  yogaValues.setProperty(uiRuntime, "currentWidth", currentValues.width);
-  yogaValues.setProperty(uiRuntime, "currentHeight", currentValues.height);
-  yogaValues.setProperty(uiRuntime, "targetOriginX", targetValues.x);
-  yogaValues.setProperty(uiRuntime, "targetGlobalOriginX", targetValues.x);
-  yogaValues.setProperty(uiRuntime, "targetOriginY", targetValues.y);
-  yogaValues.setProperty(uiRuntime, "targetGlobalOriginY", targetValues.y);
-  yogaValues.setProperty(uiRuntime, "targetWidth", targetValues.width);
-  yogaValues.setProperty(uiRuntime, "targetHeight", targetValues.height);
-  yogaValues.setProperty(uiRuntime, "windowWidth", targetValues.windowWidth);
-  yogaValues.setProperty(uiRuntime, "windowHeight", targetValues.windowHeight);
   const auto summary = layoutAnimationsManager_->buildLayoutAnimation(
       uiRuntime,
       tag,
       LayoutAnimationType::LAYOUT,
-      yogaValues,
+      makeLayoutYogaValues(uiRuntime, currentValues, targetValues),
       buildId,
       native_animation::kDefaultResourceBudget.maxTracksPerPlan);
   if (summary.isUndefined()) {
@@ -345,6 +330,19 @@ std::optional<facebook::react::SurfaceId> LayoutAnimationsProxyCommon::onGesture
 }
 
 void LayoutAnimationsProxyCommon::startSurface(const SurfaceId surfaceId) {}
+
+void LayoutAnimationsProxyCommon::runLayoutAnimationStart(
+    const Tag tag,
+    const LayoutAnimationType type,
+    const jsi::Object &values,
+    const uint64_t buildId) const {
+  try {
+    layoutAnimationsManager_->startLayoutAnimation(uiRuntime_, tag, type, values, buildId);
+  } catch (...) {
+    endLayoutAnimation(tag, type == LayoutAnimationType::EXITING);
+    throw;
+  }
+}
 
 void LayoutAnimationsProxyCommon::transferConfigFromNativeID(const std::string &nativeIdString, const int tag) const {
   if (nativeIdString.empty() || nativeIdString.length() > 9) {

@@ -131,7 +131,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward);
   virtual std::optional<facebook::react::SurfaceId> onGestureCancel();
   virtual std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) = 0;
-  virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) = 0;
+  virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) const = 0;
   virtual void startSurface(const SurfaceId surfaceId);
 
   // `onGranted` must capture the proxy weakly; a strong capture would keep
@@ -196,6 +196,11 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   static jsi::Object makeLayoutYogaValues(jsi::Runtime &rt, const Snapshot &current, const Snapshot &target);
 
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
+  // Starts the JS writer. A builder that throws leaves no entry behind: the
+  // count change of this start is undone before the error reaches the UI
+  // runtime.
+  void runLayoutAnimationStart(Tag tag, LayoutAnimationType type, const jsi::Object &values, uint64_t buildId = 0)
+      const;
 
   // One native layout command for a view, from submission to its terminal
   // result. Access follows the same main-thread rule as `frameDrivenLeases_`.

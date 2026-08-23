@@ -124,7 +124,8 @@ jsi::Value LayoutAnimationsManager::buildLayoutAnimation(
         jsi::Value(static_cast<double>(buildId)),
         jsi::Value(static_cast<double>(maxProperties)));
   } catch (const std::exception &) {
-    // The frame-driven start runs the builder again and reports the error.
+    // The JSI call itself failed. A builder error comes back in the summary
+    // and reaches the UI runtime through the frame-driven start.
     return jsi::Value::undefined();
   }
 }

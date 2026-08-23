@@ -90,6 +90,11 @@ parseLayoutNativeAnimationBuild(Runtime &rt, const Value &summary, const size_t 
     return malformed;
   }
   const auto summaryObject = summary.getObject(rt);
+  const auto builderThrew = summaryObject.getProperty(rt, "builderThrew");
+  if (builderThrew.isBool() && builderThrew.getBool()) {
+    // The stored error reaches the UI runtime through the frame-driven start.
+    return native_animation::TrackBuildFailure{native_animation::TrackBuildFailureReason::BuilderError};
+  }
   const auto limitExceeded = summaryObject.getProperty(rt, "limitExceeded");
   if (limitExceeded.isBool() && limitExceeded.getBool()) {
     // The JS build stopped at the property cap and carries no entries.

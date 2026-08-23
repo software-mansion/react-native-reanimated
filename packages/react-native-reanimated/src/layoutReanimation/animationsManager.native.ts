@@ -61,7 +61,25 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   // one later call consumes each entry: `start` with the same build id, or
   // `completeNativeBuild`. Per-build keys keep concurrent builds for one tag
   // apart, so a replacement cannot orphan a build or its callback.
-  const nativeBuildForKey = new Map<string, LayoutAnimation>();
+  const nativeBuildForKey = new Map<
+    string,
+    { style: LayoutAnimation } | { error: unknown }
+  >();
+
+  const takeStoredBuild = (tag: number, buildId: number): LayoutAnimation => {
+    const key = `${tag}:${buildId}`;
+    const storedBuild = nativeBuildForKey.get(key);
+    nativeBuildForKey.delete(key);
+    if (storedBuild === undefined) {
+      throw new Error(
+        `[Reanimated] No stored layout animation build ${buildId} for tag ${tag}.`
+      );
+    }
+    if ('error' in storedBuild) {
+      throw storedBuild.error;
+    }
+    return storedBuild.style;
+  };
 
   // A builder can set `reduceMotion` on the animation after the factory
   // attached its structure; a reduced-motion animation has no native form.
@@ -128,18 +146,10 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
       buildId?: number
     ) {
-      // Reuse the stored result of `build` instead of running the builder
-      // again.
-      let style: LayoutAnimation | undefined;
-      if (buildId !== undefined) {
-        const buildKey = `${tag}:${buildId}`;
-        const storedBuild = nativeBuildForKey.get(buildKey);
-        if (storedBuild) {
-          nativeBuildForKey.delete(buildKey);
-          style = storedBuild;
-        }
-      }
-      style ??= config(yogaValues);
+      const style =
+        buildId === undefined
+          ? config(yogaValues)
+          : takeStoredBuild(tag, buildId);
       let currentAnimation = style.animations;
 
       // When layout animation is requested, but a previous one is still running, we merge
@@ -196,15 +206,37 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       buildId: number,
       maxProperties: number
     ): NativeLayoutAnimationBuildSummary {
-      const style = config(yogaValues);
+      const buildKey = `${tag}:${buildId}`;
+      try {
+        return summarizeBuild(buildKey, config(yogaValues), maxProperties);
+      } catch (error) {
+        // The frame-driven start reports the error on the normal UI path.
+        nativeBuildForKey.set(buildKey, { error });
+        return { builderThrew: true };
+      }
+    },
+    completeNativeBuild(tag: number, buildId: number, finished: boolean) {
+      const key = `${tag}:${buildId}`;
+      const storedBuild = nativeBuildForKey.get(key);
+      nativeBuildForKey.delete(key);
+      if (storedBuild && 'style' in storedBuild) {
+        storedBuild.style.callback?.(finished);
+      }
+    },
+  };
 
-      // Store the style only on a successful return; after a throw nothing
-      // consumes the entry.
+  // Runs after the builder returned; any throw here is stored with the build
+  // too, so the builder never runs twice.
+  function summarizeBuild(
+    buildKey: string,
+    style: LayoutAnimation,
+    maxProperties: number
+  ): NativeLayoutAnimationBuildSummary {
       const animations = style.animations as Record<string, unknown>;
       const animatedProperties = Object.keys(animations);
       // Report the resource limit before any per-property work.
       if (animatedProperties.length > maxProperties) {
-        nativeBuildForKey.set(`${tag}:${buildId}`, style);
+        nativeBuildForKey.set(buildKey, { style });
         return { limitExceeded: true };
       }
       const initialValues = (style.initialValues ?? {}) as Record<
@@ -226,16 +258,11 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
           node: nativeNodeOf(animations[key]),
         };
       });
-      nativeBuildForKey.set(`${tag}:${buildId}`, style);
+      // Store the style only on a successful return; after a throw nothing
+      // consumes the entry.
+      nativeBuildForKey.set(buildKey, { style });
       return { properties, hasUnanimatedInitialValues };
-    },
-    completeNativeBuild(tag: number, buildId: number, finished: boolean) {
-      const key = `${tag}:${buildId}`;
-      const storedBuild = nativeBuildForKey.get(key);
-      nativeBuildForKey.delete(key);
-      storedBuild?.callback?.(finished);
-    },
-  };
+  }
 }
 
 // is-tree-shakable-suppress
