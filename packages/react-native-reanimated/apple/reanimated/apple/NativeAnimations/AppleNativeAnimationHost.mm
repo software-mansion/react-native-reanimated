@@ -407,9 +407,6 @@ class AppleNativeAnimationExecutor final : public NativeAnimationExecutor,
       } else {
         fromValue = [[resolved.layer() presentationLayer] valueForKeyPath:resolved.keyPath()];
         if (fromValue == nil) {
-          fromValue = [resolved.layer() valueForKeyPath:resolved.keyPath()];
-        }
-        if (fromValue == nil) {
           return AnimationResultReason::CurrentValueUnavailable;
         }
       }
@@ -488,9 +485,6 @@ class AppleNativeAnimationExecutor final : public NativeAnimationExecutor,
         return AnimationResultReason::CurrentValueUnavailable;
       }
       id object = [[it->second.layer presentationLayer] valueForKeyPath:it->second.keyPath];
-      if (object == nil) {
-        object = [it->second.layer valueForKeyPath:it->second.keyPath];
-      }
       const auto value = valueFromObject(object, target);
       if (!value) {
         return AnimationResultReason::CurrentValueUnavailable;
