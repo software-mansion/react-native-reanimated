@@ -100,11 +100,13 @@ class TestNativeAnimationExecutor : public NativeAnimationExecutor {
     std::vector<AnimationTarget> activeTargets;
     for (const auto &track : testPrepared.tracks) {
       if (track.durationMs == 0) {
-        // A real executor waits for the declared delay first. This fake
-        // records the delay and completes at once.
         zeroDuration.push_back({handle, track.target, track.delayMs});
+      }
+      if (track.durationMs == 0 && track.delayMs <= 0) {
         terminal(track.target, true);
       } else {
+        // A delayed zero-duration track holds its start value until the
+        // delay ends, so it stays active like a timed track.
         activeTargets.push_back(track.target);
       }
     }

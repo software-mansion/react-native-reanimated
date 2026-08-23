@@ -16,8 +16,6 @@
 #import <QuartzCore/QuartzCore.h>
 
 #import <array>
-#import <cmath>
-#import <limits>
 #import <optional>
 #import <unordered_map>
 #import <utility>
@@ -256,15 +254,6 @@ CAMediaTimingFunction *timingFunction(const AnimationTiming &timing)
   return nil;
 }
 
-std::optional<int64_t> checkedNanosecondsFromMilliseconds(const double milliseconds)
-{
-  const long double nanoseconds = static_cast<long double>(milliseconds) * static_cast<long double>(NSEC_PER_MSEC);
-  if (!std::isfinite(nanoseconds) || nanoseconds > static_cast<long double>(std::numeric_limits<int64_t>::max())) {
-    return std::nullopt;
-  }
-  return static_cast<int64_t>(nanoseconds);
-}
-
 class ApplePlatformUIScheduler final : public PlatformUIScheduler,
                                        public std::enable_shared_from_this<ApplePlatformUIScheduler> {
  public:
@@ -384,7 +373,6 @@ struct PreparedTrack {
   __strong CAMediaTimingFunction *timingFunction;
   double delayMs;
   double durationMs;
-  std::optional<int64_t> zeroDurationDelayNanoseconds;
 };
 
 class ApplePreparedNativeAnimation final : public PreparedNativeAnimation {
@@ -412,13 +400,6 @@ class AppleNativeAnimationExecutor final : public NativeAnimationExecutor,
       if (timing == nil) {
         return AnimationResultReason::UnsupportedTargetRealization;
       }
-      std::optional<int64_t> zeroDurationDelayNanoseconds;
-      if (track.durationMs == 0) {
-        zeroDurationDelayNanoseconds = checkedNanosecondsFromMilliseconds(track.delayMs);
-        if (!zeroDurationDelayNanoseconds) {
-          return AnimationResultReason::ResourceLimit;
-        }
-      }
       const auto &resolved = static_cast<const AppleResolvedAnimationTarget &>(*resolvedTrack.target);
       id fromValue;
       if (const auto *explicitStart = std::get_if<AnimationValue>(&track.start)) {
@@ -441,7 +422,6 @@ class AppleNativeAnimationExecutor final : public NativeAnimationExecutor,
           timing,
           track.delayMs,
           track.durationMs,
-          zeroDurationDelayNanoseconds,
       });
     }
     return std::make_unique<ApplePreparedNativeAnimation>(std::move(preparedTracks));
@@ -461,49 +441,17 @@ class AppleNativeAnimationExecutor final : public NativeAnimationExecutor,
       remove(interruption.handle, interruption.target);
     }
     auto &applePrepared = static_cast<ApplePreparedNativeAnimation &>(*prepared);
-    std::vector<AnimationTarget> completedZeroDurationTargets;
+    std::vector<AnimationTarget> completedTargets;
     for (const auto &track : applePrepared.tracks) {
-      if (track.durationMs == 0) {
-        startZeroDurationTrack(handle, track, terminal, completedZeroDurationTargets);
+      [track.layer setValue:track.toValue forKeyPath:track.keyPath];
+      if (track.durationMs == 0 && track.delayMs <= 0) {
+        completedTargets.push_back(track.target);
         continue;
       }
-
-      const AnimationTarget target = track.target;
-      const ActiveTrackKey activeKey{handle, target};
-      NSString *key = coreAnimationKey(handle, target);
-      const uint64_t token = nextToken_++;
-      const std::weak_ptr<AppleNativeAnimationExecutor> weakExecutor = weak_from_this();
-      CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:track.keyPath];
-      animation.fromValue = track.fromValue;
-      animation.toValue = track.toValue;
-      animation.duration = track.durationMs / 1000.0;
-      animation.beginTime = [track.layer convertTime:mediaTime fromLayer:nil] + track.delayMs / 1000.0;
-      animation.timingFunction = track.timingFunction;
-      animation.fillMode = kCAFillModeBackwards;
-      animation.removedOnCompletion = YES;
-
-      REANativeAnimationDelegate *delegate = [REANativeAnimationDelegate new];
-      delegate.completion = ^(BOOL finished) {
-        RCTAssertMainQueue();
-        const auto executor = weakExecutor.lock();
-        if (!executor) {
-          return;
-        }
-        const auto activeIt = executor->active_.find(activeKey);
-        if (activeIt == executor->active_.end() || activeIt->second.token != token) {
-          return;
-        }
-        executor->active_.erase(activeIt);
-        terminal(target, finished);
-      };
-      animation.delegate = delegate;
-
-      active_[activeKey] = {track.layer, track.keyPath, token, true};
-      [track.layer setValue:track.toValue forKeyPath:track.keyPath];
-      [track.layer addAnimation:animation forKey:key];
+      addTrackAnimation(handle, track, mediaTime, terminal);
     }
     [CATransaction commit];
-    for (const auto target : completedZeroDurationTargets) {
+    for (const auto target : completedTargets) {
       terminal(target, true);
     }
   }
@@ -568,57 +516,51 @@ class AppleNativeAnimationExecutor final : public NativeAnimationExecutor,
     __strong CALayer *layer;
     __strong NSString *keyPath;
     uint64_t token;
-    bool hasCoreAnimation;
   };
 
-  bool applyZeroDurationEndpoint(const ActiveTrackKey &key, const uint64_t token, id toValue)
-  {
-    const auto activeIt = active_.find(key);
-    if (activeIt == active_.end() || activeIt->second.token != token) {
-      return false;
-    }
-    CALayer *layer = activeIt->second.layer;
-    NSString *keyPath = activeIt->second.keyPath;
-    active_.erase(activeIt);
-    [layer setValue:toValue forKeyPath:keyPath];
-    return true;
-  }
-
-  void startZeroDurationTrack(
+  // A timed track runs from its start value to its endpoint after the delay.
+  // A delayed zero-duration track holds its start value for the delay and
+  // then shows the model endpoint.
+  // The delegate block keeps its own copy of the terminal callback; a
+  // reference would dangle after `start` returns.
+  void addTrackAnimation(
       const AnimationHandle &handle,
       const PreparedTrack &track,
-      const NativeTrackTerminalCallback &terminal,
-      std::vector<AnimationTarget> &completedTargets)
+      const CFTimeInterval mediaTime,
+      NativeTrackTerminalCallback terminal)
   {
-    const ActiveTrackKey activeKey{handle, track.target};
+    const bool isHold = track.durationMs == 0;
+    const AnimationTarget target = track.target;
+    const ActiveTrackKey activeKey{handle, target};
     const uint64_t token = nextToken_++;
-    active_[activeKey] = {track.layer, track.keyPath, token, false};
-
-    if (track.delayMs <= 0) {
-      if (applyZeroDurationEndpoint(activeKey, token, track.toValue)) {
-        completedTargets.push_back(track.target);
-      }
-      return;
-    }
-
     const std::weak_ptr<AppleNativeAnimationExecutor> weakExecutor = weak_from_this();
-    auto applyEndpoint = [weakExecutor, activeKey, token, toValue = track.toValue, terminal, target = track.target]() {
+    CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:track.keyPath];
+    animation.fromValue = track.fromValue;
+    animation.toValue = isHold ? track.fromValue : track.toValue;
+    animation.duration = (isHold ? track.delayMs : track.durationMs) / 1000.0;
+    animation.beginTime = [track.layer convertTime:mediaTime fromLayer:nil] + (isHold ? 0 : track.delayMs / 1000.0);
+    animation.timingFunction = track.timingFunction;
+    animation.fillMode = kCAFillModeBackwards;
+    animation.removedOnCompletion = YES;
+
+    REANativeAnimationDelegate *delegate = [REANativeAnimationDelegate new];
+    delegate.completion = ^(BOOL finished) {
       RCTAssertMainQueue();
       const auto executor = weakExecutor.lock();
       if (!executor) {
         return;
       }
-      [CATransaction begin];
-      [CATransaction setDisableActions:YES];
-      const bool applied = executor->applyZeroDurationEndpoint(activeKey, token, toValue);
-      [CATransaction commit];
-      if (applied) {
-        terminal(target, true);
+      const auto activeIt = executor->active_.find(activeKey);
+      if (activeIt == executor->active_.end() || activeIt->second.token != token) {
+        return;
       }
+      executor->active_.erase(activeIt);
+      terminal(target, finished);
     };
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, *track.zeroDurationDelayNanoseconds), dispatch_get_main_queue(), ^{
-      applyEndpoint();
-    });
+    animation.delegate = delegate;
+
+    active_[activeKey] = {track.layer, track.keyPath, token};
+    [track.layer addAnimation:animation forKey:coreAnimationKey(handle, target)];
   }
 
   void remove(const AnimationHandle &handle, const AnimationTarget target)
@@ -628,11 +570,8 @@ class AppleNativeAnimationExecutor final : public NativeAnimationExecutor,
       return;
     }
     CALayer *layer = it->second.layer;
-    const bool hasCoreAnimation = it->second.hasCoreAnimation;
     active_.erase(it);
-    if (hasCoreAnimation) {
-      [layer removeAnimationForKey:coreAnimationKey(handle, target)];
-    }
+    [layer removeAnimationForKey:coreAnimationKey(handle, target)];
   }
 
   std::unordered_map<ActiveTrackKey, ActiveTrack, ActiveTrackKeyHash> active_;
