@@ -20,7 +20,7 @@ import { getReduceMotionFromConfig } from './utilCommon';
  * the same objects as before.
  */
 export const SHOULD_ATTACH_NATIVE_ANIMATION_STRUCTURE: boolean =
-  IS_IOS && getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION');
+  IS_IOS && getStaticFeatureFlag('IOS_NATIVE_LAYOUT_ANIMATIONS');
 
 type MarkedEasing = {
   __nativeTiming?: NativeAnimationTimingStructure;

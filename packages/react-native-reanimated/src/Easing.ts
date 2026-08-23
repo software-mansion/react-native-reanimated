@@ -1,9 +1,11 @@
 'use strict';
 import { Bezier } from './Bezier';
+import { IS_IOS } from './common';
 import type {
   EasingFunction,
   NativeAnimationTimingStructure,
 } from './commonTypes';
+import { getStaticFeatureFlag } from './featureFlags';
 
 /**
  * The `Easing` module implements common easing functions. This module is used
@@ -55,6 +57,9 @@ export type EasingFunctionFactory = {
   factory: () => EasingFunction;
   __nativeTiming?: NativeAnimationTimingStructure;
 };
+
+const ATTACHES_NATIVE_TIMING =
+  IS_IOS && getStaticFeatureFlag('IOS_NATIVE_LAYOUT_ANIMATIONS');
 
 /**
  * A linear function, `f(t) = t`. Position correlates to elapsed time one to
@@ -212,13 +217,18 @@ function bezier(
   y2: number
 ): EasingFunctionFactory {
   'worklet';
-  return {
+  const factory: EasingFunctionFactory = {
     factory: () => {
       'worklet';
       return Bezier(x1, y1, x2, y2);
     },
-    __nativeTiming: { kind: 'cubicBezier', x1, y1, x2, y2 },
   };
+  // The factory object shape changes only where the native layout route can
+  // read it.
+  if (ATTACHES_NATIVE_TIMING) {
+    factory.__nativeTiming = { kind: 'cubicBezier', x1, y1, x2, y2 };
+  }
+  return factory;
 }
 
 function bezierFn(

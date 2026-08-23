@@ -3,7 +3,7 @@ import { Alert, Button, Pressable, StyleSheet, Text, View } from 'react-native';
 
 // Final-state-first bench (Objective 06). The nativeID markers below make the
 // Legacy proxy enqueue controlled prepared native requests on example-app
-// builds with IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION on; no production Layout
+// builds with IOS_NATIVE_LAYOUT_ANIMATIONS on; no production Layout
 // Animations run here. With the flag on, the box slides 5 s (taps land at the
 // final frame) and the delayed view holds invisible for 1 s, then fades in.
 // With the flag off, both views jump.

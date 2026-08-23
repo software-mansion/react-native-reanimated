@@ -13,7 +13,7 @@ import Animated, {
 
 // Native IR routing bench (Objective 07). Each scenario runs one production
 // layout animation through the routing order. A Debug example app with
-// IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION on prints one RouteDecision trace line
+// IOS_NATIVE_LAYOUT_ANIMATIONS on prints one RouteDecision trace line
 // for each start: selectedRoute=0 is direct basic, selectedRoute=3 is
 // frame-driven with its typed build failure. With the flag off every scenario
 // runs frame-driven.
@@ -137,7 +137,7 @@ export default function NativeRoutingBenchExample() {
     }));
   };
 
-  const backend = getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION')
+  const backend = getStaticFeatureFlag('IOS_NATIVE_LAYOUT_ANIMATIONS')
     ? 'native routing on'
     : 'frame-driven only';
 
