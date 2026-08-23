@@ -1230,12 +1230,16 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
     nativeAnimationSurfaceDidStart = [service = nativeAnimationService_,
                                       layoutProxy = layoutAnimationsProxy_](const SurfaceId surfaceId) {
       service->notifySurfaceStarted(surfaceId);
-      layoutProxy->notifyNativeStartsSurfaceStarted(surfaceId);
+      if constexpr (useNativeLayoutAnimations()) {
+        layoutProxy->notifyNativeStartsSurfaceStarted(surfaceId);
+      }
     };
     nativeAnimationSurfaceDidStop = [service = nativeAnimationService_,
                                      layoutProxy = layoutAnimationsProxy_](const SurfaceId surfaceId) {
-      // Drop layout-owned queued starts before shared teardown.
-      layoutProxy->cancelNativeStartsSurface(surfaceId);
+      if constexpr (useNativeLayoutAnimations()) {
+        // Drop layout-owned queued starts before shared teardown.
+        layoutProxy->cancelNativeStartsSurface(surfaceId);
+      }
       service->cancelSurface(surfaceId);
     };
   }
