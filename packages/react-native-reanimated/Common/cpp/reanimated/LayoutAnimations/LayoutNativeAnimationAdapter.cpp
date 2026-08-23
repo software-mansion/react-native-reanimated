@@ -1,6 +1,9 @@
 #include <reanimated/LayoutAnimations/LayoutNativeAnimationAdapter.h>
 
+#include <algorithm>
 #include <cmath>
+#include <string>
+#include <unordered_map>
 #include <utility>
 
 namespace reanimated {
@@ -98,10 +101,62 @@ TrackBuildResult buildLayoutTrack(
 
 } // namespace
 
+std::vector<AnimationTargetClaim> frameDrivenClaimTargets(
+    const LayoutNativeAnimationBuildInput &input,
+    const LayoutAnimationType type) {
+  // A frame write that changes the size also moves the layer position, so
+  // width and height claim their position axis too.
+  static const std::unordered_map<std::string, std::vector<AnimationTargetKind>> targetsByKey = {
+      {"opacity", {AnimationTargetKind::Opacity}},
+      {"originX", {AnimationTargetKind::PositionX}},
+      {"originY", {AnimationTargetKind::PositionY}},
+      {"width", {AnimationTargetKind::Width, AnimationTargetKind::PositionX}},
+      {"height", {AnimationTargetKind::Height, AnimationTargetKind::PositionY}},
+      {"transform", {AnimationTargetKind::Transform}},
+      {"backgroundColor", {AnimationTargetKind::BackgroundColor}},
+      {"borderColor", {AnimationTargetKind::BorderColor}},
+      {"borderRadius", {AnimationTargetKind::BorderRadius}},
+      {"borderWidth", {AnimationTargetKind::BorderWidth}},
+      {"shadowColor", {AnimationTargetKind::ShadowColor}},
+      {"shadowOpacity", {AnimationTargetKind::ShadowOpacity}},
+      {"shadowRadius", {AnimationTargetKind::ShadowRadius}},
+      {"shadowOffset", {AnimationTargetKind::ShadowOffset}},
+  };
+  std::vector<AnimationTargetClaim> claims;
+  const auto claim = [&](const std::string &key) {
+    const auto it = targetsByKey.find(key);
+    if (it == targetsByKey.end()) {
+      claims.assign({AllVisualTargets{}});
+      return false;
+    }
+    for (const auto kind : it->second) {
+      const AnimationTargetClaim target = AnimationTarget{kind};
+      if (std::ranges::find(claims, target) == claims.end()) {
+        claims.push_back(target);
+      }
+    }
+    return true;
+  };
+  for (const auto &property : input.properties) {
+    if (!claim(property.property)) {
+      return claims;
+    }
+  }
+  for (const auto &key : input.initialOnlyKeys) {
+    if (!claim(key)) {
+      return claims;
+    }
+  }
+  if (type == LayoutAnimationType::ENTERING) {
+    claim("opacity");
+  }
+  return claims;
+}
+
 LayoutPlanBuildResult buildLayoutNativeAnimationPlan(
     const LayoutNativeAnimationBuildInput &input,
     const LayoutNativeConversionContext &context) {
-  if (input.properties.empty() || input.hasUnanimatedInitialValues) {
+  if (input.properties.empty() || !input.initialOnlyKeys.empty()) {
     return native_animation::TrackBuildFailure{native_animation::TrackBuildFailureReason::UnsupportedTrackForm};
   }
   native_animation::NativeAnimationResourceUsage usage;

@@ -166,11 +166,14 @@ LayoutAnimationsProxyCommon::NativeLayoutRouteAttempt LayoutAnimationsProxyCommo
     // No stored build exists; the frame-driven start runs the builder itself.
     return attempt;
   }
-  attempt.buildId = buildId;
+  attempt.start.buildId = buildId;
 
   const native_animation::AnimationHandle handle{surfaceId, tag, native_animation::AnimationOwner::Layout, buildId};
   auto parsed =
       parseLayoutNativeAnimationBuild(uiRuntime, summary, native_animation::kDefaultResourceBudget.maxTracksPerPlan);
+  if (const auto *input = std::get_if<LayoutNativeAnimationBuildInput>(&parsed)) {
+    attempt.start.targets = frameDrivenClaimTargets(*input, LayoutAnimationType::LAYOUT);
+  }
   auto planResult = std::holds_alternative<LayoutNativeAnimationBuildInput>(parsed)
       ? buildLayoutNativeAnimationPlan(
             std::get<LayoutNativeAnimationBuildInput>(parsed), layoutConversionContext(finalView))
@@ -366,7 +369,7 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
     const LayoutAnimationType type,
     const std::weak_ptr<const LayoutAnimationsProxyCommon> &weakOwner,
     std::function<void()> onGranted,
-    const FrameDrivenBuild build) const {
+    const FrameDrivenStart start) const {
   if (!nativeAnimationAdapter_) {
     onGranted();
     return;
@@ -375,7 +378,7 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
     rejectedEnteringClaimTags_.erase(tag);
   }
   const FrameDrivenLeaseKey key{surfaceId, tag};
-  const std::vector<native_animation::AnimationTargetClaim> targets{native_animation::AllVisualTargets{}};
+  const auto &targets = start.targets;
   const auto requestedMode = type == LayoutAnimationType::EXITING
       ? native_animation::AnimationAdmissionMode::RetainedExit
       : native_animation::AnimationAdmissionMode::Normal;
@@ -385,7 +388,10 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
   const auto existingIt = frameDrivenLeases_.find(key);
   const auto existing =
       existingIt != frameDrivenLeases_.end() && !existingIt->second->isRevoked() ? existingIt->second : nullptr;
-  if (existing && existing->covers(targets, requestedMode)) {
+  // A retained exit never widens; a later start on that view joins it.
+  if (existing &&
+      (existing->covers(targets, requestedMode) ||
+       existing->getAdmissionMode() == native_animation::AnimationAdmissionMode::RetainedExit)) {
     onGranted();
     return;
   }
@@ -394,7 +400,7 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
       surfaceId,
       tag,
       native_animation::AnimationOwner::Layout,
-      build.id != 0 && !build.generationSubmitted ? build.id : ++commandGeneration_,
+      start.buildId != 0 && !start.generationSubmitted ? start.buildId : ++commandGeneration_,
   };
   const auto admissionMode =
       existing && existing->getAdmissionMode() == native_animation::AnimationAdmissionMode::RetainedExit
@@ -414,7 +420,7 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
            type,
            lease,
            existing,
-           build,
+           buildId = start.buildId,
            adapter = nativeAnimationAdapter_,
            onGranted = std::move(onGranted)](const native_animation::ExternalClaimResult result) {
             const auto owner = weakOwner.lock();
@@ -424,9 +430,9 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
                 existing->setSuperseded(false);
               }
               if (owner) {
-                if (build.id != 0) {
+                if (buildId != 0) {
                   // The animation never starts; this is its one terminal result.
-                  owner->layoutAnimationsManager_->completeNativeBuild(owner->uiRuntime_, tag, build.id, false);
+                  owner->layoutAnimationsManager_->completeNativeBuild(owner->uiRuntime_, tag, buildId, false);
                 }
                 owner->handleRejectedFrameDrivenLayoutAnimation(tag, type, result.reason);
                 if (existing && type == LayoutAnimationType::EXITING) {
@@ -463,6 +469,36 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
               },
           },
       });
+}
+
+void LayoutAnimationsProxyCommon::widenFrameDrivenLease(
+    const SurfaceId surfaceId,
+    const Tag tag,
+    const std::weak_ptr<const LayoutAnimationsProxyCommon> &weakOwner) const {
+  claimFrameDrivenLayoutAnimation(surfaceId, tag, LayoutAnimationType::LAYOUT, weakOwner, []() {});
+}
+
+FrameDrivenStart LayoutAnimationsProxyCommon::prepareFrameDrivenStart(
+    const Tag tag,
+    const LayoutAnimationType type,
+    const jsi::Object &values) const {
+  FrameDrivenStart start;
+  if (!nativeAnimationAdapter_) {
+    return start;
+  }
+  const uint64_t buildId = ++commandGeneration_;
+  const auto summary = layoutAnimationsManager_->buildLayoutAnimation(
+      uiRuntime_, tag, type, values, buildId, native_animation::kDefaultResourceBudget.maxTracksPerPlan);
+  if (summary.isUndefined()) {
+    return start;
+  }
+  start.buildId = buildId;
+  const auto parsed = parseLayoutNativeAnimationBuild(
+      uiRuntime_, summary, native_animation::kDefaultResourceBudget.maxTracksPerPlan);
+  if (const auto *input = std::get_if<LayoutNativeAnimationBuildInput>(&parsed)) {
+    start.targets = frameDrivenClaimTargets(*input, type);
+  }
+  return start;
 }
 
 // The service revoked the writer's lease. The writer stops here, without the

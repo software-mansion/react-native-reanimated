@@ -161,7 +161,7 @@ describe('LayoutAnimationsManager', () => {
 
       expect(summary).toEqual({
         properties: [{ property: 'originX', initialValue: 0, node: undefined }],
-        hasUnanimatedInitialValues: false,
+        initialOnlyKeys: [],
       });
       expect(runs()).toBe(1);
 
@@ -229,7 +229,7 @@ describe('LayoutAnimationsManager', () => {
 
       expect(summary).toEqual({
         properties: [{ property: 'opacity', initialValue: 0, node: undefined }],
-        hasUnanimatedInitialValues: false,
+        initialOnlyKeys: [],
       });
     });
 

@@ -243,12 +243,9 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         string,
         unknown
       >;
-      let hasUnanimatedInitialValues = false;
-      for (const key of Object.keys(initialValues)) {
-        if (!(key in animations)) {
-          hasUnanimatedInitialValues = true;
-        }
-      }
+      const initialOnlyKeys = Object.keys(initialValues).filter(
+        (key) => !(key in animations)
+      );
       const properties = animatedProperties.map((key) => {
         const initialValue = initialValues[key];
         return {
@@ -261,7 +258,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       // Store the style only on a successful return; after a throw nothing
       // consumes the entry.
       nativeBuildForKey.set(buildKey, { style });
-      return { properties, hasUnanimatedInitialValues };
+      return { properties, initialOnlyKeys };
   }
 }
 

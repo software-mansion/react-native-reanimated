@@ -80,14 +80,21 @@ consumeIsCancelled(std::unordered_map<Tag, PendingStart> &pendingStarts, const T
 }
 #endif
 
-// The stored JS build that a frame-driven start reuses. When a native request
+// What a frame-driven start knows before it claims its lease: the stored JS
+// build it reuses and the targets its writer claims. When a native request
 // already used the build id as its handle generation, the lease takes a new
 // generation; otherwise the build id is the logical generation of the
-// animation.
-struct FrameDrivenBuild {
-  uint64_t id{0};
+// animation. A start without a build summary claims every visual target.
+struct FrameDrivenStart {
+  uint64_t buildId{0};
   bool generationSubmitted{false};
+  std::vector<native_animation::AnimationTargetClaim> targets{native_animation::AllVisualTargets{}};
 };
+
+inline std::vector<native_animation::AnimationTargetClaim> targetClaims(
+    const std::vector<native_animation::AnimationTarget> &targets) {
+  return {targets.begin(), targets.end()};
+}
 
 class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDelegate {
  public:
@@ -152,16 +159,25 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       LayoutAnimationType type,
       const std::weak_ptr<const LayoutAnimationsProxyCommon> &weakOwner,
       std::function<void()> onGranted,
-      FrameDrivenBuild build = {}) const;
+      FrameDrivenStart start = {}) const;
+  // Widens the live lease of a view to every visual target before the writer
+  // consumes a prop-only update.
+  void widenFrameDrivenLease(
+      SurfaceId surfaceId,
+      Tag tag,
+      const std::weak_ptr<const LayoutAnimationsProxyCommon> &weakOwner) const;
+  // Runs the JS builder once for an entering or exiting start and maps its
+  // summary to the targets the writer claims.
+  FrameDrivenStart prepareFrameDrivenStart(Tag tag, LayoutAnimationType type, const jsi::Object &values) const;
   void releaseFrameDrivenLayoutAnimation(SurfaceId surfaceId, Tag tag, native_animation::AnimationOutcome outcome)
       const;
 
   // Result of one routing attempt. With `routedNative` the caller mounts the
-  // final Update mutation and skips the frame-driven start; a non-zero
-  // `buildId` names the stored builder result the frame-driven start reuses.
+  // final Update mutation and skips the frame-driven start; otherwise `start`
+  // carries the stored build and the claim targets of the frame-driven start.
   struct NativeLayoutRouteAttempt {
     bool routedNative{false};
-    uint64_t buildId{0};
+    FrameDrivenStart start;
   };
 
   LayoutNativeConversionContext layoutConversionContext(const ShadowView &finalView) const;

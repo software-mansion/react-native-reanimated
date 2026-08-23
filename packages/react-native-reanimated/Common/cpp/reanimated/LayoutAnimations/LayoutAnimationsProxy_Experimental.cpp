@@ -93,8 +93,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       consumeRejectedEnteringClaim(node->current.tag);
     }
   }
-  for (auto &[node, build] : layout_) {
-    startLayoutAnimation(node, build);
+  for (auto &[node, start] : layout_) {
+    startLayoutAnimation(node, start);
   }
   entering_.clear();
   layout_.clear();
@@ -240,7 +240,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
 #endif // ANDROID
         auto tag = mutation.newChildShadowView.tag;
         if (layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
-          FrameDrivenBuild build;
+          FrameDrivenStart start;
           if constexpr (useNativeLayoutAnimations()) {
             const auto window = surfaceManager.getWindow(mutation.newChildShadowView.surfaceId);
             const auto attempt = tryStartNativeLayoutAnimation(
@@ -256,9 +256,9 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
               filteredMutations.push_back(mutation);
               break;
             }
-            build.id = attempt.buildId;
+            start = attempt.start;
           }
-          layout_.push_back({node, build});
+          layout_.push_back({node, start});
         } else {
           filteredMutations.push_back(mutation);
         }
@@ -661,6 +661,9 @@ void LayoutAnimationsProxy_Experimental::settleRevokedLayoutAnimation(const Surf
 
 void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation)
     const {
+  if constexpr (useNativeLayoutAnimations()) {
+    widenFrameDrivenLease(mutation.newChildShadowView.surfaceId, tag, weak_from_this());
+  }
   layoutAnimations_[tag].finalView = mutation.newChildShadowView;
 }
 
@@ -844,6 +847,13 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
           return;
         }
 #endif
+        const auto start = strongThis->prepareFrameDrivenStart(
+            tag,
+            LayoutAnimationType::ENTERING,
+            makeEnteringYogaValues(
+                strongThis->uiRuntime_,
+                Snapshot(newChildShadowView, strongThis->surfaceManager.getWindow(newChildShadowView.surfaceId))));
+#endif
         strongThis->claimFrameDrivenLayoutAnimation(
             newChildShadowView.surfaceId,
             tag,
@@ -871,7 +881,8 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
                   tag,
                   LayoutAnimationType::ENTERING,
                   makeEnteringYogaValues(uiRuntime, Snapshot(newChildShadowView, window)));
-            });
+            },
+            start);
       });
 }
 
@@ -914,6 +925,12 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(const std::shared
           return;
         }
 #endif
+        const auto start = strongThis->prepareFrameDrivenStart(
+            tag,
+            LayoutAnimationType::EXITING,
+            makeExitingYogaValues(
+                strongThis->uiRuntime_, Snapshot(oldChildShadowView, strongThis->surfaceManager.getWindow(surfaceId))));
+#endif
         strongThis->claimFrameDrivenLayoutAnimation(
             surfaceId,
             tag,
@@ -935,27 +952,29 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(const std::shared
               strongThis->runLayoutAnimationStart(
                   tag, LayoutAnimationType::EXITING, makeExitingYogaValues(uiRuntime, Snapshot(oldView, window)));
               strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
-            });
+            },
+            start);
       });
 }
 
 void LayoutAnimationsProxy_Experimental::startLayoutAnimation(
     const std::shared_ptr<LightNode> &node,
-    const FrameDrivenBuild build) const {
+    const FrameDrivenStart start) const {
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
-  startFrameDrivenLayoutAnimation(node->previous, node->current, parent->current.tag, build);
+  startFrameDrivenLayoutAnimation(node->previous, node->current, parent->current.tag, start);
 }
 
 void LayoutAnimationsProxy_Experimental::startNativeLayoutFallback(const ActiveNativeLayoutAnimation &record) const {
-  startFrameDrivenLayoutAnimation(record.oldView, record.finalView, record.parentTag, {record.handle.generation, true});
+  startFrameDrivenLayoutAnimation(
+      record.oldView, record.finalView, record.parentTag, {record.handle.generation, true, targetClaims(record.targets)});
 }
 
 void LayoutAnimationsProxy_Experimental::startFrameDrivenLayoutAnimation(
     const ShadowView &oldView,
     const ShadowView &finalView,
     const Tag parentTag,
-    const FrameDrivenBuild build) const {
+    const FrameDrivenStart start) const {
   auto surfaceId = oldView.surfaceId;
   const auto tag = oldView.tag;
 #ifdef ANDROID
@@ -971,7 +990,7 @@ void LayoutAnimationsProxy_Experimental::startFrameDrivenLayoutAnimation(
        newChildShadowView = finalView,
        parentTag,
        tag,
-       build
+       start
 #ifdef ANDROID
        ,
        handle
@@ -993,7 +1012,7 @@ void LayoutAnimationsProxy_Experimental::startFrameDrivenLayoutAnimation(
             tag,
             LayoutAnimationType::LAYOUT,
             strongThis,
-            [weakThis, oldChildShadowView, newChildShadowView, parentTag, surfaceId, tag, build]() {
+            [weakThis, oldChildShadowView, newChildShadowView, parentTag, surfaceId, tag, start]() {
               auto strongThis = weakThis.lock();
               if (!strongThis) {
                 return;
@@ -1010,9 +1029,9 @@ void LayoutAnimationsProxy_Experimental::startFrameDrivenLayoutAnimation(
                   tag,
                   LayoutAnimationType::LAYOUT,
                   makeLayoutYogaValues(uiRuntime, Snapshot(oldView, window), Snapshot(newChildShadowView, window)),
-                  build.id);
+                  start.buildId);
             },
-            build);
+            start);
       });
 }
 

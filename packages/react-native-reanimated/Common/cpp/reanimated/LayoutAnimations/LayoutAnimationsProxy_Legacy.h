@@ -165,7 +165,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
 
   void startEnteringAnimation(const int tag, ShadowViewMutation &mutation) const;
   void startExitingAnimation(const int tag, ShadowViewMutation &mutation) const;
-  void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation, FrameDrivenBuild build = {}) const;
+  void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation, FrameDrivenStart start = {}) const;
   void startNativeLayoutFallback(const ActiveNativeLayoutAnimation &record) const override;
 
 #if defined(IS_REANIMATED_EXAMPLE_APP)

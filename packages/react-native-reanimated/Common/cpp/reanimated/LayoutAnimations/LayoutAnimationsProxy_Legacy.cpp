@@ -511,7 +511,7 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
           mutation.parentTag = movedViews.at(tag);
         }
         if (mutation.parentTag != -1) {
-          FrameDrivenBuild build;
+          FrameDrivenStart start;
           if constexpr (useNativeLayoutAnimations()) {
             // A moved view re-inserts its old ShadowView; it needs the
             // frame-driven update stream.
@@ -530,10 +530,10 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
                 filteredMutations.push_back(mutation);
                 break;
               }
-              build.id = attempt.buildId;
+              start = attempt.start;
             }
           }
-          startLayoutAnimation(tag, mutation, build);
+          startLayoutAnimation(tag, mutation, start);
         }
         break;
       }
@@ -848,6 +848,15 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
           return;
         }
 #endif
+        const auto start = strongThis->prepareFrameDrivenStart(
+            tag,
+            LayoutAnimationType::ENTERING,
+            makeEnteringYogaValues(
+                strongThis->uiRuntime_,
+                Snapshot(
+                    mutation.newChildShadowView,
+                    strongThis->surfaceManager.getWindow(mutation.newChildShadowView.surfaceId))));
+#endif
         strongThis->claimFrameDrivenLayoutAnimation(
             mutation.newChildShadowView.surfaceId,
             tag,
@@ -875,7 +884,8 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
                   tag,
                   LayoutAnimationType::ENTERING,
                   makeEnteringYogaValues(uiRuntime, Snapshot(mutation.newChildShadowView, window)));
-            });
+            },
+            start);
       });
 }
 
@@ -915,6 +925,13 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
           return;
         }
 #endif
+        const auto start = strongThis->prepareFrameDrivenStart(
+            tag,
+            LayoutAnimationType::EXITING,
+            makeExitingYogaValues(
+                strongThis->uiRuntime_,
+                Snapshot(mutation.oldChildShadowView, strongThis->surfaceManager.getWindow(surfaceId))));
+#endif
         strongThis->claimFrameDrivenLayoutAnimation(
             surfaceId, tag, LayoutAnimationType::EXITING, strongThis, [weakThis, mutation, surfaceId, tag]() {
               auto strongThis = weakThis.lock();
@@ -932,14 +949,15 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
               strongThis->runLayoutAnimationStart(
                   tag, LayoutAnimationType::EXITING, makeExitingYogaValues(uiRuntime, Snapshot(oldView, window)));
               strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
-            });
+            },
+            start);
       });
 }
 
 void LayoutAnimationsProxy_Legacy::startLayoutAnimation(
     const int tag,
     const ShadowViewMutation &mutation,
-    const FrameDrivenBuild build) const {
+    const FrameDrivenStart start) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "start layout animation for tag " << tag << std::endl;
 #endif
@@ -955,7 +973,7 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(
        mutation,
        surfaceId,
        tag,
-       build
+       start
 #ifdef ANDROID
        ,
        handle
@@ -978,7 +996,7 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(
             tag,
             LayoutAnimationType::LAYOUT,
             strongThis,
-            [weakThis, mutation, surfaceId, tag, build]() {
+            [weakThis, mutation, surfaceId, tag, start]() {
               auto strongThis = weakThis.lock();
               if (!strongThis) {
                 return;
@@ -996,15 +1014,15 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(
                   LayoutAnimationType::LAYOUT,
                   makeLayoutYogaValues(
                       uiRuntime, Snapshot(oldView, window), Snapshot(mutation.newChildShadowView, window)),
-                  build.id);
+                  start.buildId);
             },
-            build);
+            start);
       });
 }
 
 void LayoutAnimationsProxy_Legacy::startNativeLayoutFallback(const ActiveNativeLayoutAnimation &record) const {
   const auto mutation = ShadowViewMutation::UpdateMutation(record.oldView, record.finalView, record.parentTag);
-  startLayoutAnimation(record.handle.tag, mutation, {record.handle.generation, true});
+  startLayoutAnimation(record.handle.tag, mutation, {record.handle.generation, true, targetClaims(record.targets)});
 }
 
 void LayoutAnimationsProxy_Legacy::settleRevokedLayoutAnimation(const SurfaceId surfaceId, const Tag tag) const {
@@ -1015,6 +1033,9 @@ void LayoutAnimationsProxy_Legacy::settleRevokedLayoutAnimation(const SurfaceId 
 
 void LayoutAnimationsProxy_Legacy::updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation)
     const {
+  if constexpr (useNativeLayoutAnimations()) {
+    widenFrameDrivenLease(mutation.newChildShadowView.surfaceId, tag, weak_from_this());
+  }
   auto copy = mutation.newChildShadowView;
   layoutAnimations_[tag].finalView = copy;
 }

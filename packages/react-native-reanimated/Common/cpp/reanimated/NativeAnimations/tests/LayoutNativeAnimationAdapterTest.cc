@@ -155,10 +155,8 @@ void testConstructionTable() {
   // realize them in the basic track form; the fake Android host can.
   const StepsTiming steps{{{0, 0}, {0.5, 0.5}, {1, 1}}};
   const LinearStopsTiming stops{{{0, 0}, {1, 1}}};
-  assert(
-      failureOf(build(timingProperty("opacity", 0, 1, 300, steps))) == TrackBuildFailureReason::UnsupportedTiming);
-  assert(
-      failureOf(build(timingProperty("opacity", 0, 1, 300, stops))) == TrackBuildFailureReason::UnsupportedTiming);
+  assert(failureOf(build(timingProperty("opacity", 0, 1, 300, steps))) == TrackBuildFailureReason::UnsupportedTiming);
+  assert(failureOf(build(timingProperty("opacity", 0, 1, 300, stops))) == TrackBuildFailureReason::UnsupportedTiming);
   LayoutNativeConversionContext androidContext = appleContext();
   androidContext.formSupport = fakeAndroidFormSupport();
   assert(std::holds_alternative<AnimationPlan>(build(timingProperty("opacity", 0, 1, 300, steps), androidContext)));
@@ -206,7 +204,7 @@ void testWholePlanRouting() {
   assert(failureOf(mixed) == TrackBuildFailureReason::UnsupportedTarget);
 
   auto withExtraInitial = inputOf({timingProperty("opacity", 0, 1)});
-  withExtraInitial.hasUnanimatedInitialValues = true;
+  withExtraInitial.initialOnlyKeys = {"backgroundColor"};
   assert(
       failureOf(buildLayoutNativeAnimationPlan(withExtraInitial, appleContext())) ==
       TrackBuildFailureReason::UnsupportedTrackForm);
@@ -233,8 +231,7 @@ void testConstructionResourceBudget() {
   assert(planOf(atLimit).tracks.size() == 2);
 
   const auto aboveTrackLimit = buildLayoutNativeAnimationPlan(
-      inputOf(
-          {timingProperty("opacity", 0, 1), timingProperty("originX", 0, 10), timingProperty("originY", 0, 10)}),
+      inputOf({timingProperty("opacity", 0, 1), timingProperty("originX", 0, 10), timingProperty("originY", 0, 10)}),
       context);
   assert(failureOf(aboveTrackLimit) == TrackBuildFailureReason::ResourceLimit);
 
@@ -326,7 +323,9 @@ void testFuzzedConstruction() {
 
   for (size_t iteration = 0; iteration < iterations; ++iteration) {
     LayoutNativeAnimationBuildInput input;
-    input.hasUnanimatedInitialValues = random.next() % 8 == 0;
+    if (random.next() % 8 == 0) {
+      input.initialOnlyKeys.push_back("backgroundColor");
+    }
     const size_t propertyCount = random.next() % 5;
     for (size_t index = 0; index < propertyCount; ++index) {
       LayoutNativeAnimatedProperty property;
@@ -364,15 +363,14 @@ void testFuzzedConstruction() {
       input.properties.push_back(std::move(property));
     }
 
-    const auto result =
-        buildLayoutNativeAnimationPlan(
-            input,
-            {.finalWidth = random.nextDouble(),
-             .finalHeight = random.nextDouble(),
-             .finalOriginX = random.nextDouble(),
-             .finalOriginY = random.nextDouble(),
-             .finalOpacity = random.nextDouble(),
-             .formSupport = fakeAppleFormSupport()});
+    const auto result = buildLayoutNativeAnimationPlan(
+        input,
+        {.finalWidth = random.nextDouble(),
+         .finalHeight = random.nextDouble(),
+         .finalOriginX = random.nextDouble(),
+         .finalOriginY = random.nextDouble(),
+         .finalOpacity = random.nextDouble(),
+         .formSupport = fakeAppleFormSupport()});
     if (const auto *plan = std::get_if<AnimationPlan>(&result)) {
       assert(!plan->tracks.empty());
       assert(validateAnimationPlan(*plan) == std::nullopt && "fuzz seed 20260818 built an invalid plan");
@@ -398,18 +396,58 @@ void testCrossHostConstruction() {
   assert(std::holds_alternative<AnimationPlan>(buildLayoutNativeAnimationPlan(shared, appleHost)));
   assert(std::holds_alternative<AnimationPlan>(buildLayoutNativeAnimationPlan(shared, androidHost)));
 
-  const auto stepsOnly =
-      inputOf({timingProperty("opacity", 0, 1, 300, StepsTiming{{{0, 0}, {1, 1}}})});
-  assert(
-      failureOf(buildLayoutNativeAnimationPlan(stepsOnly, appleHost)) ==
-      TrackBuildFailureReason::UnsupportedTiming);
-  assert(std::holds_alternative<AnimationPlan>(
-      buildLayoutNativeAnimationPlan(stepsOnly, androidHost)));
+  const auto stepsOnly = inputOf({timingProperty("opacity", 0, 1, 300, StepsTiming{{{0, 0}, {1, 1}}})});
+  assert(failureOf(buildLayoutNativeAnimationPlan(stepsOnly, appleHost)) == TrackBuildFailureReason::UnsupportedTiming);
+  assert(std::holds_alternative<AnimationPlan>(buildLayoutNativeAnimationPlan(stepsOnly, androidHost)));
 }
 
 } // namespace
 
+// The frame-driven writer claims the exact targets of its build; an unknown
+// key claims every visual target, and entering always claims opacity.
+void testFrameDrivenClaimTargets() {
+  const auto claimsOf = [](LayoutNativeAnimationBuildInput input, const LayoutAnimationType type) {
+    return frameDrivenClaimTargets(input, type);
+  };
+  const std::vector<AnimationTargetClaim> move{
+      AnimationTarget{AnimationTargetKind::PositionX}, AnimationTarget{AnimationTargetKind::PositionY}};
+  assert(
+      claimsOf(
+          inputOf({timingProperty("originX", 0, 10), timingProperty("originY", 0, 10)}), LayoutAnimationType::LAYOUT) ==
+      move);
+
+  auto fade = inputOf({timingProperty("opacity", 0, 1)});
+  const std::vector<AnimationTargetClaim> opacity{AnimationTarget{AnimationTargetKind::Opacity}};
+  assert(claimsOf(fade, LayoutAnimationType::EXITING) == opacity);
+  assert(claimsOf(fade, LayoutAnimationType::ENTERING) == opacity);
+
+  const std::vector<AnimationTargetClaim> moveAndOpacity{
+      AnimationTarget{AnimationTargetKind::PositionX}, AnimationTarget{AnimationTargetKind::Opacity}};
+  assert(claimsOf(inputOf({timingProperty("originX", 0, 10)}), LayoutAnimationType::ENTERING) == moveAndOpacity);
+
+  auto withInitialOnly = inputOf({timingProperty("originX", 0, 10)});
+  withInitialOnly.initialOnlyKeys = {"opacity"};
+  assert(claimsOf(withInitialOnly, LayoutAnimationType::LAYOUT) == moveAndOpacity);
+
+  const std::vector<AnimationTargetClaim> sizeAndPosition{
+      AnimationTarget{AnimationTargetKind::Width},
+      AnimationTarget{AnimationTargetKind::PositionX},
+      AnimationTarget{AnimationTargetKind::Height},
+      AnimationTarget{AnimationTargetKind::PositionY}};
+  assert(
+      claimsOf(
+          inputOf({timingProperty("width", 0, 10), timingProperty("height", 0, 10)}), LayoutAnimationType::LAYOUT) ==
+      sizeAndPosition);
+
+  const std::vector<AnimationTargetClaim> everything{AllVisualTargets{}};
+  assert(claimsOf(inputOf({timingProperty("globalOriginX", 0, 10)}), LayoutAnimationType::LAYOUT) == everything);
+  auto unknownInitial = inputOf({timingProperty("opacity", 0, 1)});
+  unknownInitial.initialOnlyKeys = {"tintColor"};
+  assert(claimsOf(unknownInitial, LayoutAnimationType::LAYOUT) == everything);
+}
+
 void runLayoutNativeAnimationAdapterTests() {
+  testFrameDrivenClaimTargets();
   testDirectBasicConstruction();
   testConstructionTable();
   testWholePlanRouting();

@@ -131,7 +131,9 @@ export type NativeLayoutAnimationBuildSummary =
         initialValue?: number;
         node?: NativeAnimationNode;
       }[];
-      hasUnanimatedInitialValues: boolean;
+      // Initial-value keys without an animation. The frame-driven writer
+      // writes them too, and the native route cannot express them.
+      initialOnlyKeys: string[];
     };
 
 export type LayoutAnimationsManager = {

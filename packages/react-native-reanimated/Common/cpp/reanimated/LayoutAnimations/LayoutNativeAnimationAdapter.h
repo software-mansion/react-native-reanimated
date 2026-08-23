@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 #include <reanimated/NativeAnimations/NativeAnimationService.h>
 #include <reanimated/NativeAnimations/NativeAnimationValidation.h>
 
@@ -46,9 +47,10 @@ struct LayoutNativeAnimatedProperty {
 // platform data, so track construction stays pure and testable.
 struct LayoutNativeAnimationBuildInput {
   std::vector<LayoutNativeAnimatedProperty> properties;
-  // An initial value without a matching animation applies a style that the
-  // common plan cannot express; the whole animation stays frame-driven.
-  bool hasUnanimatedInitialValues{false};
+  // Initial-value keys without an animation. The frame-driven writer writes
+  // them too; the common plan cannot express them, so the whole animation
+  // stays frame-driven when any exist.
+  std::vector<std::string> initialOnlyKeys;
 };
 
 // Mounted final geometry and platform facts for conversion. The final size
@@ -65,6 +67,13 @@ struct LayoutNativeConversionContext {
   native_animation::NativeTrackFormSupport formSupport;
   native_animation::NativeAnimationResourceBudget budget{native_animation::kDefaultResourceBudget};
 };
+
+// The targets a frame-driven writer of this build writes, for its external
+// lease. A key without a known target claims every visual target; Legacy
+// entering always claims opacity.
+std::vector<native_animation::AnimationTargetClaim> frameDrivenClaimTargets(
+    const LayoutNativeAnimationBuildInput &input,
+    LayoutAnimationType type);
 
 // Converts every property once and returns one owned plan or the first typed
 // failure. It never starts fallback.

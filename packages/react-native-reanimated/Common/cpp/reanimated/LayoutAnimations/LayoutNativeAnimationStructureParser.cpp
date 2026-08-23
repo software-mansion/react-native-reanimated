@@ -111,13 +111,25 @@ parseLayoutNativeAnimationBuild(Runtime &rt, const Value &summary, const size_t 
     return native_animation::TrackBuildFailure{native_animation::TrackBuildFailureReason::ResourceLimit};
   }
 
-  const auto hasUnanimatedInitialValues = summaryObject.getProperty(rt, "hasUnanimatedInitialValues");
-  if (!hasUnanimatedInitialValues.isBool()) {
+  const auto initialOnlyKeysValue = summaryObject.getProperty(rt, "initialOnlyKeys");
+  if (!initialOnlyKeysValue.isObject() || !initialOnlyKeysValue.getObject(rt).isArray(rt)) {
     return malformed;
+  }
+  const auto initialOnlyKeys = initialOnlyKeysValue.getObject(rt).getArray(rt);
+  const auto initialOnlyKeyCount = initialOnlyKeys.size(rt);
+  if (initialOnlyKeyCount > maxProperties) {
+    return native_animation::TrackBuildFailure{native_animation::TrackBuildFailureReason::ResourceLimit};
   }
 
   LayoutNativeAnimationBuildInput input;
-  input.hasUnanimatedInitialValues = hasUnanimatedInitialValues.getBool();
+  input.initialOnlyKeys.reserve(initialOnlyKeyCount);
+  for (size_t index = 0; index < initialOnlyKeyCount; ++index) {
+    const auto keyValue = initialOnlyKeys.getValueAtIndex(rt, index);
+    if (!keyValue.isString()) {
+      return malformed;
+    }
+    input.initialOnlyKeys.push_back(keyValue.getString(rt).utf8(rt));
+  }
   input.properties.reserve(count);
   for (size_t index = 0; index < count; ++index) {
     const auto entryValue = properties.getValueAtIndex(rt, index);
