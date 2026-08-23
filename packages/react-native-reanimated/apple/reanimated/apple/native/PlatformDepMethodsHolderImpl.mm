@@ -205,8 +205,10 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   css::CSSRemoveTransitionFunction cssRemoveTransition;
   if constexpr (StaticFeatureFlags::getFlag("IOS_SHARED_NATIVE_ANIMATION_SERVICE")) {
     nativeAnimationService = native_animation::makeAppleNativeAnimationService(nodesManager.surfacePresenter);
-    layoutMountBoundary = makeAppleLayoutMountBoundary(nodesManager.surfacePresenter);
-    nativeTrackFormSupport = native_animation::appleNativeTrackFormSupport();
+    if constexpr (StaticFeatureFlags::getFlag("IOS_NATIVE_LAYOUT_ANIMATIONS")) {
+      layoutMountBoundary = makeAppleLayoutMountBoundary(nodesManager.surfacePresenter);
+      nativeTrackFormSupport = native_animation::appleNativeTrackFormSupport();
+    }
     REACSSSharedNativeTransitions *platformTransitions =
         [[REACSSSharedNativeTransitions alloc] initWithSurfacePresenter:nodesManager.surfacePresenter
                                                  nativeAnimationService:nativeAnimationService];
