@@ -78,6 +78,7 @@ class LayoutAnimationsManager {
   void completeNativeBuild(jsi::Runtime &rt, const int tag, const uint64_t buildId, const bool finished) const;
   void clearLayoutAnimationConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
+  void notifyLayoutAnimationEnd(jsi::Runtime &rt, const int tag, const bool removeView) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
   void transferSharedConfig(const Tag from, const Tag to);
   std::shared_ptr<SharedTransitionManager> getSharedTransitionManager();

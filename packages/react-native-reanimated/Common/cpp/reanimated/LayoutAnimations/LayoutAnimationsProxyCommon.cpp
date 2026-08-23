@@ -423,18 +423,37 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
     rejectedEnteringClaimTags_.erase(tag);
   }
   const FrameDrivenLeaseKey key{surfaceId, tag};
+  const std::vector<native_animation::AnimationTargetClaim> targets{native_animation::AllVisualTargets{}};
+  const auto requestedMode = type == LayoutAnimationType::EXITING
+      ? native_animation::AnimationAdmissionMode::RetainedExit
+      : native_animation::AnimationAdmissionMode::Normal;
+
+  // One lease serves the merged frame-driven writer of the view. A start that
+  // needs no wider claim joins the live lease.
+  const auto existingIt = frameDrivenLeases_.find(key);
+  const auto existing =
+      existingIt != frameDrivenLeases_.end() && !existingIt->second->isRevoked() ? existingIt->second : nullptr;
+  if (existing && existing->covers(targets, requestedMode)) {
+    onGranted();
+    return;
+  }
+
   const native_animation::AnimationHandle handle{
       surfaceId,
       tag,
       native_animation::AnimationOwner::Layout,
       ++commandGeneration_,
   };
-  const auto admissionMode = type == LayoutAnimationType::EXITING
+  const auto admissionMode =
+      existing && existing->getAdmissionMode() == native_animation::AnimationAdmissionMode::RetainedExit
       ? native_animation::AnimationAdmissionMode::RetainedExit
-      : native_animation::AnimationAdmissionMode::Normal;
-  auto lease = std::make_shared<FrameDrivenAnimationLease>(handle);
+      : requestedMode;
+  auto lease = std::make_shared<FrameDrivenAnimationLease>(handle, targets, admissionMode);
+  if (existing) {
+    existing->setSuperseded(true);
+  }
   nativeAnimationAdapter_->claimFrameDriven(
-      {handle, {native_animation::AllVisualTargets{}}, admissionMode},
+      {handle, targets, admissionMode},
       {
           [weakOwner = weakOwner,
            key,
@@ -442,17 +461,25 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
            tag,
            type,
            lease,
+           existing,
            pendingBuildId,
            adapter = nativeAnimationAdapter_,
            onGranted = std::move(onGranted)](const native_animation::ExternalClaimResult result) {
             const auto owner = weakOwner.lock();
             if (result.status == native_animation::ExternalClaimStatus::Rejected) {
+              if (existing) {
+                // The old lease stays live and does not cover this start.
+                existing->setSuperseded(false);
+              }
               if (owner) {
                 if (pendingBuildId != 0) {
                   // The animation never starts; this is its one terminal result.
                   owner->layoutAnimationsManager_->completeNativeBuild(owner->uiRuntime_, tag, pendingBuildId, false);
                 }
                 owner->handleRejectedFrameDrivenLayoutAnimation(tag, type, result.reason);
+                if (existing && type == LayoutAnimationType::EXITING) {
+                  owner->finishWithheldRemoval(key);
+                }
               }
               return;
             }
@@ -472,20 +499,32 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
           {
               {},
               [lease]() { lease->revoke(); },
-              [weakOwner = weakOwner, key, handle, tag](const native_animation::AnimationResult result) {
-                if (result.outcome == native_animation::AnimationOutcome::Interrupted ||
-                    result.outcome == native_animation::AnimationOutcome::SurfaceDestroyed) {
-                  if (const auto owner = weakOwner.lock()) {
-                    const auto lease = owner->frameDrivenLeases_.find(key);
-                    if (lease != owner->frameDrivenLeases_.end() && lease->second->getHandle() == handle) {
-                      owner->frameDrivenLeases_.erase(lease);
-                      owner->layoutAnimationsManager_->cancelLayoutAnimation(owner->uiRuntime_, tag);
-                    }
-                  }
+              [weakOwner = weakOwner, key, lease](const native_animation::AnimationResult result) {
+                const bool revokedByService = result.outcome == native_animation::AnimationOutcome::Interrupted ||
+                    result.outcome == native_animation::AnimationOutcome::SurfaceDestroyed;
+                if (!revokedByService || lease->isSuperseded()) {
+                  return;
+                }
+                if (const auto owner = weakOwner.lock()) {
+                  owner->settleRevokedFrameDrivenLayoutAnimation(key, lease);
                 }
               },
           },
       });
+}
+
+// The service revoked the writer's lease. The writer stops here, without the
+// JS end notification that a finished animation sends.
+void LayoutAnimationsProxyCommon::settleRevokedFrameDrivenLayoutAnimation(
+    const FrameDrivenLeaseKey &key,
+    const std::shared_ptr<FrameDrivenAnimationLease> &lease) const {
+  const auto it = frameDrivenLeases_.find(key);
+  if (it == frameDrivenLeases_.end() || it->second != lease) {
+    return;
+  }
+  frameDrivenLeases_.erase(it);
+  layoutAnimationsManager_->cancelLayoutAnimation(uiRuntime_, key.tag);
+  settleRevokedLayoutAnimation(key.surfaceId, key.tag);
 }
 
 void LayoutAnimationsProxyCommon::handleRejectedFrameDrivenLayoutAnimation(
@@ -512,6 +551,14 @@ void LayoutAnimationsProxyCommon::handleRejectedFrameDrivenLayoutAnimation(
     default:
       return;
   }
+}
+
+// The exit could not start and the view's own writer still holds the lease,
+// so no other owner can remove the view. The writer ends with the removal.
+void LayoutAnimationsProxyCommon::finishWithheldRemoval(const FrameDrivenLeaseKey &key) const {
+  releaseFrameDrivenLayoutAnimation(key.surfaceId, key.tag, native_animation::AnimationOutcome::Cancelled);
+  layoutAnimationsManager_->cancelLayoutAnimation(uiRuntime_, key.tag);
+  layoutAnimationsManager_->notifyLayoutAnimationEnd(uiRuntime_, key.tag, true);
 }
 
 bool LayoutAnimationsProxyCommon::consumeRejectedEnteringClaim(const Tag tag) const {

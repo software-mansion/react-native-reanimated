@@ -274,8 +274,15 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       Tag tag,
       LayoutAnimationType type,
       native_animation::AnimationResultReason reason) const;
+  void finishWithheldRemoval(const FrameDrivenLeaseKey &key) const;
   bool consumeRejectedEnteringClaim(Tag tag) const;
   std::optional<FrameDrivenAnimationLeaseWriteGuard> lockFrameDrivenLayoutAnimation(SurfaceId surfaceId, Tag tag) const;
+  void settleRevokedFrameDrivenLayoutAnimation(
+      const FrameDrivenLeaseKey &key,
+      const std::shared_ptr<FrameDrivenAnimationLease> &lease) const;
+  // The service revoked the writer of this view. Drop its animation entry
+  // and its pending update; the mounted state stays as it is.
+  virtual void settleRevokedLayoutAnimation(SurfaceId surfaceId, Tag tag) const = 0;
 
 #ifdef ANDROID
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker_;

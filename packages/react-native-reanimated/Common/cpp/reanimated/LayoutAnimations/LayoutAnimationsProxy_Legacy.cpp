@@ -1017,6 +1017,12 @@ void LayoutAnimationsProxy_Legacy::startNativeLayoutFallback(const ActiveNativeL
   startLayoutAnimation(record.handle.tag, mutation, record.handle.generation);
 }
 
+void LayoutAnimationsProxy_Legacy::settleRevokedLayoutAnimation(const SurfaceId surfaceId, const Tag tag) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  surfaceManager.getUpdateMap(surfaceId).erase(tag);
+  layoutAnimations_.erase(tag);
+}
+
 void LayoutAnimationsProxy_Legacy::updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation)
     const {
   auto copy = mutation.newChildShadowView;
