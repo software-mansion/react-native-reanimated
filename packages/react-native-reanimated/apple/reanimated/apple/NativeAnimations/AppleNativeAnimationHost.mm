@@ -404,11 +404,11 @@ class AppleNativeAnimationExecutor final : public NativeAnimationExecutor,
     preparedTracks.reserve(tracks.size());
     for (const auto &resolvedTrack : tracks) {
       const auto &track = resolvedTrack.track;
-      // TODO: add structured and sampled keyframe tracks. for now this is just the basic case
-      if (track.keyframes.size() != 1 || track.keyframes.front().offset != 1) {
+      // TODO: add structured and sampled multi-segment tracks. for now this is just the basic case
+      if (track.segments.size() != 1) {
         return AnimationResultReason::UnsupportedTargetRealization;
       }
-      CAMediaTimingFunction *timing = timingFunction(track.keyframes.front().timingToNext);
+      CAMediaTimingFunction *timing = timingFunction(track.segments.front().timingFromPrevious);
       if (timing == nil) {
         return AnimationResultReason::UnsupportedTargetRealization;
       }
@@ -437,7 +437,7 @@ class AppleNativeAnimationExecutor final : public NativeAnimationExecutor,
           resolved.layer(),
           resolved.keyPath(),
           fromValue,
-          objectFromValue(track.keyframes.front().value),
+          objectFromValue(track.segments.front().endValue),
           timing,
           track.delayMs,
           track.durationMs,

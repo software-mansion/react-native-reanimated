@@ -9,18 +9,24 @@ namespace reanimated::native_animation {
 namespace {
 
 // TODO: Replace these provisional structural caps with a measured aggregate
-// budget for tracks, total keyframes, timing points, and encoded value cost.
+// budget for tracks, total segments, timing points, and encoded value cost.
 constexpr size_t kMaximumTracksPerPlan = 128;
-constexpr size_t kMaximumKeyframesPerTrack = 4096;
+constexpr size_t kMaximumSegmentsPerTrack = 4096;
+
+bool isValidSegment(const AnimationSegment &segment, const AnimationTarget target, const double previousOffset) {
+  return std::isfinite(segment.endOffset) && segment.endOffset > previousOffset && segment.endOffset <= 1 &&
+      isFinite(segment.endValue) && valueMatchesTarget(segment.endValue, target) &&
+      isFinite(segment.timingFromPrevious) && hasOrderedTimingPoints(segment.timingFromPrevious);
+}
 
 std::optional<TrackBuildFailure> validateAnimationTrack(const AnimationTrack &track) {
   if (!std::isfinite(track.delayMs) || !std::isfinite(track.durationMs) || track.delayMs < 0 || track.durationMs < 0) {
     return TrackBuildFailure{TrackBuildFailureReason::InvalidValue};
   }
-  if (track.keyframes.empty()) {
+  if (track.segments.empty()) {
     return TrackBuildFailure{TrackBuildFailureReason::UnsupportedTrackForm};
   }
-  if (track.keyframes.size() > kMaximumKeyframesPerTrack) {
+  if (track.segments.size() > kMaximumSegmentsPerTrack) {
     return TrackBuildFailure{TrackBuildFailureReason::ResourceLimit};
   }
   if (const auto *start = std::get_if<AnimationValue>(&track.start);
@@ -28,15 +34,15 @@ std::optional<TrackBuildFailure> validateAnimationTrack(const AnimationTrack &tr
     return TrackBuildFailure{TrackBuildFailureReason::InvalidValue};
   }
 
-  double previousOffset = -1;
-  for (const auto &keyframe : track.keyframes) {
-    if (!std::isfinite(keyframe.offset) || keyframe.offset < 0 || keyframe.offset > 1 ||
-        keyframe.offset < previousOffset || !isFinite(keyframe.value) ||
-        !valueMatchesTarget(keyframe.value, track.target) || !isFinite(keyframe.timingToNext) ||
-        !hasOrderedTimingPoints(keyframe.timingToNext)) {
+  double previousOffset = 0;
+  for (const auto &segment : track.segments) {
+    if (!isValidSegment(segment, track.target, previousOffset)) {
       return TrackBuildFailure{TrackBuildFailureReason::InvalidValue};
     }
-    previousOffset = keyframe.offset;
+    previousOffset = segment.endOffset;
+  }
+  if (previousOffset != 1) {
+    return TrackBuildFailure{TrackBuildFailureReason::InvalidValue};
   }
   return std::nullopt;
 }

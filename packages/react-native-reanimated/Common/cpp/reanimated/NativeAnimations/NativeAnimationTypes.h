@@ -11,16 +11,22 @@
 
 namespace reanimated::native_animation {
 
-struct AnimationKeyframe {
-  double offset{0};
-  AnimationValue value;
-  AnimationTiming timingToNext;
+// One endpoint after the start value. `endOffset` is the normalized time at
+// which the track reaches `endValue`; `timingFromPrevious` shapes the motion
+// from the prior value. A segment whose end value equals the prior value is a
+// hold.
+struct AnimationSegment {
+  double endOffset{1};
+  AnimationValue endValue;
+  AnimationTiming timingFromPrevious;
 };
 
+// `start` is the value at offset zero. Segments end at strictly increasing
+// offsets and the last one ends at 1.0.
 struct AnimationTrack {
   AnimationTarget target;
   AnimationStart start;
-  std::vector<AnimationKeyframe> keyframes;
+  std::vector<AnimationSegment> segments;
   double delayMs{0};
   double durationMs{0};
 };

@@ -136,16 +136,49 @@ void testTrackBuildAndWholePlanFallback() {
   assert(std::holds_alternative<TrackBuildFailure>(plan));
 }
 
-void testProvisionalResourceLimitBoundaries() {
-  auto trackAtLimit = opacityTrack();
-  const auto keyframe = trackAtLimit.keyframes.front();
-  trackAtLimit.keyframes.assign(4096, keyframe);
-  assert(
-      std::holds_alternative<AnimationTrack>(
-          buildAnimationTrack(trackAtLimit)));
+AnimationTrack segmentedOpacityTrack(const size_t segmentCount) {
+  auto track = opacityTrack();
+  track.segments.clear();
+  for (size_t index = 1; index <= segmentCount; ++index) {
+    track.segments.push_back({static_cast<double>(index) / segmentCount, AnimationValue{1.0}, LinearTiming{}});
+  }
+  return track;
+}
 
-  trackAtLimit.keyframes.push_back(trackAtLimit.keyframes.front());
-  const auto trackAboveLimit = buildAnimationTrack(std::move(trackAtLimit));
+void testSegmentRules() {
+  const auto reasonOf = [](AnimationTrack track) {
+    const auto result = buildAnimationTrack(std::move(track));
+    return std::holds_alternative<TrackBuildFailure>(result)
+        ? std::optional<TrackBuildFailureReason>{std::get<TrackBuildFailure>(result).reason}
+        : std::nullopt;
+  };
+  assert(!reasonOf(segmentedOpacityTrack(3)));
+
+  auto empty = opacityTrack();
+  empty.segments.clear();
+  assert(reasonOf(empty) == TrackBuildFailureReason::UnsupportedTrackForm);
+
+  auto endsEarly = segmentedOpacityTrack(2);
+  endsEarly.segments.pop_back();
+  assert(reasonOf(endsEarly) == TrackBuildFailureReason::InvalidValue);
+
+  auto zeroOffset = opacityTrack();
+  zeroOffset.segments.insert(zeroOffset.segments.begin(), {0.0, AnimationValue{0.0}, LinearTiming{}});
+  assert(reasonOf(zeroOffset) == TrackBuildFailureReason::InvalidValue);
+
+  auto repeatedOffset = segmentedOpacityTrack(2);
+  repeatedOffset.segments.front().endOffset = 1.0;
+  assert(reasonOf(repeatedOffset) == TrackBuildFailureReason::InvalidValue);
+
+  auto pastEnd = opacityTrack();
+  pastEnd.segments.front().endOffset = 1.5;
+  assert(reasonOf(pastEnd) == TrackBuildFailureReason::InvalidValue);
+}
+
+void testProvisionalResourceLimitBoundaries() {
+  assert(std::holds_alternative<AnimationTrack>(buildAnimationTrack(segmentedOpacityTrack(4096))));
+
+  const auto trackAboveLimit = buildAnimationTrack(segmentedOpacityTrack(4097));
   assert(
       std::get<TrackBuildFailure>(trackAboveLimit).reason ==
       TrackBuildFailureReason::ResourceLimit);
@@ -773,6 +806,7 @@ void testExternalTraceEnvelope() {
 int main() {
   testOwnedRequestAndExactlyOnceTerminal();
   testTrackBuildAndWholePlanFallback();
+  testSegmentRules();
   testProvisionalResourceLimitBoundaries();
   testSurfaceIdentityAndDisjointGenerations();
   testTargetRegistryScopesClaimsAndRetainedExitsByView();
