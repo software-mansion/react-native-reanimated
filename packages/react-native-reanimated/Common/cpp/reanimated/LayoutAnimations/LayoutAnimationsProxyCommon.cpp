@@ -219,8 +219,7 @@ LayoutAnimationsProxyCommon::NativeLayoutRouteAttempt LayoutAnimationsProxyCommo
       static_cast<uint8_t>(LayoutNativeAnimationRoute::DirectBasic),
       static_cast<uint8_t>(LayoutNativeAnimationRoute::DirectBasic),
       std::nullopt);
-  activeNativeLayoutAnimations_[{surfaceId, tag}] = ActiveNativeLayoutAnimation{
-      handle, LayoutAnimationType::LAYOUT, std::move(targets), oldView, finalView, parentTag};
+  activeNativeLayoutCommands_.insert({handle, std::move(targets), oldView, finalView, parentTag});
 
   const FrameDrivenLeaseKey key{surfaceId, tag};
   native_animation::AnimationCallbacks callbacks{
@@ -259,9 +258,8 @@ void LayoutAnimationsProxyCommon::handleNativeLayoutAdmission(
     // The terminal result after a rejection owns fallback and the callback.
     return;
   }
-  const auto it = activeNativeLayoutAnimations_.find({surfaceId, tag});
-  if (it != activeNativeLayoutAnimations_.end() && it->second.handle == handle) {
-    it->second.admissionGranted = true;
+  if (auto *record = activeNativeLayoutCommands_.find(handle)) {
+    record->admissionGranted = true;
   }
 }
 
@@ -270,12 +268,7 @@ void LayoutAnimationsProxyCommon::handleNativeLayoutTerminal(
     const Tag tag,
     const native_animation::AnimationHandle &handle,
     const native_animation::AnimationResult result) const {
-  std::optional<ActiveNativeLayoutAnimation> record;
-  const auto it = activeNativeLayoutAnimations_.find({surfaceId, tag});
-  if (it != activeNativeLayoutAnimations_.end() && it->second.handle == handle) {
-    record = std::move(it->second);
-    activeNativeLayoutAnimations_.erase(it);
-  }
+  const auto record = activeNativeLayoutCommands_.take(handle);
   if (result.outcome == native_animation::AnimationOutcome::Rejected && record && !record->admissionGranted &&
       layoutPermitsFallback(result.reason)) {
     // The fallback run delivers the public callback.
@@ -295,26 +288,18 @@ bool LayoutAnimationsProxyCommon::shouldStartFromCurrentVisual(
     // The lease claims every visual target of the view.
     return true;
   }
-  const auto it = activeNativeLayoutAnimations_.find(key);
-  if (it == activeNativeLayoutAnimations_.end()) {
-    return false;
-  }
-  return std::ranges::any_of(it->second.targets, [&](const native_animation::AnimationTarget &owned) {
-    return native_animation::targetsConflict(owned, target);
-  });
+  return activeNativeLayoutCommands_.claims(surfaceId, tag, target);
 }
 
 void LayoutAnimationsProxyCommon::cancelActiveNativeLayoutAnimationsForTag(const Tag tag) const {
   if (!nativeAnimationAdapter_) {
     return;
   }
-  for (const auto &[key, record] : activeNativeLayoutAnimations_) {
-    if (key.tag != tag) {
-      continue;
-    }
-    // The terminal result consumes the record and delivers the callback.
-    cancelNativeLayoutStart(record.handle);
-    nativeAnimationAdapter_->cancel(record.handle);
+  // The terminal result of each cancel consumes its record inline, so the
+  // loop runs over a copy of the handles.
+  for (const auto &handle : activeNativeLayoutCommands_.handlesForTag(tag)) {
+    cancelNativeLayoutStart(handle);
+    nativeAnimationAdapter_->cancel(handle);
   }
 }
 

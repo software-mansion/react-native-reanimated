@@ -6,6 +6,7 @@
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/Compat/WorkletsApi.h>
+#include <reanimated/LayoutAnimations/ActiveNativeLayoutCommands.h>
 #include <reanimated/LayoutAnimations/FrameDrivenAnimationLease.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
@@ -200,7 +201,6 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   // result. Access follows the same main-thread rule as `frameDrivenLeases_`.
   struct ActiveNativeLayoutAnimation {
     native_animation::AnimationHandle handle;
-    LayoutAnimationType type{LayoutAnimationType::LAYOUT};
     std::vector<native_animation::AnimationTarget> targets;
     ShadowView oldView;
     ShadowView finalView;
@@ -264,10 +264,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   // of those paths can run on another thread.
   mutable std::unordered_map<FrameDrivenLeaseKey, std::shared_ptr<FrameDrivenAnimationLease>, FrameDrivenLeaseKeyHash>
       frameDrivenLeases_;
-  // One slot per view. A newer command replaces the slot; the replaced
-  // command still receives its own terminal result through its handle.
-  mutable std::unordered_map<FrameDrivenLeaseKey, ActiveNativeLayoutAnimation, FrameDrivenLeaseKeyHash>
-      activeNativeLayoutAnimations_;
+  mutable ActiveNativeLayoutCommands<ActiveNativeLayoutAnimation> activeNativeLayoutCommands_;
   // One monotonic source for command generations and build ids.
   mutable uint64_t commandGeneration_{0};
   // Entering claims that the coordinator rejected. The claim resolves inline

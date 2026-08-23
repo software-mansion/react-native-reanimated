@@ -13,6 +13,7 @@
 using namespace reanimated::native_animation;
 using namespace reanimated::native_animation::testing;
 
+void runActiveNativeLayoutCommandsTests();
 void runLayoutNativeAnimationAdapterTests();
 void runPendingNativeLayoutStartsTests();
 
@@ -891,6 +892,7 @@ int main() {
   testRetainedExitRejectsEveryTargetShape();
   testExternalTraceEnvelope();
   std::cout << "NativeAnimationServiceTest passed\n";
+  runActiveNativeLayoutCommandsTests();
   runLayoutNativeAnimationAdapterTests();
   runPendingNativeLayoutStartsTests();
 }
