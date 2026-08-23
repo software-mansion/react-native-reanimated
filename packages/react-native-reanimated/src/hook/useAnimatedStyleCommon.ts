@@ -15,6 +15,24 @@ import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type { Descriptor } from './commonTypes';
 import { isAnimated, shallowEqual } from './utils';
 
+export function createAnimatedStyleHandle<THandle extends object>(
+  handle: THandle,
+  styleUpdaterContainer: StyleUpdaterContainer
+): THandle & { styleUpdaterContainer: StyleUpdaterContainer } {
+  // React Native deep-freezes enumerable native props in development. Animated
+  // style handles can pass through native props before Reanimated filters them
+  // (for example, when used on a sticky header), but this container must remain
+  // mutable so that the mapper can be installed in an effect.
+  Object.defineProperty(handle, 'styleUpdaterContainer', {
+    enumerable: false,
+    value: styleUpdaterContainer,
+  });
+
+  return handle as THandle & {
+    styleUpdaterContainer: StyleUpdaterContainer;
+  };
+}
+
 export interface AnimatedState {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   last: AnimatedStyle<any>;
