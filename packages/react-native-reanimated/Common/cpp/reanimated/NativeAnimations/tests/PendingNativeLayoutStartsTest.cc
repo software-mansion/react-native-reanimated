@@ -125,14 +125,11 @@ struct PendingFixture {
       const facebook::react::Rect expectedFinalLayout,
       RecordedResults &results,
       AnimationTrack track,
-      const int64_t transactionNumber = 1,
       const uintptr_t expectedFinalPropsToken = 0) {
     std::vector<AnimationTrack> tracks;
     tracks.push_back(std::move(track));
     return {
         handle,
-        transactionNumber,
-        LayoutAnimationType::LAYOUT,
         expectedFinalLayout,
         expectedFinalPropsToken,
         nullptr,
@@ -292,9 +289,9 @@ void testBackToBackCommitsKeepNewestFinalState() {
 
   // A -> B and B -> C queue before any mount; the platform mounts C.
   fixture.pendingStarts->enqueue(
-      fixture.makeRecord(firstHandle, rect(0, 0, 100, 50), firstResults, pendingOpacityTrack(), 1));
+      fixture.makeRecord(firstHandle, rect(0, 0, 100, 50), firstResults, pendingOpacityTrack()));
   fixture.pendingStarts->enqueue(
-      fixture.makeRecord(secondHandle, rect(200, 0, 100, 50), secondResults, pendingOpacityTrack(), 2));
+      fixture.makeRecord(secondHandle, rect(200, 0, 100, 50), secondResults, pendingOpacityTrack()));
   fixture.boundary->mountedStates[{1, 10}] = {rect(200, 0, 100, 50)};
 
   fixture.boundary->simulateMount(1);
@@ -320,14 +317,14 @@ void testSecondCommitRetargetsStartedCommand() {
 
   fixture.boundary->mountedStates[{1, 10}] = {rect(0, 0, 100, 50)};
   fixture.pendingStarts->enqueue(
-      fixture.makeRecord(firstHandle, rect(0, 0, 100, 50), firstResults, pendingOpacityTrack(), 1));
+      fixture.makeRecord(firstHandle, rect(0, 0, 100, 50), firstResults, pendingOpacityTrack()));
   fixture.boundary->simulateMount(1);
   fixture.scheduler->flush();
   assert(fixture.executor->started.size() == 1);
 
   fixture.boundary->mountedStates[{1, 10}] = {rect(200, 0, 100, 50)};
   fixture.pendingStarts->enqueue(
-      fixture.makeRecord(secondHandle, rect(200, 0, 100, 50), secondResults, pendingOpacityTrack(), 2));
+      fixture.makeRecord(secondHandle, rect(200, 0, 100, 50), secondResults, pendingOpacityTrack()));
   fixture.boundary->simulateMount(1);
   fixture.scheduler->flush();
 
@@ -368,9 +365,9 @@ void testStaleMountedPropsCannotStart() {
   fixture.boundary->mountedStates[{1, 10}] = {rect(0, 0, 100, 50), 7};
   fixture.boundary->mountedStates[{1, 11}] = {rect(0, 0, 100, 50), 9};
   fixture.pendingStarts->enqueue(
-      fixture.makeRecord(staleHandle, rect(0, 0, 100, 50), staleResults, pendingOpacityTrack(), 1, 8));
+      fixture.makeRecord(staleHandle, rect(0, 0, 100, 50), staleResults, pendingOpacityTrack(), 8));
   fixture.pendingStarts->enqueue(
-      fixture.makeRecord(currentHandle, rect(0, 0, 100, 50), currentResults, pendingOpacityTrack(), 1, 9));
+      fixture.makeRecord(currentHandle, rect(0, 0, 100, 50), currentResults, pendingOpacityTrack(), 9));
 
   fixture.boundary->simulateMount(1);
   fixture.scheduler->flush();

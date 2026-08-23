@@ -168,7 +168,6 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
 #if defined(IS_REANIMATED_EXAMPLE_APP)
   // Final-state-first bench: views with a bench nativeID get a controlled
   // prepared request through the pending-start mechanism.
-  mutable MountingTransaction::Number benchTransactionNumber_{0};
   bool maybeEnqueueFinalStateFirstBenchLayout(const ShadowViewMutation &mutation) const;
   bool maybeEnqueueFinalStateFirstBenchEntering(const ShadowViewMutation &mutation) const;
 #endif

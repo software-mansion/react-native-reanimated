@@ -139,10 +139,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   // Final-state-first delivery: stores an owned prepared request during
   // interception; the pending store submits it after the intended mount.
   void enqueueNativeLayoutStart(
-      LayoutAnimationType type,
       const ShadowView &oldView,
       const ShadowView &finalView,
-      MountingTransaction::Number transactionNumber,
       native_animation::AnimationRequest request,
       native_animation::AnimationCallbacks callbacks) const;
   void cancelNativeLayoutStart(const native_animation::AnimationHandle &handle) const;

@@ -35,9 +35,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " " << surfaceId << std::endl;
 #endif
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-#if defined(IS_REANIMATED_EXAMPLE_APP)
-  benchTransactionNumber_ = transactionNumber;
-#endif
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
   auto &surfaceCtx = getSurfaceContext(surfaceId);
@@ -1186,10 +1183,8 @@ bool LayoutAnimationsProxy_Legacy::maybeEnqueueFinalStateFirstBenchLayout(const 
       5000,
   };
   enqueueNativeLayoutStart(
-      LayoutAnimationType::LAYOUT,
       mutation.oldChildShadowView,
       mutation.newChildShadowView,
-      benchTransactionNumber_,
       {handle, {{std::move(positionTrack)}}, native_animation::AnimationAdmissionMode::Normal},
       {});
   return true;
@@ -1219,10 +1214,8 @@ bool LayoutAnimationsProxy_Legacy::maybeEnqueueFinalStateFirstBenchEntering(cons
       2000,
   };
   enqueueNativeLayoutStart(
-      LayoutAnimationType::ENTERING,
       mutation.newChildShadowView,
       mutation.newChildShadowView,
-      benchTransactionNumber_,
       {handle, {{std::move(opacityTrack)}}, native_animation::AnimationAdmissionMode::Normal},
       {});
   return true;
