@@ -1,5 +1,6 @@
 #import <reanimated/apple/NativeAnimations/AppleLayoutMountBoundary.h>
 
+#import <reanimated/apple/NativeAnimations/REAMountedViewSurfaceId.h>
 #import <reanimated/apple/REAUIView.h>
 
 #import <React/RCTAssert.h>
@@ -42,17 +43,6 @@ struct PostMountObserverSlot {
     }
   }
 };
-
-facebook::react::SurfaceId surfaceIdForMountedView(REAUIView *view)
-{
-  while (view != nil) {
-    if (RCTIsReactRootView(@(view.tag))) {
-      return static_cast<facebook::react::SurfaceId>(view.tag);
-    }
-    view = view.superview;
-  }
-  return -1;
-}
 
 } // namespace
 } // namespace reanimated
@@ -117,7 +107,7 @@ class AppleLayoutMountBoundary final : public LayoutMountBoundary {
     }
     REAUIView<RCTComponentViewProtocol> *view =
         [surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
-    if (view == nil || view.layer == nil || surfaceIdForMountedView(view) != surfaceId) {
+    if (view == nil || view.layer == nil || native_animation::surfaceIdForMountedView(view) != surfaceId) {
       return std::nullopt;
     }
     // Layer position and bounds report the mounted geometry free of any
