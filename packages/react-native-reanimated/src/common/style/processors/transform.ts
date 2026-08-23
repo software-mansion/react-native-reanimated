@@ -183,7 +183,11 @@ export const processTransform: ValueProcessor<TransformsArray | string> = (
     return value;
   }
 
+  // The split consumes whitespace after each ')', and `filter(Boolean)` drops
+  // what a trailing one leaves behind, but the start of the string is only
+  // reached by trimming it.
   return value
+    .trim()
     .split(/\)\s*/)
     .filter(Boolean)
     .flatMap((part) => {
