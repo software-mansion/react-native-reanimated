@@ -181,16 +181,22 @@ std::optional<AnimationValue> valueFromObject(id object, const AnimationTarget t
     case AnimationTargetKind::BackgroundColor:
     case AnimationTargetKind::BorderColor:
     case AnimationTargetKind::ShadowColor: {
-      CGColorRef color = (__bridge CGColorRef)object;
+      // Components are read in sRGB, the space of every value this host writes.
+      CGColorRef color = CGColorCreateCopyByMatchingToColorSpace(
+          sharedSRGBColorSpace(), kCGRenderingIntentDefault, (__bridge CGColorRef)object, nullptr);
+      if (color == nullptr) {
+        return std::nullopt;
+      }
       const size_t count = CGColorGetNumberOfComponents(color);
       const CGFloat *components = CGColorGetComponents(color);
+      std::optional<AnimationValue> value;
       if (count == 2) {
-        return AnimationColor{components[0], components[0], components[0], components[1]};
+        value = AnimationColor{components[0], components[0], components[0], components[1]};
+      } else if (count >= 4) {
+        value = AnimationColor{components[0], components[1], components[2], components[3]};
       }
-      if (count >= 4) {
-        return AnimationColor{components[0], components[1], components[2], components[3]};
-      }
-      return std::nullopt;
+      CGColorRelease(color);
+      return value;
     }
     case AnimationTargetKind::Transform: {
       const CATransform3D transform = [object CATransform3DValue];
