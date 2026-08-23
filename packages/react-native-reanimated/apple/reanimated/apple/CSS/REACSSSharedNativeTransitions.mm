@@ -3,6 +3,7 @@
 #import <reanimated/CSS/utils/reversingShortening.h>
 #import <reanimated/apple/CSS/REACSSNativeTransitionAdapter.h>
 #import <reanimated/apple/CSS/REACSSPlatformProps.h>
+#import <reanimated/apple/NativeAnimations/REAMountedViewSurfaceId.h>
 #import <reanimated/apple/REAUIView.h>
 
 #import <React/RCTComponent.h>
@@ -116,11 +117,7 @@ ResolvedCSSTransition resolveCSSTransition(
 {
   REAUIView<RCTComponentViewProtocol> *view =
       [_surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:viewTag];
-  REAUIView *ancestor = view;
-  while (ancestor != nil && !RCTIsReactRootView(@(ancestor.tag))) {
-    ancestor = ancestor.superview;
-  }
-  if (ancestor == nil || ancestor.tag != surfaceId) {
+  if (view == nil || surfaceIdForMountedView(view) != surfaceId) {
     return nil;
   }
   return view.layer;
