@@ -21,6 +21,15 @@ void StderrNativeAnimationTraceSink::record(NativeAnimationTraceEvent event) {
              ? std::string("all")
              : std::to_string(static_cast<unsigned>(std::get<AnimationTarget>(*event.target).kind)));
   }
+  if (event.requestedRoute) {
+    suffix += " requestedRoute=" + std::to_string(*event.requestedRoute);
+  }
+  if (event.selectedRoute) {
+    suffix += " selectedRoute=" + std::to_string(*event.selectedRoute);
+  }
+  if (event.trackBuildFailureReason) {
+    suffix += " buildFailure=" + std::to_string(static_cast<unsigned>(*event.trackBuildFailureReason));
+  }
   if (event.outcome) {
     suffix += " outcome=" + std::to_string(static_cast<unsigned>(*event.outcome)) +
         " reason=" + std::to_string(static_cast<unsigned>(event.reason.value_or(AnimationResultReason::None)));

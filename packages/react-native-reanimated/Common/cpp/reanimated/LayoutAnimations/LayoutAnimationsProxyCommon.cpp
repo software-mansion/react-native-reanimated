@@ -6,10 +6,6 @@
 
 #include <react/utils/hash_combine.h>
 
-#if !defined(NDEBUG) && defined(IS_REANIMATED_EXAMPLE_APP)
-#include <cstdio>
-#endif
-
 #include <algorithm>
 #include <functional>
 #include <memory>
@@ -49,40 +45,6 @@ bool layoutPermitsFallback(const native_animation::AnimationResultReason reason)
   }
 }
 
-#if !defined(NDEBUG) && defined(IS_REANIMATED_EXAMPLE_APP)
-
-// Development sink that prints trace events to the console for bench evidence.
-class StderrNativeAnimationTraceSink final : public native_animation::NativeAnimationTraceSink {
- public:
-  void record(native_animation::NativeAnimationTraceEvent event) override {
-    event.sequence = ++sequence_;
-    std::fprintf(
-        stderr,
-        "[Reanimated.native-animation] seq=%llu event=%u surface=%d tag=%d owner=%u generation=%llu%s%s%s%s\n",
-        static_cast<unsigned long long>(event.sequence),
-        static_cast<unsigned>(event.event),
-        event.handle.surfaceId,
-        event.handle.tag,
-        static_cast<unsigned>(event.handle.owner),
-        static_cast<unsigned long long>(event.handle.generation),
-        event.requestedRoute ? (" requestedRoute=" + std::to_string(*event.requestedRoute)).c_str() : "",
-        event.selectedRoute ? (" selectedRoute=" + std::to_string(*event.selectedRoute)).c_str() : "",
-        event.trackBuildFailureReason
-            ? (" buildFailure=" + std::to_string(static_cast<unsigned>(*event.trackBuildFailureReason))).c_str()
-            : "",
-        event.outcome ? (" outcome=" + std::to_string(static_cast<unsigned>(*event.outcome)) + " reason=" +
-                         std::to_string(static_cast<unsigned>(
-                             event.reason.value_or(native_animation::AnimationResultReason::None))))
-                            .c_str()
-                      : "");
-  }
-
- private:
-  uint64_t sequence_{0};
-};
-
-#endif
-
 void setSnapshotProperties(
     jsi::Runtime &rt,
     const jsi::Object &values,
@@ -102,11 +64,9 @@ void setSnapshotProperties(
 
 #ifndef NDEBUG
 std::shared_ptr<native_animation::NativeAnimationTraceSink> LayoutAnimationsProxyCommon::makeLayoutTraceSink() {
-#ifdef IS_REANIMATED_EXAMPLE_APP
   if (useNativeLayoutAnimations()) {
-    return std::make_shared<StderrNativeAnimationTraceSink>();
+    return native_animation::makeDefaultNativeAnimationTraceSink();
   }
-#endif
   return std::make_shared<native_animation::NullNativeAnimationTraceSink>();
 }
 #endif
