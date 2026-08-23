@@ -8,11 +8,17 @@ namespace reanimated::native_animation {
 
 namespace {
 
+bool isValidSegment(const AnimationSegment &segment, const AnimationTarget target, const double previousOffset) {
+  return std::isfinite(segment.endOffset) && segment.endOffset > previousOffset && segment.endOffset <= 1 &&
+      isFinite(segment.endValue) && valueMatchesTarget(segment.endValue, target) &&
+      isFinite(segment.timingFromPrevious) && hasOrderedTimingPoints(segment.timingFromPrevious);
+}
+
 std::optional<TrackBuildFailure> validateAnimationTrack(const AnimationTrack &track) {
   if (!std::isfinite(track.delayMs) || !std::isfinite(track.durationMs) || track.delayMs < 0 || track.durationMs < 0) {
     return TrackBuildFailure{TrackBuildFailureReason::InvalidValue};
   }
-  if (track.keyframes.empty()) {
+  if (track.segments.empty()) {
     return TrackBuildFailure{TrackBuildFailureReason::UnsupportedTrackForm};
   }
   NativeAnimationResourceUsage usage;
@@ -24,15 +30,15 @@ std::optional<TrackBuildFailure> validateAnimationTrack(const AnimationTrack &tr
     return TrackBuildFailure{TrackBuildFailureReason::InvalidValue};
   }
 
-  double previousOffset = -1;
-  for (const auto &keyframe : track.keyframes) {
-    if (!std::isfinite(keyframe.offset) || keyframe.offset < 0 || keyframe.offset > 1 ||
-        keyframe.offset < previousOffset || !isFinite(keyframe.value) ||
-        !valueMatchesTarget(keyframe.value, track.target) || !isFinite(keyframe.timingToNext) ||
-        !hasOrderedTimingPoints(keyframe.timingToNext)) {
+  double previousOffset = 0;
+  for (const auto &segment : track.segments) {
+    if (!isValidSegment(segment, track.target, previousOffset)) {
       return TrackBuildFailure{TrackBuildFailureReason::InvalidValue};
     }
-    previousOffset = keyframe.offset;
+    previousOffset = segment.endOffset;
+  }
+  if (previousOffset != 1) {
+    return TrackBuildFailure{TrackBuildFailureReason::InvalidValue};
   }
   return std::nullopt;
 }
@@ -67,15 +73,15 @@ bool accumulateTrackUsage(
     const NativeAnimationResourceBudget &budget,
     NativeAnimationResourceUsage &usage) {
   usage.tracks += 1;
-  usage.keyframes += track.keyframes.size();
+  usage.segments += track.segments.size();
   if (const auto *start = std::get_if<AnimationValue>(&track.start)) {
     usage.encodedScalars += encodedScalarCount(*start);
   }
-  for (const auto &keyframe : track.keyframes) {
-    usage.timingPoints += timingPointCount(keyframe.timingToNext);
-    usage.encodedScalars += encodedScalarCount(keyframe.value);
+  for (const auto &segment : track.segments) {
+    usage.timingPoints += timingPointCount(segment.timingFromPrevious);
+    usage.encodedScalars += encodedScalarCount(segment.endValue);
   }
-  return usage.tracks <= budget.maxTracksPerPlan && usage.keyframes <= budget.maxKeyframesPerPlan &&
+  return usage.tracks <= budget.maxTracksPerPlan && usage.segments <= budget.maxSegmentsPerPlan &&
       usage.timingPoints <= budget.maxTimingPointsPerPlan && usage.encodedScalars <= budget.maxEncodedScalarsPerPlan;
 }
 

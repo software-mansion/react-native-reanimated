@@ -24,7 +24,7 @@ NativeTrackFormSupport fakeAppleFormSupport() {
       .cubicBezierTiming = true,
       .stepsTiming = false,
       .linearStopsTiming = false,
-      .maxKeyframesPerTrack = 1,
+      .maxSegmentsPerTrack = 1,
   };
 }
 
@@ -34,7 +34,7 @@ NativeTrackFormSupport fakeAndroidFormSupport() {
       .cubicBezierTiming = true,
       .stepsTiming = true,
       .linearStopsTiming = true,
-      .maxKeyframesPerTrack = 64,
+      .maxSegmentsPerTrack = 64,
   };
 }
 
@@ -90,16 +90,16 @@ void testDirectBasicConstruction() {
   const auto &opacity = plan.tracks[0];
   assert(opacity.target.kind == AnimationTargetKind::Opacity);
   assert(std::get<double>(std::get<AnimationValue>(opacity.start)) == 0);
-  assert(opacity.keyframes.size() == 1);
-  assert(opacity.keyframes.front().offset == 1);
-  assert(std::get<double>(opacity.keyframes.front().value) == 1);
+  assert(opacity.segments.size() == 1);
+  assert(opacity.segments.front().endOffset == 1);
+  assert(std::get<double>(opacity.segments.front().endValue) == 1);
   assert(opacity.delayMs == 0 && opacity.durationMs == 300);
 
   const auto &positionX = plan.tracks[1];
   assert(positionX.target.kind == AnimationTargetKind::PositionX);
   assert(std::get<double>(std::get<AnimationValue>(positionX.start)) == 10 + 50);
-  assert(std::get<double>(positionX.keyframes.front().value) == 60 + 50);
-  assert(std::holds_alternative<CubicBezier>(positionX.keyframes.front().timingToNext));
+  assert(std::get<double>(positionX.segments.front().endValue) == 60 + 50);
+  assert(std::holds_alternative<CubicBezier>(positionX.segments.front().timingFromPrevious));
 
   const auto &positionY = plan.tracks[2];
   assert(positionY.target.kind == AnimationTargetKind::PositionY);
@@ -207,7 +207,7 @@ void testConstructionResourceBudget() {
   LayoutNativeConversionContext context = appleContext();
   context.budget = {
       .maxTracksPerPlan = 2,
-      .maxKeyframesPerPlan = 2,
+      .maxSegmentsPerPlan = 2,
       .maxTimingPointsPerPlan = 2,
       .maxEncodedScalarsPerPlan = 4,
   };
@@ -248,19 +248,19 @@ void testPlanFixtureSerialization() {
       fixture << " start=currentVisual";
     }
     fixture << " delayMs=" << track.delayMs << " durationMs=" << track.durationMs;
-    for (const auto &keyframe : track.keyframes) {
-      fixture << " offset=" << keyframe.offset << " value=" << std::get<double>(keyframe.value) << " timing=";
-      if (std::holds_alternative<LinearTiming>(keyframe.timingToNext)) {
+    for (const auto &segment : track.segments) {
+      fixture << " endOffset=" << segment.endOffset << " endValue=" << std::get<double>(segment.endValue) << " timing=";
+      if (std::holds_alternative<LinearTiming>(segment.timingFromPrevious)) {
         fixture << "linear";
-      } else if (const auto *bezier = std::get_if<CubicBezier>(&keyframe.timingToNext)) {
+      } else if (const auto *bezier = std::get_if<CubicBezier>(&segment.timingFromPrevious)) {
         fixture << "cubicBezier(" << bezier->x1 << "," << bezier->y1 << "," << bezier->x2 << "," << bezier->y2 << ")";
       }
     }
     fixture << "\n";
   }
   const auto expected =
-      "target=0 start=0 delayMs=0 durationMs=300 offset=1 value=1 timing=linear\n"
-      "target=2 start=60 delayMs=50 durationMs=300 offset=1 value=110 timing=cubicBezier(0.25,0.1,0.25,1)\n";
+      "target=0 start=0 delayMs=0 durationMs=300 endOffset=1 endValue=1 timing=linear\n"
+      "target=2 start=60 delayMs=50 durationMs=300 endOffset=1 endValue=110 timing=cubicBezier(0.25,0.1,0.25,1)\n";
   assert(fixture.str() == expected);
   for (const auto *platformName : {"CALayer", "keyPath", "position.x", "Animator", "View"}) {
     assert(fixture.str().find(platformName) == std::string::npos);
@@ -355,8 +355,8 @@ void testFuzzedConstruction() {
       for (const auto &track : plan->tracks) {
         assert(std::isfinite(track.delayMs) && track.delayMs >= 0);
         assert(std::isfinite(track.durationMs) && track.durationMs >= 0);
-        for (const auto &keyframe : track.keyframes) {
-          assert(isFinite(keyframe.value));
+        for (const auto &segment : track.segments) {
+          assert(isFinite(segment.endValue));
         }
       }
     }

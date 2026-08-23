@@ -389,14 +389,14 @@ class AppleNativeAnimationExecutor final : public NativeAnimationExecutor,
     preparedTracks.reserve(tracks.size());
     for (const auto &resolvedTrack : tracks) {
       const auto &track = resolvedTrack.track;
-      // TODO: add structured and sampled keyframe tracks. for now this is just the basic case
-      if (track.keyframes.size() > formSupport.maxKeyframesPerTrack || track.keyframes.front().offset != 1) {
+      // TODO: add structured and sampled multi-segment tracks. for now this is just the basic case
+      if (track.segments.size() > formSupport.maxSegmentsPerTrack) {
         return AnimationResultReason::UnsupportedTargetRealization;
       }
-      if (!supportsTiming(formSupport, track.keyframes.front().timingToNext)) {
+      if (!supportsTiming(formSupport, track.segments.front().timingFromPrevious)) {
         return AnimationResultReason::UnsupportedTargetRealization;
       }
-      CAMediaTimingFunction *timing = timingFunction(track.keyframes.front().timingToNext);
+      CAMediaTimingFunction *timing = timingFunction(track.segments.front().timingFromPrevious);
       if (timing == nil) {
         return AnimationResultReason::UnsupportedTargetRealization;
       }
@@ -425,7 +425,7 @@ class AppleNativeAnimationExecutor final : public NativeAnimationExecutor,
           resolved.layer(),
           resolved.keyPath(),
           fromValue,
-          objectFromValue(track.keyframes.front().value),
+          objectFromValue(track.segments.front().endValue),
           timing,
           track.delayMs,
           track.durationMs,
@@ -646,7 +646,7 @@ NativeTrackFormSupport appleNativeTrackFormSupport()
       .cubicBezierTiming = true,
       .stepsTiming = false,
       .linearStopsTiming = false,
-      .maxKeyframesPerTrack = 1,
+      .maxSegmentsPerTrack = 1,
   };
 }
 

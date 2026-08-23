@@ -46,7 +46,7 @@ struct NativeTrackFormSupport {
   bool cubicBezierTiming{false};
   bool stepsTiming{false};
   bool linearStopsTiming{false};
-  size_t maxKeyframesPerTrack{0};
+  size_t maxSegmentsPerTrack{0};
 };
 
 class PreparedNativeAnimation {

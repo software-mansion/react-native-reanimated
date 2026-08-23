@@ -7,7 +7,7 @@
 
 namespace reanimated::native_animation {
 
-// One aggregate budget for a whole plan: track count, keyframes, stored
+// One aggregate budget for a whole plan: track count, segments, stored
 // timing points, and encoded value cost in scalar components. The limits are
 // provisional; the sampled-keyframe work (Objective 12) must measure and tune
 // them.
@@ -15,7 +15,7 @@ struct NativeAnimationResourceBudget {
   // Layout plans use at most three tracks and CSS one; 32 leaves headroom.
   size_t maxTracksPerPlan{32};
   // A 60 Hz sample of a 60 s animation stays under it.
-  size_t maxKeyframesPerPlan{4096};
+  size_t maxSegmentsPerPlan{4096};
   // Step and linear-stop curves store their points; this bound only stops
   // runaway input.
   size_t maxTimingPointsPerPlan{8192};
@@ -29,7 +29,7 @@ inline constexpr NativeAnimationResourceBudget kDefaultResourceBudget{};
 // Running usage counters checked against one budget.
 struct NativeAnimationResourceUsage {
   size_t tracks{0};
-  size_t keyframes{0};
+  size_t segments{0};
   size_t timingPoints{0};
   size_t encodedScalars{0};
 };

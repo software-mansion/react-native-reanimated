@@ -57,7 +57,7 @@ TrackBuildResult buildLayoutTrack(
       bezier != nullptr && (bezier->x1 < 0 || bezier->x1 > 1 || bezier->x2 < 0 || bezier->x2 > 1)) {
     return TrackBuildFailure{TrackBuildFailureReason::InvalidValue};
   }
-  if (!supportsTiming(context.formSupport, *timingLeaf->easing) || context.formSupport.maxKeyframesPerTrack < 1) {
+  if (!supportsTiming(context.formSupport, *timingLeaf->easing) || context.formSupport.maxSegmentsPerTrack < 1) {
     return TrackBuildFailure{TrackBuildFailureReason::UnsupportedTiming};
   }
   if (!property.initialValue) {

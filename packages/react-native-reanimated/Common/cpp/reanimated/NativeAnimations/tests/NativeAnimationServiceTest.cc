@@ -137,69 +137,98 @@ void testTrackBuildAndWholePlanFallback() {
   assert(std::holds_alternative<TrackBuildFailure>(plan));
 }
 
-// One named aggregate budget covers tracks, keyframes, timing points, and
+AnimationTrack segmentedTrack(AnimationTrack track, const size_t segmentCount) {
+  const auto endValue = track.segments.front().endValue;
+  track.segments.clear();
+  for (size_t index = 1; index <= segmentCount; ++index) {
+    track.segments.push_back({static_cast<double>(index) / segmentCount, endValue, LinearTiming{}});
+  }
+  return track;
+}
+
+AnimationTrack segmentedOpacityTrack(const size_t segmentCount) {
+  return segmentedTrack(opacityTrack(), segmentCount);
+}
+
+void testSegmentRules() {
+  const auto reasonOf = [](AnimationTrack track) {
+    const auto result = buildAnimationTrack(std::move(track));
+    return std::holds_alternative<TrackBuildFailure>(result)
+        ? std::optional<TrackBuildFailureReason>{std::get<TrackBuildFailure>(result).reason}
+        : std::nullopt;
+  };
+  assert(!reasonOf(segmentedOpacityTrack(3)));
+
+  auto empty = opacityTrack();
+  empty.segments.clear();
+  assert(reasonOf(empty) == TrackBuildFailureReason::UnsupportedTrackForm);
+
+  auto endsEarly = segmentedOpacityTrack(2);
+  endsEarly.segments.pop_back();
+  assert(reasonOf(endsEarly) == TrackBuildFailureReason::InvalidValue);
+
+  auto zeroOffset = opacityTrack();
+  zeroOffset.segments.insert(zeroOffset.segments.begin(), {0.0, AnimationValue{0.0}, LinearTiming{}});
+  assert(reasonOf(zeroOffset) == TrackBuildFailureReason::InvalidValue);
+
+  auto repeatedOffset = segmentedOpacityTrack(2);
+  repeatedOffset.segments.front().endOffset = 1.0;
+  assert(reasonOf(repeatedOffset) == TrackBuildFailureReason::InvalidValue);
+
+  auto pastEnd = opacityTrack();
+  pastEnd.segments.front().endOffset = 1.5;
+  assert(reasonOf(pastEnd) == TrackBuildFailureReason::InvalidValue);
+}
+
+// One named aggregate budget covers tracks, segments, timing points, and
 // encoded value cost across the whole plan, with typed failures at each
 // boundary. The limits stay provisional until Objective 12 measures the
 // sampled-keyframe part.
 void testAggregateResourceBudgetBoundaries() {
   constexpr auto budget = kDefaultResourceBudget;
 
-  // Keyframes count across the plan, not for one track. Split the aggregate
+  // Segments count across the plan, not for one track. Split the aggregate
   // limit between two disjoint tracks: at the limit the plan validates, one
-  // keyframe above it returns ResourceLimit.
-  const auto keyframe = opacityTrack().keyframes.front();
-  auto opacityAtHalf = opacityTrack();
-  opacityAtHalf.keyframes.assign(budget.maxKeyframesPerPlan / 2, keyframe);
-  auto positionAtHalf = positionTrack();
-  positionAtHalf.keyframes.assign(
-      budget.maxKeyframesPerPlan - opacityAtHalf.keyframes.size(),
-      positionTrack().keyframes.front());
-  AnimationPlan keyframePlan;
-  keyframePlan.tracks = {opacityAtHalf, positionAtHalf};
-  assert(validateAnimationPlan(keyframePlan) == std::nullopt);
-  keyframePlan.tracks.back().keyframes.push_back(
-      positionTrack().keyframes.front());
-  assert(
-      validateAnimationPlan(keyframePlan) ==
-      AnimationResultReason::ResourceLimit);
+  // segment above it returns ResourceLimit.
+  const auto opacityAtHalf = segmentedOpacityTrack(budget.maxSegmentsPerPlan / 2);
+  const auto positionAtHalf =
+      segmentedTrack(positionTrack(), budget.maxSegmentsPerPlan - opacityAtHalf.segments.size());
+  AnimationPlan segmentPlan;
+  segmentPlan.tracks = {opacityAtHalf, positionAtHalf};
+  assert(validateAnimationPlan(segmentPlan) == std::nullopt);
+  segmentPlan.tracks.back() = segmentedTrack(positionTrack(), positionAtHalf.segments.size() + 1);
+  assert(validateAnimationPlan(segmentPlan) == AnimationResultReason::ResourceLimit);
 
-  // One track alone can also exceed the aggregate keyframe budget.
-  auto trackAboveLimit = opacityTrack();
-  trackAboveLimit.keyframes.assign(budget.maxKeyframesPerPlan + 1, keyframe);
+  // One track alone can also exceed the aggregate segment budget.
   assert(
-      std::get<TrackBuildFailure>(
-          buildAnimationTrack(std::move(trackAboveLimit)))
-          .reason == TrackBuildFailureReason::ResourceLimit);
+      std::get<TrackBuildFailure>(buildAnimationTrack(segmentedOpacityTrack(budget.maxSegmentsPerPlan + 1))).reason ==
+      TrackBuildFailureReason::ResourceLimit);
 
   // Timing points from step timing count against their own aggregate bound.
   StepsTiming stepsAtLimit;
   stepsAtLimit.points.reserve(budget.maxTimingPointsPerPlan);
   for (size_t index = 0; index < budget.maxTimingPointsPerPlan; ++index) {
-    const double progress =
-        static_cast<double>(index) /
-        static_cast<double>(budget.maxTimingPointsPerPlan);
+    const double progress = static_cast<double>(index) / static_cast<double>(budget.maxTimingPointsPerPlan);
     stepsAtLimit.points.push_back({progress, progress});
   }
   auto stepsTrack = opacityTrack();
-  stepsTrack.keyframes.front().timingToNext = stepsAtLimit;
-  assert(std::holds_alternative<AnimationTrack>(
-      buildAnimationTrack(stepsTrack)));
-  std::get<StepsTiming>(stepsTrack.keyframes.front().timingToNext)
-      .points.push_back({1.0, 1.0});
+  stepsTrack.segments.front().timingFromPrevious = stepsAtLimit;
+  assert(std::holds_alternative<AnimationTrack>(buildAnimationTrack(stepsTrack)));
+  std::get<StepsTiming>(stepsTrack.segments.front().timingFromPrevious).points.push_back({1.0, 1.0});
   assert(
-      std::get<TrackBuildFailure>(buildAnimationTrack(std::move(stepsTrack)))
-          .reason == TrackBuildFailureReason::ResourceLimit);
+      std::get<TrackBuildFailure>(buildAnimationTrack(std::move(stepsTrack))).reason ==
+      TrackBuildFailureReason::ResourceLimit);
 
   // The encoded value cost counts scalar components; a small custom budget
   // makes the track boundary reachable without conflicting targets.
   const NativeAnimationResourceBudget smallBudget{
       .maxTracksPerPlan = 1,
-      .maxKeyframesPerPlan = 4,
+      .maxSegmentsPerPlan = 4,
       .maxTimingPointsPerPlan = 4,
       .maxEncodedScalarsPerPlan = 4,
   };
   NativeAnimationResourceUsage usage;
-  // One position track costs two start scalars and two keyframe scalars.
+  // One position track costs two start scalars and two segment scalars.
   assert(accumulateTrackUsage(positionTrack(), smallBudget, usage));
   NativeAnimationResourceUsage overTracksUsage = usage;
   assert(!accumulateTrackUsage(positionTrack(), smallBudget, overTracksUsage));
@@ -827,6 +856,7 @@ void testExternalTraceEnvelope() {
 int main() {
   testOwnedRequestAndExactlyOnceTerminal();
   testTrackBuildAndWholePlanFallback();
+  testSegmentRules();
   testAggregateResourceBudgetBoundaries();
   testSurfaceIdentityAndDisjointGenerations();
   testTargetRegistryScopesClaimsAndRetainedExitsByView();
