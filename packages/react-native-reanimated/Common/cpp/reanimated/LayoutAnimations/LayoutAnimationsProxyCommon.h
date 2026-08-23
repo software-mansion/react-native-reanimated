@@ -185,6 +185,9 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 #ifndef NDEBUG
   static std::shared_ptr<native_animation::NativeAnimationTraceSink> makeLayoutTraceSink();
 #endif
+  static jsi::Object makeEnteringYogaValues(jsi::Runtime &rt, const Snapshot &target);
+  static jsi::Object makeExitingYogaValues(jsi::Runtime &rt, const Snapshot &current);
+  static jsi::Object makeLayoutYogaValues(jsi::Runtime &rt, const Snapshot &current, const Snapshot &target);
 
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
 

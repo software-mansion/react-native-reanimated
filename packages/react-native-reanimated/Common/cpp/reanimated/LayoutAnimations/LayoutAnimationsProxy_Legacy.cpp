@@ -845,57 +845,14 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
         if (!strongThis) {
           return;
         }
-
-        if constexpr (!useNativeLayoutAnimations()) {
-          Rect window{};
-          {
-            auto &mutex = strongThis->mutex;
-            auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+        auto lock = std::unique_lock<std::recursive_mutex>(strongThis->mutex);
 #ifdef ANDROID
-            strongThis->uiThreadId_ = std::this_thread::get_id();
-            if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
-              // the view was removed before this start could run
-              return;
-            }
-#endif
-            strongThis->layoutAnimations_.insert_or_assign(
-                tag,
-                LayoutAnimation{
-                    .finalView = finalView,
-                    .currentView = current,
-                    .parentTag = mutation.parentTag,
-                    .opacity = opacity});
-            window = strongThis->surfaceManager.getWindow(mutation.newChildShadowView.surfaceId);
-          }
-
-          Snapshot values(mutation.newChildShadowView, window);
-          auto &uiRuntime = strongThis->uiRuntime_;
-          jsi::Object yogaValues(uiRuntime);
-          yogaValues.setProperty(uiRuntime, "targetOriginX", values.x);
-          yogaValues.setProperty(uiRuntime, "targetGlobalOriginX", values.x);
-          yogaValues.setProperty(uiRuntime, "targetOriginY", values.y);
-          yogaValues.setProperty(uiRuntime, "targetGlobalOriginY", values.y);
-          yogaValues.setProperty(uiRuntime, "targetWidth", values.width);
-          yogaValues.setProperty(uiRuntime, "targetHeight", values.height);
-          yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
-          yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
-          strongThis->layoutAnimationsManager_->startLayoutAnimation(
-              uiRuntime, tag, LayoutAnimationType::ENTERING, yogaValues);
+        strongThis->uiThreadId_ = std::this_thread::get_id();
+        if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
+          // the view was removed before this start could run
           return;
         }
-
-#ifdef ANDROID
-        {
-          auto &mutex = strongThis->mutex;
-          auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-          strongThis->uiThreadId_ = std::this_thread::get_id();
-          if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
-            // the view was removed before this start could run
-            return;
-          }
-        }
 #endif
-
         strongThis->claimFrameDrivenLayoutAnimation(
             mutation.newChildShadowView.surfaceId,
             tag,
@@ -918,19 +875,12 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
                         .opacity = opacity});
                 window = strongThis->surfaceManager.getWindow(mutation.newChildShadowView.surfaceId);
               }
-              const Snapshot values(mutation.newChildShadowView, window);
               auto &uiRuntime = strongThis->uiRuntime_;
-              jsi::Object yogaValues(uiRuntime);
-              yogaValues.setProperty(uiRuntime, "targetOriginX", values.x);
-              yogaValues.setProperty(uiRuntime, "targetGlobalOriginX", values.x);
-              yogaValues.setProperty(uiRuntime, "targetOriginY", values.y);
-              yogaValues.setProperty(uiRuntime, "targetGlobalOriginY", values.y);
-              yogaValues.setProperty(uiRuntime, "targetWidth", values.width);
-              yogaValues.setProperty(uiRuntime, "targetHeight", values.height);
-              yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
-              yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
               strongThis->layoutAnimationsManager_->startLayoutAnimation(
-                  uiRuntime, tag, LayoutAnimationType::ENTERING, yogaValues);
+                  uiRuntime,
+                  tag,
+                  LayoutAnimationType::ENTERING,
+                  makeEnteringYogaValues(uiRuntime, Snapshot(mutation.newChildShadowView, window)));
             });
       });
 }
@@ -960,60 +910,17 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
         if (!strongThis) {
           return;
         }
-
-        if constexpr (!useNativeLayoutAnimations()) {
-          auto oldView = mutation.oldChildShadowView;
-          Rect window{};
-          {
-            auto &mutex = strongThis->mutex;
-            auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+        auto lock = std::unique_lock<std::recursive_mutex>(strongThis->mutex);
 #ifdef ANDROID
-            strongThis->uiThreadId_ = std::this_thread::get_id();
-            if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
-              // The view was removed before this start could run. Deliberately no
-              // clearLayoutAnimationConfig: with tag reuse the config maps already
-              // describe the re-created view, and wiping them would leave it mounted
-              // at opacity 0. A dead tag's stale configs can never fire again.
-              return;
-            }
-#endif
-            strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
-            window = strongThis->surfaceManager.getWindow(surfaceId);
-          }
-
-          Snapshot values(oldView, window);
-
-          auto &uiRuntime = strongThis->uiRuntime_;
-          jsi::Object yogaValues(uiRuntime);
-          yogaValues.setProperty(uiRuntime, "currentOriginX", values.x);
-          yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", values.x);
-          yogaValues.setProperty(uiRuntime, "currentOriginY", values.y);
-          yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", values.y);
-          yogaValues.setProperty(uiRuntime, "currentWidth", values.width);
-          yogaValues.setProperty(uiRuntime, "currentHeight", values.height);
-          yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
-          yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
-          strongThis->layoutAnimationsManager_->startLayoutAnimation(
-              uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
-          strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
+        strongThis->uiThreadId_ = std::this_thread::get_id();
+        if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
+          // The view was removed before this start could run. Deliberately no
+          // clearLayoutAnimationConfig: with tag reuse the config maps already
+          // describe the re-created view, and wiping them would leave it mounted
+          // at opacity 0. A dead tag's stale configs can never fire again.
           return;
         }
-
-#ifdef ANDROID
-        {
-          auto &mutex = strongThis->mutex;
-          auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-          strongThis->uiThreadId_ = std::this_thread::get_id();
-          if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
-            // The view was removed before this start could run. Deliberately no
-            // clearLayoutAnimationConfig: with tag reuse the config maps already
-            // describe the re-created view, and wiping them would leave it mounted
-            // at opacity 0. A dead tag's stale configs can never fire again.
-            return;
-          }
-        }
 #endif
-
         strongThis->claimFrameDrivenLayoutAnimation(
             surfaceId, tag, LayoutAnimationType::EXITING, strongThis, [weakThis, mutation, surfaceId, tag]() {
               auto strongThis = weakThis.lock();
@@ -1027,19 +934,12 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
                 strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
                 window = strongThis->surfaceManager.getWindow(surfaceId);
               }
-              const Snapshot values(oldView, window);
               auto &uiRuntime = strongThis->uiRuntime_;
-              jsi::Object yogaValues(uiRuntime);
-              yogaValues.setProperty(uiRuntime, "currentOriginX", values.x);
-              yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", values.x);
-              yogaValues.setProperty(uiRuntime, "currentOriginY", values.y);
-              yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", values.y);
-              yogaValues.setProperty(uiRuntime, "currentWidth", values.width);
-              yogaValues.setProperty(uiRuntime, "currentHeight", values.height);
-              yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
-              yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
               strongThis->layoutAnimationsManager_->startLayoutAnimation(
-                  uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
+                  uiRuntime,
+                  tag,
+                  LayoutAnimationType::EXITING,
+                  makeExitingYogaValues(uiRuntime, Snapshot(oldView, window)));
               strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
             });
       });
@@ -1074,60 +974,14 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(
         if (!strongThis) {
           return;
         }
-
-        if constexpr (!useNativeLayoutAnimations()) {
-          auto oldView = mutation.oldChildShadowView;
-          Rect window{};
-          {
-            auto &mutex = strongThis->mutex;
-            auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+        auto lock = std::unique_lock<std::recursive_mutex>(strongThis->mutex);
 #ifdef ANDROID
-            strongThis->uiThreadId_ = std::this_thread::get_id();
-            if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
-              // the view was removed before this start could run
-              return;
-            }
-#endif
-            strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
-            window = strongThis->surfaceManager.getWindow(surfaceId);
-          }
-
-          Snapshot currentValues(oldView, window);
-          Snapshot targetValues(mutation.newChildShadowView, window);
-
-          auto &uiRuntime = strongThis->uiRuntime_;
-          jsi::Object yogaValues(uiRuntime);
-          yogaValues.setProperty(uiRuntime, "currentOriginX", currentValues.x);
-          yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", currentValues.x);
-          yogaValues.setProperty(uiRuntime, "currentOriginY", currentValues.y);
-          yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", currentValues.y);
-          yogaValues.setProperty(uiRuntime, "currentWidth", currentValues.width);
-          yogaValues.setProperty(uiRuntime, "currentHeight", currentValues.height);
-          yogaValues.setProperty(uiRuntime, "targetOriginX", targetValues.x);
-          yogaValues.setProperty(uiRuntime, "targetGlobalOriginX", targetValues.x);
-          yogaValues.setProperty(uiRuntime, "targetOriginY", targetValues.y);
-          yogaValues.setProperty(uiRuntime, "targetGlobalOriginY", targetValues.y);
-          yogaValues.setProperty(uiRuntime, "targetWidth", targetValues.width);
-          yogaValues.setProperty(uiRuntime, "targetHeight", targetValues.height);
-          yogaValues.setProperty(uiRuntime, "windowWidth", targetValues.windowWidth);
-          yogaValues.setProperty(uiRuntime, "windowHeight", targetValues.windowHeight);
-          strongThis->layoutAnimationsManager_->startLayoutAnimation(
-              uiRuntime, tag, LayoutAnimationType::LAYOUT, yogaValues);
+        strongThis->uiThreadId_ = std::this_thread::get_id();
+        if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
+          // the view was removed before this start could run
           return;
         }
-
-#ifdef ANDROID
-        {
-          auto &mutex = strongThis->mutex;
-          auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-          strongThis->uiThreadId_ = std::this_thread::get_id();
-          if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
-            // the view was removed before this start could run
-            return;
-          }
-        }
 #endif
-
         strongThis->claimFrameDrivenLayoutAnimation(
             surfaceId,
             tag,
@@ -1145,26 +999,14 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(
                 strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
                 window = strongThis->surfaceManager.getWindow(surfaceId);
               }
-              const Snapshot currentValues(oldView, window);
-              const Snapshot targetValues(mutation.newChildShadowView, window);
               auto &uiRuntime = strongThis->uiRuntime_;
-              jsi::Object yogaValues(uiRuntime);
-              yogaValues.setProperty(uiRuntime, "currentOriginX", currentValues.x);
-              yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", currentValues.x);
-              yogaValues.setProperty(uiRuntime, "currentOriginY", currentValues.y);
-              yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", currentValues.y);
-              yogaValues.setProperty(uiRuntime, "currentWidth", currentValues.width);
-              yogaValues.setProperty(uiRuntime, "currentHeight", currentValues.height);
-              yogaValues.setProperty(uiRuntime, "targetOriginX", targetValues.x);
-              yogaValues.setProperty(uiRuntime, "targetGlobalOriginX", targetValues.x);
-              yogaValues.setProperty(uiRuntime, "targetOriginY", targetValues.y);
-              yogaValues.setProperty(uiRuntime, "targetGlobalOriginY", targetValues.y);
-              yogaValues.setProperty(uiRuntime, "targetWidth", targetValues.width);
-              yogaValues.setProperty(uiRuntime, "targetHeight", targetValues.height);
-              yogaValues.setProperty(uiRuntime, "windowWidth", targetValues.windowWidth);
-              yogaValues.setProperty(uiRuntime, "windowHeight", targetValues.windowHeight);
               strongThis->layoutAnimationsManager_->startLayoutAnimation(
-                  uiRuntime, tag, LayoutAnimationType::LAYOUT, yogaValues, buildId);
+                  uiRuntime,
+                  tag,
+                  LayoutAnimationType::LAYOUT,
+                  makeLayoutYogaValues(
+                      uiRuntime, Snapshot(oldView, window), Snapshot(mutation.newChildShadowView, window)),
+                  buildId);
             },
             buildId);
       });

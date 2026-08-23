@@ -83,6 +83,21 @@ class StderrNativeAnimationTraceSink final : public native_animation::NativeAnim
 
 #endif
 
+void setSnapshotProperties(
+    jsi::Runtime &rt,
+    const jsi::Object &values,
+    const std::string &prefix,
+    const Snapshot &snapshot) {
+  values.setProperty(rt, (prefix + "OriginX").c_str(), snapshot.x);
+  values.setProperty(rt, (prefix + "GlobalOriginX").c_str(), snapshot.x);
+  values.setProperty(rt, (prefix + "OriginY").c_str(), snapshot.y);
+  values.setProperty(rt, (prefix + "GlobalOriginY").c_str(), snapshot.y);
+  values.setProperty(rt, (prefix + "Width").c_str(), snapshot.width);
+  values.setProperty(rt, (prefix + "Height").c_str(), snapshot.height);
+  values.setProperty(rt, "windowWidth", snapshot.windowWidth);
+  values.setProperty(rt, "windowHeight", snapshot.windowHeight);
+}
+
 } // namespace
 
 #ifndef NDEBUG
@@ -344,6 +359,26 @@ void LayoutAnimationsProxyCommon::cancelNativeStartsSurface(const SurfaceId surf
   if (pendingNativeStarts_) {
     pendingNativeStarts_->cancelSurface(surfaceId);
   }
+}
+
+jsi::Object LayoutAnimationsProxyCommon::makeEnteringYogaValues(jsi::Runtime &rt, const Snapshot &target) {
+  jsi::Object values(rt);
+  setSnapshotProperties(rt, values, "target", target);
+  return values;
+}
+
+jsi::Object LayoutAnimationsProxyCommon::makeExitingYogaValues(jsi::Runtime &rt, const Snapshot &current) {
+  jsi::Object values(rt);
+  setSnapshotProperties(rt, values, "current", current);
+  return values;
+}
+
+jsi::Object
+LayoutAnimationsProxyCommon::makeLayoutYogaValues(jsi::Runtime &rt, const Snapshot &current, const Snapshot &target) {
+  jsi::Object values(rt);
+  setSnapshotProperties(rt, values, "current", current);
+  setSnapshotProperties(rt, values, "target", target);
+  return values;
 }
 
 std::optional<facebook::react::SurfaceId>
