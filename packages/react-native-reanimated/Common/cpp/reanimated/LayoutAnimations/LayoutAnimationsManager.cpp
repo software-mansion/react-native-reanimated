@@ -93,6 +93,10 @@ void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int 
   cancelLayoutAnimation.call(rt, jsi::Value(tag));
 }
 
+void LayoutAnimationsManager::notifyLayoutAnimationEnd(jsi::Runtime &rt, const int tag, const bool removeView) const {
+  rt.global().getPropertyAsFunction(rt, "_notifyAboutEnd").call(rt, jsi::Value(tag), jsi::Value(removeView));
+}
+
 void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, const int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   const auto config = enteringAnimationsForNativeID_[nativeId];
