@@ -194,6 +194,43 @@ describe('LayoutAnimationsManager', () => {
       expect(runs()).toBe(1);
     });
 
+    test('gives a reduced-motion animation no native node', () => {
+      const config = (): LayoutAnimation => {
+        const animation: AnimationObject = {
+          current: 1,
+          reduceMotion: true,
+          __nativeAnimation: {
+            kind: 'timing',
+            toValue: 1,
+            durationMs: 300,
+            easing: { kind: 'linear' },
+          },
+          onStart() {},
+          onFrame() {
+            return true;
+          },
+        };
+        return {
+          initialValues: { opacity: 0 },
+          animations: { opacity: animation as unknown as number },
+        };
+      };
+
+      const summary = manager.build!(
+        20,
+        LayoutAnimationType.LAYOUT,
+        {},
+        config,
+        1,
+        32
+      );
+
+      expect(summary).toEqual({
+        properties: [{ property: 'opacity', initialValue: 0, node: undefined }],
+        hasUnanimatedInitialValues: false,
+      });
+    });
+
     test('keeps concurrent builds for one tag apart', () => {
       const { config, runs } = makeBuildConfig();
 

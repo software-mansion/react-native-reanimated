@@ -10,6 +10,7 @@ import type {
   LayoutAnimationsManager,
   LayoutAnimationValues,
   Mutable,
+  NativeAnimationNode,
   NativeLayoutAnimationBuildSummary,
   SharedValue,
 } from '../commonTypes';
@@ -61,6 +62,22 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   // `completeNativeBuild`. Per-build keys keep concurrent builds for one tag
   // apart, so a replacement cannot orphan a build or its callback.
   const nativeBuildForKey = new Map<string, LayoutAnimation>();
+
+  // A builder can set `reduceMotion` on the animation after the factory
+  // attached its structure; a reduced-motion animation has no native form.
+  const nativeNodeOf = (animation: unknown): NativeAnimationNode | undefined => {
+    if (
+      animation === null ||
+      typeof animation !== 'object' ||
+      Array.isArray(animation)
+    ) {
+      return undefined;
+    }
+    const animationObject = animation as AnimationObject;
+    return animationObject.reduceMotion === true
+      ? undefined
+      : animationObject.__nativeAnimation;
+  };
 
   // Layout animation starts are scheduled separately on the UI runtime. With
   // a large number of views, sampling the clock for every start noticeably
@@ -201,18 +218,12 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         }
       }
       const properties = animatedProperties.map((key) => {
-        const animation = animations[key];
         const initialValue = initialValues[key];
         return {
           property: key,
           initialValue:
             typeof initialValue === 'number' ? initialValue : undefined,
-          node:
-            animation !== null &&
-            typeof animation === 'object' &&
-            !Array.isArray(animation)
-              ? (animation as AnimationObject).__nativeAnimation
-              : undefined,
+          node: nativeNodeOf(animations[key]),
         };
       });
       nativeBuildForKey.set(`${tag}:${buildId}`, style);
