@@ -2,6 +2,7 @@
 
 #include <reanimated/NativeAnimations/NativeAnimationTypes.h>
 
+#include <memory>
 #include <optional>
 #include <vector>
 
@@ -46,6 +47,23 @@ class NullNativeAnimationTraceSink final : public NativeAnimationTraceSink {
  public:
   void record(NativeAnimationTraceEvent) override {}
 };
+
+#ifdef IS_REANIMATED_EXAMPLE_APP
+
+// Prints every event to stderr, so a bench run can check ownership and
+// exactly-once completion on a device.
+class StderrNativeAnimationTraceSink final : public NativeAnimationTraceSink {
+ public:
+  void record(NativeAnimationTraceEvent event) override;
+
+ private:
+  uint64_t sequence_{0};
+};
+
+#endif
+
+// The stderr sink in example-app builds, the null sink elsewhere.
+std::shared_ptr<NativeAnimationTraceSink> makeDefaultNativeAnimationTraceSink();
 
 void recordNativeAnimationTrace(
     NativeAnimationTraceSink &sink,

@@ -569,7 +569,11 @@ std::shared_ptr<NativeAnimationService> makeAppleNativeAnimationService(RCTSurfa
   auto scheduler = std::make_shared<ApplePlatformUIScheduler>();
   auto resolver = std::make_shared<AppleNativeAnimationTargetResolver>(surfacePresenter);
   auto executor = std::make_shared<AppleNativeAnimationExecutor>();
+#ifndef NDEBUG
+  return makeNativeAnimationService(scheduler, resolver, executor, makeDefaultNativeAnimationTraceSink());
+#else
   return makeNativeAnimationService(scheduler, resolver, executor);
+#endif
 }
 
 } // namespace reanimated::native_animation
