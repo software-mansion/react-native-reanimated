@@ -635,6 +635,12 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
   return wantAnimateExit;
 }
 
+void LayoutAnimationsProxy_Experimental::settleRevokedLayoutAnimation(const SurfaceId surfaceId, const Tag tag) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  surfaceManager.getUpdateMap(surfaceId).erase(tag);
+  layoutAnimations_.erase(tag);
+}
+
 void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation)
     const {
   layoutAnimations_[tag].finalView = mutation.newChildShadowView;
