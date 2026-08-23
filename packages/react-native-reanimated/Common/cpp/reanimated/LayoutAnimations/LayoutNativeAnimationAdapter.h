@@ -101,13 +101,6 @@ class LayoutNativeAnimationAdapter {
       std::shared_ptr<native_animation::NativeAnimationService> service,
       native_animation::CallbackScheduler callbackScheduler);
 
-  LayoutPlanBuildResult buildPlan(std::vector<native_animation::TrackBuildResult> tracks) const;
-  void schedule(
-      native_animation::AnimationHandle handle,
-      native_animation::AnimationAdmissionMode admissionMode,
-      native_animation::AnimationPlan plan,
-      native_animation::AnimationAdmissionCallback admission,
-      native_animation::TerminalCallback terminal) const;
   void claimFrameDriven(
       native_animation::ExternalClaimRequest request,
       native_animation::ExternalClaimCallbacks callbacks) const;

@@ -192,29 +192,6 @@ LayoutNativeAnimationAdapter::LayoutNativeAnimationAdapter(
     native_animation::CallbackScheduler callbackScheduler)
     : service_(std::move(service)), callbackScheduler_(std::move(callbackScheduler)) {}
 
-LayoutPlanBuildResult LayoutNativeAnimationAdapter::buildPlan(
-    std::vector<native_animation::TrackBuildResult> tracks) const {
-  native_animation::AnimationPlan plan;
-  plan.tracks.reserve(tracks.size());
-  for (auto &result : tracks) {
-    if (const auto *failure = std::get_if<native_animation::TrackBuildFailure>(&result)) {
-      return *failure;
-    }
-    plan.tracks.push_back(std::move(std::get<native_animation::AnimationTrack>(result)));
-  }
-  return plan;
-}
-
-void LayoutNativeAnimationAdapter::schedule(
-    const native_animation::AnimationHandle handle,
-    const native_animation::AnimationAdmissionMode admissionMode,
-    native_animation::AnimationPlan plan,
-    native_animation::AnimationAdmissionCallback admission,
-    native_animation::TerminalCallback terminal) const {
-  service_->schedule(
-      {handle, std::move(plan), admissionMode}, {callbackScheduler_, std::move(admission), std::move(terminal)});
-}
-
 void LayoutNativeAnimationAdapter::claimFrameDriven(
     native_animation::ExternalClaimRequest request,
     native_animation::ExternalClaimCallbacks callbacks) const {

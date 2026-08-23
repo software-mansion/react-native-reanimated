@@ -118,21 +118,13 @@ void testOwnedRequestAndExactlyOnceTerminal() {
 #endif
 }
 
-void testTrackBuildAndWholePlanFallback() {
-  Fixture fixture;
-  reanimated::LayoutNativeAnimationAdapter adapter(fixture.service, immediateScheduler());
+void testTrackBuildReportsTypedFailures() {
   auto valid = buildAnimationTrack(opacityTrack());
   auto invalidTrack = opacityTrack();
   invalidTrack.durationMs = -1;
   auto invalid = buildAnimationTrack(std::move(invalidTrack));
   assert(std::holds_alternative<AnimationTrack>(valid));
   assert(std::get<TrackBuildFailure>(invalid).reason == TrackBuildFailureReason::InvalidValue);
-
-  std::vector<TrackBuildResult> results;
-  results.push_back(std::move(valid));
-  results.push_back(std::move(invalid));
-  const auto plan = adapter.buildPlan(std::move(results));
-  assert(std::holds_alternative<TrackBuildFailure>(plan));
 }
 
 AnimationTrack segmentedTrack(AnimationTrack track, const size_t segmentCount) {
@@ -862,7 +854,7 @@ void testExternalTraceEnvelope() {
 
 int main() {
   testOwnedRequestAndExactlyOnceTerminal();
-  testTrackBuildAndWholePlanFallback();
+  testTrackBuildReportsTypedFailures();
   testSegmentRules();
   testAggregateResourceBudgetBoundaries();
   testMountedEndpointPolicy();
