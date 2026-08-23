@@ -1227,7 +1227,7 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
   const auto surfaceTracker = std::make_shared<ReanimatedSurfaceTracker>();
   std::function<void(SurfaceId)> nativeAnimationSurfaceDidStart;
   std::function<void(SurfaceId)> nativeAnimationSurfaceDidStop;
-  if constexpr (useNativeLayoutAnimations()) {
+  if (nativeAnimationService_) {
     nativeAnimationSurfaceDidStart = [service = nativeAnimationService_,
                                       layoutProxy = layoutAnimationsProxy_](const SurfaceId surfaceId) {
       service->notifySurfaceStarted(surfaceId);

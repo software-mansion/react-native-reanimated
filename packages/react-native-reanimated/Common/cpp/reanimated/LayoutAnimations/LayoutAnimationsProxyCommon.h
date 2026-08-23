@@ -27,9 +27,15 @@
 
 namespace reanimated {
 
+// Layout joins the shared native-animation service only under its own flag,
+// and only when the service exists.
 constexpr bool useNativeLayoutAnimations() {
 #ifdef __APPLE__
-  return StaticFeatureFlags::getFlag("IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION");
+  static_assert(
+      !StaticFeatureFlags::getFlag("IOS_NATIVE_LAYOUT_ANIMATIONS") ||
+          StaticFeatureFlags::getFlag("IOS_SHARED_NATIVE_ANIMATION_SERVICE"),
+      "IOS_NATIVE_LAYOUT_ANIMATIONS requires IOS_SHARED_NATIVE_ANIMATION_SERVICE");
+  return StaticFeatureFlags::getFlag("IOS_NATIVE_LAYOUT_ANIMATIONS");
 #else
   return false;
 #endif
