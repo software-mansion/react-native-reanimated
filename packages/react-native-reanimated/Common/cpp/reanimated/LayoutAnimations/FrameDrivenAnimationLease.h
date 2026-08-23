@@ -31,6 +31,12 @@ class FrameDrivenAnimationLease {
   void revoke();
   bool isRevoked() const;
 
+  // The domain closes the gate while a native request takes over the writer
+  // and opens it again when a later frame-driven start joins the lease.
+  void suspendWrites();
+  void resumeWrites();
+  bool acceptsWrites() const;
+
   // A superseded lease is replaced by a wider lease of the same writer. Its
   // terminal result must not end the writer.
   void setSuperseded(bool superseded);
@@ -44,6 +50,7 @@ class FrameDrivenAnimationLease {
   native_animation::AnimationAdmissionMode admissionMode_;
   std::recursive_mutex mutex_;
   std::atomic<bool> revoked_{false};
+  std::atomic<bool> suspended_{false};
   bool superseded_{false};
 };
 
@@ -52,7 +59,7 @@ class FrameDrivenAnimationLeaseWriteGuard {
   FrameDrivenAnimationLeaseWriteGuard() = default;
   explicit FrameDrivenAnimationLeaseWriteGuard(std::shared_ptr<FrameDrivenAnimationLease> lease);
 
-  bool isRevoked() const;
+  bool isClosed() const;
 
  private:
   // Keep the lease alive until after the mutex is unlocked.

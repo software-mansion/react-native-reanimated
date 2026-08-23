@@ -446,7 +446,23 @@ void testFrameDrivenClaimTargets() {
   assert(claimsOf(unknownInitial, LayoutAnimationType::LAYOUT) == everything);
 }
 
+// A takeover starts every track from the writer's last value instead of the
+// builder value; the endpoint rules do not change.
+void testTakeoverStart() {
+  auto context = appleContext();
+  context.takeoverStart = LayoutTakeoverStart{.positionX = 33, .positionY = 44, .opacity = 0.5};
+  const auto result = buildLayoutNativeAnimationPlan(
+      inputOf({timingProperty("opacity", 0, 1), timingProperty("originX", 10, 60), timingProperty("originY", 20, 40)}),
+      context);
+  const auto &plan = planOf(result);
+  assert(std::get<double>(std::get<AnimationValue>(plan.tracks[0].start)) == 0.5);
+  assert(std::get<double>(std::get<AnimationValue>(plan.tracks[1].start)) == 33);
+  assert(std::get<double>(std::get<AnimationValue>(plan.tracks[2].start)) == 44);
+  assert(std::get<double>(plan.tracks[1].segments.front().endValue) == 60 + 50);
+}
+
 void runLayoutNativeAnimationAdapterTests() {
+  testTakeoverStart();
   testFrameDrivenClaimTargets();
   testDirectBasicConstruction();
   testConstructionTable();

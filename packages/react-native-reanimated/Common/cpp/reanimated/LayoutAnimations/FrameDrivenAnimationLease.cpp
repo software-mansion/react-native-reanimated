@@ -50,6 +50,20 @@ bool FrameDrivenAnimationLease::isRevoked() const {
   return revoked_;
 }
 
+void FrameDrivenAnimationLease::suspendWrites() {
+  const auto lock = std::lock_guard(mutex_);
+  suspended_ = true;
+}
+
+void FrameDrivenAnimationLease::resumeWrites() {
+  const auto lock = std::lock_guard(mutex_);
+  suspended_ = false;
+}
+
+bool FrameDrivenAnimationLease::acceptsWrites() const {
+  return !revoked_ && !suspended_;
+}
+
 void FrameDrivenAnimationLease::setSuperseded(const bool superseded) {
   superseded_ = superseded;
 }
@@ -62,8 +76,8 @@ FrameDrivenAnimationLeaseWriteGuard::FrameDrivenAnimationLeaseWriteGuard(
     std::shared_ptr<FrameDrivenAnimationLease> lease)
     : lease_(std::move(lease)), lock_(lease_->mutex_) {}
 
-bool FrameDrivenAnimationLeaseWriteGuard::isRevoked() const {
-  return lease_ != nullptr && lease_->revoked_;
+bool FrameDrivenAnimationLeaseWriteGuard::isClosed() const {
+  return lease_ != nullptr && !lease_->acceptsWrites();
 }
 
 } // namespace reanimated

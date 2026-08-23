@@ -160,8 +160,9 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       const std::weak_ptr<const LayoutAnimationsProxyCommon> &weakOwner,
       std::function<void()> onGranted,
       FrameDrivenStart start = {}) const;
-  // Widens the live lease of a view to every visual target before the writer
-  // consumes a prop-only update.
+  // Widens the live lease of a view to every visual target when the writer
+  // consumes a prop-only update. The service answers the claim in its own
+  // time; the only rejection it can give is a destroyed surface.
   void widenFrameDrivenLease(
       SurfaceId surfaceId,
       Tag tag,
@@ -189,9 +190,11 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       const ShadowView &oldView,
       const ShadowView &finalView,
       Tag parentTag,
-      const Snapshot &currentValues,
-      const Snapshot &targetValues,
+      const Rect &window,
       const std::weak_ptr<const LayoutAnimationsProxyCommon> &weakSelf) const;
+  // The values a start animates from: the writer's current view when the
+  // view is mid-animation, otherwise the given model view.
+  virtual Snapshot frameDrivenStartSnapshot(SurfaceId surfaceId, Tag tag, const ShadowView &modelView) const = 0;
 
   // Final-state-first delivery: stores an owned prepared request during
   // interception; the pending store submits it after the intended mount.
@@ -236,6 +239,9 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
     ShadowView finalView;
     Tag parentTag{0};
     bool admissionGranted{false};
+    // The suspended writer lease this command took over, until the drain
+    // replaces it, the fallback resumes it, or a rejection releases it.
+    std::shared_ptr<FrameDrivenAnimationLease> takenOverLease;
   };
 
   // Starts the frame-driven animation for a command that a pre-start
@@ -253,13 +259,21 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       Tag tag,
       const native_animation::AnimationHandle &handle,
       native_animation::AnimationResult result) const;
-  // True when an active claim makes this track a replacement, which must
+  // True when a native command still owns this target, so the track must
   // start from the current visible value.
   bool shouldStartFromCurrentVisual(SurfaceId surfaceId, Tag tag, const native_animation::AnimationTarget &target)
       const;
   // Cancels every native layout command for this tag. Each terminal result
   // still delivers its public callback.
   void cancelActiveNativeLayoutAnimationsForTag(Tag tag) const;
+
+  // The frame-driven writer's last view: the last mounted frame with the
+  // pending update of this tag applied. Empty when no writer runs.
+  virtual std::optional<ShadowView> frameDrivenWriterView(SurfaceId surfaceId, Tag tag) const = 0;
+  static bool coversLeaseTargets(
+      const std::vector<native_animation::AnimationTargetClaim> &claims,
+      const std::vector<native_animation::AnimationTargetClaim> &leaseTargets);
+  static LayoutTakeoverStart takeoverStartOf(const ShadowView &writerView);
 
   mutable std::unordered_set<Tag> maybeSettledAnimationTags_;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
@@ -310,6 +324,10 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   bool consumeRejectedEnteringClaim(Tag tag) const;
   std::optional<FrameDrivenAnimationLeaseWriteGuard> lockFrameDrivenLayoutAnimation(SurfaceId surfaceId, Tag tag) const;
   void settleRevokedFrameDrivenLayoutAnimation(
+      const FrameDrivenLeaseKey &key,
+      const std::shared_ptr<FrameDrivenAnimationLease> &lease) const;
+  std::shared_ptr<FrameDrivenAnimationLease> liveFrameDrivenLease(const FrameDrivenLeaseKey &key) const;
+  void takeOverFrameDrivenWriter(
       const FrameDrivenLeaseKey &key,
       const std::shared_ptr<FrameDrivenAnimationLease> &lease) const;
   // The service revoked the writer of this view. Drop its animation entry

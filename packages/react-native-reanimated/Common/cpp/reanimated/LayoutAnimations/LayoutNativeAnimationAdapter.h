@@ -53,6 +53,14 @@ struct LayoutNativeAnimationBuildInput {
   std::vector<std::string> initialOnlyKeys;
 };
 
+// Where a native request takes over a running frame-driven writer: the last
+// value the writer showed, in layer units.
+struct LayoutTakeoverStart {
+  double positionX{0};
+  double positionY{0};
+  double opacity{1};
+};
+
 // Mounted final geometry and platform facts for conversion. The final size
 // converts frame origins to layer centers; it stays constant while size
 // tracks are unsupported.
@@ -64,6 +72,9 @@ struct LayoutNativeConversionContext {
   double finalOriginX{0};
   double finalOriginY{0};
   double finalOpacity{1};
+  // Set when the request replaces a frame-driven writer; every track then
+  // starts from this value instead of the builder value.
+  std::optional<LayoutTakeoverStart> takeoverStart;
   native_animation::NativeTrackFormSupport formSupport;
   native_animation::NativeAnimationResourceBudget budget{native_animation::kDefaultResourceBudget};
 };

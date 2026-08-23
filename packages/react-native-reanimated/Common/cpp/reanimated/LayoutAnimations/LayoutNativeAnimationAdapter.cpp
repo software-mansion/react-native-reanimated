@@ -22,6 +22,8 @@ struct LayoutTargetMapping {
   double valueOffset;
   // The value Fabric mounted for this property, in builder units.
   double mountedValue;
+  // The start value in layer units when the request takes over a writer.
+  std::optional<double> takeoverStart;
 };
 
 std::optional<LayoutTargetMapping> targetForProperty(
@@ -29,14 +31,27 @@ std::optional<LayoutTargetMapping> targetForProperty(
     const LayoutNativeConversionContext &context) {
   // Only targets the platform host realizes correctly route natively.
   // Objectives 10 and 11 extend this set.
+  const auto &takeover = context.takeoverStart;
   if (property == "opacity") {
-    return LayoutTargetMapping{AnimationTargetKind::Opacity, 0, context.finalOpacity};
+    return LayoutTargetMapping{
+        AnimationTargetKind::Opacity,
+        0,
+        context.finalOpacity,
+        takeover ? std::optional<double>{takeover->opacity} : std::nullopt};
   }
   if (property == "originX") {
-    return LayoutTargetMapping{AnimationTargetKind::PositionX, context.finalWidth / 2, context.finalOriginX};
+    return LayoutTargetMapping{
+        AnimationTargetKind::PositionX,
+        context.finalWidth / 2,
+        context.finalOriginX,
+        takeover ? std::optional<double>{takeover->positionX} : std::nullopt};
   }
   if (property == "originY") {
-    return LayoutTargetMapping{AnimationTargetKind::PositionY, context.finalHeight / 2, context.finalOriginY};
+    return LayoutTargetMapping{
+        AnimationTargetKind::PositionY,
+        context.finalHeight / 2,
+        context.finalOriginY,
+        takeover ? std::optional<double>{takeover->positionY} : std::nullopt};
   }
   return std::nullopt;
 }
@@ -81,7 +96,7 @@ TrackBuildResult buildLayoutTrack(
 
   AnimationTrack track{
       {mapping->kind},
-      AnimationValue{*property.initialValue + mapping->valueOffset},
+      AnimationValue{mapping->takeoverStart.value_or(*property.initialValue + mapping->valueOffset)},
       {{1.0, AnimationValue{timingLeaf->toValue + mapping->valueOffset}, *timingLeaf->easing}},
       delayMs,
       durationMs,

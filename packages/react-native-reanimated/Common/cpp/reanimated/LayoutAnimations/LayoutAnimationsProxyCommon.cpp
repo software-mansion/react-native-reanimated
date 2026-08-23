@@ -143,8 +143,7 @@ LayoutAnimationsProxyCommon::NativeLayoutRouteAttempt LayoutAnimationsProxyCommo
     const ShadowView &oldView,
     const ShadowView &finalView,
     const Tag parentTag,
-    const Snapshot &currentValues,
-    const Snapshot &targetValues,
+    const Rect &window,
     const std::weak_ptr<const LayoutAnimationsProxyCommon> &weakSelf) const {
   NativeLayoutRouteAttempt attempt;
   if (!nativeAnimationAdapter_ || !pendingNativeStarts_) {
@@ -154,12 +153,15 @@ LayoutAnimationsProxyCommon::NativeLayoutRouteAttempt LayoutAnimationsProxyCommo
   const auto tag = finalView.tag;
   const uint64_t buildId = ++commandGeneration_;
 
+  const FrameDrivenLeaseKey key{surfaceId, tag};
+  const auto writerLease = liveFrameDrivenLease(key);
+  const auto writerView = writerLease ? frameDrivenWriterView(surfaceId, tag) : std::nullopt;
   auto &uiRuntime = uiRuntime_;
   const auto summary = layoutAnimationsManager_->buildLayoutAnimation(
       uiRuntime,
       tag,
       LayoutAnimationType::LAYOUT,
-      makeLayoutYogaValues(uiRuntime, currentValues, targetValues),
+      makeLayoutYogaValues(uiRuntime, Snapshot(writerView.value_or(oldView), window), Snapshot(finalView, window)),
       buildId,
       native_animation::kDefaultResourceBudget.maxTracksPerPlan);
   if (summary.isUndefined()) {
@@ -174,9 +176,30 @@ LayoutAnimationsProxyCommon::NativeLayoutRouteAttempt LayoutAnimationsProxyCommo
   if (const auto *input = std::get_if<LayoutNativeAnimationBuildInput>(&parsed)) {
     attempt.start.targets = frameDrivenClaimTargets(*input, LayoutAnimationType::LAYOUT);
   }
+  // A native request may take over the frame-driven writer of the view only
+  // when its plan covers every target the writer claims. A retained exit and
+  // a partial cover stay frame-driven until JS can stop a key subset.
+  if (writerLease) {
+    if (writerLease->getAdmissionMode() == native_animation::AnimationAdmissionMode::RetainedExit ||
+        !coversLeaseTargets(attempt.start.targets, writerLease->getTargets())) {
+      recordNativeAnimationRouteTrace(
+          *layoutTraceSink_,
+          handle,
+          static_cast<uint8_t>(LayoutNativeAnimationRoute::DirectBasic),
+          static_cast<uint8_t>(LayoutNativeAnimationRoute::FrameDriven),
+          std::nullopt);
+      return attempt;
+    }
+    if (!writerView) {
+      return attempt;
+    }
+  }
+  auto context = layoutConversionContext(finalView);
+  if (writerView) {
+    context.takeoverStart = takeoverStartOf(*writerView);
+  }
   auto planResult = std::holds_alternative<LayoutNativeAnimationBuildInput>(parsed)
-      ? buildLayoutNativeAnimationPlan(
-            std::get<LayoutNativeAnimationBuildInput>(parsed), layoutConversionContext(finalView))
+      ? buildLayoutNativeAnimationPlan(std::get<LayoutNativeAnimationBuildInput>(parsed), context)
       : LayoutPlanBuildResult{std::get<native_animation::TrackBuildFailure>(parsed)};
   if (const auto *failure = std::get_if<native_animation::TrackBuildFailure>(&planResult)) {
     // One failed track routes the whole animation to frame-driven.
@@ -207,9 +230,18 @@ LayoutAnimationsProxyCommon::NativeLayoutRouteAttempt LayoutAnimationsProxyCommo
       static_cast<uint8_t>(LayoutNativeAnimationRoute::DirectBasic),
       static_cast<uint8_t>(LayoutNativeAnimationRoute::DirectBasic),
       std::nullopt);
-  activeNativeLayoutCommands_.insert({handle, std::move(targets), oldView, finalView, parentTag});
+  if (writerLease) {
+    takeOverFrameDrivenWriter(key, writerLease);
+  }
+  activeNativeLayoutCommands_.insert({
+      .handle = handle,
+      .targets = std::move(targets),
+      .oldView = writerView.value_or(oldView),
+      .finalView = finalView,
+      .parentTag = parentTag,
+      .takenOverLease = writerLease,
+  });
 
-  const FrameDrivenLeaseKey key{surfaceId, tag};
   native_animation::AnimationCallbacks callbacks{
       [uiScheduler = uiScheduler_](const native_animation::CallbackOperation &operation) {
         scheduleOnUI(uiScheduler, operation);
@@ -257,11 +289,20 @@ void LayoutAnimationsProxyCommon::handleNativeLayoutTerminal(
     const native_animation::AnimationHandle &handle,
     const native_animation::AnimationResult result) const {
   const auto record = activeNativeLayoutCommands_.take(handle);
-  if (result.outcome == native_animation::AnimationOutcome::Rejected && record && !record->admissionGranted &&
-      layoutPermitsFallback(result.reason)) {
-    // The fallback run delivers the public callback.
-    startNativeLayoutFallback(*record);
-    return;
+  if (result.outcome == native_animation::AnimationOutcome::Rejected && record && !record->admissionGranted) {
+    if (layoutPermitsFallback(result.reason)) {
+      // The fallback run delivers the public callback and joins the lease of
+      // a writer this command took over.
+      if (record->takenOverLease) {
+        record->takenOverLease->resumeWrites();
+      }
+      startNativeLayoutFallback(*record);
+      return;
+    }
+    if (record->takenOverLease && liveFrameDrivenLease({surfaceId, tag}) == record->takenOverLease) {
+      // The writer stopped at interception and nothing restarts it.
+      releaseFrameDrivenLayoutAnimation(surfaceId, tag, native_animation::AnimationOutcome::Cancelled);
+    }
   }
   layoutAnimationsManager_->completeNativeBuild(
       uiRuntime_, tag, handle.generation, result.outcome == native_animation::AnimationOutcome::Finished);
@@ -271,11 +312,6 @@ bool LayoutAnimationsProxyCommon::shouldStartFromCurrentVisual(
     const SurfaceId surfaceId,
     const Tag tag,
     const native_animation::AnimationTarget &target) const {
-  const FrameDrivenLeaseKey key{surfaceId, tag};
-  if (frameDrivenLeases_.contains(key)) {
-    // The lease claims every visual target of the view.
-    return true;
-  }
   return activeNativeLayoutCommands_.claims(surfaceId, tag, target);
 }
 
@@ -385,14 +421,17 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
 
   // One lease serves the merged frame-driven writer of the view. A start that
   // needs no wider claim joins the live lease.
-  const auto existingIt = frameDrivenLeases_.find(key);
-  const auto existing =
-      existingIt != frameDrivenLeases_.end() && !existingIt->second->isRevoked() ? existingIt->second : nullptr;
-  // A retained exit never widens; a later start on that view joins it.
-  if (existing &&
-      (existing->covers(targets, requestedMode) ||
-       existing->getAdmissionMode() == native_animation::AnimationAdmissionMode::RetainedExit)) {
+  const auto existing = liveFrameDrivenLease(key);
+  if (existing && existing->covers(targets, requestedMode)) {
     onGranted();
+    return;
+  }
+  // A retained exit never widens: a start it does not cover is rejected.
+  if (existing && existing->getAdmissionMode() == native_animation::AnimationAdmissionMode::RetainedExit) {
+    if (start.buildId != 0) {
+      layoutAnimationsManager_->completeNativeBuild(uiRuntime_, tag, start.buildId, false);
+    }
+    handleRejectedFrameDrivenLayoutAnimation(tag, type, native_animation::AnimationResultReason::RetainedExitActive);
     return;
   }
 
@@ -443,7 +482,7 @@ void LayoutAnimationsProxyCommon::claimFrameDrivenLayoutAnimation(
             }
 
             const FrameDrivenAnimationLeaseWriteGuard guard{lease};
-            if (guard.isRevoked()) {
+            if (guard.isClosed()) {
               return;
             }
             if (!owner) {
@@ -493,12 +532,48 @@ FrameDrivenStart LayoutAnimationsProxyCommon::prepareFrameDrivenStart(
     return start;
   }
   start.buildId = buildId;
-  const auto parsed = parseLayoutNativeAnimationBuild(
-      uiRuntime_, summary, native_animation::kDefaultResourceBudget.maxTracksPerPlan);
+  const auto parsed =
+      parseLayoutNativeAnimationBuild(uiRuntime_, summary, native_animation::kDefaultResourceBudget.maxTracksPerPlan);
   if (const auto *input = std::get_if<LayoutNativeAnimationBuildInput>(&parsed)) {
     start.targets = frameDrivenClaimTargets(*input, type);
   }
   return start;
+}
+
+std::shared_ptr<FrameDrivenAnimationLease> LayoutAnimationsProxyCommon::liveFrameDrivenLease(
+    const FrameDrivenLeaseKey &key) const {
+  const auto it = frameDrivenLeases_.find(key);
+  return it != frameDrivenLeases_.end() && !it->second->isRevoked() ? it->second : nullptr;
+}
+
+bool LayoutAnimationsProxyCommon::coversLeaseTargets(
+    const std::vector<native_animation::AnimationTargetClaim> &claims,
+    const std::vector<native_animation::AnimationTargetClaim> &leaseTargets) {
+  return std::ranges::all_of(leaseTargets, [&](const native_animation::AnimationTargetClaim &target) {
+    return std::holds_alternative<native_animation::AnimationTarget>(target) &&
+        std::ranges::find(claims, target) != claims.end();
+  });
+}
+
+LayoutTakeoverStart LayoutAnimationsProxyCommon::takeoverStartOf(const ShadowView &writerView) {
+  const auto &frame = writerView.layoutMetrics.frame;
+  const auto &viewProps = static_cast<const ViewProps &>(*writerView.props);
+  return {
+      .positionX = frame.origin.x + frame.size.width / 2,
+      .positionY = frame.origin.y + frame.size.height / 2,
+      .opacity = static_cast<double>(viewProps.opacity),
+  };
+}
+
+// The writer stops at interception, before the final mount. Its lease stays
+// registered until the native request replaces it at the post-mount drain or
+// a rejection releases it or starts the fallback under it.
+void LayoutAnimationsProxyCommon::takeOverFrameDrivenWriter(
+    const FrameDrivenLeaseKey &key,
+    const std::shared_ptr<FrameDrivenAnimationLease> &lease) const {
+  lease->suspendWrites();
+  layoutAnimationsManager_->cancelLayoutAnimation(uiRuntime_, key.tag);
+  settleRevokedLayoutAnimation(key.surfaceId, key.tag);
 }
 
 // The service revoked the writer's lease. The writer stops here, without the
@@ -580,7 +655,7 @@ std::optional<FrameDrivenAnimationLeaseWriteGuard> LayoutAnimationsProxyCommon::
     return std::nullopt;
   }
   FrameDrivenAnimationLeaseWriteGuard guard{lease->second};
-  if (guard.isRevoked()) {
+  if (guard.isClosed()) {
     return std::nullopt;
   }
   return guard;

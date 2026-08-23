@@ -516,13 +516,11 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
             // A moved view re-inserts its old ShadowView; it needs the
             // frame-driven update stream.
             if (!movedViews.contains(tag)) {
-              const auto window = surfaceManager.getWindow(surfaceId);
               const auto attempt = tryStartNativeLayoutAnimation(
                   mutation.oldChildShadowView,
                   mutation.newChildShadowView,
                   mutation.parentTag,
-                  Snapshot(mutation.oldChildShadowView, window),
-                  Snapshot(mutation.newChildShadowView, window),
+                  surfaceManager.getWindow(surfaceId),
                   weak_from_this());
               if (attempt.routedNative) {
                 // Final-state-first: mount the final Update now; the native
@@ -840,29 +838,29 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
         if (!strongThis) {
           return;
         }
-        auto lock = std::unique_lock<std::recursive_mutex>(strongThis->mutex);
-#ifdef ANDROID
-        strongThis->uiThreadId_ = std::this_thread::get_id();
-        if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
-          // the view was removed before this start could run
-          return;
-        }
-#endif
+        const auto surfaceId = mutation.newChildShadowView.surfaceId;
         const auto start = strongThis->prepareFrameDrivenStart(
             tag,
             LayoutAnimationType::ENTERING,
             makeEnteringYogaValues(
-                strongThis->uiRuntime_,
-                Snapshot(
-                    mutation.newChildShadowView,
-                    strongThis->surfaceManager.getWindow(mutation.newChildShadowView.surfaceId))));
-#endif
+                strongThis->uiRuntime_, Snapshot(mutation.newChildShadowView, strongThis->windowOf(surfaceId))));
         strongThis->claimFrameDrivenLayoutAnimation(
-            mutation.newChildShadowView.surfaceId,
+            surfaceId,
             tag,
             LayoutAnimationType::ENTERING,
             strongThis,
-            [weakThis, finalView, current, mutation, opacity, tag]() {
+            [weakThis,
+             finalView,
+             current,
+             mutation,
+             opacity,
+             tag,
+             buildId = start.buildId
+#ifdef ANDROID
+             ,
+             handle
+#endif
+        ]() {
               auto strongThis = weakThis.lock();
               if (!strongThis) {
                 return;
@@ -870,6 +868,13 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
               Rect window{};
               {
                 auto lock = std::unique_lock<std::recursive_mutex>(strongThis->mutex);
+#ifdef ANDROID
+                strongThis->uiThreadId_ = std::this_thread::get_id();
+                if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
+                  // the view was removed before this start could run
+                  return;
+                }
+#endif
                 strongThis->layoutAnimations_.insert_or_assign(
                     tag,
                     LayoutAnimation{
@@ -883,7 +888,8 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
               strongThis->runLayoutAnimationStart(
                   tag,
                   LayoutAnimationType::ENTERING,
-                  makeEnteringYogaValues(uiRuntime, Snapshot(mutation.newChildShadowView, window)));
+                  makeEnteringYogaValues(uiRuntime, Snapshot(mutation.newChildShadowView, window)),
+                  buildId);
             },
             start);
       });
@@ -914,26 +920,27 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
         if (!strongThis) {
           return;
         }
-        auto lock = std::unique_lock<std::recursive_mutex>(strongThis->mutex);
-#ifdef ANDROID
-        strongThis->uiThreadId_ = std::this_thread::get_id();
-        if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
-          // The view was removed before this start could run. Deliberately no
-          // clearLayoutAnimationConfig: with tag reuse the config maps already
-          // describe the re-created view, and wiping them would leave it mounted
-          // at opacity 0. A dead tag's stale configs can never fire again.
-          return;
-        }
-#endif
         const auto start = strongThis->prepareFrameDrivenStart(
             tag,
             LayoutAnimationType::EXITING,
             makeExitingYogaValues(
                 strongThis->uiRuntime_,
-                Snapshot(mutation.oldChildShadowView, strongThis->surfaceManager.getWindow(surfaceId))));
-#endif
+                strongThis->frameDrivenStartSnapshot(surfaceId, tag, mutation.oldChildShadowView)));
         strongThis->claimFrameDrivenLayoutAnimation(
-            surfaceId, tag, LayoutAnimationType::EXITING, strongThis, [weakThis, mutation, surfaceId, tag]() {
+            surfaceId,
+            tag,
+            LayoutAnimationType::EXITING,
+            strongThis,
+            [weakThis,
+             mutation,
+             surfaceId,
+             tag,
+             buildId = start.buildId
+#ifdef ANDROID
+             ,
+             handle
+#endif
+        ]() {
               auto strongThis = weakThis.lock();
               if (!strongThis) {
                 return;
@@ -942,12 +949,25 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
               Rect window{};
               {
                 auto lock = std::unique_lock<std::recursive_mutex>(strongThis->mutex);
+#ifdef ANDROID
+                strongThis->uiThreadId_ = std::this_thread::get_id();
+                if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
+                  // The view was removed before this start could run. Deliberately no
+                  // clearLayoutAnimationConfig: with tag reuse the config maps already
+                  // describe the re-created view, and wiping them would leave it mounted
+                  // at opacity 0. A dead tag's stale configs can never fire again.
+                  return;
+                }
+#endif
                 strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
                 window = strongThis->surfaceManager.getWindow(surfaceId);
               }
               auto &uiRuntime = strongThis->uiRuntime_;
               strongThis->runLayoutAnimationStart(
-                  tag, LayoutAnimationType::EXITING, makeExitingYogaValues(uiRuntime, Snapshot(oldView, window)));
+                  tag,
+                  LayoutAnimationType::EXITING,
+                  makeExitingYogaValues(uiRuntime, Snapshot(oldView, window)),
+                  buildId);
               strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
             },
             start);
@@ -983,20 +1003,21 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(
         if (!strongThis) {
           return;
         }
-        auto lock = std::unique_lock<std::recursive_mutex>(strongThis->mutex);
-#ifdef ANDROID
-        strongThis->uiThreadId_ = std::this_thread::get_id();
-        if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
-          // the view was removed before this start could run
-          return;
-        }
-#endif
         strongThis->claimFrameDrivenLayoutAnimation(
             surfaceId,
             tag,
             LayoutAnimationType::LAYOUT,
             strongThis,
-            [weakThis, mutation, surfaceId, tag, start]() {
+            [weakThis,
+             mutation,
+             surfaceId,
+             tag,
+             buildId = start.buildId
+#ifdef ANDROID
+             ,
+             handle
+#endif
+        ]() {
               auto strongThis = weakThis.lock();
               if (!strongThis) {
                 return;
@@ -1005,6 +1026,13 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(
               Rect window{};
               {
                 auto lock = std::unique_lock<std::recursive_mutex>(strongThis->mutex);
+#ifdef ANDROID
+                strongThis->uiThreadId_ = std::this_thread::get_id();
+                if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
+                  // the view was removed before this start could run
+                  return;
+                }
+#endif
                 strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
                 window = strongThis->surfaceManager.getWindow(surfaceId);
               }
@@ -1014,7 +1042,7 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(
                   LayoutAnimationType::LAYOUT,
                   makeLayoutYogaValues(
                       uiRuntime, Snapshot(oldView, window), Snapshot(mutation.newChildShadowView, window)),
-                  start.buildId);
+                  buildId);
             },
             start);
       });
@@ -1031,13 +1059,40 @@ void LayoutAnimationsProxy_Legacy::settleRevokedLayoutAnimation(const SurfaceId 
   layoutAnimations_.erase(tag);
 }
 
+Rect LayoutAnimationsProxy_Legacy::windowOf(const SurfaceId surfaceId) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  return surfaceManager.getWindow(surfaceId);
+}
+
+Snapshot LayoutAnimationsProxy_Legacy::frameDrivenStartSnapshot(
+    const SurfaceId surfaceId,
+    const Tag tag,
+    const ShadowView &modelView) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  return Snapshot(frameDrivenWriterView(surfaceId, tag).value_or(modelView), surfaceManager.getWindow(surfaceId));
+}
+
+std::optional<ShadowView> LayoutAnimationsProxy_Legacy::frameDrivenWriterView(const SurfaceId surfaceId, const Tag tag)
+    const {
+  const auto it = layoutAnimations_.find(tag);
+  if (it == layoutAnimations_.end()) {
+    return std::nullopt;
+  }
+  auto view = it->second.currentView;
+  auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+  if (const auto update = updateMap.find(tag); update != updateMap.end()) {
+    view.props = update->second.newProps;
+    updateLayoutMetrics(view.layoutMetrics, update->second.frame);
+  }
+  return view;
+}
+
 void LayoutAnimationsProxy_Legacy::updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation)
     const {
   if constexpr (useNativeLayoutAnimations()) {
     widenFrameDrivenLease(mutation.newChildShadowView.surfaceId, tag, weak_from_this());
   }
-  auto copy = mutation.newChildShadowView;
-  layoutAnimations_[tag].finalView = copy;
+  layoutAnimations_[tag].finalView = mutation.newChildShadowView;
 }
 
 void LayoutAnimationsProxy_Legacy::maybeCancelAnimation(const int tag) const {

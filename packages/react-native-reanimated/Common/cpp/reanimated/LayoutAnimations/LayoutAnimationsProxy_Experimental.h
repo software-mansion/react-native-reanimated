@@ -160,6 +160,9 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) override;
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) const override;
   void settleRevokedLayoutAnimation(SurfaceId surfaceId, Tag tag) const override;
+  std::optional<ShadowView> frameDrivenWriterView(SurfaceId surfaceId, Tag tag) const override;
+  Rect windowOf(SurfaceId surfaceId) const;
+  Snapshot frameDrivenStartSnapshot(SurfaceId surfaceId, Tag tag, const ShadowView &modelView) const override;
   std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) override;
   std::optional<SurfaceId> onGestureCancel() override;
   void startSurface(const SurfaceId surfaceId) override;
