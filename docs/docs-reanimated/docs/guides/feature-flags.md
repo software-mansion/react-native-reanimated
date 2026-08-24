@@ -20,12 +20,13 @@ Feature flags are available since Reanimated 4.
 | [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#android_synchronously_update_ui_props)                   | [static](#static-feature-flags) |  4.0.0   |  –   |                  `false`                  |
 | [`IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#ios_synchronously_update_ui_props)                           | [static](#static-feature-flags) |  4.2.0   |  –   |                  `false`                  |
 | [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) | [static](#static-feature-flags) |  4.1.0   |  –   | `true` for 4.4.0+ <br/> `false` otherwise |
-| [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               | [static](#static-feature-flags) |  4.1.0   |  –   | `true` for 4.3.0+ <br/> `false` otherwise |
+| [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               | [static](#static-feature-flags) |  4.1.0   | 4.7.0 | `true` for 4.3.0+ <br/> `false` otherwise |
 | [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](#use_commit_hook_only_for_react_commits)                 | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+ <br/> `false` otherwise |
 | [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions)                           | [static](#static-feature-flags) |  4.2.0   |  –   |                  `false`                  |
 | [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#force_react_render_for_settled_animations)           | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+ <br/> `false` otherwise |
 | [`USE_ANIMATION_BACKEND`](#use_animation_backend)                                                   | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
-| [`IOS_CSS_CORE_ANIMATION`](#ios_css_core_animation)                                                 | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
+| [`IOS_CSS_CORE_ANIMATION`](#ios_css_core_animation-and-android_css_platform_transitions)            | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
+| [`ANDROID_CSS_PLATFORM_TRANSITIONS`](#ios_css_core_animation-and-android_css_platform_transitions)  | [static](#static-feature-flags) |  4.6.0   |  –   |                  `false`                  |
 
 :::info
 
@@ -109,7 +110,9 @@ When enabled, CSS animations and transitions will also work for a limited set of
 
 ### `USE_SYNCHRONIZABLE_FOR_MUTABLES`
 
-This feature flag is supposed to speedup shared value reads on the RN runtime by reducing the number of calls to `executeOnUIRuntimeSync`. When enabled, mutables (which are the primitives behind shared values) use [Synchronizable](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable) state to check if they should sync with the UI Runtime. For more details, see [PR #8080](https://github.com/software-mansion/react-native-reanimated/pull/8080).
+This feature flag was supposed to speedup shared value reads on the RN runtime by reducing the number of calls to `runOnUISync`. When enabled, mutables (which are the primitives behind shared values) used [Synchronizable](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable) state to check if they should sync with the UI Runtime. For more details, see [PR #8080](https://github.com/software-mansion/react-native-reanimated/pull/8080).
+
+The flag was removed in 4.6.0 – mutables now always use Synchronizable state.
 
 ### `USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`
 
@@ -145,9 +148,46 @@ This feature flag conflicts with [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#
 }
 ```
 
-### `IOS_CSS_CORE_ANIMATION`
+### `IOS_CSS_CORE_ANIMATION` and `ANDROID_CSS_PLATFORM_TRANSITIONS`
 
-When enabled, Reanimated may route CSS transitions to platform-native animation APIs instead of running them on the JS-driven animation loop. Currently, only the `opacity` property is routed, and only on iOS, where the platform path uses Core Animation. Support for additional properties, CSS animations (not just transitions), and Android will be added in the future. This feature flag is experimental and defaults to `false`.
+Both flags enable the same feature, running CSS transitions with the platform's own animation API instead of Reanimated's animation loop. The platform then drives every frame, so Reanimated no longer recomputes and commits the transitioned values on each of them. One flag per platform:
+
+- `IOS_CSS_CORE_ANIMATION` enables it on iOS, where a transition runs as a Core Animation animation on the view's layer,
+- `ANDROID_CSS_PLATFORM_TRANSITIONS` enables it on Android, where it runs as an `ObjectAnimator` writing the animated value directly to the platform view.
+
+Both are experimental and default to `false`. CSS animations always run on the loop, regardless of these flags.
+
+Routing is decided per property, so a single transition may run partly on the platform and partly on the loop. A property is routed only when:
+
+- it is listed in the table below,
+- the animated component has no CSS transition callbacks. `onCSSTransitionRun`, `onCSSTransitionStart`, `onCSSTransitionEnd` and `onCSSTransitionCancel` work as usual, but only the animation loop reports them, so a component using any of them keeps all of its properties there,
+- on iOS, its timing function is `linear` or a cubic Bezier curve, since `CAMediaTimingFunction` cannot express `steps` or `linear` easing with stops. There is no such limitation on Android, where `TimeInterpolator` carries any curve that CSS transitions support.
+
+#### Properties routed to the platform
+
+| Property          |    iOS    |  Android  |
+| ----------------- | :-------: | :-------: |
+| `opacity`         |    ✅     |    ✅     |
+| `backgroundColor` |    ✅     |    ❌     |
+| `borderColor`     |    ✅     |    ❌     |
+| `borderRadius`    |    ✅     |    ❌     |
+| `borderWidth`     |    ✅     |    ❌     |
+| `shadowColor`     |    ✅     |    ❌     |
+| `shadowOffset`    |    ✅     |    ❌     |
+| `shadowOpacity`   |    ✅     |    ❌     |
+| `shadowRadius`    |    ✅     |    ❌     |
+
+Properties that aren't routed keep running on the animation loop, which supports all of them. Android routes `opacity` for now, support for more properties will be added in the future. `shadowOffset`, `shadowOpacity` and `shadowRadius` are iOS-only styles in React Native.
+
+:::warning
+Known limitation on iOS. `backgroundColor`, `borderColor`, `borderWidth` and `borderRadius` are routed even when React Native draws them on separate layers rather than on the view's own one. The routed animation doesn't reach those layers, so the new value shows up at once instead of animating. React Native keeps the four properties on the view's own layer only when:
+
+- the border has the same color, the same width and the solid style on every side,
+- the radius is the same on every corner and circular rather than elliptical,
+- the view either has no visible border or clips its children with `overflow: 'hidden'`.
+
+All four share that layer, so this is easiest to hit with a combination of them. A view with a visible border and the default `overflow` doesn't animate its `backgroundColor` either, even though the transition changes nothing about the border. `opacity` and the `shadow*` properties aren't affected, React Native always keeps them on the view's own layer.
+:::
 
 ## Static feature flags
 

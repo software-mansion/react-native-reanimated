@@ -1,7 +1,6 @@
 'use strict';
 
 import { IS_JEST } from './platformChecker';
-import { mockedRequestAnimationFrame } from './runLoop/uiRuntime/mockedRequestAnimationFrame';
 
 export function scheduleOnUI<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
@@ -58,8 +57,8 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
 ): Promise<ReturnValue> {
-  return new Promise<ReturnValue>((resolve) => {
-    enqueueUI(worklet, args, resolve);
+  return new Promise<ReturnValue>((resolve, reject) => {
+    enqueueUI(worklet, args, resolve, reject);
   });
 }
 
@@ -67,6 +66,7 @@ type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
   worklet: (...args: Args) => ReturnValue,
   args: Args,
   resolve?: (value: ReturnValue) => void,
+  reject?: (reason?: unknown) => void,
 ];
 
 let runOnUIQueue: UIJob[] = [];
@@ -74,37 +74,49 @@ let runOnUIQueue: UIJob[] = [];
 function enqueueUI<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
   args: Args,
-  resolve?: (value: ReturnValue) => void
+  resolve?: (value: ReturnValue) => void,
+  reject?: (reason?: unknown) => void
 ): void {
-  if (IS_JEST) {
-    mockedRequestAnimationFrame(() => {
-      const result = worklet(...args);
-      resolve?.(result);
-    });
-  } else {
-    const job = [worklet, args, resolve];
-    runOnUIQueue.push(job as UIJob);
-    if (runOnUIQueue.length === 1) {
+  const job = [worklet, args, resolve, reject];
+  runOnUIQueue.push(job as UIJob);
+  if (runOnUIQueue.length === 1) {
+    if (IS_JEST) {
       flushUIQueue();
+    } else {
+      queueMicrotask(flushUIQueue);
     }
   }
 }
 
+let offset = 0;
+
 function flushUIQueue(): void {
-  queueMicrotask(() => {
-    const queue = runOnUIQueue;
-    runOnUIQueue = [];
-    requestAnimationFrameImpl(() => {
-      queue.forEach(([workletFunction, workletArgs, jobResolve]) => {
-        const result = workletFunction(...workletArgs);
-        if (jobResolve) {
-          jobResolve(result);
+  const queue = runOnUIQueue;
+  runOnUIQueue = [];
+  requestAnimationFrame(() => {
+    offset = 0;
+    while (queue.length > offset) {
+      try {
+        drainUIQueue(queue);
+      } catch (e) {
+        const [, , , jobReject] = queue[offset - 1];
+        if (jobReject) {
+          jobReject(e);
+        } else {
+          console.error(e);
         }
-      });
-    });
+      }
+    }
   });
 }
 
-const requestAnimationFrameImpl = !globalThis.requestAnimationFrame
-  ? mockedRequestAnimationFrame
-  : globalThis.requestAnimationFrame;
+function drainUIQueue(queue: UIJob[]): void {
+  while (queue.length > offset) {
+    const [workletFunction, workletArgs, jobResolve] = queue[offset];
+    offset++;
+    const result = workletFunction(...workletArgs);
+    if (jobResolve) {
+      jobResolve(result);
+    }
+  }
+}

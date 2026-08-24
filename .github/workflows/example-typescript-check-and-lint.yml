@@ -54,9 +54,8 @@ jobs:
               - apps/common-app/**
             tvos:
               - apps/tvos-example/**
-            # TODO: fix fabric-example
-            # fabric:
-            #   - apps/fabric-example/**
+            fabric:
+              - apps/fabric-example/**
             # TODO: fix macos-example
             # macos:
             #   - apps/macos-example/**
@@ -73,19 +72,19 @@ jobs:
           SHARED: ${{ steps.filter.outputs.shared }}
           COMMON: ${{ steps.filter.outputs.common-app }}
           TVOS: ${{ steps.filter.outputs.tvos }}
-          # FABRIC: ${{ steps.filter.outputs.fabric }}
+          FABRIC: ${{ steps.filter.outputs.fabric }}
           # MACOS: ${{ steps.filter.outputs.macos }}
           # NEXT: ${{ steps.filter.outputs.next }}
           # WEB: ${{ steps.filter.outputs.web }}
         run: |
           if [[ "$IS_PR" != "true" || "$SHARED" == "true" ]]; then
-            ts_apps='["apps/common-app","apps/tvos-example"]'
+            ts_apps='["apps/common-app","apps/tvos-example","apps/fabric-example"]'
             web=true
           else
             apps=()
             [[ "$COMMON" == "true" ]] && apps+=("apps/common-app")
             [[ "$TVOS"   == "true" ]] && apps+=("apps/tvos-example")
-            # [[ "$FABRIC" == "true" ]] && apps+=("apps/fabric-example")
+            [[ "$FABRIC" == "true" ]] && apps+=("apps/fabric-example")
             # [[ "$MACOS"  == "true" ]] && apps+=("apps/macos-example")
             # [[ "$NEXT"   == "true" ]] && apps+=("apps/next-example")
             # [[ "$WEB"    == "true" ]] && apps+=("apps/web-example")

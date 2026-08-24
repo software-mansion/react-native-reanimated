@@ -4,7 +4,7 @@
 import {
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
@@ -74,7 +74,7 @@ const getTestData = () => {
 };
 
 describe('Test HybridObject Support', () => {
-  const workletRuntime = getWorkletRuntimeFromPool('test');
+  const [workletRuntime] = getWorkletRuntimesFromPool(1);
 
   test('passes HybridObjects from RN runtime to UI runtime', () => {
     // Arrange

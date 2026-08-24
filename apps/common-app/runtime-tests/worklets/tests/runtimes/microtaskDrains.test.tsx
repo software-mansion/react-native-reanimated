@@ -1,13 +1,11 @@
 import {
   createSynchronizable,
-  getRuntimeKind,
   runOnRuntimeAsync,
   runOnRuntimeAsyncWithId,
   runOnRuntimeSync,
   runOnRuntimeSyncWithId,
   runOnUIAsync,
   runOnUISync,
-  RuntimeKind,
   scheduleOnRN,
   scheduleOnRuntime,
   scheduleOnRuntimeWithId,
@@ -19,7 +17,7 @@ import {
   beforeEach,
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
@@ -27,15 +25,10 @@ import {
 
 const DONE_NOTIFICATION = 'DONE';
 
-const NOTHING_RAN = 0;
-const ANIMATION_FRAME_RAN = 1;
-const MICROTASK_RAN = 2;
-
 describe('microtask draining', () => {
-  const workletRuntime = getWorkletRuntimeFromPool('test');
+  const [workletRuntime] = getWorkletRuntimesFromPool(1);
 
   const microtaskDrainCount = createSynchronizable(0);
-  const firstCallbackThatRan = createSynchronizable(NOTHING_RAN);
 
   const notifyDone = () => {
     notify(DONE_NOTIFICATION);
@@ -52,18 +45,17 @@ describe('microtask draining', () => {
   }
 
   function startCountingMicrotaskDrains(runtimeId: number) {
-    restoreCallMicrotasks(runtimeId);
-
     runOnRuntimeSyncWithId(runtimeId, () => {
       'worklet';
       const previousCallMicrotasks = globalThis.__callMicrotasks;
       globalThis.originalCallMicrotasks = previousCallMicrotasks;
       globalThis.__callMicrotasks = () => {
-        microtaskDrainCount.setBlocking((count) => count + 1);
+        if (!new Error().stack!.includes('executeQueue')) {
+          microtaskDrainCount.setBlocking((count) => count + 1);
+        }
         previousCallMicrotasks();
       };
     });
-
     microtaskDrainCount.setBlocking(0);
   }
 
@@ -74,42 +66,13 @@ describe('microtask draining', () => {
     });
   }
 
-  /**
-   * Queues a microtask that reports back once it runs. On the UI Runtime it
-   * also queues an animation frame callback - `executeQueue` runs those before
-   * draining, so if the callback records itself first, the frame loop drained
-   * the microtask rather than the call under test. Only the first callback to
-   * run records itself, which keeps the check free of races.
-   */
   const probeDrainingCall = () => {
     'worklet';
-    let animationFrameHandle: number | undefined;
-    if (getRuntimeKind() === RuntimeKind.UI) {
-      animationFrameHandle = requestAnimationFrame(() => {
-        firstCallbackThatRan.setBlocking((first) =>
-          first === NOTHING_RAN ? ANIMATION_FRAME_RAN : first
-        );
-      });
-    }
     queueMicrotask(() => {
-      // Cancelling here keeps the callback from outliving this case and
-      // recording itself against the next one. If the frame loop got there
-      // first it has already recorded itself and this is a no-op.
-      if (animationFrameHandle !== undefined) {
-        cancelAnimationFrame(animationFrameHandle);
-      }
-      firstCallbackThatRan.setBlocking((first) =>
-        first === NOTHING_RAN ? MICROTASK_RAN : first
-      );
       scheduleOnRN(notifyDone);
     });
   };
 
-  /**
-   * Leaves a microtask pending without reporting back, so the runtime has
-   * microtask work to drain even when the call under test is not expected to
-   * drain it.
-   */
   const probeNonDrainingCall = () => {
     'worklet';
     queueMicrotask(() => {});
@@ -201,7 +164,6 @@ describe('microtask draining', () => {
   cases.forEach(({ name, runtimeId, expectedDrains, invoke }) => {
     describe(name, () => {
       beforeEach(() => {
-        firstCallbackThatRan.setBlocking(NOTHING_RAN);
         startCountingMicrotaskDrains(runtimeId);
       });
 
@@ -217,10 +179,6 @@ describe('microtask draining', () => {
         }
 
         const microtaskDrains = microtaskDrainCount.getBlocking();
-        const didAnimationFrameRunFirst =
-          firstCallbackThatRan.getBlocking() === ANIMATION_FRAME_RAN;
-
-        expect(didAnimationFrameRunFirst).toBe(false);
         expect(microtaskDrains).toBe(expectedDrains);
       });
     });

@@ -140,12 +140,14 @@ css::CSSApplyTransitionFunction makeCSSApplyTransition(REACSSPlatformTransitions
              const css::PlatformValue &fromValue,
              const css::PlatformValue &toValue,
              const css::CSSTransitionPropertySettings *settings,
+             bool persistent,
              double timestamp) {
     return [platformTransitions applyTransitionForTag:viewTag
                                          propertyName:propertyName
                                             fromValue:fromValue
                                               toValue:toValue
                                              settings:settings
+                                           persistent:persistent
                                             timestamp:timestamp];
   };
 }
@@ -154,6 +156,13 @@ css::CSSRemoveTransitionFunction makeCSSRemoveTransition(REACSSPlatformTransitio
 {
   return [platformTransitions](Tag viewTag, const std::string &propertyName) {
     [platformTransitions removeTransitionForTag:viewTag propertyName:propertyName];
+  };
+}
+
+css::CSSGetPlatformValueFunction makeCSSGetPlatformValue(REACSSPlatformTransitions *platformTransitions)
+{
+  return [platformTransitions](Tag viewTag, const std::string &propertyName, double timestamp) {
+    return [platformTransitions getCurrentValueForTag:viewTag propertyName:propertyName timestamp:timestamp];
   };
 }
 
@@ -223,6 +232,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto cssCanRouteProperty = makeCSSCanRouteProperty();
   auto cssApplyTransition = makeCSSApplyTransition(platformTransitions);
   auto cssRemoveTransition = makeCSSRemoveTransition(platformTransitions);
+  auto cssGetPlatformValue = makeCSSGetPlatformValue(platformTransitions);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
@@ -240,6 +250,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       cssCanRouteProperty,
       cssApplyTransition,
       cssRemoveTransition,
+      cssGetPlatformValue,
   };
   return platformDepMethodsHolder;
 }

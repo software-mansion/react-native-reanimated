@@ -1,6 +1,9 @@
 'use strict';
 
+import type { Maybe } from '../common';
+import type { InternalHostInstance } from '../commonTypes';
 import type { HostInstance } from '../platform-specific/types';
+import type { IAnimatedComponentInternalBase } from './commonTypes';
 
 // Component naming convention:
 //
@@ -27,4 +30,40 @@ export function getViewInfo(element: HostInstance): {
       element?.__internalInstanceHandle?.elementType) as string,
     viewTag: element?.__nativeTag,
   };
+}
+
+export type InstanceWithViewTag = Partial<IAnimatedComponentInternalBase> &
+  InternalHostInstance;
+
+export function getViewTagFromInstance(
+  instance: Maybe<InstanceWithViewTag>
+): number | null {
+  if (!instance) {
+    return null;
+  }
+
+  if (typeof instance.getComponentViewTag === 'function') {
+    const viewTag = instance.getComponentViewTag();
+    if (viewTag !== -1) {
+      return viewTag;
+    }
+  }
+
+  const viewTag = getViewInfo(instance).viewTag;
+  if (viewTag !== undefined) {
+    return viewTag;
+  }
+
+  const nativeScrollRef = instance.getNativeScrollRef?.();
+  if (nativeScrollRef) {
+    return getViewInfo(nativeScrollRef).viewTag ?? null;
+  }
+
+  const scrollableNode = instance.getScrollableNode?.() as Maybe<
+    HostInstance | number
+  >;
+  if (typeof scrollableNode === 'number') {
+    return scrollableNode;
+  }
+  return scrollableNode ? (getViewInfo(scrollableNode).viewTag ?? null) : null;
 }

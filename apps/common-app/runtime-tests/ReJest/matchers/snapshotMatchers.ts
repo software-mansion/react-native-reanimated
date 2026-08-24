@@ -3,11 +3,16 @@ import type { Mismatch, OperationUpdate } from '../types';
 import { ComparisonMode, isValidPropName } from '../types';
 import { formatSnapshotMismatch } from '../utils/drawSnapshotTable';
 import { green, red, yellow } from '../utils/stringFormatUtils';
-import { getComparator, getComparisonModeForProp } from './Comparators';
+import {
+  getComparator,
+  getComparisonModeForProp,
+  getNativeComparator,
+} from './Comparators';
 
 function compareSnapshot(
   expectedSnapshot: OperationUpdate,
   capturedSnapshot: OperationUpdate,
+  native: boolean,
   expectNegativeValueMismatch: boolean
 ) {
   const keys = Object.keys(capturedSnapshot) as Array<keyof OperationUpdate>;
@@ -17,7 +22,9 @@ function compareSnapshot(
     const comparisonMode = isValidPropName(key)
       ? getComparisonModeForProp(key)
       : ComparisonMode.AUTO;
-    const isEqual = getComparator(comparisonMode);
+    const isEqual = native
+      ? getNativeComparator(comparisonMode, key)
+      : getComparator(comparisonMode);
     const expectMismatch = jsValue < 0 && expectNegativeValueMismatch;
     const valuesAreMatching = isEqual(jsValue, nativeValue);
     if (
@@ -69,6 +76,7 @@ function compareSingleViewSnapshots(
     const snapshotMatching = compareSnapshot(
       expectedSnapshot,
       capturedSnapshot,
+      native,
       expectNegativeValueMismatch
     );
     if (!snapshotMatching) {
@@ -81,7 +89,7 @@ function compareSingleViewSnapshots(
   }
 
   if (mismatchedSnapshots.length > 0) {
-    return formatSnapshotMismatch(mismatchedSnapshots, false);
+    return formatSnapshotMismatch(mismatchedSnapshots, native);
   }
 }
 

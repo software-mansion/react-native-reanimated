@@ -3,18 +3,12 @@ env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
-    paths-ignore:
-      - packages/
-      - apps/
   merge_group:
     branches:
       - main
   push:
     branches:
       - main
-    paths-ignore:
-      - packages/
-      - apps/
   workflow_call:
   workflow_dispatch:
 
@@ -35,6 +29,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
+          node-version-file: '.nvmrc'
           cache: 'yarn'
 
       # Setup repo
@@ -44,6 +39,8 @@ jobs:
       # Checks
       - name: Lint
         run: yarn lint:root
+      - name: Test scripts
+        run: yarn test:scripts
       - name: Check markdown formatting
         id: md-format
         run: yarn format:md && git update-index --refresh && git diff-index --quiet HEAD --

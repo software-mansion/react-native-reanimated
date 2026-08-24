@@ -1,5 +1,32 @@
 'use strict';
+import type { Ref, RefCallback } from 'react';
 import React from 'react';
+
+import type { Maybe } from './common';
+
+export function assignRef<T>(
+  ref: Maybe<Ref<T>>,
+  instance: T | null
+): (() => void) | undefined {
+  if (typeof ref === 'function') {
+    const cleanup: unknown = ref(instance);
+    return typeof cleanup === 'function' ? (cleanup as () => void) : undefined;
+  }
+  if (ref) {
+    ref.current = instance;
+  }
+  return undefined;
+}
+
+export function mergeRefs<T>(...refs: Maybe<Ref<T>>[]): RefCallback<T> {
+  return (instance: T | null) => {
+    const cleanups = refs.map(
+      (ref) => assignRef(ref, instance) ?? (() => assignRef(ref, null))
+    );
+
+    return () => cleanups.forEach((cleanup) => cleanup());
+  };
+}
 
 function getCurrentReactOwner() {
   return (

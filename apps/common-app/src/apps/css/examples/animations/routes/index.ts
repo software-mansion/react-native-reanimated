@@ -54,6 +54,10 @@ const routes = {
     CardComponent: routeCards.MiscellaneousCard,
     name: 'Miscellaneous',
     routes: {
+      AnimationCallbacks: {
+        Component: miscellaneous.AnimationCallbacks,
+        name: 'Animation Callbacks',
+      },
       ChangingAnimation: {
         Component: miscellaneous.ChangingAnimation,
         name: 'Changing Animation',

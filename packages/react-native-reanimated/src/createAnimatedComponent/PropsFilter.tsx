@@ -2,7 +2,7 @@
 
 import { initialUpdaterRun } from '../animation';
 import type { StyleProps } from '../commonTypes';
-import { isCSSConfigProp } from '../css/utils';
+import { isCSSConfigProp, isPseudoSelectorValue } from '../css/utils';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import { isSharedValue } from '../isSharedValue';
 import { WorkletEventHandler } from '../WorkletEventHandler';
@@ -14,6 +14,7 @@ import type {
   IPropsFilter,
 } from './commonTypes';
 import { getInlineStyle, hasInlineStyles } from './InlinePropManager';
+import { svgHitTestResponder } from './platform';
 import { flattenArray, has } from './utils';
 
 function dummyListener() {
@@ -31,6 +32,7 @@ export class PropsFilter implements IPropsFilter {
     const inputProps =
       component.props as AnimatedComponentProps<InitialComponentProps>;
     const props: Record<string, unknown> = {};
+    let hasPseudoSelectors = false;
 
     for (const key in inputProps) {
       const value = inputProps[key];
@@ -120,12 +122,31 @@ export class PropsFilter implements IPropsFilter {
           }
         } else {
           for (const animatedPropKey in animatedProps) {
-            if (!isCSSConfigProp(animatedPropKey)) {
-              props[animatedPropKey] = animatedProps[animatedPropKey];
+            if (isCSSConfigProp(animatedPropKey)) {
+              continue;
             }
+            const animatedPropValue = animatedProps[animatedPropKey];
+            if (isPseudoSelectorValue(animatedPropValue)) {
+              hasPseudoSelectors = true;
+              // Forward only the resting value; pseudo states are driven by
+              // the CSS manager, like pseudo values in style are.
+              if (animatedPropValue.default !== undefined) {
+                props[animatedPropKey] = animatedPropValue.default;
+              }
+              continue;
+            }
+            props[animatedPropKey] = animatedPropValue;
           }
         }
       });
+    }
+
+    if (
+      svgHitTestResponder &&
+      hasPseudoSelectors &&
+      !props.onStartShouldSetResponder
+    ) {
+      props.onStartShouldSetResponder = svgHitTestResponder;
     }
 
     return props;

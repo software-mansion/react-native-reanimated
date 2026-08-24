@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "macos": "react-native run-macos",
-    "build": "cd macos && bundle install && bundle exec pod update --no-repo-update",
+    "build": "yarn run --top-level toggle-bundle-mode --off && cd macos && bundle install && bundle exec pod update --no-repo-update",
     "format": "yarn run --top-level oxfmt .",
     "lint": "eslint . --max-warnings 0 && yarn run --top-level oxfmt --check .",
     "start": "react-native start",
@@ -14,16 +14,17 @@
     "common-app": "workspace:*",
     "react": "19.1.4",
     "react-native": "0.81.6",
-    "react-native-macos": "patch:react-native-macos@npm%3A0.81.7#~/.yarn/patches/react-native-macos-npm-0.81.7.patch",
+    "react-native-macos": "patch:react-native-macos@npm%3A0.81.9#~/.yarn/patches/react-native-macos-npm-0.81.9-aa583a0648.patch",
     "react-native-reanimated": "workspace:*",
+    "react-native-screens": "4.24.0",
     "react-native-worklets": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "7.29.6",
     "@babel/preset-env": "7.28.3",
     "@babel/runtime": "7.28.4",
-    "@react-native-community/cli": "20.0.0",
-    "@react-native-community/cli-platform-ios": "20.0.0",
+    "@react-native-community/cli": "20.2.0",
+    "@react-native-community/cli-platform-ios": "20.2.0",
     "@react-native/babel-preset": "0.81.6",
     "@react-native/eslint-config": "0.81.6",
     "@react-native/metro-config": "0.81.6",
@@ -45,7 +46,7 @@
       "ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS": true,
       "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS": true,
       "IOS_CSS_CORE_ANIMATION": true,
-      "USE_SYNCHRONIZABLE_FOR_MUTABLES": true,
+      "ANDROID_CSS_PLATFORM_TRANSITIONS": true,
       "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS": true,
       "FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS": true
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
+#include <reanimated/Fabric/ReanimatedSurfaceTracker.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 
@@ -18,15 +19,19 @@ class ReanimatedMountHook : public UIManagerMountHook {
       const std::shared_ptr<UIManager> &uiManager,
       const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
       const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
+      const std::shared_ptr<ReanimatedSurfaceTracker> &surfaceTracker,
       const std::function<void()> &requestFlush);
   ~ReanimatedMountHook() noexcept override;
 
   void shadowTreeDidMount(RootShadowNode::Shared const &rootShadowNode, HighResTimeStamp mountTime) noexcept override;
 
+  void shadowTreeDidUnmount(SurfaceId surfaceId, HighResTimeStamp unmountTime) noexcept override;
+
  private:
   const std::shared_ptr<UIManager> uiManager_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   const std::shared_ptr<css::ViewStylesRepository> viewStylesRepository_;
+  const std::shared_ptr<ReanimatedSurfaceTracker> surfaceTracker_;
   const std::function<void()> requestFlush_;
 };
 

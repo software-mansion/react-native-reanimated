@@ -9,6 +9,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/memory/createSerializable.test');
       require('./tests/memory/createSerializableOnUI.test');
       require('./tests/memory/isSerializableRef.test');
+      require('./tests/memory/retainingSerializable.test');
       require('./tests/memory/synchronizable.test');
       require('./tests/memory/customSerializable.test');
       require('./tests/memory/hybridObjectSupport.test');
@@ -32,6 +33,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runtimes/runOnRuntimeSyncWithId.test');
       require('./tests/runtimes/scheduleOnRuntimeWithId.test');
       require('./tests/runtimes/microtaskDrains.test');
+      require('./tests/runtimes/weakRef.test');
     },
   },
   {

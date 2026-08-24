@@ -34,8 +34,103 @@ describe('CSSPseudoStylesManager', () => {
     manager = new CSSPseudoStylesManager(
       shadowNodeWrapper,
       viewTag,
-      propsBuilder
+      propsBuilder,
+      'RCTView$View'
     );
+  });
+
+  describe('fully transparent press warning', () => {
+    test('warns when a press selector is styled on a fully transparent view', () => {
+      pushStyle(manager, {
+        opacity: { default: 0, ':active': 1 },
+      });
+
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining("won't receive presses on iOS")
+      );
+      // 0.01 reads back below the threshold, so it must not be the value we suggest.
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Use "opacity: 0.02"')
+      );
+    });
+
+    test('does not repeat while the style is unchanged', () => {
+      pushStyle(manager, { opacity: { default: 0, ':active': 1 } });
+      pushStyle(manager, { opacity: { default: 0, ':active': 1 } });
+
+      expect(console.warn).toHaveBeenCalledTimes(1);
+    });
+
+    test('warns when a view only becomes transparent on a later render', () => {
+      pushStyle(manager, { opacity: { default: 1, ':active': 0.5 } });
+      expect(console.warn).not.toHaveBeenCalled();
+
+      pushStyle(manager, { opacity: { default: 0, ':active': 1 } });
+
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining("won't receive presses on iOS")
+      );
+    });
+
+    test('warns when a press selector is added to an already transparent view', () => {
+      pushStyle(manager, { opacity: { default: 0, ':hover': 1 } });
+      expect(console.warn).not.toHaveBeenCalled();
+
+      pushStyle(manager, {
+        opacity: { default: 0, ':hover': 1, ':active': 1 },
+      });
+
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining("won't receive presses on iOS")
+      );
+    });
+
+    test('warns at 0.01, which the float-backed alpha puts under the threshold', () => {
+      pushStyle(manager, {
+        opacity: { default: 0.01, ':active': 1 },
+      });
+
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining("won't receive presses on iOS")
+      );
+    });
+
+    test('stays quiet when the resting opacity is hit-testable', () => {
+      pushStyle(manager, {
+        opacity: { default: 0.02, ':active': 1 },
+      });
+
+      expect(console.warn).not.toHaveBeenCalled();
+    });
+
+    test('stays quiet just above the threshold, where presses still land', () => {
+      pushStyle(manager, {
+        opacity: { default: 0.011, ':active': 1 },
+      });
+
+      expect(console.warn).not.toHaveBeenCalled();
+    });
+
+    test('stays quiet for an SVG shape, which is hit-tested without opacity', () => {
+      const svgManager = new CSSPseudoStylesManager(
+        shadowNodeWrapper,
+        viewTag,
+        propsBuilder,
+        'RNSVGCircle$Circle'
+      );
+
+      pushStyle(svgManager, { opacity: { default: 0, ':active': 1 } });
+
+      expect(console.warn).not.toHaveBeenCalled();
+    });
+
+    test('stays quiet for a transparent view without a press selector', () => {
+      pushStyle(manager, {
+        opacity: { default: 0, ':hover': 1 },
+      });
+
+      expect(console.warn).not.toHaveBeenCalled();
+    });
   });
 
   describe('register', () => {

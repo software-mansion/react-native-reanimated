@@ -5,11 +5,7 @@ type Prop = 'onFoo' | 'onBar';
 
 type Payload = { detail: string };
 
-type PresenceChange = {
-  added: Prop[];
-  removed: Prop[];
-  present: Prop[];
-};
+type PresenceChange = Prop[];
 
 class TestStore extends CSSCallbackStore<Prop, Payload> {
   readonly changes: PresenceChange[] = [];
@@ -22,16 +18,8 @@ class TestStore extends CSSCallbackStore<Prop, Payload> {
     this.invoke(prop, payload);
   }
 
-  protected onPresenceChanged(
-    added: readonly Prop[],
-    removed: readonly Prop[],
-    present: ReadonlySet<Prop>
-  ): void {
-    this.changes.push({
-      added: [...added],
-      present: [...present],
-      removed: [...removed],
-    });
+  protected onPresenceChanged(present: ReadonlySet<Prop>): void {
+    this.changes.push([...present]);
   }
 }
 
@@ -42,12 +30,10 @@ describe('CSSCallbackStore', () => {
     store = new TestStore();
   });
 
-  test('reports a prop as added the first time a callback is provided', () => {
+  test('reports the prop as present the first time a callback is provided', () => {
     store.sync({ onFoo: jest.fn() });
 
-    expect(store.changes).toEqual([
-      { added: ['onFoo'], present: ['onFoo'], removed: [] },
-    ]);
+    expect(store.changes).toEqual([['onFoo']]);
   });
 
   test('does not report a change when only the callback identity changes', () => {
@@ -69,26 +55,26 @@ describe('CSSCallbackStore', () => {
     expect(second).toHaveBeenCalledWith({ detail: 'x' });
   });
 
-  test('reports a prop as removed when its callback becomes undefined', () => {
+  test('drops the prop from the set when its callback becomes undefined', () => {
     store.sync({ onFoo: jest.fn() });
     store.sync({ onFoo: undefined });
 
-    expect(store.changes[1]).toEqual({
-      added: [],
-      present: [],
-      removed: ['onFoo'],
-    });
+    expect(store.changes[1]).toEqual([]);
   });
 
-  test('reports additions and removals from a single sync together', () => {
+  test('reports the whole set after a sync that both adds and removes', () => {
     store.sync({ onFoo: jest.fn() });
     store.sync({ onBar: jest.fn() });
 
-    expect(store.changes[1]).toEqual({
-      added: ['onBar'],
-      present: ['onBar'],
-      removed: ['onFoo'],
-    });
+    expect(store.changes[1]).toEqual(['onBar']);
+  });
+
+  // Every other case reports a set that happens to equal the props just added.
+  test('reports a prop that was already present alongside the new one', () => {
+    store.sync({ onFoo: jest.fn() });
+    store.sync({ onBar: jest.fn(), onFoo: jest.fn() });
+
+    expect(store.changes[1]).toEqual(['onFoo', 'onBar']);
   });
 
   test('ignores props that the store does not manage', () => {
@@ -102,11 +88,7 @@ describe('CSSCallbackStore', () => {
     store.sync({ onFoo, onBar: jest.fn() });
     store.detach();
 
-    expect(store.changes[1]).toEqual({
-      added: [],
-      present: [],
-      removed: ['onFoo', 'onBar'],
-    });
+    expect(store.changes[1]).toEqual([]);
 
     store.fire('onFoo', { detail: 'x' });
     expect(onFoo).not.toHaveBeenCalled();
@@ -117,11 +99,7 @@ describe('CSSCallbackStore', () => {
     store.detach();
     store.sync({ onFoo: jest.fn() });
 
-    expect(store.changes[2]).toEqual({
-      added: ['onFoo'],
-      present: ['onFoo'],
-      removed: [],
-    });
+    expect(store.changes[2]).toEqual(['onFoo']);
   });
 
   test('detach on an empty store reports nothing', () => {

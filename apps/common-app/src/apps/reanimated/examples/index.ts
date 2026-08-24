@@ -3,6 +3,9 @@
 import 'react-native-reanimated';
 import React from 'react';
 
+import type { Example } from '@/components';
+import { REAPlatform } from '@/components';
+
 const AboutExample: React.FC = () =>
   React.createElement(require('./AboutExample').default as React.FC);
 const AmountExample: React.FC = () =>
@@ -123,6 +126,8 @@ const ColorInterpolationExample: React.FC = () =>
   React.createElement(
     require('./ColorInterpolationExample').default as React.FC
   );
+const ContrastColorExample: React.FC = () =>
+  React.createElement(require('./ContrastColorExample').default as React.FC);
 const CombinedTest: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/Combined').default as React.FC
@@ -138,10 +143,6 @@ const ComposedHandlerDifferentEventsExample: React.FC = () =>
 const ComposedHandlerInternalMergingExample: React.FC = () =>
   React.createElement(
     require('./ComposedHandlerInternalMergingExample').default
-  );
-const CopySerializablePerformanceTest: React.FC = () =>
-  React.createElement(
-    require('./CopySerializablePerformanceTest').default as React.FC
   );
 const CounterExample: React.FC = () =>
   React.createElement(require('./CounterExample').default as React.FC);
@@ -202,12 +203,18 @@ const SuspenseLayoutAnimationCrashExample: React.FC = () =>
   React.createElement(
     require('./SuspenseLayoutAnimationCrashExample').default as React.FC
   );
+const NestedExitingCleanupExample: React.FC = () =>
+  React.createElement(
+    require('./NestedExitingCleanupExample').default as React.FC
+  );
 const ExtrapolationExample: React.FC = () =>
   React.createElement(require('./ExtrapolationExample').default as React.FC);
-const FetchExample: React.FC = () =>
-  React.createElement(require('./FetchExample').default as React.FC);
 const FilterExample: React.FC = () =>
   React.createElement(require('./FilterExample').default as React.FC);
+const FinalFrameAccuracyExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/FinalFrameAccuracy').default as React.FC
+  );
 const FlatListExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/FlatList').default as React.FC
@@ -240,10 +247,6 @@ const HabitsExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/HabitsExample').default as React.FC
   );
-const HermesSamplingProfilerExample: React.FC = () =>
-  React.createElement(
-    require('./HermesSamplingProfilerExample').default as React.FC
-  );
 const IPodExample: React.FC = () =>
   React.createElement(require('./IPodExample').default as React.FC);
 const ImageStackExample: React.FC = () =>
@@ -272,6 +275,11 @@ const LayoutAnimationExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/LayoutAnimation').default
   );
+const LayoutAnimationBatchSyncExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/LayoutAnimationBatchSyncExample')
+      .default as React.FC
+  );
 const LayoutTransitionExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/LayoutTransitionExample').default
@@ -286,8 +294,6 @@ const ListItemLayoutAnimation: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/ListItemLayoutAnimation').default
   );
-const LogExample: React.FC = () =>
-  React.createElement(require('./LogExample').default as React.FC);
 const ManyScreensExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ManyScreens').default
@@ -314,8 +320,6 @@ const ModalsExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/Modals').default as React.FC
   );
-const ModifyExample: React.FC = () =>
-  React.createElement(require('./ModifyExample').default as React.FC);
 const MountingUnmounting: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/MountingUnmounting').default as React.FC
@@ -442,6 +446,8 @@ const ShadowNodesCloningExample: React.FC = () =>
   );
 const SharedStyleExample: React.FC = () =>
   React.createElement(require('./SharedStyleExample').default as React.FC);
+const SlowAnimationsExample: React.FC = () =>
+  React.createElement(require('./SlowAnimationsExample').default as React.FC);
 const SpringLayoutAnimation: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/SpringLayoutAnimation').default
@@ -466,12 +472,8 @@ const SwipeableListExample: React.FC = () =>
   React.createElement(require('./SwipeableListExample').default as React.FC);
 const SyncBackToReactExample: React.FC = () =>
   React.createElement(require('./SyncBackToReactExample').default as React.FC);
-const SynchronizablePerformanceExample: React.FC = () =>
-  React.createElement(require('./SynchronizableExample').default as React.FC);
 const SynchronousPropsExample: React.FC = () =>
   React.createElement(require('./SynchronousPropsExample').default as React.FC);
-const SystraceSectionExample: React.FC = () =>
-  React.createElement(require('./SystraceSectionExample').default as React.FC);
 const TabNavigatorExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/TabNavigatorExample').default
@@ -508,25 +510,6 @@ const WithoutBabelPluginExample: React.FC = () =>
   );
 const WobbleExample: React.FC = () =>
   React.createElement(require('./WobbleExample').default as React.FC);
-
-export const REAPlatform = {
-  IOS: 'ios',
-  ANDROID: 'android',
-  MACOS: 'macos',
-  WEB: 'web',
-};
-
-export interface Example {
-  icon?: string;
-  title: string;
-  screen: React.FC;
-  shouldWork?: {
-    ios: boolean;
-    android: boolean;
-  };
-  disabledPlatforms?: (typeof REAPlatform)[keyof typeof REAPlatform][];
-  needsBundleMode?: boolean;
-}
 
 export const EXAMPLES: Record<string, Example> = {
   // About
@@ -582,6 +565,10 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📊',
     title: 'Systrace section',
     screen: SystraceSectionExample,
+  SlowAnimationsExample: {
+    icon: '🐢',
+    title: 'Slow animations',
+    screen: SlowAnimationsExample,
   },
   SyncBackToReactExample: {
     icon: '🔄',
@@ -608,27 +595,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Third party components',
     screen: ThirdPartyComponentsExample,
   },
-  Synchronizable: {
-    icon: '🔄',
-    title: 'Synchronizable performance',
-    screen: SynchronizablePerformanceExample,
-    disabledPlatforms: [REAPlatform.WEB],
-  },
   ReactFreeze: {
     icon: '❄️',
     title: 'React freeze',
     screen: FreezeExample,
-  },
-  FetchExample: {
-    icon: '📡',
-    title: 'Fetch & XHR (Bundle Mode)',
-    screen: FetchExample,
-    needsBundleMode: true,
-  },
-  ModifyExample: {
-    icon: '🪛',
-    title: 'Modify',
-    screen: ModifyExample,
   },
   CircularSliderExample: {
     icon: '🔘',
@@ -654,12 +624,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⬆️',
     title: 'Bottom sheet',
     screen: BottomSheetExample,
-  },
-  CopySerializablePerformanceTest: {
-    icon: '🔄',
-    title: 'Copy serializable performance test',
-    screen: CopySerializablePerformanceTest,
-    disabledPlatforms: [REAPlatform.WEB],
   },
   FlatListWithLayoutAnimations: {
     icon: '🎻',
@@ -968,11 +932,6 @@ export const EXAMPLES: Record<string, Example> = {
       REAPlatform.MACOS,
     ],
   },
-  LogExample: {
-    icon: '⌨',
-    title: 'Log test',
-    screen: LogExample,
-  },
   HabitsExample: {
     icon: '🧑‍💻',
     title: 'Habits',
@@ -1078,6 +1037,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Color interpolation',
     screen: ColorInterpolationExample,
   },
+  ContrastColorExample: {
+    icon: '🔲',
+    title: 'Contrast color',
+    screen: ContrastColorExample,
+  },
   ExtrapolationExample: {
     title: 'Extrapolation example',
     screen: ExtrapolationExample,
@@ -1127,6 +1091,10 @@ export const EXAMPLES: Record<string, Example> = {
   BasicLayoutAnimation: {
     title: '[LA] Basic layout animation',
     screen: BasicLayoutAnimation,
+  },
+  LayoutAnimationBatchSync: {
+    title: '[LA] Batch synchronization',
+    screen: LayoutAnimationBatchSyncExample,
   },
   BasicNestedAnimation: {
     title: '[LA] Basic nested animation',
@@ -1263,6 +1231,15 @@ export const EXAMPLES: Record<string, Example> = {
   DefaultAnimationsOverrides: {
     title: '[LA] Default layout animations overrides',
     screen: DefaultAnimationsOverrides,
+  },
+  NestedExitingCleanupExample: {
+    icon: '🧹',
+    title: '[LA] Nested exiting cleanup',
+    screen: NestedExitingCleanupExample,
+  },
+  FinalFrameAccuracyExample: {
+    screen: FinalFrameAccuracyExample,
+    title: '[LA] Final frame accuracy',
   },
 
   // Shared Element Transitions

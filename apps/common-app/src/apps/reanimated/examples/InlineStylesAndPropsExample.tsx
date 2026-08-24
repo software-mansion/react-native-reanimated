@@ -86,7 +86,6 @@ export default function InlineStylesAndPropsExample() {
         editable={false}
         style={styles.input}
         defaultValue="false"
-        // @ts-expect-error `text` is the native prop backing TextInput's value
         text={textSv}
       />
     </View>

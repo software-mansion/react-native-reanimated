@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <variant>
 
 namespace reanimated::css {
 
@@ -128,12 +129,16 @@ folly::dynamic ViewStylesRepository::getStyleProp(const Tag tag, const PropertyP
 folly::dynamic ViewStylesRepository::getPropertyValue(const folly::dynamic &value, const PropertyPath &propertyPath) {
   const folly::dynamic *currentValue = &value;
 
-  for (size_t i = 0; i < propertyPath.size(); ++i) {
-    if (currentValue->isNull() || currentValue->empty()) {
-      return {};
+  for (const auto &segment : propertyPath) {
+    if (const auto *arrayIndex = std::get_if<size_t>(&segment)) {
+      if (!currentValue->isArray() || *arrayIndex >= currentValue->size()) {
+        return {};
+      }
+      currentValue = &(*currentValue)[*arrayIndex];
+      continue;
     }
 
-    const auto &propName = propertyPath[i];
+    const auto &propName = std::get<std::string>(segment);
 
     if (!currentValue->isObject()) {
       return {};
@@ -150,22 +155,7 @@ folly::dynamic ViewStylesRepository::getPropertyValue(const folly::dynamic &valu
         return {};
       }
 
-      if (i + 1 >= propertyPath.size()) {
-        return transform;
-      }
-
-      const std::string &transformPropName = propertyPath[i + 1];
-
-      for (const auto &transformEntry : transform) {
-        if (transformEntry.isObject()) {
-          auto transformPropIt = transformEntry.find(transformPropName);
-          if (transformPropIt != transformEntry.items().end()) {
-            return transformPropIt->second;
-          }
-        }
-      }
-
-      return {};
+      return transform;
     }
 
     auto propIt = currentValue->find(propName);

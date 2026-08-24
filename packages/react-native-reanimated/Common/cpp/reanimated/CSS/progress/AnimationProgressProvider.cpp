@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <utility>
 
@@ -15,7 +16,7 @@ AnimationProgressProvider::AnimationProgressProvider(
     const AnimationDirection direction,
     EasingFunction easingFunction,
     const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs)
-    : RawProgressProvider(timestamp, duration, delay),
+    : TimeProgressProvider(timestamp, duration, delay),
       iterationCount_(iterationCount),
       direction_(direction),
       easingFunction_(std::move(easingFunction)),
@@ -59,7 +60,70 @@ double AnimationProgressProvider::getKeyframeProgress(const double fromOffset, c
 }
 
 AnimationProgressState AnimationProgressProvider::getState() const {
-  return state_;
+  if (lifecycle_.hasEnded()) {
+    return AnimationProgressState::Finished;
+  }
+  if (pauseTimestamp_ > 0) {
+    return AnimationProgressState::Paused;
+  }
+  return lifecycle_.hasStarted() ? AnimationProgressState::Running : AnimationProgressState::Pending;
+}
+
+void AnimationProgressProvider::setMilestoneReporter(RunLifecycle::Reporter reporter) {
+  lifecycle_.setMilestoneReporter(std::move(reporter));
+}
+
+void AnimationProgressProvider::abort(const double timestamp) {
+  cancelTimestamp_ = timestamp;
+  lifecycle_.abort();
+}
+
+double AnimationProgressProvider::elapsedTimeAt(const MilestoneTime time) const {
+  switch (time) {
+    case MilestoneTime::IntervalStart:
+      return intervalStart();
+    case MilestoneTime::IntervalEnd:
+      return intervalEnd();
+    case MilestoneTime::IterationStart:
+      return iterationStart();
+    case MilestoneTime::IterationEnd:
+      return iterationEnd();
+    case MilestoneTime::ActiveTime:
+      return activeTimeAtCancel();
+  }
+}
+
+double AnimationProgressProvider::intervalStart() const {
+  // A negative delay starts the animation partway through.
+  const auto elapsedTime = std::max(0.0, -delay_);
+
+  // An infinite animation has no total duration to be capped against.
+  if (iterationCount_ < 0) {
+    return elapsedTime;
+  }
+  return std::min(elapsedTime, duration_ * iterationCount_);
+}
+
+double AnimationProgressProvider::iterationStart() const {
+  return (currentIteration_ - 1) * duration_;
+}
+
+double AnimationProgressProvider::iterationEnd() const {
+  return currentIteration_ * duration_;
+}
+
+double AnimationProgressProvider::intervalEnd() const {
+  // An infinite run reaches here by being made infinite after it had already
+  // finished, which starts it again. Its interval never ends, and the web
+  // reports that literally.
+  if (iterationCount_ < 0) {
+    return std::numeric_limits<double>::infinity();
+  }
+  return duration_ * iterationCount_;
+}
+
+double AnimationProgressProvider::activeTimeAtCancel() const {
+  return std::max(0.0, cancelTimestamp_ - getStartTimestamp(cancelTimestamp_));
 }
 
 double AnimationProgressProvider::getStartTimestamp(const double timestamp) const {
@@ -81,15 +145,14 @@ void AnimationProgressProvider::play(const double timestamp) {
 }
 
 void AnimationProgressProvider::update(const double timestamp) {
-  RawProgressProvider::update(timestamp);
-  state_ = computeState(timestamp);
+  TimeProgressProvider::update(timestamp);
+  lifecycle_.reachPhase(computePhase(timestamp), currentIteration_);
 }
 
 void AnimationProgressProvider::resetProgress() {
-  RawProgressProvider::resetProgress();
+  TimeProgressProvider::resetProgress();
   currentIteration_ = 1;
   previousIterationsDuration_ = 0;
-  state_ = AnimationProgressState::Pending;
 }
 
 std::optional<double> AnimationProgressProvider::calculateRawProgress(const double timestamp) {
@@ -120,27 +183,29 @@ double AnimationProgressProvider::getTotalPausedTime(const double timestamp) con
 }
 
 bool AnimationProgressProvider::shouldFinish(const double timestamp) const {
-  if (iterationCount_ == 0) {
-    return true;
-  }
   if (iterationCount_ == -1) {
     return false;
   }
   const auto elapsedDuration = timestamp - getStartTimestamp(timestamp);
+  // Ordered first: a run still in its delay is not over, however short it is.
+  if (elapsedDuration < 0) {
+    return false;
+  }
+  if (iterationCount_ == 0) {
+    return true;
+  }
   return elapsedDuration >= duration_ * iterationCount_;
 }
 
-AnimationProgressState AnimationProgressProvider::computeState(const double timestamp) const {
+RunPhase AnimationProgressProvider::computePhase(const double timestamp) const {
   if (shouldFinish(timestamp)) {
-    return AnimationProgressState::Finished;
+    return RunPhase::After;
   }
-  if (pauseTimestamp_ > 0) {
-    return AnimationProgressState::Paused;
-  }
+  // A paused run sits at its start timestamp, so this covers it too.
   if (timestamp < getStartTimestamp(timestamp) || !rawProgress_.has_value()) {
-    return AnimationProgressState::Pending;
+    return RunPhase::Before;
   }
-  return AnimationProgressState::Running;
+  return RunPhase::Active;
 }
 
 double AnimationProgressProvider::updateIterationProgress(const double currentIterationElapsedTime) {

@@ -342,14 +342,6 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onGestureCancel() {
   return {};
 }
 
-void LayoutAnimationsProxy_Experimental::startSurface(const SurfaceId surfaceId) {
-  const auto node = std::make_shared<LightNode>();
-  node->current.componentName = "RootView";
-  node->current.tag = surfaceId;
-  node->current.props = std::make_shared<BaseViewProps>();
-  lightNodes_[surfaceId] = node;
-}
-
 void LayoutAnimationsProxy_Experimental::insertContainers(
     ShadowViewMutationList &filteredMutations,
     int &rootChildCount,

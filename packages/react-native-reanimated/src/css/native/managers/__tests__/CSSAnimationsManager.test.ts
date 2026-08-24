@@ -4,6 +4,7 @@ import type { ShadowNodeWrapper } from '../../../../commonTypes';
 import { ANIMATION_NAME_PREFIX } from '../../../constants';
 import { CSSKeyframesRuleBase } from '../../../models';
 import type { CSSAnimationProperties } from '../../../types';
+import { CSS_EVENT_MASK } from '../../events';
 import { cssKeyframesRegistry, CSSKeyframesRuleImpl } from '../../keyframes';
 import { normalizeSingleCSSAnimationSettings } from '../../normalization';
 import {
@@ -70,6 +71,7 @@ describe('CSSAnimationsManager', () => {
             newAnimationSettings: {
               0: normalizeSingleCSSAnimationSettings(animationProperties),
             },
+            eventMask: 0,
           }
         );
 
@@ -106,6 +108,7 @@ describe('CSSAnimationsManager', () => {
             settingsUpdates: {
               0: { duration: 3000, timingFunction: 'ease-in', delay: 0 },
             },
+            eventMask: 0,
           }
         );
         expect(unregisterCSSAnimations).not.toHaveBeenCalled();
@@ -140,6 +143,7 @@ describe('CSSAnimationsManager', () => {
             newAnimationSettings: {
               0: normalizeSingleCSSAnimationSettings(newAnimationProperties),
             },
+            eventMask: 0,
           }
         );
         expect(unregisterCSSAnimations).not.toHaveBeenCalled();
@@ -290,6 +294,7 @@ describe('CSSAnimationsManager', () => {
                 0: expect.objectContaining({ duration: 2000 }),
                 1: expect.objectContaining({ duration: 2000 }),
               },
+              eventMask: 0,
             }
           );
 
@@ -304,6 +309,7 @@ describe('CSSAnimationsManager', () => {
             COMPOUND_COMPONENT_NAME,
             {
               animationNames: [animation2Name, animation1Name],
+              eventMask: 0,
             }
           );
         });
@@ -324,6 +330,7 @@ describe('CSSAnimationsManager', () => {
                 0: expect.objectContaining({ duration: 2000 }),
                 1: expect.objectContaining({ duration: 500 }),
               },
+              eventMask: 0,
             }
           );
 
@@ -342,6 +349,7 @@ describe('CSSAnimationsManager', () => {
                 0: { duration: 2000 },
                 1: { duration: 500 },
               },
+              eventMask: 0,
             }
           );
         });
@@ -392,6 +400,48 @@ describe('CSSAnimationsManager', () => {
         expect(unregisterCSSAnimations).not.toHaveBeenCalled();
         expect(applyCSSAnimations).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('event mask', () => {
+    const ANIMATION = {
+      animationName: { from: { opacity: 0 } },
+      animationDuration: '2s',
+    } satisfies CSSAnimationProperties;
+
+    test('sends the requested mask alongside the animation', () => {
+      manager.update(ANIMATION, CSS_EVENT_MASK.animationEnd);
+
+      expect(applyCSSAnimations).toHaveBeenLastCalledWith(
+        shadowNodeWrapper,
+        COMPOUND_COMPONENT_NAME,
+        expect.objectContaining({ eventMask: CSS_EVENT_MASK.animationEnd })
+      );
+    });
+
+    test('sends the new mask when only the mask changes', () => {
+      manager.update(ANIMATION, CSS_EVENT_MASK.animationEnd);
+      manager.update(
+        ANIMATION,
+        CSS_EVENT_MASK.animationEnd | CSS_EVENT_MASK.animationStart
+      );
+
+      expect(applyCSSAnimations).toHaveBeenCalledTimes(2);
+      expect(applyCSSAnimations).toHaveBeenLastCalledWith(
+        shadowNodeWrapper,
+        COMPOUND_COMPONENT_NAME,
+        {
+          eventMask:
+            CSS_EVENT_MASK.animationEnd | CSS_EVENT_MASK.animationStart,
+        }
+      );
+    });
+
+    test('does not re-apply when the mask is unchanged', () => {
+      manager.update(ANIMATION, CSS_EVENT_MASK.animationEnd);
+      manager.update(ANIMATION, CSS_EVENT_MASK.animationEnd);
+
+      expect(applyCSSAnimations).toHaveBeenCalledTimes(1);
     });
   });
 });
