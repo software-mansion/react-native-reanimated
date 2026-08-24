@@ -1,6 +1,6 @@
 'use strict';
 
-import type { ShareableHost, Synchronizable } from 'react-native-worklets';
+import type { FixedSynchronizable, ShareableHost } from 'react-native-worklets';
 
 import { logger } from './common';
 import type { Mutable } from './commonTypes';
@@ -33,7 +33,7 @@ export type Listener<TValue> = (newValue: TValue) => void;
 
 export function mutableHostDecorator<TValue>(
   mutable: ShareableHost<TValue> & Mutable<TValue>,
-  dirtyFlag?: Synchronizable<boolean>
+  dirtyFlag?: FixedSynchronizable<boolean>
 ): ShareableHost<TValue> & Mutable<TValue> {
   'worklet';
   const listeners = new Map<number, Listener<TValue>>();
@@ -41,7 +41,7 @@ export function mutableHostDecorator<TValue>(
   let isDirty = false;
 
   const setDirtyFlag = (dirty: boolean) => {
-    dirtyFlag?.setBlocking(dirty);
+    dirtyFlag?.setDirty(dirty);
     isDirty = dirty;
   };
 
