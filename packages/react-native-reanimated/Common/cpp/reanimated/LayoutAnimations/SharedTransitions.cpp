@@ -164,6 +164,8 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
       if (transitionState_ == TransitionState::CANCELLED) {
         tagsToRestore_.push_back(restoreMap_[tag][BEFORE]);
       }
+
+      layoutAnimationsManager_->clearSharedTransitionConfig(tag);
     }
     if (transitionState_ == TransitionState::END) {
       synchronized_ = false;
