@@ -120,9 +120,9 @@ Unlocks the Synchronizable. Does nothing on already unlocked Synchronizable. Wor
 
 ## C++ integration
 
-Synchronizable can be created and accessed from C++ code, including fixed-type Synchronizables and their `setDirty` method. The C++ API doesn't support setter functions.
+Synchronizable can be created and accessed from C++ code. The C++ API doesn't support setter functions.
 
 ## Remarks
 
 - Synchronizable is not reactive, meaning that there are no built-in mechanisms to notify Runtimes when its value changes. Runtimes need to poll the value to detect changes.
-- Synchronizable on a JavaScript Runtime is a wrapper to a reference to the actual Synchronizable living in C++. The value is copied to/from C++ on each access. For non-fixed-type Synchronizables, each access also serializes the value.
+- Synchronizable on a JavaScript Runtime is a wrapper to a reference to the actual Synchronizable living in C++. The value held by Synchronizable is copied to/from C++ on each access.

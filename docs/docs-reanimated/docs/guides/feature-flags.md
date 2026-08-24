@@ -110,7 +110,7 @@ When enabled, CSS animations and transitions will also work for a limited set of
 
 ### `USE_SYNCHRONIZABLE_FOR_MUTABLES`
 
-This feature flag was supposed to speedup shared value reads on the RN runtime by reducing the number of calls to `executeOnUIRuntimeSync`. When enabled, mutables (which are the primitives behind shared values) used [Synchronizable](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable) state to check if they should sync with the UI Runtime. For more details, see [PR #8080](https://github.com/software-mansion/react-native-reanimated/pull/8080).
+This feature flag was supposed to speedup shared value reads on the RN runtime by reducing the number of calls to `runOnUISync`. When enabled, mutables (which are the primitives behind shared values) used [Synchronizable](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable) state to check if they should sync with the UI Runtime. For more details, see [PR #8080](https://github.com/software-mansion/react-native-reanimated/pull/8080).
 
 The flag was removed in 4.6.0 – mutables now always use Synchronizable state.
 
