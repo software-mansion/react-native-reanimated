@@ -40,6 +40,11 @@ export function mutableHostDecorator<TValue>(
   let value = mutable.value;
   let isDirty = false;
 
+  const setDirtyFlag = (dirty: boolean) => {
+    dirtyFlag?.setBlocking(dirty);
+    isDirty = dirty;
+  };
+
   Object.defineProperties(mutable, {
     value: {
       get() {
@@ -83,7 +88,7 @@ export function mutableHostDecorator<TValue>(
       },
       set(newValue: TValue) {
         if (!isDirty) {
-          this.setDirty(true);
+          setDirtyFlag(true);
         }
         value = newValue;
         listeners.forEach((listener) => {
@@ -123,11 +128,8 @@ export function mutableHostDecorator<TValue>(
       configurable: true,
     },
 
-    setDirty: {
-      value: (dirty: boolean) => {
-        dirtyFlag?.setBlocking(dirty);
-        isDirty = dirty;
-      },
+    setDirtyFlag: {
+      value: setDirtyFlag,
       writable: true,
       enumerable: true,
       configurable: true,

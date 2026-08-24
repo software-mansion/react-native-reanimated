@@ -6,11 +6,13 @@
 
 ### 🛠 Breaking changes
 
+- Remove the `USE_SYNCHRONIZABLE_FOR_MUTABLES` feature flag. Mutables always use Synchronizable state now. ([#10298](https://github.com/software-mansion/react-native-reanimated/pull/10298) by [@tjzel](https://github.com/tjzel))
+
 ### 🎉 New features
 
 ### 🐛 Bug fixes
 
-- Fix `EXC_BAD_ACCESS` crash in `-[REANodesManager performOperations]` when called before the `_performOperations` block is registered on iOS. ([#10229](https://github.com/software-mansion/react-native-reanimated/pull/10229) by [@tomekzaw](https://github.com/tomekzaw))
-- Fix missing unmount of ancestors of animated components with exiting animations in experimental Layout Animations Proxy ([#10103](https://github.com/software-mansion/react-native-reanimated/pull/10103) by [@pawicao](https://github.com/pawicao))
-
 ### 💡 Others
+
+- Add `fontVariationSettings` to the style properties config, so the package type-checks against React Native 0.88 ([#10239](https://github.com/software-mansion/react-native-reanimated/pull/10239) by [@tjzel](https://github.com/tjzel))
+- Add `backgroundPosition`, `backgroundRepeat` and `backgroundSize` to the style properties config, so the package type-checks against React Native 0.88. ([#10354](https://github.com/software-mansion/react-native-reanimated/pull/10354) by [@tjzel](https://github.com/tjzel))

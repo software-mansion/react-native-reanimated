@@ -6,6 +6,6 @@
       "@/*": ["../common-app/src/*"]
     }
   },
-  "include": ["."],
+  "include": [".", "../common-app/src/images.d.ts"],
   "exclude": ["android", "ios", ".bundle", "vendor", "assets"]
 }

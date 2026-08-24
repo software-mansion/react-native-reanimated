@@ -1,3 +1,6 @@
+#include <react/renderer/mounting/Differentiator.h>
+#include <react/renderer/mounting/MountingCoordinator.h>
+#include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
@@ -24,6 +27,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     ShadowViewMutationList mutations) const {
   ReanimatedSystraceSection d("pullTransaction");
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (!isLightTreeInitialized(surfaceId)) {
+    pendingTransactions_[surfaceId].emplace_back(telemetry.getRevisionNumber(), mutations);
+    return MountingTransaction{surfaceId, transactionNumber, std::move(mutations), telemetry};
+  }
   const PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
   auto rootChildCount = static_cast<int>(lightNodes_[surfaceId]->children.size());
@@ -267,6 +274,9 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         } else if (layoutAnimationsManager_->hasLayoutAnimation(tag, ENTERING)) {
           entering_.push_back(node);
           filteredMutations.push_back(mutation);
+          auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
+          filteredMutations.push_back(
+              ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, hiddenView, mutation.parentTag));
         } else if (sharedTransitionManager_->tagToName_.contains(tag) && isInsideInactiveBoundary(node)) {
           filteredMutations.push_back(mutation);
           auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
@@ -302,6 +312,91 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
       }
     }
   }
+}
+
+void LayoutAnimationsProxy_Experimental::applyInitialMutationsToLightTree(
+    const ShadowViewMutationList &mutations) const {
+  for (const auto &mutation : mutations) {
+    maybeUpdateWindowDimensions(mutation);
+    switch (mutation.type) {
+      case ShadowViewMutation::Update: {
+        auto &node = lightNodes_[mutation.newChildShadowView.tag];
+        react_native_assert(node && "LightNode not found");
+        node->previous = mutation.oldChildShadowView;
+        node->current = mutation.newChildShadowView;
+        break;
+      }
+      case ShadowViewMutation::Create: {
+        const auto &node = std::make_shared<LightNode>();
+        node->current = mutation.newChildShadowView;
+        react_native_assert(!lightNodes_.contains(mutation.newChildShadowView.tag) && "LightNode already exists");
+        lightNodes_[mutation.newChildShadowView.tag] = node;
+        break;
+      }
+      case ShadowViewMutation::Delete: {
+        lightNodes_.erase(mutation.oldChildShadowView.tag);
+        break;
+      }
+      case ShadowViewMutation::Insert: {
+        auto &node = lightNodes_[mutation.newChildShadowView.tag];
+        auto &parent = lightNodes_[mutation.parentTag];
+        react_native_assert(node && parent && "LightNode not found");
+        parent->children.insert(parent->children.begin() + mutation.index, node);
+        node->parent = parent;
+        break;
+      }
+      case ShadowViewMutation::Remove: {
+        const auto &parent = lightNodes_[mutation.parentTag];
+        react_native_assert(
+            parent->children[mutation.index]->current.tag == mutation.oldChildShadowView.tag &&
+            "Indicies are wrong in Remove mutation");
+        parent->children.erase(parent->children.begin() + mutation.index);
+        break;
+      }
+      default: {
+        react_native_assert(false && "Unsupported mutation type");
+        break;
+      }
+    }
+  }
+}
+
+void LayoutAnimationsProxy_Experimental::startSurface(const ShadowTree &shadowTree) {
+  const auto mountingCoordinator = shadowTree.getMountingCoordinator();
+  mountingCoordinator->setMountingOverrideDelegate(weak_from_this());
+  // The delegate must be set before the base revision is read, so that every
+  // transaction is either contained in the revision or buffered by the proxy.
+  initializeLightTree(shadowTree.getSurfaceId(), mountingCoordinator->getBaseRevision());
+}
+
+void LayoutAnimationsProxy_Experimental::initializeLightTree(
+    const SurfaceId surfaceId,
+    const ShadowTreeRevision &baseRevision) {
+  ShadowViewMutationList initialMutations;
+  if (baseRevision.rootShadowNode) {
+    const auto emptyRoot =
+        baseRevision.rootShadowNode->ShadowNode::clone({.children = ShadowNode::emptySharedShadowNodeSharedList()});
+    initialMutations = calculateShadowViewMutations(*emptyRoot, *baseRevision.rootShadowNode);
+  }
+
+  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  react_native_assert(!isLightTreeInitialized(surfaceId) && "Light tree is already initialized");
+  if (baseRevision.rootShadowNode) {
+    const auto &size = baseRevision.rootShadowNode->getLayoutMetrics().frame.size;
+    surfaceManager.updateWindow(surfaceId, size.width, size.height);
+  }
+  const auto root = std::make_shared<LightNode>();
+  root->current.componentName = "RootView";
+  root->current.tag = surfaceId;
+  root->current.props = std::make_shared<BaseViewProps>();
+  lightNodes_[surfaceId] = root;
+  applyInitialMutationsToLightTree(initialMutations);
+  for (const auto &[revisionNumber, mutations] : pendingTransactions_[surfaceId]) {
+    if (revisionNumber > baseRevision.number) {
+      applyInitialMutationsToLightTree(mutations);
+    }
+  }
+  pendingTransactions_.erase(surfaceId);
 }
 
 // MARK: Layout Animation Updates
@@ -353,6 +448,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
   if (--layoutAnimation.count > 0) {
     return {};
   }
+  layoutAnimation.isExitingWhenSettled = shouldRemove;
   maybeSettledAnimationTags_.insert(tag);
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
@@ -474,7 +570,8 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceI
 
     const auto layoutAnimationIt = layoutAnimations_.find(tag);
 
-    if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isSettled()) {
+    if (layoutAnimationIt == layoutAnimations_.end() ||
+        (layoutAnimationIt->second.isSettled() && layoutAnimationIt->second.isExitingWhenSettled)) {
       continue;
     }
 
@@ -635,6 +732,9 @@ void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) con
   }
   if (layoutAnimationIt->second.isSettled()) {
     // Already settled - cleanupAnimations will erase it together with its updateMap entry.
+    // Mark it as exiting so addOngoingAnimations doesn't flush a pending Update
+    // after the caller has queued this view for removal.
+    layoutAnimationIt->second.isExitingWhenSettled = true;
     return;
   }
   layoutAnimations_.erase(layoutAnimationIt);

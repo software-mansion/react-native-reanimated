@@ -21,6 +21,16 @@ const SANITIZER_REPORT_DIR = path.join(projectRoot, 'sanitizer-reports');
 // -enable*Sanitizer alone does not reach the Pods project on CI (the built
 // products carried no -fsanitize flags), so each build setting is also forced
 // as a command-line override, which applies to every target.
+/**
+ * @type {Record<
+ *   string,
+ *   {
+ *     buildArgs: string[];
+ *     launchEnv: Record<string, string>;
+ *     runtimePrefix: string;
+ *   }
+ * >}
+ */
 const SANITIZERS = {
   thread: {
     buildArgs: ['-enableThreadSanitizer', 'YES', 'ENABLE_THREAD_SANITIZER=YES'],
@@ -56,25 +66,30 @@ if (args.help) {
 const LIBRARY = String(args.library ?? '').toLowerCase();
 const PLATFORM = String(args.platform ?? 'ios').toLowerCase();
 const METRO_PORT = Number(args['metro-port'] ?? 8081);
-const CONFIGURATION = args.configuration ?? 'DebugRuntimeTests';
+const CONFIGURATION =
+  typeof args.configuration === 'string'
+    ? args.configuration
+    : 'DebugRuntimeTests';
 const IS_RELEASE = CONFIGURATION.startsWith('Release');
 // Release builds have no Metro; the app then reports to port 8082.
 const PORT = Number(args.port ?? (IS_RELEASE ? 8082 : METRO_PORT + 1));
-const ONLY = args.only
-  ? args.only
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean)
-  : null;
+const ONLY =
+  typeof args.only === 'string'
+    ? args.only
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : null;
 const CONNECT_TIMEOUT_MS = Number(args['connect-timeout'] ?? 600) * 1000;
 const IDLE_TIMEOUT_MS = Number(args['idle-timeout'] ?? 600) * 1000;
 const SHOULD_LAUNCH = args.launch === true || args.launch === '';
 const BUILD_ONLY = args['build-only'] === true || args['build-only'] === '';
 const SKIP_BUILD = args['skip-build'] === true || args['skip-build'] === '';
-const SIMULATOR = args.simulator ?? 'iPhone 17';
-const UDID = args.udid ?? null;
-const SERIAL = args.serial ?? null;
-const AVD = args.avd ?? null;
+const SIMULATOR =
+  typeof args.simulator === 'string' ? args.simulator : 'iPhone 17';
+const UDID = typeof args.udid === 'string' ? args.udid : null;
+const SERIAL = typeof args.serial === 'string' ? args.serial : null;
+const AVD = typeof args.avd === 'string' ? args.avd : null;
 const SANITIZER = args.sanitizer ? String(args.sanitizer).toLowerCase() : null;
 
 if (!BUILD_ONLY && !LIBRARIES.includes(LIBRARY)) {
@@ -115,18 +130,32 @@ if (BUILD_ONLY && SHOULD_LAUNCH) {
   process.exit(1);
 }
 
+/** @typedef {{ type?: string; [key: string]: any }} DeviceMessage */
+
+/** @type {import('ws').WebSocket | null} */
 let client = null;
 let runStartedAt = 0;
 let exitCode = 1;
 let runFinished = false;
+/** @type {ReturnType<typeof setTimeout> | null} */
 let connectTimer = null;
+/** @type {ReturnType<typeof setTimeout> | null} */
 let idleTimer = null;
+/** @type {import('child_process').ChildProcess | null} */
 let metroChild = null;
+
+/**
+ * @param {unknown} error
+ * @returns {string}
+ */
+function errorMessage(error) {
+  return error instanceof Error ? error.message : String(error);
+}
 
 const wss = new WebSocketServer({ port: PORT, host: '0.0.0.0' });
 
 wss.on('error', (error) => {
-  if (error.code === 'EADDRINUSE') {
+  if (/** @type {{ code?: string }} */ (error).code === 'EADDRINUSE') {
     console.error(
       `[runtime-tests] port ${PORT} is already in use — is another runtime-tests server (or Metro) running there? Stop it or pass --port.`
     );
@@ -179,7 +208,10 @@ wss.on('connection', (socket) => {
     try {
       msg = JSON.parse(raw.toString());
     } catch (error) {
-      console.warn('[runtime-tests] failed to parse message:', error.message);
+      console.warn(
+        '[runtime-tests] failed to parse message:',
+        errorMessage(error)
+      );
       return;
     }
     handleMessage(msg);
@@ -216,6 +248,7 @@ wss.on('connection', (socket) => {
   });
 });
 
+/** @param {DeviceMessage} msg */
 function handleMessage(msg) {
   switch (msg.type) {
     case 'hello':
@@ -235,8 +268,11 @@ function handleMessage(msg) {
   }
 }
 
+/** @param {DeviceMessage} msg */
 function onHello(msg) {
-  const declared = (msg.suites ?? []).map((s) => s.name);
+  /** @type {{ name: string }[]} */
+  const suites = msg.suites ?? [];
+  const declared = suites.map((s) => s.name);
   const deviceLibrary = String(msg.library ?? '').toLowerCase();
   console.log(
     `[runtime-tests] hello from ${msg.platform} ${msg.platformVersion} (${deviceLibrary}), ${declared.length} suites declared: ${declared.join(', ')}`
@@ -273,6 +309,7 @@ function onHello(msg) {
   console.log('[runtime-tests] start sent, running tests…');
 }
 
+/** @param {DeviceMessage} msg */
 function onLog(msg) {
   const logArgs = Array.isArray(msg.args) ? msg.args : [];
   const line = logArgs.join(' ');
@@ -288,6 +325,7 @@ function onLog(msg) {
   }
 }
 
+/** @param {DeviceMessage} msg */
 function onDone(msg) {
   const elapsed = ((Date.now() - runStartedAt) / 1000).toFixed(1);
   console.log('');
@@ -314,6 +352,7 @@ function onDone(msg) {
   }
 }
 
+/** @param {DeviceMessage} msg */
 function onError(msg) {
   console.error(`[runtime-tests] device reported error: ${msg.message}`);
   if (msg.stack) {
@@ -328,6 +367,7 @@ function onError(msg) {
   }
 }
 
+/** @param {Record<string, unknown>} payload */
 function send(payload) {
   if (client && client.readyState === client.OPEN) {
     client.send(JSON.stringify(payload));
@@ -344,6 +384,7 @@ function resetIdleTimer() {
   }, IDLE_TIMEOUT_MS);
 }
 
+/** @param {'connect' | 'idle'} which */
 function clearTimer(which) {
   if (which === 'connect' && connectTimer) {
     clearTimeout(connectTimer);
@@ -376,11 +417,12 @@ function printSanitizerReports() {
   );
 }
 
+/** @param {number} code */
 function shutdown(code) {
   printSanitizerReports();
   clearTimer('connect');
   clearTimer('idle');
-  if (metroChild && !metroChild.killed) {
+  if (metroChild && !metroChild.killed && metroChild.pid !== undefined) {
     try {
       process.kill(-metroChild.pid, 'SIGTERM');
     } catch {
@@ -397,6 +439,12 @@ function shutdown(code) {
   setTimeout(() => process.exit(code), 1000).unref();
 }
 
+/**
+ * @param {string} cmd
+ * @param {string[]} cmdArgs
+ * @param {import('child_process').ExecFileOptions} [options]
+ * @returns {Promise<{ stdout: string; stderr: string }>}
+ */
 function run(cmd, cmdArgs, options = {}) {
   return new Promise((resolve, reject) => {
     execFile(
@@ -416,9 +464,16 @@ function run(cmd, cmdArgs, options = {}) {
   });
 }
 
+/**
+ * @param {string} host
+ * @param {number} port
+ * @param {number} [timeoutMs]
+ * @returns {Promise<boolean>}
+ */
 function probeTcp(host, port, timeoutMs = 500) {
   return new Promise((resolve) => {
     const socket = new net.Socket();
+    /** @param {boolean} result */
     const done = (result) => {
       socket.destroy();
       resolve(result);
@@ -431,6 +486,10 @@ function probeTcp(host, port, timeoutMs = 500) {
   });
 }
 
+/**
+ * @param {number} [timeoutMs]
+ * @returns {Promise<boolean>}
+ */
 function probeMetro(timeoutMs = 1000) {
   return new Promise((resolve) => {
     const req = http.get(
@@ -487,10 +546,10 @@ async function ensureMetroRunning() {
       detached: true,
     }
   );
-  metroChild.stdout.on('data', (chunk) => {
+  metroChild.stdout?.on('data', (chunk) => {
     process.stdout.write(`[metro] ${chunk}`);
   });
-  metroChild.stderr.on('data', (chunk) => {
+  metroChild.stderr?.on('data', (chunk) => {
     process.stderr.write(`[metro] ${chunk}`);
   });
   metroChild.on('exit', (code) => {
@@ -546,6 +605,7 @@ async function resolveSimulator() {
   return fallback;
 }
 
+/** @param {{ name: string; udid: string; state: string }} device */
 async function ensureBooted(device) {
   if (device.state !== 'Booted') {
     console.log(`[runtime-tests] booting ${device.name} (${device.udid})`);
@@ -602,16 +662,23 @@ async function appPath() {
     ],
     { cwd: iosDir }
   );
+  /** @type {{ buildSettings?: Record<string, string> }[]} */
   const entries = JSON.parse(stdout.slice(stdout.indexOf('[')));
   const entry =
     entries.find(
       (candidate) =>
-        candidate.buildSettings.WRAPPER_NAME === 'FabricExample.app'
+        candidate.buildSettings?.WRAPPER_NAME === 'FabricExample.app'
     ) ?? entries[0];
+
+  if (!entry?.buildSettings) {
+    throw new Error(`No build settings for configuration ${CONFIGURATION}`);
+  }
+
   const { TARGET_BUILD_DIR, WRAPPER_NAME } = entry.buildSettings;
   return path.join(TARGET_BUILD_DIR, WRAPPER_NAME);
 }
 
+/** @param {string} udid */
 async function installAndLaunch(udid) {
   const app = await appPath();
   if (SANITIZER) {
@@ -628,7 +695,7 @@ async function installAndLaunch(udid) {
     'write',
     BUNDLE_ID,
     'RCT_jsLocation',
-    `localhost:${METRO_PORT}`,
+    `127.0.0.1:${METRO_PORT}`,
   ]);
 
   await run('xcrun', ['simctl', 'terminate', udid, BUNDLE_ID]).catch(() => {});
@@ -650,6 +717,11 @@ async function installAndLaunch(udid) {
   });
 }
 
+/**
+ * @param {string} dir
+ * @param {string} name
+ * @returns {string}
+ */
 function sdkTool(dir, name) {
   const sdkRoot = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
   if (sdkRoot) {
@@ -663,10 +735,20 @@ function sdkTool(dir, name) {
 
 const ADB = sdkTool('platform-tools', 'adb');
 
+/**
+ * @param {string} serial
+ * @param {string[]} adbArgs
+ * @param {import('child_process').ExecFileOptions} [options]
+ * @returns {Promise<{ stdout: string; stderr: string }>}
+ */
 function adb(serial, adbArgs, options = {}) {
   return run(ADB, ['-s', serial, ...adbArgs], options);
 }
 
+/**
+ * @param {number} ms
+ * @returns {Promise<void>}
+ */
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -741,6 +823,7 @@ async function resolveAndroidDevice() {
   throw new Error(`Emulator ${avd} did not boot within 300s`);
 }
 
+/** @param {string} serial */
 async function buildAndroidApp(serial) {
   const abi = await adb(serial, ['shell', 'getprop', 'ro.product.cpu.abi'])
     .then(({ stdout }) => stdout.trim())
@@ -758,6 +841,7 @@ async function buildAndroidApp(serial) {
   await run(path.join(androidDir, 'gradlew'), gradleArgs, { cwd: androidDir });
 }
 
+/** @param {string} serial */
 async function installAndLaunchAndroid(serial) {
   const buildType = CONFIGURATION[0].toLowerCase() + CONFIGURATION.slice(1);
   const apk = path.join(
@@ -829,6 +913,7 @@ if (SHOULD_LAUNCH) {
   });
 }
 
+/** @param {Error & { stdout?: string; stderr?: string }} error */
 function printCommandFailure(error) {
   console.error(`[runtime-tests] ${error.message}`);
   if (error.stdout) {
@@ -839,7 +924,12 @@ function printCommandFailure(error) {
   }
 }
 
+/** @param {string} app */
 function assertSanitizerRuntimeEmbedded(app) {
+  if (!SANITIZER) {
+    return;
+  }
+
   const prefix = SANITIZERS[SANITIZER].runtimePrefix;
   const frameworks = path.join(app, 'Frameworks');
   const embedded =
@@ -912,7 +1002,12 @@ Ports and timeouts
   --help                    Show this message.`);
 }
 
+/**
+ * @param {string[]} argv
+ * @returns {Record<string, string | true>}
+ */
 function parseArgs(argv) {
+  /** @type {Record<string, string | true>} */
   const out = {};
   for (let i = 0; i < argv.length; i++) {
     const token = argv[i];

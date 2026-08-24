@@ -13,7 +13,6 @@
 
 #include <memory>
 #include <string>
-#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -118,8 +117,6 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
   mutable std::unordered_set<SurfaceId> surfacesToRemove_;
   bool shouldFlushDeadNodes(bool surfaceDropped) const;
 #ifdef ANDROID
-  mutable std::thread::id uiThreadId_;
-
   void maybeScheduleCleanupPull(SurfaceContext &surfaceCtx, SurfaceId surfaceId, bool flushedDeadNodes) const;
   void scheduleDeferredCleanupPull(SurfaceId surfaceId) const;
 #endif
@@ -163,7 +160,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
 
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) override;
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
-  void startSurface(const SurfaceId surfaceId) override;
+  void startSurface(const facebook::react::ShadowTree &shadowTree) override;
   SurfaceContext &getSurfaceContext(SurfaceId surfaceId) const;
   void maybeCancelAnimation(const int tag) const;
 

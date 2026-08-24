@@ -8,12 +8,12 @@ import {
 import {
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   test,
 } from '../../../ReJest/RuntimeTestsApi';
 
 describe('WeakRef on Worklet Runtime', () => {
-  const workletRuntime = getWorkletRuntimeFromPool('test');
+  const [workletRuntime] = getWorkletRuntimesFromPool(1);
   const runtimes = [
     {
       name: 'UI',

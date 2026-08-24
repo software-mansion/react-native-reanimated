@@ -81,9 +81,7 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 }
 #endif
 
-std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
-    const UpdatesBatch &updatesBatch,
-    const bool allowPartialUpdates) {
+std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBatch, const bool allowPartialUpdates) {
   static const std::unordered_set<std::string> synchronousPropNames = {
       "opacity",
       "elevation",
@@ -145,8 +143,8 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
   UpdatesBatch synchronousUpdatesBatch;
   UpdatesBatch shadowTreeUpdatesBatch;
 
-  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
-    if (allowPartialUpdates) {
+  if (allowPartialUpdates) {
+    for (const auto &[shadowNodeFamily, props] : updatesBatch) {
       folly::dynamic synchronousProps = folly::dynamic::object();
       folly::dynamic shadowTreeProps = folly::dynamic::object();
 
@@ -166,17 +164,25 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       if (!shadowTreeProps.empty()) {
         shadowTreeUpdatesBatch.emplace_back(shadowNodeFamily, std::move(shadowTreeProps));
       }
-    } else {
-      const bool hasOnlySynchronousProps = std::all_of(props.items().begin(), props.items().end(), [&](const auto &kv) {
-        return isSynchronous(kv.first.asString(), kv.second);
-      });
-
-      if (hasOnlySynchronousProps) {
-        synchronousUpdatesBatch.emplace_back(shadowNodeFamily, props);
-      } else {
-        shadowTreeUpdatesBatch.emplace_back(shadowNodeFamily, props);
-      }
     }
+
+    return {std::move(synchronousUpdatesBatch), std::move(shadowTreeUpdatesBatch)};
+  }
+
+  std::unordered_set<const ShadowNodeFamily *> familiesRequiringCommit;
+  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
+    const bool hasOnlySynchronousProps = std::all_of(props.items().begin(), props.items().end(), [&](const auto &kv) {
+      return isSynchronous(kv.first.asString(), kv.second);
+    });
+    if (!hasOnlySynchronousProps) {
+      familiesRequiringCommit.insert(shadowNodeFamily.get());
+    }
+  }
+
+  for (auto &[shadowNodeFamily, props] : updatesBatch) {
+    auto &targetBatch =
+        familiesRequiringCommit.contains(shadowNodeFamily.get()) ? shadowTreeUpdatesBatch : synchronousUpdatesBatch;
+    targetBatch.emplace_back(shadowNodeFamily, std::move(props));
   }
 
   return {std::move(synchronousUpdatesBatch), std::move(shadowTreeUpdatesBatch)};
@@ -225,7 +231,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           std::make_shared<CSSPlatformTransitionProxy>(
               platformDepMethodsHolder.cssCanRouteProperty,
               platformDepMethodsHolder.cssApplyTransition,
-              platformDepMethodsHolder.cssRemoveTransition),
+              platformDepMethodsHolder.cssRemoveTransition,
+              platformDepMethodsHolder.cssGetPlatformValue),
           cssEventsEmitter_)),
       pseudoStylesRegistry_(std::make_shared<PseudoStylesRegistry>(
           platformDepMethodsHolder.attachPseudoSelector,
@@ -1026,7 +1033,8 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
 }
 
 void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, const bool allowPartialUpdates) {
-  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] = partitionUpdates(updatesBatch, allowPartialUpdates);
+  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
+      partitionUpdates(std::move(updatesBatch), allowPartialUpdates);
 
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {

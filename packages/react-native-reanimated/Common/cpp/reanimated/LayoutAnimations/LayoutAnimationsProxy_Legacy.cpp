@@ -1,5 +1,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
+#include <worklets/Compat/StableApi.h>
 
+#include <ReactCommon/CallInvoker.h>
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
@@ -143,7 +145,7 @@ void LayoutAnimationsProxy_Legacy::reconcileContradictedRemovals(
 // we can safely cleanup on the UI thread since the surface is gone and no more mutations will be produced for it.
 bool LayoutAnimationsProxy_Legacy::shouldFlushDeadNodes([[maybe_unused]] const bool surfaceDropped) const {
 #ifdef ANDROID
-  return surfaceDropped || std::this_thread::get_id() != uiThreadId_;
+  return surfaceDropped || !worklets::isOnUIThread(uiScheduler_);
 #else
   return true;
 #endif
@@ -227,6 +229,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
   if (--layoutAnimation.count > 0) {
     return {};
   }
+  layoutAnimation.isExitingWhenSettled = shouldRemove;
   maybeSettledAnimationTags_.insert(tag);
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
@@ -530,12 +533,7 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(SurfaceId surfaceId, Sha
     auto layoutAnimationIt = layoutAnimations_.find(tag);
 
     if (layoutAnimationIt == layoutAnimations_.end() ||
-        // A settled animation is normally cleaned up without applying further
-        // updates. The exception is a flaky entering animation whose opacity was
-        // never restored (the view wasn't mounted in time) - we still need to
-        // apply that pending opacity, otherwise the view stays invisible. Only
-        // entering animations carry an opacity value.
-        (layoutAnimationIt->second.isSettled() && !layoutAnimationIt->second.opacity.has_value())) {
+        (layoutAnimationIt->second.isSettled() && layoutAnimationIt->second.isExitingWhenSettled)) {
       continue;
     }
 
@@ -790,7 +788,6 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
           auto &mutex = strongThis->mutex;
           auto lock = std::unique_lock<std::recursive_mutex>(mutex);
 #ifdef ANDROID
-          strongThis->uiThreadId_ = std::this_thread::get_id();
           if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
             // the view was removed before this start could run
             return;
@@ -851,7 +848,6 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
           auto &mutex = strongThis->mutex;
           auto lock = std::unique_lock<std::recursive_mutex>(mutex);
 #ifdef ANDROID
-          strongThis->uiThreadId_ = std::this_thread::get_id();
           if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
             // The view was removed before this start could run. Deliberately no
             // clearLayoutAnimationConfig: with tag reuse the config maps already
@@ -914,7 +910,6 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
           auto &mutex = strongThis->mutex;
           auto lock = std::unique_lock<std::recursive_mutex>(mutex);
 #ifdef ANDROID
-          strongThis->uiThreadId_ = std::this_thread::get_id();
           if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
             // the view was removed before this start could run
             return;
@@ -1066,9 +1061,19 @@ inline bool MutationNode::isMutationNode() {
   return true;
 }
 
-void LayoutAnimationsProxy_Legacy::startSurface(const SurfaceId surfaceId) {
-  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  surfaceContext_.try_emplace(surfaceId);
+void LayoutAnimationsProxy_Legacy::startSurface(const ShadowTree &shadowTree) {
+  const auto surfaceId = shadowTree.getSurfaceId();
+  const auto mountingCoordinator = shadowTree.getMountingCoordinator();
+  {
+    auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+    surfaceContext_.try_emplace(surfaceId);
+    const auto baseRevision = mountingCoordinator->getBaseRevision();
+    if (baseRevision.rootShadowNode) {
+      const auto &size = baseRevision.rootShadowNode->getLayoutMetrics().frame.size;
+      surfaceManager.updateWindow(surfaceId, size.width, size.height);
+    }
+  }
+  mountingCoordinator->setMountingOverrideDelegate(weak_from_this());
 }
 
 SurfaceContext &LayoutAnimationsProxy_Legacy::getSurfaceContext(const SurfaceId surfaceId) const {
