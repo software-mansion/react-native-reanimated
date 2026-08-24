@@ -2,7 +2,7 @@
 
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
-#include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/SynchronizableAccess.h>
 
 #include <memory>
@@ -29,6 +29,10 @@ class Synchronizable : public SynchronizableAccess,
     react_native_assert(synchronizable != nullptr && "[Worklets] Expected the object to be a Synchronizable.");
 
     return synchronizable;
+  }
+
+  bool isFixed() const {
+    return isFixed_;
   }
 
   /**
@@ -60,13 +64,17 @@ class Synchronizable : public SynchronizableAccess,
     auto synchronizableUnpacker = rt.global().getProperty(rt, "__synchronizableUnpacker");
     react_native_assert(synchronizableUnpacker.isObject() && "synchronizableUnpacker not found");
     auto ref = SerializableJSRef::newNativeStateObject(rt, this->shared_from_this());
-    return synchronizableUnpacker.getObject(rt).getFunction(rt).call(rt, std::move(ref));
+    return synchronizableUnpacker.getObject(rt).getFunction(rt).call(
+        rt, std::move(ref), facebook::jsi::Value(isFixed()));
   }
 
   ~Synchronizable() override = default;
 
  protected:
-  Synchronizable() : Serializable(ValueType::SynchronizableType) {}
+  explicit Synchronizable(bool isFixed) : Serializable(ValueType::SynchronizableType), isFixed_(isFixed) {}
+
+ private:
+  const bool isFixed_;
 };
 
 } // namespace worklets
