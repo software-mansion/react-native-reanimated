@@ -207,6 +207,8 @@ export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   fontSize: true,
   fontStyle: true,
   fontVariant: true,
+  // @ts-ignore Available since RN 0.88
+  fontVariationSettings: false, // TODO
   fontWeight: { process: processFontWeight },
   // Alignment
   textAlign: true,
