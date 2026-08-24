@@ -36,6 +36,15 @@ export type Synchronizable<TValue = unknown> = SerializableRef<TValue> &
     unlock(): void;
   };
 
+export type FixedSynchronizable<TValue extends number | boolean> =
+  Synchronizable<TValue> & {
+    setDirty(value: TValue): void;
+  };
+
+export type SynchronizableConfig = {
+  fixedType?: boolean;
+};
+
 /**
  * A {@link Synchronizable} which holds a value of a fixed primitive type. The
  * value is stored directly in native memory, without serialization.

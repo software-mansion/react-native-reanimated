@@ -1062,11 +1062,18 @@ inline bool MutationNode::isMutationNode() {
 }
 
 void LayoutAnimationsProxy_Legacy::startSurface(const ShadowTree &shadowTree) {
+  const auto surfaceId = shadowTree.getSurfaceId();
+  const auto mountingCoordinator = shadowTree.getMountingCoordinator();
   {
     auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-    surfaceContext_.try_emplace(shadowTree.getSurfaceId());
+    surfaceContext_.try_emplace(surfaceId);
+    const auto baseRevision = mountingCoordinator->getBaseRevision();
+    if (baseRevision.rootShadowNode) {
+      const auto &size = baseRevision.rootShadowNode->getLayoutMetrics().frame.size;
+      surfaceManager.updateWindow(surfaceId, size.width, size.height);
+    }
   }
-  shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(weak_from_this());
+  mountingCoordinator->setMountingOverrideDelegate(weak_from_this());
 }
 
 SurfaceContext &LayoutAnimationsProxy_Legacy::getSurfaceContext(const SurfaceId surfaceId) const {
