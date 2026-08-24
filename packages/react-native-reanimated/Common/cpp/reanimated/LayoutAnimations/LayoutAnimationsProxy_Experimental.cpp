@@ -381,6 +381,10 @@ void LayoutAnimationsProxy_Experimental::initializeLightTree(
 
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   react_native_assert(!isLightTreeInitialized(surfaceId) && "Light tree is already initialized");
+  if (baseRevision.rootShadowNode) {
+    const auto &size = baseRevision.rootShadowNode->getLayoutMetrics().frame.size;
+    surfaceManager.updateWindow(surfaceId, size.width, size.height);
+  }
   const auto root = std::make_shared<LightNode>();
   root->current.componentName = "RootView";
   root->current.tag = surfaceId;

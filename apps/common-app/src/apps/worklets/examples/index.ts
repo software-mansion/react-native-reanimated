@@ -16,8 +16,6 @@ const HermesSamplingProfilerExample: React.FC = () =>
   React.createElement(
     require('./HermesSamplingProfilerExample').default as React.FC
   );
-const ModifyExample: React.FC = () =>
-  React.createElement(require('./ModifyExample').default as React.FC);
 const SynchronizablePerformanceExample: React.FC = () =>
   React.createElement(require('./SynchronizableExample').default as React.FC);
 const SystraceSectionExample: React.FC = () =>
@@ -41,11 +39,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Fetch & XHR (Bundle Mode)',
     screen: FetchExample,
     needsBundleMode: true,
-  },
-  ModifyExample: {
-    icon: '🪛',
-    title: 'Modify',
-    screen: ModifyExample,
   },
   HermesSamplingProfilerExample: {
     icon: '📊',
