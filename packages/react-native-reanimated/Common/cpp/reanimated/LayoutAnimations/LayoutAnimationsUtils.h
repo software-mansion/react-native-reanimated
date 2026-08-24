@@ -81,8 +81,6 @@ enum class Intent : std::uint8_t {
   TO_DELETE = 2,
 };
 
-// The light tree mirrors the host tree. An exiting child is gone from the shadow tree but stays mounted,
-// so `children` holds it at its host position and shadow indices from RN must skip it.
 struct LightNode {
   ShadowView previous;
   ShadowView current;
@@ -107,7 +105,7 @@ struct LightNode {
   }
 
   int removeChild(const std::shared_ptr<LightNode> &child) {
-    for (int i = static_cast<int>(children.size()) - 1; i >= 0; i--) {
+    for (int i = children.size() - 1; i >= 0; i--) {
       if (children[i]->current.tag == child->current.tag) {
         if (children[i]->isExiting()) {
           exitingChildrenCount--;
