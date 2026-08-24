@@ -95,6 +95,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'Activity entering animation',
+    importTest: () => {
+      require('./tests/layoutAnimations/activityEntering.test');
+    },
+  },
+  {
     testSuiteName: 'entering and exiting',
     importTest: () => {
       require('./tests/layoutAnimations/entering/enteringColors.test');
