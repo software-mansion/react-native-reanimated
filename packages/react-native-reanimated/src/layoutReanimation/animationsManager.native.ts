@@ -38,12 +38,24 @@ function startObservingProgress(
   });
 }
 
-function stopObservingProgress(
+function removeProgressListener(
   tag: number,
   sharedValue: SharedValue<number>
 ): void {
   'worklet';
   sharedValue.removeListener(tag + TAG_OFFSET);
+}
+
+function stopObservingProgress(
+  tag: number,
+  sharedValue: SharedValue<number>,
+  scheduleFlush: () => void,
+  removeView = false
+): void {
+  'worklet';
+  removeProgressListener(tag, sharedValue);
+  global._notifyAboutEnd(tag, removeView);
+  scheduleFlush();
 }
 
 function createLayoutAnimationManager(): LayoutAnimationsManager {
@@ -115,7 +127,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         value = makeMutableUI(style.initialValues);
         mutableValuesForTag.set(tag, value);
       } else {
-        stopObservingProgress(tag, value);
+        removeProgressListener(tag, value);
         value._value = style.initialValues;
       }
 
@@ -124,9 +136,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
           currentAnimationForTag.delete(tag);
           mutableValuesForTag.delete(tag);
           const shouldRemoveView = type === LayoutAnimationType.EXITING;
-          stopObservingProgress(tag, value);
-          global._notifyAboutEnd(tag, shouldRemoveView);
-          scheduleFlush();
+          stopObservingProgress(tag, value, scheduleFlush, shouldRemoveView);
         }
         if (style.callback) {
           style.callback(finished);
