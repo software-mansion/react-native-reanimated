@@ -233,7 +233,7 @@ export interface Mutable<Value = unknown> extends SharedValue<Value> {
    * Defined only on the UI Runtime host mutable. Guest mutables and the web
    * implementation don't define it.
    */
-  setDirty?: (dirty: boolean) => void;
+  setDirtyFlag?: (dirty: boolean) => void;
 }
 
 export type MapperRawInputs = unknown[];

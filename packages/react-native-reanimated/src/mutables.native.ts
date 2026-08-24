@@ -34,7 +34,7 @@ function mutableGuestDecorator<TValue>(
           if (dirtyFlag.getBlocking()) {
             const uiValueGetter = (svArg: Mutable<TValue>) =>
               runOnUISync((sv) => {
-                sv.setDirty?.(false);
+                sv.setDirtyFlag?.(false);
                 return sv.value;
               }, svArg);
             latest = uiValueGetter(mutable as Mutable<TValue>);
