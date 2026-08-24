@@ -16,4 +16,3 @@
 
 - Add `fontVariationSettings` to the style properties config, so the package type-checks against React Native 0.88 ([#10239](https://github.com/software-mansion/react-native-reanimated/pull/10239) by [@tjzel](https://github.com/tjzel))
 - Add `backgroundPosition`, `backgroundRepeat` and `backgroundSize` to the style properties config, so the package type-checks against React Native 0.88. ([#10354](https://github.com/software-mansion/react-native-reanimated/pull/10354) by [@tjzel](https://github.com/tjzel))
-- Rename the internal `Mutable.setDirty` to `Mutable.setDirtyFlag`. ([#10261](https://github.com/software-mansion/react-native-reanimated/pull/10261) by [@tjzel](https://github.com/tjzel))
