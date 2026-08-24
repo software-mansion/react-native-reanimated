@@ -12,7 +12,7 @@ Feature flags allow developers to opt-in for experimental changes or opt-out fro
 | [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#android_synchronously_update_ui_props)                   | [static](#static-feature-flags) |  4.0.0   |  –   |                  `false`                  |
 | [`IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#ios_synchronously_update_ui_props)                           | [static](#static-feature-flags) |  4.2.0   |  –   |                  `false`                  |
 | [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) | [static](#static-feature-flags) |  4.1.0   |  –   | `true` for 4.4.0+  `false` otherwise |
-| [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               | [static](#static-feature-flags) |  4.1.0   |  –   | `true` for 4.3.0+  `false` otherwise |
+| [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               | [static](#static-feature-flags) |  4.1.0   | 4.7.0 | `true` for 4.3.0+  `false` otherwise |
 | [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](#use_commit_hook_only_for_react_commits)                 | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+  `false` otherwise |
 | [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions)                           | [static](#static-feature-flags) |  4.2.0   |  –   |                  `false`                  |
 | [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#force_react_render_for_settled_animations)           | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+  `false` otherwise |
@@ -100,7 +100,9 @@ When enabled, CSS animations and transitions will also work for a limited set of
 
 ### `USE_SYNCHRONIZABLE_FOR_MUTABLES`
 
-This feature flag is supposed to speedup shared value reads on the RN runtime by reducing the number of calls to `executeOnUIRuntimeSync`. When enabled, mutables (which are the primitives behind shared values) use [Synchronizable](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable) state to check if they should sync with the UI Runtime. For more details, see [PR #8080](https://github.com/software-mansion/react-native-reanimated/pull/8080).
+This feature flag was supposed to speedup shared value reads on the RN runtime by reducing the number of calls to `runOnUISync`. When enabled, mutables (which are the primitives behind shared values) used [Synchronizable](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable) state to check if they should sync with the UI Runtime. For more details, see [PR #8080](https://github.com/software-mansion/react-native-reanimated/pull/8080).
+
+The flag was removed in 4.6.0 – mutables now always use Synchronizable state.
 
 ### `USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`
 
