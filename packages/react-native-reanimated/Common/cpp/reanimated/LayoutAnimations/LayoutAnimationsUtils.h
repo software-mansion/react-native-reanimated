@@ -5,6 +5,7 @@
 #include <react/renderer/mounting/ShadowView.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
+#include <algorithm>
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
@@ -80,20 +81,71 @@ enum class Intent : std::uint8_t {
   TO_DELETE = 2,
 };
 
+// The light tree mirrors the host tree. An exiting child is gone from the shadow tree but stays mounted,
+// so `children` holds it at its host position and shadow indices from RN must skip it.
 struct LightNode {
   ShadowView previous;
   ShadowView current;
   ExitingState state = ExitingState::UNDEFINED;
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
+  int exitingChildrenCount = 0;
+
+  bool isExiting() const {
+    return state != ExitingState::UNDEFINED;
+  }
+
+  void setExitingState(ExitingState newState) {
+    const bool startsExiting = !isExiting() && newState != ExitingState::UNDEFINED;
+    state = newState;
+    if (!startsExiting) {
+      return;
+    }
+    if (const auto parentNode = parent.lock()) {
+      parentNode->exitingChildrenCount++;
+    }
+  }
+
   int removeChild(const std::shared_ptr<LightNode> &child) {
-    for (int i = children.size() - 1; i >= 0; i--) {
+    for (int i = static_cast<int>(children.size()) - 1; i >= 0; i--) {
       if (children[i]->current.tag == child->current.tag) {
+        if (children[i]->isExiting()) {
+          exitingChildrenCount--;
+        }
         children.erase(children.begin() + i);
         return i;
       }
     }
     return -1;
+  }
+
+  void clearChildren() {
+    children.clear();
+    exitingChildrenCount = 0;
+  }
+
+  // A new child goes after the exiting children that sit at its shadow position.
+  int toHostIndex(const int shadowIndex) const {
+    react_native_assert(
+        exitingChildrenCount ==
+            std::count_if(children.begin(), children.end(), [](const auto &child) { return child->isExiting(); }) &&
+        "exitingChildrenCount is out of sync");
+    react_native_assert(
+        shadowIndex >= 0 && shadowIndex <= static_cast<int>(children.size()) - exitingChildrenCount &&
+        "shadowIndex is out of range");
+    if (exitingChildrenCount == 0) {
+      return shadowIndex;
+    }
+    const auto childrenCount = static_cast<int>(children.size());
+    int hostIndex = 0;
+    int liveChildrenSeen = 0;
+    while (hostIndex < childrenCount && (liveChildrenSeen < shadowIndex || children[hostIndex]->isExiting())) {
+      if (!children[hostIndex]->isExiting()) {
+        liveChildrenSeen++;
+      }
+      hostIndex++;
+    }
+    return hostIndex;
   }
 };
 

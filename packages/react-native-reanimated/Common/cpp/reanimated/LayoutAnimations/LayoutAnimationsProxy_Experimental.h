@@ -191,7 +191,12 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   std::array<float, 3>
   getTranslateForTransformOrigin(float viewWidth, float viewHeight, const TransformOrigin &transformOrigin) const;
 
-  void handleRemovals(ShadowViewMutationList &filteredMutations, std::vector<std::shared_ptr<LightNode>> &roots) const;
+  void handleSubtreeRemoval(
+      const std::shared_ptr<LightNode> &node,
+      const std::shared_ptr<LightNode> &parent,
+      int hostIndex,
+      ShadowViewMutationList &filteredMutations) const;
+  void flushDeadNodes(ShadowViewMutationList &filteredMutations) const;
 
   void addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList &mutations) const;
   void updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation) const;
