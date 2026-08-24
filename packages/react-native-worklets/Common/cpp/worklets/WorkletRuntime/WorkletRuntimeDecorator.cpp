@@ -175,10 +175,6 @@ void WorkletRuntimeDecorator::decorate(
     return makeSerializableWorklet(rt, value.asObject(rt), false);
   });
 
-  jsi_utils::installJsiFunction(rt, "_createSerializableInitializer", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return makeSerializableInitializer(rt, value.asObject(rt));
-  });
-
   jsi_utils::installJsiFunction(rt, "_createSerializableSynchronizable", [](jsi::Runtime &rt, const jsi::Value &value) {
     return SerializableJSRef::newNativeStateObject(rt, extractSerializableOrThrow(rt, value));
   });

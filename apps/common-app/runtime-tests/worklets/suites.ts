@@ -65,7 +65,6 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
   {
     testSuiteName: 'babel plugin',
     importTest: () => {
-      require('./tests/plugin/contextObjects.test');
       require('./tests/plugin/fileWorkletization.test');
       require('./tests/plugin/jsxInWorklets.test');
       require('./tests/plugin/recursion.test');

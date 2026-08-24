@@ -183,10 +183,6 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  createSerializableInitializer(obj: object) {
-    return this.#workletsModuleProxy.createSerializableInitializer(obj);
-  }
-
   createSerializableNonWorkletFunction<TArgs extends unknown[], TReturn>(
     fun: (...args: TArgs) => TReturn,
     functionName: string | undefined

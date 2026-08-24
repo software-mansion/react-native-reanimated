@@ -7,7 +7,6 @@
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <memory>
-#include <mutex>
 #include <new>
 #include <optional>
 #include <string>
@@ -268,29 +267,6 @@ class SerializableImport : public Serializable {
  protected:
   const double source_;
   const std::string imported_;
-};
-
-class SerializableInitializer : public Serializable {
- private:
-  // We don't release the initializer since the handle can get
-  // initialized in parallel on multiple threads. However this is not a problem,
-  // since the final value is taken from a cache on the runtime which guarantees
-  // sequential access.
-  std::unique_ptr<SerializableObject> initializer_;
-  std::unique_ptr<jsi::Value> remoteValue_;
-  mutable std::mutex initializationMutex_;
-  jsi::Runtime *remoteRuntime_;
-
- public:
-  SerializableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject)
-      : Serializable(ValueType::HandleType),
-        initializer_(std::make_unique<SerializableObject>(rt, initializerObject)) {}
-
-  ~SerializableInitializer() override {
-    cleanupRuntimeAware(remoteRuntime_, remoteValue_);
-  }
-
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
 };
 
 class SerializableString : public Serializable {

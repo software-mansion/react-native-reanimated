@@ -43,7 +43,7 @@ class Serializable {
     SetType,
     WorkletType,
     RemoteFunctionType,
-    HandleType,
+    HandleType, /* unused */
     HostObjectType,
     HostFunctionType,
     ArrayBufferType,

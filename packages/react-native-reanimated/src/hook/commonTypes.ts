@@ -16,6 +16,7 @@ import type {
   AnimatedStyle,
   InstanceOrElement,
   InternalHostInstance,
+  Mutable,
   ShadowNodeWrapper,
   StyleUpdaterContainer,
 } from '../commonTypes';
@@ -66,11 +67,9 @@ export type AnimatedRefOnJS = AnimatedRef<InternalHostInstance>;
 
 /**
  * `AnimatedRef` is mapped to this type on the UI thread via a serializable
- * handle.
+ * mutable.
  */
-export type AnimatedRefOnUI = {
-  (): number | ShadowNodeWrapper | null;
-};
+export type AnimatedRefOnUI = Mutable<ShadowNodeWrapper | null>;
 
 type ReanimatedPayload = {
   eventName: string;

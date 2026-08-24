@@ -42,7 +42,8 @@ function setNativePropsNative(
     logger.warn('setNativeProps() can only be used on the UI runtime.');
     return;
   }
-  const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
+  const shadowNodeWrapper = (animatedRef as AnimatedRefOnUI)
+    .value as ShadowNodeWrapper;
   processColorsInProps(updates);
   global._updateProps!([{ shadowNodeWrapper, updates }]);
 }

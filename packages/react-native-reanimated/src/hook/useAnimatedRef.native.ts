@@ -9,7 +9,7 @@ import {
 import type { InstanceOrElement, ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { makeMutable } from '../mutables';
-import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
+import type { AnimatedRef } from './commonTypes';
 import { useAnimatedRefBase } from './useAnimatedRefCommon';
 
 /**
@@ -35,13 +35,8 @@ export function useAnimatedRef<
   });
 
   if (!serializableMappingCache.get(resultRef)) {
-    const animatedRefSerializableHandle = createSerializable({
-      __init: (): AnimatedRefOnUI => {
-        'worklet';
-        return () => sharedWrapper.value;
-      },
-    });
-    serializableMappingCache.set(resultRef, animatedRefSerializableHandle);
+    const animatedRefSerializable = createSerializable(sharedWrapper);
+    serializableMappingCache.set(resultRef, animatedRefSerializable);
   }
 
   return resultRef;

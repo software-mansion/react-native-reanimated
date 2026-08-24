@@ -70,7 +70,7 @@ std::shared_ptr<Serializable> extractSerializable(
     case Serializable::ValueType::RemoteFunctionType:
       return extractSerializableOrThrow<SerializableRemoteFunction>(rt, value, errorMessage);
     case Serializable::ValueType::HandleType:
-      return extractSerializableOrThrow<SerializableInitializer>(rt, value, errorMessage);
+      throw std::runtime_error("[Worklets] Not implemented.");
     case Serializable::ValueType::HostObjectType:
       return extractSerializableOrThrow<SerializableHostObject>(rt, value, errorMessage);
     case Serializable::ValueType::HostFunctionType:

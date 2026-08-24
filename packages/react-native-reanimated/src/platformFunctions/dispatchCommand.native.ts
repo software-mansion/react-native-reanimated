@@ -3,7 +3,6 @@
 import { RuntimeKind } from 'react-native-worklets';
 
 import { IS_JEST, logger } from '../common';
-import type { ShadowNodeWrapper } from '../commonTypes';
 import type { AnimatedRefOnJS, AnimatedRefOnUI } from '../hook/commonTypes';
 import type { DispatchCommand } from './types';
 
@@ -30,7 +29,7 @@ function dispatchCommandNative(
     return;
   }
 
-  const shadowNodeWrapper = animatedRef();
+  const shadowNodeWrapper = (animatedRef as AnimatedRefOnUI).value;
 
   // This prevents crashes if ref has not been set yet
   if (!shadowNodeWrapper) {
@@ -40,11 +39,7 @@ function dispatchCommandNative(
     return;
   }
 
-  global._dispatchCommand!(
-    shadowNodeWrapper as ShadowNodeWrapper,
-    commandName,
-    args
-  );
+  global._dispatchCommand!(shadowNodeWrapper, commandName, args);
 }
 
 function dispatchCommandJest() {

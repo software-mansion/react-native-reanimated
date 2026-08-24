@@ -39,8 +39,6 @@ jsi::Value makeSerializableClone(
       // by `makeSerializableCloneOnUIRecursive` which doesn't
       // make Retaining Serializables.
       return makeSerializableWorklet(rt, object, false);
-    } else if (!object.getProperty(rt, "__init").isUndefined()) {
-      return makeSerializableInitializer(rt, object);
     } else if (object.isFunction(rt)) {
       auto fun = object.asFunction(rt);
       if (fun.isHostFunction(rt)) {
@@ -290,32 +288,6 @@ jsi::Value SerializableImport::toJSValue(jsi::Runtime &rt) {
 
   const auto imported = jsi::String::createFromUtf8(rt, imported_);
   return metroRequire.asObject(rt).asFunction(rt).call(rt, source_).asObject(rt).getProperty(rt, imported);
-}
-
-jsi::Value SerializableInitializer::toJSValue(jsi::Runtime &rt) {
-  if (remoteValue_ == nullptr) {
-    auto initObj = initializer_->toJSValue(rt);
-    auto value = std::make_unique<jsi::Value>(
-        getValueUnpacker(rt).call(rt, initObj, jsi::String::createFromAscii(rt, "Handle")));
-
-    // We are locking the initialization here since the thread that is
-    // initializing can be preempted on runtime lock. E.g.
-    // UI thread can be preempted on initialization of a shared value and then
-    // JS thread can try to access the shared value, locking the whole runtime.
-    // If we put the lock on `getValueUnpacker` part (basically any part that
-    // requires runtime) we would get a deadlock since UI thread would never
-    // release it.
-    std::unique_lock<std::mutex> lock(initializationMutex_);
-    if (remoteValue_ == nullptr) {
-      remoteValue_ = std::move(value);
-      remoteRuntime_ = &rt;
-    }
-  }
-  if (&rt == remoteRuntime_) {
-    return jsi::Value(rt, *remoteValue_);
-  }
-  auto initObj = initializer_->toJSValue(rt);
-  return getValueUnpacker(rt).call(rt, initObj, jsi::String::createFromAscii(rt, "Handle"));
 }
 
 jsi::Value SerializableString::toJSValue(jsi::Runtime &rt) {

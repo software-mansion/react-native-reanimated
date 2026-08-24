@@ -2,10 +2,8 @@ import type { NodePath } from '@babel/core';
 import type {
   ClassBody,
   ObjectExpression,
-  ObjectMethod,
   Program,
   Statement,
-  ThisExpression,
   VariableDeclaration,
 } from '@babel/types';
 import {
@@ -16,11 +14,8 @@ import {
   isExpressionStatement,
   isIdentifier,
   isMemberExpression,
-  isObjectProperty,
-  objectProperty,
 } from '@babel/types';
 
-import { contextObjectMarker } from './contextObject';
 import { addWorkletDirectivesToPath } from './directives';
 import type { WorkletsPluginPass } from './types';
 import {
@@ -80,11 +75,7 @@ function processWorkletizableEntity(
   if (isWorkletizableFunctionPath(nodePath)) {
     addWorkletDirectivesToPath(nodePath);
   } else if (isWorkletizableObjectPath(nodePath)) {
-    if (isImplicitContextObject(nodePath)) {
-      appendWorkletContextObjectMarker(nodePath.node);
-    } else {
-      processWorkletAggregator(nodePath, state);
-    }
+    processWorkletAggregator(nodePath, state);
   } else if (nodePath.isVariableDeclaration()) {
     processVariableDeclaration(nodePath, state);
   } else if (nodePath.isClassDeclaration()) {
@@ -125,50 +116,6 @@ function processWorkletAggregator(
       processWorkletizableEntity(valuePath, state);
     }
   });
-}
-
-function appendWorkletContextObjectMarker(objectExpression: ObjectExpression) {
-  if (
-    objectExpression.properties.some(
-      (value) =>
-        isObjectProperty(value) &&
-        isIdentifier(value.key) &&
-        value.key.name === contextObjectMarker
-    )
-  ) {
-    return;
-  }
-
-  objectExpression.properties.push(
-    objectProperty(identifier(`${contextObjectMarker}`), booleanLiteral(true))
-  );
-}
-
-export function isImplicitContextObject(
-  path: NodePath<ObjectExpression>
-): boolean {
-  const propertyPaths = path.get('properties');
-
-  return propertyPaths.some((propertyPath) => {
-    if (!propertyPath.isObjectMethod()) {
-      return false;
-    }
-
-    return hasThisExpression(propertyPath);
-  });
-}
-
-function hasThisExpression(path: NodePath<ObjectMethod>): boolean {
-  let result = false;
-
-  path.traverse({
-    ThisExpression(thisPath: NodePath<ThisExpression>) {
-      result = true;
-      thisPath.stop();
-    },
-  });
-
-  return result;
 }
 
 function appendWorkletClassMarker(classBody: ClassBody) {

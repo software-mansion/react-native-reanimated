@@ -2,11 +2,7 @@
 import { RuntimeKind } from 'react-native-worklets';
 
 import { IS_JEST, logger } from '../common';
-import type {
-  InstanceOrElement,
-  MeasuredDimensions,
-  ShadowNodeWrapper,
-} from '../commonTypes';
+import type { InstanceOrElement, MeasuredDimensions } from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
@@ -36,15 +32,15 @@ function measureNative(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
     return null;
   }
 
-  const viewTag = animatedRef();
-  if (viewTag === -1) {
+  const viewTag = (animatedRef as AnimatedRefOnUI).value;
+  if (!viewTag) {
     logger.warn(
       `The view with tag ${viewTag} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );
     return null;
   }
 
-  const measured = global._measure!(viewTag as ShadowNodeWrapper);
+  const measured = global._measure!(viewTag);
   if (measured === null) {
     logger.warn(
       `The view has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`

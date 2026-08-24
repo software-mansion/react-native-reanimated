@@ -283,11 +283,6 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return makeSerializableHostObject(rt, at<0>(args).asObject(rt).asHostObject(rt));
       });
 
-  jsi_utils::addMethod<1>(
-      rt, obj, "createSerializableInitializer", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        return makeSerializableInitializer(rt, at<0>(args).asObject(rt));
-      });
-
   jsi_utils::addMethod<2>(
       rt, obj, "createSerializableArray", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         return makeSerializableArray(rt, at<0>(args).asObject(rt).asArray(rt), at<1>(args));

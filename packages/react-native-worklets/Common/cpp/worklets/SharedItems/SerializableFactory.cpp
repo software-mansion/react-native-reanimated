@@ -48,11 +48,6 @@ jsi::Value makeSerializableWorklet(jsi::Runtime &rt, const jsi::Object &object, 
   return SerializableJSRef::newNativeStateObject(rt, serializable);
 }
 
-jsi::Value makeSerializableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject) {
-  const auto serializable = std::make_shared<SerializableInitializer>(rt, initializerObject);
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
 jsi::Value makeSerializableHostFunction(
     jsi::Runtime &rt,
     const jsi::HostFunctionType &function,
