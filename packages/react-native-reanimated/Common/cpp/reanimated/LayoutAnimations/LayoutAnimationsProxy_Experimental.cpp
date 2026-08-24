@@ -36,14 +36,15 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   auto rootChildCount = static_cast<int>(lightNodes_[surfaceId]->children.size());
   const std::vector<std::shared_ptr<MutationNode>> roots;
   const bool isInTransition = static_cast<bool>(transitionState_);
+  ShadowViewMutationList teardownMutations;
 
   reconcileContradictedRemovals(mutations, filteredMutations);
 
   if (isInTransition) {
-    updateLightTree(propsParserContext, mutations, filteredMutations);
+    updateLightTree(propsParserContext, mutations, filteredMutations, teardownMutations);
     handleProgressTransition(filteredMutations, mutations, propsParserContext, surfaceId);
   } else if (!synchronized_) {
-    updateLightTree(propsParserContext, mutations, filteredMutations);
+    updateLightTree(propsParserContext, mutations, filteredMutations, teardownMutations);
     if (!lightNodes_.contains(closingScreenTag_)) {
       topScreen[surfaceId] = findActiveBoundary(lightNodes_[surfaceId]);
       synchronized_ = true;
@@ -58,7 +59,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
     }
 
-    updateLightTree(propsParserContext, mutations, filteredMutations);
+    updateLightTree(propsParserContext, mutations, filteredMutations, teardownMutations);
 
     auto afterTopScreen = findActiveBoundary(root);
     topScreen[surfaceId] = afterTopScreen;
@@ -104,6 +105,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   entering_.clear();
   layout_.clear();
   exiting_.clear();
+
+  filteredMutations.insert(filteredMutations.end(), teardownMutations.begin(), teardownMutations.end());
 
   flushDeadNodes(filteredMutations);
 
@@ -190,7 +193,8 @@ bool LayoutAnimationsProxy_Experimental::shouldOverridePullTransaction() const {
 void LayoutAnimationsProxy_Experimental::updateLightTree(
     const PropsParserContext &propsParserContext,
     const ShadowViewMutationList &mutations,
-    ShadowViewMutationList &filteredMutations) const {
+    ShadowViewMutationList &filteredMutations,
+    ShadowViewMutationList &teardownMutations) const {
   ReanimatedSystraceSection s("updateLightTree");
   std::unordered_set<Tag> inserted, moved, deleted;
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
@@ -320,7 +324,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
               ShadowViewMutation::RemoveMutation(parentTag, mutation.oldChildShadowView, hostIndex));
           parent->children.erase(parent->children.begin() + hostIndex);
         } else if (!deleted.contains(parentTag)) {
-          handleSubtreeRemoval(node, parent, hostIndex, filteredMutations);
+          handleSubtreeRemoval(node, parent, hostIndex, filteredMutations, teardownMutations);
         }
         break;
       }
@@ -500,25 +504,27 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
 }
 
 // A subtree that animates keeps its place in the host tree, so nothing is emitted for its root.
-// A subtree that does not is removed in RN's order: the children first, then the root.
+// A subtree that does not animate emits its Remove in stream order. Its teardown mounts at the
+// end of the transaction, so native code that reads a view on unmount still sees its children.
 void LayoutAnimationsProxy_Experimental::handleSubtreeRemoval(
     const std::shared_ptr<LightNode> &node,
     const std::shared_ptr<LightNode> &parent,
     const int hostIndex,
-    ShadowViewMutationList &filteredMutations) const {
+    ShadowViewMutationList &filteredMutations,
+    ShadowViewMutationList &teardownMutations) const {
   ReanimatedSystraceSection s("handleSubtreeRemoval");
   const StartAnimationsRecursivelyConfig config = {
       .shouldRemoveSubviewsWithoutAnimations = true,
       .shouldAnimate = true,
       .isScreenPop = false,
   };
-  if (startAnimationsRecursively(node, filteredMutations, config)) {
+  if (startAnimationsRecursively(node, teardownMutations, config)) {
     return;
   }
   react_native_assert(!node->isExiting() && "A subtree that does not animate must stay UNDEFINED");
   maybeCancelAnimation(node->current.tag);
   filteredMutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, hostIndex));
-  filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
+  teardownMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
   parent->children.erase(parent->children.begin() + hostIndex);
 }
 

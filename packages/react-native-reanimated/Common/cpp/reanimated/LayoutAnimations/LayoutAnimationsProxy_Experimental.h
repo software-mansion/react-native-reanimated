@@ -110,7 +110,8 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   void updateLightTree(
       const PropsParserContext &propsParserContext,
       const ShadowViewMutationList &mutations,
-      ShadowViewMutationList &filteredMutations) const;
+      ShadowViewMutationList &filteredMutations,
+      ShadowViewMutationList &teardownMutations) const;
 
   void reconcileContradictedRemovals(const ShadowViewMutationList &mutations, ShadowViewMutationList &filteredMutations)
       const;
@@ -195,7 +196,8 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       const std::shared_ptr<LightNode> &node,
       const std::shared_ptr<LightNode> &parent,
       int hostIndex,
-      ShadowViewMutationList &filteredMutations) const;
+      ShadowViewMutationList &filteredMutations,
+      ShadowViewMutationList &teardownMutations) const;
   void flushDeadNodes(ShadowViewMutationList &filteredMutations) const;
 
   void addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList &mutations) const;
