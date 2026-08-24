@@ -284,19 +284,22 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         if (moved.contains(tag) && layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
           filteredMutations.push_back(
               ShadowViewMutation::InsertMutation(mutation.parentTag, node->previous, hostIndex));
-          break;
-        }
-        filteredMutations.push_back(
-            ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
-        if (layoutAnimationsManager_->hasLayoutAnimation(tag, ENTERING)) {
+        } else if (layoutAnimationsManager_->hasLayoutAnimation(tag, ENTERING)) {
           entering_.push_back(node);
+          filteredMutations.push_back(
+              ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
           auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
           filteredMutations.push_back(
               ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, hiddenView, mutation.parentTag));
         } else if (sharedTransitionManager_->tagToName_.contains(tag) && isInsideInactiveBoundary(node)) {
+          filteredMutations.push_back(
+              ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
           auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
           filteredMutations.push_back(
               ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, hiddenView, mutation.parentTag));
+        } else {
+          filteredMutations.push_back(
+              ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
         }
         break;
       }
