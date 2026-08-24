@@ -9,6 +9,10 @@ sidebar_position: 42 # Use alphabetical order
 
 Creates a new [Synchronizable](/docs/memory/synchronizable) holding the provided initial value. Returns the created Synchronizable.
 
+By default it creates a [Synchronizable Dynamic](/docs/memory/synchronizable#synchronizable-dynamic).
+
+You can pass a config option to create [Synchronizable Fixed](/docs/memory/synchronizable#synchronizable-fixed) instead.
+
 ## Reference
 
 ```tsx
@@ -42,17 +46,18 @@ const counter = createSynchronizable(0, { fixedType: true });
 
 ### initialValue
 
-The initial value to be held by the created Synchronizable. As it has to be serialized before passing to C++, it must be one of the supported types listed in the [Serializable](/docs/memory/serializable) documentation. With the [`fixedType` option](#config) it isn't serialized and must be a `number` or a `boolean`.
+The initial value to be held by the created Synchronizable. As it has to be serialized before passing to C++, it must be one of the supported types listed in the [Serializable](/docs/memory/serializable) documentation.
 
-### config
+With the [`fixedType` option](#config) it isn't serialized and must be a `number` or a `boolean`.
+
+<Badges version="0.13.0">
+  ### config
+</Badges>
 
 Optional configuration for the Synchronizable. An object with the following properties:
 
-- `fixedType` - when `true`, the created Synchronizable stores its `number` or `boolean` value directly in native memory, without serialization, and exposes the additional [`setDirty`](/docs/memory/synchronizable#setdirty) method. The initial value must be a `number` or a `boolean` and the value type cannot change afterwards - a write with a value of the other type fails an assertion in development builds and is ignored in production builds. Defaults to `false`.
-
-The `config` argument is available since version 0.13.0.
+- `fixedType` - when `true`, the created [Synchronizable Fixed](/docs/memory/synchronizable#synchronizable-fixed) stores its `number` or `boolean` value directly in native memory, without serialization, and exposes the additional [`setDirty`](/docs/memory/synchronizable#setdirty) method. Defaults to `false`.
 
 ## Remarks
 
 - In [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode), `createSynchronizable` can be called only on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime). In Bundle Mode, it can be called on any Runtime.
-- Passing `fixedType: true` with an initial value that isn't a `number` or a `boolean` throws in development builds. In production builds, a regular Synchronizable is created instead, without the `setDirty` method.

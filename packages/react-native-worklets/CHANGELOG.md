@@ -35,4 +35,4 @@
 
 - Remove outdated Worklets Babel plugin README. ([#10350](https://github.com/software-mansion/react-native-reanimated/pull/10350) by [@tjzel](https://github.com/tjzel))
 
-- Document the `fixedType` option and `setDirty`. ([#10297](https://github.com/software-mansion/react-native-reanimated/pull/10297) by [@tjzel](https://github.com/tjzel))
+- Document the `fixedType` option and `setDirty` for Synchronizable. ([#10297](https://github.com/software-mansion/react-native-reanimated/pull/10297) by [@tjzel](https://github.com/tjzel))

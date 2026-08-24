@@ -46,36 +46,6 @@ export type SynchronizableConfig = {
 };
 
 /**
- * A {@link Synchronizable} which holds a value of a fixed primitive type. The
- * value is stored directly in native memory, without serialization.
- */
-export type FixedSynchronizable<TValue extends number | boolean> =
-  Synchronizable<TValue> & {
-    /**
-     * Non-exclusively obtains the Synchronizable and sets it to the provided
-     * value, potentially blocking if `getBlocking` or `setBlocking` are being
-     * executed on another thread or if the Synchronizable is explicitly locked
-     * by another thread. It doesn't block when `setDirty` is being executed on
-     * another thread, therefore could result in a lost update.
-     */
-    setDirty(value: TValue): void;
-  };
-
-export type SynchronizableConfig = {
-  /**
-   * When `true`, the Synchronizable stores its number or boolean value directly
-   * in native memory, without serialization. The value type is inferred from
-   * the initial value and cannot change - a write with a value of the other
-   * type fails an assertion in development builds and is ignored in production
-   * builds. Fixed-type Synchronizables expose the additional `setDirty`
-   * method.
-   *
-   * @defaultValue `false`
-   */
-  fixedType?: boolean;
-};
-
-/**
  * Registration data for
  * [registerCustomSerializable](https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable)
  * function.
