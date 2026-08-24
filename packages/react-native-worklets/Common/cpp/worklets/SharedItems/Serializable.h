@@ -10,6 +10,7 @@
 #include <worklets/SharedItems/Serializable/SerializableBigInt.h>
 #include <worklets/SharedItems/Serializable/SerializableError.h>
 #include <worklets/SharedItems/Serializable/SerializableHostFunction.h>
+#include <worklets/SharedItems/Serializable/SerializableHostObject.h>
 #include <worklets/SharedItems/Serializable/SerializableImport.h>
 #include <worklets/SharedItems/Serializable/SerializableInitializer.h>
 #include <worklets/SharedItems/Serializable/SerializableMap.h>
