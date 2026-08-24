@@ -18,6 +18,7 @@
 
 ### 🐛 Bug fixes
 
+- Fix the Jest mock's `createShareable` ignoring the host and guest decorators, which left Reanimated mutables built on top of it without `value`, `modify` and the listeners API. ([#10377](https://github.com/software-mansion/react-native-reanimated/pull/10377) by [@huextrat](https://github.com/huextrat))
 - Fix a crash on Android when the React instance is recreated while animations are running - `AnimationFrameQueue` kept delivering frames after `WorkletsModule` was invalidated. ([#10278](https://github.com/software-mansion/react-native-reanimated/pull/10278) by [@shubhamdeol](https://github.com/shubhamdeol))
 - Fix a data race between `getDirty` and `setBlocking` on a Synchronizable - the pointer holding the value is now read and written atomically. ([#10292](https://github.com/software-mansion/react-native-reanimated/pull/10292) by [@tjzel](https://github.com/tjzel))
 - Fix `setBlocking` leaving a Synchronizable locked forever in development builds when the updater function or the serializer throws. ([#10331](https://github.com/software-mansion/react-native-reanimated/pull/10331) by [@tjzel](https://github.com/tjzel))
