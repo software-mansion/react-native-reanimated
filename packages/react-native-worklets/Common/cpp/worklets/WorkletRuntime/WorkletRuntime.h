@@ -11,7 +11,6 @@
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/ScriptBuffer.h>
-#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
@@ -266,7 +265,9 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    */
   void drainMicrotasks() const {
     auto lock = acquireRuntimeLock();
-    drainMicrotasksImpl();
+    if (microtaskQueueEnabled_) {
+      getJSIRuntime().drainMicrotasks();
+    }
   }
 
  private:
@@ -376,7 +377,9 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     using Result = std::invoke_result_t<TInvoker>;
     const auto checkpoint = [&]() {
       if constexpr (TCheckpoint == MicrotaskCheckpoint::Run) {
-        drainMicrotasksImpl();
+        if (microtaskQueueEnabled_) {
+          getJSIRuntime().drainMicrotasks();
+        }
       }
     };
     if constexpr (std::is_void_v<Result>) {
@@ -386,15 +389,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       Result result = std::forward<TInvoker>(invoke)();
       checkpoint();
       return std::forward<Result>(result);
-    }
-  }
-
-  /**
-   * Assumes the caller acquired the runtime lock.
-   */
-  void drainMicrotasksImpl() const {
-    if (microtaskQueueEnabled_) {
-      jsi_utils::drainMicrotasks(getJSIRuntime());
     }
   }
 

@@ -13,6 +13,7 @@
 ### 🐛 Bug fixes
 
 - Fix layout changes made during entering animations being overwritten by stale animation frames. ([#10382](https://github.com/software-mansion/react-native-reanimated/pull/10382) by [@ngocdevv](https://github.com/ngocdevv))
+- Keep exiting views at their position in the host tree, so they no longer draw above later siblings. ([#10392](https://github.com/software-mansion/react-native-reanimated/pull/10392) by [@pawicao](https://github.com/pawicao))
 
 ### 💡 Others
 
