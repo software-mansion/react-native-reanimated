@@ -197,6 +197,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
     ShadowViewMutationList &teardownMutations) const {
   ReanimatedSystraceSection s("updateLightTree");
   std::unordered_set<Tag> inserted, moved, deleted;
+  std::unordered_map<Tag, IndexCursors> indexCursors;
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
     const auto &mutation = *it;
     switch (mutation.type) {
@@ -281,7 +282,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         transferConfigFromNativeID(mutation.newChildShadowView.props->nativeId, mutation.newChildShadowView.tag);
         auto &node = lightNodes_[mutation.newChildShadowView.tag];
         auto &parent = lightNodes_[mutation.parentTag];
-        const auto hostIndex = parent->toHostIndex(mutation.index);
+        const auto hostIndex = parent->toHostIndexForInsert(mutation.index, indexCursors[mutation.parentTag]);
         parent->children.insert(parent->children.begin() + hostIndex, node);
         node->parent = parent;
         const auto tag = mutation.newChildShadowView.tag;
@@ -312,7 +313,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         const auto tag = node->current.tag;
         const auto parentTag = mutation.parentTag;
         const auto &parent = lightNodes_[parentTag];
-        const auto hostIndex = parent->toHostIndex(mutation.index);
+        const auto hostIndex = parent->toHostIndexForRemove(mutation.index, indexCursors[parentTag]);
         react_native_assert(
             hostIndex < static_cast<int>(parent->children.size()) &&
             parent->children[hostIndex]->current.tag == mutation.oldChildShadowView.tag &&

@@ -81,6 +81,18 @@ enum class Intent : std::uint8_t {
   TO_DELETE = 2,
 };
 
+struct IndexCursor {
+  int shadowIndex = -1;
+  int hostIndex = -1;
+};
+
+// One entry per parent, scoped to a single transaction.
+struct IndexCursors {
+  IndexCursor remove;
+  IndexCursor insert;
+  bool invariantChecked = false;
+};
+
 struct LightNode {
   ShadowView previous;
   ShadowView current;
@@ -122,28 +134,80 @@ struct LightNode {
     exitingChildrenCount = 0;
   }
 
-  // A new child goes after the exiting children that sit at its shadow position.
-  int toHostIndex(const int shadowIndex) const {
-    react_native_assert(
-        exitingChildrenCount ==
-            std::count_if(children.begin(), children.end(), [](const auto &child) { return child->isExiting(); }) &&
-        "exitingChildrenCount is out of sync");
+  // A new child goes after the exiting children at its shadow position. The differ sends a
+  // parent's Removes in descending order and its Inserts in ascending order, so the cursors
+  // resume the previous scan; a query out of order falls back to a full scan. Order source:
+  // https://github.com/facebook/react-native/blob/v0.87.0/packages/react-native/ReactCommon/react/renderer/mounting/Differentiator.cpp#L1328-L1357
+  int toHostIndexForRemove(const int shadowIndex, IndexCursors &cursors) const {
+    validateExitingChildrenCount(cursors);
     react_native_assert(
         shadowIndex >= 0 && shadowIndex <= static_cast<int>(children.size()) - exitingChildrenCount &&
         "shadowIndex is out of range");
     if (exitingChildrenCount == 0) {
       return shadowIndex;
     }
-    const auto childrenCount = static_cast<int>(children.size());
+    auto &cursor = cursors.remove;
+    if (cursor.hostIndex != -1 && shadowIndex < cursor.shadowIndex) {
+      int liveChildrenBelow = cursor.shadowIndex;
+      for (int hostIndex = cursor.hostIndex - 1; hostIndex >= 0; hostIndex--) {
+        if (!children[hostIndex]->isExiting() && --liveChildrenBelow == shadowIndex) {
+          cursor = {shadowIndex, hostIndex};
+          return hostIndex;
+        }
+      }
+    }
+    const int hostIndex = scanToHostIndex(shadowIndex, 0, 0);
+    cursor = {shadowIndex, hostIndex};
+    return hostIndex;
+  }
+
+  int toHostIndexForInsert(const int shadowIndex, IndexCursors &cursors) const {
+    validateExitingChildrenCount(cursors);
+    react_native_assert(
+        shadowIndex >= 0 && shadowIndex <= static_cast<int>(children.size()) - exitingChildrenCount &&
+        "shadowIndex is out of range");
+    if (exitingChildrenCount == 0) {
+      return shadowIndex;
+    }
+    auto &cursor = cursors.insert;
     int hostIndex = 0;
-    int liveChildrenSeen = 0;
+    if (cursor.hostIndex != -1 && shadowIndex > cursor.shadowIndex) {
+      hostIndex = scanToHostIndex(shadowIndex, cursor.hostIndex + 1, cursor.shadowIndex + 1);
+    } else {
+      hostIndex = scanToHostIndex(shadowIndex, 0, 0);
+    }
+    cursor = {shadowIndex, hostIndex};
+    return hostIndex;
+  }
+
+ private:
+  int scanToHostIndex(const int shadowIndex, const int startHostIndex, const int startLiveChildren) const {
+    const auto childrenCount = static_cast<int>(children.size());
+    int hostIndex = startHostIndex;
+    int liveChildrenSeen = startLiveChildren;
+    int exitingChildrenSeen = 0;
     while (hostIndex < childrenCount && (liveChildrenSeen < shadowIndex || children[hostIndex]->isExiting())) {
-      if (!children[hostIndex]->isExiting()) {
+      if (children[hostIndex]->isExiting()) {
+        if (++exitingChildrenSeen == exitingChildrenCount && startHostIndex == 0) {
+          return shadowIndex + exitingChildrenCount;
+        }
+      } else {
         liveChildrenSeen++;
       }
       hostIndex++;
     }
     return hostIndex;
+  }
+
+  void validateExitingChildrenCount(IndexCursors &cursors) const {
+    if (cursors.invariantChecked) {
+      return;
+    }
+    react_native_assert(
+        exitingChildrenCount ==
+            std::count_if(children.begin(), children.end(), [](const auto &child) { return child->isExiting(); }) &&
+        "exitingChildrenCount is out of sync");
+    cursors.invariantChecked = true;
   }
 };
 
