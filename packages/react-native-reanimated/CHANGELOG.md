@@ -12,6 +12,10 @@
 
 ### 🐛 Bug fixes
 
+- Fix animated styles on sticky headers throwing an immutable-object mutation error in development. ([#10389](https://github.com/software-mansion/react-native-reanimated/pull/10389) by [@ngocdevv](https://github.com/ngocdevv))
+- Fix shared element transitions never running on Android for npm installs by publishing `react-native.config.js`, which registers the Shared Transition Boundary component descriptor for autolinking. ([#10375](https://github.com/software-mansion/react-native-reanimated/pull/10375) by [@dennytosp](https://github.com/dennytosp))
+- Keep exiting views at their position in the host tree, so they no longer draw above later siblings. ([#10392](https://github.com/software-mansion/react-native-reanimated/pull/10392) by [@pawicao](https://github.com/pawicao))
+
 ### 💡 Others
 
 - Add `fontVariationSettings` to the style properties config, so the package type-checks against React Native 0.88 ([#10239](https://github.com/software-mansion/react-native-reanimated/pull/10239) by [@tjzel](https://github.com/tjzel))

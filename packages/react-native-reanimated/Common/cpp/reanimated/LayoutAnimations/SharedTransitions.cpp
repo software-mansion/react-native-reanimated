@@ -16,7 +16,10 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findActiveBoundar
     const std::shared_ptr<LightNode> &node) const {
   std::shared_ptr<LightNode> result = nullptr;
 
-  if (isSETBoundary(node) && isBoundaryActive(node) && node->state == ExitingState::UNDEFINED) {
+  if (node->isExiting()) {
+    return result;
+  }
+  if (isSETBoundary(node) && isBoundaryActive(node)) {
     return node;
   }
   for (const auto &child : std::views::reverse(node->children)) {
@@ -33,6 +36,9 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findBoundaryGuess
     const std::shared_ptr<LightNode> &node) const {
   std::shared_ptr<LightNode> result = nullptr;
 
+  if (node->isExiting()) {
+    return result;
+  }
   if (isSETBoundary(node)) {
     result = node;
   }
@@ -50,6 +56,9 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     const std::shared_ptr<LightNode> &node,
     BeforeOrAfter index,
     const PropsParserContext &propsParserContext) const {
+  if (node->isExiting()) {
+    return;
+  }
   if (sharedTransitionManager_->tagToName_.contains(node->current.tag)) {
     ShadowView copy = node->current;
     std::vector<react::Point> absolutePositions;

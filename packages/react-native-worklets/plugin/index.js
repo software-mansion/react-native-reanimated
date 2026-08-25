@@ -1123,6 +1123,7 @@ var require_globals = __commonJS({
       "self",
       "console",
       "performance",
+      "navigator",
       "arguments",
       // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
       "require",

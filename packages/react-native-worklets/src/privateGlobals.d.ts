@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 'use strict';
 
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
@@ -64,7 +63,8 @@ declare global {
     value: object
   ) => FlatShareableRef<object>;
   var __serializer: typeof makeShareableCloneOnUIRecursive;
-  var __callMicrotasks: () => void;
+  /** Available on runtimes with the Hermes microtask queue enabled. */
+  var __drainMicrotasks: () => void;
   /** Available only on the UI Runtime */
   var __nativeRequestAnimationFrame: (
     callback: (timestamp: number) => void
@@ -93,12 +93,6 @@ declare global {
     runtime: WorkletRuntime,
     worklet: SerializableRef<() => void>
   ) => void;
-  /**
-   * @deprecated Kept for backwards compatibility. Remove it after support for
-   *   Reanimated 4.3 is dropped. Reanimated uses it to handle event updates
-   *   synchronously.
-   */
-  var _microtaskQueueFinalizers: (() => void)[];
   var _scheduleTimeoutCallback: (delay: number, handlerId: number) => void;
   var __runTimeoutCallback: (handlerId: number) => void;
   var _taskQueue: Queue;

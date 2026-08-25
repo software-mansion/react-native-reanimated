@@ -3,7 +3,7 @@
 #warning Do not include this file directly, it will be removed in the future. Prefer including specific Serializable headers.
 
 #include <worklets/SharedItems/Serializable/CustomSerializable.h>
-#include <worklets/SharedItems/Serializable/RetainableSerializable.h>
+#include <worklets/SharedItems/Serializable/RetainingSerializable.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/Serializable/SerializableArray.h>
 #include <worklets/SharedItems/Serializable/SerializableArrayBuffer.h>
