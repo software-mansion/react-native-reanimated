@@ -391,6 +391,15 @@ void LayoutAnimationsProxyCommon::updateLayoutAnimationTarget(
 
 std::shared_ptr<Serializable> LayoutAnimationsProxyCommon::getRetargetLayoutAnimationConfig(const Tag tag) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (const auto pendingIt = pendingLayoutAnimations_.find(tag);
+      pendingIt != pendingLayoutAnimations_.end() && pendingIt->second.type == LayoutAnimationType::LAYOUT) {
+    const auto operationIndex = pendingIt->second.operationIndex;
+    react_native_assert(operationIndex < layoutAnimationOperations_.size());
+    if (const auto *start = std::get_if<ManagedLayoutAnimationStart>(&layoutAnimationOperations_[operationIndex])) {
+      return start->config;
+    }
+    react_native_assert(false && "Pending managed layout animation not found");
+  }
   if (const auto animationIt = layoutAnimations_.find(tag);
       animationIt != layoutAnimations_.end() && animationIt->second.type == LayoutAnimationType::LAYOUT) {
     return animationIt->second.config;
