@@ -406,6 +406,37 @@ void LayoutAnimationsProxy_Experimental::applyInitialMutationsToLightTree(
   }
 }
 
+// Synchronous prop updates skip pullTransaction. Merge them into the light
+// tree so shared-transition snapshots see them. The registry broadcasts one
+// batch to every surface proxy; entries of other surfaces are skipped here.
+void LayoutAnimationsProxy_Experimental::applySynchronousProps(const UpdatesBatch &updatesBatch) const {
+  ReanimatedSystraceSection s("applySynchronousProps");
+  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+
+  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
+    if (shadowNodeFamily->getSurfaceId() != surfaceId_) {
+      continue;
+    }
+    const auto nodeIt = lightNodes_.find(shadowNodeFamily->getTag());
+    if (nodeIt == lightNodes_.end() || !nodeIt->second) {
+      continue;
+    }
+
+    const auto &node = nodeIt->second;
+    if (isRoot(node) || !node->current.props) {
+      continue;
+    }
+
+    auto rawProps = props;
+#ifdef RN_SERIALIZABLE_STATE
+    rawProps = folly::dynamic::merge(node->current.props->rawProps, rawProps);
+#endif
+    const PropsParserContext propsParserContext{node->current.surfaceId, *contextContainer_};
+    node->current.props = getComponentDescriptorForShadowView(node->current)
+                              .cloneProps(propsParserContext, node->current.props, RawProps(std::move(rawProps)));
+  }
+}
+
 void LayoutAnimationsProxy_Experimental::startSurface(
     const ShadowTree &shadowTree,
     std::weak_ptr<const MountingOverrideDelegate> mountingOverrideDelegate) {

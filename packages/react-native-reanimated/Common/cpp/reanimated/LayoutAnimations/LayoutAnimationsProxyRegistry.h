@@ -25,6 +25,7 @@ class LayoutAnimationsProxyRegistry {
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove);
   std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward);
   std::optional<SurfaceId> onGestureCancel(int tag);
+  void applySynchronousProps(const UpdatesBatch &updatesBatch);
 
  private:
   std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> instances() const;
