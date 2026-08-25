@@ -21,13 +21,16 @@ export function setupRequestAnimationFrame() {
     flushedCallbacksEnd = queuedCallbacksEnd;
     queuedCallbacksBegin = queuedCallbacksEnd;
 
-    for (const callback of flushedCallbacks) {
-      callback(timestamp);
+    if (flushedCallbacks.length > 0) {
+      for (const callback of flushedCallbacks) {
+        callback(timestamp);
+        globalThis.__drainMicrotasks();
+      }
+    } else {
+      globalThis.__drainMicrotasks();
     }
 
     flushedCallbacksBegin = flushedCallbacksEnd;
-
-    globalThis.__drainMicrotasks();
 
     const finalizers = queuedFinalizers;
     queuedFinalizers = [];
