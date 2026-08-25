@@ -188,9 +188,6 @@ export function createSerializable<TValue>(
       depth
     ) as SerializableRef<TValue>;
   }
-  if (isPlainJSObject(value) && value.__workletContextObjectFactory) {
-    return cloneContextObject(value);
-  }
   if ((isPlainJSObject(value) || isFunction) && isWorkletFunction(value)) {
     return cloneWorklet(value, shouldPersistRemote, depth);
   }
@@ -539,21 +536,6 @@ function cloneTurboModuleLike<TValue extends object>(
     proto
   ) as SerializableRef<TValue>;
   return clone;
-}
-
-function cloneContextObject<TValue extends object>(
-  value: TValue
-): SerializableRef<TValue> {
-  const workletContextObjectFactory = (value as Record<string, unknown>)
-    .__workletContextObjectFactory as () => TValue;
-  const handle = cloneInitializer({
-    __init: () => {
-      'worklet';
-      return workletContextObjectFactory();
-    },
-  });
-  serializableMappingCache.set(value, handle);
-  return handle as SerializableRef<TValue>;
 }
 
 function clonePlainJSObject<TValue extends object>(
