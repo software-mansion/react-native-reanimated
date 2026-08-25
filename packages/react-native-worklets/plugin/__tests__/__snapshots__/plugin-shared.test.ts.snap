@@ -76,6 +76,20 @@ exports[`babel plugin core (bundle mode) closure handling does not capture defau
 });"
 `;
 
+exports[`babel plugin core (bundle mode) closure handling does not capture navigator 1`] = `
+"export default (function f_testJs1Factory({}) {
+  const f = function () {
+    "use no memo";
+
+    return navigator.gpu;
+  };
+  f.__closure = {};
+  f.__workletHash = 16685825262470;
+  f.__pluginVersion = "x.y.z";
+  return f;
+});"
+`;
+
 exports[`babel plugin core (bundle mode) for react-compiler prevents outlining from worklet functions 1`] = `
 "export default (function testJs1Factory({}) {
   const testJs1 = function () {
@@ -299,6 +313,31 @@ const f = function f_testJs1Factory({
   return f;
 }({
   _worklet_861694609719_init_data
+});"
+`;
+
+exports[`babel plugin core (bundleless mode) closure handling does not capture navigator 1`] = `
+"const _worklet_16685825262470_init_data = {
+  code: "(function f_testJs1(){return navigator.gpu;})",
+  location: "test.js"
+};
+const f = function f_testJs1Factory({
+  _worklet_16685825262470_init_data
+}) {
+  const _e = [new global.Error(), 1, -27];
+  const f = function () {
+    "use no memo";
+
+    return navigator.gpu;
+  };
+  f.__closure = {};
+  f.__workletHash = 16685825262470;
+  f.__pluginVersion = "x.y.z";
+  f.__initData = _worklet_16685825262470_init_data;
+  f.__stackDetails = _e;
+  return f;
+}({
+  _worklet_16685825262470_init_data
 });"
 `;
 

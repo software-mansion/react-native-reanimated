@@ -158,6 +158,18 @@ describe.each([
       expect(workletText(result, bundleMode)).toMatchSnapshot();
     });
 
+    test('does not capture navigator', () => {
+      const input = html`<script>
+        function f() {
+          'worklet';
+          return navigator.gpu;
+        }
+      </script>`;
+
+      const result = runPlugin(input, { bundleMode });
+      expect(workletText(result, bundleMode)).toMatchSnapshot();
+    });
+
     test('captures locally bound variables shadowing globals', () => {
       const input = html`<script>
         const console = {
