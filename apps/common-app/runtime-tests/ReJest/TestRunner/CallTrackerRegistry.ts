@@ -15,7 +15,7 @@ function callTrackerJS(name: string) {
 }
 
 export class CallTrackerRegistry {
-  public callTracker(name: string) {
+  public callTracker = (name: string) => {
     'worklet';
     if (_WORKLET) {
       callCallTrackerRegistryUI.setBlocking((prev) => {
@@ -24,7 +24,7 @@ export class CallTrackerRegistry {
     } else {
       callTrackerJS(name);
     }
-  }
+  };
 
   public async getTrackerCallCount(name: string): Promise<TrackerCallCount> {
     const onUI = await runOnUIBlocking(

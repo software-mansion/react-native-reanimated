@@ -10,7 +10,6 @@ export class ValueRegistry {
     name: string,
     value: SharedValue<TValue>
   ) {
-    'worklet';
     this._valueRegistry[name] = value as SharedValue;
   }
 
