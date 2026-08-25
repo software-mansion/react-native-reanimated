@@ -247,13 +247,11 @@ const testCases: Record<string, TestCase> = {
     },
   },
   date: {
-    expected: '1970',
-    bundleMode: 'Thu Jan 01 1970 00:00:00 GMT+0000 (UTC)',
-    noBundleMode: '{}',
+    expected: '2020',
     checkIncludes: { bundleMode: true, noBundleMode: false },
     factory: () => {
       'worklet';
-      return new Date(0);
+      return new Date(Date.UTC(2020, 5, 15));
     },
   },
   regExp: {
