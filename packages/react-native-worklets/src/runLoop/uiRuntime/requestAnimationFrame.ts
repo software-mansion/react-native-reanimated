@@ -27,7 +27,7 @@ export function setupRequestAnimationFrame() {
 
     flushedCallbacksBegin = flushedCallbacksEnd;
 
-    globalThis.__callMicrotasks();
+    globalThis.__drainMicrotasks();
 
     const finalizers = queuedFinalizers;
     queuedFinalizers = [];

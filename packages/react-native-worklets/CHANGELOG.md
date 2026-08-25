@@ -33,3 +33,4 @@
 - Split `Synchronizable` into an interface and a `SynchronizableDynamic` implementation. ([#10293](https://github.com/software-mansion/react-native-reanimated/pull/10293) by [@tjzel](https://github.com/tjzel))
 - Remove outdated Worklets Babel plugin README. ([#10350](https://github.com/software-mansion/react-native-reanimated/pull/10350) by [@tjzel](https://github.com/tjzel))
 - Document the `fixedType` option and `setDirty` for Synchronizable. ([#10297](https://github.com/software-mansion/react-native-reanimated/pull/10297) by [@tjzel](https://github.com/tjzel))
+- Use the built-in Hermes microtask queue on Worklet Runtimes instead of a custom JS implementation. `queueMicrotask` now enqueues native Hermes jobs, the private `__callMicrotasks` global is replaced by `__drainMicrotasks`, and the `_microtaskQueueFinalizers` array is removed. ([#10199](https://github.com/software-mansion/react-native-reanimated/pull/10199) by [@tjzel](https://github.com/tjzel))
