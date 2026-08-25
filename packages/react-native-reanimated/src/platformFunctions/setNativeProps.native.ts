@@ -9,7 +9,7 @@ import type {
 } from '../commonTypes';
 import type {
   AnimatedRef,
-  AnimatedRefOnJS,
+  AnimatedRefOnRN,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
@@ -34,7 +34,7 @@ type SetNativeProps = <TRef extends InstanceOrElement>(
 export let setNativeProps: SetNativeProps;
 
 function setNativePropsNative(
-  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
+  animatedRef: AnimatedRefOnRN | AnimatedRefOnUI,
   updates: StyleProps
 ) {
   'worklet';

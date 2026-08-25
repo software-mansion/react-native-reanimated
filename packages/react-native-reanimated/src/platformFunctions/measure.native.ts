@@ -5,7 +5,7 @@ import { IS_JEST, logger } from '../common';
 import type { InstanceOrElement, MeasuredDimensions } from '../commonTypes';
 import type {
   AnimatedRef,
-  AnimatedRefOnJS,
+  AnimatedRefOnRN,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
@@ -26,7 +26,7 @@ type Measure = <TRef extends InstanceOrElement>(
  */
 export let measure: Measure;
 
-function measureNative(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
+function measureNative(animatedRef: AnimatedRefOnRN | AnimatedRefOnUI) {
   'worklet';
   if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     return null;

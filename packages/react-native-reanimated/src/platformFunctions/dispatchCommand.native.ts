@@ -3,7 +3,7 @@
 import { RuntimeKind } from 'react-native-worklets';
 
 import { IS_JEST, logger } from '../common';
-import type { AnimatedRefOnJS, AnimatedRefOnUI } from '../hook/commonTypes';
+import type { AnimatedRefOnRN, AnimatedRefOnUI } from '../hook/commonTypes';
 import type { DispatchCommand } from './types';
 
 /**
@@ -20,7 +20,7 @@ import type { DispatchCommand } from './types';
 export let dispatchCommand: DispatchCommand;
 
 function dispatchCommandNative(
-  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
+  animatedRef: AnimatedRefOnRN | AnimatedRefOnUI,
   commandName: string,
   args: Array<unknown> = []
 ) {

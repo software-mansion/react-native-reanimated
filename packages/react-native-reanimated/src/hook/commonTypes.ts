@@ -62,13 +62,8 @@ export type AnimatedRef<TRef extends InstanceOrElement = HostInstance> = {
   getTag?: () => Maybe<number>;
 };
 
-// Might make that type generic if it's ever needed.
-export type AnimatedRefOnJS = AnimatedRef<InternalHostInstance>;
+export type AnimatedRefOnRN = AnimatedRef<InternalHostInstance>;
 
-/**
- * `AnimatedRef` is mapped to this type on the UI thread via a serializable
- * mutable.
- */
 export type AnimatedRefOnUI = Mutable<ShadowNodeWrapper | null>;
 
 type ReanimatedPayload = {
