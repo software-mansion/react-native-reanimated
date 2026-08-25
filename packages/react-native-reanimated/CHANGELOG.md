@@ -21,7 +21,7 @@
 - Fix shared element transitions never running on Android for npm installs by publishing `react-native.config.js`, which registers the Shared Transition Boundary component descriptor for autolinking. ([#10375](https://github.com/software-mansion/react-native-reanimated/pull/10375) by [@dennytosp](https://github.com/dennytosp))
 - Keep exiting views at their position in the host tree, so they no longer draw above later siblings. ([#10392](https://github.com/software-mansion/react-native-reanimated/pull/10392) by [@pawicao](https://github.com/pawicao))
 - Fix Layout Animations state leaking between Fabric surfaces by using one proxy per surface. ([#10368](https://github.com/software-mansion/react-native-reanimated/pull/10368) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
-- Feed synchronous prop updates into the experimental layout animations proxy's light tree, so shared element transitions start from the transformed position of a view that was updated through the synchronous path. The synchronous-update feature flags now work together with `ENABLE_SHARED_ELEMENT_TRANSITIONS`. (by [@pawicao](https://github.com/pawicao))
+- Feed synchronous prop updates into the experimental layout animations proxy's light tree, so shared element transitions start from the transformed position of a view that was updated through the synchronous path. The synchronous-update feature flags now work together with `ENABLE_SHARED_ELEMENT_TRANSITIONS`. ([#10416](https://github.com/software-mansion/react-native-reanimated/pull/10416) by [@pawicao](https://github.com/pawicao))
 
 ### 💡 Others
 
