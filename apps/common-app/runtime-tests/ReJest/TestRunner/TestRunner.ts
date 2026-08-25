@@ -115,6 +115,7 @@ export class TestRunner {
   }
 
   public createOrderConstraint() {
+    'worklet';
     return this.createTestValue<number>(0, (prev: number, current: number) => {
       'worklet';
       if (prev == current - 1) {
