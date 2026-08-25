@@ -125,7 +125,11 @@ using namespace facebook::react;
 - (void)performOperations
 {
   RCTAssertMainQueue();
-  _performOperations(); // calls ReanimatedModuleProxy::performOperations
+  REAPerformOperations performOperations = _performOperations;
+  if (performOperations == nil) {
+    return;
+  }
+  performOperations(); // calls ReanimatedModuleProxy::performOperations
 }
 
 - (void)dispatchEvent:(id<RCTEvent>)event
