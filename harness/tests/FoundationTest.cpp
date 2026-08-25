@@ -120,4 +120,23 @@ TEST(PlatformDriverTest, IOSMountsAReentrantCommitInTheFollowUpLoop) {
   EXPECT_EQ(driver.mountedTransactionNumbers().size(), 2);
 }
 
+TEST(PlatformDriverTest, RecordsMountedHostFrames) {
+  auto choreographer = Choreographer{};
+  auto driver = PlatformDriver(choreographer, DriverMode::IOS);
+
+  choreographer.at(12ms, Lane::JS, [&] { driver.render(secondSnapshot()); });
+  choreographer.advanceTo(12ms);
+
+  ASSERT_EQ(driver.mountedFrames().size(), 1);
+  const auto &frame = driver.mountedFrames().front();
+  EXPECT_EQ(frame.time, 12);
+  ASSERT_EQ(frame.root.children.size(), 2);
+  EXPECT_EQ(frame.root.children[0].tag, 2);
+  EXPECT_EQ(frame.root.children[0].frame.x, 10);
+  EXPECT_EQ(frame.root.children[0].frame.y, 20);
+  EXPECT_EQ(frame.root.children[0].frame.width, 120);
+  EXPECT_EQ(frame.root.children[0].frame.height, 80);
+  EXPECT_FALSE(frame.mutations.empty());
+}
+
 } // namespace reanimated::layout_animation::test

@@ -1,12 +1,17 @@
 #include <harness/PlatformDriver.h>
 
+#include <cstdlib>
+#include <fstream>
 #include <stdexcept>
+#include <string_view>
 #include <utility>
 
+#include <folly/json.h>
 #include <react/renderer/componentregistry/ComponentDescriptorProvider.h>
 #include <react/renderer/componentregistry/ComponentDescriptorProviderRegistry.h>
 #include <react/renderer/components/rnreanimated/REASharedTransitionBoundaryComponentDescriptor.h>
 #include <react/renderer/components/view/ViewComponentDescriptor.h>
+#include <react/renderer/components/view/ViewProps.h>
 #include <react/renderer/core/LayoutConstraints.h>
 #include <react/renderer/core/LayoutContext.h>
 #include <react/renderer/mounting/ShadowView.h>
@@ -14,6 +19,85 @@
 namespace reanimated::layout_animation::test {
 
 using namespace facebook::react;
+
+namespace {
+
+std::string_view modeName(DriverMode mode) {
+  switch (mode) {
+    case DriverMode::AndroidPush:
+      return "android-push";
+    case DriverMode::AndroidPull:
+      return "android-pull";
+    case DriverMode::IOS:
+      return "ios";
+  }
+}
+
+std::string_view mutationName(ShadowViewMutation::Type type) {
+  switch (type) {
+    case ShadowViewMutation::Create:
+      return "create";
+    case ShadowViewMutation::Delete:
+      return "delete";
+    case ShadowViewMutation::Insert:
+      return "insert";
+    case ShadowViewMutation::Remove:
+      return "remove";
+    case ShadowViewMutation::Update:
+      return "update";
+  }
+}
+
+MountedNode mountedNode(const StubView &view, bool isRoot = false) {
+  auto opacity = 1.0f;
+  auto zIndex = 0;
+  if (!isRoot) {
+    const auto &props = static_cast<const ViewProps &>(*view.props);
+    opacity = props.opacity;
+    zIndex = props.zIndex.value_or(0);
+  }
+
+  auto children = std::vector<MountedNode>{};
+  children.reserve(view.children.size());
+  for (const auto &child : view.children) {
+    children.push_back(mountedNode(*child));
+  }
+
+  const auto &frame = view.layoutMetrics.frame;
+  return {
+      .tag = view.tag,
+      .component = view.componentName,
+      .frame = {frame.origin.x, frame.origin.y, frame.size.width, frame.size.height},
+      .opacity = opacity,
+      .zIndex = zIndex,
+      .children = std::move(children),
+  };
+}
+
+folly::dynamic nodeJson(const MountedNode &node) {
+  auto children = folly::dynamic::array();
+  for (const auto &child : node.children) {
+    children.push_back(nodeJson(child));
+  }
+  return folly::dynamic::object("tag", node.tag)("component", node.component)(
+      "frame",
+      folly::dynamic::object("x", node.frame.x)("y", node.frame.y)("width", node.frame.width)(
+          "height", node.frame.height))("opacity", node.opacity)("zIndex", node.zIndex)(
+      "children", std::move(children));
+}
+
+folly::dynamic frameJson(const MountedFrame &frame) {
+  auto mutations = folly::dynamic::array();
+  for (const auto &mutation : frame.mutations) {
+    mutations.push_back(
+        folly::dynamic::object("type", mutation.type)("tag", mutation.tag)("parentTag", mutation.parentTag)(
+            "index", mutation.index));
+  }
+  return folly::dynamic::object("time", frame.time)("transaction", frame.transactionNumber)(
+      "mutations", std::move(mutations))("root", nodeJson(frame.root));
+}
+
+} // namespace
 
 PlatformDriver::PlatformDriver(Choreographer &choreographer, DriverMode mode)
     : choreographer_(choreographer),
@@ -45,6 +129,7 @@ PlatformDriver::PlatformDriver(Choreographer &choreographer, DriverMode mode)
 }
 
 PlatformDriver::~PlatformDriver() {
+  writeTrace();
   uiManager_->setDelegate(nullptr);
   uiManager_->getShadowTreeRegistry().remove(surfaceId_);
 }
@@ -106,6 +191,10 @@ std::vector<std::string> PlatformDriver::takeMountingLogs() {
 
 const std::vector<MountingTransaction::Number> &PlatformDriver::mountedTransactionNumbers() const {
   return mountedTransactionNumbers_;
+}
+
+const std::vector<MountedFrame> &PlatformDriver::mountedFrames() const {
+  return mountedFrames_;
 }
 
 void PlatformDriver::uiManagerDidFinishTransaction(
@@ -271,6 +360,45 @@ void PlatformDriver::mount(MountingTransaction &transaction) const {
     runEffect(mutation);
   }
   mountedTransactionNumbers_.push_back(transaction.getNumber());
+  recordFrame(transaction);
+}
+
+void PlatformDriver::recordFrame(const MountingTransaction &transaction) const {
+  auto mutations = std::vector<MountedMutation>{};
+  mutations.reserve(transaction.getMutations().size());
+  for (const auto &mutation : transaction.getMutations()) {
+    const auto &view = mutation.type == ShadowViewMutation::Delete || mutation.type == ShadowViewMutation::Remove
+        ? mutation.oldChildShadowView
+        : mutation.newChildShadowView;
+    mutations.push_back({
+        .type = std::string(mutationName(mutation.type)),
+        .tag = view.tag,
+        .parentTag = mutation.parentTag,
+        .index = mutation.index,
+    });
+  }
+  mountedFrames_.push_back({
+      .time = choreographer_.now().count(),
+      .transactionNumber = transaction.getNumber(),
+      .mutations = std::move(mutations),
+      .root = mountedNode(hostTree_.getRootStubView(), true),
+  });
+}
+
+void PlatformDriver::writeTrace() const {
+  const auto *path = std::getenv("LA_HARNESS_TRACE_FILE");
+  if (!path) {
+    return;
+  }
+
+  auto frames = folly::dynamic::array();
+  for (const auto &frame : mountedFrames_) {
+    frames.push_back(frameJson(frame));
+  }
+  auto output = std::ofstream(path, std::ios::app);
+  if (output) {
+    output << folly::toJson(folly::dynamic::object("mode", modeName(mode_))("frames", std::move(frames))) << '\n';
+  }
 }
 
 void PlatformDriver::runEffect(const ShadowViewMutation &mutation) const {

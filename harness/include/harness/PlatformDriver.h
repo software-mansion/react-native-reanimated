@@ -3,6 +3,7 @@
 #include <deque>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 #include <harness/Choreographer.h>
@@ -19,6 +20,29 @@
 namespace reanimated::layout_animation::test {
 
 enum class DriverMode : uint8_t { AndroidPush, AndroidPull, IOS };
+
+struct MountedNode {
+  facebook::react::Tag tag;
+  std::string component;
+  Frame frame;
+  float opacity;
+  int zIndex;
+  std::vector<MountedNode> children;
+};
+
+struct MountedMutation {
+  std::string type;
+  facebook::react::Tag tag;
+  facebook::react::Tag parentTag;
+  int index;
+};
+
+struct MountedFrame {
+  int64_t time;
+  facebook::react::MountingTransaction::Number transactionNumber;
+  std::vector<MountedMutation> mutations;
+  MountedNode root;
+};
 
 class PlatformDriver final : public facebook::react::UIManagerDelegate {
  public:
@@ -37,6 +61,7 @@ class PlatformDriver final : public facebook::react::UIManagerDelegate {
   const std::shared_ptr<facebook::react::UIManager> &uiManager() const;
   std::vector<std::string> takeMountingLogs();
   const std::vector<facebook::react::MountingTransaction::Number> &mountedTransactionNumbers() const;
+  const std::vector<MountedFrame> &mountedFrames() const;
 
   void uiManagerDidFinishTransaction(
       std::shared_ptr<const facebook::react::MountingCoordinator> mountingCoordinator,
@@ -81,6 +106,8 @@ class PlatformDriver final : public facebook::react::UIManagerDelegate {
   void initiateIOS(const std::shared_ptr<const facebook::react::MountingCoordinator> &coordinator) const;
   void mount(facebook::react::MountingTransaction &transaction) const;
   void runEffect(const facebook::react::ShadowViewMutation &mutation) const;
+  void recordFrame(const facebook::react::MountingTransaction &transaction) const;
+  void writeTrace() const;
 
   static constexpr facebook::react::SurfaceId surfaceId_{1};
 
@@ -100,6 +127,7 @@ class PlatformDriver final : public facebook::react::UIManagerDelegate {
   mutable bool iosFollowUpRequired_{false};
   mutable std::shared_ptr<const facebook::react::MountingCoordinator> iosFollowUpCoordinator_;
   mutable std::vector<facebook::react::MountingTransaction::Number> mountedTransactionNumbers_;
+  mutable std::vector<MountedFrame> mountedFrames_;
 };
 
 } // namespace reanimated::layout_animation::test

@@ -61,6 +61,8 @@ ctest --test-dir build/layout-animation-harness --output-on-failure
 
 See [EXAMPLE_COVERAGE.md](EXAMPLE_COVERAGE.md) for the manual-example mapping.
 
+For local inspection, run `node harness/dashboard/server.mjs --build build/layout-animation-harness` and open `http://127.0.0.1:4173`. The dashboard runs individual native tests and replays the mounted host hierarchy after every transaction, including layout metrics, opacity, z-index, and mutation lists. Trace output is enabled only for dashboard-launched processes.
+
 ## Current coverage
 
 - entering, exiting, layout, replacement, progress, and completion;

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Run and inspect Reanimated layout-animation host tests." />
+    <title>Layout Animation Lab</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">LA</span>
+        <div>
+          <h1>Layout Animation Lab</h1>
+          <p>Native mutation tests, frame by frame</p>
+        </div>
+      </div>
+      <div class="actions">
+        <span id="run-status" class="run-status">Ready</span>
+        <button id="build" class="button secondary">Build</button>
+        <button id="run-all" class="button primary">Run all</button>
+      </div>
+    </header>
+
+    <div class="summary" aria-label="Test summary">
+      <div><strong id="total-count">0</strong><span>tests</span></div>
+      <div><strong id="passed-count">0</strong><span>passed</span></div>
+      <div><strong id="failed-count">0</strong><span>failed</span></div>
+      <div><strong id="pending-count">0</strong><span>not run</span></div>
+      <p id="build-path"></p>
+    </div>
+
+    <div class="workspace">
+      <aside class="test-browser">
+        <label class="search">
+          <span>Find a test</span>
+          <input id="search" type="search" placeholder="retarget, shared, exiting…" />
+        </label>
+        <div class="filters" role="group" aria-label="Platform filter">
+          <button class="filter active" data-platform="all">All</button>
+          <button class="filter" data-platform="ios">iOS</button>
+          <button class="filter" data-platform="android">Android</button>
+          <button class="filter" data-platform="failed">Failed</button>
+        </div>
+        <div id="test-list" class="test-list"></div>
+      </aside>
+
+      <main class="detail">
+        <section id="empty" class="empty-state">
+          <div class="empty-orbit"><span></span></div>
+          <p class="eyebrow">Host-tree observability</p>
+          <h2>Select a scenario</h2>
+          <p>Run any test to inspect the mounted hierarchy, geometry, opacity, z-index, and mutation list for every transaction.</p>
+        </section>
+
+        <section id="test-detail" class="test-detail hidden">
+          <div class="detail-heading">
+            <div>
+              <p id="test-suite" class="eyebrow"></p>
+              <h2 id="test-name"></h2>
+              <div id="test-meta" class="test-meta"></div>
+            </div>
+            <button id="run-one" class="button primary">Run test</button>
+          </div>
+
+          <div id="mode-tabs" class="mode-tabs"></div>
+
+          <section class="replay-panel">
+            <div class="replay-toolbar">
+              <div class="transport">
+                <button id="previous-frame" aria-label="Previous frame">←</button>
+                <button id="play" aria-label="Play trace">Play</button>
+                <button id="next-frame" aria-label="Next frame">→</button>
+              </div>
+              <label class="timeline-control">
+                <span id="frame-label">No trace</span>
+                <input id="timeline" type="range" min="0" max="0" value="0" />
+              </label>
+            </div>
+
+            <div class="replay-grid">
+              <div class="stage-wrap">
+                <div id="stage" class="stage" aria-label="Mounted view hierarchy"></div>
+              </div>
+              <aside class="inspector">
+                <div>
+                  <p class="eyebrow">Transaction</p>
+                  <dl id="frame-info"></dl>
+                </div>
+                <div>
+                  <p class="eyebrow">Selected view</p>
+                  <dl id="node-info"><div><dt>Tip</dt><dd>Click a view</dd></div></dl>
+                </div>
+                <div>
+                  <p class="eyebrow">Mutations</p>
+                  <div id="mutations" class="mutations"></div>
+                </div>
+              </aside>
+            </div>
+          </section>
+
+          <details class="output-panel">
+            <summary>Native test output</summary>
+            <pre id="output"></pre>
+          </details>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
