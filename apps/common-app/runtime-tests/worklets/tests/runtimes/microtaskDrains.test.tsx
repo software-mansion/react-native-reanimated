@@ -1,3 +1,4 @@
+import type { Synchronizable } from 'react-native-worklets';
 import {
   createSynchronizable,
   runOnRuntimeAsync,
@@ -13,173 +14,161 @@ import {
   UIRuntimeId,
 } from 'react-native-worklets';
 import {
-  afterEach,
-  beforeEach,
+  createOrderConstraint,
   describe,
   expect,
   getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
+  waitForNotifications,
 } from '../../../ReJest/RuntimeTestsApi';
 
 const DONE_NOTIFICATION = 'DONE';
 
+type OrderSetter = ReturnType<typeof createOrderConstraint>[1];
+
 describe('microtask draining', () => {
   const [workletRuntime] = getWorkletRuntimesFromPool(1);
-
-  const microtaskDrainCount = createSynchronizable(0);
 
   const notifyDone = () => {
     notify(DONE_NOTIFICATION);
   };
 
-  function restoreCallMicrotasks(runtimeId: number) {
-    runOnRuntimeSyncWithId(runtimeId, () => {
-      'worklet';
-      if (globalThis.originalCallMicrotasks) {
-        globalThis.__callMicrotasks = globalThis.originalCallMicrotasks;
-        globalThis.originalCallMicrotasks = undefined;
-      }
-    });
-  }
-
-  function startCountingMicrotaskDrains(runtimeId: number) {
-    runOnRuntimeSyncWithId(runtimeId, () => {
-      'worklet';
-      const previousCallMicrotasks = globalThis.__callMicrotasks;
-      globalThis.originalCallMicrotasks = previousCallMicrotasks;
-      globalThis.__callMicrotasks = () => {
-        if (!new Error().stack!.includes('executeQueue')) {
-          microtaskDrainCount.setBlocking((count) => count + 1);
-        }
-        previousCallMicrotasks();
-      };
-    });
-    microtaskDrainCount.setBlocking(0);
-  }
-
-  function drainPendingMicrotasks(runtimeId: number) {
-    runOnRuntimeSyncWithId(runtimeId, () => {
-      'worklet';
-      globalThis.__callMicrotasks();
-    });
-  }
-
-  const probeDrainingCall = () => {
+  const flushProbe = () => {
     'worklet';
     queueMicrotask(() => {
       scheduleOnRN(notifyDone);
     });
   };
 
-  const probeNonDrainingCall = () => {
+  const checkpointProbe = (order: OrderSetter) => {
     'worklet';
-    queueMicrotask(() => {});
+    queueMicrotask(() => {
+      order(2, 'microtask');
+    });
+    order(1, 'task');
   };
 
-  const cases: {
+  const pendingMicrotaskProbe = (flag: Synchronizable<boolean>) => {
+    'worklet';
+    queueMicrotask(() => {
+      flag.setBlocking(true);
+    });
+  };
+
+  const checkpointCases: {
     name: string;
-    runtimeId: number;
-    expectedDrains: number;
-    invoke: () => void | Promise<unknown>;
+    invoke: (order: OrderSetter) => void | Promise<unknown>;
   }[] = [
     {
       name: 'scheduleOnUI',
-      runtimeId: UIRuntimeId,
-      expectedDrains: 1,
-      invoke: () => scheduleOnUI(probeDrainingCall),
+      invoke: (order) => scheduleOnUI(checkpointProbe, order),
     },
     {
       name: 'runOnUIAsync',
-      runtimeId: UIRuntimeId,
-      expectedDrains: 1,
-      invoke: () => runOnUIAsync(probeDrainingCall),
-    },
-    {
-      name: 'runOnUISync',
-      runtimeId: UIRuntimeId,
-      expectedDrains: 0,
-      invoke: () => runOnUISync(probeNonDrainingCall),
+      invoke: (order) => runOnUIAsync(checkpointProbe, order),
     },
     {
       name: 'scheduleOnRuntime',
-      runtimeId: workletRuntime.runtimeId,
-      expectedDrains: 1,
-      invoke: () => scheduleOnRuntime(workletRuntime, probeDrainingCall),
+      invoke: (order) =>
+        scheduleOnRuntime(workletRuntime, checkpointProbe, order),
     },
     {
       name: 'scheduleOnRuntimeWithId, UI Runtime',
-      runtimeId: UIRuntimeId,
-      expectedDrains: 1,
-      invoke: () => scheduleOnRuntimeWithId(UIRuntimeId, probeDrainingCall),
+      invoke: (order) =>
+        scheduleOnRuntimeWithId(UIRuntimeId, checkpointProbe, order),
     },
     {
       name: 'scheduleOnRuntimeWithId, Worker Runtime',
-      runtimeId: workletRuntime.runtimeId,
-      expectedDrains: 1,
-      invoke: () =>
-        scheduleOnRuntimeWithId(workletRuntime.runtimeId, probeDrainingCall),
+      invoke: (order) =>
+        scheduleOnRuntimeWithId(
+          workletRuntime.runtimeId,
+          checkpointProbe,
+          order
+        ),
     },
     {
       name: 'runOnRuntimeAsync',
-      runtimeId: workletRuntime.runtimeId,
-      expectedDrains: 1,
-      invoke: () => runOnRuntimeAsync(workletRuntime, probeDrainingCall),
+      invoke: (order) =>
+        runOnRuntimeAsync(workletRuntime, checkpointProbe, order),
     },
     {
       name: 'runOnRuntimeAsyncWithId, UI Runtime',
-      runtimeId: UIRuntimeId,
-      expectedDrains: 1,
-      invoke: () => runOnRuntimeAsyncWithId(UIRuntimeId, probeDrainingCall),
+      invoke: (order) =>
+        runOnRuntimeAsyncWithId(UIRuntimeId, checkpointProbe, order),
     },
     {
       name: 'runOnRuntimeAsyncWithId, Worker Runtime',
-      runtimeId: workletRuntime.runtimeId,
-      expectedDrains: 1,
-      invoke: () =>
-        runOnRuntimeAsyncWithId(workletRuntime.runtimeId, probeDrainingCall),
+      invoke: (order) =>
+        runOnRuntimeAsyncWithId(
+          workletRuntime.runtimeId,
+          checkpointProbe,
+          order
+        ),
+    },
+  ];
+
+  checkpointCases.forEach(({ name, invoke }) => {
+    describe(name, () => {
+      test('runs queued microtasks after the worklet, without a manual drain', async () => {
+        const [confirmedOrder, order] = createOrderConstraint();
+
+        await invoke(order);
+
+        await waitForNotifications(['task', 'microtask']);
+        expect(confirmedOrder.value).toBe(2);
+      });
+    });
+  });
+
+  const noCheckpointCases: {
+    name: string;
+    runtimeId: number;
+    invoke: (flag: Synchronizable<boolean>) => void;
+  }[] = [
+    {
+      name: 'runOnUISync',
+      runtimeId: UIRuntimeId,
+      invoke: (flag) => runOnUISync(pendingMicrotaskProbe, flag),
     },
     {
       name: 'runOnRuntimeSync',
       runtimeId: workletRuntime.runtimeId,
-      expectedDrains: 0,
-      invoke: () => runOnRuntimeSync(workletRuntime, probeNonDrainingCall),
+      invoke: (flag) =>
+        runOnRuntimeSync(workletRuntime, pendingMicrotaskProbe, flag),
     },
     {
       name: 'runOnRuntimeSyncWithId, UI Runtime',
       runtimeId: UIRuntimeId,
-      expectedDrains: 0,
-      invoke: () => runOnRuntimeSyncWithId(UIRuntimeId, probeNonDrainingCall),
+      invoke: (flag) =>
+        runOnRuntimeSyncWithId(UIRuntimeId, pendingMicrotaskProbe, flag),
     },
     {
       name: 'runOnRuntimeSyncWithId, Worker Runtime',
       runtimeId: workletRuntime.runtimeId,
-      expectedDrains: 0,
-      invoke: () =>
-        runOnRuntimeSyncWithId(workletRuntime.runtimeId, probeNonDrainingCall),
+      invoke: (flag) =>
+        runOnRuntimeSyncWithId(
+          workletRuntime.runtimeId,
+          pendingMicrotaskProbe,
+          flag
+        ),
     },
   ];
 
-  cases.forEach(({ name, runtimeId, expectedDrains, invoke }) => {
+  noCheckpointCases.forEach(({ name, runtimeId, invoke }) => {
     describe(name, () => {
-      beforeEach(() => {
-        startCountingMicrotaskDrains(runtimeId);
-      });
+      test('defers queued microtasks past the synchronous call', async () => {
+        const flag = createSynchronizable(false);
 
-      afterEach(() => {
-        restoreCallMicrotasks(runtimeId);
-        drainPendingMicrotasks(runtimeId);
-      });
+        invoke(flag);
 
-      test(`drains microtasks ${expectedDrains} time(s)`, async () => {
-        await invoke();
-        if (expectedDrains > 0) {
-          await waitForNotification(DONE_NOTIFICATION);
-        }
+        expect(flag.getBlocking()).toBe(false);
 
-        const microtaskDrains = microtaskDrainCount.getBlocking();
-        expect(microtaskDrains).toBe(expectedDrains);
+        scheduleOnRuntimeWithId(runtimeId, flushProbe);
+        await waitForNotification(DONE_NOTIFICATION);
+
+        expect(flag.getBlocking()).toBe(true);
       });
     });
   });
