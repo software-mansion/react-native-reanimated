@@ -124,7 +124,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   filteredMutations.insert(
       filteredMutations.end(), transaction.teardownMutations.begin(), transaction.teardownMutations.end());
 
-  handleRemovals(filteredMutations);
+  flushCompletedRemovals(filteredMutations);
 
   flushLayoutAnimationOperations(lock);
 
@@ -483,8 +483,8 @@ void LayoutAnimationsProxy_Experimental::handleSubtreeRemoval(
   parent->children.erase(parent->children.begin() + hostIndex);
 }
 
-void LayoutAnimationsProxy_Experimental::handleRemovals(ShadowViewMutationList &filteredMutations) const {
-  ReanimatedSystraceSection s("handleRemovals");
+void LayoutAnimationsProxy_Experimental::flushCompletedRemovals(ShadowViewMutationList &filteredMutations) const {
+  ReanimatedSystraceSection s("flushCompletedRemovals");
   std::vector<Tag> completedRemovalTags;
   completedRemovalTags.reserve(completedAnimations_.size());
   for (const auto &[tag, completedAnimation] : completedAnimations_) {

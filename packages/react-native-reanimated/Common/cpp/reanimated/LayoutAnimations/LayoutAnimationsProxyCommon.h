@@ -93,14 +93,15 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 #endif
   {
   }
-  virtual std::optional<facebook::react::SurfaceId> onTransitionProgress(int, double, bool, bool);
-  virtual std::optional<facebook::react::SurfaceId> onGestureCancel(int);
+  virtual std::optional<facebook::react::SurfaceId>
+  onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward);
+  virtual std::optional<facebook::react::SurfaceId> onGestureCancel(int tag);
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);
   virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) = 0;
   virtual void startSurface(
-      const facebook::react::ShadowTree &,
-      std::weak_ptr<const facebook::react::MountingOverrideDelegate>);
-  virtual void shadowTreeWillCommit(bool) {}
+      const facebook::react::ShadowTree &shadowTree,
+      std::weak_ptr<const facebook::react::MountingOverrideDelegate> mountingOverrideDelegate);
+  virtual void shadowTreeWillCommit(bool /*isSurfaceRemoval*/) {}
   virtual void surfaceDidUnmount();
   ~LayoutAnimationsProxyCommon() override = default;
 
@@ -186,8 +187,13 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void restoreOpacityInShadowTree(std::vector<OpacityRestoration> restorations) const;
 #endif
 
+  struct PendingLayoutAnimation {
+    LayoutAnimationType type;
+    size_t operationIndex;
+  };
+
   mutable std::deque<LayoutAnimationOperation> layoutAnimationOperations_;
-  mutable std::unordered_map<Tag, std::optional<size_t>> pendingLayoutAnimations_;
+  mutable std::unordered_map<Tag, PendingLayoutAnimation> pendingLayoutAnimations_;
 };
 
 } // namespace reanimated

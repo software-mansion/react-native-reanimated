@@ -44,7 +44,8 @@ struct TransactionMeta {
   ShadowViewMutationList teardownMutations;
   TransitionMap transitionMap;
   Transitions transitions;
-  std::vector<PendingNodeAnimation> entering, layout;
+  std::vector<PendingNodeAnimation> layout;
+  std::vector<PendingNodeAnimation> entering;
   std::vector<PendingNodeAnimation> exiting;
   std::vector<std::shared_ptr<LightNode>> containersToInsert;
   std::vector<Tag> tagsToRestore;
@@ -162,7 +163,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &parent,
       int hostIndex,
       TransactionMeta &transaction) const;
-  void handleRemovals(ShadowViewMutationList &filteredMutations) const;
+  void flushCompletedRemovals(ShadowViewMutationList &filteredMutations) const;
 
   void addOngoingAnimations(ShadowViewMutationList &mutations) const;
   ShadowView cloneViewWithoutOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;

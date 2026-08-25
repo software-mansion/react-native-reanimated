@@ -31,11 +31,15 @@ const ShadowNode *findShadowNode(const ShadowNode &node, const Tag tag) {
 } // namespace
 #endif
 
-std::optional<facebook::react::SurfaceId> LayoutAnimationsProxyCommon::onTransitionProgress(int, double, bool, bool) {
+std::optional<facebook::react::SurfaceId> LayoutAnimationsProxyCommon::onTransitionProgress(
+    int /*tag*/,
+    double /*progress*/,
+    bool /*isClosing*/,
+    bool /*isGoingForward*/) {
   return std::nullopt;
 }
 
-std::optional<facebook::react::SurfaceId> LayoutAnimationsProxyCommon::onGestureCancel(int) {
+std::optional<facebook::react::SurfaceId> LayoutAnimationsProxyCommon::onGestureCancel(int /*tag*/) {
   return std::nullopt;
 }
 
@@ -103,19 +107,22 @@ void LayoutAnimationsProxyCommon::enqueueLayoutAnimation(ManagedLayoutAnimationS
   react_native_assert(start.config && "layout animation config is null");
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const auto tag = start.tag;
+  const auto type = start.type;
   layoutAnimationOperations_.push_back(std::move(start));
-  pendingLayoutAnimations_.insert_or_assign(tag, layoutAnimationOperations_.size() - 1);
+  pendingLayoutAnimations_.insert_or_assign(tag, PendingLayoutAnimation{type, layoutAnimationOperations_.size() - 1});
 }
 
 void LayoutAnimationsProxyCommon::enqueueLayoutAnimation(ProgressLayoutAnimationStart start) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const auto tag = start.tag;
   layoutAnimationOperations_.push_back(std::move(start));
-  pendingLayoutAnimations_.try_emplace(tag, std::nullopt);
+  pendingLayoutAnimations_.try_emplace(
+      tag, PendingLayoutAnimation{LayoutAnimationType::PROGRESS, layoutAnimationOperations_.size() - 1});
 }
 
 void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations(std::unique_lock<std::recursive_mutex> &lock) const {
-  react_native_assert(lock.owns_lock() && lock.mutex() == &mutex);
+  react_native_assert(
+      lock.owns_lock() && lock.mutex() == &mutex && "flushLayoutAnimationOperations requires the proxy lock");
   if (!worklets::isOnUIThread(uiScheduler_)) {
     if (!layoutAnimationOperations_.empty()) {
       requestLayoutAnimationFlush_(surfaceId_);
@@ -352,9 +359,11 @@ void LayoutAnimationsProxyCommon::updateLayoutAnimationTarget(
     const ShadowView &finalView,
     const std::shared_ptr<Serializable> &config) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  if (const auto pendingIt = pendingLayoutAnimations_.find(tag);
-      pendingIt != pendingLayoutAnimations_.end() && pendingIt->second) {
-    const auto operationIndex = *pendingIt->second;
+  if (const auto pendingIt = pendingLayoutAnimations_.find(tag); pendingIt != pendingLayoutAnimations_.end()) {
+    if (pendingIt->second.type == LayoutAnimationType::PROGRESS) {
+      return;
+    }
+    const auto operationIndex = pendingIt->second.operationIndex;
     react_native_assert(operationIndex < layoutAnimationOperations_.size());
     if (auto *managedStart = std::get_if<ManagedLayoutAnimationStart>(&layoutAnimationOperations_[operationIndex])) {
       managedStart->after = finalView;
@@ -377,8 +386,8 @@ std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentLayoutAnimation(c
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   std::optional<ShadowView> pendingCurrentView;
   if (const auto pendingIt = pendingLayoutAnimations_.find(tag);
-      pendingIt != pendingLayoutAnimations_.end() && pendingIt->second) {
-    const auto operationIndex = *pendingIt->second;
+      pendingIt != pendingLayoutAnimations_.end() && pendingIt->second.type != LayoutAnimationType::PROGRESS) {
+    const auto operationIndex = pendingIt->second.operationIndex;
     react_native_assert(operationIndex < layoutAnimationOperations_.size());
     if (auto *managedStart = std::get_if<ManagedLayoutAnimationStart>(&layoutAnimationOperations_[operationIndex])) {
       managedStart->parentTag = parentTag;
