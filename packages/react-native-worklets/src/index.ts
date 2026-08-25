@@ -37,6 +37,7 @@ export { serializableMappingCache } from './memory/serializableMappingCache';
 export { createShareable } from './memory/shareable';
 export { createSynchronizable } from './memory/synchronizable';
 export type {
+  FixedSynchronizable,
   RegistrationData,
   SerializableRef,
   Shareable,
@@ -50,6 +51,7 @@ export type {
   ShareableHostMeta,
   ShareableHostProps,
   Synchronizable,
+  SynchronizableConfig,
   SynchronizableRef,
 } from './memory/types';
 export {

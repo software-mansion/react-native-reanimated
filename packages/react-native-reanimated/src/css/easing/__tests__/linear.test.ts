@@ -143,5 +143,55 @@ describe(LinearEasing, () => {
         ]);
       });
     });
+
+    describe('extrapolation', () => {
+      // Expected values match Chrome for the same linear() easing.
+      test('holds the last value after a pair of stops sharing an input progress', () => {
+        const easing = new LinearEasing([0, [0.3, '50%'], [0.7, '50%']]);
+
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0 },
+          { x: 0.5, y: 0.3 },
+          { x: 0.5, y: 0.7 },
+          { x: 1, y: 0.7 },
+        ]);
+      });
+
+      test('holds the first value before a pair of stops sharing an input progress', () => {
+        const easing = new LinearEasing([
+          [0.3, '50%'],
+          [0.7, '50%'],
+          [1, '100%'],
+        ]);
+
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0.3 },
+          { x: 0.5, y: 0.3 },
+          { x: 0.5, y: 0.7 },
+          { x: 1, y: 1 },
+        ]);
+      });
+
+      test('never extrapolates to a non-finite value', () => {
+        const easings = [
+          new LinearEasing([
+            [0.5, '50%'],
+            [1, '50%'],
+          ]),
+          new LinearEasing([
+            [0.5, '50%'],
+            [0.5, '50%'],
+          ]),
+          new LinearEasing([0, [0.3, '50%'], [0.7, '50%']]),
+        ];
+
+        for (const easing of easings) {
+          for (const { x, y } of easing.normalize().points) {
+            expect(Number.isFinite(x)).toBe(true);
+            expect(Number.isFinite(y)).toBe(true);
+          }
+        }
+      });
+    });
   });
 });
