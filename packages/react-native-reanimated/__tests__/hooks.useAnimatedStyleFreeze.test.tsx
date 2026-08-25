@@ -1,6 +1,7 @@
-import { render } from '@testing-library/react-native';
+import { renderHook } from '@testing-library/react-native';
 
 import { useAnimatedStyle } from '../src';
+import type { StyleUpdaterContainer } from '../src/commonTypes';
 
 function freezeEnumerableProperties(value: unknown): void {
   if (
@@ -22,14 +23,19 @@ function freezeEnumerableProperties(value: unknown): void {
 
 describe('useAnimatedStyle with frozen style handles', () => {
   test('keeps its updater container mutable', () => {
-    function FreezeAnimatedStyleHandle() {
+    const { result } = renderHook(() => {
       const animatedStyle = useAnimatedStyle(() => ({ opacity: 1 }));
 
       freezeEnumerableProperties(animatedStyle);
 
-      return null;
-    }
+      return animatedStyle;
+    });
 
-    expect(() => render(<FreezeAnimatedStyleHandle />)).not.toThrow();
+    const { styleUpdaterContainer } = result.current as unknown as {
+      styleUpdaterContainer: StyleUpdaterContainer;
+    };
+
+    expect(Object.isFrozen(styleUpdaterContainer)).toBe(false);
+    expect(styleUpdaterContainer.current).toBeDefined();
   });
 });
