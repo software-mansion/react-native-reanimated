@@ -1,9 +1,22 @@
 # Local dashboard
 
-Build the harness, then start the dashboard with the same build directory:
+Configure and build the two native test binaries before starting the dashboard:
+
+```sh
+cmake -S harness -B build/layout-animation-harness -G Ninja
+cmake --build build/layout-animation-harness --target harness_ios_tests harness_android_tests --parallel
+```
+
+Then start the dashboard with the same build directory:
 
 ```sh
 node harness/dashboard/server.mjs --build build/layout-animation-harness
 ```
 
 Open `http://127.0.0.1:4173`. The server binds only to localhost. It can rebuild both native targets, run one test or the complete suite, and replay the mounted host-tree state from every transaction. Traces are temporary and are not part of CI output.
+
+The server exits with the missing build command when either test binary is absent instead of showing an empty suite.
+
+Point `--build` at a build configured against another Reanimated checkout to inspect that branch's conditional tests and behavior.
+
+The canvas and view hierarchy share one selection. A selected tag stays selected as frames advance, including frames where it is not mounted, so its full lifecycle can be followed in either direction. Use the frame number for exact jumps in long traces, the range control for scrubbing, and Play for continuous replay. Left and right arrow keys step frames and Space toggles playback when focus is outside a control. In the view hierarchy, Up, Down, Home, and End move between rows.

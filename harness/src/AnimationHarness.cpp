@@ -7,6 +7,9 @@
 #include <jsi/jsi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
+#ifdef HARNESS_PROXY_REGISTRY
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
+#endif
 #include <worklets/Compat/StableApi.h>
 #include <worklets/Tools/UIScheduler.h>
 
@@ -45,6 +48,12 @@ class TimelineUIScheduler final : public worklets::UIScheduler {
 
   void triggerUI() override {}
 
+#ifdef HARNESS_PROXY_REGISTRY
+  bool queryIsOnUIThread() const override {
+    return timeline_.isOn(Lane::UI);
+  }
+#endif
+
  private:
   Choreographer &timeline_;
 };
@@ -69,6 +78,21 @@ class TimelineCallInvoker final : public CallInvoker {
 void setIfPresent(jsi::Runtime &runtime, jsi::Object &object, const char *name, const std::optional<double> &value) {
   if (value) {
     object.setProperty(runtime, name, *value);
+  }
+}
+
+void recordNumericProperties(
+    jsi::Runtime &runtime,
+    const jsi::Object &object,
+    const std::string &prefix,
+    std::unordered_map<std::string, double> &recordedValues) {
+  auto names = object.getPropertyNames(runtime);
+  for (size_t index = 0; index < names.size(runtime); ++index) {
+    auto name = names.getValueAtIndex(runtime, index).asString(runtime);
+    auto value = object.getProperty(runtime, name);
+    if (value.isNumber()) {
+      recordedValues.emplace(prefix + name.utf8(runtime), value.asNumber());
+    }
   }
 }
 
@@ -97,6 +121,31 @@ AnimationHarness::AnimationHarness(DriverMode mode)
     }
     return mountedTags;
   };
+#endif
+  installAnimationRepository();
+#ifdef HARNESS_PROXY_REGISTRY
+  const auto dependencies = LayoutAnimationsProxyDependencies{
+      .layoutAnimationsManager = manager_,
+      .componentDescriptorRegistry = platform_.componentDescriptorRegistry(),
+      .contextContainer = platform_.contextContainer(),
+      .uiRuntime = *runtime_,
+      .uiScheduler = uiScheduler_,
+      .uiManager = platform_.uiManager(),
+      .requestLayoutAnimationFlush =
+          [this](SurfaceId) { uiScheduler_->scheduleOnUI([this] { flushRequested_ = true; }); },
+#ifdef ANDROID
+      .filterUnmountedTagsFunction = preserveMountedTags,
+      .jsInvoker = jsInvoker_,
+#endif
+#ifdef __APPLE__
+      .forceScreenSnapshot = [](Tag) {},
+#endif
+  };
+  proxyRegistry_ = createLayoutAnimationsProxyExperimentalRegistry(dependencies);
+  platform_.visitShadowTree(
+      [this](const ShadowTree &shadowTree) { proxy_ = proxyRegistry_->registerSurface(shadowTree); });
+#else
+#ifdef ANDROID
   proxy_ = std::make_shared<LayoutAnimationsProxy_Experimental>(
       manager_,
       platform_.componentDescriptorRegistry(),
@@ -110,15 +159,19 @@ AnimationHarness::AnimationHarness(DriverMode mode)
   proxy_ = std::make_shared<LayoutAnimationsProxy_Experimental>(
       manager_, platform_.componentDescriptorRegistry(), platform_.contextContainer(), *runtime_, uiScheduler_);
 #endif
-  installAnimationRepository();
   proxy_->startSurface(1);
 #ifdef __APPLE__
   proxy_->setForceScreenSnapshotFunction([](Tag) {});
 #endif
   platform_.setMountingOverrideDelegate(proxy_);
+#endif
 }
 
-AnimationHarness::~AnimationHarness() = default;
+AnimationHarness::~AnimationHarness() {
+#ifdef HARNESS_PROXY_REGISTRY
+  proxyRegistry_->remove(1);
+#endif
+}
 
 Choreographer &AnimationHarness::timeline() {
   return timeline_;
@@ -162,30 +215,48 @@ void AnimationHarness::progress(Tag tag, const ProgressStyle &style) {
   setIfPresent(*runtime_, value, "width", style.width);
   setIfPresent(*runtime_, value, "height", style.height);
   setIfPresent(*runtime_, value, "opacity", style.opacity);
+#ifdef HARNESS_PROXY_REGISTRY
+  flushRequested_ |= proxyRegistry_->progressLayoutAnimation(tag, value).has_value();
+#else
   flushRequested_ |= proxy_->progressLayoutAnimation(tag, value).has_value();
+#endif
 }
 
 void AnimationHarness::end(Tag tag, bool shouldRemove) {
   timeline_.requireLane(Lane::UI);
+#ifdef HARNESS_PROXY_REGISTRY
+  flushRequested_ |= proxyRegistry_->endLayoutAnimation(tag, shouldRemove).has_value();
+#else
   flushRequested_ |= proxy_->endLayoutAnimation(tag, shouldRemove).has_value();
+#endif
   activeAnimations_.erase(tag);
 }
 
 void AnimationHarness::transitionProgress(Tag boundaryTag, double progress, bool isClosing, bool isGoingForward) {
   timeline_.requireLane(Lane::UI);
+#ifdef HARNESS_PROXY_REGISTRY
+  flushRequested_ |= proxyRegistry_->onTransitionProgress(boundaryTag, progress, isClosing, isGoingForward).has_value();
+#else
   flushRequested_ |= proxy_->onTransitionProgress(boundaryTag, progress, isClosing, isGoingForward).has_value();
+#endif
 }
 
-void AnimationHarness::cancelTransition() {
+void AnimationHarness::cancelTransition(Tag sourceTag) {
   timeline_.requireLane(Lane::UI);
+#ifdef HARNESS_PROXY_REGISTRY
+  flushRequested_ |= proxyRegistry_->onGestureCancel(sourceTag).has_value();
+#else
   flushRequested_ |= proxy_->onGestureCancel().has_value();
+#endif
 }
 
 void AnimationHarness::frame() {
   timeline_.requireLane(Lane::UI);
-  if (flushRequested_) {
+  if (std::exchange(flushRequested_, false)) {
+#ifdef HARNESS_PROXY_REGISTRY
+    proxyRegistry_->flushLayoutAnimationOperations();
+#endif
     platform_.flushMountingCoordinator();
-    flushRequested_ = false;
   }
   if (mode_ != DriverMode::IOS) {
     platform_.frame();
@@ -202,6 +273,10 @@ const std::vector<Tag> &AnimationHarness::stops() const {
 
 bool AnimationHarness::isActive(Tag tag) const {
   return activeAnimations_.contains(tag);
+}
+
+void AnimationHarness::completeAnimationsOnStart() {
+  completeAnimationsOnStart_ = true;
 }
 
 void AnimationHarness::clearCalls() {
@@ -249,29 +324,37 @@ void AnimationHarness::recordStart(jsi::Runtime &runtime, const jsi::Value *argu
   }
 
   auto tag = static_cast<Tag>(arguments[0].asNumber());
+#ifndef HARNESS_PROXY_REGISTRY
   if (activeAnimations_.erase(tag) != 0) {
     flushRequested_ |= proxy_->endLayoutAnimation(tag, false).has_value();
   }
+#endif
 
   auto values = arguments[2].asObject(runtime);
-  auto valueNames = values.getPropertyNames(runtime);
   auto recordedValues = std::unordered_map<std::string, double>{};
+  recordNumericProperties(runtime, values, {}, recordedValues);
+  auto valueNames = values.getPropertyNames(runtime);
   for (size_t index = 0; index < valueNames.size(runtime); ++index) {
     auto name = valueNames.getValueAtIndex(runtime, index).asString(runtime);
     auto value = values.getProperty(runtime, name);
-    if (value.isNumber()) {
-      recordedValues.emplace(name.utf8(runtime), value.asNumber());
+    auto key = name.utf8(runtime);
+    if (value.isObject() && (key == "source" || key == "target")) {
+      recordNumericProperties(runtime, value.asObject(runtime), key + ".", recordedValues);
     }
   }
 
   auto config = arguments[3].asObject(runtime).getProperty(runtime, "name").asString(runtime).utf8(runtime);
+  const auto type = static_cast<LayoutAnimationType>(arguments[1].asNumber());
   starts_.push_back({
       .tag = tag,
-      .type = static_cast<LayoutAnimationType>(arguments[1].asNumber()),
+      .type = type,
       .config = std::move(config),
       .values = std::move(recordedValues),
   });
   activeAnimations_.insert(tag);
+  if (completeAnimationsOnStart_) {
+    end(tag, type == LayoutAnimationType::EXITING);
+  }
 }
 
 } // namespace reanimated::layout_animation::test

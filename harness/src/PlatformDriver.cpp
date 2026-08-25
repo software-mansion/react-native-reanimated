@@ -113,6 +113,8 @@ PlatformDriver::PlatformDriver(Choreographer &choreographer, DriverMode mode)
       treeBuilder_(surfaceId_, contextContainer_),
       uiManager_(std::make_shared<UIManager>([](auto &&) {}, contextContainer_)) {
   componentDescriptorProviderRegistry_->add(concreteComponentDescriptorProvider<ViewComponentDescriptor>());
+  componentDescriptorProviderRegistry_->add(concreteComponentDescriptorProvider<RNSScreenComponentDescriptor>());
+  componentDescriptorProviderRegistry_->add(concreteComponentDescriptorProvider<RNSModalScreenComponentDescriptor>());
   componentDescriptorProviderRegistry_->add(
       concreteComponentDescriptorProvider<REASharedTransitionBoundaryComponentDescriptor>());
   uiManager_->setComponentDescriptorRegistry(componentDescriptorRegistry_);
@@ -163,6 +165,23 @@ void PlatformDriver::flushMountingCoordinator() {
       surfaceId_, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
 }
 
+void PlatformDriver::pauseNextAndroidMountSchedule() {
+  choreographer_.requireLane(Lane::JS);
+  if (mode_ != DriverMode::AndroidPush || pauseNextAndroidMountSchedule_ || pausedAndroidMountItem_) {
+    throw std::logic_error("Android mount scheduling cannot be paused");
+  }
+  pauseNextAndroidMountSchedule_ = true;
+}
+
+void PlatformDriver::resumeAndroidMountSchedule() {
+  choreographer_.requireLane(Lane::JS);
+  if (!pausedAndroidMountItem_) {
+    throw std::logic_error("No Android mount schedule is paused");
+  }
+  androidMountItems_.push_back(std::move(*pausedAndroidMountItem_));
+  pausedAndroidMountItem_.reset();
+}
+
 void PlatformDriver::setMountingOverrideDelegate(const std::shared_ptr<const MountingOverrideDelegate> &delegate) {
   uiManager_->getShadowTreeRegistry().visit(surfaceId_, [&](const ShadowTree &shadowTree) {
     shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(delegate);
@@ -183,6 +202,10 @@ const SharedComponentDescriptorRegistry &PlatformDriver::componentDescriptorRegi
 
 const std::shared_ptr<UIManager> &PlatformDriver::uiManager() const {
   return uiManager_;
+}
+
+void PlatformDriver::visitShadowTree(const std::function<void(const ShadowTree &)> &visitor) const {
+  uiManager_->getShadowTreeRegistry().visit(surfaceId_, visitor);
 }
 
 std::vector<std::string> PlatformDriver::takeMountingLogs() {
@@ -212,6 +235,16 @@ void PlatformDriver::uiManagerDidFinishTransaction(
 
   if (mode_ == DriverMode::AndroidPush) {
     pullAndroid(coordinator);
+  }
+
+  if (!mountSynchronously && pauseNextAndroidMountSchedule_) {
+    pauseNextAndroidMountSchedule_ = false;
+    if (!pendingAndroidTransaction_) {
+      throw std::logic_error("Paused Android commit produced no mount transaction");
+    }
+    pausedAndroidMountItem_.emplace(AndroidMountItem{std::move(*pendingAndroidTransaction_), coordinator});
+    pendingAndroidTransaction_.reset();
+    return;
   }
 
   if (mountSynchronously) {
@@ -356,6 +389,14 @@ void PlatformDriver::initiateIOS(const std::shared_ptr<const MountingCoordinator
 
 void PlatformDriver::mount(MountingTransaction &transaction) const {
   for (const auto &mutation : transaction.getMutations()) {
+    if (mutation.type == ShadowViewMutation::Insert && !mutation.mutatedViewIsVirtual()) {
+      const auto childCount = hostTree_.getStubView(mutation.parentTag).children.size();
+      if (mutation.index < 0 || static_cast<size_t>(mutation.index) > childCount) {
+        throw std::runtime_error(
+            "Invalid Insert for tag " + std::to_string(mutation.newChildShadowView.tag) + " at index " +
+            std::to_string(mutation.index) + " with " + std::to_string(childCount) + " mounted children");
+      }
+    }
     hostTree_.mutate({mutation});
     runEffect(mutation);
   }

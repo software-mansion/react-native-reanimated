@@ -28,7 +28,11 @@ class UIScheduler;
 
 namespace reanimated {
 class LayoutAnimationsManager;
+class LayoutAnimationsProxyCommon;
 struct LayoutAnimationsProxy_Experimental;
+#ifdef HARNESS_PROXY_REGISTRY
+class LayoutAnimationsProxyRegistry;
+#endif
 } // namespace reanimated
 
 namespace reanimated::layout_animation::test {
@@ -76,12 +80,13 @@ class AnimationHarness {
   void progress(facebook::react::Tag tag, const ProgressStyle &style);
   void end(facebook::react::Tag tag, bool shouldRemove);
   void transitionProgress(facebook::react::Tag boundaryTag, double progress, bool isClosing, bool isGoingForward);
-  void cancelTransition();
+  void cancelTransition(facebook::react::Tag sourceTag);
   void frame();
 
   const std::vector<AnimationStart> &starts() const;
   const std::vector<facebook::react::Tag> &stops() const;
   bool isActive(facebook::react::Tag tag) const;
+  void completeAnimationsOnStart();
   void clearCalls();
 
  private:
@@ -95,11 +100,17 @@ class AnimationHarness {
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker_;
   std::shared_ptr<LayoutAnimationsManager> manager_;
   PlatformDriver platform_;
+#ifdef HARNESS_PROXY_REGISTRY
+  std::shared_ptr<LayoutAnimationsProxyRegistry> proxyRegistry_;
+  std::shared_ptr<LayoutAnimationsProxyCommon> proxy_;
+#else
   std::shared_ptr<LayoutAnimationsProxy_Experimental> proxy_;
+#endif
   bool flushRequested_{false};
   std::vector<AnimationStart> starts_;
   std::vector<facebook::react::Tag> stops_;
   std::unordered_set<facebook::react::Tag> activeAnimations_;
+  bool completeAnimationsOnStart_{false};
 };
 
 } // namespace reanimated::layout_animation::test

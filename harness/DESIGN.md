@@ -25,11 +25,13 @@ A node can declare `onMount`, `onUpdate`, or `onRemove`. The driver runs the cal
 
 `Choreographer` runs all tasks on one physical thread. It tracks virtual time, lane availability, and the currently executing lane. A stable sequence number orders events with the same due time. This gives deterministic interleavings without weakening the production lock boundaries.
 
-`TreeBuilder` creates real `RootShadowNode` and `ViewShadowNode` revisions. `ShadowTree` owns the real `MountingCoordinator`, differentiator, and introspection `StubViewTree`.
+`TreeBuilder` creates real `RootShadowNode`, `ViewShadowNode`, shared-transition boundary, and `RNSScreen` revisions. Shared-transition fixtures place active boundaries under screen families so the proxy traverses the same component-name ancestry it expects in an app. `ShadowTree` owns the real `MountingCoordinator`, differentiator, and introspection `StubViewTree`.
 
 `PlatformDriver` implements `ShadowTreeDelegate` and applies returned transactions to a second `StubViewTree`, which represents the host hierarchy.
 
-`AnimationHarness` owns a bare Hermes runtime, the real `LayoutAnimationsManager`, and the real experimental proxy. Its tiny host-function repository records starts and stops. When a start replaces an animation already running for the same tag, it sends the same synchronous native end notification as the production JavaScript manager. Progress flushes on a frame before completion.
+`AnimationHarness` owns a bare Hermes runtime, the real `LayoutAnimationsManager`, and the real experimental proxy. It adapts at compile time to both the pre-registry single proxy and the newer per-surface proxy registry without changing test stimuli. Its tiny host-function repository records starts and stops. When a pre-registry proxy start replaces an animation already running for the same tag, it sends the same synchronous native end notification as the production JavaScript manager. Progress flushes on a frame before completion.
+
+The newer Worklets scheduler normally caches UI-thread identity in thread-local storage. Because the harness runs virtual JS and UI lanes on one physical thread, its bridge asks the choreographer for the current lane on every query. This preserves the production decision boundary without introducing real-thread nondeterminism.
 
 The driver modes are:
 
@@ -40,6 +42,8 @@ The driver modes are:
 | iOS | on the main/UI lane | immediately, with a follow-up pull after reentrant commits |
 
 The Android mount-item queue snapshots its current items and rejects nested dispatch. Items created by a mount side effect therefore wait for the next frame. The iOS driver records a follow-up request and pulls it on the same stack after the current mount.
+
+The Android push driver can pause one asynchronous mount at the boundary after C++ swaps its pending transaction but before Java receives the mount item. UI work may run during that interruption; resuming the paused JS stack still precedes callbacks already queued to the JS lane. This narrow test control reproduces the historical cleanup inversion without exposing a raw pull operation.
 
 ## Observable assertions
 
@@ -60,6 +64,8 @@ ctest --test-dir build/layout-animation-harness --output-on-failure
 `REACT_COMMON_DIR`, `REANIMATED_DIR`, `WORKLETS_DIR`, and `HERMES_ROOT` are cache variables for testing another React Native or Reanimated checkout. The two binaries compile the proxy separately with and without `ANDROID`; the Android binary runs every scenario in both push and pull modes.
 
 See [EXAMPLE_COVERAGE.md](EXAMPLE_COVERAGE.md) for the manual-example mapping.
+
+Run [MUTATION_TESTING.md](MUTATION_TESTING.md) to verify that the behavioral tests fail when selected native invariants or the two historical PR fixes are deliberately reversed.
 
 For local inspection, run `node harness/dashboard/server.mjs --build build/layout-animation-harness` and open `http://127.0.0.1:4173`. The dashboard runs individual native tests and replays the mounted host hierarchy after every transaction, including layout metrics, opacity, z-index, and mutation lists. Trace output is enabled only for dashboard-launched processes.
 

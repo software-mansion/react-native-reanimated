@@ -59,16 +59,34 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 include(GoogleTest)
 
+set(harness_uses_proxy_registry OFF)
+if(EXISTS ${REANIMATED_DIR}/Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.cpp)
+  set(harness_uses_proxy_registry ON)
+endif()
+
 set(reanimated_layout_animations_sources
   ${REANIMATED_DIR}/Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsManager.cpp
   ${REANIMATED_DIR}/Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.cpp
   ${REANIMATED_DIR}/Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.cpp
-  ${REANIMATED_DIR}/Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsUtils.cpp
   ${REANIMATED_DIR}/Common/cpp/reanimated/LayoutAnimations/PropsDiffer.cpp
   ${REANIMATED_DIR}/Common/cpp/reanimated/LayoutAnimations/SharedTransitions.cpp
   ${REANIMATED_DIR}/Common/cpp/reanimated/Fabric/ShadowTreeCloner.cpp
-  ${WORKLETS_DIR}/Common/cpp/worklets/Tools/UIScheduler.cpp
   src/WorkletsBridge.cpp)
+
+if(NOT harness_uses_proxy_registry)
+  list(APPEND reanimated_layout_animations_sources
+       ${WORKLETS_DIR}/Common/cpp/worklets/Tools/UIScheduler.cpp)
+endif()
+
+if(EXISTS ${REANIMATED_DIR}/Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsUtils.cpp)
+  list(APPEND reanimated_layout_animations_sources
+       ${REANIMATED_DIR}/Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsUtils.cpp)
+endif()
+
+if(harness_uses_proxy_registry)
+  list(APPEND reanimated_layout_animations_sources
+       ${REANIMATED_DIR}/Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.cpp)
+endif()
 
 function(add_layout_animation_variant name)
   add_library(
@@ -95,6 +113,11 @@ function(add_layout_animation_variant name)
   target_link_libraries(
     layout_animation_harness_${name}
     PUBLIC harness_runtime_${name} reanimated_layout_animations_${name})
+
+  if(harness_uses_proxy_registry)
+    target_compile_definitions(reanimated_layout_animations_${name}
+                               PUBLIC HARNESS_PROXY_REGISTRY=1)
+  endif()
 
   if(name STREQUAL android)
     target_compile_definitions(reanimated_layout_animations_${name}

@@ -8,12 +8,28 @@
 #include <vector>
 
 #include <react/renderer/components/rnreanimated/REASharedTransitionBoundaryComponentDescriptor.h>
+#include <react/renderer/components/view/ConcreteViewShadowNode.h>
 #include <react/renderer/components/view/ViewComponentDescriptor.h>
+#include <react/renderer/core/ConcreteComponentDescriptor.h>
 #include <react/renderer/core/ReactPrimitives.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/utils/ContextContainer.h>
 
 namespace reanimated::layout_animation::test {
+
+inline constexpr char RNSScreenComponentName[] = "RNSScreen";
+using RNSScreenShadowNode = facebook::react::ConcreteViewShadowNode<
+    RNSScreenComponentName,
+    facebook::react::ViewShadowNodeProps,
+    facebook::react::ViewEventEmitter>;
+using RNSScreenComponentDescriptor = facebook::react::ConcreteComponentDescriptor<RNSScreenShadowNode>;
+
+inline constexpr char RNSModalScreenComponentName[] = "RNSModalScreen";
+using RNSModalScreenShadowNode = facebook::react::ConcreteViewShadowNode<
+    RNSModalScreenComponentName,
+    facebook::react::ViewShadowNodeProps,
+    facebook::react::ViewEventEmitter>;
+using RNSModalScreenComponentDescriptor = facebook::react::ConcreteComponentDescriptor<RNSModalScreenShadowNode>;
 
 using MutationCallback = std::shared_ptr<const std::function<void()>>;
 
@@ -32,6 +48,8 @@ struct MutationEffects {
   MutationCallback onRemove;
 };
 
+enum class NodeKind : uint8_t { View, Screen, ModalScreen, SharedTransitionBoundary };
+
 struct ViewSpec {
   facebook::react::Tag tag;
   Frame frame;
@@ -39,7 +57,8 @@ struct ViewSpec {
   MutationEffects effects;
   bool collapsable{false};
   bool hasNativeId{true};
-  bool sharedTransitionBoundary{false};
+  float opacity{1};
+  NodeKind kind{NodeKind::View};
   bool boundaryActive{false};
   bool displayNone{false};
   uint32_t generation{0};
@@ -59,6 +78,8 @@ ViewSpec viewInstance(
     std::vector<ViewSpec> children = {},
     MutationEffects effects = {});
 ViewSpec sharedTransitionBoundary(facebook::react::Tag tag, bool active, std::vector<ViewSpec> children);
+ViewSpec screen(facebook::react::Tag tag, std::vector<ViewSpec> children);
+ViewSpec modalScreen(facebook::react::Tag tag, std::vector<ViewSpec> children);
 
 struct Snapshot {
   std::vector<ViewSpec> children;
@@ -79,16 +100,23 @@ class TreeBuilder {
  private:
   using Family = facebook::react::ShadowNodeFamily::Shared;
 
+  struct FamilyEntry {
+    Family family;
+    NodeKind kind;
+  };
+
   std::shared_ptr<const facebook::react::ShadowNode> buildView(
       const ViewSpec &spec,
       std::unordered_set<facebook::react::Tag> &seenTags);
-  Family familyFor(facebook::react::Tag tag, uint32_t generation, bool sharedTransitionBoundary);
+  Family familyFor(facebook::react::Tag tag, uint32_t generation, NodeKind kind);
   void registerEffects(facebook::react::Tag tag, const MutationEffects &effects);
 
   facebook::react::SurfaceId surfaceId_;
   facebook::react::ViewComponentDescriptor viewDescriptor_;
+  RNSScreenComponentDescriptor screenDescriptor_;
+  RNSModalScreenComponentDescriptor modalScreenDescriptor_;
   facebook::react::REASharedTransitionBoundaryComponentDescriptor sharedTransitionBoundaryDescriptor_;
-  std::unordered_map<uint64_t, Family> families_;
+  std::unordered_map<uint64_t, FamilyEntry> families_;
   std::unordered_map<facebook::react::Tag, MutationEffects> effects_;
 };
 

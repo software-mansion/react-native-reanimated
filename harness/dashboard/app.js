@@ -6,15 +6,16 @@ const state = {
   search: '',
   runIndex: 0,
   frameIndex: 0,
-  selectedNode: null,
+  selectedTag: null,
   timer: null,
+  buildOutput: '',
 };
 
 const elements = Object.fromEntries([
-  'build', 'build-path', 'empty', 'failed-count', 'frame-info', 'frame-label', 'mode-tabs', 'mutations',
-  'next-frame', 'node-info', 'output', 'passed-count', 'pending-count', 'play', 'previous-frame', 'run-all',
-  'run-one', 'run-status', 'search', 'stage', 'test-detail', 'test-list', 'test-meta', 'test-name', 'test-suite',
-  'timeline', 'total-count',
+  'build', 'build-path', 'empty', 'failed-count', 'frame-info', 'frame-label', 'frame-number', 'frame-total',
+  'mode-tabs', 'mutations', 'next-frame', 'node-info', 'output', 'passed-count', 'pending-count', 'play',
+  'previous-frame', 'run-all', 'run-one', 'run-status', 'search', 'stage', 'test-detail', 'test-list',
+  'test-meta', 'test-name', 'test-suite', 'timeline', 'total-count', 'view-count', 'view-list',
 ].map((id) => [id, document.getElementById(id)]));
 
 elements.search.addEventListener('input', (event) => {
@@ -25,8 +26,18 @@ elements['run-all'].addEventListener('click', () => runTests(state.tests.map((te
 elements['run-one'].addEventListener('click', () => state.selectedId && runTests([state.selectedId]));
 elements.build.addEventListener('click', build);
 elements.timeline.addEventListener('input', (event) => {
+  stopPlayback();
   state.frameIndex = Number(event.target.value);
-  state.selectedNode = null;
+  renderReplay();
+});
+elements['frame-number'].addEventListener('change', (event) => {
+  const frames = currentFrames();
+  if (frames.length === 0) {
+    return;
+  }
+  stopPlayback();
+  const index = Math.trunc(Number(event.target.value)) - 1;
+  state.frameIndex = Number.isFinite(index) ? Math.min(frames.length - 1, Math.max(0, index)) : state.frameIndex;
   renderReplay();
 });
 elements['previous-frame'].addEventListener('click', () => stepFrame(-1));
@@ -37,6 +48,18 @@ document.querySelectorAll('.filter').forEach((button) => button.addEventListener
   document.querySelectorAll('.filter').forEach((candidate) => candidate.classList.toggle('active', candidate === button));
   renderList();
 }));
+document.addEventListener('keydown', (event) => {
+  if (event.metaKey || event.ctrlKey || event.altKey || event.target.closest('button, input, summary')) {
+    return;
+  }
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    event.preventDefault();
+    stepFrame(event.key === 'ArrowLeft' ? -1 : 1);
+  } else if (event.key === ' ') {
+    event.preventDefault();
+    togglePlayback();
+  }
+});
 
 loadTests();
 
@@ -54,7 +77,13 @@ async function build() {
     const response = await fetch('/api/build', { method: 'POST' });
     const payload = await response.json();
     state.tests = payload.tests ?? state.tests;
-    elements.output.textContent = payload.output ?? '';
+    state.buildOutput = payload.output ?? '';
+    if (payload.passed) {
+      state.results.clear();
+      state.runIndex = 0;
+      state.frameIndex = 0;
+      state.selectedTag = null;
+    }
     elements['run-status'].textContent = payload.passed ? 'Build passed' : 'Build failed';
     render();
   } finally {
@@ -82,7 +111,7 @@ async function runTests(ids) {
       state.selectedId = ids[0];
       state.runIndex = 0;
       state.frameIndex = 0;
-      state.selectedNode = null;
+      state.selectedTag = null;
     }
     elements['run-status'].textContent = `${payload.results.filter((result) => result.passed).length}/${payload.results.length} passed`;
     render();
@@ -133,6 +162,7 @@ function renderList() {
     }
     const result = state.results.get(test.id);
     const row = document.createElement('button');
+    row.type = 'button';
     row.className = `test-row${test.id === state.selectedId ? ' selected' : ''}`;
     row.innerHTML = `<span class="result-dot ${result ? (result.passed ? 'passed' : 'failed') : ''}"></span>`;
     const name = document.createElement('span');
@@ -151,7 +181,7 @@ function selectTest(id) {
   state.selectedId = id;
   state.runIndex = 0;
   state.frameIndex = 0;
-  state.selectedNode = null;
+  state.selectedTag = null;
   render();
 }
 
@@ -169,7 +199,8 @@ function renderDetail() {
   elements['test-meta'].replaceChildren(
       chip(result ? (result.passed ? 'Passed' : 'Failed') : 'Not run', result ? (result.passed ? 'passed' : 'failed') : ''),
       chip(result ? `${result.duration} ms` : 'No result'));
-  elements.output.textContent = result?.output ?? 'Run the test to capture native output and mounted frames.';
+  elements.output.textContent = result?.output || state.buildOutput ||
+      'Run the test to capture native output and mounted frames.';
   renderModeTabs(result);
   renderReplay();
 }
@@ -179,12 +210,12 @@ function renderModeTabs(result) {
   const runs = result?.runs ?? [];
   runs.forEach((run, index) => {
     const button = document.createElement('button');
+    button.type = 'button';
     button.className = `mode-tab${index === state.runIndex ? ' active' : ''}`;
     button.textContent = `${run.mode} · ${run.frames.length} frames`;
     button.addEventListener('click', () => {
       state.runIndex = index;
       state.frameIndex = 0;
-      state.selectedNode = null;
       stopPlayback();
       renderDetail();
     });
@@ -200,6 +231,13 @@ function renderReplay() {
   elements.timeline.max = Math.max(0, frames.length - 1);
   elements.timeline.value = state.frameIndex;
   elements.timeline.disabled = frames.length < 2;
+  elements['frame-number'].max = Math.max(1, frames.length);
+  elements['frame-number'].value = frames.length ? state.frameIndex + 1 : 0;
+  elements['frame-number'].disabled = frames.length === 0;
+  elements['frame-total'].textContent = `/ ${frames.length}`;
+  elements['previous-frame'].disabled = frames.length < 2;
+  elements['next-frame'].disabled = frames.length < 2;
+  elements.play.disabled = frames.length < 2;
   elements.stage.replaceChildren();
 
   if (frames.length === 0) {
@@ -207,20 +245,28 @@ function renderReplay() {
     elements.stage.innerHTML = '<div class="no-trace">Run this scenario to capture its mounted host tree.</div>';
     renderDefinitionList(elements['frame-info'], [['State', 'No captured frames']]);
     renderDefinitionList(elements['node-info'], [['Tip', 'Click a mounted view']]);
+    elements['view-count'].textContent = '0 views';
+    elements['view-list'].replaceChildren();
     elements.mutations.replaceChildren();
     return;
   }
 
   const frame = frames[state.frameIndex];
-  elements['frame-label'].textContent = `Frame ${state.frameIndex + 1}/${frames.length} · ${frame.time} ms`;
+  const selectedNode = state.selectedTag === null ? null : findNode(frame.root, state.selectedTag);
+  elements['frame-label'].textContent = `${frame.time} ms · transaction #${frame.transaction}`;
   renderDefinitionList(elements['frame-info'], [
     ['Virtual time', `${frame.time} ms`],
     ['Transaction', `#${frame.transaction}`],
     ['Host views', String(countNodes(frame.root) - 1)],
   ]);
-  renderDefinitionList(elements['node-info'], state.selectedNode ? nodeRows(state.selectedNode) : [['Tip', 'Click a mounted view']]);
+  renderDefinitionList(
+      elements['node-info'],
+      selectedNode ? nodeRows(selectedNode) : state.selectedTag === null ?
+          [['Tip', 'Select a view on the canvas or in the hierarchy']] :
+          [['Tag', `#${state.selectedTag}`], ['State', 'Not mounted in this frame']]);
   renderMutations(frame.mutations);
   renderStage(frame.root);
+  renderViewList(frame.root);
 }
 
 function renderStage(root) {
@@ -228,28 +274,44 @@ function renderStage(root) {
   const height = Math.max(1, root.frame.height);
   elements.stage.style.aspectRatio = `${width} / ${height}`;
   for (const child of root.children) {
-    elements.stage.append(nodeElement(child, root));
+    appendStageNode(child, root.frame, 1, root.frame);
   }
 }
 
-function nodeElement(node, parent) {
+function appendStageNode(node, parentFrame, parentOpacity, rootFrame) {
+  const frame = {
+    x: parentFrame.x + node.frame.x,
+    y: parentFrame.y + node.frame.y,
+    width: node.frame.width,
+    height: node.frame.height,
+  };
+  const opacity = parentOpacity * node.opacity;
+  elements.stage.append(nodeElement(node, frame, opacity, rootFrame));
+  for (const child of node.children) {
+    appendStageNode(child, frame, opacity, rootFrame);
+  }
+}
+
+function nodeElement(node, frame, opacity, rootFrame) {
   const element = document.createElement('div');
-  const selected = state.selectedNode?.tag === node.tag;
+  const selected = state.selectedTag === node.tag;
   element.className = `mounted-node${node.tag >= 10_000_000 ? ' synthetic' : ''}${selected ? ' selected' : ''}`;
   element.role = 'button';
   element.tabIndex = 0;
-  element.style.left = percent(node.frame.x, parent.frame.width);
-  element.style.top = percent(node.frame.y, parent.frame.height);
-  element.style.width = percent(node.frame.width, parent.frame.width);
-  element.style.height = percent(node.frame.height, parent.frame.height);
-  element.style.opacity = node.opacity;
+  element.dataset.nodeTag = node.tag;
+  element.ariaLabel = `View ${node.tag}, ${node.component}`;
+  element.ariaPressed = String(selected);
+  element.style.left = percent(frame.x - rootFrame.x, rootFrame.width);
+  element.style.top = percent(frame.y - rootFrame.y, rootFrame.height);
+  element.style.width = percent(frame.width, rootFrame.width);
+  element.style.height = percent(frame.height, rootFrame.height);
+  element.style.opacity = opacity;
   element.style.zIndex = node.zIndex;
   element.style.background = colorForTag(node.tag);
   element.title = `#${node.tag} ${node.component}`;
   const select = (event) => {
     event.stopPropagation();
-    state.selectedNode = node;
-    renderReplay();
+    selectNode(node.tag, 'stage');
   };
   element.addEventListener('click', select);
   element.addEventListener('keydown', (event) => {
@@ -262,10 +324,76 @@ function nodeElement(node, parent) {
   label.className = 'node-label';
   label.textContent = `#${node.tag}`;
   element.append(label);
-  for (const child of node.children) {
-    element.append(nodeElement(child, node));
-  }
   return element;
+}
+
+function renderViewList(root) {
+  const scrollTop = elements['view-list'].scrollTop;
+  const entries = root.children.flatMap((node) => flattenNodes(node));
+  elements['view-count'].textContent = `${entries.length} ${entries.length === 1 ? 'view' : 'views'}`;
+  elements['view-list'].replaceChildren(...entries.map(({ node, depth }) => {
+    const entry = document.createElement('div');
+    entry.className = 'view-entry';
+    entry.role = 'listitem';
+    const button = document.createElement('button');
+    button.type = 'button';
+    const selected = state.selectedTag === node.tag;
+    button.className = `view-row${selected ? ' selected' : ''}`;
+    button.dataset.viewTag = node.tag;
+    button.style.setProperty('--depth', depth);
+    button.ariaLabel = `${node.component} view ${node.tag}, hierarchy level ${depth + 1}`;
+    button.ariaPressed = String(selected);
+    button.title = `${node.component} #${node.tag}`;
+
+    const branch = document.createElement('span');
+    branch.className = 'view-branch';
+    branch.textContent = node.children.length ? '⌄' : '·';
+    const swatch = document.createElement('span');
+    swatch.className = 'view-swatch';
+    swatch.style.background = colorForTag(node.tag);
+    const component = document.createElement('span');
+    component.className = 'view-component';
+    component.textContent = node.component;
+    const tag = document.createElement('span');
+    tag.className = 'view-tag';
+    tag.textContent = `#${node.tag}`;
+    button.append(branch, swatch, component, tag);
+    button.addEventListener('click', () => selectNode(node.tag, 'view-list'));
+    button.addEventListener('keydown', navigateViewList);
+    entry.append(button);
+    return entry;
+  }));
+  elements['view-list'].scrollTop = scrollTop;
+}
+
+function flattenNodes(node, depth = 0) {
+  return [
+    { node, depth },
+    ...node.children.flatMap((child) => flattenNodes(child, depth + 1)),
+  ];
+}
+
+function navigateViewList(event) {
+  const rows = [...elements['view-list'].querySelectorAll('.view-row')];
+  const index = rows.indexOf(event.currentTarget);
+  const target = event.key === 'ArrowDown' ? rows[index + 1] :
+      event.key === 'ArrowUp' ? rows[index - 1] :
+      event.key === 'Home' ? rows[0] :
+      event.key === 'End' ? rows.at(-1) : null;
+  if (target) {
+    event.preventDefault();
+    target.focus();
+  }
+}
+
+function selectNode(tag, surface) {
+  state.selectedTag = tag;
+  renderReplay();
+  const selector = surface === 'stage' ? `[data-node-tag="${tag}"]` : `[data-view-tag="${tag}"]`;
+  const selected = elements[surface].querySelector(selector);
+  selected?.focus({ preventScroll: surface === 'stage' });
+  const treeRow = elements['view-list'].querySelector(`[data-view-tag="${tag}"]`);
+  treeRow?.scrollIntoView({ block: 'nearest' });
 }
 
 function renderMutations(mutations) {
@@ -315,12 +443,11 @@ function chip(text, className = '') {
 }
 
 function stepFrame(delta) {
-  const frames = state.results.get(state.selectedId)?.runs?.[state.runIndex]?.frames ?? [];
+  const frames = currentFrames();
   if (frames.length === 0) {
     return;
   }
   state.frameIndex = (state.frameIndex + delta + frames.length) % frames.length;
-  state.selectedNode = null;
   renderReplay();
 }
 
@@ -329,11 +456,12 @@ function togglePlayback() {
     stopPlayback();
     return;
   }
-  const frames = state.results.get(state.selectedId)?.runs?.[state.runIndex]?.frames ?? [];
+  const frames = currentFrames();
   if (frames.length < 2) {
     return;
   }
   elements.play.textContent = 'Pause';
+  elements.play.ariaPressed = 'true';
   state.timer = setInterval(() => stepFrame(1), 550);
 }
 
@@ -341,6 +469,11 @@ function stopPlayback() {
   clearInterval(state.timer);
   state.timer = null;
   elements.play.textContent = 'Play';
+  elements.play.ariaPressed = 'false';
+}
+
+function currentFrames() {
+  return state.results.get(state.selectedId)?.runs?.[state.runIndex]?.frames ?? [];
 }
 
 function percent(value, total) {
@@ -357,4 +490,17 @@ function colorForTag(tag) {
 
 function countNodes(node) {
   return 1 + node.children.reduce((sum, child) => sum + countNodes(child), 0);
+}
+
+function findNode(node, tag) {
+  if (node.tag === tag) {
+    return node;
+  }
+  for (const child of node.children) {
+    const match = findNode(child, tag);
+    if (match) {
+      return match;
+    }
+  }
+  return null;
 }

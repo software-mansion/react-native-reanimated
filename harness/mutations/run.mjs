@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import {
   cpSync,
+  existsSync,
   mkdtempSync,
   mkdirSync,
   readFileSync,
@@ -11,7 +12,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const mutations = [
+const preRegistryMutations = [
   {
     id: 'pending-start-cancellation',
     platform: 'android',
@@ -53,12 +54,143 @@ const mutations = [
     test: 'LayoutAnimationScenariosTest.SharedTagMovesBetweenActiveBoundaries',
   },
   {
+    id: 'shared-absolute-position',
+    platform: 'ios',
+    source: 'Common/cpp/reanimated/LayoutAnimations/SharedTransitions.cpp',
+    search: '    copy.layoutMetrics.frame.origin = absolutePositions[0];',
+    replacement: '    copy.layoutMetrics.frame.origin = node->current.layoutMetrics.frame.origin;',
+    test: 'LayoutAnimationScenariosTest.InteractiveSharedTransitionUsesAbsoluteGeometryAtEveryProgress',
+  },
+  {
+    id: 'shared-interactive-progress',
+    platform: 'ios',
+    source: 'Common/cpp/reanimated/LayoutAnimations/SharedTransitions.cpp',
+    search: '      auto x = before.origin.x + transitionProgress_ * (after.origin.x - before.origin.x);',
+    replacement: '      auto x = before.origin.x;',
+    test: 'LayoutAnimationScenariosTest.InteractiveSharedTransitionUsesAbsoluteGeometryAtEveryProgress',
+  },
+  {
     id: 'progress-style-props',
     platform: 'ios',
     source: 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.cpp',
     search: 'UpdateValues{newProps, Frame(uiRuntime_, newStyle)}',
     replacement: 'UpdateValues{layoutAnimation.finalView.props, Frame(uiRuntime_, newStyle)}',
     test: 'LayoutAnimationScenariosTest.ProgressAppliesAnimatedStyleProps',
+  },
+  {
+    id: 'immediate-exit-registration',
+    platform: 'ios',
+    source: 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.cpp',
+    search: `    node->state = ANIMATING;
+    lightNodes_[node->current.tag] = node;
+    startExitingAnimation(node);`,
+    replacement: `    node->state = ANIMATING;
+    startExitingAnimation(node);
+    lightNodes_[node->current.tag] = node;`,
+    test: 'LayoutAnimationScenariosTest.ImmediateExitCompletionCanReenterTheStartCallback',
+  },
+  {
+    id: 'modal-screen-exit-suppression',
+    platform: 'ios',
+    source: 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsUtils.h',
+    search: `static inline bool isRNSScreenOrStack(const std::shared_ptr<LightNode> &node) {
+  const auto componentName = node->current.componentName;
+  react_native_assert(componentName && "Component name is nullptr");
+  return !std::strcmp(componentName, "RNSScreenStack") || !std::strcmp(componentName, "RNSScreen") ||
+      !std::strcmp(componentName, "RNSModalScreen");
+}`,
+    replacement: `static inline bool isRNSScreenOrStack(const std::shared_ptr<LightNode> &node) {
+  const auto componentName = node->current.componentName;
+  react_native_assert(componentName && "Component name is nullptr");
+  return !std::strcmp(componentName, "RNSScreenStack") || !std::strcmp(componentName, "RNSScreen");
+}`,
+    test: 'LayoutAnimationScenariosTest.RemovingAModalScreenSkipsDescendantExitAnimations',
+  },
+  {
+    id: 'waiting-node-recreation',
+    platform: 'ios',
+    source: 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.cpp',
+    search: '      lightNodes_[subNode->current.tag] = subNode;',
+    replacement: '',
+    test: 'LayoutAnimationScenariosTest.RecreatingAWaitingSubviewFlushesItsWithheldRemoval',
+  },
+  {
+    id: 'settled-node-recreation',
+    platform: 'ios',
+    source: 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.cpp',
+    search: `    } else {
+      // A settled exiting view (state DEAD) has already left lightNodes_ but is`,
+    replacement: `    } else {
+      continue;
+      // A settled exiting view (state DEAD) has already left lightNodes_ but is`,
+    test: 'LayoutAnimationScenariosTest.RecreatingASettledExitBeforeCleanupReplacesTheDeadNode',
+  },
+];
+
+const registryMutations = [
+  {
+    id: 'android-ui-cleanup-serialization',
+    platform: 'android',
+    source: 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.cpp',
+    search: `#ifdef ANDROID
+  return !worklets::isOnUIThread(uiScheduler_);
+#else`,
+    replacement: `#ifdef ANDROID
+  return true;
+#else`,
+    test: 'LayoutAnimationStressTest.UICleanupCannotOvertakeAPausedJSMountSchedule',
+  },
+  {
+    id: 'captured-config-retarget',
+    platform: 'ios',
+    source: 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.cpp',
+    search: `        if (!config) {
+          config = getRetargetLayoutAnimationConfig(tag);
+        }
+`,
+    replacement: '',
+    test: 'LayoutAnimationScenariosTest.ConfigRemovalRetargetsWithTheCapturedLayoutConfig',
+  },
+  {
+    id: 'shared-absolute-position',
+    platform: 'ios',
+    source: 'Common/cpp/reanimated/LayoutAnimations/SharedTransitions.cpp',
+    search: '    copy.layoutMetrics.frame.origin = absolutePositions[0];',
+    replacement: '    copy.layoutMetrics.frame.origin = node->current.layoutMetrics.frame.origin;',
+    test: 'LayoutAnimationScenariosTest.InteractiveSharedTransitionUsesAbsoluteGeometryAtEveryProgress',
+  },
+  {
+    id: 'shared-interactive-progress',
+    platform: 'ios',
+    source: 'Common/cpp/reanimated/LayoutAnimations/SharedTransitions.cpp',
+    search: '      auto x = before.origin.x + transition_->progress * (after.origin.x - before.origin.x);',
+    replacement: '      auto x = before.origin.x;',
+    test: 'LayoutAnimationScenariosTest.InteractiveSharedTransitionUsesAbsoluteGeometryAtEveryProgress',
+  },
+  {
+    id: 'modal-screen-exit-suppression',
+    platform: 'ios',
+    source: 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsUtils.h',
+    search: `static inline bool isRNSScreenOrStack(const std::shared_ptr<LightNode> &node) {
+  const auto componentName = node->current.componentName;
+  react_native_assert(componentName && "Component name is nullptr");
+  return !std::strcmp(componentName, "RNSScreenStack") || !std::strcmp(componentName, "RNSScreen") ||
+      !std::strcmp(componentName, "RNSModalScreen");
+}`,
+    replacement: `static inline bool isRNSScreenOrStack(const std::shared_ptr<LightNode> &node) {
+  const auto componentName = node->current.componentName;
+  react_native_assert(componentName && "Component name is nullptr");
+  return !std::strcmp(componentName, "RNSScreenStack") || !std::strcmp(componentName, "RNSScreen");
+}`,
+    test: 'LayoutAnimationScenariosTest.RemovingAModalScreenSkipsDescendantExitAnimations',
+  },
+  {
+    id: 'waiting-node-recreation',
+    platform: 'ios',
+    source: 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.cpp',
+    search: '      lightNodes_[subNode->current.tag] = subNode;',
+    replacement: '',
+    test: 'LayoutAnimationScenariosTest.RecreatingAWaitingSubviewFlushesItsWithheldRemoval',
   },
 ];
 
@@ -68,13 +200,21 @@ const repositoryDirectory = resolve(harnessDirectory, '..');
 const options = parseOptions(process.argv.slice(2));
 const configuredBuild = resolve(repositoryDirectory, options.build ?? 'build/layout-animation-harness');
 const cache = readCache(join(configuredBuild, 'CMakeCache.txt'));
+const configuredReanimated = required(cache, 'REANIMATED_DIR');
+const usesProxyRegistry = existsSync(
+  join(configuredReanimated, 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.cpp'),
+);
+const mutations = usesProxyRegistry ? registryMutations : preRegistryMutations;
 const temporaryDirectory = mkdtempSync(join(tmpdir(), 'layout-animation-mutations-'));
 const reanimatedDirectory = join(temporaryDirectory, 'react-native-reanimated');
 const buildDirectory = join(temporaryDirectory, 'build');
 
 try {
+  process.stdout.write(
+    `Profile: ${usesProxyRegistry ? 'proxy-registry' : 'pre-registry-experimental-proxy'}\n`,
+  );
   mkdirSync(reanimatedDirectory);
-  cpSync(join(required(cache, 'REANIMATED_DIR'), 'Common'), join(reanimatedDirectory, 'Common'), {
+  cpSync(join(configuredReanimated, 'Common'), join(reanimatedDirectory, 'Common'), {
     recursive: true,
   });
 

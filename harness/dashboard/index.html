@@ -17,9 +17,9 @@
         </div>
       </div>
       <div class="actions">
-        <span id="run-status" class="run-status">Ready</span>
-        <button id="build" class="button secondary">Build</button>
-        <button id="run-all" class="button primary">Run all</button>
+        <span id="run-status" class="run-status" aria-live="polite">Ready</span>
+        <button id="build" class="button secondary" type="button">Build</button>
+        <button id="run-all" class="button primary" type="button">Run all</button>
       </div>
     </header>
 
@@ -43,7 +43,7 @@
           <button class="filter" data-platform="android">Android</button>
           <button class="filter" data-platform="failed">Failed</button>
         </div>
-        <div id="test-list" class="test-list"></div>
+        <div id="test-list" class="test-list" aria-label="Layout animation tests"></div>
       </aside>
 
       <main class="detail">
@@ -61,7 +61,7 @@
               <h2 id="test-name"></h2>
               <div id="test-meta" class="test-meta"></div>
             </div>
-            <button id="run-one" class="button primary">Run test</button>
+            <button id="run-one" class="button primary" type="button">Run test</button>
           </div>
 
           <div id="mode-tabs" class="mode-tabs"></div>
@@ -69,14 +69,20 @@
           <section class="replay-panel">
             <div class="replay-toolbar">
               <div class="transport">
-                <button id="previous-frame" aria-label="Previous frame">←</button>
-                <button id="play" aria-label="Play trace">Play</button>
-                <button id="next-frame" aria-label="Next frame">→</button>
+                <button id="previous-frame" type="button" aria-label="Previous frame" title="Previous frame (Left arrow)">←</button>
+                <button id="play" type="button" aria-label="Play trace" aria-pressed="false" title="Play or pause (Space)">Play</button>
+                <button id="next-frame" type="button" aria-label="Next frame" title="Next frame (Right arrow)">→</button>
               </div>
-              <label class="timeline-control">
-                <span id="frame-label">No trace</span>
-                <input id="timeline" type="range" min="0" max="0" value="0" />
+              <label class="frame-jump" for="frame-number">
+                <span>Frame</span>
+                <input id="frame-number" type="number" min="1" max="1" value="0" inputmode="numeric" disabled />
+                <span id="frame-total">/ 0</span>
               </label>
+              <label class="timeline-control">
+                <span class="visually-hidden">Frame timeline</span>
+                <input id="timeline" type="range" min="0" max="0" value="0" aria-describedby="frame-label" />
+              </label>
+              <output id="frame-label" for="timeline frame-number">No trace</output>
             </div>
 
             <div class="replay-grid">
@@ -91,6 +97,13 @@
                 <div>
                   <p class="eyebrow">Selected view</p>
                   <dl id="node-info"><div><dt>Tip</dt><dd>Click a view</dd></div></dl>
+                </div>
+                <div class="views-section">
+                  <div class="inspector-title">
+                    <p class="eyebrow">View hierarchy</p>
+                    <span id="view-count">0 views</span>
+                  </div>
+                  <div id="view-list" class="view-list" role="list" aria-label="Mounted view hierarchy"></div>
                 </div>
                 <div>
                   <p class="eyebrow">Mutations</p>

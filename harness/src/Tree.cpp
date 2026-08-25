@@ -68,14 +68,44 @@ ViewSpec sharedTransitionBoundary(Tag tag, bool active, std::vector<ViewSpec> ch
       .tag = tag,
       .children = std::move(children),
       .hasNativeId = false,
-      .sharedTransitionBoundary = true,
+      .kind = NodeKind::SharedTransitionBoundary,
       .boundaryActive = active,
+  };
+}
+
+ViewSpec screen(Tag tag, std::vector<ViewSpec> children) {
+  return {
+      .tag = tag,
+      .frame = {0, 0, 1024, 1024},
+      .children = std::move(children),
+      .hasNativeId = false,
+      .kind = NodeKind::Screen,
+  };
+}
+
+ViewSpec modalScreen(Tag tag, std::vector<ViewSpec> children) {
+  return {
+      .tag = tag,
+      .frame = {0, 0, 1024, 1024},
+      .children = std::move(children),
+      .hasNativeId = false,
+      .kind = NodeKind::ModalScreen,
   };
 }
 
 TreeBuilder::TreeBuilder(SurfaceId surfaceId, std::shared_ptr<const ContextContainer> contextContainer)
     : surfaceId_(surfaceId),
       viewDescriptor_(
+          ComponentDescriptorParameters{
+              .eventDispatcher = EventDispatcher::Shared{},
+              .contextContainer = contextContainer,
+              .flavor = nullptr}),
+      screenDescriptor_(
+          ComponentDescriptorParameters{
+              .eventDispatcher = EventDispatcher::Shared{},
+              .contextContainer = contextContainer,
+              .flavor = nullptr}),
+      modalScreenDescriptor_(
           ComponentDescriptorParameters{
               .eventDispatcher = EventDispatcher::Shared{},
               .contextContainer = contextContainer,
@@ -122,7 +152,7 @@ std::shared_ptr<const ShadowNode> TreeBuilder::buildView(const ViewSpec &spec, s
   }
 
   auto sharedChildren = std::make_shared<const std::vector<std::shared_ptr<const ShadowNode>>>(std::move(children));
-  if (spec.sharedTransitionBoundary) {
+  if (spec.kind == NodeKind::SharedTransitionBoundary) {
     auto props = std::make_shared<REASharedTransitionBoundaryProps>();
     props->isActive = spec.boundaryActive;
 #ifdef RN_SERIALIZABLE_STATE
@@ -130,11 +160,13 @@ std::shared_ptr<const ShadowNode> TreeBuilder::buildView(const ViewSpec &spec, s
 #endif
     props->yogaStyle.setDisplay(yoga::Display::Contents);
     return sharedTransitionBoundaryDescriptor_.createShadowNode(
-        ShadowNodeFragment{.props = props, .children = sharedChildren}, familyFor(spec.tag, spec.generation, true));
+        ShadowNodeFragment{.props = props, .children = sharedChildren},
+        familyFor(spec.tag, spec.generation, spec.kind));
   }
 
   auto props = std::make_shared<ViewShadowNodeProps>();
   props->collapsable = spec.collapsable;
+  props->opacity = spec.opacity;
   if (spec.hasNativeId) {
     props->nativeId = std::to_string(spec.tag);
   }
@@ -147,25 +179,46 @@ std::shared_ptr<const ShadowNode> TreeBuilder::buildView(const ViewSpec &spec, s
     props->yogaStyle.setDisplay(yoga::Display::None);
   }
 
-  return viewDescriptor_.createShadowNode(
-      ShadowNodeFragment{
-          .props = props,
-          .children = sharedChildren,
-      },
-      familyFor(spec.tag, spec.generation, false));
+  const auto fragment = ShadowNodeFragment{
+      .props = props,
+      .children = sharedChildren,
+  };
+  if (spec.kind == NodeKind::Screen) {
+    return screenDescriptor_.createShadowNode(fragment, familyFor(spec.tag, spec.generation, spec.kind));
+  }
+  if (spec.kind == NodeKind::ModalScreen) {
+    return modalScreenDescriptor_.createShadowNode(fragment, familyFor(spec.tag, spec.generation, spec.kind));
+  }
+  return viewDescriptor_.createShadowNode(fragment, familyFor(spec.tag, spec.generation, spec.kind));
 }
 
-TreeBuilder::Family TreeBuilder::familyFor(Tag tag, uint32_t generation, bool sharedTransitionBoundary) {
+TreeBuilder::Family TreeBuilder::familyFor(Tag tag, uint32_t generation, NodeKind kind) {
   const auto key = static_cast<uint64_t>(static_cast<uint32_t>(tag)) << 32 | generation;
-  auto family = families_.find(key);
-  if (family != families_.end()) {
-    return family->second;
+  auto entry = families_.find(key);
+  if (entry != families_.end()) {
+    if (entry->second.kind != kind) {
+      throw std::invalid_argument("View kind changed for tag " + std::to_string(tag));
+    }
+    return entry->second.family;
   }
 
   auto familyFragment = ShadowNodeFamilyFragment{.tag = tag, .surfaceId = surfaceId_, .instanceHandle = nullptr};
-  auto created = sharedTransitionBoundary ? sharedTransitionBoundaryDescriptor_.createFamily(familyFragment)
-                                          : viewDescriptor_.createFamily(familyFragment);
-  families_.emplace(key, created);
+  Family created;
+  switch (kind) {
+    case NodeKind::View:
+      created = viewDescriptor_.createFamily(familyFragment);
+      break;
+    case NodeKind::Screen:
+      created = screenDescriptor_.createFamily(familyFragment);
+      break;
+    case NodeKind::ModalScreen:
+      created = modalScreenDescriptor_.createFamily(familyFragment);
+      break;
+    case NodeKind::SharedTransitionBoundary:
+      created = sharedTransitionBoundaryDescriptor_.createFamily(familyFragment);
+      break;
+  }
+  families_.emplace(key, FamilyEntry{created, kind});
   return created;
 }
 

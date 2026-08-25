@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deque>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -53,12 +54,15 @@ class PlatformDriver final : public facebook::react::UIManagerDelegate {
   void commitFromMount(const Snapshot &snapshot);
   void frame();
   void flushMountingCoordinator();
+  void pauseNextAndroidMountSchedule();
+  void resumeAndroidMountSchedule();
   void setMountingOverrideDelegate(const std::shared_ptr<const facebook::react::MountingOverrideDelegate> &delegate);
 
   const facebook::react::StubViewTree &hostTree() const;
   std::shared_ptr<const facebook::react::ContextContainer> contextContainer() const;
   const facebook::react::SharedComponentDescriptorRegistry &componentDescriptorRegistry() const;
   const std::shared_ptr<facebook::react::UIManager> &uiManager() const;
+  void visitShadowTree(const std::function<void(const facebook::react::ShadowTree &)> &visitor) const;
   std::vector<std::string> takeMountingLogs();
   const std::vector<facebook::react::MountingTransaction::Number> &mountedTransactionNumbers() const;
   const std::vector<MountedFrame> &mountedFrames() const;
@@ -122,6 +126,8 @@ class PlatformDriver final : public facebook::react::UIManagerDelegate {
   mutable std::optional<facebook::react::MountingTransaction> pendingAndroidTransaction_;
   mutable std::vector<std::shared_ptr<const facebook::react::MountingCoordinator>> androidRenderRequests_;
   mutable std::deque<AndroidMountItem> androidMountItems_;
+  mutable std::optional<AndroidMountItem> pausedAndroidMountItem_;
+  mutable bool pauseNextAndroidMountSchedule_{false};
   mutable bool androidDispatchInProgress_{false};
   mutable bool iosTransactionInFlight_{false};
   mutable bool iosFollowUpRequired_{false};

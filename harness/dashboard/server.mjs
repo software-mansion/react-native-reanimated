@@ -14,7 +14,24 @@ const binaries = [
   { platform: 'ios', path: join(buildDirectory, 'harness_ios_tests') },
   { platform: 'android', path: join(buildDirectory, 'harness_android_tests') },
 ];
+const missingBinaries = binaries.filter((binary) => !existsSync(binary.path));
+if (missingBinaries.length > 0) {
+  process.stderr.write([
+    `No layout-animation test binaries found in ${buildDirectory}.`,
+    'Configure and build the harness before starting the dashboard:',
+    `  cmake -S harness -B ${buildDirectory} -G Ninja`,
+    `  cmake --build ${buildDirectory} --target harness_ios_tests harness_android_tests --parallel`,
+    '',
+  ].join('\n'));
+  rmSync(traceDirectory, { recursive: true, force: true });
+  process.exit(1);
+}
 let tests = listTests();
+if (tests.length === 0) {
+  process.stderr.write(`No tests were discovered in ${buildDirectory}.\n`);
+  rmSync(traceDirectory, { recursive: true, force: true });
+  process.exit(1);
+}
 let running = false;
 
 const server = createServer(async (request, response) => {
@@ -68,19 +85,16 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
 function listTests() {
   const discovered = [];
   for (const binary of binaries) {
-    if (!existsSync(binary.path)) {
-      continue;
-    }
     const result = spawnSync(binary.path, ['--gtest_list_tests', '--gtest_color=no'], { encoding: 'utf8' });
     if (result.status !== 0) {
-      continue;
+      throw new Error(`Could not list tests from ${binary.path}:\n${result.stderr}`);
     }
     let suite = '';
     for (const line of result.stdout.split('\n')) {
       if (!line.startsWith(' ') && line.trim().endsWith('.')) {
         suite = line.trim();
       } else if (suite && line.startsWith('  ')) {
-        const name = line.trim().split(/s+#/)[0];
+        const name = line.trim().split(/\s+#/)[0];
         const filter = `${suite}${name}`;
         discovered.push({
           id: `${binary.platform}.${filter}`,

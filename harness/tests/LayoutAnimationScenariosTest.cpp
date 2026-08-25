@@ -81,21 +81,20 @@ double startValue(const AnimationStart &start, const std::string &name) {
 }
 
 ProgressStyle finalStyle(const AnimationStart &start) {
-  auto value = [&](const char *target, const char *current) {
-    if (auto it = start.values.find(target); it != start.values.end()) {
-      return it->second;
+  auto value = [&](std::initializer_list<const char *> names) -> std::optional<double> {
+    for (const auto *name : names) {
+      if (auto it = start.values.find(name); it != start.values.end()) {
+        return it->second;
+      }
     }
-    if (auto it = start.values.find(current); it != start.values.end()) {
-      return it->second;
-    }
-    return 0.0;
+    return std::nullopt;
   };
   return {
-      .x = value("targetOriginX", "currentOriginX"),
-      .y = value("targetOriginY", "currentOriginY"),
-      .width = value("targetWidth", "currentWidth"),
-      .height = value("targetHeight", "currentHeight"),
-      .opacity = 1,
+      .x = value({"targetOriginX", "target.originX", "currentOriginX", "source.originX"}),
+      .y = value({"targetOriginY", "target.originY", "currentOriginY", "source.originY"}),
+      .width = value({"targetWidth", "target.width", "currentWidth", "source.width"}),
+      .height = value({"targetHeight", "target.height", "currentHeight", "source.height"}),
+      .opacity = value({"target.opacity"}).value_or(1),
   };
 }
 
@@ -159,9 +158,64 @@ Snapshot sharedScreens(bool firstActive, int count, int round = 0) {
          28}));
   }
   return {{
-      sharedTransitionBoundary(2, firstActive, std::move(first)),
-      sharedTransitionBoundary(4, !firstActive, std::move(second)),
+      screen(2, {sharedTransitionBoundary(3, firstActive, std::move(first))}),
+      screen(4, {sharedTransitionBoundary(5, !firstActive, std::move(second))}),
   }};
+}
+
+Snapshot sharedGeometryScreens(bool firstActive) {
+  auto source = view(100, {40, 60, 120, 80});
+  source.opacity = 0.4;
+  auto target = view(200, {680, 500, 240, 180});
+  target.opacity = 1;
+  return {{
+      screen(2, {sharedTransitionBoundary(3, firstActive, {source})}),
+      screen(4, {sharedTransitionBoundary(5, !firstActive, {target})}),
+  }};
+}
+
+Snapshot nestedSharedGeometryScreens(bool firstActive) {
+  auto source = view(100, {15, 25, 120, 80});
+  source.opacity = 0.4;
+  auto target = view(200, {80, 100, 240, 180});
+  target.opacity = 1;
+  return {{
+      screen(2, {sharedTransitionBoundary(3, firstActive, {view(30, {25, 35, 400, 400}, {source})})}),
+      screen(4, {sharedTransitionBoundary(5, !firstActive, {view(50, {600, 400, 400, 400}, {target})})}),
+  }};
+}
+
+void expectHostGeometry(AnimationHarness &harness, Tag tag, Frame expected) {
+  const auto &view = harness.platform().hostTree().getStubView(tag);
+  const auto &frame = view.layoutMetrics.frame;
+  EXPECT_FLOAT_EQ(frame.origin.x, expected.x);
+  EXPECT_FLOAT_EQ(frame.origin.y, expected.y);
+  EXPECT_FLOAT_EQ(frame.size.width, expected.width);
+  EXPECT_FLOAT_EQ(frame.size.height, expected.height);
+}
+
+void expectHostAbsoluteGeometry(AnimationHarness &harness, Tag tag, Frame expected) {
+  const auto &tree = harness.platform().hostTree();
+  const auto &view = tree.getStubView(tag);
+  auto frame = view.layoutMetrics.frame;
+  auto parentTag = view.parentTag;
+  while (parentTag != facebook::react::NO_VIEW_TAG) {
+    const auto &parent = tree.getStubView(parentTag);
+    frame.origin.x += parent.layoutMetrics.frame.origin.x;
+    frame.origin.y += parent.layoutMetrics.frame.origin.y;
+    parentTag = parent.parentTag;
+  }
+  EXPECT_FLOAT_EQ(frame.origin.x, expected.x);
+  EXPECT_FLOAT_EQ(frame.origin.y, expected.y);
+  EXPECT_FLOAT_EQ(frame.size.width, expected.width);
+  EXPECT_FLOAT_EQ(frame.size.height, expected.height);
+}
+
+void expectHostFrame(AnimationHarness &harness, Tag tag, Frame expected, float opacity) {
+  expectHostGeometry(harness, tag, expected);
+  const auto &view = harness.platform().hostTree().getStubView(tag);
+  const auto &props = static_cast<const facebook::react::ViewProps &>(*view.props);
+  EXPECT_FLOAT_EQ(props.opacity, opacity);
 }
 
 std::vector<AnimationConfig> sharedConfigs(int count) {
@@ -206,6 +260,40 @@ TEST(LayoutAnimationScenariosTest, ExitingViewStaysMountedUntilItsAnimationEnds)
 
     EXPECT_FALSE(harness.platform().hostTree().hasTag(2));
     EXPECT_EQ(harness.platform().hostTree().size(), 1);
+  }
+}
+
+TEST(LayoutAnimationScenariosTest, ImmediateExitCompletionCanReenterTheStartCallback) {
+  for (auto mode : platformModes()) {
+    SCOPED_TRACE(static_cast<int>(mode));
+    auto harness = AnimationHarness(mode);
+    harness.completeAnimationsOnStart();
+
+    renderAt(harness, mode, 0ms, Snapshot{{view(2, {0, 0, 100, 100})}});
+    harness.clearCalls();
+    renderAt(harness, mode, 10ms, Snapshot{}, {animation(2, LayoutAnimationType::EXITING, "reduced-motion")});
+    runUI(harness, 20ms, [] {});
+
+    const auto &start = onlyStart(harness);
+    EXPECT_EQ(start.tag, 2);
+    EXPECT_EQ(start.type, LayoutAnimationType::EXITING);
+    EXPECT_FALSE(harness.isActive(2));
+    EXPECT_FALSE(harness.platform().hostTree().hasTag(2));
+  }
+}
+
+TEST(LayoutAnimationScenariosTest, RemovingAModalScreenSkipsDescendantExitAnimations) {
+  for (auto mode : platformModes()) {
+    SCOPED_TRACE(static_cast<int>(mode));
+    auto harness = AnimationHarness(mode);
+
+    renderAt(harness, mode, 0ms, Snapshot{{modalScreen(2, {view(3, {20, 30, 100, 100})})}});
+    harness.clearCalls();
+    renderAt(harness, mode, 10ms, Snapshot{}, {animation(3, LayoutAnimationType::EXITING, "modal-child-exit")});
+
+    EXPECT_TRUE(harness.starts().empty());
+    EXPECT_FALSE(harness.platform().hostTree().hasTag(2));
+    EXPECT_FALSE(harness.platform().hostTree().hasTag(3));
   }
 }
 
@@ -276,6 +364,40 @@ TEST(LayoutAnimationScenariosTest, LayoutProgressAndRetargetUseTheCurrentMounted
     EXPECT_EQ(frame.size.height, 60);
   }
 }
+
+#ifdef HARNESS_PROXY_REGISTRY
+TEST(LayoutAnimationScenariosTest, ConfigRemovalRetargetsWithTheCapturedLayoutConfig) {
+  for (auto mode : platformModes()) {
+    SCOPED_TRACE(static_cast<int>(mode));
+    auto harness = AnimationHarness(mode);
+
+    renderAt(harness, mode, 0ms, Snapshot{{view(2, {0, 0, 100, 100})}});
+    renderAt(
+        harness,
+        mode,
+        10ms,
+        Snapshot{{view(2, {100, 0, 100, 100})}},
+        {animation(2, LayoutAnimationType::LAYOUT, "captured")});
+    runUI(harness, 20ms, [&] { harness.progress(2, {.x = 40, .y = 0, .width = 100, .height = 100}); });
+
+    harness.clearCalls();
+    renderAt(
+        harness,
+        mode,
+        30ms,
+        Snapshot{{view(2, {200, 0, 100, 100})}},
+        {removeAnimation(2, LayoutAnimationType::LAYOUT)});
+
+    const auto &start = onlyStart(harness);
+    EXPECT_EQ(start.type, LayoutAnimationType::LAYOUT);
+    EXPECT_EQ(start.config, "captured");
+    EXPECT_EQ(startValue(start, "currentOriginX"), 40);
+    EXPECT_EQ(startValue(start, "targetOriginX"), 200);
+    settleStarts(harness, 40ms);
+    EXPECT_EQ(harness.platform().hostTree().getStubView(2).layoutMetrics.frame.origin.x, 200);
+  }
+}
+#endif
 
 TEST(LayoutAnimationScenariosTest, ExitingDescendantKeepsDeletedAncestorsAlive) {
   for (auto mode : platformModes()) {
@@ -479,6 +601,59 @@ TEST(LayoutAnimationScenariosTest, RecreatingAnExitingTagCancelsTheStaleRemoval)
   }
 }
 
+TEST(LayoutAnimationScenariosTest, RecreatingAWaitingSubviewFlushesItsWithheldRemoval) {
+  for (auto mode : platformModes()) {
+    SCOPED_TRACE(static_cast<int>(mode));
+    auto harness = AnimationHarness(mode);
+    auto initial = Snapshot{{view(2, {0, 0, 220, 100}, {viewInstance(3, 0, {0, 0, 100, 100})})}};
+
+    renderAt(harness, mode, 0ms, initial);
+    harness.clearCalls();
+    renderAt(harness, mode, 10ms, Snapshot{}, {animation(2, LayoutAnimationType::EXITING, "exit")});
+    ASSERT_NE(findStart(harness, 2, LayoutAnimationType::EXITING), nullptr);
+    ASSERT_TRUE(harness.platform().hostTree().hasTag(3));
+
+    harness.clearCalls();
+    renderAt(harness, mode, 20ms, Snapshot{{viewInstance(3, 1, {40, 50, 120, 80})}});
+
+    const auto &tree = harness.platform().hostTree();
+    ASSERT_TRUE(tree.hasTag(3));
+    EXPECT_EQ(tree.getStubView(3).parentTag, 1);
+    expectHostGeometry(harness, 3, {40, 50, 120, 80});
+    ASSERT_TRUE(tree.hasTag(2));
+    EXPECT_TRUE(tree.getStubView(2).children.empty());
+
+    runUI(harness, 30ms, [&] { harness.end(2, true); });
+    EXPECT_FALSE(tree.hasTag(2));
+    EXPECT_TRUE(tree.hasTag(3));
+    EXPECT_EQ(tree.getRootStubView().children.size(), 1);
+  }
+}
+
+TEST(LayoutAnimationScenariosTest, RecreatingASettledExitBeforeCleanupReplacesTheDeadNode) {
+  for (auto mode : platformModes()) {
+    SCOPED_TRACE(static_cast<int>(mode));
+    auto harness = AnimationHarness(mode);
+
+    renderAt(harness, mode, 0ms, Snapshot{{viewInstance(2, 0, {0, 0, 100, 100})}});
+    harness.clearCalls();
+    renderAt(harness, mode, 10ms, Snapshot{}, {animation(2, LayoutAnimationType::EXITING, "exit")});
+    ASSERT_NE(findStart(harness, 2, LayoutAnimationType::EXITING), nullptr);
+
+    auto &timeline = harness.timeline();
+    timeline.at(20ms, Lane::UI, [&] { harness.end(2, true); });
+    timeline.advanceTo(20ms);
+    harness.clearCalls();
+    renderAt(harness, mode, 21ms, Snapshot{{viewInstance(2, 1, {50, 60, 120, 80})}});
+
+    const auto &tree = harness.platform().hostTree();
+    ASSERT_TRUE(tree.hasTag(2));
+    EXPECT_EQ(tree.getStubView(2).parentTag, 1);
+    EXPECT_EQ(tree.getRootStubView().children.size(), 1);
+    expectHostGeometry(harness, 2, {50, 60, 120, 80});
+  }
+}
+
 TEST(LayoutAnimationScenariosTest, ZeroDurationEnteringCanSettleOnItsFirstFrame) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
@@ -597,6 +772,53 @@ TEST(LayoutAnimationScenariosTest, SharedTagMovesBetweenActiveBoundaries) {
   }
 }
 
+TEST(LayoutAnimationScenariosTest, SharedContainerTracksGeometryAndOpacityAcrossProgressFrames) {
+  for (auto mode : platformModes()) {
+    SCOPED_TRACE(static_cast<int>(mode));
+    auto harness = AnimationHarness(mode);
+    renderAt(harness, mode, 0ms, sharedGeometryScreens(true), sharedConfigs(1));
+    harness.clearCalls();
+    renderAt(harness, mode, 10ms, sharedGeometryScreens(false));
+
+    const auto &start = onlyStart(harness);
+    ASSERT_EQ(start.type, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
+    const auto containerTag = start.tag;
+    expectHostFrame(harness, containerTag, {40, 60, 120, 80}, 0.4);
+
+    struct ProgressFrame {
+      Frame frame;
+      float opacity;
+    };
+    const auto progressFrames = std::array{
+        ProgressFrame{{200, 170, 150, 105}, 0.55},
+        ProgressFrame{{360, 280, 180, 130}, 0.7},
+        ProgressFrame{{520, 390, 210, 155}, 0.85},
+        ProgressFrame{{680, 500, 240, 180}, 1},
+    };
+
+    auto time = 20ms;
+    for (const auto &progressFrame : progressFrames) {
+      runUI(harness, time, [&] {
+        harness.progress(
+            containerTag,
+            {
+                .x = progressFrame.frame.x,
+                .y = progressFrame.frame.y,
+                .width = progressFrame.frame.width,
+                .height = progressFrame.frame.height,
+                .opacity = progressFrame.opacity,
+            });
+      });
+      expectHostFrame(harness, containerTag, progressFrame.frame, progressFrame.opacity);
+      time += 10ms;
+    }
+
+    runUI(harness, time, [&] { harness.end(containerTag, false); });
+    EXPECT_FALSE(harness.platform().hostTree().hasTag(containerTag));
+    expectHostFrame(harness, 200, {680, 500, 240, 180}, 1);
+  }
+}
+
 TEST(LayoutAnimationScenariosTest, DuplicateSharedNamesDoNotLeaveSyntheticContainers) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
@@ -647,6 +869,38 @@ TEST(LayoutAnimationScenariosTest, InteractiveSharedTransitionProgressesAndFinis
   EXPECT_TRUE(harness.platform().hostTree().hasTag(200));
 }
 
+TEST(LayoutAnimationScenariosTest, InteractiveSharedTransitionUsesAbsoluteGeometryAtEveryProgress) {
+  auto harness = AnimationHarness(DriverMode::IOS);
+  renderAt(harness, DriverMode::IOS, 0ms, nestedSharedGeometryScreens(true), sharedConfigs(1));
+
+  runUI(harness, 10ms, [&] { harness.transitionProgress(4, 0, false, false); });
+  const auto containers = syntheticRootTags(harness);
+  ASSERT_EQ(containers.size(), 1);
+  const auto containerTag = containers[0];
+  expectHostAbsoluteGeometry(harness, containerTag, {40, 60, 120, 80});
+
+  struct ProgressFrame {
+    double progress;
+    Frame frame;
+  };
+  const auto progressFrames = std::array{
+      ProgressFrame{0.25, {200, 170, 150, 105}},
+      ProgressFrame{0.5, {360, 280, 180, 130}},
+      ProgressFrame{0.75, {520, 390, 210, 155}},
+  };
+
+  auto time = 20ms;
+  for (const auto &progressFrame : progressFrames) {
+    runUI(harness, time, [&] { harness.transitionProgress(4, progressFrame.progress, false, false); });
+    expectHostAbsoluteGeometry(harness, containerTag, progressFrame.frame);
+    time += 10ms;
+  }
+
+  runUI(harness, time, [&] { harness.transitionProgress(4, 1, false, false); });
+  EXPECT_FALSE(harness.platform().hostTree().hasTag(containerTag));
+  expectHostAbsoluteGeometry(harness, 200, {680, 500, 240, 180});
+}
+
 TEST(LayoutAnimationScenariosTest, CancellingInteractiveSharedTransitionRestoresBothSides) {
   auto harness = AnimationHarness(DriverMode::IOS);
   renderAt(harness, DriverMode::IOS, 0ms, sharedScreens(true, 1), sharedConfigs(1));
@@ -655,7 +909,7 @@ TEST(LayoutAnimationScenariosTest, CancellingInteractiveSharedTransitionRestores
   auto containers = syntheticRootTags(harness);
   ASSERT_EQ(containers.size(), 1);
 
-  runUI(harness, 20ms, [&] { harness.cancelTransition(); });
+  runUI(harness, 20ms, [&] { harness.cancelTransition(2); });
   EXPECT_FALSE(harness.platform().hostTree().hasTag(containers[0]));
   EXPECT_TRUE(harness.platform().hostTree().hasTag(100));
   EXPECT_TRUE(harness.platform().hostTree().hasTag(200));
@@ -849,6 +1103,60 @@ TEST(LayoutAnimationStressTest, InterruptedExitsAreCancelledBeforeBlockedUIWorkR
     }
   }
 }
+
+#if defined(HARNESS_PROXY_REGISTRY) && defined(HARNESS_PLATFORM_ANDROID)
+TEST(LayoutAnimationStressTest, UICleanupCannotOvertakeAPausedJSMountSchedule) {
+  auto harness = AnimationHarness(DriverMode::AndroidPush);
+  auto tags = std::vector<Tag>{};
+  for (Tag tag = 10; tag < 22; ++tag) {
+    tags.push_back(tag);
+  }
+  renderAt(harness, DriverMode::AndroidPush, 0ms, flatList(tags));
+
+  tags.erase(tags.begin(), tags.begin() + 2);
+  tags.push_back(22);
+  tags.push_back(23);
+  renderAt(
+      harness,
+      DriverMode::AndroidPush,
+      10ms,
+      flatList(tags),
+      {animation(10, LayoutAnimationType::EXITING, "short-exit"),
+       animation(11, LayoutAnimationType::EXITING, "short-exit")});
+  ASSERT_NE(findStart(harness, 10, LayoutAnimationType::EXITING), nullptr);
+  ASSERT_NE(findStart(harness, 11, LayoutAnimationType::EXITING), nullptr);
+  harness.clearCalls();
+
+  tags.erase(tags.begin(), tags.begin() + 2);
+  tags.push_back(24);
+  tags.push_back(25);
+  harness.timeline().at(20ms, Lane::JS, [&] {
+    harness.platform().pauseNextAndroidMountSchedule();
+    harness.render(
+        flatList(tags),
+        {animation(12, LayoutAnimationType::EXITING, "short-exit"),
+         animation(13, LayoutAnimationType::EXITING, "short-exit")});
+  });
+  harness.timeline().advanceTo(20ms);
+
+  harness.timeline().at(21ms, Lane::UI, [&] {
+    harness.end(10, true);
+    harness.end(11, true);
+    harness.frame();
+  });
+  harness.timeline().at(21ms, Lane::JS, [&] { harness.platform().resumeAndroidMountSchedule(); });
+  harness.timeline().advanceTo(21ms);
+
+  harness.timeline().at(23ms, Lane::UI, [&] { harness.frame(); });
+  harness.timeline().advanceTo(23ms);
+
+  EXPECT_FALSE(harness.platform().hostTree().hasTag(10));
+  EXPECT_FALSE(harness.platform().hostTree().hasTag(11));
+  for (auto tag : tags) {
+    EXPECT_TRUE(harness.platform().hostTree().hasTag(tag));
+  }
+}
+#endif
 
 TEST(LayoutAnimationStressTest, BusyMainLaneCoalescesRapidLayoutCommits) {
   for (auto mode : platformModes()) {
