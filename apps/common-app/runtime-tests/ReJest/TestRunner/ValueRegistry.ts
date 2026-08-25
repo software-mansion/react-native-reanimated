@@ -6,13 +6,12 @@ import { runOnUIBlocking } from '../utils/runOnUIBlocking';
 export class ValueRegistry {
   private _valueRegistry: Record<string, SharedValue> = {};
 
-  public registerValue = <TValue = unknown>(
+  public registerValue<TValue = unknown>(
     name: string,
     value: SharedValue<TValue>
-  ) => {
-    'worklet';
+  ) {
     this._valueRegistry[name] = value as SharedValue;
-  };
+  }
 
   public peekOnJS<TValue extends TestValue>(name: string): TValue {
     return this._valueRegistry[name].value as TValue;
