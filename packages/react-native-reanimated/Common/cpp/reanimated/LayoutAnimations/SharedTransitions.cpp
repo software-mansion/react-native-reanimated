@@ -5,6 +5,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
+#include <algorithm>
 #include <ranges>
 
 namespace reanimated {
