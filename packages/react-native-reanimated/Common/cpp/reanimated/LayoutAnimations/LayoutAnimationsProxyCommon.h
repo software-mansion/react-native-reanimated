@@ -7,6 +7,7 @@
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/Compat/WorkletsApi.h>
+#include <reanimated/Fabric/updates/UpdatesRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
@@ -91,6 +92,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) = 0;
   virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) = 0;
   virtual void startSurface(const facebook::react::ShadowTree &shadowTree);
+  virtual void applySynchronousProps(const UpdatesBatch &) const {}
 
  protected:
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;

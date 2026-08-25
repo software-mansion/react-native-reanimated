@@ -67,13 +67,11 @@ void mergeAnimatedProps(AnimatedProps &target, AnimatedProps &&source) {
 
 #ifdef ANDROID
 constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
-  return StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
-      !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS");
+  return StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS");
 }
 #elif __APPLE__
 constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
-  return StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
-      !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS");
+  return StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS");
 }
 #else
 constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
@@ -1035,6 +1033,12 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
 void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, const bool allowPartialUpdates) {
   auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
       partitionUpdates(std::move(updatesBatch), allowPartialUpdates);
+
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    if (layoutAnimationsProxy_ && !synchronousUpdatesBatch.empty()) {
+      layoutAnimationsProxy_->applySynchronousProps(synchronousUpdatesBatch);
+    }
+  }
 
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {

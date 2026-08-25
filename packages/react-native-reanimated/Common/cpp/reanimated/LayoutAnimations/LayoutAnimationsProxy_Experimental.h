@@ -112,6 +112,8 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       const ShadowViewMutationList &mutations,
       ShadowViewMutationList &filteredMutations) const;
 
+  void applySynchronousProps(const UpdatesBatch &updatesBatch) const override;
+
   void reconcileContradictedRemovals(const ShadowViewMutationList &mutations, ShadowViewMutationList &filteredMutations)
       const;
 

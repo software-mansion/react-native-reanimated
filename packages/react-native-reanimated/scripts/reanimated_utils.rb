@@ -56,13 +56,6 @@ module ReanimatedUtils
   end
 
   def assert_conflicting_feature_flags(feature_flags)
-    ios_sync_ui_props = feature_flags['IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS'] == 'true'
-    shared_element_transitions = feature_flags['ENABLE_SHARED_ELEMENT_TRANSITIONS'] == 'true'
-
-    if ios_sync_ui_props && shared_element_transitions
-      raise "[Reanimated] The feature flags `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. Please disable one of them in your package.json"
-    end
-
     use_animation_backend = feature_flags['USE_ANIMATION_BACKEND'] == 'true'
     force_react_render_for_settled_animations = feature_flags['FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS'] == 'true'
 

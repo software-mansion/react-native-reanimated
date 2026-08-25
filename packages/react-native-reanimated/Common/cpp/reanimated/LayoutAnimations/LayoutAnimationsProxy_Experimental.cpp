@@ -361,6 +361,33 @@ void LayoutAnimationsProxy_Experimental::applyInitialMutationsToLightTree(
   }
 }
 
+// Synchronous prop updates skip pullTransaction. Merge them into the light
+// tree so shared-transition snapshots see them.
+void LayoutAnimationsProxy_Experimental::applySynchronousProps(const UpdatesBatch &updatesBatch) const {
+  ReanimatedSystraceSection s("applySynchronousProps");
+  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+
+  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
+    const auto nodeIt = lightNodes_.find(shadowNodeFamily->getTag());
+    if (nodeIt == lightNodes_.end() || !nodeIt->second) {
+      continue;
+    }
+
+    const auto &node = nodeIt->second;
+    if (isRoot(node) || !node->current.props || node->current.surfaceId != shadowNodeFamily->getSurfaceId()) {
+      continue;
+    }
+
+    auto rawProps = props;
+#ifdef RN_SERIALIZABLE_STATE
+    rawProps = folly::dynamic::merge(node->current.props->rawProps, rawProps);
+#endif
+    const PropsParserContext propsParserContext{node->current.surfaceId, *contextContainer_};
+    node->current.props = getComponentDescriptorForShadowView(node->current)
+                              .cloneProps(propsParserContext, node->current.props, RawProps(std::move(rawProps)));
+  }
+}
+
 void LayoutAnimationsProxy_Experimental::startSurface(const ShadowTree &shadowTree) {
   const auto mountingCoordinator = shadowTree.getMountingCoordinator();
   mountingCoordinator->setMountingOverrideDelegate(weak_from_this());
