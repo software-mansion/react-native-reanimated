@@ -57,6 +57,14 @@ describe(normalizeDelay, () => {
       }
     );
   });
+
+  describe('when a non-finite number is passed', () => {
+    test.each([NaN, Infinity, -Infinity])('throws an error for %p', (delay) => {
+      expect(() => normalizeDelay(delay)).toThrow(
+        new Error(`[Reanimated] ${ERROR_MESSAGES.invalidDelay(delay)}`)
+      );
+    });
+  });
 });
 
 describe(normalizeDuration, () => {
@@ -95,6 +103,17 @@ describe(normalizeDuration, () => {
         const value = duration as TimeUnit;
         expect(() => normalizeDuration(value)).toThrow(
           new Error(`[Reanimated] ${ERROR_MESSAGES.invalidDuration(value)}`)
+        );
+      }
+    );
+  });
+
+  describe('when a non-finite number is passed', () => {
+    test.each([NaN, Infinity, -Infinity])(
+      'throws an error for %p',
+      (duration) => {
+        expect(() => normalizeDuration(duration)).toThrow(
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidDuration(duration)}`)
         );
       }
     );

@@ -9,6 +9,7 @@
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/graphics/Transform.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
+#include <react/renderer/mounting/ShadowTreeRevision.h>
 #include <react/renderer/mounting/ShadowView.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
@@ -57,6 +58,8 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable std::vector<std::shared_ptr<LightNode>> entering_, layout_, exiting_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
+  mutable std::unordered_map<SurfaceId, std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>>>
+      pendingTransactions_;
   mutable std::vector<std::shared_ptr<LightNode>> containersToInsert_;
   mutable std::unordered_map<Tag, react::Transform> transformForNode_;
 
@@ -144,7 +147,12 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
   std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) override;
   std::optional<SurfaceId> onGestureCancel() override;
-  void startSurface(const SurfaceId surfaceId) override;
+  void startSurface(const facebook::react::ShadowTree &shadowTree) override;
+  void initializeLightTree(const SurfaceId surfaceId, const ShadowTreeRevision &baseRevision);
+  void applyInitialMutationsToLightTree(const ShadowViewMutationList &mutations) const;
+  bool isLightTreeInitialized(const SurfaceId surfaceId) const {
+    return lightNodes_.contains(surfaceId);
+  }
 
   void maybeCancelAnimation(const int tag) const;
 

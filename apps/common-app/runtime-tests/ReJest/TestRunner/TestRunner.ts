@@ -1,7 +1,10 @@
 import type { Component, ReactElement, RefObject } from 'react';
 import { useRef } from 'react';
 
+import type { ValueGetter } from '../matchers/EventualMatchers';
+import { EventualMatchers } from '../matchers/EventualMatchers';
 import { Matchers } from '../matchers/Matchers';
+import { SharedValueMatchers } from '../matchers/SharedValueMatchers';
 import { TestComponent } from '../TestComponent';
 import type {
   DefaultValue,
@@ -13,7 +16,7 @@ import type {
   TestValue,
 } from '../types';
 import { TestDecorator } from '../types';
-import { RenderLock } from '../utils/SyncUIRunner';
+import { RenderLock } from '../utils/RenderLock';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
 import { assertTestCase } from './Asserts';
 import { CallTrackerRegistry } from './CallTrackerRegistry';
@@ -137,14 +140,10 @@ export class TestRunner {
     } catch (e) {
       console.log(e);
     }
-    const stillLocked = await this._renderLock.waitForUnlock(
-      RENDER_MAX_WAIT_TIME_MS
-    );
-    if (stillLocked) {
+    try {
+      await this._renderLock.waitForRender(RENDER_MAX_WAIT_TIME_MS);
+    } finally {
       this._renderLock.unlock();
-      throw new Error(
-        `Timed out after ${RENDER_MAX_WAIT_TIME_MS}ms while waiting for the component to render.`
-      );
     }
   }
 
@@ -276,5 +275,22 @@ export class TestRunner {
   public expect(currentValue: TestValue): Matchers {
     assertTestCase(this._currentTestCase);
     return new Matchers(currentValue, this._currentTestCase);
+  }
+
+  public expectSharedValue(name: string): SharedValueMatchers {
+    assertTestCase(this._currentTestCase);
+    return new SharedValueMatchers(
+      this._valueRegistry,
+      name,
+      this._currentTestCase
+    );
+  }
+
+  public expectEventually(
+    getValue: ValueGetter,
+    timeout?: number
+  ): EventualMatchers {
+    assertTestCase(this._currentTestCase);
+    return new EventualMatchers(getValue, this._currentTestCase, timeout);
   }
 }

@@ -1,12 +1,10 @@
 import type { SharedValue } from 'react-native-reanimated';
-import { makeMutable } from 'react-native-reanimated';
 
-import type { SharedValueSnapshot, TestValue } from '../types';
-import { SyncUIRunner } from '../utils/SyncUIRunner';
+import type { TestValue } from '../types';
+import { runOnUIBlocking } from '../utils/runOnUIBlocking';
 
 export class ValueRegistry {
   private _valueRegistry: Record<string, SharedValue> = {};
-  private _syncUIRunner = new SyncUIRunner();
 
   public registerValue = <TValue = unknown>(
     name: string,
@@ -16,21 +14,35 @@ export class ValueRegistry {
     this._valueRegistry[name] = value as SharedValue;
   };
 
-  public async getRegisteredValue<TValue extends TestValue>(
+  public peekOnJS<TValue extends TestValue>(name: string): TValue {
+    return this._valueRegistry[name].value as TValue;
+  }
+
+  public async getOnJS<TValue extends TestValue>(
     name: string
-  ): Promise<SharedValueSnapshot<TValue>> {
-    const jsValue = this._valueRegistry[name].value;
+  ): Promise<TValue> {
+    await runOnUIBlocking(
+      () => {
+        'worklet';
+      },
+      1000,
+      `the UI runtime to drain before reading '${name}' on the JS runtime`
+    );
+    return this._valueRegistry[name].value as TValue;
+  }
+
+  public async getOnUI<TValue extends TestValue>(
+    name: string
+  ): Promise<TValue> {
     const sharedValue = this._valueRegistry[name];
-    const valueContainer = makeMutable<unknown>(null);
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      valueContainer.value = sharedValue.value;
-    }, 1000);
-    const uiValue = valueContainer.value;
-    return {
-      name,
-      onJS: jsValue as TValue,
-      onUI: uiValue as TValue,
-    };
+    const uiValue = await runOnUIBlocking(
+      () => {
+        'worklet';
+        return sharedValue.value;
+      },
+      1000,
+      `the UI runtime to report the value of '${name}'`
+    );
+    return uiValue as TValue;
   }
 }
