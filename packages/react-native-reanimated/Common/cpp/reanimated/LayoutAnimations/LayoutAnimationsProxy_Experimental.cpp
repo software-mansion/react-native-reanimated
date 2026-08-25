@@ -30,6 +30,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   const std::vector<std::shared_ptr<MutationNode>> roots;
   const bool isInTransition = static_cast<bool>(transitionState_);
 
+  reconcileContradictedRemovals(mutations, filteredMutations);
+
   if (isInTransition) {
     updateLightTree(propsParserContext, mutations, filteredMutations);
     handleProgressTransition(filteredMutations, mutations, propsParserContext, surfaceId);
@@ -105,6 +107,67 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   insertContainers(filteredMutations, rootChildCount, surfaceId);
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
+}
+
+// If React re-creates or re-inserts a tag whose exiting removal we are still
+// withholding, it has contradicted that withheld removal. Flush it now instead
+// of letting the stale node linger: updateLightTree would overwrite its
+// lightNodes_ entry (the "LightNode already exists" assert is compiled out in
+// release), orphaning the still-mounted exiting view, and the eventual
+// endLayoutAnimation would then remove the wrong, live view and crash the
+// mounting layer.
+//
+// This must run before updateLightTree (so the tag is re-registered cleanly)
+// and before addOngoingAnimations (which would otherwise emit an Update for a
+// tag we are about to Delete this frame).
+void LayoutAnimationsProxy_Experimental::reconcileContradictedRemovals(
+    const ShadowViewMutationList &mutations,
+    ShadowViewMutationList &filteredMutations) const {
+  for (const auto &mutation : mutations) {
+    if (mutation.type != ShadowViewMutation::Type::Create && mutation.type != ShadowViewMutation::Type::Insert) {
+      continue;
+    }
+    const auto tag = mutation.newChildShadowView.tag;
+    std::shared_ptr<LightNode> node;
+    if (const auto it = lightNodes_.find(tag); it != lightNodes_.end() && it->second->state != UNDEFINED) {
+      node = it->second;
+      lightNodes_.erase(it);
+      if (node->state == DELETED) {
+        // already unmounted — only the stale map entry had to go
+        continue;
+      }
+    } else {
+      // A settled exiting view (state DEAD) has already left lightNodes_ but is
+      // still mounted, awaiting the deadNodes cleanup in handleRemovals. That
+      // cleanup runs at the end of the transaction — after this Create would
+      // have re-registered the tag in the mounting layer's view registry — so
+      // it must be flushed now instead.
+      const auto deadIt = std::find_if(
+          deadNodes.begin(), deadNodes.end(), [tag](const auto &deadNode) { return deadNode->current.tag == tag; });
+      if (deadIt == deadNodes.end()) {
+        continue;
+      }
+      node = *deadIt;
+      deadNodes.erase(deadIt);
+      if (node->state == DELETED) {
+        continue;
+      }
+    }
+    // Flush the withheld removal for this tag (and its withheld subtree) right
+    // now, mirroring the deadNodes cleanup in handleRemovals.
+    const auto parent = node->parent.lock();
+    react_native_assert(parent && "Parent node is nullptr");
+    if (!parent) {
+      continue;
+    }
+    const auto index = parent->removeChild(node);
+    react_native_assert(index != -1 && "Exiting node not found");
+    if (index == -1) {
+      continue;
+    }
+    endAnimationsRecursively(node, index, filteredMutations);
+    maybeDropAncestors(parent, filteredMutations);
+  }
 }
 
 bool LayoutAnimationsProxy_Experimental::shouldOverridePullTransaction() const {
@@ -305,11 +368,18 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
     return surfaceId;
   }
 
-  auto node = lightNodes_[tag];
-  react_native_assert(node && "LightNode not found");
+  const auto nodeIt = lightNodes_.find(tag);
+  // the withheld removal may have already been flushed (e.g. reconciled after
+  // React re-created the tag) — the assert alone is compiled out in release
+  // and operator[] would insert a null node here
+  if (nodeIt == lightNodes_.end() || !nodeIt->second) {
+    react_native_assert(false && "LightNode not found");
+    return surfaceId;
+  }
+  auto node = nodeIt->second;
 
   node->state = DEAD;
-  lightNodes_.erase(tag);
+  lightNodes_.erase(nodeIt);
   deadNodes.insert(node);
 
   return surfaceId;
@@ -349,6 +419,7 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
       parent->children.push_back(node);
       if (node->state == UNDEFINED) {
         node->state = WAITING;
+        lightNodes_[node->current.tag] = node;
       }
     } else {
       maybeCancelAnimation(node->current.tag);
@@ -432,6 +503,10 @@ void LayoutAnimationsProxy_Experimental::endAnimationsRecursively(
     ShadowViewMutationList &mutations) const {
   maybeCancelAnimation(node->current.tag);
   node->state = DELETED;
+  // drop the tag mapping unless it was already re-registered for a new node
+  if (const auto it = lightNodes_.find(node->current.tag); it != lightNodes_.end() && it->second == node) {
+    lightNodes_.erase(it);
+  }
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
 
@@ -463,6 +538,9 @@ void LayoutAnimationsProxy_Experimental::maybeDropAncestors(
   react_native_assert(index != -1 && "Child node not found");
 
   node->state = DELETED;
+  if (const auto it = lightNodes_.find(node->current.tag); it != lightNodes_.end() && it->second == node) {
+    lightNodes_.erase(it);
+  }
   maybeCancelAnimation(node->current.tag);
   cleanupMutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, index));
   cleanupMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
@@ -515,6 +593,9 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
       mutations.push_back(ShadowViewMutation::DeleteMutation(subNode->current));
     } else {
       subNode->state = WAITING;
+      // register withheld subtree members, so that reconcileContradictedRemovals
+      // can find them when React re-creates their tags
+      lightNodes_[subNode->current.tag] = subNode;
     }
   }
 
