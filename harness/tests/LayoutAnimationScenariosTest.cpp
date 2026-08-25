@@ -11,6 +11,8 @@
 
 #include <harness/AnimationHarness.h>
 
+#include <react/renderer/components/view/ViewProps.h>
+
 namespace reanimated::layout_animation::test {
 
 using namespace std::chrono_literals;
@@ -501,6 +503,30 @@ TEST(LayoutAnimationScenariosTest, ZeroDurationEnteringCanSettleOnItsFirstFrame)
     EXPECT_EQ(frame.origin.y, 20);
     EXPECT_EQ(frame.size.width, 100);
     EXPECT_EQ(frame.size.height, 80);
+  }
+}
+
+TEST(LayoutAnimationScenariosTest, ProgressAppliesAnimatedStyleProps) {
+  for (auto mode : platformModes()) {
+    SCOPED_TRACE(static_cast<int>(mode));
+    auto harness = AnimationHarness(mode);
+
+    renderAt(
+        harness,
+        mode,
+        0ms,
+        Snapshot{{view(2, {10, 20, 100, 80})}},
+        {animation(2, LayoutAnimationType::ENTERING, "fade-in")});
+
+    runUI(harness, 10ms, [&] { harness.progress(2, {.opacity = 0.35}); });
+    const auto &progressed = harness.platform().hostTree().getStubView(2);
+    const auto &progressedProps = static_cast<const facebook::react::ViewProps &>(*progressed.props);
+    EXPECT_FLOAT_EQ(progressedProps.opacity, 0.35);
+
+    settleStarts(harness, 20ms);
+    const auto &settled = harness.platform().hostTree().getStubView(2);
+    const auto &settledProps = static_cast<const facebook::react::ViewProps &>(*settled.props);
+    EXPECT_EQ(settledProps.opacity, 1);
   }
 }
 
