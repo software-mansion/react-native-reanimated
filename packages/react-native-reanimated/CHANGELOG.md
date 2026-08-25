@@ -12,7 +12,7 @@
 
 ### 🐛 Bug fixes
 
-- Feed synchronous prop updates into the experimental layout animations proxy's light tree, so shared element transitions start from the transformed position of a view that was updated through the synchronous path. The synchronous-update feature flags now work together with `ENABLE_SHARED_ELEMENT_TRANSITIONS`. (by [@pawicao](https://github.com/pawicao))
+- Feed synchronous prop updates into the experimental layout animations proxy's light tree, so shared element transitions start from the transformed position of a view that was updated through the synchronous path. The synchronous-update feature flags now work together with `ENABLE_SHARED_ELEMENT_TRANSITIONS`. ([#10410](https://github.com/software-mansion/react-native-reanimated/pull/10410) by [@pawicao](https://github.com/pawicao))
 
 ### 💡 Others
 
