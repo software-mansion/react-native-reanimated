@@ -267,9 +267,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
       }
       case ShadowViewMutation::Delete: {
         const auto it = lightNodes_.find(mutation.oldChildShadowView.tag);
-        if (it == lightNodes_.end()) {
-          break;
-        }
+        react_native_assert(it != lightNodes_.end() && "Delete mutation for an unknown node");
         const auto state = it->second->state;
         react_native_assert(
             (state == UNDEFINED || state == WAITING || state == ANIMATING) && "Delete mutation for an unmounted node");
