@@ -15,6 +15,7 @@
 
 - Add `isOnUIThread` to the Worklets Stable API.
 - Add the fast-path `fixedType` option to `createSynchronizable`. A fixed-type Synchronizable holds a number or a boolean without serialization and exposes `setDirty`, a non-exclusive write that doesn't wait for other `setDirty` calls. ([#10296](https://github.com/software-mansion/react-native-reanimated/pull/10296) by [@tjzel](https://github.com/tjzel))
+- The Babel plugin treats `navigator` as a known global: worklets resolve it on their own runtime instead of capturing the main runtime's object by closure. ([#10364](https://github.com/software-mansion/react-native-reanimated/pull/10364) by [@wcandillon](https://github.com/wcandillon))
 
 ### 🐛 Bug fixes
 
@@ -22,15 +23,15 @@
 - Fix a data race between `getDirty` and `setBlocking` on a Synchronizable - the pointer holding the value is now read and written atomically. ([#10292](https://github.com/software-mansion/react-native-reanimated/pull/10292) by [@tjzel](https://github.com/tjzel))
 - Fix `setBlocking` leaving a Synchronizable locked forever in development builds when the updater function or the serializer throws. ([#10331](https://github.com/software-mansion/react-native-reanimated/pull/10331) by [@tjzel](https://github.com/tjzel))
 - Compare the Synchronizable's imperative lock owner with `std::thread::id` instead of comparing `pthread_t` with `==`, which POSIX doesn't define. ([#10349](https://github.com/software-mansion/react-native-reanimated/pull/10349) by [@tjzel](https://github.com/tjzel))
+- Added an umbrella header for removed `Serializable.h` file for backwards compatibility with Expo
 
 ### 💡 Others
 
 - Update the sponsors section in the README. ([#10347](https://github.com/software-mansion/react-native-reanimated/pull/10347) by [@m-bert](https://github.com/m-bert))
-
-\[general] - bump Worklets version to 0.13.0
-
+- bump Worklets version to 0.13.0
 - Split every C++ `Serializable` subclass into a dedicated file under `SharedItems/Serializable/`, with its factory function alongside. No behavior change. ([#10345](https://github.com/software-mansion/react-native-reanimated/pull/10345) by [@tjzel](https://github.com/tjzel))
-
 - Split `Synchronizable` into an interface and a `SynchronizableDynamic` implementation. ([#10293](https://github.com/software-mansion/react-native-reanimated/pull/10293) by [@tjzel](https://github.com/tjzel))
-
 - Remove outdated Worklets Babel plugin README. ([#10350](https://github.com/software-mansion/react-native-reanimated/pull/10350) by [@tjzel](https://github.com/tjzel))
+- Document the `fixedType` option and `setDirty` for Synchronizable. ([#10297](https://github.com/software-mansion/react-native-reanimated/pull/10297) by [@tjzel](https://github.com/tjzel))
+- Use the built-in Hermes microtask queue on Worklet Runtimes instead of a custom JS implementation. `queueMicrotask` now enqueues native Hermes jobs, the private `__callMicrotasks` global is replaced by `__drainMicrotasks`, and the `_microtaskQueueFinalizers` array is removed. ([#10199](https://github.com/software-mansion/react-native-reanimated/pull/10199) by [@tjzel](https://github.com/tjzel))
+- Drain the microtask queue after each `requestAnimationFrame` callback on the UI Runtime, instead of once after the whole batch. ([#10237](https://github.com/software-mansion/react-native-reanimated/pull/10237) by [@tjzel](https://github.com/tjzel))
