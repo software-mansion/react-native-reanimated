@@ -2444,6 +2444,19 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
+    test('moves `module.exports` assignment to the bottom of the file', () => {
+      const input = html`<script>
+        'worklet';
+        module.exports = foo;
+        function foo() {}
+        const bar = 1;
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('const bar = 1;\nmodule.exports = foo;');
+      expect(code).toMatchSnapshot();
+    });
+
     test('moves multiple CommonJS exports to the bottom of the file', () => {
       const input = html`<script>
         'worklet';
