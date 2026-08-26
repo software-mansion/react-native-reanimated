@@ -18,6 +18,7 @@ import type { AnimatedUpdaterData } from './useAnimatedStyleCommon';
 import {
   buildWorkletsHash,
   checkSharedValueUsage,
+  createAnimatedStyleHandle,
   styleUpdater,
 } from './useAnimatedStyleCommon';
 import { useSharedValue } from './useSharedValue';
@@ -146,11 +147,13 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
   if (!animatedStyleHandle.current) {
     const styleUpdaterContainer =
       animatedUpdaterData.current.styleUpdaterContainer;
-    animatedStyleHandle.current = {
-      viewDescriptors,
-      initial,
-      styleUpdaterContainer,
-    };
+    animatedStyleHandle.current = createAnimatedStyleHandle(
+      {
+        viewDescriptors,
+        initial,
+      },
+      styleUpdaterContainer
+    );
   }
 
   return animatedStyleHandle.current;

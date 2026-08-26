@@ -48,6 +48,15 @@ exports[`babel plugin in bundleMode source replacement still captures closure ev
 });"
 `;
 
+exports[`babel plugin in bundleMode worklet file emission captures locally defined JSX components in the closure 1`] = `
+"function LocalComponent() {
+  return null;
+}
+const renderView = require("react-native-worklets/.worklets/1.js").default({
+  LocalComponent
+});"
+`;
+
 exports[`babel plugin in bundleMode worklet file emission does not emit init data 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default({});"`;
 
 exports[`babel plugin in bundleMode worklet file emission does not emit init data 2`] = `

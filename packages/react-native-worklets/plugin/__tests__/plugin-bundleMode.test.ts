@@ -297,6 +297,28 @@ describe('babel plugin in bundleMode', () => {
       expect(files[0].content).not.toContain('__source');
     });
 
+    test('captures locally defined JSX components in the closure', () => {
+      const input = html`<script>
+        function LocalComponent() {
+          return null;
+        }
+
+        function renderView() {
+          'worklet';
+          return <LocalComponent />;
+        }
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        { presets: [['@babel/preset-react', { runtime: 'classic' }]] },
+        {},
+        MOCK_TSX_LOCATION
+      );
+      expect(code).toContain('LocalComponent');
+      expect(code).toMatchSnapshot();
+    });
+
     test('rebases relative imports against the worklets directory', () => {
       const input = html`<script>
         import { foo } from './bar';

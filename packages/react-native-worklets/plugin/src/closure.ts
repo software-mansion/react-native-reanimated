@@ -16,12 +16,6 @@ import {
 } from './imports';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 
-/**
- * In Bundle Mode JSX element names are captured too, and they reach us as
- * `JSXIdentifier` nodes. `objectProperty()` only accepts an `Identifier`, so
- * rebuild one — the name is always a valid identifier here, since Babel's
- * `ReferencedIdentifier` filters out intrinsic (lower-case) tags.
- */
 function toClosureIdentifier(node: Identifier | JSXIdentifier): Identifier {
   return isJSXIdentifier(node) ? identifier(node.name) : cloneNode(node, true);
 }
