@@ -35,8 +35,8 @@ struct StartAnimationsRecursivelyConfig {
   bool isScreenPop;
 };
 
-struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
-                                            public std::enable_shared_from_this<LayoutAnimationsProxy_Experimental> {
+struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon,
+                               public std::enable_shared_from_this<LayoutAnimationsProxy> {
   mutable std::unordered_set<std::shared_ptr<LightNode>> deadNodes;
   mutable std::unordered_map<Tag, int> leastRemoved;
   mutable std::unordered_set<Tag> activeTransitions_;
@@ -65,7 +65,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
 
   mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
 
-  LayoutAnimationsProxy_Experimental(SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies);
+  LayoutAnimationsProxy(SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies);
 
   void startEnteringAnimation(const std::shared_ptr<LightNode> &node) const;
   void startExitingAnimation(const std::shared_ptr<LightNode> &node) const;
@@ -198,7 +198,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       ShadowViewMutationList mutations) const override;
 };
 
-std::shared_ptr<LayoutAnimationsProxyRegistry> createLayoutAnimationsProxyExperimentalRegistry(
+std::shared_ptr<LayoutAnimationsProxyRegistry> createLayoutAnimationsProxyDefaultRegistry(
     const LayoutAnimationsProxyDependencies &dependencies);
 
 } // namespace reanimated

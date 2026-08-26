@@ -23,6 +23,7 @@ Feature flags are available since Reanimated 4.
 | [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               | [static](#static-feature-flags) |  4.1.0   | 4.7.0 | `true` for 4.3.0+ <br/> `false` otherwise |
 | [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](#use_commit_hook_only_for_react_commits)                 | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+ <br/> `false` otherwise |
 | [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions)                           | [static](#static-feature-flags) |  4.2.0   |  –   |                  `false`                  |
+| [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](#use_legacy_layout_animations_proxy)                         | [static](#static-feature-flags) |  4.7.0   |  –   |                  `false`                  |
 | [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#force_react_render_for_settled_animations)           | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+ <br/> `false` otherwise |
 | [`USE_ANIMATION_BACKEND`](#use_animation_backend)                                                   | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
 | [`IOS_CSS_CORE_ANIMATION`](#ios_css_core_animation-and-android_css_platform_transitions)            | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
@@ -120,7 +121,15 @@ This feature flag is supposed to fix performance regressions of animations while
 
 ### `ENABLE_SHARED_ELEMENT_TRANSITIONS`
 
-When enabled, Shared Element Transitions are available to use, also the synchronous prop update flags are disabled. The feature is not yet production ready, and may have some limitations or bugs. For more details, see [PR #7466](https://github.com/software-mansion/react-native-reanimated/pull/7466).
+When enabled, Shared Element Transitions are available to use. The feature is not yet production ready, and may have some limitations or bugs. For more details, see [PR #7466](https://github.com/software-mansion/react-native-reanimated/pull/7466).
+
+This feature flag conflicts with [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](#use_legacy_layout_animations_proxy) and they cannot be enabled simultaneously, because the legacy layout animations proxy does not support Shared Element Transitions.
+
+### `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`
+
+When enabled, layout animations run on the legacy layout animations proxy instead of the current default implementation. This is a rollback flag: use it only when the default proxy causes a regression in your app. If it does, please report an issue.
+
+This feature flag conflicts with [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions) and they cannot be enabled simultaneously.
 
 ### `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`
 

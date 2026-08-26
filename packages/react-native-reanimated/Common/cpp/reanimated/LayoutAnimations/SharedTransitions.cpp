@@ -1,8 +1,9 @@
 #include <folly/dynamic.h>
 #include <react/renderer/components/rnreanimated/Props.h>
 #include <react/renderer/components/scrollview/ScrollViewState.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
+#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <ranges>
 
@@ -12,8 +13,7 @@ namespace reanimated {
 
 // A boundary is active when its `isActive` prop (controlled from JS,
 // e.g. with `useIsFocused`) is true and it's not currently exiting.
-std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findActiveBoundary(
-    const std::shared_ptr<LightNode> &node) const {
+std::shared_ptr<LightNode> LayoutAnimationsProxy::findActiveBoundary(const std::shared_ptr<LightNode> &node) const {
   std::shared_ptr<LightNode> result = nullptr;
 
   if (node->isExiting()) {
@@ -32,8 +32,7 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findActiveBoundar
   return result;
 }
 
-std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findBoundaryGuess(
-    const std::shared_ptr<LightNode> &node) const {
+std::shared_ptr<LightNode> LayoutAnimationsProxy::findBoundaryGuess(const std::shared_ptr<LightNode> &node) const {
   std::shared_ptr<LightNode> result = nullptr;
 
   if (node->isExiting()) {
@@ -52,7 +51,7 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findBoundaryGuess
   return result;
 }
 
-void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
+void LayoutAnimationsProxy::findSharedElementsOnScreen(
     const std::shared_ptr<LightNode> &node,
     BeforeOrAfter index,
     const PropsParserContext &propsParserContext) const {
@@ -96,7 +95,7 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
   }
 }
 
-void LayoutAnimationsProxy_Experimental::handleProgressTransition(
+void LayoutAnimationsProxy::handleProgressTransition(
     ShadowViewMutationList &filteredMutations,
     const ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext) const {
@@ -187,7 +186,7 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
   }
 }
 
-void LayoutAnimationsProxy_Experimental::overrideTransform(
+void LayoutAnimationsProxy::overrideTransform(
     ShadowView &shadowView,
     const std::optional<Transform> &transform,
     const PropsParserContext &propsParserContext) const {
@@ -210,11 +209,11 @@ void LayoutAnimationsProxy_Experimental::overrideTransform(
   shadowView.props = newProps;
 }
 
-void LayoutAnimationsProxy_Experimental::transferConfigToContainer(Tag containerTag, Tag beforeTag) const {
+void LayoutAnimationsProxy::transferConfigToContainer(Tag containerTag, Tag beforeTag) const {
   layoutAnimationsManager_->transferSharedConfig(beforeTag, containerTag);
 }
 
-Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
+Tag LayoutAnimationsProxy::getOrCreateContainer(
     const ShadowView &before,
     const SharedTag &sharedTag,
     ShadowViewMutationList &filteredMutations) const {
@@ -247,13 +246,13 @@ Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
   return containerTag;
 }
 
-void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
+void LayoutAnimationsProxy::handleSharedTransitionsStart(
     const std::shared_ptr<LightNode> &afterTopScreen,
     const std::shared_ptr<LightNode> &beforeTopScreen,
     ShadowViewMutationList &filteredMutations,
     const ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext) const {
-  ReanimatedSystraceSection s1("LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart");
+  ReanimatedSystraceSection s1("LayoutAnimationsProxy::handleSharedTransitionsStart");
 
   if (!beforeTopScreen || !afterTopScreen) {
     return;
@@ -293,7 +292,7 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
   }
 }
 
-void LayoutAnimationsProxy_Experimental::hideTransitioningViews(
+void LayoutAnimationsProxy::hideTransitioningViews(
     BeforeOrAfter index,
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext) const {
@@ -307,11 +306,11 @@ void LayoutAnimationsProxy_Experimental::hideTransitioningViews(
   }
 }
 
-std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgress(
-    int tag,
-    double progress,
-    bool isClosing,
-    bool isGoingForward) {
+std::optional<SurfaceId>
+LayoutAnimationsProxy::onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) {
+  if constexpr (!StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    return {};
+  }
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const auto nodeIt = lightNodes_.find(tag);
   if (nodeIt == lightNodes_.end() || !nodeIt->second) {
@@ -342,7 +341,10 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
   return {};
 }
 
-std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onGestureCancel(int tag) {
+std::optional<SurfaceId> LayoutAnimationsProxy::onGestureCancel(int tag) {
+  if constexpr (!StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    return {};
+  }
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const auto nodeIt = lightNodes_.find(tag);
   if (nodeIt == lightNodes_.end() || !nodeIt->second) {
@@ -356,9 +358,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onGestureCancel(int
   return {};
 }
 
-void LayoutAnimationsProxy_Experimental::insertContainers(
-    ShadowViewMutationList &filteredMutations,
-    int &rootChildCount) const {
+void LayoutAnimationsProxy::insertContainers(ShadowViewMutationList &filteredMutations, int &rootChildCount) const {
   ShadowViewMutationList currentMutations;
   std::swap(currentMutations, filteredMutations);
   filteredMutations.reserve(containersToInsert_.size() * 2);
@@ -371,7 +371,7 @@ void LayoutAnimationsProxy_Experimental::insertContainers(
   containersToInsert_.clear();
 }
 
-void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
+void LayoutAnimationsProxy::cleanupSharedTransitions(
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext) const {
   ReanimatedSystraceSection s1("cleanupSharedTransitions");
@@ -407,7 +407,7 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
 
 // MARK: Position Calculation
 
-std::vector<react::Point> LayoutAnimationsProxy_Experimental::getAbsolutePositionsForRootPathView(
+std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPathView(
     const std::shared_ptr<LightNode> &node) const {
   std::vector<react::Point> viewsAbsolutePositions;
   auto currentNode = node;
@@ -438,7 +438,7 @@ std::vector<react::Point> LayoutAnimationsProxy_Experimental::getAbsolutePositio
   return viewsAbsolutePositions;
 }
 
-std::optional<Transform> LayoutAnimationsProxy_Experimental::parseParentTransforms(
+std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     const std::shared_ptr<LightNode> &node,
     const std::vector<react::Point> &absolutePositions) const {
   std::vector<std::pair<Transform, TransformOrigin>> transforms;
@@ -493,7 +493,7 @@ std::optional<Transform> LayoutAnimationsProxy_Experimental::parseParentTransfor
 // https://github.com/facebook/react-native/blob/v0.80.0/packages/react-native/ReactCommon/react/renderer/components/view/BaseViewProps.cpp#L548
 // We need a copy of these methods to modify the `resolveTransform` method
 // to accept the transform origin as a parameter instead of as a class field.
-react::Transform LayoutAnimationsProxy_Experimental::resolveTransform(
+react::Transform LayoutAnimationsProxy::resolveTransform(
     const LayoutMetrics &layoutMetrics,
     const Transform &transform,
     const TransformOrigin &transformOrigin) const {
@@ -523,7 +523,7 @@ react::Transform LayoutAnimationsProxy_Experimental::resolveTransform(
   return transformMatrix;
 }
 
-std::array<float, 3> LayoutAnimationsProxy_Experimental::getTranslateForTransformOrigin(
+std::array<float, 3> LayoutAnimationsProxy::getTranslateForTransformOrigin(
     float viewWidth,
     float viewHeight,
     const TransformOrigin &transformOrigin) const {
