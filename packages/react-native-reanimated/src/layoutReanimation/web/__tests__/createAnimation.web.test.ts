@@ -23,8 +23,8 @@ describe(createCustomKeyFrameAnimation, () => {
 
     createCustomKeyFrameAnimation(definitions, LayoutAnimationType.ENTERING);
 
-    expect(definitions[0].easing).toBe(EASING);
-    expect(definitions[100].easing).toBeUndefined();
+    expect(definitions['0'].easing).toBe(EASING);
+    expect(definitions['100'].easing).toBeUndefined();
   });
 
   test("treats 'from' as the offset it aliases", () => {
@@ -36,7 +36,7 @@ describe(createCustomKeyFrameAnimation, () => {
     createCustomKeyFrameAnimation(definitions, LayoutAnimationType.ENTERING);
 
     expect(definitions.from.easing).toBe(EASING);
-    expect(definitions[100].easing).toBeUndefined();
+    expect(definitions['100'].easing).toBeUndefined();
   });
 
   test('shifts the easing off a fractional offset', () => {
@@ -48,8 +48,8 @@ describe(createCustomKeyFrameAnimation, () => {
 
     createCustomKeyFrameAnimation(definitions, LayoutAnimationType.ENTERING);
 
-    expect(definitions[0].easing).toBe(EASING);
-    expect(definitions[33.3].easing).toBeUndefined();
-    expect(definitions[100].easing).toBeUndefined();
+    expect(definitions['0'].easing).toBe(EASING);
+    expect(definitions['33.3'].easing).toBeUndefined();
+    expect(definitions['100'].easing).toBeUndefined();
   });
 });
