@@ -18,6 +18,7 @@ import {
   isIdentifier,
   isMemberExpression,
   isObjectProperty,
+  isStringLiteral,
   objectProperty,
 } from '@babel/types';
 
@@ -211,9 +212,14 @@ function isCommonJSExportTarget(target: MemberExpression): boolean {
   if (isIdentifier(object)) {
     return (
       object.name === 'exports' ||
-      (object.name === 'module' &&
-        isIdentifier(target.property, { name: 'exports' }))
+      (object.name === 'module' && isExportsProperty(target))
     );
   }
   return isMemberExpression(object) && isCommonJSExportTarget(object);
+}
+
+function isExportsProperty(target: MemberExpression): boolean {
+  return target.computed
+    ? isStringLiteral(target.property, { value: 'exports' })
+    : isIdentifier(target.property, { name: 'exports' });
 }

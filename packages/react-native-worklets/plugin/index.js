@@ -1016,9 +1016,12 @@ var require_file = __commonJS({
     function isCommonJSExportTarget(target) {
       const object = target.object;
       if ((0, types_12.isIdentifier)(object)) {
-        return object.name === "exports" || object.name === "module" && (0, types_12.isIdentifier)(target.property, { name: "exports" });
+        return object.name === "exports" || object.name === "module" && isExportsProperty(target);
       }
       return (0, types_12.isMemberExpression)(object) && isCommonJSExportTarget(object);
+    }
+    function isExportsProperty(target) {
+      return target.computed ? (0, types_12.isStringLiteral)(target.property, { value: "exports" }) : (0, types_12.isIdentifier)(target.property, { name: "exports" });
     }
   }
 });
