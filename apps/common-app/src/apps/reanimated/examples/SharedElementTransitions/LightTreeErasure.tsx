@@ -48,9 +48,8 @@ function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
         Both buttons shift the box to the green frame and then navigate after
         {' ' + String(NAVIGATE_DELAY_MS)} ms — before the settled value syncs
         back to React. The second button also grows the spacer, which commits a
-        shadow-tree update for the box and erases the fresh transform from the
-        light tree. Both transitions should start from the green frame; today
-        the second one does not.
+        shadow-tree update for the box and previously erased the fresh transform
+        from the light tree. Both transitions should start from the green frame.
       </Text>
       <Button
         title="shift and go (control)"
@@ -60,7 +59,7 @@ function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
         }}
       />
       <Button
-        title="shift, erase and go (bug)"
+        title="shift, erase and go (regression)"
         onPress={() => {
           offset.value = 60;
           spacerHeight.value = spacerHeight.value + 40;
