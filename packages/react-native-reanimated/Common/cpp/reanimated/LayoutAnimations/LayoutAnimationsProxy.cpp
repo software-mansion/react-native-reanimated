@@ -179,6 +179,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     insertContainers(transaction, rootChildCount);
   }
 
+  keepTransitioningViewsHidden(filteredMutations, propsParserContext);
+
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 
@@ -339,6 +341,7 @@ void LayoutAnimationsProxy::updateLightTree(
         node->current = mutation.newChildShadowView;
         react_native_assert(!lightNodes_.contains(mutation.newChildShadowView.tag) && "LightNode already exists");
 
+        hiddenViewTags_.erase(mutation.newChildShadowView.tag);
         lightNodes_[mutation.newChildShadowView.tag] = node;
         staleSynchronousProps_.forget(mutation.newChildShadowView.tag);
         filteredMutations.push_back(mutation);
@@ -590,6 +593,7 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(
   }
   react_native_assert(!node->isExiting() && "A subtree that does not animate must stay UNDEFINED");
   cancelLayoutAnimation(node->current.tag);
+  hiddenViewTags_.erase(node->current.tag);
   transaction.filteredMutations.push_back(
       ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, hostIndex));
   transaction.teardownMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
@@ -713,6 +717,7 @@ void LayoutAnimationsProxy::endAnimationsRecursively(
 
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
+  hiddenViewTags_.erase(node->current.tag);
   mutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, index));
   mutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
 }
@@ -732,6 +737,7 @@ void LayoutAnimationsProxy::maybeDropAncestors(
   node->setExitingState(DELETED);
   unmapLightNode(node);
   cancelLayoutAnimation(node->current.tag);
+  hiddenViewTags_.erase(node->current.tag);
   cleanupMutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, index));
   cleanupMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
   maybeDropAncestors(parent, cleanupMutations);
@@ -774,6 +780,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
       hasAnimatedChildren = true;
     } else if (shouldRemoveSubviewsWithoutAnimations) {
       cancelLayoutAnimation(subNode->current.tag);
+      hiddenViewTags_.erase(subNode->current.tag);
       mutations.push_back(ShadowViewMutation::RemoveMutation(node->current.tag, subNode->current, index));
       toBeRemoved.push_back(subNode);
       subNode->setExitingState(DELETED);
