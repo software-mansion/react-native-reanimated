@@ -288,8 +288,6 @@ describe(processTransform, () => {
         ],
       },
       {
-        // A value read from a template literal can arrive padded; the split
-        // already tolerates whitespace everywhere except the very start.
         input: '  translate(25, 25) scale(2)  ',
         output: [{ translateX: 25 }, { translateY: 25 }, { scale: 2 }],
       },
