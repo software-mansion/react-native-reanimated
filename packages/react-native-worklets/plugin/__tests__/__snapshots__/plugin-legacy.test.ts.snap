@@ -1066,12 +1066,90 @@ const foo = useAnimatedStyle(function null1Factory({
 }));"
 `;
 
+exports[`babel plugin for file workletization doesn't move computed \`module[exports]\` assignment 1`] = `
+"module[exports] = foo;
+const _worklet_7222489488656_init_data = {
+  code: "(function foo_null1(){})",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+const foo = function foo_null1Factory({
+  _worklet_7222489488656_init_data
+}) {
+  const _e = [new global.Error(), 1, -27];
+  const foo = function () {
+    "use no memo";
+  };
+  foo.__closure = {};
+  foo.__workletHash = 7222489488656;
+  foo.__pluginVersion = "x.y.z";
+  foo.__initData = _worklet_7222489488656_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}({
+  _worklet_7222489488656_init_data
+});
+const bar = 1;"
+`;
+
 exports[`babel plugin for file workletization doesn't workletize function outside of top level scope 1`] = `
 "{
   function foo() {
     return 'bar';
   }
 }"
+`;
+
+exports[`babel plugin for file workletization moves \`module.exports\` assignment to the bottom of the file 1`] = `
+"const _worklet_7222489488656_init_data = {
+  code: "(function foo_null1(){})",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+const foo = function foo_null1Factory({
+  _worklet_7222489488656_init_data
+}) {
+  const _e = [new global.Error(), 1, -27];
+  const foo = function () {
+    "use no memo";
+  };
+  foo.__closure = {};
+  foo.__workletHash = 7222489488656;
+  foo.__pluginVersion = "x.y.z";
+  foo.__initData = _worklet_7222489488656_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}({
+  _worklet_7222489488656_init_data
+});
+const bar = 1;
+module.exports = foo;"
+`;
+
+exports[`babel plugin for file workletization moves \`module["exports"]\` assignment to the bottom of the file 1`] = `
+"const _worklet_7222489488656_init_data = {
+  code: "(function foo_null1(){})",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+const foo = function foo_null1Factory({
+  _worklet_7222489488656_init_data
+}) {
+  const _e = [new global.Error(), 1, -27];
+  const foo = function () {
+    "use no memo";
+  };
+  foo.__closure = {};
+  foo.__workletHash = 7222489488656;
+  foo.__pluginVersion = "x.y.z";
+  foo.__initData = _worklet_7222489488656_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}({
+  _worklet_7222489488656_init_data
+});
+const bar = 1;
+module["exports"] = foo;"
 `;
 
 exports[`babel plugin for file workletization moves CommonJS export to the bottom of the file 1`] = `

@@ -1008,7 +1008,17 @@ var require_file = __commonJS({
       }
     }
     function isCommonJSExport(statement) {
-      return (0, types_12.isExpressionStatement)(statement) && (0, types_12.isAssignmentExpression)(statement.expression) && (0, types_12.isMemberExpression)(statement.expression.left) && (0, types_12.isIdentifier)(statement.expression.left.object) && statement.expression.left.object.name === "exports";
+      return (0, types_12.isExpressionStatement)(statement) && (0, types_12.isAssignmentExpression)(statement.expression) && (0, types_12.isMemberExpression)(statement.expression.left) && isCommonJSExportTarget(statement.expression.left);
+    }
+    function isCommonJSExportTarget(target) {
+      const object = target.object;
+      if ((0, types_12.isIdentifier)(object)) {
+        return object.name === "exports" || object.name === "module" && isExportsProperty(target);
+      }
+      return (0, types_12.isMemberExpression)(object) && isCommonJSExportTarget(object);
+    }
+    function isExportsProperty(target) {
+      return target.computed ? (0, types_12.isStringLiteral)(target.property, { value: "exports" }) : (0, types_12.isIdentifier)(target.property, { name: "exports" });
     }
   }
 });

@@ -1,6 +1,7 @@
 import type { NodePath } from '@babel/core';
 import type {
   ClassBody,
+  MemberExpression,
   ObjectExpression,
   ObjectMethod,
   Program,
@@ -17,6 +18,7 @@ import {
   isIdentifier,
   isMemberExpression,
   isObjectProperty,
+  isStringLiteral,
   objectProperty,
 } from '@babel/types';
 
@@ -201,7 +203,23 @@ function isCommonJSExport(statement: Statement) {
     isExpressionStatement(statement) &&
     isAssignmentExpression(statement.expression) &&
     isMemberExpression(statement.expression.left) &&
-    isIdentifier(statement.expression.left.object) &&
-    statement.expression.left.object.name === 'exports'
+    isCommonJSExportTarget(statement.expression.left)
   );
+}
+
+function isCommonJSExportTarget(target: MemberExpression): boolean {
+  const object = target.object;
+  if (isIdentifier(object)) {
+    return (
+      object.name === 'exports' ||
+      (object.name === 'module' && isExportsProperty(target))
+    );
+  }
+  return isMemberExpression(object) && isCommonJSExportTarget(object);
+}
+
+function isExportsProperty(target: MemberExpression): boolean {
+  return target.computed
+    ? isStringLiteral(target.property, { value: 'exports' })
+    : isIdentifier(target.property, { name: 'exports' });
 }
