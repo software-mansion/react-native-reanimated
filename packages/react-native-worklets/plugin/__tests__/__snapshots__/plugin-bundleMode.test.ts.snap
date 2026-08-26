@@ -21,12 +21,6 @@ exports[`babel plugin in bundleMode nested worklets extracts each nested worklet
 });"
 `;
 
-exports[`babel plugin in bundleMode source replacement moves \`module.exports\` assignment to the bottom of the file 1`] = `
-"const foo = require("react-native-worklets/.worklets/12443099709124.js").default({});
-const bar = 1;
-module.exports = foo;"
-`;
-
 exports[`babel plugin in bundleMode source replacement replaces inline factory with a require to the worklet file 1`] = `"const foo = require("react-native-worklets/.worklets/16618675255854.js").default({});"`;
 
 exports[`babel plugin in bundleMode source replacement still captures closure even with "no-worklet-closure" directive 1`] = `

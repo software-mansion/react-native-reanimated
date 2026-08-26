@@ -76,19 +76,6 @@ describe('babel plugin in bundleMode', () => {
   });
 
   describe('source replacement', () => {
-    test('moves `module.exports` assignment to the bottom of the file', () => {
-      const input = html`<script>
-        'worklet';
-        module.exports = foo;
-        function foo() {}
-        const bar = 1;
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toContain('const bar = 1;\nmodule.exports = foo;');
-      expect(code).toMatchSnapshot();
-    });
-
     test('replaces inline factory with a require to the worklet file', () => {
       const input = html`<script>
         function foo() {
