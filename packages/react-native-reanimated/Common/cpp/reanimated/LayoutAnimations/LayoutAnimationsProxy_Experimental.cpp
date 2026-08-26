@@ -266,6 +266,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         }
 #else
         node->current = mutation.newChildShadowView;
+        reapplySynchronousPropsOverlay(node, propsParserContext);
 #endif // ANDROID
         auto tag = mutation.newChildShadowView.tag;
         if (layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
@@ -293,6 +294,9 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         if (state == UNDEFINED) {
           lightNodes_.erase(it);
         }
+#ifndef ANDROID
+        synchronousPropsOverlay_.erase(mutation.oldChildShadowView.tag);
+#endif
         break;
       }
       case ShadowViewMutation::Insert: {
@@ -409,9 +413,17 @@ void LayoutAnimationsProxy_Experimental::applyInitialMutationsToLightTree(
 // Synchronous prop updates skip pullTransaction. Merge them into the light
 // tree so shared-transition snapshots see them. The registry broadcasts one
 // batch to every surface proxy; entries of other surfaces are skipped here.
-void LayoutAnimationsProxy_Experimental::applySynchronousProps(const UpdatesBatch &updatesBatch) const {
+void LayoutAnimationsProxy_Experimental::applySynchronousProps(
+    const UpdatesBatch &updatesBatch,
+    [[maybe_unused]] const std::unordered_set<Tag> &skipOverlayTags) const {
   ReanimatedSystraceSection s("applySynchronousProps");
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+
+#ifndef ANDROID
+  for (const auto tag : skipOverlayTags) {
+    synchronousPropsOverlay_.erase(tag);
+  }
+#endif
 
   for (const auto &[shadowNodeFamily, props] : updatesBatch) {
     if (shadowNodeFamily->getSurfaceId() != surfaceId_) {
@@ -437,10 +449,41 @@ void LayoutAnimationsProxy_Experimental::applySynchronousProps(const UpdatesBatc
 #ifdef RN_SERIALIZABLE_STATE
     rawProps = folly::dynamic::merge(node->current.props->rawProps, rawProps);
 #endif
+#ifndef ANDROID
+    if (!skipOverlayTags.contains(node->current.tag)) {
+      auto &overlayProps = synchronousPropsOverlay_[node->current.tag];
+      overlayProps = overlayProps.isObject() ? folly::dynamic::merge(overlayProps, props) : props;
+    }
+#endif
     const PropsParserContext propsParserContext{node->current.surfaceId, *contextContainer_};
     node->current.props = getComponentDescriptorForShadowView(node->current)
                               .cloneProps(propsParserContext, node->current.props, RawProps(std::move(rawProps)));
   }
+}
+
+#ifndef ANDROID
+// A commit that does not carry the synchronous props replaces the light tree
+// props in the Update branch. Put the synchronous props back on top. The
+// entry lives until the settled sync-back commits the values to React state.
+void LayoutAnimationsProxy_Experimental::reapplySynchronousPropsOverlay(
+    const std::shared_ptr<LightNode> &node,
+    const PropsParserContext &propsParserContext) const {
+  const auto it = synchronousPropsOverlay_.find(node->current.tag);
+  if (it == synchronousPropsOverlay_.end() || !node->current.props) {
+    return;
+  }
+  node->current.props = getComponentDescriptorForShadowView(node->current)
+                            .cloneProps(propsParserContext, node->current.props, RawProps(it->second));
+}
+#endif // ANDROID
+
+void LayoutAnimationsProxy_Experimental::dropSynchronousProps([[maybe_unused]] const std::vector<Tag> &tags) const {
+#ifndef ANDROID
+  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  for (const auto tag : tags) {
+    synchronousPropsOverlay_.erase(tag);
+  }
+#endif
 }
 
 void LayoutAnimationsProxy_Experimental::startSurface(

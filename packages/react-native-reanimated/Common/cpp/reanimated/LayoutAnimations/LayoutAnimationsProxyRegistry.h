@@ -7,6 +7,7 @@
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace reanimated {
@@ -25,7 +26,8 @@ class LayoutAnimationsProxyRegistry {
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove);
   std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward);
   std::optional<SurfaceId> onGestureCancel(int tag);
-  void applySynchronousProps(const UpdatesBatch &updatesBatch);
+  void applySynchronousProps(const UpdatesBatch &updatesBatch, const std::unordered_set<Tag> &skipOverlayTags);
+  void dropSynchronousProps(const std::vector<Tag> &tags);
 
  private:
   std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> instances() const;

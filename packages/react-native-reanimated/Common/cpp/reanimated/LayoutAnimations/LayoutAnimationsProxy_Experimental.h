@@ -59,6 +59,9 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
   mutable std::vector<std::shared_ptr<LightNode>> containersToInsert_;
   mutable std::unordered_map<Tag, react::Transform> transformForNode_;
+#ifndef ANDROID
+  mutable std::unordered_map<Tag, folly::dynamic> synchronousPropsOverlay_;
+#endif
 
   mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
 
@@ -86,7 +89,14 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
     return lightNodes_.contains(surfaceId_);
   }
 
-  void applySynchronousProps(const UpdatesBatch &updatesBatch) const override;
+  void applySynchronousProps(const UpdatesBatch &updatesBatch, const std::unordered_set<Tag> &skipOverlayTags)
+      const override;
+  void dropSynchronousProps(const std::vector<Tag> &tags) const override;
+#ifndef ANDROID
+  void reapplySynchronousPropsOverlay(
+      const std::shared_ptr<LightNode> &node,
+      const PropsParserContext &propsParserContext) const;
+#endif
 
   void reconcileContradictedRemovals(const ShadowViewMutationList &mutations, ShadowViewMutationList &filteredMutations)
       const;
