@@ -1,3 +1,4 @@
+
 use std::collections::HashSet;
 
 use oxc_ast::ast::{
@@ -20,13 +21,10 @@ pub struct ClosureResult {
     pub imports: Vec<ImportInfo>,
 }
 
-pub type InjectedRef = (String, ScopeId);
-
 pub fn get_closure<'a>(
     input: &WorkletInput<'a, '_>,
     scoping: &Scoping,
     state: &State,
-    force_capture: &HashSet<InjectedRef>,
     filename: &str,
 ) -> ClosureResult {
     let WorkletInput {
@@ -96,27 +94,14 @@ pub fn get_closure<'a>(
                 result.closure_variables.push(r.name);
             }
             None => {
-                let mut injected_scopes = force_capture
-                    .iter()
-                    .filter(|(name, _)| *name == r.name)
-                    .map(|(_, scope)| *scope)
-                    .peekable();
-                let is_injected = injected_scopes.peek().is_some();
-
-                let resolves_outside = if is_injected && r.is_synthesized_node {
-                    injected_scopes
-                        .any(|scope| binding_is_outside(scoping, scope, &r.name, function_scope_id))
-                } else {
-                    binding_is_outside(scoping, function_scope_id, &r.name, function_scope_id)
-                };
-                if !resolves_outside {
+                if !binding_is_outside(scoping, function_scope_id, &r.name, function_scope_id) {
                     continue;
                 }
 
                 if self_function_name == Some(r.name.as_str()) {
                     continue;
                 }
-                if !is_injected && !is_synthesized_init_data(&r.name) {
+                if !is_synthesized_init_data(&r.name) {
                     continue;
                 }
                 seen.insert(r.name.clone());
@@ -166,7 +151,6 @@ struct CollectedRef {
     name: String,
     symbol_id: Option<SymbolId>,
     flags: ReferenceFlags,
-    is_synthesized_node: bool,
 }
 
 struct ReferenceCollector<'s> {
@@ -223,7 +207,6 @@ impl<'a, 's> Visit<'a> for ReferenceCollector<'s> {
             name: it.name.to_string(),
             symbol_id,
             flags,
-            is_synthesized_node: it.reference_id.get().is_none(),
         });
     }
 }

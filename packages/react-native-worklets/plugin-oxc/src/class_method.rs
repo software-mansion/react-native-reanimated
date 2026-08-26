@@ -38,11 +38,9 @@ pub fn process_if_worklet_method<'a>(
         PropertyKey::StaticIdentifier(id) if !method.computed => Some(id.name.to_string()),
         _ => None,
     };
-    let injected = pass.walk_function_scoped(&mut method.value, ScopeFlags::Function);
-    let Some((factory_call, _)) =
-        pass.workletize_function(&method.value, self_name.as_deref(), &injected)
+    pass.walk_function_scoped(&mut method.value, ScopeFlags::Function);
+    let Some((factory_call, _)) = pass.workletize_function(&method.value, self_name.as_deref())
     else {
-        pass.record_injected_refs(injected);
         return MethodOutcome::NotAWorklet;
     };
 

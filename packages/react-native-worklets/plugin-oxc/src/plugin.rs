@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     ArrowFunctionExpression, ClassElement, Declaration, ExportDefaultDeclaration,
@@ -13,7 +11,6 @@ use oxc_span::SPAN;
 use oxc_syntax::scope::ScopeFlags;
 
 use crate::class_method::MethodOutcome;
-use crate::closure::InjectedRef;
 use crate::types::State;
 use crate::utils::{const_decl, const_declaration, has_worklet_directive};
 use crate::worklet_factory::{make_worklet_factory, FactoryContext, WorkletInput};
@@ -21,13 +18,13 @@ use crate::worklet_factory::{make_worklet_factory, FactoryContext, WorkletInput}
 pub fn process_program<'a>(
     program: &mut Program<'a>,
     state: &mut State,
-    scoping: &Scoping,
+    scoping: &mut Scoping,
     builder: AstBuilder<'a>,
     allocator: &'a Allocator,
     filename: &str,
 ) -> Vec<(String, String)> {
     state.error =
-        crate::autoworkletization::add_directives_to_known_callbacks(program, scoping, builder);
+        crate::autoworkletization::add_directives_to_known_callbacks(program, &*scoping, builder);
 
     {
         let mut pass = WorkletPass {
@@ -36,7 +33,6 @@ pub fn process_program<'a>(
             builder,
             allocator,
             filename,
-            injected_refs_stack: Vec::new(),
             parent_is_scopable: true,
         };
         pass.visit_program(program);
@@ -47,40 +43,20 @@ pub fn process_program<'a>(
 
 pub struct WorkletPass<'a, 'b> {
     pub state: &'b mut State,
-    scoping: &'b Scoping,
+    scoping: &'b mut Scoping,
     pub builder: AstBuilder<'a>,
     pub allocator: &'a Allocator,
     filename: &'b str,
-    injected_refs_stack: Vec<HashSet<InjectedRef>>,
     parent_is_scopable: bool,
 }
 
 impl<'a, 'b> WorkletPass<'a, 'b> {
-    pub fn record_injected_refs<I: IntoIterator<Item = InjectedRef>>(&mut self, refs: I) {
-        if let Some(set) = self.injected_refs_stack.last_mut() {
-            set.extend(refs);
-        }
+    pub fn walk_function_scoped(&mut self, func: &mut Function<'a>, flags: ScopeFlags) {
+        walk_mut::walk_function(self, func, flags);
     }
 
-    fn in_new_frame(&mut self, walk: impl FnOnce(&mut Self)) -> HashSet<InjectedRef> {
-        self.injected_refs_stack.push(HashSet::new());
-        walk(self);
-        self.injected_refs_stack.pop().unwrap_or_default()
-    }
-
-    pub fn walk_function_scoped(
-        &mut self,
-        func: &mut Function<'a>,
-        flags: ScopeFlags,
-    ) -> HashSet<InjectedRef> {
-        self.in_new_frame(|pass| walk_mut::walk_function(pass, func, flags))
-    }
-
-    fn walk_arrow_scoped(
-        &mut self,
-        arrow: &mut ArrowFunctionExpression<'a>,
-    ) -> HashSet<InjectedRef> {
-        self.in_new_frame(|pass| walk_mut::walk_arrow_function_expression(pass, arrow))
+    fn walk_arrow_scoped(&mut self, arrow: &mut ArrowFunctionExpression<'a>) {
+        walk_mut::walk_arrow_function_expression(self, arrow);
     }
 
     fn take_declaration_factory(
@@ -88,17 +64,12 @@ impl<'a, 'b> WorkletPass<'a, 'b> {
         func: &mut Function<'a>,
     ) -> Option<(Expression<'a>, String)> {
         let previous = std::mem::replace(&mut self.parent_is_scopable, true);
-        let injected = self.walk_function_scoped(func, ScopeFlags::Function);
+        self.walk_function_scoped(func, ScopeFlags::Function);
         self.parent_is_scopable = previous;
 
         let name = func.id.as_ref().map(|id| id.name.to_string());
-        match self.workletize_function(func, name.as_deref(), &injected) {
-            Some((factory_call, react_name)) => Some((factory_call, name.unwrap_or(react_name))),
-            None => {
-                self.record_injected_refs(injected);
-                None
-            }
-        }
+        let (factory_call, react_name) = self.workletize_function(func, name.as_deref())?;
+        Some((factory_call, name.unwrap_or(react_name)))
     }
 
     fn binding_pattern(&self, name: &str) -> oxc_ast::ast::BindingPattern<'a> {
@@ -106,23 +77,17 @@ impl<'a, 'b> WorkletPass<'a, 'b> {
             .binding_pattern_binding_identifier(SPAN, self.builder.ident(name))
     }
 
-    fn build_factory(
-        &mut self,
-        input: WorkletInput<'a, '_>,
-        injected: &HashSet<InjectedRef>,
-    ) -> (Expression<'a>, String) {
+    fn build_factory(&mut self, input: WorkletInput<'a, '_>) -> (Expression<'a>, String) {
         let out = make_worklet_factory(
             input,
             self.state,
+            self.scoping,
             FactoryContext {
-                scoping: self.scoping,
                 builder: self.builder,
                 allocator: self.allocator,
                 filename: self.filename,
             },
-            injected,
         );
-        self.record_injected_refs(out.injected_refs.iter().cloned());
         (out.factory_call, out.react_name)
     }
 
@@ -146,7 +111,6 @@ impl<'a, 'b> WorkletPass<'a, 'b> {
         &mut self,
         func: &Function<'a>,
         self_name: Option<&str>,
-        injected: &HashSet<InjectedRef>,
     ) -> Option<(Expression<'a>, String)> {
         let body = func.body.as_ref()?;
         if !has_worklet_directive(body) {
@@ -161,7 +125,7 @@ impl<'a, 'b> WorkletPass<'a, 'b> {
             self_name,
             is_expression_body: false,
         };
-        Some(self.build_factory(input, injected))
+        Some(self.build_factory(input))
     }
 }
 
@@ -169,9 +133,8 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
     fn visit_expression(&mut self, expr: &mut Expression<'a>) {
         match expr {
             Expression::ArrowFunctionExpression(arrow) => {
-                let injected = self.walk_arrow_scoped(arrow);
+                self.walk_arrow_scoped(arrow);
                 if !has_worklet_directive(&arrow.body) {
-                    self.record_injected_refs(injected);
                     return;
                 }
                 let input = WorkletInput {
@@ -183,18 +146,14 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
                     self_name: None,
                     is_expression_body: arrow.expression,
                 };
-                let (factory_call, _) = self.build_factory(input, &injected);
+                let (factory_call, _) = self.build_factory(input);
                 *expr = factory_call;
             }
             Expression::FunctionExpression(func) => {
-                let injected = self.walk_function_scoped(func, ScopeFlags::Function);
+                self.walk_function_scoped(func, ScopeFlags::Function);
                 let name = func.id.as_ref().map(|id| id.name.to_string());
-                if let Some((factory_call, _)) =
-                    self.workletize_function(func, name.as_deref(), &injected)
-                {
+                if let Some((factory_call, _)) = self.workletize_function(func, name.as_deref()) {
                     *expr = factory_call;
-                } else {
-                    self.record_injected_refs(injected);
                 }
             }
             _ => walk_mut::walk_expression(self, expr),
@@ -326,14 +285,10 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
         let Expression::FunctionExpression(func) = &mut prop.value else {
             return;
         };
-        let injected = self.walk_function_scoped(func, ScopeFlags::Function);
-        if let Some((factory_call, _)) =
-            self.workletize_function(func, method_name.as_deref(), &injected)
-        {
+        self.walk_function_scoped(func, ScopeFlags::Function);
+        if let Some((factory_call, _)) = self.workletize_function(func, method_name.as_deref()) {
             prop.value = factory_call;
             prop.method = false;
-        } else {
-            self.record_injected_refs(injected);
         }
     }
 }

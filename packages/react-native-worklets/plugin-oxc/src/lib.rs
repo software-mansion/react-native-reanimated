@@ -135,14 +135,14 @@ fn run(
     let semantic_ret = SemanticBuilder::new()
         .with_check_syntax_error(false)
         .build(&program);
-    let scoping = semantic_ret.semantic.into_scoping();
+    let mut scoping = semantic_ret.semantic.into_scoping();
 
     state.imports_by_symbol = build_imports_index(&program);
 
     let emitted = plugin::process_program(
         &mut program,
         &mut state,
-        &scoping,
+        &mut scoping,
         builder,
         &allocator,
         filename,

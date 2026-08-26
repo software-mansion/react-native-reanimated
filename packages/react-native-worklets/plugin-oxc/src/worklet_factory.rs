@@ -7,10 +7,12 @@ use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
 use oxc_semantic::Scoping;
 use oxc_span::SPAN;
+use oxc_syntax::node::NodeId;
 use oxc_syntax::number::NumberBase;
+use oxc_syntax::reference::{Reference, ReferenceFlags, ReferenceId};
 use oxc_syntax::scope::ScopeId;
 
-use crate::closure::{get_closure, scope_is_inside, InjectedRef};
+use crate::closure::{get_closure, scope_is_inside};
 use crate::naming::worklet_hash;
 use crate::naming::{make_worklet_name, WorkletNames};
 use crate::types::State;
@@ -36,12 +38,10 @@ pub struct WorkletInput<'a, 'b> {
 pub struct FactoryOutput<'a> {
     pub factory_call: Expression<'a>,
     pub react_name: String,
-    pub injected_refs: Vec<InjectedRef>,
 }
 
 #[derive(Clone, Copy)]
 pub struct FactoryContext<'a, 'b> {
-    pub scoping: &'b Scoping,
     pub builder: AstBuilder<'a>,
     pub allocator: &'a Allocator,
     pub filename: &'b str,
@@ -50,11 +50,10 @@ pub struct FactoryContext<'a, 'b> {
 pub fn make_worklet_factory<'a>(
     input: WorkletInput<'a, '_>,
     state: &mut State,
+    scoping: &mut Scoping,
     ctx: FactoryContext<'a, '_>,
-    force_capture: &std::collections::HashSet<InjectedRef>,
 ) -> FactoryOutput<'a> {
     let FactoryContext {
-        scoping,
         builder,
         allocator,
         filename,
@@ -64,7 +63,7 @@ pub fn make_worklet_factory<'a>(
         make_worklet_name(input.self_name, filename, n)
     };
 
-    let closure = get_closure(&input, scoping, state, force_capture, filename);
+    let closure = get_closure(&input, scoping, state, filename);
 
     let recursive_name = input.self_name.and_then(|name| {
         if body_references_name(input.body, name, scoping, input.function_scope_id) {
@@ -114,24 +113,43 @@ pub fn make_worklet_factory<'a>(
         state.opts.worklets_package_dir.as_deref(),
     );
     let file_path = format!("react-native-worklets/.worklets/{hash}.js");
-    let factory_call = make_worklet_factory_call(builder, &file_path, &closure.closure_variables);
-    state.emitted_files.push((file_path, file_content));
 
     let call_scope = scoping
-        .scope_ancestors(input.function_scope_id)
-        .nth(1)
+        .scope_parent_id(input.function_scope_id)
         .unwrap_or_else(|| scoping.root_scope_id());
-    let injected_refs = closure
-        .closure_variables
-        .iter()
-        .map(|name| (name.clone(), call_scope))
-        .collect();
+    let bound_closure = bind_closure_references(scoping, call_scope, &closure.closure_variables);
+
+    let factory_call = make_worklet_factory_call(builder, &file_path, &bound_closure);
+    state.emitted_files.push((file_path, file_content));
 
     FactoryOutput {
         factory_call,
         react_name: names.react_name,
-        injected_refs,
     }
+}
+
+fn bind_closure_references(
+    scoping: &mut Scoping,
+    call_scope: ScopeId,
+    closure_variables: &[String],
+) -> Vec<(String, Option<ReferenceId>)> {
+    closure_variables
+        .iter()
+        .map(|name| {
+            let reference_id = scoping.find_binding(call_scope, name.as_str().into()).map(|symbol_id| {
+                let reference = Reference::new_with_symbol_id(
+                    NodeId::DUMMY,
+                    symbol_id,
+                    call_scope,
+                    ReferenceFlags::read(),
+                );
+                let reference_id = scoping.create_reference(reference);
+                scoping.add_resolved_reference(symbol_id, reference_id);
+                reference_id
+            });
+            (name.clone(), reference_id)
+        })
+        .collect()
 }
 
 fn generate_worklet_file<'a>(
@@ -231,7 +249,7 @@ fn build_import_declaration<'a>(
 fn make_worklet_factory_call<'a>(
     builder: AstBuilder<'a>,
     file_path: &str,
-    closure_variables: &[String],
+    closure: &[(String, Option<ReferenceId>)],
 ) -> Expression<'a> {
     let path_str = builder.str(file_path);
     let require_call = builder.expression_call(
@@ -257,7 +275,7 @@ fn make_worklet_factory_call<'a>(
     let mut args = builder.vec_with_capacity(1);
     args.push(Argument::from(build_closure_object(
         builder,
-        closure_variables,
+        closure.iter().map(|(name, id)| (name.as_str(), *id)),
     )));
     builder.expression_call(SPAN, dot_default, NONE, args, false)
 }
@@ -287,7 +305,10 @@ fn build_factory_expression<'a>(
         builder,
         react_name,
         "__closure",
-        build_closure_object(builder, closure_variables),
+        build_closure_object(
+            builder,
+            closure_variables.iter().map(|name| (name.as_str(), None)),
+        ),
     ));
 
     stmts.push(build_member_assign(
@@ -384,15 +405,20 @@ fn build_member_assign<'a>(
     builder.statement_expression(SPAN, assign)
 }
 
-fn build_closure_object<'a>(
+fn build_closure_object<'a, 'n>(
     builder: AstBuilder<'a>,
-    closure_variables: &[String],
+    entries: impl ExactSizeIterator<Item = (&'n str, Option<ReferenceId>)>,
 ) -> Expression<'a> {
-    let mut props = builder.vec_with_capacity(closure_variables.len());
-    for name in closure_variables {
+    let mut props = builder.vec_with_capacity(entries.len());
+    for (name, reference_id) in entries {
         let ident = builder.ident(name);
         let key = PropertyKey::StaticIdentifier(builder.alloc_identifier_name(SPAN, ident));
-        let value = builder.expression_identifier(SPAN, ident);
+        let value = match reference_id {
+            Some(reference_id) => {
+                builder.expression_identifier_with_reference_id(SPAN, ident, reference_id)
+            }
+            None => builder.expression_identifier(SPAN, ident),
+        };
         props.push(builder.object_property_kind_object_property(
             SPAN,
             PropertyKind::Init,

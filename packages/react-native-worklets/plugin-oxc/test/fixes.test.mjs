@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import plugin from '../index.js';
 const { transform } = plugin;
 
-const REQUIRE_FACTORY = /require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/;
+const REQUIRE_FACTORY =
+  /require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/;
 
 function joinedFiles(files) {
   return files.map((f) => f.content).join('\n');
@@ -18,7 +19,10 @@ test('referenced worklet: const f = () => {...}; useAnimatedStyle(f) workletizes
     }
   `;
   const { code } = transform(input, 'test.js', {});
-  assert.match(code, /const handler = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
+  assert.match(
+    code,
+    /const handler = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/
+  );
 });
 
 test('referenced worklet: function declaration handler', () => {
@@ -92,7 +96,11 @@ test('idempotent: running plugin twice equals running once', () => {
   const first = transform(input, 'test.js', {});
   const second = transform(first.code, 'test.js', {});
   assert.equal(second.code, first.code);
-  assert.equal(second.files.length, 0, 'idempotent second pass should not re-emit');
+  assert.equal(
+    second.files.length,
+    0,
+    'idempotent second pass should not re-emit'
+  );
 });
 
 test('recursive worklet emits inner-fn binding that resolves naturally', () => {
@@ -138,7 +146,9 @@ test('globals (null, this) are not captured into closure', () => {
 
 test('extraPlugins option does not throw and emits a stderr warning', () => {
   const input = `function foo() { 'worklet'; return 1; }`;
-  const { files } = transform(input, 'test.js', { extraPlugins: ['babel-plugin-foo'] });
+  const { files } = transform(input, 'test.js', {
+    extraPlugins: ['babel-plugin-foo'],
+  });
   assert.match(joinedFiles(files), /__workletHash/);
 });
 
@@ -204,7 +214,10 @@ test('referenced worklet survives through gesture chain', () => {
     }
   `;
   const { code } = transform(input, 'test.js', {});
-  assert.match(code, /const handler = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
+  assert.match(
+    code,
+    /const handler = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/
+  );
 });
 
 test('referenced worklet: alias chain through identifier-only assignment', () => {
@@ -217,7 +230,10 @@ test('referenced worklet: alias chain through identifier-only assignment', () =>
     }
   `;
   const { code } = transform(input, 'test.js', {});
-  assert.match(code, /const handler = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
+  assert.match(
+    code,
+    /const handler = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/
+  );
 });
 
 test('referenced worklet: object-hook arg0 identifier-valued property', () => {
@@ -229,7 +245,10 @@ test('referenced worklet: object-hook arg0 identifier-valued property', () => {
     }
   `;
   const { code } = transform(input, 'test.js', {});
-  assert.match(code, /const onScroll = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
+  assert.match(
+    code,
+    /const onScroll = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/
+  );
 });
 
 test('referenced worklet: non-const binding via assignment expression', () => {
@@ -278,7 +297,10 @@ test('object of callbacks reached through an identifier gets workletized', () =>
     function A() { return useAnimatedScrollHandler(handlers); }
   `;
   const { code, files } = transform(input, 'test.js', {});
-  assert.match(code, /onScroll: require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
+  assert.match(
+    code,
+    /onScroll: require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/
+  );
   assert.equal(files.length, 1);
 });
 
@@ -358,7 +380,10 @@ test('a worklet in a computed method key is workletized', () => {
   const input = `const g = 1;\nconst o = { [(() => { 'worklet'; return g; })()]() { return 1; } };`;
   const { code, files } = transform(input, 'test.js', {});
   assert.equal(files.length, 1);
-  assert.match(code, /\[require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default\(\{ g \}\)\(\)\]/);
+  assert.match(
+    code,
+    /\[require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default\(\{ g \}\)\(\)\]/
+  );
 });
 
 test('an import left empty by type-specifier stripping is dropped', () => {
@@ -371,7 +396,11 @@ test('an import left empty by type-specifier stripping is dropped', () => {
 });
 
 test('a genuine side-effect import survives', () => {
-  const { code } = transform(`import 'side-effect';\nconst a = 1;`, 'test.ts', {});
+  const { code } = transform(
+    `import 'side-effect';\nconst a = 1;`,
+    'test.ts',
+    {}
+  );
   assert.match(code, /import "side-effect"/);
 });
 
@@ -382,7 +411,10 @@ test('an exported function declaration referenced by a hook is workletized', () 
     const s = useAnimatedStyle(styler);
   `;
   const { code, files } = transform(input, 'test.js', {});
-  assert.match(code, /export const styler = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
+  assert.match(
+    code,
+    /export const styler = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/
+  );
   assert.equal(files.length, 1);
 });
 
@@ -439,7 +471,7 @@ test('only the last assignment to a rebound binding is workletized', () => {
   assert.equal(files.length, 1);
 });
 
-test('an unbound free variable survives a same-named nested injection', () => {
+test('a same-named nested capture does not leak into the outer closure', () => {
   const input = `
     const w = () => { 'worklet';
       function h() { const zz = 1; return () => { 'worklet'; return zz; }; }
@@ -448,7 +480,7 @@ test('an unbound free variable survives a same-named nested injection', () => {
   `;
   const { files } = transform(input, 'test.js', {});
   const outer = files.find((f) => f.content.includes('function h()'));
-  assert.match(outer.content, /__closure = \{ zz \}/);
+  assert.match(outer.content, /__closure = \{\}/);
 });
 
 test('destructuring for-of targets are not captured', () => {
@@ -464,9 +496,17 @@ test('computed exports assignments are dehoisted', () => {
 });
 
 test('to_identifier matches @babel/types on leading digits and unicode', () => {
-  const { files: a } = transform(`const w = () => { 'worklet'; return 1; };`, '/proj/2dExample.js', {});
+  const { files: a } = transform(
+    `const w = () => { 'worklet'; return 1; };`,
+    '/proj/2dExample.js',
+    {}
+  );
   assert.match(a[0].content, /dExampleJs1Factory/);
-  const { files: b } = transform(`const w = function ünïcode(){ 'worklet'; return 1; };`, 'test.js', {});
+  const { files: b } = transform(
+    `const w = function ünïcode(){ 'worklet'; return 1; };`,
+    'test.js',
+    {}
+  );
   assert.match(b[0].content, /ünïcode_testJs1Factory/);
 });
 
@@ -479,7 +519,10 @@ test('an object reached by identifier workletizes identifier-valued properties',
   `;
   const { code, files } = transform(input, 'test.js', {});
   assert.equal(files.length, 1);
-  assert.match(code, /const onStart = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
+  assert.match(
+    code,
+    /const onStart = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/
+  );
 });
 
 test('a function declaration wins over a later reassignment', () => {
@@ -514,7 +557,10 @@ test('the chosen definition site must match the accepted shape', () => {
   `;
   const { code, files } = transform(input, 'test.js', {});
   assert.equal(files.length, 1);
-  assert.match(code, /f = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
+  assert.match(
+    code,
+    /f = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/
+  );
 });
 
 test('the __workletHash guard ignores optional chaining', () => {
@@ -571,7 +617,10 @@ test('a rebound object resolves its identifier-valued properties', () => {
   `;
   const { code, files } = transform(input, 'test.js', {});
   assert.equal(files.length, 1);
-  assert.match(code, /const cb = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default\(\{\}\)/);
+  assert.match(
+    code,
+    /const cb = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default\(\{\}\)/
+  );
 });
 
 test('a destructured binding resolves through its declarator init', () => {
@@ -583,7 +632,10 @@ test('a destructured binding resolves through its declarator init', () => {
   `;
   const { code, files } = transform(input, 'test.js', {});
   assert.equal(files.length, 1);
-  assert.match(code, /onScroll: require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default\(\{\}\)/);
+  assert.match(
+    code,
+    /onScroll: require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default\(\{\}\)/
+  );
 });
 
 test('an optional call is not auto-workletized', () => {
@@ -615,7 +667,10 @@ test('a self-recursive worklet does not capture its own name', () => {
     }
   `;
   const { code } = transform(input, 'test.js', {});
-  assert.match(code, /const walk = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default\(\{\}\)/);
+  assert.match(
+    code,
+    /const walk = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default\(\{\}\)/
+  );
 });
 
 test('a call below an optional link is still auto-workletized', () => {
@@ -631,7 +686,10 @@ test('a function declaration in an unscopable position is not given a const', ()
   const input = `switch (x) { case 1: function h() { 'worklet'; return 1; } default: break; }`;
   const { code } = transform(input, 'test.js', {});
   assert.doesNotMatch(code, /const h =/);
-  assert.match(code, /require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default\(\{\}\)/);
+  assert.match(
+    code,
+    /require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default\(\{\}\)/
+  );
 });
 
 test('a computed identifier callee is auto-detected', () => {
@@ -679,7 +737,10 @@ test('an unscopable position does not leak into the declaration body', () => {
     }
   `;
   const { code } = transform(input, 'test.js', {});
-  assert.match(code, /const f = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
+  assert.match(
+    code,
+    /const f = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/
+  );
 });
 
 test('a TypeScript assertion does not hide a callback from auto-workletization', () => {
