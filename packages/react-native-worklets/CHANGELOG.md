@@ -6,6 +6,9 @@
 
 ### 🛠 Breaking changes
 
+- Remove the Serializable handle - `SerializableInitializer`, `createSerializableInitializer` and the `__init` clone path are gone. `Serializable::ValueType::HandleType` stays in the Compat Stable API enum for ABI compatibility and `extractSerializable` throws for it. ([#10414](https://github.com/software-mansion/react-native-reanimated/pull/10414) by [@tjzel](https://github.com/tjzel))
+- `makeShareable` now serializes its value eagerly into a retaining Serializable instead of rebuilding it lazily on each runtime through a handle. ([#10412](https://github.com/software-mansion/react-native-reanimated/pull/10412) by [@tjzel](https://github.com/tjzel))
+- Remove worklet context objects from the Babel plugin. ([#10411](https://github.com/software-mansion/react-native-reanimated/pull/10411) by [@tjzel](https://github.com/tjzel))
 - Change the C++ `Synchronizable` interface to operate on `std::variant` values. Getters return a `Serializable`, a `double` or a `bool`, and `setBlocking` takes either a `Serializable` or a plain value. ([#10294](https://github.com/software-mansion/react-native-reanimated/pull/10294) by [@tjzel](https://github.com/tjzel))
 - Add virtual `setDirty` to the C++ `Synchronizable` interface. `SynchronizableDynamic` throws from it. ([#10295](https://github.com/software-mansion/react-native-reanimated/pull/10295) by [@tjzel](https://github.com/tjzel))
 
@@ -25,6 +28,9 @@
 - Compare the Synchronizable's imperative lock owner with `std::thread::id` instead of comparing `pthread_t` with `==`, which POSIX doesn't define. ([#10349](https://github.com/software-mansion/react-native-reanimated/pull/10349) by [@tjzel](https://github.com/tjzel))
 - Added an umbrella header for removed `Serializable.h` file for backwards compatibility with Expo
 - Fix the umbrella `Serializable.h` header including a non-existent `RetainableSerializable.h` instead of `RetainingSerializable.h`, which made the header fail to compile. ([#10406](https://github.com/software-mansion/react-native-reanimated/pull/10406) by [@tjzel](https://github.com/tjzel))
+- Fix build error when Bundle Mode worklet captures JSX name. ([#10409](https://github.com/software-mansion/react-native-reanimated/pull/10409) by [@tshmieldev](https://github.com/tshmieldev))
+- Fix `ReferenceError` when a worklet file assigns to `module.exports`. ([#10408](https://github.com/software-mansion/react-native-reanimated/pull/10408) by [@tshmieldev](https://github.com/tshmieldev))
+- Stop workletizing getters, setters and constructors. ([#10421](https://github.com/software-mansion/react-native-reanimated/pull/10421) by [@tshmieldev](https://github.com/tshmieldev))
 
 ### 💡 Others
 
@@ -36,3 +42,4 @@
 - Document the `fixedType` option and `setDirty` for Synchronizable. ([#10297](https://github.com/software-mansion/react-native-reanimated/pull/10297) by [@tjzel](https://github.com/tjzel))
 - Use the built-in Hermes microtask queue on Worklet Runtimes instead of a custom JS implementation. `queueMicrotask` now enqueues native Hermes jobs, the private `__callMicrotasks` global is replaced by `__drainMicrotasks`, and the `_microtaskQueueFinalizers` array is removed. ([#10199](https://github.com/software-mansion/react-native-reanimated/pull/10199) by [@tjzel](https://github.com/tjzel))
 - Drain the microtask queue after each `requestAnimationFrame` callback on the UI Runtime, instead of once after the whole batch. ([#10237](https://github.com/software-mansion/react-native-reanimated/pull/10237) by [@tjzel](https://github.com/tjzel))
+- Renumber worklet hashes in plugin snapshots so they survive unrelated changes. ([#10420](https://github.com/software-mansion/react-native-reanimated/pull/10420) by [@tshmieldev](https://github.com/tshmieldev))

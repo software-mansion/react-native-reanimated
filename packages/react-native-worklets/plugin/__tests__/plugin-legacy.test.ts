@@ -554,7 +554,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    test('workletizes getter', () => {
+    test('leaves getter untouched', () => {
       const input = html`<script>
         const x = 5;
         class Foo {
@@ -568,12 +568,12 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input, {
         configFile: './plugin-unit-test.babel.config.js',
       });
-      expect(code).toHaveWorkletData();
-      expect(code).not.toContain("'worklet';");
+      expect(code).not.toHaveWorkletData();
+      expect(code).toContain("'worklet';");
       expect(code).toMatchSnapshot();
     });
 
-    test('workletizes setter', () => {
+    test('leaves setter untouched', () => {
       const input = html`<script>
         class Foo {
           set bar(x) {
@@ -586,8 +586,8 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input, {
         configFile: './plugin-unit-test.babel.config.js',
       });
-      expect(code).toHaveWorkletData();
-      expect(code).not.toContain("'worklet';");
+      expect(code).not.toHaveWorkletData();
+      expect(code).toContain("'worklet';");
       expect(code).toMatchSnapshot();
     });
 
@@ -627,7 +627,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    test('workletizes constructor', () => {
+    test('leaves constructor untouched', () => {
       const input = html`<script>
         class Foo {
           constructor(x) {
@@ -640,8 +640,8 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input, {
         configFile: './plugin-unit-test.babel.config.js',
       });
-      expect(code).toHaveWorkletData();
-      expect(code).not.toContain("'worklet';");
+      expect(code).not.toHaveWorkletData();
+      expect(code).toContain("'worklet';");
       expect(code).toMatchSnapshot();
     });
   });
@@ -2284,63 +2284,6 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    test('workletizes implicit WorkletContextObject', () => {
-      const input = html`<script>
-        'worklet';
-        const foo = {
-          bar() {
-            return 'bar';
-          },
-          foobar() {
-            return this.bar();
-          },
-        };
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toContain('__workletContextObjectFactory');
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    test('workletizes implicit WorkletContextObject in named export', () => {
-      const input = html`<script>
-        'worklet';
-        export const foo = {
-          bar() {
-            return 'bar';
-          },
-          foobar() {
-            return this.bar();
-          },
-        };
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toContain('__workletContextObjectFactory');
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    test('workletizes implicit WorkletContextObject in default export', () => {
-      const input = html`<script>
-        'worklet';
-        export default {
-          bar() {
-            return 'bar';
-          },
-          foobar() {
-            return this.bar();
-          },
-        };
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toContain('__workletContextObjectFactory');
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
     test('workletizes ClassDeclaration', () => {
       const input = html`<script>
         'worklet';
@@ -2444,6 +2387,45 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
+    test('moves `module.exports` assignment to the bottom of the file', () => {
+      const input = html`<script>
+        'worklet';
+        module.exports = foo;
+        function foo() {}
+        const bar = 1;
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('const bar = 1;\nmodule.exports = foo;');
+      expect(code).toMatchSnapshot();
+    });
+
+    test('moves `module["exports"]` assignment to the bottom of the file', () => {
+      const input = html`<script>
+        'worklet';
+        module["exports"] = foo;
+        function foo() {}
+        const bar = 1;
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('const bar = 1;\nmodule["exports"] = foo;');
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't move computed `module[exports]` assignment", () => {
+      const input = html`<script>
+        'worklet';
+        module[exports] = foo;
+        function foo() {}
+        const bar = 1;
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).not.toContain('const bar = 1;\nmodule[exports] = foo;');
+      expect(code).toMatchSnapshot();
+    });
+
     test('moves multiple CommonJS exports to the bottom of the file', () => {
       const input = html`<script>
         'worklet';
@@ -2458,72 +2440,6 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toMatchSnapshot();
-    });
-  });
-
-  describe('for context objects', () => {
-    test('removes marker', () => {
-      const input = html`<script>
-        const foo = {
-          bar() {
-            return 'bar';
-          },
-          __workletContextObject: true,
-        };
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).not.toMatch(/__workletContextObject:\s*/g);
-      expect(code).toMatchSnapshot();
-    });
-
-    test('creates factories', () => {
-      const input = html`<script>
-        const foo = {
-          bar() {
-            return 'bar';
-          },
-          __workletContextObject: true,
-        };
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toContain('__workletContextObjectFactory');
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    test('workletizes regardless of marker value', () => {
-      const input = html`<script>
-        const foo = {
-          bar() {
-            return 'bar';
-          },
-          __workletContextObject: new RegExp('foo'),
-        };
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    test('preserves bindings', () => {
-      const input = html`<script>
-        const foo = {
-          bar() {
-            return 'bar';
-          },
-          foobar() {
-            return this.bar();
-          },
-          __workletContextObject: true,
-        };
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toContainInWorkletString('this.bar()');
       expect(code).toMatchSnapshot();
     });
   });

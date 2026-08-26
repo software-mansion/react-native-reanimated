@@ -846,44 +846,14 @@ var require_classMethod = __commonJS({
     var types_12 = require("@babel/types");
     var assert_1 = require("assert");
     function processIfWorkletMethod(path) {
+      if (path.node.kind !== "method") {
+        return;
+      }
       if (path.node.body.directives.some((d) => d.value.value === "worklet")) {
         (0, assert_1.strict)((0, types_12.isIdentifier)(path.node.key), "ClassMethod key must be an Identifier");
         const methodIdentifier = path.node.key;
         path.replaceWith((0, types_12.classProperty)((0, types_12.cloneNode)(methodIdentifier, true), (0, types_12.functionExpression)((0, types_12.cloneNode)(methodIdentifier, true), path.node.params.filter((p) => (0, types_12.isFunctionParameter)(p)).map((p) => (0, types_12.cloneNode)(p, true)), (0, types_12.cloneNode)(path.node.body, true), path.node.generator, path.node.async)));
       }
-    }
-  }
-});
-
-// lib/contextObject.js
-var require_contextObject = __commonJS({
-  "lib/contextObject.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.contextObjectMarker = void 0;
-    exports2.processIfWorkletContextObject = processIfWorkletContextObject;
-    exports2.isContextObject = isContextObject;
-    var types_12 = require("@babel/types");
-    var directives_12 = require_directives();
-    exports2.contextObjectMarker = "__workletContextObject";
-    function processIfWorkletContextObject(path, _state) {
-      if (!isContextObject(path.node)) {
-        return false;
-      }
-      removeContextObjectMarker(path.node);
-      processWorkletContextObject(path.node);
-      return true;
-    }
-    function isContextObject(objectExpression) {
-      return objectExpression.properties.some((property) => (0, types_12.isObjectProperty)(property) && (0, types_12.isIdentifier)(property.key) && property.key.name === exports2.contextObjectMarker);
-    }
-    function processWorkletContextObject(objectExpression) {
-      const workletObjectFactory = (0, types_12.functionExpression)(null, [], (0, types_12.blockStatement)([(0, types_12.returnStatement)((0, types_12.cloneNode)(objectExpression))]));
-      (0, directives_12.addWorkletDirectivesToFunctionBody)(workletObjectFactory.body);
-      objectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)(`${exports2.contextObjectMarker}Factory`), workletObjectFactory));
-    }
-    function removeContextObjectMarker(objectExpression) {
-      objectExpression.properties = objectExpression.properties.filter((property) => !((0, types_12.isObjectProperty)(property) && (0, types_12.isIdentifier)(property.key) && property.key.name === exports2.contextObjectMarker));
     }
   }
 });
@@ -894,9 +864,7 @@ var require_file = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.processIfWorkletFile = processIfWorkletFile;
-    exports2.isImplicitContextObject = isImplicitContextObject;
     var types_12 = require("@babel/types");
-    var contextObject_12 = require_contextObject();
     var directives_12 = require_directives();
     var types_2 = require_types();
     function processIfWorkletFile(path, state) {
@@ -927,11 +895,7 @@ var require_file = __commonJS({
       if ((0, types_2.isWorkletizableFunctionPath)(nodePath)) {
         (0, directives_12.addWorkletDirectivesToPath)(nodePath);
       } else if ((0, types_2.isWorkletizableObjectPath)(nodePath)) {
-        if (isImplicitContextObject(nodePath)) {
-          appendWorkletContextObjectMarker(nodePath.node);
-        } else {
-          processWorkletAggregator(nodePath, state);
-        }
+        processWorkletAggregator(nodePath, state);
       } else if (nodePath.isVariableDeclaration()) {
         processVariableDeclaration(nodePath, state);
       } else if (nodePath.isClassDeclaration()) {
@@ -964,31 +928,6 @@ var require_file = __commonJS({
         }
       });
     }
-    function appendWorkletContextObjectMarker(objectExpression) {
-      if (objectExpression.properties.some((value) => (0, types_12.isObjectProperty)(value) && (0, types_12.isIdentifier)(value.key) && value.key.name === contextObject_12.contextObjectMarker)) {
-        return;
-      }
-      objectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)(`${contextObject_12.contextObjectMarker}`), (0, types_12.booleanLiteral)(true)));
-    }
-    function isImplicitContextObject(path) {
-      const propertyPaths = path.get("properties");
-      return propertyPaths.some((propertyPath) => {
-        if (!propertyPath.isObjectMethod()) {
-          return false;
-        }
-        return hasThisExpression(propertyPath);
-      });
-    }
-    function hasThisExpression(path) {
-      let result = false;
-      path.traverse({
-        ThisExpression(thisPath) {
-          result = true;
-          thisPath.stop();
-        }
-      });
-      return result;
-    }
     function appendWorkletClassMarker(classBody) {
       classBody.body.push((0, types_12.classProperty)((0, types_12.identifier)("__workletClass"), (0, types_12.booleanLiteral)(true)));
     }
@@ -1008,7 +947,17 @@ var require_file = __commonJS({
       }
     }
     function isCommonJSExport(statement) {
-      return (0, types_12.isExpressionStatement)(statement) && (0, types_12.isAssignmentExpression)(statement.expression) && (0, types_12.isMemberExpression)(statement.expression.left) && (0, types_12.isIdentifier)(statement.expression.left.object) && statement.expression.left.object.name === "exports";
+      return (0, types_12.isExpressionStatement)(statement) && (0, types_12.isAssignmentExpression)(statement.expression) && (0, types_12.isMemberExpression)(statement.expression.left) && isCommonJSExportTarget(statement.expression.left);
+    }
+    function isCommonJSExportTarget(target) {
+      const object = target.object;
+      if ((0, types_12.isIdentifier)(object)) {
+        return object.name === "exports" || object.name === "module" && isExportsProperty(target);
+      }
+      return (0, types_12.isMemberExpression)(object) && isCommonJSExportTarget(object);
+    }
+    function isExportsProperty(target) {
+      return target.computed ? (0, types_12.isStringLiteral)(target.property, { value: "exports" }) : (0, types_12.isIdentifier)(target.property, { name: "exports" });
     }
   }
 });
@@ -1368,6 +1317,9 @@ var require_closure = __commonJS({
     var types_12 = require("@babel/types");
     var globals_12 = require_globals();
     var imports_1 = require_imports();
+    function toClosureIdentifier(node) {
+      return (0, types_12.isJSXIdentifier)(node) ? (0, types_12.identifier)(node.name) : (0, types_12.cloneNode)(node, true);
+    }
     function getClosure(funPath, state) {
       const capturedNames = /* @__PURE__ */ new Set();
       const closureVariables = new Array();
@@ -1397,7 +1349,7 @@ var require_closure = __commonJS({
               return;
             }
             capturedNames.add(name);
-            closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
+            closureVariables.push(toClosureIdentifier(idPath.node));
             return;
           }
           if ("id" in funPath.node) {
@@ -1427,7 +1379,7 @@ var require_closure = __commonJS({
             }
           }
           capturedNames.add(name);
-          closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
+          closureVariables.push(toClosureIdentifier(idPath.node));
         }
       }, state);
       return {
@@ -2127,7 +2079,6 @@ var autoworkletization_1 = require_autoworkletization();
 var bundleMode_1 = require_bundleMode();
 var class_1 = require_class();
 var classMethod_1 = require_classMethod();
-var contextObject_1 = require_contextObject();
 var directives_1 = require_directives();
 var file_1 = require_file();
 var globals_1 = require_globals();
@@ -2171,13 +2122,6 @@ module.exports = function WorkletsBabelPlugin() {
         enter(path, state) {
           runWithTaggedExceptions(state, () => {
             (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state);
-          });
-        }
-      },
-      ObjectExpression: {
-        enter(path, state) {
-          runWithTaggedExceptions(state, () => {
-            (0, contextObject_1.processIfWorkletContextObject)(path, state);
           });
         }
       },
