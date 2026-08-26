@@ -418,12 +418,18 @@ void LayoutAnimationsProxy_Experimental::applySynchronousProps(const UpdatesBatc
       continue;
     }
     const auto nodeIt = lightNodes_.find(shadowNodeFamily->getTag());
-    if (nodeIt == lightNodes_.end() || !nodeIt->second) {
+    if (nodeIt == lightNodes_.end()) {
       continue;
     }
 
     const auto &node = nodeIt->second;
-    if (isRoot(node) || !node->current.props) {
+    react_native_assert(node && "LightNode is nullptr");
+    if (!node || isRoot(node)) {
+      continue;
+    }
+
+    react_native_assert(node->current.props && "LightNode has no props");
+    if (!node->current.props) {
       continue;
     }
 
