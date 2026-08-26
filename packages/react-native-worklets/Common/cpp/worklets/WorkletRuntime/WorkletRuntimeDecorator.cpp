@@ -3,7 +3,6 @@
 #include <worklets/SharedItems/Serializable/SerializableArray.h>
 #include <worklets/SharedItems/Serializable/SerializableBigInt.h>
 #include <worklets/SharedItems/Serializable/SerializableHostObject.h>
-#include <worklets/SharedItems/Serializable/SerializableInitializer.h>
 #include <worklets/SharedItems/Serializable/SerializableObject.h>
 #include <worklets/SharedItems/Serializable/SerializableScalar.h>
 #include <worklets/SharedItems/Serializable/SerializableString.h>
@@ -181,10 +180,6 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(rt, "_createSerializableWorklet", [](jsi::Runtime &rt, const jsi::Value &value) {
     return makeSerializableWorklet(rt, value.asObject(rt), false);
-  });
-
-  jsi_utils::installJsiFunction(rt, "_createSerializableInitializer", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return makeSerializableInitializer(rt, value.asObject(rt));
   });
 
   jsi_utils::installJsiFunction(rt, "_createSerializableSynchronizable", [](jsi::Runtime &rt, const jsi::Value &value) {
