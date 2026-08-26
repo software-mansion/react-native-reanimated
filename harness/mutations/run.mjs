@@ -246,6 +246,18 @@ const preRegistryMutations = [
 
 const hostPositionMutations = [
   {
+    id: 'immediate-exit-registration',
+    platform: 'ios',
+    source: 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.cpp',
+    search: `        if (state == UNDEFINED) {
+          lightNodes_.erase(it);
+        }`,
+    replacement: `        if (state == UNDEFINED || state == ANIMATING) {
+          lightNodes_.erase(it);
+        }`,
+    test: 'LayoutAnimationScenariosTest.ImmediateExitCompletionCanReenterTheStartCallback',
+  },
+  {
     id: 'exiting-host-position',
     platform: 'ios',
     source: 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.cpp',
