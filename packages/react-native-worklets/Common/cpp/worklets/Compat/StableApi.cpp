@@ -10,7 +10,6 @@
 #include <worklets/SharedItems/Serializable/SerializableHostFunction.h>
 #include <worklets/SharedItems/Serializable/SerializableHostObject.h>
 #include <worklets/SharedItems/Serializable/SerializableImport.h>
-#include <worklets/SharedItems/Serializable/SerializableInitializer.h>
 #include <worklets/SharedItems/Serializable/SerializableMap.h>
 #include <worklets/SharedItems/Serializable/SerializableObject.h>
 #include <worklets/SharedItems/Serializable/SerializableRegExp.h>
@@ -87,7 +86,7 @@ std::shared_ptr<Serializable> extractSerializable(
     case Serializable::ValueType::RemoteFunctionType:
       return extractSerializableOrThrow<SerializableRemoteFunction>(rt, value, errorMessage);
     case Serializable::ValueType::HandleType:
-      return extractSerializableOrThrow<SerializableInitializer>(rt, value, errorMessage);
+      throw std::runtime_error("[Worklets] Not implemented.");
     case Serializable::ValueType::HostObjectType:
       return extractSerializableOrThrow<SerializableHostObject>(rt, value, errorMessage);
     case Serializable::ValueType::HostFunctionType:

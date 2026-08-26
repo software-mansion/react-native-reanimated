@@ -12,7 +12,6 @@
 #include <worklets/SharedItems/Serializable/SerializableHostFunction.h>
 #include <worklets/SharedItems/Serializable/SerializableHostObject.h>
 #include <worklets/SharedItems/Serializable/SerializableImport.h>
-#include <worklets/SharedItems/Serializable/SerializableInitializer.h>
 #include <worklets/SharedItems/Serializable/SerializableMap.h>
 #include <worklets/SharedItems/Serializable/SerializableObject.h>
 #include <worklets/SharedItems/Serializable/SerializableRegExp.h>
@@ -308,11 +307,6 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   jsi_utils::addMethod<1>(
       rt, obj, "createSerializableHostObject", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         return makeSerializableHostObject(rt, at<0>(args).asObject(rt).asHostObject(rt));
-      });
-
-  jsi_utils::addMethod<1>(
-      rt, obj, "createSerializableInitializer", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        return makeSerializableInitializer(rt, at<0>(args).asObject(rt));
       });
 
   jsi_utils::addMethod<2>(
