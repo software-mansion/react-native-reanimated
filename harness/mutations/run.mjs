@@ -46,6 +46,18 @@ const preRegistryMutations = [
     test: 'LayoutAnimationScenariosTest.LayoutProgressAndRetargetUseTheCurrentMountedFrame',
   },
   {
+    id: 'layout-start-suppression',
+    platform: 'ios',
+    source: 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.cpp',
+    search: `  for (auto &node : layout_) {
+    startLayoutAnimation(node);
+  }`,
+    replacement: `  for (auto &node : layout_) {
+    (void)node;
+  }`,
+    test: 'LayoutAnimationStressTest.MixedListChurnOverlapsEnteringLayoutAndExiting',
+  },
+  {
     id: 'shared-container-cleanup',
     platform: 'ios',
     source: 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.cpp',

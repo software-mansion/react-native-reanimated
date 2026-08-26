@@ -44,15 +44,16 @@ test('keeps selected-view opacity and geometry meaningful across frames', () => 
     text: 'update #3 · α 0.50→0.75',
     title: 'parent #2, index -1; frame 5,5 20×20 → 6,5 20×20',
   });
+  assert.equal(Object.fromEntries(nodeRows(findNodeState(root(node(1, 0, 'none')), selectedTag))).Display, 'none');
 });
 
-function node(opacity, x) {
+function node(opacity, x, display = 'flex') {
   return {
     tag: 3,
     component: 'View',
     frame: { x, y: 5, width: 20, height: 20 },
     opacity,
-    display: 'flex',
+    display,
     zIndex: 0,
     children: [],
   };

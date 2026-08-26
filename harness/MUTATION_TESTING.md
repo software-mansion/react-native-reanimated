@@ -18,6 +18,7 @@ The pre-registry experimental-proxy matrix targets the highest-risk native orche
 | omit cleanup when React recreates a tag whose old family is still exiting | `RecreatingAnExitingTagCancelsTheStaleRemoval` |
 | retarget from the React frame instead of the currently mounted animation frame | `LayoutProgressAndRetargetUseTheCurrentMountedFrame` |
 | discard the completion count when replacing an active layout animation | `LayoutProgressAndRetargetUseTheCurrentMountedFrame` |
+| suppress layout starts while continuing to forward React updates | `MixedListChurnOverlapsEnteringLayoutAndExiting` |
 | omit completed shared-container cleanup | `SharedTagMovesBetweenActiveBoundaries` |
 | keep a shared view's parent-relative position instead of converting it to root coordinates | `InteractiveSharedTransitionUsesAbsoluteGeometryAtEveryProgress` |
 | ignore interactive shared-transition progress after creating its container | `InteractiveSharedTransitionUsesAbsoluteGeometryAtEveryProgress` |
@@ -56,7 +57,7 @@ The 10372 detector pauses at the unguarded boundary between swapping the C++ pen
 
 Results on 26 August 2026:
 
-- host-index-retaining pre-registry proxy on `main` (`404c5649`): 23/23 killed;
+- host-index-retaining pre-registry proxy on `main` (`404c5649`): 24/24 killed;
 - proxy-registry stack through PR 10373: 6/6 killed;
 - current `main` has a 45/45 iOS and 42/42 Android green baseline, plus three deliberate red tests on each binary that expose the shared-transition source-opacity bug;
 - unmodified proxy-registry stack: 43/43 iOS and 41/41 Android tests passed.

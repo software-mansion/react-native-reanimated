@@ -76,6 +76,16 @@ const AnimationStart *findStart(const AnimationHarness &harness, Tag tag, Layout
   return start == harness.starts().end() ? nullptr : &*start;
 }
 
+std::set<Tag> startTags(const AnimationHarness &harness, LayoutAnimationType type, size_t from = 0) {
+  auto tags = std::set<Tag>{};
+  for (auto index = from; index < harness.starts().size(); ++index) {
+    if (harness.starts()[index].type == type) {
+      tags.insert(harness.starts()[index].tag);
+    }
+  }
+  return tags;
+}
+
 double startValue(const AnimationStart &start, const std::string &name) {
   auto value = start.values.find(name);
   EXPECT_NE(value, start.values.end());
@@ -121,16 +131,20 @@ void settleStarts(AnimationHarness &harness, Time time) {
   harness.clearCalls();
 }
 
+Frame flatListFrame(size_t index, int round) {
+  return {
+      static_cast<float>((index % 4) * 40),
+      static_cast<float>((index / 4) * 40),
+      static_cast<float>(30 + round % 3),
+      30,
+  };
+}
+
 Snapshot flatList(const std::vector<Tag> &tags, int round = 0) {
   auto children = std::vector<ViewSpec>{};
   children.reserve(tags.size());
   for (size_t index = 0; index < tags.size(); ++index) {
-    children.push_back(view(
-        tags[index],
-        {static_cast<float>((index % 4) * 40),
-         static_cast<float>((index / 4) * 40),
-         static_cast<float>(30 + round % 3),
-         30}));
+    children.push_back(view(tags[index], flatListFrame(index, round)));
   }
   return {std::move(children)};
 }
@@ -194,6 +208,11 @@ void expectHostGeometry(AnimationHarness &harness, Tag tag, Frame expected) {
   EXPECT_FLOAT_EQ(frame.origin.y, expected.y);
   EXPECT_FLOAT_EQ(frame.size.width, expected.width);
   EXPECT_FLOAT_EQ(frame.size.height, expected.height);
+}
+
+Frame hostGeometry(AnimationHarness &harness, Tag tag) {
+  const auto &frame = harness.platform().hostTree().getStubView(tag).layoutMetrics.frame;
+  return {frame.origin.x, frame.origin.y, frame.size.width, frame.size.height};
 }
 
 void expectHostAbsoluteGeometry(AnimationHarness &harness, Tag tag, Frame expected) {
@@ -869,6 +888,13 @@ TEST(LayoutAnimationScenariosTest, DisplayNoneEmitsPlatformSpecificHostMutations
       } else {
         ASSERT_TRUE(harness.platform().hostTree().hasTag(2)) << round;
         expectHostGeometry(harness, 2, round % 2 == 0 ? Frame{} : Frame{0, 0, 100, 100});
+        const auto expectedDisplay =
+            round % 2 == 0 ? facebook::react::DisplayType::None : facebook::react::DisplayType::Flex;
+        EXPECT_EQ(harness.platform().hostTree().getStubView(2).layoutMetrics.displayType, expectedDisplay) << round;
+        ASSERT_FALSE(harness.platform().mountedFrames().empty());
+        ASSERT_EQ(harness.platform().mountedFrames().back().root.children.size(), 1);
+        EXPECT_EQ(harness.platform().mountedFrames().back().root.children[0].display, round % 2 == 0 ? "none" : "flex")
+            << round;
       }
       time += 4ms;
     }
@@ -1282,6 +1308,13 @@ TEST(LayoutAnimationStressTest, MixedListChurnOverlapsEnteringLayoutAndExiting) 
       for (auto tag : added) {
         configs.push_back(animation(tag, LayoutAnimationType::ENTERING, "list-enter"));
       }
+      auto expectedFirstLayout = std::set<Tag>{};
+      for (size_t index = 0; index < tags.size(); ++index) {
+        if (harness.platform().hostTree().hasTag(tags[index]) &&
+            hostGeometry(harness, tags[index]) != flatListFrame(index, round)) {
+          expectedFirstLayout.insert(tags[index]);
+        }
+      }
 
       harness.clearCalls();
       renderAt(harness, mode, time, flatList(tags, round), std::move(configs));
@@ -1293,6 +1326,9 @@ TEST(LayoutAnimationStressTest, MixedListChurnOverlapsEnteringLayoutAndExiting) 
         ASSERT_NE(findStart(harness, tag, LayoutAnimationType::ENTERING), nullptr) << "round " << round;
         expectHostOpacity(harness, tag, 0);
       }
+      EXPECT_EQ(startTags(harness, LayoutAnimationType::LAYOUT), expectedFirstLayout) << "round " << round;
+      EXPECT_EQ(harness.starts().size(), expectedFirstLayout.size() + removed.size() + added.size())
+          << "round " << round;
 
       auto firstStarts = harness.starts();
       runUI(harness, time + 2ms, [&] {
@@ -1302,13 +1338,24 @@ TEST(LayoutAnimationStressTest, MixedListChurnOverlapsEnteringLayoutAndExiting) 
       });
 
       std::reverse(tags.begin(), tags.end());
+      auto expectedSecondLayout = std::set<Tag>{};
+      for (size_t index = 0; index < tags.size(); ++index) {
+        if (hostGeometry(harness, tags[index]) != flatListFrame(index, round + 1)) {
+          expectedSecondLayout.insert(tags[index]);
+        }
+      }
+      const auto secondStartIndex = harness.starts().size();
       renderAt(harness, mode, time + 4ms, flatList(tags, round + 1), layoutConfigs(tags, "list-retarget"));
+      EXPECT_EQ(startTags(harness, LayoutAnimationType::LAYOUT, secondStartIndex), expectedSecondLayout)
+          << "round " << round;
+      EXPECT_EQ(harness.starts().size() - secondStartIndex, expectedSecondLayout.size()) << "round " << round;
       settleStarts(harness, time + 6ms);
 
       const auto &children = harness.platform().hostTree().getRootStubView().children;
       ASSERT_EQ(children.size(), tags.size()) << "round " << round;
       for (size_t index = 0; index < tags.size(); ++index) {
         EXPECT_EQ(children[index]->tag, tags[index]) << "round " << round;
+        expectHostFrame(harness, tags[index], flatListFrame(index, round + 1), 1);
       }
       time += 10ms;
     }
@@ -1696,6 +1743,14 @@ TEST(LayoutAnimationStressTest, NestedChurnChangesFlatteningWhileChildrenEnterAn
 
       harness.clearCalls();
       renderAt(harness, mode, time, snapshot(round), std::move(configs));
+      auto expectedLayoutTags = std::set<Tag>{};
+      for (int item = 0; item < 24; ++item) {
+        if (visible[item] && std::find(changed.begin(), changed.end(), item) == changed.end()) {
+          expectedLayoutTags.insert(100 + item);
+        }
+      }
+      EXPECT_EQ(startTags(harness, LayoutAnimationType::LAYOUT), expectedLayoutTags) << round;
+      EXPECT_EQ(harness.starts().size(), expectedLayoutTags.size() + changed.size()) << round;
       for (int group = 0; group < 3; ++group) {
         const auto tag = 100 + changed[group];
         const auto type = wasVisible[group] ? LayoutAnimationType::EXITING : LayoutAnimationType::ENTERING;
