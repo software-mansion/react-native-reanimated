@@ -52,7 +52,7 @@ struct TransactionMeta {
   std::vector<Tag> sharedContainersToRemove;
 };
 
-struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
+struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::unordered_set<Tag> activeTransitions_;
   mutable Tag transitionTag_;
   mutable double transitionProgress_;
@@ -74,7 +74,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
   void warnIfSynchronousPropsMissing(Tag tag, const char *animationKind) const;
 #endif
 
-  LayoutAnimationsProxy_Experimental(SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies);
+  LayoutAnimationsProxy(SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies);
 
   void startEnteringAnimation(const std::shared_ptr<LightNode> &node, const std::shared_ptr<Serializable> &config)
       const;
@@ -195,7 +195,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
       ShadowViewMutationList mutations) const override;
 };
 
-std::shared_ptr<LayoutAnimationsProxyRegistry> createLayoutAnimationsProxyExperimentalRegistry(
+std::shared_ptr<LayoutAnimationsProxyRegistry> createLayoutAnimationsProxyDefaultRegistry(
     const LayoutAnimationsProxyDependencies &dependencies);
 
 } // namespace reanimated
