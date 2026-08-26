@@ -56,9 +56,6 @@ declare global {
   var _createSerializableArray: (
     value: unknown[]
   ) => FlatSerializableRef<unknown[]>;
-  var _createSerializableInitializer: (
-    value: object
-  ) => FlatSerializableRef<object>;
   var _createSerializableSynchronizable: (
     value: object
   ) => FlatShareableRef<object>;
