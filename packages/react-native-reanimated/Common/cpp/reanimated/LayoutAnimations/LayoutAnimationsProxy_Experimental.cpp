@@ -436,14 +436,11 @@ void LayoutAnimationsProxy_Experimental::applySynchronousProps(
 
     const auto &node = nodeIt->second;
     react_native_assert(node && "LightNode is nullptr");
-    if (!node || isRoot(node)) {
+    if (isRoot(node)) {
       continue;
     }
 
     react_native_assert(node->current.props && "LightNode has no props");
-    if (!node->current.props) {
-      continue;
-    }
 
     auto rawProps = props;
 #ifdef RN_SERIALIZABLE_STATE
