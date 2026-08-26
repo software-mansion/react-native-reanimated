@@ -188,8 +188,6 @@ export function createSerializable<TValue>(
       depth
     ) as SerializableRef<TValue>;
   }
-  // TODO: The oxc plugin doesn't emit `__workletContextObjectFactory`, so under
-  // it a context object silently serializes as a plain object instead.
   if (isPlainJSObject(value) && value.__workletContextObjectFactory) {
     return cloneContextObject(value);
   }

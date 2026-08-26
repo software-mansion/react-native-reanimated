@@ -45,13 +45,6 @@ pub struct State {
     pub error: Option<String>,
 }
 
-pub fn binding_is_rebound(scoping: &Scoping, symbol_id: SymbolId) -> bool {
-    !scoping.symbol_redeclarations(symbol_id).is_empty()
-        || scoping
-            .get_resolved_references(symbol_id)
-            .any(|reference| reference.is_write())
-}
-
 impl State {
     pub fn new(opts: PluginOptions, source_text: String) -> Self {
         let user_forwarding = opts.import_forwarding.clone().unwrap_or_default();
@@ -83,4 +76,11 @@ impl State {
         self.worklet_number += 1;
         n
     }
+}
+
+pub fn binding_is_rebound(scoping: &Scoping, symbol_id: SymbolId) -> bool {
+    !scoping.symbol_redeclarations(symbol_id).is_empty()
+        || scoping
+            .get_resolved_references(symbol_id)
+            .any(|reference| reference.is_write())
 }

@@ -23,14 +23,6 @@ const MOCK_VERSION: &str = "x.y.z";
 
 const REAL_VERSION: &str = env!("WORKLETS_PACKAGE_VERSION");
 
-// We don't want to pollute tests with current version number so we mock it
-// for all tests (except one)
-fn should_mock_version() -> bool {
-    std::env::var("WORKLETS_JEST_SHOULD_MOCK_VERSION")
-        .map(|v| v == "1")
-        .unwrap_or(false)
-}
-
 pub struct WorkletInput<'a, 'b> {
     pub params: &'b FormalParameters<'a>,
     pub body: &'b FunctionBody<'a>,
@@ -412,6 +404,14 @@ fn build_closure_object<'a>(
         ));
     }
     builder.expression_object(SPAN, props)
+}
+
+// We don't want to pollute tests with current version number so we mock it
+// for all tests (except one)
+fn should_mock_version() -> bool {
+    std::env::var("WORKLETS_JEST_SHOULD_MOCK_VERSION")
+        .map(|v| v == "1")
+        .unwrap_or(false)
 }
 
 fn body_references_name(

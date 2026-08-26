@@ -13,64 +13,6 @@ pub fn worklet_hash(s: &str) -> u64 {
     (h1 as u32 as u64) * 4096 + (h2 as u32 as u64)
 }
 
-pub fn to_identifier(input: &str) -> String {
-    let mapped: String = input
-        .chars()
-        .map(|c| if is_identifier_part(c) { c } else { '-' })
-        .collect();
-
-    let trimmed: &str = {
-        let offset = mapped
-            .char_indices()
-            .find(|(_, c)| *c != '-' && !c.is_ascii_digit())
-            .map(|(i, _)| i)
-            .unwrap_or(mapped.len());
-        &mapped[offset..]
-    };
-
-    let mut out = String::with_capacity(trimmed.len());
-    let mut chars = trimmed.chars().peekable();
-    while let Some(c) = chars.next() {
-        if c != '-' {
-            out.push(c);
-            continue;
-        }
-        while chars.next_if_eq(&'-').is_some() {}
-        if let Some(next) = chars.next() {
-            out.extend(next.to_uppercase());
-        }
-    }
-
-    if out
-        .chars()
-        .next()
-        .is_none_or(|first| !is_identifier_start(first))
-    {
-        out.insert(0, '_');
-    }
-    out
-}
-
-pub fn source_from_filename(filename: &str) -> String {
-    if filename.is_empty() {
-        return "unknownFile".to_string();
-    }
-    let path = Path::new(filename);
-    let base = path
-        .file_name()
-        .and_then(|s| s.to_str())
-        .unwrap_or("unknownFile")
-        .to_string();
-
-    let parts: Vec<&str> = filename.split('/').collect();
-    if let Some(idx) = parts.iter().position(|p| *p == "node_modules") {
-        if let Some(lib) = parts.get(idx + 1) {
-            return format!("{lib}_{base}");
-        }
-    }
-    base
-}
-
 pub struct WorkletNames {
     pub worklet_name: String,
     pub react_name: String,
@@ -145,4 +87,62 @@ mod tests {
         );
         assert_eq!(source_from_filename(""), "unknownFile");
     }
+}
+
+pub fn to_identifier(input: &str) -> String {
+    let mapped: String = input
+        .chars()
+        .map(|c| if is_identifier_part(c) { c } else { '-' })
+        .collect();
+
+    let trimmed: &str = {
+        let offset = mapped
+            .char_indices()
+            .find(|(_, c)| *c != '-' && !c.is_ascii_digit())
+            .map(|(i, _)| i)
+            .unwrap_or(mapped.len());
+        &mapped[offset..]
+    };
+
+    let mut out = String::with_capacity(trimmed.len());
+    let mut chars = trimmed.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c != '-' {
+            out.push(c);
+            continue;
+        }
+        while chars.next_if_eq(&'-').is_some() {}
+        if let Some(next) = chars.next() {
+            out.extend(next.to_uppercase());
+        }
+    }
+
+    if out
+        .chars()
+        .next()
+        .is_none_or(|first| !is_identifier_start(first))
+    {
+        out.insert(0, '_');
+    }
+    out
+}
+
+pub fn source_from_filename(filename: &str) -> String {
+    if filename.is_empty() {
+        return "unknownFile".to_string();
+    }
+    let path = Path::new(filename);
+    let base = path
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("unknownFile")
+        .to_string();
+
+    let parts: Vec<&str> = filename.split('/').collect();
+    if let Some(idx) = parts.iter().position(|p| *p == "node_modules") {
+        if let Some(lib) = parts.get(idx + 1) {
+            return format!("{lib}_{base}");
+        }
+    }
+    base
 }

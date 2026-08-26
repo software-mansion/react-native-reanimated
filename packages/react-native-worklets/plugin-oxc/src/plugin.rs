@@ -2,9 +2,9 @@ use std::collections::HashSet;
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    ArrowFunctionExpression, Declaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind,
-    ExportNamedDeclaration, Expression, Function, MethodDefinition, MethodDefinitionKind,
-    ObjectProperty, Program, PropertyKey, PropertyKind, Statement,
+    ArrowFunctionExpression, ClassElement, Declaration, ExportDefaultDeclaration,
+    ExportDefaultDeclarationKind, ExportNamedDeclaration, Expression, Function, ObjectProperty,
+    Program, PropertyKey, PropertyKind, Statement,
 };
 use oxc_ast::AstBuilder;
 use oxc_ast_visit::{walk_mut, VisitMut};
@@ -12,6 +12,7 @@ use oxc_semantic::Scoping;
 use oxc_span::SPAN;
 use oxc_syntax::scope::ScopeFlags;
 
+use crate::class_method::MethodOutcome;
 use crate::closure::InjectedRef;
 use crate::types::State;
 use crate::utils::{const_decl, const_declaration, has_worklet_directive};
@@ -44,18 +45,18 @@ pub fn process_program<'a>(
     std::mem::take(&mut state.emitted_files)
 }
 
-struct WorkletPass<'a, 'b> {
-    state: &'b mut State,
+pub struct WorkletPass<'a, 'b> {
+    pub state: &'b mut State,
     scoping: &'b Scoping,
-    builder: AstBuilder<'a>,
-    allocator: &'a Allocator,
+    pub builder: AstBuilder<'a>,
+    pub allocator: &'a Allocator,
     filename: &'b str,
     injected_refs_stack: Vec<HashSet<InjectedRef>>,
     parent_is_scopable: bool,
 }
 
 impl<'a, 'b> WorkletPass<'a, 'b> {
-    fn record_injected_refs<I: IntoIterator<Item = InjectedRef>>(&mut self, refs: I) {
+    pub fn record_injected_refs<I: IntoIterator<Item = InjectedRef>>(&mut self, refs: I) {
         if let Some(set) = self.injected_refs_stack.last_mut() {
             set.extend(refs);
         }
@@ -67,7 +68,7 @@ impl<'a, 'b> WorkletPass<'a, 'b> {
         self.injected_refs_stack.pop().unwrap_or_default()
     }
 
-    fn walk_function_scoped(
+    pub fn walk_function_scoped(
         &mut self,
         func: &mut Function<'a>,
         flags: ScopeFlags,
@@ -141,30 +142,7 @@ impl<'a, 'b> WorkletPass<'a, 'b> {
         self.state.error = Some(format!("the `{name}` {kind} cannot be a worklet"));
     }
 
-    fn reject_class_method(&mut self, method: &MethodDefinition<'a>) {
-        if self.state.error.is_some() {
-            return;
-        }
-        if method.kind == MethodDefinitionKind::Constructor {
-            self.state.error = Some("a class constructor cannot be a worklet".to_string());
-            return;
-        }
-        let kind = match method.kind {
-            MethodDefinitionKind::Get => "class getter",
-            MethodDefinitionKind::Set => "class setter",
-            _ => "class method",
-        };
-        let name = match &method.key {
-            PropertyKey::StaticIdentifier(id) => id.name.to_string(),
-            _ => "<computed>".to_string(),
-        };
-        self.state.error = Some(format!(
-            "the `{name}` {kind} cannot be a worklet — Bundle Mode does not workletize class \
-             members. Use a class field with an arrow function instead."
-        ));
-    }
-
-    fn workletize_function(
+    pub fn workletize_function(
         &mut self,
         func: &Function<'a>,
         self_name: Option<&str>,
@@ -304,17 +282,18 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
         )));
     }
 
-    fn visit_method_definition(&mut self, method: &mut MethodDefinition<'a>) {
-        let has_directive = method
-            .value
-            .body
-            .as_ref()
-            .is_some_and(|body| has_worklet_directive(body));
-        if has_directive {
-            self.reject_class_method(method);
-            return;
+    fn visit_class_body(&mut self, body: &mut oxc_ast::ast::ClassBody<'a>) {
+        for element in body.body.iter_mut() {
+            let ClassElement::MethodDefinition(method) = element else {
+                self.visit_class_element(element);
+                continue;
+            };
+            match crate::class_method::process_if_worklet_method(self, method) {
+                MethodOutcome::NotAWorklet => self.visit_class_element(element),
+                MethodOutcome::Rejected => {}
+                MethodOutcome::Workletized(property) => *element = property,
+            }
         }
-        walk_mut::walk_method_definition(self, method);
     }
 
     fn visit_object_property(&mut self, prop: &mut ObjectProperty<'a>) {

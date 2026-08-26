@@ -12,11 +12,6 @@ use oxc_span::SPAN;
 
 const RELEASE_NEEDLES: &[&str] = &["prod", "release", "stage", "stagi"];
 
-fn looks_like_release(value: &str) -> bool {
-    let lower = value.to_ascii_lowercase();
-    RELEASE_NEEDLES.iter().any(|n| lower.contains(*n))
-}
-
 pub fn is_release(env_name: Option<&str>) -> bool {
     if let Some(env_name) = env_name {
         if looks_like_release(env_name) {
@@ -31,6 +26,11 @@ pub fn is_release(env_name: Option<&str>) -> bool {
         Err(_) => false,
     };
     matches("BABEL_ENV") || matches("NODE_ENV")
+}
+
+fn looks_like_release(value: &str) -> bool {
+    let lower = value.to_ascii_lowercase();
+    RELEASE_NEEDLES.iter().any(|n| lower.contains(*n))
 }
 
 pub fn can_forward_module_import(module_name: &str, forwardable: &[String]) -> bool {
@@ -70,11 +70,6 @@ fn matches_filename_segment(filename: &str, allowed_path: &str) -> bool {
 const WORKLET_DIRECTIVES: &[&str] = &["worklet", "no-worklet-closure", "limit-init-data-hoisting"];
 
 const NO_MEMO_DIRECTIVE: &str = "use no memo";
-
-fn build_directive<'a>(builder: AstBuilder<'a>, value: &str) -> oxc_ast::ast::Directive<'a> {
-    let dir_str = builder.str(value);
-    builder.directive(SPAN, builder.string_literal(SPAN, dir_str, None), dir_str)
-}
 
 pub fn strip_worklet_directives<'a>(
     body: &mut FunctionBody<'a>,
@@ -136,6 +131,11 @@ pub fn add_worklet_directives_to_function_body<'a>(
     }
     body.directives
         .insert(0, build_directive(builder, "worklet"));
+}
+
+fn build_directive<'a>(builder: AstBuilder<'a>, value: &str) -> oxc_ast::ast::Directive<'a> {
+    let dir_str = builder.str(value);
+    builder.directive(SPAN, builder.string_literal(SPAN, dir_str, None), dir_str)
 }
 
 pub fn closure_binding_pattern<'a>(

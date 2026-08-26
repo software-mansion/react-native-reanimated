@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import plugin from '../index.js';
 const { transform } = plugin;
 
+const REQUIRE_FACTORY =
+  /require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/;
+
 test('class with __workletClass marker is left alone', () => {
   const input = `
     class Foo {
@@ -13,7 +16,11 @@ test('class with __workletClass marker is left alone', () => {
   const { code } = transform(input, 'test.js', {});
   assert.match(code, /class Foo/, `Got:\n${code}`);
   assert.match(code, /__workletClass/, 'marker should be preserved');
-  assert.doesNotMatch(code, /__classFactory/, 'no factory wrap in bundle-only mode');
+  assert.doesNotMatch(
+    code,
+    /__classFactory/,
+    'no factory wrap in bundle-only mode'
+  );
 });
 
 test('class without marker is left alone', () => {
@@ -27,16 +34,59 @@ test('class without marker is left alone', () => {
   assert.match(code, /class Foo/);
 });
 
+for (const [label, member] of [
+  ['instance method', "bar(x) { 'worklet'; return x + 2; }"],
+  ['static method', "static bar(x) { 'worklet'; return x + 2; }"],
+  ['computed method', "[key]() { 'worklet'; return 1; }"],
+]) {
+  test(`class ${label} with worklet directive becomes a workletized class field`, () => {
+    const { code, files } = transform(
+      `const key = 'm'; class Foo { ${member} }`,
+      'test.js',
+      {}
+    );
+    assert.equal(files.length, 1);
+    assert.match(code, REQUIRE_FACTORY, `Got:\n${code}`);
+    assert.doesNotMatch(code, /'worklet'/);
+  });
+}
+
+test('a workletized method keeps its static and computed flags', () => {
+  const { code } = transform(
+    `const key = 'm'; class Foo { static [key]() { 'worklet'; return 1; } }`,
+    'test.js',
+    {}
+  );
+  assert.match(code, /static \[key\] = require\(/, `Got:\n${code}`);
+});
+
 for (const [label, member, message] of [
-  ['instance method', 'bar() { \'worklet\'; return 1; }', /`bar` class method cannot be a worklet/],
-  ['static method', 'static bar() { \'worklet\'; return 1; }', /`bar` class method cannot be a worklet/],
-  ['computed method', '[key]() { \'worklet\'; return 1; }', /`<computed>` class method cannot be a worklet/],
-  ['getter', 'get bar() { \'worklet\'; return 1; }', /`bar` class getter cannot be a worklet/],
-  ['setter', 'set bar(v) { \'worklet\'; this.v = v; }', /`bar` class setter cannot be a worklet/],
-  ['constructor', 'constructor(x) { \'worklet\'; this.x = x; }', /class constructor cannot be a worklet/],
+  [
+    'getter',
+    "get bar() { 'worklet'; return 1; }",
+    /`bar` class getter cannot be a worklet/,
+  ],
+  [
+    'setter',
+    "set bar(v) { 'worklet'; this.v = v; }",
+    /`bar` class setter cannot be a worklet/,
+  ],
+  [
+    'constructor',
+    "constructor(x) { 'worklet'; this.x = x; }",
+    /class constructor cannot be a worklet/,
+  ],
+  [
+    'private method',
+    "#bar() { 'worklet'; return 1; }",
+    /`#bar` class method cannot be a worklet/,
+  ],
 ]) {
   test(`class ${label} with worklet directive is rejected`, () => {
-    assert.throws(() => transform(`class Foo { ${member} }`, 'test.js', {}), message);
+    assert.throws(
+      () => transform(`class Foo { ${member} }`, 'test.js', {}),
+      message
+    );
   });
 }
 
@@ -64,7 +114,10 @@ test('worklet class field arrow is still workletized', () => {
   `;
   const { code, files } = transform(input, 'test.js', {});
   assert.equal(files.length, 1);
-  assert.match(code, /bar = require\("react-native-worklets\/\.worklets\/\d+\.js"\)/);
+  assert.match(
+    code,
+    /bar = require\("react-native-worklets\/\.worklets\/\d+\.js"\)/
+  );
 });
 
 test('class method without worklet directive is left as a method', () => {

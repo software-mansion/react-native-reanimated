@@ -14,9 +14,6 @@ export function processIfWorkletMethod(path: NodePath<ClassMethod>) {
     return;
   }
 
-  // Only a plain method can become a data property. A getter or setter would
-  // lose its accessor semantics, `constructor = ...` isn't valid JavaScript,
-  // and a `#private` key isn't a valid class property key here.
   if (path.node.kind !== 'method' || isPrivateName(path.node.key)) {
     return;
   }

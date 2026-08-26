@@ -13,10 +13,6 @@ const TOGGLE_PATHS: &[&str] = &[
     "react-native-worklets/lib/module/debug/bundleMode.native.js",
 ];
 
-fn is_toggle_target(filename: &str) -> bool {
-    TOGGLE_PATHS.iter().any(|path| filename.ends_with(path))
-}
-
 pub fn enable_flag<'a>(program: &mut Program<'a>, builder: AstBuilder<'a>, filename: &str) -> bool {
     if !is_toggle_target(filename) {
         return false;
@@ -42,4 +38,8 @@ pub fn enable_flag<'a>(program: &mut Program<'a>, builder: AstBuilder<'a>, filen
         enabled = true;
     }
     enabled
+}
+
+fn is_toggle_target(filename: &str) -> bool {
+    TOGGLE_PATHS.iter().any(|path| filename.ends_with(path))
 }

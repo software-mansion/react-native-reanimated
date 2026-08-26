@@ -24,13 +24,6 @@ export interface TransformResult {
   changed: boolean;
 }
 
-export interface WorkletSourceTokens {
-  hooks: string[];
-  methods: string[];
-}
-
-export function workletSourceTokens(): WorkletSourceTokens;
-
 export function transform(
   sourceText: string,
   filename: string,

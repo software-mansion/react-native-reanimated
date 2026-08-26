@@ -57,6 +57,37 @@ pub const FUNCTION_HOOKS: &[(&str, &[usize])] = &[
     ("scheduleOnRuntimeWithId", &[1]),
 ];
 
+pub fn add_directives_to_known_callbacks<'a>(
+    program: &mut Program<'a>,
+    scoping: &Scoping,
+    builder: AstBuilder<'a>,
+) -> Option<String> {
+    let mut definitions = Definitions {
+        scoping,
+        hand_written: HashSet::new(),
+        function_declarations: HashMap::new(),
+        declarators: HashMap::new(),
+        assignments: HashMap::new(),
+    };
+    definitions.visit_program(program);
+
+    let mut callbacks = Callbacks {
+        definitions: &definitions,
+        sites: HashSet::new(),
+        optional_calls: HashSet::new(),
+        error: None,
+    };
+    callbacks.visit_program(program);
+
+    DirectiveInjector {
+        sites: callbacks.sites,
+        builder,
+    }
+    .visit_program(program);
+
+    callbacks.error
+}
+
 fn hook(name: &str) -> Option<(Kinds, &'static [usize])> {
     let function = FUNCTION_HOOKS.iter().find(|(hook, _)| *hook == name);
     let object = name == "useAnimatedScrollHandler" || GESTURE_HANDLER_OBJECT_HOOKS.contains(&name);
@@ -90,37 +121,6 @@ fn callee_name<'a>(callee: &Expression<'a>) -> Option<&'a str> {
             .and_then(|member| member.static_property_name()),
         other => member_property(other).map(|(_, name)| name),
     }
-}
-
-pub fn add_directives_to_known_callbacks<'a>(
-    program: &mut Program<'a>,
-    scoping: &Scoping,
-    builder: AstBuilder<'a>,
-) -> Option<String> {
-    let mut definitions = Definitions {
-        scoping,
-        hand_written: HashSet::new(),
-        function_declarations: HashMap::new(),
-        declarators: HashMap::new(),
-        assignments: HashMap::new(),
-    };
-    definitions.visit_program(program);
-
-    let mut callbacks = Callbacks {
-        definitions: &definitions,
-        sites: HashSet::new(),
-        optional_calls: HashSet::new(),
-        error: None,
-    };
-    callbacks.visit_program(program);
-
-    DirectiveInjector {
-        sites: callbacks.sites,
-        builder,
-    }
-    .visit_program(program);
-
-    callbacks.error
 }
 
 struct Callbacks<'d, 's> {

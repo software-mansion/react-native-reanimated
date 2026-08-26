@@ -13,23 +13,22 @@ const BABEL_WORKLETS_PLUGIN = 'react-native-worklets/plugin';
 
 function resolveWorkletsPlugin() {
   const wanted = process.env.WORKLETS_PLUGIN;
-  if (wanted === 'babel') {
-    return BABEL_WORKLETS_PLUGIN;
-  }
-  try {
-    require('worklets-plugin-oxc');
-    return require.resolve('worklets-plugin-oxc/babel');
-  } catch (error) {
-    if (wanted === 'oxc') {
-      throw error;
+  if (wanted !== 'babel') {
+    try {
+      require('worklets-plugin-oxc');
+      return require.resolve('worklets-plugin-oxc/babel');
+    } catch (error) {
+      if (wanted === 'oxc') {
+        throw error;
+      }
+      console.warn(
+        `[Worklets] oxc plugin unavailable, falling back to ${BABEL_WORKLETS_PLUGIN}. ` +
+          'Run `yarn build` in packages/react-native-worklets/plugin-oxc to use it. ' +
+          `Cause: ${String(error.message).split('\n')[0]}`
+      );
     }
-    console.warn(
-      `[Worklets] oxc plugin unavailable, falling back to ${BABEL_WORKLETS_PLUGIN}. ` +
-        'Run `yarn build` in packages/react-native-worklets/plugin-oxc to use it. ' +
-        `Cause: ${String(error.message).split('\n')[0]}`
-    );
-    return BABEL_WORKLETS_PLUGIN;
   }
+  return BABEL_WORKLETS_PLUGIN;
 }
 
 const workletsPlugin = resolveWorkletsPlugin();

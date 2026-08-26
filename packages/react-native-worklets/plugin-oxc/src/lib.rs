@@ -12,6 +12,7 @@ use oxc_syntax::symbol::SymbolId;
 
 mod autoworkletization;
 mod bundle_mode;
+mod class_method;
 mod closure;
 mod gesture_handler_autoworkletization;
 mod imports;
@@ -27,6 +28,8 @@ mod worklet_factory;
 mod worklet_string_code;
 
 const PARSE_ERROR_CODE: &str = "WORKLETS_ERR_PARSE";
+const FLOW_ERROR_CODE: &str = "WORKLETS_ERR_FLOW";
+const FLOW_DIAGNOSTIC: &str = "Flow is not supported";
 
 const GENERATED_WORKLETS_DIR: &str = ".worklets";
 
@@ -45,31 +48,6 @@ pub struct TransformResult {
     pub map: Option<String>,
     pub files: Vec<EmittedFile>,
     pub changed: bool,
-}
-
-#[napi(object)]
-pub struct WorkletSourceTokens {
-    pub hooks: Vec<String>,
-    pub methods: Vec<String>,
-}
-
-#[napi]
-pub fn worklet_source_tokens() -> WorkletSourceTokens {
-    let hooks = autoworkletization::FUNCTION_HOOKS
-        .iter()
-        .map(|(name, _)| (*name).to_string())
-        .chain(
-            gesture_handler_autoworkletization::GESTURE_HANDLER_OBJECT_HOOKS
-                .iter()
-                .map(|name| (*name).to_string()),
-        )
-        .collect();
-    let methods = layout_animation_autoworkletization::LAYOUT_ANIMATION_CALLBACKS
-        .iter()
-        .chain(gesture_handler_autoworkletization::GESTURE_HANDLER_BUILDER_METHODS.iter())
-        .map(|name| (*name).to_string())
-        .collect();
-    WorkletSourceTokens { hooks, methods }
 }
 
 #[napi]
@@ -140,8 +118,7 @@ fn run(
         .parse();
 
     if !parsed.errors.is_empty() {
-        let first = &parsed.errors[0];
-        return Err(format!("{PARSE_ERROR_CODE} in {filename}: {first}"));
+        return Err(parse_error(filename, &parsed.errors[0]));
     }
 
     let mut program = parsed.program;
@@ -250,7 +227,7 @@ fn strip_typescript<'a>(
     let ret = oxc_transformer::Transformer::new(allocator, std::path::Path::new(filename), &opts)
         .build_with_scoping(semantic_for_strip, program);
     if let Some(first) = ret.errors.first() {
-        return Err(format!("{PARSE_ERROR_CODE} in {filename}: {first}"));
+        return Err(parse_error(filename, first));
     }
 
     program.body.retain(|stmt| {
@@ -342,6 +319,16 @@ fn maybe_warn_extras(options: &PluginOptions) {
          cannot dispatch arbitrary Babel plugins. Compose them around this plugin in \
          babel.config.js instead."
     );
+}
+
+fn parse_error(filename: &str, first: &impl std::fmt::Display) -> String {
+    let message = first.to_string();
+    let code = if message.contains(FLOW_DIAGNOSTIC) {
+        FLOW_ERROR_CODE
+    } else {
+        PARSE_ERROR_CODE
+    };
+    format!("{code} in {filename}: {message}")
 }
 
 fn panic_payload_to_string(payload: Box<dyn std::any::Any + Send>) -> String {
