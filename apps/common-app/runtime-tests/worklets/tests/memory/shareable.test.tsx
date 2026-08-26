@@ -1,4 +1,5 @@
 import {
+  createSerializable,
   createShareable,
   runOnUISync,
   runOnRuntimeSync,
@@ -10,6 +11,7 @@ import {
   scheduleOnRuntime,
   UIRuntimeId,
   isShareable,
+  serializableMappingCache,
   type ShareableHost,
 } from 'react-native-worklets';
 import {
@@ -282,6 +284,31 @@ describe('Shareable hosted on UI', () => {
       const value = await (shareable as ShareableGuest<number>).getAsync();
 
       expect(value).toBe(42);
+    }
+  );
+
+  test.each(initModes)(
+    'undecorated guest is serialized by reference (%s)',
+    (initMode) => {
+      const shareable = createShareable(
+        UIRuntimeId,
+        0,
+        getInitOptions(initMode)
+      );
+      const carrier = {};
+      serializableMappingCache.set(carrier, createSerializable(shareable));
+
+      const readBack = runOnUISync(() => {
+        'worklet';
+        return (carrier as unknown as ShareableHost<number>).value;
+      });
+      expect(readBack).toBe(0);
+
+      runOnUISync(() => {
+        'worklet';
+        (carrier as unknown as ShareableHost<number>).value = 42;
+      });
+      expect((shareable as ShareableGuest<number>).getSync()).toBe(42);
     }
   );
 
