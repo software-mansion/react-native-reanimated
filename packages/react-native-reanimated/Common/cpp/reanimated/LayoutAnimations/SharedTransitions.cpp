@@ -331,9 +331,30 @@ void LayoutAnimationsProxy::hideTransitioningViews(
     int indexNum = static_cast<int>(index);
     const auto &shadowView = transition.snapshot[indexNum];
     const auto &parentTag = transition.parentTag[indexNum];
+    hiddenViewTags_.insert(shadowView.tag);
     auto m = ShadowViewMutation::UpdateMutation(
         shadowView, cloneViewWithoutOpacity(shadowView, propsParserContext), parentTag);
     mutations.push_back(m);
+  }
+}
+
+// The hide in hideTransitioningViews is not stored in the light tree, so a
+// later Update for the same view carries full opacity and would show the view
+// again. Force opacity 0 on every outgoing Update for a hidden view until the
+// restore in cleanupSharedTransitions removes its tag from hiddenViewTags_.
+void LayoutAnimationsProxy::keepTransitioningViewsHidden(
+    ShadowViewMutationList &filteredMutations,
+    const PropsParserContext &propsParserContext) const {
+  if (hiddenViewTags_.empty()) {
+    return;
+  }
+  for (auto &mutation : filteredMutations) {
+    if (mutation.type == ShadowViewMutation::Update && hiddenViewTags_.contains(mutation.newChildShadowView.tag)) {
+      mutation = ShadowViewMutation::UpdateMutation(
+          mutation.oldChildShadowView,
+          cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext),
+          mutation.parentTag);
+    }
   }
 }
 
@@ -414,6 +435,7 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
   auto &filteredMutations = transaction.filteredMutations;
   for (auto &tag : transaction.tagsToRestore) {
     ReanimatedSystraceSection s("Restore tag");
+    hiddenViewTags_.erase(tag);
     auto &node = lightNodes_[tag];
     if (node) {
       auto view = node->current;
