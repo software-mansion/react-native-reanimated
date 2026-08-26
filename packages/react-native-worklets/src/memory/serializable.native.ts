@@ -927,12 +927,7 @@ export function makeShareable<TValue extends object>(value: TValue): TValue {
   if (serializableMappingCache.get(value)) {
     return value;
   }
-  const handle = createSerializable({
-    __init: () => {
-      'worklet';
-      return value;
-    },
-  });
+  const handle = createSerializable(value, true);
   serializableMappingCache.set(value, handle);
   return value;
 }
