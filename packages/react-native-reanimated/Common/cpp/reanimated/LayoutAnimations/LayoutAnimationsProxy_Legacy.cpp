@@ -459,6 +459,9 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
         auto shouldAnimate = hasLayoutChanged(mutation);
         if (!layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::LAYOUT) ||
             (!shouldAnimate && !layoutAnimations_.contains(tag))) {
+          if (layoutAnimations_.contains(tag)) {
+            updateOngoingAnimationTarget(tag, mutation.newChildShadowView);
+          }
           // We should cancel any ongoing animation here to ensure that the
           // proper final state is reached for this view However, due to how
           // RNSScreens handle adding headers (a second commit is triggered to
@@ -469,7 +472,7 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
           filteredMutations.push_back(mutation);
           continue;
         } else if (!shouldAnimate) {
-          updateOngoingAnimationTarget(tag, mutation);
+          updateOngoingAnimationTarget(tag, mutation.newChildShadowView);
           continue;
         }
 
@@ -943,10 +946,8 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
       });
 }
 
-void LayoutAnimationsProxy_Legacy::updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation)
-    const {
-  auto copy = mutation.newChildShadowView;
-  layoutAnimations_[tag].finalView = copy;
+void LayoutAnimationsProxy_Legacy::updateOngoingAnimationTarget(const int tag, const ShadowView &finalView) const {
+  layoutAnimations_[tag].finalView = finalView;
 }
 
 void LayoutAnimationsProxy_Legacy::maybeCancelAnimation(const int tag) const {
