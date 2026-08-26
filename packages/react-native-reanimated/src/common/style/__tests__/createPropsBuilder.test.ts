@@ -176,4 +176,36 @@ describe(createPropsBuilder, () => {
       )
     );
   });
+
+  describe('trimming string values', () => {
+    test('trims a string before handing it to the processor', () => {
+      const processor = jest.fn().mockReturnValue(0);
+      const builder = createBuilder({ margin: { process: processor } });
+
+      builder.build({ margin: '  10px\n' });
+
+      expect(processor).toHaveBeenCalledWith('10px', {
+        target: ValueProcessorTarget.Default,
+      });
+    });
+
+    test('leaves non-string values untouched', () => {
+      const processor = jest.fn().mockReturnValue(0);
+      const builder = createBuilder({ margin: { process: processor } });
+
+      builder.build({ margin: 10 });
+
+      expect(processor).toHaveBeenCalledWith(10, {
+        target: ValueProcessorTarget.Default,
+      });
+    });
+
+    test('does not trim properties that have no processor', () => {
+      const builder = createBuilder({ margin: true });
+
+      expect(builder.build({ margin: '  10px  ' })).toEqual({
+        margin: '  10px  ',
+      });
+    });
+  });
 });
