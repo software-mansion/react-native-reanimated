@@ -100,6 +100,7 @@ class PlatformDriver final : public facebook::react::UIManagerDelegate {
   void uiManagerDidStartSurface(const facebook::react::ShadowTree &shadowTree) override;
   void uiManagerDidFinishReactCommit(const facebook::react::ShadowTree &shadowTree) override;
   void uiManagerDidPromoteReactRevision(const facebook::react::ShadowTree &shadowTree) override;
+#ifdef HARNESS_NEW_UI_MANAGER_DELEGATE
   void uiManagerShouldAddOnSurfaceStartCallback(
       facebook::react::UIManagerDelegate::OnSurfaceStartCallback &&callback) override;
   void uiManagerDidCaptureViewSnapshot(facebook::react::Tag tag, facebook::react::SurfaceId surfaceId) override;
@@ -108,6 +109,10 @@ class PlatformDriver final : public facebook::react::UIManagerDelegate {
       facebook::react::Tag targetTag,
       facebook::react::SurfaceId surfaceId) override;
   void uiManagerDidClearPendingSnapshots() override;
+#else
+  void uiManagerShouldSetOnSurfaceStartCallback(
+      facebook::react::UIManagerDelegate::OnSurfaceStartCallback &&callback) override;
+#endif
 
  private:
   struct AndroidMountItem {

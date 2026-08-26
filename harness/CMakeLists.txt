@@ -97,6 +97,22 @@ if(harness_uses_proxy_registry)
        ${REANIMATED_DIR}/Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.cpp)
 endif()
 
+file(READ
+     ${REACT_COMMON_DIR}/react/renderer/uimanager/UIManagerDelegate.h
+     ui_manager_delegate_header)
+set(harness_uses_new_ui_manager_delegate OFF)
+if(ui_manager_delegate_header MATCHES
+   "uiManagerShouldAddOnSurfaceStartCallback")
+  set(harness_uses_new_ui_manager_delegate ON)
+endif()
+
+file(READ ${REACT_COMMON_DIR}/react/renderer/core/LayoutPrimitives.h
+     layout_primitives_header)
+set(harness_supports_grid_display OFF)
+if(layout_primitives_header MATCHES "Grid =")
+  set(harness_supports_grid_display ON)
+endif()
+
 function(add_layout_animation_variant name)
   add_library(
     harness_runtime_${name} STATIC src/Choreographer.cpp src/PlatformDriver.cpp
@@ -107,6 +123,14 @@ function(add_layout_animation_variant name)
     PUBLIC include ${REANIMATED_DIR}/Common/NativeView)
   target_link_libraries(harness_runtime_${name}
                         PUBLIC react_native_mounting_${name})
+  if(harness_uses_new_ui_manager_delegate)
+    target_compile_definitions(harness_runtime_${name}
+                               PUBLIC HARNESS_NEW_UI_MANAGER_DELEGATE=1)
+  endif()
+  if(harness_supports_grid_display)
+    target_compile_definitions(harness_runtime_${name}
+                               PUBLIC HARNESS_GRID_DISPLAY=1)
+  endif()
 
   add_library(reanimated_layout_animations_${name} STATIC
               ${reanimated_layout_animations_sources})

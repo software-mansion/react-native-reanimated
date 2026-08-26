@@ -56,8 +56,10 @@ std::string_view displayName(DisplayType type) {
       return "flex";
     case DisplayType::Contents:
       return "contents";
+#ifdef HARNESS_GRID_DISPLAY
     case DisplayType::Grid:
       return "grid";
+#endif
   }
   return "other";
 }
@@ -317,6 +319,7 @@ void PlatformDriver::uiManagerDidFinishReactCommit(const ShadowTree &) {}
 
 void PlatformDriver::uiManagerDidPromoteReactRevision(const ShadowTree &) {}
 
+#ifdef HARNESS_NEW_UI_MANAGER_DELEGATE
 void PlatformDriver::uiManagerShouldAddOnSurfaceStartCallback(UIManagerDelegate::OnSurfaceStartCallback &&) {}
 
 void PlatformDriver::uiManagerDidCaptureViewSnapshot(Tag, SurfaceId) {}
@@ -324,6 +327,9 @@ void PlatformDriver::uiManagerDidCaptureViewSnapshot(Tag, SurfaceId) {}
 void PlatformDriver::uiManagerDidSetViewSnapshot(Tag, Tag, SurfaceId) {}
 
 void PlatformDriver::uiManagerDidClearPendingSnapshots() {}
+#else
+void PlatformDriver::uiManagerShouldSetOnSurfaceStartCallback(UIManagerDelegate::OnSurfaceStartCallback &&) {}
+#endif
 
 void PlatformDriver::commit(const Snapshot &snapshot, bool mountSynchronously) {
   auto status = ShadowTree::CommitStatus::Cancelled;
