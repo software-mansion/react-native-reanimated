@@ -3713,22 +3713,25 @@ export type WorkletStackDetails = [
 ];
 
 interface WorkletInitData {
-  code: string;
+  /** Only when bytecode isn't toggled. */
+  code?: string;
+  /** Only in production builds and explicitly toggled. */
+  bytecode?: ArrayBuffer;
   /** Only in dev builds. */
   location?: string;
   /** Only in dev builds. */
   sourceMap?: string;
-  /** Only in dev builds. */
-  version?: string;
 }
 
 interface WorkletProps {
   __closure: WorkletClosure;
   __workletHash: number;
-  __initData: WorkletInitData;
-  __init?: () => unknown;
+  /** Only in Legacy Eval Mode. */
+  __initData?: WorkletInitData;
   /** `__stackDetails` is removed after parsing. */
   __stackDetails?: WorkletStackDetails;
+  /** Only in dev builds. */
+  __pluginVersion?: string;
 }
 
 type WorkletFunction<
@@ -3889,52 +3892,6 @@ const obj = {
 ```
 
 ### Reanimated terms
-
-#### \[Experimental] Worklet Context Objects
-
-*Object methods* called on UI thread lose their `this` binding.
-
-```ts
-const obj = {
-  foo: 1,
-  bar() {
-    'worklet';
-    console.log(this.foo); // undefined - the binding was lost.
-  },
-};
-```
-
-**Worklet Context Objects** are special terms that preserve that binding. Don't mistake them for objects created with `useSharedValue`. All changes to Worklet Context Objects on the UI thread are visible only on the UI thread. The same applies to the JS thread.
-
-```ts
-const obj = {
-  __workletContextObject: true,
-  foo: 1,
-  bar() {
-    console.log(this.foo);
-  },
-};
-
-obj.foo = 2;
-obj.bar(); // Logs 2
-scheduleOnUI(() => obj.bar()); // Logs 1
-
-scheduleOnUI(() => (obj.foo = 3));
-obj.bar(); // Logs 2
-scheduleOnUI(() => obj.bar()); // Logs 3
-```
-
-`__workletContextObject` is a special property that marks an object as a Worklet Context Object. It's value doesn't matter, but it's a good practice to use `true` as a value. `'worklet'` directive in methods will be ignored if the object has this property.
-
-```ts
-const workletContextObject = {
-  __workletContextObject: true,
-  message: 'Hello from WorkletContextObject',
-  foo() {
-    console.log(this.message);
-  },
-};
-```
 
 #### \[Experimental] Worklet Classes
 

@@ -37,22 +37,25 @@ export type WorkletStackDetails = [
 ];
 
 interface WorkletInitData {
-  code: string;
+  /** Only when bytecode isn't toggled. */
+  code?: string;
+  /** Only in production builds and explicitly toggled. */
+  bytecode?: ArrayBuffer;
   /** Only in dev builds. */
   location?: string;
   /** Only in dev builds. */
   sourceMap?: string;
-  /** Only in dev builds. */
-  version?: string;
 }
 
 interface WorkletProps {
   __closure: WorkletClosure;
   __workletHash: number;
-  __initData: WorkletInitData;
-  __init?: () => unknown;
+  /** Only in Legacy Eval Mode. */
+  __initData?: WorkletInitData;
   /** `__stackDetails` is removed after parsing. */
   __stackDetails?: WorkletStackDetails;
+  /** Only in dev builds. */
+  __pluginVersion?: string;
 }
 
 type WorkletFunction<

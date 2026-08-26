@@ -72,52 +72,6 @@ const obj = {
 
 ### Reanimated terms
 
-#### \[Experimental] Worklet Context Objects
-
-*Object methods* called on UI thread lose their `this` binding.
-
-```ts
-const obj = {
-  foo: 1,
-  bar() {
-    'worklet';
-    console.log(this.foo); // undefined - the binding was lost.
-  },
-};
-```
-
-**Worklet Context Objects** are special terms that preserve that binding. Don't mistake them for objects created with `useSharedValue`. All changes to Worklet Context Objects on the UI thread are visible only on the UI thread. The same applies to the JS thread.
-
-```ts
-const obj = {
-  __workletContextObject: true,
-  foo: 1,
-  bar() {
-    console.log(this.foo);
-  },
-};
-
-obj.foo = 2;
-obj.bar(); // Logs 2
-scheduleOnUI(() => obj.bar()); // Logs 1
-
-scheduleOnUI(() => (obj.foo = 3));
-obj.bar(); // Logs 2
-scheduleOnUI(() => obj.bar()); // Logs 3
-```
-
-`__workletContextObject` is a special property that marks an object as a Worklet Context Object. It's value doesn't matter, but it's a good practice to use `true` as a value. `'worklet'` directive in methods will be ignored if the object has this property.
-
-```ts
-const workletContextObject = {
-  __workletContextObject: true,
-  message: 'Hello from WorkletContextObject',
-  foo() {
-    console.log(this.message);
-  },
-};
-```
-
 #### \[Experimental] Worklet Classes
 
 [Hermes](https://github.com/facebook/hermes), the JavaScript engine used by React Native, doesn't support classes. Class syntax requires [polyfilling](https://en.wikipedia.org/wiki/Polyfill_%28programming%29) before it can be used, which is problematic for the UI thread. To work around this, we coined the term of **Worklet Classes**. Worklet classes can be instantiated on the UI thread.
