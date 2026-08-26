@@ -1,3 +1,5 @@
+import { findNodeState, mutationLabel, nodeRows } from './model.js';
+
 const state = {
   tests: [],
   results: new Map(),
@@ -405,29 +407,11 @@ function renderMutations(mutations) {
   for (const mutation of mutations) {
     const badge = document.createElement('span');
     badge.className = `mutation ${mutation.type}`;
-    const opacity = mutation.before && mutation.after && mutation.before.opacity !== mutation.after.opacity ?
-        ` · α ${format(mutation.before.opacity)}→${format(mutation.after.opacity)}` : '';
-    badge.textContent = `${mutation.type} #${mutation.tag}${opacity}`;
-    const geometry = mutation.before && mutation.after ?
-        `; frame ${formatFrame(mutation.before.frame)} → ${formatFrame(mutation.after.frame)}` : '';
-    badge.title = `parent #${mutation.parentTag}, index ${mutation.index}${geometry}`;
+    const label = mutationLabel(mutation);
+    badge.textContent = label.text;
+    badge.title = label.title;
     elements.mutations.append(badge);
   }
-}
-
-function nodeRows({ node, absoluteFrame, effectiveOpacity }) {
-  return [
-    ['Tag', `#${node.tag}`],
-    ['Component', node.component],
-    ['Local origin', `${format(node.frame.x)}, ${format(node.frame.y)}`],
-    ['Absolute origin', `${format(absoluteFrame.x)}, ${format(absoluteFrame.y)}`],
-    ['Size', `${format(node.frame.width)} × ${format(node.frame.height)}`],
-    ['Local opacity', format(node.opacity)],
-    ['Effective opacity', format(effectiveOpacity)],
-    ['Display', node.display],
-    ['Z-index', String(node.zIndex)],
-    ['Children', String(node.children.length)],
-  ];
 }
 
 function renderDefinitionList(element, rows) {
@@ -487,38 +471,10 @@ function percent(value, total) {
   return `${(100 * value / Math.max(1, total)).toFixed(4)}%`;
 }
 
-function format(value) {
-  return Number(value).toFixed(2).replace(/\.00$/, '');
-}
-
-function formatFrame(frame) {
-  return `${format(frame.x)},${format(frame.y)} ${format(frame.width)}×${format(frame.height)}`;
-}
-
 function colorForTag(tag) {
   return `hsla(${(tag * 67) % 360} 72% 52% / 0.5)`;
 }
 
 function countNodes(node) {
   return 1 + node.children.reduce((sum, child) => sum + countNodes(child), 0);
-}
-
-function findNodeState(node, tag, parentFrame = { x: 0, y: 0 }, parentOpacity = 1) {
-  const absoluteFrame = {
-    x: parentFrame.x + node.frame.x,
-    y: parentFrame.y + node.frame.y,
-    width: node.frame.width,
-    height: node.frame.height,
-  };
-  const effectiveOpacity = parentOpacity * node.opacity;
-  if (node.tag === tag) {
-    return { node, absoluteFrame, effectiveOpacity };
-  }
-  for (const child of node.children) {
-    const match = findNodeState(child, tag, absoluteFrame, effectiveOpacity);
-    if (match) {
-      return match;
-    }
-  }
-  return null;
 }
