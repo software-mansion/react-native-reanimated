@@ -25,6 +25,7 @@
 - Compare the Synchronizable's imperative lock owner with `std::thread::id` instead of comparing `pthread_t` with `==`, which POSIX doesn't define. ([#10349](https://github.com/software-mansion/react-native-reanimated/pull/10349) by [@tjzel](https://github.com/tjzel))
 - Added an umbrella header for removed `Serializable.h` file for backwards compatibility with Expo
 - Fix the umbrella `Serializable.h` header including a non-existent `RetainableSerializable.h` instead of `RetainingSerializable.h`, which made the header fail to compile. ([#10406](https://github.com/software-mansion/react-native-reanimated/pull/10406) by [@tjzel](https://github.com/tjzel))
+- Fix build error when Bundle Mode worklet captures JSX name. ([#10409](https://github.com/software-mansion/react-native-reanimated/pull/10409) by [@tshmieldev](https://github.com/tshmieldev))
 
 ### 💡 Others
 

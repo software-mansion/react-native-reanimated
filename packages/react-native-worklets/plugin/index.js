@@ -1368,6 +1368,9 @@ var require_closure = __commonJS({
     var types_12 = require("@babel/types");
     var globals_12 = require_globals();
     var imports_1 = require_imports();
+    function toClosureIdentifier(node) {
+      return (0, types_12.isJSXIdentifier)(node) ? (0, types_12.identifier)(node.name) : (0, types_12.cloneNode)(node, true);
+    }
     function getClosure(funPath, state) {
       const capturedNames = /* @__PURE__ */ new Set();
       const closureVariables = new Array();
@@ -1397,7 +1400,7 @@ var require_closure = __commonJS({
               return;
             }
             capturedNames.add(name);
-            closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
+            closureVariables.push(toClosureIdentifier(idPath.node));
             return;
           }
           if ("id" in funPath.node) {
@@ -1427,7 +1430,7 @@ var require_closure = __commonJS({
             }
           }
           capturedNames.add(name);
-          closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
+          closureVariables.push(toClosureIdentifier(idPath.node));
         }
       }, state);
       return {
