@@ -6,6 +6,7 @@
 
 ### 🛠 Breaking changes
 
+- `AnimatedRefOnUI` is now a `ShareableHost<ShadowNodeWrapper | null>` read with `.value` instead of a callable, and `AnimatedRefOnJS` was renamed to `AnimatedRefOnRN`. `measure` on an unmounted ref now returns `null` and warns instead of calling into `_measure`. ([#10413](https://github.com/software-mansion/react-native-reanimated/pull/10413) by [@tjzel](https://github.com/tjzel))
 - Remove the `USE_SYNCHRONIZABLE_FOR_MUTABLES` feature flag. Mutables always use Synchronizable state now. ([#10298](https://github.com/software-mansion/react-native-reanimated/pull/10298) by [@tjzel](https://github.com/tjzel))
 
 ### 🎉 New features
