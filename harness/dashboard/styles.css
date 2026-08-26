@@ -170,10 +170,13 @@ button:disabled { cursor: default; opacity: 0.45; }
 
 .detail-heading { justify-content: space-between; gap: 24px; }
 .detail-heading h2 { margin: 7px 0 10px; font-size: clamp(24px, 3vw, 38px); line-height: 1.08; letter-spacing: -0.035em; overflow-wrap: anywhere; }
+.test-description { max-width: 820px; margin: 0 0 14px; color: var(--muted); font-size: 14px; line-height: 1.6; }
 .test-meta { gap: 8px; color: var(--muted); font: 12px/1 ui-monospace, monospace; }
 .status-chip { padding: 5px 8px; border-radius: 6px; background: var(--panel-raised); }
 .status-chip.passed { color: var(--lime); }
 .status-chip.failed { color: var(--red); }
+.issue-link { color: #9ec7ff; text-decoration: none; }
+.issue-link:hover { color: #c6ddff; }
 
 .mode-tabs { min-height: 48px; gap: 8px; margin-top: 18px; }
 .mode-tab { padding: 7px 10px; font: 11px/1 ui-monospace, monospace; }

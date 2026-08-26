@@ -3,6 +3,8 @@
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <react/renderer/mounting/stubs/StubViewTree.h>
 
+#include <harness/TestMetadata.h>
+
 using namespace facebook::react;
 
 namespace {
@@ -18,7 +20,12 @@ ShadowView makeShadowView(Tag tag, ComponentName componentName) {
 
 } // namespace
 
-TEST(SmokeTest, StubViewTreeAppliesCreateAndInsert) {
+HARNESS_TEST(
+    SmokeTest,
+    StubViewTreeAppliesCreateAndInsert,
+    .description =
+        "The harness depends on React Native's StubViewTree to validate mounting mutations. "
+        "A broken baseline would make every higher-level host-tree result unreliable.") {
   auto root = makeShadowView(1, "RootView");
   auto child = makeShadowView(2, "View");
 

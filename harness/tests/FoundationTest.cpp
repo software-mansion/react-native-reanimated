@@ -7,6 +7,7 @@
 
 #include <harness/Choreographer.h>
 #include <harness/PlatformDriver.h>
+#include <harness/TestMetadata.h>
 #include <harness/Tree.h>
 
 namespace reanimated::layout_animation::test {
@@ -47,7 +48,12 @@ std::vector<facebook::react::Tag> updatedTagsSince(const PlatformDriver &driver,
 
 } // namespace
 
-TEST(ChoreographerTest, DelaysOnlyTheBusyLane) {
+HARNESS_TEST(
+    ChoreographerTest,
+    DelaysOnlyTheBusyLane,
+    .description =
+        "Virtual lanes must preserve independent availability. "
+        "A blocked UI lane must not delay JavaScript work, or timing tests would model false interleavings.") {
   auto choreographer = Choreographer{};
   auto order = std::vector<Lane>{};
 
@@ -61,7 +67,12 @@ TEST(ChoreographerTest, DelaysOnlyTheBusyLane) {
   EXPECT_EQ(choreographer.pendingTaskCount(), 0);
 }
 
-TEST(PlatformDriverTest, AndroidModesAccumulateUntilAFrame) {
+HARNESS_TEST(
+    PlatformDriverTest,
+    AndroidModesAccumulateUntilAFrame,
+    .description =
+        "Android does not mount every React revision immediately. "
+        "The driver must coalesce pending work until a frame, or race tests would use mount orders that devices cannot produce.") {
   for (auto mode : {DriverMode::AndroidPush, DriverMode::AndroidPull}) {
     SCOPED_TRACE(mode == DriverMode::AndroidPush ? "push" : "pull");
     auto choreographer = Choreographer{};
@@ -87,7 +98,12 @@ TEST(PlatformDriverTest, AndroidModesAccumulateUntilAFrame) {
   }
 }
 
-TEST(PlatformDriverTest, IOSCoalescesWhileTheMainLaneIsBusy) {
+HARNESS_TEST(
+    PlatformDriverTest,
+    IOSCoalescesWhileTheMainLaneIsBusy,
+    .description =
+        "iOS pulls transactions on the main thread after JavaScript commits. "
+        "A busy main lane must coalesce revisions, or the harness would expose intermediate transactions that devices do not mount.") {
   auto choreographer = Choreographer{};
   auto driver = PlatformDriver(choreographer, DriverMode::IOS);
 
@@ -102,7 +118,12 @@ TEST(PlatformDriverTest, IOSCoalescesWhileTheMainLaneIsBusy) {
   EXPECT_EQ(driver.mountedTransactionNumbers().size(), 1);
 }
 
-TEST(PlatformDriverTest, AndroidDefersAReentrantMountUntilTheNextFrame) {
+HARNESS_TEST(
+    PlatformDriverTest,
+    AndroidDefersAReentrantMountUntilTheNextFrame,
+    .description =
+        "A mount callback can synchronously commit on Android. "
+        "The nested mount item must wait for the next dispatcher pass, or the simulated host order would differ from Fabric.") {
   auto choreographer = Choreographer{};
   auto driver = PlatformDriver(choreographer, DriverMode::AndroidPush);
   auto nestedSnapshot = secondSnapshot();
@@ -123,7 +144,12 @@ TEST(PlatformDriverTest, AndroidDefersAReentrantMountUntilTheNextFrame) {
   EXPECT_EQ(driver.mountedTransactionNumbers().size(), 2);
 }
 
-TEST(PlatformDriverTest, IOSMountsAReentrantCommitInTheFollowUpLoop) {
+HARNESS_TEST(
+    PlatformDriverTest,
+    IOSMountsAReentrantCommitInTheFollowUpLoop,
+    .description =
+        "iOS handles a commit raised during mounting in the same transaction loop. "
+        "The driver must perform the follow-up pull before returning, or its reentrancy model would be invalid.") {
   auto choreographer = Choreographer{};
   auto driver = PlatformDriver(choreographer, DriverMode::IOS);
   auto nestedSnapshot = secondSnapshot();
@@ -137,7 +163,12 @@ TEST(PlatformDriverTest, IOSMountsAReentrantCommitInTheFollowUpLoop) {
   EXPECT_EQ(driver.mountedTransactionNumbers().size(), 2);
 }
 
-TEST(PlatformDriverTest, RecordsMountedHostFrames) {
+HARNESS_TEST(
+    PlatformDriverTest,
+    RecordsMountedHostFrames,
+    .description =
+        "Dashboard traces must describe the host tree after a mounted transaction. "
+        "Missing geometry, properties, or mutations would make visual inspection misleading.") {
   auto choreographer = Choreographer{};
   auto driver = PlatformDriver(choreographer, DriverMode::IOS);
 
@@ -158,7 +189,12 @@ TEST(PlatformDriverTest, RecordsMountedHostFrames) {
   EXPECT_FALSE(frame.mutations.empty());
 }
 
-TEST(PlatformDriverTest, ReusesUnchangedNodesAndAncestorProps) {
+HARNESS_TEST(
+    PlatformDriverTest,
+    ReusesUnchangedNodesAndAncestorProps,
+    .description =
+        "React preserves node and property identity when a view's own data is unchanged. "
+        "Synthetic ancestor updates would start animations that a production render would not start.") {
   auto choreographer = Choreographer{};
   auto driver = PlatformDriver(choreographer, DriverMode::IOS);
   auto initial = snapshot({view({
@@ -202,7 +238,12 @@ TEST(PlatformDriverTest, ReusesUnchangedNodesAndAncestorProps) {
   EXPECT_EQ(update->after->frame.x, 20);
 }
 
-TEST(PlatformDriverTest, BoundaryUpdatesDoNotUpdateUnchangedDescendants) {
+HARNESS_TEST(
+    PlatformDriverTest,
+    BoundaryUpdatesDoNotUpdateUnchangedDescendants,
+    .description =
+        "Changing a shared-transition boundary must not replace unchanged descendants. "
+        "A synthetic descendant update can overwrite hidden opacity and conceal a proxy regression.") {
   auto choreographer = Choreographer{};
   auto driver = PlatformDriver(choreographer, DriverMode::IOS);
 

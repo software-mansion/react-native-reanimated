@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include <harness/AnimationHarness.h>
+#include <harness/TestMetadata.h>
 
 #include <react/renderer/components/view/ViewProps.h>
 
@@ -10,7 +11,13 @@ namespace reanimated::layout_animation::test {
 
 using namespace std::chrono_literals;
 
-TEST(ProxySmokeTest, RunsEnteringAnimationThroughTheRealProxy) {
+HARNESS_TEST(
+    ProxySmokeTest,
+    RunsEnteringAnimationThroughTheRealProxy,
+    .description =
+        "An entering view must be hidden before its first animation frame. "
+        "A visible initial mount causes the Android flash fixed by GitHub #10198.",
+    .githubIssues = {10198}) {
   auto modes = std::vector<DriverMode>{DriverMode::IOS};
 #ifdef HARNESS_PLATFORM_ANDROID
   modes = {DriverMode::AndroidPush, DriverMode::AndroidPull};

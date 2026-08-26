@@ -170,13 +170,13 @@ add_layout_animation_variant(android)
 
 set(harness_test_sources
     tests/FoundationTest.cpp tests/LayoutAnimationScenariosTest.cpp
-    tests/ProxySmokeTest.cpp tests/SmokeTest.cpp)
+    tests/ProxySmokeTest.cpp tests/SmokeTest.cpp tests/TestMain.cpp)
 
 foreach(platform ios android)
   add_executable(harness_${platform}_tests ${harness_test_sources})
   target_link_libraries(
     harness_${platform}_tests
-    PRIVATE layout_animation_harness_${platform} GTest::gtest_main)
+    PRIVATE layout_animation_harness_${platform} GTest::gtest)
   set_target_properties(
     harness_${platform}_tests
     PROPERTIES BUILD_RPATH

@@ -19,6 +19,8 @@ The server exits with the missing build command when either test binary is absen
 
 Each test runs in its own native process. The dashboard distinguishes assertion failures, crash signals, and timeouts. `LayoutAnimationCrashRegressionTest` means the historical broken implementation crashed; a correct build still passes the test.
 
+Each native test declares a short technical description and applicable Reanimated GitHub numbers beside its test body. The dashboard reads that registry from the binary, displays it above the replay, and includes it in search results. The binaries reject tests with missing metadata or descriptions shorter than two sentences.
+
 The dashboard interaction check can run independently of the native build:
 
 ```sh

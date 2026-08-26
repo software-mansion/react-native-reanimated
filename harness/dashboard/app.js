@@ -17,7 +17,7 @@ const elements = Object.fromEntries([
   'build', 'build-path', 'empty', 'failed-count', 'frame-info', 'frame-label', 'frame-number', 'frame-total',
   'mode-tabs', 'mutations', 'next-frame', 'node-info', 'output', 'passed-count', 'pending-count', 'play',
   'previous-frame', 'run-all', 'run-one', 'run-status', 'search', 'stage', 'test-detail', 'test-list',
-  'test-meta', 'test-name', 'test-suite', 'timeline', 'total-count', 'view-count', 'view-list',
+  'test-description', 'test-meta', 'test-name', 'test-suite', 'timeline', 'total-count', 'view-count', 'view-list',
 ].map((id) => [id, document.getElementById(id)]));
 
 elements.search.addEventListener('input', (event) => {
@@ -149,7 +149,10 @@ function renderList() {
     const result = state.results.get(test.id);
     const platformMatches = state.platform === 'all' || test.platform === state.platform ||
         (state.platform === 'failed' && result && !result.passed);
-    return platformMatches && test.id.toLowerCase().includes(state.search);
+    const searchable = [test.id, test.description, ...test.githubIssues.map((issue) => `#${issue}`)]
+        .join(' ')
+        .toLowerCase();
+    return platformMatches && searchable.includes(state.search);
   });
 
   elements['test-list'].replaceChildren();
@@ -198,10 +201,12 @@ function renderDetail() {
   const result = state.results.get(test.id);
   elements['test-suite'].textContent = `${test.platform} · ${test.suite}`;
   elements['test-name'].textContent = test.name;
+  elements['test-description'].textContent = test.description;
   elements['test-meta'].replaceChildren(
       chip(resultStatus(result), result ? (result.passed ? 'passed' : 'failed') : ''),
       chip(testPurpose(test.suite)),
-      chip(result ? `${result.duration} ms` : 'No result'));
+      chip(result ? `${result.duration} ms` : 'No result'),
+      ...test.githubIssues.map(issueLink));
   elements.output.textContent = result?.output || state.buildOutput ||
       'Run the test to capture native output and mounted frames.';
   renderModeTabs(result);
@@ -432,6 +437,16 @@ function chip(text, className = '') {
   element.className = `status-chip ${className}`;
   element.textContent = text;
   return element;
+}
+
+function issueLink(number) {
+  const link = document.createElement('a');
+  link.className = 'status-chip issue-link';
+  link.href = `https://github.com/software-mansion/react-native-reanimated/issues/${number}`;
+  link.target = '_blank';
+  link.rel = 'noreferrer';
+  link.textContent = `GitHub #${number}`;
+  return link;
 }
 
 function stepFrame(delta) {

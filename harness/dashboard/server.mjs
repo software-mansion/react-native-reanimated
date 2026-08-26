@@ -85,26 +85,29 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
 function listTests() {
   const discovered = [];
   for (const binary of binaries) {
-    const result = spawnSync(binary.path, ['--gtest_list_tests', '--gtest_color=no'], { encoding: 'utf8' });
+    const result = spawnSync(binary.path, ['--harness_list_test_metadata'], { encoding: 'utf8' });
     if (result.status !== 0) {
       throw new Error(`Could not list tests from ${binary.path}:\n${result.stderr}`);
     }
-    let suite = '';
     for (const line of result.stdout.split('\n')) {
-      if (!line.startsWith(' ') && line.trim().endsWith('.')) {
-        suite = line.trim();
-      } else if (suite && line.startsWith('  ')) {
-        const name = line.trim().split(/\s+#/)[0];
-        const filter = `${suite}${name}`;
-        discovered.push({
-          id: `${binary.platform}.${filter}`,
-          platform: binary.platform,
-          suite: suite.slice(0, -1),
-          name,
-          filter,
-          binary: binary.path,
-        });
+      if (!line) {
+        continue;
       }
+      const [suite, name, description, issueList = ''] = line.split('\t');
+      if (!suite || !name || !description) {
+        throw new Error(`Invalid test metadata from ${binary.path}: ${line}`);
+      }
+      const filter = `${suite}.${name}`;
+      discovered.push({
+        id: `${binary.platform}.${filter}`,
+        platform: binary.platform,
+        suite,
+        name,
+        description,
+        githubIssues: issueList ? issueList.split(',').map(Number) : [],
+        filter,
+        binary: binary.path,
+      });
     }
   }
   return discovered;

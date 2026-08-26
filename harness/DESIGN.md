@@ -49,6 +49,8 @@ The Android push driver can pause one asynchronous mount at the boundary after C
 
 Tests assert host-tree tags, hierarchy, mounting logs, animation-driver calls, and mounted transaction count or order. They do not assert private Reanimated containers or pending maps. `RN_SHADOW_TREE_INTROSPECTION` remains enabled so React Native also verifies every pulled transaction against its own `StubViewTree`.
 
+Every native test declares a description beside its body. The description explains the protected invariant and the failure it prevents in two or more short sentences; it does not restate the timeline. Tests for a known Reanimated GitHub report also declare its number.
+
 Shared-transition tests use Reanimated's real `REASharedTransitionBoundaryShadowNode`. Synthetic containers are observed only through their host-tree lifecycle and recorded animation calls.
 
 ## Running

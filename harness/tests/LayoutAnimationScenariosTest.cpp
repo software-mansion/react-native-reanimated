@@ -12,6 +12,7 @@
 #include <vector>
 
 #include <harness/AnimationHarness.h>
+#include <harness/TestMetadata.h>
 
 #include <react/renderer/components/view/ViewProps.h>
 
@@ -353,7 +354,12 @@ std::vector<Tag> syntheticRootTags(AnimationHarness &harness) {
 
 } // namespace
 
-TEST(LayoutAnimationScenariosTest, ExitingViewStaysMountedUntilItsAnimationEnds) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    ExitingViewStaysMountedUntilItsAnimationEnds,
+    .description =
+        "An exiting view must remain mounted after React removes it. "
+        "Early deletion cuts off the animation and leaves later progress without a host view.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -395,7 +401,13 @@ TEST(LayoutAnimationScenariosTest, ExitingViewStaysMountedUntilItsAnimationEnds)
   }
 }
 
-TEST(LayoutAnimationScenariosTest, ExitingViewKeepsItsHostIndexUntilCompletion) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    ExitingViewKeepsItsHostIndexUntilCompletion,
+    .description =
+        "An exiting sibling must keep its original host index until completion. "
+        "Moving it to the end changes stacking and draws it above later siblings, as fixed by GitHub #10392.",
+    .githubIssues = {10392}) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -441,7 +453,13 @@ TEST(LayoutAnimationScenariosTest, ExitingViewKeepsItsHostIndexUntilCompletion) 
   }
 }
 
-TEST(LayoutAnimationCrashRegressionTest, ImmediateExitCompletionCanReenterTheStartCallback) {
+HARNESS_TEST(
+    LayoutAnimationCrashRegressionTest,
+    ImmediateExitCompletionCanReenterTheStartCallback,
+    .description =
+        "Reduced motion or zero duration can complete an exit inside its start callback. "
+        "Native bookkeeping must exist before that callback, or reentrant completion reads incomplete state and crashes, as in GitHub #9646.",
+    .githubIssues = {9646}) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -475,7 +493,13 @@ TEST(LayoutAnimationCrashRegressionTest, ImmediateExitCompletionCanReenterTheSta
   }
 }
 
-TEST(LayoutAnimationScenariosTest, RemovingAModalScreenSkipsDescendantExitAnimations) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    RemovingAModalScreenSkipsDescendantExitAnimations,
+    .description =
+        "A native modal pop must not start exit animations for its descendants. "
+        "The native screen owns subtree teardown, so Reanimated retention can leave invalid views, as fixed by GitHub #7667.",
+    .githubIssues = {7667}) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -508,7 +532,12 @@ TEST(LayoutAnimationScenariosTest, RemovingAModalScreenSkipsDescendantExitAnimat
   }
 }
 
-TEST(LayoutAnimationScenariosTest, RemovingAnExitConfigUnmountsWithoutStartingIt) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    RemovingAnExitConfigUnmountsWithoutStartingIt,
+    .description =
+        "Removing an exit configuration before deletion must make the removal immediate. "
+        "Reusing stale configuration would start an animation that JavaScript no longer requested.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -541,7 +570,12 @@ TEST(LayoutAnimationScenariosTest, RemovingAnExitConfigUnmountsWithoutStartingIt
   }
 }
 
-TEST(LayoutAnimationScenariosTest, LayoutProgressAndRetargetUseTheCurrentMountedFrame) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    LayoutProgressAndRetargetUseTheCurrentMountedFrame,
+    .description =
+        "A retargeted layout animation must start from the currently mounted animated frame. "
+        "Starting from the latest React frame makes the view jump and loses completion ownership from the prior animation.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -626,7 +660,13 @@ TEST(LayoutAnimationScenariosTest, LayoutProgressAndRetargetUseTheCurrentMounted
 }
 
 #ifdef HARNESS_PROXY_REGISTRY
-TEST(LayoutAnimationScenariosTest, ConfigRemovalRetargetsWithTheCapturedLayoutConfig) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    ConfigRemovalRetargetsWithTheCapturedLayoutConfig,
+    .description =
+        "An active layout animation owns the configuration that started it. "
+        "A later render may remove the JavaScript configuration, but retargeting must still use the captured value fixed by GitHub #10373.",
+    .githubIssues = {10373}) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -684,7 +724,12 @@ TEST(LayoutAnimationScenariosTest, ConfigRemovalRetargetsWithTheCapturedLayoutCo
 }
 #endif
 
-TEST(LayoutAnimationScenariosTest, ExitingDescendantKeepsDeletedAncestorsAlive) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    ExitingDescendantKeepsDeletedAncestorsAlive,
+    .description =
+        "An exiting descendant needs its deleted ancestors to remain mounted as structural hosts. "
+        "Removing an ancestor early makes descendant mutations target a detached hierarchy.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -726,7 +771,13 @@ TEST(LayoutAnimationScenariosTest, ExitingDescendantKeepsDeletedAncestorsAlive) 
   }
 }
 
-TEST(LayoutAnimationScenariosTest, NestedExitingGrandchildKeepsAllDeletedAncestorsAlive) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    NestedExitingGrandchildKeepsAllDeletedAncestorsAlive,
+    .description =
+        "An exiting grandchild can require several deleted ancestors to wait. "
+        "Missing waiting-node bookkeeping for any ancestor creates cleanup mutations against removed views, as fixed by GitHub #10103.",
+    .githubIssues = {10103}) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -776,7 +827,12 @@ TEST(LayoutAnimationScenariosTest, NestedExitingGrandchildKeepsAllDeletedAncesto
   }
 }
 
-TEST(LayoutAnimationScenariosTest, TwoExitingSiblingsCanFinishOutOfOrder) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    TwoExitingSiblingsCanFinishOutOfOrder,
+    .description =
+        "Each exiting sibling owns independent completion state. "
+        "Finishing one animation must not delete or settle another sibling that remains active.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -823,7 +879,12 @@ TEST(LayoutAnimationScenariosTest, TwoExitingSiblingsCanFinishOutOfOrder) {
   }
 }
 
-TEST(LayoutAnimationScenariosTest, EnteringLayoutAndExitingShareOneCommit) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    EnteringLayoutAndExitingShareOneCommit,
+    .description =
+        "One React commit can start different animation types on different tags. "
+        "The proxy must classify every mutation without dropping or assigning the wrong configuration.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -873,7 +934,12 @@ TEST(LayoutAnimationScenariosTest, EnteringLayoutAndExitingShareOneCommit) {
   }
 }
 
-TEST(LayoutAnimationScenariosTest, SkipExitingOnAnAncestorRemovesItsAnimatedSubtreeImmediately) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    SkipExitingOnAnAncestorRemovesItsAnimatedSubtreeImmediately,
+    .description =
+        "An ancestor's skip-exiting policy must remove its animated subtree immediately. "
+        "Retaining descendants violates the caller's opt-out and can keep detached views mounted.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -908,7 +974,12 @@ TEST(LayoutAnimationScenariosTest, SkipExitingOnAnAncestorRemovesItsAnimatedSubt
   }
 }
 
-TEST(LayoutAnimationScenariosTest, NestedSkipExitingCanBeOverriddenForAChild) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    NestedSkipExitingCanBeOverriddenForAChild,
+    .description =
+        "A child can opt back into exit animations below a skipped ancestor. "
+        "Policy inheritance must preserve the explicit child override instead of suppressing the whole subtree.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -949,7 +1020,12 @@ TEST(LayoutAnimationScenariosTest, NestedSkipExitingCanBeOverriddenForAChild) {
   }
 }
 
-TEST(LayoutAnimationScenariosTest, ReparentingStartsLayoutAnimationAndMovesTheView) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    ReparentingStartsLayoutAnimationAndMovesTheView,
+    .description =
+        "Moving a stable view between parents is a layout change, not a replacement. "
+        "The view must keep its identity and animate toward its new absolute position.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -1017,7 +1093,12 @@ TEST(LayoutAnimationScenariosTest, ReparentingStartsLayoutAnimationAndMovesTheVi
   }
 }
 
-TEST(LayoutAnimationScenariosTest, FlatteningAParentWhileRemovingAChildKeepsHostOrderConsistent) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    FlatteningAParentWhileRemovingAChildKeepsHostOrderConsistent,
+    .description =
+        "Flattening can change host parent and index in the same commit as child removal. "
+        "Mutation ordering must preserve host order and avoid operations against an already removed container.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -1077,7 +1158,12 @@ TEST(LayoutAnimationScenariosTest, FlatteningAParentWhileRemovingAChildKeepsHost
   }
 }
 
-TEST(LayoutAnimationCrashRegressionTest, RecreatingAnExitingTagCancelsTheStaleRemoval) {
+HARNESS_TEST(
+    LayoutAnimationCrashRegressionTest,
+    RecreatingAnExitingTagCancelsTheStaleRemoval,
+    .description =
+        "React can reuse a native tag while the previous view family is still exiting. "
+        "Stale cleanup must be cancelled, or it removes the new instance and corrupts the host tree.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -1132,7 +1218,13 @@ TEST(LayoutAnimationCrashRegressionTest, RecreatingAnExitingTagCancelsTheStaleRe
   }
 }
 
-TEST(LayoutAnimationCrashRegressionTest, RecreatingAWaitingSubviewFlushesItsWithheldRemoval) {
+HARNESS_TEST(
+    LayoutAnimationCrashRegressionTest,
+    RecreatingAWaitingSubviewFlushesItsWithheldRemoval,
+    .description =
+        "React can recreate an interior tag that is retained only to host an exiting descendant. "
+        "The proxy must reconcile that waiting node before old cleanup targets the new family and crashes, as fixed by GitHub #10073.",
+    .githubIssues = {10073}) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -1181,7 +1273,13 @@ TEST(LayoutAnimationCrashRegressionTest, RecreatingAWaitingSubviewFlushesItsWith
   }
 }
 
-TEST(LayoutAnimationCrashRegressionTest, RecreatingASettledExitBeforeCleanupReplacesTheDeadNode) {
+HARNESS_TEST(
+    LayoutAnimationCrashRegressionTest,
+    RecreatingASettledExitBeforeCleanupReplacesTheDeadNode,
+    .description =
+        "React can reuse a tag after an old exit settles but before its cleanup pull. "
+        "Cleanup must distinguish the dead family from the replacement, or it deletes the new view or erases its animation, as fixed by GitHub #10073 and #9621.",
+    .githubIssues = {10073, 9621}) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -1238,7 +1336,13 @@ TEST(LayoutAnimationCrashRegressionTest, RecreatingASettledExitBeforeCleanupRepl
   }
 }
 
-TEST(LayoutAnimationScenariosTest, ZeroDurationEnteringCanSettleOnItsFirstFrame) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    ZeroDurationEnteringCanSettleOnItsFirstFrame,
+    .description =
+        "An animation that settles on its first frame still needs the exact final style mutation. "
+        "Skipping settled progress leaves the host view hidden or stale, as fixed by GitHub #10171.",
+    .githubIssues = {10171}) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -1284,7 +1388,12 @@ TEST(LayoutAnimationScenariosTest, ZeroDurationEnteringCanSettleOnItsFirstFrame)
   }
 }
 
-TEST(LayoutAnimationScenariosTest, ProgressAppliesAnimatedStyleProps) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    ProgressAppliesAnimatedStyleProps,
+    .description =
+        "Layout-animation progress carries style properties as well as geometry. "
+        "Dropping those properties can leave opacity and other animated values stale while the frame appears correct.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -1322,7 +1431,12 @@ TEST(LayoutAnimationScenariosTest, ProgressAppliesAnimatedStyleProps) {
   }
 }
 
-TEST(LayoutAnimationScenariosTest, DisplayNoneEmitsPlatformSpecificHostMutationsAcrossRepeatedToggles) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    DisplayNoneEmitsPlatformSpecificHostMutationsAcrossRepeatedToggles,
+    .description =
+        "React Native platforms represent display-none views with different host mutations. "
+        "The harness must preserve those differences so Reanimated sees the same inputs that each device produces.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -1365,7 +1479,12 @@ TEST(LayoutAnimationScenariosTest, DisplayNoneEmitsPlatformSpecificHostMutations
   }
 }
 
-TEST(LayoutAnimationScenariosTest, SharedTagMovesBetweenActiveBoundaries) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    SharedTagMovesBetweenActiveBoundaries,
+    .description =
+        "A shared-tag match must hide the original views while a synthetic container owns the transition. "
+        "Completion must remove that container and restore the target, or duplicate or stale content remains visible.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -1454,7 +1573,12 @@ TEST(LayoutAnimationScenariosTest, SharedTagMovesBetweenActiveBoundaries) {
   }
 }
 
-TEST(LayoutAnimationScenariosTest, SharedSourceUpdateDuringBoundaryFlipStaysHidden) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    SharedSourceUpdateDuringBoundaryFlipStaysHidden,
+    .description =
+        "React can update a source view in the same commit that starts a shared transition. "
+        "The hidden-source mutation must win over the React update, or both the source and transition container are visible.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -1529,7 +1653,12 @@ TEST(LayoutAnimationScenariosTest, SharedSourceUpdateDuringBoundaryFlipStaysHidd
   }
 }
 
-TEST(LayoutAnimationScenariosTest, SharedTargetUpdateDuringBoundaryFlipStaysHidden) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    SharedTargetUpdateDuringBoundaryFlipStaysHidden,
+    .description =
+        "React can update a target view in the same commit that starts a shared transition. "
+        "The hidden-target mutation must win over the React update, or both the target and transition container are visible.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -1603,7 +1732,12 @@ TEST(LayoutAnimationScenariosTest, SharedTargetUpdateDuringBoundaryFlipStaysHidd
   }
 }
 
-TEST(LayoutAnimationScenariosTest, SharedContainerTracksGeometryAndOpacityAcrossProgressFrames) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    SharedContainerTracksGeometryAndOpacityAcrossProgressFrames,
+    .description =
+        "A non-interactive shared animation applies JavaScript-produced style to its synthetic container. "
+        "The mounted container must preserve every geometry and opacity value so native orchestration does not distort interpolation.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -1688,7 +1822,12 @@ TEST(LayoutAnimationScenariosTest, SharedContainerTracksGeometryAndOpacityAcross
   }
 }
 
-TEST(LayoutAnimationScenariosTest, DuplicateSharedNamesDoNotLeaveSyntheticContainers) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    DuplicateSharedNamesDoNotLeaveSyntheticContainers,
+    .description =
+        "Several views can use the same shared name during replacement. "
+        "The proxy must pair and clean them without orphaning containers or hiding unrelated originals.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -1759,7 +1898,12 @@ TEST(LayoutAnimationScenariosTest, DuplicateSharedNamesDoNotLeaveSyntheticContai
 }
 
 #ifndef HARNESS_PLATFORM_ANDROID
-TEST(LayoutAnimationScenariosTest, InteractiveSharedTransitionProgressesAndFinishes) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    InteractiveSharedTransitionProgressesAndFinishes,
+    .description =
+        "An interactive shared transition must remain active until navigation reaches its terminal state. "
+        "Early cleanup or missing completion leaves source and target visibility inconsistent.") {
   auto harness = AnimationHarness(DriverMode::IOS);
   auto timeline = AnimationTimeline(harness);
   timeline.configureAnimations({.at = 0ms, .animations = sharedConfigs(1)});
@@ -1804,7 +1948,12 @@ TEST(LayoutAnimationScenariosTest, InteractiveSharedTransitionProgressesAndFinis
   EXPECT_TRUE(syntheticRootTags(harness).empty());
 }
 
-TEST(LayoutAnimationScenariosTest, InteractiveSharedTransitionUsesAbsoluteGeometryAtEveryProgress) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    InteractiveSharedTransitionUsesAbsoluteGeometryAtEveryProgress,
+    .description =
+        "Interactive interpolation must use root-space frames when shared views are nested. "
+        "Parent-relative coordinates make the synthetic container jump and follow the wrong path.") {
   auto harness = AnimationHarness(DriverMode::IOS);
   auto timeline = AnimationTimeline(harness);
   timeline.configureAnimations({.at = 0ms, .animations = sharedConfigs(1)});
@@ -1872,7 +2021,12 @@ TEST(LayoutAnimationScenariosTest, InteractiveSharedTransitionUsesAbsoluteGeomet
   EXPECT_TRUE(syntheticRootTags(harness).empty());
 }
 
-TEST(LayoutAnimationScenariosTest, CancellingInteractiveSharedTransitionRestoresBothSides) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    CancellingInteractiveSharedTransitionRestoresBothSides,
+    .description =
+        "Cancelling interactive navigation must restore both original views and remove the synthetic container. "
+        "Otherwise one side can remain hidden after the gesture reverses.") {
   auto harness = AnimationHarness(DriverMode::IOS);
   auto timeline = AnimationTimeline(harness);
   timeline.configureAnimations({.at = 0ms, .animations = sharedConfigs(1)});
@@ -1896,7 +2050,12 @@ TEST(LayoutAnimationScenariosTest, CancellingInteractiveSharedTransitionRestores
 }
 #endif
 
-TEST(LayoutAnimationScenariosTest, AnimatedMountSideEffectCommitsAFollowUpTree) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    AnimatedMountSideEffectCommitsAFollowUpTree,
+    .description =
+        "Native mounting can synchronously cause a React state commit. "
+        "The proxy and platform driver must process the follow-up tree without losing or mounting the current transaction twice.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -1952,7 +2111,12 @@ TEST(LayoutAnimationScenariosTest, AnimatedMountSideEffectCommitsAFollowUpTree) 
   }
 }
 
-TEST(LayoutAnimationScenariosTest, RapidReordersRetargetEveryMountedItem) {
+HARNESS_TEST(
+    LayoutAnimationScenariosTest,
+    RapidReordersRetargetEveryMountedItem,
+    .description =
+        "Repeated list reorders retarget layout animations that are already running. "
+        "Every mounted item must start from its current visual position, or spammy updates produce jumps and missed animations.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -1993,7 +2157,12 @@ TEST(LayoutAnimationScenariosTest, RapidReordersRetargetEveryMountedItem) {
   }
 }
 
-TEST(LayoutAnimationStressTest, MixedListChurnOverlapsEnteringLayoutAndExiting) {
+HARNESS_TEST(
+    LayoutAnimationStressTest,
+    MixedListChurnOverlapsEnteringLayoutAndExiting,
+    .description =
+        "Real lists overlap insertions, moves, and removals before prior animations settle. "
+        "The proxy must start every requested type and converge to the exact host order without stale views.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -2089,7 +2258,12 @@ TEST(LayoutAnimationStressTest, MixedListChurnOverlapsEnteringLayoutAndExiting) 
   }
 }
 
-TEST(LayoutAnimationStressTest, RecycledTagsReplaceStillExitingInstances) {
+HARNESS_TEST(
+    LayoutAnimationStressTest,
+    RecycledTagsReplaceStillExitingInstances,
+    .description =
+        "Virtualized lists can reuse native tags before old exits finish. "
+        "Each ShadowNodeFamily must replace old ownership cleanly so stale cleanup cannot delete the new cell.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -2162,7 +2336,12 @@ TEST(LayoutAnimationStressTest, RecycledTagsReplaceStillExitingInstances) {
   }
 }
 
-TEST(LayoutAnimationCrashRegressionTest, InterruptedExitsAreCancelledBeforeBlockedUIWorkRuns) {
+HARNESS_TEST(
+    LayoutAnimationCrashRegressionTest,
+    InterruptedExitsAreCancelledBeforeBlockedUIWorkRuns,
+    .description =
+        "Android can queue an animation start while the UI lane is blocked and React removes the same view. "
+        "The cancelled start must not revive the removed view or access stale native state when the lane resumes.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -2219,7 +2398,13 @@ TEST(LayoutAnimationCrashRegressionTest, InterruptedExitsAreCancelledBeforeBlock
 }
 
 #if defined(HARNESS_PROXY_REGISTRY) && defined(HARNESS_PLATFORM_ANDROID)
-TEST(LayoutAnimationCrashRegressionTest, UICleanupCannotOvertakeAPausedJSMountSchedule) {
+HARNESS_TEST(
+    LayoutAnimationCrashRegressionTest,
+    UICleanupCannotOvertakeAPausedJSMountSchedule,
+    .description =
+        "Android can pull cleanup on the UI thread before a paused JavaScript mount reaches Java. "
+        "Structural cleanup must wait, or the host receives removal before the earlier insert and crashes, as fixed by GitHub #10372.",
+    .githubIssues = {10372}) {
   auto harness = AnimationHarness(DriverMode::AndroidPush);
   auto timeline = AnimationTimeline(harness);
   auto tags = std::vector<Tag>{};
@@ -2276,7 +2461,12 @@ TEST(LayoutAnimationCrashRegressionTest, UICleanupCannotOvertakeAPausedJSMountSc
 }
 #endif
 
-TEST(LayoutAnimationStressTest, BusyMainLanePreservesPlatformSpecificPullAccumulation) {
+HARNESS_TEST(
+    LayoutAnimationStressTest,
+    BusyMainLanePreservesPlatformSpecificPullAccumulation,
+    .description =
+        "Busy UI periods cause many JavaScript commits to accumulate differently on each platform. "
+        "The driver must preserve real pull and mount boundaries so stress results represent device behavior.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -2339,7 +2529,12 @@ TEST(LayoutAnimationStressTest, BusyMainLanePreservesPlatformSpecificPullAccumul
   }
 }
 
-TEST(LayoutAnimationStressTest, SixtyViewBurstsInterruptEnteringWithExiting) {
+HARNESS_TEST(
+    LayoutAnimationStressTest,
+    SixtyViewBurstsInterruptEnteringWithExiting,
+    .description =
+        "Large mount-and-remove bursts can interrupt entering animations before their first frame. "
+        "The proxy must cancel every start and remove every view without leaking host nodes or active animations.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -2398,7 +2593,12 @@ TEST(LayoutAnimationStressTest, SixtyViewBurstsInterruptEnteringWithExiting) {
   }
 }
 
-TEST(LayoutAnimationStressTest, ManySharedTagsToggleBetweenBoundaries) {
+HARNESS_TEST(
+    LayoutAnimationStressTest,
+    ManySharedTagsToggleBetweenBoundaries,
+    .description =
+        "Screens can switch many shared elements at once. "
+        "Pairing, opacity, and container cleanup must remain correct for every tag across repeated boundary changes.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -2436,7 +2636,12 @@ TEST(LayoutAnimationStressTest, ManySharedTagsToggleBetweenBoundaries) {
   }
 }
 
-TEST(LayoutAnimationStressTest, SharedTransitionRetargetsBeforeItSettles) {
+HARNESS_TEST(
+    LayoutAnimationStressTest,
+    SharedTransitionRetargetsBeforeItSettles,
+    .description =
+        "Navigation can reverse while a shared transition remains active. "
+        "Retargeting must replace container state without exposing original views or leaving synthetic containers behind.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
@@ -2500,7 +2705,12 @@ TEST(LayoutAnimationStressTest, SharedTransitionRetargetsBeforeItSettles) {
   }
 }
 
-TEST(LayoutAnimationStressTest, NestedChurnChangesFlatteningWhileChildrenEnterAndExit) {
+HARNESS_TEST(
+    LayoutAnimationStressTest,
+    NestedChurnChangesFlatteningWhileChildrenEnterAndExit,
+    .description =
+        "Flattening and nested enter, exit, and layout changes can overlap under rapid renders. "
+        "Mutation ordering must keep the host hierarchy valid while every requested animation starts.") {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
