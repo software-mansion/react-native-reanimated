@@ -3,6 +3,8 @@
 `runOnUIAsync` lets you asynchronously run [workletized](/docs/fundamentals/glossary#to-workletize) functions on the [UI thread](/docs/fundamentals/glossary#ui-thread).
 It returns a Promise of the worklet's return value. The Promise is resolved asynchronously, not immediately after the callback execution.
 
+To compare it with [`scheduleOnUI`](/docs/threading/scheduleOnUI) and [`runOnUISync`](/docs/threading/runOnUISync), see [Running worklets on the UI runtime](/docs/guides/running-on-the-ui-runtime).
+
 ## Reference
 
 ```javascript

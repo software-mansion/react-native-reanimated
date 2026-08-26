@@ -2,6 +2,8 @@
 
 `scheduleOnUI` lets you schedule a function to be executed on the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime). The callback executes asynchronously and doesn't return a value.
 
+To compare it with [`runOnUIAsync`](/docs/threading/runOnUIAsync) and [`runOnUISync`](/docs/threading/runOnUISync), see [Running worklets on the UI runtime](/docs/guides/running-on-the-ui-runtime).
+
 ## Reference
 
 ```javascript

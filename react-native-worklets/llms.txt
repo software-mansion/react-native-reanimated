@@ -20,6 +20,7 @@
 - [call-tables](https://docs.swmansion.com/react-native-worklets/docs/guides/call-tables)
 - [compatibility](https://docs.swmansion.com/react-native-worklets/docs/guides/compatibility)
 - [Feature flags](https://docs.swmansion.com/react-native-worklets/docs/guides/feature-flags)
+- [running-on-the-ui-runtime](https://docs.swmansion.com/react-native-worklets/docs/guides/running-on-the-ui-runtime)
 - [testing-with-jest](https://docs.swmansion.com/react-native-worklets/docs/guides/testing-with-jest)
 - [Troubleshooting](https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting)
 

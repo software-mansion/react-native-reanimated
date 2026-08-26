@@ -2,6 +2,8 @@
 
 `runOnUISync` lets you run a [workletized](/docs/fundamentals/glossary#to-workletize) function synchronously on the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime).
 
+To compare it with [`scheduleOnUI`](/docs/threading/scheduleOnUI) and [`runOnUIAsync`](/docs/threading/runOnUIAsync), see [Running worklets on the UI runtime](/docs/guides/running-on-the-ui-runtime).
+
 ## Reference
 
 ```javascript
