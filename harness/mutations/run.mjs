@@ -19,7 +19,7 @@ const preRegistryMutations = [
     source: 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h',
     search: 'const bool isCancelled = it->second.handle != handle;',
     replacement: 'const bool isCancelled = false;',
-    test: 'LayoutAnimationStressTest.InterruptedExitsAreCancelledBeforeBlockedUIWorkRuns',
+    test: 'LayoutAnimationCrashRegressionTest.InterruptedExitsAreCancelledBeforeBlockedUIWorkRuns',
   },
   {
     id: 'recreated-tag-reconciliation',
@@ -27,7 +27,7 @@ const preRegistryMutations = [
     source: 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.cpp',
     search: '  reconcileContradictedRemovals(mutations, filteredMutations);',
     replacement: '',
-    test: 'LayoutAnimationScenariosTest.RecreatingAnExitingTagCancelsTheStaleRemoval',
+    test: 'LayoutAnimationCrashRegressionTest.RecreatingAnExitingTagCancelsTheStaleRemoval',
   },
   {
     id: 'retarget-from-mounted-frame',
@@ -149,7 +149,7 @@ const preRegistryMutations = [
     replacement: `    node->state = ANIMATING;
     startExitingAnimation(node);
     lightNodes_[node->current.tag] = node;`,
-    test: 'LayoutAnimationScenariosTest.ImmediateExitCompletionCanReenterTheStartCallback',
+    test: 'LayoutAnimationCrashRegressionTest.ImmediateExitCompletionCanReenterTheStartCallback',
   },
   {
     id: 'modal-screen-exit-suppression',
@@ -174,7 +174,7 @@ const preRegistryMutations = [
     source: 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.cpp',
     search: '      lightNodes_[subNode->current.tag] = subNode;',
     replacement: '',
-    test: 'LayoutAnimationScenariosTest.RecreatingAWaitingSubviewFlushesItsWithheldRemoval',
+    test: 'LayoutAnimationCrashRegressionTest.RecreatingAWaitingSubviewFlushesItsWithheldRemoval',
   },
   {
     id: 'nested-exit-ancestor-retention',
@@ -196,7 +196,7 @@ const preRegistryMutations = [
     replacement: `    } else {
       continue;
       // A settled exiting view (state DEAD) has already left lightNodes_ but is`,
-    test: 'LayoutAnimationScenariosTest.RecreatingASettledExitBeforeCleanupReplacesTheDeadNode',
+    test: 'LayoutAnimationCrashRegressionTest.RecreatingASettledExitBeforeCleanupReplacesTheDeadNode',
   },
   {
     id: 'reanimated-tag-cleanup',
@@ -208,7 +208,7 @@ const preRegistryMutations = [
     replacement: `    if (layoutAnimationIt == layoutAnimations_.end()) {
       continue;
     }`,
-    test: 'LayoutAnimationScenariosTest.RecreatingASettledExitBeforeCleanupReplacesTheDeadNode',
+    test: 'LayoutAnimationCrashRegressionTest.RecreatingASettledExitBeforeCleanupReplacesTheDeadNode',
   },
   {
     id: 'shared-source-hide',
@@ -255,7 +255,7 @@ const hostPositionMutations = [
     replacement: `        if (state == UNDEFINED || state == ANIMATING) {
           lightNodes_.erase(it);
         }`,
-    test: 'LayoutAnimationScenariosTest.ImmediateExitCompletionCanReenterTheStartCallback',
+    test: 'LayoutAnimationCrashRegressionTest.ImmediateExitCompletionCanReenterTheStartCallback',
   },
   {
     id: 'exiting-host-position',
@@ -288,7 +288,7 @@ const registryMutations = [
     replacement: `#ifdef ANDROID
   return true;
 #else`,
-    test: 'LayoutAnimationStressTest.UICleanupCannotOvertakeAPausedJSMountSchedule',
+    test: 'LayoutAnimationCrashRegressionTest.UICleanupCannotOvertakeAPausedJSMountSchedule',
   },
   {
     id: 'captured-config-retarget',
@@ -340,7 +340,7 @@ const registryMutations = [
     source: 'Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.cpp',
     search: '      lightNodes_[subNode->current.tag] = subNode;',
     replacement: '',
-    test: 'LayoutAnimationScenariosTest.RecreatingAWaitingSubviewFlushesItsWithheldRemoval',
+    test: 'LayoutAnimationCrashRegressionTest.RecreatingAWaitingSubviewFlushesItsWithheldRemoval',
   },
 ];
 
@@ -394,7 +394,8 @@ try {
     const result = runMutation(buildDirectory, reanimatedDirectory, mutation);
     results.push(result);
     const outcome = result.killed ? 'KILLED' : 'SURVIVED';
-    process.stdout.write(`${outcome.padEnd(8)} ${result.id} -> ${result.test}\n`);
+    const failure = result.failure ? ` [${result.failure}]` : '';
+    process.stdout.write(`${outcome.padEnd(8)} ${result.id} -> ${result.test}${failure}\n`);
   }
 
   const survived = results.filter((result) => !result.killed);
@@ -422,6 +423,9 @@ function runMutation(buildDirectory, reanimatedDirectory, mutation) {
       id: mutation.id,
       test: mutation.test,
       killed: result.status !== 0 || result.signal !== null || result.error?.code === 'ETIMEDOUT',
+      failure: result.error?.code === 'ETIMEDOUT' ? 'timeout' :
+          result.signal ? `crash ${result.signal}` :
+          result.status !== 0 ? 'test failure' : null,
     };
   } finally {
     writeFileSync(source, original);
@@ -449,9 +453,13 @@ function configure(buildDirectory, reanimatedDirectory, cache) {
     `-DWORKLETS_DIR=${required(cache, 'WORKLETS_DIR')}`,
     `-DHERMES_ROOT=${required(cache, 'HERMES_ROOT')}`,
   ];
-  for (const key of ['FETCHCONTENT_SOURCE_DIR_FOLLY', 'FETCHCONTENT_SOURCE_DIR_GOOGLETEST']) {
-    if (cache[key]) {
-      arguments_.push(`-D${key}=${cache[key]}`);
+  for (const [key, directory] of [
+    ['FETCHCONTENT_SOURCE_DIR_FOLLY', 'folly-src'],
+    ['FETCHCONTENT_SOURCE_DIR_GOOGLETEST', 'googletest-src'],
+  ]) {
+    const source = cache[key] || join(configuredBuild, '_deps', directory);
+    if (existsSync(source)) {
+      arguments_.push(`-D${key}=${source}`);
     }
   }
   run('cmake', arguments_);

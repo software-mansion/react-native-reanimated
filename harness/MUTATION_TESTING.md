@@ -10,6 +10,8 @@ node harness/mutations/run.mjs --build build/layout-animation-harness
 
 The runner detects the proxy generation from the configured `REANIMATED_DIR` and selects the matching matrix.
 
+Tests in `LayoutAnimationCrashRegressionTest` cover bugs whose historical broken build crashed or raised a fatal mounting exception. A correct build must pass them; the suite name describes the regression, not an expected result. The dashboard and mutation runner execute one test per child process, so a signal terminates only that test. Mutation output distinguishes a normal test failure, a crash signal, and a timeout.
+
 The pre-registry experimental-proxy matrix targets the highest-risk native orchestration paths:
 
 | Mutation | Expected detector |
@@ -58,6 +60,7 @@ The 10372 detector pauses at the unguarded boundary between swapping the C++ pen
 Results on 26 August 2026:
 
 - host-index-retaining pre-registry proxy on `main` (`404c5649`): 25/25 killed;
+- four historical crash mutants reproduced native `SIGABRT` failures: contradicted removal reconciliation, waiting-node recreation, dead-node recreation, and synchronous exit completion;
 - proxy-registry stack through PR 10373: 6/6 killed;
 - current `main` has a 45/45 iOS and 42/42 Android green baseline, plus three deliberate red tests on each binary that expose the shared-transition source-opacity bug;
 - unmodified proxy-registry stack: 43/43 iOS and 41/41 Android tests passed.

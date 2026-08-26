@@ -44,9 +44,8 @@ struct AnimationConfig {
   std::string sharedTransitionTag;
 };
 
-AnimationConfig
-animation(facebook::react::Tag tag, LayoutAnimationType type, std::string name, std::string sharedTransitionTag = {});
-AnimationConfig removeAnimation(facebook::react::Tag tag, LayoutAnimationType type);
+AnimationConfig animation(AnimationConfig config);
+AnimationConfig removeAnimation(AnimationConfig config);
 
 struct AnimationStart {
   facebook::react::Tag tag;
@@ -73,10 +72,11 @@ class AnimationHarness {
 
   Choreographer &timeline();
   PlatformDriver &platform();
+  DriverMode mode() const;
 
-  void configure(const std::vector<AnimationConfig> &configs);
+  void configureAnimations(const std::vector<AnimationConfig> &configs);
   void setShouldAnimateExiting(facebook::react::Tag tag, bool shouldAnimate);
-  void render(const Snapshot &snapshot, const std::vector<AnimationConfig> &configs = {});
+  void render(const Snapshot &snapshot);
   void progress(facebook::react::Tag tag, const ProgressStyle &style);
   void end(facebook::react::Tag tag, bool shouldRemove);
   void transitionProgress(facebook::react::Tag boundaryTag, double progress, bool isClosing, bool isGoingForward);
@@ -111,6 +111,69 @@ class AnimationHarness {
   std::vector<facebook::react::Tag> stops_;
   std::unordered_set<facebook::react::Tag> activeAnimations_;
   bool completeAnimationsOnStart_{false};
+};
+
+struct ConfigureAnimations {
+  Choreographer::Time at;
+  std::vector<AnimationConfig> animations;
+};
+
+struct RenderTree {
+  Choreographer::Time at;
+  Snapshot tree;
+};
+
+struct ProgressAnimation {
+  Choreographer::Time at;
+  facebook::react::Tag tag;
+  ProgressStyle style;
+};
+
+struct EndAnimation {
+  Choreographer::Time at;
+  facebook::react::Tag tag;
+  bool removeView;
+};
+
+struct TransitionProgress {
+  Choreographer::Time at;
+  facebook::react::Tag targetTag;
+  double progress;
+  bool closing;
+  bool goingForward;
+};
+
+struct CancelTransition {
+  Choreographer::Time at;
+  facebook::react::Tag sourceTag;
+};
+
+struct ExitingPolicy {
+  Choreographer::Time at;
+  facebook::react::Tag tag;
+  bool animate;
+};
+
+struct UIEvent {
+  Choreographer::Time at;
+  Choreographer::Task task;
+};
+
+class AnimationTimeline {
+ public:
+  explicit AnimationTimeline(AnimationHarness &harness);
+
+  void configureAnimations(ConfigureAnimations event);
+  void render(RenderTree event);
+  void progress(ProgressAnimation event);
+  void end(EndAnimation event);
+  void transitionProgress(TransitionProgress event);
+  void cancelTransition(CancelTransition event);
+  void setShouldAnimateExiting(ExitingPolicy event);
+  void onUI(UIEvent event);
+
+ private:
+  AnimationHarness &harness_;
 };
 
 } // namespace reanimated::layout_animation::test

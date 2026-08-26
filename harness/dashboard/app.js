@@ -1,4 +1,4 @@
-import { findNodeState, mutationLabel, nodeRows } from './model.js';
+import { findNodeState, mutationLabel, nodeRows, resultStatus, testPurpose } from './model.js';
 
 const state = {
   tests: [],
@@ -199,7 +199,8 @@ function renderDetail() {
   elements['test-suite'].textContent = `${test.platform} · ${test.suite}`;
   elements['test-name'].textContent = test.name;
   elements['test-meta'].replaceChildren(
-      chip(result ? (result.passed ? 'Passed' : 'Failed') : 'Not run', result ? (result.passed ? 'passed' : 'failed') : ''),
+      chip(resultStatus(result), result ? (result.passed ? 'passed' : 'failed') : ''),
+      chip(testPurpose(test.suite)),
       chip(result ? `${result.duration} ms` : 'No result'));
   elements.output.textContent = result?.output || state.buildOutput ||
       'Run the test to capture native output and mounted frames.';

@@ -98,12 +98,14 @@ void recordNumericProperties(
 
 } // namespace
 
-AnimationConfig animation(Tag tag, LayoutAnimationType type, std::string name, std::string sharedTransitionTag) {
-  return {tag, type, std::move(name), std::move(sharedTransitionTag)};
+AnimationConfig animation(AnimationConfig config) {
+  return config;
 }
 
-AnimationConfig removeAnimation(Tag tag, LayoutAnimationType type) {
-  return {tag, type, std::nullopt, {}};
+AnimationConfig removeAnimation(AnimationConfig config) {
+  config.name.reset();
+  config.sharedTransitionTag.clear();
+  return config;
 }
 
 AnimationHarness::AnimationHarness(DriverMode mode)
@@ -200,7 +202,11 @@ PlatformDriver &AnimationHarness::platform() {
   return platform_;
 }
 
-void AnimationHarness::configure(const std::vector<AnimationConfig> &configs) {
+DriverMode AnimationHarness::mode() const {
+  return mode_;
+}
+
+void AnimationHarness::configureAnimations(const std::vector<AnimationConfig> &configs) {
   timeline_.requireLane(Lane::JS);
   auto batch = std::vector<LayoutAnimationConfig>{};
   batch.reserve(configs.size());
@@ -220,9 +226,8 @@ void AnimationHarness::setShouldAnimateExiting(Tag tag, bool shouldAnimate) {
   manager_->setShouldAnimateExiting(tag, shouldAnimate);
 }
 
-void AnimationHarness::render(const Snapshot &snapshot, const std::vector<AnimationConfig> &configs) {
+void AnimationHarness::render(const Snapshot &snapshot) {
   timeline_.requireLane(Lane::JS);
-  configure(configs);
   platform_.render(snapshot);
 }
 
@@ -301,6 +306,82 @@ void AnimationHarness::completeAnimationsOnStart() {
 void AnimationHarness::clearCalls() {
   starts_.clear();
   stops_.clear();
+}
+
+AnimationTimeline::AnimationTimeline(AnimationHarness &harness) : harness_(harness) {}
+
+void AnimationTimeline::configureAnimations(ConfigureAnimations event) {
+  auto &timeline = harness_.timeline();
+  timeline.at(event.at, Lane::JS, [this, animations = std::move(event.animations)] {
+    harness_.configureAnimations(animations);
+  });
+  timeline.advanceTo(event.at);
+}
+
+void AnimationTimeline::render(RenderTree event) {
+  auto &timeline = harness_.timeline();
+  timeline.at(event.at, Lane::JS, [this, tree = std::move(event.tree)] { harness_.render(tree); });
+  if (harness_.mode() == DriverMode::IOS) {
+    timeline.advanceTo(event.at);
+    return;
+  }
+  const auto frameTime = event.at + std::chrono::milliseconds{1};
+  timeline.at(frameTime, Lane::UI, [this] { harness_.frame(); });
+  timeline.advanceTo(frameTime);
+}
+
+void AnimationTimeline::progress(ProgressAnimation event) {
+  onUI({
+      .at = event.at,
+      .task = [this, tag = event.tag, style = std::move(event.style)] { harness_.progress(tag, style); },
+  });
+}
+
+void AnimationTimeline::end(EndAnimation event) {
+  onUI({
+      .at = event.at,
+      .task = [this, tag = event.tag, removeView = event.removeView] { harness_.end(tag, removeView); },
+  });
+}
+
+void AnimationTimeline::transitionProgress(TransitionProgress event) {
+  onUI({
+      .at = event.at,
+      .task = [this,
+               targetTag = event.targetTag,
+               progress = event.progress,
+               closing = event.closing,
+               goingForward =
+                   event.goingForward] { harness_.transitionProgress(targetTag, progress, closing, goingForward); },
+  });
+}
+
+void AnimationTimeline::cancelTransition(CancelTransition event) {
+  onUI({
+      .at = event.at,
+      .task = [this, sourceTag = event.sourceTag] { harness_.cancelTransition(sourceTag); },
+  });
+}
+
+void AnimationTimeline::setShouldAnimateExiting(ExitingPolicy event) {
+  auto &timeline = harness_.timeline();
+  timeline.at(event.at, Lane::JS, [this, tag = event.tag, animate = event.animate] {
+    harness_.setShouldAnimateExiting(tag, animate);
+  });
+  timeline.advanceTo(event.at);
+}
+
+void AnimationTimeline::onUI(UIEvent event) {
+  auto &timeline = harness_.timeline();
+  timeline.at(event.at, Lane::UI, [this, task = std::move(event.task)] {
+    if (task) {
+      task();
+    }
+    harness_.frame();
+  });
+  const auto followUpTime = event.at + std::chrono::milliseconds{1};
+  timeline.at(followUpTime, Lane::UI, [this] { harness_.frame(); });
+  timeline.advanceTo(followUpTime);
 }
 
 void AnimationHarness::installAnimationRepository() {

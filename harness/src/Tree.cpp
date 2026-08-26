@@ -46,65 +46,32 @@ MutationCallback mutationCallback(std::function<void()> task) {
   return std::make_shared<const std::function<void()>>(std::move(task));
 }
 
-ViewSpec view(Tag tag, Frame frame, std::vector<ViewSpec> children, MutationEffects effects) {
-  return {
-      .tag = tag,
-      .frame = frame,
-      .children = std::move(children),
-      .effects = std::move(effects),
-  };
+ViewSpec view(ViewSpec spec) {
+  return spec;
 }
 
-ViewSpec view(Tag tag, Frame frame, bool collapsable, std::vector<ViewSpec> children, MutationEffects effects) {
-  return {
-      .tag = tag,
-      .frame = frame,
-      .children = std::move(children),
-      .effects = std::move(effects),
-      .collapsable = collapsable,
-      .hasNativeId = false,
-  };
+ViewSpec sharedTransitionBoundary(ViewSpec spec) {
+  spec.hasNativeId = false;
+  spec.kind = NodeKind::SharedTransitionBoundary;
+  return spec;
 }
 
-ViewSpec
-viewInstance(Tag tag, uint32_t generation, Frame frame, std::vector<ViewSpec> children, MutationEffects effects) {
-  return {
-      .tag = tag,
-      .frame = frame,
-      .children = std::move(children),
-      .effects = std::move(effects),
-      .generation = generation,
-  };
+ViewSpec screen(ViewSpec spec) {
+  spec.frame = {.x = 0, .y = 0, .width = 1024, .height = 1024};
+  spec.hasNativeId = false;
+  spec.kind = NodeKind::Screen;
+  return spec;
 }
 
-ViewSpec sharedTransitionBoundary(Tag tag, bool active, std::vector<ViewSpec> children) {
-  return {
-      .tag = tag,
-      .children = std::move(children),
-      .hasNativeId = false,
-      .kind = NodeKind::SharedTransitionBoundary,
-      .boundaryActive = active,
-  };
+ViewSpec modalScreen(ViewSpec spec) {
+  spec.frame = {.x = 0, .y = 0, .width = 1024, .height = 1024};
+  spec.hasNativeId = false;
+  spec.kind = NodeKind::ModalScreen;
+  return spec;
 }
 
-ViewSpec screen(Tag tag, std::vector<ViewSpec> children) {
-  return {
-      .tag = tag,
-      .frame = {0, 0, 1024, 1024},
-      .children = std::move(children),
-      .hasNativeId = false,
-      .kind = NodeKind::Screen,
-  };
-}
-
-ViewSpec modalScreen(Tag tag, std::vector<ViewSpec> children) {
-  return {
-      .tag = tag,
-      .frame = {0, 0, 1024, 1024},
-      .children = std::move(children),
-      .hasNativeId = false,
-      .kind = NodeKind::ModalScreen,
-  };
+Snapshot snapshot(std::vector<ViewSpec> children) {
+  return {.children = std::move(children)};
 }
 
 TreeBuilder::TreeBuilder(SurfaceId surfaceId, std::shared_ptr<const ContextContainer> contextContainer)

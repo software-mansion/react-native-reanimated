@@ -67,26 +67,16 @@ struct ViewSpec {
   uint32_t generation{0};
 };
 
-ViewSpec view(facebook::react::Tag tag, Frame frame, std::vector<ViewSpec> children = {}, MutationEffects effects = {});
-ViewSpec view(
-    facebook::react::Tag tag,
-    Frame frame,
-    bool collapsable,
-    std::vector<ViewSpec> children = {},
-    MutationEffects effects = {});
-ViewSpec viewInstance(
-    facebook::react::Tag tag,
-    uint32_t generation,
-    Frame frame,
-    std::vector<ViewSpec> children = {},
-    MutationEffects effects = {});
-ViewSpec sharedTransitionBoundary(facebook::react::Tag tag, bool active, std::vector<ViewSpec> children);
-ViewSpec screen(facebook::react::Tag tag, std::vector<ViewSpec> children);
-ViewSpec modalScreen(facebook::react::Tag tag, std::vector<ViewSpec> children);
+ViewSpec view(ViewSpec spec);
+ViewSpec sharedTransitionBoundary(ViewSpec spec);
+ViewSpec screen(ViewSpec spec);
+ViewSpec modalScreen(ViewSpec spec);
 
 struct Snapshot {
   std::vector<ViewSpec> children;
 };
+
+Snapshot snapshot(std::vector<ViewSpec> children);
 
 class TreeBuilder {
  public:

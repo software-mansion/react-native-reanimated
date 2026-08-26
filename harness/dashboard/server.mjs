@@ -139,7 +139,11 @@ function runTest(test) {
     let output = '';
     child.stdout.on('data', (chunk) => { output += chunk; });
     child.stderr.on('data', (chunk) => { output += chunk; });
-    const timeout = setTimeout(() => child.kill('SIGKILL'), 120_000);
+    let timedOut = false;
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      child.kill('SIGKILL');
+    }, 120_000);
     child.on('close', (code, signal) => {
       clearTimeout(timeout);
       resolveRun({
@@ -148,6 +152,7 @@ function runTest(test) {
         duration: Math.round(performance.now() - started),
         output,
         signal,
+        timedOut,
         runs: readTrace(trace),
       });
     });

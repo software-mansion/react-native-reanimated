@@ -17,6 +17,8 @@ Open `http://127.0.0.1:4173`. The server binds only to localhost. It can rebuild
 
 The server exits with the missing build command when either test binary is absent instead of showing an empty suite.
 
+Each test runs in its own native process. The dashboard distinguishes assertion failures, crash signals, and timeouts. `LayoutAnimationCrashRegressionTest` means the historical broken implementation crashed; a correct build still passes the test.
+
 The dashboard interaction check can run independently of the native build:
 
 ```sh

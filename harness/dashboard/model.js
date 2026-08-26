@@ -46,6 +46,23 @@ export function mutationLabel(mutation) {
   };
 }
 
+export function resultStatus(result) {
+  if (!result) {
+    return 'Not run';
+  }
+  if (result.timedOut) {
+    return 'Timed out';
+  }
+  if (result.passed) {
+    return 'Passed';
+  }
+  return result.signal ? `Crashed · ${result.signal}` : 'Failed';
+}
+
+export function testPurpose(suite) {
+  return suite === 'LayoutAnimationCrashRegressionTest' ? 'Historical crash regression' : 'Behavior';
+}
+
 function format(value) {
   return Number(value).toFixed(2).replace(/\.00$/, '');
 }

@@ -31,37 +31,6 @@ std::vector<DriverMode> platformModes() {
 #endif
 }
 
-void renderAt(
-    AnimationHarness &harness,
-    DriverMode mode,
-    Time time,
-    Snapshot snapshot,
-    std::vector<AnimationConfig> configs = {}) {
-  auto &timeline = harness.timeline();
-  timeline.at(time, Lane::JS, [&harness, snapshot = std::move(snapshot), configs = std::move(configs)] {
-    harness.render(snapshot, configs);
-  });
-
-  if (mode == DriverMode::IOS) {
-    timeline.advanceTo(time);
-    return;
-  }
-
-  timeline.at(time + 1ms, Lane::UI, [&] { harness.frame(); });
-  timeline.advanceTo(time + 1ms);
-}
-
-template <typename Task>
-void runUI(AnimationHarness &harness, Time time, Task task) {
-  auto &timeline = harness.timeline();
-  timeline.at(time, Lane::UI, [&] {
-    task();
-    harness.frame();
-  });
-  timeline.at(time + 1ms, Lane::UI, [&] { harness.frame(); });
-  timeline.advanceTo(time + 1ms);
-}
-
 const AnimationStart &onlyStart(const AnimationHarness &harness) {
   if (harness.starts().size() != 1) {
     throw std::runtime_error("Expected exactly one animation start");
@@ -110,7 +79,11 @@ ProgressStyle finalStyle(const AnimationStart &start) {
   };
 }
 
-void settleStarts(AnimationHarness &harness, Time time) {
+struct SettleAnimations {
+  Time at;
+};
+
+void settleStarts(AnimationHarness &harness, AnimationTimeline &timeline, SettleAnimations event) {
   auto starts = std::vector<AnimationStart>{};
   auto seen = std::set<Tag>{};
   for (auto start = harness.starts().rbegin(); start != harness.starts().rend(); ++start) {
@@ -118,25 +91,33 @@ void settleStarts(AnimationHarness &harness, Time time) {
       starts.push_back(*start);
     }
   }
-  runUI(harness, time, [&] {
-    for (const auto &start : starts) {
-      harness.progress(start.tag, finalStyle(start));
-    }
+  timeline.onUI({
+      .at = event.at,
+      .task =
+          [&] {
+            for (const auto &start : starts) {
+              harness.progress(start.tag, finalStyle(start));
+            }
+          },
   });
-  runUI(harness, time + 1ms, [&] {
-    for (const auto &start : starts) {
-      harness.end(start.tag, start.type == LayoutAnimationType::EXITING);
-    }
+  timeline.onUI({
+      .at = event.at + 1ms,
+      .task =
+          [&] {
+            for (const auto &start : starts) {
+              harness.end(start.tag, start.type == LayoutAnimationType::EXITING);
+            }
+          },
   });
   harness.clearCalls();
 }
 
 Frame flatListFrame(size_t index, int round) {
   return {
-      static_cast<float>((index % 4) * 40),
-      static_cast<float>((index / 4) * 40),
-      static_cast<float>(30 + round % 3),
-      30,
+      .x = static_cast<float>((index % 4) * 40),
+      .y = static_cast<float>((index / 4) * 40),
+      .width = static_cast<float>(30 + round % 3),
+      .height = 30,
   };
 }
 
@@ -144,7 +125,10 @@ Snapshot flatList(const std::vector<Tag> &tags, int round = 0) {
   auto children = std::vector<ViewSpec>{};
   children.reserve(tags.size());
   for (size_t index = 0; index < tags.size(); ++index) {
-    children.push_back(view(tags[index], flatListFrame(index, round)));
+    children.push_back(view({
+        .tag = tags[index],
+        .frame = flatListFrame(index, round),
+    }));
   }
   return {std::move(children)};
 }
@@ -153,7 +137,11 @@ std::vector<AnimationConfig> layoutConfigs(const std::vector<Tag> &tags, const s
   auto configs = std::vector<AnimationConfig>{};
   configs.reserve(tags.size());
   for (auto tag : tags) {
-    configs.push_back(animation(tag, LayoutAnimationType::LAYOUT, name));
+    configs.push_back(animation({
+        .tag = tag,
+        .type = LayoutAnimationType::LAYOUT,
+        .name = name,
+    }));
   }
   return configs;
 }
@@ -164,79 +152,120 @@ Snapshot sharedScreens(bool firstActive, int count, int round = 0) {
   first.reserve(count);
   second.reserve(count);
   for (int index = 0; index < count; ++index) {
-    first.push_back(
-        view(100 + index, {static_cast<float>((index % 6) * 30), static_cast<float>((index / 6) * 30), 24, 24}));
-    second.push_back(view(
-        200 + index,
-        {static_cast<float>(300 - (index % 6) * 35 + round % 7),
-         static_cast<float>(200 - (index / 6) * 35),
-         static_cast<float>(28 + round % 5),
-         28}));
+    first.push_back(view({
+        .tag = 100 + index,
+        .frame =
+            {
+                .x = static_cast<float>((index % 6) * 30),
+                .y = static_cast<float>((index / 6) * 30),
+                .width = 24,
+                .height = 24,
+            },
+    }));
+    second.push_back(view({
+        .tag = 200 + index,
+        .frame =
+            {
+                .x = static_cast<float>(300 - (index % 6) * 35 + round % 7),
+                .y = static_cast<float>(200 - (index / 6) * 35),
+                .width = static_cast<float>(28 + round % 5),
+                .height = 28,
+            },
+    }));
   }
   return {{
-      screen(2, {sharedTransitionBoundary(3, firstActive, std::move(first))}),
-      screen(4, {sharedTransitionBoundary(5, !firstActive, std::move(second))}),
+      screen({
+          .tag = 2,
+          .children = {sharedTransitionBoundary({
+              .tag = 3,
+              .children = std::move(first),
+              .boundaryActive = firstActive,
+          })},
+      }),
+      screen({
+          .tag = 4,
+          .children = {sharedTransitionBoundary({
+              .tag = 5,
+              .children = std::move(second),
+              .boundaryActive = !firstActive,
+          })},
+      }),
   }};
 }
 
 Snapshot sharedGeometryScreens(bool firstActive) {
-  auto source = view(100, {40, 60, 120, 80});
-  source.opacity = 0.4;
-  auto target = view(200, {680, 500, 240, 180});
-  target.opacity = 1;
+  auto source = view({
+      .tag = 100,
+      .frame = {.x = 40, .y = 60, .width = 120, .height = 80},
+      .opacity = 0.4,
+  });
+  auto target = view({
+      .tag = 200,
+      .frame = {.x = 680, .y = 500, .width = 240, .height = 180},
+      .opacity = 1,
+  });
   return {{
-      screen(2, {sharedTransitionBoundary(3, firstActive, {source})}),
-      screen(4, {sharedTransitionBoundary(5, !firstActive, {target})}),
+      screen({
+          .tag = 2,
+          .children = {sharedTransitionBoundary({
+              .tag = 3,
+              .children = {source},
+              .boundaryActive = firstActive,
+          })},
+      }),
+      screen({
+          .tag = 4,
+          .children = {sharedTransitionBoundary({
+              .tag = 5,
+              .children = {target},
+              .boundaryActive = !firstActive,
+          })},
+      }),
   }};
 }
 
 Snapshot nestedSharedGeometryScreens(bool firstActive) {
-  auto source = view(100, {15, 25, 120, 80});
-  source.opacity = 0.4;
-  auto target = view(200, {80, 100, 240, 180});
-  target.opacity = 1;
+  auto source = view({
+      .tag = 100,
+      .frame = {.x = 15, .y = 25, .width = 120, .height = 80},
+      .opacity = 0.4,
+  });
+  auto target = view({
+      .tag = 200,
+      .frame = {.x = 80, .y = 100, .width = 240, .height = 180},
+      .opacity = 1,
+  });
   return {{
-      screen(2, {sharedTransitionBoundary(3, firstActive, {view(30, {25, 35, 400, 400}, {source})})}),
-      screen(4, {sharedTransitionBoundary(5, !firstActive, {view(50, {600, 400, 400, 400}, {target})})}),
+      screen({
+          .tag = 2,
+          .children = {sharedTransitionBoundary({
+              .tag = 3,
+              .children = {view({
+                  .tag = 30,
+                  .frame = {.x = 25, .y = 35, .width = 400, .height = 400},
+                  .children = {source},
+              })},
+              .boundaryActive = firstActive,
+          })},
+      }),
+      screen({
+          .tag = 4,
+          .children = {sharedTransitionBoundary({
+              .tag = 5,
+              .children = {view({
+                  .tag = 50,
+                  .frame = {.x = 600, .y = 400, .width = 400, .height = 400},
+                  .children = {target},
+              })},
+              .boundaryActive = !firstActive,
+          })},
+      }),
   }};
-}
-
-void expectHostGeometry(AnimationHarness &harness, Tag tag, Frame expected) {
-  const auto &view = harness.platform().hostTree().getStubView(tag);
-  const auto &frame = view.layoutMetrics.frame;
-  EXPECT_FLOAT_EQ(frame.origin.x, expected.x);
-  EXPECT_FLOAT_EQ(frame.origin.y, expected.y);
-  EXPECT_FLOAT_EQ(frame.size.width, expected.width);
-  EXPECT_FLOAT_EQ(frame.size.height, expected.height);
 }
 
 Frame hostGeometry(AnimationHarness &harness, Tag tag) {
   const auto &frame = harness.platform().hostTree().getStubView(tag).layoutMetrics.frame;
   return {frame.origin.x, frame.origin.y, frame.size.width, frame.size.height};
-}
-
-void expectHostAbsoluteGeometry(AnimationHarness &harness, Tag tag, Frame expected) {
-  const auto &tree = harness.platform().hostTree();
-  const auto &view = tree.getStubView(tag);
-  auto frame = view.layoutMetrics.frame;
-  auto parentTag = view.parentTag;
-  while (parentTag != facebook::react::NO_VIEW_TAG) {
-    const auto &parent = tree.getStubView(parentTag);
-    frame.origin.x += parent.layoutMetrics.frame.origin.x;
-    frame.origin.y += parent.layoutMetrics.frame.origin.y;
-    parentTag = parent.parentTag;
-  }
-  EXPECT_FLOAT_EQ(frame.origin.x, expected.x);
-  EXPECT_FLOAT_EQ(frame.origin.y, expected.y);
-  EXPECT_FLOAT_EQ(frame.size.width, expected.width);
-  EXPECT_FLOAT_EQ(frame.size.height, expected.height);
-}
-
-void expectHostFrame(AnimationHarness &harness, Tag tag, Frame expected, float opacity) {
-  expectHostGeometry(harness, tag, expected);
-  const auto &view = harness.platform().hostTree().getStubView(tag);
-  const auto &props = static_cast<const facebook::react::ViewProps &>(*view.props);
-  EXPECT_FLOAT_EQ(props.opacity, opacity);
 }
 
 float hostOpacity(AnimationHarness &harness, Tag tag) {
@@ -245,8 +274,41 @@ float hostOpacity(AnimationHarness &harness, Tag tag) {
   return props.opacity;
 }
 
-void expectHostOpacity(AnimationHarness &harness, Tag tag, float opacity) {
-  EXPECT_FLOAT_EQ(hostOpacity(harness, tag), opacity);
+struct ExpectedHostView {
+  Tag tag;
+  std::optional<Frame> frame;
+  std::optional<Frame> absoluteFrame;
+  std::optional<float> opacity;
+};
+
+void expectHostView(AnimationHarness &harness, ExpectedHostView expected) {
+  const auto &tree = harness.platform().hostTree();
+  const auto &view = tree.getStubView(expected.tag);
+  if (expected.frame) {
+    const auto &frame = view.layoutMetrics.frame;
+    EXPECT_FLOAT_EQ(frame.origin.x, expected.frame->x);
+    EXPECT_FLOAT_EQ(frame.origin.y, expected.frame->y);
+    EXPECT_FLOAT_EQ(frame.size.width, expected.frame->width);
+    EXPECT_FLOAT_EQ(frame.size.height, expected.frame->height);
+  }
+  if (expected.absoluteFrame) {
+    auto frame = view.layoutMetrics.frame;
+    auto parentTag = view.parentTag;
+    while (parentTag != facebook::react::NO_VIEW_TAG) {
+      const auto &parent = tree.getStubView(parentTag);
+      frame.origin.x += parent.layoutMetrics.frame.origin.x;
+      frame.origin.y += parent.layoutMetrics.frame.origin.y;
+      parentTag = parent.parentTag;
+    }
+    EXPECT_FLOAT_EQ(frame.origin.x, expected.absoluteFrame->x);
+    EXPECT_FLOAT_EQ(frame.origin.y, expected.absoluteFrame->y);
+    EXPECT_FLOAT_EQ(frame.size.width, expected.absoluteFrame->width);
+    EXPECT_FLOAT_EQ(frame.size.height, expected.absoluteFrame->height);
+  }
+  if (expected.opacity) {
+    const auto &props = static_cast<const facebook::react::ViewProps &>(*view.props);
+    EXPECT_FLOAT_EQ(props.opacity, *expected.opacity);
+  }
 }
 
 std::vector<Tag> childTags(const facebook::react::StubView &parent) {
@@ -263,8 +325,18 @@ std::vector<AnimationConfig> sharedConfigs(int count) {
   configs.reserve(count * 2);
   for (int index = 0; index < count; ++index) {
     auto name = "shared-" + std::to_string(index);
-    configs.push_back(animation(100 + index, LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID, name, name));
-    configs.push_back(animation(200 + index, LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID, name, name));
+    configs.push_back(animation({
+        .tag = 100 + index,
+        .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID,
+        .name = name,
+        .sharedTransitionTag = name,
+    }));
+    configs.push_back(animation({
+        .tag = 200 + index,
+        .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID,
+        .name = name,
+        .sharedTransitionTag = name,
+    }));
   }
   return configs;
 }
@@ -285,10 +357,25 @@ TEST(LayoutAnimationScenariosTest, ExitingViewStaysMountedUntilItsAnimationEnds)
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
 
-    renderAt(harness, mode, 0ms, Snapshot{{view(2, {0, 0, 100, 100})}});
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 0, .y = 0, .width = 100, .height = 100},
+        })}),
+    });
     harness.clearCalls();
-    renderAt(harness, mode, 10ms, Snapshot{}, {animation(2, LayoutAnimationType::EXITING, "fade-out")});
+    timeline.configureAnimations({
+        .at = 10ms,
+        .animations = {animation({
+            .tag = 2,
+            .type = LayoutAnimationType::EXITING,
+            .name = "fade-out",
+        })},
+    });
+    timeline.render({.at = 10ms, .tree = {}});
 
     const auto &start = onlyStart(harness);
     EXPECT_EQ(start.tag, 2);
@@ -299,9 +386,9 @@ TEST(LayoutAnimationScenariosTest, ExitingViewStaysMountedUntilItsAnimationEnds)
     EXPECT_EQ(startValue(start, "currentWidth"), 100);
     EXPECT_EQ(startValue(start, "currentHeight"), 100);
     EXPECT_TRUE(harness.platform().hostTree().hasTag(2));
-    expectHostFrame(harness, 2, {0, 0, 100, 100}, 1);
+    expectHostView(harness, {.tag = 2, .frame = Frame{.x = 0, .y = 0, .width = 100, .height = 100}, .opacity = 1});
 
-    settleStarts(harness, 20ms);
+    settleStarts(harness, timeline, {.at = 20ms});
 
     EXPECT_FALSE(harness.platform().hostTree().hasTag(2));
     EXPECT_EQ(harness.platform().hostTree().size(), 1);
@@ -312,17 +399,33 @@ TEST(LayoutAnimationScenariosTest, ExitingViewKeepsItsHostIndexUntilCompletion) 
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
 
-    renderAt(
-        harness,
-        mode,
-        0ms,
-        Snapshot{{view(2, {0, 0, 80, 80}), view(3, {100, 0, 80, 80})}},
-        {animation(2, LayoutAnimationType::EXITING, "indexed-exit")});
+    timeline.configureAnimations({
+        .at = 0ms,
+        .animations = {animation({
+            .tag = 2,
+            .type = LayoutAnimationType::EXITING,
+            .name = "indexed-exit",
+        })},
+    });
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({
+            view({.tag = 2, .frame = {.x = 0, .y = 0, .width = 80, .height = 80}}),
+            view({.tag = 3, .frame = {.x = 100, .y = 0, .width = 80, .height = 80}}),
+        }),
+    });
     harness.clearCalls();
     const auto frameIndex = harness.platform().mountedFrames().size();
 
-    renderAt(harness, mode, 10ms, Snapshot{{view(3, {100, 0, 80, 80})}});
+    timeline.render({
+        .at = 10ms,
+        .tree = snapshot({view({
+            .tag = 3,
+            .frame = {.x = 100, .y = 0, .width = 80, .height = 80},
+        })}),
+    });
 
     ASSERT_NE(findStart(harness, 2, LayoutAnimationType::EXITING), nullptr);
     EXPECT_EQ(childTags(harness.platform().hostTree().getRootStubView()), (std::vector<Tag>{2, 3}));
@@ -333,21 +436,36 @@ TEST(LayoutAnimationScenariosTest, ExitingViewKeepsItsHostIndexUntilCompletion) 
       }
     }
 
-    runUI(harness, 20ms, [&] { harness.end(2, true); });
+    timeline.end({.at = 20ms, .tag = 2, .removeView = true});
     EXPECT_EQ(childTags(harness.platform().hostTree().getRootStubView()), (std::vector<Tag>{3}));
   }
 }
 
-TEST(LayoutAnimationScenariosTest, ImmediateExitCompletionCanReenterTheStartCallback) {
+TEST(LayoutAnimationCrashRegressionTest, ImmediateExitCompletionCanReenterTheStartCallback) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
     harness.completeAnimationsOnStart();
 
-    renderAt(harness, mode, 0ms, Snapshot{{view(2, {0, 0, 100, 100})}});
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 0, .y = 0, .width = 100, .height = 100},
+        })}),
+    });
     harness.clearCalls();
-    renderAt(harness, mode, 10ms, Snapshot{}, {animation(2, LayoutAnimationType::EXITING, "reduced-motion")});
-    runUI(harness, 20ms, [] {});
+    timeline.configureAnimations({
+        .at = 10ms,
+        .animations = {animation({
+            .tag = 2,
+            .type = LayoutAnimationType::EXITING,
+            .name = "reduced-motion",
+        })},
+    });
+    timeline.render({.at = 10ms, .tree = {}});
+    timeline.onUI({.at = 20ms, .task = {}});
 
     const auto &start = onlyStart(harness);
     EXPECT_EQ(start.tag, 2);
@@ -361,10 +479,28 @@ TEST(LayoutAnimationScenariosTest, RemovingAModalScreenSkipsDescendantExitAnimat
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
 
-    renderAt(harness, mode, 0ms, Snapshot{{modalScreen(2, {view(3, {20, 30, 100, 100})})}});
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({modalScreen({
+            .tag = 2,
+            .children = {view({
+                .tag = 3,
+                .frame = {.x = 20, .y = 30, .width = 100, .height = 100},
+            })},
+        })}),
+    });
     harness.clearCalls();
-    renderAt(harness, mode, 10ms, Snapshot{}, {animation(3, LayoutAnimationType::EXITING, "modal-child-exit")});
+    timeline.configureAnimations({
+        .at = 10ms,
+        .animations = {animation({
+            .tag = 3,
+            .type = LayoutAnimationType::EXITING,
+            .name = "modal-child-exit",
+        })},
+    });
+    timeline.render({.at = 10ms, .tree = {}});
 
     EXPECT_TRUE(harness.starts().empty());
     EXPECT_FALSE(harness.platform().hostTree().hasTag(2));
@@ -376,15 +512,29 @@ TEST(LayoutAnimationScenariosTest, RemovingAnExitConfigUnmountsWithoutStartingIt
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
 
-    renderAt(
-        harness,
-        mode,
-        0ms,
-        Snapshot{{view(2, {0, 0, 100, 100})}},
-        {animation(2, LayoutAnimationType::EXITING, "configured-exit")});
+    timeline.configureAnimations({
+        .at = 0ms,
+        .animations = {animation({
+            .tag = 2,
+            .type = LayoutAnimationType::EXITING,
+            .name = "configured-exit",
+        })},
+    });
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 0, .y = 0, .width = 100, .height = 100},
+        })}),
+    });
     harness.clearCalls();
-    renderAt(harness, mode, 10ms, Snapshot{}, {removeAnimation(2, LayoutAnimationType::EXITING)});
+    timeline.configureAnimations({
+        .at = 10ms,
+        .animations = {removeAnimation({.tag = 2, .type = LayoutAnimationType::EXITING})},
+    });
+    timeline.render({.at = 10ms, .tree = {}});
 
     EXPECT_TRUE(harness.starts().empty());
     EXPECT_FALSE(harness.platform().hostTree().hasTag(2));
@@ -395,46 +545,78 @@ TEST(LayoutAnimationScenariosTest, LayoutProgressAndRetargetUseTheCurrentMounted
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
 
-    renderAt(
-        harness,
-        mode,
-        0ms,
-        Snapshot{{view(2, {0, 0, 100, 100})}},
-        {animation(2, LayoutAnimationType::LAYOUT, "spring")});
+    timeline.configureAnimations({
+        .at = 0ms,
+        .animations = {animation({
+            .tag = 2,
+            .type = LayoutAnimationType::LAYOUT,
+            .name = "spring",
+        })},
+    });
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 0, .y = 0, .width = 100, .height = 100},
+        })}),
+    });
     harness.clearCalls();
-    renderAt(
-        harness,
-        mode,
-        10ms,
-        Snapshot{{view(2, {100, 20, 120, 80})}},
-        {animation(2, LayoutAnimationType::LAYOUT, "spring")});
+    timeline.configureAnimations({
+        .at = 10ms,
+        .animations = {animation({
+            .tag = 2,
+            .type = LayoutAnimationType::LAYOUT,
+            .name = "spring",
+        })},
+    });
+    timeline.render({
+        .at = 10ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 100, .y = 20, .width = 120, .height = 80},
+        })}),
+    });
 
     auto first = onlyStart(harness);
     EXPECT_EQ(first.type, LayoutAnimationType::LAYOUT);
     EXPECT_EQ(startValue(first, "currentOriginX"), 0);
     EXPECT_EQ(startValue(first, "targetOriginX"), 100);
-    expectHostFrame(harness, 2, {0, 0, 100, 100}, 1);
+    expectHostView(harness, {.tag = 2, .frame = Frame{.x = 0, .y = 0, .width = 100, .height = 100}, .opacity = 1});
 
-    runUI(harness, 20ms, [&] { harness.progress(2, {.x = 40, .y = 8, .width = 108, .height = 92, .opacity = 1}); });
-    expectHostFrame(harness, 2, {40, 8, 108, 92}, 1);
+    timeline.progress({
+        .at = 20ms,
+        .tag = 2,
+        .style = {.x = 40, .y = 8, .width = 108, .height = 92, .opacity = 1},
+    });
+    expectHostView(harness, {.tag = 2, .frame = Frame{.x = 40, .y = 8, .width = 108, .height = 92}, .opacity = 1});
 
     harness.clearCalls();
-    renderAt(
-        harness,
-        mode,
-        30ms,
-        Snapshot{{view(2, {200, 40, 140, 60})}},
-        {animation(2, LayoutAnimationType::LAYOUT, "retarget")});
+    timeline.configureAnimations({
+        .at = 30ms,
+        .animations = {animation({
+            .tag = 2,
+            .type = LayoutAnimationType::LAYOUT,
+            .name = "retarget",
+        })},
+    });
+    timeline.render({
+        .at = 30ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 200, .y = 40, .width = 140, .height = 60},
+        })}),
+    });
 
     auto second = onlyStart(harness);
     EXPECT_EQ(second.type, LayoutAnimationType::LAYOUT);
     EXPECT_EQ(second.config, "retarget");
     EXPECT_EQ(startValue(second, "currentOriginX"), 40);
     EXPECT_EQ(startValue(second, "targetOriginX"), 200);
-    expectHostFrame(harness, 2, {40, 8, 108, 92}, 1);
+    expectHostView(harness, {.tag = 2, .frame = Frame{.x = 40, .y = 8, .width = 108, .height = 92}, .opacity = 1});
 
-    settleStarts(harness, 40ms);
+    settleStarts(harness, timeline, {.at = 40ms});
     const auto &frame = harness.platform().hostTree().getStubView(2).layoutMetrics.frame;
     EXPECT_EQ(frame.origin.x, 200);
     EXPECT_EQ(frame.origin.y, 40);
@@ -448,30 +630,55 @@ TEST(LayoutAnimationScenariosTest, ConfigRemovalRetargetsWithTheCapturedLayoutCo
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
 
-    renderAt(harness, mode, 0ms, Snapshot{{view(2, {0, 0, 100, 100})}});
-    renderAt(
-        harness,
-        mode,
-        10ms,
-        Snapshot{{view(2, {100, 0, 100, 100})}},
-        {animation(2, LayoutAnimationType::LAYOUT, "captured")});
-    runUI(harness, 20ms, [&] { harness.progress(2, {.x = 40, .y = 0, .width = 100, .height = 100}); });
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 0, .y = 0, .width = 100, .height = 100},
+        })}),
+    });
+    timeline.configureAnimations({
+        .at = 10ms,
+        .animations = {animation({
+            .tag = 2,
+            .type = LayoutAnimationType::LAYOUT,
+            .name = "captured",
+        })},
+    });
+    timeline.render({
+        .at = 10ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 100, .y = 0, .width = 100, .height = 100},
+        })}),
+    });
+    timeline.progress({
+        .at = 20ms,
+        .tag = 2,
+        .style = {.x = 40, .y = 0, .width = 100, .height = 100},
+    });
 
     harness.clearCalls();
-    renderAt(
-        harness,
-        mode,
-        30ms,
-        Snapshot{{view(2, {200, 0, 100, 100})}},
-        {removeAnimation(2, LayoutAnimationType::LAYOUT)});
+    timeline.configureAnimations({
+        .at = 30ms,
+        .animations = {removeAnimation({.tag = 2, .type = LayoutAnimationType::LAYOUT})},
+    });
+    timeline.render({
+        .at = 30ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 200, .y = 0, .width = 100, .height = 100},
+        })}),
+    });
 
     const auto &start = onlyStart(harness);
     EXPECT_EQ(start.type, LayoutAnimationType::LAYOUT);
     EXPECT_EQ(start.config, "captured");
     EXPECT_EQ(startValue(start, "currentOriginX"), 40);
     EXPECT_EQ(startValue(start, "targetOriginX"), 200);
-    settleStarts(harness, 40ms);
+    settleStarts(harness, timeline, {.at = 40ms});
     EXPECT_EQ(harness.platform().hostTree().getStubView(2).layoutMetrics.frame.origin.x, 200);
   }
 }
@@ -481,10 +688,29 @@ TEST(LayoutAnimationScenariosTest, ExitingDescendantKeepsDeletedAncestorsAlive) 
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
 
-    renderAt(harness, mode, 0ms, Snapshot{{view(2, {0, 0, 200, 200}, {view(3, {10, 10, 100, 100})})}});
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 0, .y = 0, .width = 200, .height = 200},
+            .children = {view({
+                .tag = 3,
+                .frame = {.x = 10, .y = 10, .width = 100, .height = 100},
+            })},
+        })}),
+    });
     harness.clearCalls();
-    renderAt(harness, mode, 10ms, Snapshot{}, {animation(3, LayoutAnimationType::EXITING, "nested-exit")});
+    timeline.configureAnimations({
+        .at = 10ms,
+        .animations = {animation({
+            .tag = 3,
+            .type = LayoutAnimationType::EXITING,
+            .name = "nested-exit",
+        })},
+    });
+    timeline.render({.at = 10ms, .tree = {}});
 
     const auto &start = onlyStart(harness);
     EXPECT_EQ(start.tag, 3);
@@ -492,7 +718,7 @@ TEST(LayoutAnimationScenariosTest, ExitingDescendantKeepsDeletedAncestorsAlive) 
     EXPECT_TRUE(harness.platform().hostTree().hasTag(2));
     EXPECT_TRUE(harness.platform().hostTree().hasTag(3));
 
-    settleStarts(harness, 20ms);
+    settleStarts(harness, timeline, {.at = 20ms});
 
     EXPECT_FALSE(harness.platform().hostTree().hasTag(2));
     EXPECT_FALSE(harness.platform().hostTree().hasTag(3));
@@ -504,14 +730,33 @@ TEST(LayoutAnimationScenariosTest, NestedExitingGrandchildKeepsAllDeletedAncesto
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
 
-    renderAt(
-        harness,
-        mode,
-        0ms,
-        Snapshot{{view(2, {0, 0, 240, 160}, {view(3, {10, 10, 200, 120}, {view(4, {20, 20, 80, 80})})})}});
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 0, .y = 0, .width = 240, .height = 160},
+            .children = {view({
+                .tag = 3,
+                .frame = {.x = 10, .y = 10, .width = 200, .height = 120},
+                .children = {view({
+                    .tag = 4,
+                    .frame = {.x = 20, .y = 20, .width = 80, .height = 80},
+                })},
+            })},
+        })}),
+    });
     harness.clearCalls();
-    renderAt(harness, mode, 10ms, Snapshot{}, {animation(4, LayoutAnimationType::EXITING, "deep-exit")});
+    timeline.configureAnimations({
+        .at = 10ms,
+        .animations = {animation({
+            .tag = 4,
+            .type = LayoutAnimationType::EXITING,
+            .name = "deep-exit",
+        })},
+    });
+    timeline.render({.at = 10ms, .tree = {}});
 
     const auto *start = findStart(harness, 4, LayoutAnimationType::EXITING);
     ASSERT_NE(start, nullptr);
@@ -523,7 +768,7 @@ TEST(LayoutAnimationScenariosTest, NestedExitingGrandchildKeepsAllDeletedAncesto
     EXPECT_EQ(tree.getStubView(3).parentTag, 2);
     EXPECT_EQ(tree.getStubView(4).parentTag, 3);
 
-    runUI(harness, 20ms, [&] { harness.end(4, true); });
+    timeline.end({.at = 20ms, .tag = 4, .removeView = true});
     EXPECT_FALSE(tree.hasTag(2));
     EXPECT_FALSE(tree.hasTag(3));
     EXPECT_FALSE(tree.hasTag(4));
@@ -535,28 +780,43 @@ TEST(LayoutAnimationScenariosTest, TwoExitingSiblingsCanFinishOutOfOrder) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
 
-    renderAt(
-        harness,
-        mode,
-        0ms,
-        Snapshot{{view(2, {0, 0, 200, 100}, {view(3, {0, 0, 80, 80}), view(4, {100, 0, 80, 80})})}},
-        {animation(3, LayoutAnimationType::EXITING, "short"), animation(4, LayoutAnimationType::EXITING, "long")});
+    timeline.configureAnimations({
+        .at = 0ms,
+        .animations =
+            {
+                animation({.tag = 3, .type = LayoutAnimationType::EXITING, .name = "short"}),
+                animation({.tag = 4, .type = LayoutAnimationType::EXITING, .name = "long"}),
+            },
+    });
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 0, .y = 0, .width = 200, .height = 100},
+            .children =
+                {
+                    view({.tag = 3, .frame = {.x = 0, .y = 0, .width = 80, .height = 80}}),
+                    view({.tag = 4, .frame = {.x = 100, .y = 0, .width = 80, .height = 80}}),
+                },
+        })}),
+    });
     harness.clearCalls();
-    renderAt(harness, mode, 10ms, Snapshot{});
+    timeline.render({.at = 10ms, .tree = {}});
 
     ASSERT_NE(findStart(harness, 3, LayoutAnimationType::EXITING), nullptr);
     ASSERT_NE(findStart(harness, 4, LayoutAnimationType::EXITING), nullptr);
     EXPECT_TRUE(harness.platform().hostTree().hasTag(2));
     EXPECT_EQ(childTags(harness.platform().hostTree().getStubView(2)), (std::vector<Tag>{3, 4}));
 
-    runUI(harness, 20ms, [&] { harness.end(3, true); });
+    timeline.end({.at = 20ms, .tag = 3, .removeView = true});
     EXPECT_FALSE(harness.platform().hostTree().hasTag(3));
     EXPECT_TRUE(harness.platform().hostTree().hasTag(4));
     EXPECT_TRUE(harness.platform().hostTree().hasTag(2));
     EXPECT_EQ(childTags(harness.platform().hostTree().getStubView(2)), (std::vector<Tag>{4}));
 
-    runUI(harness, 30ms, [&] { harness.end(4, true); });
+    timeline.end({.at = 30ms, .tag = 4, .removeView = true});
     EXPECT_FALSE(harness.platform().hostTree().hasTag(2));
     EXPECT_FALSE(harness.platform().hostTree().hasTag(4));
     EXPECT_EQ(harness.platform().hostTree().size(), 1);
@@ -567,34 +827,49 @@ TEST(LayoutAnimationScenariosTest, EnteringLayoutAndExitingShareOneCommit) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
 
-    renderAt(harness, mode, 0ms, Snapshot{{view(2, {0, 0, 80, 80}), view(3, {100, 0, 80, 80})}});
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({
+            view({.tag = 2, .frame = {.x = 0, .y = 0, .width = 80, .height = 80}}),
+            view({.tag = 3, .frame = {.x = 100, .y = 0, .width = 80, .height = 80}}),
+        }),
+    });
     harness.clearCalls();
-    renderAt(
-        harness,
-        mode,
-        10ms,
-        Snapshot{{view(2, {120, 20, 100, 60}), view(4, {0, 0, 90, 90})}},
-        {animation(2, LayoutAnimationType::LAYOUT, "move"),
-         animation(3, LayoutAnimationType::EXITING, "leave"),
-         animation(4, LayoutAnimationType::ENTERING, "arrive")});
+    timeline.configureAnimations({
+        .at = 10ms,
+        .animations =
+            {
+                animation({.tag = 2, .type = LayoutAnimationType::LAYOUT, .name = "move"}),
+                animation({.tag = 3, .type = LayoutAnimationType::EXITING, .name = "leave"}),
+                animation({.tag = 4, .type = LayoutAnimationType::ENTERING, .name = "arrive"}),
+            },
+    });
+    timeline.render({
+        .at = 10ms,
+        .tree = snapshot({
+            view({.tag = 2, .frame = {.x = 120, .y = 20, .width = 100, .height = 60}}),
+            view({.tag = 4, .frame = {.x = 0, .y = 0, .width = 90, .height = 90}}),
+        }),
+    });
 
     ASSERT_NE(findStart(harness, 2, LayoutAnimationType::LAYOUT), nullptr);
     ASSERT_NE(findStart(harness, 3, LayoutAnimationType::EXITING), nullptr);
     ASSERT_NE(findStart(harness, 4, LayoutAnimationType::ENTERING), nullptr);
     EXPECT_TRUE(harness.platform().hostTree().hasTag(3));
-    expectHostFrame(harness, 2, {0, 0, 80, 80}, 1);
-    expectHostFrame(harness, 3, {100, 0, 80, 80}, 1);
-    expectHostFrame(harness, 4, {0, 0, 90, 90}, 0);
+    expectHostView(harness, {.tag = 2, .frame = Frame{.x = 0, .y = 0, .width = 80, .height = 80}, .opacity = 1});
+    expectHostView(harness, {.tag = 3, .frame = Frame{.x = 100, .y = 0, .width = 80, .height = 80}, .opacity = 1});
+    expectHostView(harness, {.tag = 4, .frame = Frame{.x = 0, .y = 0, .width = 90, .height = 90}, .opacity = 0});
 
-    settleStarts(harness, 20ms);
+    settleStarts(harness, timeline, {.at = 20ms});
 
     EXPECT_TRUE(harness.platform().hostTree().hasTag(2));
     EXPECT_FALSE(harness.platform().hostTree().hasTag(3));
     EXPECT_TRUE(harness.platform().hostTree().hasTag(4));
     EXPECT_EQ(harness.platform().hostTree().size(), 3);
-    expectHostFrame(harness, 2, {120, 20, 100, 60}, 1);
-    expectHostFrame(harness, 4, {0, 0, 90, 90}, 1);
+    expectHostView(harness, {.tag = 2, .frame = Frame{.x = 120, .y = 20, .width = 100, .height = 60}, .opacity = 1});
+    expectHostView(harness, {.tag = 4, .frame = Frame{.x = 0, .y = 0, .width = 90, .height = 90}, .opacity = 1});
   }
 }
 
@@ -602,16 +877,30 @@ TEST(LayoutAnimationScenariosTest, SkipExitingOnAnAncestorRemovesItsAnimatedSubt
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
-    harness.timeline().at(0ms, Lane::JS, [&] { harness.setShouldAnimateExiting(2, false); });
-    renderAt(
-        harness,
-        mode,
-        0ms,
-        Snapshot{{view(2, {0, 0, 120, 120}, {view(3, {10, 10, 80, 80})})}},
-        {animation(3, LayoutAnimationType::EXITING, "nested-exit")});
+    auto timeline = AnimationTimeline(harness);
+    timeline.setShouldAnimateExiting({.at = 0ms, .tag = 2, .animate = false});
+    timeline.configureAnimations({
+        .at = 0ms,
+        .animations = {animation({
+            .tag = 3,
+            .type = LayoutAnimationType::EXITING,
+            .name = "nested-exit",
+        })},
+    });
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 0, .y = 0, .width = 120, .height = 120},
+            .children = {view({
+                .tag = 3,
+                .frame = {.x = 10, .y = 10, .width = 80, .height = 80},
+            })},
+        })}),
+    });
     harness.clearCalls();
 
-    renderAt(harness, mode, 10ms, Snapshot{});
+    timeline.render({.at = 10ms, .tree = {}});
 
     EXPECT_TRUE(harness.starts().empty());
     EXPECT_FALSE(harness.platform().hostTree().hasTag(2));
@@ -623,19 +912,31 @@ TEST(LayoutAnimationScenariosTest, NestedSkipExitingCanBeOverriddenForAChild) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
-    harness.timeline().at(0ms, Lane::JS, [&] {
-      harness.setShouldAnimateExiting(2, false);
-      harness.setShouldAnimateExiting(3, true);
+    auto timeline = AnimationTimeline(harness);
+    timeline.setShouldAnimateExiting({.at = 0ms, .tag = 2, .animate = false});
+    timeline.setShouldAnimateExiting({.at = 0ms, .tag = 3, .animate = true});
+    timeline.configureAnimations({
+        .at = 0ms,
+        .animations = {animation({
+            .tag = 3,
+            .type = LayoutAnimationType::EXITING,
+            .name = "nested-override",
+        })},
     });
-    renderAt(
-        harness,
-        mode,
-        0ms,
-        Snapshot{{view(2, {0, 0, 120, 120}, {view(3, {10, 10, 80, 80})})}},
-        {animation(3, LayoutAnimationType::EXITING, "nested-override")});
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 0, .y = 0, .width = 120, .height = 120},
+            .children = {view({
+                .tag = 3,
+                .frame = {.x = 10, .y = 10, .width = 80, .height = 80},
+            })},
+        })}),
+    });
     harness.clearCalls();
 
-    renderAt(harness, mode, 10ms, Snapshot{});
+    timeline.render({.at = 10ms, .tree = {}});
 
     const auto *start = findStart(harness, 3, LayoutAnimationType::EXITING);
     ASSERT_NE(start, nullptr);
@@ -643,7 +944,7 @@ TEST(LayoutAnimationScenariosTest, NestedSkipExitingCanBeOverriddenForAChild) {
     EXPECT_TRUE(harness.platform().hostTree().hasTag(2));
     EXPECT_TRUE(harness.platform().hostTree().hasTag(3));
     EXPECT_EQ(harness.platform().hostTree().getStubView(3).parentTag, 2);
-    settleStarts(harness, 20ms);
+    settleStarts(harness, timeline, {.at = 20ms});
     EXPECT_EQ(harness.platform().hostTree().size(), 1);
   }
 }
@@ -652,14 +953,47 @@ TEST(LayoutAnimationScenariosTest, ReparentingStartsLayoutAnimationAndMovesTheVi
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
-    auto initial =
-        Snapshot{{view(2, {0, 0, 300, 200}, {view(3, {20, 20, 200, 120}, false, {view(4, {0, 0, 200, 100})})})}};
-    auto moved =
-        Snapshot{{view(2, {0, 0, 300, 200}, {view(3, {20, 20, 200, 120}, true, {view(4, {0, 0, 100, 100})})})}};
+    auto timeline = AnimationTimeline(harness);
+    auto initial = snapshot({view({
+        .tag = 2,
+        .frame = {.x = 0, .y = 0, .width = 300, .height = 200},
+        .children = {view({
+            .tag = 3,
+            .frame = {.x = 20, .y = 20, .width = 200, .height = 120},
+            .children = {view({
+                .tag = 4,
+                .frame = {.x = 0, .y = 0, .width = 200, .height = 100},
+            })},
+            .collapsable = false,
+            .hasNativeId = false,
+        })},
+    })});
+    auto moved = snapshot({view({
+        .tag = 2,
+        .frame = {.x = 0, .y = 0, .width = 300, .height = 200},
+        .children = {view({
+            .tag = 3,
+            .frame = {.x = 20, .y = 20, .width = 200, .height = 120},
+            .children = {view({
+                .tag = 4,
+                .frame = {.x = 0, .y = 0, .width = 100, .height = 100},
+            })},
+            .collapsable = true,
+            .hasNativeId = false,
+        })},
+    })});
 
-    renderAt(harness, mode, 0ms, initial, {animation(4, LayoutAnimationType::LAYOUT, "move")});
+    timeline.configureAnimations({
+        .at = 0ms,
+        .animations = {animation({.tag = 4, .type = LayoutAnimationType::LAYOUT, .name = "move"})},
+    });
+    timeline.render({.at = 0ms, .tree = initial});
     harness.clearCalls();
-    renderAt(harness, mode, 10ms, moved, {animation(4, LayoutAnimationType::LAYOUT, "move")});
+    timeline.configureAnimations({
+        .at = 10ms,
+        .animations = {animation({.tag = 4, .type = LayoutAnimationType::LAYOUT, .name = "move"})},
+    });
+    timeline.render({.at = 10ms, .tree = moved});
 
     const auto &start = onlyStart(harness);
     EXPECT_EQ(start.tag, 4);
@@ -675,11 +1009,11 @@ TEST(LayoutAnimationScenariosTest, ReparentingStartsLayoutAnimationAndMovesTheVi
     EXPECT_EQ(startValue(start, "targetHeight"), 100);
     EXPECT_FALSE(harness.platform().hostTree().hasTag(3));
     EXPECT_EQ(harness.platform().hostTree().getStubView(4).parentTag, 2);
-    expectHostGeometry(harness, 4, {0, 0, 200, 100});
+    expectHostView(harness, {.tag = 4, .frame = Frame{.x = 0, .y = 0, .width = 200, .height = 100}});
 
-    settleStarts(harness, 20ms);
+    settleStarts(harness, timeline, {.at = 20ms});
     EXPECT_EQ(harness.platform().hostTree().getStubView(4).parentTag, 2);
-    expectHostGeometry(harness, 4, {20, 20, 100, 100});
+    expectHostView(harness, {.tag = 4, .frame = Frame{.x = 20, .y = 20, .width = 100, .height = 100}});
   }
 }
 
@@ -687,49 +1021,102 @@ TEST(LayoutAnimationScenariosTest, FlatteningAParentWhileRemovingAChildKeepsHost
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
-    auto initial = Snapshot{{
-        view(8, {0, 300, 20, 20}),
-        view(2, {20, 20, 200, 200}, false, {view(3, {0, 0, 100, 100}, {view(4, {0, 0, 50, 50})})}),
-        view(9, {300, 300, 20, 20}),
-    }};
-    auto flattened = Snapshot{{
-        view(8, {0, 300, 20, 20}),
-        view(2, {20, 20, 200, 200}, true, {view(3, {0, 0, 100, 100})}),
-        view(9, {300, 300, 20, 20}),
-    }};
+    auto timeline = AnimationTimeline(harness);
+    auto initial = snapshot({
+        view({.tag = 8, .frame = {.x = 0, .y = 300, .width = 20, .height = 20}}),
+        view({
+            .tag = 2,
+            .frame = {.x = 20, .y = 20, .width = 200, .height = 200},
+            .children = {view({
+                .tag = 3,
+                .frame = {.x = 0, .y = 0, .width = 100, .height = 100},
+                .children = {view({
+                    .tag = 4,
+                    .frame = {.x = 0, .y = 0, .width = 50, .height = 50},
+                })},
+            })},
+            .collapsable = false,
+            .hasNativeId = false,
+        }),
+        view({.tag = 9, .frame = {.x = 300, .y = 300, .width = 20, .height = 20}}),
+    });
+    auto flattened = snapshot({
+        view({.tag = 8, .frame = {.x = 0, .y = 300, .width = 20, .height = 20}}),
+        view({
+            .tag = 2,
+            .frame = {.x = 20, .y = 20, .width = 200, .height = 200},
+            .children = {view({
+                .tag = 3,
+                .frame = {.x = 0, .y = 0, .width = 100, .height = 100},
+            })},
+            .collapsable = true,
+            .hasNativeId = false,
+        }),
+        view({.tag = 9, .frame = {.x = 300, .y = 300, .width = 20, .height = 20}}),
+    });
 
-    renderAt(harness, mode, 0ms, initial, {animation(3, LayoutAnimationType::EXITING, "armed-exit")});
+    timeline.configureAnimations({
+        .at = 0ms,
+        .animations = {animation({
+            .tag = 3,
+            .type = LayoutAnimationType::EXITING,
+            .name = "armed-exit",
+        })},
+    });
+    timeline.render({.at = 0ms, .tree = initial});
     harness.clearCalls();
-    renderAt(harness, mode, 10ms, flattened);
+    timeline.render({.at = 10ms, .tree = flattened});
 
     EXPECT_FALSE(harness.platform().hostTree().hasTag(2));
     EXPECT_TRUE(harness.platform().hostTree().hasTag(3));
     EXPECT_FALSE(harness.platform().hostTree().hasTag(4));
     EXPECT_EQ(harness.platform().hostTree().getStubView(3).parentTag, 1);
     EXPECT_EQ(childTags(harness.platform().hostTree().getRootStubView()), (std::vector<Tag>{8, 3, 9}));
-    expectHostGeometry(harness, 3, {20, 20, 100, 100});
+    expectHostView(harness, {.tag = 3, .frame = Frame{.x = 20, .y = 20, .width = 100, .height = 100}});
     EXPECT_EQ(findStart(harness, 3, LayoutAnimationType::EXITING), nullptr);
   }
 }
 
-TEST(LayoutAnimationScenariosTest, RecreatingAnExitingTagCancelsTheStaleRemoval) {
+TEST(LayoutAnimationCrashRegressionTest, RecreatingAnExitingTagCancelsTheStaleRemoval) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
 
-    renderAt(harness, mode, 0ms, Snapshot{{viewInstance(2, 0, {0, 0, 100, 100})}});
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 0, .y = 0, .width = 100, .height = 100},
+            .generation = 0,
+        })}),
+    });
     harness.clearCalls();
-    renderAt(harness, mode, 10ms, Snapshot{}, {animation(2, LayoutAnimationType::EXITING, "exit")});
+    timeline.configureAnimations({
+        .at = 10ms,
+        .animations = {animation({.tag = 2, .type = LayoutAnimationType::EXITING, .name = "exit"})},
+    });
+    timeline.render({.at = 10ms, .tree = {}});
     ASSERT_EQ(harness.starts().size(), 1);
     ASSERT_TRUE(harness.platform().hostTree().hasTag(2));
 
     harness.clearCalls();
-    renderAt(
-        harness,
-        mode,
-        20ms,
-        Snapshot{{viewInstance(2, 1, {50, 0, 100, 100})}},
-        {animation(2, LayoutAnimationType::ENTERING, "enter-again")});
+    timeline.configureAnimations({
+        .at = 20ms,
+        .animations = {animation({
+            .tag = 2,
+            .type = LayoutAnimationType::ENTERING,
+            .name = "enter-again",
+        })},
+    });
+    timeline.render({
+        .at = 20ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 50, .y = 0, .width = 100, .height = 100},
+            .generation = 1,
+        })}),
+    });
 
     const auto &start = onlyStart(harness);
     EXPECT_EQ(start.tag, 2);
@@ -737,63 +1124,105 @@ TEST(LayoutAnimationScenariosTest, RecreatingAnExitingTagCancelsTheStaleRemoval)
     EXPECT_EQ(start.config, "enter-again");
     EXPECT_TRUE(harness.platform().hostTree().hasTag(2));
     EXPECT_EQ(harness.platform().hostTree().getRootStubView().children.size(), 1);
-    expectHostFrame(harness, 2, {50, 0, 100, 100}, 0);
-    settleStarts(harness, 30ms);
+    expectHostView(harness, {.tag = 2, .frame = Frame{.x = 50, .y = 0, .width = 100, .height = 100}, .opacity = 0});
+    settleStarts(harness, timeline, {.at = 30ms});
     EXPECT_TRUE(harness.platform().hostTree().hasTag(2));
     EXPECT_EQ(harness.platform().hostTree().getRootStubView().children.size(), 1);
-    expectHostFrame(harness, 2, {50, 0, 100, 100}, 1);
+    expectHostView(harness, {.tag = 2, .frame = Frame{.x = 50, .y = 0, .width = 100, .height = 100}, .opacity = 1});
   }
 }
 
-TEST(LayoutAnimationScenariosTest, RecreatingAWaitingSubviewFlushesItsWithheldRemoval) {
+TEST(LayoutAnimationCrashRegressionTest, RecreatingAWaitingSubviewFlushesItsWithheldRemoval) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
-    auto initial = Snapshot{{view(2, {0, 0, 220, 100}, {viewInstance(3, 0, {0, 0, 100, 100})})}};
+    auto timeline = AnimationTimeline(harness);
+    auto initial = snapshot({view({
+        .tag = 2,
+        .frame = {.x = 0, .y = 0, .width = 220, .height = 100},
+        .children = {view({
+            .tag = 3,
+            .frame = {.x = 0, .y = 0, .width = 100, .height = 100},
+            .generation = 0,
+        })},
+    })});
 
-    renderAt(harness, mode, 0ms, initial);
+    timeline.render({.at = 0ms, .tree = initial});
     harness.clearCalls();
-    renderAt(harness, mode, 10ms, Snapshot{}, {animation(2, LayoutAnimationType::EXITING, "exit")});
+    timeline.configureAnimations({
+        .at = 10ms,
+        .animations = {animation({.tag = 2, .type = LayoutAnimationType::EXITING, .name = "exit"})},
+    });
+    timeline.render({.at = 10ms, .tree = {}});
     ASSERT_NE(findStart(harness, 2, LayoutAnimationType::EXITING), nullptr);
     ASSERT_TRUE(harness.platform().hostTree().hasTag(3));
 
     harness.clearCalls();
-    renderAt(harness, mode, 20ms, Snapshot{{viewInstance(3, 1, {40, 50, 120, 80})}});
+    timeline.render({
+        .at = 20ms,
+        .tree = snapshot({view({
+            .tag = 3,
+            .frame = {.x = 40, .y = 50, .width = 120, .height = 80},
+            .generation = 1,
+        })}),
+    });
 
     const auto &tree = harness.platform().hostTree();
     ASSERT_TRUE(tree.hasTag(3));
     EXPECT_EQ(tree.getStubView(3).parentTag, 1);
-    expectHostGeometry(harness, 3, {40, 50, 120, 80});
+    expectHostView(harness, {.tag = 3, .frame = Frame{.x = 40, .y = 50, .width = 120, .height = 80}});
     ASSERT_TRUE(tree.hasTag(2));
     EXPECT_TRUE(tree.getStubView(2).children.empty());
 
-    runUI(harness, 30ms, [&] { harness.end(2, true); });
+    timeline.end({.at = 30ms, .tag = 2, .removeView = true});
     EXPECT_FALSE(tree.hasTag(2));
     EXPECT_TRUE(tree.hasTag(3));
     EXPECT_EQ(tree.getRootStubView().children.size(), 1);
   }
 }
 
-TEST(LayoutAnimationScenariosTest, RecreatingASettledExitBeforeCleanupReplacesTheDeadNode) {
+TEST(LayoutAnimationCrashRegressionTest, RecreatingASettledExitBeforeCleanupReplacesTheDeadNode) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
 
-    renderAt(harness, mode, 0ms, Snapshot{{viewInstance(2, 0, {0, 0, 100, 100})}});
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 0, .y = 0, .width = 100, .height = 100},
+            .generation = 0,
+        })}),
+    });
     harness.clearCalls();
-    renderAt(harness, mode, 10ms, Snapshot{}, {animation(2, LayoutAnimationType::EXITING, "exit")});
+    timeline.configureAnimations({
+        .at = 10ms,
+        .animations = {animation({.tag = 2, .type = LayoutAnimationType::EXITING, .name = "exit"})},
+    });
+    timeline.render({.at = 10ms, .tree = {}});
     ASSERT_NE(findStart(harness, 2, LayoutAnimationType::EXITING), nullptr);
 
-    auto &timeline = harness.timeline();
-    timeline.at(20ms, Lane::UI, [&] { harness.end(2, true); });
-    timeline.advanceTo(20ms);
+    auto &choreographer = harness.timeline();
+    choreographer.at(20ms, Lane::UI, [&] { harness.end(2, true); });
+    choreographer.advanceTo(20ms);
     harness.clearCalls();
-    renderAt(
-        harness,
-        mode,
-        21ms,
-        Snapshot{{viewInstance(2, 1, {50, 60, 120, 80})}},
-        {animation(2, LayoutAnimationType::ENTERING, "replace-dead")});
+    timeline.configureAnimations({
+        .at = 21ms,
+        .animations = {animation({
+            .tag = 2,
+            .type = LayoutAnimationType::ENTERING,
+            .name = "replace-dead",
+        })},
+    });
+    timeline.render({
+        .at = 21ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 50, .y = 60, .width = 120, .height = 80},
+            .generation = 1,
+        })}),
+    });
 
     const auto &tree = harness.platform().hostTree();
     const auto &start = onlyStart(harness);
@@ -803,9 +1232,9 @@ TEST(LayoutAnimationScenariosTest, RecreatingASettledExitBeforeCleanupReplacesTh
     ASSERT_TRUE(tree.hasTag(2));
     EXPECT_EQ(tree.getStubView(2).parentTag, 1);
     EXPECT_EQ(tree.getRootStubView().children.size(), 1);
-    expectHostFrame(harness, 2, {50, 60, 120, 80}, 0);
-    settleStarts(harness, 30ms);
-    expectHostFrame(harness, 2, {50, 60, 120, 80}, 1);
+    expectHostView(harness, {.tag = 2, .frame = Frame{.x = 50, .y = 60, .width = 120, .height = 80}, .opacity = 0});
+    settleStarts(harness, timeline, {.at = 30ms});
+    expectHostView(harness, {.tag = 2, .frame = Frame{.x = 50, .y = 60, .width = 120, .height = 80}, .opacity = 1});
   }
 }
 
@@ -813,19 +1242,33 @@ TEST(LayoutAnimationScenariosTest, ZeroDurationEnteringCanSettleOnItsFirstFrame)
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
 
-    renderAt(
-        harness,
-        mode,
-        0ms,
-        Snapshot{{view(2, {10, 20, 100, 80})}},
-        {animation(2, LayoutAnimationType::ENTERING, "duration-zero")});
+    timeline.configureAnimations({
+        .at = 0ms,
+        .animations = {animation({
+            .tag = 2,
+            .type = LayoutAnimationType::ENTERING,
+            .name = "duration-zero",
+        })},
+    });
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 10, .y = 20, .width = 100, .height = 80},
+        })}),
+    });
     auto start = onlyStart(harness);
-    expectHostFrame(harness, 2, {10, 20, 100, 80}, 0);
+    expectHostView(harness, {.tag = 2, .frame = Frame{.x = 10, .y = 20, .width = 100, .height = 80}, .opacity = 0});
 
-    runUI(harness, 2ms, [&] {
-      harness.progress(start.tag, finalStyle(start));
-      harness.end(start.tag, false);
+    timeline.onUI({
+        .at = 2ms,
+        .task =
+            [&] {
+              harness.progress(start.tag, finalStyle(start));
+              harness.end(start.tag, false);
+            },
     });
 
     EXPECT_TRUE(harness.platform().hostTree().hasTag(2));
@@ -834,10 +1277,10 @@ TEST(LayoutAnimationScenariosTest, ZeroDurationEnteringCanSettleOnItsFirstFrame)
     EXPECT_EQ(frame.origin.y, 20);
     EXPECT_EQ(frame.size.width, 100);
     EXPECT_EQ(frame.size.height, 80);
-    expectHostOpacity(harness, 2, 1);
+    expectHostView(harness, {.tag = 2, .opacity = 1});
 
-    runUI(harness, 4ms, [&] { harness.progress(2, {.opacity = 0.2}); });
-    expectHostOpacity(harness, 2, 1);
+    timeline.progress({.at = 4ms, .tag = 2, .style = {.opacity = 0.2}});
+    expectHostView(harness, {.tag = 2, .opacity = 1});
   }
 }
 
@@ -845,27 +1288,37 @@ TEST(LayoutAnimationScenariosTest, ProgressAppliesAnimatedStyleProps) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
 
-    renderAt(
-        harness,
-        mode,
-        0ms,
-        Snapshot{{view(2, {10, 20, 100, 80})}},
-        {animation(2, LayoutAnimationType::ENTERING, "fade-in")});
-    expectHostFrame(harness, 2, {10, 20, 100, 80}, 0);
+    timeline.configureAnimations({
+        .at = 0ms,
+        .animations = {animation({
+            .tag = 2,
+            .type = LayoutAnimationType::ENTERING,
+            .name = "fade-in",
+        })},
+    });
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 10, .y = 20, .width = 100, .height = 80},
+        })}),
+    });
+    expectHostView(harness, {.tag = 2, .frame = Frame{.x = 10, .y = 20, .width = 100, .height = 80}, .opacity = 0});
 
-    runUI(harness, 10ms, [&] { harness.progress(2, {.opacity = 0.35}); });
+    timeline.progress({.at = 10ms, .tag = 2, .style = {.opacity = 0.35}});
     const auto &progressed = harness.platform().hostTree().getStubView(2);
     const auto &progressedProps = static_cast<const facebook::react::ViewProps &>(*progressed.props);
     EXPECT_FLOAT_EQ(progressedProps.opacity, 0.35);
 
-    settleStarts(harness, 20ms);
+    settleStarts(harness, timeline, {.at = 20ms});
     const auto &settled = harness.platform().hostTree().getStubView(2);
     const auto &settledProps = static_cast<const facebook::react::ViewProps &>(*settled.props);
     EXPECT_EQ(settledProps.opacity, 1);
 
-    runUI(harness, 30ms, [&] { harness.progress(2, {.opacity = 0.1}); });
-    expectHostOpacity(harness, 2, 1);
+    timeline.progress({.at = 30ms, .tag = 2, .style = {.opacity = 0.1}});
+    expectHostView(harness, {.tag = 2, .opacity = 1});
   }
 }
 
@@ -873,21 +1326,29 @@ TEST(LayoutAnimationScenariosTest, DisplayNoneEmitsPlatformSpecificHostMutations
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
-    auto visible = view(2, {0, 0, 100, 100});
+    auto timeline = AnimationTimeline(harness);
+    auto visible = view({
+        .tag = 2,
+        .frame = {.x = 0, .y = 0, .width = 100, .height = 100},
+    });
     auto hidden = visible;
     hidden.displayNone = true;
 
-    renderAt(harness, mode, 0ms, Snapshot{{visible}});
+    timeline.render({.at = 0ms, .tree = snapshot({visible})});
     auto time = 10ms;
     for (int round = 0; round < 40; ++round) {
       harness.clearCalls();
-      renderAt(harness, mode, time, Snapshot{{round % 2 == 0 ? hidden : visible}});
+      timeline.render({
+          .at = time,
+          .tree = snapshot({round % 2 == 0 ? hidden : visible}),
+      });
       EXPECT_TRUE(harness.starts().empty()) << round;
       if (round % 2 == 0 && mode == DriverMode::IOS) {
         EXPECT_FALSE(harness.platform().hostTree().hasTag(2)) << round;
       } else {
         ASSERT_TRUE(harness.platform().hostTree().hasTag(2)) << round;
-        expectHostGeometry(harness, 2, round % 2 == 0 ? Frame{} : Frame{0, 0, 100, 100});
+        auto expectedFrame = round % 2 == 0 ? Frame{} : Frame{.x = 0, .y = 0, .width = 100, .height = 100};
+        expectHostView(harness, {.tag = 2, .frame = expectedFrame});
         const auto expectedDisplay =
             round % 2 == 0 ? facebook::react::DisplayType::None : facebook::react::DisplayType::Flex;
         EXPECT_EQ(harness.platform().hostTree().getStubView(2).layoutMetrics.displayType, expectedDisplay) << round;
@@ -908,22 +1369,62 @@ TEST(LayoutAnimationScenariosTest, SharedTagMovesBetweenActiveBoundaries) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
-    auto first = Snapshot{{
-        sharedTransitionBoundary(2, true, {view(3, {0, 0, 80, 80})}),
-        sharedTransitionBoundary(4, false, {view(5, {200, 100, 120, 120})}),
-    }};
-    auto second = Snapshot{{
-        sharedTransitionBoundary(2, false, {view(3, {0, 0, 80, 80})}),
-        sharedTransitionBoundary(4, true, {view(5, {200, 100, 120, 120})}),
-    }};
+    auto timeline = AnimationTimeline(harness);
+    auto first = snapshot({
+        sharedTransitionBoundary({
+            .tag = 2,
+            .children = {view({
+                .tag = 3,
+                .frame = {.x = 0, .y = 0, .width = 80, .height = 80},
+            })},
+            .boundaryActive = true,
+        }),
+        sharedTransitionBoundary({
+            .tag = 4,
+            .children = {view({
+                .tag = 5,
+                .frame = {.x = 200, .y = 100, .width = 120, .height = 120},
+            })},
+            .boundaryActive = false,
+        }),
+    });
+    auto second = snapshot({
+        sharedTransitionBoundary({
+            .tag = 2,
+            .children = {view({
+                .tag = 3,
+                .frame = {.x = 0, .y = 0, .width = 80, .height = 80},
+            })},
+            .boundaryActive = false,
+        }),
+        sharedTransitionBoundary({
+            .tag = 4,
+            .children = {view({
+                .tag = 5,
+                .frame = {.x = 200, .y = 100, .width = 120, .height = 120},
+            })},
+            .boundaryActive = true,
+        }),
+    });
     auto configs = std::vector{
-        animation(3, LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID, "hero", "hero"),
-        animation(5, LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID, "hero", "hero"),
+        animation({
+            .tag = 3,
+            .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID,
+            .name = "hero",
+            .sharedTransitionTag = "hero",
+        }),
+        animation({
+            .tag = 5,
+            .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID,
+            .name = "hero",
+            .sharedTransitionTag = "hero",
+        }),
     };
 
-    renderAt(harness, mode, 0ms, first, configs);
+    timeline.configureAnimations({.at = 0ms, .animations = configs});
+    timeline.render({.at = 0ms, .tree = first});
     harness.clearCalls();
-    renderAt(harness, mode, 10ms, second);
+    timeline.render({.at = 10ms, .tree = second});
 
     const auto &start = onlyStart(harness);
     EXPECT_EQ(start.type, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
@@ -939,15 +1440,16 @@ TEST(LayoutAnimationScenariosTest, SharedTagMovesBetweenActiveBoundaries) {
     EXPECT_EQ(startValue(start, "target.width"), 120);
     EXPECT_EQ(startValue(start, "target.height"), 120);
     EXPECT_TRUE(harness.platform().hostTree().hasTag(start.tag));
-    expectHostFrame(harness, 3, {0, 0, 80, 80}, 0);
-    expectHostFrame(harness, 5, {200, 100, 120, 120}, 0);
-    expectHostFrame(harness, start.tag, {0, 0, 80, 80}, 1);
+    expectHostView(harness, {.tag = 3, .frame = Frame{.x = 0, .y = 0, .width = 80, .height = 80}, .opacity = 0});
+    expectHostView(harness, {.tag = 5, .frame = Frame{.x = 200, .y = 100, .width = 120, .height = 120}, .opacity = 0});
+    expectHostView(
+        harness, {.tag = start.tag, .frame = Frame{.x = 0, .y = 0, .width = 80, .height = 80}, .opacity = 1});
 
     auto containerTag = start.tag;
-    settleStarts(harness, 20ms);
+    settleStarts(harness, timeline, {.at = 20ms});
     EXPECT_FALSE(harness.platform().hostTree().hasTag(containerTag));
-    expectHostFrame(harness, 3, {0, 0, 80, 80}, 0);
-    expectHostFrame(harness, 5, {200, 100, 120, 120}, 1);
+    expectHostView(harness, {.tag = 3, .frame = Frame{.x = 0, .y = 0, .width = 80, .height = 80}, .opacity = 0});
+    expectHostView(harness, {.tag = 5, .frame = Frame{.x = 200, .y = 100, .width = 120, .height = 120}, .opacity = 1});
     EXPECT_TRUE(syntheticRootTags(harness).empty());
   }
 }
@@ -956,36 +1458,74 @@ TEST(LayoutAnimationScenariosTest, SharedSourceUpdateDuringBoundaryFlipStaysHidd
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
     auto configs = std::vector{
-        animation(3, LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID, "hero", "hero"),
-        animation(5, LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID, "hero", "hero"),
+        animation({
+            .tag = 3,
+            .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID,
+            .name = "hero",
+            .sharedTransitionTag = "hero",
+        }),
+        animation({
+            .tag = 5,
+            .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID,
+            .name = "hero",
+            .sharedTransitionTag = "hero",
+        }),
     };
-    renderAt(
-        harness,
-        mode,
-        0ms,
-        Snapshot{{
-            sharedTransitionBoundary(2, true, {view(3, {0, 0, 80, 80})}),
-            sharedTransitionBoundary(4, false, {view(5, {200, 100, 120, 120})}),
-        }},
-        configs);
+    timeline.configureAnimations({.at = 0ms, .animations = configs});
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({
+            sharedTransitionBoundary({
+                .tag = 2,
+                .children = {view({
+                    .tag = 3,
+                    .frame = {.x = 0, .y = 0, .width = 80, .height = 80},
+                })},
+                .boundaryActive = true,
+            }),
+            sharedTransitionBoundary({
+                .tag = 4,
+                .children = {view({
+                    .tag = 5,
+                    .frame = {.x = 200, .y = 100, .width = 120, .height = 120},
+                })},
+                .boundaryActive = false,
+            }),
+        }),
+    });
     harness.clearCalls();
 
-    renderAt(
-        harness,
-        mode,
-        10ms,
-        Snapshot{{
-            sharedTransitionBoundary(2, false, {view(3, {10, 0, 80, 80})}),
-            sharedTransitionBoundary(4, true, {view(5, {200, 100, 120, 120})}),
-        }});
+    timeline.render({
+        .at = 10ms,
+        .tree = snapshot({
+            sharedTransitionBoundary({
+                .tag = 2,
+                .children = {view({
+                    .tag = 3,
+                    .frame = {.x = 10, .y = 0, .width = 80, .height = 80},
+                })},
+                .boundaryActive = false,
+            }),
+            sharedTransitionBoundary({
+                .tag = 4,
+                .children = {view({
+                    .tag = 5,
+                    .frame = {.x = 200, .y = 100, .width = 120, .height = 120},
+                })},
+                .boundaryActive = true,
+            }),
+        }),
+    });
 
     const auto &start = onlyStart(harness);
     EXPECT_EQ(start.type, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
     EXPECT_EQ(start.config, "hero");
-    expectHostFrame(harness, start.tag, {0, 0, 80, 80}, 1);
-    expectHostFrame(harness, 3, {10, 0, 80, 80}, 0);
-    expectHostFrame(harness, 5, {200, 100, 120, 120}, 0);
+    expectHostView(
+        harness, {.tag = start.tag, .frame = Frame{.x = 0, .y = 0, .width = 80, .height = 80}, .opacity = 1});
+    expectHostView(harness, {.tag = 3, .frame = Frame{.x = 10, .y = 0, .width = 80, .height = 80}, .opacity = 0});
+    expectHostView(harness, {.tag = 5, .frame = Frame{.x = 200, .y = 100, .width = 120, .height = 120}, .opacity = 0});
   }
 }
 
@@ -993,35 +1533,73 @@ TEST(LayoutAnimationScenariosTest, SharedTargetUpdateDuringBoundaryFlipStaysHidd
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
     auto configs = std::vector{
-        animation(3, LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID, "hero", "hero"),
-        animation(5, LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID, "hero", "hero"),
+        animation({
+            .tag = 3,
+            .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID,
+            .name = "hero",
+            .sharedTransitionTag = "hero",
+        }),
+        animation({
+            .tag = 5,
+            .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID,
+            .name = "hero",
+            .sharedTransitionTag = "hero",
+        }),
     };
-    renderAt(
-        harness,
-        mode,
-        0ms,
-        Snapshot{{
-            sharedTransitionBoundary(2, true, {view(3, {0, 0, 80, 80})}),
-            sharedTransitionBoundary(4, false, {view(5, {200, 100, 120, 120})}),
-        }},
-        configs);
+    timeline.configureAnimations({.at = 0ms, .animations = configs});
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({
+            sharedTransitionBoundary({
+                .tag = 2,
+                .children = {view({
+                    .tag = 3,
+                    .frame = {.x = 0, .y = 0, .width = 80, .height = 80},
+                })},
+                .boundaryActive = true,
+            }),
+            sharedTransitionBoundary({
+                .tag = 4,
+                .children = {view({
+                    .tag = 5,
+                    .frame = {.x = 200, .y = 100, .width = 120, .height = 120},
+                })},
+                .boundaryActive = false,
+            }),
+        }),
+    });
     harness.clearCalls();
 
-    renderAt(
-        harness,
-        mode,
-        10ms,
-        Snapshot{{
-            sharedTransitionBoundary(2, false, {view(3, {0, 0, 80, 80})}),
-            sharedTransitionBoundary(4, true, {view(5, {210, 110, 120, 120})}),
-        }});
+    timeline.render({
+        .at = 10ms,
+        .tree = snapshot({
+            sharedTransitionBoundary({
+                .tag = 2,
+                .children = {view({
+                    .tag = 3,
+                    .frame = {.x = 0, .y = 0, .width = 80, .height = 80},
+                })},
+                .boundaryActive = false,
+            }),
+            sharedTransitionBoundary({
+                .tag = 4,
+                .children = {view({
+                    .tag = 5,
+                    .frame = {.x = 210, .y = 110, .width = 120, .height = 120},
+                })},
+                .boundaryActive = true,
+            }),
+        }),
+    });
 
     const auto &start = onlyStart(harness);
     EXPECT_EQ(start.type, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
-    expectHostFrame(harness, start.tag, {0, 0, 80, 80}, 1);
-    expectHostFrame(harness, 3, {0, 0, 80, 80}, 0);
-    expectHostFrame(harness, 5, {210, 110, 120, 120}, 0);
+    expectHostView(
+        harness, {.tag = start.tag, .frame = Frame{.x = 0, .y = 0, .width = 80, .height = 80}, .opacity = 1});
+    expectHostView(harness, {.tag = 3, .frame = Frame{.x = 0, .y = 0, .width = 80, .height = 80}, .opacity = 0});
+    expectHostView(harness, {.tag = 5, .frame = Frame{.x = 210, .y = 110, .width = 120, .height = 120}, .opacity = 0});
   }
 }
 
@@ -1029,9 +1607,11 @@ TEST(LayoutAnimationScenariosTest, SharedContainerTracksGeometryAndOpacityAcross
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
-    renderAt(harness, mode, 0ms, sharedGeometryScreens(true), sharedConfigs(1));
+    auto timeline = AnimationTimeline(harness);
+    timeline.configureAnimations({.at = 0ms, .animations = sharedConfigs(1)});
+    timeline.render({.at = 0ms, .tree = sharedGeometryScreens(true)});
     harness.clearCalls();
-    renderAt(harness, mode, 10ms, sharedGeometryScreens(false));
+    timeline.render({.at = 10ms, .tree = sharedGeometryScreens(false)});
 
     const auto &start = onlyStart(harness);
     ASSERT_EQ(start.type, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
@@ -1045,44 +1625,65 @@ TEST(LayoutAnimationScenariosTest, SharedContainerTracksGeometryAndOpacityAcross
     EXPECT_EQ(startValue(start, "target.width"), 240);
     EXPECT_EQ(startValue(start, "target.height"), 180);
     const auto containerTag = start.tag;
-    expectHostFrame(harness, containerTag, {40, 60, 120, 80}, 0.4);
-    expectHostOpacity(harness, 100, 0);
-    expectHostOpacity(harness, 200, 0);
+    expectHostView(
+        harness, {.tag = containerTag, .frame = Frame{.x = 40, .y = 60, .width = 120, .height = 80}, .opacity = 0.4});
+    expectHostView(harness, {.tag = 100, .opacity = 0});
+    expectHostView(harness, {.tag = 200, .opacity = 0});
 
     struct ProgressFrame {
       Frame frame;
       float opacity;
     };
     const auto progressFrames = std::array{
-        ProgressFrame{{200, 170, 150, 105}, 0.55},
-        ProgressFrame{{360, 280, 180, 130}, 0.7},
-        ProgressFrame{{520, 390, 210, 155}, 0.85},
-        ProgressFrame{{680, 500, 240, 180}, 1},
+        ProgressFrame{
+            .frame = {.x = 200, .y = 170, .width = 150, .height = 105},
+            .opacity = 0.55,
+        },
+        ProgressFrame{
+            .frame = {.x = 360, .y = 280, .width = 180, .height = 130},
+            .opacity = 0.7,
+        },
+        ProgressFrame{
+            .frame = {.x = 520, .y = 390, .width = 210, .height = 155},
+            .opacity = 0.85,
+        },
+        ProgressFrame{
+            .frame = {.x = 680, .y = 500, .width = 240, .height = 180},
+            .opacity = 1,
+        },
     };
 
     auto time = 20ms;
     for (const auto &progressFrame : progressFrames) {
-      runUI(harness, time, [&] {
-        harness.progress(
-            containerTag,
-            {
-                .x = progressFrame.frame.x,
-                .y = progressFrame.frame.y,
-                .width = progressFrame.frame.width,
-                .height = progressFrame.frame.height,
-                .opacity = progressFrame.opacity,
-            });
+      timeline.progress({
+          .at = time,
+          .tag = containerTag,
+          .style =
+              {
+                  .x = progressFrame.frame.x,
+                  .y = progressFrame.frame.y,
+                  .width = progressFrame.frame.width,
+                  .height = progressFrame.frame.height,
+                  .opacity = progressFrame.opacity,
+              },
       });
-      expectHostFrame(harness, containerTag, progressFrame.frame, progressFrame.opacity);
-      expectHostOpacity(harness, 100, 0);
-      expectHostOpacity(harness, 200, 0);
+      expectHostView(
+          harness,
+          {
+              .tag = containerTag,
+              .frame = progressFrame.frame,
+              .opacity = progressFrame.opacity,
+          });
+      expectHostView(harness, {.tag = 100, .opacity = 0});
+      expectHostView(harness, {.tag = 200, .opacity = 0});
       time += 10ms;
     }
 
-    runUI(harness, time, [&] { harness.end(containerTag, false); });
+    timeline.end({.at = time, .tag = containerTag, .removeView = false});
     EXPECT_FALSE(harness.platform().hostTree().hasTag(containerTag));
-    expectHostFrame(harness, 100, {40, 60, 120, 80}, 0);
-    expectHostFrame(harness, 200, {680, 500, 240, 180}, 1);
+    expectHostView(harness, {.tag = 100, .frame = Frame{.x = 40, .y = 60, .width = 120, .height = 80}, .opacity = 0});
+    expectHostView(
+        harness, {.tag = 200, .frame = Frame{.x = 680, .y = 500, .width = 240, .height = 180}, .opacity = 1});
     EXPECT_TRUE(syntheticRootTags(harness).empty());
   }
 }
@@ -1091,27 +1692,65 @@ TEST(LayoutAnimationScenariosTest, DuplicateSharedNamesDoNotLeaveSyntheticContai
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
-    auto first = Snapshot{{
-        sharedTransitionBoundary(2, true, {view(10, {0, 0, 50, 50}), view(11, {60, 0, 50, 50})}),
-        sharedTransitionBoundary(4, false, {view(20, {200, 0, 50, 50}), view(21, {260, 0, 50, 50})}),
-    }};
-    auto second = Snapshot{{
-        sharedTransitionBoundary(2, false, {view(10, {0, 0, 50, 50}), view(11, {60, 0, 50, 50})}),
-        sharedTransitionBoundary(4, true, {view(20, {200, 0, 50, 50}), view(21, {260, 0, 50, 50})}),
-    }};
+    auto timeline = AnimationTimeline(harness);
+    auto first = snapshot({
+        sharedTransitionBoundary({
+            .tag = 2,
+            .children =
+                {
+                    view({.tag = 10, .frame = {.x = 0, .y = 0, .width = 50, .height = 50}}),
+                    view({.tag = 11, .frame = {.x = 60, .y = 0, .width = 50, .height = 50}}),
+                },
+            .boundaryActive = true,
+        }),
+        sharedTransitionBoundary({
+            .tag = 4,
+            .children =
+                {
+                    view({.tag = 20, .frame = {.x = 200, .y = 0, .width = 50, .height = 50}}),
+                    view({.tag = 21, .frame = {.x = 260, .y = 0, .width = 50, .height = 50}}),
+                },
+            .boundaryActive = false,
+        }),
+    });
+    auto second = snapshot({
+        sharedTransitionBoundary({
+            .tag = 2,
+            .children =
+                {
+                    view({.tag = 10, .frame = {.x = 0, .y = 0, .width = 50, .height = 50}}),
+                    view({.tag = 11, .frame = {.x = 60, .y = 0, .width = 50, .height = 50}}),
+                },
+            .boundaryActive = false,
+        }),
+        sharedTransitionBoundary({
+            .tag = 4,
+            .children =
+                {
+                    view({.tag = 20, .frame = {.x = 200, .y = 0, .width = 50, .height = 50}}),
+                    view({.tag = 21, .frame = {.x = 260, .y = 0, .width = 50, .height = 50}}),
+                },
+            .boundaryActive = true,
+        }),
+    });
     auto configs = std::vector<AnimationConfig>{};
     for (auto tag : {10, 11, 20, 21}) {
-      configs.push_back(
-          animation(tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID, "duplicate", "duplicate"));
+      configs.push_back(animation({
+          .tag = tag,
+          .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID,
+          .name = "duplicate",
+          .sharedTransitionTag = "duplicate",
+      }));
     }
 
-    renderAt(harness, mode, 0ms, first, std::move(configs));
+    timeline.configureAnimations({.at = 0ms, .animations = std::move(configs)});
+    timeline.render({.at = 0ms, .tree = first});
     harness.clearCalls();
-    renderAt(harness, mode, 10ms, second);
+    timeline.render({.at = 10ms, .tree = second});
 
     ASSERT_FALSE(harness.starts().empty());
     ASSERT_FALSE(syntheticRootTags(harness).empty());
-    settleStarts(harness, 20ms);
+    settleStarts(harness, timeline, {.at = 20ms});
     EXPECT_TRUE(syntheticRootTags(harness).empty());
     for (auto tag : {10, 11, 20, 21}) {
       EXPECT_TRUE(harness.platform().hostTree().hasTag(tag));
@@ -1122,78 +1761,137 @@ TEST(LayoutAnimationScenariosTest, DuplicateSharedNamesDoNotLeaveSyntheticContai
 #ifndef HARNESS_PLATFORM_ANDROID
 TEST(LayoutAnimationScenariosTest, InteractiveSharedTransitionProgressesAndFinishes) {
   auto harness = AnimationHarness(DriverMode::IOS);
-  renderAt(harness, DriverMode::IOS, 0ms, sharedScreens(true, 1), sharedConfigs(1));
+  auto timeline = AnimationTimeline(harness);
+  timeline.configureAnimations({.at = 0ms, .animations = sharedConfigs(1)});
+  timeline.render({.at = 0ms, .tree = sharedScreens(true, 1)});
 
-  runUI(harness, 10ms, [&] { harness.transitionProgress(4, 0.1, false, false); });
+  timeline.transitionProgress({
+      .at = 10ms,
+      .targetTag = 4,
+      .progress = 0.1,
+      .closing = false,
+      .goingForward = false,
+  });
   auto containers = syntheticRootTags(harness);
   ASSERT_EQ(containers.size(), 1);
-  expectHostFrame(harness, containers[0], {0, 0, 24, 24}, 1);
-  expectHostOpacity(harness, 100, 0);
-  expectHostOpacity(harness, 200, 0);
+  expectHostView(
+      harness, {.tag = containers[0], .frame = Frame{.x = 0, .y = 0, .width = 24, .height = 24}, .opacity = 1});
+  expectHostView(harness, {.tag = 100, .opacity = 0});
+  expectHostView(harness, {.tag = 200, .opacity = 0});
 
-  runUI(harness, 20ms, [&] { harness.transitionProgress(4, 0.5, false, false); });
-  expectHostFrame(harness, containers[0], {150, 100, 26, 26}, 1);
-  expectHostOpacity(harness, 100, 0);
-  expectHostOpacity(harness, 200, 0);
+  timeline.transitionProgress({
+      .at = 20ms,
+      .targetTag = 4,
+      .progress = 0.5,
+      .closing = false,
+      .goingForward = false,
+  });
+  expectHostView(
+      harness, {.tag = containers[0], .frame = Frame{.x = 150, .y = 100, .width = 26, .height = 26}, .opacity = 1});
+  expectHostView(harness, {.tag = 100, .opacity = 0});
+  expectHostView(harness, {.tag = 200, .opacity = 0});
 
-  runUI(harness, 30ms, [&] { harness.transitionProgress(4, 1, false, false); });
+  timeline.transitionProgress({
+      .at = 30ms,
+      .targetTag = 4,
+      .progress = 1,
+      .closing = false,
+      .goingForward = false,
+  });
   EXPECT_FALSE(harness.platform().hostTree().hasTag(containers[0]));
-  expectHostFrame(harness, 100, {0, 0, 24, 24}, 0);
-  expectHostFrame(harness, 200, {300, 200, 28, 28}, 1);
+  expectHostView(harness, {.tag = 100, .frame = Frame{.x = 0, .y = 0, .width = 24, .height = 24}, .opacity = 0});
+  expectHostView(harness, {.tag = 200, .frame = Frame{.x = 300, .y = 200, .width = 28, .height = 28}, .opacity = 1});
   EXPECT_TRUE(syntheticRootTags(harness).empty());
 }
 
 TEST(LayoutAnimationScenariosTest, InteractiveSharedTransitionUsesAbsoluteGeometryAtEveryProgress) {
   auto harness = AnimationHarness(DriverMode::IOS);
-  renderAt(harness, DriverMode::IOS, 0ms, nestedSharedGeometryScreens(true), sharedConfigs(1));
+  auto timeline = AnimationTimeline(harness);
+  timeline.configureAnimations({.at = 0ms, .animations = sharedConfigs(1)});
+  timeline.render({.at = 0ms, .tree = nestedSharedGeometryScreens(true)});
 
-  runUI(harness, 10ms, [&] { harness.transitionProgress(4, 0, false, false); });
+  timeline.transitionProgress({
+      .at = 10ms,
+      .targetTag = 4,
+      .progress = 0,
+      .closing = false,
+      .goingForward = false,
+  });
   const auto containers = syntheticRootTags(harness);
   ASSERT_EQ(containers.size(), 1);
   const auto containerTag = containers[0];
-  expectHostAbsoluteGeometry(harness, containerTag, {40, 60, 120, 80});
-  expectHostOpacity(harness, 100, 0);
-  expectHostOpacity(harness, 200, 0);
+  expectHostView(harness, {.tag = containerTag, .absoluteFrame = Frame{.x = 40, .y = 60, .width = 120, .height = 80}});
+  expectHostView(harness, {.tag = 100, .opacity = 0});
+  expectHostView(harness, {.tag = 200, .opacity = 0});
 
   struct ProgressFrame {
     double progress;
     Frame frame;
   };
   const auto progressFrames = std::array{
-      ProgressFrame{0.25, {200, 170, 150, 105}},
-      ProgressFrame{0.5, {360, 280, 180, 130}},
-      ProgressFrame{0.75, {520, 390, 210, 155}},
+      ProgressFrame{
+          .progress = 0.25,
+          .frame = {.x = 200, .y = 170, .width = 150, .height = 105},
+      },
+      ProgressFrame{
+          .progress = 0.5,
+          .frame = {.x = 360, .y = 280, .width = 180, .height = 130},
+      },
+      ProgressFrame{
+          .progress = 0.75,
+          .frame = {.x = 520, .y = 390, .width = 210, .height = 155},
+      },
   };
 
   auto time = 20ms;
   for (const auto &progressFrame : progressFrames) {
-    runUI(harness, time, [&] { harness.transitionProgress(4, progressFrame.progress, false, false); });
-    expectHostAbsoluteGeometry(harness, containerTag, progressFrame.frame);
-    expectHostOpacity(harness, 100, 0);
-    expectHostOpacity(harness, 200, 0);
+    timeline.transitionProgress({
+        .at = time,
+        .targetTag = 4,
+        .progress = progressFrame.progress,
+        .closing = false,
+        .goingForward = false,
+    });
+    expectHostView(harness, {.tag = containerTag, .absoluteFrame = progressFrame.frame});
+    expectHostView(harness, {.tag = 100, .opacity = 0});
+    expectHostView(harness, {.tag = 200, .opacity = 0});
     time += 10ms;
   }
 
-  runUI(harness, time, [&] { harness.transitionProgress(4, 1, false, false); });
+  timeline.transitionProgress({
+      .at = time,
+      .targetTag = 4,
+      .progress = 1,
+      .closing = false,
+      .goingForward = false,
+  });
   EXPECT_FALSE(harness.platform().hostTree().hasTag(containerTag));
-  expectHostAbsoluteGeometry(harness, 200, {680, 500, 240, 180});
-  expectHostOpacity(harness, 100, 0);
-  expectHostOpacity(harness, 200, 1);
+  expectHostView(harness, {.tag = 200, .absoluteFrame = Frame{.x = 680, .y = 500, .width = 240, .height = 180}});
+  expectHostView(harness, {.tag = 100, .opacity = 0});
+  expectHostView(harness, {.tag = 200, .opacity = 1});
   EXPECT_TRUE(syntheticRootTags(harness).empty());
 }
 
 TEST(LayoutAnimationScenariosTest, CancellingInteractiveSharedTransitionRestoresBothSides) {
   auto harness = AnimationHarness(DriverMode::IOS);
-  renderAt(harness, DriverMode::IOS, 0ms, sharedScreens(true, 1), sharedConfigs(1));
+  auto timeline = AnimationTimeline(harness);
+  timeline.configureAnimations({.at = 0ms, .animations = sharedConfigs(1)});
+  timeline.render({.at = 0ms, .tree = sharedScreens(true, 1)});
 
-  runUI(harness, 10ms, [&] { harness.transitionProgress(4, 0.25, false, false); });
+  timeline.transitionProgress({
+      .at = 10ms,
+      .targetTag = 4,
+      .progress = 0.25,
+      .closing = false,
+      .goingForward = false,
+  });
   auto containers = syntheticRootTags(harness);
   ASSERT_EQ(containers.size(), 1);
 
-  runUI(harness, 20ms, [&] { harness.cancelTransition(2); });
+  timeline.cancelTransition({.at = 20ms, .sourceTag = 2});
   EXPECT_FALSE(harness.platform().hostTree().hasTag(containers[0]));
-  expectHostFrame(harness, 100, {0, 0, 24, 24}, 1);
-  expectHostFrame(harness, 200, {300, 200, 28, 28}, 1);
+  expectHostView(harness, {.tag = 100, .frame = Frame{.x = 0, .y = 0, .width = 24, .height = 24}, .opacity = 1});
+  expectHostView(harness, {.tag = 200, .frame = Frame{.x = 300, .y = 200, .width = 28, .height = 28}, .opacity = 1});
   EXPECT_TRUE(syntheticRootTags(harness).empty());
 }
 #endif
@@ -1202,17 +1900,30 @@ TEST(LayoutAnimationScenariosTest, AnimatedMountSideEffectCommitsAFollowUpTree) 
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
-    auto followUp = Snapshot{{view(2, {80, 20, 120, 80}), view(3, {0, 0, 50, 50})}};
+    auto timeline = AnimationTimeline(harness);
+    auto followUp = snapshot({
+        view({.tag = 2, .frame = {.x = 80, .y = 20, .width = 120, .height = 80}}),
+        view({.tag = 3, .frame = {.x = 0, .y = 0, .width = 50, .height = 50}}),
+    });
     auto onMount = mutationCallback([&] { harness.platform().commitFromMount(followUp); });
 
-    renderAt(
-        harness,
-        mode,
-        0ms,
-        Snapshot{{view(2, {0, 0, 100, 100}, {}, {.onMount = onMount})}},
-        {animation(2, LayoutAnimationType::ENTERING, "mount-enter"),
-         animation(2, LayoutAnimationType::LAYOUT, "mount-layout"),
-         animation(3, LayoutAnimationType::ENTERING, "follow-up-enter")});
+    timeline.configureAnimations({
+        .at = 0ms,
+        .animations =
+            {
+                animation({.tag = 2, .type = LayoutAnimationType::ENTERING, .name = "mount-enter"}),
+                animation({.tag = 2, .type = LayoutAnimationType::LAYOUT, .name = "mount-layout"}),
+                animation({.tag = 3, .type = LayoutAnimationType::ENTERING, .name = "follow-up-enter"}),
+            },
+    });
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 0, .y = 0, .width = 100, .height = 100},
+            .effects = {.onMount = onMount},
+        })}),
+    });
 
     ASSERT_NE(findStart(harness, 2, LayoutAnimationType::ENTERING), nullptr);
     auto layoutStart = findStart(harness, 2, LayoutAnimationType::LAYOUT);
@@ -1227,12 +1938,12 @@ TEST(LayoutAnimationScenariosTest, AnimatedMountSideEffectCommitsAFollowUpTree) 
       EXPECT_FALSE(harness.platform().hostTree().hasTag(3));
     }
 
-    runUI(harness, 2ms, [] {});
+    timeline.onUI({.at = 2ms, .task = {}});
     EXPECT_TRUE(harness.platform().hostTree().hasTag(3));
-    expectHostOpacity(harness, 3, 0);
+    expectHostView(harness, {.tag = 3, .opacity = 0});
 
-    runUI(harness, 4ms, [&] { harness.progress(2, finalStyle(*layoutStart)); });
-    settleStarts(harness, 6ms);
+    timeline.progress({.at = 4ms, .tag = 2, .style = finalStyle(*layoutStart)});
+    settleStarts(harness, timeline, {.at = 6ms});
     const auto &frame = harness.platform().hostTree().getStubView(2).layoutMetrics.frame;
     EXPECT_EQ(frame.origin.x, 80);
     EXPECT_EQ(frame.origin.y, 20);
@@ -1245,12 +1956,14 @@ TEST(LayoutAnimationScenariosTest, RapidReordersRetargetEveryMountedItem) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
     auto tags = std::vector<Tag>{};
     for (Tag tag = 2; tag < 26; ++tag) {
       tags.push_back(tag);
     }
 
-    renderAt(harness, mode, 0ms, flatList(tags), layoutConfigs(tags));
+    timeline.configureAnimations({.at = 0ms, .animations = layoutConfigs(tags)});
+    timeline.render({.at = 0ms, .tree = flatList(tags)});
     auto time = 10ms;
     for (int round = 1; round <= 100; ++round) {
       harness.clearCalls();
@@ -1258,7 +1971,8 @@ TEST(LayoutAnimationScenariosTest, RapidReordersRetargetEveryMountedItem) {
       if (round % 3 == 0) {
         std::reverse(tags.begin(), tags.end());
       }
-      renderAt(harness, mode, time, flatList(tags, round), layoutConfigs(tags, "rapid-layout"));
+      timeline.configureAnimations({.at = time, .animations = layoutConfigs(tags, "rapid-layout")});
+      timeline.render({.at = time, .tree = flatList(tags, round)});
       ASSERT_EQ(harness.starts().size(), tags.size()) << "round " << round;
       auto startedTags = std::set<Tag>{};
       for (const auto &start : harness.starts()) {
@@ -1267,7 +1981,7 @@ TEST(LayoutAnimationScenariosTest, RapidReordersRetargetEveryMountedItem) {
         startedTags.insert(start.tag);
       }
       EXPECT_EQ(startedTags, std::set<Tag>(tags.begin(), tags.end())) << "round " << round;
-      settleStarts(harness, time + 2ms);
+      settleStarts(harness, timeline, {.at = time + 2ms});
       time += 4ms;
     }
 
@@ -1283,12 +1997,13 @@ TEST(LayoutAnimationStressTest, MixedListChurnOverlapsEnteringLayoutAndExiting) 
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
     auto tags = std::vector<Tag>{};
     for (Tag tag = 2; tag < 20; ++tag) {
       tags.push_back(tag);
     }
 
-    renderAt(harness, mode, 0ms, flatList(tags));
+    timeline.render({.at = 0ms, .tree = flatList(tags)});
     Tag nextTag = 20;
     auto time = 10ms;
     for (int round = 1; round <= 80; ++round) {
@@ -1303,10 +2018,10 @@ TEST(LayoutAnimationStressTest, MixedListChurnOverlapsEnteringLayoutAndExiting) 
 
       auto configs = layoutConfigs(tags, "list-layout");
       for (auto tag : removed) {
-        configs.push_back(animation(tag, LayoutAnimationType::EXITING, "list-exit"));
+        configs.push_back(animation({.tag = tag, .type = LayoutAnimationType::EXITING, .name = "list-exit"}));
       }
       for (auto tag : added) {
-        configs.push_back(animation(tag, LayoutAnimationType::ENTERING, "list-enter"));
+        configs.push_back(animation({.tag = tag, .type = LayoutAnimationType::ENTERING, .name = "list-enter"}));
       }
       auto expectedFirstLayout = std::set<Tag>{};
       for (size_t index = 0; index < tags.size(); ++index) {
@@ -1317,24 +2032,29 @@ TEST(LayoutAnimationStressTest, MixedListChurnOverlapsEnteringLayoutAndExiting) 
       }
 
       harness.clearCalls();
-      renderAt(harness, mode, time, flatList(tags, round), std::move(configs));
+      timeline.configureAnimations({.at = time, .animations = std::move(configs)});
+      timeline.render({.at = time, .tree = flatList(tags, round)});
       for (auto tag : removed) {
         ASSERT_NE(findStart(harness, tag, LayoutAnimationType::EXITING), nullptr) << "round " << round;
         EXPECT_TRUE(harness.platform().hostTree().hasTag(tag)) << "round " << round;
       }
       for (auto tag : added) {
         ASSERT_NE(findStart(harness, tag, LayoutAnimationType::ENTERING), nullptr) << "round " << round;
-        expectHostOpacity(harness, tag, 0);
+        expectHostView(harness, {.tag = tag, .opacity = 0});
       }
       EXPECT_EQ(startTags(harness, LayoutAnimationType::LAYOUT), expectedFirstLayout) << "round " << round;
       EXPECT_EQ(harness.starts().size(), expectedFirstLayout.size() + removed.size() + added.size())
           << "round " << round;
 
       auto firstStarts = harness.starts();
-      runUI(harness, time + 2ms, [&] {
-        for (const auto &start : firstStarts) {
-          harness.progress(start.tag, finalStyle(start));
-        }
+      timeline.onUI({
+          .at = time + 2ms,
+          .task =
+              [&] {
+                for (const auto &start : firstStarts) {
+                  harness.progress(start.tag, finalStyle(start));
+                }
+              },
       });
 
       std::reverse(tags.begin(), tags.end());
@@ -1345,17 +2065,24 @@ TEST(LayoutAnimationStressTest, MixedListChurnOverlapsEnteringLayoutAndExiting) 
         }
       }
       const auto secondStartIndex = harness.starts().size();
-      renderAt(harness, mode, time + 4ms, flatList(tags, round + 1), layoutConfigs(tags, "list-retarget"));
+      timeline.configureAnimations({.at = time + 4ms, .animations = layoutConfigs(tags, "list-retarget")});
+      timeline.render({.at = time + 4ms, .tree = flatList(tags, round + 1)});
       EXPECT_EQ(startTags(harness, LayoutAnimationType::LAYOUT, secondStartIndex), expectedSecondLayout)
           << "round " << round;
       EXPECT_EQ(harness.starts().size() - secondStartIndex, expectedSecondLayout.size()) << "round " << round;
-      settleStarts(harness, time + 6ms);
+      settleStarts(harness, timeline, {.at = time + 6ms});
 
       const auto &children = harness.platform().hostTree().getRootStubView().children;
       ASSERT_EQ(children.size(), tags.size()) << "round " << round;
       for (size_t index = 0; index < tags.size(); ++index) {
         EXPECT_EQ(children[index]->tag, tags[index]) << "round " << round;
-        expectHostFrame(harness, tags[index], flatListFrame(index, round + 1), 1);
+        expectHostView(
+            harness,
+            {
+                .tag = tags[index],
+                .frame = flatListFrame(index, round + 1),
+                .opacity = 1,
+            });
       }
       time += 10ms;
     }
@@ -1366,55 +2093,115 @@ TEST(LayoutAnimationStressTest, RecycledTagsReplaceStillExitingInstances) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
-    renderAt(harness, mode, 0ms, Snapshot{{viewInstance(2, 0, {0, 0, 100, 100})}});
+    auto timeline = AnimationTimeline(harness);
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 0, .y = 0, .width = 100, .height = 100},
+            .generation = 0,
+        })}),
+    });
 
     auto time = 10ms;
     for (uint32_t generation = 1; generation <= 150; ++generation) {
       harness.clearCalls();
-      renderAt(harness, mode, time, Snapshot{}, {animation(2, LayoutAnimationType::EXITING, "recycled-exit")});
+      timeline.configureAnimations({
+          .at = time,
+          .animations = {animation({
+              .tag = 2,
+              .type = LayoutAnimationType::EXITING,
+              .name = "recycled-exit",
+          })},
+      });
+      timeline.render({.at = time, .tree = {}});
       ASSERT_NE(findStart(harness, 2, LayoutAnimationType::EXITING), nullptr) << generation;
 
       harness.clearCalls();
-      renderAt(
-          harness,
-          mode,
-          time + 2ms,
-          Snapshot{{viewInstance(2, generation, {static_cast<float>(generation % 30), 0, 100, 100})}},
-          {animation(2, LayoutAnimationType::ENTERING, "recycled-enter")});
+      timeline.configureAnimations({
+          .at = time + 2ms,
+          .animations = {animation({
+              .tag = 2,
+              .type = LayoutAnimationType::ENTERING,
+              .name = "recycled-enter",
+          })},
+      });
+      timeline.render({
+          .at = time + 2ms,
+          .tree = snapshot({view({
+              .tag = 2,
+              .frame =
+                  {
+                      .x = static_cast<float>(generation % 30),
+                      .y = 0,
+                      .width = 100,
+                      .height = 100,
+                  },
+              .generation = generation,
+          })}),
+      });
 
       const auto *start = findStart(harness, 2, LayoutAnimationType::ENTERING);
       ASSERT_NE(start, nullptr) << generation;
       EXPECT_EQ(start->config, "recycled-enter") << generation;
       EXPECT_TRUE(harness.platform().hostTree().hasTag(2)) << generation;
       EXPECT_EQ(harness.platform().hostTree().getRootStubView().children.size(), 1) << generation;
-      expectHostFrame(harness, 2, {static_cast<float>(generation % 30), 0, 100, 100}, 0);
-      settleStarts(harness, time + 4ms);
-      expectHostFrame(harness, 2, {static_cast<float>(generation % 30), 0, 100, 100}, 1);
+      expectHostView(
+          harness,
+          {.tag = 2,
+           .frame = Frame{.x = static_cast<float>(generation % 30), .y = 0, .width = 100, .height = 100},
+           .opacity = 0});
+      settleStarts(harness, timeline, {.at = time + 4ms});
+      expectHostView(
+          harness,
+          {.tag = 2,
+           .frame = Frame{.x = static_cast<float>(generation % 30), .y = 0, .width = 100, .height = 100},
+           .opacity = 1});
       time += 7ms;
     }
   }
 }
 
-TEST(LayoutAnimationStressTest, InterruptedExitsAreCancelledBeforeBlockedUIWorkRuns) {
+TEST(LayoutAnimationCrashRegressionTest, InterruptedExitsAreCancelledBeforeBlockedUIWorkRuns) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
     auto time = 0ms;
 
     for (uint32_t generation = 0; generation < 60; ++generation) {
-      harness.timeline().at(time, Lane::JS, [&] { harness.setShouldAnimateExiting(2, false); });
-      renderAt(
-          harness,
-          mode,
-          time,
-          Snapshot{{viewInstance(2, generation, {0, 0, 200, 120}, {viewInstance(3, generation, {50, 10, 90, 90})})}},
-          {animation(3, LayoutAnimationType::EXITING, "blocked-exit")});
+      timeline.setShouldAnimateExiting({.at = time, .tag = 2, .animate = false});
+      timeline.configureAnimations({
+          .at = time,
+          .animations = {animation({
+              .tag = 3,
+              .type = LayoutAnimationType::EXITING,
+              .name = "blocked-exit",
+          })},
+      });
+      timeline.render({
+          .at = time,
+          .tree = snapshot({view({
+              .tag = 2,
+              .frame = {.x = 0, .y = 0, .width = 200, .height = 120},
+              .children = {view({
+                  .tag = 3,
+                  .frame = {.x = 50, .y = 10, .width = 90, .height = 90},
+                  .generation = generation,
+              })},
+              .generation = generation,
+          })}),
+      });
       harness.clearCalls();
 
       auto release = time + 10ms;
       harness.timeline().busyUntil(Lane::UI, release);
       harness.timeline().at(time + 2ms, Lane::JS, [&, generation] {
-        harness.render(Snapshot{{viewInstance(2, generation, {0, 0, 200, 120})}});
+        harness.render(snapshot({view({
+            .tag = 2,
+            .frame = {.x = 0, .y = 0, .width = 200, .height = 120},
+            .generation = generation,
+        })}));
       });
       harness.timeline().at(time + 3ms, Lane::JS, [&] { harness.render(Snapshot{}); });
       harness.timeline().advanceTo(release - 1ms);
@@ -1432,24 +2219,27 @@ TEST(LayoutAnimationStressTest, InterruptedExitsAreCancelledBeforeBlockedUIWorkR
 }
 
 #if defined(HARNESS_PROXY_REGISTRY) && defined(HARNESS_PLATFORM_ANDROID)
-TEST(LayoutAnimationStressTest, UICleanupCannotOvertakeAPausedJSMountSchedule) {
+TEST(LayoutAnimationCrashRegressionTest, UICleanupCannotOvertakeAPausedJSMountSchedule) {
   auto harness = AnimationHarness(DriverMode::AndroidPush);
+  auto timeline = AnimationTimeline(harness);
   auto tags = std::vector<Tag>{};
   for (Tag tag = 10; tag < 22; ++tag) {
     tags.push_back(tag);
   }
-  renderAt(harness, DriverMode::AndroidPush, 0ms, flatList(tags));
+  timeline.render({.at = 0ms, .tree = flatList(tags)});
 
   tags.erase(tags.begin(), tags.begin() + 2);
   tags.push_back(22);
   tags.push_back(23);
-  renderAt(
-      harness,
-      DriverMode::AndroidPush,
-      10ms,
-      flatList(tags),
-      {animation(10, LayoutAnimationType::EXITING, "short-exit"),
-       animation(11, LayoutAnimationType::EXITING, "short-exit")});
+  timeline.configureAnimations({
+      .at = 10ms,
+      .animations =
+          {
+              animation({.tag = 10, .type = LayoutAnimationType::EXITING, .name = "short-exit"}),
+              animation({.tag = 11, .type = LayoutAnimationType::EXITING, .name = "short-exit"}),
+          },
+  });
+  timeline.render({.at = 10ms, .tree = flatList(tags)});
   ASSERT_NE(findStart(harness, 10, LayoutAnimationType::EXITING), nullptr);
   ASSERT_NE(findStart(harness, 11, LayoutAnimationType::EXITING), nullptr);
   harness.clearCalls();
@@ -1459,10 +2249,11 @@ TEST(LayoutAnimationStressTest, UICleanupCannotOvertakeAPausedJSMountSchedule) {
   tags.push_back(25);
   harness.timeline().at(20ms, Lane::JS, [&] {
     harness.platform().pauseNextAndroidMountSchedule();
-    harness.render(
-        flatList(tags),
-        {animation(12, LayoutAnimationType::EXITING, "short-exit"),
-         animation(13, LayoutAnimationType::EXITING, "short-exit")});
+    harness.configureAnimations({
+        animation({.tag = 12, .type = LayoutAnimationType::EXITING, .name = "short-exit"}),
+        animation({.tag = 13, .type = LayoutAnimationType::EXITING, .name = "short-exit"}),
+    });
+    harness.render(flatList(tags));
   });
   harness.timeline().advanceTo(20ms);
 
@@ -1489,11 +2280,12 @@ TEST(LayoutAnimationStressTest, BusyMainLanePreservesPlatformSpecificPullAccumul
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
     auto tags = std::vector<Tag>{};
     for (Tag tag = 2; tag < 18; ++tag) {
       tags.push_back(tag);
     }
-    renderAt(harness, mode, 0ms, flatList(tags));
+    timeline.render({.at = 0ms, .tree = flatList(tags)});
     harness.clearCalls();
 
     harness.timeline().busyUntil(Lane::UI, 250ms);
@@ -1507,7 +2299,10 @@ TEST(LayoutAnimationStressTest, BusyMainLanePreservesPlatformSpecificPullAccumul
       harness.timeline().at(
           std::chrono::milliseconds{round},
           Lane::JS,
-          [&, snapshot = std::move(snapshot), configs = std::move(configs)] { harness.render(snapshot, configs); });
+          [&, snapshot = std::move(snapshot), configs = std::move(configs)] {
+            harness.configureAnimations(configs);
+            harness.render(snapshot);
+          });
     }
 
     harness.timeline().advanceTo(249ms);
@@ -1534,7 +2329,7 @@ TEST(LayoutAnimationStressTest, BusyMainLanePreservesPlatformSpecificPullAccumul
       EXPECT_EQ(startValue(start, "targetOriginY"), (index / 4) * 40);
       EXPECT_EQ(startValue(start, "targetWidth"), 31);
     }
-    settleStarts(harness, 251ms);
+    settleStarts(harness, timeline, {.at = 251ms});
 
     const auto &children = harness.platform().hostTree().getRootStubView().children;
     ASSERT_EQ(children.size(), tags.size());
@@ -1548,6 +2343,7 @@ TEST(LayoutAnimationStressTest, SixtyViewBurstsInterruptEnteringWithExiting) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
     auto time = 0ms;
 
     for (uint32_t burst = 0; burst < 20; ++burst) {
@@ -1556,24 +2352,35 @@ TEST(LayoutAnimationStressTest, SixtyViewBurstsInterruptEnteringWithExiting) {
       auto exiting = std::vector<AnimationConfig>{};
       for (Tag index = 0; index < 60; ++index) {
         auto tag = 100 + index;
-        children.push_back(viewInstance(
-            tag, burst, {static_cast<float>((index % 15) * 6), static_cast<float>((index / 15) * 6), 4, 4}));
-        entering.push_back(animation(tag, LayoutAnimationType::ENTERING, "spike-enter"));
-        exiting.push_back(animation(tag, LayoutAnimationType::EXITING, "spike-exit"));
+        children.push_back(view({
+            .tag = tag,
+            .frame =
+                {
+                    .x = static_cast<float>((index % 15) * 6),
+                    .y = static_cast<float>((index / 15) * 6),
+                    .width = 4,
+                    .height = 4,
+                },
+            .generation = burst,
+        }));
+        entering.push_back(animation({.tag = tag, .type = LayoutAnimationType::ENTERING, .name = "spike-enter"}));
+        exiting.push_back(animation({.tag = tag, .type = LayoutAnimationType::EXITING, .name = "spike-exit"}));
       }
 
-      renderAt(harness, mode, time, Snapshot{std::move(children)}, std::move(entering));
+      timeline.configureAnimations({.at = time, .animations = std::move(entering)});
+      timeline.render({.at = time, .tree = snapshot(std::move(children))});
       ASSERT_EQ(harness.starts().size(), 60) << burst;
       auto startedTags = std::set<Tag>{};
       for (const auto &start : harness.starts()) {
         EXPECT_EQ(start.type, LayoutAnimationType::ENTERING) << burst;
         EXPECT_EQ(start.config, "spike-enter") << burst;
         startedTags.insert(start.tag);
-        expectHostOpacity(harness, start.tag, 0);
+        expectHostView(harness, {.tag = start.tag, .opacity = 0});
       }
       EXPECT_EQ(startedTags.size(), 60) << burst;
       harness.clearCalls();
-      renderAt(harness, mode, time + 2ms, Snapshot{}, std::move(exiting));
+      timeline.configureAnimations({.at = time + 2ms, .animations = std::move(exiting)});
+      timeline.render({.at = time + 2ms, .tree = {}});
       ASSERT_EQ(harness.starts().size(), 60) << burst;
       startedTags.clear();
       for (const auto &start : harness.starts()) {
@@ -1583,7 +2390,7 @@ TEST(LayoutAnimationStressTest, SixtyViewBurstsInterruptEnteringWithExiting) {
         EXPECT_TRUE(harness.platform().hostTree().hasTag(start.tag)) << burst;
       }
       EXPECT_EQ(startedTags.size(), 60) << burst;
-      settleStarts(harness, time + 4ms);
+      settleStarts(harness, timeline, {.at = time + 4ms});
 
       EXPECT_EQ(harness.platform().hostTree().size(), 1) << burst;
       time += 7ms;
@@ -1595,14 +2402,16 @@ TEST(LayoutAnimationStressTest, ManySharedTagsToggleBetweenBoundaries) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
-    renderAt(harness, mode, 0ms, sharedScreens(true, 24), sharedConfigs(24));
+    auto timeline = AnimationTimeline(harness);
+    timeline.configureAnimations({.at = 0ms, .animations = sharedConfigs(24)});
+    timeline.render({.at = 0ms, .tree = sharedScreens(true, 24)});
 
     auto firstActive = true;
     auto time = 10ms;
     for (int round = 1; round <= 40; ++round) {
       firstActive = !firstActive;
       harness.clearCalls();
-      renderAt(harness, mode, time, sharedScreens(firstActive, 24, round));
+      timeline.render({.at = time, .tree = sharedScreens(firstActive, 24, round)});
 
       ASSERT_EQ(harness.starts().size(), 24) << round;
       auto configs = std::set<std::string>{};
@@ -1616,7 +2425,7 @@ TEST(LayoutAnimationStressTest, ManySharedTagsToggleBetweenBoundaries) {
         ASSERT_FLOAT_EQ(hostOpacity(harness, 200 + index), 0) << round;
       }
       EXPECT_EQ(syntheticRootTags(harness).size(), 24) << round;
-      settleStarts(harness, time + 2ms);
+      settleStarts(harness, timeline, {.at = time + 2ms});
       EXPECT_TRUE(syntheticRootTags(harness).empty()) << round;
       for (int index = 0; index < 24; ++index) {
         ASSERT_FLOAT_EQ(hostOpacity(harness, firstActive ? 200 + index : 100 + index), 0) << round;
@@ -1631,7 +2440,9 @@ TEST(LayoutAnimationStressTest, SharedTransitionRetargetsBeforeItSettles) {
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
-    renderAt(harness, mode, 0ms, sharedScreens(true, 1), sharedConfigs(1));
+    auto timeline = AnimationTimeline(harness);
+    timeline.configureAnimations({.at = 0ms, .animations = sharedConfigs(1)});
+    timeline.render({.at = 0ms, .tree = sharedScreens(true, 1)});
 
     auto firstActive = true;
     auto time = 10ms;
@@ -1640,7 +2451,7 @@ TEST(LayoutAnimationStressTest, SharedTransitionRetargetsBeforeItSettles) {
     for (int round = 1; round <= 80; ++round) {
       firstActive = !firstActive;
       harness.clearCalls();
-      renderAt(harness, mode, time, sharedScreens(firstActive, 1, round));
+      timeline.render({.at = time, .tree = sharedScreens(firstActive, 1, round)});
       auto start = onlyStart(harness);
       EXPECT_EQ(start.type, LayoutAnimationType::SHARED_ELEMENT_TRANSITION) << round;
       EXPECT_EQ(start.config, "shared-0") << round;
@@ -1665,24 +2476,27 @@ TEST(LayoutAnimationStressTest, SharedTransitionRetargetsBeforeItSettles) {
           static_cast<float>((startValue(start, "source.width") + startValue(start, "target.width")) / 2),
           static_cast<float>((startValue(start, "source.height") + startValue(start, "target.height")) / 2),
       };
-      runUI(harness, time + 2ms, [&] {
-        harness.progress(
-            containerTag,
-            {.x = mountedFrame->x,
-             .y = mountedFrame->y,
-             .width = mountedFrame->width,
-             .height = mountedFrame->height,
-             .opacity = 1});
+      timeline.progress({
+          .at = time + 2ms,
+          .tag = containerTag,
+          .style =
+              {
+                  .x = mountedFrame->x,
+                  .y = mountedFrame->y,
+                  .width = mountedFrame->width,
+                  .height = mountedFrame->height,
+                  .opacity = 1,
+              },
       });
-      expectHostFrame(harness, containerTag, *mountedFrame, 1);
+      expectHostView(harness, {.tag = containerTag, .frame = *mountedFrame, .opacity = 1});
       time += 5ms;
     }
 
-    settleStarts(harness, time);
+    settleStarts(harness, timeline, {.at = time});
     EXPECT_FALSE(harness.platform().hostTree().hasTag(containerTag));
     EXPECT_TRUE(syntheticRootTags(harness).empty());
-    expectHostOpacity(harness, firstActive ? 200 : 100, 0);
-    expectHostOpacity(harness, firstActive ? 100 : 200, 1);
+    expectHostView(harness, {.tag = firstActive ? 200 : 100, .opacity = 0});
+    expectHostView(harness, {.tag = firstActive ? 100 : 200, .opacity = 1});
   }
 }
 
@@ -1690,11 +2504,12 @@ TEST(LayoutAnimationStressTest, NestedChurnChangesFlatteningWhileChildrenEnterAn
   for (auto mode : platformModes()) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
+    auto timeline = AnimationTimeline(harness);
     auto visible = std::array<bool, 24>{};
     visible.fill(true);
     auto generations = std::array<uint32_t, 24>{};
 
-    auto snapshot = [&](int round) {
+    auto treeAtRound = [&](int round) {
       auto groups = std::vector<ViewSpec>{};
       for (int group = 0; group < 3; ++group) {
         auto children = std::vector<ViewSpec>{};
@@ -1703,21 +2518,36 @@ TEST(LayoutAnimationStressTest, NestedChurnChangesFlatteningWhileChildrenEnterAn
           if (!visible[item]) {
             continue;
           }
-          children.push_back(viewInstance(
-              100 + item,
-              generations[item],
-              {static_cast<float>((index % 4) * 35 + round % 9),
-               static_cast<float>((index / 4) * 35),
-               static_cast<float>(28 + round % 4),
-               28}));
+          children.push_back(view({
+              .tag = 100 + item,
+              .frame =
+                  {
+                      .x = static_cast<float>((index % 4) * 35 + round % 9),
+                      .y = static_cast<float>((index / 4) * 35),
+                      .width = static_cast<float>(28 + round % 4),
+                      .height = 28,
+                  },
+              .generation = generations[item],
+          }));
         }
-        groups.push_back(view(
-            10 + group, {static_cast<float>(group * 260), 0, 240, 100}, (round + group) % 2 == 0, std::move(children)));
+        groups.push_back(view({
+            .tag = 10 + group,
+            .frame =
+                {
+                    .x = static_cast<float>(group * 260),
+                    .y = 0,
+                    .width = 240,
+                    .height = 100,
+                },
+            .children = std::move(children),
+            .collapsable = (round + group) % 2 == 0,
+            .hasNativeId = false,
+        }));
       }
-      return Snapshot{std::move(groups)};
+      return snapshot(std::move(groups));
     };
 
-    renderAt(harness, mode, 0ms, snapshot(0));
+    timeline.render({.at = 0ms, .tree = treeAtRound(0)});
     auto time = 10ms;
     for (int round = 1; round <= 120; ++round) {
       auto changed = std::array<int, 3>{};
@@ -1728,21 +2558,25 @@ TEST(LayoutAnimationStressTest, NestedChurnChangesFlatteningWhileChildrenEnterAn
         changed[group] = item;
         wasVisible[group] = visible[item];
         if (visible[item]) {
-          configs.push_back(animation(100 + item, LayoutAnimationType::EXITING, "nested-exit"));
+          configs.push_back(
+              animation({.tag = 100 + item, .type = LayoutAnimationType::EXITING, .name = "nested-exit"}));
         } else {
           ++generations[item];
-          configs.push_back(animation(100 + item, LayoutAnimationType::ENTERING, "nested-enter"));
+          configs.push_back(
+              animation({.tag = 100 + item, .type = LayoutAnimationType::ENTERING, .name = "nested-enter"}));
         }
         visible[item] = !visible[item];
       }
       for (int item = 0; item < 24; ++item) {
         if (visible[item] && std::find(changed.begin(), changed.end(), item) == changed.end()) {
-          configs.push_back(animation(100 + item, LayoutAnimationType::LAYOUT, "nested-layout"));
+          configs.push_back(
+              animation({.tag = 100 + item, .type = LayoutAnimationType::LAYOUT, .name = "nested-layout"}));
         }
       }
 
       harness.clearCalls();
-      renderAt(harness, mode, time, snapshot(round), std::move(configs));
+      timeline.configureAnimations({.at = time, .animations = std::move(configs)});
+      timeline.render({.at = time, .tree = treeAtRound(round)});
       auto expectedLayoutTags = std::set<Tag>{};
       for (int item = 0; item < 24; ++item) {
         if (visible[item] && std::find(changed.begin(), changed.end(), item) == changed.end()) {
@@ -1760,10 +2594,10 @@ TEST(LayoutAnimationStressTest, NestedChurnChangesFlatteningWhileChildrenEnterAn
         if (wasVisible[group]) {
           EXPECT_TRUE(harness.platform().hostTree().hasTag(tag)) << round << ':' << tag;
         } else {
-          expectHostOpacity(harness, tag, 0);
+          expectHostView(harness, {.tag = tag, .opacity = 0});
         }
       }
-      settleStarts(harness, time + 2ms);
+      settleStarts(harness, timeline, {.at = time + 2ms});
 
       for (int group = 0; group < 3; ++group) {
         const auto flattened = (round + group) % 2 == 0;
@@ -1780,13 +2614,18 @@ TEST(LayoutAnimationStressTest, NestedChurnChangesFlatteningWhileChildrenEnterAn
         const auto expectedParent = flattened ? 1 : 10 + group;
         EXPECT_EQ(harness.platform().hostTree().getStubView(100 + item).parentTag, expectedParent)
             << round << ':' << item;
-        expectHostGeometry(
+        expectHostView(
             harness,
-            100 + item,
-            {static_cast<float>((flattened ? group * 260 : 0) + (index % 4) * 35 + round % 9),
-             static_cast<float>((index / 4) * 35),
-             static_cast<float>(28 + round % 4),
-             28});
+            {
+                .tag = 100 + item,
+                .frame =
+                    Frame{
+                        .x = static_cast<float>((flattened ? group * 260 : 0) + (index % 4) * 35 + round % 9),
+                        .y = static_cast<float>((index / 4) * 35),
+                        .width = static_cast<float>(28 + round % 4),
+                        .height = 28,
+                    },
+            });
       }
       time += 5ms;
     }

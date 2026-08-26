@@ -16,16 +16,20 @@ using namespace std::chrono_literals;
 namespace {
 
 Snapshot firstSnapshot(MutationEffects effects = {}) {
-  return Snapshot{{
-      view(2, {0, 0, 100, 100}, {}, std::move(effects)),
-  }};
+  return snapshot({
+      view({
+          .tag = 2,
+          .frame = {.x = 0, .y = 0, .width = 100, .height = 100},
+          .effects = std::move(effects),
+      }),
+  });
 }
 
 Snapshot secondSnapshot() {
-  return Snapshot{{
-      view(2, {10, 20, 120, 80}),
-      view(3, {150, 0, 50, 50}),
-  }};
+  return snapshot({
+      view({.tag = 2, .frame = {.x = 10, .y = 20, .width = 120, .height = 80}}),
+      view({.tag = 3, .frame = {.x = 150, .y = 0, .width = 50, .height = 50}}),
+  });
 }
 
 std::vector<facebook::react::Tag> updatedTagsSince(const PlatformDriver &driver, size_t frameIndex) {
@@ -157,7 +161,14 @@ TEST(PlatformDriverTest, RecordsMountedHostFrames) {
 TEST(PlatformDriverTest, ReusesUnchangedNodesAndAncestorProps) {
   auto choreographer = Choreographer{};
   auto driver = PlatformDriver(choreographer, DriverMode::IOS);
-  auto initial = Snapshot{{view(2, {0, 0, 200, 200}, {view(3, {10, 10, 50, 50})})}};
+  auto initial = snapshot({view({
+      .tag = 2,
+      .frame = {.x = 0, .y = 0, .width = 200, .height = 200},
+      .children = {view({
+          .tag = 3,
+          .frame = {.x = 10, .y = 10, .width = 50, .height = 50},
+      })},
+  })});
 
   choreographer.at(0ms, Lane::JS, [&] { driver.render(initial); });
   choreographer.advanceTo(0ms);
@@ -168,8 +179,16 @@ TEST(PlatformDriverTest, ReusesUnchangedNodesAndAncestorProps) {
   EXPECT_TRUE(updatedTagsSince(driver, frameIndex).empty());
   frameIndex = driver.mountedFrames().size();
 
-  choreographer.at(
-      2ms, Lane::JS, [&] { driver.render(Snapshot{{view(2, {0, 0, 200, 200}, {view(3, {20, 10, 50, 50})})}}); });
+  choreographer.at(2ms, Lane::JS, [&] {
+    driver.render(snapshot({view({
+        .tag = 2,
+        .frame = {.x = 0, .y = 0, .width = 200, .height = 200},
+        .children = {view({
+            .tag = 3,
+            .frame = {.x = 20, .y = 10, .width = 50, .height = 50},
+        })},
+    })}));
+  });
   choreographer.advanceTo(2ms);
   EXPECT_EQ(updatedTagsSince(driver, frameIndex), (std::vector<facebook::react::Tag>{3}));
   const auto &mutations = driver.mountedFrames().back().mutations;
@@ -188,13 +207,27 @@ TEST(PlatformDriverTest, BoundaryUpdatesDoNotUpdateUnchangedDescendants) {
   auto driver = PlatformDriver(choreographer, DriverMode::IOS);
 
   choreographer.at(0ms, Lane::JS, [&] {
-    driver.render(Snapshot{{sharedTransitionBoundary(2, true, {view(3, {10, 10, 50, 50})})}});
+    driver.render(snapshot({sharedTransitionBoundary({
+        .tag = 2,
+        .children = {view({
+            .tag = 3,
+            .frame = {.x = 10, .y = 10, .width = 50, .height = 50},
+        })},
+        .boundaryActive = true,
+    })}));
   });
   choreographer.advanceTo(0ms);
   const auto frameIndex = driver.mountedFrames().size();
 
   choreographer.at(1ms, Lane::JS, [&] {
-    driver.render(Snapshot{{sharedTransitionBoundary(2, false, {view(3, {10, 10, 50, 50})})}});
+    driver.render(snapshot({sharedTransitionBoundary({
+        .tag = 2,
+        .children = {view({
+            .tag = 3,
+            .frame = {.x = 10, .y = 10, .width = 50, .height = 50},
+        })},
+        .boundaryActive = false,
+    })}));
   });
   choreographer.advanceTo(1ms);
 

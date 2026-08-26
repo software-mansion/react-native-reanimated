@@ -19,17 +19,23 @@ TEST(ProxySmokeTest, RunsEnteringAnimationThroughTheRealProxy) {
   for (auto mode : modes) {
     SCOPED_TRACE(static_cast<int>(mode));
     auto harness = AnimationHarness(mode);
-    auto &timeline = harness.timeline();
+    auto timeline = AnimationTimeline(harness);
 
-    timeline.at(0ms, Lane::JS, [&] {
-      harness.render(Snapshot{{view(2, {10, 20, 100, 80})}}, {animation(2, LayoutAnimationType::ENTERING, "fade-in")});
+    timeline.configureAnimations({
+        .at = 0ms,
+        .animations = {animation({
+            .tag = 2,
+            .type = LayoutAnimationType::ENTERING,
+            .name = "fade-in",
+        })},
     });
-#ifdef HARNESS_PLATFORM_ANDROID
-    timeline.at(16ms, Lane::UI, [&] { harness.frame(); });
-    timeline.advanceTo(16ms);
-#else
-    timeline.advanceTo(0ms);
-#endif
+    timeline.render({
+        .at = 0ms,
+        .tree = snapshot({view({
+            .tag = 2,
+            .frame = {.x = 10, .y = 20, .width = 100, .height = 80},
+        })}),
+    });
 
     ASSERT_EQ(harness.starts().size(), 1);
     EXPECT_EQ(harness.starts()[0].tag, 2);
@@ -41,24 +47,21 @@ TEST(ProxySmokeTest, RunsEnteringAnimationThroughTheRealProxy) {
         static_cast<const facebook::react::ViewProps &>(*harness.platform().hostTree().getStubView(2).props);
     EXPECT_FLOAT_EQ(initialProps.opacity, 0);
 
-    timeline.at(100ms, Lane::UI, [&] {
-      harness.progress(2, {.x = 10, .y = 20, .width = 100, .height = 80, .opacity = 0.5});
-      harness.frame();
+    timeline.progress({
+        .at = 100ms,
+        .tag = 2,
+        .style = {.x = 10, .y = 20, .width = 100, .height = 80, .opacity = 0.5},
     });
-    timeline.advanceTo(100ms);
     const auto &progressProps =
         static_cast<const facebook::react::ViewProps &>(*harness.platform().hostTree().getStubView(2).props);
     EXPECT_FLOAT_EQ(progressProps.opacity, 0.5);
 
-    timeline.at(190ms, Lane::UI, [&] {
-      harness.progress(2, {.x = 10, .y = 20, .width = 100, .height = 80, .opacity = 1});
-      harness.frame();
+    timeline.progress({
+        .at = 190ms,
+        .tag = 2,
+        .style = {.x = 10, .y = 20, .width = 100, .height = 80, .opacity = 1},
     });
-    timeline.at(200ms, Lane::UI, [&] {
-      harness.end(2, false);
-      harness.frame();
-    });
-    timeline.advanceTo(200ms);
+    timeline.end({.at = 200ms, .tag = 2, .removeView = false});
 
     EXPECT_TRUE(harness.platform().hostTree().hasTag(2));
     const auto &finalProps =

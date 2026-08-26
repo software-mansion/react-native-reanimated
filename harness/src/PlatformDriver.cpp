@@ -56,6 +56,8 @@ std::string_view displayName(DisplayType type) {
       return "flex";
     case DisplayType::Contents:
       return "contents";
+    case DisplayType::Grid:
+      return "grid";
   }
   return "other";
 }
@@ -315,7 +317,13 @@ void PlatformDriver::uiManagerDidFinishReactCommit(const ShadowTree &) {}
 
 void PlatformDriver::uiManagerDidPromoteReactRevision(const ShadowTree &) {}
 
-void PlatformDriver::uiManagerShouldSetOnSurfaceStartCallback(UIManagerDelegate::OnSurfaceStartCallback &&) {}
+void PlatformDriver::uiManagerShouldAddOnSurfaceStartCallback(UIManagerDelegate::OnSurfaceStartCallback &&) {}
+
+void PlatformDriver::uiManagerDidCaptureViewSnapshot(Tag, SurfaceId) {}
+
+void PlatformDriver::uiManagerDidSetViewSnapshot(Tag, Tag, SurfaceId) {}
+
+void PlatformDriver::uiManagerDidClearPendingSnapshots() {}
 
 void PlatformDriver::commit(const Snapshot &snapshot, bool mountSynchronously) {
   auto status = ShadowTree::CommitStatus::Cancelled;

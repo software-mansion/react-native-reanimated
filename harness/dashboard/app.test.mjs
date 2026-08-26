@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { findNodeState, mutationLabel, nodeRows } from './model.js';
+import { findNodeState, mutationLabel, nodeRows, resultStatus, testPurpose } from './model.js';
 
 test('keeps selected-view opacity and geometry meaningful across frames', () => {
   const first = root(node(0.5, 5));
@@ -45,6 +45,11 @@ test('keeps selected-view opacity and geometry meaningful across frames', () => 
     title: 'parent #2, index -1; frame 5,5 20×20 → 6,5 20×20',
   });
   assert.equal(Object.fromEntries(nodeRows(findNodeState(root(node(1, 0, 'none')), selectedTag))).Display, 'none');
+  assert.equal(resultStatus({ passed: false, signal: 'SIGABRT' }), 'Crashed · SIGABRT');
+  assert.equal(resultStatus({ passed: false, signal: 'SIGKILL', timedOut: true }), 'Timed out');
+  assert.equal(resultStatus({ passed: false, signal: null }), 'Failed');
+  assert.equal(testPurpose('LayoutAnimationCrashRegressionTest'), 'Historical crash regression');
+  assert.equal(testPurpose('LayoutAnimationScenariosTest'), 'Behavior');
 });
 
 function node(opacity, x, display = 'flex') {
