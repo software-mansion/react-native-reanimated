@@ -184,6 +184,7 @@ export const processTransform: ValueProcessor<TransformsArray | string> = (
   }
 
   return value
+    .trim()
     .split(/\)\s*/)
     .filter(Boolean)
     .flatMap((part) => {
