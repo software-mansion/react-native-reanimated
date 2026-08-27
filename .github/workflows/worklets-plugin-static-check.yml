@@ -1,10 +1,10 @@
-name: Babel plugin static check
+name: Worklets plugin static check
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     paths:
-      - '.github/workflows/babel-plugin-static-check.yml'
+      - '.github/workflows/worklets-plugin-static-check.yml'
       - 'packages/react-native-worklets/plugin/**'
       - 'packages/react-native-worklets/plugin-oxc/**'
       - 'apps/fabric-example/babel.config.js'
@@ -15,7 +15,7 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/babel-plugin-static-check.yml'
+      - '.github/workflows/worklets-plugin-static-check.yml'
       - 'packages/react-native-worklets/plugin/**'
       - 'packages/react-native-worklets/plugin-oxc/**'
       - 'apps/fabric-example/babel.config.js'
@@ -26,7 +26,7 @@ permissions:
   contents: read
 
 jobs:
-  babel-plugin-static-check:
+  worklets-plugin-static-check:
     if: github.repository == 'software-mansion/react-native-reanimated'
     strategy:
       fail-fast: false
@@ -43,7 +43,7 @@ jobs:
             plugin: oxc
     runs-on: ${{ matrix.os }}
     concurrency:
-      group: babel-plugin-static-check-${{ matrix.os }}-${{ matrix.plugin }}-${{ github.ref }}
+      group: worklets-plugin-static-check-${{ matrix.os }}-${{ matrix.plugin }}-${{ github.ref }}
       cancel-in-progress: true
     env:
       EXAMPLE_DIR: apps/fabric-example

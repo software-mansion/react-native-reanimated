@@ -59,7 +59,12 @@ function workletsPluginOxcBabelShim(babelApi, options) {
   };
 }
 
-/** @returns {import('./index').TransformResult} */
+/**
+ * @param {string} sourceText
+ * @param {string} filename
+ * @param {import('@babel/core').PluginPass} state
+ * @returns {import('./index').TransformResult}
+ */
 function transform(sourceText, filename, state) {
   try {
     return oxc.transform(sourceText, filename, {
@@ -82,31 +87,29 @@ function transform(sourceText, filename, state) {
   }
 }
 
-/** @returns {import('@babel/types').Program} */
-function reparse(babelApi, code, filename, state) {
-  const parse = (babelApi && babelApi.parse) || require('@babel/core').parse;
-  const parserOpts = state.file.opts.parserOpts ?? {};
-  const ast = parse(code, {
-    sourceType:
-      parserOpts.sourceType ?? state.file.opts.sourceType ?? 'unambiguous',
-    parserOpts: { ...parserOpts },
-    babelrc: false,
-    configFile: false,
-    plugins: reparseSyntaxPlugins(filename),
-  });
-  return ast.program;
+/** @returns {string} */
+function resolveWorkletsPkgDir() {
+  if (cachedWorkletsPkgDir === undefined) {
+    try {
+      cachedWorkletsPkgDir = path.dirname(
+        require.resolve('react-native-worklets/package.json')
+      );
+    } catch (error) {
+      throw new Error(
+        "[Worklets] couldn't find the react-native-worklets package on disk, " +
+          'so the generated worklet files have nowhere to go. ' +
+          `Make sure it's installed. Cause: ${error.message}`
+      );
+    }
+  }
+  return cachedWorkletsPkgDir;
 }
 
-function reparseSyntaxPlugins(filename) {
-  if (filename.endsWith('.tsx')) {
-    return [[SYNTAX_TYPESCRIPT, { isTSX: true }]];
-  }
-  if (/\.(ts|mts|cts)$/.test(filename)) {
-    return [[SYNTAX_TYPESCRIPT, { isTSX: false }]];
-  }
-  return [[SYNTAX_JSX]];
-}
-
+/**
+ * @param {import('./index').TransformResult} result
+ * @param {import('@babel/core').PluginPass} state
+ * @returns {void}
+ */
 function adoptSourceMap(result, state) {
   if (!result.map) {
     return;
@@ -126,22 +129,39 @@ function adoptSourceMap(result, state) {
   state.file.inputMap = { toObject: () => map };
 }
 
-/** @returns {string} */
-function resolveWorkletsPkgDir() {
-  if (cachedWorkletsPkgDir === undefined) {
-    try {
-      cachedWorkletsPkgDir = path.dirname(
-        require.resolve('react-native-worklets/package.json')
-      );
-    } catch (error) {
-      throw new Error(
-        "[Worklets] couldn't find the react-native-worklets package on disk, " +
-          'so the generated worklet files have nowhere to go. ' +
-          `Make sure it's installed. Cause: ${error.message}`
-      );
-    }
+/**
+ * @param {typeof import('@babel/core')} babelApi
+ * @param {string} code
+ * @param {string} filename
+ * @param {import('@babel/core').PluginPass} state
+ * @returns {import('@babel/types').Program}
+ */
+function reparse(babelApi, code, filename, state) {
+  const parse = (babelApi && babelApi.parse) || require('@babel/core').parse;
+  const parserOpts = state.file.opts.parserOpts ?? {};
+  const ast = parse(code, {
+    sourceType:
+      parserOpts.sourceType ?? state.file.opts.sourceType ?? 'unambiguous',
+    parserOpts: { ...parserOpts },
+    babelrc: false,
+    configFile: false,
+    plugins: reparseSyntaxPlugins(filename),
+  });
+  return ast.program;
+}
+
+/**
+ * @param {string} filename
+ * @returns {import('@babel/core').PluginItem[]}
+ */
+function reparseSyntaxPlugins(filename) {
+  if (filename.endsWith('.tsx')) {
+    return [[SYNTAX_TYPESCRIPT, { isTSX: true }]];
   }
-  return cachedWorkletsPkgDir;
+  if (/\.(ts|mts|cts)$/.test(filename)) {
+    return [[SYNTAX_TYPESCRIPT, { isTSX: false }]];
+  }
+  return [[SYNTAX_JSX]];
 }
 
 module.exports = workletsPluginOxcBabelShim;

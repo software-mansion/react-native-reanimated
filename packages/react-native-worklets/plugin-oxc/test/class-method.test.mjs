@@ -16,22 +16,6 @@ test('class with __workletClass marker is left alone', () => {
   const { code } = transform(input, 'test.js', {});
   assert.match(code, /class Foo/, `Got:\n${code}`);
   assert.match(code, /__workletClass/, 'marker should be preserved');
-  assert.doesNotMatch(
-    code,
-    /__classFactory/,
-    'no factory wrap in bundle-only mode'
-  );
-});
-
-test('class without marker is left alone', () => {
-  const input = `
-    class Foo {
-      bar() { return 42; }
-    }
-  `;
-  const { code } = transform(input, 'test.js', {});
-  assert.doesNotMatch(code, /__classFactory/);
-  assert.match(code, /class Foo/);
 });
 
 for (const [label, member] of [

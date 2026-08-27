@@ -62,9 +62,7 @@ pub fn transform(
     if let Some(dir) = opts.worklets_package_dir.take() {
         opts.worklets_package_dir = Some(dir.replace('\\', "/"));
     }
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        run(&source_text, &filename, opts)
-    }));
+    let result = std::panic::catch_unwind(|| run(&source_text, &filename, opts));
     match result {
         Ok(Ok(value)) => Ok(value),
         Ok(Err(msg)) => Err(napi::Error::from_reason(format!(

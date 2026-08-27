@@ -6,6 +6,9 @@ export interface PluginOptions {
     moduleNames?: string[];
     relativePaths?: string[];
   };
+}
+
+export interface TransformOptions extends PluginOptions {
   envName?: string;
   pluginVersion?: string;
   workletsPackageDir?: string;
@@ -27,5 +30,5 @@ export interface TransformResult {
 export function transform(
   sourceText: string,
   filename: string,
-  options?: PluginOptions
+  options?: TransformOptions
 ): TransformResult;

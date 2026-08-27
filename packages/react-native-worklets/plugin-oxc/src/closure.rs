@@ -92,13 +92,6 @@ pub fn get_closure<'a>(
                 result.closure_variables.push(r.name);
             }
             None => {
-                if !binding_is_outside(scoping, function_scope_id, &r.name, function_scope_id) {
-                    continue;
-                }
-
-                if self_function_name == Some(r.name.as_str()) {
-                    continue;
-                }
                 if !is_synthesized_init_data(&r.name) {
                     continue;
                 }
@@ -119,22 +112,6 @@ fn is_synthesized_init_data(name: &str) -> bool {
         return false;
     };
     !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit())
-}
-
-fn binding_is_outside(
-    scoping: &Scoping,
-    lookup_from: ScopeId,
-    name: &str,
-    function_scope_id: ScopeId,
-) -> bool {
-    match scoping.find_binding(lookup_from, name.into()) {
-        Some(symbol_id) => !scope_is_inside(
-            scoping,
-            scoping.symbol_scope_id(symbol_id),
-            function_scope_id,
-        ),
-        None => true,
-    }
 }
 
 pub fn scope_is_inside(scoping: &Scoping, inner: ScopeId, outer: ScopeId) -> bool {

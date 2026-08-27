@@ -12,8 +12,37 @@ const HASH = new RegExp(
 let idByHash = new Map();
 let serializing = false;
 
-function resetWorkletHashIds() {
-  idByHash = new Map();
+const workletHashSerializer = {
+  test: (value) =>
+    !serializing && typeof value === 'string' && HASH.test(value),
+  serialize: (value, config, indentation, depth, refs, printer) => {
+    serializing = true;
+    try {
+      return printer(
+        normalizeSnapshot(value),
+        config,
+        indentation,
+        depth,
+        refs
+      );
+    } finally {
+      serializing = false;
+    }
+  },
+};
+
+function normalizeSnapshot(code) {
+  return reprint(renumber(code));
+}
+
+function renumber(code) {
+  return code.replace(new RegExp(HASH, 'g'), (match, path, field, initData) => {
+    const hash = canonicalize(path ?? field ?? initData);
+    if (!idByHash.has(hash)) {
+      idByHash.set(hash, idByHash.size + 1);
+    }
+    return match.replace(path ?? field ?? initData, idByHash.get(hash));
+  });
 }
 
 function canonicalize(raw) {
@@ -46,32 +75,9 @@ function reprint(code) {
   }
 }
 
-function renumber(code) {
-  return code.replace(new RegExp(HASH, 'g'), (match, path, field, initData) => {
-    const hash = canonicalize(path ?? field ?? initData);
-    if (!idByHash.has(hash)) {
-      idByHash.set(hash, idByHash.size + 1);
-    }
-    return match.replace(path ?? field ?? initData, idByHash.get(hash));
-  });
+function resetWorkletHashIds() {
+  idByHash = new Map();
 }
-
-function normalizeSnapshot(code) {
-  return reprint(renumber(code));
-}
-
-const workletHashSerializer = {
-  test: (value) =>
-    !serializing && typeof value === 'string' && HASH.test(value),
-  serialize: (value, config, indentation, depth, refs, printer) => {
-    serializing = true;
-    try {
-      return printer(normalizeSnapshot(value), config, indentation, depth, refs);
-    } finally {
-      serializing = false;
-    }
-  },
-};
 
 module.exports = {
   workletHashSerializer,

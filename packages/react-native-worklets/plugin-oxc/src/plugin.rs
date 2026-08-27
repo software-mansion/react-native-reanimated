@@ -10,6 +10,7 @@ use oxc_semantic::Scoping;
 use oxc_span::SPAN;
 use oxc_syntax::scope::ScopeFlags;
 
+use crate::autoworkletization::add_directives_to_known_callbacks;
 use crate::class_method::MethodOutcome;
 use crate::types::State;
 use crate::utils::{const_decl, const_declaration, has_worklet_directive};
@@ -23,20 +24,17 @@ pub fn process_program<'a>(
     allocator: &'a Allocator,
     filename: &str,
 ) -> Vec<(String, String)> {
-    state.error =
-        crate::autoworkletization::add_directives_to_known_callbacks(program, &*scoping, builder);
+    state.error = add_directives_to_known_callbacks(program, &*scoping, builder);
 
-    {
-        let mut pass = WorkletPass {
-            state,
-            scoping,
-            builder,
-            allocator,
-            filename,
-            parent_is_scopable: true,
-        };
-        pass.visit_program(program);
-    }
+    let mut pass = WorkletPass {
+        state,
+        scoping,
+        builder,
+        allocator,
+        filename,
+        parent_is_scopable: true,
+    };
+    pass.visit_program(program);
 
     std::mem::take(&mut state.emitted_files)
 }
