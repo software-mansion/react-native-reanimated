@@ -1,7 +1,5 @@
 use oxc_allocator::CloneIn;
-use oxc_ast::ast::{
-    ClassElement, MethodDefinition, MethodDefinitionKind, PropertyDefinitionType, PropertyKey,
-};
+use oxc_ast::ast::{ClassElement, MethodDefinition, PropertyDefinitionType, PropertyKey};
 use oxc_ast::NONE;
 use oxc_span::SPAN;
 use oxc_syntax::scope::ScopeFlags;
@@ -11,7 +9,6 @@ use crate::utils::has_worklet_directive;
 
 pub enum MethodOutcome<'a> {
     NotAWorklet,
-    Rejected,
     Workletized(ClassElement<'a>),
 }
 
@@ -27,11 +24,8 @@ pub fn process_if_worklet_method<'a>(
     {
         return MethodOutcome::NotAWorklet;
     }
-    if method.kind != MethodDefinitionKind::Method
-        || matches!(method.key, PropertyKey::PrivateIdentifier(_))
-    {
-        reject(pass, method);
-        return MethodOutcome::Rejected;
+    if !method.kind.is_method() || matches!(method.key, PropertyKey::PrivateIdentifier(_)) {
+        return MethodOutcome::NotAWorklet;
     }
 
     let self_name = match &method.key {
@@ -60,28 +54,4 @@ pub fn process_if_worklet_method<'a>(
         false,
         None,
     ))
-}
-
-fn reject(pass: &mut WorkletPass<'_, '_>, method: &MethodDefinition<'_>) {
-    if pass.state.error.is_some() {
-        return;
-    }
-    if method.kind == MethodDefinitionKind::Constructor {
-        pass.state.error = Some("a class constructor cannot be a worklet".to_string());
-        return;
-    }
-    let kind = match method.kind {
-        MethodDefinitionKind::Get => "class getter",
-        MethodDefinitionKind::Set => "class setter",
-        _ => "class method",
-    };
-    let name = match &method.key {
-        PropertyKey::StaticIdentifier(id) => id.name.to_string(),
-        PropertyKey::PrivateIdentifier(id) => format!("#{}", id.name),
-        _ => "<computed>".to_string(),
-    };
-    pass.state.error = Some(format!(
-        "the `{name}` {kind} cannot be a worklet. Use a class field with an arrow \
-         function instead."
-    ));
 }

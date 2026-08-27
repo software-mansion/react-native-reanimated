@@ -136,17 +136,20 @@ fn bind_closure_references(
     closure_variables
         .iter()
         .map(|name| {
-            let reference_id = scoping.find_binding(call_scope, name.as_str().into()).map(|symbol_id| {
-                let reference = Reference::new_with_symbol_id(
-                    NodeId::DUMMY,
-                    symbol_id,
-                    call_scope,
-                    ReferenceFlags::read(),
-                );
-                let reference_id = scoping.create_reference(reference);
-                scoping.add_resolved_reference(symbol_id, reference_id);
-                reference_id
-            });
+            let reference_id =
+                scoping
+                    .find_binding(call_scope, name.as_str().into())
+                    .map(|symbol_id| {
+                        let reference = Reference::new_with_symbol_id(
+                            NodeId::DUMMY,
+                            symbol_id,
+                            call_scope,
+                            ReferenceFlags::read(),
+                        );
+                        let reference_id = scoping.create_reference(reference);
+                        scoping.add_resolved_reference(symbol_id, reference_id);
+                        reference_id
+                    });
             (name.clone(), reference_id)
         })
         .collect()

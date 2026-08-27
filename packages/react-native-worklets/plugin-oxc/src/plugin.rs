@@ -249,7 +249,6 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
             };
             match crate::class_method::process_if_worklet_method(self, method) {
                 MethodOutcome::NotAWorklet => self.visit_class_element(element),
-                MethodOutcome::Rejected => {}
                 MethodOutcome::Workletized(property) => *element = property,
             }
         }

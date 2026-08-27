@@ -60,33 +60,17 @@ test('a workletized method keeps its static and computed flags', () => {
   assert.match(code, /static \[key\] = require\(/, `Got:\n${code}`);
 });
 
-for (const [label, member, message] of [
-  [
-    'getter',
-    "get bar() { 'worklet'; return 1; }",
-    /`bar` class getter cannot be a worklet/,
-  ],
-  [
-    'setter',
-    "set bar(v) { 'worklet'; this.v = v; }",
-    /`bar` class setter cannot be a worklet/,
-  ],
-  [
-    'constructor',
-    "constructor(x) { 'worklet'; this.x = x; }",
-    /class constructor cannot be a worklet/,
-  ],
-  [
-    'private method',
-    "#bar() { 'worklet'; return 1; }",
-    /`#bar` class method cannot be a worklet/,
-  ],
+for (const [label, member] of [
+  ['getter', "get bar() { 'worklet'; return 1; }"],
+  ['setter', "set bar(v) { 'worklet'; this.v = v; }"],
+  ['constructor', "constructor(x) { 'worklet'; this.x = x; }"],
+  ['private method', "#bar() { 'worklet'; return 1; }"],
 ]) {
-  test(`class ${label} with worklet directive is rejected`, () => {
-    assert.throws(
-      () => transform(`class Foo { ${member} }`, 'test.js', {}),
-      message
-    );
+  test(`class ${label} with worklet directive is left alone`, () => {
+    const { code, files } = transform(`class Foo { ${member} }`, 'test.js', {});
+    assert.equal(files.length, 0);
+    assert.doesNotMatch(code, REQUIRE_FACTORY, `Got:\n${code}`);
+    assert.match(code, /'worklet'|"worklet"/, `Got:\n${code}`);
   });
 }
 

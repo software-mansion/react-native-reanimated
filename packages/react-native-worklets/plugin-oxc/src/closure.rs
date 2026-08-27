@@ -1,4 +1,3 @@
-
 use std::collections::HashSet;
 
 use oxc_ast::ast::{
