@@ -67,6 +67,7 @@
     "scripts/worklets-version.json",
     "scripts/validate-react-native-version.js",
     "compatibility.json",
+    "react-native.config.js",
     "mock.js",
     "plugin/index.js",
     "plugin/index.d.ts",
