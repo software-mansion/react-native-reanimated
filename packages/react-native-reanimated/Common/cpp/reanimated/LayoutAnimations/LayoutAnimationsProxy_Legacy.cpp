@@ -1,5 +1,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 
+#include <ReactCommon/CallInvoker.h>
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
