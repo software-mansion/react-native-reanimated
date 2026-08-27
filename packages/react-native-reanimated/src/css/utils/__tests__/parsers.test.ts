@@ -109,8 +109,6 @@ describe(normalizeTimeUnit, () => {
     ['100ms', 100],
     ['0ms', 0],
     ['-100ms', -100],
-    // A fractional millisecond value has to keep its fractional part - the
-    // same amount of time is read correctly when it is spelled in seconds.
     ['0.5ms', 0.5],
     ['1.5ms', 1.5],
     ['.5ms', 0.5],
@@ -122,6 +120,11 @@ describe(normalizeTimeUnit, () => {
     ['-1s', -1000],
   ] satisfies [TimeUnit, number][])('converts %p to %p', (value, expected) => {
     expect(normalizeTimeUnit(value)).toBe(expected);
+  });
+
+  test('keeps the precision of a computed frame duration', () => {
+    const frameDuration = 1000 / 60;
+    expect(normalizeTimeUnit(`${frameDuration}ms`)).toBe(frameDuration);
   });
 
   // A non-finite value reaching native makes every progress computed from it

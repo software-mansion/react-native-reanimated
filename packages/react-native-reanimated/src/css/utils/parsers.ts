@@ -106,8 +106,6 @@ export function normalizeTimeUnit(timeUnit: TimeUnit): number | null {
     // progress it computes NaN, which lands on the view as a NaN style value.
     return Number.isFinite(timeUnit) ? timeUnit : null;
   } else if (MILLISECONDS_REGEX.test(timeUnit)) {
-    // MILLISECONDS_REGEX accepts a fractional part, so this has to parse one -
-    // parseInt truncates "1.5ms" to 1 and cannot read ".5ms" at all.
     return parseFloat(timeUnit);
   } else if (SECONDS_REGEX.test(timeUnit)) {
     return parseFloat(timeUnit) * 1000;
