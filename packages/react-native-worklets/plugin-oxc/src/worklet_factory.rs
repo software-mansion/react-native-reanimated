@@ -214,7 +214,6 @@ fn build_import_declaration<'a>(
 
     let local_atom = builder.ident(&info.local);
     let local_binding = builder.binding_identifier(SPAN, local_atom);
-    let mut specifiers = builder.vec_with_capacity(1);
     let specifier = match &info.shape {
         ImportShape::Default => ImportDeclarationSpecifier::ImportDefaultSpecifier(
             builder.alloc_import_default_specifier(SPAN, local_binding),
@@ -234,7 +233,7 @@ fn build_import_declaration<'a>(
             ))
         }
     };
-    specifiers.push(specifier);
+    let specifiers = builder.vec1(specifier);
 
     let source_str = builder.str(&info.source);
     let source = builder.string_literal(SPAN, source_str, None);
@@ -295,8 +294,7 @@ fn build_factory_expression<'a>(
     let (worklet_name, react_name) = (names.worklet_name.as_str(), names.react_name.as_str());
     let pat = closure_binding_pattern(builder, closure_variables);
     let factory_param = builder.plain_formal_parameter(SPAN, pat);
-    let mut params_vec = builder.vec_with_capacity(1);
-    params_vec.push(factory_param);
+    let params_vec = builder.vec1(factory_param);
     let factory_params =
         builder.formal_parameters(SPAN, FormalParameterKind::FormalParameter, params_vec, NONE);
 

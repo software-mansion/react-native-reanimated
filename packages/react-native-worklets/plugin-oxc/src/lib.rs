@@ -253,29 +253,14 @@ fn build_imports_index<'a>(program: &Program<'a>) -> HashMap<SymbolId, ImportInf
             continue;
         };
         for spec in specifiers {
-            let (local_id, shape) = match spec {
-                ImportDeclarationSpecifier::ImportSpecifier(s) => {
-                    let imported_name = match &s.imported {
-                        oxc_ast::ast::ModuleExportName::IdentifierName(n) => n.name.to_string(),
-                        oxc_ast::ast::ModuleExportName::IdentifierReference(n) => {
-                            n.name.to_string()
-                        }
-                        oxc_ast::ast::ModuleExportName::StringLiteral(n) => n.value.to_string(),
-                    };
-                    (
-                        &s.local,
-                        ImportShape::Named {
-                            imported: imported_name,
-                        },
-                    )
-                }
-                ImportDeclarationSpecifier::ImportDefaultSpecifier(s) => {
-                    (&s.local, ImportShape::Default)
-                }
-                ImportDeclarationSpecifier::ImportNamespaceSpecifier(s) => {
-                    (&s.local, ImportShape::Namespace)
-                }
+            let shape = match spec {
+                ImportDeclarationSpecifier::ImportSpecifier(s) => ImportShape::Named {
+                    imported: s.imported.name().to_string(),
+                },
+                ImportDeclarationSpecifier::ImportDefaultSpecifier(_) => ImportShape::Default,
+                ImportDeclarationSpecifier::ImportNamespaceSpecifier(_) => ImportShape::Namespace,
             };
+            let local_id = spec.local();
             if let Some(sid) = local_id.symbol_id.get() {
                 out.insert(
                     sid,

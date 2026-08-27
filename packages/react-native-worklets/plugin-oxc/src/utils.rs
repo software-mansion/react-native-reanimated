@@ -56,15 +56,12 @@ fn matches_filename_segment(filename: &str, allowed_path: &str) -> bool {
     if let Some(index) = file_segments.iter().rposition(|s| *s == "node_modules") {
         file_segments = file_segments.split_off(index + 1);
     }
-    if allowed_segments.len() > file_segments.len() {
+    if allowed_segments.is_empty() {
         return false;
     }
-    (0..=file_segments.len() - allowed_segments.len()).any(|start| {
-        allowed_segments
-            .iter()
-            .enumerate()
-            .all(|(offset, segment)| file_segments[start + offset] == *segment)
-    })
+    file_segments
+        .windows(allowed_segments.len())
+        .any(|window| window == allowed_segments.as_slice())
 }
 
 const WORKLET_DIRECTIVES: &[&str] = &["worklet", "no-worklet-closure", "limit-init-data-hoisting"];
@@ -117,8 +114,7 @@ pub fn const_declaration<'a>(
         Some(init),
         false,
     );
-    let mut declarations = builder.vec_with_capacity(1);
-    declarations.push(declarator);
+    let declarations = builder.vec1(declarator);
     builder.alloc_variable_declaration(SPAN, VariableDeclarationKind::Const, declarations, false)
 }
 
@@ -157,7 +153,7 @@ pub fn closure_binding_pattern<'a>(
 }
 
 pub fn is_object_method(prop: &oxc_ast::ast::ObjectProperty<'_>) -> bool {
-    prop.method || prop.kind != oxc_ast::ast::PropertyKind::Init
+    prop.method || prop.kind.is_accessor()
 }
 
 pub fn has_worklet_directive(body: &FunctionBody<'_>) -> bool {

@@ -255,7 +255,7 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
     }
 
     fn visit_object_property(&mut self, prop: &mut ObjectProperty<'a>) {
-        let is_accessor = prop.kind != PropertyKind::Init;
+        let is_accessor = prop.kind.is_accessor();
         if !prop.method && !is_accessor {
             walk_mut::walk_object_property(self, prop);
             return;

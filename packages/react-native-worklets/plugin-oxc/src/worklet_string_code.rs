@@ -52,8 +52,7 @@ pub fn build_worklet_string<'a>(
         Some(cloned_body),
     );
 
-    let mut stmts = builder.vec_with_capacity(1);
-    stmts.push(Statement::FunctionDeclaration(fun));
+    let stmts = builder.vec1(Statement::FunctionDeclaration(fun));
     let program = builder.program(
         SPAN,
         oxc_span::SourceType::default(),

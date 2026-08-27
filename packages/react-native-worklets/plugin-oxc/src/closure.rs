@@ -139,9 +139,6 @@ fn binding_is_outside(
 }
 
 pub fn scope_is_inside(scoping: &Scoping, inner: ScopeId, outer: ScopeId) -> bool {
-    if inner == outer {
-        return true;
-    }
     scoping.scope_ancestors(inner).any(|s| s == outer)
 }
 
