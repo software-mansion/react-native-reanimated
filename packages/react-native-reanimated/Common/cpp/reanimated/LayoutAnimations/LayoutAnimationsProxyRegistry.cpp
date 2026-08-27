@@ -1,4 +1,5 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 #include <react/renderer/mounting/ShadowTree.h>
 
@@ -63,6 +64,9 @@ std::optional<SurfaceId> LayoutAnimationsProxyRegistry::onTransitionProgress(
     const double progress,
     const bool isClosing,
     const bool isGoingForward) {
+  if constexpr (!StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    return {};
+  }
   for (const auto &instance : instances()) {
     if (const auto surfaceId = instance->onTransitionProgress(tag, progress, isClosing, isGoingForward)) {
       return surfaceId;
@@ -72,6 +76,9 @@ std::optional<SurfaceId> LayoutAnimationsProxyRegistry::onTransitionProgress(
 }
 
 std::optional<SurfaceId> LayoutAnimationsProxyRegistry::onGestureCancel(const int tag) {
+  if constexpr (!StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    return {};
+  }
   for (const auto &instance : instances()) {
     if (const auto surfaceId = instance->onGestureCancel(tag)) {
       return surfaceId;
@@ -87,6 +94,9 @@ void LayoutAnimationsProxyRegistry::flushLayoutAnimationOperations() const {
 }
 
 void LayoutAnimationsProxyRegistry::applySynchronousProps(const UpdatesBatch &updatesBatch) {
+  if constexpr (!StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    return;
+  }
   for (const auto &instance : instances()) {
     instance->applySynchronousProps(updatesBatch);
   }
