@@ -13,6 +13,7 @@
 
 ### 🐛 Bug fixes
 
+- Fix `SequencedTransition` on web scaling the wrong axis in its midpoint keyframe, so the axis that has already finished no longer collapses while the other one waits. ([#10384](https://github.com/software-mansion/react-native-reanimated/pull/10384) by [@dennytosp](https://github.com/dennytosp))
 - Fix `normalizeColor` resolving `Object.prototype` members such as `'constructor'` and `'toString'` as color names and returning a function instead of `null`. ([#10387](https://github.com/software-mansion/react-native-reanimated/pull/10387) by [@dennytosp](https://github.com/dennytosp))
 - Fix `transform` and `transformOrigin` strings padded with whitespace throwing instead of parsing. ([#10388](https://github.com/software-mansion/react-native-reanimated/pull/10388) by [@dennytosp](https://github.com/dennytosp))
 - Fix `linear()` easing not clamping an out-of-order input progress value on its first or last control point, which left the control points non-monotonic and the resulting curve wrong. ([#10380](https://github.com/software-mansion/react-native-reanimated/pull/10380) by [@dennytosp](https://github.com/dennytosp))
