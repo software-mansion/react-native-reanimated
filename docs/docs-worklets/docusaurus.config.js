@@ -28,6 +28,43 @@ const bannerReservationHeadTags = firstBannerZone
     ]
   : [];
 
+const ORGANIZATION_ID = 'https://swmansion.com/#organization';
+
+// same @id as swmansion.com, so engines read one company across both domains
+const structuredDataHeadTag = {
+  tagName: 'script',
+  attributes: { type: 'application/ld+json' },
+  innerHTML: JSON.stringify({
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': ORGANIZATION_ID,
+        name: 'Software Mansion',
+        url: 'https://swmansion.com',
+        sameAs: [
+          'https://github.com/software-mansion',
+          'https://www.linkedin.com/company/software-mansion/',
+          'https://twitter.com/swmansion',
+          'https://www.youtube.com/c/SoftwareMansion',
+        ],
+      },
+      {
+        '@type': 'SoftwareSourceCode',
+        name: 'React Native Worklets',
+        description:
+          'Multithreading engine for React Native apps and libraries.',
+        codeRepository:
+          'https://github.com/software-mansion/react-native-reanimated',
+        programmingLanguage: ['TypeScript', 'C++'],
+        runtimePlatform: 'React Native',
+        author: { '@id': ORGANIZATION_ID },
+        maintainer: { '@id': ORGANIZATION_ID },
+      },
+    ],
+  }).replace(/</g, '\\u003c'),
+};
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title:
@@ -44,7 +81,7 @@ const config = {
   organizationName: 'software-mansion', // Usually your GitHub org/user name.
   projectName: 'react-native-worklets', // Usually your repo name.
 
-  headTags: bannerReservationHeadTags,
+  headTags: [...bannerReservationHeadTags, structuredDataHeadTag],
 
   scripts: [],
 
