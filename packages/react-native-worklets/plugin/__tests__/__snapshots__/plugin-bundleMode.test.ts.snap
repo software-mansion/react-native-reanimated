@@ -92,7 +92,7 @@ exports[`babel plugin in bundleMode worklet file emission does not rebase relati
   const baz = function () {
     "use no memo";
 
-    const helper = require('./helper');
+    const helper = require("./helper");
     return helper.foo();
   };
   baz.__closure = {};
@@ -132,7 +132,7 @@ exports[`babel plugin in bundleMode worklet file emission forwards closure varia
 `;
 
 exports[`babel plugin in bundleMode worklet file emission preserves workletizable library imports in the written worklet file 1`] = `
-"import { foo } from 'some-library';
+"import { foo } from "some-library";
 const bar = require("react-native-worklets/.worklets/1.js").default({});"
 `;
 
