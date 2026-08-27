@@ -1,0 +1,14 @@
+{
+  "nightly": ["0.87.0"],
+  "versions": {
+    "0.87.0": {
+      "fbjniHash": "sha256-fjGa4RCsXl7xiQQXCupcPnU+kV0ZZpnX/TnTbI4d/jY=",
+      "fbjniVersion": "0.7.0",
+      "follyHash": "sha256-ssaHm6i6YlIY0aue78wWEakAPQW8LLGjjzuuIYkuUWc=",
+      "follyVersion": "2024.11.18.00",
+      "hermesHash": "sha256-JcQYDeT7eyp4Cfooi+kojBh8vBYcXN8r9Ksuweivqpk=",
+      "hermesVersion": "250829098.0.16",
+      "reactNativeHash": "sha256-akCj0SVYflNB9au/Yg2zzsm6eHv9dMUJKAAaZ2oKtbA="
+    }
+  }
+}

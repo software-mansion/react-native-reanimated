@@ -31,30 +31,57 @@ foreach(candidate IN LISTS hermes_roots)
 endforeach()
 set(HERMES_ROOT
     ${default_hermes_root}
-    CACHE PATH "Path to a Hermes destroot containing headers and a macOS framework")
+    CACHE PATH "Legacy Hermes destroot")
+set(HERMES_INCLUDE_DIR
+    ""
+    CACHE PATH "Path containing hermes/hermes.h")
+set(HERMES_LIBRARY
+    ""
+    CACHE FILEPATH "Path to the Hermes shared library")
+
+if(NOT HERMES_INCLUDE_DIR AND HERMES_ROOT)
+  set(HERMES_INCLUDE_DIR ${HERMES_ROOT}/include)
+endif()
+if(NOT HERMES_LIBRARY AND HERMES_ROOT)
+  if(APPLE)
+    set(HERMES_LIBRARY
+        ${HERMES_ROOT}/Library/Frameworks/macosx/hermesvm.framework/hermesvm)
+  else()
+    set(HERMES_LIBRARY ${HERMES_ROOT}/lib/libhermesvm${CMAKE_SHARED_LIBRARY_SUFFIX})
+  endif()
+endif()
 
 include(FetchContent)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/folly.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/react_native.cmake)
 
-if(NOT EXISTS ${HERMES_ROOT}/include/hermes/hermes.h)
-  message(FATAL_ERROR "HERMES_ROOT does not contain Hermes headers: ${HERMES_ROOT}")
+if(NOT EXISTS ${HERMES_INCLUDE_DIR}/hermes/hermes.h)
+  message(FATAL_ERROR
+          "HERMES_INCLUDE_DIR does not contain hermes/hermes.h: ${HERMES_INCLUDE_DIR}")
+endif()
+if(NOT EXISTS ${HERMES_LIBRARY})
+  message(FATAL_ERROR "HERMES_LIBRARY does not exist: ${HERMES_LIBRARY}")
 endif()
 
 add_library(hermesvm SHARED IMPORTED)
 set_target_properties(
   hermesvm
-  PROPERTIES IMPORTED_LOCATION
-             ${HERMES_ROOT}/Library/Frameworks/macosx/hermesvm.framework/hermesvm
-             INTERFACE_INCLUDE_DIRECTORIES ${HERMES_ROOT}/include)
+  PROPERTIES IMPORTED_LOCATION ${HERMES_LIBRARY}
+             INTERFACE_INCLUDE_DIRECTORIES ${HERMES_INCLUDE_DIR})
+get_filename_component(HERMES_LIBRARY_DIR ${HERMES_LIBRARY} DIRECTORY)
 
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.tar.gz
-  URL_HASH
-    SHA256=7b42b4d6ed48810c5362c265a17faebe90dc2373c885e5216439d37927f02926
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
-FetchContent_MakeAvailable(googletest)
+option(HARNESS_USE_SYSTEM_GTEST "Use a preinstalled GTest package" OFF)
+if(HARNESS_USE_SYSTEM_GTEST)
+  find_package(GTest CONFIG REQUIRED)
+else()
+  FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.tar.gz
+    URL_HASH
+      SHA256=7b42b4d6ed48810c5362c265a17faebe90dc2373c885e5216439d37927f02926
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+  FetchContent_MakeAvailable(googletest)
+endif()
 
 enable_testing()
 include(GoogleTest)
@@ -157,6 +184,15 @@ function(add_layout_animation_variant name)
                                PRIVATE HARNESS_PROXY_SHADOW_TREE_START=1)
   endif()
 
+  if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND name STREQUAL ios)
+    target_compile_options(
+      reanimated_layout_animations_${name}
+      PRIVATE -include ${CMAKE_CURRENT_SOURCE_DIR}/include/harness/ReanimatedHostPlatform.h)
+    target_compile_options(
+      layout_animation_harness_${name}
+      PRIVATE -include ${CMAKE_CURRENT_SOURCE_DIR}/include/harness/ReanimatedHostPlatform.h)
+  endif()
+
   if(name STREQUAL android)
     target_compile_definitions(reanimated_layout_animations_${name}
                                PRIVATE ANDROID=1)
@@ -179,8 +215,7 @@ foreach(platform ios android)
     PRIVATE layout_animation_harness_${platform} GTest::gtest)
   set_target_properties(
     harness_${platform}_tests
-    PROPERTIES BUILD_RPATH
-               ${HERMES_ROOT}/Library/Frameworks/macosx/hermesvm.framework)
+    PROPERTIES BUILD_RPATH ${HERMES_LIBRARY_DIR})
   if(platform STREQUAL android)
     target_compile_definitions(harness_${platform}_tests
                                PRIVATE HARNESS_PLATFORM_ANDROID=1)

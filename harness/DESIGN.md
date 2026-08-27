@@ -55,7 +55,15 @@ Shared-transition tests use Reanimated's real `REASharedTransitionBoundaryShadow
 
 ## Running
 
-From the repository root:
+The reproducible local entry point on Linux and macOS is:
+
+```sh
+harness/nix/run test
+```
+
+See [nix/README.md](nix/README.md) for the dashboard, clean check, mutation runner, local caching, and React Native version matrix.
+
+To use dependencies already installed on the host instead:
 
 ```sh
 cmake -S harness -B build/layout-animation-harness -G Ninja

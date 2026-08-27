@@ -3,31 +3,44 @@
 
 add_subdirectory(${REACT_COMMON_DIR}/yoga/yoga ${CMAKE_BINARY_DIR}/yoga)
 
-file(
-  GLOB fbjni_include_candidates
-  $ENV{HOME}/.gradle/caches/*/transforms/*/transformed/fbjni-*/prefab/modules/fbjni/include)
-set(default_fbjni_include_dir "")
-if(fbjni_include_candidates)
-  list(GET fbjni_include_candidates 0 default_fbjni_include_dir)
-endif()
 set(FBJNI_INCLUDE_DIR
-    ${default_fbjni_include_dir}
+    ""
     CACHE PATH "Path containing fbjni/fbjni.h")
-
-file(GLOB java_home_candidates /Library/Java/JavaVirtualMachines/*/Contents/Home)
-set(default_java_home "")
-if(java_home_candidates)
-  list(GET java_home_candidates 0 default_java_home)
-endif()
 set(JAVA_HOME_DIR
-    ${default_java_home}
+    ""
     CACHE PATH "JDK home used for Android host headers")
+
+if(NOT FBJNI_INCLUDE_DIR)
+  file(
+    GLOB fbjni_include_candidates
+    $ENV{HOME}/.gradle/caches/*/transforms/*/transformed/fbjni-*/prefab/modules/fbjni/include)
+  if(fbjni_include_candidates)
+    list(GET fbjni_include_candidates 0 FBJNI_INCLUDE_DIR)
+  endif()
+endif()
+if(NOT JAVA_HOME_DIR AND APPLE)
+  file(GLOB java_home_candidates /Library/Java/JavaVirtualMachines/*/Contents/Home)
+  if(java_home_candidates)
+    list(GET java_home_candidates 0 JAVA_HOME_DIR)
+  endif()
+endif()
 
 if(NOT EXISTS ${FBJNI_INCLUDE_DIR}/fbjni/fbjni.h)
   message(FATAL_ERROR "FBJNI_INCLUDE_DIR does not contain fbjni/fbjni.h")
 endif()
 if(NOT EXISTS ${JAVA_HOME_DIR}/include/jni.h)
   message(FATAL_ERROR "JAVA_HOME_DIR does not contain include/jni.h")
+endif()
+if(APPLE)
+  set(JNI_PLATFORM_INCLUDE_DIR ${JAVA_HOME_DIR}/include/darwin)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  set(JNI_PLATFORM_INCLUDE_DIR ${JAVA_HOME_DIR}/include/linux)
+else()
+  message(FATAL_ERROR "Unsupported host for JNI headers: ${CMAKE_SYSTEM_NAME}")
+endif()
+if(NOT EXISTS ${JNI_PLATFORM_INCLUDE_DIR}/jni_md.h)
+  message(FATAL_ERROR
+          "JAVA_HOME_DIR does not contain platform JNI headers: ${JNI_PLATFORM_INCLUDE_DIR}")
 endif()
 
 file(GLOB_RECURSE fbjni_host_sources ${FBJNI_INCLUDE_DIR}/fbjni/*.cpp)
@@ -38,7 +51,7 @@ add_library(fbjni_host STATIC ${fbjni_host_sources})
 target_include_directories(
   fbjni_host SYSTEM
   PUBLIC ${FBJNI_INCLUDE_DIR} ${JAVA_HOME_DIR}/include
-         ${JAVA_HOME_DIR}/include/darwin)
+         ${JNI_PLATFORM_INCLUDE_DIR})
 
 file(
   GLOB
@@ -46,7 +59,6 @@ file(
   CONFIGURE_DEPENDS
   ${REACT_COMMON_DIR}/jserrorhandler/ErrorUtils.cpp
   ${REACT_COMMON_DIR}/jsi/jsi/JSIDynamic.cpp
-  ${REACT_COMMON_DIR}/jsi/jsi/jsi.cpp
   ${REACT_COMMON_DIR}/jsinspector-modern/ConsoleTask*.cpp
   ${REACT_COMMON_DIR}/jsinspector-modern/network/CdpNetwork.cpp
   ${REACT_COMMON_DIR}/jsinspector-modern/network/HttpUtils.cpp
@@ -106,12 +118,15 @@ function(add_react_native_mounting_variant name platform)
   target_compile_definitions(
     react_native_mounting_${name}
     PUBLIC RN_SHADOW_TREE_INTROSPECTION=1 LOG_TAG="ReactNative")
+  if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_compile_options(react_native_mounting_${name} PRIVATE -include cstdint)
+  endif()
   if(platform STREQUAL android)
     target_include_directories(
       react_native_mounting_${name}
       SYSTEM
       PUBLIC ${FBJNI_INCLUDE_DIR} ${JAVA_HOME_DIR}/include
-             ${JAVA_HOME_DIR}/include/darwin)
+             ${JNI_PLATFORM_INCLUDE_DIR})
     target_compile_definitions(react_native_mounting_${name}
                                PUBLIC ANDROID=1 RN_SERIALIZABLE_STATE=1)
   endif()

@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+action="${1:-test}"
+if [[ $# -gt 0 ]]; then
+  shift
+fi
+
+repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
+staging="$(mktemp -d "${TMPDIR:-/tmp}/layout-animation-nix.XXXXXX")"
+trap 'rm -rf "$staging"' EXIT
+
+cd "$repo_root"
+tar -cf - \
+  --exclude=harness/build \
+  flake.nix flake.lock package.json harness \
+  packages/react-native-reanimated/Common \
+  packages/react-native-worklets/Common | tar -xf - -C "$staging"
+
+flake="path:$staging"
+nix_features=(--extra-experimental-features "nix-command flakes")
+
+case "$action" in
+  test | dashboard | mutation | record-react-native)
+    nix "${nix_features[@]}" run "$flake#$action" -- "$@"
+    ;;
+  check)
+    nix "${nix_features[@]}" flake check "$flake" -L "$@"
+    ;;
+  matrix)
+    nix "${nix_features[@]}" build "$flake#rn-matrix" -L --keep-going "$@"
+    ;;
+  shell)
+    nix "${nix_features[@]}" develop "$flake" "$@"
+    ;;
+  *)
+    echo "Usage: harness/nix/run {test|dashboard|mutation|record-react-native|check|matrix|shell}" >&2
+    exit 2
+    ;;
+esac

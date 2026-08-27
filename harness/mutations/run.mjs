@@ -451,8 +451,27 @@ function configure(buildDirectory, reanimatedDirectory, cache) {
     `-DREACT_COMMON_DIR=${required(cache, 'REACT_COMMON_DIR')}`,
     `-DREANIMATED_DIR=${reanimatedDirectory}`,
     `-DWORKLETS_DIR=${required(cache, 'WORKLETS_DIR')}`,
-    `-DHERMES_ROOT=${required(cache, 'HERMES_ROOT')}`,
   ];
+  for (const key of [
+    'HERMES_ROOT',
+    'HERMES_INCLUDE_DIR',
+    'HERMES_LIBRARY',
+    'FOLLY_SOURCE_DIR',
+    'FBJNI_INCLUDE_DIR',
+    'JAVA_HOME_DIR',
+    'BOOST_INCLUDE_DIR',
+    'FAST_FLOAT_INCLUDE_DIR',
+    'CMAKE_PREFIX_PATH',
+    'HARNESS_USE_HOMEBREW',
+    'HARNESS_USE_SYSTEM_GTEST',
+    'FETCHCONTENT_FULLY_DISCONNECTED',
+    'CMAKE_CXX_COMPILER',
+    'CMAKE_CXX_COMPILER_LAUNCHER',
+  ]) {
+    if (cache[key]) {
+      arguments_.push(`-D${key}=${cache[key]}`);
+    }
+  }
   for (const [key, directory] of [
     ['FETCHCONTENT_SOURCE_DIR_FOLLY', 'folly-src'],
     ['FETCHCONTENT_SOURCE_DIR_GOOGLETEST', 'googletest-src'],
