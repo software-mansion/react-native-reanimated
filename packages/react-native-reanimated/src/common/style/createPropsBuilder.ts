@@ -93,7 +93,12 @@ export default function createPropsBuilder<
           continue;
         }
 
-        const processedValue = configValue(value, context);
+        // CSS strips whitespace around a declaration value, so processors can
+        // assume they are given a trimmed string.
+        const processedValue = configValue(
+          typeof value === 'string' ? value.trim() : value,
+          context
+        );
 
         if (isRecord(processedValue) && !isRecord(value)) {
           // The value processor may return multiple values for a single property

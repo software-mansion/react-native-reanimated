@@ -288,14 +288,6 @@ describe(processTransform, () => {
         ],
       },
       {
-        input: '  translate(25, 25) scale(2)  ',
-        output: [{ translateX: 25 }, { translateY: 25 }, { scale: 2 }],
-      },
-      {
-        input: '\n  translate(25, 25)\n  scale(2)\n',
-        output: [{ translateX: 25 }, { translateY: 25 }, { scale: 2 }],
-      },
-      {
         input: 'translate(50, 50) scale(1.5, 2) skew(30deg, 15deg)',
         output: [
           { translateX: 50 },
