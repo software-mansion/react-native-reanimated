@@ -27,8 +27,8 @@ const foo = function foo_null1Factory({
   const foo = function (x) {
     "use no memo";
 
-    const bar = "worklet";
-    const baz = "worklet";
+    const bar = "worklet"; // prettier-ignore
+    const baz = "worklet"; // prettier-ignore
   };
   foo.__closure = {};
   foo.__workletHash = 1;
@@ -52,6 +52,7 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function (x) {
+    // prettier-ignore
     "use no memo";
 
     return x + 2;
@@ -807,152 +808,6 @@ const f = function f_null1Factory({
 });"
 `;
 
-exports[`babel plugin for context objects creates factories 1`] = `
-"const _worklet_1_init_data = {
-  code: "(function null1(){return{bar:function(){return'bar';}};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = {
-  bar() {
-    return "bar";
-  },
-  __workletContextObjectFactory: function null1Factory({
-    _worklet_1_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {
-      "use no memo";
-
-      return {
-        bar() {
-          return "bar";
-        }
-      };
-    };
-    null1.__closure = {};
-    null1.__workletHash = 1;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_1_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_1_init_data
-  })
-};"
-`;
-
-exports[`babel plugin for context objects preserves bindings 1`] = `
-"const _worklet_1_init_data = {
-  code: "(function null1(){return{bar:function(){return'bar';},foobar:function(){return this.bar();}};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = {
-  bar() {
-    return "bar";
-  },
-  foobar() {
-    return this.bar();
-  },
-  __workletContextObjectFactory: function null1Factory({
-    _worklet_1_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {
-      "use no memo";
-
-      return {
-        bar() {
-          return "bar";
-        },
-        foobar() {
-          return this.bar();
-        }
-      };
-    };
-    null1.__closure = {};
-    null1.__workletHash = 1;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_1_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_1_init_data
-  })
-};"
-`;
-
-exports[`babel plugin for context objects removes marker 1`] = `
-"const _worklet_1_init_data = {
-  code: "(function null1(){return{bar:function(){return'bar';}};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = {
-  bar() {
-    return "bar";
-  },
-  __workletContextObjectFactory: function null1Factory({
-    _worklet_1_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {
-      "use no memo";
-
-      return {
-        bar() {
-          return "bar";
-        }
-      };
-    };
-    null1.__closure = {};
-    null1.__workletHash = 1;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_1_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_1_init_data
-  })
-};"
-`;
-
-exports[`babel plugin for context objects workletizes regardless of marker value 1`] = `
-"const _worklet_1_init_data = {
-  code: "(function null1(){return{bar:function(){return'bar';}};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = {
-  bar() {
-    return "bar";
-  },
-  __workletContextObjectFactory: function null1Factory({
-    _worklet_1_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {
-      "use no memo";
-
-      return {
-        bar() {
-          return "bar";
-        }
-      };
-    };
-    null1.__closure = {};
-    null1.__workletHash = 1;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_1_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_1_init_data
-  })
-};"
-`;
-
 exports[`babel plugin for debugging does inject location for worklets in dev builds 1`] = `
 "const _worklet_1_init_data = {
   code: "(function null1(){const x=1;})",
@@ -1458,7 +1313,7 @@ const Clazz = function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = function () {
+      const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
         }
@@ -1647,7 +1502,7 @@ export default (function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = function () {
+      const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
         }
@@ -1836,7 +1691,7 @@ export const Clazz = function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = function () {
+      const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
         }
@@ -2133,129 +1988,6 @@ const foo = function foo_null1Factory({
 }({
   _worklet_1_init_data
 });"
-`;
-
-exports[`babel plugin for file workletization workletizes implicit WorkletContextObject 1`] = `
-"const _worklet_1_init_data = {
-  code: "(function null1(){return{bar:function(){return'bar';},foobar:function(){return this.bar();}};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = {
-  bar() {
-    return "bar";
-  },
-  foobar() {
-    return this.bar();
-  },
-  __workletContextObjectFactory: function null1Factory({
-    _worklet_1_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {
-      "use no memo";
-
-      return {
-        bar() {
-          return "bar";
-        },
-        foobar() {
-          return this.bar();
-        }
-      };
-    };
-    null1.__closure = {};
-    null1.__workletHash = 1;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_1_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_1_init_data
-  })
-};"
-`;
-
-exports[`babel plugin for file workletization workletizes implicit WorkletContextObject in default export 1`] = `
-"const _worklet_1_init_data = {
-  code: "(function null1(){return{bar:function(){return'bar';},foobar:function(){return this.bar();}};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-export default {
-  bar() {
-    return "bar";
-  },
-  foobar() {
-    return this.bar();
-  },
-  __workletContextObjectFactory: function null1Factory({
-    _worklet_1_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {
-      "use no memo";
-
-      return {
-        bar() {
-          return "bar";
-        },
-        foobar() {
-          return this.bar();
-        }
-      };
-    };
-    null1.__closure = {};
-    null1.__workletHash = 1;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_1_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_1_init_data
-  })
-};"
-`;
-
-exports[`babel plugin for file workletization workletizes implicit WorkletContextObject in named export 1`] = `
-"const _worklet_1_init_data = {
-  code: "(function null1(){return{bar:function(){return'bar';},foobar:function(){return this.bar();}};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-export const foo = {
-  bar() {
-    return "bar";
-  },
-  foobar() {
-    return this.bar();
-  },
-  __workletContextObjectFactory: function null1Factory({
-    _worklet_1_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {
-      "use no memo";
-
-      return {
-        bar() {
-          return "bar";
-        },
-        foobar() {
-          return this.bar();
-        }
-      };
-    };
-    null1.__closure = {};
-    null1.__workletHash = 1;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_1_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_1_init_data
-  })
-};"
 `;
 
 exports[`babel plugin for file workletization workletizes multiple functions 1`] = `
@@ -4042,7 +3774,7 @@ const Clazz = function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = function () {
+      const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
         }
@@ -4231,7 +3963,7 @@ const Clazz = function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = function () {
+      const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
         }
@@ -4516,7 +4248,7 @@ const Clazz = function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = function () {
+      const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
           _defineProperty(this, "member", 1);
@@ -4738,7 +4470,7 @@ const Clazz = function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = function () {
+      const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
         }
@@ -4927,7 +4659,7 @@ const Clazz = function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = function () {
+      const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
         }
@@ -5116,7 +4848,7 @@ const Clazz = function () {
     const Clazz__classFactory = function () {
       "use no memo";
 
-      const Clazz = function () {
+      const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
         }

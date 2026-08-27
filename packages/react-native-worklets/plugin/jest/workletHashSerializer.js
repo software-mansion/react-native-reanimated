@@ -5,17 +5,15 @@ const generate = require('@babel/generator').default;
 // arrive as `123`, `0x7b` or `123e3`.
 const HASH_NUMBER = String.raw`0x[0-9a-fA-F]+|\d+e\+?\d+|\d+`;
 
-const HASH_TOKEN = new RegExp(
-  String.raw`(\.worklets\/)(\d+)(\.js)|(__workletHash = )(${HASH_NUMBER})|(_worklet_)(\d+)(_init_data)`
+const HASH = new RegExp(
+  String.raw`\.worklets\/(\d+)\.js|__workletHash = (${HASH_NUMBER})|_worklet_(\d+)_init_data`
 );
 
 let idByHash = new Map();
-let nextId = 1;
 let serializing = false;
 
 function resetWorkletHashIds() {
   idByHash = new Map();
-  nextId = 1;
 }
 
 function canonicalize(raw) {
@@ -26,24 +24,6 @@ function canonicalize(raw) {
     return BigInt(Number(raw)).toString();
   }
   return raw;
-}
-
-function idFor(raw) {
-  const canonical = canonicalize(raw);
-  if (!idByHash.has(canonical)) {
-    idByHash.set(canonical, nextId++);
-  }
-  return idByHash.get(canonical);
-}
-
-function renumber(code) {
-  return code
-    .replace(/(\.worklets\/)(\d+)(\.js)/g, (_, a, h, b) => a + idFor(h) + b)
-    .replace(
-      new RegExp(String.raw`(__workletHash = )(${HASH_NUMBER})`, 'g'),
-      (_, a, h) => a + idFor(h)
-    )
-    .replace(/(_worklet_)(\d+)(_init_data)/g, (_, a, h, b) => a + idFor(h) + b);
 }
 
 function reprint(code) {
@@ -60,10 +40,20 @@ function reprint(code) {
         delete path.node.extra;
       },
     });
-    return generate(ast, { compact: false, comments: false }).code;
+    return generate(ast, { compact: false }).code;
   } catch {
     return code;
   }
+}
+
+function renumber(code) {
+  return code.replace(new RegExp(HASH, 'g'), (match, path, field, initData) => {
+    const hash = canonicalize(path ?? field ?? initData);
+    if (!idByHash.has(hash)) {
+      idByHash.set(hash, idByHash.size + 1);
+    }
+    return match.replace(path ?? field ?? initData, idByHash.get(hash));
+  });
 }
 
 function normalizeSnapshot(code) {
@@ -72,7 +62,7 @@ function normalizeSnapshot(code) {
 
 const workletHashSerializer = {
   test: (value) =>
-    !serializing && typeof value === 'string' && HASH_TOKEN.test(value),
+    !serializing && typeof value === 'string' && HASH.test(value),
   serialize: (value, config, indentation, depth, refs, printer) => {
     serializing = true;
     try {

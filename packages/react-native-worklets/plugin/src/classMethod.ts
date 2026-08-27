@@ -19,9 +19,6 @@ export function processIfWorkletMethod(path: NodePath<ClassMethod>) {
   }
 
   const key = path.node.key;
-  // Naming the function expression after the key lets the worklet recurse,
-  // but only for a plain identifier key — with a computed key the name would
-  // shadow the very binding the key reads.
   const functionId =
     !path.node.computed && isIdentifier(key) ? cloneNode(key, true) : null;
 
