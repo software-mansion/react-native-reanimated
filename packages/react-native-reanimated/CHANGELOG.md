@@ -8,7 +8,7 @@
 
 - `AnimatedRefOnUI` is now a `ShareableHost<ShadowNodeWrapper | null>` read with `.value` instead of a callable, and `AnimatedRefOnJS` was renamed to `AnimatedRefOnRN`. `measure` on an unmounted ref now returns `null` and warns instead of calling into `_measure`. ([#10413](https://github.com/software-mansion/react-native-reanimated/pull/10413) by [@tjzel](https://github.com/tjzel))
 - Remove the `USE_SYNCHRONIZABLE_FOR_MUTABLES` feature flag. Mutables always use Synchronizable state now. ([#10298](https://github.com/software-mansion/react-native-reanimated/pull/10298) by [@tjzel](https://github.com/tjzel))
-- Make the light-tree layout animations proxy the default implementation. The `ENABLE_SHARED_ELEMENT_TRANSITIONS` feature flag no longer selects the proxy — it only turns on Shared Element Transitions inside the default proxy. To roll back to the previous implementation, enable the new `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY` feature flag. (by [@pawicao](https://github.com/pawicao))
+- Make the light-tree layout animations proxy the default. Enable the new `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY` feature flag to roll back to the previous implementation. ([#10423](https://github.com/software-mansion/react-native-reanimated/pull/10423) by [@pawicao](https://github.com/pawicao))
 
 ### 🎉 New features
 
