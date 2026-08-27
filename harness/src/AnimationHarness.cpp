@@ -133,8 +133,6 @@ AnimationHarness::AnimationHarness(DriverMode mode)
       .uiRuntime = *runtime_,
       .uiScheduler = uiScheduler_,
       .uiManager = platform_.uiManager(),
-      .requestLayoutAnimationFlush =
-          [this](SurfaceId) { uiScheduler_->scheduleOnUI([this] { flushRequested_ = true; }); },
 #ifdef ANDROID
       .filterUnmountedTagsFunction = preserveMountedTags,
       .jsInvoker = jsInvoker_,
@@ -277,9 +275,6 @@ void AnimationHarness::cancelTransition(Tag sourceTag) {
 void AnimationHarness::frame() {
   timeline_.requireLane(Lane::UI);
   if (std::exchange(flushRequested_, false)) {
-#ifdef HARNESS_PROXY_REGISTRY
-    proxyRegistry_->flushLayoutAnimationOperations();
-#endif
     platform_.flushMountingCoordinator();
   }
   if (mode_ != DriverMode::IOS) {
@@ -424,11 +419,13 @@ void AnimationHarness::recordStart(jsi::Runtime &runtime, const jsi::Value *argu
   }
 
   auto tag = static_cast<Tag>(arguments[0].asNumber());
-#ifndef HARNESS_PROXY_REGISTRY
   if (activeAnimations_.erase(tag) != 0) {
+#ifdef HARNESS_PROXY_REGISTRY
+    flushRequested_ |= proxyRegistry_->endLayoutAnimation(tag, false).has_value();
+#else
     flushRequested_ |= proxy_->endLayoutAnimation(tag, false).has_value();
-  }
 #endif
+  }
 
   auto values = arguments[2].asObject(runtime);
   auto recordedValues = std::unordered_map<std::string, double>{};
