@@ -34584,6 +34584,8 @@ __metadata:
 "worklets-plugin-oxc@workspace:*, worklets-plugin-oxc@workspace:packages/react-native-worklets/plugin-oxc":
   version: 0.0.0-use.local
   resolution: "worklets-plugin-oxc@workspace:packages/react-native-worklets/plugin-oxc"
+  dependencies:
+    "@jridgewell/remapping": "npm:^2.3.5"
   languageName: unknown
   linkType: soft
 

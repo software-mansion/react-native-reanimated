@@ -27,17 +27,16 @@ pub fn get_closure<'a>(
     filename: &str,
 ) -> ClosureResult {
     let WorkletInput {
-        function_scope_id,
-        self_name: self_function_name,
-        ..
+        function_scope_id, ..
     } = *input;
+    let self_function_name = input.recursion_name();
     let mut collector = ReferenceCollector {
         scoping,
         refs: Vec::new(),
         in_for_target: false,
     };
-    collector.visit_function_body(input.body);
     collector.visit_formal_parameters(input.params);
+    collector.visit_function_body(input.body);
 
     let mut seen: HashSet<String> = HashSet::new();
     let mut result = ClosureResult::default();

@@ -7,6 +7,21 @@ import { fileURLToPath } from 'node:url';
 import { assertParity, compareEmitted } from './differential.mjs';
 
 const CASES = [
+  ["'worklet';\nexport function f() { return 1; }"],
+  ["'worklet';\nconst g = () => 2;"],
+  ["'worklet';\nconst o = { m() { return 1; }, a: () => 2 };"],
+  ["'worklet';\nexport default function () { return 3; }"],
+  ["'worklet';\nmodule.exports = f;\nfunction f() {}\nconst bar = 1;"],
+  ["'worklet';\nexports.foo = f;\nfunction f() {}\nconst z = 1;"],
+  ["'worklet';\nconst x = 1;"],
+  ["'worklet';\nclass A { m() { return 1; } }"],
+  ["'worklet';\nclass A { static __workletClass = true; }\nconst w = () => 2;"],
+  ["'worklet';\nmodule[exports].foo = f;\nvar f = 1;"],
+  [
+    "'worklet';\nconst a = 1;\nexport const p = ((x) => x + a) satisfies unknown;",
+  ],
+  ["'worklet';\nconst a = 1;\nexport const p = ((x) => x + a) as any;"],
+  ['const D = 1;\nconst g = 2;\nfunction f(a = D) { "worklet"; return g; }'],
   [
     'const h = { onScroll(e) { console.log(e); } };\nuseAnimatedScrollHandler(h);',
   ],

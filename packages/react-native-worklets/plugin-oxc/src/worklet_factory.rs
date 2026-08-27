@@ -32,7 +32,18 @@ pub struct WorkletInput<'a, 'b> {
     pub is_generator: bool,
     pub function_scope_id: ScopeId,
     pub self_name: Option<&'b str>,
+    pub self_name_binds: bool,
     pub is_expression_body: bool,
+}
+
+impl<'a, 'b> WorkletInput<'a, 'b> {
+    pub fn recursion_name(&self) -> Option<&'b str> {
+        if self.self_name_binds {
+            self.self_name
+        } else {
+            None
+        }
+    }
 }
 
 pub struct FactoryOutput<'a> {
@@ -65,13 +76,20 @@ pub fn make_worklet_factory<'a>(
 
     let closure = get_closure(&input, scoping, state, filename);
 
-    let recursive_name = input.self_name.and_then(|name| {
+    let recursive_name = input.recursion_name().and_then(|name| {
         if body_references_name(input.body, name, scoping, input.function_scope_id) {
             Some(names.react_name.as_str())
         } else {
             None
         }
     });
+
+    if state.error.is_none() && closure.closure_variables.contains(&names.react_name) {
+        state.error = Some(format!(
+            "the `{}` worklet shadows a captured binding of the same name",
+            names.react_name
+        ));
+    }
 
     let body_string = build_worklet_string(
         &names.worklet_name,

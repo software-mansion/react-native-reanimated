@@ -4,6 +4,9 @@
   "private": true,
   "main": "index.js",
   "types": "index.d.ts",
+  "dependencies": {
+    "@jridgewell/remapping": "^2.3.5"
+  },
   "files": [
     "babel.js",
     "index.js",

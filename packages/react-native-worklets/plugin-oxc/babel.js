@@ -3,6 +3,7 @@
 const path = require('path');
 
 const oxc = require('./index.js');
+const remapping = require('@jridgewell/remapping');
 
 const PARSE_ERROR_CODE = 'WORKLETS_ERR_PARSE';
 const FLOW_ERROR_CODE = 'WORKLETS_ERR_FLOW';
@@ -107,13 +108,20 @@ function reparseSyntaxPlugins(filename) {
 }
 
 function adoptSourceMap(result, state) {
-  if (!result.map || state.file.inputMap) {
+  if (!result.map) {
     return;
   }
   const map = JSON.parse(result.map);
   const sourceFileName = state.file.opts.generatorOpts?.sourceFileName;
   if (sourceFileName) {
     map.sources = [sourceFileName];
+  }
+  const previous = state.file.inputMap;
+  if (previous) {
+    const previousMap = previous.toObject();
+    const composed = remapping([map, previousMap], () => null, true);
+    state.file.inputMap = { toObject: () => composed };
+    return;
   }
   state.file.inputMap = { toObject: () => map };
 }

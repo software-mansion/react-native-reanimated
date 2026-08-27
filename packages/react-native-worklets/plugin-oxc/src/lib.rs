@@ -14,6 +14,7 @@ mod autoworkletization;
 mod bundle_mode;
 mod class_method;
 mod closure;
+mod file_directive;
 mod gesture_handler_autoworkletization;
 mod imports;
 mod jsx_dev_attributes;
@@ -122,13 +123,15 @@ fn run(
     }
 
     let mut program = parsed.program;
+    let builder = oxc_ast::AstBuilder::new(&allocator);
+
+    let is_worklet_file = file_directive::process_file_directive(&mut program, builder);
 
     if source_type.is_typescript() {
         strip_typescript(&mut program, &allocator, filename)?;
     }
 
     let mut state = State::new(options, source_text.to_string());
-    let builder = oxc_ast::AstBuilder::new(&allocator);
 
     let flag_enabled = bundle_mode::enable_flag(&mut program, builder, filename);
 
@@ -171,7 +174,7 @@ fn run(
     Ok(TransformResult {
         code: printed.code,
         map: printed.map.map(|map| map.to_json_string()),
-        changed: flag_enabled || !files.is_empty(),
+        changed: flag_enabled || is_worklet_file || !files.is_empty(),
         files,
     })
 }

@@ -68,7 +68,7 @@ impl<'a, 'b> WorkletPass<'a, 'b> {
         self.parent_is_scopable = previous;
 
         let name = func.id.as_ref().map(|id| id.name.to_string());
-        let (factory_call, react_name) = self.workletize_function(func, name.as_deref())?;
+        let (factory_call, react_name) = self.workletize_function(func, name.as_deref(), true)?;
         Some((factory_call, name.unwrap_or(react_name)))
     }
 
@@ -111,6 +111,7 @@ impl<'a, 'b> WorkletPass<'a, 'b> {
         &mut self,
         func: &Function<'a>,
         self_name: Option<&str>,
+        self_name_binds: bool,
     ) -> Option<(Expression<'a>, String)> {
         let body = func.body.as_ref()?;
         if !has_worklet_directive(body) {
@@ -123,6 +124,7 @@ impl<'a, 'b> WorkletPass<'a, 'b> {
             is_generator: func.generator,
             function_scope_id: func.scope_id.get().unwrap_or(self.scoping.root_scope_id()),
             self_name,
+            self_name_binds,
             is_expression_body: false,
         };
         Some(self.build_factory(input))
@@ -144,6 +146,7 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
                     is_generator: false,
                     function_scope_id: arrow.scope_id.get().unwrap_or(self.scoping.root_scope_id()),
                     self_name: None,
+                    self_name_binds: false,
                     is_expression_body: arrow.expression,
                 };
                 let (factory_call, _) = self.build_factory(input);
@@ -152,7 +155,9 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
             Expression::FunctionExpression(func) => {
                 self.walk_function_scoped(func, ScopeFlags::Function);
                 let name = func.id.as_ref().map(|id| id.name.to_string());
-                if let Some((factory_call, _)) = self.workletize_function(func, name.as_deref()) {
+                if let Some((factory_call, _)) =
+                    self.workletize_function(func, name.as_deref(), true)
+                {
                     *expr = factory_call;
                 }
             }
@@ -285,7 +290,9 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
             return;
         };
         self.walk_function_scoped(func, ScopeFlags::Function);
-        if let Some((factory_call, _)) = self.workletize_function(func, method_name.as_deref()) {
+        if let Some((factory_call, _)) =
+            self.workletize_function(func, method_name.as_deref(), false)
+        {
             prop.value = factory_call;
             prop.method = false;
         }

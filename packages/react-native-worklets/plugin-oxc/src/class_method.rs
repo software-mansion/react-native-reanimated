@@ -33,7 +33,8 @@ pub fn process_if_worklet_method<'a>(
         _ => None,
     };
     pass.walk_function_scoped(&mut method.value, ScopeFlags::Function);
-    let Some((factory_call, _)) = pass.workletize_function(&method.value, self_name.as_deref())
+    let Some((factory_call, _)) =
+        pass.workletize_function(&method.value, self_name.as_deref(), true)
     else {
         return MethodOutcome::NotAWorklet;
     };

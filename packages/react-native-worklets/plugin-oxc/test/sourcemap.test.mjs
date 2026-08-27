@@ -16,7 +16,7 @@ process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
 
 const realWriteFileSync = fs.writeFileSync;
 
-function run(plugin, source, filename) {
+function run(plugin, source, filename, extra = {}) {
   realWriteFileSync(filename, source);
   fs.writeFileSync = () => {};
   try {
@@ -26,6 +26,7 @@ function run(plugin, source, filename) {
       configFile: false,
       compact: false,
       sourceMaps: true,
+      ...extra,
       presets: [
         [
           require.resolve('@babel/preset-typescript'),
@@ -105,4 +106,37 @@ test('source map matches the Babel plugin', async () => {
     await originalLines(oxcResult, TOKENS),
     await originalLines(babelResult, TOKENS)
   );
+});
+
+function precompile(filename) {
+  realWriteFileSync(filename, SOURCE);
+  try {
+    return transformSync(SOURCE, {
+      filename,
+      babelrc: false,
+      configFile: false,
+      compact: false,
+      sourceMaps: true,
+      presets: [
+        [
+          require.resolve('@babel/preset-typescript'),
+          { isTSX: true, allExtensions: true },
+        ],
+      ],
+      plugins: [require.resolve('@babel/plugin-syntax-jsx')],
+    });
+  } finally {
+    fs.unlinkSync(filename);
+  }
+}
+
+test('source map composes with an input map from an earlier transform', async () => {
+  const filename = path.join(os.tmpdir(), 'worklets-oxc-sourcemap-chained.tsx');
+  const first = precompile(filename);
+  const result = run(oxcPlugin, first.code, filename, {
+    inputSourceMap: first.map,
+  });
+
+  assert.ok(result.map, 'no source map emitted');
+  assert.deepEqual(await originalLines(result, TOKENS), TRUE_LINES);
 });
