@@ -554,7 +554,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    test('workletizes getter', () => {
+    test('leaves getter untouched', () => {
       const input = html`<script>
         const x = 5;
         class Foo {
@@ -568,12 +568,12 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input, {
         configFile: './plugin-unit-test.babel.config.js',
       });
-      expect(code).toHaveWorkletData();
-      expect(code).not.toContain("'worklet';");
+      expect(code).not.toHaveWorkletData();
+      expect(code).toContain("'worklet';");
       expect(code).toMatchSnapshot();
     });
 
-    test('workletizes setter', () => {
+    test('leaves setter untouched', () => {
       const input = html`<script>
         class Foo {
           set bar(x) {
@@ -586,8 +586,8 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input, {
         configFile: './plugin-unit-test.babel.config.js',
       });
-      expect(code).toHaveWorkletData();
-      expect(code).not.toContain("'worklet';");
+      expect(code).not.toHaveWorkletData();
+      expect(code).toContain("'worklet';");
       expect(code).toMatchSnapshot();
     });
 
@@ -627,7 +627,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    test('workletizes constructor', () => {
+    test('leaves constructor untouched', () => {
       const input = html`<script>
         class Foo {
           constructor(x) {
@@ -640,8 +640,8 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input, {
         configFile: './plugin-unit-test.babel.config.js',
       });
-      expect(code).toHaveWorkletData();
-      expect(code).not.toContain("'worklet';");
+      expect(code).not.toHaveWorkletData();
+      expect(code).toContain("'worklet';");
       expect(code).toMatchSnapshot();
     });
   });

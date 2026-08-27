@@ -440,6 +440,40 @@ const foo = function foo_null1Factory({
 });"
 `;
 
+exports[`babel plugin for class worklets leaves constructor untouched 1`] = `
+"class Foo {
+  constructor(x) {
+    'worklet';
+    "use no memo";
+
+    this.x = x;
+  }
+}"
+`;
+
+exports[`babel plugin for class worklets leaves getter untouched 1`] = `
+"var x = 5;
+class Foo {
+  get bar() {
+    'worklet';
+    "use no memo";
+
+    return x + 2;
+  }
+}"
+`;
+
+exports[`babel plugin for class worklets leaves setter untouched 1`] = `
+"class Foo {
+  set bar(x) {
+    'worklet';
+    "use no memo";
+
+    this.x = x + 2;
+  }
+}"
+`;
+
 exports[`babel plugin for class worklets workletizes class field 1`] = `
 "var _worklet_1_init_data = {
   code: "(function null1(x){return x+2;})",
@@ -468,67 +502,6 @@ class Foo {
 }"
 `;
 
-exports[`babel plugin for class worklets workletizes constructor 1`] = `
-"var _worklet_1_init_data = {
-  code: "(function constructor_null1(x){this.x=x;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-class Foo {
-  constructor = function constructor_null1Factory({
-    _worklet_1_init_data
-  }) {
-    var _e = [new global.Error(), 1, -27];
-    var constructor = function (x) {
-      "use no memo";
-
-      this.x = x;
-    };
-    constructor.__closure = {};
-    constructor.__workletHash = 1;
-    constructor.__pluginVersion = "x.y.z";
-    constructor.__initData = _worklet_1_init_data;
-    constructor.__stackDetails = _e;
-    return constructor;
-  }({
-    _worklet_1_init_data
-  });
-}"
-`;
-
-exports[`babel plugin for class worklets workletizes getter 1`] = `
-"var x = 5;
-var _worklet_1_init_data = {
-  code: "(function bar_null1(){const{x}=this.__closure;return x+2;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-class Foo {
-  bar = function bar_null1Factory({
-    _worklet_1_init_data,
-    x
-  }) {
-    var _e = [new global.Error(), -2, -27];
-    var bar = function () {
-      "use no memo";
-
-      return x + 2;
-    };
-    bar.__closure = {
-      x
-    };
-    bar.__workletHash = 1;
-    bar.__pluginVersion = "x.y.z";
-    bar.__initData = _worklet_1_init_data;
-    bar.__stackDetails = _e;
-    return bar;
-  }({
-    _worklet_1_init_data,
-    x
-  });
-}"
-`;
-
 exports[`babel plugin for class worklets workletizes instance method 1`] = `
 "var _worklet_1_init_data = {
   code: "(function bar_null1(x){return x+2;})",
@@ -544,34 +517,6 @@ class Foo {
       "use no memo";
 
       return x + 2;
-    };
-    bar.__closure = {};
-    bar.__workletHash = 1;
-    bar.__pluginVersion = "x.y.z";
-    bar.__initData = _worklet_1_init_data;
-    bar.__stackDetails = _e;
-    return bar;
-  }({
-    _worklet_1_init_data
-  });
-}"
-`;
-
-exports[`babel plugin for class worklets workletizes setter 1`] = `
-"var _worklet_1_init_data = {
-  code: "(function bar_null1(x){this.x=x+2;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-class Foo {
-  bar = function bar_null1Factory({
-    _worklet_1_init_data
-  }) {
-    var _e = [new global.Error(), 1, -27];
-    var bar = function (x) {
-      "use no memo";
-
-      this.x = x + 2;
     };
     bar.__closure = {};
     bar.__workletHash = 1;

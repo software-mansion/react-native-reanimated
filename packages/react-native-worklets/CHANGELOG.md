@@ -30,6 +30,7 @@
 - Fix the umbrella `Serializable.h` header including a non-existent `RetainableSerializable.h` instead of `RetainingSerializable.h`, which made the header fail to compile. ([#10406](https://github.com/software-mansion/react-native-reanimated/pull/10406) by [@tjzel](https://github.com/tjzel))
 - Fix build error when Bundle Mode worklet captures JSX name. ([#10409](https://github.com/software-mansion/react-native-reanimated/pull/10409) by [@tshmieldev](https://github.com/tshmieldev))
 - Fix `ReferenceError` when a worklet file assigns to `module.exports`. ([#10408](https://github.com/software-mansion/react-native-reanimated/pull/10408) by [@tshmieldev](https://github.com/tshmieldev))
+- Stop workletizing getters, setters and constructors. ([#10421](https://github.com/software-mansion/react-native-reanimated/pull/10421) by [@tshmieldev](https://github.com/tshmieldev))
 
 ### 💡 Others
 
