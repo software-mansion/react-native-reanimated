@@ -51,6 +51,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon,
   mutable std::vector<Tag> tagsToRestore_;
   mutable TransitionMap transitionMap_;
   mutable Transitions transitions_;
+  mutable std::unordered_set<Tag> hiddenViewTags_;
   mutable bool synchronized_ = true;
   mutable Tag closingScreenTag_ = -1;
   mutable std::vector<std::shared_ptr<LightNode>> entering_, layout_, exiting_;
@@ -114,6 +115,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon,
 
   void hideTransitioningViews(
       BeforeOrAfter index,
+      ShadowViewMutationList &filteredMutations,
+      const PropsParserContext &propsParserContext) const;
+
+  void keepTransitioningViewsHidden(
       ShadowViewMutationList &filteredMutations,
       const PropsParserContext &propsParserContext) const;
 

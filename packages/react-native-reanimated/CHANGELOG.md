@@ -25,6 +25,7 @@
 - Keep exiting views at their position in the host tree, so they no longer draw above later siblings. ([#10392](https://github.com/software-mansion/react-native-reanimated/pull/10392) by [@pawicao](https://github.com/pawicao))
 - Fix Layout Animations state leaking between Fabric surfaces by using one proxy per surface. ([#10368](https://github.com/software-mansion/react-native-reanimated/pull/10368) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Feed synchronous prop updates into the layout animations proxy's light tree, so shared element transitions start from the transformed position of a view that was updated through the synchronous path. The synchronous-update feature flags now work together with `ENABLE_SHARED_ELEMENT_TRANSITIONS`. ([#10416](https://github.com/software-mansion/react-native-reanimated/pull/10416) by [@pawicao](https://github.com/pawicao))
+- Keep views hidden for the whole shared element transition, so a React update in the same commit no longer shows them again mid-transition. ([#10425](https://github.com/software-mansion/react-native-reanimated/pull/10425) by [@pawicao](https://github.com/pawicao))
 
 ### 💡 Others
 
