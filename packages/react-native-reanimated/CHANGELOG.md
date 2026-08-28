@@ -13,6 +13,7 @@
 
 ### 🐛 Bug fixes
 
+- Skip synchronous Android prop updates for unmounted views to avoid throwing and logging mounting-layer exceptions on the UI thread.
 - Fix `SequencedTransition` on web scaling the wrong axis in its midpoint keyframe, so the axis that has already finished no longer collapses while the other one waits. ([#10384](https://github.com/software-mansion/react-native-reanimated/pull/10384) by [@dennytosp](https://github.com/dennytosp))
 - Fix `normalizeColor` resolving `Object.prototype` members such as `'constructor'` and `'toString'` as color names and returning a function instead of `null`. ([#10387](https://github.com/software-mansion/react-native-reanimated/pull/10387) by [@dennytosp](https://github.com/dennytosp))
 - Fix `transform` and `transformOrigin` strings padded with whitespace throwing instead of parsing. ([#10388](https://github.com/software-mansion/react-native-reanimated/pull/10388) by [@dennytosp](https://github.com/dennytosp))
