@@ -7,6 +7,7 @@
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/Compat/WorkletsApi.h>
+#include <reanimated/Fabric/updates/UpdatesRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
@@ -104,6 +105,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       std::weak_ptr<const facebook::react::MountingOverrideDelegate> mountingOverrideDelegate);
   virtual void shadowTreeWillCommit(bool isSurfaceRemoval) {}
   virtual void surfaceDidUnmount();
+  virtual void applySynchronousProps(const UpdatesBatch &, const std::unordered_set<Tag> &) const {}
+  virtual void dropSynchronousProps(const std::vector<Tag> &) const {}
   ~LayoutAnimationsProxyCommon() override = default;
 
  protected:

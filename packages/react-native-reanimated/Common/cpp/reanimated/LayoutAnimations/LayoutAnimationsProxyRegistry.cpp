@@ -80,6 +80,20 @@ std::optional<SurfaceId> LayoutAnimationsProxyRegistry::onGestureCancel(const in
   return {};
 }
 
+void LayoutAnimationsProxyRegistry::applySynchronousProps(
+    const UpdatesBatch &updatesBatch,
+    const std::unordered_set<Tag> &skipOverlayTags) {
+  for (const auto &instance : instances()) {
+    instance->applySynchronousProps(updatesBatch, skipOverlayTags);
+  }
+}
+
+void LayoutAnimationsProxyRegistry::dropSynchronousProps(const std::vector<Tag> &tags) {
+  for (const auto &instance : instances()) {
+    instance->dropSynchronousProps(tags);
+  }
+}
+
 std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> LayoutAnimationsProxyRegistry::instances() const {
   const std::lock_guard<std::mutex> lock(instancesMutex_);
   std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> instances;
