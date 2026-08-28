@@ -270,7 +270,7 @@ open class NativeProxy {
                         updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
                     }
                 } catch (e: Exception) {
-                    Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag: $e")
+                    Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag: ${e.cause ?: e}")
                 }
             } else {
                 mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, props)
