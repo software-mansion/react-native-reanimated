@@ -150,7 +150,8 @@ export const processTransformOrigin: ValueProcessor<
 > = (value) => {
   'worklet';
   const isArray = Array.isArray(value);
-  let components = typeof value === 'string' ? value.split(/\s+/) : value;
+  let components =
+    typeof value === 'string' ? value.trim().split(/\s+/) : value;
   const customParse = isArray ? () => null : parsePx;
 
   if (components.length < 1 || components.length > 3) {

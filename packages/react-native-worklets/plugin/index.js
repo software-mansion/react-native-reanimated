@@ -846,6 +846,9 @@ var require_classMethod = __commonJS({
     var types_12 = require("@babel/types");
     var assert_1 = require("assert");
     function processIfWorkletMethod(path) {
+      if (path.node.kind !== "method") {
+        return;
+      }
       if (path.node.body.directives.some((d) => d.value.value === "worklet")) {
         (0, assert_1.strict)((0, types_12.isIdentifier)(path.node.key), "ClassMethod key must be an Identifier");
         const methodIdentifier = path.node.key;

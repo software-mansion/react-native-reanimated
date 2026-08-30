@@ -10,6 +10,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <stack>
 #include <string>
 #include <unordered_map>
@@ -32,9 +33,10 @@ struct Transition {
 };
 
 struct SharedTransitionManager {
-  std::unordered_map<std::string, Tag> containerTags_;
+  std::mutex mutex_;
   std::unordered_map<Tag, std::string> tagToName_;
   std::unordered_map<Tag, std::string> nativeIDToName_;
+  Tag nextContainerTag_{10000002};
 };
 
 using TransitionMap = std::unordered_map<SharedTag, Transition>;
@@ -47,6 +49,9 @@ struct LayoutAnimationConfig {
   std::string sharedTransitionTag;
 };
 
+// TODO: Refactor LayoutAnimationsManager around surface-owned configuration.
+// It is shared by all surface proxies, but configs carry no surface-lifetime identity,
+// so orphaned configs cannot be cleaned up safely.
 class LayoutAnimationsManager {
  public:
   LayoutAnimationsManager() : sharedTransitionManager_(std::make_shared<SharedTransitionManager>()) {}
