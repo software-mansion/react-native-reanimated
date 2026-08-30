@@ -115,6 +115,20 @@ describe(processTransformOrigin, () => {
         ],
       },
       {
+        name: 'padded string syntax',
+        cases: [
+          {
+            name: 'surrounded by whitespace',
+            cases: [
+              { input: '  50% 50%', output: ['50%', '50%', 0] },
+              { input: '  left top  ', output: [0, 0, 0] },
+              { input: '\n  25px 25% 25px\n', output: [25, '25%', 25] },
+              { input: '\tcenter', output: ['50%', '50%', 0] },
+            ],
+          },
+        ],
+      },
+      {
         name: 'array syntax',
         cases: [
           {

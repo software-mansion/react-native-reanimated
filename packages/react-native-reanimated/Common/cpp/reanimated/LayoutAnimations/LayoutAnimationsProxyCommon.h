@@ -8,9 +8,11 @@
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <unordered_map>
 #include <unordered_set>
@@ -62,46 +64,64 @@ consumeIsCancelled(std::unordered_map<Tag, PendingStart> &pendingStarts, const T
 }
 #endif
 
+struct LayoutAnimationsProxyDependencies {
+  std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager;
+  SharedComponentDescriptorRegistry componentDescriptorRegistry;
+  std::shared_ptr<const ContextContainer> contextContainer;
+  jsi::Runtime &uiRuntime;
+  std::shared_ptr<UIScheduler> uiScheduler;
+  std::shared_ptr<facebook::react::UIManager> uiManager;
+#ifdef ANDROID
+  PreserveMountedTagsFunction filterUnmountedTagsFunction;
+  std::shared_ptr<facebook::react::CallInvoker> jsInvoker;
+#endif
+#ifdef __APPLE__
+  ForceScreenSnapshotFunction forceScreenSnapshot;
+#endif
+};
+
 class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDelegate {
  public:
   LayoutAnimationsProxyCommon(
-      const std::shared_ptr<LayoutAnimationsManager> &layoutAnimationsManager,
-      const SharedComponentDescriptorRegistry &componentDescriptorRegistry,
-      const std::shared_ptr<const ContextContainer> &contextContainer,
-      jsi::Runtime &uiRuntime,
-      const std::shared_ptr<UIScheduler> &uiScheduler,
-      const std::shared_ptr<facebook::react::UIManager> &uiManager
-#ifdef ANDROID
-      ,
-      const PreserveMountedTagsFunction &filterUnmountedTagsFunction,
-      const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker
-#endif
-      )
-      : layoutAnimationsManager_(layoutAnimationsManager),
-        contextContainer_(contextContainer),
-        componentDescriptorRegistry_(componentDescriptorRegistry),
-        uiRuntime_(uiRuntime),
-        uiScheduler_(uiScheduler),
-        uiManager_(uiManager)
+      const facebook::react::SurfaceId surfaceId,
+      const LayoutAnimationsProxyDependencies &dependencies)
+      : surfaceId_(surfaceId),
+        layoutAnimationsManager_(dependencies.layoutAnimationsManager),
+        contextContainer_(dependencies.contextContainer),
+        componentDescriptorRegistry_(dependencies.componentDescriptorRegistry),
+        uiRuntime_(dependencies.uiRuntime),
+        uiScheduler_(dependencies.uiScheduler),
+        uiManager_(dependencies.uiManager)
 #ifdef ANDROID
         ,
-        preserveMountedTags_(filterUnmountedTagsFunction),
-        jsInvoker_(jsInvoker)
+        preserveMountedTags_(dependencies.filterUnmountedTagsFunction),
+        jsInvoker_(dependencies.jsInvoker)
 #endif
   {
   }
   virtual std::optional<facebook::react::SurfaceId>
   onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward);
-  virtual std::optional<facebook::react::SurfaceId> onGestureCancel();
+  virtual std::optional<facebook::react::SurfaceId> onGestureCancel(int tag);
   virtual std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) = 0;
   virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) = 0;
-  virtual void startSurface(const facebook::react::ShadowTree &shadowTree);
+  virtual void startSurface(
+      const facebook::react::ShadowTree &shadowTree,
+      std::weak_ptr<const facebook::react::MountingOverrideDelegate> mountingOverrideDelegate);
+  virtual void shadowTreeWillCommit(bool isSurfaceRemoval) {}
+  virtual void surfaceDidUnmount();
+  ~LayoutAnimationsProxyCommon() override = default;
 
  protected:
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
+  void maybeUpdateWindowDimensions(const ShadowViewMutation &mutation) const;
+  void cancelAllAnimations() const;
 
+  const SurfaceId surfaceId_;
+  mutable std::recursive_mutex mutex;
   mutable std::unordered_set<Tag> maybeSettledAnimationTags_;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
+  mutable std::unordered_map<Tag, UpdateValues> updateMap_;
+  mutable Rect window_{0, 0};
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   std::shared_ptr<const ContextContainer> contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
@@ -113,7 +133,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 #ifdef ANDROID
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker_;
 
-  void restoreOpacityInCaseOfFlakyEnteringAnimation(SurfaceId surfaceId) const;
+  void restoreOpacityInCaseOfFlakyEnteringAnimation() const;
 
   // On Android pullTransaction can run on the JS thread, so animation starts
   // are scheduled onto the UI thread. If `maybeCancelAnimation` is called between the

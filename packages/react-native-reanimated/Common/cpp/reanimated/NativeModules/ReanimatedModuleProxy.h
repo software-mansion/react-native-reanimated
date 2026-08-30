@@ -24,7 +24,7 @@
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/PseudoStyles/PseudoStylesRegistry.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
@@ -168,7 +168,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   void initializeFabric(const std::shared_ptr<UIManager> &uiManager);
 
-  void initializeLayoutAnimationsProxy();
+  void initializeLayoutAnimationsProxyRegistry();
 
   std::string obtainPropFromShadowNode(
       jsi::Runtime &rt,
@@ -268,7 +268,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 #endif // ANDROID
 
   std::shared_ptr<UIManager> uiManager_;
-  std::shared_ptr<LayoutAnimationsProxyCommon> layoutAnimationsProxy_;
+  std::shared_ptr<LayoutAnimationsProxyRegistry> layoutAnimationsProxyRegistry_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
   /// Access only on UI thread.
