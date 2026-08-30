@@ -211,15 +211,6 @@ struct LightNode {
   }
 };
 
-struct SurfaceManager {
-  mutable std::unordered_map<SurfaceId, std::shared_ptr<std::unordered_map<Tag, UpdateValues>>> props_;
-  mutable std::unordered_map<SurfaceId, Rect> windows_;
-
-  std::unordered_map<Tag, UpdateValues> &getUpdateMap(SurfaceId surfaceId);
-  void updateWindow(SurfaceId surfaceId, double windowWidth, double windowHeight);
-  Rect getWindow(SurfaceId surfaceId);
-};
-
 static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame &frame) {
   // we use optional's here to avoid overwriting non-animated values
   if (frame.width) {

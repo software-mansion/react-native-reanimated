@@ -31,6 +31,8 @@ describe(normalizeDelay, () => {
       ['100ms', 100],
       ['0ms', 0],
       ['-100ms', -100],
+      ['0.5ms', 0.5],
+      ['.5ms', 0.5],
     ] satisfies TestCases)('converts %p to %p', (delay, expected) => {
       expect(normalizeDelay(delay)).toBe(expected);
     });
@@ -82,6 +84,8 @@ describe(normalizeDuration, () => {
     test.each([
       ['100ms', 100],
       ['0ms', 0],
+      ['0.5ms', 0.5],
+      ['.5ms', 0.5],
     ] satisfies TestCases)('converts %p to %p', (duration, expected) => {
       expect(normalizeDuration(duration)).toBe(expected);
     });
