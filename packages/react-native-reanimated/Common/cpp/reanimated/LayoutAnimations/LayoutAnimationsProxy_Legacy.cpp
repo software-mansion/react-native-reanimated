@@ -724,12 +724,19 @@ void LayoutAnimationsProxy_Legacy::createLayoutAnimation(
     ShadowView &oldView,
     const int tag) const {
   int count = 1;
+  // Carried forward for the same reason as `count`: reaching this with a live
+  // record means another animation is still outstanding for the tag, and a
+  // removal already asked for must not be forgotten. A record left by a view
+  // React has re-created never gets here - `reconcileContradictedRemovals`
+  // erases it through `maybeCancelAnimation` first.
+  bool isExitingWhenSettled = false;
   auto layoutAnimationIt = layoutAnimations_.find(tag);
 
   if (layoutAnimationIt != layoutAnimations_.end()) {
     auto &layoutAnimation = layoutAnimationIt->second;
     oldView = layoutAnimation.currentView;
     count = layoutAnimation.count + 1;
+    isExitingWhenSettled = layoutAnimation.isExitingWhenSettled;
   }
 
   auto finalView =
@@ -744,6 +751,7 @@ void LayoutAnimationsProxy_Legacy::createLayoutAnimation(
           .parentTag = mutation.parentTag,
           .opacity = {},
           .isViewAlreadyMounted = false,
+          .isExitingWhenSettled = isExitingWhenSettled,
           .count = count});
 }
 

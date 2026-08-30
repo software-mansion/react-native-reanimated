@@ -873,6 +873,12 @@ ShadowView LayoutAnimationsProxy_Experimental::maybeCreateLayoutAnimation(
     const ShadowView &after,
     const Tag parentTag) const {
   auto count = 1;
+  // Carried forward for the same reason as `count`: reaching this with a live
+  // record means another animation is still outstanding for the tag, and a
+  // removal already asked for must not be forgotten. A record left by a view
+  // React has re-created never gets here - it is erased through
+  // `maybeCancelAnimation` first.
+  auto isExitingWhenSettled = false;
   const auto tag = after.tag;
   auto layoutAnimationIt = layoutAnimations_.find(tag);
   auto &oldView = before;
@@ -881,6 +887,7 @@ ShadowView LayoutAnimationsProxy_Experimental::maybeCreateLayoutAnimation(
     auto &layoutAnimation = layoutAnimationIt->second;
     oldView = layoutAnimation.currentView;
     count = layoutAnimation.count + 1;
+    isExitingWhenSettled = layoutAnimation.isExitingWhenSettled;
   }
 
   auto finalView = after;
@@ -892,6 +899,7 @@ ShadowView LayoutAnimationsProxy_Experimental::maybeCreateLayoutAnimation(
       .currentView = currentView,
       .startView = startView,
       .parentTag = parentTag,
+      .isExitingWhenSettled = isExitingWhenSettled,
       .count = count,
   };
 
