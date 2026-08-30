@@ -375,7 +375,9 @@ export function normalizeColor(color: unknown): number | null {
     return Number.parseInt(match[1] + 'ff', 16) >>> 0;
   }
 
-  if (color in names) {
+  // `in` walks the prototype chain, so plain `Object` members such as
+  // 'constructor' or 'toString' would resolve to a function here.
+  if (Object.prototype.hasOwnProperty.call(names, color)) {
     return names[color];
   }
 
