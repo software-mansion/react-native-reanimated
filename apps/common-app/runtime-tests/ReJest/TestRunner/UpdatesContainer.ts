@@ -25,34 +25,59 @@ export function createUpdatesContainer() {
   const jsUpdates = makeMutable<Array<JsUpdate>>([]);
   const nativeSnapshots = makeMutable<Array<NativeUpdate>>([]);
 
+  function _isUnmountedViewError(error: unknown): boolean {
+    'worklet';
+    const message = error instanceof Error ? error.message : String(error);
+    return (
+      message.includes('no longer mounted') ||
+      message.includes('Cannot cast shadow node to LayoutableShadowNode')
+    );
+  }
+
   function _updateNativeSnapshot(
     updateInfos: JsUpdate[],
     jsUpdateIndex: number
-  ): void {
+  ): JsUpdate[] {
     'worklet';
-    nativeSnapshots.modify((values) => {
-      'worklet';
-      for (const updateInfo of updateInfos) {
-        const snapshot: OperationUpdate = {};
-        const updatedProps = Object.keys(updateInfo.update);
-        const propsToUpdate = updatedProps.filter((propName) =>
-          isValidPropName(propName)
-        );
+    const snapshotted: JsUpdate[] = [];
+    const snapshots: NativeUpdate[] = [];
+    for (const updateInfo of updateInfos) {
+      const snapshot: OperationUpdate = {};
+      const updatedProps = Object.keys(updateInfo.update);
+      const propsToUpdate = updatedProps.filter((propName) =>
+        isValidPropName(propName)
+      );
+      try {
         for (const prop of propsToUpdate) {
           snapshot[prop] = global._obtainProp(
             updateInfo?.shadowNodeWrapper,
             prop
           );
         }
-        values.push({
-          tag: updateInfo.tag,
-          shadowNodeWrapper: updateInfo.shadowNodeWrapper,
-          snapshot,
-          jsUpdateIndex,
-        });
+      } catch (error) {
+        if (_isUnmountedViewError(error)) {
+          continue;
+        }
+        throw error;
       }
-      return values;
-    });
+      snapshots.push({
+        tag: updateInfo.tag,
+        shadowNodeWrapper: updateInfo.shadowNodeWrapper,
+        snapshot,
+        jsUpdateIndex,
+      });
+      snapshotted.push(updateInfo);
+    }
+    if (snapshots.length > 0) {
+      nativeSnapshots.modify((values) => {
+        'worklet';
+        for (const snapshot of snapshots) {
+          values.push(snapshot);
+        }
+        return values;
+      });
+    }
+    return snapshotted;
   }
 
   function _updateJsSnapshot(newUpdates: JsUpdate[]): void {
@@ -84,8 +109,11 @@ export function createUpdatesContainer() {
   function pushAnimationUpdates(operations: Operation[]) {
     'worklet';
     const newUpdates = _extractJSUpdatesUpdatesFromOperation(operations);
-    _updateNativeSnapshot(newUpdates, jsUpdates.value.length - 1);
-    _updateJsSnapshot(newUpdates);
+    const snapshotted = _updateNativeSnapshot(
+      newUpdates,
+      jsUpdates.value.length - 1
+    );
+    _updateJsSnapshot(snapshotted);
   }
 
   function pushLayoutAnimationUpdates(
@@ -100,7 +128,13 @@ export function createUpdatesContainer() {
         updatesCopy.backgroundColor
       );
     }
-    _updateNativeSnapshot([{ tag, update }], jsUpdates.value.length - 1);
+    const snapshotted = _updateNativeSnapshot(
+      [{ tag, update }],
+      jsUpdates.value.length - 1
+    );
+    if (snapshotted.length === 0) {
+      return;
+    }
     jsUpdates.modify((updates) => {
       updates.push({
         tag,
