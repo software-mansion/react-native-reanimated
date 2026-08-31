@@ -6,10 +6,9 @@ import android.view.ViewGroup;
 public class REASharedTransitionBoundaryView extends ViewGroup {
   public REASharedTransitionBoundaryView(Context context) {
     super(context);
-    // The boundary uses `display: contents`, so this view has an empty frame
-    // while its children are laid out in the coordinate space of its parent.
-    // Without this, the children would be clipped to the empty bounds.
-    // It only affects children of this view, not the rest of the app.
+    // Children can lie outside the boundary's frame — moved by an animation
+    // without a re-layout, or laid out at negative coordinates — so they
+    // must not be clipped.
     this.setClipChildren(false);
   }
 
