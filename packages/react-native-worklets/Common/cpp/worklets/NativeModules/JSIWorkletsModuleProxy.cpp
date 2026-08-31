@@ -37,8 +37,10 @@
 #endif // NDEBUG
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -638,6 +640,12 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             /* name */ at<0>(args).asString(rt).utf8(rt),
             /* value */ at<1>(args).asBool());
       });
+
+  jsi_utils::addMethod<0>(rt, obj, "getCurrentThreadId", [](jsi::Runtime &rt, const jsi::Value &) {
+    std::ostringstream stream;
+    stream << std::this_thread::get_id();
+    return jsi::String::createFromUtf8(rt, stream.str());
+  });
 
   jsi_utils::addMethod<2>(
       rt, obj, "createSynchronizable", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {

@@ -408,6 +408,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     this.#workletsModuleProxy.setDynamicFeatureFlag(name, value);
   }
 
+  getCurrentThreadId(): string {
+    return this.#workletsModuleProxy.getCurrentThreadId();
+  }
+
   getUIRuntimeHolder(): object {
     return this.#workletsModuleProxy.getUIRuntimeHolder();
   }
