@@ -22,10 +22,11 @@ function resolveWorkletsPlugin() {
   try {
     return resolveOxcPlugin();
   } catch (error) {
+    const cause = error instanceof Error ? error.message : String(error);
     console.warn(
       `[Worklets] oxc plugin unavailable, falling back to ${BABEL_WORKLETS_PLUGIN}. ` +
         'Run `yarn build` in packages/react-native-worklets/plugin-oxc to use it. ' +
-        `Cause: ${String(error.message).split('\n')[0]}`
+        `Cause: ${cause.split('\n')[0]}`
     );
     return BABEL_WORKLETS_PLUGIN;
   }

@@ -5986,7 +5986,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jridgewell/remapping@npm:^2.3.5":
+"@jridgewell/remapping@npm:2.3.5, @jridgewell/remapping@npm:^2.3.5":
   version: 2.3.5
   resolution: "@jridgewell/remapping@npm:2.3.5"
   dependencies:
@@ -34585,7 +34585,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "worklets-plugin-oxc@workspace:packages/react-native-worklets/plugin-oxc"
   dependencies:
-    "@jridgewell/remapping": "npm:^2.3.5"
+    "@jridgewell/remapping": "npm:2.3.5"
   languageName: unknown
   linkType: soft
 
