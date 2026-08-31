@@ -13,11 +13,14 @@ use oxc_syntax::reference::{Reference, ReferenceFlags, ReferenceId};
 use oxc_syntax::scope::ScopeId;
 
 use crate::closure::{get_closure, scope_is_inside};
+use crate::imports::{create_import_path, update_relative_requires};
+use crate::jsx_dev_attributes::strip_jsx_dev_attributes;
 use crate::naming::worklet_hash;
 use crate::naming::{make_worklet_name, WorkletNames};
 use crate::types::State;
 use crate::utils::{
-    closure_binding_pattern, const_decl, is_release, replace_implicit_return_with_block,
+    closure_binding_pattern, const_decl, identifier_binding_pattern, is_release,
+    replace_implicit_return_with_block, strip_worklet_directives,
 };
 use crate::worklet_string_code::build_worklet_string;
 
@@ -114,7 +117,7 @@ pub fn make_worklet_factory<'a>(
 
     if let Expression::FunctionExpression(func) = &mut factory_expr {
         if let Some(body) = func.body.as_mut() {
-            crate::imports::update_relative_requires(
+            update_relative_requires(
                 body,
                 filename,
                 &state.forwardable_relative_paths,
@@ -182,7 +185,7 @@ fn generate_worklet_file<'a>(
 ) -> String {
     use oxc_ast::ast::ExportDefaultDeclarationKind;
 
-    crate::jsx_dev_attributes::strip_jsx_dev_attributes(&mut factory);
+    strip_jsx_dev_attributes(&mut factory);
 
     let mut body = builder.vec_with_capacity(imports.len() + 1);
     for info in imports {
@@ -192,9 +195,7 @@ fn generate_worklet_file<'a>(
         }
         let mut rebased = info.clone();
         if rebased.source.starts_with('.') {
-            if let Some(p) =
-                crate::imports::create_import_path(filename, &rebased.source, worklets_package_dir)
-            {
+            if let Some(p) = create_import_path(filename, &rebased.source, worklets_package_dir) {
                 rebased.source = p;
             }
         }
@@ -385,7 +386,7 @@ fn build_inner_fn_decl<'a>(
 ) -> Statement<'a> {
     let params_clone: FormalParameters<'a> = input.params.clone_in(allocator);
     let mut body_clone: FunctionBody<'a> = input.body.clone_in(allocator);
-    crate::utils::strip_worklet_directives(&mut body_clone, builder, true);
+    strip_worklet_directives(&mut body_clone, builder, true);
     if input.is_expression_body {
         replace_implicit_return_with_block(&mut body_clone, builder);
     }
@@ -404,7 +405,7 @@ fn build_inner_fn_decl<'a>(
         Some(body_clone),
     ));
 
-    let id_pat = builder.binding_pattern_binding_identifier(SPAN, builder.ident(react_name));
+    let id_pat = identifier_binding_pattern(builder, react_name);
     const_decl(builder, id_pat, init)
 }
 

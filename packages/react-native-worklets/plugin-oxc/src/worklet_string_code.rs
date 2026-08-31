@@ -5,7 +5,10 @@ use oxc_ast::NONE;
 use oxc_codegen::{Codegen, CodegenOptions};
 use oxc_span::SPAN;
 
-use crate::utils::{closure_binding_pattern, const_decl, replace_implicit_return_with_block};
+use crate::utils::{
+    closure_binding_pattern, const_decl, identifier_binding_pattern,
+    replace_implicit_return_with_block, strip_worklet_directives,
+};
 use crate::worklet_factory::WorkletInput;
 
 pub fn build_worklet_string<'a>(
@@ -20,7 +23,7 @@ pub fn build_worklet_string<'a>(
 
     let cloned_params: FormalParameters<'a> = input.params.clone_in(allocator);
     let mut cloned_body: FunctionBody<'a> = input.body.clone_in(allocator);
-    crate::utils::strip_worklet_directives(&mut cloned_body, builder, false);
+    strip_worklet_directives(&mut cloned_body, builder, false);
     if input.is_expression_body {
         replace_implicit_return_with_block(&mut cloned_body, builder);
     }
@@ -71,8 +74,7 @@ pub fn build_worklet_string<'a>(
 }
 
 fn prepend_recursive_declaration<'a>(builder: AstBuilder<'a>, name: &str) -> Statement<'a> {
-    let ident = builder.ident(name);
-    let id_pat = builder.binding_pattern_binding_identifier(SPAN, ident);
+    let id_pat = identifier_binding_pattern(builder, name);
     let this_recur = Expression::from(builder.member_expression_static(
         SPAN,
         builder.expression_this(SPAN),

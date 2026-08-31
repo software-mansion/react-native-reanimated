@@ -26,6 +26,7 @@ mod referenced_worklets;
 mod types;
 mod utils;
 mod worklet_factory;
+mod worklet_pass;
 mod worklet_string_code;
 
 const PARSE_ERROR_CODE: &str = "WORKLETS_ERR_PARSE";

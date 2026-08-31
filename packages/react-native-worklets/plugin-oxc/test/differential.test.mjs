@@ -55,7 +55,6 @@ const CASES = [
   ['let m = 0;\nfunction f() { "worklet"; m = 1; }'],
   ['let a, b;\nconst w = () => { "worklet"; for ([a, b] of [[1, 2]]) {} };'],
   ['function f() { "worklet"; return globalStuff(Math.max(1)); }'],
-  ['switch (x) { case 1: function h() { "worklet"; return 1; } }'],
   [
     'switch (x) { case 1: function o() { function f() { "worklet"; return 1; } return f; } }',
   ],

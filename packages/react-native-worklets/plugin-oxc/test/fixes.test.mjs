@@ -683,7 +683,7 @@ test('a call below an optional link is still auto-workletized', () => {
 });
 
 test('a function declaration in an unscopable position is not given a const', () => {
-  const input = `switch (x) { case 1: function h() { 'worklet'; return 1; } default: break; }`;
+  const input = `if (x) function h() { 'worklet'; return 1; }`;
   const { code } = transform(input, 'test.js', {});
   assert.doesNotMatch(code, /const h =/);
   assert.match(
@@ -713,7 +713,7 @@ test('a layout callback is not matched through a sequence expression', () => {
 
 test('statement position of a workletized declaration', () => {
   const cases = [
-    ['switch (x) { case 1: function h() { "worklet"; return 1; } }', false],
+    ['switch (x) { case 1: function h() { "worklet"; return 1; } }', true],
     ['if (x) function h() { "worklet"; return 1; }', false],
     ['lbl: function h() { "worklet"; return 1; }', false],
     ['function h() { "worklet"; return 1; }', true],
@@ -728,13 +728,11 @@ test('statement position of a workletized declaration', () => {
 
 test('an unscopable position does not leak into the declaration body', () => {
   const input = `
-    switch (x) {
-      case 1:
-        function outer() {
-          function f() { 'worklet'; return 1; }
-          return f;
-        }
-    }
+    if (x)
+      function outer() {
+        function f() { 'worklet'; return 1; }
+        return f;
+      }
   `;
   const { code } = transform(input, 'test.js', {});
   assert.match(

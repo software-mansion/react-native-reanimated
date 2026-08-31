@@ -6,7 +6,9 @@ use oxc_ast::ast::{Argument, FunctionBody};
 use oxc_ast_visit::{walk_mut::walk_function_body, VisitMut};
 use oxc_span::SPAN;
 
-use crate::utils::{identifier_name, normalize_path, pathdiff};
+use crate::utils::{
+    can_forward_relative_import, identifier_name, normalize_path, pathdiff, to_posix,
+};
 
 pub fn update_relative_requires<'a>(
     body: &mut FunctionBody<'a>,
@@ -15,7 +17,7 @@ pub fn update_relative_requires<'a>(
     worklets_package_dir: Option<&str>,
     builder: AstBuilder<'a>,
 ) {
-    if !crate::utils::can_forward_relative_import(filename, forwardable_relative_paths) {
+    if !can_forward_relative_import(filename, forwardable_relative_paths) {
         return;
     }
     let mut visitor = RelativeRequireRewriter {
@@ -69,7 +71,7 @@ pub fn create_import_path(
     let worklets_dir = PathBuf::from(worklets_package_dir?).join(".worklets");
 
     let rel = pathdiff(&worklets_dir, &resolved)?;
-    let mut out = crate::utils::to_posix(&rel.to_string_lossy());
+    let mut out = to_posix(&rel.to_string_lossy());
     if !out.starts_with('.') && !out.starts_with('/') {
         out = format!("./{out}");
     }

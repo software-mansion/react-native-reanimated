@@ -1,11 +1,12 @@
 use oxc_allocator::CloneIn;
 use oxc_ast::ast::{ClassElement, MethodDefinition, PropertyDefinitionType, PropertyKey};
 use oxc_ast::NONE;
+use oxc_ast_visit::walk_mut;
 use oxc_span::SPAN;
 use oxc_syntax::scope::ScopeFlags;
 
-use crate::plugin::WorkletPass;
 use crate::utils::has_worklet_directive;
+use crate::worklet_pass::WorkletPass;
 
 pub enum MethodOutcome<'a> {
     NotAWorklet,
@@ -29,12 +30,11 @@ pub fn process_if_worklet_method<'a>(
     }
 
     let self_name = match &method.key {
-        PropertyKey::StaticIdentifier(id) if !method.computed => Some(id.name.to_string()),
+        PropertyKey::StaticIdentifier(id) if !method.computed => Some(id.name.as_str()),
         _ => None,
     };
-    pass.walk_function_scoped(&mut method.value, ScopeFlags::Function);
-    let Some((factory_call, _)) =
-        pass.workletize_function(&method.value, self_name.as_deref(), true)
+    walk_mut::walk_function(pass, &mut method.value, ScopeFlags::Function);
+    let Some((factory_call, _)) = pass.try_workletize_function(&method.value, self_name, true)
     else {
         return MethodOutcome::NotAWorklet;
     };

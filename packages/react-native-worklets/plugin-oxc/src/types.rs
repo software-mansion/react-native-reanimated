@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use oxc_semantic::Scoping;
 use oxc_syntax::symbol::SymbolId;
 
 use crate::options::PluginOptions;
@@ -76,11 +75,4 @@ impl State {
         self.worklet_number += 1;
         n
     }
-}
-
-pub fn binding_is_rebound(scoping: &Scoping, symbol_id: SymbolId) -> bool {
-    !scoping.symbol_redeclarations(symbol_id).is_empty()
-        || scoping
-            .get_resolved_references(symbol_id)
-            .any(|reference| reference.is_write())
 }

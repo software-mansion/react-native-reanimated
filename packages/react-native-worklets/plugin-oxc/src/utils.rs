@@ -8,7 +8,9 @@ use oxc_ast::ast::{
 };
 use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
+use oxc_semantic::Scoping;
 use oxc_span::SPAN;
+use oxc_syntax::symbol::SymbolId;
 
 const RELEASE_NEEDLES: &[&str] = &["prod", "release", "stage", "stagi"];
 
@@ -132,6 +134,13 @@ pub fn add_worklet_directives_to_function_body<'a>(
 fn build_directive<'a>(builder: AstBuilder<'a>, value: &str) -> oxc_ast::ast::Directive<'a> {
     let dir_str = builder.str(value);
     builder.directive(SPAN, builder.string_literal(SPAN, dir_str, None), dir_str)
+}
+
+pub fn identifier_binding_pattern<'a>(
+    builder: AstBuilder<'a>,
+    name: &str,
+) -> oxc_ast::ast::BindingPattern<'a> {
+    builder.binding_pattern_binding_identifier(SPAN, builder.ident(name))
 }
 
 pub fn closure_binding_pattern<'a>(
@@ -281,4 +290,11 @@ pub fn assignment_identifier<'e, 'a>(
         AssignmentTarget::AssignmentTargetIdentifier(id) => Some(id),
         _ => None,
     }
+}
+
+pub fn binding_is_rebound(scoping: &Scoping, symbol_id: SymbolId) -> bool {
+    !scoping.symbol_redeclarations(symbol_id).is_empty()
+        || scoping
+            .get_resolved_references(symbol_id)
+            .any(|reference| reference.is_write())
 }
