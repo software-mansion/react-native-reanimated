@@ -120,3 +120,7 @@ function drainUIQueue(queue: UIJob[]): void {
     }
   }
 }
+
+export function getCurrentThreadId(): string {
+  throw new Error('[Worklets] `getCurrentThreadId` is not supported on web.');
+}
