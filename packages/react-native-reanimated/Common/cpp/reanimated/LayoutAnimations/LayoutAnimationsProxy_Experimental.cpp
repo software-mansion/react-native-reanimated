@@ -131,6 +131,25 @@ bool LayoutAnimationsProxy_Experimental::isLightNodeMapped(const std::shared_ptr
   return nodeIt != lightNodes_.end() && nodeIt->second == node;
 }
 
+// the only erase of lightNodes_ once the tree is initialized
+void LayoutAnimationsProxy_Experimental::unmapLightNode(const std::shared_ptr<LightNode> &node) const {
+  const auto it = lightNodes_.find(node->current.tag);
+  if (it == lightNodes_.end() || it->second != node) {
+    return;
+  }
+  lightNodes_.erase(it);
+  if (node == topScreen_) {
+    topScreen_ = nullptr;
+  }
+  if (uncommittedScreenPop_ && node == uncommittedScreenPop_->sourceScreen) {
+    uncommittedScreenPop_->sourceScreen = nullptr;
+  }
+  if (transition_ && (node == transition_->sourceScreen || node == transition_->targetScreen)) {
+    transition_->state = TransitionState::CANCELLED;
+    transition_->updated = true;
+  }
+}
+
 // If React re-creates or re-inserts a tag whose exiting removal we are still
 // withholding, it has contradicted that withheld removal. Flush it now instead
 // of letting the stale node linger: updateLightTree would overwrite its
@@ -157,7 +176,7 @@ void LayoutAnimationsProxy_Experimental::reconcileContradictedRemovals(
     const auto node = it->second;
     completedAnimations_.erase(tag);
     updateMap_.erase(tag);
-    lightNodes_.erase(it);
+    unmapLightNode(node);
     if (node->state == DELETED) {
       // already unmounted — only the stale map entry had to go
       continue;
@@ -266,7 +285,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         react_native_assert(
             (state == UNDEFINED || state == WAITING || state == ANIMATING) && "Delete mutation for an unmounted node");
         if (state == UNDEFINED) {
-          lightNodes_.erase(it);
+          unmapLightNode(it->second);
         }
         break;
       }
@@ -577,10 +596,7 @@ void LayoutAnimationsProxy_Experimental::endAnimationsRecursively(
   const auto tag = node->current.tag;
   cancelLayoutAnimation(tag);
   node->setExitingState(DELETED);
-  // drop the tag mapping unless it was already re-registered for a new node
-  if (const auto it = lightNodes_.find(tag); it != lightNodes_.end() && it->second == node) {
-    lightNodes_.erase(it);
-  }
+  unmapLightNode(node);
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
 
@@ -612,9 +628,7 @@ void LayoutAnimationsProxy_Experimental::maybeDropAncestors(
   react_native_assert(index != -1 && "Child node not found");
 
   node->setExitingState(DELETED);
-  if (const auto it = lightNodes_.find(node->current.tag); it != lightNodes_.end() && it->second == node) {
-    lightNodes_.erase(it);
-  }
+  unmapLightNode(node);
   cancelLayoutAnimation(node->current.tag);
   cleanupMutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, index));
   cleanupMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));

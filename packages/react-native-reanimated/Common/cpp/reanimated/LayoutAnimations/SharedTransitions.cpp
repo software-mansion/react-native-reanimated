@@ -104,8 +104,7 @@ void LayoutAnimationsProxy_Experimental::resolveTransitionLifecycle(
     const PropsParserContext &propsParserContext) const {
   bool popSettledThisPull = false;
   if (uncommittedScreenPop_) {
-    const bool gestureCancelled =
-        uncommittedScreenPop_->cancelled && isLightNodeMapped(uncommittedScreenPop_->sourceScreen);
+    const bool gestureCancelled = uncommittedScreenPop_->cancelled && uncommittedScreenPop_->sourceScreen;
     if (!settleUncommittedScreenPop(transaction)) {
       return;
     }
@@ -123,17 +122,13 @@ void LayoutAnimationsProxy_Experimental::resolveTransitionLifecycle(
     return;
   }
   handleProgressTransition(transaction, mutations, propsParserContext, popSettledThisPull);
-  if (uncommittedScreenPop_) {
-    settleUncommittedScreenPop(transaction);
-  }
 }
 
 bool LayoutAnimationsProxy_Experimental::settleUncommittedScreenPop(TransactionMeta &transaction) const {
-  const bool sourceRemoved = !isLightNodeMapped(uncommittedScreenPop_->sourceScreen);
-  if (!sourceRemoved && !uncommittedScreenPop_->cancelled) {
+  if (uncommittedScreenPop_->sourceScreen && !uncommittedScreenPop_->cancelled) {
     return false;
   }
-  if (!sourceRemoved) {
+  if (uncommittedScreenPop_->sourceScreen) {
     for (const auto &node : uncommittedScreenPop_->sourceNodes) {
       if (isLightNodeMapped(node)) {
         transaction.nodesToRestore.push_back(node);
@@ -153,7 +148,7 @@ void LayoutAnimationsProxy_Experimental::resolveDeferredSourceScreen() const {
     return;
   }
   const auto sourceScreen = topScreen_ ? findParentRNSScreen(topScreen_) : nullptr;
-  if (!isLightNodeMapped(sourceScreen) || !transition_->targetScreen ||
+  if (!sourceScreen || !transition_->targetScreen ||
       sourceScreen->current.tag == transition_->targetScreen->current.tag) {
     transition_->state = TransitionState::CANCELLED;
     transition_->updated = true;
@@ -178,13 +173,11 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
 
   if (transition_->state == TransitionState::START) {
     const auto beforeTopScreen = topScreen_;
-    const auto afterTopScreen =
-        isLightNodeMapped(transition_->targetScreen) ? findBoundaryGuess(transition_->targetScreen) : nullptr;
+    const auto afterTopScreen = findBoundaryGuess(transition_->targetScreen);
     const auto beforeScreen = beforeTopScreen ? findParentRNSScreen(beforeTopScreen) : nullptr;
-    if (!isLightNodeMapped(transition_->sourceScreen) || !transition_->targetScreen ||
-        transition_->sourceScreen->current.tag == transition_->targetScreen->current.tag ||
-        !isLightNodeMapped(beforeTopScreen) || beforeScreen != transition_->sourceScreen || !afterTopScreen ||
-        beforeTopScreen == afterTopScreen) {
+    if (!transition_->sourceScreen || !transition_->targetScreen ||
+        transition_->sourceScreen->current.tag == transition_->targetScreen->current.tag || !beforeTopScreen ||
+        beforeScreen != transition_->sourceScreen || !afterTopScreen || beforeTopScreen == afterTopScreen) {
       transition_->state = TransitionState::CANCELLED;
     } else {
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, transaction);
@@ -508,7 +501,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
       std::shared_ptr<LightNode> sourceScreen;
       if (!uncommittedScreenPop_) {
         sourceScreen = topScreen_ ? findParentRNSScreen(topScreen_) : nullptr;
-        if (!isLightNodeMapped(sourceScreen) || sourceScreen->current.tag == tag) {
+        if (!sourceScreen || sourceScreen->current.tag == tag) {
           return {};
         }
       }
@@ -516,12 +509,6 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
           .sourceScreen = sourceScreen,
           .targetScreen = targetIt->second,
       };
-    } else if (
-        (transition_->state == TransitionState::START || transition_->state == TransitionState::ACTIVE) &&
-        progress < 1 && !isLightNodeMapped(transition_->targetScreen)) {
-      transition_->state = TransitionState::CANCELLED;
-      transition_->updated = true;
-      return surfaceId_;
     }
     transition_->progress = progress;
     if ((transition_->state == TransitionState::START || transition_->state == TransitionState::ACTIVE) &&
@@ -536,8 +523,8 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
 
 std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onGestureCancel(int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  if (uncommittedScreenPop_ && uncommittedScreenPop_->sourceScreen->current.tag == tag &&
-      isLightNodeMapped(uncommittedScreenPop_->sourceScreen)) {
+  if (uncommittedScreenPop_ && uncommittedScreenPop_->sourceScreen &&
+      uncommittedScreenPop_->sourceScreen->current.tag == tag) {
     if (uncommittedScreenPop_->cancelled) {
       return {};
     }
@@ -549,13 +536,13 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onGestureCancel(int
     return {};
   }
   if (transition_->sourceScreen) {
-    if (transition_->sourceScreen->current.tag != tag || !isLightNodeMapped(transition_->sourceScreen)) {
+    if (transition_->sourceScreen->current.tag != tag) {
       return {};
     }
   } else {
     const auto sourceIt = lightNodes_.find(tag);
     if (sourceIt == lightNodes_.end() || !sourceIt->second || !isRNSScreen(sourceIt->second) ||
-        !isLightNodeMapped(transition_->targetScreen) || !isRNSScreen(transition_->targetScreen)) {
+        !isRNSScreen(transition_->targetScreen)) {
       return {};
     }
     const auto sourceScreen = sourceIt->second;
@@ -633,10 +620,7 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
       root->children.erase(childIt);
     }
 
-    const auto nodeIt = lightNodes_.find(node->current.tag);
-    if (nodeIt != lightNodes_.end() && nodeIt->second == node) {
-      lightNodes_.erase(nodeIt);
-    }
+    unmapLightNode(node);
   }
 }
 
