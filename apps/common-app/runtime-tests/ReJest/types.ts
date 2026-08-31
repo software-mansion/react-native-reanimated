@@ -27,7 +27,6 @@ export type TrackerCallCount = {
 };
 
 export type SharedValueSnapshot<TValue extends TestValue> = {
-  name: string;
   onJS: TValue;
   onUI: TValue;
 };
@@ -108,8 +107,6 @@ export enum ComparisonMode {
   AUTO = 'AUTO',
 }
 
-export type LockObject = { lock: boolean };
-
 type Writable<T> = {
   -readonly [P in keyof T]: T[P];
 };
@@ -171,8 +168,6 @@ declare global {
   var originalNotifyAboutProgress:
     | ((tag: number, value: Record<string, unknown>) => void)
     | undefined;
-  var originalCallMicrotasks: (() => void) | undefined;
-  var __callMicrotasks: () => void;
   var scheduleOnRN: typeof import('react-native-worklets').scheduleOnRN;
   var originalNativeRequestAnimationFrame:
     | ((callback: (timestamp: number) => void) => void)

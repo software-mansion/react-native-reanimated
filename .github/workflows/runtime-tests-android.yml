@@ -6,8 +6,17 @@ on:
     paths:
       - .github/workflows/runtime-tests-android.yml
       - apps/common-app/runtime-tests/**
+      - apps/fabric-example/package.json
+      - apps/common-app/package.json
       - apps/fabric-example/scripts/runtime-tests-server.js
       - apps/fabric-example/android/**
+      - packages/react-native-reanimated/Common/**
+      - packages/react-native-reanimated/android/**
+      - packages/react-native-reanimated/src/**
+      - packages/react-native-worklets/Common/**
+      - packages/react-native-worklets/android/**
+      - packages/react-native-worklets/bundleMode/**
+      - packages/react-native-worklets/src/**
   workflow_call:
     inputs:
       bundleMode:

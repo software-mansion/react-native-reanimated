@@ -26,35 +26,6 @@ type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
 
 let runOnUIQueue: UIJob[] = [];
 
-export function setupMicrotasks() {
-  'worklet';
-
-  let microtasksQueue: Array<() => void> = [];
-  let isExecutingMicrotasksQueue = false;
-  globalThis.queueMicrotask = (callback: () => void) => {
-    microtasksQueue.push(callback);
-  };
-  // TODO: Remove it after support for Reanimated 4.3 is dropped.
-  globalThis._microtaskQueueFinalizers = [];
-
-  globalThis.__callMicrotasks = () => {
-    if (isExecutingMicrotasksQueue) {
-      return;
-    }
-    try {
-      isExecutingMicrotasksQueue = true;
-      for (let index = 0; index < microtasksQueue.length; index += 1) {
-        // we use classic 'for' loop because the size of the currentTasks array may change while executing some of the callbacks due to queueMicrotask calls
-        microtasksQueue[index]();
-      }
-      microtasksQueue = [];
-      globalThis._microtaskQueueFinalizers.forEach((finalizer) => finalizer());
-    } finally {
-      isExecutingMicrotasksQueue = false;
-    }
-  };
-}
-
 /**
  * Lets you schedule a function to be executed on the [UI
  * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).

@@ -21,6 +21,7 @@ class WorkletRuntimeDecorator {
       const std::string &name,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const bool isDevBundle,
+      const bool enableMicrotaskQueue,
       jsi::Object &&jsiWorkletsModuleProxy,
       const std::shared_ptr<EventLoop> &eventLoop,
       const RuntimeBindings::NativeLoggingHook &nativeLoggingHook);

@@ -95,6 +95,66 @@ describe(LinearEasing, () => {
         ]);
       });
 
+      // https://drafts.csswg.org/css-easing-2/#linear-easing-function-serializing
+      test('serialization example from the spec: linear(0 20%, 0.5 10%, 1)', () => {
+        const easing = new LinearEasing([[0, '20%'], [0.5, '10%'], 1]);
+
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0 },
+          { x: 0.2, y: 0 },
+          { x: 0.2, y: 0.5 },
+          { x: 1, y: 1 },
+        ]);
+      });
+
+      test('clamps the last point to the largest preceding input progress', () => {
+        const easing = new LinearEasing([0, [1, '80%'], [0.5, '30%']]);
+
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0 },
+          { x: 0.8, y: 1 },
+          { x: 0.8, y: 0.5 },
+          { x: 1, y: 0.5 },
+        ]);
+      });
+
+      test('treats the input progress of the first point as preceding', () => {
+        const easing = new LinearEasing([[0, '50%'], [1, '20%'], 0.5]);
+
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0 },
+          { x: 0.5, y: 0 },
+          { x: 0.5, y: 1 },
+          { x: 1, y: 0.5 },
+        ]);
+      });
+
+      test('clamps the last of only two points when they decrease', () => {
+        const easing = new LinearEasing([
+          [0, '50%'],
+          [1, '20%'],
+        ]);
+
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0 },
+          { x: 0.5, y: 0 },
+          { x: 0.5, y: 1 },
+          { x: 1, y: 1 },
+        ]);
+      });
+
+      test('clamps a point that only step 4 spaces out after it', () => {
+        const easing = new LinearEasing([[0, '50%'], 1, [0.5, '20%']]);
+
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0 },
+          { x: 0.5, y: 0 },
+          { x: 0.5, y: 1 },
+          { x: 0.5, y: 0.5 },
+          { x: 1, y: 0.5 },
+        ]);
+      });
+
       test('warns if the input progress of the point is less than the input progress of the preceding point and is overridden', () => {
         new LinearEasing([
           0,
@@ -141,6 +201,56 @@ describe(LinearEasing, () => {
           { x: 0.8, y: 0.1 },
           { x: 1, y: 1 },
         ]);
+      });
+    });
+
+    describe('extrapolation', () => {
+      // Expected values match Chrome for the same linear() easing.
+      test('holds the last value after a pair of stops sharing an input progress', () => {
+        const easing = new LinearEasing([0, [0.3, '50%'], [0.7, '50%']]);
+
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0 },
+          { x: 0.5, y: 0.3 },
+          { x: 0.5, y: 0.7 },
+          { x: 1, y: 0.7 },
+        ]);
+      });
+
+      test('holds the first value before a pair of stops sharing an input progress', () => {
+        const easing = new LinearEasing([
+          [0.3, '50%'],
+          [0.7, '50%'],
+          [1, '100%'],
+        ]);
+
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0.3 },
+          { x: 0.5, y: 0.3 },
+          { x: 0.5, y: 0.7 },
+          { x: 1, y: 1 },
+        ]);
+      });
+
+      test('never extrapolates to a non-finite value', () => {
+        const easings = [
+          new LinearEasing([
+            [0.5, '50%'],
+            [1, '50%'],
+          ]),
+          new LinearEasing([
+            [0.5, '50%'],
+            [0.5, '50%'],
+          ]),
+          new LinearEasing([0, [0.3, '50%'], [0.7, '50%']]),
+        ];
+
+        for (const easing of easings) {
+          for (const { x, y } of easing.normalize().points) {
+            expect(Number.isFinite(x)).toBe(true);
+            expect(Number.isFinite(y)).toBe(true);
+          }
+        }
       });
     });
   });

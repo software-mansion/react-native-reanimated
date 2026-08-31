@@ -230,10 +230,10 @@ export interface Mutable<Value = unknown> extends SharedValue<Value> {
    */
   _value: Value;
   /**
-   * Defined only when enabled with a feature flag
-   * `USE_SYNCHRONIZABLE_FOR_MUTABLES`.
+   * Defined on the UI Runtime host mutable and as a no-op on web and Guest
+   * mutables.
    */
-  setDirty?: (dirty: boolean) => void;
+  setDirtyFlag: (dirty: boolean) => void;
 }
 
 export type MapperRawInputs = unknown[];

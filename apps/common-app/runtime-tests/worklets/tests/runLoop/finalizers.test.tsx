@@ -7,17 +7,12 @@ import {
   createOrderConstraint,
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
   waitForNotifications,
 } from '../../../ReJest/RuntimeTestsApi';
-
-type localGlobal = typeof globalThis & {
-  __callMicrotasks: () => void;
-  _microtaskQueueFinalizers: (() => void)[];
-};
 
 describe('requestAnimationFrameFinalizer', () => {
   test('runs after the animation frame callbacks', async () => {
@@ -105,7 +100,7 @@ describe('requestAnimationFrameFinalizer', () => {
   });
 
   test('is not installed on Worker Runtimes', () => {
-    const workletRuntime = getWorkletRuntimeFromPool('test');
+    const [workletRuntime] = getWorkletRuntimesFromPool(1);
 
     const finalizerType = runOnRuntimeSyncWithId(
       workletRuntime.runtimeId,
@@ -116,92 +111,5 @@ describe('requestAnimationFrameFinalizer', () => {
     );
 
     expect(finalizerType).toBe('undefined');
-  });
-});
-
-const pushSelfRemovingFinalizer = (callback: () => void) => {
-  'worklet';
-  const finalizers = (globalThis as localGlobal)._microtaskQueueFinalizers;
-  const finalizer = () => {
-    finalizers.splice(finalizers.indexOf(finalizer), 1);
-    callback();
-  };
-  finalizers.push(finalizer);
-};
-
-describe('microtask queue finalizers', () => {
-  test('run after the microtask queue is drained', async () => {
-    const [confirmedOrder, order] = createOrderConstraint();
-
-    scheduleOnUI(() => {
-      'worklet';
-      pushSelfRemovingFinalizer(() => {
-        order(2, 'finalizer');
-      });
-
-      queueMicrotask(() => {
-        order(1, 'microtask');
-      });
-    });
-
-    await waitForNotifications(['microtask', 'finalizer']);
-    expect(confirmedOrder.value).toBe(2);
-  });
-
-  test('run after the microtasks queued by other microtasks', async () => {
-    const [confirmedOrder, order] = createOrderConstraint();
-
-    scheduleOnUI(() => {
-      'worklet';
-      pushSelfRemovingFinalizer(() => {
-        order(3, 'finalizer');
-      });
-
-      queueMicrotask(() => {
-        order(1, 'microtask');
-        queueMicrotask(() => {
-          order(2, 'nestedMicrotask');
-        });
-      });
-    });
-
-    await waitForNotifications(['microtask', 'nestedMicrotask', 'finalizer']);
-    expect(confirmedOrder.value).toBe(3);
-  });
-
-  test('are not run again by a re-entrant drain', async () => {
-    const [confirmedOrder, order] = createOrderConstraint();
-
-    scheduleOnUI(() => {
-      'worklet';
-      pushSelfRemovingFinalizer(() => {
-        order(3, 'finalizer');
-      });
-
-      queueMicrotask(() => {
-        (globalThis as localGlobal).__callMicrotasks();
-        order(1, 'first');
-      });
-      queueMicrotask(() => {
-        order(2, 'second');
-      });
-    });
-
-    await waitForNotifications(['first', 'second', 'finalizer']);
-    expect(confirmedOrder.value).toBe(3);
-  });
-
-  test('are not installed on Worker Runtimes', () => {
-    const workletRuntime = getWorkletRuntimeFromPool('test');
-
-    const finalizersType = runOnRuntimeSyncWithId(
-      workletRuntime.runtimeId,
-      () => {
-        'worklet';
-        return typeof (globalThis as localGlobal)._microtaskQueueFinalizers;
-      }
-    );
-
-    expect(finalizersType).toBe('undefined');
   });
 });

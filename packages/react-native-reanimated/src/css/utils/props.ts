@@ -13,13 +13,13 @@ import type {
   ExistingCSSAnimationProperties,
 } from '../types';
 import {
-  isAnimationCallbackProp,
+  ANIMATION_CALLBACK_PROPS,
   isAnimationProp,
   isCSSKeyframesObject,
   isCSSKeyframesRule,
   isPseudoSelectorValue,
-  isTransitionCallbackProp,
   isTransitionProp,
+  TRANSITION_CALLBACK_PROPS,
 } from './guards';
 
 export type PseudoStylesBySelector = Record<
@@ -33,21 +33,20 @@ export function filterCSSAndStyleProperties<S extends object>(
   ExistingCSSAnimationProperties | null,
   CSSTransitionProperties | null,
   PseudoStylesBySelector | null,
-  CSSAnimationCallbacks | null,
-  CSSTransitionCallbacks | null,
   UnknownRecord,
 ] {
   const animationProperties: Partial<CSSAnimationProperties> = {};
   let transitionProperties: Partial<CSSTransitionProperties> = {};
-  const animationCallbacks: CSSAnimationCallbacks = {};
-  const transitionCallbacks: CSSTransitionCallbacks = {};
   const filteredStyle: UnknownRecord = {};
   const pseudoStylesBySelector: PseudoStylesBySelector = {};
+
+  const styleObject = style as UnknownRecord;
 
   // The CSS / transition / animation buckets are strongly typed but at this
   // point we are dynamically splitting an opaque style object by prop name;
   // values are validated downstream by the normalizers.
-  for (const [prop, value] of Object.entries(style)) {
+  for (const prop in styleObject) {
+    const value = styleObject[prop];
     if (value === undefined) {
       // If the user explicitly sets a property to undefined (e.g. when they want
       // to remove CSS transition or animation), we treat the property as if it was not
@@ -69,10 +68,6 @@ export function filterCSSAndStyleProperties<S extends object>(
       } else {
         (transitionProperties as UnknownRecord)[prop] = value;
       }
-    } else if (isAnimationCallbackProp(prop)) {
-      animationCallbacks[prop] = value as CSSAnimationCallback;
-    } else if (isTransitionCallbackProp(prop)) {
-      transitionCallbacks[prop] = value as CSSTransitionCallback;
     } else if (isSharedValue(value)) {
       continue;
     } else if (isPseudoSelectorValue(value)) {
@@ -80,7 +75,7 @@ export function filterCSSAndStyleProperties<S extends object>(
       if (defaultValue !== undefined) {
         filteredStyle[prop] = defaultValue;
       }
-      for (const [selector, selectorValue] of Object.entries(value)) {
+      for (const selector in value) {
         if (selector === 'default') {
           continue;
         }
@@ -88,7 +83,7 @@ export function filterCSSAndStyleProperties<S extends object>(
           selectorStyle: {},
           defaultStyle: {},
         });
-        branch.selectorStyle[prop] = selectorValue;
+        branch.selectorStyle[prop] = value[selector];
         branch.defaultStyle[prop] = defaultValue;
       }
     } else if (isEmptyObject(value) && isSupportedStyleProp(prop)) {
@@ -103,13 +98,17 @@ export function filterCSSAndStyleProperties<S extends object>(
   // Return animationProperties only if at least one animationName contains
   // valid keyframes
   const animationName = animationProperties.animationName;
+  const animationNames = animationName
+    ? Array.isArray(animationName)
+      ? animationName
+      : [animationName]
+    : [];
   const hasAnimationName =
-    !!animationName &&
-    (Array.isArray(animationName) ? animationName : [animationName]).every(
-      (keyframes) =>
-        keyframes === 'none'
-          ? false
-          : isCSSKeyframesRule(keyframes) || isCSSKeyframesObject(keyframes)
+    animationNames.length > 0 &&
+    animationNames.every((keyframes) =>
+      keyframes === 'none'
+        ? false
+        : isCSSKeyframesRule(keyframes) || isCSSKeyframesObject(keyframes)
     );
   const finalAnimationConfig = hasAnimationName
     ? ({
@@ -127,39 +126,15 @@ export function filterCSSAndStyleProperties<S extends object>(
   const hasPseudoStyles = Object.keys(pseudoStylesBySelector).length > 0;
   const finalPseudoStyles = hasPseudoStyles ? pseudoStylesBySelector : null;
 
-  const hasAnimationCallbacks = Object.keys(animationCallbacks).length > 0;
-  const finalAnimationCallbacks = hasAnimationCallbacks
-    ? animationCallbacks
-    : null;
-
-  const hasTransitionCallbacks = Object.keys(transitionCallbacks).length > 0;
-  const finalTransitionCallbacks = hasTransitionCallbacks
-    ? transitionCallbacks
-    : null;
-
   if (__DEV__) {
     validateCSSAnimationProps(animationProperties);
     validateCSSTransitionProps(transitionProperties);
-    validateCSSCallbacks(
-      'animation',
-      'animationName',
-      animationCallbacks,
-      hasAnimationName
-    );
-    validateCSSCallbacks(
-      'transition',
-      'transitionDuration',
-      transitionCallbacks,
-      hasTransitionConfig
-    );
   }
 
   return [
     finalAnimationConfig,
     finalTransitionConfig,
     finalPseudoStyles,
-    finalAnimationCallbacks,
-    finalTransitionCallbacks,
     filteredStyle,
   ];
 }
@@ -184,23 +159,33 @@ function validateCSSTransitionProps(props: Partial<CSSTransitionProperties>) {
   }
 }
 
-function validateCSSCallbacks(
-  kind: 'animation' | 'transition',
-  exampleProp: string,
-  callbacks: CSSAnimationCallbacks | CSSTransitionCallbacks,
-  hasConfig: boolean
-) {
-  // These callbacks are driven by an actual CSS animation/transition; without
-  // the matching properties configured there is nothing that could fire them.
-  const callbackNames = Object.keys(callbacks);
-  if (callbackNames.length === 0 || hasConfig) {
-    return;
+/** Splits the callback props into their animation and transition halves. */
+export function splitCSSCallbacks(
+  props: Readonly<UnknownRecord>
+): [CSSAnimationCallbacks | null, CSSTransitionCallbacks | null] {
+  const animationCallbacks: CSSAnimationCallbacks = {};
+  const transitionCallbacks: CSSTransitionCallbacks = {};
+  let hasAnimationCallbacks = false;
+  let hasTransitionCallbacks = false;
+
+  for (const prop of ANIMATION_CALLBACK_PROPS) {
+    const value = props[prop];
+    if (value !== undefined) {
+      animationCallbacks[prop] = value as CSSAnimationCallback;
+      hasAnimationCallbacks = true;
+    }
   }
 
-  const isPlural = callbackNames.length > 1;
-  logger.warn(
-    `CSS ${kind} ${isPlural ? 'callbacks' : 'callback'} (${callbackNames.join(', ')}) ` +
-      `${isPlural ? 'were' : 'was'} provided without any CSS ${kind} properties ` +
-      `(e.g. ${exampleProp}), so ${isPlural ? 'they' : 'it'} will never be called.`
-  );
+  for (const prop of TRANSITION_CALLBACK_PROPS) {
+    const value = props[prop];
+    if (value !== undefined) {
+      transitionCallbacks[prop] = value as CSSTransitionCallback;
+      hasTransitionCallbacks = true;
+    }
+  }
+
+  return [
+    hasAnimationCallbacks ? animationCallbacks : null,
+    hasTransitionCallbacks ? transitionCallbacks : null,
+  ];
 }

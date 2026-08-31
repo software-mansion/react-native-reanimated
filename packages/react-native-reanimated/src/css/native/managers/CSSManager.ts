@@ -1,4 +1,5 @@
 'use strict';
+import type { UnknownRecord } from '../../../common';
 import {
   getCompoundComponentName,
   getPropsBuilder,
@@ -12,7 +13,7 @@ import type {
   CSSTransitionCallbacks,
 } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
-import { filterCSSAndStyleProperties } from '../../utils';
+import { filterCSSAndStyleProperties, splitCSSCallbacks } from '../../utils';
 import { setViewStyle } from '../proxy';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSCallbacksManager from './CSSCallbacksManager';
@@ -56,19 +57,23 @@ export default class CSSManager implements ICSSManager {
     this.cssPseudoStylesManager = new CSSPseudoStylesManager(
       wrapper,
       tag,
-      this.propsBuilder
+      this.propsBuilder,
+      compoundComponentName
     );
   }
 
-  update(style: CSSStyle): void {
+  update(style: CSSStyle, props: Readonly<UnknownRecord> = {}): void {
     const [
       animationProperties,
       transitionProperties,
       pseudoStylesBySelector,
-      animationCallbacks,
-      transitionCallbacks,
       filteredStyle,
     ] = filterCSSAndStyleProperties(style);
+
+    const hasAnimation = animationProperties !== null;
+    const hasTransition = transitionProperties !== null;
+
+    const [animationCallbacks, transitionCallbacks] = splitCSSCallbacks(props);
 
     // Synced before either manager runs so a cancel emitted while detaching
     // still reaches the user.
@@ -76,9 +81,6 @@ export default class CSSManager implements ICSSManager {
       animationCallbacks,
       transitionCallbacks
     );
-
-    const hasAnimation = animationProperties !== null;
-    const hasTransition = transitionProperties !== null;
 
     const normalizedStyle =
       hasAnimation ||
@@ -89,7 +91,7 @@ export default class CSSManager implements ICSSManager {
 
     const transitionDetached = this.cssTransitionsManager.update(
       transitionProperties,
-      normalizedStyle ?? {},
+      normalizedStyle,
       transitionEventMask
     );
 

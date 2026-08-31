@@ -1,6 +1,8 @@
 #pragma once
 
-#include <reanimated/CSS/misc/ViewStylesRepository.h>
+#include <reanimated/CSS/common/definitions.h>
+
+#include <react/renderer/core/ShadowNode.h>
 
 #include <memory>
 #include <string>
@@ -11,18 +13,24 @@ namespace reanimated::css {
 
 using namespace facebook;
 
+// Held by reference only, which keeps UIManager and DOM out of every value
+// type's include graph.
+class ViewStylesRepository;
+
 enum class RelativeTo : std::uint8_t {
   Parent,
   Self,
 };
 
 struct ValueInterpolationContext {
-  const std::shared_ptr<const ShadowNode> &node;
+  const std::shared_ptr<const react::ShadowNode> &node;
   const double fallbackInterpolateThreshold;
 };
 
-struct ResolvableValueInterpolationContext {
-  const std::shared_ptr<const ShadowNode> &node;
+/// Interpolating a value that is relative to a view - e.g. a percentage
+/// length against its parent - needs the view's styles as well as the node.
+struct RelativeValueInterpolationContext {
+  const std::shared_ptr<const react::ShadowNode> &node;
   const double fallbackInterpolateThreshold;
   const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
   const std::string &relativeProperty;
@@ -58,20 +66,17 @@ struct CSSSimpleValue : public CSSValue {
 };
 
 // Base for leaf values that need resolution before interpolation
-template <typename TDerived, typename TResolved = TDerived>
+template <typename TDerived, typename TContext>
 struct CSSResolvableValue : public CSSValue {
   static constexpr bool is_resolvable_value = true;
+  using ContextType = TContext;
 
   bool operator==(const CSSValue &other) const override {
     return typeid(*this) == typeid(other) &&
         *static_cast<const TDerived *>(this) == static_cast<const TDerived &>(other);
   }
 
-  virtual TDerived interpolate(double progress, const TDerived &to, const ResolvableValueInterpolationContext &context)
-      const = 0;
-  virtual std::optional<TResolved> resolve(const ResolvableValueInterpolationContext &context) const {
-    return std::nullopt;
-  }
+  virtual TDerived interpolate(double progress, const TDerived &to, const TContext &context) const = 0;
   virtual bool canInterpolateTo(const TDerived &to) const {
     return true;
   }
@@ -84,6 +89,31 @@ concept Resolvable = requires {
   { TCSSValue::is_resolvable_value } -> std::convertible_to<bool>;
   requires TCSSValue::is_resolvable_value == true;
 };
+
+/// The context needed to interpolate these types together: the one declared by
+/// the resolvable alternative, wherever it sits in the list, or the plain
+/// context when none of them resolve.
+template <typename... TCSSValues>
+struct InterpolationContext {
+  using Type = ValueInterpolationContext;
+};
+
+template <typename TCSSValue, typename... TRest>
+struct InterpolationContext<TCSSValue, TRest...> {
+  using Type = typename InterpolationContext<TRest...>::Type;
+};
+
+template <Resolvable TCSSValue, typename... TRest>
+struct InterpolationContext<TCSSValue, TRest...> {
+  using Type = typename TCSSValue::ContextType;
+};
+
+template <typename... TCSSValues>
+using InterpolationContextFor = typename InterpolationContext<TCSSValues...>::Type;
+
+/// Values that need no context at all satisfy this trivially.
+template <typename TCSSValue, typename TContext>
+concept InterpolatesWith = !Resolvable<TCSSValue> || std::is_same_v<typename TCSSValue::ContextType, TContext>;
 
 // Checks if a type is a discrete value
 template <typename TCSSValue>

@@ -19,7 +19,7 @@ import { assignRef } from '../../reactUtils';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
 import { CSSManager } from '../platform';
 import type { CSSStyle } from '../types';
-import { filterNonCSSStyleProps } from './utils';
+import { filterCSSProps } from './utils';
 
 export type AnimatedComponentProps = UnknownRecord & {
   ref?: Ref<Component>;
@@ -147,7 +147,7 @@ export default class AnimatedComponent<
       // matches the React `displayName` pattern used elsewhere.
       this.ChildComponent.displayName ?? this.ChildComponent.name
     );
-    this._CSSManager?.update(this._cssStyle);
+    this._CSSManager?.update(this._cssStyle, this.props);
 
     this._willUnmount = false;
   }
@@ -174,7 +174,7 @@ export default class AnimatedComponent<
     this._updateStyles(nextProps);
 
     if (this._CSSManager) {
-      this._CSSManager.update(this._cssStyle);
+      this._CSSManager.update(this._cssStyle, nextProps);
     }
 
     // TODO - maybe check if the render is necessary instead of always returning true
@@ -191,11 +191,8 @@ export default class AnimatedComponent<
 
     return (
       <ChildComponent
-        {...(props ?? this.props)}
+        {...filterCSSProps(props ?? this.props)}
         {...platformProps}
-        style={filterNonCSSStyleProps(
-          (props?.style ?? this.props.style) as StyleProp<CSSStyle>
-        )}
         // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
         // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
         ref={this._setComponentRef as (ref: Component) => void}

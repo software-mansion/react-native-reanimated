@@ -38,6 +38,14 @@ function startObservingProgress(
   });
 }
 
+function removeProgressListener(
+  tag: number,
+  sharedValue: SharedValue<number>
+): void {
+  'worklet';
+  sharedValue.removeListener(tag + TAG_OFFSET);
+}
+
 function stopObservingProgress(
   tag: number,
   sharedValue: SharedValue<number>,
@@ -45,7 +53,7 @@ function stopObservingProgress(
   removeView = false
 ): void {
   'worklet';
-  sharedValue.removeListener(tag + TAG_OFFSET);
+  removeProgressListener(tag, sharedValue);
   global._notifyAboutEnd(tag, removeView);
   scheduleFlush();
 }
@@ -54,6 +62,22 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   'worklet';
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
+
+  // Layout animation starts are scheduled separately on the UI runtime. With
+  // a large number of views, sampling the clock for every start noticeably
+  // staggers animations which belong to the same frame. Cache the first start
+  // timestamp until the frame finalizers run so the whole batch shares one
+  // timeline.
+  let layoutAnimationStartTimestamp: number | undefined;
+  const getLayoutAnimationStartTimestamp = () => {
+    if (layoutAnimationStartTimestamp === undefined) {
+      layoutAnimationStartTimestamp = global._getAnimationTimestamp();
+      globalThis.requestAnimationFrameFinalizer(() => {
+        layoutAnimationStartTimestamp = undefined;
+      });
+    }
+    return layoutAnimationStartTimestamp;
+  };
 
   // Flush layout-animation progress once per frame via the frame finalizer
   // (after all `requestAnimationFrame` callbacks), reusing the same
@@ -103,7 +127,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         value = makeMutableUI(style.initialValues);
         mutableValuesForTag.set(tag, value);
       } else {
-        stopObservingProgress(tag, value, scheduleFlush);
+        removeProgressListener(tag, value);
         value._value = style.initialValues;
       }
 
@@ -120,7 +144,10 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       });
 
       startObservingProgress(tag, value, scheduleFlush);
+      const previousFrameTimestamp = global.__frameTimestamp;
+      global.__frameTimestamp ??= getLayoutAnimationStartTimestamp();
       value.value = animation;
+      global.__frameTimestamp = previousFrameTimestamp;
     },
     stop(tag: number) {
       const value = mutableValuesForTag.get(tag);

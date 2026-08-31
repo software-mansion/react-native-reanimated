@@ -41,7 +41,7 @@ async function getSnapshotUpdates(
   const updatesContainer = await recordAnimationUpdates();
   await render(<AnimatedComponent fromColor={fromColor} toColor={toColor} />);
   await waitForAnimationUpdates(snapshot.length);
-  const updates = updatesContainer.getUpdates();
+  const updates = await updatesContainer.getUpdates();
   const nativeUpdates = await updatesContainer.getNativeSnapshots();
   return [updates, nativeUpdates];
 }

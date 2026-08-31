@@ -1,0 +1,296 @@
+name: Remote runtime tests iOS
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  workflow_call:
+    secrets:
+      SIM_ROUTER_USERNAME:
+        required: true
+      SIM_ROUTER_API_KEY:
+        required: true
+    inputs:
+      bundleMode:
+        required: false
+        type: boolean
+        default: false
+      configuration:
+        required: false
+        type: string
+        default: ReleaseRuntimeTests
+      udid:
+        required: false
+        type: string
+        default: ''
+  workflow_dispatch:
+    inputs:
+      bundleMode:
+        description: Run with Bundle Mode enabled (false = Legacy Eval)
+        required: false
+        type: boolean
+        default: false
+      configuration:
+        description: Build configuration (Debug* legs serve JS from Metro on the test runner)
+        required: false
+        type: string
+        default: ReleaseRuntimeTests
+      udid:
+        description: Remote simulator UUID (blank = first available iPhone)
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  # Check if we have all must-have credentials before running the workflow.
+  preflight:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      HAS_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME != '' }}
+      HAS_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY != '' }}
+    steps:
+      - name: Check cloud credentials are configured
+        run: |
+          if [ "$HAS_USERNAME" != "true" ] || [ "$HAS_API_KEY" != "true" ]; then
+            echo "::error::SIM_ROUTER_USERNAME and/or SIM_ROUTER_API_KEY secrets are not set — configure them in the repo settings before running this workflow"
+            exit 1
+          fi
+
+  # Build on macos runner
+  build-app:
+    needs: preflight
+    name: Build app (${{ matrix.configuration }}, ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }})
+    runs-on: macos-26
+    timeout-minutes: 90
+    concurrency:
+      group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        bundleMode: ${{ fromJSON(format('[{0}]', inputs.bundleMode || false)) }}
+        configuration: ${{ fromJSON(format('["{0}"]', inputs.configuration || 'ReleaseRuntimeTests')) }}
+    env:
+      WORKING_DIRECTORY: apps/fabric-example
+      CONFIGURATION: ${{ matrix.configuration }}
+      USE_CCACHE_LAUNCHER: 1
+    steps:
+      - name: checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Restore packaged app from cache
+        id: appcache
+        uses: actions/cache@6f8efc29b200d32929f49075959781ed54ec270c
+        with:
+          path: apps/fabric-example/dist/FabricExample.app.zip
+          key:
+            runtime-tests-app-zip-${{ env.CONFIGURATION }}-bundle-${{ matrix.bundleMode }}-${{ hashFiles(
+            'yarn.lock',
+            'apps/fabric-example/**',
+            '!apps/fabric-example/scripts/**',
+            'apps/common-app/**',
+            'packages/react-native-reanimated/**',
+            'packages/react-native-worklets/**'
+            ) }}
+
+      - name: Use Ruby version from `.ruby-version` file
+        if: steps.appcache.outputs.cache-hit != 'true'
+        uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
+        with:
+          bundler-cache: true
+
+      - name: Install monorepo node dependencies
+        if: steps.appcache.outputs.cache-hit != 'true'
+        run: yarn install --immutable
+
+      - name: Toggle Bundle Mode off (Legacy Eval)
+        if: steps.appcache.outputs.cache-hit != 'true' && !matrix.bundleMode
+        run: yarn toggle-bundle-mode
+
+      - name: Build Reanimated package
+        if: steps.appcache.outputs.cache-hit != 'true'
+        working-directory: packages/react-native-reanimated
+        run: yarn build
+
+      - name: Setup ccache
+        if: steps.appcache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/setup-ccache
+        with:
+          key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
+          needs-compile-database: 'false'
+
+      - name: Install Pods
+        if: steps.appcache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/install-pods
+        with:
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+          pod-directory: ios
+
+      - name: Build runtime-tests app
+        if: steps.appcache.outputs.cache-hit != 'true'
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: node scripts/runtime-tests-server.js --build-only --configuration "$CONFIGURATION"
+
+      - name: Save ccache
+        if: steps.appcache.outputs.cache-hit != 'true' && inputs.bundleMode
+        uses: ./.github/actions/save-ccache
+        with:
+          key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
+
+      - name: Package app artifact
+        if: steps.appcache.outputs.cache-hit != 'true'
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          # Debug apps are deliberately Metro-fed here (the test job runs
+          # Metro and tunnels it) — override the export script's guard.
+          EXPORT_FLAGS=""
+          case "$CONFIGURATION" in
+            Debug*) EXPORT_FLAGS="--allow-debug" ;;
+          esac
+          node scripts/export-runtime-tests-app.js --configuration "$CONFIGURATION" --out dist/FabricExample.app.zip $EXPORT_FLAGS
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: runtime-tests-app-remote-${{ env.CONFIGURATION }}-bundle-${{ matrix.bundleMode }}
+          path: apps/fabric-example/dist/FabricExample.app.zip
+          if-no-files-found: error
+          retention-days: 3
+
+  # Test on remote simulator running on Argent Cloud
+  run-tests-remote:
+    needs: build-app
+    name: Remote tests (${{ matrix.configuration }}, ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }})
+    runs-on: ubuntu-latest # <- the whole point: no macOS, no local simulator
+    timeout-minutes: 60
+    concurrency:
+      group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        # Must mirror build-app's matrix exactly.
+        bundleMode: ${{ fromJSON(format('[{0}]', inputs.bundleMode || false)) }}
+        configuration: ${{ fromJSON(format('["{0}"]', inputs.configuration || 'ReleaseRuntimeTests')) }}
+    env:
+      WORKING_DIRECTORY: apps/fabric-example
+      CONFIGURATION: ${{ matrix.configuration }}
+      SIM_ROUTER_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME }}
+      SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+
+      # Debug legs serve JS from Metro running on this runner, so this
+      # checkout's js must match the native app's bundle mode.
+      #
+      # The build job toggled its own tree before compiling the Legacy binary,
+      # and Metro would otherwise serve Bundle Mode JS (the checked-in default) to it.
+      #
+      # Release legs never execute this checkout's JS, so toggle isn't needed.
+      - name: Toggle Bundle Mode off (Legacy Eval Metro parity)
+        if: ${{ !matrix.bundleMode && startsWith(matrix.configuration, 'Debug') }}
+        run: yarn toggle-bundle-mode
+
+      - name: Install sim-remote CLI + daemon
+        uses: ./.github/actions/install-sim-remote
+
+      - name: Log in and acquire a cloud machine
+        shell: bash
+        run: |
+          # --timeout is the queue: when all pool machines are busy (e.g.
+          # sibling matrix legs hold them), this leg waits up to 30 min for
+          # a free one instead of failing after the default 120 s.
+          sim-remote login --timeout 1800
+          sim-remote simctl list devices --json | jq -e '.devices' > /dev/null
+          echo "logged in, machine acquired"
+
+      - name: Download app artifact
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          name: runtime-tests-app-remote-${{ env.CONFIGURATION }}-bundle-${{ matrix.bundleMode }}
+          path: apps/fabric-example/dist
+
+      - name: Unpack app artifact
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          # unzip (not ditto — this is Linux); the zip was created with
+          # ditto --keepParent so it unpacks to unpacked/FabricExample.app
+
+          unzip -q dist/FabricExample.app.zip -d dist/unpacked
+
+      - name: Pick remote simulator and install app
+        id: sim
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        env:
+          INPUT_UDID: ${{ inputs.udid }}
+        run: |
+          # Device-pick logic lives in the driver (`pick` subcommand) so it
+          # is testable and reusable outside CI.
+          if [ -n "$INPUT_UDID" ]; then
+            UDID=$(node scripts/runtime-tests-remote.mjs pick --udid "$INPUT_UDID")
+          else
+            UDID=$(node scripts/runtime-tests-remote.mjs pick)
+          fi
+
+          echo "using remote simulator $UDID"
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+
+          node scripts/runtime-tests-remote.mjs install --udid "$UDID" \
+            --app-path dist/unpacked/FabricExample.app
+
+      - name: Run ReJest self-tests on the remote simulator
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: >
+          node scripts/runtime-tests-remote.mjs run --udid "${{ steps.sim.outputs.udid }}"
+          --library self-tests --configuration "$CONFIGURATION"
+
+      - name: Verify CI catches failing tests
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          if node scripts/runtime-tests-remote.mjs run --udid "${{ steps.sim.outputs.udid }}" \
+            --library self-tests --configuration "$CONFIGURATION" \
+            --only "intentional failures";
+          then
+            echo "A failing suite did not fail the runner" && exit 1
+          else
+            echo "Failing tests correctly failed the runner"
+          fi
+
+      - name: Run Worklets runtime tests on the remote simulator
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: >
+          node scripts/runtime-tests-remote.mjs run --udid "${{ steps.sim.outputs.udid }}"
+          --library worklets --configuration "$CONFIGURATION"
+
+      - name: Run Reanimated runtime tests on the remote simulator
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: >
+          node scripts/runtime-tests-remote.mjs run --udid "${{ steps.sim.outputs.udid }}"
+          --library reanimated --configuration "$CONFIGURATION"
+
+      - name: Release remote simulator
+        if: always()
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          UDID="${{ steps.sim.outputs.udid }}"
+
+          if command -v sim-remote >/dev/null; then
+            if [ -n "$UDID" ]; then
+              sim-remote proxy stop "$UDID" 8082 || true
+              sim-remote proxy stop "$UDID" 8081 || true # Metro tunnel (Debug legs)
+              sim-remote simctl shutdown "$UDID" || true
+            fi
+
+            sim-remote logout || true
+          fi

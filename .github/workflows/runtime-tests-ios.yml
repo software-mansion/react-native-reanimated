@@ -5,9 +5,6 @@ on:
   pull_request:
     paths:
       - .github/workflows/runtime-tests-ios.yml
-      - apps/common-app/runtime-tests/**
-      - apps/fabric-example/scripts/runtime-tests-server.js
-      - apps/fabric-example/ios/**
   workflow_call:
     inputs:
       bundleMode:
@@ -49,9 +46,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The workflow-name check is required: the nightly caller also runs on
-        # pull_request, and its workflow_call legs must keep their explicit
-        # inputs.bundleMode instead of fanning out both modes.
         bundleMode: ${{ fromJSON((github.event_name == 'pull_request' && github.workflow == 'Runtime tests iOS') && '[false, true]' || format('[{0}]', inputs.bundleMode)) }}
     env:
       WORKING_DIRECTORY: apps/fabric-example
@@ -59,6 +53,7 @@ jobs:
       CONFIGURATION: ${{ inputs.configuration || 'DebugRuntimeTests' }}
       SANITIZER_FLAG: ${{ inputs.sanitizer && format('--sanitizer {0}', inputs.sanitizer) || '' }}
       SANITIZER_SKIP_BUILD_FLAG: ${{ inputs.sanitizer && '--skip-build' || '' }}
+      USE_CCACHE_LAUNCHER: 1
     concurrency:
       group: runtime-tests-ios-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'DebugRuntimeTests' }}-${{ inputs.sanitizer }}
       cancel-in-progress: true
@@ -72,6 +67,12 @@ jobs:
         with:
           bundler-cache: true
 
+      - name: Use Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'yarn'
+
       - name: Install monorepo node dependencies
         run: yarn install --immutable
 
@@ -82,6 +83,13 @@ jobs:
       - name: Build Reanimated package
         working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn build
+
+      - name: Setup ccache
+        if: ${{ !inputs.sanitizer }}
+        uses: ./.github/actions/setup-ccache
+        with:
+          key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
+          needs-compile-database: 'false'
 
       - name: Install Pods (with caching)
         if: ${{ !inputs.sanitizer }}
@@ -99,14 +107,6 @@ jobs:
           bundle install
           RCT_USE_PREBUILT_RNCORE=0 RCT_USE_RN_DEP=0 bundle exec pod update --no-repo-update
 
-      - name: Cache DerivedData
-        if: ${{ !inputs.sanitizer }}
-        uses: ./.github/actions/cache-derived-data
-        with:
-          platform: ios
-          working-directory: ${{ env.WORKING_DIRECTORY }}
-          pod-directory: ios
-
       # The sanitizer test steps are advisory, so the build has to be its own
       # hard-failing step or a broken build would be swallowed with them.
       - name: Build app (sanitizer)
@@ -122,6 +122,10 @@ jobs:
           --configuration "$CONFIGURATION" $SANITIZER_SKIP_BUILD_FLAG --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
           || node scripts/runtime-tests-server.js --launch --library self-tests
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
+
+      - name: Report ccache statistics
+        if: ${{ !inputs.sanitizer }}
+        run: ccache --show-stats -v
 
       - name: Verify CI catches failing tests
         working-directory: ${{ env.WORKING_DIRECTORY }}
