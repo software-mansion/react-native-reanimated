@@ -371,6 +371,9 @@ function flushUIQueue(): void {
 /**
  * Returns the id of the thread which currently executes JavaScript on the
  * calling Runtime.
+ *
+ * @returns The id of the current thread.
+ * @see https://docs.swmansion.com/react-native-worklets/docs/utility/getCurrentThreadId
  */
 export function getCurrentThreadId(): string {
   'worklet';

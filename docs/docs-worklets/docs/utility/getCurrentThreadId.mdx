@@ -1,0 +1,59 @@
+---
+sidebar_position: 42 # Use alphabetical order
+title: getCurrentThreadId
+---
+
+<Badges version="0.13.0">
+  # getCurrentThreadId
+</Badges>
+
+`getCurrentThreadId` returns the id of the thread which currently executes JavaScript on the calling [Runtime](/docs/fundamentals/runtimeKinds). The returned id is a stringified result of [`std::thread::get_id()`](https://en.cppreference.com/cpp/thread/thread/get_id).
+
+## Reference
+
+```javascript
+import { getCurrentThreadId, runOnUISync, scheduleOnUI } from 'react-native-worklets';
+
+console.log(getCurrentThreadId()); // The JS thread id.
+
+scheduleOnUI(() => {
+  'worklet';
+  console.log(getCurrentThreadId()); // The UI thread id.
+});
+
+runOnUISync(() => {
+    'worklet';
+    console.log(getCurrentThreadId()); // The JS thread id.
+})
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function getCurrentThreadId(): string;
+  ```
+</details>
+
+### Returns
+
+`getCurrentThreadId` returns a `string` with the id of the current thread. The format of the id is platform-specific.
+
+## Call table
+
+<CallTable
+  bundleMode={{
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
+  noBundleMode={{
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
+/>
+
+## Platform compatibility
+
+<PlatformTable native={true} web={false}/>

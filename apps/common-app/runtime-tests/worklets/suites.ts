@@ -22,6 +22,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       __DEV__ && require('./tests/runtimes/errorTraces.test');
       __DEV__ && require('./tests/runtimes/loggingFromWorkletRuntime.test');
       require('./tests/runtimes/createWorkletRuntime.test');
+      require('./tests/runtimes/getCurrentThreadId.test');
       require('./tests/runtimes/scheduleOnRN.test');
       require('./tests/runtimes/runOnUISync.test');
       require('./tests/runtimes/scheduleOnRuntime.test');
