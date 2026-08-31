@@ -11,6 +11,7 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -19,7 +20,6 @@
 
 namespace reanimated {
 
-class ReanimatedModuleProxy;
 class LayoutAnimationsProxyRegistry;
 
 using namespace facebook;
@@ -97,32 +97,31 @@ static inline void mergeAndSwap(
   std::swap(A, merged);
 }
 
-struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
-                                      public std::enable_shared_from_this<LayoutAnimationsProxy_Legacy> {
+struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon {
   mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag_;
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes_;
-  mutable std::unordered_map<Tag, int> leastRemoved;
   mutable bool surfaceToRemove_ = false;
   bool shouldFlushDeadNodes(bool surfaceDropped) const;
 #ifdef ANDROID
   mutable bool cleanupPullScheduled_ = false;
 
   void maybeScheduleCleanupPull(bool flushedDeadNodes) const;
-  void scheduleDeferredCleanupPull() const;
 #endif
 
   LayoutAnimationsProxy_Legacy(const SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies)
       : LayoutAnimationsProxyCommon(surfaceId, dependencies) {}
 
-  void startEnteringAnimation(const int tag, ShadowViewMutation &mutation) const;
-  void startExitingAnimation(const int tag, ShadowViewMutation &mutation) const;
-  void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation) const;
+  void startEnteringAnimation(const int tag, ShadowViewMutation &mutation, const std::shared_ptr<Serializable> &config)
+      const;
+  void startExitingAnimation(const int tag, ShadowViewMutation &mutation, const std::shared_ptr<Serializable> &config)
+      const;
+  void startLayoutAnimation(
+      const int tag,
+      const ShadowViewMutation &mutation,
+      const std::shared_ptr<Serializable> &config) const;
 
-  std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) override;
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
   void shadowTreeWillCommit(bool isSurfaceRemoval) override;
-  void maybeCancelAnimation(const int tag) const;
-
   void reconcileContradictedRemovals(ShadowViewMutationList &mutations, ShadowViewMutationList &filteredMutations)
       const;
   void parseRemoveMutations(
@@ -132,7 +131,6 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
   void handleRemovals(
       ShadowViewMutationList &filteredMutations,
       std::vector<std::shared_ptr<MutationNode>> &roots,
-      std::unordered_set<std::shared_ptr<MutationNode>> &deadNodes,
       bool surfaceDropped,
       bool flushDeadNodes) const;
 
@@ -143,16 +141,11 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
       const PropsParserContext &propsParserContext) const;
   void addOngoingAnimations(ShadowViewMutationList &mutations) const;
   void dropUpdatesForDeletedViews(ShadowViewMutationList &filteredMutations) const;
-  void updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation) const;
   std::shared_ptr<ShadowView> cloneViewWithoutOpacity(
       facebook::react::ShadowViewMutation &mutation,
       const PropsParserContext &propsParserContext) const;
-  void maybeRestoreOpacity(LayoutAnimation &layoutAnimation, const jsi::Object &newStyle) const;
-  void createLayoutAnimation(const ShadowViewMutation &mutation, ShadowView &oldView, const int tag) const;
-
   void updateIndexForMutation(ShadowViewMutation &mutation) const;
 
-  void removeRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList &mutations) const;
   bool startAnimationsRecursively(
       const std::shared_ptr<MutationNode> &node,
       bool shouldRemoveSubviewsWithoutAnimations,
@@ -165,7 +158,6 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
       const std::shared_ptr<MutationNode> &child,
       ShadowViewMutationList &cleanupMutations) const;
 
-  const ComponentDescriptor &getComponentDescriptorForShadowView(const ShadowView &shadowView) const;
   // MountingOverrideDelegate
 
   bool shouldOverridePullTransaction() const override;

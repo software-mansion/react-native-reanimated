@@ -779,6 +779,12 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   return res;
 }
 
+void ReanimatedModuleProxy::flushLayoutAnimationOperations() {
+  if (layoutAnimationsProxyRegistry_) {
+    layoutAnimationsProxyRegistry_->flushLayoutAnimationOperations();
+  }
+}
+
 void ReanimatedModuleProxy::executeLayoutAnimationsRequests() {
   std::set<SurfaceId> flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
   for (const auto surfaceId : flushRequestsCopy) {
@@ -796,6 +802,7 @@ void ReanimatedModuleProxy::performOperations() {
 
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
+  flushLayoutAnimationOperations();
   executeLayoutAnimationsRequests();
 
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
@@ -945,6 +952,7 @@ AnimationMutations ReanimatedModuleProxy::runGrandCallback(
       // lock: they touch only UI-thread state and may re-enter the proxy (via
       // requestAnimationFrame or the commit hook).
       executeWorkletsForFrame(timestamp);
+      flushLayoutAnimationOperations();
       executeLayoutAnimationsRequests();
 
       AnimationMutations mutations;
@@ -958,6 +966,7 @@ AnimationMutations ReanimatedModuleProxy::runGrandCallback(
     }
 
     case GrandCallbackSource::Event: {
+      flushLayoutAnimationOperations();
       executeLayoutAnimationsRequests();
       return collectEventUpdates();
     }
@@ -1247,6 +1256,22 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
   // relies on the proxy registry being non-null.
   react_native_assert(componentDescriptorRegistry && "ComponentDescriptorRegistry must be alive during initialization");
 
+  const auto requestLayoutAnimationFlush = [weakThis = weak_from_this()](const SurfaceId surfaceId) {
+    const auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+    scheduleOnUI(strongThis->uiScheduler_, [weakThis, surfaceId] {
+      if (const auto strongThis = weakThis.lock()) {
+        strongThis->requestRender_([weakThis, surfaceId](const double) {
+          if (const auto strongThis = weakThis.lock()) {
+            strongThis->layoutAnimationFlushRequests_.insert(surfaceId);
+          }
+        });
+      }
+    });
+  };
+
   const LayoutAnimationsProxyDependencies dependencies{
       layoutAnimationsManager_,
       componentDescriptorRegistry,
@@ -1254,6 +1279,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       getJSIRuntimeFromWorkletRuntime(uiRuntime_),
       uiScheduler_,
       uiManager_,
+      requestLayoutAnimationFlush,
 #ifdef ANDROID
       filterUnmountedTagsFunction_,
       jsInvoker_,
