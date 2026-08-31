@@ -1,0 +1,68 @@
+---
+sidebar_position: 50
+---
+
+# Synchronizing with data
+
+<!--TODO: chapter preamble-->
+
+<!-- prior to this section, we have to add "using the event loop section" -->
+
+Previous examples showed us how to return the result of a singular worklet at the point of its invocation. What if we had a long-running task, perhaps several of them, yielding results continuously, but we wanted to poll the data only occasionally?
+
+```js
+const worker = createWorkletRuntime();
+
+function taskWrapper() {
+    let result = -1;
+
+    function task() {
+        result++;
+    }
+
+    setInterval(task, 10);
+};
+
+scheduleOnRuntime(worker, taskWrapper);
+```
+
+There's no easy way to access locally declared `result` variable.
+
+### Using the global object
+
+Simplest solution here would be to store the result in the global object:
+
+```js
+const worker = createWorkletRuntime();
+
+function taskWrapper() {
+    globalThis.result = -1;
+
+    function task() {
+        globalThis.result++;
+    }
+
+    setInterval(task, 10);
+};
+
+scheduleOnRuntime(worker, taskWrapper);
+```
+
+And then poll it with another function call, either synchronously or asynchronously:
+
+```js
+function poll() {
+    return globalThis.result;
+}
+
+const asyncResult = runOnRuntimeAsync(worker, poll); // remember to await it later
+const syncResult = runOnRuntimeSync(worker, poll);
+```
+
+However, this code doesn't scale well and it's generally a bad practice to use the global object like this, it should be a last resort escape hatch.
+
+To fix it, we have to use some more complex memory types.
+
+But to begin with, remember when we said that the function could only be copied to the other Worklet Runtime as a pointer, because it belonged to a different JS heap? The same applies to all kinds of JavaScript values, numbers, objects, strings etc.
+
+How come then that we were able to return the values

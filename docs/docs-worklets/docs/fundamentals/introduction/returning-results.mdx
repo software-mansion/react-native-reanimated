@@ -1,0 +1,109 @@
+---
+sidebar_position: 40
+---
+
+# Returning results
+
+In the [previous chapter](link) we dispatched some console logs and passed parameters to other Runtimes. However, logging itself is not particularly useful and in this section we'll learn how to obtain results of calculations from dispatched worklet functions.
+
+## Synchronously
+
+Simplest way of returning values. `runOn...Sync` family of functions return the result of a worklet function directly to the invoking Runtime:
+
+```js
+
+const worker = createWorkletRuntime();
+
+function foo() {
+    return 42;
+}
+
+const uiResult = runOnUISync(foo); // 42
+const workerResult = runOnRuntimeSync(worker, foo); // 42
+```
+
+However, it's not particularly useful to dispatch `foo` synchronously, as we could've just run on the same Runtime, by invoking foo:
+
+```js
+const result = foo(); // 42
+```
+
+Therefore, we have to return it asynchronously. We'll explore when it's useful to actually return a value synchronously in future sections.
+
+## Asynchronously
+
+For asynchronous returns, i.e. results of complex calculations, you can use `runOn...Async` family of functions. They return an awaitable promise.
+
+Note that `scheduleOn...` functions do not return a value.
+
+```js
+const worker = createWorkletRuntime();
+
+function complexTask() {
+    return 42;
+}
+
+const scheduleResult = scheduleOnRuntime(worker, complexTask); // TS error - no return value.
+const uiResult = runOnUIAsync(worker, complexTask);
+const result = runOnRuntimeAsync(worker, complexTask);
+await uiResult; // 42
+await result; // 42
+```
+
+The scheduling runtime is free to keep executing JavaScript code until you await the returned promise. In this example we dispatched the invocations on `complexTask` before awaiting - to execute them concurrently.
+
+## With callbacks
+
+Often times, you'll want to update your app's React state based on a result of a worklet executed on another thread. You might be tempted to write something like this:
+
+```js
+const worker = createWorkletRuntime();
+
+function Component() {
+    const [state, setState] = useState();
+    // code ...
+    scheduleOnRuntime(worker, () => {
+        const result = doImportantStuff();
+        setState(result); // crash!
+    });
+    // code ...
+}
+```
+
+This is a common pitfall, and to understand why it crashes, we have to look how it looks in the memory of our app.
+
+<ImagePlaceholder>
+    Diagram: showing where `result`, `setState` lives and how threads interact here
+</ImagePlaceholder>
+
+Because `setState` is passed to the Worklet Runtime as a pointer to the callback, you can't just invoke it. You have to dispatch it back on the RN Runtime with `scheduleOnRN`.
+
+```js
+const worker = createWorkletRuntime();
+
+function Component() {
+    const [state, setState] = useState();
+    // code ...
+    scheduleOnRuntime(worker, () => {
+        const result = doImportantStuff();
+        scheduleOnRN(setState, result); // all good now!
+    });
+    // code ...
+}
+```
+
+Alternatively, you can use a promise and `runOnRuntimeAsync` function:
+
+```js
+const worker = createWorkletRuntime();
+
+function Component() {
+    const [state, setState] = useState();
+    // code ...
+    runOnRuntimeAsync(worker, () => {
+        const result = doImportantStuff();
+        return result;
+    }).then(result => setState(result));
+    // code ...
+}
+```

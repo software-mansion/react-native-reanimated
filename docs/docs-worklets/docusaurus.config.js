@@ -79,7 +79,7 @@ const config = {
           lastVersion: 'current',
           versions: {
             current: { label: '0.10' },
-            '0.9': { label: '0.9', banner: 'none' },
+            0.9: { label: '0.9', banner: 'none' },
           },
         },
         theme: { customCss: require.resolve('./src/css/index.css') },
