@@ -6,16 +6,11 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 
 #include <jsi/jsi.h>
-#include <stdio.h>
-#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
-#include <stack>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
-#include <utility>
 #include <vector>
 
 namespace reanimated {
@@ -32,15 +27,15 @@ struct Transition {
   std::optional<Transform> transform[2];
 };
 
+using TransitionMap = std::unordered_map<SharedTag, Transition>;
+using Transitions = std::vector<std::pair<SharedTag, Transition>>;
+
 struct SharedTransitionManager {
   std::mutex mutex_;
   std::unordered_map<Tag, std::string> tagToName_;
   std::unordered_map<Tag, std::string> nativeIDToName_;
   Tag nextContainerTag_{10000002};
 };
-
-using TransitionMap = std::unordered_map<SharedTag, Transition>;
-using Transitions = std::vector<std::pair<SharedTag, Transition>>;
 
 struct LayoutAnimationConfig {
   int tag;
@@ -58,12 +53,17 @@ class LayoutAnimationsManager {
   void configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
   void setShouldAnimateExiting(const int tag, const bool value);
   bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
-  bool hasLayoutAnimation(const int tag, const LayoutAnimationType type);
-  void startLayoutAnimation(jsi::Runtime &rt, const int tag, const LayoutAnimationType type, const jsi::Object &values);
+  std::shared_ptr<Serializable> getLayoutAnimationConfig(const int tag, const LayoutAnimationType type);
+  std::shared_ptr<Serializable> takeExitingAnimationConfigAndClearTag(int tag);
+  void startLayoutAnimation(
+      jsi::Runtime &rt,
+      const int tag,
+      const LayoutAnimationType type,
+      const jsi::Object &values,
+      const std::shared_ptr<Serializable> &config);
   void clearLayoutAnimationConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
-  void transferSharedConfig(const Tag from, const Tag to);
   std::shared_ptr<SharedTransitionManager> getSharedTransitionManager();
 
  private:
