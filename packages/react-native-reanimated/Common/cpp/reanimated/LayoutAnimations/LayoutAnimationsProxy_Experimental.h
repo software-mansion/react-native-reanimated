@@ -122,6 +122,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
   bool settleUncommittedScreenPop(TransactionMeta &transaction) const;
   void resolveDeferredSourceScreen() const;
   bool isLightNodeMapped(const std::shared_ptr<LightNode> &node) const;
+  void unmapLightNode(const std::shared_ptr<LightNode> &node) const;
 
   void updateLightTree(
       const PropsParserContext &propsParserContext,
