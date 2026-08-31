@@ -49,6 +49,22 @@ function makeConfig(startTimestamps: number[]) {
   };
 }
 
+function makePendingConfig(callback: jest.Mock) {
+  return (): LayoutAnimation => ({
+    initialValues: { originX: 0 },
+    animations: {
+      originX: {
+        current: 0,
+        onStart: jest.fn(),
+        onFrame() {
+          return false;
+        },
+      } as unknown as number,
+    },
+    callback,
+  });
+}
+
 describe('LayoutAnimationsManager', () => {
   let frameFinalizers: Array<() => void>;
   let getAnimationTimestamp: jest.Mock;
@@ -109,5 +125,67 @@ describe('LayoutAnimationsManager', () => {
     expect(startTimestamps).toEqual([300, 300]);
     expect(getAnimationTimestamp).not.toHaveBeenCalled();
     expect(globalThis.__frameTimestamp).toBe(300);
+  });
+
+  test('does not report native ends across three replacements', () => {
+    const callbacks = [jest.fn(), jest.fn(), jest.fn(), jest.fn()];
+
+    callbacks.forEach((callback) => {
+      manager.start(
+        6,
+        LayoutAnimationType.LAYOUT,
+        {},
+        makePendingConfig(callback)
+      );
+    });
+
+    callbacks.slice(0, -1).forEach((callback) => {
+      expect(callback).toHaveBeenCalledWith(false);
+    });
+    expect(callbacks.at(-1)).not.toHaveBeenCalled();
+    expect(globalThis._notifyAboutEnd).not.toHaveBeenCalled();
+
+    manager.stop(6);
+  });
+
+  test('does not report a native end when stopping a replacement', () => {
+    const previousCallback = jest.fn();
+    const replacementCallback = jest.fn();
+
+    manager.start(
+      8,
+      LayoutAnimationType.LAYOUT,
+      {},
+      makePendingConfig(previousCallback)
+    );
+    manager.start(
+      8,
+      LayoutAnimationType.LAYOUT,
+      {},
+      makePendingConfig(replacementCallback)
+    );
+    manager.stop(8);
+
+    expect(previousCallback).toHaveBeenCalledWith(false);
+    expect(replacementCallback).toHaveBeenCalledWith(false);
+    expect(globalThis._notifyAboutEnd).not.toHaveBeenCalled();
+  });
+
+  test('reports exactly one native end when an animation finishes', () => {
+    manager.start(7, LayoutAnimationType.EXITING, {}, makeConfig([]));
+
+    expect(globalThis._notifyAboutEnd).toHaveBeenCalledTimes(1);
+    expect(globalThis._notifyAboutEnd).toHaveBeenCalledWith(7, true);
+  });
+
+  test('reports both completions when a tag restarts before a pull', () => {
+    const config = makeConfig([]);
+
+    manager.start(9, LayoutAnimationType.LAYOUT, {}, config);
+    manager.start(9, LayoutAnimationType.LAYOUT, {}, config);
+
+    expect(globalThis._notifyAboutEnd).toHaveBeenCalledTimes(2);
+    expect(globalThis._notifyAboutEnd).toHaveBeenNthCalledWith(1, 9, false);
+    expect(globalThis._notifyAboutEnd).toHaveBeenNthCalledWith(2, 9, false);
   });
 });

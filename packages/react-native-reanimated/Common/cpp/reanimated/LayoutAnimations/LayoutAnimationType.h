@@ -8,4 +8,5 @@ typedef enum class LayoutAnimationType : std::uint8_t {
   LAYOUT = 3,
   SHARED_ELEMENT_TRANSITION = 4,
   SHARED_ELEMENT_TRANSITION_NATIVE_ID = 5,
+  PROGRESS = 6,
 } LayoutAnimationType;
