@@ -24,7 +24,7 @@
     "@types/ws": "8.18.1",
     "eslint": "9.37.0",
     "typescript": "5.9.3",
-    "worklets-plugin-oxc": "workspace:*",
+    "worklets-oxc-plugin": "workspace:*",
     "ws": "8.21.0"
   },
   "engines": {

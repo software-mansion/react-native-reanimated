@@ -12,9 +12,9 @@ const platform = process.platform;
 const arch = process.arch;
 
 const map = {
-  'darwin': { ext: 'dylib', prefix: 'lib' },
-  'linux': { ext: 'so', prefix: 'lib' },
-  'win32': { ext: 'dll', prefix: '' },
+  darwin: { ext: 'dylib', prefix: 'lib' },
+  linux: { ext: 'so', prefix: 'lib' },
+  win32: { ext: 'dll', prefix: '' },
 };
 
 const { ext, prefix } = map[platform] || {};
@@ -23,8 +23,13 @@ if (!ext) {
   process.exit(1);
 }
 
-const src = join(root, 'target', profile, `${prefix}worklets_plugin_oxc.${ext}`);
-const dest = join(root, `worklets-plugin-oxc.${platform}-${arch}.node`);
+const src = join(
+  root,
+  'target',
+  profile,
+  `${prefix}worklets_oxc_plugin.${ext}`
+);
+const dest = join(root, `worklets-oxc-plugin.${platform}-${arch}.node`);
 
 if (!existsSync(src)) {
   console.error(`Built artifact not found: ${src}`);
@@ -37,7 +42,7 @@ if (platform === 'darwin') {
   try {
     execFileSync('install_name_tool', [
       '-id',
-      `@rpath/worklets-plugin-oxc.${platform}-${arch}.node`,
+      `@rpath/worklets-oxc-plugin.${platform}-${arch}.node`,
       dest,
     ]);
   } catch (error) {

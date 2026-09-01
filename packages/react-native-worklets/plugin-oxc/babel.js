@@ -22,7 +22,7 @@ let cachedSyntaxTypescript;
  */
 function workletsPluginOxcBabelShim(babelApi) {
   return {
-    name: 'worklets-plugin-oxc',
+    name: 'worklets-oxc-plugin',
     visitor: {
       Program: {
         enter(programPath, state) {

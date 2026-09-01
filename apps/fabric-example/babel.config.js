@@ -33,7 +33,7 @@ function resolveWorkletsPlugin() {
 }
 
 function loadOxcPlugin() {
-  return require('worklets-plugin-oxc/babel');
+  return require('worklets-oxc-plugin/babel');
 }
 
 const workletsPlugin = resolveWorkletsPlugin();

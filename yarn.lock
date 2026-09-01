@@ -18367,7 +18367,7 @@ __metadata:
     react-native: "npm:0.87.0"
     react-native-screens: "npm:4.27.0"
     typescript: "npm:5.9.3"
-    worklets-plugin-oxc: "workspace:*"
+    worklets-oxc-plugin: "workspace:*"
     ws: "npm:8.21.0"
   languageName: unknown
   linkType: soft
@@ -34581,9 +34581,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"worklets-plugin-oxc@workspace:*, worklets-plugin-oxc@workspace:packages/react-native-worklets/plugin-oxc":
+"worklets-oxc-plugin@workspace:*, worklets-oxc-plugin@workspace:packages/react-native-worklets/plugin-oxc":
   version: 0.0.0-use.local
-  resolution: "worklets-plugin-oxc@workspace:packages/react-native-worklets/plugin-oxc"
+  resolution: "worklets-oxc-plugin@workspace:packages/react-native-worklets/plugin-oxc"
   dependencies:
     "@jridgewell/remapping": "npm:2.3.5"
   languageName: unknown

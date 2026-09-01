@@ -8,8 +8,8 @@ const arch = process.arch;
 
 function candidates() {
   return [
-    join(__dirname, `worklets-plugin-oxc.${platform}-${arch}.node`),
-    join(__dirname, 'worklets-plugin-oxc.node'),
+    join(__dirname, `worklets-oxc-plugin.${platform}-${arch}.node`),
+    join(__dirname, 'worklets-oxc-plugin.node'),
   ];
 }
 
