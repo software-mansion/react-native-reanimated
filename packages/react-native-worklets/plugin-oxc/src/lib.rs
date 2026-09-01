@@ -1,9 +1,12 @@
 use napi_derive::napi;
 
+mod ast;
 mod autoworkletization;
 mod bundle_mode;
 mod class_method;
 mod closure;
+mod directives;
+mod factory_expression;
 mod file_directive;
 mod gesture_handler_autoworkletization;
 mod imports;
@@ -14,8 +17,9 @@ mod plugin;
 mod program;
 mod referenced_worklets;
 mod types;
-mod utils;
+mod version;
 mod worklet_factory;
+mod worklet_file;
 mod worklet_pass;
 mod worklet_string_code;
 

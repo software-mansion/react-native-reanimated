@@ -1,10 +1,11 @@
+use crate::ast::is_object_method;
+use crate::directives::add_worklet_directives_to_function_body;
+
 use oxc_ast::ast::{
     Declaration, ExportDefaultDeclarationKind, Expression, MemberExpression, ObjectExpression,
     ObjectPropertyKind, Program, Statement, VariableDeclarator,
 };
 use oxc_ast::AstBuilder;
-
-use crate::utils::{add_worklet_directives_to_function_body, is_object_method};
 
 pub fn process_file_directive<'a>(program: &mut Program<'a>, builder: AstBuilder<'a>) -> bool {
     let has_directive = program

@@ -8,12 +8,13 @@ use oxc_span::Span;
 use oxc_syntax::scope::ScopeFlags;
 use oxc_syntax::symbol::SymbolId;
 
+use crate::ast::{identifier_name, member_property};
+use crate::directives::add_worklet_directives_to_function_body;
 use crate::gesture_handler_autoworkletization::{
     is_gesture_object_event_callback_method, GESTURE_HANDLER_OBJECT_HOOKS,
 };
 use crate::layout_animation_autoworkletization::is_layout_animation_callback_method;
 use crate::referenced_worklets::{Definitions, Property, Shape};
-use crate::utils::{add_worklet_directives_to_function_body, identifier_name, member_property};
 
 #[derive(Clone, Copy)]
 struct Kinds {

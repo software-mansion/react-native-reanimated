@@ -5,10 +5,11 @@ use oxc_ast::NONE;
 use oxc_codegen::{Codegen, CodegenOptions};
 use oxc_span::SPAN;
 
-use crate::utils::{
+use crate::ast::{
     closure_binding_pattern, const_decl, identifier_binding_pattern,
-    replace_implicit_return_with_block, strip_worklet_directives,
+    replace_implicit_return_with_block,
 };
+use crate::directives::strip_worklet_directives;
 use crate::worklet_factory::WorkletInput;
 
 pub fn build_worklet_string<'a>(

@@ -1,14 +1,11 @@
-use std::path::PathBuf;
+use crate::ast::identifier_name;
+use std::path::{Component, Path, PathBuf};
 
 use oxc_ast::AstBuilder;
 
 use oxc_ast::ast::{Argument, FunctionBody};
 use oxc_ast_visit::{walk_mut::walk_function_body, VisitMut};
 use oxc_span::SPAN;
-
-use crate::utils::{
-    can_forward_relative_import, identifier_name, normalize_path, pathdiff, to_posix,
-};
 
 pub fn update_relative_requires<'a>(
     body: &mut FunctionBody<'a>,
@@ -76,4 +73,94 @@ pub fn create_import_path(
         out = format!("./{out}");
     }
     Some(out)
+}
+
+pub fn can_forward_module_import(module_name: &str, forwardable: &[String]) -> bool {
+    forwardable.iter().any(|forwardable_name| {
+        module_name
+            .strip_prefix(forwardable_name.as_str())
+            .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'))
+    })
+}
+
+pub fn can_forward_relative_import(module_path: &str, relative_paths: &[String]) -> bool {
+    if module_path.is_empty() {
+        return false;
+    }
+    relative_paths
+        .iter()
+        .any(|relative_path| matches_filename_segment(module_path, relative_path))
+}
+
+fn matches_filename_segment(filename: &str, allowed_path: &str) -> bool {
+    let allowed_segments: Vec<&str> = allowed_path.split('/').collect();
+    let mut file_segments: Vec<&str> = filename.split('/').collect();
+    if let Some(index) = file_segments.iter().rposition(|s| *s == "node_modules") {
+        file_segments = file_segments.split_off(index + 1);
+    }
+    if allowed_segments.is_empty() {
+        return false;
+    }
+    file_segments
+        .windows(allowed_segments.len())
+        .any(|window| window == allowed_segments.as_slice())
+}
+
+pub fn normalize_path(p: &Path) -> PathBuf {
+    let is_absolute = p.is_absolute();
+    let mut out: Vec<std::ffi::OsString> = Vec::new();
+    for comp in p.components() {
+        match comp {
+            Component::ParentDir => {
+                let can_pop = out
+                    .last()
+                    .map(|last| last != std::ffi::OsStr::new(".."))
+                    .unwrap_or(false);
+                if can_pop {
+                    out.pop();
+                } else if !is_absolute {
+                    out.push(std::ffi::OsString::from(".."));
+                }
+            }
+            Component::CurDir => {}
+            other => out.push(other.as_os_str().to_os_string()),
+        }
+    }
+    out.iter().collect()
+}
+
+pub fn pathdiff(from: &Path, to: &Path) -> Option<PathBuf> {
+    if from.is_absolute() != to.is_absolute() {
+        return None;
+    }
+    let from = normalize_path(from);
+    let to = normalize_path(to);
+
+    let from_comps: Vec<_> = from.components().collect();
+    let to_comps: Vec<_> = to.components().collect();
+
+    let mut common = 0;
+    while common < from_comps.len()
+        && common < to_comps.len()
+        && from_comps[common] == to_comps[common]
+    {
+        common += 1;
+    }
+
+    let mut result = PathBuf::new();
+    for _ in common..from_comps.len() {
+        result.push("..");
+    }
+    for comp in &to_comps[common..] {
+        result.push(comp.as_os_str());
+    }
+    if result.as_os_str().is_empty() {
+        Some(PathBuf::from("."))
+    } else {
+        Some(result)
+    }
+}
+
+pub fn to_posix(s: &str) -> String {
+    s.replace('\\', "/")
 }

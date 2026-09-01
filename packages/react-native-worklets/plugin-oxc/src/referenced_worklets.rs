@@ -1,3 +1,6 @@
+use crate::ast::{assignment_identifier, is_object_method, object_expression};
+use crate::closure::binding_is_rebound;
+
 use std::collections::{HashMap, HashSet};
 
 use oxc_ast::ast::{
@@ -10,9 +13,6 @@ use oxc_semantic::Scoping;
 use oxc_span::{GetSpan, Span};
 use oxc_syntax::scope::ScopeFlags;
 use oxc_syntax::symbol::SymbolId;
-
-use crate::utils::binding_is_rebound;
-use crate::utils::{assignment_identifier, is_object_method, object_expression};
 
 const WORKLET_HASH: &str = "__workletHash";
 

@@ -10,11 +10,9 @@ use oxc_syntax::reference::ReferenceFlags;
 use oxc_syntax::scope::ScopeId;
 use oxc_syntax::symbol::SymbolId;
 
+use crate::ast::assignment_identifier;
+use crate::imports::{can_forward_module_import, can_forward_relative_import};
 use crate::types::{ImportInfo, ImportShape, State};
-use crate::utils::{
-    assignment_identifier, binding_is_rebound, can_forward_module_import,
-    can_forward_relative_import,
-};
 use crate::worklet_factory::WorkletInput;
 
 #[derive(Debug, Default)]
@@ -184,4 +182,11 @@ impl<'a, 's> Visit<'a> for ReferenceCollector<'s> {
             flags,
         });
     }
+}
+
+pub fn binding_is_rebound(scoping: &Scoping, symbol_id: SymbolId) -> bool {
+    !scoping.symbol_redeclarations(symbol_id).is_empty()
+        || scoping
+            .get_resolved_references(symbol_id)
+            .any(|reference| reference.is_write())
 }

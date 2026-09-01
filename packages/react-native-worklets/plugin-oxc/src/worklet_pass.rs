@@ -10,11 +10,10 @@ use oxc_semantic::Scoping;
 use oxc_span::SPAN;
 use oxc_syntax::scope::ScopeFlags;
 
+use crate::ast::{const_decl, const_declaration, identifier_binding_pattern};
 use crate::class_method::{process_if_worklet_method, MethodOutcome};
+use crate::directives::has_worklet_directive;
 use crate::types::State;
-use crate::utils::{
-    const_decl, const_declaration, has_worklet_directive, identifier_binding_pattern,
-};
 use crate::worklet_factory::{make_worklet_factory, FactoryContext, WorkletInput};
 
 pub struct WorkletPass<'a, 'b> {

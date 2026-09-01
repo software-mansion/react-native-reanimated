@@ -1,6 +1,6 @@
-use oxc_ast::ast::Expression;
+use crate::ast::{call_expression, identifier_name, member_object, member_property};
 
-use crate::utils::{call_expression, identifier_name, member_object, member_property};
+use oxc_ast::ast::Expression;
 
 const MAX_CHAIN_DEPTH: u32 = 64;
 

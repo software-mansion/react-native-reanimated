@@ -5,7 +5,7 @@ use oxc_ast_visit::walk_mut;
 use oxc_span::SPAN;
 use oxc_syntax::scope::ScopeFlags;
 
-use crate::utils::has_worklet_directive;
+use crate::directives::has_worklet_directive;
 use crate::worklet_pass::WorkletPass;
 
 pub enum MethodOutcome<'a> {
