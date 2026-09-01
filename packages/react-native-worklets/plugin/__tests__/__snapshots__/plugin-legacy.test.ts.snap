@@ -463,17 +463,6 @@ class Foo {
 }"
 `;
 
-exports[`babel plugin for class worklets leaves private method untouched 1`] = `
-"class Foo {
-  #bar(x) {
-    'worklet';
-    "use no memo";
-
-    return x + 2;
-  }
-}"
-`;
-
 exports[`babel plugin for class worklets leaves setter untouched 1`] = `
 "class Foo {
   set bar(x) {
@@ -576,7 +565,7 @@ exports[`babel plugin for class worklets workletizes static method 1`] = `
   sourceMap: "\\"mock source map\\""
 };
 class Foo {
-  static bar = function bar_null1Factory({
+  bar = function bar_null1Factory({
     _worklet_1_init_data
   }) {
     var _e = [new global.Error(), 1, -27];

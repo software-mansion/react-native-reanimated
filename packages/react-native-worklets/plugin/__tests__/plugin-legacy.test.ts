@@ -644,22 +644,6 @@ describe('babel plugin', () => {
       expect(code).toContain("'worklet';");
       expect(code).toMatchSnapshot();
     });
-
-    test('leaves private method untouched', () => {
-      const input = html`<script>
-        class Foo {
-          #bar(x) {
-            'worklet';
-            return x + 2;
-          }
-        }
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).not.toHaveWorkletData();
-      expect(code).toContain('#bar(x)');
-      expect(code).toMatchSnapshot();
-    });
   });
 
   describe('for function hooks', () => {

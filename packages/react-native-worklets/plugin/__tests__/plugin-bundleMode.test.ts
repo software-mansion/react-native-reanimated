@@ -17,8 +17,9 @@ const capturedFiles: CapturedFile[] = [];
 // The OXC transform writes its files from Rust, so they never reach the `fs`
 // mock below. Its jest setup records them on `globalThis` instead.
 function nativelyEmittedFiles(): CapturedFile[] {
-  return (globalThis as { __WORKLETS_OXC_EMITTED__?: CapturedFile[] })
-    .__WORKLETS_OXC_EMITTED__ ??= [];
+  return ((
+    globalThis as { __WORKLETS_OXC_EMITTED__?: CapturedFile[] }
+  ).__WORKLETS_OXC_EMITTED__ ??= []);
 }
 
 function emittedFiles(): CapturedFile[] {

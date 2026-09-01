@@ -15,8 +15,9 @@ const capturedFiles: CapturedFile[] = [];
 // The OXC transform writes its files from Rust, so they never reach the `fs`
 // mock below. Its jest setup records them on `globalThis` instead.
 function nativelyEmittedFiles(): CapturedFile[] {
-  return (globalThis as { __WORKLETS_OXC_EMITTED__?: CapturedFile[] })
-    .__WORKLETS_OXC_EMITTED__ ??= [];
+  return ((
+    globalThis as { __WORKLETS_OXC_EMITTED__?: CapturedFile[] }
+  ).__WORKLETS_OXC_EMITTED__ ??= []);
 }
 
 function emittedFiles(): CapturedFile[] {
@@ -90,7 +91,7 @@ describe.each([
     process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
     process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '1';
     capturedFiles.length = 0;
-  nativelyEmittedFiles().length = 0;
+    nativelyEmittedFiles().length = 0;
   });
 
   describe('worklet shapes', () => {
