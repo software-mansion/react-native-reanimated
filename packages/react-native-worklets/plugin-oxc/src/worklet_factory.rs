@@ -12,6 +12,8 @@ use oxc_syntax::number::NumberBase;
 use oxc_syntax::reference::{Reference, ReferenceFlags, ReferenceId};
 use oxc_syntax::scope::ScopeId;
 
+use std::path::Path;
+
 use crate::closure::{get_closure, scope_is_inside};
 use crate::imports::{create_import_path, update_relative_requires};
 use crate::naming::worklet_hash;
@@ -22,6 +24,7 @@ use crate::utils::{
     replace_implicit_return_with_block, strip_worklet_directives,
 };
 use crate::worklet_string_code::build_worklet_string;
+use crate::GENERATED_WORKLETS_DIR;
 
 const MOCK_VERSION: &str = "x.y.z";
 
@@ -133,6 +136,14 @@ pub fn make_worklet_factory<'a>(
         state.opts.worklets_package_dir.as_deref(),
     );
     let file_path = format!("react-native-worklets/.worklets/{hash}.js");
+
+    if let Some(package_dir) = state.opts.worklets_package_dir.as_deref() {
+        if let Err(message) = write_worklet_file(package_dir, &file_path, &file_content) {
+            if state.error.is_none() {
+                state.error = Some(message);
+            }
+        }
+    }
 
     let call_scope = scoping
         .scope_parent_id(input.function_scope_id)
@@ -501,4 +512,18 @@ fn body_references_name(
     };
     probe.visit_function_body(body);
     probe.found
+}
+
+fn write_worklet_file(
+    worklets_package_dir: &str,
+    file_path: &str,
+    content: &str,
+) -> Result<(), String> {
+    let dir = Path::new(worklets_package_dir).join(GENERATED_WORKLETS_DIR);
+    std::fs::create_dir_all(&dir)
+        .map_err(|error| format!("could not create {}: {error}", dir.display()))?;
+    let name = file_path.rsplit('/').next().unwrap_or(file_path);
+    let path = dir.join(name);
+    std::fs::write(&path, content)
+        .map_err(|error| format!("could not write {}: {error}", path.display()))
 }

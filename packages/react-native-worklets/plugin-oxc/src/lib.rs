@@ -158,32 +158,12 @@ fn run(
         .map(|(path, content)| EmittedFile { path, content })
         .collect();
 
-    if let Some(package_dir) = state.opts.worklets_package_dir.as_deref() {
-        write_emitted_files(&files, package_dir)?;
-    }
-
     Ok(TransformResult {
         code: printed.code,
         map: printed.map.map(|map| map.to_json_string()),
         changed: flag_enabled || is_worklet_file || !files.is_empty(),
         files,
     })
-}
-
-fn write_emitted_files(files: &[EmittedFile], worklets_package_dir: &str) -> Result<(), String> {
-    if files.is_empty() {
-        return Ok(());
-    }
-    let dir = std::path::Path::new(worklets_package_dir).join(GENERATED_WORKLETS_DIR);
-    std::fs::create_dir_all(&dir)
-        .map_err(|error| format!("could not create {}: {error}", dir.display()))?;
-    for file in files {
-        let name = file.path.rsplit('/').next().unwrap_or(&file.path);
-        let path = dir.join(name);
-        std::fs::write(&path, &file.content)
-            .map_err(|error| format!("could not write {}: {error}", path.display()))?;
-    }
-    Ok(())
 }
 
 fn strip_typescript<'a>(
