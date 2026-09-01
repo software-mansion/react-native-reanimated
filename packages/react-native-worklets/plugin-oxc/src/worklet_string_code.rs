@@ -84,7 +84,6 @@ fn prepend_recursive_declaration<'a>(builder: AstBuilder<'a>, name: &str) -> Sta
     const_decl(builder, id_pat, this_recur)
 }
 
-/// Prepends necessary closure variables to the worklet function.
 fn prepend_closure<'a>(builder: AstBuilder<'a>, closure_variables: &[String]) -> Statement<'a> {
     let object_pattern = closure_binding_pattern(builder, closure_variables);
 

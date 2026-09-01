@@ -326,11 +326,11 @@ fn build_factory_expression<'a>(
     let factory_params =
         builder.formal_parameters(SPAN, FormalParameterKind::FormalParameter, params_vec, NONE);
 
-    let mut stmts = builder.vec_with_capacity(8);
+    let mut statements = builder.vec_with_capacity(8);
 
-    stmts.push(build_inner_fn_decl(builder, allocator, react_name, input));
+    statements.push(build_inner_fn_decl(builder, allocator, react_name, input));
 
-    stmts.push(build_member_assign(
+    statements.push(build_member_assign(
         builder,
         react_name,
         "__closure",
@@ -340,7 +340,7 @@ fn build_factory_expression<'a>(
         ),
     ));
 
-    stmts.push(build_member_assign(
+    statements.push(build_member_assign(
         builder,
         react_name,
         "__workletHash",
@@ -354,7 +354,7 @@ fn build_factory_expression<'a>(
             state.opts.plugin_version.as_deref().unwrap_or(REAL_VERSION)
         };
         let version_str = builder.str(version);
-        stmts.push(build_member_assign(
+        statements.push(build_member_assign(
             builder,
             react_name,
             "__pluginVersion",
@@ -362,12 +362,12 @@ fn build_factory_expression<'a>(
         ));
     }
 
-    stmts.push(builder.statement_return(
+    statements.push(builder.statement_return(
         SPAN,
         Some(builder.expression_identifier(SPAN, builder.ident(react_name))),
     ));
 
-    let factory_body = builder.function_body(SPAN, builder.vec(), stmts);
+    let factory_body = builder.function_body(SPAN, builder.vec(), statements);
 
     let factory_id_name = builder.ident(&format!("{worklet_name}Factory"));
     let factory_id = builder.binding_identifier(SPAN, factory_id_name);

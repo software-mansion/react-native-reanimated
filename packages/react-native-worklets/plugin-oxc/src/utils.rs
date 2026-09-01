@@ -16,23 +16,22 @@ const RELEASE_NEEDLES: &[&str] = &["prod", "release", "stage", "stagi"];
 
 pub fn is_release(env_name: Option<&str>) -> bool {
     if let Some(env_name) = env_name {
-        if looks_like_release(env_name) {
+        let lower = env_name.to_ascii_lowercase();
+        if RELEASE_NEEDLES.iter().any(|needle| lower.contains(*needle)) {
             return true;
         }
-        if env_name.to_ascii_lowercase().contains("dev") {
+        if lower.contains("dev") {
             return false;
         }
     }
     let matches = |key: &str| match env::var(key) {
-        Ok(v) => looks_like_release(&v),
+        Ok(value) => {
+            let lower = value.to_ascii_lowercase();
+            RELEASE_NEEDLES.iter().any(|needle| lower.contains(*needle))
+        }
         Err(_) => false,
     };
     matches("BABEL_ENV") || matches("NODE_ENV")
-}
-
-fn looks_like_release(value: &str) -> bool {
-    let lower = value.to_ascii_lowercase();
-    RELEASE_NEEDLES.iter().any(|n| lower.contains(*n))
 }
 
 pub fn can_forward_module_import(module_name: &str, forwardable: &[String]) -> bool {

@@ -52,27 +52,29 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
         self.parent_is_scopable = previous;
     }
 
-    /// Replaces the node with a factory call while making sure that it's a legal
-    /// operation. If the node cannot be simply replaced with a factory call, it
-    /// will be replaced with a variable declaration.
-    ///
-    /// For example:
-    ///
-    /// ```js
-    /// export function foo() {
-    ///   'worklet';
-    ///   return 1;
-    /// }
-    /// ```
-    ///
-    /// Becomes
-    ///
-    /// ```js
-    /// export const foo = factoryCall();
-    /// ```
-    ///
-    /// But a declaration in a position that takes no declarations, like
-    /// `if (x) function foo() { 'worklet'; }`, becomes a bare factory call.
+    /**
+     * Replaces the node with a factory call while making sure that it's a legal
+     * operation. If the node cannot be simply replaced with a factory call, it
+     * will be replaced with a variable declaration.
+     *
+     * For example:
+     *
+     * ```js
+     * export function foo() {
+     *   'worklet';
+     *   return 1;
+     * }
+     * ```
+     *
+     * Becomes
+     *
+     * ```js
+     * export const foo = factoryCall();
+     * ```
+     *
+     * But a declaration in a position that takes no declarations, like
+     * `if (x) function foo() { 'worklet'; }`, becomes a bare factory call.
+     */
     fn visit_statement(&mut self, stmt: &mut Statement<'a>) {
         let Statement::FunctionDeclaration(func) = stmt else {
             let previous = std::mem::replace(&mut self.parent_is_scopable, false);
@@ -138,8 +140,10 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
         }
     }
 
-    /// Workletizes object methods, rejects worklet accessors
-    /// and walks the property node
+    /**
+     * Workletizes object methods, rejects worklet accessors
+     * and walks the property node
+     */
     fn visit_object_property(&mut self, prop: &mut ObjectProperty<'a>) {
         let is_accessor = prop.kind.is_accessor();
         let is_method_like = prop.method || is_accessor;
