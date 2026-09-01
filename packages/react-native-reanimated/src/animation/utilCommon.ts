@@ -79,9 +79,13 @@ if (__DEV__ && ReducedMotionManager.jsValue) {
 
 export function initialUpdaterRun<T>(updater: () => T) {
   IN_STYLE_UPDATER.current = true;
-  const result = updater();
-  IN_STYLE_UPDATER.current = false;
-  return result;
+  try {
+    return updater();
+  } finally {
+    // without finally, an updater that throws leaves the flag set forever and
+    // every later animation returns its raw starting value instead (GH #10433)
+    IN_STYLE_UPDATER.current = false;
+  }
 }
 
 interface RecognizedPrefixSuffix {
