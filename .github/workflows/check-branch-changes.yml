@@ -24,7 +24,8 @@ jobs:
           fetch-depth: 0
           ref: ${{ inputs.branch }}
 
-      - id: commit_check
+      - name: Check for commits in the last 24 hours
+        id: commit_check
         run: |
           COUNT=$(git log --oneline --since='24 hours ago' | wc -l)
           echo "Found $COUNT commits in the last 24 hours on branch ${{ inputs.branch }}"
