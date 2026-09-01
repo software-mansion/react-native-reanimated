@@ -844,16 +844,16 @@ var require_classMethod = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.processIfWorkletMethod = processIfWorkletMethod;
     var types_12 = require("@babel/types");
+    var assert_1 = require("assert");
     function processIfWorkletMethod(path) {
-      if (!path.node.body.directives.some((d) => d.value.value === "worklet")) {
+      if (path.node.kind !== "method") {
         return;
       }
-      if (path.node.kind !== "method" || (0, types_12.isPrivateName)(path.node.key)) {
-        return;
+      if (path.node.body.directives.some((d) => d.value.value === "worklet")) {
+        (0, assert_1.strict)((0, types_12.isIdentifier)(path.node.key), "ClassMethod key must be an Identifier");
+        const methodIdentifier = path.node.key;
+        path.replaceWith((0, types_12.classProperty)((0, types_12.cloneNode)(methodIdentifier, true), (0, types_12.functionExpression)((0, types_12.cloneNode)(methodIdentifier, true), path.node.params.filter((p) => (0, types_12.isFunctionParameter)(p)).map((p) => (0, types_12.cloneNode)(p, true)), (0, types_12.cloneNode)(path.node.body, true), path.node.generator, path.node.async)));
       }
-      const key = path.node.key;
-      const functionId = !path.node.computed && (0, types_12.isIdentifier)(key) ? (0, types_12.cloneNode)(key, true) : null;
-      path.replaceWith((0, types_12.classProperty)((0, types_12.cloneNode)(key, true), (0, types_12.functionExpression)(functionId, path.node.params.filter((p) => (0, types_12.isFunctionParameter)(p)).map((p) => (0, types_12.cloneNode)(p, true)), (0, types_12.cloneNode)(path.node.body, true), path.node.generator, path.node.async), null, null, path.node.computed, path.node.static));
     }
   }
 });
