@@ -5,14 +5,8 @@
 2. Bottlenecks of the model - animations, gestures, driving GPU.
 3. (optionally) Worklets are focused on seamless usage - less boilerplate than Web Workers; diligent comparison to Web Workers.
 
-## Your first worklet
+## Variations
 
-1. Console.log on another runtime, RN Runtime, UI Runtime, Worklet Runtime - using `getCurrentThreadId` to show the difference.
-   1. Add an interactive example with several buttons that shows how the threads are changing when you dispatch a worklet on a given runtime/thread.
-2. setState on another runtime - explaining the gap and where the memory resides, fix with scheduleOnRN
-3. Running heavy computation on another thread - calculating Zeta function roots.
-   1. Obtain data with async.
-   2. Obtain data with Shareable.
 4. Locking/unlocking the JS thread with Synchronizable and a native view.
 5. Show two worklet runtimes sharing a thread.
 6. Show two threads sharing a worklet runtime.
@@ -33,4 +27,10 @@
 5. Use Event Loop on the Worklet Runtime instead of the scheduling runtime.
 6. Prefer async invocations.
 
-<!--idea: when referring to worklets as a library in the docs, always call it Worklets library, when to a number of individual worklets, as worklet functions. use it consistently across the docs and note it somewhere-->
+## General ideas
+
+- When referring to worklets as a library in the docs, always call it Worklets library, when to a number of individual worklets, as worklet functions. use it consistently across the docs and note it somewhere.
+- Code snippets should have 2 forms 
+    1. short one with only the relevant code (core code)
+    2. long one with all imports and boilerplate ready for copy-pasting
+    3. (optional) perhaps there should also be a separate section for outputs?-->
