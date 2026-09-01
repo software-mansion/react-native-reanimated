@@ -1,5 +1,4 @@
 export interface PluginOptions {
-  bundleMode?: true;
   extraPlugins?: string[];
   extraPresets?: string[];
   importForwarding?: {

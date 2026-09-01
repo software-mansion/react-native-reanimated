@@ -14,13 +14,13 @@ const BABEL_WORKLETS_PLUGIN = 'react-native-worklets/plugin';
 function resolveWorkletsPlugin() {
   const wanted = process.env.WORKLETS_PLUGIN;
   if (wanted === 'oxc') {
-    return resolveOxcPlugin();
+    return loadOxcPlugin();
   }
   if (wanted === 'babel') {
     return BABEL_WORKLETS_PLUGIN;
   }
   try {
-    return resolveOxcPlugin();
+    return loadOxcPlugin();
   } catch (error) {
     const cause = error instanceof Error ? error.message : String(error);
     console.warn(
@@ -32,9 +32,8 @@ function resolveWorkletsPlugin() {
   }
 }
 
-function resolveOxcPlugin() {
-  require('worklets-plugin-oxc');
-  return require.resolve('worklets-plugin-oxc/babel');
+function loadOxcPlugin() {
+  return require('worklets-plugin-oxc/babel');
 }
 
 const workletsPlugin = resolveWorkletsPlugin();

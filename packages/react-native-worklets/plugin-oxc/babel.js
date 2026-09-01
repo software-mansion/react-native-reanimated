@@ -3,29 +3,24 @@
 const path = require('path');
 
 const oxc = require('./index.js');
+
+// Previous steps can pass their output sourcemap
+// it needs to be merged with this plugin's one
+// to preserve correct mappings
 const remapping = require('@jridgewell/remapping');
 
 const PARSE_ERROR_CODE = 'WORKLETS_ERR_PARSE';
 const FLOW_ERROR_CODE = 'WORKLETS_ERR_FLOW';
 
-const SYNTAX_JSX = require.resolve('@babel/plugin-syntax-jsx');
-const SYNTAX_TYPESCRIPT = require.resolve('@babel/plugin-syntax-typescript');
-
 let cachedWorkletsPkgDir;
+let cachedSyntaxJsx;
+let cachedSyntaxTypescript;
 
 /**
  * @param {typeof import('@babel/core')} babelApi
- * @param {import('./index').PluginOptions} options
  * @returns {import('@babel/core').PluginObj}
  */
-function workletsPluginOxcBabelShim(babelApi, options) {
-  if (options && options.bundleMode === false) {
-    throw new Error(
-      '[Worklets] supports Bundle Mode only. Drop `bundleMode: false`, ' +
-        'or use `react-native-worklets/plugin` for the legacy pipeline.'
-    );
-  }
-
+function workletsPluginOxcBabelShim(babelApi) {
   return {
     name: 'worklets-plugin-oxc',
     visitor: {
@@ -156,12 +151,24 @@ function reparse(babelApi, code, filename, state) {
  */
 function reparseSyntaxPlugins(filename) {
   if (filename.endsWith('.tsx')) {
-    return [[SYNTAX_TYPESCRIPT, { isTSX: true }]];
+    return [[syntaxTypescript(), { isTSX: true }]];
   }
   if (/\.(ts|mts|cts)$/.test(filename)) {
-    return [[SYNTAX_TYPESCRIPT, { isTSX: false }]];
+    return [[syntaxTypescript(), { isTSX: false }]];
   }
-  return [[SYNTAX_JSX]];
+  return [[syntaxJsx()]];
+}
+
+/** @returns {string} */
+function syntaxTypescript() {
+  cachedSyntaxTypescript ??= require.resolve('@babel/plugin-syntax-typescript');
+  return cachedSyntaxTypescript;
+}
+
+/** @returns {string} */
+function syntaxJsx() {
+  cachedSyntaxJsx ??= require.resolve('@babel/plugin-syntax-jsx');
+  return cachedSyntaxJsx;
 }
 
 module.exports = workletsPluginOxcBabelShim;

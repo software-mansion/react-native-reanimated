@@ -57,6 +57,7 @@ pub fn transform(
     filename: String,
     options: Option<PluginOptions>,
 ) -> napi::Result<TransformResult> {
+    // TODO: Check if this is actually needed on windows
     let filename = filename.replace('\\', "/");
     let mut opts = options.unwrap_or_default();
     if let Some(dir) = opts.worklets_package_dir.take() {
@@ -82,14 +83,6 @@ fn run(
     filename: &str,
     options: PluginOptions,
 ) -> Result<TransformResult, String> {
-    if options.bundle_mode == Some(false) {
-        return Err(
-            "`bundleMode: false` is not supported — this plugin supports Bundle Mode only. \
-             Use `react-native-worklets/plugin` for the legacy pipeline."
-                .to_string(),
-        );
-    }
-
     maybe_warn_extras(&options);
 
     if is_generated_worklet_file(filename) {

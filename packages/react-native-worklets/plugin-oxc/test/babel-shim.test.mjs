@@ -65,25 +65,6 @@ test(
   }
 );
 
-test(
-  'babel shim rejects an explicit bundleMode: false',
-  { skip: !babelCore },
-  () => {
-    delete require_.cache[require_.resolve('../babel.js')];
-    const shim = require_('../babel.js');
-    assert.throws(
-      () =>
-        babelCore.transformSync(`function foo() { 'worklet'; return 1; }`, {
-          filename: 'test.js',
-          babelrc: false,
-          configFile: false,
-          plugins: [[shim, { bundleMode: false }]],
-        }),
-      /supports Bundle Mode only/
-    );
-  }
-);
-
 test('babel shim parses JSX in a .js file', { skip: !babelCore }, () => {
   delete require_.cache[require_.resolve('../babel.js')];
   const shim = require_('../babel.js');

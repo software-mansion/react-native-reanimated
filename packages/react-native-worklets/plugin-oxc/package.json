@@ -11,6 +11,7 @@
     "babel.js",
     "index.js",
     "index.d.ts",
+    "babel.d.ts",
     "*.node"
   ],
   "scripts": {
