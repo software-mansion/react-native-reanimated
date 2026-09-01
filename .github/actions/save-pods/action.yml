@@ -1,0 +1,59 @@
+name: Save Pods
+description: Persist the Pods cache from the default branch after a successful build
+
+inputs:
+  working-directory:
+    description: The app directory, must match the one passed to install-pods
+    required: true
+  pod-directory:
+    description: The pod directory relative to working-directory
+    required: true
+  cache-hit:
+    description: The cache-hit output of the matching install-pods step
+    required: true
+  cache-primary-key:
+    description: The cache-primary-key output of the matching install-pods step
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    # Call this AFTER the build so a Pods tree that fails it is never
+    # published. Saving only from main keeps ~0.5 GB PR-scoped entries from
+    # eating the repo's 10 GB cache budget; the cost is that a PR changing
+    # Podfile.lock re-reconciles Pods on each push until it merges.
+    # Entries are immutable — to replace a bad one, `gh cache delete <key>`
+    # first, then re-seed from main. The reseed dispatch depends on which
+    # entry was evicted: runtime-tests-nightly.yml for the fabric-example
+    # ones, since its matrix contains the bundleMode:true /
+    # DebugRuntimeTests combination that runtime-tests-ios-argent.yml's save
+    # gate requires (that workflow's own workflow_dispatch defaults are
+    # bundleMode:false / ReleaseRuntimeTests, so dispatching it directly
+    # means overriding both inputs).
+    #
+    # Pods/.project_cache is CocoaPods' incremental-install skip state.
+    # @actions/cache resolves `path:` with implicitDescendants:false, so a
+    # bare directory pattern matches only the directory itself and a negative
+    # pattern below it has nothing to subtract — drop the directory from disk
+    # instead, so a restored tree can never suppress reinstalls.
+    - name: Drop CocoaPods incremental-install state
+      if: >-
+        inputs.cache-hit != 'true' &&
+        inputs.cache-primary-key != '' &&
+        (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') &&
+        github.ref == 'refs/heads/main'
+      shell: bash
+      run: rm -rf "${{ inputs.working-directory }}/${{ inputs.pod-directory }}/Pods/.project_cache"
+
+    - name: Save Pods cache
+      if: >-
+        inputs.cache-hit != 'true' &&
+        inputs.cache-primary-key != '' &&
+        (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') &&
+        github.ref == 'refs/heads/main'
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+      with:
+        path: |
+          ${{ inputs.working-directory }}/${{ inputs.pod-directory }}/Pods
+          ~/Library/Caches/CocoaPods
+        key: ${{ inputs.cache-primary-key }}

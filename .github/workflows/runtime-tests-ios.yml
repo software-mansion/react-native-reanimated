@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/runtime-tests-ios.yml
+      - .github/actions/install-pods/**
   workflow_call:
     inputs:
       bundleMode:
