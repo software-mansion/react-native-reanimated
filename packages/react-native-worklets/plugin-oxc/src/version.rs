@@ -2,8 +2,6 @@ use std::env;
 
 use crate::types::State;
 
-const MOCK_VERSION: &str = "x.y.z";
-
 const REAL_VERSION: &str = env!("WORKLETS_PACKAGE_VERSION");
 
 /**
@@ -14,16 +12,7 @@ pub fn plugin_version(state: &State) -> Option<&str> {
     if is_release(state.opts.env_name.as_deref()) {
         return None;
     }
-    if should_mock_version() {
-        return Some(MOCK_VERSION);
-    }
     Some(state.opts.plugin_version.as_deref().unwrap_or(REAL_VERSION))
-}
-
-fn should_mock_version() -> bool {
-    std::env::var("WORKLETS_JEST_SHOULD_MOCK_VERSION")
-        .map(|v| v == "1")
-        .unwrap_or(false)
 }
 
 const RELEASE_NEEDLES: &[&str] = &["prod", "release", "stage", "stagi"];

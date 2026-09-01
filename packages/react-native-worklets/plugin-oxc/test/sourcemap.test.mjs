@@ -12,8 +12,6 @@ const { SourceMapConsumer } = require('source-map');
 const babelPlugin = require('../../plugin/index.js');
 const oxcPlugin = require('../babel.js');
 
-process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
-
 const realWriteFileSync = fs.writeFileSync;
 
 function run(plugin, source, filename, extra = {}) {

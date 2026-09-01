@@ -152,28 +152,13 @@ test('extraPlugins option does not throw and emits a stderr warning', () => {
   assert.match(joinedFiles(files), /__workletHash/);
 });
 
-test('MOCK_VERSION env gate: without env, __pluginVersion comes from opts', () => {
-  delete process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION;
+test('__pluginVersion comes from opts', () => {
   const input = `function foo() { 'worklet'; return 1; }`;
   const { files } = transform(input, 'test.js', { pluginVersion: '1.2.3' });
-  const content = joinedFiles(files);
-  assert.match(content, /__pluginVersion\s*=\s*"1\.2\.3"/);
-  assert.doesNotMatch(content, /__pluginVersion\s*=\s*"x\.y\.z"/);
+  assert.match(joinedFiles(files), /__pluginVersion\s*=\s*"1\.2\.3"/);
 });
 
-test('MOCK_VERSION env gate: with env=1, mock wins', () => {
-  process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
-  try {
-    const input = `function foo() { 'worklet'; return 1; }`;
-    const { files } = transform(input, 'test.js', { pluginVersion: '1.2.3' });
-    assert.match(joinedFiles(files), /__pluginVersion\s*=\s*"x\.y\.z"/);
-  } finally {
-    delete process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION;
-  }
-});
-
-test('MOCK_VERSION env gate: no env, no pluginVersion → fall back to baked version', () => {
-  delete process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION;
+test('__pluginVersion falls back to the baked version', () => {
   const input = `function foo() { 'worklet'; return 1; }`;
   const { files } = transform(input, 'test.js', {});
   assert.match(joinedFiles(files), /__pluginVersion\s*=\s*"[^"]+"/);
