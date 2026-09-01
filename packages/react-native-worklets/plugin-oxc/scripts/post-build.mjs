@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { copyFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
