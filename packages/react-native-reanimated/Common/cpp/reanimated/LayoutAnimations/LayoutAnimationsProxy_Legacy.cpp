@@ -2,7 +2,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <worklets/Compat/StableApi.h>
 
-#include <ReactCommon/CallInvoker.h>
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
@@ -37,7 +36,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 #endif
   react_native_assert(surfaceId == surfaceId_ && "pull routed to the wrong surface's proxy");
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  PropsParserContext propsParserContext{surfaceId, *contextContainer_};
+  PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
   ShadowViewMutationList filteredMutations;
 
   std::vector<std::shared_ptr<MutationNode>> roots;
@@ -46,21 +45,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   reconcileContradictedRemovals(mutations, filteredMutations);
 
   addOngoingAnimations(filteredMutations);
-
-#ifdef ANDROID
-  restoreOpacityInCaseOfFlakyEnteringAnimation();
-#endif // ANDROID
-  for (const auto tag : maybeSettledAnimationTags_) {
-    const auto layoutAnimationIt = layoutAnimations_.find(tag);
-    if (layoutAnimationIt == layoutAnimations_.end() || !layoutAnimationIt->second.isSettled()) {
-      continue;
-    }
-    layoutAnimations_.erase(layoutAnimationIt);
-    updateMap_.erase(tag);
-  }
-  maybeSettledAnimationTags_.clear();
-  // Past this point no animation can be settled - we hold the mutex for the whole
-  // transaction, so no end callback can run until we return.
 
   parseRemoveMutations(movedViews, mutations, roots);
 
@@ -75,14 +59,17 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
     surfaceToRemove_ = false;
   }
   const bool flushDeadNodes = shouldFlushDeadNodes(surfaceDropped);
-  handleRemovals(filteredMutations, roots, deadNodes_, surfaceDropped, flushDeadNodes);
+  handleRemovals(filteredMutations, roots, surfaceDropped, flushDeadNodes);
 #ifdef ANDROID
   maybeScheduleCleanupPull(flushDeadNodes);
 #endif // ANDROID
 
   handleUpdatesAndEnterings(filteredMutations, movedViews, mutations, propsParserContext);
 
+  flushLayoutAnimationOperations(lock);
+
   addOngoingAnimations(filteredMutations);
+  cleanupCompletedAnimations(filteredMutations, propsParserContext);
 
   dropUpdatesForDeletedViews(filteredMutations);
 
@@ -129,6 +116,8 @@ void LayoutAnimationsProxy_Legacy::reconcileContradictedRemovals(
       continue;
     }
     auto node = std::static_pointer_cast<MutationNode>(it->second);
+    completedAnimations_.erase(tag);
+    updateMap_.erase(tag);
     // Flush the withheld Remove/Delete for this tag (and its withheld subtree)
     // right now, mirroring the deadNodes cleanup in handleRemovals. This removes
     // the stale view before React's Create/Insert re-registers the same tag.
@@ -157,51 +146,10 @@ void LayoutAnimationsProxy_Legacy::maybeScheduleCleanupPull(const bool flushedDe
     cleanupPullScheduled_ = false;
   } else if (!deadNodes_.empty() && !cleanupPullScheduled_) {
     cleanupPullScheduled_ = true;
-    scheduleDeferredCleanupPull();
+    scheduleCleanupPull();
   }
 }
-
-void LayoutAnimationsProxy_Legacy::scheduleDeferredCleanupPull() const {
-  const std::weak_ptr<UIManager> weakUiManager = uiManager_;
-  jsInvoker_->invokeAsync([weakUiManager, surfaceId = surfaceId_](jsi::Runtime &) {
-    auto uiManager = weakUiManager.lock();
-    if (!uiManager) {
-      return;
-    }
-    uiManager->getShadowTreeRegistry().visit(
-        surfaceId, [](ShadowTree const &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
-  });
-}
 #endif
-
-std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::progressLayoutAnimation(int tag, const jsi::Object &newStyle) {
-#ifdef LAYOUT_ANIMATIONS_LOGS
-  LOG(INFO) << "progress layout animation for tag " << tag << std::endl;
-#endif
-  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  auto layoutAnimationIt = layoutAnimations_.find(tag);
-
-  if (layoutAnimationIt == layoutAnimations_.end()) {
-    return {};
-  }
-
-  auto &layoutAnimation = layoutAnimationIt->second;
-
-  maybeRestoreOpacity(layoutAnimation, newStyle);
-
-  auto rawProps = std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
-
-  PropsParserContext propsParserContext{layoutAnimation.finalView.surfaceId, *contextContainer_};
-#ifdef RN_SERIALIZABLE_STATE
-  rawProps = std::make_shared<RawProps>(
-      folly::dynamic::merge(layoutAnimation.finalView.props->rawProps, (folly::dynamic)*rawProps));
-#endif
-  auto newProps = getComponentDescriptorForShadowView(layoutAnimation.finalView)
-                      .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(*rawProps));
-  updateMap_.insert_or_assign(tag, UpdateValues{newProps, Frame(uiRuntime_, newStyle)});
-
-  return layoutAnimation.finalView.surfaceId;
-}
 
 std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int tag, bool shouldRemove) {
 #ifdef LAYOUT_ANIMATIONS_LOGS
@@ -214,21 +162,12 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
     return {};
   }
 
-  auto &layoutAnimation = layoutAnimationIt->second;
-
-  // multiple layout animations can be triggered for a view
-  // one after the other, so we need to keep count of how many
-  // were actually triggered, so that we don't cleanup necessary
-  // structures too early
-  if (--layoutAnimation.count > 0) {
-    return {};
-  }
-  layoutAnimation.isExitingWhenSettled = shouldRemove;
-  maybeSettledAnimationTags_.insert(tag);
-  auto surfaceId = layoutAnimation.finalView.surfaceId;
+  completedAnimations_.insert_or_assign(
+      tag, CompletedLayoutAnimation{.animation = layoutAnimationIt->second, .shouldRemove = shouldRemove});
+  layoutAnimations_.erase(layoutAnimationIt);
 
   if (!shouldRemove || !nodeForTag_.contains(tag)) {
-    return {};
+    return surfaceId_;
   }
 
   auto node = nodeForTag_[tag];
@@ -240,7 +179,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
   mutationNode->state = ExitingState_Legacy::DEAD;
   deadNodes_.insert(mutationNode);
 
-  return surfaceId;
+  return surfaceId_;
 }
 
 /**
@@ -266,11 +205,9 @@ void LayoutAnimationsProxy_Legacy::parseRemoveMutations(
       updateIndexForMutation(mutation);
       auto tag = mutation.oldChildShadowView.tag;
       auto parentTag = mutation.parentTag;
-      auto unflattenedParentTag = parentTag; // temporary
 
       std::shared_ptr<MutationNode> mutationNode;
-      std::shared_ptr<Node> node = nodeForTag_[tag], parent = nodeForTag_[parentTag],
-                            unflattenedParent = nodeForTag_[unflattenedParentTag];
+      std::shared_ptr<Node> node = nodeForTag_[tag], parent = nodeForTag_[parentTag];
 
       if (!node) {
         mutationNode = std::make_shared<MutationNode>(mutation);
@@ -294,21 +231,12 @@ void LayoutAnimationsProxy_Legacy::parseRemoveMutations(
         nodeForTag_[parentTag] = parent;
       }
 
-      if (!unflattenedParent) {
-        if (parentTag == unflattenedParentTag) {
-          unflattenedParent = parent;
-        } else {
-          unflattenedParent = std::make_shared<Node>(unflattenedParentTag);
-          nodeForTag_[unflattenedParentTag] = unflattenedParent;
-        }
-      }
-
       mutationNodes.push_back(mutationNode);
 
       childrenForTag[parentTag].push_back(mutationNode);
-      unflattenedChildrenForTag[unflattenedParentTag].push_back(mutationNode);
+      unflattenedChildrenForTag[parentTag].push_back(mutationNode);
       mutationNode->parent = parent;
-      mutationNode->unflattenedParent = unflattenedParent;
+      mutationNode->unflattenedParent = parent;
     }
     if (mutation.type == ShadowViewMutation::Update && movedViews.contains(mutation.newChildShadowView.tag)) {
       auto node = nodeForTag_[mutation.newChildShadowView.tag];
@@ -348,7 +276,6 @@ void LayoutAnimationsProxy_Legacy::parseRemoveMutations(
 void LayoutAnimationsProxy_Legacy::handleRemovals(
     ShadowViewMutationList &filteredMutations,
     std::vector<std::shared_ptr<MutationNode>> &roots,
-    std::unordered_set<std::shared_ptr<MutationNode>> &deadNodes,
     bool surfaceDropped,
     bool flushDeadNodes) const {
   // iterate from the end, so that children
@@ -359,7 +286,7 @@ void LayoutAnimationsProxy_Legacy::handleRemovals(
       filteredMutations.push_back(node->mutation);
       node->unflattenedParent->removeChildFromUnflattenedTree(node); //???
       if (node->state != ExitingState_Legacy::MOVED) {
-        maybeCancelAnimation(node->tag);
+        cancelLayoutAnimation(node->tag);
         filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
         nodeForTag_.erase(node->tag);
         node->state = ExitingState_Legacy::DELETED;
@@ -374,13 +301,13 @@ void LayoutAnimationsProxy_Legacy::handleRemovals(
     // Deferred - the host still has these views mounted, bookkeeping stays.
     return;
   }
-  for (const auto &node : deadNodes) {
+  for (const auto &node : deadNodes_) {
     if (node->state != ExitingState_Legacy::DELETED) {
       endAnimationsRecursively(node, filteredMutations);
       maybeDropAncestors(node->unflattenedParent, node, filteredMutations);
     }
   }
-  deadNodes.clear();
+  deadNodes_.clear();
 }
 
 void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
@@ -405,52 +332,45 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
         updateIndexForMutation(mutation);
 
         const auto parentTag = mutation.parentTag;
-        const auto mutationParent = parentTag;
         if (nodeForTag_.contains(parentTag)) {
           nodeForTag_[parentTag]->applyMutationToIndices(mutation);
         }
 
         if (movedViews.contains(tag)) {
-          auto layoutAnimationIt = layoutAnimations_.find(tag);
-          if (layoutAnimationIt == layoutAnimations_.end()) {
-            if (oldShadowViewsForReparentings.contains(tag)) {
-              filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-                  mutationParent, oldShadowViewsForReparentings[tag], mutation.index));
-            } else {
-              filteredMutations.push_back(mutation);
-            }
-            continue;
-          }
-
-          auto oldView = layoutAnimationIt->second.currentView;
-          filteredMutations.push_back(ShadowViewMutation::InsertMutation(mutationParent, oldView, mutation.index));
-          if (movedViews.contains(tag)) {
-            layoutAnimationIt->second.parentTag = movedViews.at(tag);
+          if (const auto currentView = reparentLayoutAnimation(tag, movedViews.at(tag))) {
+            filteredMutations.push_back(ShadowViewMutation::InsertMutation(parentTag, *currentView, mutation.index));
+          } else if (oldShadowViewsForReparentings.contains(tag)) {
+            filteredMutations.push_back(
+                ShadowViewMutation::InsertMutation(parentTag, oldShadowViewsForReparentings[tag], mutation.index));
+          } else {
+            filteredMutations.push_back(mutation);
           }
           continue;
         }
 
         transferConfigFromNativeID(mutation.newChildShadowView.props->nativeId, mutation.newChildShadowView.tag);
-        if (!layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::ENTERING)) {
+        const auto enteringConfig =
+            layoutAnimationsManager_->getLayoutAnimationConfig(tag, LayoutAnimationType::ENTERING);
+        if (!enteringConfig) {
           filteredMutations.push_back(mutation);
           continue;
         }
 
-        startEnteringAnimation(tag, mutation);
+        startEnteringAnimation(tag, mutation, enteringConfig);
         filteredMutations.push_back(mutation);
 
         // temporarily set opacity to 0 to prevent flickering on android
         std::shared_ptr<ShadowView> newView = cloneViewWithoutOpacity(mutation, propsParserContext);
 
         filteredMutations.push_back(
-            ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, *newView, mutationParent));
+            ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, *newView, parentTag));
         break;
       }
 
       case ShadowViewMutation::Type::Update: {
         auto shouldAnimate = hasLayoutChanged(mutation);
-        if (!layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::LAYOUT) ||
-            (!shouldAnimate && !layoutAnimations_.contains(tag))) {
+        const auto layoutConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LayoutAnimationType::LAYOUT);
+        if (!layoutConfig || (!shouldAnimate && !layoutAnimations_.contains(tag) && !hasPendingLayoutAnimation(tag))) {
           // We should cancel any ongoing animation here to ensure that the
           // proper final state is reached for this view However, due to how
           // RNSScreens handle adding headers (a second commit is triggered to
@@ -461,7 +381,7 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
           filteredMutations.push_back(mutation);
           continue;
         } else if (!shouldAnimate) {
-          updateOngoingAnimationTarget(tag, mutation);
+          updateLayoutAnimationTarget(tag, mutation.newChildShadowView);
           continue;
         }
 
@@ -472,7 +392,7 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
           mutation.parentTag = movedViews.at(tag);
         }
         if (mutation.parentTag != -1) {
-          startLayoutAnimation(tag, mutation);
+          startLayoutAnimation(tag, mutation, layoutConfig);
         }
         break;
       }
@@ -522,14 +442,14 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &
 #endif
 
     auto layoutAnimationIt = layoutAnimations_.find(tag);
-
-    if (layoutAnimationIt == layoutAnimations_.end() ||
-        (layoutAnimationIt->second.isSettled() && layoutAnimationIt->second.isExitingWhenSettled)) {
+    auto completedAnimationIt = completedAnimations_.find(tag);
+    if (layoutAnimationIt == layoutAnimations_.end() &&
+        (completedAnimationIt == completedAnimations_.end() || completedAnimationIt->second.shouldRemove)) {
       continue;
     }
 
-    auto &layoutAnimation = layoutAnimationIt->second;
-    layoutAnimation.isViewAlreadyMounted = true;
+    auto &layoutAnimation = layoutAnimationIt != layoutAnimations_.end() ? layoutAnimationIt->second
+                                                                         : completedAnimationIt->second.animation;
     auto newView = layoutAnimation.finalView;
     newView.props = updateValues.newProps;
     updateLayoutMetrics(newView.layoutMetrics, updateValues.frame);
@@ -537,6 +457,9 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &
     mutations.push_back(
         ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
     layoutAnimation.currentView = newView;
+    if (layoutAnimation.opacity && static_cast<const ViewProps &>(*newView.props).opacity == *layoutAnimation.opacity) {
+      layoutAnimation.opacity.reset();
+    }
   }
   updateMap_.clear();
 }
@@ -544,7 +467,7 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &
 void LayoutAnimationsProxy_Legacy::endAnimationsRecursively(
     const std::shared_ptr<MutationNode> &node,
     ShadowViewMutationList &mutations) const {
-  maybeCancelAnimation(node->tag);
+  cancelLayoutAnimation(node->tag);
   node->state = ExitingState_Legacy::DELETED;
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
@@ -576,7 +499,7 @@ void LayoutAnimationsProxy_Legacy::maybeDropAncestors(
   if (node->children.size() == 0 && node->state != ExitingState_Legacy::ANIMATING) {
     nodeForTag_.erase(node->tag);
     cleanupMutations.push_back(node->mutation);
-    maybeCancelAnimation(node->tag);
+    cancelLayoutAnimation(node->tag);
     node->state = ExitingState_Legacy::DELETED;
 #ifdef LAYOUT_ANIMATIONS_LOGS
     LOG(INFO) << "delete " << node->tag << std::endl;
@@ -584,11 +507,6 @@ void LayoutAnimationsProxy_Legacy::maybeDropAncestors(
     cleanupMutations.push_back(ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
     maybeDropAncestors(node->unflattenedParent, node, cleanupMutations);
   }
-}
-
-const ComponentDescriptor &LayoutAnimationsProxy_Legacy::getComponentDescriptorForShadowView(
-    const ShadowView &shadowView) const {
-  return componentDescriptorRegistry_->at(shadowView.componentHandle);
 }
 
 bool LayoutAnimationsProxy_Legacy::startAnimationsRecursively(
@@ -603,8 +521,10 @@ bool LayoutAnimationsProxy_Legacy::startAnimationsRecursively(
 
   shouldAnimate = !isScreenPop && layoutAnimationsManager_->shouldAnimateExiting(node->tag, shouldAnimate);
 
-  bool hasExitAnimation =
-      shouldAnimate && layoutAnimationsManager_->hasLayoutAnimation(node->tag, LayoutAnimationType::EXITING);
+  const auto exitConfig = shouldAnimate && node->state != ExitingState_Legacy::MOVED
+      ? layoutAnimationsManager_->takeExitingAnimationConfigAndClearTag(node->tag)
+      : nullptr;
+  const bool hasExitAnimation = exitConfig != nullptr;
   bool hasAnimatedChildren = false;
 
   shouldRemoveSubviewsWithoutAnimations =
@@ -636,7 +556,7 @@ bool LayoutAnimationsProxy_Legacy::startAnimationsRecursively(
       mutations.push_back(subNode->mutation);
       toBeRemoved.push_back(subNode);
     } else if (shouldRemoveSubviewsWithoutAnimations) {
-      maybeCancelAnimation(subNode->tag);
+      cancelLayoutAnimation(subNode->tag);
       mutations.push_back(subNode->mutation);
       toBeRemoved.push_back(subNode);
       subNode->state = ExitingState_Legacy::DELETED;
@@ -670,8 +590,8 @@ bool LayoutAnimationsProxy_Legacy::startAnimationsRecursively(
 
   if (hasExitAnimation) {
     node->state = ExitingState_Legacy::ANIMATING;
-    startExitingAnimation(node->tag, node->mutation);
-  } else {
+    startExitingAnimation(node->tag, node->mutation, exitConfig);
+  } else if (!shouldAnimate) {
     layoutAnimationsManager_->clearLayoutAnimationConfig(node->tag);
   }
 
@@ -713,248 +633,56 @@ bool LayoutAnimationsProxy_Legacy::shouldOverridePullTransaction() const {
   return true;
 }
 
-void LayoutAnimationsProxy_Legacy::createLayoutAnimation(
-    const ShadowViewMutation &mutation,
-    ShadowView &oldView,
-    const int tag) const {
-  int count = 1;
-  auto layoutAnimationIt = layoutAnimations_.find(tag);
-
-  if (layoutAnimationIt != layoutAnimations_.end()) {
-    auto &layoutAnimation = layoutAnimationIt->second;
-    oldView = layoutAnimation.currentView;
-    count = layoutAnimation.count + 1;
-  }
-
-  auto finalView =
-      mutation.type == ShadowViewMutation::Remove ? mutation.oldChildShadowView : mutation.newChildShadowView;
-  auto currentView = oldView;
-
-  layoutAnimations_.insert_or_assign(
-      tag,
-      LayoutAnimation{
-          .finalView = finalView,
-          .currentView = currentView,
-          .parentTag = mutation.parentTag,
-          .opacity = {},
-          .isViewAlreadyMounted = false,
-          .count = count});
-}
-
-void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowViewMutation &mutation) const {
+void LayoutAnimationsProxy_Legacy::startEnteringAnimation(
+    const int tag,
+    ShadowViewMutation &mutation,
+    const std::shared_ptr<Serializable> &config) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "start entering animation for tag " << tag << std::endl;
 #endif
-  auto finalView = mutation.newChildShadowView;
-  auto current = mutation.newChildShadowView;
-
   auto &viewProps = static_cast<const ViewProps &>(*mutation.newChildShadowView.props);
-  auto opacity = viewProps.opacity;
-#ifdef ANDROID
-  const auto handle = pendingStarts_[tag].handle;
-  pendingStarts_[tag].count++;
-#endif
-
-  scheduleOnUI(
-      uiScheduler_,
-      [weakThis = weak_from_this(),
-       finalView,
-       current,
-       mutation,
-       opacity,
-       tag
-#ifdef ANDROID
-       ,
-       handle
-#endif
-  ]() {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-
-        Rect window{};
-        {
-          auto &mutex = strongThis->mutex;
-          auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-#ifdef ANDROID
-          if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
-            // the view was removed before this start could run
-            return;
-          }
-#endif
-          strongThis->layoutAnimations_.insert_or_assign(
-              tag,
-              LayoutAnimation{
-                  .finalView = finalView, .currentView = current, .parentTag = mutation.parentTag, .opacity = opacity});
-          window = strongThis->window_;
-        }
-
-        Snapshot values(mutation.newChildShadowView, window);
-        auto &uiRuntime = strongThis->uiRuntime_;
-        jsi::Object yogaValues(uiRuntime);
-        yogaValues.setProperty(uiRuntime, "targetOriginX", values.x);
-        yogaValues.setProperty(uiRuntime, "targetGlobalOriginX", values.x);
-        yogaValues.setProperty(uiRuntime, "targetOriginY", values.y);
-        yogaValues.setProperty(uiRuntime, "targetGlobalOriginY", values.y);
-        yogaValues.setProperty(uiRuntime, "targetWidth", values.width);
-        yogaValues.setProperty(uiRuntime, "targetHeight", values.height);
-        yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
-        yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
-        strongThis->layoutAnimationsManager_->startLayoutAnimation(
-            uiRuntime, tag, LayoutAnimationType::ENTERING, yogaValues);
-      });
+  enqueueLayoutAnimation(ManagedLayoutAnimationStart{
+      .tag = tag,
+      .type = LayoutAnimationType::ENTERING,
+      .before = mutation.newChildShadowView,
+      .after = mutation.newChildShadowView,
+      .parentTag = mutation.parentTag,
+      .opacity = viewProps.opacity,
+      .config = config,
+  });
 }
 
-void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowViewMutation &mutation) const {
+void LayoutAnimationsProxy_Legacy::startExitingAnimation(
+    const int tag,
+    ShadowViewMutation &mutation,
+    const std::shared_ptr<Serializable> &config) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "start exiting animation for tag " << tag << std::endl;
 #endif
-#ifdef ANDROID
-  const auto handle = pendingStarts_[tag].handle;
-  pendingStarts_[tag].count++;
-#endif
-
-  scheduleOnUI(
-      uiScheduler_,
-      [weakThis = weak_from_this(),
-       tag,
-       mutation
-#ifdef ANDROID
-       ,
-       handle
-#endif
-  ]() {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-
-        auto oldView = mutation.oldChildShadowView;
-        Rect window{};
-        {
-          auto &mutex = strongThis->mutex;
-          auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-#ifdef ANDROID
-          if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
-            // The view was removed before this start could run. Deliberately no
-            // clearLayoutAnimationConfig: with tag reuse the config maps already
-            // describe the re-created view, and wiping them would leave it mounted
-            // at opacity 0. A dead tag's stale configs can never fire again.
-            return;
-          }
-#endif
-          strongThis->createLayoutAnimation(mutation, oldView, tag);
-          window = strongThis->window_;
-        }
-
-        Snapshot values(oldView, window);
-
-        auto &uiRuntime = strongThis->uiRuntime_;
-        jsi::Object yogaValues(uiRuntime);
-        yogaValues.setProperty(uiRuntime, "currentOriginX", values.x);
-        yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", values.x);
-        yogaValues.setProperty(uiRuntime, "currentOriginY", values.y);
-        yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", values.y);
-        yogaValues.setProperty(uiRuntime, "currentWidth", values.width);
-        yogaValues.setProperty(uiRuntime, "currentHeight", values.height);
-        yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
-        yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
-        strongThis->layoutAnimationsManager_->startLayoutAnimation(
-            uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
-        strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
-      });
+  enqueueLayoutAnimation(ManagedLayoutAnimationStart{
+      .tag = tag,
+      .type = LayoutAnimationType::EXITING,
+      .before = mutation.oldChildShadowView,
+      .after = mutation.oldChildShadowView,
+      .parentTag = mutation.parentTag,
+      .config = config,
+  });
 }
 
-void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const ShadowViewMutation &mutation) const {
+void LayoutAnimationsProxy_Legacy::startLayoutAnimation(
+    const int tag,
+    const ShadowViewMutation &mutation,
+    const std::shared_ptr<Serializable> &config) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "start layout animation for tag " << tag << std::endl;
 #endif
-#ifdef ANDROID
-  const auto handle = pendingStarts_[tag].handle;
-  pendingStarts_[tag].count++;
-#endif
-
-  scheduleOnUI(
-      uiScheduler_,
-      [weakThis = weak_from_this(),
-       mutation,
-       tag
-#ifdef ANDROID
-       ,
-       handle
-#endif
-  ]() {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-
-        auto oldView = mutation.oldChildShadowView;
-        Rect window{};
-        {
-          auto &mutex = strongThis->mutex;
-          auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-#ifdef ANDROID
-          if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
-            // the view was removed before this start could run
-            return;
-          }
-#endif
-          strongThis->createLayoutAnimation(mutation, oldView, tag);
-          window = strongThis->window_;
-        }
-
-        Snapshot currentValues(oldView, window);
-        Snapshot targetValues(mutation.newChildShadowView, window);
-
-        auto &uiRuntime = strongThis->uiRuntime_;
-        jsi::Object yogaValues(uiRuntime);
-        yogaValues.setProperty(uiRuntime, "currentOriginX", currentValues.x);
-        yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", currentValues.x);
-        yogaValues.setProperty(uiRuntime, "currentOriginY", currentValues.y);
-        yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", currentValues.y);
-        yogaValues.setProperty(uiRuntime, "currentWidth", currentValues.width);
-        yogaValues.setProperty(uiRuntime, "currentHeight", currentValues.height);
-        yogaValues.setProperty(uiRuntime, "targetOriginX", targetValues.x);
-        yogaValues.setProperty(uiRuntime, "targetGlobalOriginX", targetValues.x);
-        yogaValues.setProperty(uiRuntime, "targetOriginY", targetValues.y);
-        yogaValues.setProperty(uiRuntime, "targetGlobalOriginY", targetValues.y);
-        yogaValues.setProperty(uiRuntime, "targetWidth", targetValues.width);
-        yogaValues.setProperty(uiRuntime, "targetHeight", targetValues.height);
-        yogaValues.setProperty(uiRuntime, "windowWidth", targetValues.windowWidth);
-        yogaValues.setProperty(uiRuntime, "windowHeight", targetValues.windowHeight);
-        strongThis->layoutAnimationsManager_->startLayoutAnimation(
-            uiRuntime, tag, LayoutAnimationType::LAYOUT, yogaValues);
-      });
-}
-
-void LayoutAnimationsProxy_Legacy::updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation)
-    const {
-  auto copy = mutation.newChildShadowView;
-  layoutAnimations_[tag].finalView = copy;
-}
-
-void LayoutAnimationsProxy_Legacy::maybeCancelAnimation(const int tag) const {
-#ifdef ANDROID
-  // invalidate animation starts that are scheduled but haven't run yet
-  if (const auto it = pendingStarts_.find(tag); it != pendingStarts_.end()) {
-    it->second.handle++;
-  }
-#endif
-  const auto layoutAnimationIt = layoutAnimations_.find(tag);
-  if (layoutAnimationIt == layoutAnimations_.end()) {
-    return;
-  }
-  layoutAnimations_.erase(layoutAnimationIt);
-  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag]() {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-
-    auto &uiRuntime = strongThis->uiRuntime_;
-    strongThis->layoutAnimationsManager_->cancelLayoutAnimation(uiRuntime, tag);
+  enqueueLayoutAnimation(ManagedLayoutAnimationStart{
+      .tag = tag,
+      .type = LayoutAnimationType::LAYOUT,
+      .before = mutation.oldChildShadowView,
+      .after = mutation.newChildShadowView,
+      .parentTag = mutation.parentTag,
+      .config = config,
   });
 }
 
@@ -966,23 +694,10 @@ std::shared_ptr<ShadowView> LayoutAnimationsProxy_Legacy::cloneViewWithoutOpacit
     const PropsParserContext &propsParserContext) const {
   auto newView = std::make_shared<ShadowView>(mutation.newChildShadowView);
   folly::dynamic opacity = folly::dynamic::object("opacity", 0);
-  auto newProps =
-      getComponentDescriptorForShadowView(*newView).cloneProps(propsParserContext, newView->props, RawProps(opacity));
+  auto newProps = componentDescriptorRegistry_->at(newView->componentHandle)
+                      .cloneProps(propsParserContext, newView->props, RawProps(opacity));
   newView->props = newProps;
   return newView;
-}
-
-void LayoutAnimationsProxy_Legacy::maybeRestoreOpacity(LayoutAnimation &layoutAnimation, const jsi::Object &newStyle)
-    const {
-  if (layoutAnimation.opacity && !newStyle.hasProperty(uiRuntime_, "opacity")) {
-    newStyle.setProperty(uiRuntime_, "opacity", jsi::Value(*layoutAnimation.opacity));
-    if (layoutAnimation.isViewAlreadyMounted) {
-      // We want to reset opacity only when we are sure that this update will be
-      // applied to the native view. Otherwise, we want to update opacity using
-      // the `restoreOpacityInCaseOfFlakyEnteringAnimation` method.
-      layoutAnimation.opacity.reset();
-    }
-  }
 }
 
 void Node::applyMutationToIndices(const ShadowViewMutation &mutation) {
