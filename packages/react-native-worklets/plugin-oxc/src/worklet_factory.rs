@@ -24,7 +24,8 @@ use crate::utils::{
     replace_implicit_return_with_block, strip_worklet_directives,
 };
 use crate::worklet_string_code::build_worklet_string;
-use crate::GENERATED_WORKLETS_DIR;
+
+const GENERATED_WORKLETS_DIR: &str = ".worklets";
 
 const MOCK_VERSION: &str = "x.y.z";
 
