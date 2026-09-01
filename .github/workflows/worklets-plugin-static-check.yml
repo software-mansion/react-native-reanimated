@@ -98,14 +98,14 @@ jobs:
             ${{ env.OXC_PLUGIN_DIR }}/target
           key: cargo-${{ runner.os }}-${{ hashFiles('packages/react-native-worklets/plugin-oxc/Cargo.lock') }}
           restore-keys: cargo-${{ runner.os }}-
-      - name: OXC plugin unit tests
+      - name: OXC plugin own tests
         if: matrix.plugin == 'oxc'
         working-directory: ${{ env.OXC_PLUGIN_DIR }}
-        run: yarn test
-      - name: OXC plugin parity tests
+        run: yarn test:oxc
+      - name: Babel plugin test suite against the OXC plugin
         if: matrix.plugin == 'oxc'
         working-directory: ${{ env.OXC_PLUGIN_DIR }}
-        run: yarn test:parity
+        run: yarn test:babel-suite
       - name: Build OXC plugin
         if: matrix.plugin == 'oxc'
         working-directory: ${{ env.OXC_PLUGIN_DIR }}

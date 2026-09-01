@@ -1,3 +1,6 @@
+// Runs the Babel plugin's own test suite against the OXC plugin, unmodified:
+// `rootDir` points at ../plugin, `testMatch` selects the bundle-mode suites we
+// support, and `moduleNameMapper` swaps the plugin under test for our shim.
 const path = require('path');
 
 const pluginDir = path.join(__dirname, '..', 'plugin');
