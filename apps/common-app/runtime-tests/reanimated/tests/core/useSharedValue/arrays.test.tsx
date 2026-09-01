@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import type { SharedValue } from 'react-native-reanimated';
 import { useSharedValue } from 'react-native-reanimated';
 
 import {
@@ -33,7 +32,7 @@ describe(`_Array operations_ on sharedValue`, () => {
     progress,
   }: ArrayComponentProps) => {
     const sharedValue = useSharedValue(initialArray);
-    registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
+    registerValue(SHARED_VALUE_REF, sharedValue);
 
     useEffect(() => {
       sharedValue.value = [...sharedValue.value, ...appendedArray];
@@ -48,7 +47,7 @@ describe(`_Array operations_ on sharedValue`, () => {
     progress,
   }: ArrayComponentProps) => {
     const sharedValue = useSharedValue(initialArray);
-    registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
+    registerValue(SHARED_VALUE_REF, sharedValue);
 
     useEffect(() => {
       sharedValue.set((value) => [...value, ...appendedArray]);
