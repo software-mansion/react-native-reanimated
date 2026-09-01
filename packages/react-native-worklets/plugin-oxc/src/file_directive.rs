@@ -3,12 +3,8 @@ use oxc_ast::ast::{
     ObjectPropertyKind, Program, Statement, VariableDeclarator,
 };
 use oxc_ast::AstBuilder;
-use oxc_ast::NONE;
-use oxc_span::SPAN;
 
 use crate::utils::{add_worklet_directives_to_function_body, is_object_method};
-
-const WORKLET_CLASS_MARKER: &str = "__workletClass";
 
 pub fn process_file_directive<'a>(program: &mut Program<'a>, builder: AstBuilder<'a>) -> bool {
     let has_directive = program
@@ -45,9 +41,6 @@ fn process_top_level<'a>(stmt: &mut Statement<'a>, builder: AstBuilder<'a>) {
                         add_worklet_directives_to_function_body(body, builder);
                     }
                 }
-                ExportDefaultDeclarationKind::ClassDeclaration(class) => {
-                    inject_class_marker(&mut class.body, builder);
-                }
                 other => {
                     if let Some(expr) = other.as_expression_mut() {
                         inject_into_expression(expr, builder);
@@ -63,28 +56,6 @@ fn process_top_level<'a>(stmt: &mut Statement<'a>, builder: AstBuilder<'a>) {
     }
 }
 
-fn inject_class_marker<'a>(body: &mut oxc_ast::ast::ClassBody<'a>, builder: AstBuilder<'a>) {
-    use oxc_ast::ast::{PropertyDefinitionType, PropertyKey};
-    let key =
-        PropertyKey::StaticIdentifier(builder.alloc_identifier_name(SPAN, WORKLET_CLASS_MARKER));
-    body.body.push(builder.class_element_property_definition(
-        SPAN,
-        PropertyDefinitionType::PropertyDefinition,
-        builder.vec(),
-        key,
-        NONE,
-        Some(builder.expression_boolean_literal(SPAN, true)),
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        None,
-    ));
-}
-
 fn inject_into_declaration<'a>(decl: &mut Declaration<'a>, builder: AstBuilder<'a>) {
     match decl {
         Declaration::FunctionDeclaration(func) => {
@@ -96,9 +67,6 @@ fn inject_into_declaration<'a>(decl: &mut Declaration<'a>, builder: AstBuilder<'
             for declarator in vd.declarations.iter_mut() {
                 inject_into_variable_declarator(declarator, builder);
             }
-        }
-        Declaration::ClassDeclaration(class) => {
-            inject_class_marker(&mut class.body, builder);
         }
         _ => {}
     }

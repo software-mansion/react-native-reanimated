@@ -17,7 +17,6 @@ mod closure;
 mod file_directive;
 mod gesture_handler_autoworkletization;
 mod imports;
-mod jsx_dev_attributes;
 mod layout_animation_autoworkletization;
 mod naming;
 mod options;

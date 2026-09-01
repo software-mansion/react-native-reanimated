@@ -14,7 +14,6 @@ use oxc_syntax::scope::ScopeId;
 
 use crate::closure::{get_closure, scope_is_inside};
 use crate::imports::{create_import_path, update_relative_requires};
-use crate::jsx_dev_attributes::strip_jsx_dev_attributes;
 use crate::naming::worklet_hash;
 use crate::naming::{make_worklet_name, WorkletNames};
 use crate::types::State;
@@ -178,14 +177,12 @@ fn bind_closure_references(
 
 fn generate_worklet_file<'a>(
     builder: AstBuilder<'a>,
-    mut factory: Expression<'a>,
+    factory: Expression<'a>,
     imports: &[crate::types::ImportInfo],
     filename: &str,
     worklets_package_dir: Option<&str>,
 ) -> String {
     use oxc_ast::ast::ExportDefaultDeclarationKind;
-
-    strip_jsx_dev_attributes(&mut factory);
 
     let mut body = builder.vec_with_capacity(imports.len() + 1);
     for info in imports {

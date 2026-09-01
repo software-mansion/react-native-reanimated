@@ -6,6 +6,13 @@ const { transform } = plugin;
 const REQUIRE_FACTORY =
   /require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/;
 
+test('a class in a worklet file is not given a __workletClass marker', () => {
+  const input = `'worklet';\nclass Foo { bar() { return 42; } }`;
+  const { code } = transform(input, 'test.js', {});
+  assert.match(code, /class Foo/, `Got:\n${code}`);
+  assert.doesNotMatch(code, /__workletClass/, `Got:\n${code}`);
+});
+
 test('class with __workletClass marker is left alone', () => {
   const input = `
     class Foo {

@@ -810,10 +810,3 @@ test('a TypeScript assertion is transparent at every node position', () => {
     assert.equal(files.length, 1, `for: ${input}`);
   }
 });
-
-test('__self and __source are stripped from emitted worklet files', () => {
-  const input = `function F() { 'worklet'; return <View __self={this} __source={{ fileName: 'a' }} x={1} />; }`;
-  const { files } = transform(input, 'test.tsx', {});
-  assert.doesNotMatch(files[0].content, /__self|__source/);
-  assert.match(files[0].content, /<View x=\{1\} \/>/);
-});

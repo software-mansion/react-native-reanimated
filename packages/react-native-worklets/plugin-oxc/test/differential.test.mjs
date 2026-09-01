@@ -14,8 +14,6 @@ const CASES = [
   ["'worklet';\nmodule.exports = f;\nfunction f() {}\nconst bar = 1;"],
   ["'worklet';\nexports.foo = f;\nfunction f() {}\nconst z = 1;"],
   ["'worklet';\nconst x = 1;"],
-  ["'worklet';\nclass A { m() { return 1; } }"],
-  ["'worklet';\nclass A { static __workletClass = true; }\nconst w = () => 2;"],
   ["'worklet';\nmodule[exports].foo = f;\nvar f = 1;"],
   [
     "'worklet';\nconst a = 1;\nexport const p = ((x) => x + a) satisfies unknown;",
