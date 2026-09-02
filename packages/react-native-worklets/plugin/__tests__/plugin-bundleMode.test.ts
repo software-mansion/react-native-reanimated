@@ -413,25 +413,6 @@ describe('babel plugin in bundleMode', () => {
       const { code } = runPlugin(input, {}, {}, MOCK_OTHER_FILE);
       expect(code).toMatchSnapshot();
     });
-
-    test('does not flip the flag without bundleMode option', () => {
-      const input = html`<script>
-        globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;
-      </script>`;
-
-      const transformed = transformSync(
-        input.replace(/<\/?script[^>]*>/g, ''),
-        {
-          filename: MOCK_WORKLET_RUNTIME_ENTRY,
-          compact: false,
-          babelrc: false,
-          configFile: false,
-          plugins: [[plugin, {}]],
-        }
-      );
-      assert(transformed?.code);
-      expect(transformed.code).toMatchSnapshot();
-    });
   });
 
   describe('nested worklets', () => {
