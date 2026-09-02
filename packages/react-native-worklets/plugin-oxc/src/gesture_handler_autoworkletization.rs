@@ -61,12 +61,11 @@ fn contains_gesture_object(expr: &Expression<'_>, depth: u32) -> bool {
     if is_gesture_object(expr) {
         return true;
     }
-    if let Some(call) = call_expression(expr) {
-        if let Some(object) = member_object(&call.callee) {
-            if contains_gesture_object(object, depth - 1) {
-                return true;
-            }
-        }
+    if let Some(call) = call_expression(expr)
+        && let Some(object) = member_object(&call.callee)
+        && contains_gesture_object(object, depth - 1)
+    {
+        return true;
     }
     false
 }

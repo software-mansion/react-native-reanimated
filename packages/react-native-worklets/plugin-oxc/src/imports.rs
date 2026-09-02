@@ -4,7 +4,7 @@ use std::path::{Component, Path, PathBuf};
 use oxc_ast::AstBuilder;
 
 use oxc_ast::ast::{Argument, FunctionBody};
-use oxc_ast_visit::{walk_mut::walk_function_body, VisitMut};
+use oxc_ast_visit::{VisitMut, walk_mut::walk_function_body};
 use oxc_span::SPAN;
 
 pub fn update_relative_requires<'a>(

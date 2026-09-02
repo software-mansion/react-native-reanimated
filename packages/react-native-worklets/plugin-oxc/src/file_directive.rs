@@ -1,11 +1,11 @@
 use crate::ast::is_object_method;
 use crate::directives::add_worklet_directives_to_function_body;
 
+use oxc_ast::AstBuilder;
 use oxc_ast::ast::{
     Declaration, ExportDefaultDeclarationKind, Expression, MemberExpression, ObjectExpression,
     ObjectPropertyKind, Program, Statement, VariableDeclarator,
 };
-use oxc_ast::AstBuilder;
 
 pub fn process_file_directive<'a>(program: &mut Program<'a>, builder: AstBuilder<'a>) -> bool {
     let has_directive = program
@@ -103,10 +103,10 @@ fn inject_into_object_expression<'a>(obj: &mut ObjectExpression<'a>, builder: As
             continue;
         };
         if is_object_method(prop) {
-            if let Expression::FunctionExpression(func) = &mut prop.value {
-                if let Some(body) = func.body.as_mut() {
-                    add_worklet_directives_to_function_body(body, builder);
-                }
+            if let Expression::FunctionExpression(func) = &mut prop.value
+                && let Some(body) = func.body.as_mut()
+            {
+                add_worklet_directives_to_function_body(body, builder);
             }
         } else {
             inject_into_expression(&mut prop.value, builder);

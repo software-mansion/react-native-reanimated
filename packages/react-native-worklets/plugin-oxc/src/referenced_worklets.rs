@@ -8,7 +8,7 @@ use oxc_ast::ast::{
     Expression, Function, ObjectExpression, ObjectPropertyKind, SimpleAssignmentTarget,
     VariableDeclarator,
 };
-use oxc_ast_visit::{walk, Visit};
+use oxc_ast_visit::{Visit, walk};
 use oxc_semantic::Scoping;
 use oxc_span::{GetSpan, Span};
 use oxc_syntax::scope::ScopeFlags;
@@ -74,10 +74,10 @@ impl<'s> Definitions<'s> {
     }
 
     fn note_hand_written(&mut self, object: &Expression<'_>) {
-        if let Expression::Identifier(object) = object {
-            if let Some(sid) = self.resolve(object) {
-                self.hand_written.insert(sid);
-            }
+        if let Expression::Identifier(object) = object
+            && let Some(sid) = self.resolve(object)
+        {
+            self.hand_written.insert(sid);
         }
     }
 
@@ -102,10 +102,11 @@ impl<'a, 's> Visit<'a> for Definitions<'s> {
         member: &oxc_ast::ast::ComputedMemberExpression<'a>,
     ) {
         walk::walk_computed_member_expression(self, member);
-        if let Expression::Identifier(key) = &member.expression {
-            if !member.optional && key.name.as_str() == WORKLET_HASH {
-                self.note_hand_written(&member.object);
-            }
+        if let Expression::Identifier(key) = &member.expression
+            && !member.optional
+            && key.name.as_str() == WORKLET_HASH
+        {
+            self.note_hand_written(&member.object);
         }
     }
 

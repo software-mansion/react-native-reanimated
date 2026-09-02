@@ -1,10 +1,10 @@
 use oxc_allocator::{Allocator, CloneIn};
+use oxc_ast::AstBuilder;
+use oxc_ast::NONE;
 use oxc_ast::ast::{
     AssignmentOperator, AssignmentTarget, Expression, FormalParameterKind, FormalParameters,
     FunctionBody, FunctionType, NumberBase, PropertyKey, PropertyKind, Statement,
 };
-use oxc_ast::AstBuilder;
-use oxc_ast::NONE;
 use oxc_semantic::Scoping;
 use oxc_span::SPAN;
 use oxc_syntax::reference::ReferenceId;

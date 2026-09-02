@@ -10,8 +10,6 @@ pub struct ImportForwarding {
 #[napi(object)]
 #[derive(Default, Clone, Debug)]
 pub struct PluginOptions {
-    pub extra_plugins: Option<Vec<String>>,
-    pub extra_presets: Option<Vec<String>>,
     pub import_forwarding: Option<ImportForwarding>,
 
     pub env_name: Option<String>,

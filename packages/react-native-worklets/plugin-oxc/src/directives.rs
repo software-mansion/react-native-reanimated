@@ -1,5 +1,5 @@
-use oxc_ast::ast::FunctionBody;
 use oxc_ast::AstBuilder;
+use oxc_ast::ast::FunctionBody;
 use oxc_span::SPAN;
 
 const WORKLET_DIRECTIVES: &[&str] = &["worklet", "no-worklet-closure", "limit-init-data-hoisting"];

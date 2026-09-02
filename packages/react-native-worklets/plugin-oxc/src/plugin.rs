@@ -1,6 +1,6 @@
 use oxc_allocator::Allocator;
-use oxc_ast::ast::Program;
 use oxc_ast::AstBuilder;
+use oxc_ast::ast::Program;
 use oxc_ast_visit::VisitMut;
 use oxc_semantic::Scoping;
 

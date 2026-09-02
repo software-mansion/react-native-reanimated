@@ -1,6 +1,6 @@
 use oxc_allocator::CloneIn;
-use oxc_ast::ast::{ClassElement, MethodDefinition, PropertyDefinitionType, PropertyKey};
 use oxc_ast::NONE;
+use oxc_ast::ast::{ClassElement, MethodDefinition, PropertyDefinitionType, PropertyKey};
 use oxc_ast_visit::walk_mut;
 use oxc_span::SPAN;
 use oxc_syntax::scope::ScopeFlags;

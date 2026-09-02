@@ -1,10 +1,10 @@
 use oxc_allocator::TakeIn;
+use oxc_ast::AstBuilder;
+use oxc_ast::NONE;
 use oxc_ast::ast::{
     AssignmentTarget, CallExpression, Expression, FunctionBody, IdentifierReference,
     ObjectExpression, Statement, VariableDeclarationKind,
 };
-use oxc_ast::AstBuilder;
-use oxc_ast::NONE;
 use oxc_span::SPAN;
 
 pub fn const_decl<'a>(

@@ -1,20 +1,20 @@
 use oxc_allocator::Allocator;
+use oxc_ast::AstBuilder;
 use oxc_ast::ast::{
     ArrowFunctionExpression, ClassElement, Declaration, ExportDefaultDeclaration,
     ExportDefaultDeclarationKind, ExportNamedDeclaration, Expression, Function, ObjectProperty,
     PropertyKey, PropertyKind, Statement,
 };
-use oxc_ast::AstBuilder;
-use oxc_ast_visit::{walk_mut, VisitMut};
+use oxc_ast_visit::{VisitMut, walk_mut};
 use oxc_semantic::Scoping;
 use oxc_span::SPAN;
 use oxc_syntax::scope::ScopeFlags;
 
 use crate::ast::{const_decl, const_declaration, identifier_binding_pattern};
-use crate::class_method::{process_if_worklet_method, MethodOutcome};
+use crate::class_method::{MethodOutcome, process_if_worklet_method};
 use crate::directives::has_worklet_directive;
 use crate::types::State;
-use crate::worklet_factory::{make_worklet_factory, FactoryContext, WorkletInput};
+use crate::worklet_factory::{FactoryContext, WorkletInput, make_worklet_factory};
 
 pub struct WorkletPass<'a, 'b> {
     pub state: &'b mut State,

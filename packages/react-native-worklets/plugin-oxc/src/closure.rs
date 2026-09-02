@@ -4,7 +4,7 @@ use oxc_ast::ast::{
     AssignmentTarget, AssignmentTargetPropertyIdentifier, ForInStatement, ForOfStatement,
     ForStatementLeft, IdentifierReference,
 };
-use oxc_ast_visit::{walk, Visit};
+use oxc_ast_visit::{Visit, walk};
 use oxc_semantic::Scoping;
 use oxc_syntax::reference::ReferenceFlags;
 use oxc_syntax::scope::ScopeId;
@@ -58,34 +58,33 @@ pub fn get_closure<'a>(
                 }
                 // We must handle recursion and
                 // not capture the function itself.
-                if let Some(fn_name) = self_function_name {
-                    if fn_name == r.name && scoping.symbol_name(symbol_id) == fn_name {
-                        continue;
-                    }
+                if let Some(fn_name) = self_function_name
+                    && fn_name == r.name
+                    && scoping.symbol_name(symbol_id) == fn_name
+                {
+                    continue;
                 }
 
                 let flags = scoping.symbol_flags(symbol_id);
-                if flags.is_import() && !binding_is_rebound(scoping, symbol_id) {
-                    if let Some(info) = state.imports_by_symbol.get(&symbol_id) {
-                        if matches!(info.shape, ImportShape::Namespace) {
-                            seen.insert(r.name.clone());
-                            result.closure_variables.push(r.name);
-                            continue;
-                        }
-                        let source = &info.source;
-                        let is_rel = source.starts_with('.');
-                        let allowed_for_rel = is_rel
-                            && can_forward_relative_import(
-                                filename,
-                                &state.forwardable_relative_paths,
-                            );
-                        let lib_workletizable = !is_rel
-                            && can_forward_module_import(source, &state.forwardable_module_names);
-                        if allowed_for_rel || lib_workletizable {
-                            result.imports.push(info.clone());
-                            seen.insert(r.name);
-                            continue;
-                        }
+                if flags.is_import()
+                    && !binding_is_rebound(scoping, symbol_id)
+                    && let Some(info) = state.imports_by_symbol.get(&symbol_id)
+                {
+                    if matches!(info.shape, ImportShape::Namespace) {
+                        seen.insert(r.name.clone());
+                        result.closure_variables.push(r.name);
+                        continue;
+                    }
+                    let source = &info.source;
+                    let is_rel = source.starts_with('.');
+                    let allowed_for_rel = is_rel
+                        && can_forward_relative_import(filename, &state.forwardable_relative_paths);
+                    let lib_workletizable = !is_rel
+                        && can_forward_module_import(source, &state.forwardable_module_names);
+                    if allowed_for_rel || lib_workletizable {
+                        result.imports.push(info.clone());
+                        seen.insert(r.name);
+                        continue;
                     }
                 }
 

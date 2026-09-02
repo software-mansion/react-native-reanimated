@@ -1,8 +1,8 @@
 use std::collections::{HashMap, HashSet};
 
-use oxc_ast::ast::{ArrowFunctionExpression, CallExpression, Expression, Function, Program};
 use oxc_ast::AstBuilder;
-use oxc_ast_visit::{walk, walk_mut, Visit, VisitMut};
+use oxc_ast::ast::{ArrowFunctionExpression, CallExpression, Expression, Function, Program};
+use oxc_ast_visit::{Visit, VisitMut, walk, walk_mut};
 use oxc_semantic::Scoping;
 use oxc_span::Span;
 use oxc_syntax::scope::ScopeFlags;
@@ -11,7 +11,7 @@ use oxc_syntax::symbol::SymbolId;
 use crate::ast::{identifier_name, member_property};
 use crate::directives::add_worklet_directives_to_function_body;
 use crate::gesture_handler_autoworkletization::{
-    is_gesture_object_event_callback_method, GESTURE_HANDLER_OBJECT_HOOKS,
+    GESTURE_HANDLER_OBJECT_HOOKS, is_gesture_object_event_callback_method,
 };
 use crate::layout_animation_autoworkletization::is_layout_animation_callback_method;
 use crate::referenced_worklets::{Definitions, Property, Shape};
@@ -174,11 +174,11 @@ impl<'d, 's> Callbacks<'d, 's> {
         if !seen.insert(sid) || self.definitions.hand_written.contains(&sid) {
             return;
         }
-        if kinds.function {
-            if let Some(span) = self.definitions.function_declarations.get(&sid) {
-                self.sites.insert(*span);
-                return;
-            }
+        if kinds.function
+            && let Some(span) = self.definitions.function_declarations.get(&sid)
+        {
+            self.sites.insert(*span);
+            return;
         }
         if self.definitions.is_rebound(sid) {
             let last = self
@@ -274,10 +274,10 @@ struct DirectiveInjector<'a> {
 
 impl<'a> VisitMut<'a> for DirectiveInjector<'a> {
     fn visit_function(&mut self, func: &mut Function<'a>, flags: ScopeFlags) {
-        if self.sites.contains(&func.span) {
-            if let Some(body) = func.body.as_mut() {
-                add_worklet_directives_to_function_body(body, self.builder);
-            }
+        if self.sites.contains(&func.span)
+            && let Some(body) = func.body.as_mut()
+        {
+            add_worklet_directives_to_function_body(body, self.builder);
         }
         walk_mut::walk_function(self, func, flags);
     }

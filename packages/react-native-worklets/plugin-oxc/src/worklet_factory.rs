@@ -1,7 +1,7 @@
 use oxc_allocator::Allocator;
-use oxc_ast::ast::{Argument, Expression, FormalParameters, FunctionBody};
 use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
+use oxc_ast::ast::{Argument, Expression, FormalParameters, FunctionBody};
 use oxc_semantic::Scoping;
 use oxc_span::SPAN;
 use oxc_syntax::node::NodeId;
@@ -106,16 +106,16 @@ pub fn make_worklet_factory<'a>(
         state,
     );
 
-    if let Expression::FunctionExpression(func) = &mut factory_expr {
-        if let Some(body) = func.body.as_mut() {
-            update_relative_requires(
-                body,
-                filename,
-                &state.forwardable_relative_paths,
-                state.opts.worklets_package_dir.as_deref(),
-                builder,
-            );
-        }
+    if let Expression::FunctionExpression(func) = &mut factory_expr
+        && let Some(body) = func.body.as_mut()
+    {
+        update_relative_requires(
+            body,
+            filename,
+            &state.forwardable_relative_paths,
+            state.opts.worklets_package_dir.as_deref(),
+            builder,
+        );
     }
     let file_content = generate_worklet_file(
         builder,
@@ -126,12 +126,11 @@ pub fn make_worklet_factory<'a>(
     );
     let file_path = format!("react-native-worklets/.worklets/{hash}.js");
 
-    if let Some(package_dir) = state.opts.worklets_package_dir.as_deref() {
-        if let Err(message) = write_worklet_file(package_dir, &file_path, &file_content) {
-            if state.error.is_none() {
-                state.error = Some(message);
-            }
-        }
+    if let Some(package_dir) = state.opts.worklets_package_dir.as_deref()
+        && let Err(message) = write_worklet_file(package_dir, &file_path, &file_content)
+        && state.error.is_none()
+    {
+        state.error = Some(message);
     }
 
     let call_scope = scoping

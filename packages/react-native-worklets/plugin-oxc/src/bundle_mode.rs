@@ -1,7 +1,7 @@
 use crate::ast::identifier_name;
 
-use oxc_ast::ast::{AssignmentTarget, Expression, Program, Statement};
 use oxc_ast::AstBuilder;
+use oxc_ast::ast::{AssignmentTarget, Expression, Program, Statement};
 use oxc_span::SPAN;
 
 const FLAG: &str = "_WORKLETS_BUNDLE_MODE_ENABLED";

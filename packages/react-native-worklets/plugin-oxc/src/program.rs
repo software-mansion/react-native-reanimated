@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicBool, Ordering};
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{ImportDeclaration, ImportDeclarationSpecifier, Program, Statement};
@@ -10,8 +9,8 @@ use oxc_span::{SourceType, Span};
 use oxc_syntax::symbol::SymbolId;
 
 use crate::types::{ImportInfo, ImportShape, State};
-use crate::{bundle_mode, file_directive, plugin};
 use crate::{EmittedFile, PluginOptions, TransformResult};
+use crate::{bundle_mode, file_directive, plugin};
 
 const PARSE_ERROR_CODE: &str = "WORKLETS_ERR_PARSE";
 const FLOW_ERROR_CODE: &str = "WORKLETS_ERR_FLOW";
@@ -22,8 +21,6 @@ pub fn run(
     filename: &str,
     options: PluginOptions,
 ) -> Result<TransformResult, String> {
-    maybe_warn_extras(&options);
-
     if is_generated_worklet_file(filename) {
         return Ok(TransformResult {
             code: source_text.to_string(),
@@ -203,32 +200,6 @@ fn build_imports_index<'a>(program: &Program<'a>) -> HashMap<SymbolId, ImportInf
 
 fn is_generated_worklet_file(filename: &str) -> bool {
     filename.contains("react-native-worklets/.worklets")
-}
-
-fn maybe_warn_extras(options: &PluginOptions) {
-    static WARNED: AtomicBool = AtomicBool::new(false);
-    let has_extras = options
-        .extra_plugins
-        .as_ref()
-        .map(|v| !v.is_empty())
-        .unwrap_or(false)
-        || options
-            .extra_presets
-            .as_ref()
-            .map(|v| !v.is_empty())
-            .unwrap_or(false);
-    if !has_extras {
-        return;
-    }
-    if WARNED.swap(true, Ordering::Relaxed) {
-        return;
-    }
-    eprintln!(
-        "[Worklets] `extraPlugins`/`extraPresets` are accepted for option-surface \
-         compatibility with `react-native-worklets/plugin` but ignored — the OXC transform \
-         cannot dispatch arbitrary Babel plugins. Compose them around this plugin in \
-         babel.config.js instead."
-    );
 }
 
 fn parse_error(filename: &str, first: &impl std::fmt::Display) -> String {

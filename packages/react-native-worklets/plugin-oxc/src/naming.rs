@@ -139,10 +139,10 @@ pub fn source_from_filename(filename: &str) -> String {
         .to_string();
 
     let parts: Vec<&str> = filename.split('/').collect();
-    if let Some(idx) = parts.iter().position(|p| *p == "node_modules") {
-        if let Some(lib) = parts.get(idx + 1) {
-            return format!("{lib}_{base}");
-        }
+    if let Some(idx) = parts.iter().position(|p| *p == "node_modules")
+        && let Some(lib) = parts.get(idx + 1)
+    {
+        return format!("{lib}_{base}");
     }
     base
 }

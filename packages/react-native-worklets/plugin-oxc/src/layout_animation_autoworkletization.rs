@@ -82,12 +82,11 @@ fn is_layout_animation_chainable_or_new(expr: &Expression<'_>, depth: u32) -> bo
         return identifier_name(&new_expr.callee)
             .is_some_and(|name| LAYOUT_ANIMATIONS.contains(&name));
     }
-    if let Some(call) = call_expression(expr) {
-        if let Some((object, name)) = member_property(&call.callee) {
-            if LAYOUT_ANIMATION_CHAIN_METHODS.contains(&name) {
-                return is_layout_animation_chainable_or_new(object, depth - 1);
-            }
-        }
+    if let Some(call) = call_expression(expr)
+        && let Some((object, name)) = member_property(&call.callee)
+        && LAYOUT_ANIMATION_CHAIN_METHODS.contains(&name)
+    {
+        return is_layout_animation_chainable_or_new(object, depth - 1);
     }
     false
 }

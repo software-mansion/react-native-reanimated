@@ -1,8 +1,8 @@
 use std::path::Path;
 
-use oxc_ast::ast::{Expression, Statement};
 use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
+use oxc_ast::ast::{Expression, Statement};
 use oxc_span::SPAN;
 
 use crate::imports::create_import_path;
@@ -25,10 +25,10 @@ pub fn generate_worklet_file<'a>(
             continue;
         }
         let mut rebased = info.clone();
-        if rebased.source.starts_with('.') {
-            if let Some(p) = create_import_path(filename, &rebased.source, worklets_package_dir) {
-                rebased.source = p;
-            }
+        if rebased.source.starts_with('.')
+            && let Some(p) = create_import_path(filename, &rebased.source, worklets_package_dir)
+        {
+            rebased.source = p;
         }
         body.push(build_import_declaration(builder, &rebased));
     }

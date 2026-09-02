@@ -1,7 +1,7 @@
 use oxc_allocator::{Allocator, CloneIn};
-use oxc_ast::ast::{Expression, FormalParameters, FunctionBody, FunctionType, Statement};
 use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
+use oxc_ast::ast::{Expression, FormalParameters, FunctionBody, FunctionType, Statement};
 use oxc_codegen::{Codegen, CodegenOptions};
 use oxc_span::SPAN;
 
