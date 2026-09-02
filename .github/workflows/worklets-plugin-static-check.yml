@@ -1,4 +1,4 @@
-name: Babel plugin static check
+name: Worklets plugin static check
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
@@ -10,9 +10,11 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/babel-plugin-static-check.yml'
+      - '.github/workflows/worklets-plugin-static-check.yml'
       - '.github/workflows/changed-paths.yml'
       - 'packages/react-native-worklets/plugin/**'
+      - 'packages/react-native-worklets/plugin-oxc/**'
+      - 'apps/fabric-example/babel.config.js'
   workflow_call:
   workflow_dispatch:
 
@@ -21,19 +23,21 @@ permissions:
 
 jobs:
   changes:
-    name: Babel plugin static check
+    name: Worklets plugin static check
     permissions:
       contents: read
       pull-requests: read
     uses: ./.github/workflows/changed-paths.yml
     with:
-      workflow: Babel plugin static check
+      workflow: Worklets plugin static check
       paths: |
-        - '.github/workflows/babel-plugin-static-check.yml'
+        - '.github/workflows/worklets-plugin-static-check.yml'
         - '.github/workflows/changed-paths.yml'
         - 'packages/react-native-worklets/plugin/**'
+        - 'packages/react-native-worklets/plugin-oxc/**'
+        - 'apps/fabric-example/babel.config.js'
 
-  babel-plugin-static-check:
+  worklets-plugin-static-check:
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.affected == 'true') && github.repository == 'software-mansion/react-native-reanimated' }}
     strategy:
@@ -42,16 +46,22 @@ jobs:
         include:
           - os: ubuntu-latest
             bundle_output: /dev/null
+            plugin: babel
           - os: windows-latest
             bundle_output: 'NUL'
+            plugin: babel
+          - os: ubuntu-latest
+            bundle_output: /dev/null
+            plugin: oxc
     runs-on: ${{ matrix.os }}
     concurrency:
-      group: babel-plugin-static-check-${{ matrix.os }}-${{ github.ref }}
+      group: worklets-plugin-static-check-${{ matrix.os }}-${{ matrix.plugin }}-${{ github.ref }}
       cancel-in-progress: true
     env:
       EXAMPLE_DIR: apps/fabric-example
       WORKLETS_DIR: packages/react-native-worklets
       PLUGIN_DIR: packages/react-native-worklets/plugin
+      OXC_PLUGIN_DIR: packages/react-native-worklets/plugin-oxc
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
@@ -89,19 +99,49 @@ jobs:
       - name: Unit tests
         working-directory: ${{ env.PLUGIN_DIR }}
         run: yarn test
+
+      - name: Cache Cargo
+        if: matrix.plugin == 'oxc'
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ${{ env.OXC_PLUGIN_DIR }}/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('packages/react-native-worklets/plugin-oxc/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-
+      - name: OXC plugin own tests
+        if: matrix.plugin == 'oxc'
+        working-directory: ${{ env.OXC_PLUGIN_DIR }}
+        run: yarn test:oxc
+      - name: Babel plugin test suite against the OXC plugin
+        if: matrix.plugin == 'oxc'
+        working-directory: ${{ env.OXC_PLUGIN_DIR }}
+        run: yarn test:babel-suite
+      - name: Build OXC plugin
+        if: matrix.plugin == 'oxc'
+        working-directory: ${{ env.OXC_PLUGIN_DIR }}
+        run: yarn build
+
       - name: Check Example App bundling
         shell: bash
         working-directory: ${{ env.EXAMPLE_DIR }}
+        env:
+          WORKLETS_PLUGIN: ${{ matrix.plugin }}
         run:
           yarn react-native bundle --reset-cache --entry-file='App.tsx' --bundle-output='${{ matrix.bundle_output }}'
           --dev=true --platform=android
 
       - name: Disable Bundle Mode
+        if: matrix.plugin != 'oxc'
         shell: bash
         run: yarn toggle-bundle-mode
       - name: Check Example App bundling (Eval Mode)
+        if: matrix.plugin != 'oxc'
         shell: bash
         working-directory: ${{ env.EXAMPLE_DIR }}
+        env:
+          WORKLETS_PLUGIN: babel
         run:
           yarn react-native bundle --reset-cache --entry-file='App.tsx' --bundle-output='${{ matrix.bundle_output }}'
           --dev=true --platform=android
