@@ -183,10 +183,6 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  createSerializableInitializer(obj: object) {
-    return this.#workletsModuleProxy.createSerializableInitializer(obj);
-  }
-
   createSerializableNonWorkletFunction<TArgs extends unknown[], TReturn>(
     fun: (...args: TArgs) => TReturn,
     functionName: string | undefined
@@ -343,8 +339,11 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {
-    return this.#workletsModuleProxy.createSynchronizable(value);
+  createSynchronizable<TValue>(
+    value: SerializableRef<TValue> | TValue,
+    isFixed: boolean
+  ): SynchronizableRef<TValue> {
+    return this.#workletsModuleProxy.createSynchronizable(value, isFixed);
   }
 
   synchronizableGetDirty<TValue>(
@@ -363,9 +362,19 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   synchronizableSetBlocking<TValue>(
     synchronizableRef: SynchronizableRef<TValue>,
-    value: SerializableRef<TValue>
+    value: SerializableRef<TValue> | TValue
   ) {
     return this.#workletsModuleProxy.synchronizableSetBlocking(
+      synchronizableRef,
+      value
+    );
+  }
+
+  synchronizableSetDirty<TValue extends number | boolean>(
+    synchronizableRef: SynchronizableRef<TValue>,
+    value: TValue
+  ): void {
+    return this.#workletsModuleProxy.synchronizableSetDirty(
       synchronizableRef,
       value
     );

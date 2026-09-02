@@ -1,5 +1,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
+#include <react/debug/react_native_assert.h>
+
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -9,6 +11,7 @@ namespace reanimated {
 
 void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
   for (const auto &layoutAnimationConfig : layoutAnimationsBatch) {
     const auto &[tag, type, config, sharedTag] = layoutAnimationConfig;
 
@@ -24,7 +27,7 @@ void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAn
     if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
       if (config == nullptr) {
         // TODO (future): if the view was transitioned (e.g. so we are on the second screen)
-        // and we remove the config, we should also bring back the view (probably using tagsToRestore_)
+        // and we remove the config, we should also bring back the view (probably using TransactionMeta::tagsToRestore)
         sharedTransitions_.erase(tag);
         sharedTransitionManager_->tagToName_.erase(tag);
       } else {
@@ -51,9 +54,24 @@ bool LayoutAnimationsManager::shouldAnimateExiting(const int tag, const bool sho
   return shouldAnimateExitingForTag_.contains(tag) ? shouldAnimateExitingForTag_[tag] : shouldAnimate;
 }
 
-bool LayoutAnimationsManager::hasLayoutAnimation(const int tag, const LayoutAnimationType type) {
+std::shared_ptr<Serializable> LayoutAnimationsManager::getLayoutAnimationConfig(
+    const int tag,
+    const LayoutAnimationType type) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  return getConfigsForType(type).contains(tag);
+  const auto &configs = getConfigsForType(type);
+  const auto configIt = configs.find(tag);
+  return configIt == configs.end() ? nullptr : configIt->second;
+}
+
+std::shared_ptr<Serializable> LayoutAnimationsManager::takeExitingAnimationConfigAndClearTag(const int tag) {
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  const auto configIt = exitingAnimations_.find(tag);
+  auto config = configIt == exitingAnimations_.end() ? nullptr : configIt->second;
+  enteringAnimations_.erase(tag);
+  exitingAnimations_.erase(tag);
+  layoutAnimations_.erase(tag);
+  shouldAnimateExitingForTag_.erase(tag);
+  return config;
 }
 
 void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
@@ -68,14 +86,11 @@ void LayoutAnimationsManager::startLayoutAnimation(
     jsi::Runtime &rt,
     const int tag,
     const LayoutAnimationType type,
-    const jsi::Object &values) {
-  std::shared_ptr<Serializable> config;
-  {
-    auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-    if (!getConfigsForType(type).contains(tag)) {
-      return;
-    }
-    config = getConfigsForType(type)[tag];
+    const jsi::Object &values,
+    const std::shared_ptr<Serializable> &config) {
+  react_native_assert(config && "layout animation config is null");
+  if (!config) {
+    return;
   }
   // TODO: cache the following!!
   jsi::Value layoutAnimationRepositoryAsValue =
@@ -95,6 +110,7 @@ void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int 
 
 void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, const int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
   const auto config = enteringAnimationsForNativeID_[nativeId];
   if (config) {
     enteringAnimations_.insert_or_assign(tag, config);
@@ -108,11 +124,6 @@ void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, con
   }
   sharedTransitionsForNativeID_.erase(nativeId);
   sharedTransitionManager_->nativeIDToName_.erase(nativeId);
-}
-
-void LayoutAnimationsManager::transferSharedConfig(const Tag from, const Tag to) {
-  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  sharedTransitions_[to] = sharedTransitions_[from];
 }
 
 std::shared_ptr<SharedTransitionManager> LayoutAnimationsManager::getSharedTransitionManager() {

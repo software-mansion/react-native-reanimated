@@ -1,72 +1,101 @@
 import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
+import type {
+  FixedSynchronizable,
+  Synchronizable,
+} from 'react-native-worklets';
 import {
   createSynchronizable,
-  scheduleOnRN,
-  scheduleOnUI,
   createWorkletRuntime,
+  scheduleOnRN,
   scheduleOnRuntime,
+  scheduleOnUI,
 } from 'react-native-worklets';
 
 const initialValue = 0;
 
 const targetValue = 200000;
 
+type VariantKey = 'dynamic' | 'fixed';
+
+type RuntimeKey = 'RN' | 'UI' | 'BG';
+
+type BenchmarkResult = { value: number; durationMS: number };
+
+type Results = Record<VariantKey, Record<RuntimeKey, BenchmarkResult>>;
+
+const emptyResult: BenchmarkResult = {
+  value: initialValue,
+  durationMS: 0,
+};
+
+const emptyResults: Results = {
+  dynamic: { RN: emptyResult, UI: emptyResult, BG: emptyResult },
+  fixed: { RN: emptyResult, UI: emptyResult, BG: emptyResult },
+};
+
 export default function SynchronizablePerformanceExample() {
-  const [valueRN, setValueRN] = React.useState(initialValue);
-  const [durationRNMS, setDurationRNMS] = React.useState(0);
-  const [valueUI, setValueUI] = React.useState(initialValue);
-  const [durationUIMS, setDurationUIMS] = React.useState(0);
-  const [valueBG, setValueBG] = React.useState(initialValue);
-  const [durationBGMS, setDurationBGMS] = React.useState(0);
+  const [results, setResults] = React.useState<Results>(emptyResults);
+  const [selectedVariant, setSelectedVariant] =
+    React.useState<VariantKey>('dynamic');
   const [runningRuntimes, setRunningRuntimes] = React.useState(0);
 
-  const synchronizable = createSynchronizable(initialValue);
+  const fixedSynchronizable: FixedSynchronizable<number> = createSynchronizable(
+    initialValue,
+    { fixedType: true }
+  );
+
+  const synchronizables: Record<VariantKey, Synchronizable<number>> = {
+    dynamic: createSynchronizable(initialValue),
+    fixed: fixedSynchronizable,
+  };
 
   const runtime = createWorkletRuntime({ name: 'SynchronizableExample' });
 
-  function setUIValueRemote(value: number, durationMS: number) {
-    setValueUI(value);
-    setDurationUIMS(durationMS);
-  }
-
-  function setBGValueRemote(value: number, durationMS: number) {
-    setValueBG(value);
-    setDurationBGMS(durationMS);
+  function setResult(
+    variant: VariantKey,
+    runtimeKey: RuntimeKey,
+    value: number,
+    durationMS: number
+  ) {
+    setResults((prev) => ({
+      ...prev,
+      [variant]: { ...prev[variant], [runtimeKey]: { value, durationMS } },
+    }));
   }
 
   const decrementRuntimes = () => setRunningRuntimes((prev) => prev - 1);
 
-  function setValueAndDuration(value: number, durationMS: number) {
+  function setValueAndDuration(
+    variant: VariantKey,
+    value: number,
+    durationMS: number
+  ) {
     'worklet';
     if (!globalThis._WORKLET) {
-      setValueRN(value);
-      setDurationRNMS(durationMS);
+      setResult(variant, 'RN', value, durationMS);
       decrementRuntimes();
       return;
     }
 
-    if ((globalThis as Record<string, unknown>)._LABEL === 'UI') {
-      scheduleOnRN(setUIValueRemote, value, durationMS);
-    } else {
-      scheduleOnRN(setBGValueRemote, value, durationMS);
-    }
+    const runtimeKey =
+      (globalThis as Record<string, unknown>)._LABEL === 'UI' ? 'UI' : 'BG';
+    scheduleOnRN(setResult, variant, runtimeKey, value, durationMS);
 
     scheduleOnRN(decrementRuntimes);
   }
 
-  function resetState() {
+  function resetVariant(variant: VariantKey) {
     setRunningRuntimes(0);
-    setValueRN(initialValue);
-    setDurationRNMS(0);
-    setValueUI(initialValue);
-    setDurationUIMS(0);
-    setValueBG(initialValue);
-    setDurationBGMS(0);
+    setResults((prev) => ({
+      ...prev,
+      [variant]: { RN: emptyResult, UI: emptyResult, BG: emptyResult },
+    }));
   }
 
-  function getDirtySetBlocking() {
+  function getDirtySetBlocking(variant: VariantKey) {
     'worklet';
+    const synchronizable = synchronizables[variant];
     const start = performance.now();
     for (let i = 0; i < targetValue; i++) {
       const value = synchronizable.getDirty();
@@ -74,11 +103,12 @@ export default function SynchronizablePerformanceExample() {
     }
     const end = performance.now();
     const durationMS = end - start;
-    setValueAndDuration(synchronizable.getBlocking(), durationMS);
+    setValueAndDuration(variant, synchronizable.getBlocking(), durationMS);
   }
 
-  function getBlockingSetBlocking() {
+  function getBlockingSetBlocking(variant: VariantKey) {
     'worklet';
+    const synchronizable = synchronizables[variant];
     const start = performance.now();
     for (let i = 0; i < targetValue; i++) {
       const value = synchronizable.getBlocking();
@@ -86,22 +116,36 @@ export default function SynchronizablePerformanceExample() {
     }
     const end = performance.now();
     const durationMS = end - start;
-    setValueAndDuration(synchronizable.getBlocking(), durationMS);
+    setValueAndDuration(variant, synchronizable.getBlocking(), durationMS);
   }
 
-  function setBlockingSetBlockingTransaction() {
+  function setBlockingSetBlockingTransaction(variant: VariantKey) {
     'worklet';
+    const synchronizable = synchronizables[variant];
     const start = performance.now();
     for (let i = 0; i < targetValue; i++) {
       synchronizable.setBlocking((prev) => prev + 1);
     }
     const end = performance.now();
     const durationMS = end - start;
-    setValueAndDuration(synchronizable.getBlocking(), durationMS);
+    setValueAndDuration(variant, synchronizable.getBlocking(), durationMS);
   }
 
-  function imperativeLocking() {
+  function getDirtySetDirty(variant: VariantKey) {
     'worklet';
+    const start = performance.now();
+    for (let i = 0; i < targetValue; i++) {
+      const value = fixedSynchronizable.getDirty();
+      fixedSynchronizable.setDirty(value + 1);
+    }
+    const end = performance.now();
+    const durationMS = end - start;
+    setValueAndDuration(variant, fixedSynchronizable.getBlocking(), durationMS);
+  }
+
+  function imperativeLocking(variant: VariantKey) {
+    'worklet';
+    const synchronizable = synchronizables[variant];
     const start = performance.now();
     for (let i = 0; i < targetValue; i++) {
       synchronizable.lock();
@@ -111,13 +155,26 @@ export default function SynchronizablePerformanceExample() {
     }
     const end = performance.now();
     const durationMS = end - start;
-    setValueAndDuration(synchronizable.getBlocking(), durationMS);
+    setValueAndDuration(variant, synchronizable.getBlocking(), durationMS);
+  }
+
+  function runBenchmark(benchmark: (variant: VariantKey) => void) {
+    const variant = selectedVariant;
+    resetVariant(variant);
+    setRunningRuntimes(3);
+
+    setTimeout(() => {
+      scheduleOnUI(benchmark, variant);
+      scheduleOnRuntime(runtime, benchmark, variant);
+      queueMicrotask(() => benchmark(variant));
+    }, 50);
   }
 
   return (
     <View style={styles.container}>
       <View style={styles.table}>
         <View style={styles.leftColumn}>
+          <Text style={styles.columnHeader}>Variant:</Text>
           <Text>Initial value:</Text>
           <Text>Target value:</Text>
           <Text>Value read when RN finished:</Text>
@@ -127,70 +184,52 @@ export default function SynchronizablePerformanceExample() {
           <Text>Duration on UI:</Text>
           <Text>Duration on BG:</Text>
         </View>
-        <View style={styles.rightColumn}>
-          <Text>{initialValue}</Text>
-          <Text>{targetValue * 3}</Text>
-          <Text>{valueRN}</Text>
-          <Text>{valueUI}</Text>
-          <Text>{valueBG}</Text>
-          <Text>{(durationRNMS / 1000).toFixed(2)}s</Text>
-          <Text>{(durationUIMS / 1000).toFixed(2)}s</Text>
-          <Text>{(durationBGMS / 1000).toFixed(2)}s</Text>
-        </View>
+        {(['dynamic', 'fixed'] as VariantKey[]).map((variant) => (
+          <View key={variant} style={styles.rightColumn}>
+            <Text style={styles.columnHeader}>
+              {variant === selectedVariant ? `[${variant}]` : variant}
+            </Text>
+            <Text>{initialValue}</Text>
+            <Text>{targetValue * 3}</Text>
+            <Text>{results[variant].RN.value}</Text>
+            <Text>{results[variant].UI.value}</Text>
+            <Text>{results[variant].BG.value}</Text>
+            <Text>{(results[variant].RN.durationMS / 1000).toFixed(2)}s</Text>
+            <Text>{(results[variant].UI.durationMS / 1000).toFixed(2)}s</Text>
+            <Text>{(results[variant].BG.durationMS / 1000).toFixed(2)}s</Text>
+          </View>
+        ))}
       </View>
       <View style={{ opacity: runningRuntimes >= 1 ? 1 : 0 }}>
         <Text>Please wait...</Text>
       </View>
       <Button
-        onPress={() => {
-          resetState();
-          setRunningRuntimes(3);
-
-          setTimeout(() => {
-            scheduleOnUI(getDirtySetBlocking);
-            scheduleOnRuntime(runtime, getDirtySetBlocking);
-            queueMicrotask(getDirtySetBlocking);
-          }, 50);
-        }}
+        onPress={() =>
+          setSelectedVariant((prev) =>
+            prev === 'dynamic' ? 'fixed' : 'dynamic'
+          )
+        }
+        title={`Selected variant: ${selectedVariant}`}
+      />
+      <Button
+        onPress={() => runBenchmark(getDirtySetBlocking)}
         title=".getDirty() & .setBlocking() on two threads"
       />
       <Button
-        onPress={() => {
-          resetState();
-          setRunningRuntimes(3);
-
-          setTimeout(() => {
-            scheduleOnRuntime(runtime, getBlockingSetBlocking);
-            scheduleOnUI(getBlockingSetBlocking);
-            queueMicrotask(getBlockingSetBlocking);
-          }, 50);
-        }}
+        onPress={() => runBenchmark(getBlockingSetBlocking)}
         title=".getBlocking() & .setBlocking() on two threads"
       />
       <Button
-        onPress={() => {
-          resetState();
-          setRunningRuntimes(3);
-
-          setTimeout(() => {
-            scheduleOnUI(setBlockingSetBlockingTransaction);
-            scheduleOnRuntime(runtime, setBlockingSetBlockingTransaction);
-            queueMicrotask(setBlockingSetBlockingTransaction);
-          }, 50);
-        }}
+        onPress={() => runBenchmark(setBlockingSetBlockingTransaction)}
         title=".setBlocking() with setter on two threads - transaction"
       />
       <Button
-        onPress={() => {
-          resetState();
-          setRunningRuntimes(3);
-
-          setTimeout(() => {
-            scheduleOnUI(imperativeLocking);
-            scheduleOnRuntime(runtime, imperativeLocking);
-            queueMicrotask(imperativeLocking);
-          }, 50);
-        }}
+        disabled={selectedVariant !== 'fixed'}
+        onPress={() => runBenchmark(getDirtySetDirty)}
+        title=".getDirty() & .setDirty() on two threads - fixed only"
+      />
+      <Button
+        onPress={() => runBenchmark(imperativeLocking)}
         title="Imperative locking"
       />
     </View>
@@ -221,5 +260,8 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'flex-end',
     gap: 10,
+  },
+  columnHeader: {
+    fontWeight: 'bold',
   },
 });

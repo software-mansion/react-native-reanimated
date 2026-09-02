@@ -11,12 +11,12 @@ ReanimatedMountHook::ReanimatedMountHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
     const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
-    const std::shared_ptr<ReanimatedSurfaceTracker> &surfaceTracker,
+    const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry,
     const std::function<void()> &requestFlush)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
       viewStylesRepository_(viewStylesRepository),
-      surfaceTracker_(surfaceTracker),
+      layoutAnimationsProxyRegistry_(layoutAnimationsProxyRegistry),
       requestFlush_(requestFlush) {
   uiManager_->registerMountHook(*this);
 }
@@ -70,8 +70,9 @@ void ReanimatedMountHook::shadowTreeDidMount(
 }
 
 void ReanimatedMountHook::shadowTreeDidUnmount(SurfaceId surfaceId, HighResTimeStamp /*unmountTime*/) noexcept {
-  // Forget stopped surfaces so a reused surface id registers again.
-  surfaceTracker_->remove(surfaceId);
+  if (layoutAnimationsProxyRegistry_) {
+    layoutAnimationsProxyRegistry_->remove(surfaceId);
+  }
 }
 
 } // namespace reanimated

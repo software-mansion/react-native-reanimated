@@ -3,7 +3,6 @@
 #include <worklets/SharedItems/Serializable/SerializableArray.h>
 #include <worklets/SharedItems/Serializable/SerializableBigInt.h>
 #include <worklets/SharedItems/Serializable/SerializableHostObject.h>
-#include <worklets/SharedItems/Serializable/SerializableInitializer.h>
 #include <worklets/SharedItems/Serializable/SerializableObject.h>
 #include <worklets/SharedItems/Serializable/SerializableScalar.h>
 #include <worklets/SharedItems/Serializable/SerializableString.h>
@@ -63,6 +62,7 @@ void WorkletRuntimeDecorator::decorate(
     const std::string &name,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const bool isDevBundle,
+    const bool enableMicrotaskQueue,
     jsi::Object &&jsiWorkletsModuleProxy,
     const std::shared_ptr<EventLoop> &eventLoop,
     const RuntimeBindings::NativeLoggingHook &nativeLoggingHook) {
@@ -182,10 +182,6 @@ void WorkletRuntimeDecorator::decorate(
     return makeSerializableWorklet(rt, value.asObject(rt), false);
   });
 
-  jsi_utils::installJsiFunction(rt, "_createSerializableInitializer", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return makeSerializableInitializer(rt, value.asObject(rt));
-  });
-
   jsi_utils::installJsiFunction(rt, "_createSerializableSynchronizable", [](jsi::Runtime &rt, const jsi::Value &value) {
     return SerializableJSRef::newNativeStateObject(rt, extractSerializableOrThrow(rt, value));
   });
@@ -226,6 +222,10 @@ void WorkletRuntimeDecorator::decorate(
     std::string path = stopProfiling(rt);
     return jsi::String::createFromUtf8(rt, path);
   });
+
+  if (enableMicrotaskQueue) {
+    jsi_utils::installJsiFunction(rt, "__drainMicrotasks", [](jsi::Runtime &rt) { rt.drainMicrotasks(); });
+  }
 
   jsi_utils::installJsiFunction(
       rt,

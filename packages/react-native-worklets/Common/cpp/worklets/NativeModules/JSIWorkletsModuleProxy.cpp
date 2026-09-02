@@ -12,7 +12,6 @@
 #include <worklets/SharedItems/Serializable/SerializableHostFunction.h>
 #include <worklets/SharedItems/Serializable/SerializableHostObject.h>
 #include <worklets/SharedItems/Serializable/SerializableImport.h>
-#include <worklets/SharedItems/Serializable/SerializableInitializer.h>
 #include <worklets/SharedItems/Serializable/SerializableMap.h>
 #include <worklets/SharedItems/Serializable/SerializableObject.h>
 #include <worklets/SharedItems/Serializable/SerializableRegExp.h>
@@ -25,6 +24,7 @@
 #include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/SharedItems/SynchronizableDynamic.h>
+#include <worklets/SharedItems/SynchronizableFixed.h>
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
@@ -200,6 +200,16 @@ inline jsi::Value synchronizableValueToJSValue(jsi::Runtime &rt, const Synchroni
       value);
 }
 
+inline SynchronizableFixedValue jsValueToSynchronizableFixedValue(const jsi::Value &value) {
+  if (value.isBool()) {
+    return value.getBool();
+  }
+  if (value.isNumber()) {
+    return value.getNumber();
+  }
+  throw std::runtime_error("[Worklets] Expected a number or boolean for a fixed-type Synchronizable.");
+}
+
 inline void registerCustomSerializable(
     const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::shared_ptr<MemoryManager> &memoryManager,
@@ -297,11 +307,6 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   jsi_utils::addMethod<1>(
       rt, obj, "createSerializableHostObject", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         return makeSerializableHostObject(rt, at<0>(args).asObject(rt).asHostObject(rt));
-      });
-
-  jsi_utils::addMethod<1>(
-      rt, obj, "createSerializableInitializer", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        return makeSerializableInitializer(rt, at<0>(args).asObject(rt));
       });
 
   jsi_utils::addMethod<2>(
@@ -628,11 +633,15 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             /* value */ at<1>(args).asBool());
       });
 
-  jsi_utils::addMethod<1>(
-      rt, obj, "createSynchronizable", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto initial = extractSerializableOrThrow(rt, at<0>(args), "[Worklets] Value must be a Serializable.");
-        auto synchronizable = std::make_shared<SynchronizableDynamic>(initial);
-        return SerializableJSRef::newNativeStateObject(rt, synchronizable);
+  jsi_utils::addMethod<2>(
+      rt, obj, "createSynchronizable", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        if (at<1>(args).getBool()) {
+          return SerializableJSRef::newNativeStateObject(
+              rt, SynchronizableFixed::make(jsValueToSynchronizableFixedValue(at<0>(args))));
+        } else {
+          auto initial = extractSerializableOrThrow(rt, at<0>(args), "[Worklets] Value must be a Serializable.");
+          return SerializableJSRef::newNativeStateObject(rt, std::make_shared<SynchronizableDynamic>(initial));
+        }
       });
 
   jsi_utils::addMethod<1>(
@@ -650,8 +659,19 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   jsi_utils::addMethod<2>(
       rt, obj, "synchronizableSetBlocking", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         auto synchronizable = Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args));
-        auto newValue = extractSerializableOrThrow(rt, at<1>(args), "[Worklets] Value must be a Serializable.");
-        synchronizable->setBlocking(newValue);
+        const auto &newValue = at<1>(args);
+        if (synchronizable->isFixed()) {
+          synchronizable->setBlocking(jsValueToSynchronizableFixedValue(newValue));
+        } else {
+          synchronizable->setBlocking(
+              extractSerializableOrThrow(rt, newValue, "[Worklets] Value must be a Serializable."));
+        }
+      });
+
+  jsi_utils::addMethod<2>(
+      rt, obj, "synchronizableSetDirty", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))
+            ->setDirty(jsValueToSynchronizableFixedValue(at<1>(args)));
       });
 
   jsi_utils::addMethod<1>(

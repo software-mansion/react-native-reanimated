@@ -108,8 +108,6 @@ export interface WorkletsModuleProxy {
     length: number
   ): SerializableRef<TValue>;
 
-  createSerializableInitializer(obj: object): SerializableRef<object>;
-
   createSerializableNonWorkletFunction<TArgs extends unknown[], TReturn>(
     fun: (...args: TArgs) => TReturn,
     functionName: string | undefined
@@ -197,7 +195,10 @@ export interface WorkletsModuleProxy {
 
   reportFatalErrorOnJS(message: string, stack: string, name: string): void;
 
-  createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue>;
+  createSynchronizable<TValue>(
+    value: SerializableRef<TValue> | TValue,
+    isFixed: boolean
+  ): SynchronizableRef<TValue>;
 
   synchronizableGetDirty<TValue>(
     synchronizableRef: SynchronizableRef<TValue>
@@ -209,7 +210,12 @@ export interface WorkletsModuleProxy {
 
   synchronizableSetBlocking<TValue>(
     synchronizableRef: SynchronizableRef<TValue>,
-    value: SerializableRef<TValue>
+    value: SerializableRef<TValue> | TValue
+  ): void;
+
+  synchronizableSetDirty<TValue extends number | boolean>(
+    synchronizableRef: SynchronizableRef<TValue>,
+    value: TValue
   ): void;
 
   synchronizableLock<TValue>(

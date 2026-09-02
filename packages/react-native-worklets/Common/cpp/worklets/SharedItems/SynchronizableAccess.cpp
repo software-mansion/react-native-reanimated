@@ -7,7 +7,7 @@ namespace worklets {
 void SynchronizableAccess::getBlockingBefore() {
   std::unique_lock<std::mutex> lock(accessLock_);
   queue_.wait(lock, [this]() {
-    return !blockingWriter_ /* && dirtyWriters_ == 0 */ &&
+    return !blockingWriter_ && dirtyWriters_ == 0 &&
         (!imperativelyLocked_ || imperativeOwner_ == std::this_thread::get_id());
   });
   blockingReaders_++;
@@ -21,31 +21,27 @@ void SynchronizableAccess::getBlockingAfter() {
   }
 }
 
-// TODO: Shared pointer members (unless they're atomic) can't be assigned
-// in a non thread-safe manner, therefore `setDirty` has little sense now.
-// void SynchronizableAccess::setDirtyBefore() {
-//   std::unique_lock<std::mutex> lock(accessLock_);
-//   queue_.wait(lock, [this]() {
-//     return !blockingWriter_ && blockingReaders_ == 0 &&
-//         (!imperativelyLocked_ || imperativeOwner_ == std::this_thread::get_id());
-//   });
-//   dirtyWriters_++;
-// }
+void SynchronizableAccess::setDirtyBefore() {
+  std::unique_lock<std::mutex> lock(accessLock_);
+  queue_.wait(lock, [this]() {
+    return !blockingWriter_ && blockingReaders_ == 0 &&
+        (!imperativelyLocked_ || imperativeOwner_ == std::this_thread::get_id());
+  });
+  dirtyWriters_++;
+}
 
-// TODO: Shared pointer members (unless they're atomic) can't be assigned
-// in a non thread-safe manner, therefore `setDirty` has little sense now.
-// void SynchronizableAccess::setDirtyAfter() {
-//   std::unique_lock<std::mutex> lock(accessLock_);
-//   dirtyWriters_--;
-//   if (dirtyWriters_ == 0) {
-//     queue_.notify_all();
-//   }
-// }
+void SynchronizableAccess::setDirtyAfter() {
+  std::unique_lock<std::mutex> lock(accessLock_);
+  dirtyWriters_--;
+  if (dirtyWriters_ == 0) {
+    queue_.notify_all();
+  }
+}
 
 void SynchronizableAccess::setBlockingBefore() {
   std::unique_lock<std::mutex> lock(accessLock_);
   queue_.wait(lock, [this]() {
-    return !blockingWriter_ && blockingReaders_ == 0 /* && dirtyWriters_ == 0 */ &&
+    return !blockingWriter_ && blockingReaders_ == 0 && dirtyWriters_ == 0 &&
         (!imperativelyLocked_ || imperativeOwner_ == std::this_thread::get_id());
   });
   blockingWriter_ = true;
@@ -60,7 +56,7 @@ void SynchronizableAccess::setBlockingAfter() {
 void SynchronizableAccess::lock() {
   std::unique_lock<std::mutex> lock(accessLock_);
   queue_.wait(lock, [this]() {
-    return !blockingWriter_ && blockingReaders_ == 0 /* && dirtyWriters_ == 0 */ &&
+    return !blockingWriter_ && blockingReaders_ == 0 && dirtyWriters_ == 0 &&
         (!imperativelyLocked_ || imperativeOwner_ == std::this_thread::get_id());
   });
   imperativelyLocked_ = true;

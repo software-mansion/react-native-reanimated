@@ -1,5 +1,7 @@
 'use strict';
 import { parseBoxShadowString } from '../../../common';
+import type { TimeUnit } from '../../types';
+import { normalizeTimeUnit } from '../parsers';
 
 describe(parseBoxShadowString, () => {
   describe('correct number of shadows', () => {
@@ -93,4 +95,48 @@ describe(parseBoxShadowString, () => {
       ]);
     });
   });
+});
+
+describe(normalizeTimeUnit, () => {
+  test.each([0, 100, -100, 0.5])(
+    'passes the finite number %p through',
+    (value) => {
+      expect(normalizeTimeUnit(value)).toBe(value);
+    }
+  );
+
+  test.each([
+    ['100ms', 100],
+    ['0ms', 0],
+    ['-100ms', -100],
+    ['0.5ms', 0.5],
+    ['1.5ms', 1.5],
+    ['.5ms', 0.5],
+    ['-1.5ms', -1.5],
+    ['1s', 1000],
+    ['0.1s', 100],
+    ['0.0005s', 0.5],
+    ['.5s', 500],
+    ['-1s', -1000],
+  ] satisfies [TimeUnit, number][])('converts %p to %p', (value, expected) => {
+    expect(normalizeTimeUnit(value)).toBe(expected);
+  });
+
+  test('keeps the precision of a computed frame duration', () => {
+    const frameDuration = 1000 / 60;
+    expect(normalizeTimeUnit(`${frameDuration}ms`)).toBe(frameDuration);
+  });
+
+  // A non-finite value reaching native makes every progress computed from it
+  // NaN, so it has to be rejected here where it can still be reported.
+  test.each([NaN, Infinity, -Infinity])('rejects %p', (value) => {
+    expect(normalizeTimeUnit(value)).toBeNull();
+  });
+
+  test.each(['invalid', 'mss', '100mms', '1', '1.1', ''])(
+    'rejects %p',
+    (value) => {
+      expect(normalizeTimeUnit(value as TimeUnit)).toBeNull();
+    }
+  );
 });

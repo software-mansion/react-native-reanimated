@@ -46,6 +46,7 @@ type TestCase = {
 const hostObject = createWorkletRuntime({ name: 'HO' });
 const shareable = createShareable(UIRuntimeId, 42);
 const synchronizable = createSynchronizable(42);
+const synchronizableFixed = createSynchronizable(42, { fixedType: true });
 
 const testCases: Record<string, TestCase> = {
   number: {
@@ -246,13 +247,11 @@ const testCases: Record<string, TestCase> = {
     },
   },
   date: {
-    expected: '1970',
-    bundleMode: 'Thu Jan 01 1970 00:00:00 GMT+0000 (UTC)',
-    noBundleMode: '{}',
+    expected: '2020',
     checkIncludes: { bundleMode: true, noBundleMode: false },
     factory: () => {
       'worklet';
-      return new Date(0);
+      return new Date(Date.UTC(2020, 5, 15));
     },
   },
   regExp: {
@@ -322,6 +321,14 @@ const testCases: Record<string, TestCase> = {
     factory: () => {
       'worklet';
       return synchronizable;
+    },
+  },
+  synchronizableFixed: {
+    expected:
+      '{ __serializableRef: true,\n  __synchronizableRef: true,\n  getDirty: [Function],\n  getBlocking: [Function],\n  setBlocking: [Function],\n  lock: [Function],\n  unlock: [Function],\n  setDirty: [Function] }',
+    factory: () => {
+      'worklet';
+      return synchronizableFixed;
     },
   },
 };
