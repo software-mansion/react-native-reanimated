@@ -1,5 +1,7 @@
 'use strict';
 
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
+
 import {
   unprocessColor,
   unprocessColorsInProps,
@@ -33,6 +35,7 @@ export const PropsRegistryGarbageCollector = {
     const deleted = this.viewsMap.delete(viewTag);
     if (deleted && this.viewsMap.size === 0) {
       this.unregisterInterval();
+      scheduleOrphanedPropsCleanup();
     }
   },
 
@@ -62,6 +65,25 @@ export const PropsRegistryGarbageCollector = {
     }
   },
 };
+
+// The last animated view just unmounted, so the GC interval has stopped and no
+// commit will drain the registry. An in-flight animation frame can still re-add
+// the view's props; wait one UI frame for it to run, then clear the registry.
+function scheduleOrphanedPropsCleanup() {
+  scheduleOnUI(() => {
+    'worklet';
+    requestAnimationFrame(() => {
+      'worklet';
+      scheduleOnRN(removeOrphanedProps);
+    });
+  });
+}
+
+function removeOrphanedProps() {
+  if (PropsRegistryGarbageCollector.viewsMap.size === 0) {
+    ReanimatedModule.removeOrphanedProps();
+  }
+}
 
 function unprocessProps(props: StyleProps) {
   unprocessColorsInProps(props);

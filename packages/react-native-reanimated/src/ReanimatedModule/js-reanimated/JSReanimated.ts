@@ -357,6 +357,12 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
+  removeOrphanedProps(): void {
+    throw new Error(
+      '[Reanimated] `removeOrphanedProps` is not available in JSReanimated.'
+    );
+  }
+
   registerPseudoStyles(): void {
     throw new Error(
       '[Reanimated] `registerPseudoStyles` is not available in JSReanimated.'
