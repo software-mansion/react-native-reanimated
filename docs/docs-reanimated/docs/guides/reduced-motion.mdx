@@ -1,0 +1,181 @@
+---
+id: reduced-motion
+title: Reduced motion
+sidebar_label: Reduced motion
+---
+
+# Reduced motion
+
+Some users experience motion sickness, dizziness or other discomfort when exposed to animations with large or rapid movement. That's why every popular platform ships an accessibility setting which lets users request that apps limit the amount of motion – _Reduce Motion_ on iOS, _Remove animations_ on Android and the `prefers-reduced-motion` media query on the web.
+
+Reanimated respects this setting out of the box – when reduced motion is enabled on the device, all animations are disabled by default. This guide explains what exactly happens in that case and how to customize this behavior, both for the whole app and for individual animations.
+
+## Default behavior
+
+By default, all animations in Reanimated are configured with `ReduceMotion.System` – they check the device's reduced motion setting and become disabled when it's turned on. A disabled animation doesn't animate gradually – instead, it skips straight to its final state. In detail, when reduced motion is enabled:
+
+- `withTiming` and `withSpring` return the `toValue` immediately,
+- `withDecay` returns the current value immediately, taking the `clamp` parameter into account,
+- `withDelay` starts the next animation immediately,
+- `withRepeat`:
+  - when `numberOfReps` is infinite or even and the animation is reversed, the repeated animation doesn't start at all,
+  - otherwise, the repeated animation runs once,
+- `withSequence` starts only those animations which have reduced motion disabled,
+- entering, keyframe and layout animations instantly reach their end state,
+- exiting animations and shared element transitions are skipped entirely.
+
+Thanks to this behavior, the state of your app stays consistent – shared values still reach their target values, callbacks still run – the users just don't see the movement in between.
+
+:::info
+
+In development mode, Reanimated logs a warning on startup when reduced motion is enabled on the device, so you don't spend hours debugging why the animations "don't work". You can read more about it in the [Troubleshooting](/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device) guide.
+
+:::
+
+## The setting is read once at startup
+
+Reanimated checks the device's reduced motion setting only once, when the app starts, and uses that value for the rest of the app's lifetime. Changing the system setting while the app is running has no effect until the app is restarted. On each platform the value comes from:
+
+- **iOS** – the _Reduce Motion_ setting (Settings → Accessibility → Motion → Reduce Motion),
+- **Android** – the _Remove animations_ accessibility setting (or setting _Transition animation scale_ to off in developer options),
+- **Web** – the [`prefers-reduced-motion`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion) media query.
+
+This is different from React Native's [`AccessibilityInfo`](https://reactnative.dev/docs/accessibilityinfo) API, which reads the setting asynchronously and emits the `reduceMotionChanged` event whenever the user changes it. Reanimated trades this reactivity for a value that is available synchronously – both on the JavaScript thread and in worklets on the UI thread – so it can be checked in the middle of an ongoing animation without any bridging.
+
+The same applies to the [`useReducedMotion`](/docs/device/useReducedMotion) hook – it returns a boolean indicating whether the reduced motion setting was enabled **when the app started** and never causes a rerender.
+
+## Customizing the behavior
+
+The reduced motion behavior of every animation is configured with the `ReduceMotion` enum:
+
+- `ReduceMotion.System` – disables the animation when the device's reduced motion setting is enabled. This is the default.
+- `ReduceMotion.Always` – the animation is always disabled, regardless of the device settings.
+- `ReduceMotion.Never` – the animation is always enabled, regardless of the device settings.
+
+### Overriding the setting for the whole app
+
+To change how the entire app responds to the device's reduced motion setting, render the [`ReducedMotionConfig`](/docs/device/ReducedMotionConfig) component anywhere in your tree:
+
+```javascript
+import { ReducedMotionConfig, ReduceMotion } from 'react-native-reanimated';
+
+function App() {
+  return (
+    <>
+      {/* ... */}
+      // highlight-next-line
+      <ReducedMotionConfig mode={ReduceMotion.Never} />
+    </>
+  );
+}
+```
+
+The configuration applies globally – to all animations in the app, no matter where the component is rendered. When the component unmounts, the previous behavior is restored. You can use it, for example, to let users override the system setting with an in-app preference:
+
+```javascript
+function App() {
+  const { disableAnimations } = useAppSettings();
+
+  return (
+    <>
+      {/* ... */}
+      <ReducedMotionConfig
+        mode={disableAnimations ? ReduceMotion.Always : ReduceMotion.Never}
+      />
+    </>
+  );
+}
+```
+
+### Overriding the setting for individual animations
+
+Each animation can be configured separately and the per-animation configuration takes precedence over the global one. Animation functions accept the configuration in their config object or as a parameter:
+
+```javascript
+import { withTiming, withDelay, ReduceMotion } from 'react-native-reanimated';
+
+function App() {
+  // in the animation config
+  sv1.value = withTiming(100, { reduceMotion: ReduceMotion.Never });
+  // as a modifier parameter
+  sv2.value = withDelay(1000, withTiming(100), ReduceMotion.Never);
+  // ...
+}
+```
+
+Layout animations are configured with the `reduceMotion` modifier:
+
+```javascript
+import { BounceIn, ReduceMotion } from 'react-native-reanimated';
+
+function App() {
+  const entering = BounceIn.reduceMotion(ReduceMotion.Never);
+  // ...
+}
+```
+
+Modifiers such as `withDelay`, `withRepeat`, `withSequence` and `withClamp` pass their configuration down to the nested animations, unless a nested animation has its own configuration. In the following example, `withTiming` runs with no delay when reduced motion is enabled on the device:
+
+```javascript
+sv.value = withDelay(
+  1000,
+  withTiming(100, { reduceMotion: ReduceMotion.System }),
+  ReduceMotion.Never
+);
+```
+
+## Common patterns
+
+### Keep functional animations enabled
+
+Reduced motion is meant to limit decorative movement, not to break your app. If an animation is _functional_ – its final state is the only way some UI can appear or a gesture can settle – disabling it may leave the interface in a broken state or make it feel unresponsive. A common example is a bottom sheet or a drawer whose position is driven by an animation. In such cases, opt the animation out explicitly:
+
+```javascript
+// the sheet must reach its position even with reduced motion enabled
+offset.value = withSpring(destination, { reduceMotion: ReduceMotion.Never });
+```
+
+This pattern is widely used by libraries built on top of Reanimated – for example, [react-native-bottom-sheet](https://github.com/gorhom/react-native-bottom-sheet) exposes an `overrideReduceMotion` option which is passed down to its internal `withSpring` and `withTiming` calls.
+
+### Replace intense animations with subtle ones
+
+Instead of disabling an animation completely, you can swap it for a calmer alternative with the [`useReducedMotion`](/docs/device/useReducedMotion) hook. This way the app still feels alive but avoids large movement:
+
+```javascript
+import {
+  useReducedMotion,
+  BounceIn,
+  FadeIn,
+  ReduceMotion,
+} from 'react-native-reanimated';
+
+function App() {
+  const reduceMotion = useReducedMotion();
+
+  const entering = reduceMotion
+    ? FadeIn.reduceMotion(ReduceMotion.Never)
+    : BounceIn;
+  // ...
+}
+```
+
+Note the `reduceMotion(ReduceMotion.Never)` modifier on the fallback animation – without it, the fade would be disabled as well, since it also respects the system setting by default.
+
+You can also use the hook to conditionally render static content or to pass the value to other libraries that don't respect the setting on their own:
+
+```javascript
+function App() {
+  const reduceMotion = useReducedMotion();
+
+  if (reduceMotion) {
+    return <StaticHeader />;
+  }
+  return <AnimatedHeader />;
+}
+```
+
+## Remarks
+
+- The per-animation configuration always wins over `ReducedMotionConfig`, which in turn wins over the system setting.
+- `ReducedMotionConfig` affects animations, but doesn't change the value returned by `useReducedMotion` – the hook always reflects the system setting from app startup.
+- Remember to test your app with reduced motion enabled – the development-only warning tells you the setting is on, but only you can tell whether the app still works correctly without the motion.
