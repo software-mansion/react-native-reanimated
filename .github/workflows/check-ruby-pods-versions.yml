@@ -21,6 +21,7 @@ jobs:
       paths: |
         - '.github/workflows/check-ruby-pods-versions.yml'
         - '.github/workflows/changed-paths.yml'
+        - '.github/workflows/helper/check-ruby-pods.sh'
         - 'apps/**/Gemfile.lock'
         - 'apps/**/**/Podfile.lock'
 

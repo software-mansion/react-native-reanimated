@@ -67,7 +67,7 @@ jobs:
         # The workflow-name check is required: the nightly caller also runs on
         # pull_request, and its workflow_call legs must keep their explicit
         # inputs.bundleMode instead of fanning out both modes.
-        bundleMode: ${{ fromJSON((github.event_name == 'pull_request' && github.workflow == 'Runtime tests Android') && '[false, true]' || format('[{0}]', inputs.bundleMode)) }}
+        bundleMode: ${{ fromJSON(((github.event_name == 'pull_request' || github.event_name == 'merge_group') && github.workflow == 'Runtime tests Android') && '[false, true]' || format('[{0}]', inputs.bundleMode)) }}
     env:
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated

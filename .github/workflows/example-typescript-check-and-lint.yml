@@ -34,12 +34,13 @@ jobs:
         - 'apps/common-app/**'
         - 'apps/tvos-example/**'
         - 'apps/fabric-example/**'
+        # web-example is only built (example-web-build), not type-checked:
+        # it uses a hack in tsconfig that would fail the check.
+        - 'apps/web-example/**'
         # TODO: fix macos-example
         # - 'apps/macos-example/**'
         # next-example does not have type:check yet
         # - 'apps/next-example/**'
-        # web-example uses a hack in tsconfig, it will fail the CI
-        # - 'apps/web-example/**'
 
   build-packages:
     needs: changes
