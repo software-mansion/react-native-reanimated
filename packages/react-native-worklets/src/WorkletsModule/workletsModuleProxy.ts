@@ -230,6 +230,8 @@ export interface WorkletsModuleProxy {
 
   setDynamicFeatureFlag(name: string, value: boolean): void;
 
+  getCurrentThreadId(): string;
+
   getUIRuntimeHolder(): object;
 
   getUISchedulerHolder(): object;
