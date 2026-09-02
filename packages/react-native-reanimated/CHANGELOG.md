@@ -13,6 +13,7 @@
 
 ### 🐛 Bug fixes
 
+- Fix `getViewProp` and the runtime-tests prop snapshotting crashing (segfault on style props, unhandled error on layout props) when the view is no longer mounted. ([#10443](https://github.com/software-mansion/react-native-reanimated/pull/10443) by [@tjzel](https://github.com/tjzel))
 - Treat `animationName: []` as no animation, so the view is detached instead of running its previous animation forever. ([#10432](https://github.com/software-mansion/react-native-reanimated/pull/10432) by [@MatiPl01](https://github.com/MatiPl01))
 - Fix `SequencedTransition` on web scaling the wrong axis in its midpoint keyframe, so the axis that has already finished no longer collapses while the other one waits. ([#10384](https://github.com/software-mansion/react-native-reanimated/pull/10384) by [@dennytosp](https://github.com/dennytosp))
 - Fix native gestures (e.g. scrolling) not working inside `SharedTransitionBoundary` on Android by growing the boundary's zero-sized frame to cover its children. ([#10430](https://github.com/software-mansion/react-native-reanimated/pull/10430) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
