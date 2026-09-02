@@ -12,6 +12,7 @@
 
 ### 🐛 Bug fixes
 
+- Fix `./gradlew app:build` failing on `:lintAnalyzeDebug` with a K2 UAST crash on `.gradle.kts` build scripts - all lint tasks are now skipped, not only `lintVital*`. ([#PR_NUMBER](https://github.com/software-mansion/react-native-reanimated/pull/PR_NUMBER) by [@tshmieldev](https://github.com/tshmieldev))
 - Fix the predefined `ease` easing function using `cubicBezier(0.25, 0.1, 0.25, 0.1)` instead of the spec-defined `cubic-bezier(0.25, 0.1, 0.25, 1)`. ([#10353](https://github.com/software-mansion/react-native-reanimated/pull/10353) by [@tjzel](https://github.com/tjzel))
 - Fix text losing its trailing word on Android after a CSS `fontSize` transition. ([#10342](https://github.com/software-mansion/react-native-reanimated/pull/10342) by [@MatiPl01](https://github.com/MatiPl01))
 - Fix `EXC_BAD_ACCESS` crash in `-[REANodesManager performOperations]` when called before the `_performOperations` block is registered on iOS. ([#10229](https://github.com/software-mansion/react-native-reanimated/pull/10229) by [@tomekzaw](https://github.com/tomekzaw))
