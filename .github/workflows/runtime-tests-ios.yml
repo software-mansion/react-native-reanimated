@@ -6,6 +6,7 @@ on:
     paths:
       - .github/workflows/runtime-tests-ios.yml
       - .github/actions/install-pods/**
+      - .github/actions/save-pods/**
   workflow_call:
     inputs:
       bundleMode:
