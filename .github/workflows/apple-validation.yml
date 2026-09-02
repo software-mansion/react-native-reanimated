@@ -8,7 +8,7 @@ on:
     paths:
       - '.github/workflows/apple-validation.yml'
       - '.github/actions/apple-validation/**'
-      - '.github/actions/changed-paths/**'
+      - '.github/workflows/changed-paths.yml'
       - 'packages/react-native-reanimated/apple/**'
       - 'packages/react-native-reanimated/package.json'
       - 'packages/react-native-reanimated/scripts/validate-apple.sh'
@@ -34,33 +34,25 @@ permissions:
 
 jobs:
   changes:
-    name: Changed paths (Apple validation)
-    runs-on: ubuntu-latest
+    name: Apple validation
     permissions:
       contents: read
       pull-requests: read
-    outputs:
-      affected: ${{ steps.changed-paths.outputs.affected }}
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - name: Match changed paths
-        id: changed-paths
-        uses: ./.github/actions/changed-paths
-        with:
-          workflow: Apple validation
-          paths: |
-            - '.github/workflows/apple-validation.yml'
-            - '.github/actions/apple-validation/**'
-            - '.github/actions/changed-paths/**'
-            - 'packages/react-native-reanimated/apple/**'
-            - 'packages/react-native-reanimated/package.json'
-            - 'packages/react-native-reanimated/scripts/validate-apple.sh'
-            - 'scripts/llvm-tools/**'
-            - 'packages/react-native-reanimated/Common/cpp/**'
-            - 'packages/react-native-worklets/apple/**'
-            - 'packages/react-native-worklets/package.json'
-            - 'packages/react-native-worklets/Common/**'
+    uses: ./.github/workflows/changed-paths.yml
+    with:
+      workflow: Apple validation
+      paths: |
+        - '.github/workflows/apple-validation.yml'
+        - '.github/actions/apple-validation/**'
+        - '.github/workflows/changed-paths.yml'
+        - 'packages/react-native-reanimated/apple/**'
+        - 'packages/react-native-reanimated/package.json'
+        - 'packages/react-native-reanimated/scripts/validate-apple.sh'
+        - 'scripts/llvm-tools/**'
+        - 'packages/react-native-reanimated/Common/cpp/**'
+        - 'packages/react-native-worklets/apple/**'
+        - 'packages/react-native-worklets/package.json'
+        - 'packages/react-native-worklets/Common/**'
 
   apple-validation:
     needs: changes

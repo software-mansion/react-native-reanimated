@@ -8,7 +8,7 @@ on:
     paths:
       - '.github/workflows/android-validation.yml'
       - '.github/actions/android-validation/**'
-      - '.github/actions/changed-paths/**'
+      - '.github/workflows/changed-paths.yml'
       - 'scripts/llvm-tools/**'
       - 'packages/react-native-reanimated/android/src/main/java/**'
       - 'packages/react-native-reanimated/android/build.gradle'
@@ -33,32 +33,24 @@ permissions:
 
 jobs:
   changes:
-    name: Changed paths (Android validation)
-    runs-on: ubuntu-latest
+    name: Android validation
     permissions:
       contents: read
       pull-requests: read
-    outputs:
-      affected: ${{ steps.changed-paths.outputs.affected }}
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - name: Match changed paths
-        id: changed-paths
-        uses: ./.github/actions/changed-paths
-        with:
-          workflow: Android validation
-          paths: |
-            - '.github/workflows/android-validation.yml'
-            - '.github/actions/android-validation/**'
-            - '.github/actions/changed-paths/**'
-            - 'scripts/llvm-tools/**'
-            - 'packages/react-native-reanimated/android/src/main/java/**'
-            - 'packages/react-native-reanimated/android/build.gradle'
-            - 'packages/react-native-reanimated/Common/cpp/**'
-            - 'packages/react-native-worklets/android/src/**'
-            - 'packages/react-native-worklets/android/build.gradle'
-            - 'packages/react-native-worklets/Common/**'
+    uses: ./.github/workflows/changed-paths.yml
+    with:
+      workflow: Android validation
+      paths: |
+        - '.github/workflows/android-validation.yml'
+        - '.github/actions/android-validation/**'
+        - '.github/workflows/changed-paths.yml'
+        - 'scripts/llvm-tools/**'
+        - 'packages/react-native-reanimated/android/src/main/java/**'
+        - 'packages/react-native-reanimated/android/build.gradle'
+        - 'packages/react-native-reanimated/Common/cpp/**'
+        - 'packages/react-native-worklets/android/src/**'
+        - 'packages/react-native-worklets/android/build.gradle'
+        - 'packages/react-native-worklets/Common/**'
 
   android-validation:
     needs: changes

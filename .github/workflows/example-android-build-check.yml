@@ -11,7 +11,7 @@ on:
       - main
     paths:
       - .github/workflows/example-android-build-check.yml
-      - .github/actions/changed-paths/**
+      - .github/workflows/changed-paths.yml
       - .clang-tidy
       - scripts/llvm-tools/**
       - packages/react-native-reanimated/android/**
@@ -42,37 +42,29 @@ permissions:
 
 jobs:
   changes:
-    name: Changed paths (Example Android build check)
-    runs-on: ubuntu-latest
+    name: Example Android build check
     permissions:
       contents: read
       pull-requests: read
-    outputs:
-      affected: ${{ steps.changed-paths.outputs.affected }}
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - name: Match changed paths
-        id: changed-paths
-        uses: ./.github/actions/changed-paths
-        with:
-          workflow: Example Android build check
-          paths: |
-            - '.github/workflows/example-android-build-check.yml'
-            - '.github/actions/changed-paths/**'
-            - '.clang-tidy'
-            - 'scripts/llvm-tools/**'
-            - 'packages/react-native-reanimated/android/**'
-            - 'packages/react-native-reanimated/package.json'
-            - 'packages/react-native-reanimated/src/specs/**'
-            - 'packages/react-native-reanimated/Common/**'
-            - 'packages/react-native-worklets/android/**'
-            - 'packages/react-native-worklets/package.json'
-            - 'packages/react-native-worklets/src/specs/**'
-            - 'packages/react-native-worklets/Common/**'
-            - 'apps/fabric-example/package.json'
-            - 'apps/common-app/package.json'
-            - 'apps/fabric-example/android/**'
+    uses: ./.github/workflows/changed-paths.yml
+    with:
+      workflow: Example Android build check
+      paths: |
+        - '.github/workflows/example-android-build-check.yml'
+        - '.github/workflows/changed-paths.yml'
+        - '.clang-tidy'
+        - 'scripts/llvm-tools/**'
+        - 'packages/react-native-reanimated/android/**'
+        - 'packages/react-native-reanimated/package.json'
+        - 'packages/react-native-reanimated/src/specs/**'
+        - 'packages/react-native-reanimated/Common/**'
+        - 'packages/react-native-worklets/android/**'
+        - 'packages/react-native-worklets/package.json'
+        - 'packages/react-native-worklets/src/specs/**'
+        - 'packages/react-native-worklets/Common/**'
+        - 'apps/fabric-example/package.json'
+        - 'apps/common-app/package.json'
+        - 'apps/fabric-example/android/**'
 
   example-android-build-check:
     needs: changes

@@ -12,7 +12,7 @@ on:
     paths:
       - .github/workflows/example-ios-build-check.yml
       - .github/actions/install-pods/**
-      - .github/actions/changed-paths/**
+      - .github/workflows/changed-paths.yml
       - .github/actions/setup-ccache/**
       - .github/actions/save-ccache/**
       - scripts/llvm-tools/**
@@ -47,42 +47,34 @@ permissions:
 
 jobs:
   changes:
-    name: Changed paths (Example iOS build check)
-    runs-on: ubuntu-latest
+    name: Example iOS build check
     permissions:
       contents: read
       pull-requests: read
-    outputs:
-      affected: ${{ steps.changed-paths.outputs.affected }}
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - name: Match changed paths
-        id: changed-paths
-        uses: ./.github/actions/changed-paths
-        with:
-          workflow: Example iOS build check
-          paths: |
-            - '.github/workflows/example-ios-build-check.yml'
-            - '.github/actions/install-pods/**'
-            - '.github/actions/setup-ccache/**'
-            - '.github/actions/save-ccache/**'
-            - '.github/actions/changed-paths/**'
-            - 'scripts/llvm-tools/**'
-            - 'packages/react-native-reanimated/RNReanimated.podspec'
-            - 'packages/react-native-reanimated/scripts/reanimated_utils.rb'
-            - 'packages/react-native-reanimated/apple/**'
-            - 'packages/react-native-reanimated/package.json'
-            - 'packages/react-native-reanimated/src/specs/**'
-            - 'packages/react-native-reanimated/Common/**'
-            - 'packages/react-native-worklets/RNWorklets.podspec'
-            - 'packages/react-native-worklets/scripts/worklets_utils.rb'
-            - 'packages/react-native-worklets/apple/**'
-            - 'packages/react-native-worklets/package.json'
-            - 'packages/react-native-worklets/src/specs/**'
-            - 'packages/react-native-worklets/Common/**'
-            - 'apps/fabric-example/**'
-            - 'apps/common-app/package.json'
+    uses: ./.github/workflows/changed-paths.yml
+    with:
+      workflow: Example iOS build check
+      paths: |
+        - '.github/workflows/example-ios-build-check.yml'
+        - '.github/actions/install-pods/**'
+        - '.github/actions/setup-ccache/**'
+        - '.github/actions/save-ccache/**'
+        - '.github/workflows/changed-paths.yml'
+        - 'scripts/llvm-tools/**'
+        - 'packages/react-native-reanimated/RNReanimated.podspec'
+        - 'packages/react-native-reanimated/scripts/reanimated_utils.rb'
+        - 'packages/react-native-reanimated/apple/**'
+        - 'packages/react-native-reanimated/package.json'
+        - 'packages/react-native-reanimated/src/specs/**'
+        - 'packages/react-native-reanimated/Common/**'
+        - 'packages/react-native-worklets/RNWorklets.podspec'
+        - 'packages/react-native-worklets/scripts/worklets_utils.rb'
+        - 'packages/react-native-worklets/apple/**'
+        - 'packages/react-native-worklets/package.json'
+        - 'packages/react-native-worklets/src/specs/**'
+        - 'packages/react-native-worklets/Common/**'
+        - 'apps/fabric-example/**'
+        - 'apps/common-app/package.json'
 
   example-ios-build-check:
     needs: changes

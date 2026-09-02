@@ -11,7 +11,7 @@ on:
       - main
     paths:
       - '.github/workflows/yarn-validation.yml'
-      - '.github/actions/changed-paths/**'
+      - '.github/workflows/changed-paths.yml'
       - 'scripts/disallow-non-exact.js'
       - '**/package.json'
       - '**/yarn.lock'
@@ -23,27 +23,19 @@ permissions:
 
 jobs:
   changes:
-    name: Changed paths (Yarn validation)
-    runs-on: ubuntu-latest
+    name: Yarn validation
     permissions:
       contents: read
       pull-requests: read
-    outputs:
-      affected: ${{ steps.changed-paths.outputs.affected }}
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - name: Match changed paths
-        id: changed-paths
-        uses: ./.github/actions/changed-paths
-        with:
-          workflow: Yarn validation
-          paths: |
-            - '.github/workflows/yarn-validation.yml'
-            - '.github/actions/changed-paths/**'
-            - 'scripts/disallow-non-exact.js'
-            - '**/package.json'
-            - '**/yarn.lock'
+    uses: ./.github/workflows/changed-paths.yml
+    with:
+      workflow: Yarn validation
+      paths: |
+        - '.github/workflows/yarn-validation.yml'
+        - '.github/workflows/changed-paths.yml'
+        - 'scripts/disallow-non-exact.js'
+        - '**/package.json'
+        - '**/yarn.lock'
 
   yarn-validation:
     needs: changes

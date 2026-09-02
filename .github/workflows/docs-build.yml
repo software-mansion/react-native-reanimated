@@ -3,6 +3,9 @@ env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
+  merge_group:
+    branches:
+      - main
   workflow_call:
   workflow_dispatch:
 
@@ -11,31 +14,23 @@ permissions:
 
 jobs:
   changes:
-    name: Changed paths (docs build)
-    runs-on: ubuntu-latest
+    name: docs build
     permissions:
       contents: read
       pull-requests: read
-    outputs:
-      affected: ${{ steps.changed-paths.outputs.affected }}
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - name: Match changed paths
-        id: changed-paths
-        uses: ./.github/actions/changed-paths
-        with:
-          workflow: docs build
-          paths: |
-            - '.github/workflows/docs-build.yml'
-            - '.github/workflows/docs-publish.yml'
-            - '.github/actions/docs-build/**'
-            - '.github/actions/changed-paths/**'
-            - 'scripts/validate-docs-versions.js'
-            - 'docs/docs-reanimated/**'
-            - 'packages/react-native-reanimated/compatibility.json'
-            - 'docs/docs-worklets/**'
-            - 'packages/react-native-worklets/compatibility.json'
+    uses: ./.github/workflows/changed-paths.yml
+    with:
+      workflow: docs build
+      paths: |
+        - '.github/workflows/docs-build.yml'
+        - '.github/workflows/docs-publish.yml'
+        - '.github/actions/docs-build/**'
+        - '.github/workflows/changed-paths.yml'
+        - 'scripts/validate-docs-versions.js'
+        - 'docs/docs-reanimated/**'
+        - 'packages/react-native-reanimated/compatibility.json'
+        - 'docs/docs-worklets/**'
+        - 'packages/react-native-worklets/compatibility.json'
 
   docs-build:
     needs: changes
