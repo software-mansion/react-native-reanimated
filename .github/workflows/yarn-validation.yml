@@ -3,11 +3,6 @@ env:
   YARN_ENABLE_HARDENED_MODE: 1
 on:
   pull_request:
-    paths:
-      - '.github/workflows/yarn-validation.yml'
-      - 'scripts/disallow-non-exact.js'
-      - '**/package.json'
-      - '**/yarn.lock'
   merge_group:
     branches:
       - main
@@ -16,6 +11,7 @@ on:
       - main
     paths:
       - '.github/workflows/yarn-validation.yml'
+      - '.github/actions/changed-paths/**'
       - 'scripts/disallow-non-exact.js'
       - '**/package.json'
       - '**/yarn.lock'
@@ -26,8 +22,32 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: Changed paths (Yarn validation)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      affected: ${{ steps.changed-paths.outputs.affected }}
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Match changed paths
+        id: changed-paths
+        uses: ./.github/actions/changed-paths
+        with:
+          workflow: Yarn validation
+          paths: |
+            - '.github/workflows/yarn-validation.yml'
+            - '.github/actions/changed-paths/**'
+            - 'scripts/disallow-non-exact.js'
+            - '**/package.json'
+            - '**/yarn.lock'
+
   yarn-validation:
-    if: github.repository == 'software-mansion/react-native-reanimated'
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.affected == 'true') && github.repository == 'software-mansion/react-native-reanimated' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

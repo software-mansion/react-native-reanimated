@@ -3,9 +3,6 @@ env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
-    paths:
-      - '.github/workflows/babel-plugin-static-check.yml'
-      - 'packages/react-native-worklets/plugin/**'
   merge_group:
     branches:
       - main
@@ -14,6 +11,7 @@ on:
       - main
     paths:
       - '.github/workflows/babel-plugin-static-check.yml'
+      - '.github/actions/changed-paths/**'
       - 'packages/react-native-worklets/plugin/**'
   workflow_call:
   workflow_dispatch:
@@ -22,8 +20,30 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: Changed paths (Babel plugin static check)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      affected: ${{ steps.changed-paths.outputs.affected }}
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Match changed paths
+        id: changed-paths
+        uses: ./.github/actions/changed-paths
+        with:
+          workflow: Babel plugin static check
+          paths: |
+            - '.github/workflows/babel-plugin-static-check.yml'
+            - '.github/actions/changed-paths/**'
+            - 'packages/react-native-worklets/plugin/**'
+
   babel-plugin-static-check:
-    if: github.repository == 'software-mansion/react-native-reanimated'
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.affected == 'true') && github.repository == 'software-mansion/react-native-reanimated' }}
     strategy:
       fail-fast: false
       matrix:

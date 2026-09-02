@@ -2,16 +2,36 @@ name: Check Ruby and CocoaPods versions
 on:
   pull_request:
     types: [opened, synchronize]
-    paths:
-      - 'apps/**/Gemfile.lock'
-      - 'apps/**/**/Podfile.lock'
 
 permissions:
   contents: read
 
 jobs:
+  changes:
+    name: Changed paths (Check Ruby and CocoaPods versions)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      affected: ${{ steps.changed-paths.outputs.affected }}
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Match changed paths
+        id: changed-paths
+        uses: ./.github/actions/changed-paths
+        with:
+          workflow: Check Ruby and CocoaPods versions
+          paths: |
+            - '.github/workflows/check-ruby-pods-versions.yml'
+            - '.github/actions/changed-paths/**'
+            - 'apps/**/Gemfile.lock'
+            - 'apps/**/**/Podfile.lock'
+
   ruby-pods-version-check:
-    if: github.repository == 'software-mansion/react-native-reanimated'
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.affected == 'true') && github.repository == 'software-mansion/react-native-reanimated' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:

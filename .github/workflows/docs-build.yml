@@ -3,15 +3,6 @@ env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
-    paths:
-      - '.github/workflows/docs-build.yml'
-      - '.github/workflows/docs-publish.yml'
-      - '.github/actions/docs-build/**'
-      - 'scripts/validate-docs-versions.js'
-      - docs/docs-reanimated/**
-      - packages/react-native-reanimated/compatibility.json
-      - docs/docs-worklets/**
-      - packages/react-native-worklets/compatibility.json
   workflow_call:
   workflow_dispatch:
 
@@ -19,7 +10,36 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: Changed paths (docs build)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      affected: ${{ steps.changed-paths.outputs.affected }}
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Match changed paths
+        id: changed-paths
+        uses: ./.github/actions/changed-paths
+        with:
+          workflow: docs build
+          paths: |
+            - '.github/workflows/docs-build.yml'
+            - '.github/workflows/docs-publish.yml'
+            - '.github/actions/docs-build/**'
+            - '.github/actions/changed-paths/**'
+            - 'scripts/validate-docs-versions.js'
+            - 'docs/docs-reanimated/**'
+            - 'packages/react-native-reanimated/compatibility.json'
+            - 'docs/docs-worklets/**'
+            - 'packages/react-native-worklets/compatibility.json'
+
   docs-build:
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.affected == 'true') }}
     runs-on: ubuntu-latest
     env:
       REANIMATED_DOCS_DIR: docs/docs-reanimated

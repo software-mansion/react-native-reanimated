@@ -1,0 +1,51 @@
+name: Changed paths
+description: Decide whether a workflow's jobs are affected by the built change
+
+inputs:
+  workflow:
+    description: >-
+      The calling workflow's own `name:`. A called (reusable) workflow inherits
+      the caller's event, so when this differs from `github.workflow` the run
+      belongs to another workflow and the filter must not apply.
+    required: true
+  paths:
+    description: YAML list of path globs, same syntax as `on.<event>.paths`
+    required: true
+
+outputs:
+  affected:
+    description: >-
+      'true' when the jobs should run — always outside pull_request events and
+      when called from another workflow, otherwise when any changed file
+      matches `paths`.
+    value: ${{ github.event_name != 'pull_request' || github.workflow != inputs.workflow || steps.filter.outputs.affected == 'true' }}
+
+runs:
+  using: 'composite'
+  steps:
+    # A required check that a `on.pull_request.paths` filter skips never
+    # reports a status, so the pull request blocks on it forever
+    # (https://github.com/orgs/community/discussions/13690). The filter lives
+    # here instead: the workflow triggers on every pull request, its `changes`
+    # job asks this action whether anything relevant changed, and the real
+    # jobs skip via a job-level `if:` — a job skipped that way reports a
+    # success-like "skipped" conclusion that satisfies branch protection.
+    #
+    # Anything that is not a pull_request (push, merge_group, schedule,
+    # workflow_dispatch) always answers true — those events either keep their
+    # own `on.paths` filter or never had one. So does a workflow_call: the
+    # callee inherits the caller's event, so a caller testing itself on its own
+    # pull_request must not be filtered against the callee's path list.
+    #
+    # Dependents gate on this output with
+    # `!cancelled() && (needs.changes.result != 'success' || affected == 'true')`
+    # so a broken gate (API error, runner failure) runs the jobs instead of
+    # skipping them into a green check.
+    - name: Match changed paths against the pull request
+      id: filter
+      if: github.event_name == 'pull_request' && github.workflow == inputs.workflow
+      uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d
+      with:
+        filters: |
+          affected:
+          ${{ inputs.paths }}

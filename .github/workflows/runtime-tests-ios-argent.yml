@@ -21,6 +21,15 @@ on:
         required: false
         type: string
         default: ''
+      # The PR wrapper always calls this workflow and passes false here when
+      # the pull request touches nothing relevant. Gating inside the callee
+      # (instead of skipping the caller job) keeps the check-run names
+      # identical between the run and skip cases, so they can be marked as
+      # required checks without ever blocking a merge.
+      enabled:
+        required: false
+        type: boolean
+        default: true
   workflow_dispatch:
     inputs:
       bundleMode:
@@ -38,6 +47,11 @@ on:
         required: false
         type: string
         default: ''
+      enabled:
+        description: Leave checked — unchecking skips every job (used by the PR wrapper)
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -45,7 +59,9 @@ permissions:
 jobs:
   # Check if we have all must-have credentials before running the workflow.
   preflight:
-    if: github.repository == 'software-mansion/react-native-reanimated'
+    # Skipping preflight cascades: every other job needs it, so they all
+    # report a success-like "skipped" conclusion when `enabled` is false.
+    if: github.repository == 'software-mansion/react-native-reanimated' && inputs.enabled
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:

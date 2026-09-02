@@ -3,20 +3,6 @@ env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
-    paths:
-      - .github/workflows/runtime-tests-android.yml
-      - apps/common-app/runtime-tests/**
-      - apps/fabric-example/package.json
-      - apps/common-app/package.json
-      - apps/fabric-example/scripts/runtime-tests-server.js
-      - apps/fabric-example/android/**
-      - packages/react-native-reanimated/Common/**
-      - packages/react-native-reanimated/android/**
-      - packages/react-native-reanimated/src/**
-      - packages/react-native-worklets/Common/**
-      - packages/react-native-worklets/android/**
-      - packages/react-native-worklets/bundleMode/**
-      - packages/react-native-worklets/src/**
   workflow_call:
     inputs:
       bundleMode:
@@ -42,8 +28,41 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: Changed paths (Runtime tests Android)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      affected: ${{ steps.changed-paths.outputs.affected }}
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Match changed paths
+        id: changed-paths
+        uses: ./.github/actions/changed-paths
+        with:
+          workflow: Runtime tests Android
+          paths: |
+            - '.github/workflows/runtime-tests-android.yml'
+            - '.github/actions/changed-paths/**'
+            - 'apps/common-app/runtime-tests/**'
+            - 'apps/fabric-example/package.json'
+            - 'apps/common-app/package.json'
+            - 'apps/fabric-example/scripts/runtime-tests-server.js'
+            - 'apps/fabric-example/android/**'
+            - 'packages/react-native-reanimated/Common/**'
+            - 'packages/react-native-reanimated/android/**'
+            - 'packages/react-native-reanimated/src/**'
+            - 'packages/react-native-worklets/Common/**'
+            - 'packages/react-native-worklets/android/**'
+            - 'packages/react-native-worklets/bundleMode/**'
+            - 'packages/react-native-worklets/src/**'
+
   runtime-tests-android:
-    if: github.repository == 'software-mansion/react-native-reanimated'
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.affected == 'true') && github.repository == 'software-mansion/react-native-reanimated' }}
     name: ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90

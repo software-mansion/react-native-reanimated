@@ -3,11 +3,6 @@ env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
-    paths:
-      - .github/workflows/example-next-build-check-and-test.yml
-      - 'packages/react-native-reanimated/src/**'
-      - 'packages/react-native-worklets/src/**'
-      - 'apps/next-example/**'
   push:
     branches:
       - main
@@ -18,7 +13,32 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: Changed paths (Example Next build check and tests)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      affected: ${{ steps.changed-paths.outputs.affected }}
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Match changed paths
+        id: changed-paths
+        uses: ./.github/actions/changed-paths
+        with:
+          workflow: Example Next build check and tests
+          paths: |
+            - '.github/workflows/example-next-build-check-and-test.yml'
+            - '.github/actions/changed-paths/**'
+            - 'packages/react-native-reanimated/src/**'
+            - 'packages/react-native-worklets/src/**'
+            - 'apps/next-example/**'
+
   example-next-build-check-and-test:
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.affected == 'true') }}
     runs-on: ubuntu-latest
     concurrency:
       group: build-next-example-${{ github.ref }}
