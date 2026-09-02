@@ -3,13 +3,14 @@
 #import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
-#import <reanimated/apple/REASlowAnimations.h>
 #import <reanimated/apple/REAUIView.h>
 #import <reanimated/apple/RNGestureHandlerStateManager.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/native/SetGestureState.h>
 #import <reanimated/apple/pseudoSelectors/REAPseudoSelectorAttachQueue.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
+
+#import <worklets/apple/SlowAnimations.h>
 
 #import <React/RCTComponentViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
@@ -48,7 +49,7 @@ RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
       // TODO macOS targetTimestamp isn't available on macOS
       auto targetTimestamp = displayLink.timestamp + displayLink.duration;
 #endif
-      const double frameTimestamp = calculateTimestampWithSlowAnimations(targetTimestamp) * 1000;
+      const double frameTimestamp = worklets::calculateTimestampWithSlowAnimations(targetTimestamp) * 1000;
       onRender(frameTimestamp);
     }];
   };
@@ -67,7 +68,7 @@ SynchronouslyUpdateUIPropsFunction makeSynchronouslyUpdateUIPropsFunction(REANod
 GetAnimationTimestampFunction makeGetAnimationTimestamp()
 {
   auto getAnimationTimestamp = []() {
-    return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000;
+    return worklets::calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000;
   };
   return getAnimationTimestamp;
 }
