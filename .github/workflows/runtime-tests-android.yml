@@ -73,7 +73,7 @@ jobs:
       REANIMATED_DIR: packages/react-native-reanimated
       CONFIGURATION: ${{ inputs.configuration || 'DebugRuntimeTests' }}
     concurrency:
-      group: runtime-tests-android-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'DebugRuntimeTests' }}
+      group: runtime-tests-android-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'DebugRuntimeTests' }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
