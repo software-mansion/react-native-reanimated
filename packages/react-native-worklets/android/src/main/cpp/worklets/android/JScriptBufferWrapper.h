@@ -1,7 +1,6 @@
 #pragma once
 
 #include <fbjni/fbjni.h>
-#include <jsireact/JSIExecutor.h>
 #include <react/jni/JSLoader.h>
 #include <worklets/Tools/ScriptBuffer.h>
 
