@@ -242,6 +242,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   AnimatedSensorModule animatedSensorModule_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
+  double lastReactRuntimeGCTimestamp_{0};
   std::function<void(double)> pendingAnimationFrameCallbackFromWorklets_;
 
 #ifdef __APPLE__

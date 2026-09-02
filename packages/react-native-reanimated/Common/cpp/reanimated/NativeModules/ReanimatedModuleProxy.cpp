@@ -1,5 +1,6 @@
 #include <cxxreact/ReactNativeVersion.h>
 #include <jsi/JSIDynamic.h>
+#include <jsi/instrumentation.h>
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
 #include <react/featureflags/ReactNativeFeatureFlags.h>
@@ -671,9 +672,17 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
       "getSettledUpdates requires FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS static feature flag to be enabled");
 
   constexpr double SETTLED_ANIMATION_THRESHOLD_MS = 1000;
+  constexpr double REACT_RUNTIME_GC_INTERVAL_MS = 60000;
 
   // TODO(future): use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
+
+  if (lastReactRuntimeGCTimestamp_ == 0) {
+    lastReactRuntimeGCTimestamp_ = currentTimestamp;
+  } else if (currentTimestamp - lastReactRuntimeGCTimestamp_ >= REACT_RUNTIME_GC_INTERVAL_MS) {
+    lastReactRuntimeGCTimestamp_ = currentTimestamp;
+    rt.instrumentation().collectGarbage("reanimated");
+  }
 
   // TODO(future): flush updates from CSS animations and CSS transitions registries
   auto lock = updatesRegistryManager_->lock();
