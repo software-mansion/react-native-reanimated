@@ -336,7 +336,7 @@ tasks.named("preBuild") { dependsOn("assertMinimalReactNativeVersionTask") }
 
 // Workaround for AGP 9 + Kotlin 2.x lint K2 UAST crash on .gradle.kts build scripts.
 // See: https://issuetracker.google.com/issues/432144179
-tasks.configureEach { if (name.startsWith("lintVital")) enabled = false }
+tasks.configureEach { if (name.startsWith("lint")) enabled = false }
 
 tasks.register<Copy>("prepareWorkletsHeadersForPrefabs") {
     from("$projectDir/src/main/cpp")
