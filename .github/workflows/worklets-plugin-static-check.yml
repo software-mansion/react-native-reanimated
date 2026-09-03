@@ -2,17 +2,6 @@ name: Worklets plugin static check
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/worklets-plugin-static-check.yml'
-      - '.github/workflows/helper/clear-annotations.sh'
-      - 'yarn.lock'
-      - 'packages/react-native-worklets/package.json'
-      - 'packages/react-native-worklets/plugin/**'
-      - 'packages/react-native-worklets/plugin-oxc/**'
-      - 'apps/fabric-example/**'
   workflow_call:
   workflow_dispatch:
 

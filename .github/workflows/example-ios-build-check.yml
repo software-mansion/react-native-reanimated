@@ -2,29 +2,6 @@ name: Example iOS build check
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/example-ios-build-check.yml
-      - .github/actions/install-pods/**
-      - .github/actions/setup-ccache/**
-      - .github/actions/save-ccache/**
-      - scripts/llvm-tools/**
-      - packages/react-native-reanimated/RNReanimated.podspec
-      - packages/react-native-reanimated/scripts/reanimated_utils.rb
-      - packages/react-native-reanimated/apple/**
-      - packages/react-native-reanimated/package.json
-      - packages/react-native-reanimated/src/specs/**
-      - packages/react-native-reanimated/Common/**
-      - packages/react-native-worklets/RNWorklets.podspec
-      - packages/react-native-worklets/scripts/worklets_utils.rb
-      - packages/react-native-worklets/apple/**
-      - packages/react-native-worklets/package.json
-      - packages/react-native-worklets/src/specs/**
-      - packages/react-native-worklets/Common/**
-      - apps/fabric-example/**
-      - apps/common-app/package.json
   workflow_call:
     inputs:
       bundleMode:

@@ -16,9 +16,11 @@ name: CI
 # (https://github.com/orgs/community/discussions/13690). Skipping through a
 # job-level `if:` instead yields a success-like "skipped" conclusion.
 #
-# Anything that is not a pull_request (merge_group, push, workflow_dispatch)
-# runs every check. The called workflows keep their own `on.push.paths`
-# triggers for pushes to main.
+# Pushes to main go through the same filter (against the commit before the
+# push) so the path lists live only here. The runtime-test suites are the
+# exception: they are too expensive to rerun after every merge, so they run
+# for pull requests only. Every other event (merge_group, workflow_dispatch)
+# runs every check.
 #
 # Dependents gate on `needs.changes.result != 'success' || affected` so a
 # broken gate (API error, runner failure) runs the checks instead of skipping
@@ -26,6 +28,9 @@ name: CI
 on:
   pull_request:
   merge_group:
+    branches:
+      - main
+  push:
     branches:
       - main
   workflow_dispatch:
@@ -42,23 +47,28 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
-      android-validation: ${{ github.event_name != 'pull_request' || steps.filter.outputs.android-validation == 'true' }}
-      apple-validation: ${{ github.event_name != 'pull_request' || steps.filter.outputs.apple-validation == 'true' }}
-      check-ruby-pods-versions: ${{ github.event_name != 'pull_request' || steps.filter.outputs.check-ruby-pods-versions == 'true' }}
-      docs-build: ${{ github.event_name != 'pull_request' || steps.filter.outputs.docs-build == 'true' }}
-      example-android-build-check: ${{ github.event_name != 'pull_request' || steps.filter.outputs.example-android-build-check == 'true' }}
-      example-ios-build-check: ${{ github.event_name != 'pull_request' || steps.filter.outputs.example-ios-build-check == 'true' }}
-      example-next-build-check-and-test: ${{ github.event_name != 'pull_request' || steps.filter.outputs.example-next-build-check-and-test == 'true' }}
-      example-typescript-check-and-lint: ${{ github.event_name != 'pull_request' || steps.filter.outputs.example-typescript-check-and-lint == 'true' }}
-      runtime-tests-android: ${{ github.event_name != 'pull_request' || steps.filter.outputs.runtime-tests-android == 'true' }}
-      runtime-tests-ios-argent: ${{ github.event_name != 'pull_request' || steps.filter.outputs.runtime-tests-ios-argent == 'true' }}
-      worklets-plugin-static-check: ${{ github.event_name != 'pull_request' || steps.filter.outputs.worklets-plugin-static-check == 'true' }}
-      yarn-validation: ${{ github.event_name != 'pull_request' || steps.filter.outputs.yarn-validation == 'true' }}
+      android-validation: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.android-validation == 'true' }}
+      apple-validation: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.apple-validation == 'true' }}
+      check-ruby-pods-versions: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.check-ruby-pods-versions == 'true' }}
+      docs-build: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.docs-build == 'true' }}
+      example-android-build-check: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.example-android-build-check == 'true' }}
+      example-ios-build-check: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.example-ios-build-check == 'true' }}
+      example-next-build-check-and-test: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.example-next-build-check-and-test == 'true' }}
+      example-typescript-check-and-lint: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.example-typescript-check-and-lint == 'true' }}
+      runtime-tests-android: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || (github.event_name != 'push' && steps.filter.outputs.runtime-tests-android == 'true') }}
+      runtime-tests-ios-argent: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || (github.event_name != 'push' && steps.filter.outputs.runtime-tests-ios-argent == 'true') }}
+      worklets-plugin-static-check: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.worklets-plugin-static-check == 'true' }}
+      yarn-validation: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.yarn-validation == 'true' }}
     steps:
-      # No checkout: the filter lists the changed files through the API.
-      - name: Match changed paths against the pull request
+      # On pull_request the filter lists the changed files through the API;
+      # on push it diffs against the commit before the push, which needs the
+      # repository checked out.
+      - name: Check out Git repository
+        if: github.event_name == 'push'
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Match changed paths
         id: filter
-        if: github.event_name == 'pull_request'
+        if: contains(fromJSON('["pull_request", "push"]'), github.event_name)
         uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d
         with:
           # One filter per called workflow, keyed by the workflow's file name.
@@ -227,14 +237,14 @@ jobs:
           OUTPUTS: ${{ toJSON(steps.filter.outputs) }}
         run: |
           {
-            if [ "$EVENT" != "pull_request" ]; then
-              echo "Not a pull request (\`$EVENT\`): every check runs."
+            if [ "$EVENT" != "pull_request" ] && [ "$EVENT" != "push" ]; then
+              echo "Not a pull request or push (\`$EVENT\`): every check runs."
             elif [ "$FILTER_OUTCOME" != "success" ]; then
               echo "The changed-paths filter did not succeed (\`$FILTER_OUTCOME\`): every check runs."
             else
               echo "| Check | Runs |"
               echo "| --- | --- |"
-              echo "$OUTPUTS" | jq -r 'to_entries | map(select(.key != "changes")) | sort_by(.key) | .[] | "| \(.key) | \(if .value == "true" then "yes" else "skipped, no matching changes" end) |"'
+              echo "$OUTPUTS" | jq -r --arg event "$EVENT" 'to_entries | map(select(.key != "changes")) | sort_by(.key) | .[] | "| \(.key) | \(if $event == "push" and (.key | startswith("runtime-tests")) then "skipped, pull requests only" elif .value == "true" then "yes" else "skipped, no matching changes" end) |"'
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 

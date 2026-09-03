@@ -2,20 +2,6 @@ name: Apple validation
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/apple-validation.yml'
-      - '.github/actions/apple-validation/**'
-      - 'packages/react-native-reanimated/apple/**'
-      - 'packages/react-native-reanimated/package.json'
-      - 'packages/react-native-reanimated/scripts/validate-apple.sh'
-      - 'scripts/llvm-tools/**'
-      - 'packages/react-native-reanimated/Common/cpp/**'
-      - 'packages/react-native-worklets/apple/**'
-      - 'packages/react-native-worklets/package.json'
-      - 'packages/react-native-worklets/Common/**'
   workflow_call:
     inputs:
       package:
