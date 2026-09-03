@@ -14,6 +14,7 @@
 ### 🐛 Bug fixes
 
 - Fix single-argument `translate()` and `skew()` in transform strings repeating the argument on the Y axis instead of leaving it at zero, so `translate(100px)` no longer also moves the element down. ([#10385](https://github.com/software-mansion/react-native-reanimated/pull/10385) by [@dennytosp](https://github.com/dennytosp))
+- Reset `IN_STYLE_UPDATER` even when an initial style updater throws, so a single updater error no longer leaves all animations returning raw values until reload. ([#10445](https://github.com/software-mansion/react-native-reanimated/pull/10445) by [@alexey-khatskelevich](https://github.com/alexey-khatskelevich))
 - Fix `./gradlew app:build` failing on `:lintAnalyzeDebug` with a K2 UAST crash on `.gradle.kts` build scripts - all lint tasks are now skipped, not only `lintVital*`. ([#10448](https://github.com/software-mansion/react-native-reanimated/pull/10448) by [@tshmieldev](https://github.com/tshmieldev))
 - Treat `animationName: []` as no animation, so the view is detached instead of running its previous animation forever. ([#10432](https://github.com/software-mansion/react-native-reanimated/pull/10432) by [@MatiPl01](https://github.com/MatiPl01))
 - Fix `SequencedTransition` on web scaling the wrong axis in its midpoint keyframe, so the axis that has already finished no longer collapses while the other one waits. ([#10384](https://github.com/software-mansion/react-native-reanimated/pull/10384) by [@dennytosp](https://github.com/dennytosp))

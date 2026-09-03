@@ -3,10 +3,28 @@
 #include <worklets/SharedItems/Serializable/SerializableObject.h>
 
 #include <memory>
+#include <string>
+#include <utility>
 
 using namespace facebook;
 
 namespace worklets {
+
+namespace {
+
+void defineOwnDataProperty(jsi::Runtime &rt, const jsi::Object &target, const std::string &key, jsi::Value value) {
+  jsi::Object descriptor(rt);
+  descriptor.setProperty(rt, "configurable", true);
+  descriptor.setProperty(rt, "enumerable", true);
+  descriptor.setProperty(rt, "writable", true);
+  descriptor.setProperty(rt, "value", std::move(value));
+
+  const auto objectCtor = rt.global().getPropertyAsObject(rt, "Object");
+  const auto defineProperty = objectCtor.getPropertyAsFunction(rt, "defineProperty");
+  defineProperty.call(rt, jsi::Value(rt, target), jsi::String::createFromUtf8(rt, key), std::move(descriptor));
+}
+
+} // namespace
 
 SerializableObject::SerializableObject(jsi::Runtime &rt, const jsi::Object &object)
     : Serializable(ValueType::ObjectType) {
@@ -33,7 +51,11 @@ SerializableObject::SerializableObject(jsi::Runtime &rt, const jsi::Object &obje
 jsi::Value SerializableObject::toJSValue(jsi::Runtime &rt) {
   auto obj = jsi::Object(rt);
   for (const auto &i : data_) {
-    obj.setProperty(rt, jsi::String::createFromUtf8(rt, i.first), i.second->toJSValue(rt));
+    if (i.first == "__proto__") {
+      defineOwnDataProperty(rt, obj, i.first, i.second->toJSValue(rt));
+    } else {
+      obj.setProperty(rt, jsi::String::createFromUtf8(rt, i.first), i.second->toJSValue(rt));
+    }
   }
   if (nativeState_ != nullptr) {
     obj.setNativeState(rt, nativeState_);
