@@ -89,9 +89,16 @@ export function createCustomKeyFrameAnimation(
   // Move keyframe easings one keyframe up (our LA Keyframe definition is different
   // from the CSS keyframes and expects easing to be present in the keyframe to which
   // we animate instead of the keyframe we animate from)
-  const offsets = Object.keys(
-    keyframeDefinitions
-  ) as (keyof KeyframeDefinitions)[];
+  // `Object.keys` lists integer-like keys first, in ascending order, and every
+  // other key after them in insertion order. That is not the order the
+  // keyframes run in once 'from'/'to' aliases or fractional offsets are used,
+  // so the offsets have to be sorted before the easings can be shifted.
+  const toOffset = (offset: keyof KeyframeDefinitions) =>
+    offset === 'from' ? 0 : offset === 'to' ? 100 : Number(offset);
+
+  const offsets = (
+    Object.keys(keyframeDefinitions) as (keyof KeyframeDefinitions)[]
+  ).sort((a, b) => toOffset(a) - toOffset(b));
 
   for (let i = 1; i < offsets.length; i++) {
     const style = keyframeDefinitions[offsets[i]];
