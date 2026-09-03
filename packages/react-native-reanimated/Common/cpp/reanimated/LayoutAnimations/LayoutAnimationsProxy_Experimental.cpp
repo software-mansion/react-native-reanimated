@@ -48,6 +48,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   ReanimatedSystraceSection d("pullTransaction");
   react_native_assert(surfaceId == surfaceId_ && "pull routed to the wrong surface's proxy");
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  auto configLock = layoutAnimationsManager_->lockAndFlushConfigUpdates();
   if (!isLightTreeInitialized()) {
     pendingTransactions_.emplace_back(telemetry.getRevisionNumber(), mutations);
     return MountingTransaction{surfaceId, transactionNumber, std::move(mutations), telemetry};
@@ -114,6 +115,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
 
   flushCompletedRemovals(filteredMutations, flushStructuralMutations);
 
+  configLock.unlock();
   flushLayoutAnimationOperations(lock);
 
   addOngoingAnimations(filteredMutations);
@@ -217,11 +219,16 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
   auto &filteredMutations = transaction.filteredMutations;
   std::unordered_set<Tag> inserted, moved, deleted;
   std::unordered_map<Tag, IndexCursors> indexCursors;
+  std::unordered_map<Tag, ShadowView> updatedViews;
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
     const auto &mutation = *it;
     switch (mutation.type) {
       case ShadowViewMutation::Delete: {
         deleted.insert(mutation.oldChildShadowView.tag);
+        break;
+      }
+      case ShadowViewMutation::Update: {
+        updatedViews.insert_or_assign(mutation.newChildShadowView.tag, mutation.oldChildShadowView);
         break;
       }
       case ShadowViewMutation::Insert: {
@@ -268,9 +275,13 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         node->current = mutation.newChildShadowView;
 #endif // ANDROID
         auto tag = mutation.newChildShadowView.tag;
-        if (const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT)) {
+        auto config = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT);
+        if (!config) {
+          config = getRetargetLayoutAnimationConfig(tag);
+        }
+        if (config) {
           transaction.layout.push_back({node, config});
-        } else {
+        } else if (!updateEnteringAnimationTarget(tag, mutation.newChildShadowView)) {
           filteredMutations.push_back(mutation);
         }
         break;
@@ -310,9 +321,21 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         }
         const auto layoutConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT);
         const auto enteringConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, ENTERING);
-        if (moved.contains(tag) && layoutConfig) {
-          filteredMutations.push_back(
-              ShadowViewMutation::InsertMutation(mutation.parentTag, node->previous, hostIndex));
+        if (moved.contains(tag)) {
+          if (const auto currentView = reparentLayoutAnimation(tag, mutation.parentTag)) {
+            filteredMutations.push_back(
+                ShadowViewMutation::InsertMutation(mutation.parentTag, *currentView, hostIndex));
+          } else if (const auto updatedViewIt = updatedViews.find(tag);
+                     updatedViewIt != updatedViews.end() && layoutConfig) {
+            filteredMutations.push_back(
+                ShadowViewMutation::InsertMutation(mutation.parentTag, updatedViewIt->second, hostIndex));
+          } else if (hasPendingLayoutAnimation(tag)) {
+            filteredMutations.push_back(
+                ShadowViewMutation::InsertMutation(mutation.parentTag, node->previous, hostIndex));
+          } else {
+            filteredMutations.push_back(
+                ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
+          }
         } else if (enteringConfig) {
           transaction.entering.push_back({node, enteringConfig});
           filteredMutations.push_back(
@@ -719,9 +742,8 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
   return wantAnimateExit;
 }
 
-void LayoutAnimationsProxy_Experimental::surfaceDidUnmount() {
-  LayoutAnimationsProxyCommon::surfaceDidUnmount();
-  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+void LayoutAnimationsProxy_Experimental::clearSurfaceState() const {
+  LayoutAnimationsProxyCommon::clearSurfaceState();
   sharedContainers_.clear();
   transition_.reset();
   uncommittedScreenPop_.reset();
