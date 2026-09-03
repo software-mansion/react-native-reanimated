@@ -181,6 +181,11 @@ const ExitingTagReuseStressExample: React.FC = () =>
     require('./LayoutAnimations/ExitingTagReuseStressExample')
       .default as React.FC
   );
+const ExperimentalCleanupOrderingExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/ExperimentalCleanupOrderingExample')
+      .default as React.FC
+  );
 const DynamicColorIOSExample: React.FC = () =>
   React.createElement(require('./DynamicColorIOSExample').default as React.FC);
 const EmojiWaterfallExample: React.FC = () =>
@@ -1202,6 +1207,10 @@ export const EXAMPLES: Record<string, Example> = {
   ExitingTagReuseStressExample: {
     title: '[LA] Exiting tag reuse stress',
     screen: ExitingTagReuseStressExample,
+  },
+  ExperimentalCleanupOrderingExample: {
+    title: '[LA] Experimental cleanup ordering',
+    screen: ExperimentalCleanupOrderingExample,
   },
   DefaultAnimationsOverrides: {
     title: '[LA] Default layout animations overrides',
