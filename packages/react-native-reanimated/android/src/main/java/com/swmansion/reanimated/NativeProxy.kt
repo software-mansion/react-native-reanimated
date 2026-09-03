@@ -251,6 +251,12 @@ open class NativeProxy {
             }.apply { isAccessible = true }
     }
 
+    private val getViewExistsMethod by lazy {
+        mountingManager.javaClass.methods
+            .first { it.name == "getViewExists" && it.parameterTypes.size == 1 }
+            .apply { isAccessible = true }
+    }
+
     @DoNotStrip
     fun synchronouslyUpdateUIProps(
         intBuffer: IntArray,
@@ -260,9 +266,11 @@ open class NativeProxy {
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
             if (BuildConfig.IS_REACT_NATIVE_86_OR_NEWER) {
                 try {
-                    updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
+                    if (getViewExistsMethod.invoke(mountingManager, viewTag) == true) {
+                        updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
+                    }
                 } catch (e: Exception) {
-                    Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag", e)
+                    Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag: ${e.cause ?: e}")
                 }
             } else {
                 mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, props)
