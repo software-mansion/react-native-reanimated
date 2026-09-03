@@ -1,0 +1,192 @@
+---
+sidebar_position: 40
+---
+
+# Synchronizing data
+
+In the [previous chapter](link) we learned some theory about event loops, which we'll now put to use.
+
+In this chapter, we'll more advanced patterns of synchronizing data between JavaScript Runtimes, where asynchronous returns wouldn't be sufficient.
+
+## Getting the result of a periodic task
+
+Previous examples showed us how to return the result of a singular worklet at the point of its invocation. What if we had a long-running task, yielding results continuously, but we wanted to poll the data only occasionally?
+
+```js
+const worker = createWorkletRuntime();
+
+function taskDispatch() {
+    let result = -1;
+
+    function task() {
+        result++;
+    }
+
+    setInterval(task, 10);
+};
+
+scheduleOnRuntime(worker, taskDispatch);
+```
+
+We'll explore how can we obtain the value of the local `result` value and pass it to the RN Runtime.
+
+## With callbacks
+
+We could use the same pattern as [returning results with a callback](link).
+
+```js
+const worker = createWorkletRuntime();
+
+let polledResult = -1;
+function pollResult(value) {
+    polledResult = value;
+}
+
+function taskDispatch() {
+    let result = -1;
+
+    function task() {
+        result++;
+        scheduleOnRN(pollResult, result);
+    }
+
+    setInterval(task, 10);
+};
+
+scheduleOnRuntime(worker, taskDispatch);
+
+// ...code
+// Only once in a while
+console.log(polledResult);
+```
+
+**Do not do this!** This will schedule a cross-runtime call every 10ms that updates our `polledResult` value, even if we don't need it at a given moment. For best multi-threading performance, it's best to minimize the amount of cross-thread (cross-runtime) operations.
+
+## With the global object
+
+The simplest approach would be to store our result on the global object of the Worker Runtime.
+
+```js
+const worker = createWorkletRuntime();
+
+function taskDispatch() {
+    globalThis.result = -1;
+
+    function task() {
+        globalThis.result++;
+    }
+
+    setInterval(task, 10);
+};
+
+scheduleOnRuntime(worker, taskDispatch);
+```
+
+Then poll it with another function call, either synchronously or asynchronously:
+
+```js
+// Only once in a while
+function poll() {
+    return globalThis.result;
+}
+
+const asyncResult = runOnRuntimeAsync(worker, poll); // remember to await it later
+const syncResult = runOnRuntimeSync(worker, poll);
+```
+
+However, this code doesn't scale well and it's generally a bad practice to use the global object like this. Use it as a last resort escape hatch.
+
+## With a Synchronizable
+
+A [Synchronizable](link) is a memory primitive in Worklets library, that lives outside of any Runtime's JavaScript heap. Reading it and writing to it doesn't require making cross-runtime call and is the cheapest option of synchronizing the data between Runtimes.
+
+<!--TODO: improve the following sentence-->
+Synchronizable has a handful of APIs, but for the sake of this example we'll stick to its `getDirty` and `setBlocking` methods.
+
+```js
+const worker = createWorkletRuntime();
+const result = createSynchronizable(-1);
+
+function taskDispatch() {
+    function task() {
+        result.setBlocking(value => value + 1);
+    }
+
+    setInterval(task, 10);
+};
+
+scheduleOnRuntime(worker, taskDispatch);
+
+// ...code
+// Only once in a while
+console.log(result.getDirty());
+```
+
+Even though the Synchronizable was created on the RN Runtime, the value actually lives in the native heap and both Runtimes (threads) can access it with little overhead and without blocking one another.
+
+For this simple case, we can even optimize our code further and use a [Synchronizable with a fixed type](link), which exposes `setDirty` method and is generally faster than a general, [Synchronizable with a dynamic type](link) that we just used.
+
+```js
+const worker = createWorkletRuntime();
+const result = createSynchronizable(-1, {fixedType: true});
+
+function taskDispatch() {
+    let localResult = result.getDirty();
+    
+    function task() {
+        localResult++;
+        result.setDirty(localResult);
+    }
+
+    setInterval(task, 10);
+};
+
+scheduleOnRuntime(worker, taskDispatch);
+
+// ...code
+// Only once in a while
+console.log(result.getDirty());
+```
+
+This approach works best when you poll the data frequently or from multiple Runtimes at once.
+
+The downside is the fact, that every call of `setDirty` or `setBlocking` have to cross the JavaScript - native boundary and store the value there. This is particularly costly when it comes to storing non-primitive types, like objects or arrays - which require [serialization and/or deserialization](link) on each boundary crossing.
+
+## With a Shareable
+
+A [Shareable](link) is another memory primitive, but this time it lives on a designated Runtime, called the Host Runtime. Reading it on other Runtimes, called Guest Runtimes, means accessing it on its Host Runtime, either synchronously or asynchronously. It's similar in principle to the [global object approach](link), but with a layer of useful encapsulation.
+
+To create a Shareable, we have to explicitly state the Host Runtime by its [Runtime ID](link). The ID can be obtained from the value returned by `createWorkletRuntime`, by its `runtimeId` property.
+
+```js
+const worker = createWorkletRuntime();
+const result = createShareable(worker.runtimeId, -1);
+```
+
+Shareable is an _asymmetric_ type, meaning it has a different structure on the Host Runtime and on Guest Runtimes. On the Host Runtime, you can access the value it holds directly as its `value` property. On Guest Runtimes you must use its synchronous or asynchronous methods.
+
+```js
+const worker = createWorkletRuntime();
+const result = createShareable(worker.runtimeId, -1);
+
+function taskDispatch() {
+    function task() {
+        result.value++;
+    }
+
+    setInterval(task, 10);
+};
+
+scheduleOnRuntime(worker, taskDispatch);
+
+// ...code
+// Only once in a while
+const syncResult = result.getSync();
+const asyncResult = result.getAsync();
+console.log(result.getSync());
+console.log(await asyncResult);
+```
+
+## Next chapter
+
+In the next chapter we'll learn how to integrate with [C++ API of Worklets library] for use-cases that can't be covered with just JavaScript code.

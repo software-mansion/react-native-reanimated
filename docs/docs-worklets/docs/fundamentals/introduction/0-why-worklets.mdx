@@ -1,0 +1,88 @@
+---
+sidebar_position: 0
+---
+
+# Why Worklets
+
+<!--
+1. To understand why a Worklets are needed, we have to look into the model of React Native.
+2. React Native is a native app, meaning it has a main (UI) thread.
+3. This native app spawns a new threads, called the JavaScript thread (JS thread).
+4. This thread creates a new Hermes JavaScript Virtual Machine (JSVM), also called a JavaScript Runtime.
+5. The JavaScript thread is responsible for executing your app's JavaScript (React) code and telling the UI thread how to render it on the screen.
+6. Since all your logic exists in JavaScript, all is going to be executed on the JS thread and might starve some UI-critical events like gestures or animations.
+    1. Showing an example how touch gesture has to wait for JS to be free.
+    2. Showing an example how a JS-driven animation has to wait for JS to be free (using useState or something).
+7. If you want to keep your code withing JavaScript boundaries, you need to find a way to execute that JavaScript on another thread.
+8. But the JSVM is single-threaded only, it can't be used by two threads simultaneously.
+9. Then, what we need is to create a separate JSVM. A JSVM is just a region in memory so it's not bound to any thread.
+10. We can use it to dispatch critical work on this extra JSVM, on the main thread.
+11. We can also offload the bottleneck to a yet another JSVM, off the JS thread and main thread.
+12. This is how React Native Worklets work.
+-->
+
+To understand why Worklets are needed, we have to look at how a React Native app is constructed.
+
+## The React Native model
+
+A React Native app is, first and foremost, **a native app**. Like every native app, it has a main thread — usually called the **User Interface (UI) thread** — that receives touches, lays out views and draws them on screen.
+
+Your JavaScript doesn't run there. At startup, the native app spawns a separate thread, the **JavaScript thread** (JS thread), and a [Hermes](https://reactnative.dev/docs/hermes) JavaScript Virtual Machine, also called a **JavaScript Runtime**. We'll call this Runtime the [React Native Runtime](link). Then, it delegates the execution of your JavaScript Bundle to the JS thread and running its [event loop]([link](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model#agent_execution_model)) there.
+
+The JS thread executes all of your app's JavaScript: your React components, your business logic, your event handlers. Its job is to figure out what the screen should look like and tell the UI thread how to render it.
+
+<ImagePlaceholder>
+  Diagram: the UI thread rendering views, the JS thread running the RN Runtime.
+</ImagePlaceholder>
+
+This split is what the official docs call the [threading model](https://reactnative.dev/architecture/threading-model).
+
+:::note
+
+__A JavaScript Runtime and a thread aren't the same thing!__
+
+- __A JavaScript Runtime is an execution environment__: a set of native functions (CPU instructions) to evaluate JavaScript code and data structures to store global objects, allocated JavaScript values, and the current execution state.
+
+- __A thread is an OS-level primitive that executes CPU instructions.__ The operating system decides when and on which CPU core it runs.
+
+A JavaScript Runtime is an exclusive resource. A thread must acquire it before using it to execute JavaScript code. After the thread finishes execution and releases it, another thread can acquire it.
+
+:::
+
+## Limitations of the model
+
+Since all your app logic lives inside the JavaScript Bundle and is executed only on one thread, you might run into situation, when a critical UI event has to wait for the JS thread to trigger a respective JavaScript event handler for it, visibly lagging the app.
+
+<!-- necessary: make the busy JS thread be occupied by something actually making sense -->
+
+<ImagePlaceholder>
+    Diagram: UI event waiting for the JS thread event loop to pick it up
+</ImagePlaceholder>
+
+Similar situation would happen if animation calculations were to be done via `useState` props and busy JS thread:
+
+<ImagePlaceholder>
+    Code? `useState` animation giving sparse updates (please don't do this)
+</ImagePlaceholder>
+
+## The solution
+
+To solve this issue, we have to somehow move the execution of the UI-critical parts of our app off the JS thread. We could write a [native module](link) but preferably we'd keep the code purely in JavaScript. We can't forcefully run some JavaScript code on the UI thread using the RN Runtime as it's single-threaded by design and it would result in a crash.
+
+This means that we have to create a new Runtime and move the event and animation logic outside the RN Runtime to the new Runtime.
+
+<ImagePlaceholder>
+    Visualization of moving the event handler to another JSVM, but not yet other thread.
+</ImagePlaceholder>
+
+Now, when the event comes, we can synchronously handle it on the UI thread, using our new Runtime. This is exactly the [UI Runtime](link) that Worklets expose.
+
+<ImagePlaceholder>
+    Event handler on another JSVM, on another thread.
+</ImagePlaceholder>
+
+Moreover, we can also offload the heavy computation that kept our JS thread overloaded. We can create yet another runtime (we don't want to preempt the UI Runtime) as it might be doing some important work.
+
+What we can do is to spawn another Runtime instead and a thread that we'll dedicate to execute tasks using the new Runtime. We'll call this Runtime a Worker Runtime.
+
+<!--<ImagePlaceholder>-->

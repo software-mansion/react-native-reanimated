@@ -1,0 +1,62 @@
+diff --git a/dist/index-f_LCpe-a.js b/dist/index-f_LCpe-a.js
+index d218eae6eb6011841c66f94f8c7d841f077d75c2..199d7fcff85be024cc13f52c605ea3a570975ccc 100644
+--- a/dist/index-f_LCpe-a.js
++++ b/dist/index-f_LCpe-a.js
+@@ -50,27 +50,41 @@ function P({
+         o
+       ),
+       children: [
+-        /* @__PURE__ */ r.jsx(
++        /* @__PURE__ */ r.jsxs(
+           "div",
+           {
+             className: f("menu__list-item-collapsible", {
+               "menu__list-item-collapsible--active": _
+             }),
+-            children: /* @__PURE__ */ r.jsx(
+-              F,
+-              {
+-                className: f("menu__link", {
+-                  "menu__link--sublist": e,
+-                  "menu__link--sublist-caret": !I && e,
+-                  "menu__link--active": x
+-                }),
+-                "aria-current": _ ? "page" : void 0,
+-                "aria-expanded": e ? !d : void 0,
+-                href: e ? p ?? "#" : p,
+-                ...t,
+-                children: u
+-              }
+-            )
++            children: [
++              /* @__PURE__ */ r.jsx(
++                F,
++                {
++                  className: f("menu__link", {
++                    "menu__link--sublist": e,
++                    "menu__link--sublist-caret": !I && e,
++                    "menu__link--active": x
++                  }),
++                  "aria-current": _ ? "page" : void 0,
++                  "aria-expanded": e ? !d : void 0,
++                  href: e ? p ?? "#" : p,
++                  ...t,
++                  onClick: (ev) => {
++                    a?.(s), e && (!I || _ ? (ev.preventDefault(), S(!d)) : S(!1));
++                  },
++                  children: u
++                }
++              ),
++              I && e && /* @__PURE__ */ r.jsx("button", {
++                type: "button",
++                className: "clean-btn menu__caret",
++                "aria-label": `${d ? "Expand" : "Collapse"} sidebar category '${u}'`,
++                "aria-expanded": !d,
++                onClick: (ev) => {
++                  ev.preventDefault(), S(!d);
++                }
++              })
++            ]
+           }
+         ),
+         /* @__PURE__ */ r.jsx(L, { lazy: !0, as: "ul", className: "menu__list", collapsed: d, children: /* @__PURE__ */ r.jsx(

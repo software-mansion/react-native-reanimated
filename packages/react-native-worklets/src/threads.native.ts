@@ -377,3 +377,9 @@ if (__DEV__ && !isBundleModeEnabled()) {
   addNoBundleModeGuardImplementation(runOnUISync);
   addNoBundleModeGuardImplementation(scheduleOnUI);
 }
+
+/** Returns the id of the thread which currently executes the calling runtime. */
+export function getCurrentThreadId(): string {
+  'worklet';
+  return globalThis.__workletsModuleProxy.getCurrentThreadId();
+}
