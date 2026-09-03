@@ -286,31 +286,46 @@ jobs:
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.example-typescript-check-and-lint == 'true') }}
     uses: ./.github/workflows/example-typescript-check-and-lint.yml
 
-  runtime-tests-android:
-    name: Runtime tests Android (${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }})
+  # The two bundle modes are spelled out instead of a matrix: a skipped
+  # matrix job shows its `name:` expression unexpanded on the pull request.
+  runtime-tests-android-legacy-eval:
+    name: Runtime tests Android (Legacy Eval)
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-android == 'true') }}
-    strategy:
-      fail-fast: false
-      matrix:
-        bundleMode: [false, true]
     uses: ./.github/workflows/runtime-tests-android.yml
     with:
       configuration: DebugRuntimeTests
-      bundleMode: ${{ matrix.bundleMode }}
+      bundleMode: false
 
-  runtime-tests-ios-argent:
-    name: Runtime tests iOS (${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }})
+  runtime-tests-android-bundle-mode:
+    name: Runtime tests Android (Bundle Mode)
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-android == 'true') }}
+    uses: ./.github/workflows/runtime-tests-android.yml
+    with:
+      configuration: DebugRuntimeTests
+      bundleMode: true
+
+  runtime-tests-ios-legacy-eval:
+    name: Runtime tests iOS (Legacy Eval)
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
-    strategy:
-      fail-fast: false
-      matrix:
-        bundleMode: [false, true]
     uses: ./.github/workflows/runtime-tests-ios-argent.yml
     with:
       configuration: ReleaseRuntimeTests
-      bundleMode: ${{ matrix.bundleMode }}
+      bundleMode: false
+    secrets:
+      SIM_ROUTER_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME }}
+      SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
+
+  runtime-tests-ios-bundle-mode:
+    name: Runtime tests iOS (Bundle Mode)
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
+    uses: ./.github/workflows/runtime-tests-ios-argent.yml
+    with:
+      configuration: ReleaseRuntimeTests
+      bundleMode: true
     secrets:
       SIM_ROUTER_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME }}
       SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
@@ -342,8 +357,10 @@ jobs:
       - example-ios-build-check
       - example-next-build-check-and-test
       - example-typescript-check-and-lint
-      - runtime-tests-android
-      - runtime-tests-ios-argent
+      - runtime-tests-android-legacy-eval
+      - runtime-tests-android-bundle-mode
+      - runtime-tests-ios-legacy-eval
+      - runtime-tests-ios-bundle-mode
       - worklets-plugin-static-check
       - yarn-validation
     if: ${{ always() }}
