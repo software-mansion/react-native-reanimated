@@ -2,10 +2,6 @@ name: Example Typescript check and lint
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  pull_request:
-  merge_group:
-    branches:
-      - main
   workflow_call:
   workflow_dispatch:
 
@@ -13,38 +9,8 @@ permissions:
   contents: read
 
 jobs:
-  changes:
-    name: Example Typescript check and lint
-    permissions:
-      contents: read
-      pull-requests: read
-    uses: ./.github/workflows/changed-paths.yml
-    with:
-      workflow: Example Typescript check and lint
-      paths: |
-        - '.github/workflows/example-typescript-check-and-lint.yml'
-        - '.github/workflows/changed-paths.yml'
-        - 'packages/react-native-reanimated/src/**'
-        - 'packages/react-native-reanimated/package.json'
-        - 'packages/react-native-worklets/src/**'
-        - 'packages/react-native-worklets/package.json'
-        - '**/tsconfig*.json'
-        - 'eslint.config.mjs'
-        - 'yarn.lock'
-        - 'apps/common-app/**'
-        - 'apps/tvos-example/**'
-        - 'apps/fabric-example/**'
-        # web-example is only built (example-web-build), not type-checked:
-        # it uses a hack in tsconfig that would fail the check.
-        - 'apps/web-example/**'
-        # TODO: fix macos-example
-        # - 'apps/macos-example/**'
-        # next-example does not have type:check yet
-        # - 'apps/next-example/**'
-
   build-packages:
-    needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.affected == 'true') && github.repository == 'software-mansion/react-native-reanimated' }}
+    if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     concurrency:
       group: typescript-build-${{ github.ref }}
@@ -74,8 +40,7 @@ jobs:
           if-no-files-found: error
 
   example-typescript-check-and-lint:
-    needs: [changes, build-packages]
-    if: ${{ !cancelled() && needs.build-packages.result == 'success' && github.repository == 'software-mansion/react-native-reanimated' }}
+    needs: build-packages
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -111,8 +76,7 @@ jobs:
         run: yarn lint
 
   example-web-build:
-    needs: [changes, build-packages]
-    if: ${{ !cancelled() && needs.build-packages.result == 'success' && github.repository == 'software-mansion/react-native-reanimated' }}
+    needs: build-packages
     runs-on: ubuntu-latest
     concurrency:
       group: typescript-web-example-${{ github.ref }}

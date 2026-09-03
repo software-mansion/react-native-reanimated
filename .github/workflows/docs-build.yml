@@ -2,10 +2,6 @@ name: docs build
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  pull_request:
-  merge_group:
-    branches:
-      - main
   workflow_call:
   workflow_dispatch:
 
@@ -13,28 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  changes:
-    name: docs build
-    permissions:
-      contents: read
-      pull-requests: read
-    uses: ./.github/workflows/changed-paths.yml
-    with:
-      workflow: docs build
-      paths: |
-        - '.github/workflows/docs-build.yml'
-        - '.github/workflows/docs-publish.yml'
-        - '.github/actions/docs-build/**'
-        - '.github/workflows/changed-paths.yml'
-        - 'scripts/validate-docs-versions.js'
-        - 'docs/docs-reanimated/**'
-        - 'packages/react-native-reanimated/compatibility.json'
-        - 'docs/docs-worklets/**'
-        - 'packages/react-native-worklets/compatibility.json'
-
   docs-build:
-    needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.affected == 'true') }}
     runs-on: ubuntu-latest
     env:
       REANIMATED_DOCS_DIR: docs/docs-reanimated

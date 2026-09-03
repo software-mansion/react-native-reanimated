@@ -2,10 +2,6 @@ name: Runtime tests Android
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  pull_request:
-  merge_group:
-    branches:
-      - main
   workflow_call:
     inputs:
       bundleMode:
@@ -31,43 +27,16 @@ permissions:
   contents: read
 
 jobs:
-  changes:
-    name: Runtime tests Android
-    permissions:
-      contents: read
-      pull-requests: read
-    uses: ./.github/workflows/changed-paths.yml
-    with:
-      workflow: Runtime tests Android
-      paths: |
-        - '.github/workflows/runtime-tests-android.yml'
-        - '.github/workflows/changed-paths.yml'
-        - 'apps/common-app/runtime-tests/**'
-        - 'apps/fabric-example/package.json'
-        - 'apps/common-app/package.json'
-        - 'apps/fabric-example/scripts/runtime-tests-server.js'
-        - 'apps/fabric-example/android/**'
-        - 'packages/react-native-reanimated/Common/**'
-        - 'packages/react-native-reanimated/android/**'
-        - 'packages/react-native-reanimated/src/**'
-        - 'packages/react-native-worklets/Common/**'
-        - 'packages/react-native-worklets/android/**'
-        - 'packages/react-native-worklets/bundleMode/**'
-        - 'packages/react-native-worklets/src/**'
-
   runtime-tests-android:
-    needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.affected == 'true') && github.repository == 'software-mansion/react-native-reanimated' }}
+    if: github.repository == 'software-mansion/react-native-reanimated'
     name: ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
-        # The workflow-name check is required: the nightly caller also runs on
-        # pull_request, and its workflow_call legs must keep their explicit
-        # inputs.bundleMode instead of fanning out both modes.
-        bundleMode: ${{ fromJSON(((github.event_name == 'pull_request' || github.event_name == 'merge_group') && github.workflow == 'Runtime tests Android') && '[false, true]' || format('[{0}]', inputs.bundleMode)) }}
+        # Callers (ci.yml, the nightly) fan out the modes themselves.
+        bundleMode: ${{ fromJSON(format('[{0}]', inputs.bundleMode)) }}
     env:
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated

@@ -2,10 +2,6 @@ name: Example Next build check and tests
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  pull_request:
-  merge_group:
-    branches:
-      - main
   push:
     branches:
       - main
@@ -16,24 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  changes:
-    name: Example Next build check and tests
-    permissions:
-      contents: read
-      pull-requests: read
-    uses: ./.github/workflows/changed-paths.yml
-    with:
-      workflow: Example Next build check and tests
-      paths: |
-        - '.github/workflows/example-next-build-check-and-test.yml'
-        - '.github/workflows/changed-paths.yml'
-        - 'packages/react-native-reanimated/src/**'
-        - 'packages/react-native-worklets/src/**'
-        - 'apps/next-example/**'
-
   example-next-build-check-and-test:
-    needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.affected == 'true') }}
     runs-on: ubuntu-latest
     concurrency:
       group: build-next-example-${{ github.ref }}

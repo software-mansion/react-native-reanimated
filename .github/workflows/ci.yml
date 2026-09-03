@@ -1,0 +1,360 @@
+name: CI
+# The single pull-request gate. Every path-filtered check lives here as a
+# reusable-workflow call so that:
+#
+# * one `changes` job answers "what did this pull request touch" for all of
+#   them (one API call instead of one per workflow),
+# * the pull request shows one line per check instead of a gate line plus a
+#   job line for each,
+# * `Required checks` is the only status branch protection needs to know
+#   about. Requiring the individual `uses:` jobs would not work: a skipped
+#   call reports one "CI / <job>" check while a real run reports
+#   "CI / <job> / <inner job>" checks, so no single name is stable.
+#
+# A required check that an `on.pull_request.paths` filter skips never reports
+# a status, so the pull request blocks on it forever
+# (https://github.com/orgs/community/discussions/13690). Skipping through a
+# job-level `if:` instead yields a success-like "skipped" conclusion.
+#
+# Anything that is not a pull_request (merge_group, push, workflow_dispatch)
+# runs every check. The called workflows keep their own `on.push.paths`
+# triggers for pushes to main.
+#
+# Dependents gate on `needs.changes.result != 'success' || affected` so a
+# broken gate (API error, runner failure) runs the checks instead of skipping
+# them into a green status.
+on:
+  pull_request:
+  merge_group:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Changed paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      android-validation: ${{ github.event_name != 'pull_request' || steps.filter.outputs.android-validation == 'true' }}
+      apple-validation: ${{ github.event_name != 'pull_request' || steps.filter.outputs.apple-validation == 'true' }}
+      check-ruby-pods-versions: ${{ github.event_name != 'pull_request' || steps.filter.outputs.check-ruby-pods-versions == 'true' }}
+      docs-build: ${{ github.event_name != 'pull_request' || steps.filter.outputs.docs-build == 'true' }}
+      example-android-build-check: ${{ github.event_name != 'pull_request' || steps.filter.outputs.example-android-build-check == 'true' }}
+      example-ios-build-check: ${{ github.event_name != 'pull_request' || steps.filter.outputs.example-ios-build-check == 'true' }}
+      example-next-build-check-and-test: ${{ github.event_name != 'pull_request' || steps.filter.outputs.example-next-build-check-and-test == 'true' }}
+      example-typescript-check-and-lint: ${{ github.event_name != 'pull_request' || steps.filter.outputs.example-typescript-check-and-lint == 'true' }}
+      runtime-tests-android: ${{ github.event_name != 'pull_request' || steps.filter.outputs.runtime-tests-android == 'true' }}
+      runtime-tests-ios-argent: ${{ github.event_name != 'pull_request' || steps.filter.outputs.runtime-tests-ios-argent == 'true' }}
+      worklets-plugin-static-check: ${{ github.event_name != 'pull_request' || steps.filter.outputs.worklets-plugin-static-check == 'true' }}
+      yarn-validation: ${{ github.event_name != 'pull_request' || steps.filter.outputs.yarn-validation == 'true' }}
+    steps:
+      # No checkout: the filter lists the changed files through the API.
+      - name: Match changed paths against the pull request
+        id: filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d
+        with:
+          # One filter per called workflow, keyed by the workflow's file name.
+          # Every filter lists this file so a change to the gate reruns
+          # everything.
+          filters: |
+            android-validation:
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/android-validation.yml'
+              - '.github/actions/android-validation/**'
+              - 'scripts/llvm-tools/**'
+              - 'packages/react-native-reanimated/android/src/main/java/**'
+              - 'packages/react-native-reanimated/android/build.gradle'
+              - 'packages/react-native-reanimated/Common/cpp/**'
+              - 'packages/react-native-worklets/android/src/**'
+              - 'packages/react-native-worklets/android/build.gradle'
+              - 'packages/react-native-worklets/Common/**'
+            apple-validation:
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/apple-validation.yml'
+              - '.github/actions/apple-validation/**'
+              - 'packages/react-native-reanimated/apple/**'
+              - 'packages/react-native-reanimated/package.json'
+              - 'packages/react-native-reanimated/scripts/validate-apple.sh'
+              - 'scripts/llvm-tools/**'
+              - 'packages/react-native-reanimated/Common/cpp/**'
+              - 'packages/react-native-worklets/apple/**'
+              - 'packages/react-native-worklets/package.json'
+              - 'packages/react-native-worklets/Common/**'
+            check-ruby-pods-versions:
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/check-ruby-pods-versions.yml'
+              - '.github/workflows/helper/check-ruby-pods.sh'
+              - 'apps/**/Gemfile.lock'
+              - 'apps/**/**/Podfile.lock'
+            docs-build:
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/docs-build.yml'
+              - '.github/workflows/docs-publish.yml'
+              - '.github/actions/docs-build/**'
+              - 'scripts/validate-docs-versions.js'
+              - 'docs/docs-reanimated/**'
+              - 'packages/react-native-reanimated/compatibility.json'
+              - 'docs/docs-worklets/**'
+              - 'packages/react-native-worklets/compatibility.json'
+            example-android-build-check:
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/example-android-build-check.yml'
+              - '.clang-tidy'
+              - 'scripts/llvm-tools/**'
+              - 'packages/react-native-reanimated/android/**'
+              - 'packages/react-native-reanimated/package.json'
+              - 'packages/react-native-reanimated/src/specs/**'
+              - 'packages/react-native-reanimated/Common/**'
+              - 'packages/react-native-worklets/android/**'
+              - 'packages/react-native-worklets/package.json'
+              - 'packages/react-native-worklets/src/specs/**'
+              - 'packages/react-native-worklets/Common/**'
+              - 'apps/fabric-example/package.json'
+              - 'apps/common-app/package.json'
+              - 'apps/fabric-example/android/**'
+            example-ios-build-check:
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/example-ios-build-check.yml'
+              - '.github/actions/install-pods/**'
+              - '.github/actions/setup-ccache/**'
+              - '.github/actions/save-ccache/**'
+              - 'scripts/llvm-tools/**'
+              - 'packages/react-native-reanimated/RNReanimated.podspec'
+              - 'packages/react-native-reanimated/scripts/reanimated_utils.rb'
+              - 'packages/react-native-reanimated/apple/**'
+              - 'packages/react-native-reanimated/package.json'
+              - 'packages/react-native-reanimated/src/specs/**'
+              - 'packages/react-native-reanimated/Common/**'
+              - 'packages/react-native-worklets/RNWorklets.podspec'
+              - 'packages/react-native-worklets/scripts/worklets_utils.rb'
+              - 'packages/react-native-worklets/apple/**'
+              - 'packages/react-native-worklets/package.json'
+              - 'packages/react-native-worklets/src/specs/**'
+              - 'packages/react-native-worklets/Common/**'
+              - 'apps/fabric-example/**'
+              - 'apps/common-app/package.json'
+            example-next-build-check-and-test:
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/example-next-build-check-and-test.yml'
+              - 'packages/react-native-reanimated/src/**'
+              - 'packages/react-native-worklets/src/**'
+              - 'apps/next-example/**'
+            example-typescript-check-and-lint:
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/example-typescript-check-and-lint.yml'
+              - 'packages/react-native-reanimated/src/**'
+              - 'packages/react-native-reanimated/package.json'
+              - 'packages/react-native-worklets/src/**'
+              - 'packages/react-native-worklets/package.json'
+              - '**/tsconfig*.json'
+              - 'eslint.config.mjs'
+              - 'yarn.lock'
+              - 'apps/common-app/**'
+              - 'apps/tvos-example/**'
+              - 'apps/fabric-example/**'
+              # web-example is only built (example-web-build), not type-checked:
+              # it uses a hack in tsconfig that would fail the check.
+              - 'apps/web-example/**'
+              # TODO: fix macos-example
+              # - 'apps/macos-example/**'
+              # next-example does not have type:check yet
+              # - 'apps/next-example/**'
+            runtime-tests-android:
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/runtime-tests-android.yml'
+              - 'apps/common-app/runtime-tests/**'
+              - 'apps/fabric-example/package.json'
+              - 'apps/common-app/package.json'
+              - 'apps/fabric-example/scripts/runtime-tests-server.js'
+              - 'apps/fabric-example/android/**'
+              - 'packages/react-native-reanimated/Common/**'
+              - 'packages/react-native-reanimated/android/**'
+              - 'packages/react-native-reanimated/src/**'
+              - 'packages/react-native-worklets/Common/**'
+              - 'packages/react-native-worklets/android/**'
+              - 'packages/react-native-worklets/bundleMode/**'
+              - 'packages/react-native-worklets/src/**'
+            runtime-tests-ios-argent:
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/runtime-tests-ios-argent.yml'
+              - '.github/actions/install-sim-remote/**'
+              - 'apps/common-app/runtime-tests/**'
+              - 'apps/fabric-example/package.json'
+              - 'apps/common-app/package.json'
+              - 'apps/fabric-example/scripts/runtime-tests-server.js'
+              - 'apps/fabric-example/scripts/runtime-tests-remote.mjs'
+              - 'apps/fabric-example/scripts/export-runtime-tests-app.js'
+              - 'apps/fabric-example/ios/**'
+              - 'packages/react-native-reanimated/RNReanimated.podspec'
+              - 'packages/react-native-reanimated/scripts/reanimated_utils.rb'
+              - 'packages/react-native-reanimated/apple/**'
+              - 'packages/react-native-reanimated/Common/**'
+              - 'packages/react-native-reanimated/src/**'
+              - 'packages/react-native-worklets/RNWorklets.podspec'
+              - 'packages/react-native-worklets/scripts/worklets_utils.rb'
+              - 'packages/react-native-worklets/apple/**'
+              - 'packages/react-native-worklets/Common/**'
+              - 'packages/react-native-worklets/bundleMode/**'
+              - 'packages/react-native-worklets/src/**'
+            worklets-plugin-static-check:
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/worklets-plugin-static-check.yml'
+              - 'packages/react-native-worklets/plugin/**'
+              - 'packages/react-native-worklets/plugin-oxc/**'
+              - 'apps/fabric-example/babel.config.js'
+            yarn-validation:
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/yarn-validation.yml'
+              - 'scripts/disallow-non-exact.js'
+              - '**/package.json'
+              - '**/yarn.lock'
+
+      - name: Summarize what runs
+        env:
+          EVENT: ${{ github.event_name }}
+          FILTER_OUTCOME: ${{ steps.filter.outcome }}
+          OUTPUTS: ${{ toJSON(steps.filter.outputs) }}
+        run: |
+          {
+            if [ "$EVENT" != "pull_request" ]; then
+              echo "Not a pull request (\`$EVENT\`): every check runs."
+            elif [ "$FILTER_OUTCOME" != "success" ]; then
+              echo "The changed-paths filter did not succeed (\`$FILTER_OUTCOME\`): every check runs."
+            else
+              echo "| Check | Runs |"
+              echo "| --- | --- |"
+              echo "$OUTPUTS" | jq -r 'to_entries | map(select(.key != "changes")) | sort_by(.key) | .[] | "| \(.key) | \(if .value == "true" then "yes" else "skipped, no matching changes" end) |"'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  android-validation:
+    name: Android validation
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.android-validation == 'true') }}
+    uses: ./.github/workflows/android-validation.yml
+
+  apple-validation:
+    name: Apple validation
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.apple-validation == 'true') }}
+    uses: ./.github/workflows/apple-validation.yml
+
+  check-ruby-pods-versions:
+    name: Check Ruby and CocoaPods versions
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.check-ruby-pods-versions == 'true') }}
+    uses: ./.github/workflows/check-ruby-pods-versions.yml
+
+  docs-build:
+    name: Docs build
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.docs-build == 'true') }}
+    uses: ./.github/workflows/docs-build.yml
+
+  example-android-build-check:
+    name: Example Android build check
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.example-android-build-check == 'true') }}
+    uses: ./.github/workflows/example-android-build-check.yml
+
+  example-ios-build-check:
+    name: Example iOS build check
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.example-ios-build-check == 'true') }}
+    uses: ./.github/workflows/example-ios-build-check.yml
+
+  example-next-build-check-and-test:
+    name: Example Next build check and tests
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.example-next-build-check-and-test == 'true') }}
+    uses: ./.github/workflows/example-next-build-check-and-test.yml
+
+  example-typescript-check-and-lint:
+    name: Example TypeScript check and lint
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.example-typescript-check-and-lint == 'true') }}
+    uses: ./.github/workflows/example-typescript-check-and-lint.yml
+
+  runtime-tests-android:
+    name: Runtime tests Android (${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }})
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-android == 'true') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        bundleMode: [false, true]
+    uses: ./.github/workflows/runtime-tests-android.yml
+    with:
+      configuration: DebugRuntimeTests
+      bundleMode: ${{ matrix.bundleMode }}
+
+  runtime-tests-ios-argent:
+    name: Runtime tests iOS (${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }})
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        bundleMode: [false, true]
+    uses: ./.github/workflows/runtime-tests-ios-argent.yml
+    with:
+      configuration: ReleaseRuntimeTests
+      bundleMode: ${{ matrix.bundleMode }}
+    secrets:
+      SIM_ROUTER_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME }}
+      SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
+
+  worklets-plugin-static-check:
+    name: Worklets plugin static check
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.worklets-plugin-static-check == 'true') }}
+    uses: ./.github/workflows/worklets-plugin-static-check.yml
+
+  yarn-validation:
+    name: Yarn validation
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.yarn-validation == 'true') }}
+    uses: ./.github/workflows/yarn-validation.yml
+
+  # The one status branch protection requires. Passes when every check above
+  # either succeeded or was skipped by the gate; fails on any failure or
+  # cancellation. `always()` keeps it reporting even when something upstream
+  # failed, which is exactly when it must go red.
+  required:
+    name: Required checks
+    needs:
+      - android-validation
+      - apple-validation
+      - check-ruby-pods-versions
+      - docs-build
+      - example-android-build-check
+      - example-ios-build-check
+      - example-next-build-check-and-test
+      - example-typescript-check-and-lint
+      - runtime-tests-android
+      - runtime-tests-ios-argent
+      - worklets-plugin-static-check
+      - yarn-validation
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      NEEDS: ${{ toJSON(needs) }}
+    steps:
+      - name: Report every check
+        run: |
+          {
+            echo "| Check | Result |"
+            echo "| --- | --- |"
+            echo "$NEEDS" | jq -r 'to_entries | sort_by(.key) | .[] | "| \(.key) | \(.value.result) |"'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Fail on any failed or cancelled check
+        run: echo "$NEEDS" | jq -e 'all(.[]; .result == "success" or .result == "skipped")' > /dev/null
