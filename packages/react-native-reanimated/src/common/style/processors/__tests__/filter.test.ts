@@ -80,6 +80,37 @@ describe(processFilter, () => {
         ],
       },
       {
+        // CSS spells these two filter functions in kebab-case; React Native's
+        // own processFilter accepts them, so a string valid there must not be
+        // dropped here.
+        name: 'kebab-case CSS filter names',
+        cases: [
+          {
+            input: 'hue-rotate(180deg)',
+            output: [{ hueRotate: 180 }],
+          },
+          {
+            input: 'drop-shadow(10 10 5 red)',
+            output: [
+              {
+                dropShadow: {
+                  offsetX: 10,
+                  offsetY: 10,
+                  standardDeviation: 5,
+                  color: 4294901760,
+                },
+              },
+            ],
+          },
+          {
+            // A single unrecognized name used to discard every other filter in
+            // the string as well.
+            input: 'blur(3px) hue-rotate(180deg)',
+            output: [{ blur: 3 }, { hueRotate: 180 }],
+          },
+        ],
+      },
+      {
         name: 'hueRotate with deg',
         cases: [
           {
