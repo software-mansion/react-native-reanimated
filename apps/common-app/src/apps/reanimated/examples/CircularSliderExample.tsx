@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ColorValue } from 'react-native';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, {
   interpolate,
@@ -13,7 +13,6 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-const AnimatedInput = Animated.createAnimatedComponent(TextInput);
 
 interface Point {
   x: number;
@@ -109,9 +108,8 @@ function CircularSlider(props: CircularSliderProps) {
     };
   });
 
-  const animatedInputProps = useAnimatedProps(() => {
-    const text = String(currentValue.value);
-    return { text, defaultValue: text };
+  const animatedProps = useAnimatedProps(() => {
+    return { text: String(currentValue.value) };
   });
 
   const gesture = usePanGesture({
@@ -153,11 +151,7 @@ function CircularSlider(props: CircularSliderProps) {
           </Svg>
         </Animated.View>
       </GestureDetector>
-      <AnimatedInput
-        editable={false}
-        animatedProps={animatedInputProps}
-        style={styles.input}
-      />
+      <Animated.Text animatedProps={animatedProps} style={styles.text} />
     </>
   );
 }
@@ -189,7 +183,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  input: {
+  text: {
     fontSize: 80,
     fontVariant: ['tabular-nums'],
     position: 'absolute',

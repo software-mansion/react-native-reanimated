@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import {
+import Animated, {
   FrameInfo,
+  useAnimatedProps,
   useFrameCallback,
   useSharedValue,
 } from 'react-native-reanimated';
@@ -25,43 +26,68 @@ export default function FpsExample() {
     )
   );
 
-  const [frameInfo, setFrameInfo] = React.useState<FrameInfo | null>(null);
+  const timestampAnimatedProps = useAnimatedProps(() => {
+    return {
+      text: String(frameInfoSharedValue.value?.timestamp.toFixed(6)),
+    };
+  });
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      setFrameInfo(frameInfoSharedValue.value);
-    }, 0);
-    return () => clearInterval(id);
-  }, [frameInfoSharedValue]);
+  const timeSinceFirstFrameAnimatedProps = useAnimatedProps(() => {
+    return {
+      text: String(frameInfoSharedValue.value?.timeSinceFirstFrame.toFixed(6)),
+    };
+  });
+
+  const timeSincePreviousFrameAnimatedProps = useAnimatedProps(() => {
+    const frameInfo = frameInfoSharedValue.value;
+    return {
+      text:
+        frameInfo !== null && frameInfo.timeSincePreviousFrame !== null
+          ? String(frameInfo.timeSincePreviousFrame.toFixed(6))
+          : 'null',
+    };
+  });
+
+  const framesPerSecondAnimatedProps = useAnimatedProps(() => {
+    const frameInfo = frameInfoSharedValue.value;
+    return {
+      text:
+        frameInfo !== null && frameInfo.timeSincePreviousFrame !== null
+          ? String((1000 / frameInfo.timeSincePreviousFrame).toFixed(2))
+          : 'unknown',
+    };
+  });
 
   return (
     <View style={styles.container}>
-      <Text>
-        Timestamp:{' '}
-        <Text style={styles.number}>{frameInfo?.timestamp.toFixed(6)}</Text>
-      </Text>
-      <Text>
-        Time since first frame:{' '}
-        <Text style={styles.number}>
-          {frameInfo?.timeSinceFirstFrame.toFixed(6)}
-        </Text>
-      </Text>
-      <Text>
-        Time since previous frame:{' '}
-        <Text style={styles.number}>
-          {frameInfo !== null && frameInfo.timeSincePreviousFrame !== null
-            ? frameInfo.timeSincePreviousFrame.toFixed(6)
-            : 'null'}
-        </Text>
-      </Text>
-      <Text>
-        Frames per second:{' '}
-        <Text style={styles.number}>
-          {frameInfo !== null && frameInfo.timeSincePreviousFrame !== null
-            ? (1000 / frameInfo.timeSincePreviousFrame).toFixed(2)
-            : 'unknown'}
-        </Text>
-      </Text>
+      <View style={styles.row}>
+        <Text>Timestamp:</Text>
+        <Animated.Text
+          animatedProps={timestampAnimatedProps}
+          style={styles.number}
+        />
+      </View>
+      <View style={styles.row}>
+        <Text>Time since first frame:</Text>
+        <Animated.Text
+          animatedProps={timeSinceFirstFrameAnimatedProps}
+          style={styles.number}
+        />
+      </View>
+      <View style={styles.row}>
+        <Text>Time since previous frame:</Text>
+        <Animated.Text
+          animatedProps={timeSincePreviousFrameAnimatedProps}
+          style={styles.number}
+        />
+      </View>
+      <View style={styles.row}>
+        <Text>Frames per second:</Text>
+        <Animated.Text
+          animatedProps={framesPerSecondAnimatedProps}
+          style={styles.number}
+        />
+      </View>
     </View>
   );
 }
@@ -75,5 +101,10 @@ const styles = StyleSheet.create({
   number: {
     fontSize: 24,
     fontVariant: ['tabular-nums'],
+    marginLeft: 4,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
   },
 });
