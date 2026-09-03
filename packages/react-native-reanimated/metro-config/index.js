@@ -1,3 +1,20 @@
+const path = require('node:path');
+
+const WINDOWS_JS_FALLBACK_PACKAGE_ROOTS = [
+  path.dirname(__dirname),
+  path.dirname(require.resolve('react-native-worklets/package.json')),
+];
+
+function shouldUseWindowsJsFallback(context, moduleName, platform) {
+  return (
+    platform === 'windows' &&
+    moduleName.startsWith('.') &&
+    WINDOWS_JS_FALLBACK_PACKAGE_ROOTS.some((packageRoot) =>
+      context.originModulePath.startsWith(`${packageRoot}${path.sep}`)
+    )
+  );
+}
+
 const COLLAPSED_STACK_REGEX = new RegExp(
   [
     // For internal usage in the example app
@@ -17,6 +34,24 @@ const COLLAPSED_STACK_REGEX = new RegExp(
 function wrapWithReanimatedMetroConfig(config) {
   return {
     ...config,
+    resolver: {
+      ...config.resolver,
+      resolveRequest(context, moduleName, platform) {
+        const resolve =
+          config.resolver?.resolveRequest ?? context.resolveRequest;
+
+        // Keep `.windows` resolution, but skip unsupported `.native` modules.
+        const resolutionContext = shouldUseWindowsJsFallback(
+          context,
+          moduleName,
+          platform
+        )
+          ? { ...context, preferNativePlatform: false }
+          : context;
+
+        return resolve(resolutionContext, moduleName, platform);
+      },
+    },
     symbolicator: {
       async customizeFrame(frame) {
         const collapse = Boolean(
