@@ -11,7 +11,10 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
+#include <folly/dynamic.h>
+
 #include <deque>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -57,6 +60,8 @@ struct LayoutAnimationCancellation {
 using LayoutAnimationOperation =
     std::variant<ManagedLayoutAnimationStart, ProgressLayoutAnimationStart, LayoutAnimationCancellation>;
 
+using GetLatestRegistryPropsFunction = std::function<folly::dynamic(Tag)>;
+
 struct LayoutAnimationsProxyDependencies {
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager;
   SharedComponentDescriptorRegistry componentDescriptorRegistry;
@@ -65,6 +70,7 @@ struct LayoutAnimationsProxyDependencies {
   std::shared_ptr<UIScheduler> uiScheduler;
   std::shared_ptr<facebook::react::UIManager> uiManager;
   std::function<void(SurfaceId)> requestLayoutAnimationFlush;
+  GetLatestRegistryPropsFunction getLatestRegistryProps;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker;
@@ -85,7 +91,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
         uiRuntime_(dependencies.uiRuntime),
         uiScheduler_(dependencies.uiScheduler),
         uiManager_(dependencies.uiManager),
-        requestLayoutAnimationFlush_(dependencies.requestLayoutAnimationFlush)
+        requestLayoutAnimationFlush_(dependencies.requestLayoutAnimationFlush),
+        getLatestRegistryProps_(dependencies.getLatestRegistryProps)
 #ifdef ANDROID
         ,
         preserveMountedTags_(dependencies.filterUnmountedTagsFunction),
@@ -149,6 +156,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   const std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<facebook::react::UIManager> uiManager_;
   std::function<void(SurfaceId)> requestLayoutAnimationFlush_;
+  const GetLatestRegistryPropsFunction getLatestRegistryProps_;
 #ifdef ANDROID
   PreserveMountedTagsFunction preserveMountedTags_;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker_;

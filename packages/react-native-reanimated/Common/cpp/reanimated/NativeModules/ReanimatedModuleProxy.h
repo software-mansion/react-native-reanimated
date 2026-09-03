@@ -40,6 +40,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <set>
 #include <string>
 #include <utility>
@@ -113,6 +114,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void performNonLayoutOperations();
   void flushLayoutAnimationOperations();
   void executeLayoutAnimationsRequests();
+
+  folly::dynamic getLatestRegistryPropsForTag(Tag tag);
 
   bool handleEventAndFlush(
       const std::string &eventName,
@@ -274,6 +277,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   std::shared_ptr<ReanimatedMountHook> mountHook_;
   /// Access only on UI thread.
   std::set<SurfaceId> layoutAnimationFlushRequests_;
+  std::optional<PropsByTagMap> latestRegistryPropsSnapshot_;
 
   const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;

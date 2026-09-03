@@ -192,6 +192,22 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
   }
 }
 
+void UpdatesRegistry::collectPropsByTag(PropsByTagMap &propsByTag) const {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+
+  for (const auto &[tag, pair] : updatesRegistry_) {
+    const auto &props = pair.second;
+    if (!props.isObject()) {
+      continue;
+    }
+    auto &merged = propsByTag[tag];
+    if (!merged.isObject()) {
+      merged = folly::dynamic::object();
+    }
+    merged.update(props);
+  }
+}
+
 void UpdatesRegistry::addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props) {
   updatesBatch_.emplace_back(shadowNodeFamily, props);
 }

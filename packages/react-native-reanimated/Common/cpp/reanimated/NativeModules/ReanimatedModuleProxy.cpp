@@ -791,6 +791,24 @@ void ReanimatedModuleProxy::executeLayoutAnimationsRequests() {
     uiManager_->getShadowTreeRegistry().visit(
         surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
   }
+  latestRegistryPropsSnapshot_.reset();
+}
+
+folly::dynamic ReanimatedModuleProxy::getLatestRegistryPropsForTag(Tag tag) {
+  if (!latestRegistryPropsSnapshot_.has_value()) {
+    if (UpdatesRegistryManager::isLockedByCurrentThread()) {
+      latestRegistryPropsSnapshot_ = updatesRegistryManager_->collectPropsByTag();
+    } else {
+      auto lock = updatesRegistryManager_->lock();
+      latestRegistryPropsSnapshot_ = updatesRegistryManager_->collectPropsByTag();
+    }
+  }
+
+  const auto it = latestRegistryPropsSnapshot_->find(tag);
+  if (it == latestRegistryPropsSnapshot_->end()) {
+    return nullptr;
+  }
+  return it->second;
 }
 
 void ReanimatedModuleProxy::performOperations() {
@@ -1272,6 +1290,14 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
     });
   };
 
+  const auto getLatestRegistryProps = [weakThis = weak_from_this()](const Tag tag) -> folly::dynamic {
+    const auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return nullptr;
+    }
+    return strongThis->getLatestRegistryPropsForTag(tag);
+  };
+
   const LayoutAnimationsProxyDependencies dependencies{
       layoutAnimationsManager_,
       componentDescriptorRegistry,
@@ -1280,6 +1306,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       uiScheduler_,
       uiManager_,
       requestLayoutAnimationFlush,
+      getLatestRegistryProps,
 #ifdef ANDROID
       filterUnmountedTagsFunction_,
       jsInvoker_,
