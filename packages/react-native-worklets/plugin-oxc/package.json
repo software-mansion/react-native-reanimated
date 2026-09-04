@@ -1,0 +1,28 @@
+{
+  "name": "worklets-oxc-plugin",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.js",
+  "types": "index.d.ts",
+  "dependencies": {
+    "@jridgewell/remapping": "2.3.5"
+  },
+  "files": [
+    "babel.js",
+    "index.js",
+    "index.d.ts",
+    "babel.d.ts",
+    "*.node"
+  ],
+  "scripts": {
+    "build": "cargo build --release && node --experimental-strip-types scripts/post-build.mts release",
+    "build:debug": "cargo build && node --experimental-strip-types scripts/post-build.mts debug",
+    "test": "yarn test:oxc && yarn test:babel-suite",
+    "type:check": "tsc --noEmit",
+    "test:oxc": "yarn build:debug && cargo test && node --experimental-strip-types --test \"test/**/*.test.mts\"",
+    "test:babel-suite": "yarn build:debug && cd ../plugin && yarn run -T jest --ci --config ../plugin-oxc/jest.config.js"
+  },
+  "installConfig": {
+    "selfReferences": false
+  }
+}

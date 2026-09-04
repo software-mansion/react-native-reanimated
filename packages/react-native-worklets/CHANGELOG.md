@@ -19,6 +19,7 @@
 - Add `isOnUIThread` to the Worklets Stable API.
 - Add the fast-path `fixedType` option to `createSynchronizable`. A fixed-type Synchronizable holds a number or a boolean without serialization and exposes `setDirty`, a non-exclusive write that doesn't wait for other `setDirty` calls. ([#10296](https://github.com/software-mansion/react-native-reanimated/pull/10296) by [@tjzel](https://github.com/tjzel))
 - The Babel plugin treats `navigator` as a known global: worklets resolve it on their own runtime instead of capturing the main runtime's object by closure. ([#10364](https://github.com/software-mansion/react-native-reanimated/pull/10364) by [@wcandillon](https://github.com/wcandillon))
+- Add an OXC port of the Babel plugin for Bundle Mode. ([#9518](https://github.com/software-mansion/react-native-reanimated/pull/9518) by [@tshmieldev](https://github.com/tshmieldev))
 
 ### 🐛 Bug fixes
 
@@ -31,6 +32,8 @@
 - Fix build error when Bundle Mode worklet captures JSX name. ([#10409](https://github.com/software-mansion/react-native-reanimated/pull/10409) by [@tshmieldev](https://github.com/tshmieldev))
 - Fix `ReferenceError` when a worklet file assigns to `module.exports`. ([#10408](https://github.com/software-mansion/react-native-reanimated/pull/10408) by [@tshmieldev](https://github.com/tshmieldev))
 - Stop workletizing getters, setters and constructors. ([#10421](https://github.com/software-mansion/react-native-reanimated/pull/10421) by [@tshmieldev](https://github.com/tshmieldev))
+- Fix a crash when serializing objects with a `__proto__` key. ([#10451](https://github.com/software-mansion/react-native-reanimated/pull/10451) by [@tshmieldev](https://github.com/tshmieldev))
+- Fix `./gradlew app:build` failing on `:lintAnalyzeDebug` with a K2 UAST crash on `.gradle.kts` build scripts - all lint tasks are now skipped, not only `lintVital*`. ([#10448](https://github.com/software-mansion/react-native-reanimated/pull/10448) by [@tshmieldev](https://github.com/tshmieldev))
 
 ### 💡 Others
 
