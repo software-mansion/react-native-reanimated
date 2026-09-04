@@ -365,6 +365,7 @@ jobs:
   required:
     name: Required checks
     needs:
+      - changes
       - android-validation
       - apple-validation
       - check-ruby-pods-versions
@@ -392,13 +393,18 @@ jobs:
             echo "| --- | --- |"
             echo "$NEEDS" | jq -r 'to_entries | sort_by(.key) | .[] | "| \(.key) | \(.value.result) |"'
           } >> "$GITHUB_STEP_SUMMARY"
-      # A run cancelled before the checks start leaves them all "skipped"
-      # (their `!cancelled()` gates are false), which the next step would
-      # accept, so the cancellation itself has to fail this job.
-      - name: Fail on a cancelled run
-        if: ${{ cancelled() }}
-        run: |
-          echo "::error::The run was cancelled, so the checks did not complete."
-          exit 1
+      # Every check must have succeeded or been skipped by the gate. The gate
+      # itself must have finished (success, or failure for the fail-open
+      # case): a run cancelled while the gate is still running leaves every
+      # check "skipped" (their `!cancelled()` conditions are false), which
+      # would otherwise pass. `cancelled()` cannot detect that here, it is
+      # false inside a job that only started after the cancellation.
       - name: Fail on any failed or cancelled check
-        run: echo "$NEEDS" | jq -e 'all(.[]; .result == "success" or .result == "skipped")' > /dev/null
+        run: |
+          echo "$NEEDS" | jq -e '
+            to_entries | all(
+              if .key == "changes"
+              then .value.result == "success" or .value.result == "failure"
+              else .value.result == "success" or .value.result == "skipped"
+              end
+            )' > /dev/null
