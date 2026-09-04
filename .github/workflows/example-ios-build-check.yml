@@ -6,6 +6,7 @@ on:
     paths:
       - .github/workflows/example-ios-build-check.yml
       - .github/actions/install-pods/**
+      - .github/actions/save-pods/**
       - .github/actions/setup-ccache/**
       - .github/actions/save-ccache/**
       - scripts/llvm-tools/**
@@ -32,6 +33,7 @@ on:
     paths:
       - .github/workflows/example-ios-build-check.yml
       - .github/actions/install-pods/**
+      - .github/actions/save-pods/**
       - .github/actions/setup-ccache/**
       - .github/actions/save-ccache/**
       - scripts/llvm-tools/**
@@ -127,6 +129,7 @@ jobs:
           key-prefix: ios-${{ env.CONFIGURATION }}
 
       - name: Install Pods (with caching)
+        id: install-pods
         if: steps.result-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/install-pods
         with:
@@ -176,6 +179,17 @@ jobs:
         run: |
           mkdir -p "${BUILD_MARKER_DIR}"
           echo "ok" > "${BUILD_MARKER_DIR}/${CACHE_KEY}.success"
+
+      # Pods do not depend on the configuration; one leg saves so the nightly
+      # fan-out does not race for the key.
+      - name: Save Pods cache
+        if: steps.result-cache.outputs.cache-hit != 'true' && env.CONFIGURATION == 'Debug'
+        uses: ./.github/actions/save-pods
+        with:
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+          pod-directory: ios
+          cache-hit: ${{ steps.install-pods.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.install-pods.outputs.cache-primary-key }}
 
       - name: Save result cache
         if: steps.result-cache.outputs.cache-hit != 'true'

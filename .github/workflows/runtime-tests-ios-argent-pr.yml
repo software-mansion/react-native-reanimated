@@ -5,6 +5,10 @@ on:
       - .github/workflows/runtime-tests-ios-argent.yml
       - .github/workflows/runtime-tests-ios-argent-pr.yml
       - .github/actions/install-sim-remote/**
+      - .github/actions/install-pods/**
+      - .github/actions/save-pods/**
+      - .github/actions/setup-ccache/**
+      - .github/actions/save-ccache/**
       - apps/common-app/runtime-tests/**
       - apps/fabric-example/package.json
       - apps/common-app/package.json
