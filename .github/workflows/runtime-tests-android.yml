@@ -35,7 +35,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Callers (ci.yml, the nightly) fan out the modes themselves.
         bundleMode: ${{ fromJSON(format('[{0}]', inputs.bundleMode)) }}
     env:
       WORKING_DIRECTORY: apps/fabric-example

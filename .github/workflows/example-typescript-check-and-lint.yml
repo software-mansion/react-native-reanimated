@@ -45,8 +45,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Static so every leg reports a stable check name (and a "skipped"
-        # conclusion when unaffected), which is what lets it be required.
         working-directory:
           [apps/common-app, apps/tvos-example, apps/fabric-example]
     concurrency:

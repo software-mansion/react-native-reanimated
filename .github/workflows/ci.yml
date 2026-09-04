@@ -1,30 +1,15 @@
 name: CI
-# The single pull-request gate. Every path-filtered check lives here as a
-# reusable-workflow call so that:
+# Gate for every path-filtered check.
 #
-# * one `changes` job answers "what did this pull request touch" for all of
-#   them (one API call instead of one per workflow),
-# * the pull request shows one line per check instead of a gate line plus a
-#   job line for each,
-# * `Required checks` is the only status branch protection needs to know
-#   about. Requiring the individual `uses:` jobs would not work: a skipped
-#   call reports one "CI / <job>" check while a real run reports
-#   "CI / <job> / <inner job>" checks, so no single name is stable.
+# A required check skipped by an `on.<event>.paths` filter never reports a
+# status and blocks the pull request forever
+# (https://github.com/orgs/community/discussions/13690), so the filtering
+# happens in `changes` and each check skips through a job-level `if:`.
 #
-# A required check that an `on.pull_request.paths` filter skips never reports
-# a status, so the pull request blocks on it forever
-# (https://github.com/orgs/community/discussions/13690). Skipping through a
-# job-level `if:` instead yields a success-like "skipped" conclusion.
+# Only `Required checks` is marked required in branch protection: a skipped
+# `uses:` job and a running one report under different check names.
 #
-# Pushes to main go through the same filter (against the commit before the
-# push) so the path lists live only here. The runtime-test suites are the
-# exception: they are too expensive to rerun after every merge, so they run
-# for pull requests only. Every other event (merge_group, workflow_dispatch)
-# runs every check.
-#
-# Dependents gate on `needs.changes.result != 'success' || affected` so a
-# broken gate (API error, runner failure) runs the checks instead of skipping
-# them into a green status.
+# A failed gate runs everything rather than skipping it into green.
 on:
   pull_request:
   merge_group:
@@ -60,9 +45,7 @@ jobs:
       worklets-plugin-static-check: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.worklets-plugin-static-check == 'true' }}
       yarn-validation: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.yarn-validation == 'true' }}
     steps:
-      # On pull_request the filter lists the changed files through the API;
-      # on push it diffs against the commit before the push, which needs the
-      # repository checked out.
+      # paths-filter needs the repository only for push events.
       - name: Check out Git repository
         if: github.event_name == 'push'
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
@@ -71,9 +54,7 @@ jobs:
         if: contains(fromJSON('["pull_request", "push"]'), github.event_name)
         uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d
         with:
-          # One filter per called workflow, keyed by the workflow's file name.
-          # Every filter lists this file so a change to the gate reruns
-          # everything.
+          # Every filter lists this file: a change to the gate reruns everything.
           filters: |
             android-validation:
               - '.github/workflows/ci.yml'
@@ -297,11 +278,8 @@ jobs:
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.example-typescript-check-and-lint == 'true') }}
     uses: ./.github/workflows/example-typescript-check-and-lint.yml
 
-  # The two bundle modes are spelled out instead of a matrix: a skipped
-  # matrix job shows its `name:` expression unexpanded on the pull request.
-  # The `push` exclusion sits here rather than in the gate's outputs so that
-  # a failed filter on a push to main (which runs everything else) still
-  # cannot launch the runtime suites.
+  # Not a matrix: a skipped matrix job shows its `name:` unexpanded.
+  # Not on pushes to main: too expensive to rerun after every merge.
   runtime-tests-android-legacy-eval:
     name: Runtime tests Android (Legacy Eval)
     needs: changes
@@ -356,12 +334,8 @@ jobs:
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.yarn-validation == 'true') }}
     uses: ./.github/workflows/yarn-validation.yml
 
-  # The one status branch protection requires. Passes when every check above
-  # either succeeded or was skipped by the gate; fails on any failure or
-  # cancellation. `always()` keeps it reporting even when something upstream
-  # failed, which is exactly when it must go red. It must not use
-  # `!cancelled()` instead: that would leave it skipped on a cancelled run,
-  # and branch protection counts a skipped check as passing.
+  # The only required status. `always()`, not `!cancelled()`: a skipped
+  # required check counts as passing.
   required:
     name: Required checks
     needs:
@@ -393,12 +367,8 @@ jobs:
             echo "| --- | --- |"
             echo "$NEEDS" | jq -r 'to_entries | sort_by(.key) | .[] | "| \(.key) | \(.value.result) |"'
           } >> "$GITHUB_STEP_SUMMARY"
-      # Every check must have succeeded or been skipped by the gate. The gate
-      # itself must have finished (success, or failure for the fail-open
-      # case): a run cancelled while the gate is still running leaves every
-      # check "skipped" (their `!cancelled()` conditions are false), which
-      # would otherwise pass. `cancelled()` cannot detect that here, it is
-      # false inside a job that only started after the cancellation.
+      # A run cancelled during the gate leaves every check skipped, so the
+      # gate itself must have finished (failure being the fail-open case).
       - name: Fail on any failed or cancelled check
         run: |
           echo "$NEEDS" | jq -e '
