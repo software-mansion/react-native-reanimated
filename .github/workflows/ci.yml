@@ -231,6 +231,7 @@ jobs:
               - '**/yarn.lock'
 
       - name: Summarize what runs
+        if: ${{ !cancelled() }}
         env:
           EVENT: ${{ github.event_name }}
           FILTER_OUTCOME: ${{ steps.filter.outcome }}
@@ -244,7 +245,7 @@ jobs:
             else
               echo "| Check | Runs |"
               echo "| --- | --- |"
-              echo "$OUTPUTS" | jq -r --arg event "$EVENT" 'to_entries | map(select(.key != "changes")) | sort_by(.key) | .[] | "| \(.key) | \(if $event == "push" and (.key | startswith("runtime-tests")) then "skipped, pull requests only" elif .value == "true" then "yes" else "skipped, no matching changes" end) |"'
+              echo "$OUTPUTS" | jq -r --arg event "$EVENT" 'to_entries | map(select(.key != "changes" and (.key | endswith("_count") | not))) | sort_by(.key) | .[] | "| \(.key) | \(if $event == "push" and (.key | startswith("runtime-tests")) then "skipped, pull requests only" elif .value == "true" then "yes" else "skipped, no matching changes" end) |"'
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
