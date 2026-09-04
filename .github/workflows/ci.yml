@@ -55,8 +55,8 @@ jobs:
       example-ios-build-check: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.example-ios-build-check == 'true' }}
       example-next-build-check-and-test: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.example-next-build-check-and-test == 'true' }}
       example-typescript-check-and-lint: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.example-typescript-check-and-lint == 'true' }}
-      runtime-tests-android: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || (github.event_name != 'push' && steps.filter.outputs.runtime-tests-android == 'true') }}
-      runtime-tests-ios-argent: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || (github.event_name != 'push' && steps.filter.outputs.runtime-tests-ios-argent == 'true') }}
+      runtime-tests-android: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.runtime-tests-android == 'true' }}
+      runtime-tests-ios-argent: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.runtime-tests-ios-argent == 'true' }}
       worklets-plugin-static-check: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.worklets-plugin-static-check == 'true' }}
       yarn-validation: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.yarn-validation == 'true' }}
     steps:
@@ -245,7 +245,7 @@ jobs:
             else
               echo "| Check | Runs |"
               echo "| --- | --- |"
-              echo "$OUTPUTS" | jq -r --arg event "$EVENT" 'to_entries | map(select(.key != "changes" and (.key | endswith("_count") | not))) | sort_by(.key) | .[] | "| \(.key) | \(if $event == "push" and (.key | startswith("runtime-tests")) then "skipped, pull requests only" elif .value == "true" then "yes" else "skipped, no matching changes" end) |"'
+              echo "$OUTPUTS" | jq -r --arg event "$EVENT" 'to_entries | map(select(.key != "changes" and (.key | endswith("_count") | not))) | sort_by(.key) | .[] | "| \(.key) | \(if $event == "push" and (.key | startswith("runtime-tests")) then "skipped, not run on pushes" elif .value == "true" then "yes" else "skipped, no matching changes" end) |"'
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -299,10 +299,13 @@ jobs:
 
   # The two bundle modes are spelled out instead of a matrix: a skipped
   # matrix job shows its `name:` expression unexpanded on the pull request.
+  # The `push` exclusion sits here rather than in the gate's outputs so that
+  # a failed filter on a push to main (which runs everything else) still
+  # cannot launch the runtime suites.
   runtime-tests-android-legacy-eval:
     name: Runtime tests Android (Legacy Eval)
     needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-android == 'true') }}
+    if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-android == 'true') }}
     uses: ./.github/workflows/runtime-tests-android.yml
     with:
       configuration: DebugRuntimeTests
@@ -311,7 +314,7 @@ jobs:
   runtime-tests-android-bundle-mode:
     name: Runtime tests Android (Bundle Mode)
     needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-android == 'true') }}
+    if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-android == 'true') }}
     uses: ./.github/workflows/runtime-tests-android.yml
     with:
       configuration: DebugRuntimeTests
@@ -320,7 +323,7 @@ jobs:
   runtime-tests-ios-legacy-eval:
     name: Runtime tests iOS (Legacy Eval)
     needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
+    if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
     uses: ./.github/workflows/runtime-tests-ios-argent.yml
     with:
       configuration: ReleaseRuntimeTests
@@ -332,7 +335,7 @@ jobs:
   runtime-tests-ios-bundle-mode:
     name: Runtime tests iOS (Bundle Mode)
     needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
+    if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
     uses: ./.github/workflows/runtime-tests-ios-argent.yml
     with:
       configuration: ReleaseRuntimeTests
@@ -356,7 +359,9 @@ jobs:
   # The one status branch protection requires. Passes when every check above
   # either succeeded or was skipped by the gate; fails on any failure or
   # cancellation. `always()` keeps it reporting even when something upstream
-  # failed, which is exactly when it must go red.
+  # failed, which is exactly when it must go red. It must not use
+  # `!cancelled()` instead: that would leave it skipped on a cancelled run,
+  # and branch protection counts a skipped check as passing.
   required:
     name: Required checks
     needs:
@@ -387,5 +392,13 @@ jobs:
             echo "| --- | --- |"
             echo "$NEEDS" | jq -r 'to_entries | sort_by(.key) | .[] | "| \(.key) | \(.value.result) |"'
           } >> "$GITHUB_STEP_SUMMARY"
+      # A run cancelled before the checks start leaves them all "skipped"
+      # (their `!cancelled()` gates are false), which the next step would
+      # accept, so the cancellation itself has to fail this job.
+      - name: Fail on a cancelled run
+        if: ${{ cancelled() }}
+        run: |
+          echo "::error::The run was cancelled, so the checks did not complete."
+          exit 1
       - name: Fail on any failed or cancelled check
         run: echo "$NEEDS" | jq -e 'all(.[]; .result == "success" or .result == "skipped")' > /dev/null

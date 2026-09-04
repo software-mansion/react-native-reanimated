@@ -29,9 +29,6 @@ jobs:
 
   android:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    permissions:
-      contents: read
-      pull-requests: read
     strategy:
       fail-fast: false
       matrix:
