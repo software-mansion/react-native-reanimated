@@ -2,33 +2,6 @@ name: Android validation
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/android-validation.yml'
-      - '.github/actions/android-validation/**'
-      - 'scripts/llvm-tools/**'
-      - 'packages/react-native-reanimated/android/src/main/java/**'
-      - 'packages/react-native-reanimated/android/build.gradle'
-      - 'packages/react-native-reanimated/Common/cpp/**'
-      - 'packages/react-native-worklets/android/src/**'
-      - 'packages/react-native-worklets/android/build.gradle'
-      - 'packages/react-native-worklets/Common/**'
-  pull_request:
-    paths:
-      - '.github/workflows/android-validation.yml'
-      - '.github/actions/android-validation/**'
-      - 'scripts/llvm-tools/**'
-      - 'packages/react-native-reanimated/android/src/main/java/**'
-      - 'packages/react-native-reanimated/android/build.gradle'
-      - 'packages/react-native-reanimated/Common/cpp/**'
-      - 'packages/react-native-worklets/android/src/**'
-      - 'packages/react-native-worklets/android/build.gradle'
-      - 'packages/react-native-worklets/Common/**'
-  merge_group:
-    branches:
-      - main
   workflow_call:
     inputs:
       package:

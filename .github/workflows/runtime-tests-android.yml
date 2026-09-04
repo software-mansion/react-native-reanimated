@@ -2,21 +2,6 @@ name: Runtime tests Android
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  pull_request:
-    paths:
-      - .github/workflows/runtime-tests-android.yml
-      - apps/common-app/runtime-tests/**
-      - apps/fabric-example/package.json
-      - apps/common-app/package.json
-      - apps/fabric-example/scripts/runtime-tests-server.js
-      - apps/fabric-example/android/**
-      - packages/react-native-reanimated/Common/**
-      - packages/react-native-reanimated/android/**
-      - packages/react-native-reanimated/src/**
-      - packages/react-native-worklets/Common/**
-      - packages/react-native-worklets/android/**
-      - packages/react-native-worklets/bundleMode/**
-      - packages/react-native-worklets/src/**
   workflow_call:
     inputs:
       bundleMode:
@@ -50,16 +35,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The workflow-name check is required: the nightly caller also runs on
-        # pull_request, and its workflow_call legs must keep their explicit
-        # inputs.bundleMode instead of fanning out both modes.
-        bundleMode: ${{ fromJSON((github.event_name == 'pull_request' && github.workflow == 'Runtime tests Android') && '[false, true]' || format('[{0}]', inputs.bundleMode)) }}
+        bundleMode: ${{ fromJSON(format('[{0}]', inputs.bundleMode)) }}
     env:
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated
       CONFIGURATION: ${{ inputs.configuration || 'DebugRuntimeTests' }}
     concurrency:
-      group: runtime-tests-android-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'DebugRuntimeTests' }}
+      group: runtime-tests-android-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'DebugRuntimeTests' }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
