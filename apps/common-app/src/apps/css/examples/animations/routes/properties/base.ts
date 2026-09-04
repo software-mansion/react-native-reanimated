@@ -152,6 +152,10 @@ const layoutAndPositioningRoutes = {
 } satisfies Routes;
 
 const appearanceRoutes = {
+  BackgroundImage: {
+    Component: baseAnimatedProperties.appearance.BackgroundImage,
+    name: 'Background Image',
+  },
   Borders: {
     name: 'Borders',
     routes: {

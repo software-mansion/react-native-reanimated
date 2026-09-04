@@ -10,6 +10,7 @@
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/common/values/complex/CSSBackgroundImage.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
 #include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
@@ -72,6 +73,7 @@ template class SimpleValueInterpolator<CSSBoolean>;
 template class SimpleValueInterpolator<CSSDisplay>;
 template class SimpleValueInterpolator<CSSKeyword>;
 template class SimpleValueInterpolator<CSSBoxShadow>;
+template class SimpleValueInterpolator<CSSLinearGradient, CSSRadialGradient>;
 template class SimpleValueInterpolator<CSSDiscreteArray<CSSKeyword>>;
 
 template class SimpleValueInterpolator<SVGPath>;

@@ -81,6 +81,7 @@ For animating `react-native-svg` components, see [Animating SVG](/docs/guides/an
   | aspectRatio             | <Yes/>  | <Yes/> | <Yes/> |
   | boxSizing               | <No/>   | <No/>  | <Yes/> |
   | backgroundColor         | <Yes/>  | <Yes/> | <Yes/> |
+  | backgroundImage         | <Yes/>  | <Yes/> | <Yes/> |
   | color                   | <Yes/>  | <Yes/> | <Yes/> |
   | textDecorationColor     | <No/>   | <Yes/> | <Yes/> |
   | textShadowColor         | <Yes/>  | <Yes/> | <Yes/> |
@@ -256,6 +257,10 @@ To mitigate this limitation, you need to specify the `textShadowColor` in every 
 Similarly to the text shadow styles - all shadow styles (i.e. `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius`) need to be specified in the animation keyframes to preserve the style during animation on the Web. Keep in mind that `shadowOffset`, `shadowOpacity`, `shadowRadius` style properties [aren't implemented on Android in React Native](https://reactnative.dev/docs/shadow-props#props) so they also can't be animated.
 
 We highly recommend to use [the `boxShadow` property](https://reactnative.dev/blog/2024/10/23/release-0.76-new-architecture#boxshadow) which doesn't have this limitation and also works on Android.
+
+### Animating background image gradients
+
+The `backgroundImage` style property (linear and radial gradients) is available under this name since React Native 0.87. On older React Native versions use the `experimental_backgroundImage` property instead - both names are supported and animate the same way. Gradients interpolate smoothly when both keyframes use the same gradient type, direction kind, number of color stops and compatible units; otherwise the value changes discretely in the middle of the animation.
 
 ### Animating image tint color
 
