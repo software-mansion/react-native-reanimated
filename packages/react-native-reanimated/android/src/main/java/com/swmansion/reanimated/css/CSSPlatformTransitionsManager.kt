@@ -6,7 +6,6 @@ import android.animation.ObjectAnimator
 import android.animation.TimeInterpolator
 import android.os.Handler
 import android.os.Looper
-import android.util.FloatProperty
 import android.view.Choreographer
 import android.view.View
 import com.facebook.react.bridge.ReactApplicationContext
@@ -77,7 +76,7 @@ internal class CSSPlatformTransitionsManager(
 
     private class RunningTransition(
         val animator: ObjectAnimator,
-        val writer: FloatProperty<View>,
+        val writer: CSSPropertyWriter,
         val startValue: Float,
     ) {
         /** Final value of a finished persistent transition, which outlives its animator. */
@@ -92,7 +91,7 @@ internal class CSSPlatformTransitionsManager(
 
         class Start(
             override val key: Key,
-            val writer: FloatProperty<View>,
+            val writer: CSSPropertyWriter,
             val fromValue: Double,
             val toValue: Double,
             val durationMs: Double,
@@ -135,18 +134,19 @@ internal class CSSPlatformTransitionsManager(
         persistent: Boolean,
     ): Boolean {
         if (invalidated) return false
-        val writer = cssPropertyWriterFor(propertyId) ?: return false
+        val writer = cssPropertyWriterFor(propertyId, fromValue, toValue) ?: return false
         val interpolator = easings[easingId] ?: return false
         val context = reactContext.get() ?: return false
         val scale = DurationScale.effectiveScale(context)
         if (scale <= 0f) return false
 
+        val (animatorFrom, animatorTo) = writer.animatorEndpoints(fromValue, toValue)
         commands.enqueue(
             Command.Start(
                 Key(viewTag, propertyId),
                 writer,
-                fromValue,
-                toValue,
+                animatorFrom,
+                animatorTo,
                 durationMs,
                 startTimestampMs,
                 interpolator,
@@ -250,7 +250,7 @@ internal class CSSPlatformTransitionsManager(
 
         // Resume from what is on screen; fromValue is the committed style, which would snap back.
         val interrupted = animators.remove(key)
-        val startValue = if (interrupted != null) writer.get(view) else command.fromValue.toFloat()
+        val startValue = if (interrupted != null) writer.resumeFrom(view) else command.fromValue.toFloat()
         interrupted?.animator?.cancel()
 
         // ObjectAnimator has no absolute start time, so resolve it after the thread hop
@@ -320,7 +320,7 @@ internal class CSSPlatformTransitionsManager(
             // target is held weakly, so read the View through it rather than keeping one.
             val view = running.animator.target as? View ?: return@forEach
             val current = running.currentValue()
-            if (running.writer.get(view) != current) running.writer.setValue(view, current)
+            if (!running.writer.matches(view, current)) running.writer.setValue(view, current)
         }
     }
 

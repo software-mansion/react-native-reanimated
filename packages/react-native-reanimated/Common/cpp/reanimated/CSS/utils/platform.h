@@ -8,6 +8,7 @@
 #include <array>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <variant>
 
@@ -17,12 +18,27 @@ namespace reanimated::css {
 /// colors (normalized to [0, 1]).
 using PlatformValue = std::variant<double, std::array<double, 2>, std::array<double, 4>>;
 
+#ifdef ANDROID
+/// Properties the Android backend animates natively; the index is the id the JNI seam
+/// carries and cssPropertyWriterFor switches on. A new one also needs a traitsFor() entry
+/// in platform.cpp and a writer, or its endpoints never parse and it stays on the loop.
+inline constexpr std::array<std::string_view, 4> kAndroidPlatformProperties{
+    "opacity",
+    "backgroundColor",
+    "borderColor",
+    "borderRadius",
+};
+#endif // ANDROID
+
 /// Whether the property can animate natively for the given easing. Every backend
 /// needs an easing its interpolators can carry, and each platform routes its own
 /// subset of properties; everything else runs on the C++ loop.
 bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &easing);
 
 std::optional<PlatformValue> lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, double progress);
+
+/// Packs normalized [r, g, b, a] into the ARGB int RN's processColor commits.
+double packColorChannels(const std::array<double, 4> &channels);
 
 /// Parses a transition's endpoints, looking the property up once. Null/undefined
 /// falls back to its CSS default; nullopt means the platform can't express the
