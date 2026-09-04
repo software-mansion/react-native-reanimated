@@ -180,9 +180,8 @@ jobs:
           mkdir -p "${BUILD_MARKER_DIR}"
           echo "ok" > "${BUILD_MARKER_DIR}/${CACHE_KEY}.success"
 
-      # Pods content is configuration-independent, so only the Debug leg
-      # saves — the Release leg of the nightly fan-out would race it for the
-      # same key.
+      # Pods do not depend on the configuration; one leg saves so the nightly
+      # fan-out does not race for the key.
       - name: Save Pods cache
         if: steps.result-cache.outputs.cache-hit != 'true' && env.CONFIGURATION == 'Debug'
         uses: ./.github/actions/save-pods

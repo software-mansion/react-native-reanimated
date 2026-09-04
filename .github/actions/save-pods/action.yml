@@ -18,24 +18,15 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    # Call this AFTER the build so a Pods tree that fails it is never
-    # published. Saving only from main keeps ~0.5 GB PR-scoped entries from
-    # eating the repo's 10 GB cache budget; the cost is that a PR changing
-    # Podfile.lock re-reconciles Pods on each push until it merges.
-    # Entries are immutable — to replace a bad one, `gh cache delete <key>`
-    # first, then re-seed from main. The reseed dispatch depends on which
-    # entry was evicted: runtime-tests-nightly.yml for the fabric-example
-    # ones, since its matrix contains the bundleMode:true /
-    # DebugRuntimeTests combination that runtime-tests-ios-argent.yml's save
-    # gate requires (that workflow's own workflow_dispatch defaults are
-    # bundleMode:false / ReleaseRuntimeTests, so dispatching it directly
-    # means overriding both inputs).
+    # Only main saves: PR-scoped entries (~0.5 GB each) would eat the 10 GB
+    # cache budget. A PR that changes Podfile.lock re-reconciles Pods on each
+    # push until it merges. Entries are immutable: to replace one,
+    # `gh cache delete <key>` and re-seed from main (runtime-tests-nightly.yml
+    # for the fabric-example entries).
     #
-    # Pods/.project_cache is CocoaPods' incremental-install skip state.
-    # @actions/cache resolves `path:` with implicitDescendants:false, so a
-    # bare directory pattern matches only the directory itself and a negative
-    # pattern below it has nothing to subtract — drop the directory from disk
-    # instead, so a restored tree can never suppress reinstalls.
+    # Pods/.project_cache is CocoaPods' incremental-install skip state; a
+    # restored copy would suppress reinstalls. It is removed from disk because
+    # a negative `path:` pattern under a bare directory subtracts nothing.
     - name: Drop CocoaPods incremental-install state
       if: >-
         inputs.cache-hit != 'true' &&

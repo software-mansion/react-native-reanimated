@@ -143,12 +143,9 @@ jobs:
         with:
           key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
 
-      # Pods content is configuration-independent, so a single leg of the
-      # nightly fan-out saves: the Bundle Mode one, whose checkout still
-      # matches the committed tree (the Legacy Eval legs run
-      # `yarn toggle-bundle-mode`, which reverses scripts/patches/* — the
-      # metro and babel configs plus the root package.json resolutions), in
-      # an arbitrary configuration.
+      # Pods do not depend on the configuration; one leg of the nightly
+      # fan-out saves. Bundle Mode, because the Legacy Eval legs run
+      # `yarn toggle-bundle-mode` and no longer match the committed tree.
       - name: Save Pods cache
         if: steps.appcache.outputs.cache-hit != 'true' && inputs.bundleMode && env.CONFIGURATION == 'DebugRuntimeTests'
         uses: ./.github/actions/save-pods

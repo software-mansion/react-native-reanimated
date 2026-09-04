@@ -23,17 +23,10 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    # The key covers only the inputs of dependency resolution (lockfile,
-    # Podfile, podspecs and the scripts they load) — not native sources,
-    # which `pod update` below reconciles from any restored tree.
-    # yarn.lock is deliberately absent: `yarn toggle-bundle-mode` rewrites it
-    # before this action runs on the Legacy Eval legs (it reverses
-    # scripts/patches/resolutions.patch and reinstalls), so including it would
-    # give those legs a key no saver ever writes. The JS-only `resolutions`
-    # entries it toggles cannot change Pods content anyway.
-    # save-pods deletes Pods/.project_cache — CocoaPods' incremental-install
-    # skip state — before archiving, so a restored tree can never suppress
-    # reinstalls.
+    # The key covers only what drives dependency resolution; `pod update`
+    # reconciles native sources from any restored tree. yarn.lock stays out:
+    # `yarn toggle-bundle-mode` rewrites it on the Legacy Eval legs, which
+    # would give them a key no saver ever writes.
     - name: Restore Pods cache
       id: pods-cache
       uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
