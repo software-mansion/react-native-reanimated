@@ -113,6 +113,19 @@ export function setupConsoleForwarding(boundCapturableConsole: typeof console) {
   };
 }
 
+export function getConsoleInitializer():
+  | typeof setupConsole
+  | typeof setupConsoleForwarding
+  | undefined {
+  if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+    return setupConsole;
+  }
+  if (__DEV__) {
+    return setupConsoleForwarding;
+  }
+  return undefined;
+}
+
 export function setupSerializer() {
   'worklet';
   globalThis.__serializer = makeShareableCloneOnUIRecursive;
@@ -190,24 +203,24 @@ function installRNBindingsOnUIRuntime() {
     );
   }
 
+  const consoleInitializer = getConsoleInitializer();
   const runtimeBoundCapturableConsole =
-    globalThis._WORKLETS_BUNDLE_MODE_ENABLED && !__DEV__
-      ? null
-      : getMemorySafeCapturableConsole();
+    consoleInitializer === undefined ? null : getMemorySafeCapturableConsole();
 
-  runOnUISync(() => {
-    'worklet';
-    if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-      setupConsole(runtimeBoundCapturableConsole!);
-    } else if (__DEV__) {
-      setupConsoleForwarding(runtimeBoundCapturableConsole!);
-    }
-
-    setupQueueMicrotask();
-    setupRequestAnimationFrame();
-    setupSetTimeout();
-    setupSetImmediate();
-    setupSetInterval();
-    setupSerializer();
-  });
+  runOnUISync(
+    (selectedConsoleInitializer, consoleToCapture) => {
+      'worklet';
+      if (selectedConsoleInitializer) {
+        selectedConsoleInitializer(consoleToCapture!);
+      }
+      setupQueueMicrotask();
+      setupRequestAnimationFrame();
+      setupSetTimeout();
+      setupSetImmediate();
+      setupSetInterval();
+      setupSerializer();
+    },
+    consoleInitializer,
+    runtimeBoundCapturableConsole
+  );
 }

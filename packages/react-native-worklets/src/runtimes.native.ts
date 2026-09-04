@@ -4,9 +4,8 @@ import { isBundleModeEnabled } from './debug/bundleMode';
 import { getStaticFeatureFlag } from './featureFlags/featureFlags';
 import { addNoBundleModeGuardImplementation } from './guardImplementation';
 import {
+  getConsoleInitializer,
   getMemorySafeCapturableConsole,
-  setupConsole,
-  setupConsoleForwarding,
   setupSerializer,
 } from './initializers/initializers';
 import {
@@ -71,10 +70,9 @@ export function createWorkletRuntime(
   nameOrConfig?: string | WorkletRuntimeConfigInternal,
   initializer?: WorkletFunction<[], void>
 ): WorkletRuntime {
+  const consoleInitializer = getConsoleInitializer();
   const runtimeBoundCapturableConsole =
-    globalThis._WORKLETS_BUNDLE_MODE_ENABLED && !__DEV__
-      ? null
-      : getMemorySafeCapturableConsole();
+    consoleInitializer === undefined ? null : getMemorySafeCapturableConsole();
 
   let name: string;
   let initializerFn: (() => void) | undefined;
@@ -123,10 +121,8 @@ export function createWorkletRuntime(
     createSerializable(() => {
       'worklet';
       setupSerializer();
-      if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-        setupConsole(runtimeBoundCapturableConsole!);
-      } else if (__DEV__) {
-        setupConsoleForwarding(runtimeBoundCapturableConsole!);
+      if (consoleInitializer) {
+        consoleInitializer(runtimeBoundCapturableConsole!);
       }
       if (enableEventLoop) {
         setupRunLoop(animationQueuePollingRate);
