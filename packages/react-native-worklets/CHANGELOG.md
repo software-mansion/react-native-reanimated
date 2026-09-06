@@ -34,6 +34,7 @@
 - Stop workletizing getters, setters and constructors. ([#10421](https://github.com/software-mansion/react-native-reanimated/pull/10421) by [@tshmieldev](https://github.com/tshmieldev))
 - Fix a crash when serializing objects with a `__proto__` key. ([#10451](https://github.com/software-mansion/react-native-reanimated/pull/10451) by [@tshmieldev](https://github.com/tshmieldev))
 - Fix `./gradlew app:build` failing on `:lintAnalyzeDebug` with a K2 UAST crash on `.gradle.kts` build scripts - all lint tasks are now skipped, not only `lintVital*`. ([#10448](https://github.com/software-mansion/react-native-reanimated/pull/10448) by [@tshmieldev](https://github.com/tshmieldev))
+- Report errors thrown by worklets on the JS thread in release builds instead of aborting the process with an uncaught C++ exception. ([#10456](https://github.com/software-mansion/react-native-reanimated/pull/10456) by [@jslok](https://github.com/jslok))
 
 ### 💡 Others
 
