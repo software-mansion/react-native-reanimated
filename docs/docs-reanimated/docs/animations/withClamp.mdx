@@ -32,6 +32,7 @@ function App() {
     config: {
       min?: T;
       max?: T;
+      reduceMotion?: ReduceMotion;
     },
     clampedAnimation: T
   ): T;
@@ -50,10 +51,11 @@ function App() {
 
 An object with following properties:
 
-| Name             | Type Description |
-| ---------------- | ---------------- | ------------------------------------------------ |
-| min <Optional/> | `number`         | The lowest value your animation can ever reach   |
-| max <Optional/> | `number`         | The greatest value your animation can ever reach |
+| Name                      | Type           | Default               | Description                                                                                                  |
+| ------------------------- | -------------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| min <Optional/>          | `number`       | `undefined`           | The lowest value your animation can ever reach                                                               |
+| max <Optional/>          | `number`       | `undefined`           | The greatest value your animation can ever reach                                                             |
+| reduceMotion <Optional/> | `ReduceMotion` | `ReduceMotion.System` | A parameter that determines how the animation responds to the device's reduced motion accessibility setting. |
 
 #### `animation`
 
