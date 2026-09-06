@@ -14,13 +14,20 @@ describe(processFontWeight, () => {
   });
 
   describe('throws an error for invalid font weight values', () => {
-    test.each(['unknown-weight', '1000', '0', 505])(
-      'throws an error for %p',
-      (value) => {
-        expect(() => processFontWeight(value)).toThrow(
-          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidFontWeight(value)}`)
-        );
-      }
-    );
+    test.each([
+      'unknown-weight',
+      '1000',
+      '0',
+      505,
+      // Object.prototype members must not resolve as font weight keywords
+      'constructor',
+      'toString',
+      '__proto__',
+      'hasOwnProperty',
+    ])('throws an error for %p', (value) => {
+      expect(() => processFontWeight(value)).toThrow(
+        new Error(`[Reanimated] ${ERROR_MESSAGES.invalidFontWeight(value)}`)
+      );
+    });
   });
 });
