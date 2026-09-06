@@ -393,8 +393,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   }
 
   /**
-   * Invokes the provided function, reporting any exception with the scheduling
-   * stack carried by the provided stack context in debug builds.
+   * Invokes the provided function, reporting any exception on the JS thread.
+   * Debug builds attach the scheduling stack carried by the provided stack context.
    */
   template <typename TScheduleStackContext, typename... TArgs>
   jsi::Value invoke(
@@ -402,20 +402,21 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       const jsi::Function &function,
       const TScheduleStackContext &scheduleStackContext,
       TArgs &&...args) const {
-#ifndef NDEBUG
     try {
       return function.call(rt, std::forward<TArgs>(args)...);
     } catch (jsi::JSError &e) {
+#ifndef NDEBUG
       if constexpr (std::is_same_v<TScheduleStackContext, RequestedScheduleStack>) {
         JSLogger::handleJSError(jsScheduler_, rt, name_, e, scheduleStackContext.value);
       } else {
         JSLogger::handleJSError(jsScheduler_, rt, name_, e, std::nullopt);
       }
+#else
+      JSLogger::reportFatalErrorOnJS(
+          jsScheduler_, JSErrorData{.message = e.getMessage(), .stack = e.getStack(), .name = "Error"});
+#endif // NDEBUG
       return jsi::Value::undefined();
     }
-#else
-    return function.call(rt, std::forward<TArgs>(args)...);
-#endif // NDEBUG
   }
 
   void bundleModeInit(
