@@ -15,6 +15,7 @@
 
 ### 🐛 Bug fixes
 
+- Fix the Metro configuration type import to use the public package export. ([#10454](https://github.com/software-mansion/react-native-reanimated/pull/10454) by [@sneakykiwi](https://github.com/sneakykiwi))
 - Skip the Android mounted-tag correction in Layout Animations when React Native's `enableMountingCoordinatorPullModelAndroid` feature flag is on, since the pull model already guarantees that updates can't outrun a view's first mount. ([#10481](https://github.com/software-mansion/react-native-reanimated/pull/10481) by [@piaskowyk](https://github.com/piaskowyk))
 - Fix `Keyframe` easings on web being dropped or applied to the wrong keyframe when the definitions use the `from`/`to` aliases or fractional offsets. ([#10386](https://github.com/software-mansion/react-native-reanimated/pull/10386) by [@dennytosp](https://github.com/dennytosp))
 - Fix `getViewProp` and the runtime-tests prop snapshotting crashing (segfault on style props, unhandled error on layout props) when the view is no longer mounted. ([#10443](https://github.com/software-mansion/react-native-reanimated/pull/10443) by [@tjzel](https://github.com/tjzel))
