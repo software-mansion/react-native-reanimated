@@ -19,7 +19,6 @@ jest.mock('react-native-worklets/WorkletsModule/NativeWorklets', () => {
       createSerializableError: mockSerializable,
       createSerializableHostObject: mockSerializable,
       createSerializableImport: mockSerializable,
-      createSerializableInitializer: mockSerializable,
       createSerializableLEGACY: mockSerializable,
       createSerializableMap: mockSerializable,
       createSerializableNonWorkletFunction: mockSerializable,

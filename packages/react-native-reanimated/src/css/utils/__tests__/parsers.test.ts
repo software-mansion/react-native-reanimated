@@ -109,11 +109,22 @@ describe(normalizeTimeUnit, () => {
     ['100ms', 100],
     ['0ms', 0],
     ['-100ms', -100],
+    ['0.5ms', 0.5],
+    ['1.5ms', 1.5],
+    ['.5ms', 0.5],
+    ['-1.5ms', -1.5],
     ['1s', 1000],
     ['0.1s', 100],
+    ['0.0005s', 0.5],
+    ['.5s', 500],
     ['-1s', -1000],
   ] satisfies [TimeUnit, number][])('converts %p to %p', (value, expected) => {
     expect(normalizeTimeUnit(value)).toBe(expected);
+  });
+
+  test('keeps the precision of a computed frame duration', () => {
+    const frameDuration = 1000 / 60;
+    expect(normalizeTimeUnit(`${frameDuration}ms`)).toBe(frameDuration);
   });
 
   // A non-finite value reaching native makes every progress computed from it

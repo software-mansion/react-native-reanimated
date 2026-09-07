@@ -95,6 +95,66 @@ describe(LinearEasing, () => {
         ]);
       });
 
+      // https://drafts.csswg.org/css-easing-2/#linear-easing-function-serializing
+      test('serialization example from the spec: linear(0 20%, 0.5 10%, 1)', () => {
+        const easing = new LinearEasing([[0, '20%'], [0.5, '10%'], 1]);
+
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0 },
+          { x: 0.2, y: 0 },
+          { x: 0.2, y: 0.5 },
+          { x: 1, y: 1 },
+        ]);
+      });
+
+      test('clamps the last point to the largest preceding input progress', () => {
+        const easing = new LinearEasing([0, [1, '80%'], [0.5, '30%']]);
+
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0 },
+          { x: 0.8, y: 1 },
+          { x: 0.8, y: 0.5 },
+          { x: 1, y: 0.5 },
+        ]);
+      });
+
+      test('treats the input progress of the first point as preceding', () => {
+        const easing = new LinearEasing([[0, '50%'], [1, '20%'], 0.5]);
+
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0 },
+          { x: 0.5, y: 0 },
+          { x: 0.5, y: 1 },
+          { x: 1, y: 0.5 },
+        ]);
+      });
+
+      test('clamps the last of only two points when they decrease', () => {
+        const easing = new LinearEasing([
+          [0, '50%'],
+          [1, '20%'],
+        ]);
+
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0 },
+          { x: 0.5, y: 0 },
+          { x: 0.5, y: 1 },
+          { x: 1, y: 1 },
+        ]);
+      });
+
+      test('clamps a point that only step 4 spaces out after it', () => {
+        const easing = new LinearEasing([[0, '50%'], 1, [0.5, '20%']]);
+
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0 },
+          { x: 0.5, y: 0 },
+          { x: 0.5, y: 1 },
+          { x: 0.5, y: 0.5 },
+          { x: 1, y: 0.5 },
+        ]);
+      });
+
       test('warns if the input progress of the point is less than the input progress of the preceding point and is overridden', () => {
         new LinearEasing([
           0,

@@ -308,6 +308,11 @@ describe('Test `normalizeColor` function', () => {
       ['peachpuff', 0xffdab9ff],
       ['peachPuff', null],
       ['PeachPuff', null],
+      // Members of Object.prototype are not color names.
+      ['constructor', null],
+      ['toString', null],
+      ['hasOwnProperty', null],
+      ['__proto__', null],
     ])('normalizeColor(%s) = %p', (color, expectedColor) => {
       expect(normalizeColor(color)).toBe(expectedColor);
     });
