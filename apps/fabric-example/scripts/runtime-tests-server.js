@@ -2,6 +2,7 @@
 
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const net = require('net');
 const http = require('http');
 const { spawn, execFile } = require('child_process');
@@ -234,7 +235,7 @@ wss.on('connection', (socket) => {
         );
       } else {
         console.error(
-          '[runtime-tests] Check the iOS simulator log for crashes (Xcode → Devices → View Device Logs)'
+          '[runtime-tests] The app most likely crashed — collecting crash reports below.'
         );
       }
       console.error(
@@ -426,7 +427,7 @@ function printSanitizerReports() {
 function failWithDiagnostics(code) {
   clearTimer('connect');
   clearTimer('idle');
-  dumpAndroidCrashDiagnostics()
+  dumpCrashDiagnostics()
     .catch((error) => {
       console.error(
         `[runtime-tests] crash diagnostics failed: ${errorMessage(error)}`
@@ -435,11 +436,152 @@ function failWithDiagnostics(code) {
     .finally(() => shutdown(code));
 }
 
-async function dumpAndroidCrashDiagnostics() {
-  if (PLATFORM !== 'android' || BUILD_ONLY || crashDiagnosticsDone) {
+async function dumpCrashDiagnostics() {
+  if (BUILD_ONLY || crashDiagnosticsDone) {
     return;
   }
   crashDiagnosticsDone = true;
+  if (PLATFORM === 'android') {
+    await dumpAndroidCrashDiagnostics();
+  } else if (PLATFORM === 'ios') {
+    await dumpIOSCrashDiagnostics();
+  }
+}
+
+async function dumpIOSCrashDiagnostics() {
+  if (process.platform !== 'darwin') {
+    console.error(
+      '[runtime-tests] the simulator runs on a remote host — check its ~/Library/Logs/DiagnosticReports for FabricExample crash reports'
+    );
+    return;
+  }
+  const reportsDir = path.join(
+    os.homedir(),
+    'Library',
+    'Logs',
+    'DiagnosticReports'
+  );
+  console.error(
+    `[runtime-tests] looking for FabricExample crash reports in ${reportsDir}…`
+  );
+  let reports = [];
+  for (let attempt = 0; attempt < 10; attempt++) {
+    await sleep(3000);
+    reports = findFreshIOSCrashReports(reportsDir);
+    if (reports.length > 0) {
+      await sleep(3000);
+      reports = findFreshIOSCrashReports(reportsDir);
+      break;
+    }
+  }
+  if (reports.length === 0) {
+    console.error(
+      '[runtime-tests] no fresh crash reports (the app may have hung or been killed without crashing)'
+    );
+    return;
+  }
+  fs.mkdirSync(CRASH_REPORT_DIR, { recursive: true });
+  for (const report of reports.slice(0, 3)) {
+    const saved = path.join(CRASH_REPORT_DIR, report.name);
+    fs.copyFileSync(report.file, saved);
+    const text = fs.readFileSync(report.file, 'utf8');
+    console.error(
+      `[runtime-tests] crash report ${report.name} (full report saved to ${saved}):`
+    );
+    console.error(formatIOSCrashReport(text));
+  }
+}
+
+/**
+ * @param {string} reportsDir
+ * @returns {{ name: string; file: string; mtimeMs: number }[]}
+ */
+function findFreshIOSCrashReports(reportsDir) {
+  let names = [];
+  try {
+    names = fs.readdirSync(reportsDir);
+  } catch {
+    return [];
+  }
+  return names
+    .filter(
+      (name) =>
+        name.startsWith('FabricExample') &&
+        (name.endsWith('.ips') || name.endsWith('.crash'))
+    )
+    .map((name) => {
+      const file = path.join(reportsDir, name);
+      return { name, file, mtimeMs: fs.statSync(file).mtimeMs };
+    })
+    .filter((report) =>
+      runStartedAt > 0 ? report.mtimeMs >= runStartedAt - 60_000 : true
+    )
+    .sort((a, b) => b.mtimeMs - a.mtimeMs);
+}
+
+/**
+ * @param {string} text
+ * @returns {string}
+ */
+function formatIOSCrashReport(text) {
+  const newlineIndex = text.indexOf('\n');
+  /** @type {any} */
+  let payload;
+  try {
+    payload = JSON.parse(text.slice(newlineIndex + 1));
+  } catch {
+    return headLines(text, 200);
+  }
+  const lines = [];
+  if (payload.exception) {
+    lines.push(`exception: ${JSON.stringify(payload.exception)}`);
+  }
+  if (payload.termination) {
+    lines.push(`termination: ${JSON.stringify(payload.termination)}`);
+  }
+  if (payload.asi) {
+    lines.push(`abort messages: ${JSON.stringify(payload.asi)}`);
+  }
+  const images = payload.usedImages ?? [];
+  /**
+   * @param {{
+   *   imageIndex?: number;
+   *   imageOffset?: number;
+   *   symbol?: string;
+   *   symbolLocation?: number;
+   * }} frame
+   */
+  const formatFrame = (frame) => {
+    const image = images[frame.imageIndex ?? -1] ?? {};
+    const location = frame.symbol
+      ? `${frame.symbol} + ${frame.symbolLocation ?? 0}`
+      : `0x${(frame.imageOffset ?? 0).toString(16)}`;
+    return `${image.name ?? '?'}  ${location}`;
+  };
+  if (Array.isArray(payload.lastExceptionBacktrace)) {
+    lines.push('last exception backtrace:');
+    payload.lastExceptionBacktrace.forEach((frame, index) => {
+      lines.push(`  #${String(index).padStart(2)} ${formatFrame(frame)}`);
+    });
+  }
+  const faultingIndex = payload.faultingThread ?? 0;
+  const thread = (payload.threads ?? [])[faultingIndex];
+  if (thread) {
+    const threadName = thread.name ?? thread.queue ?? '';
+    lines.push(
+      `faulting thread ${faultingIndex}${threadName ? ` (${threadName})` : ''}:`
+    );
+    (thread.frames ?? []).forEach((frame, index) => {
+      lines.push(`  #${String(index).padStart(2)} ${formatFrame(frame)}`);
+    });
+  }
+  if (lines.length === 0) {
+    return headLines(text, 200);
+  }
+  return lines.join('\n');
+}
+
+async function dumpAndroidCrashDiagnostics() {
   const serial =
     androidSerial ?? (await listAndroidDevices().catch(() => []))[0];
   if (!serial) {
