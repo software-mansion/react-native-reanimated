@@ -38,6 +38,7 @@
 
 ### 💡 Others
 
+- Mark the special-case `__proto__` object reconstruction path as unlikely. ([#10465](https://github.com/software-mansion/react-native-reanimated/pull/10465) by [@tshmieldev](https://github.com/tshmieldev))
 - Update the sponsors section in the README. ([#10347](https://github.com/software-mansion/react-native-reanimated/pull/10347) by [@m-bert](https://github.com/m-bert))
 - bump Worklets version to 0.13.0
 - Split every C++ `Serializable` subclass into a dedicated file under `SharedItems/Serializable/`, with its factory function alongside. No behavior change. ([#10345](https://github.com/software-mansion/react-native-reanimated/pull/10345) by [@tjzel](https://github.com/tjzel))
