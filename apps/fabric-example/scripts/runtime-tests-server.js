@@ -147,7 +147,8 @@ let idleTimer = null;
 let metroChild = null;
 /** @type {string | null} */
 let androidSerial = null;
-let crashDiagnosticsDone = false;
+/** @type {Promise<void> | null} */
+let crashDiagnosticsPromise = null;
 
 /**
  * @param {unknown} error
@@ -436,16 +437,18 @@ function failWithDiagnostics(code) {
     .finally(() => shutdown(code));
 }
 
-async function dumpCrashDiagnostics() {
-  if (BUILD_ONLY || crashDiagnosticsDone) {
-    return;
+function dumpCrashDiagnostics() {
+  if (BUILD_ONLY) {
+    return Promise.resolve();
   }
-  crashDiagnosticsDone = true;
-  if (PLATFORM === 'android') {
-    await dumpAndroidCrashDiagnostics();
-  } else if (PLATFORM === 'ios') {
-    await dumpIOSCrashDiagnostics();
-  }
+  crashDiagnosticsPromise ??= (async () => {
+    if (PLATFORM === 'android') {
+      await dumpAndroidCrashDiagnostics();
+    } else if (PLATFORM === 'ios') {
+      await dumpIOSCrashDiagnostics();
+    }
+  })();
+  return crashDiagnosticsPromise;
 }
 
 async function dumpIOSCrashDiagnostics() {
