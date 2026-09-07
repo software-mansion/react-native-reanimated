@@ -102,7 +102,7 @@ jobs:
 
       - name: Install LLVM tools (xcode-build-server + llvm clang-tidy)
         if: steps.result-cache.outputs.cache-hit != 'true'
-        run: brew install xcode-build-server llvm
+        run: brew install xcode-build-server llvm@22
 
       - name: Use Node.js
         if: steps.result-cache.outputs.cache-hit != 'true'
