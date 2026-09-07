@@ -61,6 +61,7 @@
 
 ## utility
 
+- [getCurrentThreadId](https://docs.swmansion.com/react-native-worklets/docs/utility/getCurrentThreadId)
 - [getRuntimeKind](https://docs.swmansion.com/react-native-worklets/docs/utility/getRuntimeKind)
 - [isBundleModeEnabled](https://docs.swmansion.com/react-native-worklets/docs/utility/isBundleModeEnabled)
 - [isRNRuntime](https://docs.swmansion.com/react-native-worklets/docs/utility/isRNRuntime)
