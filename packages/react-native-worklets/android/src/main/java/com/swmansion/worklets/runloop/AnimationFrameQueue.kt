@@ -25,7 +25,9 @@ class AnimationFrameQueue(
         }
     private val mCallbackPosted = AtomicBoolean()
     private val mPaused = AtomicBoolean()
+    private val mInvalidated = AtomicBoolean()
     private val mFrameCallbacks = mutableListOf<AnimationFrameCallback>()
+    private val mDispatchLock = Any()
 
     fun resume() {
         if (mPaused.getAndSet(false)) {
@@ -44,8 +46,21 @@ class AnimationFrameQueue(
         }
     }
 
+    fun invalidate() {
+        mInvalidated.set(true)
+        removePostedFrameCallback()
+        synchronized(mDispatchLock) {
+            synchronized(mFrameCallbacks) {
+                mFrameCallbacks.clear()
+            }
+        }
+    }
+
     fun requestAnimationFrame(animationFrameCallback: AnimationFrameCallback) {
         synchronized(mFrameCallbacks) {
+            if (mInvalidated.get()) {
+                return
+            }
             mFrameCallbacks.add(animationFrameCallback)
         }
         scheduleQueueExecution()
@@ -64,12 +79,24 @@ class AnimationFrameQueue(
 
     private fun scheduleQueueExecution() {
         synchronized(mPaused) {
+            if (mInvalidated.get()) {
+                return
+            }
             if (!mPaused.get() && !mCallbackPosted.getAndSet(true)) {
                 mReactChoreographer.postFrameCallback(
                     ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE,
                     mChoreographerCallback,
                 )
             }
+        }
+    }
+
+    private fun removePostedFrameCallback() {
+        if (mCallbackPosted.getAndSet(false)) {
+            mReactChoreographer.removeFrameCallback(
+                ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE,
+                mChoreographerCallback,
+            )
         }
     }
 
@@ -83,12 +110,17 @@ class AnimationFrameQueue(
             return
         }
 
-        val frameCallbacks = pullCallbacks()
-        mCallbackPosted.set(false)
+        synchronized(mDispatchLock) {
+            val frameCallbacks = pullCallbacks()
+            mCallbackPosted.set(false)
+            if (mInvalidated.get()) {
+                return
+            }
 
-        lastFrameTimeMs = currentFrameTimeMs
-        for (callback in frameCallbacks) {
-            callback.onAnimationFrame(currentFrameTimeMs)
+            lastFrameTimeMs = currentFrameTimeMs
+            for (callback in frameCallbacks) {
+                callback.onAnimationFrame(currentFrameTimeMs)
+            }
         }
     }
 
