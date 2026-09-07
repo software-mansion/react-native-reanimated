@@ -20,6 +20,7 @@
 - Add the fast-path `fixedType` option to `createSynchronizable`. A fixed-type Synchronizable holds a number or a boolean without serialization and exposes `setDirty`, a non-exclusive write that doesn't wait for other `setDirty` calls. ([#10296](https://github.com/software-mansion/react-native-reanimated/pull/10296) by [@tjzel](https://github.com/tjzel))
 - The Babel plugin treats `navigator` as a known global: worklets resolve it on their own runtime instead of capturing the main runtime's object by closure. ([#10364](https://github.com/software-mansion/react-native-reanimated/pull/10364) by [@wcandillon](https://github.com/wcandillon))
 - Add an OXC port of the Babel plugin for Bundle Mode. ([#9518](https://github.com/software-mansion/react-native-reanimated/pull/9518) by [@tshmieldev](https://github.com/tshmieldev))
+- Add `getCurrentThreadId` as public JavaScript API.
 
 ### 🐛 Bug fixes
 
@@ -38,6 +39,7 @@
 ### 💡 Others
 
 - Pass arguments to batched UI worklets separately instead of capturing them in wrapper worklets, reducing worklet serialization. ([#10466](https://github.com/software-mansion/react-native-reanimated/pull/10466) by [@tshmieldev](https://github.com/tshmieldev))
+- Mark the special-case `__proto__` object reconstruction path as unlikely. ([#10465](https://github.com/software-mansion/react-native-reanimated/pull/10465) by [@tshmieldev](https://github.com/tshmieldev))
 - Update the sponsors section in the README. ([#10347](https://github.com/software-mansion/react-native-reanimated/pull/10347) by [@m-bert](https://github.com/m-bert))
 - bump Worklets version to 0.13.0
 - Split every C++ `Serializable` subclass into a dedicated file under `SharedItems/Serializable/`, with its factory function alongside. No behavior change. ([#10345](https://github.com/software-mansion/react-native-reanimated/pull/10345) by [@tjzel](https://github.com/tjzel))
