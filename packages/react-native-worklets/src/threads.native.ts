@@ -19,12 +19,35 @@ const SHOULD_CAPTURE_SCHEDULE_STACK =
 type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
   worklet: WorkletFunction<Args, ReturnValue>,
   args: Args,
-  resolve: ((value: ReturnValue) => void) | undefined,
+  resolve:
+    | ((value: ReturnValue | PromiseLike<ReturnValue>) => void)
+    | undefined,
   reject: ((reason: unknown) => void) | undefined,
   scheduleStack: string | undefined,
 ];
 
 let runOnUIQueue: UIJob[] = [];
+
+function runAsyncUIJob<Args extends unknown[], ReturnValue>(
+  workletFunction: WorkletFunction<Args, ReturnValue>,
+  workletArgs: Args,
+  resolve: (value: ReturnValue | PromiseLike<ReturnValue>) => void,
+  reject: (reason: unknown) => void
+): void {
+  'worklet';
+  try {
+    const result = workletFunction(...workletArgs);
+    const serializedResult = globalThis.__serializer(
+      result
+    ) as SerializableRef<ReturnValue>;
+    globalThis.__workletsModuleProxy.handlePromise(resolve, serializedResult);
+  } catch (error) {
+    const serializedError = globalThis.__serializer(error);
+    globalThis.__workletsModuleProxy.handlePromise(reject, serializedError);
+  }
+}
+
+let serializableRunAsyncUIJob: SerializableRef | undefined;
 
 /**
  * Lets you schedule a function to be executed on the [UI
@@ -312,7 +335,7 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
 function enqueueUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   args: Args,
-  resolve?: (value: ReturnValue) => void,
+  resolve?: (value: ReturnValue | PromiseLike<ReturnValue>) => void,
   reject?: (reason: unknown) => void
 ): void {
   const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
@@ -334,33 +357,16 @@ function flushUIQueue(): void {
     runOnUIQueue = [];
     const jobWorklets: SerializableRef[] = [];
     const jobArguments: SerializableRef<unknown[]>[] = [];
-    let serializableEmptyArguments: SerializableRef<unknown[]> | undefined;
     for (const [workletFunction, workletArgs, resolve, reject] of queue) {
       if (resolve === undefined) {
         jobWorklets.push(createSerializable(workletFunction));
         jobArguments.push(createSerializable(workletArgs));
       } else {
-        jobWorklets.push(
-          createSerializable(() => {
-            'worklet';
-            try {
-              const result = workletFunction(...workletArgs);
-              const serializedResult = globalThis.__serializer(result);
-              globalThis.__workletsModuleProxy.handlePromise(
-                resolve,
-                serializedResult
-              );
-            } catch (error) {
-              const serializedError = globalThis.__serializer(error);
-              globalThis.__workletsModuleProxy.handlePromise(
-                reject!,
-                serializedError
-              );
-            }
-          })
+        serializableRunAsyncUIJob ??= createSerializable(runAsyncUIJob);
+        jobWorklets.push(serializableRunAsyncUIJob);
+        jobArguments.push(
+          createSerializable([workletFunction, workletArgs, resolve, reject!])
         );
-        serializableEmptyArguments ??= createSerializable([]);
-        jobArguments.push(serializableEmptyArguments);
       }
     }
     const scheduleStacks = SHOULD_CAPTURE_SCHEDULE_STACK

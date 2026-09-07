@@ -63,7 +63,7 @@ describe('native threads implementation', () => {
     );
   });
 
-  test('keeps result-handling wrappers and reuses their empty arguments', async () => {
+  test('reuses the async result handler and passes per-job state as arguments', async () => {
     const firstWorklet = jest.fn();
     const secondWorklet = jest.fn();
 
@@ -74,32 +74,46 @@ describe('native threads implementation', () => {
     await Promise.resolve();
 
     expect(createSerializable).toHaveBeenCalledTimes(3);
-    const firstResultHandlingWorklet = jest.mocked(createSerializable).mock
-      .calls[0][0];
-    const secondResultHandlingWorklet = jest.mocked(createSerializable).mock
-      .calls[2][0];
-    expect(firstResultHandlingWorklet).not.toBe(firstWorklet);
-    expect(firstResultHandlingWorklet).toEqual(expect.any(Function));
-    expect(createSerializable).toHaveBeenNthCalledWith(2, []);
+    const resultHandler = jest.mocked(createSerializable).mock.calls[0][0];
+    expect(resultHandler).not.toBe(firstWorklet);
+    expect(resultHandler).toEqual(expect.any(Function));
+    expect(createSerializable).toHaveBeenNthCalledWith(2, [
+      firstWorklet,
+      ['first argument'],
+      expect.any(Function),
+      expect.any(Function),
+    ]);
+    expect(createSerializable).toHaveBeenNthCalledWith(3, [
+      secondWorklet,
+      ['second argument'],
+      expect.any(Function),
+      expect.any(Function),
+    ]);
     expect(WorkletsModule.scheduleOnUI).toHaveBeenCalledWith(
       {
-        value: [
-          { value: firstResultHandlingWorklet },
-          { value: secondResultHandlingWorklet },
-        ],
+        value: [{ value: resultHandler }, { value: resultHandler }],
       },
       {
-        value: [{ value: [] }, { value: [] }],
+        value: [
+          {
+            value: [
+              firstWorklet,
+              ['first argument'],
+              expect.any(Function),
+              expect.any(Function),
+            ],
+          },
+          {
+            value: [
+              secondWorklet,
+              ['second argument'],
+              expect.any(Function),
+              expect.any(Function),
+            ],
+          },
+        ],
       },
       undefined
-    );
-    const serializableArgumentBatch = jest.mocked(
-      WorkletsModule.scheduleOnUI
-    ).mock.calls[0][1] as unknown as {
-      value: unknown[];
-    };
-    expect(serializableArgumentBatch.value[0]).toBe(
-      serializableArgumentBatch.value[1]
     );
   });
 });
