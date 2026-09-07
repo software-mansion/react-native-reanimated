@@ -28,23 +28,29 @@ export function installSynchronizableUnpacker() {
     synchronizable.getBlocking = () => {
       return proxy.synchronizableGetBlocking(synchronizable);
     };
+    const setBlockingValue = (newValue: TValue) => {
+      proxy.synchronizableSetBlocking(synchronizable, serializer(newValue));
+    };
     synchronizable.setBlocking = (
       valueOrFunction: TValue | ((prev: TValue) => TValue)
     ) => {
-      let newValue: TValue;
       if (typeof valueOrFunction === 'function') {
         const func = valueOrFunction as (prev: TValue) => TValue;
         synchronizable.lock();
-        const prev = synchronizable.getBlocking();
-        newValue = func(prev);
-
-        proxy.synchronizableSetBlocking(synchronizable, serializer(newValue));
-
-        synchronizable.unlock();
+        if (__DEV__) {
+          try {
+            const prev = synchronizable.getBlocking();
+            setBlockingValue(func(prev));
+          } finally {
+            synchronizable.unlock();
+          }
+        } else {
+          const prev = synchronizable.getBlocking();
+          setBlockingValue(func(prev));
+          synchronizable.unlock();
+        }
       } else {
-        const value = valueOrFunction;
-        newValue = value;
-        proxy.synchronizableSetBlocking(synchronizable, serializer(newValue));
+        setBlockingValue(valueOrFunction);
       }
     };
     synchronizable.lock = () => {
