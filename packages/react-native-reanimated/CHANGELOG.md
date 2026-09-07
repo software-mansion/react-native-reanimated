@@ -13,6 +13,7 @@
 
 ### 🐛 Bug fixes
 
+- Fix `transformOrigin` and `fontWeight` resolving `Object.prototype` members such as `'constructor'` and `'toString'` as keywords and returning a function instead of throwing. ([#10454](https://github.com/software-mansion/react-native-reanimated/pull/10454) by [@dennytosp](https://github.com/dennytosp))
 - Reset `IN_STYLE_UPDATER` even when an initial style updater throws, so a single updater error no longer leaves all animations returning raw values until reload. ([#10445](https://github.com/software-mansion/react-native-reanimated/pull/10445) by [@alexey-khatskelevich](https://github.com/alexey-khatskelevich))
 - Fix `./gradlew app:build` failing on `:lintAnalyzeDebug` with a K2 UAST crash on `.gradle.kts` build scripts - all lint tasks are now skipped, not only `lintVital*`. ([#10448](https://github.com/software-mansion/react-native-reanimated/pull/10448) by [@tshmieldev](https://github.com/tshmieldev))
 - Treat `animationName: []` as no animation, so the view is detached instead of running its previous animation forever. ([#10432](https://github.com/software-mansion/react-native-reanimated/pull/10432) by [@MatiPl01](https://github.com/MatiPl01))

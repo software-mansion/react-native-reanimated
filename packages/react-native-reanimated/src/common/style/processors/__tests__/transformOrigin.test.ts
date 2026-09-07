@@ -301,6 +301,79 @@ describe(processTransformOrigin, () => {
         ],
       },
       {
+        name: 'Object.prototype members',
+        cases: [
+          {
+            name: 'invalid',
+            cases: [
+              {
+                input: 'constructor',
+                message: ERROR_MESSAGES.invalidValue(
+                  'constructor',
+                  'x',
+                  'constructor',
+                  false
+                ),
+              },
+              {
+                input: 'toString',
+                message: ERROR_MESSAGES.invalidValue(
+                  'toString',
+                  'x',
+                  'toString',
+                  false
+                ),
+              },
+              {
+                input: '__proto__',
+                message: ERROR_MESSAGES.invalidValue(
+                  '__proto__',
+                  'x',
+                  '__proto__',
+                  false
+                ),
+              },
+              {
+                input: 'hasOwnProperty',
+                message: ERROR_MESSAGES.invalidValue(
+                  'hasOwnProperty',
+                  'x',
+                  'hasOwnProperty',
+                  false
+                ),
+              },
+              {
+                input: 'left toString', // keyword conversion lookup on the y-axis
+                message: ERROR_MESSAGES.invalidValue(
+                  'toString',
+                  'y',
+                  'left toString',
+                  false
+                ),
+              },
+              {
+                input: 'top constructor', // x and y are not swapped
+                message: ERROR_MESSAGES.invalidValue(
+                  'top',
+                  'x',
+                  'top constructor',
+                  false
+                ),
+              },
+              {
+                input: ['constructor'],
+                message: ERROR_MESSAGES.invalidValue(
+                  'constructor',
+                  'x',
+                  ['constructor'],
+                  true
+                ),
+              },
+            ],
+          },
+        ],
+      },
+      {
         name: 'array syntax',
         cases: [
           {
