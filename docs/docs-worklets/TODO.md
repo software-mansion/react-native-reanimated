@@ -18,15 +18,6 @@
 1. Linking with C++, creating a thread.
 1. Linking Worklet Runtime and the server to the same thread? Maybe?
 
-## Good practices
-
-1. Re-use your runtimes.
-2. Re-use your worklets.
-3. Prefer arguments to closures.
-4. Use granular objects to transfer.
-5. Use Event Loop on the Worklet Runtime instead of the scheduling runtime.
-6. Prefer async invocations.
-
 ## General ideas
 
 - When referring to worklets as a library in the docs, always call it Worklets library, when to a number of individual worklets, as worklet functions. use it consistently across the docs and note it somewhere.

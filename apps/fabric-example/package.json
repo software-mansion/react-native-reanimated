@@ -52,5 +52,15 @@
       "IOS_DYNAMIC_FRAMERATE_ENABLED": true,
       "FETCH_PREVIEW_ENABLED": false
     }
+  },
+  "codegenConfig": {
+    "name": "AppSpec",
+    "type": "all",
+    "jsSrcsDir": "specs",
+    "ios": {
+      "componentProvider": {
+        "TouchBox": "RCTTouchBox"
+      }
+    }
   }
 }

@@ -1,3 +1,3 @@
-import App from 'common-app';
+import TouchBoxDemo from './src/TouchBoxDemo';
 
-export default App;
+export default TouchBoxDemo;
