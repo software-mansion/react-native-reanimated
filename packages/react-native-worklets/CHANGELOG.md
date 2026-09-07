@@ -10,4 +10,6 @@
 
 ### 🐛 Bug fixes
 
+- Fix a crash when serializing objects with a `__proto__` key. ([#10451](https://github.com/software-mansion/react-native-reanimated/pull/10451) by [@tshmieldev](https://github.com/tshmieldev))
+
 ### 💡 Others
