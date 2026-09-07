@@ -440,6 +440,8 @@ const foo = function foo_null1Factory({
 });"
 `;
 
+exports[`babel plugin for bundle mode flag toggle does not flip the flag without bundleMode option 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;"`;
+
 exports[`babel plugin for class worklets leaves constructor untouched 1`] = `
 "class Foo {
   constructor(x) {

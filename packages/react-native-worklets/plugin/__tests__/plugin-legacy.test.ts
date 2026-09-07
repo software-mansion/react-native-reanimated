@@ -2444,6 +2444,27 @@ describe('babel plugin', () => {
     });
   });
 
+  describe('for bundle mode flag toggle', () => {
+    test('does not flip the flag without bundleMode option', () => {
+      const input = html`<script>
+        globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;
+      </script>`;
+
+      const transformed = transformSync(
+        input.replace(/<\/?script[^>]*>/g, ''),
+        {
+          filename: 'react-native-worklets/src/index.ts',
+          compact: false,
+          babelrc: false,
+          configFile: false,
+          plugins: [[plugin, {}]],
+        }
+      );
+      assert(transformed?.code);
+      expect(transformed.code).toMatchSnapshot();
+    });
+  });
+
   describe('for worklet classes', () => {
     test('removes marker', () => {
       const input = html`<script>

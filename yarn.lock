@@ -5986,7 +5986,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jridgewell/remapping@npm:^2.3.5":
+"@jridgewell/remapping@npm:2.3.5, @jridgewell/remapping@npm:^2.3.5":
   version: 2.3.5
   resolution: "@jridgewell/remapping@npm:2.3.5"
   dependencies:
@@ -18367,6 +18367,7 @@ __metadata:
     react-native: "npm:0.87.0"
     react-native-screens: "npm:4.27.0"
     typescript: "npm:5.9.3"
+    worklets-oxc-plugin: "workspace:*"
     ws: "npm:8.21.0"
   languageName: unknown
   linkType: soft
@@ -34579,6 +34580,14 @@ __metadata:
   checksum: 10/497d40beb2bdb08e6d38754faa17ce20b0bf1306327f80cb777927edb23f461ee1f6bc659b3c3c93f26b08e1cf4b46acc5bae8fda1f0be3b5ab9a1a0211034cd
   languageName: node
   linkType: hard
+
+"worklets-oxc-plugin@workspace:*, worklets-oxc-plugin@workspace:packages/react-native-worklets/plugin-oxc":
+  version: 0.0.0-use.local
+  resolution: "worklets-oxc-plugin@workspace:packages/react-native-worklets/plugin-oxc"
+  dependencies:
+    "@jridgewell/remapping": "npm:2.3.5"
+  languageName: unknown
+  linkType: soft
 
 "wrap-ansi-cjs@npm:wrap-ansi@^7.0.0, wrap-ansi@npm:^7.0.0":
   version: 7.0.0
