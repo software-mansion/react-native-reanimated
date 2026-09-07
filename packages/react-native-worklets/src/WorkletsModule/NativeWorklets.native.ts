@@ -246,10 +246,12 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   scheduleOnUI<TValue>(
     serializableArrayOfWorklets: SerializableRef<TValue[]>,
+    serializableArrayOfArguments: SerializableRef<unknown[]>,
     scheduleStacks: string[] | undefined
   ) {
     return this.#workletsModuleProxy.scheduleOnUI(
       serializableArrayOfWorklets,
+      serializableArrayOfArguments,
       scheduleStacks
     );
   }

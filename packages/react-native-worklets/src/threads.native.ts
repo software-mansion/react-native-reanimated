@@ -332,37 +332,43 @@ function flushUIQueue(): void {
   queueMicrotask(() => {
     const queue = runOnUIQueue;
     runOnUIQueue = [];
-    const jobWorklets = queue.map(
-      ([workletFunction, workletArgs, resolve, reject]) =>
-        createSerializable(() => {
-          'worklet';
-          try {
-            const result = workletFunction(...workletArgs);
-            if (resolve) {
+    const jobWorklets: SerializableRef[] = [];
+    const jobArguments: SerializableRef<unknown[]>[] = [];
+    let serializableEmptyArguments: SerializableRef<unknown[]> | undefined;
+    for (const [workletFunction, workletArgs, resolve, reject] of queue) {
+      if (resolve === undefined) {
+        jobWorklets.push(createSerializable(workletFunction));
+        jobArguments.push(createSerializable(workletArgs));
+      } else {
+        jobWorklets.push(
+          createSerializable(() => {
+            'worklet';
+            try {
+              const result = workletFunction(...workletArgs);
               const serializedResult = globalThis.__serializer(result);
               globalThis.__workletsModuleProxy.handlePromise(
                 resolve,
                 serializedResult
               );
-            }
-          } catch (error) {
-            if (reject) {
+            } catch (error) {
               const serializedError = globalThis.__serializer(error);
               globalThis.__workletsModuleProxy.handlePromise(
-                reject,
+                reject!,
                 serializedError
               );
-            } else {
-              throw error;
             }
-          }
-        })
-    );
+          })
+        );
+        serializableEmptyArguments ??= createSerializable([]);
+        jobArguments.push(serializableEmptyArguments);
+      }
+    }
     const scheduleStacks = SHOULD_CAPTURE_SCHEDULE_STACK
       ? (queue.map(([, , , , scheduleStack]) => scheduleStack) as string[])
       : undefined;
     WorkletsModule.scheduleOnUI(
       WorkletsModule.createSerializableArray(jobWorklets),
+      WorkletsModule.createSerializableArray(jobArguments),
       scheduleStacks
     );
   });

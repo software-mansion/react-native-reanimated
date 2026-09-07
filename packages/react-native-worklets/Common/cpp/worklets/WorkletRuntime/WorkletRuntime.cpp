@@ -159,12 +159,13 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) cons
   });
 }
 
-void WorkletRuntime::schedule(std::vector<std::shared_ptr<SerializableWorklet>> worklets) const {
-  scheduleImpl([worklets = std::move(worklets)](const WorkletRuntime &workletRuntime) {
+void WorkletRuntime::schedule(std::vector<WorkletJob> jobs) const {
+  scheduleImpl([jobs = std::move(jobs)](const WorkletRuntime &workletRuntime) {
     workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>([&](jsi::Runtime &rt) {
       const auto scope = jsi::Scope(rt);
-      for (const auto &worklet : worklets) {
-        workletRuntime.runSyncImpl(worklet);
+      for (const auto &[worklet, arguments] : jobs) {
+        const auto args = arguments->getJSIValueArr(rt);
+        workletRuntime.runSyncImpl(worklet, args.data(), args.size());
       }
     });
   });
@@ -181,19 +182,21 @@ void WorkletRuntime::scheduleWithStack(
 }
 
 void WorkletRuntime::scheduleWithStack(
-    std::vector<std::shared_ptr<SerializableWorklet>> worklets,
+    std::vector<WorkletJob> jobs,
     std::vector<std::optional<std::string>> scheduleStacks) const {
-  react_native_assert(worklets.size() == scheduleStacks.size());
-  scheduleImpl([worklets = std::move(worklets),
-                scheduleStacks = std::move(scheduleStacks)](const WorkletRuntime &workletRuntime) {
-    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>([&](jsi::Runtime &rt) {
-      const auto scope = jsi::Scope(rt);
-      for (size_t i = 0; i < worklets.size(); i++) {
-        workletRuntime.runSyncImpl<MicrotaskCheckpoint::Skip, jsi::Value, ScheduleStack::Requested>(
-            worklets[i], scheduleStacks[i]);
-      }
-    });
-  });
+  react_native_assert(jobs.size() == scheduleStacks.size());
+  scheduleImpl(
+      [jobs = std::move(jobs), scheduleStacks = std::move(scheduleStacks)](const WorkletRuntime &workletRuntime) {
+        workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>([&](jsi::Runtime &rt) {
+          const auto scope = jsi::Scope(rt);
+          for (size_t i = 0; i < jobs.size(); i++) {
+            const auto &[worklet, arguments] = jobs[i];
+            const auto args = arguments->getJSIValueArr(rt);
+            workletRuntime.runSyncImpl<MicrotaskCheckpoint::Skip, jsi::Value, ScheduleStack::Requested>(
+                worklet, scheduleStacks[i], args.data(), args.size());
+          }
+        });
+      });
 }
 #endif // NDEBUG
 

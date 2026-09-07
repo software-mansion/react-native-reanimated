@@ -165,10 +165,6 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
 
 let isLayoutAnimationsManagerInitialized = false;
 
-/**
- * Initializes the UI-side manager on first layout-animation configuration. This
- * must finish before the configuration is sent to native.
- */
 export function initializeLayoutAnimationsManager() {
   if (isLayoutAnimationsManagerInitialized) {
     return;

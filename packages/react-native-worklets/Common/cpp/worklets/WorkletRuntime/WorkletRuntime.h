@@ -6,6 +6,7 @@
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/RunLoop/EventLoop.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
+#include <worklets/SharedItems/Serializable/SerializableArray.h>
 #include <worklets/SharedItems/Serializable/SerializableWorklet.h>
 #include <worklets/SharedItems/UnpackerLoader.h>
 #include <worklets/Tools/JSLogger.h>
@@ -45,6 +46,11 @@ concept SyncCallResult = std::is_same_v<TResult, jsi::Value> || std::is_same_v<T
  */
 class JSIWorkletsModuleProxy;
 
+struct WorkletJob {
+  std::shared_ptr<SerializableWorklet> worklet;
+  std::shared_ptr<SerializableArray> arguments;
+};
+
 class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_this<WorkletRuntime> {
  public:
   /**
@@ -76,7 +82,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    *
    * Runs a single microtask checkpoint on completion of the batch.
    */
-  void schedule(std::vector<std::shared_ptr<SerializableWorklet>> worklets) const;
+  void schedule(std::vector<WorkletJob> jobs) const;
 #ifndef NDEBUG
   /**
    * Schedules a serialized worklet to run asynchronously on the worklet runtime,
@@ -93,9 +99,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    *
    * Runs a single microtask checkpoint on completion of the batch.
    */
-  void scheduleWithStack(
-      std::vector<std::shared_ptr<SerializableWorklet>> worklets,
-      std::vector<std::optional<std::string>> scheduleStacks) const;
+  void scheduleWithStack(std::vector<WorkletJob> jobs, std::vector<std::optional<std::string>> scheduleStacks) const;
 #endif // NDEBUG
 
   /**
