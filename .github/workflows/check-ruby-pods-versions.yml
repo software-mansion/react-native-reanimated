@@ -1,10 +1,7 @@
 name: Check Ruby and CocoaPods versions
 on:
-  pull_request:
-    types: [opened, synchronize]
-    paths:
-      - 'apps/**/Gemfile.lock'
-      - 'apps/**/**/Podfile.lock'
+  workflow_call:
+  workflow_dispatch:
 
 permissions:
   contents: read

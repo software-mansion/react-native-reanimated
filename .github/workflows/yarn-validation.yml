@@ -2,23 +2,6 @@ name: Yarn validation
 env:
   YARN_ENABLE_HARDENED_MODE: 1
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/yarn-validation.yml'
-      - 'scripts/disallow-non-exact.js'
-      - '**/package.json'
-      - '**/yarn.lock'
-  merge_group:
-    branches:
-      - main
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/yarn-validation.yml'
-      - 'scripts/disallow-non-exact.js'
-      - '**/package.json'
-      - '**/yarn.lock'
   workflow_call:
   workflow_dispatch:
 
