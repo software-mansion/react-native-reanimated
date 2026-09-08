@@ -1,0 +1,11 @@
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem auto;
+  padding: 1rem;
+  text-align: center;
+  border: 2px dashed var(--ifm-color-emphasis-400);
+  border-radius: 8px;
+  color: var(--ifm-color-emphasis-600);
+}
