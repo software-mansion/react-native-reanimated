@@ -25,7 +25,7 @@ To understand the purpose of Worklets library in the React Native ecosystem, we 
 
 A React Native app is, first and foremost, **a native app**. Like every native app, it has a main thread — usually called the **User Interface (UI) thread** — that receives touches, lays out views and draws them on screen.
 
-Your JavaScript doesn't run there. At startup, the native app spawns a separate thread, the **JavaScript thread** (JS thread), and a [Hermes](https://reactnative.dev/docs/hermes) JavaScript Virtual Machine, also called a **JavaScript Runtime**. We'll call this Runtime the [React Native Runtime](link). Then, it delegates the execution of your JavaScript Bundle to the JS thread and running its [event loop]([link](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model#agent_execution_model)) there.
+Your JavaScript doesn't run there. At startup, the native app spawns a separate thread, the **JavaScript thread** (JS thread), and a [Hermes](https://reactnative.dev/docs/hermes) JavaScript Virtual Machine, also called a **JavaScript Runtime**. We'll call this Runtime the [React Native Runtime](/docs/fundamentals/runtimeKinds#rn-runtime). Then, it delegates the execution of your JavaScript Bundle to the JS thread and running its [event loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model#agent_execution_model) there.
 
 The JS thread executes all of your app's JavaScript: your React components, your business logic, your event handlers. Its job is to figure out what the screen should look like and tell the UI thread how to render it.
 
@@ -51,7 +51,7 @@ A JavaScript Runtime is an exclusive resource. A thread must acquire it before u
 
 Since all your app logic lives inside the JavaScript Bundle and is executed only on one thread, you might run into situation, when a critical UI event has to wait for the JS thread to trigger a respective JavaScript event handler for it, visibly lagging the app.
 
-<!-- necessary: make the busy JS thread be occupied by something actually making sense -->
+{/* TODO: make the busy JS thread be occupied by something actually making sense*/}
 
 <ImagePlaceholder>
     Diagram: UI event waiting for the JS thread event loop to pick it up
@@ -65,7 +65,7 @@ Similar situation would happen if animation calculations were to be done via `us
 
 ## The solution
 
-To solve this issue, we have to somehow move the execution of the UI-critical parts of our app off the JS thread. We could write a [native module](link) but preferably we'd keep the code purely in JavaScript. We can't forcefully run some JavaScript code on the UI thread using the RN Runtime as it's single-threaded by design and it would result in a crash.
+To solve this issue, we have to somehow move the execution of the UI-critical parts of our app off the JS thread. We could write a [native module](https://reactnative.dev/docs/turbo-native-modules-introduction) but preferably we'd keep the code purely in JavaScript. We can't forcefully run some JavaScript code on the UI thread using the RN Runtime as it's single-threaded by design and it would result in a crash.
 
 This means that we have to create a new Runtime and move the event and animation logic outside the RN Runtime to the new Runtime.
 
@@ -73,7 +73,7 @@ This means that we have to create a new Runtime and move the event and animation
     Visualization of moving the event handler to another JSVM, but not yet other thread.
 </ImagePlaceholder>
 
-Now, when the event comes, we can synchronously handle it on the UI thread, using our new Runtime. This is exactly the [UI Runtime](link) that Worklets expose.
+Now, when the event comes, we can synchronously handle it on the UI thread, using our new Runtime. This is exactly the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime) that Worklets expose.
 
 <ImagePlaceholder>
     Event handler on another JSVM, on another thread.
@@ -83,4 +83,4 @@ Moreover, we can also offload the heavy computation that kept our JS thread over
 
 What we can do is to spawn another Runtime instead and a thread that we'll dedicate to execute tasks using the new Runtime. We'll call this Runtime a Worker Runtime.
 
-<!--<ImagePlaceholder>-->
+TBD

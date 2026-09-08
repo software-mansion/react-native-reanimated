@@ -4,7 +4,7 @@ sidebar_position: 40
 
 # Synchronizing data
 
-In the [previous chapter](link) we learned some theory about event loops, which we'll now put to use.
+In the [previous chapter](/docs/tutorials/using-event-loop) we learned some theory about event loops, which we'll now put to use.
 
 In this chapter, we'll more advanced patterns of synchronizing data between JavaScript Runtimes, where asynchronous returns wouldn't be sufficient.
 
@@ -32,7 +32,7 @@ We'll explore how can we obtain the value of the local `result` value and pass i
 
 ## With callbacks
 
-We could use the same pattern as [returning results with a callback](link).
+We could use the same pattern as [returning results with a callback](/docs/tutorials/returning-results#with-callbacks).
 
 ```js
 const worker = createWorkletRuntime();
@@ -98,7 +98,7 @@ However, this code doesn't scale well and it's generally a bad practice to use t
 
 ## With a Synchronizable
 
-A [Synchronizable](link) is a memory primitive in Worklets library, that lives outside of any Runtime's JavaScript heap. Reading it and writing to it doesn't require making cross-runtime call and is the cheapest option of synchronizing the data between Runtimes.
+A [Synchronizable](/docs/memory/synchronizable) is a memory primitive in Worklets library, that lives outside of any Runtime's JavaScript heap. Reading it and writing to it doesn't require making cross-runtime call and is the cheapest option of synchronizing the data between Runtimes.
 
 <!--TODO: improve the following sentence-->
 Synchronizable has a handful of APIs, but for the sake of this example we'll stick to its `getDirty` and `setBlocking` methods.
@@ -124,7 +124,7 @@ console.log(result.getDirty());
 
 Even though the Synchronizable was created on the RN Runtime, the value actually lives in the native heap and both Runtimes (threads) can access it with little overhead and without blocking one another.
 
-For this simple case, we can even optimize our code further and use a [Synchronizable with a fixed type](link), which exposes `setDirty` method and is generally faster than a general, [Synchronizable with a dynamic type](link) that we just used.
+For this simple case, we can even optimize our code further and use a [Synchronizable with a fixed type](/docs/memory/synchronizable#synchronizable-fixed), which exposes `setDirty` method and is generally faster than a general, [Synchronizable with a dynamic type](/docs/memory/synchronizable#synchronizable-dynamic) that we just used.
 
 ```js
 const worker = createWorkletRuntime();
@@ -150,13 +150,13 @@ console.log(result.getDirty());
 
 This approach works best when you poll the data frequently or from multiple Runtimes at once.
 
-The downside is the fact, that every call of `setDirty` or `setBlocking` have to cross the JavaScript - native boundary and store the value there. This is particularly costly when it comes to storing non-primitive types, like objects or arrays - which require [serialization and/or deserialization](link) on each boundary crossing.
+The downside is the fact, that every call of `setDirty` or `setBlocking` have to cross the JavaScript - native boundary and store the value there. This is particularly costly when it comes to storing non-primitive types, like objects or arrays - which require [serialization and/or deserialization](/docs/memory/serializable) on each boundary crossing.
 
 ## With a Shareable
 
-A [Shareable](link) is another memory primitive, but this time it lives on a designated Runtime, called the Host Runtime. Reading it on other Runtimes, called Guest Runtimes, means accessing it on its Host Runtime, either synchronously or asynchronously. It's similar in principle to the [global object approach](link), but with a layer of useful encapsulation.
+A [Shareable](/docs/memory/shareable) is another memory primitive, but this time it lives on a designated Runtime, called the Host Runtime. Reading it on other Runtimes, called Guest Runtimes, means accessing it on its Host Runtime, either synchronously or asynchronously. It's similar in principle to the [global object approach](#with-the-global-object), but with a layer of useful encapsulation.
 
-To create a Shareable, we have to explicitly state the Host Runtime by its [Runtime ID](link). The ID can be obtained from the value returned by `createWorkletRuntime`, by its `runtimeId` property.
+To create a Shareable, we have to explicitly state the Host Runtime by its [Runtime ID](/docs/fundamentals/runtimeKinds#worklet-runtime). The ID can be obtained from the value returned by `createWorkletRuntime`, by its `runtimeId` property.
 
 ```js
 const worker = createWorkletRuntime();

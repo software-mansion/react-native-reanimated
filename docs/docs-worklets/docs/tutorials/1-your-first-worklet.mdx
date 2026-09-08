@@ -4,11 +4,11 @@ sidebar_position: 10
 
 # Your first worklet
 
-In this chapter we'll show the basics of dispatching your JavaScript code to [Worklet Runtimes](link) to execute in parallel. We strongly recommend you to read [theoretical introduction](link) before continuing.
+In this chapter we'll show the basics of dispatching your JavaScript code to [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime) to execute in parallel. We strongly recommend you to read [theoretical introduction](/docs/tutorials/purpose) before continuing.
 
 ## Creating a Worklet Runtime
 
-To actually dispatch some multithreading work, we need another Worklet Runtime as a target. We can either use the [UI Runtime](link) which is always available, or create our own [Worker Runtime](link) with [`createWorkletRuntime`](link) function.
+To actually dispatch some multithreading work, we need another Worklet Runtime as a target. We can either use the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime) which is always available, or create our own [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime) with [`createWorkletRuntime`](/docs/threading/createWorkletRuntime) function.
 
 ```js
 import {createWorkletRuntime} from 'react-native-worklets';
@@ -20,19 +20,19 @@ In the next steps we'll show how to both address our new Worker Runtime and the 
 
 ## Asynchronous execution
 
-Let's start small - dispatching functions that perform only a `console.log` on different runtimes. We'll print the TID (platform-specific thread id) of the executing thread too, to show that they indeed are dispatched to different thread, with `getCurrentThreadId()` function. This function prints the result of [`std::this_thread::get_id`](link).
+Let's start small - dispatching functions that perform only a `console.log` on different runtimes. We'll print the TID (platform-specific thread id) of the executing thread too, to show that they indeed are dispatched to different thread, with `getCurrentThreadId()` function. This function prints the result of [`std::this_thread::get_id`](https://en.cppreference.com/w/cpp/thread/get_id).
 
 ```js
 const worker = createWorkletRuntime();
 
 // CORE CODE START
 function logTid() {
-    'worklet'; // TODO: explain the worklet directive
+    'worklet';
     console.log(getCurrentThreadId());
 }
 
-scheduleOnUI(logTid); // TODO: example output
-scheduleOnRuntime(worker, logTid); // TODO: example output
+scheduleOnUI(logTid);
+scheduleOnRuntime(worker, logTid);
 // CORE CODE END
 ```
 
@@ -80,10 +80,10 @@ runOnRuntimeSync(worker, logTid);
 
 ## Worklet directive
 
-In previous code snippets we marked the functions we dispatched with the `'worklet'` directive at the beginning of the functions. This directive tells the [Worklets Babel plugin](link) to transform this function into a [worklet function](link) - a JavaScript function which can be called from any Runtime.
+In previous code snippets we marked the functions we dispatched with the `'worklet'` directive at the beginning of the functions. This directive tells the [Worklets Babel plugin](/docs/worklets-babel-plugin/about) to transform this function into a [worklet function](/docs/fundamentals/glossary#worklet) - a JavaScript function which can be called from any Runtime.
 
-In most cases you can omit the `'worklet'` directive. Worklets Babel plugin [automatically detects](link) which functions should be marked as worklets and adds the directive for you. Future examples will omit the directive whenever applicable.
+In most cases you can omit the `'worklet'` directive. Worklets Babel plugin [automatically detects](/docs/worklets-babel-plugin/about#autoworkletization) which functions should be marked as worklets and adds the directive for you. Future examples will omit the directive whenever applicable.
 
 ## Next chapter
 
-In the next chapter we'll learn how to [return results from worklet functions](link).
+In the next chapter we'll learn how to [return results from worklet functions](/docs/tutorials/returning-results).

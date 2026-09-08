@@ -4,7 +4,7 @@ sidebar_position: 20
 
 # Returning results
 
-In the [previous chapter](link) we dispatched some console logs to other Runtimes. However, logging itself is not particularly useful.
+In the [previous chapter](/docs/tutorials/your-first-worklet) we dispatched some console logs to other Runtimes. However, logging itself is not particularly useful.
 
 In this chapter we'll learn how to obtain results of calculations from dispatched worklet functions.
 
@@ -83,7 +83,7 @@ This is a common pitfall, and to understand why it crashes, we have to look how 
     Diagram: showing where `result`, `setState` lives and how threads interact here
 </ImagePlaceholder>
 
-Because `setState` is passed to the Worklet Runtime as a pointer to the callback, you can't just invoke it. You have to dispatch it back on the RN Runtime with [`scheduleOnRN`](link) function.
+Because `setState` is passed to the Worklet Runtime as a pointer to the callback, you can't just invoke it. You have to dispatch it back on the RN Runtime with [`scheduleOnRN`](/docs/threading/scheduleOnRN) function.
 
 ```js
 const worker = createWorkletRuntime();
@@ -123,4 +123,4 @@ function Component() {
 
 ## Next chapter
 
-In the next chapter we'll learn how to [use a Worklet Runtime event loop](link).
+In the next chapter we'll learn how to [use a Worklet Runtime event loop](/docs/tutorials/using-event-loop).
