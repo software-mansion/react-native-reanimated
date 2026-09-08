@@ -36,6 +36,10 @@ export function executeOnUIRuntimeSync(): never {
   );
 }
 
+export function getCurrentThreadId(): string {
+  throw new Error('[Worklets] `getCurrentThreadId` is not supported on web.');
+}
+
 export function runOnJS<Args extends unknown[], ReturnValue>(
   fun: (...args: Args) => ReturnValue
 ): (...args: Args) => void {

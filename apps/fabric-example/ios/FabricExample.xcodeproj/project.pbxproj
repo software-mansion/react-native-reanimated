@@ -11,9 +11,11 @@
 		03C802BF2D28A91F00625950 /* UbuntuMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 03C802BD2D28A91E00625950 /* UbuntuMono-Regular.ttf */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		1C6897ED63B54A0EA3142771 /* Poppins-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B0F6A560FF814A07A5056D5C /* Poppins-Medium.ttf */; };
+		1FDEA4CC57C395D72F0A89AD /* RCTTouchBox.mm in Sources */ = {isa = PBXBuildFile; fileRef = C3B510DCFB9C38D5B2A661C6 /* RCTTouchBox.mm */; };
 		3118F5EAAC1849B3A846F878 /* Poppins-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 192DDE7394C0421AABAD1E39 /* Poppins-ExtraBold.ttf */; };
 		36CFC86374C74A93AFC6F37B /* Poppins-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 40201E86F4154AF6BA7D9D68 /* Poppins-ExtraLight.ttf */; };
 		3ED29A9583024AB287A348E3 /* Poppins-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5EE828465DFA40CCAD4C2BBB /* Poppins-Light.ttf */; };
+		69B0AA74C4BD212362A4A37F /* TouchBoxModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3067632AA3B06FAE4DC3F9D6 /* TouchBoxModule.mm */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		7672FDCE44F245480142DDD7 /* libPods-FabricExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 28C28DD379A4F63159381776 /* libPods-FabricExample.a */; };
 		7E23737D7AB942FC9F2DB5BC /* Poppins-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F48B9C5F2C7F46D4AF205A72 /* Poppins-Black.ttf */; };
@@ -37,6 +39,7 @@
 		192DDE7394C0421AABAD1E39 /* Poppins-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-ExtraBold.ttf"; path = "../assets/fonts/Poppins/Poppins-ExtraBold.ttf"; sourceTree = "<group>"; };
 		28C28DD379A4F63159381776 /* libPods-FabricExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FabricExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2E32E1E9D61FF701E74576F1 /* Pods-FabricExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FabricExample.release.xcconfig"; path = "Target Support Files/Pods-FabricExample/Pods-FabricExample.release.xcconfig"; sourceTree = "<group>"; };
+		3067632AA3B06FAE4DC3F9D6 /* TouchBoxModule.mm */ = {isa = PBXFileReference; includeInIndex = 1; path = TouchBoxModule.mm; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-FabricExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FabricExample.debug.xcconfig"; path = "Target Support Files/Pods-FabricExample/Pods-FabricExample.debug.xcconfig"; sourceTree = "<group>"; };
 		40201E86F4154AF6BA7D9D68 /* Poppins-ExtraLight.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-ExtraLight.ttf"; path = "../assets/fonts/Poppins/Poppins-ExtraLight.ttf"; sourceTree = "<group>"; };
 		5EE828465DFA40CCAD4C2BBB /* Poppins-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Light.ttf"; path = "../assets/fonts/Poppins/Poppins-Light.ttf"; sourceTree = "<group>"; };
@@ -44,11 +47,14 @@
 		7DCAC1E7776A4A36A864F95E /* Poppins-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-SemiBold.ttf"; path = "../assets/fonts/Poppins/Poppins-SemiBold.ttf"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = FabricExample/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		849F4FC4D7AC4BA291D6C4B4 /* Poppins-Thin.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Thin.ttf"; path = "../assets/fonts/Poppins/Poppins-Thin.ttf"; sourceTree = "<group>"; };
+		96E845D86857977025FE758B /* TouchBoxModule.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = TouchBoxModule.h; sourceTree = "<group>"; };
 		973BD397ECB7436F828E47A9 /* Poppins-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Bold.ttf"; path = "../assets/fonts/Poppins/Poppins-Bold.ttf"; sourceTree = "<group>"; };
+		A3636B732435144B41E770F1 /* RCTTouchBox.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = RCTTouchBox.h; sourceTree = "<group>"; };
 		B0F6A560FF814A07A5056D5C /* Poppins-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Medium.ttf"; path = "../assets/fonts/Poppins/Poppins-Medium.ttf"; sourceTree = "<group>"; };
 		C06453E54CB742B58CB6EFDC /* OFL.txt */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = OFL.txt; path = ../assets/fonts/Poppins/OFL.txt; sourceTree = "<group>"; };
 		C200C1012D33B96D00F25439 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = FabricExample/AppDelegate.swift; sourceTree = "<group>"; };
 		C2B18DA92F753C7F0000399C /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		C3B510DCFB9C38D5B2A661C6 /* RCTTouchBox.mm */ = {isa = PBXFileReference; includeInIndex = 1; path = RCTTouchBox.mm; sourceTree = "<group>"; };
 		C70151FDBDE5211D1ACE7DED /* Pods-FabricExample.debugruntimetests.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FabricExample.debugruntimetests.xcconfig"; path = "Target Support Files/Pods-FabricExample/Pods-FabricExample.debugruntimetests.xcconfig"; sourceTree = "<group>"; };
 		E7907DF98A294F2D9672CB3E /* Poppins-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Regular.ttf"; path = "../assets/fonts/Poppins/Poppins-Regular.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -78,6 +84,7 @@
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				F4C3F7612BCFD500008A4CDE /* PrivacyInfo.xcprivacy */,
 				C2B18DA92F753C7F0000399C /* AppIcon.icon */,
+				7364455C95594C2906AC3C0B /* TouchBox */,
 			);
 			name = FabricExample;
 			sourceTree = "<group>";
@@ -108,6 +115,18 @@
 				C06453E54CB742B58CB6EFDC /* OFL.txt */,
 			);
 			name = Resources;
+			sourceTree = "<group>";
+		};
+		7364455C95594C2906AC3C0B /* TouchBox */ = {
+			isa = PBXGroup;
+			children = (
+				A3636B732435144B41E770F1 /* RCTTouchBox.h */,
+				C3B510DCFB9C38D5B2A661C6 /* RCTTouchBox.mm */,
+				96E845D86857977025FE758B /* TouchBoxModule.h */,
+				3067632AA3B06FAE4DC3F9D6 /* TouchBoxModule.mm */,
+			);
+			name = TouchBox;
+			path = FabricExample/TouchBox;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -325,6 +344,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
+				1FDEA4CC57C395D72F0A89AD /* RCTTouchBox.mm in Sources */,
+				69B0AA74C4BD212362A4A37F /* TouchBoxModule.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -339,6 +360,10 @@
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_BITCODE = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"${PODS_ROOT}/Headers/Public/RNWorklets\"",
+				);
 				INFOPLIST_FILE = FabricExample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -365,6 +390,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"${PODS_ROOT}/Headers/Public/RNWorklets\"",
+				);
 				INFOPLIST_FILE = FabricExample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -393,6 +422,10 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"RUNTIME_TESTS=1",
 					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"${PODS_ROOT}/Headers/Public/RNWorklets\"",
 				);
 				INFOPLIST_FILE = FabricExample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -425,6 +458,10 @@
 					"DEBUG=1",
 					"RUNTIME_TESTS=1",
 					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"${PODS_ROOT}/Headers/Public/RNWorklets\"",
 				);
 				INFOPLIST_FILE = FabricExample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

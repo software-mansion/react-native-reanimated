@@ -1,0 +1,535 @@
+---
+sidebar_position: 60
+---
+
+# Advanced UI Runtime use case
+
+In this chapter we'll write an end-to-end feature using the UI Runtime exposed by Worklets library.
+
+Traditionally, react-native-reanimated used the UI Runtime to drive smooth animations and react-native-gesture-handler to handle events synchronously.
+We'll try to replicate a bit of each. We'll make a native view, attach a worklet function event listener to it. This event listener will adjust the style of the view based on touch events.
+
+We'll build on the Turbo Module from the [previous chapter](link), which already holds a reference to the UI Runtime and the UI Scheduler.
+
+{/* TODO: add android*/}
+
+## Making the native view
+
+We'll follow the official [Fabric Native Components](https://reactnative.dev/docs/fabric-native-components-introduction) guide. Start with the spec - the `NativeComponent` suffix is what Codegen looks for.
+
+```ts title="specs/TouchBoxNativeComponent.ts"
+import type { HostComponent, ViewProps } from 'react-native';
+import { codegenNativeComponent } from 'react-native';
+
+export interface NativeProps extends ViewProps {}
+
+export default codegenNativeComponent<NativeProps>(
+  'TouchBox'
+) as HostComponent<NativeProps>;
+```
+
+Point Codegen at it from your app's `package.json`:
+
+```json title="package.json"
+"codegenConfig": {
+  "name": "AppSpec",
+  "type": "all",
+  "jsSrcsDir": "specs",
+  "ios": { "componentProvider": { "TouchBox": "RCTTouchBox" } }
+}
+```
+
+Run `bundle exec pod install` to generate the artifacts. Don't commit them - they're specific to your React Native version.
+
+:::caution
+
+If your app doesn't depend on Worklets library directly, CocoaPods won't put its headers on your app target's search path and `#import <worklets/...>` will fail. Add `"${PODS_ROOT}/Headers/Public/RNWorklets"` to `HEADER_SEARCH_PATHS` from your `Podfile`'s `post_install` hook.
+
+:::
+
+The view holds the worklet function and the UI Runtime it should run on. It also keeps a registry, so we can find it by its React tag later.
+
+```objc title="ios/RCTTouchBox/RCTTouchBox.h"
+#import <React/RCTViewComponentView.h>
+#import <UIKit/UIKit.h>
+
+#import <memory>
+#import <worklets/SharedItems/Serializable/SerializableWorklet.h>
+#import <worklets/WorkletRuntime/WorkletRuntime.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface RCTTouchBox : RCTViewComponentView
+
++ (nullable RCTTouchBox *)boxForTag:(NSInteger)tag;
+
+- (void)setHandler:(std::shared_ptr<worklets::SerializableWorklet>)handler
+         uiRuntime:(std::shared_ptr<worklets::WorkletRuntime>)uiRuntime;
+
+@end
+
+NS_ASSUME_NONNULL_END
+```
+
+The implementation is the guide's boilerplate plus the registry:
+
+```objc title="ios/RCTTouchBox/RCTTouchBox.mm"
+#import "RCTTouchBox.h"
+
+#import <react/renderer/components/AppSpec/ComponentDescriptors.h>
+#import <react/renderer/components/AppSpec/EventEmitters.h>
+#import <react/renderer/components/AppSpec/Props.h>
+#import <react/renderer/components/AppSpec/RCTComponentViewHelpers.h>
+
+#import <worklets/Compat/StableApi.h>
+
+using namespace facebook;
+using namespace facebook::react;
+
+@interface RCTTouchBox () <RCTTouchBoxViewProtocol>
+- (void)applyState:(facebook::jsi::Runtime &)rt state:(const facebook::jsi::Object &)state;
+@end
+
+@implementation RCTTouchBox {
+  std::shared_ptr<worklets::WorkletRuntime> _uiRuntime;
+  std::unique_ptr<jsi::Function> _onTouch;
+}
+
++ (NSMutableDictionary<NSNumber *, RCTTouchBox *> *)registry
+{
+  static NSMutableDictionary<NSNumber *, RCTTouchBox *> *registry;
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    registry = [NSMutableDictionary new];
+  });
+  return registry;
+}
+
++ (RCTTouchBox *)boxForTag:(NSInteger)tag
+{
+  return [self registry][@(tag)];
+}
+
++ (ComponentDescriptorProvider)componentDescriptorProvider
+{
+  return concreteComponentDescriptorProvider<TouchBoxComponentDescriptor>();
+}
+
+- (instancetype)initWithFrame:(CGRect)frame
+{
+  if (self = [super initWithFrame:frame]) {
+    static const auto defaultProps = std::make_shared<const TouchBoxProps>();
+    _props = defaultProps;
+    self.userInteractionEnabled = YES;
+  }
+  return self;
+}
+
+- (void)didMoveToWindow
+{
+  [super didMoveToWindow];
+  if (self.window) {
+    [RCTTouchBox registry][@(self.tag)] = self;
+  }
+}
+
+- (void)prepareForRecycle
+{
+  [[RCTTouchBox registry] removeObjectForKey:@(self.tag)];
+  _onTouch = nullptr;
+  _uiRuntime = nullptr;
+  [super prepareForRecycle];
+}
+
+@end
+```
+
+`self.tag` is the React tag of the view - React Native assigns it when the view is mounted, and resets it to `0` when the view is recycled.
+
+## Attaching the event handler
+
+On the JavaScript side we register a worklet function against a view tag. It is not the touch handler itself - it is called **once**, at attach time, with a host function the view gives it for pushing updates. It returns the real touch handler, which keeps both that push function and the box state in its closure:
+
+```ts title="src/touchBox.ts"
+export function setTouchHandler(
+  viewTag: number,
+  handler: (touch: TouchEvent, state?: BoxState) => BoxState
+) {
+  const attach = (applyState: (state: BoxState) => void) => {
+    'worklet';
+    let current: BoxState | undefined;
+
+    const advance = (touch: TouchEvent) => {
+      current = handler({ ...touch, time: performance.now() / 1000 }, current);
+      applyState(current);
+    };
+
+    return (touch: TouchEvent) => {
+      advance(touch);
+
+      if (touch.phase !== 'ended') {
+        return;
+      }
+
+      const step = () => {
+        advance({ ...touch, phase: 'decay' });
+
+        if (current?.decaying) {
+          requestAnimationFrame(step);
+        }
+      };
+
+      requestAnimationFrame(step);
+    };
+  };
+
+  globalThis.__setTouchHandler(viewTag, createSerializable(attach));
+}
+```
+
+Registering by view tag is an awkward thing to ask of a component's user, so wrap it in a component that takes the worklet function as a prop:
+
+```tsx title="src/TouchBox.tsx"
+type TouchBoxProps = ViewProps & {
+  handler: (touch: TouchEvent, state?: BoxState) => BoxState;
+};
+
+export default function TouchBox({ handler, ...props }: TouchBoxProps) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    installTouchBox();
+
+    const viewTag = findNodeHandle(ref.current);
+    if (viewTag == null) {
+      return;
+    }
+
+    setTouchHandler(viewTag, handler);
+  }, [handler]);
+
+  return <NativeTouchBox ref={ref} {...props} />;
+}
+```
+
+:::note
+
+`handler` cannot be a real Fabric prop. Props are converted into the shadow tree, which has to be copyable and thread-safe, so a serializable worklet - a JSI object carrying `NativeState` - would not survive the trip. It looks like a prop to whoever writes the JSX, but it still travels through the Turbo Module and is attached by view tag. This is the same shape react-native-reanimated uses for its event handlers.
+
+:::
+
+Memoise the handler, or the effect re-attaches on every render.
+
+This is worth pausing on. Because the returned closure lives on the UI Runtime for as long as the view does, `current` survives between touches - so there is no state to hand back and forth across the boundary any more. And when the finger lifts, the closure keeps itself running with the UI Runtime's own [`requestAnimationFrame`](link) until the box comes to rest. The loop never leaves the UI Runtime, so it keeps stepping even while the JS thread is busy.
+
+:::caution
+
+Two habits the Worklets Babel plugin cares about here.
+
+Declare helper worklet functions **before** the worklet function that calls them. A helper declared further down the module is not captured, and you get `undefined is not a function` at runtime.
+
+Do **not** put a `'worklet'` directive on a closure nested inside a worklet function, like `step` above. It is already running on the Worklet Runtime; marking it again turns it into a serializable worklet rather than a plain callable, and `requestAnimationFrame` will fail to call it.
+
+:::
+
+[`createSerializable`](link) turns the worklet function into a value that can cross the Runtime boundary. Our Turbo Module installs `__setTouchHandler` on the RN Runtime, unpacks it, and hands it to the view:
+
+```cpp title="cpp/TouchBoxModule.cpp"
+void TouchBoxModule::install(jsi::Runtime &rnRuntime) {
+  rnRuntime.global().setProperty(
+      rnRuntime,
+      "__setTouchHandler",
+      jsi::Function::createFromHostFunction(
+          rnRuntime,
+          jsi::PropNameID::forAscii(rnRuntime, "__setTouchHandler"),
+          2,
+          [this](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
+            auto viewTag = static_cast<int>(args[0].asNumber());
+            auto handler = std::static_pointer_cast<worklets::SerializableWorklet>(
+                worklets::extractSerializable(
+                    rt,
+                    args[1],
+                    "[TouchBox] Handler must be a worklet function.",
+                    worklets::Serializable::ValueType::WorkletType));
+
+            attachHandler(viewTag, std::move(handler));
+            return jsi::Value::undefined();
+          }));
+}
+```
+
+The view runs that worklet function once, handing it a host function bound to itself, and keeps the closure it gets back:
+
+```objc title="ios/RCTTouchBox/RCTTouchBox.mm"
+- (void)setHandler:(std::shared_ptr<worklets::SerializableWorklet>)handler
+         uiRuntime:(std::shared_ptr<worklets::WorkletRuntime>)uiRuntime
+{
+  _uiRuntime = uiRuntime;
+
+  jsi::Runtime &rt = worklets::getJSIRuntimeFromWorkletRuntime(uiRuntime);
+  __weak RCTTouchBox *weakSelf = self;
+
+  auto applyState = jsi::Function::createFromHostFunction(
+      rt,
+      jsi::PropNameID::forAscii(rt, "applyState"),
+      1,
+      [weakSelf](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
+        [weakSelf applyState:rt state:args[0].asObject(rt)];
+        return jsi::Value::undefined();
+      });
+
+  try {
+    jsi::Value result = _uiRuntime->runSync(handler, jsi::Value(std::move(applyState)));
+    _onTouch = std::make_unique<jsi::Function>(result.asObject(rt).asFunction(rt));
+  } catch (const std::exception &error) {
+    RCTLogError(@"[TouchBox] Attaching the handler failed: %s", error.what());
+  }
+}
+
+- (void)applyState:(jsi::Runtime &)rt state:(const jsi::Object &)state
+{
+  self.transform = CGAffineTransformRotate(
+      CGAffineTransformMakeTranslation(
+          state.getProperty(rt, "translateX").asNumber(),
+          state.getProperty(rt, "translateY").asNumber()),
+      state.getProperty(rt, "rotate").asNumber());
+}
+```
+
+Capture the view **weakly** in the host function. The closure lives on the UI Runtime and outlives nothing else; a strong reference would keep the view alive forever.
+
+Now the touches. UIKit delivers them on the main thread, which is the same thread the UI Runtime executes on, so the stored closure can be invoked immediately, without scheduling anything:
+
+```objc title="ios/RCTTouchBox/RCTTouchBox.mm"
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
+{
+  [super touchesBegan:touches withEvent:event];
+  [self dispatchTouches:touches phase:"began"];
+}
+
+- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
+{
+  [super touchesMoved:touches withEvent:event];
+  [self dispatchTouches:touches phase:"moved"];
+}
+
+- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
+{
+  [super touchesEnded:touches withEvent:event];
+  [self dispatchTouches:touches phase:"ended"];
+}
+
+- (void)dispatchTouches:(NSSet<UITouch *> *)touches phase:(const char *)phase
+{
+  if (!_onTouch || !_uiRuntime) {
+    return;
+  }
+
+  CGPoint point = [[touches anyObject] locationInView:self.superview];
+  jsi::Runtime &rt = worklets::getJSIRuntimeFromWorkletRuntime(_uiRuntime);
+
+  auto touch = jsi::Object(rt);
+  touch.setProperty(rt, "x", point.x);
+  touch.setProperty(rt, "y", point.y);
+  touch.setProperty(rt, "phase", jsi::String::createFromAscii(rt, phase));
+
+  try {
+    _uiRuntime->runSync(*_onTouch, jsi::Value(std::move(touch)));
+  } catch (const std::exception &error) {
+    RCTLogError(@"[TouchBox] Handler failed: %s", error.what());
+  }
+}
+```
+
+Notice how little the native side is left doing. It reports where the finger is and what phase the gesture is in, and it draws whatever it is handed. Everything else - where the gesture started, how fast the finger was moving, how far the box has rolled, where the viewport ends and when the box should stop - belongs to the worklet function.
+
+The viewport bounds come from React too, not from the view. Layout is React's to decide, so the component measures its container with `onLayout` and passes the resulting limits into the worklet function's closure. Asking the platform view for its superview's size would be reading the same fact from a second source.
+
+:::caution
+
+Always catch around the call. A JavaScript error becomes a C++ exception, and letting it unwind through UIKit's Objective-C frames terminates the app with `SIGABRT` instead of showing you the error.
+
+:::
+
+The whole loop - touch, worklet function, style - happens inside the touch delivery, on the UI thread, before the frame is drawn. The RN Runtime is not involved at all.
+
+<ImagePlaceholder>
+  Diagram: touch entering the UI thread, the worklet function running on the UI
+  Runtime, the style applied to the view, all within one frame. The JS thread
+  sits idle beside it.
+</ImagePlaceholder>
+
+Note that we used `WorkletRuntime::runSync` instead of `runSyncOnRuntime` from the [stable API](link). The stable variant returns `void`, so the attach worklet function could not hand us back the closure it built. This is a deliberate trade-off - we reached past the stable surface to keep the design simple.
+
+## Simulate work under busy JS thread
+
+To see the difference, we'll put our `TouchBox` next to a regular `View` that tracks touches through React state, and give ourselves a way to block the JS thread.
+
+```tsx title="src/TouchBoxDemo.tsx"
+import { useCallback, useState } from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
+
+import TouchBox from './TouchBox';
+import { type BoxState, type Limits, type TouchEvent } from './touchHandler';
+
+const SIZE = 100;
+const RADIUS = SIZE / 2;
+const DECAY_PER_SECOND = 3;
+const RESTING_SPEED = 40;
+const MAX_SPEED = 2500;
+
+const IDLE: BoxState = {
+  translateX: 0,
+  translateY: 0,
+  rotate: 0,
+  startX: 0,
+  startY: 0,
+  originX: 0,
+  originY: 0,
+  originRotate: 0,
+  lastX: 0,
+  lastY: 0,
+  lastTime: 0,
+  velocityX: 0,
+  velocityY: 0,
+  decaying: false,
+};
+
+export function roll(
+  touch: TouchEvent,
+  limits: Limits,
+  state?: BoxState
+): BoxState {
+  const previous = state ?? IDLE;
+
+  if (touch.phase === 'began') {
+    return {
+      ...previous,
+      startX: touch.x,
+      startY: touch.y,
+      originX: previous.translateX,
+      originY: previous.translateY,
+      originRotate: previous.rotate,
+      lastX: touch.x,
+      lastY: touch.y,
+      lastTime: touch.time,
+      velocityX: 0,
+      velocityY: 0,
+      decaying: false,
+    };
+  }
+
+  const elapsed = touch.time - previous.lastTime;
+
+  if (touch.phase === 'decay') {
+    const speed = Math.hypot(previous.velocityX, previous.velocityY);
+    if (elapsed <= 0 || speed < RESTING_SPEED) {
+      return { ...previous, decaying: false };
+    }
+
+    const travelled = previous.velocityX * elapsed;
+    const damping = Math.exp(-DECAY_PER_SECOND * elapsed);
+
+    return {
+      ...previous,
+      translateX: previous.translateX + travelled,
+      translateY: previous.translateY + previous.velocityY * elapsed,
+      rotate: previous.rotate + travelled / RADIUS,
+      velocityX: previous.velocityX * damping,
+      velocityY: previous.velocityY * damping,
+      lastTime: touch.time,
+      decaying: true,
+    };
+  }
+
+  if (touch.phase === 'ended') {
+    return { ...previous, decaying: true, lastTime: touch.time };
+  }
+
+  const travelled = touch.x - previous.startX;
+
+  let velocityX = previous.velocityX;
+  let velocityY = previous.velocityY;
+
+  if (elapsed > 0) {
+    velocityX = (touch.x - previous.lastX) / elapsed;
+    velocityY = (touch.y - previous.lastY) / elapsed;
+
+    const speed = Math.hypot(velocityX, velocityY);
+    if (speed > MAX_SPEED) {
+      velocityX = (velocityX / speed) * MAX_SPEED;
+      velocityY = (velocityY / speed) * MAX_SPEED;
+    }
+  }
+
+  return {
+    ...previous,
+    translateX: previous.originX + travelled,
+    translateY: previous.originY + touch.y - previous.startY,
+    rotate: previous.originRotate + travelled / RADIUS,
+    velocityX,
+    velocityY,
+    lastX: touch.x,
+    lastY: touch.y,
+    lastTime: touch.time,
+    decaying: false,
+  };
+}
+
+export default function TouchBoxDemo() {
+  const [stage, setStage] = useState<Stage>({ width: 0, height: 0 });
+
+  const handler = useCallback(
+    (touch: TouchEvent, state?: BoxState) => {
+      'worklet';
+      return roll(touch, limitsFor(WORKLET_BOX_LEFT, stage), state);
+    },
+    [stage]
+  );
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.label}>
+        Drag either box. Then press the button and drag again.
+      </Text>
+
+      <View
+        style={styles.stage}
+        onLayout={(event) => setStage(event.nativeEvent.layout)}>
+        <TouchBox handler={handler} style={[styles.box, styles.workletBox]} />
+        <ReactBox stage={stage} />
+      </View>
+
+      <Button title="Block the JS thread" onPress={blockJsThread} />
+    </View>
+  );
+}
+
+function limitsFor(left: number, stage: Stage): Limits {
+  'worklet';
+  return {
+    minX: -left,
+    maxX: stage.width - left - SIZE,
+    minY: -BOX_TOP,
+    maxY: stage.height - BOX_TOP - SIZE,
+  };
+}
+
+function blockJsThread() {
+  const start = Date.now();
+  while (Date.now() - start < 3000) {}
+}
+```
+
+Dividing the travelled distance by the box's radius is what makes it roll rather than spin - drag it back and it unrolls. The `decay` branch keeps that going after the finger lifts, advancing the box by its own velocity each frame and damping it until it drops below `RESTING_SPEED`.
+
+`ReactBox` is the same drag written the ordinary way, calling the very same `roll` function from `onResponderGrant` and `onResponderMove` and storing its result with `useState`. The only difference between the two boxes is which Runtime runs `roll`.
+
+
+
+
+Drag both boxes and they roll along with your finger, then coast to a stop when you let go. Press the button and flick them again - the blue box freezes for three seconds, because its touch handler, its state update and its `requestAnimationFrame` loop all wait for the JS thread. The red box keeps rolling and coasting, because nothing in its path ever touches the RN Runtime.
+
+This is the problem we described in the [first chapter](link), and the reason Worklets library exists.
+
+## Next chapter

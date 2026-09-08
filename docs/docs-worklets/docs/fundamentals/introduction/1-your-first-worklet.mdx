@@ -1,0 +1,89 @@
+---
+sidebar_position: 10
+---
+
+# Your first worklet
+
+In this chapter we'll show the basics of dispatching your JavaScript code to [Worklet Runtimes](link) to execute in parallel. We strongly recommend you to read [theoretical introduction](link) before continuing.
+
+## Creating a Worklet Runtime
+
+To actually dispatch some multithreading work, we need another Worklet Runtime as a target. We can either use the [UI Runtime](link) which is always available, or create our own [Worker Runtime](link) with [`createWorkletRuntime`](link) function.
+
+```js
+import {createWorkletRuntime} from 'react-native-worklets';
+
+const worker = createWorkletRuntime();
+```
+
+In the next steps we'll show how to both address our new Worker Runtime and the UI Runtime.
+
+## Asynchronous execution
+
+Let's start small - dispatching functions that perform only a `console.log` on different runtimes. We'll print the TID (platform-specific thread id) of the executing thread too, to show that they indeed are dispatched to different thread, with `getCurrentThreadId()` function. This function prints the result of [`std::this_thread::get_id`](link).
+
+```js
+const worker = createWorkletRuntime();
+
+// CORE CODE START
+function logTid() {
+    'worklet'; // TODO: explain the worklet directive
+    console.log(getCurrentThreadId());
+}
+
+scheduleOnUI(logTid); // TODO: example output
+scheduleOnRuntime(worker, logTid); // TODO: example output
+// CORE CODE END
+```
+
+All of the log invocations returned different TID, because we used `schedule` methods, which dispatch the worklet to threads dedicated to a given runtime.
+
+## Synchronous execution
+
+Worklets expose a handful of imperative APIs and we can obtain the runtimes exclusively and invoke our worklet on them synchronously, from the same thread.
+
+```js
+const worker = createWorkletRuntime();
+
+function logTid() {
+    'worklet';
+    console.log(getCurrentThreadId());
+}
+
+// CORE CODE START
+logTid();
+runOnUISync(logTid);
+runOnRuntimeSync(worker, logTid);
+// CORE CODE END
+```
+
+Note that all 3 logs gave us the same result, there was no thread hopping involved. Knowing when to delegate something asynchronously and when to do it synchronously is the difference between smooth user experience and a bad one. Rule of thumb says that if the operation is not UI critical, it should be dispatched asynchronously.
+
+## Passing arguments
+
+If the worklet function you want to call takes arguments, you have to pass it as extra parameters inside `runOn...`/`scheduleOn...` call:
+
+```js
+const worker = createWorkletRuntime();
+
+// CORE CODE START
+function logMessage() {
+    'worklet';
+    console.log(getCurrentThreadId());
+}
+
+logTid();
+runOnUISync(logTid);
+runOnRuntimeSync(worker, logTid);
+// CORE CODE END
+```
+
+## Worklet directive
+
+In previous code snippets we marked the functions we dispatched with the `'worklet'` directive at the beginning of the functions. This directive tells the [Worklets Babel plugin](link) to transform this function into a [worklet function](link) - a JavaScript function which can be called from any Runtime.
+
+In most cases you can omit the `'worklet'` directive. Worklets Babel plugin [automatically detects](link) which functions should be marked as worklets and adds the directive for you. Future examples will omit the directive whenever applicable.
+
+## Next chapter
+
+In the next chapter we'll learn how to [return results from worklet functions](link).

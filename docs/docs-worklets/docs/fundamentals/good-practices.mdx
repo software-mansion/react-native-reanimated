@@ -1,0 +1,44 @@
+---
+sidebar_position: 44
+---
+
+# Good practices
+
+## Re-use your runtimes
+
+## Re-use your worklets
+
+## Prefer arguments over closures
+
+Whenever possible, prefer passing values as arguments to worklet functions over using closures.
+This is related to [re-use your worklets](link) section. A Worklet with a new closure is heavier to re-use invoke that a worklet with new arguments.
+
+Especially, avoid wrapper worklets:
+
+```js title="As arguments"
+function foo(arg1, arg2) {
+    'worklet';
+    // code...
+}
+
+function schedule(arg1, arg2) {
+    scheduleOnUI(() => {
+        'worklet';
+        foo(arg1, arg2);
+    });
+}
+```
+
+but instead just
+
+```js title="As closure"
+function schedule() {
+    scheduleOnUI(foo, arg1, arg2);
+}
+```
+
+## Transfer granular objects
+
+## Use target Runtime's event loop
+
+## Prefer async invocations

@@ -110,13 +110,13 @@ const config = {
         docs: {
           breadcrumbs: false,
           sidebarPath: require.resolve('./sidebars.js'),
-          sidebarCollapsible: false,
+          sidebarCollapsible: true,
           editUrl:
             'https://github.com/software-mansion/react-native-reanimated/edit/main/docs/docs-worklets',
           lastVersion: 'current',
           versions: {
             current: { label: '0.10' },
-            '0.9': { label: '0.9', banner: 'none' },
+            0.9: { label: '0.9', banner: 'none' },
           },
         },
         theme: { customCss: require.resolve('./src/css/index.css') },

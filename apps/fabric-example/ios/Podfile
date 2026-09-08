@@ -47,6 +47,22 @@ target 'FabricExample' do
       :mac_catalyst_enabled => false,
     )
 
+    installer.aggregate_targets.each do |target|
+      target.user_build_configurations.each_key do |config_name|
+        target.user_project.native_targets.each do |native_target|
+          next unless native_target.name == 'FabricExample'
+          native_target.build_configurations.each do |config|
+            paths = config.build_settings['HEADER_SEARCH_PATHS'] || ['$(inherited)']
+            paths = [paths] if paths.is_a?(String)
+            worklets = '"${PODS_ROOT}/Headers/Public/RNWorklets"'
+            paths << worklets unless paths.include?(worklets)
+            config.build_settings['HEADER_SEARCH_PATHS'] = paths
+          end
+        end
+        target.user_project.save
+      end
+    end
+
     if ENV['USE_CCACHE_LAUNCHER'] == '1'
       ccache_path = `command -v ccache`.strip
       if ccache_path.empty?
