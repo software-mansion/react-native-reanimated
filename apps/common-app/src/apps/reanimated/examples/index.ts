@@ -84,6 +84,10 @@ const LightTreeErasureExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/LightTreeErasure').default
   );
+const SynchronousPropsOverwriteExample: React.FC = () =>
+  React.createElement(
+    require('./SynchronousPropsOverwriteExample').default as React.FC
+  );
 const BorderRadiiExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/BorderRadii').default
@@ -1358,6 +1362,14 @@ export const EXAMPLES: Record<string, Example> = {
   LightTreeErasureExample: {
     title: '[SET] Light Tree Erasure Repro',
     screen: LightTreeErasureExample,
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  SynchronousPropsOverwriteExample: {
+    title: 'Synchronous Props Overwrite',
+    screen: SynchronousPropsOverwriteExample,
     shouldWork: {
       ios: true,
       android: true,
