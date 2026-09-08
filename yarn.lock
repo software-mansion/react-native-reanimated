@@ -9013,9 +9013,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swmansion/t-rex-ui@npm:1.3.4":
-  version: 1.3.4
-  resolution: "@swmansion/t-rex-ui@npm:1.3.4"
+"@swmansion/t-rex-ui@npm:1.3.10":
+  version: 1.3.10
+  resolution: "@swmansion/t-rex-ui@npm:1.3.10"
   dependencies:
     "@docusaurus/core": "npm:3.9.2"
     "@docusaurus/module-type-aliases": "npm:3.9.2"
@@ -9028,6 +9028,7 @@ __metadata:
     remark-parse: "npm:^11.0.0"
     remark-stringify: "npm:^11.0.0"
     unified: "npm:^11.0.5"
+    unist-util-visit: "npm:^5.1.0"
   peerDependencies:
     "@docsearch/core": ^4.4.0
     "@docsearch/css": ^4.4.0
@@ -9040,7 +9041,7 @@ __metadata:
     react: "*"
     react-dom: "*"
     react-icons: "*"
-  checksum: 10/b975d217072808600dd82570bec0f57b57b27041a297265c575b91fea2007214842836305a0c33fd5b86ef8aaf6b29d2bfbbaa2a55257af7cfecca47049c4d42
+  checksum: 10/8056f86b03d60c7188d0057f58c3bdbaf90e371deddbce10cd9271dd54c91614c8ef370313445cfdbd1ff39d00731603340151fc33d11a8c6e9ec03f59e4e082
   languageName: node
   linkType: hard
 
@@ -16090,7 +16091,7 @@ __metadata:
     "@mui/material": "npm:7.1.0"
     "@react-native/assets-registry": "npm:0.83.0"
     "@shopify/flash-list": "npm:2.1.0"
-    "@swmansion/t-rex-ui": "npm:1.3.4"
+    "@swmansion/t-rex-ui": "npm:1.3.10"
     "@types/raf": "npm:3.4.3"
     "@types/react": "npm:19.2.2"
     "@vercel/og": "npm:0.6.2"
@@ -16155,7 +16156,7 @@ __metadata:
     "@mui/material": "npm:7.1.0"
     "@react-native/assets-registry": "npm:0.83.0"
     "@shopify/flash-list": "npm:2.1.0"
-    "@swmansion/t-rex-ui": "npm:1.3.4"
+    "@swmansion/t-rex-ui": "npm:1.3.10"
     "@types/raf": "npm:3.4.3"
     "@types/react": "npm:19.2.2"
     "@vercel/og": "npm:0.6.2"
@@ -33524,6 +33525,17 @@ __metadata:
     unist-util-is: "npm:^6.0.0"
     unist-util-visit-parents: "npm:^6.0.0"
   checksum: 10/f2bbde23641e9ade7640358c06ddeec0f38342322eb8e7819d9ee380b0f859d25d084dde22bf63db0280b3b2f36575f15aa1d6c23acf276c91c2493cf799e3b0
+  languageName: node
+  linkType: hard
+
+"unist-util-visit@npm:^5.1.0":
+  version: 5.1.0
+  resolution: "unist-util-visit@npm:5.1.0"
+  dependencies:
+    "@types/unist": "npm:^3.0.0"
+    unist-util-is: "npm:^6.0.0"
+    unist-util-visit-parents: "npm:^6.0.0"
+  checksum: 10/340fc1929062d21156200284105caad79cc188bd98f285b60aba887492a70e6e6cadbc7e383a68909c7e0fdd83f855cb9f4184ad8e5aa153eb2d810445aea8e5
   languageName: node
   linkType: hard
 
