@@ -27,15 +27,40 @@ configureReanimatedLogger({
 });
 ```
 
+To receive the logs in your own code as well, pass a callback as the second argument. The logs are still written to the console.
+
+```js
+configureReanimatedLogger(
+  {
+    level: ReanimatedLogLevel.warn,
+    strict: true,
+  },
+  ({ level, message }) => {
+    // Forward the log to your own sink, e.g. a crash reporter
+    myLogger.record(level, message);
+  }
+);
+```
+
 <details>
   <summary>Type definitions</summary>
 
   ```typescript
-  function configureReanimatedLogger(config: LoggerConfig): void;
+  function configureReanimatedLogger(
+    config: LoggerConfig,
+    onLog?: LogFunction
+  ): void;
 
   type LoggerConfig = {
     level?: ReanimatedLogLevel;
     strict?: boolean;
+  };
+
+  type LogFunction = (data: LogData) => void;
+
+  type LogData = {
+    level: ReanimatedLogLevel;
+    message: string;
   };
 
   enum ReanimatedLogLevel {
@@ -55,9 +80,17 @@ A value of the `ReanimatedLogLevel` enum that defines the **minimum level** of t
 
 A boolean value that enables or disables **strict** mode. When **strict** mode is enabled, Reanimated will show more warnings that can help you to catch potential issues in your code.
 
+#### `onLog`
+
+An optional callback, passed as the **second argument**, that receives every log which passes the `level` and `strict` filters. It runs **in addition to** the console output, so the message is both printed and forwarded. The `message` it receives is the final text, including the `[Reanimated]` prefix and the strict mode docs reference.
+
 ## Remarks
 
 - The logger configuration is global and affects all warnings and errors displayed by Reanimated. There's no option to configure the logger per file/component.
+
+- On native, logs raised on the [UI runtime](/docs/fundamentals/glossary#ui-thread) reach the `onLog` callback **asynchronously**: the callback always runs on the React runtime, on a later tick. On web there is a single runtime, so the callback runs synchronously.
+
+- Calling `configureReanimatedLogger` without the `onLog` argument **clears** a previously registered callback, in the same way that omitting `level` or `strict` resets them to their defaults.
 
 - The `configureReanimatedLogger` function should be called before any Reanimated animations are created, e.g. in the root file of your app.
 

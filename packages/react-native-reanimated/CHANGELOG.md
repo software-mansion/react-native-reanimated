@@ -12,6 +12,7 @@
 ### 🎉 New features
 
 - Add iOS Swift Package Manager support via `Package.swift` and SPM integration metadata in `react-native.config.js`, with a dependency on `RNWorklets`. ([#10472](https://github.com/software-mansion/react-native-reanimated/pull/10472) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
+- Add an optional `onLog` callback as a second argument to `configureReanimatedLogger`, invoked for every warning and error that passes the `level` and `strict` filters, in addition to the default console output. On native, logs raised on the UI runtime are delivered asynchronously on the React runtime. ([#10482](https://github.com/software-mansion/react-native-reanimated/pull/10482) by [@douglowder](https://github.com/douglowder))
 
 ### 🐛 Bug fixes
 
