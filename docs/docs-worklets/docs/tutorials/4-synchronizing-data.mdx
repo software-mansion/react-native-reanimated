@@ -132,7 +132,7 @@ const result = createSynchronizable(-1, {fixedType: true});
 
 function taskDispatch() {
     let localResult = result.getDirty();
-    
+
     function task() {
         localResult++;
         result.setDirty(localResult);
@@ -189,4 +189,4 @@ console.log(await asyncResult);
 
 ## Next chapter
 
-In the next chapter we'll learn how to integrate with [C++ API of Worklets library] for use-cases that can't be covered with just JavaScript code.
+{/* In the next chapter we'll learn how to integrate with [C++ API of Worklets library] for use-cases that can't be covered with just JavaScript code.*/}
