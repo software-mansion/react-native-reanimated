@@ -170,16 +170,17 @@ export class TestRunner {
     if (!testCase) {
       return;
     }
-    const newRefs = Object.values(testCase.componentsRefs).filter(
-      (ref) => !previousRefs.has(ref)
+    const newRefEntries = Object.entries(testCase.componentsRefs).filter(
+      ([, ref]) => !previousRefs.has(ref)
     );
     const deadline = performance.now() + maxWaitTime;
-    for (const ref of newRefs) {
-      while (performance.now() < deadline) {
+    for (const [name, ref] of newRefEntries) {
+      let mounted = false;
+      do {
         const instance = ref.current;
         const tag = instance ? (findNodeHandle(instance) ?? -1) : -1;
         if (tag !== -1) {
-          const mounted = await getViewProp(tag, 'width', instance).then(
+          mounted = await getViewProp(tag, 'width', instance).then(
             () => true,
             () => false
           );
@@ -188,6 +189,11 @@ export class TestRunner {
           }
         }
         await sleep(FRAME_INTERVAL_MS);
+      } while (performance.now() < deadline);
+      if (!mounted) {
+        throw new Error(
+          `Test component '${name}' did not mount within ${maxWaitTime}ms after render`
+        );
       }
     }
   }
