@@ -546,7 +546,11 @@ function formatIOSCrashReport(text) {
   try {
     payload = JSON.parse(text.slice(newlineIndex + 1));
   } catch {
-    return headLines(text, 200);
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      return headLines(text, 200);
+    }
   }
   const lines = [];
   if (payload.exception) {
@@ -728,7 +732,15 @@ async function pullLatestTombstone(serial, stamp) {
     return null;
   }
   const newest = entries[0];
-  if (newest.mtimeMs < (runStartedAt || serverStartedAt) - 60_000) {
+  const hostBoundary = (runStartedAt || serverStartedAt) - 60_000;
+  const deviceNowMs = await adbDiag(serial, ['shell', 'date', '+%s']).then(
+    ({ stdout }) => Number(stdout.trim()) * 1000,
+    () => NaN
+  );
+  const boundary = Number.isFinite(deviceNowMs)
+    ? deviceNowMs - (Date.now() - hostBoundary)
+    : hostBoundary;
+  if (newest.mtimeMs < boundary) {
     console.error(
       `[runtime-tests] newest tombstone (${newest.name}) predates this run — the app died without a native crash dump`
     );
@@ -893,8 +905,14 @@ function tailLines(text, count) {
   );
 }
 
+let shutdownStarted = false;
+
 /** @param {number} code */
 function shutdown(code) {
+  if (shutdownStarted) {
+    return;
+  }
+  shutdownStarted = true;
   printSanitizerReports();
   clearTimer('connect');
   clearTimer('idle');
