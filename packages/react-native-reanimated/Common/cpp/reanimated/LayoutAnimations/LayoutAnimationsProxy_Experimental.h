@@ -160,7 +160,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   void flushDeadNodes(ShadowViewMutationList &filteredMutations) const;
 
   void addOngoingAnimations(ShadowViewMutationList &mutations) const;
-  void updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation) const;
+  void updateOngoingAnimationTarget(const int tag, const ShadowView &targetView) const;
   ShadowView cloneViewWithoutOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;
 
   ShadowView cloneViewWithOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;

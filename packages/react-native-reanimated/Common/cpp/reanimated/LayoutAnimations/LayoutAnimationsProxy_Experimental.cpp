@@ -274,7 +274,9 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         if (layoutChanged && layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
           layout_.push_back(node);
         } else if (!layoutChanged && layoutAnimations_.contains(tag)) {
-          updateOngoingAnimationTarget(tag, mutation);
+          // node->current holds the merged raw props on Android; the mutation
+          // holds only the latest diff.
+          updateOngoingAnimationTarget(tag, node->current);
         } else {
           filteredMutations.push_back(mutation);
         }
@@ -799,10 +801,10 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
   return wantAnimateExit;
 }
 
-void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation)
+void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(const int tag, const ShadowView &targetView)
     const {
   auto &layoutAnimation = layoutAnimations_[tag];
-  layoutAnimation.finalView = mutation.newChildShadowView;
+  layoutAnimation.finalView = targetView;
 
   const auto updateIt = updateMap_.find(tag);
   if (updateIt == updateMap_.end() || !updateIt->second.styleProps.isObject()) {
