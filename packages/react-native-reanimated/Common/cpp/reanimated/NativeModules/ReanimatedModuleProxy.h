@@ -42,6 +42,7 @@
 #include <mutex>
 #include <set>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 

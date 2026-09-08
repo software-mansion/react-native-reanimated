@@ -54,7 +54,10 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
   }
 }
 
-jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const double settledTimestamp) {
+jsi::Value AnimatedPropsRegistry::collectSettledUpdates(
+    jsi::Runtime &rt,
+    const double settledTimestamp,
+    std::vector<std::pair<Tag, folly::dynamic>> &evictedEntries) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
   std::vector<std::pair<Tag, std::reference_wrapper<const folly::dynamic>>> updates;
@@ -69,6 +72,7 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const 
       // re-animation staleness. Note that `syncedTags_` and `invalidatedTags_`
       // are disjoint — `update()` moves tags from the former to the latter.
       timestampMap_.erase(viewTag);
+      evictedEntries.emplace_back(viewTag, std::move(it->second.second));
       it = updatesRegistry_.erase(it);
       continue;
     }

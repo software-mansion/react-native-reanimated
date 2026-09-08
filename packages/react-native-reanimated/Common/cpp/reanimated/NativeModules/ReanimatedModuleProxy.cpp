@@ -12,6 +12,7 @@
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
+#include <reanimated/Fabric/updates/SynchronousProps.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
@@ -65,66 +66,9 @@ void mergeAnimatedProps(AnimatedProps &target, AnimatedProps &&source) {
 }
 #endif
 
-#ifdef ANDROID
-constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
-  return StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS");
-}
-#elif __APPLE__
-constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
-  return StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS");
-}
-#else
-constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
-  return false;
-}
-#endif
-
 std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBatch, const bool allowPartialUpdates) {
-  static const std::unordered_set<std::string> synchronousPropNames = {
-      "opacity",
-      "elevation",
-      "zIndex",
-      "shadowColor",
-#if __APPLE__
-      "shadowOffset",
-      "shadowOpacity",
-      "shadowRadius",
-#endif // __APPLE__
-      "backgroundColor",
-      // "color", // not supported
-      "tintColor",
-      "placeholderTextColor",
-      "borderRadius",
-      "borderTopLeftRadius",
-      "borderTopRightRadius",
-      "borderTopStartRadius",
-      "borderTopEndRadius",
-      "borderBottomLeftRadius",
-      "borderBottomRightRadius",
-      "borderBottomStartRadius",
-      "borderBottomEndRadius",
-      "borderStartStartRadius",
-      "borderStartEndRadius",
-      "borderEndStartRadius",
-      "borderEndEndRadius",
-      "borderColor",
-      "borderTopColor",
-      "borderBottomColor",
-      "borderLeftColor",
-      "borderRightColor",
-      "borderStartColor",
-      "borderEndColor",
-      "borderBlockColor",
-      "borderBlockStartColor",
-      "borderBlockEndColor",
-      "outlineColor",
-      "outlineOffset",
-      "outlineWidth",
-      "transform",
-  };
-
   const auto isSynchronous = [&](const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
-    if (!synchronousPropNames.contains(keyStr)) {
+    if (!isSynchronousPropName(keyStr)) {
       return false;
     }
 #ifdef ANDROID
@@ -595,8 +539,19 @@ void ReanimatedModuleProxy::applyCSSAnimations(
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
-  auto lock = updatesRegistryManager_->lock();
-  cssAnimationsRegistry_->remove(viewTag.asNumber());
+  const auto tag = viewTag.asNumber();
+  bool hasPendingProps = false;
+  {
+    auto lock = updatesRegistryManager_->lock();
+    cssAnimationsRegistry_->remove(tag);
+    if constexpr (synchronousUpdatesEnabled()) {
+      hasPendingProps = updatesRegistryManager_->hasPendingSynchronousProps(tag);
+    }
+  }
+  if (hasPendingProps) {
+    // Released values must reach a committed tree before React takes over.
+    requestFlushRegistry();
+  }
 }
 
 void ReanimatedModuleProxy::setCSSEventHandler(jsi::Runtime &rt, const jsi::Value &handler) {
@@ -618,8 +573,19 @@ void ReanimatedModuleProxy::runCSSTransition(
 }
 
 void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) {
-  auto lock = updatesRegistryManager_->lock();
-  cssTransitionsRegistry_->remove(viewTag.asNumber());
+  const auto tag = viewTag.asNumber();
+  bool hasPendingProps = false;
+  {
+    auto lock = updatesRegistryManager_->lock();
+    cssTransitionsRegistry_->remove(tag);
+    if constexpr (synchronousUpdatesEnabled()) {
+      hasPendingProps = updatesRegistryManager_->hasPendingSynchronousProps(tag);
+    }
+  }
+  if (hasPendingProps) {
+    // Released values must reach a committed tree before React takes over.
+    requestFlushRegistry();
+  }
 }
 
 void ReanimatedModuleProxy::registerPseudoStyles(
@@ -674,8 +640,20 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   const auto currentTimestamp = getAnimationTimestamp_();
 
   // TODO(future): flush updates from CSS animations and CSS transitions registries
+  std::vector<std::pair<Tag, folly::dynamic>> evictedEntries;
   auto lock = updatesRegistryManager_->lock();
-  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS);
+  auto settledUpdates = animatedPropsRegistry_->collectSettledUpdates(
+      rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS, evictedEntries);
+
+  if constexpr (synchronousUpdatesEnabled()) {
+    // Clear only the evicted keys - other registries may still own pending
+    // values on the same tag.
+    for (const auto &[tag, props] : evictedEntries) {
+      updatesRegistryManager_->clearPendingSynchronousProps(tag, props);
+    }
+  }
+
+  return settledUpdates;
 }
 
 bool ReanimatedModuleProxy::handleEvent(
@@ -818,7 +796,7 @@ void ReanimatedModuleProxy::performOperations() {
     }
   }
 
-  if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
+  if constexpr (synchronousUpdatesEnabled()) {
     applySynchronousUpdates(updatesBatch, false);
   }
 
@@ -828,7 +806,7 @@ void ReanimatedModuleProxy::performOperations() {
     // In this case, we should skip the commit here and let React Native do
     // it. The commit will include the current values from the updates manager
     // which will be applied in ReanimatedCommitHook.
-    if (!updatesBatch.empty()) {
+    if (!updatesBatch.empty() || shouldFlushRegistry_.load()) {
       updatesRegistryManager_->pleaseCommitAfterPause();
     }
     return;
@@ -1038,6 +1016,11 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
     }
   }
 
+  if (!synchronousUpdatesBatch.empty()) {
+    auto lock = updatesRegistryManager_->lock();
+    updatesRegistryManager_->recordSynchronousProps(synchronousUpdatesBatch);
+  }
+
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
     serializeSynchronousPropsToBuffers(
@@ -1102,6 +1085,39 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
     }
   }
 
+  std::unordered_set<SurfaceId> committingSurfaceIds;
+  if constexpr (synchronousUpdatesEnabled()) {
+    // The pending values go in front, so the batch values win overlapping
+    // keys. A registry flush is also the carrier for values whose owner
+    // registry released them, so it takes every pending entry.
+    if (flushRegistry || !propsMapBySurface.empty()) {
+      for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
+        committingSurfaceIds.insert(surfaceId);
+      }
+      PropsMap pendingProps;
+      {
+        auto lock = updatesRegistryManager_->lock();
+        updatesRegistryManager_->collectPendingSynchronousProps(
+            pendingProps, flushRegistry ? nullptr : &committingSurfaceIds);
+      }
+      for (auto const &[family, props] : pendingProps) {
+        // RawProps has no assignment operator, so rebuild the vector to put
+        // the pending values first - later entries win for overlapping keys.
+        auto &propsVector = propsMapBySurface[family->getSurfaceId()][family];
+        std::vector<RawProps> reorderedProps;
+        reorderedProps.reserve(props.size() + propsVector.size());
+        for (const auto &prop : props) {
+          reorderedProps.emplace_back(prop);
+        }
+        for (auto &prop : propsVector) {
+          reorderedProps.emplace_back(std::move(prop));
+        }
+        propsVector = std::move(reorderedProps);
+      }
+    }
+  }
+
+  bool allCommitsSucceeded = true;
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
       const auto status = shadowTree.commit(
@@ -1124,15 +1140,23 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
            false,
            /* .mountSynchronously = */ true});
 
-#ifdef ANDROID
       if (status == ShadowTree::CommitStatus::Succeeded) {
         auto lock = updatesRegistryManager_->lock();
+#ifdef ANDROID
         updatesRegistryManager_->clearPropsToRevert(surfaceId);
-      }
-#else
-      (void)status;
 #endif
+        if constexpr (synchronousUpdatesEnabled()) {
+          updatesRegistryManager_->clearPendingSynchronousProps(std::unordered_set<SurfaceId>{surfaceId});
+        }
+      } else {
+        allCommitsSucceeded = false;
+      }
     });
+  }
+
+  if (flushRegistry && !allCommitsSucceeded) {
+    // A cancelled commit consumed the flush request without carrying anything.
+    requestFlushRegistry();
   }
 }
 

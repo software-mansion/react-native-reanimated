@@ -6,6 +6,8 @@
 
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
 namespace reanimated {
 
@@ -18,7 +20,10 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   /// Also evicts entries that have already been synced to React — by the time
   /// of the next call, the corresponding `settledProps` state is guaranteed to
   /// be committed, so the registry entries are redundant.
-  jsi::Value collectSettledUpdates(jsi::Runtime &rt, double settledTimestamp);
+  jsi::Value collectSettledUpdates(
+      jsi::Runtime &rt,
+      double settledTimestamp,
+      std::vector<std::pair<Tag, folly::dynamic>> &evictedEntries);
 
  private:
   std::unordered_map<Tag, double> timestampMap_;

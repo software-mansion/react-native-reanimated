@@ -1,6 +1,7 @@
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
+#include <reanimated/Fabric/updates/SynchronousProps.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
@@ -62,10 +63,18 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   }
 
   if constexpr (StaticFeatureFlags::getFlag("USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS")) {
-    // State updates are based on the currently committed ShadowTree,
-    // which means that all animation changes are already included.
-    // Therefore, there's no need to reapply styles from the props map.
+    // Non-React commits clone from trees that never received the synchronous
+    // values, so the pending values ride along here. No commit pausing for
+    // these sources - that breaks sticky header animations.
     if (commitOptions.source != ShadowTreeCommitSource::React) {
+      if constexpr (synchronousUpdatesEnabled()) {
+        auto lock = updatesRegistryManager_->lock();
+        PropsMap pendingProps;
+        updatesRegistryManager_->collectPendingSynchronousProps(pendingProps);
+        if (!pendingProps.empty()) {
+          return cloneShadowTreeWithNewProps(*newRootShadowNode, pendingProps);
+        }
+      }
       return newRootShadowNode;
     }
   }

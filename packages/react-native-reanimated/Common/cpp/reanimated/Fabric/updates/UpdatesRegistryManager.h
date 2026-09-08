@@ -49,6 +49,16 @@ class UpdatesRegistryManager {
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
   PropsMap collectProps();
 
+  /// Values the synchronous path applied that no Reanimated commit has
+  /// carried yet. Entries leave on commit success, settled eviction, registry
+  /// release, or node removal - not when a hook attaches them.
+  void recordSynchronousProps(const UpdatesBatch &updatesBatch);
+  void collectPendingSynchronousProps(PropsMap &propsMap, const std::unordered_set<SurfaceId> *surfaceIds = nullptr);
+  void clearPendingSynchronousProps(const std::unordered_set<SurfaceId> &surfaceIds);
+  /// Removes only the given keys - values other registries own stay pending.
+  void clearPendingSynchronousProps(Tag tag, const folly::dynamic &props);
+  bool hasPendingSynchronousProps(Tag tag) const;
+
 #ifdef ANDROID
   bool hasPropsToRevert();
   void collectPropsToRevertBySurface(std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
@@ -58,8 +68,11 @@ class UpdatesRegistryManager {
  private:
   using RemovableShadowNodes = std::unordered_map<Tag, ShadowNodeFamily::Shared>;
 
+  using PendingSynchronousProps = std::unordered_map<Tag, std::pair<ShadowNodeFamily::Shared, folly::dynamic>>;
+
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
+  PendingSynchronousProps pendingSynchronousProps_;
   std::atomic<bool> shouldCommitAfterPause_;
   RemovableShadowNodes removableShadowNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;

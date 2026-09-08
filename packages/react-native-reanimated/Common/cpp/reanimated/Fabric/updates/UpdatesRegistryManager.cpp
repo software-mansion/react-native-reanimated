@@ -89,6 +89,7 @@ void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadow
         registry->remove(tag);
       }
       staticPropsRegistry_->remove(tag);
+      pendingSynchronousProps_.erase(tag);
     } else {
       remainingShadowNodes.emplace(tag, shadowNodeFamily);
     }
@@ -104,6 +105,62 @@ PropsMap UpdatesRegistryManager::collectProps() {
     registry->collectProps(propsMap);
   }
   return propsMap;
+}
+
+void UpdatesRegistryManager::recordSynchronousProps(const UpdatesBatch &updatesBatch) {
+  react_native_assert(isLockedByCurrentThread());
+  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
+    auto &entry = pendingSynchronousProps_[shadowNodeFamily->getTag()];
+    entry.first = shadowNodeFamily;
+    if (entry.second.isObject()) {
+      entry.second.update(props);
+    } else {
+      entry.second = props;
+    }
+  }
+}
+
+void UpdatesRegistryManager::collectPendingSynchronousProps(
+    PropsMap &propsMap,
+    const std::unordered_set<SurfaceId> *surfaceIds) {
+  react_native_assert(isLockedByCurrentThread());
+  for (const auto &[tag, entry] : pendingSynchronousProps_) {
+    const auto &[shadowNodeFamily, props] = entry;
+    if (surfaceIds != nullptr && !surfaceIds->contains(shadowNodeFamily->getSurfaceId())) {
+      continue;
+    }
+    propsMap[shadowNodeFamily].emplace_back(RawProps(props));
+  }
+}
+
+void UpdatesRegistryManager::clearPendingSynchronousProps(const std::unordered_set<SurfaceId> &surfaceIds) {
+  react_native_assert(isLockedByCurrentThread());
+  for (auto it = pendingSynchronousProps_.begin(); it != pendingSynchronousProps_.end();) {
+    if (surfaceIds.contains(it->second.first->getSurfaceId())) {
+      it = pendingSynchronousProps_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
+bool UpdatesRegistryManager::hasPendingSynchronousProps(const Tag tag) const {
+  react_native_assert(isLockedByCurrentThread());
+  return pendingSynchronousProps_.contains(tag);
+}
+
+void UpdatesRegistryManager::clearPendingSynchronousProps(const Tag tag, const folly::dynamic &props) {
+  react_native_assert(isLockedByCurrentThread());
+  const auto it = pendingSynchronousProps_.find(tag);
+  if (it == pendingSynchronousProps_.end() || !props.isObject()) {
+    return;
+  }
+  for (const auto &[key, value] : props.items()) {
+    it->second.second.erase(key.asString());
+  }
+  if (it->second.second.empty()) {
+    pendingSynchronousProps_.erase(it);
+  }
 }
 
 #ifdef ANDROID
