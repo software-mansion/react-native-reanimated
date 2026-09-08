@@ -173,8 +173,8 @@ export class TestRunner {
     const newRefEntries = Object.entries(testCase.componentsRefs).filter(
       ([, ref]) => !previousRefs.has(ref)
     );
-    const deadline = performance.now() + maxWaitTime;
     for (const [name, ref] of newRefEntries) {
+      const deadline = performance.now() + maxWaitTime;
       let mounted = false;
       do {
         const instance = ref.current;
