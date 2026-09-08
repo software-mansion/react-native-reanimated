@@ -31,9 +31,6 @@
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
-#ifndef NDEBUG
-#include <algorithm>
-#endif // NDEBUG
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -67,19 +64,13 @@ inline void scheduleOnUI(
       rt, serializableArrayOfArgumentsValue, "[Worklets] scheduleOnUI expects a serializable array of arguments.");
 
 #ifndef NDEBUG
-  const auto &workletsList = serializableArrayOfWorklets->getList();
-  const auto &argumentsList = serializableArrayOfArguments->getList();
-  if (workletsList.size() != argumentsList.size()) {
-    throw std::runtime_error("[Worklets] scheduleOnUI expects the same number of worklets and argument arrays.");
-  }
-
-  std::vector<std::optional<std::string>> scheduleStacks(workletsList.size());
+  std::vector<std::optional<std::string>> scheduleStacks;
   if (scheduleStacksValue.isObject()) {
     auto stacksObject = scheduleStacksValue.asObject(rt);
     if (stacksObject.isArray(rt)) {
       auto stacksArray = stacksObject.asArray(rt);
-      auto count = std::min<size_t>(stacksArray.size(rt), scheduleStacks.size());
-      for (size_t i = 0; i < count; i++) {
+      scheduleStacks.resize(stacksArray.size(rt));
+      for (size_t i = 0; i < scheduleStacks.size(); i++) {
         auto stackValue = stacksArray.getValueAtIndex(rt, i);
         if (stackValue.isString()) {
           scheduleStacks[i] = stackValue.asString(rt).utf8(rt);

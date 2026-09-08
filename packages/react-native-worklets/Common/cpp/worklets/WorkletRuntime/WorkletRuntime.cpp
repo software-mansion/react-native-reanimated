@@ -169,6 +169,7 @@ void WorkletRuntime::schedule(
           const auto scope = jsi::Scope(rt);
           const auto &worklets = serializableArrayOfWorklets->getList();
           const auto &argumentArrays = serializableArrayOfArguments->getList();
+          react_native_assert(worklets.size() == argumentArrays.size());
           for (size_t i = 0; i < worklets.size(); i++) {
             const auto worklet = std::static_pointer_cast<SerializableWorklet>(worklets[i]);
             const auto argumentArray = std::static_pointer_cast<SerializableArray>(argumentArrays[i]);
@@ -193,7 +194,11 @@ void WorkletRuntime::scheduleWithStack(
     std::shared_ptr<SerializableArray> serializableArrayOfWorklets,
     std::shared_ptr<SerializableArray> serializableArrayOfArguments,
     std::vector<std::optional<std::string>> scheduleStacks) const {
-  react_native_assert(serializableArrayOfWorklets->getList().size() == scheduleStacks.size());
+  const auto batchSize = serializableArrayOfWorklets->getList().size();
+  if (scheduleStacks.empty()) {
+    scheduleStacks.resize(batchSize);
+  }
+  react_native_assert(batchSize == scheduleStacks.size());
   scheduleImpl([serializableArrayOfWorklets = std::move(serializableArrayOfWorklets),
                 serializableArrayOfArguments = std::move(serializableArrayOfArguments),
                 scheduleStacks = std::move(scheduleStacks)](const WorkletRuntime &workletRuntime) {
@@ -201,6 +206,7 @@ void WorkletRuntime::scheduleWithStack(
       const auto scope = jsi::Scope(rt);
       const auto &worklets = serializableArrayOfWorklets->getList();
       const auto &argumentArrays = serializableArrayOfArguments->getList();
+      react_native_assert(worklets.size() == argumentArrays.size());
       for (size_t i = 0; i < worklets.size(); i++) {
         const auto worklet = std::static_pointer_cast<SerializableWorklet>(worklets[i]);
         const auto argumentArray = std::static_pointer_cast<SerializableArray>(argumentArrays[i]);
