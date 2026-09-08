@@ -1,11 +1,11 @@
-# Documentation
+# React Native Reanimated
 
-## _shared
+##  Shared
 
 - [_docs_compatibility_info](https://docs.swmansion.com/react-native-reanimated/docs/_shared/_docs_compatibility_info)
 - [_unreleased_info](https://docs.swmansion.com/react-native-reanimated/docs/_shared/_unreleased_info)
 
-## advanced
+## Advanced
 
 - [dispatchCommand](https://docs.swmansion.com/react-native-reanimated/docs/advanced/dispatchCommand)
 - [makeMutable](https://docs.swmansion.com/react-native-reanimated/docs/advanced/makeMutable)
@@ -18,11 +18,11 @@
 - [useHandler](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useHandler)
 - [useTimestamp](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useTimestamp)
 
-## animations/_shared
+## Animations /  Shared
 
 - [animationToValue](https://docs.swmansion.com/react-native-reanimated/docs/animations/_shared/animationToValue)
 
-## animations
+## Animations
 
 - [withClamp](https://docs.swmansion.com/react-native-reanimated/docs/animations/withClamp)
 - [withDecay](https://docs.swmansion.com/react-native-reanimated/docs/animations/withDecay)
@@ -32,7 +32,7 @@
 - [withSpring](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring)
 - [withTiming](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming)
 
-## core
+## Core
 
 - [cancelAnimation](https://docs.swmansion.com/react-native-reanimated/docs/core/cancelAnimation)
 - [createAnimatedComponent](https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent)
@@ -42,7 +42,7 @@
 - [useDerivedValue](https://docs.swmansion.com/react-native-reanimated/docs/core/useDerivedValue)
 - [useSharedValue](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue)
 
-## css-animations
+## Css Animations
 
 - [animation-delay](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-delay)
 - [animation-direction](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-direction)
@@ -54,7 +54,7 @@
 - [animation-timing-function](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-timing-function)
 - [overview](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/overview)
 
-## css-transitions
+## Css Transitions
 
 - [overview](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/overview)
 - [pseudo-selectors](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/pseudo-selectors)
@@ -64,20 +64,20 @@
 - [transition-property](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-property)
 - [transition-timing-function](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-timing-function)
 
-## debugging
+## Debugging
 
 - [accurate-call-stacks](https://docs.swmansion.com/react-native-reanimated/docs/debugging/accurate-call-stacks)
 - [logger-configuration](https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration)
 - [slow-animations](https://docs.swmansion.com/react-native-reanimated/docs/debugging/slow-animations)
 
-## device
+## Device
 
 - [ReducedMotionConfig](https://docs.swmansion.com/react-native-reanimated/docs/device/ReducedMotionConfig)
 - [useAnimatedKeyboard](https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedKeyboard)
 - [useAnimatedSensor](https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedSensor)
 - [useReducedMotion](https://docs.swmansion.com/react-native-reanimated/docs/device/useReducedMotion)
 
-## fundamentals
+## Fundamentals
 
 - [_animating-colors](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/_animating-colors)
 - [animating-styles-and-props](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animating-styles-and-props)
@@ -88,7 +88,7 @@
 - [handling-gestures](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/handling-gestures)
 - [your-first-animation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/your-first-animation)
 
-## guides
+## Guides
 
 - [accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility)
 - [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg)
@@ -106,7 +106,7 @@
 - [Web Support](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support)
 - [worklets](https://docs.swmansion.com/react-native-reanimated/docs/guides/worklets)
 
-## layout-animations
+## Layout Animations
 
 - [custom-animations](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/custom-animations)
 - [entering-exiting-animations](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations)
@@ -115,17 +115,17 @@
 - [layout-transitions](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions)
 - [List Layout Animations](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/list-layout-animations)
 
-## scroll
+## Scroll
 
 - [scrollTo](https://docs.swmansion.com/react-native-reanimated/docs/scroll/scrollTo)
 - [useAnimatedScrollHandler](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useAnimatedScrollHandler)
 - [useScrollOffset](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset)
 
-## shared-element-transitions
+## Shared Element Transitions
 
 - [Shared Element Transitions](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview)
 
-## utilities
+## Utilities
 
 - [DynamicColorIOS](https://docs.swmansion.com/react-native-reanimated/docs/utilities/DynamicColorIOS)
 - [clamp](https://docs.swmansion.com/react-native-reanimated/docs/utilities/clamp)

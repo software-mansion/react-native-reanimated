@@ -1,13 +1,13 @@
-# Documentation
+# React Native Worklets: Multithreading engine for your apps and libraries
 
-## bundleMode
+## BundleMode
 
 - [importForwarding](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/importForwarding)
 - [overview](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/overview)
 - [setup](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/setup)
 - [usage](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/usage)
 
-## fundamentals
+## Fundamentals
 
 - [closures](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/closures)
 - [getting-started](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/getting-started)
@@ -15,7 +15,7 @@
 - [runtimeKinds](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds)
 - [Sharing memory](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/sharing-memory)
 
-## guides
+## Guides
 
 - [call-tables](https://docs.swmansion.com/react-native-worklets/docs/guides/call-tables)
 - [compatibility](https://docs.swmansion.com/react-native-worklets/docs/guides/compatibility)
@@ -24,7 +24,7 @@
 - [testing-with-jest](https://docs.swmansion.com/react-native-worklets/docs/guides/testing-with-jest)
 - [Troubleshooting](https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting)
 
-## memory
+## Memory
 
 - [createSerializable](https://docs.swmansion.com/react-native-worklets/docs/memory/createSerializable)
 - [createShareable](https://docs.swmansion.com/react-native-worklets/docs/memory/createShareable)
@@ -39,7 +39,7 @@
 - [Shareable](https://docs.swmansion.com/react-native-worklets/docs/memory/shareable)
 - [Synchronizable](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable)
 
-## threading
+## Threading
 
 - [callMicrotasks](https://docs.swmansion.com/react-native-worklets/docs/threading/callMicrotasks)
 - [createWorkletRuntime](https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime)
@@ -59,7 +59,7 @@
 - [scheduleOnUI](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI)
 - [UIRuntimeId](https://docs.swmansion.com/react-native-worklets/docs/threading/uiRuntimeId)
 
-## utility
+## Utility
 
 - [getCurrentThreadId](https://docs.swmansion.com/react-native-worklets/docs/utility/getCurrentThreadId)
 - [getRuntimeKind](https://docs.swmansion.com/react-native-worklets/docs/utility/getRuntimeKind)
@@ -70,7 +70,7 @@
 - [isWorkletFunction](https://docs.swmansion.com/react-native-worklets/docs/utility/isWorkletFunction)
 - [isWorkletRuntime](https://docs.swmansion.com/react-native-worklets/docs/utility/isWorkletRuntime)
 
-## worklets-babel-plugin
+## Worklets Babel Plugin
 
 - [About](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about)
 - [Options](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/options)
