@@ -11,8 +11,9 @@ import { getLoggerConfig, updateLoggerConfig } from './common';
  * call it only once).
  *
  * @param config - The new logger configuration to apply.
- * @param onLog - Optional callback invoked for every log, in addition to the
- *   default console output.
+ * @param onLog - Optional callback invoked for every log that passes the
+ *   `level` and `strict` filters, in addition to the default console output.
+ *   Omitting it clears a previously registered callback.
  */
 export function configureReanimatedLogger(
   config: LoggerConfig,
