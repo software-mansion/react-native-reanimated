@@ -90,6 +90,7 @@ void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadow
       }
       staticPropsRegistry_->remove(tag);
       pendingSynchronousProps_.erase(tag);
+      pendingSynchronousPropsVersion_++;
     } else {
       remainingShadowNodes.emplace(tag, shadowNodeFamily);
     }
@@ -109,6 +110,7 @@ PropsMap UpdatesRegistryManager::collectProps() {
 
 void UpdatesRegistryManager::recordSynchronousProps(const UpdatesBatch &updatesBatch) {
   react_native_assert(isLockedByCurrentThread());
+  pendingSynchronousPropsVersion_++;
   for (const auto &[shadowNodeFamily, props] : updatesBatch) {
     auto &entry = pendingSynchronousProps_[shadowNodeFamily->getTag()];
     entry.first = shadowNodeFamily;
@@ -135,6 +137,7 @@ void UpdatesRegistryManager::collectPendingSynchronousProps(
 
 void UpdatesRegistryManager::clearPendingSynchronousProps(const std::unordered_set<SurfaceId> &surfaceIds) {
   react_native_assert(isLockedByCurrentThread());
+  pendingSynchronousPropsVersion_++;
   for (auto it = pendingSynchronousProps_.begin(); it != pendingSynchronousProps_.end();) {
     if (surfaceIds.contains(it->second.first->getSurfaceId())) {
       it = pendingSynchronousProps_.erase(it);
@@ -144,6 +147,11 @@ void UpdatesRegistryManager::clearPendingSynchronousProps(const std::unordered_s
   }
 }
 
+uint64_t UpdatesRegistryManager::pendingSynchronousPropsVersion() const {
+  react_native_assert(isLockedByCurrentThread());
+  return pendingSynchronousPropsVersion_;
+}
+
 bool UpdatesRegistryManager::hasPendingSynchronousProps(const Tag tag) const {
   react_native_assert(isLockedByCurrentThread());
   return pendingSynchronousProps_.contains(tag);
@@ -151,6 +159,7 @@ bool UpdatesRegistryManager::hasPendingSynchronousProps(const Tag tag) const {
 
 void UpdatesRegistryManager::clearPendingSynchronousProps(const Tag tag, const folly::dynamic &props) {
   react_native_assert(isLockedByCurrentThread());
+  pendingSynchronousPropsVersion_++;
   const auto it = pendingSynchronousProps_.find(tag);
   if (it == pendingSynchronousProps_.end() || !props.isObject()) {
     return;

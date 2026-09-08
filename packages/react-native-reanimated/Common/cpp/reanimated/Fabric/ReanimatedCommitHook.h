@@ -6,6 +6,8 @@
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
 
 #include <memory>
+#include <unordered_map>
+#include <utility>
 
 using namespace facebook::react;
 
@@ -36,6 +38,11 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   std::shared_ptr<LayoutAnimationsProxyRegistry> layoutAnimationsProxyRegistry_;
+
+  /// Last produced root per surface with the pending-store version it
+  /// carries. A commit based on that root with an unchanged version needs no
+  /// new clone. Guarded by the manager lock.
+  std::unordered_map<SurfaceId, std::pair<uint64_t, std::weak_ptr<const RootShadowNode>>> pendingCarriedRoots_;
 };
 
 } // namespace reanimated

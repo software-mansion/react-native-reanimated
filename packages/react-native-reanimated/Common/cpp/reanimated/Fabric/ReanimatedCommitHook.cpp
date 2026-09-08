@@ -39,7 +39,7 @@ std::shared_ptr<LayoutAnimationsProxyCommon> ReanimatedCommitHook::registerLayou
 
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &shadowTree,
-    RootShadowNode::Shared const &,
+    RootShadowNode::Shared const &oldRootShadowNode,
     RootShadowNode::Unshared const &newRootShadowNode,
     const ShadowTreeCommitOptions &commitOptions) noexcept {
   ReanimatedSystraceSection s("ReanimatedCommitHook::shadowTreeWillCommit");
@@ -69,11 +69,24 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     if (commitOptions.source != ShadowTreeCommitSource::React) {
       if constexpr (synchronousUpdatesEnabled()) {
         auto lock = updatesRegistryManager_->lock();
+        const auto version = updatesRegistryManager_->pendingSynchronousPropsVersion();
+        const auto surfaceId = shadowTree.getSurfaceId();
+        const auto carriedIt = pendingCarriedRoots_.find(surfaceId);
+        if (carriedIt != pendingCarriedRoots_.end() && carriedIt->second.first == version &&
+            carriedIt->second.second.lock() == oldRootShadowNode) {
+          // The base already carries these values - its clones keep the props
+          // pointers. The new root becomes the next carrier.
+          carriedIt->second.second = std::weak_ptr<const RootShadowNode>(newRootShadowNode);
+          return newRootShadowNode;
+        }
         PropsMap pendingProps;
         updatesRegistryManager_->collectPendingSynchronousProps(pendingProps);
         if (!pendingProps.empty()) {
-          return cloneShadowTreeWithNewProps(*newRootShadowNode, pendingProps);
+          RootShadowNode::Unshared decoratedRootNode = cloneShadowTreeWithNewProps(*newRootShadowNode, pendingProps);
+          pendingCarriedRoots_[surfaceId] = {version, std::weak_ptr<const RootShadowNode>(decoratedRootNode)};
+          return decoratedRootNode;
         }
+        pendingCarriedRoots_.erase(surfaceId);
       }
       return newRootShadowNode;
     }

@@ -58,6 +58,8 @@ class UpdatesRegistryManager {
   /// Removes only the given keys - values other registries own stay pending.
   void clearPendingSynchronousProps(Tag tag, const folly::dynamic &props);
   bool hasPendingSynchronousProps(Tag tag) const;
+  /// Changes with every pending-store change.
+  uint64_t pendingSynchronousPropsVersion() const;
 
 #ifdef ANDROID
   bool hasPropsToRevert();
@@ -73,6 +75,7 @@ class UpdatesRegistryManager {
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
   PendingSynchronousProps pendingSynchronousProps_;
+  uint64_t pendingSynchronousPropsVersion_ = 0;
   std::atomic<bool> shouldCommitAfterPause_;
   RemovableShadowNodes removableShadowNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
