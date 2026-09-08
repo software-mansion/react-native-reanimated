@@ -160,19 +160,23 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) cons
 }
 
 void WorkletRuntime::schedule(
-    std::vector<std::shared_ptr<SerializableWorklet>> worklets,
-    std::vector<std::shared_ptr<SerializableArray>> argumentArrays) const {
-  react_native_assert(worklets.size() == argumentArrays.size());
-  scheduleImpl([worklets = std::move(worklets),
-                argumentArrays = std::move(argumentArrays)](const WorkletRuntime &workletRuntime) {
-    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>([&](jsi::Runtime &rt) {
-      const auto scope = jsi::Scope(rt);
-      for (size_t i = 0; i < worklets.size(); i++) {
-        const auto args = argumentArrays[i]->getJSIValueArr(rt);
-        workletRuntime.runSyncImpl(worklets[i], args.data(), args.size());
-      }
-    });
-  });
+    std::shared_ptr<SerializableArray> serializableArrayOfWorklets,
+    std::shared_ptr<SerializableArray> serializableArrayOfArguments) const {
+  scheduleImpl(
+      [serializableArrayOfWorklets = std::move(serializableArrayOfWorklets),
+       serializableArrayOfArguments = std::move(serializableArrayOfArguments)](const WorkletRuntime &workletRuntime) {
+        workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>([&](jsi::Runtime &rt) {
+          const auto scope = jsi::Scope(rt);
+          const auto &worklets = serializableArrayOfWorklets->getList();
+          const auto &argumentArrays = serializableArrayOfArguments->getList();
+          for (size_t i = 0; i < worklets.size(); i++) {
+            const auto worklet = std::static_pointer_cast<SerializableWorklet>(worklets[i]);
+            const auto argumentArray = std::static_pointer_cast<SerializableArray>(argumentArrays[i]);
+            const auto args = argumentArray->getJSIValueArr(rt);
+            workletRuntime.runSyncImpl(worklet, args.data(), args.size());
+          }
+        });
+      });
 }
 
 #ifndef NDEBUG
@@ -186,20 +190,23 @@ void WorkletRuntime::scheduleWithStack(
 }
 
 void WorkletRuntime::scheduleWithStack(
-    std::vector<std::shared_ptr<SerializableWorklet>> worklets,
-    std::vector<std::shared_ptr<SerializableArray>> argumentArrays,
+    std::shared_ptr<SerializableArray> serializableArrayOfWorklets,
+    std::shared_ptr<SerializableArray> serializableArrayOfArguments,
     std::vector<std::optional<std::string>> scheduleStacks) const {
-  react_native_assert(worklets.size() == argumentArrays.size());
-  react_native_assert(worklets.size() == scheduleStacks.size());
-  scheduleImpl([worklets = std::move(worklets),
-                argumentArrays = std::move(argumentArrays),
+  react_native_assert(serializableArrayOfWorklets->getList().size() == scheduleStacks.size());
+  scheduleImpl([serializableArrayOfWorklets = std::move(serializableArrayOfWorklets),
+                serializableArrayOfArguments = std::move(serializableArrayOfArguments),
                 scheduleStacks = std::move(scheduleStacks)](const WorkletRuntime &workletRuntime) {
     workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>([&](jsi::Runtime &rt) {
       const auto scope = jsi::Scope(rt);
+      const auto &worklets = serializableArrayOfWorklets->getList();
+      const auto &argumentArrays = serializableArrayOfArguments->getList();
       for (size_t i = 0; i < worklets.size(); i++) {
-        const auto args = argumentArrays[i]->getJSIValueArr(rt);
+        const auto worklet = std::static_pointer_cast<SerializableWorklet>(worklets[i]);
+        const auto argumentArray = std::static_pointer_cast<SerializableArray>(argumentArrays[i]);
+        const auto args = argumentArray->getJSIValueArr(rt);
         workletRuntime.runSyncImpl<MicrotaskCheckpoint::Skip, jsi::Value, ScheduleStack::Requested>(
-            worklets[i], scheduleStacks[i], args.data(), args.size());
+            worklet, scheduleStacks[i], args.data(), args.size());
       }
     });
   });

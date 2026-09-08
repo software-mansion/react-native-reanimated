@@ -66,29 +66,14 @@ inline void scheduleOnUI(
   auto serializableArrayOfArguments = extractSerializableOrThrow<SerializableArray>(
       rt, serializableArrayOfArgumentsValue, "[Worklets] scheduleOnUI expects a serializable array of arguments.");
 
+#ifndef NDEBUG
   const auto &workletsList = serializableArrayOfWorklets->getList();
   const auto &argumentsList = serializableArrayOfArguments->getList();
-#ifndef NDEBUG
   if (workletsList.size() != argumentsList.size()) {
     throw std::runtime_error("[Worklets] scheduleOnUI expects the same number of worklets and argument arrays.");
   }
-#endif
-  std::vector<std::shared_ptr<SerializableWorklet>> worklets;
-  std::vector<std::shared_ptr<SerializableArray>> argumentArrays;
-  worklets.reserve(workletsList.size());
-  argumentArrays.reserve(argumentsList.size());
-  for (size_t i = 0; i < workletsList.size(); i++) {
-    auto worklet = std::dynamic_pointer_cast<SerializableWorklet>(workletsList[i]);
-    auto arguments = std::dynamic_pointer_cast<SerializableArray>(argumentsList[i]);
-    if (!worklet || !arguments) {
-      throw std::runtime_error("[Worklets] scheduleOnUI received an invalid job.");
-    }
-    worklets.push_back(std::move(worklet));
-    argumentArrays.push_back(std::move(arguments));
-  }
 
-#ifndef NDEBUG
-  std::vector<std::optional<std::string>> scheduleStacks(worklets.size());
+  std::vector<std::optional<std::string>> scheduleStacks(workletsList.size());
   if (scheduleStacksValue.isObject()) {
     auto stacksObject = scheduleStacksValue.asObject(rt);
     if (stacksObject.isArray(rt)) {
@@ -109,9 +94,10 @@ inline void scheduleOnUI(
     return;
   }
 #ifndef NDEBUG
-  uiWorkletRuntime->scheduleWithStack(std::move(worklets), std::move(argumentArrays), std::move(scheduleStacks));
+  uiWorkletRuntime->scheduleWithStack(
+      std::move(serializableArrayOfWorklets), std::move(serializableArrayOfArguments), std::move(scheduleStacks));
 #else
-  uiWorkletRuntime->schedule(std::move(worklets), std::move(argumentArrays));
+  uiWorkletRuntime->schedule(std::move(serializableArrayOfWorklets), std::move(serializableArrayOfArguments));
 #endif // NDEBUG
 }
 

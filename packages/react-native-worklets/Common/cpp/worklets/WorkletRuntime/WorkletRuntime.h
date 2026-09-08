@@ -78,8 +78,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    * Runs a single microtask checkpoint on completion of the batch.
    */
   void schedule(
-      std::vector<std::shared_ptr<SerializableWorklet>> worklets,
-      std::vector<std::shared_ptr<SerializableArray>> argumentArrays) const;
+      std::shared_ptr<SerializableArray> serializableArrayOfWorklets,
+      std::shared_ptr<SerializableArray> serializableArrayOfArguments) const;
 #ifndef NDEBUG
   /**
    * Schedules a serialized worklet to run asynchronously on the worklet runtime,
@@ -97,8 +97,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    * Runs a single microtask checkpoint on completion of the batch.
    */
   void scheduleWithStack(
-      std::vector<std::shared_ptr<SerializableWorklet>> worklets,
-      std::vector<std::shared_ptr<SerializableArray>> argumentArrays,
+      std::shared_ptr<SerializableArray> serializableArrayOfWorklets,
+      std::shared_ptr<SerializableArray> serializableArrayOfArguments,
       std::vector<std::optional<std::string>> scheduleStacks) const;
 #endif // NDEBUG
 
