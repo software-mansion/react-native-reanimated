@@ -42,6 +42,8 @@ struct Frame {
 struct UpdateValues {
   Props::Shared newProps;
   Frame frame;
+  // Style source of `newProps` - updateOngoingAnimationTarget rebases from it.
+  folly::dynamic styleProps = nullptr;
 };
 
 struct Snapshot {

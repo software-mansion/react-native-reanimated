@@ -59,7 +59,6 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
   mutable std::vector<std::shared_ptr<LightNode>> containersToInsert_;
   mutable std::unordered_map<Tag, react::Transform> transformForNode_;
-
   mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
 
   LayoutAnimationsProxy_Experimental(SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies);

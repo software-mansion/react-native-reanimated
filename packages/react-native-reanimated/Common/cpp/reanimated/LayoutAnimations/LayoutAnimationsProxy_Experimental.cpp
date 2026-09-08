@@ -268,8 +268,13 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         node->current = mutation.newChildShadowView;
 #endif // ANDROID
         auto tag = mutation.newChildShadowView.tag;
-        if (layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
+        // A running animation clones its frames from finalView, so a
+        // props-only Update must retarget it instead of restarting it.
+        const bool layoutChanged = hasLayoutChanged(mutation);
+        if (layoutChanged && layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
           layout_.push_back(node);
+        } else if (!layoutChanged && layoutAnimations_.contains(tag)) {
+          updateOngoingAnimationTarget(tag, mutation);
         } else {
           filteredMutations.push_back(mutation);
         }
@@ -494,18 +499,26 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::progressLayoutAnima
 
   auto &layoutAnimation = layoutAnimationIt->second;
 
+  const bool styleHasOpacity = newStyle.hasProperty(uiRuntime_, "opacity") && !layoutAnimation.restoredOpacityIntoStyle;
   maybeRestoreOpacity(layoutAnimation, newStyle);
 
-  auto rawProps = std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
+  const auto styleDynamic = jsi::dynamicFromValue(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
+  auto rawProps = std::make_shared<RawProps>(styleDynamic);
+
+  // A restored opacity is not an animation value - a retargeted opacity must
+  // win over it.
+  auto styleProps = styleDynamic;
+  if (!styleHasOpacity) {
+    styleProps.erase("opacity");
+  }
 
   const PropsParserContext propsParserContext{layoutAnimation.finalView.surfaceId, *contextContainer_};
 #ifdef RN_SERIALIZABLE_STATE
-  rawProps = std::make_shared<RawProps>(
-      folly::dynamic::merge(layoutAnimation.finalView.props->rawProps, (folly::dynamic)*rawProps));
+  rawProps = std::make_shared<RawProps>(folly::dynamic::merge(layoutAnimation.finalView.props->rawProps, styleDynamic));
 #endif
   auto newProps = getComponentDescriptorForShadowView(layoutAnimation.finalView)
                       .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(*rawProps));
-  updateMap_.insert_or_assign(tag, UpdateValues{newProps, Frame(uiRuntime_, newStyle)});
+  updateMap_.insert_or_assign(tag, UpdateValues{newProps, Frame(uiRuntime_, newStyle), std::move(styleProps)});
 
   return layoutAnimation.finalView.surfaceId;
 }
@@ -788,7 +801,23 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
 
 void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation)
     const {
-  layoutAnimations_[tag].finalView = mutation.newChildShadowView;
+  auto &layoutAnimation = layoutAnimations_[tag];
+  layoutAnimation.finalView = mutation.newChildShadowView;
+
+  const auto updateIt = updateMap_.find(tag);
+  if (updateIt == updateMap_.end() || !updateIt->second.styleProps.isObject()) {
+    return;
+  }
+  // The cached frame props were cloned from the old target - rebase them, or
+  // the final emitted Update keeps the old props.
+  const auto &finalView = layoutAnimation.finalView;
+  const PropsParserContext propsParserContext{finalView.surfaceId, *contextContainer_};
+  auto styleProps = updateIt->second.styleProps;
+#ifdef RN_SERIALIZABLE_STATE
+  styleProps = folly::dynamic::merge(finalView.props->rawProps, styleProps);
+#endif
+  updateIt->second.newProps = getComponentDescriptorForShadowView(finalView).cloneProps(
+      propsParserContext, finalView.props, RawProps(styleProps));
 }
 
 void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) const {
@@ -864,6 +893,7 @@ void LayoutAnimationsProxy_Experimental::maybeRestoreOpacity(
     const jsi::Object &newStyle) const {
   if (layoutAnimation.opacity && !newStyle.hasProperty(uiRuntime_, "opacity")) {
     newStyle.setProperty(uiRuntime_, "opacity", jsi::Value(*layoutAnimation.opacity));
+    layoutAnimation.restoredOpacityIntoStyle = true;
     if (layoutAnimation.isViewAlreadyMounted) {
       // We want to reset opacity only when we are sure that this update will be
       // applied to the native view. Otherwise, we want to update opacity using
