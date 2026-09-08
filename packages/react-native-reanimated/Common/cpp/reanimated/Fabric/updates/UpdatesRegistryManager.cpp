@@ -141,14 +141,15 @@ void UpdatesRegistryManager::clearPendingSynchronousProps(const SurfaceId surfac
   auto &surface = surfaceIt->second;
   bool removed = false;
   for (auto &[tag, entry] : surface.updates) {
-    std::erase_if(entry.versions, [&](const auto &property) {
-      if (property.second > committedVersion) {
-        return false;
+    for (auto versionIt = entry.versions.begin(); versionIt != entry.versions.end();) {
+      if (versionIt->second > committedVersion) {
+        ++versionIt;
+        continue;
       }
-      entry.props.erase(property.first);
+      entry.props.erase(versionIt->first);
+      versionIt = entry.versions.erase(versionIt);
       removed = true;
-      return true;
-    });
+    }
   }
   std::erase_if(surface.updates, [](const auto &entry) { return entry.second.props.empty(); });
   if (surface.updates.empty()) {

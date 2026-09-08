@@ -246,7 +246,7 @@ async function install() {
   }
   log(`booting remote simulator ${UDID}`);
   await simRemote(['simctl', 'boot', UDID]).catch(() => {}); // tolerate already-booted
-  await simRemote(['simctl', 'bootstatus', '-b', UDID], { timeout: 300_000 });
+  await simRemote(['simctl', 'bootstatus', UDID, '-b'], { timeout: 300_000 });
   log(`uploading ${APP_PATH} to the orchestrator (QUIC)`);
   await simRemote(['simctl', 'uninstall', UDID, BUNDLE_ID]).catch(() => {});
   await simRemote(['simctl', 'install', UDID, path.resolve(APP_PATH)], {

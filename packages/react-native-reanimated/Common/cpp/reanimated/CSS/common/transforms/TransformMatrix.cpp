@@ -99,7 +99,7 @@ std::string TransformMatrixBase<TDerived, TDimension>::toString() const {
       result += ", ";
     }
   }
-  result += "]";
+  result += ']';
   return result;
 }
 
