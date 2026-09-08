@@ -119,7 +119,7 @@ struct LightNode {
   }
 
   int removeChild(const std::shared_ptr<LightNode> &child) {
-    for (int i = static_cast<int>(children.size()) - 1; i >= 0; i--) {
+    for (int i = children.size() - 1; i >= 0; i--) {
       if (children[i]->current.tag == child->current.tag) {
         if (children[i]->isExiting()) {
           exitingChildrenCount--;

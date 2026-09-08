@@ -931,7 +931,8 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
 
 void LayoutAnimationsProxy_Legacy::updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation)
     const {
-  layoutAnimations_[tag].finalView = mutation.newChildShadowView;
+  auto copy = mutation.newChildShadowView;
+  layoutAnimations_[tag].finalView = copy;
 }
 
 void LayoutAnimationsProxy_Legacy::maybeCancelAnimation(const int tag) const {

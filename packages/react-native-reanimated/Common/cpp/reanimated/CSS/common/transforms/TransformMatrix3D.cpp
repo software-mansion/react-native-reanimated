@@ -243,7 +243,7 @@ std::ostream &operator<<(std::ostream &os, const TransformMatrix3D &matrix) {
       result += ", ";
     }
   }
-  result += '}';
+  result += "}";
   return os << result;
 }
 

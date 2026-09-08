@@ -25,7 +25,7 @@ std::string PropertyInterpolator::getPropertyPathString() const {
       result += "[" + std::to_string(*arrayIndex) + "]";
     } else {
       if (!result.empty()) {
-        result += '.';
+        result += ".";
       }
       result += std::get<std::string>(segment);
     }
