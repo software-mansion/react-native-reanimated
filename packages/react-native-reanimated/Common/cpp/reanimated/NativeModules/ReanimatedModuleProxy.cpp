@@ -1016,9 +1016,11 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
     }
   }
 
-  if (!synchronousUpdatesBatch.empty()) {
-    auto lock = updatesRegistryManager_->lock();
-    updatesRegistryManager_->recordSynchronousProps(synchronousUpdatesBatch);
+  if constexpr (synchronousUpdatesEnabled()) {
+    if (!synchronousUpdatesBatch.empty()) {
+      auto lock = updatesRegistryManager_->lock();
+      updatesRegistryManager_->recordSynchronousProps(synchronousUpdatesBatch);
+    }
   }
 
 #ifdef ANDROID
@@ -1069,6 +1071,11 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
     flushRegistry = shouldFlushRegistry_.exchange(false);
     if (flushRegistry) {
       collectedProps = updatesRegistryManager_->collectProps();
+      if constexpr (synchronousUpdatesEnabled()) {
+        for (const auto surfaceId : updatesRegistryManager_->pendingSynchronousSurfaces()) {
+          propsMapBySurface.try_emplace(surfaceId);
+        }
+      }
     }
   }
 
@@ -1085,48 +1092,35 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
     }
   }
 
-  std::unordered_set<SurfaceId> committingSurfaceIds;
-  if constexpr (synchronousUpdatesEnabled()) {
-    // The pending values go in front, so the batch values win overlapping
-    // keys. A registry flush is also the carrier for values whose owner
-    // registry released them, so it takes every pending entry.
-    if (flushRegistry || !propsMapBySurface.empty()) {
-      for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
-        committingSurfaceIds.insert(surfaceId);
-      }
-      PropsMap pendingProps;
-      {
-        auto lock = updatesRegistryManager_->lock();
-        updatesRegistryManager_->collectPendingSynchronousProps(
-            pendingProps, flushRegistry ? nullptr : &committingSurfaceIds);
-      }
-      for (auto const &[family, props] : pendingProps) {
-        // RawProps has no assignment operator, so rebuild the vector to put
-        // the pending values first - later entries win for overlapping keys.
-        auto &propsVector = propsMapBySurface[family->getSurfaceId()][family];
-        std::vector<RawProps> reorderedProps;
-        reorderedProps.reserve(props.size() + propsVector.size());
-        for (const auto &prop : props) {
-          reorderedProps.emplace_back(prop);
-        }
-        for (auto &prop : propsVector) {
-          reorderedProps.emplace_back(std::move(prop));
-        }
-        propsVector = std::move(reorderedProps);
-      }
-    }
-  }
-
   bool allCommitsSucceeded = true;
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
+      uint64_t pendingVersion = 0;
       const auto status = shadowTree.commit(
           [&](RootShadowNode const &oldRootShadowNode) -> RootShadowNode::Unshared {
             if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
               return nullptr;
             }
 
-            auto rootNode = cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+            RootShadowNode::Unshared rootNode;
+            if constexpr (synchronousUpdatesEnabled()) {
+              PropsMap propsToCommit;
+              {
+                auto lock = updatesRegistryManager_->lock();
+                updatesRegistryManager_->acknowledgeReactCommit(oldRootShadowNode);
+                updatesRegistryManager_->collectPendingSynchronousProps(propsToCommit, surfaceId);
+                pendingVersion = updatesRegistryManager_->pendingSynchronousPropsVersion(surfaceId);
+              }
+              for (const auto &[family, props] : propsMap) {
+                auto &values = propsToCommit[family];
+                for (const auto &prop : props) {
+                  values.emplace_back(prop);
+                }
+              }
+              rootNode = cloneShadowTreeWithNewProps(oldRootShadowNode, propsToCommit);
+            } else {
+              rootNode = cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+            }
 
             // Mark the commit as Reanimated commit so that we can distinguish
             // it in ReanimatedCommitHook.
@@ -1146,7 +1140,7 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
         updatesRegistryManager_->clearPropsToRevert(surfaceId);
 #endif
         if constexpr (synchronousUpdatesEnabled()) {
-          updatesRegistryManager_->clearPendingSynchronousProps(std::unordered_set<SurfaceId>{surfaceId});
+          updatesRegistryManager_->clearPendingSynchronousProps(surfaceId, pendingVersion);
         }
       } else {
         allCommitsSucceeded = false;

@@ -89,8 +89,7 @@ void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadow
         registry->remove(tag);
       }
       staticPropsRegistry_->remove(tag);
-      pendingSynchronousProps_.erase(tag);
-      pendingSynchronousPropsVersion_++;
+      removePendingSynchronousProps(*shadowNodeFamily);
     } else {
       remainingShadowNodes.emplace(tag, shadowNodeFamily);
     }
@@ -110,69 +109,200 @@ PropsMap UpdatesRegistryManager::collectProps() {
 
 void UpdatesRegistryManager::recordSynchronousProps(const UpdatesBatch &updatesBatch) {
   react_native_assert(isLockedByCurrentThread());
-  pendingSynchronousPropsVersion_++;
-  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
-    auto &entry = pendingSynchronousProps_[shadowNodeFamily->getTag()];
-    entry.first = shadowNodeFamily;
-    if (entry.second.isObject()) {
-      entry.second.update(props);
-    } else {
-      entry.second = props;
+  for (const auto &[family, props] : updatesBatch) {
+    auto &surface = pendingSynchronousProps_[family->getSurfaceId()];
+    surface.version = ++pendingSynchronousPropsVersion_;
+    auto &entry = surface.updates[family->getTag()];
+    entry.family = family;
+    entry.props.update(props);
+    for (const auto &key : props.keys()) {
+      entry.versions[key.asString()] = surface.version;
     }
   }
 }
 
-void UpdatesRegistryManager::collectPendingSynchronousProps(
-    PropsMap &propsMap,
-    const std::unordered_set<SurfaceId> *surfaceIds) {
+void UpdatesRegistryManager::collectPendingSynchronousProps(PropsMap &propsMap, const SurfaceId surfaceId) {
   react_native_assert(isLockedByCurrentThread());
-  for (const auto &[tag, entry] : pendingSynchronousProps_) {
-    const auto &[shadowNodeFamily, props] = entry;
-    if (surfaceIds != nullptr && !surfaceIds->contains(shadowNodeFamily->getSurfaceId())) {
-      continue;
-    }
-    propsMap[shadowNodeFamily].emplace_back(RawProps(props));
+  const auto it = pendingSynchronousProps_.find(surfaceId);
+  if (it == pendingSynchronousProps_.end()) {
+    return;
+  }
+  for (const auto &[tag, entry] : it->second.updates) {
+    propsMap[entry.family].emplace_back(RawProps(entry.props));
   }
 }
 
-void UpdatesRegistryManager::clearPendingSynchronousProps(const std::unordered_set<SurfaceId> &surfaceIds) {
+void UpdatesRegistryManager::clearPendingSynchronousProps(const SurfaceId surfaceId, const uint64_t committedVersion) {
   react_native_assert(isLockedByCurrentThread());
-  pendingSynchronousPropsVersion_++;
-  for (auto it = pendingSynchronousProps_.begin(); it != pendingSynchronousProps_.end();) {
-    if (surfaceIds.contains(it->second.first->getSurfaceId())) {
-      it = pendingSynchronousProps_.erase(it);
-    } else {
-      ++it;
-    }
+  const auto surfaceIt = pendingSynchronousProps_.find(surfaceId);
+  if (surfaceIt == pendingSynchronousProps_.end()) {
+    return;
+  }
+  auto &surface = surfaceIt->second;
+  bool removed = false;
+  for (auto &[tag, entry] : surface.updates) {
+    std::erase_if(entry.versions, [&](const auto &property) {
+      if (property.second > committedVersion) {
+        return false;
+      }
+      entry.props.erase(property.first);
+      removed = true;
+      return true;
+    });
+  }
+  std::erase_if(surface.updates, [](const auto &entry) { return entry.second.props.empty(); });
+  if (surface.updates.empty()) {
+    pendingSynchronousProps_.erase(surfaceIt);
+  } else if (removed) {
+    surface.version = ++pendingSynchronousPropsVersion_;
   }
 }
 
-uint64_t UpdatesRegistryManager::pendingSynchronousPropsVersion() const {
+uint64_t UpdatesRegistryManager::pendingSynchronousPropsVersion(const SurfaceId surfaceId) const {
   react_native_assert(isLockedByCurrentThread());
-  return pendingSynchronousPropsVersion_;
+  const auto it = pendingSynchronousProps_.find(surfaceId);
+  return it == pendingSynchronousProps_.end() ? 0 : it->second.version;
+}
+
+std::unordered_set<SurfaceId> UpdatesRegistryManager::pendingSynchronousSurfaces() const {
+  react_native_assert(isLockedByCurrentThread());
+  std::unordered_set<SurfaceId> surfaces;
+  for (const auto &[surfaceId, surface] : pendingSynchronousProps_) {
+    surfaces.insert(surfaceId);
+  }
+  return surfaces;
 }
 
 bool UpdatesRegistryManager::hasPendingSynchronousProps(const Tag tag) const {
   react_native_assert(isLockedByCurrentThread());
-  return pendingSynchronousProps_.contains(tag);
+  for (const auto &[surfaceId, surface] : pendingSynchronousProps_) {
+    if (surface.updates.contains(tag)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void UpdatesRegistryManager::clearPendingSynchronousProps(const Tag tag, const folly::dynamic &props) {
   react_native_assert(isLockedByCurrentThread());
-  pendingSynchronousPropsVersion_++;
-  const auto it = pendingSynchronousProps_.find(tag);
-  if (it == pendingSynchronousProps_.end() || !props.isObject()) {
+  if (!props.isObject()) {
     return;
   }
-  for (const auto &[key, value] : props.items()) {
-    // A different pending value comes from a newer writer and must stay.
-    const auto *pendingValue = it->second.second.get_ptr(key);
-    if (pendingValue != nullptr && *pendingValue == value) {
-      it->second.second.erase(key.asString());
+  for (auto surfaceIt = pendingSynchronousProps_.begin(); surfaceIt != pendingSynchronousProps_.end(); ++surfaceIt) {
+    auto &surface = surfaceIt->second;
+    const auto it = surface.updates.find(tag);
+    if (it == surface.updates.end()) {
+      continue;
+    }
+    bool changed = false;
+    for (const auto &[key, value] : props.items()) {
+      const auto *pendingValue = it->second.props.get_ptr(key);
+      if (pendingValue != nullptr && *pendingValue == value) {
+        it->second.props.erase(key.asString());
+        it->second.versions.erase(key.asString());
+        changed = true;
+      }
+    }
+    if (!changed) {
+      return;
+    }
+    surface.version = ++pendingSynchronousPropsVersion_;
+    if (it->second.props.empty()) {
+      surface.updates.erase(it);
+    }
+    if (surface.updates.empty()) {
+      pendingSynchronousProps_.erase(surfaceIt);
+    }
+    return;
+  }
+}
+
+bool UpdatesRegistryManager::recordReactCommit(const RootShadowNode::Shared &root, const PropsMap &propsMap) {
+  react_native_assert(isLockedByCurrentThread());
+  const auto surfaceId = root->getSurfaceId();
+  const auto surfaceIt = pendingSynchronousProps_.find(surfaceId);
+  if (surfaceIt == pendingSynchronousProps_.end()) {
+    pendingReactCommits_.erase(surfaceId);
+    return pendingSynchronousProps_.empty();
+  }
+
+  const auto &surface = surfaceIt->second;
+  ReactCommitReceipt receipt{root, surface.version, {}};
+  bool carriesAllPendingProps = pendingSynchronousProps_.size() == 1;
+  for (const auto &[tag, entry] : surface.updates) {
+    const auto propsIt = propsMap.find(entry.family);
+    if (propsIt == propsMap.end()) {
+      carriesAllPendingProps = false;
+      continue;
+    }
+    auto &keys = receipt.keys[tag];
+    for (const auto &rawProps : propsIt->second) {
+      const auto props = static_cast<folly::dynamic>(rawProps);
+      for (const auto &key : props.keys()) {
+        if (entry.props.count(key) > 0) {
+          keys.insert(key.asString());
+        }
+      }
+    }
+    carriesAllPendingProps &= keys.size() == entry.props.size();
+  }
+  pendingReactCommits_.insert_or_assign(surfaceId, std::move(receipt));
+  return carriesAllPendingProps;
+}
+
+void UpdatesRegistryManager::acknowledgeReactCommit(const RootShadowNode &root) {
+  react_native_assert(isLockedByCurrentThread());
+  const auto surfaceId = root.getSurfaceId();
+  const auto receiptIt = pendingReactCommits_.find(surfaceId);
+  if (receiptIt == pendingReactCommits_.end() || receiptIt->second.root.lock().get() != &root) {
+    return;
+  }
+  const auto surfaceIt = pendingSynchronousProps_.find(surfaceId);
+  if (surfaceIt != pendingSynchronousProps_.end()) {
+    auto &surface = surfaceIt->second;
+    bool changed = false;
+    for (const auto &[tag, keys] : receiptIt->second.keys) {
+      const auto entryIt = surface.updates.find(tag);
+      if (entryIt == surface.updates.end()) {
+        continue;
+      }
+      auto &entry = entryIt->second;
+      for (const auto &key : keys) {
+        const auto versionIt = entry.versions.find(key);
+        if (versionIt != entry.versions.end() && versionIt->second <= receiptIt->second.version) {
+          entry.versions.erase(versionIt);
+          entry.props.erase(key);
+          changed = true;
+        }
+      }
+      if (entry.props.empty()) {
+        surface.updates.erase(entryIt);
+      }
+    }
+    if (surface.updates.empty()) {
+      pendingSynchronousProps_.erase(surfaceIt);
+    } else if (changed) {
+      surface.version = ++pendingSynchronousPropsVersion_;
     }
   }
-  if (it->second.second.empty()) {
+  pendingReactCommits_.erase(receiptIt);
+}
+
+void UpdatesRegistryManager::removeSurface(const SurfaceId surfaceId) {
+  react_native_assert(isLockedByCurrentThread());
+  pendingSynchronousProps_.erase(surfaceId);
+  pendingReactCommits_.erase(surfaceId);
+}
+
+void UpdatesRegistryManager::removePendingSynchronousProps(const ShadowNodeFamily &family) {
+  const auto it = pendingSynchronousProps_.find(family.getSurfaceId());
+  if (it == pendingSynchronousProps_.end() || it->second.updates.erase(family.getTag()) == 0) {
+    return;
+  }
+  if (it->second.updates.empty()) {
     pendingSynchronousProps_.erase(it);
+  } else {
+    it->second.version = ++pendingSynchronousPropsVersion_;
   }
 }
 

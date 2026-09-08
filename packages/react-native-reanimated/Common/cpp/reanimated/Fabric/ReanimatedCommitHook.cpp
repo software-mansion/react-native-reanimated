@@ -52,6 +52,11 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     return newRootShadowNode;
   }
 
+  if constexpr (synchronousUpdatesEnabled()) {
+    auto lock = updatesRegistryManager_->lock();
+    updatesRegistryManager_->acknowledgeReactCommit(*oldRootShadowNode);
+  }
+
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(newRootShadowNode);
 
   if (reaShadowNode->hasReanimatedCommitTrait()) {
@@ -69,8 +74,8 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     if (commitOptions.source != ShadowTreeCommitSource::React) {
       if constexpr (synchronousUpdatesEnabled()) {
         auto lock = updatesRegistryManager_->lock();
-        const auto version = updatesRegistryManager_->pendingSynchronousPropsVersion();
         const auto surfaceId = shadowTree.getSurfaceId();
+        const auto version = updatesRegistryManager_->pendingSynchronousPropsVersion(surfaceId);
         const auto carriedIt = pendingCarriedRoots_.find(surfaceId);
         if (carriedIt != pendingCarriedRoots_.end() && carriedIt->second.first == version &&
             carriedIt->second.second.lock() == oldRootShadowNode) {
@@ -80,7 +85,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
           return newRootShadowNode;
         }
         PropsMap pendingProps;
-        updatesRegistryManager_->collectPendingSynchronousProps(pendingProps);
+        updatesRegistryManager_->collectPendingSynchronousProps(pendingProps, surfaceId);
         if (!pendingProps.empty()) {
           RootShadowNode::Unshared decoratedRootNode = cloneShadowTreeWithNewProps(*newRootShadowNode, pendingProps);
           pendingCarriedRoots_[surfaceId] = {version, std::weak_ptr<const RootShadowNode>(decoratedRootNode)};
@@ -101,9 +106,14 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     auto lock = updatesRegistryManager_->lock();
 
     PropsMap propsMap = updatesRegistryManager_->collectProps();
-    updatesRegistryManager_->cancelCommitAfterPause();
-
     rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
+    bool carriesAllPendingProps = true;
+    if constexpr (synchronousUpdatesEnabled()) {
+      carriesAllPendingProps = updatesRegistryManager_->recordReactCommit(rootNode, propsMap);
+    }
+    if (carriesAllPendingProps) {
+      updatesRegistryManager_->cancelCommitAfterPause();
+    }
     // If the commit comes from React Native then pause commits from
     // Reanimated since the ShadowTree to be committed by Reanimated may not
     // include the new changes from React Native yet and all changes of animated

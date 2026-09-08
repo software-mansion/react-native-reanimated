@@ -1,5 +1,6 @@
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
+#include <reanimated/Fabric/updates/SynchronousProps.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
@@ -49,6 +50,9 @@ void ReanimatedMountHook::shadowTreeDidMount(
 
   {
     auto lock = updatesRegistryManager_->lock();
+    if constexpr (synchronousUpdatesEnabled()) {
+      updatesRegistryManager_->acknowledgeReactCommit(*rootShadowNode);
+    }
     // Record the mounted tree for relative-length resolution.
     viewStylesRepository_->setLastMountedRoot(rootShadowNode);
 
@@ -70,6 +74,10 @@ void ReanimatedMountHook::shadowTreeDidMount(
 }
 
 void ReanimatedMountHook::shadowTreeDidUnmount(SurfaceId surfaceId, HighResTimeStamp /*unmountTime*/) noexcept {
+  {
+    auto lock = updatesRegistryManager_->lock();
+    updatesRegistryManager_->removeSurface(surfaceId);
+  }
   if (layoutAnimationsProxyRegistry_) {
     layoutAnimationsProxyRegistry_->remove(surfaceId);
   }

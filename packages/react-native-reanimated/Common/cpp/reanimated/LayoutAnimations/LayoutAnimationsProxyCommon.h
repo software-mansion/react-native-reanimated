@@ -25,9 +25,6 @@ struct LayoutAnimation {
   ShadowView finalView, currentView, startView;
   Tag parentTag;
   std::optional<double> opacity;
-  // The restoration writes into the reused style object - later frames must
-  // not read that opacity as an animation value.
-  bool restoredOpacityIntoStyle = false;
   bool isViewAlreadyMounted = false;
   bool isExitingWhenSettled = false;
   int count = 1;

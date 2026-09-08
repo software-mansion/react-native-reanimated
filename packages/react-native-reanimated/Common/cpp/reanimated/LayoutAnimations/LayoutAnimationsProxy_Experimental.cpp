@@ -444,6 +444,9 @@ void LayoutAnimationsProxy_Experimental::applySynchronousProps(const UpdatesBatc
     const PropsParserContext propsParserContext{node->current.surfaceId, *contextContainer_};
     node->current.props = getComponentDescriptorForShadowView(node->current)
                               .cloneProps(propsParserContext, node->current.props, RawProps(std::move(rawProps)));
+    if (layoutAnimations_.contains(node->current.tag)) {
+      updateOngoingAnimationTarget(node->current.tag, node->current);
+    }
   }
 }
 
@@ -499,27 +502,9 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::progressLayoutAnima
     return {};
   }
 
-  auto &layoutAnimation = layoutAnimationIt->second;
-
-  const bool styleHasOpacity = newStyle.hasProperty(uiRuntime_, "opacity") && !layoutAnimation.restoredOpacityIntoStyle;
-  maybeRestoreOpacity(layoutAnimation, newStyle);
-
-  const auto styleDynamic = jsi::dynamicFromValue(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
-  auto rawProps = std::make_shared<RawProps>(styleDynamic);
-
-  // A restored opacity is not an animation value - a retargeted opacity must
-  // win over it.
-  auto styleProps = styleDynamic;
-  if (!styleHasOpacity) {
-    styleProps.erase("opacity");
-  }
-
-  const PropsParserContext propsParserContext{layoutAnimation.finalView.surfaceId, *contextContainer_};
-#ifdef RN_SERIALIZABLE_STATE
-  rawProps = std::make_shared<RawProps>(folly::dynamic::merge(layoutAnimation.finalView.props->rawProps, styleDynamic));
-#endif
-  auto newProps = getComponentDescriptorForShadowView(layoutAnimation.finalView)
-                      .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(*rawProps));
+  const auto &layoutAnimation = layoutAnimationIt->second;
+  auto styleProps = jsi::dynamicFromValue(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
+  auto newProps = createFrameProps(layoutAnimation, styleProps);
   updateMap_.insert_or_assign(tag, UpdateValues{newProps, Frame(uiRuntime_, newStyle), std::move(styleProps)});
 
   return layoutAnimation.finalView.surfaceId;
@@ -674,6 +659,9 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(ShadowViewMutation
     mutations.push_back(
         ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
     layoutAnimation.currentView = newView;
+    if (updateValues.styleProps.isObject() && updateValues.styleProps.count("opacity") == 0) {
+      layoutAnimation.opacity.reset();
+    }
   }
   updateMap_.clear();
 }
@@ -805,21 +793,15 @@ void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(const int 
     const {
   auto &layoutAnimation = layoutAnimations_[tag];
   layoutAnimation.finalView = targetView;
+  if (layoutAnimation.opacity) {
+    layoutAnimation.opacity = static_cast<const ViewProps &>(*targetView.props).opacity;
+  }
 
   const auto updateIt = updateMap_.find(tag);
   if (updateIt == updateMap_.end() || !updateIt->second.styleProps.isObject()) {
     return;
   }
-  // The cached frame props were cloned from the old target - rebase them, or
-  // the final emitted Update keeps the old props.
-  const auto &finalView = layoutAnimation.finalView;
-  const PropsParserContext propsParserContext{finalView.surfaceId, *contextContainer_};
-  auto styleProps = updateIt->second.styleProps;
-#ifdef RN_SERIALIZABLE_STATE
-  styleProps = folly::dynamic::merge(finalView.props->rawProps, styleProps);
-#endif
-  updateIt->second.newProps = getComponentDescriptorForShadowView(finalView).cloneProps(
-      propsParserContext, finalView.props, RawProps(styleProps));
+  updateIt->second.newProps = createFrameProps(layoutAnimation, updateIt->second.styleProps);
 }
 
 void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) const {
@@ -890,19 +872,20 @@ ShadowView LayoutAnimationsProxy_Experimental::cloneViewWithOpacity(
   return newView;
 }
 
-void LayoutAnimationsProxy_Experimental::maybeRestoreOpacity(
-    reanimated::LayoutAnimation &layoutAnimation,
-    const jsi::Object &newStyle) const {
-  if (layoutAnimation.opacity && !newStyle.hasProperty(uiRuntime_, "opacity")) {
-    newStyle.setProperty(uiRuntime_, "opacity", jsi::Value(*layoutAnimation.opacity));
-    layoutAnimation.restoredOpacityIntoStyle = true;
-    if (layoutAnimation.isViewAlreadyMounted) {
-      // We want to reset opacity only when we are sure that this update will be
-      // applied to the native view. Otherwise, we want to update opacity using
-      // the `restoreOpacityInCaseOfFlakyEnteringAnimation` method.
-      layoutAnimation.opacity.reset();
-    }
+Props::Shared LayoutAnimationsProxy_Experimental::createFrameProps(
+    const LayoutAnimation &layoutAnimation,
+    const folly::dynamic &styleProps) const {
+  const auto &finalView = layoutAnimation.finalView;
+  auto props = styleProps;
+  if (layoutAnimation.opacity && props.count("opacity") == 0) {
+    props["opacity"] = *layoutAnimation.opacity;
   }
+#ifdef RN_SERIALIZABLE_STATE
+  props = folly::dynamic::merge(finalView.props->rawProps, props);
+#endif
+  const PropsParserContext propsParserContext{finalView.surfaceId, *contextContainer_};
+  return getComponentDescriptorForShadowView(finalView).cloneProps(
+      propsParserContext, finalView.props, RawProps(std::move(props)));
 }
 
 void LayoutAnimationsProxy_Experimental::cleanupAnimations(
@@ -960,12 +943,6 @@ ShadowView LayoutAnimationsProxy_Experimental::maybeCreateLayoutAnimation(
 
 void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::shared_ptr<LightNode> &node) const {
   auto newChildShadowView = node->current;
-  const auto &finalView = newChildShadowView;
-  const auto &currentView = newChildShadowView;
-
-  const auto &props = newChildShadowView.props;
-  auto &viewProps = static_cast<const ViewProps &>(*props);
-  const auto opacity = viewProps.opacity;
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
   const auto parentTag = parent->current.tag;
@@ -977,11 +954,8 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
   scheduleOnUI(
       uiScheduler_,
       [weakThis = weak_from_this(),
-       finalView,
-       currentView,
        newChildShadowView,
-       parentTag,
-       opacity
+       parentTag
 #ifdef ANDROID
        ,
        handle
@@ -993,6 +967,7 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
         }
 
         Rect window;
+        auto targetView = newChildShadowView;
         const auto tag = newChildShadowView.tag;
         {
           auto lock = std::unique_lock<std::recursive_mutex>(strongThis->mutex);
@@ -1002,17 +977,22 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
             return;
           }
 #endif
+          const auto nodeIt = strongThis->lightNodes_.find(tag);
+          if (nodeIt == strongThis->lightNodes_.end()) {
+            return;
+          }
+          targetView = nodeIt->second->current;
           strongThis->layoutAnimations_[tag] = {
-              .finalView = newChildShadowView,
+              .finalView = targetView,
               .currentView = newChildShadowView,
               .startView = newChildShadowView,
               .parentTag = parentTag,
-              .opacity = opacity,
+              .opacity = static_cast<const ViewProps &>(*targetView.props).opacity,
           };
           window = strongThis->window_;
         }
 
-        const Snapshot values(newChildShadowView, window);
+        const Snapshot values(targetView, window);
         auto &uiRuntime = strongThis->uiRuntime_;
         const jsi::Object yogaValues(uiRuntime);
         yogaValues.setProperty(uiRuntime, "targetOriginX", values.x);
@@ -1122,6 +1102,7 @@ void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const std::shared_
         }
 
         auto oldView = oldChildShadowView;
+        auto targetView = newChildShadowView;
         Rect window{};
         {
           auto &mutex = strongThis->mutex;
@@ -1132,12 +1113,17 @@ void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const std::shared_
             return;
           }
 #endif
-          oldView = strongThis->maybeCreateLayoutAnimation(oldView, newChildShadowView, parentTag);
+          const auto nodeIt = strongThis->lightNodes_.find(tag);
+          if (nodeIt == strongThis->lightNodes_.end()) {
+            return;
+          }
+          targetView = nodeIt->second->current;
+          oldView = strongThis->maybeCreateLayoutAnimation(oldView, targetView, parentTag);
           window = strongThis->window_;
         }
 
         const Snapshot currentValues(oldView, window);
-        const Snapshot targetValues(newChildShadowView, window);
+        const Snapshot targetValues(targetView, window);
 
         auto &uiRuntime = strongThis->uiRuntime_;
         const jsi::Object yogaValues(uiRuntime);

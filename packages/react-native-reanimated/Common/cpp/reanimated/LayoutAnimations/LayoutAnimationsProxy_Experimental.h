@@ -164,7 +164,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   ShadowView cloneViewWithoutOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;
 
   ShadowView cloneViewWithOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;
-  void maybeRestoreOpacity(reanimated::LayoutAnimation &layoutAnimation, const jsi::Object &newStyle) const;
+  Props::Shared createFrameProps(const LayoutAnimation &layoutAnimation, const folly::dynamic &styleProps) const;
   ShadowView maybeCreateLayoutAnimation(ShadowView &before, const ShadowView &after, const Tag parentTag) const;
 
   bool startAnimationsRecursively(
