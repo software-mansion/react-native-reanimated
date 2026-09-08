@@ -79,6 +79,10 @@ compile_commands.json
 .derived-data-log-*
 buildServer.json
 
+.build/
+.swiftpm/
+Package.resolved
+
 build/
 
 # Playwright
