@@ -42,7 +42,6 @@
 #include <mutex>
 #include <set>
 #include <string>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -207,10 +206,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   std::function<std::string()> createRegistriesLeakCheck();
 
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
-  void applySynchronousUpdates(
-      UpdatesBatch &updatesBatch,
-      bool allowPartialUpdates,
-      const std::unordered_set<Tag> &skipOverlayTags);
+  void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates);
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
   std::shared_ptr<UIManagerAnimationBackend> getAnimationBackend();

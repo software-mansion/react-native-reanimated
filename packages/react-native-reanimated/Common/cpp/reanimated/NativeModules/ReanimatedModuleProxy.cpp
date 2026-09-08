@@ -674,18 +674,8 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   const auto currentTimestamp = getAnimationTimestamp_();
 
   // TODO(future): flush updates from CSS animations and CSS transitions registries
-  std::vector<Tag> evictedTags;
   auto lock = updatesRegistryManager_->lock();
-  auto settledUpdates =
-      animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS, evictedTags);
-
-  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    if (layoutAnimationsProxyRegistry_ && !evictedTags.empty()) {
-      layoutAnimationsProxyRegistry_->dropSynchronousProps(evictedTags);
-    }
-  }
-
-  return settledUpdates;
+  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS);
 }
 
 bool ReanimatedModuleProxy::handleEvent(
@@ -809,19 +799,6 @@ void ReanimatedModuleProxy::performOperations() {
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
 
   UpdatesBatch updatesBatch;
-  // The settled-props sync-back manages only animated props, so updates
-  // flushed by the CSS registries must stay out of the synchronous props
-  // overlay of the layout animations proxy.
-  std::unordered_set<Tag> skipOverlayTags;
-  const auto collectFlushedTags = [&](const size_t begin) {
-    if constexpr (
-        shouldUseSynchronousUpdatesInPerformOperations() &&
-        StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-      for (auto i = begin; i < updatesBatch.size(); ++i) {
-        skipOverlayTags.insert(updatesBatch[i].first->getTag());
-      }
-    }
-  };
   {
     ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
 
@@ -830,7 +807,6 @@ void ReanimatedModuleProxy::performOperations() {
     if (cssTransitionsRegistry_->needsFlush()) {
       // Update CSS transitions and flush updates
       cssTransitionsRegistry_->flushUpdates(updatesBatch);
-      collectFlushedTags(0);
     }
 
     // Flush all animated props updates
@@ -838,14 +814,12 @@ void ReanimatedModuleProxy::performOperations() {
 
     if (cssAnimationsRegistry_->needsFlush()) {
       // Update CSS animations and flush updates
-      const auto begin = updatesBatch.size();
       cssAnimationsRegistry_->flushUpdates(updatesBatch);
-      collectFlushedTags(begin);
     }
   }
 
   if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
-    applySynchronousUpdates(updatesBatch, false, skipOverlayTags);
+    applySynchronousUpdates(updatesBatch, false);
   }
 
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
@@ -871,7 +845,7 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
     auto lock = updatesRegistryManager_->lock();
     updatesBatch = animatedPropsRegistry_->getPendingUpdates();
   }
-  applySynchronousUpdates(updatesBatch, true, {});
+  applySynchronousUpdates(updatesBatch, true);
 }
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
@@ -1054,16 +1028,13 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
   return handled;
 }
 
-void ReanimatedModuleProxy::applySynchronousUpdates(
-    UpdatesBatch &updatesBatch,
-    const bool allowPartialUpdates,
-    const std::unordered_set<Tag> &skipOverlayTags) {
+void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, const bool allowPartialUpdates) {
   auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
       partitionUpdates(std::move(updatesBatch), allowPartialUpdates);
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    if (layoutAnimationsProxyRegistry_ && (!synchronousUpdatesBatch.empty() || !skipOverlayTags.empty())) {
-      layoutAnimationsProxyRegistry_->applySynchronousProps(synchronousUpdatesBatch, skipOverlayTags);
+    if (layoutAnimationsProxyRegistry_ && !synchronousUpdatesBatch.empty()) {
+      layoutAnimationsProxyRegistry_->applySynchronousProps(synchronousUpdatesBatch);
     }
   }
 
