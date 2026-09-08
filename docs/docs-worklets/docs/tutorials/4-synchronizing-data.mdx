@@ -100,7 +100,7 @@ However, this code doesn't scale well and it's generally a bad practice to use t
 
 A [Synchronizable](/docs/memory/synchronizable) is a memory primitive in Worklets library, that lives outside of any Runtime's JavaScript heap. Reading it and writing to it doesn't require making cross-runtime call and is the cheapest option of synchronizing the data between Runtimes.
 
-<!--TODO: improve the following sentence-->
+{/* <!--TODO: improve the following sentence-->*/}
 Synchronizable has a handful of APIs, but for the sake of this example we'll stick to its `getDirty` and `setBlocking` methods.
 
 ```js
