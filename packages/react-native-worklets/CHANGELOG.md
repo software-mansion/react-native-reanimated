@@ -38,6 +38,7 @@
 
 ### 💡 Others
 
+- Pass arguments to batched UI worklets separately instead of capturing them in wrapper worklets, reducing worklet serialization. ([#10466](https://github.com/software-mansion/react-native-reanimated/pull/10466) by [@tshmieldev](https://github.com/tshmieldev))
 - Mark the special-case `__proto__` object reconstruction path as unlikely. ([#10465](https://github.com/software-mansion/react-native-reanimated/pull/10465) by [@tshmieldev](https://github.com/tshmieldev))
 - Update the sponsors section in the README. ([#10347](https://github.com/software-mansion/react-native-reanimated/pull/10347) by [@m-bert](https://github.com/m-bert))
 - bump Worklets version to 0.13.0
