@@ -113,8 +113,10 @@ export class LinearEasing implements ParametrizedTimingFunction {
     // than the input progress value of any preceding control point, set
     // its input progress value to the largest input progress value of
     // any preceding control point.
-    let maxPrecedingX = 0;
-    for (let i = 1; i < result.length - 1; i++) {
+    // Step 2 fills the last point in only when it is missing, so an explicit
+    // value there still has to be clamped like any other.
+    let maxPrecedingX = -Infinity;
+    for (let i = 0; i < result.length; i++) {
       const x = result[i].x;
       if (x !== undefined) {
         if (x < maxPrecedingX) {

@@ -106,7 +106,7 @@ export function normalizeTimeUnit(timeUnit: TimeUnit): number | null {
     // progress it computes NaN, which lands on the view as a NaN style value.
     return Number.isFinite(timeUnit) ? timeUnit : null;
   } else if (MILLISECONDS_REGEX.test(timeUnit)) {
-    return parseInt(timeUnit, 10);
+    return parseFloat(timeUnit);
   } else if (SECONDS_REGEX.test(timeUnit)) {
     return parseFloat(timeUnit) * 1000;
   }

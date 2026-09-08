@@ -3,19 +3,10 @@
 import { logger } from '../debug/logger';
 import type { WorkletFactory, WorkletFunction } from '../types';
 
-const handleCache = new WeakMap<WorkletFunction, unknown>();
-
 export function bundleValueUnpacker(objectToUnpack: ObjectToUnpack): unknown {
   const workletHash = objectToUnpack.__workletHash;
   if (workletHash !== undefined) {
     return getWorklet(workletHash, objectToUnpack.__closure);
-  } else if (objectToUnpack.__init !== undefined) {
-    let value = handleCache.get(objectToUnpack);
-    if (value === undefined) {
-      value = objectToUnpack.__init();
-      handleCache.set(objectToUnpack, value);
-    }
-    return value;
   } else {
     throw new Error(
       `[Worklets] Data type not recognized by value unpacker: "${globalThis._toString(

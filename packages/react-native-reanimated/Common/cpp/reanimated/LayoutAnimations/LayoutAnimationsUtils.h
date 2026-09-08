@@ -1,15 +1,15 @@
 #pragma once
 
+#include <react/debug/react_native_assert.h>
 #include <react/renderer/components/rnreanimated/Props.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
 #include <algorithm>
+#include <cstring>
 #include <memory>
-#include <unordered_map>
-#include <unordered_set>
-#include <utility>
+#include <optional>
 #include <vector>
 
 namespace reanimated {
@@ -209,15 +209,6 @@ struct LightNode {
         "exitingChildrenCount is out of sync");
     cursors.invariantChecked = true;
   }
-};
-
-struct SurfaceManager {
-  mutable std::unordered_map<SurfaceId, std::shared_ptr<std::unordered_map<Tag, UpdateValues>>> props_;
-  mutable std::unordered_map<SurfaceId, Rect> windows_;
-
-  std::unordered_map<Tag, UpdateValues> &getUpdateMap(SurfaceId surfaceId);
-  void updateWindow(SurfaceId surfaceId, double windowWidth, double windowHeight);
-  Rect getWindow(SurfaceId surfaceId);
 };
 
 static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame &frame) {

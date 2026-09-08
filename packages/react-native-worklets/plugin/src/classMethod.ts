@@ -10,6 +10,10 @@ import {
 import { strict as assert } from 'assert';
 
 export function processIfWorkletMethod(path: NodePath<ClassMethod>) {
+  if (path.node.kind !== 'method') {
+    return;
+  }
+
   if (path.node.body.directives.some((d) => d.value.value === 'worklet')) {
     assert(
       isIdentifier(path.node.key),

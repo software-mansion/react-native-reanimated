@@ -25,6 +25,21 @@ runs:
       shell: bash
       working-directory: ${{ inputs.REANIMATED_DOCS_DIR }}
       run: yarn build
+    - name: Check Reanimated docs llms.txt
+      shell: bash
+      working-directory: ${{ inputs.REANIMATED_DOCS_DIR }}
+      run: |
+        file=build/llms.txt
+        if [ ! -s "$file" ]; then
+          echo "::error::$file is missing or empty"
+          exit 1
+        fi
+        count=$(grep -cE '^- \[[^]]+\]\(https://docs\.swmansion\.com/react-native-reanimated/docs/[^)]*\)' "$file" || true)
+        if [ "$count" -eq 0 ]; then
+          echo "::error::$file lists no documentation pages"
+          exit 1
+        fi
+        echo "llms.txt lists $count documentation pages"
 
     - name: Lint check Worklets docs
       shell: bash

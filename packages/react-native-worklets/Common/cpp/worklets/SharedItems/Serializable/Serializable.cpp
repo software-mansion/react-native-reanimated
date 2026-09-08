@@ -7,7 +7,6 @@
 #include <worklets/SharedItems/Serializable/SerializableBigInt.h>
 #include <worklets/SharedItems/Serializable/SerializableHostFunction.h>
 #include <worklets/SharedItems/Serializable/SerializableHostObject.h>
-#include <worklets/SharedItems/Serializable/SerializableInitializer.h>
 #include <worklets/SharedItems/Serializable/SerializableObject.h>
 #include <worklets/SharedItems/Serializable/SerializableScalar.h>
 #include <worklets/SharedItems/Serializable/SerializableString.h>
@@ -40,8 +39,6 @@ jsi::Value makeSerializableClone(
       // by `makeSerializableCloneOnUIRecursive` which doesn't
       // make Retaining Serializables.
       return makeSerializableWorklet(rt, object, false);
-    } else if (!object.getProperty(rt, "__init").isUndefined()) {
-      return makeSerializableInitializer(rt, object);
     } else if (object.isFunction(rt)) {
       auto fun = object.asFunction(rt);
       if (fun.isHostFunction(rt)) {
