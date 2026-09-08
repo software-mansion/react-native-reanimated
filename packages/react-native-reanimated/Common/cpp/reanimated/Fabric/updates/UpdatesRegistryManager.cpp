@@ -165,7 +165,11 @@ void UpdatesRegistryManager::clearPendingSynchronousProps(const Tag tag, const f
     return;
   }
   for (const auto &[key, value] : props.items()) {
-    it->second.second.erase(key.asString());
+    // A different pending value comes from a newer writer and must stay.
+    const auto *pendingValue = it->second.second.get_ptr(key);
+    if (pendingValue != nullptr && *pendingValue == value) {
+      it->second.second.erase(key.asString());
+    }
   }
   if (it->second.second.empty()) {
     pendingSynchronousProps_.erase(it);
