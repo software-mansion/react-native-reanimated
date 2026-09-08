@@ -136,6 +136,7 @@ if (BUILD_ONLY && SHOULD_LAUNCH) {
 
 /** @type {import('ws').WebSocket | null} */
 let client = null;
+const serverStartedAt = Date.now();
 let runStartedAt = 0;
 let exitCode = 1;
 let runFinished = false;
@@ -186,7 +187,7 @@ function armConnectTimer() {
     console.error(
       `[runtime-tests] no device connected within ${CONNECT_TIMEOUT_MS / 1000}s, exiting`
     );
-    failWithDiagnostics(1);
+    void failWithDiagnostics(1);
   }, CONNECT_TIMEOUT_MS);
 }
 
@@ -243,7 +244,7 @@ wss.on('connection', (socket) => {
         '[runtime-tests] or grep `[remoteReporter]` in Metro output for the WS close reason.'
       );
       console.error('========================================');
-      failWithDiagnostics(exitCode);
+      void failWithDiagnostics(exitCode);
       return;
     }
     console.log('[runtime-tests] device disconnected');
@@ -387,7 +388,7 @@ function resetIdleTimer() {
     console.error(
       `[runtime-tests] no traffic for ${IDLE_TIMEOUT_MS / 1000}s, assuming the run is stuck`
     );
-    failWithDiagnostics(1);
+    void failWithDiagnostics(1);
   }, IDLE_TIMEOUT_MS);
 }
 
@@ -425,16 +426,18 @@ function printSanitizerReports() {
 }
 
 /** @param {number} code */
-function failWithDiagnostics(code) {
+async function failWithDiagnostics(code) {
   clearTimer('connect');
   clearTimer('idle');
-  dumpCrashDiagnostics()
-    .catch((error) => {
-      console.error(
-        `[runtime-tests] crash diagnostics failed: ${errorMessage(error)}`
-      );
-    })
-    .finally(() => shutdown(code));
+  try {
+    await dumpCrashDiagnostics();
+  } catch (error) {
+    console.error(
+      `[runtime-tests] crash diagnostics failed: ${errorMessage(error)}`
+    );
+  } finally {
+    shutdown(code);
+  }
 }
 
 function dumpCrashDiagnostics() {
@@ -467,6 +470,7 @@ async function dumpIOSCrashDiagnostics() {
   console.error(
     `[runtime-tests] looking for FabricExample crash reports in ${reportsDir}…`
   );
+  /** @type {{ name: string; file: string; mtimeMs: number }[]} */
   let reports = [];
   for (let attempt = 0; attempt < 10; attempt++) {
     await sleep(3000);
@@ -516,11 +520,20 @@ function findFreshIOSCrashReports(reportsDir) {
       const file = path.join(reportsDir, name);
       return { name, file, mtimeMs: fs.statSync(file).mtimeMs };
     })
-    .filter((report) =>
-      runStartedAt > 0 ? report.mtimeMs >= runStartedAt - 60_000 : true
+    .filter(
+      (report) => report.mtimeMs >= (runStartedAt || serverStartedAt) - 60_000
     )
     .sort((a, b) => b.mtimeMs - a.mtimeMs);
 }
+
+/**
+ * @typedef {{
+ *   imageIndex?: number;
+ *   imageOffset?: number;
+ *   symbol?: string;
+ *   symbolLocation?: number;
+ * }} IpsFrame
+ */
 
 /**
  * @param {string} text
@@ -547,12 +560,8 @@ function formatIOSCrashReport(text) {
   }
   const images = payload.usedImages ?? [];
   /**
-   * @param {{
-   *   imageIndex?: number;
-   *   imageOffset?: number;
-   *   symbol?: string;
-   *   symbolLocation?: number;
-   * }} frame
+   * @param {IpsFrame} frame
+   * @returns {string}
    */
   const formatFrame = (frame) => {
     const image = images[frame.imageIndex ?? -1] ?? {};
@@ -561,9 +570,13 @@ function formatIOSCrashReport(text) {
       : `0x${(frame.imageOffset ?? 0).toString(16)}`;
     return `${image.name ?? '?'}  ${location}`;
   };
-  if (Array.isArray(payload.lastExceptionBacktrace)) {
+  /** @type {IpsFrame[]} */
+  const lastExceptionBacktrace = Array.isArray(payload.lastExceptionBacktrace)
+    ? payload.lastExceptionBacktrace
+    : [];
+  if (lastExceptionBacktrace.length > 0) {
     lines.push('last exception backtrace:');
-    payload.lastExceptionBacktrace.forEach((frame, index) => {
+    lastExceptionBacktrace.forEach((frame, index) => {
       lines.push(`  #${String(index).padStart(2)} ${formatFrame(frame)}`);
     });
   }
@@ -574,7 +587,9 @@ function formatIOSCrashReport(text) {
     lines.push(
       `faulting thread ${faultingIndex}${threadName ? ` (${threadName})` : ''}:`
     );
-    (thread.frames ?? []).forEach((frame, index) => {
+    /** @type {IpsFrame[]} */
+    const frames = thread.frames ?? [];
+    frames.forEach((frame, index) => {
       lines.push(`  #${String(index).padStart(2)} ${formatFrame(frame)}`);
     });
   }
@@ -713,7 +728,7 @@ async function pullLatestTombstone(serial, stamp) {
     return null;
   }
   const newest = entries[0];
-  if (runStartedAt > 0 && newest.mtimeMs < runStartedAt - 60_000) {
+  if (newest.mtimeMs < (runStartedAt || serverStartedAt) - 60_000) {
     console.error(
       `[runtime-tests] newest tombstone (${newest.name}) predates this run — the app died without a native crash dump`
     );
@@ -763,7 +778,9 @@ async function symbolizeNativeCrash(serial, reportText, stamp) {
   }
   const dumpFile = path.join(CRASH_REPORT_DIR, `native-crash-${stamp}.txt`);
   fs.writeFileSync(dumpFile, reportText);
-  const stdout = await run(ndkStack, ['-sym', symDir, '-dump', dumpFile]).then(
+  const stdout = await run(ndkStack, ['-sym', symDir, '-dump', dumpFile], {
+    timeout: 60_000,
+  }).then(
     (result) => result.stdout,
     (error) => {
       printCommandFailure(error);
