@@ -76,17 +76,52 @@ export function getMemorySafeCapturableConsole(): typeof console {
   return consoleCopy as unknown as typeof console;
 }
 
+type WorkletsConsoleMethod =
+  | 'assert'
+  | 'debug'
+  | 'log'
+  | 'warn'
+  | 'error'
+  | 'info';
+
+type WorkletsConsole = Pick<typeof console, WorkletsConsoleMethod> & {
+  _isWorkletsConsole?: boolean;
+};
+
 export function setupConsole(boundCapturableConsole: typeof console) {
   'worklet';
-  // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
-  globalThis.console = {
-    assert: (...args) => scheduleOnRN(boundCapturableConsole.assert, ...args),
-    debug: (...args) => scheduleOnRN(boundCapturableConsole.debug, ...args),
-    log: (...args) => scheduleOnRN(boundCapturableConsole.log, ...args),
-    warn: (...args) => scheduleOnRN(boundCapturableConsole.warn, ...args),
-    error: (...args) => scheduleOnRN(boundCapturableConsole.error, ...args),
-    info: (...args) => scheduleOnRN(boundCapturableConsole.info, ...args),
+  const existingConsole = globalThis.console as WorkletsConsole | undefined;
+  const inspectorConsole =
+    existingConsole && !existingConsole._isWorkletsConsole
+      ? existingConsole
+      : undefined;
+
+  const createMethod =
+    (methodName: WorkletsConsoleMethod) =>
+    (...args: unknown[]) => {
+      const inspectorMethod = inspectorConsole?.[methodName] as
+        | ((...methodArgs: unknown[]) => void)
+        | undefined;
+      inspectorMethod?.(...args);
+      scheduleOnRN(
+        boundCapturableConsole[methodName] as (
+          ...methodArgs: unknown[]
+        ) => void,
+        ...args
+      );
+    };
+
+  const workletsConsole: WorkletsConsole = {
+    assert: createMethod('assert'),
+    debug: createMethod('debug'),
+    log: createMethod('log'),
+    warn: createMethod('warn'),
+    error: createMethod('error'),
+    info: createMethod('info'),
+    _isWorkletsConsole: true,
   };
+
+  globalThis.console = workletsConsole as unknown as typeof console;
 }
 
 // This is only used in DEV mode in Bunde Mode, it's necessary to see the logs in metro / devtools

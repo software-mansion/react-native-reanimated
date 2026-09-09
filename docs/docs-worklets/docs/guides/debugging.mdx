@@ -1,0 +1,28 @@
+---
+id: debugging
+sidebar_label: Debugging Worklet Runtimes
+---
+
+# Debugging Worklet Runtimes
+
+Every [Worklet Runtime](/docs/fundamentals/runtimeKinds) is registered as a separate debug target in [React Native DevTools](https://reactnative.dev/docs/react-native-devtools).
+This lets you use the Console, Sources and Performance panels on the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime) and on every [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime) created with [`createWorkletRuntime`](/docs/threading/createWorkletRuntime), the same way you use them on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
+
+## Opening a Worklet Runtime in DevTools
+
+Press <kbd>j</kbd> in the Metro terminal. With more than one target connected, Metro lists them and asks you to pick one by number.
+The RN Runtime is listed as `React Native Bridgeless`, the UI Runtime as `Worklet Runtime (UI)`, and Worker Runtimes as `Worklet Runtime (<name>)` with the `name` passed to `createWorkletRuntime`.
+
+You can also list the targets with `http://localhost:8081/json` and open the `devtoolsFrontendUrl` of the runtime you want to debug, or add `localhost:8081` under _Discover network targets_ in `chrome://inspect`.
+
+## What works
+
+- `console` calls made on the runtime are shown in the DevTools Console and are still forwarded to the RN Runtime console.
+- Breakpoints and `debugger` statements pause the runtime.
+- The Performance panel records a CPU profile of the runtime.
+
+## Limitations
+
+- Only runtimes with locking enabled and an async queue are attached. Runtimes created with `enableLocking: false` or `useDefaultQueue: false` without a custom queue are not debuggable.
+- The UI Runtime runs on the main thread, which is also the thread React Native uses to talk to DevTools. Pausing the UI Runtime on a breakpoint blocks that thread, so the debugger cannot deliver the resume command and the app stays frozen. Use breakpoints on Worker Runtimes only.
+- A Worklet Runtime cannot be reloaded on its own. Reloading from a Worklet Runtime target reloads the whole app.

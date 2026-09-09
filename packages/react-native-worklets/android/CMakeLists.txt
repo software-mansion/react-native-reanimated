@@ -95,7 +95,7 @@ target_include_directories(
 set_target_properties(worklets PROPERTIES LINKER_LANGUAGE CXX)
 
 target_link_libraries(worklets android log ReactAndroid::reactnative
-                      ReactAndroid::jsi fbjni::fbjni)
+                      ReactAndroid::jsi ReactAndroid::hermestooling fbjni::fbjni)
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 82)
   target_link_libraries(worklets hermes-engine::hermesvm)
