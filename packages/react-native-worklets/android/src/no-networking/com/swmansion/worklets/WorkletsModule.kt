@@ -13,7 +13,7 @@ import com.swmansion.worklets.runloop.AnimationFrameCallback
 import com.swmansion.worklets.runloop.AnimationFrameQueue
 
 @Suppress("KotlinJniMissingFunction")
-@ReactModule(name = WorkletsModule.NAME)
+@ReactModule(name = WorkletsModule.NAME, needsEagerInit = true)
 class WorkletsModule(
     reactContext: ReactApplicationContext,
 ) : NativeWorkletsModuleSpec(reactContext),
@@ -33,10 +33,6 @@ class WorkletsModule(
     @Suppress("unused")
     protected fun getHybridData(): HybridData? = mHybridData
 
-    init {
-        reactContext.assertOnJSQueueThread()
-    }
-
     private val mAndroidUIScheduler = AndroidUIScheduler(reactContext)
     private val mAnimationFrameQueue = AnimationFrameQueue(reactContext)
     private var mSlowAnimationsEnabled = false
@@ -50,12 +46,17 @@ class WorkletsModule(
 
     @OptIn(FrameworkAPI::class)
     private external fun initHybrid(
-        bundleModeEnabled: Boolean,
         jsContext: Long,
         jsCallInvokerHolder: CallInvokerHolderImpl,
         androidUIScheduler: AndroidUIScheduler,
-        scriptBufferWrapper: ScriptBufferWrapper?,
     ): HybridData
+
+    private external fun prepareProxyCpp()
+
+    private external fun installTurboModuleCpp(
+        bundleModeEnabled: Boolean,
+        scriptBufferWrapper: ScriptBufferWrapper?,
+    )
 
     @OptIn(FrameworkAPI::class)
     @ReactMethod(isBlockingSynchronousMethod = true)
@@ -64,9 +65,6 @@ class WorkletsModule(
 
         context.assertOnJSQueueThread()
 
-        val jsContext = checkNotNull(context.javaScriptContextHolder).get()
-        val jsCallInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
-
         val scriptBufferWrapper: ScriptBufferWrapper? =
             if (bundleModeEnabled) {
                 ScriptBufferWrapper(context.sourceURL, context)
@@ -74,14 +72,7 @@ class WorkletsModule(
                 null
             }
 
-        mHybridData =
-            initHybrid(
-                bundleModeEnabled,
-                jsContext,
-                jsCallInvokerHolder,
-                mAndroidUIScheduler,
-                scriptBufferWrapper,
-            )
+        installTurboModuleCpp(bundleModeEnabled, scriptBufferWrapper)
         return true
     }
 
@@ -117,6 +108,8 @@ class WorkletsModule(
 
     override fun initialize() {
         reactApplicationContext.addLifecycleEventListener(this)
+        createHybrid()
+        Thread({ prepareProxyCpp() }, "WorkletsProxyPrepare").start()
     }
 
     override fun invalidate() {
@@ -157,4 +150,15 @@ class WorkletsModule(
     }
 
     override fun onHostDestroy() {}
+
+    @OptIn(FrameworkAPI::class)
+    private fun createHybrid() {
+        val context = reactApplicationContext
+        val jsContext =
+            checkNotNull(context.javaScriptContextHolder) {
+                "[Worklets] JavaScript context is not available yet."
+            }.get()
+        val jsCallInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
+        mHybridData = initHybrid(jsContext, jsCallInvokerHolder, mAndroidUIScheduler)
+    }
 }
