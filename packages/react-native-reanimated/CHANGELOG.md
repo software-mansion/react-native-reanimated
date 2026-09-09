@@ -13,7 +13,6 @@
 
 ### 🐛 Bug fixes
 
-- Keep synchronous props current across React commits and running layout animations. Acknowledge pending keys only after a commit carries them, and restore entering opacity without changing the animation style. ([#10480](https://github.com/software-mansion/react-native-reanimated/pull/10480) by [@pawicao](https://github.com/pawicao))
 - Fix `normalizeColor` resolving `Object.prototype` members such as `'constructor'` and `'toString'` as color names and returning a function instead of `null`. ([#10387](https://github.com/software-mansion/react-native-reanimated/pull/10387) by [@dennytosp](https://github.com/dennytosp))
 - Fix `transform` and `transformOrigin` strings padded with whitespace throwing instead of parsing. ([#10388](https://github.com/software-mansion/react-native-reanimated/pull/10388) by [@dennytosp](https://github.com/dennytosp))
 - Fix `linear()` easing not clamping an out-of-order input progress value on its first or last control point, which left the control points non-monotonic and the resulting curve wrong. ([#10380](https://github.com/software-mansion/react-native-reanimated/pull/10380) by [@dennytosp](https://github.com/dennytosp))
