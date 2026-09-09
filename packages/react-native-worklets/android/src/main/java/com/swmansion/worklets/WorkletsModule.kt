@@ -9,6 +9,7 @@ import com.facebook.react.common.annotations.FrameworkAPI
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
 import com.facebook.soloader.SoLoader
+import com.swmansion.worklets.networking.WorkletsNetworking
 import com.swmansion.worklets.runloop.AnimationFrameCallback
 import com.swmansion.worklets.runloop.AnimationFrameQueue
 
@@ -39,6 +40,7 @@ class WorkletsModule(
 
     private val mAndroidUIScheduler = AndroidUIScheduler(reactContext)
     private val mAnimationFrameQueue = AnimationFrameQueue(reactContext)
+    private val mWorkletsNetworking = WorkletsNetworking()
     private var mSlowAnimationsEnabled = false
 
     /**
@@ -55,6 +57,7 @@ class WorkletsModule(
         jsCallInvokerHolder: CallInvokerHolderImpl,
         androidUIScheduler: AndroidUIScheduler,
         scriptBufferWrapper: ScriptBufferWrapper?,
+        workletsNetworking: WorkletsNetworking,
     ): HybridData
 
     @OptIn(FrameworkAPI::class)
@@ -81,6 +84,7 @@ class WorkletsModule(
                 jsCallInvokerHolder,
                 mAndroidUIScheduler,
                 scriptBufferWrapper,
+                mWorkletsNetworking,
             )
         return true
     }

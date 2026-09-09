@@ -10,6 +10,7 @@
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/android/AndroidUIScheduler.h>
 #include <worklets/android/JScriptBufferWrapper.h>
+#include <worklets/android/networking/AndroidNetworkingBackend.h>
 
 #include <memory>
 #include <string>
@@ -29,7 +30,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jlong jsContext,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
       jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
-      jni::alias_ref<JScriptBufferWrapper::javaobject> jScriptBufferWrapper);
+      jni::alias_ref<JScriptBufferWrapper::javaobject> jScriptBufferWrapper,
+      jni::alias_ref<JWorkletsNetworking::javaobject> workletsNetworking);
 
   static void registerNatives();
 
@@ -43,7 +45,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       const BundleModeConfig &bundleModeConfig,
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      const std::shared_ptr<UIScheduler> &uiScheduler);
+      const std::shared_ptr<UIScheduler> &uiScheduler,
+      jni::global_ref<JWorkletsNetworking::javaobject> workletsNetworking);
 
   void startCpp();
 
@@ -54,7 +57,10 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
     return javaPart_->getClass()->getMethod<Signature>(methodName.c_str());
   }
 
-  std::shared_ptr<RuntimeBindings> getRuntimeBindings(bool bundleModeEnabled, jsi::Runtime &rnRuntime);
+  std::shared_ptr<RuntimeBindings> getRuntimeBindings(
+      bool bundleModeEnabled,
+      jsi::Runtime &rnRuntime,
+      jni::global_ref<JWorkletsNetworking::javaobject> workletsNetworking);
 
   RuntimeBindings::RequestAnimationFrame getRequestAnimationFrame();
 

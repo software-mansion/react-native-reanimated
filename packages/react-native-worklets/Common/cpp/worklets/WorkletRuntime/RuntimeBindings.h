@@ -1,8 +1,10 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <worklets/Networking/NetworkingBackend.h>
 
 #include <functional>
+#include <memory>
 #include <stdexcept>
 
 using namespace facebook;
@@ -22,6 +24,7 @@ struct RuntimeBindings {
 
   const RequestAnimationFrame requestAnimationFrame;
   const NativeLoggingHook nativeLoggingHook;
+  const std::shared_ptr<NetworkingBackend> networkingBackend;
 };
 
 inline RuntimeBindings::NativeLoggingHook extractNativeLoggingHookFromRNRuntime(jsi::Runtime &rnRuntime) {
