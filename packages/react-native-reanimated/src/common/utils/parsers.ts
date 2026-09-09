@@ -50,6 +50,34 @@ export function parseBoxShadowString(value: string) {
   });
 }
 
+export function splitByComma(str: string) {
+  'worklet';
+  // split by comma not enclosed in parentheses
+  const parts: string[] = [];
+  let current = '';
+  let depth = 0;
+  for (const char of str) {
+    if (char === '(') {
+      depth++;
+    } else if (char === ')') {
+      depth--;
+    } else if (char === ',' && depth === 0) {
+      parts.push(current.trim());
+      current = '';
+      continue;
+    }
+    current += char;
+  }
+  parts.push(current.trim());
+  return parts;
+}
+
+export function splitByWhitespace(str: string) {
+  'worklet';
+  // split by whitespace not enclosed in parentheses
+  return str.split(/\s+(?![^()]*\))/);
+}
+
 export function getAngleInDegrees(angle: string): number | null {
   'worklet';
   const match = angle.match(ANGLE_UNIT_REGEX);

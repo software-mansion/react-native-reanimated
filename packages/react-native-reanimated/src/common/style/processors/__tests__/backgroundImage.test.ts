@@ -51,8 +51,8 @@ const RED = processColor('#ff0000');
 const BLUE = processColor('#0000ff');
 
 describe(processBackgroundImage, () => {
-  test('returns undefined for string values', () => {
-    expect(process('linear-gradient(to right, red, blue)')).toBeUndefined();
+  test('returns undefined for non-array non-string values', () => {
+    expect(process(null as unknown as BackgroundImageInput)).toBeUndefined();
   });
 
   test('returns an empty array for an empty array', () => {
@@ -77,6 +77,243 @@ describe(processBackgroundImage, () => {
         linear({ direction: 'to top' }),
       ])?.map(({ type }) => type)
     ).toEqual(['radial-gradient', 'linear-gradient']);
+  });
+
+  describe('css strings', () => {
+    const WHITE = processColor('#ffffff');
+    const CENTER = { top: '50%', left: '50%' };
+
+    test('parses a linear gradient', () => {
+      expect(process('linear-gradient(to right, #ff0000, #0000ff)')).toEqual([
+        {
+          type: 'linear-gradient',
+          direction: { type: 'angle', value: 90 },
+          colorStops: [
+            { color: RED, position: null },
+            { color: BLUE, position: null },
+          ],
+        },
+      ]);
+    });
+
+    test.each([
+      ['45deg', { type: 'angle', value: 45 }],
+      ['0.5turn', { type: 'angle', value: 180 }],
+      ['to left', { type: 'angle', value: 270 }],
+      ['to top right', { type: 'keyword', value: 'to top right' }],
+      ['TO LEFT TOP', { type: 'keyword', value: 'to top left' }],
+    ])('parses linear direction %p', (direction, expected) => {
+      expect(
+        processLinear(`linear-gradient(${direction}, #ff0000, #0000ff)`)
+          .direction
+      ).toEqual(expected);
+    });
+
+    test('defaults linear direction when the first part is a color', () => {
+      expect(
+        processLinear('linear-gradient(#ff0000, #0000ff)').direction
+      ).toEqual({ type: 'angle', value: 180 });
+    });
+
+    test('parses color stop positions', () => {
+      expect(
+        process(
+          'linear-gradient(#ff0000 10%, #0000ff 20px, #ffffff 30% 40%)'
+        )?.[0].colorStops
+      ).toEqual([
+        { color: RED, position: '10%' },
+        { color: BLUE, position: 20 },
+        { color: WHITE, position: '30%' },
+        { color: WHITE, position: '40%' },
+      ]);
+    });
+
+    test('parses transition hints', () => {
+      expect(
+        process('linear-gradient(#ff0000, 20%, #0000ff)')?.[0].colorStops
+      ).toEqual([
+        { color: RED, position: null },
+        { color: null, position: '20%' },
+        { color: BLUE, position: null },
+      ]);
+    });
+
+    test('keeps colors with commas inside', () => {
+      expect(
+        process('linear-gradient(rgba(255, 0, 0, 1), rgb(0, 0, 255))')?.[0]
+          .colorStops
+      ).toEqual([
+        { color: RED, position: null },
+        { color: BLUE, position: null },
+      ]);
+    });
+
+    test('parses multiple gradients and ignores newlines and case', () => {
+      expect(
+        process(
+          'LINEAR-GRADIENT(To Right, #FF0000, #0000FF),\n radial-gradient(#ffffff, #ff0000)'
+        )?.map(({ type }) => type)
+      ).toEqual(['linear-gradient', 'radial-gradient']);
+    });
+
+    test('parses radial gradient defaults', () => {
+      expect(process('radial-gradient(#ff0000, #0000ff)')).toEqual([
+        {
+          type: 'radial-gradient',
+          shape: 'ellipse',
+          size: 'farthest-corner',
+          position: CENTER,
+          colorStops: [
+            { color: RED, position: null },
+            { color: BLUE, position: null },
+          ],
+        },
+      ]);
+    });
+
+    test.each([
+      [
+        'circle',
+        { shape: 'circle', size: 'farthest-corner', position: CENTER },
+      ],
+      [
+        'closest-side',
+        { shape: 'ellipse', size: 'closest-side', position: CENTER },
+      ],
+      [
+        'circle closest-corner',
+        { shape: 'circle', size: 'closest-corner', position: CENTER },
+      ],
+      ['50px', { shape: 'circle', size: { x: 50, y: 50 }, position: CENTER }],
+      [
+        '50px 30%',
+        { shape: 'ellipse', size: { x: 50, y: '30%' }, position: CENTER },
+      ],
+      [
+        'ellipse 20% 30%',
+        { shape: 'ellipse', size: { x: '20%', y: '30%' }, position: CENTER },
+      ],
+      [
+        'at center',
+        { shape: 'ellipse', size: 'farthest-corner', position: CENTER },
+      ],
+      [
+        'at left',
+        {
+          shape: 'ellipse',
+          size: 'farthest-corner',
+          position: { top: '50%', left: '0%' },
+        },
+      ],
+      [
+        'at bottom',
+        {
+          shape: 'ellipse',
+          size: 'farthest-corner',
+          position: { top: '100%', left: '50%' },
+        },
+      ],
+      [
+        'at 10%',
+        {
+          shape: 'ellipse',
+          size: 'farthest-corner',
+          position: { top: '50%', left: '10%' },
+        },
+      ],
+      [
+        'at right top',
+        {
+          shape: 'ellipse',
+          size: 'farthest-corner',
+          position: { top: '0%', left: '100%' },
+        },
+      ],
+      [
+        'at top right',
+        {
+          shape: 'ellipse',
+          size: 'farthest-corner',
+          position: { top: '0%', left: '100%' },
+        },
+      ],
+      [
+        'at 10% 20px',
+        {
+          shape: 'ellipse',
+          size: 'farthest-corner',
+          position: { top: 20, left: '10%' },
+        },
+      ],
+      [
+        'at left 10% top 20%',
+        {
+          shape: 'ellipse',
+          size: 'farthest-corner',
+          position: { top: '20%', left: '10%' },
+        },
+      ],
+      [
+        'at right 10% bottom 20%',
+        {
+          shape: 'ellipse',
+          size: 'farthest-corner',
+          position: { bottom: '20%', right: '10%' },
+        },
+      ],
+      [
+        'circle 50px at top left',
+        {
+          shape: 'circle',
+          size: { x: 50, y: 50 },
+          position: { top: '0%', left: '0%' },
+        },
+      ],
+      [
+        '50px at top left',
+        {
+          shape: 'circle',
+          size: { x: 50, y: 50 },
+          position: { top: '0%', left: '0%' },
+        },
+      ],
+    ])('parses radial prelude %p', (prelude, expected) => {
+      expect(
+        process(`radial-gradient(${prelude}, #ff0000, #0000ff)`)?.[0]
+      ).toMatchObject(expected);
+    });
+
+    test.each([
+      'linear-gradient()',
+      'linear-gradient(to nowhere, #ff0000, #0000ff)',
+      'linear-gradient(to right right, #ff0000, #0000ff)',
+      'linear-gradient(not-a-color, #0000ff)',
+      'linear-gradient(#ff0000 abc%, #0000ff)',
+      'linear-gradient(#ff0000 abcpx, #0000ff)',
+      'linear-gradient(#ff0000 10% 20% 30%, #0000ff)',
+      'linear-gradient(20%, #ff0000, #0000ff)',
+      'linear-gradient(#ff0000, #0000ff, 20%)',
+      'linear-gradient(#ff0000, 20%, 30%, #0000ff)',
+      'radial-gradient(ellipse 50px, #ff0000, #0000ff)',
+      'radial-gradient(-50px, #ff0000, #0000ff)',
+      'radial-gradient(at, #ff0000, #0000ff)',
+      'radial-gradient(at nowhere, #ff0000, #0000ff)',
+      'radial-gradient(at 10% 20% 30%, #ff0000, #0000ff)',
+      'radial-gradient(at middle 10% top 20%, #ff0000, #0000ff)',
+      'conic-gradient(#ff0000, #0000ff)',
+      'not a gradient',
+      '',
+    ])('skips invalid gradient %p', (value) => {
+      expect(process(value)).toEqual([]);
+    });
+
+    test('forwards the processor context to string colors', () => {
+      expect(
+        process('linear-gradient(transparent, #0000ff)', {
+          target: ValueProcessorTarget.CSS,
+        })?.[0].colorStops[0]
+      ).toEqual({ color: false, position: null });
+    });
   });
 
   describe('linear gradients', () => {

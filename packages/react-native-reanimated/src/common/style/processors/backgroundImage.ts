@@ -2,9 +2,15 @@
 import type { ViewStyle } from 'react-native';
 
 import type { ValueProcessor, ValueProcessorContext } from '../../types';
-import { getAngleInDegrees, isPercentage } from '../../utils';
+import {
+  CSS_NUMBER_PATTERN,
+  getAngleInDegrees,
+  isPercentage,
+  splitByComma,
+  splitByWhitespace,
+} from '../../utils';
 import type { ProcessedColor } from './colors';
-import { processColor } from './colors';
+import { processColor, processColorNumber } from './colors';
 
 type BackgroundImageStyleValue = NonNullable<ViewStyle['backgroundImage']>;
 type BackgroundImageValue = Exclude<BackgroundImageStyleValue, string>[number];
@@ -16,7 +22,13 @@ type RadialGradientShape = RadialGradientValue['shape'];
 type RadialGradientSize = RadialGradientValue['size'];
 type RadialGradientPosition = RadialGradientValue['position'];
 
+const NEWLINE_REGEX = /\n/g;
 const WHITESPACE_NORMALIZE_REGEX = /\s+/g;
+const GRADIENT_REGEX = /^(linear|radial)-gradient\(((?:\([^)]*\)|[^()])*)\)/;
+const COLOR_STOP_PARTS_REGEX = /\S+\([^)]*\)|\S+/g;
+const PX_LENGTH_REGEX = new RegExp(`^${CSS_NUMBER_PATTERN}px$`);
+const LINEAR_GRADIENT_DIRECTION_REGEX =
+  /^to\s+(?:top|bottom|left|right)(?:\s+(?:top|bottom|left|right))?/;
 
 const DEFAULT_DIRECTION = { type: 'angle', value: 180 } as const;
 const DEFAULT_RADIAL_SHAPE = 'ellipse';
@@ -102,26 +114,29 @@ const getDirectionForKeyword = (
   }
 };
 
+const parseDirection = (direction: string): ProcessedDirection | null => {
+  'worklet';
+  const normalized = direction.toLowerCase();
+  const angle = getAngleInDegrees(normalized);
+  if (angle !== null) {
+    return { type: 'angle', value: angle };
+  }
+  return getDirectionForKeyword(normalized);
+};
+
 const processDirection = (direction?: string): ProcessedDirection => {
   'worklet';
   if (direction == null) {
     return DEFAULT_DIRECTION;
   }
 
-  const normalized = direction.toLowerCase();
-  const parsed = getAngleInDegrees(normalized);
-
-  if (parsed !== null) {
-    return { type: 'angle', value: parsed };
-  }
-
-  const keywordDirection = getDirectionForKeyword(normalized);
-  if (keywordDirection === null) {
+  const parsed = parseDirection(direction);
+  if (parsed === null) {
     throw new Error(
       `[Reanimated] ${ERROR_MESSAGES.invalidDirection(direction)}`
     );
   }
-  return keywordDirection;
+  return parsed;
 };
 
 const isValidPosition = (position: unknown): position is number | string => {
@@ -196,12 +211,344 @@ const processRadialShape = (
   return shape;
 };
 
+const getPositionFromCSSValue = (value: string): number | string | null => {
+  'worklet';
+  if (isPercentage(value)) {
+    return value;
+  }
+  if (PX_LENGTH_REGEX.test(value)) {
+    return parseFloat(value);
+  }
+  return null;
+};
+
+const parseCSSColor = (
+  color: string,
+  context?: ValueProcessorContext
+): ProcessedColor | null => {
+  'worklet';
+  if (processColorNumber(color) === null) {
+    return null;
+  }
+  return processColor(color, context);
+};
+
+const isLengthOrPercentageToken = (token: string): boolean => {
+  'worklet';
+  return token.endsWith('px') || token.endsWith('%');
+};
+
+const parseColorStopsCSSString = (
+  parts: string[],
+  context?: ValueProcessorContext
+): ProcessedColorStop[] | null => {
+  'worklet';
+  const stops = splitByComma(parts.join(','));
+  const result: ProcessedColorStop[] = [];
+  let previousWasHint = false;
+
+  for (let i = 0; i < stops.length; i++) {
+    const colorStopParts = stops[i].trim().match(COLOR_STOP_PARTS_REGEX);
+    if (colorStopParts === null) {
+      return null;
+    }
+
+    if (colorStopParts.length === 3) {
+      const color = parseCSSColor(colorStopParts[0], context);
+      const position1 = getPositionFromCSSValue(colorStopParts[1]);
+      const position2 = getPositionFromCSSValue(colorStopParts[2]);
+      if (color === null || position1 === null || position2 === null) {
+        return null;
+      }
+      result.push({ color, position: position1 });
+      result.push({ color, position: position2 });
+      previousWasHint = false;
+    } else if (colorStopParts.length === 2) {
+      const color = parseCSSColor(colorStopParts[0], context);
+      const position = getPositionFromCSSValue(colorStopParts[1]);
+      if (color === null || position === null) {
+        return null;
+      }
+      result.push({ color, position });
+      previousWasHint = false;
+    } else if (colorStopParts.length === 1) {
+      const position = getPositionFromCSSValue(colorStopParts[0]);
+      if (position !== null) {
+        if (previousWasHint || i === 0 || i === stops.length - 1) {
+          return null;
+        }
+        result.push({ color: null, position });
+        previousWasHint = true;
+      } else {
+        const color = parseCSSColor(colorStopParts[0], context);
+        if (color === null) {
+          return null;
+        }
+        result.push({ color, position: null });
+        previousWasHint = false;
+      }
+    } else {
+      return null;
+    }
+  }
+
+  return result;
+};
+
+const parseLinearGradientCSSString = (
+  content: string,
+  context?: ValueProcessorContext
+): ProcessedBackgroundImageValue | null => {
+  'worklet';
+  const parts = content.split(',');
+  const firstPart = parts[0].trim();
+  let direction: ProcessedDirection = DEFAULT_DIRECTION;
+
+  if (
+    getAngleInDegrees(firstPart) !== null ||
+    LINEAR_GRADIENT_DIRECTION_REGEX.test(firstPart)
+  ) {
+    const parsed = parseDirection(firstPart);
+    if (parsed === null) {
+      return null;
+    }
+    direction = parsed;
+    parts.shift();
+  }
+
+  const colorStops = parseColorStopsCSSString(parts, context);
+  if (colorStops === null) {
+    return null;
+  }
+
+  return { type: 'linear-gradient', direction, colorStops };
+};
+
+const HORIZONTAL_POSITION_KEYWORDS: Record<string, string> = {
+  left: '0%',
+  center: '50%',
+  right: '100%',
+};
+const VERTICAL_POSITION_KEYWORDS: Record<string, string> = {
+  top: '0%',
+  center: '50%',
+  bottom: '100%',
+};
+
+const parseRadialPosition = (
+  tokens: string[]
+): RadialGradientPosition | null => {
+  'worklet';
+  let top: string | number | undefined;
+  let left: string | number | undefined;
+  let right: string | number | undefined;
+  let bottom: string | number | undefined;
+
+  if (tokens.length === 1) {
+    const token = tokens[0];
+    if (token in HORIZONTAL_POSITION_KEYWORDS) {
+      left = HORIZONTAL_POSITION_KEYWORDS[token];
+      top = '50%';
+    } else if (token in VERTICAL_POSITION_KEYWORDS) {
+      left = '50%';
+      top = VERTICAL_POSITION_KEYWORDS[token];
+    } else if (isLengthOrPercentageToken(token)) {
+      const value = getPositionFromCSSValue(token);
+      if (value === null) {
+        return null;
+      }
+      left = value;
+      top = '50%';
+    }
+  } else if (tokens.length === 2) {
+    const [token1, token2] = tokens;
+    if (
+      token1 in HORIZONTAL_POSITION_KEYWORDS &&
+      token2 in VERTICAL_POSITION_KEYWORDS
+    ) {
+      left = HORIZONTAL_POSITION_KEYWORDS[token1];
+      top = VERTICAL_POSITION_KEYWORDS[token2];
+    } else if (
+      token1 in VERTICAL_POSITION_KEYWORDS &&
+      token2 in HORIZONTAL_POSITION_KEYWORDS
+    ) {
+      left = HORIZONTAL_POSITION_KEYWORDS[token2];
+      top = VERTICAL_POSITION_KEYWORDS[token1];
+    } else {
+      if (token1 in HORIZONTAL_POSITION_KEYWORDS) {
+        left = HORIZONTAL_POSITION_KEYWORDS[token1];
+      } else if (isLengthOrPercentageToken(token1)) {
+        const value = getPositionFromCSSValue(token1);
+        if (value === null) {
+          return null;
+        }
+        left = value;
+      } else {
+        return null;
+      }
+
+      if (token2 in VERTICAL_POSITION_KEYWORDS) {
+        top = VERTICAL_POSITION_KEYWORDS[token2];
+      } else if (isLengthOrPercentageToken(token2)) {
+        const value = getPositionFromCSSValue(token2);
+        if (value === null) {
+          return null;
+        }
+        top = value;
+      } else {
+        return null;
+      }
+    }
+  } else if (tokens.length === 4) {
+    for (const [keyword, rawValue] of [
+      [tokens[0], tokens[1]],
+      [tokens[2], tokens[3]],
+    ]) {
+      const value = getPositionFromCSSValue(rawValue);
+      if (value === null) {
+        return null;
+      }
+      if (keyword === 'left') {
+        left = value;
+      } else if (keyword === 'right') {
+        right = value;
+      } else if (keyword === 'top') {
+        top = value;
+      } else if (keyword === 'bottom') {
+        bottom = value;
+      } else {
+        return null;
+      }
+    }
+  }
+
+  if (top != null && left != null) {
+    return { top, left };
+  }
+  if (bottom != null && right != null) {
+    return { bottom, right };
+  }
+  if (top != null && right != null) {
+    return { top, right };
+  }
+  if (bottom != null && left != null) {
+    return { bottom, left };
+  }
+  return null;
+};
+
+const parseRadialGradientCSSString = (
+  content: string,
+  context?: ValueProcessorContext
+): ProcessedBackgroundImageValue | null => {
+  'worklet';
+  let shape: RadialGradientShape = DEFAULT_RADIAL_SHAPE;
+  let size: RadialGradientSize = DEFAULT_RADIAL_SIZE;
+  let position: RadialGradientPosition = { ...DEFAULT_RADIAL_POSITION };
+
+  const parts = splitByComma(content);
+  const tokens = splitByWhitespace(parts[0]);
+  let hasShapeSizeOrPosition = false;
+  let hasExplicitSingleSize = false;
+  let hasExplicitShape = false;
+
+  while (tokens.length > 0) {
+    const token = tokens.shift()!;
+
+    if (token === 'circle' || token === 'ellipse') {
+      shape = token;
+      hasShapeSizeOrPosition = true;
+      hasExplicitShape = true;
+    } else if (RADIAL_SIZE_KEYWORDS.includes(token)) {
+      size = token as RadialGradientSize;
+      hasShapeSizeOrPosition = true;
+    } else if (isLengthOrPercentageToken(token)) {
+      const sizeX = getPositionFromCSSValue(token);
+      if (sizeX === null || (typeof sizeX === 'number' && sizeX < 0)) {
+        return null;
+      }
+      hasShapeSizeOrPosition = true;
+      size = { x: sizeX, y: sizeX };
+
+      const nextToken = tokens[0];
+      if (nextToken !== undefined && isLengthOrPercentageToken(nextToken)) {
+        tokens.shift();
+        const sizeY = getPositionFromCSSValue(nextToken);
+        if (sizeY === null || (typeof sizeY === 'number' && sizeY < 0)) {
+          return null;
+        }
+        size = { x: sizeX, y: sizeY };
+      } else {
+        hasExplicitSingleSize = true;
+      }
+    } else if (token === 'at') {
+      hasShapeSizeOrPosition = true;
+      const parsedPosition = parseRadialPosition(tokens.splice(0));
+      if (parsedPosition === null) {
+        return null;
+      }
+      position = parsedPosition;
+    }
+
+    if (!hasShapeSizeOrPosition) {
+      break;
+    }
+  }
+
+  if (hasShapeSizeOrPosition) {
+    parts.shift();
+    if (!hasExplicitShape && hasExplicitSingleSize) {
+      shape = 'circle';
+    }
+    if (hasExplicitSingleSize && hasExplicitShape && shape === 'ellipse') {
+      return null;
+    }
+  }
+
+  const colorStops = parseColorStopsCSSString(parts, context);
+  if (colorStops === null) {
+    return null;
+  }
+
+  return { type: 'radial-gradient', shape, size, position, colorStops };
+};
+
+const parseBackgroundImageCSSString = (
+  value: string,
+  context?: ValueProcessorContext
+): ProcessedBackgroundImageValue[] => {
+  'worklet';
+  const result: ProcessedBackgroundImageValue[] = [];
+
+  for (const gradientString of splitByComma(
+    value.replace(NEWLINE_REGEX, ' ')
+  )) {
+    const match = GRADIENT_REGEX.exec(gradientString.toLowerCase());
+    if (!match) {
+      continue;
+    }
+    const [, type, content] = match;
+    const gradient =
+      type === 'radial'
+        ? parseRadialGradientCSSString(content, context)
+        : parseLinearGradientCSSString(content, context);
+    if (gradient !== null) {
+      result.push(gradient);
+    }
+  }
+
+  return result;
+};
+
 export const processBackgroundImage: ValueProcessor<
   BackgroundImageStyleValue,
   ProcessedBackgroundImageValue[] | undefined
 > = (value, context) => {
   'worklet';
-  if (typeof value === 'string' || !Array.isArray(value)) {
+  if (typeof value === 'string') {
+    return parseBackgroundImageCSSString(value, context);
+  }
+  if (!Array.isArray(value)) {
     return;
   }
 
