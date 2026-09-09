@@ -13,6 +13,7 @@
 
 ### 🐛 Bug fixes
 
+- Fix the last `FlatList` item disappearing for one frame during an item-removal layout animation on Android, where `removeClippedSubviews` detached the cell while it still animated to its new position. ([#10487](https://github.com/software-mansion/react-native-reanimated/pull/10487) by [@pawicao](https://github.com/pawicao))
 - Fix `Keyframe` easings on web being dropped or applied to the wrong keyframe when the definitions use the `from`/`to` aliases or fractional offsets. ([#10386](https://github.com/software-mansion/react-native-reanimated/pull/10386) by [@dennytosp](https://github.com/dennytosp))
 - Fix `getViewProp` and the runtime-tests prop snapshotting crashing (segfault on style props, unhandled error on layout props) when the view is no longer mounted. ([#10443](https://github.com/software-mansion/react-native-reanimated/pull/10443) by [@tjzel](https://github.com/tjzel))
 - Ship the Jest resolver (`react-native-reanimated/jest/resolver`) in the npm package, so consumer projects can run Jest against Reanimated: the modules that require a real native module are resolved to their web implementations. ([#10377](https://github.com/software-mansion/react-native-reanimated/pull/10377) by [@huextrat](https://github.com/huextrat))
