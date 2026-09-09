@@ -27,19 +27,6 @@ namespace worklets {
 using namespace facebook;
 using namespace react;
 
-namespace {
-
-BundleModeConfig bundleModeConfigFromWrapper(
-    const jni::alias_ref<JScriptBufferWrapper::javaobject> &jScriptBufferWrapper) {
-  if (!jScriptBufferWrapper) {
-    return BundleModeConfig{.enabled = false};
-  }
-  auto cxxWrapper = jScriptBufferWrapper->cthis();
-  return BundleModeConfig{.enabled = true, .script = cxxWrapper->getScript(), .sourceURL = cxxWrapper->getSourceUrl()};
-}
-
-} // namespace
-
 WorkletsModule::WorkletsModule(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
     jsi::Runtime *rnRuntime,
@@ -69,12 +56,17 @@ void WorkletsModule::prepareProxyCpp() {
   initializer_->prepareProxy();
 }
 
-void WorkletsModule::installTurboModuleCpp(
-    jboolean bundleModeEnabled,
-    jni::alias_ref<JScriptBufferWrapper::javaobject>
-        jScriptBufferWrapper // NOLINT //(performance-unnecessary-value-param)
-) {
-  workletsModuleProxy_ = initializer_->finalize(*rnRuntime_, bundleModeConfigFromWrapper(jScriptBufferWrapper));
+void WorkletsModule::beginBundleModeCpp() {
+  initializer_->beginBundleMode();
+}
+
+void WorkletsModule::prepareBundleModeCpp() {
+  initializer_->prepareBundleMode([this] { return loadBundleModeConfig(); });
+}
+
+void WorkletsModule::installTurboModuleCpp(jboolean bundleModeEnabled) {
+  workletsModuleProxy_ = initializer_->finalize(
+      *rnRuntime_, static_cast<bool>(bundleModeEnabled), [this] { return loadBundleModeConfig(); });
 }
 
 std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings() {
@@ -88,6 +80,15 @@ std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings() {
       .sendRequest = getSendRequest()
 #endif // WORKLETS_FETCH_PREVIEW_ENABLED
   });
+}
+
+BundleModeConfig WorkletsModule::loadBundleModeConfig() {
+  static const auto jCreateScriptBufferWrapper =
+      getJniMethod<JScriptBufferWrapper::javaobject()>("createScriptBufferWrapper");
+  const auto jScriptBufferWrapper = jCreateScriptBufferWrapper(javaPart_.get());
+  const auto scriptBufferWrapper = jScriptBufferWrapper->cthis();
+  return BundleModeConfig{
+      .enabled = true, .script = scriptBufferWrapper->getScript(), .sourceURL = scriptBufferWrapper->getSourceUrl()};
 }
 
 RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame() {
@@ -195,6 +196,8 @@ void WorkletsModule::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
       makeNativeMethod("prepareProxyCpp", WorkletsModule::prepareProxyCpp),
+      makeNativeMethod("beginBundleModeCpp", WorkletsModule::beginBundleModeCpp),
+      makeNativeMethod("prepareBundleModeCpp", WorkletsModule::prepareBundleModeCpp),
       makeNativeMethod("installTurboModuleCpp", WorkletsModule::installTurboModuleCpp),
       makeNativeMethod("invalidateCpp", WorkletsModule::invalidateCpp),
       makeNativeMethod("startCpp", WorkletsModule::startCpp),

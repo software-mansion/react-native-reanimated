@@ -54,6 +54,10 @@ const TOGGLE_PATH_CASES: ReadonlyArray<[label: string, filename: string]> = [
     'built mode-check',
     'react-native-worklets/lib/module/debug/bundleMode.native.js',
   ],
+  [
+    'prepareBundleMode polyfill',
+    'react-native-worklets/bundleMode/polyfills/prepareBundleMode.js',
+  ],
 ];
 
 const REQUIRE_PREFIX = 'require("react-native-worklets/.worklets/';

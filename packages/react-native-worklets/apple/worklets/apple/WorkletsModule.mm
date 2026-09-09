@@ -81,6 +81,20 @@ RCT_EXPORT_MODULE(WorkletsModule);
   dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{ initializer->prepareProxy(); });
 }
 
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(prepareBundleMode)
+{
+  AssertJavaScriptQueue();
+
+  initializer_->beginBundleMode();
+
+  const auto initializer = initializer_;
+  const auto loadBundleModeConfig = [self makeBundleModeConfigLoader];
+  dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+    initializer->prepareBundleMode(loadBundleModeConfig);
+  });
+  return @YES;
+}
+
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnabled)
 {
   react_native_assert(self.bridge != nullptr);
@@ -89,9 +103,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
   AssertJavaScriptQueue();
 
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
-  const auto bundleModeConfig =
-      bundleModeEnabled ? makeBundleModeConfig(bundleManager_.bundleURL) : BundleModeConfig{.enabled = false};
-  workletsModuleProxy_ = initializer_->finalize(rnRuntime, bundleModeConfig);
+  workletsModuleProxy_ =
+      initializer_->finalize(rnRuntime, static_cast<bool>(bundleModeEnabled), [self makeBundleModeConfigLoader]);
   return @YES;
 }
 
@@ -151,6 +164,14 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
       std::make_shared<JSScheduler>(rnRuntime, callInvoker_.callInvoker, []() -> bool { return IsJavaScriptQueue(); });
   initializer_ = std::make_shared<WorkletsModuleProxyInitializer>(
       jsScheduler, uiScheduler_, [self getRuntimeBindings], rnRuntimeStatus_);
+}
+
+- (WorkletsModuleProxyInitializer::BundleModeConfigLoader)makeBundleModeConfigLoader
+{
+  NSURL *bundleURL = bundleManager_.bundleURL;
+  return [bundleURL] {
+    return makeBundleModeConfig(bundleURL);
+  };
 }
 
 - (std::shared_ptr<RuntimeBindings>)getRuntimeBindings
