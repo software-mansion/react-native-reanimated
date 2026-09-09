@@ -10,6 +10,12 @@ const LENGTH_MAPPINGS = [
   'spreadDistance',
 ] as const;
 
+export const CSS_NUMBER_PATTERN = String.raw`[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?`;
+const ANGLE_UNIT_REGEX = new RegExp(
+  `^(${CSS_NUMBER_PATTERN})(deg|grad|rad|turn)$`,
+  'i'
+);
+
 const SHADOW_PARTS_REGEX = /(?:[^\s()]+|\([^()]*\))+/g;
 const SHADOW_SPLIT_REGEX = /(?:[^,()]+|\([^)]*\))+(?=\s*,|$)/g;
 
@@ -42,4 +48,25 @@ export function parseBoxShadowString(value: string) {
 
     return result;
   });
+}
+
+export function getAngleInDegrees(angle: string): number | null {
+  'worklet';
+  const match = angle.match(ANGLE_UNIT_REGEX);
+  if (!match) {
+    return null;
+  }
+  const numericValue = parseFloat(match[1]);
+  switch (match[2]) {
+    case 'deg':
+      return numericValue;
+    case 'grad':
+      return numericValue * 0.9;
+    case 'rad':
+      return (numericValue * 180) / Math.PI;
+    case 'turn':
+      return numericValue * 360;
+    default:
+      return null;
+  }
 }
