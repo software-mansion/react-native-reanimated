@@ -39,7 +39,15 @@ describe('networking API on Worklet Runtimes', () => {
       testFn('installs the networking globals', () => {
         const missingGlobals = runOnTarget(() => {
           'worklet';
-          const globalNames = ['XMLHttpRequest', 'Blob', 'FileReader'];
+          const globalNames = [
+            'fetch',
+            'Headers',
+            'Request',
+            'Response',
+            'XMLHttpRequest',
+            'Blob',
+            'FileReader',
+          ];
           return globalNames
             .filter(
               (name) =>
@@ -51,6 +59,18 @@ describe('networking API on Worklet Runtimes', () => {
         });
 
         expect(missingGlobals).toBe('');
+      });
+
+      testFn('installs fetch from the whatwg-fetch polyfill', () => {
+        const isPolyfill = runOnTarget(() => {
+          'worklet';
+          return (
+            (globalThis.fetch as unknown as { polyfill?: boolean }).polyfill ===
+            true
+          );
+        });
+
+        expect(isPolyfill).toBe(true);
       });
 
       testFn('XMLHttpRequest implements the state machine', () => {

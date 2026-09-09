@@ -51,6 +51,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/networking/api.test');
       require('./tests/networking/xhr.test');
+      require('./tests/networking/fetch.test');
     },
     disabled: !isBundleModeEnabled(),
   },
