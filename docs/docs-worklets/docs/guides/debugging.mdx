@@ -10,15 +10,18 @@ This lets you use the Console, Sources and Performance panels on the [UI Runtime
 
 ## Opening a Worklet Runtime in DevTools
 
-Press <kbd>j</kbd> in the Metro terminal. Metro lists two targets for the app and asks you to pick one by number:
+Press <kbd>j</kbd> in the Metro terminal to open React Native DevTools.
+
+With a React Native that exposes worker runtime targets (see [How it works](#how-it-works)), the Worklet Runtimes are part of the regular `React Native Bridgeless` target. The RN Runtime is the thread named `main`, the UI Runtime is `Worklet Runtime (UI)`, and every Worker Runtime created with `createWorkletRuntime` is a thread named `Worklet Runtime (<name>)`.
+
+With earlier React Native versions, Metro lists two targets for the app and asks you to pick one by number:
 
 - `React Native Bridgeless` is the target React Native registers itself. It debugs the RN Runtime only.
-- `React Native + Worklet Runtimes` debugs the RN Runtime and every Worklet Runtime in one window.
+- `React Native + Worklet Runtimes` debugs the RN Runtime and every Worklet Runtime in one window. The RN Runtime is the thread named `React Native`.
 
-In the `React Native + Worklet Runtimes` window, the RN Runtime is the thread named `React Native`, the UI Runtime is `Worklet Runtime (UI)`, and every Worker Runtime created with `createWorkletRuntime` is a thread named `Worklet Runtime (<name>)`.
-Switch between them in the _Threads_ pane of the Sources panel, or with the context selector of the Console panel. Worker Runtimes created later show up as soon as they exist.
+In both cases, switch between the runtimes in the _Threads_ pane of the Sources panel, or with the context selector of the Console panel. Worker Runtimes created later show up as soon as they exist.
 
-You can also list the targets with `http://localhost:8081/json` and open the `devtoolsFrontendUrl` of the `React Native + Worklet Runtimes` page, or add `localhost:8081` under _Discover network targets_ in `chrome://inspect`.
+You can also list the targets with `http://localhost:8081/json` and open the `devtoolsFrontendUrl` of a page, or add `localhost:8081` under _Discover network targets_ in `chrome://inspect`.
 
 ## What works
 
@@ -30,10 +33,13 @@ You can also list the targets with `http://localhost:8081/json` and open the `de
 
 - Only runtimes with locking enabled and an async queue are attached. Runtimes created with `enableLocking: false` or `useDefaultQueue: false` without a custom queue are not debuggable.
 - Pausing the UI Runtime pauses the main thread of the app, so the UI stops responding until you resume. On Android, touching the app while it is paused can trigger the "App isn't responding" dialog; choose _Wait_.
+- With earlier React Native versions, the RN Runtime session of the `React Native + Worklet Runtimes` target is driven on the main thread, so it does not respond while the UI Runtime is paused.
 - A Worklet Runtime cannot be reloaded on its own. Reloading from a Worklet Runtime target reloads the whole app.
 
 ## How it works
 
-Worklets opens its own connection to the Metro inspector proxy, separate from the one React Native uses. React Native dispatches inspector messages on the main thread, which is also where the UI Runtime runs, so a paused UI Runtime could never receive the resume command through it. The Worklets connection dispatches messages on a dedicated thread instead. It is listed by Metro as a second device with the same name and app id, with a single `React Native + Worklet Runtimes` page.
+With a React Native that exposes worker runtime targets (`HostTarget::registerWorkerRuntime`, proposed upstream), Worklets registers every Worklet Runtime with the React Native app's own inspector host. The runtimes then appear as threads of the regular `React Native Bridgeless` target, there is no second target to pick, and React Native dispatches inspector messages on a dedicated inspector thread, so no runtime blocks another.
+
+With earlier React Native versions, Worklets opens its own connection to the Metro inspector proxy, separate from the one React Native uses. React Native dispatches inspector messages on the main thread, which is also where the UI Runtime runs, so a paused UI Runtime could never receive the resume command through it. The Worklets connection dispatches messages on a dedicated thread instead. It is listed by Metro as a second device with the same name and app id, with a single `React Native + Worklet Runtimes` page.
 
 A DevTools session of that page is a session with React Native's own inspector page, driven on the main thread the way React Native does it, so the RN Runtime behaves exactly as in the `React Native Bridgeless` target. The Worklet Runtimes are exposed to the session through the CDP `Target` domain as `worker` targets, the same mechanism browsers use to show Web Workers next to the page. DevTools attaches to them automatically and addresses each one with its own session id, and their messages never touch the main thread.

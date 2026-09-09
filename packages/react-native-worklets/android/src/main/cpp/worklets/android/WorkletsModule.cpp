@@ -1,4 +1,5 @@
 #include <jsinspector-modern/InspectorFlags.h>
+#include <worklets/Inspector/WorkletsInspectorConfig.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
@@ -52,6 +53,9 @@ static std::shared_ptr<WorkletsInspectorConnection> makeInspectorConnection(
     const jni::alias_ref<jni::JString> &inspectorDeviceUrl,
     const jni::alias_ref<jni::JString> &inspectorDeviceName,
     const jni::alias_ref<jni::JString> &inspectorAppName) {
+#ifdef WORKLETS_RN_WORKER_RUNTIME_TARGETS
+  return nullptr;
+#endif // WORKLETS_RN_WORKER_RUNTIME_TARGETS
   if (!inspectorDeviceUrl || !jsinspector_modern::InspectorFlags::getInstance().getFuseboxEnabled()) {
     return nullptr;
   }

@@ -10,6 +10,9 @@
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeInspectorTarget.h>
 
+#include <worklets/Inspector/WorkletRuntimeWorkerTarget.h>
+#include <worklets/Inspector/WorkletsInspectorConfig.h>
+
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -92,6 +95,11 @@ WorkletRuntime::WorkletRuntime(
 }
 
 WorkletRuntime::~WorkletRuntime() {
+#ifdef WORKLETS_RN_WORKER_RUNTIME_TARGETS
+  if (workerTarget_) {
+    WorkletRuntimeWorkerTarget::detach(std::move(workerTarget_));
+  }
+#endif // WORKLETS_RN_WORKER_RUNTIME_TARGETS
   if (inspectorTarget_) {
     WorkletRuntimeInspectorTarget::detach(std::move(inspectorTarget_));
   }
@@ -138,11 +146,24 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
     throw std::runtime_error(std::string("[Worklets] Failed to load custom serializables. Reason: ") + e.getMessage());
   }
 
-  attachInspectorTarget(jsiWorkletsModuleProxy->getInspectorConnection());
+  attachInspectorTarget(jsiWorkletsModuleProxy);
 }
 
-void WorkletRuntime::attachInspectorTarget(const std::shared_ptr<WorkletsInspectorConnection> &inspectorConnection) {
-  if (!inspectorConnection || !queue_ || !enableLocking_ || !WorkletRuntimeInspectorTarget::isInspectorEnabled()) {
+void WorkletRuntime::attachInspectorTarget(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy) {
+  if (!queue_ || !enableLocking_ || !WorkletRuntimeInspectorTarget::isInspectorEnabled()) {
+    return;
+  }
+#ifdef WORKLETS_RN_WORKER_RUNTIME_TARGETS
+  const auto hostTarget = jsiWorkletsModuleProxy->getInspectorHostTarget();
+  if (!hostTarget.expired()) {
+    workerTarget_ = std::make_shared<WorkletRuntimeWorkerTarget>(
+        name_, runtime_, workletHermesRuntime_->getHermesRuntime(), runtimeMutex_, hostTarget);
+    workerTarget_->attach(weak_from_this());
+    return;
+  }
+#endif // WORKLETS_RN_WORKER_RUNTIME_TARGETS
+  const auto inspectorConnection = jsiWorkletsModuleProxy->getInspectorConnection();
+  if (!inspectorConnection) {
     return;
   }
   inspectorTarget_ = std::make_shared<WorkletRuntimeInspectorTarget>(

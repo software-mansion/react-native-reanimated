@@ -1,3 +1,4 @@
+#include <worklets/Inspector/WorkletsInspectorConfig.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/RunLoop/AsyncQueueImpl.h>
@@ -12,6 +13,15 @@
 using namespace facebook;
 
 namespace worklets {
+
+std::weak_ptr<facebook::react::jsinspector_modern::HostTarget> findInspectorHostTarget(jsi::Runtime &rnRuntime) {
+#ifdef WORKLETS_RN_WORKER_RUNTIME_TARGETS
+  return facebook::react::jsinspector_modern::HostTarget::fromRuntime(rnRuntime);
+#else
+  (void)rnRuntime;
+  return {};
+#endif // WORKLETS_RN_WORKER_RUNTIME_TARGETS
+}
 
 bool isDevBundleFromRNRuntime(jsi::Runtime &rnRuntime) {
   const auto rtDev = rnRuntime.global().getProperty(rnRuntime, "__DEV__");
@@ -72,6 +82,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           unpackerLoader_,
           rnRuntimeStatus_,
           inspectorConnection_,
+          findInspectorHostTarget(rnRuntime),
           RuntimeData::rnRuntimeId)) {
   RNRuntimeWorkletDecorator::decorate(rnRuntime, rnRuntimeProxy_->toOptimizedObject(rnRuntime), jsLogger_);
 }

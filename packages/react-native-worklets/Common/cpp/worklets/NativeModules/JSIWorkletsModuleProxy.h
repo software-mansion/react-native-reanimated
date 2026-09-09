@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <jsinspector-modern/HostTarget.h>
 #include <worklets/Inspector/WorkletsInspectorConnection.h>
 #include <worklets/SharedItems/MemoryManager.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
@@ -35,6 +36,7 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
       const std::shared_ptr<UnpackerLoader> &unpackerLoader,
       const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus,
       const std::shared_ptr<WorkletsInspectorConnection> &inspectorConnection,
+      const std::weak_ptr<facebook::react::jsinspector_modern::HostTarget> &inspectorHostTarget,
       RuntimeData::RuntimeId hostRuntimeId)
       : isDevBundle_(isDevBundle),
         bundleModeConfig_(bundleModeConfig),
@@ -47,6 +49,7 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
         unpackerLoader_(unpackerLoader),
         rnRuntimeStatus_(rnRuntimeStatus),
         inspectorConnection_(inspectorConnection),
+        inspectorHostTarget_(inspectorHostTarget),
         hostRuntimeId_(hostRuntimeId) {}
 
   static std::shared_ptr<JSIWorkletsModuleProxy> createForNewRuntime(
@@ -64,6 +67,7 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
         sourceProxy->unpackerLoader_,
         sourceProxy->rnRuntimeStatus_,
         sourceProxy->inspectorConnection_,
+        sourceProxy->inspectorHostTarget_,
         hostRuntimeId);
   }
 
@@ -117,6 +121,10 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
     return inspectorConnection_;
   }
 
+  [[nodiscard]] std::weak_ptr<facebook::react::jsinspector_modern::HostTarget> getInspectorHostTarget() const {
+    return inspectorHostTarget_;
+  }
+
  private:
   const bool isDevBundle_;
   const BundleModeConfig bundleModeConfig_;
@@ -129,6 +137,7 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
   const std::shared_ptr<UnpackerLoader> unpackerLoader_;
   const std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
   const std::shared_ptr<WorkletsInspectorConnection> inspectorConnection_;
+  const std::weak_ptr<facebook::react::jsinspector_modern::HostTarget> inspectorHostTarget_;
   const RuntimeData::RuntimeId hostRuntimeId_;
 };
 

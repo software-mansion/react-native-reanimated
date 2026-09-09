@@ -96,6 +96,7 @@
   },
   "resolutions": {
     "metro": "patch:metro@npm%3A0.87.0#~/.yarn/patches/metro-npm-0.87.0-1c5c005545.patch",
-    "metro-runtime": "patch:metro-runtime@npm%3A0.87.0#~/.yarn/patches/metro-runtime-npm-0.87.0-2e4e60a54a.patch"
+    "metro-runtime": "patch:metro-runtime@npm%3A0.87.0#~/.yarn/patches/metro-runtime-npm-0.87.0-2e4e60a54a.patch",
+    "react-native@npm:0.87.0": "patch:react-native@npm%3A0.87.0#~/.yarn/patches/react-native-npm-0.87.0-5a4de924a2.patch"
   }
 }

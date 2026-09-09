@@ -32,6 +32,10 @@ endif()
 
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
 
+# React Native for Android is consumed as a prebuilt library, so inspector
+# APIs declared only in its headers cannot be relied upon.
+string(APPEND CMAKE_CXX_FLAGS " -DWORKLETS_RN_PREBUILT_CORE")
+
 if(${WORKLETS_PROFILING})
   string(APPEND CMAKE_CXX_FLAGS " -DWORKLETS_PROFILING")
 endif()

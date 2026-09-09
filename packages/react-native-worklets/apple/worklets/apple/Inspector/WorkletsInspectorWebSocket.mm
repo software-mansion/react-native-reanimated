@@ -1,3 +1,4 @@
+#import <worklets/Inspector/WorkletsInspectorConfig.h>
 #import <worklets/apple/Inspector/WorkletsInspectorWebSocket.h>
 
 #import <jsinspector-modern/InspectorFlags.h>
@@ -162,6 +163,9 @@ NSString *percentEncoded(NSString *value)
 
 std::shared_ptr<WorkletsInspectorConnection> makeWorkletsInspectorConnection(NSURL *bundleURL)
 {
+#ifdef WORKLETS_RN_WORKER_RUNTIME_TARGETS
+  return nullptr;
+#endif // WORKLETS_RN_WORKER_RUNTIME_TARGETS
   if (!InspectorFlags::getInstance().getFuseboxEnabled()) {
     return nullptr;
   }

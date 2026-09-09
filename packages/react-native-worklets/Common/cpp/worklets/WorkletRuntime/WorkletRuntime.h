@@ -47,6 +47,7 @@ concept SyncCallResult = std::is_same_v<TResult, jsi::Value> || std::is_same_v<T
 class JSIWorkletsModuleProxy;
 class WorkletHermesRuntime;
 class WorkletRuntimeInspectorTarget;
+class WorkletRuntimeWorkerTarget;
 class WorkletsInspectorConnection;
 
 class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_this<WorkletRuntime> {
@@ -439,8 +440,12 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    * Exposes this runtime as a debug target in React Native DevTools when the
    * inspector is enabled. Only runtimes with an async queue and locking can be
    * attached, as the debugger needs a thread to dispatch its work to.
+   *
+   * Registers with the React Native app's own inspector host when React
+   * Native supports worker runtime targets, and with the Worklets inspector
+   * connection otherwise.
    */
-  void attachInspectorTarget(const std::shared_ptr<WorkletsInspectorConnection> &inspectorConnection);
+  void attachInspectorTarget(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy);
 
   [[nodiscard]] std::unique_lock<std::recursive_mutex> acquireRuntimeLock() const {
     if (enableLocking_) {
@@ -461,6 +466,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   std::shared_ptr<AsyncQueue> queue_;
   std::shared_ptr<EventLoop> eventLoop_;
   std::shared_ptr<WorkletRuntimeInspectorTarget> inspectorTarget_;
+  std::shared_ptr<WorkletRuntimeWorkerTarget> workerTarget_;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on
