@@ -9,6 +9,7 @@
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 
 #include <atomic>
+#include <functional>
 #include <future>
 #include <memory>
 #include <mutex>
@@ -17,6 +18,8 @@ namespace worklets {
 
 class WorkletsModuleProxyInitializer {
  public:
+  using BundleModeConfigLoader = std::function<BundleModeConfig()>;
+
   WorkletsModuleProxyInitializer(
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
@@ -25,11 +28,17 @@ class WorkletsModuleProxyInitializer {
 
   void prepareProxy();
 
-  std::shared_ptr<WorkletsModuleProxy> finalize(jsi::Runtime &rnRuntime, const BundleModeConfig &bundleModeConfig);
+  void beginBundleMode();
+
+  void prepareBundleMode(const BundleModeConfigLoader &loadBundleModeConfig);
+
+  std::shared_ptr<WorkletsModuleProxy>
+  finalize(jsi::Runtime &rnRuntime, bool bundleModeEnabled, const BundleModeConfigLoader &loadBundleModeConfig);
 
   void invalidate();
 
  private:
+  using ProxyPromise = std::shared_ptr<std::promise<std::shared_ptr<WorkletsModuleProxy>>>;
   using ProxyFuture = std::future<std::shared_ptr<WorkletsModuleProxy>>;
 
   const std::shared_ptr<JSScheduler> jsScheduler_;
@@ -39,8 +48,10 @@ class WorkletsModuleProxyInitializer {
 
   std::atomic<bool> prepared_{false};
   std::mutex mutex_;
-  const std::shared_ptr<std::promise<std::shared_ptr<WorkletsModuleProxy>>> preparedProxyPromise_;
+  const ProxyPromise preparedProxyPromise_;
   ProxyFuture preparedProxy_;
+  ProxyPromise startedProxyPromise_;
+  ProxyFuture startedProxy_;
 };
 
 } // namespace worklets
