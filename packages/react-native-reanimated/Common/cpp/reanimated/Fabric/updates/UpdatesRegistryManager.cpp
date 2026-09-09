@@ -114,9 +114,9 @@ void UpdatesRegistryManager::recordSynchronousProps(const UpdatesBatch &updatesB
     surface.version = ++pendingSynchronousPropsVersion_;
     auto &entry = surface.updates[family->getTag()];
     entry.family = family;
-    entry.props.update(props);
-    for (const auto &key : props.keys()) {
-      entry.versions[key.asString()] = surface.version;
+    for (const auto &[key, value] : props.items()) {
+      entry.props[key] = value;
+      entry.versions[key.getString()] = surface.version;
     }
   }
 }
