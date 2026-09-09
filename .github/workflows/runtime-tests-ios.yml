@@ -154,6 +154,15 @@ jobs:
           || node scripts/runtime-tests-server.js --launch --library reanimated
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
 
+      - name: Upload crash reports
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ios-crash-reports-${{ inputs.configuration || 'DebugRuntimeTests' }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}${{ inputs.sanitizer && format('-{0}', inputs.sanitizer) || '' }}
+          path: apps/fabric-example/crash-reports
+          if-no-files-found: ignore
+          retention-days: 14
+
       # With halt_on_error=0 a detected race does not fail the tests that
       # triggered it, so the collected reports have to fail the job here.
       - name: Fail on sanitizer reports
