@@ -12,6 +12,7 @@
 ### 🎉 New features
 
 - Add `backgroundImage` support to animated styles. Linear and radial gradients are accepted as objects or CSS strings and processed on the UI thread. ([#10486](https://github.com/software-mansion/react-native-reanimated/pull/10486) by [@tshmieldev](https://github.com/tshmieldev))
+
 ### 🐛 Bug fixes
 
 - Reset `IN_STYLE_UPDATER` even when an initial style updater throws, so a single updater error no longer leaves all animations returning raw values until reload. ([#10445](https://github.com/software-mansion/react-native-reanimated/pull/10445) by [@alexey-khatskelevich](https://github.com/alexey-khatskelevich))
