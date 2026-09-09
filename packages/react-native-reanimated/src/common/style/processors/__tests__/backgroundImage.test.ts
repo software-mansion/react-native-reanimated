@@ -20,6 +20,15 @@ type ProcessedLinearGradient = Extract<
   ProcessedBackgroundImageValue,
   { type: 'linear-gradient' }
 >;
+type ProcessedRadialGradient = Extract<
+  ProcessedBackgroundImageValue,
+  { type: 'radial-gradient' }
+>;
+type ProcessedDirection = ProcessedLinearGradient['direction'];
+type RadialPrelude = Pick<
+  ProcessedRadialGradient,
+  'shape' | 'size' | 'position'
+>;
 
 const process = (
   value: BackgroundImageInput,
@@ -102,12 +111,15 @@ describe(processBackgroundImage, () => {
       ['to left', { type: 'angle', value: 270 }],
       ['to top right', { type: 'keyword', value: 'to top right' }],
       ['TO LEFT TOP', { type: 'keyword', value: 'to top left' }],
-    ])('parses linear direction %p', (direction, expected) => {
-      expect(
-        processLinear(`linear-gradient(${direction}, #ff0000, #0000ff)`)
-          .direction
-      ).toEqual(expected);
-    });
+    ] satisfies [string, ProcessedDirection][])(
+      'parses linear direction %p',
+      (direction, expected) => {
+        expect(
+          processLinear(`linear-gradient(${direction}, #ff0000, #0000ff)`)
+            .direction
+        ).toEqual(expected);
+      }
+    );
 
     test('defaults linear direction when the first part is a color', () => {
       expect(
@@ -277,11 +289,14 @@ describe(processBackgroundImage, () => {
           position: { top: '0%', left: '0%' },
         },
       ],
-    ])('parses radial prelude %p', (prelude, expected) => {
-      expect(
-        process(`radial-gradient(${prelude}, #ff0000, #0000ff)`)?.[0]
-      ).toMatchObject(expected);
-    });
+    ] satisfies [string, RadialPrelude][])(
+      'parses radial prelude %p',
+      (prelude, expected) => {
+        expect(
+          process(`radial-gradient(${prelude}, #ff0000, #0000ff)`)?.[0]
+        ).toMatchObject(expected);
+      }
+    );
 
     test.each([
       'linear-gradient()',
@@ -359,11 +374,14 @@ describe(processBackgroundImage, () => {
       ['To Right', { type: 'angle', value: 90 }],
       ['to   right', { type: 'angle', value: 90 }],
       ['to\tbottom\n left', { type: 'keyword', value: 'to bottom left' }],
-    ])('converts direction keyword %p', (input, expected) => {
-      expect(processLinear([linear({ direction: input })]).direction).toEqual(
-        expected
-      );
-    });
+    ] satisfies [string, ProcessedDirection][])(
+      'converts direction keyword %p',
+      (input, expected) => {
+        expect(processLinear([linear({ direction: input })]).direction).toEqual(
+          expected
+        );
+      }
+    );
 
     test.each([
       ['45deg', 45],
@@ -374,12 +392,17 @@ describe(processBackgroundImage, () => {
       ['1.5907e-12deg', 1.5907e-12],
       ['-2.5e2deg', -250],
       ['1e2grad', 90],
-    ])('converts angle unit %s', (input, expected) => {
-      expect(processLinear([linear({ direction: input })]).direction).toEqual({
-        type: 'angle',
-        value: expected,
-      });
-    });
+    ] satisfies [string, number][])(
+      'converts angle unit %s',
+      (input, expected) => {
+        expect(processLinear([linear({ direction: input })]).direction).toEqual(
+          {
+            type: 'angle',
+            value: expected,
+          }
+        );
+      }
+    );
 
     test('defaults direction to 180deg', () => {
       expect(processLinear([linear({})]).direction).toEqual({
@@ -512,10 +535,10 @@ describe(processBackgroundImage, () => {
     });
 
     test('does not share the default position between gradients', () => {
-      const [first, second] = process([radial({}), radial({})]) as Extract<
-        ProcessedBackgroundImageValue,
-        { type: 'radial-gradient' }
-      >[];
+      const [first, second] = process([
+        radial({}),
+        radial({}),
+      ]) as ProcessedRadialGradient[];
       expect(first.position).toEqual(second.position);
       expect(first.position).not.toBe(second.position);
     });
