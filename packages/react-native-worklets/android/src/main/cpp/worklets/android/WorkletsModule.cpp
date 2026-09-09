@@ -1,3 +1,4 @@
+#include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
@@ -26,63 +27,62 @@ namespace worklets {
 using namespace facebook;
 using namespace react;
 
+namespace {
+
+BundleModeConfig bundleModeConfigFromWrapper(
+    const jni::alias_ref<JScriptBufferWrapper::javaobject> &jScriptBufferWrapper) {
+  if (!jScriptBufferWrapper) {
+    return BundleModeConfig{.enabled = false};
+  }
+  auto cxxWrapper = jScriptBufferWrapper->cthis();
+  return BundleModeConfig{.enabled = true, .script = cxxWrapper->getScript(), .sourceURL = cxxWrapper->getSourceUrl()};
+}
+
+} // namespace
+
 WorkletsModule::WorkletsModule(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
-    const BundleModeConfig &bundleModeConfig,
     jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       rnRuntimeStatus_(std::make_shared<RNRuntimeStatus>()),
-      workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
-          *rnRuntime,
-          jsCallInvoker,
+      initializer_(std::make_shared<WorkletsModuleProxyInitializer>(
+          std::make_shared<JSScheduler>(*rnRuntime, jsCallInvoker, getIsOnJSQueueThread()),
           uiScheduler,
-          getIsOnJSQueueThread(),
-          getRuntimeBindings(bundleModeConfig.enabled),
-          bundleModeConfig,
+          getRuntimeBindings(),
           rnRuntimeStatus_)) {}
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
-    jboolean bundleModeEnabled,
     jlong jsContext,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
-    jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
-    jni::alias_ref<JScriptBufferWrapper::javaobject>
-        jScriptBufferWrapper // NOLINT //(performance-unnecessary-value-param)
-) {
+    jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT //(performance-no-int-to-ptr)
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
-
-  std::shared_ptr<const ScriptBuffer> script = nullptr;
-  std::string sourceURL;
-  if (bundleModeEnabled) {
-    auto cxxWrapper = jScriptBufferWrapper->cthis();
-    script = cxxWrapper->getScript();
-    sourceURL = cxxWrapper->getSourceUrl();
-  }
-
-  return makeCxxInstance(
-      jThis,
-      BundleModeConfig{
-          .enabled = static_cast<bool>(bundleModeEnabled),
-          .script = script,
-          .sourceURL = sourceURL,
-      },
-      rnRuntime,
-      jsCallInvoker,
-      uiScheduler);
+  return makeCxxInstance(jThis, rnRuntime, jsCallInvoker, uiScheduler);
 }
 
-std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(const bool bundleModeEnabled) {
+void WorkletsModule::prepareProxyCpp() {
+  initializer_->prepareProxy();
+}
+
+void WorkletsModule::installTurboModuleCpp(
+    jboolean bundleModeEnabled,
+    jni::alias_ref<JScriptBufferWrapper::javaobject>
+        jScriptBufferWrapper // NOLINT //(performance-unnecessary-value-param)
+) {
+  workletsModuleProxy_ = initializer_->finalize(*rnRuntime_, bundleModeConfigFromWrapper(jScriptBufferWrapper));
+}
+
+std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings() {
   return std::make_shared<RuntimeBindings>(RuntimeBindings{
       .requestAnimationFrame = getRequestAnimationFrame(),
-      .nativeLoggingHook = bundleModeEnabled ? makeNativeLoggingHook() : RuntimeBindings::NativeLoggingHook{}
+      .nativeLoggingHook = makeNativeLoggingHook()
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-      ,
+          ,
       .abortRequest = getAbortRequest(),
       .clearCookies = getClearCookies(),
       .sendRequest = getSendRequest()
@@ -181,6 +181,7 @@ std::function<bool()> WorkletsModule::getIsOnJSQueueThread() {
 
 void WorkletsModule::invalidateCpp() {
   rnRuntimeStatus_->setDead();
+  initializer_->invalidate();
   javaPart_.reset();
   workletsModuleProxy_.reset();
 }
@@ -192,6 +193,8 @@ void WorkletsModule::startCpp() {
 void WorkletsModule::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
+      makeNativeMethod("prepareProxyCpp", WorkletsModule::prepareProxyCpp),
+      makeNativeMethod("installTurboModuleCpp", WorkletsModule::installTurboModuleCpp),
       makeNativeMethod("invalidateCpp", WorkletsModule::invalidateCpp),
       makeNativeMethod("startCpp", WorkletsModule::startCpp),
   });

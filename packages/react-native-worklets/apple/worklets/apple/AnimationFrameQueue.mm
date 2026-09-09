@@ -10,6 +10,7 @@
 #endif // TARGET_OS_OSX
 
 #import <React/RCTAssert.h>
+#import <React/RCTUtils.h>
 
 constexpr auto TIME_SAMPLES_AMOUNT = 4;
 
@@ -36,7 +37,9 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (instancetype)init
 {
-  AssertJavaScriptQueue();
+  react_native_assert(
+      (IsJavaScriptQueue() || RCTIsMainQueue()) &&
+      "AnimationFrameQueue must be created on the JavaScript queue or the main queue");
   if constexpr (worklets::StaticFeatureFlags::getFlag("IOS_DYNAMIC_FRAMERATE_ENABLED")) {
     bool supportsProMotion = false;
 #if !TARGET_OS_OSX

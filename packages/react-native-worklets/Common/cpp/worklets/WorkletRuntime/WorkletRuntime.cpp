@@ -99,7 +99,8 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
   const auto runtimeBindings = jsiWorkletsModuleProxy->getRuntimeBindings();
   const auto bundleModeEnabled = jsiWorkletsModuleProxy->isBundleModeEnabled();
   const auto unpackerLoader = jsiWorkletsModuleProxy->getUnpackerLoader();
-  const auto &nativeLoggingHook = runtimeBindings->nativeLoggingHook;
+  const auto nativeLoggingHook =
+      bundleModeEnabled ? runtimeBindings->nativeLoggingHook : RuntimeBindings::NativeLoggingHook{};
 
   WorkletRuntimeDecorator::decorate(
       rt,
