@@ -12,12 +12,7 @@ const HEADERS_RECEIVED = 2;
 const LOADING = 3;
 const DONE = 4;
 
-export type XMLHttpRequestResponseType =
-  | ''
-  | 'text'
-  | 'arraybuffer'
-  | 'blob'
-  | 'json';
+type XMLHttpRequestResponseType = '' | 'text' | 'arraybuffer' | 'blob' | 'json';
 
 type ResponsePayload = {
   status: number;
@@ -37,7 +32,7 @@ type DonePayload = {
   message?: string;
 };
 
-export class XMLHttpRequestUpload extends EventTargetLite {}
+class XMLHttpRequestUpload extends EventTargetLite {}
 
 export class XMLHttpRequest extends EventTargetLite {
   static readonly UNSENT = UNSENT;
