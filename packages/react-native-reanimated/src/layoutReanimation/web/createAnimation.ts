@@ -90,6 +90,16 @@ export function createCustomKeyFrameAnimation(
   // from the CSS keyframes and expects easing to be present in the keyframe to which
   // we animate instead of the keyframe we animate from)
   // `Object.keys` puts integer-like keys first, so the offsets must be sorted.
+  const toOffset = (offset: keyof KeyframeDefinitions) => {
+    if (offset === 'from') {
+      return 0;
+    }
+    if (offset === 'to') {
+      return 100;
+    }
+    return Number(offset);
+  };
+
   const offsets = (
     Object.keys(keyframeDefinitions) as (keyof KeyframeDefinitions)[]
   ).sort((a, b) => toOffset(a) - toOffset(b));
@@ -107,16 +117,6 @@ export function createCustomKeyFrameAnimation(
   insertWebAnimation(animationData.name, parsedKeyframe);
 
   return animationData.name;
-}
-
-function toOffset(offset: keyof KeyframeDefinitions): number {
-  if (offset === 'from') {
-    return 0;
-  }
-  if (offset === 'to') {
-    return 100;
-  }
-  return Number(offset);
 }
 
 export function createAnimationWithInitialValues(
