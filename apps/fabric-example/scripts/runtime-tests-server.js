@@ -152,6 +152,8 @@ let metroChild = null;
 let androidSerial = null;
 /** @type {Promise<void> | null} */
 let crashDiagnosticsPromise = null;
+/** @type {Promise<void>} */
+let afterSuiteChain = Promise.resolve();
 let afterSuiteRunning = false;
 let afterSuitePending = false;
 
@@ -342,39 +344,49 @@ function onLog(msg) {
 
 /** @param {DeviceMessage} msg */
 function onSuiteFinished(msg) {
-  if (!AFTER_SUITE) {
+  if (!AFTER_SUITE || runStartedAt === 0 || runFinished) {
     return;
   }
   if (afterSuiteRunning) {
     afterSuitePending = true;
     return;
   }
-  runAfterSuiteCommand(String(msg.name ?? ''));
+  afterSuiteChain = runAfterSuiteCommand(String(msg.name ?? ''));
 }
 
-/** @param {string} suiteName */
+/**
+ * @param {string} suiteName
+ * @returns {Promise<void>}
+ */
 function runAfterSuiteCommand(suiteName) {
   afterSuiteRunning = true;
   afterSuitePending = false;
-  const child = spawn(AFTER_SUITE, {
-    shell: true,
-    stdio: ['ignore', 'inherit', 'inherit'],
+  return new Promise((resolve) => {
+    let finished = false;
+    const onFinished = (/** @type {string} */ outcome) => {
+      if (finished) {
+        return;
+      }
+      finished = true;
+      afterSuiteRunning = false;
+      if (outcome) {
+        console.warn(
+          `[runtime-tests] --after-suite command ${outcome} (after suite: ${suiteName})`
+        );
+      }
+      resolve(afterSuitePending ? runAfterSuiteCommand(suiteName) : undefined);
+    };
+    const child = spawn(AFTER_SUITE, {
+      shell: true,
+      stdio: ['ignore', 'inherit', 'inherit'],
+    });
+    child.on('error', (error) =>
+      onFinished(`failed to start: ${error.message}`)
+    );
+    child.on('exit', (code, signal) =>
+      onFinished(code === 0 ? '' : `exited with ${signal ?? `code ${code}`}`)
+    );
   });
-  const onFinished = (/** @type {string} */ outcome) => {
-    afterSuiteRunning = false;
-    if (outcome) {
-      console.warn(
-        `[runtime-tests] --after-suite command ${outcome} (after suite: ${suiteName})`
-      );
-    }
-    if (afterSuitePending) {
-      runAfterSuiteCommand(suiteName);
-    }
-  };
-  child.on('error', (error) => onFinished(`failed to start: ${error.message}`));
-  child.on('exit', (code, signal) =>
-    onFinished(code === 0 ? '' : `exited with ${signal ?? `code ${code}`}`)
-  );
 }
 
 /** @param {DeviceMessage} msg */
@@ -971,6 +983,12 @@ function shutdown(code) {
       }
     }
   }
+  void exitAfterSuiteCommands(code);
+}
+
+/** @param {number} code */
+async function exitAfterSuiteCommands(code) {
+  await afterSuiteChain;
   wss.close(() => {
     process.exit(code);
   });
