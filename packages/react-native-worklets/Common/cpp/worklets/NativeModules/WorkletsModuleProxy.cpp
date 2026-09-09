@@ -46,7 +46,8 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     std::function<bool()> &&isJavaScriptThread,
     const std::shared_ptr<RuntimeBindings> &runtimeBindings,
     const BundleModeConfig &bundleModeConfig,
-    const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus)
+    const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus,
+    const std::shared_ptr<WorkletsInspectorConnection> &inspectorConnection)
     : isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
       jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsCallInvoker, std::move(isJavaScriptThread))),
       uiScheduler_(uiScheduler),
@@ -57,6 +58,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       runtimeManager_(std::make_shared<RuntimeManager>()),
       unpackerLoader_(std::make_shared<UnpackerLoader>()),
       rnRuntimeStatus_(rnRuntimeStatus),
+      inspectorConnection_(inspectorConnection),
       uiWorkletRuntime_(runtimeManager_->createUninitializedUIRuntime(std::make_shared<AsyncQueueUI>(uiScheduler_))),
       rnRuntimeProxy_(std::make_shared<JSIWorkletsModuleProxy>(
           isDevBundle_,
@@ -69,6 +71,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           bundleModeConfig_,
           unpackerLoader_,
           rnRuntimeStatus_,
+          inspectorConnection_,
           RuntimeData::rnRuntimeId)) {
   RNRuntimeWorkletDecorator::decorate(rnRuntime, rnRuntimeProxy_->toOptimizedObject(rnRuntime), jsLogger_);
 }

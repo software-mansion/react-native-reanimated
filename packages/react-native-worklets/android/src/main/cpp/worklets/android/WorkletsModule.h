@@ -3,6 +3,7 @@
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
+#include <worklets/Inspector/WorkletsInspectorConnection.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/Tools/RNRuntimeStatus.h>
 #include <worklets/Tools/ScriptBuffer.h>
@@ -29,7 +30,10 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jlong jsContext,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
       jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
-      jni::alias_ref<JScriptBufferWrapper::javaobject> jScriptBufferWrapper);
+      jni::alias_ref<JScriptBufferWrapper::javaobject> jScriptBufferWrapper,
+      jni::alias_ref<jni::JString> inspectorDeviceUrl,
+      jni::alias_ref<jni::JString> inspectorDeviceName,
+      jni::alias_ref<jni::JString> inspectorAppName);
 
   static void registerNatives();
 
@@ -43,7 +47,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       const BundleModeConfig &bundleModeConfig,
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      const std::shared_ptr<UIScheduler> &uiScheduler);
+      const std::shared_ptr<UIScheduler> &uiScheduler,
+      const std::shared_ptr<WorkletsInspectorConnection> &inspectorConnection);
 
   void startCpp();
 

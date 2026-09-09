@@ -138,15 +138,15 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
     throw std::runtime_error(std::string("[Worklets] Failed to load custom serializables. Reason: ") + e.getMessage());
   }
 
-  attachInspectorTarget(jsiWorkletsModuleProxy->getUIScheduler());
+  attachInspectorTarget(jsiWorkletsModuleProxy->getInspectorConnection());
 }
 
-void WorkletRuntime::attachInspectorTarget(const std::shared_ptr<UIScheduler> &uiScheduler) {
-  if (!queue_ || !enableLocking_ || !WorkletRuntimeInspectorTarget::isInspectorEnabled()) {
+void WorkletRuntime::attachInspectorTarget(const std::shared_ptr<WorkletsInspectorConnection> &inspectorConnection) {
+  if (!inspectorConnection || !queue_ || !enableLocking_ || !WorkletRuntimeInspectorTarget::isInspectorEnabled()) {
     return;
   }
   inspectorTarget_ = std::make_shared<WorkletRuntimeInspectorTarget>(
-      name_, runtime_, workletHermesRuntime_->getHermesRuntime(), runtimeMutex_, uiScheduler, jsScheduler_);
+      name_, runtime_, workletHermesRuntime_->getHermesRuntime(), runtimeMutex_, inspectorConnection, jsScheduler_);
   inspectorTarget_->attach(weak_from_this());
 }
 

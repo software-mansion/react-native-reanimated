@@ -24,5 +24,9 @@ You can also list the targets with `http://localhost:8081/json` and open the `de
 ## Limitations
 
 - Only runtimes with locking enabled and an async queue are attached. Runtimes created with `enableLocking: false` or `useDefaultQueue: false` without a custom queue are not debuggable.
-- The UI Runtime runs on the main thread, which is also the thread React Native uses to talk to DevTools. Pausing the UI Runtime on a breakpoint blocks that thread, so the debugger cannot deliver the resume command and the app stays frozen. Use breakpoints on Worker Runtimes only.
+- Pausing the UI Runtime pauses the main thread of the app, so the UI stops responding until you resume. On Android, touching the app while it is paused can trigger the "App isn't responding" dialog; choose _Wait_.
 - A Worklet Runtime cannot be reloaded on its own. Reloading from a Worklet Runtime target reloads the whole app.
+
+## How it works
+
+Worklets opens its own connection to the Metro inspector proxy, separate from the one React Native uses. React Native dispatches inspector messages on the main thread, which is also where the UI Runtime runs, so a paused UI Runtime could never receive the resume command through it. The Worklets connection dispatches messages on a dedicated thread instead. It is listed by Metro as a second device with the same name and app id, with only the Worklet Runtime pages.

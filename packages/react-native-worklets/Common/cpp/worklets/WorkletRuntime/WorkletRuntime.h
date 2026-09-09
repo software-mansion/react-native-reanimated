@@ -45,9 +45,9 @@ concept SyncCallResult = std::is_same_v<TResult, jsi::Value> || std::is_same_v<T
  * Forward declarations to avoid circular dependencies.
  */
 class JSIWorkletsModuleProxy;
-class UIScheduler;
 class WorkletHermesRuntime;
 class WorkletRuntimeInspectorTarget;
+class WorkletsInspectorConnection;
 
 class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_this<WorkletRuntime> {
  public:
@@ -440,7 +440,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    * inspector is enabled. Only runtimes with an async queue and locking can be
    * attached, as the debugger needs a thread to dispatch its work to.
    */
-  void attachInspectorTarget(const std::shared_ptr<UIScheduler> &uiScheduler);
+  void attachInspectorTarget(const std::shared_ptr<WorkletsInspectorConnection> &inspectorConnection);
 
   [[nodiscard]] std::unique_lock<std::recursive_mutex> acquireRuntimeLock() const {
     if (enableLocking_) {

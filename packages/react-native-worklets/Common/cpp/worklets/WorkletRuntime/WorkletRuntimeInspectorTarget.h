@@ -7,8 +7,8 @@
 #include <jsinspector-modern/HostTarget.h>
 #include <jsinspector-modern/InstanceTarget.h>
 #include <jsinspector-modern/RuntimeTarget.h>
+#include <worklets/Inspector/WorkletsInspectorConnection.h>
 #include <worklets/Tools/JSScheduler.h>
-#include <worklets/Tools/UIScheduler.h>
 
 #include <atomic>
 #include <functional>
@@ -24,12 +24,12 @@ class WorkletRuntime;
 
 /**
  * Registers a Worklet Runtime as a standalone debug target in React Native
- * DevTools. Each attached runtime shows up as a separate page in the
- * inspector, next to the "React Native Bridgeless" page of the RN Runtime.
+ * DevTools. Each attached runtime shows up as a separate page of the Worklets
+ * inspector connection, next to the React Native app's own pages.
  *
  * The target is created and attached on the thread that initializes the
- * runtime and is torn down on the UI thread, which is where React Native
- * dispatches inspector messages on both platforms.
+ * runtime and is torn down on the inspector thread of the connection, which is
+ * where every inspector message for the target is dispatched.
  */
 class WorkletRuntimeInspectorTarget final : public facebook::react::jsinspector_modern::HostTargetDelegate,
                                             public facebook::react::jsinspector_modern::InstanceTargetDelegate,
@@ -45,7 +45,7 @@ class WorkletRuntimeInspectorTarget final : public facebook::react::jsinspector_
       const std::shared_ptr<facebook::jsi::Runtime> &runtime,
       facebook::hermes::HermesRuntime &hermesRuntime,
       const std::shared_ptr<std::recursive_mutex> &runtimeMutex,
-      const std::shared_ptr<UIScheduler> &uiScheduler,
+      const std::shared_ptr<WorkletsInspectorConnection> &inspectorConnection,
       const std::shared_ptr<JSScheduler> &jsScheduler);
 
   ~WorkletRuntimeInspectorTarget() override;
@@ -58,8 +58,8 @@ class WorkletRuntimeInspectorTarget final : public facebook::react::jsinspector_
   void attach(const std::weak_ptr<WorkletRuntime> &weakWorkletRuntime);
 
   /**
-   * Removes the page from the inspector and destroys the target on the UI
-   * thread. Takes ownership of the target so it can outlive the
+   * Removes the page from the inspector and destroys the target on the
+   * inspector thread. Takes ownership of the target so it can outlive the
    * WorkletRuntime that created it.
    */
   static void detach(std::shared_ptr<WorkletRuntimeInspectorTarget> target);
@@ -94,7 +94,7 @@ class WorkletRuntimeInspectorTarget final : public facebook::react::jsinspector_
   const std::shared_ptr<facebook::jsi::Runtime> runtime_;
   facebook::hermes::HermesRuntime &hermesRuntime_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
-  const std::shared_ptr<UIScheduler> uiScheduler_;
+  const std::shared_ptr<WorkletsInspectorConnection> inspectorConnection_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   std::unique_ptr<facebook::react::jsinspector_modern::HermesRuntimeTargetDelegate> runtimeTargetDelegate_;
   std::shared_ptr<facebook::react::jsinspector_modern::HostTarget> hostTarget_;

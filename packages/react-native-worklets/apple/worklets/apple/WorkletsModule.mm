@@ -7,6 +7,7 @@
 #import <worklets/apple/AssertJavaScriptQueue.h>
 #import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/IOSUIScheduler.h>
+#import <worklets/apple/Inspector/WorkletsInspectorWebSocket.h>
 #import <worklets/apple/ScriptLoader.h>
 #import <worklets/apple/WorkletsModule.h>
 
@@ -64,12 +65,14 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
 
   std::string sourceURL = "";
   std::shared_ptr<const ScriptBuffer> script = nullptr;
+  NSURL *bundleURL = bundleManager_.bundleURL;
 
   if (bundleModeEnabled) {
-    NSURL *url = bundleManager_.bundleURL;
-    script = getScript(url);
-    sourceURL = [[url absoluteString] UTF8String];
+    script = getScript(bundleURL);
+    sourceURL = [[bundleURL absoluteString] UTF8String];
   }
+
+  auto inspectorConnection = makeWorkletsInspectorConnection(bundleURL);
 
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
   id networkingModule = [moduleRegistry_ moduleForClass:RCTNetworking.class];
@@ -92,7 +95,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
       std::move(isJavaScriptQueue),
       runtimeBindings,
       BundleModeConfig{.enabled = static_cast<bool>(bundleModeEnabled), .script = script, .sourceURL = sourceURL},
-      rnRuntimeStatus_);
+      rnRuntimeStatus_,
+      inspectorConnection);
 
   return @YES;
 }

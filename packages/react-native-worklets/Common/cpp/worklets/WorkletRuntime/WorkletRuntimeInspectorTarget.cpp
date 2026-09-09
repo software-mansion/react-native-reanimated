@@ -3,7 +3,6 @@
 
 #include <cxxreact/ReactNativeVersion.h>
 #include <jsinspector-modern/InspectorFlags.h>
-#include <jsinspector-modern/InspectorInterfaces.h>
 
 #include <memory>
 #include <string>
@@ -44,13 +43,13 @@ WorkletRuntimeInspectorTarget::WorkletRuntimeInspectorTarget(
     const std::shared_ptr<facebook::jsi::Runtime> &runtime,
     facebook::hermes::HermesRuntime &hermesRuntime,
     const std::shared_ptr<std::recursive_mutex> &runtimeMutex,
-    const std::shared_ptr<UIScheduler> &uiScheduler,
+    const std::shared_ptr<WorkletsInspectorConnection> &inspectorConnection,
     const std::shared_ptr<JSScheduler> &jsScheduler)
     : runtimeName_(runtimeName),
       runtime_(runtime),
       hermesRuntime_(hermesRuntime),
       runtimeMutex_(runtimeMutex),
-      uiScheduler_(uiScheduler),
+      inspectorConnection_(inspectorConnection),
       jsScheduler_(jsScheduler),
       pendingSetupJobs_(std::in_place) {}
 
@@ -59,9 +58,7 @@ WorkletRuntimeInspectorTarget::~WorkletRuntimeInspectorTarget() = default;
 void WorkletRuntimeInspectorTarget::attach(const std::weak_ptr<WorkletRuntime> &weakWorkletRuntime) {
   runtimeTargetDelegate_ = makeRuntimeTargetDelegate();
 
-  hostTarget_ = HostTarget::create(*this, [uiScheduler = uiScheduler_](std::function<void()> &&callback) {
-    uiScheduler->scheduleOnUI(std::move(callback));
-  });
+  hostTarget_ = HostTarget::create(*this, inspectorConnection_->getExecutor());
   instanceTarget_ = &hostTarget_->registerInstance(*this);
   runtimeTarget_ = &instanceTarget_->registerRuntime(*runtimeTargetDelegate_, makeRuntimeExecutor(weakWorkletRuntime));
 
@@ -72,9 +69,8 @@ void WorkletRuntimeInspectorTarget::attach(const std::weak_ptr<WorkletRuntime> &
   capabilities.prefersFuseboxFrontend = true;
 #endif // REACT_NATIVE_VERSION_MINOR < 85
 
-  pageId_ = getInspectorInstance().addPage(
+  pageId_ = inspectorConnection_->addPage(
       "Worklet Runtime (" + runtimeName_ + ")",
-      "Hermes",
       [weakThis = weak_from_this()](std::unique_ptr<IRemoteConnection> remote) -> std::unique_ptr<ILocalConnection> {
         const auto strongThis = weakThis.lock();
         if (!strongThis || strongThis->detached_) {
@@ -91,8 +87,8 @@ void WorkletRuntimeInspectorTarget::attach(const std::weak_ptr<WorkletRuntime> &
 }
 
 void WorkletRuntimeInspectorTarget::detach(std::shared_ptr<WorkletRuntimeInspectorTarget> target) {
-  const auto uiScheduler = target->uiScheduler_;
-  uiScheduler->scheduleOnUI([target = std::move(target)] { target->teardown(); });
+  const auto executor = target->inspectorConnection_->getExecutor();
+  executor([target = std::move(target)] { target->teardown(); });
 }
 
 HostTargetMetadata WorkletRuntimeInspectorTarget::getMetadata() {
@@ -188,7 +184,7 @@ void WorkletRuntimeInspectorTarget::runDetached(RuntimeJob &&job) {
 void WorkletRuntimeInspectorTarget::teardown() {
   detached_ = true;
   if (pageId_) {
-    getInspectorInstance().removePage(*pageId_);
+    inspectorConnection_->removePage(*pageId_);
     pageId_.reset();
   }
   std::unique_lock runtimeLock(*runtimeMutex_);
