@@ -1,5 +1,7 @@
 #include <worklets/android/Inspector/JWorkletsInspectorWebSocket.h>
 
+#include <fbjni/NativeRunnable.h>
+
 #include <memory>
 #include <optional>
 #include <string>
@@ -61,6 +63,20 @@ void AndroidInspectorWebSocket::send(std::string_view message) {
   jni::ThreadScope threadScope;
   static const auto sendMethod = javaWebSocket_->getClass()->getMethod<void(jni::local_ref<jni::JString>)>("send");
   sendMethod(javaWebSocket_, jni::make_jstring(std::string(message)));
+}
+
+struct JWorkletsInspectorMainThread : public jni::JavaClass<JWorkletsInspectorMainThread> {
+  static constexpr auto kJavaDescriptor = "Lcom/swmansion/worklets/inspector/WorkletsInspectorMainThread;";
+};
+
+react::jsinspector_modern::VoidExecutor makeAndroidMainThreadExecutor() {
+  return [](std::function<void()> &&callback) {
+    jni::ThreadScope threadScope;
+    static const auto postMethod = JWorkletsInspectorMainThread::javaClassStatic()
+                                       ->getStaticMethod<void(jni::alias_ref<jni::JRunnable::javaobject>)>("post");
+    postMethod(
+        JWorkletsInspectorMainThread::javaClassStatic(), jni::JNativeRunnable::newObjectCxxArgs(std::move(callback)));
+  };
 }
 
 WorkletsInspectorWebSocketFactory makeAndroidInspectorWebSocketFactory() {

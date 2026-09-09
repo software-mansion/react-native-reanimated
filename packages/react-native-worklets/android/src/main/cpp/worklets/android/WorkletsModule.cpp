@@ -60,6 +60,7 @@ static std::shared_ptr<WorkletsInspectorConnection> makeInspectorConnection(
       .deviceName = inspectorDeviceName ? inspectorDeviceName->toStdString() : "",
       .appName = inspectorAppName ? inspectorAppName->toStdString() : "",
       .webSocketFactory = makeAndroidInspectorWebSocketFactory(),
+      .mainThreadExecutor = makeAndroidMainThreadExecutor(),
   });
 }
 

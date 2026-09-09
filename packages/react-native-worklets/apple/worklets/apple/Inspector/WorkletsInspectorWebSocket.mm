@@ -196,6 +196,11 @@ std::shared_ptr<WorkletsInspectorConnection> makeWorkletsInspectorConnection(NSU
           [](const std::string &socketUrl, std::weak_ptr<IWebSocketDelegate> delegate) {
             return std::make_unique<WorkletsInspectorWebSocket>(socketUrl, std::move(delegate));
           },
+      .mainThreadExecutor =
+          [](std::function<void()> &&callback) {
+            auto sharedCallback = std::make_shared<std::function<void()>>(std::move(callback));
+            dispatch_async(dispatch_get_main_queue(), ^{ (*sharedCallback)(); });
+          },
   });
 }
 

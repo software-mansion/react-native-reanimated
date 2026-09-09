@@ -23,9 +23,9 @@ namespace worklets {
 class WorkletRuntime;
 
 /**
- * Registers a Worklet Runtime as a standalone debug target in React Native
- * DevTools. Each attached runtime shows up as a separate page of the Worklets
- * inspector connection, next to the React Native app's own pages.
+ * Registers a Worklet Runtime as a debug target in React Native DevTools. Each
+ * attached runtime is a child page of the Worklets inspector connection and
+ * shows up as a thread of the React Native app's DevTools session.
  *
  * The target is created and attached on the thread that initializes the
  * runtime and is torn down on the inspector thread of the connection, which is
@@ -40,13 +40,7 @@ class WorkletRuntimeInspectorTarget final : public facebook::react::jsinspector_
    */
   static bool isInspectorEnabled();
 
-  /**
-   * A main target is listed as a page of the Worklets inspector connection and
-   * exposes all other runtimes as child targets of its DevTools session. Child
-   * targets are only reachable through a main target.
-   */
   WorkletRuntimeInspectorTarget(
-      bool isMainTarget,
       const std::string &runtimeName,
       const std::shared_ptr<facebook::jsi::Runtime> &runtime,
       facebook::hermes::HermesRuntime &hermesRuntime,
@@ -96,7 +90,6 @@ class WorkletRuntimeInspectorTarget final : public facebook::react::jsinspector_
 
   void teardown();
 
-  const bool isMainTarget_;
   const std::string runtimeName_;
   const std::shared_ptr<facebook::jsi::Runtime> runtime_;
   facebook::hermes::HermesRuntime &hermesRuntime_;

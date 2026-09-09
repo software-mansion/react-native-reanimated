@@ -248,6 +248,91 @@ class WorkletsInspectorConnection::RemoteConnection final : public IRemoteConnec
   const std::string proxySessionId_;
 };
 
+/**
+ * A session with the React Native app's own inspector page. React Native
+ * expects its sessions to be created and driven on the main thread, so every
+ * call is forwarded there, while the replies travel back through the Worklets
+ * connection.
+ */
+class WorkletsInspectorConnection::ReactNativeLocalConnection final : public ILocalConnection {
+ public:
+  ReactNativeLocalConnection(VoidExecutor mainThreadExecutor, std::unique_ptr<IRemoteConnection> remote)
+      : mainThreadExecutor_(std::move(mainThreadExecutor)), state_(std::make_shared<State>()) {
+    state_->remote = std::move(remote);
+    mainThreadExecutor_([state = state_] { ensureConnected(*state); });
+  }
+
+  ~ReactNativeLocalConnection() override {
+    mainThreadExecutor_([state = state_] {
+      state->connection.reset();
+      state->remote.reset();
+    });
+  }
+
+  void sendMessage(std::string message) override {
+    mainThreadExecutor_([state = state_, message = std::move(message)] {
+      ensureConnected(*state);
+      if (state->connection) {
+        state->connection->sendMessage(message);
+      }
+    });
+  }
+
+  void disconnect() override {
+    mainThreadExecutor_([state = state_] {
+      if (state->connection) {
+        state->connection->disconnect();
+        state->connection.reset();
+      }
+      state->remote.reset();
+    });
+  }
+
+ private:
+  struct State {
+    std::unique_ptr<IRemoteConnection> remote;
+    std::unique_ptr<ILocalConnection> connection;
+    bool attempted{false};
+  };
+
+  static void ensureConnected(State &state) {
+    if (state.attempted) {
+      return;
+    }
+    state.attempted = true;
+    auto &inspector = getInspectorInstance();
+    std::optional<int> pageId;
+    for (const auto &page : inspector.getPages()) {
+      if (page.capabilities.nativePageReloads) {
+        pageId = page.id;
+      }
+    }
+    if (!pageId) {
+      PlatformLogger::log("[Worklets] No React Native inspector page to attach the Worklet Runtimes to");
+      return;
+    }
+    state.connection = inspector.connect(*pageId, std::move(state.remote));
+    if (!state.connection) {
+      PlatformLogger::log("[Worklets] The React Native inspector page rejected the connection");
+    }
+  }
+
+  const VoidExecutor mainThreadExecutor_;
+  const std::shared_ptr<State> state_;
+};
+
+void WorkletsInspectorConnection::registerReactNativePage() {
+  addPage(
+      PageKind::Main,
+      "React Native + Worklet Runtimes",
+      "React Native",
+      [mainThreadExecutor =
+           config_.mainThreadExecutor](std::unique_ptr<IRemoteConnection> remote) -> std::unique_ptr<ILocalConnection> {
+        return std::make_unique<ReactNativeLocalConnection>(mainThreadExecutor, std::move(remote));
+      },
+      Capabilities{.nativePageReloads = true});
+}
+
 std::shared_ptr<WorkletsInspectorConnection> WorkletsInspectorConnection::getOrCreate(Config config) {
   static std::mutex registryMutex;
   static std::map<std::string, std::shared_ptr<WorkletsInspectorConnection>> registry;
@@ -259,6 +344,7 @@ std::shared_ptr<WorkletsInspectorConnection> WorkletsInspectorConnection::getOrC
   }
   std::shared_ptr<WorkletsInspectorConnection> connection(new WorkletsInspectorConnection(std::move(config)));
   connection->webSocketDelegate_ = std::make_shared<WebSocketDelegateProxy>(connection, connection->thread_);
+  connection->registerReactNativePage();
   connection->thread_->post([weakConnection = std::weak_ptr(connection)] {
     if (auto strongConnection = weakConnection.lock()) {
       strongConnection->connect();

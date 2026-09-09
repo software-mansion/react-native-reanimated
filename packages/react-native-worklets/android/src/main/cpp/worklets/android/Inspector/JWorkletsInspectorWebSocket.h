@@ -55,4 +55,9 @@ class AndroidInspectorWebSocket final : public facebook::react::jsinspector_mode
 
 WorkletsInspectorWebSocketFactory makeAndroidInspectorWebSocketFactory();
 
+/**
+ * Returns an executor that posts callbacks to the main looper.
+ */
+facebook::react::jsinspector_modern::VoidExecutor makeAndroidMainThreadExecutor();
+
 } // namespace worklets

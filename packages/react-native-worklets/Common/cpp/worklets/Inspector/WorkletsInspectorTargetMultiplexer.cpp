@@ -33,7 +33,9 @@ std::string withSessionId(const std::string &message, const std::string &session
 
 /**
  * Tags every message of a child session with its `sessionId` before handing
- * it to the frontend connection of the main page.
+ * it to the frontend connection of the main page. Drops the child's
+ * `ReactNativeApplication.metadataUpdated` event, so DevTools keeps showing
+ * the app metadata of the main page.
  */
 class WorkletsInspectorTargetMultiplexer::ChildRemoteConnection final : public IRemoteConnection {
  public:
@@ -41,6 +43,9 @@ class WorkletsInspectorTargetMultiplexer::ChildRemoteConnection final : public I
       : upstream_(std::move(upstream)), sessionId_(std::move(sessionId)), contextName_(std::move(contextName)) {}
 
   void onMessage(std::string message) override {
+    if (message.find("\"ReactNativeApplication.metadataUpdated\"") != std::string::npos) {
+      return;
+    }
     upstream_->onMessage(withSessionId(renameExecutionContext(message, contextName_), sessionId_));
   }
 

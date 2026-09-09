@@ -39,15 +39,13 @@ bool WorkletRuntimeInspectorTarget::isInspectorEnabled() {
 }
 
 WorkletRuntimeInspectorTarget::WorkletRuntimeInspectorTarget(
-    bool isMainTarget,
     const std::string &runtimeName,
     const std::shared_ptr<facebook::jsi::Runtime> &runtime,
     facebook::hermes::HermesRuntime &hermesRuntime,
     const std::shared_ptr<std::recursive_mutex> &runtimeMutex,
     const std::shared_ptr<WorkletsInspectorConnection> &inspectorConnection,
     const std::shared_ptr<JSScheduler> &jsScheduler)
-    : isMainTarget_(isMainTarget),
-      runtimeName_(runtimeName),
+    : runtimeName_(runtimeName),
       runtime_(runtime),
       hermesRuntime_(hermesRuntime),
       runtimeMutex_(runtimeMutex),
@@ -72,8 +70,8 @@ void WorkletRuntimeInspectorTarget::attach(const std::weak_ptr<WorkletRuntime> &
 #endif // REACT_NATIVE_VERSION_MINOR < 85
 
   pageId_ = inspectorConnection_->addPage(
-      isMainTarget_ ? WorkletsInspectorConnection::PageKind::Main : WorkletsInspectorConnection::PageKind::Child,
-      isMainTarget_ ? "Worklet Runtimes" : "Worklet Runtime (" + runtimeName_ + ")",
+      WorkletsInspectorConnection::PageKind::Child,
+      "Worklet Runtime (" + runtimeName_ + ")",
       "Worklet Runtime (" + runtimeName_ + ")",
       [weakThis = weak_from_this()](std::unique_ptr<IRemoteConnection> remote) -> std::unique_ptr<ILocalConnection> {
         const auto strongThis = weakThis.lock();
@@ -97,7 +95,7 @@ void WorkletRuntimeInspectorTarget::detach(std::shared_ptr<WorkletRuntimeInspect
 
 HostTargetMetadata WorkletRuntimeInspectorTarget::getMetadata() {
   return HostTargetMetadata{
-      .appDisplayName = "Worklet Runtimes",
+      .appDisplayName = "Worklet Runtime (" + runtimeName_ + ")",
       .integrationName = "react-native-worklets",
 #ifdef ANDROID
       .platform = "android",

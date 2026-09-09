@@ -42,9 +42,11 @@ class WorkletsInspectorThread;
  * Worklet Runtime pages and dispatches every message on its own thread, so the
  * runtimes can be paused and resumed regardless of the thread they run on.
  *
- * Only main pages are listed to the proxy. Child pages are exposed to every
- * session of a main page through the CDP Target domain, so one DevTools window
- * shows all Worklet Runtimes.
+ * The connection lists a single main page, which proxies the React Native
+ * app's own inspector page so its sessions are driven on the main thread just
+ * like React Native does. Worklet Runtimes register as child pages, which are
+ * exposed to every session of the main page through the CDP Target domain, so
+ * one DevTools window shows the RN Runtime and all Worklet Runtimes.
  *
  * Connections are shared per URL for the lifetime of the process, mirroring
  * how React Native keeps its own inspector connection across reloads.
@@ -64,6 +66,11 @@ class WorkletsInspectorConnection final : public std::enable_shared_from_this<Wo
     std::string deviceName;
     std::string appName;
     WorkletsInspectorWebSocketFactory webSocketFactory;
+    /**
+     * Runs callbacks on the main thread, where React Native dispatches the
+     * messages of its own inspector sessions.
+     */
+    facebook::react::jsinspector_modern::VoidExecutor mainThreadExecutor;
   };
 
   static std::shared_ptr<WorkletsInspectorConnection> getOrCreate(Config config);
@@ -118,8 +125,11 @@ class WorkletsInspectorConnection final : public std::enable_shared_from_this<Wo
 
   class RemoteConnection;
   class WebSocketDelegateProxy;
+  class ReactNativeLocalConnection;
 
   explicit WorkletsInspectorConnection(Config config);
+
+  void registerReactNativePage();
 
   void connect();
   void reconnect();
