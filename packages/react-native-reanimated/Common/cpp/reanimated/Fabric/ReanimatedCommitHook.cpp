@@ -53,8 +53,11 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   }
 
   if constexpr (synchronousUpdatesEnabled()) {
-    auto lock = updatesRegistryManager_->lock();
-    updatesRegistryManager_->acknowledgeReactCommit(*oldRootShadowNode);
+    // A React branch can contain props that have not reached the main tree.
+    if (commitOptions.source != ShadowTreeCommitSource::React) {
+      auto lock = updatesRegistryManager_->lock();
+      updatesRegistryManager_->acknowledgeReactCommit(*oldRootShadowNode);
+    }
   }
 
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(newRootShadowNode);
@@ -71,7 +74,9 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     // Non-React commits clone from trees that never received the synchronous
     // values, so the pending values ride along here. No commit pausing for
     // these sources - that breaks sticky header animations.
-    if (commitOptions.source != ShadowTreeCommitSource::React) {
+    const bool isReactCommit = commitOptions.source == ShadowTreeCommitSource::React ||
+        (synchronousUpdatesEnabled() && commitOptions.source == ShadowTreeCommitSource::ReactRevisionMerge);
+    if (!isReactCommit) {
       if constexpr (synchronousUpdatesEnabled()) {
         auto lock = updatesRegistryManager_->lock();
         const auto surfaceId = shadowTree.getSurfaceId();

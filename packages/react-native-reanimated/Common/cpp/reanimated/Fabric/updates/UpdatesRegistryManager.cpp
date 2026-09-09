@@ -223,76 +223,95 @@ bool UpdatesRegistryManager::recordReactCommit(const RootShadowNode::Shared &roo
   const auto surfaceId = root->getSurfaceId();
   const auto surfaceIt = pendingSynchronousProps_.find(surfaceId);
   if (surfaceIt == pendingSynchronousProps_.end()) {
-    pendingReactCommits_.erase(surfaceId);
     return pendingSynchronousProps_.empty();
   }
 
-  const auto &surface = surfaceIt->second;
-  ReactCommitReceipt receipt{root, surface.version, {}};
+  auto &surface = surfaceIt->second;
   bool carriesAllPendingProps = pendingSynchronousProps_.size() == 1;
-  for (const auto &[tag, entry] : surface.updates) {
+  for (auto &[tag, entry] : surface.updates) {
+    std::erase_if(entry.reactCommits, [](const auto &receipt) { return receipt.props.expired(); });
+    const auto ancestors = entry.family->getAncestors(*root);
+    if (ancestors.empty()) {
+      continue;
+    }
     const auto propsIt = propsMap.find(entry.family);
     if (propsIt == propsMap.end()) {
       carriesAllPendingProps = false;
       continue;
     }
-    auto &keys = receipt.keys[tag];
+    const auto &[parent, index] = ancestors.back();
+    const auto &props = parent.get().getChildren()[index]->getProps();
+    ReactCommitReceipt receipt{props, surface.version, {}};
     for (const auto &rawProps : propsIt->second) {
-      const auto props = static_cast<folly::dynamic>(rawProps);
-      for (const auto &key : props.keys()) {
+      const auto values = static_cast<folly::dynamic>(rawProps);
+      for (const auto &key : values.keys()) {
         if (entry.props.count(key) > 0) {
-          keys.insert(key.asString());
+          receipt.keys.insert(key.asString());
         }
       }
     }
-    carriesAllPendingProps &= keys.size() == entry.props.size();
+    carriesAllPendingProps &= receipt.keys.size() == entry.props.size();
+    if (!receipt.keys.empty()) {
+      entry.reactCommits.push_back(std::move(receipt));
+      surface.hasReactCommits = true;
+    }
   }
-  pendingReactCommits_.insert_or_assign(surfaceId, std::move(receipt));
   return carriesAllPendingProps;
 }
 
 void UpdatesRegistryManager::acknowledgeReactCommit(const RootShadowNode &root) {
   react_native_assert(isLockedByCurrentThread());
-  const auto surfaceId = root.getSurfaceId();
-  const auto receiptIt = pendingReactCommits_.find(surfaceId);
-  if (receiptIt == pendingReactCommits_.end() || receiptIt->second.root.lock().get() != &root) {
+  const auto surfaceIt = pendingSynchronousProps_.find(root.getSurfaceId());
+  if (surfaceIt == pendingSynchronousProps_.end() || !surfaceIt->second.hasReactCommits) {
     return;
   }
-  const auto surfaceIt = pendingSynchronousProps_.find(surfaceId);
-  if (surfaceIt != pendingSynchronousProps_.end()) {
-    auto &surface = surfaceIt->second;
-    bool changed = false;
-    for (const auto &[tag, keys] : receiptIt->second.keys) {
-      const auto entryIt = surface.updates.find(tag);
-      if (entryIt == surface.updates.end()) {
+  auto &surface = surfaceIt->second;
+  surface.hasReactCommits = false;
+  bool changed = false;
+  for (auto &[tag, entry] : surface.updates) {
+    if (entry.reactCommits.empty()) {
+      continue;
+    }
+    const auto ancestors = entry.family->getAncestors(root);
+    if (ancestors.empty()) {
+      surface.hasReactCommits = true;
+      continue;
+    }
+    const auto &[parent, index] = ancestors.back();
+    const auto &props = parent.get().getChildren()[index]->getProps();
+    for (auto receiptIt = entry.reactCommits.begin(); receiptIt != entry.reactCommits.end();) {
+      const auto committedProps = receiptIt->props.lock();
+      if (!committedProps) {
+        receiptIt = entry.reactCommits.erase(receiptIt);
         continue;
       }
-      auto &entry = entryIt->second;
-      for (const auto &key : keys) {
+      if (committedProps != props) {
+        ++receiptIt;
+        continue;
+      }
+      for (const auto &key : receiptIt->keys) {
         const auto versionIt = entry.versions.find(key);
-        if (versionIt != entry.versions.end() && versionIt->second <= receiptIt->second.version) {
+        if (versionIt != entry.versions.end() && versionIt->second <= receiptIt->version) {
           entry.versions.erase(versionIt);
           entry.props.erase(key);
           changed = true;
         }
       }
-      if (entry.props.empty()) {
-        surface.updates.erase(entryIt);
-      }
+      receiptIt = entry.reactCommits.erase(receiptIt);
     }
-    if (surface.updates.empty()) {
-      pendingSynchronousProps_.erase(surfaceIt);
-    } else if (changed) {
-      surface.version = ++pendingSynchronousPropsVersion_;
-    }
+    surface.hasReactCommits |= !entry.reactCommits.empty();
   }
-  pendingReactCommits_.erase(receiptIt);
+  std::erase_if(surface.updates, [](const auto &entry) { return entry.second.props.empty(); });
+  if (surface.updates.empty()) {
+    pendingSynchronousProps_.erase(surfaceIt);
+  } else if (changed) {
+    surface.version = ++pendingSynchronousPropsVersion_;
+  }
 }
 
 void UpdatesRegistryManager::removeSurface(const SurfaceId surfaceId) {
   react_native_assert(isLockedByCurrentThread());
   pendingSynchronousProps_.erase(surfaceId);
-  pendingReactCommits_.erase(surfaceId);
 }
 
 void UpdatesRegistryManager::removePendingSynchronousProps(const ShadowNodeFamily &family) {

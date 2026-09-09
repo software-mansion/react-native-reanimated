@@ -61,7 +61,7 @@ class UpdatesRegistryManager {
   /// Changes with every pending-store change.
   uint64_t pendingSynchronousPropsVersion(SurfaceId surfaceId) const;
   std::unordered_set<SurfaceId> pendingSynchronousSurfaces() const;
-  /// Returns true if the commit carries every pending key.
+  /// Returns true if the commit covers all pending updates.
   bool recordReactCommit(const RootShadowNode::Shared &root, const PropsMap &propsMap);
   void acknowledgeReactCommit(const RootShadowNode &root);
   void removeSurface(SurfaceId surfaceId);
@@ -75,21 +75,23 @@ class UpdatesRegistryManager {
  private:
   using RemovableShadowNodes = std::unordered_map<Tag, ShadowNodeFamily::Shared>;
 
+  struct ReactCommitReceipt {
+    std::weak_ptr<const Props> props;
+    uint64_t version;
+    std::unordered_set<std::string> keys;
+  };
+
   struct PendingSynchronousProps {
     ShadowNodeFamily::Shared family;
     folly::dynamic props = folly::dynamic::object();
     std::unordered_map<std::string, uint64_t> versions;
+    std::vector<ReactCommitReceipt> reactCommits;
   };
 
   struct PendingSynchronousSurface {
     std::unordered_map<Tag, PendingSynchronousProps> updates;
     uint64_t version = 0;
-  };
-
-  struct ReactCommitReceipt {
-    std::weak_ptr<const RootShadowNode> root;
-    uint64_t version;
-    std::unordered_map<Tag, std::unordered_set<std::string>> keys;
+    bool hasReactCommits = false;
   };
 
   void removePendingSynchronousProps(const ShadowNodeFamily &family);
@@ -97,7 +99,6 @@ class UpdatesRegistryManager {
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
   std::unordered_map<SurfaceId, PendingSynchronousSurface> pendingSynchronousProps_;
-  std::unordered_map<SurfaceId, ReactCommitReceipt> pendingReactCommits_;
   uint64_t pendingSynchronousPropsVersion_ = 0;
   std::atomic<bool> shouldCommitAfterPause_;
   RemovableShadowNodes removableShadowNodes_;
