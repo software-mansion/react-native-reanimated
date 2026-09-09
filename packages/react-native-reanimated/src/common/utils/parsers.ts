@@ -57,7 +57,7 @@ export function getAngleInDegrees(angle: string): number | null {
     return null;
   }
   const numericValue = parseFloat(match[1]);
-  switch (match[2]) {
+  switch (match[2].toLowerCase()) {
     case 'deg':
       return numericValue;
     case 'grad':

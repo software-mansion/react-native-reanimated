@@ -229,7 +229,7 @@ describe(processBackgroundImage, () => {
       );
     });
 
-    test.each(['50px', '50', 'center'])(
+    test.each(['50px', '50', 'center', 'abc%', '%', '50 %'])(
       'throws on invalid position %p',
       (position) => {
         expect(() =>

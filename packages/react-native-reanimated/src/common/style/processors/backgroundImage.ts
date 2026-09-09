@@ -2,7 +2,7 @@
 import type { ViewStyle } from 'react-native';
 
 import type { ValueProcessor, ValueProcessorContext } from '../../types';
-import { getAngleInDegrees } from '../../utils';
+import { getAngleInDegrees, isPercentage } from '../../utils';
 import type { ProcessedColor } from './colors';
 import { processColor } from './colors';
 
@@ -126,10 +126,7 @@ const processDirection = (direction?: string): ProcessedDirection => {
 
 const isValidPosition = (position: unknown): position is number | string => {
   'worklet';
-  return (
-    typeof position === 'number' ||
-    (typeof position === 'string' && position.endsWith('%'))
-  );
+  return typeof position === 'number' || isPercentage(position);
 };
 
 const processColorStops = (
