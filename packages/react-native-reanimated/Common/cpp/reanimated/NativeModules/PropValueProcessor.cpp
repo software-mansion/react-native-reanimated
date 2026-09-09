@@ -20,6 +20,9 @@ std::string PropValueProcessor::processPropValue(
     const std::string &propName,
     const std::shared_ptr<const ShadowNode> &shadowNode,
     jsi::Runtime &rt) {
+  if (!shadowNode) {
+    throw std::runtime_error("Cannot obtain property `" + propName + "` because the view is no longer mounted");
+  }
   if (isLayoutProp(propName)) {
     auto layoutableShadowNode = dynamic_cast<const LayoutableShadowNode *>(shadowNode.get());
     if (!layoutableShadowNode) {

@@ -15,6 +15,10 @@
 
 ### 🐛 Bug fixes
 
+- Fix `Keyframe` easings on web being dropped or applied to the wrong keyframe when the definitions use the `from`/`to` aliases or fractional offsets. ([#10386](https://github.com/software-mansion/react-native-reanimated/pull/10386) by [@dennytosp](https://github.com/dennytosp))
+- Fix `getViewProp` and the runtime-tests prop snapshotting crashing (segfault on style props, unhandled error on layout props) when the view is no longer mounted. ([#10443](https://github.com/software-mansion/react-native-reanimated/pull/10443) by [@tjzel](https://github.com/tjzel))
+- Ship the Jest resolver (`react-native-reanimated/jest/resolver`) in the npm package, so consumer projects can run Jest against Reanimated: the modules that require a real native module are resolved to their web implementations. ([#10377](https://github.com/software-mansion/react-native-reanimated/pull/10377) by [@huextrat](https://github.com/huextrat))
+- Fix mounting an animated component with attached event handlers (e.g. `useAnimatedScrollHandler`) under Jest crashing with `[Reanimated] registerEventHandler is not available in JSReanimated.` - `WorkletEventHandler` now resolves to its web variant in Jest. ([#10377](https://github.com/software-mansion/react-native-reanimated/pull/10377) by [@huextrat](https://github.com/huextrat))
 - Reset `IN_STYLE_UPDATER` even when an initial style updater throws, so a single updater error no longer leaves all animations returning raw values until reload. ([#10445](https://github.com/software-mansion/react-native-reanimated/pull/10445) by [@alexey-khatskelevich](https://github.com/alexey-khatskelevich))
 - Fix `./gradlew app:build` failing on `:lintAnalyzeDebug` with a K2 UAST crash on `.gradle.kts` build scripts - all lint tasks are now skipped, not only `lintVital*`. ([#10448](https://github.com/software-mansion/react-native-reanimated/pull/10448) by [@tshmieldev](https://github.com/tshmieldev))
 - Treat `animationName: []` as no animation, so the view is detached instead of running its previous animation forever. ([#10432](https://github.com/software-mansion/react-native-reanimated/pull/10432) by [@MatiPl01](https://github.com/MatiPl01))
@@ -32,6 +36,7 @@
 
 ### 💡 Others
 
+- Initialize the Layout Animations manager lazily to avoid serializing its worklets during startup. ([#10466](https://github.com/software-mansion/react-native-reanimated/pull/10466) by [@tshmieldev](https://github.com/tshmieldev))
 - Add `fontVariationSettings` to the style properties config, so the package type-checks against React Native 0.88 ([#10239](https://github.com/software-mansion/react-native-reanimated/pull/10239) by [@tjzel](https://github.com/tjzel))
 - Add `backgroundPosition`, `backgroundRepeat` and `backgroundSize` to the style properties config, so the package type-checks against React Native 0.88. ([#10354](https://github.com/software-mansion/react-native-reanimated/pull/10354) by [@tjzel](https://github.com/tjzel))
 - Migrate Mutable's dirty flag to Fixed Synchronizable for better performance. ([#10272](https://github.com/software-mansion/react-native-reanimated/pull/10272) by [@tjzel](https://github.com/tjzel))
