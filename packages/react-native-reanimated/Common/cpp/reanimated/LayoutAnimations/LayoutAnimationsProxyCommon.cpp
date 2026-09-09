@@ -472,6 +472,21 @@ void LayoutAnimationsProxyCommon::maybeUpdateWindowDimensions(const ShadowViewMu
 }
 
 #ifdef ANDROID
+void LayoutAnimationsProxyCommon::protectAnimatedViewsFromSubviewClipping() const {
+  if (layoutAnimations_.empty()) {
+    return;
+  }
+  std::vector<int> viewTags;
+  std::vector<int> parentTags;
+  viewTags.reserve(layoutAnimations_.size());
+  parentTags.reserve(layoutAnimations_.size());
+  for (const auto &[tag, animation] : layoutAnimations_) {
+    viewTags.push_back(tag);
+    parentTags.push_back(animation.parentTag);
+  }
+  protectFromSubviewClipping_(viewTags, parentTags);
+}
+
 void LayoutAnimationsProxyCommon::scheduleCleanupPull() const {
   const std::weak_ptr<UIManager> weakUiManager = uiManager_;
   jsInvoker_->invokeAsync([weakUiManager, surfaceId = surfaceId_](jsi::Runtime &) {

@@ -67,6 +67,7 @@ struct LayoutAnimationsProxyDependencies {
   std::function<void(SurfaceId)> requestLayoutAnimationFlush;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
+  ProtectFromSubviewClippingFunction protectFromSubviewClipping;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker;
 #endif
 #ifdef __APPLE__
@@ -89,6 +90,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 #ifdef ANDROID
         ,
         preserveMountedTags_(dependencies.filterUnmountedTagsFunction),
+        protectFromSubviewClipping_(dependencies.protectFromSubviewClipping),
         jsInvoker_(dependencies.jsInvoker)
 #endif
   {
@@ -132,6 +134,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       const PropsParserContext &propsParserContext) const;
 #ifdef ANDROID
   void scheduleCleanupPull() const;
+  void protectAnimatedViewsFromSubviewClipping() const;
 #endif
 
   const SurfaceId surfaceId_;
@@ -151,6 +154,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   std::function<void(SurfaceId)> requestLayoutAnimationFlush_;
 #ifdef ANDROID
   PreserveMountedTagsFunction preserveMountedTags_;
+  ProtectFromSubviewClippingFunction protectFromSubviewClipping_;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker_;
 #endif
 

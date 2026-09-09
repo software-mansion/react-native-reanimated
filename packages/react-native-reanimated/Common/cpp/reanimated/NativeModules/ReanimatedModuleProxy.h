@@ -260,6 +260,9 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
   const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
+#ifdef ANDROID
+  const ProtectFromSubviewClippingFunction protectFromSubviewClipping_;
+#endif // ANDROID
 
 #ifdef ANDROID
   // Reused across `applySynchronousUpdates` calls to avoid per-frame heap

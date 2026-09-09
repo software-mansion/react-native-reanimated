@@ -196,6 +196,16 @@ std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vect
   return region;
 }
 
+void NativeProxy::protectFromSubviewClipping(const std::vector<int> &viewTags, const std::vector<int> &parentTags) {
+  static const auto method =
+      getJniMethod<void(jni::alias_ref<jni::JArrayInt>, jni::alias_ref<jni::JArrayInt>)>("protectFromSubviewClipping");
+  auto jViewTags = jni::JArrayInt::newArray(viewTags.size());
+  jViewTags->setRegion(0, viewTags.size(), viewTags.data());
+  auto jParentTags = jni::JArrayInt::newArray(parentTags.size());
+  jParentTags->setRegion(0, parentTags.size(), parentTags.data());
+  method(javaPart_.get(), jViewTags, jParentTags);
+}
+
 void NativeProxy::synchronouslyUpdateUIProps(
     const std::vector<int> &intBuffer,
     const std::vector<double> &doubleBuffer) {
@@ -361,6 +371,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto preserveMountedTags = bindThis(&NativeProxy::preserveMountedTags);
 
+  auto protectFromSubviewClipping = bindThis(&NativeProxy::protectFromSubviewClipping);
+
   auto synchronouslyUpdateUIPropsFunction = bindThis(&NativeProxy::synchronouslyUpdateUIProps);
 
   auto registerSensorFunction = bindThis(&NativeProxy::registerSensor);
@@ -406,6 +418,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   return {
       requestRender,
       preserveMountedTags,
+      protectFromSubviewClipping,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,
