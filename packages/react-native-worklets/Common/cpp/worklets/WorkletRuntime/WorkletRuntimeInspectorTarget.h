@@ -40,7 +40,13 @@ class WorkletRuntimeInspectorTarget final : public facebook::react::jsinspector_
    */
   static bool isInspectorEnabled();
 
+  /**
+   * A main target is listed as a page of the Worklets inspector connection and
+   * exposes all other runtimes as child targets of its DevTools session. Child
+   * targets are only reachable through a main target.
+   */
   WorkletRuntimeInspectorTarget(
+      bool isMainTarget,
       const std::string &runtimeName,
       const std::shared_ptr<facebook::jsi::Runtime> &runtime,
       facebook::hermes::HermesRuntime &hermesRuntime,
@@ -90,6 +96,7 @@ class WorkletRuntimeInspectorTarget final : public facebook::react::jsinspector_
 
   void teardown();
 
+  const bool isMainTarget_;
   const std::string runtimeName_;
   const std::shared_ptr<facebook::jsi::Runtime> runtime_;
   facebook::hermes::HermesRuntime &hermesRuntime_;

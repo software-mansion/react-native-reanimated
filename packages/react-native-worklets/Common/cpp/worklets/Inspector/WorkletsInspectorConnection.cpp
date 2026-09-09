@@ -15,6 +15,7 @@
 #include <string>
 #include <thread>
 #include <utility>
+#include <vector>
 
 namespace worklets {
 
@@ -36,6 +37,28 @@ std::string stringOr(const folly::dynamic &object, const char *key, const std::s
   }
   return value->getString();
 }
+
+/**
+ * Lets the main page's HostTarget own a remote connection while the
+ * multiplexer shares the same upstream with the child sessions.
+ */
+class ForwardingRemoteConnection final : public IRemoteConnection {
+ public:
+  ForwardingRemoteConnection(std::shared_ptr<IRemoteConnection> upstream, std::string runtimeName)
+      : upstream_(std::move(upstream)), runtimeName_(std::move(runtimeName)) {}
+
+  void onMessage(std::string message) override {
+    upstream_->onMessage(WorkletsInspectorTargetMultiplexer::renameExecutionContext(message, runtimeName_));
+  }
+
+  void onDisconnect() override {
+    upstream_->onDisconnect();
+  }
+
+ private:
+  const std::shared_ptr<IRemoteConnection> upstream_;
+  const std::string runtimeName_;
+};
 
 } // namespace
 
@@ -262,16 +285,46 @@ bool WorkletsInspectorConnection::isOnInspectorThread() const {
   return thread_->isCurrent();
 }
 
-int WorkletsInspectorConnection::addPage(std::string description, ConnectFunc connectFunc, Capabilities capabilities) {
-  std::lock_guard lock(pagesMutex_);
-  const auto pageId = nextPageId_++;
-  pages_.emplace(
-      pageId,
-      Page{.description = std::move(description), .connectFunc = std::move(connectFunc), .capabilities = capabilities});
+int WorkletsInspectorConnection::addPage(
+    PageKind kind,
+    std::string description,
+    std::string runtimeName,
+    ConnectFunc connectFunc,
+    Capabilities capabilities) {
+  int pageId = 0;
+  {
+    std::lock_guard lock(pagesMutex_);
+    pageId = nextPageId_++;
+    pages_.emplace(
+        pageId,
+        Page{
+            .kind = kind,
+            .description = std::move(description),
+            .runtimeName = std::move(runtimeName),
+            .connectFunc = std::move(connectFunc),
+            .capabilities = capabilities});
+  }
+  if (kind == PageKind::Child) {
+    thread_->post([weakThis = weak_from_this(), pageId] {
+      auto strongThis = weakThis.lock();
+      if (!strongThis) {
+        return;
+      }
+      for (const auto &child : strongThis->childTargets()) {
+        if (child.pageId == pageId) {
+          strongThis->forEachMultiplexer(
+              [&child](WorkletsInspectorTargetMultiplexer &multiplexer) { multiplexer.onChildTargetAdded(child); });
+          return;
+        }
+      }
+    });
+  }
   return pageId;
 }
 
 void WorkletsInspectorConnection::removePage(int pageId) {
+  forEachMultiplexer(
+      [pageId](WorkletsInspectorTargetMultiplexer &multiplexer) { multiplexer.onChildTargetRemoved(pageId); });
   {
     std::lock_guard lock(pagesMutex_);
     pages_.erase(pageId);
@@ -379,7 +432,25 @@ void WorkletsInspectorConnection::handleConnect(const folly::dynamic &payload) {
     return;
   }
 
-  ConnectFunc connectFunc;
+  const auto sessionId = nextSessionId_++;
+  WorkletsInspectorTargetMultiplexer *multiplexer = nullptr;
+  auto localConnection = connectToPage(pageId, sessionId, proxySessionId, &multiplexer);
+  if (!localConnection) {
+    folly::dynamic disconnectPayload = folly::dynamic::object("pageId", pageId)("sessionId", proxySessionId);
+    sendToPackager(folly::dynamic::object("event", "disconnect")("payload", std::move(disconnectPayload)));
+    return;
+  }
+  sessionsByPage_[pageId].emplace(
+      proxySessionId,
+      Session{.localConnection = std::move(localConnection), .multiplexer = multiplexer, .sessionId = sessionId});
+}
+
+std::unique_ptr<ILocalConnection> WorkletsInspectorConnection::connectToPage(
+    const std::string &pageId,
+    SessionId sessionId,
+    const std::string &proxySessionId,
+    WorkletsInspectorTargetMultiplexer **multiplexer) {
+  std::optional<Page> page;
   {
     std::lock_guard lock(pagesMutex_);
     int pageIdInt = 0;
@@ -390,23 +461,30 @@ void WorkletsInspectorConnection::handleConnect(const folly::dynamic &payload) {
     }
     auto it = pages_.find(pageIdInt);
     if (it != pages_.end()) {
-      connectFunc = it->second.connectFunc;
+      page = it->second;
     }
   }
+  if (!page) {
+    return nullptr;
+  }
 
-  const auto sessionId = nextSessionId_++;
-  std::unique_ptr<ILocalConnection> localConnection;
-  if (connectFunc) {
-    localConnection =
-        connectFunc(std::make_unique<RemoteConnection>(weak_from_this(), pageId, sessionId, proxySessionId));
+  std::shared_ptr<IRemoteConnection> upstream =
+      std::make_shared<RemoteConnection>(weak_from_this(), pageId, sessionId, proxySessionId);
+  if (page->kind == PageKind::Child) {
+    return page->connectFunc(std::make_unique<ForwardingRemoteConnection>(upstream, page->runtimeName));
   }
-  if (!localConnection) {
-    folly::dynamic disconnectPayload = folly::dynamic::object("pageId", pageId)("sessionId", proxySessionId);
-    sendToPackager(folly::dynamic::object("event", "disconnect")("payload", std::move(disconnectPayload)));
-    return;
+
+  auto mainConnection = page->connectFunc(std::make_unique<ForwardingRemoteConnection>(upstream, page->runtimeName));
+  if (!mainConnection) {
+    return nullptr;
   }
-  sessionsByPage_[pageId].emplace(
-      proxySessionId, Session{.localConnection = std::move(localConnection), .sessionId = sessionId});
+  auto multiplexedConnection = std::make_unique<WorkletsInspectorTargetMultiplexer>(
+      std::move(mainConnection), std::move(upstream), [weakThis = weak_from_this()] {
+        auto strongThis = weakThis.lock();
+        return strongThis ? strongThis->childTargets() : std::vector<WorkletsInspectorTargetMultiplexer::ChildTarget>{};
+      });
+  *multiplexer = multiplexedConnection.get();
+  return multiplexedConnection;
 }
 
 void WorkletsInspectorConnection::handleDisconnect(const folly::dynamic &payload) {
@@ -497,6 +575,9 @@ folly::dynamic WorkletsInspectorConnection::pages() {
   std::lock_guard lock(pagesMutex_);
   folly::dynamic array = folly::dynamic::array();
   for (const auto &[pageId, page] : pages_) {
+    if (page.kind != PageKind::Main) {
+      continue;
+    }
     folly::dynamic pageDescription = folly::dynamic::object;
     pageDescription["id"] = std::to_string(pageId);
     pageDescription["title"] = config_.appName + " (" + config_.deviceName + ")";
@@ -508,6 +589,29 @@ folly::dynamic WorkletsInspectorConnection::pages() {
     array.push_back(std::move(pageDescription));
   }
   return array;
+}
+
+std::vector<WorkletsInspectorTargetMultiplexer::ChildTarget> WorkletsInspectorConnection::childTargets() {
+  std::lock_guard lock(pagesMutex_);
+  std::vector<WorkletsInspectorTargetMultiplexer::ChildTarget> children;
+  for (const auto &[pageId, page] : pages_) {
+    if (page.kind == PageKind::Child) {
+      children.push_back(WorkletsInspectorTargetMultiplexer::ChildTarget{
+          .pageId = pageId, .title = page.description, .connectFunc = page.connectFunc});
+    }
+  }
+  return children;
+}
+
+void WorkletsInspectorConnection::forEachMultiplexer(
+    const std::function<void(WorkletsInspectorTargetMultiplexer &)> &callback) {
+  for (auto &[pageId, pageSessions] : sessionsByPage_) {
+    for (auto &[proxySessionId, session] : pageSessions) {
+      if (session.multiplexer != nullptr) {
+        callback(*session.multiplexer);
+      }
+    }
+  }
 }
 
 } // namespace worklets

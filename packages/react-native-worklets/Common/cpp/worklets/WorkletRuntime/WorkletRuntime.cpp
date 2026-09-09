@@ -146,7 +146,13 @@ void WorkletRuntime::attachInspectorTarget(const std::shared_ptr<WorkletsInspect
     return;
   }
   inspectorTarget_ = std::make_shared<WorkletRuntimeInspectorTarget>(
-      name_, runtime_, workletHermesRuntime_->getHermesRuntime(), runtimeMutex_, inspectorConnection, jsScheduler_);
+      runtimeKind_ == RuntimeData::RuntimeKind::UI,
+      name_,
+      runtime_,
+      workletHermesRuntime_->getHermesRuntime(),
+      runtimeMutex_,
+      inspectorConnection,
+      jsScheduler_);
   inspectorTarget_->attach(weak_from_this());
 }
 
