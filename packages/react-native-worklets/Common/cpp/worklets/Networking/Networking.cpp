@@ -1,5 +1,5 @@
 #include <worklets/Networking/Networking.h>
-#include <worklets/SharedItems/SerializableRemoteFunction.h>
+#include <worklets/SharedItems/Serializable/SerializableRemoteFunction.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <functional>
