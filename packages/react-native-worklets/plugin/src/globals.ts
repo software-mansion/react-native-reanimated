@@ -121,6 +121,8 @@ const notCapturedIdentifiers = [
   'Response',
   'XMLHttpRequest',
   'FormData',
+  'AbortController',
+  'AbortSignal',
   'Blob',
   'FileReader',
   'WebSocket',

@@ -218,4 +218,24 @@ describeFn('networking (live)', () => {
       expect(flag.value).toBe('ok');
     }
   );
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
+    'aborts fetch through AbortController, runtime: **%s**',
+    async (runtimeKind) => {
+      const notification = 'fetch_abort_done';
+      const [flag, setFlag] = createTestValue('not_ok');
+      const baseUrl = BASE_URL;
+
+      dispatchWorklet(() => {
+        'worklet';
+        const controller = new AbortController();
+        fetch(`${baseUrl}/echo/delay?ms=10000`, { signal: controller.signal })
+          .then(() => setFlag('request completed', notification))
+          .catch((error: Error) => setFlag(error.name, notification));
+        setTimeout(() => controller.abort(), 200);
+      }, runtimeKind);
+
+      await waitForNotification(notification);
+      expect(flag.value).toBe('AbortError');
+    }
+  );
 });
