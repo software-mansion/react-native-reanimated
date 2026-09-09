@@ -11,6 +11,8 @@
 
 ### 🎉 New features
 
+- Add iOS Swift Package Manager support via `Package.swift` and SPM integration metadata in `react-native.config.js`, with a dependency on `RNWorklets`. ([#10472](https://github.com/software-mansion/react-native-reanimated/pull/10472) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
+
 ### 🐛 Bug fixes
 
 - Reset `IN_STYLE_UPDATER` even when an initial style updater throws, so a single updater error no longer leaves all animations returning raw values until reload. ([#10445](https://github.com/software-mansion/react-native-reanimated/pull/10445) by [@alexey-khatskelevich](https://github.com/alexey-khatskelevich))
