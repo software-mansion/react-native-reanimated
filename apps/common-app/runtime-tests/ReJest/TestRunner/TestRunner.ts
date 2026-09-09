@@ -46,6 +46,7 @@ export class TestRunner {
   private _notificationRegistry = new NotificationRegistry();
   private _workletRuntimePool = new WorkletRuntimePool();
   private _progressHook: ((progress: TestProgress) => void) | null = null;
+  private _suiteFinishedHook: ((suiteName: string) => void) | null = null;
   private _progressIndex: number = 0;
   private _progressTotal: number = 0;
   private _testSuiteBuilder = new TestSuiteBuilder();
@@ -81,6 +82,7 @@ export class TestRunner {
   public configure(config: TestConfiguration) {
     this._renderHook = config.render;
     this._progressHook = config.onProgress ?? null;
+    this._suiteFinishedHook = config.onSuiteFinished ?? null;
     return this._renderLock;
   }
 
@@ -207,6 +209,8 @@ export class TestRunner {
     if (testSuite.afterAll) {
       await testSuite.afterAll();
     }
+
+    this._suiteFinishedHook?.(testSuite.name);
   }
 
   private async runTestCase(testSuite: TestSuite, testCase: TestCase) {

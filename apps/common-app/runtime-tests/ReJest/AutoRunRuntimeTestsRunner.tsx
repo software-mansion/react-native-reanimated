@@ -83,7 +83,7 @@ export default function AutoRunRuntimeTestsRunner({
           setStatus(message);
         }
       },
-      onStart: async ({ only }) => {
+      onStart: async ({ only, reportSuiteFinished }) => {
         const filterSet = only ? new Set(only) : null;
         const selected = tests.filter((test) => {
           if (test.disabled) {
@@ -107,6 +107,7 @@ export default function AutoRunRuntimeTestsRunner({
           configure: (config: {
             render: (renderedComponent: ReactNode) => void;
             onProgress?: (progressState: ProgressState) => void;
+            onSuiteFinished?: (suiteName: string) => void;
           }) => RenderLock;
           runTests: () => Promise<{
             passed: number;
@@ -121,6 +122,7 @@ export default function AutoRunRuntimeTestsRunner({
         renderLock = configure({
           render: setComponent,
           onProgress: setProgress,
+          onSuiteFinished: reportSuiteFinished,
         });
         if (warmUp) {
           await warmUp();
