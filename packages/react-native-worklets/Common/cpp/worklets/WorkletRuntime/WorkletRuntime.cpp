@@ -63,9 +63,11 @@ WorkletRuntime::WorkletRuntime(
     const std::string &name,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop,
-    bool enableLocking)
+    bool enableLocking,
+    bool enableNetworking)
     : runtimeId_(runtimeId),
       enableLocking_(enableLocking),
+      enableNetworking_(enableNetworking),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       microtaskQueueEnabled_(enableEventLoop || runtimeKind == RuntimeData::RuntimeKind::UI),
       runtime_(makeRuntime(runtimeMutex_, enableLocking_, microtaskQueueEnabled_)),
@@ -137,7 +139,7 @@ void WorkletRuntime::bundleModeInit(
     throw std::runtime_error("[Worklets] Expected to receive the bundle, but got nullptr instead.");
   }
 
-  if (networking) {
+  if (networking && enableNetworking_) {
     NetworkingInstaller::install(rt, networking, runtimeId_);
   }
 

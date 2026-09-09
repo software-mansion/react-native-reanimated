@@ -252,7 +252,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       const std::string &name,
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
       bool enableEventLoop = true,
-      bool enableLocking = true);
+      bool enableLocking = true,
+      bool enableNetworking = true);
 
   void init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy);
 
@@ -441,6 +442,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   const RuntimeData::RuntimeId runtimeId_;
   const bool enableLocking_;
+  const bool enableNetworking_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const bool microtaskQueueEnabled_;
   const std::shared_ptr<jsi::Runtime> runtime_;

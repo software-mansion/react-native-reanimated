@@ -36,7 +36,8 @@ class RuntimeManager {
       const std::shared_ptr<SerializableWorklet> &initializer = nullptr,
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
       bool enableEventLoop = true,
-      bool enableLocking = true);
+      bool enableLocking = true,
+      bool enableNetworking = true);
 
   std::shared_ptr<WorkletRuntime> createUninitializedUIRuntime(const std::shared_ptr<AsyncQueue> &uiAsyncQueue);
 
