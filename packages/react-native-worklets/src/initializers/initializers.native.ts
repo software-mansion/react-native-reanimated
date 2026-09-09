@@ -10,6 +10,7 @@ import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker'
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
 import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
 import { installValueUnpacker } from '../memory/valueUnpacker';
+import { installNetworking } from '../networking/install';
 import { setupQueueMicrotask } from '../runLoop/common/queueMicrotaskPolyfill';
 import { setupSetImmediate } from '../runLoop/common/setImmediatePolyfill';
 import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
@@ -170,6 +171,8 @@ function initializeWorkletRuntime() {
     if (__DEV__) {
       silenceHMRWarnings();
     }
+
+    installNetworking();
   }
 }
 

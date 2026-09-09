@@ -7,6 +7,7 @@
 #import <worklets/apple/AssertJavaScriptQueue.h>
 #import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/IOSUIScheduler.h>
+#import <worklets/apple/Networking/AppleNetworkingBackend.h>
 #import <worklets/apple/ScriptLoader.h>
 #import <worklets/apple/WorkletsModule.h>
 
@@ -122,7 +123,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
         [animationFrameQueue requestAnimationFrame:callback];
       },
       .nativeLoggingHook =
-          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{}});
+          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{},
+      .networkingBackend = bundleModeEnabled ? std::make_shared<AppleNetworkingBackend>() : nullptr});
 }
 
 @end
