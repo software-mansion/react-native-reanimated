@@ -34,13 +34,29 @@ func stringifyFlagValue(_ value: Any) -> String? {
     return nil
 }
 
-// Returns nil in a source checkout (the package isn't installed under node_modules).
-func findConsumerPackageJSON() -> URL? {
-    guard let range = packageDirectory.range(of: "/node_modules/") else {
-        return nil
+func isConsumerPackageJSON(at url: URL) -> Bool {
+    guard let json = readJSONObject(at: url),
+        let name = json["name"] as? String,
+        name != "react-native-worklets",
+        let section = json["worklets"] as? [String: Any],
+        section["staticFeatureFlags"] != nil
+    else {
+        return false
     }
-    let appRoot = String(packageDirectory[..<range.lowerBound])
-    return URL(fileURLWithPath: appRoot).appendingPathComponent("package.json")
+    return true
+}
+
+// SPM autolinking uses ios/build/generated/autolinking/libs/<SwiftName>/ (symlink).
+func findConsumerPackageJSON() -> URL? {
+    var dir = URL(fileURLWithPath: packageDirectory).standardizedFileURL
+    while dir.path != "/" {
+        let candidate = dir.appendingPathComponent("package.json")
+        if isConsumerPackageJSON(at: candidate) {
+            return candidate
+        }
+        dir = dir.deletingLastPathComponent()
+    }
+    return nil
 }
 
 func readStaticFeatureFlags() -> [String: String] {
