@@ -79,9 +79,11 @@ if (__DEV__ && ReducedMotionManager.jsValue) {
 
 export function initialUpdaterRun<T>(updater: () => T) {
   IN_STYLE_UPDATER.current = true;
-  const result = updater();
-  IN_STYLE_UPDATER.current = false;
-  return result;
+  try {
+    return updater();
+  } finally {
+    IN_STYLE_UPDATER.current = false;
+  }
 }
 
 interface RecognizedPrefixSuffix {

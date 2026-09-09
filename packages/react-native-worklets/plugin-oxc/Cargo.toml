@@ -1,0 +1,30 @@
+[package]
+name = "worklets-oxc-plugin"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+oxc_allocator = "0.132"
+oxc_ast = "0.132"
+oxc_ast_visit = "0.132"
+oxc_codegen = "0.132"
+oxc_transformer = "0.132"
+oxc_parser = "0.132"
+oxc_semantic = "0.132"
+oxc_span = "0.132"
+oxc_syntax = "0.132"
+
+napi = { version = "3", default-features = false, features = ["napi4", "serde-json"] }
+napi-derive = "3"
+
+[build-dependencies]
+napi-build = "2"
+
+[profile.release]
+lto = true
+strip = "symbols"
+codegen-units = 1

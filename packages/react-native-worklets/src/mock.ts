@@ -44,9 +44,36 @@ const WorkletAPI = {
       setSync: set,
     };
   },
-  createSynchronizable: ID,
+  createSynchronizable: <TValue>(
+    initialValue: TValue,
+    config?: { fixedType?: boolean }
+  ) => {
+    let value = initialValue;
+    const synchronizable = {
+      __synchronizableRef: true,
+      getDirty: () => value,
+      getBlocking: () => value,
+      setBlocking: (newValue: TValue | ((prev: TValue) => TValue)) => {
+        value =
+          typeof newValue === 'function'
+            ? (newValue as (prev: TValue) => TValue)(value)
+            : newValue;
+      },
+      lock: NOOP,
+      unlock: NOOP,
+    };
+    if (config?.fixedType) {
+      Object.assign(synchronizable, {
+        setDirty: (newValue: TValue) => {
+          value = newValue;
+        },
+      });
+    }
+    return synchronizable;
+  },
   createWorkletRuntime: NOOP_FACTORY,
   executeOnUIRuntimeSync: ID,
+  getCurrentThreadId: () => '0',
   getDynamicFeatureFlag: () => false,
   getRuntimeKind: () => RuntimeKind.ReactNative,
   getStaticFeatureFlag: () => false,

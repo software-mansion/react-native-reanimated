@@ -9,6 +9,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/memory/createSerializable.test');
       require('./tests/memory/createSerializableOnUI.test');
       require('./tests/memory/isSerializableRef.test');
+      require('./tests/memory/retainingSerializable.test');
       require('./tests/memory/synchronizable.test');
       require('./tests/memory/customSerializable.test');
       require('./tests/memory/hybridObjectSupport.test');
@@ -21,6 +22,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       __DEV__ && require('./tests/runtimes/errorTraces.test');
       __DEV__ && require('./tests/runtimes/loggingFromWorkletRuntime.test');
       require('./tests/runtimes/createWorkletRuntime.test');
+      require('./tests/runtimes/getCurrentThreadId.test');
       require('./tests/runtimes/scheduleOnRN.test');
       require('./tests/runtimes/runOnUISync.test');
       require('./tests/runtimes/scheduleOnRuntime.test');
@@ -71,7 +73,6 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
   {
     testSuiteName: 'babel plugin',
     importTest: () => {
-      require('./tests/plugin/contextObjects.test');
       require('./tests/plugin/fileWorkletization.test');
       require('./tests/plugin/jsxInWorklets.test');
       require('./tests/plugin/recursion.test');

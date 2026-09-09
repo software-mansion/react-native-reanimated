@@ -8,7 +8,7 @@ import {
 import {
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
@@ -32,8 +32,7 @@ describe('runOnRuntimeSyncWithId', () => {
     notify(FAIL_NOTIFICATION);
   };
 
-  const workletRuntime1 = getWorkletRuntimeFromPool('test');
-  const workletRuntime2 = getWorkletRuntimeFromPool('test2');
+  const [workletRuntime1, workletRuntime2] = getWorkletRuntimesFromPool(2);
 
   beforeEach(() => {
     value = 0;

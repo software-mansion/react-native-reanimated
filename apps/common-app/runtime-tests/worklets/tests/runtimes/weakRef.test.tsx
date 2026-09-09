@@ -8,12 +8,12 @@ import {
 import {
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   test,
 } from '../../../ReJest/RuntimeTestsApi';
 
 describe('WeakRef on Worklet Runtime', () => {
-  const workletRuntime = getWorkletRuntimeFromPool('test');
+  const [workletRuntime] = getWorkletRuntimesFromPool(1);
   const runtimes = [
     {
       name: 'UI',
@@ -66,30 +66,6 @@ describe('WeakRef on Worklet Runtime', () => {
       );
 
       expect(wasTargetCollected).toBe(true);
-    });
-
-    test(`does not release targets after synchronous execution on ${name} Runtime`, () => {
-      runOnRuntimeSyncWithId(runtimeId, () => {
-        'worklet';
-        const target = {};
-        globalThis.weakRefTest = new WeakRef(target);
-      });
-
-      const isTargetAliveBeforeGC = runOnRuntimeSyncWithId(runtimeId, () => {
-        'worklet';
-        return globalThis.weakRefTest?.deref() !== undefined;
-      });
-      expect(isTargetAliveBeforeGC).toBe(true);
-
-      const wasTargetCollected = runOnRuntimeSyncWithId(runtimeId, () => {
-        'worklet';
-        globalThis.gc!();
-        const wasCollected = globalThis.weakRefTest?.deref() === undefined;
-        delete globalThis.weakRefTest;
-        return wasCollected;
-      });
-
-      expect(wasTargetCollected).toBe(false);
     });
   });
 

@@ -36,23 +36,6 @@ Reanimated community is the best! 🎉 We want to say thank you to all community
 
 </div>
 
-## Sponsors
-
-We really appreciate our sponsors! Thanks to them we can develop our library and make the react-native world a better place. Special thanks for:
-
-<div class="community-holder-container">
-
-  <div class="community-holder-container-item">
-    <a href="https://expo.dev">
-    <div class="community-imageHolder">
-      <img src="https://avatars2.githubusercontent.com/u/12504344?v=3&s=100" />
-    </div>
-    <div>Expo</div>
-    </a>
-  </div>
-
-</div>
-
 ## Special thanks
 
 In our community we have really smart and talented peoples who helped us many times, we want to say thank you again 🙌

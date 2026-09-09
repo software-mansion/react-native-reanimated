@@ -47,9 +47,11 @@ class CSSTransition {
     return shadowNode_->getFamilyShared();
   }
 
-  TransitionProperties getProperties() const;
+  /// Properties animating on the C++ loop. The updates registry retains only these:
+  /// a platform-routed value lives natively, and a stale copy would be re-injected.
+  TransitionProperties getLoopProperties() const;
 
-  folly::dynamic computeCurrentLoopStyle();
+  folly::dynamic takeUpdates();
 
   /// Applies a config: routes props between the platform and loop sides and runs them.
   folly::dynamic run(jsi::Runtime &rt, CSSTransitionConfig &&config, const folly::dynamic &lastUpdates);
@@ -76,10 +78,14 @@ class CSSTransition {
   std::shared_ptr<CSSLoopTransition> loopTransition_;
 
   CSSEventMask eventMask_{0};
+  // What runs have settled since the last flush. An interpolator is retired by the same call that
+  // produces its final frame, so a run finishing within its starting frame leaves nothing to
+  // recompute afterwards. Several runs can land before one flush, so they accumulate here.
+  folly::dynamic pendingInitialUpdate_ = folly::dynamic::object();
 
   CSSLoopTransition &ensureLoopTransition();
+  void dropPending(const std::vector<std::string> &propertyNames);
   void scheduleLoop(double timestamp);
-  void trackPlatformLifecycles(const CSSTransitionConfig &config, double timestamp);
   void observeMilestones(CSSLoopTransition &loopTransition);
   void reportMilestone(RunMilestone milestone, const std::string &propertyName, double elapsedTime);
   void emitEvent(CSSEventType type, const std::string &propertyName, double elapsedTime) const;

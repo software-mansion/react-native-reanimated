@@ -9,7 +9,7 @@ import {
   beforeEach,
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
@@ -21,8 +21,7 @@ describe('runOnRuntimeAsync', () => {
   let value = 0;
   let reason = '';
 
-  const workletRuntime1 = getWorkletRuntimeFromPool('test');
-  const workletRuntime2 = getWorkletRuntimeFromPool('test2');
+  const [workletRuntime1, workletRuntime2] = getWorkletRuntimesFromPool(2);
 
   const callbackPass = (num: number) => {
     value = num;

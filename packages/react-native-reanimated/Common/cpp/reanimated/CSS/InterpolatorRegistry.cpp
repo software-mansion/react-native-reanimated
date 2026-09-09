@@ -210,11 +210,11 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
     // Text
     {"color", value<CSSColor>(BLACK)},
     {"fontFamily", value<CSSKeyword>("inherit")},
-    {"fontSize", value<CSSDouble>(14)},
+    {"fontSize", value<CSSTextDouble>(14)},
     {"fontStyle", value<CSSKeyword>("normal")},
     {"fontWeight", value<CSSKeyword>("normal")},
-    {"letterSpacing", value<CSSDouble>(0)},
-    {"lineHeight", value<CSSDouble>(14)}, // TODO - should inherit from fontSize
+    {"letterSpacing", value<CSSTextDouble>(0)},
+    {"lineHeight", value<CSSTextDouble>(14)}, // TODO - should inherit from fontSize
     {"textAlign", value<CSSKeyword>("auto")},
     {"textDecorationLine", value<CSSKeyword>("none")},
     {"textShadowColor", value<CSSColor>(BLACK)},

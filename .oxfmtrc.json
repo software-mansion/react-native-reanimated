@@ -6,6 +6,7 @@
   "trailingComma": "es5",
   "tabWidth": 2,
   "arrowParens": "always",
+  "embeddedLanguageFormatting": "off",
   "sortPackageJson": false,
   "jsdoc": true,
   "ignorePatterns": [

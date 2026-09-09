@@ -1,6 +1,12 @@
 #include <jsi/jsi.h>
-#include <worklets/SharedItems/Serializable.h>
-#include <worklets/SharedItems/SerializableFactory.h>
+#include <worklets/SharedItems/Serializable/Serializable.h>
+#include <worklets/SharedItems/Serializable/SerializableArray.h>
+#include <worklets/SharedItems/Serializable/SerializableBigInt.h>
+#include <worklets/SharedItems/Serializable/SerializableHostObject.h>
+#include <worklets/SharedItems/Serializable/SerializableObject.h>
+#include <worklets/SharedItems/Serializable/SerializableScalar.h>
+#include <worklets/SharedItems/Serializable/SerializableString.h>
+#include <worklets/SharedItems/Serializable/SerializableWorklet.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/PlatformLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
@@ -174,10 +180,6 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(rt, "_createSerializableWorklet", [](jsi::Runtime &rt, const jsi::Value &value) {
     return makeSerializableWorklet(rt, value.asObject(rt), false);
-  });
-
-  jsi_utils::installJsiFunction(rt, "_createSerializableInitializer", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return makeSerializableInitializer(rt, value.asObject(rt));
   });
 
   jsi_utils::installJsiFunction(rt, "_createSerializableSynchronizable", [](jsi::Runtime &rt, const jsi::Value &value) {

@@ -5,7 +5,9 @@
 #include <worklets/RunLoop/AsyncQueue.h>
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/RunLoop/EventLoop.h>
-#include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/Serializable/Serializable.h>
+#include <worklets/SharedItems/Serializable/SerializableArray.h>
+#include <worklets/SharedItems/Serializable/SerializableWorklet.h>
 #include <worklets/SharedItems/UnpackerLoader.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
@@ -77,7 +79,9 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    *
    * Runs a single microtask checkpoint on completion of the batch.
    */
-  void schedule(std::vector<std::shared_ptr<SerializableWorklet>> worklets) const;
+  void schedule(
+      std::shared_ptr<SerializableArray> serializableArrayOfWorklets,
+      std::shared_ptr<SerializableArray> serializableArrayOfArguments) const;
 #ifndef NDEBUG
   /**
    * Schedules a serialized worklet to run asynchronously on the worklet runtime,
@@ -95,7 +99,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    * Runs a single microtask checkpoint on completion of the batch.
    */
   void scheduleWithStack(
-      std::vector<std::shared_ptr<SerializableWorklet>> worklets,
+      std::shared_ptr<SerializableArray> serializableArrayOfWorklets,
+      std::shared_ptr<SerializableArray> serializableArrayOfArguments,
       std::vector<std::optional<std::string>> scheduleStacks) const;
 #endif // NDEBUG
 

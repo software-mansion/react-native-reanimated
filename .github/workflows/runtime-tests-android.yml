@@ -6,8 +6,17 @@ on:
     paths:
       - .github/workflows/runtime-tests-android.yml
       - apps/common-app/runtime-tests/**
+      - apps/fabric-example/package.json
+      - apps/common-app/package.json
       - apps/fabric-example/scripts/runtime-tests-server.js
       - apps/fabric-example/android/**
+      - packages/react-native-reanimated/Common/**
+      - packages/react-native-reanimated/android/**
+      - packages/react-native-reanimated/src/**
+      - packages/react-native-worklets/Common/**
+      - packages/react-native-worklets/android/**
+      - packages/react-native-worklets/bundleMode/**
+      - packages/react-native-worklets/src/**
   workflow_call:
     inputs:
       bundleMode:
@@ -149,3 +158,12 @@ jobs:
           disable-animations: false
           working-directory: apps/fabric-example
           script: node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library reanimated --skip-build --connect-timeout 900 --idle-timeout 900 || node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library reanimated --skip-build --connect-timeout 900 --idle-timeout 900
+
+      - name: Upload crash reports
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: android-crash-reports-${{ inputs.configuration || 'DebugRuntimeTests' }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}
+          path: apps/fabric-example/crash-reports
+          if-no-files-found: ignore
+          retention-days: 14

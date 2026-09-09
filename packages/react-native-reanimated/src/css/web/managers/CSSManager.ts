@@ -1,9 +1,10 @@
 'use strict';
+import type { UnknownRecord } from '../../../common';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import type { CSSStyle } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
-import { filterCSSAndStyleProperties } from '../../utils';
+import { filterCSSAndStyleProperties, splitCSSCallbacks } from '../../utils';
 import { configureWebCSS } from '../domUtils';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSPseudoSelectorsManager from './CSSPseudoSelectorsManager';
@@ -28,14 +29,11 @@ export default class CSSManager implements ICSSManager {
     );
   }
 
-  update(style: CSSStyle): void {
-    const [
-      animationProperties,
-      transitionProperties,
-      pseudoStylesBySelector,
-      animationCallbacks,
-      transitionCallbacks,
-    ] = filterCSSAndStyleProperties(style);
+  update(style: CSSStyle, props: Readonly<UnknownRecord> = {}): void {
+    const [animationProperties, transitionProperties, pseudoStylesBySelector] =
+      filterCSSAndStyleProperties(style);
+
+    const [animationCallbacks, transitionCallbacks] = splitCSSCallbacks(props);
 
     this.animationsManager.update(animationProperties, animationCallbacks);
     this.transitionsManager.update(transitionProperties, transitionCallbacks);

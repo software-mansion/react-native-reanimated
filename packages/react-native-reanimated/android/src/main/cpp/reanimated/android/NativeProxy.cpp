@@ -251,45 +251,50 @@ void NativeProxy::attachPseudoSelector(Tag tag, PseudoSelector selector, std::fu
 
 bool NativeProxy::cssAnimateTransition(
     const int viewTag,
-    const std::string &propertyName,
+    const int propertyId,
     const double fromValue,
     const double toValue,
     const double durationMs,
     const double startTimestampMs,
-    const PlatformEasing &easing,
+    const int easingId,
     const bool persistent) {
-  static const auto method = getJniMethod<jboolean(
-      int,
-      jni::alias_ref<jni::JString>,
-      double,
-      double,
-      double,
-      double,
-      int,
-      jni::alias_ref<jni::JArrayFloat>,
-      jni::alias_ref<jni::JArrayFloat>,
-      jboolean)>("cssAnimateTransition");
-  auto jPointsX = jni::JArrayFloat::newArray(easing.pointsX.size());
-  jPointsX->setRegion(0, easing.pointsX.size(), easing.pointsX.data());
-  auto jPointsY = jni::JArrayFloat::newArray(easing.pointsY.size());
-  jPointsY->setRegion(0, easing.pointsY.size(), easing.pointsY.data());
+  static const auto method =
+      getJniMethod<jboolean(int, int, double, double, double, double, int, jboolean)>("cssAnimateTransition");
   return method(
              javaPart_.get(),
              viewTag,
-             jni::make_jstring(propertyName),
+             propertyId,
              fromValue,
              toValue,
              durationMs,
              startTimestampMs,
-             static_cast<int>(easing.type),
-             jPointsX,
-             jPointsY,
+             easingId,
              static_cast<jboolean>(persistent)) != JNI_FALSE;
 }
 
-void NativeProxy::cssRemoveTransition(const int viewTag, const std::string &propertyName) {
-  static const auto method = getJniMethod<void(int, jni::alias_ref<jni::JString>)>("cssRemoveTransition");
-  method(javaPart_.get(), viewTag, jni::make_jstring(propertyName));
+void NativeProxy::cssRemoveTransition(const int viewTag, const int propertyId) {
+  static const auto method = getJniMethod<void(int, int)>("cssRemoveTransition");
+  method(javaPart_.get(), viewTag, propertyId);
+}
+
+void NativeProxy::cssDefineEasing(
+    const int easingId,
+    const int type,
+    const std::vector<float> &pointsX,
+    const std::vector<float> &pointsY) {
+  static const auto method =
+      getJniMethod<void(int, int, jni::alias_ref<jni::JArrayFloat>, jni::alias_ref<jni::JArrayFloat>)>(
+          "cssDefineEasing");
+  auto jPointsX = jni::JArrayFloat::newArray(pointsX.size());
+  jPointsX->setRegion(0, pointsX.size(), pointsX.data());
+  auto jPointsY = jni::JArrayFloat::newArray(pointsY.size());
+  jPointsY->setRegion(0, pointsY.size(), pointsY.data());
+  method(javaPart_.get(), easingId, type, jPointsX, jPointsY);
+}
+
+void NativeProxy::cssUndefineEasing(const int easingId) {
+  static const auto method = getJniMethod<void(int)>("cssUndefineEasing");
+  method(javaPart_.get(), easingId);
 }
 
 void NativeProxy::detachPseudoSelector(Tag tag, PseudoSelector selector) {
@@ -377,8 +382,12 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   // Owned by the two callbacks below rather than by NativeProxy: this runs from
   // the constructor's member-initializer list, where a member would still be raw
   // memory.
+  auto cssPlatformEasings = std::make_shared<CSSPlatformEasings>(
+      bindThis(&NativeProxy::cssDefineEasing), bindThis(&NativeProxy::cssUndefineEasing));
   auto cssPlatformTransitions = std::make_shared<CSSPlatformTransitions>(
-      bindThis(&NativeProxy::cssAnimateTransition), bindThis(&NativeProxy::cssRemoveTransition));
+      bindThis(&NativeProxy::cssAnimateTransition),
+      bindThis(&NativeProxy::cssRemoveTransition),
+      std::move(cssPlatformEasings));
 
   auto cssCanRouteProperty = css::CSSCanRoutePropertyFunction(&css::canRouteCSSProperty);
 
@@ -388,6 +397,10 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto cssRemoveTransition = [transitions = cssPlatformTransitions](auto &&...args) {
     transitions->removeTransition(std::forward<decltype(args)>(args)...);
+  };
+
+  auto cssGetPlatformValue = [transitions = cssPlatformTransitions](auto &&...args) {
+    return transitions->getCurrentValue(std::forward<decltype(args)>(args)...);
   };
 
   return {
@@ -406,6 +419,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       cssCanRouteProperty,
       cssApplyTransition,
       cssRemoveTransition,
+      cssGetPlatformValue,
   };
 }
 

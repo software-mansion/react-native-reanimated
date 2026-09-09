@@ -73,8 +73,6 @@ interface WorkletProps {
   __workletHash: number;
   /** Only in Legacy Eval Mode. */
   __initData?: WorkletInitData;
-  /** Only for Handles. */
-  __init?: () => unknown;
   /** `__stackDetails` is removed after parsing. */
   __stackDetails?: WorkletStackDetails;
   /** Only in dev builds. */

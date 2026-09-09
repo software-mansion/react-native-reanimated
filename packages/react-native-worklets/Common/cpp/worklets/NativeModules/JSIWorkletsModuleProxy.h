@@ -2,7 +2,7 @@
 
 #include <jsi/jsi.h>
 #include <worklets/SharedItems/MemoryManager.h>
-#include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/UnpackerLoader.h>
 #include <worklets/Tools/RNRuntimeStatus.h>
 #include <worklets/Tools/ScriptBuffer.h>

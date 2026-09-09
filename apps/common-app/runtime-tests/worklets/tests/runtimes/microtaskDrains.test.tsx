@@ -17,7 +17,7 @@ import {
   createOrderConstraint,
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
@@ -29,7 +29,7 @@ const DONE_NOTIFICATION = 'DONE';
 type OrderSetter = ReturnType<typeof createOrderConstraint>[1];
 
 describe('microtask draining', () => {
-  const workletRuntime = getWorkletRuntimeFromPool('test');
+  const [workletRuntime] = getWorkletRuntimesFromPool(1);
 
   const notifyDone = () => {
     notify(DONE_NOTIFICATION);

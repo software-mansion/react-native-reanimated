@@ -10,7 +10,7 @@ import {
   createTestValue,
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   test,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
@@ -19,7 +19,7 @@ import { dispatchWorklet } from '../runLoop/dispatchWorklet';
 const bundleModeEnabled = isBundleModeEnabled();
 
 describe('networking API on Worklet Runtimes', () => {
-  const workerRuntime = getWorkletRuntimeFromPool('test');
+  const [workerRuntime] = getWorkletRuntimesFromPool(1);
 
   const testFn = bundleModeEnabled ? test : test.skip;
 

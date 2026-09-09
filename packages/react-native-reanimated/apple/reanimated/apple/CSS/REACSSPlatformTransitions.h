@@ -9,6 +9,7 @@
 
 #import <Foundation/Foundation.h>
 
+#import <optional>
 #import <string>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -29,6 +30,12 @@ NS_ASSUME_NONNULL_BEGIN
                     timestamp:(double)timestamp;
 
 - (void)removeTransitionForTag:(facebook::react::Tag)viewTag propertyName:(const std::string &)propertyName;
+
+/// Retraced from the stored timeline: the presentation layer has this value, but only
+/// the main thread may read it. nullopt after a non-reversing interruption.
+- (std::optional<reanimated::css::PlatformValue>)getCurrentValueForTag:(facebook::react::Tag)viewTag
+                                                          propertyName:(const std::string &)propertyName
+                                                             timestamp:(double)timestamp;
 
 @end
 

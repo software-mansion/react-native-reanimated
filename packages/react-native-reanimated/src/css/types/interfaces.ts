@@ -1,7 +1,7 @@
 'use strict';
 import type { PseudoStylesBySelector } from '../utils';
 import type { ExistingCSSAnimationProperties } from './animation';
-import type { CSSStyle } from './props';
+import type { CSSCallbackProps, CSSStyle } from './props';
 import type { CSSTransitionProperties } from './transition';
 
 export interface ICSSAnimationsManager {
@@ -23,6 +23,6 @@ export interface ICSSPseudoStylesManager {
 }
 
 export interface ICSSManager {
-  update(style: CSSStyle | null): void;
+  update(style: CSSStyle | null, callbacks?: CSSCallbackProps): void;
   unmountCleanup(): void;
 }

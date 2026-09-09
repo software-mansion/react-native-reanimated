@@ -1,0 +1,48 @@
+name: Setup Ccache
+description: Install ccache, restore its cache and configure it for Xcode explicit modules
+
+inputs:
+  key-prefix:
+    description: Cache key prefix, keeps a separate ccache per build variant
+    required: true
+  needs-compile-database:
+    description: >-
+      Set to false when the job does not consume compile_commands.json. The
+      Reanimated and Worklets podspecs add -gen-cdb-fragment-path, which ccache
+      refuses to cache, so every translation unit of both libraries is compiled
+      from scratch. Ignoring the flag makes them cacheable, at the cost of an
+      incomplete compile database: a cache hit replays the object without
+      running the compiler, so no fragment is written. Keep it true for jobs
+      that run clang-tidy or xcode-build-server.
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install ccache
+      shell: bash
+      run: brew install ccache
+
+    - name: Restore ccache
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+      with:
+        path: ~/Library/Caches/ccache
+        key: ccache-${{ inputs.key-prefix }}-${{ github.sha }}
+        restore-keys: |
+          ccache-${{ inputs.key-prefix }}-
+
+    - name: Configure ccache
+      shell: bash
+      env:
+        NEEDS_COMPILE_DATABASE: ${{ inputs.needs-compile-database }}
+      run: |
+        ccache --set-config max_size=2G
+        ccache --set-config sloppiness=clang_index_store,file_stat_matches,include_file_ctime,include_file_mtime,ivfsoverlay,pch_defines,modules,system_headers,time_macros
+        ccache --set-config depend_mode=true
+        ccache --set-config file_clone=true
+        ccache --set-config inode_cache=true
+        if [ "$NEEDS_COMPILE_DATABASE" != "true" ]; then
+          ccache --set-config ignore_options=-gen-cdb-fragment-path
+        fi
+        ccache --zero-stats
