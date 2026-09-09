@@ -117,6 +117,8 @@ const notCapturedIdentifiers = [
   'require',
   'fetch',
   'XMLHttpRequest',
+  'Blob',
+  'FileReader',
   'WebSocket',
 
   // Run loop

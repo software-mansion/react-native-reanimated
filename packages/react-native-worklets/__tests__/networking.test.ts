@@ -1,3 +1,4 @@
+import { Blob } from '../src/networking/Blob';
 import { utf8Decode, utf8Encode } from '../src/networking/utf8';
 import { XMLHttpRequest } from '../src/networking/XMLHttpRequest';
 
@@ -59,5 +60,43 @@ describe('XMLHttpRequest', () => {
     xhr.responseType = 'arraybuffer';
     expect(() => xhr.responseText).toThrow('[Worklets]');
     expect(xhr.response).toBe(null);
+  });
+});
+
+describe('Blob', () => {
+  test('concatenates parts and reports size', async () => {
+    const blob = new Blob(['abc', new Uint8Array([0x64]).buffer], {
+      type: 'Text/Plain',
+    });
+    expect(blob.size).toBe(4);
+    expect(blob.type).toBe('text/plain');
+    await expect(blob.text()).resolves.toBe('abcd');
+  });
+
+  test('constructs without arguments', () => {
+    expect(new Blob().size).toBe(0);
+  });
+
+  test('handles non-ASCII text parts', async () => {
+    const blob = new Blob(['jaźń']);
+    expect(blob.size).toBe(6);
+    await expect(blob.text()).resolves.toBe('jaźń');
+  });
+
+  test('slices with negative indices', async () => {
+    const blob = new Blob(['abcdef']);
+    const slice = blob.slice(-3, -1, 'text/x-slice');
+    expect(slice.size).toBe(2);
+    expect(slice.type).toBe('text/x-slice');
+    await expect(slice.text()).resolves.toBe('de');
+  });
+
+  test('exposes bytes as an ArrayBuffer', async () => {
+    const buffer = await new Blob(['ab']).arrayBuffer();
+    expect(Array.from(new Uint8Array(buffer))).toEqual([0x61, 0x62]);
+  });
+
+  test('is detectable through Object.prototype.toString', () => {
+    expect(Object.prototype.toString.call(new Blob())).toBe('[object Blob]');
   });
 });
