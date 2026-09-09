@@ -25,18 +25,11 @@ void WorkletsModuleProxy::start() {
   if (!rnRuntimeProxy_) [[unlikely]] {
     throw std::runtime_error("[Worklets] WorkletsModuleProxy must be attached to the RN runtime before start.");
   }
-  if (animationFrameBatchinator_) [[unlikely]] {
-    throw std::runtime_error("[Worklets] WorkletsModuleProxy was already started.");
+  if (uiRuntimeStarted_) {
+    return;
   }
 
-  const auto uiRuntimeProxy = JSIWorkletsModuleProxy::createForNewRuntime(rnRuntimeProxy_, RuntimeData::uiRuntimeId);
-  uiWorkletRuntime_->init(uiRuntimeProxy);
-
-  animationFrameBatchinator_ =
-      std::make_shared<AnimationFrameBatchinator>(uiWorkletRuntime_, runtimeBindings_->requestAnimationFrame);
-
-  UIRuntimeDecorator::decorate(
-      uiWorkletRuntime_->getJSIRuntime(), animationFrameBatchinator_->getJsiRequestAnimationFrame());
+  startUIRuntime(JSIWorkletsModuleProxy::createForNewRuntime(rnRuntimeProxy_, RuntimeData::uiRuntimeId));
 }
 
 WorkletsModuleProxy::WorkletsModuleProxy(
@@ -54,16 +47,54 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       runtimeManager_(std::make_shared<RuntimeManager>()),
       unpackerLoader_(std::make_shared<UnpackerLoader>()),
       rnRuntimeStatus_(rnRuntimeStatus),
-      uiWorkletRuntime_(runtimeManager_->createUninitializedUIRuntime(std::make_shared<AsyncQueueUI>(uiScheduler_))) {}
+      uiWorkletRuntime_(runtimeManager_->createUninitializedUIRuntime(std::make_shared<AsyncQueueUI>(uiScheduler_))),
+      uiRuntimeStarted_(false) {}
 
-void WorkletsModuleProxy::attachToRNRuntime(jsi::Runtime &rnRuntime, const BundleModeConfig &bundleModeConfig) {
+void WorkletsModuleProxy::startUIRuntimeInBundleMode(const BundleModeConfig &bundleModeConfig) {
+  if (!bundleModeConfig.enabled) [[unlikely]] {
+    throw std::runtime_error("[Worklets] startUIRuntimeInBundleMode requires Bundle Mode.");
+  }
+  if (rnRuntimeProxy_) [[unlikely]] {
+    throw std::runtime_error("[Worklets] startUIRuntimeInBundleMode must be called before attachToRNRuntime.");
+  }
+  if (uiRuntimeStarted_) [[unlikely]] {
+    throw std::runtime_error("[Worklets] The UI Worklet Runtime was already started.");
+  }
+
+  bundleModeConfig_ = bundleModeConfig;
+  startUIRuntime(std::make_shared<JSIWorkletsModuleProxy>(
+      false, /* isDevBundle_ */
+      jsScheduler_,
+      uiScheduler_,
+      memoryManager_,
+      runtimeManager_,
+      uiWorkletRuntime_,
+      runtimeBindings_,
+      bundleModeConfig_,
+      unpackerLoader_,
+      rnRuntimeStatus_,
+      RuntimeData::uiRuntimeId));
+}
+
+void WorkletsModuleProxy::attachToRNRuntime(
+    jsi::Runtime &rnRuntime,
+    const std::optional<BundleModeConfig> &bundleModeConfig) {
   react_native_assert(jsScheduler_->canInvokeSyncOnJS() && "attachToRNRuntime must be called on the JS thread");
   if (rnRuntimeProxy_) [[unlikely]] {
     throw std::runtime_error("[Worklets] WorkletsModuleProxy is already attached to the RN runtime.");
   }
+  if (uiRuntimeStarted_ && bundleModeConfig.has_value()) [[unlikely]] {
+    throw std::runtime_error("[Worklets] The Bundle Mode config was already set by startUIRuntimeInBundleMode.");
+  }
+  if (!uiRuntimeStarted_ && !bundleModeConfig.has_value()) [[unlikely]] {
+    throw std::runtime_error(
+        "[Worklets] attachToRNRuntime requires a Bundle Mode config unless startUIRuntimeInBundleMode was called.");
+  }
 
   isDevBundle_ = isDevBundleFromRNRuntime(rnRuntime);
-  bundleModeConfig_ = bundleModeConfig;
+  if (bundleModeConfig.has_value()) {
+    bundleModeConfig_ = *bundleModeConfig;
+  }
   rnRuntimeProxy_ = std::make_shared<JSIWorkletsModuleProxy>(
       isDevBundle_,
       jsScheduler_,
@@ -82,6 +113,18 @@ void WorkletsModuleProxy::attachToRNRuntime(jsi::Runtime &rnRuntime, const Bundl
 WorkletsModuleProxy::~WorkletsModuleProxy() {
   animationFrameBatchinator_.reset();
   uiWorkletRuntime_.reset();
+}
+
+void WorkletsModuleProxy::startUIRuntime(const std::shared_ptr<JSIWorkletsModuleProxy> &uiRuntimeProxy) {
+  uiWorkletRuntime_->init(uiRuntimeProxy);
+
+  animationFrameBatchinator_ =
+      std::make_shared<AnimationFrameBatchinator>(uiWorkletRuntime_, runtimeBindings_->requestAnimationFrame);
+
+  UIRuntimeDecorator::decorate(
+      uiWorkletRuntime_->getJSIRuntime(), animationFrameBatchinator_->getJsiRequestAnimationFrame());
+
+  uiRuntimeStarted_ = true;
 }
 
 } // namespace worklets

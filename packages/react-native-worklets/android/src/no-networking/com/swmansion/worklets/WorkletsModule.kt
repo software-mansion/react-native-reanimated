@@ -53,26 +53,26 @@ class WorkletsModule(
 
     private external fun prepareProxyCpp()
 
-    private external fun installTurboModuleCpp(
-        bundleModeEnabled: Boolean,
-        scriptBufferWrapper: ScriptBufferWrapper?,
-    )
+    private external fun beginBundleModeCpp()
+
+    private external fun prepareBundleModeCpp()
+
+    private external fun installTurboModuleCpp(bundleModeEnabled: Boolean)
+
+    @OptIn(FrameworkAPI::class)
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    override fun prepareBundleMode(): Boolean {
+        reactApplicationContext.assertOnJSQueueThread()
+        beginBundleModeCpp()
+        Thread({ prepareBundleModeCpp() }, "WorkletsBundleModePrepare").start()
+        return true
+    }
 
     @OptIn(FrameworkAPI::class)
     @ReactMethod(isBlockingSynchronousMethod = true)
     override fun installTurboModule(bundleModeEnabled: Boolean): Boolean {
-        val context = reactApplicationContext
-
-        context.assertOnJSQueueThread()
-
-        val scriptBufferWrapper: ScriptBufferWrapper? =
-            if (bundleModeEnabled) {
-                ScriptBufferWrapper(context.sourceURL, context)
-            } else {
-                null
-            }
-
-        installTurboModuleCpp(bundleModeEnabled, scriptBufferWrapper)
+        reactApplicationContext.assertOnJSQueueThread()
+        installTurboModuleCpp(bundleModeEnabled)
         return true
     }
 
@@ -92,6 +92,10 @@ class WorkletsModule(
     /** @noinspection unused */
     @DoNotStrip
     fun isOnJSQueueThread(): Boolean = reactApplicationContext.isOnJSQueueThread
+
+    /** @noinspection unused */
+    @DoNotStrip
+    fun createScriptBufferWrapper(): ScriptBufferWrapper = ScriptBufferWrapper(reactApplicationContext.sourceURL, reactApplicationContext)
 
     fun toggleSlowAnimations() {
         val animationsDragFactor = 10
