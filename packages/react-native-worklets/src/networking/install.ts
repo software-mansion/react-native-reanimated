@@ -2,6 +2,7 @@
 
 import { Blob } from './Blob';
 import { FileReader } from './FileReader';
+import { FormData } from './FormData';
 import { XMLHttpRequest } from './XMLHttpRequest';
 
 /**
@@ -25,6 +26,7 @@ export function installNetworking() {
   global.XMLHttpRequest ??= XMLHttpRequest;
   global.Blob ??= Blob;
   global.FileReader ??= FileReader;
+  global.FormData ??= FormData;
 
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   require('whatwg-fetch');

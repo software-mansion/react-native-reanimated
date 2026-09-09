@@ -4,6 +4,7 @@ import { Blob } from './Blob';
 import { toArrayBuffer } from './bytes';
 import type { NetworkingEventListener } from './events';
 import { EventTargetLite } from './events';
+import { FormData } from './FormData';
 
 const UNSENT = 0;
 const OPENED = 1;
@@ -378,6 +379,10 @@ function normalizeBody(body: unknown): {
       data: toArrayBuffer(body.__getBytes()),
       contentType: body.type !== '' ? body.type : undefined,
     };
+  }
+  if (body instanceof FormData) {
+    const { body: data, contentType } = body.__encodeMultipart();
+    return { data, contentType };
   }
   if (ArrayBuffer.isView(body)) {
     return {
