@@ -99,6 +99,34 @@ describe('LayoutAnimationConfig view tag resolution', () => {
     expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(43, false);
   });
 
+  test('supports removing a conditional child', () => {
+    const { rerender } = renderWrapped(<ForwardsHostInstance />);
+
+    expect(() =>
+      rerender(
+        <LayoutAnimationConfig skipExiting>{false}</LayoutAnimationConfig>
+      )
+    ).not.toThrow();
+  });
+
+  test('supports a single child in an array', () => {
+    expect(() =>
+      renderWrapped([<ForwardsHostInstance key="child" />])
+    ).not.toThrow();
+  });
+
+  test('enables exiting when skipExiting is false', () => {
+    const { unmount } = render(
+      <LayoutAnimationConfig skipExiting={false}>
+        <ForwardsHostInstance />
+      </LayoutAnimationConfig>
+    );
+
+    unmount();
+
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(42, true);
+  });
+
   test('falls back to findNodeHandle for a fragment child', () => {
     const { unmount } = renderWrapped(
       <>

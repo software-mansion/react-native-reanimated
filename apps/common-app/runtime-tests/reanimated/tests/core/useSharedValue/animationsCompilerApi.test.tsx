@@ -14,7 +14,7 @@ import {
 import {
   describe,
   expect,
-  getRegisteredValue,
+  expectSharedValue,
   notify,
   registerValue,
   render,
@@ -109,56 +109,63 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
   test('WithTiming', async () => {
     await render(<WithTiming progress={0} />);
     await waitForNotification(NOTIFICATION_NAME);
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onJS).toBe(100, ComparisonMode.NUMBER);
-    expect(sharedValue.onUI).toBe(100, ComparisonMode.NUMBER);
+    await expectSharedValue(SHARED_VALUE_REF).onUI.toBe(
+      100,
+      ComparisonMode.NUMBER
+    );
   });
 
   test('WithClamp', async () => {
     await render(<WithClamp progress={0.16} />);
     await waitForNotification(NOTIFICATION_NAME);
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onJS).toBe(100, ComparisonMode.NUMBER);
-    expect(sharedValue.onUI).toBe(100, ComparisonMode.NUMBER);
+    await expectSharedValue(SHARED_VALUE_REF).onUI.toBe(
+      100,
+      ComparisonMode.NUMBER
+    );
   });
 
   test('WithDecay', async () => {
     await render(<WithDecay progress={0.32} />);
     await waitForNotification(NOTIFICATION_NAME);
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onJS).toBe(0, ComparisonMode.NUMBER);
-    expect(sharedValue.onUI).toBe(0, ComparisonMode.NUMBER);
+    await expectSharedValue(SHARED_VALUE_REF).onUI.toBe(
+      0,
+      ComparisonMode.NUMBER
+    );
   });
 
   test('WithDelay', async () => {
     await render(<WithDelay progress={0.48} />);
     await waitForNotification(NOTIFICATION_NAME);
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onJS).toBe(100, ComparisonMode.NUMBER);
-    expect(sharedValue.onUI).toBe(100, ComparisonMode.NUMBER);
+    await expectSharedValue(SHARED_VALUE_REF).onUI.toBe(
+      100,
+      ComparisonMode.NUMBER
+    );
   });
 
   test('WithSpring', async () => {
     await render(<WithSpring progress={0.64} />);
     await waitForNotification(NOTIFICATION_NAME);
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onJS).toBe(100, ComparisonMode.NUMBER);
-    expect(sharedValue.onUI).toBe(100, ComparisonMode.NUMBER);
+    await expectSharedValue(SHARED_VALUE_REF).onUI.toBe(
+      100,
+      ComparisonMode.NUMBER
+    );
   });
 
   test('WithRepeat', async () => {
     await render(<WithRepeat progress={0.8} />);
     await waitForNotification(NOTIFICATION_NAME);
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onJS).toBe(0, ComparisonMode.NUMBER);
-    expect(sharedValue.onUI).toBe(0, ComparisonMode.NUMBER);
+    await expectSharedValue(SHARED_VALUE_REF).onUI.toBe(
+      0,
+      ComparisonMode.NUMBER
+    );
   });
 
   test('WithSequence', async () => {
     await render(<WithSequence progress={0.96} />);
     await waitForNotification(NOTIFICATION_NAME);
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onJS).toBe(200, ComparisonMode.NUMBER);
-    expect(sharedValue.onUI).toBe(200, ComparisonMode.NUMBER);
+    await expectSharedValue(SHARED_VALUE_REF).onUI.toBe(
+      200,
+      ComparisonMode.NUMBER
+    );
   });
 });

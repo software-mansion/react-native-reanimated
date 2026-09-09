@@ -108,12 +108,26 @@ clang_tidy_binary="${clang_tidy_binary:-clang-tidy}"
 run_clang_tidy="${run_clang_tidy:-run-clang-tidy}"
 
 # `command -v` only checks $PATH. Apple Silicon shells often don't include
-# `/usr/local/bin`, and Homebrew's `llvm` formula isn't auto-symlinked. Search
-# common install locations explicitly so the script works without the user
-# having to fiddle with their shell rc.
+# `/usr/local/bin`, and Homebrew's `llvm` formulae are keg-only, so none of
+# them is auto-symlinked into `<prefix>/bin`. Search common install locations
+# explicitly so the script works without the user having to fiddle with their
+# shell rc. Versioned formulae (`llvm@22`, `llvm@21`, ...) live next to the
+# unversioned one under `<prefix>/opt`; they are appended newest major first,
+# after the unversioned `llvm` and within their own Homebrew prefix.
 LLVM_FALLBACKS=(
   "/opt/homebrew/opt/llvm/bin"
   "/usr/local/opt/llvm/bin"
+)
+for llvm_prefix in /opt/homebrew/opt /usr/local/opt; do
+  while IFS= read -r llvm_dir; do
+    LLVM_FALLBACKS+=("$llvm_dir")
+  done < <(
+    for llvm_candidate in "$llvm_prefix"/llvm@*/bin; do
+      if [ -d "$llvm_candidate" ]; then printf '%s\n' "$llvm_candidate"; fi
+    done | sort -t@ -k2,2nr
+  )
+done
+LLVM_FALLBACKS+=(
   "/opt/homebrew/bin"
   "/usr/local/bin"
 )

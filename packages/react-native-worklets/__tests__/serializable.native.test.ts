@@ -19,7 +19,6 @@ jest.mock('react-native-worklets/WorkletsModule/NativeWorklets', () => {
       createSerializableError: mockSerializable,
       createSerializableHostObject: mockSerializable,
       createSerializableImport: mockSerializable,
-      createSerializableInitializer: mockSerializable,
       createSerializableLEGACY: mockSerializable,
       createSerializableMap: mockSerializable,
       createSerializableNonWorkletFunction: mockSerializable,
@@ -133,5 +132,31 @@ describe('createSerializable unsupported-type warning', () => {
 
     expect(result).toHaveProperty('value', undefined);
     expect(console.warn).not.toHaveBeenCalled();
+  });
+});
+
+describe('createSerializable with `__proto__` key', () => {
+  const globalWithDev = globalThis as unknown as { __DEV__?: boolean };
+
+  beforeEach(() => {
+    globalWithDev.__DEV__ = false;
+  });
+
+  afterEach(() => {
+    delete globalWithDev.__DEV__;
+  });
+
+  test('keeps `__proto__` as an own property of the cloned object', () => {
+    const value = JSON.parse('{"a":{"b":{"__proto__":{}}}}');
+
+    const result = createSerializable(value) as unknown as {
+      value: { a: { value: { b: { value: Record<string, unknown> } } } };
+    };
+    const clonedB = result.value.a.value.b.value;
+
+    expect(Object.prototype.hasOwnProperty.call(clonedB, '__proto__')).toBe(
+      true
+    );
+    expect(clonedB.__proto__).toEqual({ __serializableRef: true, value: {} });
   });
 });

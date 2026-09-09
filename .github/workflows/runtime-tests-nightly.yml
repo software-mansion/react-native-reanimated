@@ -12,17 +12,20 @@ permissions:
   contents: read
 
 jobs:
-  ios:
+  ios-argent:
     if: github.repository == 'software-mansion/react-native-reanimated'
     strategy:
       fail-fast: false
       matrix:
         configuration: [DebugRuntimeTests, ReleaseRuntimeTests]
         bundleMode: [false, true]
-    uses: ./.github/workflows/runtime-tests-ios.yml
+    uses: ./.github/workflows/runtime-tests-ios-argent.yml
     with:
       configuration: ${{ matrix.configuration }}
       bundleMode: ${{ matrix.bundleMode }}
+    secrets:
+      SIM_ROUTER_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME }}
+      SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
 
   android:
     if: github.repository == 'software-mansion/react-native-reanimated'

@@ -22,6 +22,8 @@ using PlatformValue = std::variant<double, std::array<double, 2>, std::array<dou
 /// subset of properties; everything else runs on the C++ loop.
 bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &easing);
 
+std::optional<PlatformValue> lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, double progress);
+
 /// Parses a transition's endpoints, looking the property up once. Null/undefined
 /// falls back to its CSS default; nullopt means the platform can't express the
 /// pair, so it runs on the loop. jsi::Value is the config path, folly::dynamic the

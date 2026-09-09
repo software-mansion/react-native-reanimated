@@ -12,7 +12,7 @@ import Animated, {
 import {
   describe,
   expect,
-  getRegisteredValue,
+  getSharedValue,
   getTestComponent,
   registerValue,
   render,
@@ -91,8 +91,7 @@ describe('Test *****cancelAnimation*****', () => {
 
         await wait(timeToStop + 200);
 
-        const timeElapsed = (await getRegisteredValue(ELAPSED_TIME_REF))
-          .onJS as number;
+        const timeElapsed = await getSharedValue<number>(ELAPSED_TIME_REF);
         const expectedWidth = 300 * (timeElapsed / animationDuration);
         expect(
           await animatedComponent.getAnimatedStyle('width')

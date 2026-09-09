@@ -1,0 +1,34 @@
+name: Install sim-remote
+description: Install the sim-remote CLI + daemon (argent cloud client) and add them to PATH
+
+inputs:
+  release-tag:
+    description: Release tag in software-mansion/sim-remote-releases to install
+    required: false
+    default: 'softu'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install sim-remote CLI + daemon
+      shell: bash
+      run: |
+        case "$(uname -s)-$(uname -m)" in
+          Darwin-arm64) TARGET=aarch64-apple-darwin ;;
+          Linux-x86_64) TARGET=x86_64-unknown-linux-gnu ;;
+          Linux-aarch64) TARGET=aarch64-unknown-linux-gnu ;;
+          *)
+            echo "::error::no sim-remote build for $(uname -s)/$(uname -m)"
+            exit 1
+            ;;
+        esac
+
+        REL="https://github.com/software-mansion/sim-remote-releases/releases/download/${{ inputs.release-tag }}"
+        mkdir -p "$HOME/.local/bin"
+        curl -fsSL -o "$HOME/.local/bin/sim-remote" "$REL/sim-remote-$TARGET"
+        curl -fsSL -o "$HOME/.local/bin/sim-remote-daemon" "$REL/sim-remote-daemon-$TARGET"
+        chmod +x "$HOME/.local/bin/sim-remote" "$HOME/.local/bin/sim-remote-daemon"
+        echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+        # smoke check: the CLI has no --version flag; --help exits 0
+        "$HOME/.local/bin/sim-remote" --help > /dev/null

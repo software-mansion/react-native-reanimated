@@ -19,7 +19,7 @@ import { scheduleOnUI } from 'react-native-worklets';
 import {
   describe,
   expect,
-  getRegisteredValue,
+  getSharedValue,
   registerValue,
   render,
   test,
@@ -167,10 +167,12 @@ describe('Test measuring component before and after animation of the component a
 
       await wait(1000);
 
-      const measuredInitial = (await getRegisteredValue(INITIAL_MEASURE))
-        .onJS as unknown as MeasuredDimensions;
-      const measuredFinal = (await getRegisteredValue(FINAL_MEASURE))
-        .onJS as unknown as MeasuredDimensions;
+      const measuredInitial = (await getSharedValue(
+        INITIAL_MEASURE
+      )) as unknown as MeasuredDimensions;
+      const measuredFinal = (await getSharedValue(
+        FINAL_MEASURE
+      )) as unknown as MeasuredDimensions;
 
       // Check the distance from the top
       const finalStyleFull = { ...DEFAULT_STYLE, ...finalStyle };
@@ -282,8 +284,8 @@ describe('Test measuring component during the animation', () => {
   test('Test that measurements of withTiming match the expectations', async () => {
     await render(<TestComponent />);
     await wait(650);
-    const observedWidths = (await getRegisteredValue(OBSERVED_WIDTHS_REF))
-      .onJS as Array<[number, number]>;
+    const observedWidths =
+      await getSharedValue<Array<[number, number]>>(OBSERVED_WIDTHS_REF);
     observedWidths.forEach(([width, timeSinceFirstFrame]) => {
       const expectedWidth = Math.min(
         FINAL_WIDTH,

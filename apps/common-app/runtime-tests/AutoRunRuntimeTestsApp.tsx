@@ -34,7 +34,7 @@ function deriveWsUrl(): string {
       | undefined
   )?.scriptURL;
 
-  let host = 'localhost';
+  let host = '127.0.0.1';
   let port = DEFAULT_PORT;
   if (scriptURL) {
     const match = /^https?:\/\/([^/:]+)(?::(\d+))?\//.exec(scriptURL);

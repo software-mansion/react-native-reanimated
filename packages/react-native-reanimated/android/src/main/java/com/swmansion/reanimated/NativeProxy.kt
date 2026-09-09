@@ -271,37 +271,48 @@ open class NativeProxy {
     }
 
     @DoNotStrip
+    fun cssDefineEasing(
+        easingId: Int,
+        easingType: Int,
+        easingPointsX: FloatArray,
+        easingPointsY: FloatArray,
+    ) {
+        cssPlatformTransitionsManager.defineEasing(easingId, easingType, easingPointsX, easingPointsY)
+    }
+
+    @DoNotStrip
+    fun cssUndefineEasing(easingId: Int) {
+        cssPlatformTransitionsManager.undefineEasing(easingId)
+    }
+
+    @DoNotStrip
     fun cssAnimateTransition(
         viewTag: Int,
-        propertyName: String,
+        propertyId: Int,
         fromValue: Double,
         toValue: Double,
         durationMs: Double,
         startTimestampMs: Double,
-        easingType: Int,
-        easingPointsX: FloatArray,
-        easingPointsY: FloatArray,
+        easingId: Int,
         persistent: Boolean,
     ): Boolean =
         cssPlatformTransitionsManager.animateTransition(
             viewTag,
-            propertyName,
+            propertyId,
             fromValue,
             toValue,
             durationMs,
             startTimestampMs,
-            easingType,
-            easingPointsX,
-            easingPointsY,
+            easingId,
             persistent,
         )
 
     @DoNotStrip
     fun cssRemoveTransition(
         viewTag: Int,
-        propertyName: String,
+        propertyId: Int,
     ) {
-        cssPlatformTransitionsManager.removeTransition(viewTag, propertyName)
+        cssPlatformTransitionsManager.removeTransition(viewTag, propertyId)
     }
 
     @DoNotStrip

@@ -7,7 +7,7 @@ export function SequencedTransition(
 ) {
   const { translateX, translateY, scaleX, scaleY, reversed } = transitionData;
 
-  const scaleValue = reversed ? `1,${scaleX}` : `${scaleY},1`;
+  const scaleValue = reversed ? `${scaleX},1` : `1,${scaleY}`;
 
   const sequencedTransition = {
     name,

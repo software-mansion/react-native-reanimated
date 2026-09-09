@@ -32,6 +32,7 @@ import type {
 import {
   buildWorkletsHash,
   checkSharedValueUsage,
+  createAnimatedStyleHandle,
   prepareAnimation,
   runAnimations,
   styleUpdater,
@@ -332,19 +333,20 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   if (!animatedStyleHandle.current) {
     const styleUpdaterContainer =
       animatedUpdaterData.current.styleUpdaterContainer;
-    animatedStyleHandle.current = IS_JEST
-      ? {
-          viewDescriptors,
-          initial,
-          jestAnimatedValues,
-          toJSON: animatedStyleHandleToJSON,
-          styleUpdaterContainer,
-        }
-      : {
-          viewDescriptors,
-          initial,
-          styleUpdaterContainer,
-        };
+    animatedStyleHandle.current = createAnimatedStyleHandle(
+      IS_JEST
+        ? {
+            viewDescriptors,
+            initial,
+            jestAnimatedValues,
+            toJSON: animatedStyleHandleToJSON,
+          }
+        : {
+            viewDescriptors,
+            initial,
+          },
+      styleUpdaterContainer
+    );
   }
 
   return animatedStyleHandle.current;

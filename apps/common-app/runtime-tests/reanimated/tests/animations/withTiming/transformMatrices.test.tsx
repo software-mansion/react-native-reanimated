@@ -58,7 +58,7 @@ async function getSnapshotUpdates(
   );
 
   await waitForAnimationUpdates(MatrixSnapshots[snapshotName].length);
-  const updates = updatesContainer.getUpdates();
+  const updates = await updatesContainer.getUpdates();
   return updates;
 }
 

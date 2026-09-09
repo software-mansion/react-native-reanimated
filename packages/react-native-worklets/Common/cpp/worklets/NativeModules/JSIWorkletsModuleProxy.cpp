@@ -3,25 +3,43 @@
 #include <worklets/Compat/Holders.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
-#include <worklets/SharedItems/Serializable.h>
-#include <worklets/SharedItems/SerializableFactory.h>
-#include <worklets/SharedItems/SerializableRemoteFunction.h>
+#include <worklets/SharedItems/Serializable/CustomSerializable.h>
+#include <worklets/SharedItems/Serializable/Serializable.h>
+#include <worklets/SharedItems/Serializable/SerializableArray.h>
+#include <worklets/SharedItems/Serializable/SerializableArrayBuffer.h>
+#include <worklets/SharedItems/Serializable/SerializableBigInt.h>
+#include <worklets/SharedItems/Serializable/SerializableError.h>
+#include <worklets/SharedItems/Serializable/SerializableHostFunction.h>
+#include <worklets/SharedItems/Serializable/SerializableHostObject.h>
+#include <worklets/SharedItems/Serializable/SerializableImport.h>
+#include <worklets/SharedItems/Serializable/SerializableMap.h>
+#include <worklets/SharedItems/Serializable/SerializableObject.h>
+#include <worklets/SharedItems/Serializable/SerializableRegExp.h>
+#include <worklets/SharedItems/Serializable/SerializableRemoteFunction.h>
+#include <worklets/SharedItems/Serializable/SerializableScalar.h>
+#include <worklets/SharedItems/Serializable/SerializableSet.h>
+#include <worklets/SharedItems/Serializable/SerializableString.h>
+#include <worklets/SharedItems/Serializable/SerializableTurboModuleLike.h>
+#include <worklets/SharedItems/Serializable/SerializableWorklet.h>
 #include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
+#include <worklets/SharedItems/SynchronizableDynamic.h>
+#include <worklets/SharedItems/SynchronizableFixed.h>
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
-#ifndef NDEBUG
-#include <algorithm>
-#endif // NDEBUG
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
 #include <string>
+#include <thread>
+#include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 using namespace facebook;
@@ -33,31 +51,26 @@ namespace {
 inline void scheduleOnUI(
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
     jsi::Runtime &rt,
-    const jsi::Value &serializableArrayOfWorkletsValue
+    const jsi::Value &serializableArrayOfWorkletsValue,
+    const jsi::Value &serializableArrayOfArgumentsValue
 #ifndef NDEBUG
     ,
     const jsi::Value &scheduleStacksValue
 #endif // NDEBUG
 ) {
-  auto serializable = extractSerializableOrThrow(
+  auto serializableArrayOfWorklets = extractSerializableOrThrow<SerializableArray>(
       rt, serializableArrayOfWorkletsValue, "[Worklets] scheduleOnUI expects a serializable array of worklets.");
-  auto serializableArrayOfWorklets = std::static_pointer_cast<SerializableArray>(serializable);
-
-  const auto &workletsList = serializableArrayOfWorklets->getList();
-  std::vector<std::shared_ptr<SerializableWorklet>> worklets;
-  worklets.reserve(workletsList.size());
-  for (const auto &item : workletsList) {
-    worklets.push_back(std::static_pointer_cast<SerializableWorklet>(item));
-  }
+  auto serializableArrayOfArguments = extractSerializableOrThrow<SerializableArray>(
+      rt, serializableArrayOfArgumentsValue, "[Worklets] scheduleOnUI expects a serializable array of arguments.");
 
 #ifndef NDEBUG
-  std::vector<std::optional<std::string>> scheduleStacks(worklets.size());
+  std::vector<std::optional<std::string>> scheduleStacks;
   if (scheduleStacksValue.isObject()) {
     auto stacksObject = scheduleStacksValue.asObject(rt);
     if (stacksObject.isArray(rt)) {
       auto stacksArray = stacksObject.asArray(rt);
-      auto count = std::min<size_t>(stacksArray.size(rt), scheduleStacks.size());
-      for (size_t i = 0; i < count; i++) {
+      scheduleStacks.resize(stacksArray.size(rt));
+      for (size_t i = 0; i < scheduleStacks.size(); i++) {
         auto stackValue = stacksArray.getValueAtIndex(rt, i);
         if (stackValue.isString()) {
           scheduleStacks[i] = stackValue.asString(rt).utf8(rt);
@@ -72,9 +85,10 @@ inline void scheduleOnUI(
     return;
   }
 #ifndef NDEBUG
-  uiWorkletRuntime->scheduleWithStack(std::move(worklets), std::move(scheduleStacks));
+  uiWorkletRuntime->scheduleWithStack(
+      std::move(serializableArrayOfWorklets), std::move(serializableArrayOfArguments), std::move(scheduleStacks));
 #else
-  uiWorkletRuntime->schedule(std::move(worklets));
+  uiWorkletRuntime->schedule(std::move(serializableArrayOfWorklets), std::move(serializableArrayOfArguments));
 #endif // NDEBUG
 }
 
@@ -166,6 +180,29 @@ inline std::shared_ptr<AsyncQueue> extractAsyncQueue(jsi::Runtime &rt, const jsi
   auto asyncQueue = std::dynamic_pointer_cast<AsyncQueue>(nativeState);
 
   return asyncQueue;
+}
+
+inline jsi::Value synchronizableValueToJSValue(jsi::Runtime &rt, const SynchronizableValue &value) {
+  return std::visit(
+      [&rt](const auto &alternative) -> jsi::Value {
+        using TAlternative = std::decay_t<decltype(alternative)>;
+        if constexpr (std::is_same_v<TAlternative, std::shared_ptr<Serializable>>) {
+          return alternative->toJSValue(rt);
+        } else {
+          return jsi::Value(alternative);
+        }
+      },
+      value);
+}
+
+inline SynchronizableFixedValue jsValueToSynchronizableFixedValue(const jsi::Value &value) {
+  if (value.isBool()) {
+    return value.getBool();
+  }
+  if (value.isNumber()) {
+    return value.getNumber();
+  }
+  throw std::runtime_error("[Worklets] Expected a number or boolean for a fixed-type Synchronizable.");
 }
 
 inline void registerCustomSerializable(
@@ -265,11 +302,6 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   jsi_utils::addMethod<1>(
       rt, obj, "createSerializableHostObject", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         return makeSerializableHostObject(rt, at<0>(args).asObject(rt).asHostObject(rt));
-      });
-
-  jsi_utils::addMethod<1>(
-      rt, obj, "createSerializableInitializer", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        return makeSerializableInitializer(rt, at<0>(args).asObject(rt));
       });
 
   jsi_utils::addMethod<2>(
@@ -426,15 +458,15 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
       });
 
-  jsi_utils::addMethod<2>(
+  jsi_utils::addMethod<3>(
       rt,
       obj,
       "scheduleOnUI",
-      [uiWorkletRuntime = uiWorkletRuntime_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+      [uiWorkletRuntime = uiWorkletRuntime_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
 #ifndef NDEBUG
-        scheduleOnUI(uiWorkletRuntime, rt, at<0>(args), at<1>(args));
+        scheduleOnUI(uiWorkletRuntime, rt, at<0>(args), at<1>(args), at<2>(args));
 #else
-        scheduleOnUI(uiWorkletRuntime, rt, at<0>(args));
+        scheduleOnUI(uiWorkletRuntime, rt, at<0>(args), at<1>(args));
 #endif // NDEBUG
       });
 
@@ -596,41 +628,62 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             /* value */ at<1>(args).asBool());
       });
 
-  jsi_utils::addMethod<1>(
-      rt, obj, "createSynchronizable", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto initial = extractSerializableOrThrow(rt, at<0>(args), "[Worklets] Value must be a Serializable.");
-        auto synchronizable = std::make_shared<Synchronizable>(initial);
-        return SerializableJSRef::newNativeStateObject(rt, synchronizable);
+  jsi_utils::addMethod<0>(rt, obj, "getCurrentThreadId", [](jsi::Runtime &rt, const jsi::Value &) {
+    std::ostringstream stream;
+    stream << std::this_thread::get_id();
+    return jsi::String::createFromUtf8(rt, stream.str());
+  });
+
+  jsi_utils::addMethod<2>(
+      rt, obj, "createSynchronizable", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        if (at<1>(args).getBool()) {
+          return SerializableJSRef::newNativeStateObject(
+              rt, SynchronizableFixed::make(jsValueToSynchronizableFixedValue(at<0>(args))));
+        } else {
+          auto initial = extractSerializableOrThrow(rt, at<0>(args), "[Worklets] Value must be a Serializable.");
+          return SerializableJSRef::newNativeStateObject(rt, std::make_shared<SynchronizableDynamic>(initial));
+        }
       });
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableGetDirty", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto synchronizable = extractSynchronizableOrThrow(rt, at<0>(args));
-        return synchronizable->getDirty()->toJSValue(rt);
+        return synchronizableValueToJSValue(
+            rt, Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->getDirty());
       });
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableGetBlocking", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto synchronizable = extractSynchronizableOrThrow(rt, at<0>(args));
-        return synchronizable->getBlocking()->toJSValue(rt);
+        return synchronizableValueToJSValue(
+            rt, Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))->getBlocking());
       });
 
   jsi_utils::addMethod<2>(
       rt, obj, "synchronizableSetBlocking", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        auto synchronizable = extractSynchronizableOrThrow(rt, at<0>(args));
-        auto newValue = extractSerializableOrThrow(rt, at<1>(args), "[Worklets] Value must be a Serializable.");
-        synchronizable->setBlocking(newValue);
+        auto synchronizable = Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args));
+        const auto &newValue = at<1>(args);
+        if (synchronizable->isFixed()) {
+          synchronizable->setBlocking(jsValueToSynchronizableFixedValue(newValue));
+        } else {
+          synchronizable->setBlocking(
+              extractSerializableOrThrow(rt, newValue, "[Worklets] Value must be a Serializable."));
+        }
+      });
+
+  jsi_utils::addMethod<2>(
+      rt, obj, "synchronizableSetDirty", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args))
+            ->setDirty(jsValueToSynchronizableFixedValue(at<1>(args)));
       });
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableLock", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto synchronizable = extractSynchronizableOrThrow(rt, at<0>(args));
+        auto synchronizable = Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args));
         synchronizable->lock();
       });
 
   jsi_utils::addMethod<1>(
       rt, obj, "synchronizableUnlock", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto synchronizable = extractSynchronizableOrThrow(rt, at<0>(args));
+        auto synchronizable = Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args));
         synchronizable->unlock();
       });
 

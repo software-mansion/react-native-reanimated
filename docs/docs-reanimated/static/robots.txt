@@ -1,5 +1,0 @@
-User-agent: *
-Disallow: /react-native-reanimated/docs/1.x/
-Disallow: /react-native-reanimated/docs/2.x/
-Disallow: /react-native-reanimated/docs/3.x/
-Allow: /react-native-reanimated/docs/

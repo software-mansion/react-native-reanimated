@@ -8,6 +8,7 @@ import type {
 } from './commonTypes';
 import { configureLayoutAnimationBatch } from './core';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
+import { initializeLayoutAnimationsManager } from './layoutReanimation/animationsManager';
 
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];
@@ -18,6 +19,7 @@ function createUpdateManager() {
 
   return {
     update(batchItem: LayoutAnimationBatchItem, isUnmounting?: boolean) {
+      initializeLayoutAnimationsManager();
       if (isUnmounting) {
         deferredAnimations.push(batchItem);
       } else {

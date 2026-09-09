@@ -4,17 +4,19 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.animation.TimeInterpolator
+import android.os.Handler
+import android.os.Looper
 import android.util.FloatProperty
 import android.view.Choreographer
 import android.view.View
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UIManager
 import com.facebook.react.bridge.UIManagerListener
-import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.uimanager.IllegalViewOperationException
 import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentHashMap
 
 internal class CSSPlatformTransitionsManager(
     private val fabricUIManager: FabricUIManager,
@@ -50,18 +52,27 @@ internal class CSSPlatformTransitionsManager(
         fabricUIManager.addUIManagerEventListener(mountListener)
     }
 
-    private val reconciler = CSSPlatformTransitionReconciler(::repairClobberedValues)
-    private val startTokens = HashMap<Key, Long>()
+    private val reconciler = CSSPlatformTransitionReconciler(::onPreDraw)
 
     @Volatile
     private var invalidated = false
 
-    private var nextStartToken = 0L
-    private val interpolators = HashMap<InterpolatorKey, TimeInterpolator>()
+    /** Starts waiting for their View to mount, newest per key so a superseded start never begins. */
+    private val pendingStarts = LinkedHashMap<Key, Command.Start>()
+    private var retryScheduled = false
+
+    private val commands = MainThreadCommandQueue<Command>(::executeCommand)
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+    /**
+     * A C++ mutex serialises the callers but is not a happens-before edge for Java, so the
+     * map supplies that ordering itself.
+     */
+    private val easings = ConcurrentHashMap<Int, TimeInterpolator>()
 
     private data class Key(
         val viewTag: Int,
-        val propertyName: String,
+        val propertyId: Int,
     )
 
     private class RunningTransition(
@@ -74,6 +85,28 @@ internal class CSSPlatformTransitionsManager(
 
         /** Uninitialised until the first frame, which a start delay defers, so show startValue. */
         fun currentValue(): Float = heldValue ?: if (animator.isRunning) animator.animatedValue as Float else startValue
+    }
+
+    private sealed class Command {
+        abstract val key: Key
+
+        class Start(
+            override val key: Key,
+            val writer: FloatProperty<View>,
+            val fromValue: Double,
+            val toValue: Double,
+            val durationMs: Double,
+            val startTimestampMs: Double,
+            val interpolator: TimeInterpolator,
+            val scale: Float,
+            val persistent: Boolean,
+        ) : Command() {
+            val endTimestampMs: Double get() = startTimestampMs + durationMs
+        }
+
+        class Remove(
+            override val key: Key,
+        ) : Command()
     }
 
     /** Holds the start value for [delayFraction], then plays [inner] over the rest. */
@@ -90,45 +123,37 @@ internal class CSSPlatformTransitionsManager(
         }
     }
 
-    private data class InterpolatorKey(
-        val type: Int,
-        val pointsX: List<Float>,
-        val pointsY: List<Float>,
-    )
-
     /** Whether the property is accepted; it can still fail later if the View never mounts. */
     fun animateTransition(
         viewTag: Int,
-        propertyName: String,
+        propertyId: Int,
         fromValue: Double,
         toValue: Double,
         durationMs: Double,
         startTimestampMs: Double,
-        easingType: Int,
-        easingPointsX: FloatArray,
-        easingPointsY: FloatArray,
+        easingId: Int,
         persistent: Boolean,
     ): Boolean {
         if (invalidated) return false
-        val writer = cssPropertyWriterFor(propertyName) ?: return false
+        val writer = cssPropertyWriterFor(propertyId) ?: return false
+        val interpolator = easings[easingId] ?: return false
         val context = reactContext.get() ?: return false
         val scale = DurationScale.effectiveScale(context)
         if (scale <= 0f) return false
 
-        UiThreadUtil.runOnUiThread {
-            if (invalidated) return@runOnUiThread
-            val key = Key(viewTag, propertyName)
-            // A fresh token invalidates any retry still queued for this key.
-            val token = ++nextStartToken
-            startTokens[key] = token
-
-            beginWhenMounted(key, token, startTimestampMs + durationMs) {
-                viewForTag(viewTag)?.also { view ->
-                    val interpolator = interpolatorFor(easingType, easingPointsX, easingPointsY)
-                    start(view, key, writer, fromValue, toValue, durationMs, startTimestampMs, interpolator, scale, persistent)
-                } != null
-            }
-        }
+        commands.enqueue(
+            Command.Start(
+                Key(viewTag, propertyId),
+                writer,
+                fromValue,
+                toValue,
+                durationMs,
+                startTimestampMs,
+                interpolator,
+                scale,
+                persistent,
+            ),
+        )
         return true
     }
 
@@ -139,67 +164,105 @@ internal class CSSPlatformTransitionsManager(
         invalidated = true
         @OptIn(UnstableReactNativeAPI::class)
         fabricUIManager.removeUIManagerEventListener(mountListener)
-        UiThreadUtil.runOnUiThread {
-            startTokens.clear()
+        mainHandler.post {
+            pendingStarts.clear()
             // Snapshot first: cancel() runs onAnimationEnd, which reads the map.
             val running = animators.values.toList()
             animators.clear()
             running.forEach { it.animator.cancel() }
             reconciler.invalidate()
+            easings.clear()
         }
     }
 
     fun removeTransition(
         viewTag: Int,
-        propertyName: String,
+        propertyId: Int,
     ) {
-        UiThreadUtil.runOnUiThread {
-            val key = Key(viewTag, propertyName)
-            startTokens.remove(key)
-            animators.remove(key)?.animator?.cancel()
+        // Teardown streams a removal per routed property, and each would post its own message.
+        if (invalidated) return
+        commands.enqueue(Command.Remove(Key(viewTag, propertyId)))
+    }
+
+    private fun executeCommand(command: Command) {
+        // A start must not register an animator behind cleanup that is already posted.
+        if (invalidated) return
+        when (command) {
+            is Command.Start -> beginStart(command)
+            is Command.Remove -> removeNow(command.key)
         }
     }
 
+    private fun removeNow(key: Key) {
+        pendingStarts.remove(key)
+        animators.remove(key)?.animator?.cancel()
+    }
+
     /**
-     * A tag can be registered before its View mounts. The start timestamp is absolute, so a
-     * late start seeks rather than drifts, and retries stop once the transition would have ended.
+     * A tag can be registered before its View mounts. The absolute start timestamp makes a
+     * late start seek rather than drift, and retrying stops once the transition would have
+     * ended, so it needs no timeout.
      */
-    private fun beginWhenMounted(
-        key: Key,
-        token: Long,
-        endTimestampMs: Double,
-        begin: () -> Boolean,
-    ) {
-        if (startTokens[key] != token) return
-        if (begin() || animationTimestamp() >= endTimestampMs) {
-            startTokens.remove(key)
+    private fun beginStart(command: Command.Start) {
+        if (startIfMounted(command) || animationTimestamp() >= command.endTimestampMs) {
+            pendingStarts.remove(command.key)
             return
         }
-        Choreographer.getInstance().postFrameCallback { beginWhenMounted(key, token, endTimestampMs, begin) }
+        pendingStarts[command.key] = command
+        scheduleRetry()
+    }
+
+    /** False while the View is still unmounted, which leaves the start pending. */
+    private fun startIfMounted(command: Command.Start): Boolean {
+        val view = viewForTag(command.key.viewTag) ?: return false
+        start(view, command)
+        return true
+    }
+
+    /** All waiting starts share one frame callback; one each floods the Choreographer. */
+    private fun scheduleRetry() {
+        if (retryScheduled) return
+        retryScheduled = true
+        Choreographer.getInstance().postFrameCallback {
+            retryScheduled = false
+            if (invalidated) {
+                pendingStarts.clear()
+                return@postFrameCallback
+            }
+            val now = animationTimestamp()
+            val iterator = pendingStarts.entries.iterator()
+            while (iterator.hasNext()) {
+                val pending = iterator.next().value
+                if (startIfMounted(pending) || now >= pending.endTimestampMs) iterator.remove()
+            }
+            if (pendingStarts.isNotEmpty()) scheduleRetry()
+        }
     }
 
     private fun start(
         view: View,
-        key: Key,
-        writer: FloatProperty<View>,
-        fromValue: Double,
-        toValue: Double,
-        durationMs: Double,
-        startTimestampMs: Double,
-        interpolator: TimeInterpolator,
-        scale: Float,
-        persistent: Boolean,
+        command: Command.Start,
     ) {
+        val key = command.key
+        val writer = command.writer
+        val durationMs = command.durationMs
+        val interpolator = command.interpolator
+
         // Resume from what is on screen; fromValue is the committed style, which would snap back.
         val interrupted = animators.remove(key)
-        val startValue = if (interrupted != null) writer.get(view) else fromValue.toFloat()
+        val startValue = if (interrupted != null) writer.get(view) else command.fromValue.toFloat()
         interrupted?.animator?.cancel()
 
-        // ObjectAnimator writes nothing until its first frame, so the view would show the
-        // already-committed target for the whole delay.
-        writer.setValue(view, startValue)
+        // ObjectAnimator has no absolute start time, so resolve it after the thread hop
+        // rather than in C++, which would shift the timeline late.
+        val elapsedMs = animationTimestamp().toDouble() - command.startTimestampMs
 
-        val animator = ObjectAnimator.ofFloat(view, writer, startValue, toValue.toFloat())
+        // ObjectAnimator writes nothing until its first frame, so the view would show the
+        // already-committed target for the whole delay. A start that is already past its end
+        // has no delay left to cover, so priming it would only be a wasted write.
+        if (elapsedMs < durationMs) writer.setValue(view, startValue)
+
+        val animator = ObjectAnimator.ofFloat(view, writer, startValue, command.toValue.toFloat())
         animator.addListener(
             object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
@@ -207,7 +270,7 @@ internal class CSSPlatformTransitionsManager(
                     if (running.animator !== animation) return
                     // A persistent value has no committed style behind it, so dropping the entry
                     // would let the next commit revert the view.
-                    if (persistent) {
+                    if (command.persistent) {
                         running.heldValue = animator.animatedValue as Float
                     } else {
                         animators.remove(key)
@@ -215,13 +278,10 @@ internal class CSSPlatformTransitionsManager(
                 }
             },
         )
-        // ObjectAnimator has no absolute start time, so resolve it after the thread hop
-        // rather than in C++, which would shift the timeline late.
-        val elapsedMs = animationTimestamp().toDouble() - startTimestampMs
         val delayMs = if (elapsedMs < 0) -elapsedMs else 0.0
         // startDelay writes nothing while it waits, so a commit landing in the delay would
         // stay on screen. Folding the delay into the curve rewrites the property instead.
-        animator.duration = ((delayMs + durationMs) / scale).toLong().coerceAtLeast(1L)
+        animator.duration = ((delayMs + durationMs) / command.scale).toLong().coerceAtLeast(1L)
         animator.interpolator =
             if (delayMs > 0) HoldThenEase((delayMs / (delayMs + durationMs)).toFloat(), interpolator) else interpolator
         if (elapsedMs > 0 && durationMs > 0) {
@@ -238,9 +298,23 @@ internal class CSSPlatformTransitionsManager(
         reactWroteSinceLastDraw = true
     }
 
+    /**
+     * Draining here as well as from the posted message puts a queued start after the commit
+     * that wrote the target and before the draw, so it replaces the target in the same frame
+     * rather than showing it once. Returns whether the listener is still needed.
+     */
+    private fun onPreDraw(): Boolean {
+        commands.drain()
+        repairClobberedValues()
+        // Retiring while idle leaves the next start with only its posted message to beat the
+        // draw that React's commit triggers, and losing that race shows the committed target
+        // for a frame. Both calls above are no-ops while nothing is queued or running.
+        return !invalidated
+    }
+
     /** Re-asserts each animator's own value wherever a commit overwrote it. */
-    private fun repairClobberedValues(): Boolean {
-        if (!reactWroteSinceLastDraw) return animators.isNotEmpty()
+    private fun repairClobberedValues() {
+        if (!reactWroteSinceLastDraw) return
         reactWroteSinceLastDraw = false
         animators.values.forEach { running ->
             // target is held weakly, so read the View through it rather than keeping one.
@@ -248,18 +322,20 @@ internal class CSSPlatformTransitionsManager(
             val current = running.currentValue()
             if (running.writer.get(view) != current) running.writer.setValue(view, current)
         }
-        return animators.isNotEmpty()
     }
 
-    /** PathInterpolator flattens its curve on construction, so cache it. Type is in the key
-     * because families share point lists. */
-    private fun interpolatorFor(
-        type: Int,
-        pointsX: FloatArray,
-        pointsY: FloatArray,
-    ): TimeInterpolator {
-        val key = InterpolatorKey(type, pointsX.toList(), pointsY.toList())
-        return interpolators.getOrPut(key) { CSSEasing.interpolator(type, pointsX, pointsY) }
+    /** PathInterpolator flattens its curve natively on construction, so build once per id. */
+    fun defineEasing(
+        easingId: Int,
+        easingType: Int,
+        easingPointsX: FloatArray,
+        easingPointsY: FloatArray,
+    ) {
+        easings[easingId] = CSSEasing.interpolator(easingType, easingPointsX, easingPointsY)
+    }
+
+    fun undefineEasing(easingId: Int) {
+        easings.remove(easingId)
     }
 
     private fun viewForTag(viewTag: Int): View? =

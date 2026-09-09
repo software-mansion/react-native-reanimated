@@ -50,14 +50,21 @@ export type CSSAnimationEvent = {
 
 export type CSSAnimationCallback = (event: CSSAnimationEvent) => void;
 
+/**
+ * Lifecycle callbacks of a **CSS animation**. `withTiming`, `withSpring` and
+ * layout animations never fire them.
+ */
 export type CSSAnimationCallbacks = {
-  /** Fired when the animation starts, after any `animationDelay`. */
+  /** Fired when the CSS animation starts, after any `animationDelay`. */
   onCSSAnimationStart?: CSSAnimationCallback;
-  /** Fired when the animation completes. */
+  /** Fired when the CSS animation completes. */
   onCSSAnimationEnd?: CSSAnimationCallback;
-  /** Fired at the end of each iteration except the last. */
+  /** Fired at the end of each CSS animation iteration except the last. */
   onCSSAnimationIteration?: CSSAnimationCallback;
-  /** Fired when the animation is interrupted before completing. */
+  /**
+   * Fired when the CSS animation is interrupted before completing, including
+   * when the component unmounts.
+   */
   onCSSAnimationCancel?: CSSAnimationCallback;
 };
 

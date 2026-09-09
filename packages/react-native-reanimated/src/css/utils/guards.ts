@@ -9,6 +9,7 @@ import type {
   CSSAnimationCallbackProp,
   CSSAnimationKeyframes,
   CSSAnimationProp,
+  CSSCallbackProp,
   CSSConfigProp,
   CSSKeyframesRule,
   CSSTransitionCallbackProp,
@@ -56,33 +57,26 @@ export const isTransitionProp = (key: string): key is CSSTransitionProp => {
   }
 };
 
-export const isTransitionCallbackProp = (
-  key: string
-): key is CSSTransitionCallbackProp => {
-  switch (key) {
-    case 'onCSSTransitionRun':
-    case 'onCSSTransitionStart':
-    case 'onCSSTransitionEnd':
-    case 'onCSSTransitionCancel':
-      return true;
-    default:
-      return false;
-  }
-};
+export const ANIMATION_CALLBACK_PROPS = [
+  'onCSSAnimationStart',
+  'onCSSAnimationEnd',
+  'onCSSAnimationIteration',
+  'onCSSAnimationCancel',
+] as const satisfies readonly CSSAnimationCallbackProp[];
 
-export const isAnimationCallbackProp = (
-  key: string
-): key is CSSAnimationCallbackProp => {
-  switch (key) {
-    case 'onCSSAnimationStart':
-    case 'onCSSAnimationEnd':
-    case 'onCSSAnimationIteration':
-    case 'onCSSAnimationCancel':
-      return true;
-    default:
-      return false;
-  }
-};
+export const TRANSITION_CALLBACK_PROPS = [
+  'onCSSTransitionRun',
+  'onCSSTransitionStart',
+  'onCSSTransitionEnd',
+  'onCSSTransitionCancel',
+] as const satisfies readonly CSSTransitionCallbackProp[];
+
+const CSS_CALLBACK_PROPS = [
+  ...ANIMATION_CALLBACK_PROPS,
+  ...TRANSITION_CALLBACK_PROPS,
+] as const satisfies readonly CSSCallbackProp[];
+
+const CSS_CALLBACK_PROP_SET: ReadonlySet<string> = new Set(CSS_CALLBACK_PROPS);
 
 export const isStepsModifier = (value: string): value is StepsModifier => {
   switch (value) {
@@ -99,10 +93,10 @@ export const isStepsModifier = (value: string): value is StepsModifier => {
 };
 
 export const isCSSConfigProp = (key: string): key is CSSConfigProp =>
-  isTransitionProp(key) ||
-  isAnimationProp(key) ||
-  isTransitionCallbackProp(key) ||
-  isAnimationCallbackProp(key);
+  isTransitionProp(key) || isAnimationProp(key);
+
+export const isCSSCallbackProp = (key: string): key is CSSCallbackProp =>
+  CSS_CALLBACK_PROP_SET.has(key);
 
 export const isTimeUnit = (value: unknown): value is TimeUnit =>
   // TODO: implement more strict check

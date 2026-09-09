@@ -7,7 +7,6 @@ import ReanimatedFeatures from '@site/src/components/ReanimatedFeatures';
 import Animations from '@site/src/components/Animations';
 import Testimonials from '@site/src/components/Testimonials';
 import FooterBackground from '@site/src/components/FooterBackground';
-import Sponsors from '@site/src/components/Sponsors';
 import { HireUsSection } from '@swmansion/t-rex-ui';
 
 export default function Home(): JSX.Element {
@@ -18,7 +17,6 @@ export default function Home(): JSX.Element {
         <ReanimatedFeatures />
         <Animations />
         <Testimonials />
-        <Sponsors />
         <div className={styles.hireUsContainer}>
           <HireUsSection
             href={

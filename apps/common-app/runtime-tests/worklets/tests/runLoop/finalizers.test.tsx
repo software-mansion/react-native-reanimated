@@ -7,7 +7,7 @@ import {
   createOrderConstraint,
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
@@ -100,7 +100,7 @@ describe('requestAnimationFrameFinalizer', () => {
   });
 
   test('is not installed on Worker Runtimes', () => {
-    const workletRuntime = getWorkletRuntimeFromPool('test');
+    const [workletRuntime] = getWorkletRuntimesFromPool(1);
 
     const finalizerType = runOnRuntimeSyncWithId(
       workletRuntime.runtimeId,

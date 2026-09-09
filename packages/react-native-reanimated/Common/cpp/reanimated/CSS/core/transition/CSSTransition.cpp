@@ -29,10 +29,8 @@ CSSTransition::~CSSTransition() {
   }
 }
 
-TransitionProperties CSSTransition::getProperties() const {
-  TransitionProperties result = routing_.loop;
-  result.insert(routing_.platform.begin(), routing_.platform.end());
-  return result;
+TransitionProperties CSSTransition::getLoopProperties() const {
+  return routing_.loop;
 }
 
 folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config, const folly::dynamic &lastUpdates) {
@@ -44,13 +42,17 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
     std::erase(config.removedProperties, propertyName);
   }
 
-  auto loopConfig = platformTransitionProxy_->processConfig(rt, getViewTag(), config, routing_, timestamp);
+  // TODO: add support for events reported by the platform itself; until then
+  // a view with transition callbacks keeps every property on the loop, where
+  // timing and events already pair up.
+  auto loopConfig =
+      platformTransitionProxy_->processConfig(rt, getViewTag(), config, routing_, eventMask_ == 0, timestamp);
 
   if (!loopConfig.empty()) {
+    dropPending(loopConfig.removedProperties);
     ensureLoopTransition().updateSettings(
         loopConfig.changedPropertiesSettings, loopConfig.removedProperties, timestamp);
   }
-  trackPlatformLifecycles(config, timestamp);
 
   // Settings-only configs reconfigure without running.
   if (!loopConfig.hasValueUpdates()) {
@@ -60,34 +62,8 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
   auto initialUpdate =
       ensureLoopTransition().run(rt, shadowNode_, loopConfig.changedProperties, lastUpdates, timestamp);
   scheduleLoop(timestamp);
+  pendingInitialUpdate_.update(initialUpdate);
   return initialUpdate;
-}
-
-// TODO: add support for events reported by the platform itself; until then
-// the lifecycle of platform-routed properties temporarily runs on the loop path.
-void CSSTransition::trackPlatformLifecycles(const CSSTransitionConfig &config, const double timestamp) {
-  if (eventMask_ == 0) {
-    return;
-  }
-
-  if (loopTransition_ && !config.removedProperties.empty()) {
-    loopTransition_->removeProperties(config.removedProperties, timestamp);
-  }
-
-  PropertiesSettingsMap propertiesSettings;
-  std::vector<std::string> propertyNames;
-  for (const auto &[propertyName, value] : config.changedProperties) {
-    if (routing_.platform.contains(propertyName)) {
-      propertyNames.push_back(propertyName);
-      propertiesSettings.emplace(propertyName, config.changedPropertiesSettings.at(propertyName));
-    }
-  }
-  if (propertyNames.empty()) {
-    return;
-  }
-
-  ensureLoopTransition().trackProperties(propertiesSettings, propertyNames, timestamp);
-  scheduleLoop(timestamp);
 }
 
 folly::dynamic CSSTransition::run(
@@ -96,21 +72,29 @@ folly::dynamic CSSTransition::run(
   const auto timestamp = loop_->resolveTimestamp();
 
   auto loopDiffs = platformTransitionProxy_->processDynamicDiffs(
-      getViewTag(), propertyDiffs, pseudoLockedProperties_, routing_, timestamp);
+      getViewTag(), propertyDiffs, pseudoLockedProperties_, routing_, eventMask_ == 0, timestamp);
   if (loopDiffs.empty() && !loopTransition_) {
     return folly::dynamic::object();
   }
 
   auto initialUpdate = ensureLoopTransition().run(shadowNode_, loopDiffs, lastUpdates, timestamp);
   scheduleLoop(timestamp);
+  pendingInitialUpdate_.update(initialUpdate);
   return initialUpdate;
 }
 
-folly::dynamic CSSTransition::computeCurrentLoopStyle() {
-  if (!loopTransition_) {
-    return folly::dynamic::object();
+folly::dynamic CSSTransition::takeUpdates() {
+  auto updates = std::exchange(pendingInitialUpdate_, folly::dynamic::object());
+  if (loopTransition_) {
+    updates.update(loopTransition_->computeCurrentStyle(shadowNode_));
   }
-  return loopTransition_->computeCurrentStyle(shadowNode_);
+  return updates;
+}
+
+void CSSTransition::dropPending(const std::vector<std::string> &propertyNames) {
+  for (const auto &propertyName : propertyNames) {
+    pendingInitialUpdate_.erase(propertyName);
+  }
 }
 
 void CSSTransition::setPseudoLockedProperties(TransitionProperties properties) {
@@ -118,6 +102,7 @@ void CSSTransition::setPseudoLockedProperties(TransitionProperties properties) {
 }
 
 void CSSTransition::cancel() {
+  pendingInitialUpdate_ = folly::dynamic::object();
   if (loopTransition_) {
     // Report the cancel before the operation goes away, as animations do.
     loopTransition_->abort(loop_->resolveTimestamp());
@@ -127,6 +112,8 @@ void CSSTransition::cancel() {
 }
 
 void CSSTransition::removeProperties(const std::vector<std::string> &propertyNames, const double timestamp) {
+  dropPending(propertyNames);
+
   TransitionProperties platformProperties;
   for (const auto &propertyName : propertyNames) {
     if (routing_.platform.erase(propertyName) > 0) {

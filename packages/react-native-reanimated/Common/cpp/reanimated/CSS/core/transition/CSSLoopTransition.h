@@ -50,10 +50,6 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
       double timestamp);
 
   /// Tracks the lifecycle of properties whose rendering is routed to the platform.
-  void trackProperties(
-      const PropertiesSettingsMap &propertiesSettings,
-      const std::vector<std::string> &propertyNames,
-      double timestamp);
 
   folly::dynamic computeCurrentStyle(const std::shared_ptr<const ShadowNode> &shadowNode);
 
