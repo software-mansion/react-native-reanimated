@@ -7,6 +7,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <atomic>
+#include <functional>
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -53,8 +54,24 @@ class UpdatesRegistryManager {
   /// carried yet. Entries leave on commit success, settled eviction, registry
   /// release, or node removal - not when a hook attaches them.
   void recordSynchronousProps(const UpdatesBatch &updatesBatch);
-  void collectPendingSynchronousProps(PropsMap &propsMap, SurfaceId surfaceId);
-  void clearPendingSynchronousProps(SurfaceId surfaceId, uint64_t committedVersion);
+  /// Tags for which every commit carries pending values, because the
+  /// mounting layer reads their shadow props for animations.
+  void alwaysCarryPendingPropsFor(std::function<bool(Tag)> predicate);
+  /// Puts pending values before the values a commit already holds for a
+  /// family, so the commit's own values win. A pending family outside the
+  /// map joins it when an ancestor is in the map, because a changed ancestor
+  /// can reparent the node natively. With `includeUntouchedFamilies` every
+  /// pending family of the surface joins.
+  void attachPendingSynchronousProps(PropsMap &propsMap, const RootShadowNode &oldRoot, bool includeUntouchedFamilies);
+  /// Pending values of nodes that `newRoot` gives new props, a new parent,
+  /// a new index or an ancestor with new props. Other nodes keep their props
+  /// object, and mounting does not write to them.
+  void collectPendingSynchronousPropsForChangedNodes(
+      PropsMap &propsMap,
+      const RootShadowNode &oldRoot,
+      const RootShadowNode &newRoot);
+  /// Clears keys up to `committedVersion` for the families a commit carried.
+  void clearPendingSynchronousProps(SurfaceId surfaceId, const PropsMap &carriedProps, uint64_t committedVersion);
   /// Removes only the given keys - values other registries own stay pending.
   void clearPendingSynchronousProps(Tag tag, const folly::dynamic &props);
   bool hasPendingSynchronousProps(Tag tag) const;
@@ -95,8 +112,18 @@ class UpdatesRegistryManager {
   };
 
   void removePendingSynchronousProps(const ShadowNodeFamily &family);
+  bool alwaysCarriesPendingProps(Tag tag) const;
+  /// A carried node gets new props and can reparent its descendants, so
+  /// their pending values ride along.
+  static void attachPendingDescendants(
+      PropsMap &propsMap,
+      const std::unordered_map<Tag, PendingSynchronousProps> &updates,
+      const ShadowNode &node,
+      size_t &budget,
+      size_t &remaining);
 
   mutable std::mutex mutex_;
+  std::function<bool(Tag)> alwaysCarryPendingPropsFor_;
   std::atomic<bool> isPaused_;
   std::unordered_map<SurfaceId, PendingSynchronousSurface> pendingSynchronousProps_;
   uint64_t pendingSynchronousPropsVersion_ = 0;

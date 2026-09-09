@@ -248,11 +248,23 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
       case ShadowViewMutation::Update: {
         auto &node = lightNodes_[mutation.newChildShadowView.tag];
         react_native_assert(node && "LightNode not found");
+        // A mutation that keeps the props object carries no new prop values.
+        // The light node's own props already hold the synchronous writes, so
+        // they stay and only the rest of the view is taken from the mutation.
+        const bool propsUnchanged =
+            node->current.props && mutation.oldChildShadowView.props == mutation.newChildShadowView.props;
+        const auto keptProps = node->current.props;
         node->previous = mutation.oldChildShadowView;
+        if (propsUnchanged) {
+          node->previous.props = keptProps;
+        }
 #ifdef ANDROID
         // TODO (future): We don't merge the root view as the currently stored version might not be accurate, because of
         // the inconsequential initialization order of proxy and the surface
-        if (!isRoot(node) && node->current.props) {
+        if (propsUnchanged) {
+          node->current = mutation.newChildShadowView;
+          node->current.props = keptProps;
+        } else if (!isRoot(node) && node->current.props) {
           // On android rawProps are used to store the diffed props so we need to merge them
           // This should soon be replaced in RN with Props 2.0 (the diffing will be done at the end of the pipeline)
           auto &currentRawProps = node->current.props->rawProps;
@@ -266,6 +278,9 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         }
 #else
         node->current = mutation.newChildShadowView;
+        if (propsUnchanged) {
+          node->current.props = keptProps;
+        }
 #endif // ANDROID
         auto tag = mutation.newChildShadowView.tag;
         // A running animation clones its frames from finalView, so a

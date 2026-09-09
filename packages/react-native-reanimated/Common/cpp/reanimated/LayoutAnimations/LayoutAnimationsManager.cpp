@@ -57,6 +57,11 @@ bool LayoutAnimationsManager::hasLayoutAnimation(const int tag, const LayoutAnim
   return getConfigsForType(type).contains(tag);
 }
 
+bool LayoutAnimationsManager::hasAnimatedLayoutConfig(const int tag) {
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  return layoutAnimations_.contains(tag) || enteringAnimations_.contains(tag) || exitingAnimations_.contains(tag);
+}
+
 void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   enteringAnimations_.erase(tag);

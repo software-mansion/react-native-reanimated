@@ -59,6 +59,8 @@ class LayoutAnimationsManager {
   void setShouldAnimateExiting(const int tag, const bool value);
   bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
   bool hasLayoutAnimation(const int tag, const LayoutAnimationType type);
+  /// True when the tag has a layout, entering or exiting animation config.
+  bool hasAnimatedLayoutConfig(const int tag);
   void startLayoutAnimation(jsi::Runtime &rt, const int tag, const LayoutAnimationType type, const jsi::Object &values);
   void clearLayoutAnimationConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;

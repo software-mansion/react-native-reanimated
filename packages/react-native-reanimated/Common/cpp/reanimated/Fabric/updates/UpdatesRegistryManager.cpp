@@ -121,18 +121,172 @@ void UpdatesRegistryManager::recordSynchronousProps(const UpdatesBatch &updatesB
   }
 }
 
-void UpdatesRegistryManager::collectPendingSynchronousProps(PropsMap &propsMap, const SurfaceId surfaceId) {
+void UpdatesRegistryManager::alwaysCarryPendingPropsFor(std::function<bool(Tag)> predicate) {
+  alwaysCarryPendingPropsFor_ = std::move(predicate);
+}
+
+bool UpdatesRegistryManager::alwaysCarriesPendingProps(const Tag tag) const {
+  return alwaysCarryPendingPropsFor_ && alwaysCarryPendingPropsFor_(tag);
+}
+
+namespace {
+
+using AncestorChains = std::unordered_map<Tag, ShadowNodeFamily::AncestorList>;
+
+/// Nodes a Reanimated commit inspects below its batch before it falls back
+/// to one ancestor walk per pending family.
+constexpr size_t kPendingDescendantsVisitBudget = 1024;
+
+bool hasAncestorIn(const PropsMap &propsMap, const ShadowNodeFamily::AncestorList &ancestors) {
+  for (const auto &[ancestor, index] : ancestors) {
+    if (propsMap.contains(ancestor.get().getFamilyShared())) {
+      return true;
+    }
+  }
+  return false;
+}
+
+std::vector<RawProps> withPendingPropsFirst(const folly::dynamic &pendingProps, const std::vector<RawProps> &props) {
+  std::vector<RawProps> values;
+  values.reserve(props.size() + 1);
+  values.emplace_back(pendingProps);
+  for (const auto &rawProps : props) {
+    values.emplace_back(rawProps);
+  }
+  return values;
+}
+
+/// Follows the node's chain in `newRoot` and looks up the same positions in
+/// `oldRoot`. An identical node object ends the walk: nothing below it
+/// changed. A different family, or new props on the way down, means the
+/// node has a new place or new props.
+bool hasNewPropsOrPlace(const RootShadowNode &oldRoot, const ShadowNodeFamily::AncestorList &newAncestors) {
+  const ShadowNode *oldNode = &oldRoot;
+  for (const auto &[newParent, index] : newAncestors) {
+    const auto &oldChildren = oldNode->getChildren();
+    if (static_cast<size_t>(index) >= oldChildren.size()) {
+      return true;
+    }
+    const auto &oldChild = oldChildren[index];
+    const auto &newChild = newParent.get().getChildren()[index];
+    if (oldChild == newChild) {
+      return false;
+    }
+    if (&oldChild->getFamily() != &newChild->getFamily() || oldChild->getProps() != newChild->getProps()) {
+      return true;
+    }
+    oldNode = oldChild.get();
+  }
+  return false;
+}
+
+} // namespace
+
+void UpdatesRegistryManager::attachPendingSynchronousProps(
+    PropsMap &propsMap,
+    const RootShadowNode &oldRoot,
+    const bool includeUntouchedFamilies) {
   react_native_assert(isLockedByCurrentThread());
-  const auto it = pendingSynchronousProps_.find(surfaceId);
+  const auto it = pendingSynchronousProps_.find(oldRoot.getSurfaceId());
   if (it == pendingSynchronousProps_.end()) {
     return;
   }
-  for (const auto &[tag, entry] : it->second.updates) {
-    propsMap[entry.family].emplace_back(RawProps(entry.props));
+  const auto &updates = it->second.updates;
+  for (const auto &[tag, entry] : updates) {
+    const auto propsIt = propsMap.find(entry.family);
+    if (propsIt != propsMap.end()) {
+      propsIt->second = withPendingPropsFirst(entry.props, propsIt->second);
+    } else if (includeUntouchedFamilies || alwaysCarriesPendingProps(tag)) {
+      propsMap[entry.family].emplace_back(RawProps(entry.props));
+    }
+  }
+  if (includeUntouchedFamilies) {
+    return;
+  }
+  size_t remaining = 0;
+  for (const auto &[tag, entry] : updates) {
+    remaining += propsMap.contains(entry.family) ? 0 : 1;
+  }
+  std::vector<ShadowNodeFamily::Shared> carriedFamilies;
+  carriedFamilies.reserve(propsMap.size());
+  for (const auto &[family, props] : propsMap) {
+    carriedFamilies.push_back(family);
+  }
+  size_t budget = kPendingDescendantsVisitBudget;
+  for (const auto &family : carriedFamilies) {
+    if (remaining == 0 || budget == 0) {
+      break;
+    }
+    const auto ancestors = family->getAncestors(oldRoot);
+    if (ancestors.empty() || hasAncestorIn(propsMap, ancestors)) {
+      continue;
+    }
+    const auto &[parent, index] = ancestors.back();
+    attachPendingDescendants(propsMap, updates, *parent.get().getChildren()[index], budget, remaining);
+  }
+  if (remaining == 0 || budget > 0) {
+    return;
+  }
+  for (const auto &[tag, entry] : updates) {
+    if (!propsMap.contains(entry.family) && hasAncestorIn(propsMap, entry.family->getAncestors(oldRoot))) {
+      propsMap[entry.family].emplace_back(RawProps(entry.props));
+    }
   }
 }
 
-void UpdatesRegistryManager::clearPendingSynchronousProps(const SurfaceId surfaceId, const uint64_t committedVersion) {
+void UpdatesRegistryManager::attachPendingDescendants(
+    PropsMap &propsMap,
+    const std::unordered_map<Tag, PendingSynchronousProps> &updates,
+    const ShadowNode &node,
+    size_t &budget,
+    size_t &remaining) {
+  for (const auto &child : node.getChildren()) {
+    if (remaining == 0 || budget == 0) {
+      return;
+    }
+    --budget;
+    const auto entryIt = updates.find(child->getTag());
+    if (entryIt != updates.end() && !propsMap.contains(entryIt->second.family)) {
+      propsMap[entryIt->second.family].emplace_back(RawProps(entryIt->second.props));
+      --remaining;
+    }
+    attachPendingDescendants(propsMap, updates, *child, budget, remaining);
+  }
+}
+
+void UpdatesRegistryManager::collectPendingSynchronousPropsForChangedNodes(
+    PropsMap &propsMap,
+    const RootShadowNode &oldRoot,
+    const RootShadowNode &newRoot) {
+  react_native_assert(isLockedByCurrentThread());
+  const auto it = pendingSynchronousProps_.find(newRoot.getSurfaceId());
+  if (it == pendingSynchronousProps_.end()) {
+    return;
+  }
+  AncestorChains unchangedChains;
+  for (const auto &[tag, entry] : it->second.updates) {
+    auto newAncestors = entry.family->getAncestors(newRoot);
+    if (newAncestors.empty()) {
+      continue;
+    }
+    if (alwaysCarriesPendingProps(tag) || hasNewPropsOrPlace(oldRoot, newAncestors)) {
+      propsMap[entry.family].emplace_back(RawProps(entry.props));
+    } else {
+      unchangedChains.emplace(tag, std::move(newAncestors));
+    }
+  }
+  for (const auto &[tag, chain] : unchangedChains) {
+    const auto &entry = it->second.updates.at(tag);
+    if (hasAncestorIn(propsMap, chain)) {
+      propsMap[entry.family].emplace_back(RawProps(entry.props));
+    }
+  }
+}
+
+void UpdatesRegistryManager::clearPendingSynchronousProps(
+    const SurfaceId surfaceId,
+    const PropsMap &carriedProps,
+    const uint64_t committedVersion) {
   react_native_assert(isLockedByCurrentThread());
   const auto surfaceIt = pendingSynchronousProps_.find(surfaceId);
   if (surfaceIt == pendingSynchronousProps_.end()) {
@@ -141,6 +295,9 @@ void UpdatesRegistryManager::clearPendingSynchronousProps(const SurfaceId surfac
   auto &surface = surfaceIt->second;
   bool removed = false;
   for (auto &[tag, entry] : surface.updates) {
+    if (!carriedProps.contains(entry.family)) {
+      continue;
+    }
     for (auto versionIt = entry.versions.begin(); versionIt != entry.versions.end();) {
       if (versionIt->second > committedVersion) {
         ++versionIt;

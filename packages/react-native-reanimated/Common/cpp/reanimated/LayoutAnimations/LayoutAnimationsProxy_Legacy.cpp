@@ -459,6 +459,11 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
           // is pushed onto a stack
           // TODO: find a better solution for this problem
           filteredMutations.push_back(mutation);
+          if (!shouldAnimate && layoutAnimations_.contains(tag)) {
+            // The next frames clone from finalView, so it must hold the
+            // props this Update applied.
+            updateOngoingAnimationTarget(tag, mutation);
+          }
           continue;
         } else if (!shouldAnimate) {
           updateOngoingAnimationTarget(tag, mutation);
@@ -931,7 +936,11 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
 
 void LayoutAnimationsProxy_Legacy::updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation)
     const {
-  layoutAnimations_[tag].finalView = mutation.newChildShadowView;
+  auto &layoutAnimation = layoutAnimations_[tag];
+  layoutAnimation.finalView = mutation.newChildShadowView;
+  if (layoutAnimation.opacity) {
+    layoutAnimation.opacity = static_cast<const ViewProps &>(*mutation.newChildShadowView.props).opacity;
+  }
 }
 
 void LayoutAnimationsProxy_Legacy::maybeCancelAnimation(const int tag) const {

@@ -194,6 +194,10 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
   updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
   updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
   updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
+  // Layout animations clone their frames from the shadow props of these
+  // views, so a commit that moves them must carry the synchronous values.
+  updatesRegistryManager_->alwaysCarryPendingPropsFor(
+      [manager = layoutAnimationsManager_](const Tag tag) { return manager->hasAnimatedLayoutConfig(tag); });
 
 #ifdef ANDROID
   // Pre-allocate the synchronous props buffers so the first frame doesn't pay
@@ -1096,6 +1100,7 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
       uint64_t pendingVersion = 0;
+      PropsMap propsToCommit;
       const auto status = shadowTree.commit(
           [&](RootShadowNode const &oldRootShadowNode) -> RootShadowNode::Unshared {
             if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
@@ -1104,18 +1109,19 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
 
             RootShadowNode::Unshared rootNode;
             if constexpr (synchronousUpdatesEnabled()) {
-              PropsMap propsToCommit;
-              {
-                auto lock = updatesRegistryManager_->lock();
-                updatesRegistryManager_->acknowledgeReactCommit(oldRootShadowNode);
-                updatesRegistryManager_->collectPendingSynchronousProps(propsToCommit, surfaceId);
-                pendingVersion = updatesRegistryManager_->pendingSynchronousPropsVersion(surfaceId);
-              }
+              propsToCommit.clear();
               for (const auto &[family, props] : propsMap) {
                 auto &values = propsToCommit[family];
+                values.reserve(props.size());
                 for (const auto &prop : props) {
                   values.emplace_back(prop);
                 }
+              }
+              {
+                auto lock = updatesRegistryManager_->lock();
+                updatesRegistryManager_->acknowledgeReactCommit(oldRootShadowNode);
+                updatesRegistryManager_->attachPendingSynchronousProps(propsToCommit, oldRootShadowNode, flushRegistry);
+                pendingVersion = updatesRegistryManager_->pendingSynchronousPropsVersion(surfaceId);
               }
               rootNode = cloneShadowTreeWithNewProps(oldRootShadowNode, propsToCommit);
             } else {
@@ -1140,7 +1146,7 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
         updatesRegistryManager_->clearPropsToRevert(surfaceId);
 #endif
         if constexpr (synchronousUpdatesEnabled()) {
-          updatesRegistryManager_->clearPendingSynchronousProps(surfaceId, pendingVersion);
+          updatesRegistryManager_->clearPendingSynchronousProps(surfaceId, propsToCommit, pendingVersion);
         }
       } else {
         allCommitsSucceeded = false;

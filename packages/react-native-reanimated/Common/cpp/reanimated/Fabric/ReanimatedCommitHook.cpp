@@ -79,24 +79,12 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     if (!isReactCommit) {
       if constexpr (synchronousUpdatesEnabled()) {
         auto lock = updatesRegistryManager_->lock();
-        const auto surfaceId = shadowTree.getSurfaceId();
-        const auto version = updatesRegistryManager_->pendingSynchronousPropsVersion(surfaceId);
-        const auto carriedIt = pendingCarriedRoots_.find(surfaceId);
-        if (carriedIt != pendingCarriedRoots_.end() && carriedIt->second.first == version &&
-            carriedIt->second.second.lock() == oldRootShadowNode) {
-          // The base already carries these values - its clones keep the props
-          // pointers. The new root becomes the next carrier.
-          carriedIt->second.second = std::weak_ptr<const RootShadowNode>(newRootShadowNode);
-          return newRootShadowNode;
-        }
         PropsMap pendingProps;
-        updatesRegistryManager_->collectPendingSynchronousProps(pendingProps, surfaceId);
+        updatesRegistryManager_->collectPendingSynchronousPropsForChangedNodes(
+            pendingProps, *oldRootShadowNode, *newRootShadowNode);
         if (!pendingProps.empty()) {
-          RootShadowNode::Unshared decoratedRootNode = cloneShadowTreeWithNewProps(*newRootShadowNode, pendingProps);
-          pendingCarriedRoots_[surfaceId] = {version, std::weak_ptr<const RootShadowNode>(decoratedRootNode)};
-          return decoratedRootNode;
+          return cloneShadowTreeWithNewProps(*newRootShadowNode, pendingProps);
         }
-        pendingCarriedRoots_.erase(surfaceId);
       }
       return newRootShadowNode;
     }
