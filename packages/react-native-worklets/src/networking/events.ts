@@ -1,6 +1,6 @@
 'use strict';
 
-export interface NetworkingEvent {
+interface NetworkingEvent {
   type: string;
   target: EventTargetLite;
   loaded: number;
