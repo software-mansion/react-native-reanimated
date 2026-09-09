@@ -44,7 +44,6 @@ runs:
       if: steps.app-cache.outputs.cache-hit != 'true'
       shell: bash
       run: |
-        rm -rf "${{ inputs.app-name }}"
         npx @react-native-community/cli init ${{ inputs.app-name }} \
           --version "${{ inputs.react-native-version }}" \
           --skip-install \
