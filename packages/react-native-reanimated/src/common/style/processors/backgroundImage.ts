@@ -335,6 +335,16 @@ const VERTICAL_POSITION_KEYWORDS: Record<string, string> = {
   bottom: '100%',
 };
 
+const getKeywordPosition = (
+  keywords: Record<string, string>,
+  token: string
+): string | null => {
+  'worklet';
+  return Object.prototype.hasOwnProperty.call(keywords, token)
+    ? keywords[token]
+    : null;
+};
+
 const parseRadialPosition = (
   tokens: string[]
 ): RadialGradientPosition | null => {
@@ -346,12 +356,14 @@ const parseRadialPosition = (
 
   if (tokens.length === 1) {
     const token = tokens[0];
-    if (token in HORIZONTAL_POSITION_KEYWORDS) {
-      left = HORIZONTAL_POSITION_KEYWORDS[token];
+    const horizontal = getKeywordPosition(HORIZONTAL_POSITION_KEYWORDS, token);
+    const vertical = getKeywordPosition(VERTICAL_POSITION_KEYWORDS, token);
+    if (horizontal !== null) {
+      left = horizontal;
       top = '50%';
-    } else if (token in VERTICAL_POSITION_KEYWORDS) {
+    } else if (vertical !== null) {
       left = '50%';
-      top = VERTICAL_POSITION_KEYWORDS[token];
+      top = vertical;
     } else if (isLengthOrPercentageToken(token)) {
       const value = getPositionFromCSSValue(token);
       if (value === null) {
@@ -362,21 +374,25 @@ const parseRadialPosition = (
     }
   } else if (tokens.length === 2) {
     const [token1, token2] = tokens;
-    if (
-      token1 in HORIZONTAL_POSITION_KEYWORDS &&
-      token2 in VERTICAL_POSITION_KEYWORDS
-    ) {
-      left = HORIZONTAL_POSITION_KEYWORDS[token1];
-      top = VERTICAL_POSITION_KEYWORDS[token2];
-    } else if (
-      token1 in VERTICAL_POSITION_KEYWORDS &&
-      token2 in HORIZONTAL_POSITION_KEYWORDS
-    ) {
-      left = HORIZONTAL_POSITION_KEYWORDS[token2];
-      top = VERTICAL_POSITION_KEYWORDS[token1];
+    const horizontal1 = getKeywordPosition(
+      HORIZONTAL_POSITION_KEYWORDS,
+      token1
+    );
+    const vertical1 = getKeywordPosition(VERTICAL_POSITION_KEYWORDS, token1);
+    const horizontal2 = getKeywordPosition(
+      HORIZONTAL_POSITION_KEYWORDS,
+      token2
+    );
+    const vertical2 = getKeywordPosition(VERTICAL_POSITION_KEYWORDS, token2);
+    if (horizontal1 !== null && vertical2 !== null) {
+      left = horizontal1;
+      top = vertical2;
+    } else if (vertical1 !== null && horizontal2 !== null) {
+      left = horizontal2;
+      top = vertical1;
     } else {
-      if (token1 in HORIZONTAL_POSITION_KEYWORDS) {
-        left = HORIZONTAL_POSITION_KEYWORDS[token1];
+      if (horizontal1 !== null) {
+        left = horizontal1;
       } else if (isLengthOrPercentageToken(token1)) {
         const value = getPositionFromCSSValue(token1);
         if (value === null) {
@@ -387,8 +403,8 @@ const parseRadialPosition = (
         return null;
       }
 
-      if (token2 in VERTICAL_POSITION_KEYWORDS) {
-        top = VERTICAL_POSITION_KEYWORDS[token2];
+      if (vertical2 !== null) {
+        top = vertical2;
       } else if (isLengthOrPercentageToken(token2)) {
         const value = getPositionFromCSSValue(token2);
         if (value === null) {
@@ -464,7 +480,7 @@ const parseRadialGradientCSSString = (
       hasShapeSizeOrPosition = true;
     } else if (isLengthOrPercentageToken(token)) {
       const sizeX = getPositionFromCSSValue(token);
-      if (sizeX === null || (typeof sizeX === 'number' && sizeX < 0)) {
+      if (sizeX === null || parseFloat(token) < 0) {
         return null;
       }
       hasShapeSizeOrPosition = true;
@@ -474,7 +490,7 @@ const parseRadialGradientCSSString = (
       if (nextToken !== undefined && isLengthOrPercentageToken(nextToken)) {
         tokens.shift();
         const sizeY = getPositionFromCSSValue(nextToken);
-        if (sizeY === null || (typeof sizeY === 'number' && sizeY < 0)) {
+        if (sizeY === null || parseFloat(nextToken) < 0) {
           return null;
         }
         size = { x: sizeX, y: sizeY };
