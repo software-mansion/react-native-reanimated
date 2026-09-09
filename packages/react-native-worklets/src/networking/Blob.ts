@@ -3,7 +3,7 @@
 import { toArrayBuffer } from './bytes';
 import { utf8Decode, utf8Encode } from './utf8';
 
-export type BlobPart = string | ArrayBuffer | ArrayBufferView | Blob;
+type BlobPart = string | ArrayBuffer | ArrayBufferView | Blob;
 
 export class Blob {
   readonly type: string;
