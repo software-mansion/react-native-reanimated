@@ -53,6 +53,9 @@ class UpdatesRegistryManager {
   /// Values the synchronous path applied that no Reanimated commit has
   /// carried yet. Entries leave on commit success, settled eviction, registry
   /// release, or node removal - not when a hook attaches them.
+  /// Selection below rests on one mounting rule: a view gets new props only
+  /// when its node's props object changed. A node that keeps its props object
+  /// keeps the native value, so no commit has to carry its pending values.
   void recordSynchronousProps(const UpdatesBatch &updatesBatch);
   /// Tags for which every commit carries pending values, because the
   /// mounting layer reads their shadow props for animations.
