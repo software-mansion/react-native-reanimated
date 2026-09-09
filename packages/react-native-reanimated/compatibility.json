@@ -6,7 +6,8 @@
     },
     "4.7.x": {
       "react-native": ["0.85", "0.86", "0.87"],
-      "react-native-worklets": ["0.13.x"]
+      "react-native-worklets": ["0.13.x"],
+      "spm": ["0.87"]
     },
     "4.6.x": {
       "react-native": ["0.83", "0.84", "0.85", "0.86", "0.87"],
