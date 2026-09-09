@@ -351,14 +351,15 @@ function onSuiteFinished(msg) {
     afterSuitePending = true;
     return;
   }
-  afterSuiteChain = runAfterSuiteCommand(String(msg.name ?? ''));
+  afterSuiteChain = runAfterSuiteCommand(AFTER_SUITE, String(msg.name ?? ''));
 }
 
 /**
+ * @param {string} command
  * @param {string} suiteName
  * @returns {Promise<void>}
  */
-function runAfterSuiteCommand(suiteName) {
+function runAfterSuiteCommand(command, suiteName) {
   afterSuiteRunning = true;
   afterSuitePending = false;
   return new Promise((resolve) => {
@@ -374,9 +375,11 @@ function runAfterSuiteCommand(suiteName) {
           `[runtime-tests] --after-suite command ${outcome} (after suite: ${suiteName})`
         );
       }
-      resolve(afterSuitePending ? runAfterSuiteCommand(suiteName) : undefined);
+      resolve(
+        afterSuitePending ? runAfterSuiteCommand(command, suiteName) : undefined
+      );
     };
-    const child = spawn(AFTER_SUITE, {
+    const child = spawn(command, {
       shell: true,
       stdio: ['ignore', 'inherit', 'inherit'],
     });
