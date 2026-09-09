@@ -9,16 +9,17 @@ import com.facebook.react.uimanager.IllegalViewOperationException
 import com.facebook.react.uimanager.ReactClippingViewGroup
 
 /**
- * A parent with `removeClippedSubviews` detaches a child that lies outside its bounds. A layout
- * animation moves the child over many frames, so the child can leave the bounds before it
- * arrives at its target. This class attaches such children again after each mount, until the
- * animation ends and React Native clips them with their final layout.
+ * Keeps views with an active layout animation attached to a parent that has
+ * `removeClippedSubviews`, until the animation ends and the final layout mounts.
  */
 internal class SubviewClippingGuard(
     private val fabricUIManager: FabricUIManager,
 ) {
     private val lock = Any()
-    private var animatedChildrenByParent = HashMap<Int, MutableSet<Int>>()
+    private var invalidated = false
+
+    /** Per surface: flat `[tag, parentTag, ...]` pairs of the animated views. */
+    private val tagPairsBySurface = HashMap<Int, IntArray>()
 
     @OptIn(UnstableReactNativeAPI::class)
     private val mountListener =
@@ -39,35 +40,42 @@ internal class SubviewClippingGuard(
         fabricUIManager.addUIManagerEventListener(mountListener)
     }
 
-    /** Called from the pull that emits the transaction, on the JS or the UI thread. */
-    fun protect(
-        viewTags: IntArray,
-        parentTags: IntArray,
+    /** Called on the JS or the UI thread. */
+    fun updateClippingProtection(
+        surfaceId: Int,
+        tagPairs: IntArray,
     ) {
         synchronized(lock) {
-            for (i in viewTags.indices) {
-                animatedChildrenByParent.getOrPut(parentTags[i]) { HashSet() }.add(viewTags[i])
-            }
+            if (invalidated) return
+            if (tagPairs.isEmpty()) tagPairsBySurface.remove(surfaceId) else tagPairsBySurface[surfaceId] = tagPairs
         }
     }
 
     fun invalidate() {
         @OptIn(UnstableReactNativeAPI::class)
         fabricUIManager.removeUIManagerEventListener(mountListener)
-        synchronized(lock) { animatedChildrenByParent.clear() }
+        synchronized(lock) {
+            invalidated = true
+            tagPairsBySurface.clear()
+        }
     }
 
     private fun restoreClippedChildren() {
-        val byParent =
-            synchronized(lock) {
-                if (animatedChildrenByParent.isEmpty()) return
-                animatedChildrenByParent.also { animatedChildrenByParent = HashMap() }
+        val surfaces = synchronized(lock) { tagPairsBySurface.values.toList() }
+        if (surfaces.isEmpty()) return
+        val protectedTags = HashSet<Int>()
+        val childrenByParent = HashMap<Int, MutableList<Int>>()
+        for (tagPairs in surfaces) {
+            for (i in tagPairs.indices step 2) {
+                protectedTags.add(tagPairs[i])
+                childrenByParent.getOrPut(tagPairs[i + 1]) { ArrayList() }.add(tagPairs[i])
             }
-        for ((parentTag, childTags) in byParent) {
+        }
+        for ((parentTag, children) in childrenByParent) {
             val parent = viewForTag(parentTag) as? ReactClippingViewGroup ?: continue
             if (!parent.removeClippedSubviews) continue
-            if (childTags.none { isDetached(it) }) continue
-            parent.updateClippingRect(childTags)
+            if (children.none { isDetached(it) }) continue
+            parent.updateClippingRect(protectedTags)
         }
     }
 

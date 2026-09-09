@@ -234,11 +234,11 @@ open class NativeProxy {
     }
 
     @DoNotStrip
-    fun protectFromSubviewClipping(
-        viewTags: IntArray,
-        parentTags: IntArray,
+    fun updateClippingProtection(
+        surfaceId: Int,
+        tagPairs: IntArray,
     ) {
-        subviewClippingGuard.protect(viewTags, parentTags)
+        subviewClippingGuard.updateClippingProtection(surfaceId, tagPairs)
     }
 
     // TODO(#9681): Temporary workaround for RN >= 0.86. Since RN 0.86,

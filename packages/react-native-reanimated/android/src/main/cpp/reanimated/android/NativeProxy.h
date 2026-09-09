@@ -48,7 +48,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
   // std::shared_ptr<EventListener> eventListener_;
   void installJSIBindings();
   std::optional<std::unique_ptr<int[]>> preserveMountedTags(std::vector<int> &tags);
-  void protectFromSubviewClipping(const std::vector<int> &viewTags, const std::vector<int> &parentTags);
+  void updateClippingProtection(SurfaceId surfaceId, const std::vector<int> &tagPairs);
   void synchronouslyUpdateUIProps(const std::vector<int> &intBuffer, const std::vector<double> &doubleBuffer);
   PlatformDepMethodsHolder getPlatformDependentMethods();
 

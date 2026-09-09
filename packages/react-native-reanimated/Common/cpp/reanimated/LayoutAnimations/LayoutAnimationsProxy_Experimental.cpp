@@ -135,7 +135,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   insertContainers(transaction, rootChildCount);
 
 #ifdef ANDROID
-  protectAnimatedViewsFromSubviewClipping();
+  publishClippingProtection();
 #endif
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};

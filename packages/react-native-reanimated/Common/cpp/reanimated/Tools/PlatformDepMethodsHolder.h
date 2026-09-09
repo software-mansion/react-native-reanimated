@@ -35,8 +35,7 @@ using SynchronouslyUpdateUIPropsFunction = std::function<void(const std::vector<
 using SynchronouslyUpdateUIPropsFunction = std::function<void(const int, const folly::dynamic &)>;
 #endif // ANDROID
 using PreserveMountedTagsFunction = std::function<std::optional<std::unique_ptr<int[]>>(std::vector<int> &)>;
-using ProtectFromSubviewClippingFunction =
-    std::function<void(const std::vector<int> &viewTags, const std::vector<int> &parentTags)>;
+using UpdateClippingProtectionFunction = std::function<void(SurfaceId surfaceId, const std::vector<int> &tagPairs)>;
 using GetAnimationTimestampFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction = std::function<void(jsi::Runtime &, int, jsi::Object)>;
@@ -58,7 +57,7 @@ struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
-  ProtectFromSubviewClippingFunction protectFromSubviewClipping;
+  UpdateClippingProtectionFunction updateClippingProtection;
 #endif // ANDROID
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshotFunction;

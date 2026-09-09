@@ -7,11 +7,14 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
 
+#include <algorithm>
 #include <cstring>
 #include <memory>
 #include <optional>
 #include <unordered_set>
 #include <utility>
+#include <variant>
+#include <vector>
 
 namespace reanimated {
 
@@ -58,6 +61,9 @@ void LayoutAnimationsProxyCommon::startSurface(
 
 void LayoutAnimationsProxyCommon::surfaceDidUnmount() {
   cancelAllLayoutAnimations();
+#ifdef ANDROID
+  publishClippingProtection();
+#endif
 }
 
 std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
@@ -472,19 +478,42 @@ void LayoutAnimationsProxyCommon::maybeUpdateWindowDimensions(const ShadowViewMu
 }
 
 #ifdef ANDROID
-void LayoutAnimationsProxyCommon::protectAnimatedViewsFromSubviewClipping() const {
-  if (layoutAnimations_.empty()) {
+void LayoutAnimationsProxyCommon::publishClippingProtection() const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  std::vector<std::pair<Tag, Tag>> protectedViews;
+  protectedViews.reserve(layoutAnimations_.size() + pendingLayoutAnimations_.size());
+  for (const auto &[tag, animation] : layoutAnimations_) {
+    protectedViews.emplace_back(tag, animation.parentTag);
+  }
+  for (const auto &[tag, pending] : pendingLayoutAnimations_) {
+    const auto parentTag = std::visit(
+        [](const auto &operation) -> Tag {
+          if constexpr (requires { operation.parentTag; }) {
+            return operation.parentTag;
+          } else {
+            return -1;
+          }
+        },
+        layoutAnimationOperations_[pending.operationIndex]);
+    if (parentTag != -1) {
+      protectedViews.emplace_back(tag, parentTag);
+    }
+  }
+  std::ranges::sort(protectedViews);
+  const auto duplicates = std::ranges::unique(protectedViews);
+  protectedViews.erase(duplicates.begin(), duplicates.end());
+  if (protectedViews == publishedClippingProtection_) {
     return;
   }
-  std::vector<int> viewTags;
-  std::vector<int> parentTags;
-  viewTags.reserve(layoutAnimations_.size());
-  parentTags.reserve(layoutAnimations_.size());
-  for (const auto &[tag, animation] : layoutAnimations_) {
-    viewTags.push_back(tag);
-    parentTags.push_back(animation.parentTag);
+  publishedClippingProtection_ = std::move(protectedViews);
+
+  std::vector<int> tagPairs;
+  tagPairs.reserve(2 * publishedClippingProtection_.size());
+  for (const auto &[tag, parentTag] : publishedClippingProtection_) {
+    tagPairs.push_back(tag);
+    tagPairs.push_back(parentTag);
   }
-  protectFromSubviewClipping_(viewTags, parentTags);
+  updateClippingProtection_(surfaceId_, tagPairs);
 }
 
 void LayoutAnimationsProxyCommon::scheduleCleanupPull() const {
