@@ -196,7 +196,7 @@ fs.writeFileSync(
 type CompatibilityDetails = {
   'react-native'?: string[];
   'react-native-worklets'?: string[];
-  "spm"?: string[];
+  spm?: string[];
 };
 
 type CompatibilityData = {
