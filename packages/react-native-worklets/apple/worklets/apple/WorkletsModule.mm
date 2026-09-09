@@ -45,6 +45,7 @@ using namespace worklets;
   return workletsModuleProxy_;
 }
 
+@synthesize bridge = _bridge;
 @synthesize bundleManager = bundleManager_;
 @synthesize callInvoker = callInvoker_;
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
@@ -119,8 +120,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
     rnRuntimeStatus_->setDead();
   }
   workletsModuleProxy_.reset();
-
-  [super invalidate];
 }
 
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
