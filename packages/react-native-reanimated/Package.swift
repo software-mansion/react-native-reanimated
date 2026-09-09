@@ -20,9 +20,7 @@ func readJSONObject(at url: URL) -> [String: Any]? {
     return object as? [String: Any]
 }
 
-// Mirror Ruby's `value.to_s`: booleans render as "true"/"false", numbers as
-// their literal, strings pass through. NSNumber needs the CFBoolean check to
-// tell booleans apart from integers.
+// NSNumber needs the CFBoolean check to tell booleans apart from integers.
 func stringifyFlagValue(_ value: Any) -> String? {
     if let number = value as? NSNumber {
         if CFGetTypeID(number) == CFBooleanGetTypeID() {
@@ -36,9 +34,7 @@ func stringifyFlagValue(_ value: Any) -> String? {
     return nil
 }
 
-// Locate the consuming app's package.json by walking out of `node_modules`,
-// mirroring the CocoaPods `installation_root/../package.json` lookup. Returns
-// nil in a source checkout (the package isn't installed under node_modules).
+// Returns nil in a source checkout (the package isn't installed under node_modules).
 func findConsumerPackageJSON() -> URL? {
     guard let range = packageDirectory.range(of: "/node_modules/") else {
         return nil
@@ -47,8 +43,6 @@ func findConsumerPackageJSON() -> URL? {
     return URL(fileURLWithPath: appRoot).appendingPathComponent("package.json")
 }
 
-// Matches ReanimatedUtils.assert_conflicting_feature_flags so an invalid combo
-// fails the SPM build the same way it fails `pod install`.
 func assertNoConflictingFeatureFlags(_ flags: [String: String]) {
     if flags["IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS"] == "true",
         flags["ENABLE_SHARED_ELEMENT_TRANSITIONS"] == "true"
@@ -67,9 +61,6 @@ func assertNoConflictingFeatureFlags(_ flags: [String: String]) {
     }
 }
 
-// Feature flags = library defaults from `src/featureFlags/staticFlags.json`,
-// overlaid with per-app overrides from the consumer's
-// `package.json` -> `reanimated.staticFeatureFlags` (same precedence as pods).
 func readStaticFeatureFlags() -> [String: String] {
     var flags: [String: String] = [:]
 

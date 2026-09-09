@@ -20,9 +20,7 @@ func readJSONObject(at url: URL) -> [String: Any]? {
     return object as? [String: Any]
 }
 
-// Mirror Ruby's `value.to_s`: booleans render as "true"/"false", numbers as
-// their literal, strings pass through. NSNumber needs the CFBoolean check to
-// tell booleans apart from integers.
+// NSNumber needs the CFBoolean check to tell booleans apart from integers.
 func stringifyFlagValue(_ value: Any) -> String? {
     if let number = value as? NSNumber {
         if CFGetTypeID(number) == CFBooleanGetTypeID() {
@@ -36,9 +34,7 @@ func stringifyFlagValue(_ value: Any) -> String? {
     return nil
 }
 
-// Locate the consuming app's package.json by walking out of `node_modules`,
-// mirroring the CocoaPods `installation_root/../package.json` lookup. Returns
-// nil in a source checkout (the package isn't installed under node_modules).
+// Returns nil in a source checkout (the package isn't installed under node_modules).
 func findConsumerPackageJSON() -> URL? {
     guard let range = packageDirectory.range(of: "/node_modules/") else {
         return nil
@@ -47,9 +43,6 @@ func findConsumerPackageJSON() -> URL? {
     return URL(fileURLWithPath: appRoot).appendingPathComponent("package.json")
 }
 
-// Feature flags = library defaults from `src/featureFlags/staticFlags.json`,
-// overlaid with per-app overrides from the consumer's
-// `package.json` -> `worklets.staticFeatureFlags` (same precedence as pods).
 func readStaticFeatureFlags() -> [String: String] {
     var flags: [String: String] = [:]
 

@@ -220,7 +220,7 @@ jobs:
         include: ${{ fromJson(needs.read-compatibility-json.outputs.spm-matrix) }}
     env:
       APP_NAME: app
-      CACHE_KEY: ${{ matrix.reactNativeVersion }}-${{ matrix.reanimatedVersion }}-${{ matrix.workletsVersion }}-spm
+      CACHE_KEY: ${{ matrix.reactNativeVersion }}-${{ matrix.reanimatedVersion }}-${{ matrix.workletsVersion }}-spm-${{ github.sha }}
       BUILD_MARKER_DIR: .compatibility-build-markers
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
