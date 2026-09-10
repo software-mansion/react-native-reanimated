@@ -38,7 +38,7 @@ export function useAnimatedReaction<PreparedResult>(
     logger.warn('dependencies should only be used in web implementation.');
   }
 
-  const inputs = Object.values(prepare.__closure ?? {});
+  const inputs = prepare.__closure ?? [];
 
   useAnimatedReactionBase(prepare, react, undefined, inputs);
 }

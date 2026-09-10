@@ -3,7 +3,7 @@ use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
 use oxc_ast::ast::{
     AssignmentOperator, AssignmentTarget, Expression, FormalParameterKind, FormalParameters,
-    FunctionBody, FunctionType, NumberBase, PropertyKey, PropertyKind, Statement,
+    FunctionBody, FunctionType, NumberBase, Statement,
 };
 use oxc_semantic::Scoping;
 use oxc_span::SPAN;
@@ -31,7 +31,11 @@ pub fn build_factory_expression<'a>(
     let (worklet_name, react_name) = (names.worklet_name.as_str(), names.react_name.as_str());
     let pat = closure_binding_pattern(builder, closure_variables);
     let factory_param = builder.plain_formal_parameter(SPAN, pat);
-    let params_vec = builder.vec1(factory_param);
+    let params_vec = if closure_variables.is_empty() {
+        builder.vec()
+    } else {
+        builder.vec1(factory_param)
+    };
     let factory_params =
         builder.formal_parameters(SPAN, FormalParameterKind::FormalParameter, params_vec, NONE);
 
@@ -39,15 +43,17 @@ pub fn build_factory_expression<'a>(
 
     statements.push(build_inner_fn_decl(builder, allocator, react_name, input));
 
-    statements.push(build_member_assign(
-        builder,
-        react_name,
-        "__closure",
-        build_closure_object(
+    if !closure_variables.is_empty() {
+        statements.push(build_member_assign(
             builder,
-            closure_variables.iter().map(|name| (name.as_str(), None)),
-        ),
-    ));
+            react_name,
+            "__closure",
+            build_closure_array(
+                builder,
+                closure_variables.iter().map(|name| (name.as_str(), None)),
+            ),
+        ));
+    }
 
     statements.push(build_member_assign(
         builder,
@@ -138,31 +144,22 @@ fn build_member_assign<'a>(
     builder.statement_expression(SPAN, assign)
 }
 
-pub fn build_closure_object<'a, 'n>(
+pub fn build_closure_array<'a, 'n>(
     builder: AstBuilder<'a>,
     entries: impl ExactSizeIterator<Item = (&'n str, Option<ReferenceId>)>,
 ) -> Expression<'a> {
-    let mut props = builder.vec_with_capacity(entries.len());
+    let mut elements = builder.vec_with_capacity(entries.len());
     for (name, reference_id) in entries {
         let ident = builder.ident(name);
-        let key = PropertyKey::StaticIdentifier(builder.alloc_identifier_name(SPAN, ident));
         let value = match reference_id {
             Some(reference_id) => {
                 builder.expression_identifier_with_reference_id(SPAN, ident, reference_id)
             }
             None => builder.expression_identifier(SPAN, ident),
         };
-        props.push(builder.object_property_kind_object_property(
-            SPAN,
-            PropertyKind::Init,
-            key,
-            value,
-            false,
-            true,
-            false,
-        ));
+        elements.push(oxc_ast::ast::ArrayExpressionElement::from(value));
     }
-    builder.expression_object(SPAN, props)
+    builder.expression_array(SPAN, elements)
 }
 
 // We don't want to pollute tests with current version number so we mock it

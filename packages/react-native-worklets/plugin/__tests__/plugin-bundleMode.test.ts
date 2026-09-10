@@ -7,7 +7,9 @@ import { html } from 'code-tag';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { runInNewContext } from 'vm';
 
+import type { WorkletFactory, WorkletFunction } from '../../src/types';
 import { countOccurrences } from '../jest/pluginTestUtils';
 
 type CapturedFile = { path: string; content: string };
@@ -81,6 +83,43 @@ function runPlugin(
   return { code: transformed.code ?? '', files: emittedFiles() };
 }
 
+function evaluateBundle<T = unknown>(
+  code: string,
+  files: CapturedFile[],
+  imports: Record<string, Record<string, unknown>> = {}
+) {
+  const cache = new Map<string, { exports: Record<string, unknown> }>();
+  const load = (filename: string): Record<string, unknown> => {
+    if (Object.prototype.hasOwnProperty.call(imports, filename)) {
+      return imports[filename];
+    }
+    const name = path.basename(filename);
+    if (cache.has(name)) {
+      return cache.get(name)!.exports;
+    }
+    const file = files.find(
+      (candidate) => path.basename(candidate.path) === name
+    );
+    assert(file, `Missing generated module ${filename}`);
+    const module = { exports: {} };
+    cache.set(name, module);
+    const transformed = transformSync(file.content, {
+      babelrc: false,
+      configFile: false,
+      plugins: ['@babel/plugin-transform-modules-commonjs'],
+    });
+    runInNewContext(transformed!.code!, {
+      require: load,
+      module,
+      exports: module.exports,
+    });
+    return module.exports;
+  };
+  const module: { exports: unknown } = { exports: {} };
+  runInNewContext(code, { require: load, module });
+  return { exports: module.exports as T, load };
+}
+
 describe('babel plugin in bundleMode', () => {
   beforeEach(() => {
     process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
@@ -89,6 +128,113 @@ describe('babel plugin in bundleMode', () => {
   });
 
   describe('source replacement', () => {
+    test.each(['arrow', 'method'])(
+      'does not shadow forwarded imports with the closure-free %s worklet binding',
+      (kind) => {
+        const name = kind === 'arrow' ? 'testJs1' : 'read';
+        const body = `{ 'worklet'; return [${name}(), _${name}()]; }`;
+        const expression =
+          kind === 'arrow' ? `() => ${body}` : `{ read() ${body} }.read`;
+        const { files } = runPlugin(
+          `
+          import { first as ${name}, second as _${name} } from 'some-library';
+          const f = ${expression};
+        `,
+          {},
+          { importForwarding: { moduleNames: ['some-library'] } }
+        );
+        const { load } = evaluateBundle('', files, {
+          'some-library': { first: () => 41, second: () => 1 },
+        });
+        const worklet = load(files[0].path).default as WorkletFunction;
+        expect(worklet()).toEqual([41, 1]);
+        expect(worklet.__closure).toBeUndefined();
+      }
+    );
+
+    test('preserves capture order, undefined values and independent instances across runtimes', () => {
+      const { code, files } = runPlugin(`
+        function make(z, missing, a) {
+          return (suffix) => {
+            'worklet';
+            return [z.value, missing, a, suffix];
+          };
+        }
+        module.exports = make;
+      `);
+      const { exports: make } = evaluateBundle<
+        (z: { value: number }, missing: undefined, a: string) => WorkletFunction
+      >(code, files);
+      const first = make({ value: 7 }, undefined, 'first');
+      const second = make({ value: 9 }, undefined, 'second');
+      expect(first.__closure).toEqual([{ value: 7 }, undefined, 'first']);
+      expect(second.__closure).toEqual([{ value: 9 }, undefined, 'second']);
+      expect(first('RN')).toEqual([7, undefined, 'first', 'RN']);
+
+      const { load } = evaluateBundle('', files);
+      const factory = load(`${first.__workletHash}.js`)
+        .default as WorkletFactory;
+      const restored = factory(first.__closure!);
+      expect(restored('UI')).toEqual([7, undefined, 'first', 'UI']);
+      expect(factory(second.__closure!)('UI')).toEqual([
+        9,
+        undefined,
+        'second',
+        'UI',
+      ]);
+      expect(restored.__closure).toEqual(first.__closure);
+      expect(restored.__workletHash).toBe(first.__workletHash);
+    });
+
+    test('exports closure-free worklets directly without invoking them during loading', () => {
+      const { code, files } = runPlugin(`
+        function factorial(n) {
+          'worklet';
+          if (n === undefined) throw new Error('invoked during loading');
+          return n <= 1 ? 1 : n * factorial(n - 1);
+        }
+        module.exports = factorial;
+      `);
+      expect(code).toMatch(/\.default;/);
+      expect(files[0].content).not.toContain('Factory');
+      expect(files[0].content).not.toContain('__closure');
+      const { exports: worklet } = evaluateBundle<WorkletFunction>(code, files);
+      expect(worklet(5)).toBe(120);
+      expect(worklet.__closure).toBeUndefined();
+      const { load } = evaluateBundle('', files);
+      const restored = load(`${worklet.__workletHash}.js`)
+        .default as WorkletFunction;
+      expect(restored(6)).toBe(720);
+      expect(restored.__workletHash).toBe(worklet.__workletHash);
+    });
+
+    test('supports nested worklets with and without captures', () => {
+      const { code, files } = runPlugin(`
+        function outer(value) {
+          'worklet';
+          const captured = () => {
+            'worklet';
+            return value;
+          };
+          const empty = () => {
+            'worklet';
+            return 42;
+          };
+          return [captured, empty];
+        }
+        module.exports = outer;
+      `);
+      const { exports: outer } = evaluateBundle<
+        WorkletFunction<[string], [WorkletFunction, WorkletFunction]>
+      >(code, files);
+      const [captured, empty] = outer('nested');
+      expect(outer.__closure).toBeUndefined();
+      expect(captured.__closure).toEqual(['nested']);
+      expect(empty.__closure).toBeUndefined();
+      expect(captured()).toBe('nested');
+      expect(empty()).toBe(42);
+    });
+
     test('replaces inline factory with a require to the worklet file', () => {
       const input = html`<script>
         function foo() {
@@ -151,7 +297,7 @@ describe('babel plugin in bundleMode', () => {
       expect(code).toMatchSnapshot();
     });
 
-    test('written file content has factory shape', () => {
+    test('written closure-free file exports the worklet directly', () => {
       const input = html`<script>
         function foo() {
           'worklet';
