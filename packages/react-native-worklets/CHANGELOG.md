@@ -14,6 +14,8 @@
 
 ### 🎉 New features
 
+- Add iOS Swift Package Manager support via `Package.swift` and SPM integration metadata in `react-native.config.js`. ([#10472](https://github.com/software-mansion/react-native-reanimated/pull/10472) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
+
 \[General] Per-runtime caching for RetainingSerializable
 
 - Add `isOnUIThread` to the Worklets Stable API.

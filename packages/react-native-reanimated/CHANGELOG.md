@@ -11,6 +11,8 @@
 
 ### 🎉 New features
 
+- Add iOS Swift Package Manager support via `Package.swift` and SPM integration metadata in `react-native.config.js`, with a dependency on `RNWorklets`. ([#10472](https://github.com/software-mansion/react-native-reanimated/pull/10472) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
+
 ### 🐛 Bug fixes
 
 - Skip the Android mounted-tag correction in Layout Animations when React Native's `enableMountingCoordinatorPullModelAndroid` feature flag is on, since the pull model already guarantees that updates can't outrun a view's first mount. ([#10481](https://github.com/software-mansion/react-native-reanimated/pull/10481) by [@piaskowyk](https://github.com/piaskowyk))
