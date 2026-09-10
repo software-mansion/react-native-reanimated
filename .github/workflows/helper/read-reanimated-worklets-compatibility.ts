@@ -133,6 +133,7 @@ for (const [reanimatedRange, details] of Object.entries(fabricCompatibility)) {
   for (const workletsRange of workletsRanges) {
     const workletsDetails = workletsCompatibilityData[workletsRange];
     const workletsReactNativeVersions = workletsDetails?.['react-native'] || [];
+    const workletsSpmReactNativeVersions = workletsDetails?.['spm'] || [];
 
     if (workletsReactNativeVersions.length === 0) {
       continue;
@@ -145,7 +146,8 @@ for (const [reanimatedRange, details] of Object.entries(fabricCompatibility)) {
     for (const rnMinor of spmReactNativeVersions) {
       if (
         !reactNativeVersions.includes(rnMinor) ||
-        !workletsReactNativeVersions.includes(rnMinor)
+        !workletsReactNativeVersions.includes(rnMinor) ||
+        !workletsSpmReactNativeVersions.includes(rnMinor)
       ) {
         continue;
       }
@@ -205,7 +207,7 @@ type CompatibilityData = {
 
 type WorkletsCompatibilityData = Record<
   string,
-  { 'react-native'?: string[] } | undefined
+  { 'react-native'?: string[]; spm?: string[] } | undefined
 >;
 
 type MatrixEntry = {

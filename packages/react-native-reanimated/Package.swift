@@ -139,13 +139,11 @@ let package = Package(
                 .product(name: "RNWorklets", package: "RNWorklets"),
             ],
             path: ".",
-            exclude: ["Common/NativeView/CMakeLists.txt"],
             sources: [
                 "Common/cpp/reanimated",
                 "apple/reanimated",
                 "Common/NativeView",
             ],
-            publicHeadersPath: "Common/cpp",
             cSettings: [
                 .headerSearchPath("."),
                 .headerSearchPath("Common/cpp"),
