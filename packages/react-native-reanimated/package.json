@@ -59,6 +59,8 @@
     "android/build.gradle",
     "android/",
     "apple/",
+    "include/",
+    "Package.swift",
     "RNReanimated.podspec",
     "react-native.config.js",
     "scripts/reanimated_utils.rb",
