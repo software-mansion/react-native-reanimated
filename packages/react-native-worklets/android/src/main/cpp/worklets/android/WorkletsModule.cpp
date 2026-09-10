@@ -27,7 +27,7 @@ WorkletsModule::WorkletsModule(
           jsCallInvoker,
           uiScheduler,
           getIsOnJSQueueThread(),
-          getRuntimeBindings(bundleModeConfig.enabled, *rnRuntime),
+          getRuntimeBindings(bundleModeConfig.enabled),
           bundleModeConfig,
           rnRuntimeStatus_)) {}
 
@@ -64,13 +64,10 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
       uiScheduler);
 }
 
-std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(
-    const bool bundleModeEnabled,
-    jsi::Runtime &rnRuntime) {
+std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(const bool bundleModeEnabled) {
   return std::make_shared<RuntimeBindings>(RuntimeBindings{
       .requestAnimationFrame = getRequestAnimationFrame(),
-      .nativeLoggingHook =
-          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{}});
+      .nativeLoggingHook = bundleModeEnabled ? makeNativeLoggingHook() : RuntimeBindings::NativeLoggingHook{}});
 }
 
 RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame() {

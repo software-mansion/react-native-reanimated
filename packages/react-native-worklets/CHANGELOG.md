@@ -15,6 +15,8 @@
 
 ### 🎉 New features
 
+- Add iOS Swift Package Manager support via `Package.swift` and SPM integration metadata in `react-native.config.js`. ([#10472](https://github.com/software-mansion/react-native-reanimated/pull/10472) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
+
 \[General] Per-runtime caching for RetainingSerializable
 
 - Add `isOnUIThread` to the Worklets Stable API.
@@ -41,6 +43,8 @@
 
 ### 💡 Others
 
+- Build `nativeLoggingHook` for Worklet Runtimes natively instead of reading React Native's host function from the RN Runtime. ([#10488](https://github.com/software-mansion/react-native-reanimated/pull/10488) by [@tjzel](https://github.com/tjzel))
+- Drop the `RCTEventEmitter` base class from `WorkletsModule` on iOS. The module never emitted events, so it now inherits from `NSObject` and declares the `bridge` property itself. ([#10485](https://github.com/software-mansion/react-native-reanimated/pull/10485) by [@tjzel](https://github.com/tjzel))
 - Pass arguments to batched UI worklets separately instead of capturing them in wrapper worklets, reducing worklet serialization. ([#10466](https://github.com/software-mansion/react-native-reanimated/pull/10466) by [@tshmieldev](https://github.com/tshmieldev))
 - Mark the special-case `__proto__` object reconstruction path as unlikely. ([#10465](https://github.com/software-mansion/react-native-reanimated/pull/10465) by [@tshmieldev](https://github.com/tshmieldev))
 - Update the sponsors section in the README. ([#10347](https://github.com/software-mansion/react-native-reanimated/pull/10347) by [@m-bert](https://github.com/m-bert))
