@@ -81,7 +81,7 @@ yarn build-apps                        # regenerates apps/*/ios/Podfile.lock; ma
 
 iOS (`apps/fabric-example/ios`): workspace `FabricExample.xcworkspace`, schemes `Debug FabricExample` and `Release FabricExample`, configurations `DebugRuntimeTests` and `ReleaseRuntimeTests`. Pod-only schemes `RNWorklets` and `RNReanimated` compile native code without the app. `RCT_USE_PREBUILT_RNCORE=0 RCT_USE_RN_DEP=0` builds React Native from source (needed for sanitizers). Re-run `pod install` after switching branches when native files were added or removed, because the podspecs glob sources.
 
-Android: `yarn workspace fabric-example android` (`--active-arch-only`). Worklets cannot be built without an app project and the React Native Gradle Plugin. Gradle does not track worklets package files for `createBundleReleaseJsAndAssets`, so pass `--rerun` after editing worklets JS.
+Android: `yarn workspace fabric-example android` (`--active-arch-only`). Worklets/Reanimated cannot be built without an app project and the React Native Gradle Plugin. Gradle does not track worklets package files for `createBundleReleaseJsAndAssets`, so pass `--rerun` after editing JS.
 
 Fast C++ syntax check without a native build. Run from `packages/react-native-worklets` after `pod install` in fabric-example:
 
