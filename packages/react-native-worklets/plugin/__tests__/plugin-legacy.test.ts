@@ -61,10 +61,479 @@ function runPlugin(
   return transformed;
 }
 
+/**
+ * A worklet the UI runtime would evaluate, as a callable — `this` is its host
+ * object.
+ */
+type EvaluatedWorklet = (this: {
+  __closure: Record<string, unknown>;
+}) => unknown;
+
+/**
+ * The serialized worklet out of the emitted `__initData`, compiled and ready to
+ * call.
+ *
+ * `__initData.code` is the exact string the UI runtime evaluates, and `new
+ * Function` compiles it in the GLOBAL scope — so a captured binding is
+ * reachable through `this.__closure` and through nothing else. That is what
+ * makes a call here mean what a call on the UI thread means: a scope that
+ * already holds the capture cannot observe a worklet that fails to reach it.
+ */
+function evaluateWorkletCode(transformedCode: string): EvaluatedWorklet {
+  const match = /code: (?<literal>"(?:[^"\\]|\\.)*")/u.exec(transformedCode);
+  assert(match?.groups?.literal, 'no worklet `code` in the transformed output');
+  const workletSource: unknown = JSON.parse(match.groups.literal);
+  assert(typeof workletSource === 'string', '`code` is not a string');
+
+  return new Function(`return ${workletSource}`)() as EvaluatedWorklet;
+}
+
 describe('babel plugin', () => {
   beforeEach(() => {
     process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '1';
     process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
+  });
+
+  describe('closure-dependent parameters', () => {
+    test('hoists a default that reads a captured binding into the body', () => {
+      const input = html`<script>
+        const DEFAULTS = { max: 8 };
+
+        function clamp(value, limits = DEFAULTS) {
+          'worklet';
+          return Math.min(value, limits.max);
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // The capture is destructured at the top of the BODY, and a parameter default is evaluated
+      // in the PARAMETER scope, which by specification cannot see a body declaration. Leaving the
+      // default in place emits a function that throws ReferenceError on every call that omits the
+      // argument — on the UI thread, an uncaught C++ exception.
+      // The whole fix, in the emitted body: the parameter carries a placeholder and the default
+      // is resolved AFTER the closure destructure, where the capture actually exists.
+      //
+      // The placeholder carries no digit. `Scope#generateUid` strips trailing digits from the
+      // requested name, so a parameter index cannot reach the output; where a digit DOES appear
+      // it is that function's collision counter, never the position.
+      expect(code).toContain(
+        '(value,_workletParameter){const{DEFAULTS}=this.__closure;let limits=_workletParameter===void 0?DEFAULTS:_workletParameter;'
+      );
+    });
+
+    test('hoists a parameter that depends on an already-hoisted parameter', () => {
+      const input = html`<script>
+        const DEFAULTS = { max: 8 };
+
+        function span(first = DEFAULTS, second = first) {
+          'worklet';
+          return first.max + second.max;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // Hoisting `first` moves its binding into the body, so `second` is left reading a name
+      // parameter scope no longer has — the same ReferenceError, one parameter over. The rule is
+      // transitive for exactly this reason.
+      // Both parameters land in the body, in declaration order, so `second` resolves `first`
+      // from the body binding rather than from a parameter scope that no longer has it.
+      //
+      // `_workletParameter` then `_workletParameter2` is `generateUid` avoiding a collision with
+      // the name it just handed out — the counter skips 1 — and not the parameter positions,
+      // which are 0 and 1.
+      expect(code).toContain(
+        'let first=_workletParameter===void 0?DEFAULTS:_workletParameter;let second=_workletParameter2===void 0?first:_workletParameter2;'
+      );
+    });
+
+    test('leaves a default that reads an earlier parameter alone', () => {
+      const input = html`<script>
+        function distance(from, to = from) {
+          'worklet';
+          return to - from;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // Parameter scope can legitimately see an earlier parameter, and this worklet captures
+      // nothing, so rewriting it would be a change with no cause.
+      expect(code).not.toContain('_workletParameter');
+    });
+
+    test('hoists a LATER parameter that captures nothing, so evaluation order is preserved', () => {
+      const input = html`<script>
+        const DEFAULTS = { max: 8 };
+
+        function span(first = DEFAULTS, second = globalThis.fallback()) {
+          'worklet';
+          return first.max + second;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // `second` reads a global, so it captures nothing and nothing about SCOPE forces it to move.
+      // Order does: every parameter expression runs before the body, so leaving `second` behind
+      // would run it BEFORE `first`, which now lives in the body. The source says `first` then
+      // `second`, and a transform that silently swaps two side effects is a defect no return value
+      // reveals — which is why the assertion is on the emitted order rather than on a result.
+      expect(code).toContain(
+        'let first=_workletParameter===void 0?DEFAULTS:_workletParameter;let second=_workletParameter2===void 0?globalThis.fallback():_workletParameter2;'
+      );
+    });
+
+    test('leaves a plain identifier after a hoisted parameter alone', () => {
+      const input = html`<script>
+        const DEFAULTS = { max: 8 };
+
+        function span(first = DEFAULTS, second) {
+          'worklet';
+          return first.max + second;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // The order rule is bounded by what a parameter EVALUATES, not by where it sits. An
+      // identifier binds the argument and runs nothing, so it has no side effect to reorder and
+      // moving it would be churn. Its slot stays exactly where it was written.
+      expect(code).toContain('(_workletParameter,second){');
+    });
+
+    test('hoists a DEFAULTLESS pattern after a hoisted parameter — destructuring is observable', () => {
+      const input = html`<script>
+        const DEFAULTS = { max: 8 };
+
+        function span(first = DEFAULTS, { max }) {
+          'worklet';
+          return first.max + max;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // A pattern with no default still evaluates in the parameter scope: it reads properties and
+      // drives the iterator protocol, both of which can run user code through a getter. So the
+      // order rule keys on "evaluates something", never on "carries a default" — the narrower
+      // reading would leave a getter firing on the wrong side of the hoisted parameter.
+      expect(code).toContain(
+        'let first=_workletParameter===void 0?DEFAULTS:_workletParameter;let{max:max}=_workletParameter2;'
+      );
+    });
+
+    test('hoists a destructuring pattern WHOLE, keeping its nested defaults', () => {
+      const input = html`<script>
+        const DEFAULTS = { max: 8, min: 1 };
+
+        function span({ min, max } = DEFAULTS) {
+          'worklet';
+          return max - min;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // The pattern moves intact rather than being decomposed, so nested defaults, computed keys
+      // and throw-on-`undefined` destructuring semantics are all unchanged — the only thing that
+      // moves is WHERE the binding happens.
+      expect(code).toContain(
+        // Shorthand properties are expanded by the generator, so the serialized body spells the
+        // pattern `{min:min,max:max}` — asserted as emitted rather than as authored.
+        'let{min:min,max:max}=_workletParameter===void 0?DEFAULTS:_workletParameter;'
+      );
+    });
+
+    test('hoists a pattern whose NESTED default reads a capture', () => {
+      const input = html`<script>
+        const DEFAULTS = { min: 1 };
+
+        function low({ min = DEFAULTS.min }) {
+          'worklet';
+          return min;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // The parameter itself carries no default; the capture is read from inside the pattern. A
+      // check that only looked at `AssignmentPattern` at the top level would miss it entirely.
+      expect(code).toContain('let{min=DEFAULTS.min}=_workletParameter;');
+    });
+
+    test('replaces a rest element ARGUMENT, so the rest keeps collecting', () => {
+      const input = html`<script>
+        const DEFAULTS = { max: 8 };
+
+        function first(...[limits = DEFAULTS]) {
+          'worklet';
+          return limits.max;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // `...rest` binds a plain identifier and cannot carry a default, so it has nothing to hoist.
+      // `...[a = CAPTURED]` is a pattern and does — and there the placeholder replaces the rest
+      // ARGUMENT, never the parameter, because the rest element itself has to go on collecting the
+      // remaining arguments. Overwriting the parameter would silently drop every argument past
+      // that position.
+      expect(code).toContain('(..._restPattern){');
+      expect(code).toContain('let[limits=DEFAULTS]=_restPattern;');
+    });
+
+    test('a capture in a non-computed KEY position is not a reference to it', () => {
+      const input = html`<script>
+        const min = 1;
+
+        function rename({ min: renamed }) {
+          'worklet';
+          return renamed + min;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // `{ min: renamed }` names a property, not the binding `min`. Rewriting on a key match would
+      // hoist a parameter that depends on nothing, which is a behaviour change with no cause.
+      expect(code).toContain('({min:renamed})');
+      expect(code).not.toContain('_workletParameter');
+    });
+
+    test('hoists NOTHING when the body redeclares a hoistable parameter with `var`', () => {
+      const input = html`<script>
+        const DEFAULTS = { max: 8 };
+
+        function shadow(limits = DEFAULTS) {
+          'worklet';
+          var limits;
+          return 1;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // `var x` may legally redeclare a PARAMETER and may not redeclare a `let`, so hoisting this
+      // one emits `let limits; var limits;` — a SyntaxError, failing on every call rather than only
+      // the defaulting one. That is strictly worse than the defect being fixed, so the whole plan
+      // is refused and the output matches upstream's exactly. The floor for this function is "no
+      // worse than unpatched", never "broken differently".
+      expect(code).toContain('(limits=DEFAULTS){');
+      expect(code).not.toContain('_workletParameter');
+    });
+
+    test('a BLOCKED plan hoists nothing, including the parameters that could have moved', () => {
+      const input = html`<script>
+        const DEFAULTS = { max: 8 };
+
+        function cascade(limits = DEFAULTS, scale = limits.max) {
+          'worklet';
+          var scale;
+          return scale;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // `limits` alone is hoistable and `scale` is not. Moving only `limits` would leave `scale`
+      // reading a name that is no longer in parameter scope — the original defect at a NEW trigger,
+      // on a call that worked before the patch. All or nothing is what makes that unrepresentable.
+      expect(code).toContain('(limits=DEFAULTS,scale=limits.max){');
+      expect(code).not.toContain('_workletParameter');
+    });
+
+    test("hoists a default that calls the worklet's OWN name, past the recursion binding", () => {
+      const input = html`<script>
+        const DEFAULTS = { max: 8 };
+
+        function walk(depth, next = walk) {
+          'worklet';
+          return depth > 0 ? next(depth - 1) : DEFAULTS.max;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // `prependRecursiveDeclaration` shadows a self-referencing worklet's own name with
+      // `const <name> = this._recur;` INSIDE the body. A default that calls the worklet therefore
+      // resolves, from parameter scope, to the bare function expression and invokes it with no
+      // `this` — whose body reads `this.__closure` first. The recursion binding counts as body
+      // scope for exactly that reason.
+      expect(code).toContain('=this._recur;');
+      expect(code).toContain('_workletParameter===void 0?');
+    });
+
+    test('the same shape hoists in a worklet that captures NOTHING', () => {
+      const input = html`<script>
+        function walk(depth, next = walk) {
+          'worklet';
+          return depth > 0 ? next(depth - 1) : 0;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // The recursion binding exists whether or not anything was captured, so gating the hoist on
+      // the closure count made two otherwise-identical worklets differ by one captured constant.
+      expect(code).toContain('=this._recur;');
+      expect(code).toContain('_workletParameter===void 0?');
+    });
+
+    test('the hoisted binding is `let`, so a body may reassign its own parameter', () => {
+      const input = html`<script>
+        const DEFAULTS = { max: 8 };
+
+        function bump(limits = DEFAULTS) {
+          'worklet';
+          limits = { max: limits.max + 1 };
+          return limits.max;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // A parameter is assignable, so the binding that replaces it must be too. `const` here is
+      // observable only as the "Assignment to constant variable" it throws at call time, which is
+      // why the emitted keyword is asserted rather than inferred.
+      expect(code).toContain(
+        'let limits=_workletParameter===void 0?DEFAULTS:_workletParameter;'
+      );
+    });
+
+    test('the parameter COUNT is preserved — one parameter becomes one placeholder', () => {
+      const input = html`<script>
+        const DEFAULTS = { max: 8 };
+
+        function clamp(value, limits = DEFAULTS) {
+          'worklet';
+          return Math.min(value, limits.max);
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // `arguments` is indexed by position, so a hoisted parameter must leave its slot occupied
+      // rather than vanish from the list.
+      //
+      // `Function.prototype.length` is the one observable this DOES move, and it moves by
+      // construction: it counts the parameters before the first default, so replacing a defaulted
+      // parameter with a plain placeholder raises it — measured 1 -> 2 for this function. Nothing
+      // in this package reads a worklet's arity, and the alternative is the ReferenceError, so the
+      // trade is deliberate rather than overlooked. It is pinned here so a future change to the
+      // placeholder shape cannot move it further without saying so.
+      expect(code).toContain('(value,_workletParameter){');
+      expect(code).not.toContain('(value){');
+    });
+
+    test('the placeholder cannot collide with a name the body already declares', () => {
+      const input = html`<script>
+        const DEFAULTS = { max: 8 };
+
+        function collide(limits = DEFAULTS) {
+          'worklet';
+          const _workletParameter = 7;
+          return limits.max + _workletParameter;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // A raw identifier would emit two `_workletParameter` bindings in one scope, which does not
+      // parse. `generateUid` re-suffixes until the name is free across the whole program.
+      expect(code).toContain('_workletParameter2');
+    });
+
+    test('a default that CONSTRUCTS a captured worklet class hoists', () => {
+      const input = html`<script>
+        class Limits {
+          constructor() {
+            this.max = 8;
+          }
+        }
+
+        function clamp(scale, limits = new Limits()) {
+          'worklet';
+          return Math.min(limits.max, scale);
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // A captured worklet CLASS never appears in `closureVariables` under its own name —
+      // `buildWorkletString` replaces `Limits` with `Limits<suffix>` and prepends
+      // `const Limits = Limits<suffix>();` to the body. So the constructor name is body-scoped
+      // exactly like a capture, and reading it from a parameter default is the original defect at
+      // a trigger the closure-name scan alone cannot see.
+      expect(code).toContain(
+        'let limits=_workletParameter===void 0?new Limits():_workletParameter'
+      );
+    });
+
+    test('a hoisted initializer lands AFTER the class-factory declaration it reads', () => {
+      const input = html`<script>
+        class Limits {
+          constructor() {
+            this.max = 8;
+          }
+        }
+
+        function clamp(scale, limits = new Limits()) {
+          'worklet';
+          return Math.min(limits.max, scale);
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // Ordering, not merely presence: `const Limits = …` is a `const`, so an initializer placed
+      // above it reads the name in its temporal dead zone and throws just as surely as the
+      // unhoisted version did. The closure destructure stays first because the factory call needs
+      // it.
+      const factoryIndex = code.indexOf('const Limits=');
+      const hoistIndex = code.indexOf('let limits=');
+
+      expect(factoryIndex).toBeGreaterThan(-1);
+      expect(hoistIndex).toBeGreaterThan(factoryIndex);
+    });
+
+    test('the emitted worklet RUNS, and runs its defaults in source order', () => {
+      const input = html`<script>
+        const DEFAULTS = { max: 8 };
+
+        function span(
+          first = (globalThis.trace.push('first'), DEFAULTS),
+          second = globalThis.trace.push('second')
+        ) {
+          'worklet';
+          globalThis.trace.push('body');
+          return first.max + second;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // Every other test in this block asserts emitted TEXT, which structurally cannot fail for
+      // the reason this defect fails: the emitted function parses fine and throws when it is
+      // CALLED. So this one calls it, in the only scope that matters — `new Function` compiles in
+      // the global scope, so the captured `DEFAULTS` is reachable through `this.__closure` and
+      // through nothing else, which is the UI runtime's shape.
+      const worklet = evaluateWorkletCode(code);
+      const trace: Array<string> = [];
+      // The worklet reaches its recorder off the global, because that is the one thing a bare
+      // `new Function` scope shares with this one.
+      Object.assign(globalThis, { trace });
+
+      const result = worklet.call({ __closure: { DEFAULTS: { max: 8 } } });
+
+      // `Array.prototype.push` returns the new length, so `second` is 2 and the value doubles as
+      // proof that the default ran rather than being dropped: 8 + 2.
+      expect(result).toBe(10);
+      // The ORDER is what the value cannot tell you — leaving `second` in the parameter scope
+      // yields the identical 10 while running the two side effects the other way round.
+      expect(trace).toEqual(['first', 'second', 'body']);
+    });
   });
 
   describe('generally', () => {
