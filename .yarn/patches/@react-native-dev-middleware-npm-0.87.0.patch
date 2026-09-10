@@ -1,0 +1,56 @@
+diff --git a/dist/inspector-proxy/Device.js b/dist/inspector-proxy/Device.js
+index 582d1d375120c96b4d55651dad4eb1dedc52643c..2b785f210b84a2015c6d1bea74fc5d3b5d793b4f 100644
+--- a/dist/inspector-proxy/Device.js
++++ b/dist/inspector-proxy/Device.js
+@@ -622,7 +622,7 @@ class Device {
+         }
+         if ("scriptId" in params && params.scriptId != null) {
+           this.#scriptIdToSourcePathMapping.set(
+-            params.scriptId,
++            this.#scriptSourceKey(payload.sessionId, params.scriptId),
+             serverRelativeUrl,
+           );
+         }
+@@ -680,6 +680,7 @@ class Device {
+       case "Network.loadNetworkResource":
+         const response = {
+           id: req.id,
++          ...(req.sessionId != null ? { sessionId: req.sessionId } : {}),
+           result: {
+             error: {
+               code: -32601,
+@@ -740,6 +741,7 @@ class Device {
+     const sendSuccessResponse = (scriptSource) => {
+       const response = {
+         id: req.id,
++        ...(req.sessionId != null ? { sessionId: req.sessionId } : {}),
+         result: {
+           scriptSource,
+         },
+@@ -754,6 +756,7 @@ class Device {
+     const sendErrorResponse = (error) => {
+       const response = {
+         id: req.id,
++        ...(req.sessionId != null ? { sessionId: req.sessionId } : {}),
+         result: {
+           error: {
+             message: error,
+@@ -769,7 +772,7 @@ class Device {
+       });
+     };
+     const pathToSource = this.#scriptIdToSourcePathMapping.get(
+-      req.params.scriptId,
++      this.#scriptSourceKey(req.sessionId, req.params.scriptId),
+     );
+     try {
+       const httpURL =
+@@ -787,6 +790,9 @@ class Device {
+       );
+     }
+   }
++  #scriptSourceKey(sessionId, scriptId) {
++    return sessionId == null ? scriptId : `${sessionId}:${scriptId}`;
++  }
+   #mapToDevicePageId(pageId) {
+     if (
+       pageId === REACT_NATIVE_RELOADABLE_PAGE_ID &&

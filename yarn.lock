@@ -7974,6 +7974,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native/dev-middleware@patch:@react-native/dev-middleware@npm%3A0.87.0#~/.yarn/patches/@react-native-dev-middleware-npm-0.87.0.patch":
+  version: 0.87.0
+  resolution: "@react-native/dev-middleware@patch:@react-native/dev-middleware@npm%3A0.87.0#~/.yarn/patches/@react-native-dev-middleware-npm-0.87.0.patch::version=0.87.0&hash=12ec13"
+  dependencies:
+    "@isaacs/ttlcache": "npm:^1.4.1"
+    "@react-native/debugger-frontend": "npm:0.87.0"
+    "@react-native/debugger-shell": "npm:0.87.0"
+    chrome-launcher: "npm:^0.15.2"
+    chromium-edge-launcher: "npm:^0.3.0"
+    connect: "npm:^3.6.5"
+    debug: "npm:^4.4.0"
+    invariant: "npm:^2.2.4"
+    nullthrows: "npm:^1.1.1"
+    open: "npm:^7.0.3"
+    serve-static: "npm:^1.16.2"
+    ws: "npm:^7.5.10"
+  checksum: 10/7cfe78c22554382c254bb54dfbe93543eccc51298064c9e0af75f1fd75bee0a7f078dd28c3f61a00a0a6e5e23f5c4e9f06adab613a1cf412ccabaa6f90872cbd
+  languageName: node
+  linkType: hard
+
 "@react-native/eslint-config@npm:0.81.6":
   version: 0.81.6
   resolution: "@react-native/eslint-config@npm:0.81.6"

@@ -38,7 +38,7 @@ You can also list the targets with `http://localhost:8081/json` and open the `de
 
 ## How it works
 
-With a React Native that exposes worker runtime targets (`HostTarget::registerWorkerRuntime`, proposed upstream), Worklets registers every Worklet Runtime with the React Native app's own inspector host. The runtimes then appear as threads of the regular `React Native Bridgeless` target, there is no second target to pick, and React Native dispatches inspector messages on a dedicated inspector thread, so no runtime blocks another.
+With a React Native that exposes worker runtime targets (`HostTarget::registerWorkerRuntime`, proposed upstream), Worklets registers every Worklet Runtime with the React Native app's own inspector host. The runtimes then appear as threads of the regular `React Native Bridgeless` target, there is no second target to pick, and React Native dispatches inspector messages on a dedicated inspector thread, so no runtime blocks another. The Metro inspector proxy answers source and source map requests on behalf of the app; it has to echo the session id of the thread that asked (`@react-native/dev-middleware`, proposed upstream), otherwise source maps of the Worklet Runtimes never load.
 
 With earlier React Native versions, Worklets opens its own connection to the Metro inspector proxy, separate from the one React Native uses. React Native dispatches inspector messages on the main thread, which is also where the UI Runtime runs, so a paused UI Runtime could never receive the resume command through it. The Worklets connection dispatches messages on a dedicated thread instead. It is listed by Metro as a second device with the same name and app id, with a single `React Native + Worklet Runtimes` page.
 
