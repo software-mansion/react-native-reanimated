@@ -35,7 +35,10 @@ export interface RemoteReporterOptions {
   library: string;
   declaredSuites: DeclaredSuite[];
   onStatus: (message: string) => void;
-  onStart: (params: { only?: string[] }) => Promise<RunSummary | void>;
+  onStart: (params: {
+    only?: string[];
+    reportSuiteFinished: (suiteName: string) => void;
+  }) => Promise<RunSummary | void>;
 }
 
 interface StartMessage {
@@ -248,7 +251,11 @@ export function runWithRemoteReporter({
     patchConsole();
     installGlobalErrorHandler();
 
-    onStart({ only: parsed.only })
+    const reportSuiteFinished = (suiteName: string) => {
+      safeSend({ type: 'suiteFinished', name: suiteName });
+    };
+
+    onStart({ only: parsed.only, reportSuiteFinished })
       .then((summary) => {
         const finalSummary = summary ?? {
           passed: 0,
