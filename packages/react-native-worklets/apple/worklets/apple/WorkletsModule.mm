@@ -83,7 +83,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
     return IsJavaScriptQueue();
   };
   animationFrameQueue_ = [AnimationFrameQueue new];
-  auto runtimeBindings = [self getRuntimeBindings:rnRuntime bundleModeEnabled:bundleModeEnabled];
+  auto runtimeBindings = [self getRuntimeBindings:bundleModeEnabled];
   rnRuntimeStatus_ = std::make_shared<RNRuntimeStatus>();
 
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
@@ -129,16 +129,14 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
   return std::make_shared<facebook::react::NativeWorkletsModuleSpecJSI>(params);
 }
 
-- (std::shared_ptr<RuntimeBindings>)getRuntimeBindings:(jsi::Runtime &)rnRuntime
-                                     bundleModeEnabled:(BOOL)bundleModeEnabled
+- (std::shared_ptr<RuntimeBindings>)getRuntimeBindings:(BOOL)bundleModeEnabled
 {
   return std::make_shared<RuntimeBindings>(RuntimeBindings{
       .requestAnimationFrame = [animationFrameQueue =
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
       },
-      .nativeLoggingHook =
-          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{}
+      .nativeLoggingHook = bundleModeEnabled ? makeNativeLoggingHook() : RuntimeBindings::NativeLoggingHook{}
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
       ,
       .abortRequest =
