@@ -70,4 +70,22 @@ describe('bundle mode Metro config', () => {
     expect(result.filePath.endsWith(path.join('.worklets', '1.js'))).toBe(true);
     expect(resolveRequest).not.toHaveBeenCalled();
   });
+
+  test('keeps existing polyfills and appends the prepareBundleMode polyfill', () => {
+    const config = getBundleModeMetroConfig({
+      resolver: {},
+      serializer: { polyfillModuleNames: ['/custom/polyfill.js'] },
+      transformer: {},
+    });
+
+    expect(config.serializer.polyfillModuleNames).toHaveLength(2);
+    expect(config.serializer.polyfillModuleNames[0]).toBe(
+      '/custom/polyfill.js'
+    );
+    expect(
+      config.serializer.polyfillModuleNames[1].endsWith(
+        path.join('bundleMode', 'polyfills', 'prepareBundleMode.js')
+      )
+    ).toBe(true);
+  });
 });
