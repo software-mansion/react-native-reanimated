@@ -1100,6 +1100,12 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
     for (auto const &[shadowNodeFamily, props] : updatesBatch) {
       propsMapBySurface[shadowNodeFamily->getSurfaceId()][shadowNodeFamily].emplace_back(props);
     }
+    if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
+      auto lock = updatesRegistryManager_->lock();
+      for (auto &[_, propsMap] : propsMapBySurface) {
+        updatesRegistryManager_->addRegistryProps(propsMap);
+      }
+    }
   }
 
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {

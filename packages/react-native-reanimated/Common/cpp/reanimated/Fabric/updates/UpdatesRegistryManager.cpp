@@ -106,6 +106,18 @@ PropsMap UpdatesRegistryManager::collectProps() {
   return propsMap;
 }
 
+void UpdatesRegistryManager::addRegistryProps(PropsMap &propsMap) {
+  react_native_assert(isLockedByCurrentThread());
+  for (auto &[family, props] : propsMap) {
+    for (const auto &registry : registries_) {
+      auto registryProps = registry->get(family->getTag());
+      if (registryProps.isObject()) {
+        props.emplace_back(RawProps(std::move(registryProps)));
+      }
+    }
+  }
+}
+
 #ifdef ANDROID
 
 bool UpdatesRegistryManager::hasPropsToRevert() {

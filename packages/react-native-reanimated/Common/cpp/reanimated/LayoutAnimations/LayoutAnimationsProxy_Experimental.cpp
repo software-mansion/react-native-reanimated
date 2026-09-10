@@ -248,6 +248,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
       case ShadowViewMutation::Update: {
         auto &node = lightNodes_[mutation.newChildShadowView.tag];
         react_native_assert(node && "LightNode not found");
+        const auto currentProps = node->current.props;
         node->previous = mutation.oldChildShadowView;
 #ifdef ANDROID
         // TODO (future): We don't merge the root view as the currently stored version might not be accurate, because of
@@ -267,6 +268,9 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
 #else
         node->current = mutation.newChildShadowView;
 #endif // ANDROID
+        if (mutation.oldChildShadowView.props == mutation.newChildShadowView.props) {
+          node->current.props = currentProps;
+        }
         auto tag = mutation.newChildShadowView.tag;
         if (layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
           layout_.push_back(node);

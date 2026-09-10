@@ -48,6 +48,7 @@ class UpdatesRegistryManager {
   void unmarkNodeAsRemovable(Tag viewTag);
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
   PropsMap collectProps();
+  void addRegistryProps(PropsMap &propsMap);
 
 #ifdef ANDROID
   bool hasPropsToRevert();
