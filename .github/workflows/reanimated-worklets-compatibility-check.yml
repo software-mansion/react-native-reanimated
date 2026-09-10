@@ -29,8 +29,6 @@ jobs:
     outputs:
       matrix: ${{ steps.set-outputs.outputs.matrix }}
       matrix-size: ${{ steps.set-outputs.outputs.matrix-size }}
-      spm-matrix: ${{ steps.set-outputs.outputs.spm-matrix }}
-      spm-matrix-size: ${{ steps.set-outputs.outputs.spm-matrix-size }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
@@ -54,8 +52,6 @@ jobs:
         run: |
           echo "matrix=$(cat /tmp/reanimated-worklets-matrix.json)" >> "$GITHUB_OUTPUT"
           echo "matrix-size=$(jq 'length' /tmp/reanimated-worklets-matrix.json)" >> "$GITHUB_OUTPUT"
-          echo "spm-matrix=$(cat /tmp/reanimated-worklets-spm-matrix.json)" >> "$GITHUB_OUTPUT"
-          echo "spm-matrix-size=$(jq 'length' /tmp/reanimated-worklets-spm-matrix.json)" >> "$GITHUB_OUTPUT"
 
   reanimated-worklets-compatibility-check-android:
     if: github.repository == 'software-mansion/react-native-reanimated'
@@ -132,7 +128,7 @@ jobs:
         include: ${{ fromJson(needs.read-compatibility-json.outputs.matrix) }}
     env:
       APP_NAME: app
-      CACHE_KEY: ${{ matrix.reactNativeVersion }}-${{ matrix.reanimatedVersion }}-${{ matrix.workletsVersion }}
+      CACHE_KEY: ${{ matrix.reactNativeVersion }}-${{ matrix.reanimatedVersion }}-${{ matrix.workletsVersion }}${{ matrix.spm && '-spm' || '' }}
       BUILD_MARKER_DIR: .compatibility-build-markers
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
@@ -153,7 +149,7 @@ jobs:
         if: steps.result-cache.outputs.cache-hit == 'true'
         run: |
           echo "Skipping already validated combination:"
-          echo "RN=${{ matrix.reactNativeVersion }} | Reanimated=${{ matrix.reanimatedVersion }} | Worklets=${{ matrix.workletsVersion }}"
+          echo "RN=${{ matrix.reactNativeVersion }} | Reanimated=${{ matrix.reanimatedVersion }} | Worklets=${{ matrix.workletsVersion }} | SPM=${{ matrix.spm }}"
 
       - name: Create RNC CLI app
         if: steps.result-cache.outputs.cache-hit != 'true'
@@ -190,92 +186,16 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -quiet
 
-      - name: Mark combination as successful
-        if: steps.result-cache.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p "${BUILD_MARKER_DIR}"
-          echo "ok" > "${BUILD_MARKER_DIR}/${{ env.CACHE_KEY }}.success"
-
-      - name: Save result cache
-        if: steps.result-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
-        with:
-          path: ${{ env.BUILD_MARKER_DIR }}/${{ env.CACHE_KEY }}.success
-          key: reanimated-worklets-compat-ios-${{ env.CACHE_KEY }}
-
-  # SPM is a separate job because pre-release builds install worklets/reanimated
-  # from monorepo tarballs (npm packages do not ship Package.swift yet).
-  # TODO: Once react-native-worklets and react-native-reanimated are published
-  # on npm with Package.swift, fold SPM into reanimated-worklets-compatibility-check-ios
-  # for matching 0.87 matrix rows: CocoaPods build first, then
-  # `npx react-native spm scaffold --deintegrate --yes`, then xcodebuild -project
-  # on the same app - no second `cli init`, same npm-installed versions.
-  reanimated-worklets-compatibility-check-ios-spm:
-    if: github.repository == 'software-mansion/react-native-reanimated' && needs.read-compatibility-json.outputs.spm-matrix-size != '0'
-    runs-on: macos-26
-    needs: read-compatibility-json
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJson(needs.read-compatibility-json.outputs.spm-matrix) }}
-    env:
-      APP_NAME: app
-      CACHE_KEY: ${{ matrix.reactNativeVersion }}-${{ matrix.reanimatedVersion }}-${{ matrix.workletsVersion }}-spm-${{ github.sha }}
-      BUILD_MARKER_DIR: .compatibility-build-markers
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-
-      - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with:
-          node-version-file: '.nvmrc'
-
-      - name: Restore result cache
-        id: result-cache
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
-        with:
-          path: ${{ env.BUILD_MARKER_DIR }}/${{ env.CACHE_KEY }}.success
-          key: reanimated-worklets-compat-ios-spm-${{ env.CACHE_KEY }}
-
-      - name: Skip already validated combination
-        if: steps.result-cache.outputs.cache-hit == 'true'
-        run: |
-          echo "Skipping already validated SPM combination:"
-          echo "RN=${{ matrix.reactNativeVersion }} | Reanimated=${{ matrix.reanimatedVersion }} | Worklets=${{ matrix.workletsVersion }}"
-
-      - name: Install monorepo dependencies
-        if: steps.result-cache.outputs.cache-hit != 'true'
-        run: yarn install --immutable
-
-      - name: Build and pack packages
-        if: steps.result-cache.outputs.cache-hit != 'true'
-        run: |
-          yarn workspace react-native-worklets build
-          yarn workspace react-native-reanimated build
-          mkdir -p /tmp/packs
-          npm pack -w react-native-worklets --pack-destination /tmp/packs
-          npm pack -w react-native-reanimated --pack-destination /tmp/packs
-          echo "WORKLETS_TARBALL=$(ls /tmp/packs/react-native-worklets-*.tgz)" >> "$GITHUB_ENV"
-          echo "REANIMATED_TARBALL=$(ls /tmp/packs/react-native-reanimated-*.tgz)" >> "$GITHUB_ENV"
-
-      - name: Create RNC CLI app
-        if: steps.result-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/create-rnc-cli-app
-        with:
-          react-native-version: ${{ matrix.reactNativeVersion }}
-          reanimated-version: ${{ matrix.reanimatedVersion }}
-          worklets-version: ${{ matrix.workletsVersion }}
-          integration: spm
-          worklets-tarball: ${{ env.WORKLETS_TARBALL }}
-          reanimated-tarball: ${{ env.REANIMATED_TARBALL }}
-
+      # SPM rows (matrix.spm): same npm-installed app, CocoaPods build first,
+      # then deintegrate and rebuild via SPM. Requires published packages that
+      # ship Package.swift — see spm lists in both compatibility.json files.
       - name: SPM scaffold
-        if: steps.result-cache.outputs.cache-hit != 'true'
+        if: matrix.spm && steps.result-cache.outputs.cache-hit != 'true'
         working-directory: ${{ env.APP_NAME }}
         run: npx react-native spm scaffold --deintegrate --yes
 
       - name: Build app (iOS Debug, SPM)
-        if: steps.result-cache.outputs.cache-hit != 'true'
+        if: matrix.spm && steps.result-cache.outputs.cache-hit != 'true'
         working-directory: ${{ env.APP_NAME }}/ios
         run: |
           xcodebuild build \
@@ -297,4 +217,4 @@ jobs:
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
           path: ${{ env.BUILD_MARKER_DIR }}/${{ env.CACHE_KEY }}.success
-          key: reanimated-worklets-compat-ios-spm-${{ env.CACHE_KEY }}
+          key: reanimated-worklets-compat-ios-${{ env.CACHE_KEY }}
