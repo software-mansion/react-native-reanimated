@@ -83,10 +83,6 @@ std::shared_ptr<WorkletsModuleProxy> WorkletsModuleProxyInitializer::finalize(
   if (!proxyFuture.valid()) [[unlikely]] {
     throw std::runtime_error("[Worklets] finalize was called after the prepared proxy was already taken.");
   }
-  if (startedAheadOfTime && !bundleModeEnabled) [[unlikely]] {
-    throw std::runtime_error(
-        "[Worklets] prepareBundleMode was called, but installTurboModule was called with Bundle Mode disabled.");
-  }
   auto proxy = proxyFuture.get();
   if (startedAheadOfTime) {
     proxy->attachToRNRuntime(rnRuntime, std::nullopt);
