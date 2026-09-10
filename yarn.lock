@@ -29522,6 +29522,52 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native@patch:react-native@npm%3A0.87.0#~/.yarn/patches/react-native-npm-0.87.0-5a4de924a2.patch":
+  version: 0.87.0
+  resolution: "react-native@patch:react-native@npm%3A0.87.0#~/.yarn/patches/react-native-npm-0.87.0-5a4de924a2.patch::version=0.87.0&hash=a2685a"
+  dependencies:
+    "@react-native/asset-utils": "npm:0.87.0"
+    "@react-native/codegen": "npm:0.87.0"
+    "@react-native/community-cli-plugin": "npm:0.87.0"
+    "@react-native/gradle-plugin": "npm:0.87.0"
+    "@react-native/normalize-colors": "npm:0.87.0"
+    "@react-native/virtualized-lists": "npm:0.87.0"
+    anser: "npm:^1.4.9"
+    ansi-regex: "npm:^5.0.0"
+    babel-plugin-syntax-hermes-parser: "npm:0.36.1"
+    base64-js: "npm:^1.5.1"
+    commander: "npm:^12.0.0"
+    flow-enums-runtime: "npm:^0.0.6"
+    hermes-compiler: "npm:250829098.0.16"
+    invariant: "npm:^2.2.4"
+    memoize-one: "npm:^5.0.0"
+    metro-runtime: "npm:^0.87.0"
+    metro-source-map: "npm:^0.87.0"
+    nullthrows: "npm:^1.1.1"
+    pretty-format: "npm:^29.7.0"
+    promise: "npm:^8.3.0"
+    react-devtools-core: "npm:^6.1.5"
+    react-refresh: "npm:^0.14.0"
+    regenerator-runtime: "npm:^0.13.2"
+    scheduler: "npm:0.27.0"
+    semver: "npm:^7.1.3"
+    stacktrace-parser: "npm:^0.1.10"
+    tinyglobby: "npm:^0.2.15"
+    whatwg-fetch: "npm:^3.0.0"
+    ws: "npm:^7.5.10"
+    yargs: "npm:^17.6.2"
+  peerDependencies:
+    "@types/react": ^19.1.1
+    react: ^19.2.3
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  bin:
+    react-native: cli.js
+  checksum: 10/179c826909ae62ba300031cef94f092e203a63f8b49656236a812a8987ecaa270339e859176b3459377e20b3871ec8a7763933f04939cd7eff180b148f0c620a
+  languageName: node
+  linkType: hard
+
 "react-proxy@npm:^1.1.7":
   version: 1.1.8
   resolution: "react-proxy@npm:1.1.8"

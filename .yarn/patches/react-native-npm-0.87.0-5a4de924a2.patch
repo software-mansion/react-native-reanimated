@@ -1,0 +1,94 @@
+diff --git a/ReactAndroid/api/ReactAndroid.api b/ReactAndroid/api/ReactAndroid.api
+index 57ed2ec2aa73cba0483e8a86370dd91cb2b7b52c..ab818d0012106395d6e82722a2171a4d71ad745b 100644
+--- a/ReactAndroid/api/ReactAndroid.api
++++ b/ReactAndroid/api/ReactAndroid.api
+@@ -3767,6 +3767,8 @@ public final class com/facebook/react/uimanager/ReactClippingViewGroupHelper {
+ 	public static final field INSTANCE Lcom/facebook/react/uimanager/ReactClippingViewGroupHelper;
+ 	public static final field PROP_REMOVE_CLIPPED_SUBVIEWS Ljava/lang/String;
+ 	public static final fun calculateClippingRect (Landroid/view/View;Landroid/graphics/Rect;)V
++	public static final fun isExcludedFromClipping (Landroid/view/View;)Z
++	public static final fun setExcludedFromClipping (Landroid/view/View;Z)V
+ }
+ 
+ public abstract interface class com/facebook/react/uimanager/ReactCompoundView {
+diff --git a/ReactAndroid/src/main/java/com/facebook/react/uimanager/ReactClippingViewGroupHelper.kt b/ReactAndroid/src/main/java/com/facebook/react/uimanager/ReactClippingViewGroupHelper.kt
+index ecc935ac5d1fddf0c2b1ec4bbbe8a84edb2b0c1a..0b768939bfaf737ae04befe79a7d97c494b31d80 100644
+--- a/ReactAndroid/src/main/java/com/facebook/react/uimanager/ReactClippingViewGroupHelper.kt
++++ b/ReactAndroid/src/main/java/com/facebook/react/uimanager/ReactClippingViewGroupHelper.kt
+@@ -9,6 +9,7 @@ package com.facebook.react.uimanager
+ 
+ import android.graphics.Rect
+ import android.view.View
++import com.facebook.react.R
+ import javax.annotation.concurrent.NotThreadSafe
+ 
+ /**
+@@ -22,6 +23,24 @@ public object ReactClippingViewGroupHelper {
+ 
+   private val helperRect: Rect = Rect()
+ 
++  /**
++   * Excludes [view] from subview clipping. A parent with
++   * [com.facebook.react.uimanager.ReactClippingViewGroup.removeClippedSubviews] keeps an excluded
++   * child attached while the child's bounds are outside the clipping rect, in the same way it keeps
++   * a child with a running [android.view.animation.Animation]. Use it for a child whose layout is
++   * animated through mount updates, so the child is not detached before it reaches its final
++   * position. Clear it when the animation ends. The parent applies normal clipping to the child
++   * again on its next clipping pass.
++   */
++  @JvmStatic
++  public fun setExcludedFromClipping(view: View, excluded: Boolean) {
++    view.setTag(R.id.excluded_from_clipping, if (excluded) true else null)
++  }
++
++  @JvmStatic
++  public fun isExcludedFromClipping(view: View): Boolean =
++      view.getTag(R.id.excluded_from_clipping) == true
++
+   /**
+    * Can be used by view that support
+    * [com.facebook.react.uimanager.ReactClippingViewGroup.removeClippedSubviews] property to
+diff --git a/ReactAndroid/src/main/java/com/facebook/react/views/view/ReactViewGroup.kt b/ReactAndroid/src/main/java/com/facebook/react/views/view/ReactViewGroup.kt
+index 24009633c75910e2a32281a1fa46217998961117..18c02fe299ce0088967401dcf841633953733f15 100644
+--- a/ReactAndroid/src/main/java/com/facebook/react/views/view/ReactViewGroup.kt
++++ b/ReactAndroid/src/main/java/com/facebook/react/views/view/ReactViewGroup.kt
+@@ -58,6 +58,7 @@ import com.facebook.react.uimanager.ReactAxOrderHelper
+ import com.facebook.react.uimanager.ReactClippingProhibitedView
+ import com.facebook.react.uimanager.ReactClippingViewGroup
+ import com.facebook.react.uimanager.ReactClippingViewGroupHelper.calculateClippingRect
++import com.facebook.react.uimanager.ReactClippingViewGroupHelper.isExcludedFromClipping
+ import com.facebook.react.uimanager.ReactOverflowViewWithInset
+ import com.facebook.react.uimanager.ReactPointerEventsView
+ import com.facebook.react.uimanager.style.BorderRadiusProp
+@@ -516,14 +517,17 @@ public open class ReactViewGroup public constructor(context: Context?) :
+             !isViewClipped(child, idx) &&
+             !isAnimating &&
+             child !== focusedChild &&
+-            !shouldSkipView
++            !shouldSkipView &&
++            !isExcludedFromClipping(child)
+     ) {
+       setViewClipped(child, true)
+       // We can try saving on invalidate call here as the view that we remove is out of visible area
+       // therefore invalidation is not necessary.
+       removeViewInLayout(child)
+       needUpdateClippingRecursive = true
+-    } else if ((shouldSkipView || intersects) && isViewClipped(child, idx)) {
++    } else if (
++        (shouldSkipView || intersects || isExcludedFromClipping(child)) && isViewClipped(child, idx)
++    ) {
+       val adjustedIdx = idx - clippedSoFar
+       check(adjustedIdx >= 0)
+       setViewClipped(child, false)
+diff --git a/ReactAndroid/src/main/res/views/uimanager/values/ids.xml b/ReactAndroid/src/main/res/views/uimanager/values/ids.xml
+index 0e51a358eb77e9b1ff77ab8e64039ccc306ed0a8..722b0c76fcfd36050c59c4f67912b62143be1c4e 100644
+--- a/ReactAndroid/src/main/res/views/uimanager/values/ids.xml
++++ b/ReactAndroid/src/main/res/views/uimanager/values/ids.xml
+@@ -82,4 +82,7 @@
+ 
+   <!-- tag is used to store important_for_interaction state -->
+   <item type="id" name="important_for_interaction"/>
++
++  <!-- tag is used to keep a view attached to a parent that removes clipped subviews -->
++  <item type="id" name="excluded_from_clipping"/>
+ </resources>
