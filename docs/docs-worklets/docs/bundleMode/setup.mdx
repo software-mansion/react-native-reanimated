@@ -77,6 +77,14 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
   </TabItem>
 </Tabs>
 
+`bundleModeMetroConfig` sets `serializer.polyfillModuleNames`. `mergeConfig` replaces this array, it does not concatenate it. If your Metro config sets `serializer.polyfillModuleNames` too, use `getBundleModeMetroConfig`, which appends to your list:
+
+```javascript
+module.exports = getBundleModeMetroConfig(
+  mergeConfig(getDefaultConfig(__dirname), config)
+);
+```
+
 ## Enable seamless Metro bundling
 
 _This step is optional but highly recommended._
