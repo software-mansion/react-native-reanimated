@@ -2,11 +2,16 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <worklets/Compat/StableApi.h>
 
+#ifdef ANDROID
+#include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
+#endif // ANDROID
+
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
 #include <memory>
+#include <optional>
 #include <ranges>
 #include <set>
 #include <string>
@@ -410,19 +415,23 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
 
 void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &mutations) const {
 #ifdef ANDROID
-  std::vector<int> tagsToUpdate;
-  tagsToUpdate.reserve(updateMap_.size());
+  std::optional<std::unique_ptr<int[]>> maybeCorrectedTags;
 
-  for (const auto &[tag, _] : updateMap_) {
-    tagsToUpdate.push_back(tag);
+  if (!isMountingCoordinatorPullModelEnabled()) {
+    std::vector<int> tagsToUpdate;
+    tagsToUpdate.reserve(updateMap_.size());
+
+    for (const auto &[tag, _] : updateMap_) {
+      tagsToUpdate.push_back(tag);
+    }
+
+    maybeCorrectedTags = preserveMountedTags_(tagsToUpdate);
+    if (!maybeCorrectedTags.has_value()) {
+      return;
+    }
   }
 
-  auto maybeCorrectedTags = preserveMountedTags_(tagsToUpdate);
-  if (!maybeCorrectedTags.has_value()) {
-    return;
-  }
-
-  auto correctedTags = maybeCorrectedTags->get();
+  const auto correctedTags = maybeCorrectedTags.has_value() ? maybeCorrectedTags->get() : nullptr;
 
   // since the map is not updated, we can assume that the ordering of tags in
   // correctedTags matches the iterator
@@ -431,7 +440,7 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &
   for (auto &[tag, updateValues] : updateMap_) {
 #ifdef ANDROID
     i++;
-    if (correctedTags[i] == -1) {
+    if (correctedTags != nullptr && correctedTags[i] == -1) {
       // skip views that have not been mounted yet
       // on Android we start entering animations from the JS thread
       // so it might happen, that the first frame of the animation goes through
