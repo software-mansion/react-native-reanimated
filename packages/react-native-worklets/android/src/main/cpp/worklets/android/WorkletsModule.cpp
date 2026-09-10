@@ -182,6 +182,7 @@ std::function<bool()> WorkletsModule::getIsOnJSQueueThread() {
 void WorkletsModule::invalidateCpp() {
   rnRuntimeStatus_->setDead();
   initializer_->invalidate();
+  initializer_.reset();
   javaPart_.reset();
   workletsModuleProxy_.reset();
 }

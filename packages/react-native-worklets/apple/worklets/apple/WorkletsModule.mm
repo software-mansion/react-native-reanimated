@@ -118,6 +118,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
   }
   if (initializer_) {
     initializer_->invalidate();
+    initializer_.reset();
   }
   workletsModuleProxy_.reset();
 }
