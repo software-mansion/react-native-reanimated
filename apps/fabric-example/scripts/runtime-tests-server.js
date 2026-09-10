@@ -84,6 +84,8 @@ const ONLY =
     : null;
 const CONNECT_TIMEOUT_MS = Number(args['connect-timeout'] ?? 600) * 1000;
 const IDLE_TIMEOUT_MS = Number(args['idle-timeout'] ?? 600) * 1000;
+const AFTER_SUITE =
+  typeof args['after-suite'] === 'string' ? args['after-suite'] : null;
 const SHOULD_LAUNCH = args.launch === true || args.launch === '';
 const BUILD_ONLY = args['build-only'] === true || args['build-only'] === '';
 const SKIP_BUILD = args['skip-build'] === true || args['skip-build'] === '';
@@ -150,6 +152,10 @@ let metroChild = null;
 let androidSerial = null;
 /** @type {Promise<void> | null} */
 let crashDiagnosticsPromise = null;
+/** @type {Promise<void>} */
+let afterSuiteChain = Promise.resolve();
+let afterSuiteRunning = false;
+let afterSuitePending = false;
 
 /**
  * @param {unknown} error
@@ -355,6 +361,9 @@ function handleMessage(msg) {
     case 'log':
       onLog(msg);
       break;
+    case 'suiteFinished':
+      onSuiteFinished(msg);
+      break;
     case 'done':
       onDone(msg);
       break;
@@ -421,6 +430,56 @@ function onLog(msg) {
     default:
       console.log(line);
   }
+}
+
+/** @param {DeviceMessage} msg */
+function onSuiteFinished(msg) {
+  if (!AFTER_SUITE || runStartedAt === 0 || runFinished) {
+    return;
+  }
+  if (afterSuiteRunning) {
+    afterSuitePending = true;
+    return;
+  }
+  afterSuiteChain = runAfterSuiteCommand(AFTER_SUITE, String(msg.name ?? ''));
+}
+
+/**
+ * @param {string} command
+ * @param {string} suiteName
+ * @returns {Promise<void>}
+ */
+function runAfterSuiteCommand(command, suiteName) {
+  afterSuiteRunning = true;
+  afterSuitePending = false;
+  return new Promise((resolve) => {
+    let finished = false;
+    const onFinished = (/** @type {string} */ outcome) => {
+      if (finished) {
+        return;
+      }
+      finished = true;
+      afterSuiteRunning = false;
+      if (outcome) {
+        console.warn(
+          `[runtime-tests] --after-suite command ${outcome} (after suite: ${suiteName})`
+        );
+      }
+      resolve(
+        afterSuitePending ? runAfterSuiteCommand(command, suiteName) : undefined
+      );
+    };
+    const child = spawn(command, {
+      shell: true,
+      stdio: ['ignore', 'inherit', 'inherit'],
+    });
+    child.on('error', (error) =>
+      onFinished(`failed to start: ${error.message}`)
+    );
+    child.on('exit', (code, signal) =>
+      onFinished(code === 0 ? '' : `exited with ${signal ?? `code ${code}`}`)
+    );
+  });
 }
 
 /** @param {DeviceMessage} msg */
@@ -1017,6 +1076,12 @@ function shutdown(code) {
       }
     }
   }
+  void exitAfterSuiteCommands(code);
+}
+
+/** @param {number} code */
+async function exitAfterSuiteCommands(code) {
+  await afterSuiteChain;
   wss.close(() => {
     process.exit(code);
   });
@@ -1576,6 +1641,10 @@ Build and run
   --only <a,b>              Comma separated suite names to run. Suite names come
                             from the library's suites.ts, for example
                             "run loop" or "runtimes,memory".
+  --after-suite <command>   Shell command to run each time the app finishes a
+                            describe() suite, e.g. a cloud keepalive ping.
+                            Overlapping runs are coalesced into one pending
+                            call; a failing command only logs a warning.
 
 Ports and timeouts
   --metro-port <port>       Default: 8081.

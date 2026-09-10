@@ -5,6 +5,11 @@
 #import <worklets/apple/SlowAnimations.h>
 #import <chrono>
 
+#import <Foundation/Foundation.h>
+#if !TARGET_OS_OSX
+#import <UIKit/UIKit.h>
+#endif // !TARGET_OS_OSX
+
 #if TARGET_OS_OSX
 #import <QuartzCore/CADisplayLink.h>
 #endif // TARGET_OS_OSX

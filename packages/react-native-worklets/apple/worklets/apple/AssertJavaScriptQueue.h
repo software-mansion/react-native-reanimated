@@ -1,3 +1,4 @@
+#import <Foundation/Foundation.h>
 #import <react/debug/react_native_assert.h>
 
 // Copied from RCTJSThreadManager.mm

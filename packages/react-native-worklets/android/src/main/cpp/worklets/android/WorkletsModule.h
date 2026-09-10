@@ -59,7 +59,6 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
 
   std::shared_ptr<RuntimeBindings> getRuntimeBindings(
       bool bundleModeEnabled,
-      jsi::Runtime &rnRuntime,
       jni::global_ref<JWorkletsNetworking::javaobject> workletsNetworking);
 
   RuntimeBindings::RequestAnimationFrame getRequestAnimationFrame();

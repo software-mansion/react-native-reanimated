@@ -118,6 +118,7 @@
     "jest",
     "plugin/index.js",
     "plugin/index.d.ts",
+    "Package.swift",
     "*.podspec",
     "react-native.config.js",
     "!apple/build",

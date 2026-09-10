@@ -28,7 +28,7 @@ WorkletsModule::WorkletsModule(
           jsCallInvoker,
           uiScheduler,
           getIsOnJSQueueThread(),
-          getRuntimeBindings(bundleModeConfig.enabled, *rnRuntime, std::move(jWorkletsNetworking)),
+          getRuntimeBindings(bundleModeConfig.enabled, std::move(jWorkletsNetworking)),
           bundleModeConfig,
           rnRuntimeStatus_)) {}
 
@@ -70,12 +70,10 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
 
 std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(
     const bool bundleModeEnabled,
-    jsi::Runtime &rnRuntime,
     jni::global_ref<JWorkletsNetworking::javaobject> jWorkletsNetworking) {
   return std::make_shared<RuntimeBindings>(RuntimeBindings{
       .requestAnimationFrame = getRequestAnimationFrame(),
-      .nativeLoggingHook =
-          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{},
+      .nativeLoggingHook = bundleModeEnabled ? makeNativeLoggingHook() : RuntimeBindings::NativeLoggingHook{},
       .networkingBackend =
           bundleModeEnabled ? std::make_shared<AndroidNetworkingBackend>(std::move(jWorkletsNetworking)) : nullptr});
 }
