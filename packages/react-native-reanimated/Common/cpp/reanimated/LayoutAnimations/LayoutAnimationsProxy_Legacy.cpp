@@ -73,6 +73,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 
   dropUpdatesForDeletedViews(filteredMutations);
 
+#ifdef ANDROID
+  publishClippingExclusions();
+#endif
+
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 

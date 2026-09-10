@@ -20,6 +20,7 @@ import com.swmansion.common.GestureHandlerStateManager
 import com.swmansion.reanimated.css.CSSPlatformTransitionsManager
 import com.swmansion.reanimated.keyboard.KeyboardAnimationManager
 import com.swmansion.reanimated.keyboard.KeyboardWorkletWrapper
+import com.swmansion.reanimated.layoutAnimations.SubviewClippingGuard
 import com.swmansion.reanimated.nativeProxy.AnimationFrameCallback
 import com.swmansion.reanimated.nativeProxy.EventHandler
 import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
@@ -48,6 +49,7 @@ open class NativeProxy {
     private val keyboardAnimationManager: KeyboardAnimationManager
     private val pseudoSelectorManager: PseudoSelectorManager
     private val cssPlatformTransitionsManager: CSSPlatformTransitionsManager
+    private val subviewClippingGuard: SubviewClippingGuard
     private var firstUptime: Long = SystemClock.uptimeMillis()
     private var slowAnimationsEnabled = false
     private val animationsDragFactor = 10
@@ -98,6 +100,7 @@ open class NativeProxy {
         pseudoSelectorManager = PseudoSelectorManager(mFabricUIManager, mContext)
         cssPlatformTransitionsManager =
             CSSPlatformTransitionsManager(mFabricUIManager, mContext, ::getAnimationTimestamp)
+        subviewClippingGuard = SubviewClippingGuard(mFabricUIManager)
 
         val callInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
         mHybridData =
@@ -140,6 +143,7 @@ open class NativeProxy {
         }
         pseudoSelectorManager.invalidate()
         cssPlatformTransitionsManager.invalidate()
+        subviewClippingGuard.invalidate()
         if (mHybridData.isValid) {
             invalidateCpp()
         }
@@ -227,6 +231,14 @@ open class NativeProxy {
         }
 
         return true
+    }
+
+    @DoNotStrip
+    fun updateClippingExclusions(
+        surfaceId: Int,
+        tags: IntArray,
+    ) {
+        subviewClippingGuard.updateClippingExclusions(surfaceId, tags)
     }
 
     // TODO(#9681): Temporary workaround for RN >= 0.86. Since RN 0.86,

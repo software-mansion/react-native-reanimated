@@ -134,6 +134,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
 
   insertContainers(transaction, rootChildCount);
 
+#ifdef ANDROID
+  publishClippingExclusions();
+#endif
+
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 

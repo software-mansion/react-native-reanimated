@@ -262,6 +262,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
 
 #ifdef ANDROID
+  const UpdateClippingExclusionsFunction updateClippingExclusions_;
+
   // Reused across `applySynchronousUpdates` calls to avoid per-frame heap
   // allocations. Access only on the UI thread.
   std::vector<int> synchronousPropsIntBuffer_;
