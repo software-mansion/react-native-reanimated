@@ -2,8 +2,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import 'react-native-reanimated';
 import React from 'react';
-
-import type { Example } from '@/components';
+import type { Example, ExampleEntry } from '@/components';
 import { REAPlatform } from '@/components';
 
 const AboutExample: React.FC = () =>
@@ -16,14 +15,6 @@ const AnimatableRefExample: React.FC = () =>
   React.createElement(require('./AnimatableRefExample').default as React.FC);
 const AnimatedKeyboardExample: React.FC = () =>
   React.createElement(require('./AnimatedKeyboardExample').default as React.FC);
-const AnimatedListExample: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/AnimatedList').default as React.FC
-  );
-const AnimatedTouchables: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/AnimatedTouchables').default as React.FC
-  );
 const AnimatedPropsExample: React.FC = () =>
   React.createElement(require('./AnimatedPropsExample').default as React.FC);
 const AnimatedSensorAccelerometerExample: React.FC = () =>
@@ -62,18 +53,6 @@ const BBExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/BBExample').default as React.FC
   );
-const BasicLayoutAnimation: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/BasicLayoutAnimation').default
-  );
-const BasicNestedAnimation: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/BasicNestedAnimation').default
-  );
-const BasicNestedLayoutAnimation: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/BasicNestedLayoutAnimation').default
-  );
 const BokehExample: React.FC = () =>
   React.createElement(require('./BokehExample').default as React.FC);
 const BorderRadiiExample: React.FC = () =>
@@ -90,10 +69,6 @@ const BouncingBoxExample: React.FC = () =>
   React.createElement(require('./BouncingBoxExample').default as React.FC);
 const BubblesExample: React.FC = () =>
   React.createElement(require('./BubblesExample').default as React.FC);
-const CardExample: React.FC = () =>
-  React.createElement(
-    require('./SharedElementTransitions/Card').default as React.FC
-  );
 const Carousel: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/Carousel').default as React.FC
@@ -144,17 +119,9 @@ const CustomLayoutAnimationScreen: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/CustomLayout').default as React.FC
   );
-const CustomTransitionExample: React.FC = () =>
-  React.createElement(
-    require('./SharedElementTransitions/CustomTransition').default
-  );
 const DefaultAnimations: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DefaultAnimations').default as React.FC
-  );
-const DefaultAnimationsOverrides: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/DefaultAnimationsOverrides').default as React.FC
   );
 const DeleteAncestorOfExiting: React.FC = () =>
   React.createElement(
@@ -168,10 +135,6 @@ const DispatchCommandExample: React.FC = () =>
   React.createElement(require('./DispatchCommandExample').default as React.FC);
 const DragAndSnapExample: React.FC = () =>
   React.createElement(require('./DragAndSnapExample').default as React.FC);
-const DuplicateTagsExample: React.FC = () =>
-  React.createElement(
-    require('./SharedElementTransitions/DuplicateTags').default
-  );
 const DurationZeroExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DurationZero').default as React.FC
@@ -243,10 +206,6 @@ const HabitsExample: React.FC = () =>
   );
 const IPodExample: React.FC = () =>
   React.createElement(require('./IPodExample').default as React.FC);
-const ImageStackExample: React.FC = () =>
-  React.createElement(
-    require('./SharedElementTransitions/ImageStack').default as React.FC
-  );
 const InstanceDiscoveryExample: React.FC = () =>
   React.createElement(
     require('./InstanceDiscoveryExample').default as React.FC
@@ -265,18 +224,10 @@ const KeyframeAnimation: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/KeyframeAnimation').default as React.FC
   );
-const LayoutAnimationExample: React.FC = () =>
-  React.createElement(
-    require('./SharedElementTransitions/LayoutAnimation').default
-  );
 const LayoutAnimationBatchSyncExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/LayoutAnimationBatchSyncExample')
       .default as React.FC
-  );
-const LayoutTransitionExample: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/LayoutTransitionExample').default
   );
 const LettersExample: React.FC = () =>
   React.createElement(require('./LettersExample').default as React.FC);
@@ -292,47 +243,21 @@ const ManyScreensExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ManyScreens').default
   );
-const ManyTagsExample: React.FC = () =>
-  React.createElement(
-    require('./SharedElementTransitions/ManyTags').default as React.FC
-  );
 const MatrixTransform: React.FC = () =>
   React.createElement(require('./MatrixTransform').default as React.FC);
 const MeasureExample: React.FC = () =>
   React.createElement(require('./MeasureExample').default as React.FC);
 const MemoExample: React.FC = () =>
   React.createElement(require('./MemoExample').default as React.FC);
-const Modal: React.FC = () =>
-  React.createElement(require('./LayoutAnimations/Modal').default as React.FC);
 const ModalExitingExample: React.FC = () =>
   React.createElement(require('./ModalExitingExample').default as React.FC);
-const ModalNewAPI: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/ModalNewAPI').default as React.FC
-  );
 const ModalsExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/Modals').default as React.FC
   );
-const MountingUnmounting: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/MountingUnmounting').default as React.FC
-  );
 const MoveWithExiting: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/MoveWithExiting').default as React.FC
-  );
-const NativeModals: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/NativeModals').default as React.FC
-  );
-const NestedLayoutAnimationConfig: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/NestedLayoutAnimationConfig').default
-  );
-const NestedNativeStacksWithLayout: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/NestedNativeStacksWithLayout').default
   );
 const NestedRotationExample: React.FC = () =>
   React.createElement(
@@ -342,8 +267,6 @@ const NestedStacksExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedStacks').default
   );
-const NestedTest: React.FC = () =>
-  React.createElement(require('./LayoutAnimations/Nested').default as React.FC);
 const NewestShadowNodesRegistryRemoveExample: React.FC = () =>
   React.createElement(
     require('./NewestShadowNodesRegistryRemoveExample').default
@@ -354,10 +277,6 @@ const NonLayoutPropAndRenderExample: React.FC = () =>
   );
 const OldMeasureExample: React.FC = () =>
   React.createElement(require('./OldMeasureExample').default as React.FC);
-const OlympicAnimation: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/OlympicAnimation').default as React.FC
-  );
 const OpacityTransformExample: React.FC = () =>
   React.createElement(require('./OpacityTransformExample').default as React.FC);
 const OverlappingBoxesExample: React.FC = () =>
@@ -384,19 +303,11 @@ const ProgressTransitionExample: React.FC = () =>
   );
 const RainbowExample: React.FC = () =>
   React.createElement(require('./RainbowExample').default as React.FC);
-const ReactionsCounterExample: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/ReactionsCounterExample').default
-  );
 const ReducedMotionExample: React.FC = () =>
   React.createElement(require('./ReducedMotionExample').default as React.FC);
 const ReducedMotionLayoutExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/ReducedMotionLayoutExample').default
-  );
-const ReducedMotionSharedExample: React.FC = () =>
-  React.createElement(
-    require('./SharedElementTransitions/ReducedMotionSharedExample').default
   );
 const RefExample: React.FC = () =>
   React.createElement(require('./RefExample').default as React.FC);
@@ -442,10 +353,6 @@ const SharedStyleExample: React.FC = () =>
   React.createElement(require('./SharedStyleExample').default as React.FC);
 const SlowAnimationsExample: React.FC = () =>
   React.createElement(require('./SlowAnimationsExample').default as React.FC);
-const SpringLayoutAnimation: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/SpringLayoutAnimation').default
-  );
 const SpringPresetsExample: React.FC = () =>
   React.createElement(require('./SpringPresetsExample').default as React.FC);
 const StickyHeaderExample: React.FC = () =>
@@ -458,10 +365,6 @@ const StrictModeComparison: React.FC = () =>
   );
 const SvgExample: React.FC = () =>
   React.createElement(require('./SvgExample').default as React.FC);
-const SwipeableList: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/SwipeableList').default as React.FC
-  );
 const SwipeableListExample: React.FC = () =>
   React.createElement(require('./SwipeableListExample').default as React.FC);
 const SyncBackToReactExample: React.FC = () =>
@@ -505,7 +408,7 @@ const WithoutBabelPluginExample: React.FC = () =>
 const WobbleExample: React.FC = () =>
   React.createElement(require('./WobbleExample').default as React.FC);
 
-export const EXAMPLES: Record<string, Example> = {
+const ALL_EXAMPLES: Record<string, Example> = {
   // About
   AboutExample: {
     icon: 'ℹ️',
@@ -1059,29 +962,9 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Interrupted exiting animation (#7493)',
     screen: InterruptedExitingExample,
   },
-  NestedNativeStacksWithLayout: {
-    title: '[LA] Nested NativeStacks with layout',
-    screen: NestedNativeStacksWithLayout,
-  },
-  BasicLayoutAnimation: {
-    title: '[LA] Basic layout animation',
-    screen: BasicLayoutAnimation,
-  },
   LayoutAnimationBatchSync: {
     title: '[LA] Batch synchronization',
     screen: LayoutAnimationBatchSyncExample,
-  },
-  BasicNestedAnimation: {
-    title: '[LA] Basic nested animation',
-    screen: BasicNestedAnimation,
-  },
-  BasicNestedLayoutAnimation: {
-    title: '[LA] Basic nested layout animation',
-    screen: BasicNestedLayoutAnimation,
-  },
-  NestedLayoutAnimations: {
-    title: '[LA] Nested layout animations',
-    screen: NestedTest,
   },
   CombinedLayoutAnimations: {
     title: '[LA] Entering and Exiting with Layout',
@@ -1091,65 +974,21 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Default layout animations',
     screen: DefaultAnimations,
   },
-  DefaultTransitions: {
-    title: '[LA] Default layout transitions',
-    screen: LayoutTransitionExample,
-  },
   KeyframeAnimation: {
     title: '[LA] Keyframe animation',
     screen: KeyframeAnimation,
-  },
-  ParticipantList: {
-    title: '[LA] Participant List',
-    screen: AnimatedListExample,
-  },
-  AnimatedTouchables: {
-    title: '[LA] Animated Touchables',
-    screen: AnimatedTouchables,
-  },
-  OlympicAnimation: {
-    title: '[LA] Olympic animation',
-    screen: OlympicAnimation,
   },
   CustomLayoutAnimation: {
     title: '[LA] Custom layout animation',
     screen: CustomLayoutAnimationScreen,
   },
-  ModalNewAPI: {
-    title: '[LA] ModalNewAPI',
-    screen: ModalNewAPI,
-  },
-  SpringLayoutAnimation: {
-    title: '[LA] Spring Layout Animation',
-    screen: SpringLayoutAnimation,
-  },
-  MountingUnmounting: {
-    title: '[LA] Mounting Unmounting',
-    screen: MountingUnmounting,
-  },
   StrictModeComparison: {
     title: '[LA] Strict Mode Comparison',
     screen: StrictModeComparison,
   },
-  ReactionsCounterExample: {
-    title: '[LA] Reactions counter',
-    screen: ReactionsCounterExample,
-  },
   ListItemLayoutAnimation: {
     title: '[LA] List item layout animation',
     screen: ListItemLayoutAnimation,
-  },
-  SwipeableList: {
-    title: '[LA] Swipeable list',
-    screen: SwipeableList,
-  },
-  Modal: {
-    title: '[LA] Modal',
-    screen: Modal,
-  },
-  NativeModals: {
-    title: '[LA] Native modals (RN and Screens)',
-    screen: NativeModals,
   },
   Carousel: {
     title: '[LA] Carousel',
@@ -1158,10 +997,6 @@ export const EXAMPLES: Record<string, Example> = {
   ReducedMotionLayoutExample: {
     title: '[LA] Reduced Motion',
     screen: ReducedMotionLayoutExample,
-  },
-  NestedLayoutAnimationConfig: {
-    title: '[LA] Nested LayoutAnimationConfig',
-    screen: NestedLayoutAnimationConfig,
   },
   FlatListSkipEnteringExiting: {
     title: '[LA] FlatList skip entering & exiting',
@@ -1203,10 +1038,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Exiting tag reuse stress',
     screen: ExitingTagReuseStressExample,
   },
-  DefaultAnimationsOverrides: {
-    title: '[LA] Default layout animations overrides',
-    screen: DefaultAnimationsOverrides,
-  },
   NestedExitingCleanupExample: {
     icon: '🧹',
     title: '[LA] Nested exiting cleanup',
@@ -1219,41 +1050,9 @@ export const EXAMPLES: Record<string, Example> = {
 
   // Shared Element Transitions
 
-  CardExample: {
-    title: '[SET] Card',
-    screen: CardExample,
-    shouldWork: {
-      ios: true,
-      android: true,
-    },
-  },
-  CustomTransitionExample: {
-    title: '[SET] Custom transition',
-    screen: CustomTransitionExample,
-    shouldWork: {
-      ios: true,
-      android: true,
-    },
-  },
-  LayoutAnimationExample: {
-    title: '[SET] Layout Animation',
-    screen: LayoutAnimationExample,
-    shouldWork: {
-      ios: true,
-      android: true,
-    },
-  },
   ManyScreensExample: {
     title: '[SET] Many screens',
     screen: ManyScreensExample,
-    shouldWork: {
-      ios: true,
-      android: true,
-    },
-  },
-  ManyTagsExample: {
-    title: '[SET] Many tags',
-    screen: ManyTagsExample,
     shouldWork: {
       ios: true,
       android: true,
@@ -1283,14 +1082,6 @@ export const EXAMPLES: Record<string, Example> = {
       android: true,
     },
   },
-  ImageStackExample: {
-    title: '[SET] Image Stack',
-    screen: ImageStackExample,
-    shouldWork: {
-      ios: true,
-      android: true,
-    },
-  },
   RestoreStateExample: {
     title: '[SET] Restore State',
     screen: RestoreStateExample,
@@ -1298,14 +1089,6 @@ export const EXAMPLES: Record<string, Example> = {
       ios: true,
       android: true,
     },
-  },
-  DuplicateTagsExample: {
-    title: '[SET] Duplicate Tags',
-    screen: DuplicateTagsExample,
-  },
-  ReducedMotionSharedExample: {
-    title: '[SET] Reduced Motion',
-    screen: ReducedMotionSharedExample,
   },
   TransitionRestartExample: {
     title: '[SET] Transition Restart',
@@ -1356,3 +1139,50 @@ export const EXAMPLES: Record<string, Example> = {
     },
   },
 } as const;
+
+/**
+ * `[LA]` and `[SET]` in a title are what assign a screen to its group, matching
+ * the prefix convention the titles already used while the list was flat.
+ */
+function withTitlePrefix(prefix: string): Record<string, Example> {
+  return Object.fromEntries(
+    Object.entries(ALL_EXAMPLES).filter(([, example]) =>
+      example.title.startsWith(prefix)
+    )
+  );
+}
+
+function withoutTitlePrefixes(
+  prefixes: Array<string>
+): Record<string, Example> {
+  return Object.fromEntries(
+    Object.entries(ALL_EXAMPLES).filter(
+      ([, example]) =>
+        !prefixes.some((prefix) => example.title.startsWith(prefix))
+    )
+  );
+}
+
+const LAYOUT_ANIMATION_PREFIX = '[LA]';
+const SHARED_ELEMENT_TRANSITION_PREFIX = '[SET]';
+
+export const EXAMPLES: Record<string, ExampleEntry> = {
+  LayoutAnimations: {
+    examples: withTitlePrefix(LAYOUT_ANIMATION_PREFIX),
+    icon: '📐',
+    title: 'Layout Animations',
+  },
+  SharedElementTransitions: {
+    examples: withTitlePrefix(SHARED_ELEMENT_TRANSITION_PREFIX),
+    icon: '🔗',
+    title: 'Shared Element Transitions',
+  },
+  Examples: {
+    examples: withoutTitlePrefixes([
+      LAYOUT_ANIMATION_PREFIX,
+      SHARED_ELEMENT_TRANSITION_PREFIX,
+    ]),
+    icon: '🎠',
+    title: 'Examples',
+  },
+};
