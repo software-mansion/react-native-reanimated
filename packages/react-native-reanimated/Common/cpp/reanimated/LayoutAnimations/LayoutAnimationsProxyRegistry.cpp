@@ -94,9 +94,6 @@ void LayoutAnimationsProxyRegistry::flushLayoutAnimationOperations() const {
 }
 
 void LayoutAnimationsProxyRegistry::applySynchronousProps(const UpdatesBatch &updatesBatch) {
-  if constexpr (!StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    return;
-  }
   for (const auto &instance : instances()) {
     instance->applySynchronousProps(updatesBatch);
   }
