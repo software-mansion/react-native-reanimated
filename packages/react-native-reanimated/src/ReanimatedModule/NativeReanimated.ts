@@ -251,6 +251,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.#reanimatedModuleProxy.getSettledUpdates();
   }
 
+  removeOrphanedProps() {
+    this.#reanimatedModuleProxy.removeOrphanedProps();
+  }
+
   registerPseudoStyles(
     shadowNodeWrapper: ShadowNodeWrapper,
     config: CSSPseudoStyleConfig
@@ -304,6 +308,8 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   getSettledUpdates(): SettledUpdate[] {
     return [];
   }
+
+  removeOrphanedProps(): void {}
 
   registerPseudoStyles(): void {}
   unregisterPseudoStyles(): void {}
