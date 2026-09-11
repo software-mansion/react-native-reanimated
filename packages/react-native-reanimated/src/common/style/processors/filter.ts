@@ -189,17 +189,14 @@ const parseFilterString = (
       return [];
     }
 
-    // `drop-shadow` and `hue-rotate` are the only CSS filter functions whose
-    // names are not already camelCase. React Native's own processFilter
-    // camelizes them the same way before dispatching.
-    const camelizedName =
-      name === 'drop-shadow'
-        ? 'dropShadow'
-        : name === 'hue-rotate'
-          ? 'hueRotate'
-          : name;
+    let filterName = name;
+    if (filterName === 'drop-shadow') {
+      filterName = 'dropShadow';
+    } else if (filterName === 'hue-rotate') {
+      filterName = 'hueRotate';
+    }
 
-    const parsed = parseFilterProperty(camelizedName, content, context);
+    const parsed = parseFilterProperty(filterName, content, context);
     if (parsed === null) {
       return [];
     }
