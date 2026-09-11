@@ -4,6 +4,13 @@
 
 #include <functional>
 #include <stdexcept>
+#include <string>
+
+#if defined(__APPLE__) && defined(__OBJC__)
+#import <React/RCTLog.h>
+#elif defined(ANDROID)
+#include <android/log.h>
+#endif
 
 using namespace facebook;
 
@@ -48,12 +55,23 @@ struct RuntimeBindings {
 #endif // WORKLETS_FETCH_PREVIEW_ENABLED
 };
 
-inline RuntimeBindings::NativeLoggingHook extractNativeLoggingHookFromRNRuntime(jsi::Runtime &rnRuntime) {
-  auto nativeLoggingHookValue = rnRuntime.global().getProperty(rnRuntime, "nativeLoggingHook");
-  if (!nativeLoggingHookValue.isObject() || !nativeLoggingHookValue.asObject(rnRuntime).isFunction(rnRuntime)) {
-    throw std::runtime_error("[Worklets] nativeLoggingHook is missing.");
-  }
-  return nativeLoggingHookValue.asObject(rnRuntime).asFunction(rnRuntime).getHostFunction(rnRuntime);
+#if defined(ANDROID) || (defined(__APPLE__) && defined(__OBJC__))
+inline RuntimeBindings::NativeLoggingHook makeNativeLoggingHook() {
+  return [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) -> jsi::Value {
+    if (count != 2) {
+      throw std::invalid_argument("nativeLoggingHook takes 2 arguments");
+    }
+    const auto message = args[0].asString(rt).utf8(rt);
+    const auto logLevel = static_cast<unsigned int>(args[1].asNumber());
+#if defined(__APPLE__)
+    _RCTLogJavaScriptInternal(static_cast<RCTLogLevel>(logLevel), [NSString stringWithUTF8String:message.c_str()]);
+#else
+    __android_log_write(
+        static_cast<android_LogPriority>(logLevel + ANDROID_LOG_DEBUG), "ReactNativeJS", message.c_str());
+#endif
+    return jsi::Value::undefined();
+  };
 }
+#endif // defined(ANDROID) || (defined(__APPLE__) && defined(__OBJC__))
 
 } // namespace worklets

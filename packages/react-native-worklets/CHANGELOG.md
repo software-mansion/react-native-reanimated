@@ -14,16 +14,21 @@
 
 ### 🎉 New features
 
+- Add iOS Swift Package Manager support via `Package.swift` and SPM integration metadata in `react-native.config.js`. ([#10472](https://github.com/software-mansion/react-native-reanimated/pull/10472) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
+
 \[General] Per-runtime caching for RetainingSerializable
 
 - Add `isOnUIThread` to the Worklets Stable API.
 - Add the fast-path `fixedType` option to `createSynchronizable`. A fixed-type Synchronizable holds a number or a boolean without serialization and exposes `setDirty`, a non-exclusive write that doesn't wait for other `setDirty` calls. ([#10296](https://github.com/software-mansion/react-native-reanimated/pull/10296) by [@tjzel](https://github.com/tjzel))
 - The Babel plugin treats `navigator` as a known global: worklets resolve it on their own runtime instead of capturing the main runtime's object by closure. ([#10364](https://github.com/software-mansion/react-native-reanimated/pull/10364) by [@wcandillon](https://github.com/wcandillon))
 - Add an OXC port of the Babel plugin for Bundle Mode. ([#9518](https://github.com/software-mansion/react-native-reanimated/pull/9518) by [@tshmieldev](https://github.com/tshmieldev))
+- Add `getCurrentThreadId` as public JavaScript API.
+- Autoworkletize the fourth argument of `withTiming` and `withSpring`. ([#10467](https://github.com/software-mansion/react-native-reanimated/pull/10467) by [@piaskowyk](https://github.com/piaskowyk))
 
 ### 🐛 Bug fixes
 
 - Fix a crash on Android when the React instance is recreated while animations are running - `AnimationFrameQueue` kept delivering frames after `WorkletsModule` was invalidated. ([#10278](https://github.com/software-mansion/react-native-reanimated/pull/10278) by [@shubhamdeol](https://github.com/shubhamdeol))
+- Stop `AnimationFrameQueue` from dispatching the rest of a frame batch when `WorkletsModule` is invalidated from inside a frame callback. ([#10464](https://github.com/software-mansion/react-native-reanimated/pull/10464) by [@tjzel](https://github.com/tjzel))
 - Fix a data race between `getDirty` and `setBlocking` on a Synchronizable - the pointer holding the value is now read and written atomically. ([#10292](https://github.com/software-mansion/react-native-reanimated/pull/10292) by [@tjzel](https://github.com/tjzel))
 - Fix `setBlocking` leaving a Synchronizable locked forever in development builds when the updater function or the serializer throws. ([#10331](https://github.com/software-mansion/react-native-reanimated/pull/10331) by [@tjzel](https://github.com/tjzel))
 - Compare the Synchronizable's imperative lock owner with `std::thread::id` instead of comparing `pthread_t` with `==`, which POSIX doesn't define. ([#10349](https://github.com/software-mansion/react-native-reanimated/pull/10349) by [@tjzel](https://github.com/tjzel))
@@ -37,6 +42,10 @@
 
 ### 💡 Others
 
+- Build `nativeLoggingHook` for Worklet Runtimes natively instead of reading React Native's host function from the RN Runtime. ([#10488](https://github.com/software-mansion/react-native-reanimated/pull/10488) by [@tjzel](https://github.com/tjzel))
+- Drop the `RCTEventEmitter` base class from `WorkletsModule` on iOS. The module never emitted events, so it now inherits from `NSObject` and declares the `bridge` property itself. ([#10485](https://github.com/software-mansion/react-native-reanimated/pull/10485) by [@tjzel](https://github.com/tjzel))
+- Pass arguments to batched UI worklets separately instead of capturing them in wrapper worklets, reducing worklet serialization. ([#10466](https://github.com/software-mansion/react-native-reanimated/pull/10466) by [@tshmieldev](https://github.com/tshmieldev))
+- Mark the special-case `__proto__` object reconstruction path as unlikely. ([#10465](https://github.com/software-mansion/react-native-reanimated/pull/10465) by [@tshmieldev](https://github.com/tshmieldev))
 - Update the sponsors section in the README. ([#10347](https://github.com/software-mansion/react-native-reanimated/pull/10347) by [@m-bert](https://github.com/m-bert))
 - bump Worklets version to 0.13.0
 - Split every C++ `Serializable` subclass into a dedicated file under `SharedItems/Serializable/`, with its factory function alongside. No behavior change. ([#10345](https://github.com/software-mansion/react-native-reanimated/pull/10345) by [@tjzel](https://github.com/tjzel))
