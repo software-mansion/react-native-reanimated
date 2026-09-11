@@ -42,6 +42,7 @@
 
 ### 💡 Others
 
+- In Bundle Mode, evaluate the bundle on the UI Worklet Runtime on a background thread while the RN Runtime evaluates it, instead of on the JS thread in `start`. `bundleModeMetroConfig` prepends a polyfill that triggers it. ([#10490](https://github.com/software-mansion/react-native-reanimated/pull/10490) by [@tjzel](https://github.com/tjzel))
 - Create the native side of `WorkletsModule` on a background thread as soon as the module is created, so `installTurboModule` only attaches it to the RN Runtime. ([#10489](https://github.com/software-mansion/react-native-reanimated/pull/10489) by [@tjzel](https://github.com/tjzel))
 - Build `nativeLoggingHook` for Worklet Runtimes natively instead of reading React Native's host function from the RN Runtime. ([#10488](https://github.com/software-mansion/react-native-reanimated/pull/10488) by [@tjzel](https://github.com/tjzel))
 - Drop the `RCTEventEmitter` base class from `WorkletsModule` on iOS. The module never emitted events, so it now inherits from `NSObject` and declares the `bridge` property itself. ([#10485](https://github.com/software-mansion/react-native-reanimated/pull/10485) by [@tjzel](https://github.com/tjzel))

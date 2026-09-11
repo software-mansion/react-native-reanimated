@@ -11,6 +11,7 @@ const TOGGLE_PATHS: &[&str] = &[
     "react-native-worklets/src/debug/bundleMode.native.ts",
     "react-native-worklets/lib/module/index.js",
     "react-native-worklets/lib/module/debug/bundleMode.native.js",
+    "react-native-worklets/bundleMode/polyfills/prepareBundleMode.js",
 ];
 
 pub fn enable_flag<'a>(program: &mut Program<'a>, builder: AstBuilder<'a>, filename: &str) -> bool {

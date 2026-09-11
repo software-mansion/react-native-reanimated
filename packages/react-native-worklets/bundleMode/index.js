@@ -7,6 +7,11 @@ const turboModuleRegistryShimPath = path.join(
   'shims',
   'turboModuleRegistryShim.js'
 );
+const prepareBundleModePolyfillPath = path.join(
+  __dirname,
+  'polyfills',
+  'prepareBundleMode.js'
+);
 const turboModuleRegistryModuleName =
   'react-native/Libraries/TurboModule/TurboModuleRegistry';
 const turboModuleRegistryFileSuffix = path.join(
@@ -78,6 +83,7 @@ function bundleModeResolveRequest(
 const bundleModeMetroConfig = {
   serializer: {
     createModuleIdFactory: bundleModeCreateModuleIdFactory,
+    polyfillModuleNames: [prepareBundleModePolyfillPath],
   },
   resolver: {
     resolveRequest: (
@@ -117,6 +123,10 @@ const bundleModeMetroConfig = {
 /** Use in Expo projects. */
 function getBundleModeMetroConfig(/** @type {any} */ config) {
   config.serializer.createModuleIdFactory = bundleModeCreateModuleIdFactory;
+  config.serializer.polyfillModuleNames = [
+    ...(config.serializer.polyfillModuleNames ?? []),
+    prepareBundleModePolyfillPath,
+  ];
 
   const currentResolveRequest = config?.resolver?.resolveRequest;
   config.resolver.resolveRequest = (
