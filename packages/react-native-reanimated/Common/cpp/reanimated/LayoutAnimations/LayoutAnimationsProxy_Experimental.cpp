@@ -5,6 +5,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
+#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #ifdef ANDROID
@@ -40,7 +41,27 @@ LayoutAnimationsProxy_Experimental::LayoutAnimationsProxy_Experimental(
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
 #endif
+#ifndef NDEBUG
+  hasSynchronousProps_ = dependencies.hasSynchronousProps;
+#endif
 }
+
+#ifndef NDEBUG
+void LayoutAnimationsProxy_Experimental::warnIfSynchronousPropsMissing(const Tag tag, const char *animationKind) const {
+  if (DynamicFeatureFlags::getFlag("SYNCHRONOUS_PROPS_IN_LIGHT_TREE") || !hasSynchronousProps_ ||
+      !hasSynchronousProps_(tag) || !warnedSynchronousPropsTags_.insert(tag).second) {
+    return;
+  }
+  scheduleOnUI(uiScheduler_, [&uiRuntime = uiRuntime_, tag, animationKind]() {
+    const auto consoleWarn =
+        uiRuntime.global().getPropertyAsObject(uiRuntime, "console").getPropertyAsFunction(uiRuntime, "warn");
+    consoleWarn.call(
+        uiRuntime,
+        std::string("[Reanimated] View ") + std::to_string(tag) + " starts a " + animationKind +
+            " with props that were applied through the synchronous path, so it starts from stale values. Set the SYNCHRONOUS_PROPS_IN_LIGHT_TREE dynamic feature flag to true to keep those props in the light tree.");
+  });
+}
+#endif
 
 // MARK: MountingOverrideDelegate
 
@@ -840,6 +861,9 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(
 void LayoutAnimationsProxy_Experimental::startLayoutAnimation(
     const std::shared_ptr<LightNode> &node,
     const std::shared_ptr<Serializable> &config) const {
+#ifndef NDEBUG
+  warnIfSynchronousPropsMissing(node->current.tag, "layout animation");
+#endif
   const auto &oldChildShadowView = node->previous;
   const auto &newChildShadowView = node->current;
   const auto &parent = node->parent.lock();

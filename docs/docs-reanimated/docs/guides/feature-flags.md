@@ -27,6 +27,7 @@ Feature flags are available since Reanimated 4.
 | [`USE_ANIMATION_BACKEND`](#use_animation_backend)                                                   | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
 | [`IOS_CSS_CORE_ANIMATION`](#ios_css_core_animation-and-android_css_platform_transitions)            | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
 | [`ANDROID_CSS_PLATFORM_TRANSITIONS`](#ios_css_core_animation-and-android_css_platform_transitions)  | [static](#static-feature-flags) |  4.6.0   |  –   |                  `false`                  |
+| [`SYNCHRONOUS_PROPS_IN_LIGHT_TREE`](#synchronous_props_in_light_tree)                               | [dynamic](#dynamic-feature-flags)|  4.7.0   |  –   | `false`                                   |
 
 :::info
 
@@ -188,6 +189,12 @@ Known limitation on iOS. `backgroundColor`, `borderColor`, `borderWidth` and `bo
 
 All four share that layer, so this is easiest to hit with a combination of them. A view with a visible border and the default `overflow` doesn't animate its `backgroundColor` either, even though the transition changes nothing about the border. `opacity` and the `shadow*` properties aren't affected, React Native always keeps them on the view's own layer.
 :::
+
+### `SYNCHRONOUS_PROPS_IN_LIGHT_TREE`
+
+When enabled, the props that the synchronous path applies to native views (see `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` and `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`) are also merged into the light tree of the experimental layout animations proxy. Shared element transitions and layout animations then start from the current props of a view that moved through the synchronous path. This costs one props clone per synchronously updated view per frame.
+
+When disabled, a development build logs a warning the first time a shared element transition or a layout animation starts on a view whose synchronous props are missing from the light tree.
 
 ## Static feature flags
 

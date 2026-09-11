@@ -476,6 +476,10 @@ const SyncBackToReactExample: React.FC = () =>
   React.createElement(require('./SyncBackToReactExample').default as React.FC);
 const SynchronousPropsExample: React.FC = () =>
   React.createElement(require('./SynchronousPropsExample').default as React.FC);
+const SyncPropsLayoutAnimationExample: React.FC = () =>
+  React.createElement(
+    require('./SyncPropsLayoutAnimationExample').default as React.FC
+  );
 const SynchronousPropsOverwriteExample: React.FC = () =>
   React.createElement(
     require('./SynchronousPropsOverwriteExample').default as React.FC
@@ -716,6 +720,14 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⚡',
     title: 'Animate synchronous props',
     screen: SynchronousPropsExample,
+  },
+  SyncPropsLayoutAnimationExample: {
+    title: 'Sync Props Layout Animation',
+    screen: SyncPropsLayoutAnimationExample,
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
   },
   SynchronousPropsOverwriteExample: {
     title: 'Synchronous Props Overwrite',

@@ -12,6 +12,7 @@
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
+#include <reanimated/Fabric/updates/SynchronousPropNames.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
@@ -80,51 +81,8 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 #endif
 
 std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBatch, const bool allowPartialUpdates) {
-  static const std::unordered_set<std::string> synchronousPropNames = {
-      "opacity",
-      "elevation",
-      "zIndex",
-      "shadowColor",
-#if __APPLE__
-      "shadowOffset",
-      "shadowOpacity",
-      "shadowRadius",
-#endif // __APPLE__
-      "backgroundColor",
-      // "color", // not supported
-      "tintColor",
-      "placeholderTextColor",
-      "borderRadius",
-      "borderTopLeftRadius",
-      "borderTopRightRadius",
-      "borderTopStartRadius",
-      "borderTopEndRadius",
-      "borderBottomLeftRadius",
-      "borderBottomRightRadius",
-      "borderBottomStartRadius",
-      "borderBottomEndRadius",
-      "borderStartStartRadius",
-      "borderStartEndRadius",
-      "borderEndStartRadius",
-      "borderEndEndRadius",
-      "borderColor",
-      "borderTopColor",
-      "borderBottomColor",
-      "borderLeftColor",
-      "borderRightColor",
-      "borderStartColor",
-      "borderEndColor",
-      "borderBlockColor",
-      "borderBlockStartColor",
-      "borderBlockEndColor",
-      "outlineColor",
-      "outlineOffset",
-      "outlineWidth",
-      "transform",
-  };
-
   const auto isSynchronous = [&](const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
-    if (!synchronousPropNames.contains(keyStr)) {
+    if (!isSynchronousPropName(keyStr)) {
       return false;
     }
 #ifdef ANDROID
@@ -1079,7 +1037,8 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
 
 void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch) {
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    if (layoutAnimationsProxyRegistry_ && !synchronousUpdatesBatch.empty()) {
+    if (layoutAnimationsProxyRegistry_ && !synchronousUpdatesBatch.empty() &&
+        DynamicFeatureFlags::getFlag("SYNCHRONOUS_PROPS_IN_LIGHT_TREE")) {
       layoutAnimationsProxyRegistry_->applySynchronousProps(synchronousUpdatesBatch);
     }
   }
@@ -1291,6 +1250,10 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       uiScheduler_,
       uiManager_,
       requestLayoutAnimationFlush,
+      [updatesRegistryManager = updatesRegistryManager_](const Tag tag) {
+        const auto lock = updatesRegistryManager->lock();
+        return updatesRegistryManager->hasSynchronousProps(tag);
+      },
 #ifdef ANDROID
       filterUnmountedTagsFunction_,
       jsInvoker_,

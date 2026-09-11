@@ -68,6 +68,11 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
 
   mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
+#ifndef NDEBUG
+  std::function<bool(Tag)> hasSynchronousProps_;
+  mutable std::unordered_set<Tag> warnedSynchronousPropsTags_;
+  void warnIfSynchronousPropsMissing(Tag tag, const char *animationKind) const;
+#endif
 
   LayoutAnimationsProxy_Experimental(SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies);
 

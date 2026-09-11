@@ -1,3 +1,4 @@
+#include <reanimated/Fabric/updates/SynchronousPropNames.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
@@ -116,6 +117,22 @@ void UpdatesRegistryManager::appendRegistryProps(PropsMap &propsMap) {
       }
     }
   }
+}
+
+bool UpdatesRegistryManager::hasSynchronousProps(const Tag tag) {
+  react_native_assert(isLockedByCurrentThread());
+  for (const auto &registry : registries_) {
+    const auto props = registry->get(tag);
+    if (!props.isObject()) {
+      continue;
+    }
+    for (const auto &key : props.keys()) {
+      if (isSynchronousPropName(key.asString())) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 #ifdef ANDROID

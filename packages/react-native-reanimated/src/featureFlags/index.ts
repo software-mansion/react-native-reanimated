@@ -5,6 +5,7 @@ import type { StaticFeatureFlagsSchema } from './staticFeatureFlags';
 
 type DynamicFlagsType = {
   EXAMPLE_DYNAMIC_FLAG: boolean;
+  SYNCHRONOUS_PROPS_IN_LIGHT_TREE: boolean;
   init(): void;
   setFlag(name: DynamicFlagName, value: boolean): void;
   getFlag(name: DynamicFlagName): boolean;
@@ -17,6 +18,7 @@ type DynamicFlagName = keyof Omit<
 /** @knipIgnore */
 export const DynamicFlags: DynamicFlagsType = {
   EXAMPLE_DYNAMIC_FLAG: true,
+  SYNCHRONOUS_PROPS_IN_LIGHT_TREE: false,
 
   init() {
     Object.keys(DynamicFlags).forEach((key) => {

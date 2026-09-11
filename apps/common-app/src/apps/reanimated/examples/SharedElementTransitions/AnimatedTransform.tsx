@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  setDynamicFeatureFlag,
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
@@ -65,6 +66,12 @@ const Screen1 = withSharedTransitionBoundary(Screen1Content);
 const Screen2 = withSharedTransitionBoundary(Screen2Content);
 
 export default function AnimatedTransformExample() {
+  React.useEffect(() => {
+    setDynamicFeatureFlag('SYNCHRONOUS_PROPS_IN_LIGHT_TREE', true);
+    return () =>
+      setDynamicFeatureFlag('SYNCHRONOUS_PROPS_IN_LIGHT_TREE', false);
+  }, []);
+
   return (
     <Stack.Navigator>
       <Stack.Screen name="Screen1" component={Screen1} />

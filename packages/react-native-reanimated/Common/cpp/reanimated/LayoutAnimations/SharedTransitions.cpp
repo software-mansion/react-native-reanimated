@@ -265,6 +265,9 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
   if (beforeTopScreen != afterTopScreen) {
     for (auto &[sharedTag, transition] : transaction.transitions) {
       auto &[before, after] = transition.snapshot;
+#ifndef NDEBUG
+      warnIfSynchronousPropsMissing(before.tag, "shared element transition");
+#endif
       const auto &transform = transition.transform;
       overrideTransform(before, transform[BEFORE], propsParserContext);
       overrideTransform(after, transform[AFTER], propsParserContext);
