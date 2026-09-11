@@ -116,6 +116,9 @@ const notCapturedIdentifiers = [
   'arguments', // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
   'require',
   'fetch',
+  'Headers',
+  'Request',
+  'Response',
   'XMLHttpRequest',
   'Blob',
   'FileReader',

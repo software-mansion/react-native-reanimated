@@ -5,9 +5,13 @@ import { FileReader } from './FileReader';
 import { XMLHttpRequest } from './XMLHttpRequest';
 
 /**
- * Installs the networking API on a Worklet Runtime. The native
- * `__workletsNetworking` binding is installed by C++ only on Worklet Runtimes
- * in Bundle Mode, so this function is a no-op anywhere else.
+ * Installs the networking API (`fetch`, `XMLHttpRequest` and their supporting
+ * globals) on a Worklet Runtime. The native `__workletsNetworking` binding is
+ * installed by C++ only on Worklet Runtimes in Bundle Mode, so this function is
+ * a no-op anywhere else.
+ *
+ * All polyfills must be in place before `whatwg-fetch` is required because it
+ * feature-detects them at module scope.
  */
 let installed = false;
 
@@ -21,4 +25,7 @@ export function installNetworking() {
   global.XMLHttpRequest ??= XMLHttpRequest;
   global.Blob ??= Blob;
   global.FileReader ??= FileReader;
+
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require('whatwg-fetch');
 }
