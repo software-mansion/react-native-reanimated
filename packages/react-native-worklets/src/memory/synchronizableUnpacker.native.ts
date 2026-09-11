@@ -3,7 +3,11 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 'use strict';
 
-import { type Synchronizable, type SynchronizableRef } from './types';
+import {
+  type FixedSynchronizable,
+  type Synchronizable,
+  type SynchronizableRef,
+} from './types';
 
 export function installSynchronizableUnpacker() {
   'worklet';
@@ -15,7 +19,8 @@ export function installSynchronizableUnpacker() {
       : (value: unknown) => globalThis.__serializer(value);
 
   function synchronizableUnpacker<TValue>(
-    synchronizableRef: SynchronizableRef<TValue>
+    synchronizableRef: SynchronizableRef<TValue>,
+    isFixed: boolean
   ): Synchronizable<TValue> {
     const synchronizable =
       synchronizableRef as unknown as Synchronizable<TValue>;
@@ -29,7 +34,10 @@ export function installSynchronizableUnpacker() {
       return proxy.synchronizableGetBlocking(synchronizable);
     };
     const setBlockingValue = (newValue: TValue) => {
-      proxy.synchronizableSetBlocking(synchronizable, serializer(newValue));
+      proxy.synchronizableSetBlocking(
+        synchronizable,
+        isFixed ? newValue : serializer(newValue)
+      );
     };
     synchronizable.setBlocking = (
       valueOrFunction: TValue | ((prev: TValue) => TValue)
@@ -59,6 +67,16 @@ export function installSynchronizableUnpacker() {
     synchronizable.unlock = () => {
       proxy.synchronizableUnlock(synchronizable);
     };
+    if (isFixed) {
+      (
+        synchronizable as unknown as FixedSynchronizable<number | boolean>
+      ).setDirty = (value: number | boolean) => {
+        proxy.synchronizableSetDirty(
+          synchronizable as unknown as SynchronizableRef<number | boolean>,
+          value
+        );
+      };
+    }
 
     return synchronizable;
   }
@@ -67,5 +85,6 @@ export function installSynchronizableUnpacker() {
 }
 
 export type SynchronizableUnpacker = <TValue>(
-  synchronizableRef: SynchronizableRef<TValue>
+  synchronizableRef: SynchronizableRef<TValue>,
+  isFixed: boolean
 ) => Synchronizable<TValue>;

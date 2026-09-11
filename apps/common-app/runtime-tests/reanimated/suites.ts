@@ -53,6 +53,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/core/useSharedValue/synchronization.test');
       require('./tests/core/useSharedValue/numbers.test');
       require('./tests/core/useSharedValue/arrays.test');
+      require('./tests/core/useSharedValue/modify.test');
       require('./tests/core/useSharedValue/objects.test');
       require('./tests/core/useSharedValue/assigningObjects.test');
       require('./tests/core/useSharedValue/convergence.test');

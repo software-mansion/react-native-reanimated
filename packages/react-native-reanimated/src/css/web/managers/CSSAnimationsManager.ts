@@ -220,7 +220,8 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     const animationDelays = animationSettings.animationDelay ?? [];
     this.element.style.animationDelay = processedAnimations
       .map(({ elapsedTime }, i) => {
-        const providedDelay = animationDelays[i] ?? 0;
+        // Repeat delays as CSS does before applying each animation's elapsed time.
+        const providedDelay = animationDelays[i % animationDelays.length] ?? 0;
         return maybeAddSuffix(
           elapsedTime
             ? (normalizeTimeUnit(providedDelay) ?? 0) - elapsedTime

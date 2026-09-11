@@ -211,7 +211,7 @@ describe('Test createSerializable', () => {
           remoteFunction = 8,
           array = 9,
           workletFunction = 10,
-          initializer = 11,
+          regExp = 11,
           arrayBuffer = 12,
         }
         const arrayBuffer = new ArrayBuffer(3);
@@ -246,7 +246,7 @@ describe('Test createSerializable', () => {
             'worklet';
             return 1;
           },
-          // initializer - regexp
+          // regexp
           /a/,
           // array buffer
           arrayBuffer,
@@ -281,9 +281,9 @@ describe('Test createSerializable', () => {
             // worklet function
             typeof arrayValue[index.workletFunction] === 'function',
             arrayValue[index.workletFunction]() === 1,
-            // initializer - regexp
-            arrayValue[index.initializer] instanceof RegExp,
-            arrayValue[index.initializer].test('a'),
+            // regexp
+            arrayValue[index.regExp] instanceof RegExp,
+            arrayValue[index.regExp].test('a'),
             // array buffer
             arrayValue[index.arrayBuffer] instanceof ArrayBuffer,
             arrayValue[index.arrayBuffer].byteLength === 3,
@@ -474,7 +474,7 @@ describe('Test createSerializable', () => {
         expect(result).toBe(true);
       });
 
-      test('createSerializableInitializer', async () => {
+      test('createSerializableRegExp', async () => {
         const regExpValue = /a/;
         scheduleOnTarget(() => {
           'worklet';
@@ -498,7 +498,7 @@ describe('Test createSerializable', () => {
           remoteFunction = 8,
           array = 9,
           workletFunction = 10,
-          initializer = 11,
+          regExp = 11,
           arrayBuffer = 12,
         }
         const obj = {
@@ -518,7 +518,7 @@ describe('Test createSerializable', () => {
             'worklet';
             return 2;
           },
-          [key.initializer]: /test/,
+          [key.regExp]: /test/,
           [key.arrayBuffer]: new ArrayBuffer(3),
         };
 
@@ -541,8 +541,8 @@ describe('Test createSerializable', () => {
             obj[key.array].length === 1,
             obj[key.array][0] === 1,
             obj[key.workletFunction]() === 2,
-            obj[key.initializer] instanceof RegExp,
-            obj[key.initializer].test('test'),
+            obj[key.regExp] instanceof RegExp,
+            obj[key.regExp].test('test'),
             obj[key.arrayBuffer] instanceof ArrayBuffer,
             obj[key.arrayBuffer].byteLength === 3,
           ];

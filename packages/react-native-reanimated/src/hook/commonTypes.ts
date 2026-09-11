@@ -8,7 +8,7 @@ import type {
   TextStyle,
   ViewStyle,
 } from 'react-native';
-import type { WorkletFunction } from 'react-native-worklets';
+import type { ShareableHost, WorkletFunction } from 'react-native-worklets';
 
 import type { Maybe } from '../common';
 import type {
@@ -61,16 +61,9 @@ export type AnimatedRef<TRef extends InstanceOrElement = HostInstance> = {
   getTag?: () => Maybe<number>;
 };
 
-// Might make that type generic if it's ever needed.
-export type AnimatedRefOnJS = AnimatedRef<InternalHostInstance>;
+export type AnimatedRefOnRN = AnimatedRef<InternalHostInstance>;
 
-/**
- * `AnimatedRef` is mapped to this type on the UI thread via a serializable
- * handle.
- */
-export type AnimatedRefOnUI = {
-  (): number | ShadowNodeWrapper | null;
-};
+export type AnimatedRefOnUI = ShareableHost<ShadowNodeWrapper | null>;
 
 type ReanimatedPayload = {
   eventName: string;

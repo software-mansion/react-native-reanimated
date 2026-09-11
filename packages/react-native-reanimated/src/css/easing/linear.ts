@@ -38,6 +38,13 @@ const parsePercentage = (percentage: string | number): number => {
 };
 
 const extrapolate = (x: number, point1: Point, point2: Point) => {
+  // Two stops at the same input progress form a vertical jump, so there is no
+  // slope to extend through them. An input before the jump keeps the value
+  // going into it, an input after it keeps the value coming out.
+  // https://drafts.csswg.org/css-easing-2/#linear-easing-function-output
+  if (point1.x === point2.x) {
+    return x <= point1.x ? point1.y : point2.y;
+  }
   const slope = (point2.y - point1.y) / (point2.x - point1.x);
   return point1.y + slope * (x - point1.x);
 };
@@ -106,8 +113,10 @@ export class LinearEasing implements ParametrizedTimingFunction {
     // than the input progress value of any preceding control point, set
     // its input progress value to the largest input progress value of
     // any preceding control point.
-    let maxPrecedingX = 0;
-    for (let i = 1; i < result.length - 1; i++) {
+    // Step 2 fills the last point in only when it is missing, so an explicit
+    // value there still has to be clamped like any other.
+    let maxPrecedingX = -Infinity;
+    for (let i = 0; i < result.length; i++) {
       const x = result[i].x;
       if (x !== undefined) {
         if (x < maxPrecedingX) {

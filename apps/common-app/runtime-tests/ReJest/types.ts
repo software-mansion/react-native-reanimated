@@ -146,6 +146,7 @@ export type TestProgress = {
 export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
   onProgress?: (progress: TestProgress) => void;
+  onSuiteFinished?: (suiteName: string) => void;
 };
 
 export type Mismatch = {
@@ -168,8 +169,6 @@ declare global {
   var originalNotifyAboutProgress:
     | ((tag: number, value: Record<string, unknown>) => void)
     | undefined;
-  var originalCallMicrotasks: (() => void) | undefined;
-  var __callMicrotasks: () => void;
   var scheduleOnRN: typeof import('react-native-worklets').scheduleOnRN;
   var originalNativeRequestAnimationFrame:
     | ((callback: (timestamp: number) => void) => void)
