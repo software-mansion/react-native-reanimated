@@ -94,13 +94,13 @@ describe('CSSCallbackListeners (web)', () => {
     expect(onFooAgain).toHaveBeenCalledWith({ detail: 'b' });
   });
 
-  test('scheduled detach keeps listeners through cancellation event dispatch', () => {
-    let frameCallback: FrameRequestCallback | undefined;
+  test('scheduled detach waits through the following rendering update', () => {
+    const frameCallbacks: FrameRequestCallback[] = [];
     jest
       .spyOn(global, 'requestAnimationFrame')
       .mockImplementation((callback) => {
-        frameCallback = callback;
-        return 1;
+        frameCallbacks.push(callback);
+        return frameCallbacks.length;
       });
     const onFoo = jest.fn();
     listeners.sync({ onFoo });
@@ -109,9 +109,19 @@ describe('CSSCallbackListeners (web)', () => {
     element.dispatchEvent(namedEvent('foo', 'before-frame'));
     expect(onFoo).toHaveBeenCalledWith({ detail: 'before-frame' });
 
-    frameCallback?.(0);
-    element.dispatchEvent(namedEvent('foo', 'after-frame'));
-    expect(onFoo).toHaveBeenCalledTimes(1);
+    frameCallbacks.shift()?.(0);
+    element.dispatchEvent(namedEvent('foo', 'after-first-frame'));
+    expect(onFoo).toHaveBeenCalledWith({ detail: 'after-first-frame' });
+
+    frameCallbacks.shift()?.(16);
+    element.dispatchEvent(namedEvent('foo', 'after-second-frame'));
+    expect(onFoo).toHaveBeenCalledTimes(2);
+  });
+
+  test('does not schedule detach when no listeners are attached', () => {
+    const requestSpy = jest.spyOn(global, 'requestAnimationFrame');
+    listeners.scheduleDetach();
+    expect(requestSpy).not.toHaveBeenCalled();
   });
 
   test('sync cancels a scheduled detach when the manager is reused', () => {

@@ -30,9 +30,18 @@ export class CSSCallbackListeners<
   }
 
   scheduleDetach(): void {
+    if (this.attachedListeners.size === 0) {
+      return;
+    }
+
     this.detachFrame ??= requestAnimationFrame(() => {
-      this.detachFrame = null;
-      this.detach();
+      // If cleanup starts during the browser's animation-event dispatch, a
+      // callback queued here can still run in the same rendering update. Wait
+      // one more frame so cancellation events from the next update arrive.
+      this.detachFrame = requestAnimationFrame(() => {
+        this.detachFrame = null;
+        this.detach();
+      });
     });
   }
 
