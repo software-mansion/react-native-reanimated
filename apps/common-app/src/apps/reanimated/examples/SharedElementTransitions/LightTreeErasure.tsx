@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  getDynamicFeatureFlag,
   setDynamicFeatureFlag,
   useAnimatedStyle,
   useSharedValue,
@@ -88,9 +89,10 @@ const Screen2 = withSharedTransitionBoundary(Screen2Content);
 
 export default function LightTreeErasureExample() {
   React.useEffect(() => {
+    const previous = getDynamicFeatureFlag('SYNCHRONOUS_PROPS_IN_LIGHT_TREE');
     setDynamicFeatureFlag('SYNCHRONOUS_PROPS_IN_LIGHT_TREE', true);
     return () =>
-      setDynamicFeatureFlag('SYNCHRONOUS_PROPS_IN_LIGHT_TREE', false);
+      setDynamicFeatureFlag('SYNCHRONOUS_PROPS_IN_LIGHT_TREE', previous);
   }, []);
 
   return (
