@@ -39,7 +39,7 @@ jobs:
           cat /tmp/react-native-versions.json >> $GITHUB_OUTPUT
 
   reanimated-compatibility-check-nightly:
-    if: ${{github.repository == 'software-mansion/react-native-reanimated' && (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'Check compatibility'))}}
+    if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ${{matrix.platform == 'iOS' && 'macos-26' || 'ubuntu-latest'}}
     needs: read-compatibility-json
     strategy:
@@ -78,6 +78,16 @@ jobs:
               echo "SKIP_BUILD=true" >> $GITHUB_OUTPUT
             fi
 
+      - name: Check SPM eligibility
+        id: spm-eligibility
+        run: |
+          RN_MINOR="$(echo "${{ matrix.react-native-version }}" | cut -d. -f2)"
+          if [ "$RN_MINOR" -ge 87 ]; then
+            echo "run_spm=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_spm=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run Reanimated Compatibility Check
         if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
         uses: ./.github/actions/reanimated-compatibility-check-build
@@ -87,3 +97,4 @@ jobs:
           mode: ${{ matrix.mode }}
           github-sha: ${{ github.sha }}
           app-name: ${{ env.APP_NAME }}
+          run-spm: ${{ matrix.platform == 'iOS' && steps.spm-eligibility.outputs.run_spm == 'true' }}

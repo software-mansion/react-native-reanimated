@@ -17,6 +17,10 @@ inputs:
     description: Name of the test app
     default: 'app'
     required: false
+  run-spm:
+    description: After the CocoaPods iOS build, deintegrate and rebuild via SPM
+    default: 'false'
+    required: false
 
 runs:
   using: 'composite'
@@ -60,11 +64,21 @@ runs:
       working-directory: ${{ inputs.app-name }}/ios
       shell: bash
       run: bundle install && bundle exec pod update
-    - name: Build app (iOS)
+    - name: Build app (iOS, CocoaPods)
       if: ${{ inputs.platform == 'iOS' }}
       working-directory: ${{ inputs.app-name }}/ios
       shell: bash
       run: xcodebuild -workspace ${{inputs.app-name}}.xcworkspace -configuration ${{inputs.mode}} -scheme ${{inputs.app-name}} -destination "generic/platform=iOS Simulator" -quiet
+    - name: SPM scaffold
+      if: ${{ inputs.platform == 'iOS' && inputs.run-spm == 'true' }}
+      working-directory: ${{ inputs.app-name }}
+      shell: bash
+      run: npx react-native spm scaffold --deintegrate --yes
+    - name: Build app (iOS, SPM)
+      if: ${{ inputs.platform == 'iOS' && inputs.run-spm == 'true' }}
+      working-directory: ${{ inputs.app-name }}/ios
+      shell: bash
+      run: xcodebuild -project ${{inputs.app-name}}.xcodeproj -configuration ${{inputs.mode}} -scheme ${{inputs.app-name}} -destination "generic/platform=iOS Simulator" -quiet
     - name: Build app (Android)
       if: ${{ inputs.platform == 'Android' }}
       working-directory: ${{ inputs.app-name }}/android
