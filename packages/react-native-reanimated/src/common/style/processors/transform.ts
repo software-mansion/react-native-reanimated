@@ -38,8 +38,10 @@ function parseTranslate(values: (number | string)[]): TransformsArray {
   if (values.length > 2) {
     return [];
   }
+  // translate(tx) leaves ty at zero, it does not repeat tx - unlike scale(s),
+  // which is uniform. https://drafts.csswg.org/css-transforms/#funcdef-transform-translate
   const result = parseTranslateX([values[0]]).concat(
-    parseTranslateY([values[1] ?? values[0]])
+    parseTranslateY([values[1] ?? 0])
   );
   return result.length === 2 ? result : [];
 }
@@ -103,9 +105,9 @@ function parseSkew(values: (number | string)[]): TransformsArray {
   if (values.length > 2) {
     return [];
   }
-  const result = parseSkewX([values[0]]).concat(
-    parseSkewY([values[1] ?? values[0]])
-  );
+  // skew(ax) leaves ay at zero, same as translate above.
+  // https://drafts.csswg.org/css-transforms/#funcdef-transform-skew
+  const result = parseSkewX([values[0]]).concat(parseSkewY([values[1] ?? 0]));
   return result.length === 2 ? result : [];
 }
 
