@@ -134,6 +134,10 @@ button[class*='DocSearch-Button'] {
   color: var(--swm-dropdown-versions-item-hover) !important;
 }
 
+.theme-doc-sidebar-item-category-level-2 > .menu__list {
+  padding-left: 12px;
+}
+
 /* examples sidebar */
 
 [class*='plugin-blog'] [class*='sidebar']:not([class*='navbar-sidebar']) {
