@@ -87,7 +87,7 @@ Fires when the property reaches its target value.
 
 #### `onCSSTransitionCancel`
 
-Fires when the transition is interrupted before finishing - the target changed again, the transition config was removed, or the component unmounted.
+Fires when the transition is interrupted before finishing - for example, when the target changes again or the transition config is removed. On Android and iOS, it also fires when the component unmounts. On web, unmounting the component doesn't fire this callback.
 
 import TransitionCallbacksCancel from '@site/src/examples/css-transitions/TransitionCallbacksCancel';
 import TransitionCallbacksCancelSrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionCallbacksCancel';

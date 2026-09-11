@@ -80,11 +80,11 @@ Fires at the boundary between two iterations, so an animation with [`animationIt
 
 #### `onCSSAnimationEnd`
 
-Fires when the last iteration completes. An infinite animation never ends, so it only ever reports `cancel`.
+Fires when the last iteration completes. An infinite animation never reports `end`; if it is interrupted, it reports `cancel` instead.
 
 #### `onCSSAnimationCancel`
 
-Fires when the animation is removed before finishing - the animation name changed, the style dropped it, or the component unmounted.
+Fires when the animation is removed before finishing - for example, when the animation name changes or the style drops it. On Android and iOS, it also fires when the component unmounts. On web, unmounting the component doesn't fire this callback.
 
 import AnimationCallbacksSequence from '@site/src/examples/css-animations/AnimationCallbacksSequence';
 import AnimationCallbacksSequenceSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationCallbacksSequence';
