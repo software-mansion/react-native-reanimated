@@ -182,12 +182,12 @@ describe(processTransform, () => {
             output: [{ skewX: '0deg' }, { skewY: '0deg' }],
           },
           {
-            input: 'skew(45deg, 45deg)',
-            output: [{ skewX: '45deg' }, { skewY: '45deg' }],
+            input: 'skew(45deg, 0)',
+            output: [{ skewX: '45deg' }, { skewY: '0deg' }],
           },
           {
-            input: 'skew(1.5rad, 1.5rad)',
-            output: [{ skewX: '1.5rad' }, { skewY: '1.5rad' }],
+            input: 'skew(0rad, 1.5rad)',
+            output: [{ skewX: '0rad' }, { skewY: '1.5rad' }],
           },
           {
             input: 'skew(0, 0)',
@@ -298,14 +298,14 @@ describe(processTransform, () => {
         output: [{ translateX: 25 }, { translateY: 25 }, { scale: 2 }],
       },
       {
-        input: 'translate(50, 50) scale(1.5, 2) skew(30deg, 15deg)',
+        input: 'translate(50, 50) scale(1.5, 2) skew(30deg)',
         output: [
           { translateX: 50 },
           { translateY: 50 },
           { scaleX: 1.5 },
           { scaleY: 2 },
           { skewX: '30deg' },
-          { skewY: '15deg' },
+          { skewY: '0deg' },
         ],
       },
       {
@@ -386,6 +386,14 @@ describe(processTransform, () => {
       {
         input: 'skew(45deg, 90)', // Missing units for second skew value
         errorMessage: ERROR_MESSAGES.invalidTransform('skew(45deg, 90)'),
+      },
+      {
+        input: 'skew(45deg, 30deg)', // Two-axis skew cannot be represented by separate skew operations
+        errorMessage: ERROR_MESSAGES.invalidTransform('skew(45deg, 30deg)'),
+      },
+      {
+        input: 'skew(1.5rad, -0.5rad)', // Two-axis skew cannot be represented by separate skew operations
+        errorMessage: ERROR_MESSAGES.invalidTransform('skew(1.5rad, -0.5rad)'),
       },
       {
         input: 'matrix(1, 2, 3)', // Incorrect number of elements for matrix (should be 6 or 16)

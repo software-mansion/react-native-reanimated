@@ -100,9 +100,23 @@ function parseSkewY(values: (number | string)[]): TransformsArray {
     : [];
 }
 
+function isZeroAngle(value: number | string): boolean {
+  'worklet';
+  return value === 0 || (isAngle(value) && parseFloat(value) === 0);
+}
+
 function parseSkew(values: (number | string)[]): TransformsArray {
   'worklet';
   if (values.length > 2) {
+    return [];
+  }
+  // React Native exposes skewX and skewY as separate operations. Combining
+  // them changes the matrix when both CSS skew angles are nonzero.
+  if (
+    values.length === 2 &&
+    !isZeroAngle(values[0]) &&
+    !isZeroAngle(values[1])
+  ) {
     return [];
   }
   // skew(ax) leaves ay at zero, same as translate above.
