@@ -397,6 +397,11 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
           before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
       if (!config) {
+        for (const auto &node : collectedTransition.nodes) {
+          if (node) {
+            transaction.nodesToRestore.push_back(node);
+          }
+        }
         continue;
       }
       const auto &afterNode = collectedTransition.nodes[AFTER];
