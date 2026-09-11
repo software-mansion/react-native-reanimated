@@ -27,9 +27,6 @@ struct Transition {
   std::optional<Transform> transform[2];
 };
 
-using TransitionMap = std::unordered_map<SharedTag, Transition>;
-using Transitions = std::vector<std::pair<SharedTag, Transition>>;
-
 struct SharedTransitionManager {
   std::mutex mutex_;
   std::unordered_map<Tag, std::string> tagToName_;

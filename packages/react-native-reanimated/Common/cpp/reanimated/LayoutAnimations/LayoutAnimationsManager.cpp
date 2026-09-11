@@ -27,7 +27,7 @@ void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAn
     if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
       if (config == nullptr) {
         // TODO (future): if the view was transitioned (e.g. so we are on the second screen)
-        // and we remove the config, we should also bring back the view (probably using TransactionMeta::tagsToRestore)
+        // and we remove the config, we should also bring back the view (probably using TransactionMeta::nodesToRestore)
         sharedTransitions_.erase(tag);
         sharedTransitionManager_->tagToName_.erase(tag);
       } else {

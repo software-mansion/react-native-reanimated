@@ -14,6 +14,7 @@
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 
+#include <array>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -39,28 +40,42 @@ struct PendingNodeAnimation {
   std::shared_ptr<Serializable> config;
 };
 
+struct SharedContainer {
+  SharedTag sharedTag;
+  std::shared_ptr<LightNode> node;
+  std::shared_ptr<LightNode> restoreBeforeNode;
+  std::shared_ptr<LightNode> restoreAfterNode;
+};
+
+struct CollectedTransition {
+  Transition transition;
+  std::array<std::shared_ptr<LightNode>, 2> nodes;
+};
+
+using CollectedTransitionMap = std::unordered_map<SharedTag, CollectedTransition>;
+using CollectedTransitions = std::vector<std::pair<SharedTag, CollectedTransition>>;
+
 struct TransactionMeta {
   ShadowViewMutationList filteredMutations;
   ShadowViewMutationList teardownMutations;
-  TransitionMap transitionMap;
-  Transitions transitions;
+  CollectedTransitionMap transitionMap;
+  CollectedTransitions transitions;
   std::vector<PendingNodeAnimation> layout;
   std::vector<PendingNodeAnimation> entering;
   std::vector<PendingNodeAnimation> exiting;
   std::vector<std::shared_ptr<LightNode>> containersToInsert;
-  std::vector<Tag> tagsToRestore;
-  std::vector<Tag> sharedContainersToRemove;
+  std::vector<std::shared_ptr<LightNode>> nodesToRestore;
+  std::unordered_set<std::shared_ptr<LightNode>> hiddenNodes;
+  std::vector<std::shared_ptr<LightNode>> containersToRemove;
 };
 
 struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
-  mutable std::unordered_set<Tag> activeTransitions_;
   mutable Tag transitionTag_;
   mutable double transitionProgress_;
   mutable bool transitionUpdated_;
   mutable TransitionState transitionState_ = TransitionState::NONE;
   mutable std::shared_ptr<LightNode> topScreen_;
-  mutable std::unordered_map<Tag, Tag[2]> restoreMap_;
-  mutable std::unordered_map<std::string, Tag> containerTags_;
+  mutable std::unordered_map<Tag, SharedContainer> sharedContainers_;
   mutable bool synchronized_ = true;
   mutable Tag closingScreenTag_ = -1;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
@@ -112,8 +127,8 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
 
   void hideTransitioningViews(
       BeforeOrAfter index,
-      const Transitions &transitions,
       ShadowViewMutationList &mutations,
+      TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
 
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
