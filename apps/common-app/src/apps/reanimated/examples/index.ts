@@ -203,8 +203,6 @@ const NestedExitingCleanupExample: React.FC = () =>
   );
 const ExtrapolationExample: React.FC = () =>
   React.createElement(require('./ExtrapolationExample').default as React.FC);
-const BackgroundImageExample: React.FC = () =>
-  React.createElement(require('./BackgroundImageExample').default as React.FC);
 const FilterExample: React.FC = () =>
   React.createElement(require('./FilterExample').default as React.FC);
 const FinalFrameAccuracyExample: React.FC = () =>
@@ -701,11 +699,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🖼️',
     title: 'Animate filter',
     screen: FilterExample,
-  },
-  BackgroundImageExample: {
-    icon: '🌅',
-    title: 'Animate background image',
-    screen: BackgroundImageExample,
   },
   SynchronousPropsExample: {
     icon: '⚡',
