@@ -84,7 +84,7 @@ Fires when the last iteration completes. An infinite animation never reports `en
 
 #### `onCSSAnimationCancel`
 
-Fires when the animation is removed before finishing - for example, when the animation name changes or the style drops it. On Android and iOS, it also fires when the component unmounts. On web, unmounting the component doesn't fire this callback.
+Fires when the animation is removed before finishing - the animation name changed, the style dropped it, or the component unmounted.
 
 import AnimationCallbacksSequence from '@site/src/examples/css-animations/AnimationCallbacksSequence';
 import AnimationCallbacksSequenceSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationCallbacksSequence';
