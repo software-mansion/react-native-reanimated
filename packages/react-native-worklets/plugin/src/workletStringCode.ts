@@ -154,7 +154,7 @@ export function buildWorkletString(
   const transformed = workletTransformSync(code, {
     filename: state.file.opts.filename,
     extraPlugins: [
-      getClosurePlugin(closureVariables),
+      getClosurePlugin(closureVariables, parsedClasses),
       ...(state.opts.extraPlugins ?? []),
     ],
     extraPresets: state.opts.extraPresets,
@@ -231,7 +231,8 @@ function shouldMockSourceMap() {
  */
 function collectBodyScopeNames(
   path: NodePath<WorkletizableFunction>,
-  closureVariables: Array<Identifier>
+  closureVariables: Array<Identifier>,
+  workletClassNames: ReadonlySet<string>
 ): Set<string> {
   const names = new Set(closureVariables.map((variable) => variable.name));
 
@@ -239,12 +240,17 @@ function collectBodyScopeNames(
   // `buildWorkletString` replaces `Foo` with `Foo<suffix>` there and prepends
   // `const Foo = Foo<suffix>();` to the body — so the constructor name is
   // body-scoped exactly like a capture, and a default such as `new Foo()`
-  // reads it from parameter scope. Recovering it from the factory name is what
-  // keeps that shape from being the original defect at a new trigger.
-  for (const variable of closureVariables) {
-    if (variable.name.endsWith(workletClassFactorySuffix)) {
-      names.add(variable.name.slice(0, -workletClassFactorySuffix.length));
-    }
+  // reads it from parameter scope. Leaving it out keeps that shape as the
+  // original defect at a new trigger.
+  //
+  // The names come from the census `buildWorkletString` kept while rewriting
+  // rather than from stripping the suffix off a closure entry. The suffix is a
+  // plain string a user may also have typed, so stripping it would declare a
+  // body-scoped `x` for a captured variable named `x__classFactory` that no
+  // declaration ever creates — and hoist a parameter that had no reason to
+  // move.
+  for (const className of workletClassNames) {
+    names.add(className);
   }
 
   // An arrow function and an object method carry no name of their own, so
@@ -511,9 +517,14 @@ function planHoistedParameters(
  */
 function hoistBodyScopedParameters(
   path: NodePath<WorkletizableFunction>,
-  closureVariables: Array<Identifier>
+  closureVariables: Array<Identifier>,
+  workletClassNames: ReadonlySet<string>
 ): Array<VariableDeclaration> {
-  const bodyScopeNames = collectBodyScopeNames(path, closureVariables);
+  const bodyScopeNames = collectBodyScopeNames(
+    path,
+    closureVariables,
+    workletClassNames
+  );
   const hoisted: Array<VariableDeclaration> = [];
 
   if (bodyScopeNames.size === 0) {
@@ -592,6 +603,7 @@ function hoistBodyScopedParameters(
 function prependClosure(
   path: NodePath<WorkletizableFunction>,
   closureVariables: Array<Identifier>,
+  workletClassNames: ReadonlySet<string>,
   closureDeclaration: VariableDeclaration
 ) {
   if (!isProgram(path.parent) || isExpression(path.node.body)) {
@@ -607,14 +619,22 @@ function prependClosure(
   //
   // The hoisted declarations follow the closure destructure, because that is the
   // binding they were moved here to reach.
-  const hoisted = hoistBodyScopedParameters(path, closureVariables);
+  const hoisted = hoistBodyScopedParameters(
+    path,
+    closureVariables,
+    workletClassNames
+  );
   const body = path.node.body.body;
 
   // …and they follow the worklet-class factory calls for the same reason.
   // `buildWorkletString` has already prepended `const Foo = Foo<suffix>();` for
   // every captured class, so a hoisted initializer that constructs one would
   // read `Foo` in its temporal dead zone if it landed above that declaration.
-  body.splice(countLeadingClassFactoryDeclarations(body), 0, ...hoisted);
+  body.splice(
+    countLeadingClassFactoryDeclarations(body, workletClassNames),
+    0,
+    ...hoisted
+  );
 
   if (closureVariables.length > 0) {
     body.unshift(closureDeclaration);
@@ -625,33 +645,48 @@ function prependClosure(
  * How many worklet-class factory declarations `buildWorkletString` has already
  * placed at the top of the body.
  *
- * They are matched by SHAPE — `const <name> = <name><suffix>();` — rather than
- * by counting the captured classes, so a body that carries none is answered
- * with zero and the hoist lands where it did before.
+ * A statement counts only when it is `const <name> = <name><suffix>();` for a
+ * `<name>` in the census of classes this worklet's rewrite actually produced,
+ * and each name counts once — so the answer can never exceed the number of
+ * declarations that were generated, and a body carrying none is answered with
+ * zero. Matching the SHAPE alone would also count a user statement calling any
+ * identifier that happens to end in the suffix, and the hoisted declarations
+ * would then land BELOW a body statement whose side effects the source runs
+ * after every parameter expression.
  */
 function countLeadingClassFactoryDeclarations(
-  body: ReadonlyArray<Statement>
+  body: ReadonlyArray<Statement>,
+  workletClassNames: ReadonlySet<string>
 ): number {
+  const remaining = new Set(workletClassNames);
   let count = 0;
 
-  while (count < body.length) {
+  while (count < body.length && remaining.size > 0) {
     const statement = body[count];
 
-    if (!isVariableDeclaration(statement) || statement.kind !== 'const') {
-      break;
-    }
-
-    const [declarator] = statement.declarations;
-    const initializer = declarator?.init;
-
     if (
-      !isCallExpression(initializer) ||
-      !isIdentifier(initializer.callee) ||
-      !initializer.callee.name.endsWith(workletClassFactorySuffix)
+      !isVariableDeclaration(statement) ||
+      statement.kind !== 'const' ||
+      statement.declarations.length !== 1
     ) {
       break;
     }
 
+    const [declarator] = statement.declarations;
+    const initializer = declarator.init;
+
+    if (
+      !isIdentifier(declarator.id) ||
+      !remaining.has(declarator.id.name) ||
+      !isCallExpression(initializer) ||
+      initializer.arguments.length > 0 ||
+      !isIdentifier(initializer.callee) ||
+      initializer.callee.name !== declarator.id.name + workletClassFactorySuffix
+    ) {
+      break;
+    }
+
+    remaining.delete(declarator.id.name);
     count += 1;
   }
 
@@ -682,7 +717,10 @@ function prependRecursiveDeclaration(path: NodePath<WorkletizableFunction>) {
 }
 
 /** Prepends necessary closure variables to the worklet function. */
-function getClosurePlugin(closureVariables: Array<Identifier>): PluginItem {
+function getClosurePlugin(
+  closureVariables: Array<Identifier>,
+  workletClassNames: ReadonlySet<string>
+): PluginItem {
   const closureDeclaration = variableDeclaration('const', [
     variableDeclarator(
       objectPattern(
@@ -703,7 +741,12 @@ function getClosurePlugin(closureVariables: Array<Identifier>): PluginItem {
     visitor: {
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod':
         (path: NodePath<WorkletizableFunction>) => {
-          prependClosure(path, closureVariables, closureDeclaration);
+          prependClosure(
+            path,
+            closureVariables,
+            workletClassNames,
+            closureDeclaration
+          );
           prependRecursiveDeclaration(path);
         },
     },

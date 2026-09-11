@@ -1677,7 +1677,7 @@ var require_workletStringCode = __commonJS({
       const transformed = (0, transform_1.workletTransformSync)(code, {
         filename: state.file.opts.filename,
         extraPlugins: [
-          getClosurePlugin(closureVariables),
+          getClosurePlugin(closureVariables, parsedClasses),
           ...(_a = state.opts.extraPlugins) !== null && _a !== void 0 ? _a : []
         ],
         extraPresets: state.opts.extraPresets,
@@ -1718,12 +1718,10 @@ var require_workletStringCode = __commonJS({
     function shouldMockSourceMap() {
       return process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP === "1";
     }
-    function collectBodyScopeNames(path, closureVariables) {
+    function collectBodyScopeNames(path, closureVariables, workletClassNames) {
       const names = new Set(closureVariables.map((variable) => variable.name));
-      for (const variable of closureVariables) {
-        if (variable.name.endsWith(types_2.workletClassFactorySuffix)) {
-          names.add(variable.name.slice(0, -types_2.workletClassFactorySuffix.length));
-        }
+      for (const className of workletClassNames) {
+        names.add(className);
       }
       if (!(0, types_12.isArrowFunctionExpression)(path.node) && !(0, types_12.isObjectMethod)(path.node) && path.node.id) {
         names.add(path.node.id.name);
@@ -1823,8 +1821,8 @@ var require_workletStringCode = __commonJS({
       }
       return Array.from(planned.values()).sort((left, right) => left.index - right.index);
     }
-    function hoistBodyScopedParameters(path, closureVariables) {
-      const bodyScopeNames = collectBodyScopeNames(path, closureVariables);
+    function hoistBodyScopedParameters(path, closureVariables, workletClassNames) {
+      const bodyScopeNames = collectBodyScopeNames(path, closureVariables, workletClassNames);
       const hoisted = [];
       if (bodyScopeNames.size === 0) {
         return hoisted;
@@ -1855,29 +1853,31 @@ var require_workletStringCode = __commonJS({
       }
       return hoisted;
     }
-    function prependClosure(path, closureVariables, closureDeclaration) {
+    function prependClosure(path, closureVariables, workletClassNames, closureDeclaration) {
       if (!(0, types_12.isProgram)(path.parent) || (0, types_12.isExpression)(path.node.body)) {
         return;
       }
-      const hoisted = hoistBodyScopedParameters(path, closureVariables);
+      const hoisted = hoistBodyScopedParameters(path, closureVariables, workletClassNames);
       const body = path.node.body.body;
-      body.splice(countLeadingClassFactoryDeclarations(body), 0, ...hoisted);
+      body.splice(countLeadingClassFactoryDeclarations(body, workletClassNames), 0, ...hoisted);
       if (closureVariables.length > 0) {
         body.unshift(closureDeclaration);
       }
     }
-    function countLeadingClassFactoryDeclarations(body) {
+    function countLeadingClassFactoryDeclarations(body, workletClassNames) {
+      const remaining = new Set(workletClassNames);
       let count = 0;
-      while (count < body.length) {
+      while (count < body.length && remaining.size > 0) {
         const statement = body[count];
-        if (!(0, types_12.isVariableDeclaration)(statement) || statement.kind !== "const") {
+        if (!(0, types_12.isVariableDeclaration)(statement) || statement.kind !== "const" || statement.declarations.length !== 1) {
           break;
         }
         const [declarator] = statement.declarations;
-        const initializer = declarator === null || declarator === void 0 ? void 0 : declarator.init;
-        if (!(0, types_12.isCallExpression)(initializer) || !(0, types_12.isIdentifier)(initializer.callee) || !initializer.callee.name.endsWith(types_2.workletClassFactorySuffix)) {
+        const initializer = declarator.init;
+        if (!(0, types_12.isIdentifier)(declarator.id) || !remaining.has(declarator.id.name) || !(0, types_12.isCallExpression)(initializer) || initializer.arguments.length > 0 || !(0, types_12.isIdentifier)(initializer.callee) || initializer.callee.name !== declarator.id.name + types_2.workletClassFactorySuffix) {
           break;
         }
+        remaining.delete(declarator.id.name);
         count += 1;
       }
       return count;
@@ -1893,14 +1893,14 @@ var require_workletStringCode = __commonJS({
         }
       }
     }
-    function getClosurePlugin(closureVariables) {
+    function getClosurePlugin(closureVariables, workletClassNames) {
       const closureDeclaration = (0, types_12.variableDeclaration)("const", [
         (0, types_12.variableDeclarator)((0, types_12.objectPattern)(closureVariables.map((variable) => (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.identifier)(variable.name), false, true))), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("__closure")))
       ]);
       return {
         visitor: {
           "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod": (path) => {
-            prependClosure(path, closureVariables, closureDeclaration);
+            prependClosure(path, closureVariables, workletClassNames, closureDeclaration);
             prependRecursiveDeclaration(path);
           }
         }

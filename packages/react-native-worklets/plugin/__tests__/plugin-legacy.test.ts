@@ -64,10 +64,18 @@ function runPlugin(
 /**
  * A worklet the UI runtime would evaluate, as a callable — `this` is its host
  * object.
+ *
+ * The host carries `__closure` and whatever else a test hands the worklet to
+ * reach. `this` is the one channel into a `new Function` scope that costs
+ * nothing outside the call, which is what keeps a worklet that records its own
+ * evaluation order from writing to a global every later test can see.
  */
-type EvaluatedWorklet = (this: {
+type WorkletHost = {
   __closure: Record<string, unknown>;
-}) => unknown;
+  [property: string]: unknown;
+};
+
+type EvaluatedWorklet = (this: WorkletHost) => unknown;
 
 /**
  * The serialized worklet out of the emitted `__initData`, compiled and ready to
@@ -503,11 +511,11 @@ describe('babel plugin', () => {
         const DEFAULTS = { max: 8 };
 
         function span(
-          first = (globalThis.trace.push('first'), DEFAULTS),
-          second = globalThis.trace.push('second')
+          first = (this.trace.push('first'), DEFAULTS),
+          second = this.trace.push('second')
         ) {
           'worklet';
-          globalThis.trace.push('body');
+          this.trace.push('body');
           return first.max + second;
         }
       </script>`;
@@ -521,11 +529,12 @@ describe('babel plugin', () => {
       // through nothing else, which is the UI runtime's shape.
       const worklet = evaluateWorkletCode(code);
       const trace: Array<string> = [];
-      // The worklet reaches its recorder off the global, because that is the one thing a bare
-      // `new Function` scope shares with this one.
-      Object.assign(globalThis, { trace });
 
-      const result = worklet.call({ __closure: { DEFAULTS: { max: 8 } } });
+      // The recorder rides on the host object, which is the one channel a bare `new Function`
+      // scope has into this one and costs nothing outside the call. A parameter default reads
+      // `this` from the call receiver in either arm — the hoisted one and the one this patch
+      // would leave in parameter scope — so the counterfactual is still observable.
+      const result = worklet.call({ __closure: { DEFAULTS: { max: 8 } }, trace });
 
       // `Array.prototype.push` returns the new length, so `second` is 2 and the value doubles as
       // proof that the default ran rather than being dropped: 8 + 2.
@@ -533,6 +542,64 @@ describe('babel plugin', () => {
       // The ORDER is what the value cannot tell you — leaving `second` in the parameter scope
       // yields the identical 10 while running the two side effects the other way round.
       expect(trace).toEqual(['first', 'second', 'body']);
+    });
+
+    test('a body statement calling a `__classFactory` name the plugin did not generate is not a hoist anchor', () => {
+      const input = html`<script>
+        const DEFAULTS = { max: 8 };
+        const gadget__classFactory = () => ({ size: 2 });
+
+        function span(limits = (this.trace.push('default'), DEFAULTS)) {
+          'worklet';
+          const gadget = gadget__classFactory();
+          return limits.max + gadget.size;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      const worklet = evaluateWorkletCode(code);
+      const trace: Array<string> = [];
+
+      // The suffix is a plain string, so a body statement may take the exact shape of a generated
+      // factory declaration without the plugin having written it. Counting it puts the hoisted
+      // parameter BELOW that statement, and the source runs every parameter expression first.
+      const result = worklet.call({
+        __closure: {
+          DEFAULTS: { max: 8 },
+          gadget__classFactory: () => {
+            trace.push('gadget');
+            return { size: 2 };
+          },
+        },
+        trace,
+      });
+
+      expect(result).toBe(10);
+      expect(trace).toEqual(['default', 'gadget']);
+      expect(code.indexOf('let limits=')).toBeLessThan(
+        code.indexOf('const gadget=')
+      );
+    });
+
+    test('a captured name ending in the class-factory suffix declares no body binding', () => {
+      const input = html`<script>
+        const gadget__classFactory = () => 2;
+
+        function span(gadget, size = gadget * 2) {
+          'worklet';
+          return size + gadget__classFactory();
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      // Recovering a constructor name by stripping the suffix off a closure entry invents a
+      // body-scoped `gadget` that no declaration creates, and here the real `gadget` is an
+      // earlier PARAMETER — which parameter scope can legitimately see. The default would then
+      // be hoisted for a reason that does not exist, and a spurious member drags every later
+      // parameter with it and can lose the whole plan to the `var`-redeclaration refusal.
+      expect(code).not.toContain('_workletParameter');
+      expect(code).toContain('size=gadget*2');
     });
   });
 
