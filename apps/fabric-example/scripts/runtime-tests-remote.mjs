@@ -304,6 +304,8 @@ async function runLibrary() {
     String(CONNECT_TIMEOUT),
     '--idle-timeout',
     String(IDLE_TIMEOUT),
+    '--after-suite',
+    'sim-remote keepalive',
   ];
   if (ONLY) {
     serverArgs.push('--only', ONLY);
