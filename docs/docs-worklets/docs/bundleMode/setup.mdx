@@ -77,6 +77,12 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
   </TabItem>
 </Tabs>
 
+:::note
+In Expo projects, this Metro configuration forces the `inlineRequires` option to be enabled, which may cause some libraries to fail or change their behavior. 
+
+`inlineRequires: true` defers module evaluation: modules whose imports are only referenced inside functions are evaluated at the first use of their imports instead of at the top of the importing module. Libraries that rely on import-time side effects for initialization may fail or change behavior. For a discussion on this option, see [expo/expo#27279](https://github.com/expo/expo/issues/27279).
+:::
+
 ## Enable seamless Metro bundling
 
 _This step is optional but highly recommended._
