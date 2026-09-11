@@ -1,4 +1,5 @@
 import {
+  createWorkletRuntime,
   isBundleModeEnabled,
   runOnRuntimeSync,
   runOnUISync,
@@ -140,4 +141,25 @@ describe('networking API on Worklet Runtimes', () => {
       expect(flag.value).toBe('content');
     }
   );
+
+  testFn('skips installation when enableNetworking is false', () => {
+    const runtime = createWorkletRuntime({
+      enableNetworking: false,
+      name: 'noNetworking',
+    });
+    const outcome = runOnRuntimeSync(runtime, () => {
+      'worklet';
+      const global = globalThis as unknown as Record<string, unknown>;
+      // eslint-disable-next-line no-underscore-dangle
+      if (global.__workletsNetworking !== undefined) {
+        return 'native binding installed';
+      }
+      if (typeof global.fetch !== 'undefined') {
+        return 'fetch installed';
+      }
+      return 'ok';
+    });
+
+    expect(outcome).toBe('ok');
+  });
 });
