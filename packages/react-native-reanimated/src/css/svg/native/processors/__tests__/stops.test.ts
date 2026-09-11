@@ -48,6 +48,14 @@ describe(processSVGGradientStops, () => {
   });
 
   describe('Sorting and Offsets', () => {
+    test('trims string offsets and opacity before processing', () => {
+      const result = processSVGGradientStops([
+        { offset: ' 50% ', color: 'red', opacity: ' 50% ' },
+      ]);
+
+      expect(result).toEqual([0.5, 2164195328]);
+    });
+
     test('sorts stops by offset in ascending order', () => {
       const input = [
         { offset: 1, color: 'blue' },
