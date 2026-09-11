@@ -206,8 +206,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void requestFlushRegistry();
   std::function<std::string()> createRegistriesLeakCheck();
 
-  void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
-  void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates);
+  void commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
+  void applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch);
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
   std::shared_ptr<UIManagerAnimationBackend> getAnimationBackend();
