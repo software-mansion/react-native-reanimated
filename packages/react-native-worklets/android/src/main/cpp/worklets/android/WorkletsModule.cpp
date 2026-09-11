@@ -18,7 +18,8 @@ WorkletsModule::WorkletsModule(
     const BundleModeConfig &bundleModeConfig,
     jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-    const std::shared_ptr<UIScheduler> &uiScheduler)
+    const std::shared_ptr<UIScheduler> &uiScheduler,
+    jni::global_ref<JWorkletsNetworking::javaobject> jWorkletsNetworking)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       rnRuntimeStatus_(std::make_shared<RNRuntimeStatus>()),
@@ -27,7 +28,7 @@ WorkletsModule::WorkletsModule(
           jsCallInvoker,
           uiScheduler,
           getIsOnJSQueueThread(),
-          getRuntimeBindings(bundleModeConfig.enabled),
+          getRuntimeBindings(bundleModeConfig.enabled, std::move(jWorkletsNetworking)),
           bundleModeConfig,
           rnRuntimeStatus_)) {}
 
@@ -38,7 +39,9 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
     jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
     jni::alias_ref<JScriptBufferWrapper::javaobject>
-        jScriptBufferWrapper // NOLINT //(performance-unnecessary-value-param)
+        jScriptBufferWrapper, // NOLINT //(performance-unnecessary-value-param)
+    jni::alias_ref<JWorkletsNetworking::javaobject>
+        jWorkletsNetworking // NOLINT //(performance-unnecessary-value-param)
 ) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT //(performance-no-int-to-ptr)
@@ -61,13 +64,18 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
       },
       rnRuntime,
       jsCallInvoker,
-      uiScheduler);
+      uiScheduler,
+      jni::make_global(jWorkletsNetworking));
 }
 
-std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(const bool bundleModeEnabled) {
+std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(
+    const bool bundleModeEnabled,
+    jni::global_ref<JWorkletsNetworking::javaobject> jWorkletsNetworking) {
   return std::make_shared<RuntimeBindings>(RuntimeBindings{
       .requestAnimationFrame = getRequestAnimationFrame(),
-      .nativeLoggingHook = bundleModeEnabled ? makeNativeLoggingHook() : RuntimeBindings::NativeLoggingHook{}});
+      .nativeLoggingHook = bundleModeEnabled ? makeNativeLoggingHook() : RuntimeBindings::NativeLoggingHook{},
+      .networkingBackend =
+          bundleModeEnabled ? std::make_shared<AndroidNetworkingBackend>(std::move(jWorkletsNetworking)) : nullptr});
 }
 
 RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame() {

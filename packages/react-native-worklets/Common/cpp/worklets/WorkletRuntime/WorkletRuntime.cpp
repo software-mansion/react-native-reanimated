@@ -1,6 +1,7 @@
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#include <worklets/Networking/NetworkingInstaller.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
 #include <worklets/WorkletRuntime/ScriptLoader.h>
@@ -113,7 +114,7 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
       nativeLoggingHook);
 
   if (bundleModeEnabled) {
-    bundleModeInit(jsScheduler, script, sourceUrl);
+    bundleModeInit(jsScheduler, script, sourceUrl, jsiWorkletsModuleProxy->getNetworking());
   } else {
     legacyModeInit(unpackerLoader);
   }
@@ -128,11 +129,16 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
 void WorkletRuntime::bundleModeInit(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<const ScriptBuffer> &script,
-    const std::string &sourceUrl) {
+    const std::string &sourceUrl,
+    const std::shared_ptr<Networking> &networking) {
   jsi::Runtime &rt = *runtime_;
 
   if (!script) {
     throw std::runtime_error("[Worklets] Expected to receive the bundle, but got nullptr instead.");
+  }
+
+  if (networking) {
+    NetworkingInstaller::install(rt, networking, runtimeId_);
   }
 
   ScriptLoader::loadScript(rt, script, sourceUrl);

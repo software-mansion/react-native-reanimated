@@ -29,6 +29,8 @@ namespace worklets {
 using namespace facebook;
 using namespace react;
 
+class Networking;
+
 template <typename TCallable>
 concept RuntimeCallable = std::is_same_v<std::remove_cvref_t<TCallable>, jsi::Function> ||
     std::is_same_v<std::remove_cvref_t<TCallable>, std::shared_ptr<SerializableWorklet>>;
@@ -425,7 +427,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   void bundleModeInit(
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<const ScriptBuffer> &script,
-      const std::string &sourceUrl);
+      const std::string &sourceUrl,
+      const std::shared_ptr<Networking> &networking);
 
   void legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader);
 

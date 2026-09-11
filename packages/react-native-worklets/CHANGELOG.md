@@ -16,6 +16,7 @@
 ### 🎉 New features
 
 - Add iOS Swift Package Manager support via `Package.swift` and SPM integration metadata in `react-native.config.js`. ([#10472](https://github.com/software-mansion/react-native-reanimated/pull/10472) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
+- Add a standalone networking module for Worklet Runtimes in Bundle Mode, with `XMLHttpRequest` for text and `arraybuffer` responses. ([#10493](https://github.com/software-mansion/react-native-reanimated/pull/10493) by [@tjzel](https://github.com/tjzel))
 
 \[General] Per-runtime caching for RetainingSerializable
 
