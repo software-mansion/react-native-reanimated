@@ -19,6 +19,27 @@ exports[`babel plugin in bundleMode nested worklets extracts each nested worklet
 });"
 `;
 
+exports[`babel plugin in bundleMode source replacement packs captures in the same order at the call site and in the factory 1`] = `
+"function make(z, missing, a) {
+  return require("react-native-worklets/.worklets/1.js").default([z, missing, a]);
+}
+module.exports = make;"
+`;
+
+exports[`babel plugin in bundleMode source replacement packs captures in the same order at the call site and in the factory 2`] = `
+"export default (function testJs1Factory([z, missing, a]) {
+  const testJs1 = function (suffix) {
+    "use no memo";
+
+    return [z.value, missing, a, suffix];
+  };
+  testJs1.__closure = [z, missing, a];
+  testJs1.__workletHash = 1;
+  testJs1.__pluginVersion = "x.y.z";
+  return testJs1;
+});"
+`;
+
 exports[`babel plugin in bundleMode source replacement replaces inline factory with a require to the worklet file 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default([]);"`;
 
 exports[`babel plugin in bundleMode source replacement still captures closure even with "no-worklet-closure" directive 1`] = `

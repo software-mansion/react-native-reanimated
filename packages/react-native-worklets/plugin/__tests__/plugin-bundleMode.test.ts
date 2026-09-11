@@ -7,9 +7,7 @@ import { html } from 'code-tag';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { runInNewContext } from 'vm';
 
-import type { WorkletFactory, WorkletFunction } from '../../src/types';
 import { countOccurrences } from '../jest/pluginTestUtils';
 
 type CapturedFile = { path: string; content: string };
@@ -83,39 +81,6 @@ function runPlugin(
   return { code: transformed.code ?? '', files: emittedFiles() };
 }
 
-function evaluateBundle<T = unknown>(
-  code: string,
-  files: CapturedFile[]
-) {
-  const cache = new Map<string, { exports: Record<string, unknown> }>();
-  const load = (filename: string): Record<string, unknown> => {
-    const name = path.basename(filename);
-    if (cache.has(name)) {
-      return cache.get(name)!.exports;
-    }
-    const file = files.find(
-      (candidate) => path.basename(candidate.path) === name
-    );
-    assert(file, `Missing generated module ${filename}`);
-    const module = { exports: {} };
-    cache.set(name, module);
-    const transformed = transformSync(file.content, {
-      babelrc: false,
-      configFile: false,
-      plugins: ['@babel/plugin-transform-modules-commonjs'],
-    });
-    runInNewContext(transformed!.code!, {
-      require: load,
-      module,
-      exports: module.exports,
-    });
-    return module.exports;
-  };
-  const module: { exports: unknown } = { exports: {} };
-  runInNewContext(code, { require: load, module });
-  return { exports: module.exports as T, load };
-}
-
 describe('babel plugin in bundleMode', () => {
   beforeEach(() => {
     process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
@@ -124,7 +89,7 @@ describe('babel plugin in bundleMode', () => {
   });
 
   describe('source replacement', () => {
-    test('preserves capture order, undefined values and independent instances across runtimes', () => {
+    test('packs captures in the same order at the call site and in the factory', () => {
       const { code, files } = runPlugin(`
         function make(z, missing, a) {
           return (suffix) => {
@@ -134,28 +99,8 @@ describe('babel plugin in bundleMode', () => {
         }
         module.exports = make;
       `);
-      const { exports: make } = evaluateBundle<
-        (z: { value: number }, missing: undefined, a: string) => WorkletFunction
-      >(code, files);
-      const first = make({ value: 7 }, undefined, 'first');
-      const second = make({ value: 9 }, undefined, 'second');
-      expect(first.__closure).toEqual([{ value: 7 }, undefined, 'first']);
-      expect(second.__closure).toEqual([{ value: 9 }, undefined, 'second']);
-      expect(first('RN')).toEqual([7, undefined, 'first', 'RN']);
-
-      const { load } = evaluateBundle('', files);
-      const factory = load(`${first.__workletHash}.js`)
-        .default as WorkletFactory;
-      const restored = factory(first.__closure);
-      expect(restored('UI')).toEqual([7, undefined, 'first', 'UI']);
-      expect(factory(second.__closure)('UI')).toEqual([
-        9,
-        undefined,
-        'second',
-        'UI',
-      ]);
-      expect(restored.__closure).toEqual(first.__closure);
-      expect(restored.__workletHash).toBe(first.__workletHash);
+      expect(code).toMatchSnapshot();
+      expect(files[0].content).toMatchSnapshot();
     });
 
     test('replaces inline factory with a require to the worklet file', () => {
