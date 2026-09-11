@@ -44,7 +44,7 @@ CSSAngle::CSSAngle(const std::string &rotationString) {
   this->value = numericValue * it->second;
 }
 
-CSSAngle::CSSAngle(const char *cstr) : CSSAngle(std::string_view{cstr}) {}
+CSSAngle::CSSAngle(const char *cstr) : CSSAngle(std::string{cstr}) {}
 
 CSSAngle::CSSAngle(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   *this = CSSAngle(jsiValue.asString(rt).utf8(rt));

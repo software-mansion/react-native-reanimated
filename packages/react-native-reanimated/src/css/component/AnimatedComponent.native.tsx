@@ -191,13 +191,7 @@ export default class AnimatedComponent<
     });
 
     const filteredProps = filterCSSProps(props ?? this.props);
-    const style = StyleSheet.flatten(filteredProps.style);
-    if (hasCombinedSkew(style?.transform)) {
-      filteredProps.style = [
-        filteredProps.style,
-        { transform: processTransformForReactNative(style.transform) },
-      ];
-    }
+    filteredProps.style = processSkewInStyle(filteredProps.style);
     if (hasCombinedSkew(filteredProps.transform)) {
       filteredProps.transform = processTransformForReactNative(
         filteredProps.transform
@@ -223,4 +217,26 @@ function hasCombinedSkew(
     ? /\bskew\s*\(/.test(value)
     : Array.isArray(value) &&
         value.some((operation) => operation && 'skew' in operation);
+}
+
+function processSkewInStyle(
+  style: StyleProp<DefaultStyle>
+): StyleProp<DefaultStyle> {
+  // RN processes every entry, even overridden ones. Replace each raw skew
+  // instead of appending a converted transform at the end of the style array.
+  if (Array.isArray(style)) {
+    return style.map(processSkewInStyle);
+  }
+  if (
+    style &&
+    typeof style === 'object' &&
+    'transform' in style &&
+    hasCombinedSkew(style.transform)
+  ) {
+    return {
+      ...style,
+      transform: processTransformForReactNative(style.transform),
+    };
+  }
+  return style;
 }

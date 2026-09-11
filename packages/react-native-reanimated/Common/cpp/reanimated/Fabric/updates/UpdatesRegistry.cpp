@@ -6,6 +6,7 @@
 
 #include <react/debug/react_native_assert.h>
 
+#include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
 #include <memory>
 #include <string>
@@ -149,6 +150,7 @@ void UpdatesRegistry::addRawPropsToAnimatedPropsBatch(
     const ShadowNodeFamily::Shared &shadowNodeFamily,
     folly::dynamic props) {
   const bool hasLayoutUpdates = hasLayoutProps(props);
+  props = css::lowerSkewProps(props);
   animatedPropsBuilder_.storeDynamic(props);
   addAnimatedPropsToBatch(shadowNodeFamily, animatedPropsBuilder_.get(), hasLayoutUpdates);
 }
@@ -158,6 +160,21 @@ void UpdatesRegistry::addJSIPropsToAnimatedPropsBatch(
     jsi::Runtime &rt,
     jsi::Value &props) {
   const bool hasLayoutUpdates = hasLayoutProps(rt, props);
+  const auto transform = props.asObject(rt).getProperty(rt, "transform");
+  if (transform.isObject() && transform.asObject(rt).isArray(rt)) {
+    const auto operations = transform.asObject(rt).asArray(rt);
+    for (size_t i = 0; i < operations.size(rt); ++i) {
+      const auto operation = operations.getValueAtIndex(rt, i);
+      if (operation.isObject() && operation.asObject(rt).hasProperty(rt, "skew")) {
+        // The animation backend parses typed transforms before creating a
+        // shadow-tree update, so lower our internal operation before that step.
+        auto loweredProps = css::lowerSkewProps(jsi::dynamicFromValue(rt, props));
+        animatedPropsBuilder_.storeDynamic(loweredProps);
+        addAnimatedPropsToBatch(shadowNodeFamily, animatedPropsBuilder_.get(), hasLayoutUpdates);
+        return;
+      }
+    }
+  }
   animatedPropsBuilder_.storeJSI(rt, props);
   addAnimatedPropsToBatch(shadowNodeFamily, animatedPropsBuilder_.get(), hasLayoutUpdates);
 }
