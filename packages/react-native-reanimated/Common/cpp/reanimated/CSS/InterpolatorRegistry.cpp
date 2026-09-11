@@ -11,6 +11,7 @@
 #include <reanimated/CSS/common/values/CSSValue.h>
 
 #include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
+#include <reanimated/CSS/common/values/complex/CSSBackgroundImage.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
 
 #include <reanimated/CSS/svg/values/CSSLengthArray.h>
@@ -206,6 +207,8 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
     {"cursor", value<CSSKeyword>("auto")},
     {"boxShadow", array({value<CSSBoxShadow>(CSSBoxShadow())})},
     {"mixBlendMode", value<CSSKeyword>("normal")},
+    {"backgroundImage", array({value<CSSLinearGradient, CSSRadialGradient>(CSSLinearGradient())})},
+    {"experimental_backgroundImage", array({value<CSSLinearGradient, CSSRadialGradient>(CSSLinearGradient())})},
 
     // Text
     {"color", value<CSSColor>(BLACK)},
