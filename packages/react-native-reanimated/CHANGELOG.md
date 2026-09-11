@@ -11,8 +11,8 @@
 
 ### 🎉 New features
 
-- Add iOS Swift Package Manager support via `Package.swift` and SPM integration metadata in `react-native.config.js`, with a dependency on `RNWorklets`. ([#10472](https://github.com/software-mansion/react-native-reanimated/pull/10472) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
 - Add `backgroundImage` support to animated styles. Linear and radial gradients are accepted as objects or CSS strings and processed on the UI thread. ([#10486](https://github.com/software-mansion/react-native-reanimated/pull/10486) by [@tshmieldev](https://github.com/tshmieldev))
+- Add iOS Swift Package Manager support via `Package.swift` and SPM integration metadata in `react-native.config.js`, with a dependency on `RNWorklets`. ([#10472](https://github.com/software-mansion/react-native-reanimated/pull/10472) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
 
 ### 🐛 Bug fixes
 
