@@ -125,11 +125,11 @@ export function runCommonTests() {
 
       test('when worklet hash changes', () => {
         const w = worklet();
-        w.__closure = { x: 1 };
+        w.__closure = [1];
         const { result, rerender } = renderUseHandler({ onScroll: w });
 
         const w2 = worklet();
-        w2.__closure = { x: 1 };
+        w2.__closure = [1];
         rerender({ handlers: { onScroll: w2 } });
 
         expect(result.current.doDependenciesDiffer).toBe(true);
@@ -137,24 +137,24 @@ export function runCommonTests() {
 
       test.each([
         {
-          name: 'closure keys change',
-          before: { a: 1, b: 2 },
-          after: { a: 1, c: 3 },
+          name: 'closure order changes',
+          before: [1, 2],
+          after: [2, 1],
         },
         {
-          name: 'closure has additional keys',
-          before: { x: 1 },
-          after: { x: 1, y: 2 },
+          name: 'closure has additional values',
+          before: [1],
+          after: [1, 2],
         },
         {
-          name: 'closure values change (same keys)',
-          before: { x: 1 },
-          after: { x: 2 },
+          name: 'closure values change (same length)',
+          before: [1],
+          after: [2],
         },
         {
           name: 'closure value references differ (same shape, different object)',
-          before: { ref: { nested: true } },
-          after: { ref: { nested: true } },
+          before: [{ nested: true }],
+          after: [{ nested: true }],
         },
       ])('when $name for same hash', ({ before, after }) => {
         const w = worklet();
@@ -170,6 +170,26 @@ export function runCommonTests() {
     });
 
     describe('is false', () => {
+      test.each([
+        { name: 'no captured values', closure: [] },
+        { name: 'equal captured values', closure: [1, NaN, 'hello'] },
+      ])(
+        'when distinct worklets have the same hash and $name',
+        ({ closure }) => {
+          const w = worklet();
+          w.__closure = closure;
+          const { result, rerender } = renderUseHandler({ onScroll: w });
+          const cloned = cloneWorklet(w);
+
+          expect(cloned).not.toBe(w);
+          expect(cloned.__closure).not.toBe(w.__closure);
+
+          rerender({ handlers: { onScroll: cloned } });
+
+          expect(result.current.doDependenciesDiffer).toBe(false);
+        }
+      );
+
       test('when re-rendering with unmodified handlers object', () => {
         const handlers = { onScroll: worklet() };
         const { result, rerender } = renderUseHandler(handlers);
@@ -183,9 +203,9 @@ export function runCommonTests() {
 
       test('when handler object reference changes but worklets have same hash and closure', () => {
         const w1 = worklet();
-        w1.__closure = { x: 1 };
+        w1.__closure = [1];
         const w2 = worklet();
-        w2.__closure = { y: 'hello' };
+        w2.__closure = ['hello'];
 
         const { result, rerender } = renderUseHandler({
           onScroll: w1,

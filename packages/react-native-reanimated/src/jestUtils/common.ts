@@ -19,7 +19,7 @@ export const worklet = <Args extends unknown[] = [], ReturnValue = void>(
     ReturnValue
   >;
   fn.__workletHash = Math.random();
-  fn.__closure = {};
+  fn.__closure = [];
   return fn;
 };
 
@@ -29,6 +29,6 @@ export const cloneWorklet = <Args extends unknown[] = [], ReturnValue = void>(
 ): WorkletFunction<Args, ReturnValue> => {
   const w = worklet<Args, ReturnValue>();
   w.__workletHash = original.__workletHash;
-  w.__closure = { ...original.__closure };
+  w.__closure = [...original.__closure];
   return w;
 };

@@ -10,7 +10,7 @@ use oxc_syntax::scope::ScopeId;
 
 use crate::closure::get_closure;
 use crate::factory_expression::{
-    body_references_name, build_closure_object, build_factory_expression,
+    body_references_name, build_closure_array, build_factory_expression,
 };
 use crate::imports::update_relative_requires;
 use crate::naming::make_worklet_name;
@@ -201,7 +201,7 @@ fn make_worklet_factory_call<'a>(
     ));
 
     let mut args = builder.vec_with_capacity(1);
-    args.push(Argument::from(build_closure_object(
+    args.push(Argument::from(build_closure_array(
         builder,
         closure.iter().map(|(name, id)| (name.as_str(), *id)),
     )));

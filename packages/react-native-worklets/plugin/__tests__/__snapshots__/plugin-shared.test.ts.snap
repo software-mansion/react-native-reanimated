@@ -3,12 +3,12 @@
 exports[`babel plugin core (bundle mode) autoworkletization workletizes useAnimatedStyle callback 1`] = `
 "import { useAnimatedStyle } from "react-native-reanimated";
 function Box() {
-  const style = useAnimatedStyle(require("react-native-worklets/.worklets/1.js").default({}));
+  const style = useAnimatedStyle(require("react-native-worklets/.worklets/1.js").default([]));
 }"
 `;
 
 exports[`babel plugin core (bundle mode) autoworkletization workletizes useAnimatedStyle callback 2`] = `
-"export default (function testJs1Factory({}) {
+"export default (function testJs1Factory([]) {
   const testJs1 = function () {
     "use no memo";
 
@@ -16,7 +16,7 @@ exports[`babel plugin core (bundle mode) autoworkletization workletizes useAnima
       width: 100
     };
   };
-  testJs1.__closure = {};
+  testJs1.__closure = [];
   testJs1.__workletHash = 1;
   testJs1.__pluginVersion = "x.y.z";
   return testJs1;
@@ -24,17 +24,13 @@ exports[`babel plugin core (bundle mode) autoworkletization workletizes useAnima
 `;
 
 exports[`babel plugin core (bundle mode) closure handling captures locally bound variables shadowing globals 1`] = `
-"export default (function f_testJs1Factory({
-  console
-}) {
+"export default (function f_testJs1Factory([console]) {
   const f = function () {
     "use no memo";
 
     console.log(console);
   };
-  f.__closure = {
-    console
-  };
+  f.__closure = [console];
   f.__workletHash = 1;
   f.__pluginVersion = "x.y.z";
   return f;
@@ -42,19 +38,13 @@ exports[`babel plugin core (bundle mode) closure handling captures locally bound
 `;
 
 exports[`babel plugin core (bundle mode) closure handling captures multiple closure variables 1`] = `
-"export default (function foo_testJs1Factory({
-  a,
-  b
-}) {
+"export default (function foo_testJs1Factory([a, b]) {
   const foo = function () {
     "use no memo";
 
     return a + b;
   };
-  foo.__closure = {
-    a,
-    b
-  };
+  foo.__closure = [a, b];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   return foo;
@@ -62,14 +52,14 @@ exports[`babel plugin core (bundle mode) closure handling captures multiple clos
 `;
 
 exports[`babel plugin core (bundle mode) closure handling does not capture default globals 1`] = `
-"export default (function f_testJs1Factory({}) {
+"export default (function f_testJs1Factory([]) {
   const f = function () {
     "use no memo";
 
     console.log("hi");
     return Math.random();
   };
-  f.__closure = {};
+  f.__closure = [];
   f.__workletHash = 1;
   f.__pluginVersion = "x.y.z";
   return f;
@@ -77,13 +67,13 @@ exports[`babel plugin core (bundle mode) closure handling does not capture defau
 `;
 
 exports[`babel plugin core (bundle mode) closure handling does not capture navigator 1`] = `
-"export default (function f_testJs1Factory({}) {
+"export default (function f_testJs1Factory([]) {
   const f = function () {
     "use no memo";
 
     return navigator.gpu;
   };
-  f.__closure = {};
+  f.__closure = [];
   f.__workletHash = 1;
   f.__pluginVersion = "x.y.z";
   return f;
@@ -91,13 +81,13 @@ exports[`babel plugin core (bundle mode) closure handling does not capture navig
 `;
 
 exports[`babel plugin core (bundle mode) for react-compiler prevents outlining from worklet functions 1`] = `
-"export default (function testJs1Factory({}) {
+"export default (function testJs1Factory([]) {
   const testJs1 = function () {
     "use no memo";
 
     return [1, 2, 3].map(() => null);
   };
-  testJs1.__closure = {};
+  testJs1.__closure = [];
   testJs1.__workletHash = 1;
   testJs1.__pluginVersion = "x.y.z";
   return testJs1;
@@ -110,32 +100,32 @@ exports[`babel plugin core (bundle mode) without worklets leaves code untouched 
 }"
 `;
 
-exports[`babel plugin core (bundle mode) worklet shapes workletizes ArrowFunctionExpression 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default({});"`;
+exports[`babel plugin core (bundle mode) worklet shapes workletizes ArrowFunctionExpression 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default([]);"`;
 
 exports[`babel plugin core (bundle mode) worklet shapes workletizes ArrowFunctionExpression 2`] = `
-"export default (function testJs1Factory({}) {
+"export default (function testJs1Factory([]) {
   const testJs1 = function (x) {
     "use no memo";
 
     return x + 2;
   };
-  testJs1.__closure = {};
+  testJs1.__closure = [];
   testJs1.__workletHash = 1;
   testJs1.__pluginVersion = "x.y.z";
   return testJs1;
 });"
 `;
 
-exports[`babel plugin core (bundle mode) worklet shapes workletizes FunctionDeclaration 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default({});"`;
+exports[`babel plugin core (bundle mode) worklet shapes workletizes FunctionDeclaration 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default([]);"`;
 
 exports[`babel plugin core (bundle mode) worklet shapes workletizes FunctionDeclaration 2`] = `
-"export default (function foo_testJs1Factory({}) {
+"export default (function foo_testJs1Factory([]) {
   const foo = function (x) {
     "use no memo";
 
     return x + 2;
   };
-  foo.__closure = {};
+  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   return foo;
@@ -144,50 +134,50 @@ exports[`babel plugin core (bundle mode) worklet shapes workletizes FunctionDecl
 
 exports[`babel plugin core (bundle mode) worklet shapes workletizes ObjectMethod 1`] = `
 "const foo = {
-  bar: require("react-native-worklets/.worklets/1.js").default({})
+  bar: require("react-native-worklets/.worklets/1.js").default([])
 };"
 `;
 
 exports[`babel plugin core (bundle mode) worklet shapes workletizes ObjectMethod 2`] = `
-"export default (function bar_testJs1Factory({}) {
+"export default (function bar_testJs1Factory([]) {
   const bar = function (x) {
     "use no memo";
 
     return x + 2;
   };
-  bar.__closure = {};
+  bar.__closure = [];
   bar.__workletHash = 1;
   bar.__pluginVersion = "x.y.z";
   return bar;
 });"
 `;
 
-exports[`babel plugin core (bundle mode) worklet shapes workletizes named FunctionExpression 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default({});"`;
+exports[`babel plugin core (bundle mode) worklet shapes workletizes named FunctionExpression 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default([]);"`;
 
 exports[`babel plugin core (bundle mode) worklet shapes workletizes named FunctionExpression 2`] = `
-"export default (function foo_testJs1Factory({}) {
+"export default (function foo_testJs1Factory([]) {
   const foo = function (x) {
     "use no memo";
 
     return x + 2;
   };
-  foo.__closure = {};
+  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   return foo;
 });"
 `;
 
-exports[`babel plugin core (bundle mode) worklet shapes workletizes unnamed FunctionExpression 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default({});"`;
+exports[`babel plugin core (bundle mode) worklet shapes workletizes unnamed FunctionExpression 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default([]);"`;
 
 exports[`babel plugin core (bundle mode) worklet shapes workletizes unnamed FunctionExpression 2`] = `
-"export default (function testJs1Factory({}) {
+"export default (function testJs1Factory([]) {
   const testJs1 = function (x) {
     "use no memo";
 
     return x + 2;
   };
-  testJs1.__closure = {};
+  testJs1.__closure = [];
   testJs1.__workletHash = 1;
   testJs1.__pluginVersion = "x.y.z";
   return testJs1;
@@ -201,9 +191,7 @@ const _worklet_1_init_data = {
   location: "test.js"
 };
 function Box() {
-  const style = useAnimatedStyle(function testJs1Factory({
-    _worklet_1_init_data
-  }) {
+  const style = useAnimatedStyle(function testJs1Factory([_worklet_1_init_data]) {
     const _e = [new global.Error(), 1, -27];
     const testJs1 = function () {
       "use no memo";
@@ -212,15 +200,13 @@ function Box() {
         width: 100
       };
     };
-    testJs1.__closure = {};
+    testJs1.__closure = [];
     testJs1.__workletHash = 1;
     testJs1.__pluginVersion = "x.y.z";
     testJs1.__initData = _worklet_1_init_data;
     testJs1.__stackDetails = _e;
     return testJs1;
-  }({
-    _worklet_1_init_data
-  }));
+  }([_worklet_1_init_data]));
 }"
 `;
 
@@ -229,65 +215,46 @@ exports[`babel plugin core (bundleless mode) closure handling captures locally b
   log: () => 42
 };
 const _worklet_1_init_data = {
-  code: "(function f_testJs1(){const{console}=this.__closure;console.log(console);})",
+  code: "(function f_testJs1(){const[console]=this.__closure;console.log(console);})",
   location: "test.js"
 };
-const f = function f_testJs1Factory({
-  _worklet_1_init_data,
-  console
-}) {
+const f = function f_testJs1Factory([_worklet_1_init_data, console]) {
   const _e = [new global.Error(), -2, -27];
   const f = function () {
     "use no memo";
 
     console.log(console);
   };
-  f.__closure = {
-    console
-  };
+  f.__closure = [console];
   f.__workletHash = 1;
   f.__pluginVersion = "x.y.z";
   f.__initData = _worklet_1_init_data;
   f.__stackDetails = _e;
   return f;
-}({
-  _worklet_1_init_data,
-  console
-});"
+}([_worklet_1_init_data, console]);"
 `;
 
 exports[`babel plugin core (bundleless mode) closure handling captures multiple closure variables 1`] = `
 "const a = 1;
 const b = 2;
 const _worklet_1_init_data = {
-  code: "(function foo_testJs1(){const{a,b}=this.__closure;return a+b;})",
+  code: "(function foo_testJs1(){const[a,b]=this.__closure;return a+b;})",
   location: "test.js"
 };
-const foo = function foo_testJs1Factory({
-  _worklet_1_init_data,
-  a,
-  b
-}) {
+const foo = function foo_testJs1Factory([_worklet_1_init_data, a, b]) {
   const _e = [new global.Error(), -3, -27];
   const foo = function () {
     "use no memo";
 
     return a + b;
   };
-  foo.__closure = {
-    a,
-    b
-  };
+  foo.__closure = [a, b];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
   foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_1_init_data,
-  a,
-  b
-});"
+}([_worklet_1_init_data, a, b]);"
 `;
 
 exports[`babel plugin core (bundleless mode) closure handling does not capture default globals 1`] = `
@@ -295,9 +262,7 @@ exports[`babel plugin core (bundleless mode) closure handling does not capture d
   code: "(function f_testJs1(){console.log('hi');return Math.random();})",
   location: "test.js"
 };
-const f = function f_testJs1Factory({
-  _worklet_1_init_data
-}) {
+const f = function f_testJs1Factory([_worklet_1_init_data]) {
   const _e = [new global.Error(), 1, -27];
   const f = function () {
     "use no memo";
@@ -305,15 +270,13 @@ const f = function f_testJs1Factory({
     console.log("hi");
     return Math.random();
   };
-  f.__closure = {};
+  f.__closure = [];
   f.__workletHash = 1;
   f.__pluginVersion = "x.y.z";
   f.__initData = _worklet_1_init_data;
   f.__stackDetails = _e;
   return f;
-}({
-  _worklet_1_init_data
-});"
+}([_worklet_1_init_data]);"
 `;
 
 exports[`babel plugin core (bundleless mode) closure handling does not capture navigator 1`] = `
@@ -321,24 +284,20 @@ exports[`babel plugin core (bundleless mode) closure handling does not capture n
   code: "(function f_testJs1(){return navigator.gpu;})",
   location: "test.js"
 };
-const f = function f_testJs1Factory({
-  _worklet_1_init_data
-}) {
+const f = function f_testJs1Factory([_worklet_1_init_data]) {
   const _e = [new global.Error(), 1, -27];
   const f = function () {
     "use no memo";
 
     return navigator.gpu;
   };
-  f.__closure = {};
+  f.__closure = [];
   f.__workletHash = 1;
   f.__pluginVersion = "x.y.z";
   f.__initData = _worklet_1_init_data;
   f.__stackDetails = _e;
   return f;
-}({
-  _worklet_1_init_data
-});"
+}([_worklet_1_init_data]);"
 `;
 
 exports[`babel plugin core (bundleless mode) for react-compiler prevents outlining from worklet functions 1`] = `
@@ -351,24 +310,20 @@ const TestComponent = t0 => {
   const $ = _c(1);
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = function testJs1Factory({
-      _worklet_1_init_data
-    }) {
+    t1 = function testJs1Factory([_worklet_1_init_data]) {
       const _e = [new global.Error(), 1, -27];
       const testJs1 = function () {
         "use no memo";
 
         return [1, 2, 3].map(() => null);
       };
-      testJs1.__closure = {};
+      testJs1.__closure = [];
       testJs1.__workletHash = 1;
       testJs1.__pluginVersion = "x.y.z";
       testJs1.__initData = _worklet_1_init_data;
       testJs1.__stackDetails = _e;
       return testJs1;
-    }({
-      _worklet_1_init_data
-    });
+    }([_worklet_1_init_data]);
     $[0] = t1;
   } else {
     t1 = $[0];
@@ -389,24 +344,20 @@ exports[`babel plugin core (bundleless mode) worklet shapes workletizes ArrowFun
   code: "(function testJs1(x){return x+2;})",
   location: "test.js"
 };
-const foo = function testJs1Factory({
-  _worklet_1_init_data
-}) {
+const foo = function testJs1Factory([_worklet_1_init_data]) {
   const _e = [new global.Error(), 1, -27];
   const testJs1 = function (x) {
     "use no memo";
 
     return x + 2;
   };
-  testJs1.__closure = {};
+  testJs1.__closure = [];
   testJs1.__workletHash = 1;
   testJs1.__pluginVersion = "x.y.z";
   testJs1.__initData = _worklet_1_init_data;
   testJs1.__stackDetails = _e;
   return testJs1;
-}({
-  _worklet_1_init_data
-});"
+}([_worklet_1_init_data]);"
 `;
 
 exports[`babel plugin core (bundleless mode) worklet shapes workletizes FunctionDeclaration 1`] = `
@@ -414,24 +365,20 @@ exports[`babel plugin core (bundleless mode) worklet shapes workletizes Function
   code: "(function foo_testJs1(x){return x+2;})",
   location: "test.js"
 };
-const foo = function foo_testJs1Factory({
-  _worklet_1_init_data
-}) {
+const foo = function foo_testJs1Factory([_worklet_1_init_data]) {
   const _e = [new global.Error(), 1, -27];
   const foo = function (x) {
     "use no memo";
 
     return x + 2;
   };
-  foo.__closure = {};
+  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
   foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_1_init_data
-});"
+}([_worklet_1_init_data]);"
 `;
 
 exports[`babel plugin core (bundleless mode) worklet shapes workletizes ObjectMethod 1`] = `
@@ -440,24 +387,20 @@ exports[`babel plugin core (bundleless mode) worklet shapes workletizes ObjectMe
   location: "test.js"
 };
 const foo = {
-  bar: function bar_testJs1Factory({
-    _worklet_1_init_data
-  }) {
+  bar: function bar_testJs1Factory([_worklet_1_init_data]) {
     const _e = [new global.Error(), 1, -27];
     const bar = function (x) {
       "use no memo";
 
       return x + 2;
     };
-    bar.__closure = {};
+    bar.__closure = [];
     bar.__workletHash = 1;
     bar.__pluginVersion = "x.y.z";
     bar.__initData = _worklet_1_init_data;
     bar.__stackDetails = _e;
     return bar;
-  }({
-    _worklet_1_init_data
-  })
+  }([_worklet_1_init_data])
 };"
 `;
 
@@ -466,24 +409,20 @@ exports[`babel plugin core (bundleless mode) worklet shapes workletizes named Fu
   code: "(function foo_testJs1(x){return x+2;})",
   location: "test.js"
 };
-const foo = function foo_testJs1Factory({
-  _worklet_1_init_data
-}) {
+const foo = function foo_testJs1Factory([_worklet_1_init_data]) {
   const _e = [new global.Error(), 1, -27];
   const foo = function (x) {
     "use no memo";
 
     return x + 2;
   };
-  foo.__closure = {};
+  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
   foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_1_init_data
-});"
+}([_worklet_1_init_data]);"
 `;
 
 exports[`babel plugin core (bundleless mode) worklet shapes workletizes unnamed FunctionExpression 1`] = `
@@ -491,22 +430,18 @@ exports[`babel plugin core (bundleless mode) worklet shapes workletizes unnamed 
   code: "(function testJs1(x){return x+2;})",
   location: "test.js"
 };
-const foo = function testJs1Factory({
-  _worklet_1_init_data
-}) {
+const foo = function testJs1Factory([_worklet_1_init_data]) {
   const _e = [new global.Error(), 1, -27];
   const testJs1 = function (x) {
     "use no memo";
 
     return x + 2;
   };
-  testJs1.__closure = {};
+  testJs1.__closure = [];
   testJs1.__workletHash = 1;
   testJs1.__pluginVersion = "x.y.z";
   testJs1.__initData = _worklet_1_init_data;
   testJs1.__stackDetails = _e;
   return testJs1;
-}({
-  _worklet_1_init_data
-});"
+}([_worklet_1_init_data]);"
 `;

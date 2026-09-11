@@ -2,15 +2,16 @@ import type { NodePath } from '@babel/core';
 import generate from '@babel/generator';
 import type { Binding } from '@babel/traverse';
 import type {
+  ArrayExpression,
   BlockStatement,
   ExpressionStatement,
   FunctionExpression,
-  ObjectExpression,
   ReturnStatement,
   VariableDeclaration,
 } from '@babel/types';
 import {
   arrayExpression,
+  arrayPattern,
   assignmentExpression,
   blockStatement,
   cloneNode,
@@ -26,7 +27,6 @@ import {
   newExpression,
   numericLiteral,
   objectExpression,
-  objectPattern,
   objectProperty,
   returnStatement,
   stringLiteral,
@@ -57,7 +57,7 @@ export function makeWorkletFactory(
   state: WorkletsPluginPass
 ): {
   factory: FunctionExpression;
-  factoryCallParamPack: ObjectExpression;
+  factoryCallParamPack: ArrayExpression;
   workletHash: number;
 } {
   // Returns a new FunctionExpression which is a workletized version of provided
@@ -247,28 +247,20 @@ export function makeWorkletFactory(
       assignmentExpression(
         '=',
         memberExpression(identifier(reactName), identifier('__closure'), false),
-        objectExpression(
+        arrayExpression(
           closureVariables.map((variable) =>
             !state.opts.bundleMode &&
             variable.name.endsWith(workletClassFactorySuffix)
-              ? objectProperty(
-                  identifier(variable.name),
-                  memberExpression(
-                    identifier(
-                      variable.name.slice(
-                        0,
-                        variable.name.length - workletClassFactorySuffix.length
-                      )
-                    ),
-                    identifier(variable.name)
-                  )
+              ? memberExpression(
+                  identifier(
+                    variable.name.slice(
+                      0,
+                      variable.name.length - workletClassFactorySuffix.length
+                    )
+                  ),
+                  identifier(variable.name)
                 )
-              : objectProperty(
-                  cloneNode(variable, true),
-                  cloneNode(variable, true),
-                  false,
-                  true
-                )
+              : cloneNode(variable, true)
           )
         )
       )
@@ -369,35 +361,15 @@ export function makeWorkletFactory(
     factoryParams.unshift(cloneNode(initDataId, true));
   }
 
-  const factoryParamObjectPattern = objectPattern(
-    factoryParams.map((param) =>
-      objectProperty(
-        cloneNode(param, true),
-        cloneNode(param, true),
-        false,
-        true
-      )
-    )
-  );
-
   const factory = functionExpression(
     identifier(workletName + 'Factory'),
-    [factoryParamObjectPattern],
+    [arrayPattern(factoryParams.map((param) => cloneNode(param, true)))],
     blockStatement(statements)
   );
 
   const factoryCallArgs = factoryParams.map((param) => cloneNode(param, true));
 
-  const factoryCallParamPack = objectExpression(
-    factoryCallArgs.map((param) =>
-      objectProperty(
-        cloneNode(param, true),
-        cloneNode(param, true),
-        false,
-        true
-      )
-    )
-  );
+  const factoryCallParamPack = arrayExpression(factoryCallArgs);
 
   if (state.opts.bundleMode) {
     updateRelativeRequires(factory, state);

@@ -395,7 +395,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).not.toContain('_f.__closure = {};');
+      expect(code).toContain('f.__closure = [x, objX]');
       expect(code).toMatchSnapshot();
     });
 
@@ -418,15 +418,15 @@ describe('babel plugin', () => {
             path.isAssignmentExpression() &&
             'property' in path.node.left &&
             'name' in path.node.left.property &&
-            'properties' in path.node.right &&
+            'elements' in path.node.right &&
             path.node.left.property.name === '__closure'
           ) {
-            closureBindings = path.node.right.properties;
+            closureBindings = path.node.right.elements;
           }
         },
       });
-      expect(closureBindings).not.toEqual([]);
-      expect(code).toMatch(/f\.__closure = {\s*globalStuff/gm);
+      expect(closureBindings).toHaveLength(1);
+      expect(code).toContain('f.__closure = [globalStuff]');
       expect(code).toMatchSnapshot();
     });
 
@@ -449,14 +449,15 @@ describe('babel plugin', () => {
             path.isAssignmentExpression() &&
             'property' in path.node.left &&
             'name' in path.node.left.property &&
-            'properties' in path.node.right &&
+            'elements' in path.node.right &&
             path.node.left.property.name === '__closure'
           ) {
-            closureBindings = path.node.right.properties;
+            closureBindings = path.node.right.elements;
           }
         },
       });
       expect(closureBindings).toEqual([]);
+      expect(code).toContain('f.__closure = []');
       expect(code).toMatchSnapshot();
     });
 
@@ -469,7 +470,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input, undefined, { globals: ['foo'] });
-      expect(code).toContain('f.__closure = {}');
+      expect(code).toContain('f.__closure = []');
       expect(code).toMatchSnapshot();
     });
 
@@ -484,7 +485,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input, undefined, { globals: ['foo'] });
-      expect(code).toMatch(/f\.__closure = {\s*foo/gm);
+      expect(code).toContain('f.__closure = [foo]');
       expect(code).toMatchSnapshot();
     });
 
@@ -497,7 +498,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('f.__closure = {}');
+      expect(code).toContain('f.__closure = []');
       expect(code).toMatchSnapshot();
     });
 
@@ -512,7 +513,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toMatch(/f\.__closure = {\s*foo/gm);
+      expect(code).toContain('f.__closure = [foo]');
       expect(code).toMatchSnapshot();
     });
   });
@@ -1093,10 +1094,10 @@ describe('babel plugin', () => {
             path.isAssignmentExpression() &&
             'property' in path.node.left &&
             'name' in path.node.left.property &&
-            'properties' in path.node.right &&
+            'elements' in path.node.right &&
             path.node.left.property.name === '__closure'
           ) {
-            closureBindings = path.node.right.properties;
+            closureBindings = path.node.right.elements;
           }
         },
       });
@@ -2137,7 +2138,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain('export const foo = function foo_null1Factory({');
+      expect(code).toContain('export const foo = function foo_null1Factory([');
       expect(code).toMatchSnapshot();
     });
 
@@ -2151,7 +2152,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain('export default (function foo_null1Factory({');
+      expect(code).toContain('export default (function foo_null1Factory([');
       expect(code).toMatchSnapshot();
     });
 
@@ -2178,7 +2179,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain('export const foo = function null1Factory({');
+      expect(code).toContain('export const foo = function null1Factory([');
       expect(code).toMatchSnapshot();
     });
 
@@ -2192,7 +2193,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain('export default (function null1Factory({');
+      expect(code).toContain('export default (function null1Factory([');
       expect(code).toMatchSnapshot();
     });
 
@@ -2219,7 +2220,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain('export const foo = function null1Factory({');
+      expect(code).toContain('export const foo = function null1Factory([');
       expect(code).toMatchSnapshot();
     });
 
@@ -2233,7 +2234,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain('export default (function null1Factory({');
+      expect(code).toContain('export default (function null1Factory([');
       expect(code).toMatchSnapshot();
     });
 
@@ -2535,7 +2536,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('Clazz__classFactory: Clazz.Clazz__classFactory');
+      expect(code).toContain('foo.__closure = [Clazz.Clazz__classFactory]');
       expect(code).toMatchSnapshot();
     });
 
