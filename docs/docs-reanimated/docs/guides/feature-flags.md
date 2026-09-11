@@ -121,7 +121,7 @@ This feature flag is supposed to fix performance regressions of animations while
 
 ### `ENABLE_SHARED_ELEMENT_TRANSITIONS`
 
-When enabled, Shared Element Transitions are available to use, also the synchronous prop update flags are disabled. The feature is not yet production ready, and may have some limitations or bugs. For more details, see [PR #7466](https://github.com/software-mansion/react-native-reanimated/pull/7466).
+When enabled, Shared Element Transitions are available to use. The feature is not yet production ready, and may have some limitations or bugs. For more details, see [PR #7466](https://github.com/software-mansion/react-native-reanimated/pull/7466).
 
 ### `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`
 
@@ -192,9 +192,13 @@ All four share that layer, so this is easiest to hit with a combination of them.
 
 ### `SYNCHRONOUS_PROPS_IN_LIGHT_TREE`
 
-When enabled, the props that the synchronous path applies to native views (see `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` and `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`) are also merged into the light tree of the experimental layout animations proxy. Shared element transitions and layout animations then start from the current props of a view that moved through the synchronous path. This costs one props clone per synchronously updated view per frame.
+Keep this flag off unless you see the warning described below.
 
-When disabled, a development build logs a warning the first time a shared element transition or a layout animation starts on a view whose synchronous props are missing from the light tree.
+With `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` or `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` enabled, some props go straight to the native views and skip the shadow tree. The layout animations proxy keeps its own copy of the view tree, the light tree, and does not see those props. A shared element transition or a layout animation of such a view then starts from the last committed props, not from the current ones. This happens only when a view gets props through the synchronous path and then starts one of these animations.
+
+When enabled, the synchronous path also merges those props into the light tree. This costs one props clone for each synchronously updated view on every frame, on the path that every animation goes through. Enable the flag only for the screens that hit the case above, for example with `setDynamicFeatureFlag` in an effect of the screen.
+
+When disabled, a development build logs a warning once per view when a shared element transition or a layout animation starts on a view whose synchronous props are missing from the light tree.
 
 ## Static feature flags
 
