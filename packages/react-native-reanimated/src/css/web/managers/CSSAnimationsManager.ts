@@ -220,14 +220,8 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     const animationDelays = animationSettings.animationDelay ?? [];
     this.element.style.animationDelay = processedAnimations
       .map(({ elapsedTime }, i) => {
-        // A list shorter than `animation-name` repeats to match it, so an
-        // index past the end wraps instead of falling back to the initial
-        // value. The sibling properties leave their list to the browser, which
-        // does this on its own; this one is expanded here to fold in
-        // `elapsedTime`, so it has to repeat the list itself.
-        const providedDelay = animationDelays.length
-          ? animationDelays[i % animationDelays.length]
-          : 0;
+        // Repeat delays as CSS does before applying each animation's elapsed time.
+        const providedDelay = animationDelays[i % animationDelays.length] ?? 0;
         return maybeAddSuffix(
           elapsedTime
             ? (normalizeTimeUnit(providedDelay) ?? 0) - elapsedTime
