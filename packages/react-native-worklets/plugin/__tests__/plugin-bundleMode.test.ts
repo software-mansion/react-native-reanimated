@@ -89,6 +89,20 @@ describe('babel plugin in bundleMode', () => {
   });
 
   describe('source replacement', () => {
+    test('packs captures in the same order at the call site and in the factory', () => {
+      const { code, files } = runPlugin(`
+        function make(z, missing, a) {
+          return (suffix) => {
+            'worklet';
+            return [z.value, missing, a, suffix];
+          };
+        }
+        module.exports = make;
+      `);
+      expect(code).toMatchSnapshot();
+      expect(files[0].content).toMatchSnapshot();
+    });
+
     test('replaces inline factory with a require to the worklet file', () => {
       const input = html`<script>
         function foo() {

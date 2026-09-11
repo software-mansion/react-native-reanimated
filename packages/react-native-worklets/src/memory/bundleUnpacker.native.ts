@@ -18,7 +18,7 @@ export function bundleValueUnpacker(objectToUnpack: ObjectToUnpack): unknown {
 
 function getWorklet(
   workletHash: number,
-  closureVariables: Record<string, unknown>
+  closureVariables: unknown[]
 ): WorkletFunction | undefined {
   let worklet;
   if (__DEV__) {
@@ -39,7 +39,7 @@ const metroRequire = globalThis.__r;
 
 function getWorkletFromMetroRequire(
   workletHash: number,
-  closureVariables: Record<string, unknown>
+  closureVariables: unknown[]
 ): WorkletFunction {
   const factory = metroRequire(workletHash).default as WorkletFactory;
   return factory(closureVariables);

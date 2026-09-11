@@ -45,20 +45,7 @@ const objectIs: (a: unknown, b: unknown) => boolean =
         (x === y && (x !== 0 || 1 / (x as number) === 1 / (y as number))) ||
         (Number.isNaN(x as number) && Number.isNaN(y as number));
 
-type WorkletClosure = Record<string, unknown>;
-
-function areWorkletClosuresEqual(
-  next: WorkletClosure,
-  prev: WorkletClosure
-): boolean {
-  const nextKeys = Object.keys(next);
-  const prevKeys = Object.keys(prev);
-
-  return (
-    prevKeys.length === nextKeys.length &&
-    prevKeys.every((key) => key in next && objectIs(next[key], prev[key]))
-  );
-}
+const areWorkletClosuresEqual = areDependenciesEqual;
 
 function areWorkletsEqual(
   next: WorkletFunction,
