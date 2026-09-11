@@ -1082,6 +1082,8 @@ var require_globals = __commonJS({
       "Response",
       "XMLHttpRequest",
       "FormData",
+      "AbortController",
+      "AbortSignal",
       "Blob",
       "FileReader",
       "WebSocket",
