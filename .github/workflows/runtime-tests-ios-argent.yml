@@ -41,6 +41,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   # Check if we have all must-have credentials before running the workflow.
@@ -83,42 +84,23 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Restore packaged app from cache
-        id: appcache
-        uses: actions/cache@6f8efc29b200d32929f49075959781ed54ec270c
-        with:
-          path: apps/fabric-example/dist/FabricExample.app.zip
-          key:
-            runtime-tests-app-zip-${{ env.CONFIGURATION }}-bundle-${{ matrix.bundleMode }}-${{ hashFiles(
-            'yarn.lock',
-            'apps/fabric-example/**',
-            '!apps/fabric-example/scripts/**',
-            'apps/common-app/**',
-            'packages/react-native-reanimated/**',
-            'packages/react-native-worklets/**'
-            ) }}
-
       - name: Use Ruby version from `.ruby-version` file
-        if: steps.appcache.outputs.cache-hit != 'true'
         uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
         with:
           bundler-cache: true
 
       - name: Install monorepo node dependencies
-        if: steps.appcache.outputs.cache-hit != 'true'
         run: yarn install --immutable
 
       - name: Toggle Bundle Mode off (Legacy Eval)
-        if: steps.appcache.outputs.cache-hit != 'true' && !matrix.bundleMode
+        if: ${{ !matrix.bundleMode }}
         run: yarn toggle-bundle-mode
 
       - name: Build Reanimated package
-        if: steps.appcache.outputs.cache-hit != 'true'
         working-directory: packages/react-native-reanimated
         run: yarn build
 
       - name: Setup ccache
-        if: steps.appcache.outputs.cache-hit != 'true'
         uses: ./.github/actions/setup-ccache
         with:
           key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
@@ -126,19 +108,17 @@ jobs:
 
       - name: Install Pods
         id: install-pods
-        if: steps.appcache.outputs.cache-hit != 'true'
         uses: ./.github/actions/install-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: ios
 
       - name: Build runtime-tests app
-        if: steps.appcache.outputs.cache-hit != 'true'
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: node scripts/runtime-tests-server.js --build-only --configuration "$CONFIGURATION"
 
       - name: Save ccache
-        if: steps.appcache.outputs.cache-hit != 'true' && inputs.bundleMode
+        if: inputs.bundleMode
         uses: ./.github/actions/save-ccache
         with:
           key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
@@ -147,7 +127,7 @@ jobs:
       # fan-out saves. Bundle Mode, because the Legacy Eval legs run
       # `yarn toggle-bundle-mode` and no longer match the committed tree.
       - name: Save Pods cache
-        if: steps.appcache.outputs.cache-hit != 'true' && inputs.bundleMode && env.CONFIGURATION == 'DebugRuntimeTests'
+        if: inputs.bundleMode && env.CONFIGURATION == 'DebugRuntimeTests'
         uses: ./.github/actions/save-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
@@ -156,7 +136,6 @@ jobs:
           cache-primary-key: ${{ steps.install-pods.outputs.cache-primary-key }}
 
       - name: Package app artifact
-        if: steps.appcache.outputs.cache-hit != 'true'
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           # Debug apps are deliberately Metro-fed here (the test job runs
