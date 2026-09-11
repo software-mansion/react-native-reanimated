@@ -94,6 +94,9 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
+#ifdef ANDROID
+  mutable bool cleanupPullScheduled_ = false;
+#endif
 
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
@@ -146,8 +149,16 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
       const ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
 
-  void cleanupAnimations(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
+  bool shouldFlushStructuralMutations() const;
+  void cleanupAnimations(
+      TransactionMeta &transaction,
+      const PropsParserContext &propsParserContext,
+      bool flushStructuralMutations) const;
   void cleanupSharedTransitions(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
+#ifdef ANDROID
+  bool hasPendingStructuralCleanup() const;
+  void maybeScheduleCleanupPull(bool flushedStructuralMutations) const;
+#endif
 
   void hideTransitioningViews(
       BeforeOrAfter index,
@@ -198,7 +209,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &parent,
       int hostIndex,
       TransactionMeta &transaction) const;
-  void flushCompletedRemovals(ShadowViewMutationList &filteredMutations) const;
+  void flushCompletedRemovals(ShadowViewMutationList &filteredMutations, bool flushStructuralMutations) const;
 
   void addOngoingAnimations(ShadowViewMutationList &mutations) const;
   ShadowView cloneViewWithoutOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;
