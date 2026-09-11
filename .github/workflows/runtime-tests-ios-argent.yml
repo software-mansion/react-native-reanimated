@@ -21,6 +21,16 @@ on:
         required: false
         type: string
         default: ''
+      ref:
+        description: Git ref to check out (blank = the default ref of the triggering event)
+        required: false
+        type: string
+        default: ''
+      requireApproval:
+        description: Wait for a maintainer to approve the fork-pr-runtime-tests environment before running
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       bundleMode:
@@ -43,9 +53,19 @@ permissions:
   contents: read
 
 jobs:
+  approve-fork:
+    if: github.repository == 'software-mansion/react-native-reanimated' && inputs.requireApproval
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: fork-pr-runtime-tests
+    steps:
+      - name: Approved by a maintainer
+        run: echo "Fork PR approved for the Argent Cloud runtime tests"
+
   # Check if we have all must-have credentials before running the workflow.
   preflight:
-    if: github.repository == 'software-mansion/react-native-reanimated'
+    needs: approve-fork
+    if: ${{ !cancelled() && github.repository == 'software-mansion/react-native-reanimated' && (needs.approve-fork.result == 'success' || needs.approve-fork.result == 'skipped') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -66,7 +86,7 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 90
     concurrency:
-      group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}
+      group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -81,6 +101,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
+          ref: ${{ inputs.ref }}
           persist-credentials: false
 
       - name: Restore packaged app from cache
@@ -182,7 +203,7 @@ jobs:
     runs-on: ubuntu-latest # <- the whole point: no macOS, no local simulator
     timeout-minutes: 60
     concurrency:
-      group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}
+      group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -199,6 +220,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
+          ref: ${{ inputs.ref }}
           persist-credentials: false
 
       - name: Install monorepo node dependencies
