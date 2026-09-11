@@ -93,6 +93,8 @@ std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(jsi::Runtim
     }
     case TransformOp::SkewX:
       return std::make_shared<SkewXOperation>(propertyValue.asString(rt).utf8(rt));
+    case TransformOp::Skew:
+      return std::make_shared<SkewOperation>(rt, propertyValue);
     case TransformOp::SkewY:
       return std::make_shared<SkewYOperation>(propertyValue.asString(rt).utf8(rt));
     case TransformOp::Matrix:
@@ -147,6 +149,8 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(const folly:
     }
     case TransformOp::SkewX:
       return std::make_shared<SkewXOperation>(propertyValue.getString());
+    case TransformOp::Skew:
+      return std::make_shared<SkewOperation>(propertyValue);
     case TransformOp::SkewY:
       return std::make_shared<SkewYOperation>(propertyValue.getString());
     case TransformOp::Matrix:

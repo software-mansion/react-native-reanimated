@@ -18,6 +18,7 @@ enum class TransformOp : uint8_t {
   SkewX,
   SkewY,
   Matrix,
+  Skew,
 };
 
 TransformOp getTransformOperationType(const std::string &property);

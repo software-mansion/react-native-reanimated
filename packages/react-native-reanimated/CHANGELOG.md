@@ -15,7 +15,7 @@
 
 ### 🐛 Bug fixes
 
-- Reject two-axis `skew()` transform strings that React Native cannot represent instead of rendering incorrect geometry. ([#10519](https://github.com/software-mansion/react-native-reanimated/pull/10519) by [@MatiPl01](https://github.com/MatiPl01))
+- Support two-argument `skew()` transform strings with correct geometry and angle interpolation. ([#10519](https://github.com/software-mansion/react-native-reanimated/pull/10519) by [@MatiPl01](https://github.com/MatiPl01))
 - Fix single-argument `translate()` and `skew()` in transform strings repeating the argument on the Y axis instead of leaving it at zero, so `translate(100px)` no longer also moves the element down. ([#10385](https://github.com/software-mansion/react-native-reanimated/pull/10385) by [@dennytosp](https://github.com/dennytosp))
 - Fix the Metro configuration type import to use the public package export. ([#10454](https://github.com/software-mansion/react-native-reanimated/pull/10454) by [@sneakykiwi](https://github.com/sneakykiwi))
 - Skip the Android mounted-tag correction in Layout Animations when React Native's `enableMountingCoordinatorPullModelAndroid` feature flag is on, since the pull model already guarantees that updates can't outrun a view's first mount. ([#10481](https://github.com/software-mansion/react-native-reanimated/pull/10481) by [@piaskowyk](https://github.com/piaskowyk))

@@ -1,6 +1,64 @@
 'use strict';
-import type { TransformsArray } from '../../../types';
-import { ERROR_MESSAGES, processTransform } from '../transform';
+import {
+  ERROR_MESSAGES,
+  processTransform,
+  processTransformForReactNative,
+} from '../transform';
+
+describe(processTransformForReactNative, () => {
+  test.each([
+    [30, 15],
+    [45, 45],
+    [60, 60],
+    [-45, 30],
+    [0, 30],
+    [30, 0],
+    [0, 0],
+    [120, -60],
+  ])('preserves CSS geometry for skew(%sdeg, %sdeg)', (ax, ay) => {
+    const transforms = processTransformForReactNative(
+      `skew(${ax}deg, ${ay}deg)`
+    );
+    // Apply RN operations to basis vectors, rightmost operation first.
+    // CSS skew maps (px, py) to (px + tan(ax) * py, tan(ay) * px + py).
+    for (const [px, py] of [
+      [1, 0],
+      [0, 1],
+      [23, -17],
+    ]) {
+      let x = px;
+      let y = py;
+      for (const operation of [...transforms].reverse()) {
+        if (operation && typeof operation.rotate === 'string') {
+          const angle = parseFloat(operation.rotate);
+          [x, y] = [
+            Math.cos(angle) * x - Math.sin(angle) * y,
+            Math.sin(angle) * x + Math.cos(angle) * y,
+          ];
+        } else if (operation && typeof operation.scaleX === 'number') {
+          x *= operation.scaleX;
+        } else if (operation && typeof operation.scaleY === 'number') {
+          y *= operation.scaleY;
+        } else if (operation && typeof operation.skewX === 'string') {
+          x += Math.tan(parseFloat(operation.skewX)) * y;
+        } else {
+          throw new Error('Unexpected native operation');
+        }
+      }
+      expect(x).toBeCloseTo(px + Math.tan((ax * Math.PI) / 180) * py, 10);
+      expect(y).toBeCloseTo(Math.tan((ay * Math.PI) / 180) * px + py, 10);
+    }
+  });
+
+  test('preserves sibling operations and percentage translations', () => {
+    const result = processTransformForReactNative(
+      'translateX(20%) skew(30deg, 15deg) rotateX(25deg)'
+    );
+    expect(result[0]).toEqual({ translateX: '20%' });
+    expect(result[result.length - 1]).toEqual({ rotateX: '25deg' });
+    expect(result).toHaveLength(6);
+  });
+});
 
 describe(processTransform, () => {
   test('returns the same object if not a string', () => {
@@ -12,7 +70,7 @@ describe(processTransform, () => {
   describe('converts transform string to transform objects', () => {
     const cases: {
       name: string;
-      cases: { input: string; output: TransformsArray }[];
+      cases: { input: string; output: ReturnType<typeof processTransform> }[];
     }[] = [
       {
         name: 'translate',
@@ -175,23 +233,31 @@ describe(processTransform, () => {
           {
             // A single argument leaves the Y axis at zero, it is not repeated.
             input: 'skew(45deg)',
-            output: [{ skewX: '45deg' }, { skewY: '0deg' }],
+            output: [{ skew: ['45deg', '0deg'] }],
           },
           {
             input: 'skew(0)',
-            output: [{ skewX: '0deg' }, { skewY: '0deg' }],
+            output: [{ skew: ['0deg', '0deg'] }],
           },
           {
             input: 'skew(45deg, 0)',
-            output: [{ skewX: '45deg' }, { skewY: '0deg' }],
+            output: [{ skew: ['45deg', '0deg'] }],
           },
           {
             input: 'skew(0rad, 1.5rad)',
-            output: [{ skewX: '0rad' }, { skewY: '1.5rad' }],
+            output: [{ skew: ['0rad', '1.5rad'] }],
           },
           {
             input: 'skew(0, 0)',
-            output: [{ skewX: '0deg' }, { skewY: '0deg' }],
+            output: [{ skew: ['0deg', '0deg'] }],
+          },
+          {
+            input: 'skew(45deg, 30deg)',
+            output: [{ skew: ['45deg', '30deg'] }],
+          },
+          {
+            input: 'skew(1.5rad, -0.5rad)',
+            output: [{ skew: ['1.5rad', '-0.5rad'] }],
           },
         ],
       },
@@ -278,7 +344,7 @@ describe(processTransform, () => {
   describe('converts multiple transforms to the ordered transforms array', () => {
     const cases: {
       input: string;
-      output: TransformsArray;
+      output: ReturnType<typeof processTransform>;
     }[] = [
       {
         input: 'translate(25, 25) scale(2) rotate(45deg)',
@@ -304,8 +370,7 @@ describe(processTransform, () => {
           { translateY: 50 },
           { scaleX: 1.5 },
           { scaleY: 2 },
-          { skewX: '30deg' },
-          { skewY: '0deg' },
+          { skew: ['30deg', '0deg'] },
         ],
       },
       {
@@ -386,14 +451,6 @@ describe(processTransform, () => {
       {
         input: 'skew(45deg, 90)', // Missing units for second skew value
         errorMessage: ERROR_MESSAGES.invalidTransform('skew(45deg, 90)'),
-      },
-      {
-        input: 'skew(45deg, 30deg)', // Two-axis skew cannot be represented by separate skew operations
-        errorMessage: ERROR_MESSAGES.invalidTransform('skew(45deg, 30deg)'),
-      },
-      {
-        input: 'skew(1.5rad, -0.5rad)', // Two-axis skew cannot be represented by separate skew operations
-        errorMessage: ERROR_MESSAGES.invalidTransform('skew(1.5rad, -0.5rad)'),
       },
       {
         input: 'matrix(1, 2, 3)', // Incorrect number of elements for matrix (should be 6 or 16)

@@ -208,6 +208,7 @@ template class TransformOperationInterpolator<ScaleYOperation>;
 // Skew operations
 template class TransformOperationInterpolator<SkewXOperation>;
 template class TransformOperationInterpolator<SkewYOperation>;
+template class TransformOperationInterpolator<SkewOperation>;
 
 // Translate operations (resolvable)
 template class TransformOperationInterpolator<TranslateXOperation>;

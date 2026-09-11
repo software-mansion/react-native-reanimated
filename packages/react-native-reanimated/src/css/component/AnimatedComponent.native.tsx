@@ -5,6 +5,7 @@ import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
 import type { AnyComponent, UnknownRecord } from '../../common';
+import { processTransformForReactNative } from '../../common/style/processors/transform';
 import type { InternalHostInstance } from '../../commonTypes';
 import type {
   AnimatedComponentRef,
@@ -189,9 +190,23 @@ export default class AnimatedComponent<
       default: { collapsable: false },
     });
 
+    const filteredProps = filterCSSProps(props ?? this.props);
+    const style = StyleSheet.flatten(filteredProps.style);
+    if (hasCombinedSkew(style?.transform)) {
+      filteredProps.style = [
+        filteredProps.style,
+        { transform: processTransformForReactNative(style.transform) },
+      ];
+    }
+    if (hasCombinedSkew(filteredProps.transform)) {
+      filteredProps.transform = processTransformForReactNative(
+        filteredProps.transform
+      );
+    }
+
     return (
       <ChildComponent
-        {...filterCSSProps(props ?? this.props)}
+        {...filteredProps}
         {...platformProps}
         // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
         // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
@@ -199,4 +214,13 @@ export default class AnimatedComponent<
       />
     );
   }
+}
+
+function hasCombinedSkew(
+  value: unknown
+): value is Parameters<typeof processTransformForReactNative>[0] {
+  return typeof value === 'string'
+    ? /\bskew\s*\(/.test(value)
+    : Array.isArray(value) &&
+        value.some((operation) => operation && 'skew' in operation);
 }

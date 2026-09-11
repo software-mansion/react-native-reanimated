@@ -151,6 +151,7 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
           {"translateY", transformOp<TranslateYOperation>(0, {RelativeTo::Self, "height"})},
           {"skewX", transformOp<SkewXOperation>("0deg")},
           {"skewY", transformOp<SkewYOperation>("0deg")},
+          {"skew", transformOp<SkewOperation>(SkewAngles{CSSAngle(0.0), CSSAngle(0.0)})},
           {"matrix", transformOp<MatrixOperation>(TransformMatrix2D())}})},
 
     // Filters

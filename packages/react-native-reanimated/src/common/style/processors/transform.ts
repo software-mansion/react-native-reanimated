@@ -1,6 +1,8 @@
 'use strict';
-import type { TransformsArray, ValueProcessor } from '../../types';
+import type { TransformsArray } from '../../types';
 import { isAngle, isNumber, isNumberArray, isPercentage } from '../../utils';
+
+type InternalTransform = TransformsArray[number] | { skew: [string, string] };
 
 export const ERROR_MESSAGES = {
   invalidTransform: (transform: string) =>
@@ -100,29 +102,26 @@ function parseSkewY(values: (number | string)[]): TransformsArray {
     : [];
 }
 
-function isZeroAngle(value: number | string): boolean {
-  'worklet';
-  return value === 0 || (isAngle(value) && parseFloat(value) === 0);
-}
-
-function parseSkew(values: (number | string)[]): TransformsArray {
+function parseSkew(values: (number | string)[]): InternalTransform[] {
   'worklet';
   if (values.length > 2) {
-    return [];
-  }
-  // React Native exposes skewX and skewY as separate operations. Combining
-  // them changes the matrix when both CSS skew angles are nonzero.
-  if (
-    values.length === 2 &&
-    !isZeroAngle(values[0]) &&
-    !isZeroAngle(values[1])
-  ) {
     return [];
   }
   // skew(ax) leaves ay at zero, same as translate above.
   // https://drafts.csswg.org/css-transforms/#funcdef-transform-skew
   const result = parseSkewX([values[0]]).concat(parseSkewY([values[1] ?? 0]));
-  return result.length === 2 ? result : [];
+  // Keep both angles together so native CSS interpolation interpolates angles,
+  // rather than a decomposition of the resulting matrix.
+  return result.length === 2
+    ? [
+        {
+          skew: [
+            String(values[0] === 0 ? '0deg' : values[0]),
+            String(!values[1] ? '0deg' : values[1]),
+          ],
+        },
+      ]
+    : [];
 }
 
 function parseMatrix(values: (number | string)[]): TransformsArray {
@@ -153,7 +152,9 @@ function parsePerspective(values: (number | string)[]): TransformsArray {
     : [];
 }
 
-const parseTransformProperty = (transform: string): TransformsArray => {
+const parseTransformProperty = (
+  transform: string
+): readonly InternalTransform[] => {
   'worklet';
   const [key, valueString] = transform.split(/\(\s*/);
   const values = parseValues(valueString.replace(/\)$/g, ''));
@@ -191,9 +192,9 @@ const parseTransformProperty = (transform: string): TransformsArray => {
   }
 };
 
-export const processTransform: ValueProcessor<TransformsArray | string> = (
-  value
-) => {
+export const processTransform = (
+  value: readonly InternalTransform[] | string
+): readonly InternalTransform[] => {
   'worklet';
   if (typeof value !== 'string') {
     return value;
@@ -215,3 +216,30 @@ export const processTransform: ValueProcessor<TransformsArray | string> = (
       return parsed;
     });
 };
+
+/** Lower the internal skew operation only when passing transforms to RN. */
+export function processTransformForReactNative(
+  value: readonly InternalTransform[] | string
+): TransformsArray {
+  'worklet';
+  const transforms = processTransform(value);
+  return transforms.flatMap((transform): TransformsArray => {
+    if (!transform || !('skew' in transform)) {
+      return [transform];
+    }
+    const [x, y] = transform.skew.map((angle) => {
+      const radians =
+        parseFloat(angle) * (angle.endsWith('deg') ? Math.PI / 180 : 1);
+      return Math.tan(radians);
+    });
+    // QR factorization of [[1, x], [y, 1]]. Unlike two axis skews,
+    // this also preserves the diagonal and works when the determinant is zero.
+    const scaleX = Math.hypot(1, y);
+    return [
+      { rotate: `${Math.atan(y)}rad` },
+      { scaleX },
+      { scaleY: (1 - x * y) / scaleX },
+      { skewX: `${Math.atan((x + y) / (1 + y * y))}rad` },
+    ];
+  });
+}

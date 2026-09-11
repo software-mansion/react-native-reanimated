@@ -1,3 +1,4 @@
+#include <reanimated/CSS/interpolation/transforms/operations/skew.h>
 #include <reanimated/NativeModules/SynchronousPropsBufferSerializer.h>
 
 #ifdef ANDROID
@@ -228,10 +229,11 @@ void serializeSynchronousPropsToBuffers(
           }
           break;
 
-        case CMD_START_OF_TRANSFORM:
+        case CMD_START_OF_TRANSFORM: {
           pushInt(command);
           react_native_assert(value.isArray() && "[Reanimated] Transform value must be an array");
-          for (const auto &item : value) {
+          const auto lowered = css::lowerSkewTransforms(value);
+          for (const auto &item : lowered ? *lowered : value) {
             react_native_assert(item.isObject() && "[Reanimated] Transform array item must be an object");
             react_native_assert(
                 item.size() == 1 && "[Reanimated] Transform array item must have exactly one key-value pair");
@@ -299,6 +301,7 @@ void serializeSynchronousPropsToBuffers(
           }
           pushInt(CMD_END_OF_TRANSFORM);
           break;
+        }
 
         default:
           throw std::runtime_error("[Reanimated] Unsupported prop: " + propName);

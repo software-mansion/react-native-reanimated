@@ -1,3 +1,4 @@
+#include <reanimated/CSS/interpolation/transforms/operations/skew.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
@@ -126,10 +127,10 @@ void UpdatesRegistryManager::addToPropsMap(
 
   if (it == propsMap.cend()) {
     auto propsVector = std::vector<RawProps>{};
-    propsVector.emplace_back(props);
+    propsVector.emplace_back(css::lowerSkewProps(props));
     propsMap.emplace(shadowNodeFamily, propsVector);
   } else {
-    it->second.emplace_back(props);
+    it->second.emplace_back(css::lowerSkewProps(props));
   }
 }
 

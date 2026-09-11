@@ -167,6 +167,12 @@ For animating `react-native-svg` components, see [Animating SVG](/docs/guides/an
 
 ## Remarks
 
+### Transform strings
+
+On native platforms, Reanimated accepts `skew(ax)` and `skew(ax, ay)` in transform strings. Angles can use `deg` or `rad`; unitless `0` is also accepted. The omitted second angle defaults to zero.
+
+For example, `transform: 'skew(30deg, 15deg)'` applies a single CSS skew. Its result differs from `skewX(30deg) skewY(15deg)`. CSS animations and transitions interpolate the two angles independently. The array syntax continues to use React Native's supported transform operations.
+
 ### Style Inheritance
 
 Style inheritance is not supported. Properties that would normally inherit values (e.g., textDecorationColor inheriting from color) must be provided separately, as inheritance is not implemented.

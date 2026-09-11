@@ -6,7 +6,7 @@
 
 namespace reanimated::css {
 
-constexpr std::array<const char *, 13> transformOperationStrings = {
+constexpr std::array<const char *, 14> transformOperationStrings = {
     "perspective",
     "rotate",
     "rotateX",
@@ -19,7 +19,8 @@ constexpr std::array<const char *, 13> transformOperationStrings = {
     "translateY",
     "skewX",
     "skewY",
-    "matrix"};
+    "matrix",
+    "skew"};
 
 TransformOp getTransformOperationType(const std::string &property) {
   static const std::unordered_map<std::string, TransformOp> stringToEnumMap = {
@@ -35,7 +36,8 @@ TransformOp getTransformOperationType(const std::string &property) {
       {"translateY", TransformOp::TranslateY},
       {"skewX", TransformOp::SkewX},
       {"skewY", TransformOp::SkewY},
-      {"matrix", TransformOp::Matrix}};
+      {"matrix", TransformOp::Matrix},
+      {"skew", TransformOp::Skew}};
 
   auto it = stringToEnumMap.find(property);
   if (it != stringToEnumMap.end()) {
