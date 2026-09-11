@@ -171,6 +171,32 @@ describe('babel plugin', () => {
       expect(matches).toHaveLength(2);
     });
 
+    test('a worklet compiles when its file is not on disk', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          return 1;
+        }
+      </script>`;
+
+      // A filename the caller merely NAMES should not become a filename the plugin insists on
+      // FINDING. Any in-memory transform hands one over: a virtual module specifier, a name that
+      // never existed, a source map carrying paths from an earlier build step.
+      //
+      // The `fs` mock at the top of this file intercepts only `/dev/null`, so this filename
+      // reaches the real `readFileSync` — which is the point. Source maps are left ON for the same
+      // reason: under `disableSourceMaps` the read never happens, so the case would pass whatever
+      // the plugin did with it.
+      const { code } = runPlugin(
+        input,
+        undefined,
+        {},
+        'no-such-directory/no-such-file.js'
+      );
+
+      expect(code).toMatch(/function foo_noSuchFileJs[0-9]+\(\)/gm);
+    });
+
     test('removes comments from worklets', () => {
       const input = html`<script>
         const f = () => {

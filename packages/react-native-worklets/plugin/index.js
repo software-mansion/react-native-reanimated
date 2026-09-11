@@ -1622,12 +1622,10 @@ var require_workletStringCode = __commonJS({
     var types_12 = require("@babel/types");
     var assert_1 = require("assert");
     var convertSourceMap = __importStar(require("convert-source-map"));
-    var fs = __importStar(require("fs"));
     var transform_1 = require_transform();
     var types_2 = require_types();
     var utils_1 = require_utils();
     var MOCK_SOURCE_MAP = "mock source map";
-    var querySuffixRE = /[?#].*$/;
     function buildWorkletString(fun, state, closureVariables, workletName, inputMap) {
       var _a;
       restoreRecursiveCalls(fun, workletName);
@@ -1668,12 +1666,6 @@ var require_workletStringCode = __commonJS({
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "`inputMap` is undefined.");
       const includeSourceMap = !((0, utils_1.isRelease)(state) || state.opts.disableSourceMaps);
-      if (includeSourceMap) {
-        inputMap.sourcesContent = [];
-        for (const sourceFile of inputMap.sources) {
-          inputMap.sourcesContent.push(fs.readFileSync(sourceFile.replace(querySuffixRE, "")).toString("utf-8"));
-        }
-      }
       const transformed = (0, transform_1.workletTransformSync)(code, {
         filename: state.file.opts.filename,
         extraPlugins: [

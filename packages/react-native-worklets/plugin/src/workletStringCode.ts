@@ -28,7 +28,6 @@ import {
 } from '@babel/types';
 import { strict as assert } from 'assert';
 import * as convertSourceMap from 'convert-source-map';
-import * as fs from 'fs';
 
 import { workletTransformSync } from './transform';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
@@ -36,7 +35,6 @@ import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
 
 const MOCK_SOURCE_MAP = 'mock source map';
-const querySuffixRE = /[?#].*$/;
 
 export function buildWorkletString(
   fun: BabelFile,
@@ -125,17 +123,16 @@ export function buildWorkletString(
 
   const includeSourceMap = !(isRelease(state) || state.opts.disableSourceMaps);
 
-  if (includeSourceMap) {
-    // Clear contents array (should be empty anyways)
-    inputMap.sourcesContent = [];
-    // Include source contents in source map, because Flipper/iframe is not
-    // allowed to read files from disk.
-    for (const sourceFile of inputMap.sources) {
-      inputMap.sourcesContent.push(
-        fs.readFileSync(sourceFile.replace(querySuffixRE, '')).toString('utf-8')
-      );
-    }
-  }
+  // `inputMap.sourcesContent` is left unpopulated. Both branches below discard it
+  // — the mocked one replaces the whole map, the real one deletes the field — so
+  // nothing this function returns can carry it, whatever it holds here.
+  //
+  // Filling it would therefore read every source off disk for a value with no
+  // consumer, and a source that is not ON disk would take the whole transform
+  // down rather than being skipped: a virtual module specifier, an in-memory
+  // filename, a map carrying paths from an earlier build step. That failure
+  // surfaces as `[Worklets] Babel plugin exception: ENOENT` naming the path, so
+  // it reads as a missing file rather than as a plugin that insisted on one.
 
   const transformed = workletTransformSync(code, {
     filename: state.file.opts.filename,
