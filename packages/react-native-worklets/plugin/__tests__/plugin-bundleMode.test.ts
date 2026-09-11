@@ -89,6 +89,26 @@ describe('babel plugin in bundleMode', () => {
   });
 
   describe('source replacement', () => {
+    test.each(['arrow', 'method'])(
+      'does not shadow forwarded imports with the closure-free %s worklet binding',
+      (kind) => {
+        const name = kind === 'arrow' ? 'testJs1' : 'read';
+        const body = `{ 'worklet'; return [${name}(), _${name}()]; }`;
+        const expression =
+          kind === 'arrow' ? `() => ${body}` : `{ read() ${body} }.read`;
+        const { files } = runPlugin(
+          `
+          import { first as ${name}, second as _${name} } from 'some-library';
+          const f = ${expression};
+        `,
+          {},
+          { importForwarding: { moduleNames: ['some-library'] } }
+        );
+        expect(files[0].content).toContain(`const __${name} =`);
+        expect(files[0].content).toMatchSnapshot();
+      }
+    );
+
     test('packs captures in the same order at the call site and in the factory', () => {
       const { code, files } = runPlugin(`
         function make(z, missing, a) {
@@ -101,6 +121,19 @@ describe('babel plugin in bundleMode', () => {
       `);
       expect(code).toMatchSnapshot();
       expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('exports closure-free worklets without a factory call', () => {
+      const { code, files } = runPlugin(`
+        function factorial(n) {
+          'worklet';
+          return n <= 1 ? 1 : n * factorial(n - 1);
+        }
+        module.exports = factorial;
+      `);
+      expect(code).toMatch(/\.default;/);
+      expect(files[0].content).not.toContain('Factory');
+      expect(files[0].content).not.toContain('__closure');
     });
 
     test('replaces inline factory with a require to the worklet file', () => {
@@ -165,7 +198,7 @@ describe('babel plugin in bundleMode', () => {
       expect(code).toMatchSnapshot();
     });
 
-    test('written file content has factory shape', () => {
+    test('written closure-free file exports the worklet directly', () => {
       const input = html`<script>
         function foo() {
           'worklet';
