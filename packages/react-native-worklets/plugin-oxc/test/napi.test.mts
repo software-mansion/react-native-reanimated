@@ -140,13 +140,13 @@ test('disableInlineStylesWarning suppresses the warning', () => {
 
 test('to_identifier matches @babel/types on leading digits and unicode', () => {
   const { files: a } = transform(
-    `const value = 1; const w = () => { 'worklet'; return value; };`,
+    `const w = () => { 'worklet'; return 1; };`,
     '/proj/2dExample.js',
     {}
   );
   assert.match(a[0].content, /dExampleJs1Factory/);
   const { files: b } = transform(
-    `const value = 1; const w = function ünïcode(){ 'worklet'; return value; };`,
+    `const w = function ünïcode(){ 'worklet'; return 1; };`,
     'test.js',
     {}
   );
@@ -155,7 +155,7 @@ test('to_identifier matches @babel/types on leading digits and unicode', () => {
 
 test('to_identifier rejects non-ID_Continue numerics', () => {
   const { files } = transform(
-    `const value = 1; export const f = () => { 'worklet'; return value; };`,
+    `export const f = () => { 'worklet'; return 1; };`,
     '/tmp/x².js',
     {}
   );

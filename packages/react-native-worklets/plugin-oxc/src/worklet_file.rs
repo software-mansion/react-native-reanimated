@@ -1,6 +1,5 @@
 use std::path::Path;
 
-use oxc_allocator::TakeIn;
 use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
 use oxc_ast::ast::{Expression, Statement};
@@ -12,7 +11,7 @@ const GENERATED_WORKLETS_DIR: &str = ".worklets";
 
 pub fn generate_worklet_file<'a>(
     builder: AstBuilder<'a>,
-    mut factory: Expression<'a>,
+    factory: Expression<'a>,
     imports: &[crate::types::ImportInfo],
     filename: &str,
     worklets_package_dir: Option<&str>,
@@ -32,16 +31,6 @@ pub fn generate_worklet_file<'a>(
             rebased.source = p;
         }
         body.push(build_import_declaration(builder, &rebased));
-    }
-    if let Expression::FunctionExpression(function) = &mut factory
-        && function.params.items.is_empty()
-    {
-        let statements = &mut function.body.as_mut().unwrap().statements;
-        let Some(Statement::ReturnStatement(mut returned)) = statements.pop() else {
-            unreachable!("a worklet factory must return its worklet");
-        };
-        body.extend(statements.take_in(builder));
-        factory = returned.argument.take().unwrap();
     }
     let export =
         builder.alloc_export_default_declaration(SPAN, ExportDefaultDeclarationKind::from(factory));

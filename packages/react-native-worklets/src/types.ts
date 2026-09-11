@@ -69,7 +69,7 @@ interface WorkletInitData {
 }
 
 interface WorkletProps {
-  __closure?: WorkletClosure;
+  __closure: WorkletClosure;
   __workletHash: number;
   /** Only in Legacy Eval Mode. */
   __initData?: WorkletInitData;

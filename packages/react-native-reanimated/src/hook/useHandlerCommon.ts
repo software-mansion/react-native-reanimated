@@ -57,8 +57,7 @@ function areWorkletsEqual(
 
   return (
     next.__workletHash === prev.__workletHash &&
-    ((next.__closure === undefined && prev.__closure === undefined) ||
-      areWorkletClosuresEqual(next.__closure, prev.__closure))
+    areWorkletClosuresEqual(next.__closure, prev.__closure)
   );
 }
 

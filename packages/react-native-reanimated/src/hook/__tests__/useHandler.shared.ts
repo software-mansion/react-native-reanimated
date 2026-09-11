@@ -156,16 +156,6 @@ export function runCommonTests() {
           before: [{ nested: true }],
           after: [{ nested: true }],
         },
-        {
-          name: 'worklet gains a closure',
-          before: undefined,
-          after: [1],
-        },
-        {
-          name: 'worklet loses its closure',
-          before: [1],
-          after: undefined,
-        },
       ])('when $name for same hash', ({ before, after }) => {
         const w = worklet();
         w.__closure = before;
@@ -181,7 +171,7 @@ export function runCommonTests() {
 
     describe('is false', () => {
       test.each([
-        { name: 'no captured values', closure: undefined },
+        { name: 'no captured values', closure: [] },
         { name: 'equal captured values', closure: [1, NaN, 'hello'] },
       ])(
         'when distinct worklets have the same hash and $name',
@@ -192,9 +182,7 @@ export function runCommonTests() {
           const cloned = cloneWorklet(w);
 
           expect(cloned).not.toBe(w);
-          if (closure !== undefined) {
-            expect(cloned.__closure).not.toBe(w.__closure);
-          }
+          expect(cloned.__closure).not.toBe(w.__closure);
 
           rerender({ handlers: { onScroll: cloned } });
 
