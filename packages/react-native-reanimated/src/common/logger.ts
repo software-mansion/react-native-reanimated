@@ -11,12 +11,12 @@ export enum ReanimatedLogLevel {
   error = 2,
 }
 
-type LogData = {
+export type LogData = {
   level: ReanimatedLogLevel;
   message: string;
 };
 
-type LogFunction = (data: LogData) => void;
+export type LogFunction = (data: LogData) => void;
 
 export type LoggerConfig = {
   level?: ReanimatedLogLevel;
@@ -25,6 +25,7 @@ export type LoggerConfig = {
 
 export type LoggerConfigInternal = {
   logFunction: LogFunction;
+  onLog?: LogFunction;
 } & Required<LoggerConfig>;
 
 function logToConsole(data: LogData) {
@@ -67,17 +68,23 @@ export function getLoggerConfig() {
  *   - Level: The minimum log level to display.
  *   - Strict: Whether to log warnings and errors that are not strict. Defaults to
  *     false.
+ *
+ * @param onLog - An optional callback invoked for every log that passes the
+ *   `level` and `strict` filters, in addition to the default console output.
+ *   Omitting it clears a previously registered callback.
  */
 export function updateLoggerConfig(
   currentConfig: LoggerConfigInternal,
-  options?: Partial<LoggerConfig>
+  options?: Partial<LoggerConfig>,
+  onLog?: LogFunction
 ) {
   'worklet';
   global.__reanimatedLoggerConfig = {
     ...currentConfig,
-    // Don't reuse previous level and strict values from the current config
+    // Don't reuse previous level, strict and onLog values from the current config
     level: options?.level ?? DEFAULT_LOGGER_CONFIG.level,
     strict: options?.strict ?? DEFAULT_LOGGER_CONFIG.strict,
+    onLog,
   };
 }
 
@@ -106,10 +113,13 @@ function handleLog(
     message += `\n\n${DOCS_REFERENCE}`;
   }
 
-  config.logFunction({
+  const data = {
     level,
     message: `${PREFIX} ${message}`,
-  });
+  };
+
+  config.logFunction(data);
+  config.onLog?.(data);
 }
 
 export const logger = {
