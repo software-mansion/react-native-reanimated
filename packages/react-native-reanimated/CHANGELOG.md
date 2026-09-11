@@ -11,6 +11,7 @@
 
 ### 🎉 New features
 
+- Run CSS transitions for `backgroundColor`, `borderColor`, and numeric `borderRadius` on the Android platform animation path. ([#10310](https://github.com/software-mansion/react-native-reanimated/pull/10310) by [@MatiPl01](https://github.com/MatiPl01))
 - Add iOS Swift Package Manager support via `Package.swift` and SPM integration metadata in `react-native.config.js`, with a dependency on `RNWorklets`. ([#10472](https://github.com/software-mansion/react-native-reanimated/pull/10472) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
 
 ### 🐛 Bug fixes
