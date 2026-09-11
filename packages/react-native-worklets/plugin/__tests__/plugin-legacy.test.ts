@@ -456,8 +456,8 @@ describe('babel plugin', () => {
           }
         },
       });
-      expect(closureBindings).toEqual([]);
-      expect(code).toContain('f.__closure = []');
+      expect(closureBindings).toBeUndefined();
+      expect(code).not.toContain('__closure');
       expect(code).toMatchSnapshot();
     });
 
@@ -470,7 +470,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input, undefined, { globals: ['foo'] });
-      expect(code).toContain('f.__closure = []');
+      expect(code).not.toContain('__closure');
       expect(code).toMatchSnapshot();
     });
 
@@ -498,7 +498,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('f.__closure = []');
+      expect(code).not.toContain('__closure');
       expect(code).toMatchSnapshot();
     });
 

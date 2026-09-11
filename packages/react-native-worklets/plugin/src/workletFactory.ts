@@ -117,7 +117,22 @@ export function makeWorkletFactory(
       )
     : clone;
 
-  const { workletName, reactName } = makeWorkletName(fun, state);
+  const { workletName, reactName: initialReactName } = makeWorkletName(
+    fun,
+    state
+  );
+  let reactName = initialReactName;
+  if (state.opts.bundleMode && closureVariables.length === 0) {
+    // The worklet binding will share module scope with forwarded imports.
+    const importedNames = new Set(
+      [...moduleBindingsToImport, ...relativeBindingsToImport].map(
+        (binding) => binding.identifier.name
+      )
+    );
+    while (importedNames.has(reactName)) {
+      reactName = `_${reactName}`;
+    }
+  }
 
   let mutatedClosureVariables;
   if (state.opts.bundleMode) {
@@ -243,28 +258,37 @@ export function makeWorkletFactory(
     variableDeclaration('const', [
       variableDeclarator(identifier(reactName), funExpression),
     ]),
-    expressionStatement(
-      assignmentExpression(
-        '=',
-        memberExpression(identifier(reactName), identifier('__closure'), false),
-        arrayExpression(
-          closureVariables.map((variable) =>
-            !state.opts.bundleMode &&
-            variable.name.endsWith(workletClassFactorySuffix)
-              ? memberExpression(
-                  identifier(
-                    variable.name.slice(
-                      0,
-                      variable.name.length - workletClassFactorySuffix.length
-                    )
-                  ),
-                  identifier(variable.name)
+    ...(closureVariables.length > 0
+      ? [
+          expressionStatement(
+            assignmentExpression(
+              '=',
+              memberExpression(
+                identifier(reactName),
+                identifier('__closure'),
+                false
+              ),
+              arrayExpression(
+                closureVariables.map((variable) =>
+                  !state.opts.bundleMode &&
+                  variable.name.endsWith(workletClassFactorySuffix)
+                    ? memberExpression(
+                        identifier(
+                          variable.name.slice(
+                            0,
+                            variable.name.length -
+                              workletClassFactorySuffix.length
+                          )
+                        ),
+                        identifier(variable.name)
+                      )
+                    : cloneNode(variable, true)
                 )
-              : cloneNode(variable, true)
-          )
-        )
-      )
-    ),
+              )
+            )
+          ),
+        ]
+      : []),
     expressionStatement(
       assignmentExpression(
         '=',
@@ -363,7 +387,9 @@ export function makeWorkletFactory(
 
   const factory = functionExpression(
     identifier(workletName + 'Factory'),
-    [arrayPattern(factoryParams.map((param) => cloneNode(param, true)))],
+    factoryParams.length > 0
+      ? [arrayPattern(factoryParams.map((param) => cloneNode(param, true)))]
+      : [],
     blockStatement(statements)
   );
 

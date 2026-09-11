@@ -6,6 +6,7 @@
 
 ### 🛠 Breaking changes
 
+- Omit empty worklet closures and export closure-free worklets directly in Bundle Mode without factory wrappers. ([#10517](https://github.com/software-mansion/react-native-reanimated/pull/10517) by [@tshmieldev](https://github.com/tshmieldev))
 - Store worklet closures as arrays instead of objects. ([#10506](https://github.com/software-mansion/react-native-reanimated/pull/10506) by [@tshmieldev](https://github.com/tshmieldev))
 - Remove the Serializable handle - `SerializableInitializer`, `createSerializableInitializer` and the `__init` clone path are gone. `Serializable::ValueType::HandleType` stays in the Compat Stable API enum for ABI compatibility and `extractSerializable` throws for it. ([#10414](https://github.com/software-mansion/react-native-reanimated/pull/10414) by [@tjzel](https://github.com/tjzel))
 - `makeShareable` now serializes its value eagerly into a retaining Serializable instead of rebuilding it lazily on each runtime through a handle. ([#10412](https://github.com/software-mansion/react-native-reanimated/pull/10412) by [@tjzel](https://github.com/tjzel))

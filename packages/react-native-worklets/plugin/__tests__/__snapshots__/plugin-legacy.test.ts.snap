@@ -28,7 +28,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
     const bar = "worklet"; // prettier-ignore
     const baz = "worklet"; // prettier-ignore
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -51,7 +50,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
 
     return x + 2;
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -133,7 +131,6 @@ FadeIn.withCallback(function null1Factory([_worklet_1_init_data]) {
 
     console.log("FadeIn with build after");
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -155,7 +152,6 @@ new FadeIn().withCallback(function null1Factory([_worklet_1_init_data]) {
 
     console.log("FadeIn with build after");
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -177,7 +173,6 @@ FadeIn.build().withCallback(function null1Factory([_worklet_1_init_data]) {
 
     console.log("FadeIn with build before");
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -199,7 +194,6 @@ new FadeIn().build().withCallback(function null1Factory([_worklet_1_init_data]) 
 
     console.log("FadeIn with build before");
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -221,7 +215,6 @@ FadeIn.build().duration().withCallback(function null1Factory([_worklet_1_init_da
 
     console.log("FadeIn with build");
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -243,7 +236,6 @@ new FadeIn().build().duration().withCallback(function null1Factory([_worklet_1_i
 
     console.log("FadeIn with build");
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -265,7 +257,6 @@ FadeIn.withCallback(function null1Factory([_worklet_1_init_data]) {
 
     console.log("FadeIn with AmogusIn after");
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -287,7 +278,6 @@ new FadeIn().withCallback(function null1Factory([_worklet_1_init_data]) {
 
     console.log("FadeIn with AmogusIn after");
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -309,7 +299,6 @@ FadeIn.withCallback(function null1Factory([_worklet_1_init_data]) {
 
     console.log("FadeIn");
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -331,7 +320,6 @@ new FadeIn().withCallback(function null1Factory([_worklet_1_init_data]) {
 
     console.log("FadeIn");
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -353,7 +341,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
 
     await Promise.resolve();
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -375,7 +362,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
 
     await Promise.resolve();
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -434,7 +420,6 @@ class Foo {
 
       return x + 2;
     };
-    null1.__closure = [];
     null1.__workletHash = 1;
     null1.__pluginVersion = "x.y.z";
     null1.__initData = _worklet_1_init_data;
@@ -458,7 +443,6 @@ class Foo {
 
       return x + 2;
     };
-    bar.__closure = [];
     bar.__workletHash = 1;
     bar.__pluginVersion = "x.y.z";
     bar.__initData = _worklet_1_init_data;
@@ -482,7 +466,6 @@ class Foo {
 
       return x + 2;
     };
-    null1.__closure = [];
     null1.__workletHash = 1;
     null1.__pluginVersion = "x.y.z";
     null1.__initData = _worklet_1_init_data;
@@ -506,7 +489,6 @@ class Foo {
 
       return x + 2;
     };
-    bar.__closure = [];
     bar.__workletHash = 1;
     bar.__pluginVersion = "x.y.z";
     bar.__initData = _worklet_1_init_data;
@@ -557,7 +539,6 @@ const f = function f_null1Factory([_worklet_1_init_data]) {
 
     console.log(arguments);
   };
-  f.__closure = [];
   f.__workletHash = 1;
   f.__pluginVersion = "x.y.z";
   f.__initData = _worklet_1_init_data;
@@ -579,7 +560,6 @@ const f = function f_null1Factory([_worklet_1_init_data]) {
 
     console.log(foo);
   };
-  f.__closure = [];
   f.__workletHash = 1;
   f.__pluginVersion = "x.y.z";
   f.__initData = _worklet_1_init_data;
@@ -649,7 +629,6 @@ const f = function f_null1Factory([_worklet_1_init_data]) {
 
     globalStuff();
   };
-  f.__closure = [];
   f.__workletHash = 1;
   f.__pluginVersion = "x.y.z";
   f.__initData = _worklet_1_init_data;
@@ -693,7 +672,6 @@ const foo = useAnimatedStyle(function null1Factory([_worklet_1_init_data]) {
 
     const x = 1;
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -712,7 +690,6 @@ const foo = useAnimatedStyle(function null1Factory([_worklet_1_init_data]) {
 
     const x = 1;
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__initData = _worklet_1_init_data;
   return null1;
@@ -729,7 +706,6 @@ const foo = useAnimatedStyle(function null1Factory([_worklet_1_init_data]) {
 
     const x = 1;
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__initData = _worklet_1_init_data;
   return null1;
@@ -748,7 +724,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
   const foo = function () {
     "use no memo";
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -777,7 +752,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
   const foo = function () {
     "use no memo";
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -799,7 +773,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
   const foo = function () {
     "use no memo";
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -821,7 +794,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
   const foo = function () {
     "use no memo";
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -843,7 +815,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
   const foo = function () {
     "use no memo";
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -860,7 +831,6 @@ const bar = function bar_null2Factory([_worklet_2_init_data]) {
   const bar = function () {
     "use no memo";
   };
-  bar.__closure = [];
   bar.__workletHash = 2;
   bar.__pluginVersion = "x.y.z";
   bar.__initData = _worklet_2_init_data;
@@ -877,7 +847,6 @@ const baz = function baz_null3Factory([_worklet_3_init_data]) {
   const baz = function () {
     "use no memo";
   };
-  baz.__closure = [];
   baz.__workletHash = 3;
   baz.__pluginVersion = "x.y.z";
   baz.__initData = _worklet_3_init_data;
@@ -894,7 +863,6 @@ const foobar = function foobar_null4Factory([_worklet_4_init_data]) {
   const foobar = function () {
     "use no memo";
   };
-  foobar.__closure = [];
   foobar.__workletHash = 4;
   foobar.__pluginVersion = "x.y.z";
   foobar.__initData = _worklet_4_init_data;
@@ -920,7 +888,6 @@ const foo = function null1Factory([_worklet_1_init_data]) {
 
     return "bar";
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -942,7 +909,6 @@ export default (function null1Factory([_worklet_1_init_data]) {
 
     return "bar";
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -964,7 +930,6 @@ export const foo = function null1Factory([_worklet_1_init_data]) {
 
     return "bar";
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -1012,7 +977,6 @@ const Clazz = function () {
 
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
-    _classCallCheck.__closure = [];
     _classCallCheck.__workletHash = 1;
     _classCallCheck.__pluginVersion = "x.y.z";
     _classCallCheck.__initData = _worklet_1_init_data;
@@ -1033,7 +997,6 @@ const Clazz = function () {
       }
       return ("string" === r ? String : Number)(t);
     };
-    _toPrimitive.__closure = [];
     _toPrimitive.__workletHash = 2;
     _toPrimitive.__pluginVersion = "x.y.z";
     _toPrimitive.__initData = _worklet_2_init_data;
@@ -1158,7 +1121,6 @@ export default (function () {
 
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
-    _classCallCheck.__closure = [];
     _classCallCheck.__workletHash = 1;
     _classCallCheck.__pluginVersion = "x.y.z";
     _classCallCheck.__initData = _worklet_1_init_data;
@@ -1179,7 +1141,6 @@ export default (function () {
       }
       return ("string" === r ? String : Number)(t);
     };
-    _toPrimitive.__closure = [];
     _toPrimitive.__workletHash = 2;
     _toPrimitive.__pluginVersion = "x.y.z";
     _toPrimitive.__initData = _worklet_2_init_data;
@@ -1304,7 +1265,6 @@ export const Clazz = function () {
 
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
-    _classCallCheck.__closure = [];
     _classCallCheck.__workletHash = 1;
     _classCallCheck.__pluginVersion = "x.y.z";
     _classCallCheck.__initData = _worklet_1_init_data;
@@ -1325,7 +1285,6 @@ export const Clazz = function () {
       }
       return ("string" === r ? String : Number)(t);
     };
-    _toPrimitive.__closure = [];
     _toPrimitive.__workletHash = 2;
     _toPrimitive.__pluginVersion = "x.y.z";
     _toPrimitive.__initData = _worklet_2_init_data;
@@ -1424,7 +1383,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
 
     return "bar";
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -1446,7 +1404,6 @@ export default (function foo_null1Factory([_worklet_1_init_data]) {
 
     return "bar";
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -1468,7 +1425,6 @@ export const foo = function foo_null1Factory([_worklet_1_init_data]) {
 
     return "bar";
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -1490,7 +1446,6 @@ const foo = function null1Factory([_worklet_1_init_data]) {
 
     return "bar";
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -1512,7 +1467,6 @@ export default (function null1Factory([_worklet_1_init_data]) {
 
     return "bar";
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -1534,7 +1488,6 @@ export const foo = function null1Factory([_worklet_1_init_data]) {
 
     return "bar";
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -1557,7 +1510,6 @@ const foo = {
 
       return "bar";
     };
-    bar.__closure = [];
     bar.__workletHash = 1;
     bar.__pluginVersion = "x.y.z";
     bar.__initData = _worklet_1_init_data;
@@ -1581,7 +1533,6 @@ export default {
 
       return "bar";
     };
-    bar.__closure = [];
     bar.__workletHash = 1;
     bar.__pluginVersion = "x.y.z";
     bar.__initData = _worklet_1_init_data;
@@ -1605,7 +1556,6 @@ export const foo = {
 
       return "bar";
     };
-    bar.__closure = [];
     bar.__workletHash = 1;
     bar.__pluginVersion = "x.y.z";
     bar.__initData = _worklet_1_init_data;
@@ -1628,7 +1578,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
 
     return "bar";
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -1650,7 +1599,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
 
     return "bar";
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -1669,7 +1617,6 @@ const bar = function null2Factory([_worklet_2_init_data]) {
 
     return "foobar";
   };
-  null2.__closure = [];
   null2.__workletHash = 2;
   null2.__pluginVersion = "x.y.z";
   null2.__initData = _worklet_2_init_data;
@@ -1693,7 +1640,6 @@ const animatedStyle = useAnimatedStyle(function foo_null1Factory([_worklet_1_ini
       width: 50
     };
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -1717,7 +1663,6 @@ const animatedStyle = useAnimatedStyle(function null1Factory([_worklet_1_init_da
       width: 50
     };
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -1742,7 +1687,6 @@ const style = function null1Factory([_worklet_1_init_data]) {
       backgroundColor: "blue"
     };
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -1766,7 +1710,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
     yield "hello";
     yield "world";
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -1789,7 +1732,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
     yield "hello";
     yield "world";
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -1870,7 +1812,6 @@ useAnimatedScrollHandler(function null1Factory([_worklet_1_init_data]) {
 
     console.log(event);
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -1911,7 +1852,6 @@ useAnimatedScrollHandler({
     const null1 = function () {
       "use no memo";
     };
-    null1.__closure = [];
     null1.__workletHash = 1;
     null1.__pluginVersion = "x.y.z";
     null1.__initData = _worklet_1_init_data;
@@ -1923,7 +1863,6 @@ useAnimatedScrollHandler({
     const null2 = function () {
       "use no memo";
     };
-    null2.__closure = [];
     null2.__workletHash = 2;
     null2.__pluginVersion = "x.y.z";
     null2.__initData = _worklet_2_init_data;
@@ -1935,7 +1874,6 @@ useAnimatedScrollHandler({
     const null3 = function () {
       "use no memo";
     };
-    null3.__closure = [];
     null3.__workletHash = 3;
     null3.__pluginVersion = "x.y.z";
     null3.__initData = _worklet_3_init_data;
@@ -1947,7 +1885,6 @@ useAnimatedScrollHandler({
     const null4 = function () {
       "use no memo";
     };
-    null4.__closure = [];
     null4.__workletHash = 4;
     null4.__pluginVersion = "x.y.z";
     null4.__initData = _worklet_4_init_data;
@@ -1959,7 +1896,6 @@ useAnimatedScrollHandler({
     const null5 = function () {
       "use no memo";
     };
-    null5.__closure = [];
     null5.__workletHash = 5;
     null5.__pluginVersion = "x.y.z";
     null5.__initData = _worklet_5_init_data;
@@ -1982,7 +1918,6 @@ useAnimatedScrollHandler(function foo_null1Factory([_worklet_1_init_data]) {
 
     console.log(event);
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -2004,7 +1939,6 @@ useAnimatedScrollHandler(function null1Factory([_worklet_1_init_data]) {
 
     console.log(event);
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -2027,7 +1961,6 @@ useAnimatedScrollHandler({
 
       console.log(event);
     };
-    null1.__closure = [];
     null1.__workletHash = 1;
     null1.__pluginVersion = "x.y.z";
     null1.__initData = _worklet_1_init_data;
@@ -2051,7 +1984,6 @@ useAnimatedScrollHandler({
 
       console.log(event);
     };
-    onScroll.__closure = [];
     onScroll.__workletHash = 1;
     onScroll.__pluginVersion = "x.y.z";
     onScroll.__initData = _worklet_1_init_data;
@@ -2075,7 +2007,6 @@ useAnimatedScrollHandler({
 
       console.log(event);
     };
-    onScroll.__closure = [];
     onScroll.__workletHash = 1;
     onScroll.__pluginVersion = "x.y.z";
     onScroll.__initData = _worklet_1_init_data;
@@ -2099,7 +2030,6 @@ useAnimatedScrollHandler({
 
       console.log(event);
     };
-    null1.__closure = [];
     null1.__workletHash = 1;
     null1.__pluginVersion = "x.y.z";
     null1.__initData = _worklet_1_init_data;
@@ -2149,7 +2079,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
     const bar = [4, 5];
     const baz = [1, ...[2, 3], ...bar];
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -2171,7 +2100,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
 
     console.log(args);
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -2193,7 +2121,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
 
     console.log(...arg);
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -2226,7 +2153,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
       ...bar
     };
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -2260,7 +2186,6 @@ const foo = useTapGesture({
 
       console.log("onBegin");
     };
-    null1.__closure = [];
     null1.__workletHash = 1;
     null1.__pluginVersion = "x.y.z";
     null1.__initData = _worklet_1_init_data;
@@ -2274,7 +2199,6 @@ const foo = useTapGesture({
 
       console.log("onStart");
     };
-    null2.__closure = [];
     null2.__workletHash = 2;
     null2.__pluginVersion = "x.y.z";
     null2.__initData = _worklet_2_init_data;
@@ -2288,7 +2212,6 @@ const foo = useTapGesture({
 
       console.log("onEnd");
     };
-    null3.__closure = [];
     null3.__workletHash = 3;
     null3.__pluginVersion = "x.y.z";
     null3.__initData = _worklet_3_init_data;
@@ -2321,7 +2244,6 @@ const foo = Gesture.Tap().numberOfTaps(2).onBegin(function null1Factory([_workle
 
     console.log("onBegin");
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -2334,7 +2256,6 @@ const foo = Gesture.Tap().numberOfTaps(2).onBegin(function null1Factory([_workle
 
     console.log("onStart");
   };
-  null2.__closure = [];
   null2.__workletHash = 2;
   null2.__pluginVersion = "x.y.z";
   null2.__initData = _worklet_2_init_data;
@@ -2347,7 +2268,6 @@ const foo = Gesture.Tap().numberOfTaps(2).onBegin(function null1Factory([_workle
 
     console.log("onEnd");
   };
-  null3.__closure = [];
   null3.__workletHash = 3;
   null3.__pluginVersion = "x.y.z";
   null3.__initData = _worklet_3_init_data;
@@ -2367,7 +2287,6 @@ const onStart = function null1Factory([_worklet_1_init_data]) {
   const null1 = function () {
     "use no memo";
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -2390,7 +2309,6 @@ const onBegin = function null1Factory([_worklet_1_init_data]) {
 
     console.log("onBegin");
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -2416,7 +2334,6 @@ const onBegin = function null1Factory([_worklet_1_init_data]) {
 
     console.log("onBegin");
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -2443,7 +2360,6 @@ styleFactory = function null1Factory([_worklet_1_init_data]) {
 
     return "AssignmentExpression";
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -2466,7 +2382,6 @@ const styleFactory = function styleFactory_null1Factory([_worklet_1_init_data]) 
 
     return "FunctionDeclaration";
   };
-  styleFactory.__closure = [];
   styleFactory.__workletHash = 1;
   styleFactory.__pluginVersion = "x.y.z";
   styleFactory.__initData = _worklet_1_init_data;
@@ -2491,7 +2406,6 @@ styleFactory = function null1Factory([_worklet_1_init_data]) {
 
     return {};
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -2514,7 +2428,6 @@ let styleFactory = function null1Factory([_worklet_1_init_data]) {
 
     return {};
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -2539,7 +2452,6 @@ styleFactory = function null1Factory([_worklet_1_init_data]) {
 
     return "AssignmentExpression";
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -2562,7 +2474,6 @@ const styleFactory = function styleFactory_null1Factory([_worklet_1_init_data]) 
 
     return {};
   };
-  styleFactory.__closure = [];
   styleFactory.__workletHash = 1;
   styleFactory.__pluginVersion = "x.y.z";
   styleFactory.__initData = _worklet_1_init_data;
@@ -2586,7 +2497,6 @@ styleFactory = function null1Factory([_worklet_1_init_data]) {
 
     return {};
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -2609,7 +2519,6 @@ let styleFactory = function null1Factory([_worklet_1_init_data]) {
 
     return {};
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -2636,7 +2545,6 @@ styleFactory = function null1Factory([_worklet_1_init_data]) {
 
     return "AssignmentExpression";
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -2659,7 +2567,6 @@ handler = {
     const null1 = function () {
       "use no memo";
     };
-    null1.__closure = [];
     null1.__workletHash = 1;
     null1.__pluginVersion = "x.y.z";
     null1.__initData = _worklet_1_init_data;
@@ -2682,7 +2589,6 @@ let handler = {
     const null1 = function () {
       "use no memo";
     };
-    null1.__closure = [];
     null1.__workletHash = 1;
     null1.__pluginVersion = "x.y.z";
     null1.__initData = _worklet_1_init_data;
@@ -2711,7 +2617,6 @@ handler = {
 
       return "AssignmentExpression";
     };
-    null1.__closure = [];
     null1.__workletHash = 1;
     null1.__pluginVersion = "x.y.z";
     null1.__initData = _worklet_1_init_data;
@@ -2737,7 +2642,6 @@ styleFactory = function null1Factory([_worklet_1_init_data]) {
 
     return "AssignmentAfterUse";
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -2759,7 +2663,6 @@ let styleFactory = function null1Factory([_worklet_1_init_data]) {
 
     return {};
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -2783,7 +2686,6 @@ function outerScope() {
 
       return {};
     };
-    null1.__closure = [];
     null1.__workletHash = 1;
     null1.__pluginVersion = "x.y.z";
     null1.__initData = _worklet_1_init_data;
@@ -2809,7 +2711,6 @@ const secondReference = function null1Factory([_worklet_1_init_data]) {
 
     return {};
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -2865,7 +2766,6 @@ function App() {
       const onStart = function () {
         "use no memo";
       };
-      onStart.__closure = [];
       onStart.__workletHash = 1;
       onStart.__pluginVersion = "x.y.z";
       onStart.__initData = _worklet_1_init_data;
@@ -2889,7 +2789,6 @@ function App() {
       const onScroll = function () {
         "use no memo";
       };
-      onScroll.__closure = [];
       onScroll.__workletHash = 1;
       onScroll.__pluginVersion = "x.y.z";
       onScroll.__initData = _worklet_1_init_data;
@@ -2913,7 +2812,6 @@ function App() {
       const onStart = function () {
         "use no memo";
       };
-      onStart.__closure = [];
       onStart.__workletHash = 1;
       onStart.__pluginVersion = "x.y.z";
       onStart.__initData = _worklet_1_init_data;
@@ -3000,7 +2898,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
 
     var bar = "bar";
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -3010,19 +2907,18 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
 `;
 
 exports[`babel plugin for web configuration skips initData when omitNativeOnlyData option is set to true 1`] = `
-"const foo = function foo_null1Factory([]) {
+"const foo = function foo_null1Factory() {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
     "use no memo";
 
     var foo = "bar";
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__stackDetails = _e;
   return foo;
-}([]);"
+}();"
 `;
 
 exports[`babel plugin for web configuration substitutes isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to true 1`] = `
@@ -3069,7 +2965,6 @@ const Clazz = function () {
 
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
-    _classCallCheck.__closure = [];
     _classCallCheck.__workletHash = 1;
     _classCallCheck.__pluginVersion = "x.y.z";
     _classCallCheck.__initData = _worklet_1_init_data;
@@ -3090,7 +2985,6 @@ const Clazz = function () {
       }
       return ("string" === r ? String : Number)(t);
     };
-    _toPrimitive.__closure = [];
     _toPrimitive.__workletHash = 2;
     _toPrimitive.__pluginVersion = "x.y.z";
     _toPrimitive.__initData = _worklet_2_init_data;
@@ -3215,7 +3109,6 @@ const Clazz = function () {
 
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
-    _classCallCheck.__closure = [];
     _classCallCheck.__workletHash = 1;
     _classCallCheck.__pluginVersion = "x.y.z";
     _classCallCheck.__initData = _worklet_1_init_data;
@@ -3236,7 +3129,6 @@ const Clazz = function () {
       }
       return ("string" === r ? String : Number)(t);
     };
-    _toPrimitive.__closure = [];
     _toPrimitive.__workletHash = 2;
     _toPrimitive.__pluginVersion = "x.y.z";
     _toPrimitive.__initData = _worklet_2_init_data;
@@ -3413,7 +3305,6 @@ const Clazz = function () {
 
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
-    _classCallCheck.__closure = [];
     _classCallCheck.__workletHash = 1;
     _classCallCheck.__pluginVersion = "x.y.z";
     _classCallCheck.__initData = _worklet_1_init_data;
@@ -3434,7 +3325,6 @@ const Clazz = function () {
       }
       return ("string" === r ? String : Number)(t);
     };
-    _toPrimitive.__closure = [];
     _toPrimitive.__workletHash = 2;
     _toPrimitive.__pluginVersion = "x.y.z";
     _toPrimitive.__initData = _worklet_2_init_data;
@@ -3601,7 +3491,6 @@ const Clazz = function () {
 
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
-    _classCallCheck.__closure = [];
     _classCallCheck.__workletHash = 1;
     _classCallCheck.__pluginVersion = "x.y.z";
     _classCallCheck.__initData = _worklet_1_init_data;
@@ -3622,7 +3511,6 @@ const Clazz = function () {
       }
       return ("string" === r ? String : Number)(t);
     };
-    _toPrimitive.__closure = [];
     _toPrimitive.__workletHash = 2;
     _toPrimitive.__pluginVersion = "x.y.z";
     _toPrimitive.__initData = _worklet_2_init_data;
@@ -3747,7 +3635,6 @@ const Clazz = function () {
 
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
-    _classCallCheck.__closure = [];
     _classCallCheck.__workletHash = 1;
     _classCallCheck.__pluginVersion = "x.y.z";
     _classCallCheck.__initData = _worklet_1_init_data;
@@ -3768,7 +3655,6 @@ const Clazz = function () {
       }
       return ("string" === r ? String : Number)(t);
     };
-    _toPrimitive.__closure = [];
     _toPrimitive.__workletHash = 2;
     _toPrimitive.__pluginVersion = "x.y.z";
     _toPrimitive.__initData = _worklet_2_init_data;
@@ -3893,7 +3779,6 @@ const Clazz = function () {
 
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
-    _classCallCheck.__closure = [];
     _classCallCheck.__workletHash = 1;
     _classCallCheck.__pluginVersion = "x.y.z";
     _classCallCheck.__initData = _worklet_1_init_data;
@@ -3914,7 +3799,6 @@ const Clazz = function () {
       }
       return ("string" === r ? String : Number)(t);
     };
-    _toPrimitive.__closure = [];
     _toPrimitive.__workletHash = 2;
     _toPrimitive.__pluginVersion = "x.y.z";
     _toPrimitive.__initData = _worklet_2_init_data;
@@ -4012,7 +3896,6 @@ const foo = function foo_sourceJs1Factory([_worklet_1_init_data]) {
 
     return 1;
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -4033,7 +3916,6 @@ const foo = function foo_library_sourceJs1Factory([_worklet_1_init_data]) {
 
     return 1;
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -4054,7 +3936,6 @@ const foo = function foo_SourceJs1Factory([_worklet_1_init_data]) {
 
     return 1;
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -4076,7 +3957,6 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
 
     foo(1);
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -4098,7 +3978,6 @@ exports[`babel plugin for worklet names unnamed ArrowFunctionExpression 1`] = `
 
     return 1;
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -4120,7 +3999,6 @@ exports[`babel plugin for worklet names unnamed FunctionExpression 1`] = `
 
     return 1;
   };
-  null1.__closure = [];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
   null1.__initData = _worklet_1_init_data;
@@ -4136,7 +4014,7 @@ exports[`babel plugin for worklet nesting transpiles nested worklets 1`] = `
   sourceMap: "\\"mock source map\\""
 };
 const _worklet_2_init_data = {
-  code: "(function null2(){const[_worklet_1_init_data]=this.__closure;const bar=function null1Factory([_worklet_1_init_data]){const _e=[new global.Error(),1,-27];const null1=function(){console.log('bar');};null1.__closure=[];null1.__workletHash=15547305016511;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_1_init_data;null1.__stackDetails=_e;return null1;}([_worklet_1_init_data]);bar();})",
+  code: "(function null2(){const[_worklet_1_init_data]=this.__closure;const bar=function null1Factory([_worklet_1_init_data]){const _e=[new global.Error(),1,-27];const null1=function(){console.log('bar');};null1.__workletHash=15547305016511;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_1_init_data;null1.__stackDetails=_e;return null1;}([_worklet_1_init_data]);bar();})",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
@@ -4152,7 +4030,6 @@ const foo = function null2Factory([_worklet_2_init_data, _worklet_1_init_data]) 
 
         console.log("bar");
       };
-      null1.__closure = [];
       null1.__workletHash = 1;
       null1.__pluginVersion = "x.y.z";
       null1.__initData = _worklet_1_init_data;
@@ -4177,7 +4054,7 @@ exports[`babel plugin for worklet nesting transpiles nested worklets embedded in
   sourceMap: "\\"mock source map\\""
 };
 const _worklet_2_init_data = {
-  code: "(function null2(){const[runOnJS,_worklet_1_init_data]=this.__closure;console.log('Hello from UI thread');runOnJS(function null1Factory([_worklet_1_init_data]){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Hello from JS thread');};null1.__closure=[];null1.__workletHash=11239746781805;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_1_init_data;null1.__stackDetails=_e;return null1;}([_worklet_1_init_data]))();})",
+  code: "(function null2(){const[runOnJS,_worklet_1_init_data]=this.__closure;console.log('Hello from UI thread');runOnJS(function null1Factory([_worklet_1_init_data]){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Hello from JS thread');};null1.__workletHash=11239746781805;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_1_init_data;null1.__stackDetails=_e;return null1;}([_worklet_1_init_data]))();})",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
@@ -4194,7 +4071,6 @@ runOnUI(function null2Factory([_worklet_2_init_data, runOnJS, _worklet_1_init_da
 
         console.log("Hello from JS thread");
       };
-      null1.__closure = [];
       null1.__workletHash = 1;
       null1.__pluginVersion = "x.y.z";
       null1.__initData = _worklet_1_init_data;
@@ -4218,12 +4094,12 @@ exports[`babel plugin for worklet nesting transpiles nested worklets embedded in
   sourceMap: "\\"mock source map\\""
 };
 const _worklet_2_init_data = {
-  code: "(function null2(){const[runOnUI,_worklet_1_init_data]=this.__closure;console.log('Hello from JS thread');runOnUI(function null1Factory([_worklet_1_init_data]){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Hello from UI thread again');};null1.__closure=[];null1.__workletHash=7548753055656;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_1_init_data;null1.__stackDetails=_e;return null1;}([_worklet_1_init_data]))();})",
+  code: "(function null2(){const[runOnUI,_worklet_1_init_data]=this.__closure;console.log('Hello from JS thread');runOnUI(function null1Factory([_worklet_1_init_data]){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Hello from UI thread again');};null1.__workletHash=7548753055656;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_1_init_data;null1.__stackDetails=_e;return null1;}([_worklet_1_init_data]))();})",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
 const _worklet_3_init_data = {
-  code: "(function null3(){const[runOnJS,_worklet_2_init_data,runOnUI,_worklet_1_init_data]=this.__closure;console.log('Hello from UI thread');runOnJS(function null2Factory([_worklet_2_init_data,runOnUI,_worklet_1_init_data]){const _e=[new global.Error(),-3,-27];const null2=function(){console.log('Hello from JS thread');runOnUI(function null1Factory([_worklet_1_init_data]){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Hello from UI thread again');};null1.__closure=[];null1.__workletHash=7548753055656;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_1_init_data;null1.__stackDetails=_e;return null1;}([_worklet_1_init_data]))();};null2.__closure=[runOnUI,_worklet_1_init_data];null2.__workletHash=5235470675834;null2.__pluginVersion=\\"x.y.z\\";null2.__initData=_worklet_2_init_data;null2.__stackDetails=_e;return null2;}([_worklet_2_init_data,runOnUI,_worklet_1_init_data]))();})",
+  code: "(function null3(){const[runOnJS,_worklet_2_init_data,runOnUI,_worklet_1_init_data]=this.__closure;console.log('Hello from UI thread');runOnJS(function null2Factory([_worklet_2_init_data,runOnUI,_worklet_1_init_data]){const _e=[new global.Error(),-3,-27];const null2=function(){console.log('Hello from JS thread');runOnUI(function null1Factory([_worklet_1_init_data]){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Hello from UI thread again');};null1.__workletHash=7548753055656;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_1_init_data;null1.__stackDetails=_e;return null1;}([_worklet_1_init_data]))();};null2.__closure=[runOnUI,_worklet_1_init_data];null2.__workletHash=11543522036047;null2.__pluginVersion=\\"x.y.z\\";null2.__initData=_worklet_2_init_data;null2.__stackDetails=_e;return null2;}([_worklet_2_init_data,runOnUI,_worklet_1_init_data]))();})",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
@@ -4246,7 +4122,6 @@ runOnUI(function null3Factory([_worklet_3_init_data, runOnJS, _worklet_2_init_da
 
             console.log("Hello from UI thread again");
           };
-          null1.__closure = [];
           null1.__workletHash = 1;
           null1.__pluginVersion = "x.y.z";
           null1.__initData = _worklet_1_init_data;
@@ -4278,12 +4153,12 @@ exports[`babel plugin for worklet nesting transpiles nested worklets with depth 
   sourceMap: "\\"mock source map\\""
 };
 const _worklet_2_init_data = {
-  code: "(function null2(){const[_worklet_1_init_data]=this.__closure;const foobar=function null1Factory([_worklet_1_init_data]){const _e=[new global.Error(),1,-27];const null1=function(){console.log('foobar');};null1.__closure=[];null1.__workletHash=7394546508057;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_1_init_data;null1.__stackDetails=_e;return null1;}([_worklet_1_init_data]);})",
+  code: "(function null2(){const[_worklet_1_init_data]=this.__closure;const foobar=function null1Factory([_worklet_1_init_data]){const _e=[new global.Error(),1,-27];const null1=function(){console.log('foobar');};null1.__workletHash=7394546508057;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_1_init_data;null1.__stackDetails=_e;return null1;}([_worklet_1_init_data]);})",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
 const _worklet_3_init_data = {
-  code: "(function null3(){const[_worklet_2_init_data,_worklet_1_init_data]=this.__closure;const bar=function null2Factory([_worklet_2_init_data,_worklet_1_init_data]){const _e=[new global.Error(),-2,-27];const null2=function(){const foobar=function null1Factory([_worklet_1_init_data]){const _e=[new global.Error(),1,-27];const null1=function(){console.log('foobar');};null1.__closure=[];null1.__workletHash=7394546508057;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_1_init_data;null1.__stackDetails=_e;return null1;}([_worklet_1_init_data]);};null2.__closure=[_worklet_1_init_data];null2.__workletHash=39791129959;null2.__pluginVersion=\\"x.y.z\\";null2.__initData=_worklet_2_init_data;null2.__stackDetails=_e;return null2;}([_worklet_2_init_data,_worklet_1_init_data]);bar();})",
+  code: "(function null3(){const[_worklet_2_init_data,_worklet_1_init_data]=this.__closure;const bar=function null2Factory([_worklet_2_init_data,_worklet_1_init_data]){const _e=[new global.Error(),-2,-27];const null2=function(){const foobar=function null1Factory([_worklet_1_init_data]){const _e=[new global.Error(),1,-27];const null1=function(){console.log('foobar');};null1.__workletHash=7394546508057;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_1_init_data;null1.__stackDetails=_e;return null1;}([_worklet_1_init_data]);};null2.__closure=[_worklet_1_init_data];null2.__workletHash=5131817430994;null2.__pluginVersion=\\"x.y.z\\";null2.__initData=_worklet_2_init_data;null2.__stackDetails=_e;return null2;}([_worklet_2_init_data,_worklet_1_init_data]);bar();})",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
@@ -4304,7 +4179,6 @@ const foo = function null3Factory([_worklet_3_init_data, _worklet_2_init_data, _
 
             console.log("foobar");
           };
-          null1.__closure = [];
           null1.__workletHash = 1;
           null1.__pluginVersion = "x.y.z";
           null1.__initData = _worklet_1_init_data;
@@ -4342,7 +4216,7 @@ const _worklet_2_init_data = {
   sourceMap: "\\"mock source map\\""
 };
 const _worklet_3_init_data = {
-  code: "(function null3(){const[_worklet_1_init_data,_worklet_2_init_data,runOnJS]=this.__closure;const a=function null1Factory([_worklet_1_init_data]){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Good morning from JS thread!');};null1.__closure=[];null1.__workletHash=10798770476691;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_1_init_data;null1.__stackDetails=_e;return null1;}([_worklet_1_init_data]);const b=function null2Factory([_worklet_2_init_data]){const _e=[new global.Error(),1,-27];const null2=function(){console.log('Good afternoon from JS thread');};null2.__closure=[];null2.__workletHash=9016903891659;null2.__pluginVersion=\\"x.y.z\\";null2.__initData=_worklet_2_init_data;null2.__stackDetails=_e;return null2;}([_worklet_2_init_data]);const func=Math.random()<0.5?a:b;runOnJS(func)();})",
+  code: "(function null3(){const[_worklet_1_init_data,_worklet_2_init_data,runOnJS]=this.__closure;const a=function null1Factory([_worklet_1_init_data]){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Good morning from JS thread!');};null1.__workletHash=10798770476691;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_1_init_data;null1.__stackDetails=_e;return null1;}([_worklet_1_init_data]);const b=function null2Factory([_worklet_2_init_data]){const _e=[new global.Error(),1,-27];const null2=function(){console.log('Good afternoon from JS thread');};null2.__workletHash=9016903891659;null2.__pluginVersion=\\"x.y.z\\";null2.__initData=_worklet_2_init_data;null2.__stackDetails=_e;return null2;}([_worklet_2_init_data]);const func=Math.random()<0.5?a:b;runOnJS(func)();})",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
@@ -4358,7 +4232,6 @@ runOnUI(function null3Factory([_worklet_3_init_data, _worklet_1_init_data, _work
 
         console.log("Good morning from JS thread!");
       };
-      null1.__closure = [];
       null1.__workletHash = 1;
       null1.__pluginVersion = "x.y.z";
       null1.__initData = _worklet_1_init_data;
@@ -4372,7 +4245,6 @@ runOnUI(function null3Factory([_worklet_3_init_data, _worklet_1_init_data, _work
 
         console.log("Good afternoon from JS thread");
       };
-      null2.__closure = [];
       null2.__workletHash = 2;
       null2.__pluginVersion = "x.y.z";
       null2.__initData = _worklet_2_init_data;
@@ -4404,7 +4276,6 @@ const foo = function foo_nullQuery1Factory([_worklet_1_init_data]) {
 
     var foo = "bar";
   };
-  foo.__closure = [];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_1_init_data;
@@ -4426,7 +4297,6 @@ const foo = function foo_nullHash1Factory([_worklet_2_init_data]) {
 
     var foo = "bar";
   };
-  foo.__closure = [];
   foo.__workletHash = 2;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_2_init_data;
@@ -4448,7 +4318,6 @@ const foo = function foo_nullQueryHash1Factory([_worklet_3_init_data]) {
 
     var foo = "bar";
   };
-  foo.__closure = [];
   foo.__workletHash = 3;
   foo.__pluginVersion = "x.y.z";
   foo.__initData = _worklet_3_init_data;
