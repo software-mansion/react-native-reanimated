@@ -8,6 +8,7 @@ import type {
   ValueProcessor,
   ValueProcessorContext,
 } from '../../types';
+import { camelizeKebabCase } from '../../utils/conversions';
 import { isLength, isNumber } from '../../utils/guards';
 import { CSS_NUMBER_PATTERN } from '../../utils/parsers';
 import { processColor } from './colors';
@@ -190,7 +191,11 @@ const parseFilterString = (
       return [];
     }
 
-    const parsed = parseFilterProperty(name, content, context);
+    const parsed = parseFilterProperty(
+      camelizeKebabCase(name),
+      content,
+      context
+    );
     if (parsed === null) {
       return [];
     }

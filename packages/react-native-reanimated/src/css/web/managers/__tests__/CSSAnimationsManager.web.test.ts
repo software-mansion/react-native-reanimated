@@ -69,6 +69,31 @@ describe('CSSAnimationsManager (web)', () => {
       expect(element.style.animationDirection).toBe('reverse');
     });
 
+    test('repeats a delay list that is shorter than the animation list', () => {
+      manager.update(
+        animation({
+          animationName: [keyframes, keyframes],
+          animationDelay: '1s',
+        })
+      );
+
+      // A list shorter than `animation-name` repeats to match it, the way the
+      // browser does for the sibling longhands this manager passes through
+      // untouched.
+      expect(element.style.animationDelay).toBe('1s,1s');
+    });
+
+    test('leaves a delay list that already matches the animation list alone', () => {
+      manager.update(
+        animation({
+          animationName: [keyframes, keyframes],
+          animationDelay: ['1s', '2s'],
+        })
+      );
+
+      expect(element.style.animationDelay).toBe('1s,2s');
+    });
+
     test('inserts every one of multiple comma-separated animations', () => {
       manager.update(
         animation({

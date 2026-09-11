@@ -38,6 +38,7 @@ const config = {
   },
 };
 
+/** @type {import('@react-native/metro-config').MetroConfig} */
 module.exports = wrapWithReanimatedMetroConfig(
   mergeConfig(defaultConfig, config)
 );
