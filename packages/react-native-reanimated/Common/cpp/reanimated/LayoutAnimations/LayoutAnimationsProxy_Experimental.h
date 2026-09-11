@@ -98,7 +98,12 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
 #endif
 
 #ifdef __APPLE__
-  ForceScreenSnapshotFunction forceScreenSnapshot_;
+  mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
+#endif
+#ifndef NDEBUG
+  std::function<bool(Tag)> hasSynchronousProps_;
+  mutable std::unordered_set<Tag> warnedSynchronousPropsTags_;
+  void warnIfSynchronousPropsMissing(Tag tag, const char *animationKind) const;
 #endif
 
   LayoutAnimationsProxy_Experimental(SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies);

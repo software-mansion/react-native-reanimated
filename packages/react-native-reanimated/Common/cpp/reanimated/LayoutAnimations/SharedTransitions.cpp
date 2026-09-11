@@ -387,6 +387,9 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
     for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
       auto &transition = collectedTransition.transition;
       auto &[before, after] = transition.snapshot;
+#ifndef NDEBUG
+      warnIfSynchronousPropsMissing(before.tag, "shared element transition");
+#endif
       const auto &transform = transition.transform;
       overrideTransform(before, transform[BEFORE], propsParserContext);
       overrideTransform(after, transform[AFTER], propsParserContext);
