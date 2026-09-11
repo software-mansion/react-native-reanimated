@@ -196,7 +196,7 @@ Keep this flag off unless you see the warning described below.
 
 With `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` or `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` enabled, some props go straight to the native views and skip the shadow tree. The layout animations proxy keeps its own copy of the view tree, the light tree, and does not see those props. A shared element transition or a layout animation of such a view then starts from the last committed props, not from the current ones. This happens only when a view gets props through the synchronous path and then starts one of these animations.
 
-When enabled, the synchronous path also merges those props into the light tree. This costs one props clone for each synchronously updated view on every frame, on the path that every animation goes through. Enable the flag only for the screens that hit the case above, for example with `setDynamicFeatureFlag` in an effect of the screen.
+When enabled, the synchronous path also merges those props into the light tree. This costs one props clone for each synchronously updated view on every frame, on the path that every animation goes through. Enable the flag only for the screens that hit the case above, for example with `setDynamicFeatureFlag` in an effect of the screen, and restore the previous value in the cleanup of that effect.
 
 When disabled, a development build logs a warning once per view when a shared element transition or a layout animation starts on a view whose synchronous props are missing from the light tree.
 
