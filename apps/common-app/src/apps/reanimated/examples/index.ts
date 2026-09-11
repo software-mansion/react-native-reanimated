@@ -25,6 +25,14 @@ const BBExample: React.FC = () =>
   );
 const BokehExample: React.FC = () =>
   React.createElement(require('./BokehExample').default as React.FC);
+const AnimatedTransformExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/AnimatedTransform').default
+  );
+const LightTreeErasureExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/LightTreeErasure').default
+  );
 const BorderRadiiExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/BorderRadii').default
@@ -909,6 +917,22 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: BorderRadiiExample,
     shouldWork: {
       ios: false, // broken on back gesture
+      android: true,
+    },
+  },
+  AnimatedTransformExample: {
+    title: '[SET] Animated Transform',
+    screen: AnimatedTransformExample,
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  LightTreeErasureExample: {
+    title: '[SET] Light Tree Erasure Repro',
+    screen: LightTreeErasureExample,
+    shouldWork: {
+      ios: true,
       android: true,
     },
   },
