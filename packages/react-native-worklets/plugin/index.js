@@ -1677,7 +1677,7 @@ var require_workletStringCode = __commonJS({
       const transformed = (0, transform_1.workletTransformSync)(code, {
         filename: state.file.opts.filename,
         extraPlugins: [
-          getClosurePlugin(closureVariables),
+          getClosurePlugin(closureVariables, parsedClasses),
           ...(_a = state.opts.extraPlugins) !== null && _a !== void 0 ? _a : []
         ],
         extraPresets: state.opts.extraPresets,
@@ -1718,13 +1718,169 @@ var require_workletStringCode = __commonJS({
     function shouldMockSourceMap() {
       return process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP === "1";
     }
-    function prependClosure(path, closureVariables, closureDeclaration) {
-      if (closureVariables.length === 0 || !(0, types_12.isProgram)(path.parent)) {
+    function collectBodyScopeNames(path, closureVariables, workletClassNames) {
+      const names = new Set(closureVariables.map((variable) => variable.name));
+      for (const className of workletClassNames) {
+        names.add(className);
+      }
+      if (!(0, types_12.isArrowFunctionExpression)(path.node) && !(0, types_12.isObjectMethod)(path.node) && path.node.id) {
+        names.add(path.node.id.name);
+      }
+      return names;
+    }
+    function collectBodyRedeclarations(path) {
+      const names = /* @__PURE__ */ new Set();
+      const bodyPath = path.get("body");
+      if (!bodyPath.isBlockStatement()) {
+        return names;
+      }
+      bodyPath.traverse({
+        Function(innerPath) {
+          if (innerPath.isFunctionDeclaration() && innerPath.node.id) {
+            names.add(innerPath.node.id.name);
+          }
+          innerPath.skip();
+        },
+        VariableDeclaration(innerPath) {
+          if (innerPath.node.kind !== "var") {
+            return;
+          }
+          for (const declaration of innerPath.node.declarations) {
+            for (const boundName of Object.keys((0, types_12.getBindingIdentifiers)(declaration.id))) {
+              names.add(boundName);
+            }
+          }
+        }
+      });
+      return names;
+    }
+    function resolveParameterScopeExpression(parameterPath) {
+      const parameter = parameterPath.node;
+      if ((0, types_12.isIdentifier)(parameter) || parameter.type === "VoidPattern") {
+        return void 0;
+      }
+      const restElementNode = (0, types_12.isRestElement)(parameter) ? parameter : void 0;
+      const target = restElementNode ? restElementNode.argument : parameter;
+      if (restElementNode && (0, types_12.isIdentifier)(target)) {
+        return void 0;
+      }
+      return {
+        defaultValue: (0, types_12.isAssignmentPattern)(target) ? target.right : void 0,
+        pattern: (0, types_12.isAssignmentPattern)(target) ? target.left : target,
+        restElementNode
+      };
+    }
+    function readsBodyScopedName(parameterPath, bodyScopeNames) {
+      let reads = false;
+      parameterPath.traverse({
+        Identifier(innerPath) {
+          if (bodyScopeNames.has(innerPath.node.name) && innerPath.isReferencedIdentifier()) {
+            reads = true;
+          }
+        }
+      });
+      return reads;
+    }
+    function resolveHoistReason(readsBodyScope, followsHoistedParameter) {
+      if (readsBodyScope) {
+        return "body-scope";
+      }
+      if (followsHoistedParameter) {
+        return "evaluation-order";
+      }
+      return void 0;
+    }
+    function planHoistedParameters(path, bodyScopeNames) {
+      const names = new Set(bodyScopeNames);
+      const planned = /* @__PURE__ */ new Map();
+      const parameterPaths = path.get("params");
+      let lowestPlannedIndex = Number.POSITIVE_INFINITY;
+      let changed = true;
+      while (changed) {
+        changed = false;
+        parameterPaths.forEach((parameterPath, index) => {
+          if (planned.has(index)) {
+            return;
+          }
+          const scopeExpression = resolveParameterScopeExpression(parameterPath);
+          if (scopeExpression === void 0) {
+            return;
+          }
+          const reason = resolveHoistReason(readsBodyScopedName(parameterPath, names), index > lowestPlannedIndex);
+          if (reason === void 0) {
+            return;
+          }
+          const boundNames = Object.keys((0, types_12.getBindingIdentifiers)(scopeExpression.pattern));
+          planned.set(index, Object.assign(Object.assign({}, scopeExpression), { boundNames, index, reason }));
+          lowestPlannedIndex = Math.min(lowestPlannedIndex, index);
+          for (const boundName of boundNames) {
+            names.add(boundName);
+          }
+          changed = true;
+        });
+      }
+      return Array.from(planned.values()).sort((left, right) => left.index - right.index);
+    }
+    function hoistBodyScopedParameters(path, closureVariables, workletClassNames) {
+      const bodyScopeNames = collectBodyScopeNames(path, closureVariables, workletClassNames);
+      const hoisted = [];
+      if (bodyScopeNames.size === 0) {
+        return hoisted;
+      }
+      const plan = planHoistedParameters(path, bodyScopeNames);
+      if (plan.length === 0) {
+        return hoisted;
+      }
+      const bodyRedeclarations = collectBodyRedeclarations(path);
+      const blocked = plan.some((entry) => entry.boundNames.some((name) => bodyRedeclarations.has(name)));
+      if (blocked) {
+        return hoisted;
+      }
+      for (const entry of plan) {
+        const placeholder = path.scope.generateUidIdentifier(entry.restElementNode ? "restPattern" : "workletParameter");
+        let initializer = placeholder;
+        if (entry.defaultValue) {
+          initializer = (0, types_12.conditionalExpression)((0, types_12.binaryExpression)("===", (0, types_12.cloneNode)(placeholder), (0, types_12.unaryExpression)("void", (0, types_12.numericLiteral)(0))), entry.defaultValue, (0, types_12.cloneNode)(placeholder));
+        }
+        if (entry.restElementNode) {
+          entry.restElementNode.argument = placeholder;
+        } else {
+          path.node.params[entry.index] = placeholder;
+        }
+        hoisted.push((0, types_12.variableDeclaration)("let", [
+          (0, types_12.variableDeclarator)(entry.pattern, initializer)
+        ]));
+      }
+      return hoisted;
+    }
+    function prependClosure(path, closureVariables, workletClassNames, closureDeclaration) {
+      if (!(0, types_12.isProgram)(path.parent) || (0, types_12.isExpression)(path.node.body)) {
         return;
       }
-      if (!(0, types_12.isExpression)(path.node.body)) {
-        path.node.body.body.unshift(closureDeclaration);
+      const hoisted = hoistBodyScopedParameters(path, closureVariables, workletClassNames);
+      const body = path.node.body.body;
+      body.splice(countLeadingClassFactoryDeclarations(body, workletClassNames), 0, ...hoisted);
+      if (closureVariables.length > 0) {
+        body.unshift(closureDeclaration);
       }
+    }
+    function countLeadingClassFactoryDeclarations(body, workletClassNames) {
+      const remaining = new Set(workletClassNames);
+      let count = 0;
+      while (count < body.length && remaining.size > 0) {
+        const statement = body[count];
+        if (!(0, types_12.isVariableDeclaration)(statement) || statement.kind !== "const" || statement.declarations.length !== 1) {
+          break;
+        }
+        const [declarator] = statement.declarations;
+        const initializer = declarator.init;
+        if (!(0, types_12.isIdentifier)(declarator.id) || !remaining.has(declarator.id.name) || !(0, types_12.isCallExpression)(initializer) || initializer.arguments.length > 0 || !(0, types_12.isIdentifier)(initializer.callee) || initializer.callee.name !== declarator.id.name + types_2.workletClassFactorySuffix) {
+          break;
+        }
+        remaining.delete(declarator.id.name);
+        count += 1;
+      }
+      return count;
     }
     function prependRecursiveDeclaration(path) {
       var _a;
@@ -1737,14 +1893,14 @@ var require_workletStringCode = __commonJS({
         }
       }
     }
-    function getClosurePlugin(closureVariables) {
+    function getClosurePlugin(closureVariables, workletClassNames) {
       const closureDeclaration = (0, types_12.variableDeclaration)("const", [
         (0, types_12.variableDeclarator)((0, types_12.objectPattern)(closureVariables.map((variable) => (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.identifier)(variable.name), false, true))), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("__closure")))
       ]);
       return {
         visitor: {
           "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod": (path) => {
-            prependClosure(path, closureVariables, closureDeclaration);
+            prependClosure(path, closureVariables, workletClassNames, closureDeclaration);
             prependRecursiveDeclaration(path);
           }
         }
