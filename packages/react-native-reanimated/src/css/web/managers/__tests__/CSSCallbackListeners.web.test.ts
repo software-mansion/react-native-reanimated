@@ -28,6 +28,10 @@ describe('CSSCallbackListeners (web)', () => {
     );
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   test('subscribes to the mapped event on the first callback and forwards the built payload', () => {
     const onFoo = jest.fn();
     const addSpy = jest.spyOn(element, 'addEventListener');
@@ -88,6 +92,40 @@ describe('CSSCallbackListeners (web)', () => {
     listeners.sync({ onFoo: onFooAgain });
     element.dispatchEvent(namedEvent('foo', 'b'));
     expect(onFooAgain).toHaveBeenCalledWith({ detail: 'b' });
+  });
+
+  test('scheduled detach keeps listeners through cancellation event dispatch', () => {
+    let frameCallback: FrameRequestCallback | undefined;
+    jest
+      .spyOn(global, 'requestAnimationFrame')
+      .mockImplementation((callback) => {
+        frameCallback = callback;
+        return 1;
+      });
+    const onFoo = jest.fn();
+    listeners.sync({ onFoo });
+
+    listeners.scheduleDetach();
+    element.dispatchEvent(namedEvent('foo', 'before-frame'));
+    expect(onFoo).toHaveBeenCalledWith({ detail: 'before-frame' });
+
+    frameCallback?.(0);
+    element.dispatchEvent(namedEvent('foo', 'after-frame'));
+    expect(onFoo).toHaveBeenCalledTimes(1);
+  });
+
+  test('sync cancels a scheduled detach when the manager is reused', () => {
+    jest.spyOn(global, 'requestAnimationFrame').mockReturnValue(1);
+    const cancelSpy = jest.spyOn(global, 'cancelAnimationFrame');
+    listeners.sync({ onFoo: jest.fn() });
+    listeners.scheduleDetach();
+
+    const onFooAfterReuse = jest.fn();
+    listeners.sync({ onFoo: onFooAfterReuse });
+
+    expect(cancelSpy).toHaveBeenCalledWith(1);
+    element.dispatchEvent(namedEvent('foo', 'after-reuse'));
+    expect(onFooAfterReuse).toHaveBeenCalledWith({ detail: 'after-reuse' });
   });
 
   test('only manages props present in the event-name map', () => {

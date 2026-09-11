@@ -2,11 +2,16 @@
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import { CSSCallbackStore } from '../../models';
 
+type CallbackMap<Prop extends string, Payload> = Partial<
+  Record<Prop, ((payload: Payload) => void) | undefined>
+>;
+
 export class CSSCallbackListeners<
   Prop extends string,
   Payload,
 > extends CSSCallbackStore<Prop, Payload> {
   private readonly attachedListeners = new Map<Prop, EventListener>();
+  private detachFrame: number | null = null;
 
   constructor(
     private readonly element: ReanimatedHTMLElement,
@@ -14,6 +19,21 @@ export class CSSCallbackListeners<
     private readonly buildPayload: (event: Event) => Payload
   ) {
     super(Object.keys(eventNameByProp) as Prop[]);
+  }
+
+  override sync(callbacks: CallbackMap<Prop, Payload>): void {
+    if (this.detachFrame !== null) {
+      cancelAnimationFrame(this.detachFrame);
+      this.detachFrame = null;
+    }
+    super.sync(callbacks);
+  }
+
+  scheduleDetach(): void {
+    this.detachFrame ??= requestAnimationFrame(() => {
+      this.detachFrame = null;
+      this.detach();
+    });
   }
 
   protected onPresenceChanged(present: ReadonlySet<Prop>): void {

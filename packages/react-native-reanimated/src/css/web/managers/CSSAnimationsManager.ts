@@ -146,7 +146,9 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   }
 
   unmountCleanup(): void {
-    this.callbackListeners.detach();
+    // Browsers dispatch `animationcancel` after the element leaves the DOM,
+    // during the next rendering update and before animation frame callbacks.
+    this.callbackListeners.scheduleDetach();
 
     if (!this.unmountCleanupCalled) {
       this.unmountCleanupCalled = true;
