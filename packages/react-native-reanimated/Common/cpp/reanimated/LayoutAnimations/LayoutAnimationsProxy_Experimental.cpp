@@ -419,8 +419,7 @@ void LayoutAnimationsProxy_Experimental::applyInitialMutationsToLightTree(
   }
 }
 
-// Synchronous prop updates skip pullTransaction. Merge them into the light
-// tree so shared-transition snapshots see them. The registry broadcasts one
+// Synchronous prop updates skip pullTransaction. The registry broadcasts one
 // batch to every surface proxy; entries of other surfaces are skipped here.
 void LayoutAnimationsProxy_Experimental::applySynchronousProps(const UpdatesBatch &updatesBatch) const {
   ReanimatedSystraceSection s("applySynchronousProps");
