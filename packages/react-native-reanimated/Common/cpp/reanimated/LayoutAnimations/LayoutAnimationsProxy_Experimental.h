@@ -212,7 +212,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &parent,
       int hostIndex,
       TransactionMeta &transaction) const;
-  void flushCompletedRemovals(ShadowViewMutationList &filteredMutations, bool flushStructuralMutations) const;
+  void flushCompletedRemovals(ShadowViewMutationList &filteredMutations) const;
 
   void addOngoingAnimations(ShadowViewMutationList &mutations) const;
   ShadowView cloneViewWithoutOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;
