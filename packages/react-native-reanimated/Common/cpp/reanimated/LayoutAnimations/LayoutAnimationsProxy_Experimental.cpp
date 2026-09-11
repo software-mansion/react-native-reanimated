@@ -290,7 +290,8 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         react_native_assert(
             (state == UNDEFINED || state == WAITING || state == ANIMATING) && "Delete mutation for an unmounted node");
         if (state == UNDEFINED) {
-          unmapLightNode(it->second);
+          const auto node = it->second;
+          unmapLightNode(node);
         }
         break;
       }

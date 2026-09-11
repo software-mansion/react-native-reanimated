@@ -143,8 +143,9 @@ bool LayoutAnimationsProxy_Experimental::settleUncommittedScreenPop(TransactionM
 // A gesture that starts while the previous one still awaits its source
 // removal cannot know its own source screen until topScreen_ is recomputed.
 void LayoutAnimationsProxy_Experimental::resolveDeferredSourceScreen() const {
-  if (!transition_ || transition_->sourceScreen ||
-      (transition_->state != TransitionState::START && transition_->state != TransitionState::END)) {
+  const bool needsSourceScreen = transition_ && !transition_->sourceScreen &&
+      (transition_->state == TransitionState::START || transition_->state == TransitionState::END);
+  if (!needsSourceScreen) {
     return;
   }
   const auto sourceScreen = topScreen_ ? findParentRNSScreen(topScreen_) : nullptr;
