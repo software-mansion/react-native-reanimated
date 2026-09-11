@@ -142,8 +142,9 @@ bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &ea
   }
   // Any TimeInterpolator can carry a curve, so every easing routes and this is unused.
   (void)easing;
-  // borderWidth moves layout on Android and the shadow* props are iOS-only, so
-  // neither can be driven from a view-level setter.
+  // borderWidth affects layout on Android, so it stays on the loop. shadowColor
+  // is supported on Android API 28+, but is not routed here; the other shadow*
+  // props are iOS-only.
   return std::ranges::find(kAndroidPlatformProperties, propertyName) != kAndroidPlatformProperties.end();
 #else
   // No native routing backend on this platform yet; every property runs on the loop.
