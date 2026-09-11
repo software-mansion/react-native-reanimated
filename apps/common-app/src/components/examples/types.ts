@@ -18,3 +18,15 @@ export interface Example {
   disabledPlatforms?: Array<(typeof REAPlatform)[keyof typeof REAPlatform]>;
   needsBundleMode?: boolean;
 }
+
+export interface ExampleGroup {
+  icon?: string;
+  title: string;
+  examples: Record<string, Example>;
+}
+
+export type ExampleEntry = Example | ExampleGroup;
+
+export function isExampleGroup(entry: ExampleEntry): entry is ExampleGroup {
+  return 'examples' in entry;
+}
