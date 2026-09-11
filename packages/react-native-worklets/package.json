@@ -147,6 +147,11 @@
     "jsSrcsDir": "src/specs",
     "android": {
       "javaPackageName": "com.swmansion.worklets"
+    },
+    "ios": {
+      "unstableModulesRequiringMainQueueSetup": [
+        "WorkletsModule"
+      ]
     }
   }
 }
