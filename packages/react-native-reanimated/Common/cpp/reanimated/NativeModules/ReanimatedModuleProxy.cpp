@@ -1080,6 +1080,12 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
 }
 
 void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch) {
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    if (layoutAnimationsProxyRegistry_ && !synchronousUpdatesBatch.empty()) {
+      layoutAnimationsProxyRegistry_->applySynchronousProps(synchronousUpdatesBatch);
+    }
+  }
+
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
     serializeSynchronousPropsToBuffers(

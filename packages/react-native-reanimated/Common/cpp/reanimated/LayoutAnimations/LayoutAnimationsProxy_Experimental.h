@@ -97,6 +97,8 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
     return lightNodes_.contains(surfaceId_);
   }
 
+  void applySynchronousProps(const UpdatesBatch &updatesBatch) const override;
+
   void reconcileContradictedRemovals(const ShadowViewMutationList &mutations, ShadowViewMutationList &filteredMutations)
       const;
 

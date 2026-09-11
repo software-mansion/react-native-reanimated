@@ -234,6 +234,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
       case ShadowViewMutation::Update: {
         auto &node = lightNodes_[mutation.newChildShadowView.tag];
         react_native_assert(node && "LightNode not found");
+        const auto currentProps = node->current.props;
         node->previous = mutation.oldChildShadowView;
 #ifdef ANDROID
         // TODO (future): We don't merge the root view as the currently stored version might not be accurate, because of
@@ -253,6 +254,9 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
 #else
         node->current = mutation.newChildShadowView;
 #endif // ANDROID
+        if (mutation.oldChildShadowView.props == mutation.newChildShadowView.props) {
+          node->current.props = currentProps;
+        }
         auto tag = mutation.newChildShadowView.tag;
         if (const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT)) {
           transaction.layout.push_back({node, config});
@@ -391,6 +395,40 @@ void LayoutAnimationsProxy_Experimental::applyInitialMutationsToLightTree(
         break;
       }
     }
+  }
+}
+
+// Synchronous prop updates skip pullTransaction. Merge them into the light
+// tree so shared-transition snapshots see them. The registry broadcasts one
+// batch to every surface proxy; entries of other surfaces are skipped here.
+void LayoutAnimationsProxy_Experimental::applySynchronousProps(const UpdatesBatch &updatesBatch) const {
+  ReanimatedSystraceSection s("applySynchronousProps");
+  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+
+  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
+    if (shadowNodeFamily->getSurfaceId() != surfaceId_) {
+      continue;
+    }
+    const auto nodeIt = lightNodes_.find(shadowNodeFamily->getTag());
+    if (nodeIt == lightNodes_.end()) {
+      continue;
+    }
+
+    const auto &node = nodeIt->second;
+    react_native_assert(node && "LightNode is nullptr");
+    if (isRoot(node)) {
+      continue;
+    }
+
+    react_native_assert(node->current.props && "LightNode has no props");
+
+    auto rawProps = props;
+#ifdef RN_SERIALIZABLE_STATE
+    rawProps = folly::dynamic::merge(node->current.props->rawProps, rawProps);
+#endif
+    const PropsParserContext propsParserContext{node->current.surfaceId, *contextContainer_};
+    node->current.props = getComponentDescriptorForShadowView(node->current)
+                              .cloneProps(propsParserContext, node->current.props, RawProps(std::move(rawProps)));
   }
 }
 
