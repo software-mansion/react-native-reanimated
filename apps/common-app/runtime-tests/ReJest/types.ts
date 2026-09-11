@@ -148,6 +148,7 @@ export type TestProgress = {
 export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
   onProgress?: (progress: TestProgress) => void;
+  onSuiteFinished?: (suiteName: string) => void;
 };
 
 export type Mismatch = {
