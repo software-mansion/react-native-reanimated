@@ -265,6 +265,10 @@ describe(processFilter, () => {
           input: 'unknownFilter(5)',
         },
         {
+          name: 'unknown kebab-case filter name',
+          input: 'spin-around(5deg)',
+        },
+        {
           name: 'completely invalid string',
           input: 'not a filter',
         },

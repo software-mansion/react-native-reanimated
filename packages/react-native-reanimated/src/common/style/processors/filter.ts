@@ -8,6 +8,7 @@ import type {
   ValueProcessor,
   ValueProcessorContext,
 } from '../../types';
+import { camelizeKebabCase } from '../../utils/conversions';
 import { isLength, isNumber } from '../../utils/guards';
 import { processColor } from './colors';
 
@@ -189,14 +190,11 @@ const parseFilterString = (
       return [];
     }
 
-    let filterName = name;
-    if (filterName === 'drop-shadow') {
-      filterName = 'dropShadow';
-    } else if (filterName === 'hue-rotate') {
-      filterName = 'hueRotate';
-    }
-
-    const parsed = parseFilterProperty(filterName, content, context);
+    const parsed = parseFilterProperty(
+      camelizeKebabCase(name),
+      content,
+      context
+    );
     if (parsed === null) {
       return [];
     }
