@@ -4,6 +4,8 @@ import type { DropShadowValue, FilterFunction } from 'react-native';
 import { kebabizeCamelCase, maybeAddSuffix } from '../../../utils';
 import type { ValueProcessor } from '../types';
 
+const FILTER_FUNCTION_NAME_REGEX = /[a-z][a-zA-Z-]*(?=\()/g;
+
 const isDropShadowValue = (value: unknown): value is DropShadowValue => {
   return (
     typeof value === 'object' &&
@@ -44,7 +46,9 @@ export const processFilterWeb: ValueProcessor<
   ReadonlyArray<FilterFunction> | string
 > = (value) => {
   if (typeof value === 'string') {
-    return value;
+    return value.replace(FILTER_FUNCTION_NAME_REGEX, (name) =>
+      kebabizeCamelCase(name)
+    );
   }
 
   return value
