@@ -273,6 +273,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
           before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
       if (!config) {
+        transaction.tagsToRestore.push_back(before.tag);
+        transaction.tagsToRestore.push_back(after.tag);
         continue;
       }
       auto containerTag = getOrCreateContainer(before, sharedTag, transaction);
