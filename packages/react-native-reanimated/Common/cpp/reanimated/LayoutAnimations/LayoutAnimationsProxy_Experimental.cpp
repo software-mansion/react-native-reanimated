@@ -5,6 +5,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
+#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #ifdef ANDROID
@@ -40,7 +41,27 @@ LayoutAnimationsProxy_Experimental::LayoutAnimationsProxy_Experimental(
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
 #endif
+#ifndef NDEBUG
+  hasSynchronousProps_ = dependencies.hasSynchronousProps;
+#endif
 }
+
+#ifndef NDEBUG
+void LayoutAnimationsProxy_Experimental::warnIfSynchronousPropsMissing(const Tag tag, const char *animationKind) const {
+  if (DynamicFeatureFlags::getFlag("SYNCHRONOUS_PROPS_IN_LIGHT_TREE") || !hasSynchronousProps_ ||
+      !hasSynchronousProps_(tag) || !warnedSynchronousPropsTags_.insert(tag).second) {
+    return;
+  }
+  scheduleOnUI(uiScheduler_, [&uiRuntime = uiRuntime_, tag, animationKind]() {
+    const auto consoleWarn =
+        uiRuntime.global().getPropertyAsObject(uiRuntime, "console").getPropertyAsFunction(uiRuntime, "warn");
+    consoleWarn.call(
+        uiRuntime,
+        std::string("[Reanimated] View ") + std::to_string(tag) + " starts a " + animationKind +
+            " with props that were applied through the synchronous path, so it starts from stale values. Set the SYNCHRONOUS_PROPS_IN_LIGHT_TREE dynamic feature flag to true to keep those props in the light tree.");
+  });
+}
+#endif
 
 // MARK: MountingOverrideDelegate
 
@@ -234,6 +255,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
       case ShadowViewMutation::Update: {
         auto &node = lightNodes_[mutation.newChildShadowView.tag];
         react_native_assert(node && "LightNode not found");
+        const auto currentProps = node->current.props;
         node->previous = mutation.oldChildShadowView;
 #ifdef ANDROID
         // TODO (future): We don't merge the root view as the currently stored version might not be accurate, because of
@@ -253,6 +275,9 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
 #else
         node->current = mutation.newChildShadowView;
 #endif // ANDROID
+        if (mutation.oldChildShadowView.props == mutation.newChildShadowView.props) {
+          node->current.props = currentProps;
+        }
         auto tag = mutation.newChildShadowView.tag;
         if (const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT)) {
           transaction.layout.push_back({node, config});
@@ -391,6 +416,39 @@ void LayoutAnimationsProxy_Experimental::applyInitialMutationsToLightTree(
         break;
       }
     }
+  }
+}
+
+// Synchronous prop updates skip pullTransaction. The registry broadcasts one
+// batch to every surface proxy; entries of other surfaces are skipped here.
+void LayoutAnimationsProxy_Experimental::applySynchronousProps(const UpdatesBatch &updatesBatch) const {
+  ReanimatedSystraceSection s("applySynchronousProps");
+  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+
+  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
+    if (shadowNodeFamily->getSurfaceId() != surfaceId_) {
+      continue;
+    }
+    const auto nodeIt = lightNodes_.find(shadowNodeFamily->getTag());
+    if (nodeIt == lightNodes_.end()) {
+      continue;
+    }
+
+    const auto &node = nodeIt->second;
+    react_native_assert(node && "LightNode is nullptr");
+    if (isRoot(node)) {
+      continue;
+    }
+
+    react_native_assert(node->current.props && "LightNode has no props");
+
+    auto rawProps = props;
+#ifdef RN_SERIALIZABLE_STATE
+    rawProps = folly::dynamic::merge(node->current.props->rawProps, rawProps);
+#endif
+    const PropsParserContext propsParserContext{node->current.surfaceId, *contextContainer_};
+    node->current.props = getComponentDescriptorForShadowView(node->current)
+                              .cloneProps(propsParserContext, node->current.props, RawProps(std::move(rawProps)));
   }
 }
 
@@ -802,6 +860,9 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(
 void LayoutAnimationsProxy_Experimental::startLayoutAnimation(
     const std::shared_ptr<LightNode> &node,
     const std::shared_ptr<Serializable> &config) const {
+#ifndef NDEBUG
+  warnIfSynchronousPropsMissing(node->current.tag, "layout animation");
+#endif
   const auto &oldChildShadowView = node->previous;
   const auto &newChildShadowView = node->current;
   const auto &parent = node->parent.lock();
