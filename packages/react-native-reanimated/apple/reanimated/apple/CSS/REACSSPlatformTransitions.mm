@@ -1,6 +1,7 @@
 #import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 
 #import <reanimated/apple/CSS/REACSSPlatformProps.h>
+#import <reanimated/apple/REASlowAnimations.h>
 #import <reanimated/apple/REAUIView.h>
 
 #import <React/RCTComponentViewProtocol.h>
@@ -50,7 +51,7 @@ using namespace reanimated::css;
   id fromId = idFromPlatformValue(fromValue);
   id toId = idFromPlatformValue(toValue);
   double durationSec = durationMs / 1000.0;
-  CFTimeInterval beginTime = startTimestampMs / 1000.0;
+  CFTimeInterval beginTime = reanimated::calculateMediaTimeFromSlowAnimationsTimestamp(startTimestampMs / 1000.0);
   CAMediaTimingFunction *timing = makeCSSTimingFunction(easing);
 
   __weak __typeof__(self) weakSelf = self;

@@ -2,6 +2,8 @@
 
 #include <react/debug/react_native_assert.h>
 
+#include <jsi/JSIDynamic.h>
+
 #include <utility>
 
 namespace reanimated::css {
@@ -154,7 +156,7 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
       routing.platform.insert(propertyName);
     } else {
       // platform -> loop migration cancels on the platform side.
-      std::optional<double> resumeFrom;
+      std::optional<folly::dynamic> resumeFrom;
       if (routing.platform.erase(propertyName) > 0) {
         if (hasValue) {
           resumeFrom = getResumeValue(viewTag, propertyName, timestamp);
@@ -163,7 +165,7 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
       }
       routing.loop.insert(propertyName);
       if (hasValue) {
-        auto fromValue = resumeFrom ? jsi::Value(*resumeFrom) : jsi::Value(rt, valueIt->second.first);
+        auto fromValue = resumeFrom ? jsi::valueFromDynamic(rt, *resumeFrom) : jsi::Value(rt, valueIt->second.first);
         loopConfig.changedProperties.emplace(
             propertyName, std::make_pair(std::move(fromValue), jsi::Value(rt, valueIt->second.second)));
       }
@@ -212,7 +214,7 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
       remove(viewTag, propertyName);
       routing.loop.insert(propertyName);
       if (resumeFrom) {
-        loopDiffs.emplace(propertyName, std::make_pair(folly::dynamic(*resumeFrom), propertyDiff.second));
+        loopDiffs.emplace(propertyName, std::make_pair(*resumeFrom, propertyDiff.second));
         continue;
       }
     }
@@ -221,7 +223,7 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
   return loopDiffs;
 }
 
-std::optional<double> CSSPlatformTransitionProxy::getResumeValue(
+std::optional<folly::dynamic> CSSPlatformTransitionProxy::getResumeValue(
     const Tag viewTag,
     const std::string &propertyName,
     const double timestamp) const {
@@ -229,8 +231,7 @@ std::optional<double> CSSPlatformTransitionProxy::getResumeValue(
   if (!value) {
     return std::nullopt;
   }
-  const auto *scalar = std::get_if<double>(&*value);
-  return scalar != nullptr ? std::optional(*scalar) : std::nullopt;
+  return platformValueToDynamic(*value);
 }
 
 void CSSPlatformTransitionProxy::cancelAll(const Tag viewTag, const TransitionProperties &properties) {

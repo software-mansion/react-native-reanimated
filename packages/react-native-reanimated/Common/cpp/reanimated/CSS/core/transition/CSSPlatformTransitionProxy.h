@@ -113,7 +113,7 @@ class CSSPlatformTransitionProxy {
   /// not routed to the platform.
   std::optional<PlatformValue> getCurrentValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
   /// nullopt keeps the diff's own from-value, which the animation has painted past.
-  std::optional<double> getResumeValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
+  std::optional<folly::dynamic> getResumeValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
 
   CSSStartTransitionFunction startTransition_;
   CSSStopTransitionFunction stopTransition_;

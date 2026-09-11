@@ -28,6 +28,10 @@ bool canRouteCSSAnimations();
 
 std::optional<PlatformValue> lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, double progress);
 
+/// Converts a native transition value back to the representation consumed by
+/// the C++ loop when a property migrates there mid-transition.
+folly::dynamic platformValueToDynamic(const PlatformValue &value);
+
 /// Parses a transition's endpoints, looking the property up once. Null/undefined
 /// falls back to its CSS default; nullopt means the platform can't express the
 /// pair, so it runs on the loop. jsi::Value is the config path, folly::dynamic the
