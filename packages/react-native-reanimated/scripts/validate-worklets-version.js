@@ -36,17 +36,29 @@ function validateVersion(reanimatedVersion) {
     const { version } = require('react-native-worklets/package.json');
     workletsVersion = version;
   } catch (_e) {
-    return {
-      ok: false,
-      message:
-        "react-native-worklets package isn't installed. Please install a version between " +
-        earliestSupportedVersion +
-        ' and ' +
-        latestSupportedVersion +
-        ' to use Reanimated ' +
-        reanimatedVersion +
-        '.',
-    };
+    // In pnpm monorepos, the standard require may not resolve correctly from
+    // Reanimated's install location. Try resolving from the project root.
+    try {
+      const resolvedPath = require.resolve('react-native-worklets/package.json', {
+        paths: [process.cwd()],
+      });
+      const { version } = require(resolvedPath);
+      workletsVersion = version;
+    } catch (_e2) {
+      return {
+        ok: false,
+        message:
+          "react-native-worklets package isn't installed. Please install a version between " +
+          earliestSupportedVersion +
+          ' and ' +
+          latestSupportedVersion +
+          ' to use Reanimated ' +
+          reanimatedVersion +
+          '.' +
+          ' If you are using a pnpm monorepo, ensure the package is installed' +
+          ' in your app directory (not just the workspace root).',
+      };
+    }
   }
 
   if (semverPrerelease(workletsVersion)) {
@@ -69,9 +81,15 @@ function validateVersion(reanimatedVersion) {
     ? `Please install the latest supported version of Worklets ${latestSupportedVersion} or older`
     : `Please install Worklets ${earliestSupportedVersion} or newer`;
 
+  const monorepoHint =
+    ' If you are using a monorepo (e.g. pnpm workspaces), make sure all apps' +
+    ' in the workspace use the same version of react-native-worklets. You can' +
+    ' enforce a consistent version using your package manager\'s overrides/' +
+    'resolutions field in the root package.json.';
+
   return {
     ok: false,
-    message: `Your installed version of Worklets (${workletsVersion}) is not compatible with installed version of Reanimated (${reanimatedVersion}). ${installMessage}. See the documentation for the list of supported versions: https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility/#supported-react-native-worklets-versions`,
+    message: `Your installed version of Worklets (${workletsVersion}) is not compatible with installed version of Reanimated (${reanimatedVersion}). ${installMessage}. See the documentation for the list of supported versions: https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility/#supported-react-native-worklets-versions${monorepoHint}`,
   };
 }
 
