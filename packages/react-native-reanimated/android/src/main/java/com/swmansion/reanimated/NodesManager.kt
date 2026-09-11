@@ -73,14 +73,19 @@ class NodesManager(
     }
 
     fun invalidate() {
+        mFabricUIManager.eventDispatcher.removeListener(this)
+        mEventQueue.clear()
+        UiThreadUtil.runOnUiThread {
+            stopUpdatingOnAnimationFrame()
+            mFrameCallbacks.clear()
+        }
+
         mNativeProxy?.let {
             it.invalidate()
             mNativeProxy = null
         }
 
         mDrawPassDetector.invalidate()
-
-        mFabricUIManager.eventDispatcher.removeListener(this)
     }
 
     fun onHostPause() {
