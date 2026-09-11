@@ -1,7 +1,10 @@
+#include <jsinspector-modern/InspectorFlags.h>
+#include <worklets/Inspector/WorkletsInspectorConfig.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/android/AnimationFrameCallback.h>
+#include <worklets/android/Inspector/JWorkletsInspectorWebSocket.h>
 #include <worklets/android/WorkletsModule.h>
 
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
@@ -31,7 +34,8 @@ WorkletsModule::WorkletsModule(
     const BundleModeConfig &bundleModeConfig,
     jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-    const std::shared_ptr<UIScheduler> &uiScheduler)
+    const std::shared_ptr<UIScheduler> &uiScheduler,
+    const std::shared_ptr<WorkletsInspectorConnection> &inspectorConnection)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       rnRuntimeStatus_(std::make_shared<RNRuntimeStatus>()),
@@ -42,7 +46,27 @@ WorkletsModule::WorkletsModule(
           getIsOnJSQueueThread(),
           getRuntimeBindings(bundleModeConfig.enabled),
           bundleModeConfig,
-          rnRuntimeStatus_)) {}
+          rnRuntimeStatus_,
+          inspectorConnection)) {}
+
+static std::shared_ptr<WorkletsInspectorConnection> makeInspectorConnection(
+    const jni::alias_ref<jni::JString> &inspectorDeviceUrl,
+    const jni::alias_ref<jni::JString> &inspectorDeviceName,
+    const jni::alias_ref<jni::JString> &inspectorAppName) {
+#ifdef WORKLETS_RN_WORKER_RUNTIME_TARGETS
+  return nullptr;
+#endif // WORKLETS_RN_WORKER_RUNTIME_TARGETS
+  if (!inspectorDeviceUrl || !jsinspector_modern::InspectorFlags::getInstance().getFuseboxEnabled()) {
+    return nullptr;
+  }
+  return WorkletsInspectorConnection::getOrCreate(WorkletsInspectorConnection::Config{
+      .url = inspectorDeviceUrl->toStdString(),
+      .deviceName = inspectorDeviceName ? inspectorDeviceName->toStdString() : "",
+      .appName = inspectorAppName ? inspectorAppName->toStdString() : "",
+      .webSocketFactory = makeAndroidInspectorWebSocketFactory(),
+      .mainThreadExecutor = makeAndroidMainThreadExecutor(),
+  });
+}
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
@@ -51,7 +75,10 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
     jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
     jni::alias_ref<JScriptBufferWrapper::javaobject>
-        jScriptBufferWrapper // NOLINT //(performance-unnecessary-value-param)
+        jScriptBufferWrapper, // NOLINT //(performance-unnecessary-value-param)
+    jni::alias_ref<jni::JString> inspectorDeviceUrl, // NOLINT //(performance-unnecessary-value-param)
+    jni::alias_ref<jni::JString> inspectorDeviceName, // NOLINT //(performance-unnecessary-value-param)
+    jni::alias_ref<jni::JString> inspectorAppName // NOLINT //(performance-unnecessary-value-param)
 ) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT //(performance-no-int-to-ptr)
@@ -74,7 +101,8 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
       },
       rnRuntime,
       jsCallInvoker,
-      uiScheduler);
+      uiScheduler,
+      makeInspectorConnection(inspectorDeviceUrl, inspectorDeviceName, inspectorAppName));
 }
 
 std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(const bool bundleModeEnabled) {

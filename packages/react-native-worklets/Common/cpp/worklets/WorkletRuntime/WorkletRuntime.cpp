@@ -8,6 +8,10 @@
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
+#include <worklets/WorkletRuntime/WorkletRuntimeInspectorTarget.h>
+
+#include <worklets/Inspector/WorkletRuntimeWorkerTarget.h>
+#include <worklets/Inspector/WorkletsInspectorConfig.h>
 
 #include <memory>
 #include <stdexcept>
@@ -45,11 +49,17 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
         runtime_(std::move(runtime)) {}
 };
 
-static std::shared_ptr<jsi::Runtime>
-makeRuntime(const std::shared_ptr<std::recursive_mutex> &runtimeMutex, bool enableLocking, bool enableMicrotaskQueue) {
+static std::shared_ptr<WorkletHermesRuntime> makeWorkletHermesRuntime(bool enableMicrotaskQueue) {
   auto config = ::hermes::vm::RuntimeConfig::Builder().withMicrotaskQueue(enableMicrotaskQueue).build();
   auto hermesRuntime = facebook::hermes::makeHermesRuntime(config);
-  std::shared_ptr<jsi::Runtime> jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
+  return std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
+}
+
+static std::shared_ptr<jsi::Runtime> makeRuntime(
+    const std::shared_ptr<WorkletHermesRuntime> &workletHermesRuntime,
+    const std::shared_ptr<std::recursive_mutex> &runtimeMutex,
+    bool enableLocking) {
+  std::shared_ptr<jsi::Runtime> jsiRuntime = workletHermesRuntime;
   if (!enableLocking) {
     return jsiRuntime;
   }
@@ -67,7 +77,8 @@ WorkletRuntime::WorkletRuntime(
       enableLocking_(enableLocking),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       microtaskQueueEnabled_(enableEventLoop || runtimeKind == RuntimeData::RuntimeKind::UI),
-      runtime_(makeRuntime(runtimeMutex_, enableLocking_, microtaskQueueEnabled_)),
+      workletHermesRuntime_(makeWorkletHermesRuntime(microtaskQueueEnabled_)),
+      runtime_(makeRuntime(workletHermesRuntime_, runtimeMutex_, enableLocking_)),
       runtimeKind_(runtimeKind),
       name_(name),
       queue_(queue) {
@@ -80,6 +91,17 @@ WorkletRuntime::WorkletRuntime(
   if (enableEventLoop) {
     eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_, runtimeMutex_);
     eventLoop_->run();
+  }
+}
+
+WorkletRuntime::~WorkletRuntime() {
+#ifdef WORKLETS_RN_WORKER_RUNTIME_TARGETS
+  if (workerTarget_) {
+    WorkletRuntimeWorkerTarget::detach(std::move(workerTarget_));
+  }
+#endif // WORKLETS_RN_WORKER_RUNTIME_TARGETS
+  if (inspectorTarget_) {
+    WorkletRuntimeInspectorTarget::detach(std::move(inspectorTarget_));
   }
 }
 
@@ -123,6 +145,30 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
   } catch (jsi::JSError &e) {
     throw std::runtime_error(std::string("[Worklets] Failed to load custom serializables. Reason: ") + e.getMessage());
   }
+
+  attachInspectorTarget(jsiWorkletsModuleProxy);
+}
+
+void WorkletRuntime::attachInspectorTarget(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy) {
+  if (!queue_ || !enableLocking_ || !WorkletRuntimeInspectorTarget::isInspectorEnabled()) {
+    return;
+  }
+#ifdef WORKLETS_RN_WORKER_RUNTIME_TARGETS
+  const auto hostTarget = jsiWorkletsModuleProxy->getInspectorHostTarget();
+  if (!hostTarget.expired()) {
+    workerTarget_ = std::make_shared<WorkletRuntimeWorkerTarget>(
+        name_, runtime_, workletHermesRuntime_->getHermesRuntime(), runtimeMutex_, hostTarget);
+    workerTarget_->attach(weak_from_this());
+    return;
+  }
+#endif // WORKLETS_RN_WORKER_RUNTIME_TARGETS
+  const auto inspectorConnection = jsiWorkletsModuleProxy->getInspectorConnection();
+  if (!inspectorConnection) {
+    return;
+  }
+  inspectorTarget_ = std::make_shared<WorkletRuntimeInspectorTarget>(
+      name_, runtime_, workletHermesRuntime_->getHermesRuntime(), runtimeMutex_, inspectorConnection, jsScheduler_);
+  inspectorTarget_->attach(weak_from_this());
 }
 
 void WorkletRuntime::bundleModeInit(

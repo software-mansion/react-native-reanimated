@@ -30,7 +30,8 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
       std::function<bool()> &&isJavaScriptQueue,
       const std::shared_ptr<RuntimeBindings> &runtimeBindings,
       const BundleModeConfig &bundleModeConfig,
-      const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus);
+      const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus,
+      const std::shared_ptr<WorkletsInspectorConnection> &inspectorConnection = nullptr);
 
   ~WorkletsModuleProxy();
 
@@ -65,6 +66,7 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
   const std::shared_ptr<RuntimeManager> runtimeManager_;
   const std::shared_ptr<UnpackerLoader> unpackerLoader_;
   const std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
+  const std::shared_ptr<WorkletsInspectorConnection> inspectorConnection_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
   const std::shared_ptr<JSIWorkletsModuleProxy> rnRuntimeProxy_;
   std::shared_ptr<AnimationFrameBatchinator> animationFrameBatchinator_;
