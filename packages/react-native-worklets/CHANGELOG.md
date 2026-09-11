@@ -6,6 +6,7 @@
 
 ### 🛠 Breaking changes
 
+- Removed the networking preview together with its `FETCH_PREVIEW_ENABLED` feature flag. ([#10250](https://github.com/software-mansion/react-native-reanimated/pull/10250) by [@tjzel](https://github.com/tjzel))
 - Remove the Serializable handle - `SerializableInitializer`, `createSerializableInitializer` and the `__init` clone path are gone. `Serializable::ValueType::HandleType` stays in the Compat Stable API enum for ABI compatibility and `extractSerializable` throws for it. ([#10414](https://github.com/software-mansion/react-native-reanimated/pull/10414) by [@tjzel](https://github.com/tjzel))
 - `makeShareable` now serializes its value eagerly into a retaining Serializable instead of rebuilding it lazily on each runtime through a handle. ([#10412](https://github.com/software-mansion/react-native-reanimated/pull/10412) by [@tjzel](https://github.com/tjzel))
 - Remove worklet context objects from the Babel plugin. ([#10411](https://github.com/software-mansion/react-native-reanimated/pull/10411) by [@tjzel](https://github.com/tjzel))
