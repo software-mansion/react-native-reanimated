@@ -87,3 +87,4 @@ jobs:
           mode: ${{ matrix.mode }}
           github-sha: ${{ github.sha }}
           app-name: ${{ env.APP_NAME }}
+          run-spm: ${{ matrix.platform == 'iOS' && matrix.react-native-version >= '0.87' }}

@@ -186,9 +186,11 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -quiet
 
-      # SPM rows (matrix.spm): same npm-installed app, CocoaPods build first,
-      # then deintegrate and rebuild via SPM. Requires published packages that
-      # ship Package.swift — see spm lists in both compatibility.json files.
+      # TODO: Once react-native-reanimated and react-native-worklets are published on
+      # npm with Package.swift, add "spm": ["0.87"] to the matching release lines in
+      # packages/react-native-reanimated/compatibility.json and
+      # packages/react-native-worklets/compatibility.json.
+      # Until then, SPM is validated in reanimated-compatibility-check-nightly.yml.
       - name: SPM scaffold
         if: matrix.spm && steps.result-cache.outputs.cache-hit != 'true'
         working-directory: ${{ env.APP_NAME }}
