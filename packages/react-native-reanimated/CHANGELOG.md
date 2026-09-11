@@ -8,6 +8,7 @@
 
 - `AnimatedRefOnUI` is now a `ShareableHost<ShadowNodeWrapper | null>` read with `.value` instead of a callable, and `AnimatedRefOnJS` was renamed to `AnimatedRefOnRN`. `measure` on an unmounted ref now returns `null` and warns instead of calling into `_measure`. ([#10413](https://github.com/software-mansion/react-native-reanimated/pull/10413) by [@tjzel](https://github.com/tjzel))
 - Remove the `USE_SYNCHRONIZABLE_FOR_MUTABLES` feature flag. Mutables always use Synchronizable state now. ([#10298](https://github.com/software-mansion/react-native-reanimated/pull/10298) by [@tjzel](https://github.com/tjzel))
+- Make the light-tree layout animations proxy the default. Enable the new `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY` feature flag to roll back to the previous implementation. The legacy proxy does not support Shared Element Transitions, so `ENABLE_SHARED_ELEMENT_TRANSITIONS` must be off when you enable it. ([#10423](https://github.com/software-mansion/react-native-reanimated/pull/10423) by [@pawicao](https://github.com/pawicao))
 
 ### 🎉 New features
 
@@ -15,7 +16,7 @@
 
 ### 🐛 Bug fixes
 
-- Feed synchronous prop updates into the experimental layout animations proxy's light tree behind the `SYNCHRONOUS_PROPS_IN_LIGHT_TREE` dynamic feature flag, so shared element transitions and layout animations start from the current props of a view that moved through the synchronous path; warn in development when a transition or layout animation starts on such a view with the flag off. The synchronous-update feature flags now work together with `ENABLE_SHARED_ELEMENT_TRANSITIONS`. ([#10522](https://github.com/software-mansion/react-native-reanimated/pull/10522) by [@pawicao](https://github.com/pawicao))
+- Feed synchronous prop updates into the layout animations proxy's light tree behind the `SYNCHRONOUS_PROPS_IN_LIGHT_TREE` dynamic feature flag, so shared element transitions and layout animations start from the current props of a view that moved through the synchronous path; warn in development when a transition or layout animation starts on such a view with the flag off. The synchronous-update feature flags now work together with `ENABLE_SHARED_ELEMENT_TRANSITIONS`. ([#10522](https://github.com/software-mansion/react-native-reanimated/pull/10522) by [@pawicao](https://github.com/pawicao))
 - Carry a view's current registry values in the Reanimated commits that change its layout props, so iOS no longer writes a stale transform back to a view that moved through the synchronous path. ([#10416](https://github.com/software-mansion/react-native-reanimated/pull/10416) by [@pawicao](https://github.com/pawicao))
 - Fix a short `animationDelay` list on web applying no delay to the animations past its end instead of repeating, the way CSS does and the native path already did. ([#10442](https://github.com/software-mansion/react-native-reanimated/pull/10442) by [@dennytosp](https://github.com/dennytosp))
 - Fix `filter` strings using the CSS `hue-rotate()` and `drop-shadow()` spellings being discarded together with every other filter in the same declaration. ([#10383](https://github.com/software-mansion/react-native-reanimated/pull/10383) by [@dennytosp](https://github.com/dennytosp))
