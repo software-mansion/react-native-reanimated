@@ -740,8 +740,8 @@ void LayoutAnimationsProxy_Experimental::cleanupAnimations(
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
   ReanimatedSystraceSection s("cleanupAnimations");
-  for (const auto &[tag, completedAnimation] : completedAnimations_) {
-    if (hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag)) {
+  for (const auto &[tag, _] : completedAnimations_) {
+    if (hasPendingLayoutAnimation(tag)) {
       continue;
     }
     const auto containerIt = sharedContainers_.find(tag);
