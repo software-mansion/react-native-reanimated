@@ -68,11 +68,10 @@ typedef enum class ExitingState : std::uint8_t {
 struct MutationNode;
 
 enum class TransitionState : std::uint8_t {
-  NONE = 0,
-  START = 1,
-  ACTIVE = 2,
-  END = 3,
-  CANCELLED = 4,
+  START,
+  ACTIVE,
+  END,
+  CANCELLED,
 };
 
 enum class Intent : std::uint8_t {
