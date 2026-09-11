@@ -31,6 +31,8 @@ describe(normalizeDelay, () => {
       ['100ms', 100],
       ['0ms', 0],
       ['-100ms', -100],
+      ['0.5ms', 0.5],
+      ['.5ms', 0.5],
     ] satisfies TestCases)('converts %p to %p', (delay, expected) => {
       expect(normalizeDelay(delay)).toBe(expected);
     });
@@ -57,6 +59,14 @@ describe(normalizeDelay, () => {
       }
     );
   });
+
+  describe('when a non-finite number is passed', () => {
+    test.each([NaN, Infinity, -Infinity])('throws an error for %p', (delay) => {
+      expect(() => normalizeDelay(delay)).toThrow(
+        new Error(`[Reanimated] ${ERROR_MESSAGES.invalidDelay(delay)}`)
+      );
+    });
+  });
 });
 
 describe(normalizeDuration, () => {
@@ -74,6 +84,8 @@ describe(normalizeDuration, () => {
     test.each([
       ['100ms', 100],
       ['0ms', 0],
+      ['0.5ms', 0.5],
+      ['.5ms', 0.5],
     ] satisfies TestCases)('converts %p to %p', (duration, expected) => {
       expect(normalizeDuration(duration)).toBe(expected);
     });
@@ -95,6 +107,17 @@ describe(normalizeDuration, () => {
         const value = duration as TimeUnit;
         expect(() => normalizeDuration(value)).toThrow(
           new Error(`[Reanimated] ${ERROR_MESSAGES.invalidDuration(value)}`)
+        );
+      }
+    );
+  });
+
+  describe('when a non-finite number is passed', () => {
+    test.each([NaN, Infinity, -Infinity])(
+      'throws an error for %p',
+      (duration) => {
+        expect(() => normalizeDuration(duration)).toThrow(
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidDuration(duration)}`)
         );
       }
     );

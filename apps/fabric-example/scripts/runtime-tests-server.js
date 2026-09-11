@@ -2,6 +2,7 @@
 
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const net = require('net');
 const http = require('http');
 const { spawn, execFile } = require('child_process');
@@ -18,9 +19,20 @@ const projectRoot = path.resolve(__dirname, '..');
 const iosDir = path.join(projectRoot, 'ios');
 const androidDir = path.join(projectRoot, 'android');
 const SANITIZER_REPORT_DIR = path.join(projectRoot, 'sanitizer-reports');
+const CRASH_REPORT_DIR = path.join(projectRoot, 'crash-reports');
 // -enable*Sanitizer alone does not reach the Pods project on CI (the built
 // products carried no -fsanitize flags), so each build setting is also forced
 // as a command-line override, which applies to every target.
+/**
+ * @type {Record<
+ *   string,
+ *   {
+ *     buildArgs: string[];
+ *     launchEnv: Record<string, string>;
+ *     runtimePrefix: string;
+ *   }
+ * >}
+ */
 const SANITIZERS = {
   thread: {
     buildArgs: ['-enableThreadSanitizer', 'YES', 'ENABLE_THREAD_SANITIZER=YES'],
@@ -56,25 +68,32 @@ if (args.help) {
 const LIBRARY = String(args.library ?? '').toLowerCase();
 const PLATFORM = String(args.platform ?? 'ios').toLowerCase();
 const METRO_PORT = Number(args['metro-port'] ?? 8081);
-const CONFIGURATION = args.configuration ?? 'DebugRuntimeTests';
+const CONFIGURATION =
+  typeof args.configuration === 'string'
+    ? args.configuration
+    : 'DebugRuntimeTests';
 const IS_RELEASE = CONFIGURATION.startsWith('Release');
 // Release builds have no Metro; the app then reports to port 8082.
 const PORT = Number(args.port ?? (IS_RELEASE ? 8082 : METRO_PORT + 1));
-const ONLY = args.only
-  ? args.only
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean)
-  : null;
+const ONLY =
+  typeof args.only === 'string'
+    ? args.only
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : null;
 const CONNECT_TIMEOUT_MS = Number(args['connect-timeout'] ?? 600) * 1000;
 const IDLE_TIMEOUT_MS = Number(args['idle-timeout'] ?? 600) * 1000;
+const AFTER_SUITE =
+  typeof args['after-suite'] === 'string' ? args['after-suite'] : null;
 const SHOULD_LAUNCH = args.launch === true || args.launch === '';
 const BUILD_ONLY = args['build-only'] === true || args['build-only'] === '';
 const SKIP_BUILD = args['skip-build'] === true || args['skip-build'] === '';
-const SIMULATOR = args.simulator ?? 'iPhone 17';
-const UDID = args.udid ?? null;
-const SERIAL = args.serial ?? null;
-const AVD = args.avd ?? null;
+const SIMULATOR =
+  typeof args.simulator === 'string' ? args.simulator : 'iPhone 17';
+const UDID = typeof args.udid === 'string' ? args.udid : null;
+const SERIAL = typeof args.serial === 'string' ? args.serial : null;
+const AVD = typeof args.avd === 'string' ? args.avd : null;
 const SANITIZER = args.sanitizer ? String(args.sanitizer).toLowerCase() : null;
 
 if (!BUILD_ONLY && !LIBRARIES.includes(LIBRARY)) {
@@ -115,18 +134,41 @@ if (BUILD_ONLY && SHOULD_LAUNCH) {
   process.exit(1);
 }
 
+/** @typedef {{ type?: string; [key: string]: any }} DeviceMessage */
+
+/** @type {import('ws').WebSocket | null} */
 let client = null;
+const serverStartedAt = Date.now();
 let runStartedAt = 0;
 let exitCode = 1;
 let runFinished = false;
+/** @type {ReturnType<typeof setTimeout> | null} */
 let connectTimer = null;
+/** @type {ReturnType<typeof setTimeout> | null} */
 let idleTimer = null;
+/** @type {import('child_process').ChildProcess | null} */
 let metroChild = null;
+/** @type {string | null} */
+let androidSerial = null;
+/** @type {Promise<void> | null} */
+let crashDiagnosticsPromise = null;
+/** @type {Promise<void>} */
+let afterSuiteChain = Promise.resolve();
+let afterSuiteRunning = false;
+let afterSuitePending = false;
+
+/**
+ * @param {unknown} error
+ * @returns {string}
+ */
+function errorMessage(error) {
+  return error instanceof Error ? error.message : String(error);
+}
 
 const wss = new WebSocketServer({ port: PORT, host: '0.0.0.0' });
 
 wss.on('error', (error) => {
-  if (error.code === 'EADDRINUSE') {
+  if (/** @type {{ code?: string }} */ (error).code === 'EADDRINUSE') {
     console.error(
       `[runtime-tests] port ${PORT} is already in use — is another runtime-tests server (or Metro) running there? Stop it or pass --port.`
     );
@@ -151,7 +193,7 @@ function armConnectTimer() {
     console.error(
       `[runtime-tests] no device connected within ${CONNECT_TIMEOUT_MS / 1000}s, exiting`
     );
-    shutdown(1);
+    void failWithDiagnostics(1);
   }, CONNECT_TIMEOUT_MS);
 }
 
@@ -179,7 +221,10 @@ wss.on('connection', (socket) => {
     try {
       msg = JSON.parse(raw.toString());
     } catch (error) {
-      console.warn('[runtime-tests] failed to parse message:', error.message);
+      console.warn(
+        '[runtime-tests] failed to parse message:',
+        errorMessage(error)
+      );
       return;
     }
     handleMessage(msg);
@@ -194,20 +239,21 @@ wss.on('connection', (socket) => {
       );
       if (PLATFORM === 'android') {
         console.error(
-          '[runtime-tests] Check `adb logcat` for crashes (grep AndroidRuntime or ReactNative)'
+          '[runtime-tests] The app most likely crashed — collecting crash diagnostics below.'
         );
       } else {
         console.error(
-          '[runtime-tests] Check the iOS simulator log for crashes (Xcode → Devices → View Device Logs)'
+          '[runtime-tests] The app most likely crashed — collecting crash reports below.'
         );
       }
       console.error(
         '[runtime-tests] or grep `[remoteReporter]` in Metro output for the WS close reason.'
       );
       console.error('========================================');
-    } else {
-      console.log('[runtime-tests] device disconnected');
+      void failWithDiagnostics(exitCode);
+      return;
     }
+    console.log('[runtime-tests] device disconnected');
     shutdown(exitCode);
   });
 
@@ -216,6 +262,7 @@ wss.on('connection', (socket) => {
   });
 });
 
+/** @param {DeviceMessage} msg */
 function handleMessage(msg) {
   switch (msg.type) {
     case 'hello':
@@ -223,6 +270,9 @@ function handleMessage(msg) {
       break;
     case 'log':
       onLog(msg);
+      break;
+    case 'suiteFinished':
+      onSuiteFinished(msg);
       break;
     case 'done':
       onDone(msg);
@@ -235,8 +285,11 @@ function handleMessage(msg) {
   }
 }
 
+/** @param {DeviceMessage} msg */
 function onHello(msg) {
-  const declared = (msg.suites ?? []).map((s) => s.name);
+  /** @type {{ name: string }[]} */
+  const suites = msg.suites ?? [];
+  const declared = suites.map((s) => s.name);
   const deviceLibrary = String(msg.library ?? '').toLowerCase();
   console.log(
     `[runtime-tests] hello from ${msg.platform} ${msg.platformVersion} (${deviceLibrary}), ${declared.length} suites declared: ${declared.join(', ')}`
@@ -273,6 +326,7 @@ function onHello(msg) {
   console.log('[runtime-tests] start sent, running tests…');
 }
 
+/** @param {DeviceMessage} msg */
 function onLog(msg) {
   const logArgs = Array.isArray(msg.args) ? msg.args : [];
   const line = logArgs.join(' ');
@@ -288,6 +342,57 @@ function onLog(msg) {
   }
 }
 
+/** @param {DeviceMessage} msg */
+function onSuiteFinished(msg) {
+  if (!AFTER_SUITE || runStartedAt === 0 || runFinished) {
+    return;
+  }
+  if (afterSuiteRunning) {
+    afterSuitePending = true;
+    return;
+  }
+  afterSuiteChain = runAfterSuiteCommand(AFTER_SUITE, String(msg.name ?? ''));
+}
+
+/**
+ * @param {string} command
+ * @param {string} suiteName
+ * @returns {Promise<void>}
+ */
+function runAfterSuiteCommand(command, suiteName) {
+  afterSuiteRunning = true;
+  afterSuitePending = false;
+  return new Promise((resolve) => {
+    let finished = false;
+    const onFinished = (/** @type {string} */ outcome) => {
+      if (finished) {
+        return;
+      }
+      finished = true;
+      afterSuiteRunning = false;
+      if (outcome) {
+        console.warn(
+          `[runtime-tests] --after-suite command ${outcome} (after suite: ${suiteName})`
+        );
+      }
+      resolve(
+        afterSuitePending ? runAfterSuiteCommand(command, suiteName) : undefined
+      );
+    };
+    const child = spawn(command, {
+      shell: true,
+      stdio: ['ignore', 'inherit', 'inherit'],
+    });
+    child.on('error', (error) =>
+      onFinished(`failed to start: ${error.message}`)
+    );
+    child.on('exit', (code, signal) =>
+      onFinished(code === 0 ? '' : `exited with ${signal ?? `code ${code}`}`)
+    );
+  });
+}
+
+/** @param {DeviceMessage} msg */
 function onDone(msg) {
   const elapsed = ((Date.now() - runStartedAt) / 1000).toFixed(1);
   console.log('');
@@ -314,6 +419,7 @@ function onDone(msg) {
   }
 }
 
+/** @param {DeviceMessage} msg */
 function onError(msg) {
   console.error(`[runtime-tests] device reported error: ${msg.message}`);
   if (msg.stack) {
@@ -328,6 +434,7 @@ function onError(msg) {
   }
 }
 
+/** @param {Record<string, unknown>} payload */
 function send(payload) {
   if (client && client.readyState === client.OPEN) {
     client.send(JSON.stringify(payload));
@@ -340,10 +447,11 @@ function resetIdleTimer() {
     console.error(
       `[runtime-tests] no traffic for ${IDLE_TIMEOUT_MS / 1000}s, assuming the run is stuck`
     );
-    shutdown(1);
+    void failWithDiagnostics(1);
   }, IDLE_TIMEOUT_MS);
 }
 
+/** @param {'connect' | 'idle'} which */
 function clearTimer(which) {
   if (which === 'connect' && connectTimer) {
     clearTimeout(connectTimer);
@@ -376,11 +484,498 @@ function printSanitizerReports() {
   );
 }
 
+/** @param {number} code */
+async function failWithDiagnostics(code) {
+  clearTimer('connect');
+  clearTimer('idle');
+  try {
+    await dumpCrashDiagnostics();
+  } catch (error) {
+    console.error(
+      `[runtime-tests] crash diagnostics failed: ${errorMessage(error)}`
+    );
+  } finally {
+    shutdown(code);
+  }
+}
+
+function dumpCrashDiagnostics() {
+  if (BUILD_ONLY) {
+    return Promise.resolve();
+  }
+  crashDiagnosticsPromise ??= (async () => {
+    if (PLATFORM === 'android') {
+      await dumpAndroidCrashDiagnostics();
+    } else if (PLATFORM === 'ios') {
+      await dumpIOSCrashDiagnostics();
+    }
+  })();
+  return crashDiagnosticsPromise;
+}
+
+async function dumpIOSCrashDiagnostics() {
+  if (process.platform !== 'darwin') {
+    console.error(
+      '[runtime-tests] the simulator runs on a remote host — check its ~/Library/Logs/DiagnosticReports for FabricExample crash reports'
+    );
+    return;
+  }
+  const reportsDir = path.join(
+    os.homedir(),
+    'Library',
+    'Logs',
+    'DiagnosticReports'
+  );
+  console.error(
+    `[runtime-tests] looking for FabricExample crash reports in ${reportsDir}…`
+  );
+  /** @type {{ name: string; file: string; mtimeMs: number }[]} */
+  let reports = [];
+  for (let attempt = 0; attempt < 10; attempt++) {
+    await sleep(3000);
+    reports = findFreshIOSCrashReports(reportsDir);
+    if (reports.length > 0) {
+      await sleep(3000);
+      reports = findFreshIOSCrashReports(reportsDir);
+      break;
+    }
+  }
+  if (reports.length === 0) {
+    console.error(
+      '[runtime-tests] no fresh crash reports (the app may have hung or been killed without crashing)'
+    );
+    return;
+  }
+  fs.mkdirSync(CRASH_REPORT_DIR, { recursive: true });
+  for (const report of reports.slice(0, 3)) {
+    const saved = path.join(CRASH_REPORT_DIR, report.name);
+    fs.copyFileSync(report.file, saved);
+    const text = fs.readFileSync(report.file, 'utf8');
+    console.error(
+      `[runtime-tests] crash report ${report.name} (full report saved to ${saved}):`
+    );
+    console.error(formatIOSCrashReport(text));
+  }
+}
+
+/**
+ * @param {string} reportsDir
+ * @returns {{ name: string; file: string; mtimeMs: number }[]}
+ */
+function findFreshIOSCrashReports(reportsDir) {
+  let names = [];
+  try {
+    names = fs.readdirSync(reportsDir);
+  } catch {
+    return [];
+  }
+  return names
+    .filter(
+      (name) =>
+        name.startsWith('FabricExample') &&
+        (name.endsWith('.ips') || name.endsWith('.crash'))
+    )
+    .map((name) => {
+      const file = path.join(reportsDir, name);
+      return { name, file, mtimeMs: fs.statSync(file).mtimeMs };
+    })
+    .filter(
+      (report) => report.mtimeMs >= (runStartedAt || serverStartedAt) - 60_000
+    )
+    .sort((a, b) => b.mtimeMs - a.mtimeMs);
+}
+
+/**
+ * @typedef {{
+ *   imageIndex?: number;
+ *   imageOffset?: number;
+ *   symbol?: string;
+ *   symbolLocation?: number;
+ * }} IpsFrame
+ */
+
+/**
+ * @param {string} text
+ * @returns {string}
+ */
+function formatIOSCrashReport(text) {
+  const newlineIndex = text.indexOf('\n');
+  /** @type {any} */
+  let payload;
+  try {
+    payload = JSON.parse(text.slice(newlineIndex + 1));
+  } catch {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      return headLines(text, 200);
+    }
+  }
+  const lines = [];
+  if (payload.exception) {
+    lines.push(`exception: ${JSON.stringify(payload.exception)}`);
+  }
+  if (payload.termination) {
+    lines.push(`termination: ${JSON.stringify(payload.termination)}`);
+  }
+  if (payload.asi) {
+    lines.push(`abort messages: ${JSON.stringify(payload.asi)}`);
+  }
+  const images = payload.usedImages ?? [];
+  /**
+   * @param {IpsFrame} frame
+   * @returns {string}
+   */
+  const formatFrame = (frame) => {
+    const image = images[frame.imageIndex ?? -1] ?? {};
+    const location = frame.symbol
+      ? `${frame.symbol} + ${frame.symbolLocation ?? 0}`
+      : `0x${(frame.imageOffset ?? 0).toString(16)}`;
+    return `${image.name ?? '?'}  ${location}`;
+  };
+  /** @type {IpsFrame[]} */
+  const lastExceptionBacktrace = Array.isArray(payload.lastExceptionBacktrace)
+    ? payload.lastExceptionBacktrace
+    : [];
+  if (lastExceptionBacktrace.length > 0) {
+    lines.push('last exception backtrace:');
+    lastExceptionBacktrace.forEach((frame, index) => {
+      lines.push(`  #${String(index).padStart(2)} ${formatFrame(frame)}`);
+    });
+  }
+  const faultingIndex = payload.faultingThread ?? 0;
+  const thread = (payload.threads ?? [])[faultingIndex];
+  if (thread) {
+    const threadName = thread.name ?? thread.queue ?? '';
+    lines.push(
+      `faulting thread ${faultingIndex}${threadName ? ` (${threadName})` : ''}:`
+    );
+    /** @type {IpsFrame[]} */
+    const frames = thread.frames ?? [];
+    frames.forEach((frame, index) => {
+      lines.push(`  #${String(index).padStart(2)} ${formatFrame(frame)}`);
+    });
+  }
+  if (lines.length === 0) {
+    return headLines(text, 200);
+  }
+  return lines.join('\n');
+}
+
+async function dumpAndroidCrashDiagnostics() {
+  const serial =
+    androidSerial ?? (await listAndroidDevices().catch(() => []))[0];
+  if (!serial) {
+    console.error(
+      '[runtime-tests] no adb device available for crash diagnostics'
+    );
+    return;
+  }
+  console.error(`[runtime-tests] collecting crash diagnostics from ${serial}…`);
+  fs.mkdirSync(CRASH_REPORT_DIR, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+  let crashLog = '';
+  let hasCrashLog = false;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    await sleep(3000);
+    crashLog = await readCrashBuffer(serial);
+    hasCrashLog = crashBufferHasContent(crashLog);
+    if (hasCrashLog) {
+      await sleep(3000);
+      crashLog = await readCrashBuffer(serial);
+      break;
+    }
+  }
+  if (hasCrashLog) {
+    const file = path.join(CRASH_REPORT_DIR, `logcat-crash-${stamp}.txt`);
+    fs.writeFileSync(file, crashLog);
+    console.error(`[runtime-tests] logcat crash buffer (saved to ${file}):`);
+    console.error(tailLines(crashLog, 400));
+  } else {
+    console.error(
+      '[runtime-tests] logcat crash buffer is empty (no Java or native crash was recorded)'
+    );
+  }
+  await adbDiag(serial, ['logcat', '-b', 'crash', '-c']).catch(() => {});
+
+  const tombstone = await pullLatestTombstone(serial, stamp);
+  if (tombstone) {
+    console.error(
+      `[runtime-tests] tombstone ${tombstone.name} (saved to ${tombstone.file}):`
+    );
+    console.error(headLines(tombstone.text, 200));
+  }
+
+  const nativeReport = tombstone?.text ?? (hasCrashLog ? crashLog : null);
+  if (nativeReport) {
+    await symbolizeNativeCrash(serial, nativeReport, stamp);
+  }
+}
+
+/**
+ * @param {string} serial
+ * @returns {Promise<string>}
+ */
+async function readCrashBuffer(serial) {
+  return adbDiag(serial, ['logcat', '-b', 'crash', '-d']).then(
+    ({ stdout }) => stdout,
+    (error) => {
+      console.error(
+        `[runtime-tests] failed to read logcat crash buffer: ${errorMessage(error)}`
+      );
+      return '';
+    }
+  );
+}
+
+/**
+ * @param {string} crashLog
+ * @returns {boolean}
+ */
+function crashBufferHasContent(crashLog) {
+  return crashLog
+    .split('\n')
+    .some((line) => line.trim() && !line.startsWith('---------'));
+}
+
+/**
+ * @param {string} serial
+ * @param {string} stamp
+ * @returns {Promise<{ name: string; text: string; file: string } | null>}
+ */
+async function pullLatestTombstone(serial, stamp) {
+  const rootOutput = await adbDiag(serial, ['root']).then(
+    ({ stdout, stderr }) => stdout + stderr,
+    (error) => `${errorMessage(error)}`
+  );
+  if (/cannot run as root|error/i.test(rootOutput)) {
+    console.error(
+      `[runtime-tests] adb root unavailable, skipping tombstones: ${rootOutput.trim()}`
+    );
+    return null;
+  }
+  await adbDiag(serial, ['wait-for-device']).catch(() => {});
+  const pullDir = path.join(CRASH_REPORT_DIR, `tombstones-${stamp}`);
+  const pulled = await adbDiag(serial, [
+    'pull',
+    '-a',
+    '/data/tombstones',
+    pullDir,
+  ]).then(
+    () => true,
+    () => false
+  );
+  if (!pulled) {
+    console.error('[runtime-tests] no tombstones directory on the device');
+    return null;
+  }
+  const nestedDir = path.join(pullDir, 'tombstones');
+  const tombstonesDir = fs.existsSync(nestedDir) ? nestedDir : pullDir;
+  /** @type {{ name: string; mtimeMs: number }[]} */
+  let entries = [];
+  try {
+    entries = fs
+      .readdirSync(tombstonesDir)
+      .filter((name) => !name.endsWith('.pb'))
+      .map((name) => ({
+        name,
+        mtimeMs: fs.statSync(path.join(tombstonesDir, name)).mtimeMs,
+      }))
+      .sort((a, b) => b.mtimeMs - a.mtimeMs);
+  } catch {
+    entries = [];
+  }
+  if (entries.length === 0) {
+    console.error('[runtime-tests] no tombstones on the device');
+    return null;
+  }
+  const newest = entries[0];
+  const hostBoundary = (runStartedAt || serverStartedAt) - 60_000;
+  const deviceNowMs = await adbDiag(serial, ['shell', 'date', '+%s']).then(
+    ({ stdout }) => Number(stdout.trim()) * 1000,
+    () => NaN
+  );
+  const boundary = Number.isFinite(deviceNowMs)
+    ? deviceNowMs - (Date.now() - hostBoundary)
+    : hostBoundary;
+  if (newest.mtimeMs < boundary) {
+    console.error(
+      `[runtime-tests] newest tombstone (${newest.name}) predates this run — the app died without a native crash dump`
+    );
+    return null;
+  }
+  const file = path.join(tombstonesDir, newest.name);
+  const text = fs.readFileSync(file, 'utf8');
+  await adbDiag(serial, ['shell', 'rm', '-f', '/data/tombstones/*']).catch(
+    () => {}
+  );
+  return { name: newest.name, text, file };
+}
+
+/**
+ * @param {string} serial
+ * @param {string} reportText
+ * @param {string} stamp
+ */
+async function symbolizeNativeCrash(serial, reportText, stamp) {
+  if (!reportText.includes('*** ***')) {
+    return;
+  }
+  const ndkStack = findNdkStack();
+  if (!ndkStack) {
+    console.error(
+      '[runtime-tests] ndk-stack not found (looked in ANDROID_NDK_HOME and $ANDROID_HOME/ndk), skipping symbolication'
+    );
+    return;
+  }
+  let symDir = findAndroidSymbolsDir();
+  if (!symDir) {
+    console.error(
+      '[runtime-tests] no unstripped libs under android/app/build/intermediates/merged_native_libs, skipping symbolication'
+    );
+    return;
+  }
+  const abi = await adbDiag(serial, [
+    'shell',
+    'getprop',
+    'ro.product.cpu.abi',
+  ]).then(
+    ({ stdout }) => stdout.trim(),
+    () => null
+  );
+  if (abi && fs.existsSync(path.join(symDir, abi))) {
+    symDir = path.join(symDir, abi);
+  }
+  const dumpFile = path.join(CRASH_REPORT_DIR, `native-crash-${stamp}.txt`);
+  fs.writeFileSync(dumpFile, reportText);
+  const stdout = await run(ndkStack, ['-sym', symDir, '-dump', dumpFile], {
+    timeout: 60_000,
+  }).then(
+    (result) => result.stdout,
+    (error) => {
+      printCommandFailure(error);
+      return '';
+    }
+  );
+  if (stdout.trim()) {
+    const file = path.join(
+      CRASH_REPORT_DIR,
+      `native-crash-symbolized-${stamp}.txt`
+    );
+    fs.writeFileSync(file, stdout);
+    console.error(
+      `[runtime-tests] symbolized native stack trace (saved to ${file}):`
+    );
+    console.error(headLines(stdout, 250));
+  }
+}
+
+/**
+ * @param {string} serial
+ * @param {string[]} adbArgs
+ * @returns {Promise<{ stdout: string; stderr: string }>}
+ */
+function adbDiag(serial, adbArgs) {
+  return adb(serial, adbArgs, { timeout: 30_000 });
+}
+
+/** @returns {string | null} */
+function findNdkStack() {
+  const bin = process.platform === 'win32' ? 'ndk-stack.cmd' : 'ndk-stack';
+  const candidates = [];
+  if (process.env.ANDROID_NDK_HOME) {
+    candidates.push(path.join(process.env.ANDROID_NDK_HOME, bin));
+  }
+  const sdkRoot = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
+  const ndkRoot = sdkRoot ? path.join(sdkRoot, 'ndk') : null;
+  if (ndkRoot && fs.existsSync(ndkRoot)) {
+    const versions = fs.readdirSync(ndkRoot).sort().reverse();
+    for (const version of versions) {
+      candidates.push(path.join(ndkRoot, version, bin));
+    }
+  }
+  return candidates.find((candidate) => fs.existsSync(candidate)) ?? null;
+}
+
+/** @returns {string | null} */
+function findAndroidSymbolsDir() {
+  const buildType = CONFIGURATION[0].toLowerCase() + CONFIGURATION.slice(1);
+  const root = path.join(
+    androidDir,
+    'app',
+    'build',
+    'intermediates',
+    'merged_native_libs',
+    buildType
+  );
+  if (!fs.existsSync(root)) {
+    return null;
+  }
+  const stack = [root];
+  while (stack.length > 0) {
+    const dir = stack.pop();
+    if (!dir) {
+      break;
+    }
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+      const full = path.join(dir, entry.name);
+      if (entry.name === 'lib') {
+        return full;
+      }
+      stack.push(full);
+    }
+  }
+  return null;
+}
+
+/**
+ * @param {string} text
+ * @param {number} count
+ * @returns {string}
+ */
+function headLines(text, count) {
+  const lines = text.split('\n');
+  if (lines.length <= count) {
+    return text;
+  }
+  return (
+    lines.slice(0, count).join('\n') +
+    `\n[runtime-tests] … ${lines.length - count} more lines in the saved file`
+  );
+}
+
+/**
+ * @param {string} text
+ * @param {number} count
+ * @returns {string}
+ */
+function tailLines(text, count) {
+  const lines = text.split('\n');
+  if (lines.length <= count) {
+    return text;
+  }
+  return (
+    `[runtime-tests] … ${lines.length - count} earlier lines in the saved file\n` +
+    lines.slice(-count).join('\n')
+  );
+}
+
+let shutdownStarted = false;
+
+/** @param {number} code */
 function shutdown(code) {
+  if (shutdownStarted) {
+    return;
+  }
+  shutdownStarted = true;
   printSanitizerReports();
   clearTimer('connect');
   clearTimer('idle');
-  if (metroChild && !metroChild.killed) {
+  if (metroChild && !metroChild.killed && metroChild.pid !== undefined) {
     try {
       process.kill(-metroChild.pid, 'SIGTERM');
     } catch {
@@ -391,12 +986,24 @@ function shutdown(code) {
       }
     }
   }
+  void exitAfterSuiteCommands(code);
+}
+
+/** @param {number} code */
+async function exitAfterSuiteCommands(code) {
+  await afterSuiteChain;
   wss.close(() => {
     process.exit(code);
   });
   setTimeout(() => process.exit(code), 1000).unref();
 }
 
+/**
+ * @param {string} cmd
+ * @param {string[]} cmdArgs
+ * @param {import('child_process').ExecFileOptions} [options]
+ * @returns {Promise<{ stdout: string; stderr: string }>}
+ */
 function run(cmd, cmdArgs, options = {}) {
   return new Promise((resolve, reject) => {
     execFile(
@@ -416,9 +1023,16 @@ function run(cmd, cmdArgs, options = {}) {
   });
 }
 
+/**
+ * @param {string} host
+ * @param {number} port
+ * @param {number} [timeoutMs]
+ * @returns {Promise<boolean>}
+ */
 function probeTcp(host, port, timeoutMs = 500) {
   return new Promise((resolve) => {
     const socket = new net.Socket();
+    /** @param {boolean} result */
     const done = (result) => {
       socket.destroy();
       resolve(result);
@@ -431,6 +1045,10 @@ function probeTcp(host, port, timeoutMs = 500) {
   });
 }
 
+/**
+ * @param {number} [timeoutMs]
+ * @returns {Promise<boolean>}
+ */
 function probeMetro(timeoutMs = 1000) {
   return new Promise((resolve) => {
     const req = http.get(
@@ -487,10 +1105,10 @@ async function ensureMetroRunning() {
       detached: true,
     }
   );
-  metroChild.stdout.on('data', (chunk) => {
+  metroChild.stdout?.on('data', (chunk) => {
     process.stdout.write(`[metro] ${chunk}`);
   });
-  metroChild.stderr.on('data', (chunk) => {
+  metroChild.stderr?.on('data', (chunk) => {
     process.stderr.write(`[metro] ${chunk}`);
   });
   metroChild.on('exit', (code) => {
@@ -546,6 +1164,7 @@ async function resolveSimulator() {
   return fallback;
 }
 
+/** @param {{ name: string; udid: string; state: string }} device */
 async function ensureBooted(device) {
   if (device.state !== 'Booted') {
     console.log(`[runtime-tests] booting ${device.name} (${device.udid})`);
@@ -602,16 +1221,23 @@ async function appPath() {
     ],
     { cwd: iosDir }
   );
+  /** @type {{ buildSettings?: Record<string, string> }[]} */
   const entries = JSON.parse(stdout.slice(stdout.indexOf('[')));
   const entry =
     entries.find(
       (candidate) =>
-        candidate.buildSettings.WRAPPER_NAME === 'FabricExample.app'
+        candidate.buildSettings?.WRAPPER_NAME === 'FabricExample.app'
     ) ?? entries[0];
+
+  if (!entry?.buildSettings) {
+    throw new Error(`No build settings for configuration ${CONFIGURATION}`);
+  }
+
   const { TARGET_BUILD_DIR, WRAPPER_NAME } = entry.buildSettings;
   return path.join(TARGET_BUILD_DIR, WRAPPER_NAME);
 }
 
+/** @param {string} udid */
 async function installAndLaunch(udid) {
   const app = await appPath();
   if (SANITIZER) {
@@ -628,7 +1254,7 @@ async function installAndLaunch(udid) {
     'write',
     BUNDLE_ID,
     'RCT_jsLocation',
-    `localhost:${METRO_PORT}`,
+    `127.0.0.1:${METRO_PORT}`,
   ]);
 
   await run('xcrun', ['simctl', 'terminate', udid, BUNDLE_ID]).catch(() => {});
@@ -650,6 +1276,11 @@ async function installAndLaunch(udid) {
   });
 }
 
+/**
+ * @param {string} dir
+ * @param {string} name
+ * @returns {string}
+ */
 function sdkTool(dir, name) {
   const sdkRoot = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
   if (sdkRoot) {
@@ -663,10 +1294,20 @@ function sdkTool(dir, name) {
 
 const ADB = sdkTool('platform-tools', 'adb');
 
+/**
+ * @param {string} serial
+ * @param {string[]} adbArgs
+ * @param {import('child_process').ExecFileOptions} [options]
+ * @returns {Promise<{ stdout: string; stderr: string }>}
+ */
 function adb(serial, adbArgs, options = {}) {
   return run(ADB, ['-s', serial, ...adbArgs], options);
 }
 
+/**
+ * @param {number} ms
+ * @returns {Promise<void>}
+ */
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -741,6 +1382,7 @@ async function resolveAndroidDevice() {
   throw new Error(`Emulator ${avd} did not boot within 300s`);
 }
 
+/** @param {string} serial */
 async function buildAndroidApp(serial) {
   const abi = await adb(serial, ['shell', 'getprop', 'ro.product.cpu.abi'])
     .then(({ stdout }) => stdout.trim())
@@ -758,6 +1400,7 @@ async function buildAndroidApp(serial) {
   await run(path.join(androidDir, 'gradlew'), gradleArgs, { cwd: androidDir });
 }
 
+/** @param {string} serial */
 async function installAndLaunchAndroid(serial) {
   const buildType = CONFIGURATION[0].toLowerCase() + CONFIGURATION.slice(1);
   const apk = path.join(
@@ -810,6 +1453,7 @@ if (SHOULD_LAUNCH) {
     }
     if (PLATFORM === 'android') {
       const serial = await resolveAndroidDevice();
+      androidSerial = serial;
       if (!SKIP_BUILD) {
         await buildAndroidApp(serial);
       }
@@ -829,6 +1473,7 @@ if (SHOULD_LAUNCH) {
   });
 }
 
+/** @param {Error & { stdout?: string; stderr?: string }} error */
 function printCommandFailure(error) {
   console.error(`[runtime-tests] ${error.message}`);
   if (error.stdout) {
@@ -839,7 +1484,12 @@ function printCommandFailure(error) {
   }
 }
 
+/** @param {string} app */
 function assertSanitizerRuntimeEmbedded(app) {
+  if (!SANITIZER) {
+    return;
+  }
+
   const prefix = SANITIZERS[SANITIZER].runtimePrefix;
   const frameworks = path.join(app, 'Frameworks');
   const embedded =
@@ -901,6 +1551,10 @@ Build and run
   --only <a,b>              Comma separated suite names to run. Suite names come
                             from the library's suites.ts, for example
                             "run loop" or "runtimes,memory".
+  --after-suite <command>   Shell command to run each time the app finishes a
+                            describe() suite, e.g. a cloud keepalive ping.
+                            Overlapping runs are coalesced into one pending
+                            call; a failing command only logs a warning.
 
 Ports and timeouts
   --metro-port <port>       Default: 8081.
@@ -912,7 +1566,12 @@ Ports and timeouts
   --help                    Show this message.`);
 }
 
+/**
+ * @param {string[]} argv
+ * @returns {Record<string, string | true>}
+ */
 function parseArgs(argv) {
+  /** @type {Record<string, string | true>} */
   const out = {};
   for (let i = 0; i < argv.length; i++) {
     const token = argv[i];

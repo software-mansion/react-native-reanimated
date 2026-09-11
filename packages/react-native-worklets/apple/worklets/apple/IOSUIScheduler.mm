@@ -1,3 +1,6 @@
+#import <Foundation/Foundation.h>
+#import <dispatch/dispatch.h>
+
 #import <worklets/apple/IOSUIScheduler.h>
 
 namespace worklets {
@@ -5,9 +8,14 @@ namespace worklets {
 using namespace facebook;
 using namespace react;
 
+bool IOSUIScheduler::queryIsOnUIThread() const
+{
+  return [NSThread isMainThread];
+}
+
 void IOSUIScheduler::scheduleOnUI(std::function<void()> job)
 {
-  if ([NSThread isMainThread]) {
+  if (isOnUIThread()) {
     job();
     return;
   }

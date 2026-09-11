@@ -10,13 +10,13 @@ import Animated, {
 
 import {
   callTracker,
+  createTestValue,
   describe,
   expect,
-  getRegisteredValue,
+  expectSharedValue,
   getTrackerCallCount,
   mockAnimationTimer,
   recordAnimationUpdates,
-  registerValue,
   render,
   test,
   waitForAnimationUpdates,
@@ -29,16 +29,13 @@ describe(`Cascade of callbacks`, () => {
     interruptedAnimation = 'interruptedAnimationTracker',
     animationNotExecuted = 'animationNotExecuted',
   }
-  enum SV {
-    callbackArgument0 = 'callbackArgument0',
-    callbackArgument1 = 'callbackArgument1',
-  }
-  const CallbackComponent = () => {
-    const callbackArgument0 = useSharedValue<boolean | undefined | null>(null);
-    const callbackArgument1 = useSharedValue<boolean | undefined | null>(false);
-    registerValue(SV.callbackArgument0, callbackArgument0);
-    registerValue(SV.callbackArgument1, callbackArgument1);
-
+  const CallbackComponent = ({
+    setCallbackArgument0,
+    setCallbackArgument1,
+  }: {
+    setCallbackArgument0: (value?: boolean) => void;
+    setCallbackArgument1: (value?: boolean) => void;
+  }) => {
     const sv0 = useSharedValue(0);
     const sv1 = useSharedValue(0);
     const sv2 = useSharedValue(0);
@@ -49,18 +46,18 @@ describe(`Cascade of callbacks`, () => {
           sv1.value = withSequence(
             withTiming(20, { duration: 600 }, (finished?: boolean) => {
               // this animation gets interrupted
-              callbackArgument0.value = finished;
+              setCallbackArgument0(finished);
               callTracker(Tracker.interruptedAnimation);
             }),
             withTiming(1000, { duration: 600 }, (finished?: boolean) => {
               // execution of this animation never starts
               callTracker(Tracker.animationNotExecuted);
-              callbackArgument1.value = finished;
+              setCallbackArgument1(finished);
             }),
             withTiming(1000, { duration: 600 }, (finished?: boolean) => {
               // execution of this animation never starts
               callTracker(Tracker.animationNotExecuted);
-              callbackArgument1.value = callbackArgument1.value || finished;
+              setCallbackArgument1(finished);
             })
           );
         }),
@@ -97,29 +94,37 @@ describe(`Cascade of callbacks`, () => {
     await mockAnimationTimer();
     const updatesContainerActive = await recordAnimationUpdates();
 
-    await render(<CallbackComponent />);
+    const [callbackArgument0, setCallbackArgument0] =
+      createTestValue<boolean>(false);
+    const [callbackArgument1, setCallbackArgument1] =
+      createTestValue<boolean>(false);
+
+    await render(
+      <CallbackComponent
+        setCallbackArgument0={setCallbackArgument0}
+        setCallbackArgument1={setCallbackArgument1}
+      />
+    );
     await waitForAnimationUpdates(Snapshots.CallbackCascade.length);
-    const updates = updatesContainerActive.getUpdates();
+    const updates = await updatesContainerActive.getUpdates();
     const nativeUpdates = await updatesContainerActive.getNativeSnapshots();
 
     expect(updates).toMatchSnapshots(Snapshots.CallbackCascade);
     expect(updates).toMatchNativeSnapshots(nativeUpdates);
 
-    // TODO Fix tests to support boolean values
-    expect((await getRegisteredValue(SV.callbackArgument0)).onJS).toBe(0);
-    expect((await getRegisteredValue(SV.callbackArgument1)).onJS).toBe(0);
+    expect(callbackArgument0.value).toBe(false);
+    expect(callbackArgument1.value).toBe(false);
 
-    (
-      [
-        [Tracker.animationNotExecuted, 2],
-        [Tracker.interruptedAnimation, 1],
-        [Tracker.callbackAnimation, 3],
-      ] as const
-    ).forEach(([trackerRef, counts]) => {
-      expect(getTrackerCallCount(trackerRef)).toBeCalled(counts);
-      expect(getTrackerCallCount(trackerRef)).toBeCalledUI(counts);
-      expect(getTrackerCallCount(trackerRef)).toBeCalledJS(0);
-    });
+    for (const [trackerRef, counts] of [
+      [Tracker.animationNotExecuted, 2],
+      [Tracker.interruptedAnimation, 1],
+      [Tracker.callbackAnimation, 3],
+    ] as const) {
+      const trackerCallCount = await getTrackerCallCount(trackerRef);
+      expect(trackerCallCount).toBeCalled(counts);
+      expect(trackerCallCount).toBeCalledUI(counts);
+      expect(trackerCallCount).toBeCalledJS(0);
+    }
   });
 });
 
@@ -206,12 +211,12 @@ describe(`Cascade of callbacks`, () => {
 //   const updatesContainerActive = await recordAnimationUpdates();
 //   await render(<CallbackComponent />);
 //   await waitForAnimationUpdates(Snapshots.CallbackOrder.length);
-//   const updates = updatesContainerActive.getUpdates();
+//   const updates = await updatesContainerActive.getUpdates();
 //   const nativeUpdates = await updatesContainerActive.getNativeSnapshots();
 //   expect(updates).toMatchSnapshots(Snapshots.CallbackOrder);
 //   expect(updates).toMatchNativeSnapshots(nativeUpdates);
 
-//   expect((await getRegisteredValue(SV_REF)).onJS).toBe([
+//   await expectSharedValue(SV_REF).onJS.toBe([
 //     'ONE',
 //     'TWO',
 //     'THREE',

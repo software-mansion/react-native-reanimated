@@ -2,13 +2,17 @@
 
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
-#include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/SynchronizableAccess.h>
 
 #include <memory>
 #include <utility>
+#include <variant>
 
 namespace worklets {
+
+using SynchronizableValue = std::variant<std::shared_ptr<Serializable>, double, bool>;
+using SynchronizableFixedValue = std::variant<double, bool>;
 
 class Synchronizable : public SynchronizableAccess,
                        public Serializable,
@@ -27,16 +31,26 @@ class Synchronizable : public SynchronizableAccess,
     return synchronizable;
   }
 
+  bool isFixed() const {
+    return isFixed_;
+  }
+
   /**
    * Can run concurrently with getDirty, setDirty, getBlocking, setBlocking.
    */
-  virtual std::shared_ptr<Serializable> getDirty() = 0;
+  virtual SynchronizableValue getDirty() = 0;
 
   /**
    * Can run concurrently with getDirty, getBlocking.
    * Can't run concurrently with setDirty, setBlocking.
    */
-  virtual std::shared_ptr<Serializable> getBlocking() = 0;
+  virtual SynchronizableValue getBlocking() = 0;
+
+  /**
+   * Can run concurrently with getDirty, setDirty.
+   * Can't run concurrently with getBlocking, setBlocking.
+   */
+  virtual void setDirty(const SynchronizableFixedValue &value) = 0;
 
   /**
    * Can run concurrently with getDirty.
@@ -44,17 +58,23 @@ class Synchronizable : public SynchronizableAccess,
    */
   virtual void setBlocking(const std::shared_ptr<Serializable> &value) = 0;
 
+  virtual void setBlocking(const SynchronizableFixedValue &value) = 0;
+
   facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) final {
     auto synchronizableUnpacker = rt.global().getProperty(rt, "__synchronizableUnpacker");
     react_native_assert(synchronizableUnpacker.isObject() && "synchronizableUnpacker not found");
     auto ref = SerializableJSRef::newNativeStateObject(rt, this->shared_from_this());
-    return synchronizableUnpacker.getObject(rt).getFunction(rt).call(rt, std::move(ref));
+    return synchronizableUnpacker.getObject(rt).getFunction(rt).call(
+        rt, std::move(ref), facebook::jsi::Value(isFixed()));
   }
 
   ~Synchronizable() override = default;
 
  protected:
-  Synchronizable() : Serializable(ValueType::SynchronizableType) {}
+  explicit Synchronizable(bool isFixed) : Serializable(ValueType::SynchronizableType), isFixed_(isFixed) {}
+
+ private:
+  const bool isFixed_;
 };
 
 } // namespace worklets

@@ -34,12 +34,13 @@ describe(processTransform, () => {
             output: [{ translateX: '25%' }, { translateY: 25 }],
           },
           {
+            // A single argument leaves the Y axis at zero, it is not repeated.
             input: 'translate(25)',
-            output: [{ translateX: 25 }, { translateY: 25 }],
+            output: [{ translateX: 25 }, { translateY: 0 }],
           },
           {
             input: 'translate(25%)',
-            output: [{ translateX: '25%' }, { translateY: '25%' }],
+            output: [{ translateX: '25%' }, { translateY: 0 }],
           },
         ],
       },
@@ -172,8 +173,9 @@ describe(processTransform, () => {
         name: 'skew',
         cases: [
           {
+            // A single argument leaves the Y axis at zero, it is not repeated.
             input: 'skew(45deg)',
-            output: [{ skewX: '45deg' }, { skewY: '45deg' }],
+            output: [{ skewX: '45deg' }, { skewY: '0deg' }],
           },
           {
             input: 'skew(0)',
@@ -286,6 +288,14 @@ describe(processTransform, () => {
           { scale: 2 },
           { rotate: '45deg' },
         ],
+      },
+      {
+        input: '  translate(25, 25) scale(2)  ',
+        output: [{ translateX: 25 }, { translateY: 25 }, { scale: 2 }],
+      },
+      {
+        input: '\n  translate(25, 25)\n  scale(2)\n',
+        output: [{ translateX: 25 }, { translateY: 25 }, { scale: 2 }],
       },
       {
         input: 'translate(50, 50) scale(1.5, 2) skew(30deg, 15deg)',

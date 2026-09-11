@@ -5986,7 +5986,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jridgewell/remapping@npm:^2.3.5":
+"@jridgewell/remapping@npm:2.3.5, @jridgewell/remapping@npm:^2.3.5":
   version: 2.3.5
   resolution: "@jridgewell/remapping@npm:2.3.5"
   dependencies:
@@ -9013,9 +9013,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swmansion/t-rex-ui@npm:1.3.4":
-  version: 1.3.4
-  resolution: "@swmansion/t-rex-ui@npm:1.3.4"
+"@swmansion/t-rex-ui@npm:1.3.10":
+  version: 1.3.10
+  resolution: "@swmansion/t-rex-ui@npm:1.3.10"
   dependencies:
     "@docusaurus/core": "npm:3.9.2"
     "@docusaurus/module-type-aliases": "npm:3.9.2"
@@ -9028,6 +9028,7 @@ __metadata:
     remark-parse: "npm:^11.0.0"
     remark-stringify: "npm:^11.0.0"
     unified: "npm:^11.0.5"
+    unist-util-visit: "npm:^5.1.0"
   peerDependencies:
     "@docsearch/core": ^4.4.0
     "@docsearch/css": ^4.4.0
@@ -9040,7 +9041,7 @@ __metadata:
     react: "*"
     react-dom: "*"
     react-icons: "*"
-  checksum: 10/b975d217072808600dd82570bec0f57b57b27041a297265c575b91fea2007214842836305a0c33fd5b86ef8aaf6b29d2bfbbaa2a55257af7cfecca47049c4d42
+  checksum: 10/8056f86b03d60c7188d0057f58c3bdbaf90e371deddbce10cd9271dd54c91614c8ef370313445cfdbd1ff39d00731603340151fc33d11a8c6e9ec03f59e4e082
   languageName: node
   linkType: hard
 
@@ -10202,7 +10203,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/ws@npm:^8.5.10":
+"@types/ws@npm:8.18.1, @types/ws@npm:^8.5.10":
   version: 8.18.1
   resolution: "@types/ws@npm:8.18.1"
   dependencies:
@@ -14353,7 +14354,7 @@ __metadata:
     react: "npm:19.2.8"
     react-dom: "npm:19.2.8"
     react-native: "npm:0.87.0"
-    react-native-gesture-handler: "npm:3.1.0"
+    react-native-gesture-handler: "npm:3.3.0-nightly-20260821-439ded45d"
     react-native-mmkv: "npm:4.3.2"
     react-native-nitro-modules: "npm:0.36.5"
     react-native-reanimated: "workspace:*"
@@ -16090,7 +16091,7 @@ __metadata:
     "@mui/material": "npm:7.1.0"
     "@react-native/assets-registry": "npm:0.83.0"
     "@shopify/flash-list": "npm:2.1.0"
-    "@swmansion/t-rex-ui": "npm:1.3.4"
+    "@swmansion/t-rex-ui": "npm:1.3.10"
     "@types/raf": "npm:3.4.3"
     "@types/react": "npm:19.2.2"
     "@vercel/og": "npm:0.6.2"
@@ -16155,7 +16156,7 @@ __metadata:
     "@mui/material": "npm:7.1.0"
     "@react-native/assets-registry": "npm:0.83.0"
     "@shopify/flash-list": "npm:2.1.0"
-    "@swmansion/t-rex-ui": "npm:1.3.4"
+    "@swmansion/t-rex-ui": "npm:1.3.10"
     "@types/raf": "npm:3.4.3"
     "@types/react": "npm:19.2.2"
     "@vercel/og": "npm:0.6.2"
@@ -18360,12 +18361,14 @@ __metadata:
   resolution: "fabric-example@workspace:apps/fabric-example"
   dependencies:
     "@types/react": "npm:19.2.18"
+    "@types/ws": "npm:8.18.1"
     common-app: "workspace:*"
     eslint: "npm:9.37.0"
     react: "npm:19.2.8"
     react-native: "npm:0.87.0"
     react-native-screens: "npm:4.27.0"
     typescript: "npm:5.9.3"
+    worklets-oxc-plugin: "workspace:*"
     ws: "npm:8.21.0"
   languageName: unknown
   linkType: soft
@@ -28900,16 +28903,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-gesture-handler@npm:3.1.0":
-  version: 3.1.0
-  resolution: "react-native-gesture-handler@npm:3.1.0"
+"react-native-gesture-handler@npm:3.3.0-nightly-20260821-439ded45d":
+  version: 3.3.0-nightly-20260821-439ded45d
+  resolution: "react-native-gesture-handler@npm:3.3.0-nightly-20260821-439ded45d"
   dependencies:
     "@types/react-test-renderer": "npm:^19.1.0"
     invariant: "npm:^2.2.4"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/ca63c06a61c9a3be9415caeb52eae234f8b42de97081fe335b06b1a99cdfdbb021bcc4b51c58a07de6891fc559100d0e2e2efac65cba1db8b0181c12328d7d82
+  checksum: 10/5a53d9768be4a8e7598419040fef044b13eef3b1f9063fcd07f99fcecc63d6415e3b074d9de641e38da1d358ffc349cfda985f2fb913c73fefed795d147a6427
   languageName: node
   linkType: hard
 
@@ -29168,8 +29171,8 @@ __metadata:
     typescript: "npm:5.9.3"
   peerDependencies:
     react: "*"
-    react-native: 0.83 - 0.87
-    react-native-worklets: 0.11.0-main
+    react-native: 0.85 - 0.87
+    react-native-worklets: 0.13.0-main
   languageName: unknown
   linkType: soft
 
@@ -33514,14 +33517,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unist-util-visit@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "unist-util-visit@npm:5.0.0"
+"unist-util-visit@npm:^5.0.0, unist-util-visit@npm:^5.1.0":
+  version: 5.1.0
+  resolution: "unist-util-visit@npm:5.1.0"
   dependencies:
     "@types/unist": "npm:^3.0.0"
     unist-util-is: "npm:^6.0.0"
     unist-util-visit-parents: "npm:^6.0.0"
-  checksum: 10/f2bbde23641e9ade7640358c06ddeec0f38342322eb8e7819d9ee380b0f859d25d084dde22bf63db0280b3b2f36575f15aa1d6c23acf276c91c2493cf799e3b0
+  checksum: 10/340fc1929062d21156200284105caad79cc188bd98f285b60aba887492a70e6e6cadbc7e383a68909c7e0fdd83f855cb9f4184ad8e5aa153eb2d810445aea8e5
   languageName: node
   linkType: hard
 
@@ -34578,6 +34581,14 @@ __metadata:
   checksum: 10/497d40beb2bdb08e6d38754faa17ce20b0bf1306327f80cb777927edb23f461ee1f6bc659b3c3c93f26b08e1cf4b46acc5bae8fda1f0be3b5ab9a1a0211034cd
   languageName: node
   linkType: hard
+
+"worklets-oxc-plugin@workspace:*, worklets-oxc-plugin@workspace:packages/react-native-worklets/plugin-oxc":
+  version: 0.0.0-use.local
+  resolution: "worklets-oxc-plugin@workspace:packages/react-native-worklets/plugin-oxc"
+  dependencies:
+    "@jridgewell/remapping": "npm:2.3.5"
+  languageName: unknown
+  linkType: soft
 
 "wrap-ansi-cjs@npm:wrap-ansi@^7.0.0, wrap-ansi@npm:^7.0.0":
   version: 7.0.0

@@ -61,7 +61,7 @@ async function getSnapshotUpdates(
     />
   );
   await waitForAnimationUpdates(Snapshots[snapshotName].length);
-  const updates = updatesContainer.getUpdates();
+  const updates = await updatesContainer.getUpdates();
   const nativeUpdates = await updatesContainer.getNativeSnapshots();
 
   return [updates, nativeUpdates];

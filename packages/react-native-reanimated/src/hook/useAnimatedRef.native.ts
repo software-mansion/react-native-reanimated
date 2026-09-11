@@ -3,12 +3,14 @@ import { useState } from 'react';
 import type { HostInstance } from 'react-native';
 import {
   createSerializable,
+  createShareable,
+  scheduleOnUI,
   serializableMappingCache,
+  UIRuntimeId,
 } from 'react-native-worklets';
 
 import type { InstanceOrElement, ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import { makeMutable } from '../mutables';
 import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
 import { useAnimatedRefBase } from './useAnimatedRefCommon';
 
@@ -23,25 +25,22 @@ export function useAnimatedRef<
   TRef extends InstanceOrElement = HostInstance,
 >(): AnimatedRef<TRef> {
   const [sharedWrapper] = useState(() =>
-    makeMutable<ShadowNodeWrapper | null>(null)
+    createShareable<ShadowNodeWrapper | null>(UIRuntimeId, null)
   );
 
   const resultRef = useAnimatedRefBase<TRef>((ref) => {
     const currentWrapper = getShadowNodeWrapperFromRef(ref);
 
-    sharedWrapper.value = currentWrapper;
+    scheduleOnUI(() => {
+      (sharedWrapper as AnimatedRefOnUI).value = currentWrapper;
+    });
 
     return currentWrapper;
   });
 
   if (!serializableMappingCache.get(resultRef)) {
-    const animatedRefSerializableHandle = createSerializable({
-      __init: (): AnimatedRefOnUI => {
-        'worklet';
-        return () => sharedWrapper.value;
-      },
-    });
-    serializableMappingCache.set(resultRef, animatedRefSerializableHandle);
+    const animatedRefSerializable = createSerializable(sharedWrapper);
+    serializableMappingCache.set(resultRef, animatedRefSerializable);
   }
 
   return resultRef;

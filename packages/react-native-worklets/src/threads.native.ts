@@ -19,41 +19,35 @@ const SHOULD_CAPTURE_SCHEDULE_STACK =
 type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
   worklet: WorkletFunction<Args, ReturnValue>,
   args: Args,
-  resolve: ((value: ReturnValue) => void) | undefined,
+  resolve:
+    | ((value: ReturnValue | PromiseLike<ReturnValue>) => void)
+    | undefined,
   reject: ((reason: unknown) => void) | undefined,
   scheduleStack: string | undefined,
 ];
 
 let runOnUIQueue: UIJob[] = [];
 
-export function setupMicrotasks() {
+function runAsyncUIJob<Args extends unknown[], ReturnValue>(
+  workletFunction: WorkletFunction<Args, ReturnValue>,
+  workletArgs: Args,
+  resolve: (value: ReturnValue | PromiseLike<ReturnValue>) => void,
+  reject: (reason: unknown) => void
+): void {
   'worklet';
-
-  let microtasksQueue: Array<() => void> = [];
-  let isExecutingMicrotasksQueue = false;
-  globalThis.queueMicrotask = (callback: () => void) => {
-    microtasksQueue.push(callback);
-  };
-  // TODO: Remove it after support for Reanimated 4.3 is dropped.
-  globalThis._microtaskQueueFinalizers = [];
-
-  globalThis.__callMicrotasks = () => {
-    if (isExecutingMicrotasksQueue) {
-      return;
-    }
-    try {
-      isExecutingMicrotasksQueue = true;
-      for (let index = 0; index < microtasksQueue.length; index += 1) {
-        // we use classic 'for' loop because the size of the currentTasks array may change while executing some of the callbacks due to queueMicrotask calls
-        microtasksQueue[index]();
-      }
-      microtasksQueue = [];
-      globalThis._microtaskQueueFinalizers.forEach((finalizer) => finalizer());
-    } finally {
-      isExecutingMicrotasksQueue = false;
-    }
-  };
+  try {
+    const result = workletFunction(...workletArgs);
+    const serializedResult = globalThis.__serializer(
+      result
+    ) as SerializableRef<ReturnValue>;
+    globalThis.__workletsModuleProxy.handlePromise(resolve, serializedResult);
+  } catch (error) {
+    const serializedError = globalThis.__serializer(error);
+    globalThis.__workletsModuleProxy.handlePromise(reject, serializedError);
+  }
 }
+
+let serializableRunAsyncUIJob: SerializableRef | undefined;
 
 /**
  * Lets you schedule a function to be executed on the [UI
@@ -341,7 +335,7 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
 function enqueueUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   args: Args,
-  resolve?: (value: ReturnValue) => void,
+  resolve?: (value: ReturnValue | PromiseLike<ReturnValue>) => void,
   reject?: (reason: unknown) => void
 ): void {
   const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
@@ -361,40 +355,41 @@ function flushUIQueue(): void {
   queueMicrotask(() => {
     const queue = runOnUIQueue;
     runOnUIQueue = [];
-    const jobWorklets = queue.map(
-      ([workletFunction, workletArgs, resolve, reject]) =>
-        createSerializable(() => {
-          'worklet';
-          try {
-            const result = workletFunction(...workletArgs);
-            if (resolve) {
-              const serializedResult = globalThis.__serializer(result);
-              globalThis.__workletsModuleProxy.handlePromise(
-                resolve,
-                serializedResult
-              );
-            }
-          } catch (error) {
-            if (reject) {
-              const serializedError = globalThis.__serializer(error);
-              globalThis.__workletsModuleProxy.handlePromise(
-                reject,
-                serializedError
-              );
-            } else {
-              throw error;
-            }
-          }
-        })
-    );
+    const jobWorklets: SerializableRef[] = [];
+    const jobArguments: SerializableRef<unknown[]>[] = [];
+    for (const [workletFunction, workletArgs, resolve, reject] of queue) {
+      if (resolve === undefined) {
+        jobWorklets.push(createSerializable(workletFunction));
+        jobArguments.push(createSerializable(workletArgs));
+      } else {
+        serializableRunAsyncUIJob ??= createSerializable(runAsyncUIJob);
+        jobWorklets.push(serializableRunAsyncUIJob);
+        jobArguments.push(
+          createSerializable([workletFunction, workletArgs, resolve, reject!])
+        );
+      }
+    }
     const scheduleStacks = SHOULD_CAPTURE_SCHEDULE_STACK
       ? (queue.map(([, , , , scheduleStack]) => scheduleStack) as string[])
       : undefined;
     WorkletsModule.scheduleOnUI(
       WorkletsModule.createSerializableArray(jobWorklets),
+      WorkletsModule.createSerializableArray(jobArguments),
       scheduleStacks
     );
   });
+}
+
+/**
+ * Returns the id of the thread which currently executes JavaScript on the
+ * calling Runtime.
+ *
+ * @returns The id of the current thread.
+ * @see https://docs.swmansion.com/react-native-worklets/docs/utility/getCurrentThreadId
+ */
+export function getCurrentThreadId(): string {
+  'worklet';
+  return globalThis.__workletsModuleProxy.getCurrentThreadId();
 }
 
 if (__DEV__ && !isBundleModeEnabled()) {

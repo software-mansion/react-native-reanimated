@@ -5,7 +5,7 @@ import { useSharedValue } from 'react-native-reanimated';
 import {
   describe,
   expect,
-  getRegisteredValue,
+  expectSharedValue,
   notify,
   Presets,
   registerValue,
@@ -110,10 +110,11 @@ describe('Test _mathematical operations_ on sharedValue', () => {
       />
     );
     await waitForNotification(MULTIPLICATION_NOTIFICATION_NAME);
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
     const expected = initialValue * factor;
-    expect(sharedValue.onJS).toBe(expected, ComparisonMode.NUMBER);
-    expect(sharedValue.onUI).toBe(expected, ComparisonMode.NUMBER);
+    await expectSharedValue(SHARED_VALUE_REF).onUI.toBe(
+      expected,
+      ComparisonMode.NUMBER
+    );
     await render(<ProgressBar progress={progress} />);
   }
 

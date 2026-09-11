@@ -49,6 +49,7 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
       platformTransitionProxy_->processConfig(rt, getViewTag(), config, routing_, eventMask_ == 0, timestamp);
 
   if (!loopConfig.empty()) {
+    dropPending(loopConfig.removedProperties);
     ensureLoopTransition().updateSettings(
         loopConfig.changedPropertiesSettings, loopConfig.removedProperties, timestamp);
   }
@@ -61,6 +62,7 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
   auto initialUpdate =
       ensureLoopTransition().run(rt, shadowNode_, loopConfig.changedProperties, lastUpdates, timestamp);
   scheduleLoop(timestamp);
+  pendingInitialUpdate_.update(initialUpdate);
   return initialUpdate;
 }
 
@@ -77,14 +79,22 @@ folly::dynamic CSSTransition::run(
 
   auto initialUpdate = ensureLoopTransition().run(shadowNode_, loopDiffs, lastUpdates, timestamp);
   scheduleLoop(timestamp);
+  pendingInitialUpdate_.update(initialUpdate);
   return initialUpdate;
 }
 
-folly::dynamic CSSTransition::computeCurrentLoopStyle() {
-  if (!loopTransition_) {
-    return folly::dynamic::object();
+folly::dynamic CSSTransition::takeUpdates() {
+  auto updates = std::exchange(pendingInitialUpdate_, folly::dynamic::object());
+  if (loopTransition_) {
+    updates.update(loopTransition_->computeCurrentStyle(shadowNode_));
   }
-  return loopTransition_->computeCurrentStyle(shadowNode_);
+  return updates;
+}
+
+void CSSTransition::dropPending(const std::vector<std::string> &propertyNames) {
+  for (const auto &propertyName : propertyNames) {
+    pendingInitialUpdate_.erase(propertyName);
+  }
 }
 
 void CSSTransition::setPseudoLockedProperties(TransitionProperties properties) {
@@ -92,6 +102,7 @@ void CSSTransition::setPseudoLockedProperties(TransitionProperties properties) {
 }
 
 void CSSTransition::cancel() {
+  pendingInitialUpdate_ = folly::dynamic::object();
   if (loopTransition_) {
     // Report the cancel before the operation goes away, as animations do.
     loopTransition_->abort(loop_->resolveTimestamp());
@@ -101,6 +112,8 @@ void CSSTransition::cancel() {
 }
 
 void CSSTransition::removeProperties(const std::vector<std::string> &propertyNames, const double timestamp) {
+  dropPending(propertyNames);
+
   TransitionProperties platformProperties;
   for (const auto &propertyName : propertyNames) {
     if (routing_.platform.erase(propertyName) > 0) {

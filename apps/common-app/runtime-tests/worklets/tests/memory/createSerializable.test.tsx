@@ -211,7 +211,7 @@ describe('Test createSerializable', () => {
           remoteFunction = 8,
           array = 9,
           workletFunction = 10,
-          initializer = 11,
+          regExp = 11,
           arrayBuffer = 12,
         }
         const arrayBuffer = new ArrayBuffer(3);
@@ -246,7 +246,7 @@ describe('Test createSerializable', () => {
             'worklet';
             return 1;
           },
-          // initializer - regexp
+          // regexp
           /a/,
           // array buffer
           arrayBuffer,
@@ -281,15 +281,56 @@ describe('Test createSerializable', () => {
             // worklet function
             typeof arrayValue[index.workletFunction] === 'function',
             arrayValue[index.workletFunction]() === 1,
-            // initializer - regexp
-            arrayValue[index.initializer] instanceof RegExp,
-            arrayValue[index.initializer].test('a'),
+            // regexp
+            arrayValue[index.regExp] instanceof RegExp,
+            arrayValue[index.regExp].test('a'),
             // array buffer
             arrayValue[index.arrayBuffer] instanceof ArrayBuffer,
             arrayValue[index.arrayBuffer].byteLength === 3,
             uint8ArrayUI[0] === 1,
             uint8ArrayUI[1] === 2,
             uint8ArrayUI[2] === 3,
+          ];
+          scheduleOnRN(callbackPass, checks.every(Boolean));
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
+      test('createSerializableUnicodeString', async () => {
+        const emojiString =
+          '\u{1F643}\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}';
+        const ligatureString = '\uFB01\uFB02\u00E6\u0153';
+        const nonLatinString = '\u4F60\u597D\u0645\u0631\u062D\u0431\u0430';
+
+        scheduleOnTarget(() => {
+          'worklet';
+          const checks = [
+            emojiString ===
+              '\u{1F643}\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}',
+            ligatureString === '\uFB01\uFB02\u00E6\u0153',
+            nonLatinString === '\u4F60\u597D\u0645\u0631\u062D\u0431\u0430',
+          ];
+          scheduleOnRN(callbackPass, checks.every(Boolean));
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
+      test('createSerializableFloat32Array', async () => {
+        const floatArrayValue = new Float32Array(3);
+        floatArrayValue[0] = 0.5;
+        floatArrayValue[1] = -1.25;
+        floatArrayValue[2] = 3.75;
+
+        scheduleOnTarget(() => {
+          'worklet';
+          const checks = [
+            floatArrayValue instanceof Float32Array,
+            floatArrayValue.length === 3,
+            floatArrayValue[0] === 0.5,
+            floatArrayValue[1] === -1.25,
+            floatArrayValue[2] === 3.75,
           ];
           scheduleOnRN(callbackPass, checks.every(Boolean));
         });
@@ -433,7 +474,7 @@ describe('Test createSerializable', () => {
         expect(result).toBe(true);
       });
 
-      test('createSerializableInitializer', async () => {
+      test('createSerializableRegExp', async () => {
         const regExpValue = /a/;
         scheduleOnTarget(() => {
           'worklet';
@@ -457,7 +498,7 @@ describe('Test createSerializable', () => {
           remoteFunction = 8,
           array = 9,
           workletFunction = 10,
-          initializer = 11,
+          regExp = 11,
           arrayBuffer = 12,
         }
         const obj = {
@@ -477,7 +518,7 @@ describe('Test createSerializable', () => {
             'worklet';
             return 2;
           },
-          [key.initializer]: /test/,
+          [key.regExp]: /test/,
           [key.arrayBuffer]: new ArrayBuffer(3),
         };
 
@@ -500,8 +541,8 @@ describe('Test createSerializable', () => {
             obj[key.array].length === 1,
             obj[key.array][0] === 1,
             obj[key.workletFunction]() === 2,
-            obj[key.initializer] instanceof RegExp,
-            obj[key.initializer].test('test'),
+            obj[key.regExp] instanceof RegExp,
+            obj[key.regExp].test('test'),
             obj[key.arrayBuffer] instanceof ArrayBuffer,
             obj[key.arrayBuffer].byteLength === 3,
           ];
