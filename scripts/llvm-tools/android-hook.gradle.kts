@@ -4,8 +4,8 @@ project.tasks.configureEach {
     if (!javaClass.name.startsWith("com.android.build.gradle.tasks.ExternalNativeBuildJsonTask")) {
         return@configureEach
     }
-    val pkgDir: File = project.projectDir.parentFile
-    val cxxRoot = File(project.projectDir, ".cxx")
+    val pkgDir: File = project.layout.projectDirectory.asFile.parentFile
+    val cxxRoot = File(project.layout.projectDirectory.asFile, ".cxx")
     doLast {
         val repoRoot = pkgDir.parentFile.parentFile
         val publishScript = File(repoRoot, "scripts/llvm-tools/emit.js")
