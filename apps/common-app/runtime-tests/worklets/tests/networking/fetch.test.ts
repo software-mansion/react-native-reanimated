@@ -180,4 +180,42 @@ describeFn('networking (live)', () => {
       expect(flag.value).toBe('ok');
     }
   );
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
+    'posts FormData as multipart, runtime: **%s**',
+    async (runtimeKind) => {
+      const notification = 'formdata_done';
+      const [flag, setFlag] = createTestValue('not_ok');
+      const baseUrl = BASE_URL;
+
+      dispatchWorklet(() => {
+        'worklet';
+        const formData = new FormData();
+        formData.append('field', 'value');
+        formData.append('emoji', '🦄');
+        fetch(`${baseUrl}/echo/body`, { body: formData, method: 'POST' })
+          .then((response) => response.json())
+          .then((echo: { method: string; contentType: string; body: string }) => {
+            if (echo.method !== 'POST') {
+              setFlag(`wrong method: ${echo.method}`, notification);
+            } else if (
+              !echo.contentType?.startsWith('multipart/form-data; boundary=')
+            ) {
+              setFlag(`wrong content type: ${echo.contentType}`, notification);
+            } else if (
+              !echo.body.includes('name="field"') ||
+              !echo.body.includes('value') ||
+              !echo.body.includes('🦄')
+            ) {
+              setFlag(`wrong body: ${echo.body}`, notification);
+            } else {
+              setFlag('ok', notification);
+            }
+          })
+          .catch((error) => setFlag(String(error), notification));
+      }, runtimeKind);
+
+      await waitForNotification(notification);
+      expect(flag.value).toBe('ok');
+    }
+  );
 });
