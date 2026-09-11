@@ -138,6 +138,10 @@ const ComposedHandlerInternalMergingExample: React.FC = () =>
   React.createElement(
     require('./ComposedHandlerInternalMergingExample').default
   );
+const ConfigSpamExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/ConfigSpamExample').default as React.FC
+  );
 const CounterExample: React.FC = () =>
   React.createElement(require('./CounterExample').default as React.FC);
 const CustomLayoutAnimationScreen: React.FC = () =>
@@ -1143,6 +1147,10 @@ export const EXAMPLES: Record<string, Example> = {
   ListItemLayoutAnimation: {
     title: '[LA] List item layout animation',
     screen: ListItemLayoutAnimation,
+  },
+  ConfigSpamExample: {
+    title: '[LA] Config spam',
+    screen: ConfigSpamExample,
   },
   SwipeableList: {
     title: '[LA] Swipeable list',
