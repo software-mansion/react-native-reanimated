@@ -109,15 +109,6 @@ fun getReanimatedStaticFeatureFlags(): String {
 }
 
 fun validateConflictingFeatureFlags(featureFlags: HashMap<String, String>) {
-    val androidSyncUiProps = featureFlags["ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS"] == "true"
-    val sharedElementTransitions = featureFlags["ENABLE_SHARED_ELEMENT_TRANSITIONS"] == "true"
-
-    if (androidSyncUiProps && sharedElementTransitions) {
-        throw GradleException(
-            "[Reanimated] The feature flags `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. Please disable one of them in your package.json."
-        )
-    }
-
     val useAnimationBackend = featureFlags["USE_ANIMATION_BACKEND"] == "true"
     val forceReactRenderForSettledAnimations = featureFlags["FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS"] == "true"
 
