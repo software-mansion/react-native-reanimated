@@ -79,6 +79,13 @@ runs:
         ruby-version: '3.3'
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
+    # Fixes RNC CLI issue https://github.com/software-mansion/react-native-reanimated/actions/runs/34574250232/job/103183218956?pr=10511
+    - name: Pin json gem below 3.0 (iOS)
+      if: ${{ runner.os == 'macOS' && inputs.integration == 'pods' }}
+      working-directory: ${{ inputs.app-name }}
+      shell: bash
+      run: grep -q "^gem 'json'" Gemfile || echo "gem 'json', '< 3.0'" >> Gemfile
+
     - name: Install Pods (iOS)
       if: ${{ runner.os == 'macOS' && inputs.integration == 'pods' }}
       working-directory: ${{ inputs.app-name }}/ios

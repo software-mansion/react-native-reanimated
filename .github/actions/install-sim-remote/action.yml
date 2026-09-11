@@ -5,7 +5,7 @@ inputs:
   release-tag:
     description: Release tag in software-mansion/sim-remote-releases to install
     required: false
-    default: 'softu'
+    default: 'latest'
 
 runs:
   using: 'composite'
