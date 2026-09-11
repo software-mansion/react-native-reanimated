@@ -78,6 +78,16 @@ jobs:
               echo "SKIP_BUILD=true" >> $GITHUB_OUTPUT
             fi
 
+      - name: Check SPM eligibility
+        id: spm-eligibility
+        run: |
+          RN_MINOR="$(echo "${{ matrix.react-native-version }}" | cut -d. -f2)"
+          if [ "$RN_MINOR" -ge 87 ]; then
+            echo "run_spm=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_spm=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run Reanimated Compatibility Check
         if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
         uses: ./.github/actions/reanimated-compatibility-check-build
@@ -87,4 +97,4 @@ jobs:
           mode: ${{ matrix.mode }}
           github-sha: ${{ github.sha }}
           app-name: ${{ env.APP_NAME }}
-          run-spm: ${{ matrix.platform == 'iOS' && matrix.react-native-version >= '0.87' }}
+          run-spm: ${{ matrix.platform == 'iOS' && steps.spm-eligibility.outputs.run_spm == 'true' }}
