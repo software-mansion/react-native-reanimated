@@ -128,7 +128,7 @@ This feature flag conflicts with [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](#use_leg
 
 ### `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`
 
-When enabled, layout animations run on the legacy layout animations proxy instead of the current default implementation. This is a rollback flag: use it only when the default proxy causes a regression in your app. If it does, please report an issue.
+When enabled, layout animations run on the legacy layout animations proxy instead of the current default implementation. This is a rollback flag: use it only when the default proxy causes a regression in your app. If it does, please report an issue. The legacy proxy has no light tree, so [`SYNCHRONOUS_PROPS_IN_LIGHT_TREE`](#synchronous_props_in_light_tree) has no effect with it.
 
 This feature flag conflicts with [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions) and they cannot be enabled simultaneously.
 
