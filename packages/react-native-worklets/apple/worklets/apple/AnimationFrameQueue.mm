@@ -17,6 +17,7 @@
 #import <React/RCTAssert.h>
 
 constexpr auto TIME_SAMPLES_AMOUNT = 4;
+constexpr auto MILLISECONDS_IN_SECOND = 1000;
 
 namespace FrameRateRange {
 const auto BEST = CAFrameRateRangeMake(60, 120, 120);
@@ -99,7 +100,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 #else // TARGET_OS_OSX
   auto targetTimestamp = displayLink.targetTimestamp;
 #endif // TARGET_OS_OSX
-  targetTimestamp = worklets::calculateTimestampWithSlowAnimations(targetTimestamp);
+  targetTimestamp = worklets::calculateTimestampWithSlowAnimations(targetTimestamp) * MILLISECONDS_IN_SECOND;
   for (const auto &callback : frameCallbacks) {
     callback(targetTimestamp);
   }
