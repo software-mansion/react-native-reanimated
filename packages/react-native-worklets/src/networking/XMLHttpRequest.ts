@@ -1,5 +1,6 @@
 'use strict';
 
+import { Blob } from './Blob';
 import { toArrayBuffer } from './bytes';
 import type { NetworkingEventListener } from './events';
 import { EventTargetLite } from './events';
@@ -10,7 +11,7 @@ const HEADERS_RECEIVED = 2;
 const LOADING = 3;
 const DONE = 4;
 
-type XMLHttpRequestResponseType = '' | 'text' | 'arraybuffer' | 'json';
+type XMLHttpRequestResponseType = '' | 'text' | 'arraybuffer' | 'blob' | 'json';
 
 type ResponsePayload = {
   status: number;
@@ -75,6 +76,7 @@ export class XMLHttpRequest extends EventTargetLite {
   private responseTypeValue: XMLHttpRequestResponseType = '';
   private responseTextValue = '';
   private responseBytes: ArrayBuffer | null = null;
+  private responseBlobValue: Blob | null = null;
   private responseJsonValue: unknown = undefined;
 
   get responseType(): XMLHttpRequestResponseType {
@@ -97,6 +99,17 @@ export class XMLHttpRequest extends EventTargetLite {
         return this.responseTextValue;
       case 'arraybuffer':
         return this.readyState === DONE ? this.responseBytes : null;
+      case 'blob':
+        if (this.readyState !== DONE) {
+          return null;
+        }
+        if (this.responseBlobValue === null) {
+          this.responseBlobValue = new Blob(
+            this.responseBytes !== null ? [this.responseBytes] : [],
+            { type: this.getResponseHeader('content-type') ?? '' }
+          );
+        }
+        return this.responseBlobValue;
       case 'json':
         if (this.readyState !== DONE) {
           return null;
@@ -144,6 +157,7 @@ export class XMLHttpRequest extends EventTargetLite {
     this.responseHeaders = [];
     this.responseTextValue = '';
     this.responseBytes = null;
+    this.responseBlobValue = null;
     this.responseJsonValue = undefined;
     this.setReadyState(OPENED);
   }
@@ -211,7 +225,10 @@ export class XMLHttpRequest extends EventTargetLite {
         headers,
         body: data,
         responseKind:
-          this.responseTypeValue === 'arraybuffer' ? 'bytes' : 'text',
+          this.responseTypeValue === 'arraybuffer' ||
+          this.responseTypeValue === 'blob'
+            ? 'bytes'
+            : 'text',
         timeoutMs: this.timeout,
         withCredentials: this.withCredentials,
       },
@@ -350,6 +367,12 @@ function normalizeBody(body: unknown): {
   }
   if (body instanceof ArrayBuffer) {
     return { data: body };
+  }
+  if (body instanceof Blob) {
+    return {
+      data: toArrayBuffer(body.__getBytes()),
+      contentType: body.type !== '' ? body.type : undefined,
+    };
   }
   if (ArrayBuffer.isView(body)) {
     return {

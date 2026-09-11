@@ -1,5 +1,7 @@
 'use strict';
 
+import { Blob } from './Blob';
+import { FileReader } from './FileReader';
 import { XMLHttpRequest } from './XMLHttpRequest';
 
 /**
@@ -17,4 +19,6 @@ export function installNetworking() {
 
   const global = globalThis as unknown as Record<string, unknown>;
   global.XMLHttpRequest ??= XMLHttpRequest;
+  global.Blob ??= Blob;
+  global.FileReader ??= FileReader;
 }
