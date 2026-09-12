@@ -23,11 +23,7 @@ using namespace facebook::react;
   RCTAssertMainQueue();
 
   if (!_displayLink) {
-    _displayLink = [READisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
-#if !TARGET_OS_OSX
-    _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
-#endif // TARGET_OS_OSX
-    [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+    _displayLink = REAMakeDisplayLink(self, @selector(onAnimationFrame:));
   }
   return _displayLink;
 }

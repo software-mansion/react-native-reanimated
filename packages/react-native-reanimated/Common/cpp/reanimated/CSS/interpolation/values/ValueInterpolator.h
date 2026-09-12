@@ -28,7 +28,6 @@ class ValueInterpolator : public PropertyInterpolator {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   virtual ~ValueInterpolator() = default;
 
-  folly::dynamic getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const override;
   folly::dynamic getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const override;
   folly::dynamic getFirstKeyframeValue() const override;
   folly::dynamic getLastKeyframeValue() const override;
