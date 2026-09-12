@@ -3,6 +3,7 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #endif
 #include <folly/dynamic.h>
+#include <jsi/JSIDynamic.h>
 #include <react/debug/react_native_assert.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
@@ -74,7 +75,16 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
     newStyle.setProperty(uiRuntime_, "opacity", jsi::Value(*layoutAnimation.opacity));
   }
 
-  auto rawProps = std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
+  folly::dynamic mergedRawProps = folly::dynamic::object();
+  if (getLatestRegistryProps_) {
+    auto latestRegistryProps = getLatestRegistryProps_(tag);
+    if (latestRegistryProps.isObject()) {
+      mergedRawProps.update(latestRegistryProps);
+    }
+  }
+  mergedRawProps.update(jsi::dynamicFromValue(uiRuntime_, jsi::Value(uiRuntime_, newStyle)));
+
+  auto rawProps = std::make_shared<RawProps>(std::move(mergedRawProps));
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
 #ifdef RN_SERIALIZABLE_STATE
   rawProps = std::make_shared<RawProps>(
