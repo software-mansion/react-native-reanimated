@@ -10,6 +10,7 @@ import {
   cloneNode,
   exportDefaultDeclaration,
   importDeclaration,
+  isReturnStatement,
   program,
   stringLiteral,
 } from '@babel/types';
@@ -68,7 +69,15 @@ export function generateWorkletFile(
 
   const imports = [...libraryImports, ...relativeImports];
 
-  const newProg = program([...imports, exportDefaultDeclaration(factory)]);
+  const statements = [...factory.body.body];
+  const returnedWorklet = statements.pop();
+  assert(isReturnStatement(returnedWorklet) && returnedWorklet.argument);
+  const newProg = program([
+    ...imports,
+    ...(factory.params.length === 0
+      ? [...statements, exportDefaultDeclaration(returnedWorklet.argument)]
+      : [exportDefaultDeclaration(factory)]),
+  ]);
 
   const transformedProg = transformFromAstSync(newProg, undefined, {
     filename: state.file.opts.filename,

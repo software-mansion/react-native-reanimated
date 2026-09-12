@@ -10,7 +10,7 @@ use oxc_syntax::scope::ScopeId;
 
 use crate::closure::get_closure;
 use crate::factory_expression::{
-    body_references_name, build_closure_object, build_factory_expression,
+    body_references_name, build_closure_array, build_factory_expression,
 };
 use crate::imports::update_relative_requires;
 use crate::naming::make_worklet_name;
@@ -63,12 +63,23 @@ pub fn make_worklet_factory<'a>(
         allocator,
         filename,
     } = ctx;
-    let names = {
+    let mut names = {
         let n = state.next_worklet_number();
         make_worklet_name(input.self_name, filename, n)
     };
 
     let closure = get_closure(&input, scoping, state, filename);
+
+    // Closure-free worklets share module scope with forwarded imports.
+    if closure.closure_variables.is_empty() {
+        while closure
+            .imports
+            .iter()
+            .any(|import| import.local == names.react_name)
+        {
+            names.react_name.insert(0, '_');
+        }
+    }
 
     let recursive_name = input.recursion_name().and_then(|name| {
         if body_references_name(input.body, name, scoping, input.function_scope_id) {
@@ -200,8 +211,12 @@ fn make_worklet_factory_call<'a>(
         false,
     ));
 
+    if closure.is_empty() {
+        return dot_default;
+    }
+
     let mut args = builder.vec_with_capacity(1);
-    args.push(Argument::from(build_closure_object(
+    args.push(Argument::from(build_closure_array(
         builder,
         closure.iter().map(|(name, id)| (name.as_str(), *id)),
     )));

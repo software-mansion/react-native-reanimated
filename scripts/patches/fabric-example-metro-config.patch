@@ -1,5 +1,5 @@
 diff --git a/apps/fabric-example/metro.config.js b/apps/fabric-example/metro.config.js
-index 84f5db27c9..12f68e3575 100644
+index 51e4b93e4b..2edf2e9b77 100644
 --- a/apps/fabric-example/metro.config.js
 +++ b/apps/fabric-example/metro.config.js
 @@ -32,6 +32,9 @@ let config = {
@@ -9,6 +9,6 @@ index 84f5db27c9..12f68e3575 100644
 +const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
 +config = mergeConfig(config, bundleModeMetroConfig);
 +
+ /** @type {import('@react-native/metro-config').MetroConfig} */
  module.exports = wrapWithReanimatedMetroConfig(
    mergeConfig(defaultConfig, config)
- );
