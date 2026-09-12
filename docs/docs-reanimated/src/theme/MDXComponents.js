@@ -13,6 +13,7 @@ import {
   ReanimatedCompatibility,
   WorkletsCompatibility,
 } from '@site/src/components/Compatibility';
+import AvailableFrom from '@site/src/components/AvailableFrom';
 import Optional from '@site/src/components/Optional';
 import { Badges } from '@swmansion/t-rex-ui';
 import Indent from '@site/src/components/Indent';
@@ -34,6 +35,7 @@ export default {
   No,
   Version,
   Spacer,
+  AvailableFrom,
   Optional,
   Badges,
   Indent,
