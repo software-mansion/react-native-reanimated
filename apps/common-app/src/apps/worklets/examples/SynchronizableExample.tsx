@@ -50,7 +50,10 @@ export default function SynchronizablePerformanceExample() {
     fixed: fixedSynchronizable,
   };
 
-  const runtime = createWorkletRuntime({ name: 'SynchronizableExample' });
+  const runtime = React.useMemo(
+    () => createWorkletRuntime({ name: 'SynchronizableExample' }),
+    []
+  );
 
   function setResult(
     variant: VariantKey,

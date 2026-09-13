@@ -42,9 +42,13 @@ template <typename TResult>
 concept SyncCallResult = std::is_same_v<TResult, jsi::Value> || std::is_same_v<TResult, std::shared_ptr<Serializable>>;
 
 /**
- * Forward declaration to avoid circular dependencies.
+ * Forward declarations to avoid circular dependencies.
  */
 class JSIWorkletsModuleProxy;
+class WorkletHermesRuntime;
+class WorkletRuntimeInspectorTarget;
+class WorkletRuntimeWorkerTarget;
+class WorkletsInspectorConnection;
 
 class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_this<WorkletRuntime> {
  public:
@@ -252,6 +256,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       bool enableEventLoop = true,
       bool enableLocking = true);
 
+  ~WorkletRuntime() override;
+
   void init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy);
 
   /**
@@ -430,6 +436,17 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   void legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader);
 
+  /**
+   * Exposes this runtime as a debug target in React Native DevTools when the
+   * inspector is enabled. Only runtimes with an async queue and locking can be
+   * attached, as the debugger needs a thread to dispatch its work to.
+   *
+   * Registers with the React Native app's own inspector host when React
+   * Native supports worker runtime targets, and with the Worklets inspector
+   * connection otherwise.
+   */
+  void attachInspectorTarget(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy);
+
   [[nodiscard]] std::unique_lock<std::recursive_mutex> acquireRuntimeLock() const {
     if (enableLocking_) {
       return std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
@@ -441,12 +458,15 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   const bool enableLocking_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const bool microtaskQueueEnabled_;
+  const std::shared_ptr<WorkletHermesRuntime> workletHermesRuntime_;
   const std::shared_ptr<jsi::Runtime> runtime_;
   std::shared_ptr<JSScheduler> jsScheduler_;
   const RuntimeData::RuntimeKind runtimeKind_;
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
   std::shared_ptr<EventLoop> eventLoop_;
+  std::shared_ptr<WorkletRuntimeInspectorTarget> inspectorTarget_;
+  std::shared_ptr<WorkletRuntimeWorkerTarget> workerTarget_;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on

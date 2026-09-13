@@ -1,0 +1,1437 @@
+diff --git a/React/Inspector/RCTCxxInspectorPackagerConnection.mm b/React/Inspector/RCTCxxInspectorPackagerConnection.mm
+index 19d53df5ff8512aa8b31bedc91faf874a404e70d..9fe3c72092a610440d23a1dd56022916f48b1e2b 100644
+--- a/React/Inspector/RCTCxxInspectorPackagerConnection.mm
++++ b/React/Inspector/RCTCxxInspectorPackagerConnection.mm
+@@ -22,6 +22,7 @@
+ #import "RCTCxxInspectorPackagerConnection.h"
+ #import "RCTCxxInspectorPackagerConnectionDelegate.h"
+ #import "RCTCxxInspectorWebSocketAdapter.h"
++#import "RCTInspectorQueue.h"
+ #import "RCTInspectorUtils.h"
+ 
+ using namespace facebook::react::jsinspector_modern;
+@@ -49,22 +50,32 @@ - (instancetype)initWithURL:(NSURL *)url
+ 
+ - (void)sendEventToAllConnections:(NSString *)event
+ {
+-  _cxxImpl->sendEventToAllConnections(event.UTF8String);
++  RCTExecuteOnInspectorQueue(^{
++    self->_cxxImpl->sendEventToAllConnections(event.UTF8String);
++  });
+ }
+ 
+ - (bool)isConnected
+ {
+-  return _cxxImpl->isConnected();
++  __block bool isConnected = false;
++  RCTUnsafeExecuteOnInspectorQueueSync(^{
++    isConnected = self->_cxxImpl->isConnected();
++  });
++  return isConnected;
+ }
+ 
+ - (void)connect
+ {
+-  _cxxImpl->connect();
++  RCTExecuteOnInspectorQueue(^{
++    self->_cxxImpl->connect();
++  });
+ }
+ 
+ - (void)closeQuietly
+ {
+-  _cxxImpl->closeQuietly();
++  RCTExecuteOnInspectorQueue(^{
++    self->_cxxImpl->closeQuietly();
++  });
+ }
+ 
+ @end
+diff --git a/React/Inspector/RCTCxxInspectorPackagerConnectionDelegate.mm b/React/Inspector/RCTCxxInspectorPackagerConnectionDelegate.mm
+index c85bd4d3aa4a7091a3565a41d3a979d6b2d72b73..769e17db0a3086ba71986ec2bd67e1fd99208478 100644
+--- a/React/Inspector/RCTCxxInspectorPackagerConnectionDelegate.mm
++++ b/React/Inspector/RCTCxxInspectorPackagerConnectionDelegate.mm
+@@ -6,6 +6,7 @@
+  */
+ 
+ #import "RCTCxxInspectorPackagerConnectionDelegate.h"
++#import "RCTInspectorQueue.h"
+ 
+ #if RCT_DEV || RCT_REMOTE_PROFILE
+ 
+@@ -42,7 +43,7 @@
+     std::function<void(void)> callback,
+     std::chrono::milliseconds delayMs)
+ {
+-  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, delayMs.count() * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
++  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, delayMs.count() * NSEC_PER_MSEC), RCTInspectorQueue(), ^{
+     callback();
+   });
+ }
+diff --git a/React/Inspector/RCTCxxInspectorWebSocketAdapter.mm b/React/Inspector/RCTCxxInspectorWebSocketAdapter.mm
+index 1c8a5840ab3592e8b924fbc01a3d902f6d0ad377..dfbaccdb08993839477c4d727e7ff91b2eb047bc 100644
+--- a/React/Inspector/RCTCxxInspectorWebSocketAdapter.mm
++++ b/React/Inspector/RCTCxxInspectorWebSocketAdapter.mm
+@@ -18,6 +18,8 @@
+ #import <jsinspector-modern/InspectorPackagerConnection.h>
+ #import <memory>
+ 
++#import "RCTInspectorQueue.h"
++
+ using namespace facebook::react::jsinspector_modern;
+ 
+ namespace {
+@@ -46,6 +48,7 @@ - (instancetype)initWithURL:(const std::string &)url delegate:(std::weak_ptr<IWe
+     [[RCTDevSupportHttpHeaders sharedInstance] applyHeadersToRequest:request];
+     _webSocket = [[SRWebSocket alloc] initWithURLRequest:request];
+     _webSocket.delegate = self;
++    [_webSocket setDelegateDispatchQueue:RCTInspectorQueue()];
+     [_webSocket open];
+   }
+   return self;
+@@ -55,7 +58,7 @@ - (void)send:(std::string_view)message
+ {
+   __weak RCTCxxInspectorWebSocketAdapter *weakSelf = self;
+   NSString *messageStr = NSStringFromUTF8StringView(message);
+-  dispatch_async(dispatch_get_main_queue(), ^{
++  dispatch_async(RCTInspectorQueue(), ^{
+     RCTCxxInspectorWebSocketAdapter *strongSelf = weakSelf;
+     if (strongSelf != nullptr) {
+       [strongSelf->_webSocket sendString:messageStr error:NULL];
+@@ -70,7 +73,7 @@ - (void)close
+ 
+ - (void)webSocketDidOpen:(__unused SRWebSocket *)webSocket
+ {
+-  // NOTE: We are on the main queue here, per SRWebSocket's defaults.
++  // NOTE: We are on the inspector queue here, see setDelegateDispatchQueue: above.
+   if (auto delegate = _delegate.lock()) {
+     delegate->didOpen();
+   }
+@@ -78,7 +81,7 @@ - (void)webSocketDidOpen:(__unused SRWebSocket *)webSocket
+ 
+ - (void)webSocket:(__unused SRWebSocket *)webSocket didFailWithError:(NSError *)error
+ {
+-  // NOTE: We are on the main queue here, per SRWebSocket's defaults.
++  // NOTE: We are on the inspector queue here, see setDelegateDispatchQueue: above.
+   if (auto delegate = _delegate.lock()) {
+     delegate->didFailWithError([error code], [error description].UTF8String);
+   }
+@@ -86,7 +89,7 @@ - (void)webSocket:(__unused SRWebSocket *)webSocket didFailWithError:(NSError *)
+ 
+ - (void)webSocket:(__unused SRWebSocket *)webSocket didReceiveMessageWithString:(NSString *)message
+ {
+-  // NOTE: We are on the main queue here, per SRWebSocket's defaults.
++  // NOTE: We are on the inspector queue here, see setDelegateDispatchQueue: above.
+   if (auto delegate = _delegate.lock()) {
+     delegate->didReceiveMessage([message UTF8String]);
+   }
+@@ -97,7 +100,7 @@ - (void)webSocket:(__unused SRWebSocket *)webSocket
+               reason:(__unused NSString *)reason
+             wasClean:(__unused BOOL)wasClean
+ {
+-  // NOTE: We are on the main queue here, per SRWebSocket's defaults.
++  // NOTE: We are on the inspector queue here, see setDelegateDispatchQueue: above.
+   if (auto delegate = _delegate.lock()) {
+     delegate->didClose();
+   }
+diff --git a/React/Inspector/RCTInspectorQueue.h b/React/Inspector/RCTInspectorQueue.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..5267b1b9bf55556a24c9841ca019e6879d701d4d
+--- /dev/null
++++ b/React/Inspector/RCTInspectorQueue.h
+@@ -0,0 +1,34 @@
++/*
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ */
++
++#import <Foundation/Foundation.h>
++#import <React/RCTDefines.h>
++
++/**
++ * The serial queue on which the modern inspector (React Native DevTools)
++ * dispatches its work: inspector messages from the dev server, HostTarget
++ * callbacks and session lifecycle. It is deliberately not the main queue, so
++ * that a JS runtime paused on the main thread can still be resumed.
++ */
++RCT_EXTERN dispatch_queue_t RCTInspectorQueue(void);
++
++/**
++ * Whether the current thread is running on the inspector queue.
++ */
++RCT_EXTERN BOOL RCTIsOnInspectorQueue(void);
++
++/**
++ * Runs the block on the inspector queue: immediately when already on it,
++ * asynchronously otherwise.
++ */
++RCT_EXTERN void RCTExecuteOnInspectorQueue(dispatch_block_t block);
++
++/**
++ * Runs the block on the inspector queue and waits for it to complete. Do not
++ * call from code that the inspector queue itself may be waiting on.
++ */
++RCT_EXTERN void RCTUnsafeExecuteOnInspectorQueueSync(dispatch_block_t block);
+diff --git a/React/Inspector/RCTInspectorQueue.mm b/React/Inspector/RCTInspectorQueue.mm
+new file mode 100644
+index 0000000000000000000000000000000000000000..3da3e3de7c31b3e53a81347136f8af746e19eba0
+--- /dev/null
++++ b/React/Inspector/RCTInspectorQueue.mm
+@@ -0,0 +1,47 @@
++/*
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ */
++
++#import "RCTInspectorQueue.h"
++
++static void *const RCTInspectorQueueKey = (void *)&RCTInspectorQueueKey;
++
++dispatch_queue_t RCTInspectorQueue(void)
++{
++  static dispatch_queue_t queue;
++  static dispatch_once_t onceToken;
++  dispatch_once(&onceToken, ^{
++    dispatch_queue_attr_t attributes =
++        dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
++    queue = dispatch_queue_create("com.facebook.react.inspector", attributes);
++    dispatch_queue_set_specific(queue, RCTInspectorQueueKey, RCTInspectorQueueKey, NULL);
++  });
++  return queue;
++}
++
++BOOL RCTIsOnInspectorQueue(void)
++{
++  RCTInspectorQueue();
++  return dispatch_get_specific(RCTInspectorQueueKey) == RCTInspectorQueueKey;
++}
++
++void RCTExecuteOnInspectorQueue(dispatch_block_t block)
++{
++  if (RCTIsOnInspectorQueue()) {
++    block();
++  } else {
++    dispatch_async(RCTInspectorQueue(), block);
++  }
++}
++
++void RCTUnsafeExecuteOnInspectorQueueSync(dispatch_block_t block)
++{
++  if (RCTIsOnInspectorQueue()) {
++    block();
++  } else {
++    dispatch_sync(RCTInspectorQueue(), block);
++  }
++}
+diff --git a/ReactAndroid/src/main/java/com/facebook/react/devsupport/CxxInspectorPackagerConnection.kt b/ReactAndroid/src/main/java/com/facebook/react/devsupport/CxxInspectorPackagerConnection.kt
+index c6b6b7839353b83f7d6c3b5a0def583b5916469e..a36e5203c4d61e2a1df42e3ccb00daf7a86485e8 100644
+--- a/ReactAndroid/src/main/java/com/facebook/react/devsupport/CxxInspectorPackagerConnection.kt
++++ b/ReactAndroid/src/main/java/com/facebook/react/devsupport/CxxInspectorPackagerConnection.kt
+@@ -7,14 +7,13 @@
+ 
+ package com.facebook.react.devsupport
+ 
+-import android.os.Handler
+-import android.os.Looper
+ import com.facebook.common.logging.FLog
+ import com.facebook.jni.HybridData
+ import com.facebook.proguard.annotations.DoNotStrip
+ import com.facebook.proguard.annotations.DoNotStripAny
+ import com.facebook.react.common.annotations.VisibleForTesting
+ import com.facebook.react.devsupport.inspector.DevSupportHttpClient
++import com.facebook.react.devsupport.inspector.InspectorThread
+ import com.facebook.soloader.SoLoader
+ import java.io.Closeable
+ import java.nio.ByteBuffer
+@@ -39,11 +38,23 @@ internal class CxxInspectorPackagerConnection(
+     mHybridData = initHybrid(url, deviceName, packageName, DelegateImpl())
+   }
+ 
+-  external override fun connect()
++  override fun connect() {
++    InspectorThread.executor.execute { connectNative() }
++  }
++
++  override fun closeQuietly() {
++    InspectorThread.executor.execute { closeQuietlyNative() }
++  }
++
++  override fun sendEventToAllConnections(event: String?) {
++    InspectorThread.executor.execute { sendEventToAllConnectionsNative(event) }
++  }
++
++  private external fun connectNative()
+ 
+-  external override fun closeQuietly()
++  private external fun closeQuietlyNative()
+ 
+-  external override fun sendEventToAllConnections(event: String?)
++  private external fun sendEventToAllConnectionsNative(event: String?)
+ 
+   /** Java wrapper around a C++ IWebSocketDelegate, allowing us to call the interface from Java. */
+   @DoNotStrip
+@@ -174,7 +185,7 @@ internal class CxxInspectorPackagerConnection(
+   private class DelegateImpl {
+     private val httpClient = DevSupportHttpClient.websocketClient
+ 
+-    private val handler = Handler(Looper.getMainLooper())
++    private val handler = InspectorThread.handler
+ 
+     @Suppress("unused")
+     @DoNotStrip
+diff --git a/ReactAndroid/src/main/java/com/facebook/react/devsupport/inspector/InspectorThread.kt b/ReactAndroid/src/main/java/com/facebook/react/devsupport/inspector/InspectorThread.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..5b4cc6fe8719b58c9301c124194165020e569646
+--- /dev/null
++++ b/ReactAndroid/src/main/java/com/facebook/react/devsupport/inspector/InspectorThread.kt
+@@ -0,0 +1,58 @@
++/*
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ */
++
++package com.facebook.react.devsupport.inspector
++
++import android.os.Handler
++import android.os.HandlerThread
++import android.os.Looper
++import java.util.concurrent.CountDownLatch
++import java.util.concurrent.Executor
++
++/**
++ * The thread on which the modern inspector (React Native DevTools) dispatches its work: inspector
++ * messages from the dev server, HostTarget callbacks and session lifecycle. It is deliberately not
++ * the UI thread, so that a JS runtime paused on the UI thread can still be resumed.
++ */
++public object InspectorThread {
++  private val handlerThread: HandlerThread by lazy {
++    HandlerThread("ReactNativeInspector").apply { start() }
++  }
++
++  public val handler: Handler by lazy { Handler(handlerThread.looper) }
++
++  /** Runs commands on the inspector thread, immediately when already on it. */
++  public val executor: Executor = Executor { command ->
++    if (isOnInspectorThread()) {
++      command.run()
++    } else {
++      handler.post(command)
++    }
++  }
++
++  public fun isOnInspectorThread(): Boolean = Looper.myLooper() == handlerThread.looper
++
++  /**
++   * Runs the block on the inspector thread and waits for it to complete. Do not call from code
++   * that the inspector thread itself may be waiting on.
++   */
++  public fun runSync(block: () -> Unit) {
++    if (isOnInspectorThread()) {
++      block()
++      return
++    }
++    val latch = CountDownLatch(1)
++    handler.post {
++      try {
++        block()
++      } finally {
++        latch.countDown()
++      }
++    }
++    latch.await()
++  }
++}
+diff --git a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactHostImpl.kt b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactHostImpl.kt
+index 56ffb40926869515e619d4f6c62de03d0c6e2b82..3ad689e8e81c6db53b4e3307973a69b709111ebf 100644
+--- a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactHostImpl.kt
++++ b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactHostImpl.kt
+@@ -45,6 +45,7 @@ import com.facebook.react.devsupport.DevMenuConfiguration
+ import com.facebook.react.devsupport.DevSupportManagerBase
+ import com.facebook.react.devsupport.DevSupportManagerFactory
+ import com.facebook.react.devsupport.InspectorFlags
++import com.facebook.react.devsupport.inspector.InspectorThread
+ import com.facebook.react.devsupport.inspector.FrameTimingsObserver
+ import com.facebook.react.devsupport.inspector.InspectorNetworkHelper
+ import com.facebook.react.devsupport.inspector.InspectorNetworkRequestListener
+@@ -420,6 +421,10 @@ public class ReactHostImpl(
+ 
+   @DoNotStrip
+   private fun setPausedInDebuggerMessage(message: String?) {
++    if (!UiThreadUtil.isOnUiThread()) {
++      UiThreadUtil.runOnUiThread { setPausedInDebuggerMessage(message) }
++      return
++    }
+     if (message == null) {
+       devSupportManager.hidePausedInDebuggerOverlay()
+     } else {
+@@ -1633,7 +1638,6 @@ public class ReactHostImpl(
+     reactHostInspectorTarget = null
+   }
+ 
+-  @ThreadConfined(ThreadConfined.UI)
+   internal fun unregisterInstanceFromInspector(reactInstance: ReactInstance?) {
+     if (reactInstance != null) {
+       if (InspectorFlags.getFuseboxEnabled()) {
+@@ -1642,7 +1646,7 @@ public class ReactHostImpl(
+             "Host inspector target destroyed before instance was unregistered",
+         )
+       }
+-      reactInstance.unregisterFromInspector()
++      InspectorThread.runSync { reactInstance.unregisterFromInspector() }
+     }
+   }
+ 
+diff --git a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactHostInspectorTarget.kt b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactHostInspectorTarget.kt
+index 936bcac115cabdb850d323e696887a1b5f05fbc9..d786a7137c14b9030bbd6ecd388703511c669a07 100644
+--- a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactHostInspectorTarget.kt
++++ b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactHostInspectorTarget.kt
+@@ -13,6 +13,7 @@ import com.facebook.react.bridge.UiThreadUtil
+ import com.facebook.react.common.annotations.FrameworkAPI
+ import com.facebook.react.common.annotations.UnstableReactNativeAPI
+ import com.facebook.react.devsupport.inspector.FrameTimingSequence
++import com.facebook.react.devsupport.inspector.InspectorThread
+ import com.facebook.react.devsupport.inspector.TracingState
+ import com.facebook.react.devsupport.inspector.TracingStateListener
+ import com.facebook.react.devsupport.perfmonitor.PerfMonitorInspectorTarget
+@@ -29,7 +30,7 @@ internal class ReactHostInspectorTarget(reactHostImpl: ReactHostImpl) :
+   // fbjni looks for the exact name "mHybridData":
+   // https://github.com/facebookincubator/fbjni/blob/5587a7fd2b191656be9391a3832ce04c034009a5/cxx/fbjni/detail/Hybrid.h#L310
+   @Suppress("NoHungarianNotation")
+-  private val mHybridData: HybridData = initHybrid(reactHostImpl, UIThreadConditionalSyncExecutor())
++  private val mHybridData: HybridData = initHybrid(reactHostImpl, InspectorThread.executor)
+ 
+   private val perfMonitorListeners = mutableSetOf<PerfMonitorUpdateListener>()
+ 
+@@ -92,15 +93,4 @@ internal class ReactHostInspectorTarget(reactHostImpl: ReactHostImpl) :
+    * An [java.util.concurrent.Executor] that runs tasks on the UI thread (immediately if already on
+    * that thread).
+    */
+-  private class UIThreadConditionalSyncExecutor : Executor {
+-    override fun execute(command: Runnable) {
+-      if (UiThreadUtil.isOnUiThread()) {
+-        // If we're already on the main thread, execute the command immediately
+-        command.run()
+-      } else {
+-        // Otherwise, post it on the main thread handler
+-        UiThreadUtil.runOnUiThread(command)
+-      }
+-    }
+-  }
+ }
+diff --git a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
+index 63b6802ad3db49df3a630309de3822e45a206fec..2ee33023978bd92c85f6a922d85f62a2931d8eff 100644
+--- a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
++++ b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
+@@ -464,7 +464,8 @@ internal class ReactInstance(
+ 
+   private external fun handleMemoryPressureJs(pressureLevel: Int)
+ 
+-  @ThreadConfined(ThreadConfined.UI) external fun unregisterFromInspector()
++  /** Must be called on the inspector thread, see [InspectorThread]. */
++  external fun unregisterFromInspector()
+ 
+   fun handleMemoryPressure(level: Int) {
+     try {
+diff --git a/ReactAndroid/src/main/jni/react/devsupport/JCxxInspectorPackagerConnection.cpp b/ReactAndroid/src/main/jni/react/devsupport/JCxxInspectorPackagerConnection.cpp
+index 9857bec6d3b5ef13614a5e78168e9b5742ae4c0f..caddcc68dc2494467618c41394a9a479f9fa49ee 100644
+--- a/ReactAndroid/src/main/jni/react/devsupport/JCxxInspectorPackagerConnection.cpp
++++ b/ReactAndroid/src/main/jni/react/devsupport/JCxxInspectorPackagerConnection.cpp
+@@ -47,11 +47,11 @@ void JCxxInspectorPackagerConnection::registerNatives() {
+   registerHybrid(
+       {makeNativeMethod(
+            "initHybrid", JCxxInspectorPackagerConnection::initHybrid),
+-       makeNativeMethod("connect", JCxxInspectorPackagerConnection::connect),
++       makeNativeMethod("connectNative", JCxxInspectorPackagerConnection::connect),
+        makeNativeMethod(
+-           "closeQuietly", JCxxInspectorPackagerConnection::closeQuietly),
++           "closeQuietlyNative", JCxxInspectorPackagerConnection::closeQuietly),
+        makeNativeMethod(
+-           "sendEventToAllConnections",
++           "sendEventToAllConnectionsNative",
+            JCxxInspectorPackagerConnection::sendEventToAllConnections)});
+ }
+ } // namespace facebook::react::jsinspector_modern
+diff --git a/ReactCommon/jsinspector-modern/HostTarget.cpp b/ReactCommon/jsinspector-modern/HostTarget.cpp
+index 637198d2a57e4fc563592332866ecc31c09bff11..c5d73e9b68d04a15c06736d47eb8f2a9e77a631d 100644
+--- a/ReactCommon/jsinspector-modern/HostTarget.cpp
++++ b/ReactCommon/jsinspector-modern/HostTarget.cpp
+@@ -13,6 +13,7 @@
+ #include "InspectorUtilities.h"
+ #include "InstanceTarget.h"
+ #include "SessionState.h"
++#include "TargetAgent.h"
+ 
+ #include <jsinspector-modern/InspectorFlags.h>
+ #include <jsinspector-modern/cdp/CdpJson.h>
+@@ -48,7 +49,8 @@ class HostTargetSession {
+             targetController,
+             std::move(hostMetadata),
+             state_,
+-            std::move(executor)) {}
++            std::move(executor)),
++        targetAgent_(frontendChannel_, targetController) {}
+ 
+   /**
+    * Called by CallbackLocalConnection to send a message to this Session's
+@@ -71,6 +73,13 @@ class HostTargetSession {
+     }
+ 
+     try {
++      if (request.sessionId.has_value()) {
++        targetAgent_.handleChildRequest(request);
++        return;
++      }
++      if (targetAgent_.handleRequest(request)) {
++        return;
++      }
+       hostAgent_.handleRequest(request);
+     }
+     // Catch exceptions that may arise from accessing dynamic params during
+@@ -107,6 +116,10 @@ class HostTargetSession {
+     return hostAgent_;
+   }
+ 
++  TargetAgent& targetAgent() {
++    return targetAgent_;
++  }
++
+   FrontendChannel dangerouslyGetFrontendChannel() {
+     return frontendChannel_;
+   }
+@@ -119,6 +132,7 @@ class HostTargetSession {
+ 
+   // NOTE: hostAgent_ has a raw reference to state_ so must be destroyed first.
+   HostAgent hostAgent_;
++  TargetAgent targetAgent_;
+ };
+ 
+ /**
+@@ -279,6 +293,96 @@ void HostTarget::unregisterInstance(InstanceTarget& instance) {
+   currentInstance_.reset();
+ }
+ 
++WorkerRuntimeTarget::WorkerRuntimeTarget(
++    std::string targetId,
++    WorkerRuntimeDescription description,
++    std::shared_ptr<RuntimeTarget> runtimeTarget)
++    : targetId_(std::move(targetId)),
++      description_(std::move(description)),
++      runtimeTarget_(std::move(runtimeTarget)) {}
++
++WorkerRuntimeTarget::~WorkerRuntimeTarget() = default;
++
++const std::string& WorkerRuntimeTarget::getTargetId() const {
++  return targetId_;
++}
++
++const WorkerRuntimeDescription& WorkerRuntimeTarget::getDescription() const {
++  return description_;
++}
++
++RuntimeTarget& WorkerRuntimeTarget::getRuntimeTarget() {
++  return *runtimeTarget_;
++}
++
++WorkerRuntimeTarget& HostTarget::registerWorkerRuntime(
++    WorkerRuntimeDescription description,
++    RuntimeTargetDelegate& delegate,
++    RuntimeExecutor jsExecutor) {
++  auto targetId = "worker-" + std::to_string(nextWorkerRuntimeId_++);
++  auto runtimeTarget = RuntimeTarget::create(
++      ExecutionContextDescription{
++          .id = executionContextManager_->allocateExecutionContextId(),
++          .origin = "",
++          .name = description.title,
++          .uniqueId = std::nullopt},
++      delegate,
++      std::move(jsExecutor),
++      makeVoidExecutor(executorFromThis()));
++  std::unique_ptr<WorkerRuntimeTarget> worker(new WorkerRuntimeTarget(
++      std::move(targetId), std::move(description), std::move(runtimeTarget)));
++  auto& workerRef = *worker;
++  workerRuntimes_.push_back(std::move(worker));
++  sessions_.forEach([&workerRef](HostTargetSession& session) {
++    session.targetAgent().onWorkerRuntimeAdded(workerRef);
++  });
++  return workerRef;
++}
++
++void HostTarget::unregisterWorkerRuntime(WorkerRuntimeTarget& worker) {
++  sessions_.forEach([&worker](HostTargetSession& session) {
++    session.targetAgent().onWorkerRuntimeRemoved(worker);
++  });
++  for (auto it = workerRuntimes_.begin(); it != workerRuntimes_.end(); ++it) {
++    if (it->get() == &worker) {
++      workerRuntimes_.erase(it);
++      return;
++    }
++  }
++  assert(false && "Invalid worker runtime unregistration");
++}
++
++namespace {
++
++constexpr jsi::UUID kHostTargetRuntimeDataUUID{
++    0x5f2f3d1a,
++    0x8c6e,
++    0x4b8a,
++    0x9d21,
++    0x3a7e4c6b1f90};
++
++struct HostTargetRuntimeData {
++  std::weak_ptr<HostTarget> hostTarget;
++};
++
++} // namespace
++
++void HostTarget::attachToRuntime(jsi::Runtime& runtime) {
++  runtime.setRuntimeData(
++      kHostTargetRuntimeDataUUID,
++      std::make_shared<HostTargetRuntimeData>(
++          HostTargetRuntimeData{.hostTarget = weak_from_this()}));
++}
++
++std::shared_ptr<HostTarget> HostTarget::fromRuntime(jsi::Runtime& runtime) {
++  auto data = runtime.getRuntimeData(kHostTargetRuntimeDataUUID);
++  if (!data) {
++    return nullptr;
++  }
++  return std::static_pointer_cast<HostTargetRuntimeData>(data)
++      ->hostTarget.lock();
++}
++
+ void HostTarget::sendCommand(HostCommand command) {
+   executorFromThis()([command](HostTarget& self) {
+     if (!self.commandSender_) {
+@@ -310,6 +414,16 @@ bool HostTargetController::hasInstance() const {
+   return target_.hasInstance();
+ }
+ 
++std::vector<WorkerRuntimeTarget*> HostTargetController::getWorkerRuntimes()
++    const {
++  std::vector<WorkerRuntimeTarget*> workers;
++  workers.reserve(target_.workerRuntimes_.size());
++  for (const auto& worker : target_.workerRuntimes_) {
++    workers.push_back(worker.get());
++  }
++  return workers;
++}
++
+ void HostTargetController::incrementPauseOverlayCounter() {
+   ++pauseOverlayCounter_;
+ }
+diff --git a/ReactCommon/jsinspector-modern/HostTarget.h b/ReactCommon/jsinspector-modern/HostTarget.h
+index 7d0193d310871770a646e12d7be8077f411b24e5..0e3de9287d9175094f828afbdff0c6654993e1be 100644
+--- a/ReactCommon/jsinspector-modern/HostTarget.h
++++ b/ReactCommon/jsinspector-modern/HostTarget.h
+@@ -17,10 +17,14 @@
+ #include "WeakList.h"
+ 
+ #include <functional>
++#include <map>
++#include <memory>
+ #include <optional>
+ #include <set>
+ #include <string>
++#include <vector>
+ 
++#include <jsi/jsi.h>
+ #include <jsinspector-modern/tracing/FrameTimingSequence.h>
+ #include <jsinspector-modern/tracing/HostTracingProfile.h>
+ #include <jsinspector-modern/tracing/TraceRecordingState.h>
+@@ -39,6 +43,13 @@
+ #endif // _MSC_VER
+ #endif // !defined(JSINSPECTOR_EXPORT)
+ 
++/**
++ * Defined when HostTarget supports registering additional JS runtimes as
++ * worker targets (\c HostTarget::registerWorkerRuntime). Lets libraries that
++ * own their own runtimes detect the API at compile time.
++ */
++#define REACT_NATIVE_INSPECTOR_WORKER_RUNTIMES 1
++
+ namespace facebook::react::jsinspector_modern {
+ 
+ class HostTargetSession;
+@@ -49,6 +60,51 @@ class HostRuntimeBinding;
+ class HostTarget;
+ class HostTargetTraceRecording;
+ 
++/**
++ * Describes a JS runtime, owned by the app or a library, that is exposed to
++ * DevTools as a worker target of the host.
++ */
++struct WorkerRuntimeDescription {
++  /**
++   * The name shown for the runtime in DevTools (e.g. in the Threads pane).
++   */
++  std::string title;
++
++  /**
++   * A URL identifying the runtime. Must differ from \c title.
++   */
++  std::string url;
++};
++
++/**
++ * A JS runtime registered with a HostTarget through
++ * \c HostTarget::registerWorkerRuntime. Owned by the HostTarget.
++ */
++class JSINSPECTOR_EXPORT WorkerRuntimeTarget {
++ public:
++  WorkerRuntimeTarget(const WorkerRuntimeTarget &) = delete;
++  WorkerRuntimeTarget(WorkerRuntimeTarget &&) = delete;
++  WorkerRuntimeTarget &operator=(const WorkerRuntimeTarget &) = delete;
++  WorkerRuntimeTarget &operator=(WorkerRuntimeTarget &&) = delete;
++  ~WorkerRuntimeTarget();
++
++  const std::string &getTargetId() const;
++  const WorkerRuntimeDescription &getDescription() const;
++  RuntimeTarget &getRuntimeTarget();
++
++ private:
++  friend class HostTarget;
++
++  WorkerRuntimeTarget(
++      std::string targetId,
++      WorkerRuntimeDescription description,
++      std::shared_ptr<RuntimeTarget> runtimeTarget);
++
++  std::string targetId_;
++  WorkerRuntimeDescription description_;
++  std::shared_ptr<RuntimeTarget> runtimeTarget_;
++};
++
+ struct HostTargetMetadata {
+   std::optional<std::string> appDisplayName{};
+   std::optional<std::string> appIdentifier{};
+@@ -252,6 +308,12 @@ class HostTargetController final {
+ 
+   bool hasInstance() const;
+ 
++  /**
++   * \returns the worker runtimes currently registered with the target, in
++   * registration order.
++   */
++  std::vector<WorkerRuntimeTarget *> getWorkerRuntimes() const;
++
+   /**
+    * Increments the target's pause overlay counter. The counter represents the
+    * exact number of Agents that have (concurrently) requested the pause
+@@ -356,6 +418,49 @@ class JSINSPECTOR_EXPORT HostTarget : public EnableExecutorFromThis<HostTarget>
+    */
+   void unregisterInstance(InstanceTarget &instance);
+ 
++  /**
++   * Registers an additional JS runtime with this HostTarget. The runtime is
++   * exposed to every session as a "worker" target through the CDP Target
++   * domain, so DevTools shows it as a thread of the app next to the runtime
++   * of the current instance.
++   * \param description Describes the runtime to the frontend.
++   * \param delegate The object that will receive events from the runtime's
++   * target. All the requirements of \c RuntimeTarget::create apply.
++   * \param jsExecutor A RuntimeExecutor that can be used to schedule work on
++   * the runtime's thread. All the requirements of \c RuntimeTarget::create
++   * apply.
++   * \return A reference to the registration, owned by the HostTarget. Only
++   * valid until unregisterWorkerRuntime is called.
++   * \pre Called on the HostTarget's executor.
++   */
++  WorkerRuntimeTarget &registerWorkerRuntime(
++      WorkerRuntimeDescription description,
++      RuntimeTargetDelegate &delegate,
++      RuntimeExecutor jsExecutor);
++
++  /**
++   * Unregisters a worker runtime previously registered with
++   * registerWorkerRuntime, detaching all sessions from it. The
++   * \c RuntimeTargetDelegate may continue to be used as long as JavaScript
++   * execution continues in the runtime.
++   * \pre Called on the HostTarget's executor.
++   */
++  void unregisterWorkerRuntime(WorkerRuntimeTarget &worker);
++
++  /**
++   * Stores a weak reference to this HostTarget as runtime data of \c runtime,
++   * so that code that only has access to the runtime (e.g. a native module)
++   * can find the host with \c fromRuntime. Must be called on the runtime's
++   * thread.
++   */
++  void attachToRuntime(jsi::Runtime &runtime);
++
++  /**
++   * \returns the HostTarget previously attached to \c runtime with
++   * \c attachToRuntime, or nullptr. Must be called on the runtime's thread.
++   */
++  static std::shared_ptr<HostTarget> fromRuntime(jsi::Runtime &runtime);
++
+   /**
+    * Sends an imperative command to the HostTarget. May be called from any
+    * thread.
+@@ -422,6 +527,8 @@ class JSINSPECTOR_EXPORT HostTarget : public EnableExecutorFromThis<HostTarget>
+   // briefly outliving the HostTarget, which it generally shouldn't).
+   std::shared_ptr<ExecutionContextManager> executionContextManager_;
+   std::shared_ptr<InstanceTarget> currentInstance_{nullptr};
++  std::vector<std::unique_ptr<WorkerRuntimeTarget>> workerRuntimes_;
++  uint64_t nextWorkerRuntimeId_{1};
+   std::unique_ptr<HostCommandSender> commandSender_;
+   std::unique_ptr<PerfMonitorUpdateHandler> perfMonitorUpdateHandler_;
+   std::unique_ptr<HostRuntimeBinding> perfMetricsBinding_;
+diff --git a/ReactCommon/jsinspector-modern/TargetAgent.cpp b/ReactCommon/jsinspector-modern/TargetAgent.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..989d58e9c796500bdeb921fb52a252ee056b97b5
+--- /dev/null
++++ b/ReactCommon/jsinspector-modern/TargetAgent.cpp
+@@ -0,0 +1,296 @@
++/*
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ */
++
++#include "TargetAgent.h"
++#include "HostTarget.h"
++
++#include <folly/dynamic.h>
++#include <folly/json.h>
++
++#include <utility>
++#include <vector>
++
++namespace facebook::react::jsinspector_modern {
++
++namespace {
++
++/**
++ * Inserts a `sessionId` property into a JSON-encoded CDP message, which is
++ * how a flattened child session is addressed on the wire.
++ */
++std::string withSessionId(std::string_view message, const std::string& sessionId) {
++  std::string prefix = "{\"sessionId\":\"" + sessionId + "\"";
++  if (message.size() < 2 || message.front() != '{') {
++    return std::string(message);
++  }
++  if (message.size() == 2) {
++    return prefix + "}";
++  }
++  return prefix + "," + std::string(message.substr(1));
++}
++
++bool boolParam(const folly::dynamic& params, const char* name) {
++  if (!params.isObject()) {
++    return false;
++  }
++  const auto* value = params.get_ptr(name);
++  return value != nullptr && value->isBool() && value->getBool();
++}
++
++std::optional<std::string> stringParam(
++    const folly::dynamic& params,
++    const char* name) {
++  if (!params.isObject()) {
++    return std::nullopt;
++  }
++  const auto* value = params.get_ptr(name);
++  if (value == nullptr || !value->isString()) {
++    return std::nullopt;
++  }
++  return value->getString();
++}
++
++} // namespace
++
++TargetAgent::TargetAgent(
++    FrontendChannel frontendChannel,
++    HostTargetController& targetController)
++    : frontendChannel_(std::move(frontendChannel)),
++      targetController_(targetController) {}
++
++TargetAgent::~TargetAgent() = default;
++
++bool TargetAgent::handleRequest(const cdp::PreparsedRequest& req) {
++  if (req.method == "Target.setAutoAttach") {
++    autoAttach_ = boolParam(req.params, "autoAttach");
++    if (autoAttach_) {
++      for (auto* worker : targetController_.getWorkerRuntimes()) {
++        if (!findSessionByTargetId(worker->getTargetId())) {
++          attach(*worker);
++        }
++      }
++    }
++    frontendChannel_(cdp::jsonResult(req.id));
++    return true;
++  }
++  if (req.method == "Target.setDiscoverTargets") {
++    discoverTargets_ = boolParam(req.params, "discover");
++    if (discoverTargets_) {
++      for (auto* worker : targetController_.getWorkerRuntimes()) {
++        frontendChannel_(
++            cdp::jsonNotification(
++                "Target.targetCreated",
++                folly::dynamic::object("targetInfo", targetInfo(*worker))));
++      }
++    }
++    frontendChannel_(cdp::jsonResult(req.id));
++    return true;
++  }
++  if (req.method == "Target.getTargets") {
++    folly::dynamic targetInfos = folly::dynamic::array();
++    for (auto* worker : targetController_.getWorkerRuntimes()) {
++      targetInfos.push_back(targetInfo(*worker));
++    }
++    frontendChannel_(
++        cdp::jsonResult(
++            req.id, folly::dynamic::object("targetInfos", std::move(targetInfos))));
++    return true;
++  }
++  if (req.method == "Target.attachToTarget") {
++    auto targetId = stringParam(req.params, "targetId");
++    WorkerRuntimeTarget* worker = nullptr;
++    if (targetId) {
++      for (auto* candidate : targetController_.getWorkerRuntimes()) {
++        if (candidate->getTargetId() == *targetId) {
++          worker = candidate;
++          break;
++        }
++      }
++    }
++    if (worker == nullptr) {
++      frontendChannel_(
++          cdp::jsonError(
++              req.id,
++              cdp::ErrorCode::InvalidParams,
++              "No target with given id found"));
++      return true;
++    }
++    if (auto existing = findSessionByTargetId(worker->getTargetId())) {
++      frontendChannel_(
++          cdp::jsonResult(
++              req.id, folly::dynamic::object("sessionId", *existing)));
++      return true;
++    }
++    auto sessionId = attach(*worker);
++    if (!sessionId) {
++      frontendChannel_(
++          cdp::jsonError(
++              req.id,
++              cdp::ErrorCode::InternalError,
++              "Target rejected the connection"));
++      return true;
++    }
++    frontendChannel_(
++        cdp::jsonResult(
++            req.id, folly::dynamic::object("sessionId", *sessionId)));
++    return true;
++  }
++  if (req.method == "Target.detachFromTarget") {
++    auto sessionId = stringParam(req.params, "sessionId");
++    if (!sessionId || sessions_.find(*sessionId) == sessions_.end()) {
++      frontendChannel_(
++          cdp::jsonError(
++              req.id, cdp::ErrorCode::InvalidParams, "No session with given id"));
++      return true;
++    }
++    detach(*sessionId);
++    frontendChannel_(cdp::jsonResult(req.id));
++    return true;
++  }
++  if (req.method == "Target.setRemoteLocations" ||
++      req.method == "Target.activateTarget") {
++    frontendChannel_(cdp::jsonResult(req.id));
++    return true;
++  }
++  return false;
++}
++
++void TargetAgent::handleChildRequest(const cdp::PreparsedRequest& req) {
++  assert(req.sessionId.has_value() && "Child requests carry a sessionId");
++  auto sessionIt = sessions_.find(*req.sessionId);
++  if (sessionIt == sessions_.end()) {
++    frontendChannel_(
++        withSessionId(
++            cdp::jsonError(
++                req.id, cdp::ErrorCode::InvalidRequest, "Session not found"),
++            *req.sessionId));
++    return;
++  }
++  auto& session = *sessionIt->second;
++  if (req.method == "Runtime.enable") {
++    sendChildExecutionContextCreated(session);
++  }
++  if (req.method == "ReactNativeApplication.enable" ||
++      req.method == "ReactNativeApplication.disable") {
++    // The application-level domain is served by the main session only.
++    session.channel(cdp::jsonResult(req.id));
++    return;
++  }
++  cdp::PreparsedRequest childRequest = req;
++  childRequest.sessionId.reset();
++  try {
++    if (session.agent->handleRequest(childRequest)) {
++      return;
++    }
++  } catch (const cdp::TypeError& e) {
++    session.channel(
++        cdp::jsonError(req.id, cdp::ErrorCode::InvalidRequest, e.what()));
++    return;
++  }
++  session.channel(
++      cdp::jsonError(req.id, cdp::ErrorCode::MethodNotFound, req.method));
++}
++
++void TargetAgent::onWorkerRuntimeAdded(WorkerRuntimeTarget& worker) {
++  if (discoverTargets_) {
++    frontendChannel_(
++        cdp::jsonNotification(
++            "Target.targetCreated",
++            folly::dynamic::object("targetInfo", targetInfo(worker))));
++  }
++  if (autoAttach_) {
++    attach(worker);
++  }
++}
++
++void TargetAgent::onWorkerRuntimeRemoved(WorkerRuntimeTarget& worker) {
++  if (auto sessionId = findSessionByTargetId(worker.getTargetId())) {
++    detach(*sessionId);
++  } else if (discoverTargets_) {
++    frontendChannel_(
++        cdp::jsonNotification(
++            "Target.targetDestroyed",
++            folly::dynamic::object("targetId", worker.getTargetId())));
++  }
++}
++
++std::optional<std::string> TargetAgent::attach(WorkerRuntimeTarget& worker) {
++  auto sessionId = "worker-" + std::to_string(nextSessionId_++);
++  auto session = std::make_unique<ChildSession>();
++  session->targetId = worker.getTargetId();
++  session->channel = [frontendChannel = frontendChannel_,
++                      sessionId](std::string_view message) {
++    frontendChannel(withSessionId(message, sessionId));
++  };
++  session->agent =
++      worker.getRuntimeTarget().createAgent(session->channel, session->state);
++  if (!session->agent) {
++    return std::nullopt;
++  }
++  frontendChannel_(
++      cdp::jsonNotification(
++          "Target.attachedToTarget",
++          folly::dynamic::object("sessionId", sessionId)(
++              "targetInfo", targetInfo(worker))("waitingForDebugger", false)));
++  sessions_.emplace(sessionId, std::move(session));
++  return sessionId;
++}
++
++void TargetAgent::detach(const std::string& sessionId) {
++  auto sessionIt = sessions_.find(sessionId);
++  if (sessionIt == sessions_.end()) {
++    return;
++  }
++  auto session = std::move(sessionIt->second);
++  sessions_.erase(sessionIt);
++  auto targetId = session->targetId;
++  session.reset();
++  frontendChannel_(
++      cdp::jsonNotification(
++          "Target.detachedFromTarget",
++          folly::dynamic::object("sessionId", sessionId)("targetId", targetId)));
++  if (discoverTargets_) {
++    frontendChannel_(
++        cdp::jsonNotification(
++            "Target.targetDestroyed",
++            folly::dynamic::object("targetId", targetId)));
++  }
++}
++
++std::optional<std::string> TargetAgent::findSessionByTargetId(
++    const std::string& targetId) const {
++  for (const auto& [sessionId, session] : sessions_) {
++    if (session->targetId == targetId) {
++      return sessionId;
++    }
++  }
++  return std::nullopt;
++}
++
++folly::dynamic TargetAgent::targetInfo(WorkerRuntimeTarget& worker) const {
++  const auto& description = worker.getDescription();
++  return folly::dynamic::object("targetId", worker.getTargetId())(
++      "type", "worker")("title", description.title)("url", description.url)(
++      "attached", findSessionByTargetId(worker.getTargetId()).has_value())(
++      "canAccessOpener", false);
++}
++
++void TargetAgent::sendChildExecutionContextCreated(
++    const ChildSession& session) {
++  const auto& context = session.agent->getExecutionContextDescription();
++  folly::dynamic params = folly::dynamic::object(
++      "context",
++      folly::dynamic::object("id", context.id)("origin", context.origin)(
++          "name", context.name));
++  if (context.uniqueId.has_value()) {
++    params["context"]["uniqueId"] = *context.uniqueId;
++  }
++  session.channel(
++      cdp::jsonNotification("Runtime.executionContextCreated", params));
++}
++
++} // namespace facebook::react::jsinspector_modern
+diff --git a/ReactCommon/jsinspector-modern/TargetAgent.h b/ReactCommon/jsinspector-modern/TargetAgent.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..3123a737ae311ee56ff8eabc58cac6d554cc4598
+--- /dev/null
++++ b/ReactCommon/jsinspector-modern/TargetAgent.h
+@@ -0,0 +1,99 @@
++/*
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ */
++
++#pragma once
++
++#include "InspectorInterfaces.h"
++#include "RuntimeAgent.h"
++#include "SessionState.h"
++
++#include <jsinspector-modern/cdp/CdpJson.h>
++
++#include <cstdint>
++#include <map>
++#include <memory>
++#include <optional>
++#include <string>
++
++namespace facebook::react::jsinspector_modern {
++
++class HostTargetController;
++class WorkerRuntimeTarget;
++
++/**
++ * Implements the CDP Target domain for a HostTarget session. Exposes the
++ * host's worker runtimes (see HostTarget::registerWorkerRuntime) to the
++ * frontend as "worker" targets, the way browsers expose Web Workers, and
++ * multiplexes the child sessions the frontend attaches to them: every message
++ * of a child session carries the session's `sessionId`.
++ */
++class TargetAgent final {
++ public:
++  /**
++   * \param frontendChannel A channel used to send responses and events to the
++   * frontend.
++   * \param targetController An interface to the HostTarget that this agent is
++   * attached to. The caller is responsible for ensuring that the HostTarget
++   * outlives the agent.
++   */
++  TargetAgent(FrontendChannel frontendChannel, HostTargetController &targetController);
++
++  TargetAgent(const TargetAgent &) = delete;
++  TargetAgent(TargetAgent &&) = delete;
++  TargetAgent &operator=(const TargetAgent &) = delete;
++  TargetAgent &operator=(TargetAgent &&) = delete;
++
++  ~TargetAgent();
++
++  /**
++   * Handle a CDP request of the Target domain. The response will be sent over
++   * the provided \c FrontendChannel synchronously.
++   * \returns true if this agent has responded to the request.
++   */
++  bool handleRequest(const cdp::PreparsedRequest &req);
++
++  /**
++   * Handle a CDP request addressed to a child session (a request carrying a
++   * `sessionId`). Always responds, with an error if the session is unknown.
++   */
++  void handleChildRequest(const cdp::PreparsedRequest &req);
++
++  /**
++   * Notifies the frontend about a newly registered worker runtime and attaches
++   * to it if the frontend requested auto-attachment.
++   */
++  void onWorkerRuntimeAdded(WorkerRuntimeTarget &worker);
++
++  /**
++   * Detaches from the worker runtime, if attached, and notifies the frontend.
++   * Must be called before the worker's RuntimeTarget is destroyed.
++   */
++  void onWorkerRuntimeRemoved(WorkerRuntimeTarget &worker);
++
++ private:
++  struct ChildSession {
++    std::string targetId;
++    FrontendChannel channel;
++    SessionState state;
++    std::shared_ptr<RuntimeAgent> agent;
++  };
++
++  std::optional<std::string> attach(WorkerRuntimeTarget &worker);
++  void detach(const std::string &sessionId);
++  std::optional<std::string> findSessionByTargetId(const std::string &targetId) const;
++  folly::dynamic targetInfo(WorkerRuntimeTarget &worker) const;
++  void sendChildExecutionContextCreated(const ChildSession &session);
++
++  FrontendChannel frontendChannel_;
++  HostTargetController &targetController_;
++  bool autoAttach_{false};
++  bool discoverTargets_{false};
++  uint64_t nextSessionId_{1};
++  std::map<std::string, std::unique_ptr<ChildSession>> sessions_;
++};
++
++} // namespace facebook::react::jsinspector_modern
+diff --git a/ReactCommon/jsinspector-modern/cdp/CdpJson.cpp b/ReactCommon/jsinspector-modern/cdp/CdpJson.cpp
+index 5b50cebfb89e6c1c5918b92f9cc9743aee797bb7..262a8dd54c0b5470fefa3140a299e33b69831052 100644
+--- a/ReactCommon/jsinspector-modern/cdp/CdpJson.cpp
++++ b/ReactCommon/jsinspector-modern/cdp/CdpJson.cpp
+@@ -14,10 +14,14 @@ namespace facebook::react::jsinspector_modern::cdp {
+ 
+ PreparsedRequest preparse(std::string_view message) {
+   folly::dynamic parsed = folly::parseJson(message);
+-  return PreparsedRequest{
++  PreparsedRequest request{
+       .id = parsed["id"].getInt(),
+       .method = parsed["method"].getString(),
+       .params = parsed.count("params") != 0u ? parsed["params"] : nullptr};
++  if (parsed.count("sessionId") != 0u && parsed["sessionId"].isString()) {
++    request.sessionId = parsed["sessionId"].getString();
++  }
++  return request;
+ }
+ 
+ std::string PreparsedRequest::toJson() const {
+@@ -27,6 +31,9 @@ std::string PreparsedRequest::toJson() const {
+   if (params != nullptr) {
+     obj["params"] = params;
+   }
++  if (sessionId.has_value()) {
++    obj["sessionId"] = *sessionId;
++  }
+   return folly::toJson(obj);
+ }
+ 
+diff --git a/ReactCommon/jsinspector-modern/cdp/CdpJson.h b/ReactCommon/jsinspector-modern/cdp/CdpJson.h
+index 89576d96295bdfc1246468f62fd5d4213934cd3a..302ac0347bc7ac44a5630b3a8d908529a632a7b1 100644
+--- a/ReactCommon/jsinspector-modern/cdp/CdpJson.h
++++ b/ReactCommon/jsinspector-modern/cdp/CdpJson.h
+@@ -9,6 +9,7 @@
+ 
+ #include <folly/dynamic.h>
+ #include <folly/json.h>
++#include <optional>
+ #include <string>
+ #include <string_view>
+ 
+@@ -49,12 +50,18 @@ struct PreparsedRequest {
+    */
+   folly::dynamic params;
+ 
++  /**
++   * The id of the child session the request is addressed to, if any. Child
++   * sessions are created by the Target domain (see \c TargetAgent).
++   */
++  std::optional<std::string> sessionId;
++
+   /**
+    * Equality operator, useful for unit tests
+    */
+   inline bool operator==(const PreparsedRequest &rhs) const
+   {
+-    return id == rhs.id && method == rhs.method && params == rhs.params;
++    return id == rhs.id && method == rhs.method && params == rhs.params && sessionId == rhs.sessionId;
+   }
+ 
+   std::string toJson() const;
+diff --git a/ReactCommon/react/runtime/ReactInstance.cpp b/ReactCommon/react/runtime/ReactInstance.cpp
+index 4d12c90edfb360cf840e041bddc4006d5e34e5c5..08b18f0c83958cca92f130df8d840dbddfd99af4 100644
+--- a/ReactCommon/react/runtime/ReactInstance.cpp
++++ b/ReactCommon/react/runtime/ReactInstance.cpp
+@@ -154,6 +154,12 @@ ReactInstance::ReactInstance(
+       runtimeInspectorTarget_ = &inspectorTarget_->registerRuntime(
+           runtime_->getRuntimeTargetDelegate(),
+           runtimeExecutorThatGoesThroughRuntimeScheduler);
++      bufferedRuntimeExecutorThatWaitsForInspectorSetup->execute(
++          [hostTargetWeak = hostTarget.weak_from_this()](jsi::Runtime& runtime) {
++            if (auto hostTarget = hostTargetWeak.lock()) {
++              hostTarget->attachToRuntime(runtime);
++            }
++          });
+       bufferedRuntimeExecutorThatWaitsForInspectorSetup->flush();
+     });
+   } else {
+diff --git a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTHost.mm b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTHost.mm
+index 0d5762dbaf675371bfa74d99bd94d7bd296526fb..8391f421f2e6f06fbd1849c0a6760a8c55aa1084 100644
+--- a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTHost.mm
++++ b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTHost.mm
+@@ -16,6 +16,7 @@
+ #import <React/RCTFrameTimingsObserver.h>
+ #import <React/RCTInspectorDevServerHelper.h>
+ #import <React/RCTInspectorNetworkHelper.h>
++#import <React/RCTInspectorQueue.h>
+ #import <React/RCTInspectorUtils.h>
+ #import <React/RCTJSThread.h>
+ #import <React/RCTLog.h>
+@@ -108,31 +109,36 @@ void onTracingStopped() override
+ 
+   void onReload(const PageReloadRequest &request) override
+   {
+-    RCTAssertMainQueue();
+-    [static_cast<id<RCTReloadListener>>(host_) didReceiveReloadCommand];
++    __weak RCTHost *hostWeak = host_;
++    RCTExecuteOnMainQueue(^{
++      [static_cast<id<RCTReloadListener>>(hostWeak) didReceiveReloadCommand];
++    });
+   }
+ 
+   void onSetPausedInDebuggerMessage(const OverlaySetPausedInDebuggerMessageRequest &request) override
+   {
+-    RCTAssertMainQueue();
+-    if (!request.message.has_value()) {
+-      [pauseOverlayController_ hide];
+-    } else {
+-      __weak RCTHost *hostWeak = host_;
+-      [pauseOverlayController_
+-          showWithMessage:@(request.message.value().c_str())
+-                 onResume:^{
+-                   RCTAssertMainQueue();
+-                   RCTHost *hostStrong = hostWeak;
+-                   if (!hostStrong) {
+-                     return;
+-                   }
+-                   if (!hostStrong.inspectorTarget) {
+-                     return;
+-                   }
+-                   hostStrong.inspectorTarget->sendCommand(jsinspector_modern::HostCommand::DebuggerResume);
+-                 }];
+-    }
++    __weak RCTHost *hostWeak = host_;
++    RCTPausedInDebuggerOverlayController *pauseOverlayController = pauseOverlayController_;
++    std::optional<std::string> message = request.message;
++    RCTExecuteOnMainQueue(^{
++      if (!message.has_value()) {
++        [pauseOverlayController hide];
++      } else {
++        [pauseOverlayController
++            showWithMessage:@(message.value().c_str())
++                   onResume:^{
++                     RCTAssertMainQueue();
++                     RCTHost *hostStrong = hostWeak;
++                     if (!hostStrong) {
++                       return;
++                     }
++                     if (!hostStrong.inspectorTarget) {
++                       return;
++                     }
++                     hostStrong.inspectorTarget->sendCommand(jsinspector_modern::HostCommand::DebuggerResume);
++                   }];
++      }
++    });
+   }
+ 
+   void loadNetworkResource(const RCTInspectorLoadNetworkResourceRequest &params, RCTInspectorNetworkExecutor executor)
+@@ -143,6 +149,16 @@ void loadNetworkResource(const RCTInspectorLoadNetworkResourceRequest &params, R
+ 
+ #if TARGET_OS_IPHONE
+   bool onSetEmulatedMedia(const SetEmulatedMediaRequest &request) override
++  {
++    __block bool result = false;
++    std::string colorScheme = request.colorScheme;
++    RCTUnsafeExecuteOnMainQueueSync(^{
++      result = setEmulatedMediaOnMainQueue(colorScheme);
++    });
++    return result;
++  }
++
++  static bool setEmulatedMediaOnMainQueue(const std::string &colorScheme)
+   {
+     RCTAssertMainQueue();
+     UIWindow *keyWindow = nil;
+@@ -167,9 +183,9 @@ bool onSetEmulatedMedia(const SetEmulatedMediaRequest &request) override
+     }
+ 
+     UIUserInterfaceStyle style = UIUserInterfaceStyleUnspecified;
+-    if (request.colorScheme == "dark") {
++    if (colorScheme == "dark") {
+       style = UIUserInterfaceStyleDark;
+-    } else if (request.colorScheme == "light") {
++    } else if (colorScheme == "light") {
+       style = UIUserInterfaceStyleLight;
+     }
+ 
+@@ -180,6 +196,16 @@ bool onSetEmulatedMedia(const SetEmulatedMediaRequest &request) override
+ 
+ #if TARGET_OS_IPHONE && defined(REACT_NATIVE_DEBUGGER_ENABLED)
+   std::optional<std::string> captureScreenshot(const PageCaptureScreenshotRequest &request) override
++  {
++    __block std::optional<std::string> result;
++    PageCaptureScreenshotRequest requestCopy = request;
++    RCTUnsafeExecuteOnMainQueueSync(^{
++      result = captureScreenshotOnMainQueue(requestCopy);
++    });
++    return result;
++  }
++
++  static std::optional<std::string> captureScreenshotOnMainQueue(const PageCaptureScreenshotRequest &request)
+   {
+     UIWindow *keyWindow = nil;
+     for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
+@@ -390,7 +416,7 @@ - (void)start
+   if (inspectorFlags.getFuseboxEnabled() && !_inspectorPageId.has_value()) {
+     _inspectorTarget =
+         facebook::react::jsinspector_modern::HostTarget::create(*_inspectorHostDelegate, [](auto callback) {
+-          RCTExecuteOnMainQueue(^{
++          RCTExecuteOnInspectorQueue(^{
+             callback();
+           });
+         });
+@@ -477,9 +503,16 @@ - (void)dealloc
+ {
+   [_instance invalidate];
+   if (_inspectorPageId.has_value()) {
+-    facebook::react::jsinspector_modern::getInspectorInstance().removePage(*_inspectorPageId);
++    // Remove the page (terminating all sessions) and destroy the target, both
++    // on the inspector queue.
++    int inspectorPageId = *_inspectorPageId;
++    std::shared_ptr<facebook::react::jsinspector_modern::HostTarget> inspectorTarget = std::move(_inspectorTarget);
+     _inspectorPageId.reset();
+     _inspectorTarget.reset();
++    RCTExecuteOnInspectorQueue(^{
++      facebook::react::jsinspector_modern::getInspectorInstance().removePage(inspectorPageId);
++      (void)inspectorTarget;
++    });
+   }
+ }
+ 
+diff --git a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
+index 0365513953235edabe964d1b04eaa0c8291d6f88..6b563b3a3b6f69016ebf7ff29990d79a365a896f 100644
+--- a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
++++ b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
+@@ -37,6 +37,7 @@
+ #import <ReactCommon/RCTTurboModuleManager.h>
+ #import <ReactCommon/RuntimeExecutor.h>
+ #import <cxxreact/ReactMarker.h>
++#import <React/RCTInspectorQueue.h>
+ #import <jsinspector-modern/InspectorFlags.h>
+ #import <jsinspector-modern/ReactCdp.h>
+ #import <jsireact/JSIExecutor.h>
+@@ -225,7 +226,9 @@ - (void)invalidate
+   std::lock_guard<std::mutex> lock(_invalidationMutex);
+   _valid = false;
+   if (_reactInstance) {
+-    _reactInstance->unregisterFromInspector();
++    RCTUnsafeExecuteOnInspectorQueueSync(^{
++      self->_reactInstance->unregisterFromInspector();
++    });
+   }
+   [_surfacePresenter suspend];
+   [_jsThreadManager dispatchToJSThread:^{

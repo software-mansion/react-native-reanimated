@@ -32,6 +32,10 @@ endif()
 
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
 
+# React Native for Android is consumed as a prebuilt library, so inspector
+# APIs declared only in its headers cannot be relied upon.
+string(APPEND CMAKE_CXX_FLAGS " -DWORKLETS_RN_PREBUILT_CORE")
+
 if(${WORKLETS_PROFILING})
   string(APPEND CMAKE_CXX_FLAGS " -DWORKLETS_PROFILING")
 endif()
@@ -95,7 +99,7 @@ target_include_directories(
 set_target_properties(worklets PROPERTIES LINKER_LANGUAGE CXX)
 
 target_link_libraries(worklets android log ReactAndroid::reactnative
-                      ReactAndroid::jsi fbjni::fbjni)
+                      ReactAndroid::jsi ReactAndroid::hermestooling fbjni::fbjni)
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 82)
   target_link_libraries(worklets hermes-engine::hermesvm)
