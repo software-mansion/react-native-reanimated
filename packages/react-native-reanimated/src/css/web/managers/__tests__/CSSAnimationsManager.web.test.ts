@@ -45,6 +45,38 @@ describe('CSSAnimationsManager (web)', () => {
     manager = new CSSAnimationsManager(element);
   });
 
+  describe('reuse before stylesheet cleanup', () => {
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => {
+      jest.useRealTimers();
+      jest.restoreAllMocks();
+    });
+
+    test.each([false, true])(
+      'does not remove active rules after reuse (replacement: %s)',
+      (replace) => {
+        manager.update(animation());
+        manager.unmountCleanup();
+        manager.update(
+          replace
+            ? animation({
+                animationName: { from: { opacity: 0.2 }, to: { opacity: 0.8 } },
+              })
+            : animation()
+        );
+        jest.mocked(removeCSSAnimation).mockClear();
+        jest.runOnlyPendingTimers();
+        expect(removeCSSAnimation).not.toHaveBeenCalled();
+        const activeName = element.style.animationName;
+        manager.unmountCleanup();
+        manager.unmountCleanup();
+        jest.runOnlyPendingTimers();
+        expect(removeCSSAnimation).toHaveBeenCalledTimes(1);
+        expect(removeCSSAnimation).toHaveBeenCalledWith(activeName);
+      }
+    );
+  });
+
   describe('update', () => {
     test('hands the processed keyframes to domUtils and writes the animation longhands to the element', () => {
       manager.update(
