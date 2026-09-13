@@ -24,18 +24,27 @@ inline ReversingState makeReversingState(double timestamp, double duration, doub
   return {1.0, timestamp + delay, duration, delay, std::move(easing)};
 }
 
+// Both the shortening factor below and a demoted transition's resume value are
+// sampled off this same curve.
+inline double easedProgressAt(const ReversingState &state, double timestamp) {
+  if (timestamp < state.startTimestamp) {
+    return 0;
+  }
+  const double linearProgress =
+      state.duration > 0 ? std::clamp((timestamp - state.startTimestamp) / state.duration, 0.0, 1.0) : 1.0;
+  return getEasingFunctionFromConfig(state.easing)(linearProgress);
+}
+
 // When a transition reverses an in-flight one, the new transition's duration
 // (and negative delay) shorten by an accumulating factor based on how far the
 // running transition had progressed.
 // See https://drafts.csswg.org/css-transitions/#reversing
 inline ReversingState
 reverseShorten(const ReversingState &previous, double timestamp, double duration, double delay, EasingConfig easing) {
-  const double elapsed = std::clamp(timestamp - previous.startTimestamp, 0.0, previous.duration);
-  const double linearProgress = previous.duration > 0 ? elapsed / previous.duration : 1.0;
-  const double easedProgress = getEasingFunctionFromConfig(previous.easing)(linearProgress);
   // Absolute value and clamp are both required by the spec, which adds them
   // "to handle timing functions that have y1 or y2 outside the range [0, 1]".
-  const double factor = std::clamp(std::abs(easedProgress * previous.factor + (1 - previous.factor)), 0.0, 1.0);
+  const double factor =
+      std::clamp(std::abs(easedProgressAt(previous, timestamp) * previous.factor + (1 - previous.factor)), 0.0, 1.0);
   duration *= factor;
   if (delay < 0) {
     delay *= factor;

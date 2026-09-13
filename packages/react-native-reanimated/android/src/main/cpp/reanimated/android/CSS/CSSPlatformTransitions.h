@@ -1,24 +1,23 @@
 #pragma once
 
-#include <reanimated/CSS/configs/CSSTransitionConfig.h>
+#include <reanimated/CSS/easing/EasingConfigs.h>
 #include <reanimated/CSS/utils/platform.h>
-#include <reanimated/CSS/utils/reversingShortening.h>
 #include <reanimated/android/CSS/CSSPlatformEasings.h>
 
 #include <react/renderer/core/ReactPrimitives.h>
 
-#include <cstdint>
 #include <functional>
 #include <memory>
-#include <optional>
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 namespace reanimated {
 
 using namespace facebook::react;
 
+/// ObjectAnimator backend for platform-routed CSS transitions; the reversing bookkeeping
+/// lives in CSSPlatformTransitionProxy. Curves cross the JNI seam as interned ids, so this
+/// owns the reference each routed property holds.
 class CSSPlatformTransitions {
  public:
   /// False means the property falls back to the loop.
@@ -35,40 +34,26 @@ class CSSPlatformTransitions {
 
   CSSPlatformTransitions(AnimateFunction animate, RemoveFunction remove, std::shared_ptr<CSSPlatformEasings> easings);
 
-  /// A null `settings` marks the pseudo-selector toggle path, which carries none of
-  /// its own and reuses whatever the last config apply stored. A settings-only config
-  /// change does not re-apply, so those can be a revision behind.
-  bool applyTransition(
+  /// False when the platform cannot express the property or the player refuses the start.
+  bool startTransition(
       Tag viewTag,
       const std::string &propertyName,
       const css::PlatformValue &fromValue,
       const css::PlatformValue &toValue,
-      const css::CSSTransitionPropertySettings *settings,
-      bool persistent,
-      double timestamp);
+      double durationMs,
+      double startTimestampMs,
+      const css::EasingConfig &easing,
+      bool persistent);
 
-  void removeTransition(Tag viewTag, const std::string &propertyName);
-
-  /// nullopt after a non-reversing interruption, which resumed from the live view value.
-  std::optional<css::PlatformValue> getCurrentValue(Tag viewTag, const std::string &propertyName, double timestamp)
-      const;
+  void stopTransition(Tag viewTag, const std::string &propertyName);
 
  private:
-  struct ActiveTransition {
-    /// Reversing-adjusted start value: what a later reversal has to target. A reversal
-    /// resumes from the live value, so this is not where the animator started.
-    std::optional<css::PlatformValue> adjustedStart;
-    /// Where the animator started, so getCurrentValue can retrace what it plays.
-    std::optional<css::PlatformValue> startValue;
-    css::PlatformValue adjustedEnd;
-    css::ReversingState reversing;
-    css::CSSTransitionPropertySettings settings;
-    int easingId;
-  };
+  /// Takes a reference on the property's new curve and drops the one it replaces, in that
+  /// order, so a retrigger with the same curve never falls to zero and rebuilds it.
+  void replaceEasingId(Tag viewTag, const std::string &propertyName, int easingId);
 
-  const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
-
-  std::unordered_map<Tag, std::unordered_map<std::string, ActiveTransition>> active_;
+  /// viewTag -> propertyName -> the interned curve the property currently holds.
+  std::unordered_map<Tag, std::unordered_map<std::string, int>> easingIds_;
   std::shared_ptr<CSSPlatformEasings> easings_;
   AnimateFunction animate_;
   RemoveFunction remove_;

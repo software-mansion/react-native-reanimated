@@ -2,7 +2,9 @@
 #include <reanimated/CSS/utils/props.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
+#include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -147,6 +149,17 @@ bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &ea
 #endif // __APPLE__
 }
 
+bool canRouteCSSAnimations() {
+#if __APPLE__
+  // constexpr so the flag lookup folds away instead of running on every call.
+  constexpr bool CORE_ANIMATION_ENABLED = StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION");
+  return CORE_ANIMATION_ENABLED;
+#else
+  // No animation backend outside Apple yet; the Android flag covers transitions only.
+  return false;
+#endif // __APPLE__
+}
+
 std::optional<PlatformValue>
 lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, const double progress) {
   return std::visit(
@@ -158,6 +171,27 @@ lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, const dou
         return lerpValue(fromValue, *toValue, progress);
       },
       from);
+}
+
+folly::dynamic platformValueToDynamic(const PlatformValue &value) {
+  return std::visit(
+      [](const auto &typedValue) -> folly::dynamic {
+        using TValue = std::decay_t<decltype(typedValue)>;
+        if constexpr (std::is_same_v<TValue, double>) {
+          return typedValue;
+        } else if constexpr (std::is_same_v<TValue, std::array<double, 2>>) {
+          return folly::dynamic::object("width", typedValue[0])("height", typedValue[1]);
+        } else {
+          const auto toByte = [](const double channel) {
+            return static_cast<std::uint32_t>(std::round(std::clamp(channel, 0.0, 1.0) * 255.0));
+          };
+          const std::uint32_t packed = (toByte(typedValue[3]) << 24) | (toByte(typedValue[0]) << 16) |
+              (toByte(typedValue[1]) << 8) | toByte(typedValue[2]);
+          // processColor values are signed 32-bit integers in JavaScript.
+          return static_cast<std::int64_t>(static_cast<std::int32_t>(packed));
+        }
+      },
+      value);
 }
 
 std::optional<PlatformValuePair> parsePlatformValues(
