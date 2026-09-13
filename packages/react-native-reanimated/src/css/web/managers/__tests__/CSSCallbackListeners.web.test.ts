@@ -138,6 +138,167 @@ describe('CSSCallbackListeners (web)', () => {
     expect(onFooAfterReuse).toHaveBeenCalledWith({ detail: 'after-reuse' });
   });
 
+  test.each([0, 1])(
+    'collected managers stop cleanup after %i frames',
+    (frames) => {
+      const queued: FrameRequestCallback[] = [];
+      jest
+        .spyOn(global, 'requestAnimationFrame')
+        .mockImplementation((callback) => {
+          queued.push(callback);
+          return queued.length;
+        });
+      const deref = jest.fn().mockReturnValue(listeners);
+      jest
+        .spyOn(global, 'WeakRef')
+        .mockImplementation(() => ({ deref, [Symbol.toStringTag]: 'WeakRef' }));
+      listeners.sync({ onFoo: jest.fn() });
+      listeners.scheduleDetach();
+      if (frames) {
+        queued.shift()?.(0);
+      }
+      deref.mockReturnValue(undefined);
+      queued.shift()?.(16);
+      expect(queued).toHaveLength(0);
+    }
+  );
+
+  test('reuse between frames cancels the second cleanup frame', () => {
+    let firstFrame: FrameRequestCallback | undefined;
+    jest
+      .spyOn(global, 'requestAnimationFrame')
+      .mockImplementationOnce((callback) => {
+        firstFrame = callback;
+        return 1;
+      })
+      .mockReturnValue(2);
+    const cancel = jest.spyOn(global, 'cancelAnimationFrame');
+    listeners.sync({ onFoo: jest.fn() });
+    listeners.scheduleDetach();
+    firstFrame?.(0);
+    const callback = jest.fn();
+    listeners.sync({ onFoo: callback });
+    expect(cancel).toHaveBeenCalledWith(2);
+    element.dispatchEvent(namedEvent('foo', 'reused'));
+    expect(callback).toHaveBeenCalledWith({ detail: 'reused' });
+  });
+
+  test('repeated cleanup requests share the pending frame', () => {
+    const request = jest
+      .spyOn(global, 'requestAnimationFrame')
+      .mockReturnValue(1);
+    listeners.sync({ onFoo: jest.fn() });
+    listeners.scheduleDetach();
+    listeners.scheduleDetach();
+    expect(request).toHaveBeenCalledTimes(1);
+  });
+
+  test('falls back to deferred cleanup when WeakRef is unavailable', () => {
+    const descriptor = Object.getOwnPropertyDescriptor(global, 'WeakRef')!;
+    const queued: FrameRequestCallback[] = [];
+    jest
+      .spyOn(global, 'requestAnimationFrame')
+      .mockImplementation((callback) => {
+        queued.push(callback);
+        return queued.length;
+      });
+    Object.defineProperty(global, 'WeakRef', {
+      ...descriptor,
+      value: undefined,
+    });
+    try {
+      const callback = jest.fn();
+      listeners.sync({ onFoo: callback });
+      listeners.scheduleDetach();
+      queued.shift()?.(0);
+      element.dispatchEvent(namedEvent('foo', 'cancel'));
+      queued.shift()?.(16);
+      element.dispatchEvent(namedEvent('foo', 'detached'));
+      expect(callback).toHaveBeenCalledTimes(1);
+    } finally {
+      Object.defineProperty(global, 'WeakRef', descriptor);
+    }
+  });
+
+  // Run with node --expose-gc and --runInBand to check actual reachability.
+  (global.gc ? test : test.skip).each([0, 1])(
+    'pending cleanup does not retain an unreachable manager after %i frames',
+    async (frames) => {
+      jest.useRealTimers();
+      const queued: FrameRequestCallback[] = [];
+      jest
+        .spyOn(global, 'requestAnimationFrame')
+        .mockImplementation((callback) => {
+          queued.push(callback);
+          return queued.length;
+        });
+      const createPending = () => {
+        const node = document.createElement(
+          'div'
+        ) as unknown as ReanimatedHTMLElement;
+        const manager = new CSSCallbackListeners(
+          node,
+          EVENT_NAME,
+          buildPayload
+        );
+        manager.sync({ onFoo: () => {} });
+        manager.scheduleDetach();
+        return new WeakRef(manager);
+      };
+      const ref = createPending();
+      if (frames) {
+        queued.shift()?.(0);
+      }
+      for (let attempt = 0; attempt < 20; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        global.gc?.();
+      }
+      expect(ref.deref()).toBeUndefined();
+      expect(queued).toHaveLength(1);
+      queued.shift()?.(16);
+      expect(queued).toHaveLength(0);
+    }
+  );
+
+  (global.gc ? test : test.skip)(
+    'a retained element keeps cancellation callbacks alive',
+    async () => {
+      jest.useRealTimers();
+      const queued: FrameRequestCallback[] = [];
+      jest
+        .spyOn(global, 'requestAnimationFrame')
+        .mockImplementation((callback) => {
+          queued.push(callback);
+          return queued.length;
+        });
+      const callback = jest.fn();
+      const createPendingElement = () => {
+        const node = document.createElement(
+          'div'
+        ) as unknown as ReanimatedHTMLElement;
+        const manager = new CSSCallbackListeners(
+          node,
+          EVENT_NAME,
+          buildPayload
+        );
+        manager.sync({ onFoo: callback });
+        manager.scheduleDetach();
+        return node;
+      };
+      const node = createPendingElement();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      global.gc?.();
+      queued.shift()?.(0);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      global.gc?.();
+      node.dispatchEvent(namedEvent('foo', 'cancel'));
+      expect(callback).toHaveBeenCalledWith({ detail: 'cancel' });
+      queued.shift()?.(16);
+      node.dispatchEvent(namedEvent('foo', 'after-cleanup'));
+      expect(callback).toHaveBeenCalledTimes(1);
+    }
+  );
+
   test('only manages props present in the event-name map', () => {
     const addSpy = jest.spyOn(element, 'addEventListener');
 

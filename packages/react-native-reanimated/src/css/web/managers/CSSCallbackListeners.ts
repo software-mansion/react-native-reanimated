@@ -30,18 +30,41 @@ export class CSSCallbackListeners<
   }
 
   scheduleDetach(): void {
-    if (this.attachedListeners.size === 0) {
+    if (this.attachedListeners.size === 0 || this.detachFrame !== null) {
       return;
     }
 
-    this.detachFrame ??= requestAnimationFrame(() => {
-      // If cleanup starts during the browser's animation-event dispatch, a
-      // callback queued here can still run in the same rendering update. Wait
-      // one more frame so cancellation events from the next update arrive.
-      this.detachFrame = requestAnimationFrame(() => {
-        this.detachFrame = null;
-        this.detach();
-      });
+    // A suspended frame must not keep an otherwise unreachable element and its
+    // callbacks alive. Older browsers retain the existing cleanup behavior.
+    const ref =
+      typeof WeakRef === 'undefined'
+        ? { deref: () => this }
+        : new WeakRef(this);
+    this.detachFrame = CSSCallbackListeners.scheduleDetachFrame(ref, false);
+  }
+
+  private static scheduleDetachFrame<Prop extends string, Payload>(
+    ref: { deref(): CSSCallbackListeners<Prop, Payload> | undefined },
+    finalFrame: boolean
+  ): number {
+    // Keep this closure outside the instance method so it captures only ref,
+    // never the manager or a dereferenced instance from the previous frame.
+    return requestAnimationFrame(() => {
+      const listeners = ref.deref();
+      if (!listeners) {
+        return;
+      }
+      if (finalFrame) {
+        listeners.detachFrame = null;
+        listeners.detach();
+      } else {
+        // Cleanup can start during animation-event dispatch. The first frame
+        // may run in that same rendering update; cancellations arrive next.
+        listeners.detachFrame = CSSCallbackListeners.scheduleDetachFrame(
+          ref,
+          true
+        );
+      }
     });
   }
 
