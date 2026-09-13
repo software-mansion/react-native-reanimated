@@ -27,14 +27,11 @@ inline ReversingState makeReversingState(double timestamp, double duration, doub
 // Both the shortening factor below and a demoted transition's resume value are
 // sampled off this same curve.
 inline double easedProgressAt(const ReversingState &state, double timestamp) {
-  double linearProgress;
   if (timestamp < state.startTimestamp) {
-    linearProgress = 0.0;
-  } else if (state.duration > 0) {
-    linearProgress = std::clamp((timestamp - state.startTimestamp) / state.duration, 0.0, 1.0);
-  } else {
-    linearProgress = 1.0;
+    return 0;
   }
+  const double linearProgress =
+      state.duration > 0 ? std::clamp((timestamp - state.startTimestamp) / state.duration, 0.0, 1.0) : 1.0;
   return getEasingFunctionFromConfig(state.easing)(linearProgress);
 }
 

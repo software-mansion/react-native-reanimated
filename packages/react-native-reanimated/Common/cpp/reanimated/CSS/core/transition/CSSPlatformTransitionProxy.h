@@ -44,6 +44,20 @@ struct CSSTransitionRouting {
   TransitionProperties loop;
 };
 
+struct CSSPlatformConfigResult {
+  CSSTransitionConfig loopConfig;
+  /// Properties whose sampled platform value must win over a stale registry update.
+  TransitionProperties resumedProperties;
+};
+
+struct CSSPlatformDynamicResult {
+  PropertyValueDynamicDiffsMap loopDiffs;
+  /// Settings that the loop has never seen, or may have cached from an older route.
+  PropertiesSettingsMap resumedSettings;
+  /// Properties whose sampled platform value must win over a stale registry update.
+  TransitionProperties resumedProperties;
+};
+
 /// Shared routing engine: per property it routes a view's CSS transition to the platform or
 /// the C++ loop, and owns the timeline of everything it routed, so the reversing bookkeeping
 /// the CSS spec requires lives here once for every backend. Endpoints are parsed here, so a
@@ -54,7 +68,7 @@ class CSSPlatformTransitionProxy {
 
   /// Routes the config between platform and loop, updating `routing` and returning
   /// the loop-routed remainder to run.
-  CSSTransitionConfig processConfig(
+  CSSPlatformConfigResult processConfig(
       jsi::Runtime &rt,
       Tag viewTag,
       const CSSTransitionConfig &config,
@@ -65,7 +79,7 @@ class CSSPlatformTransitionProxy {
   /// Re-routes pseudo-selector toggle diffs: a property the platform can no longer
   /// express migrates to the loop. Updates `routing`, returns the loop diffs.
   /// Only a property still pseudo-locked after the toggle needs its value held.
-  PropertyValueDynamicDiffsMap processDynamicDiffs(
+  CSSPlatformDynamicResult processDynamicDiffs(
       Tag viewTag,
       const PropertyValueDynamicDiffsMap &propertyDiffs,
       const TransitionProperties &pseudoLockedProperties,
@@ -95,8 +109,8 @@ class CSSPlatformTransitionProxy {
   /// keeps every property on the loop, so nothing is started that cannot be cancelled.
   bool canRoute(const std::string &propertyName, const EasingConfig &easing) const;
   /// A null `settings` marks the pseudo-selector toggle path, which reuses whatever the
-  /// last value-carrying config stored - a settings-only config does not re-apply, so those
-  /// can be a revision behind. False when there is nothing stored to reuse.
+  /// latest config stored without restarting the current transition. False when there is
+  /// nothing stored to reuse.
   bool apply(
       Tag viewTag,
       const std::string &propertyName,
@@ -106,6 +120,7 @@ class CSSPlatformTransitionProxy {
       bool persistent,
       double timestamp);
   void remove(Tag viewTag, const std::string &propertyName);
+  bool updateSettings(Tag viewTag, const std::string &propertyName, const CSSTransitionPropertySettings &settings);
 
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
   /// The value the platform shows now, retraced from the stored timeline rather than read

@@ -106,6 +106,22 @@ void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &pr
   }
 }
 
+bool CSSPlatformTransitionProxy::updateSettings(
+    const Tag viewTag,
+    const std::string &propertyName,
+    const CSSTransitionPropertySettings &settings) {
+  const auto propertiesIt = active_.find(viewTag);
+  if (propertiesIt == active_.end()) {
+    return false;
+  }
+  const auto activeIt = propertiesIt->second.find(propertyName);
+  if (activeIt == propertiesIt->second.end()) {
+    return false;
+  }
+  activeIt->second.settings = settings;
+  return true;
+}
+
 std::optional<PlatformValue> CSSPlatformTransitionProxy::getCurrentValue(
     const Tag viewTag,
     const std::string &propertyName,
@@ -117,14 +133,15 @@ std::optional<PlatformValue> CSSPlatformTransitionProxy::getCurrentValue(
   return lerpPlatformValues(*active->startValue, active->adjustedEnd, easedProgressAt(active->reversing, timestamp));
 }
 
-CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
+CSSPlatformConfigResult CSSPlatformTransitionProxy::processConfig(
     jsi::Runtime &rt,
     const Tag viewTag,
     const CSSTransitionConfig &config,
     CSSTransitionRouting &routing,
     const bool allowPlatform,
     const double timestamp) {
-  CSSTransitionConfig loopConfig;
+  CSSPlatformConfigResult result;
+  auto &loopConfig = result.loopConfig;
 #ifndef NDEBUG
   size_t matchedValues = 0;
 #endif // NDEBUG
@@ -138,14 +155,20 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
     }
 #endif // NDEBUG
 
+    // Changing transition settings does not affect a transition already running.
+    // Store them for the next value change, when routing is reconsidered.
+    if (!hasValue && routing.platform.contains(propertyName) && updateSettings(viewTag, propertyName, settings)) {
+      continue;
+    }
+
     bool routable = allowPlatform && canRoute(propertyName, settings.easingConfig);
     if (routable && hasValue) {
       const auto values = parsePlatformValues(rt, propertyName, valueIt->second.first, valueIt->second.second);
       // React commits the config path's target, so there is nothing to hold afterwards.
       routable = values && apply(viewTag, propertyName, values->first, values->second, &settings, false, timestamp);
     } else if (routable) {
-      // Settings-only: stay on the platform only if already animating there.
-      routable = routing.platform.contains(propertyName);
+      // There is no native timeline to configure without a value.
+      routable = false;
     }
 
     if (routable) {
@@ -160,6 +183,9 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
       if (routing.platform.erase(propertyName) > 0) {
         if (hasValue) {
           resumeFrom = getResumeValue(viewTag, propertyName, timestamp);
+          if (resumeFrom) {
+            result.resumedProperties.insert(propertyName);
+          }
         }
         remove(viewTag, propertyName);
       }
@@ -185,22 +211,24 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
     }
   }
 
-  return loopConfig;
+  return result;
 }
 
-PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
+CSSPlatformDynamicResult CSSPlatformTransitionProxy::processDynamicDiffs(
     const Tag viewTag,
     const PropertyValueDynamicDiffsMap &propertyDiffs,
     const TransitionProperties &pseudoLockedProperties,
     CSSTransitionRouting &routing,
     const bool allowPlatform,
     const double timestamp) {
-  PropertyValueDynamicDiffsMap loopDiffs;
+  CSSPlatformDynamicResult result;
+  auto &loopDiffs = result.loopDiffs;
   for (const auto &[propertyName, propertyDiff] : propertyDiffs) {
     // A platform-routed property keeps animating natively while the platform can
     // still express the toggled value; otherwise it migrates to the loop.
     if (routing.platform.contains(propertyName)) {
-      if (allowPlatform) {
+      const auto *active = activeTransitionFor(viewTag, propertyName);
+      if (allowPlatform && active != nullptr && canRoute(propertyName, active->settings.easingConfig)) {
         const auto values = parsePlatformValues(propertyName, propertyDiff.first, propertyDiff.second);
         // Releasing the last selector targets the committed style, which needs no hold.
         const bool persistent = pseudoLockedProperties.contains(propertyName);
@@ -211,16 +239,20 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
       routing.platform.erase(propertyName);
       // Read before remove(): it drops the timeline this resumes from.
       const auto resumeFrom = getResumeValue(viewTag, propertyName, timestamp);
+      if (active != nullptr) {
+        result.resumedSettings.emplace(propertyName, active->settings);
+      }
       remove(viewTag, propertyName);
       routing.loop.insert(propertyName);
       if (resumeFrom) {
+        result.resumedProperties.insert(propertyName);
         loopDiffs.emplace(propertyName, std::make_pair(*resumeFrom, propertyDiff.second));
         continue;
       }
     }
     loopDiffs.emplace(propertyName, propertyDiff);
   }
-  return loopDiffs;
+  return result;
 }
 
 std::optional<folly::dynamic> CSSPlatformTransitionProxy::getResumeValue(
