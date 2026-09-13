@@ -16,6 +16,7 @@
 
 ### 🐛 Bug fixes
 
+- Align native iOS CSS transition start times with the Simulator's Slow Animations clock. ([#10530](https://github.com/software-mansion/react-native-reanimated/pull/10530) by [@MatiPl01](https://github.com/MatiPl01))
 - Fix a short `animationDelay` list on web applying no delay to the animations past its end instead of repeating, the way CSS does and the native path already did. ([#10442](https://github.com/software-mansion/react-native-reanimated/pull/10442) by [@dennytosp](https://github.com/dennytosp))
 - Fix `filter` strings using the CSS `hue-rotate()` and `drop-shadow()` spellings being discarded together with every other filter in the same declaration. ([#10383](https://github.com/software-mansion/react-native-reanimated/pull/10383) by [@dennytosp](https://github.com/dennytosp))
 - Fix single-argument `translate()` and `skew()` in transform strings repeating the argument on the Y axis instead of leaving it at zero, so `translate(100px)` no longer also moves the element down. ([#10385](https://github.com/software-mansion/react-native-reanimated/pull/10385) by [@dennytosp](https://github.com/dennytosp))
