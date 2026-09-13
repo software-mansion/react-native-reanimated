@@ -52,6 +52,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   // Keys are processed keyframes
   private attachedAnimations: Record<string, ProcessedAnimation> = {};
   private unmountCleanupCalled = false;
+  private cleanupTimeout: ReturnType<typeof setTimeout> | null = null;
 
   private readonly callbackListeners: CSSCallbackListeners<
     CSSAnimationCallbackProp,
@@ -77,6 +78,10 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     animationProperties: ExistingCSSAnimationProperties | null,
     callbacks: CSSAnimationCallbacks | null = null
   ) {
+    if (this.cleanupTimeout !== null) {
+      clearTimeout(this.cleanupTimeout);
+      this.cleanupTimeout = null;
+    }
     // Keep listeners tied to callback presence (not animation presence) so an
     // `animationcancel` emitted while detaching still reaches the user.
     this.callbackListeners.sync(callbacks ?? {});
@@ -128,11 +133,8 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       }
 
       if (this.unmountCleanupCalled) {
-        // unmountCleanup is called not only when the component truly unmounts, but also
-        // when display property is set to 'none' (e.g. during navigation between screens)
-        // In such a case, we don't want to restart the animation after re-entering the
-        // screen so we have to shift its delay by the time elapsed since the animation
-        // was started for the first time.
+        // A manager can be reused after cleanup. Preserve the animation's
+        // elapsed time instead of restarting it when the component remounts.
         processedAnimation.elapsedTime =
           timestamp - processedAnimation.creationTimestamp;
       }
@@ -146,15 +148,17 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   }
 
   unmountCleanup(): void {
-    this.callbackListeners.detach();
+    // Browsers dispatch `animationcancel` after the element leaves the DOM.
+    this.callbackListeners.scheduleDetach();
 
     if (!this.unmountCleanupCalled) {
       this.unmountCleanupCalled = true;
-      // We use setTimeout to ensure that the animation is removed after the
-      // component is unmounted (it puts the detach call at the end of the event loop)
+      // Defer stylesheet cleanup until React has removed the element.
+      // An update cancels this timer if the manager is reused before it runs.
       // We just remove the animation definition from the style sheet as there is no
       // need to clean up view props if it is removed from the DOM.
-      setTimeout(() => {
+      this.cleanupTimeout = setTimeout(() => {
+        this.cleanupTimeout = null;
         this.removeAnimationsFromStyleSheet(
           Object.values(this.attachedAnimations)
         );

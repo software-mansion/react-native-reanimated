@@ -163,18 +163,19 @@ describe('CSSTransitionsManager (web)', () => {
       expect(second).toHaveBeenCalledTimes(1);
     });
 
-    test('detaches the same listeners it attached on unmount cleanup', () => {
-      const addSpy = jest.spyOn(element, 'addEventListener');
-      const removeSpy = jest.spyOn(element, 'removeEventListener');
-
-      manager.update(transition(), {
-        onCSSTransitionStart: jest.fn(),
-        onCSSTransitionEnd: jest.fn(),
-      });
+    test('keeps the cancel listener until the animation frame after unmount cleanup', () => {
+      jest.spyOn(global, 'requestAnimationFrame').mockReturnValue(1);
+      const onCSSTransitionCancel = jest.fn();
+      manager.update(transition(), { onCSSTransitionCancel });
       manager.unmountCleanup();
 
-      // Every listener that was attached is detached with the same reference.
-      expect(removeSpy.mock.calls).toEqual(addSpy.mock.calls);
+      element.dispatchEvent(
+        transitionEvent('transitioncancel', 'background-color', 0.1)
+      );
+      expect(onCSSTransitionCancel).toHaveBeenCalledWith({
+        propertyName: 'backgroundColor',
+        elapsedTime: 0.1,
+      });
     });
   });
 });
