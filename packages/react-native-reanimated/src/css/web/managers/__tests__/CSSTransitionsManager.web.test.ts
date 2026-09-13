@@ -163,7 +163,7 @@ describe('CSSTransitionsManager (web)', () => {
       expect(second).toHaveBeenCalledTimes(1);
     });
 
-    test('keeps the cancel listener until the animation frame after unmount cleanup', () => {
+    test('forwards cancellation events after unmount cleanup', () => {
       jest.spyOn(global, 'requestAnimationFrame').mockReturnValue(1);
       const onCSSTransitionCancel = jest.fn();
       manager.update(transition(), { onCSSTransitionCancel });

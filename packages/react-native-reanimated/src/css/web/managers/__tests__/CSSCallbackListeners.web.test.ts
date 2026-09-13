@@ -95,13 +95,7 @@ describe('CSSCallbackListeners (web)', () => {
   });
 
   test('scheduled detach waits through the following rendering update', () => {
-    const frameCallbacks: FrameRequestCallback[] = [];
-    jest
-      .spyOn(global, 'requestAnimationFrame')
-      .mockImplementation((callback) => {
-        frameCallbacks.push(callback);
-        return frameCallbacks.length;
-      });
+    const frameCallbacks = mockFrames();
     const onFoo = jest.fn();
     listeners.sync({ onFoo });
 
@@ -141,13 +135,7 @@ describe('CSSCallbackListeners (web)', () => {
   test.each([0, 1])(
     'collected managers stop cleanup after %i frames',
     (frames) => {
-      const queued: FrameRequestCallback[] = [];
-      jest
-        .spyOn(global, 'requestAnimationFrame')
-        .mockImplementation((callback) => {
-          queued.push(callback);
-          return queued.length;
-        });
+      const queued = mockFrames();
       const deref = jest.fn().mockReturnValue(listeners);
       jest
         .spyOn(global, 'WeakRef')
@@ -195,13 +183,7 @@ describe('CSSCallbackListeners (web)', () => {
 
   test('falls back to deferred cleanup when WeakRef is unavailable', () => {
     const descriptor = Object.getOwnPropertyDescriptor(global, 'WeakRef')!;
-    const queued: FrameRequestCallback[] = [];
-    jest
-      .spyOn(global, 'requestAnimationFrame')
-      .mockImplementation((callback) => {
-        queued.push(callback);
-        return queued.length;
-      });
+    const queued = mockFrames();
     Object.defineProperty(global, 'WeakRef', {
       ...descriptor,
       value: undefined,
@@ -225,13 +207,7 @@ describe('CSSCallbackListeners (web)', () => {
     'pending cleanup does not retain an unreachable manager after %i frames',
     async (frames) => {
       jest.useRealTimers();
-      const queued: FrameRequestCallback[] = [];
-      jest
-        .spyOn(global, 'requestAnimationFrame')
-        .mockImplementation((callback) => {
-          queued.push(callback);
-          return queued.length;
-        });
+      const queued = mockFrames();
       const createPending = () => {
         const node = document.createElement(
           'div'
@@ -264,13 +240,7 @@ describe('CSSCallbackListeners (web)', () => {
     'a retained element keeps cancellation callbacks alive',
     async () => {
       jest.useRealTimers();
-      const queued: FrameRequestCallback[] = [];
-      jest
-        .spyOn(global, 'requestAnimationFrame')
-        .mockImplementation((callback) => {
-          queued.push(callback);
-          return queued.length;
-        });
+      const queued = mockFrames();
       const callback = jest.fn();
       const createPendingElement = () => {
         const node = document.createElement(
@@ -316,3 +286,12 @@ describe('CSSCallbackListeners (web)', () => {
     expect(removeSpy).toHaveBeenCalledWith('foo', expect.any(Function));
   });
 });
+
+function mockFrames() {
+  const queued: FrameRequestCallback[] = [];
+  jest.spyOn(global, 'requestAnimationFrame').mockImplementation((callback) => {
+    queued.push(callback);
+    return queued.length;
+  });
+  return queued;
+}
