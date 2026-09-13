@@ -1,11 +1,10 @@
 #include <reanimated/android/CSS/CSSPlatformTransitions.h>
 
-#include <reanimated/CSS/easing/EasingConfigs.h>
-
+#include <optional>
+#include <string>
+#include <utility>
 #include <variant>
 #include <vector>
-
-#include <utility>
 
 namespace reanimated {
 
@@ -47,25 +46,15 @@ CSSPlatformTransitions::CSSPlatformTransitions(
     std::shared_ptr<CSSPlatformEasings> easings)
     : easings_(std::move(easings)), animate_(std::move(animate)), remove_(std::move(remove)) {}
 
-const CSSPlatformTransitions::ActiveTransition *CSSPlatformTransitions::activeTransitionFor(
-    const Tag viewTag,
-    const std::string &propertyName) const {
-  const auto propertiesIt = active_.find(viewTag);
-  if (propertiesIt == active_.end()) {
-    return nullptr;
-  }
-  const auto activeIt = propertiesIt->second.find(propertyName);
-  return activeIt != propertiesIt->second.end() ? &activeIt->second : nullptr;
-}
-
-bool CSSPlatformTransitions::applyTransition(
+bool CSSPlatformTransitions::startTransition(
     const Tag viewTag,
     const std::string &propertyName,
     const css::PlatformValue &fromValue,
     const css::PlatformValue &toValue,
-    const css::CSSTransitionPropertySettings *settings,
-    const bool persistent,
-    const double timestamp) {
+    const double durationMs,
+    const double startTimestampMs,
+    const css::EasingConfig &easing,
+    const bool persistent) {
   // Only scalars are routed today (opacity); anything else stays on the loop.
   const auto *from = std::get_if<double>(&fromValue);
   const auto *to = std::get_if<double>(&toValue);
@@ -79,92 +68,38 @@ bool CSSPlatformTransitions::applyTransition(
     return false;
   }
 
-  const ActiveTransition *active = activeTransitionFor(viewTag, propertyName);
-
-  if (settings == nullptr && active == nullptr) {
-    return false;
-  }
-  // Copy: the active entry is re-assigned below.
-  const css::CSSTransitionPropertySettings resolvedSettings = settings == nullptr ? active->settings : *settings;
-  const int replacedEasingId = active != nullptr ? active->easingId : -1;
-
-  // Targeting the in-flight transition's start value means this is a reversal.
-  const bool isReversal = active != nullptr && active->adjustedStart && toValue == *active->adjustedStart;
-  css::ReversingState reversing = isReversal
-      ? css::reverseShorten(
-            active->reversing,
-            timestamp,
-            resolvedSettings.duration,
-            resolvedSettings.delay,
-            resolvedSettings.easingConfig)
-      : css::makeReversingState(
-            timestamp, resolvedSettings.duration, resolvedSettings.delay, resolvedSettings.easingConfig);
-
-  std::optional<css::PlatformValue> adjustedStart;
-  std::optional<css::PlatformValue> startValue;
-  if (active == nullptr) {
-    adjustedStart = startValue = fromValue;
-  } else {
-    // An interruption starts from the value on screen, which the outgoing timeline
-    // still describes; active_ is only re-assigned below. A finished transition
-    // retraces to its own end, so this covers that case too.
-    startValue = getCurrentValue(viewTag, propertyName, timestamp);
-    // https://drafts.csswg.org/css-transitions/#reversing: a reversal has to target
-    // where the interrupted one began, anything else starts its own reversing run.
-    adjustedStart = isReversal ? active->adjustedEnd : startValue;
-  }
-
-  const int easingId = easings_->acquire(toPlatformEasing(resolvedSettings.easingConfig));
-
+  const int easingId = easings_->acquire(toPlatformEasing(easing));
   if (!animate_(
-          static_cast<int>(viewTag),
-          *propertyId,
-          *from,
-          *to,
-          reversing.duration,
-          reversing.startTimestamp,
-          easingId,
-          persistent)) {
+          static_cast<int>(viewTag), *propertyId, *from, *to, durationMs, startTimestampMs, easingId, persistent)) {
     easings_->release(easingId);
     return false;
   }
 
-  // After the acquire above: a retrigger with the same curve would otherwise drop it to zero
-  // and rebuild the interpolator.
-  if (replacedEasingId >= 0) {
-    easings_->release(replacedEasingId);
-  }
-
-  active_[viewTag][propertyName] =
-      ActiveTransition{adjustedStart, startValue, toValue, std::move(reversing), resolvedSettings, easingId};
+  replaceEasingId(viewTag, propertyName, easingId);
   return true;
 }
 
-std::optional<css::PlatformValue> CSSPlatformTransitions::getCurrentValue(
-    const Tag viewTag,
-    const std::string &propertyName,
-    const double timestamp) const {
-  const auto *active = activeTransitionFor(viewTag, propertyName);
-  if (active == nullptr || !active->startValue) {
-    return std::nullopt;
+void CSSPlatformTransitions::replaceEasingId(const Tag viewTag, const std::string &propertyName, const int easingId) {
+  auto &propertyIds = easingIds_[viewTag];
+  const auto it = propertyIds.find(propertyName);
+  if (it == propertyIds.end()) {
+    propertyIds.emplace(propertyName, easingId);
+    return;
   }
-  const auto &reversing = active->reversing;
-  const double progress =
-      reversing.duration > 0 ? std::clamp((timestamp - reversing.startTimestamp) / reversing.duration, 0.0, 1.0) : 1.0;
-  return css::lerpPlatformValues(
-      *active->startValue, active->adjustedEnd, css::getEasingFunctionFromConfig(reversing.easing)(progress));
+  easings_->release(it->second);
+  it->second = easingId;
 }
 
-void CSSPlatformTransitions::removeTransition(const Tag viewTag, const std::string &propertyName) {
-  const auto propertiesIt = active_.find(viewTag);
-  if (propertiesIt != active_.end()) {
-    const auto activeIt = propertiesIt->second.find(propertyName);
-    if (activeIt != propertiesIt->second.end()) {
-      easings_->release(activeIt->second.easingId);
-      propertiesIt->second.erase(activeIt);
+void CSSPlatformTransitions::stopTransition(const Tag viewTag, const std::string &propertyName) {
+  const auto propertyIdsIt = easingIds_.find(viewTag);
+  if (propertyIdsIt != easingIds_.end()) {
+    const auto it = propertyIdsIt->second.find(propertyName);
+    if (it != propertyIdsIt->second.end()) {
+      easings_->release(it->second);
+      propertyIdsIt->second.erase(it);
     }
-    if (propertiesIt->second.empty()) {
-      active_.erase(propertiesIt);
+    if (propertyIdsIt->second.empty()) {
+      easingIds_.erase(propertyIdsIt);
     }
   }
   // A property without an id was never routed, so there is nothing to remove.

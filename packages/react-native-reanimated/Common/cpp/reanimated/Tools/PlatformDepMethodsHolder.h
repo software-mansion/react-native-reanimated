@@ -70,10 +70,8 @@ struct PlatformDepMethodsHolder {
   MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
   PlatformAttachPseudoSelectorFunction attachPseudoSelector;
   PlatformDetachPseudoSelectorFunction detachPseudoSelector;
-  css::CSSCanRoutePropertyFunction cssCanRouteProperty;
-  css::CSSApplyTransitionFunction cssApplyTransition;
-  css::CSSRemoveTransitionFunction cssRemoveTransition;
-  css::CSSGetPlatformValueFunction cssGetPlatformValue;
+  css::CSSStartTransitionFunction cssStartTransition;
+  css::CSSStopTransitionFunction cssStopTransition;
   // Last so a platform that does not supply it can omit it and get value-init.
   std::shared_ptr<css::CSSPlatformAnimationFactory> platformAnimationFactory;
 };
