@@ -18,6 +18,8 @@ struct ReversingState {
 
 ReversingState makeReversingState(double timestamp, double duration, double delay, EasingConfig easing);
 
+double easedProgressAt(const ReversingState &state, double timestamp);
+
 // When a transition reverses an in-flight one, the new transition's duration
 // (and negative delay) shorten by an accumulating factor based on how far the
 // running transition had progressed.

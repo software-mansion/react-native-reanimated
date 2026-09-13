@@ -40,13 +40,25 @@ struct CSSTransitionRouting {
   TransitionProperties loop;
 };
 
+struct CSSPlatformConfigResult {
+  CSSTransitionConfig loopConfig;
+  TransitionProperties resumedProperties;
+};
+
+struct CSSPlatformDynamicResult {
+  PropertyValueDynamicDiffsMap loopDiffs;
+  /// Settings restored when routing returns to the loop.
+  PropertiesSettingsMap resumedSettings;
+  TransitionProperties resumedProperties;
+};
+
 /// Routes CSS transitions between platform backends and the C++ loop.
 class CSSPlatformTransitionProxy {
  public:
   CSSPlatformTransitionProxy(CSSStartTransitionFunction startTransition, CSSStopTransitionFunction stopTransition);
 
   /// Routes a transition config and returns the C++ loop remainder.
-  CSSTransitionConfig processConfig(
+  CSSPlatformConfigResult processConfig(
       jsi::Runtime &rt,
       Tag viewTag,
       const CSSTransitionConfig &config,
@@ -55,7 +67,7 @@ class CSSPlatformTransitionProxy {
       double timestamp);
 
   /// Routes pseudo-selector diffs and returns the C++ loop remainder.
-  PropertyValueDynamicDiffsMap processDynamicDiffs(
+  CSSPlatformDynamicResult processDynamicDiffs(
       Tag viewTag,
       const PropertyValueDynamicDiffsMap &propertyDiffs,
       const TransitionProperties &pseudoLockedProperties,
@@ -88,11 +100,12 @@ class CSSPlatformTransitionProxy {
       bool persistent,
       double timestamp);
   void remove(Tag viewTag, const std::string &propertyName);
+  bool updateSettings(Tag viewTag, const std::string &propertyName, const CSSTransitionPropertySettings &settings);
 
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
   /// Samples the current value from the stored timeline.
   std::optional<PlatformValue> getCurrentValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
-  std::optional<double> getResumeValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
+  std::optional<folly::dynamic> getResumeValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
 
   CSSStartTransitionFunction startTransition_;
   CSSStopTransitionFunction stopTransition_;

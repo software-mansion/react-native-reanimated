@@ -45,8 +45,9 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
   // TODO: add support for events reported by the platform itself; until then
   // a view with transition callbacks keeps every property on the loop, where
   // timing and events already pair up.
-  auto loopConfig =
+  auto platformResult =
       platformTransitionProxy_->processConfig(rt, getViewTag(), config, routing_, eventMask_ == 0, timestamp);
+  auto &loopConfig = platformResult.loopConfig;
 
   if (!loopConfig.empty()) {
     dropPending(loopConfig.removedProperties);
@@ -59,8 +60,8 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
     return folly::dynamic::object();
   }
 
-  auto initialUpdate =
-      ensureLoopTransition().run(rt, shadowNode_, loopConfig.changedProperties, lastUpdates, timestamp);
+  auto initialUpdate = ensureLoopTransition().run(
+      rt, shadowNode_, loopConfig.changedProperties, lastUpdates, platformResult.resumedProperties, timestamp);
   scheduleLoop(timestamp);
   pendingInitialUpdate_.update(initialUpdate);
   return initialUpdate;
@@ -71,13 +72,19 @@ folly::dynamic CSSTransition::run(
     const folly::dynamic &lastUpdates) {
   const auto timestamp = loop_->resolveTimestamp();
 
-  auto loopDiffs = platformTransitionProxy_->processDynamicDiffs(
+  auto platformResult = platformTransitionProxy_->processDynamicDiffs(
       getViewTag(), propertyDiffs, pseudoLockedProperties_, routing_, eventMask_ == 0, timestamp);
+  auto &loopDiffs = platformResult.loopDiffs;
   if (loopDiffs.empty() && !loopTransition_) {
     return folly::dynamic::object();
   }
 
-  auto initialUpdate = ensureLoopTransition().run(shadowNode_, loopDiffs, lastUpdates, timestamp);
+  auto &loopTransition = ensureLoopTransition();
+  if (!platformResult.resumedSettings.empty()) {
+    loopTransition.updateSettings(platformResult.resumedSettings, {}, timestamp);
+  }
+  auto initialUpdate =
+      loopTransition.run(shadowNode_, loopDiffs, lastUpdates, platformResult.resumedProperties, timestamp);
   scheduleLoop(timestamp);
   pendingInitialUpdate_.update(initialUpdate);
   return initialUpdate;

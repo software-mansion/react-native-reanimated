@@ -37,12 +37,14 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const PropertyValueDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
+      const TransitionProperties &authoritativeStarts,
       double timestamp);
   /** TODO: unify folly::dynamic and jsi::value versions */
   folly::dynamic run(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const PropertyValueDynamicDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
+      const TransitionProperties &authoritativeStarts,
       double timestamp);
   void updateSettings(
       const PropertiesSettingsMap &changedPropertiesSettings,
@@ -70,11 +72,13 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
       jsi::Runtime &rt,
       const PropertyValueDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
+      const TransitionProperties &authoritativeStarts,
       double timestamp);
   /** TODO: unify folly::dynamic and jsi::value versions */
   void handleChangedProperties(
       const PropertyValueDynamicDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
+      const TransitionProperties &authoritativeStarts,
       double timestamp);
   void removeProperty(const std::string &propertyName, double timestamp);
 };

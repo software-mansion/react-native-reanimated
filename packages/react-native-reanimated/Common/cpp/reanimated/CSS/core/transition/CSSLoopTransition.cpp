@@ -44,10 +44,15 @@ folly::dynamic CSSLoopTransition::run(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const PropertyValueDiffsMap &propertiesDiffs,
     const folly::dynamic &lastUpdateValue,
+    const TransitionProperties &authoritativeStarts,
     const double timestamp) {
   // Update interpolators and progress providers for changed properties
   handleChangedProperties(
-      rt, propertiesDiffs, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
+      rt,
+      propertiesDiffs,
+      lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue,
+      authoritativeStarts,
+      timestamp);
   // Advance progress and return the first transition frame
   progressProvider_.update(timestamp);
   return computeCurrentStyle(shadowNode);
@@ -57,9 +62,13 @@ folly::dynamic CSSLoopTransition::run(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const PropertyValueDynamicDiffsMap &propertiesDiffs,
     const folly::dynamic &lastUpdateValue,
+    const TransitionProperties &authoritativeStarts,
     const double timestamp) {
   handleChangedProperties(
-      propertiesDiffs, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
+      propertiesDiffs,
+      lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue,
+      authoritativeStarts,
+      timestamp);
   progressProvider_.update(timestamp);
   return computeCurrentStyle(shadowNode);
 }
@@ -91,6 +100,7 @@ void CSSLoopTransition::handleChangedProperties(
     jsi::Runtime &rt,
     const PropertyValueDiffsMap &propertiesDiffs,
     const folly::dynamic &lastUpdateValue,
+    const TransitionProperties &authoritativeStarts,
     const double timestamp) {
   const auto null = folly::dynamic();
 
@@ -104,7 +114,7 @@ void CSSLoopTransition::handleChangedProperties(
 
     // Update the transition style interpolator
     bool isReversed;
-    if (lastUpdateValue.count(propertyName)) {
+    if (!authoritativeStarts.contains(propertyName) && lastUpdateValue.count(propertyName)) {
       // TODO - get rid of lastValue dynamic in the future
       isReversed = styleInterpolator_.createOrUpdateInterpolator(
           rt, propertyName, jsi::valueFromDynamic(rt, lastUpdateValue.at(propertyName)), propertyDiff.second);
@@ -125,6 +135,7 @@ void CSSLoopTransition::handleChangedProperties(
 void CSSLoopTransition::handleChangedProperties(
     const PropertyValueDynamicDiffsMap &propertiesDiffs,
     const folly::dynamic &lastUpdateValue,
+    const TransitionProperties &authoritativeStarts,
     const double timestamp) {
   for (const auto &[propertyName, propertyDiff] : propertiesDiffs) {
     const auto allowDiscrete = progressProvider_.getPropertySettings(propertyName).allowDiscrete;
@@ -135,7 +146,7 @@ void CSSLoopTransition::handleChangedProperties(
     }
 
     bool isReversed;
-    if (lastUpdateValue.count(propertyName)) {
+    if (!authoritativeStarts.contains(propertyName) && lastUpdateValue.count(propertyName)) {
       isReversed = styleInterpolator_.createOrUpdateInterpolator(
           propertyName, lastUpdateValue.at(propertyName), propertyDiff.second);
     } else {
