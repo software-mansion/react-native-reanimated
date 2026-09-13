@@ -1,20 +1,16 @@
 #pragma once
 
-#include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionBackend.h>
+#include <reanimated/CSS/easing/EasingConfigs.h>
 #include <reanimated/CSS/utils/platform.h>
-#include <reanimated/CSS/utils/reversingShortening.h>
 #include <reanimated/android/CSS/CSSPlatformEasings.h>
 
 #include <react/renderer/core/ReactPrimitives.h>
 
-#include <cstdint>
 #include <functional>
 #include <memory>
-#include <optional>
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 namespace reanimated {
 
@@ -41,40 +37,23 @@ class CSSPlatformTransitions : public css::CSSPlatformTransitionBackend {
   /// with a Kotlin writer do.
   bool canRoute(const std::string &propertyName, const css::EasingConfig &easing) const override;
 
-  /// A null `settings` marks the pseudo-selector toggle path, which carries none of
-  /// its own and reuses whatever the last config apply stored. A settings-only config
-  /// change does not re-apply, so those can be a revision behind.
-  bool applyTransition(
+  bool startTransition(
       Tag viewTag,
       const std::string &propertyName,
       const css::PlatformValue &fromValue,
       const css::PlatformValue &toValue,
-      const css::CSSTransitionPropertySettings *settings,
-      bool persistent,
-      double timestamp) override;
+      double durationMs,
+      double startTimestampMs,
+      const css::EasingConfig &easing,
+      bool persistent) override;
 
-  void removeTransition(Tag viewTag, const std::string &propertyName) override;
-
-  /// nullopt after a non-reversing interruption, which resumed from the live view value.
-  std::optional<css::PlatformValue> getCurrentValue(Tag viewTag, const std::string &propertyName, double timestamp)
-      const override;
+  void stopTransition(Tag viewTag, const std::string &propertyName) override;
 
  private:
-  struct ActiveTransition {
-    /// Reversing-adjusted start value: what a later reversal has to target. A reversal
-    /// resumes from the live value, so this is not where the animator started.
-    std::optional<css::PlatformValue> adjustedStart;
-    /// Where the animator started, so getCurrentValue can retrace what it plays.
-    std::optional<css::PlatformValue> startValue;
-    css::PlatformValue adjustedEnd;
-    css::ReversingState reversing;
-    css::CSSTransitionPropertySettings settings;
-    int easingId;
-  };
+  void replaceEasingId(Tag viewTag, const std::string &propertyName, int easingId);
 
-  const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
-
-  std::unordered_map<Tag, std::unordered_map<std::string, ActiveTransition>> active_;
+  /// The easing each running animator holds, released when it is replaced or stopped.
+  std::unordered_map<Tag, std::unordered_map<std::string, int>> easingIds_;
   std::shared_ptr<CSSPlatformEasings> easings_;
   AnimateFunction animate_;
   RemoveFunction remove_;
