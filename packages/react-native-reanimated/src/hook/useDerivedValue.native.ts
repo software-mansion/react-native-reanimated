@@ -34,7 +34,7 @@ export function useDerivedValue<Value>(
     logger.warn('dependencies should only be used in web implementation.');
   }
 
-  const inputs = Object.values(updater.__closure ?? {});
+  const inputs = updater.__closure ?? [];
 
   return useDerivedValueBase(updater, undefined, inputs);
 }

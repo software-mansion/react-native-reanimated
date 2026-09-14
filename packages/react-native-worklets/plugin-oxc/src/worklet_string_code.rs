@@ -86,7 +86,7 @@ fn prepend_recursive_declaration<'a>(builder: AstBuilder<'a>, name: &str) -> Sta
 }
 
 fn prepend_closure<'a>(builder: AstBuilder<'a>, closure_variables: &[String]) -> Statement<'a> {
-    let object_pattern = closure_binding_pattern(builder, closure_variables);
+    let array_pattern = closure_binding_pattern(builder, closure_variables);
 
     let this_closure = Expression::from(builder.member_expression_static(
         SPAN,
@@ -95,5 +95,5 @@ fn prepend_closure<'a>(builder: AstBuilder<'a>, closure_variables: &[String]) ->
         false,
     ));
 
-    const_decl(builder, object_pattern, this_closure)
+    const_decl(builder, array_pattern, this_closure)
 }

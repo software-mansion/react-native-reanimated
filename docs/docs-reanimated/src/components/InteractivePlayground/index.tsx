@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React, { Dispatch } from 'react';
+import React, { Dispatch, useId } from 'react';
 import styles from './styles.module.css';
 
 import BrowserOnly from '@docusaurus/BrowserOnly';
@@ -331,11 +331,14 @@ export function SelectOption({
   disabled,
   disabledOptions,
 }: SelectProps) {
+  const labelId = useId();
+
   return (
     <div className={styles.row}>
-      <label>{label}</label>
+      <label id={labelId}>{label}</label>
       <FormControl sx={{ minWidth: 85 }} size="small">
         <Select
+          labelId={labelId}
           value={value}
           sx={SelectStyling}
           onChange={(e) => onChange(e.target.value)}
