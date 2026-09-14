@@ -13,6 +13,7 @@ import useTimingPlayground from './useTimingPlayground';
 import useEnteringExitingPlayground from './useEnteringExitingAnimationPlayground';
 import useRepeatPlayground from './useRepeatPlayground';
 import useInterpolateColorPlayground from './useInterpolateColorPlayground';
+import useContrastColorPlayground from './useContrastColorPlayground';
 import useAnimatedSensorPlayground from './useAnimatedSensorPlayground';
 import useDecayPlayground from './useDecayPlayground';
 
@@ -35,18 +36,22 @@ export {
   useRepeatPlayground,
   useEnteringExitingPlayground,
   useInterpolateColorPlayground,
+  useContrastColorPlayground,
   useAnimatedSensorPlayground,
   useDecayPlayground,
 };
 
 interface InteractivePlaygroundProps {
   usePlayground: () => {
-    example: React.FC<{ width?: number }>;
+    example: React.FC<any>;
     props?: Record<string, any>;
     code: string;
-    controls: string;
+    controls?: React.ReactNode;
     resetOptions: () => {};
-    additionalComponents?: { section; chart };
+    additionalComponents?: {
+      section?: React.ReactNode;
+      chart?: React.ReactNode;
+    };
   };
 }
 
@@ -108,10 +113,12 @@ export default function InteractivePlayground(
           </div>
           {additionalComponents?.section}
           <div className={styles.wrapper}>
-            <div className={styles.controls}>
-              {controls}
-              {additionalComponents?.chart}
-            </div>
+            {(controls || additionalComponents?.chart) && (
+              <div className={styles.controls}>
+                {controls}
+                {additionalComponents?.chart}
+              </div>
+            )}
             <div className={styles.codeWrapper}>
               <CodeBlock className={styles.code} language="javascript">
                 {code}
