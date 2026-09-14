@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cxxreact/ReactNativeVersion.h>
 #include <jsi/jsi.h>
+#include <worklets/Compat/ReactNativeVersionCompat.h>
 
 #if REACT_NATIVE_VERSION_MINOR >= 84
 #include <cxxreact/JSBigString.h>
