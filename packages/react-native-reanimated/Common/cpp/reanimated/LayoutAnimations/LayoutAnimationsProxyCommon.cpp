@@ -62,6 +62,14 @@ void LayoutAnimationsProxyCommon::surfaceDidUnmount() {
   cancelAllLayoutAnimations();
 }
 
+void LayoutAnimationsProxyCommon::clearSurfaceState() const {
+  layoutAnimationOperations_.clear();
+  pendingLayoutAnimations_.clear();
+  updateMap_.clear();
+  layoutAnimations_.clear();
+  completedAnimations_.clear();
+}
+
 std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
     const int tag,
     const jsi::Object &newStyle) {
@@ -426,16 +434,12 @@ void LayoutAnimationsProxyCommon::cancelAllLayoutAnimations() const {
         stops.push_back(cancellation->tag);
       }
     }
-    layoutAnimationOperations_.clear();
-    pendingLayoutAnimations_.clear();
     for (const auto &[tag, animation] : layoutAnimations_) {
       if (animation.type != LayoutAnimationType::PROGRESS && stoppedTags.insert(tag).second) {
         stops.push_back(tag);
       }
     }
-    updateMap_.clear();
-    layoutAnimations_.clear();
-    completedAnimations_.clear();
+    clearSurfaceState();
   }
   if (!stops.empty()) {
     scheduleOnUI(
@@ -564,9 +568,38 @@ std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentLayoutAnimation(c
   }
   if (const auto completedAnimationIt = completedAnimations_.find(tag);
       completedAnimationIt != completedAnimations_.end() && !completedAnimationIt->second.shouldRemove) {
+    completedAnimationIt->second.animation.parentTag = parentTag;
     return completedAnimationIt->second.animation.currentView;
   }
   return pendingCurrentView;
+}
+
+std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentPendingLayoutAnimations(
+    const Tag tag,
+    const Tag parentTag,
+    const ShadowView &newView,
+    const react::Point offset) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (!pendingLayoutAnimations_.contains(tag)) {
+    return std::nullopt;
+  }
+  std::optional<ShadowView> currentView;
+  for (auto operationIt = layoutAnimationOperations_.rbegin(); operationIt != layoutAnimationOperations_.rend();
+       operationIt++) {
+    if (const auto *cancellation = std::get_if<LayoutAnimationCancellation>(&*operationIt);
+        cancellation && cancellation->tag == tag) {
+      break;
+    }
+    auto *start = std::get_if<ManagedLayoutAnimationStart>(&*operationIt);
+    if (!start || start->tag != tag) {
+      continue;
+    }
+    start->parentTag = parentTag;
+    start->before.layoutMetrics.frame.origin += offset;
+    start->after = newView;
+    currentView = start->before;
+  }
+  return currentView;
 }
 
 void LayoutAnimationsProxyCommon::cleanupCompletedAnimations(

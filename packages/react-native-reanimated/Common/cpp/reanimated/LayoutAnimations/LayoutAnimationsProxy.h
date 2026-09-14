@@ -139,6 +139,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowViewMutationList &mutations,
       TransactionMeta &transaction) const;
 
+  std::optional<ShadowView>
+  reparentLayoutAnimation(Tag tag, Tag parentTag, const ShadowView &newView, react::Point offset) const;
+
   void applyInitialMutationsToLightTree(const ShadowViewMutationList &mutations) const;
   void updateLightNodeProps(
       const std::shared_ptr<LightNode> &node,
@@ -187,7 +190,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       std::weak_ptr<const facebook::react::MountingOverrideDelegate> mountingOverrideDelegate) override;
   std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) override;
   std::optional<SurfaceId> onGestureCancel(int tag) override;
-  void surfaceDidUnmount() override;
+  void clearSurfaceState() const override;
 
   std::shared_ptr<LightNode> findActiveBoundary(const std::shared_ptr<LightNode> &node) const;
   std::shared_ptr<LightNode> findBoundaryGuess(const std::shared_ptr<LightNode> &node) const;

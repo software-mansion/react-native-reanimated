@@ -2,6 +2,7 @@
 
 #include <jsi/jsi.h>
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
+#include <react/renderer/graphics/Point.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowView.h>
@@ -30,6 +31,7 @@ struct LayoutAnimation {
   std::optional<double> opacity;
   LayoutAnimationType type;
   std::shared_ptr<Serializable> config;
+  react::Point frameOffset;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 };
 
@@ -116,6 +118,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   Props::Shared mergeSynchronousProps(const ShadowView &view, const folly::dynamic &props) const;
   bool hasLayoutAnimationRecords() const;
   void applySynchronousPropsToLayoutAnimation(Tag tag, const folly::dynamic &props) const;
+  virtual void clearSurfaceState() const;
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
   void enqueueLayoutAnimation(ManagedLayoutAnimationStart start) const;
   void enqueueLayoutAnimation(ProgressLayoutAnimationStart start) const;
@@ -131,6 +134,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   bool updateEnteringAnimationTarget(Tag tag, const ShadowView &finalView) const;
   std::optional<ShadowView> takeCompletedLayoutAnimationView(Tag tag) const;
   std::optional<ShadowView> reparentLayoutAnimation(Tag tag, Tag parentTag) const;
+  std::optional<ShadowView>
+  reparentPendingLayoutAnimations(Tag tag, Tag parentTag, const ShadowView &newView, react::Point offset) const;
   void schedulePullOnNextFrame() const;
   void maybeUpdateWindowDimensions(const ShadowViewMutation &mutation) const;
   void cleanupCompletedAnimations(
