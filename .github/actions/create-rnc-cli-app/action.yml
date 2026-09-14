@@ -14,16 +14,6 @@ inputs:
     description: Name of the test app
     default: 'app'
     required: false
-  integration:
-    description: Native integration path (pods or spm)
-    default: 'pods'
-    required: false
-  reanimated-tarball:
-    description: Path to a packed react-native-reanimated tarball (required for spm)
-    required: false
-  worklets-tarball:
-    description: Path to a packed react-native-worklets tarball (required for spm)
-    required: false
 
 runs:
   using: 'composite'
@@ -57,30 +47,22 @@ runs:
         path: ${{ inputs.app-name }}
         key: rnc-cli-app-${{ runner.os }}-${{ steps.cli-version.outputs.version }}-${{ inputs.react-native-version }}
 
-    - name: Install Worklets and Reanimated (npm)
-      if: inputs.integration == 'pods'
+    - name: Install Worklets and Reanimated
       working-directory: ${{ inputs.app-name }}
       shell: bash
       run: |
         npm install "react-native-worklets@${{ inputs.worklets-version }}"
         npm install "react-native-reanimated@${{ inputs.reanimated-version }}"
 
-    - name: Install Worklets and Reanimated (tarballs)
-      if: inputs.integration == 'spm'
-      working-directory: ${{ inputs.app-name }}
-      shell: bash
-      run: |
-        npm install "${{ inputs.worklets-tarball }}" "${{ inputs.reanimated-tarball }}"
-
     - name: Setup Ruby (iOS)
-      if: ${{ runner.os == 'macOS' && inputs.integration == 'pods' }}
+      if: runner.os == 'macOS'
       uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
       with:
         ruby-version: '3.3'
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
     - name: Install Pods (iOS)
-      if: ${{ runner.os == 'macOS' && inputs.integration == 'pods' }}
+      if: runner.os == 'macOS'
       working-directory: ${{ inputs.app-name }}/ios
       shell: bash
       run: bundle install && bundle exec pod install
