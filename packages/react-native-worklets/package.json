@@ -117,6 +117,7 @@
     "jest",
     "plugin/index.js",
     "plugin/index.d.ts",
+    "Package.swift",
     "*.podspec",
     "react-native.config.js",
     "!apple/build",
@@ -146,6 +147,11 @@
     "jsSrcsDir": "src/specs",
     "android": {
       "javaPackageName": "com.swmansion.worklets"
+    },
+    "ios": {
+      "unstableModulesRequiringMainQueueSetup": [
+        "WorkletsModule"
+      ]
     }
   }
 }

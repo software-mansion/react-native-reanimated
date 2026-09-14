@@ -1,8 +1,8 @@
 #pragma once
 
-#include <cxxreact/ReactNativeVersion.h>
 #include <jsi/jsi.h>
 #include <react/renderer/core/ShadowNode.h>
+#include <reanimated/Compat/ReactNativeVersionCompat.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 
 #if REACT_NATIVE_VERSION_MINOR >= 85

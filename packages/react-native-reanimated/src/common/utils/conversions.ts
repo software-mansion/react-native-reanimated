@@ -19,5 +19,6 @@ export function kebabizeCamelCase<T extends string>(property: T) {
 }
 
 export function camelizeKebabCase<T extends string>(property: T) {
+  'worklet';
   return property.replace(/-./g, (x) => x[1].toUpperCase());
 }

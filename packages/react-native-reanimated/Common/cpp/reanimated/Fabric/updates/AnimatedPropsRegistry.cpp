@@ -1,4 +1,4 @@
-#include <cxxreact/ReactNativeVersion.h>
+#include <reanimated/Compat/ReactNativeVersionCompat.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/Tools/FeatureFlags.h>
