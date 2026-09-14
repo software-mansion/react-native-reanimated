@@ -55,14 +55,14 @@ runs:
         npm install "react-native-reanimated@${{ inputs.reanimated-version }}"
 
     - name: Setup Ruby (iOS)
-      if: ${{ runner.os == 'macOS' }}
+      if: runner.os == 'macOS'
       uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
       with:
         ruby-version: '3.3'
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
     - name: Install Pods (iOS)
-      if: ${{ runner.os == 'macOS' }}
+      if: runner.os == 'macOS'
       working-directory: ${{ inputs.app-name }}/ios
       shell: bash
       run: bundle install && bundle exec pod install

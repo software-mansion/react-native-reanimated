@@ -2,7 +2,7 @@
 
 #include <jsi/jsi.h>
 
-#include <cxxreact/ReactNativeVersion.h>
+#include <reanimated/Compat/ReactNativeVersionCompat.h>
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
 #include <react/featureflags/ReactNativeFeatureFlags.h>
