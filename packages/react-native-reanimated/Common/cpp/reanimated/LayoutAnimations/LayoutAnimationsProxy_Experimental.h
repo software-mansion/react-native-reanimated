@@ -65,7 +65,6 @@ struct TransactionMeta {
   std::vector<PendingNodeAnimation> exiting;
   std::vector<std::shared_ptr<LightNode>> containersToInsert;
   std::vector<std::shared_ptr<LightNode>> nodesToRestore;
-  std::unordered_set<std::shared_ptr<LightNode>> hiddenNodes;
   std::vector<std::shared_ptr<LightNode>> containersToRemove;
 };
 
@@ -156,7 +155,11 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
 
   std::vector<react::Point> getAbsolutePositionsForRootPathView(const std::shared_ptr<LightNode> &node) const;
 
-  Tag getOrCreateContainer(const ShadowView &before, const SharedTag &sharedTag, TransactionMeta &transaction) const;
+  Tag getOrCreateContainer(
+      const ShadowView &before,
+      const SharedTag &sharedTag,
+      const std::array<std::shared_ptr<LightNode>, 2> &nodes,
+      TransactionMeta &transaction) const;
 
   void overrideTransform(
       ShadowView &shadowView,
