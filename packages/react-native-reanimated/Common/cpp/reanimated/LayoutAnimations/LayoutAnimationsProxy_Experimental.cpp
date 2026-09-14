@@ -226,11 +226,16 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
   auto &filteredMutations = transaction.filteredMutations;
   std::unordered_set<Tag> inserted, moved, deleted;
   std::unordered_map<Tag, IndexCursors> indexCursors;
+  std::unordered_map<Tag, ShadowView> updatedViews;
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
     const auto &mutation = *it;
     switch (mutation.type) {
       case ShadowViewMutation::Delete: {
         deleted.insert(mutation.oldChildShadowView.tag);
+        break;
+      }
+      case ShadowViewMutation::Update: {
+        updatedViews.insert_or_assign(mutation.newChildShadowView.tag, mutation.oldChildShadowView);
         break;
       }
       case ShadowViewMutation::Insert: {
@@ -277,10 +282,19 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         node->current = mutation.newChildShadowView;
 #endif // ANDROID
         auto tag = mutation.newChildShadowView.tag;
-        if (const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT)) {
+        auto config = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT);
+        if (!config) {
+          config = getRetargetLayoutAnimationConfig(tag);
+        }
+        if (config) {
           transaction.layout.push_back({node, config});
-        } else {
-          filteredMutations.push_back(mutation);
+        } else if (!updateEnteringAnimationTarget(tag, node->current)) {
+          if (const auto currentView = takeCompletedLayoutAnimationView(tag)) {
+            filteredMutations.push_back(
+                ShadowViewMutation::UpdateMutation(*currentView, node->current, mutation.parentTag));
+          } else {
+            filteredMutations.push_back(mutation);
+          }
         }
         break;
       }
@@ -311,6 +325,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         auto &parent = lightNodes_[mutation.parentTag];
         const auto hostIndex = parent->toHostIndexForInsert(mutation.index, indexCursors[mutation.parentTag]);
         parent->children.insert(parent->children.begin() + hostIndex, node);
+        const auto sameParent = node->parent.lock() == parent;
         node->parent = parent;
         const auto tag = mutation.newChildShadowView.tag;
         bool hasSharedTransition;
@@ -320,9 +335,19 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         }
         const auto layoutConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT);
         const auto enteringConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, ENTERING);
-        if (moved.contains(tag) && layoutConfig) {
-          filteredMutations.push_back(
-              ShadowViewMutation::InsertMutation(mutation.parentTag, node->previous, hostIndex));
+        if (moved.contains(tag) && (sameParent || layoutConfig)) {
+          auto view = node->previous;
+          if (sameParent) {
+            if (const auto currentView = reparentLayoutAnimation(tag, mutation.parentTag)) {
+              view = *currentView;
+            } else if (const auto updatedViewIt = updatedViews.find(tag);
+                       updatedViewIt != updatedViews.end() && layoutConfig) {
+              view = updatedViewIt->second;
+            } else if (!hasPendingLayoutAnimation(tag)) {
+              view = mutation.newChildShadowView;
+            }
+          }
+          filteredMutations.push_back(ShadowViewMutation::InsertMutation(mutation.parentTag, view, hostIndex));
         } else if (enteringConfig) {
           transaction.entering.push_back({node, enteringConfig});
           filteredMutations.push_back(
