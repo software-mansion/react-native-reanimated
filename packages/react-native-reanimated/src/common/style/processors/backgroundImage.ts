@@ -61,11 +61,11 @@ export const ERROR_MESSAGES = {
   },
 };
 
-type ProcessedDirection =
+export type ProcessedDirection =
   | { type: 'angle'; value: number }
   | { type: 'keyword'; value: string };
 
-type ProcessedColorStop = {
+export type ProcessedColorStop = {
   color: ProcessedColor | null;
   position: number | string | null;
 };
