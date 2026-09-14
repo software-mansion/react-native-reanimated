@@ -20,6 +20,10 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   /// be committed, so the registry entries are redundant.
   jsi::Value collectSettledUpdates(jsi::Runtime &rt, double settledTimestamp);
 
+  /// Drops every entry. Called by the JS-side GC once the last animated view
+  /// unmount.
+  void removeAll();
+
  private:
   std::unordered_map<Tag, double> timestampMap_;
   // Tags whose latest values have already been pushed to React `settledProps`.
