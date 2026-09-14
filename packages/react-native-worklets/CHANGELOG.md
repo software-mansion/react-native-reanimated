@@ -45,6 +45,7 @@
 
 ### 💡 Others
 
+- Create the native side of `WorkletsModule` on a background thread as soon as the module is created, so `installTurboModule` only attaches it to the RN Runtime. ([#10489](https://github.com/software-mansion/react-native-reanimated/pull/10489) by [@tjzel](https://github.com/tjzel))
 - Validate the iOS Swift Package Manager integration in CI: the nightly compatibility check now builds the app via SPM on React Native >= 0.87. ([#10511](https://github.com/software-mansion/react-native-reanimated/pull/10511) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
 - Build `nativeLoggingHook` for Worklet Runtimes natively instead of reading React Native's host function from the RN Runtime. ([#10488](https://github.com/software-mansion/react-native-reanimated/pull/10488) by [@tjzel](https://github.com/tjzel))
 - Drop the `RCTEventEmitter` base class from `WorkletsModule` on iOS. The module never emitted events, so it now inherits from `NSObject` and declares the `bridge` property itself. ([#10485](https://github.com/software-mansion/react-native-reanimated/pull/10485) by [@tjzel](https://github.com/tjzel))
