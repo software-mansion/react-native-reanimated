@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Switch, View, Text } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -8,11 +8,28 @@ import Animated, {
   ReducedMotionConfig,
   ReduceMotion,
 } from 'react-native-reanimated';
+import { FormControl, MenuItem, Select } from '@mui/material';
 import useThemedTextStyle from '@site/src/hooks/useThemedTextStyle';
+
+const MODES = [
+  { label: 'System', value: ReduceMotion.System },
+  { label: 'Always', value: ReduceMotion.Always },
+  { label: 'Never', value: ReduceMotion.Never },
+];
+
+const SelectStyling = {
+  fontSize: 14,
+  color: 'text.secondary',
+  backgroundColor: 'background.default',
+  borderRadius: 0,
+  '& fieldset': {
+    borderColor: 'text.secondary',
+  },
+};
 
 export default function App() {
   const textColor = useThemedTextStyle();
-  const [isReduceMotionDisabled, setIsReduceMotionDisabled] = useState(false);
+  const [mode, setMode] = useState(ReduceMotion.System);
   const sv = useSharedValue<number>(0);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${sv.value}deg` }],
@@ -21,20 +38,29 @@ export default function App() {
   useEffect(() => {
     sv.value = 0;
     sv.value = withRepeat(withTiming(360, { duration: 2000 }), -1, true);
-  }, [textColor, isReduceMotionDisabled]);
+  }, [textColor, mode]);
 
   return (
     <View style={styles.container}>
       <View style={styles.row}>
-        <Text style={[styles.text, textColor]}>Disable reduced motion</Text>
-        <Switch
-          value={isReduceMotionDisabled}
-          onValueChange={setIsReduceMotionDisabled}
-        />
+        <Text style={[styles.text, textColor]}>Mode</Text>
+        <FormControl sx={{ minWidth: 85 }} size="small">
+          <Select
+            value={mode}
+            sx={SelectStyling}
+            onChange={(e) => setMode(e.target.value as ReduceMotion)}>
+            {MODES.map((option) => (
+              <MenuItem
+                key={option.value}
+                value={option.value}
+                sx={{ color: 'text.secondary' }}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       </View>
-      <ReducedMotionConfig
-        mode={isReduceMotionDisabled ? ReduceMotion.Never : ReduceMotion.System}
-      />
+      <ReducedMotionConfig mode={mode} />
       <Animated.View style={[styles.box, animatedStyle]} />
     </View>
   );
@@ -53,6 +79,7 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 20,
   },
   text: {
