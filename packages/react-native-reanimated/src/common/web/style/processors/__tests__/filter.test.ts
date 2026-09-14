@@ -4,8 +4,14 @@ import type { DropShadowValue } from 'react-native';
 import { processFilterWeb } from '../filter';
 
 describe(processFilterWeb, () => {
-  test('returns string unchanged', () => {
-    expect(processFilterWeb('blur(5px)')).toBe('blur(5px)');
+  test.each([
+    ['blur(5px)', 'blur(5px)'],
+    ['hue-rotate(45deg)', 'hue-rotate(45deg)'],
+    ['hueRotate(45deg)', 'hue-rotate(45deg)'],
+    ['drop-shadow(2px 4px blue)', 'drop-shadow(2px 4px blue)'],
+    ['dropShadow(2px 4px blue)', 'drop-shadow(2px 4px blue)'],
+  ])('normalizes string input %s', (input, expected) => {
+    expect(processFilterWeb(input)).toBe(expected);
   });
 
   test('builds basic filter string from array', () => {
