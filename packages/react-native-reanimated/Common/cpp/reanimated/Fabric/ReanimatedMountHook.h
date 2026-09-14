@@ -23,6 +23,8 @@ class ReanimatedMountHook : public UIManagerMountHook {
 
   void shadowTreeDidMount(RootShadowNode::Shared const &rootShadowNode, HighResTimeStamp mountTime) noexcept override;
 
+  void shadowTreeDidUnmount(SurfaceId surfaceId, HighResTimeStamp unmountTime) noexcept override;
+
  private:
   const std::shared_ptr<UIManager> uiManager_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;

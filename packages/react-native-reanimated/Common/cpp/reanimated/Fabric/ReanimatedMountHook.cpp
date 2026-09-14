@@ -61,4 +61,11 @@ void ReanimatedMountHook::shadowTreeDidMount(
   }
 }
 
+void ReanimatedMountHook::shadowTreeDidUnmount(SurfaceId surfaceId, HighResTimeStamp /*unmountTime*/) noexcept {
+  // Drop the mounted-root snapshot of a surface that is gone. Nothing else evicts it,
+  // and once the surface stops we are its only owner.
+  auto lock = updatesRegistryManager_->lock();
+  viewStylesRepository_->removeSurface(surfaceId);
+}
+
 } // namespace reanimated
