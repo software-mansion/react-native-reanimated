@@ -2,7 +2,14 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { Dispatch, SetStateAction } from 'react';
 import { memo, useCallback, useLayoutEffect, useMemo, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Platform,
+  Pressable,
+  SectionList,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { FlatList, Touchable } from 'react-native-gesture-handler';
 import { useReducedMotion } from 'react-native-reanimated';
 
@@ -56,6 +63,33 @@ function flattenExamples(
     }
   }
   return flat;
+}
+
+const OTHER_SECTION = 'Other';
+
+/**
+ * Buckets entries into `sections`, keeping their order. Entries without a known
+ * section go to "Other", so nothing disappears while sections are assigned.
+ */
+function groupBySection(
+  entries: Record<string, ExampleEntry>,
+  sections: ReadonlyArray<string>
+): Array<{ title: string; data: Array<string> }> {
+  const buckets = new Map<string, Array<string>>(
+    [...sections, OTHER_SECTION].map((sectionTitle) => [sectionTitle, []])
+  );
+  for (const [name, entry] of Object.entries(entries)) {
+    const section =
+      !isExampleGroup(entry) &&
+      entry.section !== undefined &&
+      buckets.has(entry.section)
+        ? entry.section
+        : OTHER_SECTION;
+    buckets.get(section)?.push(name);
+  }
+  return [...buckets]
+    .filter(([, data]) => data.length > 0)
+    .map(([sectionTitle, data]) => ({ data, title: sectionTitle }));
 }
 
 function ExamplesApp({ examples, headerTitle, title }: ExamplesAppProps) {
@@ -117,6 +151,7 @@ function ExamplesApp({ examples, headerTitle, title }: ExamplesAppProps) {
               allExamples={allExamples}
               entries={group.examples}
               navigation={navigation}
+              sections={group.sections}
               setWasClicked={setWasClicked}
               wasClicked={wasClicked}
             />
@@ -148,6 +183,7 @@ interface ExampleListScreenProps {
   entries: Record<string, ExampleEntry>;
   allExamples: Record<string, Example>;
   navigation: NavigationProp;
+  sections?: ReadonlyArray<string>;
   wasClicked: Array<string>;
   setWasClicked: Dispatch<SetStateAction<Array<string>>>;
 }
@@ -156,6 +192,7 @@ function ExampleListScreen({
   allExamples,
   entries,
   navigation,
+  sections,
   setWasClicked,
   wasClicked,
 }: ExampleListScreenProps) {
@@ -224,47 +261,89 @@ function ExampleListScreen({
     [navigation, setWasClicked]
   );
 
+  const sectionData = useMemo(
+    () => (sections ? groupBySection(entries, sections) : undefined),
+    [entries, sections]
+  );
+
+  const renderEntry = useCallback(
+    ({ item: name }: { item: string }) => {
+      const entry = isSearching ? allExamples[name] : entries[name];
+
+      // Search results come from `allExamples`, which holds no groups, so a
+      // group row can only ever come from `entries`.
+      if (isExampleGroup(entry)) {
+        return (
+          <GroupItem
+            count={Object.keys(entry.examples).length}
+            icon={entry.icon}
+            title={entry.title}
+            onPress={() => navigation.navigate(groupRoute(name))}
+          />
+        );
+      }
+
+      return (
+        <Item
+          icon={entry.icon}
+          shouldWork={platform ? entry.shouldWork?.[platform] : undefined}
+          title={entry.title}
+          wasClicked={wasClicked.includes(name)}
+          disabled={
+            entry.disabledPlatforms?.includes(Platform.OS) ||
+            (entry.needsBundleMode &&
+              // eslint-disable-next-line no-underscore-dangle
+              !globalThis._WORKLETS_BUNDLE_MODE_ENABLED)
+          }
+          onPress={() => openExample(name)}
+        />
+      );
+    },
+    [
+      allExamples,
+      entries,
+      isSearching,
+      navigation,
+      openExample,
+      platform,
+      wasClicked,
+    ]
+  );
+
+  // Search results span every group, so they are listed flat, never sectioned.
+  if (sectionData && !isSearching) {
+    return (
+      <SectionList
+        contentInsetAdjustmentBehavior="automatic"
+        initialNumToRender={entryNames.length}
+        ItemSeparatorComponent={ItemSeparator}
+        renderItem={renderEntry}
+        renderSectionHeader={renderSectionHeader}
+        sections={sectionData}
+        style={styles.list}
+      />
+    );
+  }
+
   return (
     <FlatList
       contentInsetAdjustmentBehavior="automatic"
       data={visibleNames}
       initialNumToRender={visibleNames.length}
       ItemSeparatorComponent={ItemSeparator}
+      renderItem={renderEntry}
       style={styles.list}
-      renderItem={({ item: name }) => {
-        const entry = isSearching ? allExamples[name] : entries[name];
-
-        // Search results come from `allExamples`, which holds no groups, so a
-        // group row can only ever come from `entries`.
-        if (isExampleGroup(entry)) {
-          return (
-            <GroupItem
-              count={Object.keys(entry.examples).length}
-              icon={entry.icon}
-              title={entry.title}
-              onPress={() => navigation.navigate(groupRoute(name))}
-            />
-          );
-        }
-
-        return (
-          <Item
-            icon={entry.icon}
-            shouldWork={platform ? entry.shouldWork?.[platform] : undefined}
-            title={entry.title}
-            wasClicked={wasClicked.includes(name)}
-            disabled={
-              entry.disabledPlatforms?.includes(Platform.OS) ||
-              (entry.needsBundleMode &&
-                // eslint-disable-next-line no-underscore-dangle
-                !globalThis._WORKLETS_BUNDLE_MODE_ENABLED)
-            }
-            onPress={() => openExample(name)}
-          />
-        );
-      }}
     />
   );
+}
+
+function SectionHeader({ title }: { title: string }) {
+  return <Text style={styles.sectionHeader}>{title}</Text>;
+}
+
+// Module-level so the list gets a stable callback, like `renderItem` does.
+function renderSectionHeader({ section }: { section: { title: string } }) {
+  return <SectionHeader title={section.title} />;
 }
 
 interface ItemProps {
@@ -376,6 +455,16 @@ const styles = StyleSheet.create({
   },
   list: {
     backgroundColor: '#EFEFF4',
+  },
+  sectionHeader: {
+    // Opaque so rows do not show through a sticky header.
+    backgroundColor: '#EFEFF4',
+    color: '#6D6D72',
+    fontSize: 13,
+    paddingBottom: 6,
+    paddingHorizontal: 15,
+    paddingTop: 20,
+    textTransform: 'uppercase',
   },
   separator: {
     backgroundColor: '#DBDBE0',

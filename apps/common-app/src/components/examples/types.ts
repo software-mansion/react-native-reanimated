@@ -17,12 +17,18 @@ export interface Example {
   };
   disabledPlatforms?: Array<(typeof REAPlatform)[keyof typeof REAPlatform]>;
   needsBundleMode?: boolean;
+
+  /** Title of the section this example is listed under in its group. */
+  section?: string;
 }
 
 export interface ExampleGroup {
   icon?: string;
   title: string;
   examples: Record<string, Example>;
+
+  /** Section titles in display order; without them the group is a flat list. */
+  sections?: ReadonlyArray<string>;
 }
 
 export type ExampleEntry = Example | ExampleGroup;

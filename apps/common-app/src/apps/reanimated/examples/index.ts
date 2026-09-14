@@ -13,8 +13,6 @@ const AndroidDrawPassExample: React.FC = () =>
   React.createElement(require('./AndroidDrawPassExample').default as React.FC);
 const AnimatableRefExample: React.FC = () =>
   React.createElement(require('./AnimatableRefExample').default as React.FC);
-const AnimatedKeyboardExample: React.FC = () =>
-  React.createElement(require('./AnimatedKeyboardExample').default as React.FC);
 const AnimatedPropsExample: React.FC = () =>
   React.createElement(require('./AnimatedPropsExample').default as React.FC);
 const AnimatedSensorAccelerometerExample: React.FC = () =>
@@ -37,16 +35,6 @@ const AnimatedSensorRotationExample: React.FC = () =>
   React.createElement(
     require('./AnimatedSensorRotationExample').default as React.FC
   );
-const AnimatedStyleUpdateExample: React.FC = () =>
-  React.createElement(
-    require('./AnimatedStyleUpdateExample').default as React.FC
-  );
-const AnimatedTabBarExample: React.FC = () =>
-  React.createElement(require('./AnimatedTabBarExample').default as React.FC);
-const AnimatedTextWidthExample: React.FC = () =>
-  React.createElement(
-    require('./AnimatedTextWidthExample').default as React.FC
-  );
 const ArticleProgressExample: React.FC = () =>
   React.createElement(require('./ArticleProgressExample').default as React.FC);
 const BBExample: React.FC = () =>
@@ -65,8 +53,6 @@ const BottomTabsExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/BottomTabs').default as React.FC
   );
-const BouncingBoxExample: React.FC = () =>
-  React.createElement(require('./BouncingBoxExample').default as React.FC);
 const BubblesExample: React.FC = () =>
   React.createElement(require('./BubblesExample').default as React.FC);
 const Carousel: React.FC = () =>
@@ -89,8 +75,6 @@ const ChessboardExample: React.FC = () =>
   React.createElement(require('./ChessboardExample').default as React.FC);
 const CircularSliderExample: React.FC = () =>
   React.createElement(require('./CircularSliderExample').default as React.FC);
-const ColorExample: React.FC = () =>
-  React.createElement(require('./ColorExample').default as React.FC);
 const ColorInterpolationExample: React.FC = () =>
   React.createElement(
     require('./ColorInterpolationExample').default as React.FC
@@ -133,8 +117,6 @@ const DetachAnimatedStylesExample: React.FC = () =>
   );
 const DispatchCommandExample: React.FC = () =>
   React.createElement(require('./DispatchCommandExample').default as React.FC);
-const DragAndSnapExample: React.FC = () =>
-  React.createElement(require('./DragAndSnapExample').default as React.FC);
 const DurationZeroExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DurationZero').default as React.FC
@@ -184,8 +166,6 @@ const FlatListWithLayoutAnimations: React.FC = () =>
   React.createElement(
     require('./FlatListWithLayoutAnimationsExample').default as React.FC
   );
-const FpsExample: React.FC = () =>
-  React.createElement(require('./FpsExample').default as React.FC);
 const FrameCallbackExample: React.FC = () =>
   React.createElement(require('./FrameCallbackExample').default as React.FC);
 const FreezeExample: React.FC = () =>
@@ -196,19 +176,9 @@ const GalleryExample: React.FC = () =>
   );
 const Game2048Example: React.FC = () =>
   React.createElement(require('./Game2048Example').default as React.FC);
-const GestureHandlerExample: React.FC = () =>
-  React.createElement(require('./GestureHandlerExample').default as React.FC);
-const GetViewPropExample: React.FC = () =>
-  React.createElement(require('./GetViewPropExample').default as React.FC);
 const HabitsExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/HabitsExample').default as React.FC
-  );
-const IPodExample: React.FC = () =>
-  React.createElement(require('./IPodExample').default as React.FC);
-const InstanceDiscoveryExample: React.FC = () =>
-  React.createElement(
-    require('./InstanceDiscoveryExample').default as React.FC
   );
 const InvalidValueAccessExample: React.FC = () =>
   React.createElement(
@@ -245,8 +215,6 @@ const ManyScreensExample: React.FC = () =>
   );
 const MatrixTransform: React.FC = () =>
   React.createElement(require('./MatrixTransform').default as React.FC);
-const MeasureExample: React.FC = () =>
-  React.createElement(require('./MeasureExample').default as React.FC);
 const MemoExample: React.FC = () =>
   React.createElement(require('./MemoExample').default as React.FC);
 const ModalExitingExample: React.FC = () =>
@@ -267,18 +235,10 @@ const NestedStacksExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedStacks').default
   );
-const NewestShadowNodesRegistryRemoveExample: React.FC = () =>
-  React.createElement(
-    require('./NewestShadowNodesRegistryRemoveExample').default
-  );
 const NonLayoutPropAndRenderExample: React.FC = () =>
   React.createElement(
     require('./NonLayoutPropAndRenderExample').default as React.FC
   );
-const OldMeasureExample: React.FC = () =>
-  React.createElement(require('./OldMeasureExample').default as React.FC);
-const OpacityTransformExample: React.FC = () =>
-  React.createElement(require('./OpacityTransformExample').default as React.FC);
 const OverlappingBoxesExample: React.FC = () =>
   React.createElement(require('./OverlappingBoxesExample').default as React.FC);
 const PendulumExample: React.FC = () =>
@@ -323,26 +283,14 @@ const ScreenlessBasic: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ScreenlessBasic').default as React.FC
   );
-const ScreenStackExample: React.FC = () =>
-  React.createElement(require('./ScreenStackExample').default as React.FC);
-const ScreenStackHeaderConfigBackgroundColorExample: React.FC = () =>
-  React.createElement(
-    require('./ScreenStackHeaderConfigBackgroundColorExample').default
-  );
-const ScrollEventExample: React.FC = () =>
-  React.createElement(require('./ScrollEventExample').default as React.FC);
 const ScrollPerformanceExample: React.FC = () =>
   React.createElement(
     require('./ScrollPerformanceExample').default as React.FC
   );
 const ScrollToExample: React.FC = () =>
   React.createElement(require('./ScrollToExample').default as React.FC);
-const ScrollViewExample: React.FC = () =>
-  React.createElement(require('./ScrollViewExample').default as React.FC);
 const ScrollViewOffsetExample: React.FC = () =>
   React.createElement(require('./ScrollViewOffsetExample').default as React.FC);
-const ScrollableViewExample: React.FC = () =>
-  React.createElement(require('./ScrollableViewExample').default as React.FC);
 const SetNativePropsExample: React.FC = () =>
   React.createElement(require('./SetNativePropsExample').default as React.FC);
 const ShadowNodesCloningExample: React.FC = () =>
@@ -363,10 +311,6 @@ const StrictModeComparison: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/StrictModeComparisonExample').default
   );
-const SvgExample: React.FC = () =>
-  React.createElement(require('./SvgExample').default as React.FC);
-const SwipeableListExample: React.FC = () =>
-  React.createElement(require('./SwipeableListExample').default as React.FC);
 const SyncBackToReactExample: React.FC = () =>
   React.createElement(require('./SyncBackToReactExample').default as React.FC);
 const SynchronousPropsExample: React.FC = () =>
@@ -379,8 +323,6 @@ const ThirdPartyComponentsExample: React.FC = () =>
   React.createElement(
     require('./ThirdPartyComponentsExample').default as React.FC
   );
-const TransformExample: React.FC = () =>
-  React.createElement(require('./TransformExample').default as React.FC);
 const TransformOriginExample: React.FC = () =>
   React.createElement(require('./TransformOriginExample').default as React.FC);
 const TransitionRestartExample: React.FC = () =>
@@ -401,12 +343,12 @@ const WidthExample: React.FC = () =>
   React.createElement(require('./WidthExample').default as React.FC);
 const WithClampExample: React.FC = () =>
   React.createElement(require('./WithClampExample').default as React.FC);
-const WithoutBabelPluginExample: React.FC = () =>
-  React.createElement(
-    require('./WithoutBabelPluginExample').default as React.FC
-  );
-const WobbleExample: React.FC = () =>
-  React.createElement(require('./WobbleExample').default as React.FC);
+
+// Sections of the "Show Cases and Regressions" group. Declared before
+// `ALL_EXAMPLES` because its entries reference them.
+const SHOW_CASES = 'Show Cases';
+const SHOW_CASES_AND_REGRESSIONS = 'Show Cases and Regressions';
+const REGRESSIONS = 'Regressions';
 
 const ALL_EXAMPLES: Record<string, Example> = {
   // About
@@ -419,6 +361,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   SuspenseLayoutAnimationCrashExample: {
     icon: '💥',
     title: 'Suspense + Layout Animation Crash',
+    section: REGRESSIONS,
     screen: SuspenseLayoutAnimationCrashExample,
   },
   SettledPropsLeakExample: {
@@ -438,14 +381,10 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Inline styles and props',
     screen: InlineStylesAndPropsExample,
   },
-  FpsExample: {
-    icon: '🎞️',
-    title: 'FPS',
-    screen: FpsExample,
-  },
   SlowAnimationsExample: {
     icon: '🐢',
     title: 'Slow animations',
+    section: REGRESSIONS,
     screen: SlowAnimationsExample,
   },
   SyncBackToReactExample: {
@@ -456,6 +395,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   AndroidDrawPassExample: {
     icon: '✍️',
     title: 'Android Draw Pass',
+    section: REGRESSIONS,
     screen: AndroidDrawPassExample,
   },
   DetachAnimatedStylesExample: {
@@ -471,6 +411,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ThirdPartyComponentsExample: {
     icon: '3️⃣',
     title: 'Third party components',
+    section: SHOW_CASES,
     screen: ThirdPartyComponentsExample,
   },
   ReactFreeze: {
@@ -481,6 +422,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   CircularSliderExample: {
     icon: '🔘',
     title: 'Circular slider',
+    section: SHOW_CASES,
     screen: CircularSliderExample,
   },
   MemoExample: {
@@ -501,11 +443,13 @@ const ALL_EXAMPLES: Record<string, Example> = {
   BottomSheetExample: {
     icon: '⬆️',
     title: 'Bottom sheet',
+    section: REGRESSIONS,
     screen: BottomSheetExample,
   },
   FlatListWithLayoutAnimations: {
     icon: '🎻',
     title: 'FlatList with layout animations',
+    section: REGRESSIONS,
     screen: FlatListWithLayoutAnimations,
   },
 
@@ -514,51 +458,43 @@ const ALL_EXAMPLES: Record<string, Example> = {
   BokehExample: {
     icon: '✨',
     title: 'Bokeh',
+    section: SHOW_CASES,
     screen: BokehExample,
   },
   BubblesExample: {
     icon: '🫧',
     title: 'Bubbles',
+    section: SHOW_CASES,
     screen: BubblesExample,
-  },
-  OpacityTransformExample: {
-    icon: '🌀',
-    title: 'opacity & transform',
-    screen: OpacityTransformExample,
-  },
-  IPodExample: {
-    icon: '🎧',
-    title: 'iPod',
-    screen: IPodExample,
   },
   EmojiWaterfallExample: {
     icon: '💸',
     title: 'Emoji waterfall',
+    section: REGRESSIONS,
     screen: EmojiWaterfallExample,
   },
   LightBoxExample: {
     icon: '📷',
     title: 'Camera roll',
+    section: SHOW_CASES,
     screen: LightBoxExample,
   },
   LiquidSwipe: {
     icon: '♠️',
     title: 'Liquid swipe',
+    section: SHOW_CASES_AND_REGRESSIONS,
     screen: LiquidSwipe,
-  },
-  SwipeableListExample: {
-    icon: '📞',
-    title: 'Swipeable list',
-    screen: SwipeableListExample,
   },
   ArticleProgressExample: {
     icon: '📰',
     title: 'Article progress',
+    section: SHOW_CASES,
     screen: ArticleProgressExample,
   },
   LettersExample: {
     icon: '📖',
     title: 'Letters',
+    section: SHOW_CASES,
     screen: LettersExample,
   },
   SetNativePropsExample: {
@@ -581,72 +517,32 @@ const ALL_EXAMPLES: Record<string, Example> = {
   AmountExample: {
     icon: '📈',
     title: 'Amount',
+    section: SHOW_CASES,
     screen: AmountExample,
   },
   CounterExample: {
     icon: '🎰',
     title: 'Counter',
+    section: SHOW_CASES,
     screen: CounterExample,
-  },
-  AnimatedTextWidthExample: {
-    icon: '✂️',
-    title: 'Animate text width',
-    screen: AnimatedTextWidthExample,
-  },
-  ColorExample: {
-    icon: '🌈',
-    title: 'Animate colors',
-    screen: ColorExample,
   },
   FilterExample: {
     icon: '🖼️',
     title: 'Animate filter',
+    section: REGRESSIONS,
     screen: FilterExample,
   },
   SynchronousPropsExample: {
     icon: '⚡',
     title: 'Animate synchronous props',
+    section: REGRESSIONS,
     screen: SynchronousPropsExample,
-  },
-  ScreenStackHeaderConfigBackgroundColorExample: {
-    icon: '🎨',
-    title: 'Screen header background color',
-    screen: ScreenStackHeaderConfigBackgroundColorExample,
-    shouldWork: {
-      ios: true,
-      // TODO: fix - on Android AnimatedScreenStackHeaderConfig makes the button presses trigger no React effects
-      android: false,
-    },
-  },
-  ScreenStackExample: {
-    icon: '🥞',
-    title: 'Screen stack',
-    screen: ScreenStackExample,
-  },
-  GestureHandlerExample: {
-    icon: '👌',
-    title: 'Draggable circle',
-    screen: GestureHandlerExample,
-  },
-  SvgExample: {
-    icon: '🟢',
-    title: 'Animated SVG circle',
-    screen: SvgExample,
   },
   PlanetsExample: {
     icon: '🪐',
     title: 'Planets',
+    section: SHOW_CASES,
     screen: PlanetsExample,
-  },
-  BouncingBoxExample: {
-    icon: '📦',
-    title: 'Bouncing box',
-    screen: BouncingBoxExample,
-  },
-  AnimatedKeyboardExample: {
-    icon: '⌨️',
-    title: 'useAnimatedKeyboard',
-    screen: AnimatedKeyboardExample,
   },
   AnimatedSensorAccelerometerExample: {
     icon: '🚀',
@@ -678,45 +574,28 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'useFrameCallback',
     screen: FrameCallbackExample,
   },
-  ScrollViewExample: {
-    icon: '📜',
-    title: 'useAnimatedScrollHandler',
-    screen: ScrollViewExample,
-  },
   ScrollToExample: {
     icon: '🦘',
     title: 'scrollTo',
+    section: REGRESSIONS,
     screen: ScrollToExample,
   },
   ScrollViewOffsetExample: {
     icon: '𝌍',
     title: 'useScrollOffset',
+    section: REGRESSIONS,
     screen: ScrollViewOffsetExample,
-  },
-  InstanceDiscoveryExample: {
-    icon: '🔍',
-    title: 'Instance Discovery',
-    screen: InstanceDiscoveryExample,
   },
   StickyHeaderExample: {
     icon: '🔝',
     title: 'Stinky header',
+    section: REGRESSIONS,
     screen: StickyHeaderExample,
   },
   DispatchCommandExample: {
     icon: '🫡',
     title: 'Dispatch command',
     screen: DispatchCommandExample,
-  },
-  MeasureExample: {
-    icon: '📐',
-    title: 'measure',
-    screen: MeasureExample,
-  },
-  TransformExample: {
-    icon: '🔄',
-    title: 'Transform',
-    screen: TransformExample,
   },
   WidthExample: {
     icon: '🌲',
@@ -736,42 +615,31 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ChessExample: {
     icon: '♟️',
     title: 'Chess',
+    section: SHOW_CASES,
     screen: ChessExample,
   },
   ChessboardExample: {
     icon: '♟️',
     title: 'Chessboard',
+    section: REGRESSIONS,
     screen: ChessboardExample,
   },
   Game2048Example: {
     icon: '🕹️',
     title: '2048',
+    section: REGRESSIONS,
     screen: Game2048Example,
   },
   OverlappingBoxesExample: {
     icon: '🔝',
     title: 'z-index & elevation',
+    section: REGRESSIONS,
     screen: OverlappingBoxesExample,
-  },
-  NewestShadowNodesRegistryRemoveExample: {
-    icon: '🌓',
-    title: 'Conditional',
-    screen: NewestShadowNodesRegistryRemoveExample,
   },
   RainbowExample: {
     icon: '🌈',
     title: 'Rainbow',
     screen: RainbowExample,
-  },
-  WithoutBabelPluginExample: {
-    icon: '🔌',
-    title: 'Without Babel plugin',
-    screen: WithoutBabelPluginExample,
-    disabledPlatforms: [
-      REAPlatform.ANDROID,
-      REAPlatform.IOS,
-      REAPlatform.MACOS,
-    ],
   },
   MatrixExample: {
     icon: '🧮',
@@ -782,42 +650,37 @@ const ALL_EXAMPLES: Record<string, Example> = {
   SpringExample: {
     icon: '🕰',
     title: 'Pendulum example',
+    section: SHOW_CASES,
     screen: PendulumExample,
   },
   SpringPresetsExample: {
     icon: '🛠',
     title: 'Spring presets',
+    section: SHOW_CASES,
     screen: SpringPresetsExample,
   },
   SpringClampExample: {
     icon: '🗜',
     title: 'Spring with Clamp',
+    section: SHOW_CASES,
     screen: WithClampExample,
   },
   ReducedMotionExample: {
     icon: '⏸️',
     title: 'Reduced Motion',
+    section: SHOW_CASES_AND_REGRESSIONS,
     screen: ReducedMotionExample,
-  },
-  GetViewPropExample: {
-    icon: '🔎',
-    title: 'getViewProp',
-    screen: GetViewPropExample,
-    disabledPlatforms: [
-      REAPlatform.WEB,
-      REAPlatform.ANDROID,
-      REAPlatform.IOS,
-      REAPlatform.MACOS,
-    ],
   },
   HabitsExample: {
     icon: '🧑‍💻',
     title: 'Habits',
+    section: SHOW_CASES,
     screen: HabitsExample,
   },
   PerformanceMonitorExample: {
     icon: '⏱️',
     title: 'Performance monitor',
+    section: REGRESSIONS,
     screen: PerformanceMonitorExample,
   },
   ComposedHandlerConditionalExample: {
@@ -838,6 +701,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   BBExample: {
     icon: '💀',
     title: 'BB',
+    section: REGRESSIONS,
     screen: BBExample,
   },
   StrictDOMExample: {
@@ -848,6 +712,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ProfilesExample: {
     icon: '🙆‍♂️',
     title: 'Profiles',
+    section: SHOW_CASES,
     screen: ProfilesExample,
     shouldWork: {
       ios: true,
@@ -857,6 +722,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ProgressTransitionExample: {
     icon: '☕',
     title: 'Progress transition',
+    section: SHOW_CASES,
     screen: ProgressTransitionExample,
     shouldWork: {
       ios: true,
@@ -866,6 +732,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   GalleryExample: {
     icon: '🇮🇹',
     title: 'Gallery',
+    section: SHOW_CASES,
     screen: GalleryExample,
     shouldWork: {
       ios: true,
@@ -874,12 +741,14 @@ const ALL_EXAMPLES: Record<string, Example> = {
   },
   DynamicColorIOSExample: {
     title: 'DynamicColorIOS',
+    section: SHOW_CASES,
     screen: DynamicColorIOSExample,
     icon: '🌗',
     disabledPlatforms: [REAPlatform.ANDROID, REAPlatform.WEB],
   },
   PlatformColorExample: {
     title: 'PlatformColor',
+    section: SHOW_CASES,
     screen: PlatformColorExample,
     icon: '🎨',
     disabledPlatforms: [REAPlatform.WEB],
@@ -891,28 +760,18 @@ const ALL_EXAMPLES: Record<string, Example> = {
   },
 
   // Old examples
-  AnimatedStyleUpdateExample: {
-    title: 'Animated style update',
-    screen: AnimatedStyleUpdateExample,
-  },
   SharedStyleExample: {
     title: 'Shared style',
     screen: SharedStyleExample,
   },
-  AnimatedTabBarExample: {
-    title: 'Tab bar',
-    screen: AnimatedTabBarExample,
-  },
   ChatHeadsExample: {
     title: 'Chat heads',
+    section: REGRESSIONS,
     screen: ChatHeadsExample,
-  },
-  DragAndSnapExample: {
-    title: 'Drag and snap',
-    screen: DragAndSnapExample,
   },
   ColorInterpolationExample: {
     title: 'Color interpolation',
+    section: SHOW_CASES,
     screen: ColorInterpolationExample,
   },
   ContrastColorExample: {
@@ -926,30 +785,17 @@ const ALL_EXAMPLES: Record<string, Example> = {
   },
   InvertedFlatListExample: {
     title: 'Inverted FlatList example',
+    section: REGRESSIONS,
     screen: InvertedFlatListExample,
-  },
-  OldMeasureExample: {
-    title: 'Accordion',
-    screen: OldMeasureExample,
   },
   PinExample: {
     title: 'PIN example',
+    section: SHOW_CASES,
     screen: PinExample,
-  },
-  ScrollableViewExample: {
-    title: 'Scrollable view example',
-    screen: ScrollableViewExample,
-  },
-  ScrollEventExample: {
-    title: 'Scroll event example',
-    screen: ScrollEventExample,
-  },
-  WobbleExample: {
-    title: 'Wobble example',
-    screen: WobbleExample,
   },
   TransformOriginExample: {
     title: 'Transform origin example',
+    section: SHOW_CASES,
     screen: TransformOriginExample,
   },
 
@@ -1183,6 +1029,7 @@ export const EXAMPLES: Record<string, ExampleEntry> = {
       SHARED_ELEMENT_TRANSITION_PREFIX,
     ]),
     icon: '🎠',
-    title: 'Examples',
+    sections: [SHOW_CASES, SHOW_CASES_AND_REGRESSIONS, REGRESSIONS],
+    title: 'Show Cases and Regressions',
   },
 };
