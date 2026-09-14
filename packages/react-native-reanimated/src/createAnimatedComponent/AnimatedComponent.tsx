@@ -2,6 +2,7 @@
 import type React from 'react';
 import { Fragment } from 'react';
 
+import { initialUpdaterRun } from '../animation';
 import { maybeBuild } from '../animationBuilder';
 import { logger } from '../common';
 import type { StyleProps } from '../commonTypes';
@@ -9,6 +10,7 @@ import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import { getStaticFeatureFlag } from '../featureFlags';
+import { isSharedValue } from '../isSharedValue';
 import { type BaseAnimationBuilder } from '../layoutReanimation';
 import { SharedTransition } from '../layoutReanimation/SharedTransition';
 import {
@@ -62,6 +64,7 @@ export default class AnimatedComponent
   _animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[] = [];
   _prevAnimatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[] = [];
   _isFirstRender = true;
+  _initialTextChildren?: string;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps } = { value: {} };
   jestAnimatedProps: { value: AnimatedProps } = { value: {} };
@@ -421,6 +424,42 @@ export default class AnimatedComponent
 
     let nativeID;
 
+    if (this.ChildComponent.displayName === 'Text') {
+      if (filteredProps.text !== undefined) {
+        if (filteredProps.children !== undefined) {
+          throw new Error(
+            '[Reanimated] <Animated.Text> component with animated prop `text` must be empty.'
+          );
+        }
+        // TODO: handle case when `text` property is not present during initial render but appears later on
+
+        // Pass the current value of animated prop `text` as `children` so that the text displays correctly during first render
+        filteredProps.children = normalizeTextProp(filteredProps.text);
+      } else if (isSharedValue(this.props.children)) {
+        // A shared value passed as children animates the text like the `text`
+        // prop - normalize the initial value passed by PropsFilter so that
+        // an empty string doesn't collapse the text content shadow node.
+        filteredProps.children = normalizeTextProp(filteredProps.children);
+      } else if (
+        Array.isArray(this.props.children) &&
+        this.props.children.some(isSharedValue)
+      ) {
+        // Mixed children (e.g. <Animated.Text>Before {sv} After</Animated.Text>)
+        // are joined into a single string so that React commits a single text
+        // node which is then updated as a whole on the UI thread. The initial
+        // values of the shared values are kept stable across re-renders so
+        // that React doesn't replace the committed text node with a new one.
+        this._initialTextChildren ??= this.props.children
+          .map((child: unknown) =>
+            isSharedValue(child)
+              ? initialUpdaterRun(() => child.value)
+              : (child as string | number)
+          )
+          .join('');
+        filteredProps.children = normalizeTextProp(this._initialTextChildren);
+      }
+    }
+
     // TODO: Remove need for this \/\/\/\/.
     // RNSVG expects Gradient elem to have stops passed as children. When we want to animate them,
     // we provide them using `gradient` prop.
@@ -439,4 +478,11 @@ export default class AnimatedComponent
       ...filteredProps,
     });
   }
+}
+
+function normalizeTextProp(text: unknown): string {
+  if (text === '') {
+    return '\u200b'; // use zero-width space when text is empty to prevent collapsing of the Text component
+  }
+  return String(text); // convert numbers to string, keep strings as they are
 }
