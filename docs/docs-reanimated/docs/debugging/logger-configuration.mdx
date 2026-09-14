@@ -92,7 +92,7 @@ A boolean value that enables or disables **strict** mode. When **strict** mode i
 
 - The logger configuration is global and affects all warnings and errors displayed by Reanimated. There's no option to configure the logger per file/component.
 
-- On native, logs raised on the [UI runtime](/docs/fundamentals/glossary#ui-thread) reach the `onLog` callback **asynchronously**: the callback always runs on the React runtime, on a later tick. On web there is a single runtime, so the callback runs synchronously.
+- On native, logs raised on the [UI runtime](/docs/fundamentals/glossary#ui-thread) reach the `onLog` callback **asynchronously**: the callback always runs on the React Native runtime, on a later tick. On web the callback runs synchronously.
 
 - Calling `configureReanimatedLogger` without the `onLog` argument **clears** a previously registered callback, in the same way that omitting `level` or `strict` resets them to their defaults.
 
