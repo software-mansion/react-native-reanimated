@@ -42,6 +42,7 @@
 
 ### 💡 Others
 
+- Validate the iOS Swift Package Manager integration in CI: the nightly compatibility check now builds the app via SPM on React Native >= 0.87. ([#10511](https://github.com/software-mansion/react-native-reanimated/pull/10511) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
 - Support worklets without closure metadata in handler dependency comparisons and Jest helpers. ([#10517](https://github.com/software-mansion/react-native-reanimated/pull/10517) by [@tshmieldev](https://github.com/tshmieldev))
 - Update hooks for array-based worklet closures and use explicit control points for web Bezier easings instead of inspecting closures. ([#10506](https://github.com/software-mansion/react-native-reanimated/pull/10506) by [@tshmieldev](https://github.com/tshmieldev))
 - Initialize the Layout Animations manager lazily to avoid serializing its worklets during startup. ([#10466](https://github.com/software-mansion/react-native-reanimated/pull/10466) by [@tshmieldev](https://github.com/tshmieldev))
