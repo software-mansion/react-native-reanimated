@@ -376,19 +376,21 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
 
       case ShadowViewMutation::Type::Update: {
         auto shouldAnimate = hasLayoutChanged(mutation);
-        const auto layoutConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LayoutAnimationType::LAYOUT);
+        auto layoutConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LayoutAnimationType::LAYOUT);
+        if (!layoutConfig) {
+          layoutConfig = getRetargetLayoutAnimationConfig(tag);
+        }
+        if ((!layoutConfig || !shouldAnimate) && updateEnteringAnimationTarget(tag, mutation.newChildShadowView)) {
+          continue;
+        }
         if (!layoutConfig || (!shouldAnimate && !layoutAnimations_.contains(tag) && !hasPendingLayoutAnimation(tag))) {
-          // We should cancel any ongoing animation here to ensure that the
-          // proper final state is reached for this view However, due to how
-          // RNSScreens handle adding headers (a second commit is triggered to
-          // offset all the elements by the header height) this would lead to
-          // all entering animations being cancelled when a screen with a header
-          // is pushed onto a stack
-          // TODO: find a better solution for this problem
+          if (const auto currentView = takeCompletedLayoutAnimationView(tag)) {
+            mutation.oldChildShadowView = *currentView;
+          }
           filteredMutations.push_back(mutation);
           continue;
         } else if (!shouldAnimate) {
-          updateLayoutAnimationTarget(tag, mutation.newChildShadowView);
+          updateLayoutAnimationTarget(tag, mutation.newChildShadowView, layoutConfig);
           continue;
         }
 
