@@ -26,6 +26,7 @@
 - Add an OXC port of the Babel plugin for Bundle Mode. ([#9518](https://github.com/software-mansion/react-native-reanimated/pull/9518) by [@tshmieldev](https://github.com/tshmieldev))
 - Add `getCurrentThreadId` as public JavaScript API.
 - Autoworkletize the fourth argument of `withTiming` and `withSpring`. ([#10467](https://github.com/software-mansion/react-native-reanimated/pull/10467) by [@piaskowyk](https://github.com/piaskowyk))
+- Add Bundle Mode patches for metro and metro-runtime 0.87.0 and 0.87.1. ([#10455](https://github.com/software-mansion/react-native-reanimated/pull/10455) by [@jslok](https://github.com/jslok))
 
 ### 🐛 Bug fixes
 
