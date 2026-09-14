@@ -145,6 +145,7 @@ export interface WorkletsModuleProxy {
 
   scheduleOnUI<TValue>(
     serializableArrayOfWorklets: SerializableRef<TValue[]>,
+    serializableArrayOfArguments: SerializableRef<unknown[]>,
     scheduleStacks: string[] | undefined
   ): void;
 

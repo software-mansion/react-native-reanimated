@@ -1,4 +1,3 @@
-#include <cxxreact/ReactNativeVersion.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
@@ -9,6 +8,7 @@
 #include <react/renderer/uimanager/primitives.h>
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/Compat/ReactNativeVersionCompat.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
@@ -468,7 +468,12 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
       return;
     }
     jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(strongThis->uiRuntime_);
-    const auto resultStr = strongThis->obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
+    std::string resultStr;
+    try {
+      resultStr = strongThis->obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
+    } catch (const std::exception &error) {
+      resultStr = std::string("error: ") + error.what();
+    }
 
     strongThis->jsInvoker_->invokeAsync([=](jsi::Runtime &rnRuntime) {
       const auto resultValue = jsi::String::createFromUtf8(rnRuntime, resultStr);

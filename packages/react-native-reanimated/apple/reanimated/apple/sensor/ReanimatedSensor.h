@@ -1,5 +1,8 @@
+#import <Foundation/Foundation.h>
+
 #if !TARGET_OS_TV && !TARGET_OS_OSX
 #import <CoreMotion/CoreMotion.h>
+#import <UIKit/UIKit.h>
 #endif
 
 #import <reanimated/apple/sensor/ReanimatedSensorType.h>

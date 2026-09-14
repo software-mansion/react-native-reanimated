@@ -1,5 +1,7 @@
 import type { Component, ReactElement, RefObject } from 'react';
 import { useRef } from 'react';
+import { findNodeHandle } from 'react-native';
+import { getViewProp } from 'react-native-reanimated';
 
 import type { ValueGetter } from '../matchers/EventualMatchers';
 import { EventualMatchers } from '../matchers/EventualMatchers';
@@ -17,6 +19,8 @@ import type {
 } from '../types';
 import { TestDecorator } from '../types';
 import { RenderLock } from '../utils/RenderLock';
+import { sleep } from '../utils/waitFor';
+import { waitForFrames } from '../utils/waitForFrames';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
 import { assertTestCase } from './Asserts';
 import { CallTrackerRegistry } from './CallTrackerRegistry';
@@ -31,6 +35,9 @@ import { scheduleOnRN } from 'react-native-worklets';
 export { Presets } from '../Presets';
 
 const RENDER_MAX_WAIT_TIME_MS = 10000;
+const MOUNT_MAX_WAIT_TIME_MS = 1000;
+const DRAIN_MAX_WAIT_TIME_MS = 5000;
+const FRAME_INTERVAL_MS = 16;
 
 export class TestRunner {
   private _currentTestCase: TestCase | null = null;
@@ -46,6 +53,7 @@ export class TestRunner {
   private _notificationRegistry = new NotificationRegistry();
   private _workletRuntimePool = new WorkletRuntimePool();
   private _progressHook: ((progress: TestProgress) => void) | null = null;
+  private _suiteFinishedHook: ((suiteName: string) => void) | null = null;
   private _progressIndex: number = 0;
   private _progressTotal: number = 0;
   private _testSuiteBuilder = new TestSuiteBuilder();
@@ -81,6 +89,7 @@ export class TestRunner {
   public configure(config: TestConfiguration) {
     this._renderHook = config.render;
     this._progressHook = config.onProgress ?? null;
+    this._suiteFinishedHook = config.onSuiteFinished ?? null;
     return this._renderLock;
   }
 
@@ -132,6 +141,10 @@ export class TestRunner {
       return;
     }
 
+    const previousRefs = new Set(
+      Object.values(this._currentTestCase?.componentsRefs ?? {})
+    );
+
     this._renderLock.setRenderedNull(!component);
     this._renderLock.lock();
 
@@ -144,6 +157,46 @@ export class TestRunner {
       await this._renderLock.waitForRender(RENDER_MAX_WAIT_TIME_MS);
     } finally {
       this._renderLock.unlock();
+    }
+
+    if (component) {
+      await this._waitForMount(previousRefs);
+    }
+  }
+
+  private async _waitForMount(
+    previousRefs: Set<RefObject<any>>,
+    maxWaitTime = MOUNT_MAX_WAIT_TIME_MS
+  ) {
+    const testCase = this._currentTestCase;
+    if (!testCase) {
+      return;
+    }
+    const newRefEntries = Object.entries(testCase.componentsRefs).filter(
+      ([, ref]) => !previousRefs.has(ref)
+    );
+    for (const [name, ref] of newRefEntries) {
+      const deadline = performance.now() + maxWaitTime;
+      let mounted = false;
+      do {
+        const instance = ref.current;
+        const tag = instance ? (findNodeHandle(instance) ?? -1) : -1;
+        if (tag !== -1) {
+          mounted = await getViewProp(tag, 'width', instance).then(
+            () => true,
+            () => false
+          );
+          if (mounted) {
+            break;
+          }
+        }
+        await sleep(FRAME_INTERVAL_MS);
+      } while (performance.now() < deadline);
+      if (!mounted) {
+        throw new Error(
+          `Test component '${name}' did not mount within ${maxWaitTime}ms after render`
+        );
+      }
     }
   }
 
@@ -207,6 +260,8 @@ export class TestRunner {
     if (testSuite.afterAll) {
       await testSuite.afterAll();
     }
+
+    this._suiteFinishedHook?.(testSuite.name);
   }
 
   private async runTestCase(testSuite: TestSuite, testCase: TestCase) {
@@ -250,6 +305,8 @@ export class TestRunner {
       if (testSuite.afterEach) {
         await testSuite.afterEach();
       }
+
+      await waitForFrames(1, DRAIN_MAX_WAIT_TIME_MS);
 
       this._currentTestCase = null;
       await this.render(null);

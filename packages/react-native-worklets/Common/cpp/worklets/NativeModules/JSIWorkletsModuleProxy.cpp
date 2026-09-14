@@ -31,9 +31,6 @@
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
-#ifndef NDEBUG
-#include <algorithm>
-#endif // NDEBUG
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -54,31 +51,26 @@ namespace {
 inline void scheduleOnUI(
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
     jsi::Runtime &rt,
-    const jsi::Value &serializableArrayOfWorkletsValue
+    const jsi::Value &serializableArrayOfWorkletsValue,
+    const jsi::Value &serializableArrayOfArgumentsValue
 #ifndef NDEBUG
     ,
     const jsi::Value &scheduleStacksValue
 #endif // NDEBUG
 ) {
-  auto serializable = extractSerializableOrThrow(
+  auto serializableArrayOfWorklets = extractSerializableOrThrow<SerializableArray>(
       rt, serializableArrayOfWorkletsValue, "[Worklets] scheduleOnUI expects a serializable array of worklets.");
-  auto serializableArrayOfWorklets = std::static_pointer_cast<SerializableArray>(serializable);
-
-  const auto &workletsList = serializableArrayOfWorklets->getList();
-  std::vector<std::shared_ptr<SerializableWorklet>> worklets;
-  worklets.reserve(workletsList.size());
-  for (const auto &item : workletsList) {
-    worklets.push_back(std::static_pointer_cast<SerializableWorklet>(item));
-  }
+  auto serializableArrayOfArguments = extractSerializableOrThrow<SerializableArray>(
+      rt, serializableArrayOfArgumentsValue, "[Worklets] scheduleOnUI expects a serializable array of arguments.");
 
 #ifndef NDEBUG
-  std::vector<std::optional<std::string>> scheduleStacks(worklets.size());
+  std::vector<std::optional<std::string>> scheduleStacks;
   if (scheduleStacksValue.isObject()) {
     auto stacksObject = scheduleStacksValue.asObject(rt);
     if (stacksObject.isArray(rt)) {
       auto stacksArray = stacksObject.asArray(rt);
-      auto count = std::min<size_t>(stacksArray.size(rt), scheduleStacks.size());
-      for (size_t i = 0; i < count; i++) {
+      scheduleStacks.resize(stacksArray.size(rt));
+      for (size_t i = 0; i < scheduleStacks.size(); i++) {
         auto stackValue = stacksArray.getValueAtIndex(rt, i);
         if (stackValue.isString()) {
           scheduleStacks[i] = stackValue.asString(rt).utf8(rt);
@@ -93,9 +85,10 @@ inline void scheduleOnUI(
     return;
   }
 #ifndef NDEBUG
-  uiWorkletRuntime->scheduleWithStack(std::move(worklets), std::move(scheduleStacks));
+  uiWorkletRuntime->scheduleWithStack(
+      std::move(serializableArrayOfWorklets), std::move(serializableArrayOfArguments), std::move(scheduleStacks));
 #else
-  uiWorkletRuntime->schedule(std::move(worklets));
+  uiWorkletRuntime->schedule(std::move(serializableArrayOfWorklets), std::move(serializableArrayOfArguments));
 #endif // NDEBUG
 }
 
@@ -465,15 +458,15 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
       });
 
-  jsi_utils::addMethod<2>(
+  jsi_utils::addMethod<3>(
       rt,
       obj,
       "scheduleOnUI",
-      [uiWorkletRuntime = uiWorkletRuntime_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+      [uiWorkletRuntime = uiWorkletRuntime_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
 #ifndef NDEBUG
-        scheduleOnUI(uiWorkletRuntime, rt, at<0>(args), at<1>(args));
+        scheduleOnUI(uiWorkletRuntime, rt, at<0>(args), at<1>(args), at<2>(args));
 #else
-        scheduleOnUI(uiWorkletRuntime, rt, at<0>(args));
+        scheduleOnUI(uiWorkletRuntime, rt, at<0>(args), at<1>(args));
 #endif // NDEBUG
       });
 
