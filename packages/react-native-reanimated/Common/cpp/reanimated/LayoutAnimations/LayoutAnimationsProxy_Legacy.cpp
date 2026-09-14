@@ -383,6 +383,13 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
           // all entering animations being cancelled when a screen with a header
           // is pushed onto a stack
           // TODO: find a better solution for this problem
+          if (shouldAnimate && (layoutAnimations_.contains(tag) || hasPendingLayoutAnimation(tag))) {
+            // An entering or exiting animation replays its target every frame,
+            // so a layout change that lands mid-animation has to move that
+            // target too. Otherwise the replay restores the old frame and the
+            // view keeps hit-testing against it.
+            updateLayoutAnimationTarget(tag, mutation.newChildShadowView);
+          }
           filteredMutations.push_back(mutation);
           continue;
         } else if (!shouldAnimate) {
