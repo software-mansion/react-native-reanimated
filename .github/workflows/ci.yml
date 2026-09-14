@@ -306,7 +306,7 @@ jobs:
   runtime-tests-ios-legacy-eval:
     name: Runtime tests iOS (Legacy Eval)
     needs: changes
-    if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
+    if: ${{ !cancelled() && github.event_name != 'push' && !github.event.pull_request.head.repo.fork && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
     uses: ./.github/workflows/runtime-tests-ios-argent.yml
     with:
       configuration: ReleaseRuntimeTests
@@ -318,7 +318,7 @@ jobs:
   runtime-tests-ios-bundle-mode:
     name: Runtime tests iOS (Bundle Mode)
     needs: changes
-    if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
+    if: ${{ !cancelled() && github.event_name != 'push' && !github.event.pull_request.head.repo.fork && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
     uses: ./.github/workflows/runtime-tests-ios-argent.yml
     with:
       configuration: ReleaseRuntimeTests
