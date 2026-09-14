@@ -190,7 +190,11 @@ function ExampleListScreen({
           setSearch(event.nativeEvent.text);
         },
         onSearchButtonPress: (event) => {
-          const [firstMatch] = findExamples(event.nativeEvent.text);
+          const value = event.nativeEvent.text.trim();
+          if (value === '') {
+            return;
+          }
+          const [firstMatch] = findExamples(value);
           if (firstMatch !== undefined && firstMatch in allExamples) {
             navigation.navigate(firstMatch);
           }
