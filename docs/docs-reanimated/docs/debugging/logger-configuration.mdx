@@ -27,7 +27,9 @@ configureReanimatedLogger({
 });
 ```
 
-To receive the logs in your own code as well, pass a callback as the second argument. The logs are still written to the console.
+<Badges version="4.7.0">
+  To receive the logs in your own code as well, pass a callback as the second argument. The logs are still written to the console.
+</Badges>
 
 ```js
 configureReanimatedLogger(
@@ -82,7 +84,9 @@ A boolean value that enables or disables **strict** mode. When **strict** mode i
 
 #### `onLog`
 
-An optional callback, passed as the **second argument**, that receives every log which passes the `level` and `strict` filters. It runs **in addition to** the console output, so the message is both printed and forwarded. The `message` it receives is the final text, including the `[Reanimated]` prefix and the strict mode docs reference.
+<Badges version="4.7.0">
+  An optional callback, passed as the **second argument**, that receives every log which passes the `level` and `strict` filters. It runs **in addition to** the console output, so the message is both printed and forwarded. The `message` it receives is the final text, including the `[Reanimated]` prefix and the strict mode docs reference.
+</Badges>
 
 ## Remarks
 
