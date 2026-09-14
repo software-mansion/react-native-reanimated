@@ -79,7 +79,8 @@ export type ValidPropNames =
   | 'top'
   | 'left'
   | 'backgroundColor'
-  | 'boxShadow';
+  | 'boxShadow'
+  | 'backgroundImage';
 
 export function isValidPropName(propName: string): propName is ValidPropNames {
   'worklet';
@@ -92,6 +93,7 @@ export function isValidPropName(propName: string): propName is ValidPropNames {
     'left',
     'backgroundColor',
     'boxShadow',
+    'backgroundImage',
   ].includes(propName);
 }
 
@@ -146,6 +148,7 @@ export type TestProgress = {
 export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
   onProgress?: (progress: TestProgress) => void;
+  onSuiteFinished?: (suiteName: string) => void;
 };
 
 export type Mismatch = {

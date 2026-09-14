@@ -37,6 +37,15 @@ test('reference', () => {
 Before you begin, make sure to follow the respective Jest guide for [React Native Worklets](https://docs.swmansion.com/react-native-worklets/docs/guides/testing).
 :::
 
+Override Jest resolver to enforce resolving web implementation of Reanimated and React Native Worklets instead of pulling the native one. Modify your `jest.config.js` file to include the following code:
+
+```js
+module.exports = {
+  // ... other configurations
+  resolver: 'react-native-reanimated/jest/resolver',
+};
+```
+
 Add the following line to your `jest-setup.js` file:
 
 ```js
@@ -50,6 +59,7 @@ To be sure, check if your `jest.config.js` file contains:
 ```js
 ...
 preset: 'react-native',
+resolver: 'react-native-reanimated/jest/resolver',
 setupFilesAfterEnv: ['./jest-setup.js'],
 ...
 ```

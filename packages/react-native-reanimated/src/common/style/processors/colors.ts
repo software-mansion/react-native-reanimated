@@ -165,7 +165,7 @@ function unprocessDynamicColorObjectIOS(
   };
 }
 
-type ProcessedColor =
+export type ProcessedColor =
   | number
   | PlatformColorObject
   | ProcessedDynamicColorObjectIOS;

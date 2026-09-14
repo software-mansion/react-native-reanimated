@@ -1,5 +1,4 @@
 'use strict';
-import './layoutReanimation/animationsManager';
 
 import {
   runOnUISync,

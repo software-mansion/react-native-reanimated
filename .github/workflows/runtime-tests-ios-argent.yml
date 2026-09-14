@@ -125,6 +125,7 @@ jobs:
           needs-compile-database: 'false'
 
       - name: Install Pods
+        id: install-pods
         if: steps.appcache.outputs.cache-hit != 'true'
         uses: ./.github/actions/install-pods
         with:
@@ -141,6 +142,18 @@ jobs:
         uses: ./.github/actions/save-ccache
         with:
           key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
+
+      # Pods do not depend on the configuration; one leg of the nightly
+      # fan-out saves. Bundle Mode, because the Legacy Eval legs run
+      # `yarn toggle-bundle-mode` and no longer match the committed tree.
+      - name: Save Pods cache
+        if: steps.appcache.outputs.cache-hit != 'true' && inputs.bundleMode && env.CONFIGURATION == 'DebugRuntimeTests'
+        uses: ./.github/actions/save-pods
+        with:
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+          pod-directory: ios
+          cache-hit: ${{ steps.install-pods.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.install-pods.outputs.cache-primary-key }}
 
       - name: Package app artifact
         if: steps.appcache.outputs.cache-hit != 'true'

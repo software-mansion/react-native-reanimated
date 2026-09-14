@@ -468,7 +468,12 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
       return;
     }
     jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(strongThis->uiRuntime_);
-    const auto resultStr = strongThis->obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
+    std::string resultStr;
+    try {
+      resultStr = strongThis->obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
+    } catch (const std::exception &error) {
+      resultStr = std::string("error: ") + error.what();
+    }
 
     strongThis->jsInvoker_->invokeAsync([=](jsi::Runtime &rnRuntime) {
       const auto resultValue = jsi::String::createFromUtf8(rnRuntime, resultStr);

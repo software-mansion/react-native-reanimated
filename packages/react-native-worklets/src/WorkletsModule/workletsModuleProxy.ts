@@ -145,6 +145,7 @@ export interface WorkletsModuleProxy {
 
   scheduleOnUI<TValue>(
     serializableArrayOfWorklets: SerializableRef<TValue[]>,
+    serializableArrayOfArguments: SerializableRef<unknown[]>,
     scheduleStacks: string[] | undefined
   ): void;
 
@@ -229,6 +230,8 @@ export interface WorkletsModuleProxy {
   getStaticFeatureFlag(name: string): boolean;
 
   setDynamicFeatureFlag(name: string, value: boolean): void;
+
+  getCurrentThreadId(): string;
 
   getUIRuntimeHolder(): object;
 

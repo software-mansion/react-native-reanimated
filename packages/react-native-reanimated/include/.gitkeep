@@ -1,0 +1,3 @@
+// Reanimated exposes no SPM-facing headers, so Package.swift omits publicHeadersPath.
+// Without publicHeadersPath, SPM defaults to the "include/" directory.
+// We need to provide the "include/" directory so the iOS SPM build succeeds.
