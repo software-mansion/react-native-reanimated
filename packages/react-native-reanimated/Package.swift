@@ -60,6 +60,14 @@ func findConsumerPackageJSON() -> URL? {
 }
 
 func assertNoConflictingFeatureFlags(_ flags: [String: String]) {
+    if flags["USE_LEGACY_LAYOUT_ANIMATIONS_PROXY"] == "true",
+        flags["ENABLE_SHARED_ELEMENT_TRANSITIONS"] == "true"
+    {
+        fatalError(
+            "[Reanimated] The feature flags `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. The legacy layout animations proxy does not support shared element transitions. Please disable one of them in your package.json"
+        )
+    }
+
     if flags["USE_ANIMATION_BACKEND"] == "true",
         flags["FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS"] == "true"
     {
