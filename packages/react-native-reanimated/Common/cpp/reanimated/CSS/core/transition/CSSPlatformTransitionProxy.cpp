@@ -35,7 +35,6 @@ bool CSSPlatformTransitionProxy::apply(
     const double timestamp) {
   const ActiveTransition *active = activeTransitionFor(viewTag, propertyName);
 
-  // The toggle path has no settings of its own, so it reuses the stored ones.
   const bool reusesStoredSettings = settings == nullptr;
   if (reusesStoredSettings && active == nullptr) {
     return false;
@@ -43,47 +42,43 @@ bool CSSPlatformTransitionProxy::apply(
   // Copy: the active entry is re-assigned below.
   const CSSTransitionPropertySettings resolvedSettings = reusesStoredSettings ? active->settings : *settings;
 
-  // Targeting the in-flight transition's start value means this is a reversal.
+  // https://drafts.csswg.org/css-transitions/#reversing
   const bool isReversal = active != nullptr && active->adjustedStart && toValue == *active->adjustedStart;
-  ReversingState reversing = isReversal
-      ? reverseShorten(
-            active->reversing,
+  TransitionTimeline timeline = isReversal
+      ? reverseTimeline(
+            active->timeline,
             timestamp,
             resolvedSettings.duration,
             resolvedSettings.delay,
             resolvedSettings.easingConfig)
-      : makeReversingState(timestamp, resolvedSettings.duration, resolvedSettings.delay, resolvedSettings.easingConfig);
+      : makeTimeline(timestamp, resolvedSettings.duration, resolvedSettings.delay, resolvedSettings.easingConfig);
 
   std::optional<PlatformValue> adjustedStart;
   std::optional<PlatformValue> startValue;
   if (active == nullptr) {
     adjustedStart = startValue = fromValue;
   } else {
-    // An interruption resumes from the value on the outgoing timeline, which is
-    // still stored at this point. A finished transition retraces to its own end.
     startValue = getCurrentValue(viewTag, propertyName, timestamp);
-    // https://drafts.csswg.org/css-transitions/#reversing: a reversal has to target
-    // where the interrupted one began, anything else starts its own reversing run.
     adjustedStart = isReversal ? active->adjustedEnd : startValue;
   }
 
-  // The backend gets the engine's from-value, not the retraced one: on interruption
-  // it continues from what is on screen itself.
+  // The backend gets fromValue, not startValue: on interruption it continues from
+  // what is on screen itself.
   if (!backend_ ||
       !backend_->startTransition(
           viewTag,
           propertyName,
           fromValue,
           toValue,
-          reversing.duration,
-          reversing.startTimestamp,
+          timeline.duration,
+          timeline.startTimestamp,
           resolvedSettings.easingConfig,
           persistent)) {
     return false;
   }
 
   active_[viewTag][propertyName] =
-      ActiveTransition{adjustedStart, startValue, toValue, std::move(reversing), resolvedSettings};
+      ActiveTransition{adjustedStart, startValue, toValue, std::move(timeline), resolvedSettings};
   return true;
 }
 
@@ -109,11 +104,11 @@ std::optional<PlatformValue> CSSPlatformTransitionProxy::getCurrentValue(
   if (active == nullptr || !active->startValue) {
     return std::nullopt;
   }
-  const auto &reversing = active->reversing;
+  const auto &timeline = active->timeline;
   const double progress =
-      reversing.duration > 0 ? std::clamp((timestamp - reversing.startTimestamp) / reversing.duration, 0.0, 1.0) : 1.0;
+      timeline.duration > 0 ? std::clamp((timestamp - timeline.startTimestamp) / timeline.duration, 0.0, 1.0) : 1.0;
   return lerpPlatformValues(
-      *active->startValue, active->adjustedEnd, getEasingFunctionFromConfig(reversing.easing)(progress));
+      *active->startValue, active->adjustedEnd, getEasingFunctionFromConfig(timeline.easing)(progress));
 }
 
 CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
@@ -208,7 +203,7 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
         }
       }
       routing.platform.erase(propertyName);
-      // Read before remove(): it drops the timeline this resumes from.
+      // Read before remove() drops the run this resumes from.
       const auto resumeFrom = getResumeValue(viewTag, propertyName, timestamp);
       remove(viewTag, propertyName);
       routing.loop.insert(propertyName);

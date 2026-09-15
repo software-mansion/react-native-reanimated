@@ -91,8 +91,8 @@ bool CSSPlatformTransitions::startTransition(
   return true;
 }
 
-// Called after the new id is acquired: a retrigger with the same curve would
-// otherwise drop it to zero and rebuild the interpolator.
+// Runs after the new id is acquired: releasing first would drop a reused curve to
+// zero and rebuild its interpolator.
 void CSSPlatformTransitions::replaceEasingId(const Tag viewTag, const std::string &propertyName, const int easingId) {
   auto &propertyIds = easingIds_[viewTag];
   const auto it = propertyIds.find(propertyName);

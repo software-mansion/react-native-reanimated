@@ -18,7 +18,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter;
 
-/// Supports past or future start times and optionally holds the final value.
 - (BOOL)startTransitionForTag:(facebook::react::Tag)viewTag
                  propertyName:(const std::string &)propertyName
                     fromValue:(const reanimated::css::PlatformValue &)fromValue

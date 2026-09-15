@@ -52,7 +52,6 @@ class CSSPlatformTransitions : public css::CSSPlatformTransitionBackend {
  private:
   void replaceEasingId(Tag viewTag, const std::string &propertyName, int easingId);
 
-  /// The easing each running animator holds, released when it is replaced or stopped.
   std::unordered_map<Tag, std::unordered_map<std::string, int>> easingIds_;
   std::shared_ptr<CSSPlatformEasings> easings_;
   AnimateFunction animate_;
