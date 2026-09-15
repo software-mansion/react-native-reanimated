@@ -49,7 +49,6 @@ class UpdatesRegistryManager {
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
   PropsMap collectProps();
   void mergeRegistryProps(Tag viewTag, folly::dynamic &target);
-  bool hasSynchronousProps(Tag tag);
 
 #ifdef ANDROID
   bool hasPropsToRevert();

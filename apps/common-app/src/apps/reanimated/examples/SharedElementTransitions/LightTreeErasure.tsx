@@ -89,10 +89,15 @@ const Screen2 = withSharedTransitionBoundary(Screen2Content);
 
 export default function LightTreeErasureExample() {
   React.useEffect(() => {
-    const previous = getDynamicFeatureFlag('SYNCHRONOUS_PROPS_IN_LIGHT_TREE');
-    setDynamicFeatureFlag('SYNCHRONOUS_PROPS_IN_LIGHT_TREE', true);
+    const previous = getDynamicFeatureFlag(
+      'TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS'
+    );
+    setDynamicFeatureFlag('TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS', true);
     return () =>
-      setDynamicFeatureFlag('SYNCHRONOUS_PROPS_IN_LIGHT_TREE', previous);
+      setDynamicFeatureFlag(
+        'TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS',
+        previous
+      );
   }, []);
 
   return (

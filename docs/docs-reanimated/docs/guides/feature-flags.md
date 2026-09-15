@@ -27,7 +27,7 @@ Feature flags are available since Reanimated 4.
 | [`USE_ANIMATION_BACKEND`](#use_animation_backend)                                                   | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
 | [`IOS_CSS_CORE_ANIMATION`](#ios_css_core_animation-and-android_css_platform_transitions)            | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
 | [`ANDROID_CSS_PLATFORM_TRANSITIONS`](#ios_css_core_animation-and-android_css_platform_transitions)  | [static](#static-feature-flags) |  4.6.0   |  –   |                  `false`                  |
-| [`SYNCHRONOUS_PROPS_IN_LIGHT_TREE`](#synchronous_props_in_light_tree)                               | [dynamic](#dynamic-feature-flags)|  4.7.0   |  –   | `false`                                   |
+| [`TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS`](#track_synchronous_props_in_layout_animations)                               | [dynamic](#dynamic-feature-flags)|  4.7.0   |  –   | `false`                                   |
 
 :::info
 
@@ -190,7 +190,7 @@ Known limitation on iOS. `backgroundColor`, `borderColor`, `borderWidth` and `bo
 All four share that layer, so this is easiest to hit with a combination of them. A view with a visible border and the default `overflow` doesn't animate its `backgroundColor` either, even though the transition changes nothing about the border. `opacity` and the `shadow*` properties aren't affected, React Native always keeps them on the view's own layer.
 :::
 
-### `SYNCHRONOUS_PROPS_IN_LIGHT_TREE`
+### `TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS`
 
 Keep this flag off unless you see the warning described below.
 
@@ -198,7 +198,7 @@ With `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` or `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PRO
 
 When enabled, the synchronous path also updates the reanimated internal bookkeeping. This costs one props clone for each synchronously updated view on every frame, on the path that every animation goes through. Enable the flag only for the screens that hit the case above, for example with `setDynamicFeatureFlag` in an effect of the screen, and restore the previous value in the cleanup of that effect.
 
-When disabled, a development build logs a warning once per view when a shared element transition or a layout animation starts on a view whose synchronous props are missing from the light tree.
+When disabled, a development build logs a warning once per view when a layout animation or a shared element transition starts on a view whose synchronous props are missing from that bookkeeping. A shared element transition also warns when it starts under an ancestor whose synchronous transform is missing from it.
 
 ## Static feature flags
 

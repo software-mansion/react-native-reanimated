@@ -68,6 +68,9 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     }
   }
   if (sharedTag) {
+    if (const auto staleTag = findStaleSynchronousProps(node, LayoutAnimationType::SHARED_ELEMENT_TRANSITION)) {
+      transaction.staleSnapshots[node->current.tag] = *staleTag;
+    }
     ShadowView copy = node->current;
     std::vector<react::Point> absolutePositions;
     absolutePositions = getAbsolutePositionsForRootPathView(node);
@@ -208,6 +211,8 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
         if (!beforeNode || !afterNode) {
           continue;
         }
+        warnIfSnapshotIsStale(before, transaction);
+        warnIfSnapshotIsStale(after, transaction);
 
         const auto containerTag = getOrCreateContainer(before, sharedTag, collectedTransition.nodes, transaction);
         auto &container = sharedContainers_.at(containerTag);
@@ -387,9 +392,6 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
     for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
       auto &transition = collectedTransition.transition;
       auto &[before, after] = transition.snapshot;
-#ifndef NDEBUG
-      warnIfSynchronousPropsMissing(before.tag, "shared element transition");
-#endif
       const auto &transform = transition.transform;
       overrideTransform(before, transform[BEFORE], propsParserContext);
       overrideTransform(after, transform[AFTER], propsParserContext);
@@ -403,6 +405,8 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
       if (!afterNode) {
         continue;
       }
+      warnIfSnapshotIsStale(before, transaction);
+      warnIfSnapshotIsStale(after, transaction);
       auto containerTag = getOrCreateContainer(before, sharedTag, collectedTransition.nodes, transaction);
       auto &container = sharedContainers_.at(containerTag);
       restoreOldTarget(container, collectedTransition.nodes, transaction);

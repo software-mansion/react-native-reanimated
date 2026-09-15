@@ -13,7 +13,7 @@ import Animated, {
 
 export default function SyncPropsLayoutAnimationExample() {
   const [flagOn, setFlagOn] = useState(() =>
-    getDynamicFeatureFlag('SYNCHRONOUS_PROPS_IN_LIGHT_TREE')
+    getDynamicFeatureFlag('TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS')
   );
   const offset = useSharedValue(0);
   const spacerHeight = useSharedValue(0);
@@ -30,11 +30,14 @@ export default function SyncPropsLayoutAnimationExample() {
   return (
     <View style={styles.container}>
       <View style={styles.row}>
-        <Text>SYNCHRONOUS_PROPS_IN_LIGHT_TREE</Text>
+        <Text>TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS</Text>
         <Switch
           value={flagOn}
           onValueChange={(value) => {
-            setDynamicFeatureFlag('SYNCHRONOUS_PROPS_IN_LIGHT_TREE', value);
+            setDynamicFeatureFlag(
+              'TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS',
+              value
+            );
             setFlagOn(value);
           }}
         />
