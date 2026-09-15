@@ -851,15 +851,36 @@ void ReanimatedModuleProxy::performOperations() {
           propsVector.emplace_back(std::move(prop));
         }
       }
+    } else if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
+      // The synchronous path does not update the shadow tree, so a commit also carries the registry values.
+      std::unordered_map<ShadowNodeFamily::Shared, folly::dynamic> propsByFamily;
+      for (auto &[family, props] : commitUpdatesBatch) {
+        auto [it, inserted] = propsByFamily.try_emplace(family, std::move(props));
+        if (!inserted) {
+          it->second.update(props);
+        }
+      }
+      for (auto &[family, props] : propsByFamily) {
+        updatesRegistryManager_->mergeRegistryProps(family->getTag(), props);
+        propsMapBySurface[family->getSurfaceId()][family].emplace_back(std::move(props));
+      }
+#ifdef ANDROID
+      for (auto &[_, propsMap] : propsMapBySurface) {
+        for (auto &[family, propsVector] : propsMap) {
+          if (propsByFamily.contains(family)) {
+            continue;
+          }
+          folly::dynamic registryProps = folly::dynamic::object;
+          updatesRegistryManager_->mergeRegistryProps(family->getTag(), registryProps);
+          if (!registryProps.empty()) {
+            propsVector.emplace_back(std::move(registryProps));
+          }
+        }
+      }
+#endif
     } else {
       for (auto &[family, props] : commitUpdatesBatch) {
         propsMapBySurface[family->getSurfaceId()][family].emplace_back(std::move(props));
-      }
-      if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
-        // The synchronous path does not update the shadow tree, so a commit also carries the registry values.
-        for (auto &[_, propsMap] : propsMapBySurface) {
-          updatesRegistryManager_->appendRegistryProps(propsMap);
-        }
       }
     }
   }
