@@ -1,0 +1,812 @@
+.container {
+  --sim-bg: #e1f3fa;
+  --sim-panel: #ffffff;
+  --sim-border: #87cce8;
+  --sim-idle-fill: #e1f3fa;
+  --sim-bus-idle: #9fd6ed;
+  --sim-text: #000000;
+  --sim-muted: #4b6572;
+  --sim-error: #c0392b;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+  font-family: var(--ifm-font-family-base);
+  color: var(--sim-text);
+}
+
+[data-theme='dark'] .container {
+  --sim-bg: #172430;
+  --sim-panel: #1e2c3a;
+  --sim-border: #3f7c99;
+  --sim-idle-fill: #22384a;
+  --sim-bus-idle: #3f7c99;
+  --sim-text: #f2f7fb;
+  --sim-muted: #a9c1d0;
+  --sim-error: #ff8a80;
+}
+
+.rtRed {
+  --rt-color: #e88789;
+  --rt-fill: #f9dcdd;
+}
+
+.container {
+  --rt-red: #e88789;
+  --rt-red-fill: #f9dcdd;
+}
+
+[data-theme='dark'] .container {
+  --rt-red-fill: #5a3536;
+}
+
+.rtPurple {
+  --rt-color: #8787e8;
+  --rt-fill: #dcdcf9;
+}
+
+.rtGreen {
+  --rt-color: #6fcfa4;
+  --rt-fill: #dcf5ea;
+}
+
+.rtOrange {
+  --rt-color: #f0b46a;
+  --rt-fill: #fbeedb;
+}
+
+.rtTeal {
+  --rt-color: #6ac6d4;
+  --rt-fill: #dcf3f6;
+}
+
+[data-theme='dark'] .rtRed {
+  --rt-fill: #5a3536;
+}
+
+[data-theme='dark'] .rtPurple {
+  --rt-fill: #37375f;
+}
+
+[data-theme='dark'] .rtGreen {
+  --rt-fill: #2a4d40;
+}
+
+[data-theme='dark'] .rtOrange {
+  --rt-fill: #5a4630;
+}
+
+[data-theme='dark'] .rtTeal {
+  --rt-fill: #2b4d53;
+}
+
+.title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.button {
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--swm-border);
+  background: var(--ifm-background-color);
+  color: var(--ifm-font-color-base);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.buttonActive {
+  border-color: var(--ifm-color-primary);
+  box-shadow: inset 0 0 0 1px var(--ifm-color-primary);
+}
+
+.buttonPrimary {
+  background: var(--ifm-color-primary);
+  border-color: var(--ifm-color-primary);
+  color: var(--ifm-color-primary-contrast-background, #fff);
+}
+
+.tickLabel {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.scene {
+  --bus-line: 5px;
+  --bus-step: 15px;
+  --bus-count: 4;
+  --fork-width: calc(
+    var(--bus-line) + (var(--bus-count) - 1) * var(--bus-step)
+  );
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--fork-width) 48px 300px;
+  grid-template-rows: auto 56px auto 56px auto;
+  grid-template-areas:
+    'code code code code'
+    'side fork fork .'
+    'side fork fork cpu'
+    'side fork fork .'
+    'memory memory memory memory';
+  padding: 24px;
+  border-radius: 16px;
+  background-color: var(--sim-bg);
+}
+
+.scene {
+  outline: 2px solid transparent;
+  outline-offset: 3px;
+  transition: outline-color 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.sceneRunning {
+  outline-color: var(--ifm-color-primary);
+  animation: sceneRunning 1.8s ease-in-out infinite;
+}
+
+@keyframes sceneRunning {
+  0%,
+  100% {
+    outline-color: var(--ifm-color-primary);
+  }
+  50% {
+    outline-color: color-mix(
+      in srgb,
+      var(--ifm-color-primary) 55%,
+      transparent
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sceneRunning {
+    animation: none;
+  }
+}
+
+.sceneNoMemory {
+  grid-template-rows: auto 56px auto 0 0;
+}
+
+.areaCode {
+  grid-area: code;
+}
+
+.areaCpu {
+  grid-area: cpu;
+  align-self: center;
+}
+
+.areaMemory {
+  grid-area: memory;
+}
+
+@media (max-width: 720px) {
+  .scene {
+    grid-template-columns: minmax(0, 1fr) var(--fork-width) 24px 200px;
+  }
+}
+
+.areaSide {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 16px;
+  min-width: 0;
+  min-height: 0;
+  padding: 14px 12px 22px 0;
+}
+
+.areaSide .phone {
+  align-self: center;
+}
+
+.consolePanel {
+  flex: 1;
+  min-height: 0;
+}
+
+.consolePanel .panelBody {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding: 10px 12px;
+}
+
+.phone {
+  position: relative;
+  width: 132px;
+  padding: 10px 8px;
+  border: 3px solid var(--sim-border);
+  border-radius: 20px;
+  background-color: var(--sim-panel);
+  transition: border-color 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.phoneRedrawn {
+  border-color: var(--rt-red);
+}
+
+.phoneNotch {
+  width: 40px;
+  height: 6px;
+  margin: 0 auto 8px;
+  border-radius: 3px;
+  background-color: var(--sim-border);
+}
+
+.phoneScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-height: 150px;
+  padding: 12px 8px;
+  border-radius: 10px;
+  background-color: var(--sim-idle-fill);
+}
+
+.phoneEmpty {
+  margin: auto;
+  font-size: 0.7rem;
+  color: var(--sim-muted);
+  text-align: center;
+}
+
+.phoneView {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.phoneBox {
+  display: block;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background-color: var(--rt-color, #8787e8);
+  transition: transform 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.phoneText {
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.phoneButton {
+  position: relative;
+  padding: 6px 14px;
+  border: 2px solid var(--sim-border);
+  border-radius: 999px;
+  background-color: var(--sim-panel);
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition:
+    background-color 180ms cubic-bezier(0.2, 0, 0, 1),
+    border-color 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.phoneButtonPressed {
+  border-color: var(--rt-red);
+  background-color: var(--rt-red-fill);
+}
+
+.phoneTouch {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--rt-red);
+  background-color: rgba(232, 135, 137, 0.35);
+}
+
+.forkBus {
+  grid-area: fork;
+  position: relative;
+  min-height: 0;
+}
+
+.forkLine {
+  --slot-x: calc(var(--slot) * var(--bus-step));
+  --slot-y: calc(
+    50% + (var(--slot) - (var(--bus-count) - 1) / 2) * var(--bus-step)
+  );
+  position: absolute;
+  background-color: var(--sim-bus-idle);
+  animation-duration: 50ms;
+  animation-timing-function: cubic-bezier(0.33, 0, 0.2, 1);
+  animation-fill-mode: both;
+}
+
+.forkTrunk {
+  left: calc(var(--slot-x) + var(--bus-line) / 2);
+  right: 0;
+  top: calc(var(--slot-y) - 1.5px);
+  height: 3px;
+  transform-origin: 100% 50%;
+  z-index: 1;
+}
+
+.forkUp {
+  left: calc(var(--slot-x) + 1px);
+  top: 0;
+  width: 3px;
+  height: calc(var(--slot-y) + 1.5px);
+  transform-origin: 50% 100%;
+  z-index: 2;
+}
+
+.forkDown {
+  left: calc(var(--slot-x) + 1px);
+  top: calc(var(--slot-y) - 1.5px);
+  bottom: 0;
+  width: 3px;
+  transform-origin: 50% 0;
+  z-index: 2;
+}
+
+.forkLineActive {
+  background-color: var(--rt-color);
+}
+
+.forkTrunk.forkLineActive {
+  top: calc(var(--slot-y) - var(--bus-line) / 2);
+  height: var(--bus-line);
+  animation-name: busGrowX;
+}
+
+.forkUp.forkLineActive {
+  left: var(--slot-x);
+  width: var(--bus-line);
+  height: calc(var(--slot-y) + var(--bus-line) / 2);
+  animation-name: busGrowY;
+  animation-delay: 50ms;
+}
+
+.forkDown.forkLineActive {
+  left: var(--slot-x);
+  top: calc(var(--slot-y) - var(--bus-line) / 2);
+  width: var(--bus-line);
+  animation-name: busGrowY;
+  animation-delay: 50ms;
+}
+
+.busPulse {
+  --pulse-length: 22px;
+  --pulse-extra: 2px;
+  position: absolute;
+  background-color: var(--rt-color);
+  border-radius: 3px;
+  animation-timing-function: cubic-bezier(0.33, 0, 0.2, 1);
+  animation-fill-mode: forwards;
+}
+
+.pulseTrunk {
+  top: calc(-1 * var(--pulse-extra));
+  bottom: calc(-1 * var(--pulse-extra));
+  right: 0;
+  width: var(--pulse-length);
+  animation-name: pulseRightToLeft;
+  animation-duration: 50ms;
+}
+
+.pulseUp {
+  left: calc(-1 * var(--pulse-extra));
+  right: calc(-1 * var(--pulse-extra));
+  bottom: 0;
+  height: var(--pulse-length);
+  animation-name: pulseBottomToTop;
+  animation-duration: 80ms;
+  animation-delay: 50ms;
+}
+
+@keyframes busGrowX {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes busGrowY {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes pulseRightToLeft {
+  0% {
+    right: 0;
+    opacity: 1;
+  }
+  99% {
+    right: calc(100% - var(--pulse-length));
+    opacity: 1;
+  }
+  100% {
+    right: calc(100% - var(--pulse-length));
+    opacity: 0;
+  }
+}
+
+@keyframes pulseBottomToTop {
+  0% {
+    bottom: 0;
+    opacity: 0;
+  }
+  1% {
+    opacity: 1;
+  }
+  62.5% {
+    bottom: calc(100% - var(--pulse-length));
+    opacity: 1;
+  }
+  100% {
+    bottom: 100%;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .forkLine,
+  .busPulse,
+  .vm {
+    animation: none;
+  }
+
+  .busPulse {
+    display: none;
+  }
+}
+
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin-top: 18px;
+  border: 2px solid var(--sim-border);
+  background-color: var(--sim-panel);
+  min-width: 0;
+}
+
+.panelTitle {
+  position: absolute;
+  top: -20px;
+  left: -2px;
+  padding: 2px 12px;
+  border: 2px solid var(--sim-border);
+  border-bottom: none;
+  background-color: var(--sim-panel);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+}
+
+.panelBody {
+  padding: 16px;
+  min-width: 0;
+}
+
+.codeList {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+}
+
+.codeGap {
+  height: 1.2em;
+  flex-shrink: 0;
+}
+
+.codeLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 1px 12px 1px 10px;
+  border-left: 3px solid transparent;
+  font-family: var(--swm-code-font, var(--ifm-font-family-monospace));
+  font-size: 0.78rem;
+  line-height: 1.55;
+  transition:
+    background-color 180ms cubic-bezier(0.2, 0, 0, 1),
+    border-color 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.codeBlockStart,
+.codeBlockInner,
+.codeBlockEnd {
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+.codeLineActive {
+  border-left-color: var(--rt-color);
+  background-color: var(--rt-fill);
+}
+
+.codeLineDone {
+  border-left-color: color-mix(in srgb, var(--rt-color) 45%, transparent);
+  background-color: color-mix(in srgb, var(--rt-fill) 45%, transparent);
+}
+
+.codeText {
+  flex: 1;
+  min-width: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.codeDots {
+  display: flex;
+  gap: 4px;
+}
+
+.codeDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--rt-color);
+}
+
+.coreGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.core .boxDetail {
+  font-size: 0.7rem;
+  overflow-wrap: anywhere;
+}
+
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 2px solid var(--sim-border);
+  background-color: var(--sim-idle-fill);
+  min-width: 0;
+  transition:
+    background-color 180ms cubic-bezier(0.2, 0, 0, 1),
+    border-color 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.boxActive {
+  border-width: 3px;
+  padding: 7px 9px;
+  border-color: var(--rt-color);
+  background-color: var(--rt-fill);
+}
+
+.core {
+  height: 132px;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.core.rtRed,
+.core.rtPurple,
+.core.rtGreen,
+.core.rtOrange,
+.core.rtTeal {
+  border-color: color-mix(in srgb, var(--rt-color) 55%, var(--sim-border));
+  background-color: color-mix(in srgb, var(--rt-fill) 70%, var(--sim-panel));
+}
+
+.core.boxActive {
+  border-color: var(--rt-color);
+  background-color: var(--rt-fill);
+}
+
+.queue {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: auto;
+  padding-top: 6px;
+  min-height: 46px;
+}
+
+.queueLabel {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sim-muted);
+}
+
+.queueEmpty {
+  font-size: 0.7rem;
+  color: var(--sim-muted);
+  opacity: 0.7;
+}
+
+.queueChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.queueChip {
+  padding: 0 6px;
+  border: 1px solid var(--rt-color, var(--sim-border));
+  border-radius: 999px;
+  background-color: var(--sim-panel);
+  font-family: var(--swm-code-font, var(--ifm-font-family-monospace));
+  font-size: 0.66rem;
+  line-height: 1.5;
+  animation: appear 200ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.queueChipInternal {
+  border-style: dashed;
+  font-family: var(--ifm-font-family-base);
+}
+
+.queueMore {
+  font-size: 0.66rem;
+  color: var(--sim-muted);
+}
+
+.boxTitle {
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+}
+
+.boxDetail {
+  font-size: 0.75rem;
+  color: var(--sim-muted);
+}
+
+.vmRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.vm {
+  height: 156px;
+  overflow: hidden;
+  animation: appear 200ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.vmPlaceholder {
+  visibility: hidden;
+  animation: none;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.vmStatus {
+  margin-top: 6px;
+  font-family: var(--swm-code-font, var(--ifm-font-family-monospace));
+  font-size: 0.78rem;
+  word-break: break-word;
+}
+
+.vmList {
+  font-family: var(--swm-code-font, var(--ifm-font-family-monospace));
+  font-size: 0.72rem;
+  color: var(--sim-muted);
+  word-break: break-word;
+}
+
+.vmError {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--sim-error);
+  font-weight: 600;
+}
+
+.events {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 7.6em;
+  overflow: hidden;
+  font-size: 0.9rem;
+  color: var(--ifm-font-color-base);
+}
+
+.tickState {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin: 0;
+  height: 3.4em;
+  overflow: hidden;
+  font-weight: 500;
+}
+
+.tickStateLabel {
+  color: var(--rt-color);
+  font-weight: 700;
+}
+
+.tickEvents {
+  margin: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.console {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  overflow-y: auto;
+  font-family: var(--swm-code-font, var(--ifm-font-family-monospace));
+  font-size: 0.78rem;
+}
+
+.consoleTitle {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sim-muted);
+}
+
+.consoleEmpty {
+  color: var(--sim-muted);
+}
+
+.consoleEntry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  background-color: var(--rt-color);
+}
+
+.error {
+  margin: 0;
+  color: var(--sim-error);
+  font-weight: 600;
+}

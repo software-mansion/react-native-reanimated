@@ -1,0 +1,79 @@
+import React from 'react';
+import clsx from 'clsx';
+
+import styles from './styles.module.css';
+import { runtimeClass } from './runtimeColors';
+import type { RuntimeDescriptor } from './runtimeColors';
+
+export interface BusSlot {
+  index: number;
+  runtime: RuntimeDescriptor | undefined;
+  activeSince: number | undefined;
+  lineImpulse: number | undefined;
+}
+
+interface ForkBusProps {
+  slots: BusSlot[];
+  showDown?: boolean;
+}
+
+export default function ForkBus({ slots, showDown = true }: ForkBusProps) {
+  return (
+    <div className={styles.forkBus} aria-hidden="true">
+      {slots.map(({ index, runtime, activeSince, lineImpulse }) => {
+        const isActive = activeSince !== undefined;
+        const colorClass =
+          runtime === undefined ? undefined : runtimeClass(runtime);
+        const lineKey = isActive ? `${index}:${activeSince}` : `${index}`;
+        const pulses =
+          isActive && lineImpulse !== undefined && lineImpulse > activeSince;
+        const style = { '--slot': index } as React.CSSProperties;
+        return (
+          <React.Fragment key={lineKey}>
+            <span
+              className={clsx(
+                styles.forkLine,
+                styles.forkTrunk,
+                colorClass,
+                isActive && styles.forkLineActive
+              )}
+              style={style}>
+              {pulses && (
+                <span
+                  key={lineImpulse}
+                  className={clsx(styles.busPulse, styles.pulseTrunk)}
+                />
+              )}
+            </span>
+            <span
+              className={clsx(
+                styles.forkLine,
+                styles.forkUp,
+                colorClass,
+                isActive && styles.forkLineActive
+              )}
+              style={style}>
+              {pulses && (
+                <span
+                  key={lineImpulse}
+                  className={clsx(styles.busPulse, styles.pulseUp)}
+                />
+              )}
+            </span>
+            {showDown && (
+              <span
+                className={clsx(
+                  styles.forkLine,
+                  styles.forkDown,
+                  colorClass,
+                  isActive && styles.forkLineActive
+                )}
+                style={style}
+              />
+            )}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+}

@@ -4,8 +4,7 @@ sidebar_position: 0
 
 # Why Worklets
 
-<!--
-1. To understand why a Worklets are needed, we have to look into the model of React Native.
+{/* 1. To understand why a Worklets are needed, we have to look into the model of React Native.
 2. React Native is a native app, meaning it has a main (UI) thread.
 3. This native app spawns a new threads, called the JavaScript thread (JS thread).
 4. This thread creates a new Hermes JavaScript Virtual Machine (JSVM), also called a JavaScript Runtime.
@@ -18,8 +17,7 @@ sidebar_position: 0
 9. Then, what we need is to create a separate JSVM. A JSVM is just a region in memory so it's not bound to any thread.
 10. We can use it to dispatch critical work on this extra JSVM, on the main thread.
 11. We can also offload the bottleneck to a yet another JSVM, off the JS thread and main thread.
-12. This is how React Native Worklets work.
--->
+12. This is how React Native Worklets work.*/}
 
 To understand why Worklets are needed, we have to look at how a React Native app is constructed.
 
@@ -32,6 +30,7 @@ Your JavaScript doesn't run there. At startup, the native app spawns a separate 
 The JS thread executes all of your app's JavaScript: your React components, your business logic, your event handlers. Its job is to figure out what the screen should look like and tell the UI thread how to render it.
 
 <ImagePlaceholder>
+    TODO: add the simulation here
   Diagram: the UI thread rendering views, the JS thread running the RN Runtime.
 </ImagePlaceholder>
 
@@ -43,7 +42,7 @@ __A JavaScript Runtime and a thread aren't the same thing!__
 
 - __A JavaScript Runtime is an execution environment__: a set of native functions (CPU instructions) to evaluate JavaScript code and data structures to store global objects, allocated JavaScript values, and the current execution state.
 
-- __A thread is an OS-level primitive that executes CPU instructions.__ The operating system decides when and on which CPU core it runs.
+- __A thread is an OS-level primitive for executing CPU instructions.__ The operating system decides when and on which CPU core it runs.
 
 A JavaScript Runtime is an exclusive resource. A thread must acquire it before using it to execute JavaScript code. After the thread finishes execution and releases it, another thread can acquire it.
 
@@ -53,10 +52,10 @@ A JavaScript Runtime is an exclusive resource. A thread must acquire it before u
 
 Since all your app logic lives inside the JavaScript Bundle and is executed only on one thread, you might run into situation, when a critical UI event has to wait for the JS thread to trigger a respective JavaScript event handler for it, visibly lagging the app.
 
-<!-- necessary: make the busy JS thread be occupied by something actually making sense -->
-
 <ImagePlaceholder>
     Diagram: UI event waiting for the JS thread event loop to pick it up
+
+    JS thread: executes "busyBusinessLogicTask" in JS code that makes the execution of the touch event to be visibly delayed
 </ImagePlaceholder>
 
 Similar situation would happen if animation calculations were to be done via `useState` props and busy JS thread:
@@ -65,9 +64,9 @@ Similar situation would happen if animation calculations were to be done via `us
     Code? `useState` animation giving sparse updates (please don't do this)
 </ImagePlaceholder>
 
-## The solution
+## Overcoming limitations
 
-To solve this issue, we have to somehow move the execution of the UI-critical parts of our app off the JS thread. We could write a [native module](link) but preferably we'd keep the code purely in JavaScript. We can't forcefully run some JavaScript code on the UI thread using the RN Runtime as it's single-threaded by design and it would result in a crash.
+To solve this issue, we have to somehow move the execution of the UI-critical parts of our app off the JS thread. We can't use a [native module](link) as it would move our logic from the JavaScript code. We can't forcefully run some JavaScript code on the UI thread using the RN Runtime as it's single-threaded by design and it would result in a crash.
 
 This means that we have to create a new Runtime and move the event and animation logic outside the RN Runtime to the new Runtime.
 
@@ -85,4 +84,12 @@ Moreover, we can also offload the heavy computation that kept our JS thread over
 
 What we can do is to spawn another Runtime instead and a thread that we'll dedicate to execute tasks using the new Runtime. We'll call this Runtime a Worker Runtime.
 
-<!--<ImagePlaceholder>-->
+<ImagePlaceholder>
+    Third runtime joins the party
+</ImagePlaceholder>
+
+This is how Worklets library allow you to overcome bottlenecks on the RN Runtime and the JS thread, while keeping your app's logic strictly in JavaScript.
+
+## Next chapter
+
+With that knowledge you're now ready to write [your first worklet](./1-your-first-worklet).

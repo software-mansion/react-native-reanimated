@@ -16,6 +16,7 @@ import SVGDiagram from '@site/src/components/SVGDiagram';
 import ImagePlaceholder from '@site/src/components/ImagePlaceholder';
 import PlatformTable from '@site/src/components/PlatformTable';
 import CallTable from '@site/src/components/CallTable';
+import ThreadingSimulation from '@site/src/components/ThreadingSimulation';
 
 export default {
   // Re-use the default mapping
@@ -36,4 +37,5 @@ export default {
   ImagePlaceholder,
   PlatformTable,
   CallTable,
+  ThreadingSimulation,
 };
