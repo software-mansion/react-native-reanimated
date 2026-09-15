@@ -1,6 +1,8 @@
 'use strict';
 import { processColor as processColorRN } from 'react-native';
+// @ts-expect-error React Native ships no type declarations for this internal module.
 import processBackgroundImageRN from 'react-native/Libraries/StyleSheet/processBackgroundImage';
+// @ts-expect-error React Native ships no type declarations for this internal module.
 import processBoxShadowRN from 'react-native/Libraries/StyleSheet/processBoxShadow';
 
 import {
@@ -65,9 +67,9 @@ describe('unprocessProps', () => {
         },
       ],
     ])('round-trips %s through React Native', (boxShadow) => {
-      const props: StyleProps = {
+      const props = {
         boxShadow: processBoxShadow(boxShadow, context),
-      };
+      } as unknown as StyleProps;
 
       unprocessProps(props);
 
@@ -86,9 +88,9 @@ describe('unprocessProps', () => {
       'radial-gradient(ellipse 22% 70% at 50% 0%, #ffe6c4 0%, transparent 100%)',
       'radial-gradient(closest-side, red, blue), linear-gradient(180deg, red, blue)',
     ])('round-trips %s through React Native', (backgroundImage) => {
-      const props: StyleProps = {
+      const props = {
         backgroundImage: processBackgroundImage(backgroundImage, context),
-      };
+      } as unknown as StyleProps;
 
       unprocessProps(props);
 
