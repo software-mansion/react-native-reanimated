@@ -397,6 +397,11 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
           before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
       if (!config) {
+        for (const auto &node : collectedTransition.nodes) {
+          if (node) {
+            transaction.nodesToRestore.push_back(node);
+          }
+        }
         continue;
       }
       const auto &afterNode = collectedTransition.nodes[AFTER];
@@ -470,6 +475,7 @@ void LayoutAnimationsProxy::hideTransitioningViews(
     int indexNum = static_cast<int>(index);
     const auto &shadowView = transition.snapshot[indexNum];
     const auto &parentTag = transition.parentTag[indexNum];
+    hiddenViewTags_.insert(shadowView.tag);
     auto m = ShadowViewMutation::UpdateMutation(
         shadowView, cloneViewWithoutOpacity(shadowView, propsParserContext), parentTag);
     hiddenMutations.push_back(m);
@@ -477,6 +483,26 @@ void LayoutAnimationsProxy::hideTransitioningViews(
   auto &filteredMutations = transaction.filteredMutations;
   const auto insertionPoint = index == BEFORE ? filteredMutations.begin() : filteredMutations.end();
   filteredMutations.insert(insertionPoint, hiddenMutations.begin(), hiddenMutations.end());
+}
+
+// The hide in hideTransitioningViews is not stored in the light tree, so a
+// later Update for the same view carries full opacity and would show the view
+// again. Force opacity 0 on every outgoing Update for a hidden view until the
+// restore in cleanupSharedTransitions removes its tag from hiddenViewTags_.
+void LayoutAnimationsProxy::keepTransitioningViewsHidden(
+    ShadowViewMutationList &filteredMutations,
+    const PropsParserContext &propsParserContext) const {
+  if (hiddenViewTags_.empty()) {
+    return;
+  }
+  for (auto &mutation : filteredMutations) {
+    if (mutation.type == ShadowViewMutation::Update && hiddenViewTags_.contains(mutation.newChildShadowView.tag)) {
+      mutation = ShadowViewMutation::UpdateMutation(
+          mutation.oldChildShadowView,
+          cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext),
+          mutation.parentTag);
+    }
+  }
 }
 
 std::optional<SurfaceId>
@@ -598,6 +624,7 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
   auto &filteredMutations = transaction.filteredMutations;
   for (const auto &node : transaction.nodesToRestore) {
     ReanimatedSystraceSection s("Restore tag");
+    hiddenViewTags_.erase(node->current.tag);
     const auto nodeIt = lightNodes_.find(node->current.tag);
     if (nodeIt == lightNodes_.end() || nodeIt->second != node) {
       continue;
