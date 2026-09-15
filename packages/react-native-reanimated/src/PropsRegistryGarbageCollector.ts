@@ -68,7 +68,7 @@ export const PropsRegistryGarbageCollector = {
   },
 };
 
-function unprocessProps(props: StyleProps) {
+export function unprocessProps(props: StyleProps) {
   unprocessColorsInProps(props);
   unprocessBoxShadow(props);
   unprocessBackgroundImage(props);
