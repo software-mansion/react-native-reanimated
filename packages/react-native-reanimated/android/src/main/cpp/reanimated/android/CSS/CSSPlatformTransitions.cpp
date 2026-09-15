@@ -2,6 +2,7 @@
 
 #include <reanimated/CSS/easing/EasingConfigs.h>
 
+#include <algorithm>
 #include <variant>
 #include <vector>
 
@@ -31,10 +32,18 @@ PlatformEasing toPlatformEasing(const css::EasingConfig &easingConfig) {
   return {PlatformEasing::Type::Linear, {}, {}};
 }
 
-/// Must match cssPropertyWriterFor on the Kotlin side.
 std::optional<int> platformPropertyId(const std::string &propertyName) {
-  if (propertyName == "opacity") {
-    return 0;
+  const auto &properties = css::kAndroidPlatformProperties;
+  const auto it = std::ranges::find(properties, propertyName);
+  return it != properties.end() ? std::optional(static_cast<int>(it - properties.begin())) : std::nullopt;
+}
+
+std::optional<double> toJniValue(const css::PlatformValue &value) {
+  if (const auto *scalar = std::get_if<double>(&value)) {
+    return *scalar;
+  }
+  if (const auto *channels = std::get_if<std::array<double, 4>>(&value)) {
+    return css::packColorChannels(*channels);
   }
   return std::nullopt;
 }
@@ -66,10 +75,9 @@ bool CSSPlatformTransitions::applyTransition(
     const css::CSSTransitionPropertySettings *settings,
     const bool persistent,
     const double timestamp) {
-  // Only scalars are routed today (opacity); anything else stays on the loop.
-  const auto *from = std::get_if<double>(&fromValue);
-  const auto *to = std::get_if<double>(&toValue);
-  if (from == nullptr || to == nullptr) {
+  const auto from = toJniValue(fromValue);
+  const auto to = toJniValue(toValue);
+  if (!from.has_value() || !to.has_value()) {
     return false;
   }
 
