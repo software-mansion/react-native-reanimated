@@ -60,7 +60,7 @@ void LayoutAnimationsProxy_Experimental::warnIfSynchronousPropsMissing(const Tag
     consoleWarn.call(
         uiRuntime,
         std::string("[Reanimated] View ") + std::to_string(tag) + " starts a " + animationKind +
-            " with props that were applied through the synchronous path, so it starts from stale values. Set the SYNCHRONOUS_PROPS_IN_LIGHT_TREE dynamic feature flag to true to keep those props in the light tree.");
+            " with props that were applied through the synchronous path, so it starts from stale values. Set the SYNCHRONOUS_PROPS_IN_LIGHT_TREE dynamic feature flag to notify the reanimated Layout Animation / Shared Transition bookkeeping of the synchronous updates");
   });
 }
 #endif
