@@ -17,6 +17,10 @@ struct TransitionTiming {
 
 TransitionTiming makeTiming(double timestamp, double duration, double delay, EasingConfig easing);
 
+/// The easing output at `timestamp`. 0 while the run is still delayed: steps and
+/// linear() stops can map progress 0 above 0, but nothing has played yet.
+double easedProgressAt(const TransitionTiming &timing, double timestamp);
+
 /// The run that reverses `previous` mid-flight, shortened by how far `previous`
 /// got: https://drafts.csswg.org/css-transitions/#reversing
 TransitionTiming
