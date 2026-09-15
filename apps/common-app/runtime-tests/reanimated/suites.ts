@@ -74,6 +74,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'css animations',
+    importTest: () => {
+      require('./tests/css/animationCancellation.test');
+    },
+  },
+  {
     testSuiteName: 'utilities',
     importTest: () => {
       require('./tests/utilities/relativeCoords.test');

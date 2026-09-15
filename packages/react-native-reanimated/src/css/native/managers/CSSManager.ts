@@ -72,6 +72,8 @@ export default class CSSManager implements ICSSManager {
 
     const hasAnimation = animationProperties !== null;
     const hasTransition = transitionProperties !== null;
+    const hadAttachedAnimations =
+      this.cssAnimationsManager.hasAttachedAnimations();
 
     const [animationCallbacks, transitionCallbacks] = splitCSSCallbacks(props);
 
@@ -85,6 +87,7 @@ export default class CSSManager implements ICSSManager {
     const normalizedStyle =
       hasAnimation ||
       hasTransition ||
+      hadAttachedAnimations ||
       (IS_ANDROID && this.hadTransitionLastUpdate)
         ? this.propsBuilder.build(filteredStyle)
         : undefined;
@@ -95,11 +98,14 @@ export default class CSSManager implements ICSSManager {
       transitionEventMask
     );
 
-    // Record the committed style as the base so animations and (on Android) a
-    // detaching transition can revert to it instead of interpolator defaults.
+    // Record the committed style as the base so animations (including one
+    // detached by this update) and, on Android, a detaching transition can
+    // revert to it instead of stale values or interpolator defaults.
     if (
       normalizedStyle &&
-      (hasAnimation || (IS_ANDROID && transitionDetached))
+      (hasAnimation ||
+        hadAttachedAnimations ||
+        (IS_ANDROID && transitionDetached))
     ) {
       setViewStyle(this.viewTag, normalizedStyle);
     }
