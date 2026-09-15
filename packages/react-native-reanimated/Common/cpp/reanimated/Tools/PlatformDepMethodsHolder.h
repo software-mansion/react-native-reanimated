@@ -70,9 +70,8 @@ struct PlatformDepMethodsHolder {
   MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
   PlatformAttachPseudoSelectorFunction attachPseudoSelector;
   PlatformDetachPseudoSelectorFunction detachPseudoSelector;
-  // The native CSS backends are optional and come last, so a platform that has
-  // none (or has it disabled by its feature flag) omits them and gets value-init;
-  // null keeps every CSS transition and animation on the C++ loop.
+  // Optional and last, so a platform without them just omits them; null keeps
+  // CSS transitions and animations on the C++ loop.
   std::shared_ptr<css::CSSPlatformTransitionBackend> platformTransitionBackend;
   std::shared_ptr<css::CSSPlatformAnimationFactory> platformAnimationFactory;
 };

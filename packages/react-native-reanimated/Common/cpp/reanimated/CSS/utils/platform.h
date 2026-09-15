@@ -22,9 +22,8 @@ using PlatformValue = std::variant<double, std::array<double, 2>, std::array<dou
 /// Properties the Android backend animates natively; the index is the id the JNI seam
 /// carries and cssPropertyWriterFor switches on. A new one also needs a traitsFor() entry
 /// in platform.cpp and a writer, or its endpoints never parse and it stays on the loop.
-/// borderWidth affects layout on Android, so it stays on the loop. shadowColor is
-/// supported on Android API 28+, but is not routed here; the other shadow* props are
-/// iOS-only.
+/// borderWidth affects layout, so it stays on the loop; shadowColor (API 28+) is not
+/// routed yet.
 inline constexpr std::array<std::string_view, 4> kAndroidPlatformProperties{
     "opacity",
     "backgroundColor",
@@ -33,9 +32,7 @@ inline constexpr std::array<std::string_view, 4> kAndroidPlatformProperties{
 };
 #endif // ANDROID
 
-/// Whether parsePlatformValues knows the property, i.e. it has a platform value
-/// kind and a CSS default. A backend that animates every value kind can route on
-/// this alone; one that animates fewer properties keeps its own list.
+/// Whether parsePlatformValues knows the property (value kind and CSS default).
 bool hasPlatformValueTraits(const std::string &propertyName);
 
 std::optional<PlatformValue> lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, double progress);

@@ -402,9 +402,8 @@ std::shared_ptr<css::CSSPlatformTransitionBackend> NativeProxy::makePlatformTran
   if constexpr (!StaticFeatureFlags::getFlag("ANDROID_CSS_PLATFORM_TRANSITIONS")) {
     return nullptr;
   }
-  // Owned by the backend rather than by NativeProxy: this runs from the
-  // constructor's member-initializer list, where a member would still be raw
-  // memory.
+  // Not a NativeProxy member: this runs from the ctor's member-initializer list,
+  // where a member would still be raw memory.
   auto easings = std::make_shared<CSSPlatformEasings>(
       bindThis(&NativeProxy::cssDefineEasing), bindThis(&NativeProxy::cssUndefineEasing));
   return std::make_shared<CSSPlatformTransitions>(

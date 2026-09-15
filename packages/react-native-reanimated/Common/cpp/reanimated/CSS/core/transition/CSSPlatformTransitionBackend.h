@@ -14,23 +14,18 @@ namespace reanimated::css {
 using namespace facebook;
 using namespace react;
 
-/// The platform's native driver for CSS transitions. A platform supplies one
-/// only when its native transitions are enabled, in the same place it builds the
-/// rest of its PlatformDepMethodsHolder; without one every property runs on the
-/// C++ loop, so the C++ side never reads a platform feature flag.
+/// Native driver for CSS transitions. A platform supplies one only when its
+/// native transitions are enabled; without one every property runs on the C++ loop.
 class CSSPlatformTransitionBackend {
  public:
   virtual ~CSSPlatformTransitionBackend() = default;
 
-  /// Whether the property can animate natively for the given easing. Each
-  /// backend routes its own subset of properties and needs an easing its
-  /// interpolators can carry; everything else runs on the C++ loop.
+  /// Whether the property can animate natively with the given easing.
   virtual bool canRoute(const std::string &propertyName, const EasingConfig &easing) const = 0;
 
-  /// Animates a routed property natively; a false return falls back to the loop.
-  /// `settings` is null on the pseudo-selector toggle path, where the backend reuses
-  /// the settings captured at config-apply time. `persistent` means the target has no
-  /// committed style behind it, so the backend must hold the value past the animation.
+  /// False falls back to the loop. `settings` is null on the pseudo-selector toggle
+  /// path (reuse the ones captured at config apply). `persistent` means no committed
+  /// style backs the target, so the value must be held past the animation.
   virtual bool applyTransition(
       Tag viewTag,
       const std::string &propertyName,

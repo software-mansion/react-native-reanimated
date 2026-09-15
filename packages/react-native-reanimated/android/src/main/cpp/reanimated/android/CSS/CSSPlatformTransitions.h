@@ -37,8 +37,8 @@ class CSSPlatformTransitions : public css::CSSPlatformTransitionBackend {
 
   CSSPlatformTransitions(AnimateFunction animate, RemoveFunction remove, std::shared_ptr<CSSPlatformEasings> easings);
 
-  /// Only the properties with a Kotlin-side writer route; any TimeInterpolator can
-  /// carry a curve, so the easing never decides.
+  /// Every easing routes (a TimeInterpolator carries any curve); only properties
+  /// with a Kotlin writer do.
   bool canRoute(const std::string &propertyName, const css::EasingConfig &easing) const override;
 
   /// A null `settings` marks the pseudo-selector toggle path, which carries none of

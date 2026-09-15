@@ -143,11 +143,9 @@ class REACSSPlatformTransitionBackend : public css::CSSPlatformTransitionBackend
 
   bool canRoute(const std::string &propertyName, const css::EasingConfig &easing) const override
   {
-    // TODO: border props route unconditionally, but snap when RN rasterizes the
-    // border (view fails useCoreAnimationBorderRendering); they should route only
-    // when the platform can render them correctly (follow-up PR).
-    // CAMediaTimingFunction can express only linear and cubic-bezier curves;
-    // steps / linear-stops easings have to interpolate per-frame on the loop.
+    // TODO: border props snap when RN rasterizes the border (the view fails
+    // useCoreAnimationBorderRendering); route them only when the layer draws them.
+    // CAMediaTimingFunction carries only linear and cubic-bezier curves.
     return css::hasPlatformValueTraits(propertyName) &&
         (std::holds_alternative<css::LinearEasing>(easing) || std::holds_alternative<css::CubicBezierEasing>(easing));
   }

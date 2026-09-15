@@ -123,7 +123,6 @@ bool CSSAnimation::isReversed() const {
 }
 
 void CSSAnimation::updatePropertyRouting() {
-  // A platform supplies the factory only when its native animations are enabled.
   if (!platformAnimationFactory_) {
     return;
   }
