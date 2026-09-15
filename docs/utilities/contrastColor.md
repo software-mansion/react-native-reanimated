@@ -50,6 +50,8 @@ The background color to contrast against. Accepts any color format supported by 
 
 `contrastColor` returns `'white'` or `'black'` – whichever has the higher contrast ratio with `color`. If both have the same contrast, `'white'` is returned.
 
+## Example
+
 ## Remarks
 
 * `contrastColor` is a worklet, so it can be used inside `useAnimatedStyle`, `useDerivedValue` and other worklets, as well as on the JavaScript thread.
