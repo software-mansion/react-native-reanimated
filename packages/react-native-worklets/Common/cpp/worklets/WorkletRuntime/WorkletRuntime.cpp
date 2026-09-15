@@ -34,6 +34,7 @@ class AroundLock {
 
 class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
   AroundLock aroundLock_;
+  const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   std::shared_ptr<jsi::Runtime> runtime_;
 
  public:
@@ -42,7 +43,13 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
       const std::shared_ptr<std::recursive_mutex> &runtimeMutex)
       : jsi::WithRuntimeDecorator<AroundLock>(*runtime, aroundLock_),
         aroundLock_(runtimeMutex),
+        runtimeMutex_(runtimeMutex),
         runtime_(std::move(runtime)) {}
+
+  ~LockableRuntime() override {
+    const std::lock_guard<std::recursive_mutex> lock(*runtimeMutex_);
+    runtime_.reset();
+  }
 };
 
 static std::shared_ptr<jsi::Runtime>
