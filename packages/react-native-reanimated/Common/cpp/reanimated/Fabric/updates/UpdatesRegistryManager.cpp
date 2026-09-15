@@ -106,15 +106,10 @@ PropsMap UpdatesRegistryManager::collectProps() {
   return propsMap;
 }
 
-void UpdatesRegistryManager::appendRegistryProps(PropsMap &propsMap) {
+void UpdatesRegistryManager::mergeRegistryProps(const Tag viewTag, folly::dynamic &target) {
   react_native_assert(isLockedByCurrentThread());
-  for (auto &[family, propsVector] : propsMap) {
-    for (const auto &registry : registries_) {
-      auto props = registry->get(family->getTag());
-      if (props.isObject()) {
-        propsVector.emplace_back(RawProps(std::move(props)));
-      }
-    }
+  for (const auto &registry : registries_) {
+    registry->mergeInto(viewTag, target);
   }
 }
 
