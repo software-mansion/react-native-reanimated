@@ -13,7 +13,7 @@
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
 #include <reanimated/Fabric/updates/SynchronousPropNames.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
@@ -1057,13 +1057,11 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
 }
 
 void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch) {
-  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    if (layoutAnimationsProxyRegistry_ && !synchronousUpdatesBatch.empty()) {
-      if (DynamicFeatureFlags::getFlag("TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS")) {
-        layoutAnimationsProxyRegistry_->applySynchronousProps(synchronousUpdatesBatch);
-      } else {
-        layoutAnimationsProxyRegistry_->recordSkippedSynchronousProps(synchronousUpdatesBatch);
-      }
+  if (layoutAnimationsProxyRegistry_ && !synchronousUpdatesBatch.empty()) {
+    if (DynamicFeatureFlags::getFlag("TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS")) {
+      layoutAnimationsProxyRegistry_->applySynchronousProps(synchronousUpdatesBatch);
+    } else {
+      layoutAnimationsProxyRegistry_->recordSkippedSynchronousProps(synchronousUpdatesBatch);
     }
   }
 
@@ -1283,8 +1281,8 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
 #endif
   };
 
-  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    layoutAnimationsProxyRegistry_ = createLayoutAnimationsProxyExperimentalRegistry(dependencies);
+  if constexpr (!StaticFeatureFlags::getFlag("USE_LEGACY_LAYOUT_ANIMATIONS_PROXY")) {
+    layoutAnimationsProxyRegistry_ = createLayoutAnimationsProxyDefaultRegistry(dependencies);
   } else {
     layoutAnimationsProxyRegistry_ = createLayoutAnimationsProxyLegacyRegistry(dependencies);
   }

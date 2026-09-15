@@ -2,12 +2,12 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   getStaticFeatureFlag,
-  ZoomIn,
-  ZoomOut,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
+  ZoomIn,
+  ZoomOut,
 } from 'react-native-reanimated';
 
 const SPIKE_COUNT = 60;
@@ -52,8 +52,8 @@ function SpikeNode({ index, onDone }: { index: number; onDone: () => void }) {
 }
 
 export default function ExitingTagReuseStressExample() {
-  const sharedElementTransitionsEnabled = getStaticFeatureFlag(
-    'ENABLE_SHARED_ELEMENT_TRANSITIONS'
+  const legacyLayoutAnimationsProxyEnabled = getStaticFeatureFlag(
+    'USE_LEGACY_LAYOUT_ANIMATIONS_PROXY'
   );
   const [visibleIds, setVisibleIds] = useState<Set<number>>(() => new Set());
   const [spikeIds, setSpikeIds] = useState<number[]>([]);
@@ -158,8 +158,8 @@ export default function ExitingTagReuseStressExample() {
           cleanup bugs.
         </Text>
         <Text style={styles.debugLine}>
-          JS flag ENABLE_SHARED_ELEMENT_TRANSITIONS ={' '}
-          {String(sharedElementTransitionsEnabled)}
+          JS flag USE_LEGACY_LAYOUT_ANIMATIONS_PROXY ={' '}
+          {String(legacyLayoutAnimationsProxyEnabled)}
         </Text>
       </View>
 
