@@ -16,6 +16,7 @@
 #include <mutex>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -125,7 +126,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void cleanupCompletedAnimations(
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext,
-      bool preserveRemovals = false) const;
+      bool preserveRemovals = false,
+      const std::unordered_set<Tag> &preservedTags = {}) const;
   ShadowView cloneViewWithOpacity(
       const ShadowView &shadowView,
       double opacity,

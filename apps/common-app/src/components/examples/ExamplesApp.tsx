@@ -1,14 +1,23 @@
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { StackNavigationProp } from '@react-navigation/stack';
+import type { Dispatch, SetStateAction } from 'react';
 import { memo, useCallback, useLayoutEffect, useMemo, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Platform,
+  Pressable,
+  SectionList,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { FlatList, Touchable } from 'react-native-gesture-handler';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import { createStack, IS_MACOS } from '@/utils';
 
 import { BackButton, DrawerButton } from '../navigation';
-import type { Example } from './types';
+import type { Example, ExampleEntry, ExampleGroup } from './types';
+import { isExampleGroup } from './types';
 
 type RootStackParamList = Record<string, undefined>;
 
@@ -18,15 +27,86 @@ type NavigationProp =
 
 type AnimationType = 'none' | 'default' | 'fade';
 
+/** Namespaced to avoid collisions */
+function groupRoute(key: string): string {
+  return `group/${key}`;
+}
+
 export interface ExamplesAppProps {
-  examples: Record<string, Example>;
+  examples: Record<string, ExampleEntry>;
   headerTitle: string;
   title: string;
 }
 
+/** Every example in the registry, flattened out of its group. */
+function flattenExamples(
+  entries: Record<string, ExampleEntry>
+): Record<string, Example> {
+  const flat: Record<string, Example> = {};
+
+  const add = (name: string, example: Example) => {
+    if (__DEV__ && name in flat) {
+      console.warn(
+        `[examples] duplicate key "${name}" - only one of the screens is reachable`
+      );
+    }
+    flat[name] = example;
+  };
+
+  for (const [key, entry] of Object.entries(entries)) {
+    if (isExampleGroup(entry)) {
+      for (const [name, example] of Object.entries(entry.examples)) {
+        add(name, example);
+      }
+    } else {
+      add(key, entry);
+    }
+  }
+  return flat;
+}
+
+const OTHER_SECTION = 'Other';
+
+/**
+ * Buckets entries into `sections`, keeping their order. Entries without a known
+ * section go to "Other", so nothing disappears while sections are assigned.
+ */
+function groupBySection(
+  entries: Record<string, ExampleEntry>,
+  sections: ReadonlyArray<string>
+): Array<{ title: string; data: Array<string> }> {
+  const buckets = new Map<string, Array<string>>(
+    [...sections, OTHER_SECTION].map((sectionTitle) => [sectionTitle, []])
+  );
+  for (const [name, entry] of Object.entries(entries)) {
+    const section =
+      !isExampleGroup(entry) &&
+      entry.section !== undefined &&
+      buckets.has(entry.section)
+        ? entry.section
+        : OTHER_SECTION;
+    buckets.get(section)?.push(name);
+  }
+  return [...buckets]
+    .filter(([, data]) => data.length > 0)
+    .map(([sectionTitle, data]) => ({ data, title: sectionTitle }));
+}
+
 function ExamplesApp({ examples, headerTitle, title }: ExamplesAppProps) {
-  const names = useMemo(() => Object.keys(examples), [examples]);
   const shouldReduceMotion = useReducedMotion();
+  // Visited items live here so the marker survives moving between the home
+  // screen and a group screen.
+  const [wasClicked, setWasClicked] = useState<Array<string>>([]);
+
+  const allExamples = useMemo(() => flattenExamples(examples), [examples]);
+  const allNames = useMemo(() => Object.keys(allExamples), [allExamples]);
+  const groups = useMemo(
+    () =>
+      Object.entries(examples).filter(
+        (entry): entry is [string, ExampleGroup] => isExampleGroup(entry[1])
+      ),
+    [examples]
+  );
 
   let animation: AnimationType = 'default';
   if (IS_MACOS) {
@@ -48,22 +128,45 @@ function ExamplesApp({ examples, headerTitle, title }: ExamplesAppProps) {
           title,
         }}>
         {({ navigation }: { navigation: NavigationProp }) => (
-          <HomeScreen
-            examples={examples}
-            names={names}
+          <ExampleListScreen
+            allExamples={allExamples}
+            entries={examples}
             navigation={navigation}
+            setWasClicked={setWasClicked}
+            wasClicked={wasClicked}
           />
         )}
       </Stack.Screen>
-      {names.map((name) => (
+      {groups.map(([groupKey, group]) => (
         <Stack.Screen
-          component={examples[name].screen}
+          key={groupKey}
+          name={groupRoute(groupKey)}
+          options={{
+            animation,
+            headerTitle: group.title,
+            title: group.title,
+          }}>
+          {({ navigation }: { navigation: NavigationProp }) => (
+            <ExampleListScreen
+              allExamples={allExamples}
+              entries={group.examples}
+              navigation={navigation}
+              sections={group.sections}
+              setWasClicked={setWasClicked}
+              wasClicked={wasClicked}
+            />
+          )}
+        </Stack.Screen>
+      ))}
+      {allNames.map((name) => (
+        <Stack.Screen
+          component={allExamples[name].screen}
           key={name}
           name={name}
           options={{
-            animation: animation,
-            headerTitle: examples[name].title,
-            title: examples[name].title,
+            animation,
+            headerTitle: allExamples[name].title,
+            title: allExamples[name].title,
           }}
         />
       ))}
@@ -71,32 +174,50 @@ function ExamplesApp({ examples, headerTitle, title }: ExamplesAppProps) {
   );
 }
 
-interface HomeScreenProps {
-  examples: Record<string, Example>;
-  names: Array<string>;
+/**
+ * `entries` is what the list shows while the search box is empty - groups
+ * included. `allExamples` is every example in the app, so search reaches into
+ * groups from any depth.
+ */
+interface ExampleListScreenProps {
+  entries: Record<string, ExampleEntry>;
+  allExamples: Record<string, Example>;
   navigation: NavigationProp;
+  sections?: ReadonlyArray<string>;
+  wasClicked: Array<string>;
+  setWasClicked: Dispatch<SetStateAction<Array<string>>>;
 }
 
-function HomeScreen({ examples, names, navigation }: HomeScreenProps) {
+function ExampleListScreen({
+  allExamples,
+  entries,
+  navigation,
+  sections,
+  setWasClicked,
+  wasClicked,
+}: ExampleListScreenProps) {
   const [search, setSearch] = useState('');
-  const [wasClicked, setWasClicked] = useState<Array<string>>([]);
   const platform =
     Platform.OS === 'ios' || Platform.OS === 'android'
       ? Platform.OS
       : undefined;
 
+  const entryNames = useMemo(() => Object.keys(entries), [entries]);
+
+  // Searching always spans the whole registry, no matter which list is open -
+  // browsing is what the groups narrow, not search.
   const findExamples = useCallback(
     (value: string) => {
       if (value === '') {
-        return names;
+        return entryNames;
       }
-      return names.filter((name) =>
-        examples[name].title
+      return Object.keys(allExamples).filter((name) =>
+        allExamples[name].title
           .toLocaleLowerCase()
           .includes(value.toLocaleLowerCase())
       );
     },
-    [examples, names]
+    [allExamples, entryNames]
   );
 
   useLayoutEffect(() => {
@@ -106,47 +227,128 @@ function HomeScreen({ examples, names, navigation }: HomeScreenProps) {
           setSearch(event.nativeEvent.text);
         },
         onSearchButtonPress: (event) => {
-          const results = findExamples(event.nativeEvent.text);
-          if (results.length >= 1) {
-            navigation.navigate(results[0]);
+          const value = event.nativeEvent.text.trim();
+          if (value === '') {
+            return;
+          }
+          const [firstMatch] = findExamples(value);
+          if (firstMatch !== undefined && firstMatch in allExamples) {
+            navigation.navigate(firstMatch);
           }
         },
       },
       headerTransparent: false,
     });
-  }, [findExamples, navigation]);
+  }, [allExamples, findExamples, navigation]);
+
+  // Whitespace-only input is not a query: it would match no title and leave
+  // the list empty. Trim once and use the result for both the filter and the
+  // search-mode flag.
+  const query = search.trim();
+  const visibleNames = useMemo(
+    () => findExamples(query),
+    [findExamples, query]
+  );
+  const isSearching = query !== '';
+
+  const openExample = useCallback(
+    (name: string) => {
+      navigation.navigate(name);
+      setTimeout(
+        () =>
+          setWasClicked((clicked) =>
+            clicked.includes(name) ? clicked : [...clicked, name]
+          ),
+        500
+      );
+    },
+    [navigation, setWasClicked]
+  );
+
+  const sectionData = useMemo(
+    () => (sections ? groupBySection(entries, sections) : undefined),
+    [entries, sections]
+  );
+
+  const renderEntry = useCallback(
+    ({ item: name }: { item: string }) => {
+      const entry = isSearching ? allExamples[name] : entries[name];
+
+      // Search results come from `allExamples`, which holds no groups, so a
+      // group row can only ever come from `entries`.
+      if (isExampleGroup(entry)) {
+        return (
+          <GroupItem
+            count={Object.keys(entry.examples).length}
+            icon={entry.icon}
+            title={entry.title}
+            onPress={() => navigation.navigate(groupRoute(name))}
+          />
+        );
+      }
+
+      return (
+        <Item
+          icon={entry.icon}
+          shouldWork={platform ? entry.shouldWork?.[platform] : undefined}
+          title={entry.title}
+          wasClicked={wasClicked.includes(name)}
+          disabled={
+            entry.disabledPlatforms?.includes(Platform.OS) ||
+            (entry.needsBundleMode &&
+              // eslint-disable-next-line no-underscore-dangle
+              !globalThis._WORKLETS_BUNDLE_MODE_ENABLED)
+          }
+          onPress={() => openExample(name)}
+        />
+      );
+    },
+    [
+      allExamples,
+      entries,
+      isSearching,
+      navigation,
+      openExample,
+      platform,
+      wasClicked,
+    ]
+  );
+
+  // Search results span every group, so they are listed flat, never sectioned.
+  if (sectionData && !isSearching) {
+    return (
+      <SectionList
+        contentInsetAdjustmentBehavior="automatic"
+        initialNumToRender={entryNames.length}
+        ItemSeparatorComponent={ItemSeparator}
+        renderItem={renderEntry}
+        renderSectionHeader={renderSectionHeader}
+        sections={sectionData}
+        stickySectionHeadersEnabled={true}
+        style={styles.list}
+      />
+    );
+  }
 
   return (
     <FlatList
       contentInsetAdjustmentBehavior="automatic"
-      data={findExamples(search)}
-      initialNumToRender={names.length}
+      data={visibleNames}
+      initialNumToRender={visibleNames.length}
       ItemSeparatorComponent={ItemSeparator}
+      renderItem={renderEntry}
       style={styles.list}
-      renderItem={({ item: name }) => (
-        <Item
-          icon={examples[name].icon}
-          title={examples[name].title}
-          wasClicked={wasClicked.includes(name)}
-          disabled={
-            examples[name].disabledPlatforms?.includes(Platform.OS) ||
-            (examples[name]?.needsBundleMode &&
-              // eslint-disable-next-line no-underscore-dangle
-              !globalThis._WORKLETS_BUNDLE_MODE_ENABLED)
-          }
-          shouldWork={
-            platform ? examples[name].shouldWork?.[platform] : undefined
-          }
-          onPress={() => {
-            navigation.navigate(name);
-            if (!wasClicked.includes(name)) {
-              setTimeout(() => setWasClicked([...wasClicked, name]), 500);
-            }
-          }}
-        />
-      )}
     />
   );
+}
+
+function SectionHeader({ title }: { title: string }) {
+  return <Text style={styles.sectionHeader}>{title}</Text>;
+}
+
+// Module-level so the list gets a stable callback, like `renderItem` does.
+function renderSectionHeader({ section }: { section: { title: string } }) {
+  return <SectionHeader title={section.title} />;
 }
 
 interface ItemProps {
@@ -166,10 +368,8 @@ function Item({
   title,
   wasClicked,
 }: ItemProps) {
-  const Button = IS_MACOS ? Pressable : Touchable;
-
   return (
-    <Button
+    <ItemButton
       activeUnderlayOpacity={0.7}
       style={[
         styles.button,
@@ -177,13 +377,41 @@ function Item({
         wasClicked && styles.visitedItem,
       ]}
       onPress={!disabled ? onPress : undefined}>
-      {icon && <Text style={styles.title}>{icon + '  '}</Text>}
+      <ItemIcon icon={icon} />
       <Text style={styles.title}>{title}</Text>
       {shouldWork !== undefined && (
         <Text style={styles.shouldWorkEmoji}>{shouldWork ? '✅' : '❌'}</Text>
       )}
-    </Button>
+    </ItemButton>
   );
+}
+
+interface GroupItemProps {
+  icon?: string;
+  title: string;
+  count: number;
+  onPress: () => void;
+}
+
+function GroupItem({ count, icon, onPress, title }: GroupItemProps) {
+  return (
+    <ItemButton
+      activeUnderlayOpacity={0.7}
+      style={styles.button}
+      onPress={onPress}>
+      <ItemIcon icon={icon} />
+      <Text style={[styles.title, styles.groupTitle]}>{title}</Text>
+      <Text style={styles.count}>{count}</Text>
+      <Text style={styles.chevron}>›</Text>
+    </ItemButton>
+  );
+}
+
+function ItemIcon({ icon }: { icon?: string }) {
+  if (!icon) {
+    return null;
+  }
+  return <Text style={styles.title}>{`${icon}  `}</Text>;
 }
 
 function ItemSeparator() {
@@ -196,6 +424,8 @@ declare global {
 }
 
 const Stack = createStack<RootStackParamList>();
+
+const ItemButton = IS_MACOS ? Pressable : Touchable;
 
 const screenOptions = {
   headerLeft: IS_MACOS ? undefined : () => <BackButton />,
@@ -211,12 +441,35 @@ const styles = StyleSheet.create({
     height: 60,
     padding: 15,
   },
+  chevron: {
+    color: '#C7C7CC',
+    fontSize: 22,
+    marginLeft: 8,
+  },
+  count: {
+    color: '#8E8E93',
+    fontSize: 15,
+    marginLeft: 'auto',
+  },
   disabledButton: {
     backgroundColor: 'grey',
     opacity: 0.5,
   },
+  groupTitle: {
+    fontWeight: '600',
+  },
   list: {
     backgroundColor: '#EFEFF4',
+  },
+  sectionHeader: {
+    // Opaque so rows do not show through a sticky header.
+    backgroundColor: '#EFEFF4',
+    color: '#6D6D72',
+    fontSize: 13,
+    paddingBottom: 6,
+    paddingHorizontal: 15,
+    paddingTop: 20,
+    textTransform: 'uppercase',
   },
   separator: {
     backgroundColor: '#DBDBE0',

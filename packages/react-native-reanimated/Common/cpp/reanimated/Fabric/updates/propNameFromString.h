@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cxxreact/ReactNativeVersion.h>
+#include <reanimated/Compat/ReactNativeVersionCompat.h>
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
 #include <react/renderer/animationbackend/AnimationBackend.h>
