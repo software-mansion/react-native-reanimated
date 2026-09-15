@@ -12,6 +12,7 @@
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
+#include <reanimated/Fabric/updates/SynchronousPropNames.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
@@ -67,13 +68,11 @@ void mergeAnimatedProps(AnimatedProps &target, AnimatedProps &&source) {
 
 #ifdef ANDROID
 constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
-  return StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
-      !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS");
+  return StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS");
 }
 #elif __APPLE__
 constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
-  return StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
-      !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS");
+  return StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS");
 }
 #else
 constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
@@ -82,51 +81,8 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 #endif
 
 std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBatch, const bool allowPartialUpdates) {
-  static const std::unordered_set<std::string> synchronousPropNames = {
-      "opacity",
-      "elevation",
-      "zIndex",
-      "shadowColor",
-#if __APPLE__
-      "shadowOffset",
-      "shadowOpacity",
-      "shadowRadius",
-#endif // __APPLE__
-      "backgroundColor",
-      // "color", // not supported
-      "tintColor",
-      "placeholderTextColor",
-      "borderRadius",
-      "borderTopLeftRadius",
-      "borderTopRightRadius",
-      "borderTopStartRadius",
-      "borderTopEndRadius",
-      "borderBottomLeftRadius",
-      "borderBottomRightRadius",
-      "borderBottomStartRadius",
-      "borderBottomEndRadius",
-      "borderStartStartRadius",
-      "borderStartEndRadius",
-      "borderEndStartRadius",
-      "borderEndEndRadius",
-      "borderColor",
-      "borderTopColor",
-      "borderBottomColor",
-      "borderLeftColor",
-      "borderRightColor",
-      "borderStartColor",
-      "borderEndColor",
-      "borderBlockColor",
-      "borderBlockStartColor",
-      "borderBlockEndColor",
-      "outlineColor",
-      "outlineOffset",
-      "outlineWidth",
-      "transform",
-  };
-
   const auto isSynchronous = [&](const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
-    if (!synchronousPropNames.contains(keyStr)) {
+    if (!isSynchronousPropName(keyStr)) {
       return false;
     }
 #ifdef ANDROID
@@ -1101,6 +1057,16 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
 }
 
 void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch) {
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    if (layoutAnimationsProxyRegistry_ && !synchronousUpdatesBatch.empty()) {
+      if (DynamicFeatureFlags::getFlag("TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS")) {
+        layoutAnimationsProxyRegistry_->applySynchronousProps(synchronousUpdatesBatch);
+      } else {
+        layoutAnimationsProxyRegistry_->recordSkippedSynchronousProps(synchronousUpdatesBatch);
+      }
+    }
+  }
+
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
     serializeSynchronousPropsToBuffers(

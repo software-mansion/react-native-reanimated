@@ -26,6 +26,12 @@ class LayoutAnimationsProxyRegistry {
   std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward);
   std::optional<SurfaceId> onGestureCancel(int tag);
   void flushLayoutAnimationOperations() const;
+  void applySynchronousProps(const UpdatesBatch &updatesBatch);
+#ifndef NDEBUG
+  void recordSkippedSynchronousProps(const UpdatesBatch &updatesBatch);
+#else
+  void recordSkippedSynchronousProps(const UpdatesBatch &) {}
+#endif
 
  private:
   std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> instances() const;

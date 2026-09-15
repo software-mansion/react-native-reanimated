@@ -5,6 +5,7 @@
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
+#include <reanimated/LayoutAnimations/PropsDiffer.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <worklets/Compat/StableApi.h>
 
@@ -41,6 +42,43 @@ LayoutAnimationsProxy_Experimental::LayoutAnimationsProxy_Experimental(
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
 #endif
+}
+
+#ifndef NDEBUG
+void LayoutAnimationsProxy_Experimental::recordSkippedSynchronousProps(const UpdatesBatch &updatesBatch) const {
+  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
+    const auto tag = shadowNodeFamily->getTag();
+    if (shadowNodeFamily->getSurfaceId() != surfaceId_ || !lightNodes_.contains(tag)) {
+      continue;
+    }
+    staleSynchronousProps_.record(tag, props);
+  }
+}
+#endif
+
+void LayoutAnimationsProxy_Experimental::warnAboutStaleSynchronousProps(
+    const Tag tag,
+    const Tag staleTag,
+    const LayoutAnimationType type) const {
+  const auto message = staleSynchronousProps_.takeWarning(tag, staleTag, type);
+  if (!message) {
+    return;
+  }
+  scheduleOnUI(uiScheduler_, [&uiRuntime = uiRuntime_, message = *message]() {
+    const auto consoleWarn =
+        uiRuntime.global().getPropertyAsObject(uiRuntime, "console").getPropertyAsFunction(uiRuntime, "warn");
+    consoleWarn.call(uiRuntime, message);
+  });
+}
+
+void LayoutAnimationsProxy_Experimental::warnIfSnapshotIsStale(
+    const ShadowView &snapshot,
+    const TransactionMeta &transaction) const {
+  const auto it = transaction.staleSnapshots.find(snapshot.tag);
+  if (it != transaction.staleSnapshots.end()) {
+    warnAboutStaleSynchronousProps(snapshot.tag, it->second, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
+  }
 }
 
 // MARK: MountingOverrideDelegate
@@ -257,6 +295,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
       case ShadowViewMutation::Update: {
         auto &node = lightNodes_[mutation.newChildShadowView.tag];
         react_native_assert(node && "LightNode not found");
+        const auto currentProps = node->current.props;
         node->previous = mutation.oldChildShadowView;
 #ifdef ANDROID
         // TODO (future): We don't merge the root view as the currently stored version might not be accurate, because of
@@ -277,6 +316,11 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         node->current = mutation.newChildShadowView;
 #endif // ANDROID
         auto tag = mutation.newChildShadowView.tag;
+        if (mutation.oldChildShadowView.props == mutation.newChildShadowView.props) {
+          node->current.props = currentProps;
+        } else {
+          staleSynchronousProps_.forget(tag);
+        }
         if (const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT)) {
           transaction.layout.push_back({node, config});
         } else {
@@ -290,6 +334,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         react_native_assert(!lightNodes_.contains(mutation.newChildShadowView.tag) && "LightNode already exists");
 
         lightNodes_[mutation.newChildShadowView.tag] = node;
+        staleSynchronousProps_.forget(mutation.newChildShadowView.tag);
         filteredMutations.push_back(mutation);
         break;
       }
@@ -303,6 +348,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
           const auto node = it->second;
           unmapLightNode(node);
         }
+        staleSynchronousProps_.forget(mutation.oldChildShadowView.tag);
         break;
       }
       case ShadowViewMutation::Insert: {
@@ -415,6 +461,35 @@ void LayoutAnimationsProxy_Experimental::applyInitialMutationsToLightTree(
         break;
       }
     }
+  }
+}
+
+// Synchronous prop updates skip pullTransaction. The registry broadcasts one
+// batch to every surface proxy; entries of other surfaces are skipped here.
+void LayoutAnimationsProxy_Experimental::applySynchronousProps(const UpdatesBatch &updatesBatch) const {
+  ReanimatedSystraceSection s("applySynchronousProps");
+  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+
+  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
+    if (shadowNodeFamily->getSurfaceId() != surfaceId_) {
+      continue;
+    }
+    const auto tag = shadowNodeFamily->getTag();
+    const auto nodeIt = lightNodes_.find(tag);
+    if (nodeIt == lightNodes_.end()) {
+      continue;
+    }
+
+    const auto &node = nodeIt->second;
+    react_native_assert(node && "LightNode is nullptr");
+    if (isRoot(node)) {
+      continue;
+    }
+
+    react_native_assert(node->current.props && "LightNode has no props");
+    staleSynchronousProps_.forget(tag, props);
+    node->current.props = mergeSynchronousProps(node->current, props);
+    applySynchronousPropsToLayoutAnimation(tag, props);
   }
 }
 
@@ -853,6 +928,9 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(
 void LayoutAnimationsProxy_Experimental::startLayoutAnimation(
     const std::shared_ptr<LightNode> &node,
     const std::shared_ptr<Serializable> &config) const {
+  if (const auto staleTag = staleSynchronousProps_.find(node, LayoutAnimationType::LAYOUT)) {
+    warnAboutStaleSynchronousProps(node->current.tag, *staleTag, LayoutAnimationType::LAYOUT);
+  }
   const auto &oldChildShadowView = node->previous;
   const auto &newChildShadowView = node->current;
   const auto &parent = node->parent.lock();

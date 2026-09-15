@@ -60,14 +60,6 @@ func findConsumerPackageJSON() -> URL? {
 }
 
 func assertNoConflictingFeatureFlags(_ flags: [String: String]) {
-    if flags["IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS"] == "true",
-        flags["ENABLE_SHARED_ELEMENT_TRANSITIONS"] == "true"
-    {
-        fatalError(
-            "[Reanimated] The feature flags `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. Please disable one of them in your package.json"
-        )
-    }
-
     if flags["USE_ANIMATION_BACKEND"] == "true",
         flags["FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS"] == "true"
     {

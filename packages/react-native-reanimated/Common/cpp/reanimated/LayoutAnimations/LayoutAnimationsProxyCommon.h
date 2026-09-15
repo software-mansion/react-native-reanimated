@@ -7,11 +7,13 @@
 #include <react/renderer/mounting/ShadowView.h>
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/Compat/WorkletsApi.h>
+#include <reanimated/Fabric/updates/UpdatesRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <deque>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -104,11 +106,17 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       std::weak_ptr<const facebook::react::MountingOverrideDelegate> mountingOverrideDelegate);
   virtual void shadowTreeWillCommit(bool /*isSurfaceRemoval*/) {}
   virtual void surfaceDidUnmount();
+  virtual void applySynchronousProps(const UpdatesBatch &) const {}
+#ifndef NDEBUG
+  virtual void recordSkippedSynchronousProps(const UpdatesBatch &) const {}
+#endif
   ~LayoutAnimationsProxyCommon() override = default;
 
   void flushLayoutAnimationOperations() const;
 
  protected:
+  Props::Shared mergeSynchronousProps(const ShadowView &view, const folly::dynamic &props) const;
+  void applySynchronousPropsToLayoutAnimation(Tag tag, const folly::dynamic &props) const;
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
   void enqueueLayoutAnimation(ManagedLayoutAnimationStart start) const;
   void enqueueLayoutAnimation(ProgressLayoutAnimationStart start) const;
