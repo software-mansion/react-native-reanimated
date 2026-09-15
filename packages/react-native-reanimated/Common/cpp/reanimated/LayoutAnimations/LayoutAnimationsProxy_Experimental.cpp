@@ -488,14 +488,8 @@ void LayoutAnimationsProxy_Experimental::applySynchronousProps(const UpdatesBatc
 
     react_native_assert(node->current.props && "LightNode has no props");
     staleSynchronousProps_.forget(tag, props);
-
-    auto rawProps = props;
-#ifdef RN_SERIALIZABLE_STATE
-    rawProps = folly::dynamic::merge(node->current.props->rawProps, rawProps);
-#endif
-    const PropsParserContext propsParserContext{node->current.surfaceId, *contextContainer_};
-    node->current.props = componentDescriptorRegistry_->at(node->current.componentHandle)
-                              .cloneProps(propsParserContext, node->current.props, RawProps(std::move(rawProps)));
+    node->current.props = mergeSynchronousProps(node->current, props);
+    applySynchronousPropsToLayoutAnimation(tag, props);
   }
 }
 
