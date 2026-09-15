@@ -5,7 +5,7 @@
 #include <reanimated/CSS/progress/RunLifecycle.h>
 #include <reanimated/CSS/progress/TimeProgressProvider.h>
 #include <reanimated/CSS/utils/props.h>
-#include <reanimated/CSS/utils/transitionTimeline.h>
+#include <reanimated/CSS/utils/transitionTiming.h>
 
 #include <memory>
 #include <string>
@@ -30,7 +30,7 @@ class TransitionPropertyProgressProvider final : public KeyframeProgressProvider
   double getGlobalProgress() const override;
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
   double getRemainingDelay(double timestamp) const;
-  TransitionTimeline getTimeline() const;
+  TransitionTiming getTiming() const;
   TransitionProgressState getState() const;
 
   /// Time the property has run by the given milestone, in milliseconds.

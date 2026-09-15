@@ -5,7 +5,7 @@
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionBackend.h>
 #include <reanimated/CSS/easing/EasingConfigs.h>
 #include <reanimated/CSS/utils/platform.h>
-#include <reanimated/CSS/utils/transitionTimeline.h>
+#include <reanimated/CSS/utils/transitionTiming.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
@@ -68,7 +68,7 @@ class CSSPlatformTransitionProxy {
     /// Where the run started, so getCurrentValue can retrace it.
     std::optional<PlatformValue> startValue;
     PlatformValue adjustedEnd;
-    TransitionTimeline timeline;
+    TransitionTiming timing;
     CSSTransitionPropertySettings settings;
   };
 
@@ -85,7 +85,7 @@ class CSSPlatformTransitionProxy {
   void remove(Tag viewTag, const std::string &propertyName);
 
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
-  /// What the native animation shows at `timestamp`, retraced from its timeline.
+  /// What the native animation shows at `timestamp`, retraced from the stored run.
   std::optional<PlatformValue> getCurrentValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
   /// nullopt keeps the diff's own from-value, which the animation has painted past.
   std::optional<double> getResumeValue(Tag viewTag, const std::string &propertyName, double timestamp) const;

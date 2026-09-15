@@ -1,4 +1,4 @@
-#include <reanimated/CSS/utils/transitionTimeline.h>
+#include <reanimated/CSS/utils/transitionTiming.h>
 
 #include <algorithm>
 #include <cmath>
@@ -6,16 +6,12 @@
 
 namespace reanimated::css {
 
-TransitionTimeline makeTimeline(double timestamp, double duration, double delay, EasingConfig easing) {
+TransitionTiming makeTiming(double timestamp, double duration, double delay, EasingConfig easing) {
   return {1.0, timestamp + delay, duration, delay, std::move(easing)};
 }
 
-TransitionTimeline reverseTimeline(
-    const TransitionTimeline &previous,
-    double timestamp,
-    double duration,
-    double delay,
-    EasingConfig easing) {
+TransitionTiming
+reverseTiming(const TransitionTiming &previous, double timestamp, double duration, double delay, EasingConfig easing) {
   const double elapsed = std::clamp(timestamp - previous.startTimestamp, 0.0, previous.duration);
   const double linearProgress = previous.duration > 0 ? elapsed / previous.duration : 1.0;
   const double easedProgress = getEasingFunctionFromConfig(previous.easing)(linearProgress);

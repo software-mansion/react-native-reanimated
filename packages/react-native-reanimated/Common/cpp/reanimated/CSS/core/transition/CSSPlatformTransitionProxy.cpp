@@ -44,14 +44,10 @@ bool CSSPlatformTransitionProxy::apply(
 
   // https://drafts.csswg.org/css-transitions/#reversing
   const bool isReversal = active != nullptr && active->adjustedStart && toValue == *active->adjustedStart;
-  TransitionTimeline timeline = isReversal
-      ? reverseTimeline(
-            active->timeline,
-            timestamp,
-            resolvedSettings.duration,
-            resolvedSettings.delay,
-            resolvedSettings.easingConfig)
-      : makeTimeline(timestamp, resolvedSettings.duration, resolvedSettings.delay, resolvedSettings.easingConfig);
+  TransitionTiming timing = isReversal
+      ? reverseTiming(
+            active->timing, timestamp, resolvedSettings.duration, resolvedSettings.delay, resolvedSettings.easingConfig)
+      : makeTiming(timestamp, resolvedSettings.duration, resolvedSettings.delay, resolvedSettings.easingConfig);
 
   std::optional<PlatformValue> adjustedStart;
   std::optional<PlatformValue> startValue;
@@ -70,15 +66,15 @@ bool CSSPlatformTransitionProxy::apply(
           propertyName,
           fromValue,
           toValue,
-          timeline.duration,
-          timeline.startTimestamp,
+          timing.duration,
+          timing.startTimestamp,
           resolvedSettings.easingConfig,
           persistent)) {
     return false;
   }
 
   active_[viewTag][propertyName] =
-      ActiveTransition{adjustedStart, startValue, toValue, std::move(timeline), resolvedSettings};
+      ActiveTransition{adjustedStart, startValue, toValue, std::move(timing), resolvedSettings};
   return true;
 }
 
@@ -104,11 +100,11 @@ std::optional<PlatformValue> CSSPlatformTransitionProxy::getCurrentValue(
   if (active == nullptr || !active->startValue) {
     return std::nullopt;
   }
-  const auto &timeline = active->timeline;
+  const auto &timing = active->timing;
   const double progress =
-      timeline.duration > 0 ? std::clamp((timestamp - timeline.startTimestamp) / timeline.duration, 0.0, 1.0) : 1.0;
+      timing.duration > 0 ? std::clamp((timestamp - timing.startTimestamp) / timing.duration, 0.0, 1.0) : 1.0;
   return lerpPlatformValues(
-      *active->startValue, active->adjustedEnd, getEasingFunctionFromConfig(timeline.easing)(progress));
+      *active->startValue, active->adjustedEnd, getEasingFunctionFromConfig(timing.easing)(progress));
 }
 
 CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
