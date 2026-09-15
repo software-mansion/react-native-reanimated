@@ -43,4 +43,24 @@ CFTimeInterval calculateTimestampWithSlowAnimations(CFTimeInterval currentTimest
 #endif
 }
 
+CFTimeInterval calculateMediaTimeFromSlowAnimationsTimestamp(CFTimeInterval animationTimestamp)
+{
+#if TARGET_IPHONE_SIMULATOR
+  const CFTimeInterval mediaTime = CACurrentMediaTime();
+  const CFTimeInterval animationTime = calculateTimestampWithSlowAnimations(mediaTime);
+  return mediaTime + (animationTimestamp - animationTime) * getUIAnimationDragCoefficient();
+#else
+  return animationTimestamp;
+#endif
+}
+
+CFTimeInterval calculateMediaDurationFromSlowAnimationsDuration(CFTimeInterval animationDuration)
+{
+#if TARGET_IPHONE_SIMULATOR
+  return animationDuration * getUIAnimationDragCoefficient();
+#else
+  return animationDuration;
+#endif
+}
+
 } // namespace reanimated

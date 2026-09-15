@@ -97,7 +97,12 @@ open class NativeProxy {
             UIManagerHelper.getUIManager(context, UIManagerType.FABRIC) as FabricUIManager
         pseudoSelectorManager = PseudoSelectorManager(mFabricUIManager, mContext)
         cssPlatformTransitionsManager =
-            CSSPlatformTransitionsManager(mFabricUIManager, mContext, ::getAnimationTimestamp)
+            CSSPlatformTransitionsManager(
+                mFabricUIManager,
+                mContext,
+                ::getAnimationTimestamp,
+                ::getAnimationsDragFactor,
+            )
 
         val callInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
         mHybridData =
@@ -330,6 +335,8 @@ open class NativeProxy {
         } else {
             SystemClock.uptimeMillis()
         }
+
+    private fun getAnimationsDragFactor(): Double = if (slowAnimationsEnabled) animationsDragFactor.toDouble() else 1.0
 
     @DoNotStrip
     fun registerEventHandler(handler: EventHandler) {
