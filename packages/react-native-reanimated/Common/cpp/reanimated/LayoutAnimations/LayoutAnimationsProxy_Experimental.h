@@ -16,6 +16,7 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -83,6 +84,7 @@ struct TransactionMeta {
   std::vector<std::shared_ptr<LightNode>> containersToInsert;
   std::vector<std::shared_ptr<LightNode>> nodesToRestore;
   std::vector<std::shared_ptr<LightNode>> containersToRemove;
+  std::unordered_map<Tag, Tag> staleSnapshots;
 };
 
 struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
@@ -101,10 +103,22 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif
 #ifndef NDEBUG
-  std::function<bool(Tag)> hasSynchronousProps_;
-  mutable std::unordered_set<Tag> warnedSynchronousPropsTags_;
-  void warnIfSynchronousPropsMissing(Tag tag, const char *animationKind) const;
+  mutable std::unordered_map<Tag, std::unordered_set<std::string>> staleSynchronousProps_;
+  mutable std::unordered_set<Tag> warnedStaleSynchronousPropsTags_;
+  void recordSkippedSynchronousProps(const UpdatesBatch &updatesBatch) const override;
+  void forgetStaleSynchronousProps(Tag tag) const;
+  void forgetStaleSynchronousProps(Tag tag, const folly::dynamic &props) const;
+  std::optional<Tag> findStaleSynchronousProps(const std::shared_ptr<LightNode> &node, LayoutAnimationType type) const;
+  void warnAboutStaleSynchronousProps(Tag tag, Tag staleTag, LayoutAnimationType type) const;
+#else
+  void forgetStaleSynchronousProps(Tag) const {}
+  void forgetStaleSynchronousProps(Tag, const folly::dynamic &) const {}
+  std::optional<Tag> findStaleSynchronousProps(const std::shared_ptr<LightNode> &, LayoutAnimationType) const {
+    return std::nullopt;
+  }
+  void warnAboutStaleSynchronousProps(Tag, Tag, LayoutAnimationType) const {}
 #endif
+  void warnIfSnapshotIsStale(const ShadowView &snapshot, const TransactionMeta &transaction) const;
 
   LayoutAnimationsProxy_Experimental(SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies);
 

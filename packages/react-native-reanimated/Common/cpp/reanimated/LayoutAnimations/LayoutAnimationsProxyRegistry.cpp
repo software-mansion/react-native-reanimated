@@ -92,6 +92,14 @@ void LayoutAnimationsProxyRegistry::applySynchronousProps(const UpdatesBatch &up
   }
 }
 
+#ifndef NDEBUG
+void LayoutAnimationsProxyRegistry::recordSkippedSynchronousProps(const UpdatesBatch &updatesBatch) {
+  for (const auto &instance : instances()) {
+    instance->recordSkippedSynchronousProps(updatesBatch);
+  }
+}
+#endif
+
 std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> LayoutAnimationsProxyRegistry::instances() const {
   const std::lock_guard<std::mutex> lock(instancesMutex_);
   std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> instances;

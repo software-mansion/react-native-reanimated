@@ -1054,9 +1054,12 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
 
 void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch) {
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    if (layoutAnimationsProxyRegistry_ && !synchronousUpdatesBatch.empty() &&
-        DynamicFeatureFlags::getFlag("SYNCHRONOUS_PROPS_IN_LIGHT_TREE")) {
-      layoutAnimationsProxyRegistry_->applySynchronousProps(synchronousUpdatesBatch);
+    if (layoutAnimationsProxyRegistry_ && !synchronousUpdatesBatch.empty()) {
+      if (DynamicFeatureFlags::getFlag("TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS")) {
+        layoutAnimationsProxyRegistry_->applySynchronousProps(synchronousUpdatesBatch);
+      } else {
+        layoutAnimationsProxyRegistry_->recordSkippedSynchronousProps(synchronousUpdatesBatch);
+      }
     }
   }
 
@@ -1267,10 +1270,6 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       uiScheduler_,
       uiManager_,
       requestLayoutAnimationFlush,
-      [updatesRegistryManager = updatesRegistryManager_](const Tag tag) {
-        const auto lock = updatesRegistryManager->lock();
-        return updatesRegistryManager->hasSynchronousProps(tag);
-      },
 #ifdef ANDROID
       filterUnmountedTagsFunction_,
       jsInvoker_,

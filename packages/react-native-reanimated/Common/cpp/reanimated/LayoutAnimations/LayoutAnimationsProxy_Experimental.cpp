@@ -6,7 +6,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
-#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <worklets/Compat/StableApi.h>
 
@@ -43,27 +42,90 @@ LayoutAnimationsProxy_Experimental::LayoutAnimationsProxy_Experimental(
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
 #endif
-#ifndef NDEBUG
-  hasSynchronousProps_ = dependencies.hasSynchronousProps;
-#endif
 }
 
 #ifndef NDEBUG
-void LayoutAnimationsProxy_Experimental::warnIfSynchronousPropsMissing(const Tag tag, const char *animationKind) const {
-  if (DynamicFeatureFlags::getFlag("SYNCHRONOUS_PROPS_IN_LIGHT_TREE") || !hasSynchronousProps_ ||
-      !hasSynchronousProps_(tag) || !warnedSynchronousPropsTags_.insert(tag).second) {
+void LayoutAnimationsProxy_Experimental::recordSkippedSynchronousProps(const UpdatesBatch &updatesBatch) const {
+  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
+    const auto tag = shadowNodeFamily->getTag();
+    if (shadowNodeFamily->getSurfaceId() != surfaceId_ || !lightNodes_.contains(tag)) {
+      continue;
+    }
+    auto &stalePropNames = staleSynchronousProps_[tag];
+    for (const auto &key : props.keys()) {
+      stalePropNames.insert(key.asString());
+    }
+  }
+}
+
+void LayoutAnimationsProxy_Experimental::forgetStaleSynchronousProps(const Tag tag) const {
+  staleSynchronousProps_.erase(tag);
+}
+
+void LayoutAnimationsProxy_Experimental::forgetStaleSynchronousProps(const Tag tag, const folly::dynamic &props) const {
+  const auto it = staleSynchronousProps_.find(tag);
+  if (it == staleSynchronousProps_.end()) {
     return;
   }
-  scheduleOnUI(uiScheduler_, [&uiRuntime = uiRuntime_, tag, animationKind]() {
+  for (const auto &key : props.keys()) {
+    it->second.erase(key.asString());
+  }
+  if (it->second.empty()) {
+    staleSynchronousProps_.erase(it);
+  }
+}
+
+// A layout animation applies the props of the view itself. A shared element transition also
+// bakes the transforms of every ancestor into its snapshot.
+std::optional<Tag> LayoutAnimationsProxy_Experimental::findStaleSynchronousProps(
+    const std::shared_ptr<LightNode> &node,
+    const LayoutAnimationType type) const {
+  if (staleSynchronousProps_.contains(node->current.tag)) {
+    return node->current.tag;
+  }
+  if (type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
+    return std::nullopt;
+  }
+  for (auto ancestor = node->parent.lock(); ancestor; ancestor = ancestor->parent.lock()) {
+    const auto it = staleSynchronousProps_.find(ancestor->current.tag);
+    if (it != staleSynchronousProps_.end() && it->second.contains("transform")) {
+      return ancestor->current.tag;
+    }
+  }
+  return std::nullopt;
+}
+
+void LayoutAnimationsProxy_Experimental::warnAboutStaleSynchronousProps(
+    const Tag tag,
+    const Tag staleTag,
+    const LayoutAnimationType type) const {
+  if (!warnedStaleSynchronousPropsTags_.insert(tag).second) {
+    return;
+  }
+  const auto animationKind =
+      type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION ? "shared element transition" : "layout animation";
+  const auto reason = staleTag == tag
+      ? std::string("with props that were applied through the synchronous path")
+      : "under view " + std::to_string(staleTag) + ", whose transform was applied through the synchronous path";
+  const auto message = "[Reanimated] View " + std::to_string(tag) + " starts a " + animationKind + " " + reason +
+      ", so it starts from stale values. Set the TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS dynamic feature flag to notify the reanimated Layout Animation / Shared Transition bookkeeping of the synchronous updates";
+  scheduleOnUI(uiScheduler_, [&uiRuntime = uiRuntime_, message]() {
     const auto consoleWarn =
         uiRuntime.global().getPropertyAsObject(uiRuntime, "console").getPropertyAsFunction(uiRuntime, "warn");
-    consoleWarn.call(
-        uiRuntime,
-        std::string("[Reanimated] View ") + std::to_string(tag) + " starts a " + animationKind +
-            " with props that were applied through the synchronous path, so it starts from stale values. Set the SYNCHRONOUS_PROPS_IN_LIGHT_TREE dynamic feature flag to notify the reanimated Layout Animation / Shared Transition bookkeeping of the synchronous updates");
+    consoleWarn.call(uiRuntime, message);
   });
 }
 #endif
+
+void LayoutAnimationsProxy_Experimental::warnIfSnapshotIsStale(
+    const ShadowView &snapshot,
+    const TransactionMeta &transaction) const {
+  const auto it = transaction.staleSnapshots.find(snapshot.tag);
+  if (it != transaction.staleSnapshots.end()) {
+    warnAboutStaleSynchronousProps(snapshot.tag, it->second, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
+  }
+}
 
 // MARK: MountingOverrideDelegate
 
@@ -299,10 +361,12 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
 #else
         node->current = mutation.newChildShadowView;
 #endif // ANDROID
+        auto tag = mutation.newChildShadowView.tag;
         if (mutation.oldChildShadowView.props == mutation.newChildShadowView.props) {
           node->current.props = currentProps;
+        } else {
+          forgetStaleSynchronousProps(tag);
         }
-        auto tag = mutation.newChildShadowView.tag;
         if (const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT)) {
           transaction.layout.push_back({node, config});
         } else {
@@ -316,6 +380,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         react_native_assert(!lightNodes_.contains(mutation.newChildShadowView.tag) && "LightNode already exists");
 
         lightNodes_[mutation.newChildShadowView.tag] = node;
+        forgetStaleSynchronousProps(mutation.newChildShadowView.tag);
         filteredMutations.push_back(mutation);
         break;
       }
@@ -329,6 +394,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
           const auto node = it->second;
           unmapLightNode(node);
         }
+        forgetStaleSynchronousProps(mutation.oldChildShadowView.tag);
         break;
       }
       case ShadowViewMutation::Insert: {
@@ -454,7 +520,8 @@ void LayoutAnimationsProxy_Experimental::applySynchronousProps(const UpdatesBatc
     if (shadowNodeFamily->getSurfaceId() != surfaceId_) {
       continue;
     }
-    const auto nodeIt = lightNodes_.find(shadowNodeFamily->getTag());
+    const auto tag = shadowNodeFamily->getTag();
+    const auto nodeIt = lightNodes_.find(tag);
     if (nodeIt == lightNodes_.end()) {
       continue;
     }
@@ -466,6 +533,7 @@ void LayoutAnimationsProxy_Experimental::applySynchronousProps(const UpdatesBatc
     }
 
     react_native_assert(node->current.props && "LightNode has no props");
+    forgetStaleSynchronousProps(tag, props);
 
     auto rawProps = props;
 #ifdef RN_SERIALIZABLE_STATE
@@ -912,9 +980,9 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(
 void LayoutAnimationsProxy_Experimental::startLayoutAnimation(
     const std::shared_ptr<LightNode> &node,
     const std::shared_ptr<Serializable> &config) const {
-#ifndef NDEBUG
-  warnIfSynchronousPropsMissing(node->current.tag, "layout animation");
-#endif
+  if (const auto staleTag = findStaleSynchronousProps(node, LayoutAnimationType::LAYOUT)) {
+    warnAboutStaleSynchronousProps(node->current.tag, *staleTag, LayoutAnimationType::LAYOUT);
+  }
   const auto &oldChildShadowView = node->previous;
   const auto &newChildShadowView = node->current;
   const auto &parent = node->parent.lock();
