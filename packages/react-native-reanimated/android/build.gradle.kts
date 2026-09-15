@@ -28,6 +28,11 @@ if (shouldApplyKotlinAndroidPlugin()) {
 fun safeExtGet(prop: String, fallback: Any?): Any? =
     if (rootProject.extensions.extraProperties.has(prop)) rootProject.extensions.extraProperties.get(prop) else fallback
 
+fun findRootStringProperty(prop: String): String? =
+    (rootProject.findProperty(prop) as? CharSequence)
+        ?.toString()
+        ?.takeIf { it.isNotEmpty() }
+
 fun safeAppExtGet(prop: String, fallback: Any?): Any? {
     val appProject = rootProject.allprojects.find { it.plugins.hasPlugin("com.android.application") }
     return if (appProject?.extensions?.extraProperties?.has(prop) == true)
@@ -176,13 +181,13 @@ android {
 
     namespace = "com.swmansion.reanimated"
 
-    val resolvedNdkPath = rootProject.findProperty("ndkPath") as? String
-    if (!resolvedNdkPath.isNullOrEmpty()) {
+    val resolvedNdkPath = findRootStringProperty("ndkPath")
+    if (resolvedNdkPath != null) {
         ndkPath = resolvedNdkPath
     }
 
-    val resolvedNdkVersion = rootProject.findProperty("ndkVersion") as? String
-    if (!resolvedNdkVersion.isNullOrEmpty()) {
+    val resolvedNdkVersion = findRootStringProperty("ndkVersion")
+    if (resolvedNdkVersion != null) {
         ndkVersion = resolvedNdkVersion
     }
 

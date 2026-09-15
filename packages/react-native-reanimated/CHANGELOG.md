@@ -17,6 +17,7 @@
 
 ### 🐛 Bug fixes
 
+- Accept Groovy `GString` values for `ndkVersion` and `ndkPath` from the root Gradle project instead of ignoring them. (by [@piaskowyk](https://github.com/piaskowyk))
 - Include the React Native version macros through `<React/Utils.h>` when it is available, so `cxxreact/ReactNativeVersion.h` deprecated on React Native `main` no longer breaks the build. ([#10536](https://github.com/software-mansion/react-native-reanimated/pull/10536) by [@tshmieldev](https://github.com/tshmieldev))
 - Fix a short `animationDelay` list on web applying no delay to the animations past its end instead of repeating, the way CSS does and the native path already did. ([#10442](https://github.com/software-mansion/react-native-reanimated/pull/10442) by [@dennytosp](https://github.com/dennytosp))
 - Fix `filter` strings using the CSS `hue-rotate()` and `drop-shadow()` spellings being discarded together with every other filter in the same declaration. ([#10383](https://github.com/software-mansion/react-native-reanimated/pull/10383) by [@dennytosp](https://github.com/dennytosp))
