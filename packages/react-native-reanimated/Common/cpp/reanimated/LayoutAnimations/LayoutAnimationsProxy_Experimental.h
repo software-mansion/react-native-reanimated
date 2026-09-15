@@ -148,6 +148,8 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
   }
 
   void applySynchronousProps(const UpdatesBatch &updatesBatch) const override;
+  Props::Shared mergeSynchronousProps(const ShadowView &view, const folly::dynamic &props) const;
+  void feedRunningLayoutAnimation(Tag tag, const folly::dynamic &props) const;
 
   void reconcileContradictedRemovals(const ShadowViewMutationList &mutations, ShadowViewMutationList &filteredMutations)
       const;

@@ -488,14 +488,47 @@ void LayoutAnimationsProxy_Experimental::applySynchronousProps(const UpdatesBatc
 
     react_native_assert(node->current.props && "LightNode has no props");
     staleSynchronousProps_.forget(tag, props);
+    node->current.props = mergeSynchronousProps(node->current, props);
+    feedRunningLayoutAnimation(tag, props);
+  }
+}
 
-    auto rawProps = props;
+Props::Shared LayoutAnimationsProxy_Experimental::mergeSynchronousProps(
+    const ShadowView &view,
+    const folly::dynamic &props) const {
+  auto rawProps = props;
 #ifdef RN_SERIALIZABLE_STATE
-    rawProps = folly::dynamic::merge(node->current.props->rawProps, rawProps);
+  rawProps = folly::dynamic::merge(view.props->rawProps, rawProps);
 #endif
-    const PropsParserContext propsParserContext{node->current.surfaceId, *contextContainer_};
-    node->current.props = componentDescriptorRegistry_->at(node->current.componentHandle)
-                              .cloneProps(propsParserContext, node->current.props, RawProps(std::move(rawProps)));
+  const PropsParserContext propsParserContext{view.surfaceId, *contextContainer_};
+  return componentDescriptorRegistry_->at(view.componentHandle)
+      .cloneProps(propsParserContext, view.props, RawProps(std::move(rawProps)));
+}
+
+// A layout animation builds every frame from its own copies of the props, not from the light node.
+// The copies live in the queued start, in the running record and in the frame that waits for a pull.
+void LayoutAnimationsProxy_Experimental::feedRunningLayoutAnimation(const Tag tag, const folly::dynamic &props) const {
+  updateQueuedLayoutAnimationViews(tag, [&](ShadowView &view) { view.props = mergeSynchronousProps(view, props); });
+
+  LayoutAnimation *animation = nullptr;
+  if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
+    animation = &it->second;
+  } else if (const auto it = completedAnimations_.find(tag);
+             it != completedAnimations_.end() && !it->second.shouldRemove) {
+    animation = &it->second.animation;
+  }
+  if (animation == nullptr) {
+    return;
+  }
+  animation->finalView.props = mergeSynchronousProps(animation->finalView, props);
+  animation->currentView.props = mergeSynchronousProps(animation->currentView, props);
+  if (animation->opacity && props.count("opacity") > 0 && props["opacity"].isNumber()) {
+    animation->opacity = props["opacity"].asDouble();
+  }
+  if (const auto it = updateMap_.find(tag); it != updateMap_.end() && it->second.newProps) {
+    auto pendingView = animation->finalView;
+    pendingView.props = it->second.newProps;
+    it->second.newProps = mergeSynchronousProps(pendingView, props);
   }
 }
 

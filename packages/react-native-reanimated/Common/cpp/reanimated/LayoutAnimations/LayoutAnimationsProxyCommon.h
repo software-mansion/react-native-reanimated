@@ -13,6 +13,7 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <deque>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -114,6 +115,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void flushLayoutAnimationOperations() const;
 
  protected:
+  void updateQueuedLayoutAnimationViews(Tag tag, const std::function<void(ShadowView &)> &update) const;
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
   void enqueueLayoutAnimation(ManagedLayoutAnimationStart start) const;
   void enqueueLayoutAnimation(ProgressLayoutAnimationStart start) const;

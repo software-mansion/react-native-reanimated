@@ -8,10 +8,13 @@
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
 
 #include <cstring>
+#include <functional>
 #include <memory>
 #include <optional>
+#include <type_traits>
 #include <unordered_set>
 #include <utility>
+#include <variant>
 
 namespace reanimated {
 
@@ -130,6 +133,23 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations(std::unique_loc
     return;
   }
   flushLayoutAnimationOperationsLocked();
+}
+
+void LayoutAnimationsProxyCommon::updateQueuedLayoutAnimationViews(
+    const Tag tag,
+    const std::function<void(ShadowView &)> &update) const {
+  for (auto &operation : layoutAnimationOperations_) {
+    std::visit(
+        [&](auto &start) {
+          if constexpr (!std::is_same_v<std::decay_t<decltype(start)>, LayoutAnimationCancellation>) {
+            if (start.tag == tag) {
+              update(start.before);
+              update(start.after);
+            }
+          }
+        },
+        operation);
+  }
 }
 
 ShadowView LayoutAnimationsProxyCommon::materializeLayoutAnimation(
