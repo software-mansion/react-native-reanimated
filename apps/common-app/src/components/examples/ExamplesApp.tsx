@@ -241,11 +241,15 @@ function ExampleListScreen({
     });
   }, [allExamples, findExamples, navigation]);
 
+  // Whitespace-only input is not a query: it would match no title and leave
+  // the list empty. Trim once and use the result for both the filter and the
+  // search-mode flag.
+  const query = search.trim();
   const visibleNames = useMemo(
-    () => findExamples(search),
-    [findExamples, search]
+    () => findExamples(query),
+    [findExamples, query]
   );
-  const isSearching = search !== '';
+  const isSearching = query !== '';
 
   const openExample = useCallback(
     (name: string) => {
