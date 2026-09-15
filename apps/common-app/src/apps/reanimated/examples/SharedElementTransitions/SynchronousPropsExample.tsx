@@ -53,7 +53,7 @@ function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.flexOne}>
       <View style={styles.row}>
-        <Text>{FLAG}</Text>
+        <Text style={styles.flagLabel}>Track synchronous props</Text>
         <Switch
           value={flagOn}
           onValueChange={(value) => {
@@ -65,16 +65,10 @@ function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
         />
       </View>
       <Text style={styles.hint}>
-        The purple box moves through the synchronous path. It must keep its
-        position and color when it resizes through a commit, when it animates
-        with a layout animation, and when a shared element transition starts.
-        The green box has a static transform and must also start its transition
-        from where it is drawn. Every button press makes a React commit that
-        also refreshes the layout animation bookkeeping, so the flag matters
-        only for an animation that starts in the same press as the shift. The
-        switch remounts the purple box. With the flag off, the three combined
-        buttons start their animation from the stale layout position, and a
-        warning is logged.
+        The purple box shifts through the synchronous path. With the flag on,
+        every animation and transition starts from the shifted spot. With the
+        flag off, the three combined buttons start from the stale layout
+        position and log a warning. The switch remounts the box.
       </Text>
       <Button title="Shift (synchronous)" onPress={shift} />
       <Button
@@ -123,6 +117,7 @@ function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
 function Screen2Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.flexOne}>
+      <Button title="go back" onPress={() => navigation.popTo('Screen1')} />
       <Animated.View
         sharedTransitionTag="animatedBox"
         style={styles.boxScreenTwo}
@@ -131,7 +126,6 @@ function Screen2Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
         sharedTransitionTag="staticBox"
         style={styles.staticBoxScreenTwo}
       />
-      <Button title="go back" onPress={() => navigation.popTo('Screen1')} />
     </View>
   );
 }
@@ -164,6 +158,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     margin: 16,
   },
+  flagLabel: {
+    flex: 1,
+    marginRight: 16,
+  },
   hint: {
     marginHorizontal: 16,
   },
@@ -184,7 +182,7 @@ const styles = StyleSheet.create({
   boxScreenTwo: {
     width: 200,
     height: 200,
-    marginTop: 300,
+    marginTop: 260,
     marginLeft: 150,
     backgroundColor: 'purple',
   },
