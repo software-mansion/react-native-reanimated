@@ -168,16 +168,16 @@ Routing is decided per property, so a single transition may run partly on the pl
 | Property          |    iOS    |  Android  |
 | ----------------- | :-------: | :-------: |
 | `opacity`         |    ✅     |    ✅     |
-| `backgroundColor` |    ✅     |    ✅     |
-| `borderColor`     |    ✅     |    ✅     |
-| `borderRadius`    |    ✅     |    ✅     |
+| `backgroundColor` |    ✅     |    ❌     |
+| `borderColor`     |    ✅     |    ❌     |
+| `borderRadius`    |    ✅     |    ❌     |
 | `borderWidth`     |    ✅     |    ❌     |
-| `shadowColor`     |    ✅     |    ✅     |
+| `shadowColor`     |    ✅     |    ❌     |
 | `shadowOffset`    |    ✅     |    ❌     |
 | `shadowOpacity`   |    ✅     |    ❌     |
 | `shadowRadius`    |    ✅     |    ❌     |
 
-Properties that aren't routed keep running on the animation loop, which supports all of them. On Android, `borderRadius` is routed only as a numeric value, and `shadowColor` only on Android 9 (API 28) and newer. `shadowOffset`, `shadowOpacity` and `shadowRadius` are iOS-only styles in React Native.
+Properties that aren't routed keep running on the animation loop, which supports all of them. Android routes `opacity` for now, support for more properties will be added in the future. `shadowOffset`, `shadowOpacity` and `shadowRadius` are iOS-only styles in React Native.
 
 :::warning
 Known limitation on iOS. `backgroundColor`, `borderColor`, `borderWidth` and `borderRadius` are routed even when React Native draws them on separate layers rather than on the view's own one. The routed animation doesn't reach those layers, so the new value shows up at once instead of animating. React Native keeps the four properties on the view's own layer only when:
