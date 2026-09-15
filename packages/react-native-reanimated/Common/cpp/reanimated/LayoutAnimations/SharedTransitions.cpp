@@ -68,7 +68,7 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     }
   }
   if (sharedTag) {
-    if (const auto staleTag = findStaleSynchronousProps(node, LayoutAnimationType::SHARED_ELEMENT_TRANSITION)) {
+    if (const auto staleTag = staleSynchronousProps_.find(node, LayoutAnimationType::SHARED_ELEMENT_TRANSITION)) {
       transaction.staleSnapshots[node->current.tag] = *staleTag;
     }
     ShadowView copy = node->current;
