@@ -25,6 +25,40 @@ namespace reanimated {
 using enum LayoutAnimationType;
 using enum ExitingState;
 
+namespace {
+struct AncestorOrigin {
+  Tag tag;
+  react::Point origin;
+};
+
+react::Point reparentOffset(const std::vector<AncestorOrigin> &oldChain, const std::vector<AncestorOrigin> &newChain) {
+  react::Point newOffset;
+  for (const auto &newAncestor : newChain) {
+    react::Point oldOffset;
+    for (const auto &oldAncestor : oldChain) {
+      if (oldAncestor.tag == newAncestor.tag) {
+        return oldOffset - newOffset;
+      }
+      oldOffset += oldAncestor.origin;
+    }
+    newOffset += newAncestor.origin;
+  }
+  return {};
+}
+
+std::vector<AncestorOrigin> ancestorOrigins(
+    std::shared_ptr<LightNode> node,
+    const std::unordered_map<Tag, ShadowView> &updatedViews) {
+  std::vector<AncestorOrigin> chain;
+  for (; node; node = node->parent.lock()) {
+    const auto updatedIt = updatedViews.find(node->current.tag);
+    const auto &view = updatedIt == updatedViews.end() ? node->current : updatedIt->second;
+    chain.push_back({node->current.tag, view.layoutMetrics.frame.origin});
+  }
+  return chain;
+}
+} // namespace
+
 std::shared_ptr<LayoutAnimationsProxyRegistry> createLayoutAnimationsProxyExperimentalRegistry(
     const LayoutAnimationsProxyDependencies &dependencies) {
   return std::make_shared<LayoutAnimationsProxyRegistry>(
@@ -41,6 +75,34 @@ LayoutAnimationsProxy_Experimental::LayoutAnimationsProxy_Experimental(
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
 #endif
+}
+
+std::optional<ShadowView> LayoutAnimationsProxy_Experimental::reparentLayoutAnimation(
+    const Tag tag,
+    const Tag parentTag,
+    const ShadowView &newView,
+    const react::Point offset) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  auto pendingCurrentView = reparentPendingLayoutAnimations(tag, parentTag, newView, offset);
+  if (const auto animationIt = layoutAnimations_.find(tag); animationIt != layoutAnimations_.end()) {
+    auto &animation = animationIt->second;
+    animation.parentTag = parentTag;
+    animation.currentView.layoutMetrics.frame.origin += offset;
+    animation.startView.layoutMetrics.frame.origin += offset;
+    animation.frameOffset += offset;
+    animation.finalView = newView;
+    return animation.currentView;
+  }
+  if (const auto completedAnimationIt = completedAnimations_.find(tag);
+      completedAnimationIt != completedAnimations_.end() && !completedAnimationIt->second.shouldRemove) {
+    auto &animation = completedAnimationIt->second.animation;
+    animation.parentTag = parentTag;
+    animation.currentView.layoutMetrics.frame.origin += offset;
+    animation.frameOffset += offset;
+    animation.finalView = newView;
+    return animation.currentView;
+  }
+  return pendingCurrentView;
 }
 
 // MARK: MountingOverrideDelegate
@@ -227,6 +289,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
   std::unordered_set<Tag> inserted, moved, deleted;
   std::unordered_map<Tag, IndexCursors> indexCursors;
   std::unordered_map<Tag, ShadowView> updatedViews;
+  std::unordered_map<Tag, std::vector<AncestorOrigin>> oldChains;
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
     const auto &mutation = *it;
     switch (mutation.type) {
@@ -325,7 +388,6 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         auto &parent = lightNodes_[mutation.parentTag];
         const auto hostIndex = parent->toHostIndexForInsert(mutation.index, indexCursors[mutation.parentTag]);
         parent->children.insert(parent->children.begin() + hostIndex, node);
-        const auto sameParent = node->parent.lock() == parent;
         node->parent = parent;
         const auto tag = mutation.newChildShadowView.tag;
         bool hasSharedTransition;
@@ -335,19 +397,24 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         }
         const auto layoutConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT);
         const auto enteringConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, ENTERING);
-        if (moved.contains(tag) && (sameParent || layoutConfig)) {
-          auto view = node->previous;
-          if (sameParent) {
-            if (const auto currentView = reparentLayoutAnimation(tag, mutation.parentTag)) {
-              view = *currentView;
-            } else if (const auto updatedViewIt = updatedViews.find(tag);
-                       updatedViewIt != updatedViews.end() && layoutConfig) {
-              view = updatedViewIt->second;
-            } else if (!hasPendingLayoutAnimation(tag)) {
-              view = mutation.newChildShadowView;
-            }
+        if (moved.contains(tag)) {
+          const auto offset = reparentOffset(oldChains.at(tag), ancestorOrigins(parent, {}));
+          node->previous.layoutMetrics.frame.origin += offset;
+          if (const auto currentView = reparentLayoutAnimation(tag, mutation.parentTag, node->current, offset)) {
+            filteredMutations.push_back(
+                ShadowViewMutation::InsertMutation(mutation.parentTag, *currentView, hostIndex));
+          } else if (const auto updatedViewIt = updatedViews.find(tag);
+                     updatedViewIt != updatedViews.end() && layoutConfig) {
+            auto updatedView = updatedViewIt->second;
+            updatedView.layoutMetrics.frame.origin += offset;
+            filteredMutations.push_back(ShadowViewMutation::InsertMutation(mutation.parentTag, updatedView, hostIndex));
+          } else if (hasPendingLayoutAnimation(tag)) {
+            filteredMutations.push_back(
+                ShadowViewMutation::InsertMutation(mutation.parentTag, node->previous, hostIndex));
+          } else {
+            filteredMutations.push_back(
+                ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
           }
-          filteredMutations.push_back(ShadowViewMutation::InsertMutation(mutation.parentTag, view, hostIndex));
         } else if (enteringConfig) {
           transaction.entering.push_back({node, enteringConfig});
           filteredMutations.push_back(
@@ -380,6 +447,9 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
 
         if (!deleted.contains(tag)) {
           react_native_assert(!node->isExiting() && "Remove mutation for an exiting node");
+          if (moved.contains(tag)) {
+            oldChains[tag] = ancestorOrigins(parent, updatedViews);
+          }
           filteredMutations.push_back(
               ShadowViewMutation::RemoveMutation(parentTag, mutation.oldChildShadowView, hostIndex));
           parent->children.erase(parent->children.begin() + hostIndex);
@@ -622,7 +692,7 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(ShadowViewMutation
     if (updateValues.newProps) {
       newView.props = updateValues.newProps;
     }
-    updateLayoutMetrics(newView.layoutMetrics, updateValues.frame);
+    updateLayoutMetrics(newView.layoutMetrics, updateValues.frame, layoutAnimation.frameOffset);
 
     mutations.push_back(
         ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
@@ -752,9 +822,8 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
   return wantAnimateExit;
 }
 
-void LayoutAnimationsProxy_Experimental::surfaceDidUnmount() {
-  LayoutAnimationsProxyCommon::surfaceDidUnmount();
-  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+void LayoutAnimationsProxy_Experimental::clearSurfaceState() const {
+  LayoutAnimationsProxyCommon::clearSurfaceState();
   sharedContainers_.clear();
   transition_.reset();
   uncommittedScreenPop_.reset();
