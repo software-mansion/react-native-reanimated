@@ -19,6 +19,7 @@
 
 ### 🐛 Bug fixes
 
+- Start a shared element transition from the frame of a running layout animation on the source view. ([#10556](https://github.com/software-mansion/react-native-reanimated/pull/10556) by [@pawicao](https://github.com/pawicao))
 - Track synchronous prop updates in the layout animations bookkeeping behind the `TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS` dynamic feature flag, so shared element transitions and layout animations start from the current props of a view that moved through the synchronous path; warn in development when a transition or layout animation starts on such a view with the flag off. The synchronous-update feature flags now work together with `ENABLE_SHARED_ELEMENT_TRANSITIONS`. ([#10522](https://github.com/software-mansion/react-native-reanimated/pull/10522) by [@pawicao](https://github.com/pawicao))
 - Carry a view's current registry values in the Reanimated commits that change its layout props, so iOS no longer writes a stale transform back to a view that moved through the synchronous path. ([#10416](https://github.com/software-mansion/react-native-reanimated/pull/10416) by [@pawicao](https://github.com/pawicao))
 - Restore the underlying native style when a running CSS animation is removed or its `animationName` becomes `none`. ([#10528](https://github.com/software-mansion/react-native-reanimated/pull/10528) by [@MatiPl01](https://github.com/MatiPl01))
