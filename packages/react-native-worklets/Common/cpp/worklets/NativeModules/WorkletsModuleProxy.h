@@ -46,11 +46,11 @@ namespace worklets {
  *
  *   3. JS thread: the `prepareBundleMode` polyfill runs before the first module of the bundle. The Worklets plugin
  *      enables the polyfill only when Bundle Mode is on. The polyfill calls `prepareBundleMode` on the native
- *      module. The module calls `WorkletsModuleProxyInitializer::beginBundleMode` and dispatches
- *      `WorkletsModuleProxyInitializer::prepareBundleMode` to a background thread.
- *   4. Background thread: `prepareBundleMode` waits for step 2, loads the bundle and calls
- *      `startUIRuntimeInBundleMode`. It stores the Bundle Mode config, initializes the UI Worklet Runtime and
- *      evaluates the bundle on it. This runs in parallel with the JS thread, which evaluates the bundle on the RN
+ *      module. The module calls `WorkletsModuleProxyInitializer::beginBundleModeAOT` and dispatches
+ *      `WorkletsModuleProxyInitializer::prepareBundleModeAOT` to a background thread.
+ *   4. Background thread: `prepareBundleModeAOT` waits for step 2, loads the bundle and calls
+ *      `startUIRuntimeInBundleModeAOT`. It stores the Bundle Mode config, initializes the UI Worklet Runtime
+ * and evaluates the bundle on it. This runs in parallel with the JS thread, which evaluates the bundle on the RN
  *      Runtime.
  *   5. JS thread: the bundle evaluates `NativeWorklets`, which calls `installTurboModule(true)`. The native module
  *      calls `WorkletsModuleProxyInitializer::finalize`. It waits for step 4 and calls `attachToRNRuntime` without
@@ -65,7 +65,7 @@ namespace worklets {
  */
 class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModuleProxy> {
  public:
-  void startUIRuntimeInBundleMode(const BundleModeConfig &bundleModeConfig);
+  void startUIRuntimeInBundleModeAOT(const BundleModeConfig &bundleModeConfig);
 
   void attachToRNRuntime(jsi::Runtime &rnRuntime, const std::optional<BundleModeConfig> &bundleModeConfig);
 

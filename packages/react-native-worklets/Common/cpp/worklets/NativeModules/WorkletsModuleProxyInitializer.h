@@ -27,9 +27,9 @@ class WorkletsModuleProxyInitializer {
 
   void prepareProxy();
 
-  void beginBundleMode();
+  void beginBundleModeAOT();
 
-  void prepareBundleMode(const BundleModeConfigLoader &loadBundleModeConfig);
+  void prepareBundleModeAOT(const BundleModeConfigLoader &loadBundleModeConfig);
 
   std::shared_ptr<WorkletsModuleProxy>
   finalize(jsi::Runtime &rnRuntime, bool bundleModeEnabled, const BundleModeConfigLoader &loadBundleModeConfig);
@@ -37,7 +37,7 @@ class WorkletsModuleProxyInitializer {
   void invalidate();
 
  private:
-  enum class Stage { Created, BundleModeBegun, Finalized, Invalidated };
+  enum class Stage { Created, AOTBegun, Finalized, Invalidated };
 
   using ProxyPromise = std::promise<std::shared_ptr<WorkletsModuleProxy>>;
   using ProxyFuture = std::shared_future<std::shared_ptr<WorkletsModuleProxy>>;
@@ -51,8 +51,8 @@ class WorkletsModuleProxyInitializer {
   Stage stage_{Stage::Created};
   ProxyPromise preparedProxyPromise_;
   ProxyFuture preparedProxy_;
-  ProxyPromise startedProxyPromise_;
-  ProxyFuture startedProxy_;
+  ProxyPromise aotProxyPromise_;
+  ProxyFuture aotProxy_;
 };
 
 } // namespace worklets

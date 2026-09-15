@@ -50,12 +50,12 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       uiWorkletRuntime_(runtimeManager_->createUninitializedUIRuntime(std::make_shared<AsyncQueueUI>(uiScheduler_))),
       uiRuntimeStarted_(false) {}
 
-void WorkletsModuleProxy::startUIRuntimeInBundleMode(const BundleModeConfig &bundleModeConfig) {
+void WorkletsModuleProxy::startUIRuntimeInBundleModeAOT(const BundleModeConfig &bundleModeConfig) {
   if (!bundleModeConfig.enabled) [[unlikely]] {
-    throw std::runtime_error("[Worklets] startUIRuntimeInBundleMode requires Bundle Mode.");
+    throw std::runtime_error("[Worklets] startUIRuntimeInBundleModeAOT requires Bundle Mode.");
   }
   if (rnRuntimeProxy_) [[unlikely]] {
-    throw std::runtime_error("[Worklets] startUIRuntimeInBundleMode must be called before attachToRNRuntime.");
+    throw std::runtime_error("[Worklets] startUIRuntimeInBundleModeAOT must be called before attachToRNRuntime.");
   }
   if (uiRuntimeStarted_) [[unlikely]] {
     throw std::runtime_error("[Worklets] The UI Worklet Runtime was already started.");
@@ -84,11 +84,11 @@ void WorkletsModuleProxy::attachToRNRuntime(
     throw std::runtime_error("[Worklets] WorkletsModuleProxy is already attached to the RN runtime.");
   }
   if (uiRuntimeStarted_ && bundleModeConfig.has_value()) [[unlikely]] {
-    throw std::runtime_error("[Worklets] The Bundle Mode config was already set by startUIRuntimeInBundleMode.");
+    throw std::runtime_error("[Worklets] The Bundle Mode config was already set by startUIRuntimeInBundleModeAOT.");
   }
   if (!uiRuntimeStarted_ && !bundleModeConfig.has_value()) [[unlikely]] {
     throw std::runtime_error(
-        "[Worklets] attachToRNRuntime requires a Bundle Mode config unless startUIRuntimeInBundleMode was called.");
+        "[Worklets] attachToRNRuntime requires a Bundle Mode config unless startUIRuntimeInBundleModeAOT was called.");
   }
 
   isDevBundle_ = isDevBundleFromRNRuntime(rnRuntime);

@@ -56,12 +56,12 @@ void WorkletsModule::prepareProxyCpp() {
   initializer_->prepareProxy();
 }
 
-void WorkletsModule::beginBundleModeCpp() {
-  initializer_->beginBundleMode();
+void WorkletsModule::beginBundleModeAOTCpp() {
+  initializer_->beginBundleModeAOT();
 }
 
-void WorkletsModule::prepareBundleModeCpp() {
-  initializer_->prepareBundleMode([this] { return loadBundleModeConfig(); });
+void WorkletsModule::prepareBundleModeAOTCpp() {
+  initializer_->prepareBundleModeAOT([this] { return loadBundleModeConfig(); });
 }
 
 void WorkletsModule::installTurboModuleCpp(jboolean bundleModeEnabled) {
@@ -196,8 +196,8 @@ void WorkletsModule::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
       makeNativeMethod("prepareProxyCpp", WorkletsModule::prepareProxyCpp),
-      makeNativeMethod("beginBundleModeCpp", WorkletsModule::beginBundleModeCpp),
-      makeNativeMethod("prepareBundleModeCpp", WorkletsModule::prepareBundleModeCpp),
+      makeNativeMethod("beginBundleModeAOTCpp", WorkletsModule::beginBundleModeAOTCpp),
+      makeNativeMethod("prepareBundleModeAOTCpp", WorkletsModule::prepareBundleModeAOTCpp),
       makeNativeMethod("installTurboModuleCpp", WorkletsModule::installTurboModuleCpp),
       makeNativeMethod("invalidateCpp", WorkletsModule::invalidateCpp),
       makeNativeMethod("startCpp", WorkletsModule::startCpp),

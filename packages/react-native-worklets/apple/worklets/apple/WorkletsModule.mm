@@ -85,12 +85,12 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(prepareBundleMode)
 {
   AssertJavaScriptQueue();
 
-  initializer_->beginBundleMode();
+  initializer_->beginBundleModeAOT();
 
   const auto initializer = initializer_;
   const auto loadBundleModeConfig = [self makeBundleModeConfigLoader];
   dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-    initializer->prepareBundleMode(loadBundleModeConfig);
+    initializer->prepareBundleModeAOT(loadBundleModeConfig);
   });
   return @YES;
 }

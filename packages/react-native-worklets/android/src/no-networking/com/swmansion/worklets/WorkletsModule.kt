@@ -53,9 +53,9 @@ class WorkletsModule(
 
     private external fun prepareProxyCpp()
 
-    private external fun beginBundleModeCpp()
+    private external fun beginBundleModeAOTCpp()
 
-    private external fun prepareBundleModeCpp()
+    private external fun prepareBundleModeAOTCpp()
 
     private external fun installTurboModuleCpp(bundleModeEnabled: Boolean)
 
@@ -63,8 +63,8 @@ class WorkletsModule(
     @ReactMethod(isBlockingSynchronousMethod = true)
     override fun prepareBundleMode(): Boolean {
         reactApplicationContext.assertOnJSQueueThread()
-        beginBundleModeCpp()
-        Thread({ prepareBundleModeCpp() }, "WorkletsBundleModePrepare").start()
+        beginBundleModeAOTCpp()
+        Thread({ prepareBundleModeAOTCpp() }, "WorkletsBundleModePrepare").start()
         return true
     }
 

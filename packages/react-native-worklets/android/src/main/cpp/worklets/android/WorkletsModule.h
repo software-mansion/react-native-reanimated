@@ -45,9 +45,9 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
 
   void prepareProxyCpp();
 
-  void beginBundleModeCpp();
+  void beginBundleModeAOTCpp();
 
-  void prepareBundleModeCpp();
+  void prepareBundleModeAOTCpp();
 
   void installTurboModuleCpp(jboolean bundleModeEnabled);
 
