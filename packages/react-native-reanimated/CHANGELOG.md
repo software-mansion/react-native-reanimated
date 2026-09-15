@@ -52,6 +52,7 @@
 
 ### 💡 Others
 
+- Move the `IOS_CSS_CORE_ANIMATION` and `ANDROID_CSS_PLATFORM_TRANSITIONS` checks out of the shared C++ code: each platform now supplies its native CSS transition backend under its own flag. No behavior change. ([#10546](https://github.com/software-mansion/react-native-reanimated/pull/10546) by [@MatiPl01](https://github.com/MatiPl01))
 - Added Jest and runtime tests for the settled props unprocessors (colors, `boxShadow`, `backgroundImage`). `unprocessProps` is now exported. ([#10545](https://github.com/software-mansion/react-native-reanimated/pull/10545) by [@tshmieldev](https://github.com/tshmieldev))
 - Remove three duplicated implementations: `CSSBoxShadow` and `CSSDropShadow` share their field validation, `PropertyInterpolator` provides the common `getStyleValue`, and the nodes manager and keyboard observer create their display links through one `REAMakeDisplayLink` helper. ([#10357](https://github.com/software-mansion/react-native-reanimated/pull/10357) by [@MatiPl01](https://github.com/MatiPl01))
 - Throw a descriptive error on iOS when the native module cannot be installed because React Native has no active surface during a reload race, instead of silently installing a dummy module proxy. The `WorkletsModule` registry check that guarded the same path is removed. ([#10508](https://github.com/software-mansion/react-native-reanimated/pull/10508) by [@tjzel](https://github.com/tjzel))
