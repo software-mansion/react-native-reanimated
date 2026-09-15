@@ -2,15 +2,16 @@ import type { NodePath } from '@babel/core';
 import generate from '@babel/generator';
 import type { Binding } from '@babel/traverse';
 import type {
+  ArrayExpression,
   BlockStatement,
   ExpressionStatement,
   FunctionExpression,
-  ObjectExpression,
   ReturnStatement,
   VariableDeclaration,
 } from '@babel/types';
 import {
   arrayExpression,
+  arrayPattern,
   assignmentExpression,
   blockStatement,
   cloneNode,
@@ -26,7 +27,6 @@ import {
   newExpression,
   numericLiteral,
   objectExpression,
-  objectPattern,
   objectProperty,
   returnStatement,
   stringLiteral,
@@ -57,7 +57,7 @@ export function makeWorkletFactory(
   state: WorkletsPluginPass
 ): {
   factory: FunctionExpression;
-  factoryCallParamPack: ObjectExpression;
+  factoryCallParamPack: ArrayExpression;
   workletHash: number;
 } {
   // Returns a new FunctionExpression which is a workletized version of provided
@@ -117,7 +117,22 @@ export function makeWorkletFactory(
       )
     : clone;
 
-  const { workletName, reactName } = makeWorkletName(fun, state);
+  const { workletName, reactName: initialReactName } = makeWorkletName(
+    fun,
+    state
+  );
+  let reactName = initialReactName;
+  if (state.opts.bundleMode && closureVariables.length === 0) {
+    // The worklet binding will share module scope with forwarded imports.
+    const importedNames = new Set(
+      [...moduleBindingsToImport, ...relativeBindingsToImport].map(
+        (binding) => binding.identifier.name
+      )
+    );
+    while (importedNames.has(reactName)) {
+      reactName = `_${reactName}`;
+    }
+  }
 
   let mutatedClosureVariables;
   if (state.opts.bundleMode) {
@@ -243,36 +258,37 @@ export function makeWorkletFactory(
     variableDeclaration('const', [
       variableDeclarator(identifier(reactName), funExpression),
     ]),
-    expressionStatement(
-      assignmentExpression(
-        '=',
-        memberExpression(identifier(reactName), identifier('__closure'), false),
-        objectExpression(
-          closureVariables.map((variable) =>
-            !state.opts.bundleMode &&
-            variable.name.endsWith(workletClassFactorySuffix)
-              ? objectProperty(
-                  identifier(variable.name),
-                  memberExpression(
-                    identifier(
-                      variable.name.slice(
-                        0,
-                        variable.name.length - workletClassFactorySuffix.length
+    ...(closureVariables.length > 0
+      ? [
+          expressionStatement(
+            assignmentExpression(
+              '=',
+              memberExpression(
+                identifier(reactName),
+                identifier('__closure'),
+                false
+              ),
+              arrayExpression(
+                closureVariables.map((variable) =>
+                  !state.opts.bundleMode &&
+                  variable.name.endsWith(workletClassFactorySuffix)
+                    ? memberExpression(
+                        identifier(
+                          variable.name.slice(
+                            0,
+                            variable.name.length -
+                              workletClassFactorySuffix.length
+                          )
+                        ),
+                        identifier(variable.name)
                       )
-                    ),
-                    identifier(variable.name)
-                  )
+                    : cloneNode(variable, true)
                 )
-              : objectProperty(
-                  cloneNode(variable, true),
-                  cloneNode(variable, true),
-                  false,
-                  true
-                )
-          )
-        )
-      )
-    ),
+              )
+            )
+          ),
+        ]
+      : []),
     expressionStatement(
       assignmentExpression(
         '=',
@@ -369,35 +385,17 @@ export function makeWorkletFactory(
     factoryParams.unshift(cloneNode(initDataId, true));
   }
 
-  const factoryParamObjectPattern = objectPattern(
-    factoryParams.map((param) =>
-      objectProperty(
-        cloneNode(param, true),
-        cloneNode(param, true),
-        false,
-        true
-      )
-    )
-  );
-
   const factory = functionExpression(
     identifier(workletName + 'Factory'),
-    [factoryParamObjectPattern],
+    factoryParams.length > 0
+      ? [arrayPattern(factoryParams.map((param) => cloneNode(param, true)))]
+      : [],
     blockStatement(statements)
   );
 
   const factoryCallArgs = factoryParams.map((param) => cloneNode(param, true));
 
-  const factoryCallParamPack = objectExpression(
-    factoryCallArgs.map((param) =>
-      objectProperty(
-        cloneNode(param, true),
-        cloneNode(param, true),
-        false,
-        true
-      )
-    )
-  );
+  const factoryCallParamPack = arrayExpression(factoryCallArgs);
 
   if (state.opts.bundleMode) {
     updateRelativeRequires(factory, state);
