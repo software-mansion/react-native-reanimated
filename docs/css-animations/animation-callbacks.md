@@ -1,0 +1,102 @@
+# Animation Callbacks
+
+Animation callbacks tell you when a CSS animation **starts**, **repeats**, **ends**, or is **cancelled**, without polling or tracking the animation yourself.
+
+Unlike everything else about a CSS animation, callbacks aren't part of `style` - they are props on the component, next to `onPress` and friends:
+
+```jsx
+<Animated.View
+  style={{
+    animationName: pulse,
+    animationDuration: 1200,
+    animationIterationCount: 'infinite',
+  }}
+  // highlight-next-line
+  onCSSAnimationIteration={() => setIterations((count) => count + 1)}
+/>
+```
+
+## Reference
+
+```javascript
+function App() {
+  return (
+    <Animated.View
+      style={{ animationName: pulse, animationDuration: 1000 }}
+      // highlight-start
+      onCSSAnimationStart={(event) => console.log('start', event.animationName)}
+      onCSSAnimationIteration={(event) => console.log('iteration', event.elapsedTime)}
+      onCSSAnimationEnd={(event) => console.log('end', event.elapsedTime)}
+      onCSSAnimationCancel={(event) => console.log('cancel', event.elapsedTime)}
+      // highlight-end
+    />
+  );
+}
+```
+
+Type definitions
+
+```typescript
+type CSSAnimationEvent = {
+  /** Name of the animation that the event refers to. */
+  animationName: string;
+  /** Time in seconds the animation had been running when the event fired. */
+  elapsedTime: number;
+};
+
+type CSSAnimationCallback = (event: CSSAnimationEvent) => void;
+
+type CSSAnimationCallbacks = {
+  onCSSAnimationStart?: CSSAnimationCallback;
+  onCSSAnimationIteration?: CSSAnimationCallback;
+  onCSSAnimationEnd?: CSSAnimationCallback;
+  onCSSAnimationCancel?: CSSAnimationCallback;
+};
+```
+
+### Values
+
+#### `onCSSAnimationStart`
+
+Fires when the animation begins, after [`animationDelay`](/docs/css-animations/animation-delay) has passed.
+
+#### `onCSSAnimationIteration`
+
+Fires at the boundary between two iterations, so an animation with [`animationIterationCount`](/docs/css-animations/animation-iteration-count) of `3` reports two iterations. It never fires for a single-iteration animation, and it keeps firing forever for an infinite one.
+
+#### `onCSSAnimationEnd`
+
+Fires when the last iteration completes. An infinite animation never reports `end`; if it is interrupted, it reports `cancel` instead.
+
+#### `onCSSAnimationCancel`
+
+Fires when the animation is removed before finishing - the animation name changed, the style dropped it, or the component unmounted.
+
+## How it works
+
+Each callback receives a [`CSSAnimationEvent`](#reference). `animationName` is the name Reanimated generated for the keyframes, so compare it against the object you created rather than a string literal:
+
+```jsx
+const pulse = css.keyframes({ ... });
+const fade = css.keyframes({ ... });
+
+<Animated.View
+  style={{ animationName: [pulse, fade] }}
+  onCSSAnimationEnd={(event) => {
+    if (event.animationName === pulse.name) {
+      // ...
+    }
+  }}
+/>;
+```
+
+`elapsedTime` is measured in seconds and excludes the delay, so the third iteration of a 400ms animation ends with `elapsedTime: 1.2`.
+
+## Remarks
+
+* Callbacks fire only for CSS animations. Transitions have [their own callbacks](/docs/css-transitions/transition-callbacks), and [`withTiming`](/docs/animations/withTiming) and friends report completion through their own callback argument instead.
+* Handlers run on the JavaScript thread. The animation itself keeps running natively, so slow work in a callback delays your code, not the animation.
+* Pausing with [`animationPlayState`](/docs/css-animations/animation-play-state) doesn't emit anything, and time spent paused is excluded from `elapsedTime`.
+* An animation that is removed before its last iteration emits `cancel` rather than `end`, so the two are mutually exclusive for a given run.
+
+## Platform compatibility

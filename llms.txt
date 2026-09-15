@@ -44,6 +44,7 @@
 
 ## Css Animations
 
+- [Animation Callbacks](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-callbacks)
 - [animation-delay](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-delay)
 - [animation-direction](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-direction)
 - [animation-duration](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-duration)
@@ -59,6 +60,7 @@
 - [overview](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/overview)
 - [pseudo-selectors](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/pseudo-selectors)
 - [transition-behavior](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-behavior)
+- [Transition Callbacks](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-callbacks)
 - [transition-delay](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-delay)
 - [transition-duration](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-duration)
 - [transition-property](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-property)
