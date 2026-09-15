@@ -4,6 +4,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
+#include <reanimated/LayoutAnimations/StaleSynchronousPropsTracker.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
@@ -102,22 +103,11 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif
+  mutable StaleSynchronousPropsTracker staleSynchronousProps_;
 #ifndef NDEBUG
-  mutable std::unordered_map<Tag, std::unordered_set<std::string>> staleSynchronousProps_;
-  mutable std::unordered_set<Tag> warnedStaleSynchronousPropsTags_;
   void recordSkippedSynchronousProps(const UpdatesBatch &updatesBatch) const override;
-  void forgetStaleSynchronousProps(Tag tag) const;
-  void forgetStaleSynchronousProps(Tag tag, const folly::dynamic &props) const;
-  std::optional<Tag> findStaleSynchronousProps(const std::shared_ptr<LightNode> &node, LayoutAnimationType type) const;
-  void warnAboutStaleSynchronousProps(Tag tag, Tag staleTag, LayoutAnimationType type) const;
-#else
-  void forgetStaleSynchronousProps(Tag) const {}
-  void forgetStaleSynchronousProps(Tag, const folly::dynamic &) const {}
-  std::optional<Tag> findStaleSynchronousProps(const std::shared_ptr<LightNode> &, LayoutAnimationType) const {
-    return std::nullopt;
-  }
-  void warnAboutStaleSynchronousProps(Tag, Tag, LayoutAnimationType) const {}
 #endif
+  void warnAboutStaleSynchronousProps(Tag tag, Tag staleTag, LayoutAnimationType type) const;
   void warnIfSnapshotIsStale(const ShadowView &snapshot, const TransactionMeta &transaction) const;
 
   LayoutAnimationsProxy_Experimental(SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies);
