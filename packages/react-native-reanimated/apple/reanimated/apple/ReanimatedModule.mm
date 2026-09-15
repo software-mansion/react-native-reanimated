@@ -154,34 +154,11 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   }
 }
 
-/**
- * Currently on iOS React Native can go into a non-fatal race condition
- * on a double reload. Double reload can happen during an OTA update,
- * when an app is reloaded immediately after evaluating the bundle.
- * We need to bail on it without throwing exceptions.
- */
-- (BOOL)hasReactNativeFailedReload
-{
-  id workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
-  if (![_moduleRegistry moduleIsInitialized:[workletsModule class]]) {
-    return YES;
-  }
-
-  // On a double reload React Native can momentarily leave the surface presenter without
-  // a scheduler. This is another manifestation of the same non-fatal reload race, so we
-  // bail on it here instead of asserting on a nil scheduler later in installTurboModule.
-  if ([_surfacePresenter scheduler] == nil) {
-    return YES;
-  }
-
-  return NO;
-}
-
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
   REAAssertJavaScriptQueue();
 
-  if ([self hasReactNativeFailedReload]) {
+  if ([_surfacePresenter scheduler] == nil) {
     return @NO;
   }
 

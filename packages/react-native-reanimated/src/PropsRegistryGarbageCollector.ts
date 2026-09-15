@@ -1,5 +1,10 @@
 'use strict';
 
+import type {
+  ProcessedBackgroundImageValue,
+  ProcessedColorStop,
+  ProcessedDirection,
+} from './common/style/processors/backgroundImage';
 import {
   unprocessColor,
   unprocessColorsInProps,
@@ -66,6 +71,7 @@ export const PropsRegistryGarbageCollector = {
 function unprocessProps(props: StyleProps) {
   unprocessColorsInProps(props);
   unprocessBoxShadow(props);
+  unprocessBackgroundImage(props);
 }
 
 function unprocessBoxShadow(props: StyleProps) {
@@ -76,4 +82,35 @@ function unprocessBoxShadow(props: StyleProps) {
       color: unprocessColor(boxShadow.color),
     }));
   }
+}
+
+function unprocessBackgroundImage(props: StyleProps) {
+  if (!Array.isArray(props.backgroundImage)) {
+    return;
+  }
+  // @ts-ignore props is readonly
+  props.backgroundImage = (
+    props.backgroundImage as ProcessedBackgroundImageValue[]
+  ).map((backgroundImage) => {
+    const colorStops = backgroundImage.colorStops.map(unprocessColorStop);
+    if (backgroundImage.type === 'linear-gradient') {
+      return {
+        ...backgroundImage,
+        direction: unprocessDirection(backgroundImage.direction),
+        colorStops,
+      };
+    }
+    return { ...backgroundImage, colorStops };
+  });
+}
+
+function unprocessDirection({ type, value }: ProcessedDirection) {
+  return type === 'angle' ? `${value}deg` : value;
+}
+
+function unprocessColorStop({ color, position }: ProcessedColorStop) {
+  return {
+    color: color === null ? null : unprocessColor(color),
+    positions: position === null ? undefined : [position],
+  };
 }
