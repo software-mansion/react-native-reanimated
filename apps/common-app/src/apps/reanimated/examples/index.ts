@@ -43,14 +43,6 @@ const BBExample: React.FC = () =>
   );
 const BokehExample: React.FC = () =>
   React.createElement(require('./BokehExample').default as React.FC);
-const AnimatedTransformExample: React.FC = () =>
-  React.createElement(
-    require('./SharedElementTransitions/AnimatedTransform').default
-  );
-const LightTreeErasureExample: React.FC = () =>
-  React.createElement(
-    require('./SharedElementTransitions/LightTreeErasure').default
-  );
 const BorderRadiiExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/BorderRadii').default
@@ -239,6 +231,10 @@ const NestedRotationExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedRotation').default
   );
+const SynchronousPropsSETExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/SynchronousPropsExample').default
+  );
 const NestedStacksExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedStacks').default
@@ -323,14 +319,6 @@ const SyncBackToReactExample: React.FC = () =>
   React.createElement(require('./SyncBackToReactExample').default as React.FC);
 const SynchronousPropsExample: React.FC = () =>
   React.createElement(require('./SynchronousPropsExample').default as React.FC);
-const SyncPropsLayoutAnimationExample: React.FC = () =>
-  React.createElement(
-    require('./SyncPropsLayoutAnimationExample').default as React.FC
-  );
-const SynchronousPropsOverwriteExample: React.FC = () =>
-  React.createElement(
-    require('./SynchronousPropsOverwriteExample').default as React.FC
-  );
 const TabNavigatorExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/TabNavigatorExample').default
@@ -553,20 +541,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Animate synchronous props',
     section: REGRESSIONS,
     screen: SynchronousPropsExample,
-  },
-  SyncPropsLayoutAnimationExample: {
-    title: 'Sync Props Layout Animation',
-    screen: SyncPropsLayoutAnimationExample,
-    shouldWork: {
-      ios: true,
-      android: true,
-    },
-  },
-  SynchronousPropsOverwriteExample: {
-    icon: '⚡',
-    title: 'Synchronous props overwrite',
-    section: REGRESSIONS,
-    screen: SynchronousPropsOverwriteExample,
   },
   PlanetsExample: {
     icon: '🪐',
@@ -934,6 +908,14 @@ const ALL_EXAMPLES: Record<string, Example> = {
       android: true,
     },
   },
+  SynchronousPropsSETExample: {
+    title: '[LA] Synchronous props',
+    screen: SynchronousPropsSETExample,
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
   NestedStacksExample: {
     title: '[SET] Nested stacks',
     screen: NestedStacksExample,
@@ -995,22 +977,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: BorderRadiiExample,
     shouldWork: {
       ios: false, // broken on back gesture
-      android: true,
-    },
-  },
-  AnimatedTransformExample: {
-    title: '[SET] Animated Transform',
-    screen: AnimatedTransformExample,
-    shouldWork: {
-      ios: true,
-      android: true,
-    },
-  },
-  LightTreeErasureExample: {
-    title: '[SET] Light Tree Erasure Repro',
-    screen: LightTreeErasureExample,
-    shouldWork: {
-      ios: true,
       android: true,
     },
   },
