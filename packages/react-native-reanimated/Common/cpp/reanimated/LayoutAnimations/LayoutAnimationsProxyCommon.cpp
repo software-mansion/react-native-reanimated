@@ -10,8 +10,10 @@
 #include <cstring>
 #include <memory>
 #include <optional>
+#include <type_traits>
 #include <unordered_set>
 #include <utility>
+#include <variant>
 
 namespace reanimated {
 
@@ -130,6 +132,66 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations(std::unique_loc
     return;
   }
   flushLayoutAnimationOperationsLocked();
+}
+
+Props::Shared LayoutAnimationsProxyCommon::mergeSynchronousProps(const ShadowView &view, const folly::dynamic &props)
+    const {
+  auto rawProps = props;
+#ifdef RN_SERIALIZABLE_STATE
+  rawProps = folly::dynamic::merge(view.props->rawProps, rawProps);
+#endif
+  const PropsParserContext propsParserContext{view.surfaceId, *contextContainer_};
+  return componentDescriptorRegistry_->at(view.componentHandle)
+      .cloneProps(propsParserContext, view.props, RawProps(std::move(rawProps)));
+}
+
+// A layout animation builds every frame from its own copies of the props, not from the light node.
+// The copies live in the queued start, in the running record and in the frame that waits for a pull.
+void LayoutAnimationsProxyCommon::applySynchronousPropsToLayoutAnimation(const Tag tag, const folly::dynamic &props)
+    const {
+  const bool propsIncludeOpacity = props.count("opacity") > 0;
+  if (hasPendingLayoutAnimation(tag)) {
+    for (auto &operation : layoutAnimationOperations_) {
+      std::visit(
+          [&](auto &start) {
+            using Start = std::decay_t<decltype(start)>;
+            if constexpr (!std::is_same_v<Start, LayoutAnimationCancellation>) {
+              if (start.tag != tag) {
+                return;
+              }
+              start.before.props = mergeSynchronousProps(start.before, props);
+              start.after.props = mergeSynchronousProps(start.after, props);
+              if constexpr (std::is_same_v<Start, ManagedLayoutAnimationStart>) {
+                if (propsIncludeOpacity && start.opacity) {
+                  start.opacity = static_cast<const ViewProps &>(*start.after.props).opacity;
+                }
+              }
+            }
+          },
+          operation);
+    }
+  }
+
+  LayoutAnimation *animation = nullptr;
+  if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
+    animation = &it->second;
+  } else if (const auto it = completedAnimations_.find(tag);
+             it != completedAnimations_.end() && !it->second.shouldRemove) {
+    animation = &it->second.animation;
+  }
+  if (animation == nullptr) {
+    return;
+  }
+  animation->finalView.props = mergeSynchronousProps(animation->finalView, props);
+  animation->currentView.props = mergeSynchronousProps(animation->currentView, props);
+  if (propsIncludeOpacity && animation->opacity) {
+    animation->opacity = static_cast<const ViewProps &>(*animation->finalView.props).opacity;
+  }
+  if (const auto it = updateMap_.find(tag); it != updateMap_.end() && it->second.newProps) {
+    auto pendingView = animation->finalView;
+    pendingView.props = it->second.newProps;
+    it->second.newProps = mergeSynchronousProps(pendingView, props);
+  }
 }
 
 ShadowView LayoutAnimationsProxyCommon::materializeLayoutAnimation(

@@ -13,6 +13,7 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <deque>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -114,6 +115,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void flushLayoutAnimationOperations() const;
 
  protected:
+  Props::Shared mergeSynchronousProps(const ShadowView &view, const folly::dynamic &props) const;
+  void applySynchronousPropsToLayoutAnimation(Tag tag, const folly::dynamic &props) const;
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
   void enqueueLayoutAnimation(ManagedLayoutAnimationStart start) const;
   void enqueueLayoutAnimation(ProgressLayoutAnimationStart start) const;
