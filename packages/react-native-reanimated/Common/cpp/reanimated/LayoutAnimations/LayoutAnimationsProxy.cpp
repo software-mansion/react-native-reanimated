@@ -306,9 +306,15 @@ void LayoutAnimationsProxy::updateLightTree(
         if (!config) {
           config = getRetargetLayoutAnimationConfig(tag);
         }
-        if (config) {
+        const auto shouldAnimate = hasLayoutChanged(mutation);
+        if ((!config || !shouldAnimate) && updateEnteringAnimationTarget(tag, node->current)) {
+          break;
+        }
+        if (config && shouldAnimate) {
           transaction.layout.push_back({node, config});
-        } else if (!updateEnteringAnimationTarget(tag, node->current)) {
+        } else if (config && (layoutAnimations_.contains(tag) || hasPendingLayoutAnimation(tag))) {
+          updateLayoutAnimationTarget(tag, node->current, config);
+        } else {
           if (const auto currentView = takeCompletedLayoutAnimationView(tag)) {
             filteredMutations.push_back(
                 ShadowViewMutation::UpdateMutation(*currentView, node->current, mutation.parentTag));
@@ -365,8 +371,8 @@ void LayoutAnimationsProxy::updateLightTree(
           if (sameParent) {
             if (const auto currentView = reparentLayoutAnimation(tag, mutation.parentTag)) {
               view = *currentView;
-            } else if (const auto updatedViewIt = updatedViews.find(tag);
-                       updatedViewIt != updatedViews.end() && layoutConfig) {
+            } else if (const auto updatedViewIt = updatedViews.find(tag); updatedViewIt != updatedViews.end() &&
+                       layoutConfig && updatedViewIt->second.layoutMetrics.frame != node->current.layoutMetrics.frame) {
               view = updatedViewIt->second;
             } else if (!hasPendingLayoutAnimation(tag)) {
               view = mutation.newChildShadowView;
