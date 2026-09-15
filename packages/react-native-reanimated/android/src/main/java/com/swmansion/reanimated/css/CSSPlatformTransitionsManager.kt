@@ -21,6 +21,7 @@ internal class CSSPlatformTransitionsManager(
     private val fabricUIManager: FabricUIManager,
     private val reactContext: WeakReference<ReactApplicationContext>,
     private val animationTimestamp: () -> Long,
+    private val animationsDragFactor: () -> Double,
 ) {
     private val animators = HashMap<Key, RunningTransition>()
 
@@ -281,7 +282,9 @@ internal class CSSPlatformTransitionsManager(
         val delayMs = if (elapsedMs < 0) -elapsedMs else 0.0
         // startDelay writes nothing while it waits, so a commit landing in the delay would
         // stay on screen. Folding the delay into the curve rewrites the property instead.
-        animator.duration = ((delayMs + durationMs) / command.scale).toLong().coerceAtLeast(1L)
+        // Slow animations slow Reanimated's clock, not the animator, so its duration stretches by the drag factor.
+        val animatorDurationMs = (delayMs + durationMs) * animationsDragFactor() / command.scale
+        animator.duration = animatorDurationMs.toLong().coerceAtLeast(1L)
         animator.interpolator =
             if (delayMs > 0) HoldThenEase((delayMs / (delayMs + durationMs)).toFloat(), interpolator) else interpolator
         if (elapsedMs > 0 && durationMs > 0) {

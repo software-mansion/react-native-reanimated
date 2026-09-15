@@ -3,6 +3,7 @@
 #import <reanimated/CSS/utils/platform.h>
 #import <reanimated/CSS/utils/reversingShortening.h>
 #import <reanimated/apple/CSS/REACSSPlatformProps.h>
+#import <reanimated/apple/REASlowAnimations.h>
 #import <reanimated/apple/REAUIView.h>
 
 #import <React/RCTComponentViewProtocol.h>
@@ -143,8 +144,8 @@ struct ActiveTransition {
   NSString *keyPath = caLayerKeyPathForCSSProperty(propertyName);
   id fromId = idFromPlatformValue(fromValue);
   id toId = idFromPlatformValue(toValue);
-  double durationSec = durationMs / 1000.0;
-  CFTimeInterval beginTime = startTimeMs / 1000.0;
+  double durationSec = reanimated::calculateMediaDurationFromSlowAnimationsDuration(durationMs / 1000.0);
+  CFTimeInterval beginTime = reanimated::calculateMediaTimeFromSlowAnimationsTimestamp(startTimeMs / 1000.0);
   CAMediaTimingFunction *timing = makeCSSTimingFunction(easing);
 
   __weak __typeof__(self) weakSelf = self;
