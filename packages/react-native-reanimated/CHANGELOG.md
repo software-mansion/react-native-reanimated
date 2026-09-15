@@ -11,6 +11,7 @@
 
 ### 🎉 New features
 
+- Run `shadowColor` CSS transitions on the Android platform animation path on Android 9 and newer. ([#TBD](https://github.com/software-mansion/react-native-reanimated/pull/TBD) by [@MatiPl01](https://github.com/MatiPl01))
 - Run CSS transitions for `backgroundColor`, `borderColor`, and numeric `borderRadius` on the Android platform animation path. ([#10310](https://github.com/software-mansion/react-native-reanimated/pull/10310) by [@MatiPl01](https://github.com/MatiPl01))
 - Add `backgroundImage` support to animated styles. Linear and radial gradients are accepted as objects or CSS strings and processed on the UI thread. ([#10486](https://github.com/software-mansion/react-native-reanimated/pull/10486) by [@tshmieldev](https://github.com/tshmieldev))
 - Add iOS Swift Package Manager support via `Package.swift` and SPM integration metadata in `react-native.config.js`, with a dependency on `RNWorklets`. ([#10472](https://github.com/software-mansion/react-native-reanimated/pull/10472) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
