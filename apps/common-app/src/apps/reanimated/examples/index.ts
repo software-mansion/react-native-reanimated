@@ -1023,7 +1023,7 @@ export const EXAMPLES: Record<string, ExampleEntry> = {
     icon: '🔗',
     title: 'Shared Element Transitions',
   },
-  Examples: {
+  ShowCasesAndRegressions: {
     examples: withoutTitlePrefixes([
       LAYOUT_ANIMATION_PREFIX,
       SHARED_ELEMENT_TRANSITION_PREFIX,

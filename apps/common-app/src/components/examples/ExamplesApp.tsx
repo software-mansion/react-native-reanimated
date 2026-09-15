@@ -81,8 +81,8 @@ function groupBySection(
   for (const [name, entry] of Object.entries(entries)) {
     const section =
       !isExampleGroup(entry) &&
-      entry.section !== undefined &&
-      buckets.has(entry.section)
+        entry.section !== undefined &&
+        buckets.has(entry.section)
         ? entry.section
         : OTHER_SECTION;
     buckets.get(section)?.push(name);
@@ -324,6 +324,7 @@ function ExampleListScreen({
         renderItem={renderEntry}
         renderSectionHeader={renderSectionHeader}
         sections={sectionData}
+        stickySectionHeadersEnabled={true}
         style={styles.list}
       />
     );
