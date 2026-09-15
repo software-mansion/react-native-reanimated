@@ -25,13 +25,15 @@ function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   const height = useSharedValue(100);
   const spacerHeight = useSharedValue(40);
 
-  const boxStyle = useAnimatedStyle(() => ({
+  const boxSynchronousStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],
     backgroundColor: interpolateColor(
       offset.value,
       [0, 60],
       ['purple', 'orange']
     ),
+  }));
+  const boxHeightStyle = useAnimatedStyle(() => ({
     height: height.value,
   }));
   const spacerStyle = useAnimatedStyle(() => ({
@@ -65,11 +67,14 @@ function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
       <Text style={styles.hint}>
         The purple box moves through the synchronous path. It must keep its
         position and color when it resizes through a commit, when it animates
-        down with a layout animation, and when a shared element transition
-        starts. The green box has a static transform and must also start its
-        transition from where it is drawn. The switch remounts the purple box,
-        so with the flag off the layout animation and the transitions start from
-        the stale layout position and a warning is logged.
+        with a layout animation, and when a shared element transition starts.
+        The green box has a static transform and must also start its transition
+        from where it is drawn. Every button press makes a React commit that
+        also refreshes the layout animation bookkeeping, so the flag matters
+        only for an animation that starts in the same press as the shift. The
+        switch remounts the purple box. With the flag off, the three combined
+        buttons start their animation from the stale layout position, and a
+        warning is logged.
       </Text>
       <Button title="Shift (synchronous)" onPress={shift} />
       <Button
@@ -78,7 +83,13 @@ function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
           height.value = height.value === 100 ? 150 : 100;
         }}
       />
-      <Button title="Relayout with a layout animation" onPress={relayout} />
+      <Button
+        title="Shift, then relayout"
+        onPress={() => {
+          offset.value = 60;
+          relayout();
+        }}
+      />
       <Button
         title="Shift, then navigate"
         onPress={() => {
@@ -99,7 +110,7 @@ function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
         key={flagOn ? 'tracked' : 'untracked'}
         layout={LinearTransition.duration(800)}
         sharedTransitionTag="animatedBox"
-        style={[styles.box, boxStyle]}
+        style={[styles.box, boxSynchronousStyle, boxHeightStyle]}
       />
       <Animated.View
         sharedTransitionTag="staticBox"
