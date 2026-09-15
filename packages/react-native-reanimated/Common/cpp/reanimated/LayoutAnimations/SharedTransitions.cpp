@@ -70,15 +70,16 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
     if (const auto staleTag = staleSynchronousProps_.find(node, LayoutAnimationType::SHARED_ELEMENT_TRANSITION)) {
       transaction.staleSnapshots[node->current.tag] = *staleTag;
     }
-    ShadowView copy = node->current;
+    const bool useViewsOnScreen = index == BEFORE;
+    ShadowView copy = useViewsOnScreen ? viewOnScreen(*node) : node->current;
     std::vector<react::Point> absolutePositions;
-    absolutePositions = getAbsolutePositionsForRootPathView(node);
+    absolutePositions = getAbsolutePositionsForRootPathView(node, useViewsOnScreen);
     copy.layoutMetrics.frame.origin = absolutePositions[0];
 
     auto &collectedTransition = transaction.transitionMap[*sharedTag];
     auto &transition = collectedTransition.transition;
     auto &[snapshot, parentTag, transform] = transition;
-    auto newTransform = parseParentTransforms(node, absolutePositions);
+    auto newTransform = parseParentTransforms(node, absolutePositions, useViewsOnScreen);
     const auto &parent = node->parent.lock();
     react_native_assert(parent && "Parent node is nullptr");
 
@@ -629,7 +630,7 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
     if (nodeIt == lightNodes_.end() || nodeIt->second != node) {
       continue;
     }
-    auto view = node->current;
+    const auto &view = viewOnScreen(*node);
     const auto parent = node->parent.lock();
     react_native_assert(parent && "Parent node is nullptr");
     if (!parent) {
@@ -660,8 +661,22 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
 
 // MARK: Position Calculation
 
+// A running layout animation keeps the frame that is on screen in its own record.
+// The light node holds the committed layout, which the animation has not reached yet.
+const ShadowView &LayoutAnimationsProxy::viewOnScreen(const LightNode &node) const {
+  const auto tag = node.current.tag;
+  if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
+    return it->second.currentView;
+  }
+  if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end() && !it->second.shouldRemove) {
+    return it->second.animation.currentView;
+  }
+  return node.current;
+}
+
 std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPathView(
-    const std::shared_ptr<LightNode> &node) const {
+    const std::shared_ptr<LightNode> &node,
+    const bool useViewsOnScreen) const {
   std::vector<react::Point> viewsAbsolutePositions;
   auto currentNode = node;
   while (currentNode) {
@@ -673,15 +688,16 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
       auto data = state->getData();
       viewPosition -= data.contentOffset;
     }
+    const auto &view = useViewsOnScreen ? viewOnScreen(*currentNode) : currentNode->current;
     if (!strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
       const auto &parent = currentNode->parent.lock();
       react_native_assert(parent && "Parent node is nullptr");
 
-      const float headerHeight =
-          parent->current.layoutMetrics.frame.size.height - currentNode->current.layoutMetrics.frame.size.height;
+      const auto &parentView = useViewsOnScreen ? viewOnScreen(*parent) : parent->current;
+      const float headerHeight = parentView.layoutMetrics.frame.size.height - view.layoutMetrics.frame.size.height;
       viewPosition.y += headerHeight;
     }
-    viewPosition += currentNode->current.layoutMetrics.frame.origin;
+    viewPosition += view.layoutMetrics.frame.origin;
     viewsAbsolutePositions.emplace_back(viewPosition);
     currentNode = currentNode->parent.lock();
   }
@@ -693,13 +709,16 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
 
 std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     const std::shared_ptr<LightNode> &node,
-    const std::vector<react::Point> &absolutePositions) const {
+    const std::vector<react::Point> &absolutePositions,
+    const bool useViewsOnScreen) const {
   std::vector<std::pair<Transform, TransformOrigin>> transforms;
+  const auto &targetLayoutMetrics = (useViewsOnScreen ? viewOnScreen(*node) : node->current).layoutMetrics;
   auto currentNode = node;
   while (currentNode) {
-    const auto &props = static_cast<const ViewProps &>(*currentNode->current.props);
+    const auto &view = useViewsOnScreen ? viewOnScreen(*currentNode) : currentNode->current;
+    const auto &props = static_cast<const ViewProps &>(*view.props);
     auto origin = props.transformOrigin;
-    const auto &viewSize = currentNode->current.layoutMetrics.frame.size;
+    const auto &viewSize = view.layoutMetrics.frame.size;
     if (origin.xy[0].unit == facebook::react::UnitType::Percent) {
       origin.xy[0] = {static_cast<float>(viewSize.width * origin.xy[0].value / 100), UnitType::Point};
     } else if (origin.xy[0].unit == facebook::react::UnitType::Undefined) {
@@ -730,7 +749,7 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     }
     transformOrigin.xy[0].value -= targetViewPosition.x - absolutePositions[i].x;
     transformOrigin.xy[1].value -= targetViewPosition.y - absolutePositions[i].y;
-    combinedMatrix = combinedMatrix * resolveTransform(node->current.layoutMetrics, transform, transformOrigin);
+    combinedMatrix = combinedMatrix * resolveTransform(targetLayoutMetrics, transform, transformOrigin);
     combinedMatrix.operations.clear();
   }
   if (parentHasTransform) {
