@@ -315,6 +315,10 @@ const SyncBackToReactExample: React.FC = () =>
   React.createElement(require('./SyncBackToReactExample').default as React.FC);
 const SynchronousPropsExample: React.FC = () =>
   React.createElement(require('./SynchronousPropsExample').default as React.FC);
+const SynchronousPropsOverwriteExample: React.FC = () =>
+  React.createElement(
+    require('./SynchronousPropsOverwriteExample').default as React.FC
+  );
 const TabNavigatorExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/TabNavigatorExample').default
@@ -537,6 +541,12 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Animate synchronous props',
     section: REGRESSIONS,
     screen: SynchronousPropsExample,
+  },
+  SynchronousPropsOverwriteExample: {
+    icon: '⚡',
+    title: 'Synchronous props overwrite',
+    section: REGRESSIONS,
+    screen: SynchronousPropsOverwriteExample,
   },
   PlanetsExample: {
     icon: '🪐',
