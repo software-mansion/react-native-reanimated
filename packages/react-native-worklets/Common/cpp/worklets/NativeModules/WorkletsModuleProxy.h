@@ -21,15 +21,14 @@ namespace worklets {
 
 class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModuleProxy> {
  public:
+  void attachToRNRuntime(jsi::Runtime &rnRuntime, const BundleModeConfig &bundleModeConfig);
+
   void start();
 
   explicit WorkletsModuleProxy(
-      jsi::Runtime &rnRuntime,
-      const std::shared_ptr<CallInvoker> &jsCallInvoker,
+      const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      std::function<bool()> &&isJavaScriptQueue,
       const std::shared_ptr<RuntimeBindings> &runtimeBindings,
-      const BundleModeConfig &bundleModeConfig,
       const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus);
 
   ~WorkletsModuleProxy();
@@ -55,18 +54,18 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
   }
 
  private:
-  const bool isDevBundle_;
+  bool isDevBundle_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   const std::shared_ptr<JSLogger> jsLogger_;
   const std::shared_ptr<RuntimeBindings> runtimeBindings_;
-  const BundleModeConfig bundleModeConfig_;
+  BundleModeConfig bundleModeConfig_;
   const std::shared_ptr<MemoryManager> memoryManager_;
   const std::shared_ptr<RuntimeManager> runtimeManager_;
   const std::shared_ptr<UnpackerLoader> unpackerLoader_;
   const std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
-  const std::shared_ptr<JSIWorkletsModuleProxy> rnRuntimeProxy_;
+  std::shared_ptr<JSIWorkletsModuleProxy> rnRuntimeProxy_;
   std::shared_ptr<AnimationFrameBatchinator> animationFrameBatchinator_;
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModuleProxy> singleInstanceChecker_;

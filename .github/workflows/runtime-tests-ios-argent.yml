@@ -215,7 +215,7 @@ jobs:
         if: ${{ !matrix.bundleMode && startsWith(matrix.configuration, 'Debug') }}
         run: yarn toggle-bundle-mode
 
-      - name: Install sim-remote CLI + daemon
+      - name: Install sim-remote CLI
         uses: ./.github/actions/install-sim-remote
 
       - name: Log in and acquire a cloud machine

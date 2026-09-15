@@ -12,10 +12,14 @@
 ### 🎉 New features
 
 - Run CSS transitions for `backgroundColor`, `borderColor`, and numeric `borderRadius` on the Android platform animation path. ([#10310](https://github.com/software-mansion/react-native-reanimated/pull/10310) by [@MatiPl01](https://github.com/MatiPl01))
+- Add `backgroundImage` support to animated styles. Linear and radial gradients are accepted as objects or CSS strings and processed on the UI thread. ([#10486](https://github.com/software-mansion/react-native-reanimated/pull/10486) by [@tshmieldev](https://github.com/tshmieldev))
 - Add iOS Swift Package Manager support via `Package.swift` and SPM integration metadata in `react-native.config.js`, with a dependency on `RNWorklets`. ([#10472](https://github.com/software-mansion/react-native-reanimated/pull/10472) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
+- Add an optional `onLog` callback as a second argument to `configureReanimatedLogger`, invoked for every warning and error that passes the `level` and `strict` filters, in addition to the default console output. On native, logs raised on the UI runtime are delivered asynchronously on the React Native Runtime. ([#10482](https://github.com/software-mansion/react-native-reanimated/pull/10482) by [@douglowder](https://github.com/douglowder))
 
 ### 🐛 Bug fixes
 
+- Include the React Native version macros through `<React/Utils.h>` when it is available, so `cxxreact/ReactNativeVersion.h` deprecated on React Native `main` no longer breaks the build. ([#10536](https://github.com/software-mansion/react-native-reanimated/pull/10536) by [@tshmieldev](https://github.com/tshmieldev))
+- Fix a short `animationDelay` list on web applying no delay to the animations past its end instead of repeating, the way CSS does and the native path already did. ([#10442](https://github.com/software-mansion/react-native-reanimated/pull/10442) by [@dennytosp](https://github.com/dennytosp))
 - Fix `filter` strings using the CSS `hue-rotate()` and `drop-shadow()` spellings being discarded together with every other filter in the same declaration. ([#10383](https://github.com/software-mansion/react-native-reanimated/pull/10383) by [@dennytosp](https://github.com/dennytosp))
 - Fix single-argument `translate()` and `skew()` in transform strings repeating the argument on the Y axis instead of leaving it at zero, so `translate(100px)` no longer also moves the element down. ([#10385](https://github.com/software-mansion/react-native-reanimated/pull/10385) by [@dennytosp](https://github.com/dennytosp))
 - Fix the Metro configuration type import to use the public package export. ([#10454](https://github.com/software-mansion/react-native-reanimated/pull/10454) by [@sneakykiwi](https://github.com/sneakykiwi))
@@ -36,11 +40,19 @@
 - Fix animated styles on sticky headers throwing an immutable-object mutation error in development. ([#10389](https://github.com/software-mansion/react-native-reanimated/pull/10389) by [@ngocdevv](https://github.com/ngocdevv))
 - Fix shared element transitions never running on Android for npm installs by publishing `react-native.config.js`, which registers the Shared Transition Boundary component descriptor for autolinking. ([#10375](https://github.com/software-mansion/react-native-reanimated/pull/10375) by [@dennytosp](https://github.com/dennytosp))
 - Keep exiting views at their position in the host tree, so they no longer draw above later siblings. ([#10392](https://github.com/software-mansion/react-native-reanimated/pull/10392) by [@pawicao](https://github.com/pawicao))
+- Apply Layout Animation config batches consistently at the mounting pull boundary. ([#10373](https://github.com/software-mansion/react-native-reanimated/pull/10373) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+- Fix Experimental Layout Animations cleanup ordering on Android. ([#10372](https://github.com/software-mansion/react-native-reanimated/pull/10372) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+- Fix interactive Shared Transitions cancellation and progress lifecycle ordering. ([#10371](https://github.com/software-mansion/react-native-reanimated/pull/10371) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+- Fix Shared Transitions cleanup, restoration, and positioning in native-stack screens and modals. ([#10370](https://github.com/software-mansion/react-native-reanimated/pull/10370) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Fix Layout Animations replacement and completion ordering by centralizing native lifecycle operations. ([#10369](https://github.com/software-mansion/react-native-reanimated/pull/10369) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Fix Layout Animations state leaking between Fabric surfaces by using one proxy per surface. ([#10368](https://github.com/software-mansion/react-native-reanimated/pull/10368) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 
 ### 💡 Others
 
+- Throw a descriptive error on iOS when the native module cannot be installed because React Native has no active surface during a reload race, instead of silently installing a dummy module proxy. The `WorkletsModule` registry check that guarded the same path is removed. ([#10508](https://github.com/software-mansion/react-native-reanimated/pull/10508) by [@tjzel](https://github.com/tjzel))
+- Validate the iOS Swift Package Manager integration in CI: the nightly compatibility check now builds the app via SPM on React Native >= 0.87. ([#10511](https://github.com/software-mansion/react-native-reanimated/pull/10511) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
+- Support worklets without closure metadata in handler dependency comparisons and Jest helpers. ([#10517](https://github.com/software-mansion/react-native-reanimated/pull/10517) by [@tshmieldev](https://github.com/tshmieldev))
+- Update hooks for array-based worklet closures and use explicit control points for web Bezier easings instead of inspecting closures. ([#10506](https://github.com/software-mansion/react-native-reanimated/pull/10506) by [@tshmieldev](https://github.com/tshmieldev))
 - Initialize the Layout Animations manager lazily to avoid serializing its worklets during startup. ([#10466](https://github.com/software-mansion/react-native-reanimated/pull/10466) by [@tshmieldev](https://github.com/tshmieldev))
 - Add `fontVariationSettings` to the style properties config, so the package type-checks against React Native 0.88 ([#10239](https://github.com/software-mansion/react-native-reanimated/pull/10239) by [@tjzel](https://github.com/tjzel))
 - Add `backgroundPosition`, `backgroundRepeat` and `backgroundSize` to the style properties config, so the package type-checks against React Native 0.88. ([#10354](https://github.com/software-mansion/react-native-reanimated/pull/10354) by [@tjzel](https://github.com/tjzel))

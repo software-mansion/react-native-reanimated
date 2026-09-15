@@ -14,6 +14,7 @@
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 
+#include <array>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -22,11 +23,9 @@
 
 namespace reanimated {
 
-class ReanimatedModuleProxy;
 class LayoutAnimationsProxyRegistry;
 
 using namespace facebook;
-using namespace reanimated;
 
 struct StartAnimationsRecursivelyConfig {
   bool shouldRemoveSubviewsWithoutAnimations;
@@ -39,35 +38,68 @@ struct PendingNodeAnimation {
   std::shared_ptr<Serializable> config;
 };
 
+struct SharedContainer {
+  SharedTag sharedTag;
+  std::shared_ptr<LightNode> node;
+  std::shared_ptr<LightNode> restoreBeforeNode;
+  std::shared_ptr<LightNode> restoreAfterNode;
+};
+
+// One in-flight back gesture. Created on the first progress event, destroyed
+// when a pull processes its END or CANCELLED state.
+struct ProgressTransition {
+  TransitionState state = TransitionState::START;
+  std::shared_ptr<LightNode> sourceScreen;
+  std::shared_ptr<LightNode> targetScreen;
+  double progress = 0;
+  bool updated = true;
+};
+
+// A finished gesture whose hidden source views wait for React to commit the
+// navigation. The wait ends when React deletes sourceScreen, or a late cancel
+// sets cancelled and the next pull restores sourceNodes.
+struct UncommittedScreenPop {
+  std::shared_ptr<LightNode> sourceScreen;
+  std::vector<std::shared_ptr<LightNode>> sourceNodes;
+  bool cancelled = false;
+};
+
+struct CollectedTransition {
+  Transition transition;
+  std::array<std::shared_ptr<LightNode>, 2> nodes;
+};
+
+using CollectedTransitionMap = std::unordered_map<SharedTag, CollectedTransition>;
+using CollectedTransitions = std::vector<std::pair<SharedTag, CollectedTransition>>;
+
 struct TransactionMeta {
   ShadowViewMutationList filteredMutations;
   ShadowViewMutationList teardownMutations;
-  TransitionMap transitionMap;
-  Transitions transitions;
+  CollectedTransitionMap transitionMap;
+  CollectedTransitions transitions;
   std::vector<PendingNodeAnimation> layout;
   std::vector<PendingNodeAnimation> entering;
   std::vector<PendingNodeAnimation> exiting;
   std::vector<std::shared_ptr<LightNode>> containersToInsert;
-  std::vector<Tag> tagsToRestore;
-  std::vector<Tag> sharedContainersToRemove;
+  std::vector<std::shared_ptr<LightNode>> nodesToRestore;
+  std::vector<std::shared_ptr<LightNode>> containersToRemove;
 };
 
 struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
-  mutable std::unordered_set<Tag> activeTransitions_;
-  mutable Tag transitionTag_;
-  mutable double transitionProgress_;
-  mutable bool transitionUpdated_;
-  mutable TransitionState transitionState_ = TransitionState::NONE;
+  mutable std::optional<ProgressTransition> transition_;
+  mutable std::optional<UncommittedScreenPop> uncommittedScreenPop_;
   mutable std::shared_ptr<LightNode> topScreen_;
-  mutable std::unordered_map<Tag, Tag[2]> restoreMap_;
-  mutable std::unordered_map<std::string, Tag> containerTags_;
-  mutable bool synchronized_ = true;
-  mutable Tag closingScreenTag_ = -1;
+  mutable std::unordered_map<Tag, SharedContainer> sharedContainers_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
+#ifdef ANDROID
+  mutable bool cleanupPullScheduled_ = false;
+#endif
 
-  mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
+#ifdef __APPLE__
+  ForceScreenSnapshotFunction forceScreenSnapshot_;
+#endif
 
   LayoutAnimationsProxy_Experimental(SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies);
 
@@ -80,11 +112,20 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
       const ShadowView &before,
       const ShadowView &after,
       const std::shared_ptr<Serializable> &config) const;
-  void startProgressTransition(const int tag, const ShadowView &before, const ShadowView &after) const;
+  void startProgressTransition(int tag, const ShadowView &before, const ShadowView &after) const;
   void handleProgressTransition(
       TransactionMeta &transaction,
       const ShadowViewMutationList &mutations,
+      const PropsParserContext &propsParserContext,
+      bool popSettledThisPull) const;
+  void resolveTransitionLifecycle(
+      TransactionMeta &transaction,
+      const ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
+  bool settleUncommittedScreenPop(TransactionMeta &transaction) const;
+  void resolveDeferredSourceScreen() const;
+  bool isLightNodeMapped(const std::shared_ptr<LightNode> &node) const;
+  void unmapLightNode(const std::shared_ptr<LightNode> &node) const;
 
   void updateLightTree(
       const PropsParserContext &propsParserContext,
@@ -107,13 +148,20 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
       const ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
 
-  void cleanupAnimations(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
+  bool shouldFlushStructuralMutations() const;
+  void cleanupAnimations(
+      TransactionMeta &transaction,
+      const PropsParserContext &propsParserContext,
+      bool flushStructuralMutations) const;
   void cleanupSharedTransitions(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
+#ifdef ANDROID
+  bool hasPendingStructuralCleanup() const;
+  void maybeScheduleCleanupPull(bool flushedStructuralMutations) const;
+#endif
 
   void hideTransitioningViews(
       BeforeOrAfter index,
-      const Transitions &transitions,
-      ShadowViewMutationList &mutations,
+      TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
 
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
@@ -124,15 +172,12 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
   std::optional<SurfaceId> onGestureCancel(int tag) override;
   void surfaceDidUnmount() override;
 
-  void maybeCancelAnimation(const int tag) const;
-
   std::shared_ptr<LightNode> findActiveBoundary(const std::shared_ptr<LightNode> &node) const;
   std::shared_ptr<LightNode> findBoundaryGuess(const std::shared_ptr<LightNode> &node) const;
 
   void findSharedElementsOnScreen(
       const std::shared_ptr<LightNode> &node,
       BeforeOrAfter index,
-      const PropsParserContext &propsParserContext,
       TransactionMeta &transaction) const;
 
   void insertContainers(TransactionMeta &transaction, int &rootChildCount) const;
@@ -141,7 +186,11 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
 
   std::vector<react::Point> getAbsolutePositionsForRootPathView(const std::shared_ptr<LightNode> &node) const;
 
-  Tag getOrCreateContainer(const ShadowView &before, const SharedTag &sharedTag, TransactionMeta &transaction) const;
+  Tag getOrCreateContainer(
+      const ShadowView &before,
+      const SharedTag &sharedTag,
+      const std::array<std::shared_ptr<LightNode>, 2> &nodes,
+      TransactionMeta &transaction) const;
 
   void overrideTransform(
       ShadowView &shadowView,
@@ -175,8 +224,6 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
   void endAnimationsRecursively(const std::shared_ptr<LightNode> &node, int index, ShadowViewMutationList &mutations)
       const;
   void maybeDropAncestors(const std::shared_ptr<LightNode> &node, ShadowViewMutationList &cleanupMutations) const;
-
-  const ComponentDescriptor &getComponentDescriptorForShadowView(const ShadowView &shadowView) const;
 
   // MountingOverrideDelegate
 
