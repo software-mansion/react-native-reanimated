@@ -1,4 +1,5 @@
 #import <reanimated/CSS/utils/platform.h>
+#import <reanimated/Tools/FeatureFlags.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
 #import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 #import <reanimated/apple/READisplayLink.h>
@@ -14,6 +15,9 @@
 #import <React/RCTComponentViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
 #import <React/RCTMountingManager.h>
+
+#import <memory>
+#import <variant>
 
 @protocol RNScreenViewOptionalProtocol <NSObject>
 @required
@@ -127,44 +131,72 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
   return unsubscribeFromKeyboardEventsFunction;
 }
 
-css::CSSCanRoutePropertyFunction makeCSSCanRouteProperty()
+namespace {
+
+/// Drives CSS transitions through Core Animation on the view's layer.
+class REACSSPlatformTransitionBackend : public css::CSSPlatformTransitionBackend {
+ public:
+  explicit REACSSPlatformTransitionBackend(REACSSPlatformTransitions *platformTransitions)
+      : platformTransitions_(platformTransitions)
+  {
+  }
+
+  bool canRoute(const std::string &propertyName, const css::EasingConfig &easing) const override
+  {
+    // TODO: border props route unconditionally, but snap when RN rasterizes the
+    // border (view fails useCoreAnimationBorderRendering); they should route only
+    // when the platform can render them correctly (follow-up PR).
+    // CAMediaTimingFunction can express only linear and cubic-bezier curves;
+    // steps / linear-stops easings have to interpolate per-frame on the loop.
+    return css::hasPlatformValueTraits(propertyName) &&
+        (std::holds_alternative<css::LinearEasing>(easing) || std::holds_alternative<css::CubicBezierEasing>(easing));
+  }
+
+  bool applyTransition(
+      Tag viewTag,
+      const std::string &propertyName,
+      const css::PlatformValue &fromValue,
+      const css::PlatformValue &toValue,
+      const css::CSSTransitionPropertySettings *settings,
+      bool persistent,
+      double timestamp) override
+  {
+    return [platformTransitions_ applyTransitionForTag:viewTag
+                                          propertyName:propertyName
+                                             fromValue:fromValue
+                                               toValue:toValue
+                                              settings:settings
+                                            persistent:persistent
+                                             timestamp:timestamp];
+  }
+
+  void removeTransition(Tag viewTag, const std::string &propertyName) override
+  {
+    [platformTransitions_ removeTransitionForTag:viewTag propertyName:propertyName];
+  }
+
+  std::optional<css::PlatformValue> getCurrentValue(Tag viewTag, const std::string &propertyName, double timestamp)
+      const override
+  {
+    return [platformTransitions_ getCurrentValueForTag:viewTag propertyName:propertyName timestamp:timestamp];
+  }
+
+ private:
+  REACSSPlatformTransitions *platformTransitions_;
+};
+
+/// The one place that decides whether CSS transitions run on Core Animation.
+std::shared_ptr<css::CSSPlatformTransitionBackend> makePlatformTransitionBackend(REANodesManager *nodesManager)
 {
-  return &css::canRouteCSSProperty;
+  if constexpr (!StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
+    return nullptr;
+  }
+  REACSSPlatformTransitions *platformTransitions =
+      [[REACSSPlatformTransitions alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
+  return std::make_shared<REACSSPlatformTransitionBackend>(platformTransitions);
 }
 
-css::CSSApplyTransitionFunction makeCSSApplyTransition(REACSSPlatformTransitions *platformTransitions)
-{
-  return [platformTransitions](
-             Tag viewTag,
-             const std::string &propertyName,
-             const css::PlatformValue &fromValue,
-             const css::PlatformValue &toValue,
-             const css::CSSTransitionPropertySettings *settings,
-             bool persistent,
-             double timestamp) {
-    return [platformTransitions applyTransitionForTag:viewTag
-                                         propertyName:propertyName
-                                            fromValue:fromValue
-                                              toValue:toValue
-                                             settings:settings
-                                           persistent:persistent
-                                            timestamp:timestamp];
-  };
-}
-
-css::CSSRemoveTransitionFunction makeCSSRemoveTransition(REACSSPlatformTransitions *platformTransitions)
-{
-  return [platformTransitions](Tag viewTag, const std::string &propertyName) {
-    [platformTransitions removeTransitionForTag:viewTag propertyName:propertyName];
-  };
-}
-
-css::CSSGetPlatformValueFunction makeCSSGetPlatformValue(REACSSPlatformTransitions *platformTransitions)
-{
-  return [platformTransitions](Tag viewTag, const std::string &propertyName, double timestamp) {
-    return [platformTransitions getCurrentValueForTag:viewTag propertyName:propertyName timestamp:timestamp];
-  };
-}
+} // namespace
 
 ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
 {
@@ -227,12 +259,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(attachQueue);
   auto detachPseudoSelectorFunction = makeDetachPseudoSelectorFunction(attachQueue);
 
-  REACSSPlatformTransitions *platformTransitions =
-      [[REACSSPlatformTransitions alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
-  auto cssCanRouteProperty = makeCSSCanRouteProperty();
-  auto cssApplyTransition = makeCSSApplyTransition(platformTransitions);
-  auto cssRemoveTransition = makeCSSRemoveTransition(platformTransitions);
-  auto cssGetPlatformValue = makeCSSGetPlatformValue(platformTransitions);
+  auto platformTransitionBackend = makePlatformTransitionBackend(nodesManager);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
@@ -247,10 +274,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       maybeFlushUIUpdatesQueueFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
-      cssCanRouteProperty,
-      cssApplyTransition,
-      cssRemoveTransition,
-      cssGetPlatformValue,
+      platformTransitionBackend,
   };
   return platformDepMethodsHolder;
 }

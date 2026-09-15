@@ -6,18 +6,11 @@
 
 namespace reanimated::css {
 
-CSSPlatformTransitionProxy::CSSPlatformTransitionProxy(
-    CSSCanRoutePropertyFunction canRoute,
-    CSSApplyTransitionFunction applyTransition,
-    CSSRemoveTransitionFunction removeTransition,
-    CSSGetPlatformValueFunction getPlatformValue)
-    : canRoute_(std::move(canRoute)),
-      applyTransition_(std::move(applyTransition)),
-      removeTransition_(std::move(removeTransition)),
-      getPlatformValue_(std::move(getPlatformValue)) {}
+CSSPlatformTransitionProxy::CSSPlatformTransitionProxy(std::shared_ptr<CSSPlatformTransitionBackend> backend)
+    : backend_(std::move(backend)) {}
 
 bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const EasingConfig &easing) const {
-  return canRoute_ && canRoute_(propertyName, easing);
+  return backend_ && backend_->canRoute(propertyName, easing);
 }
 
 bool CSSPlatformTransitionProxy::apply(
@@ -28,13 +21,13 @@ bool CSSPlatformTransitionProxy::apply(
     const CSSTransitionPropertySettings *settings,
     const bool persistent,
     const double timestamp) const {
-  return applyTransition_ &&
-      applyTransition_(viewTag, propertyName, fromValue, toValue, settings, persistent, timestamp);
+  return backend_ &&
+      backend_->applyTransition(viewTag, propertyName, fromValue, toValue, settings, persistent, timestamp);
 }
 
 void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &propertyName) const {
-  if (removeTransition_) {
-    removeTransition_(viewTag, propertyName);
+  if (backend_) {
+    backend_->removeTransition(viewTag, propertyName);
   }
 }
 
@@ -148,10 +141,10 @@ std::optional<double> CSSPlatformTransitionProxy::getResumeValue(
     const Tag viewTag,
     const std::string &propertyName,
     const double timestamp) const {
-  if (!getPlatformValue_) {
+  if (!backend_) {
     return std::nullopt;
   }
-  const auto value = getPlatformValue_(viewTag, propertyName, timestamp);
+  const auto value = backend_->getCurrentValue(viewTag, propertyName, timestamp);
   if (!value) {
     return std::nullopt;
   }
