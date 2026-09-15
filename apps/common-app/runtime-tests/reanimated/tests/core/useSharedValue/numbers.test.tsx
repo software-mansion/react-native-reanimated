@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import type { SharedValue } from 'react-native-reanimated';
 import { useSharedValue } from 'react-native-reanimated';
 
 import {
@@ -37,7 +36,7 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     progress,
   }: MultiplyComponentProps<T>) => {
     const sharedValue = useSharedValue(initialValue);
-    registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
+    registerValue(SHARED_VALUE_REF, sharedValue);
     useEffect(() => {
       const currentValue = sharedValue.value;
       sharedValue.value = (currentValue * factor) as T;
@@ -55,7 +54,7 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     progress,
   }: MultiplyComponentProps<T>) => {
     const sharedValue = useSharedValue(initialValue);
-    registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
+    registerValue(SHARED_VALUE_REF, sharedValue);
     useEffect(() => {
       const currentValue = sharedValue.get();
       sharedValue.set((currentValue * factor) as T);
@@ -73,7 +72,7 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     progress,
   }: MultiplyComponentProps<T>) => {
     const sharedValue = useSharedValue(initialValue);
-    registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
+    registerValue(SHARED_VALUE_REF, sharedValue);
     useEffect(() => {
       sharedValue.set((value) => (value * factor) as T);
       scheduleOnUI(() => {
