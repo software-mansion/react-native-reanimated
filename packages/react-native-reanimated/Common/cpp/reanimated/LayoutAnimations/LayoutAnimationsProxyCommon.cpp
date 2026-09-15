@@ -503,8 +503,10 @@ std::shared_ptr<Serializable> LayoutAnimationsProxyCommon::getRetargetLayoutAnim
 bool LayoutAnimationsProxyCommon::updateEnteringAnimationTarget(const Tag tag, const ShadowView &finalView) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const auto opacity = static_cast<const ViewProps &>(*finalView.props).opacity;
-  if (const auto pendingIt = pendingLayoutAnimations_.find(tag);
-      pendingIt != pendingLayoutAnimations_.end() && pendingIt->second.type == LayoutAnimationType::ENTERING) {
+  if (const auto pendingIt = pendingLayoutAnimations_.find(tag); pendingIt != pendingLayoutAnimations_.end()) {
+    if (pendingIt->second.type != LayoutAnimationType::ENTERING) {
+      return false;
+    }
     const auto operationIndex = pendingIt->second.operationIndex;
     react_native_assert(operationIndex < layoutAnimationOperations_.size());
     if (auto *start = std::get_if<ManagedLayoutAnimationStart>(&layoutAnimationOperations_[operationIndex])) {
