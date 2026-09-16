@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import { runOnUISync, runOnRuntimeSync } from 'react-native-worklets';
+
 import {
   describe,
   expect,

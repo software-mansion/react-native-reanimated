@@ -22,10 +22,10 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import leavesBackground from './assets/nature/leaves.jpg';
 import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
-import { scheduleOnRN } from 'react-native-worklets';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;

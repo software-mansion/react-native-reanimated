@@ -9,8 +9,8 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import photo from './assets/image.jpg';
 
+import photo from './assets/image.jpg';
 import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
 
 type ParamList = {

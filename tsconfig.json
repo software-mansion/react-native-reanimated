@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "declaration": true,
     "preserveSymlinks": true,
     "target": "es6",
@@ -17,6 +16,7 @@
     "allowJs": true,
     "checkJs": true,
     "noEmit": true,
+    "types": ["node", "jest"],
     "moduleSuffixes": [
       ".native.test",
       ".native",

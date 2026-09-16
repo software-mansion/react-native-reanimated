@@ -1,5 +1,3 @@
-import { isColor } from './colorUtils';
-
 import {
   getComparator,
   getComparisonModeForProp,
@@ -7,6 +5,7 @@ import {
 } from '../matchers/Comparators';
 import type { Mismatch, TestValue } from '../types';
 import { ComparisonMode, isValidPropName } from '../types';
+import { isColor } from './colorUtils';
 import { color, getColorSquare, green, red } from './stringFormatUtils';
 
 const VALUE_COLUMN_WIDTH = 15;

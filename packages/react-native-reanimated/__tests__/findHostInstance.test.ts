@@ -1,4 +1,4 @@
-/* eslint-disable camelcase */
+/* eslint-disable eslint-core/camelcase */
 import type { IAnimatedComponentInternalBase } from '../src/createAnimatedComponent/commonTypes';
 import { findHostInstance } from '../src/platform-specific/findHostInstance';
 

@@ -79,6 +79,7 @@ const clipProps: PropsBuilderConfig<ClipProps> = {
   clipPath: true, // TODO - maybe preprocess this?
 };
 
+/* eslint-disable @typescript-eslint/no-deprecated */
 const transformProps: PropsBuilderConfig<TransformProps> = {
   translate: true, // TODO - add preprocessor (NumberArray) and split to translateX and translateY
   translateX: true,
@@ -97,6 +98,7 @@ const transformProps: PropsBuilderConfig<TransformProps> = {
   y: true,
   transform: true, // TODO - add preprocessor
 };
+/* eslint-enable @typescript-eslint/no-deprecated */
 
 const responderProps: PropsBuilderConfig<
   Omit<ResponderProps, keyof GestureResponderHandlers>

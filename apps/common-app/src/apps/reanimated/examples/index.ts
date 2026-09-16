@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
 import 'react-native-reanimated';
+
 import React from 'react';
+
 import type { Example, ExampleEntry } from '@/components';
 import { REAPlatform } from '@/components';
 

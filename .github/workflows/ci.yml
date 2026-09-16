@@ -147,7 +147,7 @@ jobs:
               - 'packages/react-native-worklets/src/**'
               - 'packages/react-native-worklets/package.json'
               - '**/tsconfig*.json'
-              - 'eslint.config.mjs'
+              - '**/.oxlintrc.json'
               - 'yarn.lock'
               - 'apps/common-app/**'
               - 'apps/tvos-example/**'
