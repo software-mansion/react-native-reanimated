@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { isBundleModeEnabled, RuntimeKind } from 'react-native-worklets';
 
 import {
@@ -26,7 +25,7 @@ describeFn('networking (live)', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'fetches JSON, runtime: **%s**',
     async (runtimeKind) => {
-      const notification = 'fetch_json_done';
+      const notification = `fetch_json_done_${runtimeKind}`;
       const [flag, setFlag] = createTestValue('not_ok');
       const baseUrl = BASE_URL;
       const expectedText = EXPECTED_TEXT;
@@ -60,7 +59,7 @@ describeFn('networking (live)', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'fetches UTF-8 text without corruption, runtime: **%s**',
     async (runtimeKind) => {
-      const notification = 'fetch_text_done';
+      const notification = `fetch_text_done_${runtimeKind}`;
       const [flag, setFlag] = createTestValue('not_ok');
       const baseUrl = BASE_URL;
 
@@ -79,7 +78,7 @@ describeFn('networking (live)', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'reads binary responses through fetch, runtime: **%s**',
     async (runtimeKind) => {
-      const notification = 'fetch_binary_done';
+      const notification = `fetch_binary_done_${runtimeKind}`;
       const [flag, setFlag] = createTestValue('not_ok');
       const baseUrl = BASE_URL;
 
@@ -114,7 +113,7 @@ describeFn('networking (live)', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'resolves fetch on error statuses, runtime: **%s**',
     async (runtimeKind) => {
-      const notification = 'fetch_status_done';
+      const notification = `fetch_status_done_${runtimeKind}`;
       const [flag, setFlag] = createTestValue('not_ok');
       const baseUrl = BASE_URL;
 
@@ -138,7 +137,7 @@ describeFn('networking (live)', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'rejects fetch on network failures, runtime: **%s**',
     async (runtimeKind) => {
-      const notification = 'fetch_network_error_done';
+      const notification = `fetch_network_error_done_${runtimeKind}`;
       const [flag, setFlag] = createTestValue('not_ok');
 
       dispatchWorklet(() => {
@@ -155,7 +154,7 @@ describeFn('networking (live)', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'posts UTF-8 string bodies, runtime: **%s**',
     async (runtimeKind) => {
-      const notification = 'string_body_done';
+      const notification = `string_body_done_${runtimeKind}`;
       const [flag, setFlag] = createTestValue('not_ok');
       const baseUrl = BASE_URL;
       const expectedText = EXPECTED_TEXT;
@@ -183,7 +182,7 @@ describeFn('networking (live)', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'posts FormData as multipart, runtime: **%s**',
     async (runtimeKind) => {
-      const notification = 'formdata_done';
+      const notification = `formdata_done_${runtimeKind}`;
       const [flag, setFlag] = createTestValue('not_ok');
       const baseUrl = BASE_URL;
 
@@ -226,7 +225,7 @@ describeFn('networking (live)', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'aborts fetch through AbortController, runtime: **%s**',
     async (runtimeKind) => {
-      const notification = 'fetch_abort_done';
+      const notification = `fetch_abort_done_${runtimeKind}`;
       const [flag, setFlag] = createTestValue('not_ok');
       const baseUrl = BASE_URL;
 

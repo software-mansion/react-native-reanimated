@@ -1,4 +1,5 @@
 import {
+  createWorkletRuntime,
   isBundleModeEnabled,
   runOnRuntimeSync,
   runOnUISync,
@@ -13,6 +14,7 @@ import {
   test,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
+import { deriveEchoServerUrl } from '../../../ReJest/utils/serverUrl';
 import { dispatchWorklet } from '../runLoop/dispatchWorklet';
 
 const bundleModeEnabled = isBundleModeEnabled();
@@ -112,7 +114,7 @@ describe('networking API on Worklet Runtimes', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'FileReader completes when started from a Promise continuation, runtime: **%s**',
     async (runtimeKind) => {
-      const notification = 'file_reader_from_continuation';
+      const notification = `file_reader_from_continuation_${runtimeKind}`;
       const [flag, setFlag] = createTestValue('not_ok');
 
       /**
@@ -140,4 +142,99 @@ describe('networking API on Worklet Runtimes', () => {
       expect(flag.value).toBe('content');
     }
   );
+
+  testFn('keeps requests independent across two Worklet Runtimes', async () => {
+    const baseUrl = deriveEchoServerUrl();
+    const [uiFlag, setUiFlag] = createTestValue('not_ok');
+    const [workerFlag, setWorkerFlag] = createTestValue('not_ok');
+
+    const request = (
+      setFlag: (value: string, notification: string) => void,
+      notification: string,
+      size: number
+    ) => {
+      'worklet';
+      const xhr = new globalThis.XMLHttpRequest();
+      xhr.responseType = 'arraybuffer';
+      xhr.onerror = () => setFlag('request errored', notification);
+      xhr.onload = () => {
+        const buffer = xhr.response as ArrayBuffer;
+        setFlag(
+          buffer.byteLength === size
+            ? 'ok'
+            : `wrong size: ${buffer.byteLength}`,
+          notification
+        );
+      };
+      xhr.open('GET', `${baseUrl}/echo/binary?size=${size}`);
+      xhr.send();
+    };
+
+    dispatchWorklet(() => {
+      'worklet';
+      request(setUiFlag, 'two_runtimes_ui', 262144);
+    }, RuntimeKind.UI);
+    dispatchWorklet(() => {
+      'worklet';
+      request(setWorkerFlag, 'two_runtimes_worker', 65536);
+    }, RuntimeKind.Worker);
+
+    await waitForNotification('two_runtimes_ui');
+    await waitForNotification('two_runtimes_worker');
+    expect(uiFlag.value).toBe('ok');
+    expect(workerFlag.value).toBe('ok');
+  });
+
+  testFn('survives a runtime disposed with a request in flight', async () => {
+    const baseUrl = deriveEchoServerUrl();
+    const [flag, setFlag] = createTestValue('not_ok');
+
+    {
+      const doomedRuntime = createWorkletRuntime({ name: 'doomedNetworking' });
+      runOnRuntimeSync(doomedRuntime, () => {
+        'worklet';
+        const xhr = new globalThis.XMLHttpRequest();
+        xhr.open('GET', `${baseUrl}/echo/delay?ms=10000`);
+        xhr.send();
+        return true;
+      });
+    }
+
+    dispatchWorklet(() => {
+      'worklet';
+      const xhr = new globalThis.XMLHttpRequest();
+      xhr.onerror = () => setFlag('request errored', 'after_teardown');
+      xhr.onload = () =>
+        setFlag(
+          xhr.status === 200 ? 'ok' : `status ${xhr.status}`,
+          'after_teardown'
+        );
+      xhr.open('GET', `${baseUrl}/echo/text`);
+      xhr.send();
+    }, RuntimeKind.Worker);
+
+    await waitForNotification('after_teardown');
+    expect(flag.value).toBe('ok');
+  });
+
+  testFn('skips installation when enableNetworking is false', () => {
+    const runtime = createWorkletRuntime({
+      enableNetworking: false,
+      name: 'noNetworking',
+    });
+    const outcome = runOnRuntimeSync(runtime, () => {
+      'worklet';
+      const global = globalThis as unknown as Record<string, unknown>;
+      // eslint-disable-next-line no-underscore-dangle
+      if (global.__workletsNetworking !== undefined) {
+        return 'native binding installed';
+      }
+      if (typeof global.fetch !== 'undefined') {
+        return 'fetch installed';
+      }
+      return 'ok';
+    });
+
+    expect(outcome).toBe('ok');
+  });
 });
