@@ -20,6 +20,7 @@
 ### 🐛 Bug fixes
 
 - Warn only once per caller when dependencies are passed to native hooks. ([#10562](https://github.com/software-mansion/react-native-reanimated/pull/10562) by [@tshmieldev](https://github.com/tshmieldev))
+- Release the shadow tree of a stopped surface; the last mounted root of every surface was kept forever, so apps that start a surface per screen leaked the whole tree of every closed screen. ([#10579](https://github.com/software-mansion/react-native-reanimated/pull/10579) by [@MatiPl01](https://github.com/MatiPl01))
 - Keep `borderWidth` CSS transitions on the animation loop on iOS, so the children move with the border and no stray black border is drawn. ([#10569](https://github.com/software-mansion/react-native-reanimated/pull/10569) by [@MatiPl01](https://github.com/MatiPl01))
 - Resume a `shadowOffset` CSS transition from its in-flight value when it moves from Core Animation to the C++ loop, instead of restarting from the previously committed offset. ([#10564](https://github.com/software-mansion/react-native-reanimated/pull/10564) by [@MatiPl01](https://github.com/MatiPl01))
 - Fix CSS platform transitions ignoring slow animations: on iOS they snapped to the end state under the Simulator's Slow Animations, and on Android they played at full speed under the dev-menu toggle. ([#10548](https://github.com/software-mansion/react-native-reanimated/pull/10548) by [@MatiPl01](https://github.com/MatiPl01))
