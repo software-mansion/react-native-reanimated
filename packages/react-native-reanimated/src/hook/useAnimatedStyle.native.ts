@@ -42,9 +42,7 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
 ): AnimatedStyleHandle<Style>;
 
 export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
-  updater:
-    | WorkletFunction<[], Style>
-    | ((() => Style) & Record<string, unknown>),
+  updater: WorkletFunction<[], Style>,
   _dependencies?: DependencyList | null,
   adapters?: AnimatedPropsAdapterWorklet | AnimatedPropsAdapterWorklet[] | null,
   isAnimatedProps = false
@@ -54,7 +52,7 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
   }
 
   const animatedUpdaterData = useRef<AnimatedUpdaterData | null>(null);
-  const inputs = Object.values(updater.__closure ?? {});
+  const inputs = updater.__closure ?? [];
   const adaptersArray = adapters
     ? Array.isArray(adapters)
       ? adapters

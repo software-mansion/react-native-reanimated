@@ -6,7 +6,6 @@ import android.animation.ObjectAnimator
 import android.animation.TimeInterpolator
 import android.os.Handler
 import android.os.Looper
-import android.util.FloatProperty
 import android.view.Choreographer
 import android.view.View
 import com.facebook.react.bridge.ReactApplicationContext
@@ -21,9 +20,12 @@ import java.util.concurrent.ConcurrentHashMap
 internal class CSSPlatformTransitionsManager(
     private val fabricUIManager: FabricUIManager,
     private val reactContext: WeakReference<ReactApplicationContext>,
-    private val animationTimestamp: () -> Long,
+    private val getAnimationTimestamp: () -> Long,
 ) {
     private val animators = HashMap<Key, RunningTransition>()
+
+    /** How many times slower Reanimated's clock runs than the animator's while slow animations are on. */
+    private var slowAnimationsDragFactor = 1.0
 
     /**
      * React can overwrite an animated value only on frames where it wrote props, so the
@@ -77,7 +79,7 @@ internal class CSSPlatformTransitionsManager(
 
     private class RunningTransition(
         val animator: ObjectAnimator,
-        val writer: FloatProperty<View>,
+        val writer: CSSPropertyWriter,
         val startValue: Float,
     ) {
         /** Final value of a finished persistent transition, which outlives its animator. */
@@ -92,7 +94,7 @@ internal class CSSPlatformTransitionsManager(
 
         class Start(
             override val key: Key,
-            val writer: FloatProperty<View>,
+            val writer: CSSPropertyWriter,
             val fromValue: Double,
             val toValue: Double,
             val durationMs: Double,
@@ -135,18 +137,19 @@ internal class CSSPlatformTransitionsManager(
         persistent: Boolean,
     ): Boolean {
         if (invalidated) return false
-        val writer = cssPropertyWriterFor(propertyId) ?: return false
+        val writer = cssPropertyWriterFor(propertyId, fromValue, toValue) ?: return false
         val interpolator = easings[easingId] ?: return false
         val context = reactContext.get() ?: return false
         val scale = DurationScale.effectiveScale(context)
         if (scale <= 0f) return false
 
+        val (animatorFrom, animatorTo) = writer.animatorEndpoints(fromValue, toValue)
         commands.enqueue(
             Command.Start(
                 Key(viewTag, propertyId),
                 writer,
-                fromValue,
-                toValue,
+                animatorFrom,
+                animatorTo,
                 durationMs,
                 startTimestampMs,
                 interpolator,
@@ -155,6 +158,13 @@ internal class CSSPlatformTransitionsManager(
             ),
         )
         return true
+    }
+
+    fun enableSlowAnimations(
+        slowAnimationsEnabled: Boolean,
+        animationsDragFactor: Int,
+    ) {
+        slowAnimationsDragFactor = if (slowAnimationsEnabled) animationsDragFactor.toDouble() else 1.0
     }
 
     /** Animators keep ticking on their own, so a dead context has to stop them. */
@@ -204,7 +214,7 @@ internal class CSSPlatformTransitionsManager(
      * ended, so it needs no timeout.
      */
     private fun beginStart(command: Command.Start) {
-        if (startIfMounted(command) || animationTimestamp() >= command.endTimestampMs) {
+        if (startIfMounted(command) || getAnimationTimestamp() >= command.endTimestampMs) {
             pendingStarts.remove(command.key)
             return
         }
@@ -229,7 +239,7 @@ internal class CSSPlatformTransitionsManager(
                 pendingStarts.clear()
                 return@postFrameCallback
             }
-            val now = animationTimestamp()
+            val now = getAnimationTimestamp()
             val iterator = pendingStarts.entries.iterator()
             while (iterator.hasNext()) {
                 val pending = iterator.next().value
@@ -250,12 +260,12 @@ internal class CSSPlatformTransitionsManager(
 
         // Resume from what is on screen; fromValue is the committed style, which would snap back.
         val interrupted = animators.remove(key)
-        val startValue = if (interrupted != null) writer.get(view) else command.fromValue.toFloat()
+        val startValue = if (interrupted != null) writer.resumeFrom(view) else command.fromValue.toFloat()
         interrupted?.animator?.cancel()
 
         // ObjectAnimator has no absolute start time, so resolve it after the thread hop
         // rather than in C++, which would shift the timeline late.
-        val elapsedMs = animationTimestamp().toDouble() - command.startTimestampMs
+        val elapsedMs = getAnimationTimestamp().toDouble() - command.startTimestampMs
 
         // ObjectAnimator writes nothing until its first frame, so the view would show the
         // already-committed target for the whole delay. A start that is already past its end
@@ -281,7 +291,8 @@ internal class CSSPlatformTransitionsManager(
         val delayMs = if (elapsedMs < 0) -elapsedMs else 0.0
         // startDelay writes nothing while it waits, so a commit landing in the delay would
         // stay on screen. Folding the delay into the curve rewrites the property instead.
-        animator.duration = ((delayMs + durationMs) / command.scale).toLong().coerceAtLeast(1L)
+        val animatorDurationMs = (delayMs + durationMs) * slowAnimationsDragFactor / command.scale
+        animator.duration = animatorDurationMs.toLong().coerceAtLeast(1L)
         animator.interpolator =
             if (delayMs > 0) HoldThenEase((delayMs / (delayMs + durationMs)).toFloat(), interpolator) else interpolator
         if (elapsedMs > 0 && durationMs > 0) {
@@ -320,7 +331,7 @@ internal class CSSPlatformTransitionsManager(
             // target is held weakly, so read the View through it rather than keeping one.
             val view = running.animator.target as? View ?: return@forEach
             val current = running.currentValue()
-            if (running.writer.get(view) != current) running.writer.setValue(view, current)
+            if (!running.writer.matches(view, current)) running.writer.setValue(view, current)
         }
     }
 

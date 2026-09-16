@@ -68,7 +68,15 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
   {
     testSuiteName: 'props',
     importTest: () => {
+      require('./tests/props/backgroundImage.test');
+      require('./tests/props/syncBackToReact.test');
       require('./tests/props/boxShadow.test');
+    },
+  },
+  {
+    testSuiteName: 'css animations',
+    importTest: () => {
+      require('./tests/css/animationCancellation.test');
     },
   },
   {

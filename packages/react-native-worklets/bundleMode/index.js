@@ -2,6 +2,11 @@ const path = require('path');
 
 const workletsPackageParentDir = path.resolve(__dirname, '../..');
 const reactNativeShimPath = path.join(__dirname, 'shims', 'reactNativeShim.js');
+const prepareBundleModePolyfillPath = path.join(
+  __dirname,
+  'polyfills',
+  'prepareBundleMode.js'
+);
 
 const workletsPackageName = 'react-native-worklets';
 const workletsDirPath = path.posix.join(workletsPackageName, '.worklets');
@@ -44,6 +49,7 @@ function bundleModeResolveRequest(
 const bundleModeMetroConfig = {
   serializer: {
     createModuleIdFactory: bundleModeCreateModuleIdFactory,
+    polyfillModuleNames: [prepareBundleModePolyfillPath],
   },
   resolver: {
     resolveRequest: (
@@ -70,6 +76,10 @@ const bundleModeMetroConfig = {
 /** Use in Expo projects. */
 function getBundleModeMetroConfig(/** @type {any} */ config) {
   config.serializer.createModuleIdFactory = bundleModeCreateModuleIdFactory;
+  config.serializer.polyfillModuleNames = [
+    ...(config.serializer.polyfillModuleNames ?? []),
+    prepareBundleModePolyfillPath,
+  ];
 
   const currentResolveRequest = config?.resolver?.resolveRequest;
   config.resolver.resolveRequest = (

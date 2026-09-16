@@ -151,6 +151,7 @@ open class NativeProxy {
             firstUptime = SystemClock.uptimeMillis()
         }
         mNodesManager!!.enableSlowAnimations(slowAnimationsEnabled, animationsDragFactor)
+        cssPlatformTransitionsManager.enableSlowAnimations(slowAnimationsEnabled, animationsDragFactor)
         toggleSlowAnimationsOnUIRuntime()
     }
 

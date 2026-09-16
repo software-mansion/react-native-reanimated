@@ -1,4 +1,3 @@
-#include <cxxreact/ReactNativeVersion.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
@@ -9,6 +8,7 @@
 #include <react/renderer/uimanager/primitives.h>
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/Compat/ReactNativeVersionCompat.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
@@ -228,11 +228,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           viewStylesRepository_,
           operationsLoop_,
-          std::make_shared<CSSPlatformTransitionProxy>(
-              platformDepMethodsHolder.cssCanRouteProperty,
-              platformDepMethodsHolder.cssApplyTransition,
-              platformDepMethodsHolder.cssRemoveTransition,
-              platformDepMethodsHolder.cssGetPlatformValue),
+          std::make_shared<CSSPlatformTransitionProxy>(platformDepMethodsHolder.platformTransitionBackend),
           cssEventsEmitter_)),
       pseudoStylesRegistry_(std::make_shared<PseudoStylesRegistry>(
           platformDepMethodsHolder.attachPseudoSelector,

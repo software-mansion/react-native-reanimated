@@ -1,9 +1,11 @@
 #include <folly/dynamic.h>
+#include <react/debug/react_native_assert.h>
 #include <react/renderer/components/rnreanimated/Props.h>
 #include <react/renderer/components/scrollview/ScrollViewState.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
+#include <algorithm>
 #include <ranges>
 
 namespace reanimated {
@@ -14,10 +16,8 @@ namespace reanimated {
 // e.g. with `useIsFocused`) is true and it's not currently exiting.
 std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findActiveBoundary(
     const std::shared_ptr<LightNode> &node) const {
-  std::shared_ptr<LightNode> result = nullptr;
-
   if (node->isExiting()) {
-    return result;
+    return nullptr;
   }
   if (isSETBoundary(node) && isBoundaryActive(node)) {
     return node;
@@ -29,7 +29,7 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findActiveBoundar
     }
   }
 
-  return result;
+  return nullptr;
 }
 
 std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findBoundaryGuess(
@@ -55,7 +55,6 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findBoundaryGuess
 void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     const std::shared_ptr<LightNode> &node,
     BeforeOrAfter index,
-    const PropsParserContext &propsParserContext,
     TransactionMeta &transaction) const {
   if (node->isExiting()) {
     return;
@@ -74,7 +73,8 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     absolutePositions = getAbsolutePositionsForRootPathView(node);
     copy.layoutMetrics.frame.origin = absolutePositions[0];
 
-    auto &transition = transaction.transitionMap[*sharedTag];
+    auto &collectedTransition = transaction.transitionMap[*sharedTag];
+    auto &transition = collectedTransition.transition;
     auto &[snapshot, parentTag, transform] = transition;
     auto newTransform = parseParentTransforms(node, absolutePositions);
     const auto &parent = node->parent.lock();
@@ -84,60 +84,147 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     transform[indexNum] = std::move(newTransform);
     snapshot[indexNum] = copy;
     parentTag[indexNum] = parent->current.tag;
+    collectedTransition.nodes[indexNum] = node;
 
     if (parentTag[BEFORE] && parentTag[AFTER]) {
-      transaction.transitions.emplace_back(*sharedTag, transition);
+      transaction.transitions.emplace_back(*sharedTag, collectedTransition);
     } else if (parentTag[AFTER]) {
       // TODO (future): this is adding unnecessary views to the list
-      transaction.tagsToRestore.push_back(snapshot[AFTER].tag);
+      transaction.nodesToRestore.push_back(node);
     }
   }
   for (auto &child : node->children) {
-    findSharedElementsOnScreen(child, index, propsParserContext, transaction);
+    findSharedElementsOnScreen(child, index, transaction);
+  }
+}
+
+void LayoutAnimationsProxy_Experimental::resolveTransitionLifecycle(
+    TransactionMeta &transaction,
+    const ShadowViewMutationList &mutations,
+    const PropsParserContext &propsParserContext) const {
+  bool popSettledThisPull = false;
+  if (uncommittedScreenPop_) {
+    const bool gestureCancelled = uncommittedScreenPop_->cancelled && uncommittedScreenPop_->sourceScreen;
+    if (!settleUncommittedScreenPop(transaction)) {
+      return;
+    }
+    popSettledThisPull = true;
+    if (gestureCancelled && transition_ && !transition_->sourceScreen) {
+      // A deferred-source transition inside a cancelled gesture's settle window is that same
+      // gesture reversing; its cancel was already consumed by the uncommitted pop.
+      transition_->state = TransitionState::CANCELLED;
+      transition_->updated = true;
+    } else {
+      resolveDeferredSourceScreen();
+    }
+  }
+  if (!transition_) {
+    return;
+  }
+  handleProgressTransition(transaction, mutations, propsParserContext, popSettledThisPull);
+}
+
+bool LayoutAnimationsProxy_Experimental::settleUncommittedScreenPop(TransactionMeta &transaction) const {
+  if (uncommittedScreenPop_->sourceScreen && !uncommittedScreenPop_->cancelled) {
+    return false;
+  }
+  if (uncommittedScreenPop_->sourceScreen) {
+    for (const auto &node : uncommittedScreenPop_->sourceNodes) {
+      if (isLightNodeMapped(node)) {
+        transaction.nodesToRestore.push_back(node);
+      }
+    }
+  }
+  topScreen_ = findActiveBoundary(lightNodes_.at(surfaceId_));
+  uncommittedScreenPop_.reset();
+  return true;
+}
+
+// A gesture that starts while the previous one still awaits its source
+// removal cannot know its own source screen until topScreen_ is recomputed.
+void LayoutAnimationsProxy_Experimental::resolveDeferredSourceScreen() const {
+  const bool needsSourceScreen = transition_ && !transition_->sourceScreen &&
+      (transition_->state == TransitionState::START || transition_->state == TransitionState::END);
+  if (!needsSourceScreen) {
+    return;
+  }
+  const auto sourceScreen = topScreen_ ? findParentRNSScreen(topScreen_) : nullptr;
+  if (!sourceScreen || !transition_->targetScreen ||
+      sourceScreen->current.tag == transition_->targetScreen->current.tag) {
+    transition_->state = TransitionState::CANCELLED;
+    transition_->updated = true;
+    return;
+  }
+  transition_->sourceScreen = sourceScreen;
+}
+
+static void restoreOldTarget(
+    const SharedContainer &container,
+    const std::array<std::shared_ptr<LightNode>, 2> &nodes,
+    TransactionMeta &transaction) {
+  const auto &oldTarget = container.restoreAfterNode;
+  if (oldTarget && oldTarget != nodes[BEFORE] && oldTarget != nodes[AFTER]) {
+    transaction.nodesToRestore.push_back(oldTarget);
   }
 }
 
 void LayoutAnimationsProxy_Experimental::handleProgressTransition(
     TransactionMeta &transaction,
     const ShadowViewMutationList &mutations,
-    const PropsParserContext &propsParserContext) const {
-  auto &filteredMutations = transaction.filteredMutations;
-  if (!transitionUpdated_) {
+    const PropsParserContext &propsParserContext,
+    const bool popSettledThisPull) const {
+  if (!transition_->updated) {
     return;
   }
-  transitionUpdated_ = false;
-
-  if (!mutations.empty() || !static_cast<bool>(transitionState_)) {
+  if (transition_->state == TransitionState::START && !mutations.empty() && !popSettledThisPull) {
+    schedulePullOnNextFrame();
     return;
   }
+  transition_->updated = false;
 
-  if (transitionState_ == TransitionState::START) {
-    auto beforeTopScreen = topScreen_;
-    auto afterTopScreen = findBoundaryGuess(lightNodes_[transitionTag_]);
-    if (beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen) {
-      findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext, transaction);
-      findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext, transaction);
-      hideTransitioningViews(BEFORE, transaction.transitions, filteredMutations, propsParserContext);
-      hideTransitioningViews(AFTER, transaction.transitions, filteredMutations, propsParserContext);
+  if (transition_->state == TransitionState::START) {
+    const auto beforeTopScreen = topScreen_;
+    const auto afterTopScreen = findBoundaryGuess(transition_->targetScreen);
+    const auto beforeScreen = beforeTopScreen ? findParentRNSScreen(beforeTopScreen) : nullptr;
+    if (!transition_->sourceScreen || !transition_->targetScreen ||
+        transition_->sourceScreen->current.tag == transition_->targetScreen->current.tag || !beforeTopScreen ||
+        beforeScreen != transition_->sourceScreen || !afterTopScreen || beforeTopScreen == afterTopScreen) {
+      transition_->state = TransitionState::CANCELLED;
+    } else {
+      findSharedElementsOnScreen(beforeTopScreen, BEFORE, transaction);
+      findSharedElementsOnScreen(afterTopScreen, AFTER, transaction);
+      hideTransitioningViews(BEFORE, transaction, propsParserContext);
+      hideTransitioningViews(AFTER, transaction, propsParserContext);
 
-      for (auto &[sharedTag, transition] : transaction.transitions) {
+      for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
+        auto &transition = collectedTransition.transition;
         auto &[before, after] = transition.snapshot;
         const auto &transform = transition.transform;
         overrideTransform(before, transform[BEFORE], propsParserContext);
         overrideTransform(after, transform[AFTER], propsParserContext);
-        auto containerTag = getOrCreateContainer(before, sharedTag, transaction);
+        const auto &[beforeNode, afterNode] = collectedTransition.nodes;
+        react_native_assert(beforeNode && "Shared transition source not found");
+        react_native_assert(afterNode && "Shared transition target not found");
+        if (!beforeNode || !afterNode) {
+          continue;
+        }
 
-        restoreMap_[containerTag][BEFORE] = before.tag;
-        restoreMap_[containerTag][AFTER] = after.tag;
+        const auto containerTag = getOrCreateContainer(before, sharedTag, collectedTransition.nodes, transaction);
+        auto &container = sharedContainers_.at(containerTag);
+        container.restoreBeforeNode = beforeNode;
+        restoreOldTarget(container, collectedTransition.nodes, transaction);
+        container.restoreAfterNode = afterNode;
         before.tag = containerTag;
         after.tag = containerTag;
-        activeTransitions_.insert(containerTag);
 
         startProgressTransition(containerTag, before, after);
       }
     }
-  } else if (transitionState_ == TransitionState::ACTIVE) {
-    for (auto tag : activeTransitions_) {
+  } else if (transition_->state == TransitionState::ACTIVE) {
+    for (const auto &[tag, container] : sharedContainers_) {
+      if (!container.restoreBeforeNode) {
+        continue;
+      }
       if (hasPendingLayoutAnimation(tag)) {
         continue;
       }
@@ -149,10 +236,10 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
       const auto &layoutAnimation = layoutAnimationIt->second;
       auto before = layoutAnimation.startView.layoutMetrics.frame;
       auto after = layoutAnimation.finalView.layoutMetrics.frame;
-      auto x = before.origin.x + transitionProgress_ * (after.origin.x - before.origin.x);
-      auto y = before.origin.y + transitionProgress_ * (after.origin.y - before.origin.y);
-      auto width = before.size.width + transitionProgress_ * (after.size.width - before.size.width);
-      auto height = before.size.height + transitionProgress_ * (after.size.height - before.size.height);
+      auto x = before.origin.x + transition_->progress * (after.origin.x - before.origin.x);
+      auto y = before.origin.y + transition_->progress * (after.origin.y - before.origin.y);
+      auto width = before.size.width + transition_->progress * (after.size.width - before.size.width);
+      auto height = before.size.height + transition_->progress * (after.size.height - before.size.height);
 
       auto beforeProps = std::static_pointer_cast<const BaseViewProps>(layoutAnimation.startView.props);
       auto afterProps = std::static_pointer_cast<const BaseViewProps>(layoutAnimation.finalView.props);
@@ -161,7 +248,7 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
 
       // TODO (future): Support more props in progress transitions.
       auto borderRadiusDynamic =
-          folly::dynamic::object("borderRadius", beforeRadius + transitionProgress_ * (afterRadius - beforeRadius));
+          folly::dynamic::object("borderRadius", beforeRadius + transition_->progress * (afterRadius - beforeRadius));
 
 #ifdef RN_SERIALIZABLE_STATE
       // TODO (future): Support borderRadius on Android.
@@ -169,7 +256,7 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
 #else
       auto rawProps = RawProps(std::move(borderRadiusDynamic));
 
-      auto newProps = getComponentDescriptorForShadowView(layoutAnimation.finalView)
+      auto newProps = componentDescriptorRegistry_->at(layoutAnimation.finalView.componentHandle)
                           .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(rawProps));
 #endif
 
@@ -177,22 +264,41 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
     }
   }
 
-  if (transitionState_ == TransitionState::START) {
-    transitionState_ = TransitionState::ACTIVE;
-  } else if (transitionState_ == TransitionState::END || transitionState_ == TransitionState::CANCELLED) {
-    for (auto tag : activeTransitions_) {
-      transaction.tagsToRestore.push_back(restoreMap_[tag][AFTER]);
-      if (transitionState_ == TransitionState::CANCELLED) {
-        transaction.tagsToRestore.push_back(restoreMap_[tag][BEFORE]);
+  if (transition_->state == TransitionState::START) {
+    transition_->state = TransitionState::ACTIVE;
+  } else if (transition_->state == TransitionState::END || transition_->state == TransitionState::CANCELLED) {
+    std::vector<Tag> progressContainerTags;
+    std::vector<std::shared_ptr<LightNode>> sourceNodes;
+    for (const auto &[tag, container] : sharedContainers_) {
+      if (container.restoreBeforeNode) {
+        progressContainerTags.push_back(tag);
       }
+    }
+    for (const auto tag : progressContainerTags) {
+      const auto &container = sharedContainers_.at(tag);
+      react_native_assert(container.restoreAfterNode && "Shared transition target not found");
+      if (container.restoreAfterNode) {
+        transaction.nodesToRestore.push_back(container.restoreAfterNode);
+      }
+      sourceNodes.push_back(container.restoreBeforeNode);
       removeSharedContainer(tag, transaction);
-      maybeCancelAnimation(tag);
+      cancelLayoutAnimation(tag);
     }
-    if (transitionState_ == TransitionState::END) {
-      synchronized_ = false;
+    if (transition_->state == TransitionState::END) {
+      react_native_assert(!uncommittedScreenPop_ && "Previous screen pop not settled");
+      react_native_assert(transition_->sourceScreen && "Shared transition source not found");
+      if (transition_->sourceScreen) {
+        uncommittedScreenPop_ = UncommittedScreenPop{transition_->sourceScreen, std::move(sourceNodes)};
+      }
+    } else {
+      topScreen_ = findActiveBoundary(lightNodes_.at(surfaceId_));
+      for (const auto &node : sourceNodes) {
+        if (isLightNodeMapped(node)) {
+          transaction.nodesToRestore.push_back(node);
+        }
+      }
     }
-    activeTransitions_.clear();
-    transitionState_ = TransitionState::NONE;
+    transition_.reset();
   }
 }
 
@@ -208,11 +314,12 @@ void LayoutAnimationsProxy_Experimental::overrideTransform(
   auto array = folly::dynamic::array(folly::dynamic::object("matrix", transform->operator folly::dynamic()));
   const folly::dynamic newTransformDynamic = folly::dynamic::object("transform", array);
   auto newRawProps = folly::dynamic::merge(shadowView.props->rawProps, newTransformDynamic);
-  auto newProps = getComponentDescriptorForShadowView(shadowView)
+  auto newProps = componentDescriptorRegistry_->at(shadowView.componentHandle)
                       .cloneProps(propsParserContext, shadowView.props, RawProps(newRawProps));
   auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
 #else
-  auto newProps = getComponentDescriptorForShadowView(shadowView).cloneProps(propsParserContext, shadowView.props, {});
+  auto newProps =
+      componentDescriptorRegistry_->at(shadowView.componentHandle).cloneProps(propsParserContext, shadowView.props, {});
   auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
   viewProps->transform = *transform;
 #endif
@@ -222,31 +329,45 @@ void LayoutAnimationsProxy_Experimental::overrideTransform(
 Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
     const ShadowView &before,
     const SharedTag &sharedTag,
+    const std::array<std::shared_ptr<LightNode>, 2> &nodes,
     TransactionMeta &transaction) const {
-  const auto containerIt = containerTags_.find(sharedTag);
-  auto containerTag = containerIt == containerTags_.end() ? -1 : containerIt->second;
-  const auto shouldCreateContainer =
-      containerTag == -1 || (!layoutAnimations_.contains(containerTag) && !hasPendingLayoutAnimation(containerTag));
-
-  if (shouldCreateContainer) {
-    {
-      auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
-      containerTag = sharedTransitionManager_->nextContainerTag_;
-      sharedTransitionManager_->nextContainerTag_ += 2;
-      sharedTransitionManager_->tagToName_[containerTag] = sharedTag;
+  auto containerTag = Tag{-1};
+  for (const auto &[tag, container] : sharedContainers_) {
+    if (container.sharedTag == sharedTag && tag > containerTag) {
+      containerTag = tag;
     }
-    auto &root = lightNodes_[surfaceId_];
-    ShadowView container = before;
-
-    container.tag = containerTag;
-    auto node = std::make_shared<LightNode>();
-    node->current = std::move(container);
-    root->children.push_back(node);
-    transaction.containersToInsert.push_back(node);
-    lightNodes_[containerTag] = std::move(node);
-
-    containerTags_[sharedTag] = containerTag;
   }
+  if (containerTag != -1) {
+    if (hasPendingLayoutAnimation(containerTag) || layoutAnimations_.contains(containerTag)) {
+      return containerTag;
+    }
+    const auto &container = sharedContainers_.at(containerTag);
+    react_native_assert(completedAnimations_.contains(containerTag) && "Shared container has no animation");
+    restoreOldTarget(container, nodes, transaction);
+    removeSharedContainer(containerTag, transaction);
+  }
+
+  {
+    auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
+    containerTag = sharedTransitionManager_->nextContainerTag_;
+    sharedTransitionManager_->nextContainerTag_ += 2;
+  }
+  const auto root = lightNodes_.at(surfaceId_);
+  auto containerView = before;
+  containerView.tag = containerTag;
+  auto node = std::make_shared<LightNode>();
+  node->current = std::move(containerView);
+  node->parent = root;
+  root->children.push_back(node);
+  transaction.containersToInsert.push_back(node);
+  [[maybe_unused]] const auto [_, inserted] = lightNodes_.emplace(containerTag, node);
+  react_native_assert(inserted && "Shared container already exists");
+  sharedContainers_.emplace(
+      containerTag,
+      SharedContainer{
+          .sharedTag = sharedTag,
+          .node = std::move(node),
+      });
   return containerTag;
 }
 
@@ -263,7 +384,8 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
   }
 
   if (beforeTopScreen != afterTopScreen) {
-    for (auto &[sharedTag, transition] : transaction.transitions) {
+    for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
+      auto &transition = collectedTransition.transition;
       auto &[before, after] = transition.snapshot;
       const auto &transform = transition.transform;
       overrideTransform(before, transform[BEFORE], propsParserContext);
@@ -273,48 +395,59 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
       if (!config) {
         continue;
       }
-      auto containerTag = getOrCreateContainer(before, sharedTag, transaction);
-
-      restoreMap_[containerTag][AFTER] = after.tag;
+      const auto &afterNode = collectedTransition.nodes[AFTER];
+      react_native_assert(afterNode && "Shared transition target not found");
+      if (!afterNode) {
+        continue;
+      }
+      auto containerTag = getOrCreateContainer(before, sharedTag, collectedTransition.nodes, transaction);
+      auto &container = sharedContainers_.at(containerTag);
+      restoreOldTarget(container, collectedTransition.nodes, transaction);
+      container.restoreAfterNode = afterNode;
       before.tag = containerTag;
       after.tag = containerTag;
 
       startSharedTransition(containerTag, before, after, config);
     }
   } else if (!mutations.empty()) {
-    for (auto &[sharedTag, transition] : transaction.transitions) {
+    for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
+      auto &transition = collectedTransition.transition;
       auto &[before, after] = transition.snapshot;
 
-      const auto containerIt = containerTags_.find(sharedTag);
-      if (containerIt == containerTags_.end()) {
+      auto containerTag = Tag{-1};
+      for (const auto &[tag, container] : sharedContainers_) {
+        if (container.sharedTag == sharedTag && (hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag)) &&
+            tag > containerTag) {
+          containerTag = tag;
+        }
+      }
+      if (containerTag == -1) {
         continue;
       }
-      const auto containerTag = containerIt->second;
+      const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
+          before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
+      if (!config) {
+        continue;
+      }
+      const auto &afterNode = collectedTransition.nodes[AFTER];
+      react_native_assert(afterNode && "Shared transition target not found");
+      if (!afterNode) {
+        continue;
+      }
+      auto &container = sharedContainers_.at(containerTag);
+      if (container.restoreAfterNode && container.restoreAfterNode != afterNode) {
+        transaction.nodesToRestore.push_back(container.restoreAfterNode);
+      }
+      container.restoreAfterNode = afterNode;
+      overrideTransform(after, transition.transform[AFTER], propsParserContext);
+      after.tag = containerTag;
       if (hasPendingLayoutAnimation(containerTag)) {
-        const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
-            before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
-        if (!config) {
-          continue;
-        }
-        overrideTransform(after, transition.transform[AFTER], propsParserContext);
-        after.tag = containerTag;
         updateLayoutAnimationTarget(containerTag, after, config);
         continue;
       }
-      const auto layoutAnimationIt = layoutAnimations_.find(containerTag);
-      if (layoutAnimationIt == layoutAnimations_.end()) {
-        continue;
-      }
-      const auto &la = layoutAnimationIt->second;
-      if (la.finalView.layoutMetrics != after.layoutMetrics) {
-        const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
-            before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
-        if (!config) {
-          continue;
-        }
-        overrideTransform(after, transition.transform[AFTER], propsParserContext);
-        after.tag = containerTag;
-        startSharedTransition(containerTag, la.currentView, after, config);
+      const auto &layoutAnimation = layoutAnimations_.at(containerTag);
+      if (layoutAnimation.finalView.layoutMetrics != after.layoutMetrics) {
+        startSharedTransition(containerTag, layoutAnimation.currentView, after, config);
       }
     }
   }
@@ -322,17 +455,22 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
 
 void LayoutAnimationsProxy_Experimental::hideTransitioningViews(
     BeforeOrAfter index,
-    const Transitions &transitions,
-    ShadowViewMutationList &mutations,
+    TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
-  for (auto &[sharedTag, transition] : transitions) {
+  ShadowViewMutationList hiddenMutations;
+  hiddenMutations.reserve(transaction.transitions.size());
+  for (const auto &[_, collectedTransition] : transaction.transitions) {
+    const auto &transition = collectedTransition.transition;
     int indexNum = static_cast<int>(index);
     const auto &shadowView = transition.snapshot[indexNum];
     const auto &parentTag = transition.parentTag[indexNum];
     auto m = ShadowViewMutation::UpdateMutation(
         shadowView, cloneViewWithoutOpacity(shadowView, propsParserContext), parentTag);
-    mutations.push_back(m);
+    hiddenMutations.push_back(m);
   }
+  auto &filteredMutations = transaction.filteredMutations;
+  const auto insertionPoint = index == BEFORE ? filteredMutations.begin() : filteredMutations.end();
+  filteredMutations.insert(insertionPoint, hiddenMutations.begin(), hiddenMutations.end());
 }
 
 std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgress(
@@ -341,11 +479,6 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
     bool isClosing,
     bool isGoingForward) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  const auto nodeIt = lightNodes_.find(tag);
-  if (nodeIt == lightNodes_.end() || !nodeIt->second) {
-    return {};
-  }
-  transitionUpdated_ = true;
   bool isAndroid;
 #ifdef ANDROID
   isAndroid = true;
@@ -354,17 +487,36 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
 #endif
   // TODO (future): this new approach causes all back transitions to be progress
   // transitions (maybe that's ok?)
-  if (isClosing && !isGoingForward && !isAndroid) {
-    closingScreenTag_ = tag;
-  }
   if (!isClosing && !isGoingForward && !isAndroid) {
-    transitionProgress_ = progress;
-    if (transitionState_ == TransitionState::NONE && progress < 1) {
-      transitionState_ = TransitionState::START;
-      transitionTag_ = tag;
-    } else if (transitionState_ == TransitionState::ACTIVE && progress == 1) {
-      transitionState_ = TransitionState::END;
+    if (transition_ && (!transition_->targetScreen || tag != transition_->targetScreen->current.tag)) {
+      return {};
     }
+    if (transition_ && transition_->state == TransitionState::CANCELLED) {
+      return {};
+    }
+    if (!transition_) {
+      const auto targetIt = lightNodes_.find(tag);
+      if (targetIt == lightNodes_.end() || !targetIt->second || progress >= 1) {
+        return {};
+      }
+      std::shared_ptr<LightNode> sourceScreen;
+      if (!uncommittedScreenPop_) {
+        sourceScreen = topScreen_ ? findParentRNSScreen(topScreen_) : nullptr;
+        if (!sourceScreen || sourceScreen->current.tag == tag) {
+          return {};
+        }
+      }
+      transition_ = ProgressTransition{
+          .sourceScreen = sourceScreen,
+          .targetScreen = targetIt->second,
+      };
+    }
+    transition_->progress = progress;
+    if ((transition_->state == TransitionState::START || transition_->state == TransitionState::ACTIVE) &&
+        progress == 1) {
+      transition_->state = TransitionState::END;
+    }
+    transition_->updated = true;
     return surfaceId_;
   }
   return {};
@@ -372,16 +524,40 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
 
 std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onGestureCancel(int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  const auto nodeIt = lightNodes_.find(tag);
-  if (nodeIt == lightNodes_.end() || !nodeIt->second) {
-    return {};
-  }
-  if (static_cast<bool>(transitionState_)) {
-    transitionState_ = TransitionState::CANCELLED;
-    transitionUpdated_ = true;
+  if (uncommittedScreenPop_ && uncommittedScreenPop_->sourceScreen &&
+      uncommittedScreenPop_->sourceScreen->current.tag == tag) {
+    if (uncommittedScreenPop_->cancelled) {
+      return {};
+    }
+    uncommittedScreenPop_->cancelled = true;
     return surfaceId_;
   }
-  return {};
+
+  if (!transition_ || transition_->state == TransitionState::CANCELLED) {
+    return {};
+  }
+  if (transition_->sourceScreen) {
+    if (transition_->sourceScreen->current.tag != tag) {
+      return {};
+    }
+  } else {
+    const auto sourceIt = lightNodes_.find(tag);
+    if (sourceIt == lightNodes_.end() || !sourceIt->second || !isRNSScreen(sourceIt->second) ||
+        !isRNSScreen(transition_->targetScreen)) {
+      return {};
+    }
+    const auto sourceScreen = sourceIt->second;
+    const auto sourceParent = sourceScreen->parent.lock();
+    const auto targetParent = transition_->targetScreen->parent.lock();
+    if (sourceScreen == transition_->targetScreen || !sourceParent || sourceParent != targetParent) {
+      return {};
+    }
+    transition_->sourceScreen = sourceScreen;
+  }
+
+  transition_->state = TransitionState::CANCELLED;
+  transition_->updated = true;
+  return surfaceId_;
 }
 
 void LayoutAnimationsProxy_Experimental::insertContainers(TransactionMeta &transaction, int &rootChildCount) const {
@@ -389,7 +565,6 @@ void LayoutAnimationsProxy_Experimental::insertContainers(TransactionMeta &trans
   ShadowViewMutationList currentMutations;
   std::swap(currentMutations, filteredMutations);
   filteredMutations.reserve(transaction.containersToInsert.size() * 2);
-  auto root = lightNodes_[surfaceId_];
   for (auto &node : transaction.containersToInsert) {
     filteredMutations.push_back(ShadowViewMutation::CreateMutation(node->current));
     filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId_, node->current, rootChildCount++));
@@ -398,8 +573,13 @@ void LayoutAnimationsProxy_Experimental::insertContainers(TransactionMeta &trans
 }
 
 void LayoutAnimationsProxy_Experimental::removeSharedContainer(Tag containerTag, TransactionMeta &transaction) const {
-  transaction.sharedContainersToRemove.push_back(containerTag);
-  std::erase_if(containerTags_, [containerTag](const auto &entry) { return entry.second == containerTag; });
+  const auto containerIt = sharedContainers_.find(containerTag);
+  react_native_assert(containerIt != sharedContainers_.end() && "Unknown shared container");
+  if (containerIt == sharedContainers_.end()) {
+    return;
+  }
+  transaction.containersToRemove.push_back(std::move(containerIt->second.node));
+  sharedContainers_.erase(containerIt);
 }
 
 void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
@@ -407,34 +587,38 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
     const PropsParserContext &propsParserContext) const {
   ReanimatedSystraceSection s1("cleanupSharedTransitions");
   auto &filteredMutations = transaction.filteredMutations;
-  for (auto &tag : transaction.tagsToRestore) {
+  for (const auto &node : transaction.nodesToRestore) {
     ReanimatedSystraceSection s("Restore tag");
-    auto &node = lightNodes_[tag];
-    if (node) {
-      auto view = node->current;
-      const auto &parent = node->parent.lock();
-      react_native_assert(parent && "Parent node is nullptr");
-      auto parentTag = parent->current.tag;
-      const auto opacity = static_cast<const ViewProps &>(*view.props).opacity;
-      auto m = ShadowViewMutation::UpdateMutation(
-          cloneViewWithoutOpacity(view, propsParserContext),
-          cloneViewWithOpacity(view, opacity, propsParserContext),
-          parentTag);
-      filteredMutations.push_back(m);
+    const auto nodeIt = lightNodes_.find(node->current.tag);
+    if (nodeIt == lightNodes_.end() || nodeIt->second != node) {
+      continue;
     }
+    auto view = node->current;
+    const auto parent = node->parent.lock();
+    react_native_assert(parent && "Parent node is nullptr");
+    if (!parent) {
+      continue;
+    }
+    const auto opacity = static_cast<const ViewProps &>(*view.props).opacity;
+    filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
+        cloneViewWithoutOpacity(view, propsParserContext),
+        cloneViewWithOpacity(view, opacity, propsParserContext),
+        parent->current.tag));
   }
 
   ReanimatedSystraceSection s2("remove shared containers");
-  for (auto &tag : transaction.sharedContainersToRemove) {
-    auto root = lightNodes_[surfaceId_];
-    for (int i = 0; i < root->children.size(); i++) {
-      auto &child = root->children[i];
-      if (child->current.tag == tag) {
-        filteredMutations.push_back(ShadowViewMutation::RemoveMutation(surfaceId_, child->current, i));
-        filteredMutations.push_back(ShadowViewMutation::DeleteMutation(child->current));
-        root->children.erase(root->children.begin() + i);
-      }
+  const auto root = lightNodes_.at(surfaceId_);
+  for (const auto &node : transaction.containersToRemove) {
+    const auto childIt = std::ranges::find(root->children, node);
+    react_native_assert(childIt != root->children.end() && "Shared container is not mounted");
+    if (childIt != root->children.end()) {
+      const auto index = static_cast<int>(std::distance(root->children.begin(), childIt));
+      filteredMutations.push_back(ShadowViewMutation::RemoveMutation(surfaceId_, node->current, index));
+      filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
+      root->children.erase(childIt);
     }
+
+    unmapLightNode(node);
   }
 }
 

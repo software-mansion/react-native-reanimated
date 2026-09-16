@@ -1,8 +1,9 @@
 #include <reanimated/CSS/utils/platform.h>
 #include <reanimated/CSS/utils/props.h>
-#include <reanimated/Tools/FeatureFlags.h>
 
+#include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -24,7 +25,7 @@ struct CSSPropertyTraits {
 };
 
 // Value kind and CSS default per property (mirrors InterpolatorRegistry.cpp).
-// Which of them a platform actually routes is canRouteCSSProperty's decision.
+// Which of them a platform actually routes is its backend's canRoute decision.
 const CSSPropertyTraits *traitsFor(const std::string &propertyName) {
   constexpr std::array<double, 4> kTransparentColor = {0, 0, 0, 0};
   constexpr std::array<double, 4> kBlackColor = {0, 0, 0, 1};
@@ -120,31 +121,8 @@ lerpValue(const std::array<double, N> &from, const std::array<double, N> &to, co
 
 } // namespace
 
-bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &easing) {
-#if __APPLE__
-  if constexpr (!StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
-    return false;
-  }
-  if (traitsFor(propertyName) == nullptr) {
-    return false;
-  }
-  // TODO: border props route unconditionally, but snap when RN rasterizes the
-  // border (view fails useCoreAnimationBorderRendering); they should route only
-  // when the platform can render them correctly (follow-up PR).
-  // CAMediaTimingFunction can express only linear and cubic-bezier curves;
-  // steps / linear-stops easings have to interpolate per-frame on the loop.
-  return std::holds_alternative<LinearEasing>(easing) || std::holds_alternative<CubicBezierEasing>(easing);
-#elif defined(ANDROID)
-  if constexpr (!StaticFeatureFlags::getFlag("ANDROID_CSS_PLATFORM_TRANSITIONS")) {
-    return false;
-  }
-  // Any TimeInterpolator can carry a curve, so every easing routes and this is unused.
-  (void)easing;
-  return propertyName == "opacity";
-#else
-  // No native routing backend on this platform yet; every property runs on the loop.
-  return false;
-#endif // __APPLE__
+bool hasPlatformValueTraits(const std::string &propertyName) {
+  return traitsFor(propertyName) != nullptr;
 }
 
 std::optional<PlatformValue>
@@ -158,6 +136,16 @@ lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, const dou
         return lerpValue(fromValue, *toValue, progress);
       },
       from);
+}
+
+double packColorChannels(const std::array<double, 4> &channels) {
+  const auto toByte = [](double channel) {
+    const auto clamped = std::clamp(channel, 0.0, 1.0);
+    return static_cast<uint32_t>(std::lround(clamped * 255.0));
+  };
+  const uint32_t packed =
+      (toByte(channels[3]) << 24) | (toByte(channels[0]) << 16) | (toByte(channels[1]) << 8) | toByte(channels[2]);
+  return static_cast<double>(packed);
 }
 
 std::optional<PlatformValuePair> parsePlatformValues(

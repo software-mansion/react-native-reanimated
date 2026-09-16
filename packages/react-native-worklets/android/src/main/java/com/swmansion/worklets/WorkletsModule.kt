@@ -13,7 +13,7 @@ import com.swmansion.worklets.runloop.AnimationFrameCallback
 import com.swmansion.worklets.runloop.AnimationFrameQueue
 
 @Suppress("KotlinJniMissingFunction")
-@ReactModule(name = WorkletsModule.NAME)
+@ReactModule(name = WorkletsModule.NAME, needsEagerInit = true)
 class WorkletsModule(
     reactContext: ReactApplicationContext,
 ) : NativeWorkletsModuleSpec(reactContext),
@@ -33,10 +33,6 @@ class WorkletsModule(
     @Suppress("unused")
     protected fun getHybridData(): HybridData? = mHybridData
 
-    init {
-        reactContext.assertOnJSQueueThread()
-    }
-
     private val mAndroidUIScheduler = AndroidUIScheduler(reactContext)
     private val mAnimationFrameQueue = AnimationFrameQueue(reactContext)
     private var mSlowAnimationsEnabled = false
@@ -50,38 +46,33 @@ class WorkletsModule(
 
     @OptIn(FrameworkAPI::class)
     private external fun initHybrid(
-        bundleModeEnabled: Boolean,
         jsContext: Long,
         jsCallInvokerHolder: CallInvokerHolderImpl,
         androidUIScheduler: AndroidUIScheduler,
-        scriptBufferWrapper: ScriptBufferWrapper?,
     ): HybridData
+
+    private external fun prepareProxyCpp()
+
+    private external fun beginBundleModeAOTCpp()
+
+    private external fun prepareBundleModeAOTCpp()
+
+    private external fun installTurboModuleCpp(bundleModeEnabled: Boolean)
+
+    @OptIn(FrameworkAPI::class)
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    override fun prepareBundleMode(): Boolean {
+        reactApplicationContext.assertOnJSQueueThread()
+        beginBundleModeAOTCpp()
+        Thread({ prepareBundleModeAOTCpp() }, "WorkletsBundleModePrepare").start()
+        return true
+    }
 
     @OptIn(FrameworkAPI::class)
     @ReactMethod(isBlockingSynchronousMethod = true)
     override fun installTurboModule(bundleModeEnabled: Boolean): Boolean {
-        val context = reactApplicationContext
-
-        context.assertOnJSQueueThread()
-
-        val jsContext = checkNotNull(context.javaScriptContextHolder).get()
-        val jsCallInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
-
-        val scriptBufferWrapper: ScriptBufferWrapper? =
-            if (bundleModeEnabled) {
-                ScriptBufferWrapper(context.sourceURL, context)
-            } else {
-                null
-            }
-
-        mHybridData =
-            initHybrid(
-                bundleModeEnabled,
-                jsContext,
-                jsCallInvokerHolder,
-                mAndroidUIScheduler,
-                scriptBufferWrapper,
-            )
+        reactApplicationContext.assertOnJSQueueThread()
+        installTurboModuleCpp(bundleModeEnabled)
         return true
     }
 
@@ -102,6 +93,10 @@ class WorkletsModule(
     @DoNotStrip
     fun isOnJSQueueThread(): Boolean = reactApplicationContext.isOnJSQueueThread
 
+    /** @noinspection unused */
+    @DoNotStrip
+    fun createScriptBufferWrapper(): ScriptBufferWrapper = ScriptBufferWrapper(reactApplicationContext.sourceURL, reactApplicationContext)
+
     fun toggleSlowAnimations() {
         val animationsDragFactor = 10
         mSlowAnimationsEnabled = !mSlowAnimationsEnabled
@@ -117,6 +112,8 @@ class WorkletsModule(
 
     override fun initialize() {
         reactApplicationContext.addLifecycleEventListener(this)
+        createHybrid()
+        Thread({ prepareProxyCpp() }, "WorkletsProxyPrepare").start()
     }
 
     override fun invalidate() {
@@ -157,4 +154,15 @@ class WorkletsModule(
     }
 
     override fun onHostDestroy() {}
+
+    @OptIn(FrameworkAPI::class)
+    private fun createHybrid() {
+        val context = reactApplicationContext
+        val jsContext =
+            checkNotNull(context.javaScriptContextHolder) {
+                "[Worklets] JavaScript context is not available yet."
+            }.get()
+        val jsCallInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
+        mHybridData = initHybrid(jsContext, jsCallInvokerHolder, mAndroidUIScheduler)
+    }
 }

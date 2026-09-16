@@ -1,13 +1,8 @@
-import type React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import type { CircleProps } from 'react-native-svg';
 import { Circle, Svg } from 'react-native-svg';
 
-// react-native-svg accepts `style`, but its prop types don't declare it yet.
-const AnimatedCircle = Animated.createAnimatedComponent(
-  Circle
-) as React.ComponentType<CircleProps & { style?: object }>;
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const CIRCLES = [
   { cx: '20%', color: '#fa7f7c' },
@@ -20,14 +15,15 @@ export default function App() {
     <View style={styles.container}>
       <Svg style={styles.svg}>
         {CIRCLES.map(({ cx, color }) => (
-          // Base geometry stays on the props so the circle renders at rest.
+          // `default` inside each pseudo object is the resting value, so the
+          // plain `r` and `fill` props below are optional here.
           <AnimatedCircle
             key={cx}
             cx={cx}
             cy="50%"
             r={28}
             fill={color}
-            style={{
+            animatedProps={{
               // highlight-start
               fill: { default: color, ':hover': '#ffe780' },
               r: { default: 28, ':hover': 44 },

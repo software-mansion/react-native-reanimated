@@ -58,6 +58,9 @@ jobs:
       - name: Install Expo
         working-directory: ${{ env.APP_NAME }}
         run: npm install expo@${{ env.EXPO_TAG }}
+      - name: Align dependencies with the Expo SDK
+        working-directory: ${{ env.APP_NAME }}
+        run: npx expo install --fix
       - name: Setup configuration
         working-directory: ${{ env.APP_NAME }}
         run: node --experimental-strip-types ${{ env.SCRIPT_PATH }} setBundleIdentifier
