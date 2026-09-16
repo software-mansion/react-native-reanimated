@@ -18,7 +18,7 @@
 
 ### 🐛 Bug fixes
 
-- Warn only once per caller when dependencies are passed to native hooks.
+- Warn only once per caller when dependencies are passed to native hooks. ([#10562](https://github.com/software-mansion/react-native-reanimated/pull/10562) by [@tshmieldev](https://github.com/tshmieldev))
 - Restore the underlying native style when a running CSS animation is removed or its `animationName` becomes `none`. ([#10528](https://github.com/software-mansion/react-native-reanimated/pull/10528) by [@MatiPl01](https://github.com/MatiPl01))
 - Fixed a crash after animations settled when `backgroundImage` was animated with `useAnimatedStyle`. The settled props sync now converts the native gradient format back before passing it to React. ([#10542](https://github.com/software-mansion/react-native-reanimated/pull/10542) by [@tshmieldev](https://github.com/tshmieldev))
 - Include the React Native version macros through `<React/Utils.h>` when it is available, so `cxxreact/ReactNativeVersion.h` deprecated on React Native `main` no longer breaks the build. ([#10536](https://github.com/software-mansion/react-native-reanimated/pull/10536) by [@tshmieldev](https://github.com/tshmieldev))
