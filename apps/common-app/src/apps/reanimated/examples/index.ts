@@ -79,8 +79,6 @@ const ComposedHandlerInternalMergingExample: React.FC = () =>
   React.createElement(
     require('./ComposedHandlerInternalMergingExample').default
   );
-const CounterExample: React.FC = () =>
-  React.createElement(require('./CounterExample').default as React.FC);
 const CustomLayoutAnimationScreen: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/CustomLayout').default as React.FC
@@ -243,8 +241,6 @@ const ProgressTransitionExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ProgressTransition').default
   );
-const RainbowExample: React.FC = () =>
-  React.createElement(require('./RainbowExample').default as React.FC);
 const ReducedMotionExample: React.FC = () =>
   React.createElement(require('./ReducedMotionExample').default as React.FC);
 const ReducedMotionLayoutExample: React.FC = () =>
@@ -275,10 +271,6 @@ const ScrollViewOffsetExample: React.FC = () =>
   React.createElement(require('./ScrollViewOffsetExample').default as React.FC);
 const SetNativePropsExample: React.FC = () =>
   React.createElement(require('./SetNativePropsExample').default as React.FC);
-const ShadowNodesCloningExample: React.FC = () =>
-  React.createElement(
-    require('./ShadowNodesCloningExample').default as React.FC
-  );
 const SharedStyleExample: React.FC = () =>
   React.createElement(require('./SharedStyleExample').default as React.FC);
 const SlowAnimationsExample: React.FC = () =>
@@ -487,6 +479,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   UpdatePropsPerfExample: {
     icon: '🏎️',
     title: 'Update props performance',
+    section: REGRESSIONS,
     screen: UpdatePropsPerfExample,
   },
 
@@ -501,12 +494,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Amount',
     section: SHOW_CASES,
     screen: AmountExample,
-  },
-  CounterExample: {
-    icon: '🎰',
-    title: 'Counter',
-    section: SHOW_CASES,
-    screen: CounterExample,
   },
   FilterExample: {
     icon: '🖼️',
@@ -562,6 +549,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   WidthExample: {
     icon: '🌲',
     title: 'Layout props',
+    section: REGRESSIONS,
     screen: WidthExample,
   },
   NonLayoutPropAndRenderExample: {
@@ -597,11 +585,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'z-index & elevation',
     section: REGRESSIONS,
     screen: OverlappingBoxesExample,
-  },
-  RainbowExample: {
-    icon: '🌈',
-    title: 'Rainbow',
-    screen: RainbowExample,
   },
   MatrixExample: {
     icon: '🧮',
@@ -708,11 +691,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: PlatformColorExample,
     icon: '🎨',
     disabledPlatforms: [REAPlatform.WEB],
-  },
-  ShadowNodesCloningExample: {
-    icon: '🌑',
-    title: 'Shadow Nodes Cloning',
-    screen: ShadowNodesCloningExample,
   },
 
   // Old examples
