@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   clamp,
   SensorType,
+  useAnimatedReaction,
   useAnimatedSensor,
   useAnimatedStyle,
   useSharedValue,
@@ -24,11 +25,16 @@ function AccelerometerBox() {
   const yOffset = useSharedValue(0);
   const zOffset = useSharedValue(1);
 
+  useAnimatedReaction(
+    () => accelerometer.sensor.value,
+    ({ x, y, z }) => {
+      xOffset.value = clamp(xOffset.value - x, -OFFSET_X * 2, OFFSET_X / 4);
+      yOffset.value = clamp(yOffset.value - y, -OFFSET_Y, OFFSET_Y);
+      zOffset.value = clamp(zOffset.value + z * 0.1, 0.5, 2);
+    }
+  );
+
   const animatedStyle = useAnimatedStyle(() => {
-    const { x, y, z } = accelerometer.sensor.value;
-    xOffset.value = clamp(xOffset.value - x, -OFFSET_X * 2, OFFSET_X / 4);
-    yOffset.value = clamp(yOffset.value - y, -OFFSET_Y, OFFSET_Y);
-    zOffset.value = clamp(zOffset.value + z * 0.1, 0.5, 2);
     return {
       transform: [
         { translateX: withSpring(-OFFSET_X - xOffset.value) },
@@ -49,12 +55,17 @@ function GyroscopeBox() {
   const yOffset = useSharedValue(0);
   const zOffset = useSharedValue(0);
 
+  useAnimatedReaction(
+    () => gyroscope.sensor.value,
+    ({ x, y, z }) => {
+      // The x vs y here seems wrong but is the way to make it feel right to the user
+      xOffset.value = clamp(xOffset.value + y, -OFFSET_X * 2, OFFSET_X / 4);
+      yOffset.value = clamp(yOffset.value - x, -OFFSET_Y, OFFSET_Y);
+      zOffset.value = clamp(zOffset.value + z, -OFFSET_Z, OFFSET_Z);
+    }
+  );
+
   const animatedStyle = useAnimatedStyle(() => {
-    const { x, y, z } = gyroscope.sensor.value;
-    // The x vs y here seems wrong but is the way to make it feel right to the user
-    xOffset.value = clamp(xOffset.value + y, -OFFSET_X * 2, OFFSET_X / 4);
-    yOffset.value = clamp(yOffset.value - x, -OFFSET_Y, OFFSET_Y);
-    zOffset.value = clamp(zOffset.value + z, -OFFSET_Z, OFFSET_Z);
     return {
       transform: [
         { translateX: withSpring(-OFFSET_X - xOffset.value) },
