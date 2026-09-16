@@ -127,6 +127,41 @@ export const logger = {
     'worklet';
     handleLog(ReanimatedLogLevel.warn, message, options);
   },
+  /**
+   * Warns once per message and selected caller, independently in each runtime.
+   *
+   * @param message - The warning to print.
+   * @param level - Caller depth from the logging end of the stack: 0 selects
+   *   the direct caller, 1 its caller, and so on. If that frame is unavailable,
+   *   the warning is deduplicated by message alone.
+   */
+  logOnce(message: string, level: number) {
+    'worklet';
+    if (getLoggerConfig().level > ReanimatedLogLevel.warn) {
+      return;
+    }
+
+    // V8 and Hermes use "at ..."; JavaScriptCore uses "function@location".
+    // Filter the header and blank lines before indexing, not a fixed line count.
+    const frames = new Error().stack
+      ?.split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith('at ') || line.includes('@'));
+    // Frame 0 is logOnce itself.
+    const frame =
+      Number.isInteger(level) && level >= 0 ? frames?.[level + 1] : undefined;
+    const key = JSON.stringify([message, frame ?? null]);
+    const logged = (global.__reanimatedLoggedMessages ??= new Set<string>());
+    if (logged.has(key)) {
+      return;
+    }
+    logged.add(key);
+    handleLog(
+      ReanimatedLogLevel.warn,
+      frame ? `${message}\n${frame}` : message,
+      {}
+    );
+  },
   error(message: string, options: LogOptions = {}) {
     'worklet';
     handleLog(ReanimatedLogLevel.error, message, options);

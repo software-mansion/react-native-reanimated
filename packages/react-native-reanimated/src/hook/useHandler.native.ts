@@ -31,7 +31,10 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
   'use no memo';
 
   if (__DEV__ && _dependencies !== undefined) {
-    logger.warn('dependencies should only be used in web implementation.');
+    logger.logOnce(
+      'dependencies should only be used in web implementation.',
+      1
+    );
   }
 
   const stateRef = useRef<{

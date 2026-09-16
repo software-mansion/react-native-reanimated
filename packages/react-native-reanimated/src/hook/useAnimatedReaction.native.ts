@@ -35,7 +35,10 @@ export function useAnimatedReaction<PreparedResult>(
   _dependencies?: DependencyList
 ) {
   if (__DEV__ && _dependencies !== undefined) {
-    logger.warn('dependencies should only be used in web implementation.');
+    logger.logOnce(
+      'dependencies should only be used in web implementation.',
+      1
+    );
   }
 
   const inputs = prepare.__closure ?? [];
