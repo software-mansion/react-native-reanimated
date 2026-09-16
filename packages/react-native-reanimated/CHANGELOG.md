@@ -59,7 +59,7 @@
 
 ### 💡 Others
 
-- Upgrade React Native to `0.88.0-rc.1` and React to `19.3.0`. The peer range widens to `0.85 - 0.88`. ([#10582](https://github.com/software-mansion/react-native-reanimated/pull/10582) by [@pawicao](https://github.com/pawicao))
+- Added support for React Native 0.88. ([#10582](https://github.com/software-mansion/react-native-reanimated/pull/10582) by [@pawicao](https://github.com/pawicao))
 - Deduplicate the native CSS transition state machine across Android and iOS. ([#10356](https://github.com/software-mansion/react-native-reanimated/pull/10356) by [@MatiPl01](https://github.com/MatiPl01))
 - Move the `IOS_CSS_CORE_ANIMATION` and `ANDROID_CSS_PLATFORM_TRANSITIONS` checks out of the shared C++ code: each platform now supplies its native CSS transition backend under its own flag. No behavior change. ([#10546](https://github.com/software-mansion/react-native-reanimated/pull/10546) by [@MatiPl01](https://github.com/MatiPl01))
 - Added Jest and runtime tests for the settled props unprocessors (colors, `boxShadow`, `backgroundImage`). `unprocessProps` is now exported. ([#10545](https://github.com/software-mansion/react-native-reanimated/pull/10545) by [@tshmieldev](https://github.com/tshmieldev))
