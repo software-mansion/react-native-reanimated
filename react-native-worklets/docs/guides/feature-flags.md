@@ -5,7 +5,7 @@ Feature flags allow developers to opt-in for experimental changes or opt-out fro
 | Feature flag name                                                          |              Type               | Added in | Removed in | Default value |
 | -------------------------------------------------------------------------- | :-----------------------------: | :------: | :--------: | :-----------: |
 | [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled)         | [static](#static-feature-flags) |  0.6.0   |  –   |    `true`     |
-| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled)                         | [static](#static-feature-flags) |  0.8.0   |  –   |    `false`    |
+| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled)                         | [static](#static-feature-flags) |  0.8.0   |  0.13.0   |    `false`    |
 | [`ENABLE_CROSS_RUNTIME_STACK_TRACES`](#enable_cross_runtime_stack_traces) | [static](#static-feature-flags) |  0.9.0   |  –   |    `true`     |
 
 > **Info**
@@ -20,8 +20,7 @@ This feature flags is supposed to improve the visual perception and perceived sm
 
 ### `FETCH_PREVIEW_ENABLED`
 
-This feature flag enables the [preview of fetch API on Worklet Runtimes](/docs/bundleMode/usage#running-network-requests-in-worklets) in the [Bundle Mode](/docs/bundleMode/). Make sure to follow the rest of the [setup instructions](/docs/bundleMode/setup/) after enabling this flag.
-**This flag only takes effect in Bundle Mode.**
+**Removed in 0.13.0.** The [fetch API on Worklet Runtimes](/docs/bundleMode/usage#running-network-requests-in-worklets) is now always available in [Bundle Mode](/docs/bundleMode/) and no longer requires a feature flag.
 
 ### `ENABLE_CROSS_RUNTIME_STACK_TRACES`
 

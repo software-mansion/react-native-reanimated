@@ -20,15 +20,21 @@ The `importForwarding` API is temporary and will be replaced with a more robust 
 
 ## Running network requests in Worklets
 
-In React Native ecosystem, new JavaScript runtimes don't come with networking capabilities out of the box. Worklets library provides a simplified version of `fetch` API that can be used on Worklet Runtimes - however, it might not be sufficient for all use cases.
+In Bundle Mode, Worklet Runtimes come with a standalone networking module. It's always enabled and doesn't require any configuration beyond the [Bundle Mode setup](/docs/bundleMode/setup).
 
-For this reason, to enable `fetch` on Worklet Runtimes you have to toggle the `FETCH_PREVIEW_ENABLED` static feature flag in your app's `package.json`. You can find instructions on how to enable it [here](/docs/guides/feature-flags).
+The following APIs are available on Worklet Runtimes:
 
-Running `fetch` also requires installing all the patches from the [Bundle Mode setup guide](/docs/bundleMode/setup).
+* `fetch`, `Headers`, `Request` and `Response`, provided by the [whatwg-fetch](https://github.com/JakeChampion/fetch) polyfill,
+* `XMLHttpRequest`, including download and upload progress events, `arraybuffer` and `blob` response types, timeouts and aborting. Libraries built on top of `XMLHttpRequest`, such as Axios, work out of the box,
+* `FormData` with string fields, encoded as `multipart/form-data`,
+* `Blob` and `FileReader`, backed by in-memory data,
+* `AbortController` and `AbortSignal`.
 
-> **Note**
->
-> We are currently looking for third-party networking solutions that would provide same networking capabilities on Worklet Runtimes as what's available on the RN Runtime. We are open to adopting or integrating with such solutions. If you know about such solutions, please reach out to us on [GitHub](https://github.com/software-mansion/react-native-reanimated/issues).
+The implementation has the following limitations:
+
+* Response streaming is not supported. `Response.body` is `undefined` and `XMLHttpRequest.responseText` is only available after the request completes.
+* `FormData` accepts only string values. File parts, such as `{ uri: ... }` objects, are not supported.
+* `WebSocket` is not available.
 
 ## Reference
 
