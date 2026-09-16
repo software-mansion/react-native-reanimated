@@ -297,7 +297,8 @@ void LayoutAnimationsProxy::updateLightTree(
 #ifdef ANDROID
         // TODO (future): We don't merge the root view as the currently stored version might not be accurate, because of
         // the inconsequential initialization order of proxy and the surface
-        if (!isRoot(node) && node->current.props) {
+        if (!isRoot(node) && node->current.props &&
+            mutation.oldChildShadowView.props != mutation.newChildShadowView.props) {
           // On android rawProps are used to store the diffed props so we need to merge them
           // This should soon be replaced in RN with Props 2.0 (the diffing will be done at the end of the pipeline)
           auto &currentRawProps = node->current.props->rawProps;
@@ -305,7 +306,8 @@ void LayoutAnimationsProxy::updateLightTree(
           node->current = mutation.newChildShadowView;
           node->current.props =
               componentDescriptorRegistry_->at(node->current.componentHandle)
-                  .cloneProps(propsParserContext, mutation.newChildShadowView.props, RawProps(mergedRawProps));
+                  .cloneProps(
+                      propsParserContext, mutation.newChildShadowView.props, RawProps(std::move(mergedRawProps)));
         } else {
           node->current = mutation.newChildShadowView;
         }
