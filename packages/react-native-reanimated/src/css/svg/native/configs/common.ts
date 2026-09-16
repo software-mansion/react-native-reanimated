@@ -133,7 +133,17 @@ export type SvgStyleBuilderConfig<T> = PropsBuilderConfig<
   Omit<T, NonAnimatablePropNames>
 >;
 
-export const SVG_COMMON_PROPERTIES_CONFIG = {
+export const SVG_COMMON_PROPERTIES_CONFIG: typeof colorProps &
+  typeof fillProps &
+  typeof strokeProps &
+  typeof clipProps &
+  typeof transformProps &
+  typeof responderProps &
+  typeof commonMarkerProps &
+  typeof commonMaskProps &
+  typeof commonFilterProps & {
+    readonly opacity: { readonly process: typeof processPercentage };
+  } = {
   ...colorProps,
   ...fillProps,
   ...strokeProps,
