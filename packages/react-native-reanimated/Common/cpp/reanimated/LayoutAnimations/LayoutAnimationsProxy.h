@@ -140,6 +140,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       TransactionMeta &transaction) const;
 
   void applyInitialMutationsToLightTree(const ShadowViewMutationList &mutations) const;
+  void updateLightNodeProps(
+      const std::shared_ptr<LightNode> &node,
+      const ShadowView &oldView,
+      const ShadowView &newView) const;
+  void resolveLightNodeProps(const std::shared_ptr<LightNode> &node) const;
   void initializeLightTree(const ShadowTreeRevision &baseRevision);
   bool isLightTreeInitialized() const {
     return lightNodes_.contains(surfaceId_);

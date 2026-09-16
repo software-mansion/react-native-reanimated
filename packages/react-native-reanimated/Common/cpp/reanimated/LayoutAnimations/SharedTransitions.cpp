@@ -70,6 +70,7 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
     if (const auto staleTag = staleSynchronousProps_.find(node, LayoutAnimationType::SHARED_ELEMENT_TRANSITION)) {
       transaction.staleSnapshots[node->current.tag] = *staleTag;
     }
+    resolveLightNodeProps(node);
     const bool useViewsOnScreen = index == BEFORE;
     ShadowView copy = useViewsOnScreen ? viewOnScreen(node) : node->current;
     std::vector<react::Point> absolutePositions;
@@ -362,6 +363,10 @@ Tag LayoutAnimationsProxy::getOrCreateContainer(
   containerView.tag = containerTag;
   auto node = std::make_shared<LightNode>();
   node->current = std::move(containerView);
+#ifdef ANDROID
+  react_native_assert(node->current.props && "Shared container has no props");
+  node->accumulatedRawProps = node->current.props->rawProps;
+#endif
   node->parent = root;
   root->children.push_back(node);
   transaction.containersToInsert.push_back(node);
@@ -630,6 +635,7 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
     if (nodeIt == lightNodes_.end() || nodeIt->second != node) {
       continue;
     }
+    resolveLightNodeProps(node);
     const auto &view = viewOnScreen(node);
     const auto parent = node->parent.lock();
     react_native_assert(parent && "Parent node is nullptr");

@@ -292,32 +292,9 @@ void LayoutAnimationsProxy::updateLightTree(
       case ShadowViewMutation::Update: {
         auto &node = lightNodes_[mutation.newChildShadowView.tag];
         react_native_assert(node && "LightNode not found");
-        const auto currentProps = node->current.props;
-        node->previous = mutation.oldChildShadowView;
-#ifdef ANDROID
-        // TODO (future): We don't merge the root view as the currently stored version might not be accurate, because of
-        // the inconsequential initialization order of proxy and the surface
-        if (!isRoot(node) && node->current.props &&
-            mutation.oldChildShadowView.props != mutation.newChildShadowView.props) {
-          // On android rawProps are used to store the diffed props so we need to merge them
-          // This should soon be replaced in RN with Props 2.0 (the diffing will be done at the end of the pipeline)
-          auto &currentRawProps = node->current.props->rawProps;
-          auto mergedRawProps = folly::dynamic::merge(currentRawProps, mutation.newChildShadowView.props->rawProps);
-          node->current = mutation.newChildShadowView;
-          node->current.props =
-              componentDescriptorRegistry_->at(node->current.componentHandle)
-                  .cloneProps(
-                      propsParserContext, mutation.newChildShadowView.props, RawProps(std::move(mergedRawProps)));
-        } else {
-          node->current = mutation.newChildShadowView;
-        }
-#else
-        node->current = mutation.newChildShadowView;
-#endif // ANDROID
+        updateLightNodeProps(node, mutation.oldChildShadowView, mutation.newChildShadowView);
         auto tag = mutation.newChildShadowView.tag;
-        if (mutation.oldChildShadowView.props == mutation.newChildShadowView.props) {
-          node->current.props = currentProps;
-        } else {
+        if (mutation.oldChildShadowView.props != mutation.newChildShadowView.props) {
           staleSynchronousProps_.forget(tag);
         }
         if (const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT)) {
@@ -426,8 +403,7 @@ void LayoutAnimationsProxy::applyInitialMutationsToLightTree(const ShadowViewMut
       case ShadowViewMutation::Update: {
         auto &node = lightNodes_[mutation.newChildShadowView.tag];
         react_native_assert(node && "LightNode not found");
-        node->previous = mutation.oldChildShadowView;
-        node->current = mutation.newChildShadowView;
+        updateLightNodeProps(node, mutation.oldChildShadowView, mutation.newChildShadowView);
         break;
       }
       case ShadowViewMutation::Create: {
@@ -465,6 +441,48 @@ void LayoutAnimationsProxy::applyInitialMutationsToLightTree(const ShadowViewMut
   }
 }
 
+// A commit that keeps the props object only moves the view, so the props the light
+// tree already holds (merged or synchronous) stay valid.
+void LayoutAnimationsProxy::updateLightNodeProps(
+    const std::shared_ptr<LightNode> &node,
+    const ShadowView &oldView,
+    const ShadowView &newView) const {
+  const auto currentProps = node->current.props;
+  const auto propsChanged = newView.props != oldView.props;
+  node->previous = oldView;
+  node->current = newView;
+  if (!propsChanged) {
+    node->current.props = currentProps;
+    return;
+  }
+#ifdef ANDROID
+  // On android rawProps hold only the props changed by the commit, so the full set is
+  // accumulated here. This should be replaced in RN with Props 2.0 (the diffing will be
+  // done at the end of the pipeline). The root view is never merged, as the stored
+  // version might not be accurate because of the initialization order of proxy and surface.
+  if (isRoot(node) || !currentProps || !newView.props) {
+    return;
+  }
+  if (node->accumulatedRawProps.isNull()) {
+    node->accumulatedRawProps = currentProps->rawProps;
+  }
+  node->accumulatedRawProps.update(newView.props->rawProps);
+  node->propsNeedResolve = true;
+#endif // ANDROID
+}
+
+void LayoutAnimationsProxy::resolveLightNodeProps(const std::shared_ptr<LightNode> &node) const {
+#ifdef ANDROID
+  if (!node->propsNeedResolve) {
+    return;
+  }
+  const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
+  node->current.props = componentDescriptorRegistry_->at(node->current.componentHandle)
+                            .cloneProps(propsParserContext, node->current.props, RawProps(node->accumulatedRawProps));
+  node->propsNeedResolve = false;
+#endif // ANDROID
+}
+
 // Synchronous prop updates skip pullTransaction. Animation records always take the
 // values; light nodes take them only while the dynamic flag is on.
 void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBatch, const bool trackInLightTree) const {
@@ -497,7 +515,16 @@ void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBat
 
     react_native_assert(node->current.props && "LightNode has no props");
     staleSynchronousProps_.forget(tag, props);
+#ifdef ANDROID
+    if (node->accumulatedRawProps.isNull()) {
+      node->accumulatedRawProps = node->current.props->rawProps;
+    }
+    node->accumulatedRawProps.update(props);
+    node->propsNeedResolve = true;
+    resolveLightNodeProps(node);
+#else
     node->current.props = mergeSynchronousProps(node->current, props);
+#endif
   }
 }
 
@@ -918,6 +945,7 @@ void LayoutAnimationsProxy::maybeScheduleCleanupPull(const bool flushedStructura
 void LayoutAnimationsProxy::startEnteringAnimation(
     const std::shared_ptr<LightNode> &node,
     const std::shared_ptr<Serializable> &config) const {
+  resolveLightNodeProps(node);
   const auto &newChildShadowView = node->current;
   const auto &props = newChildShadowView.props;
   auto &viewProps = static_cast<const ViewProps &>(*props);
@@ -938,6 +966,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
 void LayoutAnimationsProxy::startExitingAnimation(
     const std::shared_ptr<LightNode> &node,
     const std::shared_ptr<Serializable> &config) const {
+  resolveLightNodeProps(node);
   const auto &oldChildShadowView = node->current;
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
@@ -957,6 +986,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
   if (const auto staleTag = staleSynchronousProps_.find(node, LayoutAnimationType::LAYOUT)) {
     warnAboutStaleSynchronousProps(node->current.tag, *staleTag, LayoutAnimationType::LAYOUT);
   }
+  resolveLightNodeProps(node);
   const auto &oldChildShadowView = node->previous;
   const auto &newChildShadowView = node->current;
   const auto &parent = node->parent.lock();

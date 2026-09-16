@@ -1,5 +1,6 @@
 #pragma once
 
+#include <folly/dynamic.h>
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/components/rnreanimated/Props.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
@@ -95,6 +96,12 @@ struct IndexCursors {
 struct LightNode {
   ShadowView previous;
   ShadowView current;
+#ifdef ANDROID
+  // React Native stores only the props changed by a commit in `Props::rawProps` on Android.
+  // The full set accumulates here and becomes a `Props` only when a consumer reads the node.
+  folly::dynamic accumulatedRawProps = nullptr;
+  bool propsNeedResolve = false;
+#endif
   ExitingState state = ExitingState::UNDEFINED;
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
