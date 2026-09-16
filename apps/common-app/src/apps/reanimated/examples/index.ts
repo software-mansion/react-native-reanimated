@@ -301,8 +301,10 @@ const SharedStyleExample: React.FC = () =>
   React.createElement(require('./SharedStyleExample').default as React.FC);
 const SlowAnimationsExample: React.FC = () =>
   React.createElement(require('./SlowAnimationsExample').default as React.FC);
-const SpringPresetsExample: React.FC = () =>
-  React.createElement(require('./SpringPresetsExample').default as React.FC);
+const SpringPresetsAndClampExample: React.FC = () =>
+  React.createElement(
+    require('./SpringPresetsAndClampExample').default as React.FC
+  );
 const StickyHeaderExample: React.FC = () =>
   React.createElement(require('./StickyHeaderExample').default as React.FC);
 const StrictDOMExample: React.FC = () =>
@@ -341,8 +343,6 @@ const ViewRecyclingExample: React.FC = () =>
   );
 const WidthExample: React.FC = () =>
   React.createElement(require('./WidthExample').default as React.FC);
-const WithClampExample: React.FC = () =>
-  React.createElement(require('./WithClampExample').default as React.FC);
 
 // Sections of the "Show Cases and Regressions" group. Declared before
 // `ALL_EXAMPLES` because its entries reference them.
@@ -653,17 +653,11 @@ const ALL_EXAMPLES: Record<string, Example> = {
     section: SHOW_CASES,
     screen: PendulumExample,
   },
-  SpringPresetsExample: {
+  SpringPresetsAndClampExample: {
     icon: '🛠',
-    title: 'Spring presets',
+    title: 'Spring presets and clamp',
     section: SHOW_CASES,
-    screen: SpringPresetsExample,
-  },
-  SpringClampExample: {
-    icon: '🗜',
-    title: 'Spring with Clamp',
-    section: SHOW_CASES,
-    screen: WithClampExample,
+    screen: SpringPresetsAndClampExample,
   },
   ReducedMotionExample: {
     icon: '⏸️',
