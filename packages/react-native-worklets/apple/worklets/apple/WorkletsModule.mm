@@ -8,6 +8,7 @@
 #import <worklets/apple/AssertJavaScriptQueue.h>
 #import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/IOSUIScheduler.h>
+#import <worklets/apple/Networking/AppleNetworkingBackend.h>
 #import <worklets/apple/ScriptLoader.h>
 #import <worklets/apple/WorkletsModule.h>
 
@@ -165,7 +166,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
       },
-      .nativeLoggingHook = makeNativeLoggingHook()});
+      .nativeLoggingHook = makeNativeLoggingHook(),
+      .networkingBackend = std::make_shared<AppleNetworkingBackend>()});
 }
 
 @end
