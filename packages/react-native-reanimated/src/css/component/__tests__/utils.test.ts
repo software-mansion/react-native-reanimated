@@ -93,17 +93,28 @@ describe('filterCSSProps', () => {
       });
     });
 
-    it('flattens nested style arrays and skips empty entries', () => {
+    it('handles nested style arrays and keeps empty entries in place', () => {
       const props = {
         style: [
           null,
-          [{ width: 100 }, false, [{ opacity: { ':hover': 0.5 } }]],
+          [{ opacity: 1, width: 100 }, false, [{ opacity: { ':hover': 0.5 } }]],
         ],
       };
 
       expect(filterCSSProps(props)).toEqual({
-        style: [{ width: 100 }, {}],
+        style: [null, [{ width: 100 }, false, [{}]]],
       });
+    });
+
+    it('forwards only the default of the last pseudo object for a property', () => {
+      const props = {
+        style: [
+          { opacity: { default: 0.9, ':hover': 0.8 } },
+          { opacity: { ':active': 0.5 } },
+        ],
+      };
+
+      expect(filterCSSProps(props)).toEqual({ style: [{}, {}] });
     });
   });
 });
