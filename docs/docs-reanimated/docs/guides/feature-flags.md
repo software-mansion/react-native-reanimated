@@ -178,7 +178,7 @@ Routing is decided per property, so a single transition may run partly on the pl
 
 Properties that aren't routed keep running on the animation loop, which supports all of them. Android routes `opacity` for now, support for more properties will be added in the future. `shadowOffset`, `shadowOpacity` and `shadowRadius` are iOS-only styles in React Native.
 
-On iOS, React Native draws the background and border on the view's own layer only when the border has the same color, the same width and the solid style on every side, the radius is the same on every corner and circular, and the view either has no visible border or clips its children (`overflow: 'hidden'` or `'scroll'`). `backgroundColor`, `borderColor` and `borderRadius` transitions are routed only when the style they leave and the style they target both meet this.
+On iOS, React Native draws the background and border on the view's own layer only when the border has the same color, the same width and the solid style on every side, the radius is the same on every corner and circular, and the view either has no visible border or clips its children (`overflow: 'hidden'` or `'scroll'`). `backgroundColor`, `borderColor` and `borderRadius` transitions are routed only when the style they leave and the style they target both meet this, and not while a border or `overflow` transition is still running.
 
 ## Static feature flags
 

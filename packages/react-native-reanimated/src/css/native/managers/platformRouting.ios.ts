@@ -1,5 +1,6 @@
 'use strict';
 import type { UnknownRecord } from '../../../common';
+import type { CSSTransitionConfig } from '../types';
 
 const SIDE_WIDTHS = [
   'borderTopWidth',
@@ -83,4 +84,25 @@ export function supportsPlatformRouting(style: UnknownRecord): boolean {
     borderStyle === 'solid' &&
     (width === 0 || clips || isTransparent(color))
   );
+}
+
+/**
+ * A border or overflow transition runs on the loop and changes what React
+ * Native draws on the view's own layer until it ends, whatever the committed
+ * styles say, so the platform stays off until then.
+ */
+export function platformBlockedUntil(
+  config: CSSTransitionConfig,
+  now: number
+): number {
+  let until = 0;
+  for (const [property, settings] of Object.entries(config)) {
+    if (
+      settings &&
+      (property === 'overflow' || property.startsWith('border'))
+    ) {
+      until = Math.max(until, now + settings.delay + settings.duration);
+    }
+  }
+  return until;
 }
