@@ -1,28 +1,24 @@
-#import <QuartzCore/QuartzCore.h>
-
 #import <reanimated/apple/REASlowAnimations.h>
 
 #if TARGET_IPHONE_SIMULATOR
+
+#import <QuartzCore/QuartzCore.h>
 #import <dlfcn.h>
-#endif
 
 namespace reanimated {
 
 CGFloat getUIAnimationDragCoefficient(void)
 {
   static float (*UIAnimationDragCoefficient)(void) = NULL;
-#if TARGET_IPHONE_SIMULATOR
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     UIAnimationDragCoefficient = reinterpret_cast<float (*)(void)>(dlsym(RTLD_DEFAULT, "UIAnimationDragCoefficient"));
   });
-#endif
   return UIAnimationDragCoefficient ? UIAnimationDragCoefficient() : 1.f;
 }
 
 CFTimeInterval calculateTimestampWithSlowAnimations(CFTimeInterval currentTimestamp)
 {
-#if TARGET_IPHONE_SIMULATOR
   static CFTimeInterval dragCoefChangedTimestamp = CACurrentMediaTime();
   static CGFloat previousDragCoef = getUIAnimationDragCoefficient();
 
@@ -38,29 +34,20 @@ CFTimeInterval calculateTimestampWithSlowAnimations(CFTimeInterval currentTimest
   } else {
     return currentTimestamp;
   }
-#else
-  return currentTimestamp;
-#endif
 }
 
 CFTimeInterval calculateMediaTimeFromSlowAnimationsTimestamp(CFTimeInterval animationTimestamp)
 {
-#if TARGET_IPHONE_SIMULATOR
   const CFTimeInterval mediaTime = CACurrentMediaTime();
   const CFTimeInterval animationTime = calculateTimestampWithSlowAnimations(mediaTime);
   return mediaTime + (animationTimestamp - animationTime) * getUIAnimationDragCoefficient();
-#else
-  return animationTimestamp;
-#endif
 }
 
 CFTimeInterval calculateMediaDurationFromSlowAnimationsDuration(CFTimeInterval animationDuration)
 {
-#if TARGET_IPHONE_SIMULATOR
   return animationDuration * getUIAnimationDragCoefficient();
-#else
-  return animationDuration;
-#endif
 }
 
 } // namespace reanimated
+
+#endif // TARGET_IPHONE_SIMULATOR
