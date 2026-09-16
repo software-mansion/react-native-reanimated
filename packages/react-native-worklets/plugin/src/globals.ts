@@ -120,6 +120,7 @@ const notCapturedIdentifiers = [
   'Request',
   'Response',
   'XMLHttpRequest',
+  'FormData',
   'Blob',
   'FileReader',
   'WebSocket',

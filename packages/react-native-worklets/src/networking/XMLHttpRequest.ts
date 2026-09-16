@@ -5,6 +5,7 @@ import { toArrayBuffer } from './bytes';
 import { DOMException } from './DOMException';
 import type { NetworkingEventListener } from './events';
 import { EventTargetLite } from './events';
+import { FormData } from './FormData';
 import {
   combineHeader,
   extractCharset,
@@ -540,6 +541,10 @@ function normalizeBody(body: unknown): {
       data: toArrayBuffer(body.__getBytes()),
       contentType: body.type !== '' ? body.type : undefined,
     };
+  }
+  if (body instanceof FormData) {
+    const { body: data, contentType } = body.__encodeMultipart();
+    return { data, contentType };
   }
   if (ArrayBuffer.isView(body)) {
     return {
