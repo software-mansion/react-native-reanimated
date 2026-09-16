@@ -44,19 +44,6 @@ LayoutAnimationsProxy_Experimental::LayoutAnimationsProxy_Experimental(
 #endif
 }
 
-#ifndef NDEBUG
-void LayoutAnimationsProxy_Experimental::recordSkippedSynchronousProps(const UpdatesBatch &updatesBatch) const {
-  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
-    const auto tag = shadowNodeFamily->getTag();
-    if (shadowNodeFamily->getSurfaceId() != surfaceId_ || !lightNodes_.contains(tag)) {
-      continue;
-    }
-    staleSynchronousProps_.record(tag, props);
-  }
-}
-#endif
-
 void LayoutAnimationsProxy_Experimental::warnAboutStaleSynchronousProps(
     const Tag tag,
     const Tag staleTag,
@@ -464,32 +451,41 @@ void LayoutAnimationsProxy_Experimental::applyInitialMutationsToLightTree(
   }
 }
 
-// Synchronous prop updates skip pullTransaction. The registry broadcasts one
-// batch to every surface proxy; entries of other surfaces are skipped here.
-void LayoutAnimationsProxy_Experimental::applySynchronousProps(const UpdatesBatch &updatesBatch) const {
+// Synchronous prop updates skip pullTransaction. Animation records always take the
+// values; light nodes take them only while the dynamic flag is on.
+void LayoutAnimationsProxy_Experimental::applySynchronousProps(
+    const UpdatesBatch &updatesBatch,
+    const bool trackInLightTree) const {
   ReanimatedSystraceSection s("applySynchronousProps");
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  const bool hasRecords = hasLayoutAnimationRecords();
 
   for (const auto &[shadowNodeFamily, props] : updatesBatch) {
     if (shadowNodeFamily->getSurfaceId() != surfaceId_) {
       continue;
     }
     const auto tag = shadowNodeFamily->getTag();
+    if (hasRecords) {
+      applySynchronousPropsToLayoutAnimation(tag, props);
+    }
+
     const auto nodeIt = lightNodes_.find(tag);
     if (nodeIt == lightNodes_.end()) {
       continue;
     }
-
     const auto &node = nodeIt->second;
     react_native_assert(node && "LightNode is nullptr");
     if (isRoot(node)) {
+      continue;
+    }
+    if (!trackInLightTree) {
+      staleSynchronousProps_.record(tag, props);
       continue;
     }
 
     react_native_assert(node->current.props && "LightNode has no props");
     staleSynchronousProps_.forget(tag, props);
     node->current.props = mergeSynchronousProps(node->current, props);
-    applySynchronousPropsToLayoutAnimation(tag, props);
   }
 }
 

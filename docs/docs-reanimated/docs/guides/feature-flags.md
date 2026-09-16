@@ -195,9 +195,9 @@ All three share that layer, so this is easiest to hit with a combination of them
 
 Keep this flag off unless you see the warning described below.
 
-With `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` or `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` enabled, some props that don't require layout recalculation go straight to the native views and skip some of the bookkeeping that Shared Element Transitions and Layout Animations require. This causes those types of animations to start with stale values if one of those non-layout props was animated before.
+With `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` or `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` enabled, some props that don't require layout recalculation go straight to the native views and skip some of the bookkeeping that Shared Element Transitions and Layout Animations require. A layout animation that is already queued or running always receives those props, so a prop changed during the animation keeps its value. An animation that starts later still starts with stale values if one of those non-layout props was animated before.
 
-When enabled, the synchronous path also updates the reanimated internal bookkeeping. This costs one props clone for each synchronously updated view on every frame, on the path that every animation goes through. Enable the flag only for the screens that hit the case above, for example with `setDynamicFeatureFlag` in an effect of the screen, and restore the previous value in the cleanup of that effect.
+When enabled, the synchronous path also updates the reanimated internal bookkeeping for animations that start later. This costs one props clone for each synchronously updated view on every frame, on the path that every animation goes through. Enable the flag only for the screens that hit the case above, for example with `setDynamicFeatureFlag` in an effect of the screen, and restore the previous value in the cleanup of that effect.
 
 When disabled, a development build logs a warning once per view when a layout animation or a shared element transition starts on a view whose synchronous props are missing from that bookkeeping. A shared element transition also warns when it starts under an ancestor whose synchronous transform is missing from it.
 

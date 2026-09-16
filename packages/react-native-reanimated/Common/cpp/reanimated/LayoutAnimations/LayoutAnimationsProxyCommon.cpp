@@ -145,12 +145,31 @@ Props::Shared LayoutAnimationsProxyCommon::mergeSynchronousProps(const ShadowVie
       .cloneProps(propsParserContext, view.props, RawProps(std::move(rawProps)));
 }
 
+// The registry broadcasts one batch to every surface proxy; entries of other surfaces are skipped here.
+void LayoutAnimationsProxyCommon::applySynchronousProps(const UpdatesBatch &updatesBatch, bool /*trackInLightTree*/)
+    const {
+  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (!hasLayoutAnimationRecords()) {
+    return;
+  }
+  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
+    if (shadowNodeFamily->getSurfaceId() != surfaceId_) {
+      continue;
+    }
+    applySynchronousPropsToLayoutAnimation(shadowNodeFamily->getTag(), props);
+  }
+}
+
+bool LayoutAnimationsProxyCommon::hasLayoutAnimationRecords() const {
+  return !layoutAnimations_.empty() || !pendingLayoutAnimations_.empty() || !completedAnimations_.empty();
+}
+
 // A layout animation builds every frame from its own copies of the props, not from the light node.
 // The copies live in the queued start, in the running record and in the frame that waits for a pull.
 void LayoutAnimationsProxyCommon::applySynchronousPropsToLayoutAnimation(const Tag tag, const folly::dynamic &props)
     const {
   const bool propsIncludeOpacity = props.count("opacity") > 0;
-  if (hasPendingLayoutAnimation(tag)) {
+  if (pendingLayoutAnimations_.contains(tag)) {
     for (auto &operation : layoutAnimationOperations_) {
       std::visit(
           [&](auto &start) {

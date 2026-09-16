@@ -106,16 +106,14 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       std::weak_ptr<const facebook::react::MountingOverrideDelegate> mountingOverrideDelegate);
   virtual void shadowTreeWillCommit(bool /*isSurfaceRemoval*/) {}
   virtual void surfaceDidUnmount();
-  virtual void applySynchronousProps(const UpdatesBatch &) const {}
-#ifndef NDEBUG
-  virtual void recordSkippedSynchronousProps(const UpdatesBatch &) const {}
-#endif
+  virtual void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const;
   ~LayoutAnimationsProxyCommon() override = default;
 
   void flushLayoutAnimationOperations() const;
 
  protected:
   Props::Shared mergeSynchronousProps(const ShadowView &view, const folly::dynamic &props) const;
+  bool hasLayoutAnimationRecords() const;
   void applySynchronousPropsToLayoutAnimation(Tag tag, const folly::dynamic &props) const;
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
   void enqueueLayoutAnimation(ManagedLayoutAnimationStart start) const;

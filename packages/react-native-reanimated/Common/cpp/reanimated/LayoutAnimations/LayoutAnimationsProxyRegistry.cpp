@@ -86,19 +86,13 @@ void LayoutAnimationsProxyRegistry::flushLayoutAnimationOperations() const {
   }
 }
 
-void LayoutAnimationsProxyRegistry::applySynchronousProps(const UpdatesBatch &updatesBatch) {
+void LayoutAnimationsProxyRegistry::applySynchronousProps(
+    const UpdatesBatch &updatesBatch,
+    const bool trackInLightTree) {
   for (const auto &instance : instances()) {
-    instance->applySynchronousProps(updatesBatch);
+    instance->applySynchronousProps(updatesBatch, trackInLightTree);
   }
 }
-
-#ifndef NDEBUG
-void LayoutAnimationsProxyRegistry::recordSkippedSynchronousProps(const UpdatesBatch &updatesBatch) {
-  for (const auto &instance : instances()) {
-    instance->recordSkippedSynchronousProps(updatesBatch);
-  }
-}
-#endif
 
 std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> LayoutAnimationsProxyRegistry::instances() const {
   const std::lock_guard<std::mutex> lock(instancesMutex_);

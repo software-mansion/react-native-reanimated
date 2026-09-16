@@ -104,9 +104,6 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif
   mutable StaleSynchronousPropsTracker staleSynchronousProps_;
-#ifndef NDEBUG
-  void recordSkippedSynchronousProps(const UpdatesBatch &updatesBatch) const override;
-#endif
   void warnAboutStaleSynchronousProps(Tag tag, Tag staleTag, LayoutAnimationType type) const;
   void warnIfSnapshotIsStale(const ShadowView &snapshot, const TransactionMeta &transaction) const;
 
@@ -147,7 +144,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
     return lightNodes_.contains(surfaceId_);
   }
 
-  void applySynchronousProps(const UpdatesBatch &updatesBatch) const override;
+  void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const override;
 
   void reconcileContradictedRemovals(const ShadowViewMutationList &mutations, ShadowViewMutationList &filteredMutations)
       const;
