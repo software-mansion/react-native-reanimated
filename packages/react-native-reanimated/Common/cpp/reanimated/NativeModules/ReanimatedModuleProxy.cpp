@@ -1137,8 +1137,7 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
 
 #ifdef ANDROID
     if (!isSurfaceAlive) {
-      // There is no tree to commit the reverts of a stopped surface to, and they would be
-      // rebuilt on every commit otherwise.
+      // A stopped surface has no tree to commit its reverts to.
       auto lock = updatesRegistryManager_->lock();
       updatesRegistryManager_->clearPropsToRevert(surfaceId);
     }

@@ -31,9 +31,7 @@ export function unmarkNodeAsRemovable(viewTag: number) {
   ReanimatedModule.unmarkNodeAsRemovable(viewTag);
 }
 
-// scheduleOnUI is FIFO, so by the time this lands every UI-side removal scheduled before
-// it has landed too and no update for the view can still be in flight. Only then may the
-// native side evict the view's registry entries.
+// scheduleOnUI is FIFO, so every UI-side removal scheduled before this has landed when it runs.
 export function notifyViewDetached(viewTag: number) {
   scheduleOnUI(() => {
     'worklet';

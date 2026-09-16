@@ -67,7 +67,7 @@ bool UpdatesRegistryManager::shouldCommitAfterPause() {
 
 void UpdatesRegistryManager::markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode) {
   react_native_assert(isLockedByCurrentThread());
-  // A new unmount starts a new detach sequence, so an earlier detach no longer counts.
+  // A new unmount restarts the detach sequence.
   removableShadowNodes_[shadowNode->getTag()] = {shadowNode->getFamilyShared(), false};
 }
 
@@ -98,10 +98,8 @@ void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadow
 
   for (auto it = removableShadowNodes_.begin(); it != removableShadowNodes_.end();) {
     const auto &[family, detached] = it->second;
-    // Only the node's own tree can tell a removal from a remount that followed
-    // componentWillUnmount (a frozen screen); a foreign root proves nothing. Eviction also
-    // waits for the detach notification, which JS orders after the last update it can
-    // still emit for the node, so nothing can re-add the entry afterwards.
+    // A foreign root proves nothing (frozen screens remount after componentWillUnmount), and
+    // the detach notification is ordered after the last update JS can still emit.
     const bool isRemoved = !family ||
         (detached && family->getSurfaceId() == mountedSurfaceId && family->getAncestors(rootShadowNode).empty());
     if (isRemoved) {

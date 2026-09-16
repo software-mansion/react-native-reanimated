@@ -169,8 +169,7 @@ export default class AnimatedComponent<
       // animations/transitions/props while handling cases where the node might be
       // remounted (e.g., when frozen) after componentWillUnmount is called.
       markNodeAsRemovable(wrapper);
-      // Subclasses detach their styles before calling this, so the notification lands
-      // after the last update those styles could emit.
+      // Subclasses detach their styles before calling this, so this lands after their last update.
       if (typeof viewTag === 'number') {
         notifyViewDetached(viewTag);
       }

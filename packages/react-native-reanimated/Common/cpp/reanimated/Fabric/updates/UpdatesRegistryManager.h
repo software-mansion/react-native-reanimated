@@ -47,12 +47,11 @@ class UpdatesRegistryManager {
 
   void markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode);
   void unmarkNodeAsRemovable(Tag viewTag);
-  /// Called once JS guarantees that no further updates can arrive for the node. Evicts it
-  /// right away when it has already left its mounted tree; otherwise the first mount without
-  /// it does. `isNodeMounted` answers whether the family is still in the last mounted tree.
+  /// Called once JS can emit no further updates for the node. Evicts it if it already left
+  /// its mounted tree; otherwise the first mount without it does.
   void handleNodeDetached(Tag viewTag, const std::function<bool(const ShadowNodeFamily &)> &isNodeMounted);
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
-  /// Evicts the detached marks of a surface that RN has stopped; the rest follow on detach.
+  /// Evicts the detached marks of a stopped surface; the rest follow on their detach.
   void handleSurfaceUnmount(SurfaceId surfaceId);
   PropsMap collectProps();
   void mergeRegistryProps(Tag viewTag, folly::dynamic &target);
@@ -66,7 +65,7 @@ class UpdatesRegistryManager {
  private:
   struct RemovableNode {
     ShadowNodeFamily::Shared family;
-    /// Set once JS reports that it detached the node, so no in-flight update can re-add it.
+    /// JS detached the node, so no in-flight update can re-add it.
     bool detached;
   };
   using RemovableShadowNodes = std::unordered_map<Tag, RemovableNode>;

@@ -137,8 +137,7 @@ export default class AnimatedComponent
       }
     }
 
-    // Marks the node removable and schedules the detach notification, which has to
-    // follow the style detachment above.
+    // Marks the node removable; its detach notification must follow the style detachment above.
     super.componentWillUnmount();
 
     if (this._options?.jsProps?.length) {

@@ -49,9 +49,7 @@ export function useAnimatedRef<
           unmarkNodeAsRemovable(tag);
         }
       },
-      // A view that is only ever written through this ref (setNativeProps) has no animated
-      // component to mark it on unmount. Marking a view that its component marks anyway is
-      // harmless: its own unmount re-marks and re-notifies after detaching its styles.
+      // Covers views written only through this ref (setNativeProps); a double mark is harmless.
       onDetach: (wrapper, tag) => {
         markNodeAsRemovable(wrapper);
         if (tag !== null) {

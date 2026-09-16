@@ -56,7 +56,6 @@ export function useAnimatedRefBase<TRef extends InstanceOrElement>(
           });
         }
       } else if (wrapperRef.current) {
-        // React clears a callback ref with null on unmount.
         lifecycle?.onDetach?.(wrapperRef.current, tagRef.current);
       }
 
