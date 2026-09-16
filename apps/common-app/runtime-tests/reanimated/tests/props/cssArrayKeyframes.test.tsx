@@ -75,6 +75,28 @@ function Example({
   );
 }
 
+// Two running views share one set of keyframes and the interpolator behind
+// it, so each frame resolves the omitted endpoint against a different list.
+function SharedExample() {
+  const firstRef = useTestRef('first');
+  const secondRef = useTestRef('second');
+  const style: CSSStyle = {
+    animationDelay: -250000,
+    animationDuration: 1000000,
+    animationFillMode: 'both',
+    animationName: { to: { boxShadow: [green] } },
+    animationTimingFunction: steps(4, 'end'),
+    height: 80,
+    width: 80,
+  };
+  return (
+    <View>
+      <Animated.View ref={firstRef} style={{ ...style, boxShadow: [red] }} />
+      <Animated.View ref={secondRef} style={{ ...style, boxShadow: base }} />
+    </View>
+  );
+}
+
 async function shadows(name = 'animated'): Promise<Array<BoxShadowValue>> {
   await wait(100);
   return JSON.parse(
@@ -265,13 +287,18 @@ describe('CSS array keyframes', () => {
   test('inset mismatch switches the entire list discretely', async () => {
     await render(
       <Example
+        underlying={[green]}
         keyframes={{
           from: { boxShadow: base },
           to: { boxShadow: [green, { ...blue, inset: true }] },
         }}
       />
     );
-    expect(await shadows()).toBe(await shadows('static'), ComparisonMode.ARRAY);
+    const result = await shadows();
+    expect(result.length).toBe(2);
+    expect(result[0].offsetX).toBe(20);
+    expect(result[1].offsetX).toBe(-20);
+    expect(result[1].inset).toBe(false);
   });
 
   test.each([base, []])(
@@ -336,11 +363,27 @@ describe('CSS array keyframes', () => {
     await render(
       <Example
         progress={0.75}
-        underlying={target}
+        underlying={[red]}
         keyframes={{ from: { boxShadow: base }, to: { boxShadow: target } }}
       />
     );
-    expect(await shadows()).toBe(await shadows('static'), ComparisonMode.ARRAY);
+    const result = await shadows();
+    expect(result.length).toBe(2);
+    expect(result[0].offsetX).toBe(40);
+    expect(result[1].offsetX).toBe(-20);
+    expect(result[1].inset).toBe(true);
+  });
+
+  test('views sharing to-only keyframes each start from their own list', async () => {
+    await render(<SharedExample />);
+    const first = await shadows('first');
+    const second = await shadows('second');
+    expect(first.length).toBe(1);
+    expect(first[0].offsetX).toBe(25);
+    expect(second.length).toBe(2);
+    expect(second[0].offsetX).toBe(25);
+    expect(second[1].offsetX).toBe(-15);
+    expect(second[1].color).toBe('#0000ffbf');
   });
 
   test('keyframe easing is applied once within its segment', async () => {
