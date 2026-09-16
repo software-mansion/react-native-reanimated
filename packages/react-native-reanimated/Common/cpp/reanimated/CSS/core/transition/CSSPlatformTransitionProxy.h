@@ -86,8 +86,6 @@ class CSSPlatformTransitionProxy {
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
   /// What the native animation shows at `timestamp`, retraced from the stored run.
   std::optional<PlatformValue> getCurrentValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
-  /// nullopt keeps the diff's own from-value, which the animation has painted past.
-  std::optional<folly::dynamic> getResumeValue(Tag viewTag, const std::string &propertyName, double timestamp) const;
 
   std::shared_ptr<CSSPlatformTransitionBackend> backend_;
   std::unordered_map<Tag, std::unordered_map<std::string, ActiveTransition>> active_;

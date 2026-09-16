@@ -1,6 +1,5 @@
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
 
-#include <jsi/JSIDynamic.h>
 #include <react/debug/react_native_assert.h>
 
 #include <utility>
@@ -142,16 +141,18 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
       routing.platform.insert(propertyName);
     } else {
       // platform -> loop migration cancels on the platform side.
-      std::optional<folly::dynamic> resumeFrom;
+      // Sampled before remove() drops the run this resumes from; nullopt keeps the
+      // diff's own from-value, which the animation has painted past.
+      std::optional<PlatformValue> resumeFrom;
       if (routing.platform.erase(propertyName) > 0) {
         if (hasValue) {
-          resumeFrom = getResumeValue(viewTag, propertyName, timestamp);
+          resumeFrom = getCurrentValue(viewTag, propertyName, timestamp);
         }
         remove(viewTag, propertyName);
       }
       routing.loop.insert(propertyName);
       if (hasValue) {
-        auto fromValue = resumeFrom ? jsi::valueFromDynamic(rt, *resumeFrom) : jsi::Value(rt, valueIt->second.first);
+        auto fromValue = resumeFrom ? platformValueToJSI(rt, *resumeFrom) : jsi::Value(rt, valueIt->second.first);
         loopConfig.changedProperties.emplace(
             propertyName, std::make_pair(std::move(fromValue), jsi::Value(rt, valueIt->second.second)));
       }
@@ -196,25 +197,17 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
       }
       routing.platform.erase(propertyName);
       // Read before remove() drops the run this resumes from.
-      const auto resumeFrom = getResumeValue(viewTag, propertyName, timestamp);
+      const auto resumeFrom = getCurrentValue(viewTag, propertyName, timestamp);
       remove(viewTag, propertyName);
       routing.loop.insert(propertyName);
       if (resumeFrom) {
-        loopDiffs.emplace(propertyName, std::make_pair(*resumeFrom, propertyDiff.second));
+        loopDiffs.emplace(propertyName, std::make_pair(platformValueToDynamic(*resumeFrom), propertyDiff.second));
         continue;
       }
     }
     loopDiffs.emplace(propertyName, propertyDiff);
   }
   return loopDiffs;
-}
-
-std::optional<folly::dynamic> CSSPlatformTransitionProxy::getResumeValue(
-    const Tag viewTag,
-    const std::string &propertyName,
-    const double timestamp) const {
-  const auto value = getCurrentValue(viewTag, propertyName, timestamp);
-  return value ? std::optional(platformValueToDynamic(*value)) : std::nullopt;
 }
 
 void CSSPlatformTransitionProxy::cancelAll(const Tag viewTag, const TransitionProperties &properties) {

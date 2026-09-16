@@ -148,6 +148,24 @@ double packColorChannels(const std::array<double, 4> &channels) {
   return static_cast<double>(packed);
 }
 
+jsi::Value platformValueToJSI(jsi::Runtime &rt, const PlatformValue &value) {
+  return std::visit(
+      [&rt](const auto &typedValue) -> jsi::Value {
+        using T = std::decay_t<decltype(typedValue)>;
+        if constexpr (std::is_same_v<T, double>) {
+          return jsi::Value(typedValue);
+        } else if constexpr (std::is_same_v<T, std::array<double, 2>>) {
+          jsi::Object size(rt);
+          size.setProperty(rt, "width", typedValue[0]);
+          size.setProperty(rt, "height", typedValue[1]);
+          return jsi::Value(std::move(size));
+        } else {
+          return jsi::Value(packColorChannels(typedValue));
+        }
+      },
+      value);
+}
+
 folly::dynamic platformValueToDynamic(const PlatformValue &value) {
   return std::visit(
       [](const auto &typedValue) -> folly::dynamic {
