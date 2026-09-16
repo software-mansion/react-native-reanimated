@@ -28,6 +28,15 @@ folly::dynamic UpdatesRegistry::get(const Tag tag) const {
   return it->second.second;
 }
 
+void UpdatesRegistry::mergeInto(const Tag tag, folly::dynamic &target) const {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  auto it = updatesRegistry_.find(tag);
+  if (it == updatesRegistry_.cend()) {
+    return;
+  }
+  target.update(it->second.second);
+}
+
 void UpdatesRegistry::remove(const Tag tag) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   removeTag(tag);

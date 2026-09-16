@@ -47,6 +47,7 @@ class UpdatesRegistry {
 
   virtual bool isEmpty() const;
   folly::dynamic get(Tag tag) const;
+  void mergeInto(Tag tag, folly::dynamic &target) const;
   void remove(Tag tag);
 
 #ifdef ANDROID

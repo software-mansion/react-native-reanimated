@@ -4,6 +4,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
+#include <reanimated/LayoutAnimations/StaleSynchronousPropsTracker.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
@@ -16,6 +17,7 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -83,13 +85,15 @@ struct TransactionMeta {
   std::vector<std::shared_ptr<LightNode>> containersToInsert;
   std::vector<std::shared_ptr<LightNode>> nodesToRestore;
   std::vector<std::shared_ptr<LightNode>> containersToRemove;
+  std::unordered_map<Tag, Tag> staleSnapshots;
 };
 
-struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
+struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::optional<ProgressTransition> transition_;
   mutable std::optional<UncommittedScreenPop> uncommittedScreenPop_;
   mutable std::shared_ptr<LightNode> topScreen_;
   mutable std::unordered_map<Tag, SharedContainer> sharedContainers_;
+  mutable std::unordered_set<Tag> hiddenViewTags_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
@@ -100,8 +104,11 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif
+  mutable StaleSynchronousPropsTracker staleSynchronousProps_;
+  void warnAboutStaleSynchronousProps(Tag tag, Tag staleTag, LayoutAnimationType type) const;
+  void warnIfSnapshotIsStale(const ShadowView &snapshot, const TransactionMeta &transaction) const;
 
-  LayoutAnimationsProxy_Experimental(SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies);
+  LayoutAnimationsProxy(SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies);
 
   void startEnteringAnimation(const std::shared_ptr<LightNode> &node, const std::shared_ptr<Serializable> &config)
       const;
@@ -132,11 +139,21 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
       const ShadowViewMutationList &mutations,
       TransactionMeta &transaction) const;
 
+  std::optional<ShadowView>
+  reparentLayoutAnimation(Tag tag, Tag parentTag, const ShadowView &newView, react::Point offset) const;
+
   void applyInitialMutationsToLightTree(const ShadowViewMutationList &mutations) const;
+  void updateLightNodeProps(
+      const std::shared_ptr<LightNode> &node,
+      const ShadowView &oldView,
+      const ShadowView &newView) const;
+  void resolveLightNodeProps(const std::shared_ptr<LightNode> &node) const;
   void initializeLightTree(const ShadowTreeRevision &baseRevision);
   bool isLightTreeInitialized() const {
     return lightNodes_.contains(surfaceId_);
   }
+
+  void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const override;
 
   void reconcileContradictedRemovals(const ShadowViewMutationList &mutations, ShadowViewMutationList &filteredMutations)
       const;
@@ -164,13 +181,16 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
 
+  void keepTransitioningViewsHidden(
+      ShadowViewMutationList &filteredMutations,
+      const PropsParserContext &propsParserContext) const;
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
   void startSurface(
       const facebook::react::ShadowTree &shadowTree,
       std::weak_ptr<const facebook::react::MountingOverrideDelegate> mountingOverrideDelegate) override;
   std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) override;
   std::optional<SurfaceId> onGestureCancel(int tag) override;
-  void surfaceDidUnmount() override;
+  void clearSurfaceState() const override;
 
   std::shared_ptr<LightNode> findActiveBoundary(const std::shared_ptr<LightNode> &node) const;
   std::shared_ptr<LightNode> findBoundaryGuess(const std::shared_ptr<LightNode> &node) const;
@@ -184,7 +204,10 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
 
   void removeSharedContainer(Tag containerTag, TransactionMeta &transaction) const;
 
-  std::vector<react::Point> getAbsolutePositionsForRootPathView(const std::shared_ptr<LightNode> &node) const;
+  std::vector<react::Point> getAbsolutePositionsForRootPathView(
+      const std::shared_ptr<LightNode> &node,
+      bool useViewsOnScreen) const;
+  const ShadowView &viewOnScreen(const std::shared_ptr<LightNode> &node) const;
 
   Tag getOrCreateContainer(
       const ShadowView &before,
@@ -199,7 +222,8 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
 
   std::optional<Transform> parseParentTransforms(
       const std::shared_ptr<LightNode> &node,
-      const std::vector<react::Point> &absolutePositions) const;
+      const std::vector<react::Point> &absolutePositions,
+      bool useViewsOnScreen) const;
   react::Transform resolveTransform(
       const LayoutMetrics &layoutMetrics,
       const Transform &transform,
@@ -235,7 +259,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
       ShadowViewMutationList mutations) const override;
 };
 
-std::shared_ptr<LayoutAnimationsProxyRegistry> createLayoutAnimationsProxyExperimentalRegistry(
+std::shared_ptr<LayoutAnimationsProxyRegistry> createLayoutAnimationsProxyDefaultRegistry(
     const LayoutAnimationsProxyDependencies &dependencies);
 
 } // namespace reanimated

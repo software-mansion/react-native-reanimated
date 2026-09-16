@@ -117,6 +117,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     skipByDefault: true,
   },
   {
+    testSuiteName: 'layout animation updates',
+    importTest: () => {
+      require('./tests/layoutAnimations/layout/propUpdates.test');
+    },
+  },
+  {
     testSuiteName: 'keyframe animations',
     importTest: () => {
       require('./tests/layoutAnimations/keyframe/basic.test');

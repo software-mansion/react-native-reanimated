@@ -18,6 +18,12 @@
 ### 🎉 New features
 
 - Add iOS Swift Package Manager support via `Package.swift` and SPM integration metadata in `react-native.config.js`. ([#10472](https://github.com/software-mansion/react-native-reanimated/pull/10472) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
+- Add a standalone networking module for Worklet Runtimes in Bundle Mode, with `XMLHttpRequest` for text and `arraybuffer` responses. ([#10493](https://github.com/software-mansion/react-native-reanimated/pull/10493) by [@tjzel](https://github.com/tjzel))
+- Add `Blob` and `FileReader` to the Worklets networking module, and `blob` and `arraybuffer` response types to `XMLHttpRequest`. ([#10494](https://github.com/software-mansion/react-native-reanimated/pull/10494) by [@tjzel](https://github.com/tjzel))
+- Add `fetch`, `Headers`, `Request` and `Response` to the Worklets networking module, backed by `whatwg-fetch`. ([#10495](https://github.com/software-mansion/react-native-reanimated/pull/10495) by [@tjzel](https://github.com/tjzel))
+- Add `FormData` to the Worklets networking module, with multipart encoding done in JavaScript. ([#10496](https://github.com/software-mansion/react-native-reanimated/pull/10496) by [@tjzel](https://github.com/tjzel))
+- Add `AbortController` and `AbortSignal` to the Worklets networking module. ([#10497](https://github.com/software-mansion/react-native-reanimated/pull/10497) by [@tjzel](https://github.com/tjzel))
+- Add the `enableNetworking` option to `createWorkletRuntime`. It defaults to `true` and is forced off on runtimes without the Event Loop. ([#10498](https://github.com/software-mansion/react-native-reanimated/pull/10498) by [@tjzel](https://github.com/tjzel))
 
 \[General] Per-runtime caching for RetainingSerializable
 

@@ -106,6 +106,13 @@ PropsMap UpdatesRegistryManager::collectProps() {
   return propsMap;
 }
 
+void UpdatesRegistryManager::mergeRegistryProps(const Tag viewTag, folly::dynamic &target) {
+  react_native_assert(isLockedByCurrentThread());
+  for (const auto &registry : registries_) {
+    registry->mergeInto(viewTag, target);
+  }
+}
+
 #ifdef ANDROID
 
 bool UpdatesRegistryManager::hasPropsToRevert() {

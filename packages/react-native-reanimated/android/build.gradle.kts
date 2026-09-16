@@ -109,12 +109,12 @@ fun getReanimatedStaticFeatureFlags(): String {
 }
 
 fun validateConflictingFeatureFlags(featureFlags: HashMap<String, String>) {
-    val androidSyncUiProps = featureFlags["ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS"] == "true"
+    val legacyLayoutAnimationsProxy = featureFlags["USE_LEGACY_LAYOUT_ANIMATIONS_PROXY"] == "true"
     val sharedElementTransitions = featureFlags["ENABLE_SHARED_ELEMENT_TRANSITIONS"] == "true"
 
-    if (androidSyncUiProps && sharedElementTransitions) {
+    if (legacyLayoutAnimationsProxy && sharedElementTransitions) {
         throw GradleException(
-            "[Reanimated] The feature flags `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. Please disable one of them in your package.json."
+            "[Reanimated] The feature flags `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. The legacy layout animations proxy does not support shared element transitions. Please disable one of them in your package.json."
         )
     }
 
