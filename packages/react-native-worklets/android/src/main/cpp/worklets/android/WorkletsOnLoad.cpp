@@ -3,7 +3,6 @@
 #include <worklets/android/AndroidUIScheduler.h>
 #include <worklets/android/AnimationFrameCallback.h>
 #include <worklets/android/JScriptBufferWrapper.h>
-#include <worklets/android/JWorkletRuntimeWrapper.h>
 #include <worklets/android/WorkletsModule.h>
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
@@ -12,8 +11,5 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
     worklets::AndroidUIScheduler::registerNatives();
     worklets::AnimationFrameCallback::registerNatives();
     worklets::JScriptBufferWrapper::registerNatives();
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-    worklets::JWorkletRuntimeWrapper::registerNatives();
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
   });
 }

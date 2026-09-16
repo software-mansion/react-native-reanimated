@@ -41,6 +41,12 @@ std::optional<PlatformValue> lerpPlatformValues(const PlatformValue &from, const
 /// Packs normalized [r, g, b, a] into the ARGB int RN's processColor commits.
 double packColorChannels(const std::array<double, 4> &channels);
 
+/// The value in the form the C++ loop takes: a number for scalars and colors,
+/// `{width, height}` for sizes. The jsi::Value form feeds the config path, the
+/// folly::dynamic form the pseudo-selector diffs.
+facebook::jsi::Value platformValueToJSI(facebook::jsi::Runtime &rt, const PlatformValue &value);
+folly::dynamic platformValueToDynamic(const PlatformValue &value);
+
 /// Parses a transition's endpoints, looking the property up once. Null/undefined
 /// falls back to its CSS default; nullopt means the platform can't express the
 /// pair, so it runs on the loop. jsi::Value is the config path, folly::dynamic the
