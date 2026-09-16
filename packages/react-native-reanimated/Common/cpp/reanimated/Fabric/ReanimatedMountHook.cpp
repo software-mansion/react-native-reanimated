@@ -73,6 +73,9 @@ void ReanimatedMountHook::shadowTreeDidUnmount(SurfaceId surfaceId, HighResTimeS
   if (layoutAnimationsProxyRegistry_) {
     layoutAnimationsProxyRegistry_->remove(surfaceId);
   }
+
+  auto lock = updatesRegistryManager_->lock();
+  viewStylesRepository_->removeSurface(surfaceId);
 }
 
 } // namespace reanimated
