@@ -42,8 +42,8 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
     std::erase(config.removedProperties, propertyName);
   }
 
-  auto loopConfig =
-      platformTransitionProxy_->processConfig(rt, getViewTag(), config, routing_, allowsPlatform(), timestamp);
+  auto loopConfig = platformTransitionProxy_->processConfig(
+      rt, getViewTag(), config, routing_, allowsPlatform(), platformAllowed_, timestamp);
 
   if (!loopConfig.empty()) {
     dropPending(loopConfig.removedProperties);
@@ -69,7 +69,7 @@ folly::dynamic CSSTransition::run(
   const auto timestamp = loop_->resolveTimestamp();
 
   auto loopDiffs = platformTransitionProxy_->processDynamicDiffs(
-      getViewTag(), propertyDiffs, pseudoLockedProperties_, routing_, allowsPlatform(), timestamp);
+      getViewTag(), propertyDiffs, pseudoLockedProperties_, routing_, allowsPlatform(), platformAllowed_, timestamp);
   if (loopDiffs.empty() && !loopTransition_) {
     return folly::dynamic::object();
   }
@@ -155,7 +155,7 @@ folly::dynamic CSSTransition::setPlatformAllowed(const bool allowed, const folly
   if (allowed) {
     return folly::dynamic::object();
   }
-  auto initialUpdate = demotePlatformRuns(lastUpdates, loop_->resolveTimestamp());
+  auto initialUpdate = demoteBorderDrawnRuns(lastUpdates, loop_->resolveTimestamp());
   pendingInitialUpdate_.update(initialUpdate);
   return initialUpdate;
 }
@@ -164,14 +164,14 @@ bool CSSTransition::allowsPlatform() const {
   // TODO: add support for events reported by the platform itself; until then
   // a view with transition callbacks keeps every property on the loop, where
   // timing and events already pair up.
-  return eventMask_ == 0 && platformAllowed_;
+  return eventMask_ == 0;
 }
 
-folly::dynamic CSSTransition::demotePlatformRuns(const folly::dynamic &lastUpdates, const double timestamp) {
+folly::dynamic CSSTransition::demoteBorderDrawnRuns(const folly::dynamic &lastUpdates, const double timestamp) {
   if (routing_.platform.empty()) {
     return folly::dynamic::object();
   }
-  auto demotion = platformTransitionProxy_->demoteAll(getViewTag(), routing_, timestamp);
+  auto demotion = platformTransitionProxy_->demoteBorderDrawn(getViewTag(), routing_, timestamp);
   if (demotion.diffs.empty()) {
     return folly::dynamic::object();
   }

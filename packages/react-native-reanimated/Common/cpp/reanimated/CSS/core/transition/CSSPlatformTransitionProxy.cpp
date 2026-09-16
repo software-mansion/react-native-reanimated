@@ -14,6 +14,10 @@ bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const
   return backend_ && backend_->canRoute(propertyName, easing);
 }
 
+bool CSSPlatformTransitionProxy::drawsWithBorder(const std::string &propertyName) const {
+  return backend_ && backend_->drawsWithBorder(propertyName);
+}
+
 const CSSPlatformTransitionProxy::ActiveTransition *CSSPlatformTransitionProxy::activeTransitionFor(
     const Tag viewTag,
     const std::string &propertyName) const {
@@ -109,6 +113,7 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
     const CSSTransitionConfig &config,
     CSSTransitionRouting &routing,
     const bool allowPlatform,
+    const bool layerAllowed,
     const double timestamp) {
   CSSTransitionConfig loopConfig;
 #ifndef NDEBUG
@@ -124,7 +129,8 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
     }
 #endif // NDEBUG
 
-    bool routable = allowPlatform && canRoute(propertyName, settings.easingConfig);
+    bool routable = allowPlatform && (layerAllowed || !drawsWithBorder(propertyName)) &&
+        canRoute(propertyName, settings.easingConfig);
     if (routable && hasValue) {
       const auto values = parsePlatformValues(rt, propertyName, valueIt->second.first, valueIt->second.second);
       // React commits the config path's target, so there is nothing to hold afterwards.
@@ -182,13 +188,14 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
     const TransitionProperties &pseudoLockedProperties,
     CSSTransitionRouting &routing,
     const bool allowPlatform,
+    const bool layerAllowed,
     const double timestamp) {
   PropertyValueDynamicDiffsMap loopDiffs;
   for (const auto &[propertyName, propertyDiff] : propertyDiffs) {
     // A platform-routed property keeps animating natively while the platform can
     // still express the toggled value; otherwise it migrates to the loop.
     if (routing.platform.contains(propertyName)) {
-      if (allowPlatform) {
+      if (allowPlatform && (layerAllowed || !drawsWithBorder(propertyName))) {
         const auto values = parsePlatformValues(propertyName, propertyDiff.first, propertyDiff.second);
         // Releasing the last selector targets the committed style, which needs no hold.
         const bool persistent = pseudoLockedProperties.contains(propertyName);
@@ -217,11 +224,17 @@ void CSSPlatformTransitionProxy::cancelAll(const Tag viewTag, const TransitionPr
   }
 }
 
-CSSPlatformTransitionProxy::Demotion
-CSSPlatformTransitionProxy::demoteAll(const Tag viewTag, CSSTransitionRouting &routing, const double timestamp) {
+CSSPlatformTransitionProxy::Demotion CSSPlatformTransitionProxy::demoteBorderDrawn(
+    const Tag viewTag,
+    CSSTransitionRouting &routing,
+    const double timestamp) {
   Demotion demotion;
-  const auto platformProperties = std::exchange(routing.platform, {});
+  const auto platformProperties = routing.platform;
   for (const auto &propertyName : platformProperties) {
+    if (!drawsWithBorder(propertyName)) {
+      continue;
+    }
+    routing.platform.erase(propertyName);
     routing.loop.insert(propertyName);
     // Read before remove() drops the run.
     if (const ActiveTransition *active = activeTransitionFor(viewTag, propertyName);

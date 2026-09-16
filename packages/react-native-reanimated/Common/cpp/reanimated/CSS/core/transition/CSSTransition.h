@@ -66,9 +66,9 @@ class CSSTransition {
 
   void setEventMask(CSSEventMask eventMask);
 
-  /// Whether the view can show platform-routed animations (JS mirrors the platform's rendering
-  /// rule per commit). Turning it off moves in-flight platform runs to the loop; the returned
-  /// first frame keeps them where they are.
+  /// Whether the platform draws the view's border on the view's own layer (JS mirrors its rule
+  /// per commit); off, the properties drawn with the border stay on the loop, and their
+  /// in-flight platform runs move there. The returned first frame keeps them where they are.
   folly::dynamic setPlatformAllowed(bool allowed, const folly::dynamic &lastUpdates);
 
  private:
@@ -91,7 +91,7 @@ class CSSTransition {
 
   CSSLoopTransition &ensureLoopTransition();
   bool allowsPlatform() const;
-  folly::dynamic demotePlatformRuns(const folly::dynamic &lastUpdates, double timestamp);
+  folly::dynamic demoteBorderDrawnRuns(const folly::dynamic &lastUpdates, double timestamp);
   void dropPending(const std::vector<std::string> &propertyNames);
   void scheduleLoop(double timestamp);
   void observeMilestones(CSSLoopTransition &loopTransition);

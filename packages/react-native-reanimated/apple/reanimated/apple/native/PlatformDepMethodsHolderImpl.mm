@@ -173,6 +173,13 @@ class REACSSPlatformTransitionBackend : public css::CSSPlatformTransitionBackend
     [platformTransitions_ stopTransitionForTag:viewTag propertyName:propertyName];
   }
 
+  /// RN draws these on the view's own layer only while useCoreAnimationBorderRendering holds;
+  /// opacity and the shadow properties sit on that layer either way.
+  bool drawsWithBorder(const std::string &propertyName) const override
+  {
+    return propertyName == "backgroundColor" || propertyName == "borderColor" || propertyName == "borderRadius";
+  }
+
  private:
   REACSSPlatformTransitions *platformTransitions_;
 };
