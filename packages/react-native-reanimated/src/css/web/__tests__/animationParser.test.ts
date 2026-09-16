@@ -60,4 +60,37 @@ describe('processKeyframeDefinitions (web)', () => {
       'from { animation-timing-function: ease-in; opacity: 0 } to { opacity: 1 }'
     );
   });
+
+  test('serializes backgroundImage gradient objects to CSS', () => {
+    expect(
+      processKeyframeDefinitions({
+        from: {
+          backgroundImage: [
+            {
+              type: 'linear-gradient',
+              direction: '45deg',
+              colorStops: [{ color: 'red' }, { color: 'blue' }],
+            },
+          ],
+        },
+        to: {
+          backgroundImage: [
+            {
+              type: 'radial-gradient',
+              shape: 'circle',
+              size: { x: 30, y: 40 },
+              position: { top: '10%', left: '20%' },
+              colorStops: [
+                { color: 'red', positions: [10] },
+                { color: 'blue' },
+              ],
+            },
+          ],
+        },
+      })
+    ).toBe(
+      'from { background-image: linear-gradient(45deg, red, blue) } ' +
+        'to { background-image: radial-gradient(circle 40px at left 20% top 10%, red 10px, blue) }'
+    );
+  });
 });

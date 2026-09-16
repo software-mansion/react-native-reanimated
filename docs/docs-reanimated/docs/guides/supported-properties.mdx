@@ -81,7 +81,7 @@ For animating `react-native-svg` components, see [Animating SVG](/docs/guides/an
   | aspectRatio             | <Yes/>  | <Yes/> | <Yes/> |
   | boxSizing               | <No/>   | <No/>  | <Yes/> |
   | backgroundColor         | <Yes/>  | <Yes/> | <Yes/> |
-  | backgroundImage         | <Yes/>  | <Yes/> | <No/>  |
+  | backgroundImage         | <Yes/>  | <Yes/> | <Yes/> |
   | color                   | <Yes/>  | <Yes/> | <Yes/> |
   | textDecorationColor     | <No/>   | <Yes/> | <Yes/> |
   | textShadowColor         | <Yes/>  | <Yes/> | <Yes/> |
@@ -260,7 +260,7 @@ We highly recommend to use [the `boxShadow` property](https://reactnative.dev/bl
 
 ### Animating background image gradients
 
-The `backgroundImage` style property (linear and radial gradients, available since React Native 0.87) can be animated with CSS animations and transitions. Two gradients interpolate smoothly when they have the same type, the same kind of direction (an angle or the same keyword), for radial gradients the same shape, the same kind of size (a keyword or two lengths) and the same position sides, and color stops that pair up one to one: the same count, each pair either both with or both without an explicit position, in the same unit. Any other pair, including a gradient and no gradient at all, switches discretely: in the middle of an animation, and at the start of a transition unless `transitionBehavior: 'allow-discrete'` moves the switch to the middle. A keyframe that omits `backgroundImage` starts from or ends at the view's own gradient. Color stops using `PlatformColor` or `DynamicColorIOS` are passed to React Native unchanged and always switch discretely.
+The `backgroundImage` style property (linear and radial gradients, available since React Native 0.87) can be animated with CSS animations and transitions. Two gradients interpolate smoothly when they have the same type, the same kind of direction (an angle or the same keyword), for radial gradients the same shape, the same kind of size (a keyword or two lengths) and the same position sides, and color stops that pair up one to one: the same count, each pair either both with or both without an explicit position, in the same unit. Any other pair, including a gradient and no gradient at all, switches discretely: in the middle of an animation, and at the start of a transition unless `transitionBehavior: 'allow-discrete'` moves the switch to the middle. A keyframe that omits `backgroundImage` starts from or ends at the view's own gradient. Color stops using `PlatformColor` or `DynamicColorIOS` are passed to React Native unchanged and always switch discretely. On web the browser decides: current browsers switch `background-image` discretely even between gradients of the same structure, and a transition needs a string `backgroundImage` in the base style because react-native-web does not accept the object form there.
 
 ### Animating image tint color
 

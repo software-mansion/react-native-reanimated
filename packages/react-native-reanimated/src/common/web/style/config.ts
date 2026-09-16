@@ -7,6 +7,7 @@ import {
   textShadowBuilder,
 } from './builders';
 import {
+  processBackgroundImageWeb,
   processBoxShadowWeb,
   processColor,
   processFilterWeb,
@@ -192,8 +193,8 @@ export const PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   backfaceVisibility: true,
   opacity: true,
   mixBlendMode: true,
-  // eslint-disable-next-line camelcase
-  experimental_backgroundImage: false, // TODO
+  // @ts-ignore Available since RN 0.87
+  backgroundImage: { process: processBackgroundImageWeb },
 
   /** Typography */
   // Font
