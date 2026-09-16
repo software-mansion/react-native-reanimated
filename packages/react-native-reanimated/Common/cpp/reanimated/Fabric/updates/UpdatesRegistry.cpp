@@ -50,7 +50,6 @@ void UpdatesRegistry::flush(UpdatesBatch &updatesBatch) {
   }
 }
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
 void UpdatesRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   flush(updatesBatch);
@@ -160,7 +159,6 @@ void UpdatesRegistry::addJSIPropsToAnimatedPropsBatch(
   animatedPropsBuilder_.storeJSI(rt, props);
   addAnimatedPropsToBatch(shadowNodeFamily, animatedPropsBuilder_.get(), hasLayoutUpdates);
 }
-#endif
 
 UpdatesBatch UpdatesRegistry::getPendingUpdates() {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
