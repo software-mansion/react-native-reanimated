@@ -15,26 +15,8 @@ const AnimatableRefExample: React.FC = () =>
   React.createElement(require('./AnimatableRefExample').default as React.FC);
 const AnimatedPropsExample: React.FC = () =>
   React.createElement(require('./AnimatedPropsExample').default as React.FC);
-const AnimatedSensorAccelerometerExample: React.FC = () =>
-  React.createElement(
-    require('./AnimatedSensorAccelerometerExample').default as React.FC
-  );
-const AnimatedSensorGravityExample: React.FC = () =>
-  React.createElement(
-    require('./AnimatedSensorGravityExample').default as React.FC
-  );
-const AnimatedSensorGyroscopeExample: React.FC = () =>
-  React.createElement(
-    require('./AnimatedSensorGyroscopeExample').default as React.FC
-  );
-const AnimatedSensorMagneticFieldExample: React.FC = () =>
-  React.createElement(
-    require('./AnimatedSensorMagneticFieldExample').default as React.FC
-  );
-const AnimatedSensorRotationExample: React.FC = () =>
-  React.createElement(
-    require('./AnimatedSensorRotationExample').default as React.FC
-  );
+const AnimatedSensorExample: React.FC = () =>
+  React.createElement(require('./AnimatedSensorExample').default as React.FC);
 const ArticleProgressExample: React.FC = () =>
   React.createElement(require('./ArticleProgressExample').default as React.FC);
 const BBExample: React.FC = () =>
@@ -544,30 +526,10 @@ const ALL_EXAMPLES: Record<string, Example> = {
     section: SHOW_CASES,
     screen: PlanetsExample,
   },
-  AnimatedSensorAccelerometerExample: {
-    icon: '🚀',
-    title: 'useAnimatedSensor - accelerometer',
-    screen: AnimatedSensorAccelerometerExample,
-  },
-  AnimatedSensorGyroscopeExample: {
-    icon: '⚖️',
-    title: 'useAnimatedSensor - gyroscope',
-    screen: AnimatedSensorGyroscopeExample,
-  },
-  AnimatedSensorGravityExample: {
-    icon: '🌎',
-    title: 'useAnimatedSensor - gravity',
-    screen: AnimatedSensorGravityExample,
-  },
-  AnimatedSensorMagneticFieldExample: {
-    icon: '🧲',
-    title: 'useAnimatedSensor - magnetic field',
-    screen: AnimatedSensorMagneticFieldExample,
-  },
-  AnimatedSensorRotationExample: {
-    icon: '🔄',
-    title: 'useAnimatedSensor - rotation',
-    screen: AnimatedSensorRotationExample,
+  AnimatedSensorExample: {
+    icon: '📡',
+    title: 'useAnimatedSensor',
+    screen: AnimatedSensorExample,
   },
   FrameCallbackExample: {
     icon: '🗣',
