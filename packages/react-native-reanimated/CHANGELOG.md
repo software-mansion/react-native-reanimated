@@ -55,6 +55,7 @@
 
 ### 💡 Others
 
+- Replace ESLint with oxlint for JavaScript and TypeScript linting. ([#10584](https://github.com/software-mansion/react-native-reanimated/pull/10584) by [@tshmieldev](https://github.com/tshmieldev))
 - Deduplicate the native CSS transition state machine across Android and iOS. ([#10356](https://github.com/software-mansion/react-native-reanimated/pull/10356) by [@MatiPl01](https://github.com/MatiPl01))
 - Move the `IOS_CSS_CORE_ANIMATION` and `ANDROID_CSS_PLATFORM_TRANSITIONS` checks out of the shared C++ code: each platform now supplies its native CSS transition backend under its own flag. No behavior change. ([#10546](https://github.com/software-mansion/react-native-reanimated/pull/10546) by [@MatiPl01](https://github.com/MatiPl01))
 - Added Jest and runtime tests for the settled props unprocessors (colors, `boxShadow`, `backgroundImage`). `unprocessProps` is now exported. ([#10545](https://github.com/software-mansion/react-native-reanimated/pull/10545) by [@tshmieldev](https://github.com/tshmieldev))
