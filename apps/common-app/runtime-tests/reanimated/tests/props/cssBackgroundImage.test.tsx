@@ -64,11 +64,13 @@ function Example({
   fill = 'none',
   keyframes,
   progress = 0.2,
+  reference,
   underlying,
 }: {
   keyframes: CSSAnimationKeyframes;
   progress?: number;
   underlying?: BackgroundImage;
+  reference?: BackgroundImage;
   finish?: boolean;
   fill?: 'none' | 'forwards';
 }) {
@@ -92,7 +94,11 @@ function Example({
       />
       <Animated.View
         ref={staticRef}
-        style={{ backgroundImage: underlying, height: 80, width: 80 }}
+        style={{
+          backgroundImage: reference ?? underlying,
+          height: 80,
+          width: 80,
+        }}
       />
     </View>
   );
@@ -130,6 +136,10 @@ function TransitionExample({
 async function gradients(name = 'animated') {
   await wait(100);
   return await getTestComponent(name).getAnimatedStyle('backgroundImage');
+}
+
+function isResolvedColor(color: string) {
+  return /^#[0-9a-f]{8}$/.test(color);
 }
 
 function firstLayer(json: string) {
@@ -364,7 +374,7 @@ describe('CSS backgroundImage', () => {
     await render(
       <Example
         progress={0.75}
-        underlying={[nativeColorStop]}
+        reference={[nativeColorStop]}
         keyframes={{
           from: { backgroundImage: [redToBlue] },
           to: { backgroundImage: [nativeColorStop] },
@@ -374,6 +384,7 @@ describe('CSS backgroundImage', () => {
     const layer = firstLayer(await gradients());
     const nativeColor = firstLayer(await gradients('static')).colorStops[0]
       .color;
+    expect(isResolvedColor(nativeColor)).toBe(true);
     expect(nativeColor).not.toBe(RED);
     expect(layer.colorStops[0].color).toBe(nativeColor);
     expect(layer.colorStops[1].color).toBe(RED);
@@ -401,6 +412,7 @@ describe('CSS backgroundImage', () => {
       const layer = firstLayer(await gradients());
       const nativeColor = firstLayer(await gradients('static')).colorStops[0]
         .color;
+      expect(isResolvedColor(nativeColor)).toBe(true);
       expect(layer.colorStops[0].color).toBe(
         progress < 0.5 ? nativeColor : GREEN
       );
