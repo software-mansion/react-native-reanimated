@@ -4,6 +4,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
+#include <reanimated/LayoutAnimations/StaleSynchronousPropsTracker.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
@@ -16,6 +17,7 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -83,6 +85,7 @@ struct TransactionMeta {
   std::vector<std::shared_ptr<LightNode>> containersToInsert;
   std::vector<std::shared_ptr<LightNode>> nodesToRestore;
   std::vector<std::shared_ptr<LightNode>> containersToRemove;
+  std::unordered_map<Tag, Tag> staleSnapshots;
 };
 
 struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
@@ -100,6 +103,9 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif
+  mutable StaleSynchronousPropsTracker staleSynchronousProps_;
+  void warnAboutStaleSynchronousProps(Tag tag, Tag staleTag, LayoutAnimationType type) const;
+  void warnIfSnapshotIsStale(const ShadowView &snapshot, const TransactionMeta &transaction) const;
 
   LayoutAnimationsProxy_Experimental(SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies);
 
@@ -137,6 +143,8 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon {
   bool isLightTreeInitialized() const {
     return lightNodes_.contains(surfaceId_);
   }
+
+  void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const override;
 
   void reconcileContradictedRemovals(const ShadowViewMutationList &mutations, ShadowViewMutationList &filteredMutations)
       const;

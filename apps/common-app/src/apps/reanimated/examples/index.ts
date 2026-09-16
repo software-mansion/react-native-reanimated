@@ -25,6 +25,14 @@ const BBExample: React.FC = () =>
   );
 const BokehExample: React.FC = () =>
   React.createElement(require('./BokehExample').default as React.FC);
+const AnimatedTransformExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/AnimatedTransform').default
+  );
+const LightTreeErasureExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/LightTreeErasure').default
+  );
 const BorderRadiiExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/BorderRadii').default
@@ -291,6 +299,10 @@ const SyncBackToReactExample: React.FC = () =>
   React.createElement(require('./SyncBackToReactExample').default as React.FC);
 const SynchronousPropsExample: React.FC = () =>
   React.createElement(require('./SynchronousPropsExample').default as React.FC);
+const SyncPropsLayoutAnimationExample: React.FC = () =>
+  React.createElement(
+    require('./SyncPropsLayoutAnimationExample').default as React.FC
+  );
 const SynchronousPropsOverwriteExample: React.FC = () =>
   React.createElement(
     require('./SynchronousPropsOverwriteExample').default as React.FC
@@ -510,6 +522,14 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Animate synchronous props',
     section: REGRESSIONS,
     screen: SynchronousPropsExample,
+  },
+  SyncPropsLayoutAnimationExample: {
+    title: 'Sync Props Layout Animation',
+    screen: SyncPropsLayoutAnimationExample,
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
   },
   SynchronousPropsOverwriteExample: {
     icon: '⚡',
@@ -909,6 +929,22 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: BorderRadiiExample,
     shouldWork: {
       ios: false, // broken on back gesture
+      android: true,
+    },
+  },
+  AnimatedTransformExample: {
+    title: '[SET] Animated Transform',
+    screen: AnimatedTransformExample,
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  LightTreeErasureExample: {
+    title: '[SET] Light Tree Erasure Repro',
+    screen: LightTreeErasureExample,
+    shouldWork: {
+      ios: true,
       android: true,
     },
   },
