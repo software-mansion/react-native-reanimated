@@ -197,7 +197,7 @@ The button drifts between colors over 600ms, but snaps down in 100ms when presse
 
 Pseudo selectors work on [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components too. SVG attributes such as `fill` or `r` are component props rather than React Native `style` keys, so their pseudo objects go in `animatedProps`, not in `style`. For everything else about animating SVG, see [Animating SVG](/docs/guides/animating-svg).
 
-Give every animated attribute a resting value, either as `default` inside the pseudo object or as the plain prop - both work, and `default` wins when you write both. With neither, the attribute falls back to its own default, which for `r` means the shape renders at `0`.
+Give every animated attribute its resting value as `default` inside the pseudo object. The pseudo object owns the attribute, so a plain prop of the same name is ignored, and without `default` the attribute falls back to its own default, which for `r` means the shape renders at `0`.
 
 import PseudoSelectorsSvg from '@site/src/examples/css-transitions/PseudoSelectorsSvg';
 import PseudoSelectorsSvgSrc from '!!raw-loader!@site/src/examples/css-transitions/PseudoSelectorsSvg';

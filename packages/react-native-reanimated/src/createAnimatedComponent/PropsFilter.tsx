@@ -116,11 +116,11 @@ export class PropsFilter implements IPropsFilter {
             const animatedPropValue = animatedProps[animatedPropKey];
             if (isPseudoSelectorValue(animatedPropValue)) {
               hasPseudoSelectors = true;
-              // Forward only the resting value; pseudo states are driven by
-              // the CSS manager, like pseudo values in style are.
-              if (animatedPropValue.default !== undefined) {
-                props[animatedPropKey] = animatedPropValue.default;
-              }
+              // The pseudo object owns the prop: the host gets its resting
+              // value only, so a plain prop of the same name is dropped and
+              // without `default` the prop rests at its own default value.
+              // Pseudo states are driven by the CSS manager.
+              props[animatedPropKey] = animatedPropValue.default;
               continue;
             }
             props[animatedPropKey] = animatedPropValue;
