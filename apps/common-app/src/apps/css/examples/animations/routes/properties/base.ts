@@ -154,7 +154,6 @@ const layoutAndPositioningRoutes = {
 const appearanceRoutes = {
   BackgroundImage: {
     Component: baseAnimatedProperties.appearance.BackgroundImage,
-    labelTypes: ['iOS', 'Android'],
     name: 'Background Image',
   },
   Borders: {
