@@ -30,6 +30,9 @@ class SimpleValueInterpolator : public ValueInterpolator {
 
   std::shared_ptr<CSSValue> createValue(const folly::dynamic &value) const override;
 
+  bool canInterpolateValue(const std::shared_ptr<CSSValue> &fromValue, const std::shared_ptr<CSSValue> &toValue)
+      const override;
+
   folly::dynamic interpolateValue(
       double progress,
       const std::shared_ptr<CSSValue> &fromValue,

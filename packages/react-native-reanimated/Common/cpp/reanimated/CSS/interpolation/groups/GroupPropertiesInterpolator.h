@@ -19,6 +19,10 @@ class GroupPropertiesInterpolator : public PropertyInterpolator {
   folly::dynamic getFirstKeyframeValue() const override;
   folly::dynamic getLastKeyframeValue() const override;
 
+  bool canInterpolate(
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const override;
+
   folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
