@@ -719,6 +719,7 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
   const auto &targetLayoutMetrics = (useViewsOnScreen ? viewOnScreen(node) : node->current).layoutMetrics;
   auto currentNode = node;
   while (currentNode) {
+    resolveLightNodeProps(currentNode);
     const auto &view = useViewsOnScreen ? viewOnScreen(currentNode) : currentNode->current;
     const auto &props = static_cast<const ViewProps &>(*view.props);
     auto origin = props.transformOrigin;
