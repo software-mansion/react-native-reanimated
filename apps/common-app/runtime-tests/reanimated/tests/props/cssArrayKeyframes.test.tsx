@@ -75,24 +75,39 @@ function Example({
   );
 }
 
-// Two running views share one set of keyframes and the interpolator behind
-// it, so each frame resolves the omitted endpoint against a different list.
+// Views with the same inline keyframes share one registry entry and the
+// interpolator behind it, so each frame resolves the omitted endpoint against
+// a different underlying list.
+function SharedView({
+  name,
+  boxShadow,
+}: {
+  name: string;
+  boxShadow: Array<BoxShadowValue>;
+}) {
+  const ref = useTestRef(name);
+  return (
+    <Animated.View
+      ref={ref}
+      style={{
+        animationDelay: -250000,
+        animationDuration: 1000000,
+        animationFillMode: 'both',
+        animationName: { to: { boxShadow: [green] } },
+        animationTimingFunction: steps(4, 'end'),
+        boxShadow,
+        height: 80,
+        width: 80,
+      }}
+    />
+  );
+}
+
 function SharedExample() {
-  const firstRef = useTestRef('first');
-  const secondRef = useTestRef('second');
-  const style: CSSStyle = {
-    animationDelay: -250000,
-    animationDuration: 1000000,
-    animationFillMode: 'both',
-    animationName: { to: { boxShadow: [green] } },
-    animationTimingFunction: steps(4, 'end'),
-    height: 80,
-    width: 80,
-  };
   return (
     <View>
-      <Animated.View ref={firstRef} style={{ ...style, boxShadow: [red] }} />
-      <Animated.View ref={secondRef} style={{ ...style, boxShadow: base }} />
+      <SharedView name="first" boxShadow={[red]} />
+      <SharedView name="second" boxShadow={base} />
     </View>
   );
 }
