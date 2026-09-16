@@ -147,6 +147,12 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   }
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
   TransactionMeta transaction;
+  const bool removesRootChildren = std::ranges::any_of(mutations, [this](const auto &mutation) {
+    return mutation.type == ShadowViewMutation::Remove && mutation.parentTag == surfaceId_;
+  });
+  if (removesRootChildren) {
+    transaction.surfaceDropped = std::exchange(surfaceToRemove_, false);
+  }
   auto &filteredMutations = transaction.filteredMutations;
   auto rootChildCount = static_cast<int>(lightNodes_[surfaceId_]->children.size());
   const bool flushStructuralMutations = shouldFlushStructuralMutations();
@@ -713,7 +719,7 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(
   ReanimatedSystraceSection s("handleSubtreeRemoval");
   const StartAnimationsRecursivelyConfig config = {
       .shouldRemoveSubviewsWithoutAnimations = true,
-      .shouldAnimate = true,
+      .shouldAnimate = !transaction.surfaceDropped,
       .isScreenPop = false,
   };
   if (startAnimationsRecursively(node, transaction, config)) {
@@ -950,6 +956,11 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
   }
 
   return wantAnimateExit;
+}
+
+void LayoutAnimationsProxy::shadowTreeWillCommit(const bool isSurfaceRemoval) {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  surfaceToRemove_ = isSurfaceRemoval;
 }
 
 void LayoutAnimationsProxy::clearSurfaceState() const {

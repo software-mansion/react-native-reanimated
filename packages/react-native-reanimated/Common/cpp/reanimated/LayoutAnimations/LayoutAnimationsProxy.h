@@ -77,6 +77,7 @@ using CollectedTransitions = std::vector<std::pair<SharedTag, CollectedTransitio
 struct TransactionMeta {
   ShadowViewMutationList filteredMutations;
   ShadowViewMutationList teardownMutations;
+  bool surfaceDropped = false;
   CollectedTransitionMap transitionMap;
   CollectedTransitions transitions;
   std::vector<PendingNodeAnimation> layout;
@@ -97,6 +98,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
+  mutable bool surfaceToRemove_ = false;
 #ifdef ANDROID
   mutable bool cleanupPullScheduled_ = false;
 #endif
@@ -190,6 +192,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       std::weak_ptr<const facebook::react::MountingOverrideDelegate> mountingOverrideDelegate) override;
   std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) override;
   std::optional<SurfaceId> onGestureCancel(int tag) override;
+  void shadowTreeWillCommit(bool isSurfaceRemoval) override;
   void clearSurfaceState() const override;
 
   std::shared_ptr<LightNode> findActiveBoundary(const std::shared_ptr<LightNode> &node) const;
