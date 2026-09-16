@@ -67,6 +67,10 @@ const CSSPlatformTransitions::ActiveTransition *CSSPlatformTransitions::activeTr
   return activeIt != propertiesIt->second.end() ? &activeIt->second : nullptr;
 }
 
+bool CSSPlatformTransitions::canRoute(const std::string &propertyName, const css::EasingConfig & /*easing*/) const {
+  return platformPropertyId(propertyName).has_value();
+}
+
 bool CSSPlatformTransitions::applyTransition(
     const Tag viewTag,
     const std::string &propertyName,

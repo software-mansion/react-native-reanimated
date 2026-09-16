@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
+#include <reanimated/CSS/core/transition/CSSPlatformTransitionBackend.h>
 #include <reanimated/CSS/utils/platform.h>
 #include <reanimated/CSS/utils/reversingShortening.h>
 #include <reanimated/android/CSS/CSSPlatformEasings.h>
@@ -19,7 +20,8 @@ namespace reanimated {
 
 using namespace facebook::react;
 
-class CSSPlatformTransitions {
+/// Drives CSS transitions through an ObjectAnimator writing straight to the view.
+class CSSPlatformTransitions : public css::CSSPlatformTransitionBackend {
  public:
   /// False means the property falls back to the loop.
   using AnimateFunction = std::function<bool(
@@ -35,6 +37,10 @@ class CSSPlatformTransitions {
 
   CSSPlatformTransitions(AnimateFunction animate, RemoveFunction remove, std::shared_ptr<CSSPlatformEasings> easings);
 
+  /// Every easing routes (a TimeInterpolator carries any curve); only properties
+  /// with a Kotlin writer do.
+  bool canRoute(const std::string &propertyName, const css::EasingConfig &easing) const override;
+
   /// A null `settings` marks the pseudo-selector toggle path, which carries none of
   /// its own and reuses whatever the last config apply stored. A settings-only config
   /// change does not re-apply, so those can be a revision behind.
@@ -45,13 +51,13 @@ class CSSPlatformTransitions {
       const css::PlatformValue &toValue,
       const css::CSSTransitionPropertySettings *settings,
       bool persistent,
-      double timestamp);
+      double timestamp) override;
 
-  void removeTransition(Tag viewTag, const std::string &propertyName);
+  void removeTransition(Tag viewTag, const std::string &propertyName) override;
 
   /// nullopt after a non-reversing interruption, which resumed from the live view value.
   std::optional<css::PlatformValue> getCurrentValue(Tag viewTag, const std::string &propertyName, double timestamp)
-      const;
+      const override;
 
  private:
   struct ActiveTransition {
