@@ -22,13 +22,14 @@ using PlatformValue = std::variant<double, std::array<double, 2>, std::array<dou
 /// Properties the Android backend animates natively; the index is the id the JNI seam
 /// carries and cssPropertyWriterFor switches on. A new one also needs a traitsFor() entry
 /// in platform.cpp and a writer, or its endpoints never parse and it stays on the loop.
-/// borderWidth affects layout, so it stays on the loop; shadowColor (API 28+) is not
-/// routed yet.
-inline constexpr std::array<std::string_view, 4> kAndroidPlatformProperties{
+/// borderWidth affects layout, so it stays on the loop; the writer declines shadowColor
+/// below API 28.
+inline constexpr std::array<std::string_view, 5> kAndroidPlatformProperties{
     "opacity",
     "backgroundColor",
     "borderColor",
     "borderRadius",
+    "shadowColor",
 };
 #endif // ANDROID
 
