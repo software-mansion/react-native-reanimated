@@ -689,17 +689,15 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
       viewPosition -= data.contentOffset;
     }
     const auto &view = useViewsOnScreen ? viewOnScreen(currentNode) : currentNode->current;
-    if (!strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
-      const auto &parent = currentNode->parent.lock();
-      react_native_assert(parent && "Parent node is nullptr");
-
+    const auto parent = currentNode->parent.lock();
+    if (parent && !strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
       const auto &parentView = useViewsOnScreen ? viewOnScreen(parent) : parent->current;
       const float headerHeight = parentView.layoutMetrics.frame.size.height - view.layoutMetrics.frame.size.height;
       viewPosition.y += headerHeight;
     }
     viewPosition += view.layoutMetrics.frame.origin;
     viewsAbsolutePositions.emplace_back(viewPosition);
-    currentNode = currentNode->parent.lock();
+    currentNode = parent;
   }
   for (int i = static_cast<int>(viewsAbsolutePositions.size()) - 2; i >= 0; --i) {
     viewsAbsolutePositions[i] += viewsAbsolutePositions[i + 1];
