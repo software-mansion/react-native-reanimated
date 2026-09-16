@@ -165,28 +165,29 @@ Routing is decided per property, so a single transition may run partly on the pl
 
 #### Properties routed to the platform
 
-| Property          |    iOS    |  Android  |
-| ----------------- | :-------: | :-------: |
-| `opacity`         |    ✅     |    ✅     |
-| `backgroundColor` |    ✅     |    ❌     |
-| `borderColor`     |    ✅     |    ❌     |
-| `borderRadius`    |    ✅     |    ❌     |
-| `borderWidth`     |    ✅     |    ❌     |
-| `shadowColor`     |    ✅     |    ❌     |
-| `shadowOffset`    |    ✅     |    ❌     |
-| `shadowOpacity`   |    ✅     |    ❌     |
-| `shadowRadius`    |    ✅     |    ❌     |
+Each cell gives the Reanimated version since which the property is routed to the platform; a cross means it runs on the animation loop.
 
-Properties that aren't routed keep running on the animation loop, which supports all of them. Android routes `opacity` for now, support for more properties will be added in the future. `shadowOffset`, `shadowOpacity` and `shadowRadius` are iOS-only styles in React Native.
+| Property          |       iOS       |     Android      |
+| ----------------- | :-------------: | :--------------: |
+| `opacity`         |      4.4.0      |      4.6.0       |
+| `backgroundColor` |      4.5.0      |      4.7.0       |
+| `borderColor`     |      4.5.0      |      4.7.0       |
+| `borderRadius`    | 4.5.0 (numeric) | 4.7.0 (numeric)  |
+| `shadowColor`     |      4.5.0      | 4.7.0 (API 28+)  |
+| `shadowOffset`    |      4.5.0      |        ❌        |
+| `shadowOpacity`   |      4.5.0      |        ❌        |
+| `shadowRadius`    |      4.5.0      |        ❌        |
+
+Properties that aren't routed keep running on the animation loop, which supports all of them. `borderRadius` is routed only when it is a number, so a percentage value runs on the loop. On Android, `shadowColor` is routed on API 28 (Android 9) and newer; older versions keep it on the loop. `shadowOffset`, `shadowOpacity` and `shadowRadius` are iOS-only styles in React Native.
 
 :::warning
-Known limitation on iOS. `backgroundColor`, `borderColor`, `borderWidth` and `borderRadius` are routed even when React Native draws them on separate layers rather than on the view's own one. The routed animation doesn't reach those layers, so the new value shows up at once instead of animating. React Native keeps the four properties on the view's own layer only when:
+Known limitation on iOS. `backgroundColor`, `borderColor` and `borderRadius` are routed even when React Native draws them on separate layers rather than on the view's own one. The routed animation doesn't reach those layers, so the new value shows up at once instead of animating. React Native keeps the three properties on the view's own layer only when:
 
 - the border has the same color, the same width and the solid style on every side,
 - the radius is the same on every corner and circular rather than elliptical,
 - the view either has no visible border or clips its children with `overflow: 'hidden'`.
 
-All four share that layer, so this is easiest to hit with a combination of them. A view with a visible border and the default `overflow` doesn't animate its `backgroundColor` either, even though the transition changes nothing about the border. `opacity` and the `shadow*` properties aren't affected, React Native always keeps them on the view's own layer.
+All three share that layer, so this is easiest to hit with a combination of them. A view with a visible border and the default `overflow` doesn't animate its `backgroundColor` either, even though the transition changes nothing about the border. `opacity` and the `shadow*` properties aren't affected, React Native always keeps them on the view's own layer.
 :::
 
 ## Static feature flags

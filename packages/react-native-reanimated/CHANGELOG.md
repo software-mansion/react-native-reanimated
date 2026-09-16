@@ -19,6 +19,10 @@
 
 ### 🐛 Bug fixes
 
+- Warn only once per caller when dependencies are passed to native hooks. ([#10562](https://github.com/software-mansion/react-native-reanimated/pull/10562) by [@tshmieldev](https://github.com/tshmieldev))
+- Keep `borderWidth` CSS transitions on the animation loop on iOS, so the children move with the border and no stray black border is drawn. ([#10569](https://github.com/software-mansion/react-native-reanimated/pull/10569) by [@MatiPl01](https://github.com/MatiPl01))
+- Resume a `shadowOffset` CSS transition from its in-flight value when it moves from Core Animation to the C++ loop, instead of restarting from the previously committed offset. ([#10564](https://github.com/software-mansion/react-native-reanimated/pull/10564) by [@MatiPl01](https://github.com/MatiPl01))
+- Fix CSS platform transitions ignoring slow animations: on iOS they snapped to the end state under the Simulator's Slow Animations, and on Android they played at full speed under the dev-menu toggle. ([#10548](https://github.com/software-mansion/react-native-reanimated/pull/10548) by [@MatiPl01](https://github.com/MatiPl01))
 - Fix the Release Android build failing on an unused variable in `SharedTransitions.cpp`, and the `backgroundImage` style types failing to compile with React Native 0.85, 0.86 and nightly. ([#10558](https://github.com/software-mansion/react-native-reanimated/pull/10558) by [@tjzel](https://github.com/tjzel))
 - Keep a delayed CSS transition at its start value when it is interrupted or reversed before its delay ends; the platform path used to evaluate the easing at progress 0, which is the end value for `step-start`. ([#10356](https://github.com/software-mansion/react-native-reanimated/pull/10356) by [@MatiPl01](https://github.com/MatiPl01))
 - Restore the underlying native style when a running CSS animation is removed or its `animationName` becomes `none`. ([#10528](https://github.com/software-mansion/react-native-reanimated/pull/10528) by [@MatiPl01](https://github.com/MatiPl01))
