@@ -217,7 +217,8 @@ struct LightNode {
   }
 };
 
-static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame &frame) {
+static inline void
+updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame &frame, const react::Point &offset = {}) {
   // we use optional's here to avoid overwriting non-animated values
   if (frame.width) {
     layoutMetrics.frame.size.width = *frame.width;
@@ -226,10 +227,10 @@ static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame
     layoutMetrics.frame.size.height = *frame.height;
   }
   if (frame.x) {
-    layoutMetrics.frame.origin.x = *frame.x;
+    layoutMetrics.frame.origin.x = *frame.x + offset.x;
   }
   if (frame.y) {
-    layoutMetrics.frame.origin.y = *frame.y;
+    layoutMetrics.frame.origin.y = *frame.y + offset.y;
   }
 }
 
