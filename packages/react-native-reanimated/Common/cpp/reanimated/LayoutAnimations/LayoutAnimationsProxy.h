@@ -196,7 +196,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   void removeSharedContainer(Tag containerTag, TransactionMeta &transaction) const;
 
-  std::vector<react::Point> getAbsolutePositionsForRootPathView(const std::shared_ptr<LightNode> &node) const;
+  std::vector<react::Point> getAbsolutePositionsForRootPathView(
+      const std::shared_ptr<LightNode> &node,
+      bool useViewsOnScreen) const;
+  const ShadowView &viewOnScreen(const std::shared_ptr<LightNode> &node) const;
 
   Tag getOrCreateContainer(
       const ShadowView &before,
@@ -211,7 +214,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   std::optional<Transform> parseParentTransforms(
       const std::shared_ptr<LightNode> &node,
-      const std::vector<react::Point> &absolutePositions) const;
+      const std::vector<react::Point> &absolutePositions,
+      bool useViewsOnScreen) const;
   react::Transform resolveTransform(
       const LayoutMetrics &layoutMetrics,
       const Transform &transform,
