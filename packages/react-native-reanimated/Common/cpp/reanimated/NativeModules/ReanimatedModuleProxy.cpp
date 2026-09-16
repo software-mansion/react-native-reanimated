@@ -610,13 +610,16 @@ void ReanimatedModuleProxy::runCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &transitionConfig,
-    const jsi::Value &eventMask) {
+    const jsi::Value &eventMask,
+    const jsi::Value &platformAllowed) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   auto config = parseCSSTransitionConfig(rt, shadowNode->getComponentName(), transitionConfig);
 
   auto lock = updatesRegistryManager_->lock();
   // Subscribed before the run so the first `transitionrun` already has a listener.
   cssTransitionsRegistry_->setEventMask(shadowNode, static_cast<CSSEventMask>(eventMask.asNumber()));
+  // Applied before the run so its demotions precede the new diffs.
+  cssTransitionsRegistry_->setPlatformAllowed(shadowNode, platformAllowed.getBool());
   cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, std::move(config));
 }
 
@@ -1595,16 +1598,16 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
         strongThis->unregisterCSSAnimations(at<0>(args));
       });
 
-  addMethod<3>(
+  addMethod<4>(
       rt,
       obj,
       "runCSSTransition",
-      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[4]) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
         }
-        strongThis->runCSSTransition(rt, at<0>(args), at<1>(args), at<2>(args));
+        strongThis->runCSSTransition(rt, at<0>(args), at<1>(args), at<2>(args), at<3>(args));
       });
 
   addMethod<1>(

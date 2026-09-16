@@ -42,6 +42,15 @@ void CSSTransitionsRegistry::setEventMask(
   getOrCreateTransition(shadowNode)->setEventMask(eventMask);
 }
 
+void CSSTransitionsRegistry::setPlatformAllowed(
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const bool allowed) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  const auto &transition = getOrCreateTransition(shadowNode);
+  auto initialUpdate = transition->setPlatformAllowed(allowed, getUpdatesFromRegistry(transition->getViewTag()));
+  recordInitialUpdate(transition, initialUpdate);
+}
+
 void CSSTransitionsRegistry::run(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const PropertyValueDynamicDiffsMap &propertyDiffs) {

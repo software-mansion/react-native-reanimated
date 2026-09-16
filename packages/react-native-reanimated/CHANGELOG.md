@@ -19,6 +19,7 @@
 
 ### 🐛 Bug fixes
 
+- Run `backgroundColor`, `borderColor` and `borderRadius` CSS transitions on Core Animation only when React Native draws them on the view's own layer; on a bordered non-clipping view they snapped. ([#10572](https://github.com/software-mansion/react-native-reanimated/pull/10572) by [@MatiPl01](https://github.com/MatiPl01))
 - Resume a `shadowOffset` CSS transition from its in-flight value when it moves from Core Animation to the C++ loop, instead of restarting from the previously committed offset. ([#10564](https://github.com/software-mansion/react-native-reanimated/pull/10564) by [@MatiPl01](https://github.com/MatiPl01))
 - Fix CSS platform transitions ignoring slow animations: on iOS they snapped to the end state under the Simulator's Slow Animations, and on Android they played at full speed under the dev-menu toggle. ([#10548](https://github.com/software-mansion/react-native-reanimated/pull/10548) by [@MatiPl01](https://github.com/MatiPl01))
 - Fix the Release Android build failing on an unused variable in `SharedTransitions.cpp`, and the `backgroundImage` style types failing to compile with React Native 0.85, 0.86 and nightly. ([#10558](https://github.com/software-mansion/react-native-reanimated/pull/10558) by [@tjzel](https://github.com/tjzel))

@@ -338,7 +338,8 @@ class JSReanimated implements IReanimatedModule {
   runCSSTransition(
     _shadowNodeWrapper: ShadowNodeWrapper,
     _transitionConfig: CSSTransitionConfig,
-    _eventMask: number
+    _eventMask: number,
+    _platformAllowed: boolean
   ): void {
     throw new Error(
       '[Reanimated] `runCSSTransition` is not available in JSReanimated.'

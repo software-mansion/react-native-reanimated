@@ -60,6 +60,15 @@ class CSSPlatformTransitionProxy {
   /// Cancels the native transition of every given property (teardown).
   void cancelAll(Tag viewTag, const TransitionProperties &properties);
 
+  /// Moves every platform-routed property to the loop: an unfinished run continues there from
+  /// the value it shows now with its settings; a finished one only changes sides, since the
+  /// committed style already holds its target.
+  struct Demotion {
+    PropertyValueDynamicDiffsMap diffs;
+    PropertiesSettingsMap settings;
+  };
+  Demotion demoteAll(Tag viewTag, CSSTransitionRouting &routing, double timestamp);
+
  private:
   struct ActiveTransition {
     /// What a later reversal has to target (the spec's reversing-adjusted start value).

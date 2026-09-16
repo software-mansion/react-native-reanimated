@@ -2,6 +2,7 @@
 
 #include <react/debug/react_native_assert.h>
 
+#include <algorithm>
 #include <utility>
 
 namespace reanimated::css {
@@ -214,6 +215,31 @@ void CSSPlatformTransitionProxy::cancelAll(const Tag viewTag, const TransitionPr
   for (const auto &propertyName : properties) {
     remove(viewTag, propertyName);
   }
+}
+
+CSSPlatformTransitionProxy::Demotion
+CSSPlatformTransitionProxy::demoteAll(const Tag viewTag, CSSTransitionRouting &routing, const double timestamp) {
+  Demotion demotion;
+  const auto platformProperties = std::exchange(routing.platform, {});
+  for (const auto &propertyName : platformProperties) {
+    routing.loop.insert(propertyName);
+    // Read before remove() drops the run.
+    if (const ActiveTransition *active = activeTransitionFor(viewTag, propertyName);
+        active != nullptr && easedProgressAt(active->timing, timestamp) < 1) {
+      const auto currentValue = getCurrentValue(viewTag, propertyName, timestamp);
+      demotion.diffs.emplace(
+          propertyName,
+          std::make_pair(
+              platformValueToDynamic(currentValue ? *currentValue : active->adjustedEnd),
+              platformValueToDynamic(active->adjustedEnd)));
+      // Only the part of the delay that has not elapsed yet.
+      auto settings = active->settings;
+      settings.delay = std::max(0.0, active->timing.startTimestamp - timestamp);
+      demotion.settings.emplace(propertyName, std::move(settings));
+    }
+    remove(viewTag, propertyName);
+  }
+  return demotion;
 }
 
 } // namespace reanimated::css

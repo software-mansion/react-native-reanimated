@@ -42,6 +42,49 @@ describe('CSSTransitionsManager', () => {
   });
 
   describe('update', () => {
+    describe('platform routing flag', () => {
+      test('is passed with the transition', () => {
+        manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 });
+        manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 }, 0, false);
+
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          shadowNodeWrapper,
+          { opacity: { ...DEFAULT_SETTINGS, value: [0, 1] } },
+          0,
+          false
+        );
+      });
+
+      test('is sent on its own when it changes while a transition is attached', () => {
+        manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 });
+        manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 });
+        manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 }, 0, false);
+
+        expect(runCSSTransition).toHaveBeenCalledTimes(2);
+        expect(runCSSTransition).toHaveBeenLastCalledWith(
+          shadowNodeWrapper,
+          {},
+          0,
+          false
+        );
+      });
+
+      test('is not sent when nothing else changes', () => {
+        manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 });
+        manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 }, 0, false);
+        manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 }, 0, false);
+
+        expect(runCSSTransition).toHaveBeenCalledTimes(1);
+      });
+
+      test('is not sent before any transition ran', () => {
+        manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 }, 0, false);
+        manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 }, 0, true);
+
+        expect(runCSSTransition).not.toHaveBeenCalled();
+      });
+    });
+
     describe('does not trigger transition', () => {
       test('on first render (mounting)', () => {
         manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 });
@@ -77,7 +120,8 @@ describe('CSSTransitionsManager', () => {
               value: [0, 1],
             },
           },
-          0
+          0,
+          true
         );
       });
 
@@ -91,7 +135,8 @@ describe('CSSTransitionsManager', () => {
             opacity: { ...DEFAULT_SETTINGS, value: [0, 1] },
             width: { ...DEFAULT_SETTINGS, value: [100, 200] },
           },
-          0
+          0,
+          true
         );
       });
 
@@ -104,7 +149,8 @@ describe('CSSTransitionsManager', () => {
           {
             width: { ...DEFAULT_SETTINGS, value: [undefined, 100] },
           },
-          0
+          0,
+          true
         );
       });
 
@@ -117,7 +163,8 @@ describe('CSSTransitionsManager', () => {
           {
             width: { ...DEFAULT_SETTINGS, value: [100, undefined] },
           },
-          0
+          0,
+          true
         );
       });
 
@@ -139,7 +186,8 @@ describe('CSSTransitionsManager', () => {
           {
             width: { ...DEFAULT_SETTINGS, value: [undefined, 100] },
           },
-          0
+          0,
+          true
         );
       });
 
@@ -173,7 +221,8 @@ describe('CSSTransitionsManager', () => {
               {
                 opacity: null,
               },
-              0
+              0,
+              true
             );
           });
         });
@@ -200,7 +249,8 @@ describe('CSSTransitionsManager', () => {
               value: [0, 1],
             },
           },
-          0
+          0,
+          true
         );
       });
 
@@ -219,7 +269,8 @@ describe('CSSTransitionsManager', () => {
           {
             opacity: { ...DEFAULT_SETTINGS, value: [0, 1] },
           },
-          0
+          0,
+          true
         );
       });
 
@@ -268,7 +319,8 @@ describe('CSSTransitionsManager', () => {
           {
             opacity: null,
           },
-          0
+          0,
+          true
         );
       });
 
@@ -280,7 +332,8 @@ describe('CSSTransitionsManager', () => {
           expect(runCSSTransition).toHaveBeenLastCalledWith(
             shadowNodeWrapper,
             { opacity: { ...DEFAULT_SETTINGS, value: [0, 1] } },
-            0b1110000
+            0b1110000,
+            true
           );
         });
 
@@ -292,7 +345,8 @@ describe('CSSTransitionsManager', () => {
           expect(runCSSTransition).toHaveBeenLastCalledWith(
             shadowNodeWrapper,
             {},
-            0b1000000
+            0b1000000,
+            true
           );
         });
 

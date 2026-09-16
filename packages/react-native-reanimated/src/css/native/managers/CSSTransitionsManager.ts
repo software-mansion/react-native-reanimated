@@ -25,6 +25,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   // Indicates whether a CSS transition is currently attached to the view
   private hasTransition = false;
   private appliedEventMask = 0;
+  private appliedPlatformAllowed = true;
 
   constructor(shadowNodeWrapper: ShadowNodeWrapper, viewTag: number) {
     this.viewTag = viewTag;
@@ -38,7 +39,8 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   update(
     transitionProperties: CSSTransitionProperties | null,
     nextStyle?: UnknownRecord,
-    eventMask = 0
+    eventMask = 0,
+    platformAllowed = true
   ): boolean {
     const transitionConfig =
       transitionProperties &&
@@ -71,12 +73,24 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
 
     if (Object.keys(config).length) {
       this.appliedEventMask = eventMask;
-      runCSSTransition(this.shadowNodeWrapper, config, eventMask);
+      this.appliedPlatformAllowed = platformAllowed;
+      runCSSTransition(
+        this.shadowNodeWrapper,
+        config,
+        eventMask,
+        platformAllowed
+      );
       this.hasTransition = true;
-    } else if (this.hasTransition && eventMask !== this.appliedEventMask) {
-      // Only the mask changed, but the native side still has to learn about it.
+    } else if (
+      this.hasTransition &&
+      (eventMask !== this.appliedEventMask ||
+        platformAllowed !== this.appliedPlatformAllowed)
+    ) {
+      // Only the mask or the platform flag changed, but the native side still
+      // has to learn about it: the flag can move a running transition off the platform.
       this.appliedEventMask = eventMask;
-      runCSSTransition(this.shadowNodeWrapper, {}, eventMask);
+      this.appliedPlatformAllowed = platformAllowed;
+      runCSSTransition(this.shadowNodeWrapper, {}, eventMask, platformAllowed);
     }
 
     return false;
@@ -91,6 +105,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     this.propsWithTransitions.clear();
     this.hasTransition = false;
     this.appliedEventMask = 0;
+    this.appliedPlatformAllowed = true;
   }
 
   private processTransitionConfig(
