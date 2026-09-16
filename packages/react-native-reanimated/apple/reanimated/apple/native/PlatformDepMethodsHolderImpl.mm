@@ -150,33 +150,29 @@ class REACSSPlatformTransitionBackend : public css::CSSPlatformTransitionBackend
         (std::holds_alternative<css::LinearEasing>(easing) || std::holds_alternative<css::CubicBezierEasing>(easing));
   }
 
-  bool applyTransition(
+  bool startTransition(
       Tag viewTag,
       const std::string &propertyName,
       const css::PlatformValue &fromValue,
       const css::PlatformValue &toValue,
-      const css::CSSTransitionPropertySettings *settings,
-      bool persistent,
-      double timestamp) override
+      double durationMs,
+      double startTimestampMs,
+      const css::EasingConfig &easing,
+      bool persistent) override
   {
-    return [platformTransitions_ applyTransitionForTag:viewTag
+    return [platformTransitions_ startTransitionForTag:viewTag
                                           propertyName:propertyName
                                              fromValue:fromValue
                                                toValue:toValue
-                                              settings:settings
-                                            persistent:persistent
-                                             timestamp:timestamp];
+                                            durationMs:durationMs
+                                      startTimestampMs:startTimestampMs
+                                                easing:easing
+                                            persistent:persistent];
   }
 
-  void removeTransition(Tag viewTag, const std::string &propertyName) override
+  void stopTransition(Tag viewTag, const std::string &propertyName) override
   {
-    [platformTransitions_ removeTransitionForTag:viewTag propertyName:propertyName];
-  }
-
-  std::optional<css::PlatformValue> getCurrentValue(Tag viewTag, const std::string &propertyName, double timestamp)
-      const override
-  {
-    return [platformTransitions_ getCurrentValueForTag:viewTag propertyName:propertyName timestamp:timestamp];
+    [platformTransitions_ stopTransitionForTag:viewTag propertyName:propertyName];
   }
 
  private:

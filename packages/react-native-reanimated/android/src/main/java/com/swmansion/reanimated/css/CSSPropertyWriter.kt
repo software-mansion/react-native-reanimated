@@ -1,7 +1,9 @@
 package com.swmansion.reanimated.css
 
+import android.os.Build
 import android.util.FloatProperty
 import android.view.View
+import androidx.annotation.RequiresApi
 import com.facebook.react.uimanager.BackgroundStyleApplicator
 import com.facebook.react.uimanager.LengthPercentage
 import com.facebook.react.uimanager.LengthPercentageType
@@ -46,6 +48,13 @@ internal fun cssPropertyWriterFor(
         1 -> ColorBlendWriter("backgroundColor", fromBits.toColorInt(), toBits.toColorInt(), BackgroundColorAccess)
         2 -> ColorBlendWriter("borderColor", fromBits.toColorInt(), toBits.toColorInt(), BorderColorAccess)
         3 -> BorderRadiusWriter
+        4 ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                ColorBlendWriter("shadowColor", fromBits.toColorInt(), toBits.toColorInt(), ShadowColorAccess)
+            } else {
+                // No shadow color API before 28; the C++ side keeps the property on the loop.
+                null
+            }
         else -> null
     }
 
@@ -94,6 +103,20 @@ private object BorderColorAccess : ColorAccess {
         view: View,
         color: Int,
     ) = BackgroundStyleApplicator.setBorderColor(view, LogicalEdge.ALL, color)
+}
+
+/** Mirrors BaseViewManager.setShadowColor, which writes the same color to both shadows. */
+@RequiresApi(Build.VERSION_CODES.P)
+private object ShadowColorAccess : ColorAccess {
+    override fun read(view: View): Int? = view.outlineAmbientShadowColor
+
+    override fun write(
+        view: View,
+        color: Int,
+    ) {
+        view.outlineAmbientShadowColor = color
+        view.outlineSpotShadowColor = color
+    }
 }
 
 /**
