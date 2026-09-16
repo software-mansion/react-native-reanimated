@@ -31,7 +31,7 @@ export function useDerivedValue<Value>(
   _dependencies?: DependencyList
 ): DerivedValue<Value> {
   if (__DEV__ && _dependencies !== undefined) {
-    logger.logOnce(
+    logger.warnOnce(
       'Dependencies should only be used on the web and are always ignored on native. Check DevTools to see the offending code.',
       1
     );

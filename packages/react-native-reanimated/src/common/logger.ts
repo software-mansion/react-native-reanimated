@@ -127,7 +127,7 @@ export const logger = {
     'worklet';
     handleLog(ReanimatedLogLevel.warn, message, options);
   },
-  logOnce(message: string, level: number) {
+  warnOnce(message: string, level: number) {
     'worklet';
     if (getLoggerConfig().level > ReanimatedLogLevel.warn) {
       return;
