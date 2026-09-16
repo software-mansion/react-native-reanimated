@@ -1,5 +1,6 @@
 import { Blob } from '../src/networking/Blob';
 import { FileReader } from '../src/networking/FileReader';
+import { FormData } from '../src/networking/FormData';
 import { utf8Decode, utf8Encode } from '../src/networking/utf8';
 import { XMLHttpRequest } from '../src/networking/XMLHttpRequest';
 
@@ -191,5 +192,59 @@ describe('FileReader', () => {
     await done;
     expect(String(reader.error)).toContain('Worklets networking module');
     expect(reader.result).toBe(null);
+  });
+});
+
+describe('FormData', () => {
+  test('implements the entry API', () => {
+    const formData = new FormData();
+    formData.append('a', '1');
+    formData.append('a', '2');
+    formData.append('b', '3');
+    expect(formData.get('a')).toBe('1');
+    expect(formData.getAll('a')).toEqual(['1', '2']);
+    expect(formData.has('b')).toBe(true);
+    formData.set('a', '4');
+    expect(formData.getAll('a')).toEqual(['4']);
+    formData.delete('b');
+    expect(formData.has('b')).toBe(false);
+    expect([...formData.keys()]).toEqual(['a']);
+  });
+
+  test('exposes React Native style parts', () => {
+    const formData = new FormData();
+    formData.append('field', 'value');
+    expect(formData.getParts()).toEqual([
+      {
+        string: 'value',
+        fieldName: 'field',
+        headers: { 'content-disposition': 'form-data; name="field"' },
+      },
+    ]);
+  });
+
+  test('encodes multipart bodies', () => {
+    const formData = new FormData();
+    formData.append('field', 'value');
+    formData.append('emoji', '🦄');
+    const { body, contentType } = formData.__encodeMultipart();
+    const match = /^multipart\/form-data; boundary=([-\w]+)$/.exec(contentType);
+    expect(match).not.toBe(null);
+    const boundary = match![1];
+    const encoded = utf8Decode(new Uint8Array(body));
+    expect(encoded).toBe(
+      `--${boundary}\r\ncontent-disposition: form-data; name="field"\r\n\r\nvalue\r\n` +
+        `--${boundary}\r\ncontent-disposition: form-data; name="emoji"\r\n\r\n🦄\r\n` +
+        `--${boundary}--\r\n`
+    );
+  });
+
+  test('escapes quotes and newlines in field names', () => {
+    const formData = new FormData();
+    formData.append('na"me\r\n', 'value');
+    const { body } = formData.__encodeMultipart();
+    expect(utf8Decode(new Uint8Array(body))).toContain(
+      'content-disposition: form-data; name="na%22me%0D%0A"'
+    );
   });
 });

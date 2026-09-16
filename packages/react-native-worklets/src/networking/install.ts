@@ -3,6 +3,7 @@
 import { Blob } from './Blob';
 import { DOMException } from './DOMException';
 import { FileReader } from './FileReader';
+import { FormData } from './FormData';
 import { XMLHttpRequest } from './XMLHttpRequest';
 
 /**
@@ -26,6 +27,7 @@ export function installNetworking() {
   global.XMLHttpRequest ??= XMLHttpRequest;
   global.Blob ??= Blob;
   global.FileReader ??= FileReader;
+  global.FormData ??= FormData;
   global.DOMException ??= DOMException;
 
   // eslint-disable-next-line @typescript-eslint/no-require-imports
