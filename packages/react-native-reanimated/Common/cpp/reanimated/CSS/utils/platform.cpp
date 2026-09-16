@@ -148,6 +148,21 @@ double packColorChannels(const std::array<double, 4> &channels) {
   return static_cast<double>(packed);
 }
 
+folly::dynamic platformValueToDynamic(const PlatformValue &value) {
+  return std::visit(
+      [](const auto &typedValue) -> folly::dynamic {
+        using T = std::decay_t<decltype(typedValue)>;
+        if constexpr (std::is_same_v<T, double>) {
+          return typedValue;
+        } else if constexpr (std::is_same_v<T, std::array<double, 2>>) {
+          return folly::dynamic::object("width", typedValue[0])("height", typedValue[1]);
+        } else {
+          return packColorChannels(typedValue);
+        }
+      },
+      value);
+}
+
 std::optional<PlatformValuePair> parsePlatformValues(
     jsi::Runtime &rt,
     const std::string &propertyName,
