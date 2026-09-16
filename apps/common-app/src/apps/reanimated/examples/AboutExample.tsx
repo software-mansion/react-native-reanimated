@@ -86,7 +86,6 @@ const staticFlagsReanimated = [
 ] as const;
 
 const staticFlagsWorklets = [
-  'FETCH_PREVIEW_ENABLED',
   'IOS_DYNAMIC_FRAMERATE_ENABLED',
   'ENABLE_CROSS_RUNTIME_STACK_TRACES',
 ] as const;
