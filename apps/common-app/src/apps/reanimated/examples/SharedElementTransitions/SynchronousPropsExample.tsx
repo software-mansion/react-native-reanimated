@@ -46,8 +46,14 @@ function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   const relayout = () => {
     spacerHeight.value = spacerHeight.value === 40 ? 120 : 40;
   };
+  const navigationTimer =
+    React.useRef<ReturnType<typeof setTimeout>>(undefined);
+  React.useEffect(() => () => clearTimeout(navigationTimer.current), []);
   const navigateSoon = () => {
-    setTimeout(() => navigation.navigate('Screen2'), NAVIGATE_DELAY_MS);
+    navigationTimer.current = setTimeout(
+      () => navigation.navigate('Screen2'),
+      NAVIGATE_DELAY_MS
+    );
   };
 
   return (
