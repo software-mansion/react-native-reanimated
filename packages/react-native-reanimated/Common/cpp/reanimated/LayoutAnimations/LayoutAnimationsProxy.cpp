@@ -3,9 +3,10 @@
 #include <react/renderer/mounting/MountingCoordinator.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
+#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <worklets/Compat/StableApi.h>
 
@@ -26,15 +27,15 @@ namespace reanimated {
 using enum LayoutAnimationType;
 using enum ExitingState;
 
-std::shared_ptr<LayoutAnimationsProxyRegistry> createLayoutAnimationsProxyExperimentalRegistry(
+std::shared_ptr<LayoutAnimationsProxyRegistry> createLayoutAnimationsProxyDefaultRegistry(
     const LayoutAnimationsProxyDependencies &dependencies) {
   return std::make_shared<LayoutAnimationsProxyRegistry>(
       [dependencies](const SurfaceId surfaceId) -> std::shared_ptr<LayoutAnimationsProxyCommon> {
-        return std::make_shared<LayoutAnimationsProxy_Experimental>(surfaceId, dependencies);
+        return std::make_shared<LayoutAnimationsProxy>(surfaceId, dependencies);
       });
 }
 
-LayoutAnimationsProxy_Experimental::LayoutAnimationsProxy_Experimental(
+LayoutAnimationsProxy::LayoutAnimationsProxy(
     const SurfaceId surfaceId,
     const LayoutAnimationsProxyDependencies &dependencies)
     : LayoutAnimationsProxyCommon(surfaceId, dependencies),
@@ -44,7 +45,7 @@ LayoutAnimationsProxy_Experimental::LayoutAnimationsProxy_Experimental(
 #endif
 }
 
-void LayoutAnimationsProxy_Experimental::warnAboutStaleSynchronousProps(
+void LayoutAnimationsProxy::warnAboutStaleSynchronousProps(
     const Tag tag,
     const Tag staleTag,
     const LayoutAnimationType type) const {
@@ -59,9 +60,8 @@ void LayoutAnimationsProxy_Experimental::warnAboutStaleSynchronousProps(
   });
 }
 
-void LayoutAnimationsProxy_Experimental::warnIfSnapshotIsStale(
-    const ShadowView &snapshot,
-    const TransactionMeta &transaction) const {
+void LayoutAnimationsProxy::warnIfSnapshotIsStale(const ShadowView &snapshot, const TransactionMeta &transaction)
+    const {
   const auto it = transaction.staleSnapshots.find(snapshot.tag);
   if (it != transaction.staleSnapshots.end()) {
     warnAboutStaleSynchronousProps(snapshot.tag, it->second, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
@@ -70,7 +70,7 @@ void LayoutAnimationsProxy_Experimental::warnIfSnapshotIsStale(
 
 // MARK: MountingOverrideDelegate
 
-std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTransaction(
+std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     SurfaceId surfaceId,
     MountingTransaction::Number transactionNumber,
     const TransactionTelemetry &telemetry,
@@ -91,7 +91,11 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
 
   reconcileContradictedRemovals(mutations, filteredMutations);
 
-  if (transition_ || uncommittedScreenPop_) {
+  if constexpr (!StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    if (!mutations.empty()) {
+      updateLightTree(propsParserContext, mutations, transaction);
+    }
+  } else if (transition_ || uncommittedScreenPop_) {
     updateLightTree(propsParserContext, mutations, transaction);
     resolveTransitionLifecycle(transaction, mutations, propsParserContext);
   } else if (!mutations.empty()) {
@@ -158,12 +162,14 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   maybeScheduleCleanupPull(flushStructuralMutations);
 #endif
 
-  insertContainers(transaction, rootChildCount);
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    insertContainers(transaction, rootChildCount);
+  }
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 
-bool LayoutAnimationsProxy_Experimental::isLightNodeMapped(const std::shared_ptr<LightNode> &node) const {
+bool LayoutAnimationsProxy::isLightNodeMapped(const std::shared_ptr<LightNode> &node) const {
   if (!node) {
     return false;
   }
@@ -172,7 +178,7 @@ bool LayoutAnimationsProxy_Experimental::isLightNodeMapped(const std::shared_ptr
 }
 
 // the only erase of lightNodes_ once the tree is initialized
-void LayoutAnimationsProxy_Experimental::unmapLightNode(const std::shared_ptr<LightNode> &node) const {
+void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &node) const {
   const auto it = lightNodes_.find(node->current.tag);
   if (it == lightNodes_.end() || it->second != node) {
     return;
@@ -201,7 +207,7 @@ void LayoutAnimationsProxy_Experimental::unmapLightNode(const std::shared_ptr<Li
 // This must run before updateLightTree (so the tag is re-registered cleanly)
 // and before addOngoingAnimations (which would otherwise emit an Update for a
 // tag we are about to Delete this frame).
-void LayoutAnimationsProxy_Experimental::reconcileContradictedRemovals(
+void LayoutAnimationsProxy::reconcileContradictedRemovals(
     const ShadowViewMutationList &mutations,
     ShadowViewMutationList &filteredMutations) const {
   for (const auto &mutation : mutations) {
@@ -236,14 +242,14 @@ void LayoutAnimationsProxy_Experimental::reconcileContradictedRemovals(
   }
 }
 
-bool LayoutAnimationsProxy_Experimental::shouldOverridePullTransaction() const {
+bool LayoutAnimationsProxy::shouldOverridePullTransaction() const {
   // we need to listen to every possible mutation to keep the light tree updated
   return true;
 }
 
 // MARK: Light Tree
 
-void LayoutAnimationsProxy_Experimental::updateLightTree(
+void LayoutAnimationsProxy::updateLightTree(
     const PropsParserContext &propsParserContext,
     const ShadowViewMutationList &mutations,
     TransactionMeta &transaction) const {
@@ -346,8 +352,8 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         parent->children.insert(parent->children.begin() + hostIndex, node);
         node->parent = parent;
         const auto tag = mutation.newChildShadowView.tag;
-        bool hasSharedTransition;
-        {
+        bool hasSharedTransition = false;
+        if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
           auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
           hasSharedTransition = sharedTransitionManager_->tagToName_.contains(tag);
         }
@@ -404,8 +410,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
   }
 }
 
-void LayoutAnimationsProxy_Experimental::applyInitialMutationsToLightTree(
-    const ShadowViewMutationList &mutations) const {
+void LayoutAnimationsProxy::applyInitialMutationsToLightTree(const ShadowViewMutationList &mutations) const {
   for (const auto &mutation : mutations) {
     maybeUpdateWindowDimensions(mutation);
     switch (mutation.type) {
@@ -453,9 +458,7 @@ void LayoutAnimationsProxy_Experimental::applyInitialMutationsToLightTree(
 
 // Synchronous prop updates skip pullTransaction. Animation records always take the
 // values; light nodes take them only while the dynamic flag is on.
-void LayoutAnimationsProxy_Experimental::applySynchronousProps(
-    const UpdatesBatch &updatesBatch,
-    const bool trackInLightTree) const {
+void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBatch, const bool trackInLightTree) const {
   ReanimatedSystraceSection s("applySynchronousProps");
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const bool hasRecords = hasLayoutAnimationRecords();
@@ -489,7 +492,7 @@ void LayoutAnimationsProxy_Experimental::applySynchronousProps(
   }
 }
 
-void LayoutAnimationsProxy_Experimental::startSurface(
+void LayoutAnimationsProxy::startSurface(
     const ShadowTree &shadowTree,
     std::weak_ptr<const MountingOverrideDelegate> mountingOverrideDelegate) {
   react_native_assert(shadowTree.getSurfaceId() == surfaceId_ && "surface registered with the wrong proxy");
@@ -500,7 +503,7 @@ void LayoutAnimationsProxy_Experimental::startSurface(
   initializeLightTree(mountingCoordinator->getBaseRevision());
 }
 
-void LayoutAnimationsProxy_Experimental::initializeLightTree(const ShadowTreeRevision &baseRevision) {
+void LayoutAnimationsProxy::initializeLightTree(const ShadowTreeRevision &baseRevision) {
   ShadowViewMutationList initialMutations;
   if (baseRevision.rootShadowNode) {
     const auto emptyRoot =
@@ -526,12 +529,14 @@ void LayoutAnimationsProxy_Experimental::initializeLightTree(const ShadowTreeRev
     }
   }
   pendingTransactions_.clear();
-  topScreen_ = findActiveBoundary(lightNodes_.at(surfaceId_));
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    topScreen_ = findActiveBoundary(lightNodes_.at(surfaceId_));
+  }
 }
 
 // MARK: Layout Animation Updates
 
-std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(int tag, bool shouldRemove) {
+std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool shouldRemove) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   auto layoutAnimationIt = layoutAnimations_.find(tag);
 
@@ -563,7 +568,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
 // A subtree that animates keeps its place in the host tree, so nothing is emitted for its root.
 // A subtree that does not animate emits its Remove in stream order. Its teardown mounts at the
 // end of the transaction, so native code that reads a view on unmount still sees its children.
-void LayoutAnimationsProxy_Experimental::handleSubtreeRemoval(
+void LayoutAnimationsProxy::handleSubtreeRemoval(
     const std::shared_ptr<LightNode> &node,
     const std::shared_ptr<LightNode> &parent,
     const int hostIndex,
@@ -585,7 +590,7 @@ void LayoutAnimationsProxy_Experimental::handleSubtreeRemoval(
   parent->children.erase(parent->children.begin() + hostIndex);
 }
 
-void LayoutAnimationsProxy_Experimental::flushCompletedRemovals(ShadowViewMutationList &filteredMutations) const {
+void LayoutAnimationsProxy::flushCompletedRemovals(ShadowViewMutationList &filteredMutations) const {
   ReanimatedSystraceSection s("flushCompletedRemovals");
 
   std::vector<Tag> completedRemovalTags;
@@ -618,7 +623,7 @@ void LayoutAnimationsProxy_Experimental::flushCompletedRemovals(ShadowViewMutati
   }
 }
 
-void LayoutAnimationsProxy_Experimental::addOngoingAnimations(ShadowViewMutationList &mutations) const {
+void LayoutAnimationsProxy::addOngoingAnimations(ShadowViewMutationList &mutations) const {
   ReanimatedSystraceSection s1("addOngoingAnimations");
 #ifdef ANDROID
   std::optional<std::unique_ptr<int[]>> maybeCorrectedTags;
@@ -680,7 +685,7 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(ShadowViewMutation
   updateMap_.clear();
 }
 
-void LayoutAnimationsProxy_Experimental::endAnimationsRecursively(
+void LayoutAnimationsProxy::endAnimationsRecursively(
     const std::shared_ptr<LightNode> &node,
     int index,
     ShadowViewMutationList &mutations) const {
@@ -706,7 +711,7 @@ void LayoutAnimationsProxy_Experimental::endAnimationsRecursively(
   mutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
 }
 
-void LayoutAnimationsProxy_Experimental::maybeDropAncestors(
+void LayoutAnimationsProxy::maybeDropAncestors(
     const std::shared_ptr<LightNode> &node,
     ShadowViewMutationList &cleanupMutations) const {
   if (node->children.size() != 0 || node->state == ANIMATING || node->state == UNDEFINED) {
@@ -726,7 +731,7 @@ void LayoutAnimationsProxy_Experimental::maybeDropAncestors(
   maybeDropAncestors(parent, cleanupMutations);
 }
 
-bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
+bool LayoutAnimationsProxy::startAnimationsRecursively(
     const std::shared_ptr<LightNode> &node,
     TransactionMeta &transaction,
     StartAnimationsRecursivelyConfig config) const {
@@ -798,12 +803,14 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
   return wantAnimateExit;
 }
 
-void LayoutAnimationsProxy_Experimental::surfaceDidUnmount() {
+void LayoutAnimationsProxy::surfaceDidUnmount() {
   LayoutAnimationsProxyCommon::surfaceDidUnmount();
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  sharedContainers_.clear();
-  transition_.reset();
-  uncommittedScreenPop_.reset();
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    sharedContainers_.clear();
+    transition_.reset();
+    uncommittedScreenPop_.reset();
+  }
 #ifdef ANDROID
   cleanupPullScheduled_ = false;
 #endif
@@ -812,7 +819,7 @@ void LayoutAnimationsProxy_Experimental::surfaceDidUnmount() {
 // When entering animations start, we temporarily set opacity to 0
 // so that we can immediately insert the view at the right position
 // and schedule the animation on the UI thread
-ShadowView LayoutAnimationsProxy_Experimental::cloneViewWithoutOpacity(
+ShadowView LayoutAnimationsProxy::cloneViewWithoutOpacity(
     const ShadowView &shadowView,
     const PropsParserContext &propsParserContext) const {
   auto newView = shadowView;
@@ -829,7 +836,7 @@ ShadowView LayoutAnimationsProxy_Experimental::cloneViewWithoutOpacity(
 // thread. A UI-thread pull can overtake them, so completed animations must not
 // add structural cleanup mutations there. This gate can go away with Android's
 // pull model.
-bool LayoutAnimationsProxy_Experimental::shouldFlushStructuralMutations() const {
+bool LayoutAnimationsProxy::shouldFlushStructuralMutations() const {
 #ifdef ANDROID
   return !worklets::isOnUIThread(uiScheduler_);
 #else
@@ -837,43 +844,45 @@ bool LayoutAnimationsProxy_Experimental::shouldFlushStructuralMutations() const 
 #endif
 }
 
-void LayoutAnimationsProxy_Experimental::cleanupAnimations(
+void LayoutAnimationsProxy::cleanupAnimations(
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext,
     const bool flushStructuralMutations) const {
   ReanimatedSystraceSection s("cleanupAnimations");
   std::unordered_set<Tag> preservedContainerTags;
-  for (const auto &[tag, _] : completedAnimations_) {
-    if (hasPendingLayoutAnimation(tag)) {
-      continue;
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    for (const auto &[tag, _] : completedAnimations_) {
+      if (hasPendingLayoutAnimation(tag)) {
+        continue;
+      }
+      const auto containerIt = sharedContainers_.find(tag);
+      if (containerIt == sharedContainers_.end()) {
+        continue;
+      }
+      if (!flushStructuralMutations) {
+        preservedContainerTags.insert(tag);
+        continue;
+      }
+      if (containerIt->second.restoreAfterNode) {
+        transaction.nodesToRestore.push_back(containerIt->second.restoreAfterNode);
+      }
+      removeSharedContainer(tag, transaction);
     }
-    const auto containerIt = sharedContainers_.find(tag);
-    if (containerIt == sharedContainers_.end()) {
-      continue;
-    }
-    if (!flushStructuralMutations) {
-      preservedContainerTags.insert(tag);
-      continue;
-    }
-    if (containerIt->second.restoreAfterNode) {
-      transaction.nodesToRestore.push_back(containerIt->second.restoreAfterNode);
-    }
-    removeSharedContainer(tag, transaction);
-  }
 
-  cleanupSharedTransitions(transaction, propsParserContext);
+    cleanupSharedTransitions(transaction, propsParserContext);
+  }
   cleanupCompletedAnimations(transaction.filteredMutations, propsParserContext, true, preservedContainerTags);
 }
 
 #ifdef ANDROID
-bool LayoutAnimationsProxy_Experimental::hasPendingStructuralCleanup() const {
+bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
   return std::ranges::any_of(completedAnimations_, [this](const auto &entry) {
     const auto &[tag, completedAnimation] = entry;
     return !hasPendingLayoutAnimation(tag) && (completedAnimation.shouldRemove || sharedContainers_.contains(tag));
   });
 }
 
-void LayoutAnimationsProxy_Experimental::maybeScheduleCleanupPull(const bool flushedStructuralMutations) const {
+void LayoutAnimationsProxy::maybeScheduleCleanupPull(const bool flushedStructuralMutations) const {
   if (flushedStructuralMutations) {
     cleanupPullScheduled_ = false;
   } else if (hasPendingStructuralCleanup() && !cleanupPullScheduled_) {
@@ -885,7 +894,7 @@ void LayoutAnimationsProxy_Experimental::maybeScheduleCleanupPull(const bool flu
 
 // MARK: Start Animation
 
-void LayoutAnimationsProxy_Experimental::startEnteringAnimation(
+void LayoutAnimationsProxy::startEnteringAnimation(
     const std::shared_ptr<LightNode> &node,
     const std::shared_ptr<Serializable> &config) const {
   const auto &newChildShadowView = node->current;
@@ -905,7 +914,7 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(
   });
 }
 
-void LayoutAnimationsProxy_Experimental::startExitingAnimation(
+void LayoutAnimationsProxy::startExitingAnimation(
     const std::shared_ptr<LightNode> &node,
     const std::shared_ptr<Serializable> &config) const {
   const auto &oldChildShadowView = node->current;
@@ -921,7 +930,7 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(
   });
 }
 
-void LayoutAnimationsProxy_Experimental::startLayoutAnimation(
+void LayoutAnimationsProxy::startLayoutAnimation(
     const std::shared_ptr<LightNode> &node,
     const std::shared_ptr<Serializable> &config) const {
   if (const auto staleTag = staleSynchronousProps_.find(node, LayoutAnimationType::LAYOUT)) {
@@ -941,7 +950,7 @@ void LayoutAnimationsProxy_Experimental::startLayoutAnimation(
   });
 }
 
-void LayoutAnimationsProxy_Experimental::startSharedTransition(
+void LayoutAnimationsProxy::startSharedTransition(
     const int tag,
     const ShadowView &before,
     const ShadowView &after,
@@ -956,10 +965,8 @@ void LayoutAnimationsProxy_Experimental::startSharedTransition(
   });
 }
 
-void LayoutAnimationsProxy_Experimental::startProgressTransition(
-    const int tag,
-    const ShadowView &before,
-    const ShadowView &after) const {
+void LayoutAnimationsProxy::startProgressTransition(const int tag, const ShadowView &before, const ShadowView &after)
+    const {
   enqueueLayoutAnimation(ProgressLayoutAnimationStart{
       .tag = tag,
       .before = before,
