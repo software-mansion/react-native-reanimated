@@ -388,6 +388,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ScrollPerformanceExample: {
     icon: '🚁',
     title: 'Scroll performance',
+    section: REGRESSIONS,
     screen: ScrollPerformanceExample,
   },
   ThirdPartyComponentsExample: {
@@ -399,6 +400,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ReactFreeze: {
     icon: '❄️',
     title: 'React freeze',
+    section: REGRESSIONS,
     screen: FreezeExample,
   },
   CircularSliderExample: {
@@ -567,6 +569,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   NonLayoutPropAndRenderExample: {
     icon: '🎭',
     title: 'Non-layout prop and render example',
+    section: REGRESSIONS,
     screen: NonLayoutPropAndRenderExample,
   },
   RefExample: {
@@ -733,6 +736,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ContrastColorExample: {
     icon: '🔲',
     title: 'Contrast color',
+    section: REGRESSIONS,
     screen: ContrastColorExample,
   },
   ExtrapolationExample: {
