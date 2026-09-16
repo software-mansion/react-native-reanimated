@@ -29,12 +29,12 @@ struct CSSPropertyTraits {
 const CSSPropertyTraits *traitsFor(const std::string &propertyName) {
   constexpr std::array<double, 4> kTransparentColor = {0, 0, 0, 0};
   constexpr std::array<double, 4> kBlackColor = {0, 0, 0, 1};
+  // borderWidth is a layout input, so it stays on the loop on every platform.
   static const std::unordered_map<std::string, CSSPropertyTraits> kProperties = {
       {"opacity", {CSSValueKind::Scalar, 1.0}},
       {"backgroundColor", {CSSValueKind::Color, kTransparentColor}},
       {"borderColor", {CSSValueKind::Color, kBlackColor}},
       {"borderRadius", {CSSValueKind::Scalar, 0.0}},
-      {"borderWidth", {CSSValueKind::Scalar, 0.0}},
       {"shadowColor", {CSSValueKind::Color, kBlackColor}},
       {"shadowOpacity", {CSSValueKind::Scalar, 1.0}},
       {"shadowRadius", {CSSValueKind::Scalar, 0.0}},
