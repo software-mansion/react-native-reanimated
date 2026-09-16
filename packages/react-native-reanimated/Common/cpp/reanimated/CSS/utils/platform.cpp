@@ -1,6 +1,5 @@
 #include <reanimated/CSS/utils/platform.h>
 #include <reanimated/CSS/utils/props.h>
-#include <reanimated/Tools/FeatureFlags.h>
 
 #include <algorithm>
 #include <array>
@@ -26,7 +25,7 @@ struct CSSPropertyTraits {
 };
 
 // Value kind and CSS default per property (mirrors InterpolatorRegistry.cpp).
-// Which of them a platform actually routes is canRouteCSSProperty's decision.
+// Which of them a platform actually routes is its backend's canRoute decision.
 const CSSPropertyTraits *traitsFor(const std::string &propertyName) {
   constexpr std::array<double, 4> kTransparentColor = {0, 0, 0, 0};
   constexpr std::array<double, 4> kBlackColor = {0, 0, 0, 1};
@@ -122,33 +121,8 @@ lerpValue(const std::array<double, N> &from, const std::array<double, N> &to, co
 
 } // namespace
 
-bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &easing) {
-#if __APPLE__
-  if constexpr (!StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
-    return false;
-  }
-  if (traitsFor(propertyName) == nullptr) {
-    return false;
-  }
-  // TODO: border props route unconditionally, but snap when RN rasterizes the
-  // border (view fails useCoreAnimationBorderRendering); they should route only
-  // when the platform can render them correctly (follow-up PR).
-  // CAMediaTimingFunction can express only linear and cubic-bezier curves;
-  // steps / linear-stops easings have to interpolate per-frame on the loop.
-  return std::holds_alternative<LinearEasing>(easing) || std::holds_alternative<CubicBezierEasing>(easing);
-#elif defined(ANDROID)
-  if constexpr (!StaticFeatureFlags::getFlag("ANDROID_CSS_PLATFORM_TRANSITIONS")) {
-    return false;
-  }
-  // Any TimeInterpolator can carry a curve, so every easing routes and this is unused.
-  (void)easing;
-  // borderWidth affects layout on Android, so it stays on the loop; the writer
-  // declines shadowColor below API 28; the other shadow* props are iOS-only.
-  return std::ranges::find(kAndroidPlatformProperties, propertyName) != kAndroidPlatformProperties.end();
-#else
-  // No native routing backend on this platform yet; every property runs on the loop.
-  return false;
-#endif // __APPLE__
+bool hasPlatformValueTraits(const std::string &propertyName) {
+  return traitsFor(propertyName) != nullptr;
 }
 
 std::optional<PlatformValue>

@@ -29,6 +29,8 @@
 
 ### 🐛 Bug fixes
 
+- Acquire the runtime mutex before destroying a Worklet Runtime so a synchronous call in flight on another thread finishes first. ([#10550](https://github.com/software-mansion/react-native-reanimated/pull/10550) by [@tjzel](https://github.com/tjzel))
+- Destroy discarded results of synchronous worklet calls while the runtime lock is still held. ([#10552](https://github.com/software-mansion/react-native-reanimated/pull/10552) by [@tjzel](https://github.com/tjzel))
 - Include the React Native version macros through `<React/Utils.h>` when it is available, so `cxxreact/ReactNativeVersion.h` deprecated on React Native `main` no longer breaks the build. ([#10536](https://github.com/software-mansion/react-native-reanimated/pull/10536) by [@tshmieldev](https://github.com/tshmieldev))
 - Fix a crash on Android when the React instance is recreated while animations are running - `AnimationFrameQueue` kept delivering frames after `WorkletsModule` was invalidated. ([#10278](https://github.com/software-mansion/react-native-reanimated/pull/10278) by [@shubhamdeol](https://github.com/shubhamdeol))
 - Stop `AnimationFrameQueue` from dispatching the rest of a frame batch when `WorkletsModule` is invalidated from inside a frame callback. ([#10464](https://github.com/software-mansion/react-native-reanimated/pull/10464) by [@tjzel](https://github.com/tjzel))
@@ -45,6 +47,7 @@
 
 ### 💡 Others
 
+- In Bundle Mode, evaluate the bundle on the UI Worklet Runtime on a background thread while the RN Runtime evaluates it, instead of on the JS thread in `start`. `bundleModeMetroConfig` prepends a polyfill that triggers it. ([#10490](https://github.com/software-mansion/react-native-reanimated/pull/10490) by [@tjzel](https://github.com/tjzel))
 - Create the native side of `WorkletsModule` on a background thread as soon as the module is created, so `installTurboModule` only attaches it to the RN Runtime. ([#10489](https://github.com/software-mansion/react-native-reanimated/pull/10489) by [@tjzel](https://github.com/tjzel))
 - Validate the iOS Swift Package Manager integration in CI: the nightly compatibility check now builds the app via SPM on React Native >= 0.87. ([#10511](https://github.com/software-mansion/react-native-reanimated/pull/10511) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
 - Build `nativeLoggingHook` for Worklet Runtimes natively instead of reading React Native's host function from the RN Runtime. ([#10488](https://github.com/software-mansion/react-native-reanimated/pull/10488) by [@tjzel](https://github.com/tjzel))
