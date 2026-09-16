@@ -44,12 +44,15 @@ class UpdatesRegistryManager {
   bool shouldCommitAfterPause();
   void cancelCommitAfterPause();
 
-  /// A node JS detached while it was still mounted (a frozen screen, or its removal has
-  /// not been mounted yet); the first mount without it evicts it.
+  /// A node JS detached while it was still in its surface's committed tree (a frozen
+  /// screen); the first sweep that finds it gone evicts it.
   void addDetachedNode(const ShadowNodeFamily::Shared &shadowNodeFamily);
   void removeDetachedNode(Tag viewTag);
   void evictNode(Tag viewTag);
-  void handleNodeRemovals(const RootShadowNode &rootShadowNode);
+  /// Evicts the detached nodes of the root's surface that are no longer in the tree. Pass a
+  /// committed root, never a mounted one: mounts are reported late, so an older mounted
+  /// root can predate a node that is still alive.
+  void handleNodeRemovals(const RootShadowNode &committedRoot);
   void handleSurfaceUnmount(SurfaceId surfaceId);
   PropsMap collectProps();
   void mergeRegistryProps(Tag viewTag, folly::dynamic &target);

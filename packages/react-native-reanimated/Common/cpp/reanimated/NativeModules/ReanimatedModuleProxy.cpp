@@ -513,14 +513,40 @@ void ReanimatedModuleProxy::setViewStyle(jsi::Runtime &rt, const jsi::Value &vie
 
 void ReanimatedModuleProxy::notifyViewsLifecycle(jsi::Runtime &rt, const jsi::Value &operations) {
   const auto operationsArray = operations.asObject(rt).asArray(rt);
-  auto lock = updatesRegistryManager_->lock();
+  const auto length = operationsArray.size(rt);
 
-  for (size_t i = 0, length = operationsArray.size(rt); i < length; ++i) {
+  std::vector<std::pair<std::shared_ptr<const ShadowNode>, bool>> parsedOperations;
+  parsedOperations.reserve(length);
+  for (size_t i = 0; i < length; ++i) {
     const auto operation = operationsArray.getValueAtIndex(rt, i).asObject(rt);
-    const auto shadowNode = shadowNodeFromValue(rt, operation.getProperty(rt, "shadowNodeWrapper"));
-    if (operation.getProperty(rt, "attached").getBool()) {
+    parsedOperations.emplace_back(
+        shadowNodeFromValue(rt, operation.getProperty(rt, "shadowNodeWrapper")),
+        operation.getProperty(rt, "attached").getBool());
+  }
+
+  // A detach is judged against the surface's committed tree, which already reflects the
+  // removal that triggered it; the mounted snapshot can lag behind a node's own mount.
+  // Read the trees before taking the updates lock, which must never be held while taking
+  // a ShadowTree lock. A missing tree means the surface has stopped.
+  std::unordered_map<SurfaceId, RootShadowNode::Shared> committedRoots;
+  for (const auto &[shadowNode, attached] : parsedOperations) {
+    const auto surfaceId = shadowNode->getSurfaceId();
+    if (attached || committedRoots.contains(surfaceId)) {
+      continue;
+    }
+    auto &root = committedRoots[surfaceId];
+    uiManager_->getShadowTreeRegistry().visit(
+        surfaceId, [&](const ShadowTree &shadowTree) { root = shadowTree.getCurrentRevision().rootShadowNode; });
+  }
+
+  auto lock = updatesRegistryManager_->lock();
+  for (const auto &[shadowNode, attached] : parsedOperations) {
+    if (attached) {
       updatesRegistryManager_->removeDetachedNode(shadowNode->getTag());
-    } else if (viewStylesRepository_->isNodeMounted(shadowNode->getFamily())) {
+      continue;
+    }
+    const auto &root = committedRoots[shadowNode->getSurfaceId()];
+    if (root && !shadowNode->getFamily().getAncestors(*root).empty()) {
       updatesRegistryManager_->addDetachedNode(shadowNode->getFamilyShared());
     } else {
       updatesRegistryManager_->evictNode(shadowNode->getTag());

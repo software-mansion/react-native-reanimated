@@ -53,6 +53,15 @@ export function notifyViewDetached(shadowNodeWrapper: ShadowNodeWrapper) {
 }
 
 export function notifyViewAttached(shadowNodeWrapper: ShadowNodeWrapper) {
+  // A remount in the same task (StrictMode's double invocation) cancels the pending detach.
+  const detachIndex = pendingViewLifecycleOperations.findIndex(
+    (operation) =>
+      !operation.attached && operation.shadowNodeWrapper === shadowNodeWrapper
+  );
+  if (detachIndex !== -1) {
+    pendingViewLifecycleOperations.splice(detachIndex, 1);
+    return;
+  }
   queueViewLifecycleOperation({ shadowNodeWrapper, attached: true });
 }
 

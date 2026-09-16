@@ -83,14 +83,13 @@ void UpdatesRegistryManager::evictNode(const Tag viewTag) {
   staticPropsRegistry_->remove(viewTag);
 }
 
-void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadowNode) {
+void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &committedRoot) {
   react_native_assert(isLockedByCurrentThread());
-  const auto surfaceId = rootShadowNode.getSurfaceId();
+  const auto surfaceId = committedRoot.getSurfaceId();
 
   for (auto it = detachedNodes_.begin(); it != detachedNodes_.end();) {
     const auto &family = it->second;
-    // Only the node's own surface can tell a removal from a hidden, still mounted node.
-    if (family->getSurfaceId() == surfaceId && family->getAncestors(rootShadowNode).empty()) {
+    if (family->getSurfaceId() == surfaceId && family->getAncestors(committedRoot).empty()) {
       evictNode(it->first);
       it = detachedNodes_.erase(it);
     } else {

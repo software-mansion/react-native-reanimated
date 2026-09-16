@@ -30,8 +30,19 @@ void ReanimatedMountHook::shadowTreeDidMount(
     HighResTimeStamp mountTime) noexcept {
   ReanimatedSystraceSection s("ReanimatedMountHook::shadowTreeDidMount");
 
+  // The committed tree, not the mounted one, decides whether a detached node is gone: mounts
+  // are reported late and an older root can predate a node that is still alive. Read it
+  // before taking the updates lock, which must never be held while taking a ShadowTree lock.
+  RootShadowNode::Shared committedRoot;
+  uiManager_->getShadowTreeRegistry().visit(rootShadowNode->getSurfaceId(), [&](const ShadowTree &shadowTree) {
+    committedRoot = shadowTree.getCurrentRevision().rootShadowNode;
+  });
+
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // With the animation backend this hook only tracks surface unmounts.
+    if (committedRoot) {
+      auto lock = updatesRegistryManager_->lock();
+      updatesRegistryManager_->handleNodeRemovals(*committedRoot);
+    }
     return;
   }
 
@@ -52,11 +63,13 @@ void ReanimatedMountHook::shadowTreeDidMount(
     // Record the mounted tree for relative-length resolution.
     viewStylesRepository_->setLastMountedRoot(rootShadowNode);
 
-    // Always drain removable nodes, even on Reanimated's own commits. While CSS
+    // Always drain detached nodes, even on Reanimated's own commits. While CSS
     // animations run every mount carries the mount trait, so returning early here
     // would skip removals for the whole animation and leak unmounted nodes if the
     // tree is torn down mid-animation.
-    updatesRegistryManager_->handleNodeRemovals(*rootShadowNode);
+    if (committedRoot) {
+      updatesRegistryManager_->handleNodeRemovals(*committedRoot);
+    }
 
     if (!isReanimatedMount) {
       // When a commit from React Native has finished, we reset the skip commit
