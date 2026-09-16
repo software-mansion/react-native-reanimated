@@ -125,9 +125,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   void setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle);
 
-  void markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper);
-  void unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &viewTag);
-  void notifyViewDetached(int viewTag);
+  void notifyViewsLifecycle(jsi::Runtime &rt, const jsi::Value &operations);
 
   void registerCSSKeyframes(
       jsi::Runtime &rt,

@@ -14,8 +14,8 @@ import type {
 } from './commonTypes';
 
 export type AnimatedRefLifecycle = {
-  onAttach?: (tag: number | null) => void;
-  onDetach?: (wrapper: ShadowNodeWrapper, tag: number | null) => void;
+  onAttach: (wrapper: ShadowNodeWrapper) => void;
+  onDetach: (wrapper: ShadowNodeWrapper) => void;
 };
 
 export function useAnimatedRefBase<TRef extends InstanceOrElement>(
@@ -26,7 +26,6 @@ export function useAnimatedRefBase<TRef extends InstanceOrElement>(
     new Map()
   ).current;
   const wrapperRef = useRef<ShadowNodeWrapper | null>(null);
-  const tagRef = useRef<number | null>(null);
   const resultRef = useRef<AnimatedRef<TRef> | null>(null);
 
   if (!resultRef.current) {
@@ -38,11 +37,7 @@ export function useAnimatedRefBase<TRef extends InstanceOrElement>(
         // @ts-expect-error this can't be typed well.
         fun.getTag = () => ref.getScrollableNode?.() || findNodeHandle(ref);
         fun.current = ref;
-
-        if (lifecycle) {
-          tagRef.current = fun.getTag() ?? null;
-          lifecycle.onAttach?.(tagRef.current);
-        }
+        lifecycle?.onAttach(wrapperRef.current);
 
         if (observers.size) {
           const currentTag = fun?.getTag?.() ?? null;
@@ -56,7 +51,7 @@ export function useAnimatedRefBase<TRef extends InstanceOrElement>(
           });
         }
       } else if (wrapperRef.current) {
-        lifecycle?.onDetach?.(wrapperRef.current, tagRef.current);
+        lifecycle?.onDetach(wrapperRef.current);
       }
 
       return wrapperRef.current;

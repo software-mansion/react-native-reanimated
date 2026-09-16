@@ -23,20 +23,37 @@ export function setCSSEventHandler(handler: CSSEventHandler) {
   ReanimatedModule.setCSSEventHandler(handler);
 }
 
-export function markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper) {
-  ReanimatedModule.markNodeAsRemovable(shadowNodeWrapper);
-}
+type ViewLifecycleOperation = {
+  shadowNodeWrapper: ShadowNodeWrapper;
+  attached: boolean;
+};
 
-export function unmarkNodeAsRemovable(viewTag: number) {
-  ReanimatedModule.unmarkNodeAsRemovable(viewTag);
-}
+let pendingViewLifecycleOperations: ViewLifecycleOperation[] = [];
 
-// scheduleOnUI is FIFO, so every UI-side removal scheduled before this has landed when it runs.
-export function notifyViewDetached(viewTag: number) {
+function flushViewLifecycleOperations() {
+  const operations = pendingViewLifecycleOperations;
+  pendingViewLifecycleOperations = [];
   scheduleOnUI(() => {
     'worklet';
-    global._notifyViewDetached?.(viewTag);
+    global._notifyViewsLifecycle?.(operations);
   });
+}
+
+// Flushed from a microtask, so the batch is scheduled after every style detachment of the
+// same commit and lands on the UI runtime after the last update those styles could emit.
+function queueViewLifecycleOperation(operation: ViewLifecycleOperation) {
+  if (pendingViewLifecycleOperations.length === 0) {
+    queueMicrotask(flushViewLifecycleOperations);
+  }
+  pendingViewLifecycleOperations.push(operation);
+}
+
+export function notifyViewDetached(shadowNodeWrapper: ShadowNodeWrapper) {
+  queueViewLifecycleOperation({ shadowNodeWrapper, attached: false });
+}
+
+export function notifyViewAttached(shadowNodeWrapper: ShadowNodeWrapper) {
+  queueViewLifecycleOperation({ shadowNodeWrapper, attached: true });
 }
 
 // ANIMATIONS

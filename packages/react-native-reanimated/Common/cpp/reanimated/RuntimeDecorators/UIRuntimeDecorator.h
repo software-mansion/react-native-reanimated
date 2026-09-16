@@ -24,7 +24,7 @@ class UIRuntimeDecorator {
       const ProgressLayoutAnimationFunction &progressLayoutAnimation,
       const EndLayoutAnimationFunction &endLayoutAnimation,
       const MaybeFlushUIUpdatesQueueFunction &maybeFlushUIUpdatesQueue,
-      const NotifyViewDetachedFunction &notifyViewDetached,
+      const NotifyViewsLifecycleFunction &notifyViewsLifecycle,
       const std::optional<worklets::RequestAnimationFrameHostFunction> &requestAnimationFrame);
 };
 

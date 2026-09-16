@@ -35,7 +35,14 @@ declare global {
   var _registriesLeakCheck: () => string;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
-  var _notifyViewDetached: ((viewTag: number) => void) | undefined;
+  var _notifyViewsLifecycle:
+    | ((
+        operations: {
+          shadowNodeWrapper: ShadowNodeWrapper;
+          attached: boolean;
+        }[]
+      ) => void)
+    | undefined;
   var _tagToJSPropNamesMapping: Record<number, Record<string, boolean>>;
   var _updateProps:
     | ((

@@ -7,7 +7,6 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <atomic>
-#include <functional>
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -45,13 +44,12 @@ class UpdatesRegistryManager {
   bool shouldCommitAfterPause();
   void cancelCommitAfterPause();
 
-  void markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode);
-  void unmarkNodeAsRemovable(Tag viewTag);
-  /// Called once JS can emit no further updates for the node. Evicts it if it already left
-  /// its mounted tree; otherwise the first mount without it does.
-  void handleNodeDetached(Tag viewTag, const std::function<bool(const ShadowNodeFamily &)> &isNodeMounted);
+  /// A node JS detached while it was still mounted (a frozen screen, or its removal has
+  /// not been mounted yet); the first mount without it evicts it.
+  void addDetachedNode(const ShadowNodeFamily::Shared &shadowNodeFamily);
+  void removeDetachedNode(Tag viewTag);
+  void evictNode(Tag viewTag);
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
-  /// Evicts the detached marks of a stopped surface; the rest follow on their detach.
   void handleSurfaceUnmount(SurfaceId surfaceId);
   PropsMap collectProps();
   void mergeRegistryProps(Tag viewTag, folly::dynamic &target);
@@ -63,21 +61,14 @@ class UpdatesRegistryManager {
 #endif
 
  private:
-  struct RemovableNode {
-    ShadowNodeFamily::Shared family;
-    /// JS detached the node, so no in-flight update can re-add it.
-    bool detached;
-  };
-  using RemovableShadowNodes = std::unordered_map<Tag, RemovableNode>;
+  using DetachedNodes = std::unordered_map<Tag, ShadowNodeFamily::Shared>;
 
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
   std::atomic<bool> shouldCommitAfterPause_;
-  RemovableShadowNodes removableShadowNodes_;
+  DetachedNodes detachedNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
-
-  void evictNode(Tag viewTag);
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;

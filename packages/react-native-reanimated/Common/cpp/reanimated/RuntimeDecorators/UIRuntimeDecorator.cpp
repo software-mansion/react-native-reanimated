@@ -14,7 +14,7 @@ void UIRuntimeDecorator::decorate(
     const ProgressLayoutAnimationFunction &progressLayoutAnimation,
     const EndLayoutAnimationFunction &endLayoutAnimation,
     const MaybeFlushUIUpdatesQueueFunction &maybeFlushUIUpdatesQueue,
-    const NotifyViewDetachedFunction &notifyViewDetached,
+    const NotifyViewsLifecycleFunction &notifyViewsLifecycle,
     const std::optional<worklets::RequestAnimationFrameHostFunction> &requestAnimationFrame) {
 
   jsi_utils::installJsiFunction(uiRuntime, "_updateProps", updateProps);
@@ -26,7 +26,7 @@ void UIRuntimeDecorator::decorate(
   jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", setGestureState);
   jsi_utils::installJsiFunction(uiRuntime, "_obtainProp", obtainPropFunction);
   jsi_utils::installJsiFunction(uiRuntime, "_maybeFlushUIUpdatesQueue", maybeFlushUIUpdatesQueue);
-  jsi_utils::installJsiFunction(uiRuntime, "_notifyViewDetached", notifyViewDetached);
+  jsi_utils::installJsiFunction(uiRuntime, "_notifyViewsLifecycle", notifyViewsLifecycle);
   if (requestAnimationFrame.has_value()) {
     worklets::installRequestAnimationFrame(uiRuntime, *requestAnimationFrame);
   }

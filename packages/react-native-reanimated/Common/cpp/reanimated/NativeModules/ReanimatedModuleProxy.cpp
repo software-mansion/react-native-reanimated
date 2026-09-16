@@ -348,9 +348,9 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       progressLayoutAnimation,
       endLayoutAnimation,
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction,
-      [weakThis = weak_from_this()](const int viewTag) {
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &operations) {
         if (const auto strongThis = weakThis.lock()) {
-          strongThis->notifyViewDetached(viewTag);
+          strongThis->notifyViewsLifecycle(rt, operations);
         }
       },
       requestAnimationFrame);
@@ -511,21 +511,21 @@ void ReanimatedModuleProxy::setViewStyle(jsi::Runtime &rt, const jsi::Value &vie
   staticPropsRegistry_->set(rt, viewTag.asNumber(), viewStyle);
 }
 
-void ReanimatedModuleProxy::markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+void ReanimatedModuleProxy::notifyViewsLifecycle(jsi::Runtime &rt, const jsi::Value &operations) {
+  const auto operationsArray = operations.asObject(rt).asArray(rt);
   auto lock = updatesRegistryManager_->lock();
-  updatesRegistryManager_->markNodeAsRemovable(shadowNode);
-}
 
-void ReanimatedModuleProxy::notifyViewDetached(const int viewTag) {
-  auto lock = updatesRegistryManager_->lock();
-  updatesRegistryManager_->handleNodeDetached(
-      viewTag, [this](const ShadowNodeFamily &family) { return viewStylesRepository_->isNodeMounted(family); });
-}
-
-void ReanimatedModuleProxy::unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &viewTag) {
-  auto lock = updatesRegistryManager_->lock();
-  updatesRegistryManager_->unmarkNodeAsRemovable(viewTag.asNumber());
+  for (size_t i = 0, length = operationsArray.size(rt); i < length; ++i) {
+    const auto operation = operationsArray.getValueAtIndex(rt, i).asObject(rt);
+    const auto shadowNode = shadowNodeFromValue(rt, operation.getProperty(rt, "shadowNodeWrapper"));
+    if (operation.getProperty(rt, "attached").getBool()) {
+      updatesRegistryManager_->removeDetachedNode(shadowNode->getTag());
+    } else if (viewStylesRepository_->isNodeMounted(shadowNode->getFamily())) {
+      updatesRegistryManager_->addDetachedNode(shadowNode->getFamilyShared());
+    } else {
+      updatesRegistryManager_->evictNode(shadowNode->getTag());
+    }
+  }
 }
 
 void ReanimatedModuleProxy::registerCSSKeyframes(
@@ -1514,30 +1514,6 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
           return;
         }
         strongThis->setViewStyle(rt, at<0>(args), at<1>(args));
-      });
-
-  addMethod<1>(
-      rt,
-      obj,
-      "markNodeAsRemovable",
-      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-        strongThis->markNodeAsRemovable(rt, at<0>(args));
-      });
-
-  addMethod<1>(
-      rt,
-      obj,
-      "unmarkNodeAsRemovable",
-      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-        strongThis->unmarkNodeAsRemovable(rt, at<0>(args));
       });
 
   addMethod<3>(

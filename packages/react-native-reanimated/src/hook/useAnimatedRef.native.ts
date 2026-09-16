@@ -1,5 +1,5 @@
 'use strict';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { HostInstance } from 'react-native';
 import {
   createSerializable,
@@ -10,11 +10,7 @@ import {
 } from 'react-native-worklets';
 
 import type { InstanceOrElement, ShadowNodeWrapper } from '../commonTypes';
-import {
-  markNodeAsRemovable,
-  notifyViewDetached,
-  unmarkNodeAsRemovable,
-} from '../css/native';
+import { notifyViewAttached, notifyViewDetached } from '../css/native';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
 import { useAnimatedRefBase } from './useAnimatedRefCommon';
@@ -32,6 +28,7 @@ export function useAnimatedRef<
   const [sharedWrapper] = useState(() =>
     createShareable<ShadowNodeWrapper | null>(UIRuntimeId, null)
   );
+  const wasDetached = useRef(false);
 
   const resultRef = useAnimatedRefBase<TRef>(
     (ref) => {
@@ -44,17 +41,15 @@ export function useAnimatedRef<
       return currentWrapper;
     },
     {
-      onAttach: (tag) => {
-        if (tag !== null) {
-          unmarkNodeAsRemovable(tag);
+      onAttach: (wrapper) => {
+        if (wasDetached.current) {
+          notifyViewAttached(wrapper);
         }
       },
-      // Covers views written only through this ref (setNativeProps); a double mark is harmless.
-      onDetach: (wrapper, tag) => {
-        markNodeAsRemovable(wrapper);
-        if (tag !== null) {
-          notifyViewDetached(tag);
-        }
+      // Covers views written only through this ref (setNativeProps).
+      onDetach: (wrapper) => {
+        wasDetached.current = true;
+        notifyViewDetached(wrapper);
       },
     }
   );
