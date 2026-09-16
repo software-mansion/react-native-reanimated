@@ -124,6 +124,7 @@ function PresetTrack({
 
   useEffect(() => {
     if (toggleCount === 0) {
+      sv.value = lowerTarget;
       return;
     }
     sv.value = withSpring(
@@ -171,10 +172,11 @@ function ClampTracks({ frameWidth, toggleCount }: ToggleProps) {
 
   useEffect(() => {
     if (toggleCount === 0) {
+      width.value = frameWidth / 3;
       return;
     }
     width.value = toggleCount % 2 === 1 ? upperTarget : lowerTarget;
-  }, [toggleCount, lowerTarget, upperTarget, width]);
+  }, [toggleCount, frameWidth, lowerTarget, upperTarget, width]);
 
   const clampedStyleWithAnimationModifier = useAnimatedStyle(() => {
     return {
