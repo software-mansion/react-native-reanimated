@@ -39,6 +39,39 @@ describe('CSSPseudoStylesManager', () => {
     );
   });
 
+  describe('platform routing flag', () => {
+    const style: CSSStyle = {
+      opacity: { default: 0, ':active': 1 },
+      transitionProperty: 'opacity',
+      transitionDuration: '300ms',
+    };
+
+    test('is registered with the pseudo styles', () => {
+      const [, transition, pseudo] = filterCSSAndStyleProperties(style);
+      manager.update(pseudo, transition, false);
+
+      expect(registerPseudoStyles).toHaveBeenCalledWith(
+        shadowNodeWrapper,
+        expect.objectContaining({ platformAllowed: false })
+      );
+    });
+
+    test('re-registers when only the flag changes', () => {
+      const [, transition, pseudo] = filterCSSAndStyleProperties(style);
+      manager.update(pseudo, transition, true);
+      manager.update(pseudo, transition, true);
+      expect(registerPseudoStyles).toHaveBeenCalledTimes(1);
+
+      manager.update(pseudo, transition, false);
+
+      expect(registerPseudoStyles).toHaveBeenCalledTimes(2);
+      expect(registerPseudoStyles).toHaveBeenLastCalledWith(
+        shadowNodeWrapper,
+        expect.objectContaining({ platformAllowed: false })
+      );
+    });
+  });
+
   describe('fully transparent press warning', () => {
     test('warns when a press selector is styled on a fully transparent view', () => {
       pushStyle(manager, {

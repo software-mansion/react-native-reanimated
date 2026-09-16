@@ -19,6 +19,7 @@
 
 ### 🐛 Bug fixes
 
+- Apply the iOS Core Animation routing rule to pseudo selector styles too, so a selector that adds a border keeps its transitions on the loop. ([#10576](https://github.com/software-mansion/react-native-reanimated/pull/10576) by [@MatiPl01](https://github.com/MatiPl01))
 - Run `backgroundColor`, `borderColor` and `borderRadius` CSS transitions on Core Animation only when React Native draws them on the view's own layer; on a bordered non-clipping view they snapped. ([#10572](https://github.com/software-mansion/react-native-reanimated/pull/10572) by [@MatiPl01](https://github.com/MatiPl01))
 - Warn only once per caller when dependencies are passed to native hooks. ([#10562](https://github.com/software-mansion/react-native-reanimated/pull/10562) by [@tshmieldev](https://github.com/tshmieldev))
 - Keep `borderWidth` CSS transitions on the animation loop on iOS, so the children move with the border and no stray black border is drawn. ([#10569](https://github.com/software-mansion/react-native-reanimated/pull/10569) by [@MatiPl01](https://github.com/MatiPl01))
