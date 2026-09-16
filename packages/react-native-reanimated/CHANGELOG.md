@@ -12,6 +12,7 @@
 
 ### 🎉 New features
 
+- Animate `backgroundImage` gradients with CSS animations and transitions on iOS and Android. Two gradients interpolate smoothly when they have the same type, direction kind, shape and size form, and the same number of color stops; every other pair, including a gradient and no gradient, switches discretely. ([#10193](https://github.com/software-mansion/react-native-reanimated/pull/10193) by [@Titozzz](https://github.com/Titozzz))
 - Run `shadowColor` CSS transitions on the Android platform animation path on Android 9 and newer. ([#10547](https://github.com/software-mansion/react-native-reanimated/pull/10547) by [@MatiPl01](https://github.com/MatiPl01))
 - Run CSS transitions for `backgroundColor`, `borderColor`, and numeric `borderRadius` on the Android platform animation path. ([#10310](https://github.com/software-mansion/react-native-reanimated/pull/10310) by [@MatiPl01](https://github.com/MatiPl01))
 - Add `backgroundImage` support to animated styles. Linear and radial gradients are accepted as objects or CSS strings and processed on the UI thread. ([#10486](https://github.com/software-mansion/react-native-reanimated/pull/10486) by [@tshmieldev](https://github.com/tshmieldev))
