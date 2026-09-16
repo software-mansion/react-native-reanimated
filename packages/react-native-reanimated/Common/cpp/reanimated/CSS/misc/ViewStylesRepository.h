@@ -35,6 +35,9 @@ class ViewStylesRepository {
 
   void setLastMountedRoot(const RootShadowNode::Shared &rootShadowNode);
   void removeSurface(SurfaceId surfaceId);
+  /// Whether the family is in its surface's last mounted tree. Always true with the animation
+  /// backend, which records no snapshot (node eviction is not wired there yet).
+  bool isNodeMounted(const ShadowNodeFamily &family) const;
 
  private:
   std::shared_ptr<UIManager> uiManager_;

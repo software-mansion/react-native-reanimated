@@ -46,6 +46,7 @@ using SetGestureStateFunction = std::function<void(int, int)>;
 using KeyboardEventSubscribeFunction = std::function<int(std::function<void(int, int)>, bool, bool)>;
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
+using NotifyViewDetachedFunction = std::function<void(int viewTag)>;
 
 using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
 

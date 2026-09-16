@@ -7,6 +7,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <atomic>
+#include <functional>
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -46,7 +47,13 @@ class UpdatesRegistryManager {
 
   void markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode);
   void unmarkNodeAsRemovable(Tag viewTag);
+  /// Called once JS guarantees that no further updates can arrive for the node. Evicts it
+  /// right away when it has already left its mounted tree; otherwise the first mount without
+  /// it does. `isNodeMounted` answers whether the family is still in the last mounted tree.
+  void handleNodeDetached(Tag viewTag, const std::function<bool(const ShadowNodeFamily &)> &isNodeMounted);
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
+  /// Evicts the detached marks of a surface that RN has stopped; the rest follow on detach.
+  void handleSurfaceUnmount(SurfaceId surfaceId);
   PropsMap collectProps();
   void mergeRegistryProps(Tag viewTag, folly::dynamic &target);
 
@@ -57,7 +64,12 @@ class UpdatesRegistryManager {
 #endif
 
  private:
-  using RemovableShadowNodes = std::unordered_map<Tag, ShadowNodeFamily::Shared>;
+  struct RemovableNode {
+    ShadowNodeFamily::Shared family;
+    /// Set once JS reports that it detached the node, so no in-flight update can re-add it.
+    bool detached;
+  };
+  using RemovableShadowNodes = std::unordered_map<Tag, RemovableNode>;
 
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
@@ -65,6 +77,8 @@ class UpdatesRegistryManager {
   RemovableShadowNodes removableShadowNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
+
+  void evictNode(Tag viewTag);
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;

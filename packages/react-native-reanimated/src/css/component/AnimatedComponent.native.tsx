@@ -16,7 +16,11 @@ import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import type { DefaultStyle } from '../../hook/commonTypes';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { assignRef } from '../../reactUtils';
-import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
+import {
+  markNodeAsRemovable,
+  notifyViewDetached,
+  unmarkNodeAsRemovable,
+} from '../native';
 import { CSSManager } from '../platform';
 import type { CSSStyle } from '../types';
 import { filterCSSProps } from './utils';
@@ -158,13 +162,18 @@ export default class AnimatedComponent<
     }
 
     const wrapper = this._viewInfo?.shadowNodeWrapper;
+    const viewTag = this._viewInfo?.viewTag;
     if (wrapper) {
       // Mark node as removable on the native (C++) side, but only actually remove it
       // when it no longer exists in the Shadow Tree. This ensures proper cleanup of
       // animations/transitions/props while handling cases where the node might be
       // remounted (e.g., when frozen) after componentWillUnmount is called.
-
       markNodeAsRemovable(wrapper);
+      // Subclasses detach their styles before calling this, so the notification lands
+      // after the last update those styles could emit.
+      if (typeof viewTag === 'number') {
+        notifyViewDetached(viewTag);
+      }
     }
 
     this._willUnmount = true;

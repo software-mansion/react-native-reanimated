@@ -67,7 +67,8 @@ bool UpdatesRegistryManager::shouldCommitAfterPause() {
 
 void UpdatesRegistryManager::markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode) {
   react_native_assert(isLockedByCurrentThread());
-  removableShadowNodes_[shadowNode->getTag()] = shadowNode->getFamilyShared();
+  // A new unmount starts a new detach sequence, so an earlier detach no longer counts.
+  removableShadowNodes_[shadowNode->getTag()] = {shadowNode->getFamilyShared(), false};
 }
 
 void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
@@ -75,26 +76,61 @@ void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
   removableShadowNodes_.erase(viewTag);
 }
 
+void UpdatesRegistryManager::handleNodeDetached(
+    const Tag viewTag,
+    const std::function<bool(const ShadowNodeFamily &)> &isNodeMounted) {
+  react_native_assert(isLockedByCurrentThread());
+  const auto it = removableShadowNodes_.find(viewTag);
+  if (it == removableShadowNodes_.end()) {
+    return;
+  }
+  if (it->second.family && isNodeMounted(*it->second.family)) {
+    it->second.detached = true;
+    return;
+  }
+  removableShadowNodes_.erase(it);
+  evictNode(viewTag);
+}
+
 void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadowNode) {
   react_native_assert(isLockedByCurrentThread());
-  RemovableShadowNodes remainingShadowNodes;
+  const auto mountedSurfaceId = rootShadowNode.getSurfaceId();
 
-  for (const auto &[tag, shadowNodeFamily] : removableShadowNodes_) {
-    if (!shadowNodeFamily) {
-      continue;
-    }
-
-    if (shadowNodeFamily->getAncestors(rootShadowNode).empty()) {
-      for (auto &registry : registries_) {
-        registry->remove(tag);
-      }
-      staticPropsRegistry_->remove(tag);
+  for (auto it = removableShadowNodes_.begin(); it != removableShadowNodes_.end();) {
+    const auto &[family, detached] = it->second;
+    // Only the node's own tree can tell a removal from a remount that followed
+    // componentWillUnmount (a frozen screen); a foreign root proves nothing. Eviction also
+    // waits for the detach notification, which JS orders after the last update it can
+    // still emit for the node, so nothing can re-add the entry afterwards.
+    const bool isRemoved = !family ||
+        (detached && family->getSurfaceId() == mountedSurfaceId && family->getAncestors(rootShadowNode).empty());
+    if (isRemoved) {
+      evictNode(it->first);
+      it = removableShadowNodes_.erase(it);
     } else {
-      remainingShadowNodes.emplace(tag, shadowNodeFamily);
+      ++it;
     }
   }
+}
 
-  removableShadowNodes_ = std::move(remainingShadowNodes);
+void UpdatesRegistryManager::handleSurfaceUnmount(const SurfaceId surfaceId) {
+  react_native_assert(isLockedByCurrentThread());
+  for (auto it = removableShadowNodes_.begin(); it != removableShadowNodes_.end();) {
+    const auto &[family, detached] = it->second;
+    if (!family || (detached && family->getSurfaceId() == surfaceId)) {
+      evictNode(it->first);
+      it = removableShadowNodes_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
+void UpdatesRegistryManager::evictNode(const Tag viewTag) {
+  for (auto &registry : registries_) {
+    registry->remove(viewTag);
+  }
+  staticPropsRegistry_->remove(viewTag);
 }
 
 PropsMap UpdatesRegistryManager::collectProps() {

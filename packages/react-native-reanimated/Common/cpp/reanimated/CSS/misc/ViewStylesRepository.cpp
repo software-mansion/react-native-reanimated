@@ -121,6 +121,17 @@ void ViewStylesRepository::removeSurface(const SurfaceId surfaceId) {
   lastMountedRootBySurface_.erase(surfaceId);
 }
 
+bool ViewStylesRepository::isNodeMounted(const ShadowNodeFamily &family) const {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    return true;
+  }
+  const auto it = lastMountedRootBySurface_.find(family.getSurfaceId());
+  if (it == lastMountedRootBySurface_.end()) {
+    return false;
+  }
+  return !family.getAncestors(*it->second).empty();
+}
+
 folly::dynamic ViewStylesRepository::getStyleProp(const Tag tag, const PropertyPath &propertyPath) {
   auto animatedValue = getPropertyValue(animatedPropsRegistry_->get(tag), propertyPath);
   if (!animatedValue.isNull()) {

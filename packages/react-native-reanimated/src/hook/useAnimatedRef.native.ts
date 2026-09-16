@@ -10,6 +10,11 @@ import {
 } from 'react-native-worklets';
 
 import type { InstanceOrElement, ShadowNodeWrapper } from '../commonTypes';
+import {
+  markNodeAsRemovable,
+  notifyViewDetached,
+  unmarkNodeAsRemovable,
+} from '../css/native';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
 import { useAnimatedRefBase } from './useAnimatedRefCommon';
@@ -28,15 +33,33 @@ export function useAnimatedRef<
     createShareable<ShadowNodeWrapper | null>(UIRuntimeId, null)
   );
 
-  const resultRef = useAnimatedRefBase<TRef>((ref) => {
-    const currentWrapper = getShadowNodeWrapperFromRef(ref);
+  const resultRef = useAnimatedRefBase<TRef>(
+    (ref) => {
+      const currentWrapper = getShadowNodeWrapperFromRef(ref);
 
-    scheduleOnUI(() => {
-      (sharedWrapper as AnimatedRefOnUI).value = currentWrapper;
-    });
+      scheduleOnUI(() => {
+        (sharedWrapper as AnimatedRefOnUI).value = currentWrapper;
+      });
 
-    return currentWrapper;
-  });
+      return currentWrapper;
+    },
+    {
+      onAttach: (tag) => {
+        if (tag !== null) {
+          unmarkNodeAsRemovable(tag);
+        }
+      },
+      // A view that is only ever written through this ref (setNativeProps) has no animated
+      // component to mark it on unmount. Marking a view that its component marks anyway is
+      // harmless: its own unmount re-marks and re-notifies after detaching its styles.
+      onDetach: (wrapper, tag) => {
+        markNodeAsRemovable(wrapper);
+        if (tag !== null) {
+          notifyViewDetached(tag);
+        }
+      },
+    }
+  );
 
   if (!serializableMappingCache.get(resultRef)) {
     const animatedRefSerializable = createSerializable(sharedWrapper);

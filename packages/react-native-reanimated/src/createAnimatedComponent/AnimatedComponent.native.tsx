@@ -126,7 +126,6 @@ export default class AnimatedComponent
   }
 
   componentWillUnmount() {
-    super.componentWillUnmount();
     this._NativeEventsManager?.detachEvents();
     this._detachStyles();
     this._InlinePropManager.detachInlineProps();
@@ -137,6 +136,10 @@ export default class AnimatedComponent
         PropsRegistryGarbageCollector.unregisterView(viewTag);
       }
     }
+
+    // Marks the node removable and schedules the detach notification, which has to
+    // follow the style detachment above.
+    super.componentWillUnmount();
 
     if (this._options?.jsProps?.length) {
       jsPropsUpdater.unregisterComponent(this);

@@ -1,4 +1,6 @@
 'use strict';
+import { scheduleOnUI } from 'react-native-worklets';
+
 import type { ShadowNodeWrapper, StyleProps } from '../../commonTypes';
 import { ReanimatedModule } from '../../ReanimatedModule';
 import type { CSSEventHandler } from './events';
@@ -27,6 +29,16 @@ export function markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper) {
 
 export function unmarkNodeAsRemovable(viewTag: number) {
   ReanimatedModule.unmarkNodeAsRemovable(viewTag);
+}
+
+// scheduleOnUI is FIFO, so by the time this lands every UI-side removal scheduled before
+// it has landed too and no update for the view can still be in flight. Only then may the
+// native side evict the view's registry entries.
+export function notifyViewDetached(viewTag: number) {
+  scheduleOnUI(() => {
+    'worklet';
+    global._notifyViewDetached?.(viewTag);
+  });
 }
 
 // ANIMATIONS

@@ -348,6 +348,11 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       progressLayoutAnimation,
       endLayoutAnimation,
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction,
+      [weakThis = weak_from_this()](const int viewTag) {
+        if (const auto strongThis = weakThis.lock()) {
+          strongThis->notifyViewDetached(viewTag);
+        }
+      },
       requestAnimationFrame);
 }
 
@@ -510,6 +515,12 @@ void ReanimatedModuleProxy::markNodeAsRemovable(jsi::Runtime &rt, const jsi::Val
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   auto lock = updatesRegistryManager_->lock();
   updatesRegistryManager_->markNodeAsRemovable(shadowNode);
+}
+
+void ReanimatedModuleProxy::notifyViewDetached(const int viewTag) {
+  auto lock = updatesRegistryManager_->lock();
+  updatesRegistryManager_->handleNodeDetached(
+      viewTag, [this](const ShadowNodeFamily &family) { return viewStylesRepository_->isNodeMounted(family); });
 }
 
 void ReanimatedModuleProxy::unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &viewTag) {
@@ -1093,7 +1104,7 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
 
   // No registry lock is held here - shadowTree.commit re-enters via ReanimatedCommitHook.
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
-    shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
+    const bool isSurfaceAlive = shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
       const auto status = shadowTree.commit(
           [&](RootShadowNode const &oldRootShadowNode) -> RootShadowNode::Unshared {
             if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
@@ -1123,6 +1134,17 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
       (void)status;
 #endif
     });
+
+#ifdef ANDROID
+    if (!isSurfaceAlive) {
+      // There is no tree to commit the reverts of a stopped surface to, and they would be
+      // rebuilt on every commit otherwise.
+      auto lock = updatesRegistryManager_->lock();
+      updatesRegistryManager_->clearPropsToRevert(surfaceId);
+    }
+#else
+    (void)isSurfaceAlive;
+#endif
   }
 }
 
