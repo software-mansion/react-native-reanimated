@@ -53,6 +53,19 @@ describe(filterStyles, () => {
       });
     });
 
+    test('treat an explicit undefined default like a missing one', () => {
+      const { cssStyle } = filterStyles(
+        styleArray(
+          { backgroundColor: '#eee' },
+          { backgroundColor: { default: undefined, ':active': '#ccc' } }
+        )
+      );
+
+      expect(cssStyle).toEqual({
+        backgroundColor: { default: '#eee', ':active': '#ccc' },
+      });
+    });
+
     test('stay without default when no earlier entry sets the property', () => {
       const { cssStyle } = filterStyles(
         styleArray({ width: 100 }, { backgroundColor: { ':active': '#ccc' } })

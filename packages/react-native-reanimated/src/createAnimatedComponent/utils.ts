@@ -60,7 +60,7 @@ function withInheritedDefault(value: unknown, overridden: unknown): unknown {
   if (restingValue === undefined || isSharedValue(restingValue)) {
     return value;
   }
-  return { default: restingValue, ...value };
+  return { ...value, default: restingValue };
 }
 
 function mergeCSSStyle(
