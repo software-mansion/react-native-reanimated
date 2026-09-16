@@ -19,6 +19,7 @@
 ### 🐛 Bug fixes
 
 - Fix CSS platform transitions ignoring slow animations: on iOS they snapped to the end state under the Simulator's Slow Animations, and on Android they played at full speed under the dev-menu toggle. ([#10548](https://github.com/software-mansion/react-native-reanimated/pull/10548) by [@MatiPl01](https://github.com/MatiPl01))
+- Fix the Release Android build failing on an unused variable in `SharedTransitions.cpp`, and the `backgroundImage` style types failing to compile with React Native 0.85, 0.86 and nightly. ([#10558](https://github.com/software-mansion/react-native-reanimated/pull/10558) by [@tjzel](https://github.com/tjzel))
 - Keep a delayed CSS transition at its start value when it is interrupted or reversed before its delay ends; the platform path used to evaluate the easing at progress 0, which is the end value for `step-start`. ([#10356](https://github.com/software-mansion/react-native-reanimated/pull/10356) by [@MatiPl01](https://github.com/MatiPl01))
 - Restore the underlying native style when a running CSS animation is removed or its `animationName` becomes `none`. ([#10528](https://github.com/software-mansion/react-native-reanimated/pull/10528) by [@MatiPl01](https://github.com/MatiPl01))
 - Fixed a crash after animations settled when `backgroundImage` was animated with `useAnimatedStyle`. The settled props sync now converts the native gradient format back before passing it to React. ([#10542](https://github.com/software-mansion/react-native-reanimated/pull/10542) by [@tshmieldev](https://github.com/tshmieldev))
