@@ -73,6 +73,11 @@ void ReanimatedMountHook::shadowTreeDidUnmount(SurfaceId surfaceId, HighResTimeS
   if (layoutAnimationsProxyRegistry_) {
     layoutAnimationsProxyRegistry_->remove(surfaceId);
   }
+
+  // Once RN has stopped the surface nothing overwrites its mounted-root snapshot, and
+  // RN itself no longer references that tree, so the snapshot would pin it forever.
+  auto lock = updatesRegistryManager_->lock();
+  viewStylesRepository_->removeSurface(surfaceId);
 }
 
 } // namespace reanimated

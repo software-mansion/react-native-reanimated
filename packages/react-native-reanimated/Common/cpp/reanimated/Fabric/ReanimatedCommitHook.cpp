@@ -15,9 +15,11 @@ namespace reanimated {
 ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
+    const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
     const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
+      viewStylesRepository_(viewStylesRepository),
       layoutAnimationsProxyRegistry_(layoutAnimationsProxyRegistry) {
   uiManager_->registerCommitHook(*this);
   uiManager_->getShadowTreeRegistry().enumerate(
@@ -49,6 +51,15 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     return newRootShadowNode;
+  }
+
+  if (newRootShadowNode->getChildren().empty()) {
+    // A stopping surface commits an empty root after RN has already unregistered it, and
+    // RN reports that mount only from a later mount-item dispatch, which a paused Android
+    // host never runs. Drop the surface's mounted-root snapshot here, synchronously in the
+    // stop. If the surface is merely rendering nothing, its next mount records the root again.
+    auto lock = updatesRegistryManager_->lock();
+    viewStylesRepository_->removeSurface(shadowTree.getSurfaceId());
   }
 
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(newRootShadowNode);

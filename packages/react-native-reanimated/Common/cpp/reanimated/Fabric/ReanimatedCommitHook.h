@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 
@@ -16,6 +17,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
   ReanimatedCommitHook(
       const std::shared_ptr<UIManager> &uiManager,
       const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
+      const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
       const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry);
 
   ~ReanimatedCommitHook() noexcept override;
@@ -35,6 +37,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
  private:
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
+  std::shared_ptr<css::ViewStylesRepository> viewStylesRepository_;
   std::shared_ptr<LayoutAnimationsProxyRegistry> layoutAnimationsProxyRegistry_;
 };
 
