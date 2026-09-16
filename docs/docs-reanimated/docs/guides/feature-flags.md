@@ -171,7 +171,6 @@ Routing is decided per property, so a single transition may run partly on the pl
 | `backgroundColor` |    ✅     |    ❌     |
 | `borderColor`     |    ✅     |    ❌     |
 | `borderRadius`    |    ✅     |    ❌     |
-| `borderWidth`     |    ✅     |    ❌     |
 | `shadowColor`     |    ✅     |    ❌     |
 | `shadowOffset`    |    ✅     |    ❌     |
 | `shadowOpacity`   |    ✅     |    ❌     |
