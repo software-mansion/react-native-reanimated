@@ -1,5 +1,6 @@
 'use strict';
 
+import { AbortController, AbortSignal } from './AbortController';
 import { Blob } from './Blob';
 import { DOMException } from './DOMException';
 import { FileReader } from './FileReader';
@@ -29,6 +30,8 @@ export function installNetworking() {
   global.FileReader ??= FileReader;
   global.FormData ??= FormData;
   global.DOMException ??= DOMException;
+  global.AbortController ??= AbortController;
+  global.AbortSignal ??= AbortSignal;
 
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   require('whatwg-fetch');

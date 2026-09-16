@@ -1,3 +1,4 @@
+import { AbortController } from '../src/networking/AbortController';
 import { Blob } from '../src/networking/Blob';
 import { FileReader } from '../src/networking/FileReader';
 import { FormData } from '../src/networking/FormData';
@@ -246,5 +247,39 @@ describe('FormData', () => {
     expect(utf8Decode(new Uint8Array(body))).toContain(
       'content-disposition: form-data; name="na%22me%0D%0A"'
     );
+  });
+});
+
+describe('AbortController', () => {
+  test('aborts its signal once', () => {
+    const controller = new AbortController();
+    const listener = jest.fn();
+    const handler = jest.fn();
+    controller.signal.addEventListener('abort', listener);
+    controller.signal.onabort = handler;
+    expect(controller.signal.aborted).toBe(false);
+    controller.abort();
+    controller.abort();
+    expect(controller.signal.aborted).toBe(true);
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(handler).toHaveBeenCalledTimes(1);
+    expect((controller.signal.reason as Error).name).toBe('AbortError');
+  });
+
+  test('keeps a custom abort reason', () => {
+    const controller = new AbortController();
+    const reason = new Error('[Worklets] custom');
+    controller.abort(reason);
+    expect(controller.signal.reason).toBe(reason);
+    expect(() => controller.signal.throwIfAborted()).toThrow(reason);
+  });
+
+  test('removes abort listeners', () => {
+    const controller = new AbortController();
+    const listener = jest.fn();
+    controller.signal.addEventListener('abort', listener);
+    controller.signal.removeEventListener('abort', listener);
+    controller.abort();
+    expect(listener).not.toHaveBeenCalled();
   });
 });

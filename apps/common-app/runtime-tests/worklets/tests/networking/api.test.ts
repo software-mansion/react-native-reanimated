@@ -47,6 +47,8 @@ describe('networking API on Worklet Runtimes', () => {
             'XMLHttpRequest',
             'Blob',
             'FileReader',
+            'AbortController',
+            'AbortSignal',
           ];
           return globalNames
             .filter(
