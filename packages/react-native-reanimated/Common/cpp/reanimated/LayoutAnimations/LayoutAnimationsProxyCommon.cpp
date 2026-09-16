@@ -169,7 +169,7 @@ bool LayoutAnimationsProxyCommon::hasLayoutAnimationRecords() const {
 void LayoutAnimationsProxyCommon::applySynchronousPropsToLayoutAnimation(const Tag tag, const folly::dynamic &props)
     const {
   const bool propsIncludeOpacity = props.count("opacity") > 0;
-  if (pendingLayoutAnimations_.contains(tag)) {
+  if (hasPendingLayoutAnimation(tag)) {
     for (auto &operation : layoutAnimationOperations_) {
       std::visit(
           [&](auto &start) {
