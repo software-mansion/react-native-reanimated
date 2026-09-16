@@ -1,5 +1,8 @@
 'use strict';
-import { supportsPlatformRouting } from '../platformRouting';
+import {
+  platformBlockedUntil,
+  supportsPlatformRouting,
+} from '../platformRouting';
 
 // Mirrors React Native's useCoreAnimationBorderRendering on iOS.
 describe('supportsPlatformRouting (iOS)', () => {
@@ -65,5 +68,39 @@ describe('supportsPlatformRouting (iOS)', () => {
     ],
   ])('rejects %s', (_name, style) => {
     expect(supportsPlatformRouting(style)).toBe(false);
+  });
+});
+
+describe('platformBlockedUntil (iOS)', () => {
+  const settings = (duration: number, delay = 0) => ({
+    duration,
+    delay,
+    timingFunction: 'ease',
+    allowDiscrete: false,
+    value: [0, 1],
+  });
+
+  test('blocks until a border transition ends', () => {
+    expect(
+      platformBlockedUntil({ borderWidth: settings(300, 100) } as never, 1000)
+    ).toBe(1400);
+  });
+
+  test('takes the latest end of several', () => {
+    expect(
+      platformBlockedUntil(
+        { borderColor: settings(200), overflow: settings(500) } as never,
+        1000
+      )
+    ).toBe(1500);
+  });
+
+  test('ignores other properties and removed ones', () => {
+    expect(
+      platformBlockedUntil(
+        { backgroundColor: settings(300), borderRadius: null } as never,
+        1000
+      )
+    ).toBe(0);
   });
 });

@@ -12,6 +12,7 @@ import type {
   CSSTransitionConfig,
   NormalizedCSSTransitionConfig,
 } from '../types';
+import { platformBlockedUntil } from './platformRouting';
 
 export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private readonly viewTag: number;
@@ -26,6 +27,8 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private hasTransition = false;
   private appliedEventMask = 0;
   private appliedPlatformAllowed = true;
+  // Until when a running border transition keeps the platform off, see platformRouting.
+  private platformBlockedUntil = 0;
 
   constructor(shadowNodeWrapper: ShadowNodeWrapper, viewTag: number) {
     this.viewTag = viewTag;
@@ -71,6 +74,13 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
       transitionConfig
     );
 
+    const now = Date.now();
+    this.platformBlockedUntil = Math.max(
+      this.platformBlockedUntil,
+      platformBlockedUntil(config, now)
+    );
+    platformAllowed &&= now >= this.platformBlockedUntil;
+
     if (Object.keys(config).length) {
       this.appliedEventMask = eventMask;
       this.appliedPlatformAllowed = platformAllowed;
@@ -106,6 +116,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     this.hasTransition = false;
     this.appliedEventMask = 0;
     this.appliedPlatformAllowed = true;
+    this.platformBlockedUntil = 0;
   }
 
   private processTransitionConfig(
