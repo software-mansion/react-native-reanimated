@@ -6258,18 +6258,20 @@ Routing is decided per property, so a single transition may run partly on the pl
 
 #### Properties routed to the platform
 
-| Property          |    iOS    |  Android  |
-| ----------------- | :-------: | :-------: |
-| `opacity`         |    ✅     |    ✅     |
-| `backgroundColor` |    ✅     |    ❌     |
-| `borderColor`     |    ✅     |    ❌     |
-| `borderRadius`    |    ✅     |    ❌     |
-| `shadowColor`     |    ✅     |    ❌     |
-| `shadowOffset`    |    ✅     |    ❌     |
-| `shadowOpacity`   |    ✅     |    ❌     |
-| `shadowRadius`    |    ✅     |    ❌     |
+Each cell gives the Reanimated version since which the property is routed to the platform; a cross means it runs on the animation loop.
 
-Properties that aren't routed keep running on the animation loop, which supports all of them. Android routes `opacity` for now, support for more properties will be added in the future. `shadowOffset`, `shadowOpacity` and `shadowRadius` are iOS-only styles in React Native.
+| Property          |       iOS       |     Android      |
+| ----------------- | :-------------: | :--------------: |
+| `opacity`         |      4.4.0      |      4.6.0       |
+| `backgroundColor` |      4.5.0      |      4.7.0       |
+| `borderColor`     |      4.5.0      |      4.7.0       |
+| `borderRadius`    | 4.5.0 (numeric) | 4.7.0 (numeric)  |
+| `shadowColor`     |      4.5.0      | 4.7.0 (API 28+)  |
+| `shadowOffset`    |      4.5.0      |        ❌        |
+| `shadowOpacity`   |      4.5.0      |        ❌        |
+| `shadowRadius`    |      4.5.0      |        ❌        |
+
+Properties that aren't routed keep running on the animation loop, which supports all of them. `borderRadius` is routed only when it is a number, so a percentage value runs on the loop. On Android, `shadowColor` is routed on API 28 (Android 9) and newer; older versions keep it on the loop. `shadowOffset`, `shadowOpacity` and `shadowRadius` are iOS-only styles in React Native.
 
 > **Warning**
 >
