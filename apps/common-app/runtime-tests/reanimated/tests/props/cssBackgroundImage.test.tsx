@@ -370,25 +370,30 @@ describe('CSS backgroundImage', () => {
     expect(await gradients()).toBe('[]');
   });
 
-  test('a stop with a platform color reaches the renderer and switches discretely', async () => {
-    await render(
-      <Example
-        progress={0.75}
-        reference={[nativeColorStop]}
-        keyframes={{
-          from: { backgroundImage: [redToBlue] },
-          to: { backgroundImage: [nativeColorStop] },
-        }}
-      />
-    );
-    const layer = firstLayer(await gradients());
-    const nativeColor = firstLayer(await gradients('static')).colorStops[0]
-      .color;
-    expect(isResolvedColor(nativeColor)).toBe(true);
-    expect(nativeColor).not.toBe(RED);
-    expect(layer.colorStops[0].color).toBe(nativeColor);
-    expect(layer.colorStops[1].color).toBe(RED);
-  });
+  test.each([0.25, 0.75])(
+    'a stop with a platform color reaches the renderer and switches discretely: %p',
+    async (progress) => {
+      await render(
+        <Example
+          progress={progress}
+          reference={[nativeColorStop]}
+          keyframes={{
+            from: { backgroundImage: [redToBlue] },
+            to: { backgroundImage: [nativeColorStop] },
+          }}
+        />
+      );
+      const layer = firstLayer(await gradients());
+      const nativeColor = firstLayer(await gradients('static')).colorStops[0]
+        .color;
+      expect(isResolvedColor(nativeColor)).toBe(true);
+      expect(nativeColor).not.toBe(RED);
+      expect(layer.colorStops[0].color).toBe(
+        progress < 0.5 ? RED : nativeColor
+      );
+      expect(layer.colorStops[1].color).toBe(progress < 0.5 ? BLUE : RED);
+    }
+  );
 
   test.each([0.25, 0.75])(
     'an implicit endpoint with a platform color switches discretely: %p',
