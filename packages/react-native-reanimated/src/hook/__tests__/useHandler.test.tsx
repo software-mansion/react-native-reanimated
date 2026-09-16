@@ -69,7 +69,7 @@ describe('useHandler (native)', () => {
       expect(result.current.doDependenciesDiffer).toBe(false);
 
       expect(logger.logOnce).toHaveBeenCalledWith(
-        'dependencies should only be used in web implementation.',
+        'Dependencies should only be used on the web and are always ignored on native. Check DevTools to see the offending code.',
         1
       );
     });
@@ -104,7 +104,7 @@ describe('useHandler (native)', () => {
       expect(result.current.doDependenciesDiffer).toBe(true);
 
       expect(logger.logOnce).toHaveBeenCalledWith(
-        'dependencies should only be used in web implementation.',
+        'Dependencies should only be used on the web and are always ignored on native. Check DevTools to see the offending code.',
         1
       );
     });
