@@ -1,5 +1,6 @@
 'use strict';
 
+import { Blob } from './Blob';
 import { toArrayBuffer } from './bytes';
 import { DOMException } from './DOMException';
 import type { NetworkingEventListener } from './events';
@@ -27,7 +28,7 @@ const HEADERS_RECEIVED = 2;
 const LOADING = 3;
 const DONE = 4;
 
-const RESPONSE_TYPES = ['', 'text', 'arraybuffer', 'json'] as const;
+const RESPONSE_TYPES = ['', 'text', 'arraybuffer', 'blob', 'json'] as const;
 
 type XMLHttpRequestResponseType = (typeof RESPONSE_TYPES)[number];
 
@@ -100,6 +101,7 @@ export class XMLHttpRequest extends EventTargetLite {
   private responseHeaders: Array<[string, string]> = [];
   private responseTypeValue: XMLHttpRequestResponseType = '';
   private responseBytes: ArrayBuffer | null = null;
+  private responseBlobValue: Blob | null = null;
   private responseTextValue: string | null = null;
   private responseJsonValue: unknown = undefined;
 
@@ -127,6 +129,19 @@ export class XMLHttpRequest extends EventTargetLite {
         return this.readyState >= LOADING ? this.getResponseText() : '';
       case 'arraybuffer':
         return this.readyState === DONE ? this.responseBytes : null;
+      case 'blob':
+        if (this.readyState !== DONE || this.responseBytes === null) {
+          return null;
+        }
+        if (this.responseBlobValue === null) {
+          this.responseBlobValue = new Blob([this.responseBytes], {
+            type:
+              this.mimeTypeOverride ??
+              this.getResponseHeader('content-type') ??
+              '',
+          });
+        }
+        return this.responseBlobValue;
       case 'json':
         if (this.readyState !== DONE) {
           return null;
@@ -404,6 +419,7 @@ export class XMLHttpRequest extends EventTargetLite {
   private handleResponseEndOfBody(body?: ArrayBuffer) {
     this.responseBytes = body ?? new ArrayBuffer(0);
     this.responseTextValue = null;
+    this.responseBlobValue = null;
     this.responseJsonValue = undefined;
     const transmitted = Math.max(
       this.responseBytes.byteLength,
@@ -469,6 +485,7 @@ export class XMLHttpRequest extends EventTargetLite {
     this.responseHeaders = [];
     this.responseBytes = null;
     this.responseTextValue = null;
+    this.responseBlobValue = null;
     this.responseJsonValue = undefined;
   }
 
@@ -501,6 +518,10 @@ function decodeResponseText(
   return utf8Decode(new Uint8Array(bytes));
 }
 
+function isBlobLike(body: unknown): body is Blob {
+  return typeof (body as Blob | undefined)?.__getBytes === 'function';
+}
+
 function normalizeBody(body: unknown): {
   data?: string | ArrayBuffer;
   contentType?: string;
@@ -513,6 +534,12 @@ function normalizeBody(body: unknown): {
   }
   if (body instanceof ArrayBuffer) {
     return { data: body };
+  }
+  if (isBlobLike(body)) {
+    return {
+      data: toArrayBuffer(body.__getBytes()),
+      contentType: body.type !== '' ? body.type : undefined,
+    };
   }
   if (ArrayBuffer.isView(body)) {
     return {

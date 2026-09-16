@@ -1,3 +1,5 @@
+import { Blob } from '../src/networking/Blob';
+import { FileReader } from '../src/networking/FileReader';
 import { utf8Decode, utf8Encode } from '../src/networking/utf8';
 import { XMLHttpRequest } from '../src/networking/XMLHttpRequest';
 
@@ -80,5 +82,114 @@ describe('XMLHttpRequest', () => {
     xhr.responseType = 'arraybuffer';
     expect(() => xhr.responseText).toThrow('[Worklets]');
     expect(xhr.response).toBe(null);
+  });
+});
+
+describe('Blob', () => {
+  test('concatenates parts and reports size', async () => {
+    const blob = new Blob(['abc', new Uint8Array([0x64]).buffer], {
+      type: 'Text/Plain',
+    });
+    expect(blob.size).toBe(4);
+    expect(blob.type).toBe('text/plain');
+    await expect(blob.text()).resolves.toBe('abcd');
+  });
+
+  test('constructs without arguments', () => {
+    expect(new Blob().size).toBe(0);
+  });
+
+  test('handles non-ASCII text parts', async () => {
+    const blob = new Blob(['jaźń']);
+    expect(blob.size).toBe(6);
+    await expect(blob.text()).resolves.toBe('jaźń');
+  });
+
+  test('slices with negative indices', async () => {
+    const blob = new Blob(['abcdef']);
+    const slice = blob.slice(-3, -1, 'text/x-slice');
+    expect(slice.size).toBe(2);
+    expect(slice.type).toBe('text/x-slice');
+    await expect(slice.text()).resolves.toBe('de');
+  });
+
+  test('exposes bytes as an ArrayBuffer', async () => {
+    const buffer = await new Blob(['ab']).arrayBuffer();
+    expect(Array.from(new Uint8Array(buffer))).toEqual([0x61, 0x62]);
+  });
+
+  test('is detectable through Object.prototype.toString', () => {
+    expect(Object.prototype.toString.call(new Blob())).toBe('[object Blob]');
+  });
+});
+
+describe('FileReader', () => {
+  test('reads text with the charset from the blob type', async () => {
+    const reader = new FileReader();
+    const done = new Promise<void>((resolve) => {
+      reader.onloadend = () => resolve();
+    });
+    reader.readAsText(
+      new Blob([new Uint8Array([0x61, 0x62])], {
+        type: 'text/plain; charset="utf-8"',
+      })
+    );
+    await done;
+    expect(reader.result).toBe('ab');
+    expect(reader.error).toBe(null);
+  });
+
+  test('rejects a second read while loading', () => {
+    const reader = new FileReader();
+    reader.readAsText(new Blob(['first']));
+    expect(() => reader.readAsText(new Blob(['second']))).toThrow(
+      'already loading'
+    );
+  });
+
+  test('clears the previous result and error before a new read', async () => {
+    const reader = new FileReader();
+    const readOnce = (blob: Blob) =>
+      new Promise<void>((resolve) => {
+        reader.onloadend = () => resolve();
+        reader.readAsText(blob);
+      });
+
+    await readOnce(new Blob([], { type: 'text/plain' }));
+    reader.error = new Error('stale');
+    await readOnce(new Blob(['fresh']));
+    expect(reader.result).toBe('fresh');
+    expect(reader.error).toBe(null);
+  });
+
+  test('does not report an error when onload throws', async () => {
+    const reader = new FileReader();
+    const events: string[] = [];
+    const done = new Promise<void>((resolve) => {
+      reader.onload = () => {
+        events.push('load');
+        throw new Error('consumer failure');
+      };
+      reader.onerror = () => events.push('error');
+      reader.onloadend = () => {
+        events.push('loadend');
+        resolve();
+      };
+    });
+    reader.readAsText(new Blob(['body']));
+    await done;
+    expect(events).toEqual(['load', 'loadend']);
+    expect(reader.error).toBe(null);
+  });
+
+  test('reports a foreign Blob as a read error', async () => {
+    const reader = new FileReader();
+    const done = new Promise<void>((resolve) => {
+      reader.onloadend = () => resolve();
+    });
+    reader.readAsText({ type: 'text/plain' } as unknown as Blob);
+    await done;
+    expect(String(reader.error)).toContain('Worklets networking module');
+    expect(reader.result).toBe(null);
   });
 });

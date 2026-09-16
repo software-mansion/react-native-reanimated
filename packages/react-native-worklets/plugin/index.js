@@ -1079,6 +1079,8 @@ var require_globals = __commonJS({
       "require",
       "fetch",
       "XMLHttpRequest",
+      "Blob",
+      "FileReader",
       "WebSocket",
       // Run loop
       "queueMicrotask",
