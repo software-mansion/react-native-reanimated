@@ -19,6 +19,7 @@ import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSCallbacksManager from './CSSCallbacksManager';
 import CSSPseudoStylesManager from './CSSPseudoStylesManager';
 import CSSTransitionsManager from './CSSTransitionsManager';
+import { supportsPlatformRouting } from './platformRouting';
 
 export default class CSSManager implements ICSSManager {
   private readonly cssAnimationsManager: CSSAnimationsManager;
@@ -34,6 +35,9 @@ export default class CSSManager implements ICSSManager {
    * https://github.com/software-mansion/react-native-reanimated/issues/9218).
    */
   private hadTransitionLastUpdate = false;
+  // Whether the previous style let the platform show routed transitions. A run
+  // is routed only when both the style it leaves and the one it targets do.
+  private prevStyleSupportsPlatform = true;
 
   constructor(
     { shadowNodeWrapper, viewTag, reactViewName = 'RCTView' }: ViewInfo,
@@ -95,7 +99,8 @@ export default class CSSManager implements ICSSManager {
     const transitionDetached = this.cssTransitionsManager.update(
       transitionProperties,
       normalizedStyle,
-      transitionEventMask
+      transitionEventMask,
+      this.updatePlatformRouting(normalizedStyle)
     );
 
     // Record the committed style as the base so animations (including one
@@ -117,6 +122,19 @@ export default class CSSManager implements ICSSManager {
     );
 
     this.hadTransitionLastUpdate = hasTransition;
+  }
+
+  private updatePlatformRouting(
+    normalizedStyle: UnknownRecord | undefined
+  ): boolean {
+    if (!normalizedStyle) {
+      this.prevStyleSupportsPlatform = true;
+      return true;
+    }
+    const supportsPlatform = supportsPlatformRouting(normalizedStyle);
+    const allowed = this.prevStyleSupportsPlatform && supportsPlatform;
+    this.prevStyleSupportsPlatform = supportsPlatform;
+    return allowed;
   }
 
   unmountCleanup(): void {

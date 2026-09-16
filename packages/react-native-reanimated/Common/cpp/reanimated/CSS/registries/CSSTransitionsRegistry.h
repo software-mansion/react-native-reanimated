@@ -30,6 +30,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
       CSSTransitionConfig &&config);
 
   void setEventMask(const std::shared_ptr<const ShadowNode> &shadowNode, CSSEventMask eventMask);
+  void setPlatformAllowed(const std::shared_ptr<const ShadowNode> &shadowNode, bool allowed);
   void run(const std::shared_ptr<const ShadowNode> &shadowNode, const PropertyValueDynamicDiffsMap &propertyDiffs);
 
   void setPseudoLockedProperties(Tag viewTag, const TransitionProperties &properties);

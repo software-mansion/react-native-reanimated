@@ -37,13 +37,15 @@ class CSSPlatformTransitionProxy {
   explicit CSSPlatformTransitionProxy(std::shared_ptr<CSSPlatformTransitionBackend> backend);
 
   /// Routes the config between platform and loop, updating `routing` and returning
-  /// the loop-routed remainder to run.
+  /// the loop-routed remainder to run. `layerAllowed` false keeps the properties drawn
+  /// with the border on the loop.
   CSSTransitionConfig processConfig(
       jsi::Runtime &rt,
       Tag viewTag,
       const CSSTransitionConfig &config,
       CSSTransitionRouting &routing,
       bool allowPlatform,
+      bool layerAllowed,
       double timestamp);
 
   /// Re-routes pseudo-selector toggle diffs: a property the platform can no longer
@@ -55,10 +57,20 @@ class CSSPlatformTransitionProxy {
       const TransitionProperties &pseudoLockedProperties,
       CSSTransitionRouting &routing,
       bool allowPlatform,
+      bool layerAllowed,
       double timestamp);
 
   /// Cancels the native transition of every given property (teardown).
   void cancelAll(Tag viewTag, const TransitionProperties &properties);
+
+  /// Moves the platform-routed properties drawn with the border to the loop: an unfinished
+  /// run continues there from the value it shows now with its settings; a finished one only
+  /// changes sides, since the committed style already holds its target.
+  struct Demotion {
+    PropertyValueDynamicDiffsMap diffs;
+    PropertiesSettingsMap settings;
+  };
+  Demotion demoteBorderDrawn(Tag viewTag, CSSTransitionRouting &routing, double timestamp);
 
  private:
   struct ActiveTransition {
@@ -72,6 +84,7 @@ class CSSPlatformTransitionProxy {
   };
 
   bool canRoute(const std::string &propertyName, const EasingConfig &easing) const;
+  bool drawsWithBorder(const std::string &propertyName) const;
   /// Null `settings` is the pseudo-selector toggle path, which reuses the stored ones.
   bool apply(
       Tag viewTag,

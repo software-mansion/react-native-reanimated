@@ -143,8 +143,6 @@ class REACSSPlatformTransitionBackend : public css::CSSPlatformTransitionBackend
 
   bool canRoute(const std::string &propertyName, const css::EasingConfig &easing) const override
   {
-    // TODO: border props snap when RN rasterizes the border (the view fails
-    // useCoreAnimationBorderRendering); route them only when the layer draws them.
     // CAMediaTimingFunction carries only linear and cubic-bezier curves.
     return css::hasPlatformValueTraits(propertyName) &&
         (std::holds_alternative<css::LinearEasing>(easing) || std::holds_alternative<css::CubicBezierEasing>(easing));
@@ -173,6 +171,13 @@ class REACSSPlatformTransitionBackend : public css::CSSPlatformTransitionBackend
   void stopTransition(Tag viewTag, const std::string &propertyName) override
   {
     [platformTransitions_ stopTransitionForTag:viewTag propertyName:propertyName];
+  }
+
+  /// RN draws these on the view's own layer only while useCoreAnimationBorderRendering holds;
+  /// opacity and the shadow properties sit on that layer either way.
+  bool drawsWithBorder(const std::string &propertyName) const override
+  {
+    return propertyName == "backgroundColor" || propertyName == "borderColor" || propertyName == "borderRadius";
   }
 
  private:

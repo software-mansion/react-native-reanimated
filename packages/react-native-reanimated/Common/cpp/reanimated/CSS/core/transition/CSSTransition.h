@@ -66,6 +66,11 @@ class CSSTransition {
 
   void setEventMask(CSSEventMask eventMask);
 
+  /// Whether the platform draws the view's border on the view's own layer (JS mirrors its rule
+  /// per commit); off, the properties drawn with the border stay on the loop, and their
+  /// in-flight platform runs move there. The returned first frame keeps them where they are.
+  folly::dynamic setPlatformAllowed(bool allowed, const folly::dynamic &lastUpdates);
+
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
@@ -78,12 +83,15 @@ class CSSTransition {
   std::shared_ptr<CSSLoopTransition> loopTransition_;
 
   CSSEventMask eventMask_{0};
+  bool platformAllowed_{true};
   // What runs have settled since the last flush. An interpolator is retired by the same call that
   // produces its final frame, so a run finishing within its starting frame leaves nothing to
   // recompute afterwards. Several runs can land before one flush, so they accumulate here.
   folly::dynamic pendingInitialUpdate_ = folly::dynamic::object();
 
   CSSLoopTransition &ensureLoopTransition();
+  bool allowsPlatform() const;
+  folly::dynamic demoteBorderDrawnRuns(const folly::dynamic &lastUpdates, double timestamp);
   void dropPending(const std::vector<std::string> &propertyNames);
   void scheduleLoop(double timestamp);
   void observeMilestones(CSSLoopTransition &loopTransition);

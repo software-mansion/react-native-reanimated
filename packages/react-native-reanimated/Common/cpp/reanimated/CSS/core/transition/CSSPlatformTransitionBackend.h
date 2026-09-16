@@ -35,6 +35,12 @@ class CSSPlatformTransitionBackend {
       bool persistent) = 0;
 
   virtual void stopTransition(Tag viewTag, const std::string &propertyName) = 0;
+
+  /// Whether the platform draws the property together with the border, so it needs the
+  /// view's own layer, which the border rendering can take away (see CSSTransition).
+  virtual bool drawsWithBorder(const std::string & /*propertyName*/) const {
+    return false;
+  }
 };
 
 } // namespace reanimated::css
