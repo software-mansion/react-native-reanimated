@@ -54,10 +54,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   }
 
   if (newRootShadowNode->getChildren().empty()) {
-    // A stopping surface commits an empty root after RN has already unregistered it, and
-    // RN reports that mount only from a later mount-item dispatch, which a paused Android
-    // host never runs. Drop the surface's mounted-root snapshot here, synchronously in the
-    // stop. If the surface is merely rendering nothing, its next mount records the root again.
+    // A stopping surface commits an empty root; its mount is not reported on a paused Android host.
     auto lock = updatesRegistryManager_->lock();
     viewStylesRepository_->removeSurface(shadowTree.getSurfaceId());
   }
