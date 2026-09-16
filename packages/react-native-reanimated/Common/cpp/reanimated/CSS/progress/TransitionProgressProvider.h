@@ -5,7 +5,6 @@
 #include <reanimated/CSS/progress/RunLifecycle.h>
 #include <reanimated/CSS/progress/TimeProgressProvider.h>
 #include <reanimated/CSS/utils/props.h>
-#include <reanimated/CSS/utils/transitionTiming.h>
 
 #include <memory>
 #include <string>

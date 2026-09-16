@@ -1,7 +1,5 @@
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
-#include <reanimated/CSS/utils/transitionTiming.h>
-
 #include <algorithm>
 #include <limits>
 #include <memory>

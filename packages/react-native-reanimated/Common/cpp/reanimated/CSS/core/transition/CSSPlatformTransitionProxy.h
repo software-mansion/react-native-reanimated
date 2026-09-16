@@ -5,7 +5,6 @@
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionBackend.h>
 #include <reanimated/CSS/easing/EasingConfigs.h>
 #include <reanimated/CSS/utils/platform.h>
-#include <reanimated/CSS/utils/transitionTiming.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
