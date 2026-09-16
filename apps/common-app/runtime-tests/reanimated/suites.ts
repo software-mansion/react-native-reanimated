@@ -11,6 +11,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'cssBackgroundImage',
+    importTest: () => {
+      require('./tests/props/cssBackgroundImage.test');
+    },
+  },
+  {
     testSuiteName: 'animations',
     importTest: () => {
       const { describe } = require('../ReJest/RuntimeTestsApi') as {
