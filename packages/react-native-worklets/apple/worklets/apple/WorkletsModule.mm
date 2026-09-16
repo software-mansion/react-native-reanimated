@@ -16,12 +16,6 @@
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
 
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-#import <React/RCTNetworking.h>
-#import <ReactCommon/RCTTurboModule.h>
-#import <worklets/apple/Networking/WorkletsNetworking.h>
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
-
 #import <memory>
 #import <string>
 
@@ -49,9 +43,6 @@ BundleModeConfig makeBundleModeConfig(NSURL *bundleURL)
   std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
   std::shared_ptr<WorkletsModuleProxyInitializer> initializer_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-  WorkletsNetworking *workletsNetworking_;
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -66,9 +57,6 @@ BundleModeConfig makeBundleModeConfig(NSURL *bundleURL)
 @synthesize bridge = _bridge;
 @synthesize bundleManager = bundleManager_;
 @synthesize callInvoker = callInvoker_;
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-@synthesize moduleRegistry = moduleRegistry_;
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
@@ -148,10 +136,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
   animationFrameQueue_ = [AnimationFrameQueue new];
   uiScheduler_ = std::make_shared<IOSUIScheduler>();
   rnRuntimeStatus_ = std::make_shared<RNRuntimeStatus>();
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-  id networkingModule = [moduleRegistry_ moduleForClass:RCTNetworking.class];
-  workletsNetworking_ = [[WorkletsNetworking alloc] init:networkingModule];
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 }
 
 - (void)createInitializer
@@ -181,27 +165,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
       },
-      .nativeLoggingHook = makeNativeLoggingHook()
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-          ,
-      .abortRequest =
-          [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, const jsi::Value &requestID) {
-            [workletsNetworking jsiAbortRequest:requestID.asNumber()];
-            return jsi::Value::undefined();
-          },
-      .clearCookies =
-          [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, jsi::Function &&responseSender) {
-            [workletsNetworking jsiClearCookies:rt responseSender:(std::move(responseSender))];
-            return jsi::Value::undefined();
-          },
-      .sendRequest =
-          [workletsNetworking = workletsNetworking_](
-              jsi::Runtime &rt, const jsi::Value &query, jsi::Function &&responseSender) {
-            [workletsNetworking jsiSendRequest:rt jquery:query responseSender:(std::move(responseSender))];
-            return jsi::Value::undefined();
-          }
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
-  });
+      .nativeLoggingHook = makeNativeLoggingHook()});
 }
 
 @end
