@@ -179,7 +179,7 @@ Each cell gives the Reanimated version since which the property is routed to the
 | `shadowOpacity`   |      4.5.0      |        ❌        |
 | `shadowRadius`    |      4.5.0      |        ❌        |
 
-iOS has routed `opacity` since 4.4.0 and the other listed properties since 4.5.0. Android has routed `opacity` since 4.6.0; 4.7.0 adds `backgroundColor`, `borderColor`, `borderRadius` and `shadowColor`, the last one on Android 9 (API 28) and newer. `borderRadius` is routed only when it is a number; a percentage value runs on the loop on both platforms. Properties that aren't routed keep running on the animation loop, which supports all of them. `borderWidth` affects layout on Android, so it stays on the loop, and `shadowOffset`, `shadowOpacity` and `shadowRadius` are iOS-only styles in React Native.
+Properties that aren't routed keep running on the animation loop, which supports all of them. `borderRadius` is routed only when it is a number, and `borderWidth` stays on the loop on Android because it affects layout. `shadowOffset`, `shadowOpacity` and `shadowRadius` are iOS-only styles in React Native.
 
 :::warning
 Known limitation on iOS. `backgroundColor`, `borderColor`, `borderWidth` and `borderRadius` are routed even when React Native draws them on separate layers rather than on the view's own one. The routed animation doesn't reach those layers, so the new value shows up at once instead of animating. React Native keeps the four properties on the view's own layer only when:
