@@ -12,4 +12,6 @@ export type CSSPseudoStyleEntry = {
 export type CSSPseudoStyleConfig = {
   defaultStyle: StyleProps;
   selectors: CSSPseudoStyleEntry[];
+  // Whether the platform can show the view's routed transitions, see platformRouting.
+  platformAllowed: boolean;
 };

@@ -1,6 +1,6 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../../../commonTypes';
-import { runCSSTransition } from '../../proxy';
+import { registerPseudoStyles, runCSSTransition } from '../../proxy';
 import CSSManager from '../CSSManager';
 
 jest.mock('../../proxy');
@@ -90,6 +90,18 @@ describe('CSSManager (iOS) platform routing flag', () => {
       {},
       0,
       false
+    );
+  });
+  test('checks each pseudo selector style on top of the default one', () => {
+    manager.update({
+      backgroundColor: { default: 'red', ':active': 'blue' },
+      ':active': { borderWidth: 2 },
+      ...TRANSITION,
+    } as never);
+
+    expect(registerPseudoStyles).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ platformAllowed: false })
     );
   });
 });

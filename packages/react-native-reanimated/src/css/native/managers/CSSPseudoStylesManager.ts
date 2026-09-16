@@ -27,6 +27,7 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
 
   private prevPseudoStylesBySelector: PseudoStylesBySelector | null = null;
   private prevTransitionProperties: CSSTransitionProperties | null = null;
+  private prevPlatformAllowed = true;
   private isRegistered = false;
 
   constructor(
@@ -43,11 +44,13 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
 
   update(
     pseudoStylesBySelector: PseudoStylesBySelector | null,
-    transitionProperties: CSSTransitionProperties | null
+    transitionProperties: CSSTransitionProperties | null,
+    platformAllowed = true
   ): void {
     if (
       deepEqual(pseudoStylesBySelector, this.prevPseudoStylesBySelector) &&
-      deepEqual(transitionProperties, this.prevTransitionProperties)
+      deepEqual(transitionProperties, this.prevTransitionProperties) &&
+      platformAllowed === this.prevPlatformAllowed
     ) {
       return;
     }
@@ -58,6 +61,7 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
 
     this.prevPseudoStylesBySelector = pseudoStylesBySelector;
     this.prevTransitionProperties = transitionProperties;
+    this.prevPlatformAllowed = platformAllowed;
 
     if (!pseudoStylesBySelector) {
       if (this.isRegistered) {
@@ -122,6 +126,7 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
       registerPseudoStyles(this.shadowNodeWrapper, {
         defaultStyle: builtDefaultStyle,
         selectors,
+        platformAllowed,
       });
       this.isRegistered = true;
     }
@@ -133,6 +138,7 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     }
     this.prevPseudoStylesBySelector = null;
     this.prevTransitionProperties = null;
+    this.prevPlatformAllowed = true;
   }
 
   private detach() {

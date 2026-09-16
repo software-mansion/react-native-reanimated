@@ -645,6 +645,11 @@ void ReanimatedModuleProxy::registerPseudoStyles(
 
   auto lock = updatesRegistryManager_->lock();
 
+  const auto platformAllowed = configObj.getProperty(rt, "platformAllowed");
+  if (platformAllowed.isBool()) {
+    cssTransitionsRegistry_->setPlatformAllowed(shadowNode, platformAllowed.getBool());
+  }
+
   for (size_t i = 0; i < selectorsCount; ++i) {
     const auto entryObj = selectorsArray.getValueAtIndex(rt, i).asObject(rt);
     const auto selectorEnum = pseudoSelectorFromString(stringFromValue(rt, entryObj.getProperty(rt, "selector")));

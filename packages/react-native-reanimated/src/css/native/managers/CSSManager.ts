@@ -13,6 +13,7 @@ import type {
   CSSTransitionCallbacks,
 } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
+import type { PseudoStylesBySelector } from '../../utils';
 import { filterCSSAndStyleProperties, splitCSSCallbacks } from '../../utils';
 import { setViewStyle } from '../proxy';
 import CSSAnimationsManager from './CSSAnimationsManager';
@@ -92,15 +93,21 @@ export default class CSSManager implements ICSSManager {
       hasAnimation ||
       hasTransition ||
       hadAttachedAnimations ||
+      pseudoStylesBySelector !== null ||
       (IS_ANDROID && this.hadTransitionLastUpdate)
         ? this.propsBuilder.build(filteredStyle)
         : undefined;
+
+    const platformAllowed = this.updatePlatformRouting(
+      normalizedStyle,
+      pseudoStylesBySelector
+    );
 
     const transitionDetached = this.cssTransitionsManager.update(
       transitionProperties,
       normalizedStyle,
       transitionEventMask,
-      this.updatePlatformRouting(normalizedStyle)
+      platformAllowed
     );
 
     // Record the committed style as the base so animations (including one
@@ -118,21 +125,30 @@ export default class CSSManager implements ICSSManager {
     this.cssAnimationsManager.update(animationProperties, animationEventMask);
     this.cssPseudoStylesManager.update(
       pseudoStylesBySelector,
-      transitionProperties
+      transitionProperties,
+      platformAllowed
     );
 
     this.hadTransitionLastUpdate = hasTransition;
   }
 
+  // A pseudo selector's style is a target too, so each one is checked on top of the default.
   private updatePlatformRouting(
-    normalizedStyle: UnknownRecord | undefined
+    normalizedStyle: UnknownRecord | undefined,
+    pseudoStylesBySelector: PseudoStylesBySelector | null
   ): boolean {
     if (!normalizedStyle) {
       this.prevStyleSupportsPlatform = true;
       return true;
     }
     const supportsPlatform = supportsPlatformRouting(normalizedStyle);
-    const allowed = this.prevStyleSupportsPlatform && supportsPlatform;
+    const allowed =
+      this.prevStyleSupportsPlatform &&
+      supportsPlatform &&
+      (!pseudoStylesBySelector ||
+        Object.values(pseudoStylesBySelector).every(({ selectorStyle }) =>
+          supportsPlatformRouting({ ...normalizedStyle, ...selectorStyle })
+        ));
     this.prevStyleSupportsPlatform = supportsPlatform;
     return allowed;
   }
