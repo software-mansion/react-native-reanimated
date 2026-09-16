@@ -19,3 +19,21 @@ runs:
       with:
         path: ~/Library/Caches/ccache
         key: ccache-${{ inputs.key-prefix }}-${{ github.sha }}
+
+    # Restores match by prefix and take the newest entry, so every older
+    # entry under the same prefix is dead weight against the 10 GB budget.
+    - name: Delete superseded ccache entries
+      if: (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/main'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        REPO: ${{ github.repository }}
+        KEY_PREFIX: ccache-${{ inputs.key-prefix }}-
+        CURRENT_KEY: ccache-${{ inputs.key-prefix }}-${{ github.sha }}
+      run: |
+        gh api --paginate "repos/${REPO}/actions/caches?key=${KEY_PREFIX}&ref=refs/heads/main&per_page=100" \
+          --jq ".actions_caches[] | select(.key != \"${CURRENT_KEY}\") | .id" |
+        while read -r id; do
+          echo "Deleting cache ${id}"
+          gh api -X DELETE "repos/${REPO}/actions/caches/${id}"
+        done
