@@ -19,6 +19,7 @@
 
 ### 🐛 Bug fixes
 
+- Carry a view's current registry values in the Reanimated commits that change its layout props, so iOS no longer writes a stale transform back to a view that moved through the synchronous path. ([#10416](https://github.com/software-mansion/react-native-reanimated/pull/10416) by [@pawicao](https://github.com/pawicao))
 - Warn only once per caller when dependencies are passed to native hooks. ([#10562](https://github.com/software-mansion/react-native-reanimated/pull/10562) by [@tshmieldev](https://github.com/tshmieldev))
 - Keep `borderWidth` CSS transitions on the animation loop on iOS, so the children move with the border and no stray black border is drawn. ([#10569](https://github.com/software-mansion/react-native-reanimated/pull/10569) by [@MatiPl01](https://github.com/MatiPl01))
 - Resume a `shadowOffset` CSS transition from its in-flight value when it moves from Core Animation to the C++ loop, instead of restarting from the previously committed offset. ([#10564](https://github.com/software-mansion/react-native-reanimated/pull/10564) by [@MatiPl01](https://github.com/MatiPl01))
