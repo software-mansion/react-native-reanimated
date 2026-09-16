@@ -36,7 +36,7 @@ import type {
 import { InlinePropManager } from './InlinePropManager';
 import jsPropsUpdater from './JSPropsUpdater';
 import { PropsFilter } from './PropsFilter';
-import { filterStyles, flattenArray } from './utils';
+import { filterStyles, flattenArray, mergeCSSAnimatedProps } from './utils';
 
 let id = 0;
 
@@ -328,15 +328,10 @@ export default class AnimatedComponent
         return;
       }
 
-      // Add all remaining props to cssStyle object
-      // (e.g. SVG components are styled via top level props, not via style object)
-      const mergedProps = {
-        ...props,
-        ...filteredAnimatedProps.cssStyle,
-      };
-      delete mergedProps.style;
-      delete mergedProps.animatedProps;
-      this._cssStyle = mergedProps;
+      this._cssStyle = mergeCSSAnimatedProps(
+        props,
+        filteredAnimatedProps.cssStyle
+      );
     } else {
       this._cssStyle = filteredStyles.cssStyle ?? {};
     }
