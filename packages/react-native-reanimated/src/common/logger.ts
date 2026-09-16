@@ -145,11 +145,7 @@ export const logger = {
       return;
     }
     logged.add(key);
-    handleLog(
-      ReanimatedLogLevel.warn,
-      frame ? `${message}\n${frame}` : message,
-      {}
-    );
+    handleLog(ReanimatedLogLevel.warn, message, {});
   },
   error(message: string, options: LogOptions = {}) {
     'worklet';

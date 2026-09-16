@@ -29,15 +29,14 @@ afterEach(() => {
   onLog.mockClear();
 });
 
-test('prints only once for the selected caller, including its location', () => {
+test('logs once per caller', () => {
   logger.logOnce('dependencies warning', 1);
   logger.logOnce('dependencies warning', 1);
 
   expect(logFunction).toHaveBeenCalledTimes(1);
   expect(logFunction).toHaveBeenCalledWith({
     level: ReanimatedLogLevel.warn,
-    message:
-      '[Reanimated] dependencies warning\nat LibraryComponent (someoneslib/src/labubu.js:21:37)',
+    message: '[Reanimated] dependencies warning',
   });
   expect(onLog).toHaveBeenCalledTimes(1);
   expect(onLog).toHaveBeenCalledWith(logFunction.mock.calls[0][0]);
@@ -58,9 +57,11 @@ test('zero selects the direct caller and ignores changes higher in the stack', (
   logger.logOnce('warning', 0);
 
   expect(logFunction).toHaveBeenCalledTimes(1);
-  expect(logFunction.mock.calls[0][0].message).toContain(
-    'at useDerivedValue (useDerivedValue.ts:34:12)'
-  );
+  expect(logFunction.mock.calls[0][0].message).toBe('[Reanimated] warning');
+
+  error.stack = error.stack.replace('34:12', '35:12');
+  logger.logOnce('warning', 0);
+  expect(logFunction).toHaveBeenCalledTimes(2);
 });
 
 test('supports JavaScriptCore stacks without an Error header', () => {
@@ -74,9 +75,11 @@ test('supports JavaScriptCore stacks without an Error header', () => {
   logger.logOnce('warning', 1);
 
   expect(logFunction).toHaveBeenCalledTimes(1);
-  expect(logFunction.mock.calls[0][0].message).toContain(
-    'LibraryComponent@someoneslib/src/labubu.js:21:37'
-  );
+  expect(logFunction.mock.calls[0][0].message).toBe('[Reanimated] warning');
+
+  error.stack = error.stack.replace('21:37', '42:37');
+  logger.logOnce('warning', 1);
+  expect(logFunction).toHaveBeenCalledTimes(2);
 });
 
 test('supports Hermes bytecode locations', () => {
@@ -90,9 +93,11 @@ test('supports Hermes bytecode locations', () => {
   logger.logOnce('warning', 1);
 
   expect(logFunction).toHaveBeenCalledTimes(1);
-  expect(logFunction.mock.calls[0][0].message).toContain(
-    'at LibraryComponent (address at index.bundle:1:300)'
-  );
+  expect(logFunction.mock.calls[0][0].message).toBe('[Reanimated] warning');
+
+  error.stack = error.stack.replace('1:300', '1:400');
+  logger.logOnce('warning', 1);
+  expect(logFunction).toHaveBeenCalledTimes(2);
 });
 
 test.each([undefined, '', 'Error'])(
