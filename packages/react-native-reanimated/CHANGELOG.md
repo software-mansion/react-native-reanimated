@@ -64,6 +64,7 @@
 
 ### 💡 Others
 
+- Merge the accumulated Android raw props of a view in the layout animations light tree only when an animation, a shared element transition or a synchronous update reads that view, instead of on every commit. ([#10570](https://github.com/software-mansion/react-native-reanimated/pull/10570) by [@pawicao](https://github.com/pawicao))
 - Reduce Android layout animation overhead by skipping the raw props merge and props clone in the light tree when an Update reuses the same props pointer, and by moving the merged raw props instead of copying them. ([#10566](https://github.com/software-mansion/react-native-reanimated/pull/10566) by [@pawicao](https://github.com/pawicao))
 - Deduplicate the native CSS transition state machine across Android and iOS. ([#10356](https://github.com/software-mansion/react-native-reanimated/pull/10356) by [@MatiPl01](https://github.com/MatiPl01))
 - Move the `IOS_CSS_CORE_ANIMATION` and `ANDROID_CSS_PLATFORM_TRANSITIONS` checks out of the shared C++ code: each platform now supplies its native CSS transition backend under its own flag. No behavior change. ([#10546](https://github.com/software-mansion/react-native-reanimated/pull/10546) by [@MatiPl01](https://github.com/MatiPl01))
