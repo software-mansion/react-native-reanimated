@@ -1,15 +1,24 @@
 ---
 sidebar_position: 1
+hide_table_of_contents: true
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import * as ShowcaseSnippet from './_getting-started/showcase';
+import ShowcaseSource from '!!raw-loader!./_getting-started/showcase';
+import * as ShowcaseSingleSnippet from './_getting-started/showcaseSingle';
+import ShowcaseSingleSource from '!!raw-loader!./_getting-started/showcaseSingle';
 
 # Getting started
 
 ## What is React Native Worklets?
 
 React Native Worklets is a library that allows you to run JavaScript code in parallel on multiple threads and runtimes.
+
+To learn more, explore our tutorials section, starting with the explanation for the [purpose](/docs/tutorials/purpose) of the library.
+
+<ThreadingShowcase single={{ module: ShowcaseSingleSnippet, source: ShowcaseSingleSource }} worklets={{ module: ShowcaseSnippet, source: ShowcaseSource }}/>
 
 ## Installation
 

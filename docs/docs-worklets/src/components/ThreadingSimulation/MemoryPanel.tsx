@@ -1,0 +1,135 @@
+import React from 'react';
+import clsx from 'clsx';
+
+import type { CoreSnapshot, MemorySnapshot } from '@site/src/simulation';
+
+import styles from './styles.module.css';
+import { runtimeClass, threadName } from './runtimeColors';
+import QueueList from './QueueList';
+import type { RuntimeDescriptor } from './runtimeColors';
+
+interface MemoryPanelProps {
+  runtimes: RuntimeDescriptor[];
+  present: Set<string>;
+  allRuntimes: RuntimeDescriptor[];
+  cores: CoreSnapshot[];
+  memory: MemorySnapshot[];
+  settled: boolean;
+  steady: Set<string>;
+}
+
+export default function MemoryPanel({
+  runtimes,
+  present,
+  allRuntimes,
+  cores,
+  memory,
+  settled,
+  steady,
+}: MemoryPanelProps) {
+  const ordered = [...runtimes].sort((a, b) => memoryRank(a) - memoryRank(b));
+  const synchronizables = memory.filter(
+    (cell) => cell.kind === 'synchronizable'
+  );
+  const accessorOf = (cell: MemorySnapshot) =>
+    cell.accessedBy === null || !settled
+      ? undefined
+      : allRuntimes.find((candidate) => candidate.id === cell.accessedBy);
+  return (
+    <div className={styles.memoryColumn}>
+      <div className={styles.vmRow}>
+        {ordered.map((runtime) => {
+          const executor = cores.find(
+            (candidate) =>
+              candidate.status === 'running' &&
+              candidate.heldRuntimes.includes(runtime.id)
+          );
+          const executorDescriptor =
+            executor === undefined
+              ? undefined
+              : allRuntimes.find((candidate) => candidate.id === executor.id);
+          const own = cores.find((candidate) => candidate.id === runtime.id);
+          const running =
+            executor !== undefined && (settled || steady.has(executor.id));
+          const pending = own?.pending ?? [];
+          const error = own?.error ?? null;
+          const paused =
+            running && executor !== undefined && executor.id !== runtime.id;
+          const shareables = memory.filter(
+            (cell) => cell.kind === 'shareable' && cell.host === runtime.id
+          );
+          return (
+            <div
+              key={runtime.id}
+              className={clsx(
+                styles.box,
+                styles.vm,
+                runtimeClass(executorDescriptor ?? runtime),
+                running && styles.boxActive,
+                !present.has(runtime.id) && styles.vmPlaceholder
+              )}
+              aria-hidden={!present.has(runtime.id)}>
+              <span className={styles.boxTitle}>{runtime.label}</span>
+              <span className={styles.boxDetail}>
+                {!running || executorDescriptor === undefined
+                  ? 'no thread'
+                  : threadName(executorDescriptor)}
+              </span>
+              {shareables.map((cell) => {
+                const accessor = accessorOf(cell);
+                return (
+                  <span
+                    key={`shareable-${cell.id}`}
+                    className={clsx(
+                      styles.shareable,
+                      accessor !== undefined && runtimeClass(accessor),
+                      accessor !== undefined && styles.shareableActive
+                    )}>
+                    <span className={styles.shareableLabel}>Shareable</span>
+                    <span className={styles.cellNumber}>{cell.value}</span>
+                  </span>
+                );
+              })}
+              {error !== null && (
+                <span className={styles.vmError}>{error}</span>
+              )}
+              {error === null && (
+                <QueueList pending={pending} paused={paused} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {synchronizables.length > 0 && (
+        <div className={styles.nativeRow}>
+          <span className={styles.nativeLabel}>native heap</span>
+          {synchronizables.map((cell) => {
+            const accessor = accessorOf(cell);
+            return (
+              <span
+                key={`cell-${cell.id}`}
+                className={clsx(
+                  styles.synchronizable,
+                  accessor !== undefined && runtimeClass(accessor),
+                  accessor !== undefined && styles.synchronizableActive
+                )}>
+                <span className={styles.shareableLabel}>Synchronizable</span>
+                <span className={styles.cellNumber}>{cell.value}</span>
+              </span>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function memoryRank(runtime: RuntimeDescriptor): number {
+  if (runtime.kind === 'rn') {
+    return 0;
+  }
+  if (runtime.kind === 'ui') {
+    return 1;
+  }
+  return 2 + runtime.coreIndex;
+}

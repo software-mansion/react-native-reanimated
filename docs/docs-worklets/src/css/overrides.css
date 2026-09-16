@@ -134,6 +134,10 @@ button[class*='DocSearch-Button'] {
   color: var(--swm-dropdown-versions-item-hover) !important;
 }
 
+.theme-doc-sidebar-item-category-level-2 > .menu__list {
+  padding-left: 12px;
+}
+
 /* examples sidebar */
 
 [class*='plugin-blog'] [class*='sidebar']:not([class*='navbar-sidebar']) {
@@ -200,4 +204,15 @@ footer .footer__bottom [class*='footer__copyright'] p {
 
 footer .footer__bottom [class*='footer__copyright'] p a[data-privacy-policy] {
   text-decoration: none;
+}
+
+[class*='_wrapper_']:has(> [class*='_badge_'][class*='_deprecated_'])
+  .menu__link {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  opacity: 0.7;
+}
+
+[class*='_badge_'][class*='_deprecated_'] {
+  display: none;
 }
