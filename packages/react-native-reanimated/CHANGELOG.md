@@ -19,6 +19,7 @@
 
 ### 🐛 Bug fixes
 
+- Fix a pseudo-selector object without `default` letting the value from an earlier entry of the style array (or a plain prop of the same name in `animatedProps`) reach the host view, so the property rests at its own default from mount on native and on web, as documented. ([#10578](https://github.com/software-mansion/react-native-reanimated/pull/10578) by [@MatiPl01](https://github.com/MatiPl01))
 - Warn only once per caller when dependencies are passed to native hooks. ([#10562](https://github.com/software-mansion/react-native-reanimated/pull/10562) by [@tshmieldev](https://github.com/tshmieldev))
 - Keep `borderWidth` CSS transitions on the animation loop on iOS, so the children move with the border and no stray black border is drawn. ([#10569](https://github.com/software-mansion/react-native-reanimated/pull/10569) by [@MatiPl01](https://github.com/MatiPl01))
 - Resume a `shadowOffset` CSS transition from its in-flight value when it moves from Core Animation to the C++ loop, instead of restarting from the previously committed offset. ([#10564](https://github.com/software-mansion/react-native-reanimated/pull/10564) by [@MatiPl01](https://github.com/MatiPl01))
