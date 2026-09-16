@@ -58,7 +58,6 @@ declare global {
   var _frameCallbackRegistry: FrameCallbackRegistryUI;
   var console: Console;
   var __reanimatedLoggerConfig: LoggerConfigInternal | undefined;
-  var __reanimatedLoggedMessages: Set<string> | undefined;
   var __mapperRegistry: MapperRegistry;
   var __sensorContainer: SensorContainer;
   var LayoutAnimationsManager: LayoutAnimationsManager;

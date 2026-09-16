@@ -5,6 +5,7 @@ const PREFIX = '[Reanimated]';
 const DOCS_URL =
   'https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration';
 const DOCS_REFERENCE = `If you don't want to see this message, you can disable the \`strict\` mode. Refer to:\n${DOCS_URL} for more details.`;
+const loggedMessages = new Set<string>();
 
 export enum ReanimatedLogLevel {
   warn = 1,
@@ -140,11 +141,10 @@ export const logger = {
     const frame =
       Number.isInteger(level) && level >= 0 ? frames?.[level + 1] : undefined;
     const key = JSON.stringify([message, frame ?? null]);
-    const logged = (global.__reanimatedLoggedMessages ??= new Set<string>());
-    if (logged.has(key)) {
+    if (loggedMessages.has(key)) {
       return;
     }
-    logged.add(key);
+    loggedMessages.add(key);
     handleLog(ReanimatedLogLevel.warn, message, {});
   },
   error(message: string, options: LogOptions = {}) {

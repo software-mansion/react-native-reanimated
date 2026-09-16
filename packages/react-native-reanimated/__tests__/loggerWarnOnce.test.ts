@@ -1,16 +1,21 @@
+import type { logger as Logger } from '../src/common/logger';
 import {
   getLoggerConfig,
-  logger,
   ReanimatedLogLevel,
   updateLoggerConfig,
 } from '../src/common/logger';
 
 const logFunction = jest.fn();
 const onLog = jest.fn();
+let logger: typeof Logger;
 let error: Error;
 
 beforeEach(() => {
-  global.__reanimatedLoggedMessages = undefined;
+  jest.isolateModules(() => {
+    logger = jest.requireActual<{ logger: typeof Logger }>(
+      '../src/common/logger'
+    ).logger;
+  });
   updateLoggerConfig({ ...getLoggerConfig(), logFunction }, {}, onLog);
   error = new Error();
   error.stack = [
