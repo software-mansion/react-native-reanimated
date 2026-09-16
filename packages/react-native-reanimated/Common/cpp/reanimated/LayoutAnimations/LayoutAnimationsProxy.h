@@ -93,6 +93,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::optional<UncommittedScreenPop> uncommittedScreenPop_;
   mutable std::shared_ptr<LightNode> topScreen_;
   mutable std::unordered_map<Tag, SharedContainer> sharedContainers_;
+  mutable std::unordered_set<Tag> hiddenViewTags_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
@@ -172,6 +173,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
 
+  void keepTransitioningViewsHidden(
+      ShadowViewMutationList &filteredMutations,
+      const PropsParserContext &propsParserContext) const;
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
   void startSurface(
       const facebook::react::ShadowTree &shadowTree,
