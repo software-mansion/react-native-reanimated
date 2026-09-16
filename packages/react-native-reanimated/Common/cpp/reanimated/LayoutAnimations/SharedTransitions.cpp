@@ -360,7 +360,7 @@ Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
   node->parent = root;
   root->children.push_back(node);
   transaction.containersToInsert.push_back(node);
-  const auto [_, inserted] = lightNodes_.emplace(containerTag, node);
+  [[maybe_unused]] const auto [_, inserted] = lightNodes_.emplace(containerTag, node);
   react_native_assert(inserted && "Shared container already exists");
   sharedContainers_.emplace(
       containerTag,

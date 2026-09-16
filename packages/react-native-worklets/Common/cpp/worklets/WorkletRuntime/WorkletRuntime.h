@@ -124,9 +124,15 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    * Does not run a microtask checkpoint.
    */
   template <RuntimeCallable TCallable, typename... TArgs>
-  auto runSync(const TCallable &callable, TArgs &&...args) const -> jsi::Value {
+  [[nodiscard]] auto runSync(const TCallable &callable, TArgs &&...args) const -> jsi::Value {
     auto lock = acquireRuntimeLock();
     return runSyncImpl(callable, std::forward<TArgs>(args)...);
+  }
+
+  template <RuntimeCallable TCallable, typename... TArgs>
+  void runSyncAndDiscard(const TCallable &callable, TArgs &&...args) const {
+    auto lock = acquireRuntimeLock();
+    static_cast<void>(runSyncImpl(callable, std::forward<TArgs>(args)...));
   }
 
   /**
@@ -166,7 +172,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    * Runs a single microtask checkpoint on completion.
    */
   template <RuntimeCallable TCallable, typename... TArgs>
-  auto runSyncAndDrainMicrotasks(const TCallable &callable, TArgs &&...args) const -> jsi::Value {
+  [[nodiscard]] auto runSyncAndDrainMicrotasks(const TCallable &callable, TArgs &&...args) const -> jsi::Value {
     auto lock = acquireRuntimeLock();
     return runSyncImpl<MicrotaskCheckpoint::Run>(callable, std::forward<TArgs>(args)...);
   }
@@ -425,8 +431,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   void bundleModeInit(
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<const ScriptBuffer> &script,
-      const std::string &sourceUrl,
-      const std::shared_ptr<RuntimeBindings> &runtimeBindings);
+      const std::string &sourceUrl);
 
   void legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader);
 

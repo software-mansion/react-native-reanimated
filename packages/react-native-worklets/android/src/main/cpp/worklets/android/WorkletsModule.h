@@ -45,9 +45,11 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
 
   void prepareProxyCpp();
 
-  void installTurboModuleCpp(
-      jboolean bundleModeEnabled,
-      jni::alias_ref<JScriptBufferWrapper::javaobject> jScriptBufferWrapper);
+  void beginBundleModeAOTCpp();
+
+  void prepareBundleModeAOTCpp();
+
+  void installTurboModuleCpp(jboolean bundleModeEnabled);
 
   void startCpp();
 
@@ -60,12 +62,9 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
 
   std::shared_ptr<RuntimeBindings> getRuntimeBindings();
 
+  BundleModeConfig loadBundleModeConfig();
+
   RuntimeBindings::RequestAnimationFrame getRequestAnimationFrame();
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-  RuntimeBindings::AbortRequest getAbortRequest();
-  RuntimeBindings::ClearCookies getClearCookies();
-  RuntimeBindings::SendRequest getSendRequest();
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
   std::function<bool()> getIsOnJSQueueThread();
 

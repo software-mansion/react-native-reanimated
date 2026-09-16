@@ -1,6 +1,5 @@
 #include <reanimated/CSS/utils/platform.h>
 #include <reanimated/CSS/utils/props.h>
-#include <reanimated/Tools/FeatureFlags.h>
 
 #include <algorithm>
 #include <array>
@@ -26,7 +25,7 @@ struct CSSPropertyTraits {
 };
 
 // Value kind and CSS default per property (mirrors InterpolatorRegistry.cpp).
-// Which of them a platform actually routes is canRouteCSSProperty's decision.
+// Which of them a platform actually routes is its backend's canRoute decision.
 const CSSPropertyTraits *traitsFor(const std::string &propertyName) {
   constexpr std::array<double, 4> kTransparentColor = {0, 0, 0, 0};
   constexpr std::array<double, 4> kBlackColor = {0, 0, 0, 1};
@@ -35,7 +34,6 @@ const CSSPropertyTraits *traitsFor(const std::string &propertyName) {
       {"backgroundColor", {CSSValueKind::Color, kTransparentColor}},
       {"borderColor", {CSSValueKind::Color, kBlackColor}},
       {"borderRadius", {CSSValueKind::Scalar, 0.0}},
-      {"borderWidth", {CSSValueKind::Scalar, 0.0}},
       {"shadowColor", {CSSValueKind::Color, kBlackColor}},
       {"shadowOpacity", {CSSValueKind::Scalar, 1.0}},
       {"shadowRadius", {CSSValueKind::Scalar, 0.0}},
@@ -122,34 +120,8 @@ lerpValue(const std::array<double, N> &from, const std::array<double, N> &to, co
 
 } // namespace
 
-bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &easing) {
-#if __APPLE__
-  if constexpr (!StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
-    return false;
-  }
-  if (traitsFor(propertyName) == nullptr) {
-    return false;
-  }
-  // TODO: border props route unconditionally, but snap when RN rasterizes the
-  // border (view fails useCoreAnimationBorderRendering); they should route only
-  // when the platform can render them correctly (follow-up PR).
-  // CAMediaTimingFunction can express only linear and cubic-bezier curves;
-  // steps / linear-stops easings have to interpolate per-frame on the loop.
-  return std::holds_alternative<LinearEasing>(easing) || std::holds_alternative<CubicBezierEasing>(easing);
-#elif defined(ANDROID)
-  if constexpr (!StaticFeatureFlags::getFlag("ANDROID_CSS_PLATFORM_TRANSITIONS")) {
-    return false;
-  }
-  // Any TimeInterpolator can carry a curve, so every easing routes and this is unused.
-  (void)easing;
-  // borderWidth affects layout on Android, so it stays on the loop. shadowColor
-  // is supported on Android API 28+, but is not routed here; the other shadow*
-  // props are iOS-only.
-  return std::ranges::find(kAndroidPlatformProperties, propertyName) != kAndroidPlatformProperties.end();
-#else
-  // No native routing backend on this platform yet; every property runs on the loop.
-  return false;
-#endif // __APPLE__
+bool hasPlatformValueTraits(const std::string &propertyName) {
+  return traitsFor(propertyName) != nullptr;
 }
 
 std::optional<PlatformValue>
@@ -173,6 +145,39 @@ double packColorChannels(const std::array<double, 4> &channels) {
   const uint32_t packed =
       (toByte(channels[3]) << 24) | (toByte(channels[0]) << 16) | (toByte(channels[1]) << 8) | toByte(channels[2]);
   return static_cast<double>(packed);
+}
+
+jsi::Value platformValueToJSI(jsi::Runtime &rt, const PlatformValue &value) {
+  return std::visit(
+      [&rt](const auto &typedValue) -> jsi::Value {
+        using T = std::decay_t<decltype(typedValue)>;
+        if constexpr (std::is_same_v<T, double>) {
+          return jsi::Value(typedValue);
+        } else if constexpr (std::is_same_v<T, std::array<double, 2>>) {
+          jsi::Object size(rt);
+          size.setProperty(rt, "width", typedValue[0]);
+          size.setProperty(rt, "height", typedValue[1]);
+          return jsi::Value(std::move(size));
+        } else {
+          return jsi::Value(packColorChannels(typedValue));
+        }
+      },
+      value);
+}
+
+folly::dynamic platformValueToDynamic(const PlatformValue &value) {
+  return std::visit(
+      [](const auto &typedValue) -> folly::dynamic {
+        using T = std::decay_t<decltype(typedValue)>;
+        if constexpr (std::is_same_v<T, double>) {
+          return typedValue;
+        } else if constexpr (std::is_same_v<T, std::array<double, 2>>) {
+          return folly::dynamic::object("width", typedValue[0])("height", typedValue[1]);
+        } else {
+          return packColorChannels(typedValue);
+        }
+      },
+      value);
 }
 
 std::optional<PlatformValuePair> parsePlatformValues(

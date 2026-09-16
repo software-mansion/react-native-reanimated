@@ -11,6 +11,7 @@
 
 ### 🎉 New features
 
+- Run `shadowColor` CSS transitions on the Android platform animation path on Android 9 and newer. ([#10547](https://github.com/software-mansion/react-native-reanimated/pull/10547) by [@MatiPl01](https://github.com/MatiPl01))
 - Run CSS transitions for `backgroundColor`, `borderColor`, and numeric `borderRadius` on the Android platform animation path. ([#10310](https://github.com/software-mansion/react-native-reanimated/pull/10310) by [@MatiPl01](https://github.com/MatiPl01))
 - Add `backgroundImage` support to animated styles. Linear and radial gradients are accepted as objects or CSS strings and processed on the UI thread. ([#10486](https://github.com/software-mansion/react-native-reanimated/pull/10486) by [@tshmieldev](https://github.com/tshmieldev))
 - Add iOS Swift Package Manager support via `Package.swift` and SPM integration metadata in `react-native.config.js`, with a dependency on `RNWorklets`. ([#10472](https://github.com/software-mansion/react-native-reanimated/pull/10472) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
@@ -18,6 +19,12 @@
 
 ### 🐛 Bug fixes
 
+- Warn only once per caller when dependencies are passed to native hooks. ([#10562](https://github.com/software-mansion/react-native-reanimated/pull/10562) by [@tshmieldev](https://github.com/tshmieldev))
+- Keep `borderWidth` CSS transitions on the animation loop on iOS, so the children move with the border and no stray black border is drawn. ([#10569](https://github.com/software-mansion/react-native-reanimated/pull/10569) by [@MatiPl01](https://github.com/MatiPl01))
+- Resume a `shadowOffset` CSS transition from its in-flight value when it moves from Core Animation to the C++ loop, instead of restarting from the previously committed offset. ([#10564](https://github.com/software-mansion/react-native-reanimated/pull/10564) by [@MatiPl01](https://github.com/MatiPl01))
+- Fix CSS platform transitions ignoring slow animations: on iOS they snapped to the end state under the Simulator's Slow Animations, and on Android they played at full speed under the dev-menu toggle. ([#10548](https://github.com/software-mansion/react-native-reanimated/pull/10548) by [@MatiPl01](https://github.com/MatiPl01))
+- Fix the Release Android build failing on an unused variable in `SharedTransitions.cpp`, and the `backgroundImage` style types failing to compile with React Native 0.85, 0.86 and nightly. ([#10558](https://github.com/software-mansion/react-native-reanimated/pull/10558) by [@tjzel](https://github.com/tjzel))
+- Keep a delayed CSS transition at its start value when it is interrupted or reversed before its delay ends; the platform path used to evaluate the easing at progress 0, which is the end value for `step-start`. ([#10356](https://github.com/software-mansion/react-native-reanimated/pull/10356) by [@MatiPl01](https://github.com/MatiPl01))
 - Restore the underlying native style when a running CSS animation is removed or its `animationName` becomes `none`. ([#10528](https://github.com/software-mansion/react-native-reanimated/pull/10528) by [@MatiPl01](https://github.com/MatiPl01))
 - Fixed a crash after animations settled when `backgroundImage` was animated with `useAnimatedStyle`. The settled props sync now converts the native gradient format back before passing it to React. ([#10542](https://github.com/software-mansion/react-native-reanimated/pull/10542) by [@tshmieldev](https://github.com/tshmieldev))
 - Include the React Native version macros through `<React/Utils.h>` when it is available, so `cxxreact/ReactNativeVersion.h` deprecated on React Native `main` no longer breaks the build. ([#10536](https://github.com/software-mansion/react-native-reanimated/pull/10536) by [@tshmieldev](https://github.com/tshmieldev))
@@ -52,6 +59,8 @@
 
 ### 💡 Others
 
+- Deduplicate the native CSS transition state machine across Android and iOS. ([#10356](https://github.com/software-mansion/react-native-reanimated/pull/10356) by [@MatiPl01](https://github.com/MatiPl01))
+- Move the `IOS_CSS_CORE_ANIMATION` and `ANDROID_CSS_PLATFORM_TRANSITIONS` checks out of the shared C++ code: each platform now supplies its native CSS transition backend under its own flag. No behavior change. ([#10546](https://github.com/software-mansion/react-native-reanimated/pull/10546) by [@MatiPl01](https://github.com/MatiPl01))
 - Added Jest and runtime tests for the settled props unprocessors (colors, `boxShadow`, `backgroundImage`). `unprocessProps` is now exported. ([#10545](https://github.com/software-mansion/react-native-reanimated/pull/10545) by [@tshmieldev](https://github.com/tshmieldev))
 - Remove three duplicated implementations: `CSSBoxShadow` and `CSSDropShadow` share their field validation, `PropertyInterpolator` provides the common `getStyleValue`, and the nodes manager and keyboard observer create their display links through one `REAMakeDisplayLink` helper. ([#10357](https://github.com/software-mansion/react-native-reanimated/pull/10357) by [@MatiPl01](https://github.com/MatiPl01))
 - Throw a descriptive error on iOS when the native module cannot be installed because React Native has no active surface during a reload race, instead of silently installing a dummy module proxy. The `WorkletsModule` registry check that guarded the same path is removed. ([#10508](https://github.com/software-mansion/react-native-reanimated/pull/10508) by [@tjzel](https://github.com/tjzel))

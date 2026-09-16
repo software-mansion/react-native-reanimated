@@ -2,12 +2,9 @@ package com.swmansion.worklets
 
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
-import com.facebook.react.bridge.Callback
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
-import com.facebook.react.bridge.ReadableNativeArray
-import com.facebook.react.bridge.ReadableNativeMap
 import com.facebook.react.common.annotations.FrameworkAPI
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
@@ -38,7 +35,6 @@ class WorkletsModule(
 
     private val mAndroidUIScheduler = AndroidUIScheduler(reactContext)
     private val mAnimationFrameQueue = AnimationFrameQueue(reactContext)
-    private val mWorkletsNetworking = WorkletsNetworking()
     private var mSlowAnimationsEnabled = false
 
     /**
@@ -57,26 +53,26 @@ class WorkletsModule(
 
     private external fun prepareProxyCpp()
 
-    private external fun installTurboModuleCpp(
-        bundleModeEnabled: Boolean,
-        scriptBufferWrapper: ScriptBufferWrapper?,
-    )
+    private external fun beginBundleModeAOTCpp()
+
+    private external fun prepareBundleModeAOTCpp()
+
+    private external fun installTurboModuleCpp(bundleModeEnabled: Boolean)
+
+    @OptIn(FrameworkAPI::class)
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    override fun prepareBundleMode(): Boolean {
+        reactApplicationContext.assertOnJSQueueThread()
+        beginBundleModeAOTCpp()
+        Thread({ prepareBundleModeAOTCpp() }, "WorkletsBundleModePrepare").start()
+        return true
+    }
 
     @OptIn(FrameworkAPI::class)
     @ReactMethod(isBlockingSynchronousMethod = true)
     override fun installTurboModule(bundleModeEnabled: Boolean): Boolean {
-        val context = reactApplicationContext
-
-        context.assertOnJSQueueThread()
-
-        val scriptBufferWrapper: ScriptBufferWrapper? =
-            if (bundleModeEnabled) {
-                ScriptBufferWrapper(context.sourceURL, context)
-            } else {
-                null
-            }
-
-        installTurboModuleCpp(bundleModeEnabled, scriptBufferWrapper)
+        reactApplicationContext.assertOnJSQueueThread()
+        installTurboModuleCpp(bundleModeEnabled)
         return true
     }
 
@@ -89,46 +85,6 @@ class WorkletsModule(
     }
 
     @DoNotStrip
-    fun abortRequest(
-        runtimeId: Int,
-        requestIdAsDouble: Double,
-    ) {
-        mWorkletsNetworking.jsiAbortRequest(runtimeId, requestIdAsDouble)
-    }
-
-    @DoNotStrip
-    fun clearCookies(callback: Callback) {
-        mWorkletsNetworking.jsiClearCookies(callback)
-    }
-
-    @DoNotStrip
-    fun sendRequest(
-        runtimeWrapper: WorkletRuntimeWrapper,
-        method: String,
-        url: String,
-        requestIdAsDouble: Double,
-        headers: ReadableNativeArray,
-        data: ReadableNativeMap,
-        responseType: String,
-        useIncrementalUpdates: Boolean,
-        timeoutAsDouble: Double,
-        withCredentials: Boolean,
-    ) {
-        mWorkletsNetworking.jsiSendRequest(
-            runtimeWrapper,
-            method,
-            url,
-            requestIdAsDouble,
-            headers,
-            data,
-            responseType,
-            useIncrementalUpdates,
-            timeoutAsDouble,
-            withCredentials,
-        )
-    }
-
-    @DoNotStrip
     fun requestAnimationFrame(animationFrameCallback: AnimationFrameCallback) {
         mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback)
     }
@@ -136,6 +92,10 @@ class WorkletsModule(
     /** @noinspection unused */
     @DoNotStrip
     fun isOnJSQueueThread(): Boolean = reactApplicationContext.isOnJSQueueThread
+
+    /** @noinspection unused */
+    @DoNotStrip
+    fun createScriptBufferWrapper(): ScriptBufferWrapper = ScriptBufferWrapper(reactApplicationContext.sourceURL, reactApplicationContext)
 
     fun toggleSlowAnimations() {
         val animationsDragFactor = 10

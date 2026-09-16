@@ -12,7 +12,12 @@ import {
 import type { ProcessedColor } from './colors';
 import { processColor, processColorNumber } from './colors';
 
-type BackgroundImageStyleValue = NonNullable<ViewStyle['backgroundImage']>;
+type BackgroundImageStyleValue = NonNullable<
+  ViewStyle[Extract<
+    keyof ViewStyle,
+    'backgroundImage' | 'experimental_backgroundImage'
+  >]
+>;
 type BackgroundImageValue = Exclude<BackgroundImageStyleValue, string>[number];
 type RadialGradientValue = Extract<
   BackgroundImageValue,

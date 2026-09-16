@@ -5,19 +5,6 @@
 #include <worklets/android/AnimationFrameCallback.h>
 #include <worklets/android/WorkletsModule.h>
 
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-#include <folly/json/dynamic.h>
-#include <jni.h>
-#include <jsi/JSIDynamic.h>
-#include <react/jni/JCallback.h>
-#include <react/jni/ReadableNativeArray.h>
-#include <react/jni/ReadableNativeMap.h>
-#include <worklets/WorkletRuntime/WorkletRuntime.h>
-#include <worklets/android/JWorkletRuntimeWrapper.h>
-
-#include <vector>
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
-
 #include <memory>
 #include <string>
 #include <utility>
@@ -26,19 +13,6 @@ namespace worklets {
 
 using namespace facebook;
 using namespace react;
-
-namespace {
-
-BundleModeConfig bundleModeConfigFromWrapper(
-    const jni::alias_ref<JScriptBufferWrapper::javaobject> &jScriptBufferWrapper) {
-  if (!jScriptBufferWrapper) {
-    return BundleModeConfig{.enabled = false};
-  }
-  auto cxxWrapper = jScriptBufferWrapper->cthis();
-  return BundleModeConfig{.enabled = true, .script = cxxWrapper->getScript(), .sourceURL = cxxWrapper->getSourceUrl()};
-}
-
-} // namespace
 
 WorkletsModule::WorkletsModule(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
@@ -69,25 +43,31 @@ void WorkletsModule::prepareProxyCpp() {
   initializer_->prepareProxy();
 }
 
-void WorkletsModule::installTurboModuleCpp(
-    jboolean bundleModeEnabled,
-    jni::alias_ref<JScriptBufferWrapper::javaobject>
-        jScriptBufferWrapper // NOLINT //(performance-unnecessary-value-param)
-) {
-  workletsModuleProxy_ = initializer_->finalize(*rnRuntime_, bundleModeConfigFromWrapper(jScriptBufferWrapper));
+void WorkletsModule::beginBundleModeAOTCpp() {
+  initializer_->beginBundleModeAOT();
+}
+
+void WorkletsModule::prepareBundleModeAOTCpp() {
+  initializer_->prepareBundleModeAOT([this] { return loadBundleModeConfig(); });
+}
+
+void WorkletsModule::installTurboModuleCpp(jboolean bundleModeEnabled) {
+  workletsModuleProxy_ = initializer_->finalize(
+      *rnRuntime_, static_cast<bool>(bundleModeEnabled), [this] { return loadBundleModeConfig(); });
 }
 
 std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings() {
   return std::make_shared<RuntimeBindings>(RuntimeBindings{
-      .requestAnimationFrame = getRequestAnimationFrame(),
-      .nativeLoggingHook = makeNativeLoggingHook()
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-          ,
-      .abortRequest = getAbortRequest(),
-      .clearCookies = getClearCookies(),
-      .sendRequest = getSendRequest()
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
-  });
+      .requestAnimationFrame = getRequestAnimationFrame(), .nativeLoggingHook = makeNativeLoggingHook()});
+}
+
+BundleModeConfig WorkletsModule::loadBundleModeConfig() {
+  static const auto jCreateScriptBufferWrapper =
+      getJniMethod<JScriptBufferWrapper::javaobject()>("createScriptBufferWrapper");
+  const auto jScriptBufferWrapper = jCreateScriptBufferWrapper(javaPart_.get());
+  const auto scriptBufferWrapper = jScriptBufferWrapper->cthis();
+  return BundleModeConfig{
+      .enabled = true, .script = scriptBufferWrapper->getScript(), .sourceURL = scriptBufferWrapper->getSourceUrl()};
 }
 
 RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame() {
@@ -97,80 +77,6 @@ RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame(
     jRequestAnimationFrame(javaPart.get(), AnimationFrameCallback::newObjectCxxArgs(std::move(callback)).get());
   };
 }
-
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-RuntimeBindings::AbortRequest WorkletsModule::getAbortRequest() {
-  return [javaPart = javaPart_](jsi::Runtime &rt, double requestId) -> void {
-    static const auto jAbortRequest = javaPart->getClass()->getMethod<void(int, double)>("abortRequest");
-    auto workletRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt).lock();
-    jAbortRequest(javaPart.get(), static_cast<int>(workletRuntime->getRuntimeId()), requestId);
-  };
-}
-
-RuntimeBindings::ClearCookies WorkletsModule::getClearCookies() {
-  return [javaPart = javaPart_](jsi::Runtime &rt, jsi::Function &&responseSender) {
-    static const auto jClearCookies = javaPart->getClass()->getMethod<void(JCallback::javaobject)>("clearCookies");
-    auto jsiFunction = std::make_shared<jsi::Function>(std::move(responseSender));
-    auto workletRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt);
-    auto callback = [jsiFunction, workletRuntime](folly::dynamic args) {
-      if (auto runtime = workletRuntime.lock()) {
-        runtime->schedule([jsiFunction, args = std::move(args)](jsi::Runtime &rt) {
-          std::vector<jsi::Value> jsArgs;
-          for (auto &arg : args) {
-            jsArgs.push_back(jsi::valueFromDynamic(rt, arg));
-          }
-          const jsi::Value *rawData = jsArgs.data();
-          size_t size = jsArgs.size();
-          jsiFunction->call(rt, rawData, size);
-        });
-      }
-    };
-    jClearCookies(javaPart.get(), JCxxCallbackImpl::newObjectCxxArgs(std::move(callback)).get());
-  };
-}
-
-RuntimeBindings::SendRequest WorkletsModule::getSendRequest() {
-  return [javaPart = javaPart_](
-             jsi::Runtime &rt,
-             jsi::String &method,
-             jsi::String &url,
-             double requestId,
-             jsi::Array &headers,
-             jsi::Object &data,
-             jsi::String &responseType,
-             bool incrementalUpdates,
-             double timeout,
-             bool withCredentials) {
-    static const auto jSendRequest = javaPart->getClass()
-                                         ->getMethod<void(
-                                             JWorkletRuntimeWrapper::javaobject,
-                                             std::string /* method */,
-                                             std::string /* url */,
-                                             double /* requestId */,
-                                             ReadableNativeArray::javaobject /* headers */,
-                                             ReadableNativeMap::javaobject /* data */,
-                                             std::string /* responseType */,
-                                             bool /* incrementalUpdates */,
-                                             double /* timeout */,
-                                             bool /* withCredentials */
-                                             )>("sendRequest");
-    auto workletRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt).lock();
-
-    jSendRequest(
-        javaPart.get(),
-        JWorkletRuntimeWrapper::makeJWorkletRuntimeWrapper(workletRuntime).get(),
-        method.utf8(rt),
-        url.utf8(rt),
-        requestId,
-        ReadableNativeArray::newObjectCxxArgs(jsi::dynamicFromValue(rt, jsi::Value(std::move(headers)))).get(),
-        ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, jsi::Value(std::move(data)))).get(),
-        responseType.utf8(rt),
-        incrementalUpdates,
-        timeout,
-        withCredentials);
-  };
-}
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
 std::function<bool()> WorkletsModule::getIsOnJSQueueThread() {
   return [javaPart = javaPart_]() -> bool {
@@ -195,6 +101,8 @@ void WorkletsModule::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
       makeNativeMethod("prepareProxyCpp", WorkletsModule::prepareProxyCpp),
+      makeNativeMethod("beginBundleModeAOTCpp", WorkletsModule::beginBundleModeAOTCpp),
+      makeNativeMethod("prepareBundleModeAOTCpp", WorkletsModule::prepareBundleModeAOTCpp),
       makeNativeMethod("installTurboModuleCpp", WorkletsModule::installTurboModuleCpp),
       makeNativeMethod("invalidateCpp", WorkletsModule::invalidateCpp),
       makeNativeMethod("startCpp", WorkletsModule::startCpp),

@@ -549,7 +549,8 @@ var require_bundleMode = __commonJS({
       (0, path_1.join)(WORKLETS_SRC_DIR, "index.ts"),
       (0, path_1.join)(WORKLETS_SRC_DIR, "debug", "bundleMode.native.ts"),
       (0, path_1.join)(WORKLETS_LIB_DIR, "index.js"),
-      (0, path_1.join)(WORKLETS_LIB_DIR, "debug", "bundleMode.native.js")
+      (0, path_1.join)(WORKLETS_LIB_DIR, "debug", "bundleMode.native.js"),
+      (0, path_1.join)(WORKLETS_PACKAGE, "bundleMode", "polyfills", "prepareBundleMode.js")
     ];
     function toggleBundleMode(path, state) {
       if (!state.opts.bundleMode || !togglePaths.some((togglePath) => {
@@ -1131,10 +1132,7 @@ var require_globals = __commonJS({
       exports2.globals = new Set(exports2.defaultGlobals);
     }
     var defaultAllowedPaths = ["react-native-worklets"];
-    var defaultAllowedModules = [
-      "react-native-worklets",
-      "react-native/Libraries/Core/setUpXHR"
-    ];
+    var defaultAllowedModules = ["react-native-worklets"];
     function addCustomGlobals(state) {
       if (state.opts && Array.isArray(state.opts.globals)) {
         state.opts.globals.forEach((name) => {

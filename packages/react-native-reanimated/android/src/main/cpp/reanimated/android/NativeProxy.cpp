@@ -379,29 +379,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto detachPseudoSelectorFunction = bindThis(&NativeProxy::detachPseudoSelector);
 
-  // Owned by the two callbacks below rather than by NativeProxy: this runs from
-  // the constructor's member-initializer list, where a member would still be raw
-  // memory.
-  auto cssPlatformEasings = std::make_shared<CSSPlatformEasings>(
-      bindThis(&NativeProxy::cssDefineEasing), bindThis(&NativeProxy::cssUndefineEasing));
-  auto cssPlatformTransitions = std::make_shared<CSSPlatformTransitions>(
-      bindThis(&NativeProxy::cssAnimateTransition),
-      bindThis(&NativeProxy::cssRemoveTransition),
-      std::move(cssPlatformEasings));
-
-  auto cssCanRouteProperty = css::CSSCanRoutePropertyFunction(&css::canRouteCSSProperty);
-
-  auto cssApplyTransition = [transitions = cssPlatformTransitions](auto &&...args) {
-    return transitions->applyTransition(std::forward<decltype(args)>(args)...);
-  };
-
-  auto cssRemoveTransition = [transitions = cssPlatformTransitions](auto &&...args) {
-    transitions->removeTransition(std::forward<decltype(args)>(args)...);
-  };
-
-  auto cssGetPlatformValue = [transitions = cssPlatformTransitions](auto &&...args) {
-    return transitions->getCurrentValue(std::forward<decltype(args)>(args)...);
-  };
+  auto platformTransitionBackend = makePlatformTransitionBackend();
 
   return {
       requestRender,
@@ -416,11 +394,20 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       maybeFlushUiUpdatesQueueFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
-      cssCanRouteProperty,
-      cssApplyTransition,
-      cssRemoveTransition,
-      cssGetPlatformValue,
+      platformTransitionBackend,
   };
+}
+
+std::shared_ptr<css::CSSPlatformTransitionBackend> NativeProxy::makePlatformTransitionBackend() {
+  if constexpr (!StaticFeatureFlags::getFlag("ANDROID_CSS_PLATFORM_TRANSITIONS")) {
+    return nullptr;
+  }
+  // Not a NativeProxy member: this runs from the ctor's member-initializer list,
+  // where a member would still be raw memory.
+  auto easings = std::make_shared<CSSPlatformEasings>(
+      bindThis(&NativeProxy::cssDefineEasing), bindThis(&NativeProxy::cssUndefineEasing));
+  return std::make_shared<CSSPlatformTransitions>(
+      bindThis(&NativeProxy::cssAnimateTransition), bindThis(&NativeProxy::cssRemoveTransition), std::move(easings));
 }
 
 void NativeProxy::invalidateCpp() {

@@ -3,6 +3,8 @@
 #include <react/debug/react_native_assert.h>
 
 #include <exception>
+#include <future>
+#include <optional>
 #include <stdexcept>
 #include <utility>
 
@@ -17,47 +19,76 @@ WorkletsModuleProxyInitializer::WorkletsModuleProxyInitializer(
       uiScheduler_(uiScheduler),
       runtimeBindings_(runtimeBindings),
       rnRuntimeStatus_(rnRuntimeStatus),
-      preparedProxyPromise_(std::make_shared<std::promise<std::shared_ptr<WorkletsModuleProxy>>>()),
-      preparedProxy_(preparedProxyPromise_->get_future()) {}
+      preparedProxy_(preparedProxyPromise_.get_future().share()),
+      aotProxy_(aotProxyPromise_.get_future().share()) {}
 
 void WorkletsModuleProxyInitializer::prepareProxy() {
-  if (prepared_.exchange(true)) {
-    throw std::runtime_error("[Worklets] prepareProxy must be called exactly once.");
-  }
   try {
-    preparedProxyPromise_->set_value(
+    preparedProxyPromise_.set_value(
         std::make_shared<WorkletsModuleProxy>(jsScheduler_, uiScheduler_, runtimeBindings_, rnRuntimeStatus_));
+  } catch (const std::future_error &) {
+    throw std::runtime_error("[Worklets] prepareProxy must be called exactly once.");
   } catch (...) {
-    preparedProxyPromise_->set_exception(std::current_exception());
+    preparedProxyPromise_.set_exception(std::current_exception());
+  }
+}
+
+void WorkletsModuleProxyInitializer::beginBundleModeAOT() {
+  react_native_assert(jsScheduler_->canInvokeSyncOnJS() && "beginBundleModeAOT must be called on the JS thread");
+  std::lock_guard lock(mutex_);
+  if (stage_ != Stage::Created) [[unlikely]] {
+    throw std::runtime_error("[Worklets] beginBundleModeAOT must be called at most once and before finalize.");
+  }
+  stage_ = Stage::AOTBegun;
+}
+
+void WorkletsModuleProxyInitializer::prepareBundleModeAOT(const BundleModeConfigLoader &loadBundleModeConfig) {
+  try {
+    auto proxy = preparedProxy_.get();
+    proxy->startUIRuntimeInBundleModeAOT(loadBundleModeConfig());
+    aotProxyPromise_.set_value(std::move(proxy));
+  } catch (const std::future_error &) {
+    throw std::runtime_error("[Worklets] prepareBundleModeAOT must be called exactly once.");
+  } catch (...) {
+    aotProxyPromise_.set_exception(std::current_exception());
   }
 }
 
 std::shared_ptr<WorkletsModuleProxy> WorkletsModuleProxyInitializer::finalize(
     jsi::Runtime &rnRuntime,
-    const BundleModeConfig &bundleModeConfig) {
+    const bool bundleModeEnabled,
+    const BundleModeConfigLoader &loadBundleModeConfig) {
   react_native_assert(jsScheduler_->canInvokeSyncOnJS() && "finalize must be called on the JS thread");
-  ProxyFuture preparedProxy;
+  bool startedAOT = false;
   {
     std::lock_guard lock(mutex_);
-    preparedProxy = std::move(preparedProxy_);
+    if (stage_ == Stage::Finalized || stage_ == Stage::Invalidated) [[unlikely]] {
+      throw std::runtime_error("[Worklets] finalize must be called at most once and before invalidate.");
+    }
+    startedAOT = stage_ == Stage::AOTBegun;
+    stage_ = Stage::Finalized;
   }
-  if (!preparedProxy.valid()) {
-    throw std::runtime_error("[Worklets] finalize was called after the prepared proxy was already taken.");
+  auto proxy = (startedAOT ? aotProxy_ : preparedProxy_).get();
+  if (startedAOT) {
+    proxy->attachToRNRuntime(rnRuntime, std::nullopt);
+  } else {
+    proxy->attachToRNRuntime(
+        rnRuntime, bundleModeEnabled ? loadBundleModeConfig() : BundleModeConfig{.enabled = false});
   }
-  auto proxy = preparedProxy.get();
-  proxy->attachToRNRuntime(rnRuntime, bundleModeConfig);
   return proxy;
 }
 
 void WorkletsModuleProxyInitializer::invalidate() {
-  ProxyFuture preparedProxy;
+  bool startedAOT = false;
   {
     std::lock_guard lock(mutex_);
-    preparedProxy = std::move(preparedProxy_);
+    startedAOT = stage_ == Stage::AOTBegun;
+    stage_ = Stage::Invalidated;
   }
-  if (preparedProxy.valid()) {
-    preparedProxy.wait();
+  if (startedAOT) {
+    aotProxy_.wait();
   }
+  preparedProxy_.wait();
 }
 
 } // namespace worklets

@@ -6,18 +6,22 @@
 
 namespace reanimated::css {
 
-CSSPlatformTransitionProxy::CSSPlatformTransitionProxy(
-    CSSCanRoutePropertyFunction canRoute,
-    CSSApplyTransitionFunction applyTransition,
-    CSSRemoveTransitionFunction removeTransition,
-    CSSGetPlatformValueFunction getPlatformValue)
-    : canRoute_(std::move(canRoute)),
-      applyTransition_(std::move(applyTransition)),
-      removeTransition_(std::move(removeTransition)),
-      getPlatformValue_(std::move(getPlatformValue)) {}
+CSSPlatformTransitionProxy::CSSPlatformTransitionProxy(std::shared_ptr<CSSPlatformTransitionBackend> backend)
+    : backend_(std::move(backend)) {}
 
 bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const EasingConfig &easing) const {
-  return canRoute_ && canRoute_(propertyName, easing);
+  return backend_ && backend_->canRoute(propertyName, easing);
+}
+
+const CSSPlatformTransitionProxy::ActiveTransition *CSSPlatformTransitionProxy::activeTransitionFor(
+    const Tag viewTag,
+    const std::string &propertyName) const {
+  const auto propertiesIt = active_.find(viewTag);
+  if (propertiesIt == active_.end()) {
+    return nullptr;
+  }
+  const auto activeIt = propertiesIt->second.find(propertyName);
+  return activeIt != propertiesIt->second.end() ? &activeIt->second : nullptr;
 }
 
 bool CSSPlatformTransitionProxy::apply(
@@ -27,15 +31,75 @@ bool CSSPlatformTransitionProxy::apply(
     const PlatformValue &toValue,
     const CSSTransitionPropertySettings *settings,
     const bool persistent,
-    const double timestamp) const {
-  return applyTransition_ &&
-      applyTransition_(viewTag, propertyName, fromValue, toValue, settings, persistent, timestamp);
+    const double timestamp) {
+  const ActiveTransition *active = activeTransitionFor(viewTag, propertyName);
+
+  const bool reusesStoredSettings = settings == nullptr;
+  if (reusesStoredSettings && active == nullptr) {
+    return false;
+  }
+  // Copy: the active entry is re-assigned below.
+  const CSSTransitionPropertySettings resolvedSettings = reusesStoredSettings ? active->settings : *settings;
+
+  // https://drafts.csswg.org/css-transitions/#reversing
+  const bool isReversal = active != nullptr && active->adjustedStart && toValue == *active->adjustedStart;
+  TransitionTiming timing = isReversal
+      ? reverseTiming(
+            active->timing, timestamp, resolvedSettings.duration, resolvedSettings.delay, resolvedSettings.easingConfig)
+      : makeTiming(timestamp, resolvedSettings.duration, resolvedSettings.delay, resolvedSettings.easingConfig);
+
+  std::optional<PlatformValue> adjustedStart;
+  std::optional<PlatformValue> startValue;
+  if (active == nullptr) {
+    adjustedStart = startValue = fromValue;
+  } else {
+    startValue = getCurrentValue(viewTag, propertyName, timestamp);
+    adjustedStart = isReversal ? active->adjustedEnd : startValue;
+  }
+
+  // The backend gets fromValue, not startValue: on interruption it continues from
+  // what is on screen itself.
+  if (!backend_ ||
+      !backend_->startTransition(
+          viewTag,
+          propertyName,
+          fromValue,
+          toValue,
+          timing.duration,
+          timing.startTimestamp,
+          resolvedSettings.easingConfig,
+          persistent)) {
+    return false;
+  }
+
+  active_[viewTag][propertyName] =
+      ActiveTransition{adjustedStart, startValue, toValue, std::move(timing), resolvedSettings};
+  return true;
 }
 
-void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &propertyName) const {
-  if (removeTransition_) {
-    removeTransition_(viewTag, propertyName);
+void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &propertyName) {
+  const auto propertiesIt = active_.find(viewTag);
+  if (propertiesIt != active_.end()) {
+    propertiesIt->second.erase(propertyName);
+    if (propertiesIt->second.empty()) {
+      active_.erase(propertiesIt);
+    }
   }
+
+  if (backend_) {
+    backend_->stopTransition(viewTag, propertyName);
+  }
+}
+
+std::optional<PlatformValue> CSSPlatformTransitionProxy::getCurrentValue(
+    const Tag viewTag,
+    const std::string &propertyName,
+    const double timestamp) const {
+  const ActiveTransition *active = activeTransitionFor(viewTag, propertyName);
+  if (active == nullptr || !active->startValue) {
+    return std::nullopt;
+  }
+  return lerpPlatformValues(*active->startValue, active->adjustedEnd, easedProgressAt(active->timing, timestamp));
 }
 
 CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
@@ -44,7 +108,7 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
     const CSSTransitionConfig &config,
     CSSTransitionRouting &routing,
     const bool allowPlatform,
-    const double timestamp) const {
+    const double timestamp) {
   CSSTransitionConfig loopConfig;
 #ifndef NDEBUG
   size_t matchedValues = 0;
@@ -77,16 +141,18 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
       routing.platform.insert(propertyName);
     } else {
       // platform -> loop migration cancels on the platform side.
-      std::optional<double> resumeFrom;
+      // Sampled before remove() drops the run this resumes from; nullopt keeps the
+      // diff's own from-value, which the animation has painted past.
+      std::optional<PlatformValue> resumeFrom;
       if (routing.platform.erase(propertyName) > 0) {
         if (hasValue) {
-          resumeFrom = getResumeValue(viewTag, propertyName, timestamp);
+          resumeFrom = getCurrentValue(viewTag, propertyName, timestamp);
         }
         remove(viewTag, propertyName);
       }
       routing.loop.insert(propertyName);
       if (hasValue) {
-        auto fromValue = resumeFrom ? jsi::Value(*resumeFrom) : jsi::Value(rt, valueIt->second.first);
+        auto fromValue = resumeFrom ? platformValueToJSI(rt, *resumeFrom) : jsi::Value(rt, valueIt->second.first);
         loopConfig.changedProperties.emplace(
             propertyName, std::make_pair(std::move(fromValue), jsi::Value(rt, valueIt->second.second)));
       }
@@ -115,7 +181,7 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
     const TransitionProperties &pseudoLockedProperties,
     CSSTransitionRouting &routing,
     const bool allowPlatform,
-    const double timestamp) const {
+    const double timestamp) {
   PropertyValueDynamicDiffsMap loopDiffs;
   for (const auto &[propertyName, propertyDiff] : propertyDiffs) {
     // A platform-routed property keeps animating natively while the platform can
@@ -130,12 +196,12 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
         }
       }
       routing.platform.erase(propertyName);
-      // Read before remove(): it drops the platform-side state this resumes from.
-      const auto resumeFrom = getResumeValue(viewTag, propertyName, timestamp);
+      // Read before remove() drops the run this resumes from.
+      const auto resumeFrom = getCurrentValue(viewTag, propertyName, timestamp);
       remove(viewTag, propertyName);
       routing.loop.insert(propertyName);
       if (resumeFrom) {
-        loopDiffs.emplace(propertyName, std::make_pair(folly::dynamic(*resumeFrom), propertyDiff.second));
+        loopDiffs.emplace(propertyName, std::make_pair(platformValueToDynamic(*resumeFrom), propertyDiff.second));
         continue;
       }
     }
@@ -144,27 +210,7 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
   return loopDiffs;
 }
 
-std::optional<double> CSSPlatformTransitionProxy::getResumeValue(
-    const Tag viewTag,
-    const std::string &propertyName,
-    const double timestamp) const {
-  if (!getPlatformValue_) {
-    return std::nullopt;
-  }
-  const auto value = getPlatformValue_(viewTag, propertyName, timestamp);
-  if (!value) {
-    return std::nullopt;
-  }
-  if (const auto *scalar = std::get_if<double>(&*value)) {
-    return *scalar;
-  }
-  if (const auto *channels = std::get_if<std::array<double, 4>>(&*value)) {
-    return packColorChannels(*channels);
-  }
-  return std::nullopt;
-}
-
-void CSSPlatformTransitionProxy::cancelAll(const Tag viewTag, const TransitionProperties &properties) const {
+void CSSPlatformTransitionProxy::cancelAll(const Tag viewTag, const TransitionProperties &properties) {
   for (const auto &propertyName : properties) {
     remove(viewTag, propertyName);
   }

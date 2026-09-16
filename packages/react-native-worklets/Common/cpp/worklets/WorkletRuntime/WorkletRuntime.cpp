@@ -34,6 +34,7 @@ class AroundLock {
 
 class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
   AroundLock aroundLock_;
+  const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   std::shared_ptr<jsi::Runtime> runtime_;
 
  public:
@@ -42,7 +43,13 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
       const std::shared_ptr<std::recursive_mutex> &runtimeMutex)
       : jsi::WithRuntimeDecorator<AroundLock>(*runtime, aroundLock_),
         aroundLock_(runtimeMutex),
+        runtimeMutex_(runtimeMutex),
         runtime_(std::move(runtime)) {}
+
+  ~LockableRuntime() override {
+    const std::lock_guard<std::recursive_mutex> lock(*runtimeMutex_);
+    runtime_.reset();
+  }
 };
 
 static std::shared_ptr<jsi::Runtime>
@@ -114,7 +121,7 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
       nativeLoggingHook);
 
   if (bundleModeEnabled) {
-    bundleModeInit(jsScheduler, script, sourceUrl, runtimeBindings);
+    bundleModeInit(jsScheduler, script, sourceUrl);
   } else {
     legacyModeInit(unpackerLoader);
   }
@@ -129,8 +136,7 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
 void WorkletRuntime::bundleModeInit(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<const ScriptBuffer> &script,
-    const std::string &sourceUrl,
-    const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
+    const std::string &sourceUrl) {
   jsi::Runtime &rt = *runtime_;
 
   if (!script) {
@@ -138,8 +144,6 @@ void WorkletRuntime::bundleModeInit(
   }
 
   ScriptLoader::loadScript(rt, script, sourceUrl);
-
-  WorkletRuntimeDecorator::postEvaluateScript(rt, runtimeBindings);
 }
 
 void WorkletRuntime::legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader) {

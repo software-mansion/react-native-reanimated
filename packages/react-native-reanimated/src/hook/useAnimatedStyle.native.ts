@@ -48,7 +48,10 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
   isAnimatedProps = false
 ): AnimatedStyleHandle<Style | AnimatedProps> {
   if (__DEV__ && _dependencies !== undefined && _dependencies !== null) {
-    logger.warn('dependencies should only be used in web implementation.');
+    logger.warnOnce(
+      'Dependencies should only be used on the web and are always ignored on native. Check DevTools to see the offending code.',
+      isAnimatedProps ? 2 : 1
+    );
   }
 
   const animatedUpdaterData = useRef<AnimatedUpdaterData | null>(null);

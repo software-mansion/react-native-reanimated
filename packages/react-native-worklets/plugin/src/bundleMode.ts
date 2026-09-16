@@ -13,6 +13,7 @@ const togglePaths = [
   join(WORKLETS_SRC_DIR, 'debug', 'bundleMode.native.ts'),
   join(WORKLETS_LIB_DIR, 'index.js'),
   join(WORKLETS_LIB_DIR, 'debug', 'bundleMode.native.js'),
+  join(WORKLETS_PACKAGE, 'bundleMode', 'polyfills', 'prepareBundleMode.js'),
 ];
 
 /**
