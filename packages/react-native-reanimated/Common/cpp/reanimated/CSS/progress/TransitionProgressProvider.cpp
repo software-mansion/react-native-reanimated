@@ -1,7 +1,5 @@
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
-#include <reanimated/CSS/utils/reversingShortening.h>
-
 #include <algorithm>
 #include <limits>
 #include <memory>
@@ -48,7 +46,7 @@ double TransitionPropertyProgressProvider::getRemainingDelay(const double timest
   return delay_ - (timestamp - creationTimestamp_);
 }
 
-ReversingState TransitionPropertyProgressProvider::getReversingState() const {
+TransitionTiming TransitionPropertyProgressProvider::getTiming() const {
   return {reversingShorteningFactor_, creationTimestamp_ + delay_, duration_, delay_, easing_};
 }
 
@@ -268,14 +266,15 @@ TransitionProgressProvider::createReversingShorteningProgressProvider(
     const double timestamp,
     const CSSTransitionPropertySettings &propertySettings,
     const TransitionPropertyProgressProvider &existingProgressProvider) {
-  const auto rs = reverseShorten(
-      existingProgressProvider.getReversingState(),
+  const auto timing = reverseTiming(
+      existingProgressProvider.getTiming(),
       timestamp,
       propertySettings.duration,
       propertySettings.delay,
       propertySettings.easingConfig);
 
-  return std::make_shared<TransitionPropertyProgressProvider>(timestamp, rs.duration, rs.delay, rs.easing, rs.factor);
+  return std::make_shared<TransitionPropertyProgressProvider>(
+      timestamp, timing.duration, timing.delay, timing.easing, timing.reversingFactor);
 }
 
 void TransitionProgressProvider::setPropertySettings(const PropertiesSettingsMap &changedPropertiesSettings) {

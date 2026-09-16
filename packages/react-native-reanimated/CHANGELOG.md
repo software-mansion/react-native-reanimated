@@ -18,6 +18,7 @@
 
 ### 🐛 Bug fixes
 
+- Keep a delayed CSS transition at its start value when it is interrupted or reversed before its delay ends; the platform path used to evaluate the easing at progress 0, which is the end value for `step-start`. ([#10356](https://github.com/software-mansion/react-native-reanimated/pull/10356) by [@MatiPl01](https://github.com/MatiPl01))
 - Restore the underlying native style when a running CSS animation is removed or its `animationName` becomes `none`. ([#10528](https://github.com/software-mansion/react-native-reanimated/pull/10528) by [@MatiPl01](https://github.com/MatiPl01))
 - Fixed a crash after animations settled when `backgroundImage` was animated with `useAnimatedStyle`. The settled props sync now converts the native gradient format back before passing it to React. ([#10542](https://github.com/software-mansion/react-native-reanimated/pull/10542) by [@tshmieldev](https://github.com/tshmieldev))
 - Include the React Native version macros through `<React/Utils.h>` when it is available, so `cxxreact/ReactNativeVersion.h` deprecated on React Native `main` no longer breaks the build. ([#10536](https://github.com/software-mansion/react-native-reanimated/pull/10536) by [@tshmieldev](https://github.com/tshmieldev))
@@ -52,6 +53,7 @@
 
 ### 💡 Others
 
+- Deduplicate the native CSS transition state machine across Android and iOS. ([#10356](https://github.com/software-mansion/react-native-reanimated/pull/10356) by [@MatiPl01](https://github.com/MatiPl01))
 - Move the `IOS_CSS_CORE_ANIMATION` and `ANDROID_CSS_PLATFORM_TRANSITIONS` checks out of the shared C++ code: each platform now supplies its native CSS transition backend under its own flag. No behavior change. ([#10546](https://github.com/software-mansion/react-native-reanimated/pull/10546) by [@MatiPl01](https://github.com/MatiPl01))
 - Added Jest and runtime tests for the settled props unprocessors (colors, `boxShadow`, `backgroundImage`). `unprocessProps` is now exported. ([#10545](https://github.com/software-mansion/react-native-reanimated/pull/10545) by [@tshmieldev](https://github.com/tshmieldev))
 - Remove three duplicated implementations: `CSSBoxShadow` and `CSSDropShadow` share their field validation, `PropertyInterpolator` provides the common `getStyleValue`, and the nodes manager and keyboard observer create their display links through one `REAMakeDisplayLink` helper. ([#10357](https://github.com/software-mansion/react-native-reanimated/pull/10357) by [@MatiPl01](https://github.com/MatiPl01))
