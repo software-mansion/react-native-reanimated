@@ -167,6 +167,50 @@ describe(processBackgroundImageWeb, () => {
     ).toBe('linear-gradient(rgba(255, 0, 0, 1), rgba(0, 0, 255, 1))');
   });
 
+  test.each([
+    [
+      'without a position',
+      [{ color: 'red' }, { color: null }, { color: 'blue' }],
+    ],
+    [
+      'with two positions',
+      [
+        { color: 'red' },
+        { color: null, positions: ['20%', '40%'] },
+        { color: 'blue' },
+      ],
+    ],
+    [
+      'first',
+      [
+        { color: null, positions: ['20%'] },
+        { color: 'red' },
+        { color: 'blue' },
+      ],
+    ],
+    [
+      'last',
+      [
+        { color: 'red' },
+        { color: 'blue' },
+        { color: null, positions: ['80%'] },
+      ],
+    ],
+    [
+      'next to another hint',
+      [
+        { color: 'red' },
+        { color: null, positions: ['20%'] },
+        { color: null, positions: ['40%'] },
+        { color: 'blue' },
+      ],
+    ],
+  ])('drops the value when a transition hint is %s', (_, colorStops) => {
+    expect(
+      processBackgroundImageWeb([{ type: 'linear-gradient', colorStops }])
+    ).toBeUndefined();
+  });
+
   test('drops the value when a color stop has an object color', () => {
     const platformColor = { semantic: ['systemRed'] } as unknown as ColorValue;
 

@@ -42,6 +42,10 @@ type RadialGradientValue = {
 
 type BackgroundImageValue = LinearGradientValue | RadialGradientValue;
 
+function isTransitionHint({ color }: GradientColorStop): boolean {
+  return color == null;
+}
+
 function serializeColorStop({
   color,
   positions,
@@ -51,7 +55,7 @@ function serializeColorStop({
     '';
   if (color == null) {
     // Transition hint (e.g. red, 20%, blue)
-    return serializedPositions;
+    return positions?.length === 1 ? serializedPositions : undefined;
   }
 
   const serializedColor = processColor(color as ColorValue);
@@ -67,7 +71,17 @@ function serializeColorStops(
   colorStops: ReadonlyArray<GradientColorStop>
 ): string | undefined {
   const serialized: string[] = [];
-  for (const colorStop of colorStops) {
+  for (let i = 0; i < colorStops.length; i++) {
+    const colorStop = colorStops[i];
+    // A hint is only valid between two color stops.
+    if (
+      isTransitionHint(colorStop) &&
+      (i === 0 ||
+        i === colorStops.length - 1 ||
+        isTransitionHint(colorStops[i - 1]))
+    ) {
+      return;
+    }
     const serializedColorStop = serializeColorStop(colorStop);
     if (serializedColorStop === undefined) {
       return;
