@@ -10,12 +10,12 @@ namespace worklets {
 /**
  * Identifies the owner of a job, so that a queue shared between several owners
  * can cancel the jobs of one of them without touching the jobs of the others.
- * Runtime ids start at `RuntimeData::rnRuntimeId`, so zero marks an unowned
- * job.
+ *
+ * Worklet Runtimes send their RuntimeId as a token.
  */
 using AbortToken = uint64_t;
 
-inline constexpr AbortToken noAbortToken{0};
+inline constexpr AbortToken defaultToken{0};
 
 class AsyncQueue : public facebook::jsi::NativeState {
  public:
@@ -25,8 +25,7 @@ class AsyncQueue : public facebook::jsi::NativeState {
 
   /**
    * Pushes a job on behalf of the owner the token belongs to. The default
-   * implementation discards the token, which is correct for a queue that is
-   * never shared between owners.
+   * implementation discards the token.
    */
   virtual void push(std::function<void()> &&job, AbortToken /* abortToken */) {
     push(std::move(job));
