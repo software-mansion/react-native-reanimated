@@ -114,8 +114,14 @@ export function getCurrentThreadId(): string {
   return dispatch('getCurrentThreadId', []) as string;
 }
 
+const FRAME_MS = 16;
+
 export function setTimeout(callback: () => unknown, ms = 0): number {
   return dispatch('setTimeout', [callback, ms]) as number;
+}
+
+export function requestAnimationFrame(callback: () => unknown): number {
+  return dispatch('setTimeout', [callback, FRAME_MS]) as number;
 }
 
 export function setInterval(callback: () => unknown, ms = 0): number {

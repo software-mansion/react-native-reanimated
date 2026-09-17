@@ -1,5 +1,6 @@
 import { SnippetError } from './errors';
 import { isGeneratorFunction, isGeneratorObject } from './loadSnippet';
+import { APP_MS_PER_TICK, INPUT_DEADLINE_MS } from './types';
 import type {
   CoreId,
   CoreSnapshot,
@@ -9,6 +10,7 @@ import type {
   InterceptedApi,
   Job,
   LoadedSnippet,
+  ResourceSnapshot,
   MemorySnapshot,
   PromiseHandle,
   SharedCell,
@@ -33,7 +35,6 @@ import {
   isAwaitMarker,
   readShareableValue,
   setCurrentInterceptor,
-  updateScreen,
 } from './worklets';
 
 export const CORE_SPECS: CoreSpec[] = [
@@ -56,7 +57,6 @@ export const CORE_SPECS: CoreSpec[] = [
 export const DEFAULT_MAX_TICKS = 1000;
 export const DEFAULT_MAX_DEPTH = 32;
 const HIDDEN_STEP_LIMIT = 100;
-const MS_PER_TICK = 16;
 
 const BUNDLE_MODE_GUARD_MESSAGE =
   '[Worklets] scheduleOnUI cannot be called on Worklet Runtimes outside of the Bundle Mode.';
@@ -69,6 +69,7 @@ export class Machine {
   private readonly maxDepth: number;
   private cores: CoreState[];
   private tickCount = 0;
+  private now = 0;
   private nextJobId = 1;
   private halted = false;
   private events: SimEvent[] = [];
@@ -80,7 +81,6 @@ export class Machine {
   >();
   private nextClaim = 1;
   private holders = new Map<CoreId, CoreId>();
-  private readonly applyScreen: SnippetFn;
   private readonly inputs: ExternalInput[];
   private readonly promises = new Map<number, PromiseState>();
   private nextPromiseId = 1;
@@ -94,19 +94,6 @@ export class Machine {
     this.inputs = [...(options.inputs ?? [])];
     this.maxDepth = options.maxDepth ?? DEFAULT_MAX_DEPTH;
     this.screen = { ...(options.screen ?? {}) };
-    this.applyScreen = function* applyScreen(patch: unknown) {
-      yield updateScreen(patch as Record<string, unknown>);
-    } as unknown as SnippetFn;
-    snippet.fnInfo.set(this.applyScreen, {
-      name: 'applyScreen',
-      headerLine: 0,
-      endLine: 0,
-      yieldLines: [0],
-      yieldEnds: [0],
-      isNative: true,
-      isHidden: false,
-      hasLoop: false,
-    });
     this.readShareable = function* readShareable(id: unknown) {
       return yield readShareableValue(id as number);
     } as unknown as SnippetFn;
@@ -135,12 +122,28 @@ export class Machine {
     this.core(entry).macrotasks.push(this.createJob(snippet.main, [], null));
   }
 
-  tick(): Snapshot {
+  get currentTick(): number {
+    return this.tickCount;
+  }
+
+  addInput(input: ExternalInput): boolean {
+    if (input.tick <= this.tickCount) {
+      return false;
+    }
+    if (this.inputs.some((existing) => existing.tick === input.tick)) {
+      return false;
+    }
+    this.inputs.push(input);
+    return true;
+  }
+
+  tick(now: number = this.now + APP_MS_PER_TICK): Snapshot {
     if (this.isFinished()) {
       return this.snapshot();
     }
     this.events = [];
     this.tickCount += 1;
+    this.now = now;
     this.applyInputs();
     const cores = [...this.cores];
     for (const core of cores) {
@@ -162,6 +165,8 @@ export class Machine {
   snapshot(): Snapshot {
     return {
       tick: this.tickCount,
+      now: this.now,
+      resources: this.snapshotResources(),
       cores: this.cores
         .filter((core) => core.createdAtTick < this.tickCount)
         .map((core) => this.snapshotCore(core)),
@@ -170,6 +175,46 @@ export class Machine {
       memory: this.snapshotMemory(),
       finished: this.isFinished(),
     };
+  }
+
+  private snapshotResources(): ResourceSnapshot[] {
+    const resources: ResourceSnapshot[] = [];
+    for (const core of this.cores) {
+      if (!core.spec.hasRuntime || core.createdAtTick >= this.tickCount) {
+        continue;
+      }
+      const holder = this.holders.get(core.spec.id) ?? core.spec.id;
+      resources.push({
+        id: core.spec.id,
+        kind: 'runtime',
+        label: core.spec.label,
+        owner: core.spec.id,
+        holder:
+          core.status === 'running' || holder !== core.spec.id ? holder : null,
+      });
+      resources.push({
+        id: `loop:${core.spec.id}`,
+        kind: 'loop',
+        label: `${core.spec.label} event loop`,
+        owner: core.spec.id,
+        holder: core.spec.id,
+      });
+    }
+    for (const cell of this.shared.values()) {
+      if (
+        cell.kind === 'synchronizable' &&
+        cell.createdAtTick < this.tickCount
+      ) {
+        resources.push({
+          id: `synchronizable:${cell.id}`,
+          kind: 'synchronizable',
+          label: 'Synchronizable',
+          owner: null,
+          holder: cell.accessTick === this.tickCount ? cell.accessedBy : null,
+        });
+      }
+    }
+    return resources;
   }
 
   private snapshotMemory(): MemorySnapshot[] {
@@ -198,6 +243,7 @@ export class Machine {
           core.frames.length === 0 &&
           core.macrotasks.length === 0 &&
           core.outbox.length === 0 &&
+          core.screenPatches.length === 0 &&
           core.resolutions.length === 0 &&
           core.timers.length === 0
       )
@@ -414,6 +460,7 @@ export class Machine {
         api: 'sendToUIThread',
         tick: this.tickCount,
       });
+      job.deadline = this.now + INPUT_DEADLINE_MS;
       core.macrotasks.push(job);
       this.emit({ type: 'delivered', core: core.spec.id, jobs: [job.label] });
     }
@@ -443,26 +490,30 @@ export class Machine {
       );
     }
     const timerId = this.nextJobId++;
-    const ticks = Math.max(1, Math.round(delay / MS_PER_TICK));
+    const wait = Math.max(delay, 0);
     core.timers.push({
       id: timerId,
-      due: this.tickCount + ticks,
+      due: this.now + wait,
       callback: repeat ? (callback as () => unknown) : () => gen,
       label: this.snippet.fnInfo.get(fn)!.name,
-      interval: repeat ? ticks : undefined,
+      interval: repeat ? Math.max(wait, APP_MS_PER_TICK) : undefined,
     });
     return timerId;
   }
 
   private fireTimers(core: CoreState): void {
-    const due = core.timers.filter((timer) => timer.due <= this.tickCount);
+    const due = core.timers.filter((timer) => timer.due <= this.now);
     if (due.length === 0) {
       return;
     }
-    core.timers = core.timers.filter((timer) => timer.due > this.tickCount);
+    core.timers = core.timers.filter((timer) => timer.due > this.now);
     for (const timer of due) {
       if (timer.interval !== undefined) {
-        core.timers.push({ ...timer, due: this.tickCount + timer.interval });
+        let next = timer.due + timer.interval;
+        while (next <= this.now) {
+          next += timer.interval;
+        }
+        core.timers.push({ ...timer, due: next });
         if (core.macrotasks.some((job) => job.timerId === timer.id)) {
           continue;
         }
@@ -487,6 +538,7 @@ export class Machine {
       const job: Job = {
         id: timer.interval === undefined ? timer.id : this.nextJobId++,
         timerId: timer.id,
+        dueAt: timer.due,
         fn,
         args: [],
         label: `${info.name}()`,
@@ -866,21 +918,14 @@ export class Machine {
       throw new SnippetError('updateScreen expects an object');
     }
     if (core.spec.kind !== 'ui') {
-      this.scheduleCrossRuntime(
-        core,
-        'sendToUIThread',
-        'ui',
-        this.applyScreen,
-        [patch]
-      );
+      core.screenPatches.push(cloneArgs([patch])[0] as ScreenState);
       return;
     }
-    const next = cloneArgs([patch])[0] as ScreenState;
-    const nativeProps = {
-      ...((this.screen.nativeProps as Record<string, unknown>) ?? {}),
-      ...((next.nativeProps as Record<string, unknown>) ?? {}),
-    };
-    this.screen = { ...this.screen, ...next, nativeProps };
+    this.applyScreenPatch(core, cloneArgs([patch])[0] as ScreenState);
+  }
+
+  private applyScreenPatch(core: CoreState, patch: ScreenState): void {
+    this.screen = mergeScreenPatch(this.screen, patch);
     this.emit({
       type: 'screen',
       core: core.spec.id,
@@ -941,6 +986,7 @@ export class Machine {
       args,
       this.origin(core, 'scheduleOnRN')
     );
+    job.deadline = core.currentJob?.deadline;
     core.macrotasks.push(job);
     this.emit({
       type: 'scheduled',
@@ -966,6 +1012,7 @@ export class Machine {
       cloneArgs(args),
       this.origin(core, api)
     );
+    job.deadline = core.currentJob?.deadline;
     core.outbox.push({ target, job });
     this.emit({
       type: 'scheduled',
@@ -1266,6 +1313,7 @@ export class Machine {
       this.tick();
     }
     this.tickCount = 0;
+    this.now = 0;
     this.events = [];
     for (const core of this.cores) {
       if (core.status === 'running') {
@@ -1340,6 +1388,15 @@ export class Machine {
       );
     }
     core.resolutions = [];
+    if (core.screenPatches.length > 0) {
+      const ui = this.core('ui');
+      const merged = core.screenPatches.reduce(
+        (patch, next) => mergeScreenPatch(patch, next),
+        {} as ScreenState
+      );
+      core.screenPatches = [];
+      this.applyScreenPatch(ui, merged);
+    }
     if (core.outbox.length === 0) {
       return;
     }
@@ -1450,16 +1507,12 @@ export class Machine {
       runtime: core.status === 'running' ? core.executedRuntime : null,
       heldRuntimes: this.heldRuntimes(core),
       waitingFor:
-        core.status === 'running'
-          ? (core.waitingFor ?? core.preemptedBy)
-          : null,
-      blockReason:
         core.status !== 'running'
           ? null
           : core.waitingFor !== null
-            ? 'acquire'
+            ? core.waitingFor
             : core.preemptedBy !== null
-              ? 'preempted'
+              ? core.spec.id
               : null,
       currentFn: core.status === 'running' ? core.executedFn : null,
       nativeFrame: core.status === 'running' && core.executedNative,
@@ -1484,6 +1537,9 @@ export class Machine {
             id: job.id,
             name: this.snippet.fnInfo.get(job.fn)!.name,
             internal: this.isInternal(job.fn),
+            pastDue:
+              (job.dueAt !== undefined && job.dueAt <= this.now) ||
+              (job.deadline !== undefined && job.deadline <= this.now),
           })),
         ...[...core.timers]
           .sort((a, b) => a.due - b.due)
@@ -1517,6 +1573,7 @@ function createCore(spec: CoreSpec): CoreState {
     finishedJob: null,
     macrotasks: [],
     outbox: [],
+    screenPatches: [],
     resolutions: [],
     suspended: [],
     returnValue: undefined,
@@ -1532,6 +1589,22 @@ function createCore(spec: CoreSpec): CoreState {
     createdAtTick: -1,
     error: null,
   };
+}
+
+function mergeScreenPatch(base: ScreenState, patch: ScreenState): ScreenState {
+  const baseProps = (base.nativeProps ?? {}) as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const patchProps = (patch.nativeProps ?? {}) as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const nativeProps: Record<string, Record<string, unknown>> = { ...baseProps };
+  for (const [id, props] of Object.entries(patchProps)) {
+    nativeProps[id] = { ...(nativeProps[id] ?? {}), ...props };
+  }
+  return { ...base, ...patch, nativeProps };
 }
 
 function cloneArgs(args: unknown[]): unknown[] {

@@ -6,12 +6,18 @@ import styles from './styles.module.css';
 interface PanelProps {
   title: string;
   className?: string;
+  help?: string;
   children: React.ReactNode;
 }
 
-export default function Panel({ title, className, children }: PanelProps) {
+export default function Panel({
+  title,
+  className,
+  help,
+  children,
+}: PanelProps) {
   return (
-    <section className={clsx(styles.panel, className)}>
+    <section className={clsx(styles.panel, className)} data-help={help}>
       <span className={styles.panelTitle}>{title}</span>
       <div className={styles.panelBody}>{children}</div>
     </section>

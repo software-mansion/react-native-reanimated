@@ -136,6 +136,27 @@
   cursor: pointer;
 }
 
+.codeReveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 360ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.codeRevealOpen {
+  grid-template-rows: 1fr;
+}
+
+.codeRevealInner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .codeReveal {
+    transition: none;
+  }
+}
+
 .codeFooter {
   display: flex;
   align-items: center;
@@ -154,7 +175,28 @@
   align-self: flex-end;
 }
 
-.collapsed .codeFooter {
+.collapsed .codeReveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 360ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.codeRevealOpen {
+  grid-template-rows: 1fr;
+}
+
+.codeRevealInner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .codeReveal {
+    transition: none;
+  }
+}
+
+.codeFooter {
   padding: 0 8px 6px;
 }
 
@@ -246,7 +288,9 @@
     var(--bus-line) + (var(--bus-count) - 1) * var(--bus-step)
   );
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--fork-width) 48px 330px;
+  grid-template-columns:
+    minmax(0, 1fr) var(--fork-width) 48px
+    var(--cpu-width, 330px);
   grid-template-rows: auto 56px auto 56px auto;
   grid-template-areas:
     'code code code code'
@@ -263,6 +307,65 @@
   outline: 2px solid transparent;
   outline-offset: 3px;
   transition: outline-color 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.scene {
+  position: relative;
+}
+
+.inspectButton {
+  position: absolute;
+  z-index: 5;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 2px solid var(--sim-border);
+  border-radius: 50%;
+  background-color: var(--sim-panel);
+  color: var(--sim-muted);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
+}
+
+.inspectButton:hover,
+.inspectButtonActive {
+  border-color: var(--ifm-color-primary);
+  background-color: var(--ifm-color-primary);
+  color: #fff;
+}
+
+.sceneInspect [data-help] {
+  cursor: help;
+}
+
+.sceneInspect .inspectTarget {
+  outline: 2px dashed var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.inspectTip {
+  position: absolute;
+  z-index: 6;
+  max-width: 360px;
+  padding: 12px 16px;
+  border: 2px solid var(--ifm-color-primary);
+  border-radius: 10px;
+  background-color: var(--sim-panel);
+  color: var(--sim-text);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  transform: translate(14px, 14px);
+  pointer-events: none;
 }
 
 .sceneRunning {
@@ -285,6 +388,65 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .scene {
+    position: relative;
+  }
+
+  .inspectButton {
+    position: absolute;
+    z-index: 5;
+    top: 10px;
+    right: 10px;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 2px solid var(--sim-border);
+    border-radius: 50%;
+    background-color: var(--sim-panel);
+    color: var(--sim-muted);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background-color 120ms ease,
+      color 120ms ease,
+      border-color 120ms ease;
+  }
+
+  .inspectButton:hover,
+  .inspectButtonActive {
+    border-color: var(--ifm-color-primary);
+    background-color: var(--ifm-color-primary);
+    color: #fff;
+  }
+
+  .sceneInspect [data-help] {
+    cursor: help;
+  }
+
+  .sceneInspect [data-help]:hover {
+    outline: 2px dashed var(--ifm-color-primary);
+    outline-offset: 2px;
+  }
+
+  .inspectTip {
+    position: absolute;
+    z-index: 6;
+    max-width: 260px;
+    padding: 8px 10px;
+    border: 1px solid var(--sim-border);
+    border-radius: 8px;
+    background-color: var(--sim-panel);
+    color: var(--sim-text);
+    font-size: 0.78rem;
+    line-height: 1.4;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+    transform: translate(14px, 14px);
+    pointer-events: none;
+  }
+
   .sceneRunning {
     animation: none;
   }
@@ -295,20 +457,25 @@
 }
 
 .sceneWithPhone {
-  grid-template-rows: auto auto auto 56px auto;
+  --cpu-width: 400px;
+  grid-template-columns:
+    minmax(0, 1fr) var(--fork-width) 48px var(--cpu-width)
+    max-content;
+  grid-template-rows: auto 56px auto 56px auto;
   grid-template-areas:
-    'code code code code'
-    'side fork fork phone'
-    'side fork fork cpu'
-    '. fork fork .'
-    'memory memory memory memory';
+    'code code code code code'
+    '. fork fork . .'
+    'side fork fork cpu phone'
+    '. fork fork . .'
+    'memory memory memory memory memory';
 }
 
 .areaPhone {
   grid-area: phone;
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 28px 0;
+  padding: 0 0 0 24px;
 }
 
 .areaCode {
@@ -365,11 +532,16 @@
 
 .phone {
   position: relative;
-  width: 150px;
-  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  width: 180px;
+  aspect-ratio: 9 / 19.5;
+  padding: 8px;
   border: 3px solid var(--sim-border);
-  border-radius: 20px;
+  border-radius: 26px;
   background-color: var(--sim-panel);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--sim-border) 40%, transparent);
   transition: border-color 180ms cubic-bezier(0.2, 0, 0, 1);
 }
 
@@ -378,21 +550,26 @@
 }
 
 .phoneNotch {
-  width: 40px;
-  height: 6px;
-  margin: 0 auto 8px;
-  border-radius: 3px;
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  width: 44px;
+  height: 12px;
+  transform: translateX(-50%);
+  border-radius: 999px;
   background-color: var(--sim-border);
 }
 
 .phoneScreen {
   display: flex;
+  flex: 1;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  min-height: 150px;
-  padding: 12px 8px;
-  border-radius: 10px;
+  min-height: 0;
+  padding: 36px 8px 16px;
+  border-radius: 18px;
   background-color: var(--sim-idle-fill);
 }
 
@@ -427,6 +604,152 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1;
+}
+
+.phoneTextSmall {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 108px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 6px;
+  box-sizing: border-box;
+  background-color: var(--sim-panel);
+  font-family: var(--swm-code-font, var(--ifm-font-family-monospace));
+  font-size: 0.62rem;
+  font-weight: 500;
+  line-height: 1.3;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.phoneFeed {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  height: calc(4 * 20px + 3 * 5px);
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+.phoneFeedRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 5px;
+  background-color: var(--sim-panel);
+  animation: appear 220ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.phoneFeedAvatar {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--rt-purple, #8787e8);
+}
+
+.phoneFeedText {
+  font-family: var(--swm-code-font, var(--ifm-font-family-monospace));
+  font-size: 0.6rem;
+  color: var(--sim-muted);
+}
+
+.textBold {
+  font-weight: 800;
+}
+
+.textItalic {
+  font-style: italic;
+}
+
+.textUnderline {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.textStrike {
+  text-decoration: line-through;
+}
+
+.textCode {
+  box-shadow: inset 0 0 0 1px var(--sim-border);
+  background-color: var(--sim-idle-fill);
+}
+
+.phoneSpeaker {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  display: flex;
+  gap: 3px;
+  transform: translateX(-50%);
+}
+
+.phoneSpeaker > span {
+  width: 4px;
+  height: 10px;
+  border-radius: 2px;
+  background-color: var(--sim-border);
+}
+
+.phoneWaves {
+  position: absolute;
+  z-index: 2;
+  bottom: 22px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.phoneWaveRing {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  border: 3px solid var(--rt-green, #57b495);
+  transform: translate(-50%, -50%) scale(0.1);
+  opacity: 0;
+  animation: speakerWave 900ms ease-out both;
+}
+
+.phoneWaveRing:nth-child(2) {
+  animation-delay: 150ms;
+}
+
+.phoneWaveRing:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+@keyframes speakerWave {
+  0% {
+    transform: translate(-50%, -50%) scale(0.1);
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+.phoneSpinner {
+  display: block;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 4px solid color-mix(in srgb, var(--rt-red) 30%, transparent);
+  border-top-color: var(--rt-red);
+  transition: transform 180ms linear;
 }
 
 .phoneButton {
@@ -464,15 +787,32 @@
   background-color: var(--rt-red-fill);
 }
 
+.phoneScreen {
+  position: relative;
+}
+
 .phoneTouch {
   position: absolute;
-  right: -10px;
-  bottom: -10px;
+  z-index: 1;
   width: 26px;
   height: 26px;
   border-radius: 50%;
   border: 2px solid var(--rt-red);
   background-color: rgba(232, 135, 137, 0.35);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: touchRipple 220ms ease-out both;
+}
+
+@keyframes touchRipple {
+  from {
+    transform: translate(-50%, -50%) scale(0.6);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
 }
 
 .forkBus {
@@ -544,6 +884,10 @@
   width: var(--bus-line);
   animation-name: busGrowY;
   animation-delay: 50ms;
+}
+
+.forkLine.forkLineStatic.forkLineActive {
+  animation: none;
 }
 
 .busPulse {
@@ -821,7 +1165,8 @@
 }
 
 .core {
-  height: 132px;
+  aspect-ratio: 1;
+  min-height: 132px;
   justify-content: flex-start;
   overflow: hidden;
 }
@@ -993,23 +1338,18 @@
   }
 }
 
-.queueChipTimer {
-  border-style: dotted;
-  color: var(--sim-muted);
+.queueChipPastDue {
+  border-color: var(--sim-error);
+  color: var(--sim-error);
 }
 
 .queueChipNote {
   margin-left: 6px;
   font-family: var(--ifm-font-family-base);
   font-size: 0.58rem;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  opacity: 0.8;
-}
-
-.queueChipInternal {
-  border-style: dashed;
-  font-family: var(--ifm-font-family-base);
 }
 
 .queueMore {
@@ -1030,12 +1370,44 @@
 
 .vmRow {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 12px;
 }
 
-.vm {
+.vmPair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px;
+  min-width: 0;
+}
+
+.vmPair .box {
+  padding: 8px 8px;
+}
+
+.vmPair .boxActive {
+  padding: 7px 7px;
+}
+
+.vmPair .boxTitle {
+  font-size: 0.8rem;
+  letter-spacing: 0;
+}
+
+.vmRuntime,
+.vmLoop {
   height: 208px;
+}
+
+.vmLoopIdle {
+  background-color: color-mix(
+    in srgb,
+    var(--rt-fill) 45%,
+    var(--sim-idle-fill)
+  );
+}
+
+.vm {
   overflow: hidden;
   animation: appear 200ms cubic-bezier(0.2, 0, 0, 1) both;
 }

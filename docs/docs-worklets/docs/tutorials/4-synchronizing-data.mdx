@@ -29,7 +29,7 @@ Previous examples showed us how to return the result of a singular worklet at th
 invocation. What if we had a long-running task, yielding results continuously, but we wanted to poll
 the data only occasionally?
 
-<ThreadingSimulation module={SyncPeriodicSnippet} source={SyncPeriodicSource} durationTicks={24}/>
+<ThreadingSimulation module={SyncPeriodicSnippet} source={SyncPeriodicSource} durationTicks={120} tickMs={200}/>
 
 We'll explore how can we obtain the value of the local `result` value and pass it to the RN Runtime.
 
@@ -38,7 +38,7 @@ We'll explore how can we obtain the value of the local `result` value and pass i
 We could use the same pattern as [returning results with a
 callback](/docs/tutorials/returning-results#with-callbacks).
 
-<ThreadingSimulation module={SyncCallbacksSnippet} source={SyncCallbacksSource} durationTicks={24}/>
+<ThreadingSimulation module={SyncCallbacksSnippet} source={SyncCallbacksSource} durationTicks={120} tickMs={200}/>
 
 **Do not do this!** This will schedule a cross-runtime call every 10ms that updates our
 `polledResult` value — even if we don't need it at the given moment. **For best multi-threading
@@ -50,7 +50,7 @@ The simplest approach would be to store our result on the global object of the W
 
 Then poll it with another function call, either synchronously or asynchronously:
 
-<ThreadingSimulation module={SyncGlobalSnippet} source={SyncGlobalSource} durationTicks={24}/>
+<ThreadingSimulation module={SyncGlobalSnippet} source={SyncGlobalSource} durationTicks={120} tickMs={200}/>
 
 However, this code doesn't scale well if we want to synchronize with multiple variables. It's
 generally a bad practice to use the global object like this. It's still better than the previous
@@ -67,7 +67,7 @@ cross-runtime call and is the cheapest option of synchronizing the data between 
 Synchronizable has a handful of APIs, but for the sake of this example we'll stick to its `getDirty`
 and `setBlocking` methods.
 
-<ThreadingSimulation module={SyncSynchronizableSnippet} source={SyncSynchronizableSource} durationTicks={24}/>
+<ThreadingSimulation module={SyncSynchronizableSnippet} source={SyncSynchronizableSource} durationTicks={120} tickMs={200}/>
 
 Even though the Synchronizable was created on the RN Runtime, the value actually lives in the native
 heap and both Runtimes (threads) can access it with little overhead and without blocking one
@@ -78,7 +78,7 @@ type](/docs/memory/synchronizable#synchronizable-fixed), which exposes `setDirty
 generally faster than a general, [Synchronizable with a dynamic
 type](/docs/memory/synchronizable#synchronizable-dynamic) that we just used.
 
-<ThreadingSimulation module={SyncSynchronizableFixedSnippet} source={SyncSynchronizableFixedSource} durationTicks={24}/>
+<ThreadingSimulation module={SyncSynchronizableFixedSnippet} source={SyncSynchronizableFixedSource} durationTicks={120} tickMs={200}/>
 
 This approach works best when you poll the data frequently or from multiple Runtimes at once.
 
@@ -108,7 +108,7 @@ Shareable is an _asymmetric_ type, meaning it has a different structure on the H
 Guest Runtimes. On the Host Runtime, you can access the value it holds directly as its `value`
 property. On Guest Runtimes you must use its synchronous or asynchronous methods.
 
-<ThreadingSimulation module={SyncShareableSnippet} source={SyncShareableSource} durationTicks={24}/>
+<ThreadingSimulation module={SyncShareableSnippet} source={SyncShareableSource} durationTicks={120} tickMs={200}/>
 
 ## Future tutorials
 

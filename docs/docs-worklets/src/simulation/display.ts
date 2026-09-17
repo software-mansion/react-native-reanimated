@@ -17,6 +17,7 @@ const SIMULATOR_ONLY_NAMES = new Set([
   'globalThis',
   'setTimeout',
   'setInterval',
+  'requestAnimationFrame',
   'clearInterval',
   'updateScreen',
   'setNativeProps',

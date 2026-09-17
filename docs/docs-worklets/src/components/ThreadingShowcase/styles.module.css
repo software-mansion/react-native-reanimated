@@ -112,9 +112,9 @@
 .speed {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   margin-left: auto;
-  padding: 3px;
+  padding: 4px 3px;
   border: 1px solid var(--ifm-color-emphasis-300);
   border-radius: 999px;
   background-color: var(--ifm-background-surface-color);
@@ -129,28 +129,23 @@
   color: var(--ifm-color-emphasis-600);
 }
 
-.speedOption {
-  padding: 4px 10px;
-  border: none;
-  border-radius: 999px;
-  background: none;
-  color: var(--ifm-color-emphasis-800);
-  font: inherit;
+.speedSlider {
+  flex-shrink: 0;
+  width: 160px;
+  margin: 0;
+  accent-color: var(--ifm-color-primary);
+  cursor: pointer;
+}
+
+.speedValue {
+  flex-shrink: 0;
+  width: 6.5ch;
+  padding-right: 10px;
+  box-sizing: content-box;
   font-size: 0.8rem;
   font-variant-numeric: tabular-nums;
-  cursor: pointer;
-  transition:
-    background-color 120ms ease,
-    color 120ms ease;
-}
-
-.speedOption:hover {
-  background-color: var(--ifm-color-emphasis-200);
-}
-
-.speedOptionActive {
-  background-color: var(--ifm-color-primary);
-  color: #fff;
+  text-align: right;
+  color: var(--ifm-color-emphasis-800);
 }
 
 @keyframes shimmer {

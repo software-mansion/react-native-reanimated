@@ -12,7 +12,7 @@ export default function HomepageTryOutSection(): JSX.Element {
       </h2>
       <HomepageButton
         title="Get started"
-        href="/react-native-worklets/docs/fundamentals/getting-started"
+        href="/react-native-worklets/docs/getting-started"
       />
     </div>
   );

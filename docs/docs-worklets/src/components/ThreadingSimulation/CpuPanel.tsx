@@ -36,7 +36,8 @@ export default function CpuPanel({
         const blockedOn =
           core?.waitingFor == null
             ? undefined
-            : runtimes.find((candidate) => candidate.id === core.waitingFor);
+            : (runtimes.find((candidate) => candidate.id === core.waitingFor)
+                ?.label ?? core.waitingFor);
         return (
           <div
             key={index}
@@ -46,7 +47,12 @@ export default function CpuPanel({
               runtime !== undefined && runtimeClass(runtime),
               running && styles.boxActive,
               blockedOn !== undefined && styles.coreBlocked
-            )}>
+            )}
+            data-help={
+              runtime === undefined
+                ? 'An unused core.'
+                : `${threadName(runtime)}: a thread. It shows the function and line it executes this tick, or why it is blocked. It holds its runtime while executing JavaScript.`
+            }>
             <span className={styles.boxTitle}>Core {index}</span>
             {runtime !== undefined && (
               <span className={styles.boxDetail}>
@@ -63,9 +69,7 @@ export default function CpuPanel({
               <div className={styles.coreLine}>
                 <span className={styles.blockedTag}>blocked</span>
                 <span className={styles.coreLineText}>
-                  {core?.blockReason === 'preempted'
-                    ? `runtime held by ${threadName(blockedOn)}`
-                    : `waiting for ${blockedOn.label}`}
+                  waiting for {blockedOn}
                 </span>
               </div>
             )}

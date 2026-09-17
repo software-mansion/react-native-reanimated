@@ -36,7 +36,6 @@ export function threadName(runtime: RuntimeDescriptor): string {
 }
 
 const FRIENDLY_NAMES: Record<string, string> = {
-  applyScreen: 'draw frame',
   dispatchPress: 'press event',
   touch: 'touch event',
   tick: 'timer',

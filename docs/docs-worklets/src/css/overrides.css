@@ -138,6 +138,18 @@ button[class*='DocSearch-Button'] {
   padding-left: 12px;
 }
 
+li.theme-doc-sidebar-item-link-level-1 > a.menu__link {
+  --ifm-menu-link-padding-horizontal: 0;
+  --ifm-menu-color: var(--ifm-font-color-base);
+  margin: 8px 0;
+}
+
+@media (max-width: 996px) {
+  li.theme-doc-sidebar-item-link-level-1 > a.menu__link {
+    margin: 4px 0 8px;
+  }
+}
+
 /* examples sidebar */
 
 [class*='plugin-blog'] [class*='sidebar']:not([class*='navbar-sidebar']) {

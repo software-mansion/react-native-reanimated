@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { simulate } from '@site/src/simulation';
+import {
+  APP_MS_PER_TICK,
+  MIN_TICK_MS,
+  Machine,
+  loadSnippet,
+} from '@site/src/simulation';
 import type {
-  ExternalInput,
   ScreenState,
   Snapshot,
   SnippetModule,
@@ -11,34 +15,114 @@ import { displaySource } from '@site/src/simulation/display';
 
 export const PROPAGATION_MS = 100;
 
-function withFinalStep(snapshots: Snapshot[]): Snapshot[] {
-  const last = snapshots[snapshots.length - 1];
-  if (last === undefined || !last.finished) {
-    return snapshots;
+interface SessionOptions {
+  bundleMode: boolean;
+  uiRuntime: boolean;
+  screen: ScreenState | undefined;
+  skipTicks: number;
+  durationTicks: number | undefined;
+}
+
+class Session {
+  machine: Machine | null = null;
+  snapshots: Snapshot[] = [];
+  error: string | null = null;
+  finished = false;
+  presses = 0;
+  clock = 0;
+
+  constructor(
+    private readonly module: SnippetModule,
+    private readonly source: string,
+    private readonly options: SessionOptions
+  ) {
+    this.reset();
   }
-  return [
-    ...snapshots,
-    {
-      ...last,
-      tick: last.tick + 1,
-      events: [],
-      memory: last.memory.map((cell) => ({ ...cell, accessedBy: null })),
-      cores: last.cores.map((core) => ({
-        ...core,
-        status: core.status === 'error' ? core.status : 'idle',
-        line: null,
-        job: null,
-        runtime: null,
-        heldRuntimes: [],
-        waitingFor: null,
-        blockReason: null,
-        currentFn: null,
-        nativeFrame: false,
-        callStack: [],
-        visibleStack: [],
-      })),
-    },
-  ];
+
+  reset(): void {
+    this.presses = 0;
+    this.finished = false;
+    this.clock = 0;
+    try {
+      const machine = new Machine(loadSnippet(this.module, this.source), {
+        bundleMode: this.options.bundleMode,
+        uiRuntime: this.options.uiRuntime,
+        screen: this.options.screen,
+      });
+      machine.skip(this.options.skipTicks);
+      this.machine = machine;
+      this.snapshots = [machine.snapshot()];
+      this.error = null;
+    } catch (error) {
+      this.machine = null;
+      this.snapshots = [];
+      this.error = error instanceof Error ? error.message : String(error);
+      this.finished = true;
+    }
+  }
+
+  get atEnd(): boolean {
+    return (
+      this.finished ||
+      (this.options.durationTicks !== undefined &&
+        this.snapshots.length > this.options.durationTicks)
+    );
+  }
+
+  advance(): boolean {
+    if (this.machine === null || this.atEnd) {
+      return false;
+    }
+    this.clock += APP_MS_PER_TICK;
+    const snapshot = this.machine.tick(this.clock);
+    this.snapshots.push(snapshot);
+    if (snapshot.finished) {
+      this.snapshots.push(finalStep(snapshot));
+      this.finished = true;
+    }
+    return true;
+  }
+
+  press(fn: string): void {
+    if (this.machine === null || this.atEnd) {
+      return;
+    }
+    const accepted = this.machine.addInput({
+      tick: this.machine.currentTick + 1,
+      core: 'ui',
+      fn,
+      args: [this.presses + 1],
+    });
+    if (accepted) {
+      this.presses += 1;
+    }
+  }
+}
+
+function finalStep(last: Snapshot): Snapshot {
+  return {
+    ...last,
+    tick: last.tick + 1,
+    events: [],
+    memory: last.memory.map((cell) => ({ ...cell, accessedBy: null })),
+    resources: last.resources.map((resource) => ({
+      ...resource,
+      holder: resource.kind === 'loop' ? resource.holder : null,
+    })),
+    cores: last.cores.map((core) => ({
+      ...core,
+      status: core.status === 'error' ? core.status : 'idle',
+      line: null,
+      job: null,
+      runtime: null,
+      heldRuntimes: [],
+      waitingFor: null,
+      currentFn: null,
+      nativeFrame: false,
+      callStack: [],
+      visibleStack: [],
+    })),
+  };
 }
 
 export interface SimulationState {
@@ -54,7 +138,6 @@ export interface SimulationState {
   settled: boolean;
   propagationMs: number;
   containerRef: React.RefObject<HTMLDivElement | null>;
-  inputs: ExternalInput[];
   press: (fn: string) => void;
   step: () => void;
   back: () => void;
@@ -89,71 +172,35 @@ export function useSimulation(
     }
   }, [source, boilerplate]);
   const screenKey = JSON.stringify(screen ?? null);
-  const [inputs, setInputs] = useState<ExternalInput[]>([]);
-  const tickRef = useRef(0);
-  const base = useMemo(
-    () => ({
-      module,
-      source,
-      bundleMode,
-      uiRuntime,
-      screenKey,
-      skipTicks,
-      durationTicks,
-    }),
+  const session = useMemo(
+    () =>
+      new Session(module, source, {
+        bundleMode,
+        uiRuntime,
+        screen: (JSON.parse(screenKey) as ScreenState | null) ?? undefined,
+        skipTicks,
+        durationTicks,
+      }),
     [module, source, bundleMode, uiRuntime, screenKey, skipTicks, durationTicks]
   );
-  const run = useMemo(() => {
-    try {
-      const snapshots = withFinalStep(
-        simulate(module, source, {
-          bundleMode,
-          uiRuntime,
-          screen: (JSON.parse(screenKey) as ScreenState | null) ?? undefined,
-          skipTicks,
-          durationTicks,
-          inputs,
-        })
-      );
-      return { snapshots, error: null };
-    } catch (error) {
-      return {
-        snapshots: [],
-        error: error instanceof Error ? error.message : String(error),
-      };
-    }
-  }, [
-    module,
-    source,
-    bundleMode,
-    uiRuntime,
-    screenKey,
-    skipTicks,
-    durationTicks,
-    inputs,
-  ]);
 
-  const lastTick = Math.max(run.snapshots.length - 1, 0);
   const [tick, setTick] = useState(0);
+  const [, setVersion] = useState(0);
   const [playing, setPlaying] = useState(alwaysOn);
   const [loop, setLoop] = useState(alwaysOn);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const startedRef = useRef(false);
-  const [settled, setSettled] = useState(true);
+  const tickRef = useRef(0);
+  const loopRef = useRef(loop);
+  const [settledTick, setSettledTick] = useState(0);
+  tickRef.current = tick;
+  loopRef.current = loop;
 
   useEffect(() => {
     setTick(0);
-    setInputs([]);
     setPlaying(alwaysOn);
     startedRef.current = alwaysOn;
-  }, [base, alwaysOn]);
-
-  useEffect(() => {
-    tickRef.current = tick;
-    if (tick === 0) {
-      setInputs((current) => (current.length === 0 ? current : []));
-    }
-  }, [tick]);
+  }, [session, alwaysOn]);
 
   useEffect(() => {
     const element = containerRef.current;
@@ -177,65 +224,77 @@ export function useSimulation(
     );
     observer.observe(element);
     return () => observer.disconnect();
-  }, [base, enabled]);
+  }, [session, enabled]);
 
   const propagationMs = Math.min(PROPAGATION_MS, Math.floor(tickMs / 2));
   useEffect(() => {
-    const delay = propagationMs;
-    if (tick === 0 || delay === 0) {
-      setSettled(true);
+    if (tick === 0 || propagationMs === 0) {
       return;
     }
-    setSettled(false);
-    const id = setTimeout(() => setSettled(true), delay);
+    const id = setTimeout(() => setSettledTick(tick), propagationMs);
     return () => clearTimeout(id);
-  }, [tick, run, propagationMs]);
+  }, [tick, session, propagationMs]);
+  const settled = tick === 0 || propagationMs === 0 || settledTick === tick;
+
+  const advance = useCallback((): 'moved' | 'end' => {
+    const current = tickRef.current;
+    if (current < session.snapshots.length - 1) {
+      setTick(current + 1);
+      return 'moved';
+    }
+    if (session.advance()) {
+      setVersion((version) => version + 1);
+      setTick(current + 1);
+      return 'moved';
+    }
+    return 'end';
+  }, [session]);
+
+  const restart = useCallback(() => {
+    session.reset();
+    setVersion((version) => version + 1);
+    setTick(0);
+  }, [session]);
 
   useEffect(() => {
     if (!playing) {
       return;
     }
-    const advance = () => {
-      setTick((current) => {
-        if (current < lastTick) {
-          return current + 1;
+    const run = () => {
+      if (advance() === 'end') {
+        if (loopRef.current) {
+          restart();
+        } else if (!alwaysOn) {
+          setPlaying(false);
         }
-        return loop ? 0 : current;
-      });
+      }
     };
-    if (tickMs <= 0) {
-      let frame = requestAnimationFrame(function step() {
-        advance();
-        frame = requestAnimationFrame(step);
-      });
-      return () => cancelAnimationFrame(frame);
-    }
-    const id = setInterval(advance, tickMs);
+    const id = setInterval(run, Math.max(tickMs, MIN_TICK_MS));
     return () => clearInterval(id);
-  }, [playing, loop, tickMs, lastTick]);
+  }, [playing, tickMs, advance, restart, alwaysOn]);
 
-  useEffect(() => {
-    if (tick >= lastTick && !loop && !alwaysOn) {
-      setPlaying(false);
-    }
-  }, [tick, lastTick, loop, alwaysOn]);
+  const lastTick = session.atEnd
+    ? Math.max(session.snapshots.length - 1, 0)
+    : Number.POSITIVE_INFINITY;
 
   const step = useCallback(() => {
     setPlaying(false);
-    setTick((current) => Math.min(current + 1, lastTick));
-  }, [lastTick]);
+    advance();
+  }, [advance]);
   const back = useCallback(() => {
     setPlaying(false);
     setTick((current) => Math.max(current - 1, 0));
   }, []);
   const reset = useCallback(() => {
     setPlaying(false);
-    setTick(0);
-  }, []);
+    restart();
+  }, [restart]);
   const togglePlay = useCallback(() => {
-    setTick((current) => (current >= lastTick ? 0 : current));
+    if (session.atEnd && tickRef.current >= session.snapshots.length - 1) {
+      restart();
+    }
     setPlaying((current) => !current);
-  }, [lastTick]);
+  }, [session, restart]);
   const toggleLoop = useCallback(() => {
     setLoop((current) => !current);
   }, []);
@@ -244,24 +303,14 @@ export function useSimulation(
   }, []);
   const press = useCallback(
     (fn: string) => {
-      const at = tickRef.current + 1;
-      if (at > lastTick) {
-        return;
-      }
-      setInputs((current) =>
-        current.some((input) => input.tick === at)
-          ? current
-          : [
-              ...current,
-              { tick: at, core: 'ui', fn, args: [current.length + 1] },
-            ]
-      );
+      session.press(fn);
     },
-    [lastTick]
+    [session]
   );
 
   return {
-    ...run,
+    snapshots: session.snapshots,
+    error: session.error,
     displayText: display.text,
     rawToDisplayLine: display.rawToDisplayLine,
     blockEnds: display.blockEnds,
@@ -272,7 +321,6 @@ export function useSimulation(
     settled,
     propagationMs,
     containerRef,
-    inputs,
     press,
     step,
     back,

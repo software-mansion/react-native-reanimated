@@ -140,6 +140,8 @@ export interface Job {
   gen?: Generator<unknown, unknown, unknown>;
   promiseId?: number;
   timerId?: number;
+  dueAt?: number;
+  deadline?: number;
   resume?: { frames: Frame[]; value: unknown };
 }
 
@@ -169,6 +171,7 @@ export interface CoreState {
   finishedJob: string | null;
   macrotasks: Job[];
   outbox: { target: CoreId; job: Job }[];
+  screenPatches: ScreenState[];
   resolutions: { target: CoreId; promiseId: number; value: unknown }[];
   suspended: { job: Job; promiseId: number }[];
   returnValue: unknown;
@@ -194,8 +197,7 @@ export interface CoreSnapshot {
   nativeFrame: boolean;
   runtime: CoreId | null;
   heldRuntimes: CoreId[];
-  waitingFor: CoreId | null;
-  blockReason: 'acquire' | 'preempted' | null;
+  waitingFor: string | null;
   currentFn: string | null;
   visibleStack: string[];
   status: CoreStatus;
@@ -213,6 +215,7 @@ export interface PendingJob {
   internal: boolean;
   timer?: boolean;
   awaiting?: boolean;
+  pastDue?: boolean;
 }
 
 export type SimEvent =
@@ -244,8 +247,20 @@ export type SimEvent =
   | { type: 'jobEnd'; core: CoreId; job: string; internal: boolean }
   | { type: 'error'; core: CoreId; line: number | null; message: string };
 
+export type ResourceKind = 'runtime' | 'loop' | 'synchronizable';
+
+export interface ResourceSnapshot {
+  id: string;
+  kind: ResourceKind;
+  label: string;
+  owner: CoreId | null;
+  holder: CoreId | null;
+}
+
 export interface Snapshot {
   tick: number;
+  now: number;
+  resources: ResourceSnapshot[];
   cores: CoreSnapshot[];
   events: SimEvent[];
   screen: ScreenState;
@@ -259,6 +274,12 @@ export interface ExternalInput {
   fn: string;
   args?: unknown[];
 }
+
+export const FRAME_MS = 16;
+export const TICKS_PER_FRAME = 8;
+export const APP_MS_PER_TICK = FRAME_MS / TICKS_PER_FRAME;
+export const INPUT_DEADLINE_MS = FRAME_MS;
+export const MIN_TICK_MS = 16;
 
 export interface SimulateOptions {
   bundleMode?: boolean;

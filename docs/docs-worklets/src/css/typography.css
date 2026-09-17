@@ -181,7 +181,8 @@ b code {
 }
 
 /* Sidebar */
-[class*='menu__list-item-collapsible'] a {
+[class*='menu__list-item-collapsible'] a,
+.theme-doc-sidebar-item-link-level-1 > .menu__link {
   font-family: var(--swm-title-font);
   font-weight: 600;
   font-size: 18px;

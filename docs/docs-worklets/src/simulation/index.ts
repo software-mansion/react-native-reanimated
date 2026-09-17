@@ -1,5 +1,6 @@
 import { loadSnippet } from './loadSnippet';
 import { DEFAULT_MAX_TICKS, Machine } from './machine';
+import { APP_MS_PER_TICK } from './types';
 import type { SimulateOptions, Snapshot, SnippetModule } from './types';
 
 export { displaySource } from './display';
@@ -8,6 +9,12 @@ export { formatEvent, formatLogs, formatTrace } from './format';
 export { loadSnippet } from './loadSnippet';
 export { CORE_SPECS, Machine } from './machine';
 export type * from './types';
+export {
+  APP_MS_PER_TICK,
+  FRAME_MS,
+  MIN_TICK_MS,
+  TICKS_PER_FRAME,
+} from './types';
 
 export function simulate(
   module: SnippetModule,
@@ -31,7 +38,7 @@ export function simulate(
     if (snapshots.length > maxTicks) {
       throw new Error(`Simulation did not finish within ${maxTicks} ticks`);
     }
-    snapshots.push(machine.tick());
+    snapshots.push(machine.tick(snapshots.length * APP_MS_PER_TICK));
   }
   return snapshots;
 }

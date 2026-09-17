@@ -18,20 +18,34 @@ interface ThreadingShowcaseProps {
   tickMs?: number;
 }
 
-const TICK_SPEEDS = [
-  { ms: 0, label: '0 ms' },
-  { ms: 10, label: '10 ms' },
-  { ms: 100, label: '100 ms' },
-  { ms: 250, label: '250 ms' },
-  { ms: 500, label: '500 ms' },
-  { ms: 1000, label: '1 s' },
-];
+const TICK_STEP_MS = 50;
+const TICK_MIN_MS = 16;
+const TICK_MAX_MS = 1000;
+
+function snapTick(value: number): number {
+  if (value < TICK_STEP_MS) {
+    return TICK_MIN_MS;
+  }
+  return Math.min(TICK_MAX_MS, Math.round(value / TICK_STEP_MS) * TICK_STEP_MS);
+}
+
+function formatTick(ms: number): string {
+  return ms >= 1000 ? `${ms / 1000} s` : `${ms} ms`;
+}
 
 const INITIAL_SCREEN = {
   tree: {
     type: 'View',
     props: {},
     children: [
+      { type: 'Speaker', props: { nativeID: 'speaker' }, children: [] },
+      { type: 'Feed', props: { nativeID: 'feed' }, children: [] },
+      { type: 'Spinner', props: { nativeID: 'spinner' }, children: [] },
+      {
+        type: 'Text',
+        props: { nativeID: 'article', small: true },
+        children: ['README.md'],
+      },
       {
         type: 'Button',
         props: { title: 'You pressed me 0 times', nativeID: 'counter' },
@@ -77,22 +91,22 @@ export default function ThreadingShowcase({
             ? 'four runtimes, four threads'
             : 'everything runs on the JS thread'}
         </span>
-        <div className={styles.speed} role="group" aria-label="Tick speed">
+        <label className={styles.speed}>
           <span className={styles.speedLabel}>tick</span>
-          {TICK_SPEEDS.map((speed) => (
-            <button
-              key={speed.ms}
-              type="button"
-              className={clsx(
-                styles.speedOption,
-                speed.ms === tickMs && styles.speedOptionActive
-              )}
-              onClick={() => setTickMs(speed.ms)}
-              aria-pressed={speed.ms === tickMs}>
-              {speed.label}
-            </button>
-          ))}
-        </div>
+          <input
+            type="range"
+            className={styles.speedSlider}
+            min={TICK_MIN_MS}
+            max={TICK_MAX_MS}
+            step={1}
+            value={tickMs}
+            onChange={(event) =>
+              setTickMs(snapTick(Number(event.target.value)))
+            }
+            aria-label="Tick length in milliseconds"
+          />
+          <span className={styles.speedValue}>{formatTick(tickMs)}</span>
+        </label>
       </div>
       <ThreadingSimulation
         key={enabled ? 'worklets' : 'single'}

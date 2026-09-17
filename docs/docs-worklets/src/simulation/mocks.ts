@@ -1,12 +1,15 @@
+const POSTS_PER_PAGE = 2;
+
 export function fetchFromBackend(path: string): {
   path: string;
   items: number[];
 } {
-  return { path, items: [1, 2, 3, 4, 5] };
-}
-
-export function updateDb(rows: unknown): number {
-  return Array.isArray(rows) ? rows.length : 1;
+  const page = Number(/page=(\d+)/.exec(path)?.[1] ?? 1);
+  const first = (page - 1) * POSTS_PER_PAGE + 1;
+  return {
+    path,
+    items: Array.from({ length: POSTS_PER_PAGE }, (_, index) => first + index),
+  };
 }
 
 export function doImportantStuff(): number {
@@ -17,26 +20,47 @@ export function formatPresses(count: number): string {
   return `You pressed me ${count} ${count === 1 ? 'time' : 'times'}`;
 }
 
-export function applyTransform<T>(style: T): T {
-  return style;
-}
-
 export function decodeAudio(chunk: number): { chunk: number; samples: number } {
   return { chunk, samples: chunk * 512 };
+}
+
+export function applyEqualizer<T>(buffer: T): T {
+  return buffer;
+}
+
+export function mixChannels<T>(buffer: T): T {
+  return buffer;
+}
+
+export function resolveLinks<T>(ast: T): T {
+  return ast;
+}
+
+export function layoutBlocks<T>(ast: T): T {
+  return ast;
+}
+
+export function applyTheme<T>(ast: T): T {
+  return ast;
 }
 
 export function playAudio(buffer: { samples: number }): number {
   return buffer.samples;
 }
 
-export function parseMarkdown(text: string): { text: string; nodes: number } {
-  return { text, nodes: text.length };
+export function parseMarkdown(
+  text: string,
+  revision = 1
+): { text: string; revision: number } {
+  return { text, revision };
 }
 
-export function renderHtml(ast: { nodes: number }): string {
-  return '<p>'.repeat(ast.nodes);
-}
+const TEXT_STYLES = ['bold', 'italic', 'underline', 'strikethrough', 'code'];
 
-export function cacheHtml(key: string, html: string): number {
-  return key.length + html.length;
+export function renderHtml(ast: { text: string; revision: number }): {
+  text: string;
+  style: string;
+} {
+  const style = TEXT_STYLES[(ast.revision - 1) % TEXT_STYLES.length];
+  return { text: style, style };
 }

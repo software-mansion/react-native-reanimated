@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import type { CoreSnapshot, MemorySnapshot } from '@site/src/simulation';
 
 import styles from './styles.module.css';
-import { runtimeClass, threadName } from './runtimeColors';
+import { badgeName, runtimeClass, threadName } from './runtimeColors';
 import QueueList from './QueueList';
 import type { RuntimeDescriptor } from './runtimeColors';
 
@@ -58,44 +58,70 @@ export default function MemoryPanel({
           const shareables = memory.filter(
             (cell) => cell.kind === 'shareable' && cell.host === runtime.id
           );
+          const placeholder = !present.has(runtime.id);
+          const driving =
+            running && executor !== undefined && executor.id === runtime.id;
           return (
             <div
               key={runtime.id}
               className={clsx(
-                styles.box,
-                styles.vm,
-                runtimeClass(executorDescriptor ?? runtime),
-                running && styles.boxActive,
-                !present.has(runtime.id) && styles.vmPlaceholder
+                styles.vmPair,
+                placeholder && styles.vmPlaceholder
               )}
-              aria-hidden={!present.has(runtime.id)}>
-              <span className={styles.boxTitle}>{runtime.label}</span>
-              <span className={styles.boxDetail}>
-                {!running || executorDescriptor === undefined
-                  ? 'no thread'
-                  : threadName(executorDescriptor)}
-              </span>
-              {shareables.map((cell) => {
-                const accessor = accessorOf(cell);
-                return (
-                  <span
-                    key={`shareable-${cell.id}`}
-                    className={clsx(
-                      styles.shareable,
-                      accessor !== undefined && runtimeClass(accessor),
-                      accessor !== undefined && styles.shareableActive
-                    )}>
-                    <span className={styles.shareableLabel}>Shareable</span>
-                    <span className={styles.cellNumber}>{cell.value}</span>
-                  </span>
-                );
-              })}
-              {error !== null && (
-                <span className={styles.vmError}>{error}</span>
-              )}
-              {error === null && (
-                <QueueList pending={pending} paused={paused} />
-              )}
+              aria-hidden={placeholder}>
+              <div
+                className={clsx(
+                  styles.box,
+                  styles.vm,
+                  styles.vmLoop,
+                  runtimeClass(runtime),
+                  styles.boxActive,
+                  !driving && styles.vmLoopIdle
+                )}
+                data-help={`The event loop of the ${runtime.label}: its queue of jobs and timers, driven by the ${threadName(runtime)}. It pauses while another thread holds the runtime.`}>
+                <span className={styles.boxTitle}>
+                  {badgeName(runtime.id)} event loop
+                </span>
+                <span className={styles.boxDetail}>{threadName(runtime)}</span>
+                {error === null && (
+                  <QueueList pending={pending} paused={paused} />
+                )}
+              </div>
+              <div
+                className={clsx(
+                  styles.box,
+                  styles.vm,
+                  styles.vmRuntime,
+                  runtimeClass(executorDescriptor ?? runtime),
+                  running && styles.boxActive
+                )}
+                data-help={`${runtime.label}: a JavaScript heap. A thread must hold it to run JavaScript on it; the box names the thread holding it now. A synchronous call from another thread borrows it.`}>
+                <span className={styles.boxTitle}>{runtime.label}</span>
+                <span className={styles.boxDetail}>
+                  {!running || executorDescriptor === undefined
+                    ? 'no thread'
+                    : threadName(executorDescriptor)}
+                </span>
+                {shareables.map((cell) => {
+                  const accessor = accessorOf(cell);
+                  return (
+                    <span
+                      key={`shareable-${cell.id}`}
+                      className={clsx(
+                        styles.shareable,
+                        accessor !== undefined && runtimeClass(accessor),
+                        accessor !== undefined && styles.shareableActive
+                      )}
+                      data-help="A Shareable: a value living in this host runtime. Other threads read it with getSync (borrowing the runtime) or getAsync (a job on the host).">
+                      <span className={styles.shareableLabel}>Shareable</span>
+                      <span className={styles.cellNumber}>{cell.value}</span>
+                    </span>
+                  );
+                })}
+                {error !== null && (
+                  <span className={styles.vmError}>{error}</span>
+                )}
+              </div>
             </div>
           );
         })}
@@ -112,7 +138,8 @@ export default function MemoryPanel({
                   styles.synchronizable,
                   accessor !== undefined && runtimeClass(accessor),
                   accessor !== undefined && styles.synchronizableActive
-                )}>
+                )}
+                data-help="A Synchronizable: shared memory in the native heap. Any thread reads or writes it without a cross-runtime call; the colour shows who touched it this tick.">
                 <span className={styles.shareableLabel}>Synchronizable</span>
                 <span className={styles.cellNumber}>{cell.value}</span>
               </span>

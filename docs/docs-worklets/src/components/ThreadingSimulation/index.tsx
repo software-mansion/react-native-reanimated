@@ -18,7 +18,6 @@ import Phone from './Phone';
 import { badgeName, runtimeClass } from './runtimeColors';
 import type { RuntimeDescriptor } from './runtimeColors';
 import styles from './styles.module.css';
-import { useFrameInterval } from './useFrameInterval';
 import { useSimulation } from './useSimulation';
 
 interface ThreadingSimulationProps {
@@ -45,7 +44,7 @@ interface ThreadingSimulationProps {
 }
 
 const DEFAULT_TICK_MS = 1800;
-const MIN_PULSE_FRAMES = 4;
+const MIN_PULSE_MS = 64;
 
 export default function ThreadingSimulation({
   module,
@@ -72,7 +71,40 @@ export default function ThreadingSimulation({
   const [open, setOpen] = useState(defaultOpen || alwaysOn);
   const [localCodeOpen, setLocalCodeOpen] = useState(!collapsibleCode);
   const [boilerplate, setBoilerplate] = useState(false);
-  const frameMs = useFrameInterval();
+  const [inspecting, setInspecting] = useState(false);
+  const [tip, setTip] = useState<{
+    text: string;
+    x: number;
+    y: number;
+  } | null>(null);
+  const sceneRef = useRef<HTMLDivElement | null>(null);
+  const inspectTargetRef = useRef<Element | null>(null);
+  const markInspectTarget = (target: Element | null) => {
+    if (inspectTargetRef.current === target) {
+      return;
+    }
+    inspectTargetRef.current?.classList.remove(styles.inspectTarget);
+    target?.classList.add(styles.inspectTarget);
+    inspectTargetRef.current = target;
+  };
+  const onInspectMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!inspecting || sceneRef.current === null) {
+      return;
+    }
+    const target = (event.target as HTMLElement).closest('[data-help]');
+    const text = target?.getAttribute('data-help');
+    markInspectTarget(text ? target : null);
+    if (!text) {
+      setTip(null);
+      return;
+    }
+    const bounds = sceneRef.current.getBoundingClientRect();
+    setTip({
+      text,
+      x: event.clientX - bounds.left,
+      y: event.clientY - bounds.top,
+    });
+  };
   const codeOpen = controlledCodeOpen ?? localCodeOpen;
   const setCodeOpen = (next: boolean) => {
     setLocalCodeOpen(next);
@@ -124,7 +156,7 @@ export default function ThreadingSimulation({
   const snapshot = simulation.snapshots[simulation.tick];
   const runtimes = collectRuntimes([snapshot]);
   const everRuntimes = collectRuntimes(simulation.snapshots);
-  const usedRuntimes = collectUsedRuntimes(simulation.snapshots);
+  const usedRuntimes = collectUsedRuntimes(simulation.snapshots, source);
   const activeSince = collectActiveSince(simulation.snapshots, simulation.tick);
   const steady = new Set(
     [...activeSince]
@@ -232,7 +264,9 @@ export default function ThreadingSimulation({
               Loop
             </button>
             <span className={styles.tickLabel}>
-              tick {simulation.tick} / {simulation.lastTick}
+              tick {simulation.tick}
+              {Number.isFinite(simulation.lastTick) &&
+                ` / ${simulation.lastTick}`}
             </span>
             <button
               type="button"
@@ -247,30 +281,71 @@ export default function ThreadingSimulation({
         )}
 
         <div
+          ref={sceneRef}
           className={clsx(
             styles.scene,
             phone && styles.sceneWithPhone,
             !showMemory && styles.sceneNoMemory,
-            simulation.playing && styles.sceneRunning
+            simulation.playing && styles.sceneRunning,
+            inspecting && styles.sceneInspect
           )}
           style={
             {
               '--propagation': `${simulation.propagationMs}ms`,
             } as React.CSSProperties
-          }>
-          <Panel title="Code" className={styles.areaCode}>
-            {codeOpen && (
-              <CodePanel
-                code={simulation.displayText}
-                runtimes={runtimes}
-                cores={snapshot.cores}
-                rawToDisplayLine={simulation.rawToDisplayLine}
-                blockEnds={simulation.blockEnds}
-                history={history}
-                settled={simulation.settled}
-                columns={codeColumns}
-              />
+          }
+          onMouseMove={onInspectMove}
+          onMouseLeave={() => {
+            markInspectTarget(null);
+            setTip(null);
+          }}>
+          <button
+            type="button"
+            className={clsx(
+              styles.inspectButton,
+              inspecting && styles.inspectButtonActive
             )}
+            onClick={() => {
+              setInspecting((current) => !current);
+              markInspectTarget(null);
+              setTip(null);
+            }}
+            aria-pressed={inspecting}
+            aria-label="Explain the simulation elements"
+            title="What is this?">
+            ?
+          </button>
+          {inspecting && tip !== null && (
+            <div
+              className={styles.inspectTip}
+              style={{ left: tip.x, top: tip.y }}
+              role="tooltip">
+              {tip.text}
+            </div>
+          )}
+          <Panel
+            title="Code"
+            className={styles.areaCode}
+            help="The snippet being executed. A highlighted line is executing right now on the thread of that colour; lines fade out over the next three ticks.">
+            <div
+              className={clsx(
+                styles.codeReveal,
+                codeOpen && styles.codeRevealOpen
+              )}
+              aria-hidden={!codeOpen}>
+              <div className={styles.codeRevealInner}>
+                <CodePanel
+                  code={simulation.displayText}
+                  runtimes={runtimes}
+                  cores={snapshot.cores}
+                  rawToDisplayLine={simulation.rawToDisplayLine}
+                  blockEnds={simulation.blockEnds}
+                  history={history}
+                  settled={simulation.settled}
+                  columns={codeColumns}
+                />
+              </div>
+            </div>
             <div
               className={clsx(
                 styles.codeFooter,
@@ -307,7 +382,10 @@ export default function ThreadingSimulation({
           )}
           <div className={styles.areaSide}>
             {showConsole && (
-              <Panel title="Console" className={styles.consolePanel}>
+              <Panel
+                title="Console"
+                className={styles.consolePanel}
+                help="console.log output, tagged with the runtime it ran on and the wall-clock time it was shown.">
                 <div className={styles.console}>
                   {logs.length === 0 ? (
                     <span className={styles.consoleEmpty}>no output yet</span>
@@ -335,9 +413,12 @@ export default function ThreadingSimulation({
           <ForkBus
             slots={slots}
             showDown={showMemory}
-            pulse={simulation.propagationMs >= MIN_PULSE_FRAMES * frameMs}
+            pulse={simulation.propagationMs >= MIN_PULSE_MS}
           />
-          <Panel title="CPU" className={styles.areaCpu}>
+          <Panel
+            title="CPU"
+            className={styles.areaCpu}
+            help="The threads. Each thread executes at most one line per tick.">
             <CpuPanel
               runtimes={runtimes}
               cores={snapshot.cores}
@@ -345,7 +426,10 @@ export default function ThreadingSimulation({
             />
           </Panel>
           {showMemory && (
-            <Panel title="Memory" className={styles.areaMemory}>
+            <Panel
+              title="Memory"
+              className={styles.areaMemory}
+              help="JavaScript runtimes with their event loops, plus shared memory outside every runtime.">
               <MemoryPanel
                 runtimes={everRuntimes.filter(
                   (runtime) =>
@@ -386,8 +470,14 @@ function collectRuntimes(snapshots: Snapshot[]): RuntimeDescriptor[] {
   return runtimes;
 }
 
-function collectUsedRuntimes(snapshots: Snapshot[]): Set<string> {
+function collectUsedRuntimes(
+  snapshots: Snapshot[],
+  source: string
+): Set<string> {
   const used = new Set<string>();
+  if (/OnUI|UIThread/.test(source)) {
+    used.add('ui');
+  }
   for (const snapshot of snapshots) {
     for (const core of snapshot.cores) {
       if (core.status !== 'idle' || core.pending.length > 0) {

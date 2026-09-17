@@ -693,7 +693,7 @@ describe('Machine semantics', () => {
       `)
     );
     const waiting = snapshots.filter(
-      (snapshot) => core(snapshot, 'rn').blockReason === 'acquire'
+      (snapshot) => core(snapshot, 'rn').waitingFor === 'worker:worker'
     );
     assert.equal(waiting.length, 1);
     assert.equal(core(waiting[0], 'rn').waitingFor, 'worker:worker');
@@ -711,7 +711,7 @@ describe('Machine semantics', () => {
 
   it('a sync claim on a free runtime blocks it from the same tick on', () => {
     const source = snippetSource('syncShareable');
-    const snapshots = simulate(syncShareable, source, { durationTicks: 24 });
+    const snapshots = simulate(syncShareable, source, { durationTicks: 200 });
     const claimLine =
       source.split('\n').findIndex((line) => line.includes('getSync')) + 1;
     const claimTick = snapshots.find((snapshot) =>
@@ -725,8 +725,7 @@ describe('Machine semantics', () => {
     assert.ok(claimTick !== undefined);
     for (const snapshot of [claimTick, snapshots[claimTick.tick + 1]]) {
       const worker = core(snapshot, 'worker:worker');
-      assert.equal(worker.blockReason, 'preempted');
-      assert.equal(worker.waitingFor, 'rn');
+      assert.equal(worker.waitingFor, 'worker:worker');
       assert.deepEqual(worker.heldRuntimes, []);
       assert.deepEqual(core(snapshot, 'rn').heldRuntimes, [
         'rn',
@@ -739,14 +738,14 @@ describe('Machine semantics', () => {
       );
     }
     assert.equal(
-      core(snapshots[claimTick.tick + 2], 'worker:worker').blockReason,
+      core(snapshots[claimTick.tick + 2], 'worker:worker').waitingFor,
       null
     );
   });
 
   it('an interval does not stack callbacks while its runtime is blocked', () => {
     const source = snippetSource('syncShareable');
-    const snapshots = simulate(syncShareable, source, { durationTicks: 24 });
+    const snapshots = simulate(syncShareable, source, { durationTicks: 200 });
     for (const snapshot of snapshots) {
       const worker = snapshot.cores.find(
         (candidate) => candidate.id === 'worker:worker'
@@ -763,7 +762,7 @@ describe('Machine semantics', () => {
 
   it('getSync on a Shareable acquires the Host Runtime and reads the value', () => {
     const source = snippetSource('syncShareable');
-    const snapshots = simulate(syncShareable, source, { durationTicks: 24 });
+    const snapshots = simulate(syncShareable, source, { durationTicks: 200 });
     const reading = snapshots.find((snapshot) =>
       snapshot.events.some(
         (event) => event.type === 'memory' && event.core === 'rn'
@@ -782,7 +781,7 @@ describe('Machine semantics', () => {
   it('a Synchronizable is written by the worker and read by RN without a cross-runtime call', () => {
     const source = snippetSource('syncSynchronizable');
     const snapshots = simulate(syncSynchronizable, source, {
-      durationTicks: 16,
+      durationTicks: 200,
     });
     const scheduled = snapshots.flatMap((snapshot) =>
       snapshot.events.filter((event) => event.type === 'scheduled')

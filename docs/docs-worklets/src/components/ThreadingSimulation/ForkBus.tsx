@@ -24,7 +24,10 @@ export default function ForkBus({
   pulse = true,
 }: ForkBusProps) {
   return (
-    <div className={styles.forkBus} aria-hidden="true">
+    <div
+      className={styles.forkBus}
+      aria-hidden="true"
+      data-help="One line per core. A pulse travels from the executing core up to its code line and down to the runtime it executes on.">
       {slots.map(({ index, runtime, activeSince, lineImpulse }) => {
         const isActive = activeSince !== undefined;
         const colorClass =
@@ -43,7 +46,8 @@ export default function ForkBus({
                 styles.forkLine,
                 styles.forkTrunk,
                 colorClass,
-                isActive && styles.forkLineActive
+                isActive && styles.forkLineActive,
+                !pulse && styles.forkLineStatic
               )}
               style={style}>
               {pulses && (
@@ -58,7 +62,8 @@ export default function ForkBus({
                 styles.forkLine,
                 styles.forkUp,
                 colorClass,
-                isActive && styles.forkLineActive
+                isActive && styles.forkLineActive,
+                !pulse && styles.forkLineStatic
               )}
               style={style}>
               {pulses && (
@@ -74,7 +79,8 @@ export default function ForkBus({
                   styles.forkLine,
                   styles.forkDown,
                   colorClass,
-                  isActive && styles.forkLineActive
+                  isActive && styles.forkLineActive,
+                  !pulse && styles.forkLineStatic
                 )}
                 style={style}>
                 {pulses && (

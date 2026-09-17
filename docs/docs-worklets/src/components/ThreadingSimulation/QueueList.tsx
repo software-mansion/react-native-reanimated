@@ -102,16 +102,24 @@ export default function QueueList({ pending, paused = false }: QueueListProps) {
             key={entry.job.id}
             className={clsx(
               styles.queueChip,
-              entry.job.internal && styles.queueChipInternal,
-              entry.job.timer === true && styles.queueChipTimer,
+              entry.job.pastDue === true && styles.queueChipPastDue,
               entry.exitAt !== null && styles.queueChipExit
-            )}>
+            )}
+            data-help={
+              entry.job.timer === true
+                ? 'A pending timer. When it is due, its callback joins this queue as a job.'
+                : entry.job.awaiting === true
+                  ? 'A job suspended at await. It re-enters the queue when its promise settles.'
+                  : entry.job.pastDue === true
+                    ? 'A job that is past due: its timer fired, or the press waited longer than a frame, while the thread was busy.'
+                    : 'A job waiting for the thread to dequeue it. Jobs run in order, one at a time.'
+            }>
             {entry.job.internal
               ? humanize(entry.job.name)
               : `${entry.job.name}()`}
             {entry.job.awaiting === true && ' awaits'}
-            {entry.job.timer === true && (
-              <span className={styles.queueChipNote}>timer</span>
+            {entry.job.pastDue === true && (
+              <span className={styles.queueChipNote}>past due</span>
             )}
           </span>
         ))}
