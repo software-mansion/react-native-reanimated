@@ -4,13 +4,15 @@ import * as React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, {
+  getDynamicFeatureFlag,
   runOnJS,
+  setDynamicFeatureFlag,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import photo from './assets/image.jpg';
 
+import photo from './assets/image.jpg';
 import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
 
 type ParamList = {
@@ -167,6 +169,13 @@ const Screen1 = withSharedTransitionBoundary(Screen1Content);
 const Screen2 = withSharedTransitionBoundary(Screen2Content);
 
 export default function ModalsExample() {
+  React.useEffect(() => {
+    const flag = 'TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS';
+    const previous = getDynamicFeatureFlag(flag);
+    setDynamicFeatureFlag(flag, true);
+    return () => setDynamicFeatureFlag(flag, previous);
+  }, []);
+
   return (
     <Stack.Navigator
       screenOptions={{
