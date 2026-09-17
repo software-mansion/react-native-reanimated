@@ -248,7 +248,7 @@ static BOOL isSameOrigin(NSURL *lhs, NSURL *rhs)
 
 - (void)sendRequest:(RequestConfig &&)config
           requestId:(uint64_t)requestId
-           listener:(const std::shared_ptr<NetworkRequestListener> &)listener
+           listener:(std::shared_ptr<NetworkRequestListener>)listener
 {
   NSString *urlString = [NSString stringWithUTF8String:config.url.c_str()];
   NSURL *url = urlString != nil ? [NSURL URLWithString:urlString] : nil;
@@ -287,22 +287,21 @@ static BOOL isSameOrigin(NSURL *lhs, NSURL *rhs)
   request.HTTPShouldHandleCookies = config.withCredentials;
   request.timeoutInterval = config.timeoutMs > 0 ? config.timeoutMs / 1000.0 : kNoTimeoutInterval;
 
-  const auto sharedListener = listener;
   const auto timeoutMs = config.timeoutMs;
   const auto withCredentials = config.withCredentials;
 
   [_delegateQueue addOperationWithBlock:^{
     if (atomic_load(&self->_invalidated)) {
-      sharedListener->onError(RequestError::Aborted, "The networking session was invalidated.");
+      listener->onError(RequestError::Aborted, "The networking session was invalidated.");
       return;
     }
     NSURLSessionDataTask *task = [[self sessionWithCredentials:withCredentials] dataTaskWithRequest:request];
     if (task == nil) {
-      sharedListener->onError(RequestError::Network, "Failed to create a data task for the request.");
+      listener->onError(RequestError::Network, "Failed to create a data task for the request.");
       return;
     }
     WorkletsRequestState *state = [WorkletsRequestState new];
-    state->listener = sharedListener;
+    state->listener = listener;
     state->data = [NSMutableData new];
     state->requestId = requestId;
     state->expectedContentLength = -1;
