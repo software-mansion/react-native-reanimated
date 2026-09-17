@@ -73,6 +73,15 @@ bool ValueInterpolator::updateKeyframes(const folly::dynamic &fromValue, const f
   return equalsReversingAdjustedStartValue;
 }
 
+bool ValueInterpolator::canInterpolate(
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
+  const auto toIndex = getToKeyframeIndex(progressProvider);
+  const auto &from = keyframes_[toIndex - 1].value;
+  const auto &to = keyframes_[toIndex].value;
+  return canInterpolateValue(from ? *from : getFallbackValue(shadowNode), to ? *to : getFallbackValue(shadowNode));
+}
+
 folly::dynamic ValueInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider,

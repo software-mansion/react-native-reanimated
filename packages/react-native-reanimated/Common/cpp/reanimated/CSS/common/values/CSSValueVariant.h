@@ -84,6 +84,8 @@ class CSSValueVariant final : public CSSValue {
   bool operator==(const CSSValueVariant &other) const;
   bool operator==(const CSSValue &other) const override;
 
+  bool canInterpolateTo(const CSSValueVariant &to) const;
+
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
 

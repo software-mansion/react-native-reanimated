@@ -17,6 +17,12 @@ folly::dynamic PropertyInterpolator::getStyleValue(const std::shared_ptr<const S
   return viewStylesRepository_->getStyleProp(shadowNode->getTag(), propertyPath_);
 }
 
+bool PropertyInterpolator::canInterpolate(
+    const std::shared_ptr<const ShadowNode> &,
+    const std::shared_ptr<KeyframeProgressProvider> &) const {
+  return true;
+}
+
 bool PropertyInterpolatorFactory::isDiscreteProperty() const {
   return false;
 }

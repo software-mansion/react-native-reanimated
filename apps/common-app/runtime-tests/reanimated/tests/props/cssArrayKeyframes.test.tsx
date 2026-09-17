@@ -496,4 +496,37 @@ describe('CSS array keyframes', () => {
     await wait(500);
     expect(await shadows()).toBe([], ComparisonMode.ARRAY);
   });
+
+  test('inset mismatch switches the entire list discretely', async () => {
+    await render(
+      <Example
+        underlying={[green]}
+        keyframes={{
+          from: { boxShadow: base },
+          to: { boxShadow: [green, { ...blue, inset: true }] },
+        }}
+      />
+    );
+    const result = await shadows();
+    expect(result.length).toBe(2);
+    expect(result[0].offsetX).toBe(20);
+    expect(result[1].offsetX).toBe(-20);
+    expect(result[1].inset).toBe(false);
+  });
+
+  test('inset mismatch switches all layers after halfway', async () => {
+    const target = [green, { ...blue, inset: true }];
+    await render(
+      <Example
+        progress={0.75}
+        underlying={[red]}
+        keyframes={{ from: { boxShadow: base }, to: { boxShadow: target } }}
+      />
+    );
+    const result = await shadows();
+    expect(result.length).toBe(2);
+    expect(result[0].offsetX).toBe(40);
+    expect(result[1].offsetX).toBe(-20);
+    expect(result[1].inset).toBe(true);
+  });
 });

@@ -86,6 +86,19 @@ bool CSSValueVariant<AllowedTypes...>::operator==(const CSSValue &other) const {
 }
 
 template <CSSValueDerived... AllowedTypes>
+bool CSSValueVariant<AllowedTypes...>::canInterpolateTo(const CSSValueVariant &to) const {
+  return std::visit(
+      [](const auto &fromValue, const auto &toValue) {
+        REA_IF_SAME_TYPE(fromValue, toValue) {
+          return fromValue.canInterpolateTo(toValue);
+        }
+        return false;
+      },
+      storage_,
+      to.storage_);
+}
+
+template <CSSValueDerived... AllowedTypes>
 folly::dynamic CSSValueVariant<AllowedTypes...>::toDynamic() const {
   return std::visit([](const auto &v) { return v.toDynamic(); }, storage_);
 }
