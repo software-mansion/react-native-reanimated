@@ -1,4 +1,6 @@
 'use strict';
+import { scheduleOnUI } from 'react-native-worklets';
+
 import type { ShadowNodeWrapper, StyleProps } from '../../commonTypes';
 import { ReanimatedModule } from '../../ReanimatedModule';
 import type { CSSEventHandler } from './events';
@@ -21,12 +23,46 @@ export function setCSSEventHandler(handler: CSSEventHandler) {
   ReanimatedModule.setCSSEventHandler(handler);
 }
 
-export function markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper) {
-  ReanimatedModule.markNodeAsRemovable(shadowNodeWrapper);
+type ViewLifecycleOperation = {
+  shadowNodeWrapper: ShadowNodeWrapper;
+  attached: boolean;
+};
+
+let pendingViewLifecycleOperations: ViewLifecycleOperation[] = [];
+
+function flushViewLifecycleOperations() {
+  const operations = pendingViewLifecycleOperations;
+  pendingViewLifecycleOperations = [];
+  scheduleOnUI(() => {
+    'worklet';
+    global._notifyViewsLifecycle?.(operations);
+  });
 }
 
-export function unmarkNodeAsRemovable(viewTag: number) {
-  ReanimatedModule.unmarkNodeAsRemovable(viewTag);
+// Flushed from a microtask, so the batch is scheduled after every style detachment of the
+// same commit and lands on the UI runtime after the last update those styles could emit.
+function queueViewLifecycleOperation(operation: ViewLifecycleOperation) {
+  if (pendingViewLifecycleOperations.length === 0) {
+    queueMicrotask(flushViewLifecycleOperations);
+  }
+  pendingViewLifecycleOperations.push(operation);
+}
+
+export function notifyViewDetached(shadowNodeWrapper: ShadowNodeWrapper) {
+  queueViewLifecycleOperation({ shadowNodeWrapper, attached: false });
+}
+
+export function notifyViewAttached(shadowNodeWrapper: ShadowNodeWrapper) {
+  // A remount in the same task (StrictMode's double invocation) cancels the pending detach.
+  const detachIndex = pendingViewLifecycleOperations.findIndex(
+    (operation) =>
+      !operation.attached && operation.shadowNodeWrapper === shadowNodeWrapper
+  );
+  if (detachIndex !== -1) {
+    pendingViewLifecycleOperations.splice(detachIndex, 1);
+    return;
+  }
+  queueViewLifecycleOperation({ shadowNodeWrapper, attached: true });
 }
 
 // ANIMATIONS

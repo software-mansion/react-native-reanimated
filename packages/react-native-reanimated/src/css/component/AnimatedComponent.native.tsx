@@ -16,7 +16,7 @@ import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import type { DefaultStyle } from '../../hook/commonTypes';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { assignRef } from '../../reactUtils';
-import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
+import { notifyViewAttached, notifyViewDetached } from '../native';
 import { CSSManager } from '../platform';
 import type { CSSStyle } from '../types';
 import { filterCSSProps } from './utils';
@@ -135,9 +135,9 @@ export default class AnimatedComponent<
   componentDidMount() {
     this._updateStyles(this.props);
 
-    const viewTag = this._viewInfo?.viewTag;
-    if (this._willUnmount && typeof viewTag === 'number') {
-      unmarkNodeAsRemovable(viewTag);
+    const wrapper = this._viewInfo?.shadowNodeWrapper;
+    if (this._willUnmount && wrapper) {
+      notifyViewAttached(wrapper);
     }
 
     this._CSSManager ??= new CSSManager(
@@ -159,12 +159,9 @@ export default class AnimatedComponent<
 
     const wrapper = this._viewInfo?.shadowNodeWrapper;
     if (wrapper) {
-      // Mark node as removable on the native (C++) side, but only actually remove it
-      // when it no longer exists in the Shadow Tree. This ensures proper cleanup of
-      // animations/transitions/props while handling cases where the node might be
-      // remounted (e.g., when frozen) after componentWillUnmount is called.
-
-      markNodeAsRemovable(wrapper);
+      // The native side drops the view's registry entries once it has left the shadow tree,
+      // which handles nodes remounted after componentWillUnmount (e.g. when frozen).
+      notifyViewDetached(wrapper);
     }
 
     this._willUnmount = true;

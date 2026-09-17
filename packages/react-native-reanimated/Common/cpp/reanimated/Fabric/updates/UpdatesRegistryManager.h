@@ -44,9 +44,16 @@ class UpdatesRegistryManager {
   bool shouldCommitAfterPause();
   void cancelCommitAfterPause();
 
-  void markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode);
-  void unmarkNodeAsRemovable(Tag viewTag);
-  void handleNodeRemovals(const RootShadowNode &rootShadowNode);
+  /// A node JS detached while it was still in its surface's committed tree (a frozen
+  /// screen); the first sweep that finds it gone evicts it.
+  void addDetachedNode(const ShadowNodeFamily::Shared &shadowNodeFamily);
+  void removeDetachedNode(Tag viewTag);
+  void evictNode(Tag viewTag);
+  /// Evicts the detached nodes of the root's surface that are no longer in the tree. Pass a
+  /// committed root, never a mounted one: mounts are reported late, so an older mounted
+  /// root can predate a node that is still alive.
+  void handleNodeRemovals(const RootShadowNode &committedRoot);
+  void handleSurfaceUnmount(SurfaceId surfaceId);
   PropsMap collectProps();
   void mergeRegistryProps(Tag viewTag, folly::dynamic &target);
 
@@ -57,12 +64,12 @@ class UpdatesRegistryManager {
 #endif
 
  private:
-  using RemovableShadowNodes = std::unordered_map<Tag, ShadowNodeFamily::Shared>;
+  using DetachedNodes = std::unordered_map<Tag, ShadowNodeFamily::Shared>;
 
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
   std::atomic<bool> shouldCommitAfterPause_;
-  RemovableShadowNodes removableShadowNodes_;
+  DetachedNodes detachedNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 
