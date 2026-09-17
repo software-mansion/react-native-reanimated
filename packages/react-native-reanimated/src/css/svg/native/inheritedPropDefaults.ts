@@ -5,7 +5,7 @@ import {
   isCSSKeyframesRule,
   isPseudoSelectorValue,
 } from '../../utils';
-import { SVG_PROP_LIST_DEFAULTS } from './configs';
+import { SVG_INHERITED_PROP_DEFAULTS } from './configs';
 
 function collectFromKeyframes(animationName: unknown, props: Set<string>) {
   const list = Array.isArray(animationName) ? animationName : [animationName];
@@ -18,7 +18,7 @@ function collectFromKeyframes(animationName: unknown, props: Set<string>) {
     ) as Record<string, object>;
     for (const selector in cssRules) {
       for (const prop in cssRules[selector]) {
-        if (prop in SVG_PROP_LIST_DEFAULTS) {
+        if (prop in SVG_INHERITED_PROP_DEFAULTS) {
           props.add(prop);
         }
       }
@@ -26,13 +26,13 @@ function collectFromKeyframes(animationName: unknown, props: Set<string>) {
   }
 }
 
-// react-native-svg cascades a fill or stroke prop to an element's children
-// only when the element lists it in `propList`, which it builds from the props
-// it received in JS. A CSS animation or pseudo state writes to the shadow node
-// directly, so a prop it is the only source of has to be passed inline too, at
-// the value react-native-svg draws with when it is unset. Owning the prop also
-// stops an ancestor from overwriting the animated value on every draw.
-export function forwardSvgPropListDefaults(
+// react-native-svg cascades its inherited fill and stroke props to an element's
+// children only when the element lists them in `propList`, which it builds in
+// JS from the props it received. A CSS animation or pseudo state writes to the
+// shadow node directly, so a prop it is the only source of has to be passed
+// inline too, at the value react-native-svg draws with when it is unset. Owning
+// the prop also stops an ancestor from overwriting the animated value.
+export function forwardSvgInheritedPropDefaults(
   props: Record<string, unknown>,
   animatedProps: Record<string, unknown>[]
 ) {
@@ -46,7 +46,7 @@ export function forwardSvgPropListDefaults(
         collectFromKeyframes(entry[key], (missing ??= new Set()));
       } else if (
         !isCSSConfigProp(key) &&
-        key in SVG_PROP_LIST_DEFAULTS &&
+        key in SVG_INHERITED_PROP_DEFAULTS &&
         isPseudoSelectorValue(entry[key]) &&
         entry[key].default === undefined
       ) {
@@ -64,7 +64,9 @@ export function forwardSvgPropListDefaults(
       !styles?.some((style) => style?.[prop] != null)
     ) {
       props[prop] =
-        SVG_PROP_LIST_DEFAULTS[prop as keyof typeof SVG_PROP_LIST_DEFAULTS];
+        SVG_INHERITED_PROP_DEFAULTS[
+          prop as keyof typeof SVG_INHERITED_PROP_DEFAULTS
+        ];
     }
   }
 }

@@ -18,7 +18,7 @@ function renderText(props: Record<string, unknown>) {
   return getByTestId('text').props;
 }
 
-describe('SVG propList defaults forwarded as plain props', () => {
+describe('SVG inherited prop defaults forwarded as plain props', () => {
   it('forwards the default of a prop set only by keyframes', () => {
     const props = renderText({
       fill: 'blue',

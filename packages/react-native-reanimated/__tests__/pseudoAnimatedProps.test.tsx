@@ -20,8 +20,8 @@ describe('pseudo selector values in animatedProps', () => {
     expect(getByTestId('subject').props.fill).toBe('rgb(255,0,0)');
   });
 
-  // `opacity` rather than `fill`: react-native-svg cascades `fill` through
-  // its `propList`, so a pseudo-only `fill` now gets a default forwarded.
+  // `opacity` rather than `fill`: `fill` is an inherited react-native-svg
+  // prop, so a pseudo-only `fill` now gets a default forwarded.
   it('omits a pseudo value that has no default', () => {
     const { getByTestId } = render(
       <AnimatedView
