@@ -20,7 +20,7 @@
 
 ### 🐛 Bug fixes
 
-- Forward the react-native-svg default of `fill`, `fillOpacity`, `stroke`, `strokeWidth`, `strokeOpacity` and the other inherited fill and stroke props inline when only CSS keyframes or a pseudo selector set them, so their animation reaches the children of `Text` and `G` on iOS and Android. ([#PR_NUMBER](https://github.com/software-mansion/react-native-reanimated/pull/PR_NUMBER) by [@MatiPl01](https://github.com/MatiPl01))
+- Forward the react-native-svg default of `fill`, `fillOpacity`, `stroke`, `strokeWidth`, `strokeOpacity` and the other inherited fill and stroke props inline when only CSS keyframes or a pseudo selector set them, so their animation reaches the children of `Text` and `G` on iOS and Android. ([#10611](https://github.com/software-mansion/react-native-reanimated/pull/10611) by [@MatiPl01](https://github.com/MatiPl01))
 - Stop passing `forwardedRef` and `nativeID` to the wrapped component on web, which React Strict DOM reported as invalid props. ([#10605](https://github.com/software-mansion/react-native-reanimated/pull/10605) by [@tjzel](https://github.com/tjzel))
 - Preserve Android color and other prop updates when hiding and restoring shared transition views. ([#10601](https://github.com/software-mansion/react-native-reanimated/pull/10601) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Prevent Shared Transition Boundaries from intercepting touches intended for sibling views while keeping their children interactive. ([#10600](https://github.com/software-mansion/react-native-reanimated/pull/10600) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
