@@ -20,6 +20,7 @@
 
 ### 🐛 Bug fixes
 
+- Remove `zIndex` from the synchronous props. No platform applies `zIndex` to a mounted view, so with `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` on, an animated style with only `zIndex` and `elevation` never reached the shadow tree commit and the views did not reorder until a later React render. ([#10602](https://github.com/software-mansion/react-native-reanimated/pull/10602) by [@pawicao](https://github.com/pawicao))
 - Stop passing `forwardedRef` and `nativeID` to the wrapped component on web, which React Strict DOM reported as invalid props. ([#10605](https://github.com/software-mansion/react-native-reanimated/pull/10605) by [@tjzel](https://github.com/tjzel))
 - Preserve Android color and other prop updates when hiding and restoring shared transition views. ([#10601](https://github.com/software-mansion/react-native-reanimated/pull/10601) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Prevent Shared Transition Boundaries from intercepting touches intended for sibling views while keeping their children interactive. ([#10600](https://github.com/software-mansion/react-native-reanimated/pull/10600) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
