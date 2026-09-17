@@ -187,6 +187,10 @@ export const processTransform: ValueProcessor<TransformsArray | string> = (
     return value;
   }
 
+  if (value === 'none') {
+    return [];
+  }
+
   return value
     .split(/\)\s*/)
     .filter(Boolean)

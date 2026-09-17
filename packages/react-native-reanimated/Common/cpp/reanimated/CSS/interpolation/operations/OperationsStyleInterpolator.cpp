@@ -150,7 +150,7 @@ std::optional<StyleOperations> OperationsStyleInterpolator::parseStyleOperations
 }
 
 std::optional<StyleOperations> OperationsStyleInterpolator::parseStyleOperations(const folly::dynamic &values) const {
-  if (values.empty()) {
+  if (values.isNull()) {
     return std::nullopt;
   }
 
