@@ -88,8 +88,20 @@ WorkletRuntime::WorkletRuntime(
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
   if (enableEventLoop) {
-    eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_, runtimeMutex_);
+    eventLoop_ = std::make_shared<EventLoop>(name_, abortToken(), runtime_, queue_, runtimeMutex_);
     eventLoop_->run();
+  }
+}
+
+WorkletRuntime::~WorkletRuntime() {
+  auto lock = acquireRuntimeLock();
+  if (eventLoop_) {
+    eventLoop_->abortPending();
+    eventLoop_.reset();
+  }
+  if (queue_) {
+    queue_->abortPending(abortToken());
+    queue_.reset();
   }
 }
 
@@ -244,15 +256,17 @@ void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
       "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
       "async queue is not set. Recreate the runtime with a valid async queue.");
 
-  queue_->push([job = std::move(job), weakThis = weak_from_this()] {
-    const auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
+  queue_->push(
+      [job = std::move(job), weakThis = weak_from_this()] {
+        const auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
 
-    auto lock = strongThis->acquireRuntimeLock();
-    job(*strongThis);
-  });
+        auto lock = strongThis->acquireRuntimeLock();
+        job(*strongThis);
+      },
+      abortToken());
 }
 
 /* #endregion */

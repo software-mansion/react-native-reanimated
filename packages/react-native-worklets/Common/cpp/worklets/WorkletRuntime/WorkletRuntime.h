@@ -261,6 +261,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       bool enableLocking = true,
       bool enableNetworking = true);
 
+  ~WorkletRuntime() override;
+
   void init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy);
 
   /**
@@ -438,6 +440,10 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       const std::shared_ptr<Networking> &networking);
 
   void legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader);
+
+  [[nodiscard]] AbortToken abortToken() const noexcept {
+    return static_cast<AbortToken>(runtimeId_);
+  }
 
   [[nodiscard]] std::unique_lock<std::recursive_mutex> acquireRuntimeLock() const {
     if (enableLocking_) {
