@@ -170,9 +170,9 @@ class REACSSPlatformTransitionBackend : public css::CSSPlatformTransitionBackend
                                             persistent:persistent];
   }
 
-  void stopTransition(Tag viewTag, const std::string &propertyName) override
+  void stopTransition(Tag viewTag, const std::string &propertyName, bool settle) override
   {
-    [platformTransitions_ stopTransitionForTag:viewTag propertyName:propertyName];
+    [platformTransitions_ stopTransitionForTag:viewTag propertyName:propertyName settle:settle];
   }
 
  private:

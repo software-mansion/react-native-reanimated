@@ -272,9 +272,9 @@ bool NativeProxy::cssAnimateTransition(
              static_cast<jboolean>(persistent)) != JNI_FALSE;
 }
 
-void NativeProxy::cssRemoveTransition(const int viewTag, const int propertyId) {
-  static const auto method = getJniMethod<void(int, int)>("cssRemoveTransition");
-  method(javaPart_.get(), viewTag, propertyId);
+void NativeProxy::cssRemoveTransition(const int viewTag, const int propertyId, const bool settle) {
+  static const auto method = getJniMethod<void(int, int, jboolean)>("cssRemoveTransition");
+  method(javaPart_.get(), viewTag, propertyId, static_cast<jboolean>(settle));
 }
 
 void NativeProxy::cssDefineEasing(
