@@ -271,14 +271,15 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
 // If React re-creates or re-inserts a tag whose exiting removal we are still
 // withholding, it has contradicted that withheld removal. Flush it now instead
 // of letting the stale node linger: updateLightTree would overwrite its
-// lightNodes_ entry (the "LightNode already exists" assert is compiled out in
-// release), orphaning the still-mounted exiting view, and the eventual
+// lightNodes_ entry, orphaning the still-mounted exiting view, and the eventual
 // removal flush would then remove the wrong, live view and crash the
 // mounting layer.
 //
 // This must run before updateLightTree (so the tag is re-registered cleanly)
 // and before addOngoingAnimations (which would otherwise emit an Update for a
-// tag we are about to Delete this frame).
+// tag we are about to Delete this frame). It only sees nodes that were already
+// exiting when the transaction arrived; a node that starts exiting inside this
+// transaction is contradicted by the Create handler in updateLightTree.
 void LayoutAnimationsProxy::reconcileContradictedRemovals(
     const ShadowViewMutationList &mutations,
     ShadowViewMutationList &filteredMutations) const {
@@ -286,32 +287,50 @@ void LayoutAnimationsProxy::reconcileContradictedRemovals(
     if (mutation.type != ShadowViewMutation::Type::Create && mutation.type != ShadowViewMutation::Type::Insert) {
       continue;
     }
-    const auto tag = mutation.newChildShadowView.tag;
-    const auto it = lightNodes_.find(tag);
+    const auto it = lightNodes_.find(mutation.newChildShadowView.tag);
     if (it == lightNodes_.end() || it->second->state == UNDEFINED) {
       continue;
     }
     const auto node = it->second;
-    completedAnimations_.erase(tag);
-    updateMap_.erase(tag);
-    unmapLightNode(node);
-    if (node->state == DELETED) {
-      // already unmounted — only the stale map entry had to go
-      continue;
-    }
-    const auto parent = node->parent.lock();
-    react_native_assert(parent && "Parent node is nullptr");
-    if (!parent) {
-      continue;
-    }
-    const auto index = parent->removeChild(node);
-    react_native_assert(index != -1 && "Exiting node not found");
-    if (index == -1) {
-      continue;
-    }
-    endAnimationsRecursively(node, index, filteredMutations);
-    maybeDropAncestors(parent, filteredMutations);
+    forgetContradictedNode(node);
+    dropContradictedNode(node, filteredMutations);
   }
+}
+
+// Drops every record the proxy keeps under the contradicted tag. It has to run
+// before the new view claims that tag: a record left behind resolves by tag
+// alone, so endLayoutAnimation would later mark the new, live node DEAD and the
+// next Delete for it would hit "Delete mutation for an unmounted node".
+void LayoutAnimationsProxy::forgetContradictedNode(const std::shared_ptr<LightNode> &node) const {
+  const auto tag = node->current.tag;
+  completedAnimations_.erase(tag);
+  updateMap_.erase(tag);
+  cancelLayoutAnimation(tag);
+  unmapLightNode(node);
+}
+
+// Unmounts whatever is left of the contradicted node. Always runs after
+// forgetContradictedNode, and never while the per-parent index cursors of
+// updateLightTree are live, because it edits a parent's children.
+void LayoutAnimationsProxy::dropContradictedNode(
+    const std::shared_ptr<LightNode> &node,
+    ShadowViewMutationList &filteredMutations) const {
+  if (node->state == DELETED) {
+    // already unmounted — only the stale records had to go
+    return;
+  }
+  const auto parent = node->parent.lock();
+  react_native_assert(parent && "Parent node is nullptr");
+  if (!parent) {
+    return;
+  }
+  const auto index = parent->removeChild(node);
+  react_native_assert(index != -1 && "Exiting node not found");
+  if (index == -1) {
+    return;
+  }
+  endAnimationsRecursively(node, index, filteredMutations);
+  maybeDropAncestors(parent, filteredMutations);
 }
 
 bool LayoutAnimationsProxy::shouldOverridePullTransaction() const {
@@ -331,6 +350,7 @@ void LayoutAnimationsProxy::updateLightTree(
   std::unordered_map<Tag, IndexCursors> indexCursors;
   std::unordered_map<Tag, ShadowView> updatedViews;
   std::unordered_map<Tag, std::vector<AncestorOrigin>> oldChains;
+  std::vector<std::shared_ptr<LightNode>> contradictedNodes;
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
     const auto &mutation = *it;
     switch (mutation.type) {
@@ -394,15 +414,26 @@ void LayoutAnimationsProxy::updateLightTree(
         break;
       }
       case ShadowViewMutation::Create: {
+        const auto tag = mutation.newChildShadowView.tag;
         const auto &node = std::make_shared<LightNode>();
         node->current = mutation.newChildShadowView;
-        react_native_assert(!lightNodes_.contains(mutation.newChildShadowView.tag) && "LightNode already exists");
+        // React reuses a tag when a view unflattens, and it can flatten and
+        // unflatten the same view within one transaction. reconcileContradictedRemovals
+        // ran before this loop, so it cannot see a node that started exiting a few
+        // mutations ago. Hand the tag over here rather than letting the new node
+        // overwrite the entry of a still-mounted exiting one.
+        if (const auto contradictedIt = lightNodes_.find(tag); contradictedIt != lightNodes_.end()) {
+          const auto contradicted = contradictedIt->second;
+          react_native_assert(contradicted->isExiting() && "Create mutation for a live node");
+          forgetContradictedNode(contradicted);
+          contradictedNodes.push_back(contradicted);
+        }
 
         if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-          hiddenViewTags_.erase(mutation.newChildShadowView.tag);
+          hiddenViewTags_.erase(tag);
         }
-        lightNodes_[mutation.newChildShadowView.tag] = node;
-        staleSynchronousProps_.forget(mutation.newChildShadowView.tag);
+        lightNodes_[tag] = node;
+        staleSynchronousProps_.forget(tag);
         filteredMutations.push_back(mutation);
         break;
       }
@@ -500,6 +531,12 @@ void LayoutAnimationsProxy::updateLightTree(
         break;
       }
     }
+  }
+
+  // Deferred until the loop is over: dropping a node edits its parent's
+  // children, which would invalidate the index cursors cached per parent above.
+  for (const auto &node : contradictedNodes) {
+    dropContradictedNode(node, filteredMutations);
   }
 }
 
@@ -687,23 +724,34 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
     return {};
   }
 
+  std::shared_ptr<LightNode> exitingNode;
+  if (shouldRemove) {
+    const auto nodeIt = lightNodes_.find(tag);
+    // the withheld removal may have already been flushed (e.g. reconciled after
+    // React re-created the tag) — the assert alone is compiled out in release
+    // and operator[] would insert a null node here
+    if (nodeIt == lightNodes_.end() || !nodeIt->second) {
+      react_native_assert(false && "LightNode not found");
+    } else if (nodeIt->second->isExiting()) {
+      exitingNode = nodeIt->second;
+    }
+    // Anything else means React has already handed this tag to a live view, as
+    // it does when a view unflattens. That view is not ours to unmount, so drop
+    // the record of the withheld one instead of completing it against the wrong
+    // node.
+    if (!exitingNode) {
+      layoutAnimations_.erase(layoutAnimationIt);
+      return surfaceId_;
+    }
+  }
+
   completedAnimations_.insert_or_assign(
       tag, CompletedLayoutAnimation{.animation = layoutAnimationIt->second, .shouldRemove = shouldRemove});
   layoutAnimations_.erase(layoutAnimationIt);
 
-  if (!shouldRemove) {
-    return surfaceId_;
+  if (exitingNode) {
+    exitingNode->setExitingState(DEAD);
   }
-
-  const auto nodeIt = lightNodes_.find(tag);
-  // the withheld removal may have already been flushed (e.g. reconciled after
-  // React re-created the tag) — the assert alone is compiled out in release
-  // and operator[] would insert a null node here
-  if (nodeIt == lightNodes_.end() || !nodeIt->second) {
-    react_native_assert(false && "LightNode not found");
-    return surfaceId_;
-  }
-  nodeIt->second->setExitingState(DEAD);
 
   return surfaceId_;
 }
