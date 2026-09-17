@@ -230,14 +230,12 @@ open class NativeProxy {
         return true
     }
 
-    // TODO(#9681): Temporary workaround for RN >= 0.86. Since RN 0.86,
+    // TODO(#9681): Temporary workaround. Since RN 0.86,
     // overrideBySynchronousMountPropsAtMountingAndroid defaults on, so RN's only public
     // synchronous-update API (synchronouslyUpdateViewOnUIThread) seeds the tagToSynchronousMountProps
-    // cache that then clamps later commits and freezes animations. On RN >= 0.86 we instead call
+    // cache that then clamps later commits and freezes animations. We instead call
     // MountingManager.updatePropsSynchronously directly (apply without cache seeding) via reflection, since
-    // MountingManager is internal. On older RN the flag is off, so we keep the original RN path
-    // unchanged (gated by BuildConfig.IS_REACT_NATIVE_86_OR_NEWER, derived from the RN version at
-    // build time). Remove once RN exposes a non-seeding synchronous-update API.
+    // MountingManager is internal. Remove once RN exposes a non-seeding synchronous-update API.
     private val mountingManager: Any by lazy {
         FabricUIManager::class.java.getDeclaredField("mMountingManager").run {
             isAccessible = true
@@ -259,14 +257,10 @@ open class NativeProxy {
     ) {
         cssPlatformTransitionsManager.onPropsWrittenSynchronously()
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
-            if (BuildConfig.IS_REACT_NATIVE_86_OR_NEWER) {
-                try {
-                    updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
-                } catch (e: Exception) {
-                    Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag", e)
-                }
-            } else {
-                mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, props)
+            try {
+                updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
+            } catch (e: Exception) {
+                Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag", e)
             }
         }
     }

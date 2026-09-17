@@ -142,7 +142,7 @@ This feature flag conflicts with [`USE_ANIMATION_BACKEND`](#use_animation_backen
 
 When enabled, Reanimated will use the React Native's new Animation Backend for applying animated changes. The backend will now be responsible for keeping animation changes in sync with the current React tree. This is meant to help with long-term stability and unlock new performance optimizations.
 
-This flag is experimental and defaults to `false`. To use it, you must run React Native 0.85.2 or newer with `useSharedAnimatedBackend` feature flag enabled (which is achieved by using React Native's Experimental release level in development).
+This flag is experimental and defaults to `false`. To use it, you must enable the `useSharedAnimatedBackend` React Native feature flag (which is achieved by using React Native's Experimental release level in development).
 
 This feature flag conflicts with [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#force_react_render_for_settled_animations) and they cannot be enabled simultaneously. Since `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS` is enabled by default, you need to explicitly disable it in your app's `package.json` when enabling `USE_ANIMATION_BACKEND`:
 
