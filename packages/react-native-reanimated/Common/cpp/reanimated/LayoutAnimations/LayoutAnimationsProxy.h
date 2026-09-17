@@ -159,6 +159,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   void reconcileContradictedRemovals(const ShadowViewMutationList &mutations, ShadowViewMutationList &filteredMutations)
       const;
+  void forgetContradictedNode(const std::shared_ptr<LightNode> &node) const;
+  void dropContradictedNode(const std::shared_ptr<LightNode> &node, ShadowViewMutationList &filteredMutations) const;
 
   void handleSharedTransitionsStart(
       const std::shared_ptr<LightNode> &afterTopScreen,
