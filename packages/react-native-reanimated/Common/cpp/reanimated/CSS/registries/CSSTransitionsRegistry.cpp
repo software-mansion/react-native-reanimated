@@ -22,7 +22,7 @@ CSSTransitionsRegistry::CSSTransitionsRegistry(
 
 bool CSSTransitionsRegistry::needsFlush() const {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
-  return !updatedTags_.empty();
+  return !updatedTags_.empty() || !revertUpdates_.empty();
 }
 
 void CSSTransitionsRegistry::updateConfigOrRun(
@@ -134,6 +134,10 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   }
 
   flush(updatesBatch);
+  for (auto &[family, props] : revertUpdates_) {
+    updatesBatch.emplace_back(family, std::move(props));
+  }
+  revertUpdates_.clear();
 }
 
 void CSSTransitionsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
@@ -155,6 +159,10 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatc
     }
   }
 
+  for (const auto &[family, props] : revertUpdates_) {
+    addRawPropsToAnimatedPropsBatch(family, props);
+  }
+  revertUpdates_.clear();
   flush(updatesBatch);
 }
 
@@ -178,6 +186,16 @@ void CSSTransitionsRegistry::removeTag(const Tag viewTag) {
   const auto it = registry_.find(viewTag);
   if (it != registry_.end()) {
     it->second->cancel();
+#ifndef ANDROID
+    const auto updates = getUpdatesFromRegistry(viewTag);
+    if (updates.isObject()) {
+      std::vector<std::string> propertyNames;
+      for (const auto &propKey : updates.keys()) {
+        propertyNames.push_back(propKey.asString());
+      }
+      recordRevert(it->second, propertyNames);
+    }
+#endif // ANDROID
   }
   removeFromUpdatesRegistry(viewTag);
   registry_.erase(viewTag);
@@ -206,12 +224,43 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
   // updated object contains only allowed properties so we don't need
   // to do additional filtering here
   filteredUpdates.update(updates);
+#ifndef ANDROID
+  if (lastUpdates.isObject()) {
+    std::vector<std::string> droppedProperties;
+    for (const auto &propKey : lastUpdates.keys()) {
+      if (filteredUpdates.count(propKey) == 0) {
+        droppedProperties.push_back(propKey.asString());
+      }
+    }
+    recordRevert(transition, droppedProperties);
+  }
+#endif // ANDROID
   if (filteredUpdates.empty()) {
     removeFromUpdatesRegistry(shadowNode->getTag());
   } else {
     setInUpdatesRegistry(shadowNode->getFamilyShared(), filteredUpdates);
   }
 }
+
+#ifndef ANDROID
+// Android reverts every property that leaves a registry itself
+// (UpdatesRegistryManager::collectPropsToRevertBySurface).
+void CSSTransitionsRegistry::recordRevert(
+    const std::shared_ptr<CSSTransition> &transition,
+    const std::vector<std::string> &propertyNames) {
+  const auto viewTag = transition->getViewTag();
+  folly::dynamic committedValues = folly::dynamic::object;
+  for (const auto &propertyName : propertyNames) {
+    auto committedValue = viewStylesRepository_->getStyleProp(viewTag, {propertyName});
+    if (!committedValue.isNull()) {
+      committedValues[propertyName] = std::move(committedValue);
+    }
+  }
+  if (!committedValues.empty()) {
+    revertUpdates_.emplace_back(transition->getShadowNodeFamily(), std::move(committedValues));
+  }
+}
+#endif // ANDROID
 
 const std::shared_ptr<CSSTransition> &CSSTransitionsRegistry::getOrCreateTransition(
     const std::shared_ptr<const ShadowNode> &shadowNode) {

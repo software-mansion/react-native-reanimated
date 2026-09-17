@@ -8,8 +8,10 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 namespace reanimated::css {
 
@@ -68,8 +70,15 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   Registry registry_;
   // Tags reported by owned transitions between flushes.
   std::unordered_set<Tag> updatedTags_;
+  // Committed values of properties that just left the loop, applied on the next
+  // flush without entering the registry. Only React would restore them
+  // otherwise, and a render that changes nothing else never commits.
+  UpdatesBatch revertUpdates_;
 
   void removeTag(Tag viewTag) override;
+#ifndef ANDROID
+  void recordRevert(const std::shared_ptr<CSSTransition> &transition, const std::vector<std::string> &propertyNames);
+#endif // ANDROID
   const std::shared_ptr<CSSTransition> &getOrCreateTransition(const std::shared_ptr<const ShadowNode> &shadowNode);
   void updateInUpdatesRegistry(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &updates);
   void recordInitialUpdate(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &initialUpdate);

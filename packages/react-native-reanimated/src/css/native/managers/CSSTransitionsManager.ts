@@ -31,15 +31,11 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     this.shadowNodeWrapper = shadowNodeWrapper;
   }
 
-  /**
-   * @returns Whether this update detached a running transition (its props were
-   *   removed, or normalized to an empty config, e.g. when duration is 0).
-   */
   update(
     transitionProperties: CSSTransitionProperties | null,
     nextStyle?: UnknownRecord,
     eventMask = 0
-  ): boolean {
+  ): void {
     const transitionConfig =
       transitionProperties &&
       normalizeCSSTransitionProperties(transitionProperties);
@@ -57,9 +53,8 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     if (!prevProps || !transitionConfig) {
       if (this.hasTransition) {
         this.detach();
-        return true;
       }
-      return false;
+      return;
     }
 
     // Trigger transition for changed properties only
@@ -78,8 +73,6 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
       this.appliedEventMask = eventMask;
       runCSSTransition(this.shadowNodeWrapper, {}, eventMask);
     }
-
-    return false;
   }
 
   unmountCleanup(): void {
