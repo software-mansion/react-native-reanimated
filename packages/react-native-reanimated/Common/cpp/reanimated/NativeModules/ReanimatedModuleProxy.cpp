@@ -48,7 +48,6 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
 
 namespace {
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
 void mergeAnimatedProps(AnimatedProps &target, AnimatedProps &&source) {
   if (source.rawProps) {
     if (target.rawProps) {
@@ -64,7 +63,6 @@ void mergeAnimatedProps(AnimatedProps &target, AnimatedProps &&source) {
     target.props.push_back(std::move(prop));
   }
 }
-#endif
 
 #ifdef ANDROID
 constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
@@ -870,7 +868,6 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
   applySynchronousUpdates(partitionUpdates(std::move(updatesBatch), true).first);
 }
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
 AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::collectNonLayoutAnimationUpdates");
 
@@ -893,10 +890,8 @@ std::shared_ptr<UIManagerAnimationBackend> ReanimatedModuleProxy::getAnimationBa
       "[Reanimated] Animation Backend is null (UIManager not wired to a backend yet or already torn down)");
   return locked;
 }
-#endif
 
 void ReanimatedModuleProxy::startBackendIfNeeded() {
-#if REACT_NATIVE_VERSION_MINOR >= 85
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     if (isAnimationRunning_) {
       return;
@@ -911,11 +906,9 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
         });
     isAnimationRunning_ = true;
   }
-#endif
 }
 
 void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
-#if REACT_NATIVE_VERSION_MINOR >= 85
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     const bool hasWork = producedMutations || !pendingFrameCallbacks_.empty() ||
         pendingAnimationFrameCallbackFromWorklets_ != nullptr || operationsLoop_->hasOngoingOperations() ||
@@ -926,10 +919,8 @@ void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
       isAnimationRunning_ = false;
     }
   }
-#endif
 }
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
 AnimationMutations ReanimatedModuleProxy::mutationsFromAnimatedPropsBatch(
     UpdatesBatchAnimatedProps &&animatedPropsBatch) {
   // This is a temporary fix, in reanimated we can sometimes produce multiple updates for the same view
@@ -1030,7 +1021,6 @@ AnimationMutations ReanimatedModuleProxy::collectEventUpdates() {
 
   return mutationsFromAnimatedPropsBatch(std::move(batch));
 }
-#endif
 
 bool ReanimatedModuleProxy::handleEventAndFlush(
     const std::string &eventName,
@@ -1038,17 +1028,10 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
     const jsi::Value &payload,
     const GrandCallbackSource source) {
   bool handled = false;
-#if REACT_NATIVE_VERSION_MINOR >= 85 && (REACT_NATIVE_VERSION_MINOR > 85 || REACT_NATIVE_VERSION_PATCH >= 2)
   getAnimationBackend()->pushAnimationMutations([&, source](AnimationTimestamp timestamp) {
     handled = handleEvent(eventName, emitterReactTag, payload, timestamp.count());
     return runGrandCallback(timestamp, source);
   });
-#else
-  (void)eventName;
-  (void)emitterReactTag;
-  (void)payload;
-  (void)source;
-#endif
   return handled;
 }
 
@@ -1194,11 +1177,6 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
   viewStylesRepository_->setUIManager(uiManager_);
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    react_native_assert(
-        (REACT_NATIVE_VERSION_MINOR > 85 || (REACT_NATIVE_VERSION_MINOR == 85 && REACT_NATIVE_VERSION_PATCH >= 2)) &&
-        "[Reanimated] USE_ANIMATION_BACKEND requires React Native 0.85.2 or newer.");
-
-#if REACT_NATIVE_VERSION_MINOR >= 85
     if (!ReactNativeFeatureFlags::useSharedAnimatedBackend()) {
       react_native_assert(
           false &&
@@ -1207,7 +1185,6 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
           "Enable the Experimental Release level in React Native, "
           "or disable the Reanimated Feature Flag");
     }
-#endif
   }
 
   initializeLayoutAnimationsProxyRegistry();
