@@ -99,24 +99,19 @@ describe('CSSManager', () => {
     expect(setViewStyle).not.toHaveBeenCalled();
   });
 
-  // A property that leaves a running transition reverts natively to the
-  // recorded style, so every transition update records it before running.
-  test('records the committed style before a transition update runs', () => {
+  test('does not call the props setter while a transition is running', () => {
     manager.update({ opacity: 0, ...TRANSITION });
     jest.clearAllMocks();
 
+    // Triggers a running transition - there is no base to record for it.
     manager.update({ opacity: 1, ...TRANSITION });
 
-    expect(setViewStyle).toHaveBeenCalledWith(
-      viewTag,
-      expect.objectContaining({ opacity: 1 })
-    );
-    expect(jest.mocked(setViewStyle).mock.invocationCallOrder[0]).toBeLessThan(
-      jest.mocked(runCSSTransition).mock.invocationCallOrder[0]
-    );
+    expect(setViewStyle).not.toHaveBeenCalled();
   });
 
-  test('records the committed style when a transition detaches', () => {
+  // The same detach records a base on Android (see CSSManager.android.test.ts);
+  // here the revert subsystem is absent, so the platform gate keeps it silent.
+  test('does not call the props setter when a transition detaches (non-Android)', () => {
     manager.update({ opacity: 0, ...TRANSITION });
     manager.update({ opacity: 1, ...TRANSITION });
     jest.clearAllMocks();
@@ -128,10 +123,7 @@ describe('CSSManager', () => {
       transitionDuration: '0ms',
     });
 
-    expect(setViewStyle).toHaveBeenCalledWith(
-      viewTag,
-      expect.objectContaining({ opacity: 1 })
-    );
+    expect(setViewStyle).not.toHaveBeenCalled();
   });
 
   describe('animation callbacks', () => {

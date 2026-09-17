@@ -22,9 +22,10 @@ const TRANSITION = {
   transitionDuration: '300ms',
 } as const;
 
-// Runs in the android jest project (Platform.OS === 'android'). Every transition
-// update records the committed style via the props setter (setViewStyle) for
-// the native revert to restore, the same as on the other platforms.
+// Runs in the android jest project (Platform.OS === 'android'), so IS_ANDROID is
+// true. The revert subsystem is Android-only, so unlike other platforms every
+// transition update records the committed style via the props setter
+// (setViewStyle) for the native revert to restore.
 describe('CSSManager (Android)', () => {
   let manager: CSSManager;
 

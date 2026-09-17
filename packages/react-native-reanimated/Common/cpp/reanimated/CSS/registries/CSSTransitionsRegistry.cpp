@@ -1,4 +1,3 @@
-#include <reanimated/CSS/InterpolatorRegistry.h>
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 
@@ -23,7 +22,7 @@ CSSTransitionsRegistry::CSSTransitionsRegistry(
 
 bool CSSTransitionsRegistry::needsFlush() const {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
-  return !updatedTags_.empty() || !revertUpdates_.empty();
+  return !updatedTags_.empty();
 }
 
 void CSSTransitionsRegistry::updateConfigOrRun(
@@ -120,11 +119,6 @@ void CSSTransitionsRegistry::reconcilePseudoStyledProperties(
 
 void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
-  // Reverts go first so a transition restarted in the meantime wins the frame.
-  for (auto &[family, props] : revertUpdates_) {
-    updatesBatch.emplace_back(family, std::move(props));
-  }
-  revertUpdates_.clear();
   const auto tags = std::exchange(updatedTags_, {});
   for (const auto viewTag : tags) {
     const auto it = registry_.find(viewTag);
@@ -144,10 +138,6 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
 
 void CSSTransitionsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
-  for (const auto &[family, props] : revertUpdates_) {
-    addRawPropsToAnimatedPropsBatch(family, props);
-  }
-  revertUpdates_.clear();
   const auto tags = std::exchange(updatedTags_, {});
   for (const auto viewTag : tags) {
     const auto it = registry_.find(viewTag);
@@ -188,16 +178,6 @@ void CSSTransitionsRegistry::removeTag(const Tag viewTag) {
   const auto it = registry_.find(viewTag);
   if (it != registry_.end()) {
     it->second->cancel();
-#ifndef ANDROID
-    const auto updates = getUpdatesFromRegistry(viewTag);
-    if (updates.isObject()) {
-      std::vector<std::string> propertyNames;
-      for (const auto &propKey : updates.keys()) {
-        propertyNames.push_back(propKey.asString());
-      }
-      recordRevert(it->second, propertyNames);
-    }
-#endif // ANDROID
   }
   removeFromUpdatesRegistry(viewTag);
   registry_.erase(viewTag);
@@ -226,60 +206,12 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
   // updated object contains only allowed properties so we don't need
   // to do additional filtering here
   filteredUpdates.update(updates);
-#ifndef ANDROID
-  if (lastUpdates.isObject()) {
-    std::vector<std::string> droppedProperties;
-    for (const auto &propKey : lastUpdates.keys()) {
-      if (filteredUpdates.count(propKey) == 0) {
-        droppedProperties.push_back(propKey.asString());
-      }
-    }
-    recordRevert(transition, droppedProperties);
-  }
-  // A property re-added before the flush is driven by its new run again.
-  for (auto &[family, props] : revertUpdates_) {
-    if (family->getTag() != shadowNode->getTag()) {
-      continue;
-    }
-    for (const auto &propKey : filteredUpdates.keys()) {
-      props.erase(propKey);
-    }
-  }
-  std::erase_if(revertUpdates_, [](const auto &entry) { return entry.second.empty(); });
-#endif // ANDROID
   if (filteredUpdates.empty()) {
     removeFromUpdatesRegistry(shadowNode->getTag());
   } else {
     setInUpdatesRegistry(shadowNode->getFamilyShared(), filteredUpdates);
   }
 }
-
-#ifndef ANDROID
-// Android reverts every property that leaves a registry itself
-// (UpdatesRegistryManager::collectPropsToRevertBySurface).
-void CSSTransitionsRegistry::recordRevert(
-    const std::shared_ptr<CSSTransition> &transition,
-    const std::vector<std::string> &propertyNames) {
-  if (propertyNames.empty()) {
-    return;
-  }
-  const auto viewTag = transition->getViewTag();
-  const auto family = transition->getShadowNodeFamily();
-  const auto &interpolators = getComponentInterpolators(family->getComponentName());
-  folly::dynamic committedValues = folly::dynamic::object;
-  for (const auto &propertyName : propertyNames) {
-    auto committedValue = viewStylesRepository_->getStyleProp(viewTag, {propertyName});
-    if (committedValue.isNull()) {
-      // A property absent from the committed style (it was transitioning to
-      // undefined) rests on the default the transition was heading for.
-      const auto it = interpolators.find(propertyName);
-      committedValue = it != interpolators.end() ? it->second->getDefaultValue().toDynamic() : nullptr;
-    }
-    committedValues[propertyName] = std::move(committedValue);
-  }
-  revertUpdates_.emplace_back(family, std::move(committedValues));
-}
-#endif // ANDROID
 
 const std::shared_ptr<CSSTransition> &CSSTransitionsRegistry::getOrCreateTransition(
     const std::shared_ptr<const ShadowNode> &shadowNode) {

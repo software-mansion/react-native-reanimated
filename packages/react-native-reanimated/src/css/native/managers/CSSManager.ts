@@ -1,6 +1,10 @@
 'use strict';
 import type { UnknownRecord } from '../../../common';
-import { getCompoundComponentName, getPropsBuilder } from '../../../common';
+import {
+  getCompoundComponentName,
+  getPropsBuilder,
+  IS_ANDROID,
+} from '../../../common';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type {
@@ -24,9 +28,9 @@ export default class CSSManager implements ICSSManager {
   private readonly viewTag: number;
   private readonly propsBuilder: ReturnType<typeof getPropsBuilder>;
   /**
-   * True if the previous update had CSS transition props attached. The next
-   * update still records `normalizedStyle` so that a detaching transition
-   * reverts to the committed values (fixes
+   * True if the previous update had CSS transition props attached. On the next
+   * update we still need to build `normalizedStyle` only on Android to revert
+   * props applied during the transition to correct current values. (fixes
    * https://github.com/software-mansion/react-native-reanimated/issues/9218).
    */
   private hadTransitionLastUpdate = false;
@@ -84,23 +88,29 @@ export default class CSSManager implements ICSSManager {
       hasAnimation ||
       hasTransition ||
       hadAttachedAnimations ||
-      this.hadTransitionLastUpdate
+      (IS_ANDROID && this.hadTransitionLastUpdate)
         ? this.propsBuilder.build(filteredStyle)
         : undefined;
 
-    // Record the committed style as the base before the managers run, so a
-    // property that leaves a transition, a detaching transition and animations
-    // (including one detached by this update) revert to it instead of stale
-    // values or interpolator defaults.
-    if (normalizedStyle) {
-      setViewStyle(this.viewTag, normalizedStyle);
-    }
-
-    this.cssTransitionsManager.update(
+    const transitionDetached = this.cssTransitionsManager.update(
       transitionProperties,
       normalizedStyle,
       transitionEventMask
     );
+
+    // Record the committed style as the base so animations (including one
+    // detached by this update) and, on Android, a property that leaves a
+    // transition or a detaching transition revert to it instead of stale
+    // values or interpolator defaults.
+    if (
+      normalizedStyle &&
+      (hasAnimation ||
+        hadAttachedAnimations ||
+        (IS_ANDROID && (hasTransition || transitionDetached)))
+    ) {
+      setViewStyle(this.viewTag, normalizedStyle);
+    }
+
     this.cssAnimationsManager.update(animationProperties, animationEventMask);
     this.cssPseudoStylesManager.update(
       pseudoStylesBySelector,
