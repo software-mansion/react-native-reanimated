@@ -1,4 +1,3 @@
-/** Every target shipped in the npm package, keyed by Rust target triple. */
 export const TARGETS: Record<
   string,
   { platform: NodeJS.Platform; arch: string }

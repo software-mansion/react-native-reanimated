@@ -53,7 +53,6 @@ on:
 
 jobs:
   build-oxc-plugin:
-    # linux-x64 is built by the publish job itself, as part of `yarn build`.
     strategy:
       fail-fast: true
       matrix:
@@ -64,10 +63,12 @@ jobs:
             target: x86_64-apple-darwin
           - os: ubuntu-22.04-arm
             target: aarch64-unknown-linux-gnu
-          - os: windows-latest
+          - os: ubuntu-22.04
             target: x86_64-pc-windows-msvc
-          - os: windows-11-arm
+            xwin: true
+          - os: ubuntu-22.04
             target: aarch64-pc-windows-msvc
+            xwin: true
     runs-on: ${{ matrix.os }}
     env:
       CARGO_BUILD_TARGET: ${{ matrix.target }}
@@ -81,10 +82,20 @@ jobs:
           node-version-file: '.nvmrc'
       - name: Install Rust target
         run: rustup target add ${{ matrix.target }}
+      - name: Install cargo-xwin
+        if: matrix.xwin
+        run: cargo install --locked cargo-xwin
       - name: Install monorepo dependencies
         run: yarn install --immutable
       - name: Build OXC plugin
+        if: ${{ !matrix.xwin }}
         run: yarn workspace worklets-oxc-plugin build
+      - name: Build OXC plugin (cargo-xwin)
+        if: matrix.xwin
+        working-directory: packages/react-native-worklets/plugin-oxc
+        run: |
+          cargo xwin build --release --target ${{ matrix.target }}
+          node --experimental-strip-types scripts/post-build.mts release
       - name: Upload OXC plugin
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -96,7 +107,6 @@ jobs:
     needs: build-oxc-plugin
     uses: ./.github/workflows/npm-package-publish.yml
     with:
-      # The publish job builds the linux-x64 OXC plugin, so keep its glibc requirement low.
       runs-on: ubuntu-22.04
       artifacts-pattern: oxc-plugin-*
       artifacts-path: packages/react-native-worklets/plugin-oxc

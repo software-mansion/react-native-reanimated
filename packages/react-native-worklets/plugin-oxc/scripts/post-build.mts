@@ -20,8 +20,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const profile: string = process.argv[2] === 'release' ? 'release' : 'debug';
 
-// Cross builds set CARGO_BUILD_TARGET, which also moves cargo's output to
-// target/<triple>/<profile>.
 const cargoTarget = process.env.CARGO_BUILD_TARGET;
 const target = cargoTarget
   ? TARGETS[cargoTarget]

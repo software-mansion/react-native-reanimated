@@ -1,6 +1,3 @@
-// Builds the release binary for every target of the host OS. Other OSes are
-// built on their own CI runners (npm-worklets-publish.yml).
-
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
