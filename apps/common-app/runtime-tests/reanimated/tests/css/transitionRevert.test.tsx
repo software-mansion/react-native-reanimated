@@ -114,6 +114,34 @@ describe('CSS transition property revert', () => {
     await expectSnappedToReference('height');
   });
 
+  // marginTop leaves the style one render before the detach, so the committed
+  // style has no value for it and the revert falls back to the property
+  // default. The frame top exposes it.
+  test('snaps a property transitioning to undefined when the transition detaches', async () => {
+    await render(
+      <RevertTest
+        style={{ marginTop: 100, width: 40 }}
+        transitionProperty={['width', 'marginTop']}
+      />
+    );
+    await render(
+      <RevertTest
+        style={{ width: 160 }}
+        transitionProperty={['width', 'marginTop']}
+      />
+    );
+    await wait(200);
+    await expectMidFlight('top');
+    await expectMidFlight('width');
+
+    await render(
+      <RevertTest style={{ width: 160 }} transitionProperty="none" />
+    );
+    await wait(100);
+    await expectSnappedToReference('top');
+    await expectSnappedToReference('width');
+  });
+
   test('snaps every property when the transition detaches', async () => {
     await render(
       <RevertTest

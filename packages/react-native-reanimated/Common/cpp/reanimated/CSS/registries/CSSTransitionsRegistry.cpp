@@ -1,3 +1,4 @@
+#include <reanimated/CSS/InterpolatorRegistry.h>
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 
@@ -259,17 +260,24 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
 void CSSTransitionsRegistry::recordRevert(
     const std::shared_ptr<CSSTransition> &transition,
     const std::vector<std::string> &propertyNames) {
+  if (propertyNames.empty()) {
+    return;
+  }
   const auto viewTag = transition->getViewTag();
+  const auto family = transition->getShadowNodeFamily();
+  const auto &interpolators = getComponentInterpolators(family->getComponentName());
   folly::dynamic committedValues = folly::dynamic::object;
   for (const auto &propertyName : propertyNames) {
     auto committedValue = viewStylesRepository_->getStyleProp(viewTag, {propertyName});
-    if (!committedValue.isNull()) {
-      committedValues[propertyName] = std::move(committedValue);
+    if (committedValue.isNull()) {
+      // A property absent from the committed style (it was transitioning to
+      // undefined) rests on the default the transition was heading for.
+      const auto it = interpolators.find(propertyName);
+      committedValue = it != interpolators.end() ? it->second->getDefaultValue().toDynamic() : nullptr;
     }
+    committedValues[propertyName] = std::move(committedValue);
   }
-  if (!committedValues.empty()) {
-    revertUpdates_.emplace_back(transition->getShadowNodeFamily(), std::move(committedValues));
-  }
+  revertUpdates_.emplace_back(family, std::move(committedValues));
 }
 #endif // ANDROID
 
