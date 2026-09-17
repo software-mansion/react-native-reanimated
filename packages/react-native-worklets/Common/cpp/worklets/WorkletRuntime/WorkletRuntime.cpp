@@ -256,15 +256,24 @@ void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
       "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
       "async queue is not set. Recreate the runtime with a valid async queue.");
 
+  auto payload = std::shared_ptr<ScheduledJob>(
+      new ScheduledJob(std::move(job)), [runtime = runtime_, runtimeMutex = runtimeMutex_](ScheduledJob *scheduledJob) {
+        {
+          const std::lock_guard<std::recursive_mutex> lock(*runtimeMutex);
+          *scheduledJob = nullptr;
+        }
+        delete scheduledJob;
+      });
+
   queue_->push(
-      [job = std::move(job), weakThis = weak_from_this()] {
+      [payload = std::move(payload), weakThis = weak_from_this()] {
         const auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
         }
 
         auto lock = strongThis->acquireRuntimeLock();
-        job(*strongThis);
+        (*payload)(*strongThis);
       },
       abortToken());
 }

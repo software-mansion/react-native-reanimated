@@ -36,6 +36,7 @@
 
 ### 🐛 Bug fixes
 
+- Keep a Worklet Runtime's JSI runtime alive until its scheduled jobs are released, and release them under the runtime lock, so a job that outlives the runtime no longer destroys its JSI handles on a dead runtime. ([#10585](https://github.com/software-mansion/react-native-reanimated/pull/10585) by [@tjzel](https://github.com/tjzel))
 - Abort the pending jobs of a Worklet Runtime's async queue and event loop from its destructor while the runtime lock is held, so the JSI handles they capture are no longer destroyed on an unrelated thread or under the queue mutex. ([#10580](https://github.com/software-mansion/react-native-reanimated/pull/10580) by [@tjzel](https://github.com/tjzel))
 - Native methods on the Worklets module proxy read missing trailing arguments as `undefined` again instead of throwing, which broke `runOnRuntimeSync` and `scheduleOnRuntime` on guest runtimes in Legacy Eval mode. ([#10593](https://github.com/software-mansion/react-native-reanimated/pull/10593) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Acquire the runtime mutex before destroying a Worklet Runtime so a synchronous call in flight on another thread finishes first. ([#10550](https://github.com/software-mansion/react-native-reanimated/pull/10550) by [@tjzel](https://github.com/tjzel))
