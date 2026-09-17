@@ -20,6 +20,7 @@
 
 ### 🐛 Bug fixes
 
+- Restore the view's complete `boxShadow` and `transformOrigin` value when a CSS animation of it ends, instead of only the elements the keyframes mentioned.
 - Accept `none` for `boxShadow` and `transform` in CSS keyframes and treat it as an explicit empty list, as CSS does.
 - Skip exiting animations in the light tree based Layout Animations proxy when a surface is stopped, so the empty-root transaction removes the views at once instead of starting animations on a dead surface and leaving their component views registered on iOS. ([#10586](https://github.com/software-mansion/react-native-reanimated/pull/10586) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Start a shared element transition from the frame of a running layout animation on the source view. ([#10556](https://github.com/software-mansion/react-native-reanimated/pull/10556) by [@pawicao](https://github.com/pawicao))
