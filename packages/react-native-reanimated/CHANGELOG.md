@@ -20,6 +20,7 @@
 
 ### 🐛 Bug fixes
 
+- Remove `zIndex` from the synchronous props. No platform applies `zIndex` to a mounted view, so with `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` on, an animated style with only `zIndex` and `elevation` never reached the shadow tree commit and the views did not reorder until a later React render. ([#10602](https://github.com/software-mansion/react-native-reanimated/pull/10602) by [@pawicao](https://github.com/pawicao))
 - Prevent Shared Transition Boundaries from intercepting touches intended for sibling views while keeping their children interactive. ([#10600](https://github.com/software-mansion/react-native-reanimated/pull/10600) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Skip exiting animations in the light tree based Layout Animations proxy when a surface is stopped, so the empty-root transaction removes the views at once instead of starting animations on a dead surface and leaving their component views registered on iOS. ([#10586](https://github.com/software-mansion/react-native-reanimated/pull/10586) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Start a shared element transition from the frame of a running layout animation on the source view. ([#10556](https://github.com/software-mansion/react-native-reanimated/pull/10556) by [@pawicao](https://github.com/pawicao))
