@@ -36,6 +36,7 @@
 
 ### 🐛 Bug fixes
 
+- Native methods on the Worklets module proxy read missing trailing arguments as `undefined` again instead of throwing, which broke `runOnRuntimeSync` and `scheduleOnRuntime` on guest runtimes in Legacy Eval mode. ([#10593](https://github.com/software-mansion/react-native-reanimated/pull/10593) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Acquire the runtime mutex before destroying a Worklet Runtime so a synchronous call in flight on another thread finishes first. ([#10550](https://github.com/software-mansion/react-native-reanimated/pull/10550) by [@tjzel](https://github.com/tjzel))
 - Destroy discarded results of synchronous worklet calls while the runtime lock is still held. ([#10552](https://github.com/software-mansion/react-native-reanimated/pull/10552) by [@tjzel](https://github.com/tjzel))
 - Include the React Native version macros through `<React/Utils.h>` when it is available, so `cxxreact/ReactNativeVersion.h` deprecated on React Native `main` no longer breaks the build. ([#10536](https://github.com/software-mansion/react-native-reanimated/pull/10536) by [@tshmieldev](https://github.com/tshmieldev))
