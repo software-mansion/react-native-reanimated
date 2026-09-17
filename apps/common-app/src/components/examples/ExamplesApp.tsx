@@ -2,6 +2,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { Dispatch, SetStateAction } from 'react';
 import { memo, useCallback, useLayoutEffect, useMemo, useState } from 'react';
+import type { ScrollViewProps } from 'react-native';
 import {
   Platform,
   Pressable,
@@ -10,7 +11,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { FlatList, Touchable } from 'react-native-gesture-handler';
+import { FlatList, ScrollView, Touchable } from 'react-native-gesture-handler';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import { createStack, IS_MACOS } from '@/utils';
@@ -322,6 +323,7 @@ function ExampleListScreen({
         initialNumToRender={entryNames.length}
         ItemSeparatorComponent={ItemSeparator}
         renderItem={renderEntry}
+        renderScrollComponent={renderScrollComponent}
         renderSectionHeader={renderSectionHeader}
         sections={sectionData}
         stickySectionHeadersEnabled={true}
@@ -349,6 +351,10 @@ function SectionHeader({ title }: { title: string }) {
 // Module-level so the list gets a stable callback, like `renderItem` does.
 function renderSectionHeader({ section }: { section: { title: string } }) {
   return <SectionHeader title={section.title} />;
+}
+
+function renderScrollComponent(props: ScrollViewProps) {
+  return <ScrollView {...props} />;
 }
 
 interface ItemProps {
