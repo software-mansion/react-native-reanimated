@@ -1,3 +1,3 @@
 'use strict';
 export * from './configs';
-export * from './inheritedProps';
+export * from './propListDefaults';

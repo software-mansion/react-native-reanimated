@@ -74,10 +74,11 @@ const strokeProps: PropsBuilderConfig<StrokeProps> = {
   },
 };
 
-// The values react-native-svg draws with when a fill or stroke prop is unset.
-// These are not the interpolation fallbacks in `InterpolatorRegistry.cpp`; the
-// two differ for `stroke` and `fillRule`.
-export const SVG_INHERITED_PROP_DEFAULTS = {
+// The fill and stroke props react-native-svg cascades to children through its
+// `propList`, with the values it draws with when they are unset. These are not
+// the interpolation fallbacks in `InterpolatorRegistry.cpp`; the two differ for
+// `stroke` and `fillRule`.
+export const SVG_PROP_LIST_DEFAULTS = {
   fill: 'black',
   fillOpacity: 1,
   fillRule: 'nonzero',

@@ -2,8 +2,6 @@ import { render } from '@testing-library/react-native';
 import Animated, { css } from 'react-native-reanimated';
 import { Svg, Text } from 'react-native-svg';
 
-import { initSvgCssSupport } from '../src/css/svg';
-
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 jest.mock('react-native-svg', () => require('../mock'));
 
@@ -20,11 +18,7 @@ function renderText(props: Record<string, unknown>) {
   return getByTestId('text').props;
 }
 
-describe('SVG resting defaults forwarded as plain props', () => {
-  beforeAll(() => {
-    initSvgCssSupport();
-  });
-
+describe('SVG propList defaults forwarded as plain props', () => {
   it('forwards the default of a prop set only by keyframes', () => {
     const props = renderText({
       fill: 'blue',

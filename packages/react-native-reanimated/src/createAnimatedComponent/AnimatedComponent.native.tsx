@@ -8,7 +8,7 @@ import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
-import { addSvgInheritedProps } from '../css/svg/native';
+import { forwardSvgPropListDefaults } from '../css/svg/native';
 import { getStaticFeatureFlag } from '../featureFlags';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import { SharedTransition } from '../layoutReanimation/SharedTransition';
@@ -459,7 +459,7 @@ export default class AnimatedComponent
     }
 
     if (this.props.animatedProps) {
-      addSvgInheritedProps(
+      forwardSvgPropListDefaults(
         filteredProps,
         flattenArray(this.props.animatedProps)
       );

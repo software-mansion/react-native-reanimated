@@ -4,7 +4,6 @@ import {
   registerComponentPropsBuilder,
 } from '../../common';
 import {
-  enableSvgInheritedProps,
   SVG_CIRCLE_PROPERTIES_CONFIG,
   SVG_COMMON_PROPERTIES_CONFIG,
   SVG_ELLIPSE_PROPERTIES_CONFIG,
@@ -48,6 +47,4 @@ export function initSvgCssSupport() {
 
   // Fallback for all SVG components that aren't explicitly registered
   registerComponentPropsBuilder(/^RNSVG/, SVG_COMMON_PROPERTIES_CONFIG);
-
-  enableSvgInheritedProps();
 }
