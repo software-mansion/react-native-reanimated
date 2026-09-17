@@ -119,6 +119,11 @@ void CSSTransitionsRegistry::reconcilePseudoStyledProperties(
 
 void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  // Reverts go first so a transition restarted in the meantime wins the frame.
+  for (auto &[family, props] : revertUpdates_) {
+    updatesBatch.emplace_back(family, std::move(props));
+  }
+  revertUpdates_.clear();
   const auto tags = std::exchange(updatedTags_, {});
   for (const auto viewTag : tags) {
     const auto it = registry_.find(viewTag);
@@ -134,14 +139,14 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   }
 
   flush(updatesBatch);
-  for (auto &[family, props] : revertUpdates_) {
-    updatesBatch.emplace_back(family, std::move(props));
-  }
-  revertUpdates_.clear();
 }
 
 void CSSTransitionsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  for (const auto &[family, props] : revertUpdates_) {
+    addRawPropsToAnimatedPropsBatch(family, props);
+  }
+  revertUpdates_.clear();
   const auto tags = std::exchange(updatedTags_, {});
   for (const auto viewTag : tags) {
     const auto it = registry_.find(viewTag);
@@ -159,10 +164,6 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatc
     }
   }
 
-  for (const auto &[family, props] : revertUpdates_) {
-    addRawPropsToAnimatedPropsBatch(family, props);
-  }
-  revertUpdates_.clear();
   flush(updatesBatch);
 }
 
@@ -234,6 +235,16 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
     }
     recordRevert(transition, droppedProperties);
   }
+  // A property re-added before the flush is driven by its new run again.
+  for (auto &[family, props] : revertUpdates_) {
+    if (family->getTag() != shadowNode->getTag()) {
+      continue;
+    }
+    for (const auto &propKey : filteredUpdates.keys()) {
+      props.erase(propKey);
+    }
+  }
+  std::erase_if(revertUpdates_, [](const auto &entry) { return entry.second.empty(); });
 #endif // ANDROID
   if (filteredUpdates.empty()) {
     removeFromUpdatesRegistry(shadowNode->getTag());
