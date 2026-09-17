@@ -56,14 +56,14 @@ export default function GroupExample() {
               examples: [
                 {
                   description:
-                    'Animating fill on a group cascades to all children. Note: the animated prop (e.g. `fill`) must also be passed inline on the component for the animation to work.',
+                    'Animating fill on a group cascades to all children',
                   keyframes: {
                     to: {
                       fill: 'red',
                     },
                   },
                   props: {
-                    fill: colors.primary, // TODO - remove the necessity of passing animated props separately as inline props
+                    fill: colors.primary,
                   },
                   title: 'Fill color',
                 },
@@ -75,7 +75,6 @@ export default function GroupExample() {
                   },
                   props: {
                     fill: colors.primary,
-                    fillOpacity: 1, // TODO - remove the necessity of passing animated props separately as inline props
                   },
                   title: 'Fill opacity',
                 },
@@ -100,21 +99,16 @@ export default function GroupExample() {
                       strokeWidth: 10,
                     },
                   },
-                  props: {
-                    stroke: colors.primary, // TODO - remove the necessity of passing animated props separately as inline props
-                    strokeWidth: 1, // TODO - remove the necessity of passing animated props separately as inline props
-                  },
                   title: 'Stroke color and width',
                 },
                 {
                   keyframes: {
                     to: {
-                      strokeOpacity: 0.2, // TODO - remove the necessity of passing animated props separately as inline props
+                      strokeOpacity: 0.2,
                     },
                   },
                   props: {
                     stroke: colors.primary,
-                    strokeOpacity: 1, // TODO - remove the necessity of passing animated props separately as inline props
                     strokeWidth: 10,
                   },
                   title: 'Stroke opacity',

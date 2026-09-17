@@ -74,6 +74,30 @@ const strokeProps: PropsBuilderConfig<StrokeProps> = {
   },
 };
 
+// react-native-svg only cascades a fill/stroke prop to an element's children
+// when the element received it in JS, since that is what it builds `propList`
+// from. A CSS animation writes straight to the shadow node, so the prop has to
+// be passed inline as well, at the value react-native-svg draws with when it is
+// unset. These are those rendering defaults, not the interpolation fallbacks in
+// `InterpolatorRegistry.cpp`, and the two differ for `stroke` and `fillRule`.
+export const SVG_INHERITED_PROP_DEFAULTS = {
+  fill: 'black',
+  fillOpacity: 1,
+  fillRule: 'nonzero',
+  stroke: 'none',
+  strokeWidth: 1,
+  strokeOpacity: 1,
+  strokeDasharray: 'none',
+  strokeDashoffset: 0,
+  strokeLinecap: 'butt',
+  strokeLinejoin: 'miter',
+  strokeMiterlimit: 4,
+  // `vectorEffect` is the one stroke prop react-native-svg keeps off `propList`
+} as const satisfies Record<
+  keyof typeof fillProps | Exclude<keyof typeof strokeProps, 'vectorEffect'>,
+  unknown
+>;
+
 const clipProps: PropsBuilderConfig<ClipProps> = {
   clipRule: true,
   clipPath: true, // TODO - maybe preprocess this?

@@ -2,7 +2,11 @@
 
 import { initialUpdaterRun } from '../animation';
 import type { StyleProps } from '../commonTypes';
-import { isCSSConfigProp, isPseudoSelectorValue } from '../css/utils';
+import {
+  isCSSConfigProp,
+  isCSSKeyframesRule,
+  isPseudoSelectorValue,
+} from '../css/utils';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import { isSharedValue } from '../isSharedValue';
 import { WorkletEventHandler } from '../WorkletEventHandler';
@@ -14,12 +18,34 @@ import type {
   IPropsFilter,
 } from './commonTypes';
 import { getInlineStyle, hasInlineStyles } from './InlinePropManager';
-import { svgHitTestResponder } from './platform';
+import { svgHitTestResponder, svgInheritedPropDefaults } from './platform';
 import { flattenArray, has } from './utils';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
   // event is used.
+}
+
+function collectSvgInheritedKeyframeProps(
+  animationName: unknown,
+  propDefaults: Record<string, unknown>,
+  inheritedProps: Set<string>
+) {
+  for (const keyframes of flattenArray(animationName)) {
+    if (!keyframes || typeof keyframes !== 'object') {
+      continue;
+    }
+    const cssRules = isCSSKeyframesRule(keyframes)
+      ? keyframes.cssRules
+      : keyframes;
+    for (const keyframe of Object.values(cssRules)) {
+      for (const prop in keyframe) {
+        if (prop in propDefaults) {
+          inheritedProps.add(prop);
+        }
+      }
+    }
+  }
 }
 
 export class PropsFilter implements IPropsFilter {
@@ -98,6 +124,8 @@ export class PropsFilter implements IPropsFilter {
         flattenArray<Partial<AnimatedComponentProps<AnimatedProps>>>(
           animatedPropsProp
         );
+      // Props whose only source is keyframes or a pseudo state.
+      let svgInheritedProps: Set<string> | undefined;
 
       animatedPropsArray.forEach((animatedProps) => {
         if (!animatedProps) {
@@ -110,16 +138,31 @@ export class PropsFilter implements IPropsFilter {
           }
         } else {
           for (const animatedPropKey in animatedProps) {
+            const animatedPropValue = animatedProps[animatedPropKey];
             if (isCSSConfigProp(animatedPropKey)) {
+              if (
+                animatedPropKey === 'animationName' &&
+                svgInheritedPropDefaults
+              ) {
+                collectSvgInheritedKeyframeProps(
+                  animatedPropValue,
+                  svgInheritedPropDefaults,
+                  (svgInheritedProps ??= new Set())
+                );
+              }
               continue;
             }
-            const animatedPropValue = animatedProps[animatedPropKey];
             if (isPseudoSelectorValue(animatedPropValue)) {
               hasPseudoSelectors = true;
               // Forward only the resting value; pseudo states are driven by
               // the CSS manager, like pseudo values in style are.
               if (animatedPropValue.default !== undefined) {
                 props[animatedPropKey] = animatedPropValue.default;
+              } else if (
+                svgInheritedPropDefaults &&
+                animatedPropKey in svgInheritedPropDefaults
+              ) {
+                (svgInheritedProps ??= new Set()).add(animatedPropKey);
               }
               continue;
             }
@@ -127,6 +170,17 @@ export class PropsFilter implements IPropsFilter {
           }
         }
       });
+
+      // Owning the prop also stops react-native-svg merging it in from an
+      // ancestor, which would otherwise overwrite the animated value on every
+      // draw.
+      if (svgInheritedProps && svgInheritedPropDefaults) {
+        for (const prop of svgInheritedProps) {
+          if (props[prop] == null) {
+            props[prop] = svgInheritedPropDefaults[prop];
+          }
+        }
+      }
     }
 
     if (
