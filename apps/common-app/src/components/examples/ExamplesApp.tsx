@@ -98,14 +98,28 @@ function ExamplesApp({ examples, headerTitle, title }: ExamplesAppProps) {
   // screen and a group screen.
   const [wasClicked, setWasClicked] = useState<Array<string>>([]);
 
-  const allExamples = useMemo(() => flattenExamples(examples), [examples]);
+  const visibleEntries = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(examples).filter(
+          ([, entry]) =>
+            !isExampleGroup(entry) ||
+            !entry.hiddenPlatforms?.includes(Platform.OS)
+        )
+      ),
+    [examples]
+  );
+  const allExamples = useMemo(
+    () => flattenExamples(visibleEntries),
+    [visibleEntries]
+  );
   const allNames = useMemo(() => Object.keys(allExamples), [allExamples]);
   const groups = useMemo(
     () =>
-      Object.entries(examples).filter(
+      Object.entries(visibleEntries).filter(
         (entry): entry is [string, ExampleGroup] => isExampleGroup(entry[1])
       ),
-    [examples]
+    [visibleEntries]
   );
 
   let animation: AnimationType = 'default';
@@ -130,7 +144,7 @@ function ExamplesApp({ examples, headerTitle, title }: ExamplesAppProps) {
         {({ navigation }: { navigation: NavigationProp }) => (
           <ExampleListScreen
             allExamples={allExamples}
-            entries={examples}
+            entries={visibleEntries}
             navigation={navigation}
             setWasClicked={setWasClicked}
             wasClicked={wasClicked}
