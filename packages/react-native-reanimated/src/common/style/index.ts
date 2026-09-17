@@ -3,6 +3,7 @@ export * from './config';
 export { default as createPropsBuilder } from './createPropsBuilder';
 export * from './processors';
 export * from './processStyleValue';
+export * from './propDefaults';
 export { type NativePropsBuilder, stylePropsBuilder } from './propsBuilder';
 export * from './registry';
 // `AllStyleProps` is intentionally not re-exported — it is internal to the

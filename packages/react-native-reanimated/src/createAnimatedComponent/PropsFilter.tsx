@@ -1,8 +1,17 @@
 'use strict';
 
 import { initialUpdaterRun } from '../animation';
+import {
+  getRegisteredPropDefault,
+  hasRegisteredPropDefault,
+  hasRegisteredPropDefaults,
+} from '../common';
 import type { StyleProps } from '../commonTypes';
-import { isCSSConfigProp, isPseudoSelectorValue } from '../css/utils';
+import {
+  isCSSConfigProp,
+  isCSSKeyframesRule,
+  isPseudoSelectorValue,
+} from '../css/utils';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import { isSharedValue } from '../isSharedValue';
 import { WorkletEventHandler } from '../WorkletEventHandler';
@@ -22,6 +31,27 @@ function dummyListener() {
   // event is used.
 }
 
+function collectDefaultBackedKeyframeProps(
+  animationName: unknown,
+  props: Set<string>
+) {
+  for (const keyframes of flattenArray(animationName)) {
+    if (!keyframes || typeof keyframes !== 'object') {
+      continue;
+    }
+    const cssRules = (
+      isCSSKeyframesRule(keyframes) ? keyframes.cssRules : keyframes
+    ) as Record<string, object>;
+    for (const selector in cssRules) {
+      for (const prop in cssRules[selector]) {
+        if (hasRegisteredPropDefault(prop)) {
+          props.add(prop);
+        }
+      }
+    }
+  }
+}
+
 export class PropsFilter implements IPropsFilter {
   private _initialPropsMap = new Map<AnimatedStyleHandle, StyleProps>();
 
@@ -32,6 +62,9 @@ export class PropsFilter implements IPropsFilter {
       component.props as AnimatedComponentProps<InitialComponentProps>;
     const props: Record<string, unknown> = {};
     let hasPseudoSelectors = false;
+    const trackDefaults = hasRegisteredPropDefaults();
+    // Props whose only source is keyframes or a pseudo state.
+    let defaultBackedProps: Set<string> | undefined;
 
     for (const key in inputProps) {
       const value = inputProps[key];
@@ -60,6 +93,17 @@ export class PropsFilter implements IPropsFilter {
         // keep styles as they were passed by the user
         // it will help other libs to interpret styles correctly
         props[key] = processedStyle;
+
+        if (trackDefaults) {
+          for (const style of processedStyle) {
+            if (style?.animationName !== undefined) {
+              collectDefaultBackedKeyframeProps(
+                style.animationName,
+                (defaultBackedProps ??= new Set())
+              );
+            }
+          }
+        }
       } else if (key === 'animatedProps') {
         // Handled in a second pass after this loop so that animatedProps
         // values always take precedence over inline props with the same key,
@@ -110,16 +154,24 @@ export class PropsFilter implements IPropsFilter {
           }
         } else {
           for (const animatedPropKey in animatedProps) {
+            const animatedPropValue = animatedProps[animatedPropKey];
             if (isCSSConfigProp(animatedPropKey)) {
+              if (trackDefaults && animatedPropKey === 'animationName') {
+                collectDefaultBackedKeyframeProps(
+                  animatedPropValue,
+                  (defaultBackedProps ??= new Set())
+                );
+              }
               continue;
             }
-            const animatedPropValue = animatedProps[animatedPropKey];
             if (isPseudoSelectorValue(animatedPropValue)) {
               hasPseudoSelectors = true;
               // Forward only the resting value; pseudo states are driven by
               // the CSS manager, like pseudo values in style are.
               if (animatedPropValue.default !== undefined) {
                 props[animatedPropKey] = animatedPropValue.default;
+              } else if (hasRegisteredPropDefault(animatedPropKey)) {
+                (defaultBackedProps ??= new Set()).add(animatedPropKey);
               }
               continue;
             }
@@ -127,6 +179,20 @@ export class PropsFilter implements IPropsFilter {
           }
         }
       });
+    }
+
+    // Owning the prop also stops an ancestor from writing its own value over
+    // the animated one. A value in the style already reaches the component.
+    if (defaultBackedProps) {
+      const styles = props.style as StyleProps[] | undefined;
+      for (const prop of defaultBackedProps) {
+        if (
+          props[prop] == null &&
+          !styles?.some((style) => style?.[prop] != null)
+        ) {
+          props[prop] = getRegisteredPropDefault(prop);
+        }
+      }
     }
 
     if (
