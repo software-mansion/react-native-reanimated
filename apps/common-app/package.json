@@ -41,7 +41,7 @@
     "react-native-nitro-modules": "0.36.5",
     "react-native-reanimated": "workspace:*",
     "react-native-safe-area-context": "5.8.1",
-    "react-native-svg": "15.15.5",
+    "react-native-svg": "patch:react-native-svg@npm%3A15.15.5#~/.yarn/patches/react-native-svg-npm-15.15.5-88bb60fb23.patch",
     "react-native-worklets": "workspace:*",
     "react-strict-dom": "0.0.55"
   },
