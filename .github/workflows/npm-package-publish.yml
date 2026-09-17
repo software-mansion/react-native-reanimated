@@ -41,8 +41,14 @@ on:
         type: string
         default: 'ubuntu-latest'
 
-      prebuild-command:
-        description: 'Shell command run from the repository root before the package is built, empty to skip.'
+      artifacts-pattern:
+        description: 'Glob of workflow artifacts to download before building, empty to skip.'
+        required: false
+        type: string
+        default: ''
+
+      artifacts-path:
+        description: 'Directory the artifacts matching artifacts-pattern are merged into.'
         required: false
         type: string
         default: ''
@@ -64,10 +70,13 @@ jobs:
           cache: 'yarn'
           node-version-file: '.nvmrc'
 
-      - name: Prebuild
-        if: inputs.prebuild-command != ''
-        shell: bash
-        run: ${{ inputs.prebuild-command }}
+      - name: Download prebuilt artifacts
+        if: inputs.artifacts-pattern != ''
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          pattern: ${{ inputs.artifacts-pattern }}
+          path: ${{ inputs.artifacts-path }}
+          merge-multiple: true
 
       - name: Build and publish ${{ inputs.package-name }}
         uses: software-mansion/npm-package-publish@bbfbcdf3f27e2dc288d7d56f5989a731efc79e6f
