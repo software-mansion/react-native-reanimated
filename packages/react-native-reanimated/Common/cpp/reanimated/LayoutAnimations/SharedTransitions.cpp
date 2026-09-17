@@ -8,6 +8,8 @@
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <algorithm>
 #include <ranges>
+#include <unordered_set>
+#include <utility>
 
 namespace reanimated {
 
@@ -93,7 +95,6 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
     if (parentTag[BEFORE] && parentTag[AFTER]) {
       transaction.transitions.emplace_back(*sharedTag, collectedTransition);
     } else if (parentTag[AFTER]) {
-      // TODO (future): this is adding unnecessary views to the list
       transaction.nodesToRestore.push_back(node);
     }
   }
@@ -162,16 +163,6 @@ void LayoutAnimationsProxy::resolveDeferredSourceScreen() const {
   transition_->sourceScreen = sourceScreen;
 }
 
-static void restoreOldTarget(
-    const SharedContainer &container,
-    const std::array<std::shared_ptr<LightNode>, 2> &nodes,
-    TransactionMeta &transaction) {
-  const auto &oldTarget = container.restoreAfterNode;
-  if (oldTarget && oldTarget != nodes[BEFORE] && oldTarget != nodes[AFTER]) {
-    transaction.nodesToRestore.push_back(oldTarget);
-  }
-}
-
 void LayoutAnimationsProxy::handleProgressTransition(
     TransactionMeta &transaction,
     const ShadowViewMutationList &mutations,
@@ -215,11 +206,10 @@ void LayoutAnimationsProxy::handleProgressTransition(
         warnIfSnapshotIsStale(before, transaction);
         warnIfSnapshotIsStale(after, transaction);
 
-        const auto containerTag = getOrCreateContainer(before, sharedTag, collectedTransition.nodes, transaction);
-        auto &container = sharedContainers_.at(containerTag);
-        container.restoreBeforeNode = beforeNode;
-        restoreOldTarget(container, collectedTransition.nodes, transaction);
-        container.restoreAfterNode = afterNode;
+        auto &element = getOrCreateContainer(before, sharedTag, transaction);
+        retargetSharedElement(element, collectedTransition.nodes, transaction);
+        element.gestureDriven = true;
+        const auto containerTag = element.container->current.tag;
         before.tag = containerTag;
         after.tag = containerTag;
 
@@ -227,10 +217,11 @@ void LayoutAnimationsProxy::handleProgressTransition(
       }
     }
   } else if (transition_->state == TransitionState::ACTIVE) {
-    for (const auto &[tag, container] : sharedContainers_) {
-      if (!container.restoreBeforeNode) {
+    for (const auto &[_, element] : sharedElements_) {
+      if (!element.container || !element.gestureDriven) {
         continue;
       }
+      const auto tag = element.container->current.tag;
       if (hasPendingLayoutAnimation(tag)) {
         continue;
       }
@@ -273,21 +264,15 @@ void LayoutAnimationsProxy::handleProgressTransition(
   if (transition_->state == TransitionState::START) {
     transition_->state = TransitionState::ACTIVE;
   } else if (transition_->state == TransitionState::END || transition_->state == TransitionState::CANCELLED) {
-    std::vector<Tag> progressContainerTags;
     std::vector<std::shared_ptr<LightNode>> sourceNodes;
-    for (const auto &[tag, container] : sharedContainers_) {
-      if (container.restoreBeforeNode) {
-        progressContainerTags.push_back(tag);
+    for (auto &[_, element] : sharedElements_) {
+      if (!element.container || !element.gestureDriven) {
+        continue;
       }
-    }
-    for (const auto tag : progressContainerTags) {
-      const auto &container = sharedContainers_.at(tag);
-      react_native_assert(container.restoreAfterNode && "Shared transition target not found");
-      if (container.restoreAfterNode) {
-        transaction.nodesToRestore.push_back(container.restoreAfterNode);
-      }
-      sourceNodes.push_back(container.restoreBeforeNode);
-      removeSharedContainer(tag, transaction);
+      react_native_assert(element.target && "Shared transition target not found");
+      sourceNodes.push_back(element.source);
+      const auto tag = element.container->current.tag;
+      finishSharedTransition(element, transaction);
       cancelLayoutAnimation(tag);
     }
     if (transition_->state == TransitionState::END) {
@@ -332,27 +317,21 @@ void LayoutAnimationsProxy::overrideTransform(
   shadowView.props = newProps;
 }
 
-Tag LayoutAnimationsProxy::getOrCreateContainer(
+SharedElement &LayoutAnimationsProxy::getOrCreateContainer(
     const ShadowView &before,
     const SharedTag &sharedTag,
-    const std::array<std::shared_ptr<LightNode>, 2> &nodes,
     TransactionMeta &transaction) const {
-  auto containerTag = Tag{-1};
-  for (const auto &[tag, container] : sharedContainers_) {
-    if (container.sharedTag == sharedTag && tag > containerTag) {
-      containerTag = tag;
+  auto &element = sharedElements_[sharedTag];
+  if (element.container) {
+    const auto tag = element.container->current.tag;
+    if (hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag)) {
+      return element;
     }
-  }
-  if (containerTag != -1) {
-    if (hasPendingLayoutAnimation(containerTag) || layoutAnimations_.contains(containerTag)) {
-      return containerTag;
-    }
-    const auto &container = sharedContainers_.at(containerTag);
-    react_native_assert(completedAnimations_.contains(containerTag) && "Shared container has no animation");
-    restoreOldTarget(container, nodes, transaction);
-    removeSharedContainer(containerTag, transaction);
+    react_native_assert(completedAnimations_.contains(tag) && "Shared container has no animation");
+    removeSharedContainer(element, transaction);
   }
 
+  Tag containerTag = -1;
   {
     auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
     containerTag = sharedTransitionManager_->nextContainerTag_;
@@ -372,13 +351,22 @@ Tag LayoutAnimationsProxy::getOrCreateContainer(
   transaction.containersToInsert.push_back(node);
   [[maybe_unused]] const auto [_, inserted] = lightNodes_.emplace(containerTag, node);
   react_native_assert(inserted && "Shared container already exists");
-  sharedContainers_.emplace(
-      containerTag,
-      SharedContainer{
-          .sharedTag = sharedTag,
-          .node = std::move(node),
-      });
-  return containerTag;
+  element.container = std::move(node);
+  return element;
+}
+
+// Shows the target of the previous transition again, unless the new transition
+// uses that view as well.
+void LayoutAnimationsProxy::retargetSharedElement(
+    SharedElement &element,
+    const std::array<std::shared_ptr<LightNode>, 2> &nodes,
+    TransactionMeta &transaction) const {
+  const auto &oldTarget = element.target;
+  if (oldTarget && oldTarget != nodes[BEFORE] && oldTarget != nodes[AFTER]) {
+    transaction.nodesToRestore.push_back(oldTarget);
+  }
+  element.source = nodes[BEFORE];
+  element.target = nodes[AFTER];
 }
 
 void LayoutAnimationsProxy::handleSharedTransitionsStart(
@@ -417,10 +405,10 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       }
       warnIfSnapshotIsStale(before, transaction);
       warnIfSnapshotIsStale(after, transaction);
-      auto containerTag = getOrCreateContainer(before, sharedTag, collectedTransition.nodes, transaction);
-      auto &container = sharedContainers_.at(containerTag);
-      restoreOldTarget(container, collectedTransition.nodes, transaction);
-      container.restoreAfterNode = afterNode;
+      auto &element = getOrCreateContainer(before, sharedTag, transaction);
+      retargetSharedElement(element, collectedTransition.nodes, transaction);
+      element.gestureDriven = false;
+      const auto containerTag = element.container->current.tag;
       before.tag = containerTag;
       after.tag = containerTag;
 
@@ -431,14 +419,13 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       auto &transition = collectedTransition.transition;
       auto &[before, after] = transition.snapshot;
 
-      auto containerTag = Tag{-1};
-      for (const auto &[tag, container] : sharedContainers_) {
-        if (container.sharedTag == sharedTag && (hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag)) &&
-            tag > containerTag) {
-          containerTag = tag;
-        }
+      const auto elementIt = sharedElements_.find(sharedTag);
+      if (elementIt == sharedElements_.end() || !elementIt->second.container) {
+        continue;
       }
-      if (containerTag == -1) {
+      auto &element = elementIt->second;
+      const auto containerTag = element.container->current.tag;
+      if (!hasPendingLayoutAnimation(containerTag) && !layoutAnimations_.contains(containerTag)) {
         continue;
       }
       const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
@@ -451,11 +438,10 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       if (!afterNode) {
         continue;
       }
-      auto &container = sharedContainers_.at(containerTag);
-      if (container.restoreAfterNode && container.restoreAfterNode != afterNode) {
-        transaction.nodesToRestore.push_back(container.restoreAfterNode);
+      if (element.target && element.target != afterNode) {
+        transaction.nodesToRestore.push_back(element.target);
       }
-      container.restoreAfterNode = afterNode;
+      element.target = afterNode;
       overrideTransform(after, transition.transform[AFTER], propsParserContext);
       after.tag = containerTag;
       if (hasPendingLayoutAnimation(containerTag)) {
@@ -476,12 +462,17 @@ void LayoutAnimationsProxy::hideTransitioningViews(
     const PropsParserContext &propsParserContext) const {
   ShadowViewMutationList hiddenMutations;
   hiddenMutations.reserve(transaction.transitions.size());
-  for (const auto &[_, collectedTransition] : transaction.transitions) {
+  for (const auto &[sharedTag, collectedTransition] : transaction.transitions) {
     const auto &transition = collectedTransition.transition;
     int indexNum = static_cast<int>(index);
     const auto &shadowView = transition.snapshot[indexNum];
     const auto &parentTag = transition.parentTag[indexNum];
-    hiddenViewTags_.insert(shadowView.tag);
+    const auto &node = collectedTransition.nodes[indexNum];
+    react_native_assert(node && "Shared transition view not found");
+    auto &hiddenNodes = sharedElements_[sharedTag].hiddenNodes;
+    if (node && std::ranges::find(hiddenNodes, node) == hiddenNodes.end()) {
+      hiddenNodes.push_back(node);
+    }
     auto m = ShadowViewMutation::UpdateMutation(
         shadowView, cloneViewWithoutOpacity(shadowView, propsParserContext), parentTag);
     hiddenMutations.push_back(m);
@@ -494,15 +485,21 @@ void LayoutAnimationsProxy::hideTransitioningViews(
 // The hide in hideTransitioningViews is not stored in the light tree, so a
 // later Update for the same view carries full opacity and would show the view
 // again. Force opacity 0 on every outgoing Update for a hidden view until the
-// restore in cleanupSharedTransitions removes its tag from hiddenViewTags_.
+// restore in cleanupSharedTransitions removes it from its shared element.
 void LayoutAnimationsProxy::keepTransitioningViewsHidden(
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext) const {
-  if (hiddenViewTags_.empty()) {
+  std::unordered_set<Tag> hiddenViewTags;
+  for (const auto &[_, element] : sharedElements_) {
+    for (const auto &node : element.hiddenNodes) {
+      hiddenViewTags.insert(node->current.tag);
+    }
+  }
+  if (hiddenViewTags.empty()) {
     return;
   }
   for (auto &mutation : filteredMutations) {
-    if (mutation.type == ShadowViewMutation::Update && hiddenViewTags_.contains(mutation.newChildShadowView.tag)) {
+    if (mutation.type == ShadowViewMutation::Update && hiddenViewTags.contains(mutation.newChildShadowView.tag)) {
       mutation = ShadowViewMutation::UpdateMutation(
           mutation.oldChildShadowView,
           cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext),
@@ -613,14 +610,56 @@ void LayoutAnimationsProxy::insertContainers(TransactionMeta &transaction, int &
   filteredMutations.insert(filteredMutations.end(), currentMutations.begin(), currentMutations.end());
 }
 
-void LayoutAnimationsProxy::removeSharedContainer(Tag containerTag, TransactionMeta &transaction) const {
-  const auto containerIt = sharedContainers_.find(containerTag);
-  react_native_assert(containerIt != sharedContainers_.end() && "Unknown shared container");
-  if (containerIt == sharedContainers_.end()) {
+void LayoutAnimationsProxy::removeSharedContainer(SharedElement &element, TransactionMeta &transaction) const {
+  react_native_assert(element.container && "Shared element has no container");
+  if (!element.container) {
     return;
   }
-  transaction.containersToRemove.push_back(std::move(containerIt->second.node));
-  sharedContainers_.erase(containerIt);
+  transaction.containersToRemove.push_back(std::exchange(element.container, nullptr));
+  element.gestureDriven = false;
+}
+
+void LayoutAnimationsProxy::finishSharedTransition(SharedElement &element, TransactionMeta &transaction) const {
+  if (element.target) {
+    transaction.nodesToRestore.push_back(element.target);
+  }
+  removeSharedContainer(element, transaction);
+  element.source = nullptr;
+  element.target = nullptr;
+}
+
+bool LayoutAnimationsProxy::isSharedContainer(const Tag tag) const {
+  return std::ranges::any_of(sharedElements_, [tag](const auto &entry) {
+    const auto &container = entry.second.container;
+    return container && container->current.tag == tag;
+  });
+}
+
+bool LayoutAnimationsProxy::showHiddenView(const std::shared_ptr<LightNode> &node) const {
+  for (auto &[_, element] : sharedElements_) {
+    if (std::erase(element.hiddenNodes, node) > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void LayoutAnimationsProxy::forgetHiddenView(const Tag tag) const {
+  for (auto &[_, element] : sharedElements_) {
+    std::erase_if(element.hiddenNodes, [tag](const auto &node) { return node->current.tag == tag; });
+  }
+}
+
+void LayoutAnimationsProxy::restoreViewsWithoutSharedTag(TransactionMeta &transaction) const {
+  auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
+  for (const auto &[_, element] : sharedElements_) {
+    for (const auto &node : element.hiddenNodes) {
+      const bool isInTransition = element.container && (node == element.source || node == element.target);
+      if (!isInTransition && !sharedTransitionManager_->tagToName_.contains(node->current.tag)) {
+        transaction.nodesToRestore.push_back(node);
+      }
+    }
+  }
 }
 
 void LayoutAnimationsProxy::cleanupSharedTransitions(
@@ -630,9 +669,7 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
   auto &filteredMutations = transaction.filteredMutations;
   for (const auto &node : transaction.nodesToRestore) {
     ReanimatedSystraceSection s("Restore tag");
-    hiddenViewTags_.erase(node->current.tag);
-    const auto nodeIt = lightNodes_.find(node->current.tag);
-    if (nodeIt == lightNodes_.end() || nodeIt->second != node) {
+    if (!showHiddenView(node) || !isLightNodeMapped(node)) {
       continue;
     }
     resolveLightNodeProps(node);
@@ -663,6 +700,11 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
 
     unmapLightNode(node);
   }
+
+  std::erase_if(sharedElements_, [](const auto &entry) {
+    const auto &element = entry.second;
+    return !element.container && element.hiddenNodes.empty();
+  });
 }
 
 // MARK: Position Calculation
