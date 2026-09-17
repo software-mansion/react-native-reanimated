@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
+import android.view.View
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.bridge.NativeModule
@@ -15,6 +16,7 @@ import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
 import com.facebook.react.uimanager.IllegalViewOperationException
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.common.UIManagerType
+import com.facebook.react.views.text.ReactTextView
 import com.facebook.soloader.SoLoader
 import com.swmansion.common.GestureHandlerStateManager
 import com.swmansion.reanimated.css.CSSPlatformTransitionsManager
@@ -228,6 +230,31 @@ open class NativeProxy {
         }
 
         return true
+    }
+
+    // TODO: Remove once React Native draws text decorations after a text update that keeps the
+    // view's frame (react/react-native#58579). See ReanimatedModuleProxy::relayoutCommittedTextViews.
+    @DoNotStrip
+    fun relayoutTextViews(tags: IntArray) {
+        if (!UiThreadUtil.isOnUiThread()) {
+            return
+        }
+
+        for (tag in tags) {
+            val view =
+                try {
+                    mFabricUIManager.resolveView(tag) as? ReactTextView ?: continue
+                } catch (e: IllegalViewOperationException) {
+                    // Same as in `preserveMountedTags`: a tag can have a `ViewState` without a view.
+                    continue
+                }
+            if (view.layout == null && view.width > 0 && view.height > 0) {
+                view.measure(
+                    View.MeasureSpec.makeMeasureSpec(view.width, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(view.height, View.MeasureSpec.EXACTLY),
+                )
+            }
+        }
     }
 
     // TODO(#9681): Temporary workaround. Since RN 0.86,

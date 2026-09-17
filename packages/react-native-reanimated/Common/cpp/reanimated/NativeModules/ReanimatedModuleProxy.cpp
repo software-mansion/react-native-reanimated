@@ -25,9 +25,11 @@
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
+#include <react/renderer/components/text/ParagraphShadowNode.h>
 #endif // __ANDROID__
 
 #include <algorithm>
+#include <cstring>
 #include <functional>
 #include <memory>
 #include <string>
@@ -192,6 +194,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
+      relayoutTextViewsFunction_(platformDepMethodsHolder.relayoutTextViewsFunction),
 #endif // ANDROID
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
@@ -1099,8 +1102,11 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
 
 #ifdef ANDROID
       if (status == ShadowTree::CommitStatus::Succeeded) {
-        auto lock = updatesRegistryManager_->lock();
-        updatesRegistryManager_->clearPropsToRevert(surfaceId);
+        {
+          auto lock = updatesRegistryManager_->lock();
+          updatesRegistryManager_->clearPropsToRevert(surfaceId);
+        }
+        relayoutCommittedTextViews(propsMap);
       }
 #else
       (void)status;
@@ -1108,6 +1114,27 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
     });
   }
 }
+
+#ifdef ANDROID
+// TODO: Remove once React Native draws text decorations after a text update that keeps the
+// view's frame (react/react-native#58579). Since RN 0.87 `ReactTextView.onDraw` paints
+// underline and strikethrough itself, but only when the TextView still has a Layout.
+// `setText` drops it and Fabric measures the view again only when its frame changed, so a
+// commit that changes just the text attributes leaves the next draw without decorations.
+// The mount of a UI-thread commit has already run here, before the frame is drawn, so the
+// affected views can rebuild their Layout now.
+void ReanimatedModuleProxy::relayoutCommittedTextViews(const PropsMap &propsMap) {
+  committedTextTags_.clear();
+  for (const auto &[family, _] : propsMap) {
+    if (std::strcmp(family->getComponentName(), ParagraphComponentName) == 0) {
+      committedTextTags_.push_back(family->getTag());
+    }
+  }
+  if (!committedTextTags_.empty()) {
+    relayoutTextViewsFunction_(committedTextTags_);
+  }
+}
+#endif // ANDROID
 
 void ReanimatedModuleProxy::dispatchCommand(
     jsi::Runtime &rt,
