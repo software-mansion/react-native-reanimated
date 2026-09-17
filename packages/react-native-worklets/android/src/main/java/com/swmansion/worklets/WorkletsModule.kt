@@ -9,6 +9,7 @@ import com.facebook.react.common.annotations.FrameworkAPI
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
 import com.facebook.soloader.SoLoader
+import com.swmansion.worklets.networking.Networking
 import com.swmansion.worklets.runloop.AnimationFrameCallback
 import com.swmansion.worklets.runloop.AnimationFrameQueue
 
@@ -35,6 +36,7 @@ class WorkletsModule(
 
     private val mAndroidUIScheduler = AndroidUIScheduler(reactContext)
     private val mAnimationFrameQueue = AnimationFrameQueue(reactContext)
+    private val mNetworking = Networking()
     private var mSlowAnimationsEnabled = false
 
     /**
@@ -49,6 +51,7 @@ class WorkletsModule(
         jsContext: Long,
         jsCallInvokerHolder: CallInvokerHolderImpl,
         androidUIScheduler: AndroidUIScheduler,
+        networking: Networking,
     ): HybridData
 
     private external fun prepareProxyCpp()
@@ -163,6 +166,6 @@ class WorkletsModule(
                 "[Worklets] JavaScript context is not available yet."
             }.get()
         val jsCallInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
-        mHybridData = initHybrid(jsContext, jsCallInvokerHolder, mAndroidUIScheduler)
+        mHybridData = initHybrid(jsContext, jsCallInvokerHolder, mAndroidUIScheduler, mNetworking)
     }
 }

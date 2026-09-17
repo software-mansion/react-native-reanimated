@@ -48,6 +48,7 @@ class UpdatesRegistryManager {
   void unmarkNodeAsRemovable(Tag viewTag);
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
   PropsMap collectProps();
+  void mergeRegistryProps(Tag viewTag, folly::dynamic &target);
 
 #ifdef ANDROID
   bool hasPropsToRevert();

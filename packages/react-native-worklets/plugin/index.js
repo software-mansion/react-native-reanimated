@@ -1078,7 +1078,15 @@ var require_globals = __commonJS({
       // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
       "require",
       "fetch",
+      "Headers",
+      "Request",
+      "Response",
       "XMLHttpRequest",
+      "FormData",
+      "AbortController",
+      "AbortSignal",
+      "Blob",
+      "FileReader",
       "WebSocket",
       // Run loop
       "queueMicrotask",
