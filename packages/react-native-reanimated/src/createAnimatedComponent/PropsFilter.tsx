@@ -58,6 +58,8 @@ export class PropsFilter implements IPropsFilter {
       component.props as AnimatedComponentProps<InitialComponentProps>;
     const props: Record<string, unknown> = {};
     let hasPseudoSelectors = false;
+    // Props whose only source is keyframes or a pseudo state.
+    let svgInheritedProps: Set<string> | undefined;
 
     for (const key in inputProps) {
       const value = inputProps[key];
@@ -86,6 +88,19 @@ export class PropsFilter implements IPropsFilter {
         // keep styles as they were passed by the user
         // it will help other libs to interpret styles correctly
         props[key] = processedStyle;
+
+        if (svgInheritedPropDefaults) {
+          for (const style of processedStyle) {
+            if (style?.animationName === undefined) {
+              continue;
+            }
+            collectSvgInheritedKeyframeProps(
+              style.animationName,
+              svgInheritedPropDefaults,
+              (svgInheritedProps ??= new Set())
+            );
+          }
+        }
       } else if (key === 'animatedProps') {
         // Handled in a second pass after this loop so that animatedProps
         // values always take precedence over inline props with the same key,
@@ -124,9 +139,6 @@ export class PropsFilter implements IPropsFilter {
         flattenArray<Partial<AnimatedComponentProps<AnimatedProps>>>(
           animatedPropsProp
         );
-      // Props whose only source is keyframes or a pseudo state.
-      let svgInheritedProps: Set<string> | undefined;
-
       animatedPropsArray.forEach((animatedProps) => {
         if (!animatedProps) {
           return;
@@ -170,15 +182,19 @@ export class PropsFilter implements IPropsFilter {
           }
         }
       });
+    }
 
-      // Owning the prop also stops react-native-svg merging it in from an
-      // ancestor, which would otherwise overwrite the animated value on every
-      // draw.
-      if (svgInheritedProps && svgInheritedPropDefaults) {
-        for (const prop of svgInheritedProps) {
-          if (props[prop] == null) {
-            props[prop] = svgInheritedPropDefaults[prop];
-          }
+    // Owning the prop also stops react-native-svg merging it in from an
+    // ancestor, which would otherwise overwrite the animated value on every
+    // draw. A value in the style already reaches it through its own merge.
+    if (svgInheritedProps && svgInheritedPropDefaults) {
+      const styles = props.style as StyleProps[] | undefined;
+      for (const prop of svgInheritedProps) {
+        if (
+          props[prop] == null &&
+          !styles?.some((style) => style?.[prop] != null)
+        ) {
+          props[prop] = svgInheritedPropDefaults[prop];
         }
       }
     }

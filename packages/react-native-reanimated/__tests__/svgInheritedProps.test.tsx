@@ -78,6 +78,25 @@ describe('SVG props inherited by children of an animated element', () => {
     expect(props.fillOpacity).toBe(0.5);
   });
 
+  it('forwards the SVG default of a prop set only by style keyframes', () => {
+    const props = renderText({
+      style: { animationName: { to: { fillOpacity: 0.2 } } },
+    });
+
+    expect(props.fillOpacity).toBe(1);
+  });
+
+  it('keeps a style value over the forwarded default', () => {
+    const props = renderText({
+      style: {
+        fillOpacity: 0.5,
+        animationName: { to: { fillOpacity: 0.2 } },
+      },
+    });
+
+    expect(props.fillOpacity).toBeUndefined();
+  });
+
   it('forwards the SVG default of a pseudo value without a default', () => {
     const props = renderText({
       animatedProps: { fillOpacity: { ':active': 0.2 } },
