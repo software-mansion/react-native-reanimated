@@ -43,6 +43,7 @@ class NodesManager(
     private var lastFrameTimeMs = 0.0
     private var mFabricUIManager: FabricUIManager
     private val mDrawPassDetector: DrawPassDetector
+    private val mSynchronousPropsReconciler: SynchronousPropsReconciler?
 
     private var mNativeProxy: NativeProxy? = null
 
@@ -70,9 +71,18 @@ class NodesManager(
         mNativeProxy = NativeProxy(context, this)
         mFabricUIManager = uiManager as FabricUIManager
         mFabricUIManager.eventDispatcher.addListener(this)
+        mSynchronousPropsReconciler =
+            if (mNativeProxy?.shouldRepairSynchronousPropsAfterMount() == true) {
+                SynchronousPropsReconciler(mFabricUIManager, ::performNonLayoutOperations)
+            } else {
+                null
+            }
     }
 
     fun invalidate() {
+        // Before the proxy goes away, so a mount in flight cannot reach a torn down C++ side.
+        mSynchronousPropsReconciler?.invalidate()
+
         mNativeProxy?.let {
             it.invalidate()
             mNativeProxy = null

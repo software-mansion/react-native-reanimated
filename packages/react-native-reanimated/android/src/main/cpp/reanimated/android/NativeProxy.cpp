@@ -138,6 +138,15 @@ void NativeProxy::performNonLayoutOperations() {
   reanimatedModuleProxy_->performNonLayoutOperations();
 }
 
+bool NativeProxy::shouldRepairSynchronousPropsAfterMount() {
+  // Only the synchronous path leaves the animated value out of the ShadowTree, so only it can be
+  // regressed by a mount. The backend path routes every update through mount mutations instead of
+  // the updates registry, which makes a registry replay the wrong repair there.
+  // Kotlin has no access to the feature flags, so the decision is made here.
+  return StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
+      !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND");
+}
+
 bool NativeProxy::getIsReducedMotion() {
   static const auto method = getJniMethod<jboolean()>("getIsReducedMotion");
   return method(javaPart_.get());
@@ -154,6 +163,7 @@ void NativeProxy::registerNatives() {
        makeNativeMethod("isAnyHandlerWaitingForEvent", NativeProxy::isAnyHandlerWaitingForEvent),
        makeNativeMethod("performOperations", NativeProxy::performOperations),
        makeNativeMethod("performNonLayoutOperations", NativeProxy::performNonLayoutOperations),
+       makeNativeMethod("shouldRepairSynchronousPropsAfterMount", NativeProxy::shouldRepairSynchronousPropsAfterMount),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp),
        makeNativeMethod("toggleSlowAnimationsOnUIRuntime", NativeProxy::toggleSlowAnimationsOnUIRuntime)});
 }
