@@ -93,9 +93,11 @@ export const SVG_INHERITED_PROP_DEFAULTS = {
   strokeLinejoin: 'miter',
   strokeMiterlimit: 4,
   // `vectorEffect` is the one stroke prop react-native-svg keeps off `propList`
-} as const satisfies Record<
-  keyof typeof fillProps | Exclude<keyof typeof strokeProps, 'vectorEffect'>,
-  unknown
+} as const satisfies Required<
+  Pick<
+    FillProps & StrokeProps,
+    keyof typeof fillProps | Exclude<keyof typeof strokeProps, 'vectorEffect'>
+  >
 >;
 
 const clipProps: PropsBuilderConfig<ClipProps> = {
