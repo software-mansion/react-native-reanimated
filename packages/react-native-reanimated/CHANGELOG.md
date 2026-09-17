@@ -20,6 +20,7 @@
 
 ### 🐛 Bug fixes
 
+- Draw `textDecorationLine`, `textDecorationColor` and `textDecorationStyle` animated by Reanimated on Android with React Native 0.87+, where `ReactTextView` skips the decorations after a text update that keeps the view's frame. ([#10622](https://github.com/software-mansion/react-native-reanimated/pull/10622) by [@MatiPl01](https://github.com/MatiPl01))
 - Prevent Shared Transition Boundaries from intercepting touches intended for sibling views while keeping their children interactive. ([#10600](https://github.com/software-mansion/react-native-reanimated/pull/10600) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Skip exiting animations in the light tree based Layout Animations proxy when a surface is stopped, so the empty-root transaction removes the views at once instead of starting animations on a dead surface and leaving their component views registered on iOS. ([#10586](https://github.com/software-mansion/react-native-reanimated/pull/10586) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Start a shared element transition from the frame of a running layout animation on the source view. ([#10556](https://github.com/software-mansion/react-native-reanimated/pull/10556) by [@pawicao](https://github.com/pawicao))
