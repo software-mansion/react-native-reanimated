@@ -272,6 +272,11 @@ bool NativeProxy::cssAnimateTransition(
              static_cast<jboolean>(persistent)) != JNI_FALSE;
 }
 
+void NativeProxy::repairSvgFillRule(const int viewTag, const bool evenOdd) {
+  static const auto method = getJniMethod<void(int, jboolean)>("repairSvgFillRule");
+  method(javaPart_.get(), viewTag, static_cast<jboolean>(evenOdd));
+}
+
 void NativeProxy::cssRemoveTransition(const int viewTag, const int propertyId) {
   static const auto method = getJniMethod<void(int, int)>("cssRemoveTransition");
   method(javaPart_.get(), viewTag, propertyId);
@@ -361,6 +366,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto preserveMountedTags = bindThis(&NativeProxy::preserveMountedTags);
 
+  auto repairSvgFillRule = bindThis(&NativeProxy::repairSvgFillRule);
+
   auto synchronouslyUpdateUIPropsFunction = bindThis(&NativeProxy::synchronouslyUpdateUIProps);
 
   auto registerSensorFunction = bindThis(&NativeProxy::registerSensor);
@@ -384,6 +391,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   return {
       requestRender,
       preserveMountedTags,
+      repairSvgFillRule,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,
