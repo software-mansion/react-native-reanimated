@@ -37,21 +37,21 @@ type DeselectionCase = {
 // animations, which are not the path under test.
 const CASES: Array<DeselectionCase> = [
   {
+    initialStyle: { height: 40, width: 40 },
     name: 'present in the style',
-    initialStyle: { width: 40, height: 40 },
-    targetStyle: { width: 160, height: 120 },
-    transitionProperty: ['width', 'height'],
     observedProp: 'height',
+    targetStyle: { height: 120, width: 160 },
+    transitionProperty: ['width', 'height'],
   },
   {
+    initialStyle: { marginTop: 100, width: 40 },
     // marginTop leaves the style one render before the deselect, so its
     // transition (to the default 0) is a key of neither style snapshot and
     // only the running transitions know about it. The frame top exposes it.
     name: 'transitioning to undefined',
-    initialStyle: { width: 40, marginTop: 100 },
+    observedProp: 'top',
     targetStyle: { width: 160 },
     transitionProperty: ['width', 'marginTop'],
-    observedProp: 'top',
   },
 ];
 
@@ -119,7 +119,7 @@ function DeselectionTest({
 describe('CSS transition property deselection', () => {
   test.each(CASES)(
     'snaps a property ${name} once it leaves transitionProperty mid-flight',
-    async ({ initialStyle, targetStyle, transitionProperty, observedProp }) => {
+    async ({ initialStyle, observedProp, targetStyle, transitionProperty }) => {
       await render(
         <DeselectionTest
           style={initialStyle}
@@ -153,12 +153,12 @@ describe('CSS transition property deselection', () => {
 });
 
 const styles = StyleSheet.create({
+  box: {
+    backgroundColor: 'royalblue',
+    height: 40,
+  },
   slot: {
     height: 160,
     marginBottom: 20,
-  },
-  box: {
-    height: 40,
-    backgroundColor: 'royalblue',
   },
 });
