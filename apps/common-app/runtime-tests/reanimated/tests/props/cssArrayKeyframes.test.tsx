@@ -6,6 +6,7 @@ import type {
   CSSStyle,
 } from 'react-native-reanimated';
 import Animated, {
+  linear,
   measure,
   steps,
   useAnimatedRef,
@@ -77,6 +78,40 @@ function Example({
 // Views with the same inline keyframes share one registry entry and the
 // interpolator behind it, so each frame resolves the omitted endpoint against
 // a different underlying list.
+
+function SharedView({
+  name,
+  boxShadow,
+}: {
+  name: string;
+  boxShadow: Array<BoxShadowValue>;
+}) {
+  const ref = useTestRef(name);
+  return (
+    <Animated.View
+      ref={ref}
+      style={{
+        animationDelay: -250000,
+        animationDuration: 1000000,
+        animationFillMode: 'both',
+        animationName: { to: { boxShadow: [green] } },
+        animationTimingFunction: steps(4, 'end'),
+        boxShadow,
+        height: 80,
+        width: 80,
+      }}
+    />
+  );
+}
+
+function SharedExample() {
+  return (
+    <View>
+      <SharedView name="first" boxShadow={[red]} />
+      <SharedView name="second" boxShadow={base} />
+    </View>
+  );
+}
 
 async function shadows(name = 'animated'): Promise<Array<BoxShadowValue>> {
   await wait(100);
@@ -283,4 +318,182 @@ describe('CSS array keyframes', () => {
       expect(result[1].offsetX).toBe(shrinking ? -15 : -5);
     }
   );
+
+  test.each([0, 0.5, 1])(
+    'explicit empty keyframe at progress %p',
+    async (progress) => {
+      await render(
+        <Example
+          progress={progress}
+          keyframes={{
+            '25%': { boxShadow: [red] },
+            '50%': { boxShadow: [] },
+            '75%': { boxShadow: [blue] },
+            from: { boxShadow: [] },
+            to: { boxShadow: [] },
+          }}
+        />
+      );
+      expect(await shadows()).toBe([], ComparisonMode.ARRAY);
+    }
+  );
+  test('empty to nonempty fades from a neutral shadow, not the base', async () => {
+    await render(
+      <Example
+        keyframes={{ from: { boxShadow: [] }, to: { boxShadow: [red] } }}
+      />
+    );
+    const result = await shadows();
+    expect(result.length).toBe(1);
+    expect(result[0].offsetX).toBe(5);
+    expect(result[0].color).toBe('#ff000040');
+  });
+
+  test.each([false, true])(
+    'implicit endpoint keeps the whole base: fromOnly=%p',
+    async (fromOnly) => {
+      await render(
+        <Example
+          progress={fromOnly ? 1 : 0}
+          keyframes={
+            fromOnly
+              ? { from: { boxShadow: [green] } }
+              : { to: { boxShadow: [green] } }
+          }
+        />
+      );
+      expect(await shadows()).toBe(
+        await shadows('static'),
+        ComparisonMode.ARRAY
+      );
+    }
+  );
+
+  test('extra underlying shadow fades instead of disappearing immediately', async () => {
+    await render(<Example keyframes={{ to: { boxShadow: [green] } }} />);
+    const result = await shadows();
+    expect(result.length).toBe(2);
+    expect(result[0].offsetX).toBe(25);
+    expect(result[1].offsetX).toBe(-15);
+    expect(result[1].color).toBe('#0000ffbf');
+  });
+  test.each([0.25, 0.75])(
+    'unequal keyframe segments at %p keep only participating layers',
+    async (progress) => {
+      await render(
+        <Example
+          progress={progress}
+          keyframes={{
+            from: { boxShadow: [red, blue] },
+            '50%': { boxShadow: [] },
+            to: { boxShadow: [green] },
+          }}
+        />
+      );
+      const result = await shadows();
+      expect(result.length).toBe(progress < 0.5 ? 2 : 1);
+      expect(result[0].offsetX).toBe(progress < 0.5 ? 10 : 20);
+    }
+  );
+
+  test('empty-to-empty keyframes render no shadows', async () => {
+    await render(
+      <Example keyframes={{ from: { boxShadow: [] }, to: { boxShadow: [] } }} />
+    );
+    expect(await shadows()).toBe([], ComparisonMode.ARRAY);
+  });
+
+  test('inset padding adopts the real shadow inset', async () => {
+    await render(
+      <Example
+        keyframes={{
+          from: { boxShadow: [] },
+          to: { boxShadow: [{ ...red, inset: true }] },
+        }}
+      />
+    );
+    const result = await shadows();
+    expect(result[0].inset).toBe(true);
+    expect(result[0].offsetX).toBe(5);
+  });
+
+  test('views sharing to-only keyframes each start from their own list', async () => {
+    await render(<SharedExample />);
+    const first = await shadows('first');
+    const second = await shadows('second');
+    expect(first.length).toBe(1);
+    expect(first[0].offsetX).toBe(25);
+    expect(second.length).toBe(2);
+    expect(second[0].offsetX).toBe(25);
+    expect(second[1].offsetX).toBe(-15);
+    expect(second[1].color).toBe('#0000ffbf');
+  });
+
+  test('keyframe easing is applied once within its segment', async () => {
+    await render(
+      <Example
+        progress={0.25}
+        keyframes={{
+          from: {
+            boxShadow: [red],
+            animationTimingFunction: steps(4, 'start'),
+          },
+          '50%': { boxShadow: [green] },
+          to: { boxShadow: [] },
+        }}
+      />
+    );
+    expect((await shadows())[0].offsetX).toBe(35);
+  });
+
+  test.each([-0.5, 1.5])(
+    'easing can extrapolate beyond endpoints: %p',
+    async (output) => {
+      await render(
+        <Example
+          progress={0.5}
+          timingFunction={linear(0, [output, '50%'], 1)}
+          keyframes={{ from: { boxShadow: [red] }, to: { boxShadow: [green] } }}
+        />
+      );
+      expect((await shadows())[0].offsetX).toBe(20 + 20 * output);
+    }
+  );
+
+  test('transition reversal to an empty list keeps shortening behavior', async () => {
+    await render(<TransitionExample value={[]} duration={10000} />);
+    await wait(100);
+    await render(<TransitionExample value={[red]} duration={10000} />);
+    expect((await shadows())[0].offsetX).toBe(5);
+    await render(<TransitionExample value={[]} duration={10000} />);
+    await wait(3500);
+    expect(await shadows()).toBe([], ComparisonMode.ARRAY);
+  });
+  test('switching segments mid-animation shrinks and regrows the rendered list', async () => {
+    const keyframes = {
+      from: { boxShadow: base },
+      '50%': { boxShadow: [] },
+      to: { boxShadow: [green] },
+    };
+    await render(<Example progress={0.25} keyframes={keyframes} />);
+    expect((await shadows()).length).toBe(2);
+    await render(<Example progress={0.75} keyframes={keyframes} />);
+    const shorter = await shadows();
+    expect(shorter.length).toBe(1);
+    expect(shorter[0].offsetX).toBe(20);
+    await render(<Example progress={0.25} keyframes={keyframes} />);
+    expect((await shadows()).length).toBe(2);
+  });
+
+  test('forwards fill keeps an explicit empty final list', async () => {
+    await render(
+      <Example
+        finish
+        fill="forwards"
+        keyframes={{ from: { boxShadow: base }, to: { boxShadow: [] } }}
+      />
+    );
+    await wait(500);
+    expect(await shadows()).toBe([], ComparisonMode.ARRAY);
+  });
 });
