@@ -74,6 +74,29 @@ const strokeProps: PropsBuilderConfig<StrokeProps> = {
   },
 };
 
+// The values react-native-svg draws with when a fill or stroke prop is unset.
+// These are not the interpolation fallbacks in `InterpolatorRegistry.cpp`; the
+// two differ for `stroke` and `fillRule`.
+export const SVG_INHERITED_PROP_DEFAULTS = {
+  fill: 'black',
+  fillOpacity: 1,
+  fillRule: 'nonzero',
+  stroke: 'none',
+  strokeWidth: 1,
+  strokeOpacity: 1,
+  strokeDasharray: 'none',
+  strokeDashoffset: 0,
+  strokeLinecap: 'butt',
+  strokeLinejoin: 'miter',
+  strokeMiterlimit: 4,
+  // `vectorEffect` is the one stroke prop react-native-svg keeps off `propList`
+} as const satisfies Required<
+  Pick<
+    FillProps & StrokeProps,
+    keyof typeof fillProps | Exclude<keyof typeof strokeProps, 'vectorEffect'>
+  >
+>;
+
 const clipProps: PropsBuilderConfig<ClipProps> = {
   clipRule: true,
   clipPath: true, // TODO - maybe preprocess this?
