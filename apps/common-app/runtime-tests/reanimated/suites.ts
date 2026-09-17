@@ -80,6 +80,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'css transitions',
+    importTest: () => {
+      require('./tests/css/transitionCancellation.test');
+    },
+  },
+  {
     testSuiteName: 'utilities',
     importTest: () => {
       require('./tests/utilities/relativeCoords.test');
