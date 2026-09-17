@@ -183,10 +183,14 @@ void addMethod(jsi::Runtime &rt, jsi::Object &obj, const char *name, TFun &&func
           rt,
           jsi::PropNameID::forAscii(rt, name),
           TLength,
-          [func = std::forward<TFun>(func)](
-              jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t) mutable -> jsi::Value {
+          [func = std::forward<TFun>(func), name](
+              jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t count) mutable -> jsi::Value {
             using TReturn =
                 std::invoke_result_t<TFun &, jsi::Runtime &, const jsi::Value &, const jsi::Value(&)[TLength]>;
+            if (count < TLength) {
+              throw jsi::JSError(
+                  rt, std::string("[Worklets] ") + name + " expects " + std::to_string(TLength) + " arguments.");
+            }
             auto &typed = *reinterpret_cast<const jsi::Value(*)[TLength]>(args);
             if constexpr (std::is_void_v<TReturn>) {
               func(rt, thisVal, typed);

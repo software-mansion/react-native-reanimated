@@ -165,9 +165,291 @@ function errorMessage(error) {
   return error instanceof Error ? error.message : String(error);
 }
 
-const wss = new WebSocketServer({ port: PORT, host: '0.0.0.0' });
+// UTF-8 payload with multi-byte characters, used by the networking runtime
+// tests to detect any Latin-1 / mojibake decoding path.
+const ECHO_TEXT = 'Zażółć gęślą jaźń — 中文字 — 🦄';
 
-wss.on('error', (error) => {
+const MAX_REQUEST_BODY_BYTES = 32 * 1024 * 1024;
+
+/**
+ * Plain-HTTP endpoints served on the same port as the WebSocket harness. The
+ * networking runtime tests fetch these instead of external services.
+ *
+ * @param {import('http').IncomingMessage} req
+ * @param {import('http').ServerResponse} res
+ */
+function handleEchoRequest(req, res) {
+  req.on('error', () => {});
+  res.on('error', () => {});
+  /** @type {Buffer[]} */
+  const chunks = [];
+  let received = 0;
+  req.on('data', (/** @type {Buffer} */ chunk) => {
+    received += chunk.length;
+    if (received > MAX_REQUEST_BODY_BYTES) {
+      res.writeHead(413, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('request body too large');
+      req.destroy();
+      return;
+    }
+    chunks.push(chunk);
+  });
+  req.on('end', () => {
+    if (res.writableEnded) {
+      return;
+    }
+    try {
+      routeEchoRequest(req, res, Buffer.concat(chunks));
+    } catch (error) {
+      if (!res.headersSent) {
+        res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+      }
+      res.end(`bad request: ${errorMessage(error)}`);
+    }
+  });
+}
+
+/**
+ * @param {import('http').IncomingMessage} req
+ * @param {import('http').ServerResponse} res
+ * @param {Buffer} body
+ */
+function routeEchoRequest(req, res, body) {
+  const url = new URL(
+    req.url ?? '/',
+    `http://${req.headers.host ?? 'localhost'}`
+  );
+  switch (url.pathname) {
+    case '/echo/text': {
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end(ECHO_TEXT);
+      return;
+    }
+    case '/echo/json': {
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+      });
+      res.end(JSON.stringify({ id: 1, title: ECHO_TEXT, completed: false }));
+      return;
+    }
+    case '/echo/binary': {
+      const size = clampInteger(
+        url.searchParams.get('size'),
+        1024,
+        0,
+        16 * 1024 * 1024
+      );
+      const bytes = Buffer.alloc(size);
+      for (let i = 0; i < size; i++) {
+        bytes[i] = i % 256;
+      }
+      res.writeHead(200, {
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': String(size),
+      });
+      res.end(bytes);
+      return;
+    }
+    case '/echo/body': {
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+      });
+      res.end(
+        JSON.stringify({
+          method: req.method,
+          contentType: req.headers['content-type'] ?? null,
+          contentLength: req.headers['content-length'] ?? null,
+          byteLength: body.byteLength,
+          body: body.toString('utf8'),
+          bytes: Array.from(body.subarray(0, 64)),
+        })
+      );
+      return;
+    }
+    case '/echo/delay': {
+      const ms = clampInteger(url.searchParams.get('ms'), 1000, 0, 60000);
+      setTimeout(() => {
+        if (res.destroyed || res.writableEnded) {
+          return;
+        }
+        res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('delayed');
+      }, ms).unref();
+      return;
+    }
+    case '/echo/slow-body': {
+      const ms = clampInteger(url.searchParams.get('ms'), 1000, 0, 60000);
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.write('start');
+      setTimeout(() => {
+        if (res.destroyed || res.writableEnded) {
+          return;
+        }
+        res.end('end');
+      }, ms).unref();
+      return;
+    }
+    case '/echo/status': {
+      const code = clampInteger(url.searchParams.get('code'), 200, 200, 599);
+      res.writeHead(code, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end(`status ${code}`);
+      return;
+    }
+    case '/echo/redirect': {
+      const to = url.searchParams.get('to') ?? '/echo/json';
+      const code = clampInteger(url.searchParams.get('code'), 302, 300, 399);
+      if (!isAllowedRedirectTarget(to)) {
+        res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('redirect target must be an /echo/ path on this server');
+        return;
+      }
+      res.writeHead(code, { Location: to });
+      res.end();
+      return;
+    }
+    case '/echo/headers': {
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'X-Dup': ['one', 'two'],
+        'X-MiXeD': 'value',
+      });
+      res.end('headers');
+      return;
+    }
+    case '/echo/set-cookie': {
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Set-Cookie': 'worklets_sid=1; Path=/',
+      });
+      res.end('cookie set');
+      return;
+    }
+    case '/echo/echo-headers': {
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+      });
+      res.end(JSON.stringify(req.headersDistinct ?? req.headers));
+      return;
+    }
+    case '/echo/utf8-cases': {
+      /** @type {Record<string, number[]>} */
+      const cases = {
+        replacement: [0x61, 0xff, 0x62],
+        'valid-prefix': [0xe1, 0x80, 0x41],
+        truncated: [0xe2, 0x9c],
+        overlong: [0xc0, 0xaf],
+        surrogate: [0xed, 0xa0, 0x80],
+        'bom-utf8': [0xef, 0xbb, 0xbf, 0x63, 0x61, 0x66, 0xc3, 0xa9],
+        'bom-utf16le': [0xff, 0xfe, 0x68, 0x00, 0x69, 0x00],
+        'bom-utf16be': [0xfe, 0xff, 0x00, 0x68, 0x00, 0x69],
+        'utf16le-surrogate-pair': [0xff, 0xfe, 0x3d, 0xd8, 0x84, 0xde],
+        'utf16le-lone-surrogate': [0xff, 0xfe, 0x3d, 0xd8, 0x69, 0x00],
+        'utf16le-odd-length': [0xff, 0xfe, 0x68, 0x00, 0x69],
+        'four-byte': [0xf0, 0x9f, 0xa6, 0x84],
+      };
+      const name = url.searchParams.get('case') ?? 'replacement';
+      const bytes = Buffer.from(cases[name] ?? cases.replacement);
+      const charset = url.searchParams.get('charset');
+      res.writeHead(200, {
+        'Content-Type': `text/plain${charset !== null ? `; charset=${charset}` : ''}`,
+        'Content-Length': String(bytes.length),
+      });
+      res.end(bytes);
+      return;
+    }
+    case '/echo/shift-jis': {
+      const malformed = url.searchParams.get('malformed') !== null;
+      const bytes = Buffer.from(
+        malformed ? [0x93, 0xfa, 0x96, 0x7b, 0x81] : [0x93, 0xfa, 0x96, 0x7b]
+      );
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=shift_jis',
+        'Content-Length': String(bytes.length),
+      });
+      res.end(bytes);
+      return;
+    }
+    case '/echo/chunked': {
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.write('chunk-one');
+      res.end('chunk-two');
+      return;
+    }
+    case '/echo/invalid-utf8': {
+      // 'a', a lone 0xFF, 'b' - decodes to "a�b" under the Encoding
+      // Standard and to "aÿb" under a Latin-1 fallback.
+      const bytes = Buffer.from([0x61, 0xff, 0x62]);
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Content-Length': String(bytes.length),
+      });
+      res.end(bytes);
+      return;
+    }
+    case '/echo/latin1': {
+      // 0x92 is U+2019 in windows-1252 and a C1 control in true ISO-8859-1.
+      const bytes = Buffer.from([0x92]);
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=iso-8859-1',
+        'Content-Length': String(bytes.length),
+      });
+      res.end(bytes);
+      return;
+    }
+    default: {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('not found');
+    }
+  }
+}
+
+/**
+ * Redirect targets are caller-supplied, so only paths on this server are
+ * allowed. A loopback alias is permitted as well, so a test can exercise a
+ * genuine cross-origin redirect against the same process.
+ *
+ * @param {string} to
+ * @returns {boolean}
+ */
+function isAllowedRedirectTarget(to) {
+  if (to.startsWith('/echo/')) {
+    return true;
+  }
+  let target;
+  try {
+    target = new URL(to);
+  } catch {
+    return false;
+  }
+  return (
+    target.protocol === 'http:' &&
+    ['localhost', '127.0.0.1'].includes(target.hostname) &&
+    target.port === String(PORT) &&
+    target.pathname.startsWith('/echo/')
+  );
+}
+
+/**
+ * @param {string | null} raw
+ * @param {number} fallback
+ * @param {number} min
+ * @param {number} max
+ * @returns {number}
+ */
+function clampInteger(raw, fallback, min, max) {
+  const value = Number(raw);
+  if (raw === null || raw === '' || !Number.isFinite(value)) {
+    return fallback;
+  }
+  return Math.min(Math.max(Math.trunc(value), min), max);
+}
+
+const HOST = typeof args.host === 'string' ? args.host : '0.0.0.0';
+
+const httpServer = http.createServer(handleEchoRequest);
+const wss = new WebSocketServer({ server: httpServer });
+
+httpServer.on('error', (error) => {
   if (/** @type {{ code?: string }} */ (error).code === 'EADDRINUSE') {
     console.error(
       `[runtime-tests] port ${PORT} is already in use — is another runtime-tests server (or Metro) running there? Stop it or pass --port.`
@@ -178,8 +460,24 @@ wss.on('error', (error) => {
   process.exit(1);
 });
 
+wss.on('error', (error) => {
+  console.error(`[runtime-tests] websocket error: ${error.message}`);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error(`[runtime-tests] uncaught exception: ${errorMessage(error)}`);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error(`[runtime-tests] unhandled rejection: ${errorMessage(reason)}`);
+  process.exit(1);
+});
+
+httpServer.listen(PORT, HOST);
+
 console.log(
-  `[runtime-tests] listening on ws://0.0.0.0:${PORT} (library: ${LIBRARY})`
+  `[runtime-tests] listening on ws://${HOST}:${PORT} (library: ${LIBRARY})`
 );
 if (ONLY) {
   console.log(`[runtime-tests] suite filter: ${ONLY.join(', ')}`);
@@ -993,7 +1291,9 @@ function shutdown(code) {
 async function exitAfterSuiteCommands(code) {
   await afterSuiteChain;
   wss.close(() => {
-    process.exit(code);
+    httpServer.close(() => {
+      process.exit(code);
+    });
   });
   setTimeout(() => process.exit(code), 1000).unref();
 }

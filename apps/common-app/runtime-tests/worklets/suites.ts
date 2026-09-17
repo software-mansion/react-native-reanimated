@@ -47,6 +47,15 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
     disabled: !isBundleModeEnabled() || !__DEV__,
   },
   {
+    testSuiteName: 'networking',
+    importTest: () => {
+      require('./tests/networking/api.test');
+      require('./tests/networking/xhr.test');
+      require('./tests/networking/fetch.test');
+    },
+    disabled: !isBundleModeEnabled(),
+  },
+  {
     testSuiteName: 'run loop',
     importTest: () => {
       require('./tests/runLoop/requestAnimationFrame.test');
