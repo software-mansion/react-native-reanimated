@@ -20,7 +20,7 @@
 
 ### 🐛 Bug fixes
 
-- Switch a `boxShadow` list discretely as a whole when an inset shadow is paired with an outset one, as CSS does, instead of switching only that shadow.
+- Switch a `boxShadow` list discretely as a whole when an inset shadow is paired with an outset one, as CSS does, instead of switching only that shadow. ([#10599](https://github.com/software-mansion/react-native-reanimated/pull/10599) by [@matipl01](https://github.com/matipl01))
 - Interpolate `boxShadow` and `transformOrigin` keyframes as whole lists: an explicit `[]` or `none` keyframe is an empty list instead of the view's own value, a shorter list is padded with blank shadows, and a keyframe that omits the property starts from the view's complete list.
 - Restore the view's complete `boxShadow` and `transformOrigin` value when a CSS animation of it ends, instead of only the elements the keyframes mentioned.
 - Accept `none` for `boxShadow` and `transform` in CSS keyframes and treat it as an explicit empty list, as CSS does.
