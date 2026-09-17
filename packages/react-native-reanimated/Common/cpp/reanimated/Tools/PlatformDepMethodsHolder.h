@@ -35,6 +35,8 @@ using SynchronouslyUpdateUIPropsFunction = std::function<void(const std::vector<
 using SynchronouslyUpdateUIPropsFunction = std::function<void(const int, const folly::dynamic &)>;
 #endif // ANDROID
 using PreserveMountedTagsFunction = std::function<std::optional<std::unique_ptr<int[]>>(std::vector<int> &)>;
+/// Re-applies an SVG fill rule a commit just wrote (see NativeProxy.repairSvgFillRule).
+using RepairSvgFillRuleFunction = std::function<void(Tag, bool evenOdd)>;
 using GetAnimationTimestampFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction = std::function<void(jsi::Runtime &, int, jsi::Object)>;
@@ -56,6 +58,7 @@ struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
+  RepairSvgFillRuleFunction repairSvgFillRuleFunction;
 #endif // ANDROID
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshotFunction;
