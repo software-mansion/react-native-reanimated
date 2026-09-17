@@ -29,8 +29,6 @@ Both packages share one internal layout:
 - `android/src/main/cpp/<pkg>/android/` fbjni glue, `android/src/main/java/com/swmansion/<pkg>/` Kotlin.
 - `__tests__/` Jest, `__typetests__/` tstyche. `src/mock.ts` must mirror the exports of `src/index.ts` (`yarn validate-mock`).
 
-The worklets package ships `plugin-oxc/` too (`index.js`, `babel.js`, typings, `*.node`). `npm-worklets-publish.yml` builds the `.node` binary for each platform and the publish job builds linux-x64 itself. `CARGO_BUILD_TARGET` selects a cross target in `plugin-oxc/scripts/post-build.mts`.
-
 Committed build artifacts, rebuild them and never hand-edit: `packages/react-native-worklets/plugin/index.js`, `plugin/index.d.ts`, `packages/eslint-plugin-reanimated/index.js`, `packages/eslint-plugin-reanimated/types/`. The pre-commit hook rebuilds and stages the worklets plugin.
 
 ## How the pieces link
@@ -69,7 +67,7 @@ Committed build artifacts, rebuild them and never hand-edit: `packages/react-nat
 
 ```sh
 yarn                                   # install (needed in every new worktree)
-yarn build-packages                    # builds worklets then reanimated (bob), rebuilds the Babel plugin and the OXC plugin (needs cargo), fills lib/
+yarn build-packages                    # builds worklets then reanimated (bob), rebuilds the Babel plugin and the OXC plugin, fills lib/
 yarn workspace react-native-worklets build
 yarn workspace <pkg> type:check        # native + web + common-app + type tests
 yarn workspace <pkg> lint              # lint:js + lint:android + lint:apple + lint:clang-tidy (+ lint:plugin)
@@ -123,7 +121,7 @@ yarn workspace fabric-example runtime-tests --library worklets --platform ios --
 ## Fresh checkout or worktree
 
 1. `yarn` - a new worktree has no `node_modules`.
-1. `yarn build-packages` - fills `lib/` and rebuilds both plugins (the OXC one needs a Rust toolchain). `type:check` and `circular-dependency-check` fail without it.
+1. `yarn build-packages` - fills `lib/` and rebuilds both plugins. `type:check` and `circular-dependency-check` fail without it.
 1. After merging across a version bump: `rm packages/react-native-worklets/.worklets/*.js` (keep `dummy.md`) and `yarn jest --clearCache`. Stale chunks trip the plugin version check.
 1. `cd apps/fabric-example/ios && bundle exec pod install` when native files changed.
 1. Metro `--reset-cache` after toggling Bundle Mode.

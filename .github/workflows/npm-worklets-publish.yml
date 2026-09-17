@@ -52,54 +52,14 @@ on:
     - cron: '27 23 * * *' # at 23:27 every day
 
 jobs:
-  build-oxc-plugin:
-    # linux-x64 is built by the publish job itself, as part of `yarn build`.
-    strategy:
-      fail-fast: true
-      matrix:
-        include:
-          - os: macos-26
-            target: aarch64-apple-darwin
-          - os: macos-26
-            target: x86_64-apple-darwin
-          - os: ubuntu-22.04-arm
-            target: aarch64-unknown-linux-gnu
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-          - os: windows-latest
-            target: aarch64-pc-windows-msvc
-    runs-on: ${{ matrix.os }}
-    env:
-      CARGO_BUILD_TARGET: ${{ matrix.target }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - name: Use Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with:
-          cache: 'yarn'
-          node-version-file: '.nvmrc'
-      - name: Install Rust target
-        run: rustup target add ${{ matrix.target }}
-      - name: Install monorepo dependencies
-        run: yarn install --immutable
-      - name: Build OXC plugin
-        run: yarn workspace worklets-oxc-plugin build
-      - name: Upload OXC plugin
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: oxc-plugin-${{ matrix.target }}
-          path: packages/react-native-worklets/plugin-oxc/*.node
-          if-no-files-found: error
-
   npm-worklets-publish:
-    needs: build-oxc-plugin
     uses: ./.github/workflows/npm-package-publish.yml
     with:
-      # The publish job builds the linux-x64 OXC plugin, so keep its glibc requirement low.
-      runs-on: ubuntu-22.04
-      artifacts-pattern: oxc-plugin-*
-      artifacts-path: packages/react-native-worklets/plugin-oxc
+      # The OXC plugin is cross-compiled for every platform, which needs a macOS host.
+      runs-on: macos-26
+      prebuild-command: >-
+        brew install zig cargo-zigbuild && cargo install --locked cargo-xwin &&
+        node --experimental-strip-types packages/react-native-worklets/plugin-oxc/scripts/build-all.mts
       package-name: 'react-native-worklets'
       package-json-path: 'packages/react-native-worklets/package.json'
       release-type: ${{ github.event_name == 'schedule' && 'nightly' || inputs.release-type || 'nightly' }}

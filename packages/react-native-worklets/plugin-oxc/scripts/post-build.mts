@@ -3,6 +3,8 @@ import { copyFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { TARGETS } from './targets.mts';
+
 interface LibraryNaming {
   ext: string;
   prefix: string;
@@ -20,15 +22,6 @@ const profile: string = process.argv[2] === 'release' ? 'release' : 'debug';
 
 // Cross builds set CARGO_BUILD_TARGET, which also moves cargo's output to
 // target/<triple>/<profile>.
-const TARGETS: Record<string, { platform: NodeJS.Platform; arch: string }> = {
-  'aarch64-apple-darwin': { platform: 'darwin', arch: 'arm64' },
-  'x86_64-apple-darwin': { platform: 'darwin', arch: 'x64' },
-  'aarch64-unknown-linux-gnu': { platform: 'linux', arch: 'arm64' },
-  'x86_64-unknown-linux-gnu': { platform: 'linux', arch: 'x64' },
-  'aarch64-pc-windows-msvc': { platform: 'win32', arch: 'arm64' },
-  'x86_64-pc-windows-msvc': { platform: 'win32', arch: 'x64' },
-};
-
 const cargoTarget = process.env.CARGO_BUILD_TARGET;
 const target = cargoTarget
   ? TARGETS[cargoTarget]
