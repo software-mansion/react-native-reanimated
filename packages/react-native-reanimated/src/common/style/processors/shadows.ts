@@ -37,11 +37,11 @@ const parseBlurRadius = (value: string) => {
 
 export const processBoxShadow: ValueProcessor<
   ReadonlyArray<BoxShadowValue> | string,
-  ProcessedBoxShadowValue[] | undefined
+  ProcessedBoxShadowValue[]
 > = (value, context) => {
   'worklet';
   if (value === 'none') {
-    return;
+    return [];
   }
 
   const parsedShadow =
