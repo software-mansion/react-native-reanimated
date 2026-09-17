@@ -982,9 +982,12 @@ ShadowView LayoutAnimationsProxy::cloneViewWithoutOpacity(
     const ShadowView &shadowView,
     const PropsParserContext &propsParserContext) const {
   auto newView = shadowView;
-  const folly::dynamic opacity = folly::dynamic::object("opacity", 0);
+  folly::dynamic rawProps = folly::dynamic::object("opacity", 0);
+#ifdef ANDROID
+  rawProps = folly::dynamic::merge(shadowView.props->rawProps, rawProps);
+#endif
   auto newProps = componentDescriptorRegistry_->at(newView.componentHandle)
-                      .cloneProps(propsParserContext, newView.props, RawProps(opacity));
+                      .cloneProps(propsParserContext, newView.props, RawProps(rawProps));
   auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
   viewProps->opacity = 0;
   newView.props = newProps;
