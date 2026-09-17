@@ -2,12 +2,14 @@
 import {
   getCompoundComponentName,
   registerComponentPropsBuilder,
+  registerPropDefaults,
 } from '../../common';
 import {
   SVG_CIRCLE_PROPERTIES_CONFIG,
   SVG_COMMON_PROPERTIES_CONFIG,
   SVG_ELLIPSE_PROPERTIES_CONFIG,
   SVG_IMAGE_PROPERTIES_CONFIG,
+  SVG_INHERITED_PROP_DEFAULTS,
   SVG_LINE_PROPERTIES_CONFIG,
   SVG_LINEAR_GRADIENT_PROPERTIES_CONFIG,
   SVG_PATH_PROPERTIES_CONFIG,
@@ -47,4 +49,6 @@ export function initSvgCssSupport() {
 
   // Fallback for all SVG components that aren't explicitly registered
   registerComponentPropsBuilder(/^RNSVG/, SVG_COMMON_PROPERTIES_CONFIG);
+
+  registerPropDefaults(SVG_INHERITED_PROP_DEFAULTS);
 }
