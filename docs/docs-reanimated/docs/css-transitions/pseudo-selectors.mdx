@@ -197,7 +197,7 @@ The button drifts between colors over 600ms, but snaps down in 100ms when presse
 
 Pseudo selectors work on [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components too. SVG attributes such as `fill` or `r` are component props rather than React Native `style` keys, so their pseudo objects go in `animatedProps`, not in `style`. For everything else about animating SVG, see [Animating SVG](/docs/guides/animating-svg).
 
-Give every animated attribute a resting value, either as `default` inside the pseudo object or as the plain prop - both work, and `default` wins when you write both. With neither, the attribute falls back to its own default, which for `r` means the shape renders at `0`.
+Give every animated attribute a resting value, either as `default` inside the pseudo object or as the plain prop it replaces - both work, and `default` wins when you write both. With neither, the attribute falls back to its own default, which for `r` means the shape renders at `0`.
 
 import PseudoSelectorsSvg from '@site/src/examples/css-transitions/PseudoSelectorsSvg';
 import PseudoSelectorsSvgSrc from '!!raw-loader!@site/src/examples/css-transitions/PseudoSelectorsSvg';
@@ -210,7 +210,7 @@ Reanimated hit-tests the front-most element, so when SVG shapes overlap only the
 
 - Set `transitionDuration` when you want the change animated. Without any transition settings the pseudo value still applies, it just switches over immediately, exactly like a transition of `0`.
 
-- `default` is optional. Leaving it out is a fine way to animate back to a property's own default value. What it won't do is bring back a value from your `StyleSheet`: once `backgroundColor` has a pseudo object, that object owns the property, and any `backgroundColor` from an earlier style in the array is dropped. Write the resting value as `default` instead.
+- `default` is optional. Without it the property rests at the value the pseudo object replaced, such as a `backgroundColor` set by an earlier style in the array, or at its own default if nothing set it. A `default` inside the pseudo object wins over both.
 
 - Transition settings can't go inside a pseudo object. `transitionDuration`, `transitionTimingFunction`, and `transitionDelay` describe the component, not a single state.
 
