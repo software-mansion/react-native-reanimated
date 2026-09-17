@@ -33,6 +33,7 @@
 - Add an OXC port of the Babel plugin for Bundle Mode. ([#9518](https://github.com/software-mansion/react-native-reanimated/pull/9518) by [@tshmieldev](https://github.com/tshmieldev))
 - Add `getCurrentThreadId` as public JavaScript API.
 - Autoworkletize the fourth argument of `withTiming` and `withSpring`. ([#10467](https://github.com/software-mansion/react-native-reanimated/pull/10467) by [@piaskowyk](https://github.com/piaskowyk))
+- Ship the OXC Worklets plugin as `react-native-worklets/plugin-oxc/babel`, with prebuilt binaries for macOS, Linux and Windows on x64 and arm64. ([#10608](https://github.com/software-mansion/react-native-reanimated/pull/10608) by [@tshmieldev](https://github.com/tshmieldev))
 
 ### 🐛 Bug fixes
 

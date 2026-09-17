@@ -67,7 +67,7 @@ Committed build artifacts, rebuild them and never hand-edit: `packages/react-nat
 
 ```sh
 yarn                                   # install (needed in every new worktree)
-yarn build-packages                    # builds worklets then reanimated (bob), rebuilds the Babel plugin, fills lib/
+yarn build-packages                    # builds worklets then reanimated (bob), rebuilds the Babel plugin and the OXC plugin, fills lib/
 yarn workspace react-native-worklets build
 yarn workspace <pkg> type:check        # native + web + common-app + type tests
 yarn workspace <pkg> lint              # lint:js + lint:android + lint:apple + lint:clang-tidy (+ lint:plugin)
@@ -121,7 +121,7 @@ yarn workspace fabric-example runtime-tests --library worklets --platform ios --
 ## Fresh checkout or worktree
 
 1. `yarn` - a new worktree has no `node_modules`.
-1. `yarn build-packages` - fills `lib/` and rebuilds the plugin. `type:check` and `circular-dependency-check` fail without it.
+1. `yarn build-packages` - fills `lib/` and rebuilds both plugins. `type:check` and `circular-dependency-check` fail without it.
 1. After merging across a version bump: `rm packages/react-native-worklets/.worklets/*.js` (keep `dummy.md`) and `yarn jest --clearCache`. Stale chunks trip the plugin version check.
 1. `cd apps/fabric-example/ios && bundle exec pod install` when native files changed.
 1. Metro `--reset-cache` after toggling Bundle Mode.
