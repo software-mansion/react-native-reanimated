@@ -29338,6 +29338,7 @@ __metadata:
     "@babel/preset-typescript": "npm:^7.28.5"
     "@babel/traverse": "npm:^7.27.1"
     "@babel/types": "npm:^7.27.1"
+    "@jridgewell/remapping": "npm:^2.3.5"
     "@react-native-community/cli": "npm:20.2.0"
     "@react-native/eslint-config": "npm:0.88.0-rc.1"
     "@react-native/jest-preset": "npm:0.88.0-rc.1"

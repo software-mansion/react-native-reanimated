@@ -33,9 +33,11 @@
 - Add an OXC port of the Babel plugin for Bundle Mode. ([#9518](https://github.com/software-mansion/react-native-reanimated/pull/9518) by [@tshmieldev](https://github.com/tshmieldev))
 - Add `getCurrentThreadId` as public JavaScript API.
 - Autoworkletize the fourth argument of `withTiming` and `withSpring`. ([#10467](https://github.com/software-mansion/react-native-reanimated/pull/10467) by [@piaskowyk](https://github.com/piaskowyk))
+- Ship the OXC Worklets plugin as `react-native-worklets/plugin-oxc/babel`, with prebuilt binaries for macOS, Linux and Windows on x64 and arm64. ([#10608](https://github.com/software-mansion/react-native-reanimated/pull/10608) by [@tshmieldev](https://github.com/tshmieldev))
 
 ### 🐛 Bug fixes
 
+- Abort the pending jobs of a Worklet Runtime's async queue and event loop from its destructor while the runtime lock is held, so the JSI handles they capture are no longer destroyed on an unrelated thread or under the queue mutex. ([#10580](https://github.com/software-mansion/react-native-reanimated/pull/10580) by [@tjzel](https://github.com/tjzel))
 - Native methods on the Worklets module proxy read missing trailing arguments as `undefined` again instead of throwing, which broke `runOnRuntimeSync` and `scheduleOnRuntime` on guest runtimes in Legacy Eval mode. ([#10593](https://github.com/software-mansion/react-native-reanimated/pull/10593) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Acquire the runtime mutex before destroying a Worklet Runtime so a synchronous call in flight on another thread finishes first. ([#10550](https://github.com/software-mansion/react-native-reanimated/pull/10550) by [@tjzel](https://github.com/tjzel))
 - Destroy discarded results of synchronous worklet calls while the runtime lock is still held. ([#10552](https://github.com/software-mansion/react-native-reanimated/pull/10552) by [@tjzel](https://github.com/tjzel))

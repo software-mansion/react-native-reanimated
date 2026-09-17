@@ -9,7 +9,7 @@
     "worklets"
   ],
   "scripts": {
-    "build": "yarn workspace babel-plugin-worklets build && yarn set-version && yarn run --top-level bob build",
+    "build": "yarn workspace babel-plugin-worklets build && yarn workspace worklets-oxc-plugin build && yarn set-version && yarn run --top-level bob build",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "find-unused-code:js": "knip",
     "format": "yarn format:js && yarn format:plugin && yarn format:common && yarn format:android && yarn format:apple",
@@ -77,6 +77,7 @@
     "@babel/preset-typescript": "^7.28.5",
     "@babel/traverse": "^7.27.1",
     "@babel/types": "^7.27.1",
+    "@jridgewell/remapping": "^2.3.5",
     "convert-source-map": "^2.0.0",
     "semver": "^7.7.4",
     "whatwg-fetch": "^3.6.20"
@@ -119,6 +120,11 @@
     "jest",
     "plugin/index.js",
     "plugin/index.d.ts",
+    "plugin-oxc/index.js",
+    "plugin-oxc/index.d.ts",
+    "plugin-oxc/babel.js",
+    "plugin-oxc/babel.d.ts",
+    "plugin-oxc/*.node",
     "Package.swift",
     "*.podspec",
     "react-native.config.js",
