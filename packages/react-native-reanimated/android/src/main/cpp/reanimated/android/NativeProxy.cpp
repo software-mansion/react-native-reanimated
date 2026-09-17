@@ -196,6 +196,13 @@ std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vect
   return region;
 }
 
+void NativeProxy::relayoutTextViews(const std::vector<int> &tags) {
+  static const auto method = getJniMethod<void(jni::alias_ref<jni::JArrayInt>)>("relayoutTextViews");
+  auto jArrayInt = jni::JArrayInt::newArray(tags.size());
+  jArrayInt->setRegion(0, tags.size(), tags.data());
+  method(javaPart_.get(), jArrayInt);
+}
+
 void NativeProxy::synchronouslyUpdateUIProps(
     const std::vector<int> &intBuffer,
     const std::vector<double> &doubleBuffer) {
@@ -361,6 +368,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto preserveMountedTags = bindThis(&NativeProxy::preserveMountedTags);
 
+  auto relayoutTextViews = bindThis(&NativeProxy::relayoutTextViews);
+
   auto synchronouslyUpdateUIPropsFunction = bindThis(&NativeProxy::synchronouslyUpdateUIProps);
 
   auto registerSensorFunction = bindThis(&NativeProxy::registerSensor);
@@ -384,6 +393,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   return {
       requestRender,
       preserveMountedTags,
+      relayoutTextViews,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,

@@ -204,6 +204,9 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   std::function<std::string()> createRegistriesLeakCheck();
 
   void commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
+#ifdef ANDROID
+  void relayoutCommittedTextViews(const PropsMap &propsMap);
+#endif // ANDROID
   void applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch);
 
   std::shared_ptr<UIManagerAnimationBackend> getAnimationBackend();
@@ -255,10 +258,14 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
 
 #ifdef ANDROID
+  const RelayoutTextViewsFunction relayoutTextViewsFunction_;
+
   // Reused across `applySynchronousUpdates` calls to avoid per-frame heap
   // allocations. Access only on the UI thread.
   std::vector<int> synchronousPropsIntBuffer_;
   std::vector<double> synchronousPropsDoubleBuffer_;
+  // Reused across `commitUpdates` calls for the same reason.
+  std::vector<int> committedTextTags_;
 #endif // ANDROID
 
   std::shared_ptr<UIManager> uiManager_;

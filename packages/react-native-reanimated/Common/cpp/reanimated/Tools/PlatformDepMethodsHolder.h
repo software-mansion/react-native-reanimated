@@ -35,6 +35,9 @@ using SynchronouslyUpdateUIPropsFunction = std::function<void(const std::vector<
 using SynchronouslyUpdateUIPropsFunction = std::function<void(const int, const folly::dynamic &)>;
 #endif // ANDROID
 using PreserveMountedTagsFunction = std::function<std::optional<std::unique_ptr<int[]>>(std::vector<int> &)>;
+#ifdef ANDROID
+using RelayoutTextViewsFunction = std::function<void(const std::vector<int> &)>;
+#endif // ANDROID
 using GetAnimationTimestampFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction = std::function<void(jsi::Runtime &, int, jsi::Object)>;
@@ -56,6 +59,7 @@ struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
+  RelayoutTextViewsFunction relayoutTextViewsFunction;
 #endif // ANDROID
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshotFunction;
