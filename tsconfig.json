@@ -16,7 +16,7 @@
     "allowJs": true,
     "checkJs": true,
     "noEmit": true,
-    "types": ["node", "jest"],
+    "types": ["node"],
     "moduleSuffixes": [
       ".native.test",
       ".native",
