@@ -547,8 +547,17 @@ void ReanimatedModuleProxy::applyCSSAnimations(
   const auto compoundComponentNameStr = compoundComponentName.asString(rt).utf8(rt);
   const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
 
-  auto lock = updatesRegistryManager_->lock();
-  cssAnimationsRegistry_->apply(shadowNode, compoundComponentNameStr, updates);
+  folly::dynamic startingStyle;
+  {
+    auto lock = updatesRegistryManager_->lock();
+    if (cssAnimationsRegistry_->apply(shadowNode, compoundComponentNameStr, updates)) {
+      startingStyle = cssAnimationsRegistry_->get(shadowNode->getTag());
+    }
+  }
+
+  if (startingStyle.isObject() && !startingStyle.empty()) {
+    commitCSSAnimationsStartingStyle(shadowNode, std::move(startingStyle));
+  }
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
@@ -1067,6 +1076,36 @@ void ReanimatedModuleProxy::requestFlushRegistry() {
       }
     });
   }
+}
+
+void ReanimatedModuleProxy::commitCSSAnimationsStartingStyle(
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    folly::dynamic &&startingStyle) {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    // The backend drains the registries itself; a shadow tree commit would bypass it.
+    return;
+  }
+
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::commitCSSAnimationsStartingStyle");
+  react_native_assert(uiManager_ != nullptr);
+
+  PropsMap propsMap;
+  propsMap[shadowNode->getFamilyShared()].emplace_back(std::move(startingStyle));
+
+  // This runs on the JS thread, so no React commit can be in flight and the pause
+  // that keeps the UI thread commits from racing one does not apply. The commit is
+  // also left unmarked on purpose: the React commit that mounted the view may not
+  // have been mounted yet, in which case both land in one mount and the mount hook
+  // must lift that pause like it would for the React mount alone.
+  uiManager_->getShadowTreeRegistry().visit(shadowNode->getSurfaceId(), [&](ShadowTree const &shadowTree) {
+    shadowTree.commit(
+        [&](RootShadowNode const &oldRootShadowNode) -> RootShadowNode::Unshared {
+          return cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+        },
+        {/* .enableStateReconciliation = */
+         false,
+         /* .mountSynchronously = */ true});
+  });
 }
 
 void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {

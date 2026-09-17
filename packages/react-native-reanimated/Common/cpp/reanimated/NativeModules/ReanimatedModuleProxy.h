@@ -204,6 +204,12 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   std::function<std::string()> createRegistriesLeakCheck();
 
   void commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
+  /// Commits the style newly registered CSS animations start from right away, on
+  /// the calling (JS) thread, so it reaches the host view together with the React
+  /// commit that mounted it instead of one frame later.
+  void commitCSSAnimationsStartingStyle(
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      folly::dynamic &&startingStyle);
   void applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch);
 
   std::shared_ptr<UIManagerAnimationBackend> getAnimationBackend();
