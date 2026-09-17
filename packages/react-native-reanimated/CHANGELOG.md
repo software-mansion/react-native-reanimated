@@ -20,6 +20,7 @@
 
 ### 🐛 Bug fixes
 
+- Mount views with the style their CSS animations start from and commit that style at registration, so a freshly mounted view no longer shows its own style for a frame before the first keyframe (for example a `display: none` backwards fill) lands. ([#10621](https://github.com/software-mansion/react-native-reanimated/pull/10621) by [@MatiPl01](https://github.com/MatiPl01))
 - Remove `zIndex` from the synchronous props. No platform applies `zIndex` to a mounted view, so with `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` on, an animated style with only `zIndex` and `elevation` never reached the shadow tree commit and the views did not reorder until a later React render. ([#10602](https://github.com/software-mansion/react-native-reanimated/pull/10602) by [@pawicao](https://github.com/pawicao))
 - Stop passing `forwardedRef` and `nativeID` to the wrapped component on web, which React Strict DOM reported as invalid props. ([#10605](https://github.com/software-mansion/react-native-reanimated/pull/10605) by [@tjzel](https://github.com/tjzel))
 - Preserve Android color and other prop updates when hiding and restoring shared transition views. ([#10601](https://github.com/software-mansion/react-native-reanimated/pull/10601) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
