@@ -6,7 +6,9 @@
 // source of has to reach the component inline as well, at its resting value.
 const PROP_DEFAULTS = new Map<string, unknown>();
 
-export function registerPropDefaults(defaults: Record<string, unknown>) {
+export function registerPropDefaults(
+  defaults: Record<string, NonNullable<unknown>>
+) {
   for (const prop in defaults) {
     PROP_DEFAULTS.set(prop, defaults[prop]);
   }
