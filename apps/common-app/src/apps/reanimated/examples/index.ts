@@ -383,6 +383,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   DetachAnimatedStylesExample: {
     icon: '⛓️‍💥',
     title: 'Detach animated styles',
+    section: REGRESSIONS,
     screen: DetachAnimatedStylesExample,
   },
   ScrollPerformanceExample: {
