@@ -97,7 +97,7 @@ using namespace reanimated::css;
   return YES;
 }
 
-- (void)stopTransitionForTag:(Tag)viewTag propertyName:(const std::string &)propertyName
+- (void)stopTransitionForTag:(Tag)viewTag propertyName:(const std::string &)propertyName settle:(BOOL)settle
 {
   NSString *keyPath = caLayerKeyPathForCSSProperty(propertyName);
   __weak __typeof__(self) weakSelf = self;
@@ -110,10 +110,16 @@ using namespace reanimated::css;
     if (!layer) {
       return;
     }
-    // Freeze the last visible frame into the model so the layer doesn't snap.
-    id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
-    if (presentationValue) {
-      [layer setValue:presentationValue forKeyPath:keyPath];
+    // A hand-off to the loop keeps the last visible frame in the model so the layer
+    // doesn't snap before the loop paints its first frame. A held (persistent) value
+    // has no committed target in the model, so it keeps its frame as well.
+    CAAnimation *animation = [layer animationForKey:keyPath];
+    BOOL held = animation != nil && !animation.removedOnCompletion;
+    if (!settle || held) {
+      id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
+      if (presentationValue) {
+        [layer setValue:presentationValue forKeyPath:keyPath];
+      }
     }
     [layer removeAnimationForKey:keyPath];
   });

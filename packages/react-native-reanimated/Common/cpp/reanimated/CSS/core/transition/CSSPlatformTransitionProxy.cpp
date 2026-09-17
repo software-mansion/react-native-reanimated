@@ -77,7 +77,7 @@ bool CSSPlatformTransitionProxy::apply(
   return true;
 }
 
-void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &propertyName) {
+void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &propertyName, const bool settle) {
   const auto propertiesIt = active_.find(viewTag);
   if (propertiesIt != active_.end()) {
     propertiesIt->second.erase(propertyName);
@@ -87,7 +87,7 @@ void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &pr
   }
 
   if (backend_) {
-    backend_->stopTransition(viewTag, propertyName);
+    backend_->stopTransition(viewTag, propertyName, settle);
   }
 }
 
@@ -148,7 +148,7 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
         if (hasValue) {
           resumeFrom = getCurrentValue(viewTag, propertyName, timestamp);
         }
-        remove(viewTag, propertyName);
+        remove(viewTag, propertyName, false);
       }
       routing.loop.insert(propertyName);
       if (hasValue) {
@@ -164,9 +164,10 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
   react_native_assert(
       matchedValues == config.changedProperties.size() && "[Reanimated] CSS transition value diff without settings");
 
+  // A property that leaves the transition rests on its committed value at once.
   for (const auto &propertyName : config.removedProperties) {
     if (routing.platform.erase(propertyName) > 0) {
-      remove(viewTag, propertyName);
+      remove(viewTag, propertyName, true);
     } else if (routing.loop.erase(propertyName) > 0) {
       loopConfig.removedProperties.push_back(propertyName);
     }
@@ -198,7 +199,7 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
       routing.platform.erase(propertyName);
       // Read before remove() drops the run this resumes from.
       const auto resumeFrom = getCurrentValue(viewTag, propertyName, timestamp);
-      remove(viewTag, propertyName);
+      remove(viewTag, propertyName, false);
       routing.loop.insert(propertyName);
       if (resumeFrom) {
         loopDiffs.emplace(propertyName, std::make_pair(platformValueToDynamic(*resumeFrom), propertyDiff.second));
@@ -212,7 +213,7 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
 
 void CSSPlatformTransitionProxy::cancelAll(const Tag viewTag, const TransitionProperties &properties) {
   for (const auto &propertyName : properties) {
-    remove(viewTag, propertyName);
+    remove(viewTag, propertyName, true);
   }
 }
 
