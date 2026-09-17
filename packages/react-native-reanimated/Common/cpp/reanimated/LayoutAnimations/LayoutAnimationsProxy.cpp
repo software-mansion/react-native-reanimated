@@ -147,6 +147,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   }
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
   TransactionMeta transaction;
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    restoreViewsWithoutSharedTag(transaction);
+  }
   const bool removesRootChildren = std::ranges::any_of(mutations, [this](const auto &mutation) {
     return mutation.type == ShadowViewMutation::Remove && mutation.parentTag == surfaceId_;
   });
@@ -399,7 +402,7 @@ void LayoutAnimationsProxy::updateLightTree(
         react_native_assert(!lightNodes_.contains(mutation.newChildShadowView.tag) && "LightNode already exists");
 
         if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-          hiddenViewTags_.erase(mutation.newChildShadowView.tag);
+          forgetHiddenView(mutation.newChildShadowView.tag);
         }
         lightNodes_[mutation.newChildShadowView.tag] = node;
         staleSynchronousProps_.forget(mutation.newChildShadowView.tag);
@@ -728,7 +731,7 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(
   react_native_assert(!node->isExiting() && "A subtree that does not animate must stay UNDEFINED");
   cancelLayoutAnimation(node->current.tag);
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    hiddenViewTags_.erase(node->current.tag);
+    forgetHiddenView(node->current.tag);
   }
   transaction.filteredMutations.push_back(
       ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, hostIndex));
@@ -854,7 +857,7 @@ void LayoutAnimationsProxy::endAnimationsRecursively(
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    hiddenViewTags_.erase(node->current.tag);
+    forgetHiddenView(node->current.tag);
   }
   mutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, index));
   mutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
@@ -876,7 +879,7 @@ void LayoutAnimationsProxy::maybeDropAncestors(
   unmapLightNode(node);
   cancelLayoutAnimation(node->current.tag);
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    hiddenViewTags_.erase(node->current.tag);
+    forgetHiddenView(node->current.tag);
   }
   cleanupMutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, index));
   cleanupMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
@@ -921,7 +924,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
     } else if (shouldRemoveSubviewsWithoutAnimations) {
       cancelLayoutAnimation(subNode->current.tag);
       if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-        hiddenViewTags_.erase(subNode->current.tag);
+        forgetHiddenView(subNode->current.tag);
       }
       mutations.push_back(ShadowViewMutation::RemoveMutation(node->current.tag, subNode->current, index));
       toBeRemoved.push_back(subNode);
@@ -966,7 +969,7 @@ void LayoutAnimationsProxy::shadowTreeWillCommit(const bool isSurfaceRemoval) {
 void LayoutAnimationsProxy::clearSurfaceState() const {
   LayoutAnimationsProxyCommon::clearSurfaceState();
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    sharedContainers_.clear();
+    sharedElements_.clear();
     transition_.reset();
     uncommittedScreenPop_.reset();
   }
@@ -1013,22 +1016,19 @@ void LayoutAnimationsProxy::cleanupAnimations(
   ReanimatedSystraceSection s("cleanupAnimations");
   std::unordered_set<Tag> preservedContainerTags;
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    for (const auto &[tag, _] : completedAnimations_) {
-      if (hasPendingLayoutAnimation(tag)) {
+    for (auto &[_, element] : sharedElements_) {
+      if (!element.container) {
         continue;
       }
-      const auto containerIt = sharedContainers_.find(tag);
-      if (containerIt == sharedContainers_.end()) {
+      const auto tag = element.container->current.tag;
+      if (!completedAnimations_.contains(tag) || hasPendingLayoutAnimation(tag)) {
         continue;
       }
       if (!flushStructuralMutations) {
         preservedContainerTags.insert(tag);
         continue;
       }
-      if (containerIt->second.restoreAfterNode) {
-        transaction.nodesToRestore.push_back(containerIt->second.restoreAfterNode);
-      }
-      removeSharedContainer(tag, transaction);
+      finishSharedTransition(element, transaction);
     }
 
     cleanupSharedTransitions(transaction, propsParserContext);
@@ -1040,7 +1040,7 @@ void LayoutAnimationsProxy::cleanupAnimations(
 bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
   return std::ranges::any_of(completedAnimations_, [this](const auto &entry) {
     const auto &[tag, completedAnimation] = entry;
-    return !hasPendingLayoutAnimation(tag) && (completedAnimation.shouldRemove || sharedContainers_.contains(tag));
+    return !hasPendingLayoutAnimation(tag) && (completedAnimation.shouldRemove || isSharedContainer(tag));
   });
 }
 
