@@ -21,6 +21,9 @@
 ### 🐛 Bug fixes
 
 - Mount views with the style their CSS animations start from and commit that style at registration, so a freshly mounted view no longer shows its own style for a frame before the first keyframe (for example a `display: none` backwards fill) lands. ([#10621](https://github.com/software-mansion/react-native-reanimated/pull/10621) by [@MatiPl01](https://github.com/MatiPl01))
+- Remove `zIndex` from the synchronous props. No platform applies `zIndex` to a mounted view, so with `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` on, an animated style with only `zIndex` and `elevation` never reached the shadow tree commit and the views did not reorder until a later React render. ([#10602](https://github.com/software-mansion/react-native-reanimated/pull/10602) by [@pawicao](https://github.com/pawicao))
+- Stop passing `forwardedRef` and `nativeID` to the wrapped component on web, which React Strict DOM reported as invalid props. ([#10605](https://github.com/software-mansion/react-native-reanimated/pull/10605) by [@tjzel](https://github.com/tjzel))
+- Preserve Android color and other prop updates when hiding and restoring shared transition views. ([#10601](https://github.com/software-mansion/react-native-reanimated/pull/10601) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Prevent Shared Transition Boundaries from intercepting touches intended for sibling views while keeping their children interactive. ([#10600](https://github.com/software-mansion/react-native-reanimated/pull/10600) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Skip exiting animations in the light tree based Layout Animations proxy when a surface is stopped, so the empty-root transaction removes the views at once instead of starting animations on a dead surface and leaving their component views registered on iOS. ([#10586](https://github.com/software-mansion/react-native-reanimated/pull/10586) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Start a shared element transition from the frame of a running layout animation on the source view. ([#10556](https://github.com/software-mansion/react-native-reanimated/pull/10556) by [@pawicao](https://github.com/pawicao))
@@ -70,6 +73,7 @@
 
 ### 💡 Others
 
+- Patch `react-native-svg` in the example apps so its podspec targets iOS and tvOS 15.1, which Xcode 27 requires. ([#10607](https://github.com/software-mansion/react-native-reanimated/pull/10607) by [@tjzel](https://github.com/tjzel))
 - Added support for React Native 0.88. ([#10582](https://github.com/software-mansion/react-native-reanimated/pull/10582) by [@pawicao](https://github.com/pawicao))
 - Merge the accumulated Android raw props of a view in the layout animations light tree only when an animation, a shared element transition or a synchronous update reads that view, instead of on every commit. ([#10570](https://github.com/software-mansion/react-native-reanimated/pull/10570) by [@pawicao](https://github.com/pawicao))
 - Reduce Android layout animation overhead by skipping the raw props merge and props clone in the light tree when an Update reuses the same props pointer, and by moving the merged raw props instead of copying them. ([#10566](https://github.com/software-mansion/react-native-reanimated/pull/10566) by [@pawicao](https://github.com/pawicao))

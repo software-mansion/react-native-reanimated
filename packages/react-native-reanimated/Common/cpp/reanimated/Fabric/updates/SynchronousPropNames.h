@@ -9,7 +9,6 @@ inline bool isSynchronousPropName(const std::string &name) {
   static const std::unordered_set<std::string> synchronousPropNames = {
       "opacity",
       "elevation",
-      "zIndex",
       "shadowColor",
 #if __APPLE__
       "shadowOffset",
