@@ -20,6 +20,7 @@
 
 ### 🐛 Bug fixes
 
+- Replay the updates registry after an Android mount, so a React commit that lands mid-animation no longer leaves a stale value of a synchronously written prop on screen. With `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` on, the commit hook injects a snapshot taken on the commit thread, and `performOperations` only applies its own delta, so a frame without a new update kept the regressed value — a scroll-driven sticky header jumped out of position on every re-render. ([#10626](https://github.com/software-mansion/react-native-reanimated/pull/10626) by [@piaskowyk](https://github.com/piaskowyk))
 - Remove `zIndex` from the synchronous props. No platform applies `zIndex` to a mounted view, so with `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` on, an animated style with only `zIndex` and `elevation` never reached the shadow tree commit and the views did not reorder until a later React render. ([#10602](https://github.com/software-mansion/react-native-reanimated/pull/10602) by [@pawicao](https://github.com/pawicao))
 - Stop passing `forwardedRef` and `nativeID` to the wrapped component on web, which React Strict DOM reported as invalid props. ([#10605](https://github.com/software-mansion/react-native-reanimated/pull/10605) by [@tjzel](https://github.com/tjzel))
 - Preserve Android color and other prop updates when hiding and restoring shared transition views. ([#10601](https://github.com/software-mansion/react-native-reanimated/pull/10601) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))

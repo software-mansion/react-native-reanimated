@@ -126,6 +126,8 @@ open class NativeProxy {
 
     external fun performNonLayoutOperations()
 
+    external fun shouldRepairSynchronousPropsAfterMount(): Boolean
+
     external fun installJSIBindings()
 
     private external fun invalidateCpp()
