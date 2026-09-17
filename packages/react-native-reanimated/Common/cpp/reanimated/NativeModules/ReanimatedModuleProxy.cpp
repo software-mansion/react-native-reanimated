@@ -1121,8 +1121,8 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
 // underline and strikethrough itself, but only when the TextView still has a Layout.
 // `setText` drops it and Fabric measures the view again only when its frame changed, so a
 // commit that changes just the text attributes leaves the next draw without decorations.
-// The mount of a UI-thread commit has already run here, before the frame is drawn, so the
-// affected views can rebuild their Layout now.
+// Fabric mounts a UI-thread commit before `commit` returns and the frame is drawn later, so
+// the affected views can rebuild their Layout now.
 void ReanimatedModuleProxy::relayoutCommittedTextViews(const PropsMap &propsMap) {
   committedTextTags_.clear();
   for (const auto &[family, _] : propsMap) {
