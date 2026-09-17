@@ -1,0 +1,3 @@
+# Replaces .gitignore for npm pack, which would otherwise drop the prebuilt *.node binaries.
+target/
+node_modules/
