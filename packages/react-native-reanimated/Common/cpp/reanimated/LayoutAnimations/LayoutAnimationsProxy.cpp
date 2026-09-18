@@ -410,9 +410,9 @@ void LayoutAnimationsProxy::updateLightTree(
         const auto it = lightNodes_.find(mutation.oldChildShadowView.tag);
         react_native_assert(it != lightNodes_.end() && "Delete mutation for an unknown node");
         const auto state = it->second->state;
-        react_native_assert(
-            (state == UNDEFINED || state == WAITING || state == ANIMATING) && "Delete mutation for an unmounted node");
-        if (state == UNDEFINED) {
+        react_native_assert(state != DEAD && "Delete mutation for an unmounted node");
+        // View flattening emits a child's Delete after its parent's Remove, which has already torn the child down.
+        if (state == UNDEFINED || state == DELETED) {
           const auto node = it->second;
           unmapLightNode(node);
         }
@@ -982,9 +982,12 @@ ShadowView LayoutAnimationsProxy::cloneViewWithoutOpacity(
     const ShadowView &shadowView,
     const PropsParserContext &propsParserContext) const {
   auto newView = shadowView;
-  const folly::dynamic opacity = folly::dynamic::object("opacity", 0);
+  folly::dynamic rawProps = folly::dynamic::object("opacity", 0);
+#ifdef ANDROID
+  rawProps = folly::dynamic::merge(shadowView.props->rawProps, rawProps);
+#endif
   auto newProps = componentDescriptorRegistry_->at(newView.componentHandle)
-                      .cloneProps(propsParserContext, newView.props, RawProps(opacity));
+                      .cloneProps(propsParserContext, newView.props, RawProps(rawProps));
   auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
   viewProps->opacity = 0;
   newView.props = newProps;

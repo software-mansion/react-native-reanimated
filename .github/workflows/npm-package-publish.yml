@@ -35,13 +35,31 @@ on:
         type: string
         default: ''
 
+      runs-on:
+        description: 'Runner for the publish job.'
+        required: false
+        type: string
+        default: 'ubuntu-latest'
+
+      artifacts-pattern:
+        description: 'Glob of workflow artifacts to download before building, empty to skip.'
+        required: false
+        type: string
+        default: ''
+
+      artifacts-path:
+        description: 'Directory the artifacts matching artifacts-pattern are merged into.'
+        required: false
+        type: string
+        default: ''
+
 permissions:
   contents: read
   id-token: write
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
@@ -51,6 +69,14 @@ jobs:
         with:
           cache: 'yarn'
           node-version-file: '.nvmrc'
+
+      - name: Download prebuilt artifacts
+        if: inputs.artifacts-pattern != ''
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          pattern: ${{ inputs.artifacts-pattern }}
+          path: ${{ inputs.artifacts-path }}
+          merge-multiple: true
 
       - name: Build and publish ${{ inputs.package-name }}
         uses: software-mansion/npm-package-publish@bbfbcdf3f27e2dc288d7d56f5989a731efc79e6f

@@ -341,6 +341,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Suspense + Layout Animation Crash',
     section: REGRESSIONS,
     screen: SuspenseLayoutAnimationCrashExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   SettledPropsLeakExample: {
     icon: '🚿',
@@ -462,6 +463,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Liquid swipe',
     section: SHOW_CASES_AND_REGRESSIONS,
     screen: LiquidSwipe,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   ArticleProgressExample: {
     icon: '📰',
@@ -544,6 +546,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Stinky header',
     section: REGRESSIONS,
     screen: StickyHeaderExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   DispatchCommandExample: {
     icon: '🫡',
@@ -657,6 +660,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Profiles',
     section: SHOW_CASES,
     screen: ProfilesExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -667,6 +671,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Progress transition',
     section: SHOW_CASES,
     screen: ProgressTransitionExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -677,6 +682,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Gallery',
     section: SHOW_CASES,
     screen: GalleryExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -837,6 +843,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ManyScreensExample: {
     title: '[SET] Many screens',
     screen: ManyScreensExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -853,6 +860,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   NestedStacksExample: {
     title: '[SET] Nested stacks',
     screen: NestedStacksExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -861,6 +869,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ModalsExample: {
     title: '[SET] Modals',
     screen: ModalsExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // broken header height
       android: true,
@@ -869,6 +878,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   FlatListExample: {
     title: '[SET] FlatList',
     screen: FlatListExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -877,6 +887,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   RestoreStateExample: {
     title: '[SET] Restore State',
     screen: RestoreStateExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -885,6 +896,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   TransitionRestartExample: {
     title: '[SET] Transition Restart',
     screen: TransitionRestartExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // goes too far up for some reason?
       android: true,
@@ -893,6 +905,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ChangeThemeSharedExample: {
     title: '[SET] Change theme',
     screen: ChangeThemeSharedExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // s2 -> change theme -> go back (progress) will have wrong target
       android: true,
@@ -901,6 +914,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // broken for modals
       android: false, // broken transform, I think due to skew
@@ -909,6 +923,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   BorderRadiiExample: {
     title: '[SET] Border Radii',
     screen: BorderRadiiExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // broken on back gesture
       android: true,
@@ -917,6 +932,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   TabNavigatorExample: {
     title: '[SET] Tab Navigator',
     screen: TabNavigatorExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -925,6 +941,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ScreenlessBasic: {
     title: '[SET] Screenless Basic',
     screen: ScreenlessBasic,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -966,6 +983,7 @@ export const EXAMPLES: Record<string, ExampleEntry> = {
   },
   SharedElementTransitions: {
     examples: withTitlePrefix(SHARED_ELEMENT_TRANSITION_PREFIX),
+    hiddenPlatforms: [REAPlatform.WEB],
     icon: '🔗',
     title: 'Shared Element Transitions',
   },

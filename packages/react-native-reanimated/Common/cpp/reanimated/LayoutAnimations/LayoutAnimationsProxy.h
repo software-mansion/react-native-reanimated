@@ -223,12 +223,19 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::optional<Transform> &transform,
       const PropsParserContext &propsParserContext) const;
 
+  struct AncestorTransform {
+    Transform transform;
+    TransformOrigin origin;
+    react::Size ownSize;
+  };
+
   std::optional<Transform> parseParentTransforms(
       const std::shared_ptr<LightNode> &node,
       const std::vector<react::Point> &absolutePositions,
       bool useViewsOnScreen) const;
   react::Transform resolveTransform(
-      const LayoutMetrics &layoutMetrics,
+      const react::Size &originFrameSize,
+      const react::Size &ownSize,
       const Transform &transform,
       const TransformOrigin &transformOrigin) const;
   std::array<float, 3>
