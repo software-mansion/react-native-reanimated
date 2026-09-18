@@ -8,6 +8,7 @@ import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
+import { forwardSvgInheritedPropDefaults } from '../css/svg/native';
 import { getStaticFeatureFlag } from '../featureFlags';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import { SharedTransition } from '../layoutReanimation/SharedTransition';
@@ -455,6 +456,13 @@ export default class AnimatedComponent
       if (filteredProps.children === undefined) {
         filteredProps.children = <Fragment />;
       }
+    }
+
+    if (this.props.animatedProps) {
+      forwardSvgInheritedPropDefaults(
+        filteredProps,
+        flattenArray(this.props.animatedProps)
+      );
     }
 
     if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS && this.state.settledStyle) {

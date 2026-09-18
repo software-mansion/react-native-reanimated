@@ -20,15 +20,17 @@ describe('pseudo selector values in animatedProps', () => {
     expect(getByTestId('subject').props.fill).toBe('rgb(255,0,0)');
   });
 
+  // `opacity` rather than `fill`: `fill` is an inherited react-native-svg
+  // prop, so a pseudo-only `fill` now gets a default forwarded.
   it('omits a pseudo value that has no default', () => {
     const { getByTestId } = render(
       <AnimatedView
-        animatedProps={{ fill: { ':hover': 'rgb(255,255,0)' } }}
+        animatedProps={{ opacity: { ':hover': 0.5 } }}
         testID="subject"
       />
     );
 
-    expect(getByTestId('subject').props.fill).toBeUndefined();
+    expect(getByTestId('subject').props.opacity).toBeUndefined();
   });
 
   it('forwards plain animatedProps values unchanged', () => {
