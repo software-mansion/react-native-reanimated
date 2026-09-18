@@ -245,6 +245,7 @@ export type MapperExtractedInputs = SharedValue[];
 export type Mapper = {
   id: number;
   dirty: boolean;
+  isScrollDriven?: boolean;
   worklet: () => void;
   inputs: MapperExtractedInputs;
   outputs?: MapperOutputs;

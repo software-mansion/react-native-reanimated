@@ -8,7 +8,12 @@ import type {
   MapperOutputs,
   MapperRawInputs,
 } from './commonTypes';
+import { getStaticFeatureFlag } from './featureFlags';
 import { isSharedValue } from './isSharedValue';
+
+const ROUTE_SCROLL_DRIVEN_UPDATES_TO_COMMITS = getStaticFeatureFlag(
+  'ROUTE_SCROLL_DRIVEN_UPDATES_TO_COMMITS'
+);
 
 function createMapperRegistry() {
   'worklet';
@@ -96,7 +101,7 @@ function createMapperRegistry() {
         for (const mapper of sortedMappers) {
           if (mapper.dirty) {
             mapper.dirty = false;
-            mapper.worklet();
+            runMapper(mapper);
           }
         }
       }
@@ -121,6 +126,20 @@ function createMapperRegistry() {
   schedulingFunction(scheduledMapperRun);
 
   global.__mapperRun = mapperRun;
+
+  function runMapper(mapper: Mapper) {
+    if (!ROUTE_SCROLL_DRIVEN_UPDATES_TO_COMMITS) {
+      mapper.worklet();
+      return;
+    }
+    const wasScrollDrivenWrite = globalThis.__isScrollDrivenWrite;
+    globalThis.__isScrollDrivenWrite = mapper.isScrollDriven;
+    try {
+      mapper.worklet();
+    } finally {
+      globalThis.__isScrollDrivenWrite = wasScrollDrivenWrite;
+    }
+  }
 
   function extractInputs(
     inputs: unknown,
@@ -157,6 +176,7 @@ function createMapperRegistry() {
       const mapper: Mapper = {
         id: mapperID,
         dirty: true,
+        isScrollDriven: false,
         worklet,
         inputs: extractInputs(inputs, []),
         outputs,
@@ -168,6 +188,12 @@ function createMapperRegistry() {
         sv.addListener(mapper.id, () => {
           mapper.dirty = true;
           isAnyMapperDirty = true;
+          if (
+            ROUTE_SCROLL_DRIVEN_UPDATES_TO_COMMITS &&
+            globalThis.__isScrollDrivenWrite
+          ) {
+            mapper.isScrollDriven = true;
+          }
         });
       }
     },

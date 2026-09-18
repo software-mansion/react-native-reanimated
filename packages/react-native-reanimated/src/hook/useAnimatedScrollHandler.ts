@@ -1,4 +1,5 @@
 'use strict';
+import { withScrollDrivenWrites } from '../scrollDrivenWrites';
 import type {
   DependencyList,
   ReanimatedScrollEvent,
@@ -86,7 +87,7 @@ export function useAnimatedScrollHandler<
         onMomentumEnd,
       } = scrollHandlers;
       if (onScroll && event.eventName.endsWith('onScroll')) {
-        onScroll(event, context);
+        withScrollDrivenWrites(() => onScroll(event, context));
       } else if (onBeginDrag && event.eventName.endsWith('onScrollBeginDrag')) {
         onBeginDrag(event, context);
       } else if (onEndDrag && event.eventName.endsWith('onScrollEndDrag')) {

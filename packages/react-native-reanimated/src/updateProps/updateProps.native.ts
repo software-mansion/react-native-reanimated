@@ -22,6 +22,9 @@ import jsPropsUpdater from '../createAnimatedComponent/JSPropsUpdater';
 import { getStaticFeatureFlag } from '../featureFlags';
 
 const USE_ANIMATION_BACKEND = getStaticFeatureFlag('USE_ANIMATION_BACKEND');
+const ROUTE_SCROLL_DRIVEN_UPDATES_TO_COMMITS = getStaticFeatureFlag(
+  'ROUTE_SCROLL_DRIVEN_UPDATES_TO_COMMITS'
+);
 
 const updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
@@ -66,6 +69,7 @@ function updateJSProps(operations: JSPropsOperation[]) {
 type NativePropsOperation = {
   shadowNodeWrapper: ShadowNodeWrapper;
   updates: StyleProps;
+  isScrollDriven: boolean;
 };
 
 function createUpdatePropsManager() {
@@ -103,6 +107,9 @@ function createUpdatePropsManager() {
           nativeOperations.push({
             shadowNodeWrapper,
             updates: nativePropUpdates,
+            isScrollDriven:
+              ROUTE_SCROLL_DRIVEN_UPDATES_TO_COMMITS &&
+              globalThis.__isScrollDrivenWrite === true,
           });
         }
         if (jsPropUpdates) {

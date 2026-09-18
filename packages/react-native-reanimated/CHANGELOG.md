@@ -12,6 +12,7 @@
 
 ### 🎉 New features
 
+- Add the `ROUTE_SCROLL_DRIVEN_UPDATES_TO_COMMITS` static feature flag. With a synchronous props flag enabled, it sends animated style updates that a scroll position drives through shadow tree commits. ([#10633](https://github.com/software-mansion/react-native-reanimated/pull/10633) by [@pawicao](https://github.com/pawicao))
 - Run `shadowColor` CSS transitions on the Android platform animation path on Android 9 and newer. ([#10547](https://github.com/software-mansion/react-native-reanimated/pull/10547) by [@MatiPl01](https://github.com/MatiPl01))
 - Run CSS transitions for `backgroundColor`, `borderColor`, and numeric `borderRadius` on the Android platform animation path. ([#10310](https://github.com/software-mansion/react-native-reanimated/pull/10310) by [@MatiPl01](https://github.com/MatiPl01))
 - Add `backgroundImage` support to animated styles. Linear and radial gradients are accepted as objects or CSS strings and processed on the UI thread. ([#10486](https://github.com/software-mansion/react-native-reanimated/pull/10486) by [@tshmieldev](https://github.com/tshmieldev))

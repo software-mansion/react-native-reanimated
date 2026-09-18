@@ -78,7 +78,18 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 }
 #endif
 
-std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBatch, const bool allowPartialUpdates) {
+std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
+    UpdatesBatch &&updatesBatch,
+    const AnimatedPropsRegistry &animatedPropsRegistry,
+    const bool allowPartialUpdates) {
+  const auto isScrollDriven = [&]([[maybe_unused]] const ShadowNodeFamily &shadowNodeFamily) {
+    if constexpr (StaticFeatureFlags::getFlag("ROUTE_SCROLL_DRIVEN_UPDATES_TO_COMMITS")) {
+      return animatedPropsRegistry.isScrollDriven(shadowNodeFamily.getTag());
+    } else {
+      return false;
+    }
+  };
+
   const auto isSynchronous = [&](const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
     if (!isSynchronousPropName(keyStr)) {
       return false;
@@ -128,7 +139,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBat
     const bool hasOnlySynchronousProps = std::all_of(props.items().begin(), props.items().end(), [&](const auto &kv) {
       return isSynchronous(kv.first.asString(), kv.second);
     });
-    if (!hasOnlySynchronousProps) {
+    if (!hasOnlySynchronousProps || isScrollDriven(*shadowNodeFamily)) {
       familiesRequiringCommit.insert(shadowNodeFamily.get());
     }
   }
@@ -784,7 +795,8 @@ void ReanimatedModuleProxy::performOperations() {
     }
 
     if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
-      auto [synchronousBatch, shadowTreeBatch] = partitionUpdates(std::move(commitUpdatesBatch), false);
+      auto [synchronousBatch, shadowTreeBatch] =
+          partitionUpdates(std::move(commitUpdatesBatch), *animatedPropsRegistry_, false);
       synchronousUpdatesBatch = std::move(synchronousBatch);
       commitUpdatesBatch = std::move(shadowTreeBatch);
     }
@@ -865,7 +877,7 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
     auto lock = updatesRegistryManager_->lock();
     updatesBatch = animatedPropsRegistry_->getPendingUpdates();
   }
-  applySynchronousUpdates(partitionUpdates(std::move(updatesBatch), true).first);
+  applySynchronousUpdates(partitionUpdates(std::move(updatesBatch), *animatedPropsRegistry_, true).first);
 }
 
 AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
