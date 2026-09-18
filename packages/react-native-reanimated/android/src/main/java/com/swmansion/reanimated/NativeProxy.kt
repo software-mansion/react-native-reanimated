@@ -67,6 +67,9 @@ open class NativeProxy {
      */
     private val mInvalidated = AtomicBoolean(false)
 
+    /** A mount callback on the UI thread must not run native code while a different thread destroys it. */
+    private val invalidationLock = Any()
+
     @field:DoNotStrip
     @Suppress("unused")
     private val mHybridData: HybridData
@@ -79,8 +82,10 @@ open class NativeProxy {
             override fun willMountItems(uiManager: UIManager) = Unit
 
             override fun didMountItems(uiManager: UIManager) {
-                if (!mInvalidated.get()) {
-                    rewriteSynchronousProps()
+                synchronized(invalidationLock) {
+                    if (!mInvalidated.get()) {
+                        rewriteSynchronousProps()
+                    }
                 }
             }
 
@@ -171,8 +176,10 @@ open class NativeProxy {
         mFabricUIManager.removeUIManagerEventListener(mountListener)
         pseudoSelectorManager.invalidate()
         cssPlatformTransitionsManager.invalidate()
-        if (mHybridData.isValid) {
-            invalidateCpp()
+        synchronized(invalidationLock) {
+            if (mHybridData.isValid) {
+                invalidateCpp()
+            }
         }
     }
 
