@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import type { Maybe } from '../common';
 import { logger } from '../common';
 import type { InstanceOrElement, SharedValue } from '../commonTypes';
+import { withScrollDrivenWrites } from '../scrollDrivenWrites';
 import type {
   AnimatedRef,
   ReanimatedScrollEvent,
@@ -44,10 +45,12 @@ export function useScrollOffset<TRef extends InstanceOrElement>(
   const eventHandler = useEvent<RNNativeScrollEvent>(
     (event: ReanimatedScrollEvent) => {
       'worklet';
-      offset.value =
-        event.contentOffset.x === 0
-          ? event.contentOffset.y
-          : event.contentOffset.x;
+      withScrollDrivenWrites(() => {
+        offset.value =
+          event.contentOffset.x === 0
+            ? event.contentOffset.y
+            : event.contentOffset.x;
+      });
     },
     NATIVE_SCROLL_EVENT_NAMES
     // Read https://github.com/software-mansion/react-native-reanimated/pull/5056

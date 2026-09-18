@@ -28,6 +28,13 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
 
     jsi::Value updates = item.getProperty(rt, "updates");
 
+    if constexpr (StaticFeatureFlags::getFlag("ROUTE_SCROLL_DRIVEN_UPDATES_TO_COMMITS")) {
+      const auto isScrollDriven = item.getProperty(rt, "isScrollDriven");
+      if (isScrollDriven.isBool() && isScrollDriven.getBool()) {
+        scrollDrivenTags_.insert(shadowNode->getTag());
+      }
+    }
+
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
       addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates);
     } else {
@@ -112,6 +119,11 @@ void AnimatedPropsRegistry::removeTag(const Tag tag) {
   timestampMap_.erase(tag);
   syncedTags_.erase(tag);
   invalidatedTags_.erase(tag);
+  scrollDrivenTags_.erase(tag);
+}
+
+bool AnimatedPropsRegistry::isScrollDriven(const Tag tag) const {
+  return scrollDrivenTags_.contains(tag);
 }
 
 } // namespace reanimated

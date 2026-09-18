@@ -42,6 +42,7 @@ declare global {
           shadowNodeWrapper: ShadowNodeWrapper;
 
           updates: PropUpdates;
+          isScrollDriven?: boolean;
         }[]
       ) => void)
     | undefined;
@@ -80,6 +81,7 @@ declare global {
   var __frameTimestamp: number | undefined;
   var __mapperRun: () => void;
   var __requestMapperRunFinalizer: (finalizer: () => void) => void;
+  var __isScrollDrivenWrite: boolean | undefined;
   var _maybeFlushUIUpdatesQueue: () => void;
   var __UI_WORKLET_RUNTIME_HOLDER: object | undefined;
   var __UI_SCHEDULER_HOLDER: object | undefined;

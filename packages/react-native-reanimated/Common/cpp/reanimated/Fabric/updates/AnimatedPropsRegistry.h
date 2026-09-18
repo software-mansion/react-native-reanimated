@@ -13,6 +13,8 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
  public:
   void update(jsi::Runtime &rt, const jsi::Value &operations, double timestamp);
 
+  bool isScrollDriven(Tag tag) const;
+
   /// Returns updates that settled (received no update since `settledTimestamp`)
   /// or whose synced `settledProps` snapshot was invalidated by a fresh update.
   /// Also evicts entries that have already been synced to React — by the time
@@ -28,6 +30,7 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   // Tags that were synced to React but received a fresh worklet update since;
   // their `settledProps` are stale and need to be refreshed on the next sync.
   std::unordered_set<Tag> invalidatedTags_;
+  std::unordered_set<Tag> scrollDrivenTags_;
 
   void removeTag(Tag tag) override;
 };
