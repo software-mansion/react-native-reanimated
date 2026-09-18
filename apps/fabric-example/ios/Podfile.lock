@@ -1934,7 +1934,7 @@ PODS:
     - ReactNativeDependencies
     - RNWorklets (>= 0.8.0)
     - Yoga
-  - RNReanimated (4.7.0-main):
+  - RNReanimated (4.7.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1957,37 +1957,12 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNReanimated/apple (= 4.7.0-main)
-    - RNReanimated/common (= 4.7.0-main)
-    - RNReanimated/view (= 4.7.0-main)
+    - RNReanimated/apple (= 4.7.0)
+    - RNReanimated/common (= 4.7.0)
+    - RNReanimated/view (= 4.7.0)
     - RNWorklets
     - Yoga
-  - RNReanimated/apple (4.7.0-main):
-    - hermes-engine
-    - RCTRequired
-    - RCTTypeSafety
-    - React-bridging
-    - React-Core
-    - React-Core-prebuilt
-    - React-cxxstableapi
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-hermes
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/core
-    - ReactNativeDependencies
-    - RNWorklets
-    - Yoga
-  - RNReanimated/common (4.7.0-main):
+  - RNReanimated/apple (4.7.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2012,7 +1987,32 @@ PODS:
     - ReactNativeDependencies
     - RNWorklets
     - Yoga
-  - RNReanimated/view (4.7.0-main):
+  - RNReanimated/common (4.7.0):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-bridging
+    - React-Core
+    - React-Core-prebuilt
+    - React-cxxstableapi
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - RNWorklets
+    - Yoga
+  - RNReanimated/view (4.7.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2602,7 +2602,7 @@ SPEC CHECKSUMS:
   RNCClipboard: efcb0fcabe40529a32cb0c75fcef4f9c73052c2e
   RNCMaskedView: 89bb912716973f9715102cfe932f3ca6793b21f9
   RNGestureHandler: 09bfbf4fd5e1a0eeadd8f217b999d97bf64ac875
-  RNReanimated: 88678c499c0df7901e156555ff43726ed2f46f7d
+  RNReanimated: b67a506f09715857f40efb8a1282b21889bae819
   RNScreens: 1b386604ba6e45b594cb15714a078d7dca096211
   RNSVG: 3dacba6cbd65d6016718d9b2b205e6e09cfc041d
   RNWorklets: 3612da208a855098f2a821ae8d454f649556c49e
