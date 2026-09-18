@@ -39,8 +39,6 @@ const DEFAULT_DIRECTION = { type: 'angle', value: 180 } as const;
 const DEFAULT_RADIAL_SHAPE = 'ellipse';
 const DEFAULT_RADIAL_SIZE = 'farthest-corner';
 const DEFAULT_RADIAL_POSITION = { top: '50%', left: '50%' };
-// The minimum the CSS grammar requires. React Native does not check it, but
-// Android throws when a gradient shader gets fewer than two colors.
 const MIN_COLOR_STOPS = 2;
 
 const RADIAL_SIZE_KEYWORDS = [
@@ -197,8 +195,6 @@ const processColorStops = (
     }
   }
 
-  // React Native does not fix up a hint without a color stop on both sides:
-  // iOS throws on a leading one and Android draws it transparent.
   for (let i = 0; i < result.length; i++) {
     const { color, position } = result[i];
     if (
