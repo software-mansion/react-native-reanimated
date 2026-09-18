@@ -104,13 +104,11 @@ function processProps(
     }
 
     if (
-      /* this object type check is correct as it accepts records and arrays */
       typeof value === 'object' &&
+      !Array.isArray(value) &&
       separatelyInterpolatedNestedProperties.has(property)
     ) {
-      const subBuilder = (keyframeProps[property] ??= Array.isArray(value)
-        ? []
-        : {}) as UnknownRecord;
+      const subBuilder = (keyframeProps[property] ??= {}) as UnknownRecord;
       processProps(
         offset,
         value,

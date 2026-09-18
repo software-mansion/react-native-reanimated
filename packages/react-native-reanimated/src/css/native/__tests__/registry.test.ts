@@ -153,14 +153,7 @@ describe('registry', () => {
           'UnregisteredComponentJS'
         )
       );
-      expect(props).toEqual(
-        new Set([
-          'boxShadow',
-          'shadowOffset',
-          'textShadowOffset',
-          'transformOrigin',
-        ])
-      );
+      expect(props).toEqual(new Set(['shadowOffset', 'textShadowOffset']));
     });
 
     test('registers and retrieves separately interpolated nested properties', () => {
