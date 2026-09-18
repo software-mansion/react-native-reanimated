@@ -10,6 +10,7 @@
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REANodesManager.h>
+#import <reanimated/apple/REASynchronousPropsRewriter.h>
 #import <reanimated/apple/ReanimatedModule.h>
 #import <reanimated/apple/native/NativeProxy.h>
 #import <reanimated/apple/native/REAJSIUtils.h>
@@ -25,6 +26,7 @@ using namespace worklets;
 @implementation ReanimatedModule {
   __weak RCTSurfacePresenter *_surfacePresenter;
   std::shared_ptr<ReanimatedModuleProxy> _reanimatedModuleProxy;
+  REASynchronousPropsRewriter *_synchronousPropsRewriter;
 #ifndef NDEBUG
   reanimated::SingleInstanceChecker<ReanimatedModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -41,6 +43,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   REAAssertTurboModuleManagerQueue();
 
   [_nodesManager invalidate];
+  _synchronousPropsRewriter = nil;
   _reanimatedModuleProxy.reset();
   [super invalidate];
 }
@@ -184,6 +187,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   const auto &uiManager = scheduler.uiManager;
   react_native_assert(uiManager.get() != nil);
   _reanimatedModuleProxy->initializeFabric(uiManager);
+  if (_reanimatedModuleProxy->needsSynchronousPropsRewrite()) {
+    _synchronousPropsRewriter = [[REASynchronousPropsRewriter alloc] initWithSurfacePresenter:_surfacePresenter
+                                                                        reanimatedModuleProxy:_reanimatedModuleProxy];
+  }
   [self attachReactEventListener:_reanimatedModuleProxy];
   [self registerRCTEventHandler:_reanimatedModuleProxy uiWorkletRuntime:uiWorkletRuntime];
 
