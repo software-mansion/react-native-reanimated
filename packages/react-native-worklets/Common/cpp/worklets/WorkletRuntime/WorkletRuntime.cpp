@@ -130,6 +130,7 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
       name_,
       jsScheduler,
       isDevBundle,
+      bundleModeEnabled,
       microtaskQueueEnabled_,
       jsiWorkletsModuleProxy->toOptimizedObject(rt),
       eventLoop_,
