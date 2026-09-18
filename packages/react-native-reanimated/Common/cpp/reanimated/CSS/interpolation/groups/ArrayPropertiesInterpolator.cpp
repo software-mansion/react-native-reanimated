@@ -9,10 +9,8 @@ namespace reanimated::css {
 
 namespace {
 
-// Children hold one segment. The parent's keyframe progress is already eased,
-// so it passes through as is, overshoot included. The global progress only
-// selects the child's single segment, so it is clamped, or an overshooting
-// easing would send a negative value into the child's keyframe lookup.
+// Passes the parent's eased progress through unchanged; only the segment
+// lookup is clamped, so an overshooting easing cannot underflow it.
 class ArraySegmentProgressProvider final : public KeyframeProgressProvider {
  public:
   explicit ArraySegmentProgressProvider(double progress) : progress_(progress) {}
@@ -39,7 +37,7 @@ ArrayPropertiesInterpolator::ArrayPropertiesInterpolator(
 
 folly::dynamic ArrayPropertiesInterpolator::getDefaultValue() const {
   auto result = folly::dynamic::array();
-  // A single factory describes a variable-length list; several describe a tuple.
+  // One factory is a variable-length list, several are a tuple.
   if (factories_.size() > 1) {
     for (const auto &factory : factories_) {
       result.push_back(factory->getDefaultValue().toDynamic());
@@ -49,7 +47,6 @@ folly::dynamic ArrayPropertiesInterpolator::getDefaultValue() const {
 }
 
 folly::dynamic ArrayPropertiesInterpolator::getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const {
-  // The group base class maps the children; the array needs the whole list.
   return PropertyInterpolator::getStyleValue(shadowNode);
 }
 
@@ -83,8 +80,7 @@ void ArrayPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::V
       prepareSegment(*keyframeSegments_[i], from, to);
     }
   }
-  // A value paired only with the view's own style is not parsed until the
-  // animation reaches it; check it now so invalid input fails on registration.
+  // Parse values next to omitted endpoints too, so invalid input fails on registration.
   Segment scratch;
   for (size_t i = 0; i < count; ++i) {
     const auto &value = keyframes_[i].second;
@@ -112,8 +108,6 @@ bool ArrayPropertiesInterpolator::updateKeyframes(const folly::dynamic &fromValu
   }
   prepareSegment(*viewSegment_, from, to);
   segment_ = viewSegment_.get();
-  // Compare normalized whole endpoints, so changing list lengths does not lose
-  // transition reversal state when child interpolators are resized.
   const auto normalizedFrom = getEndpointValue(true);
   const auto normalizedTo = getEndpointValue(false);
   const bool reversed = reversingAdjustedStartValue_ && normalizedTo == *reversingAdjustedStartValue_;
@@ -137,8 +131,7 @@ void ArrayPropertiesInterpolator::prepareSegment(Segment &segment, const folly::
         createPropertyInterpolator(interpolators.size(), propertyPath_, factories_, viewStylesRepository_));
   }
   for (size_t i = 0; i < count; ++i) {
-    // A missing element of an explicit array uses the child's neutral default,
-    // not the underlying property. Omitted whole endpoints are resolved first.
+    // A missing element interpolates to the child default, not to the view's own element.
     interpolators[i]->updateKeyframes(
         i < from.size() ? from[i] : folly::dynamic(), i < to.size() ? to[i] : folly::dynamic());
   }
