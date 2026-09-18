@@ -248,6 +248,11 @@ bool UpdatesRegistry::hasPropsToRevert() const {
   return !propsToRevertMap_.empty();
 }
 
+void UpdatesRegistry::dropPropsToRevert(const Tag tag) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  propsToRevertMap_.erase(tag);
+}
+
 void UpdatesRegistry::collectPropsToRevert(PropsToRevertMap &propsToRevertMap) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 

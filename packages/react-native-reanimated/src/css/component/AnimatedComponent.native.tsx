@@ -16,14 +16,9 @@ import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import type { DefaultStyle } from '../../hook/commonTypes';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { assignRef } from '../../reactUtils';
-import {
-  getAnimationsStartingStyle,
-  markNodeAsRemovable,
-  unmarkNodeAsRemovable,
-} from '../native';
+import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
 import { CSSManager } from '../platform';
 import type { CSSStyle } from '../types';
-import { filterCSSAndStyleProperties } from '../utils';
 import { filterCSSProps } from './utils';
 
 export type AnimatedComponentProps = UnknownRecord & {
@@ -50,8 +45,6 @@ export default class AnimatedComponent<
   _componentRef: AnimatedComponentRef | HTMLElement | null = null;
   _componentDOMRef: HTMLElement | null = null;
   _willUnmount: boolean = false;
-  _hasMounted: boolean = false;
-  _startingStyle: CSSStyle | null = null;
   _forwardedRefCleanup?: () => void;
 
   constructor(ChildComponent: AnyComponent, props: P) {
@@ -156,18 +149,7 @@ export default class AnimatedComponent<
     );
     this._CSSManager?.update(this._cssStyle, this.props);
 
-    this._hasMounted = true;
     this._willUnmount = false;
-
-    if (this._startingStyle) {
-      this._startingStyle = null;
-      // React keeps the props it mounted the view with and commits them again
-      // whenever an ancestor renders, so the starting style has to leave them
-      // now that the animations are registered; otherwise a finished
-      // animation without a forwards fill would snap back to its first
-      // keyframe on the next React commit.
-      this.forceUpdate();
-    }
   }
 
   componentWillUnmount() {
@@ -199,30 +181,6 @@ export default class AnimatedComponent<
     return true;
   }
 
-  /**
-   * Animations are registered natively only after React has committed the
-   * mounted view, so the first frame the view could show is its own style.
-   * Mounting it with the style the animations start from closes that gap; once
-   * mounted, the native side owns these values.
-   */
-  _getStartingStyle(style: StyleProp<DefaultStyle>): CSSStyle | null {
-    if (this._hasMounted) {
-      return null;
-    }
-    const [animationProperties] = filterCSSAndStyleProperties(
-      (StyleSheet.flatten(style) ?? {}) as CSSStyle
-    );
-    if (!animationProperties) {
-      return null;
-    }
-    try {
-      return getAnimationsStartingStyle(animationProperties) as CSSStyle | null;
-    } catch {
-      // An invalid config is reported by the CSS manager once the view mounts.
-      return null;
-    }
-  }
-
   render(props?: ComponentProps<AnyComponent>) {
     const { ChildComponent } = this;
 
@@ -231,20 +189,9 @@ export default class AnimatedComponent<
       default: { collapsable: false },
     });
 
-    const renderProps = filterCSSProps(props ?? this.props);
-    this._startingStyle = this._getStartingStyle(
-      (props ?? this.props).style as StyleProp<DefaultStyle>
-    );
-    if (this._startingStyle) {
-      (renderProps as { style?: StyleProp<CSSStyle> }).style = [
-        (renderProps as { style?: StyleProp<CSSStyle> }).style,
-        this._startingStyle,
-      ];
-    }
-
     return (
       <ChildComponent
-        {...renderProps}
+        {...filterCSSProps(props ?? this.props)}
         {...platformProps}
         // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
         // After spending some time trying to figure out what to do with this problem, we decided to leave it this way

@@ -53,6 +53,7 @@ class UpdatesRegistry {
 #ifdef ANDROID
   bool hasPropsToRevert() const;
   void collectPropsToRevert(PropsToRevertMap &propsToRevertMap);
+  void dropPropsToRevert(Tag tag);
 #endif
 
   // Drains pending style updates as folly::dynamic.
