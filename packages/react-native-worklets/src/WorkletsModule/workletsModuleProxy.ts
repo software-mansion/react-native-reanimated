@@ -27,7 +27,8 @@ export interface WorkletsModuleProxy {
     shareableGuestUnpackerSourceMap: string,
     remoteFunctionUnpackerCode: string,
     remoteFunctionUnpackerLocation: string,
-    remoteFunctionUnpackerSourceMap: string
+    remoteFunctionUnpackerSourceMap: string,
+    isDev: boolean
   ): void;
 
   loadUnpackersWithBytecode(
