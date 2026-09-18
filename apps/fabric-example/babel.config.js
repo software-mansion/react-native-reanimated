@@ -16,7 +16,9 @@ function resolveWorkletsPlugin() {
   if (wanted === 'oxc') {
     return loadOxcPlugin();
   }
-  if (wanted === 'babel') {
+  // The OXC plugin only implements Bundle Mode: it always emits worklet files,
+  // which nothing resolves once Bundle Mode is toggled off.
+  if (wanted === 'babel' || !workletsPluginOptions.bundleMode) {
     return BABEL_WORKLETS_PLUGIN;
   }
   try {

@@ -410,9 +410,9 @@ void LayoutAnimationsProxy::updateLightTree(
         const auto it = lightNodes_.find(mutation.oldChildShadowView.tag);
         react_native_assert(it != lightNodes_.end() && "Delete mutation for an unknown node");
         const auto state = it->second->state;
-        react_native_assert(
-            (state == UNDEFINED || state == WAITING || state == ANIMATING) && "Delete mutation for an unmounted node");
-        if (state == UNDEFINED) {
+        react_native_assert(state != DEAD && "Delete mutation for an unmounted node");
+        // View flattening emits a child's Delete after its parent's Remove, which has already torn the child down.
+        if (state == UNDEFINED || state == DELETED) {
           const auto node = it->second;
           unmapLightNode(node);
         }
