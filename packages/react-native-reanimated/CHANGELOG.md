@@ -20,6 +20,7 @@
 
 ### 🐛 Bug fixes
 
+- Reject a `backgroundImage` gradient given as an object when a transition hint is not placed between two color stops, and reject gradients with fewer than two color stops in both the object and the string form; React Native crashes on iOS or Android when such values reach the renderer. ([#10589](https://github.com/software-mansion/react-native-reanimated/pull/10589) by [@matipl01](https://github.com/matipl01))
 - Fix a crash in the light tree based Layout Animations proxy when a view is flattened while one of its children is removed in the same commit. ([#10628](https://github.com/software-mansion/react-native-reanimated/pull/10628) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Remove `zIndex` from the synchronous props. No platform applies `zIndex` to a mounted view, so with `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` on, an animated style with only `zIndex` and `elevation` never reached the shadow tree commit and the views did not reorder until a later React render. ([#10602](https://github.com/software-mansion/react-native-reanimated/pull/10602) by [@pawicao](https://github.com/pawicao))
 - Stop passing `forwardedRef` and `nativeID` to the wrapped component on web, which React Strict DOM reported as invalid props. ([#10605](https://github.com/software-mansion/react-native-reanimated/pull/10605) by [@tjzel](https://github.com/tjzel))
