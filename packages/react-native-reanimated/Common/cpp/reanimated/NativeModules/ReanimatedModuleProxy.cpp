@@ -78,6 +78,15 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 }
 #endif
 
+std::shared_ptr<SynchronousWritesTracker> makeSynchronousWritesTracker() {
+#ifdef ANDROID
+  if constexpr (StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+    return std::make_shared<SynchronousWritesTracker>();
+  }
+#endif // ANDROID
+  return nullptr;
+}
+
 std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBatch, const bool allowPartialUpdates) {
   const auto isSynchronous = [&](const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
     if (!isSynchronousPropName(keyStr)) {
@@ -193,6 +202,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
 #endif // ANDROID
+      synchronousWritesTracker_(makeSynchronousWritesTracker()),
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
   // Add registries in order of their priority (from the lowest to the
@@ -868,6 +878,26 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
   applySynchronousUpdates(partitionUpdates(std::move(updatesBatch), true).first);
 }
 
+void ReanimatedModuleProxy::rewriteSynchronousProps() {
+  if (!synchronousWritesTracker_) {
+    return;
+  }
+  const auto families = synchronousWritesTracker_->getFamiliesToRewrite();
+  if (!families.empty()) {
+    UpdatesBatch registryValues;
+    {
+      auto lock = updatesRegistryManager_->lock();
+      for (const auto &family : families) {
+        folly::dynamic props = folly::dynamic::object;
+        updatesRegistryManager_->mergeRegistryProps(family->getTag(), props);
+        registryValues.emplace_back(family, std::move(props));
+      }
+    }
+    writeSynchronousPropsToViews(partitionUpdates(std::move(registryValues), true).first);
+  }
+  synchronousWritesTracker_->onRewrite();
+}
+
 AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::collectNonLayoutAnimationUpdates");
 
@@ -1040,7 +1070,13 @@ void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchron
     layoutAnimationsProxyRegistry_->applySynchronousProps(
         synchronousUpdatesBatch, DynamicFeatureFlags::getFlag("TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS"));
   }
+  if (synchronousWritesTracker_) {
+    synchronousWritesTracker_->onSynchronousWrite(synchronousUpdatesBatch);
+  }
+  writeSynchronousPropsToViews(synchronousUpdatesBatch);
+}
 
+void ReanimatedModuleProxy::writeSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch) {
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
     serializeSynchronousPropsToBuffers(
@@ -1201,10 +1237,19 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
   // TODO: with the animation backend we still need a way to handleNodeRemovals,
   // for now we leave this to leak the memory, a fix will come in a follow-up
   mountHook_ = std::make_shared<ReanimatedMountHook>(
-      uiManager_, updatesRegistryManager_, viewStylesRepository_, layoutAnimationsProxyRegistry_, request);
+      uiManager_,
+      updatesRegistryManager_,
+      viewStylesRepository_,
+      layoutAnimationsProxyRegistry_,
+      synchronousWritesTracker_,
+      request);
 
   commitHook_ = std::make_shared<ReanimatedCommitHook>(
-      uiManager_, updatesRegistryManager_, viewStylesRepository_, layoutAnimationsProxyRegistry_);
+      uiManager_,
+      updatesRegistryManager_,
+      viewStylesRepository_,
+      layoutAnimationsProxyRegistry_,
+      synchronousWritesTracker_);
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
