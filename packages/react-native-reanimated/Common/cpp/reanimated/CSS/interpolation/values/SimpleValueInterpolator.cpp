@@ -41,6 +41,14 @@ std::shared_ptr<CSSValue> SimpleValueInterpolator<AllowedTypes...>::createValue(
 }
 
 template <typename... AllowedTypes>
+bool SimpleValueInterpolator<AllowedTypes...>::canInterpolateValue(
+    const std::shared_ptr<CSSValue> &fromValue,
+    const std::shared_ptr<CSSValue> &toValue) const {
+  return std::static_pointer_cast<ValueType>(fromValue)->canInterpolateTo(
+      *std::static_pointer_cast<ValueType>(toValue));
+}
+
+template <typename... AllowedTypes>
 folly::dynamic SimpleValueInterpolator<AllowedTypes...>::interpolateValue(
     double progress,
     const std::shared_ptr<CSSValue> &fromValue,

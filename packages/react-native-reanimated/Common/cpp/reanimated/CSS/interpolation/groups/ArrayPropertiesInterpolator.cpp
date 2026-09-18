@@ -178,8 +178,16 @@ folly::dynamic ArrayPropertiesInterpolator::interpolate(
   if (progress == 0 || progress == 1) {
     return getEndpointValue(progress == 0);
   }
-  return GroupPropertiesInterpolator::interpolate(
-      shadowNode, std::make_shared<ArraySegmentProgressProvider>(progress), fallbackInterpolateThreshold);
+  const auto segmentProgress = std::make_shared<ArraySegmentProgressProvider>(progress);
+  // CSS switches a shadow list discretely as a whole when any pair cannot interpolate.
+  const auto &interpolators = segment_->interpolators;
+  const bool interpolable = std::all_of(interpolators.begin(), interpolators.end(), [&](const auto &interpolator) {
+    return interpolator->canInterpolate(shadowNode, segmentProgress);
+  });
+  if (!interpolable) {
+    return getEndpointValue(progress < fallbackInterpolateThreshold);
+  }
+  return GroupPropertiesInterpolator::interpolate(shadowNode, segmentProgress, fallbackInterpolateThreshold);
 }
 
 folly::dynamic ArrayPropertiesInterpolator::mapInterpolators(

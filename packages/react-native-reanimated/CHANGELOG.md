@@ -20,7 +20,8 @@
 
 ### 🐛 Bug fixes
 
-- Interpolate `boxShadow` keyframes as whole lists: an explicit `[]` or `none` keyframe is an empty list instead of the view's own shadows, a shorter list is padded with blank shadows, and a keyframe that omits `boxShadow` or `transformOrigin` starts from the view's complete value. ([#10597](https://github.com/software-mansion/react-native-reanimated/pull/10597) by [@matipl01](https://github.com/matipl01))
+- Switch a `boxShadow` list discretely as a whole when an inset shadow is paired with an outset one, as CSS does, instead of switching only that shadow. ([#10599](https://github.com/software-mansion/react-native-reanimated/pull/10599) by [@matipl01](https://github.com/matipl01))
+- Interpolate `boxShadow` and `transformOrigin` keyframes as whole lists: an explicit `[]` or `none` keyframe is an empty list instead of the view's own value, a shorter list is padded with blank shadows, and a keyframe that omits the property starts from the view's complete list.
 - Restore the view's complete `boxShadow` and `transformOrigin` value when a CSS animation of it ends, instead of only the elements the keyframes mentioned. ([#10596](https://github.com/software-mansion/react-native-reanimated/pull/10596) by [@matipl01](https://github.com/matipl01))
 - Accept `none` for `boxShadow` and `transform` in CSS keyframes and treat it as an explicit empty list, as CSS does.
 - Skip exiting animations in the light tree based Layout Animations proxy when a surface is stopped, so the empty-root transaction removes the views at once instead of starting animations on a dead surface and leaving their component views registered on iOS. ([#10586](https://github.com/software-mansion/react-native-reanimated/pull/10586) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))

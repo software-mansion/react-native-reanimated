@@ -29,6 +29,10 @@ class PropertyInterpolator {
   /** TODO: unify folly::dynamic and jsi::value versions */
   virtual bool updateKeyframes(const folly::dynamic &fromValue, const folly::dynamic &toValue) = 0;
 
+  virtual bool canInterpolate(
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;
+
   virtual folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
