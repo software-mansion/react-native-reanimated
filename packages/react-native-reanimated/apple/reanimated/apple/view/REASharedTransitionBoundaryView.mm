@@ -28,7 +28,13 @@ using namespace facebook::react;
 - (void)updateLayoutMetrics:(const facebook::react::LayoutMetrics &)layoutMetrics
            oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics
 {
-  [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
+  // RCTViewComponentView stops hit testing at a view with no overflow inset.
+  // Synchronous transforms move children out of the frame without layout,
+  // so always report an overflow to keep them touchable.
+  auto hitTestableLayoutMetrics = layoutMetrics;
+  hitTestableLayoutMetrics.overflowInset = {.left = -1, .top = -1, .right = -1, .bottom = -1};
+
+  [super updateLayoutMetrics:hitTestableLayoutMetrics oldLayoutMetrics:oldLayoutMetrics];
   self.frame = RCTCGRectFromRect(layoutMetrics.frame);
 }
 
