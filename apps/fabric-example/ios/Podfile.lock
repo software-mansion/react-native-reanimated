@@ -1932,6 +1932,7 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
+    - RNWorklets (>= 0.8.0)
     - Yoga
   - RNReanimated (4.7.0-main):
     - hermes-engine
@@ -2132,7 +2133,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNWorklets (0.13.0-main):
+  - RNWorklets (0.13.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2155,10 +2156,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNWorklets/apple (= 0.13.0-main)
-    - RNWorklets/common (= 0.13.0-main)
+    - RNWorklets/apple (= 0.13.0)
+    - RNWorklets/common (= 0.13.0)
     - Yoga
-  - RNWorklets/apple (0.13.0-main):
+  - RNWorklets/apple (0.13.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2182,7 +2183,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNWorklets/common (0.13.0-main):
+  - RNWorklets/common (0.13.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2306,7 +2307,7 @@ DEPENDENCIES:
   - RNReanimated (from `../../../packages/react-native-reanimated`)
   - RNScreens (from `../../../node_modules/react-native-screens`)
   - RNSVG (from `../../../node_modules/react-native-svg`)
-  - RNWorklets (from `../../../packages/react-native-worklets`)
+  - RNWorklets (from `../../../node_modules/react-native-worklets`)
   - SocketRocket (from `build/rndeps-facades/SocketRocket`)
   - Yoga (from `build/rncore-facades/Yoga`)
 
@@ -2503,7 +2504,7 @@ EXTERNAL SOURCES:
   RNSVG:
     :path: "../../../node_modules/react-native-svg"
   RNWorklets:
-    :path: "../../../packages/react-native-worklets"
+    :path: "../../../node_modules/react-native-worklets"
   SocketRocket:
     :path: build/rndeps-facades/SocketRocket
   Yoga:
@@ -2600,11 +2601,11 @@ SPEC CHECKSUMS:
   ReactNativeDependencies: dabb9681fdf66316a899de1ce3ef247606b513a8
   RNCClipboard: efcb0fcabe40529a32cb0c75fcef4f9c73052c2e
   RNCMaskedView: 89bb912716973f9715102cfe932f3ca6793b21f9
-  RNGestureHandler: 973d5b5cb7b88aca649eec9aecb783e3de1b9b3f
+  RNGestureHandler: 09bfbf4fd5e1a0eeadd8f217b999d97bf64ac875
   RNReanimated: 88678c499c0df7901e156555ff43726ed2f46f7d
   RNScreens: 1b386604ba6e45b594cb15714a078d7dca096211
   RNSVG: 3dacba6cbd65d6016718d9b2b205e6e09cfc041d
-  RNWorklets: f8dd80f53e5395ad219c429f58db28ca9b2d3c91
+  RNWorklets: 3612da208a855098f2a821ae8d454f649556c49e
   SocketRocket: 37aec555668fb852ec12e3c0de59a86ca58f0871
   Yoga: d1c536142c5ff8ec8cd856ab2a7c227a1d875c8e
 

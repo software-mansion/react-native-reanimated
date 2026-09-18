@@ -108,7 +108,7 @@
   "peerDependencies": {
     "react": "*",
     "react-native": "0.86 - 0.88",
-    "react-native-worklets": "0.13.0-main"
+    "react-native-worklets": "0.13.x"
   },
   "devDependencies": {
     "@babel/core": "7.29.6",
@@ -140,7 +140,7 @@
     "react-native": "0.88.0-rc.1",
     "react-native-svg": "patch:react-native-svg@npm%3A15.15.5#~/.yarn/patches/react-native-svg-npm-15.15.5-88bb60fb23.patch",
     "react-native-web": "0.21.2",
-    "react-native-worklets": "workspace:*",
+    "react-native-worklets": "0.13.0",
     "react-test-renderer": "19.3.0",
     "typescript": "5.9.3"
   },
