@@ -1,0 +1,1 @@
+Fix an animated view that jumps back to an older value for a frame with `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` or `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` on, for example a sticky header in a list that renders while it scrolls. A React commit could mount over a newer synchronous prop write.
