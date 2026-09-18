@@ -13,7 +13,7 @@ ArrayPropertiesInterpolator::ArrayPropertiesInterpolator(
 
 folly::dynamic ArrayPropertiesInterpolator::getDefaultValue() const {
   auto result = folly::dynamic::array();
-  // A single factory describes a variable-length list; several describe a tuple.
+  // One factory is a variable-length list, several are a tuple.
   if (factories_.size() > 1) {
     for (const auto &factory : factories_) {
       result.push_back(factory->getDefaultValue().toDynamic());
@@ -23,7 +23,6 @@ folly::dynamic ArrayPropertiesInterpolator::getDefaultValue() const {
 }
 
 folly::dynamic ArrayPropertiesInterpolator::getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const {
-  // The group base class maps the children; the array needs the whole list.
   return PropertyInterpolator::getStyleValue(shadowNode);
 }
 
