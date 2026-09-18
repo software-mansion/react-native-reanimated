@@ -20,6 +20,7 @@
 
 ### 🐛 Bug fixes
 
+- Fix an animated view that jumps back to an older value for a frame with `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` or `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` on, for example a sticky header in a list that renders while it scrolls. A React commit could mount over a newer synchronous prop write. ([#10631](https://github.com/software-mansion/react-native-reanimated/pull/10631) by [@pawicao](https://github.com/pawicao))
 - Fix a crash in the light tree based Layout Animations proxy when a view is flattened while one of its children is removed in the same commit. ([#10628](https://github.com/software-mansion/react-native-reanimated/pull/10628) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Remove `zIndex` from the synchronous props. No platform applies `zIndex` to a mounted view, so with `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` on, an animated style with only `zIndex` and `elevation` never reached the shadow tree commit and the views did not reorder until a later React render. ([#10602](https://github.com/software-mansion/react-native-reanimated/pull/10602) by [@pawicao](https://github.com/pawicao))
 - Stop passing `forwardedRef` and `nativeID` to the wrapped component on web, which React Strict DOM reported as invalid props. ([#10605](https://github.com/software-mansion/react-native-reanimated/pull/10605) by [@tjzel](https://github.com/tjzel))

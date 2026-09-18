@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
+#include <reanimated/Fabric/updates/SynchronousWritesTracker.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 
@@ -18,7 +19,8 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
       const std::shared_ptr<UIManager> &uiManager,
       const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
       const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
-      const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry);
+      const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry,
+      const std::shared_ptr<SynchronousWritesTracker> &synchronousWritesTracker);
 
   ~ReanimatedCommitHook() noexcept override;
 
@@ -35,10 +37,13 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
       const ShadowTreeCommitOptions &commitOptions) noexcept override;
 
  private:
+  void trackCommit(const RootShadowNode::Shared &rootShadowNode, bool carriesRegistryValues) const;
+
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   std::shared_ptr<css::ViewStylesRepository> viewStylesRepository_;
   std::shared_ptr<LayoutAnimationsProxyRegistry> layoutAnimationsProxyRegistry_;
+  std::shared_ptr<SynchronousWritesTracker> synchronousWritesTracker_;
 };
 
 } // namespace reanimated
