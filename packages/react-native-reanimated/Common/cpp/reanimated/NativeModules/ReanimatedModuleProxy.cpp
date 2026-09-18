@@ -79,11 +79,10 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 #endif
 
 std::shared_ptr<SynchronousWritesTracker> makeSynchronousWritesTracker() {
-#ifdef ANDROID
-  if constexpr (StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+  if constexpr (
+      shouldUseSynchronousUpdatesInPerformOperations() && !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     return std::make_shared<SynchronousWritesTracker>();
   }
-#endif // ANDROID
   return nullptr;
 }
 
@@ -876,6 +875,10 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
     updatesBatch = animatedPropsRegistry_->getPendingUpdates();
   }
   applySynchronousUpdates(partitionUpdates(std::move(updatesBatch), true).first);
+}
+
+bool ReanimatedModuleProxy::needsSynchronousPropsRewrite() const {
+  return synchronousWritesTracker_ != nullptr;
 }
 
 void ReanimatedModuleProxy::rewriteSynchronousProps() {
