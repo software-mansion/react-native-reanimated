@@ -179,9 +179,7 @@ folly::dynamic ArrayPropertiesInterpolator::interpolate(
     return getEndpointValue(progress == 0);
   }
   const auto segmentProgress = std::make_shared<ArraySegmentProgressProvider>(progress);
-  // CSS switches the whole shadow list discretely when any pair cannot
-  // interpolate (an inset next to an outset shadow); the same rule keeps a
-  // list of gradients from mixing blended and switched layers.
+  // CSS switches a shadow list discretely as a whole when any pair cannot interpolate.
   const auto &interpolators = segment_->interpolators;
   const bool interpolable = std::all_of(interpolators.begin(), interpolators.end(), [&](const auto &interpolator) {
     return interpolator->canInterpolate(shadowNode, segmentProgress);
