@@ -8,6 +8,7 @@ Facts that are true on `main` and that agents otherwise re-discover in every ses
 - Node from `.nvmrc`, Ruby from `.ruby-version`, CocoaPods through bundler: `bundle exec pod install`. CI rejects a `Podfile.lock` written by a different CocoaPods version.
 - Husky refuses commits and pushes on `main`. Work on a branch.
 - Formatters: oxfmt (JS/TS), remark (`yarn format:md`, CI fails on any diff), clang-format (C++/ObjC), cmake-format, spotless (Kotlin/Java). Prettier is not used.
+- Oxlint lints JS/TS with type-aware rules, so tsconfigs must not use `baseUrl`. Nested `.oxlintrc.json` files must `extends` the root one.
 - Use the existing scripts (root `scripts/`, per-package `scripts/`, `scripts` in each `package.json`). Do not invent ad-hoc build or test scripts.
 
 ## Layout

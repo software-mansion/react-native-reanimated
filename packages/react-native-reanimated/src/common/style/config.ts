@@ -1,4 +1,4 @@
-/* eslint-disable camelcase */
+/* eslint-disable eslint-core/camelcase */
 'use strict';
 import { IS_ANDROID } from '../constants';
 import {
