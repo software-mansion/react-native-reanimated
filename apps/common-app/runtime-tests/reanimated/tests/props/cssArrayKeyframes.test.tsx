@@ -75,10 +75,6 @@ function Example({
   );
 }
 
-// Views with the same inline keyframes share one registry entry and the
-// interpolator behind it, so each frame resolves the omitted endpoint against
-// a different underlying list.
-
 function SharedView({
   name,
   boxShadow,
@@ -236,8 +232,6 @@ describe('CSS array keyframes', () => {
     'transform keyframe start: %p',
     async (from) => {
       await render(<TransformExample from={from} />);
-      // An omitted start keeps the view's own translateX 80, an explicit
-      // empty list or none starts from the identity transform.
       await expectEventually(() => getSharedValue('displacement'), 3000).toBe(
         from ? -70 : -10
       );

@@ -45,8 +45,7 @@ class ArrayPropertiesInterpolator : public GroupPropertiesInterpolator {
   // Null marks an omitted array endpoint; [] is an explicit empty value.
   std::vector<std::pair<double, folly::dynamic>> keyframes_;
   std::optional<folly::dynamic> reversingAdjustedStartValue_;
-  // Indexed by the segment's end keyframe; null where an endpoint is omitted,
-  // because such a segment depends on the animated view's own style.
+  // Indexed by the segment's end keyframe; null when an endpoint is omitted.
   std::vector<std::shared_ptr<Segment>> keyframeSegments_;
   mutable std::shared_ptr<Segment> viewSegment_;
   mutable Segment *segment_ = nullptr;
