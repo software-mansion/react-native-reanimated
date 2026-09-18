@@ -37,7 +37,7 @@
 
 ### 🐛 Bug fixes
 
-- Let the bundle initialize `__DEV__` in Bundle Mode instead of setting it in the runtime decorator. ([#10632](https://github.com/software-mansion/react-native-reanimated/pull/10632) by [@tshmieldev](https://github.com/tshmieldev))
+- Initialize `__DEV__` in JavaScript and remove the native development flag plumbing. ([#10632](https://github.com/software-mansion/react-native-reanimated/pull/10632) by [@tshmieldev](https://github.com/tshmieldev))
 
 - Abort the pending jobs of a Worklet Runtime's async queue and event loop from its destructor while the runtime lock is held, so the JSI handles they capture are no longer destroyed on an unrelated thread or under the queue mutex. ([#10580](https://github.com/software-mansion/react-native-reanimated/pull/10580) by [@tjzel](https://github.com/tjzel))
 

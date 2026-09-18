@@ -15,6 +15,8 @@ declare global {
 export function installValueUnpacker() {
   'worklet';
   'no-worklet-closure';
+  // TS thinks we're on RN runtime where globalThis.__DEV__ is a const
+  globalThis.__DEV__ = typeof __DEV__ !== 'undefined' ? __DEV__ : false;
   const workletsCache = new Map<number, () => unknown>();
 
   function valueUnpacker(objectToUnpack: ObjectToUnpack): unknown {

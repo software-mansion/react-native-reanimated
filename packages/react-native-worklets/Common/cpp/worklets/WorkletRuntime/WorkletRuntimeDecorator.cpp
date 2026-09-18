@@ -61,8 +61,6 @@ void WorkletRuntimeDecorator::decorate(
     const RuntimeData::RuntimeKind runtimeKind,
     const std::string &name,
     const std::shared_ptr<JSScheduler> &jsScheduler,
-    const bool isDevBundle,
-    const bool bundleModeEnabled,
     const bool enableMicrotaskQueue,
     jsi::Object &&jsiWorkletsModuleProxy,
     const std::shared_ptr<EventLoop> &eventLoop,
@@ -75,10 +73,6 @@ void WorkletRuntimeDecorator::decorate(
   rt.global().setProperty(rt, "_WORKLET", true);
 
   rt.global().setProperty(rt, RuntimeData::runtimeNameBindingName, jsi::String::createFromAscii(rt, name));
-
-  if (!bundleModeEnabled) {
-    rt.global().setProperty(rt, "__DEV__", isDevBundle);
-  }
 
   rt.global().setProperty(rt, "__workletsModuleProxy", std::move(jsiWorkletsModuleProxy));
 
