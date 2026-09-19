@@ -23,6 +23,13 @@ class JSLogger {
   static void
   reportFatalErrorOnJS(const std::shared_ptr<JSScheduler> &jsScheduler, JSErrorData &&jsErrorData, bool force = false);
 
+  /**
+   * Returns the `name` property of the thrown JS value (e.g. `TypeError`), or
+   * `fallback` when the value is not an object or has no string `name`.
+   */
+  static std::string
+  getErrorName(facebook::jsi::Runtime &rt, const facebook::jsi::JSError &error, const std::string &fallback);
+
 #ifndef NDEBUG
   /**
    * Forwards a `jsi::JSError` raised on a worklet runtime to the RN runtime so

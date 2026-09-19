@@ -413,7 +413,9 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       }
 #else
       JSLogger::reportFatalErrorOnJS(
-          jsScheduler_, JSErrorData{.message = e.getMessage(), .stack = e.getStack(), .name = "Error"});
+          jsScheduler_,
+          JSErrorData{
+              .message = e.getMessage(), .stack = e.getStack(), .name = JSLogger::getErrorName(rt, e, "Error")});
 #endif // NDEBUG
       return jsi::Value::undefined();
     }

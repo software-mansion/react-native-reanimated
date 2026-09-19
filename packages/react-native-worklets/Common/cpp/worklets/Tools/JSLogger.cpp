@@ -45,6 +45,20 @@ void JSLogger::reportFatalErrorOnJS(jsi::Runtime &rnRuntime, const JSErrorData &
   reportFatalErrorFunction.call(rnRuntime, errorInstance, force);
 }
 
+std::string JSLogger::getErrorName(jsi::Runtime &rt, const jsi::JSError &error, const std::string &fallback) {
+  const auto &errVal = error.value();
+  if (errVal.isObject()) {
+    auto errObj = errVal.asObject(rt);
+    if (errObj.hasProperty(rt, "name")) {
+      auto nameVal = errObj.getProperty(rt, "name");
+      if (nameVal.isString()) {
+        return nameVal.asString(rt).utf8(rt);
+      }
+    }
+  }
+  return fallback;
+}
+
 #ifndef NDEBUG
 static std::string labelStackFrames(const std::string &rawStack, const std::string &label) {
   static const std::string sep = "\n    at";
@@ -65,18 +79,7 @@ void JSLogger::handleJSError(
     const std::string &runtimeName,
     jsi::JSError &error,
     const std::optional<std::string> &scheduleStack) {
-  std::string name = "WorkletsError";
-  const auto &errVal = error.value();
-  if (errVal.isObject()) {
-    auto errObj = errVal.asObject(workletRuntime);
-    if (errObj.hasProperty(workletRuntime, "name")) {
-      auto nameVal = errObj.getProperty(workletRuntime, "name");
-      if (nameVal.isString()) {
-        name = nameVal.asString(workletRuntime).utf8(workletRuntime);
-      }
-    }
-  }
-
+  const auto name = getErrorName(workletRuntime, error, "WorkletsError");
   const auto &message = error.getMessage();
   std::string combined = message + labelStackFrames(error.getStack(), runtimeName);
   if (scheduleStack.has_value()) {
