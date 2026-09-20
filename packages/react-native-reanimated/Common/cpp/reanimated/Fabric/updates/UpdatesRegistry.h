@@ -1,15 +1,12 @@
 #pragma once
 
-#include <cxxreact/ReactNativeVersion.h>
 #include <jsi/jsi.h>
 #include <react/renderer/core/ShadowNode.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
 #include <react/renderer/animationbackend/AnimatedProps.h>
 #include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
 #include <react/renderer/animationbackend/AnimationBackend.h>
-#endif
 
 #include <memory>
 #include <string>
@@ -25,14 +22,12 @@ using namespace react;
 
 using UpdatesBatch = std::vector<std::pair<ShadowNodeFamily::Shared, folly::dynamic>>;
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
 struct AnimatedPropsEntry {
   const ShadowNodeFamily::Shared shadowNodeFamily;
   AnimatedProps animatedProps;
   const bool hasLayoutUpdates;
 };
 using UpdatesBatchAnimatedProps = std::vector<AnimatedPropsEntry>;
-#endif
 
 using RegistryMap = std::unordered_map<Tag, std::pair<ShadowNodeFamily::Shared, folly::dynamic>>;
 
@@ -52,6 +47,7 @@ class UpdatesRegistry {
 
   virtual bool isEmpty() const;
   folly::dynamic get(Tag tag) const;
+  void mergeInto(Tag tag, folly::dynamic &target) const;
   void remove(Tag tag);
 
 #ifdef ANDROID
@@ -62,7 +58,6 @@ class UpdatesRegistry {
   // Drains pending style updates as folly::dynamic.
   void flushUpdates(UpdatesBatch &updatesBatch);
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
   // Drains pending typed animated props.
   void flushUpdates(UpdatesBatchAnimatedProps &updatesBatch);
 
@@ -78,7 +73,6 @@ class UpdatesRegistry {
       const ShadowNodeFamily::Shared &shadowNodeFamily,
       jsi::Runtime &rt,
       jsi::Value &props);
-#endif
 
   void collectProps(PropsMap &propsMap);
   UpdatesBatch getPendingUpdates();
@@ -89,10 +83,8 @@ class UpdatesRegistry {
   /// Assumes the caller already locked the registry.
   void flush(UpdatesBatch &updatesBatch);
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
   // Assumes the caller already locked the registry.
   void flush(UpdatesBatchAnimatedProps &updatesBatch);
-#endif
 
   /// Assumes the caller already locked the registry.
   virtual void removeTag(Tag tag) = 0;
@@ -112,10 +104,8 @@ class UpdatesRegistry {
  private:
   UpdatesBatch updatesBatch_;
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
   UpdatesBatchAnimatedProps updatesBatchAnimatedProps_;
   AnimatedPropsBuilder animatedPropsBuilder_;
-#endif
 
   void flushUpdatesToRegistry(const UpdatesBatch &updatesBatch);
 

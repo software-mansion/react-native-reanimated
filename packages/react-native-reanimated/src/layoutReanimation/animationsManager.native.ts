@@ -163,8 +163,15 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   };
 }
 
-// is-tree-shakable-suppress
-runOnUISync(() => {
-  'worklet';
-  global.LayoutAnimationsManager = createLayoutAnimationManager();
-});
+let isLayoutAnimationsManagerInitialized = false;
+
+export function initializeLayoutAnimationsManager() {
+  if (isLayoutAnimationsManagerInitialized) {
+    return;
+  }
+  runOnUISync(() => {
+    'worklet';
+    global.LayoutAnimationsManager = createLayoutAnimationManager();
+  });
+  isLayoutAnimationsManagerInitialized = true;
+}

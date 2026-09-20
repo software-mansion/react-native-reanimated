@@ -18,6 +18,7 @@ using namespace facebook;
 
 namespace worklets {
 
+class Networking;
 class WorkletRuntime;
 
 class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsModuleProxy> {
@@ -30,6 +31,7 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
       const std::shared_ptr<RuntimeManager> &runtimeManager,
       const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
       const std::shared_ptr<RuntimeBindings> &runtimeBindings,
+      const std::shared_ptr<Networking> &networking,
       const BundleModeConfig &bundleModeConfig,
       const std::shared_ptr<UnpackerLoader> &unpackerLoader,
       const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus,
@@ -42,6 +44,7 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
         runtimeManager_(runtimeManager),
         uiWorkletRuntime_(uiWorkletRuntime),
         runtimeBindings_(runtimeBindings),
+        networking_(networking),
         unpackerLoader_(unpackerLoader),
         rnRuntimeStatus_(rnRuntimeStatus),
         hostRuntimeId_(hostRuntimeId) {}
@@ -57,6 +60,7 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
         sourceProxy->runtimeManager_,
         sourceProxy->uiWorkletRuntime_,
         sourceProxy->runtimeBindings_,
+        sourceProxy->networking_,
         sourceProxy->bundleModeConfig_,
         sourceProxy->unpackerLoader_,
         sourceProxy->rnRuntimeStatus_,
@@ -105,6 +109,10 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
     return runtimeBindings_;
   }
 
+  [[nodiscard]] std::shared_ptr<Networking> getNetworking() const {
+    return networking_;
+  }
+
   [[nodiscard]] std::shared_ptr<UnpackerLoader> getUnpackerLoader() const {
     return unpackerLoader_;
   }
@@ -118,6 +126,7 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
   const std::shared_ptr<RuntimeManager> runtimeManager_;
   const std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
   const std::shared_ptr<RuntimeBindings> runtimeBindings_;
+  const std::shared_ptr<Networking> networking_;
   const std::shared_ptr<UnpackerLoader> unpackerLoader_;
   const std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
   const RuntimeData::RuntimeId hostRuntimeId_;

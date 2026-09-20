@@ -44,7 +44,7 @@ describe('useHandler (native)', () => {
 
   describe('dependencies parameter is ignored', () => {
     beforeEach(() => {
-      jest.spyOn(logger, 'warn').mockImplementation();
+      jest.spyOn(logger, 'warnOnce').mockImplementation();
     });
 
     afterEach(() => {
@@ -68,8 +68,9 @@ describe('useHandler (native)', () => {
       rerender({ handlers: { onScroll: w }, deps: ['a', 'b', 'c'] });
       expect(result.current.doDependenciesDiffer).toBe(false);
 
-      expect(logger.warn).toHaveBeenCalledWith(
-        'dependencies should only be used in web implementation.'
+      expect(logger.warnOnce).toHaveBeenCalledWith(
+        'Dependencies should only be used on the web and are always ignored on native. Check DevTools to see the offending code.',
+        1
       );
     });
 
@@ -86,7 +87,7 @@ describe('useHandler (native)', () => {
       rerender({ handlers: { onScroll: worklet() }, deps: undefined });
       expect(result.current.doDependenciesDiffer).toBe(true);
 
-      expect(logger.warn).not.toHaveBeenCalled();
+      expect(logger.warnOnce).not.toHaveBeenCalled();
     });
 
     test('doDependenciesDiffer is unaffected by empty deps', () => {
@@ -102,8 +103,9 @@ describe('useHandler (native)', () => {
       rerender({ handlers: { onScroll: worklet() }, deps: [] });
       expect(result.current.doDependenciesDiffer).toBe(true);
 
-      expect(logger.warn).toHaveBeenCalledWith(
-        'dependencies should only be used in web implementation.'
+      expect(logger.warnOnce).toHaveBeenCalledWith(
+        'Dependencies should only be used on the web and are always ignored on native. Check DevTools to see the offending code.',
+        1
       );
     });
   });

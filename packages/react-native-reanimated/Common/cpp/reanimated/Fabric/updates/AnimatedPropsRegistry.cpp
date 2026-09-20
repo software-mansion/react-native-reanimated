@@ -1,4 +1,3 @@
-#include <cxxreact/ReactNativeVersion.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/Tools/FeatureFlags.h>
@@ -30,9 +29,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     jsi::Value updates = item.getProperty(rt, "updates");
 
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-#if REACT_NATIVE_VERSION_MINOR >= 85
       addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates);
-#endif
     } else {
       addUpdatesToBatch(shadowNode->getFamilyShared(), jsi::dynamicFromValue(rt, updates));
     }

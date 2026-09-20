@@ -16,6 +16,7 @@
   ],
   "scripts": {
     "build": "cargo build --release && node --experimental-strip-types scripts/post-build.mts release",
+    "build:all": "node --experimental-strip-types scripts/build-all.mts",
     "build:debug": "cargo build && node --experimental-strip-types scripts/post-build.mts debug",
     "test": "yarn test:oxc && yarn test:babel-suite",
     "type:check": "tsc --noEmit",

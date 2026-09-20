@@ -10,8 +10,10 @@
 #include <cstring>
 #include <memory>
 #include <optional>
+#include <type_traits>
 #include <unordered_set>
 #include <utility>
+#include <variant>
 
 namespace reanimated {
 
@@ -60,6 +62,14 @@ void LayoutAnimationsProxyCommon::surfaceDidUnmount() {
   cancelAllLayoutAnimations();
 }
 
+void LayoutAnimationsProxyCommon::clearSurfaceState() const {
+  layoutAnimationOperations_.clear();
+  pendingLayoutAnimations_.clear();
+  updateMap_.clear();
+  layoutAnimations_.clear();
+  completedAnimations_.clear();
+}
+
 std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
     const int tag,
     const jsi::Object &newStyle) {
@@ -70,11 +80,16 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
   }
 
   auto &layoutAnimation = layoutAnimationIt->second;
-  if (layoutAnimation.opacity && !newStyle.hasProperty(uiRuntime_, "opacity")) {
-    newStyle.setProperty(uiRuntime_, "opacity", jsi::Value(*layoutAnimation.opacity));
+  if (newStyle.hasProperty(uiRuntime_, "opacity")) {
+    layoutAnimation.opacity.reset();
   }
 
   auto rawProps = std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
+  if (layoutAnimation.opacity) {
+    auto props = (folly::dynamic)*rawProps;
+    props["opacity"] = *layoutAnimation.opacity;
+    rawProps = std::make_shared<RawProps>(std::move(props));
+  }
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
 #ifdef RN_SERIALIZABLE_STATE
   rawProps = std::make_shared<RawProps>(
@@ -108,6 +123,15 @@ void LayoutAnimationsProxyCommon::enqueueLayoutAnimation(ManagedLayoutAnimationS
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const auto tag = start.tag;
   const auto type = start.type;
+  if (const auto pendingIt = pendingLayoutAnimations_.find(tag);
+      pendingIt != pendingLayoutAnimations_.end() && pendingIt->second.type == type) {
+    auto &pending = std::get<ManagedLayoutAnimationStart>(layoutAnimationOperations_[pendingIt->second.operationIndex]);
+    pending.after = start.after;
+    pending.parentTag = start.parentTag;
+    pending.opacity = start.opacity;
+    pending.config = start.config;
+    return;
+  }
   layoutAnimationOperations_.push_back(std::move(start));
   pendingLayoutAnimations_.insert_or_assign(tag, PendingLayoutAnimation{type, layoutAnimationOperations_.size() - 1});
 }
@@ -132,13 +156,93 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations(std::unique_loc
   flushLayoutAnimationOperationsLocked();
 }
 
+Props::Shared LayoutAnimationsProxyCommon::mergeSynchronousProps(const ShadowView &view, const folly::dynamic &props)
+    const {
+  auto rawProps = props;
+#ifdef RN_SERIALIZABLE_STATE
+  rawProps = folly::dynamic::merge(view.props->rawProps, rawProps);
+#endif
+  const PropsParserContext propsParserContext{view.surfaceId, *contextContainer_};
+  return componentDescriptorRegistry_->at(view.componentHandle)
+      .cloneProps(propsParserContext, view.props, RawProps(std::move(rawProps)));
+}
+
+// The registry broadcasts one batch to every surface proxy; entries of other surfaces are skipped here.
+void LayoutAnimationsProxyCommon::applySynchronousProps(const UpdatesBatch &updatesBatch, bool /*trackInLightTree*/)
+    const {
+  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (!hasLayoutAnimationRecords()) {
+    return;
+  }
+  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
+    if (shadowNodeFamily->getSurfaceId() != surfaceId_) {
+      continue;
+    }
+    applySynchronousPropsToLayoutAnimation(shadowNodeFamily->getTag(), props);
+  }
+}
+
+bool LayoutAnimationsProxyCommon::hasLayoutAnimationRecords() const {
+  return !layoutAnimations_.empty() || !pendingLayoutAnimations_.empty() || !completedAnimations_.empty();
+}
+
+// A layout animation builds every frame from its own copies of the props, not from the light node.
+// The copies live in the queued start, in the running record and in the frame that waits for a pull.
+void LayoutAnimationsProxyCommon::applySynchronousPropsToLayoutAnimation(const Tag tag, const folly::dynamic &props)
+    const {
+  const bool propsIncludeOpacity = props.count("opacity") > 0;
+  if (hasPendingLayoutAnimation(tag)) {
+    for (auto &operation : layoutAnimationOperations_) {
+      std::visit(
+          [&](auto &start) {
+            using Start = std::decay_t<decltype(start)>;
+            if constexpr (!std::is_same_v<Start, LayoutAnimationCancellation>) {
+              if (start.tag != tag) {
+                return;
+              }
+              start.before.props = mergeSynchronousProps(start.before, props);
+              start.after.props = mergeSynchronousProps(start.after, props);
+              if constexpr (std::is_same_v<Start, ManagedLayoutAnimationStart>) {
+                if (propsIncludeOpacity && start.opacity) {
+                  start.opacity = static_cast<const ViewProps &>(*start.after.props).opacity;
+                }
+              }
+            }
+          },
+          operation);
+    }
+  }
+
+  LayoutAnimation *animation = nullptr;
+  if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
+    animation = &it->second;
+  } else if (const auto it = completedAnimations_.find(tag);
+             it != completedAnimations_.end() && !it->second.shouldRemove) {
+    animation = &it->second.animation;
+  }
+  if (animation == nullptr) {
+    return;
+  }
+  animation->finalView.props = mergeSynchronousProps(animation->finalView, props);
+  animation->currentView.props = mergeSynchronousProps(animation->currentView, props);
+  if (propsIncludeOpacity && animation->opacity) {
+    animation->opacity = static_cast<const ViewProps &>(*animation->finalView.props).opacity;
+  }
+  if (const auto it = updateMap_.find(tag); it != updateMap_.end() && it->second.newProps) {
+    auto pendingView = animation->finalView;
+    pendingView.props = it->second.newProps;
+    it->second.newProps = mergeSynchronousProps(pendingView, props);
+  }
+}
+
 ShadowView LayoutAnimationsProxyCommon::materializeLayoutAnimation(
     const Tag tag,
     const ShadowView &before,
     const ShadowView &after,
     const Tag parentTag,
     const std::optional<double> opacity,
-    const LayoutAnimationType type) const {
+    const LayoutAnimationType type,
+    const std::shared_ptr<Serializable> &config) const {
   auto currentView = before;
   const auto activeAnimationIt = layoutAnimations_.find(tag);
   if (type == LayoutAnimationType::ENTERING) {
@@ -171,6 +275,7 @@ ShadowView LayoutAnimationsProxyCommon::materializeLayoutAnimation(
           .parentTag = parentTag,
           .opacity = opacity,
           .type = type,
+          .config = config,
       });
   return currentView;
 }
@@ -190,7 +295,8 @@ LayoutAnimationsProxyCommon::takeNextLayoutAnimationOperation(std::deque<LayoutA
         managedStart->after,
         managedStart->parentTag,
         managedStart->opacity,
-        managedStart->type);
+        managedStart->type,
+        managedStart->config);
     return PreparedLayoutAnimationStart{
         .start = std::move(*managedStart),
         .window = window_,
@@ -211,7 +317,8 @@ LayoutAnimationsProxyCommon::takeNextLayoutAnimationOperation(std::deque<LayoutA
         progressStart->after,
         progressStart->parentTag,
         std::nullopt,
-        LayoutAnimationType::PROGRESS);
+        LayoutAnimationType::PROGRESS,
+        nullptr);
     return std::monostate{};
   }
   const auto cancellation = std::get<LayoutAnimationCancellation>(operation);
@@ -327,16 +434,12 @@ void LayoutAnimationsProxyCommon::cancelAllLayoutAnimations() const {
         stops.push_back(cancellation->tag);
       }
     }
-    layoutAnimationOperations_.clear();
-    pendingLayoutAnimations_.clear();
     for (const auto &[tag, animation] : layoutAnimations_) {
       if (animation.type != LayoutAnimationType::PROGRESS && stoppedTags.insert(tag).second) {
         stops.push_back(tag);
       }
     }
-    updateMap_.clear();
-    layoutAnimations_.clear();
-    completedAnimations_.clear();
+    clearSurfaceState();
   }
   if (!stops.empty()) {
     scheduleOnUI(
@@ -381,6 +484,69 @@ void LayoutAnimationsProxyCommon::updateLayoutAnimationTarget(
   react_native_assert(false && "Layout animation not found");
 }
 
+std::shared_ptr<Serializable> LayoutAnimationsProxyCommon::getRetargetLayoutAnimationConfig(const Tag tag) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (const auto pendingIt = pendingLayoutAnimations_.find(tag); pendingIt != pendingLayoutAnimations_.end()) {
+    if (pendingIt->second.type != LayoutAnimationType::LAYOUT) {
+      return nullptr;
+    }
+    const auto operationIndex = pendingIt->second.operationIndex;
+    react_native_assert(operationIndex < layoutAnimationOperations_.size());
+    if (const auto *start = std::get_if<ManagedLayoutAnimationStart>(&layoutAnimationOperations_[operationIndex])) {
+      return start->config;
+    }
+    react_native_assert(false && "Pending managed layout animation not found");
+  }
+  if (const auto animationIt = layoutAnimations_.find(tag);
+      animationIt != layoutAnimations_.end() && animationIt->second.type == LayoutAnimationType::LAYOUT) {
+    return animationIt->second.config;
+  }
+  return nullptr;
+}
+
+bool LayoutAnimationsProxyCommon::updateEnteringAnimationTarget(const Tag tag, const ShadowView &finalView) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  const auto opacity = static_cast<const ViewProps &>(*finalView.props).opacity;
+  if (const auto pendingIt = pendingLayoutAnimations_.find(tag); pendingIt != pendingLayoutAnimations_.end()) {
+    if (pendingIt->second.type != LayoutAnimationType::ENTERING) {
+      return false;
+    }
+    const auto operationIndex = pendingIt->second.operationIndex;
+    react_native_assert(operationIndex < layoutAnimationOperations_.size());
+    if (auto *start = std::get_if<ManagedLayoutAnimationStart>(&layoutAnimationOperations_[operationIndex])) {
+      start->after = finalView;
+      start->opacity = opacity;
+      return true;
+    }
+    react_native_assert(false && "Pending managed layout animation not found");
+  }
+  if (const auto animationIt = layoutAnimations_.find(tag);
+      animationIt != layoutAnimations_.end() && animationIt->second.type == LayoutAnimationType::ENTERING) {
+    animationIt->second.finalView = finalView;
+    if (animationIt->second.opacity) {
+      animationIt->second.opacity = opacity;
+    }
+    return true;
+  }
+  return false;
+}
+
+std::optional<ShadowView> LayoutAnimationsProxyCommon::takeCompletedLayoutAnimationView(const Tag tag) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  const auto it = completedAnimations_.find(tag);
+  if (it == completedAnimations_.end() || it->second.shouldRemove || hasPendingLayoutAnimation(tag)) {
+    return std::nullopt;
+  }
+  const auto &animation = it->second.animation;
+  if (animation.type != LayoutAnimationType::LAYOUT && animation.type != LayoutAnimationType::ENTERING) {
+    return std::nullopt;
+  }
+  auto currentView = animation.currentView;
+  updateMap_.erase(tag);
+  completedAnimations_.erase(it);
+  return currentView;
+}
+
 std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentLayoutAnimation(const Tag tag, const Tag parentTag)
     const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
@@ -402,15 +568,45 @@ std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentLayoutAnimation(c
   }
   if (const auto completedAnimationIt = completedAnimations_.find(tag);
       completedAnimationIt != completedAnimations_.end() && !completedAnimationIt->second.shouldRemove) {
+    completedAnimationIt->second.animation.parentTag = parentTag;
     return completedAnimationIt->second.animation.currentView;
   }
   return pendingCurrentView;
 }
 
+std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentPendingLayoutAnimations(
+    const Tag tag,
+    const Tag parentTag,
+    const ShadowView &newView,
+    const react::Point offset) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (!pendingLayoutAnimations_.contains(tag)) {
+    return std::nullopt;
+  }
+  std::optional<ShadowView> currentView;
+  for (auto operationIt = layoutAnimationOperations_.rbegin(); operationIt != layoutAnimationOperations_.rend();
+       operationIt++) {
+    if (const auto *cancellation = std::get_if<LayoutAnimationCancellation>(&*operationIt);
+        cancellation && cancellation->tag == tag) {
+      break;
+    }
+    auto *start = std::get_if<ManagedLayoutAnimationStart>(&*operationIt);
+    if (!start || start->tag != tag) {
+      continue;
+    }
+    start->parentTag = parentTag;
+    start->before.layoutMetrics.frame.origin += offset;
+    start->after = newView;
+    currentView = start->before;
+  }
+  return currentView;
+}
+
 void LayoutAnimationsProxyCommon::cleanupCompletedAnimations(
     ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext,
-    const bool preserveRemovals) const {
+    const bool preserveRemovals,
+    const std::unordered_set<Tag> &preservedTags) const {
 #ifdef ANDROID
   std::vector<OpacityRestoration> opacityRestorations;
 #endif
@@ -421,21 +617,29 @@ void LayoutAnimationsProxyCommon::cleanupCompletedAnimations(
       ++it;
       continue;
     }
-    if (preserveRemovals && completedAnimation.shouldRemove) {
+    if ((preserveRemovals && completedAnimation.shouldRemove) || preservedTags.contains(tag)) {
       ++it;
       continue;
     }
-    if (!completedAnimation.shouldRemove && completedAnimation.animation.opacity) {
-      auto &animation = completedAnimation.animation;
+    auto &animation = completedAnimation.animation;
+    auto finalView = animation.currentView;
+    if (needsFinalFrameReconciliation(animation.type)) {
+      finalView.layoutMetrics = animation.finalView.layoutMetrics;
+    }
+    if (!completedAnimation.shouldRemove && animation.opacity) {
 #ifdef ANDROID
       opacityRestorations.push_back(OpacityRestoration{
           .shadowView = animation.finalView,
           .opacity = *animation.opacity,
       });
 #else
-      auto restoredView = cloneViewWithOpacity(animation.currentView, *animation.opacity, propsParserContext);
-      mutations.push_back(ShadowViewMutation::UpdateMutation(animation.currentView, restoredView, animation.parentTag));
+      finalView = cloneViewWithOpacity(finalView, *animation.opacity, propsParserContext);
 #endif
+    }
+    if (!completedAnimation.shouldRemove &&
+        (finalView.props != animation.currentView.props ||
+         finalView.layoutMetrics != animation.currentView.layoutMetrics)) {
+      mutations.push_back(ShadowViewMutation::UpdateMutation(animation.currentView, finalView, animation.parentTag));
     }
     updateMap_.erase(tag);
     it = completedAnimations_.erase(it);
@@ -453,6 +657,9 @@ ShadowView LayoutAnimationsProxyCommon::cloneViewWithOpacity(
     const PropsParserContext &propsParserContext) const {
   auto newView = shadowView;
   folly::dynamic opacityProps = folly::dynamic::object("opacity", opacity);
+#ifdef ANDROID
+  opacityProps = folly::dynamic::merge(shadowView.props->rawProps, opacityProps);
+#endif
   newView.props = componentDescriptorRegistry_->at(newView.componentHandle)
                       .cloneProps(propsParserContext, newView.props, RawProps(opacityProps));
   return newView;

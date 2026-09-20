@@ -119,6 +119,9 @@ class AnimationFrameQueue(
 
             lastFrameTimeMs = currentFrameTimeMs
             for (callback in frameCallbacks) {
+                if (mInvalidated.get()) {
+                    break
+                }
                 callback.onAnimationFrame(currentFrameTimeMs)
             }
         }

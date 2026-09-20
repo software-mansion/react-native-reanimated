@@ -13,10 +13,6 @@ ValueInterpolator::ValueInterpolator(
       defaultStyleValue_(defaultValue),
       defaultStyleValueDynamic_(defaultValue->toDynamic()) {}
 
-folly::dynamic ValueInterpolator::getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const {
-  return viewStylesRepository_->getStyleProp(shadowNode->getTag(), propertyPath_);
-}
-
 folly::dynamic ValueInterpolator::getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const {
   auto styleValue = getStyleValue(shadowNode);
 
