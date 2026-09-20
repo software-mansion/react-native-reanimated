@@ -52,9 +52,58 @@ on:
     - cron: '27 23 * * *' # at 23:27 every day
 
 jobs:
+  build-oxc-plugin:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - name: darwin
+            os: macos-26
+          - name: linux-arm64
+            os: ubuntu-22.04-arm
+          - name: win32
+            os: ubuntu-22.04
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Use Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          cache: 'yarn'
+          node-version-file: '.nvmrc'
+      - name: Install monorepo dependencies
+        run: yarn install --immutable
+      - name: Build OXC plugin (darwin)
+        if: matrix.name == 'darwin'
+        run: yarn workspace worklets-oxc-plugin build:all
+      - name: Build OXC plugin (linux-arm64)
+        if: matrix.name == 'linux-arm64'
+        run: yarn workspace worklets-oxc-plugin build
+      - name: Build OXC plugin (win32)
+        if: matrix.name == 'win32'
+        working-directory: packages/react-native-worklets/plugin-oxc
+        run: |
+          cargo install --locked cargo-xwin
+          for target in x86_64-pc-windows-msvc aarch64-pc-windows-msvc; do
+            rustup target add "$target"
+            cargo xwin build --release --target "$target"
+            CARGO_BUILD_TARGET="$target" node --experimental-strip-types scripts/post-build.mts release
+          done
+      - name: Upload OXC plugin
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: oxc-plugin-${{ matrix.name }}
+          path: packages/react-native-worklets/plugin-oxc/*.node
+          if-no-files-found: error
+
   npm-worklets-publish:
+    needs: build-oxc-plugin
     uses: ./.github/workflows/npm-package-publish.yml
     with:
+      runs-on: ubuntu-22.04
+      artifacts-pattern: oxc-plugin-*
+      artifacts-path: packages/react-native-worklets/plugin-oxc
       package-name: 'react-native-worklets'
       package-json-path: 'packages/react-native-worklets/package.json'
       release-type: ${{ github.event_name == 'schedule' && 'nightly' || inputs.release-type || 'nightly' }}

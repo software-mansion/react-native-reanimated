@@ -8,6 +8,7 @@ const WEB_ONLY_IN_JEST = new Set([
   'UpdateLayoutAnimations',
   'useAnimatedRef',
   'useAnimatedStyle',
+  'WorkletEventHandler',
   'JSPropsUpdater',
   'updateProps',
   'util',

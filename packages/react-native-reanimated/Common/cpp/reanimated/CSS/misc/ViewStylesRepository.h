@@ -34,6 +34,7 @@ class ViewStylesRepository {
   folly::dynamic getStyleProp(Tag tag, const PropertyPath &propertyPath);
 
   void setLastMountedRoot(const RootShadowNode::Shared &rootShadowNode);
+  void removeSurface(SurfaceId surfaceId);
 
  private:
   std::shared_ptr<UIManager> uiManager_;

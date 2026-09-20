@@ -68,7 +68,15 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
   {
     testSuiteName: 'props',
     importTest: () => {
+      require('./tests/props/backgroundImage.test');
+      require('./tests/props/syncBackToReact.test');
       require('./tests/props/boxShadow.test');
+    },
+  },
+  {
+    testSuiteName: 'css animations',
+    importTest: () => {
+      require('./tests/css/animationCancellation.test');
     },
   },
   {
@@ -107,6 +115,18 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     // Remove disabled and skipByDefault when fixed
     disabled: true,
     skipByDefault: true,
+  },
+  {
+    testSuiteName: 'layout animation updates',
+    importTest: () => {
+      require('./tests/layoutAnimations/layout/propUpdates.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animations view flattening',
+    importTest: () => {
+      require('./tests/layoutAnimations/flattening.test');
+    },
   },
   {
     testSuiteName: 'keyframe animations',
