@@ -76,7 +76,7 @@ const config = {
 
   baseUrl: '/react-native-worklets/',
 
-  trailingSlash: false,
+  trailingSlash: true,
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
