@@ -12,7 +12,8 @@
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
+#include <reanimated/Fabric/updates/SynchronousPropNames.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
@@ -47,7 +48,6 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
 
 namespace {
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
 void mergeAnimatedProps(AnimatedProps &target, AnimatedProps &&source) {
   if (source.rawProps) {
     if (target.rawProps) {
@@ -63,17 +63,14 @@ void mergeAnimatedProps(AnimatedProps &target, AnimatedProps &&source) {
     target.props.push_back(std::move(prop));
   }
 }
-#endif
 
 #ifdef ANDROID
 constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
-  return StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
-      !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS");
+  return StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS");
 }
 #elif __APPLE__
 constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
-  return StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
-      !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS");
+  return StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS");
 }
 #else
 constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
@@ -82,51 +79,8 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 #endif
 
 std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBatch, const bool allowPartialUpdates) {
-  static const std::unordered_set<std::string> synchronousPropNames = {
-      "opacity",
-      "elevation",
-      "zIndex",
-      "shadowColor",
-#if __APPLE__
-      "shadowOffset",
-      "shadowOpacity",
-      "shadowRadius",
-#endif // __APPLE__
-      "backgroundColor",
-      // "color", // not supported
-      "tintColor",
-      "placeholderTextColor",
-      "borderRadius",
-      "borderTopLeftRadius",
-      "borderTopRightRadius",
-      "borderTopStartRadius",
-      "borderTopEndRadius",
-      "borderBottomLeftRadius",
-      "borderBottomRightRadius",
-      "borderBottomStartRadius",
-      "borderBottomEndRadius",
-      "borderStartStartRadius",
-      "borderStartEndRadius",
-      "borderEndStartRadius",
-      "borderEndEndRadius",
-      "borderColor",
-      "borderTopColor",
-      "borderBottomColor",
-      "borderLeftColor",
-      "borderRightColor",
-      "borderStartColor",
-      "borderEndColor",
-      "borderBlockColor",
-      "borderBlockStartColor",
-      "borderBlockEndColor",
-      "outlineColor",
-      "outlineOffset",
-      "outlineWidth",
-      "transform",
-  };
-
   const auto isSynchronous = [&](const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
-    if (!synchronousPropNames.contains(keyStr)) {
+    if (!isSynchronousPropName(keyStr)) {
       return false;
     }
 #ifdef ANDROID
@@ -806,30 +760,83 @@ void ReanimatedModuleProxy::performOperations() {
   flushLayoutAnimationOperations();
   executeLayoutAnimationsRequests();
 
-  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
-
-  UpdatesBatch updatesBatch;
+  UpdatesBatch synchronousUpdatesBatch;
+  std::unordered_map<SurfaceId, PropsMap> propsMapBySurface;
+  bool flushRegistry = false;
+  bool hasCommitUpdates = false;
   {
     ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
 
     auto lock = updatesRegistryManager_->lock();
 
+    UpdatesBatch commitUpdatesBatch;
     if (cssTransitionsRegistry_->needsFlush()) {
       // Update CSS transitions and flush updates
-      cssTransitionsRegistry_->flushUpdates(updatesBatch);
+      cssTransitionsRegistry_->flushUpdates(commitUpdatesBatch);
     }
 
     // Flush all animated props updates
-    animatedPropsRegistry_->flushUpdates(updatesBatch);
+    animatedPropsRegistry_->flushUpdates(commitUpdatesBatch);
 
     if (cssAnimationsRegistry_->needsFlush()) {
       // Update CSS animations and flush updates
-      cssAnimationsRegistry_->flushUpdates(updatesBatch);
+      cssAnimationsRegistry_->flushUpdates(commitUpdatesBatch);
+    }
+
+    if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
+      auto [synchronousBatch, shadowTreeBatch] = partitionUpdates(std::move(commitUpdatesBatch), false);
+      synchronousUpdatesBatch = std::move(synchronousBatch);
+      commitUpdatesBatch = std::move(shadowTreeBatch);
+    }
+
+#ifdef ANDROID
+    updatesRegistryManager_->collectPropsToRevertBySurface(propsMapBySurface);
+#endif
+    flushRegistry = shouldFlushRegistry_.exchange(false);
+    hasCommitUpdates = !commitUpdatesBatch.empty();
+    if (flushRegistry) {
+      for (auto &[family, props] : updatesRegistryManager_->collectProps()) {
+        auto &propsVector = propsMapBySurface[family->getSurfaceId()][family];
+        for (auto &prop : props) {
+          propsVector.emplace_back(std::move(prop));
+        }
+      }
+    } else if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
+      // The synchronous path does not update the shadow tree, so a commit also carries the registry values.
+      std::unordered_map<ShadowNodeFamily::Shared, folly::dynamic> propsByFamily;
+      for (auto &[family, props] : commitUpdatesBatch) {
+        auto [it, inserted] = propsByFamily.try_emplace(family, std::move(props));
+        if (!inserted) {
+          it->second.update(props);
+        }
+      }
+      for (auto &[family, props] : propsByFamily) {
+        updatesRegistryManager_->mergeRegistryProps(family->getTag(), props);
+        propsMapBySurface[family->getSurfaceId()][family].emplace_back(std::move(props));
+      }
+#ifdef ANDROID
+      for (auto &[_, propsMap] : propsMapBySurface) {
+        for (auto &[family, propsVector] : propsMap) {
+          if (propsByFamily.contains(family)) {
+            continue;
+          }
+          folly::dynamic registryProps = folly::dynamic::object;
+          updatesRegistryManager_->mergeRegistryProps(family->getTag(), registryProps);
+          if (!registryProps.empty()) {
+            propsVector.emplace_back(std::move(registryProps));
+          }
+        }
+      }
+#endif
+    } else {
+      for (auto &[family, props] : commitUpdatesBatch) {
+        propsMapBySurface[family->getSurfaceId()][family].emplace_back(std::move(props));
+      }
     }
   }
 
   if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
-    applySynchronousUpdates(updatesBatch, false);
+    applySynchronousUpdates(synchronousUpdatesBatch);
   }
 
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
@@ -838,13 +845,16 @@ void ReanimatedModuleProxy::performOperations() {
     // In this case, we should skip the commit here and let React Native do
     // it. The commit will include the current values from the updates manager
     // which will be applied in ReanimatedCommitHook.
-    if (!updatesBatch.empty()) {
+    if (flushRegistry) {
+      shouldFlushRegistry_ = true;
+    }
+    if (hasCommitUpdates) {
       updatesRegistryManager_->pleaseCommitAfterPause();
     }
     return;
   }
 
-  commitUpdates(uiRuntime, updatesBatch);
+  commitUpdates(propsMapBySurface);
 }
 
 void ReanimatedModuleProxy::performNonLayoutOperations() {
@@ -855,10 +865,9 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
     auto lock = updatesRegistryManager_->lock();
     updatesBatch = animatedPropsRegistry_->getPendingUpdates();
   }
-  applySynchronousUpdates(updatesBatch, true);
+  applySynchronousUpdates(partitionUpdates(std::move(updatesBatch), true).first);
 }
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
 AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::collectNonLayoutAnimationUpdates");
 
@@ -881,10 +890,8 @@ std::shared_ptr<UIManagerAnimationBackend> ReanimatedModuleProxy::getAnimationBa
       "[Reanimated] Animation Backend is null (UIManager not wired to a backend yet or already torn down)");
   return locked;
 }
-#endif
 
 void ReanimatedModuleProxy::startBackendIfNeeded() {
-#if REACT_NATIVE_VERSION_MINOR >= 85
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     if (isAnimationRunning_) {
       return;
@@ -899,11 +906,9 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
         });
     isAnimationRunning_ = true;
   }
-#endif
 }
 
 void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
-#if REACT_NATIVE_VERSION_MINOR >= 85
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     const bool hasWork = producedMutations || !pendingFrameCallbacks_.empty() ||
         pendingAnimationFrameCallbackFromWorklets_ != nullptr || operationsLoop_->hasOngoingOperations() ||
@@ -914,10 +919,8 @@ void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
       isAnimationRunning_ = false;
     }
   }
-#endif
 }
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
 AnimationMutations ReanimatedModuleProxy::mutationsFromAnimatedPropsBatch(
     UpdatesBatchAnimatedProps &&animatedPropsBatch) {
   // This is a temporary fix, in reanimated we can sometimes produce multiple updates for the same view
@@ -1018,7 +1021,6 @@ AnimationMutations ReanimatedModuleProxy::collectEventUpdates() {
 
   return mutationsFromAnimatedPropsBatch(std::move(batch));
 }
-#endif
 
 bool ReanimatedModuleProxy::handleEventAndFlush(
     const std::string &eventName,
@@ -1026,23 +1028,18 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
     const jsi::Value &payload,
     const GrandCallbackSource source) {
   bool handled = false;
-#if REACT_NATIVE_VERSION_MINOR >= 85 && (REACT_NATIVE_VERSION_MINOR > 85 || REACT_NATIVE_VERSION_PATCH >= 2)
   getAnimationBackend()->pushAnimationMutations([&, source](AnimationTimestamp timestamp) {
     handled = handleEvent(eventName, emitterReactTag, payload, timestamp.count());
     return runGrandCallback(timestamp, source);
   });
-#else
-  (void)eventName;
-  (void)emitterReactTag;
-  (void)payload;
-  (void)source;
-#endif
   return handled;
 }
 
-void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, const bool allowPartialUpdates) {
-  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
-      partitionUpdates(std::move(updatesBatch), allowPartialUpdates);
+void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch) {
+  if (layoutAnimationsProxyRegistry_ && !synchronousUpdatesBatch.empty()) {
+    layoutAnimationsProxyRegistry_->applySynchronousProps(
+        synchronousUpdatesBatch, DynamicFeatureFlags::getFlag("TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS"));
+  }
 
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
@@ -1057,8 +1054,6 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
     synchronouslyUpdateUIPropsFunction_(shadowNodeFamily->getTag(), props);
   }
 #endif // __APPLE__
-
-  updatesBatch = std::move(shadowTreeUpdatesBatch);
 }
 
 void ReanimatedModuleProxy::requestFlushRegistry() {
@@ -1074,40 +1069,12 @@ void ReanimatedModuleProxy::requestFlushRegistry() {
   }
 }
 
-void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch) {
+void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::commitUpdates");
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 
-  std::unordered_map<SurfaceId, PropsMap> propsMapBySurface;
-  PropsMap collectedProps;
-  bool flushRegistry;
-
-  // Release the lock before shadowTree.commit - it re-enters via ReanimatedCommitHook.
-  {
-    auto lock = updatesRegistryManager_->lock();
-#ifdef ANDROID
-    updatesRegistryManager_->collectPropsToRevertBySurface(propsMapBySurface);
-#endif
-    flushRegistry = shouldFlushRegistry_.exchange(false);
-    if (flushRegistry) {
-      collectedProps = updatesRegistryManager_->collectProps();
-    }
-  }
-
-  if (flushRegistry) {
-    for (auto const &[family, props] : collectedProps) {
-      auto &propsVector = propsMapBySurface[family->getSurfaceId()][family];
-      for (const auto &prop : props) {
-        propsVector.emplace_back(prop);
-      }
-    }
-  } else {
-    for (auto const &[shadowNodeFamily, props] : updatesBatch) {
-      propsMapBySurface[shadowNodeFamily->getSurfaceId()][shadowNodeFamily].emplace_back(props);
-    }
-  }
-
+  // No registry lock is held here - shadowTree.commit re-enters via ReanimatedCommitHook.
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
       const auto status = shadowTree.commit(
@@ -1210,11 +1177,6 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
   viewStylesRepository_->setUIManager(uiManager_);
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    react_native_assert(
-        (REACT_NATIVE_VERSION_MINOR > 85 || (REACT_NATIVE_VERSION_MINOR == 85 && REACT_NATIVE_VERSION_PATCH >= 2)) &&
-        "[Reanimated] USE_ANIMATION_BACKEND requires React Native 0.85.2 or newer.");
-
-#if REACT_NATIVE_VERSION_MINOR >= 85
     if (!ReactNativeFeatureFlags::useSharedAnimatedBackend()) {
       react_native_assert(
           false &&
@@ -1223,7 +1185,6 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
           "Enable the Experimental Release level in React Native, "
           "or disable the Reanimated Feature Flag");
     }
-#endif
   }
 
   initializeLayoutAnimationsProxyRegistry();
@@ -1242,8 +1203,8 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
   mountHook_ = std::make_shared<ReanimatedMountHook>(
       uiManager_, updatesRegistryManager_, viewStylesRepository_, layoutAnimationsProxyRegistry_, request);
 
-  commitHook_ =
-      std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxyRegistry_);
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(
+      uiManager_, updatesRegistryManager_, viewStylesRepository_, layoutAnimationsProxyRegistry_);
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
@@ -1290,8 +1251,8 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
 #endif
   };
 
-  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    layoutAnimationsProxyRegistry_ = createLayoutAnimationsProxyExperimentalRegistry(dependencies);
+  if constexpr (!StaticFeatureFlags::getFlag("USE_LEGACY_LAYOUT_ANIMATIONS_PROXY")) {
+    layoutAnimationsProxyRegistry_ = createLayoutAnimationsProxyDefaultRegistry(dependencies);
   } else {
     layoutAnimationsProxyRegistry_ = createLayoutAnimationsProxyLegacyRegistry(dependencies);
   }

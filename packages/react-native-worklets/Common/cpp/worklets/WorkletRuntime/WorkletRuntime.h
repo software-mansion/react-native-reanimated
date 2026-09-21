@@ -29,6 +29,8 @@ namespace worklets {
 using namespace facebook;
 using namespace react;
 
+class Networking;
+
 template <typename TCallable>
 concept RuntimeCallable = std::is_same_v<std::remove_cvref_t<TCallable>, jsi::Function> ||
     std::is_same_v<std::remove_cvref_t<TCallable>, std::shared_ptr<SerializableWorklet>>;
@@ -256,7 +258,10 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       const std::string &name,
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
       bool enableEventLoop = true,
-      bool enableLocking = true);
+      bool enableLocking = true,
+      bool enableNetworking = true);
+
+  ~WorkletRuntime() override;
 
   void init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy);
 
@@ -431,9 +436,14 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   void bundleModeInit(
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<const ScriptBuffer> &script,
-      const std::string &sourceUrl);
+      const std::string &sourceUrl,
+      const std::shared_ptr<Networking> &networking);
 
   void legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader);
+
+  [[nodiscard]] AbortToken abortToken() const noexcept {
+    return static_cast<AbortToken>(runtimeId_);
+  }
 
   [[nodiscard]] std::unique_lock<std::recursive_mutex> acquireRuntimeLock() const {
     if (enableLocking_) {
@@ -444,6 +454,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   const RuntimeData::RuntimeId runtimeId_;
   const bool enableLocking_;
+  const bool enableNetworking_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const bool microtaskQueueEnabled_;
   const std::shared_ptr<jsi::Runtime> runtime_;

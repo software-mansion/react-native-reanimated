@@ -50,14 +50,14 @@ const linear = (
   gradient: Partial<Extract<BackgroundImageValue, { type: 'linear-gradient' }>>
 ): BackgroundImageValue => ({
   type: 'linear-gradient',
-  colorStops: [{ color: '#ff0000' }],
+  colorStops: [{ color: '#ff0000' }, { color: '#0000ff' }],
   ...gradient,
 });
 
 const radial = (gradient: Partial<RadialGradientInput>): BackgroundImageValue =>
   ({
     type: 'radial-gradient',
-    colorStops: [{ color: '#ff0000' }],
+    colorStops: [{ color: '#ff0000' }, { color: '#0000ff' }],
     ...gradient,
   }) as RadialGradientInput;
 
@@ -327,6 +327,9 @@ describe(processBackgroundImage, () => {
       'radial-gradient(at 10% 20% 30%, #ff0000, #0000ff)',
       'radial-gradient(at middle 10% top 20%, #ff0000, #0000ff)',
       'conic-gradient(#ff0000, #0000ff)',
+      'linear-gradient(#ff0000)',
+      'linear-gradient(to right, #ff0000)',
+      'radial-gradient(circle, #ff0000)',
       'not a gradient',
       '',
     ])('skips invalid gradient %p', (value) => {
@@ -466,18 +469,80 @@ describe(processBackgroundImage, () => {
           linear({
             colorStops: [
               { color: '#ff0000', positions: [0.25] as unknown as string[] },
+              { color: '#0000ff' },
             ],
           }),
         ])?.[0].colorStops
-      ).toEqual([{ color: RED, position: 0.25 }]);
+      ).toEqual([
+        { color: RED, position: 0.25 },
+        { color: BLUE, position: null },
+      ]);
     });
 
     test('forwards the processor context to colors', () => {
       expect(
-        process([linear({ colorStops: [{ color: 'transparent' }] })], {
-          target: ValueProcessorTarget.CSS,
-        })?.[0].colorStops
-      ).toEqual([{ color: false, position: null }]);
+        process(
+          [
+            linear({
+              colorStops: [{ color: 'transparent' }, { color: '#0000ff' }],
+            }),
+          ],
+          { target: ValueProcessorTarget.CSS }
+        )?.[0].colorStops
+      ).toEqual([
+        { color: false, position: null },
+        { color: BLUE, position: null },
+      ]);
+    });
+
+    test.each([
+      [
+        'leading',
+        [
+          { color: null, positions: ['20%'] },
+          { color: '#ff0000' },
+          { color: '#0000ff' },
+        ],
+        '20%',
+      ],
+      [
+        'trailing',
+        [
+          { color: '#ff0000' },
+          { color: '#0000ff' },
+          { color: null, positions: ['80%'] },
+        ],
+        '80%',
+      ],
+      [
+        'adjacent',
+        [
+          { color: '#ff0000' },
+          { color: null, positions: ['20%'] },
+          { color: null, positions: ['40%'] },
+          { color: '#0000ff' },
+        ],
+        '40%',
+      ],
+    ])('throws on %s transition hints', (_, colorStops, position) => {
+      expect(() => process([linear({ colorStops })])).toThrow(
+        new Error(
+          `[Reanimated] ${ERROR_MESSAGES.invalidTransitionHint(position)}`
+        )
+      );
+    });
+
+    test.each([
+      [[], 0],
+      [[{ color: '#ff0000' }], 1],
+      [[{ color: '#ff0000', positions: ['50%'] }], 1],
+    ])('throws on fewer than two color stops %p', (colorStops, count) => {
+      expect(() => process([linear({ colorStops })])).toThrow(
+        new Error(`[Reanimated] ${ERROR_MESSAGES.notEnoughColorStops(count)}`)
+      );
+      expect(() => process([radial({ colorStops })])).toThrow(
+        new Error(`[Reanimated] ${ERROR_MESSAGES.notEnoughColorStops(count)}`)
+      );
     });
 
     test('throws on a null color with a position count other than one', () => {
@@ -534,7 +599,10 @@ describe(processBackgroundImage, () => {
           shape: 'ellipse',
           size: 'farthest-corner',
           position: { top: '50%', left: '50%' },
-          colorStops: [{ color: RED, position: null }],
+          colorStops: [
+            { color: RED, position: null },
+            { color: BLUE, position: null },
+          ],
         },
       ]);
     });
@@ -571,7 +639,10 @@ describe(processBackgroundImage, () => {
         shape: 'circle',
         size: { x: '30%', y: '40%' },
         position: { top: '10%', left: '20%' },
-        colorStops: [{ color: RED, position: null }],
+        colorStops: [
+          { color: RED, position: null },
+          { color: BLUE, position: null },
+        ],
       });
     });
 

@@ -59,7 +59,7 @@ Committed build artifacts, rebuild them and never hand-edit: `packages/react-nat
 - Style update path: `useAnimatedStyle` and `useAnimatedProps` (`src/hook/`) write through `src/updateProps/updateProps.native.ts`, which calls `_updateProps` on the UI runtime. Native stores the values in `Fabric/updates/AnimatedPropsRegistry` and `UpdatesRegistryManager`, and `Fabric/ReanimatedCommitHook` applies them to the shadow tree with `cloneShadowTreeWithNewProps` (`Fabric/ShadowTreeCloner`) on every commit. `Fabric/ReanimatedMountHook` runs after mount.
 - Animated components: `src/createAnimatedComponent/` (`AnimatedComponent.native.tsx`, `JSPropsUpdater`, `InlinePropManager`, `NativeEventsManager`, `PropsFilter`). Shared values live in `src/mutables.native.ts` and `src/mutablesCommon.ts`.
 - Events: `src/WorkletEventHandler.native.ts` registers through `registerEventHandler`, native side in `Common/cpp/reanimated/Events/UIEventHandlerRegistry`.
-- Layout animations: JS in `src/layoutReanimation/` and `src/UpdateLayoutAnimations.native.ts` (`configureLayoutAnimationBatch`). Native in `Common/cpp/reanimated/LayoutAnimations/`: `LayoutAnimationsManager` holds configs, `LayoutAnimationsProxy_Legacy` and `LayoutAnimationsProxy_Experimental` are `MountingOverrideDelegate`s chosen at install time through `LayoutAnimationsProxyRegistry`. Shared element transitions are in `SharedTransitions.cpp` and the `REASharedTransitionBoundary` Fabric component in `Common/NativeView/`.
+- Layout animations: JS in `src/layoutReanimation/` and `src/UpdateLayoutAnimations.native.ts` (`configureLayoutAnimationBatch`). Native in `Common/cpp/reanimated/LayoutAnimations/`: `LayoutAnimationsManager` holds configs, `LayoutAnimationsProxy` (default) and `LayoutAnimationsProxy_Legacy` (`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`) are `MountingOverrideDelegate`s chosen at install time through `LayoutAnimationsProxyRegistry`. Shared element transitions are in `SharedTransitions.cpp` and the `REASharedTransitionBoundary` Fabric component in `Common/NativeView/`.
 - CSS animations and transitions: JS in `src/css/` (`platform.native.ts` picks `css/native`, `platform.ts` picks `css/web`). Native in `Common/cpp/reanimated/CSS/` with `registries/` (keyframes, animations, transitions), `core/`, `interpolation/`, `easing/`, driven by `Fabric/updates/OperationsLoop`. Platform pieces in `apple/reanimated/apple/CSS` and `android/src/main/cpp/reanimated/android/CSS`.
 - Other native features: `AnimatedSensor/`, `PseudoStyles/`, keyboard in `apple/reanimated/apple/keyboardObserver` and `android/src/main/java/com/swmansion/reanimated/keyboard`.
 
@@ -67,7 +67,7 @@ Committed build artifacts, rebuild them and never hand-edit: `packages/react-nat
 
 ```sh
 yarn                                   # install (needed in every new worktree)
-yarn build-packages                    # builds worklets then reanimated (bob), rebuilds the Babel plugin, fills lib/
+yarn build-packages                    # builds worklets then reanimated (bob), rebuilds the Babel plugin and the OXC plugin, fills lib/
 yarn workspace react-native-worklets build
 yarn workspace <pkg> type:check        # native + web + common-app + type tests
 yarn workspace <pkg> lint              # lint:js + lint:android + lint:apple + lint:clang-tidy (+ lint:plugin)
@@ -121,7 +121,7 @@ yarn workspace fabric-example runtime-tests --library worklets --platform ios --
 ## Fresh checkout or worktree
 
 1. `yarn` - a new worktree has no `node_modules`.
-1. `yarn build-packages` - fills `lib/` and rebuilds the plugin. `type:check` and `circular-dependency-check` fail without it.
+1. `yarn build-packages` - fills `lib/` and rebuilds both plugins. `type:check` and `circular-dependency-check` fail without it.
 1. After merging across a version bump: `rm packages/react-native-worklets/.worklets/*.js` (keep `dummy.md`) and `yarn jest --clearCache`. Stale chunks trip the plugin version check.
 1. `cd apps/fabric-example/ios && bundle exec pod install` when native files changed.
 1. Metro `--reset-cache` after toggling Bundle Mode.

@@ -47,6 +47,9 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       runtimeManager_(std::make_shared<RuntimeManager>()),
       unpackerLoader_(std::make_shared<UnpackerLoader>()),
       rnRuntimeStatus_(rnRuntimeStatus),
+      networking_(
+          runtimeBindings->networkingBackend ? std::make_shared<Networking>(runtimeBindings->networkingBackend)
+                                             : nullptr),
       uiWorkletRuntime_(runtimeManager_->createUninitializedUIRuntime(std::make_shared<AsyncQueueUI>(uiScheduler_))),
       uiRuntimeStarted_(false) {}
 
@@ -70,6 +73,7 @@ void WorkletsModuleProxy::startUIRuntimeInBundleModeAOT(const BundleModeConfig &
       runtimeManager_,
       uiWorkletRuntime_,
       runtimeBindings_,
+      networking_,
       bundleModeConfig_,
       unpackerLoader_,
       rnRuntimeStatus_,
@@ -103,14 +107,19 @@ void WorkletsModuleProxy::attachToRNRuntime(
       runtimeManager_,
       uiWorkletRuntime_,
       runtimeBindings_,
+      networking_,
       bundleModeConfig_,
       unpackerLoader_,
       rnRuntimeStatus_,
       RuntimeData::rnRuntimeId);
+
   RNRuntimeWorkletDecorator::decorate(rnRuntime, rnRuntimeProxy_->toOptimizedObject(rnRuntime), jsLogger_);
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {
+  if (networking_) {
+    networking_->abortAll();
+  }
   animationFrameBatchinator_.reset();
   uiWorkletRuntime_.reset();
 }

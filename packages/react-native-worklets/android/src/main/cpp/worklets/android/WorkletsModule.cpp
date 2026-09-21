@@ -18,25 +18,28 @@ WorkletsModule::WorkletsModule(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
     jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-    const std::shared_ptr<UIScheduler> &uiScheduler)
+    const std::shared_ptr<UIScheduler> &uiScheduler,
+    jni::global_ref<JNetworking::javaobject> networking)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       rnRuntimeStatus_(std::make_shared<RNRuntimeStatus>()),
       initializer_(std::make_shared<WorkletsModuleProxyInitializer>(
           std::make_shared<JSScheduler>(*rnRuntime, jsCallInvoker, getIsOnJSQueueThread()),
           uiScheduler,
-          getRuntimeBindings(),
+          getRuntimeBindings(javaPart_, std::move(networking)),
           rnRuntimeStatus_)) {}
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
     jlong jsContext,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
-    jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler) {
+    jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
+    jni::alias_ref<JNetworking::javaobject> networking // NOLINT //(performance-unnecessary-value-param)
+) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT //(performance-no-int-to-ptr)
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
-  return makeCxxInstance(jThis, rnRuntime, jsCallInvoker, uiScheduler);
+  return makeCxxInstance(jThis, rnRuntime, jsCallInvoker, uiScheduler, jni::make_global(networking));
 }
 
 void WorkletsModule::prepareProxyCpp() {
@@ -56,9 +59,13 @@ void WorkletsModule::installTurboModuleCpp(jboolean bundleModeEnabled) {
       *rnRuntime_, static_cast<bool>(bundleModeEnabled), [this] { return loadBundleModeConfig(); });
 }
 
-std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings() {
+std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(
+    const jni::global_ref<jhybridobject> &javaPart,
+    jni::global_ref<JNetworking::javaobject> networking) {
   return std::make_shared<RuntimeBindings>(RuntimeBindings{
-      .requestAnimationFrame = getRequestAnimationFrame(), .nativeLoggingHook = makeNativeLoggingHook()});
+      .requestAnimationFrame = getRequestAnimationFrame(javaPart),
+      .nativeLoggingHook = makeNativeLoggingHook(),
+      .networkingBackend = std::make_shared<AndroidNetworkingBackend>(std::move(networking))});
 }
 
 BundleModeConfig WorkletsModule::loadBundleModeConfig() {
@@ -70,8 +77,9 @@ BundleModeConfig WorkletsModule::loadBundleModeConfig() {
       .enabled = true, .script = scriptBufferWrapper->getScript(), .sourceURL = scriptBufferWrapper->getSourceUrl()};
 }
 
-RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame() {
-  return [javaPart = javaPart_](std::function<void(const double)> &&callback) -> void {
+RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame(
+    const jni::global_ref<jhybridobject> &javaPart) {
+  return [javaPart](std::function<void(const double)> &&callback) -> void {
     static const auto jRequestAnimationFrame =
         javaPart->getClass()->getMethod<void(AnimationFrameCallback::javaobject)>("requestAnimationFrame");
     jRequestAnimationFrame(javaPart.get(), AnimationFrameCallback::newObjectCxxArgs(std::move(callback)).get());

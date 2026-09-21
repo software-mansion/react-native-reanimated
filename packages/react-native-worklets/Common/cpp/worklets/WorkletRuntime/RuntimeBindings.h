@@ -1,8 +1,10 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <worklets/Networking/NetworkingBackend.h>
 
 #include <functional>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -29,6 +31,7 @@ struct RuntimeBindings {
 
   const RequestAnimationFrame requestAnimationFrame;
   const NativeLoggingHook nativeLoggingHook;
+  const std::shared_ptr<NetworkingBackend> networkingBackend;
 };
 
 #if defined(ANDROID) || (defined(__APPLE__) && defined(__OBJC__))

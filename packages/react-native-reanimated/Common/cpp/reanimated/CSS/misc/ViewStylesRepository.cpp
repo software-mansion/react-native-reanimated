@@ -117,6 +117,10 @@ void ViewStylesRepository::setLastMountedRoot(const RootShadowNode::Shared &root
   lastMountedRootBySurface_[rootShadowNode->getSurfaceId()] = rootShadowNode;
 }
 
+void ViewStylesRepository::removeSurface(const SurfaceId surfaceId) {
+  lastMountedRootBySurface_.erase(surfaceId);
+}
+
 folly::dynamic ViewStylesRepository::getStyleProp(const Tag tag, const PropertyPath &propertyPath) {
   auto animatedValue = getPropertyValue(animatedPropsRegistry_->get(tag), propertyPath);
   if (!animatedValue.isNull()) {
