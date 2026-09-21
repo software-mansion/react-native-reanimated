@@ -13,7 +13,7 @@ function withoutCollapsable(Component: typeof html.div) {
   return forwardRef<
     React.ComponentRef<typeof html.div>,
     React.ComponentPropsWithoutRef<typeof html.div> & { collapsable?: boolean }
-    >(function StrictDOMWrapper({ collapsable: _collapsable, ...props }, ref) {
+  >(function StrictDOMWrapper({ collapsable: _collapsable, ...props }, ref) {
     // we do not want to pass collapsable as strict dom components
     // do not support it as a prop and error out
     return <Component {...props} ref={ref} />;
