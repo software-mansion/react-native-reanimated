@@ -11,24 +11,21 @@ import {
   expect,
   expectEventually,
   getTestComponent,
+  mockAnimationTimer,
+  recordAnimationUpdates,
   render,
   test,
+  unmockAnimationTimer,
   useTestRef,
   wait,
+  waitForAnimationUpdates,
 } from '../../../ReJest/RuntimeTestsApi';
+import type { SingleViewSnapshot } from '../../../ReJest/TestRunner/UpdatesContainer';
 import { ComparisonMode } from '../../../ReJest/types';
-
-// Mirrors the NonLayoutPropAndRenderExample screen: backgroundColor is animated
-// from a shared value on the UI runtime, while width and height come from
-// React. A React render that changes only the layout props must not reset the
-// animated backgroundColor to a stale value.
+import { convertDecimalColor } from '../../../ReJest/utils/util';
 
 const BOX_REF = 'NON_LAYOUT_PROP_BOX';
-const ANIMATION_DURATION_MS = 300;
-// About 20 frames, enough for a React commit and a possible stale animation
-// frame to land. `waitForFrames(n > 1)` is not used because of a ReJest bug:
-// its nested worklet captures itself before it is assigned.
-const SETTLE_DELAY_MS = 20 * 16;
+const RECORDED_FRAMES = 12;
 
 const COLOR_OFF = '#00ffff';
 const COLOR_ON = '#ff0000';
@@ -52,7 +49,7 @@ function NonLayoutPropBox({
   const animatedStyle = useAnimatedStyle(() => {
     return {
       backgroundColor: withTiming(sv.value ? COLOR_ON : COLOR_OFF, {
-        duration: ANIMATION_DURATION_MS,
+        duration: 300,
       }),
     };
   });
@@ -83,9 +80,24 @@ async function expectBox(size: number, color: string) {
   );
 }
 
+function toColorFrames(snapshot: SingleViewSnapshot): SingleViewSnapshot {
+  return snapshot.map((update) => ({
+    backgroundColor: convertDecimalColor(
+      (update as Record<string, unknown>).backgroundColor
+    ),
+  }));
+}
+
+function redChannel(frame: SingleViewSnapshot[number]): number {
+  return parseInt(
+    ((frame as Record<string, unknown>).backgroundColor as string).slice(1, 3),
+    16
+  );
+}
+
 async function expectBoxStaysSettled(size: number, color: string) {
   await expectBox(size, color);
-  await wait(SETTLE_DELAY_MS);
+  await wait(320);
   const box = getTestComponent(BOX_REF);
   expect(await box.getAnimatedStyle('width')).toBe(size, ComparisonMode.PIXEL);
   expect(await box.getAnimatedStyle('backgroundColor')).toBe(
@@ -115,6 +127,18 @@ describe('Animated non-layout prop and React render', () => {
     await expectBoxStaysSettled(SIZE_SMALL, COLOR_ON);
   });
 
+  test('React render during the on-to-off animation keeps both updates', async () => {
+    await render(<NonLayoutPropBox colorToggled={false} size={SIZE_BIG} />);
+    await expectBox(SIZE_BIG, COLOR_OFF);
+
+    await render(<NonLayoutPropBox size={SIZE_BIG} colorToggled />);
+    await expectBoxStaysSettled(SIZE_BIG, COLOR_ON);
+
+    await render(<NonLayoutPropBox colorToggled={false} size={SIZE_BIG} />);
+    await render(<NonLayoutPropBox colorToggled={false} size={SIZE_SMALL} />);
+    await expectBoxStaysSettled(SIZE_SMALL, COLOR_OFF);
+  });
+
   test('backgroundColor animates correctly after a React render changed the size', async () => {
     await render(<NonLayoutPropBox colorToggled={false} size={SIZE_BIG} />);
     await expectBox(SIZE_BIG, COLOR_OFF);
@@ -137,6 +161,34 @@ describe('Animated non-layout prop and React render', () => {
     await render(<NonLayoutPropBox colorToggled={false} size={SIZE_BIG} />);
     await render(<NonLayoutPropBox size={SIZE_SMALL} colorToggled />);
     await expectBoxStaysSettled(SIZE_SMALL, COLOR_ON);
+  });
+
+  test('a React render neither drops nor reverts backgroundColor frames', async () => {
+    await mockAnimationTimer();
+    const updatesContainer = await recordAnimationUpdates();
+
+    await render(<NonLayoutPropBox colorToggled={false} size={SIZE_BIG} />);
+    await render(<NonLayoutPropBox size={SIZE_BIG} colorToggled />);
+    await render(<NonLayoutPropBox size={SIZE_SMALL} colorToggled />);
+    await waitForAnimationUpdates(RECORDED_FRAMES);
+
+    const frames = toColorFrames(
+      await updatesContainer.getUpdates(undefined, ['backgroundColor'])
+    );
+    const nativeFrames = toColorFrames(
+      await updatesContainer.getNativeSnapshots(undefined, ['backgroundColor'])
+    );
+    await unmockAnimationTimer();
+
+    expect(frames).toMatchNativeSnapshots(nativeFrames);
+
+    const reds = frames.map(redChannel);
+    for (let i = 1; i < reds.length; i++) {
+      expect(reds[i] >= reds[i - 1]).toBe(true);
+    }
+    expect(reds[reds.length - 1] > reds[0]).toBe(true);
+
+    await expectBox(SIZE_SMALL, COLOR_ON);
   });
 });
 
