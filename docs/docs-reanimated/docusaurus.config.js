@@ -78,6 +78,8 @@ const config = {
   // Change this to /react-native-reanimated/ when deploying to GitHub pages
   baseUrl: '/react-native-reanimated/',
 
+  trailingSlash: false,
+
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'software-mansion', // Usually your GitHub org/user name.
