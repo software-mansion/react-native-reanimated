@@ -12,8 +12,6 @@
 
 ### 💡 Others
 
-- Bump Worklets version to 0.14.0. ([#10636](https://github.com/software-mansion/react-native-reanimated/pull/10636) by [@pawicao](https://github.com/pawicao))
-
 ## 0.13.0 — 2026-09-18
 
 ### 🛠 Breaking changes
