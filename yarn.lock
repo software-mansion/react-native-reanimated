@@ -3071,6 +3071,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@docusaurus/plugin-client-redirects@npm:3.9.2":
+  version: 3.9.2
+  resolution: "@docusaurus/plugin-client-redirects@npm:3.9.2"
+  dependencies:
+    "@docusaurus/core": "npm:3.9.2"
+    "@docusaurus/logger": "npm:3.9.2"
+    "@docusaurus/utils": "npm:3.9.2"
+    "@docusaurus/utils-common": "npm:3.9.2"
+    "@docusaurus/utils-validation": "npm:3.9.2"
+    eta: "npm:^2.2.0"
+    fs-extra: "npm:^11.1.1"
+    lodash: "npm:^4.17.21"
+    tslib: "npm:^2.6.0"
+  peerDependencies:
+    react: ^18.0.0 || ^19.0.0
+    react-dom: ^18.0.0 || ^19.0.0
+  checksum: 10/2f45f0a247bf02c54b4fdbd7de73be6523ad467869573861fe083586e46b94844eb01103e5e1e3c1f44d93b2e9b9e64c8fac9168910fe9d6aa377c2fcd79701a
+  languageName: node
+  linkType: hard
+
 "@docusaurus/plugin-content-blog@npm:3.9.2":
   version: 3.9.2
   resolution: "@docusaurus/plugin-content-blog@npm:3.9.2"
@@ -16076,6 +16096,7 @@ __metadata:
     "@dnd-kit/modifiers": "npm:9.0.0"
     "@docusaurus/core": "npm:3.9.2"
     "@docusaurus/module-type-aliases": "npm:3.9.2"
+    "@docusaurus/plugin-client-redirects": "npm:3.9.2"
     "@docusaurus/plugin-debug": "npm:3.9.2"
     "@docusaurus/plugin-google-tag-manager": "npm:3.9.2"
     "@docusaurus/preset-classic": "npm:3.9.2"
