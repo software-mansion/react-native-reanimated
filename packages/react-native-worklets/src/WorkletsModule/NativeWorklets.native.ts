@@ -474,7 +474,8 @@ function installUnpackers(workletsModuleProxy: WorkletsModuleProxy) {
       shareableGuest.sourceMap ?? '',
       remoteFunction.code!,
       remoteFunction.location ?? '',
-      remoteFunction.sourceMap ?? ''
+      remoteFunction.sourceMap ?? '',
+      __DEV__
     );
   }
 }
