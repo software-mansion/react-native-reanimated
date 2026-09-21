@@ -2,8 +2,8 @@ import {
   gfmTaskListItemFromMarkdown,
   gfmTaskListItemToMarkdown,
 } from 'mdast-util-gfm-task-list-item';
-import remarkFrontmatter from 'remark-frontmatter';
 import { gfmTaskListItem } from 'micromark-extension-gfm-task-list-item';
+import remarkFrontmatter from 'remark-frontmatter';
 
 export function remarkGfmTaskListItem() {
   const data = this.data();

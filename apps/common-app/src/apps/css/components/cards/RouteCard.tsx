@@ -1,5 +1,6 @@
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import type { JSX, PropsWithChildren } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -30,14 +31,14 @@ export default function RouteCard({
   showcaseScale = 1,
   title,
 }: RouteCardProps) {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
 
   return (
     <Pressable
       disabled={disabled}
       style={styles.card}
       onPress={() => {
-        navigation.navigate(route as never);
+        navigation.navigate(route);
       }}>
       <View style={[styles.content, { opacity: disabled ? 0.6 : 1 }]}>
         <View style={styles.textColumn}>

@@ -3,14 +3,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
-  describe,
-  expect,
-  getWorkletRuntimesFromPool,
-  notify,
-  test,
-  waitForNotification,
-} from '../../../ReJest/RuntimeTestsApi';
-import {
   createSerializable,
   createSynchronizable,
   createWorkletRuntime,
@@ -20,6 +12,15 @@ import {
   scheduleOnRuntime,
   scheduleOnUI,
 } from 'react-native-worklets';
+
+import {
+  describe,
+  expect,
+  getWorkletRuntimesFromPool,
+  notify,
+  test,
+  waitForNotification,
+} from '../../../ReJest/RuntimeTestsApi';
 
 type IGlobalConstructorCarrier = {
   __isCustomObject: true;

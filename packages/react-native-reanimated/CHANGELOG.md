@@ -79,6 +79,7 @@
 
 - Patch `react-native-svg` in the example apps so its podspec targets iOS and tvOS 15.1, which Xcode 27 requires. ([#10607](https://github.com/software-mansion/react-native-reanimated/pull/10607) by [@tjzel](https://github.com/tjzel))
 - Added support for React Native 0.88. ([#10582](https://github.com/software-mansion/react-native-reanimated/pull/10582) by [@pawicao](https://github.com/pawicao))
+- Replace ESLint with oxlint for JavaScript and TypeScript linting. ([#10584](https://github.com/software-mansion/react-native-reanimated/pull/10584) by [@tshmieldev](https://github.com/tshmieldev))
 - Merge the accumulated Android raw props of a view in the layout animations light tree only when an animation, a shared element transition or a synchronous update reads that view, instead of on every commit. ([#10570](https://github.com/software-mansion/react-native-reanimated/pull/10570) by [@pawicao](https://github.com/pawicao))
 - Reduce Android layout animation overhead by skipping the raw props merge and props clone in the light tree when an Update reuses the same props pointer, and by moving the merged raw props instead of copying them. ([#10566](https://github.com/software-mansion/react-native-reanimated/pull/10566) by [@pawicao](https://github.com/pawicao))
 - Deduplicate the native CSS transition state machine across Android and iOS. ([#10356](https://github.com/software-mansion/react-native-reanimated/pull/10356) by [@MatiPl01](https://github.com/MatiPl01))
