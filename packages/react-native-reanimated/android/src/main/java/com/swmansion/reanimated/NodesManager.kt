@@ -19,6 +19,8 @@ import com.swmansion.reanimated.nativeProxy.NoopEventHandler
 import java.util.ArrayList
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.write
 
 class NodesManager(
     context: ReactApplicationContext,
@@ -46,6 +48,10 @@ class NodesManager(
 
     private var mNativeProxy: NativeProxy? = null
 
+    // invalidate() runs off the UI thread. Readers only try the lock: the UI thread may hold the UI
+    // runtime lock, which invalidateCpp can also take, so it must never wait for the writer.
+    private val mNativeProxyLock = ReentrantReadWriteLock()
+
     fun getNativeProxy(): NativeProxy? = mNativeProxy
 
     init {
@@ -72,9 +78,21 @@ class NodesManager(
         mFabricUIManager.eventDispatcher.addListener(this)
     }
 
+    private inline fun withNativeProxy(block: (NativeProxy) -> Unit) {
+        val readLock = mNativeProxyLock.readLock()
+        if (!readLock.tryLock()) {
+            return
+        }
+        try {
+            mNativeProxy?.let(block)
+        } finally {
+            readLock.unlock()
+        }
+    }
+
     fun invalidate() {
-        mNativeProxy?.let {
-            it.invalidate()
+        mNativeProxyLock.write {
+            mNativeProxy?.invalidate()
             mNativeProxy = null
         }
 
@@ -118,12 +136,12 @@ class NodesManager(
 
     fun performOperations() {
         UiThreadUtil.assertOnUiThread()
-        mNativeProxy?.performOperations()
+        withNativeProxy { it.performOperations() }
     }
 
     internal fun performNonLayoutOperations() {
         UiThreadUtil.assertOnUiThread()
-        mNativeProxy?.performNonLayoutOperations()
+        withNativeProxy { it.performNonLayoutOperations() }
     }
 
     internal fun performOperationsRespectingDrawPass() {
@@ -160,20 +178,22 @@ class NodesManager(
                 // due to frame drops. If this occurs, the additional callback execution should be ignored.
                 lastFrameTimeMs = currentFrameTimeMs
 
-                while (!mEventQueue.isEmpty()) {
-                    val copiedEvent = mEventQueue.poll()
-                    handleEvent(copiedEvent!!)
-                }
-
-                if (mFrameCallbacks.isNotEmpty()) {
-                    val frameCallbacks = mFrameCallbacks
-                    mFrameCallbacks = ArrayList(frameCallbacks.size)
-                    for (i in 0 until frameCallbacks.size) {
-                        frameCallbacks[i].onAnimationFrame(currentFrameTimeMs)
+                withNativeProxy {
+                    while (!mEventQueue.isEmpty()) {
+                        val copiedEvent = mEventQueue.poll()
+                        handleEvent(copiedEvent!!)
                     }
-                }
 
-                performOperations()
+                    if (mFrameCallbacks.isNotEmpty()) {
+                        val frameCallbacks = mFrameCallbacks
+                        mFrameCallbacks = ArrayList(frameCallbacks.size)
+                        for (i in 0 until frameCallbacks.size) {
+                            frameCallbacks[i].onAnimationFrame(currentFrameTimeMs)
+                        }
+                    }
+
+                    performOperations()
+                }
             }
 
             mCallbackPosted.set(false)
@@ -199,25 +219,24 @@ class NodesManager(
                 Trace.beginSection("onEventDispatch")
             }
 
-            if (mNativeProxy == null) {
-                return
-            }
-            // Events can be dispatched from any thread so we have to make sure handleEvent is run from
-            // the UI thread.
-            if (UiThreadUtil.isOnUiThread()) {
-                // Ensure draw-pass tracking is attached before event handling; the backend reads
-                // isInDrawPass during receiveEvent.
-                mDrawPassDetector.initialize()
-                handleEvent(event)
-                performOperationsRespectingDrawPass()
-            } else {
-                val eventName = mCustomEventNamesResolver.resolveCustomEventName(event.eventName) ?: return
-                val viewTag = event.viewTag
-                val shouldSaveEvent = mNativeProxy!!.isAnyHandlerWaitingForEvent(eventName, viewTag)
-                if (shouldSaveEvent) {
-                    mEventQueue.offer(CopiedEvent(event))
+            withNativeProxy { nativeProxy ->
+                // Events can be dispatched from any thread so we have to make sure handleEvent is run from
+                // the UI thread.
+                if (UiThreadUtil.isOnUiThread()) {
+                    // Ensure draw-pass tracking is attached before event handling; the backend reads
+                    // isInDrawPass during receiveEvent.
+                    mDrawPassDetector.initialize()
+                    handleEvent(event)
+                    performOperationsRespectingDrawPass()
+                } else {
+                    val eventName = mCustomEventNamesResolver.resolveCustomEventName(event.eventName) ?: return
+                    val viewTag = event.viewTag
+                    val shouldSaveEvent = nativeProxy.isAnyHandlerWaitingForEvent(eventName, viewTag)
+                    if (shouldSaveEvent) {
+                        mEventQueue.offer(CopiedEvent(event))
+                    }
+                    startUpdatingOnAnimationFrame()
                 }
-                startUpdatingOnAnimationFrame()
             }
         } finally {
             if (BuildConfig.REANIMATED_PROFILING) {
