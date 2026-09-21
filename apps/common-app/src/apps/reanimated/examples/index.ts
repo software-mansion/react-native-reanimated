@@ -61,8 +61,6 @@ const ColorInterpolationExample: React.FC = () =>
   React.createElement(
     require('./ColorInterpolationExample').default as React.FC
   );
-const ContrastColorExample: React.FC = () =>
-  React.createElement(require('./ContrastColorExample').default as React.FC);
 const CombinedTest: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/Combined').default as React.FC
@@ -733,12 +731,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Color interpolation',
     section: SHOW_CASES,
     screen: ColorInterpolationExample,
-  },
-  ContrastColorExample: {
-    icon: '🔲',
-    title: 'Contrast color',
-    section: REGRESSIONS,
-    screen: ContrastColorExample,
   },
   ExtrapolationExample: {
     title: 'Extrapolation example',
