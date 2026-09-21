@@ -210,6 +210,7 @@ jobs:
               - '.github/workflows/ci.yml'
               - '.github/workflows/worklets-plugin-static-check.yml'
               - '.github/workflows/helper/clear-annotations.sh'
+              - '.oxfmtrc.json'
               - '.oxlintrc.json'
               - 'scripts/oxlint/**'
               - 'yarn.lock'
