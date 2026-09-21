@@ -25,6 +25,7 @@ import { ComparisonMode } from '../../../ReJest/types';
 import { convertDecimalColor } from '../../../ReJest/utils/util';
 
 const BOX_REF = 'NON_LAYOUT_PROP_BOX';
+// Under the ~19 frames of the 300 ms animation; asking for more times out.
 const RECORDED_FRAMES = 12;
 
 const COLOR_OFF = '#00ffff';
@@ -80,23 +81,23 @@ async function expectBox(size: number, color: string) {
   );
 }
 
+function colorOf(update: SingleViewSnapshot[number]): string {
+  return convertDecimalColor(
+    (update as { backgroundColor?: unknown }).backgroundColor
+  );
+}
+
 function toColorFrames(snapshot: SingleViewSnapshot): SingleViewSnapshot {
-  return snapshot.map((update) => ({
-    backgroundColor: convertDecimalColor(
-      (update as Record<string, unknown>).backgroundColor
-    ),
-  }));
+  return snapshot.map((update) => ({ backgroundColor: colorOf(update) }));
 }
 
 function redChannel(frame: SingleViewSnapshot[number]): number {
-  return parseInt(
-    ((frame as Record<string, unknown>).backgroundColor as string).slice(1, 3),
-    16
-  );
+  return parseInt(colorOf(frame).slice(1, 3), 16);
 }
 
 async function expectBoxStaysSettled(size: number, color: string) {
   await expectBox(size, color);
+  // One frame past the 300 ms animation - the window a stale frame can land in.
   await wait(320);
   const box = getTestComponent(BOX_REF);
   expect(await box.getAnimatedStyle('width')).toBe(size, ComparisonMode.PIXEL);
@@ -163,6 +164,7 @@ describe('Animated non-layout prop and React render', () => {
     await expectBoxStaysSettled(SIZE_SMALL, COLOR_ON);
   });
 
+  // Frame-level counterpart of the mid-animation test above, on a mocked clock.
   test('a React render neither drops nor reverts backgroundColor frames', async () => {
     await mockAnimationTimer();
     const updatesContainer = await recordAnimationUpdates();
@@ -184,7 +186,7 @@ describe('Animated non-layout prop and React render', () => {
 
     const reds = frames.map(redChannel);
     for (let i = 1; i < reds.length; i++) {
-      expect(reds[i] >= reds[i - 1]).toBe(true);
+      expect(reds[i]).toBeWithinRange(reds[i - 1], 255);
     }
     expect(reds[reds.length - 1] > reds[0]).toBe(true);
 
