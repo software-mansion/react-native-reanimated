@@ -15,12 +15,11 @@ bool IOSUIScheduler::queryIsOnUIThread() const
 
 void IOSUIScheduler::scheduleOnUI(std::function<void()> job)
 {
+  UIScheduler::scheduleOnUI(std::move(job));
   if (isOnUIThread()) {
-    job();
+    triggerUI();
     return;
   }
-
-  UIScheduler::scheduleOnUI(job);
 
   if (!scheduledOnUI_) {
     dispatch_async(dispatch_get_main_queue(), [weakThis = weak_from_this()] {
