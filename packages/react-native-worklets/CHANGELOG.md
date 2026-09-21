@@ -1,17 +1,5 @@
 # Changelog
 
-## Unpublished
-
-<!-- Add a concise entry under the appropriate category. Include links to the pull request and author when available. -->
-
-### 🛠 Breaking changes
-
-### 🎉 New features
-
-### 🐛 Bug fixes
-
-### 💡 Others
-
 ## 0.13.0 — 2026-09-18
 
 ### 🛠 Breaking changes

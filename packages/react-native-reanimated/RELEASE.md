@@ -31,6 +31,12 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
    - `cd packages/react-native-reanimated && yarn set-version --version x.y.z`
 
+1. Move the changelog fragments into `CHANGELOG.md` by running the following script in the repository root (it needs `gh` to read the authors):
+
+   - `yarn changelog:squash reanimated x.y.z`
+
+   The script reads the pull request number from the first `(#N)` in the subject of the commit that added the fragment. It fails when that subject has no `(#N)`. Add a `pr: N` line to that fragment and run the script again.
+
 1. Update the **Compatibility** in `packages/react-native-reanimated/compatibility.json`
 
 1. Update `peerDependencies` in `packages/react-native-reanimated/package.json` to align with the versions declared in the **Compatibility** file.
@@ -176,6 +182,12 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
    - Make sure you've checked the right boxes:
      - **Set as pre-release** - select this when prereleasing (alpha, beta, rc),
      - **Set as the latest release** - check if releasing v4, don't check when dealing with v3 or v2.
+
+8. After a minor release, open the post-release pull request to `main`. It moves `main` to the next `x.y.0-main` version and updates `compatibility.json`. In the same pull request, run the squash script in the repository root with the version and the date of the release:
+
+   - `yarn changelog:squash reanimated x.y.0 --date YYYY-MM-DD --cut origin/x.y-stable`
+
+   `--cut` leaves the fragments that came to `main` after the stable branch was cut. They belong to the next release on `main`, also when a cherry-pick put them into `x.y.0` on the stable branch. Such an entry is then listed in both versions.
 
 8. Share the good news with the team.
 
