@@ -213,6 +213,9 @@ export function Range({
           value={value}
           onChange={(e) => {
             const newValue = parseFloat(e.target.value);
+            if (!Number.isFinite(newValue)) {
+              return;
+            }
             onChange(newValue > max ? max : newValue <= min ? min : newValue);
           }}
         />
