@@ -1,6 +1,7 @@
 'use strict';
 
 import { IS_JEST } from './platformChecker';
+import { mockedRequestAnimationFrame } from './runLoop/uiRuntime/mockedRequestAnimationFrame';
 
 export function scheduleOnUI<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
@@ -93,7 +94,7 @@ let offset = 0;
 function flushUIQueue(): void {
   const queue = runOnUIQueue;
   runOnUIQueue = [];
-  requestAnimationFrame(() => {
+  requestAnimationFrameImpl(() => {
     offset = 0;
     while (queue.length > offset) {
       try {
@@ -108,6 +109,21 @@ function flushUIQueue(): void {
       }
     }
   });
+}
+
+/**
+ * Server-side rendering evaluates web code in environments without
+ * `requestAnimationFrame`, such as Node.js. Work scheduled there, for example
+ * at module scope, falls back to a timer instead of throwing from a microtask.
+ */
+function requestAnimationFrameImpl(
+  callback: (timestamp: number) => void
+): void {
+  if (typeof globalThis.requestAnimationFrame === 'function') {
+    globalThis.requestAnimationFrame(callback);
+  } else {
+    mockedRequestAnimationFrame(callback);
+  }
 }
 
 function drainUIQueue(queue: UIJob[]): void {

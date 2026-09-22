@@ -10,6 +10,8 @@
 
 ### 🐛 Bug fixes
 
+- Fall back to a timer in web `scheduleOnUI` and `runOnUIAsync` when `requestAnimationFrame` is unavailable, such as during server-side rendering in Node.js. ([@robhogan](https://github.com/robhogan))
+
 ### 💡 Others
 
 ## 0.13.0 — 2026-09-18

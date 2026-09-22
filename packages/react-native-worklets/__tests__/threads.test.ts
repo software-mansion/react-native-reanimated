@@ -44,4 +44,15 @@ describe('web threads implementation', () => {
       })
     ).rejects.toBe(error);
   });
+
+  test('executes callbacks when requestAnimationFrame is unavailable', async () => {
+    const requestAnimationFrame = globalThis.requestAnimationFrame;
+    // @ts-expect-error Simulates a server environment such as Node.js.
+    delete globalThis.requestAnimationFrame;
+    try {
+      await expect(runOnUIAsync(() => 'done')).resolves.toBe('done');
+    } finally {
+      globalThis.requestAnimationFrame = requestAnimationFrame;
+    }
+  });
 });
