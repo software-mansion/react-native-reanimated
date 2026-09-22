@@ -87,6 +87,7 @@
 
 ### 💡 Others
 
+- Bump the example apps and dev dependencies to React Native 0.88.0-rc.2 and move the iOS example app to the UIScene lifecycle. ([#10650](https://github.com/software-mansion/react-native-reanimated/pull/10650) by [@pawicao](https://github.com/pawicao))
 - Patch `react-native-svg` in the example apps so its podspec targets iOS and tvOS 15.1, which Xcode 27 requires. ([#10607](https://github.com/software-mansion/react-native-reanimated/pull/10607) by [@tjzel](https://github.com/tjzel))
 - Added support for React Native 0.88. ([#10582](https://github.com/software-mansion/react-native-reanimated/pull/10582) by [@pawicao](https://github.com/pawicao))
 - Replace ESLint with oxlint for JavaScript and TypeScript linting. ([#10584](https://github.com/software-mansion/react-native-reanimated/pull/10584) by [@tshmieldev](https://github.com/tshmieldev))
