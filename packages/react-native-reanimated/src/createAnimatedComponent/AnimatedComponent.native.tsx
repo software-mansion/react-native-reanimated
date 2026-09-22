@@ -3,7 +3,7 @@ import type React from 'react';
 import { Fragment } from 'react';
 
 import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
-import { IS_JEST, logger } from '../common';
+import { IS_IOS, IS_JEST, logger } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
@@ -113,6 +113,12 @@ export default class AnimatedComponent
       jsPropsUpdater.registerComponent(this, this._options.jsProps);
     }
 
+    if (IS_IOS && !this._isFirstRender && !this.context?.current) {
+      this._configureLayoutAnimation(
+        LayoutAnimationType.ENTERING,
+        this.props.entering
+      );
+    }
     this._configureLayoutAnimation(
       LayoutAnimationType.LAYOUT,
       this.props.layout

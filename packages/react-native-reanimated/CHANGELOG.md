@@ -10,6 +10,8 @@
 
 ### 🐛 Bug fixes
 
+- Restore entering animations when React reactivates a hidden Activity.
+
 ### 💡 Others
 
 ## 4.7.0 — 2026-09-18
