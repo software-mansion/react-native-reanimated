@@ -2,8 +2,10 @@ import { act, renderHook } from '@testing-library/react-hooks';
 
 import type { SensorConfig, Value3D, ValueRotation } from '../src';
 import { SensorType, useAnimatedSensor } from '../src';
+import { unregisterSensor } from '../src/core';
 
 let eventHandler: (data: Value3D | ValueRotation) => void;
+const mockUnsupportedSensorType = SensorType.GYROSCOPE;
 
 jest.mock('../src/core', () => {
   const originalModule = jest.requireActual('../src/core');
@@ -12,12 +14,14 @@ jest.mock('../src/core', () => {
     __esModule: true,
     ...originalModule,
     registerSensor: (
-      sensorType: number,
+      sensorType: SensorType,
       config: SensorConfig,
       _eventHandler: (data: Value3D | ValueRotation) => void
     ) => {
       eventHandler = _eventHandler;
+      return sensorType === mockUnsupportedSensorType ? -1 : 1;
     },
+    unregisterSensor: jest.fn(),
   };
 });
 
@@ -250,5 +254,31 @@ describe('Sensors', () => {
     };
 
     expect(result.current.sensor.value).toStrictEqual(data270);
+  });
+
+  test('exposes availability without a render from the parent', () => {
+    const { result, rerender } = renderHook(
+      (sensorType: SensorType) => useAnimatedSensor(sensorType),
+      { initialProps: SensorType.ACCELEROMETER }
+    );
+
+    expect(result.current.isAvailable).toBe(true);
+
+    rerender(mockUnsupportedSensorType);
+
+    expect(result.current.isAvailable).toBe(false);
+  });
+
+  test('unregisters once after a manual unregister and an unmount', () => {
+    const { result, rerender, unmount } = renderHook(() =>
+      useAnimatedSensor(SensorType.ACCELEROMETER)
+    );
+    rerender();
+    jest.mocked(unregisterSensor).mockClear();
+
+    result.current.unregister();
+    unmount();
+
+    expect(unregisterSensor).toHaveBeenCalledTimes(1);
   });
 });
