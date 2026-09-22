@@ -141,7 +141,7 @@ const QUESTIONS: Question[] = [
   {
     missing: ({ message }) => message === undefined,
     flag: '--message',
-    prompt: () => 'Entry (one sentence that ends with a period): ',
+    prompt: () => 'Entry (one sentence): ',
     apply: (answers, reply) => {
       answers.message = reply;
     },

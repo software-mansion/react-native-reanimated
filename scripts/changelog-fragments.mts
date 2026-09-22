@@ -76,9 +76,6 @@ export function parseFragment(content: string): ParsedFragment {
 
 function validateText(text: string) {
   const errors: string[] = [];
-  if (!text.endsWith('.')) {
-    errors.push('The entry must end with a period.');
-  }
   if (text.startsWith('- ')) {
     errors.push('The entry must not start with a list marker.');
   }

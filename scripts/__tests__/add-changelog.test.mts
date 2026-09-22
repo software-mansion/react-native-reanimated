@@ -154,7 +154,7 @@ describe('add-changelog', () => {
       const errors = validateAnswers({
         packages: ['gesture-handler' as never],
         category: 'chore' as never,
-        message: 'No period',
+        message: '- Fix a crash',
         slug: 'Bad Slug',
       });
       assert.equal(errors.length, 4);

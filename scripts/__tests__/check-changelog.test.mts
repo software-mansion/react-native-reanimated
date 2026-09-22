@@ -99,7 +99,7 @@ describe('check-changelog', () => {
   it('reports each body error with the fragment path', () => {
     const path = `${REANIMATED}/changelog/crash.fix.md`;
     const problems = check([added(path)], {
-      [path]: 'Fix a crash\nsecond line\n',
+      [path]: '- Fix a crash\nsecond line\n',
     });
     assert.equal(problems.length, 2);
     assert.ok(problems.every((problem) => problem.startsWith(`${path}: `)));
@@ -162,7 +162,7 @@ describe('check-changelog', () => {
     const path = `${REANIMATED}/changelog/crash.fix.md`;
     const problems = check(
       [added(path)],
-      { [path]: 'No period' },
+      { [path]: '- Fix a crash' },
       new Set([REANIMATED])
     );
     assert.equal(problems.length, 1);

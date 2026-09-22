@@ -70,10 +70,6 @@ describe('changelog-fragments', () => {
       ]);
     });
 
-    it('rejects an entry with no period', () => {
-      assert.match(parseFragment('Fix a crash').errors[0], /period/);
-    });
-
     it('rejects a list marker', () => {
       assert.match(parseFragment('- Fix a crash.').errors[0], /list marker/);
     });

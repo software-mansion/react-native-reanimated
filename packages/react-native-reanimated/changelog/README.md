@@ -19,7 +19,7 @@ yarn changelog:add --type fix --message 'Fix the crash of `measure` on an unmoun
 ## Format
 
 - File name: `<slug>.<type>.md`. The slug has only `a-z`, `0-9` and `-`.
-- Content: one sentence that ends with a period. Do not add the link to the pull request or the author. The release script reads them from the merge commit.
+- Content: one sentence. Do not add the link to the pull request or the author. The release script reads them from the merge commit.
 - Optional lines after the sentence: `pr: 12345` sets the pull request number, `by: @user1, @user2` sets the authors.
 - A pull request with two entries adds two files.
 

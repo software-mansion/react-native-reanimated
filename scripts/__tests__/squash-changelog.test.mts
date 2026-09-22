@@ -158,7 +158,10 @@ describe('squash-changelog', () => {
         () => toFragmentFile('dir/notes.md', 'Fix.'),
         /not a valid fragment/
       );
-      assert.throws(() => toFragmentFile('dir/crash.fix.md', 'Fix'), /period/);
+      assert.throws(
+        () => toFragmentFile('dir/crash.fix.md', 'Fix.\nsecond line'),
+        /one line/
+      );
     });
   });
 
