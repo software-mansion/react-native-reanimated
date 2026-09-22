@@ -12,6 +12,7 @@
 
 #include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
+#include <reanimated/CSS/common/values/complex/CSSGradient.h>
 
 #include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
@@ -170,6 +171,7 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
     // View
     {"backfaceVisibility", value<CSSKeyword>("visible")},
     {"backgroundColor", value<CSSColor>(TRANSPARENT)},
+    {"backgroundImage", array({value<CSSGradient>(CSSGradient())})},
     {"borderBlockColor", value<CSSColor>(BLACK)},
     {"borderBlockEndColor", value<CSSColor>(BLACK)},
     {"borderBlockStartColor", value<CSSColor>(BLACK)},
