@@ -11,6 +11,8 @@ async function main(): Promise<void> {
   const issueUrl = process.env.ISSUE_URL;
   const runUrl = process.env.RUN_URL;
   const status = process.env.STATUS;
+  const stage = process.env.STAGE ?? 'reproduce';
+  const planFile = process.env.PLAN_FILE;
   const streamFile = process.env.STREAM_FILE;
   const outputFile = process.env.OUTPUT_FILE;
 
@@ -22,6 +24,31 @@ async function main(): Promise<void> {
 
   const issue = title ? `#${number} — ${title}` : `#${number}`;
   const links = [`Issue: ${issueUrl}`, `Run: ${runUrl}`];
+
+  if (stage === 'plan-infeasible') {
+    const reason = readReason(planFile);
+    await postToSlack({
+      text: [
+        `⚪ Argent Cloud repro skipped: ${issue}`,
+        ...links,
+        '',
+        `Reason: ${reason}`,
+      ].join('\n'),
+    });
+    return;
+  }
+
+  if (stage === 'build-failed') {
+    await postToSlack({
+      text: [
+        `🔴 Argent Cloud repro build failed: ${issue}`,
+        ...links,
+        '',
+        '_See the run logs._',
+      ].join('\n'),
+    });
+    return;
+  }
 
   const stream = readFile(streamFile);
   if (stream) {
@@ -84,6 +111,23 @@ function splitIntoChunks(content: string, limit: number): string[] {
 
 function statusEmoji(status: string): string {
   return status === 'success' ? '🟢' : '🔴';
+}
+
+function readReason(file: string | undefined): string {
+  const content = readFile(file);
+  if (!content) {
+    return 'no plan was produced';
+  }
+  const plan: unknown = JSON.parse(content);
+  if (
+    typeof plan === 'object' &&
+    plan !== null &&
+    'reason' in plan &&
+    typeof plan.reason === 'string'
+  ) {
+    return plan.reason;
+  }
+  return 'the plan has no reason';
 }
 
 function readFile(file: string | undefined): string | null {
