@@ -1,5 +1,5 @@
 'use strict';
-import type { ViewStyle } from 'react-native';
+import type { ColorValue, ViewStyle } from 'react-native';
 
 import { processBackgroundImageWeb } from '../backgroundImage';
 
@@ -24,7 +24,10 @@ describe(processBackgroundImageWeb, () => {
           colorStops: [
             { color: 'red', positions: ['0%'] },
             { color: null, positions: ['30%'] },
-            { color: 0xff0000ff, positions: ['50%', '80%'] },
+            {
+              color: 0xff0000ff as unknown as ColorValue,
+              positions: ['50%', '80%'],
+            },
             { color: 'blue' },
           ],
         },

@@ -687,6 +687,8 @@ describe(processBackgroundImage, () => {
       {},
       { x: NaN, y: 10 },
       { x: 10, y: -Infinity },
+      { x: -10, y: 10 },
+      { x: '10%', y: '-10%' },
     ])('throws on invalid size %p', (size) => {
       expect(() =>
         process([

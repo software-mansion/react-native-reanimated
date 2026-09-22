@@ -162,6 +162,11 @@ const isValidPosition = (position: unknown): position is number | string => {
   return Number.isFinite(position) || isPercentage(position);
 };
 
+const isValidRadialSize = (size: unknown): size is number | string => {
+  'worklet';
+  return isValidPosition(size) && parseFloat(String(size)) >= 0;
+};
+
 const processRadialPosition = (
   position?: RadialGradientPosition
 ): RadialGradientPosition => {
@@ -247,8 +252,8 @@ const processRadialSize = (size?: RadialGradientSize): RadialGradientSize => {
   }
   if (
     typeof size === 'object' &&
-    isValidPosition(size.x) &&
-    isValidPosition(size.y)
+    isValidRadialSize(size.x) &&
+    isValidRadialSize(size.y)
   ) {
     return { x: size.x, y: size.y };
   }
