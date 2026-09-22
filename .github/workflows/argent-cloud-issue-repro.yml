@@ -212,6 +212,7 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           STATUS: ${{ job.status }}
           STAGE: build-failed
+          FAILED_STEP: ${{ steps.prepare.outcome == 'failure' && 'Prepare the app' || steps.build.outcome == 'failure' && 'Build the app for the iOS simulator' || '' }}
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-notification.ts
 
   reproduce:
@@ -246,9 +247,11 @@ jobs:
           path: ${{ env.WORK_DIR }}/app
 
       - name: Install the argent-cloud CLI
+        id: install
         uses: ./.github/actions/install-argent-cloud
 
       - name: Write the reproduction brief
+        id: brief
         run: |
           plan="$WORK_DIR/plan.json"
           {
@@ -289,6 +292,7 @@ jobs:
           cat "$WORK_DIR/brief.md"
 
       - name: Run argent-cloud issue-repro
+        id: repro
         env:
           TITLE: ${{ github.event.issue.title }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -324,4 +328,6 @@ jobs:
           STATUS: ${{ job.status }}
           STREAM_FILE: ${{ env.WORK_DIR }}/output/stream.md
           OUTPUT_FILE: ${{ env.WORK_DIR }}/output/output.md
+          FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro.outcome == 'failure' && 'Run argent-cloud issue-repro' || '' }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-notification.ts
