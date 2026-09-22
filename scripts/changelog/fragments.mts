@@ -5,7 +5,7 @@ export const PACKAGES = [
   { name: 'worklets', path: 'packages/react-native-worklets' },
 ] as const;
 
-export const REPOSITORY_ROOT = resolve(import.meta.dirname, '..');
+export const REPOSITORY_ROOT = resolve(import.meta.dirname, '../..');
 
 export const CATEGORY_HEADINGS = {
   breaking: '### 🛠 Breaking changes',

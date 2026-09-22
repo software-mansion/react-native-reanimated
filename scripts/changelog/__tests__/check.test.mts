@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import type { Change } from '../check-changelog.mts';
-import { findProblems, parseNameStatus } from '../check-changelog.mts';
+import type { Change } from '../check.mts';
+import { findProblems, parseNameStatus } from '../check.mts';
 
 const REANIMATED = 'packages/react-native-reanimated';
 const WORKLETS = 'packages/react-native-worklets';
@@ -23,7 +23,7 @@ function added(path: string): Change {
   return { status: 'added', path };
 }
 
-describe('check-changelog', () => {
+describe('changelog/check', () => {
   it('requires a fragment for a Reanimated change', () => {
     const problems = check([
       { status: 'modified', path: `${REANIMATED}/src/index.ts` },

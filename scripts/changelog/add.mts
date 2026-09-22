@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { parseArgs } from 'node:util';
 
-import type { Category } from './changelog-fragments.mts';
+import type { Category } from './fragments.mts';
 import {
   CATEGORIES,
   REPOSITORY_ROOT,
@@ -13,7 +13,7 @@ import {
   isValidSlug,
   packagePathFromCwd,
   parseFragment,
-} from './changelog-fragments.mts';
+} from './fragments.mts';
 
 export type Answers = {
   category?: Category;

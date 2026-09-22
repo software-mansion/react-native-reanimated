@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import type { Answers } from '../add-changelog.mts';
+import type { Answers } from '../add.mts';
 import {
   parseArguments,
   planFragment,
   slugFromBranch,
   validateAnswers,
   withDefaults,
-} from '../add-changelog.mts';
+} from '../add.mts';
 
 const DIRECTORY = 'packages/react-native-reanimated/changelog';
 const COMPLETE: Answers = {
@@ -17,7 +17,7 @@ const COMPLETE: Answers = {
   slug: 'crash',
 };
 
-describe('add-changelog', () => {
+describe('changelog/add', () => {
   describe('slugFromBranch', () => {
     it('drops the text before the first slash', () => {
       assert.equal(slugFromBranch('@pawicao/zindex-la'), 'zindex-la');

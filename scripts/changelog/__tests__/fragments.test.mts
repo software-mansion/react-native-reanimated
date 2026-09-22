@@ -7,9 +7,9 @@ import {
   packagePathFromCwd,
   parseFragment,
   parseFragmentFileName,
-} from '../changelog-fragments.mts';
+} from '../fragments.mts';
 
-describe('changelog-fragments', () => {
+describe('changelog/fragments', () => {
   describe('parseFragmentFileName', () => {
     it('reads the slug and the category', () => {
       assert.deepEqual(parseFragmentFileName('zindex-la.fix.md'), {

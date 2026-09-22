@@ -3,7 +3,7 @@ import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { parseArgs } from 'node:util';
 
-import type { Category, Fragment } from './changelog-fragments.mts';
+import type { Category, Fragment } from './fragments.mts';
 import {
   CATEGORIES,
   CATEGORY_HEADINGS,
@@ -13,7 +13,7 @@ import {
   packagePathFromCwd,
   parseFragment,
   parseFragmentFileName,
-} from './changelog-fragments.mts';
+} from './fragments.mts';
 
 export type FragmentFile = { path: string; category: Category } & Fragment;
 

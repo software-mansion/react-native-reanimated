@@ -6,7 +6,7 @@ import {
   fragmentsDirectory,
   parseFragment,
   parseFragmentFileName,
-} from './changelog-fragments.mts';
+} from './fragments.mts';
 
 export type ChangeStatus = 'added' | 'modified' | 'deleted';
 export type Change = { status: ChangeStatus; path: string };
@@ -22,7 +22,7 @@ function main() {
 
   if (!base) {
     console.error(
-      'Usage: node --experimental-strip-types scripts/check-changelog.mts <base> [head]'
+      'Usage: node --experimental-strip-types scripts/changelog/check.mts <base> [head]'
     );
     process.exitCode = 1;
     return;

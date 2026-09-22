@@ -9,8 +9,8 @@
     "reanimated"
   ],
   "scripts": {
-    "changelog:add": "node --experimental-strip-types ../../scripts/add-changelog.mts",
-    "changelog:squash": "node --experimental-strip-types ../../scripts/squash-changelog.mts",
+    "changelog:add": "node --experimental-strip-types ../../scripts/changelog/add.mts",
+    "changelog:squash": "node --experimental-strip-types ../../scripts/changelog/squash.mts",
     "test": "yarn run --top-level jest",
     "lint": "yarn lint:js && yarn lint:android && yarn lint:apple && yarn lint:clang-tidy",
     "lint:js": "yarn run --top-level oxlint src __tests__ __typetests__ && yarn run --top-level oxfmt --check src __tests__ __typetests__ && yarn validate-mock",

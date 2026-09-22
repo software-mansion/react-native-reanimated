@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import type { Entry, FragmentFile } from '../squash-changelog.mts';
+import type { Entry, FragmentFile } from '../squash.mts';
 import {
   extractPullRequest,
   buildAuthorsQuery,
@@ -13,7 +13,7 @@ import {
   renderSection,
   resolveEntries,
   toFragmentFile,
-} from '../squash-changelog.mts';
+} from '../squash.mts';
 
 const NO_RESOLVERS = {
   findPullRequest: () => undefined,
@@ -29,7 +29,7 @@ function fragmentFile(overrides: Partial<FragmentFile> = {}): FragmentFile {
   };
 }
 
-describe('squash-changelog', () => {
+describe('changelog/squash', () => {
   describe('extractPullRequest', () => {
     it('reads the number from a squash-merge subject', () => {
       assert.equal(extractPullRequest('fix: a crash (#10613)'), 10613);
