@@ -13,6 +13,7 @@
 ### 💡 Others
 
 - Rename the `DEAD` exiting state of the light tree based Layout Animations proxy to `COMPLETED`. ([#10629](https://github.com/software-mansion/react-native-reanimated/pull/10629) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+
 ## 4.7.0 — 2026-09-18
 
 ### 🛠 Breaking changes
