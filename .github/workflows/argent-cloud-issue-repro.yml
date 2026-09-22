@@ -139,7 +139,6 @@ jobs:
           } > "$WORK_DIR/comment.md"
           gh issue comment "$ISSUE_NUMBER" -R "$GITHUB_REPOSITORY" --body-file "$WORK_DIR/comment.md"
 
-
       - name: Upload the plan
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
