@@ -1,0 +1,13 @@
+[
+  "@react-native-masked-view/masked-view",
+  "@react-navigation/bottom-tabs",
+  "@react-navigation/drawer",
+  "@react-navigation/native",
+  "@react-navigation/native-stack",
+  "@react-navigation/stack",
+  "@shopify/flash-list",
+  "react-native-gesture-handler",
+  "react-native-safe-area-context",
+  "react-native-screens",
+  "react-native-svg"
+]

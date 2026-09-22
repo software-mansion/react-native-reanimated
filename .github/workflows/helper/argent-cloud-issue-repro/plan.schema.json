@@ -1,0 +1,109 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "feasible",
+    "reason",
+    "summary",
+    "library",
+    "platform",
+    "reactNativeVersion",
+    "reanimatedVersion",
+    "workletsVersion",
+    "architecture",
+    "appKind",
+    "expoSdkVersion",
+    "reproductionSource",
+    "extraDependencies",
+    "reproductionSteps",
+    "expectedBehavior",
+    "actualBehavior"
+  ],
+  "properties": {
+    "feasible": {
+      "type": "boolean",
+      "description": "false when the issue cannot be reproduced on an iOS simulator with an embedded release bundle, for example web-only, Android-only, real-device-only or Debug-only issues, when the reproduction needs a package outside the allowlist, or when the issue has no usable reproduction."
+    },
+    "reason": {
+      "type": "string",
+      "description": "One or two sentences. When feasible is false, why. When feasible is true, how the plan was derived."
+    },
+    "summary": {
+      "type": "string",
+      "description": "One paragraph that describes the bug in your own words."
+    },
+    "library": {
+      "type": "string",
+      "enum": ["reanimated", "worklets"],
+      "description": "The package whose behaviour is wrong."
+    },
+    "platform": {
+      "type": "string",
+      "enum": ["ios"],
+      "description": "Only ios is supported by the reproduction runner."
+    },
+    "reactNativeVersion": {
+      "type": "string",
+      "description": "Exact react-native version that exists on npm, for example 0.81.4."
+    },
+    "reanimatedVersion": {
+      "type": "string",
+      "description": "Exact react-native-reanimated version that exists on npm."
+    },
+    "workletsVersion": {
+      "type": ["string", "null"],
+      "description": "Exact react-native-worklets version that exists on npm, or null for Reanimated 3.x."
+    },
+    "architecture": {
+      "type": "string",
+      "enum": ["fabric", "paper"]
+    },
+    "appKind": {
+      "type": "string",
+      "enum": ["rn-cli", "expo"],
+      "description": "rn-cli scaffolds with @react-native-community/cli. expo scaffolds with create-expo-app and runs expo prebuild."
+    },
+    "expoSdkVersion": {
+      "type": ["string", "null"],
+      "description": "Expo SDK major, for example 54, when appKind is expo. null otherwise."
+    },
+    "reproductionSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "url", "copiedFrom"],
+      "description": "Where the code in .argent-cloud/repro/ came from. Informational only. The build never installs or executes the linked reproduction.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["repository", "snack", "issue-text", "authored"]
+        },
+        "url": { "type": ["string", "null"] },
+        "copiedFrom": {
+          "type": "array",
+          "description": "Paths inside the linked reproduction that you copied or adapted, relative to its root.",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "extraDependencies": {
+      "type": "array",
+      "description": "npm packages, besides react-native, react-native-reanimated and react-native-worklets, that the app needs. Only names from allowed-dependencies.json are accepted, each with an exact version that exists on npm.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "version"],
+        "properties": {
+          "name": { "type": "string" },
+          "version": { "type": "string" }
+        }
+      }
+    },
+    "reproductionSteps": {
+      "type": "array",
+      "description": "Ordered steps that a tester performs in the built app on a simulator. Each step names what to tap or do and what to look at.",
+      "items": { "type": "string" }
+    },
+    "expectedBehavior": { "type": "string" },
+    "actualBehavior": { "type": "string" }
+  }
+}
