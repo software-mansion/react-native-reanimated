@@ -12,8 +12,12 @@ export function waitForFrames(
     scheduleOnUI(() => {
       'worklet';
       let remaining = count;
+      // No `worklet` directive: it would make the plugin workletize `onFrame`
+      // separately and snapshot its closure while `onFrame` is still in its
+      // temporal dead zone, so the recursive call would queue `undefined` and
+      // kill the UI run loop on the next flush. Nested functions inside a
+      // worklet are ordinary closures and need no directive.
       const onFrame = () => {
-        'worklet';
         remaining -= 1;
         if (remaining > 0) {
           requestAnimationFrame(onFrame);
