@@ -565,13 +565,15 @@ describe(processBackgroundImage, () => {
       );
     });
 
-    test.each(['50px', '50', 'center', 'abc%', '%', '50 %'])(
+    test.each(['50px', '50', 'center', 'abc%', '%', '50 %', NaN, Infinity])(
       'throws on invalid position %p',
       (position) => {
         expect(() =>
           process([
             linear({
-              colorStops: [{ color: '#ff0000', positions: [position] }],
+              colorStops: [
+                { color: '#ff0000', positions: [position as string] },
+              ],
             }),
           ])
         ).toThrow(
@@ -660,17 +662,37 @@ describe(processBackgroundImage, () => {
       );
     });
 
-    test.each(['nearest-side', { x: '30%' }, { y: '30%' }, {}])(
-      'throws on invalid size %p',
-      (size) => {
-        expect(() =>
-          process([
-            radial({ size: size as unknown as RadialGradientInput['size'] }),
-          ])
-        ).toThrow(
-          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidSize(size)}`)
-        );
-      }
-    );
+    test.each([
+      { top: NaN, left: '50%' },
+      { top: '50%', left: Infinity },
+      { bottom: 'abc', right: 10 },
+    ])('throws on invalid position %p', (position) => {
+      expect(() =>
+        process([
+          radial({
+            position: position as unknown as RadialGradientInput['position'],
+          }),
+        ])
+      ).toThrow(
+        new Error(
+          `[Reanimated] ${ERROR_MESSAGES.invalidRadialPosition(position)}`
+        )
+      );
+    });
+
+    test.each([
+      'nearest-side',
+      { x: '30%' },
+      { y: '30%' },
+      {},
+      { x: NaN, y: 10 },
+      { x: 10, y: -Infinity },
+    ])('throws on invalid size %p', (size) => {
+      expect(() =>
+        process([
+          radial({ size: size as unknown as RadialGradientInput['size'] }),
+        ])
+      ).toThrow(new Error(`[Reanimated] ${ERROR_MESSAGES.invalidSize(size)}`));
+    });
   });
 });
