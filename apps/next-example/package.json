@@ -19,7 +19,7 @@
     "next": "16.2.12",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-native": "0.88.0-rc.1",
+    "react-native": "0.88.0-rc.2",
     "react-native-reanimated": "workspace:*",
     "react-native-web": "0.21.2",
     "react-native-worklets": "workspace:*",

@@ -66,6 +66,7 @@
 
 ### 💡 Others
 
+- Bump the dev dependency on React Native to 0.88.0-rc.2. ([#10650](https://github.com/software-mansion/react-native-reanimated/pull/10650) by [@pawicao](https://github.com/pawicao))
 - Added support for React Native 0.88. ([#10582](https://github.com/software-mansion/react-native-reanimated/pull/10582) by [@pawicao](https://github.com/pawicao))
 - Replace ESLint with oxlint for JavaScript and TypeScript linting. ([#10584](https://github.com/software-mansion/react-native-reanimated/pull/10584) by [@tshmieldev](https://github.com/tshmieldev))
 - In Bundle Mode, evaluate the bundle on the UI Worklet Runtime on a background thread while the RN Runtime evaluates it, instead of on the JS thread in `start`. `bundleModeMetroConfig` prepends a polyfill that triggers it. ([#10490](https://github.com/software-mansion/react-native-reanimated/pull/10490) by [@tjzel](https://github.com/tjzel))
