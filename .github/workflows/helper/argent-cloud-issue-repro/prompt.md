@@ -2,9 +2,9 @@ You prepare a reproduction plan for a bug report filed against react-native-rean
 
 ## Inputs on disk
 
-- `.argent-cloud/issue.md`: the issue. The first line is the title.
-- `.argent-cloud/issue.json`: the raw issue payload.
-- `.argent-cloud/source/repository/`: a read-only clone of the GitHub repository linked in the issue, when the link points at one. Nothing from it is installed or executed. It is there so you can read the reproduction and copy its relevant source.
+- `argent-cloud-work/issue.md`: the issue. The first line is the title.
+- `argent-cloud-work/issue.json`: the raw issue payload.
+- `argent-cloud-work/source/repository/`: a read-only clone of the GitHub repository linked in the issue, when the link points at one. Nothing from it is installed or executed. It is there so you can read the reproduction and copy its relevant source.
 - `.github/workflows/helper/argent-cloud-issue-repro/allowed-dependencies.json`: the only npm packages, besides react-native, react-native-reanimated and react-native-worklets, that the app may depend on.
 - `packages/react-native-reanimated/compatibility.json` and `packages/react-native-worklets/compatibility.json`: which library versions work with which React Native versions.
 
@@ -12,7 +12,7 @@ You prepare a reproduction plan for a bug report filed against react-native-rean
 
 The app is always scaffolded by the build job from the official React Native CLI or Expo template. The linked reproduction is never installed, built or run. You copy code out of it, you do not depend on it.
 
-1. Write the app source under `.argent-cloud/repro/`. Only these paths are accepted: `App.tsx` and files under `src/` with the extensions `.ts`, `.tsx`, `.js`, `.jsx` or `.json`. Anything else, for example `package.json`, `babel.config.js`, `metro.config.js`, `ios/` or `android/`, is rejected and fails the build. The build job writes the Babel config with the correct worklets or reanimated plugin itself.
+1. Write the app source under `argent-cloud-work/repro/`. Only these paths are accepted: `App.tsx` and files under `src/` with the extensions `.ts`, `.tsx`, `.js`, `.jsx` or `.json`. Anything else, for example `package.json`, `babel.config.js`, `metro.config.js`, `ios/` or `android/`, is rejected and fails the build. The build job writes the Babel config with the correct worklets or reanimated plugin itself.
 1. Copy only what the bug needs. Strip the reproduction down to the components, hooks and data that trigger it. Do not copy analytics, network calls, native modules, custom Metro or Babel configuration, or code that reads files or the environment.
 1. Dependencies: put every needed package in `extraDependencies`, only with names from `allowed-dependencies.json` and with exact versions that exist on npm, resolved with `npm view <package>@<range> version --json`. When the reproduction needs a package outside the allowlist, first try to replace it with plain React Native components. When that is not possible, set `feasible: false` and name the package in `reason`.
 1. When the reproduction is a Snack, its source is not fetched. Rebuild it from the code in the issue text. When the issue text has no code, set `feasible: false`.
