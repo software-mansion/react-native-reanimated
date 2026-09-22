@@ -7,6 +7,7 @@ import {
   parseMarkdownFile,
   DEFAULT_PARSE_FRONT_MATTER,
 } from '@docusaurus/utils';
+import { DefaultNumberPrefixParser } from '@docusaurus/plugin-content-docs/lib/numberPrefix.js';
 import OGImageStream from './og-image-stream';
 const { globSync } = require('glob');
 
@@ -49,12 +50,19 @@ async function getPageTitle(filePath) {
     parseFrontMatter: DEFAULT_PARSE_FRONT_MATTER,
   });
 
-  return (
-    frontMatter.title ??
-    contentTitle ??
-    frontMatter.id ??
-    path.basename(filePath, path.extname(filePath))
-  );
+  return frontMatter.title ?? contentTitle ?? getBaseId(filePath, frontMatter);
+}
+
+function getBaseId(filePath, frontMatter) {
+  if (frontMatter.id) {
+    return frontMatter.id;
+  }
+
+  const fileName = path.basename(filePath, path.extname(filePath));
+
+  return frontMatter.parse_number_prefixes === false
+    ? fileName
+    : DefaultNumberPrefixParser(fileName).filename;
 }
 
 function getImageName(title) {
