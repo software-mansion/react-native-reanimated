@@ -50,7 +50,9 @@ class NodesManager(
 
     // invalidate() runs off the UI thread. Readers only try the lock: the UI thread may hold the UI
     // runtime lock, which invalidateCpp can also take, so it must never wait for the writer.
+    // tryLock() barges past a queued writer, so mInvalidated stops new readers from delaying it.
     private val mNativeProxyLock = ReentrantReadWriteLock()
+    private val mInvalidated = AtomicBoolean()
 
     fun getNativeProxy(): NativeProxy? = mNativeProxy
 
@@ -79,6 +81,9 @@ class NodesManager(
     }
 
     private inline fun withNativeProxy(block: (NativeProxy) -> Unit) {
+        if (mInvalidated.get()) {
+            return
+        }
         val readLock = mNativeProxyLock.readLock()
         if (!readLock.tryLock()) {
             return
@@ -91,6 +96,7 @@ class NodesManager(
     }
 
     fun invalidate() {
+        mInvalidated.set(true)
         mNativeProxyLock.write {
             mNativeProxy?.invalidate()
             mNativeProxy = null
