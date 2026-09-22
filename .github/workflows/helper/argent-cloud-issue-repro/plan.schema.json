@@ -71,7 +71,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["kind", "url", "copiedFrom"],
-      "description": "Where the code in .argent-cloud/repro/ came from. Informational only. The build never installs or executes the linked reproduction.",
+      "description": "Where the code in argent-cloud-work/repro/ came from. Informational only. The build never installs or executes the linked reproduction.",
       "properties": {
         "kind": {
           "type": "string",

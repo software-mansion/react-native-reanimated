@@ -15,7 +15,7 @@ concurrency:
 env:
   TRIGGER_LABEL: argent-cloud
   HELPER_DIR: .github/workflows/helper/argent-cloud-issue-repro
-  WORK_DIR: .argent-cloud
+  WORK_DIR: argent-cloud-work
 
 jobs:
   plan:
@@ -124,16 +124,6 @@ jobs:
             echo "react-native-version=$(jq -r .reactNativeVersion "$WORK_DIR/plan.json")"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Upload the plan
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: argent-cloud-plan-issue-${{ github.event.issue.number }}
-          path: |
-            ${{ env.WORK_DIR }}
-            !${{ env.WORK_DIR }}/source
-          if-no-files-found: error
-          retention-days: 7
-
       - name: Report an infeasible issue
         if: steps.plan.outputs.feasible != 'true'
         env:
@@ -149,13 +139,23 @@ jobs:
           } > "$WORK_DIR/comment.md"
           gh issue comment "$ISSUE_NUMBER" -R "$GITHUB_REPOSITORY" --body-file "$WORK_DIR/comment.md"
 
+      - name: Upload the plan
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: argent-cloud-plan-issue-${{ github.event.issue.number }}
+          path: |
+            ${{ env.WORK_DIR }}
+            !${{ env.WORK_DIR }}/source
+          if-no-files-found: error
+          retention-days: 7
+
   build:
     needs: plan
     if: needs.plan.outputs.feasible == 'true'
     runs-on: macos-26
     timeout-minutes: 120
     env:
-      APP_DIR: ${{ github.workspace }}/.argent-cloud-app
+      APP_DIR: ${{ github.workspace }}/argent-cloud-app
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
