@@ -124,20 +124,18 @@ jobs:
             echo "react-native-version=$(jq -r .reactNativeVersion "$WORK_DIR/plan.json")"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Report an infeasible issue
+      - name: Report an infeasible issue to Slack
         if: steps.plan.outputs.feasible != 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_ARGENT_URL }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
-        run: |
-          {
-            echo "Argent Cloud could not attempt a reproduction for this issue."
-            echo
-            echo "Reason: $(jq -r .reason "$WORK_DIR/plan.json")"
-            echo
-            echo "Workflow run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          } > "$WORK_DIR/comment.md"
-          gh issue comment "$ISSUE_NUMBER" -R "$GITHUB_REPOSITORY" --body-file "$WORK_DIR/comment.md"
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STATUS: ${{ job.status }}
+          STAGE: plan-infeasible
+          PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-notification.ts
 
       - name: Upload the plan
         if: always() && steps.plan.outcome == 'success'
@@ -204,18 +202,17 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: Report a build failure
+      - name: Report a build failure to Slack
         if: failure()
         env:
-          GH_TOKEN: ${{ github.token }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_ARGENT_URL }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
-        run: |
-          {
-            echo "Argent Cloud could not build a reproduction app for this issue."
-            echo
-            echo "Workflow run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          } > comment.md
-          gh issue comment "$ISSUE_NUMBER" -R "$GITHUB_REPOSITORY" --body-file comment.md
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STATUS: ${{ job.status }}
+          STAGE: build-failed
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-notification.ts
 
   reproduce:
     needs: [plan, build]
@@ -278,6 +275,13 @@ jobs:
             echo
             jq -r .actualBehavior "$plan"
             echo
+            echo "### Verification"
+            echo
+            echo "- Kind: $(jq -r .verification.kind "$plan")"
+            echo "- How: $(jq -r .verification.how "$plan")"
+            echo "- Pass: $(jq -r .verification.passSignal "$plan")"
+            echo "- Fail: $(jq -r .verification.failSignal "$plan")"
+            echo
             echo "## Original issue"
             echo
             cat "$WORK_DIR/issue.md"
@@ -288,7 +292,7 @@ jobs:
         env:
           TITLE: ${{ github.event.issue.title }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          SIM_REMOTE_API_KEY: ${{ secrets.SIM_REMOTE_API_KEY }}
+          SIM_REMOTE_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
           ARGENT_BACKEND_IP: ${{ secrets.ARGENT_BACKEND_IP }}
         run: |
           mkdir -p "$WORK_DIR/output"
@@ -308,31 +312,6 @@ jobs:
           path: ${{ env.WORK_DIR }}/output
           if-no-files-found: warn
           retention-days: 30
-
-      - name: Report the result on the issue
-        if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
-          OUTCOME: ${{ job.status }}
-        run: |
-          output="$WORK_DIR/output/output.md"
-          {
-            echo "## Argent Cloud reproduction attempt"
-            echo
-            echo "Status: $OUTCOME. Workflow run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-            echo
-            if [ -s "$output" ]; then
-              head -c 60000 "$output"
-              if [ "$(wc -c < "$output")" -gt 60000 ]; then
-                echo
-                echo "_Output truncated. The full report is in the workflow artifacts._"
-              fi
-            else
-              echo "_The reproduction agent produced no output. See the workflow run logs._"
-            fi
-          } > comment.md
-          gh issue comment "$ISSUE_NUMBER" -R "$GITHUB_REPOSITORY" --body-file comment.md
 
       - name: Report the result to Slack
         if: always()
