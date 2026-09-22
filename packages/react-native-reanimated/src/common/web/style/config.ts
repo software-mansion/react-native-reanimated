@@ -194,7 +194,7 @@ export const PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   opacity: true,
   mixBlendMode: true,
   backgroundImage: { process: processBackgroundImageWeb },
-  // eslint-disable-next-line camelcase
+  // eslint-disable-next-line eslint-core/camelcase
   experimental_backgroundImage: false, // TODO
 
   /** Typography */
