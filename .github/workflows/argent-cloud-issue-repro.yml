@@ -140,6 +140,7 @@ jobs:
           gh issue comment "$ISSUE_NUMBER" -R "$GITHUB_REPOSITORY" --body-file "$WORK_DIR/comment.md"
 
       - name: Upload the plan
+        if: always() && steps.plan.outcome == 'success'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: argent-cloud-plan-issue-${{ github.event.issue.number }}
@@ -226,6 +227,7 @@ jobs:
           persist-credentials: false
           sparse-checkout: |
             /.nvmrc
+            /.github/actions/install-argent-cloud
             /.github/workflows/helper
           sparse-checkout-cone-mode: false
 
