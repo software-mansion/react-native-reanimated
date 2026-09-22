@@ -78,7 +78,7 @@ struct CSSGradient : public CSSSimpleValue<CSSGradient> {
   bool isNone() const;
   CSSGradient withTransparentColors() const;
   std::vector<ColorStop> paddedColorStops(size_t count) const;
-  std::vector<std::optional<CSSGradientLength>> resolvedStopPositions(size_t count) const;
+  static std::vector<std::optional<CSSGradientLength>> resolvedStopPositions(const std::vector<ColorStop> &stops);
 };
 
 } // namespace reanimated::css

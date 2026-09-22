@@ -1,5 +1,12 @@
 'use strict';
+import type { ViewStyle } from 'react-native';
+
 import { processBackgroundImageWeb } from '../backgroundImage';
+
+type BackgroundImageLayer = Exclude<
+  NonNullable<ViewStyle['backgroundImage']>,
+  string
+>[number];
 
 describe(processBackgroundImageWeb, () => {
   test('passes string input through', () => {
@@ -70,6 +77,35 @@ describe(processBackgroundImageWeb, () => {
       ])
     ).toBe(
       'radial-gradient(ellipse 40px 20% at bottom 10px right 5%, red, blue)'
+    );
+  });
+
+  test('adds px to numeric stop positions', () => {
+    expect(
+      processBackgroundImageWeb([
+        {
+          type: 'linear-gradient',
+          direction: 'to right',
+          colorStops: [
+            { color: 'red', positions: [10 as unknown as string] },
+            { color: null, positions: [20 as unknown as string] },
+            { color: 'blue', positions: ['50%'] },
+          ],
+        },
+      ])
+    ).toBe('linear-gradient(to right, red 10px, 20px, blue 50%)');
+  });
+
+  test('defaults radial shape, size and position', () => {
+    expect(
+      processBackgroundImageWeb([
+        {
+          type: 'radial-gradient',
+          colorStops: [{ color: 'red' }, { color: 'blue' }],
+        } as unknown as BackgroundImageLayer,
+      ])
+    ).toBe(
+      'radial-gradient(ellipse farthest-corner at top 50% left 50%, red, blue)'
     );
   });
 

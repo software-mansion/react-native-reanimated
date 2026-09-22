@@ -15,7 +15,10 @@ type RadialGradientValue = Extract<
 const processColorStops = (colorStops: BackgroundImageValue['colorStops']) =>
   colorStops
     .map(({ color, positions }) => {
-      const positionsString = positions?.join(' ') ?? '';
+      const positionsString =
+        positions
+          ?.map((position) => maybeAddSuffix(position, 'px'))
+          .join(' ') ?? '';
       if (color == null) {
         return positionsString;
       }
@@ -47,7 +50,11 @@ export const processBackgroundImageWeb: ValueProcessor<
       if (backgroundImage.type === 'linear-gradient') {
         return `linear-gradient(${backgroundImage.direction ?? 'to bottom'}, ${colorStops})`;
       }
-      const { shape, size, position } = backgroundImage;
+      const {
+        shape = 'ellipse',
+        size = 'farthest-corner',
+        position = { top: '50%', left: '50%' },
+      } = backgroundImage;
       return `radial-gradient(${shape} ${processRadialSize(size)} at ${processRadialPosition(position)}, ${colorStops})`;
     })
     .join(', ');

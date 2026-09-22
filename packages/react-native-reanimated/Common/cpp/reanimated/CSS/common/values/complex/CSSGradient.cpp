@@ -354,8 +354,8 @@ CSSGradient CSSGradient::interpolate(const double progress, const CSSGradient &t
   const auto count = std::max(colorStops.size(), to.colorStops.size());
   const auto fromStops = paddedColorStops(count);
   const auto toStops = to.paddedColorStops(count);
-  const auto fromPositions = resolvedStopPositions(count);
-  const auto toPositions = to.resolvedStopPositions(count);
+  const auto fromPositions = resolvedStopPositions(fromStops);
+  const auto toPositions = resolvedStopPositions(toStops);
 
   result.colorStops.clear();
   result.colorStops.reserve(count);
@@ -415,8 +415,8 @@ bool CSSGradient::canInterpolateTo(const CSSGradient &to) const {
   const auto count = std::max(colorStops.size(), to.colorStops.size());
   const auto fromStops = paddedColorStops(count);
   const auto toStops = to.paddedColorStops(count);
-  const auto fromPositions = resolvedStopPositions(count);
-  const auto toPositions = to.resolvedStopPositions(count);
+  const auto fromPositions = resolvedStopPositions(fromStops);
+  const auto toPositions = resolvedStopPositions(toStops);
 
   for (size_t i = 0; i < count; ++i) {
     if (fromStops[i].color.has_value() != toStops[i].color.has_value()) {
@@ -457,8 +457,8 @@ std::vector<CSSGradient::ColorStop> CSSGradient::paddedColorStops(const size_t c
   return result;
 }
 
-std::vector<std::optional<CSSGradientLength>> CSSGradient::resolvedStopPositions(const size_t count) const {
-  const auto stops = paddedColorStops(count);
+std::vector<std::optional<CSSGradientLength>> CSSGradient::resolvedStopPositions(const std::vector<ColorStop> &stops) {
+  const auto count = stops.size();
   std::vector<std::optional<CSSGradientLength>> positions;
   positions.reserve(count);
   for (const auto &stop : stops) {
