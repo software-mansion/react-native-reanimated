@@ -1,5 +1,5 @@
 'use strict';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
   AnimatedSensor,
@@ -120,28 +120,20 @@ export function useAnimatedSensor(
     [userConfigRef.current]
   );
 
-  const ref = useRef<AnimatedSensor<Value3D | ValueRotation>>({
-    sensor: initializeSensor(sensorType, config),
-    unregister: () => {
-      // NOOP
-    },
-    isAvailable: false,
-    config,
-  });
-
-  useEffect(() => {
-    ref.current = {
+  const [sensor, setSensor] = useState<AnimatedSensor<Value3D | ValueRotation>>(
+    () => ({
       sensor: initializeSensor(sensorType, config),
       unregister: () => {
         // NOOP
       },
       isAvailable: false,
       config,
-    };
+    })
+  );
 
-    const sensorData = ref.current.sensor;
-    const adjustToInterfaceOrientation =
-      ref.current.config.adjustToInterfaceOrientation;
+  useEffect(() => {
+    const sensorData = initializeSensor(sensorType, config);
+    const adjustToInterfaceOrientation = config.adjustToInterfaceOrientation;
 
     const id = registerSensor(sensorType, config, (data) => {
       'worklet';
@@ -155,22 +147,24 @@ export function useAnimatedSensor(
       sensorData.value = data;
     });
 
-    if (id !== -1) {
-      // if sensor is available
-      ref.current.unregister = () => unregisterSensor(id);
-      ref.current.isAvailable = true;
-    } else {
-      // if sensor is unavailable
-      ref.current.unregister = () => {
-        // NOOP
-      };
-      ref.current.isAvailable = false;
-    }
-
-    return () => {
-      ref.current.unregister();
+    let registered = id !== -1;
+    const unregister = () => {
+      if (!registered) {
+        return;
+      }
+      registered = false;
+      unregisterSensor(id);
     };
+
+    setSensor({
+      sensor: sensorData,
+      unregister,
+      isAvailable: registered,
+      config,
+    });
+
+    return unregister;
   }, [sensorType, config]);
 
-  return ref.current as AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D>;
+  return sensor as AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D>;
 }
