@@ -203,7 +203,7 @@ class NodesManager(
             }
 
             mCallbackPosted.set(false)
-            if (mFrameCallbacks.isNotEmpty() || !mEventQueue.isEmpty()) {
+            if (!mInvalidated.get() && (mFrameCallbacks.isNotEmpty() || !mEventQueue.isEmpty())) {
                 // enqueue next frame
                 startUpdatingOnAnimationFrame()
             }
