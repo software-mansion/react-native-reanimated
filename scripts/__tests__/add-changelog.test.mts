@@ -3,16 +3,15 @@ import { describe, it } from 'node:test';
 
 import type { Answers } from '../add-changelog.mts';
 import {
-  detectPackages,
   parseArguments,
-  planFragments,
+  planFragment,
   slugFromBranch,
   validateAnswers,
   withDefaults,
 } from '../add-changelog.mts';
 
+const DIRECTORY = 'packages/react-native-reanimated/changelog';
 const COMPLETE: Answers = {
-  packages: ['reanimated'],
   category: 'fix',
   message: 'Fix a crash.',
   slug: 'crash',
@@ -44,33 +43,10 @@ describe('add-changelog', () => {
     });
   });
 
-  describe('detectPackages', () => {
-    it('finds each package that has changed files', () => {
-      assert.deepEqual(
-        detectPackages([
-          'packages/react-native-worklets/src/index.ts',
-          'apps/common-app/src/App.tsx',
-        ]),
-        ['worklets']
-      );
-      assert.deepEqual(
-        detectPackages([
-          'packages/react-native-worklets/src/index.ts',
-          'packages/react-native-reanimated/src/index.ts',
-        ]),
-        ['reanimated', 'worklets']
-      );
-    });
-  });
-
   describe('parseArguments', () => {
-    it('reads all flags and a repeated --package', () => {
+    it('reads all flags', () => {
       assert.deepEqual(
         parseArguments([
-          '--package',
-          'reanimated',
-          '--package',
-          'worklets',
           '--type',
           'feature',
           '--message',
@@ -78,20 +54,7 @@ describe('add-changelog', () => {
           '--slug',
           'new-api',
         ]),
-        {
-          packages: ['reanimated', 'worklets'],
-          category: 'feature',
-          message: 'Add an API.',
-          slug: 'new-api',
-        }
-      );
-    });
-
-    it('reads a repeated package once', () => {
-      assert.deepEqual(
-        parseArguments(['--package', 'worklets', '--package', 'worklets'])
-          .packages,
-        ['worklets']
+        { category: 'feature', message: 'Add an API.', slug: 'new-api' }
       );
     });
 
@@ -104,18 +67,13 @@ describe('add-changelog', () => {
     const noStdin = () => assert.fail('must not read stdin');
 
     it('takes the slug from the branch', () => {
-      const answers = withDefaults({ packages: [] }, 'me/from-branch', noStdin);
+      const answers = withDefaults({}, 'me/from-branch', noStdin);
       assert.equal(answers.slug, 'from-branch');
-    });
-
-    it('does not guess the packages', () => {
-      const answers = withDefaults({ packages: [] }, 'me/from-branch', noStdin);
-      assert.deepEqual(answers.packages, []);
     });
 
     it('keeps an explicit slug and message', () => {
       const answers = withDefaults(
-        { packages: [], slug: 'explicit', message: 'Fix.' },
+        { slug: 'explicit', message: 'Fix.' },
         'me/from-branch',
         noStdin
       );
@@ -125,7 +83,7 @@ describe('add-changelog', () => {
 
     it('reads the message from stdin for `--message -`', () => {
       const answers = withDefaults(
-        { packages: [], message: '-' },
+        { message: '-' },
         'me/from-branch',
         () => 'Fix the `measure` crash.\n'
       );
@@ -139,8 +97,8 @@ describe('add-changelog', () => {
     });
 
     it('names each missing flag', () => {
-      assert.deepEqual(validateAnswers({ packages: [] }), [
-        'Missing: --package, --type, --message, --slug.',
+      assert.deepEqual(validateAnswers({}), [
+        'Missing: --type, --message, --slug.',
       ]);
     });
 
@@ -152,54 +110,41 @@ describe('add-changelog', () => {
 
     it('rejects unknown values and a bad message', () => {
       const errors = validateAnswers({
-        packages: ['gesture-handler' as never],
         category: 'chore' as never,
         message: '- Fix a crash',
         slug: 'Bad Slug',
       });
-      assert.equal(errors.length, 4);
+      assert.equal(errors.length, 3);
     });
   });
 
-  describe('planFragments', () => {
-    it('plans one file for each package', () => {
+  describe('planFragment', () => {
+    it('plans the file in the given directory', () => {
       assert.deepEqual(
-        planFragments(
-          { ...COMPLETE, packages: ['reanimated', 'worklets'] },
-          () => false
-        ),
-        [
-          {
-            path: 'packages/react-native-reanimated/changelog/crash.fix.md',
-            collidedWith: undefined,
-          },
-          {
-            path: 'packages/react-native-worklets/changelog/crash.fix.md',
-            collidedWith: undefined,
-          },
-        ]
+        planFragment(DIRECTORY, COMPLETE, () => false),
+        {
+          path: `${DIRECTORY}/crash.fix.md`,
+          collidedWith: undefined,
+        }
       );
     });
 
     it('adds the first free numeric suffix and reports the collision', () => {
-      const directory = 'packages/react-native-reanimated/changelog';
       const taken = new Set([
-        `${directory}/crash.fix.md`,
-        `${directory}/crash-2.fix.md`,
+        `${DIRECTORY}/crash.fix.md`,
+        `${DIRECTORY}/crash-2.fix.md`,
       ]);
       assert.deepEqual(
-        planFragments(COMPLETE, (path) => taken.has(path)),
-        [
-          {
-            path: `${directory}/crash-3.fix.md`,
-            collidedWith: `${directory}/crash.fix.md`,
-          },
-        ]
+        planFragment(DIRECTORY, COMPLETE, (path) => taken.has(path)),
+        {
+          path: `${DIRECTORY}/crash-3.fix.md`,
+          collidedWith: `${DIRECTORY}/crash.fix.md`,
+        }
       );
     });
 
     it('does not collide with the same slug in another category', () => {
-      const [{ collidedWith }] = planFragments(COMPLETE, (path) =>
+      const { collidedWith } = planFragment(DIRECTORY, COMPLETE, (path) =>
         path.endsWith('crash.feature.md')
       );
       assert.equal(collidedWith, undefined);
@@ -207,7 +152,7 @@ describe('add-changelog', () => {
 
     it('throws with the usage when answers are missing', () => {
       assert.throws(
-        () => planFragments({ packages: [] }, () => false),
+        () => planFragment(DIRECTORY, {}, () => false),
         /Missing: .*\nUsage:/
       );
     });

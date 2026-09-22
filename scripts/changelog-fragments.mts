@@ -1,7 +1,11 @@
+import { relative, resolve } from 'node:path';
+
 export const PACKAGES = [
   { name: 'reanimated', path: 'packages/react-native-reanimated' },
   { name: 'worklets', path: 'packages/react-native-worklets' },
 ] as const;
+
+export const REPOSITORY_ROOT = resolve(import.meta.dirname, '..');
 
 export const CATEGORY_HEADINGS = {
   breaking: '### 🛠 Breaking changes',
@@ -33,6 +37,17 @@ const FRAGMENT_NAME_PATTERN = new RegExp(
 );
 const HAND_MADE_LINK_PATTERN = /\(\[?#\d+/;
 const AUTHOR_PATTERN = /^@[A-Za-z0-9-]+$/;
+
+export function packagePathFromCwd(cwd = process.cwd()) {
+  const path = relative(REPOSITORY_ROOT, cwd).split('\\').join('/');
+  const packagePath = PACKAGES.find((entry) => entry.path === path)?.path;
+  if (!packagePath) {
+    throw new Error(
+      `Run this script from a package: \`yarn workspace <${PACKAGES.map(({ path }) => path.slice('packages/'.length)).join('|')}> <script>\`.`
+    );
+  }
+  return packagePath;
+}
 
 export function fragmentsDirectory(packagePath: string) {
   return `${packagePath}/${FRAGMENTS_DIRECTORY}`;

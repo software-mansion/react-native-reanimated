@@ -43,7 +43,7 @@ function main() {
     [
       ...problems.map((problem) => `- ${problem}`),
       '',
-      'Add a fragment with `yarn changelog:add`. See `packages/react-native-reanimated/changelog/README.md`.',
+      'Add a fragment with `yarn workspace <package> changelog:add`. See `packages/react-native-reanimated/changelog/README.md`.',
     ].join('\n')
   );
   process.exitCode = 1;

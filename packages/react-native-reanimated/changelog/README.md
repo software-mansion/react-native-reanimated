@@ -7,11 +7,11 @@ Each pull request that changes this package adds one file here. The release scri
 Run this in the repository root:
 
 ```sh
-yarn changelog:add --type fix --message 'Fix the crash of `measure` on an unmounted view.'
+yarn workspace react-native-reanimated changelog:add --type fix --message 'Fix the crash of `measure` on an unmounted view.'
 ```
 
 - `--type` is `breaking`, `feature`, `fix` or `other`.
-- `--package` is `reanimated` or `worklets`. Repeat it for both. In a terminal, the script offers each package that your branch changes.
+- The script writes into the package of the workspace. A change to both packages needs one run for each.
 - Put the message in single quotes, because the shell runs backticks inside double quotes. `--message -` reads the message from stdin.
 - `--slug` sets the file name. The default is the branch name without the text before the first `/`.
 - Without the flags, the script asks for the values.
@@ -26,5 +26,5 @@ yarn changelog:add --type fix --message 'Fix the crash of `measure` on an unmoun
 ## Read the unpublished entries
 
 ```sh
-yarn changelog:squash reanimated
+yarn workspace react-native-reanimated changelog:squash
 ```

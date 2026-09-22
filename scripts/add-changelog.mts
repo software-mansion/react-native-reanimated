@@ -7,17 +7,15 @@ import { parseArgs } from 'node:util';
 import type { Category } from './changelog-fragments.mts';
 import {
   CATEGORIES,
-  PACKAGES,
+  REPOSITORY_ROOT,
   fragmentFileName,
   fragmentsDirectory,
   isValidSlug,
+  packagePathFromCwd,
   parseFragment,
 } from './changelog-fragments.mts';
 
-type PackageName = (typeof PACKAGES)[number]['name'];
-
 export type Answers = {
-  packages: PackageName[];
   category?: Category;
   message?: string;
   slug?: string;
@@ -26,41 +24,37 @@ export type Answers = {
 type Question = {
   missing: (answers: Answers) => boolean;
   flag: string;
-  prompt: (detectedPackages: PackageName[]) => string;
-  apply: (
-    answers: Answers,
-    reply: string,
-    detectedPackages: PackageName[]
-  ) => void;
+  prompt: string;
+  apply: (answers: Answers, reply: string) => void;
 };
 
-const USAGE = `Usage: yarn changelog:add [--package ${PACKAGES.map(({ name }) => name).join('|')}]... [--type ${CATEGORIES.join('|')}] [--message '<text>'|-] [--slug <name>]
-\`--message -\` reads the text from stdin. With no terminal, all flags but --slug are required.`;
+const USAGE = `Usage: yarn workspace <package> changelog:add [--type ${CATEGORIES.join('|')}] [--message '<text>'|-] [--slug <name>]
+\`--message -\` reads the text from stdin. With no terminal, --type and --message are required.`;
 const MESSAGE_FROM_STDIN = '-';
 const BRANCHES_WITHOUT_SLUG = /^(main|master|.*-stable)$/;
-const REPOSITORY_ROOT = join(import.meta.dirname, '..');
 
 async function main() {
   try {
+    const directory = fragmentsDirectory(packagePathFromCwd());
     const answers = withDefaults(
       parseArguments(process.argv.slice(2)),
       getCurrentBranch(),
       () => readFileSync(process.stdin.fd, 'utf8')
     );
     const completeAnswers = process.stdin.isTTY
-      ? await askMissing(answers, detectPackages(getChangedFiles()))
+      ? await askMissing(answers)
       : answers;
 
-    for (const { path, collidedWith } of planFragments(
+    const { path, collidedWith } = planFragment(
+      directory,
       completeAnswers,
       (path) => existsSync(join(REPOSITORY_ROOT, path))
-    )) {
-      if (collidedWith) {
-        console.warn(`Warning: ${collidedWith} exists. Using ${path}.`);
-      }
-      writeFragment(path, completeAnswers.message!);
-      console.log(path);
+    );
+    if (collidedWith) {
+      console.warn(`Warning: ${collidedWith} exists. Using ${path}.`);
     }
+    writeFragment(path, completeAnswers.message!);
+    console.log(path);
   } catch (error) {
     console.error((error as Error).message);
     process.exitCode = 1;
@@ -71,14 +65,12 @@ export function parseArguments(args: string[]): Answers {
   const { values } = parseArgs({
     args,
     options: {
-      package: { type: 'string', multiple: true },
       type: { type: 'string' },
       message: { type: 'string' },
       slug: { type: 'string' },
     },
   });
   return {
-    packages: [...new Set(values.package ?? [])] as PackageName[],
     category: values.type as Category | undefined,
     message: values.message,
     slug: values.slug,
@@ -112,28 +104,11 @@ export function slugFromBranch(branch: string) {
   return slug || undefined;
 }
 
-export function detectPackages(changedFiles: string[]) {
-  return PACKAGES.filter(({ path }) =>
-    changedFiles.some((file) => file.startsWith(`${path}/`))
-  ).map(({ name }) => name);
-}
-
 const QUESTIONS: Question[] = [
-  {
-    missing: ({ packages }) => packages.length === 0,
-    flag: '--package',
-    prompt: (detectedPackages) =>
-      `Package (${PACKAGES.map(({ name }) => name).join(', ')}; comma-separated) [${detectedPackages.join(', ')}]: `,
-    apply: (answers, reply, detectedPackages) => {
-      answers.packages = reply
-        ? (reply.split(',').map((name) => name.trim()) as PackageName[])
-        : detectedPackages;
-    },
-  },
   {
     missing: ({ category }) => category === undefined,
     flag: '--type',
-    prompt: () => `Type (${CATEGORIES.join(', ')}): `,
+    prompt: `Type (${CATEGORIES.join(', ')}): `,
     apply: (answers, reply) => {
       answers.category = reply as Category;
     },
@@ -141,7 +116,7 @@ const QUESTIONS: Question[] = [
   {
     missing: ({ message }) => message === undefined,
     flag: '--message',
-    prompt: () => 'Entry (one sentence): ',
+    prompt: 'Entry (one sentence): ',
     apply: (answers, reply) => {
       answers.message = reply;
     },
@@ -149,14 +124,14 @@ const QUESTIONS: Question[] = [
   {
     missing: ({ slug }) => slug === undefined,
     flag: '--slug',
-    prompt: () => 'Slug (the branch gives no name; use a-z, 0-9 and -): ',
+    prompt: 'Slug (the branch gives no name; use a-z, 0-9 and -): ',
     apply: (answers, reply) => {
       answers.slug = reply;
     },
   },
 ];
 
-async function askMissing(answers: Answers, detectedPackages: PackageName[]) {
+async function askMissing(answers: Answers) {
   const completeAnswers = { ...answers };
   const readline = createInterface({
     input: process.stdin,
@@ -167,8 +142,7 @@ async function askMissing(answers: Answers, detectedPackages: PackageName[]) {
       if (question.missing(completeAnswers)) {
         question.apply(
           completeAnswers,
-          (await readline.question(question.prompt(detectedPackages))).trim(),
-          detectedPackages
+          (await readline.question(question.prompt)).trim()
         );
       }
     }
@@ -178,7 +152,8 @@ async function askMissing(answers: Answers, detectedPackages: PackageName[]) {
   return completeAnswers;
 }
 
-export function planFragments(
+export function planFragment(
+  directory: string,
   answers: Answers,
   exists: (path: string) => boolean
 ) {
@@ -186,13 +161,7 @@ export function planFragments(
   if (errors.length > 0) {
     throw new Error([...errors, USAGE].join('\n'));
   }
-
-  return answers.packages.map((packageName) => {
-    const directory = fragmentsDirectory(
-      PACKAGES.find(({ name }) => name === packageName)!.path
-    );
-    return findFreePath(directory, answers.slug!, answers.category!, exists);
-  });
+  return findFreePath(directory, answers.slug!, answers.category!, exists);
 }
 
 export function validateAnswers(answers: Answers) {
@@ -204,12 +173,6 @@ export function validateAnswers(answers: Answers) {
   }
 
   const errors = [...parseFragment(answers.message!).errors];
-  const unknownPackage = answers.packages.find(
-    (packageName) => !PACKAGES.some(({ name }) => name === packageName)
-  );
-  if (unknownPackage !== undefined) {
-    errors.push(`Unknown package "${unknownPackage}".`);
-  }
   if (!CATEGORIES.includes(answers.category!)) {
     errors.push(`Unknown type "${answers.category}".`);
   }
@@ -243,25 +206,6 @@ function writeFragment(path: string, message: string) {
 
 function getCurrentBranch() {
   return git(['branch', '--show-current']);
-}
-
-function getChangedFiles() {
-  const mainBranch = ['origin/main', 'main'].find((ref) => {
-    try {
-      git(['rev-parse', '--verify', '--quiet', ref]);
-      return true;
-    } catch {
-      return false;
-    }
-  });
-  const committed = mainBranch
-    ? git(['diff', '--name-only', `${mainBranch}...HEAD`])
-    : '';
-  const uncommitted = git(['status', '--porcelain', '--no-renames', '-z'])
-    .split('\0')
-    .map((entry) => entry.slice(3))
-    .join('\n');
-  return `${committed}\n${uncommitted}`.split('\n').filter(Boolean);
 }
 
 function git(args: string[]) {

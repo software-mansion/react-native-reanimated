@@ -33,7 +33,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
 1. Move the changelog fragments into `CHANGELOG.md` by running the following script in the repository root (it needs `gh` to read the authors):
 
-   - `yarn changelog:squash reanimated x.y.z`
+   - `yarn workspace react-native-reanimated changelog:squash x.y.z`
 
    The script reads the pull request number from the first `(#N)` in the subject of the commit that added the fragment. It fails when that subject has no `(#N)`. Add a `pr: N` line to that fragment and run the script again.
 
@@ -185,7 +185,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
 8. After a minor release, open the post-release pull request to `main`. It moves `main` to the next `x.y.0-main` version and updates `compatibility.json`. In the same pull request, run the squash script in the repository root with the version and the date of the release:
 
-   - `yarn changelog:squash reanimated x.y.0 --date YYYY-MM-DD --cut origin/x.y-stable`
+   - `yarn workspace react-native-reanimated changelog:squash x.y.0 --date YYYY-MM-DD --cut origin/x.y-stable`
 
    `--cut` leaves the fragments that came to `main` after the stable branch was cut. They belong to the next release on `main`, also when a cherry-pick put them into `x.y.0` on the stable branch. Such an entry is then listed in both versions.
 

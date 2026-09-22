@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
+  REPOSITORY_ROOT,
   isValidSlug,
+  packagePathFromCwd,
   parseFragment,
   parseFragmentFileName,
 } from '../changelog-fragments.mts';
@@ -30,6 +32,26 @@ describe('changelog-fragments', () => {
       assert.equal(parseFragmentFileName('Slug_Name.fix.md'), undefined);
       assert.equal(parseFragmentFileName('slug.md'), undefined);
       assert.equal(parseFragmentFileName('-slug.fix.md'), undefined);
+    });
+  });
+
+  describe('packagePathFromCwd', () => {
+    it('maps a package directory to its repository path', () => {
+      assert.equal(
+        packagePathFromCwd(`${REPOSITORY_ROOT}/packages/react-native-worklets`),
+        'packages/react-native-worklets'
+      );
+    });
+
+    it('rejects the repository root and other directories', () => {
+      assert.throws(
+        () => packagePathFromCwd(REPOSITORY_ROOT),
+        /yarn workspace/
+      );
+      assert.throws(
+        () => packagePathFromCwd(`${REPOSITORY_ROOT}/apps/fabric-example`),
+        /yarn workspace/
+      );
     });
   });
 

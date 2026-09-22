@@ -8,8 +8,9 @@ import {
   CATEGORIES,
   CATEGORY_HEADINGS,
   FRAGMENTS_README,
-  PACKAGES,
+  REPOSITORY_ROOT,
   fragmentsDirectory,
+  packagePathFromCwd,
   parseFragment,
   parseFragmentFileName,
 } from './changelog-fragments.mts';
@@ -36,11 +37,10 @@ export type Resolvers = {
   findAuthors: (pullRequests: number[]) => Map<number, string[]>;
 };
 
-const USAGE = `Usage: yarn changelog:squash <${PACKAGES.map(({ name }) => name).join('|')}> [<version>] [--date YYYY-MM-DD] [--cut <stable-ref>] [--dry-run]
+const USAGE = `Usage: yarn workspace <package> changelog:squash [<version>] [--date YYYY-MM-DD] [--cut <stable-ref>] [--dry-run]
 Without a version, the script prints the unpublished section and changes no file.
 --cut takes only the fragments that existed when <stable-ref> left this branch.`;
 const REPOSITORY = 'software-mansion/react-native-reanimated';
-const REPOSITORY_ROOT = join(import.meta.dirname, '..');
 const UNPUBLISHED_HEADING = '## Unpublished';
 const DELETED_ACCOUNT_LOGIN = 'ghost';
 const PULL_REQUEST_ALIAS = 'pr';
@@ -79,13 +79,12 @@ function parseArguments(args: string[]): Options {
       'dry-run': { type: 'boolean', default: false },
     },
   });
-  const [packageName, version] = positionals;
-  const packagePath = PACKAGES.find(({ name }) => name === packageName)?.path;
-  if (!packagePath) {
+  const [version, extra] = positionals;
+  if (extra !== undefined) {
     throw new Error(USAGE);
   }
   return {
-    packagePath,
+    packagePath: packagePathFromCwd(),
     version,
     date: values.date ?? today(),
     cut: values.cut,
