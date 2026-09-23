@@ -16,6 +16,7 @@ env:
   TRIGGER_LABEL: argent-cloud
   HELPER_DIR: .github/workflows/helper/argent-cloud-issue-repro
   WORK_DIR: argent-cloud-work
+  REPORTS_REPO: software-mansion-labs/reanimated-argent-cloud
 
 jobs:
   plan:
@@ -159,6 +160,24 @@ jobs:
           REPORT_FILE: ${{ env.WORK_DIR }}/report.md
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts report
 
+      - name: Publish the report
+        id: publish
+        if: steps.plan.outputs.feasible != 'true'
+        env:
+          REPORTS_REPO: ${{ env.REPORTS_REPO }}
+          REPORTS_TOKEN: ${{ secrets.ARGENT_CLOUD_REPORTS_TOKEN }}
+          RUN_ID: ${{ github.run_id }}
+          REPORT_FILE: ${{ env.WORK_DIR }}/report.md
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STATUS: ${{ job.status }}
+          STAGE: plan-infeasible
+          PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
+          PLAN_COST_USD: ${{ steps.plan-cost.outputs.cost-usd }}
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts publish
+
       - name: Report to Slack
         if: ${{ !cancelled() && steps.plan.outcome == 'success' && steps.plan.outputs.feasible != 'true' }}
         env:
@@ -171,6 +190,7 @@ jobs:
           STAGE: plan-infeasible
           PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
           PLAN_COST_USD: ${{ steps.plan-cost.outputs.cost-usd }}
+          REPORT_URL: ${{ steps.publish.outputs.url }}
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts notify
 
       - name: Upload the plan
@@ -260,6 +280,25 @@ jobs:
           REPORT_FILE: ${{ env.WORK_DIR }}/report.md
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts report
 
+      - name: Publish the report
+        id: publish
+        if: failure()
+        env:
+          REPORTS_REPO: ${{ env.REPORTS_REPO }}
+          REPORTS_TOKEN: ${{ secrets.ARGENT_CLOUD_REPORTS_TOKEN }}
+          RUN_ID: ${{ github.run_id }}
+          REPORT_FILE: ${{ env.WORK_DIR }}/report.md
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STATUS: ${{ job.status }}
+          STAGE: build-failed
+          PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
+          PLAN_COST_USD: ${{ needs.plan.outputs.cost-usd }}
+          FAILED_STEP: ${{ steps.prepare.outcome == 'failure' && 'Prepare the app' || steps.build.outcome == 'failure' && 'Build the app for the iOS simulator' || '' }}
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts publish
+
       - name: Report to Slack
         if: failure()
         env:
@@ -273,16 +312,8 @@ jobs:
           PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
           PLAN_COST_USD: ${{ needs.plan.outputs.cost-usd }}
           FAILED_STEP: ${{ steps.prepare.outcome == 'failure' && 'Prepare the app' || steps.build.outcome == 'failure' && 'Build the app for the iOS simulator' || '' }}
+          REPORT_URL: ${{ steps.publish.outputs.url }}
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts notify
-
-      - name: Upload the report
-        if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: argent-cloud-report-issue-${{ github.event.issue.number }}
-          path: ${{ env.WORK_DIR }}/report.md
-          if-no-files-found: warn
-          retention-days: 30
 
   reproduce:
     needs: [plan, build]
@@ -413,6 +444,29 @@ jobs:
           REPORT_FILE: ${{ env.WORK_DIR }}/report.md
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts report
 
+      - name: Publish the report
+        id: publish
+        if: always()
+        env:
+          REPORTS_REPO: ${{ env.REPORTS_REPO }}
+          REPORTS_TOKEN: ${{ secrets.ARGENT_CLOUD_REPORTS_TOKEN }}
+          RUN_ID: ${{ github.run_id }}
+          REPORT_FILE: ${{ env.WORK_DIR }}/report.md
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STATUS: ${{ job.status }}
+          STAGE: reproduce
+          PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
+          PLAN_COST_USD: ${{ needs.plan.outputs.cost-usd }}
+          REPRO_COST_USD: ${{ steps.repro-cost.outputs.cost-usd }}
+          BRIEF_FILE: ${{ env.WORK_DIR }}/brief.md
+          OUTPUT_FILE: ${{ env.WORK_DIR }}/output/output.md
+          STREAM_FILE: ${{ env.WORK_DIR }}/output/stream.md
+          FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro.outcome == 'failure' && 'Run argent-cloud issue-repro' || '' }}
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts publish
+
       - name: Report to Slack
         if: always()
         env:
@@ -430,6 +484,7 @@ jobs:
           OUTPUT_FILE: ${{ env.WORK_DIR }}/output/output.md
           STREAM_FILE: ${{ env.WORK_DIR }}/output/stream.md
           FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro.outcome == 'failure' && 'Run argent-cloud issue-repro' || '' }}
+          REPORT_URL: ${{ steps.publish.outputs.url }}
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts notify
 
       - name: Upload the reproduction output
