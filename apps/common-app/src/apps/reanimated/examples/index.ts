@@ -315,6 +315,14 @@ const ViewFlatteningExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/ViewFlattening').default as React.FC
   );
+const NestedFlattenSwapExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/NestedFlattenSwapExample').default as React.FC
+  );
+const ZIndexFlattenSwapExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/ZIndexFlattenSwapExample').default as React.FC
+  );
 const ViewRecyclingExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/ViewRecyclingExample').default
@@ -802,6 +810,14 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ViewFlattening: {
     title: '[LA] View Flattening',
     screen: ViewFlatteningExample,
+  },
+  NestedFlattenSwap: {
+    title: '[LA] Nested flatten swap',
+    screen: NestedFlattenSwapExample,
+  },
+  ZIndexFlattenSwap: {
+    title: '[LA] zIndex flatten swap',
+    screen: ZIndexFlattenSwapExample,
   },
   ViewRecycling: {
     title: '[LA] View Recycling',
