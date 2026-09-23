@@ -269,6 +269,18 @@ describe('Sensors', () => {
     expect(result.current.isAvailable).toBe(false);
   });
 
+  test('keeps one registration across renders with a fresh config object', () => {
+    const { rerender } = renderHook(() =>
+      useAnimatedSensor(SensorType.ACCELEROMETER, { interval: 100 })
+    );
+    jest.mocked(unregisterSensor).mockClear();
+
+    rerender();
+    rerender();
+
+    expect(unregisterSensor).not.toHaveBeenCalled();
+  });
+
   test('unregisters once after a manual unregister and an unmount', () => {
     const { result, rerender, unmount } = renderHook(() =>
       useAnimatedSensor(SensorType.ACCELEROMETER)
