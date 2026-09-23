@@ -8,7 +8,7 @@ describe('SensorContainer', () => {
     const isSensorAvailable = jest
       .spyOn(ReanimatedModule, 'isSensorAvailable')
       .mockImplementation(
-        (sensorType) => sensorType === Number(SensorType.ACCELEROMETER)
+        (sensorType) => sensorType === (SensorType.ACCELEROMETER as number)
       );
     const sensorContainer = new SensorContainer();
 
