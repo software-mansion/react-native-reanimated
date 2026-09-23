@@ -38,7 +38,7 @@ It is also recommended to animate non-layout styles (e.g. `transform`) rather th
 
 ### ⚠️ Blink of incorrect layout of FlashList
 
-**Problem:** When `FlashList` component from `@shopify/flash-list` is mounted while there are some animations running, the item components might be positioned incorrectly for a split second. Unfortunately, the root cause of the issue is located in React Native itself. We reported a [GitHub issue](https://github.com/facebook/react-native/issues/52373) where you can track the progress.
+**Problem:** When `FlashList` component from `@shopify/flash-list` is mounted while there are some animations running, the item components might be positioned incorrectly for a split second. Unfortunately, the root cause of the issue is located in React Native itself. We reported a [GitHub issue](https://github.com/react/react-native/issues/52373) where you can track the progress.
 
 ### ℹ️ Debug vs. release mode
 
@@ -119,7 +119,7 @@ const pan = useMemo(
 
 ### 💡 Animate `TextInput` instead of re-rendering `Text` component
 
-When implementing an animated number counter, don't use React state to periodically update the counter. Instead, store the number in a shared value and use an animated `TextInput` component to display the current value. For more details, see [this example](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/src/apps/reanimated/examples/CounterExample.tsx).
+When implementing an animated number counter, don't use React state to periodically update the counter. Instead, store the number in a shared value and use an animated `TextInput` component to display the current value. For more details, see [this example](https://github.com/software-mansion/react-native-reanimated/blob/89db30708664ca07ce904030cc253fd0774e8ef8/apps/common-app/src/apps/reanimated/examples/CounterExample.tsx).
 
 We are also working on adding support for animating text inside `Animated.Text` component using a shared value – see [PR #8595](https://github.com/software-mansion/react-native-reanimated/pull/8595).
 
