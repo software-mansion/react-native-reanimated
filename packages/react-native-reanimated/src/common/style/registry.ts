@@ -9,6 +9,8 @@ import {
 } from './propsBuilder';
 
 const DEFAULT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Set<string>([
+  // backgroundImage is the name since React Native 0.87, older versions use
+  // experimental_backgroundImage
   'backgroundImage',
   'experimental_backgroundImage',
   'boxShadow',

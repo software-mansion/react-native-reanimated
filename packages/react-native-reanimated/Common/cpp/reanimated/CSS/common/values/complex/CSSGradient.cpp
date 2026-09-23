@@ -42,6 +42,14 @@ bool isValidDirection(const folly::dynamic &direction) {
   return type == "keyword" && direction["value"].isString();
 }
 
+bool isValidShape(const folly::dynamic &shape) {
+  return shape.isString() && (shape.asString() == "circle" || shape.asString() == "ellipse");
+}
+
+const char *shapeToString(const CSSGradient::Shape shape) {
+  return shape == CSSGradient::Shape::Circle ? "circle" : "ellipse";
+}
+
 bool isValidRadialSize(const folly::dynamic &size) {
   if (size.isString()) {
     return true;
@@ -158,7 +166,7 @@ CSSGradient::CSSGradient(const folly::dynamic &value) {
     }
   } else {
     if (value.count("shape") > 0) {
-      shape = value["shape"].asString();
+      shape = value["shape"].asString() == "circle" ? Shape::Circle : Shape::Ellipse;
     }
     if (value.count("size") > 0) {
       const auto &sizeValue = value["size"];
@@ -207,7 +215,7 @@ bool CSSGradient::canConstruct(const folly::dynamic &value) {
       return false;
     }
   } else if (type == RADIAL_GRADIENT) {
-    if (value.count("shape") > 0 && !value["shape"].isString()) {
+    if (value.count("shape") > 0 && !isValidShape(value["shape"])) {
       return false;
     }
     if (value.count("size") > 0 && !isValidRadialSize(value["size"])) {
@@ -239,7 +247,7 @@ folly::dynamic CSSGradient::toDynamic() const {
     result["direction"] = std::move(directionValue);
   } else {
     result["type"] = RADIAL_GRADIENT;
-    result["shape"] = shape;
+    result["shape"] = shapeToString(shape);
     if (const auto *keyword = std::get_if<std::string>(&size)) {
       result["size"] = *keyword;
     } else {
@@ -288,7 +296,7 @@ std::string CSSGradient::toString() const {
       ss << std::get<std::string>(direction);
     }
   } else {
-    ss << RADIAL_GRADIENT << "(" << shape << " ";
+    ss << RADIAL_GRADIENT << "(" << shapeToString(shape) << " ";
     if (const auto *keyword = std::get_if<std::string>(&size)) {
       ss << *keyword;
     } else {
@@ -323,10 +331,10 @@ std::string CSSGradient::toString() const {
 }
 
 CSSGradient CSSGradient::interpolate(const double progress, const CSSGradient &to) const {
-  if (isNone()) {
+  if (isNone()) [[unlikely]] {
     return to.isNone() ? *this : to.withTransparentColors().interpolate(progress, to);
   }
-  if (to.isNone()) {
+  if (to.isNone()) [[unlikely]] {
     return interpolate(progress, withTransparentColors());
   }
 
@@ -377,7 +385,7 @@ bool CSSGradient::canInterpolateTo(const CSSGradient &to) const {
   if (isNone() || to.isNone()) {
     return true;
   }
-  if (type != to.type) {
+  if (type != to.type) [[unlikely]] {
     return false;
   }
 

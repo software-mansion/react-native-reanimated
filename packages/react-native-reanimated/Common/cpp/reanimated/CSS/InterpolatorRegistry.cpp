@@ -1,4 +1,5 @@
 #include <reanimated/CSS/InterpolatorRegistry.h>
+#include <reanimated/Compat/ReactNativeVersionCompat.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
 #include <reanimated/CSS/common/values/CSSAngle.h>
@@ -171,7 +172,9 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
     // View
     {"backfaceVisibility", value<CSSKeyword>("visible")},
     {"backgroundColor", value<CSSColor>(TRANSPARENT)},
+#if REACT_NATIVE_VERSION_MINOR >= 87
     {"backgroundImage", array({value<CSSGradient>(CSSGradient())})},
+#endif
     {"experimental_backgroundImage", array({value<CSSGradient>(CSSGradient())})},
     {"borderBlockColor", value<CSSColor>(BLACK)},
     {"borderBlockEndColor", value<CSSColor>(BLACK)},
