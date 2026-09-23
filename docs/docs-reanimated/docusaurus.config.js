@@ -28,6 +28,45 @@ const bannerReservationHeadTags = firstBannerZone
     ]
   : [];
 
+const ORGANIZATION_ID = 'https://swmansion.com/#organization';
+
+// Same @id as swmansion.com, so engines read one company across both domains.
+const structuredDataHeadTag = {
+  tagName: 'script',
+  attributes: { type: 'application/ld+json' },
+  innerHTML: JSON.stringify({
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': ORGANIZATION_ID,
+        name: 'Software Mansion',
+        url: 'https://swmansion.com',
+        sameAs: [
+          'https://github.com/software-mansion',
+          'https://www.linkedin.com/company/software-mansion/',
+          'https://twitter.com/swmansion',
+          'https://www.youtube.com/c/SoftwareMansion',
+        ],
+      },
+      {
+        '@type': 'SoftwareSourceCode',
+        name: 'React Native Reanimated',
+        description:
+          "React Native's Animated library reimplemented, with animations and gestures running on the UI thread.",
+        codeRepository:
+          'https://github.com/software-mansion/react-native-reanimated',
+        programmingLanguage: ['TypeScript', 'C++'],
+        runtimePlatform: 'React Native',
+        license:
+          'https://github.com/software-mansion/react-native-reanimated/blob/main/LICENSE',
+        author: { '@id': ORGANIZATION_ID },
+        maintainer: { '@id': ORGANIZATION_ID },
+      },
+    ],
+  }).replace(/</g, '\\u003c'),
+};
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'React Native Reanimated',
@@ -44,7 +83,7 @@ const config = {
   organizationName: 'software-mansion', // Usually your GitHub org/user name.
   projectName: 'react-native-reanimated', // Usually your repo name.
 
-  headTags: bannerReservationHeadTags,
+  headTags: [...bannerReservationHeadTags, structuredDataHeadTag],
 
   scripts: [
     {
@@ -179,6 +218,7 @@ const config = {
         },
       ],
     ].filter(Boolean),
+    require('./plugins/llms-txt'),
     function svgModulePlugin() {
       return {
         name: 'svg-module-plugin',

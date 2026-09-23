@@ -69,6 +69,31 @@ describe('CSSAnimationsManager (web)', () => {
       expect(element.style.animationDirection).toBe('reverse');
     });
 
+    test('repeats a delay list that is shorter than the animation list', () => {
+      manager.update(
+        animation({
+          animationName: [keyframes, keyframes],
+          animationDelay: '1s',
+        })
+      );
+
+      // A list shorter than `animation-name` repeats to match it, the way the
+      // browser does for the sibling longhands this manager passes through
+      // untouched.
+      expect(element.style.animationDelay).toBe('1s,1s');
+    });
+
+    test('leaves a delay list that already matches the animation list alone', () => {
+      manager.update(
+        animation({
+          animationName: [keyframes, keyframes],
+          animationDelay: ['1s', '2s'],
+        })
+      );
+
+      expect(element.style.animationDelay).toBe('1s,2s');
+    });
+
     test('inserts every one of multiple comma-separated animations', () => {
       manager.update(
         animation({
@@ -183,7 +208,7 @@ describe('CSSAnimationsManager (web)', () => {
       const addSpy = jest.spyOn(element, 'addEventListener');
       const removeSpy = jest.spyOn(element, 'removeEventListener');
 
-      manager.update(animation(), { onAnimationEnd: jest.fn() });
+      manager.update(animation(), { onCSSAnimationEnd: jest.fn() });
       expect(addSpy).toHaveBeenCalledWith('animationend', expect.any(Function));
 
       // Removing the callback on the next update must detach the exact same
@@ -196,10 +221,10 @@ describe('CSSAnimationsManager (web)', () => {
       const addSpy = jest.spyOn(element, 'addEventListener');
 
       manager.update(animation(), {
-        onAnimationStart: jest.fn(),
-        onAnimationEnd: jest.fn(),
-        onAnimationIteration: jest.fn(),
-        onAnimationCancel: jest.fn(),
+        onCSSAnimationStart: jest.fn(),
+        onCSSAnimationEnd: jest.fn(),
+        onCSSAnimationIteration: jest.fn(),
+        onCSSAnimationCancel: jest.fn(),
       });
 
       for (const eventName of [
@@ -213,14 +238,14 @@ describe('CSSAnimationsManager (web)', () => {
     });
 
     test('forwards the animationName and elapsedTime when the event fires', () => {
-      const onAnimationEnd = jest.fn();
-      manager.update(animation(), { onAnimationEnd });
+      const onCSSAnimationEnd = jest.fn();
+      manager.update(animation(), { onCSSAnimationEnd });
 
       element.dispatchEvent(
         animationEvent('animationend', 'my-animation', 0.3)
       );
 
-      expect(onAnimationEnd).toHaveBeenCalledWith({
+      expect(onCSSAnimationEnd).toHaveBeenCalledWith({
         animationName: 'my-animation',
         elapsedTime: 0.3,
       });
@@ -229,13 +254,13 @@ describe('CSSAnimationsManager (web)', () => {
     test('ignores events that bubble up from descendant nodes', () => {
       const child = document.createElement('div');
       element.appendChild(child);
-      const onAnimationEnd = jest.fn();
-      manager.update(animation(), { onAnimationEnd });
+      const onCSSAnimationEnd = jest.fn();
+      manager.update(animation(), { onCSSAnimationEnd });
 
       // The event bubbles from the child to the element's listener.
       child.dispatchEvent(animationEvent('animationend', 'my-animation', 0.1));
 
-      expect(onAnimationEnd).not.toHaveBeenCalled();
+      expect(onCSSAnimationEnd).not.toHaveBeenCalled();
     });
 
     test('uses the latest callback without re-subscribing on re-render', () => {
@@ -243,8 +268,8 @@ describe('CSSAnimationsManager (web)', () => {
       const first = jest.fn();
       const second = jest.fn();
 
-      manager.update(animation(), { onAnimationEnd: first });
-      manager.update(animation(), { onAnimationEnd: second });
+      manager.update(animation(), { onCSSAnimationEnd: first });
+      manager.update(animation(), { onCSSAnimationEnd: second });
 
       const endSubscriptions = addSpy.mock.calls.filter(
         ([eventName]) => eventName === 'animationend'
@@ -263,8 +288,8 @@ describe('CSSAnimationsManager (web)', () => {
       const removeSpy = jest.spyOn(element, 'removeEventListener');
 
       manager.update(animation(), {
-        onAnimationStart: jest.fn(),
-        onAnimationEnd: jest.fn(),
+        onCSSAnimationStart: jest.fn(),
+        onCSSAnimationEnd: jest.fn(),
       });
       manager.unmountCleanup();
 

@@ -16,7 +16,6 @@ export function installValueUnpacker() {
   'worklet';
   'no-worklet-closure';
   const workletsCache = new Map<number, () => unknown>();
-  const handleCache = new WeakMap<object, unknown>();
 
   function valueUnpacker(objectToUnpack: ObjectToUnpack): unknown {
     const workletHash = objectToUnpack.__workletHash;
@@ -55,13 +54,6 @@ export function installValueUnpacker() {
       const functionInstance = workletFun!.bind(objectToUnpack);
       objectToUnpack._recur = functionInstance;
       return functionInstance;
-    } else if (objectToUnpack.__init !== undefined) {
-      let value = handleCache.get(objectToUnpack);
-      if (value === undefined) {
-        value = objectToUnpack.__init();
-        handleCache.set(objectToUnpack, value);
-      }
-      return value;
     } else {
       throw new Error(
         `[Worklets] Data type not recognized by value unpacker: "${globalThis._toString(

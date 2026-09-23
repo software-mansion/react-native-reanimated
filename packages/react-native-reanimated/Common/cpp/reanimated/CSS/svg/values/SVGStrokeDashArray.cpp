@@ -8,7 +8,7 @@ namespace reanimated::css {
 SVGStrokeDashArray SVGStrokeDashArray::interpolate(
     double progress,
     const SVGStrokeDashArray &to,
-    const ResolvableValueInterpolationContext &context) const {
+    const RelativeValueInterpolationContext &context) const {
   std::vector<CSSLength> result;
   auto fromValues = values;
   auto toValues = to.values;

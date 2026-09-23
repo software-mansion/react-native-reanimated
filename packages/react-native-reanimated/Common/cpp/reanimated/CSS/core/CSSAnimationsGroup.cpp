@@ -24,6 +24,12 @@ void CSSAnimationsGroup::updateSettings(const CSSAnimationSettingsUpdatesMap &se
   }
 }
 
+void CSSAnimationsGroup::setEventMask(const CSSEventMask eventMask) {
+  for (const auto &animation : animations_) {
+    animation->setEventMask(eventMask);
+  }
+}
+
 void CSSAnimationsGroup::schedule(OperationsLoop &loop) {
   for (const auto &animation : animations_) {
     animation->schedule(loop);

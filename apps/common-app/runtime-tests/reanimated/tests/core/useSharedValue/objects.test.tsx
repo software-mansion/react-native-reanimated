@@ -7,7 +7,7 @@ import { runOnUISync } from 'react-native-worklets';
 import {
   describe,
   expect,
-  getRegisteredValue,
+  expectSharedValue,
   registerValue,
   render,
   test,
@@ -90,9 +90,11 @@ describe('Tests of objects as sharedValue', () => {
           progress={index / TEST_CASES.length}
         />
       );
-      const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
       const expected = { ...initialValue, [key]: newVal };
-      expect(sharedValue.onJS).toBe(expected, ComparisonMode.OBJECT);
+      await expectSharedValue(SHARED_VALUE_REF).onUI.toBe(
+        expected,
+        ComparisonMode.OBJECT
+      );
       await render(<ProgressBar progress={index / TEST_CASES.length} />);
     }
   );
@@ -108,9 +110,11 @@ describe('Tests of objects as sharedValue', () => {
           progress={index / TEST_CASES.length}
         />
       );
-      const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
       const expected = { ...initialValue, [key]: newVal };
-      expect(sharedValue.onJS).toBe(expected, ComparisonMode.OBJECT);
+      await expectSharedValue(SHARED_VALUE_REF).onUI.toBe(
+        expected,
+        ComparisonMode.OBJECT
+      );
       await render(<ProgressBar progress={index / TEST_CASES.length} />);
     }
   );

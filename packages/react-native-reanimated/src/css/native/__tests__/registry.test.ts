@@ -157,7 +157,6 @@ describe('registry', () => {
         new Set([
           'backgroundImage',
           'boxShadow',
-          'experimental_backgroundImage',
           'shadowOffset',
           'textShadowOffset',
           'transformOrigin',

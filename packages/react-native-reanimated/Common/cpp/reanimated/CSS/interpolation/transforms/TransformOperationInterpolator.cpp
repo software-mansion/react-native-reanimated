@@ -164,8 +164,7 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::inte
   const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
   const auto &toOp = *std::static_pointer_cast<TOperation>(to);
 
-  return std::make_unique<TOperation>(
-      fromOp.value.interpolate(progress, toOp.value, getResolvableValueContext(context)));
+  return std::make_unique<TOperation>(fromOp.value.interpolate(progress, toOp.value, getRelativeValueContext(context)));
 }
 
 template <ResolvableOp TOperation>
@@ -173,7 +172,7 @@ std::shared_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::reso
     const std::shared_ptr<StyleOperation> &operation,
     const StyleOperationsInterpolationContext &context) const {
   const auto &resolvableOp = std::static_pointer_cast<TOperation>(operation);
-  const auto &resolved = resolvableOp->value.resolve(getResolvableValueContext(context));
+  const auto &resolved = resolvableOp->value.resolve(getRelativeValueContext(context));
 
   if (!resolved.has_value()) {
     throw std::invalid_argument(
@@ -185,9 +184,9 @@ std::shared_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::reso
 }
 
 template <ResolvableOp TOperation>
-ResolvableValueInterpolationContext TransformOperationInterpolator<TOperation>::getResolvableValueContext(
+RelativeValueInterpolationContext TransformOperationInterpolator<TOperation>::getRelativeValueContext(
     const StyleOperationsInterpolationContext &context) const {
-  return ResolvableValueInterpolationContext{
+  return RelativeValueInterpolationContext{
       .node = context.node,
       .fallbackInterpolateThreshold = context.fallbackInterpolateThreshold,
       .viewStylesRepository = context.viewStylesRepository,

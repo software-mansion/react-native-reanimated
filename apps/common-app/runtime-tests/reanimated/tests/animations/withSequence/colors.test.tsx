@@ -63,7 +63,7 @@ describe('withSequence animation of color', () => {
     waitForNotifications([
       `${Component.ACTIVE}_${notificationName}`,
       `${Component.PASSIVE}_${notificationName}`,
-    ]) as Promise<boolean>;
+    ]);
 
   const WidthComponent = ({
     startColor,
@@ -232,7 +232,7 @@ describe('withSequence animation of color', () => {
           ComparisonMode.COLOR
         );
       }
-      expect(await bothNotified(START_ANIMATION_NOTIFICATION_NAME)).toBe(true);
+      await bothNotified(START_ANIMATION_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(
         finalColor,
         ComparisonMode.COLOR
@@ -241,7 +241,7 @@ describe('withSequence animation of color', () => {
         finalColor,
         ComparisonMode.COLOR
       );
-      expect(await bothNotified(MIDDLE_ANIMATION_NOTIFICATION_NAME)).toBe(true);
+      await bothNotified(MIDDLE_ANIMATION_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(
         middleColor,
         ComparisonMode.COLOR
@@ -250,7 +250,7 @@ describe('withSequence animation of color', () => {
         middleColor,
         ComparisonMode.COLOR
       );
-      expect(await bothNotified(FINAL_ANIMATION_NOTIFICATION_NAME)).toBe(true);
+      await bothNotified(FINAL_ANIMATION_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(
         finalColor,
         ComparisonMode.COLOR

@@ -1,4 +1,3 @@
-import BackgroundImage from './BackgroundImage';
 import borders from './borders';
 import colors from './colors';
 import Filter from './Filter';
@@ -8,7 +7,6 @@ import shadows from './shadows';
 import transforms from './transforms';
 
 export default {
-  BackgroundImage,
   borders,
   colors,
   Filter,

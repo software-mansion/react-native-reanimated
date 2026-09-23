@@ -58,11 +58,14 @@ fi
 echo "info: workspace is $workspace_path" >&2
 
 # Resolve the per-workspace DerivedData folder by checking every plausible
-# DerivedData base for a `${project}-<hash>` folder whose info.plist's
-# WorkspacePath matches the workspace we're building. This is necessary
-# because Xcode disambiguates concurrent workspaces (e.g. git worktrees with
-# the same project name) only by the hash suffix; a naive `${project}-*`
-# glob would also match the other worktrees' folders.
+# DerivedData base for a `${project}` or `${project}-<hash>` folder whose
+# info.plist's WorkspacePath matches the workspace we're building. The match
+# on WorkspacePath is necessary because in the default DerivedData layout
+# Xcode disambiguates concurrent workspaces (e.g. git worktrees with the same
+# project name) only by the hash suffix; a naive `${project}-*` glob would
+# also match the other worktrees' folders. The unsuffixed name is used when
+# Xcode's Derived Data location is relative to the workspace, where the
+# containing path is already unique and no hash is appended.
 #
 # Searched bases, in order:
 #   1. Custom DerivedData location set in Xcode → Preferences → Locations.
@@ -77,7 +80,7 @@ dd_bases=()
 
 dd_proj=""
 for base in "${dd_bases[@]:+${dd_bases[@]}}"; do
-  for candidate in "$base"/"${project}"-*; do
+  for candidate in "$base"/"${project}" "$base"/"${project}"-*; do
     [ -d "$candidate" ] || continue
     plist="$candidate/info.plist"
     [ -f "$plist" ] || continue

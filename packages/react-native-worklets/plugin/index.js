@@ -486,8 +486,8 @@ var require_autoworkletization = __commonJS({
       ["useDerivedValue", [0]],
       ["useAnimatedScrollHandler", [0]],
       ["useAnimatedReaction", [0, 1]],
-      ["withTiming", [2]],
-      ["withSpring", [2]],
+      ["withTiming", [2, 3]],
+      ["withSpring", [2, 3]],
       ["withDecay", [1]],
       ["withRepeat", [3]],
       ["runOnUI", [0]],
@@ -549,7 +549,8 @@ var require_bundleMode = __commonJS({
       (0, path_1.join)(WORKLETS_SRC_DIR, "index.ts"),
       (0, path_1.join)(WORKLETS_SRC_DIR, "debug", "bundleMode.native.ts"),
       (0, path_1.join)(WORKLETS_LIB_DIR, "index.js"),
-      (0, path_1.join)(WORKLETS_LIB_DIR, "debug", "bundleMode.native.js")
+      (0, path_1.join)(WORKLETS_LIB_DIR, "debug", "bundleMode.native.js"),
+      (0, path_1.join)(WORKLETS_PACKAGE, "bundleMode", "polyfills", "prepareBundleMode.js")
     ];
     function toggleBundleMode(path, state) {
       if (!state.opts.bundleMode || !togglePaths.some((togglePath) => {
@@ -846,44 +847,14 @@ var require_classMethod = __commonJS({
     var types_12 = require("@babel/types");
     var assert_1 = require("assert");
     function processIfWorkletMethod(path) {
+      if (path.node.kind !== "method") {
+        return;
+      }
       if (path.node.body.directives.some((d) => d.value.value === "worklet")) {
         (0, assert_1.strict)((0, types_12.isIdentifier)(path.node.key), "ClassMethod key must be an Identifier");
         const methodIdentifier = path.node.key;
         path.replaceWith((0, types_12.classProperty)((0, types_12.cloneNode)(methodIdentifier, true), (0, types_12.functionExpression)((0, types_12.cloneNode)(methodIdentifier, true), path.node.params.filter((p) => (0, types_12.isFunctionParameter)(p)).map((p) => (0, types_12.cloneNode)(p, true)), (0, types_12.cloneNode)(path.node.body, true), path.node.generator, path.node.async)));
       }
-    }
-  }
-});
-
-// lib/contextObject.js
-var require_contextObject = __commonJS({
-  "lib/contextObject.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.contextObjectMarker = void 0;
-    exports2.processIfWorkletContextObject = processIfWorkletContextObject;
-    exports2.isContextObject = isContextObject;
-    var types_12 = require("@babel/types");
-    var directives_12 = require_directives();
-    exports2.contextObjectMarker = "__workletContextObject";
-    function processIfWorkletContextObject(path, _state) {
-      if (!isContextObject(path.node)) {
-        return false;
-      }
-      removeContextObjectMarker(path.node);
-      processWorkletContextObject(path.node);
-      return true;
-    }
-    function isContextObject(objectExpression) {
-      return objectExpression.properties.some((property) => (0, types_12.isObjectProperty)(property) && (0, types_12.isIdentifier)(property.key) && property.key.name === exports2.contextObjectMarker);
-    }
-    function processWorkletContextObject(objectExpression) {
-      const workletObjectFactory = (0, types_12.functionExpression)(null, [], (0, types_12.blockStatement)([(0, types_12.returnStatement)((0, types_12.cloneNode)(objectExpression))]));
-      (0, directives_12.addWorkletDirectivesToFunctionBody)(workletObjectFactory.body);
-      objectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)(`${exports2.contextObjectMarker}Factory`), workletObjectFactory));
-    }
-    function removeContextObjectMarker(objectExpression) {
-      objectExpression.properties = objectExpression.properties.filter((property) => !((0, types_12.isObjectProperty)(property) && (0, types_12.isIdentifier)(property.key) && property.key.name === exports2.contextObjectMarker));
     }
   }
 });
@@ -894,9 +865,7 @@ var require_file = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.processIfWorkletFile = processIfWorkletFile;
-    exports2.isImplicitContextObject = isImplicitContextObject;
     var types_12 = require("@babel/types");
-    var contextObject_12 = require_contextObject();
     var directives_12 = require_directives();
     var types_2 = require_types();
     function processIfWorkletFile(path, state) {
@@ -927,11 +896,7 @@ var require_file = __commonJS({
       if ((0, types_2.isWorkletizableFunctionPath)(nodePath)) {
         (0, directives_12.addWorkletDirectivesToPath)(nodePath);
       } else if ((0, types_2.isWorkletizableObjectPath)(nodePath)) {
-        if (isImplicitContextObject(nodePath)) {
-          appendWorkletContextObjectMarker(nodePath.node);
-        } else {
-          processWorkletAggregator(nodePath, state);
-        }
+        processWorkletAggregator(nodePath, state);
       } else if (nodePath.isVariableDeclaration()) {
         processVariableDeclaration(nodePath, state);
       } else if (nodePath.isClassDeclaration()) {
@@ -964,31 +929,6 @@ var require_file = __commonJS({
         }
       });
     }
-    function appendWorkletContextObjectMarker(objectExpression) {
-      if (objectExpression.properties.some((value) => (0, types_12.isObjectProperty)(value) && (0, types_12.isIdentifier)(value.key) && value.key.name === contextObject_12.contextObjectMarker)) {
-        return;
-      }
-      objectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)(`${contextObject_12.contextObjectMarker}`), (0, types_12.booleanLiteral)(true)));
-    }
-    function isImplicitContextObject(path) {
-      const propertyPaths = path.get("properties");
-      return propertyPaths.some((propertyPath) => {
-        if (!propertyPath.isObjectMethod()) {
-          return false;
-        }
-        return hasThisExpression(propertyPath);
-      });
-    }
-    function hasThisExpression(path) {
-      let result = false;
-      path.traverse({
-        ThisExpression(thisPath) {
-          result = true;
-          thisPath.stop();
-        }
-      });
-      return result;
-    }
     function appendWorkletClassMarker(classBody) {
       classBody.body.push((0, types_12.classProperty)((0, types_12.identifier)("__workletClass"), (0, types_12.booleanLiteral)(true)));
     }
@@ -1008,7 +948,17 @@ var require_file = __commonJS({
       }
     }
     function isCommonJSExport(statement) {
-      return (0, types_12.isExpressionStatement)(statement) && (0, types_12.isAssignmentExpression)(statement.expression) && (0, types_12.isMemberExpression)(statement.expression.left) && (0, types_12.isIdentifier)(statement.expression.left.object) && statement.expression.left.object.name === "exports";
+      return (0, types_12.isExpressionStatement)(statement) && (0, types_12.isAssignmentExpression)(statement.expression) && (0, types_12.isMemberExpression)(statement.expression.left) && isCommonJSExportTarget(statement.expression.left);
+    }
+    function isCommonJSExportTarget(target) {
+      const object = target.object;
+      if ((0, types_12.isIdentifier)(object)) {
+        return object.name === "exports" || object.name === "module" && isExportsProperty(target);
+      }
+      return (0, types_12.isMemberExpression)(object) && isCommonJSExportTarget(object);
+    }
+    function isExportsProperty(target) {
+      return target.computed ? (0, types_12.isStringLiteral)(target.property, { value: "exports" }) : (0, types_12.isIdentifier)(target.property, { name: "exports" });
     }
   }
 });
@@ -1123,11 +1073,20 @@ var require_globals = __commonJS({
       "self",
       "console",
       "performance",
+      "navigator",
       "arguments",
       // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
       "require",
       "fetch",
+      "Headers",
+      "Request",
+      "Response",
       "XMLHttpRequest",
+      "FormData",
+      "AbortController",
+      "AbortSignal",
+      "Blob",
+      "FileReader",
       "WebSocket",
       // Run loop
       "queueMicrotask",
@@ -1181,10 +1140,7 @@ var require_globals = __commonJS({
       exports2.globals = new Set(exports2.defaultGlobals);
     }
     var defaultAllowedPaths = ["react-native-worklets"];
-    var defaultAllowedModules = [
-      "react-native-worklets",
-      "react-native/Libraries/Core/setUpXHR"
-    ];
+    var defaultAllowedModules = ["react-native-worklets"];
     function addCustomGlobals(state) {
       if (state.opts && Array.isArray(state.opts.globals)) {
         state.opts.globals.forEach((name) => {
@@ -1367,6 +1323,9 @@ var require_closure = __commonJS({
     var types_12 = require("@babel/types");
     var globals_12 = require_globals();
     var imports_1 = require_imports();
+    function toClosureIdentifier(node) {
+      return (0, types_12.isJSXIdentifier)(node) ? (0, types_12.identifier)(node.name) : (0, types_12.cloneNode)(node, true);
+    }
     function getClosure(funPath, state) {
       const capturedNames = /* @__PURE__ */ new Set();
       const closureVariables = new Array();
@@ -1396,7 +1355,7 @@ var require_closure = __commonJS({
               return;
             }
             capturedNames.add(name);
-            closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
+            closureVariables.push(toClosureIdentifier(idPath.node));
             return;
           }
           if ("id" in funPath.node) {
@@ -1426,7 +1385,7 @@ var require_closure = __commonJS({
             }
           }
           capturedNames.add(name);
-          closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
+          closureVariables.push(toClosureIdentifier(idPath.node));
         }
       }, state);
       return {
@@ -1460,7 +1419,13 @@ var require_generate = __commonJS({
       const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
       const relativeImports = Array.from(relativeBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, imports_1.createImportPathLiteral)(binding.path.parentPath.node.source.value, state)));
       const imports = [...libraryImports, ...relativeImports];
-      const newProg = (0, types_12.program)([...imports, (0, types_12.exportDefaultDeclaration)(factory)]);
+      const statements = [...factory.body.body];
+      const returnedWorklet = statements.pop();
+      (0, assert_1.default)((0, types_12.isReturnStatement)(returnedWorklet) && returnedWorklet.argument);
+      const newProg = (0, types_12.program)([
+        ...imports,
+        ...factory.params.length === 0 ? [...statements, (0, types_12.exportDefaultDeclaration)(returnedWorklet.argument)] : [(0, types_12.exportDefaultDeclaration)(factory)]
+      ]);
       const transformedProg = (_a = (0, core_1.transformFromAstSync)(newProg, void 0, {
         filename: state.file.opts.filename,
         presets: [resolvePresetTypescript()],
@@ -1786,7 +1751,7 @@ var require_workletStringCode = __commonJS({
     }
     function getClosurePlugin(closureVariables) {
       const closureDeclaration = (0, types_12.variableDeclaration)("const", [
-        (0, types_12.variableDeclarator)((0, types_12.objectPattern)(closureVariables.map((variable) => (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.identifier)(variable.name), false, true))), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("__closure")))
+        (0, types_12.variableDeclarator)((0, types_12.arrayPattern)(closureVariables.map((variable) => (0, types_12.identifier)(variable.name))), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("__closure")))
       ]);
       return {
         visitor: {
@@ -1852,7 +1817,14 @@ var require_workletFactory = __commonJS({
       };
       const clone = (0, types_12.cloneNode)(fun.node);
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
-      const { workletName, reactName } = makeWorkletName(fun, state);
+      const { workletName, reactName: initialReactName } = makeWorkletName(fun, state);
+      let reactName = initialReactName;
+      if (state.opts.bundleMode && closureVariables.length === 0) {
+        const importedNames = new Set([...moduleBindingsToImport, ...relativeBindingsToImport].map((binding) => binding.identifier.name));
+        while (importedNames.has(reactName)) {
+          reactName = `_${reactName}`;
+        }
+      }
       let mutatedClosureVariables;
       if (state.opts.bundleMode) {
         mutatedClosureVariables = closureVariables.map((variable) => (0, types_12.cloneNode)(variable, true));
@@ -1910,7 +1882,9 @@ var require_workletFactory = __commonJS({
         (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)((0, types_12.identifier)(reactName), funExpression)
         ]),
-        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(closureVariables.map((variable) => !state.opts.bundleMode && variable.name.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.cloneNode)(variable, true), (0, types_12.cloneNode)(variable, true), false, true))))),
+        ...closureVariables.length > 0 ? [
+          (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.arrayExpression)(closureVariables.map((variable) => !state.opts.bundleMode && variable.name.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable.name)) : (0, types_12.cloneNode)(variable, true)))))
+        ] : [],
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__workletHash"), false), (0, types_12.numericLiteral)(workletHash)))
       ];
       const shouldInjectVersion = !(0, utils_1.isRelease)(state);
@@ -1942,10 +1916,9 @@ var require_workletFactory = __commonJS({
       if (shouldIncludeInitData) {
         factoryParams.unshift((0, types_12.cloneNode)(initDataId, true));
       }
-      const factoryParamObjectPattern = (0, types_12.objectPattern)(factoryParams.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
-      const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), [factoryParamObjectPattern], (0, types_12.blockStatement)(statements));
+      const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), factoryParams.length > 0 ? [(0, types_12.arrayPattern)(factoryParams.map((param) => (0, types_12.cloneNode)(param, true)))] : [], (0, types_12.blockStatement)(statements));
       const factoryCallArgs = factoryParams.map((param) => (0, types_12.cloneNode)(param, true));
-      const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
+      const factoryCallParamPack = (0, types_12.arrayExpression)(factoryCallArgs);
       if (state.opts.bundleMode) {
         (0, imports_1.updateRelativeRequires)(factory, state);
         (0, generate_1.generateWorkletFile)(moduleBindingsToImport, relativeBindingsToImport, factory, workletHash, state);
@@ -2043,11 +2016,16 @@ var require_workletFactoryCall = __commonJS({
       const { factory, factoryCallParamPack, workletHash } = (0, workletFactory_1.makeWorkletFactory)(path, state);
       let factoryCall;
       if (state.opts.bundleMode) {
-        factoryCall = (0, types_12.callExpression)((0, types_12.memberExpression)((0, types_12.callExpression)((0, types_12.identifier)("require"), [
+        const workletModule = (0, types_12.memberExpression)((0, types_12.callExpression)((0, types_12.identifier)("require"), [
           (0, types_12.stringLiteral)(`react-native-worklets/${types_2.generatedWorkletsDir}/${workletHash}.js`)
-        ]), (0, types_12.identifier)("default")), [factoryCallParamPack]);
+        ]), (0, types_12.identifier)("default"));
+        if (factoryCallParamPack.elements.length === 0) {
+          workletModule.loc = path.node.loc;
+          return workletModule;
+        }
+        factoryCall = (0, types_12.callExpression)(workletModule, [factoryCallParamPack]);
       } else {
-        factoryCall = (0, types_12.callExpression)(factory, [factoryCallParamPack]);
+        factoryCall = (0, types_12.callExpression)(factory, factoryCallParamPack.elements.length > 0 ? [factoryCallParamPack] : []);
       }
       addStackTraceDataToWorkletFactory(path, factoryCall);
       const replacement = factoryCall;
@@ -2126,7 +2104,6 @@ var autoworkletization_1 = require_autoworkletization();
 var bundleMode_1 = require_bundleMode();
 var class_1 = require_class();
 var classMethod_1 = require_classMethod();
-var contextObject_1 = require_contextObject();
 var directives_1 = require_directives();
 var file_1 = require_file();
 var globals_1 = require_globals();
@@ -2170,13 +2147,6 @@ module.exports = function WorkletsBabelPlugin() {
         enter(path, state) {
           runWithTaggedExceptions(state, () => {
             (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state);
-          });
-        }
-      },
-      ObjectExpression: {
-        enter(path, state) {
-          runWithTaggedExceptions(state, () => {
-            (0, contextObject_1.processIfWorkletContextObject)(path, state);
           });
         }
       },

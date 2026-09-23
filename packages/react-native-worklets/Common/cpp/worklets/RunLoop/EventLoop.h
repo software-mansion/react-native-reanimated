@@ -6,7 +6,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <memory>
-#include <queue>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -33,16 +33,21 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
  public:
   EventLoop(
       const std::string &name,
+      AbortToken abortToken,
       const std::shared_ptr<jsi::Runtime> &runtime,
-      const std::shared_ptr<AsyncQueue> &queue);
+      const std::shared_ptr<AsyncQueue> &queue,
+      const std::shared_ptr<std::recursive_mutex> &runtimeMutex);
   ~EventLoop();
   void run();
   void pushTask(std::function<void(jsi::Runtime &rt)> &&job);
   void pushTimeout(std::function<void(jsi::Runtime &rt)> &&job, int64_t delay);
+  void abortPending();
 
  private:
+  const AbortToken abortToken_;
   const std::shared_ptr<jsi::Runtime> runtime_;
   const std::shared_ptr<AsyncQueue> queue_;
+  const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<TimeoutsQueueState> timeoutsQueueState_;
   const std::string name_;
 

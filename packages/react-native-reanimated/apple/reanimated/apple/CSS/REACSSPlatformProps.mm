@@ -1,5 +1,9 @@
 #import <reanimated/apple/CSS/REACSSPlatformProps.h>
 
+#if !TARGET_OS_OSX
+#import <UIKit/UIKit.h>
+#endif
+
 #import <array>
 #import <string>
 #import <variant>

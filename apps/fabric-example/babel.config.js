@@ -9,11 +9,42 @@ const workletsPluginOptions = {
   },
 };
 
+const BABEL_WORKLETS_PLUGIN = 'react-native-worklets/plugin';
+
+function resolveWorkletsPlugin() {
+  const wanted = process.env.WORKLETS_PLUGIN;
+  if (wanted === 'oxc') {
+    return loadOxcPlugin();
+  }
+  // The OXC plugin only implements Bundle Mode: it always emits worklet files,
+  // which nothing resolves once Bundle Mode is toggled off.
+  if (wanted === 'babel' || !workletsPluginOptions.bundleMode) {
+    return BABEL_WORKLETS_PLUGIN;
+  }
+  try {
+    return loadOxcPlugin();
+  } catch (error) {
+    const cause = error instanceof Error ? error.message : String(error);
+    console.warn(
+      `[Worklets] oxc plugin unavailable, falling back to ${BABEL_WORKLETS_PLUGIN}. ` +
+        'Run `yarn build` in packages/react-native-worklets/plugin-oxc to use it. ' +
+        `Cause: ${cause.split('\n')[0]}`
+    );
+    return BABEL_WORKLETS_PLUGIN;
+  }
+}
+
+function loadOxcPlugin() {
+  return require('worklets-oxc-plugin/babel');
+}
+
+const workletsPlugin = resolveWorkletsPlugin();
+
 /** @type {import('@babel/core').TransformOptions} */
 module.exports = {
   presets: ['module:@react-native/babel-preset'],
   plugins: [
-    ['react-native-worklets/plugin', workletsPluginOptions],
+    [workletsPlugin, workletsPluginOptions],
     [
       'module-resolver',
       {

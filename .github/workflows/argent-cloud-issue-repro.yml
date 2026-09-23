@@ -1,0 +1,333 @@
+name: Argent Cloud issue repro
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: argent-cloud-issue-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+env:
+  TRIGGER_LABEL: argent-cloud
+  HELPER_DIR: .github/workflows/helper/argent-cloud-issue-repro
+  WORK_DIR: argent-cloud-work
+
+jobs:
+  plan:
+    if: github.event.label.name == 'argent-cloud'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      feasible: ${{ steps.plan.outputs.feasible }}
+      reanimated-version: ${{ steps.plan.outputs.reanimated-version }}
+      react-native-version: ${{ steps.plan.outputs.react-native-version }}
+    steps:
+      - name: Check that a maintainer applied the label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SENDER: ${{ github.event.sender.login }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          role=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$SENDER/permission" --jq .role_name 2>/dev/null || echo none)
+          if [ "$role" != "admin" ] && [ "$role" != "maintain" ]; then
+            echo "::error::$SENDER ($role) is not a maintainer; removing the $TRIGGER_LABEL label."
+            gh issue edit "$ISSUE_NUMBER" -R "$GITHUB_REPOSITORY" --remove-label "$TRIGGER_LABEL"
+            exit 1
+          fi
+
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Write the issue to disk
+        env:
+          TITLE: ${{ github.event.issue.title }}
+          BODY: ${{ github.event.issue.body }}
+          EVENT: ${{ toJSON(github.event.issue) }}
+        run: |
+          mkdir -p "$WORK_DIR/repro"
+          printf '# %s\n\n%s\n' "$TITLE" "$BODY" > "$WORK_DIR/issue.md"
+          printf '%s\n' "$EVENT" > "$WORK_DIR/issue.json"
+
+      - name: Fetch the linked reproduction read-only
+        env:
+          BODY: ${{ github.event.issue.body }}
+        run: |
+          link=$(printf '%s\n' "$BODY" | tr -d '\r' | awk '
+            /^### Snack or a link to a repository[[:space:]]*$/ { found = 1; next }
+            found && /^### / { exit }
+            found && NF { print; exit }
+          ' | tr -d '`<>' | xargs)
+          echo "Reproduction link: ${link:-none}"
+          if [[ "$link" =~ ^https://github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)(/tree/([^/[:space:]]+))?/?$ ]]; then
+            owner="${BASH_REMATCH[1]}"
+            repo="${BASH_REMATCH[2]%.git}"
+            ref="${BASH_REMATCH[4]}"
+            mkdir -p "$WORK_DIR/source"
+            git -c core.hooksPath=/dev/null clone --depth 1 --no-tags ${ref:+--branch "$ref"} \
+              "https://github.com/$owner/$repo.git" "$WORK_DIR/source/repository" \
+              || echo "::warning::could not clone $link; the agent will work from the issue text only"
+            rm -rf "$WORK_DIR/source/repository/.git"
+          fi
+
+      - name: Load the agent prompt and the plan schema
+        id: agent-input
+        run: |
+          {
+            echo 'prompt<<PROMPT_EOF'
+            cat "$HELPER_DIR/prompt.md"
+            echo 'PROMPT_EOF'
+            echo "schema=$(jq -c . "$HELPER_DIR/plan.schema.json")"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Analyse the issue and prepare a reproduction plan
+        id: agent
+        uses: anthropics/claude-code-action@v1
+        with:
+          # TODO (optional): replace the static key with workload identity federation
+          # (anthropic_federation_rule_id, anthropic_organization_id,
+          # anthropic_service_account_id, anthropic_workspace_id plus `id-token: write`)
+          # so a leaked credential expires with the run. See
+          # https://github.com/anthropics/claude-code-action/blob/main/docs/setup.md
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ github.token }}
+          prompt: ${{ steps.agent-input.outputs.prompt }}
+          claude_args: |
+            --max-turns 80
+            --allowedTools "Read,Write,Glob,Grep,Bash(npm view:*)"
+            --json-schema '${{ steps.agent-input.outputs.schema }}'
+
+      - name: Save the plan
+        id: plan
+        env:
+          PLAN: ${{ steps.agent.outputs.structured_output }}
+        run: |
+          if [ -z "$PLAN" ]; then
+            echo "::error::the agent produced no structured output"
+            exit 1
+          fi
+          printf '%s\n' "$PLAN" | jq . > "$WORK_DIR/plan.json"
+          jq . "$WORK_DIR/plan.json"
+          {
+            echo "feasible=$(jq -r .feasible "$WORK_DIR/plan.json")"
+            echo "reanimated-version=$(jq -r .reanimatedVersion "$WORK_DIR/plan.json")"
+            echo "react-native-version=$(jq -r .reactNativeVersion "$WORK_DIR/plan.json")"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Report an infeasible issue to Slack
+        if: steps.plan.outputs.feasible != 'true'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_ARGENT_URL }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STATUS: ${{ job.status }}
+          STAGE: plan-infeasible
+          PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-notification.ts
+
+      - name: Upload the plan
+        if: always() && steps.plan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: argent-cloud-plan-issue-${{ github.event.issue.number }}
+          path: |
+            ${{ env.WORK_DIR }}
+            !${{ env.WORK_DIR }}/source
+          if-no-files-found: error
+          retention-days: 7
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.feasible == 'true'
+    runs-on: macos-26
+    timeout-minutes: 120
+    env:
+      APP_DIR: ${{ github.workspace }}/argent-cloud-app
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Download the plan
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          name: argent-cloud-plan-issue-${{ github.event.issue.number }}
+          path: ${{ env.WORK_DIR }}
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
+        with:
+          ruby-version: '3.3'
+
+      - name: Select Xcode for older React Native
+        env:
+          RN_VERSION: ${{ needs.plan.outputs.react-native-version }}
+        run: |
+          RN_MINOR="$(echo "$RN_VERSION" | cut -d. -f2)"
+          if [ "$RN_MINOR" -lt 83 ]; then
+            echo "React Native $RN_VERSION < 0.83, pinning Xcode 26.3"
+            echo "DEVELOPER_DIR=/Applications/Xcode_26.3.app/Contents/Developer" >> "$GITHUB_ENV"
+          fi
+
+      - name: Prepare the app
+        id: prepare
+        run: '"$HELPER_DIR/prepare-app.sh" "$WORK_DIR/plan.json" "$WORK_DIR/repro" "$APP_DIR"'
+
+      - name: Build the app for the iOS simulator
+        id: build
+        run: '"$HELPER_DIR/build-app.sh" "${{ steps.prepare.outputs.app-root }}" "$WORK_DIR/app/repro-app.tar.gz"'
+
+      - name: Upload the app
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: argent-cloud-app-issue-${{ github.event.issue.number }}
+          path: ${{ env.WORK_DIR }}/app/repro-app.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Report a build failure to Slack
+        if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_ARGENT_URL }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STATUS: ${{ job.status }}
+          STAGE: build-failed
+          FAILED_STEP: ${{ steps.prepare.outcome == 'failure' && 'Prepare the app' || steps.build.outcome == 'failure' && 'Build the app for the iOS simulator' || '' }}
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-notification.ts
+
+  reproduce:
+    needs: [plan, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            /.nvmrc
+            /.github/actions/install-argent-cloud
+            /.github/workflows/helper
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Download the plan
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          name: argent-cloud-plan-issue-${{ github.event.issue.number }}
+          path: ${{ env.WORK_DIR }}
+
+      - name: Download the app
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          name: argent-cloud-app-issue-${{ github.event.issue.number }}
+          path: ${{ env.WORK_DIR }}/app
+
+      - name: Install the argent-cloud CLI
+        id: install
+        uses: ./.github/actions/install-argent-cloud
+
+      - name: Write the reproduction brief
+        id: brief
+        run: |
+          plan="$WORK_DIR/plan.json"
+          {
+            echo "## Reproduction plan"
+            echo
+            jq -r .summary "$plan"
+            echo
+            echo "- Library: $(jq -r .library "$plan")"
+            echo "- react-native: $(jq -r .reactNativeVersion "$plan")"
+            echo "- react-native-reanimated: $(jq -r .reanimatedVersion "$plan")"
+            echo "- react-native-worklets: $(jq -r '.workletsVersion // "none"' "$plan")"
+            echo "- Architecture: $(jq -r .architecture "$plan")"
+            echo "- App: $(jq -r .appKind "$plan") scaffold, code from $(jq -r .reproductionSource.kind "$plan"), iOS simulator, Release configuration with an embedded bundle"
+            echo
+            echo "### Steps"
+            echo
+            jq -r '.reproductionSteps | to_entries[] | "\(.key + 1). \(.value)"' "$plan"
+            echo
+            echo "### Expected"
+            echo
+            jq -r .expectedBehavior "$plan"
+            echo
+            echo "### Actual"
+            echo
+            jq -r .actualBehavior "$plan"
+            echo
+            echo "### Verification"
+            echo
+            echo "- Kind: $(jq -r .verification.kind "$plan")"
+            echo "- How: $(jq -r .verification.how "$plan")"
+            echo "- Pass: $(jq -r .verification.passSignal "$plan")"
+            echo "- Fail: $(jq -r .verification.failSignal "$plan")"
+            echo
+            echo "## Original issue"
+            echo
+            cat "$WORK_DIR/issue.md"
+          } > "$WORK_DIR/brief.md"
+          cat "$WORK_DIR/brief.md"
+
+      - name: Run argent-cloud issue-repro
+        id: repro
+        env:
+          TITLE: ${{ github.event.issue.title }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
+          ARGENT_BACKEND_IP: ${{ secrets.ARGENT_BACKEND_IP }}
+        run: |
+          mkdir -p "$WORK_DIR/output"
+          argent-cloud issue-repro \
+            --title "$TITLE" \
+            --body "$(cat "$WORK_DIR/brief.md")" \
+            --app-bundle "$WORK_DIR/app/repro-app.tar.gz" \
+            --log-usage \
+            --stream="$WORK_DIR/output/stream.md" \
+            | tee "$WORK_DIR/output/output.md"
+
+      - name: Upload the reproduction output
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: argent-cloud-output-issue-${{ github.event.issue.number }}
+          path: ${{ env.WORK_DIR }}/output
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Report the result to Slack
+        if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_ARGENT_URL }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STATUS: ${{ job.status }}
+          STREAM_FILE: ${{ env.WORK_DIR }}/output/stream.md
+          OUTPUT_FILE: ${{ env.WORK_DIR }}/output/output.md
+          FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro.outcome == 'failure' && 'Run argent-cloud issue-repro' || '' }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-notification.ts

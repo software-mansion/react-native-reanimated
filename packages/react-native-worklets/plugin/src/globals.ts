@@ -112,10 +112,19 @@ const notCapturedIdentifiers = [
   'self',
   'console',
   'performance',
+  'navigator',
   'arguments', // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
   'require',
   'fetch',
+  'Headers',
+  'Request',
+  'Response',
   'XMLHttpRequest',
+  'FormData',
+  'AbortController',
+  'AbortSignal',
+  'Blob',
+  'FileReader',
   'WebSocket',
 
   // Run loop
@@ -189,10 +198,7 @@ export function initializeGlobals() {
 }
 
 const defaultAllowedPaths = ['react-native-worklets'];
-const defaultAllowedModules = [
-  'react-native-worklets',
-  'react-native/Libraries/Core/setUpXHR',
-];
+const defaultAllowedModules = ['react-native-worklets'];
 
 /**
  * This function allows to add custom globals such as host-functions. Those

@@ -1,6 +1,6 @@
 #pragma once
 
-#import <reanimated/CSS/configs/CSSTransitionConfig.h>
+#import <reanimated/CSS/easing/EasingConfigs.h>
 #import <reanimated/CSS/utils/platform.h>
 
 #import <React/RCTSurfacePresenter.h>
@@ -13,21 +13,21 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// Core Animation backend for CSS transitions.
 @interface REACSSPlatformTransitions : NSObject
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter;
 
-/// Animates the property natively and remembers its settings for later toggles.
-/// A null `settings` marks the toggle path: the stored settings are reused and the
-/// animation is held persistently. Returns NO when there are none to reuse.
-- (BOOL)applyTransitionForTag:(facebook::react::Tag)viewTag
+- (BOOL)startTransitionForTag:(facebook::react::Tag)viewTag
                  propertyName:(const std::string &)propertyName
                     fromValue:(const reanimated::css::PlatformValue &)fromValue
                       toValue:(const reanimated::css::PlatformValue &)toValue
-                     settings:(nullable const reanimated::css::CSSTransitionPropertySettings *)settings
-                    timestamp:(double)timestamp;
+                   durationMs:(double)durationMs
+             startTimestampMs:(double)startTimestampMs
+                       easing:(const reanimated::css::EasingConfig &)easing
+                   persistent:(BOOL)persistent;
 
-- (void)removeTransitionForTag:(facebook::react::Tag)viewTag propertyName:(const std::string &)propertyName;
+- (void)stopTransitionForTag:(facebook::react::Tag)viewTag propertyName:(const std::string &)propertyName;
 
 @end
 

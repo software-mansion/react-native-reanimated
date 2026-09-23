@@ -1,8 +1,24 @@
 #include <jsi/jsi.h>
 #include <worklets/Compat/Holders.h>
 #include <worklets/Compat/StableApi.h>
-#include <worklets/SharedItems/Serializable.h>
-#include <worklets/SharedItems/SerializableRemoteFunction.h>
+#include <worklets/SharedItems/Serializable/CustomSerializable.h>
+#include <worklets/SharedItems/Serializable/Serializable.h>
+#include <worklets/SharedItems/Serializable/SerializableArray.h>
+#include <worklets/SharedItems/Serializable/SerializableArrayBuffer.h>
+#include <worklets/SharedItems/Serializable/SerializableBigInt.h>
+#include <worklets/SharedItems/Serializable/SerializableError.h>
+#include <worklets/SharedItems/Serializable/SerializableHostFunction.h>
+#include <worklets/SharedItems/Serializable/SerializableHostObject.h>
+#include <worklets/SharedItems/Serializable/SerializableImport.h>
+#include <worklets/SharedItems/Serializable/SerializableMap.h>
+#include <worklets/SharedItems/Serializable/SerializableObject.h>
+#include <worklets/SharedItems/Serializable/SerializableRegExp.h>
+#include <worklets/SharedItems/Serializable/SerializableRemoteFunction.h>
+#include <worklets/SharedItems/Serializable/SerializableScalar.h>
+#include <worklets/SharedItems/Serializable/SerializableSet.h>
+#include <worklets/SharedItems/Serializable/SerializableString.h>
+#include <worklets/SharedItems/Serializable/SerializableTurboModuleLike.h>
+#include <worklets/SharedItems/Serializable/SerializableWorklet.h>
 #include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/JSISerializer.h>
@@ -20,6 +36,10 @@ std::string JSIValueToStdString(facebook::jsi::Runtime &rt, const facebook::jsi:
 
 void scheduleOnUI(const std::shared_ptr<UIScheduler> &uiScheduler, const std::function<void()> &job) {
   uiScheduler->scheduleOnUI(job);
+}
+
+bool isOnUIThread(const std::shared_ptr<UIScheduler> &uiScheduler) {
+  return uiScheduler->isOnUIThread();
 }
 
 facebook::jsi::Runtime &getJSIRuntimeFromWorkletRuntime(const std::shared_ptr<WorkletRuntime> &workletRuntime) {
@@ -66,7 +86,7 @@ std::shared_ptr<Serializable> extractSerializable(
     case Serializable::ValueType::RemoteFunctionType:
       return extractSerializableOrThrow<SerializableRemoteFunction>(rt, value, errorMessage);
     case Serializable::ValueType::HandleType:
-      return extractSerializableOrThrow<SerializableInitializer>(rt, value, errorMessage);
+      throw std::runtime_error("[Worklets] Not implemented.");
     case Serializable::ValueType::HostObjectType:
       return extractSerializableOrThrow<SerializableHostObject>(rt, value, errorMessage);
     case Serializable::ValueType::HostFunctionType:
@@ -97,14 +117,14 @@ std::shared_ptr<Serializable> extractSerializable(
 void runSyncOnRuntime(
     const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const std::shared_ptr<Serializable> &worklet) {
-  workletRuntime->runSync(std::static_pointer_cast<SerializableWorklet>(worklet));
+  workletRuntime->runSyncAndDiscard(std::static_pointer_cast<SerializableWorklet>(worklet));
 }
 
 void runSyncOnRuntime(
     const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const std::shared_ptr<Serializable> &worklet,
     const facebook::jsi::Value &arg0) {
-  workletRuntime->runSync(std::static_pointer_cast<SerializableWorklet>(worklet), arg0);
+  workletRuntime->runSyncAndDiscard(std::static_pointer_cast<SerializableWorklet>(worklet), arg0);
 }
 
 void runSyncOnRuntime(
@@ -112,18 +132,18 @@ void runSyncOnRuntime(
     const std::shared_ptr<Serializable> &worklet,
     const facebook::jsi::Value &arg0,
     const facebook::jsi::Value &arg1) {
-  workletRuntime->runSync(std::static_pointer_cast<SerializableWorklet>(worklet), arg0, arg1);
+  workletRuntime->runSyncAndDiscard(std::static_pointer_cast<SerializableWorklet>(worklet), arg0, arg1);
 }
 
 void runSyncOnRuntime(const std::shared_ptr<WorkletRuntime> &workletRuntime, const facebook::jsi::Function &function) {
-  workletRuntime->runSync(function);
+  workletRuntime->runSyncAndDiscard(function);
 }
 
 void runSyncOnRuntime(
     const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const facebook::jsi::Function &function,
     const facebook::jsi::Value &arg0) {
-  workletRuntime->runSync(function, arg0);
+  workletRuntime->runSyncAndDiscard(function, arg0);
 }
 
 std::shared_ptr<WorkletRuntime> getWorkletRuntimeFromHolder(

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
+#include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
+#include <reanimated/CSS/core/transition/CSSPlatformTransitionBackend.h>
 #include <reanimated/PseudoStyles/PseudoSelector.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
-#include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
 
 #include <memory>
 #include <string>
@@ -70,11 +70,9 @@ struct PlatformDepMethodsHolder {
   MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
   PlatformAttachPseudoSelectorFunction attachPseudoSelector;
   PlatformDetachPseudoSelectorFunction detachPseudoSelector;
-  css::CSSCanRoutePropertyFunction cssCanRouteProperty;
-  css::CSSApplyTransitionFunction cssApplyTransition;
-  css::CSSRemoveTransitionFunction cssRemoveTransition;
-  // Last so platform initializers that don't supply it (iOS, Android today)
-  // can omit it and rely on value-init (= null shared_ptr).
+  // Optional and last, so a platform without them just omits them; null keeps
+  // CSS transitions and animations on the C++ loop.
+  std::shared_ptr<css::CSSPlatformTransitionBackend> platformTransitionBackend;
   std::shared_ptr<css::CSSPlatformAnimationFactory> platformAnimationFactory;
 };
 

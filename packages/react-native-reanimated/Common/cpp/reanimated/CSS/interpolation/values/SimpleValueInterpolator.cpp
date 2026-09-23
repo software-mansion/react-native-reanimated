@@ -10,8 +10,8 @@
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
-#include <reanimated/CSS/common/values/complex/CSSBackgroundImage.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
+#include <reanimated/CSS/common/values/complex/CSSGradient.h>
 #include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGPath.h>
@@ -47,15 +47,24 @@ folly::dynamic SimpleValueInterpolator<AllowedTypes...>::interpolateValue(
     const std::shared_ptr<CSSValue> &fromValue,
     const std::shared_ptr<CSSValue> &toValue,
     const ValueInterpolationContext &context) const {
-  const auto &from = std::static_pointer_cast<ValueType>(fromValue);
-  const auto &to = std::static_pointer_cast<ValueType>(toValue);
-  return from->interpolate(progress, *to, context).toDynamic();
+  if constexpr (std::is_same_v<InterpolationContextFor<AllowedTypes...>, ValueInterpolationContext>) {
+    const auto &from = std::static_pointer_cast<ValueType>(fromValue);
+    const auto &to = std::static_pointer_cast<ValueType>(toValue);
+    return from->interpolate(progress, *to, context).toDynamic();
+  } else {
+    // Only instantiated as ResolvableValueInterpolator's base, which overrides
+    // this and can build the context these values ask for.
+    throw std::runtime_error(
+        "[Reanimated] Cannot interpolate " + fromValue->toString() + " to " + toValue->toString() +
+        ": this property is registered with an interpolator that cannot supply the context these values need");
+  }
 }
 
 template class SimpleValueInterpolator<CSSLength>;
 template class SimpleValueInterpolator<CSSLength, CSSKeyword>;
 template class SimpleValueInterpolator<CSSDouble>;
 template class SimpleValueInterpolator<CSSDouble, CSSKeyword>;
+template class SimpleValueInterpolator<CSSTextDouble>;
 template class SimpleValueInterpolator<CSSInteger>;
 template class SimpleValueInterpolator<CSSIndex>;
 template class SimpleValueInterpolator<CSSAngle>;
@@ -64,7 +73,7 @@ template class SimpleValueInterpolator<CSSBoolean>;
 template class SimpleValueInterpolator<CSSDisplay>;
 template class SimpleValueInterpolator<CSSKeyword>;
 template class SimpleValueInterpolator<CSSBoxShadow>;
-template class SimpleValueInterpolator<CSSLinearGradient, CSSRadialGradient>;
+template class SimpleValueInterpolator<CSSGradient>;
 template class SimpleValueInterpolator<CSSDiscreteArray<CSSKeyword>>;
 
 template class SimpleValueInterpolator<SVGPath>;

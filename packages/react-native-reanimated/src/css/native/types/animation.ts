@@ -52,4 +52,5 @@ export type CSSAnimationUpdates = {
     number,
     Partial<NormalizedSingleCSSAnimationSettings>
   >;
+  eventMask?: number;
 };

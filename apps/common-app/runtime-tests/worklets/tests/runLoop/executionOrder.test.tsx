@@ -1,23 +1,23 @@
 import {
-  describe,
-  expect,
-  createOrderConstraint,
-  createTestValue,
-  getWorkletRuntimeFromPool,
-  test,
-  waitForNotifications,
-} from '../../../ReJest/RuntimeTestsApi';
-import { dispatchWorklet } from './dispatchWorklet';
-import {
   createSynchronizable,
   RuntimeKind,
   scheduleOnRuntime,
 } from 'react-native-worklets';
 
-import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_2_METHODS } from './executionOrderConfigs/twoMethodsSerial';
-import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SERIAL } from './executionOrderConfigs/threeMethodsSerial';
+import {
+  describe,
+  expect,
+  createOrderConstraint,
+  createTestValue,
+  getWorkletRuntimesFromPool,
+  test,
+  waitForNotifications,
+} from '../../../ReJest/RuntimeTestsApi';
+import { dispatchWorklet } from './dispatchWorklet';
 import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_RUN_ON_RUNTIME } from './executionOrderConfigs/runOnRuntime';
 import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SCHEDULING } from './executionOrderConfigs/threeMethodsScheduling';
+import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SERIAL } from './executionOrderConfigs/threeMethodsSerial';
+import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_2_METHODS } from './executionOrderConfigs/twoMethodsSerial';
 import { getMethodMap, MethodsName } from './executionOrderConfigs/utils';
 
 const ANIMATION_QUEUE_POLLING_RATE = 16;
@@ -37,7 +37,7 @@ const NESTED_TIMER_BEFORE_ANIMATION_FRAME: [MethodsName, MethodsName][] =
   );
 
 describe('Test mixed order of execution', () => {
-  const rt = getWorkletRuntimeFromPool('test');
+  const [rt] = getWorkletRuntimesFromPool(1);
 
   test.each(EXPECTED_ORDER_OF_EXECUTION_2_METHODS)(
     'two methods, **${0}**[**${1}**], **${2}**[**${3}**], runtime: **${4}**',

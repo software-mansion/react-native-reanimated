@@ -181,16 +181,6 @@ export function createSerializable<TValue>(
   if (isHostObject(value)) {
     return cloneHostObject(value);
   }
-  if (isPlainJSObject(value) && value.__init) {
-    return cloneInitializer(
-      value,
-      shouldPersistRemote,
-      depth
-    ) as SerializableRef<TValue>;
-  }
-  if (isPlainJSObject(value) && value.__workletContextObjectFactory) {
-    return cloneContextObject(value);
-  }
   if ((isPlainJSObject(value) || isFunction) && isWorkletFunction(value)) {
     return cloneWorklet(value, shouldPersistRemote, depth);
   }
@@ -374,7 +364,7 @@ function cloneObjectProperties<T extends object>(
   shouldPersistRemote: boolean,
   depth: number
 ): Record<string, unknown> {
-  const clonedProps: Record<string, unknown> = {};
+  const clonedProps: Record<string, unknown> = Object.create(null);
   for (const [key, element] of Object.entries(value)) {
     // We don't need to clone __initData field as it contains long strings
     // representing the worklet code, source map, and location, and we will
@@ -395,19 +385,6 @@ function cloneObjectProperties<T extends object>(
     }
   }
   return clonedProps;
-}
-
-function cloneInitializer(
-  value: object,
-  shouldPersistRemote = false,
-  depth = 0
-): SerializableRef<object> {
-  const clonedProps: Record<string, unknown> = cloneObjectProperties(
-    value,
-    shouldPersistRemote,
-    depth
-  );
-  return WorkletsModule.createSerializableInitializer(clonedProps);
 }
 
 function cloneArray<T extends unknown[]>(
@@ -539,21 +516,6 @@ function cloneTurboModuleLike<TValue extends object>(
     proto
   ) as SerializableRef<TValue>;
   return clone;
-}
-
-function cloneContextObject<TValue extends object>(
-  value: TValue
-): SerializableRef<TValue> {
-  const workletContextObjectFactory = (value as Record<string, unknown>)
-    .__workletContextObjectFactory as () => TValue;
-  const handle = cloneInitializer({
-    __init: () => {
-      'worklet';
-      return workletContextObjectFactory();
-    },
-  });
-  serializableMappingCache.set(value, handle);
-  return handle as SerializableRef<TValue>;
 }
 
 function clonePlainJSObject<TValue extends object>(
@@ -878,7 +840,10 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
           '[Worklets] Promises cannot be converted to serializable.'
         );
       }
-      const toAdapt: Record<string, FlatSerializableRef<TValue>> = {};
+      const toAdapt: Record<
+        string,
+        FlatSerializableRef<TValue>
+      > = Object.create(null);
       for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
       }
@@ -945,12 +910,7 @@ export function makeShareable<TValue extends object>(value: TValue): TValue {
   if (serializableMappingCache.get(value)) {
     return value;
   }
-  const handle = createSerializable({
-    __init: () => {
-      'worklet';
-      return value;
-    },
-  });
+  const handle = createSerializable(value, true);
   serializableMappingCache.set(value, handle);
   return value;
 }

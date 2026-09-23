@@ -13,6 +13,7 @@ import type {
   InstanceOrElement,
   SharedValueDisableContravariance,
 } from '../commonTypes';
+import type { CSSCallbackProps } from '../css/types';
 import type { AnimatedProps } from '../helperTypes';
 import type { AnimatedRef } from '../hook';
 import type { ExtractElementRef } from '../hook/commonTypes';
@@ -40,12 +41,14 @@ export type AnimatedComponentType<
 > = {
   (
     props: Omit<AnimatedProps<Props>, 'ref'> &
+      CSSCallbackProps &
       ExtraProps & {
         ref?: AnimatedComponentRef<Instance>;
       }
   ): ReactNode;
   (
     props: Omit<AnimatedProps<Props>, 'ref'> &
+      CSSCallbackProps &
       ExtraProps &
       RefAttributes<ExtractElementRef<Instance>>
   ): ReactNode;

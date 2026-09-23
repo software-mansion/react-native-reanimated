@@ -3,19 +3,10 @@
 import { logger } from '../debug/logger';
 import type { WorkletFactory, WorkletFunction } from '../types';
 
-const handleCache = new WeakMap<WorkletFunction, unknown>();
-
 export function bundleValueUnpacker(objectToUnpack: ObjectToUnpack): unknown {
   const workletHash = objectToUnpack.__workletHash;
   if (workletHash !== undefined) {
     return getWorklet(workletHash, objectToUnpack.__closure);
-  } else if (objectToUnpack.__init !== undefined) {
-    let value = handleCache.get(objectToUnpack);
-    if (value === undefined) {
-      value = objectToUnpack.__init();
-      handleCache.set(objectToUnpack, value);
-    }
-    return value;
   } else {
     throw new Error(
       `[Worklets] Data type not recognized by value unpacker: "${globalThis._toString(
@@ -27,7 +18,7 @@ export function bundleValueUnpacker(objectToUnpack: ObjectToUnpack): unknown {
 
 function getWorklet(
   workletHash: number,
-  closureVariables: Record<string, unknown>
+  closureVariables: unknown[] | undefined
 ): WorkletFunction | undefined {
   let worklet;
   if (__DEV__) {
@@ -48,10 +39,12 @@ const metroRequire = globalThis.__r;
 
 function getWorkletFromMetroRequire(
   workletHash: number,
-  closureVariables: Record<string, unknown>
+  closureVariables: unknown[] | undefined
 ): WorkletFunction {
-  const factory = metroRequire(workletHash).default as WorkletFactory;
-  return factory(closureVariables);
+  const exportedWorklet = metroRequire(workletHash).default;
+  return closureVariables === undefined
+    ? (exportedWorklet as WorkletFunction)
+    : (exportedWorklet as WorkletFactory)(closureVariables);
 }
 
 interface ObjectToUnpack extends WorkletFunction {

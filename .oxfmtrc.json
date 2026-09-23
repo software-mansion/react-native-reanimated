@@ -6,6 +6,7 @@
   "trailingComma": "es5",
   "tabWidth": 2,
   "arrowParens": "always",
+  "embeddedLanguageFormatting": "off",
   "sortPackageJson": false,
   "jsdoc": true,
   "ignorePatterns": [
@@ -29,6 +30,21 @@
       "options": {
         "jsdoc": false
       }
+    },
+    {
+      "files": ["docs/**"],
+      "options": {
+        "sortImports": false
+      }
     }
-  ]
+  ],
+  "sortImports": {
+    "groups": [
+      "side_effect",
+      ["builtin", "external"],
+      ["internal", "subpath"],
+      ["parent", "sibling", "index", "style"],
+      "unknown"
+    ]
+  }
 }

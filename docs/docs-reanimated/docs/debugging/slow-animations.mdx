@@ -1,0 +1,47 @@
+---
+id: slow-animations
+sidebar_label: Slow animations
+sidebar_position: 3
+---
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Slow animations
+
+When debugging animations, it's often useful to slow them down to closely observe how they play out. Reanimated supports slow animations on both iOS and Android without any additional setup.
+
+<details>
+  <summary>How does it work?</summary>
+
+  Reanimated animations are driven by frame timestamps. When slow animations are enabled, Reanimated rescales the timestamps passed to its animation loop, so all animations driven by Reanimated – including animations of [shared values](/docs/fundamentals/glossary#shared-value), layout animations and keyboard-driven animations – slow down accordingly.
+
+  On iOS, Reanimated reads the Simulator's animation drag coefficient and applies the same slowdown factor. On Android, Reanimated divides the elapsed time by a factor of 10.
+</details>
+
+## iOS
+
+On iOS, use the built-in **Slow Animations** feature of the iOS Simulator. Reanimated automatically detects it and slows down its animations by the same factor as the system ones (10 times).
+
+To enable it, select **Debug** > **Slow Animations** in the iOS Simulator menu bar.
+
+<img src={useBaseUrl('/img/debugging/slow-animations-ios.png')} alt="Slow Animations option in the iOS Simulator Debug menu" width={700} style={{ display: 'block', margin: '0 auto' }}/>
+
+## Android
+
+On Android, Reanimated adds a custom option to the React Native Dev Menu. When enabled, animations run 10 times slower. The option is currently not available in Expo apps.
+
+To enable it, open the Dev Menu (press <kbd>d</kbd> in the Metro console, shake the device, press <kbd>Cmd</kbd> + <kbd>M</kbd> or <kbd>Ctrl</kbd> + <kbd>M</kbd> in the Android Emulator, or run `adb shell input keyevent 82`) and select **Toggle slow animations (Reanimated)**.
+
+<img src={useBaseUrl('/img/debugging/slow-animations-android.png')} alt="Toggle slow animations (Reanimated) option in the React Native Dev Menu on Android" width={300} style={{ display: 'block', margin: '0 auto' }}/>
+
+## Remarks
+
+- Slow animations are a development-only tool. On iOS, the toggle is available only in the Simulator – there's no way to enable slow animations on a physical device. On Android, the option is part of the Dev Menu, which is available only in debug builds.
+
+- Enabling slow animations doesn't interrupt ongoing animations – they seamlessly continue at a slower pace. However, when you disable slow animations, the animation clock jumps forward to catch up with real time, which kept passing at full speed all along. As a result, ongoing animations jump ahead, usually straight to their final state.
+
+- If you need to inspect animations frame by frame, record the screen and open the recording in a media player that steps through individual frames (i.e. QuickTime Player with the left and right arrow keys).
+
+## Platform compatibility
+
+<PlatformCompatibility android ios/>

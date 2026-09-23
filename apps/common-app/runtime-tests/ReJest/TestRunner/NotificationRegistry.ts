@@ -1,5 +1,7 @@
 import { RuntimeKind, scheduleOnRN } from 'react-native-worklets';
 
+import { waitFor } from '../utils/waitFor';
+
 let notificationRegistry: Record<string, boolean> = {};
 function notifyJS(name: string) {
   notificationRegistry[name] = true;
@@ -20,22 +22,17 @@ export class NotificationRegistry {
   }
 
   public async waitForNotifications(names: string[], timeout?: number) {
-    const beginTime = performance.now();
-    const defaultPollingRate = 10;
-    return new Promise((resolve) => {
-      const interval = setInterval(() => {
-        if (names.every((name) => notificationRegistry[name])) {
-          clearInterval(interval);
-          resolve(true);
-        }
-        if (timeout != undefined && performance.now() - beginTime > timeout) {
-          names.forEach((name) =>
-            console.log(`Notification '${name}' timeout exceeded.`)
-          );
-          clearInterval(interval);
-          resolve(false);
-        }
-      }, defaultPollingRate);
+    await waitFor(() => names.every((name) => notificationRegistry[name]), {
+      description:
+        names.length === 1
+          ? `notification '${names[0]}'`
+          : `notifications ${names.map((name) => `'${name}'`).join(', ')}`,
+      timeout,
+      describeState: () =>
+        `missing ${names
+          .filter((name) => !notificationRegistry[name])
+          .map((name) => `'${name}'`)
+          .join(', ')}`,
     });
   }
 

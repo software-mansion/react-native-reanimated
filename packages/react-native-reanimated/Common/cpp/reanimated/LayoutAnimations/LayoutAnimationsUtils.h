@@ -1,14 +1,16 @@
 #pragma once
 
+#include <folly/dynamic.h>
+#include <react/debug/react_native_assert.h>
 #include <react/renderer/components/rnreanimated/Props.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
+#include <algorithm>
+#include <cstring>
 #include <memory>
-#include <unordered_map>
-#include <unordered_set>
-#include <utility>
+#include <optional>
 #include <vector>
 
 namespace reanimated {
@@ -60,18 +62,17 @@ typedef enum class ExitingState : std::uint8_t {
   UNDEFINED = 1,
   WAITING = 2,
   ANIMATING = 3,
-  DEAD = 4,
+  COMPLETED = 4,
   DELETED = 5,
 } ExitingState;
 
 struct MutationNode;
 
 enum class TransitionState : std::uint8_t {
-  NONE = 0,
-  START = 1,
-  ACTIVE = 2,
-  END = 3,
-  CANCELLED = 4,
+  START,
+  ACTIVE,
+  END,
+  CANCELLED,
 };
 
 enum class Intent : std::uint8_t {
@@ -80,33 +81,144 @@ enum class Intent : std::uint8_t {
   TO_DELETE = 2,
 };
 
+struct IndexCursor {
+  int shadowIndex = -1;
+  int hostIndex = -1;
+};
+
+// One entry per parent, scoped to a single transaction.
+struct IndexCursors {
+  IndexCursor remove;
+  IndexCursor insert;
+  bool invariantChecked = false;
+};
+
 struct LightNode {
   ShadowView previous;
   ShadowView current;
+#ifdef ANDROID
+  // React Native stores only the props changed by a commit in `Props::rawProps` on Android.
+  // The full set accumulates here and becomes a `Props` only when a consumer reads the node.
+  folly::dynamic accumulatedRawProps = nullptr;
+  bool propsNeedResolve = false;
+#endif
   ExitingState state = ExitingState::UNDEFINED;
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
+  int exitingChildrenCount = 0;
+
+  bool isExiting() const {
+    return state != ExitingState::UNDEFINED;
+  }
+
+  void setExitingState(ExitingState newState) {
+    const bool startsExiting = !isExiting() && newState != ExitingState::UNDEFINED;
+    state = newState;
+    if (!startsExiting) {
+      return;
+    }
+    if (const auto parentNode = parent.lock()) {
+      parentNode->exitingChildrenCount++;
+    }
+  }
+
   int removeChild(const std::shared_ptr<LightNode> &child) {
     for (int i = children.size() - 1; i >= 0; i--) {
       if (children[i]->current.tag == child->current.tag) {
+        if (children[i]->isExiting()) {
+          exitingChildrenCount--;
+        }
         children.erase(children.begin() + i);
         return i;
       }
     }
     return -1;
   }
+
+  void clearChildren() {
+    children.clear();
+    exitingChildrenCount = 0;
+  }
+
+  // A new child goes after the exiting children at its shadow position. The differ sends a
+  // parent's Removes in descending order and its Inserts in ascending order, so the cursors
+  // resume the previous scan; a query out of order falls back to a full scan. Order source:
+  // https://github.com/facebook/react-native/blob/v0.87.0/packages/react-native/ReactCommon/react/renderer/mounting/Differentiator.cpp#L1328-L1357
+  int toHostIndexForRemove(const int shadowIndex, IndexCursors &cursors) const {
+    validateExitingChildrenCount(cursors);
+    react_native_assert(
+        shadowIndex >= 0 && shadowIndex <= static_cast<int>(children.size()) - exitingChildrenCount &&
+        "shadowIndex is out of range");
+    if (exitingChildrenCount == 0) {
+      return shadowIndex;
+    }
+    auto &cursor = cursors.remove;
+    if (cursor.hostIndex != -1 && shadowIndex < cursor.shadowIndex) {
+      int liveChildrenBelow = cursor.shadowIndex;
+      for (int hostIndex = cursor.hostIndex - 1; hostIndex >= 0; hostIndex--) {
+        if (!children[hostIndex]->isExiting() && --liveChildrenBelow == shadowIndex) {
+          cursor = {shadowIndex, hostIndex};
+          return hostIndex;
+        }
+      }
+    }
+    const int hostIndex = scanToHostIndex(shadowIndex, 0, 0);
+    cursor = {shadowIndex, hostIndex};
+    return hostIndex;
+  }
+
+  int toHostIndexForInsert(const int shadowIndex, IndexCursors &cursors) const {
+    validateExitingChildrenCount(cursors);
+    react_native_assert(
+        shadowIndex >= 0 && shadowIndex <= static_cast<int>(children.size()) - exitingChildrenCount &&
+        "shadowIndex is out of range");
+    if (exitingChildrenCount == 0) {
+      return shadowIndex;
+    }
+    auto &cursor = cursors.insert;
+    int hostIndex = 0;
+    if (cursor.hostIndex != -1 && shadowIndex > cursor.shadowIndex) {
+      hostIndex = scanToHostIndex(shadowIndex, cursor.hostIndex + 1, cursor.shadowIndex + 1);
+    } else {
+      hostIndex = scanToHostIndex(shadowIndex, 0, 0);
+    }
+    cursor = {shadowIndex, hostIndex};
+    return hostIndex;
+  }
+
+ private:
+  int scanToHostIndex(const int shadowIndex, const int startHostIndex, const int startLiveChildren) const {
+    const auto childrenCount = static_cast<int>(children.size());
+    int hostIndex = startHostIndex;
+    int liveChildrenSeen = startLiveChildren;
+    int exitingChildrenSeen = 0;
+    while (hostIndex < childrenCount && (liveChildrenSeen < shadowIndex || children[hostIndex]->isExiting())) {
+      if (children[hostIndex]->isExiting()) {
+        if (++exitingChildrenSeen == exitingChildrenCount && startHostIndex == 0) {
+          return shadowIndex + exitingChildrenCount;
+        }
+      } else {
+        liveChildrenSeen++;
+      }
+      hostIndex++;
+    }
+    return hostIndex;
+  }
+
+  void validateExitingChildrenCount(IndexCursors &cursors) const {
+    if (cursors.invariantChecked) {
+      return;
+    }
+    react_native_assert(
+        exitingChildrenCount ==
+            std::count_if(children.begin(), children.end(), [](const auto &child) { return child->isExiting(); }) &&
+        "exitingChildrenCount is out of sync");
+    cursors.invariantChecked = true;
+  }
 };
 
-struct SurfaceManager {
-  mutable std::unordered_map<SurfaceId, std::shared_ptr<std::unordered_map<Tag, UpdateValues>>> props_;
-  mutable std::unordered_map<SurfaceId, Rect> windows_;
-
-  std::unordered_map<Tag, UpdateValues> &getUpdateMap(SurfaceId surfaceId);
-  void updateWindow(SurfaceId surfaceId, double windowWidth, double windowHeight);
-  Rect getWindow(SurfaceId surfaceId);
-};
-
-static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame &frame) {
+static inline void
+updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame &frame, const react::Point &offset = {}) {
   // we use optional's here to avoid overwriting non-animated values
   if (frame.width) {
     layoutMetrics.frame.size.width = *frame.width;
@@ -115,10 +227,10 @@ static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame
     layoutMetrics.frame.size.height = *frame.height;
   }
   if (frame.x) {
-    layoutMetrics.frame.origin.x = *frame.x;
+    layoutMetrics.frame.origin.x = *frame.x + offset.x;
   }
   if (frame.y) {
-    layoutMetrics.frame.origin.y = *frame.y;
+    layoutMetrics.frame.origin.y = *frame.y + offset.y;
   }
 }
 

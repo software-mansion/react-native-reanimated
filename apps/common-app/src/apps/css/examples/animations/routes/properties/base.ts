@@ -152,10 +152,6 @@ const layoutAndPositioningRoutes = {
 } satisfies Routes;
 
 const appearanceRoutes = {
-  BackgroundImage: {
-    Component: baseAnimatedProperties.appearance.BackgroundImage,
-    name: 'Background Image',
-  },
   Borders: {
     name: 'Borders',
     routes: {
@@ -336,6 +332,10 @@ const appearanceRoutes = {
       BackfaceVisibility: {
         Component: baseAnimatedProperties.appearance.others.BackfaceVisibility,
         name: 'Backface Visibility',
+      },
+      BackgroundImage: {
+        Component: baseAnimatedProperties.appearance.others.BackgroundImage,
+        name: 'Background Image',
       },
       MixBlendMode: {
         Component: baseAnimatedProperties.appearance.others.MixBlendMode,

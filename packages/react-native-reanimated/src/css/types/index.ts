@@ -14,8 +14,8 @@ export type * from './props';
 export type * from './pseudo';
 export type * from './transition';
 
-export type CSSConfigProp =
-  | CSSTransitionProp
-  | CSSAnimationProp
-  | CSSTransitionCallbackProp
-  | CSSAnimationCallbackProp;
+export type CSSConfigProp = CSSTransitionProp | CSSAnimationProp;
+
+export type CSSCallbackProp =
+  | CSSAnimationCallbackProp
+  | CSSTransitionCallbackProp;

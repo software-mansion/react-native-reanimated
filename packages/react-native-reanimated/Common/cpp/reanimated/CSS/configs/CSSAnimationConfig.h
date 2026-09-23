@@ -2,6 +2,7 @@
 
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 #include <reanimated/CSS/configs/common.h>
+#include <reanimated/CSS/events/CSSEvent.h>
 
 #include <optional>
 #include <string>
@@ -44,6 +45,7 @@ struct CSSAnimationUpdates {
   std::optional<std::vector<std::string>> animationNames;
   CSSAnimationSettingsMap newAnimationSettings;
   CSSAnimationSettingsUpdatesMap settingsUpdates;
+  CSSEventMask eventMask{0};
 };
 
 CSSAnimationUpdates parseCSSAnimationUpdates(jsi::Runtime &rt, const jsi::Value &config);

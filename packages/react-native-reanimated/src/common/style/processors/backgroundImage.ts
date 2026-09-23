@@ -1,133 +1,112 @@
 'use strict';
-import type { ColorValue } from 'react-native';
+import type { ViewStyle } from 'react-native';
 
 import type { ValueProcessor, ValueProcessorContext } from '../../types';
-import { processColor, type ProcessedColor } from './colors';
+import {
+  CSS_NUMBER_PATTERN,
+  getAngleInDegrees,
+  isPercentage,
+  splitByComma,
+  splitByWhitespace,
+} from '../../utils';
+import type { ProcessedColor } from './colors';
+import { processColor, processColorNumber } from './colors';
 
-// Types are defined locally instead of being imported from `react-native`
-// because the stable `backgroundImage` style prop (and its types) is
-// available only since react-native 0.87.
-type GradientColorStop = {
-  color: ColorValue | number | null;
-  positions?: ReadonlyArray<string>;
+type BackgroundImageStyleValue = NonNullable<
+  ViewStyle[Extract<
+    keyof ViewStyle,
+    'backgroundImage' | 'experimental_backgroundImage'
+  >]
+>;
+type BackgroundImageValue = Exclude<BackgroundImageStyleValue, string>[number];
+type RadialGradientValue = Extract<
+  BackgroundImageValue,
+  { type: 'radial-gradient' }
+>;
+type RadialGradientShape = RadialGradientValue['shape'];
+type RadialGradientSize = RadialGradientValue['size'];
+type RadialGradientPosition = RadialGradientValue['position'];
+
+const NEWLINE_REGEX = /\n/g;
+const WHITESPACE_NORMALIZE_REGEX = /\s+/g;
+const GRADIENT_REGEX = /^(linear|radial)-gradient\(((?:\([^)]*\)|[^()])*)\)/;
+const COLOR_STOP_PARTS_REGEX = /\S+\([^)]*\)|\S+/g;
+const PX_LENGTH_REGEX = new RegExp(`^${CSS_NUMBER_PATTERN}px$`);
+const LINEAR_GRADIENT_DIRECTION_REGEX =
+  /^to\s+(?:top|bottom|left|right)(?:\s+(?:top|bottom|left|right))?/;
+
+const DEFAULT_DIRECTION = { type: 'angle', value: 180 } as const;
+const DEFAULT_RADIAL_SHAPE = 'ellipse';
+const DEFAULT_RADIAL_SIZE = 'farthest-corner';
+const DEFAULT_RADIAL_POSITION = { top: '50%', left: '50%' };
+const MIN_COLOR_STOPS = 2;
+
+const RADIAL_SIZE_KEYWORDS = [
+  'closest-side',
+  'closest-corner',
+  'farthest-side',
+  'farthest-corner',
+];
+
+export const ERROR_MESSAGES = {
+  invalidDirection(direction: string) {
+    'worklet';
+    return `Invalid direction "${direction}" in background image.`;
+  },
+  invalidPosition(position: unknown) {
+    'worklet';
+    return `Invalid position "${String(position)}" in background image color stop.`;
+  },
+  invalidShape(shape: string) {
+    'worklet';
+    return `Invalid shape "${shape}" in radial gradient.`;
+  },
+  invalidSize(size: unknown) {
+    'worklet';
+    return `Invalid size ${JSON.stringify(size)} in radial gradient.`;
+  },
+  invalidRadialPosition(position: unknown) {
+    'worklet';
+    return `Invalid position ${JSON.stringify(position)} in radial gradient.`;
+  },
+  invalidTransitionHint(position: unknown) {
+    'worklet';
+    return `Invalid transition hint "${String(position)}" in background image: a hint must be placed between two color stops.`;
+  },
+  notEnoughColorStops(count: number) {
+    'worklet';
+    return `Background image gradient must have at least two color stops, got ${count}.`;
+  },
 };
 
-type LinearGradientValue = {
-  type: 'linear-gradient';
-  // Angle or direction enums
-  direction?: string;
-  colorStops: ReadonlyArray<GradientColorStop>;
-};
-
-type RadialGradientShape = 'circle' | 'ellipse';
-
-type RadialGradientSize =
-  | 'closest-corner'
-  | 'closest-side'
-  | 'farthest-corner'
-  | 'farthest-side'
-  | {
-      x: string | number;
-      y: string | number;
-    };
-
-type RadialGradientPosition = {
-  top?: number | string;
-  left?: number | string;
-  bottom?: number | string;
-  right?: number | string;
-};
-
-type RadialGradientValue = {
-  type: 'radial-gradient';
-  shape?: RadialGradientShape;
-  size?: RadialGradientSize;
-  position?: RadialGradientPosition;
-  colorStops: ReadonlyArray<GradientColorStop>;
-};
-
-export type BackgroundImageValue = LinearGradientValue | RadialGradientValue;
-
-// null color indicates that the transition hint syntax is used (e.g. red, 20%, blue)
-type ProcessedColorStopColor = ProcessedColor | null;
-// number - pixel value, string - percentage, null - position not specified
-type ProcessedColorStopPosition = number | string | null;
-
-type ProcessedGradientColorStop = {
-  color: ProcessedColorStopColor;
-  position: ProcessedColorStopPosition;
-};
-
-type ProcessedLinearGradientDirection =
+export type ProcessedDirection =
   | { type: 'angle'; value: number }
   | { type: 'keyword'; value: string };
 
-type ProcessedLinearGradient = {
-  type: 'linear-gradient';
-  direction: ProcessedLinearGradientDirection;
-  colorStops: ProcessedGradientColorStop[];
+export type ProcessedColorStop = {
+  color: ProcessedColor | null;
+  position: number | string | null;
 };
 
-type ProcessedRadialGradient = {
-  type: 'radial-gradient';
-  shape: RadialGradientShape;
-  size: RadialGradientSize;
-  position: RadialGradientPosition;
-  colorStops: ProcessedGradientColorStop[];
-};
+export type ProcessedBackgroundImageValue =
+  | {
+      type: 'linear-gradient';
+      direction: ProcessedDirection;
+      colorStops: ProcessedColorStop[];
+    }
+  | {
+      type: 'radial-gradient';
+      shape: RadialGradientShape;
+      size: RadialGradientSize;
+      position: RadialGradientPosition;
+      colorStops: ProcessedColorStop[];
+    };
 
-type ProcessedBackgroundImage = Array<
-  ProcessedLinearGradient | ProcessedRadialGradient
->;
-
-const NEWLINE_REGEX = /\n/g;
-const GRADIENT_REGEX = /^(linear|radial)-gradient\(((?:\([^)]*\)|[^()])*)\)/;
-const COMMA_SPLIT_REGEX = /,(?![^(]*\))/;
-const WHITESPACE_SPLIT_REGEX = /\s+/;
-const COLOR_STOP_PARTS_REGEX = /\S+\([^)]*\)|\S+/g;
-const WHITESPACE_NORMALIZE_REGEX = /\s+/g;
-
-const LINEAR_GRADIENT_ANGLE_UNIT_REGEX =
-  /^([+-]?\d*\.?\d+)(deg|grad|rad|turn)$/;
-
-const DEFAULT_LINEAR_GRADIENT_DIRECTION: ProcessedLinearGradientDirection = {
-  type: 'angle',
-  value: 180,
-};
-const DEFAULT_RADIAL_SHAPE = 'ellipse';
-const DEFAULT_RADIAL_SIZE = 'farthest-corner';
-
-function getAngleInDegrees(angle: string): number | null {
-  'worklet';
-  const match = angle.match(LINEAR_GRADIENT_ANGLE_UNIT_REGEX);
-  if (!match) {
-    return null;
-  }
-
-  const [, value, unit] = match;
-  const numericValue = parseFloat(value);
-
-  switch (unit) {
-    case 'deg':
-      return numericValue;
-    case 'grad':
-      return numericValue * 0.9; // 1 grad = 0.9 degrees
-    case 'rad':
-      return (numericValue * 180) / Math.PI;
-    case 'turn':
-      return numericValue * 360; // 1 turn = 360 degrees
-    default:
-      return null;
-  }
-}
-
-function getDirectionForKeyword(
+const getDirectionForKeyword = (
   direction: string
-): ProcessedLinearGradientDirection | null {
+): ProcessedDirection | null => {
   'worklet';
-  const normalized = direction.replace(WHITESPACE_NORMALIZE_REGEX, ' ');
-
-  switch (normalized) {
+  switch (direction.replace(WHITESPACE_NORMALIZE_REGEX, ' ')) {
     case 'to top':
       return { type: 'angle', value: 0 };
     case 'to right':
@@ -151,684 +130,529 @@ function getDirectionForKeyword(
     default:
       return null;
   }
-}
-
-function getPositionFromCSSValue(position: string): number | string | null {
-  'worklet';
-  if (position.endsWith('px')) {
-    return parseFloat(position);
-  }
-  if (position.endsWith('%')) {
-    return position;
-  }
-  return null;
-}
-
-const ERROR_MESSAGES = {
-  invalidBackgroundImage(value: unknown) {
-    'worklet';
-    return `Background image value must be a string or an array of gradient objects (e.g. [{ type: 'linear-gradient', direction, colorStops }]). Received: ${JSON.stringify(value)}.`;
-  },
-  invalidDirection(direction: string) {
-    'worklet';
-    return `Invalid direction "${direction}" in a linear gradient. Expected an angle (e.g. "45deg") or a direction keyword (e.g. "to bottom right").`;
-  },
-  invalidGradientShape(shape: string) {
-    'worklet';
-    return `Invalid shape "${shape}" in a radial gradient. Expected "circle" or "ellipse".`;
-  },
-  invalidGradientSize(size: unknown) {
-    'worklet';
-    return `Invalid size ${JSON.stringify(size)} in a radial gradient. Expected an extent keyword (e.g. "farthest-corner"), a single non-negative length, or a pair of non-negative lengths.`;
-  },
-  invalidGradientPosition(position: unknown) {
-    'worklet';
-    return `Invalid position ${JSON.stringify(position)} in a radial gradient.`;
-  },
-  invalidColorStopPosition(position: unknown) {
-    'worklet';
-    return `Invalid color stop position ${JSON.stringify(position)} in a gradient. Expected a number (pixels) or a percentage string.`;
-  },
-  invalidTransitionHint(hint: unknown) {
-    'worklet';
-    return `Invalid transition hint ${JSON.stringify(hint)} in a gradient. A transition hint must be a single position placed between two color stops.`;
-  },
-  invalidColorStop(colorStop: unknown) {
-    'worklet';
-    return `Invalid color stop ${JSON.stringify(colorStop)} in a gradient.`;
-  },
-  invalidGradientString(gradient: string) {
-    'worklet';
-    return `Invalid gradient "${gradient}". Expected a comma-separated list of linear-gradient(...) or radial-gradient(...) functions.`;
-  },
 };
 
-function processColorStops(
-  colorStops: ReadonlyArray<GradientColorStop>,
-  context?: ValueProcessorContext
-): ProcessedGradientColorStop[] {
+const parseDirection = (direction: string): ProcessedDirection | null => {
   'worklet';
-  const processedColorStops: ProcessedGradientColorStop[] = [];
+  const normalized = direction.toLowerCase();
+  const angle = getAngleInDegrees(normalized);
+  if (angle !== null) {
+    return { type: 'angle', value: angle };
+  }
+  return getDirectionForKeyword(normalized);
+};
+
+const processDirection = (direction?: string): ProcessedDirection => {
+  'worklet';
+  if (direction == null) {
+    return DEFAULT_DIRECTION;
+  }
+
+  const parsed = parseDirection(direction);
+  if (parsed === null) {
+    throw new Error(
+      `[Reanimated] ${ERROR_MESSAGES.invalidDirection(direction)}`
+    );
+  }
+  return parsed;
+};
+
+const isValidPosition = (position: unknown): position is number | string => {
+  'worklet';
+  return Number.isFinite(position) || isPercentage(position);
+};
+
+const isValidRadialSize = (size: unknown): size is number | string => {
+  'worklet';
+  return isValidPosition(size) && parseFloat(String(size)) >= 0;
+};
+
+const processRadialPosition = (
+  position?: RadialGradientPosition
+): RadialGradientPosition => {
+  'worklet';
+  if (position == null) {
+    return { ...DEFAULT_RADIAL_POSITION };
+  }
+  for (const value of Object.values(position)) {
+    if (!isValidPosition(value)) {
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidRadialPosition(position)}`
+      );
+    }
+  }
+  return position;
+};
+
+const processColorStops = (
+  colorStops: BackgroundImageValue['colorStops'],
+  context?: ValueProcessorContext
+): ProcessedColorStop[] => {
+  'worklet';
+  const result: ProcessedColorStop[] = [];
 
   for (const colorStop of colorStops) {
-    const positions = colorStop.positions;
-    // Color transition hint syntax (red, 20%, blue)
-    if (
-      colorStop.color == null &&
-      Array.isArray(positions) &&
-      positions.length === 1
-    ) {
-      const position = positions[0];
-      if (
-        typeof position === 'number' ||
-        (typeof position === 'string' && position.endsWith('%'))
-      ) {
-        processedColorStops.push({ color: null, position });
-      } else {
+    const { color, positions } = colorStop;
+
+    if (color == null && positions?.length === 1) {
+      if (!isValidPosition(positions[0])) {
         throw new Error(
-          `[Reanimated] ${ERROR_MESSAGES.invalidTransitionHint(position)}`
+          `[Reanimated] ${ERROR_MESSAGES.invalidPosition(positions[0])}`
         );
       }
-    } else {
-      const processedColor = processColor(colorStop.color, context);
-      if (processedColor == null) {
+      result.push({ color: null, position: positions[0] });
+      continue;
+    }
+
+    const processedColor = processColor(color, context);
+
+    if (!positions?.length) {
+      result.push({ color: processedColor, position: null });
+      continue;
+    }
+
+    for (const position of positions) {
+      if (!isValidPosition(position)) {
         throw new Error(
-          `[Reanimated] ${ERROR_MESSAGES.invalidColorStop(colorStop)}`
+          `[Reanimated] ${ERROR_MESSAGES.invalidPosition(position)}`
         );
       }
-      if (positions && positions.length > 0) {
-        for (const position of positions) {
-          if (
-            typeof position === 'number' ||
-            (typeof position === 'string' && position.endsWith('%'))
-          ) {
-            processedColorStops.push({ color: processedColor, position });
-          } else {
-            throw new Error(
-              `[Reanimated] ${ERROR_MESSAGES.invalidColorStopPosition(position)}`
-            );
-          }
-        }
-      } else {
-        processedColorStops.push({ color: processedColor, position: null });
-      }
+      result.push({ color: processedColor, position });
     }
   }
 
-  return processedColorStops;
-}
+  for (let i = 0; i < result.length; i++) {
+    const { color, position } = result[i];
+    if (
+      color === null &&
+      (i === 0 || i === result.length - 1 || result[i - 1].color === null)
+    ) {
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidTransitionHint(position)}`
+      );
+    }
+  }
 
-function parseColorStopsCSSString(
+  if (result.length < MIN_COLOR_STOPS) {
+    throw new Error(
+      `[Reanimated] ${ERROR_MESSAGES.notEnoughColorStops(result.length)}`
+    );
+  }
+
+  return result;
+};
+
+const processRadialSize = (size?: RadialGradientSize): RadialGradientSize => {
+  'worklet';
+  if (size == null) {
+    return DEFAULT_RADIAL_SIZE;
+  }
+  if (typeof size === 'string' && RADIAL_SIZE_KEYWORDS.includes(size)) {
+    return size;
+  }
+  if (
+    typeof size === 'object' &&
+    isValidRadialSize(size.x) &&
+    isValidRadialSize(size.y)
+  ) {
+    return { x: size.x, y: size.y };
+  }
+  throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidSize(size)}`);
+};
+
+const processRadialShape = (
+  shape?: RadialGradientShape
+): RadialGradientShape => {
+  'worklet';
+  if (shape == null) {
+    return DEFAULT_RADIAL_SHAPE;
+  }
+  if (shape !== 'circle' && shape !== 'ellipse') {
+    throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidShape(shape)}`);
+  }
+  return shape;
+};
+
+const getPositionFromCSSValue = (value: string): number | string | null => {
+  'worklet';
+  if (isPercentage(value)) {
+    return value;
+  }
+  if (PX_LENGTH_REGEX.test(value)) {
+    return parseFloat(value);
+  }
+  return null;
+};
+
+const parseCSSColor = (
+  color: string,
+  context?: ValueProcessorContext
+): ProcessedColor | null => {
+  'worklet';
+  if (processColorNumber(color) === null) {
+    return null;
+  }
+  return processColor(color, context);
+};
+
+const isLengthOrPercentageToken = (token: string): boolean => {
+  'worklet';
+  return token.endsWith('px') || token.endsWith('%');
+};
+
+const parseColorStopsCSSString = (
   parts: string[],
   context?: ValueProcessorContext
-): ProcessedGradientColorStop[] {
+): ProcessedColorStop[] | null => {
   'worklet';
-  const colorStopsString = parts.join(',');
-  const colorStops: ProcessedGradientColorStop[] = [];
-  // split by comma, but not if it's inside parentheses
-  // e.g. red, rgba(0, 0, 0, 0.5), green => ["red", "rgba(0, 0, 0, 0.5)", "green"]
-  const stops = colorStopsString.split(COMMA_SPLIT_REGEX);
-  let prevStop: RegExpMatchArray | null = null;
+  const stops = splitByComma(parts.join(','));
+  const result: ProcessedColorStop[] = [];
+  let previousWasHint = false;
 
   for (let i = 0; i < stops.length; i++) {
-    const trimmedStop = stops[i].trim();
-    // Match function like pattern or single words
-    const colorStopParts = trimmedStop.match(COLOR_STOP_PARTS_REGEX);
-    if (colorStopParts == null) {
-      throw new Error(
-        `[Reanimated] ${ERROR_MESSAGES.invalidColorStop(trimmedStop)}`
-      );
+    const colorStopParts = stops[i].trim().match(COLOR_STOP_PARTS_REGEX);
+    if (colorStopParts === null) {
+      return null;
     }
-    // Case 1: [color, position, position]
+
     if (colorStopParts.length === 3) {
+      const color = parseCSSColor(colorStopParts[0], context);
       const position1 = getPositionFromCSSValue(colorStopParts[1]);
       const position2 = getPositionFromCSSValue(colorStopParts[2]);
-      if (position1 == null || position2 == null) {
-        throw new Error(
-          `[Reanimated] ${ERROR_MESSAGES.invalidColorStopPosition(trimmedStop)}`
-        );
+      if (color === null || position1 === null || position2 === null) {
+        return null;
       }
-      const processedColor = processColor(colorStopParts[0], context);
-      colorStops.push({ color: processedColor, position: position1 });
-      colorStops.push({ color: processedColor, position: position2 });
-    }
-    // Case 2: [color, position]
-    else if (colorStopParts.length === 2) {
+      result.push({ color, position: position1 });
+      result.push({ color, position: position2 });
+      previousWasHint = false;
+    } else if (colorStopParts.length === 2) {
+      const color = parseCSSColor(colorStopParts[0], context);
       const position = getPositionFromCSSValue(colorStopParts[1]);
-      if (position == null) {
-        throw new Error(
-          `[Reanimated] ${ERROR_MESSAGES.invalidColorStopPosition(trimmedStop)}`
-        );
+      if (color === null || position === null) {
+        return null;
       }
-      const processedColor = processColor(colorStopParts[0], context);
-      colorStops.push({ color: processedColor, position });
-    }
-    // Case 3: [color]
-    // Case 4: [position] => transition hint syntax
-    else if (colorStopParts.length === 1) {
+      result.push({ color, position });
+      previousWasHint = false;
+    } else if (colorStopParts.length === 1) {
       const position = getPositionFromCSSValue(colorStopParts[0]);
-      if (position != null) {
-        // A transition hint must have a color stop before and after it
-        // (e.g. red, 20%, blue)
-        if (
-          (prevStop != null &&
-            prevStop.length === 1 &&
-            getPositionFromCSSValue(prevStop[0]) != null) ||
-          i === stops.length - 1 ||
-          i === 0
-        ) {
-          throw new Error(
-            `[Reanimated] ${ERROR_MESSAGES.invalidTransitionHint(trimmedStop)}`
-          );
+      if (position !== null) {
+        if (previousWasHint || i === 0 || i === stops.length - 1) {
+          return null;
         }
-        colorStops.push({ color: null, position });
+        result.push({ color: null, position });
+        previousWasHint = true;
       } else {
-        colorStops.push({
-          color: processColor(colorStopParts[0], context),
-          position: null,
-        });
+        const color = parseCSSColor(colorStopParts[0], context);
+        if (color === null) {
+          return null;
+        }
+        result.push({ color, position: null });
+        previousWasHint = false;
       }
     } else {
-      throw new Error(
-        `[Reanimated] ${ERROR_MESSAGES.invalidColorStop(trimmedStop)}`
-      );
+      return null;
     }
-    prevStop = colorStopParts;
   }
 
-  return colorStops;
-}
+  if (result.length < MIN_COLOR_STOPS) {
+    return null;
+  }
 
-function parseLinearGradientCSSString(
-  gradientContent: string,
+  return result;
+};
+
+const parseLinearGradientCSSString = (
+  content: string,
   context?: ValueProcessorContext
-): ProcessedLinearGradient {
+): ProcessedBackgroundImageValue | null => {
   'worklet';
-  const parts = gradientContent.split(',');
-  let direction: ProcessedLinearGradientDirection =
-    DEFAULT_LINEAR_GRADIENT_DIRECTION;
-  const trimmedDirection = parts[0].trim();
+  const parts = content.split(',');
+  const firstPart = parts[0].trim();
+  let direction: ProcessedDirection = DEFAULT_DIRECTION;
 
-  if (LINEAR_GRADIENT_ANGLE_UNIT_REGEX.test(trimmedDirection)) {
-    const parsedAngle = getAngleInDegrees(trimmedDirection);
-    if (parsedAngle == null) {
-      throw new Error(
-        `[Reanimated] ${ERROR_MESSAGES.invalidDirection(trimmedDirection)}`
-      );
+  if (
+    getAngleInDegrees(firstPart) !== null ||
+    LINEAR_GRADIENT_DIRECTION_REGEX.test(firstPart)
+  ) {
+    const parsed = parseDirection(firstPart);
+    if (parsed === null) {
+      return null;
     }
-    direction = { type: 'angle', value: parsedAngle };
-    parts.shift();
-  } else if (trimmedDirection.startsWith('to ')) {
-    const parsedDirection = getDirectionForKeyword(trimmedDirection);
-    if (parsedDirection == null) {
-      throw new Error(
-        `[Reanimated] ${ERROR_MESSAGES.invalidDirection(trimmedDirection)}`
-      );
-    }
-    direction = parsedDirection;
+    direction = parsed;
     parts.shift();
   }
 
-  return {
-    type: 'linear-gradient',
-    direction,
-    colorStops: parseColorStopsCSSString(parts, context),
-  };
-}
+  const colorStops = parseColorStopsCSSString(parts, context);
+  if (colorStops === null) {
+    return null;
+  }
 
-function parseRadialGradientCSSString(
-  gradientContent: string,
+  return { type: 'linear-gradient', direction, colorStops };
+};
+
+const HORIZONTAL_POSITION_KEYWORDS: Record<string, string> = {
+  left: '0%',
+  center: '50%',
+  right: '100%',
+};
+const VERTICAL_POSITION_KEYWORDS: Record<string, string> = {
+  top: '0%',
+  center: '50%',
+  bottom: '100%',
+};
+
+const getKeywordPosition = (
+  keywords: Record<string, string>,
+  token: string
+): string | null => {
+  'worklet';
+  return Object.prototype.hasOwnProperty.call(keywords, token)
+    ? keywords[token]
+    : null;
+};
+
+const parseRadialPosition = (
+  tokens: string[]
+): RadialGradientPosition | null => {
+  'worklet';
+  let top: string | number | undefined;
+  let left: string | number | undefined;
+  let right: string | number | undefined;
+  let bottom: string | number | undefined;
+
+  if (tokens.length === 1) {
+    const token = tokens[0];
+    const horizontal = getKeywordPosition(HORIZONTAL_POSITION_KEYWORDS, token);
+    const vertical = getKeywordPosition(VERTICAL_POSITION_KEYWORDS, token);
+    if (horizontal !== null) {
+      left = horizontal;
+      top = '50%';
+    } else if (vertical !== null) {
+      left = '50%';
+      top = vertical;
+    } else if (isLengthOrPercentageToken(token)) {
+      const value = getPositionFromCSSValue(token);
+      if (value === null) {
+        return null;
+      }
+      left = value;
+      top = '50%';
+    }
+  } else if (tokens.length === 2) {
+    const [token1, token2] = tokens;
+    const horizontal1 = getKeywordPosition(
+      HORIZONTAL_POSITION_KEYWORDS,
+      token1
+    );
+    const vertical1 = getKeywordPosition(VERTICAL_POSITION_KEYWORDS, token1);
+    const horizontal2 = getKeywordPosition(
+      HORIZONTAL_POSITION_KEYWORDS,
+      token2
+    );
+    const vertical2 = getKeywordPosition(VERTICAL_POSITION_KEYWORDS, token2);
+    if (horizontal1 !== null && vertical2 !== null) {
+      left = horizontal1;
+      top = vertical2;
+    } else if (vertical1 !== null && horizontal2 !== null) {
+      left = horizontal2;
+      top = vertical1;
+    } else {
+      if (horizontal1 !== null) {
+        left = horizontal1;
+      } else if (isLengthOrPercentageToken(token1)) {
+        const value = getPositionFromCSSValue(token1);
+        if (value === null) {
+          return null;
+        }
+        left = value;
+      } else {
+        return null;
+      }
+
+      if (vertical2 !== null) {
+        top = vertical2;
+      } else if (isLengthOrPercentageToken(token2)) {
+        const value = getPositionFromCSSValue(token2);
+        if (value === null) {
+          return null;
+        }
+        top = value;
+      } else {
+        return null;
+      }
+    }
+  } else if (tokens.length === 4) {
+    for (const [keyword, rawValue] of [
+      [tokens[0], tokens[1]],
+      [tokens[2], tokens[3]],
+    ]) {
+      const value = getPositionFromCSSValue(rawValue);
+      if (value === null) {
+        return null;
+      }
+      if (keyword === 'left') {
+        left = value;
+      } else if (keyword === 'right') {
+        right = value;
+      } else if (keyword === 'top') {
+        top = value;
+      } else if (keyword === 'bottom') {
+        bottom = value;
+      } else {
+        return null;
+      }
+    }
+  }
+
+  if (top != null && left != null) {
+    return { top, left };
+  }
+  if (bottom != null && right != null) {
+    return { bottom, right };
+  }
+  if (top != null && right != null) {
+    return { top, right };
+  }
+  if (bottom != null && left != null) {
+    return { bottom, left };
+  }
+  return null;
+};
+
+const parseRadialGradientCSSString = (
+  content: string,
   context?: ValueProcessorContext
-): ProcessedRadialGradient {
+): ProcessedBackgroundImageValue | null => {
   'worklet';
   let shape: RadialGradientShape = DEFAULT_RADIAL_SHAPE;
   let size: RadialGradientSize = DEFAULT_RADIAL_SIZE;
-  let position: RadialGradientPosition = { top: '50%', left: '50%' };
+  let position: RadialGradientPosition = { ...DEFAULT_RADIAL_POSITION };
 
-  // split the content by commas, but not if inside parentheses (for color values)
-  const parts = gradientContent.split(COMMA_SPLIT_REGEX);
-  // first part may contain shape, size, and position
-  // [ <radial-shape> || <radial-size> ]? [ at <position> ]?
-  const firstPartStr = parts[0].trim();
-  const remainingParts = [...parts];
-  let hasShapeSizeOrPositionString = false;
+  const parts = splitByComma(content);
+  const tokens = splitByWhitespace(parts[0]);
+  let hasShapeSizeOrPosition = false;
   let hasExplicitSingleSize = false;
   let hasExplicitShape = false;
-  const firstPartTokens = firstPartStr.split(WHITESPACE_SPLIT_REGEX);
 
-  const invalidGradient = () => {
-    'worklet';
-    return new Error(
-      `[Reanimated] ${ERROR_MESSAGES.invalidGradientString(`radial-gradient(${gradientContent})`)}`
-    );
-  };
+  while (tokens.length > 0) {
+    const token = tokens.shift()!;
 
-  while (firstPartTokens.length > 0) {
-    let token = firstPartTokens.shift();
-    if (token == null) {
-      continue;
-    }
-    let tokenTrimmed = token.trim();
-
-    if (tokenTrimmed === 'circle' || tokenTrimmed === 'ellipse') {
-      shape = tokenTrimmed;
-      hasShapeSizeOrPositionString = true;
+    if (token === 'circle' || token === 'ellipse') {
+      shape = token;
+      hasShapeSizeOrPosition = true;
       hasExplicitShape = true;
-    } else if (
-      tokenTrimmed === 'closest-corner' ||
-      tokenTrimmed === 'farthest-corner' ||
-      tokenTrimmed === 'closest-side' ||
-      tokenTrimmed === 'farthest-side'
-    ) {
-      size = tokenTrimmed;
-      hasShapeSizeOrPositionString = true;
-    } else if (tokenTrimmed.endsWith('px') || tokenTrimmed.endsWith('%')) {
-      const sizeX = getPositionFromCSSValue(tokenTrimmed);
-      if (sizeX == null || (typeof sizeX === 'number' && sizeX < 0)) {
-        throw invalidGradient();
+    } else if (RADIAL_SIZE_KEYWORDS.includes(token)) {
+      size = token as RadialGradientSize;
+      hasShapeSizeOrPosition = true;
+    } else if (isLengthOrPercentageToken(token)) {
+      const sizeX = getPositionFromCSSValue(token);
+      if (sizeX === null || parseFloat(token) < 0) {
+        return null;
       }
-      hasShapeSizeOrPositionString = true;
+      hasShapeSizeOrPosition = true;
       size = { x: sizeX, y: sizeX };
-      token = firstPartTokens.shift();
-      if (token == null) {
-        hasExplicitSingleSize = true;
-        continue;
-      }
-      tokenTrimmed = token.trim();
-      if (tokenTrimmed.endsWith('px') || tokenTrimmed.endsWith('%')) {
-        const sizeY = getPositionFromCSSValue(tokenTrimmed);
-        if (sizeY == null || (typeof sizeY === 'number' && sizeY < 0)) {
-          throw invalidGradient();
+
+      const nextToken = tokens[0];
+      if (nextToken !== undefined && isLengthOrPercentageToken(nextToken)) {
+        tokens.shift();
+        const sizeY = getPositionFromCSSValue(nextToken);
+        if (sizeY === null || parseFloat(nextToken) < 0) {
+          return null;
         }
         size = { x: sizeX, y: sizeY };
       } else {
         hasExplicitSingleSize = true;
-        // The token after the size is not a second size value (e.g. 'at' or a
-        // shape keyword). Put it back so the loop can process it, otherwise
-        // the position would be silently dropped and its values re-parsed as
-        // a new size.
-        firstPartTokens.unshift(token);
       }
-    } else if (tokenTrimmed === 'at') {
-      let top: string | number | undefined;
-      let left: string | number | undefined;
-      let right: string | number | undefined;
-      let bottom: string | number | undefined;
-      hasShapeSizeOrPositionString = true;
-
-      if (firstPartTokens.length === 0) {
-        // 'at' must be followed by a position
-        throw invalidGradient();
+    } else if (token === 'at') {
+      hasShapeSizeOrPosition = true;
+      const parsedPosition = parseRadialPosition(tokens.splice(0));
+      if (parsedPosition === null) {
+        return null;
       }
-
-      // 1. [ left | center | right | top | bottom | <length-percentage> ]
-      if (firstPartTokens.length === 1) {
-        token = firstPartTokens.shift();
-        if (token == null) {
-          throw invalidGradient();
-        }
-        tokenTrimmed = token.trim();
-        if (tokenTrimmed === 'left') {
-          left = '0%';
-          top = '50%';
-        } else if (tokenTrimmed === 'center') {
-          left = '50%';
-          top = '50%';
-        } else if (tokenTrimmed === 'right') {
-          left = '100%';
-          top = '50%';
-        } else if (tokenTrimmed === 'top') {
-          left = '50%';
-          top = '0%';
-        } else if (tokenTrimmed === 'bottom') {
-          left = '50%';
-          top = '100%';
-        } else if (tokenTrimmed.endsWith('px') || tokenTrimmed.endsWith('%')) {
-          const value = getPositionFromCSSValue(tokenTrimmed);
-          if (value == null) {
-            throw invalidGradient();
-          }
-          left = value;
-          top = '50%';
-        }
-      }
-
-      if (firstPartTokens.length === 2) {
-        const t1 = firstPartTokens.shift();
-        const t2 = firstPartTokens.shift();
-        if (t1 == null || t2 == null) {
-          throw invalidGradient();
-        }
-
-        const token1 = t1.trim();
-        const token2 = t2.trim();
-
-        // 2. [ left | center | right ] && [ top | center | bottom ]
-        const horizontalPositions = ['left', 'center', 'right'];
-        const verticalPositions = ['top', 'center', 'bottom'];
-
-        if (
-          horizontalPositions.includes(token1) &&
-          verticalPositions.includes(token2)
-        ) {
-          left =
-            token1 === 'left' ? '0%' : token1 === 'center' ? '50%' : '100%';
-          top = token2 === 'top' ? '0%' : token2 === 'center' ? '50%' : '100%';
-        } else if (
-          verticalPositions.includes(token1) &&
-          horizontalPositions.includes(token2)
-        ) {
-          left =
-            token2 === 'left' ? '0%' : token2 === 'center' ? '50%' : '100%';
-          top = token1 === 'top' ? '0%' : token1 === 'center' ? '50%' : '100%';
-        }
-        // 3. [ left | center | right | <length-percentage> ] [ top | center | bottom | <length-percentage> ]
-        else {
-          if (token1 === 'left') {
-            left = '0%';
-          } else if (token1 === 'center') {
-            left = '50%';
-          } else if (token1 === 'right') {
-            left = '100%';
-          } else if (token1.endsWith('px') || token1.endsWith('%')) {
-            const value = getPositionFromCSSValue(token1);
-            if (value == null) {
-              throw invalidGradient();
-            }
-            left = value;
-          } else {
-            throw invalidGradient();
-          }
-
-          if (token2 === 'top') {
-            top = '0%';
-          } else if (token2 === 'center') {
-            top = '50%';
-          } else if (token2 === 'bottom') {
-            top = '100%';
-          } else if (token2.endsWith('px') || token2.endsWith('%')) {
-            const value = getPositionFromCSSValue(token2);
-            if (value == null) {
-              throw invalidGradient();
-            }
-            top = value;
-          } else {
-            throw invalidGradient();
-          }
-        }
-      }
-
-      // 4. [ [ left | right ] <length-percentage> ] && [ [ top | bottom ] <length-percentage> ]
-      if (firstPartTokens.length === 4) {
-        const t1 = firstPartTokens.shift();
-        const t2 = firstPartTokens.shift();
-        const t3 = firstPartTokens.shift();
-        const t4 = firstPartTokens.shift();
-
-        if (t1 == null || t2 == null || t3 == null || t4 == null) {
-          throw invalidGradient();
-        }
-        const keyword1 = t1.trim();
-        const value1 = getPositionFromCSSValue(t2.trim());
-        const keyword2 = t3.trim();
-        const value2 = getPositionFromCSSValue(t4.trim());
-        if (value1 == null || value2 == null) {
-          throw invalidGradient();
-        }
-
-        if (keyword1 === 'left') {
-          left = value1;
-        } else if (keyword1 === 'right') {
-          right = value1;
-        } else if (keyword1 === 'top') {
-          top = value1;
-        } else if (keyword1 === 'bottom') {
-          bottom = value1;
-        } else {
-          throw invalidGradient();
-        }
-
-        if (keyword2 === 'left') {
-          left = value2;
-        } else if (keyword2 === 'right') {
-          right = value2;
-        } else if (keyword2 === 'top') {
-          top = value2;
-        } else if (keyword2 === 'bottom') {
-          bottom = value2;
-        } else {
-          throw invalidGradient();
-        }
-      }
-
-      if (top != null && left != null) {
-        position = { top, left };
-      } else if (bottom != null && right != null) {
-        position = { bottom, right };
-      } else if (top != null && right != null) {
-        position = { top, right };
-      } else if (bottom != null && left != null) {
-        position = { bottom, left };
-      } else {
-        throw invalidGradient();
-      }
-      // 'at' comes at the end of the first part of the radial gradient syntax
-      break;
+      position = parsedPosition;
     }
 
-    // if there is no shape, size, or position string found in the first
-    // token, break as it might be a color stop
-    if (!hasShapeSizeOrPositionString) {
+    if (!hasShapeSizeOrPosition) {
       break;
     }
   }
 
-  if (hasShapeSizeOrPositionString) {
-    remainingParts.shift();
-
+  if (hasShapeSizeOrPosition) {
+    parts.shift();
     if (!hasExplicitShape && hasExplicitSingleSize) {
       shape = 'circle';
     }
-
     if (hasExplicitSingleSize && hasExplicitShape && shape === 'ellipse') {
-      // A single size can be used only with the circle shape
-      throw invalidGradient();
-    }
-
-    if (
-      shape === 'circle' &&
-      typeof size === 'object' &&
-      (typeof size.x === 'string' || typeof size.y === 'string')
-    ) {
-      // A circle radius must be a <length>. Percentages are only valid for
-      // ellipses, so browsers reject the whole declaration.
-      throw new Error(
-        `[Reanimated] ${ERROR_MESSAGES.invalidGradientSize(size)}`
-      );
+      return null;
     }
   }
 
-  return {
-    type: 'radial-gradient',
-    shape,
-    size,
-    position,
-    colorStops: parseColorStopsCSSString(remainingParts, context),
-  };
-}
+  const colorStops = parseColorStopsCSSString(parts, context);
+  if (colorStops === null) {
+    return null;
+  }
 
-function splitGradients(input: string): string[] {
+  return { type: 'radial-gradient', shape, size, position, colorStops };
+};
+
+const parseBackgroundImageCSSString = (
+  value: string,
+  context?: ValueProcessorContext
+): ProcessedBackgroundImageValue[] => {
   'worklet';
-  const result: string[] = [];
-  let current = '';
-  let depth = 0;
+  const result: ProcessedBackgroundImageValue[] = [];
 
-  for (let i = 0; i < input.length; i++) {
-    const char = input[i];
-
-    if (char === '(') {
-      depth++;
-    } else if (char === ')') {
-      depth--;
-    } else if (char === ',' && depth === 0) {
-      result.push(current.trim());
-      current = '';
+  for (const gradientString of splitByComma(
+    value.replace(NEWLINE_REGEX, ' ')
+  )) {
+    const match = GRADIENT_REGEX.exec(gradientString.toLowerCase());
+    if (!match) {
       continue;
     }
-
-    current += char;
-  }
-
-  if (current.trim() !== '') {
-    result.push(current.trim());
-  }
-
-  return result;
-}
-
-function parseBackgroundImageCSSString(
-  cssString: string,
-  context?: ValueProcessorContext
-): ProcessedBackgroundImage {
-  'worklet';
-  const gradients: ProcessedBackgroundImage = [];
-  const bgImageStrings = splitGradients(cssString);
-
-  for (const bgImageString of bgImageStrings) {
-    const bgImage = bgImageString.toLowerCase();
-    const match = GRADIENT_REGEX.exec(bgImage);
-    if (!match || match[0].length !== bgImage.length) {
-      throw new Error(
-        `[Reanimated] ${ERROR_MESSAGES.invalidGradientString(bgImageString)}`
-      );
-    }
-    const [, type, gradientContent] = match;
-    gradients.push(
+    const [, type, content] = match;
+    const gradient =
       type === 'radial'
-        ? parseRadialGradientCSSString(gradientContent, context)
-        : parseLinearGradientCSSString(gradientContent, context)
-    );
-  }
-  return gradients;
-}
-
-function processBackgroundImageObjects(
-  backgroundImage: ReadonlyArray<BackgroundImageValue>,
-  context?: ValueProcessorContext
-): ProcessedBackgroundImage {
-  'worklet';
-  const result: ProcessedBackgroundImage = [];
-
-  for (const bgImage of backgroundImage) {
-    const processedColorStops = processColorStops(bgImage.colorStops, context);
-
-    if (bgImage.type === 'linear-gradient') {
-      let direction: ProcessedLinearGradientDirection =
-        DEFAULT_LINEAR_GRADIENT_DIRECTION;
-      const bgDirection =
-        bgImage.direction != null ? bgImage.direction.toLowerCase() : null;
-
-      if (bgDirection != null) {
-        if (LINEAR_GRADIENT_ANGLE_UNIT_REGEX.test(bgDirection)) {
-          const parsedAngle = getAngleInDegrees(bgDirection);
-          if (parsedAngle == null) {
-            throw new Error(
-              `[Reanimated] ${ERROR_MESSAGES.invalidDirection(bgDirection)}`
-            );
-          }
-          direction = { type: 'angle', value: parsedAngle };
-        } else {
-          const parsedDirection = getDirectionForKeyword(bgDirection);
-          if (parsedDirection == null) {
-            throw new Error(
-              `[Reanimated] ${ERROR_MESSAGES.invalidDirection(bgDirection)}`
-            );
-          }
-          direction = parsedDirection;
-        }
-      }
-
-      result.push({
-        type: 'linear-gradient',
-        direction,
-        colorStops: processedColorStops,
-      });
-    } else if (bgImage.type === 'radial-gradient') {
-      let shape: RadialGradientShape = DEFAULT_RADIAL_SHAPE;
-      let size: RadialGradientSize = DEFAULT_RADIAL_SIZE;
-      let position: RadialGradientPosition = { top: '50%', left: '50%' };
-
-      if (bgImage.shape != null) {
-        if (bgImage.shape === 'circle' || bgImage.shape === 'ellipse') {
-          shape = bgImage.shape;
-        } else {
-          throw new Error(
-            `[Reanimated] ${ERROR_MESSAGES.invalidGradientShape(bgImage.shape)}`
-          );
-        }
-      }
-
-      if (bgImage.size != null) {
-        if (
-          bgImage.size === 'closest-side' ||
-          bgImage.size === 'closest-corner' ||
-          bgImage.size === 'farthest-side' ||
-          bgImage.size === 'farthest-corner'
-        ) {
-          size = bgImage.size;
-        } else if (
-          typeof bgImage.size === 'object' &&
-          bgImage.size.x != null &&
-          bgImage.size.y != null
-        ) {
-          size = { x: bgImage.size.x, y: bgImage.size.y };
-        } else {
-          throw new Error(
-            `[Reanimated] ${ERROR_MESSAGES.invalidGradientSize(bgImage.size)}`
-          );
-        }
-      }
-
-      if (bgImage.position != null) {
-        position = bgImage.position;
-      }
-
-      result.push({
-        type: 'radial-gradient',
-        shape,
-        size,
-        position,
-        colorStops: processedColorStops,
-      });
-    } else {
-      throw new Error(
-        `[Reanimated] ${ERROR_MESSAGES.invalidBackgroundImage(bgImage)}`
-      );
+        ? parseRadialGradientCSSString(content, context)
+        : parseLinearGradientCSSString(content, context);
+    if (gradient !== null) {
+      result.push(gradient);
     }
   }
 
   return result;
-}
+};
 
 export const processBackgroundImage: ValueProcessor<
-  ReadonlyArray<BackgroundImageValue> | string,
-  ProcessedBackgroundImage | undefined
+  BackgroundImageStyleValue,
+  ProcessedBackgroundImageValue[] | undefined
 > = (value, context) => {
   'worklet';
-  if (value === 'none') {
-    return [];
-  }
   if (typeof value === 'string') {
-    return parseBackgroundImageCSSString(
-      value.replace(NEWLINE_REGEX, ' '),
-      context
-    );
+    return parseBackgroundImageCSSString(value, context);
   }
-  if (Array.isArray(value)) {
-    return processBackgroundImageObjects(value, context);
+  if (!Array.isArray(value)) {
+    return;
   }
 
-  throw new Error(
-    `[Reanimated] ${ERROR_MESSAGES.invalidBackgroundImage(value)}`
-  );
+  const result: ProcessedBackgroundImageValue[] = [];
+
+  for (const backgroundImage of value) {
+    if (backgroundImage.type === 'linear-gradient') {
+      result.push({
+        type: 'linear-gradient',
+        direction: processDirection(backgroundImage.direction),
+        colorStops: processColorStops(backgroundImage.colorStops, context),
+      });
+    } else if (backgroundImage.type === 'radial-gradient') {
+      result.push({
+        type: 'radial-gradient',
+        shape: processRadialShape(backgroundImage.shape),
+        size: processRadialSize(backgroundImage.size),
+        position: processRadialPosition(backgroundImage.position),
+        colorStops: processColorStops(backgroundImage.colorStops, context),
+      });
+    }
+  }
+
+  return result;
 };

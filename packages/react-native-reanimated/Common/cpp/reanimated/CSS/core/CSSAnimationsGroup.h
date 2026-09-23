@@ -23,6 +23,7 @@ class CSSAnimationsGroup {
   void schedule(OperationsLoop &loop);
   void unschedule(OperationsLoop &loop) const;
   void updateSettings(const CSSAnimationSettingsUpdatesMap &settingsUpdates, double timestamp);
+  void setEventMask(CSSEventMask eventMask);
   // Computes the combined style from all animations.
   // When includeResetStyles is true, finished animations without forwards fill
   // contribute their original (pre-animation) property values — these should be

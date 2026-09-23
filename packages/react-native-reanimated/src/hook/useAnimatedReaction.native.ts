@@ -35,10 +35,13 @@ export function useAnimatedReaction<PreparedResult>(
   _dependencies?: DependencyList
 ) {
   if (__DEV__ && _dependencies !== undefined) {
-    logger.warn('dependencies should only be used in web implementation.');
+    logger.warnOnce(
+      'Dependencies should only be used on the web and are always ignored on native. Check DevTools to see the offending code.',
+      1
+    );
   }
 
-  const inputs = Object.values(prepare.__closure ?? {});
+  const inputs = prepare.__closure ?? [];
 
   useAnimatedReactionBase(prepare, react, undefined, inputs);
 }

@@ -1,5 +1,5 @@
 import type { NodePath } from '@babel/traverse';
-import type { CallExpression } from '@babel/types';
+import type { CallExpression, MemberExpression } from '@babel/types';
 import {
   identifier,
   isExportNamedDeclaration,
@@ -66,7 +66,7 @@ export function isRelease(state: WorkletsPluginPass) {
 export function replaceWithFactoryCall(
   toReplace: NodePath<unknown>,
   name: string | undefined,
-  factoryCall: CallExpression
+  factoryCall: CallExpression | MemberExpression
 ) {
   if (!name || !needsDeclaration(toReplace)) {
     toReplace.replaceWith(factoryCall);

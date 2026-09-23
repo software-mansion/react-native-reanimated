@@ -6,6 +6,7 @@ import Animated, {
   useEvent,
   useSharedValue,
 } from 'react-native-reanimated';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import {
   describe,
@@ -16,7 +17,6 @@ import {
   wait,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 interface TestResult {
   height: number;

@@ -11,8 +11,8 @@
 #include <reanimated/CSS/common/values/CSSValue.h>
 
 #include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
-#include <reanimated/CSS/common/values/complex/CSSBackgroundImage.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
+#include <reanimated/CSS/common/values/complex/CSSGradient.h>
 
 #include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
@@ -171,6 +171,7 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
     // View
     {"backfaceVisibility", value<CSSKeyword>("visible")},
     {"backgroundColor", value<CSSColor>(TRANSPARENT)},
+    {"backgroundImage", array({value<CSSGradient>(CSSGradient())})},
     {"borderBlockColor", value<CSSColor>(BLACK)},
     {"borderBlockEndColor", value<CSSColor>(BLACK)},
     {"borderBlockStartColor", value<CSSColor>(BLACK)},
@@ -207,17 +208,15 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
     {"cursor", value<CSSKeyword>("auto")},
     {"boxShadow", array({value<CSSBoxShadow>(CSSBoxShadow())})},
     {"mixBlendMode", value<CSSKeyword>("normal")},
-    {"backgroundImage", array({value<CSSLinearGradient, CSSRadialGradient>(CSSLinearGradient())})},
-    {"experimental_backgroundImage", array({value<CSSLinearGradient, CSSRadialGradient>(CSSLinearGradient())})},
 
     // Text
     {"color", value<CSSColor>(BLACK)},
     {"fontFamily", value<CSSKeyword>("inherit")},
-    {"fontSize", value<CSSDouble>(14)},
+    {"fontSize", value<CSSTextDouble>(14)},
     {"fontStyle", value<CSSKeyword>("normal")},
     {"fontWeight", value<CSSKeyword>("normal")},
-    {"letterSpacing", value<CSSDouble>(0)},
-    {"lineHeight", value<CSSDouble>(14)}, // TODO - should inherit from fontSize
+    {"letterSpacing", value<CSSTextDouble>(0)},
+    {"lineHeight", value<CSSTextDouble>(14)}, // TODO - should inherit from fontSize
     {"textAlign", value<CSSKeyword>("auto")},
     {"textDecorationLine", value<CSSKeyword>("none")},
     {"textShadowColor", value<CSSColor>(BLACK)},

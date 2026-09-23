@@ -1,13 +1,43 @@
 'use strict';
+import type { ColorValue, ViewStyle } from 'react-native';
+
 import { processBackgroundImageWeb } from '../backgroundImage';
 
+type BackgroundImageLayer = Exclude<
+  NonNullable<ViewStyle['backgroundImage']>,
+  string
+>[number];
+
 describe(processBackgroundImageWeb, () => {
-  test('passes strings through unchanged', () => {
-    const value = 'linear-gradient(45deg, red, blue)';
-    expect(processBackgroundImageWeb(value)).toBe(value);
+  test('passes string input through', () => {
+    expect(
+      processBackgroundImageWeb('linear-gradient(to right, red 10%, blue)')
+    ).toBe('linear-gradient(to right, red 10%, blue)');
   });
 
-  test('serializes a linear gradient without a direction', () => {
+  test('converts a linear gradient object', () => {
+    expect(
+      processBackgroundImageWeb([
+        {
+          type: 'linear-gradient',
+          direction: '45deg',
+          colorStops: [
+            { color: 'red', positions: ['0%'] },
+            { color: null, positions: ['30%'] },
+            {
+              color: 0xff0000ff as unknown as ColorValue,
+              positions: ['50%', '80%'],
+            },
+            { color: 'blue' },
+          ],
+        },
+      ])
+    ).toBe(
+      'linear-gradient(45deg, red 0%, 30%, rgba(255, 0, 0, 1) 50% 80%, blue)'
+    );
+  });
+
+  test('defaults a linear gradient direction to bottom', () => {
     expect(
       processBackgroundImageWeb([
         {
@@ -15,110 +45,91 @@ describe(processBackgroundImageWeb, () => {
           colorStops: [{ color: 'red' }, { color: 'blue' }],
         },
       ])
-    ).toBe('linear-gradient(red, blue)');
+    ).toBe('linear-gradient(to bottom, red, blue)');
   });
 
-  test('serializes a linear gradient with a direction and positions', () => {
+  test('converts a radial gradient object with keyword size', () => {
     expect(
       processBackgroundImageWeb([
         {
-          type: 'linear-gradient',
-          direction: 'to bottom right',
+          type: 'radial-gradient',
+          shape: 'circle',
+          size: 'farthest-side',
+          position: { top: '50%', left: 20 },
           colorStops: [
-            { color: 'red', positions: ['0%', '20%'] },
-            { color: 'blue', positions: ['100%'] },
+            { color: 'white' },
+            { color: 'black', positions: ['70%'] },
           ],
         },
       ])
-    ).toBe('linear-gradient(to bottom right, red 0% 20%, blue 100%)');
+    ).toBe(
+      'radial-gradient(circle farthest-side at top 50% left 20px, white, black 70%)'
+    );
   });
 
-  test('serializes transition hints', () => {
-    expect(
-      processBackgroundImageWeb([
-        {
-          type: 'linear-gradient',
-          colorStops: [
-            { color: 'red' },
-            { color: null, positions: ['30%'] },
-            { color: 'blue' },
-          ],
-        },
-      ])
-    ).toBe('linear-gradient(red, 30%, blue)');
-  });
-
-  test('serializes a radial gradient', () => {
+  test('converts a radial gradient object with explicit size', () => {
     expect(
       processBackgroundImageWeb([
         {
           type: 'radial-gradient',
           shape: 'ellipse',
-          size: { x: 100, y: '50%' },
-          position: { top: '10%', left: 20 },
+          size: { x: 40, y: '20%' },
+          position: { bottom: 10, right: '5%' },
           colorStops: [{ color: 'red' }, { color: 'blue' }],
         },
       ])
     ).toBe(
-      'radial-gradient(ellipse 100px 50% at top 10% left 20px, red, blue)'
+      'radial-gradient(ellipse 40px 20% at bottom 10px right 5%, red, blue)'
     );
   });
 
-  test('serializes a circle size as a single radius', () => {
-    expect(
-      processBackgroundImageWeb([
-        {
-          type: 'radial-gradient',
-          shape: 'circle',
-          size: { x: 100, y: 100 },
-          colorStops: [{ color: 'red' }, { color: 'blue' }],
-        },
-      ])
-    ).toBe('radial-gradient(circle 100px, red, blue)');
-  });
-
-  test.each([
-    [{ x: 100, y: 50 }], // unequal axes cannot describe a circle
-    [{ x: '50%', y: '50%' }], // a circle radius cannot be a percentage
-  ])('throws for an invalid circle size %j', (size) => {
-    expect(() =>
-      processBackgroundImageWeb([
-        {
-          type: 'radial-gradient',
-          shape: 'circle',
-          size,
-          colorStops: [{ color: 'red' }, { color: 'blue' }],
-        },
-      ])
-    ).toThrow();
-  });
-
-  test('serializes multiple gradients', () => {
+  test('adds px to numeric stop positions', () => {
     expect(
       processBackgroundImageWeb([
         {
           type: 'linear-gradient',
+          direction: 'to right',
+          colorStops: [
+            { color: 'red', positions: [10 as unknown as string] },
+            { color: null, positions: [20 as unknown as string] },
+            { color: 'blue', positions: ['50%'] },
+          ],
+        },
+      ])
+    ).toBe('linear-gradient(to right, red 10px, 20px, blue 50%)');
+  });
+
+  test('defaults radial shape, size and position', () => {
+    expect(
+      processBackgroundImageWeb([
+        {
+          type: 'radial-gradient',
+          colorStops: [{ color: 'red' }, { color: 'blue' }],
+        } as unknown as BackgroundImageLayer,
+      ])
+    ).toBe(
+      'radial-gradient(ellipse farthest-corner at top 50% left 50%, red, blue)'
+    );
+  });
+
+  test('joins multiple layers', () => {
+    expect(
+      processBackgroundImageWeb([
+        {
+          type: 'linear-gradient',
+          direction: 'to right',
           colorStops: [{ color: 'red' }, { color: 'blue' }],
         },
         {
           type: 'radial-gradient',
-          size: 'closest-side',
-          colorStops: [{ color: 'green' }, { color: 'blue' }],
+          shape: 'circle',
+          size: 'closest-corner',
+          position: { top: '50%', left: '50%' },
+          colorStops: [{ color: 'white' }, { color: 'black' }],
         },
       ])
     ).toBe(
-      'linear-gradient(red, blue), radial-gradient(closest-side, green, blue)'
+      'linear-gradient(to right, red, blue), radial-gradient(circle closest-corner at top 50% left 50%, white, black)'
     );
-  });
-
-  test('converts number colors to rgba strings', () => {
-    expect(
-      processBackgroundImageWeb([
-        {
-          type: 'linear-gradient',
-          colorStops: [{ color: 0xff0000ff }, { color: 0x0000ffff }],
-        },
-      ])
-    ).toBe('linear-gradient(rgba(255, 0, 0, 1), rgba(0, 0, 255, 1))');
   });
 });

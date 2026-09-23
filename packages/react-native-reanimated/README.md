@@ -33,13 +33,6 @@ Check out our dedicated documentation page for info about this library, API refe
 
 Reanimated library is licensed under [The MIT License](LICENSE).
 
-## Credits
-
-This project has been built and is maintained thanks to the support from [Expo.io](https://expo.io) and [Software Mansion](https://swmansion.com)
-
-[![expo](https://avatars2.githubusercontent.com/u/12504344?v=3\&s=100 'Expo.io')](https://expo.io)
-[![swm](https://logo.swmansion.com/logo?color=white\&variant=desktop\&width=150\&tag=react-native-reanimated-github 'Software Mansion')](https://swmansion.com)
-
 ## Community Discord
 
 [Join the Software Mansion Community Discord](https://discord.swmansion.com) to chat about Reanimated or other Software Mansion libraries.

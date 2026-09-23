@@ -6,8 +6,8 @@
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 #include <reanimated/CSS/common/values/CSSValueVariant.h>
-#include <reanimated/CSS/common/values/complex/CSSBackgroundImage.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
+#include <reanimated/CSS/common/values/complex/CSSGradient.h>
 #include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGPath.h>
@@ -100,7 +100,7 @@ template <CSSValueDerived... AllowedTypes>
 CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::interpolate(
     const double progress,
     const CSSValueVariant &to,
-    const ValueInterpolationContext &context) const {
+    const InterpolationContextFor<AllowedTypes...> &context) const {
   if (storage_.index() != to.storage_.index()) {
     return fallbackInterpolate(progress, to, context.fallbackInterpolateThreshold);
   }
@@ -108,34 +108,12 @@ CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::interpolate(
   return std::visit(
       [&](const auto &fromValue, const auto &toValue) -> CSSValueVariant {
         REA_IF_SAME_TYPE(fromValue, toValue) {
-          if constexpr (Resolvable<L>) {
-            throw std::runtime_error("[Reanimated] Resolvable value cannot be interpolated as non-resolvable");
-          } else if (fromValue.canInterpolateTo(toValue)) {
-            return CSSValueVariant(fromValue.interpolate(progress, toValue));
-          }
-        }
-        return fallbackInterpolate(progress, to, context.fallbackInterpolateThreshold);
-      },
-      storage_,
-      to.storage_);
-}
-
-template <CSSValueDerived... AllowedTypes>
-CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::interpolate(
-    const double progress,
-    const CSSValueVariant &to,
-    const ResolvableValueInterpolationContext &context) const {
-  if (storage_.index() != to.storage_.index()) {
-    return fallbackInterpolate(progress, to, context.fallbackInterpolateThreshold);
-  }
-
-  return std::visit(
-      [&](const auto &fromValue, const auto &toValue) -> CSSValueVariant {
-        REA_IF_SAME_TYPE(fromValue, toValue) {
-          if constexpr (!Resolvable<L>) {
-            throw std::runtime_error("[Reanimated] Non-resolvable value cannot be interpolated as resolvable");
-          } else if (fromValue.canInterpolateTo(toValue)) {
-            return CSSValueVariant(fromValue.interpolate(progress, toValue, context));
+          if (fromValue.canInterpolateTo(toValue)) {
+            if constexpr (requires { fromValue.interpolate(progress, toValue, context); }) {
+              return CSSValueVariant(fromValue.interpolate(progress, toValue, context));
+            } else {
+              return CSSValueVariant(fromValue.interpolate(progress, toValue));
+            }
           }
         }
         return fallbackInterpolate(progress, to, context.fallbackInterpolateThreshold);
@@ -156,6 +134,7 @@ template class CSSValueVariant<CSSLength>;
 template class CSSValueVariant<CSSLength, CSSKeyword>;
 template class CSSValueVariant<CSSDouble>;
 template class CSSValueVariant<CSSDouble, CSSKeyword>;
+template class CSSValueVariant<CSSTextDouble>;
 template class CSSValueVariant<CSSInteger>;
 template class CSSValueVariant<CSSIndex>;
 template class CSSValueVariant<CSSKeyword>;
@@ -164,7 +143,7 @@ template class CSSValueVariant<CSSBoolean>;
 template class CSSValueVariant<CSSColor>;
 template class CSSValueVariant<CSSDisplay>;
 template class CSSValueVariant<CSSBoxShadow>;
-template class CSSValueVariant<CSSLinearGradient, CSSRadialGradient>;
+template class CSSValueVariant<CSSGradient>;
 template class CSSValueVariant<CSSDiscreteArray<CSSKeyword>>;
 
 template class CSSValueVariant<SVGPath>;
