@@ -7,6 +7,7 @@ import {
   describe,
   expect,
   getTestComponent,
+  isViewMountedNatively,
   render,
   test,
   useTestRef,
@@ -28,32 +29,42 @@ const AndroidDrawerLayout = (
   }
 ).default;
 
-const droppedChildren = {
-  plain: <View style={styles.dropped} />,
-  nested: (
-    <View style={styles.dropped}>
-      <View style={styles.nested}>
-        <View style={styles.nested} />
-      </View>
+type DroppedKind = 'plain' | 'nested' | 'exiting';
+
+function DroppedChild({ kind }: { kind: DroppedKind }) {
+  const ref = useTestRef('dropped');
+  if (kind === 'exiting') {
+    return (
+      <Animated.View
+        ref={ref}
+        exiting={FadeOut.duration(300)}
+        style={styles.dropped}
+      />
+    );
+  }
+  return (
+    <View ref={ref} style={styles.dropped}>
+      {kind === 'nested' && (
+        <View style={styles.nested}>
+          <View style={styles.nested} />
+        </View>
+      )}
     </View>
-  ),
-  exiting: (
-    <Animated.View exiting={FadeOut.duration(300)} style={styles.dropped} />
-  ),
-};
+  );
+}
 
 function FlattenedWrapper({
   flat,
   dropped,
 }: {
   flat: boolean;
-  dropped: keyof typeof droppedChildren;
+  dropped: DroppedKind;
 }) {
   const ref = useTestRef('kept');
   return (
     <View style={flat ? undefined : styles.wrapper}>
       <Animated.View ref={ref} style={styles.kept} />
-      {!flat && droppedChildren[dropped]}
+      {!flat && <DroppedChild kind={dropped} />}
     </View>
   );
 }
@@ -89,13 +100,13 @@ function SwappedWrappersDroppingSibling({
   dropped,
 }: {
   swapped: boolean;
-  dropped: keyof typeof droppedChildren;
+  dropped: DroppedKind;
 }) {
   const ref = useTestRef('moved');
   return (
     <View style={swapped ? styles.wrapper : undefined}>
       <View style={swapped ? undefined : styles.wrapper}>
-        {!swapped && droppedChildren[dropped]}
+        {!swapped && <DroppedChild kind={dropped} />}
         <Animated.View ref={ref} style={styles.kept} />
       </View>
     </View>
@@ -109,16 +120,23 @@ describe('View flattening', () => {
       await render(<FlattenedWrapper flat={false} dropped={dropped} />);
       await waitForFrames();
       const tag = getTestComponent('kept').getTag();
+      const firstDroppedTag = getTestComponent('dropped').getTag();
+      expect(await isViewMountedNatively(firstDroppedTag)).toBe(true);
 
       await render(<FlattenedWrapper flat dropped={dropped} />);
       await waitForFrames();
       // unflattens the wrapper while it may still be withheld for the exiting child
       await render(<FlattenedWrapper flat={false} dropped={dropped} />);
       await waitForFrames();
+      const secondDroppedTag = getTestComponent('dropped').getTag();
+      expect(await isViewMountedNatively(secondDroppedTag)).toBe(true);
       await render(<FlattenedWrapper flat dropped={dropped} />);
       await wait(500);
 
       expect(getTestComponent('kept').getTag()).toBe(tag);
+      expect(await isViewMountedNatively(tag)).toBe(true);
+      expect(await isViewMountedNatively(firstDroppedTag)).toBe(false);
+      expect(await isViewMountedNatively(secondDroppedTag)).toBe(false);
     }
   );
 
@@ -155,6 +173,8 @@ describe('View flattening', () => {
       );
       await waitForFrames();
       const tag = getTestComponent('moved').getTag();
+      const firstDroppedTag = getTestComponent('dropped').getTag();
+      expect(await isViewMountedNatively(firstDroppedTag)).toBe(true);
 
       await render(
         <SwappedWrappersDroppingSibling swapped dropped={dropped} />
@@ -164,12 +184,17 @@ describe('View flattening', () => {
         <SwappedWrappersDroppingSibling swapped={false} dropped={dropped} />
       );
       await waitForFrames();
+      const secondDroppedTag = getTestComponent('dropped').getTag();
+      expect(await isViewMountedNatively(secondDroppedTag)).toBe(true);
       await render(
         <SwappedWrappersDroppingSibling swapped dropped={dropped} />
       );
       await wait(500);
 
       expect(getTestComponent('moved').getTag()).toBe(tag);
+      expect(await isViewMountedNatively(tag)).toBe(true);
+      expect(await isViewMountedNatively(firstDroppedTag)).toBe(false);
+      expect(await isViewMountedNatively(secondDroppedTag)).toBe(false);
     }
   );
 });
