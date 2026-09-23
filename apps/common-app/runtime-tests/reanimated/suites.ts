@@ -78,6 +78,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'css animations',
     importTest: () => {
       require('./tests/css/animationCancellation.test');
+      require('./tests/css/backgroundImage.test');
     },
   },
   {

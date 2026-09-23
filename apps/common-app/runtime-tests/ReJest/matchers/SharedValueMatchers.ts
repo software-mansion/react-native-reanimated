@@ -1,9 +1,9 @@
 import type { ValueRegistry } from '../TestRunner/ValueRegistry';
 import type { TestCase, TestValue } from '../types';
 import type { ComparisonMode } from '../types';
+import { waitFor } from '../utils/waitFor';
 import { Matchers } from './Matchers';
 import { toBeMatcher } from './rawMatchers';
-import { waitFor } from '../utils/waitFor';
 
 class SharedValueSideMatchers {
   constructor(

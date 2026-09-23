@@ -1,9 +1,8 @@
 import { PixelRatio } from 'react-native';
 
-import { colorsAreClose, isColor } from '../utils/colorUtils';
-
 import type { TestValue, ValidPropNames } from '../types';
 import { ComparisonMode, isValidPropName } from '../types';
+import { colorsAreClose, isColor } from '../utils/colorUtils';
 
 const DISTANCE_TOLERANCE = 0.5;
 

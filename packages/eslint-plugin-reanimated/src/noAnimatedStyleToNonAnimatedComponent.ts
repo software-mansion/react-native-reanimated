@@ -13,7 +13,7 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
           return; // XML-based namespace syntax: <Animated:View>
           // We include it although its not a supported syntax in React-Native
         }
-        const sourceCode = context.getSourceCode();
+        const sourceCode = context.sourceCode;
         const tokensBefore = sourceCode.getTokensBefore(node);
         const componentName = node?.name?.name;
 
@@ -174,7 +174,6 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
     type: 'suggestion',
     schema: [],
   },
-  defaultOptions: [],
 };
 
 export default rule;
