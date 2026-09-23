@@ -1,0 +1,1 @@
+Fix a crash of the Layout Animations proxy (`Delete mutation for an unmounted node`, `shadowIndex is out of range`, or a segfault in release builds) when a view flattens in the same commit in which its parent unflattens.

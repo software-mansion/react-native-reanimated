@@ -1,0 +1,35 @@
+diff --git a/ReactCommon/react/renderer/mounting/Differentiator.cpp b/ReactCommon/react/renderer/mounting/Differentiator.cpp
+index 3e1307093315f7ec58ac90654df86d40a272e79e..70548f58f61756076856d89aa14c50b973ad5662 100644
+--- a/ReactCommon/react/renderer/mounting/Differentiator.cpp
++++ b/ReactCommon/react/renderer/mounting/Differentiator.cpp
+@@ -712,9 +712,9 @@ static void calculateShadowViewMutationsFlattener(
+             auto unvisitedOtherNodesIt =
+                 unvisitedOtherNodes.find(newChild.shadowView.tag);
+             if (unvisitedOtherNodesIt != unvisitedOtherNodes.end()) {
+-              auto unvisitedItPair = *unvisitedOtherNodesIt->second;
++              auto* unvisitedItPair = unvisitedOtherNodesIt->second;
+               unvisitedRecursiveChildPairs.insert(
+-                  {unvisitedItPair.shadowView.tag, &unvisitedItPair});
++                  {unvisitedItPair->shadowView.tag, unvisitedItPair});
+             } else {
+               unvisitedRecursiveChildPairs.insert(
+                   {newChild.shadowView.tag, &newChild});
+@@ -836,6 +836,18 @@ static void calculateShadowViewMutationsFlattener(
+       continue;
+     }
+ 
++    // A nested (un)flattening may have matched this node through a different
++    // ShadowViewNodePair instance after the loop above visited it, e.g. when
++    // zIndex orders it before the (un)flattened node that contains it in the
++    // other tree. The node exists in both trees then, and its Remove or Insert
++    // has already been emitted by the loop above.
++    const auto& subVisitedMap = reparentMode == ReparentMode::Flatten
++        ? *subVisitedOldMap
++        : *subVisitedNewMap;
++    if (subVisitedMap.contains(treeChildPair.shadowView.tag)) {
++      continue;
++    }
++
+     auto adjustedCullingContext =
+         cullingContext.adjustCullingContextIfNeeded(treeChildPair);
+ 
