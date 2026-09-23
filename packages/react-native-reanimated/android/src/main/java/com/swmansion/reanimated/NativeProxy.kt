@@ -334,6 +334,10 @@ open class NativeProxy {
     }
 
     @DoNotStrip
+    fun isSensorAvailable(sensorType: Int): Boolean =
+        reanimatedSensorContainer.isSensorAvailable(ReanimatedSensorType.getInstanceById(sensorType))
+
+    @DoNotStrip
     fun registerSensor(
         sensorType: Int,
         interval: Int,

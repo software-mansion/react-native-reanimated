@@ -1,15 +1,23 @@
 'use strict';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 
 import type {
   AnimatedSensor,
   SensorConfig,
-  SensorType,
   Value3D,
   ValueRotation,
 } from '../commonTypes';
-import { InterfaceOrientation, IOSReferenceFrame } from '../commonTypes';
-import { initializeSensor, registerSensor, unregisterSensor } from '../core';
+import {
+  InterfaceOrientation,
+  IOSReferenceFrame,
+  SensorType,
+} from '../commonTypes';
+import {
+  initializeSensor,
+  isSensorAvailable,
+  registerSensor,
+  unregisterSensor,
+} from '../core';
 
 // euler angles are in order ZXY, z = yaw, x = pitch, y = roll
 // https://github.com/mrdoob/three.js/blob/dev/src/math/Quaternion.js#L237
@@ -71,12 +79,28 @@ function adjustVectorToInterfaceOrientation(data: Value3D) {
   return data;
 }
 
-function adjustToInterfaceOrientation(data: Value3D | ValueRotation) {
+function adjustDataToInterfaceOrientation(
+  sensorType: SensorType,
+  data: Value3D | ValueRotation
+) {
   'worklet';
-  return 'qw' in data
-    ? adjustRotationToInterfaceOrientation(data)
-    : adjustVectorToInterfaceOrientation(data);
+  // The sensor type determines the shape of its data.
+  return sensorType === SensorType.ROTATION
+    ? adjustRotationToInterfaceOrientation(data as ValueRotation)
+    : adjustVectorToInterfaceOrientation(data as Value3D);
 }
+
+const NOOP = () => {
+  // NOOP
+};
+
+// The sensors of a device do not change while the app runs, so there is
+// nothing to subscribe to.
+const subscribeToAvailability = () => NOOP;
+
+// There are no sensors on the server. React renders the server value during
+// hydration too, so the hydrated markup matches the server markup.
+const getServerAvailability = () => false;
 
 /**
  * Lets you create animations based on data from the device's sensors.
@@ -103,58 +127,61 @@ export function useAnimatedSensor(
 ): AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D> {
   const {
     interval = 'auto',
-    adjustToInterfaceOrientation: adjust = true,
+    adjustToInterfaceOrientation = true,
     iosReferenceFrame = IOSReferenceFrame.Auto,
   } = userConfig ?? {};
 
-  const [sensor, setSensor] = useState<AnimatedSensor<Value3D | ValueRotation>>(
-    () => {
-      const config = {
-        interval,
-        adjustToInterfaceOrientation: adjust,
-        iosReferenceFrame,
-      };
-      return {
-        sensor: initializeSensor(sensorType, config),
-        unregister: () => {
-          // NOOP
-        },
-        isAvailable: false,
-        config,
-      };
-    }
+  // `userConfig` is usually a new object on every render, so the config
+  // depends on its values, not on its identity.
+  const config = useMemo<SensorConfig>(
+    () => ({ interval, adjustToInterfaceOrientation, iosReferenceFrame }),
+    [interval, adjustToInterfaceOrientation, iosReferenceFrame]
   );
 
-  useEffect(() => {
-    const config = {
-      interval,
-      adjustToInterfaceOrientation: adjust,
-      iosReferenceFrame,
-    };
-    const sensorData = initializeSensor(sensorType, config);
+  // Ask the platform during render, so that the first render already reports
+  // whether the device has the sensor.
+  const isAvailable = useSyncExternalStore(
+    subscribeToAvailability,
+    () => isSensorAvailable(sensorType),
+    getServerAvailability
+  );
 
+  const sensor = useMemo(
+    () => initializeSensor(sensorType, config),
+    [sensorType, config]
+  );
+
+  const unregisterRef = useRef(NOOP);
+
+  useEffect(() => {
     const id = registerSensor(sensorType, config, (data) => {
       'worklet';
-      sensorData.value = adjust ? adjustToInterfaceOrientation(data) : data;
+      sensor.value = adjustToInterfaceOrientation
+        ? adjustDataToInterfaceOrientation(sensorType, data)
+        : data;
     });
 
-    let registered = id !== -1;
+    // `unregister` is both the public method and the effect cleanup, so it
+    // must release the registration at most once.
+    let isRegistered = id !== -1;
     const unregister = () => {
-      if (registered) {
-        registered = false;
+      if (isRegistered) {
+        isRegistered = false;
         unregisterSensor(id);
       }
     };
-
-    setSensor({
-      sensor: sensorData,
-      unregister,
-      isAvailable: registered,
-      config,
-    });
+    unregisterRef.current = unregister;
 
     return unregister;
-  }, [sensorType, interval, adjust, iosReferenceFrame]);
+  }, [sensorType, config, sensor, adjustToInterfaceOrientation]);
 
-  return sensor as AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D>;
+  return useMemo(
+    () => ({
+      sensor,
+      isAvailable,
+      config,
+      unregister: () => unregisterRef.current(),
+    }),
+    [sensor, isAvailable, config]
+  ) as AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D>;
 }

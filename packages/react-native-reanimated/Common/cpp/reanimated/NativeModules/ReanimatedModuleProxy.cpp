@@ -481,6 +481,10 @@ bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &event
   return eventHandlerRegistry_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
 }
 
+jsi::Value ReanimatedModuleProxy::isSensorAvailable(jsi::Runtime &, const jsi::Value &sensorType) const {
+  return animatedSensorModule_.isSensorAvailable(sensorType);
+}
+
 jsi::Value ReanimatedModuleProxy::registerSensor(
     jsi::Runtime &rt,
     const jsi::Value &sensorType,
@@ -1362,6 +1366,18 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
           return jsi::Value::undefined();
         }
         return strongThis->getViewProp(rt, at<0>(args), at<1>(args), at<2>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "isSensorAvailable",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value(false);
+        }
+        return strongThis->isSensorAvailable(rt, at<0>(args));
       });
 
   addMethod<4>(
