@@ -111,6 +111,7 @@ function flushUIQueue(): void {
   });
 }
 
+// is-tree-shakable-suppress
 if (!globalThis.requestAnimationFrame) {
   /**
    * Server-side rendering evaluates web code in environments without
