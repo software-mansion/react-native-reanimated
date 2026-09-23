@@ -33,7 +33,6 @@ const SEQUENCE_DONE = 'NON_LAYOUT_PROP_SEQUENCE_DONE';
 const DURATION_MS = 300;
 // Under the ~19 frames of the 300 ms animation; asking for more times out.
 const RECORDED_FRAMES = 12;
-// The mocked animation timer advances by one frame of this length per tick.
 const FRAME_INTERVAL_MS = 16;
 
 const COLOR_OFF = '#00ffff';
@@ -77,10 +76,8 @@ function NonLayoutPropBox({
   );
 }
 
-// Mounts once and drives the whole sequence itself, so the recording sees a
-// single view: the color change starts the animation and the size change is a
-// React render that lands while it runs. A null `resizeDelayMs` never resizes,
-// which is how the reference timeline for a case is recorded.
+// A null `resizeDelayMs` never resizes, which is how the reference timeline
+// for a case is recorded.
 function NonLayoutPropSequence({
   fromColor,
   resizeDelayMs,
@@ -154,9 +151,8 @@ function toColorFrames(snapshot: SingleViewSnapshot): SingleViewSnapshot {
   });
 }
 
-// A React render can re-apply the color the view already holds. That repeat is
-// harmless and only the run that resizes can have it, so drop it before lining
-// the two recordings up. A frame with a different value survives and fails.
+// A React render can re-apply the color the view already holds, and only the
+// run that resizes can have that repeat, so drop it before lining the two up.
 function dropRepeatedFrames(frames: SingleViewSnapshot): SingleViewSnapshot {
   return frames.filter(
     (frame, index) =>
@@ -164,9 +160,8 @@ function dropRepeatedFrames(frames: SingleViewSnapshot): SingleViewSnapshot {
   );
 }
 
-// Between COLOR_OFF and COLOR_ON all three channels move, but red is the one
-// that rises across the full 0-255 range, so it reads as the animation's
-// progress directly - flipped when the animation runs the other way.
+// Red rises across the full 0-255 range between the two colors, so it reads as
+// progress - flipped when the animation runs the other way.
 function progressFrames(
   frames: SingleViewSnapshot,
   toColor: string
@@ -177,10 +172,9 @@ function progressFrames(
   });
 }
 
-// Recorded updates carry no view tag (`_updateProps` operations only hold a
-// shadow node wrapper), so a control view rendered next to the box cannot be
-// told apart in the recording. The reference timeline is a separate run of the
-// same animation with no resize in it instead.
+// Recorded updates carry no view tag, so a control view rendered next to the
+// box cannot be told apart in the recording. The reference timeline is a
+// separate run of the same animation with no resize in it instead.
 async function recordColorFrames(
   fromColor: string,
   toColor: string,
@@ -198,6 +192,12 @@ async function recordColorFrames(
     />
   );
   await waitForAnimationUpdates(RECORDED_FRAMES);
+  // The mocked timer advances the animation clock, not `setTimeout`, so a fast
+  // device can finish the frames above before the resize lands.
+  if (resizeDelayMs !== null) {
+    await waitForNotification(SEQUENCE_DONE);
+    await waitForAnimationUpdates(RECORDED_FRAMES + 1);
+  }
 
   const frames = toColorFrames(await updatesContainer.getUpdates());
   const nativeFrames = toColorFrames(
@@ -217,7 +217,6 @@ const recordedCases = [
     toColor: COLOR_ON,
   },
   {
-    // A third into the animation, so frames land on both sides of the render.
     description: 'a third into the off-to-on animation',
     fromColor: COLOR_OFF,
     resizeDelayMs: 100,
