@@ -76,6 +76,24 @@ function SwappedWrappers({
   );
 }
 
+function SwappedWrappersDroppingSibling({
+  swapped,
+  dropped,
+}: {
+  swapped: boolean;
+  dropped: keyof typeof droppedChildren;
+}) {
+  const ref = useTestRef('moved');
+  return (
+    <View style={swapped ? styles.wrapper : undefined}>
+      <View style={swapped ? undefined : styles.wrapper}>
+        {!swapped && droppedChildren[dropped]}
+        <Animated.View ref={ref} style={styles.kept} />
+      </View>
+    </View>
+  );
+}
+
 describe('View flattening', () => {
   test.each(['plain', 'nested', 'exiting'] as const)(
     'flattens a parent while one of its children is deleted, child: %s',
@@ -118,6 +136,32 @@ describe('View flattening', () => {
       const moved = getTestComponent('moved');
       expect(moved.getTag()).toBe(tag);
       expect(Number(await moved.getAnimatedStyle('opacity'))).toBe(1);
+    }
+  );
+
+  test.each(['plain', 'nested', 'exiting'] as const)(
+    'unflattens a parent while its child flattens and drops a sibling of the moved child: %s',
+    async (dropped) => {
+      await render(
+        <SwappedWrappersDroppingSibling swapped={false} dropped={dropped} />
+      );
+      await waitForFrames();
+      const tag = getTestComponent('moved').getTag();
+
+      await render(
+        <SwappedWrappersDroppingSibling swapped dropped={dropped} />
+      );
+      await waitForFrames();
+      await render(
+        <SwappedWrappersDroppingSibling swapped={false} dropped={dropped} />
+      );
+      await waitForFrames();
+      await render(
+        <SwappedWrappersDroppingSibling swapped dropped={dropped} />
+      );
+      await wait(500);
+
+      expect(getTestComponent('moved').getTag()).toBe(tag);
     }
   );
 });
