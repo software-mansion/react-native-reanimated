@@ -10,6 +10,7 @@ import {
 
 const DEFAULT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Set<string>([
   'backgroundImage',
+  'experimental_backgroundImage',
   'boxShadow',
   'shadowOffset',
   'textShadowOffset',

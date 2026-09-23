@@ -172,6 +172,7 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
     {"backfaceVisibility", value<CSSKeyword>("visible")},
     {"backgroundColor", value<CSSColor>(TRANSPARENT)},
     {"backgroundImage", array({value<CSSGradient>(CSSGradient())})},
+    {"experimental_backgroundImage", array({value<CSSGradient>(CSSGradient())})},
     {"borderBlockColor", value<CSSColor>(BLACK)},
     {"borderBlockEndColor", value<CSSColor>(BLACK)},
     {"borderBlockStartColor", value<CSSColor>(BLACK)},

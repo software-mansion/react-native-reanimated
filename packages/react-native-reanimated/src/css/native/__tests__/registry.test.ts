@@ -156,6 +156,7 @@ describe('registry', () => {
       expect(props).toEqual(
         new Set([
           'backgroundImage',
+          'experimental_backgroundImage',
           'boxShadow',
           'shadowOffset',
           'textShadowOffset',

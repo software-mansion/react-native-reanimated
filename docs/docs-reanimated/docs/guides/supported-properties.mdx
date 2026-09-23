@@ -260,6 +260,8 @@ We highly recommend to use [the `boxShadow` property](https://reactnative.dev/bl
 
 ### Animating background image
 
+The `backgroundImage` style property has this name since React Native 0.87. On older React Native versions use `experimental_backgroundImage` instead; both names are supported and animate the same way.
+
 On iOS and Android, `backgroundImage` gradients are interpolated: colors, color stop positions, an angle direction and the radial size and position animate smoothly between keyframes. Two gradients that cannot be interpolated (for example a linear gradient and a radial gradient, or a keyword direction such as `to top right` and an angle) switch at the midpoint of the animation. Layers are paired by their index in the array, so a layer that exists in only one keyframe has to be the last one; it fades in from or out to transparent.
 
 On the Web, browsers do not interpolate `background-image` values, so the gradient switches at the midpoint between keyframes instead of animating.

@@ -195,7 +195,10 @@ export const PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   mixBlendMode: true,
   backgroundImage: { process: processBackgroundImageWeb },
   // eslint-disable-next-line eslint-core/camelcase
-  experimental_backgroundImage: false, // TODO
+  experimental_backgroundImage: {
+    name: 'backgroundImage',
+    process: processBackgroundImageWeb,
+  },
 
   /** Typography */
   // Font
