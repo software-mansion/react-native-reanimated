@@ -40,6 +40,7 @@ using GetAnimationTimestampFunction = std::function<double(void)>;
 using ProgressLayoutAnimationFunction = std::function<void(jsi::Runtime &, int, jsi::Object)>;
 using EndLayoutAnimationFunction = std::function<void(int, bool)>;
 
+using IsSensorAvailableFunction = std::function<bool(int)>;
 using RegisterSensorFunction = std::function<int(int, int, int, std::function<void(double[], int)>)>;
 using UnregisterSensorFunction = std::function<void(int)>;
 using SetGestureStateFunction = std::function<void(int, int)>;
@@ -62,6 +63,7 @@ struct PlatformDepMethodsHolder {
 #endif
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   GetAnimationTimestampFunction getAnimationTimestamp;
+  IsSensorAvailableFunction isSensorAvailable;
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;
   SetGestureStateFunction setGestureStateFunction;

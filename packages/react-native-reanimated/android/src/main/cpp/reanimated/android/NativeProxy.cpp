@@ -208,6 +208,11 @@ void NativeProxy::synchronouslyUpdateUIProps(
   method(javaPart_.get(), jArrayInt, jArrayDouble);
 }
 
+bool NativeProxy::isSensorAvailable(int sensorType) {
+  static const auto method = getJniMethod<jboolean(int)>("isSensorAvailable");
+  return method(javaPart_.get(), sensorType);
+}
+
 int NativeProxy::registerSensor(int sensorType, int interval, int, std::function<void(double[], int)> setter) {
   static const auto method = getJniMethod<int(int, int, SensorSetter::javaobject)>("registerSensor");
   return method(javaPart_.get(), sensorType, interval, SensorSetter::newObjectCxxArgs(std::move(setter)).get());
@@ -363,6 +368,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto synchronouslyUpdateUIPropsFunction = bindThis(&NativeProxy::synchronouslyUpdateUIProps);
 
+  auto isSensorAvailableFunction = bindThis(&NativeProxy::isSensorAvailable);
+
   auto registerSensorFunction = bindThis(&NativeProxy::registerSensor);
 
   auto unregisterSensorFunction = bindThis(&NativeProxy::unregisterSensor);
@@ -386,6 +393,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       preserveMountedTags,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
+      isSensorAvailableFunction,
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,

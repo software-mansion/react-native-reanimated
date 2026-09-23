@@ -8,10 +8,22 @@ import type {
   Value3D,
   ValueRotation,
 } from './commonTypes';
+import { ReanimatedModule } from './ReanimatedModule';
 import Sensor from './Sensor';
 
 export class SensorContainer {
   private nativeSensors: Map<number, Sensor> = new Map();
+  // The sensors of a device do not change while the app runs.
+  private availability: Map<SensorType, boolean> = new Map();
+
+  isSensorAvailable(sensorType: SensorType): boolean {
+    let isAvailable = this.availability.get(sensorType);
+    if (isAvailable === undefined) {
+      isAvailable = ReanimatedModule.isSensorAvailable(sensorType);
+      this.availability.set(sensorType, isAvailable);
+    }
+    return isAvailable;
+  }
 
   getSensorId(sensorType: SensorType, config: SensorConfig) {
     return (

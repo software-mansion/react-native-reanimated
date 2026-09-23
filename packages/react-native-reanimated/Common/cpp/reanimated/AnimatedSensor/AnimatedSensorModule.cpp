@@ -7,8 +7,13 @@
 namespace reanimated {
 
 AnimatedSensorModule::AnimatedSensorModule(const PlatformDepMethodsHolder &platformDepMethodsHolder)
-    : platformRegisterSensorFunction_(platformDepMethodsHolder.registerSensor),
+    : platformIsSensorAvailableFunction_(platformDepMethodsHolder.isSensorAvailable),
+      platformRegisterSensorFunction_(platformDepMethodsHolder.registerSensor),
       platformUnregisterSensorFunction_(platformDepMethodsHolder.unregisterSensor) {}
+
+jsi::Value AnimatedSensorModule::isSensorAvailable(const jsi::Value &sensorType) const {
+  return jsi::Value(platformIsSensorAvailableFunction_(static_cast<int>(sensorType.asNumber())));
+}
 
 jsi::Value AnimatedSensorModule::registerSensor(
     jsi::Runtime &rnRuntime,
