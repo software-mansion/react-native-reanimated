@@ -35,10 +35,6 @@ const DURATION_MS = 300;
 const RECORDED_FRAMES = 12;
 // The mocked animation timer advances by one frame of this length per tick.
 const FRAME_INTERVAL_MS = 16;
-// Two recordings can stop a frame apart, and neither stops exactly at
-// RECORDED_FRAMES, so they are lined up on the frames both of them caught.
-// Below this many the comparison stops being worth much.
-const MIN_COMPARED_FRAMES = 8;
 
 const COLOR_OFF = '#00ffff';
 const COLOR_ON = '#ff0000';
@@ -307,7 +303,9 @@ describe('animation of a non-layout prop across React renders', () => {
       const expected = dropRepeatedFrames(reference.frames);
       const received = dropRepeatedFrames(observed.frames);
       expect(received.length >= expected.length - 1).toBe(true);
-      
+
+      // Two recordings can stop a frame apart, and neither stops exactly at
+      // RECORDED_FRAMES, so they are lined up on the frames both of them caught.
       const compared = Math.min(expected.length, received.length);
       expect(received.slice(0, compared)).toMatchSnapshots(
         expected.slice(0, compared)
