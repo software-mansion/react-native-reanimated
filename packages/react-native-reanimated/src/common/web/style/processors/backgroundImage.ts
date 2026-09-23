@@ -27,10 +27,16 @@ const processColorStops = (colorStops: BackgroundImageValue['colorStops']) =>
     })
     .join(', ');
 
-const processRadialSize = (size: RadialGradientValue['size']) =>
-  typeof size === 'string'
-    ? size
-    : `${maybeAddSuffix(size.x, 'px')} ${maybeAddSuffix(size.y, 'px')}`;
+const processRadialSize = (
+  shape: RadialGradientValue['shape'],
+  size: RadialGradientValue['size']
+) => {
+  if (typeof size === 'string') {
+    return size;
+  }
+  const x = maybeAddSuffix(size.x, 'px');
+  return shape === 'circle' ? x : `${x} ${maybeAddSuffix(size.y, 'px')}`;
+};
 
 const processRadialPosition = (position: RadialGradientValue['position']) =>
   Object.entries(position)
@@ -55,7 +61,7 @@ export const processBackgroundImageWeb: ValueProcessor<
         size = 'farthest-corner',
         position = { top: '50%', left: '50%' },
       } = backgroundImage;
-      return `radial-gradient(${shape} ${processRadialSize(size)} at ${processRadialPosition(position)}, ${colorStops})`;
+      return `radial-gradient(${shape} ${processRadialSize(shape, size)} at ${processRadialPosition(position)}, ${colorStops})`;
     })
     .join(', ');
 };

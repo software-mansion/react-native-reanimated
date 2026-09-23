@@ -83,6 +83,20 @@ describe(processBackgroundImageWeb, () => {
     );
   });
 
+  test('emits a single radius for an explicit circle size', () => {
+    expect(
+      processBackgroundImageWeb([
+        {
+          type: 'radial-gradient',
+          shape: 'circle',
+          size: { x: 40, y: 40 },
+          position: { top: '50%', left: '50%' },
+          colorStops: [{ color: 'red' }, { color: 'blue' }],
+        },
+      ])
+    ).toBe('radial-gradient(circle 40px at top 50% left 50%, red, blue)');
+  });
+
   test('adds px to numeric stop positions', () => {
     expect(
       processBackgroundImageWeb([
