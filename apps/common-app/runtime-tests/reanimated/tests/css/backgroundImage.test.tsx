@@ -128,8 +128,8 @@ describe('CSS animation of backgroundImage', () => {
           direction: { type: 'angle', value: 90 },
           colorStops: [
             { color: RED, position: null },
-            { color: BLUE, position: null },
-            { color: TEAL, position: null },
+            { color: BLUE, position: '75%' },
+            { color: TEAL, position: '100%' },
           ],
         },
       ],

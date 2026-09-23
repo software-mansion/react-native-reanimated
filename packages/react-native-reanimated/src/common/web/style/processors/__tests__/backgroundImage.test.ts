@@ -83,18 +83,32 @@ describe(processBackgroundImageWeb, () => {
     );
   });
 
-  test('emits a single radius for an explicit circle size', () => {
+  test('emits the larger radius for an explicit circle size', () => {
     expect(
       processBackgroundImageWeb([
         {
           type: 'radial-gradient',
           shape: 'circle',
-          size: { x: 40, y: 40 },
+          size: { x: 40, y: 80 },
           position: { top: '50%', left: '50%' },
           colorStops: [{ color: 'red' }, { color: 'blue' }],
         },
       ])
-    ).toBe('radial-gradient(circle 40px at top 50% left 50%, red, blue)');
+    ).toBe('radial-gradient(circle 80px at top 50% left 50%, red, blue)');
+  });
+
+  test('emits an ellipse for a circle with percentage size', () => {
+    expect(
+      processBackgroundImageWeb([
+        {
+          type: 'radial-gradient',
+          shape: 'circle',
+          size: { x: '50%', y: 20 },
+          position: { top: '50%', left: '50%' },
+          colorStops: [{ color: 'red' }, { color: 'blue' }],
+        },
+      ])
+    ).toBe('radial-gradient(ellipse 50% 20px at top 50% left 50%, red, blue)');
   });
 
   test('adds px to numeric stop positions', () => {

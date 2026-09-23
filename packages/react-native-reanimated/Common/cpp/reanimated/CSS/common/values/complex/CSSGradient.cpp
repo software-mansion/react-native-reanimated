@@ -451,6 +451,9 @@ CSSGradient CSSGradient::withTransparentColors() const {
 
 std::vector<CSSGradient::ColorStop> CSSGradient::paddedColorStops(const size_t count) const {
   std::vector<ColorStop> result = colorStops;
+  if (result.size() < count && !result.back().position) {
+    result.back().position = CSSGradientLength{100, true};
+  }
   while (result.size() < count) {
     result.push_back(result.back());
   }

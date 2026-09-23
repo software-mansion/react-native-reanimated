@@ -1,11 +1,16 @@
 'use strict';
 import type { ViewStyle } from 'react-native';
 
-import { maybeAddSuffix } from '../../../utils';
+import { isNumber, maybeAddSuffix } from '../../../utils';
 import type { ValueProcessor } from '../types';
 import { processColor } from './colors';
 
-type BackgroundImageStyleValue = NonNullable<ViewStyle['backgroundImage']>;
+type BackgroundImageStyleValue = NonNullable<
+  ViewStyle[Extract<
+    keyof ViewStyle,
+    'backgroundImage' | 'experimental_backgroundImage'
+  >]
+>;
 type BackgroundImageValue = Exclude<BackgroundImageStyleValue, string>[number];
 type RadialGradientValue = Extract<
   BackgroundImageValue,
@@ -27,15 +32,17 @@ const processColorStops = (colorStops: BackgroundImageValue['colorStops']) =>
     })
     .join(', ');
 
-const processRadialSize = (
+const processRadialShapeAndSize = (
   shape: RadialGradientValue['shape'],
   size: RadialGradientValue['size']
 ) => {
   if (typeof size === 'string') {
-    return size;
+    return `${shape} ${size}`;
   }
-  const x = maybeAddSuffix(size.x, 'px');
-  return shape === 'circle' ? x : `${x} ${maybeAddSuffix(size.y, 'px')}`;
+  if (shape === 'circle' && isNumber(size.x) && isNumber(size.y)) {
+    return `circle ${Math.max(size.x, size.y)}px`;
+  }
+  return `ellipse ${maybeAddSuffix(size.x, 'px')} ${maybeAddSuffix(size.y, 'px')}`;
 };
 
 const processRadialPosition = (position: RadialGradientValue['position']) =>
@@ -61,7 +68,7 @@ export const processBackgroundImageWeb: ValueProcessor<
         size = 'farthest-corner',
         position = { top: '50%', left: '50%' },
       } = backgroundImage;
-      return `radial-gradient(${shape} ${processRadialSize(shape, size)} at ${processRadialPosition(position)}, ${colorStops})`;
+      return `radial-gradient(${processRadialShapeAndSize(shape, size)} at ${processRadialPosition(position)}, ${colorStops})`;
     })
     .join(', ');
 };
