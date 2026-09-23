@@ -296,7 +296,7 @@ jobs:
         env:
           TITLE: ${{ github.event.issue.title }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          SIM_REMOTE_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
+          SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
           ARGENT_BACKEND_IP: ${{ secrets.ARGENT_BACKEND_IP }}
         run: |
           mkdir -p "$WORK_DIR/output"
