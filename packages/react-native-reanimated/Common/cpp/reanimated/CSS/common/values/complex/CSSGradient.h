@@ -30,6 +30,7 @@ struct CSSGradientLength {
 struct CSSGradient : public CSSSimpleValue<CSSGradient> {
   enum class Type : std::uint8_t { Linear, Radial };
   enum class Shape : std::uint8_t { Circle, Ellipse };
+  enum class SizeKeyword : std::uint8_t { ClosestSide, ClosestCorner, FarthestSide, FarthestCorner };
 
   struct ColorStop {
     std::optional<CSSColor> color;
@@ -39,7 +40,7 @@ struct CSSGradient : public CSSSimpleValue<CSSGradient> {
   };
 
   using Direction = std::variant<double, std::string>;
-  using RadialSize = std::variant<std::string, std::pair<CSSGradientLength, CSSGradientLength>>;
+  using RadialSize = std::variant<SizeKeyword, std::pair<CSSGradientLength, CSSGradientLength>>;
 
   struct RadialPosition {
     std::optional<CSSGradientLength> top;
@@ -53,7 +54,7 @@ struct CSSGradient : public CSSSimpleValue<CSSGradient> {
   Type type{Type::Linear};
   Direction direction{180.0};
   Shape shape{Shape::Ellipse};
-  RadialSize size{std::string("farthest-corner")};
+  RadialSize size{SizeKeyword::FarthestCorner};
   RadialPosition position;
   std::vector<ColorStop> colorStops;
 

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -50,9 +51,28 @@ const char *shapeToString(const CSSGradient::Shape shape) {
   return shape == CSSGradient::Shape::Circle ? "circle" : "ellipse";
 }
 
+const std::unordered_map<std::string, CSSGradient::SizeKeyword> SIZE_KEYWORDS = {
+    {"closest-side", CSSGradient::SizeKeyword::ClosestSide},
+    {"closest-corner", CSSGradient::SizeKeyword::ClosestCorner},
+    {"farthest-side", CSSGradient::SizeKeyword::FarthestSide},
+    {"farthest-corner", CSSGradient::SizeKeyword::FarthestCorner}};
+
+const char *sizeKeywordToString(const CSSGradient::SizeKeyword keyword) {
+  switch (keyword) {
+    case CSSGradient::SizeKeyword::ClosestSide:
+      return "closest-side";
+    case CSSGradient::SizeKeyword::ClosestCorner:
+      return "closest-corner";
+    case CSSGradient::SizeKeyword::FarthestSide:
+      return "farthest-side";
+    case CSSGradient::SizeKeyword::FarthestCorner:
+      return "farthest-corner";
+  }
+}
+
 bool isValidRadialSize(const folly::dynamic &size) {
   if (size.isString()) {
-    return true;
+    return SIZE_KEYWORDS.contains(size.asString());
   }
   return size.isObject() && size.count("x") > 0 && size.count("y") > 0 && isValidLength(size["x"]) &&
       isValidLength(size["y"]);
@@ -171,7 +191,7 @@ CSSGradient::CSSGradient(const folly::dynamic &value) {
     if (value.count("size") > 0) {
       const auto &sizeValue = value["size"];
       if (sizeValue.isString()) {
-        size = sizeValue.asString();
+        size = SIZE_KEYWORDS.at(sizeValue.asString());
       } else {
         size = std::make_pair(
             CSSGradientLength::fromDynamic(sizeValue["x"]).value(),
@@ -248,8 +268,8 @@ folly::dynamic CSSGradient::toDynamic() const {
   } else {
     result["type"] = RADIAL_GRADIENT;
     result["shape"] = shapeToString(shape);
-    if (const auto *keyword = std::get_if<std::string>(&size)) {
-      result["size"] = *keyword;
+    if (const auto *keyword = std::get_if<SizeKeyword>(&size)) {
+      result["size"] = sizeKeywordToString(*keyword);
     } else {
       const auto &[x, y] = std::get<std::pair<CSSGradientLength, CSSGradientLength>>(size);
       result["size"] = folly::dynamic::object("x", x.toDynamic())("y", y.toDynamic());
@@ -297,8 +317,8 @@ std::string CSSGradient::toString() const {
     }
   } else {
     ss << RADIAL_GRADIENT << "(" << shapeToString(shape) << " ";
-    if (const auto *keyword = std::get_if<std::string>(&size)) {
-      ss << *keyword;
+    if (const auto *keyword = std::get_if<SizeKeyword>(&size)) {
+      ss << sizeKeywordToString(*keyword);
     } else {
       const auto &[x, y] = std::get<std::pair<CSSGradientLength, CSSGradientLength>>(size);
       ss << x.toString() << " " << y.toString();
@@ -401,8 +421,8 @@ bool CSSGradient::canInterpolateTo(const CSSGradient &to) const {
     if (shape != to.shape || size.index() != to.size.index()) {
       return false;
     }
-    if (const auto *keyword = std::get_if<std::string>(&size)) {
-      if (*keyword != std::get<std::string>(to.size)) {
+    if (const auto *keyword = std::get_if<SizeKeyword>(&size)) {
+      if (*keyword != std::get<SizeKeyword>(to.size)) {
         return false;
       }
     } else {
