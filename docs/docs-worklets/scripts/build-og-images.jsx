@@ -3,39 +3,13 @@ import { pipeline } from 'stream';
 import { promisify } from 'util';
 import path from 'path';
 import fs from 'fs';
+import {
+  parseMarkdownFile,
+  DEFAULT_PARSE_FRONT_MATTER,
+} from '@docusaurus/utils';
+import { DefaultNumberPrefixParser } from '@docusaurus/plugin-content-docs/lib/numberPrefix.js';
 import OGImageStream from './og-image-stream';
 const { globSync } = require('glob');
-
-const getDocsMarkdownHeader = (path) => {
-  const content = fs.readFileSync(path, 'utf-8');
-  const headers = content
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.startsWith('#'))
-    .map((line, index) => ({
-      level: line.match(/#/g).length,
-      title: line.replace(/#/g, '').trim(),
-      index,
-    }))
-    .sort((a, b) => a.level - b.level || a.index - b.index);
-
-  return headers[0]?.title || 'React Native Worklets';
-};
-
-const getExampleMardownHeader = (path) => {
-  const content = fs.readFileSync(path, 'utf-8');
-  const headers = content
-    .split('\n')
-    .filter((line) => line.startsWith('title:'))
-    .map((line) => line.replace('title:', '').trim());
-
-  return headers[0] || 'React Native Worklets';
-};
-
-async function saveStreamToFile(stream, filePath) {
-  const writeStream = createWriteStream(filePath);
-  await promisify(pipeline)(stream, writeStream);
-}
 
 async function buildOGImages() {
   const docsDirPath = path.resolve(__dirname, '../docs');
@@ -57,20 +31,47 @@ async function buildOGImages() {
   const base64Image = `data:image/png;base64,${imageBuffer.toString('base64')}`;
 
   for (const filePath of docsFiles) {
-    const header = filePath.startsWith(docsDirPath)
-      ? getDocsMarkdownHeader(filePath)
-      : getExampleMardownHeader(filePath);
-
-    const ogImageStream = OGImageStream(header, base64Image);
+    const title = await getPageTitle(filePath);
+    const ogImageStream = OGImageStream(title, base64Image);
 
     await saveStreamToFile(
       await ogImageStream,
-      path.resolve(
-        ogImageTargets,
-        `${header.replace(/ /g, '-').replace('/', '-').toLowerCase()}.png`
-      )
+      path.resolve(ogImageTargets, `${getImageName(title)}.png`)
     );
   }
+}
+
+// The name must match the one the theme asks for, so the title is resolved the
+// same way Docusaurus resolves it.
+async function getPageTitle(filePath) {
+  const { frontMatter, contentTitle } = await parseMarkdownFile({
+    filePath,
+    fileContent: fs.readFileSync(filePath, 'utf-8'),
+    parseFrontMatter: DEFAULT_PARSE_FRONT_MATTER,
+  });
+
+  return frontMatter.title ?? contentTitle ?? getBaseId(filePath, frontMatter);
+}
+
+function getBaseId(filePath, frontMatter) {
+  if (frontMatter.id) {
+    return frontMatter.id;
+  }
+
+  const fileName = path.basename(filePath, path.extname(filePath));
+
+  return frontMatter.parse_number_prefixes === false
+    ? fileName
+    : DefaultNumberPrefixParser(fileName).filename;
+}
+
+function getImageName(title) {
+  return title.replace(/ /g, '-').replace('/', '-').toLowerCase();
+}
+
+async function saveStreamToFile(stream, filePath) {
+  const writeStream = createWriteStream(filePath);
+  await promisify(pipeline)(stream, writeStream);
 }
 
 buildOGImages();
