@@ -1,5 +1,5 @@
 'use strict';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import type {
   AnimatedSensor,
@@ -97,43 +97,37 @@ export function useAnimatedSensor(
   sensorType: SensorType,
   userConfig?: Partial<SensorConfig>
 ): AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D> {
-  const userConfigRef = useRef(userConfig);
-
-  const hasConfigChanged =
-    userConfigRef.current?.adjustToInterfaceOrientation !==
-      userConfig?.adjustToInterfaceOrientation ||
-    userConfigRef.current?.interval !== userConfig?.interval ||
-    userConfigRef.current?.iosReferenceFrame !== userConfig?.iosReferenceFrame;
-
-  if (hasConfigChanged) {
-    userConfigRef.current = { ...userConfig };
-  }
-
-  const config: SensorConfig = useMemo(
-    () => ({
-      interval: 'auto',
-      adjustToInterfaceOrientation: true,
-      iosReferenceFrame: IOSReferenceFrame.Auto,
-      ...userConfigRef.current,
-    }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [userConfigRef.current]
-  );
+  const {
+    interval = 'auto',
+    adjustToInterfaceOrientation = true,
+    iosReferenceFrame = IOSReferenceFrame.Auto,
+  } = userConfig ?? {};
 
   const [sensor, setSensor] = useState<AnimatedSensor<Value3D | ValueRotation>>(
-    () => ({
-      sensor: initializeSensor(sensorType, config),
-      unregister: () => {
-        // NOOP
-      },
-      isAvailable: false,
-      config,
-    })
+    () => {
+      const config = {
+        interval,
+        adjustToInterfaceOrientation,
+        iosReferenceFrame,
+      };
+      return {
+        sensor: initializeSensor(sensorType, config),
+        unregister: () => {
+          // NOOP
+        },
+        isAvailable: false,
+        config,
+      };
+    }
   );
 
   useEffect(() => {
+    const config = {
+      interval,
+      adjustToInterfaceOrientation,
+      iosReferenceFrame,
+    };
     const sensorData = initializeSensor(sensorType, config);
-    const adjustToInterfaceOrientation = config.adjustToInterfaceOrientation;
 
     const id = registerSensor(sensorType, config, (data) => {
       'worklet';
@@ -164,7 +158,7 @@ export function useAnimatedSensor(
     });
 
     return unregister;
-  }, [sensorType, config]);
+  }, [sensorType, interval, adjustToInterfaceOrientation, iosReferenceFrame]);
 
   return sensor as AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D>;
 }
