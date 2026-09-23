@@ -59,11 +59,18 @@ struct Snapshot {
 };
 
 typedef enum class ExitingState : std::uint8_t {
-  UNDEFINED = 1,
-  WAITING = 2,
-  ANIMATING = 3,
-  COMPLETED = 4,
-  DELETED = 5,
+  // React still renders the view
+  LIVE = 1,
+  // React deletes the view in the current transaction and the proxy has not decided how it exits yet
+  DECISION_PENDING = 2,
+  // withheld until its exiting descendants finish
+  WAITING = 3,
+  // withheld while its own exiting animation runs
+  ANIMATING = 4,
+  // its exiting animation finished, it is torn down at the next flush
+  COMPLETED = 5,
+  // the proxy has emitted its Remove and Delete
+  TORN_DOWN = 6,
 } ExitingState;
 
 struct MutationNode;
@@ -102,17 +109,18 @@ struct LightNode {
   folly::dynamic accumulatedRawProps = nullptr;
   bool propsNeedResolve = false;
 #endif
-  ExitingState state = ExitingState::UNDEFINED;
+  ExitingState state = ExitingState::LIVE;
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
   int exitingChildrenCount = 0;
 
   bool isExiting() const {
-    return state != ExitingState::UNDEFINED;
+    return state != ExitingState::LIVE;
   }
 
   void setExitingState(ExitingState newState) {
-    const bool startsExiting = !isExiting() && newState != ExitingState::UNDEFINED;
+    react_native_assert(newState != ExitingState::LIVE && "A light node never becomes live again");
+    const bool startsExiting = !isExiting() && newState != ExitingState::LIVE;
     state = newState;
     if (!startsExiting) {
       return;
