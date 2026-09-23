@@ -152,6 +152,8 @@ A type of a sensor to use. You specify the sensor type using a `SensorType` enum
 
 #### `config` <Optional/>
 
+The `HINGE` sensor takes no config. It reports only when the angle changes, and its value doesn't depend on the interface orientation.
+
 Available properties:
 
 | Name                         | Type                | Default                  | Description                                                                                      |
@@ -176,7 +178,7 @@ You can specify the iOS reference frame using an `IOSReferenceFrame` enum contai
 | ----------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | sensor      | `SharedValue<Value3D｜ValueRotation｜ValueHinge>` | A [shared value](/docs/fundamentals/glossary#shared-value) containing the sensor measurements. The values returned by the sensor depend on the type of sensor you choose with the [`sensorType`](/docs/device/useAnimatedSensor#sensortype) argument. |
 | unregister  | `() => void`                                      | Allows to stop listening to sensor updates on call.                                                                                                                                                                                             |
-| isAvailable | `boolean`                                         | Whether the device has the sensor. It's correct from the first render and doesn't reflect a missing permission. On iOS, the hinge sensor is `false` until its first update, and on a device with a hinge it then becomes `true`. |
+| isAvailable | `boolean`                                         | Whether the device has the sensor. It's correct from the first render and doesn't reflect a missing permission.                                                                                                                                 |
 | config      | `SensorConfig`                                    | An object containing sensor configuration.                                                                                                                                                                                                      |
 
 The shared value returned from the **rotation sensor** is an object contain Euler angles, a quaternion and an interface orientation:
@@ -232,7 +234,7 @@ The shared value returned from the **hinge sensor** is an object with the fold a
 - `UNKNOWN` - the status is not known yet.
 - `CLOSED` - the device is closed.
 - `PARTIALLY_OPEN` - the device is open at an angle between closed and flat.
-- `FULLY_OPEN` - the device is flat.
+- `FULLY_OPEN` - the device is flat, or open as far as it allows if that is less.
 
 **All other sensors** return an object with measurements in the x, y and z axes and the interface orientation:
 
@@ -274,7 +276,7 @@ import AnimatedHingeSrc from '!!raw-loader!@site/src/examples/AnimatedHinge';
 
 - You can read the sensor data on both [UI thread](/docs/fundamentals/glossary#ui-thread) and [JavaScript thread](/docs/fundamentals/glossary#javascript-thread).
 
-- The hinge sensor needs a foldable device. On Android it reads `Sensor.TYPE_HINGE_ANGLE`. On iOS it needs iOS 27.1 or newer. On Web it is not supported and `isAvailable` is `false`.
+- The hinge sensor needs a foldable device. On Android it reads `Sensor.TYPE_HINGE_ANGLE`. On iOS it needs iOS 27.1 or newer and an app built with Xcode 27.1 or newer. On Web it is not supported and `isAvailable` is `false`.
 
 - Some devices, for example Samsung Galaxy Z Fold phones, report the angle in coarse steps (0°, 90°, 180°). Use `status` when you only need the fold state.
 
