@@ -82,7 +82,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
   {
     testSuiteName: 'react-freeze',
     importTest: () => {
-      require('./tests/freeze/freezeSubtree.test');
+      require('./tests/freeze/freeze.test');
     },
   },
   {
