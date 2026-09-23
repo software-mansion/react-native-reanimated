@@ -1,0 +1,1 @@
+Render `useAnimatedSensor` again after the hook registers the sensor, so `isAvailable` reports the result of the registration. The hook refreshes the value again after a change of `sensorType` or `config`.
