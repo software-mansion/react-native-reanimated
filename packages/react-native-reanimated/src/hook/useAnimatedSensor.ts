@@ -4,14 +4,11 @@ import { useEffect, useState } from 'react';
 import type {
   AnimatedSensor,
   SensorConfig,
+  SensorType,
   Value3D,
   ValueRotation,
 } from '../commonTypes';
-import {
-  InterfaceOrientation,
-  IOSReferenceFrame,
-  SensorType,
-} from '../commonTypes';
+import { InterfaceOrientation, IOSReferenceFrame } from '../commonTypes';
 import { initializeSensor, registerSensor, unregisterSensor } from '../core';
 
 // euler angles are in order ZXY, z = yaw, x = pitch, y = roll
@@ -74,6 +71,13 @@ function adjustVectorToInterfaceOrientation(data: Value3D) {
   return data;
 }
 
+function adjustToInterfaceOrientation(data: Value3D | ValueRotation) {
+  'worklet';
+  return 'qw' in data
+    ? adjustRotationToInterfaceOrientation(data)
+    : adjustVectorToInterfaceOrientation(data);
+}
+
 /**
  * Lets you create animations based on data from the device's sensors.
  *
@@ -99,7 +103,7 @@ export function useAnimatedSensor(
 ): AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D> {
   const {
     interval = 'auto',
-    adjustToInterfaceOrientation = true,
+    adjustToInterfaceOrientation: adjust = true,
     iosReferenceFrame = IOSReferenceFrame.Auto,
   } = userConfig ?? {};
 
@@ -107,7 +111,7 @@ export function useAnimatedSensor(
     () => {
       const config = {
         interval,
-        adjustToInterfaceOrientation,
+        adjustToInterfaceOrientation: adjust,
         iosReferenceFrame,
       };
       return {
@@ -124,30 +128,22 @@ export function useAnimatedSensor(
   useEffect(() => {
     const config = {
       interval,
-      adjustToInterfaceOrientation,
+      adjustToInterfaceOrientation: adjust,
       iosReferenceFrame,
     };
     const sensorData = initializeSensor(sensorType, config);
 
     const id = registerSensor(sensorType, config, (data) => {
       'worklet';
-      if (adjustToInterfaceOrientation) {
-        if (sensorType === SensorType.ROTATION) {
-          data = adjustRotationToInterfaceOrientation(data as ValueRotation);
-        } else {
-          data = adjustVectorToInterfaceOrientation(data as Value3D);
-        }
-      }
-      sensorData.value = data;
+      sensorData.value = adjust ? adjustToInterfaceOrientation(data) : data;
     });
 
     let registered = id !== -1;
     const unregister = () => {
-      if (!registered) {
-        return;
+      if (registered) {
+        registered = false;
+        unregisterSensor(id);
       }
-      registered = false;
-      unregisterSensor(id);
     };
 
     setSensor({
@@ -158,7 +154,7 @@ export function useAnimatedSensor(
     });
 
     return unregister;
-  }, [sensorType, interval, adjustToInterfaceOrientation, iosReferenceFrame]);
+  }, [sensorType, interval, adjust, iosReferenceFrame]);
 
   return sensor as AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D>;
 }
