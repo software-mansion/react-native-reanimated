@@ -1,7 +1,7 @@
 'use strict';
 import { scheduleOnUI } from 'react-native-worklets';
 
-import type { FrameInfo } from './FrameCallbackRegistryUI';
+import type { FrameInfo } from './commonTypes';
 import { prepareUIRegistry } from './FrameCallbackRegistryUI';
 
 export default class FrameCallbackRegistryJS {
