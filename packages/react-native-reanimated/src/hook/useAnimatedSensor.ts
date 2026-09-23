@@ -98,8 +98,9 @@ const NOOP = () => {
 // nothing to subscribe to.
 const subscribeToAvailability = () => NOOP;
 
-// There are no sensors on the server. React renders the server value during
-// hydration too, so the hydrated markup matches the server markup.
+// There are no sensors on the server. React uses this value during hydration
+// too, so the hydrated markup matches the server markup, and then renders
+// again with the value for the device.
 const getServerAvailability = () => false;
 
 /**

@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react-hooks';
+import { act, renderHook } from '@testing-library/react-native';
 import { createElement, StrictMode } from 'react';
 import { renderToString } from 'react-dom/server';
 
@@ -7,6 +7,7 @@ import { IOSReferenceFrame, SensorType, useAnimatedSensor } from '../src';
 import { registerSensor, unregisterSensor } from '../src/core';
 
 let eventHandler: (data: Value3D | ValueRotation) => void;
+let mockNextSensorId = 1;
 const mockUnavailableSensorType = SensorType.GYROSCOPE;
 
 jest.mock('../src/core', () => {
@@ -24,12 +25,30 @@ jest.mock('../src/core', () => {
         _eventHandler: (data: Value3D | ValueRotation) => void
       ) => {
         eventHandler = _eventHandler;
-        return sensorType === mockUnavailableSensorType ? -1 : 1;
+        return sensorType === mockUnavailableSensorType
+          ? -1
+          : mockNextSensorId++;
       }
     ),
     unregisterSensor: jest.fn(),
   };
 });
+
+type SensorResult = ReturnType<typeof useAnimatedSensor>;
+
+// Records the result of every render of the hook.
+function renderSensorHook<Props>(
+  useSensor: (props: Props) => SensorResult,
+  options?: { initialProps?: Props; wrapper?: typeof StrictMode }
+) {
+  const renders: SensorResult[] = [];
+  const hook = renderHook((props: Props) => {
+    const result = useSensor(props);
+    renders.push(result);
+    return result;
+  }, options);
+  return { ...hook, renders };
+}
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -69,6 +88,7 @@ expect.extend({
 describe('Sensors', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockNextSensorId = 1;
   });
 
   test('returns rotation sensors', () => {
@@ -267,21 +287,23 @@ describe('Sensors', () => {
   });
 
   test('reports availability on the first render', () => {
-    const available = renderHook(() =>
+    const available = renderSensorHook(() =>
       useAnimatedSensor(SensorType.ACCELEROMETER)
     );
-    const unavailable = renderHook(() =>
+    const unavailable = renderSensorHook(() =>
       useAnimatedSensor(mockUnavailableSensorType)
     );
 
-    expect(available.result.all).toHaveLength(1);
-    expect(available.result.current.isAvailable).toBe(true);
-    expect(unavailable.result.all).toHaveLength(1);
-    expect(unavailable.result.current.isAvailable).toBe(false);
+    expect(available.renders.map((result) => result.isAvailable)).toEqual([
+      true,
+    ]);
+    expect(unavailable.renders.map((result) => result.isAvailable)).toEqual([
+      false,
+    ]);
   });
 
   test('reports availability in the render that changes the sensor type', () => {
-    const { result, rerender } = renderHook(
+    const { renders, rerender } = renderSensorHook(
       (sensorType: SensorType) => useAnimatedSensor(sensorType),
       { initialProps: SensorType.ACCELEROMETER }
     );
@@ -289,9 +311,11 @@ describe('Sensors', () => {
     rerender(mockUnavailableSensorType);
     rerender(SensorType.ACCELEROMETER);
 
-    expect(
-      result.all.map((sensor) => 'isAvailable' in sensor && sensor.isAvailable)
-    ).toEqual([true, false, true]);
+    expect(renders.map((result) => result.isAvailable)).toEqual([
+      true,
+      false,
+      true,
+    ]);
   });
 
   test('reports no sensor when rendered on the server', () => {
@@ -305,16 +329,16 @@ describe('Sensors', () => {
   });
 
   test('keeps one registration and one result across renders with a new config object', () => {
-    const { result, rerender } = renderHook(() =>
+    const { renders, rerender } = renderSensorHook(() =>
       useAnimatedSensor(SensorType.ACCELEROMETER, { interval: 100 })
     );
 
-    rerender();
-    rerender();
+    rerender(undefined);
+    rerender(undefined);
 
-    expect(result.all).toHaveLength(3);
-    expect(result.all[1]).toBe(result.all[0]);
-    expect(result.all[2]).toBe(result.all[0]);
+    expect(renders).toHaveLength(3);
+    expect(renders[1]).toBe(renders[0]);
+    expect(renders[2]).toBe(renders[0]);
     expect(registerSensor).toHaveBeenCalledTimes(1);
     expect(unregisterSensor).not.toHaveBeenCalled();
   });
@@ -334,7 +358,7 @@ describe('Sensors', () => {
       adjustToInterfaceOrientation: true,
       iosReferenceFrame: IOSReferenceFrame.Auto,
     });
-    expect(unregisterSensor).toHaveBeenCalledTimes(1);
+    expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1]]);
     expect(result.current.config.interval).toBe(200);
   });
 
@@ -353,25 +377,28 @@ describe('Sensors', () => {
     const { result, rerender, unmount } = renderHook(() =>
       useAnimatedSensor(SensorType.ACCELEROMETER)
     );
-    rerender();
+    rerender(undefined);
 
     result.current.unregister();
     unmount();
 
-    expect(unregisterSensor).toHaveBeenCalledTimes(1);
+    expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1]]);
   });
 
   test('releases every registration under Strict Mode', () => {
-    const { unmount } = renderHook(
+    const { result, unmount } = renderHook(
       () => useAnimatedSensor(SensorType.ACCELEROMETER),
       { wrapper: StrictMode }
     );
 
+    // Strict Mode mounts the effect, cleans it up and mounts it again.
+    expect(registerSensor).toHaveBeenCalledTimes(2);
+    expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1]]);
+
+    result.current.unregister();
     unmount();
 
-    expect(unregisterSensor).toHaveBeenCalledTimes(
-      jest.mocked(registerSensor).mock.calls.length
-    );
+    expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1], [2]]);
   });
 
   test('unregisters the current registration after a change of sensor type', () => {
@@ -381,10 +408,10 @@ describe('Sensors', () => {
     );
 
     rerender(SensorType.GRAVITY);
-    expect(unregisterSensor).toHaveBeenCalledTimes(1);
+    expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1]]);
 
     result.current.unregister();
 
-    expect(unregisterSensor).toHaveBeenCalledTimes(2);
+    expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1], [2]]);
   });
 });
