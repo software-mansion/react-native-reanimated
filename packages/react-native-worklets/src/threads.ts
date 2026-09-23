@@ -94,7 +94,7 @@ let offset = 0;
 function flushUIQueue(): void {
   const queue = runOnUIQueue;
   runOnUIQueue = [];
-  requestAnimationFrameImpl(() => {
+  requestAnimationFrame(() => {
     offset = 0;
     while (queue.length > offset) {
       try {
@@ -111,19 +111,15 @@ function flushUIQueue(): void {
   });
 }
 
-/**
- * Server-side rendering evaluates web code in environments without
- * `requestAnimationFrame`, such as Node.js. Work scheduled there, for example
- * at module scope, falls back to a timer instead of throwing from a microtask.
- */
-function requestAnimationFrameImpl(
-  callback: (timestamp: number) => void
-): void {
-  if (typeof globalThis.requestAnimationFrame === 'function') {
-    globalThis.requestAnimationFrame(callback);
-  } else {
-    mockedRequestAnimationFrame(callback);
-  }
+if (!globalThis.requestAnimationFrame) {
+  /**
+   * Server-side rendering evaluates web code in environments without
+   * `requestAnimationFrame`, such as Node.js. Work scheduled there, for example
+   * at module scope, falls back to a timer instead of throwing from a
+   * microtask.
+   */
+  globalThis.requestAnimationFrame =
+    mockedRequestAnimationFrame as unknown as typeof globalThis.requestAnimationFrame;
 }
 
 function drainUIQueue(queue: UIJob[]): void {

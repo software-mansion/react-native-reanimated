@@ -53,7 +53,10 @@ describe('web threads implementation', () => {
     // @ts-expect-error Simulates a server environment such as Node.js.
     delete globalThis.requestAnimationFrame;
     try {
-      await expect(runOnUIAsync(() => 'done')).resolves.toBe('done');
+      await jest.isolateModulesAsync(async () => {
+        const threads = await import('../src/threads');
+        await expect(threads.runOnUIAsync(() => 'done')).resolves.toBe('done');
+      });
     } finally {
       if (descriptor) {
         Object.defineProperty(globalThis, 'requestAnimationFrame', descriptor);

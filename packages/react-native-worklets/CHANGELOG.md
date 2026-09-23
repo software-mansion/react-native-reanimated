@@ -1,19 +1,5 @@
 # Changelog
 
-## Unpublished
-
-<!-- Add a concise entry under the appropriate category. Include links to the pull request and author when available. -->
-
-### 🛠 Breaking changes
-
-### 🎉 New features
-
-### 🐛 Bug fixes
-
-- Fall back to a timer in web `scheduleOnUI` and `runOnUIAsync` when `requestAnimationFrame` is unavailable, such as during server-side rendering in Node.js. ([#10667](https://github.com/software-mansion/react-native-reanimated/pull/10667) by [@robhogan](https://github.com/robhogan))
-
-### 💡 Others
-
 ## 0.13.0 — 2026-09-18
 
 ### 🛠 Breaking changes
@@ -47,7 +33,6 @@
 
 ### 🐛 Bug fixes
 
-- Initialize `__DEV__` in JavaScript and remove the native development flag plumbing. ([#10632](https://github.com/software-mansion/react-native-reanimated/pull/10632) by [@tshmieldev](https://github.com/tshmieldev))
 - Abort the pending jobs of a Worklet Runtime's async queue and event loop from its destructor while the runtime lock is held, so the JSI handles they capture are no longer destroyed on an unrelated thread or under the queue mutex. ([#10580](https://github.com/software-mansion/react-native-reanimated/pull/10580) by [@tjzel](https://github.com/tjzel))
 - Native methods on the Worklets module proxy read missing trailing arguments as `undefined` again instead of throwing, which broke `runOnRuntimeSync` and `scheduleOnRuntime` on guest runtimes in Legacy Eval mode. ([#10593](https://github.com/software-mansion/react-native-reanimated/pull/10593) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Acquire the runtime mutex before destroying a Worklet Runtime so a synchronous call in flight on another thread finishes first. ([#10550](https://github.com/software-mansion/react-native-reanimated/pull/10550) by [@tjzel](https://github.com/tjzel))
@@ -68,9 +53,7 @@
 
 ### 💡 Others
 
-- Bump the dev dependency on React Native to 0.88.0-rc.2 and add Bundle Mode patches for Metro 0.87.1. ([#10650](https://github.com/software-mansion/react-native-reanimated/pull/10650) by [@pawicao](https://github.com/pawicao))
 - Added support for React Native 0.88. ([#10582](https://github.com/software-mansion/react-native-reanimated/pull/10582) by [@pawicao](https://github.com/pawicao))
-- Replace ESLint with oxlint for JavaScript and TypeScript linting. ([#10584](https://github.com/software-mansion/react-native-reanimated/pull/10584) by [@tshmieldev](https://github.com/tshmieldev))
 - In Bundle Mode, evaluate the bundle on the UI Worklet Runtime on a background thread while the RN Runtime evaluates it, instead of on the JS thread in `start`. `bundleModeMetroConfig` prepends a polyfill that triggers it. ([#10490](https://github.com/software-mansion/react-native-reanimated/pull/10490) by [@tjzel](https://github.com/tjzel))
 - Create the native side of `WorkletsModule` on a background thread as soon as the module is created, so `installTurboModule` only attaches it to the RN Runtime. ([#10489](https://github.com/software-mansion/react-native-reanimated/pull/10489) by [@tjzel](https://github.com/tjzel))
 - Validate the iOS Swift Package Manager integration in CI: the nightly compatibility check now builds the app via SPM on React Native >= 0.87. ([#10511](https://github.com/software-mansion/react-native-reanimated/pull/10511) by [@kacperzolkiewski](https://github.com/kacperzolkiewski))
