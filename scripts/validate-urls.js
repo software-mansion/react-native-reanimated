@@ -134,6 +134,9 @@ const skippedUrls = [
   'observablehq.com',
   'example.com',
   '127.0.0.1',
+  '//x.com',
+  'youtube.com',
+  'cppreference.com',
 ];
 
 const skippedExactUrls = [
