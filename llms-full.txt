@@ -4154,6 +4154,8 @@ A parameter that determines how animations should behave in response to the devi
 # URL: https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedKeyboard
 # Title: useAnimatedKeyboard
 
+# useAnimatedKeyboard
+
 `useAnimatedKeyboard` lets you create animations based on state and height of the virtual keyboard.
 
 :::info ⚠️ Deprecation notice
@@ -4280,6 +4282,8 @@ Also consider exploring the built-in [components](https://kirillzyusko.github.io
 ---
 # URL: https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedSensor
 # Title: useAnimatedSensor
+
+# useAnimatedSensor
 
 `useAnimatedSensor` lets you create animations based on data from the device's sensors. You can access:
 

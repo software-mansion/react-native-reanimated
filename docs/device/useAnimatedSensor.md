@@ -1,3 +1,5 @@
+# useAnimatedSensor
+
 `useAnimatedSensor` lets you create animations based on data from the device's sensors. You can access:
 
 * **Accelerometer** - the device acceleration (without gravity).

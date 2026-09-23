@@ -1,3 +1,5 @@
+# useAnimatedKeyboard
+
 `useAnimatedKeyboard` lets you create animations based on state and height of the virtual keyboard.
 
 :::info ⚠️ Deprecation notice
