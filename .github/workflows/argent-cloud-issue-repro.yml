@@ -24,6 +24,7 @@ jobs:
     timeout-minutes: 30
     outputs:
       feasible: ${{ steps.plan.outputs.feasible }}
+      cost-usd: ${{ steps.plan-cost.outputs.cost-usd }}
       reanimated-version: ${{ steps.plan.outputs.reanimated-version }}
       react-native-version: ${{ steps.plan.outputs.react-native-version }}
     steps:
@@ -107,6 +108,26 @@ jobs:
             --allowedTools "Read,Write,Glob,Grep,Bash(npm view:*)"
             --json-schema '${{ steps.agent-input.outputs.schema }}'
 
+      - name: Restore the trusted checkout
+        if: always()
+        run: |
+          git checkout -- .
+          git clean -fdq -e "$WORK_DIR"
+          git status --short
+
+      - name: Read the planning cost
+        id: plan-cost
+        if: always()
+        env:
+          EXECUTION_FILE: ${{ steps.agent.outputs.execution_file }}
+        run: |
+          cost=0
+          if [ -n "$EXECUTION_FILE" ] && [ -f "$EXECUTION_FILE" ]; then
+            cost=$(jq '[.. | objects | select(has("total_cost_usd")) | .total_cost_usd] | max // 0' "$EXECUTION_FILE")
+          fi
+          echo "planning cost: $cost USD"
+          echo "cost-usd=$cost" >> "$GITHUB_OUTPUT"
+
       - name: Save the plan
         id: plan
         env:
@@ -124,8 +145,22 @@ jobs:
             echo "react-native-version=$(jq -r .reactNativeVersion "$WORK_DIR/plan.json")"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Report an infeasible issue to Slack
+      - name: Write the report
         if: steps.plan.outputs.feasible != 'true'
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STATUS: ${{ job.status }}
+          STAGE: plan-infeasible
+          PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
+          PLAN_COST_USD: ${{ steps.plan-cost.outputs.cost-usd }}
+          REPORT_FILE: ${{ env.WORK_DIR }}/report.md
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts report
+
+      - name: Report to Slack
+        if: ${{ !cancelled() && steps.plan.outcome == 'success' && steps.plan.outputs.feasible != 'true' }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_ARGENT_URL }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
@@ -135,7 +170,8 @@ jobs:
           STATUS: ${{ job.status }}
           STAGE: plan-infeasible
           PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
-        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-notification.ts
+          PLAN_COST_USD: ${{ steps.plan-cost.outputs.cost-usd }}
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts notify
 
       - name: Upload the plan
         if: always() && steps.plan.outcome == 'success'
@@ -202,7 +238,22 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: Report a build failure to Slack
+      - name: Write the report
+        if: failure()
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STATUS: ${{ job.status }}
+          STAGE: build-failed
+          PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
+          PLAN_COST_USD: ${{ needs.plan.outputs.cost-usd }}
+          FAILED_STEP: ${{ steps.prepare.outcome == 'failure' && 'Prepare the app' || steps.build.outcome == 'failure' && 'Build the app for the iOS simulator' || '' }}
+          REPORT_FILE: ${{ env.WORK_DIR }}/report.md
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts report
+
+      - name: Report to Slack
         if: failure()
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_ARGENT_URL }}
@@ -212,8 +263,19 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           STATUS: ${{ job.status }}
           STAGE: build-failed
+          PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
+          PLAN_COST_USD: ${{ needs.plan.outputs.cost-usd }}
           FAILED_STEP: ${{ steps.prepare.outcome == 'failure' && 'Prepare the app' || steps.build.outcome == 'failure' && 'Build the app for the iOS simulator' || '' }}
-        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-notification.ts
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts notify
+
+      - name: Upload the report
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: argent-cloud-report-issue-${{ github.event.issue.number }}
+          path: ${{ env.WORK_DIR }}/report.md
+          if-no-files-found: warn
+          retention-days: 30
 
   reproduce:
     needs: [plan, build]
@@ -255,6 +317,10 @@ jobs:
         run: |
           plan="$WORK_DIR/plan.json"
           {
+            echo "## Report format"
+            echo
+            echo "Start your final message with the verdict heading your instructions require. Directly under it add a \`## Summary\` section: at most three plain sentences that state the verdict in words and give the decisive evidence, or what blocked you. This section is extracted automatically and shown to maintainers on its own, so it must stand alone. The rest of your message follows after it."
+            echo
             echo "## Reproduction plan"
             echo
             jq -r .summary "$plan"
@@ -306,18 +372,41 @@ jobs:
             --app-bundle "$WORK_DIR/app/repro-app.tar.gz" \
             --log-usage \
             --stream="$WORK_DIR/output/stream.md" \
+            2> >(tee "$WORK_DIR/output/argent-cloud.log" >&2) \
             | tee "$WORK_DIR/output/output.md"
 
-      - name: Upload the reproduction output
+      - name: Read the reproduction cost
+        id: repro-cost
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: argent-cloud-output-issue-${{ github.event.issue.number }}
-          path: ${{ env.WORK_DIR }}/output
-          if-no-files-found: warn
-          retention-days: 30
+        run: |
+          cost=0
+          log="$WORK_DIR/output/argent-cloud.log"
+          if [ -f "$log" ]; then
+            cost=$(sed 's/\x1b\[[0-9;]*m//g' "$log" | grep -oE 'cost_usd=[0-9.]+' | cut -d= -f2 | awk '{ sum += $1 } END { printf "%.6f", sum }')
+          fi
+          echo "reproduction cost: $cost USD"
+          echo "cost-usd=$cost" >> "$GITHUB_OUTPUT"
 
-      - name: Report the result to Slack
+      - name: Write the report
+        if: always()
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STATUS: ${{ job.status }}
+          STAGE: reproduce
+          PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
+          PLAN_COST_USD: ${{ needs.plan.outputs.cost-usd }}
+          REPRO_COST_USD: ${{ steps.repro-cost.outputs.cost-usd }}
+          BRIEF_FILE: ${{ env.WORK_DIR }}/brief.md
+          OUTPUT_FILE: ${{ env.WORK_DIR }}/output/output.md
+          STREAM_FILE: ${{ env.WORK_DIR }}/output/stream.md
+          FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro.outcome == 'failure' && 'Run argent-cloud issue-repro' || '' }}
+          REPORT_FILE: ${{ env.WORK_DIR }}/report.md
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts report
+
+      - name: Report to Slack
         if: always()
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_ARGENT_URL }}
@@ -326,8 +415,23 @@ jobs:
           ISSUE_URL: ${{ github.event.issue.html_url }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           STATUS: ${{ job.status }}
-          STREAM_FILE: ${{ env.WORK_DIR }}/output/stream.md
+          STAGE: reproduce
+          PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
+          PLAN_COST_USD: ${{ needs.plan.outputs.cost-usd }}
+          REPRO_COST_USD: ${{ steps.repro-cost.outputs.cost-usd }}
+          BRIEF_FILE: ${{ env.WORK_DIR }}/brief.md
           OUTPUT_FILE: ${{ env.WORK_DIR }}/output/output.md
+          STREAM_FILE: ${{ env.WORK_DIR }}/output/stream.md
           FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro.outcome == 'failure' && 'Run argent-cloud issue-repro' || '' }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-notification.ts
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts notify
+
+      - name: Upload the reproduction output
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: argent-cloud-output-issue-${{ github.event.issue.number }}
+          path: |
+            ${{ env.WORK_DIR }}/output
+            ${{ env.WORK_DIR }}/report.md
+          if-no-files-found: warn
+          retention-days: 30
