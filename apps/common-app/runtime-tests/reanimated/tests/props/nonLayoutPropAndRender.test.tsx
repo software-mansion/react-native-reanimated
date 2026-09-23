@@ -135,8 +135,8 @@ async function expectBoxStaysSettled(size: number, color: string) {
   );
 }
 
-describe('Animated non-layout prop and React render', () => {
-  test('React render of layout props keeps the settled animated backgroundColor', async () => {
+describe('animation of a non-layout prop across React renders', () => {
+  test('a size render after the animation settles keeps the color', async () => {
     await render(<NonLayoutPropBox colorToggled={false} size={SIZE_BIG} />);
     await expectBox(SIZE_BIG, COLOR_OFF);
 
@@ -156,7 +156,7 @@ describe('Animated non-layout prop and React render', () => {
     await expectBoxStaysSettled(SIZE_SMALL, COLOR_ON);
   });
 
-  test('React render during the on-to-off animation keeps both updates', async () => {
+  test('a size render during the on-to-off animation keeps both updates', async () => {
     await render(<NonLayoutPropBox colorToggled={false} size={SIZE_BIG} />);
     await expectBox(SIZE_BIG, COLOR_OFF);
 
@@ -168,7 +168,7 @@ describe('Animated non-layout prop and React render', () => {
     await expectBoxStaysSettled(SIZE_SMALL, COLOR_OFF);
   });
 
-  test('backgroundColor animates correctly after a React render changed the size', async () => {
+  test('a color toggle after a size render still animates the color', async () => {
     await render(<NonLayoutPropBox colorToggled={false} size={SIZE_BIG} />);
     await expectBox(SIZE_BIG, COLOR_OFF);
 
@@ -192,7 +192,7 @@ describe('Animated non-layout prop and React render', () => {
     await expectBoxStaysSettled(SIZE_SMALL, COLOR_ON);
   });
 
-  test('a React render neither drops nor reverts backgroundColor frames', async () => {
+  test('a size render mid-animation neither drops nor reverts color frames', async () => {
     await mockAnimationTimer();
     const updatesContainer = await recordAnimationUpdates();
 
