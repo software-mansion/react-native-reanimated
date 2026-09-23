@@ -306,8 +306,9 @@ describe('animation of a non-layout prop across React renders', () => {
 
       const expected = dropRepeatedFrames(reference.frames);
       const received = dropRepeatedFrames(observed.frames);
+      expect(received.length >= expected.length - 1).toBe(true);
+      
       const compared = Math.min(expected.length, received.length);
-      expect(compared >= MIN_COMPARED_FRAMES).toBe(true);
       expect(received.slice(0, compared)).toMatchSnapshots(
         expected.slice(0, compared)
       );
