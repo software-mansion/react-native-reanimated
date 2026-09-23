@@ -86,6 +86,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
   }
 
+  isSensorAvailable(sensorType: number) {
+    return this.#reanimatedModuleProxy.isSensorAvailable(sensorType);
+  }
+
   registerSensor(
     sensorType: number,
     interval: number,

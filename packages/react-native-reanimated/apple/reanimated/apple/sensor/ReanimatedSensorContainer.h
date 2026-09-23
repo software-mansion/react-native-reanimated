@@ -6,6 +6,7 @@
 }
 
 - (instancetype)init;
+- (bool)isSensorAvailable:(ReanimatedSensorType)sensorType;
 - (int)registerSensor:(ReanimatedSensorType)sensorType
              interval:(int)interval
     iosReferenceFrame:(int)iosReferenceFrame

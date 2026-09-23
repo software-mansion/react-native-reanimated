@@ -1,11 +1,13 @@
 import { act, renderHook } from '@testing-library/react-hooks';
+import { createElement, StrictMode } from 'react';
+import { renderToString } from 'react-dom/server';
 
 import type { SensorConfig, Value3D, ValueRotation } from '../src';
-import { SensorType, useAnimatedSensor } from '../src';
-import { unregisterSensor } from '../src/core';
+import { IOSReferenceFrame, SensorType, useAnimatedSensor } from '../src';
+import { registerSensor, unregisterSensor } from '../src/core';
 
 let eventHandler: (data: Value3D | ValueRotation) => void;
-const mockUnsupportedSensorType = SensorType.GYROSCOPE;
+const mockUnavailableSensorType = SensorType.GYROSCOPE;
 
 jest.mock('../src/core', () => {
   const originalModule = jest.requireActual('../src/core');
@@ -13,14 +15,18 @@ jest.mock('../src/core', () => {
   return {
     __esModule: true,
     ...originalModule,
-    registerSensor: (
-      sensorType: SensorType,
-      config: SensorConfig,
-      _eventHandler: (data: Value3D | ValueRotation) => void
-    ) => {
-      eventHandler = _eventHandler;
-      return sensorType === mockUnsupportedSensorType ? -1 : 1;
-    },
+    isSensorAvailable: (sensorType: SensorType) =>
+      sensorType !== mockUnavailableSensorType,
+    registerSensor: jest.fn(
+      (
+        sensorType: SensorType,
+        config: SensorConfig,
+        _eventHandler: (data: Value3D | ValueRotation) => void
+      ) => {
+        eventHandler = _eventHandler;
+        return sensorType === mockUnavailableSensorType ? -1 : 1;
+      }
+    ),
     unregisterSensor: jest.fn(),
   };
 });
@@ -61,6 +67,10 @@ expect.extend({
 });
 
 describe('Sensors', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   test('returns rotation sensors', () => {
     const { result } = renderHook(() =>
       useAnimatedSensor(SensorType.ROTATION, {
@@ -256,27 +266,85 @@ describe('Sensors', () => {
     expect(result.current.sensor.value).toStrictEqual(data270);
   });
 
-  test('exposes availability without a render from the parent', () => {
+  test('reports availability on the first render', () => {
+    const available = renderHook(() =>
+      useAnimatedSensor(SensorType.ACCELEROMETER)
+    );
+    const unavailable = renderHook(() =>
+      useAnimatedSensor(mockUnavailableSensorType)
+    );
+
+    expect(available.result.all).toHaveLength(1);
+    expect(available.result.current.isAvailable).toBe(true);
+    expect(unavailable.result.all).toHaveLength(1);
+    expect(unavailable.result.current.isAvailable).toBe(false);
+  });
+
+  test('reports availability in the render that changes the sensor type', () => {
     const { result, rerender } = renderHook(
       (sensorType: SensorType) => useAnimatedSensor(sensorType),
       { initialProps: SensorType.ACCELEROMETER }
     );
 
-    expect(result.current.isAvailable).toBe(true);
+    rerender(mockUnavailableSensorType);
+    rerender(SensorType.ACCELEROMETER);
 
-    rerender(mockUnsupportedSensorType);
-
-    expect(result.current.isAvailable).toBe(false);
+    expect(
+      result.all.map((sensor) => 'isAvailable' in sensor && sensor.isAvailable)
+    ).toEqual([true, false, true]);
   });
 
-  test('keeps one registration across renders with a fresh config object', () => {
-    const { rerender } = renderHook(() =>
+  test('reports no sensor when rendered on the server', () => {
+    function SensorAvailability() {
+      const { isAvailable } = useAnimatedSensor(SensorType.ACCELEROMETER);
+      return String(isAvailable);
+    }
+
+    expect(renderToString(createElement(SensorAvailability))).toBe('false');
+    expect(registerSensor).not.toHaveBeenCalled();
+  });
+
+  test('keeps one registration and one result across renders with a new config object', () => {
+    const { result, rerender } = renderHook(() =>
       useAnimatedSensor(SensorType.ACCELEROMETER, { interval: 100 })
     );
-    jest.mocked(unregisterSensor).mockClear();
 
     rerender();
     rerender();
+
+    expect(result.all).toHaveLength(3);
+    expect(result.all[1]).toBe(result.all[0]);
+    expect(result.all[2]).toBe(result.all[0]);
+    expect(registerSensor).toHaveBeenCalledTimes(1);
+    expect(unregisterSensor).not.toHaveBeenCalled();
+  });
+
+  test('registers again after a change of config', () => {
+    const { result, rerender } = renderHook(
+      (interval: number) =>
+        useAnimatedSensor(SensorType.ACCELEROMETER, { interval }),
+      { initialProps: 100 }
+    );
+
+    rerender(200);
+
+    expect(registerSensor).toHaveBeenCalledTimes(2);
+    expect(jest.mocked(registerSensor).mock.calls[1][1]).toEqual({
+      interval: 200,
+      adjustToInterfaceOrientation: true,
+      iosReferenceFrame: IOSReferenceFrame.Auto,
+    });
+    expect(unregisterSensor).toHaveBeenCalledTimes(1);
+    expect(result.current.config.interval).toBe(200);
+  });
+
+  test('does not unregister an unavailable sensor', () => {
+    const { result, unmount } = renderHook(() =>
+      useAnimatedSensor(mockUnavailableSensorType)
+    );
+
+    result.current.unregister();
+    unmount();
 
     expect(unregisterSensor).not.toHaveBeenCalled();
   });
@@ -286,11 +354,37 @@ describe('Sensors', () => {
       useAnimatedSensor(SensorType.ACCELEROMETER)
     );
     rerender();
-    jest.mocked(unregisterSensor).mockClear();
 
     result.current.unregister();
     unmount();
 
     expect(unregisterSensor).toHaveBeenCalledTimes(1);
+  });
+
+  test('releases every registration under Strict Mode', () => {
+    const { unmount } = renderHook(
+      () => useAnimatedSensor(SensorType.ACCELEROMETER),
+      { wrapper: StrictMode }
+    );
+
+    unmount();
+
+    expect(unregisterSensor).toHaveBeenCalledTimes(
+      jest.mocked(registerSensor).mock.calls.length
+    );
+  });
+
+  test('unregisters the current registration after a change of sensor type', () => {
+    const { result, rerender } = renderHook(
+      (sensorType: SensorType) => useAnimatedSensor(sensorType),
+      { initialProps: SensorType.ACCELEROMETER }
+    );
+
+    rerender(SensorType.GRAVITY);
+    expect(unregisterSensor).toHaveBeenCalledTimes(1);
+
+    result.current.unregister();
+
+    expect(unregisterSensor).toHaveBeenCalledTimes(2);
   });
 });

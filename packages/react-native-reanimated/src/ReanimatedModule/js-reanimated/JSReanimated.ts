@@ -72,6 +72,11 @@ class JSReanimated implements IReanimatedModule {
     // no-op
   }
 
+  isSensorAvailable(sensorType: SensorType): boolean {
+    // the window object is unavailable when building the server portion of a site that uses SSG
+    return IS_WINDOW_AVAILABLE && this.getSensorName(sensorType) in window;
+  }
+
   registerSensor(
     sensorType: SensorType,
     interval: number,
@@ -88,7 +93,7 @@ class JSReanimated implements IReanimatedModule {
       this.detectPlatform();
     }
 
-    if (!(this.getSensorName(sensorType) in window)) {
+    if (!this.isSensorAvailable(sensorType)) {
       // https://w3c.github.io/sensors/#secure-context
       logger.warn(
         'Sensor is not available.' +

@@ -35,6 +35,8 @@ export interface ReanimatedModuleProxy {
     callback?: (result: T) => void
   ): Promise<T>;
 
+  isSensorAvailable(sensorType: number): boolean;
+
   registerSensor(
     sensorType: number,
     interval: number,

@@ -158,6 +158,11 @@ export function unsubscribeFromKeyboardEvents(listenerId: number): void {
   return ReanimatedModule.unsubscribeFromKeyboardEvents(listenerId);
 }
 
+export function isSensorAvailable(sensorType: SensorType): boolean {
+  const sensorContainer = getSensorContainer();
+  return sensorContainer.isSensorAvailable(sensorType);
+}
+
 export function registerSensor(
   sensorType: SensorType,
   config: SensorConfig,
