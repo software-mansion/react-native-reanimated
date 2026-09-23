@@ -1,14 +1,17 @@
 'use strict';
 
 import type {
+  MakeShareableClone,
+  WorkletRuntime as WorkletRuntimeFromWorklets,
+} from 'react-native-worklets';
+import {
+  createSerializable,
   createWorkletRuntime as createWorkletRuntimeFromWorklets,
   executeOnUIRuntimeSync as executeOnUIRuntimeSyncFromWorklets,
   isWorkletFunction as isWorkletFunctionFromWorklets,
-  MakeShareableClone,
   runOnJS as runOnJSFromWorklets,
   runOnRuntime as runOnRuntimeFromWorklets,
   runOnUI as runOnUIFromWorklets,
-  WorkletRuntime as WorkletRuntimeFromWorklets,
 } from 'react-native-worklets';
 
 /**
@@ -20,20 +23,15 @@ import type {
  *   guide](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-3.x/)
  *   for more details.
  */
-export const makeShareableCloneRecursive = (<TValue>(value: TValue) =>
-  value) as MakeShareableClone;
+export const makeShareableCloneRecursive: MakeShareableClone =
+  createSerializable;
 
 /**
  * @deprecated Please import [`createWorkletRuntime` directly from
  *   `react-native-worklets`](https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime/)
  *   instead of `react-native-reanimated`.
  */
-export const createWorkletRuntime: typeof createWorkletRuntimeFromWorklets =
-  () => {
-    throw new Error(
-      '[Reanimated] `createWorkletRuntime` is not supported on web.'
-    );
-  };
+export const createWorkletRuntime = createWorkletRuntimeFromWorklets;
 
 /**
  * @deprecated Please use [`runOnUISync` from
@@ -44,12 +42,7 @@ export const createWorkletRuntime: typeof createWorkletRuntimeFromWorklets =
  *   guide](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-3.x/)
  *   for more details.
  */
-export const executeOnUIRuntimeSync: typeof executeOnUIRuntimeSyncFromWorklets =
-  () => {
-    throw new Error(
-      '[Reanimated] `executeOnUIRuntimeSync` is not supported on web.'
-    );
-  };
+export const executeOnUIRuntimeSync = executeOnUIRuntimeSyncFromWorklets;
 
 /**
  * @deprecated Please use [`scheduleOnRN` from
@@ -60,10 +53,7 @@ export const executeOnUIRuntimeSync: typeof executeOnUIRuntimeSyncFromWorklets =
  *   guide](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-3.x/)
  *   for more details.
  */
-export const runOnJS: typeof runOnJSFromWorklets =
-  (fun) =>
-  (...args) =>
-    queueMicrotask(() => (fun as (...args: unknown[]) => unknown)(...args));
+export const runOnJS = runOnJSFromWorklets;
 
 /**
  * @deprecated Please use [`scheduleOnUI` from
@@ -74,10 +64,7 @@ export const runOnJS: typeof runOnJSFromWorklets =
  *   guide](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-3.x/)
  *   for more details.
  */
-export const runOnUI: typeof runOnUIFromWorklets =
-  (worklet) =>
-  (...args) =>
-    queueMicrotask(() => (worklet as (...args: unknown[]) => unknown)(...args));
+export const runOnUI = runOnUIFromWorklets;
 
 /**
  * @deprecated Please use [`scheduleOnRuntime` from
@@ -88,9 +75,7 @@ export const runOnUI: typeof runOnUIFromWorklets =
  *   guide](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-3.x/)
  *   for more details.
  */
-export const runOnRuntime: typeof runOnRuntimeFromWorklets = () => {
-  throw new Error('[Reanimated] `runOnRuntime` is not supported on web.');
-};
+export const runOnRuntime = runOnRuntimeFromWorklets;
 
 /**
  * @deprecated Please import `WorkletRuntime` directly from
@@ -103,9 +88,4 @@ export type WorkletRuntime = WorkletRuntimeFromWorklets;
  *   `react-native-worklets`](https://docs.swmansion.com/react-native-worklets/docs/utility/isWorkletFunction/)
  *   instead of `react-native-reanimated`.
  */
-export const isWorkletFunction: typeof isWorkletFunctionFromWorklets = ((
-  value: unknown
-) =>
-  typeof value === 'function' &&
-  !!(value as unknown as Record<string, unknown>)
-    .__workletHash) as typeof isWorkletFunctionFromWorklets;
+export const isWorkletFunction = isWorkletFunctionFromWorklets;

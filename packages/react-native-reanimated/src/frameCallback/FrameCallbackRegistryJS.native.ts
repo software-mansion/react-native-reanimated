@@ -1,4 +1,6 @@
 'use strict';
+import { scheduleOnUI } from 'react-native-worklets';
+
 import type { FrameInfo } from './FrameCallbackRegistryUI';
 import { prepareUIRegistry } from './FrameCallbackRegistryUI';
 
@@ -6,7 +8,7 @@ export default class FrameCallbackRegistryJS {
   private nextCallbackId = 0;
 
   constructor() {
-    prepareUIRegistry();
+    scheduleOnUI(prepareUIRegistry);
   }
 
   registerFrameCallback(callback: (frameInfo: FrameInfo) => void): number {
@@ -17,16 +19,22 @@ export default class FrameCallbackRegistryJS {
     const callbackId = this.nextCallbackId;
     this.nextCallbackId++;
 
-    global._frameCallbackRegistry.registerFrameCallback(callback, callbackId);
+    scheduleOnUI(() => {
+      global._frameCallbackRegistry.registerFrameCallback(callback, callbackId);
+    });
 
     return callbackId;
   }
 
   unregisterFrameCallback(callbackId: number): void {
-    global._frameCallbackRegistry.unregisterFrameCallback(callbackId);
+    scheduleOnUI(() => {
+      global._frameCallbackRegistry.unregisterFrameCallback(callbackId);
+    });
   }
 
   manageStateFrameCallback(callbackId: number, state: boolean): void {
-    global._frameCallbackRegistry.manageStateFrameCallback(callbackId, state);
+    scheduleOnUI(() => {
+      global._frameCallbackRegistry.manageStateFrameCallback(callbackId, state);
+    });
   }
 }
