@@ -11,11 +11,21 @@ import { DefaultNumberPrefixParser } from '@docusaurus/plugin-content-docs/lib/n
 import OGImageStream from './og-image-stream';
 const { globSync } = require('glob');
 
+// Docusaurus does not build these files as pages.
+const NOT_A_PAGE = ['**/_*.{md,mdx}', '**/_*/**'];
+
 async function buildOGImages() {
   const docsDirPath = path.resolve(__dirname, '../docs');
+  const versionedDocsDirPath = path.resolve(__dirname, '../versioned_docs');
   const blogDirPath = path.resolve(__dirname, '../blog');
 
-  const docsFiles = globSync(`${docsDirPath}/*/*.{md,mdx}`);
+  const docsFiles = globSync(
+    [
+      `${docsDirPath}/**/*.{md,mdx}`,
+      `${versionedDocsDirPath}/version-*/**/*.{md,mdx}`,
+    ],
+    { ignore: NOT_A_PAGE }
+  );
   const blogFiles = globSync(`${blogDirPath}/*.{md,mdx}`);
 
   const ogImageTargets = path.resolve(__dirname, '../build/img/og');
@@ -32,10 +42,9 @@ async function buildOGImages() {
   const imageBuffer = fs.readFileSync(imagePath);
   const base64Image = `data:image/png;base64,${imageBuffer.toString('base64')}`;
 
-  const allFiles = [...docsFiles, ...blogFiles];
+  const titles = await getPageTitles([...docsFiles, ...blogFiles]);
 
-  for (const filePath of allFiles) {
-    const title = await getPageTitle(filePath);
+  for (const title of titles) {
     const ogImageStream = OGImageStream(title, base64Image);
 
     await saveStreamToFile(
@@ -43,6 +52,17 @@ async function buildOGImages() {
       path.resolve(ogImageTargets, `${getImageName(title)}.png`)
     );
   }
+}
+
+// Pages of different versions share one image, so every title is rendered once.
+async function getPageTitles(filePaths) {
+  const titles = new Set();
+
+  for (const filePath of filePaths) {
+    titles.add(await getPageTitle(filePath));
+  }
+
+  return titles;
 }
 
 // The name must match the one the theme asks for, so the title is resolved the
