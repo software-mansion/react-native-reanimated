@@ -1,3 +1,5 @@
+# useReducedMotion
+
 `useReducedMotion` lets you query the reduced motion system setting. You can use it to disable animations.
 
 ## Reference

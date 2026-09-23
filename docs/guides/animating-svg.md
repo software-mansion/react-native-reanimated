@@ -1,3 +1,5 @@
+# Animating SVG
+
 Reanimated can animate [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components - both their geometry (`cx`, `r`, `d`, `points`, ...) and their appearance (`fill`, `stroke`, `opacity`, ...). You can drive them with [inline props](/docs/fundamentals/animating-styles-and-props#animating-props), the [`useAnimatedProps`](/docs/core/useAnimatedProps) hook, or the modern, declarative [CSS animations](/docs/css-animations/animation-name) and [CSS transitions](/docs/css-transitions/transition-property).
 
 > **Info**

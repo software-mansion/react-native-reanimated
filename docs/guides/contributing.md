@@ -1,3 +1,5 @@
+# Contributing
+
 Thank you for your interest in contributing to Reanimated! From triaging and commenting on issues, through extending the documentation, to reviewing and sending Pull Requests, all contributions are more than welcome.
 
 ## Ways to Contribute

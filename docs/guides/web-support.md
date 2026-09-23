@@ -1,3 +1,5 @@
+# Web Support
+
 It's possible to launch Reanimated in a web browser. For that case all of the functionalities are implemented purely in JavaScript, hence the efficiency of the animations might be lower.
 
 ## Example app

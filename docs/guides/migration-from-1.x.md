@@ -1,3 +1,5 @@
+# Migrating from Reanimated 1.x to 2.x
+
 We wanted to make it possible to migrate from Reanimated 1 to Reanimated 2 incrementally.
 When installing Reanimated 2, you will be able to use the old API as well as the new one.
 We made the latest stable Reanimated 1 available from the same package with a few exceptions, as we needed to address some naming collisions.

@@ -4100,6 +4100,8 @@ To enable it, open the Dev Menu (press d in the Metro console, shake the device,
 # URL: https://docs.swmansion.com/react-native-reanimated/docs/device/ReducedMotionConfig
 # Title: ReducedMotionConfig
 
+# ReducedMotionConfig
+
 `ReducedMotionConfig` component let's you change behavior in response to the device's reduced motion accessibility setting. By default it disables all animation when the reduced motion is enabled on a device. You can adjust it for your specific use case. You can learn more about [Accessibility](/docs/guides/accessibility) and [`useReducedMotion`](/docs/device/useReducedMotion) in Reanimated.
 
 > **Caution**
@@ -4481,6 +4483,8 @@ Depending on the sensor type the measurement is a number in radians per second, 
 ---
 # URL: https://docs.swmansion.com/react-native-reanimated/docs/device/useReducedMotion
 # Title: useReducedMotion
+
+# useReducedMotion
 
 `useReducedMotion` lets you query the reduced motion system setting. You can use it to disable animations.
 
@@ -5503,6 +5507,8 @@ function App() {
 # URL: https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg
 # Title: Animating SVG
 
+# Animating SVG
+
 Reanimated can animate [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components - both their geometry (`cx`, `r`, `d`, `points`, ...) and their appearance (`fill`, `stroke`, `opacity`, ...). You can drive them with [inline props](/docs/fundamentals/animating-styles-and-props#animating-props), the [`useAnimatedProps`](/docs/core/useAnimatedProps) hook, or the modern, declarative [CSS animations](/docs/css-animations/animation-name) and [CSS transitions](/docs/css-transitions/transition-property).
 
 > **Info**
@@ -5670,6 +5676,8 @@ On Web, Reanimated drives SVG through CSS, so an attribute animates only if it m
 # URL: https://docs.swmansion.com/react-native-reanimated/docs/guides/building-for-android-on-windows
 # Title: Building for Android on Windows
 
+# Building for Android on Windows
+
 This article provides basic troubleshooting steps for issues that may happen when building React Native apps with Reanimated for Android devices on Windows host machine.
 
 There are many possible errors including, but not limited to:
@@ -5831,6 +5839,8 @@ Looking for the compatibility table for an older major version?
 ---
 # URL: https://docs.swmansion.com/react-native-reanimated/docs/guides/contributing
 # Title: Contributing
+
+# Contributing
 
 Thank you for your interest in contributing to Reanimated! From triaging and commenting on issues, through extending the documentation, to reviewing and sending Pull Requests, all contributions are more than welcome.
 
@@ -6105,6 +6115,8 @@ See you on GitHub! 🎉
 # URL: https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags
 # Title: Feature flags
 
+# Feature flags
+
 Feature flags allow developers to opt-in for experimental changes or opt-out from recent changes that have already been made default. Feature flags serve as a tool for incremental rollout of new implementation without affecting the general stability of the library, allowing to gather feedback from early adopters. There are two types of feature flags: static and dynamic.
 
 > **Info**
@@ -6374,6 +6386,8 @@ To read a dynamic feature flag value in JavaScript, you can use `getDynamicFeatu
 # URL: https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-1.x
 # Title: Migrating from Reanimated 1.x to 2.x
 
+# Migrating from Reanimated 1.x to 2.x
+
 We wanted to make it possible to migrate from Reanimated 1 to Reanimated 2 incrementally.
 When installing Reanimated 2, you will be able to use the old API as well as the new one.
 We made the latest stable Reanimated 1 available from the same package with a few exceptions, as we needed to address some naming collisions.
@@ -6398,12 +6412,16 @@ When using `Easing` imported from `react-native-reanimated` v1, in v2 you should
 # URL: https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-2.x
 # Title: Migrating from Reanimated 2.x to 3.x
 
+# Migrating from Reanimated 2.x to 3.x
+
 Reanimated 3.x doesn't introduce any breaking changes between 2.x and 3.x in terms of the API. All the code you've written in Reanimated v2 API works in 3.x without any changes. However, Reanimated 3.x drops the Reanimated v1 API entirely. For the migration guide between 1.x and 2.x versions please consult [Migration from 1.x to 2.x](/docs/guides/migration-from-1.x.md).
 
 
 ---
 # URL: https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-3.x
 # Title: Migrating from Reanimated 3.x to 4.x
+
+# Migrating from Reanimated 3.x to 4.x
 
 ## Breaking changes
 
@@ -7254,6 +7272,8 @@ See [the accessibility overview](accessibility) to learn more about Reduced Moti
 ---
 # URL: https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support
 # Title: Web Support
+
+# Web Support
 
 It's possible to launch Reanimated in a web browser. For that case all of the functionalities are implemented purely in JavaScript, hence the efficiency of the animations might be lower.
 
@@ -9231,6 +9251,8 @@ keyframe
 # URL: https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-animation-config
 # Title: LayoutAnimationConfig
 
+# LayoutAnimationConfig
+
 `LayoutAnimationConfig` is a component that lets you skip entering and exiting animations.
 
 ## Reference
@@ -9562,6 +9584,8 @@ EntryExitTransition.duration(1000)
 # URL: https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/list-layout-animations
 # Title: List Layout Animations
 
+# List Layout Animations
+
 `itemLayoutAnimation` lets you define a [layout transition](/docs/layout-animations/layout-transitions) that's applied when list items layout changes. You can use one of the [predefined transitions](/docs/layout-animations/layout-transitions#predefined-transitions) like `LinearTransition` or create [your own transition](/docs/layout-animations/custom-animations#custom-layout-transition).
 
 ## Example
@@ -9874,6 +9898,8 @@ An optional shared value to be updated with the scroll offset. If not provided a
 ---
 # URL: https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
 # Title: Shared Element Transitions
+
+# Shared Element Transitions
 
 > **Caution**
 >

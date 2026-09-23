@@ -1,3 +1,5 @@
+# LayoutAnimationConfig
+
 `LayoutAnimationConfig` is a component that lets you skip entering and exiting animations.
 
 ## Reference
