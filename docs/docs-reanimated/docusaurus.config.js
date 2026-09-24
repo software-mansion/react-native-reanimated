@@ -78,6 +78,8 @@ const config = {
   // Change this to /react-native-reanimated/ when deploying to GitHub pages
   baseUrl: '/react-native-reanimated/',
 
+  trailingSlash: true,
+
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'software-mansion', // Usually your GitHub org/user name.
@@ -219,6 +221,235 @@ const config = {
       ],
     ].filter(Boolean),
     require('./plugins/llms-txt'),
+    [
+      '@docusaurus/plugin-client-redirects',
+      /** @type {import('@docusaurus/plugin-client-redirects').Options} */
+      ({
+        redirects: [
+          {
+            from: [
+              '/docs/',
+              '/docs/installation',
+              '/docs/fundamentals/installation',
+              '/docs/next/installation',
+              '/docs/next/fundamentals/installation',
+              '/docs/about',
+              '/docs/about-reanimated.html',
+              '/docs/api',
+            ],
+            to: '/docs/fundamentals/getting-started',
+          },
+          {
+            from: '/docs/1.x.x',
+            to: '/docs/1.x',
+          },
+          {
+            from: '/docs/1.x.x/getting_started',
+            to: '/docs/1.x/getting_started',
+          },
+          {
+            from: '/docs/next/animations',
+            to: '/docs/category/animations',
+          },
+          {
+            from: '/docs/fundamentals/web-support',
+            to: '/docs/guides/web-support',
+          },
+          { from: '/docs/tutorials', to: '/docs/category/guides' },
+          { from: '/docs/devtools', to: '/docs/category/debugging' },
+          {
+            from: [
+              '/docs/api/hooks/useSharedValue',
+              '/docs/next/api/hooks/useSharedValue',
+              '/docs/fundamentals/shared-values',
+              '/docs/shared-values',
+            ],
+            to: '/docs/core/useSharedValue',
+          },
+          {
+            from: [
+              '/docs/api/hooks/useAnimatedStyle',
+              '/docs/next/api/hooks/useAnimatedStyle',
+            ],
+            to: '/docs/core/useAnimatedStyle',
+          },
+          {
+            from: [
+              '/docs/api/hooks/useAnimatedProps',
+              '/docs/next/api/hooks/useAnimatedProps',
+            ],
+            to: '/docs/core/useAnimatedProps',
+          },
+          {
+            from: [
+              '/docs/api/hooks/useDerivedValue',
+              '/docs/next/api/hooks/useDerivedValue',
+            ],
+            to: '/docs/core/useDerivedValue',
+          },
+          {
+            from: [
+              '/docs/api/hooks/useAnimatedRef',
+              '/docs/next/api/hooks/useAnimatedRef',
+            ],
+            to: '/docs/core/useAnimatedRef',
+          },
+          {
+            from: '/docs/api/miscellaneous/cancelAnimation',
+            to: '/docs/core/cancelAnimation',
+          },
+          {
+            from: '/docs/api/miscellaneous/createAnimatedComponent',
+            to: '/docs/core/createAnimatedComponent',
+          },
+          {
+            from: '/docs/api/hooks/useAnimatedSensor',
+            to: '/docs/device/useAnimatedSensor',
+          },
+          {
+            from: '/docs/api/hooks/useAnimatedKeyboard',
+            to: '/docs/device/useAnimatedKeyboard',
+          },
+          {
+            from: '/docs/api/hooks/useReducedMotion',
+            to: '/docs/device/useReducedMotion',
+          },
+          {
+            from: [
+              '/docs/next/api/nativeMethods/scrollTo',
+              '/docs/api/nativeMethods/scrollTo',
+            ],
+            to: '/docs/scroll/scrollTo',
+          },
+          {
+            from: '/docs/api/hooks/useAnimatedScrollHandler',
+            to: '/docs/scroll/useAnimatedScrollHandler',
+          },
+          {
+            from: '/docs/api/hooks/useAnimatedGestureHandler',
+            to: '/docs/fundamentals/handling-gestures',
+          },
+          {
+            from: '/docs/api/nativeMethods/measure',
+            to: '/docs/advanced/measure',
+          },
+          {
+            from: '/docs/api/nativeMethods/setNativeProps',
+            to: '/docs/advanced/setNativeProps',
+          },
+          {
+            from: '/docs/api/nativeMethods/dispatchCommand',
+            to: '/docs/advanced/dispatchCommand',
+          },
+          {
+            from: '/docs/api/hooks/useAnimatedReaction',
+            to: '/docs/advanced/useAnimatedReaction',
+          },
+          {
+            from: '/docs/api/miscellaneous/makeMutable',
+            to: '/docs/advanced/makeMutable',
+          },
+          {
+            from: '/docs/api/miscellaneous/interpolate',
+            to: '/docs/utilities/interpolate',
+          },
+          {
+            from: [
+              '/docs/api/miscellaneous/interpolateColor',
+              '/docs/api/miscellaneous/interpolateColors',
+            ],
+            to: '/docs/utilities/interpolateColor',
+          },
+          {
+            from: [
+              '/docs/api/animations/withSpring',
+              '/docs/api/withSpring',
+              '/docs/next/api/animations/withSpring',
+            ],
+            to: '/docs/animations/withSpring',
+          },
+          {
+            from: [
+              '/docs/api/animations/withSequence',
+              '/docs/api/withSequence',
+              '/docs/next/api/animations/withSequence',
+            ],
+            to: '/docs/animations/withSequence',
+          },
+          {
+            from: [
+              '/docs/api/animations/withRepeat',
+              '/docs/api/withRepeat',
+              '/docs/next/api/animations/withRepeat',
+            ],
+            to: '/docs/animations/withRepeat',
+          },
+          {
+            from: [
+              '/docs/api/animations/withDelay',
+              '/docs/api/withDelay',
+              '/docs/next/api/animations/withDelay',
+            ],
+            to: '/docs/animations/withDelay',
+          },
+          {
+            from: [
+              '/docs/api/animations/withTiming',
+              '/docs/api/withTiming',
+              '/docs/next/api/withTiming',
+              '/docs/next/api/animations/withTiming',
+            ],
+            to: '/docs/animations/withTiming',
+          },
+          {
+            from: [
+              '/docs/api/animations/withDecay',
+              '/docs/api/withDecay',
+              '/docs/next/api/animations/withDecay',
+            ],
+            to: '/docs/animations/withDecay',
+          },
+          {
+            from: '/docs/fundamentals/animations',
+            to: '/docs/category/animations',
+          },
+          {
+            from: [
+              '/docs/api/LayoutAnimations/layoutTransitions',
+              '/docs/fundamentals/layout_animations',
+            ],
+            to: '/docs/layout-animations/layout-transitions',
+          },
+          {
+            from: [
+              '/docs/api/LayoutAnimations/entryAnimations',
+              '/docs/api/LayoutAnimations/exitAnimations',
+            ],
+            to: '/docs/layout-animations/entering-exiting-animations',
+          },
+          {
+            from: '/docs/api/LayoutAnimations/keyframeAnimations',
+            to: '/docs/layout-animations/keyframe-animations',
+          },
+          {
+            from: '/docs/api/LayoutAnimations/customAnimations',
+            to: '/docs/layout-animations/custom-animations',
+          },
+          {
+            from: ['/docs/api/layout-animations', '/docs/api/LayoutAnimations'],
+            to: '/docs/category/layout-animations',
+          },
+          {
+            from: '/docs/api/sharedElementTransitions',
+            to: '/docs/shared-element-transitions/overview',
+          },
+          {
+            from: '/docs/next/category/css-animations',
+            to: '/docs/category/css-animations',
+          },
+        ],
+      }),
+    ],
     function svgModulePlugin() {
       return {
         name: 'svg-module-plugin',

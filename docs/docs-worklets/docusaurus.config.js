@@ -76,6 +76,8 @@ const config = {
 
   baseUrl: '/react-native-worklets/',
 
+  trailingSlash: true,
+
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'software-mansion', // Usually your GitHub org/user name.
