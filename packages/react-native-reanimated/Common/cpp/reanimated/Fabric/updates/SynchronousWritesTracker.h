@@ -5,6 +5,7 @@
 #include <react/renderer/components/root/RootShadowNode.h>
 #include <react/renderer/core/ShadowNodeFamily.h>
 
+#include <atomic>
 #include <cstdint>
 #include <deque>
 #include <memory>
@@ -21,10 +22,15 @@ namespace reanimated {
 // that the platform can write their current values again after a mount.
 class SynchronousWritesTracker {
  public:
+  // `reportedRootIsMounted` is true on a platform that reports a mount only after the mount items of the reported
+  // root ran.
+  explicit SynchronousWritesTracker(bool reportedRootIsMounted);
+
   void onCommit(const RootShadowNode::Shared &rootShadowNode, bool carriesRegistryValues);
   void onSynchronousWrite(const UpdatesBatch &synchronousUpdatesBatch);
   void onMountReport(const RootShadowNode::Shared &mountedRootShadowNode);
   void onSurfaceStop(SurfaceId surfaceId);
+  bool hasWorkForMountCallback() const;
   std::vector<ShadowNodeFamily::Shared> getFamiliesToRewrite() const;
   void onRewrite();
 
@@ -51,6 +57,12 @@ class SynchronousWritesTracker {
     std::unordered_map<Tag, Write> writes;
   };
 
+  static bool hasUnmountedRoot(const std::deque<CommittedRoot> &committedRoots);
+  static void settle(Surface &surface);
+  void refreshWorkFlag();
+
+  const bool reportedRootIsMounted_;
+  std::atomic<bool> hasWorkForMountCallback_{false};
   mutable std::mutex mutex_;
   std::unordered_map<SurfaceId, Surface> surfaces_;
 };
