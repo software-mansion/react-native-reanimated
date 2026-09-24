@@ -8,6 +8,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { interpolateColor } from 'react-native-reanimated/src';
 
 // TODO: sync `text` prop updates back to React as `children` prop
 
@@ -44,13 +45,25 @@ export default function EmptyExample() {
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      fontSize: interpolate(sv.value, [0, 1], [10, 20]),
+      fontSize: Math.round(interpolate(sv.value, [0, 1], [10, 20])* 5) / 5,
     };
   });
 
   const [show, setShow] = useState(false);
 
   const [, setCount] = useState(0);
+
+  const colorStyle = useAnimatedStyle(() => {
+      return {
+        color: interpolateColor(
+          sv.value,
+          [0, 1],
+          ['black', 'white']
+        ),
+        backgroundColor: interpolateColor(sv.value, [0, 1], ["pink", "black"]),
+        fontSize: 8 + sv.value * 32
+      };
+    });
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -69,7 +82,7 @@ export default function EmptyExample() {
         <Text>Before</Text>
         <Animated.Text
           text={textSv}
-          style={[styles.tabularNums, styles.color0]}
+          style={[styles.tabularNums, colorStyle]}
         />
         <Text>After</Text>
       </View>

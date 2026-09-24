@@ -1,24 +1,58 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
+#include <react/debug/react_native_assert.h>
+
+#include <cstring>
 #include <memory>
+#include <optional>
 #include <ranges>
+#include <string>
 #include <utility>
 
 namespace reanimated {
 
-Props::Shared
-mergeProps(const ShadowNode &shadowNode, const PropsMap &propsMap, const ShadowNodeFamily::Shared &family) {
+namespace {
+
+bool isTextComponent(const ShadowNode &shadowNode) {
+  return !strcmp(shadowNode.getComponentName(), "Paragraph") || !strcmp(shadowNode.getComponentName(), "Text");
+}
+
+std::optional<std::string> extractTextProp(
+    const std::vector<RawProps> &propsVector,
+    std::vector<RawProps> &strippedProps) {
+  std::optional<std::string> text;
+  for (const auto &props : propsVector) {
+    auto propsDynamic = props.toDynamic();
+    if (const auto *textProp = propsDynamic.get_ptr("text")) {
+      text = textProp->asString();
+      propsDynamic.erase("text");
+    }
+    if (!propsDynamic.empty()) {
+      strippedProps.emplace_back(std::move(propsDynamic));
+    }
+  }
+  return text;
+}
+
+std::shared_ptr<const ShadowNode> cloneRawTextWithNewText(const ShadowNode &rawTextNode, const std::string &text) {
+  react_native_assert(!strcmp(rawTextNode.getComponentName(), "RawText"));
+  PropsParserContext propsParserContext{rawTextNode.getSurfaceId(), *rawTextNode.getContextContainer()};
+  auto newProps = rawTextNode.getComponentDescriptor().cloneProps(
+      propsParserContext, rawTextNode.getProps(), RawProps(folly::dynamic::object("text", text)));
+  return rawTextNode.clone({newProps, ShadowNodeFragment::childrenPlaceholder(), rawTextNode.getState()});
+}
+
+} // namespace
+
+Props::Shared mergeProps(const ShadowNode &shadowNode, const std::vector<RawProps> &propsVector) {
   ReanimatedSystraceSection s("ShadowTreeCloner::mergeProps");
 
-  const auto it = propsMap.find(family);
-
-  if (it == propsMap.end()) {
+  if (propsVector.empty()) {
     return ShadowNodeFragment::propsPlaceholder();
   }
 
   PropsParserContext propsParserContext{shadowNode.getSurfaceId(), *shadowNode.getContextContainer()};
-  const auto &propsVector = it->second;
   auto newProps = shadowNode.getProps();
 
 #ifdef ANDROID
@@ -52,8 +86,23 @@ std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
     }
   }
 
+  Props::Shared newProps = ShadowNodeFragment::propsPlaceholder();
+  const auto propsIt = propsMap.find(family);
+  if (propsIt != propsMap.end()) {
+    if (isTextComponent(shadowNode)) {
+      std::vector<RawProps> strippedProps;
+      if (const auto text = extractTextProp(propsIt->second, strippedProps)) {
+        react_native_assert(!children.empty());
+        children[0] = cloneRawTextWithNewText(*children[0], *text);
+      }
+      newProps = mergeProps(shadowNode, strippedProps);
+    } else {
+      newProps = mergeProps(shadowNode, propsIt->second);
+    }
+  }
+
   return shadowNode.clone(
-      {mergeProps(shadowNode, propsMap, family),
+      {newProps,
        std::make_shared<std::vector<std::shared_ptr<const ShadowNode>>>(children),
        shadowNode.getState(),
        false});

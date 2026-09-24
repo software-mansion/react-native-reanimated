@@ -481,6 +481,11 @@ export default class AnimatedComponent
           .join('');
         filteredProps.children = normalizeTextProp(this._initialTextChildren);
       }
+      if (this.state.settledProps?.text !== undefined) {
+        filteredProps.children = normalizeTextProp(
+          this.state.settledProps.text
+        );
+      }
     }
 
     // TODO: Remove need for this \/\/\/\/.
