@@ -22,6 +22,18 @@ function isInlineStyleTransform(transform: unknown): boolean {
   return transform.some((t: Record<string, unknown>) => hasInlineStyles(t));
 }
 
+function areInlineValuesEqual(value1: unknown, value2: unknown): boolean {
+  if (Array.isArray(value1) && Array.isArray(value2)) {
+    // Arrays (e.g. mixed children of <Animated.Text>) are recreated on each
+    // render, so we compare their elements instead of the array identity.
+    return (
+      value1.length === value2.length &&
+      value1.every((element, index) => element === value2[index])
+    );
+  }
+  return value1 === value2;
+}
+
 function inlinePropsHasChanged(
   props1: UnknownRecord,
   props2: UnknownRecord
@@ -31,7 +43,7 @@ function inlinePropsHasChanged(
   }
 
   for (const key of Object.keys(props1)) {
-    if (props1[key] !== props2[key]) {
+    if (!areInlineValuesEqual(props1[key], props2[key])) {
       return true;
     }
   }
@@ -142,6 +154,22 @@ export class InlinePropManager implements IInlinePropManager {
   ) {
     const { inlineStyleProps, inlineTopLevelProps } =
       extractSharedValuesMapFromProps(animatedComponent.props);
+
+    if (animatedComponent.ChildComponent.displayName === 'Text') {
+      const children = (animatedComponent.props as { children?: unknown })
+        .children;
+      delete inlineTopLevelProps.children;
+      if (isSharedValue(children)) {
+        // A shared value passed as children of <Animated.Text> animates the
+        // text content like the `text` prop, so we send its updates as `text`.
+        inlineTopLevelProps.text = children;
+      } else if (Array.isArray(children) && children.some(isSharedValue)) {
+        // Mixed children (e.g. <Animated.Text>Before {sv} After</Animated.Text>)
+        // are joined into a single `text` update in the updater function.
+        inlineTopLevelProps.text = children;
+      }
+    }
+
     const hasChanged =
       inlinePropsHasChanged(inlineStyleProps, this._inlineStyleProps) ||
       inlinePropsHasChanged(inlineTopLevelProps, this._inlineTopLevelProps);
@@ -173,15 +201,19 @@ export class InlinePropManager implements IInlinePropManager {
           );
         }
         if (hasInlineTopLevelProps) {
+          const propsUpdate = getInlinePropsUpdate(
+            inlineTopLevelProps
+          ) as StyleProps;
+          if (Array.isArray(propsUpdate.text)) {
+            // Mixed children of <Animated.Text> - join the static parts with
+            // the current values of the shared values into a single string
+            propsUpdate.text = propsUpdate.text.join('');
+          }
           // Shared values passed directly as top-level props are animated
           // props, not styles — process them like `useAnimatedProps` updates
           // (in particular, don't run them through the style props builder,
           // which drops non-style keys).
-          updateProps(
-            shareableViewDescriptors,
-            getInlinePropsUpdate(inlineTopLevelProps) as StyleProps,
-            true
-          );
+          updateProps(shareableViewDescriptors, propsUpdate, true);
         }
       };
       this._inlineStyleProps = inlineStyleProps;
