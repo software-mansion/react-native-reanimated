@@ -94,6 +94,13 @@ export default function createPropsBuilder<
           continue;
         }
 
+        // null resets the prop, the same as in React Native, so there is
+        // nothing to process.
+        if (value === null) {
+          result[property] = null;
+          continue;
+        }
+
         let processedValue;
         try {
           processedValue = processStyleValue(configValue, value, context);

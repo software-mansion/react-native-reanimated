@@ -60,6 +60,17 @@ describe(processStylePropInPlace, () => {
     expect(warn).toHaveBeenCalledTimes(1);
   });
 
+  test('keeps null without processing it', () => {
+    const props = { backgroundColor: null };
+
+    processStylePropInPlace(props, 'backgroundColor', () => {
+      throw new Error('[Reanimated] should not be called');
+    });
+
+    expect(props).toEqual({ backgroundColor: null });
+    expect(warn).not.toHaveBeenCalled();
+  });
+
   test('keeps an undefined result, which clears the prop', () => {
     const props = { boxShadow: 'none' };
 

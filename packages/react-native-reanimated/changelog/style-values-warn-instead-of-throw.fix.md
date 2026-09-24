@@ -1,1 +1,1 @@
-Ignore invalid style values instead of throwing, which could crash the app from the UI runtime, and warn about them in development. An invalid `filter` now keeps the current filter instead of clearing it.
+Ignore invalid style values instead of throwing, which could crash the app from the UI runtime, and warn about them in development. An invalid `filter` now keeps the current filter instead of clearing it, and `null` resets a style property like in React Native instead of being rejected.
