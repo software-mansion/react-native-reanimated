@@ -11,6 +11,7 @@ import android.view.View
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UIManager
 import com.facebook.react.bridge.UIManagerListener
+import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.uimanager.IllegalViewOperationException
@@ -50,7 +51,11 @@ internal class CSSPlatformTransitionsManager(
 
             override fun didDispatchMountItems(uiManager: UIManager) = Unit
 
-            override fun didScheduleMountItems(uiManager: UIManager) = Unit
+            override fun didScheduleMountItems(uiManager: UIManager) {
+                // The pull model executes the transaction on the UI thread right after this
+                // call, without going through willMountItems.
+                if (UiThreadUtil.isOnUiThread()) commands.drain()
+            }
         }
 
     init {
@@ -191,7 +196,6 @@ internal class CSSPlatformTransitionsManager(
         }
     }
 
-    /** [settle] lands a committed target; a hand-off to the loop keeps the last written frame. */
     fun removeTransition(
         viewTag: Int,
         propertyId: Int,
@@ -217,7 +221,7 @@ internal class CSSPlatformTransitionsManager(
     ) {
         pendingStarts.remove(key)
         val running = animators.remove(key) ?: return
-        // A held value has no committed target behind it, so it keeps its last frame.
+        // A persistent value has no committed style behind it, so it keeps its last frame.
         if (settle && !running.persistent) running.animator.end() else running.animator.cancel()
     }
 
@@ -338,7 +342,7 @@ internal class CSSPlatformTransitionsManager(
         repairClobberedValues()
         // Retiring while idle leaves the next start with only its posted message to beat the
         // draw that React's commit triggers, and losing that race shows the committed target
-        // for a frame. Both calls above are no-ops while nothing is queued or running.
+        // for a frame. The calls above are no-ops while nothing is queued or running.
         return !invalidated
     }
 
