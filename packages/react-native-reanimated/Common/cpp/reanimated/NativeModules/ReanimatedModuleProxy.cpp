@@ -1375,6 +1375,7 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
       [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
+          // Callers expect a boolean, so a torn-down module reports no sensor.
           return jsi::Value(false);
         }
         return strongThis->isSensorAvailable(rt, at<0>(args));
