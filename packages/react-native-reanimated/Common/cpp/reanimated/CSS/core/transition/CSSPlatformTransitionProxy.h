@@ -81,7 +81,11 @@ class CSSPlatformTransitionProxy {
       const CSSTransitionPropertySettings *settings,
       bool persistent,
       double timestamp);
+  /// `settle` lands the property on its committed target; see the backend.
   void remove(Tag viewTag, const std::string &propertyName, bool settle);
+  /// Hands the property to the loop: returns what the native run shows at
+  /// `timestamp` (nullopt when nothing is in flight) and stops it on that frame.
+  std::optional<PlatformValue> releaseToLoop(Tag viewTag, const std::string &propertyName, double timestamp);
 
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
   /// What the native animation shows at `timestamp`, retraced from the stored run.

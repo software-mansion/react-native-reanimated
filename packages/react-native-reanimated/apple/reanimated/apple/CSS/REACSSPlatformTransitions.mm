@@ -112,7 +112,9 @@ using namespace reanimated::css;
     }
     // Without settle (a hand-off to the loop, or a view leaving the tree) the last
     // visible frame goes into the model so the layer doesn't snap. A held (persistent)
-    // value has no committed target in the model, so it keeps its frame as well.
+    // value has no committed target in the model, so it keeps its frame as well. The
+    // live animation decides, not the proxy's record: a start queued from the JS
+    // thread can land after an inline pseudo start and replace the held one.
     CAAnimation *animation = [layer animationForKey:keyPath];
     BOOL held = animation != nil && !animation.removedOnCompletion;
     if (!settle || held) {

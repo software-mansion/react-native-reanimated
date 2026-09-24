@@ -91,6 +91,14 @@ void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &pr
   }
 }
 
+std::optional<PlatformValue>
+CSSPlatformTransitionProxy::releaseToLoop(const Tag viewTag, const std::string &propertyName, const double timestamp) {
+  // Read before remove() drops the run this resumes from.
+  const auto resumeFrom = getCurrentValue(viewTag, propertyName, timestamp);
+  remove(viewTag, propertyName, false);
+  return resumeFrom;
+}
+
 std::optional<PlatformValue> CSSPlatformTransitionProxy::getCurrentValue(
     const Tag viewTag,
     const std::string &propertyName,
@@ -140,16 +148,16 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
       }
       routing.platform.insert(propertyName);
     } else {
-      // platform -> loop migration cancels on the platform side.
-      // Sampled before remove() drops the run this resumes from; nullopt keeps the
-      // diff's own from-value, which the animation has painted past. Without a new value
-      // the loop has nothing to resume, so the property lands on its committed value.
+      // platform -> loop migration cancels on the platform side. nullopt keeps the
+      // diff's own from-value, which the animation has painted past. Without a new
+      // value the loop has nothing to resume, so the property lands on its committed value.
       std::optional<PlatformValue> resumeFrom;
       if (routing.platform.erase(propertyName) > 0) {
         if (hasValue) {
-          resumeFrom = getCurrentValue(viewTag, propertyName, timestamp);
+          resumeFrom = releaseToLoop(viewTag, propertyName, timestamp);
+        } else {
+          remove(viewTag, propertyName, true);
         }
-        remove(viewTag, propertyName, !hasValue);
       }
       routing.loop.insert(propertyName);
       if (hasValue) {
@@ -198,9 +206,7 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
         }
       }
       routing.platform.erase(propertyName);
-      // Read before remove() drops the run this resumes from.
-      const auto resumeFrom = getCurrentValue(viewTag, propertyName, timestamp);
-      remove(viewTag, propertyName, false);
+      const auto resumeFrom = releaseToLoop(viewTag, propertyName, timestamp);
       routing.loop.insert(propertyName);
       if (resumeFrom) {
         loopDiffs.emplace(propertyName, std::make_pair(platformValueToDynamic(*resumeFrom), propertyDiff.second));
