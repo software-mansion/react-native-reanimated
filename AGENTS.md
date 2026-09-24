@@ -8,6 +8,7 @@ Facts that are true on `main` and that agents otherwise re-discover in every ses
 - Node from `.nvmrc`, Ruby from `.ruby-version`, CocoaPods through bundler: `bundle exec pod install`. CI rejects a `Podfile.lock` written by a different CocoaPods version.
 - Husky refuses commits and pushes on `main`. Work on a branch.
 - Formatters: oxfmt (JS/TS), remark (`yarn format:md`, CI fails on any diff), clang-format (C++/ObjC), cmake-format, spotless (Kotlin/Java). Prettier is not used.
+- Oxlint lints JS/TS with type-aware rules, so tsconfigs must not use `baseUrl`. Nested `.oxlintrc.json` files must `extends` the root one.
 - Use the existing scripts (root `scripts/`, per-package `scripts/`, `scripts` in each `package.json`). Do not invent ad-hoc build or test scripts.
 
 ## Layout
@@ -113,7 +114,7 @@ yarn workspace fabric-example runtime-tests --library worklets --platform ios --
 - New native binding: `Common/cpp`, then `android/src/main/cpp`, Kotlin (if exposed), `apple/`, then `src/` TS (`workletsModuleProxy.ts`, `privateGlobals.d.ts`, `mock.ts`).
 - Worklets public API change: grep `packages/react-native-reanimated/src`, the largest consumer.
 - Babel plugin change: run `plugin/__tests__`, rebuild `plugin/index.js`, rebuild both packages.
-- Any package change needs a `CHANGELOG.md` entry under `## Unpublished`: `- Description. ([#N](pr-url) by [@user](profile-url))`. `changelog-check` is always red on `*-stable` branches. Ignore it there.
+- Any package change needs a new changelog fragment `packages/<pkg>/changelog/<slug>.<breaking|feature|fix|other>.md` that holds one sentence. Write the file directly, or run `yarn workspace <react-native-reanimated|react-native-worklets> changelog:add --type <type> --message '<One sentence>'`. Use single quotes, because the shell runs backticks inside double quotes. Do not write the PR link or the author (the optional lines `pr: <number>` and `by: @user1, @user2` exist for the cases that the release script cannot resolve), and do not edit `CHANGELOG.md`: `yarn changelog:squash` fills it at release. On stable branches older than `4.7-stable` and `worklets-0.13-stable`, `changelog-check` uses the old layout and is always red. Ignore it there. On newer stable branches, a red check means that the cherry-pick lost its fragment.
 - Docs-visible API change: update `docs/docs-reanimated` and/or `docs/docs-worklets`.
 - Do not commit changes to the playground files `apps/common-app/src/apps/reanimated/examples/EmptyExample.tsx` and `apps/common-app/src/apps/css/examples/animations/screens/testExamples/Playground.tsx`.
 - PR template: `.github/PULL_REQUEST_TEMPLATE.md` (Summary, Test plan).
