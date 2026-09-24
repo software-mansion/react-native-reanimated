@@ -5,7 +5,6 @@
 
 + (bool)isAvailable:(ReanimatedSensorType)sensorType
 {
-  // Availability is a property of the device, so one manager answers for every sensor.
   static CMMotionManager *motionManager;
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{ motionManager = [[CMMotionManager alloc] init]; });

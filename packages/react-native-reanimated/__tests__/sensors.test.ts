@@ -35,7 +35,6 @@ jest.mock('../src/core', () => {
 
 type SensorResult = ReturnType<typeof useAnimatedSensor>;
 
-// Records the result of every render of the hook.
 function renderSensorHook<Props>(
   useSensor: (props: Props) => SensorResult,
   options?: { initialProps?: Props; wrapper?: typeof StrictMode }
@@ -381,7 +380,6 @@ describe('Sensors', () => {
       { wrapper: StrictMode }
     );
 
-    // Strict Mode mounts the effect, cleans it up and mounts it again.
     expect(registerSensor).toHaveBeenCalledTimes(2);
     expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1]]);
 
