@@ -1,30 +1,5 @@
 import { SensorType } from '../src';
-import { ReanimatedModule } from '../src/ReanimatedModule';
 import { createJSReanimatedModule } from '../src/ReanimatedModule/js-reanimated';
-import { SensorContainer } from '../src/SensorContainer';
-
-describe('SensorContainer', () => {
-  test('asks the platform about each sensor type once', () => {
-    const isSensorAvailable = jest
-      .spyOn(ReanimatedModule, 'isSensorAvailable')
-      .mockImplementation(
-        (sensorType) => sensorType === (SensorType.ACCELEROMETER as number)
-      );
-    const sensorContainer = new SensorContainer();
-
-    expect(sensorContainer.isSensorAvailable(SensorType.ACCELEROMETER)).toBe(
-      true
-    );
-    expect(sensorContainer.isSensorAvailable(SensorType.GYROSCOPE)).toBe(false);
-    expect(sensorContainer.isSensorAvailable(SensorType.ACCELEROMETER)).toBe(
-      true
-    );
-    expect(sensorContainer.isSensorAvailable(SensorType.GYROSCOPE)).toBe(false);
-
-    expect(isSensorAvailable).toHaveBeenCalledTimes(2);
-    isSensorAvailable.mockRestore();
-  });
-});
 
 describe('JSReanimated', () => {
   afterEach(() => {
@@ -40,5 +15,14 @@ describe('JSReanimated', () => {
 
     expect(module.isSensorAvailable(SensorType.ACCELEROMETER)).toBe(true);
     expect(module.isSensorAvailable(SensorType.GYROSCOPE)).toBe(false);
+  });
+
+  test('has no hinge sensor', () => {
+    const module = createJSReanimatedModule();
+
+    expect(module.isSensorAvailable(SensorType.HINGE)).toBe(false);
+    expect(
+      module.registerSensor(SensorType.HINGE, -1, 0, jest.fn() as never)
+    ).toBe(-1);
   });
 });

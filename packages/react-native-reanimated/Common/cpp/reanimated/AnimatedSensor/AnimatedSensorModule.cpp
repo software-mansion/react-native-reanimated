@@ -54,6 +54,9 @@ jsi::Value AnimatedSensorModule::registerSensor(
           value.setProperty(uiRuntime, "yaw", newValues[4]);
           value.setProperty(uiRuntime, "pitch", newValues[5]);
           value.setProperty(uiRuntime, "roll", newValues[6]);
+        } else if (sensorType == SensorType::HINGE) {
+          value.setProperty(uiRuntime, "angle", newValues[0]);
+          value.setProperty(uiRuntime, "status", newValues[1]);
         } else {
           value.setProperty(uiRuntime, "x", newValues[0]);
           value.setProperty(uiRuntime, "y", newValues[1]);
