@@ -1,5 +1,5 @@
 'use strict';
-import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import type {
   AnimatedSensor,
@@ -94,15 +94,6 @@ const NOOP = () => {
   // NOOP
 };
 
-// The sensors of a device do not change while the app runs, so there is
-// nothing to subscribe to.
-const subscribeToAvailability = () => NOOP;
-
-// There are no sensors on the server. React uses this value during hydration
-// too, so the hydrated markup matches the server markup, and then renders
-// again with the value for the device.
-const getServerAvailability = () => false;
-
 /**
  * Lets you create animations based on data from the device's sensors.
  *
@@ -141,10 +132,9 @@ export function useAnimatedSensor(
 
   // Ask the platform during render, so that the first render already reports
   // whether the device has the sensor.
-  const isAvailable = useSyncExternalStore(
-    subscribeToAvailability,
+  const isAvailable = useMemo(
     () => isSensorAvailable(sensorType),
-    getServerAvailability
+    [sensorType]
   );
 
   const sensor = useMemo(
