@@ -16,7 +16,6 @@ env:
   TRIGGER_LABEL: argent-cloud
   HELPER_DIR: .github/workflows/helper/argent-cloud-issue-repro
   WORK_DIR: argent-cloud-work
-  REPORTS_REPO: software-mansion-labs/reanimated-argent-cloud
 
 jobs:
   plan:
@@ -160,12 +159,41 @@ jobs:
           REPORT_FILE: ${{ env.WORK_DIR }}/report.md
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts report
 
+      - name: Resolve the reports repository
+        if: steps.plan.outputs.feasible != 'true'
+        env:
+          REPO: ${{ secrets.ARGENT_CLOUD_REPORTS_REPO }}
+        run: |
+          repo="${REPO#https://github.com/}"
+          repo="${repo%.git}"
+          repo="${repo%/}"
+          if [ -z "$repo" ] || [ "${repo#*/}" = "$repo" ]; then
+            echo "::error::ARGENT_CLOUD_REPORTS_REPO must be 'owner/name' or a github.com repository URL"
+            exit 1
+          fi
+          {
+            echo "REPORTS_REPO=$repo"
+            echo "REPORTS_OWNER=${repo%%/*}"
+            echo "REPORTS_NAME=${repo#*/}"
+          } >> "$GITHUB_ENV"
+
+      - name: Mint a token for the reports repository
+        id: reports-token
+        if: steps.plan.outputs.feasible != 'true'
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          app-id: ${{ secrets.ARGENT_CLOUD_REPORTS_APP_ID }}
+          private-key: ${{ secrets.ARGENT_CLOUD_REPORTS_APP_PRIVATE_KEY }}
+          owner: ${{ env.REPORTS_OWNER }}
+          repositories: ${{ env.REPORTS_NAME }}
+          permission-issues: write
+
       - name: Publish the report
         id: publish
         if: steps.plan.outputs.feasible != 'true'
         env:
           REPORTS_REPO: ${{ env.REPORTS_REPO }}
-          REPORTS_TOKEN: ${{ secrets.ARGENT_CLOUD_REPORTS_TOKEN }}
+          REPORTS_TOKEN: ${{ steps.reports-token.outputs.token }}
           RUN_ID: ${{ github.run_id }}
           REPORT_FILE: ${{ env.WORK_DIR }}/report.md
           ISSUE_TITLE: ${{ github.event.issue.title }}
@@ -280,12 +308,41 @@ jobs:
           REPORT_FILE: ${{ env.WORK_DIR }}/report.md
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts report
 
+      - name: Resolve the reports repository
+        if: failure()
+        env:
+          REPO: ${{ secrets.ARGENT_CLOUD_REPORTS_REPO }}
+        run: |
+          repo="${REPO#https://github.com/}"
+          repo="${repo%.git}"
+          repo="${repo%/}"
+          if [ -z "$repo" ] || [ "${repo#*/}" = "$repo" ]; then
+            echo "::error::ARGENT_CLOUD_REPORTS_REPO must be 'owner/name' or a github.com repository URL"
+            exit 1
+          fi
+          {
+            echo "REPORTS_REPO=$repo"
+            echo "REPORTS_OWNER=${repo%%/*}"
+            echo "REPORTS_NAME=${repo#*/}"
+          } >> "$GITHUB_ENV"
+
+      - name: Mint a token for the reports repository
+        id: reports-token
+        if: failure()
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          app-id: ${{ secrets.ARGENT_CLOUD_REPORTS_APP_ID }}
+          private-key: ${{ secrets.ARGENT_CLOUD_REPORTS_APP_PRIVATE_KEY }}
+          owner: ${{ env.REPORTS_OWNER }}
+          repositories: ${{ env.REPORTS_NAME }}
+          permission-issues: write
+
       - name: Publish the report
         id: publish
         if: failure()
         env:
           REPORTS_REPO: ${{ env.REPORTS_REPO }}
-          REPORTS_TOKEN: ${{ secrets.ARGENT_CLOUD_REPORTS_TOKEN }}
+          REPORTS_TOKEN: ${{ steps.reports-token.outputs.token }}
           RUN_ID: ${{ github.run_id }}
           REPORT_FILE: ${{ env.WORK_DIR }}/report.md
           ISSUE_TITLE: ${{ github.event.issue.title }}
@@ -444,12 +501,41 @@ jobs:
           REPORT_FILE: ${{ env.WORK_DIR }}/report.md
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts report
 
+      - name: Resolve the reports repository
+        if: always()
+        env:
+          REPO: ${{ secrets.ARGENT_CLOUD_REPORTS_REPO }}
+        run: |
+          repo="${REPO#https://github.com/}"
+          repo="${repo%.git}"
+          repo="${repo%/}"
+          if [ -z "$repo" ] || [ "${repo#*/}" = "$repo" ]; then
+            echo "::error::ARGENT_CLOUD_REPORTS_REPO must be 'owner/name' or a github.com repository URL"
+            exit 1
+          fi
+          {
+            echo "REPORTS_REPO=$repo"
+            echo "REPORTS_OWNER=${repo%%/*}"
+            echo "REPORTS_NAME=${repo#*/}"
+          } >> "$GITHUB_ENV"
+
+      - name: Mint a token for the reports repository
+        id: reports-token
+        if: always()
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          app-id: ${{ secrets.ARGENT_CLOUD_REPORTS_APP_ID }}
+          private-key: ${{ secrets.ARGENT_CLOUD_REPORTS_APP_PRIVATE_KEY }}
+          owner: ${{ env.REPORTS_OWNER }}
+          repositories: ${{ env.REPORTS_NAME }}
+          permission-issues: write
+
       - name: Publish the report
         id: publish
         if: always()
         env:
           REPORTS_REPO: ${{ env.REPORTS_REPO }}
-          REPORTS_TOKEN: ${{ secrets.ARGENT_CLOUD_REPORTS_TOKEN }}
+          REPORTS_TOKEN: ${{ steps.reports-token.outputs.token }}
           RUN_ID: ${{ github.run_id }}
           REPORT_FILE: ${{ env.WORK_DIR }}/report.md
           ISSUE_TITLE: ${{ github.event.issue.title }}

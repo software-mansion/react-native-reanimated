@@ -4,6 +4,7 @@ import path from 'node:path';
 import { postToSlack } from './slack.ts';
 
 const GITHUB_BODY_LIMIT = 60_000;
+const GITHUB_TITLE_LIMIT = 256;
 const SUMMARY_LIMIT = 600;
 
 type Stage = 'plan-infeasible' | 'build-failed' | 'reproduce';
@@ -264,7 +265,11 @@ async function publish(context: Context): Promise<void> {
     'Content-Type': 'application/json',
     'X-GitHub-Api-Version': '2022-11-28',
   };
-  const title = `${outcomeLabel(context)}: ${issueLabel(context)} (run ${runId})`;
+  const prefix = `${outcomeLabel(context)}: `;
+  const suffix = ` (run ${runId})`;
+  const room = GITHUB_TITLE_LIMIT - prefix.length - suffix.length;
+  const label = issueLabel(context);
+  const title = `${prefix}${label.length > room ? `${label.slice(0, room - 1)}…` : label}${suffix}`;
   const issue = await githubPost(`${apiUrl}/repos/${repo}/issues`, headers, {
     title,
     body: clampBody(
@@ -273,6 +278,9 @@ async function publish(context: Context): Promise<void> {
     ),
   });
   console.log(`opened ${issue.html_url}`);
+  if (process.env.GITHUB_OUTPUT) {
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `url=${issue.html_url}\n`);
+  }
 
   if (context.stream) {
     const chunks = splitIntoChunks(context.stream, GITHUB_BODY_LIMIT - 200);
@@ -295,10 +303,6 @@ async function publish(context: Context): Promise<void> {
       );
     }
     console.log(`posted the stream in ${chunks.length} comment(s)`);
-  }
-
-  if (process.env.GITHUB_OUTPUT) {
-    fs.appendFileSync(process.env.GITHUB_OUTPUT, `url=${issue.html_url}\n`);
   }
 }
 
