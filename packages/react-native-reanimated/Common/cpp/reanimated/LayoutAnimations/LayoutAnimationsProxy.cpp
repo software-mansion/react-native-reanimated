@@ -410,9 +410,9 @@ void LayoutAnimationsProxy::updateLightTree(
         const auto it = lightNodes_.find(mutation.oldChildShadowView.tag);
         react_native_assert(it != lightNodes_.end() && "Delete mutation for an unknown node");
         const auto state = it->second->state;
-        react_native_assert(
-            (state == UNDEFINED || state == WAITING || state == ANIMATING) && "Delete mutation for an unmounted node");
-        if (state == UNDEFINED) {
+        // View flattening emits a child's Delete after its parent's Remove, which may have already torn the child
+        // down.
+        if (state == UNDEFINED || state == COMPLETED || state == DELETED) {
           const auto node = it->second;
           unmapLightNode(node);
         }
@@ -703,7 +703,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
     react_native_assert(false && "LightNode not found");
     return surfaceId_;
   }
-  nodeIt->second->setExitingState(DEAD);
+  nodeIt->second->setExitingState(COMPLETED);
 
   return surfaceId_;
 }
@@ -755,14 +755,14 @@ void LayoutAnimationsProxy::flushCompletedRemovals(ShadowViewMutationList &filte
       continue;
     }
     const auto nodeIt = lightNodes_.find(tag);
-    if (nodeIt == lightNodes_.end() || nodeIt->second->state != DEAD) {
+    if (nodeIt == lightNodes_.end() || nodeIt->second->state != COMPLETED) {
       continue;
     }
     const auto node = nodeIt->second;
     auto parent = node->parent.lock();
     react_native_assert(parent && "Parent node is nullptr");
     auto index = parent->removeChild(node);
-    react_native_assert(index != -1 && "Dead node not found");
+    react_native_assert(index != -1 && "Completed node not found");
 
     endAnimationsRecursively(node, index, filteredMutations);
     maybeDropAncestors(parent, filteredMutations);
@@ -910,7 +910,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
     index--;
     auto &subNode = *it;
     if (subNode->state != UNDEFINED) {
-      if (shouldAnimate && subNode->state != DEAD) {
+      if (shouldAnimate && subNode->state != COMPLETED) {
         hasAnimatedChildren = true;
       } else {
         endAnimationsRecursively(subNode, index, mutations);

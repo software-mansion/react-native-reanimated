@@ -7,6 +7,7 @@ import Animated, {
   measure,
   useAnimatedRef,
 } from 'react-native-reanimated';
+import { scheduleOnUI } from 'react-native-worklets';
 
 import {
   createTestValue,
@@ -16,7 +17,6 @@ import {
   test,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import { scheduleOnUI } from 'react-native-worklets';
 
 const MEASURED_NOTIFICATION = 'measured';
 
