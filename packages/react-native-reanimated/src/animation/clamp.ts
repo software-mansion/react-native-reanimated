@@ -18,6 +18,7 @@ type withClampType = <T extends number | string>(
   config: {
     min?: T;
     max?: T;
+    reduceMotion?: ReduceMotion;
   },
   clampedAnimation: T
 ) => T;
