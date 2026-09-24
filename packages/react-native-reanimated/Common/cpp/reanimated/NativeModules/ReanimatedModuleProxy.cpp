@@ -877,7 +877,7 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
   applySynchronousUpdates(partitionUpdates(std::move(updatesBatch), true).first);
 }
 
-bool ReanimatedModuleProxy::needsSynchronousPropsRewrite() const {
+bool ReanimatedModuleProxy::hasSynchronousWritesTracker() const {
   return synchronousWritesTracker_ != nullptr;
 }
 

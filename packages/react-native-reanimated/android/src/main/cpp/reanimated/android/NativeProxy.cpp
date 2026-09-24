@@ -138,8 +138,8 @@ void NativeProxy::performNonLayoutOperations() {
   reanimatedModuleProxy_->performNonLayoutOperations();
 }
 
-bool NativeProxy::needsSynchronousPropsRewrite() {
-  return reanimatedModuleProxy_->needsSynchronousPropsRewrite();
+bool NativeProxy::hasSynchronousWritesTracker() {
+  return reanimatedModuleProxy_->hasSynchronousWritesTracker();
 }
 
 void NativeProxy::rewriteSynchronousProps() {
@@ -162,7 +162,7 @@ void NativeProxy::registerNatives() {
        makeNativeMethod("isAnyHandlerWaitingForEvent", NativeProxy::isAnyHandlerWaitingForEvent),
        makeNativeMethod("performOperations", NativeProxy::performOperations),
        makeNativeMethod("performNonLayoutOperations", NativeProxy::performNonLayoutOperations),
-       makeNativeMethod("needsSynchronousPropsRewrite", NativeProxy::needsSynchronousPropsRewrite),
+       makeNativeMethod("hasSynchronousWritesTracker", NativeProxy::hasSynchronousWritesTracker),
        makeNativeMethod("rewriteSynchronousProps", NativeProxy::rewriteSynchronousProps),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp),
        makeNativeMethod("toggleSlowAnimationsOnUIRuntime", NativeProxy::toggleSlowAnimationsOnUIRuntime)});

@@ -187,7 +187,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   const auto &uiManager = scheduler.uiManager;
   react_native_assert(uiManager.get() != nil);
   _reanimatedModuleProxy->initializeFabric(uiManager);
-  if (_reanimatedModuleProxy->needsSynchronousPropsRewrite()) {
+  if (_reanimatedModuleProxy->hasSynchronousWritesTracker()) {
     _synchronousPropsRewriter = [[REASynchronousPropsRewriter alloc] initWithSurfacePresenter:_surfacePresenter
                                                                         reanimatedModuleProxy:_reanimatedModuleProxy];
   }

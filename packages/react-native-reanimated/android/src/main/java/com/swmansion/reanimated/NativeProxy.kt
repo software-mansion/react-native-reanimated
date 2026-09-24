@@ -135,7 +135,7 @@ open class NativeProxy {
         if (BuildConfig.DEBUG) {
             checkCppVersion() // injectCppVersion should be called during initHybrid above
         }
-        if (needsSynchronousPropsRewrite()) {
+        if (hasSynchronousWritesTracker()) {
             @OptIn(UnstableReactNativeAPI::class)
             mFabricUIManager.addUIManagerEventListener(mountListener)
         }
@@ -156,7 +156,7 @@ open class NativeProxy {
 
     external fun performNonLayoutOperations()
 
-    private external fun needsSynchronousPropsRewrite(): Boolean
+    private external fun hasSynchronousWritesTracker(): Boolean
 
     private external fun rewriteSynchronousProps()
 
