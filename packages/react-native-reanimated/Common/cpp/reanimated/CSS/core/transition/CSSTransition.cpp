@@ -109,7 +109,7 @@ void CSSTransition::cancel(const bool settle) {
     loop_->remove(loopTransition_);
   }
   platformTransitionProxy_->cancelAll(getViewTag(), routing_.platform, settle);
-  // The destructor's stop keeps the presented frame, which would undo this settle.
+  // Already stopped: the destructor's stop keeps the presented frame and would undo a settle.
   routing_.platform.clear();
 }
 
