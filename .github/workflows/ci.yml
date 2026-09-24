@@ -187,6 +187,7 @@ jobs:
               - 'packages/react-native-worklets/src/**'
               - 'scripts/patches/**'
               - 'scripts/toggle-bundle-mode.sh'
+              - '.yarn/patches/metro-*.patch'
             runtime-tests-ios-argent:
               - '.github/workflows/ci.yml'
               - '.github/workflows/runtime-tests-ios-argent.yml'
@@ -220,6 +221,7 @@ jobs:
               - 'packages/react-native-worklets/src/**'
               - 'scripts/patches/**'
               - 'scripts/toggle-bundle-mode.sh'
+              - '.yarn/patches/metro-*.patch'
             worklets-plugin-static-check:
               - '.github/workflows/ci.yml'
               - '.github/workflows/worklets-plugin-static-check.yml'
