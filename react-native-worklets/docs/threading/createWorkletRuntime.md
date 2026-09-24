@@ -47,6 +47,7 @@ type WorkletRuntimeConfig = {
   name?: string;
   initializer?: () => void;
   animationQueuePollingRate?: number;
+  enableNetworking?: boolean;
   queue?: 'default' | object | null;
 } & (
   | { enableEventLoop?: boolean; enableLocking?: true }
@@ -80,6 +81,10 @@ Time interval in milliseconds between polling of frame callbacks scheduled by `r
 
 Determines whether to enable the default event loop. Defaults to `true`. Always disabled on runtimes with `enableLocking: false`.
 When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`, `clearImmediate`, and `cancelAnimationFrame`.
+
+##### `enableNetworking`
+
+Determines whether the [networking API](/docs/bundleMode/usage#running-network-requests-in-worklets) - `fetch`, `XMLHttpRequest` and their supporting globals - is installed on the Runtime. Defaults to `true`.
 
 ##### `enableLocking`
 

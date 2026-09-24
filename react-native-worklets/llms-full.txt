@@ -386,21 +386,29 @@ The `importForwarding` API is temporary and will be replaced with a more robust 
 
 ## Running network requests in Worklets
 
-In Bundle Mode, Worklet Runtimes come with a standalone networking module. It's always enabled and doesn't require any configuration beyond the [Bundle Mode setup](/docs/bundleMode/setup).
+In Bundle Mode, Worklet Runtimes come with a standalone networking module, no longer needing a feature flag. It's installed on every Worklet Runtime unless you opt out with [`enableNetworking: false`](/docs/threading/createWorkletRuntime#enablenetworking).
 
-The following APIs are available on Worklet Runtimes:
+```tsx
+const runtime = createWorkletRuntime({ name: 'worker' });
 
-* `fetch`, `Headers`, `Request` and `Response`, provided by the [whatwg-fetch](https://github.com/JakeChampion/fetch) polyfill,
-* `XMLHttpRequest`, including download and upload progress events, `arraybuffer` and `blob` response types, timeouts and aborting. Libraries built on top of `XMLHttpRequest`, such as Axios, work out of the box,
-* `FormData` with string fields, encoded as `multipart/form-data`,
-* `Blob` and `FileReader`, backed by in-memory data,
-* `AbortController` and `AbortSignal`.
+scheduleOnRuntime(runtime, async () => {
+  'worklet';
+  const response = await fetch('https://swmansion.com');
+  console.log(response.status);
+});
+```
 
-The implementation has the following limitations:
+| API | Supported |
+| --- | --- |
+| `fetch`, `Headers`, `Request`, `Response` | ✅ |
+| `XMLHttpRequest` | ✅ |
+| `Blob`, `FileReader` | ✅ |
+| `AbortController`, `AbortSignal` | ✅ | |
+| `FormData` | String fields only, encoded as `multipart/form-data`. |
+| Response streaming | ❌ |
+| `WebSocket` | coming soon |
 
-* Response streaming is not supported. `Response.body` is `undefined` and `XMLHttpRequest.responseText` is only available after the request completes.
-* `FormData` accepts only string values. File parts, such as `{ uri: ... }` objects, are not supported.
-* `WebSocket` is not available.
+Requests are made by the platform's own networking stack, they share the app's cookie storage and its TLS configuration.
 
 ## Reference
 
@@ -1014,7 +1022,7 @@ This feature flags is supposed to improve the visual perception and perceived sm
 
 ### `FETCH_PREVIEW_ENABLED`
 
-**Removed in 0.13.0.** The [fetch API on Worklet Runtimes](/docs/bundleMode/usage#running-network-requests-in-worklets) is now always available in [Bundle Mode](/docs/bundleMode/) and no longer requires a feature flag.
+**Removed in 0.13.0.** The [networking API on Worklet Runtimes](/docs/bundleMode/usage#running-network-requests-in-worklets) is enabled by default in [Bundle Mode](/docs/bundleMode/) and no longer requires a feature flag. To leave it out of a particular runtime, pass [`enableNetworking: false`](/docs/threading/createWorkletRuntime#enablenetworking) to `createWorkletRuntime`.
 
 ### `ENABLE_CROSS_RUNTIME_STACK_TRACES`
 
@@ -2474,6 +2482,7 @@ type WorkletRuntimeConfig = {
   name?: string;
   initializer?: () => void;
   animationQueuePollingRate?: number;
+  enableNetworking?: boolean;
   queue?: 'default' | object | null;
 } & (
   | { enableEventLoop?: boolean; enableLocking?: true }
@@ -2507,6 +2516,10 @@ Time interval in milliseconds between polling of frame callbacks scheduled by `r
 
 Determines whether to enable the default event loop. Defaults to `true`. Always disabled on runtimes with `enableLocking: false`.
 When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`, `clearImmediate`, and `cancelAnimationFrame`.
+
+##### `enableNetworking`
+
+Determines whether the [networking API](/docs/bundleMode/usage#running-network-requests-in-worklets) - `fetch`, `XMLHttpRequest` and their supporting globals - is installed on the Runtime. Defaults to `true`.
 
 ##### `enableLocking`
 
