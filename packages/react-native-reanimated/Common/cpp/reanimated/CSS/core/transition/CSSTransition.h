@@ -74,6 +74,10 @@ class CSSTransition {
   Observer &observer_;
 
   CSSTransitionRouting routing_;
+  /// Latest settings per property, read by both the platform and the loop. Kept
+  /// after a property leaves the transition, for a pseudo toggle to run it with.
+  /// Shared because the loop can tick its transition after this one is gone.
+  const std::shared_ptr<PropertiesSettingsMap> settings_ = std::make_shared<PropertiesSettingsMap>();
   TransitionProperties pseudoLockedProperties_;
   std::shared_ptr<CSSLoopTransition> loopTransition_;
 

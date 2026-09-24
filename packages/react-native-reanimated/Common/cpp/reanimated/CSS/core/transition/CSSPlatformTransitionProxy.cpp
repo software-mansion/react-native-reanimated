@@ -29,24 +29,16 @@ bool CSSPlatformTransitionProxy::apply(
     const std::string &propertyName,
     const PlatformValue &fromValue,
     const PlatformValue &toValue,
-    const CSSTransitionPropertySettings *settings,
+    const CSSTransitionPropertySettings &settings,
     const bool persistent,
     const double timestamp) {
   const ActiveTransition *active = activeTransitionFor(viewTag, propertyName);
 
-  const bool reusesStoredSettings = settings == nullptr;
-  if (reusesStoredSettings && active == nullptr) {
-    return false;
-  }
-  // Copy: the active entry is re-assigned below.
-  const CSSTransitionPropertySettings resolvedSettings = reusesStoredSettings ? active->settings : *settings;
-
   // https://drafts.csswg.org/css-transitions/#reversing
   const bool isReversal = active != nullptr && active->adjustedStart && toValue == *active->adjustedStart;
   TransitionTiming timing = isReversal
-      ? reverseTiming(
-            active->timing, timestamp, resolvedSettings.duration, resolvedSettings.delay, resolvedSettings.easingConfig)
-      : makeTiming(timestamp, resolvedSettings.duration, resolvedSettings.delay, resolvedSettings.easingConfig);
+      ? reverseTiming(active->timing, timestamp, settings.duration, settings.delay, settings.easingConfig)
+      : makeTiming(timestamp, settings.duration, settings.delay, settings.easingConfig);
 
   std::optional<PlatformValue> adjustedStart;
   std::optional<PlatformValue> startValue;
@@ -67,13 +59,12 @@ bool CSSPlatformTransitionProxy::apply(
           toValue,
           timing.duration,
           timing.startTimestamp,
-          resolvedSettings.easingConfig,
+          settings.easingConfig,
           persistent)) {
     return false;
   }
 
-  active_[viewTag][propertyName] =
-      ActiveTransition{adjustedStart, startValue, toValue, std::move(timing), resolvedSettings};
+  active_[viewTag][propertyName] = ActiveTransition{adjustedStart, startValue, toValue, std::move(timing)};
   return true;
 }
 
@@ -123,14 +114,17 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
     }
 #endif // NDEBUG
 
-    bool routable = allowPlatform && canRoute(propertyName, settings.easingConfig);
-    if (routable && hasValue) {
+    // New settings apply to the next run, never to the one in flight, so settings
+    // alone leave a native run as it is.
+    if (!hasValue && routing.platform.contains(propertyName)) {
+      continue;
+    }
+
+    bool routable = hasValue && allowPlatform && canRoute(propertyName, settings.easingConfig);
+    if (routable) {
       const auto values = parsePlatformValues(rt, propertyName, valueIt->second.first, valueIt->second.second);
       // React commits the config path's target, so there is nothing to hold afterwards.
-      routable = values && apply(viewTag, propertyName, values->first, values->second, &settings, false, timestamp);
-    } else if (routable) {
-      // Settings-only: stay on the platform only if already animating there.
-      routable = routing.platform.contains(propertyName);
+      routable = values && apply(viewTag, propertyName, values->first, values->second, settings, false, timestamp);
     }
 
     if (routable) {
@@ -145,9 +139,7 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
       // diff's own from-value, which the animation has painted past.
       std::optional<PlatformValue> resumeFrom;
       if (routing.platform.erase(propertyName) > 0) {
-        if (hasValue) {
-          resumeFrom = getCurrentValue(viewTag, propertyName, timestamp);
-        }
+        resumeFrom = getCurrentValue(viewTag, propertyName, timestamp);
         remove(viewTag, propertyName, false);
       }
       routing.loop.insert(propertyName);
@@ -156,7 +148,6 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
         loopConfig.changedProperties.emplace(
             propertyName, std::make_pair(std::move(fromValue), jsi::Value(rt, valueIt->second.second)));
       }
-      loopConfig.changedPropertiesSettings.emplace(propertyName, settings);
     }
   }
 
@@ -179,6 +170,7 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
 PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
     const Tag viewTag,
     const PropertyValueDynamicDiffsMap &propertyDiffs,
+    const PropertiesSettingsMap &settings,
     const TransitionProperties &pseudoLockedProperties,
     CSSTransitionRouting &routing,
     const bool allowPlatform,
@@ -186,13 +178,16 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
   PropertyValueDynamicDiffsMap loopDiffs;
   for (const auto &[propertyName, propertyDiff] : propertyDiffs) {
     // A platform-routed property keeps animating natively while the platform can
-    // still express the toggled value; otherwise it migrates to the loop.
+    // still express the toggled value and its current settings; otherwise it
+    // migrates to the loop.
     if (routing.platform.contains(propertyName)) {
-      if (allowPlatform) {
+      const auto settingsIt = settings.find(propertyName);
+      if (allowPlatform && settingsIt != settings.end() && canRoute(propertyName, settingsIt->second.easingConfig)) {
         const auto values = parsePlatformValues(propertyName, propertyDiff.first, propertyDiff.second);
         // Releasing the last selector targets the committed style, which needs no hold.
         const bool persistent = pseudoLockedProperties.contains(propertyName);
-        if (values && apply(viewTag, propertyName, values->first, values->second, nullptr, persistent, timestamp)) {
+        if (values &&
+            apply(viewTag, propertyName, values->first, values->second, settingsIt->second, persistent, timestamp)) {
           continue;
         }
       }

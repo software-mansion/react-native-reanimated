@@ -42,16 +42,21 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
     std::erase(config.removedProperties, propertyName);
   }
 
+  for (const auto &[propertyName, settings] : config.changedPropertiesSettings) {
+    (*settings_)[propertyName] = settings;
+  }
+
   // TODO: add support for events reported by the platform itself; until then
   // a view with transition callbacks keeps every property on the loop, where
   // timing and events already pair up.
   auto loopConfig =
       platformTransitionProxy_->processConfig(rt, getViewTag(), config, routing_, eventMask_ == 0, timestamp);
 
-  if (!loopConfig.empty()) {
+  if (!loopConfig.removedProperties.empty()) {
     dropPending(loopConfig.removedProperties);
-    ensureLoopTransition().updateSettings(
-        loopConfig.changedPropertiesSettings, loopConfig.removedProperties, timestamp);
+    if (loopTransition_) {
+      loopTransition_->removeProperties(loopConfig.removedProperties, timestamp);
+    }
   }
 
   // Settings-only configs reconfigure without running.
@@ -72,7 +77,7 @@ folly::dynamic CSSTransition::run(
   const auto timestamp = loop_->resolveTimestamp();
 
   auto loopDiffs = platformTransitionProxy_->processDynamicDiffs(
-      getViewTag(), propertyDiffs, pseudoLockedProperties_, routing_, eventMask_ == 0, timestamp);
+      getViewTag(), propertyDiffs, *settings_, pseudoLockedProperties_, routing_, eventMask_ == 0, timestamp);
   if (loopDiffs.empty() && !loopTransition_) {
     return folly::dynamic::object();
   }
@@ -136,6 +141,7 @@ CSSLoopTransition &CSSTransition::ensureLoopTransition() {
         shadowNode_->getTag(),
         shadowNode_->getComponentName(),
         viewStylesRepository_,
+        settings_,
         [&observer = observer_](Tag viewTag) { observer.onTransitionUpdate(viewTag); });
     observeMilestones(*loopTransition_);
   }

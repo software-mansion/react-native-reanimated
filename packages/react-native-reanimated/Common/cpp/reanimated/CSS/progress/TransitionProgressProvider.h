@@ -64,6 +64,8 @@ class TransitionProgressProvider final {
   /// Reports a milestone of one property, with the time elapsed by then.
   using MilestoneReporter = std::function<void(RunMilestone, const std::string &property, double elapsedTime)>;
 
+  explicit TransitionProgressProvider(std::shared_ptr<const PropertiesSettingsMap> propertySettings);
+
   TransitionProgressState getState() const;
   double getMinDelay(double timestamp) const;
   TransitionPropertyProgressProviders getPropertyProgressProviders() const;
@@ -77,7 +79,6 @@ class TransitionProgressProvider final {
   void removeProperty(const std::string &propertyName, double timestamp);
   void discardFinishedProgressProviders();
   void update(double timestamp);
-  void setPropertySettings(const PropertiesSettingsMap &changedPropertiesSettings);
   CSSTransitionPropertySettings getPropertySettings(const std::string &propertyName) const;
 
  private:
@@ -86,10 +87,8 @@ class TransitionProgressProvider final {
 
   void observeProperty(const std::string &propertyName, TransitionPropertyProgressProvider &provider);
 
-  // TO DO: currently never cleaned by design - if the property has already been transitioned in the past, we might want
-  // to reuse the config (run without settings in the config).
-  /// We might want to add an option for clearing those settings in the future.
-  PropertiesSettingsMap propertySettings_;
+  /// Owned by the view's CSSTransition, which also routes these settings to the platform.
+  std::shared_ptr<const PropertiesSettingsMap> propertySettings_;
 
   std::unordered_set<std::string> removedProperties_;
 

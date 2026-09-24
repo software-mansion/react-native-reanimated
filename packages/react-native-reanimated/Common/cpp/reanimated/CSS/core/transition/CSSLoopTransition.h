@@ -24,6 +24,7 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
       Tag viewTag,
       const std::string &componentName,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+      std::shared_ptr<const PropertiesSettingsMap> propertySettings,
       OnUpdateCallback onUpdate);
 
   double getMinDelay(double timestamp) const;
@@ -44,12 +45,6 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
       const PropertyValueDynamicDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
-  void updateSettings(
-      const PropertiesSettingsMap &changedPropertiesSettings,
-      const std::vector<std::string> &removedProperties,
-      double timestamp);
-
-  /// Tracks the lifecycle of properties whose rendering is routed to the platform.
 
   folly::dynamic computeCurrentStyle(const std::shared_ptr<const ShadowNode> &shadowNode);
 

@@ -37,7 +37,8 @@ class CSSPlatformTransitionProxy {
   explicit CSSPlatformTransitionProxy(std::shared_ptr<CSSPlatformTransitionBackend> backend);
 
   /// Routes the config between platform and loop, updating `routing` and returning
-  /// the loop-routed remainder to run.
+  /// the loop-routed value diffs and removals. Settings are not part of the result:
+  /// both sides read them from the view's settings map.
   CSSTransitionConfig processConfig(
       jsi::Runtime &rt,
       Tag viewTag,
@@ -52,6 +53,7 @@ class CSSPlatformTransitionProxy {
   PropertyValueDynamicDiffsMap processDynamicDiffs(
       Tag viewTag,
       const PropertyValueDynamicDiffsMap &propertyDiffs,
+      const PropertiesSettingsMap &settings,
       const TransitionProperties &pseudoLockedProperties,
       CSSTransitionRouting &routing,
       bool allowPlatform,
@@ -69,17 +71,15 @@ class CSSPlatformTransitionProxy {
     std::optional<PlatformValue> startValue;
     PlatformValue adjustedEnd;
     TransitionTiming timing;
-    CSSTransitionPropertySettings settings;
   };
 
   bool canRoute(const std::string &propertyName, const EasingConfig &easing) const;
-  /// Null `settings` is the pseudo-selector toggle path, which reuses the stored ones.
   bool apply(
       Tag viewTag,
       const std::string &propertyName,
       const PlatformValue &fromValue,
       const PlatformValue &toValue,
-      const CSSTransitionPropertySettings *settings,
+      const CSSTransitionPropertySettings &settings,
       bool persistent,
       double timestamp);
   /// `settle` is false only when the loop takes the property over and resumes it.

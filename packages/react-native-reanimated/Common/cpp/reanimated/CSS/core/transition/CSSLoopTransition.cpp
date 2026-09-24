@@ -13,12 +13,13 @@ CSSLoopTransition::CSSLoopTransition(
     const Tag viewTag,
     const std::string &componentName,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+    std::shared_ptr<const PropertiesSettingsMap> propertySettings,
     OnUpdateCallback onUpdate)
     : viewTag_(viewTag),
       componentName_(componentName),
       onUpdate_(std::move(onUpdate)),
       styleInterpolator_(TransitionStyleInterpolator(componentName_, viewStylesRepository)),
-      progressProvider_(TransitionProgressProvider()) {}
+      progressProvider_(TransitionProgressProvider(std::move(propertySettings))) {}
 
 double CSSLoopTransition::getMinDelay(double timestamp) const {
   return progressProvider_.getMinDelay(timestamp);
@@ -62,18 +63,6 @@ folly::dynamic CSSLoopTransition::run(
       propertiesDiffs, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
   progressProvider_.update(timestamp);
   return computeCurrentStyle(shadowNode);
-}
-
-void CSSLoopTransition::updateSettings(
-    const PropertiesSettingsMap &changedPropertiesSettings,
-    const std::vector<std::string> &removedProperties,
-    const double timestamp) {
-
-  // Remove interpolators and progress providers for no longer transitioned props
-  removeProperties(removedProperties, timestamp);
-
-  // Update the settings saved in progress provider
-  progressProvider_.setPropertySettings(changedPropertiesSettings);
 }
 
 folly::dynamic CSSLoopTransition::computeCurrentStyle(const std::shared_ptr<const ShadowNode> &shadowNode) {
