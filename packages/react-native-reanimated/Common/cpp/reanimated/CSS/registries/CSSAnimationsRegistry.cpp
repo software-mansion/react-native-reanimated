@@ -36,7 +36,7 @@ bool CSSAnimationsRegistry::needsFlush() const {
   return !updatedTags_.empty();
 }
 
-bool CSSAnimationsRegistry::apply(
+void CSSAnimationsRegistry::apply(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::string &compoundComponentName,
     const CSSAnimationUpdates &updates) {
@@ -44,7 +44,6 @@ bool CSSAnimationsRegistry::apply(
   const auto viewTag = shadowNode->getTag();
   auto newGroup =
       maybeBuildNewGroup(shadowNode, compoundComponentName, updates.animationNames, updates.newAnimationSettings);
-  const bool hasNewGroup = newGroup.has_value();
 
   if (newGroup) {
     auto oldIt = groups_.find(viewTag);
@@ -54,7 +53,7 @@ bool CSSAnimationsRegistry::apply(
 
     if (newGroup->getAnimations().empty()) {
       remove(viewTag);
-      return false;
+      return;
     }
 
     groups_.insert_or_assign(viewTag, std::move(*newGroup));
@@ -62,7 +61,7 @@ bool CSSAnimationsRegistry::apply(
 
   auto it = groups_.find(viewTag);
   if (it == groups_.end()) {
-    return false;
+    return;
   }
 
   auto &group = it->second;
@@ -75,7 +74,6 @@ bool CSSAnimationsRegistry::apply(
   setInUpdatesRegistry(group.getShadowNodeFamily(), group.computeStyle());
   // Mark always as updated to ensure that updates are committed
   updatedTags_.insert(viewTag);
-  return hasNewGroup;
 }
 
 void CSSAnimationsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {

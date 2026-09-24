@@ -32,8 +32,7 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
 
   bool needsFlush() const;
 
-  /// Returns true when a new set of animations was installed for the view.
-  bool apply(
+  void apply(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::string &compoundComponentName,
       const CSSAnimationUpdates &updates);

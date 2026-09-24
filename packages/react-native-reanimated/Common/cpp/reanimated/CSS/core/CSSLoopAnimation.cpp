@@ -72,8 +72,8 @@ void CSSLoopAnimation::schedule(OperationsLoop &loop) {
   }
 
   const auto startTimestamp = progressProvider_->getStartTimestamp(timestamp);
-  // Without a delay the run is active right away; update it now so that its first
-  // keyframe is part of the style committed at registration, not the next frame.
+  // The delay has already elapsed, so update the run now to have its current style
+  // stored by apply() instead of waiting for the next frame.
   if (startTimestamp <= timestamp) {
     progressProvider_->update(timestamp);
   }

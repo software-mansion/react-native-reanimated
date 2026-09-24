@@ -204,11 +204,10 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   std::function<std::string()> createRegistriesLeakCheck();
 
   void commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
-  /// Commits the starting style of newly registered CSS animations on the JS thread,
-  /// so that it is mounted together with the React commit that added the view.
-  void commitCSSAnimationsStartingStyle(
-      const std::shared_ptr<const ShadowNode> &shadowNode,
-      folly::dynamic &&startingStyle);
+  /// Commits the current style of the view's new CSS animations at the end of the JS
+  /// task, so that it is mounted together with the React commit that added them.
+  void scheduleNewCSSAnimationsCommit(jsi::Runtime &rt, ShadowNodeFamily::Shared family);
+  void commitNewCSSAnimations();
   void applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch);
 
   std::shared_ptr<UIManagerAnimationBackend> getAnimationBackend();
@@ -253,6 +252,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   const std::shared_ptr<css::CSSEventsEmitter> cssEventsEmitter_;
   const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
+  // Only accessed on the JS thread.
+  std::vector<ShadowNodeFamily::Shared> newCSSAnimationsFamilies_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
   const std::shared_ptr<PseudoStylesRegistry> pseudoStylesRegistry_;
 

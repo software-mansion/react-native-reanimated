@@ -87,14 +87,7 @@ void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadow
     if (shadowNodeFamily->getAncestors(rootShadowNode).empty()) {
       for (auto &registry : registries_) {
         registry->remove(tag);
-#ifdef ANDROID
-        // There is no view to revert, and the revert commit would mount the tree early.
-        registry->dropPropsToRevert(tag);
-#endif
       }
-#ifdef ANDROID
-      propsToRevertMap_.erase(tag);
-#endif
       staticPropsRegistry_->remove(tag);
     } else {
       remainingShadowNodes.emplace(tag, shadowNodeFamily);

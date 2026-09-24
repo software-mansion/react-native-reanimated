@@ -547,16 +547,13 @@ void ReanimatedModuleProxy::applyCSSAnimations(
   const auto compoundComponentNameStr = compoundComponentName.asString(rt).utf8(rt);
   const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
 
-  folly::dynamic startingStyle;
   {
     auto lock = updatesRegistryManager_->lock();
-    if (cssAnimationsRegistry_->apply(shadowNode, compoundComponentNameStr, updates)) {
-      startingStyle = cssAnimationsRegistry_->get(shadowNode->getTag());
-    }
+    cssAnimationsRegistry_->apply(shadowNode, compoundComponentNameStr, updates);
   }
 
-  if (startingStyle.isObject() && !startingStyle.empty()) {
-    commitCSSAnimationsStartingStyle(shadowNode, std::move(startingStyle));
+  if (!updates.newAnimationSettings.empty()) {
+    scheduleNewCSSAnimationsCommit(rt, shadowNode->getFamilyShared());
   }
 }
 
@@ -1078,31 +1075,63 @@ void ReanimatedModuleProxy::requestFlushRegistry() {
   }
 }
 
-void ReanimatedModuleProxy::commitCSSAnimationsStartingStyle(
-    const std::shared_ptr<const ShadowNode> &shadowNode,
-    folly::dynamic &&startingStyle) {
+void ReanimatedModuleProxy::scheduleNewCSSAnimationsCommit(jsi::Runtime &rt, ShadowNodeFamily::Shared family) {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     return;
   }
 
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::commitCSSAnimationsStartingStyle");
+  const bool isCommitScheduled = !newCSSAnimationsFamilies_.empty();
+  newCSSAnimationsFamilies_.push_back(std::move(family));
+  if (isCommitScheduled) {
+    return;
+  }
+
+  // Microtasks run after React's commit (with all its layout effects) and before the
+  // end of the JS task, where React's commit and this one are mounted together.
+  rt.queueMicrotask(jsi::Function::createFromHostFunction(
+      rt,
+      jsi::PropNameID::forAscii(rt, "commitNewCSSAnimations"),
+      0,
+      [weakThis = weak_from_this()](jsi::Runtime &, const jsi::Value &, const jsi::Value *, size_t) {
+        if (auto strongThis = weakThis.lock()) {
+          strongThis->commitNewCSSAnimations();
+        }
+        return jsi::Value::undefined();
+      }));
+}
+
+void ReanimatedModuleProxy::commitNewCSSAnimations() {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::commitNewCSSAnimations");
   react_native_assert(uiManager_ != nullptr);
 
-  PropsMap propsMap;
-  propsMap[shadowNode->getFamilyShared()].emplace_back(std::move(startingStyle));
+  std::unordered_map<SurfaceId, std::vector<ShadowNodeFamily::Shared>> familiesBySurface;
+  for (auto &family : std::exchange(newCSSAnimationsFamilies_, {})) {
+    familiesBySurface[family->getSurfaceId()].push_back(std::move(family));
+  }
 
   // On the JS thread no React commit can be in flight, so the commit pause is ignored.
-  // No Reanimated commit trait either, so that the mount hook lifts the pause when this
-  // commit is mounted together with the React commit before it.
-  uiManager_->getShadowTreeRegistry().visit(shadowNode->getSurfaceId(), [&](ShadowTree const &shadowTree) {
-    shadowTree.commit(
-        [&](RootShadowNode const &oldRootShadowNode) -> RootShadowNode::Unshared {
-          return cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
-        },
-        {/* .enableStateReconciliation = */
-         false,
-         /* .mountSynchronously = */ true});
-  });
+  // Without the Reanimated commit trait, the mount hook lifts the pause as usual.
+  for (const auto &[surfaceId, families] : familiesBySurface) {
+    uiManager_->getShadowTreeRegistry().visit(surfaceId, [&](ShadowTree const &shadowTree) {
+      shadowTree.commit(
+          [&](RootShadowNode const &oldRootShadowNode) -> RootShadowNode::Unshared {
+            PropsMap propsMap;
+            {
+              auto lock = updatesRegistryManager_->lock();
+              for (const auto &family : families) {
+                auto style = cssAnimationsRegistry_->get(family->getTag());
+                if (style.isObject() && !style.empty()) {
+                  propsMap[family].emplace_back(std::move(style));
+                }
+              }
+            }
+            return cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+          },
+          {/* .enableStateReconciliation = */
+           false,
+           /* .mountSynchronously = */ false});
+    });
+  }
 }
 
 void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
@@ -1113,6 +1142,7 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
   // No registry lock is held here - shadowTree.commit re-enters via ReanimatedCommitHook.
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
+      bool viewsRemoved = false;
       const auto status = shadowTree.commit(
           [&](RootShadowNode const &oldRootShadowNode) -> RootShadowNode::Unshared {
             if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
@@ -1120,6 +1150,12 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
             }
 
             auto rootNode = cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+            if (!rootNode) {
+              // None of the updated views is in the tree anymore. Committing would only mount
+              // React's tree early, possibly before its new views register their animations.
+              viewsRemoved = true;
+              return nullptr;
+            }
 
             // Mark the commit as Reanimated commit so that we can distinguish
             // it in ReanimatedCommitHook.
@@ -1134,12 +1170,13 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
            /* .mountSynchronously = */ true});
 
 #ifdef ANDROID
-      if (status == ShadowTree::CommitStatus::Succeeded) {
+      if (status == ShadowTree::CommitStatus::Succeeded || viewsRemoved) {
         auto lock = updatesRegistryManager_->lock();
         updatesRegistryManager_->clearPropsToRevert(surfaceId);
       }
 #else
       (void)status;
+      (void)viewsRemoved;
 #endif
     });
   }
