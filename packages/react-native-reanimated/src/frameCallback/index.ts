@@ -1,2 +1,2 @@
 'use strict';
-export type { FrameInfo } from './FrameCallbackRegistryUI';
+export type { FrameInfo } from './commonTypes';
