@@ -127,6 +127,9 @@ double TransitionPropertyProgressProvider::getElapsedTime(const double timestamp
 
 // TransitionProgressProvider
 
+TransitionProgressProvider::TransitionProgressProvider(std::shared_ptr<const PropertiesSettingsMap> propertySettings)
+    : propertySettings_(std::move(propertySettings)) {}
+
 TransitionProgressState TransitionProgressProvider::getState() const {
   for (const auto &[_, progressProvider] : propertyProgressProviders_) {
     const auto state = progressProvider->getState();
@@ -277,15 +280,9 @@ TransitionProgressProvider::createReversingShorteningProgressProvider(
       timestamp, timing.duration, timing.delay, timing.easing, timing.reversingFactor);
 }
 
-void TransitionProgressProvider::setPropertySettings(const PropertiesSettingsMap &changedPropertiesSettings) {
-  for (const auto &[propertyName, propertySettings] : changedPropertiesSettings) {
-    propertySettings_[propertyName] = propertySettings;
-  }
-}
-
 CSSTransitionPropertySettings TransitionProgressProvider::getPropertySettings(const std::string &propertyName) const {
-  const auto it = propertySettings_.find(propertyName);
-  if (it == propertySettings_.end()) {
+  const auto it = propertySettings_->find(propertyName);
+  if (it == propertySettings_->end()) {
     // A pseudo toggle can run a property whose settings never parsed, e.g. a discrete
     // property without allowDiscrete.
     return CSSTransitionPropertySettings{};

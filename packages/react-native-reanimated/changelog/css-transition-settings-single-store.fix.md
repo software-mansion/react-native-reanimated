@@ -1,0 +1,1 @@
+Fix CSS transitions on the iOS Core Animation and Android platform paths using stale settings in pseudo selector toggles after a `transitionDuration`, `transitionDelay` or `transitionTimingFunction` change, and freezing mid-flight when the new timing function cannot run natively.
