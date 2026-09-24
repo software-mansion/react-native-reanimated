@@ -11,7 +11,7 @@ import type {
   ShadowNodeWrapper,
 } from './commonTypes';
 import type { PropUpdates } from './createAnimatedComponent/commonTypes';
-import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
+import type { FrameCallbackRegistryUI } from './frameCallback/commonTypes';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
 import type { RNScreensTurboModuleType } from './screenTransition/commonTypes';
 import type { SensorContainer } from './SensorContainer';
