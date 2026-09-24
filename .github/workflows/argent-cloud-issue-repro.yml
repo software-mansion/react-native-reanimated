@@ -238,6 +238,13 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      - name: Restore the trusted checkout
+        if: failure()
+        run: |
+          git checkout -- .
+          git clean -fdq -e "$WORK_DIR" -e "$APP_DIR"
+          git status --short
+
       - name: Write the report
         if: failure()
         env:
