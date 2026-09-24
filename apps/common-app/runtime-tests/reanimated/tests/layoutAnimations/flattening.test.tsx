@@ -31,6 +31,16 @@ const AndroidDrawerLayout = (
 
 type DroppedKind = 'plain' | 'nested' | 'exiting';
 
+function NestedDescendants() {
+  const ref = useTestRef('droppedNested');
+  const innerRef = useTestRef('droppedNestedInner');
+  return (
+    <View ref={ref} style={styles.nested}>
+      <View ref={innerRef} style={styles.nested} />
+    </View>
+  );
+}
+
 function DroppedChild({ kind }: { kind: DroppedKind }) {
   const ref = useTestRef('dropped');
   if (kind === 'exiting') {
@@ -44,13 +54,23 @@ function DroppedChild({ kind }: { kind: DroppedKind }) {
   }
   return (
     <View ref={ref} style={styles.dropped}>
-      {kind === 'nested' && (
-        <View style={styles.nested}>
-          <View style={styles.nested} />
-        </View>
-      )}
+      {kind === 'nested' && <NestedDescendants />}
     </View>
   );
+}
+
+function getDroppedTags(dropped: DroppedKind) {
+  const names =
+    dropped === 'nested'
+      ? ['dropped', 'droppedNested', 'droppedNestedInner']
+      : ['dropped'];
+  return names.map((name) => getTestComponent(name).getTag());
+}
+
+async function expectMountedNatively(tags: number[], mounted: boolean) {
+  for (const tag of tags) {
+    expect(await isViewMountedNatively(tag)).toBe(mounted);
+  }
 }
 
 function FlattenedWrapper({
@@ -120,23 +140,23 @@ describe('View flattening', () => {
       await render(<FlattenedWrapper flat={false} dropped={dropped} />);
       await waitForFrames();
       const tag = getTestComponent('kept').getTag();
-      const firstDroppedTag = getTestComponent('dropped').getTag();
-      expect(await isViewMountedNatively(firstDroppedTag)).toBe(true);
+      const firstDroppedTags = getDroppedTags(dropped);
+      await expectMountedNatively(firstDroppedTags, true);
 
       await render(<FlattenedWrapper flat dropped={dropped} />);
       await waitForFrames();
       // unflattens the wrapper while it may still be withheld for the exiting child
       await render(<FlattenedWrapper flat={false} dropped={dropped} />);
       await waitForFrames();
-      const secondDroppedTag = getTestComponent('dropped').getTag();
-      expect(await isViewMountedNatively(secondDroppedTag)).toBe(true);
+      const secondDroppedTags = getDroppedTags(dropped);
+      await expectMountedNatively(secondDroppedTags, true);
       await render(<FlattenedWrapper flat dropped={dropped} />);
       await wait(500);
 
       expect(getTestComponent('kept').getTag()).toBe(tag);
       expect(await isViewMountedNatively(tag)).toBe(true);
-      expect(await isViewMountedNatively(firstDroppedTag)).toBe(false);
-      expect(await isViewMountedNatively(secondDroppedTag)).toBe(false);
+      await expectMountedNatively(firstDroppedTags, false);
+      await expectMountedNatively(secondDroppedTags, false);
     }
   );
 
@@ -173,8 +193,8 @@ describe('View flattening', () => {
       );
       await waitForFrames();
       const tag = getTestComponent('moved').getTag();
-      const firstDroppedTag = getTestComponent('dropped').getTag();
-      expect(await isViewMountedNatively(firstDroppedTag)).toBe(true);
+      const firstDroppedTags = getDroppedTags(dropped);
+      await expectMountedNatively(firstDroppedTags, true);
 
       await render(
         <SwappedWrappersDroppingSibling swapped dropped={dropped} />
@@ -184,8 +204,8 @@ describe('View flattening', () => {
         <SwappedWrappersDroppingSibling swapped={false} dropped={dropped} />
       );
       await waitForFrames();
-      const secondDroppedTag = getTestComponent('dropped').getTag();
-      expect(await isViewMountedNatively(secondDroppedTag)).toBe(true);
+      const secondDroppedTags = getDroppedTags(dropped);
+      await expectMountedNatively(secondDroppedTags, true);
       await render(
         <SwappedWrappersDroppingSibling swapped dropped={dropped} />
       );
@@ -193,8 +213,8 @@ describe('View flattening', () => {
 
       expect(getTestComponent('moved').getTag()).toBe(tag);
       expect(await isViewMountedNatively(tag)).toBe(true);
-      expect(await isViewMountedNatively(firstDroppedTag)).toBe(false);
-      expect(await isViewMountedNatively(secondDroppedTag)).toBe(false);
+      await expectMountedNatively(firstDroppedTags, false);
+      await expectMountedNatively(secondDroppedTags, false);
     }
   );
 });
