@@ -4,9 +4,9 @@ import type { SerializableRef } from 'react-native-worklets';
 import type {
   SensorConfig,
   SensorType,
+  SensorValue,
+  SensorValueMap,
   SharedValue,
-  Value3D,
-  ValueRotation,
 } from './commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 import Sensor from './Sensor';
@@ -33,25 +33,27 @@ export class SensorContainer {
     );
   }
 
-  initializeSensor(
-    sensorType: SensorType,
+  initializeSensor<T extends SensorType>(
+    sensorType: T,
     config: SensorConfig
-  ): SharedValue<Value3D | ValueRotation> {
+  ): SharedValue<SensorValueMap[T]> {
     const sensorId = this.getSensorId(sensorType, config);
 
     if (!this.nativeSensors.has(sensorId)) {
-      const newSensor = new Sensor(sensorType, config);
-      this.nativeSensors.set(sensorId, newSensor);
+      this.nativeSensors.set(
+        sensorId,
+        new Sensor<SensorType>(sensorType, config)
+      );
     }
 
-    const sensor = this.nativeSensors.get(sensorId);
+    const sensor = this.nativeSensors.get(sensorId) as Sensor<T> | undefined;
     return sensor!.getSharedValue();
   }
 
   registerSensor(
     sensorType: SensorType,
     config: SensorConfig,
-    handler: SerializableRef<(data: Value3D | ValueRotation) => void>
+    handler: SerializableRef<(data: SensorValue) => void>
   ): number {
     const sensorId = this.getSensorId(sensorType, config);
 

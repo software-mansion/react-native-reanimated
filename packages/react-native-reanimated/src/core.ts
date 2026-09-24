@@ -13,9 +13,8 @@ import type {
   LayoutAnimationBatchItem,
   SensorConfig,
   SensorType,
+  SensorValueMap,
   SharedValue,
-  Value3D,
-  ValueRotation,
 } from './commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
@@ -163,13 +162,10 @@ export function isSensorAvailable(sensorType: SensorType): boolean {
   return sensorContainer.isSensorAvailable(sensorType);
 }
 
-export function registerSensor(
-  sensorType: SensorType,
+export function registerSensor<T extends SensorType>(
+  sensorType: T,
   config: SensorConfig,
-  eventHandler: (
-    data: Value3D | ValueRotation,
-    orientationDegrees: number
-  ) => void
+  eventHandler: (data: SensorValueMap[T], orientationDegrees: number) => void
 ): number {
   const sensorContainer = getSensorContainer();
   return sensorContainer.registerSensor(
@@ -179,10 +175,10 @@ export function registerSensor(
   );
 }
 
-export function initializeSensor(
-  sensorType: SensorType,
+export function initializeSensor<T extends SensorType>(
+  sensorType: T,
   config: SensorConfig
-): SharedValue<Value3D | ValueRotation> {
+): SharedValue<SensorValueMap[T]> {
   const sensorContainer = getSensorContainer();
   return sensorContainer.initializeSensor(sensorType, config);
 }

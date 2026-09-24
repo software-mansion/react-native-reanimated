@@ -5,11 +5,10 @@ import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 import type {
   InternalHostInstance,
   LayoutAnimationBatchItem,
+  SensorValue,
   SettledUpdate,
   ShadowNodeWrapper,
   StyleProps,
-  Value3D,
-  ValueRotation,
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
@@ -41,7 +40,7 @@ export interface ReanimatedModuleProxy {
     sensorType: number,
     interval: number,
     iosReferenceFrame: number,
-    handler: SerializableRef<(data: Value3D | ValueRotation) => void>
+    handler: SerializableRef<(data: SensorValue) => void>
   ): number;
 
   unregisterSensor(sensorId: number): void;

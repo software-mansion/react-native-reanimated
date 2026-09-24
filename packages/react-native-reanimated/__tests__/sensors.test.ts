@@ -1,11 +1,11 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { StrictMode } from 'react';
 
-import type { SensorConfig, Value3D, ValueRotation } from '../src';
+import type { SensorConfig, SensorValue, Value3D, ValueRotation } from '../src';
 import { IOSReferenceFrame, SensorType, useAnimatedSensor } from '../src';
 import { registerSensor, unregisterSensor } from '../src/core';
 
-let eventHandler: (data: Value3D | ValueRotation) => void;
+let eventHandler: (data: SensorValue) => void;
 let mockNextSensorId = 1;
 const mockUnavailableSensorType = SensorType.GYROSCOPE;
 
@@ -21,7 +21,7 @@ jest.mock('../src/core', () => {
       (
         sensorType: SensorType,
         config: SensorConfig,
-        _eventHandler: (data: Value3D | ValueRotation) => void
+        _eventHandler: (data: SensorValue) => void
       ) => {
         eventHandler = _eventHandler;
         return sensorType === mockUnavailableSensorType
@@ -33,13 +33,11 @@ jest.mock('../src/core', () => {
   };
 });
 
-type SensorResult = ReturnType<typeof useAnimatedSensor>;
-
-function renderSensorHook<Props>(
-  useSensor: (props: Props) => SensorResult,
+function renderSensorHook<Props, Result>(
+  useSensor: (props: Props) => Result,
   options?: { initialProps?: Props; wrapper?: typeof StrictMode }
 ) {
-  const renders: SensorResult[] = [];
+  const renders: Result[] = [];
   const hook = renderHook((props: Props) => {
     const result = useSensor(props);
     renders.push(result);
@@ -302,8 +300,7 @@ describe('Sensors', () => {
 
   test('reports availability in the render that changes the sensor type', () => {
     const { renders, rerender } = renderSensorHook(
-      (sensorType: Exclude<SensorType, SensorType.ROTATION>) =>
-        useAnimatedSensor(sensorType),
+      (sensorType: SensorType) => useAnimatedSensor(sensorType),
       { initialProps: SensorType.ACCELEROMETER }
     );
 
@@ -391,8 +388,7 @@ describe('Sensors', () => {
 
   test('unregisters the current registration after a change of sensor type', () => {
     const { result, rerender } = renderHook(
-      (sensorType: Exclude<SensorType, SensorType.ROTATION>) =>
-        useAnimatedSensor(sensorType),
+      (sensorType: SensorType) => useAnimatedSensor(sensorType),
       { initialProps: SensorType.ACCELEROMETER }
     );
 

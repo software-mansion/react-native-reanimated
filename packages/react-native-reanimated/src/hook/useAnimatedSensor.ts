@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import type {
   AnimatedSensor,
   SensorConfig,
+  SensorValueMap,
   Value3D,
   ValueRotation,
 } from '../commonTypes';
@@ -79,15 +80,15 @@ function adjustVectorToInterfaceOrientation(data: Value3D) {
   return data;
 }
 
-function adjustDataToInterfaceOrientation(
-  sensorType: SensorType,
-  data: Value3D | ValueRotation
-) {
-  'worklet';
-  return sensorType === SensorType.ROTATION
-    ? adjustRotationToInterfaceOrientation(data as ValueRotation)
-    : adjustVectorToInterfaceOrientation(data as Value3D);
-}
+const INTERFACE_ORIENTATION_ADJUSTERS: {
+  [K in SensorType]: (data: SensorValueMap[K]) => SensorValueMap[K];
+} = {
+  [SensorType.ACCELEROMETER]: adjustVectorToInterfaceOrientation,
+  [SensorType.GYROSCOPE]: adjustVectorToInterfaceOrientation,
+  [SensorType.GRAVITY]: adjustVectorToInterfaceOrientation,
+  [SensorType.MAGNETIC_FIELD]: adjustVectorToInterfaceOrientation,
+  [SensorType.ROTATION]: adjustRotationToInterfaceOrientation,
+};
 
 const NOOP = () => {
   // NOOP
@@ -104,18 +105,10 @@ const NOOP = () => {
  *   and a function to unregister the sensor
  * @see https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedSensor
  */
-export function useAnimatedSensor(
-  sensorType: SensorType.ROTATION,
+export function useAnimatedSensor<T extends SensorType>(
+  sensorType: T,
   userConfig?: Partial<SensorConfig>
-): AnimatedSensor<ValueRotation>;
-export function useAnimatedSensor(
-  sensorType: Exclude<SensorType, SensorType.ROTATION>,
-  userConfig?: Partial<SensorConfig>
-): AnimatedSensor<Value3D>;
-export function useAnimatedSensor(
-  sensorType: SensorType,
-  userConfig?: Partial<SensorConfig>
-): AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D> {
+): AnimatedSensor<SensorValueMap[T]> {
   const {
     interval = 'auto',
     adjustToInterfaceOrientation = true,
@@ -143,7 +136,7 @@ export function useAnimatedSensor(
     const id = registerSensor(sensorType, config, (data) => {
       'worklet';
       sensor.value = adjustToInterfaceOrientation
-        ? adjustDataToInterfaceOrientation(sensorType, data)
+        ? INTERFACE_ORIENTATION_ADJUSTERS[sensorType](data)
         : data;
     });
 
@@ -167,5 +160,5 @@ export function useAnimatedSensor(
       unregister: () => unregisterRef.current(),
     }),
     [sensor, isAvailable, config]
-  ) as AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D>;
+  );
 }
