@@ -231,22 +231,24 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   auto obj = jsi::Object(rt);
   using jsi_utils::at;
 
-  jsi_utils::addMethod<18>(
+  jsi_utils::addMethod<19>(
       rt,
       obj,
       "loadUnpackersWithCode",
-      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[18]) {
+      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[19]) {
         const auto str = [&](size_t i) {
           return args[i].getString(rt).utf8(rt);
         };
-        unpackerLoader->loadCodeUnpackers({
-            CodeUnpacker{.code = str(0), .location = str(1), .sourceMap = str(2)},
-            CodeUnpacker{.code = str(3), .location = str(4), .sourceMap = str(5)},
-            CodeUnpacker{.code = str(6), .location = str(7), .sourceMap = str(8)},
-            CodeUnpacker{.code = str(9), .location = str(10), .sourceMap = str(11)},
-            CodeUnpacker{.code = str(12), .location = str(13), .sourceMap = str(14)},
-            CodeUnpacker{.code = str(15), .location = str(16), .sourceMap = str(17)},
-        });
+        unpackerLoader->loadCodeUnpackers(
+            {
+                CodeUnpacker{.code = str(0), .location = str(1), .sourceMap = str(2)},
+                CodeUnpacker{.code = str(3), .location = str(4), .sourceMap = str(5)},
+                CodeUnpacker{.code = str(6), .location = str(7), .sourceMap = str(8)},
+                CodeUnpacker{.code = str(9), .location = str(10), .sourceMap = str(11)},
+                CodeUnpacker{.code = str(12), .location = str(13), .sourceMap = str(14)},
+                CodeUnpacker{.code = str(15), .location = str(16), .sourceMap = str(17)},
+            },
+            args[18].asBool());
       });
 
   jsi_utils::addMethod<6>(

@@ -1,8 +1,6 @@
 # Changelog
 
-## Unpublished
-
-<!-- Add a concise entry under the appropriate category. Include links to the pull request and author when available. -->
+## 4.7.0 — 2026-09-18
 
 ### 🛠 Breaking changes
 
@@ -20,12 +18,16 @@
 
 ### 🐛 Bug fixes
 
-- Fix an animated SVG `fillRule` sticking at `evenodd` on Android: `react-native-svg` (up to 15.15.5) never switches back to `nonzero`, so the committed value is re-applied after each commit. ([#10616](https://github.com/software-mansion/react-native-reanimated/pull/10616) by [@MatiPl01](https://github.com/MatiPl01))
+- Fix a property removed from `transitionProperty` while it transitions to or from `undefined` (its style key was just removed or added) finishing the transition instead of snapping to the committed value. ([#10613](https://github.com/software-mansion/react-native-reanimated/pull/10613) by [@MatiPl01](https://github.com/MatiPl01))
+- Fix a property removed from `transitionProperty` mid-transition reverting to the interpolator default (for example `borderRadius: 0`) instead of the committed style on Android. ([#10614](https://github.com/software-mansion/react-native-reanimated/pull/10614) by [@MatiPl01](https://github.com/MatiPl01))
+- Reject a `backgroundImage` gradient given as an object when a transition hint is not placed between two color stops, and reject gradients with fewer than two color stops in both the object and the string form; React Native crashes on iOS or Android when such values reach the renderer. ([#10589](https://github.com/software-mansion/react-native-reanimated/pull/10589) by [@matipl01](https://github.com/matipl01))
+- Fix a crash in the light tree based Layout Animations proxy when a view is flattened while one of its children is removed in the same commit. ([#10628](https://github.com/software-mansion/react-native-reanimated/pull/10628) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Remove `zIndex` from the synchronous props. No platform applies `zIndex` to a mounted view, so with `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` on, an animated style with only `zIndex` and `elevation` never reached the shadow tree commit and the views did not reorder until a later React render. ([#10602](https://github.com/software-mansion/react-native-reanimated/pull/10602) by [@pawicao](https://github.com/pawicao))
 - Stop passing `forwardedRef` and `nativeID` to the wrapped component on web, which React Strict DOM reported as invalid props. ([#10605](https://github.com/software-mansion/react-native-reanimated/pull/10605) by [@tjzel](https://github.com/tjzel))
 - Preserve Android color and other prop updates when hiding and restoring shared transition views. ([#10601](https://github.com/software-mansion/react-native-reanimated/pull/10601) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Prevent Shared Transition Boundaries from intercepting touches intended for sibling views while keeping their children interactive. ([#10600](https://github.com/software-mansion/react-native-reanimated/pull/10600) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
 - Skip exiting animations in the light tree based Layout Animations proxy when a surface is stopped, so the empty-root transaction removes the views at once instead of starting animations on a dead surface and leaving their component views registered on iOS. ([#10586](https://github.com/software-mansion/react-native-reanimated/pull/10586) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+- Resolve a percent translate of a shared view or of its ancestor with the size of the view that owns it in shared element transitions, so the transition copy no longer starts at a wrong position and `translateX: '50%'` no longer animates as 50 points. ([#10617](https://github.com/software-mansion/react-native-reanimated/pull/10617) by [@pawicao](https://github.com/pawicao))
 - Start a shared element transition from the frame of a running layout animation on the source view. ([#10556](https://github.com/software-mansion/react-native-reanimated/pull/10556) by [@pawicao](https://github.com/pawicao))
 - Track synchronous prop updates in the layout animations bookkeeping behind the `TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS` dynamic feature flag, so shared element transitions and layout animations start from the current props of a view that moved through the synchronous path; warn in development when a transition or layout animation starts on such a view with the flag off. A queued or running layout animation always receives the synchronous props, so a prop changed during the animation no longer blinks back on the next frame. The synchronous-update feature flags now work together with `ENABLE_SHARED_ELEMENT_TRANSITIONS`. ([#10522](https://github.com/software-mansion/react-native-reanimated/pull/10522) by [@pawicao](https://github.com/pawicao))
 - Carry a view's current registry values in the Reanimated commits that change its layout props, so iOS no longer writes a stale transform back to a view that moved through the synchronous path. ([#10416](https://github.com/software-mansion/react-native-reanimated/pull/10416) by [@pawicao](https://github.com/pawicao))

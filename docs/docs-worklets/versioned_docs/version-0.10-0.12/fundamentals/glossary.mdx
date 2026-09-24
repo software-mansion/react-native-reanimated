@@ -1,0 +1,65 @@
+---
+sidebar_position: 2
+---
+
+# Glossary of terms
+
+## Worklet
+
+Worklet is a short-running JavaScript function that can be moved and executed across different [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime) and the [React Native Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
+
+Most of the time when working with libraries like [Reanimated](https://docs.swmansion.com/react-native-reanimated/) the code is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and run on the UI thread by default.
+
+```javascript
+const style = useAnimatedStyle(() => {
+  console.log('Running on the UI Runtime (UI thread)');
+  return { opacity: 0.5 };
+});
+```
+
+You can create your own worklets using the `"worklet"` directive at the top of a function.
+
+```javascript
+function myWorklet() {
+  'worklet';
+  console.log('Running on the UI Runtime (UI thread)');
+}
+```
+
+[`scheduleOnUI`](/docs/threading/scheduleOnUI) lets you manually run worklets on the UI Runtime (UI thread):
+
+```javascript
+function myWorklet(greeting) {
+  'worklet';
+  console.log(`${greeting} from the UI Runtime (UI thread)`);
+}
+
+function onPress() {
+  // highlight-next-line
+  scheduleOnUI(myWorklet, 'Howdy');
+}
+```
+
+## to workletize
+
+To convert a JavaScript function into a serializable object which can be copied and run over on [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime).
+
+Functions marked with `"worklet"` directive are automatically picked up and workletized by the Worklets Babel plugin.
+
+## JavaScript thread
+
+JavaScript thread (or JS thread for short) is responsible for handling JavaScript code execution in the app for the [React Native Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
+
+This is the primary place where all the business logic, state management, and JavaScript event handling occur. It runs the JavaScript code that defines your app’s behavior and manages interactions with the user interface.
+
+## UI thread
+
+UI thread is responsible for handling user interface updates. Also known as Main thread.
+
+You can learn more about it by reading the [Threading model](https://reactnative.dev/architecture/threading-model) article in the official React Native docs.
+
+## Worklets Babel plugin
+
+The plugin performs automatic [workletization](/docs/fundamentals/glossary#to-workletize) of certain functions used with Reanimated to reduce the amount of boilerplate code.
+
+You can learn the details [here](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about).

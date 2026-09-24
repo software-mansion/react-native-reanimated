@@ -14,8 +14,8 @@ import {
   View,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
-import photo from './assets/image.jpg';
 
+import photo from './assets/image.jpg';
 import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
 
 type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;

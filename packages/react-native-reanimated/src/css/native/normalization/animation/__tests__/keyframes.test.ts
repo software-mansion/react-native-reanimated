@@ -141,6 +141,57 @@ describe(processKeyframes, () => {
   describe('complex properties', () => {
     const propsBuilder = getPropsBuilder(COMPOUND_COMPONENT_NAME);
 
+    test('backgroundImage preserves nested object structure', () => {
+      const keyframes = {
+        from: { backgroundImage: 'linear-gradient(0deg, red, blue)' },
+        to: {
+          backgroundImage: [
+            {
+              type: 'linear-gradient' as const,
+              direction: '90deg',
+              colorStops: [
+                { color: 'blue', positions: ['25%'] },
+                { color: 'red' },
+              ],
+            },
+          ],
+        },
+      };
+
+      expect(processKeyframes(keyframes, propsBuilder)).toEqual([
+        {
+          offset: 0,
+          props: {
+            backgroundImage: [
+              {
+                type: 'linear-gradient',
+                direction: { type: 'angle', value: 0 },
+                colorStops: [
+                  { color: 0xffff0000, position: null },
+                  { color: 0xff0000ff, position: null },
+                ],
+              },
+            ],
+          },
+        },
+        {
+          offset: 1,
+          props: {
+            backgroundImage: [
+              {
+                type: 'linear-gradient',
+                direction: { type: 'angle', value: 90 },
+                colorStops: [
+                  { color: 0xff0000ff, position: '25%' },
+                  { color: 0xffff0000, position: null },
+                ],
+              },
+            ],
+          },
+        },
+      ]);
+    });
+
     test('transform preserves array of operations', () => {
       const keyframes = {
         '0%': { transform: [{ translateX: 0 }] },

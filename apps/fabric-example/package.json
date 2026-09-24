@@ -8,7 +8,7 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "format": "yarn run --top-level oxfmt .",
-    "lint": "eslint . --max-warnings 0 && yarn run --top-level oxfmt --check .",
+    "lint": "yarn run --top-level oxlint . --max-warnings 0 && yarn run --top-level oxfmt --check .",
     "type:check": "tsc --noEmit",
     "runtime-tests": "node ./scripts/runtime-tests-server.js --launch",
     "runtime-tests:server": "node ./scripts/runtime-tests-server.js"
@@ -16,13 +16,12 @@
   "dependencies": {
     "common-app": "workspace:*",
     "react": "19.3.0",
-    "react-native": "0.88.0-rc.1",
+    "react-native": "0.88.0-rc.2",
     "react-native-screens": "4.27.0"
   },
   "devDependencies": {
     "@types/react": "19.2.18",
     "@types/ws": "8.18.1",
-    "eslint": "9.37.0",
     "typescript": "5.9.3",
     "worklets-oxc-plugin": "workspace:*",
     "ws": "8.21.0"

@@ -39,6 +39,7 @@ const DEFAULT_DIRECTION = { type: 'angle', value: 180 } as const;
 const DEFAULT_RADIAL_SHAPE = 'ellipse';
 const DEFAULT_RADIAL_SIZE = 'farthest-corner';
 const DEFAULT_RADIAL_POSITION = { top: '50%', left: '50%' };
+const MIN_COLOR_STOPS = 2;
 
 const RADIAL_SIZE_KEYWORDS = [
   'closest-side',
@@ -63,6 +64,18 @@ export const ERROR_MESSAGES = {
   invalidSize(size: unknown) {
     'worklet';
     return `Invalid size ${JSON.stringify(size)} in radial gradient.`;
+  },
+  invalidRadialPosition(position: unknown) {
+    'worklet';
+    return `Invalid position ${JSON.stringify(position)} in radial gradient.`;
+  },
+  invalidTransitionHint(position: unknown) {
+    'worklet';
+    return `Invalid transition hint "${String(position)}" in background image: a hint must be placed between two color stops.`;
+  },
+  notEnoughColorStops(count: number) {
+    'worklet';
+    return `Background image gradient must have at least two color stops, got ${count}.`;
   },
 };
 
@@ -146,7 +159,29 @@ const processDirection = (direction?: string): ProcessedDirection => {
 
 const isValidPosition = (position: unknown): position is number | string => {
   'worklet';
-  return typeof position === 'number' || isPercentage(position);
+  return Number.isFinite(position) || isPercentage(position);
+};
+
+const isValidRadialSize = (size: unknown): size is number | string => {
+  'worklet';
+  return isValidPosition(size) && parseFloat(String(size)) >= 0;
+};
+
+const processRadialPosition = (
+  position?: RadialGradientPosition
+): RadialGradientPosition => {
+  'worklet';
+  if (position == null) {
+    return { ...DEFAULT_RADIAL_POSITION };
+  }
+  for (const value of Object.values(position)) {
+    if (!isValidPosition(value)) {
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidRadialPosition(position)}`
+      );
+    }
+  }
+  return position;
 };
 
 const processColorStops = (
@@ -186,6 +221,24 @@ const processColorStops = (
     }
   }
 
+  for (let i = 0; i < result.length; i++) {
+    const { color, position } = result[i];
+    if (
+      color === null &&
+      (i === 0 || i === result.length - 1 || result[i - 1].color === null)
+    ) {
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidTransitionHint(position)}`
+      );
+    }
+  }
+
+  if (result.length < MIN_COLOR_STOPS) {
+    throw new Error(
+      `[Reanimated] ${ERROR_MESSAGES.notEnoughColorStops(result.length)}`
+    );
+  }
+
   return result;
 };
 
@@ -197,7 +250,11 @@ const processRadialSize = (size?: RadialGradientSize): RadialGradientSize => {
   if (typeof size === 'string' && RADIAL_SIZE_KEYWORDS.includes(size)) {
     return size;
   }
-  if (typeof size === 'object' && size.x != null && size.y != null) {
+  if (
+    typeof size === 'object' &&
+    isValidRadialSize(size.x) &&
+    isValidRadialSize(size.y)
+  ) {
     return { x: size.x, y: size.y };
   }
   throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidSize(size)}`);
@@ -295,6 +352,10 @@ const parseColorStopsCSSString = (
     } else {
       return null;
     }
+  }
+
+  if (result.length < MIN_COLOR_STOPS) {
+    return null;
   }
 
   return result;
@@ -576,21 +637,19 @@ export const processBackgroundImage: ValueProcessor<
   const result: ProcessedBackgroundImageValue[] = [];
 
   for (const backgroundImage of value) {
-    const colorStops = processColorStops(backgroundImage.colorStops, context);
-
     if (backgroundImage.type === 'linear-gradient') {
       result.push({
         type: 'linear-gradient',
         direction: processDirection(backgroundImage.direction),
-        colorStops,
+        colorStops: processColorStops(backgroundImage.colorStops, context),
       });
     } else if (backgroundImage.type === 'radial-gradient') {
       result.push({
         type: 'radial-gradient',
         shape: processRadialShape(backgroundImage.shape),
         size: processRadialSize(backgroundImage.size),
-        position: backgroundImage.position ?? { ...DEFAULT_RADIAL_POSITION },
-        colorStops,
+        position: processRadialPosition(backgroundImage.position),
+        colorStops: processColorStops(backgroundImage.colorStops, context),
       });
     }
   }
