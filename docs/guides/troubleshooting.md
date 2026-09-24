@@ -133,7 +133,7 @@ LogBox.ignoreLogs([
 ]);
 ```
 
-See [the accessibility overview](accessibility) to learn more about Reduced Motion.
+See [the accessibility overview](/docs/guides/accessibility) to learn more about Reduced Motion.
 
 ## Dependency issues
 
