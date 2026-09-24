@@ -37,20 +37,14 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
   </TabItem>
 
   <TabItem value="oxc" label="OXC plugin">
-    ```javascript {2-5,13}
-    /** @type {import('react-native-worklets/plugin-oxc').PluginOptions} */
-    const workletsPluginOptions = {
-      bundleMode: true,
-      strictGlobal: true, // optional, but recommended
-    }
-
+    ```javascript {7}
     module.exports = {
       presets: [
         ... // don't add it here :)
       ],
       plugins: [
         ...
-        ['react-native-worklets/plugin-oxc/babel', workletsPluginOptions],
+        'react-native-worklets/plugin-oxc/babel',
       ],
     };
     ```
