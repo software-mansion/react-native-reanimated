@@ -135,6 +135,20 @@ describe(processKeyframes, () => {
     );
   });
 
+  test('omits undefined, so the style value is used, and keeps null', () => {
+    const propsBuilder = getPropsBuilder(COMPOUND_COMPONENT_NAME);
+    const keyframes = {
+      from: { opacity: 0, filter: undefined },
+      to: { opacity: 1, filter: null },
+    };
+
+    expect(processKeyframes(keyframes as never, propsBuilder)).toEqual([
+      { offset: 0, props: { opacity: 0 } },
+      { offset: 1, props: { opacity: 1, filter: null } },
+    ]);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
   describe('offset handling', () => {
     test('sorts keyframes and accepts percentages', () => {
       const { builder } = createMockPropsBuilder();

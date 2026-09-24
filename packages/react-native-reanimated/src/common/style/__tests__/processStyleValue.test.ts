@@ -25,6 +25,15 @@ describe(warnIgnoredStyleValue, () => {
     );
   });
 
+  test('warns with a value thrown that is not an error', () => {
+    warnIgnoredStyleValue('Invalid value: nope');
+
+    expect(warn).toHaveBeenCalledWith(
+      WARN_MESSAGES.ignoredValue('Invalid value: nope'),
+      { strict: true }
+    );
+  });
+
   test('does not warn outside development', () => {
     const globalWithDev = globalThis as unknown as { __DEV__: boolean };
     const originalDev = globalWithDev.__DEV__;

@@ -206,10 +206,12 @@ const parseFilterArray = (
   'worklet';
   const filterArray: FilterArray = [];
   for (const filter of value) {
-    const [filterKey, filterValue] = Object.entries(filter)[0] ?? [];
-    const parsed = filterKey
-      ? parseFilterProperty(filterKey, filterValue, context)
-      : null;
+    const entries = Object.entries(filter);
+    // Each filter object holds exactly one function, like `{ blur: 2 }`.
+    const parsed =
+      entries.length === 1
+        ? parseFilterProperty(entries[0][0], entries[0][1], context)
+        : null;
     if (parsed === null) {
       return [];
     }
@@ -230,22 +232,15 @@ export const processFilter: ValueProcessor<
   FilterArray
 > = (value, context) => {
   'worklet';
-  // `none` and an empty value are the legitimate ways to clear a filter.
-  if (
-    value == null ||
-    value === 'none' ||
-    value === '' ||
-    (Array.isArray(value) && value.length === 0)
-  ) {
+  // `none` and an empty string or array clear the filter.
+  if (value === 'none' || value.length === 0) {
     return [];
   }
 
   const filterArray =
     typeof value === 'string'
       ? parseFilterString(value, context)
-      : Array.isArray(value)
-        ? parseFilterArray(value, context)
-        : [];
+      : parseFilterArray(value, context);
 
   // One invalid function invalidates the whole declaration, like in CSS.
   if (filterArray.length === 0) {

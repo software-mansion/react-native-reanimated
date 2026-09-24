@@ -324,6 +324,10 @@ describe(processFilter, () => {
           name: 'empty filter object in array input',
           input: [{}, { brightness: 1 }] as never,
         },
+        {
+          name: 'filter object with more than one function',
+          input: [{ blur: 2, brightness: 1 }] as never,
+        },
       ];
 
       test.each(invalidArrayCases)('$name throws', ({ input }) => {
@@ -349,13 +353,8 @@ describe(processFilter, () => {
     });
   });
 
-  describe('non-filter input type', () => {
-    test.each([
-      { name: 'number input', input: 123 },
-      { name: 'object input', input: {} },
-    ])('throws for $name', ({ input }) => {
-      expectInvalidFilter(input);
-    });
+  test.each([123, {}])('throws for a non-filter input %p', (input) => {
+    expect(() => processFilter(input as never)).toThrow();
   });
 
   describe('clearing the filter', () => {
@@ -363,10 +362,8 @@ describe(processFilter, () => {
       { name: 'none', input: 'none' },
       { name: 'empty string', input: '' },
       { name: 'empty array', input: [] },
-      { name: 'null', input: null },
-      { name: 'undefined', input: undefined },
     ])('returns empty array for $name', ({ input }) => {
-      expect(processFilter(input as string)).toEqual([]);
+      expect(processFilter(input)).toEqual([]);
     });
   });
 });

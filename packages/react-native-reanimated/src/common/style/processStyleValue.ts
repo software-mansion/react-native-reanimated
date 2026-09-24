@@ -40,7 +40,8 @@ export const WARN_MESSAGES = {
 export function warnIgnoredStyleValue(error: unknown) {
   'worklet';
   if (__DEV__) {
-    const reason = (error as Error).message.replace(ERROR_PREFIX, '');
+    const message = error instanceof Error ? error.message : String(error);
+    const reason = message.replace(ERROR_PREFIX, '');
     logger.warn(WARN_MESSAGES.ignoredValue(reason), { strict: true });
   }
 }
