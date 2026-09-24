@@ -303,7 +303,8 @@ describe('Sensors', () => {
 
   test('reports availability in the render that changes the sensor type', () => {
     const { renders, rerender } = renderSensorHook(
-      (sensorType: SensorType) => useAnimatedSensor(sensorType),
+      (sensorType: Exclude<SensorType, SensorType.ROTATION>) =>
+        useAnimatedSensor(sensorType),
       { initialProps: SensorType.ACCELEROMETER }
     );
 
@@ -392,7 +393,8 @@ describe('Sensors', () => {
 
   test('unregisters the current registration after a change of sensor type', () => {
     const { result, rerender } = renderHook(
-      (sensorType: SensorType) => useAnimatedSensor(sensorType),
+      (sensorType: Exclude<SensorType, SensorType.ROTATION>) =>
+        useAnimatedSensor(sensorType),
       { initialProps: SensorType.ACCELEROMETER }
     );
 
