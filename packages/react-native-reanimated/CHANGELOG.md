@@ -1,8 +1,6 @@
 # Changelog
 
-## Unpublished
-
-<!-- Add a concise entry under the appropriate category. Include links to the pull request and author when available. -->
+## 4.7.0 — 2026-09-18
 
 ### 🛠 Breaking changes
 

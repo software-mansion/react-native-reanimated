@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "",
-    "lint": "eslint . --flag v10_config_lookup_from_file && yarn run --top-level oxfmt --check .",
+    "lint": "yarn run --top-level oxlint --type-aware . && yarn run --top-level oxfmt --check .",
     "format": "yarn run --top-level oxfmt .",
     "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src",
     "type:check": "yarn type:check:native && yarn type:check:web",
@@ -52,20 +52,17 @@
     "@react-native-community/cli": "20.2.0",
     "@react-native-community/cli-platform-android": "20.2.0",
     "@react-native-community/cli-platform-ios": "20.2.0",
-    "@react-native/babel-preset": "0.88.0-rc.1",
-    "@react-native/eslint-config": "0.88.0-rc.1",
-    "@react-native/metro-config": "0.88.0-rc.1",
-    "@react-native/typescript-config": "0.88.0-rc.1",
+    "@react-native/babel-preset": "0.88.0-rc.2",
+    "@react-native/metro-config": "0.88.0-rc.2",
+    "@react-native/typescript-config": "0.88.0-rc.2",
     "@tsconfig/react-native": "3.0.9",
     "@types/d3-shape": "3.1.7",
     "@types/react": "19.2.18",
     "@types/react-test-renderer": "19.1.0",
-    "eslint": "9.37.0",
     "madge": "8.0.0",
-    "react-native": "0.88.0-rc.1",
+    "react-native": "0.88.0-rc.2",
     "react-native-screens": "4.27.0",
     "react-test-renderer": "19.3.0",
-    "typescript": "5.9.3",
-    "typescript-eslint": "8.46.0"
+    "typescript": "5.9.3"
   }
 }

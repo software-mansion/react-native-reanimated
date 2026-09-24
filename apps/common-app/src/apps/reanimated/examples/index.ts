@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
 import 'react-native-reanimated';
+
 import React from 'react';
+
 import type { Example, ExampleEntry } from '@/components';
 import { REAPlatform } from '@/components';
 
@@ -61,8 +63,6 @@ const ColorInterpolationExample: React.FC = () =>
   React.createElement(
     require('./ColorInterpolationExample').default as React.FC
   );
-const ContrastColorExample: React.FC = () =>
-  React.createElement(require('./ContrastColorExample').default as React.FC);
 const CombinedTest: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/Combined').default as React.FC
@@ -380,11 +380,13 @@ const ALL_EXAMPLES: Record<string, Example> = {
   DetachAnimatedStylesExample: {
     icon: '⛓️‍💥',
     title: 'Detach animated styles',
+    section: REGRESSIONS,
     screen: DetachAnimatedStylesExample,
   },
   ScrollPerformanceExample: {
     icon: '🚁',
     title: 'Scroll performance',
+    section: REGRESSIONS,
     screen: ScrollPerformanceExample,
   },
   ThirdPartyComponentsExample: {
@@ -396,6 +398,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ReactFreeze: {
     icon: '❄️',
     title: 'React freeze',
+    section: REGRESSIONS,
     screen: FreezeExample,
   },
   CircularSliderExample: {
@@ -562,6 +565,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   NonLayoutPropAndRenderExample: {
     icon: '🎭',
     title: 'Non-layout prop and render example',
+    section: REGRESSIONS,
     screen: NonLayoutPropAndRenderExample,
   },
   RefExample: {
@@ -717,11 +721,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Color interpolation',
     section: SHOW_CASES,
     screen: ColorInterpolationExample,
-  },
-  ContrastColorExample: {
-    icon: '🔲',
-    title: 'Contrast color',
-    screen: ContrastColorExample,
   },
   ExtrapolationExample: {
     title: 'Extrapolation example',

@@ -1,0 +1,36 @@
+name: Install argent-cloud
+description: Install the argent-cloud CLI (argent cloud issue reproduction client) and add it to PATH
+
+inputs:
+  release-tag:
+    description: Release tag in software-mansion-labs/argent-cloud-releases to install
+    required: false
+    default: 'latest'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install argent-cloud CLI
+      shell: bash
+      env:
+        RELEASE_TAG: ${{ inputs.release-tag }}
+      run: |
+        case "$(uname -s)-$(uname -m)" in
+          Linux-x86_64) ;;
+          *)
+            echo "::error::argent-cloud is published for Linux/x86_64 only, this runner is $(uname -s)/$(uname -m)"
+            exit 1
+            ;;
+        esac
+
+        if [ "$RELEASE_TAG" = "latest" ]; then
+          URL="https://github.com/software-mansion-labs/argent-cloud-releases/releases/latest/download/argent-cloud"
+        else
+          URL="https://github.com/software-mansion-labs/argent-cloud-releases/releases/download/$RELEASE_TAG/argent-cloud"
+        fi
+        mkdir -p "$HOME/.local/bin"
+        curl -fsSL -o "$HOME/.local/bin/argent-cloud" "$URL"
+        chmod +x "$HOME/.local/bin/argent-cloud"
+        echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+        "$HOME/.local/bin/argent-cloud" --help > /dev/null

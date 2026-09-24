@@ -118,7 +118,8 @@ const config = {
             'https://github.com/software-mansion/react-native-reanimated/edit/main/docs/docs-worklets',
           lastVersion: 'current',
           versions: {
-            current: { label: '0.10+' },
+            current: { label: '0.13' },
+            '0.10-0.12': { label: '0.10-0.12', banner: 'none' },
             0.9: { label: '0.9', banner: 'none' },
           },
         },

@@ -86,6 +86,23 @@ typedef NS_ENUM(NSUInteger, KeyboardState) { // NOLINT(performance-enum-size,cpp
 
 #else
 
+static UIWindow *_Nullable REAFindKeyWindow(void)
+{
+  // The window used to be read straight off the app delegate. Apps that adopt the UIScene
+  // life cycle own their window in a UISceneDelegate, so their app delegate may not declare
+  // `window` at all and messaging it raises NSInvalidArgumentException. Prefer the delegate
+  // when it is available so existing apps keep the exact same window, and otherwise fall back
+  // to the scene-aware lookup (cf. -[REATouchHoverCoordinator activeKeyWindow]).
+  id<UIApplicationDelegate> delegate = RCTSharedApplication().delegate;
+  if ([delegate respondsToSelector:@selector(window)]) {
+    UIWindow *window = delegate.window;
+    if (window != nil) {
+      return window;
+    }
+  }
+  return RCTKeyWindow();
+}
+
 - (void)runListeners:(float)keyboardHeight
 {
   for (NSString *key in _listeners.allKeys) {
@@ -185,7 +202,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) { // NOLINT(performance-enum-size,cpp
   CGRect beginFrame = [[userInfo objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue];
   CGRect endFrame = [[userInfo objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
   NSTimeInterval animationDuration = [[userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
-  auto window = [[[UIApplication sharedApplication] delegate] window];
+  auto window = REAFindKeyWindow();
 
   /*
    The keyboard frame is in the screen's coordinate space and must first be converted
@@ -238,7 +255,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) { // NOLINT(performance-enum-size,cpp
   RCTExecuteOnMainQueue(^() {
     if (!self->_measuringView) {
       self->_measuringView = [[UIView alloc] initWithFrame:CGRectMake(0, -1, 0, 0)];
-      UIWindow *keyWindow = [[[UIApplication sharedApplication] delegate] window];
+      UIWindow *keyWindow = REAFindKeyWindow();
       [keyWindow addSubview:self->_measuringView];
     }
     if ([self->_listeners count] == 0) {
@@ -301,7 +318,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) { // NOLINT(performance-enum-size,cpp
 {
   [[self getDisplayLink] setPaused:YES];
 
-  auto window = [[[UIApplication sharedApplication] delegate] window];
+  auto window = REAFindKeyWindow();
   auto keyboardView = [self getKeyboardView];
   if (keyboardView) {
     CGRect frameIntersection = CGRectIntersection(window.bounds, keyboardView.frame);
