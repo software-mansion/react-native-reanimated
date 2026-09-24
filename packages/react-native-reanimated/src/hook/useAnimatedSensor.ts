@@ -84,7 +84,6 @@ function adjustDataToInterfaceOrientation(
   data: Value3D | ValueRotation
 ) {
   'worklet';
-  // The sensor type determines the shape of its data.
   return sensorType === SensorType.ROTATION
     ? adjustRotationToInterfaceOrientation(data as ValueRotation)
     : adjustVectorToInterfaceOrientation(data as Value3D);
@@ -123,15 +122,11 @@ export function useAnimatedSensor(
     iosReferenceFrame = IOSReferenceFrame.Auto,
   } = userConfig ?? {};
 
-  // `userConfig` is usually a new object on every render, so the config
-  // depends on its values, not on its identity.
   const config = useMemo<SensorConfig>(
     () => ({ interval, adjustToInterfaceOrientation, iosReferenceFrame }),
     [interval, adjustToInterfaceOrientation, iosReferenceFrame]
   );
 
-  // Ask the platform during render, so that the first render already reports
-  // whether the device has the sensor.
   const isAvailable = useMemo(
     () => isSensorAvailable(sensorType),
     [sensorType]
@@ -152,8 +147,6 @@ export function useAnimatedSensor(
         : data;
     });
 
-    // `unregister` is both the public method and the effect cleanup, so it
-    // must release the registration at most once.
     let isRegistered = id !== -1;
     const unregister = () => {
       if (isRegistered) {
