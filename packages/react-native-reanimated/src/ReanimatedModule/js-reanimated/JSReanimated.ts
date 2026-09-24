@@ -9,11 +9,10 @@ import { WorkletsModule } from 'react-native-worklets';
 import { IS_JEST, IS_WEB, IS_WINDOW_AVAILABLE, logger } from '../../common';
 import type {
   InternalHostInstance,
+  SensorValue,
   SettledUpdate,
   ShadowNodeWrapper,
   StyleProps,
-  Value3D,
-  ValueRotation,
 } from '../../commonTypes';
 import { SensorType } from '../../commonTypes';
 import type {
@@ -81,7 +80,7 @@ class JSReanimated implements IReanimatedModule {
     sensorType: SensorType,
     interval: number,
     _iosReferenceFrame: number,
-    eventHandler: SerializableRef<(data: Value3D | ValueRotation) => void>
+    eventHandler: SerializableRef<(data: SensorValue) => void>
   ): number {
     if (!IS_WINDOW_AVAILABLE) {
       // the window object is unavailable when building the server portion of a site that uses SSG
@@ -125,7 +124,7 @@ class JSReanimated implements IReanimatedModule {
   getSensorCallback = (
     sensor: WebSensor,
     sensorType: SensorType,
-    eventHandler: SerializableRef<(data: Value3D | ValueRotation) => void>
+    eventHandler: SerializableRef<(data: SensorValue) => void>
   ) => {
     switch (sensorType) {
       case SensorType.ACCELEROMETER:
