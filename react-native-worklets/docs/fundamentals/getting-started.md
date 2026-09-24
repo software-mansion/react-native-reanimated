@@ -38,7 +38,7 @@ Don't I need the Worklets babel plugin?
 
 Since [Expo SDK 54](https://expo.dev/changelog/sdk-54-beta#notable-breaking-changes), the Expo starter template includes the Worklets babel plugin by default, so there's nothing to add. On older SDKs, add `react-native-worklets/plugin` to your `babel.config.js` as described in the React Native Community CLI tab.
 
-To learn more about the plugin go to [Worklets babel plugin](/docs/worklets-babel-plugin/about) section.
+To learn more about the plugin go to [Worklets babel plugin](/docs/worklets-plugin/about) section.
 
 #### Clear Metro bundler cache (recommended)
 
@@ -64,13 +64,13 @@ module.exports = {
 };
 ```
 
-Worklets Babel plugin comes with several options, you can explore what they are and how to use them in the [Options for Worklets Babel Plugin](/docs/worklets-babel-plugin/plugin-options) section.
+Worklets Babel plugin comes with several options, you can explore what they are and how to use them in the [Options for Worklets Babel Plugin](/docs/worklets-plugin/plugin-options) section.
 
 Why do I need this?
 
 In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime)
 
-To learn more about the plugin go to [Worklets babel plugin](/docs/worklets-babel-plugin/about) section.
+To learn more about the plugin go to [Worklets babel plugin](/docs/worklets-plugin/about) section.
 
 #### iOS
 

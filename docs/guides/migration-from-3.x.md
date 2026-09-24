@@ -16,7 +16,7 @@ You can read more about `react-native-worklets` library in its [documentation](h
 
 ### Renamed `react-native-reanimated/plugin`
 
-Reanimated Babel plugin was moved to `react-native-worklets` and renamed to [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about/). Please make sure to import the plugin from `react-native-worklets/plugin` in your `babel.config.js`.
+Reanimated Babel plugin was moved to `react-native-worklets` and renamed to [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about/). Please make sure to import the plugin from `react-native-worklets/plugin` in your `babel.config.js`.
 
 ```diff
 plugins: [

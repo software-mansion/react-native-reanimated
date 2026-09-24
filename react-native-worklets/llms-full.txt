@@ -146,7 +146,7 @@ Import forwarding lets you state which imports used inside worklets should be
 forwarded into the worklet body automatically, so you can drop that boilerplate.
 
 You can configure it via the
-[`importForwarding`](/docs/worklets-babel-plugin/plugin-options#importforwarding)
+[`importForwarding`](/docs/worklets-plugin/plugin-options#importforwarding)
 option of the Worklets Babel plugin.
 
 ### Dropping boilerplate
@@ -239,27 +239,39 @@ The former way of using worklets - where each worklet is serialized as a string 
 
 To use `react-native-worklets`'s Bundle Mode feature, you need to make the following changes in your repository:
 
-## Configure Babel
+## Configure Worklets plugin
 
-1. **Modify your Babel configuration**. [Worklets Babel Plugin](/docs/worklets-babel-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. This is also the source of truth for your app to know if the Bundle Mode is enabled. In your `babel.config.js` file, add the following:
+1. **Modify your Babel configuration**. [Worklets plugin](/docs/worklets-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. This is also the source of truth for your app to know if the Bundle Mode is enabled. In your `babel.config.js` file, add the following:
 
-   ```javascript {2-5,13}
-   /** @type {import('react-native-worklets/plugin').PluginOptions} */
-   const workletsPluginOptions = {
-     bundleMode: true,
-     strictGlobal: true, // optional, but recommended
-   }
+```javascript {2-5,13}
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  bundleMode: true,
+  strictGlobal: true, // optional, but recommended
+}
 
-   module.exports = {
-     presets: [
-       ... // don't add it here :)
-     ],
-     plugins: [
-       ...
-       ['react-native-worklets/plugin', workletsPluginOptions],
-     ],
-   };
-   ```
+module.exports = {
+  presets: [
+    ... // don't add it here :)
+  ],
+  plugins: [
+    ...
+    ['react-native-worklets/plugin', workletsPluginOptions],
+  ],
+};
+```
+
+```javascript {7}
+module.exports = {
+  presets: [
+    ... // don't add it here :)
+  ],
+  plugins: [
+    ...
+    'react-native-worklets/plugin-oxc/babel',
+  ],
+};
+```
 
 ## Configure Metro
 
@@ -605,7 +617,7 @@ Don't I need the Worklets babel plugin?
 
 Since [Expo SDK 54](https://expo.dev/changelog/sdk-54-beta#notable-breaking-changes), the Expo starter template includes the Worklets babel plugin by default, so there's nothing to add. On older SDKs, add `react-native-worklets/plugin` to your `babel.config.js` as described in the React Native Community CLI tab.
 
-To learn more about the plugin go to [Worklets babel plugin](/docs/worklets-babel-plugin/about) section.
+To learn more about the plugin go to [Worklets babel plugin](/docs/worklets-plugin/about) section.
 
 #### Clear Metro bundler cache (recommended)
 
@@ -631,13 +643,13 @@ module.exports = {
 };
 ```
 
-Worklets Babel plugin comes with several options, you can explore what they are and how to use them in the [Options for Worklets Babel Plugin](/docs/worklets-babel-plugin/plugin-options) section.
+Worklets Babel plugin comes with several options, you can explore what they are and how to use them in the [Options for Worklets Babel Plugin](/docs/worklets-plugin/plugin-options) section.
 
 Why do I need this?
 
 In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime)
 
-To learn more about the plugin go to [Worklets babel plugin](/docs/worklets-babel-plugin/about) section.
+To learn more about the plugin go to [Worklets babel plugin](/docs/worklets-plugin/about) section.
 
 #### iOS
 
@@ -722,7 +734,7 @@ You can learn more about it by reading the [Threading model](https://reactnative
 
 The plugin performs automatic [workletization](/docs/fundamentals/glossary#to-workletize) of certain functions used with Reanimated to reduce the amount of boilerplate code.
 
-You can learn the details [here](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about).
+You can learn the details [here](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about).
 
 
 ---
@@ -2072,7 +2084,7 @@ flowchart TD
 
 ## Remarks
 
-* To use Custom Serializables which require `new` keyword for instantiation, you need to [disable Worklet Classes](/docs/worklets-babel-plugin/plugin-options#disableworkletclasses) option in Worklets Babel plugin configuration.
+* To use Custom Serializables which require `new` keyword for instantiation, you need to [disable Worklet Classes](/docs/worklets-plugin/plugin-options#disableworkletclasses) option in Worklets Babel plugin configuration.
 * Custom Serializables are global and shared between all [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime). Once you register a Custom Serializable, it will be available in all Runtimes.
 * You can use `registerCustomSerializable` only on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
 
@@ -3866,14 +3878,16 @@ function isWorkletRuntime(): boolean;
 
 
 ---
-# URL: https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about
+# URL: https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about
 # Title: About
 
-# Worklets Babel Plugin
+# Worklets plugin
 
-## What is Worklets Babel Plugin?
+## What is the Worklets plugin?
 
-The Worklets Babel Plugin transforms your code so that it can run on the [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize).
+The Worklets plugin transforms your code so that it can run on the [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize).
+
+The Worklets plugin ships in two implementations. The Babel plugin (`react-native-worklets/plugin`) is the default. Starting from Worklets 0.13 you can also use the [OXC plugin](/docs/worklets-plugin/oxc), a faster Rust port that supports [Bundle Mode](/docs/bundleMode/) only. Everything on this page applies to both.
 
 * A function that contains a `'worklet'` directive at its very top, i.e.:
 
@@ -3901,7 +3915,7 @@ useAnimatedStyle(() => {
 
 ### JavaScript terms
 
-Worklets Babel Plugin supports the following terms as worklets:
+The Worklets plugin supports the following terms as worklets:
 
 #### Function Declarations
 
@@ -3969,7 +3983,7 @@ scheduleOnUI(() => new Clazz().foo()); // Logs 'Hello from WorkletClass'
 
 ## Autoworkletization
 
-To reduce boilerplate code and provide a safer API, Worklets Babel Plugin detects automatically whether a function should be workletized. Thanks to that, you don't need to add the `'worklet'` directive to your callbacks:
+To reduce boilerplate code and provide a safer API, the Worklets plugin detects automatically whether a function should be workletized. Thanks to that, you don't need to add the `'worklet'` directive to your callbacks:
 
 ```ts
 import { scheduleOnUI } from 'react-native-worklets';
@@ -3981,7 +3995,7 @@ const style = scheduleOnUI((greetings: string) => {
 }, 'Hello');
 ```
 
-This isn't limited to `useAnimatedStyle` hook - Worklets Babel Plugin autoworkletizes all callbacks for all its API. It also does some for some callbacks in [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/layoutAnimationAutoworkletization.ts) and [React Native Gesture Handler](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/gestureHandlerAutoworkletization.ts) The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
+This isn't limited to `useAnimatedStyle` hook - the Worklets plugin autoworkletizes all callbacks for all its API. It also does some for some callbacks in [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/layoutAnimationAutoworkletization.ts) and [React Native Gesture Handler](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/gestureHandlerAutoworkletization.ts) The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
 
 Keep in mind that in more advanced use cases, you might still need to manually mark a function as a worklet.
 
@@ -4112,11 +4126,11 @@ function foo() {
 
 ## Notes
 
-Babel is a powerful tool that can be explored to implement numerous useful features. If you feel like Worklets Babel plugin could make use of some new functionality or that its pitfalls are too severe, feel free to let us know on [GitHub](https://github.com/software-mansion/react-native-reanimated/), via an issue or a discussion thread - and as always, PRs are welcome!
+If you feel like the Worklets plugin could make use of some new functionality or that its pitfalls are too severe, feel free to let us know on [GitHub](https://github.com/software-mansion/react-native-reanimated/), via an issue or a discussion thread - and as always, PRs are welcome!
 
 
 ---
-# URL: https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/options
+# URL: https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/options
 # Title: Options
 
 # Options for Worklets Babel Plugin
@@ -4176,6 +4190,8 @@ module.exports = {
 
 ## Options
 
+If you are using the OXC plugin, refer to [OXC plugin options](/docs/worklets-plugin/oxc#options).
+
 ### bundleMode
 
 Defaults to `false`.
@@ -4227,7 +4243,7 @@ This option turns off the source map generation for worklets. Mostly used for te
 Defaults to `false`.
 
 Disables [Worklet Classes
-support](/docs/worklets-babel-plugin/about#experimental-worklet-classes).
+support](/docs/worklets-plugin/about#experimental-worklet-classes).
 You might need to disable this feature when using [Custom
 Serializables](/docs/memory/registerCustomSerializable).
 
@@ -4500,4 +4516,29 @@ You can also narrow the path to a subdirectory — e.g. `my-library/src` or
 `'./utils'` import across the bundle, potentially breaking other libraries
 with a file at the same relative path. `relativePaths` scopes forwarding to a
 specific package.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/oxc
+# Title: OXC plugin
+
+# OXC plugin
+
+> **Note**
+>
+> The OXC plugin is a port of the [Worklets Babel plugin](/docs/worklets-plugin/about) to Rust, built on top of [OXC](https://oxc.rs/). It's an opt-in alternative to the Babel plugin, which remains the default for the time being. Only [Bundle Mode](/docs/bundleMode/) is supported.
+
+## Setup
+
+For setup instructions, refer to the [Bundle Mode setup](/docs/bundleMode/setup?worklets-plugin=oxc#configure-worklets-plugin) with the OXC plugin selected in the tabs.
+
+## Options
+
+The OXC plugin accepts the [`importForwarding`](/docs/worklets-plugin/plugin-options#importforwarding) option and it works the same way as in the Babel plugin.
+
+[`bundleMode`](/docs/worklets-plugin/plugin-options#bundlemode) and [`strictGlobal`](/docs/worklets-plugin/plugin-options#strictglobal) are always on and cannot be turned off. The remaining options of the Babel plugin are ignored.
+
+## Notes
+
+Being a port, the OXC plugin might not cover every edge case that the Babel plugin does. If you find a difference in behavior, please let us know on [GitHub](https://github.com/software-mansion/react-native-reanimated/).
 

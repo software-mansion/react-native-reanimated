@@ -70,8 +70,9 @@
 - [isWorkletFunction](https://docs.swmansion.com/react-native-worklets/docs/utility/isWorkletFunction)
 - [isWorkletRuntime](https://docs.swmansion.com/react-native-worklets/docs/utility/isWorkletRuntime)
 
-## Worklets Babel Plugin
+## Worklets Plugin
 
-- [About](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about)
-- [Options](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/options)
+- [About](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about)
+- [Options](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/options)
+- [OXC plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/oxc)
 

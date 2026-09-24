@@ -4901,7 +4901,7 @@ When using [React Native Community CLI](https://github.com/react-native-communit
 >
 > `react-native-worklets/plugin` has to be listed last.
 
-Worklets Babel plugin comes with several customization options, you can explore what they are and how to use them in the [Worklets docs](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options) section.
+Worklets Babel plugin comes with several customization options, you can explore what they are and how to use them in the [Worklets docs](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options) section.
 
 Why do I need this?
 
@@ -4909,7 +4909,7 @@ In short, the Worklets Babel plugin automatically converts special JavaScript fu
 
 Since [Expo SDK 50](https://expo.dev/changelog/2024/01-18-sdk-50), the Expo starter template includes the Worklets Babel plugin by default.
 
-To learn more about the plugin head onto to [Worklets Babel plugin docs page](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about).
+To learn more about the plugin head onto to [Worklets Babel plugin docs page](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about).
 
 #### Clear Metro bundler cache (recommended)
 
@@ -5134,7 +5134,7 @@ You can learn more about it by reading the [Threading model](https://reactnative
 
 The plugin performs automatic [workletization](/docs/fundamentals/glossary#to-workletize) of certain functions used with Reanimated to reduce the amount of boilerplate code.
 
-You can learn the details by reading the [Worklets docs](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about).
+You can learn the details by reading the [Worklets docs](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about).
 
 
 ---
@@ -6439,7 +6439,7 @@ You can read more about `react-native-worklets` library in its [documentation](h
 
 ### Renamed `react-native-reanimated/plugin`
 
-Reanimated Babel plugin was moved to `react-native-worklets` and renamed to [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about/). Please make sure to import the plugin from `react-native-worklets/plugin` in your `babel.config.js`.
+Reanimated Babel plugin was moved to `react-native-worklets` and renamed to [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about/). Please make sure to import the plugin from `react-native-worklets/plugin` in your `babel.config.js`.
 
 ```diff
 plugins: [
@@ -7347,7 +7347,7 @@ module.exports = {
 >
 > We strongly recommend not opting out of the Worklets Babel plugin, as it is the only configuration we actively test.
 
-It is possible to use Reanimated without the [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about) (`react-native-worklets/plugin`) on the Web, with some additional configuration.
+It is possible to use Reanimated without the [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about) (`react-native-worklets/plugin`) on the Web, with some additional configuration.
 
 Reanimated hooks all accept optional dependency arrays. Under the hood, Reanimated uses extra data provided by the Worklets Babel plugin to automatically infer these dependencies for you.
 
@@ -7447,7 +7447,7 @@ function myWorklet() {
 
 ## Workletization
 
-The [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about) looks for functions marked with the `'worklet'` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize). These objects can then be copied and run over on the UI thread.
+The [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about) looks for functions marked with the `'worklet'` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize). These objects can then be copied and run over on the UI thread.
 
 Most of the time when working with Reanimated and [Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/) the code is automatically workletized and run on the UI thread by default.
 

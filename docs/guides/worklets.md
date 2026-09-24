@@ -15,7 +15,7 @@ function myWorklet() {
 
 ## Workletization
 
-The [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about) looks for functions marked with the `'worklet'` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize). These objects can then be copied and run over on the UI thread.
+The [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about) looks for functions marked with the `'worklet'` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize). These objects can then be copied and run over on the UI thread.
 
 Most of the time when working with Reanimated and [Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/) the code is automatically workletized and run on the UI thread by default.
 

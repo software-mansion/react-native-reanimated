@@ -2,27 +2,39 @@
 
 To use `react-native-worklets`'s Bundle Mode feature, you need to make the following changes in your repository:
 
-## Configure Babel
+## Configure Worklets plugin
 
-1. **Modify your Babel configuration**. [Worklets Babel Plugin](/docs/worklets-babel-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. This is also the source of truth for your app to know if the Bundle Mode is enabled. In your `babel.config.js` file, add the following:
+1. **Modify your Babel configuration**. [Worklets plugin](/docs/worklets-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. This is also the source of truth for your app to know if the Bundle Mode is enabled. In your `babel.config.js` file, add the following:
 
-   ```javascript {2-5,13}
-   /** @type {import('react-native-worklets/plugin').PluginOptions} */
-   const workletsPluginOptions = {
-     bundleMode: true,
-     strictGlobal: true, // optional, but recommended
-   }
+```javascript {2-5,13}
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  bundleMode: true,
+  strictGlobal: true, // optional, but recommended
+}
 
-   module.exports = {
-     presets: [
-       ... // don't add it here :)
-     ],
-     plugins: [
-       ...
-       ['react-native-worklets/plugin', workletsPluginOptions],
-     ],
-   };
-   ```
+module.exports = {
+  presets: [
+    ... // don't add it here :)
+  ],
+  plugins: [
+    ...
+    ['react-native-worklets/plugin', workletsPluginOptions],
+  ],
+};
+```
+
+```javascript {7}
+module.exports = {
+  presets: [
+    ... // don't add it here :)
+  ],
+  plugins: [
+    ...
+    'react-native-worklets/plugin-oxc/babel',
+  ],
+};
+```
 
 ## Configure Metro
 

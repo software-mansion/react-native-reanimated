@@ -139,7 +139,7 @@ Import forwarding lets you state which imports used inside worklets should be
 forwarded into the worklet body automatically, so you can drop that boilerplate.
 
 You can configure it via the
-[`importForwarding`](/docs/worklets-babel-plugin/plugin-options#importforwarding)
+[`importForwarding`](/docs/worklets-plugin/plugin-options#importforwarding)
 option of the Worklets Babel plugin.
 
 ### Dropping boilerplate
