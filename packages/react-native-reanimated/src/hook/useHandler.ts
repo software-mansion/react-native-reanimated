@@ -1,9 +1,9 @@
 'use strict';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
-import { isWorkletFunction } from 'react-native-worklets';
 
 import type { UnknownRecord } from '../common';
+import { isWorkletFunction } from '../workletFunctions';
 import type { DependencyList } from './commonTypes';
 import type { GeneralHandlers, UseHandlerContext } from './useHandlerCommon';
 import {
