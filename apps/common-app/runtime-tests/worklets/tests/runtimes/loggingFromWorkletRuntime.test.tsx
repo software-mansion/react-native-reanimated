@@ -1,4 +1,13 @@
 import {
+  runOnUISync,
+  scheduleOnRN,
+  createShareable,
+  createSynchronizable,
+  UIRuntimeId,
+  createWorkletRuntime,
+} from 'react-native-worklets';
+
+import {
   describe,
   expect,
   test,
@@ -7,14 +16,6 @@ import {
   beforeEach,
   afterEach,
 } from '../../../ReJest/RuntimeTestsApi';
-import {
-  runOnUISync,
-  scheduleOnRN,
-  createShareable,
-  createSynchronizable,
-  UIRuntimeId,
-  createWorkletRuntime,
-} from 'react-native-worklets';
 
 declare global {
   // eslint-disable-next-line no-var

@@ -27,6 +27,7 @@ export const SVG_TEXT_PROPERTIES_CONFIG: SvgStyleBuilderConfig<TextProps> = {
   alignmentBaseline: false,
   baselineShift: false,
   verticalAlign: false,
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   fontData: false,
   fontFeatureSettings: false,
   font: false,

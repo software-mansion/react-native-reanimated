@@ -2,7 +2,7 @@ import { Bezier } from '../src/Bezier';
 
 // spell-checker:disable
 /*
- * https://github.com/gre/bezier-easing/blob/master/test/test.js
+ * https://github.com/gre/bezier-easing/blob/master/test/test.test.js
  * BezierEasing - use bezier curve for transition easing function
  * by Gaëtan Renaudeau 2014 - 2015 – MIT License
  */

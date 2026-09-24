@@ -715,7 +715,7 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     const std::shared_ptr<LightNode> &node,
     const std::vector<react::Point> &absolutePositions,
     const bool useViewsOnScreen) const {
-  std::vector<std::pair<Transform, TransformOrigin>> transforms;
+  std::vector<AncestorTransform> transforms;
   const auto &targetLayoutMetrics = (useViewsOnScreen ? viewOnScreen(node) : node->current).layoutMetrics;
   auto currentNode = node;
   while (currentNode) {
@@ -734,7 +734,7 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     } else if (origin.xy[1].unit == facebook::react::UnitType::Undefined) {
       origin.xy[1] = {static_cast<float>(viewSize.height * 0.5), UnitType::Point};
     }
-    transforms.emplace_back(props.transform, origin);
+    transforms.push_back({props.transform, origin, viewSize});
     currentNode = currentNode->parent.lock();
   }
 
@@ -742,7 +742,7 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
   Transform combinedMatrix;
   bool parentHasTransform = false;
   for (int i = static_cast<int>(transforms.size()) - 1; i >= 0; --i) {
-    auto &[transform, transformOrigin] = transforms[i];
+    auto &[transform, transformOrigin, ownSize] = transforms[i];
     if (transform.operations.empty()) {
       continue;
     } else if (i > 0) {
@@ -754,7 +754,8 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     }
     transformOrigin.xy[0].value -= targetViewPosition.x - absolutePositions[i].x;
     transformOrigin.xy[1].value -= targetViewPosition.y - absolutePositions[i].y;
-    combinedMatrix = combinedMatrix * resolveTransform(targetLayoutMetrics, transform, transformOrigin);
+    combinedMatrix =
+        combinedMatrix * resolveTransform(targetLayoutMetrics.frame.size, ownSize, transform, transformOrigin);
     combinedMatrix.operations.clear();
   }
   if (parentHasTransform) {
@@ -769,14 +770,15 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
 // from:
 // https://github.com/facebook/react-native/blob/v0.80.0/packages/react-native/ReactCommon/react/renderer/components/view/BaseViewProps.cpp#L548
 // We need a copy of these methods to modify the `resolveTransform` method
-// to accept the transform origin as a parameter instead of as a class field.
+// to accept the transform origin as a parameter instead of as a class field,
+// and to resolve percent operations with the size of the view that owns them.
 react::Transform LayoutAnimationsProxy::resolveTransform(
-    const LayoutMetrics &layoutMetrics,
+    const react::Size &originFrameSize,
+    const react::Size &ownSize,
     const Transform &transform,
     const TransformOrigin &transformOrigin) const {
-  const auto &frameSize = layoutMetrics.frame.size;
   auto transformMatrix = Transform{};
-  if (frameSize.width == 0 && frameSize.height == 0) {
+  if (originFrameSize.width == 0 && originFrameSize.height == 0) {
     return transformMatrix;
   }
 
@@ -785,14 +787,13 @@ react::Transform LayoutAnimationsProxy::resolveTransform(
     transformMatrix = transform;
   } else {
     for (const auto &operation : transform.operations) {
-      transformMatrix =
-          transformMatrix * Transform::FromTransformOperation(operation, layoutMetrics.frame.size, transform);
+      transformMatrix = transformMatrix * Transform::FromTransformOperation(operation, ownSize, transform);
     }
   }
 
   if (transformOrigin.isSet()) {
     std::array<float, 3> translateOffsets =
-        getTranslateForTransformOrigin(frameSize.width, frameSize.height, transformOrigin);
+        getTranslateForTransformOrigin(originFrameSize.width, originFrameSize.height, transformOrigin);
     transformMatrix = Transform::Translate(translateOffsets[0], translateOffsets[1], translateOffsets[2]) *
         transformMatrix * Transform::Translate(-translateOffsets[0], -translateOffsets[1], -translateOffsets[2]);
   }

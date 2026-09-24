@@ -62,7 +62,7 @@ typedef enum class ExitingState : std::uint8_t {
   UNDEFINED = 1,
   WAITING = 2,
   ANIMATING = 3,
-  DEAD = 4,
+  COMPLETED = 4,
   DELETED = 5,
 } ExitingState;
 
