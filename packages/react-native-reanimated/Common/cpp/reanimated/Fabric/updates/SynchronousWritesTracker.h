@@ -9,6 +9,7 @@
 #include <deque>
 #include <memory>
 #include <mutex>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -21,7 +22,8 @@ namespace reanimated {
 // that the platform can write their current values again after a mount.
 class SynchronousWritesTracker {
  public:
-  void onCommit(const RootShadowNode::Shared &rootShadowNode, bool carriesRegistryValues);
+  void onWillCommit(const RootShadowNode::Shared &rootShadowNode, bool carriesRegistryValues);
+  void onDidCommit(const RootShadowNode::Shared &rootShadowNode);
   void onSynchronousWrite(const UpdatesBatch &synchronousUpdatesBatch);
   void onMountReport(const RootShadowNode::Shared &mountedRootShadowNode);
   void onSurfaceStop(SurfaceId surfaceId);
@@ -41,17 +43,29 @@ class SynchronousWritesTracker {
     Epoch epoch;
   };
 
+  struct PendingCommit {
+    SurfaceId surfaceId;
+    Epoch epoch;
+  };
+
   struct Surface {
     // Number of commits that carried registry values. A write with epoch N is newer than the values in commits 1..N.
     Epoch epoch{0};
-    // A mount report can show a commit before its mount items run. The rewrite after the report covers them.
+    // Android reports a mount at the pull, before the mount items run. The next mount callback writes the props
+    // again. That callback also runs for a dispatch that has only view commands. If such a dispatch runs before the
+    // mount items, the tracker removes the writes too early. The old value then stays on screen until the next
+    // synchronous write.
     Epoch reportedEpoch{0};
     Epoch mountedEpoch{0};
     std::deque<CommittedRoot> committedRoots;
     std::unordered_map<Tag, Write> writes;
   };
 
+  static void rememberRoot(Surface &surface, const RootShadowNode::Shared &rootShadowNode, Epoch epoch);
+
   mutable std::mutex mutex_;
+  // One thread runs the two commit callbacks of one commit. This map holds the epoch between them.
+  std::unordered_map<std::thread::id, PendingCommit> pendingCommits_;
   std::unordered_map<SurfaceId, Surface> surfaces_;
 };
 

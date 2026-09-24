@@ -4,19 +4,45 @@
 
 namespace reanimated {
 
-void SynchronousWritesTracker::onCommit(
+void SynchronousWritesTracker::onWillCommit(
     const RootShadowNode::Shared &rootShadowNode,
     const bool carriesRegistryValues) {
   auto lock = std::scoped_lock{mutex_};
-  auto &surface = surfaces_[rootShadowNode->getSurfaceId()];
+  const auto threadId = std::this_thread::get_id();
+  pendingCommits_.erase(threadId);
+  if (rootShadowNode->getChildren().empty()) {
+    return;
+  }
+  const auto surfaceId = rootShadowNode->getSurfaceId();
+  auto &surface = surfaces_[surfaceId];
   if (carriesRegistryValues) {
     surface.epoch++;
   }
+  pendingCommits_.emplace(threadId, PendingCommit{surfaceId, surface.epoch});
+}
+
+void SynchronousWritesTracker::onDidCommit(const RootShadowNode::Shared &rootShadowNode) {
+  auto lock = std::scoped_lock{mutex_};
+  const auto pendingCommit = pendingCommits_.extract(std::this_thread::get_id());
+  if (pendingCommit.empty() || pendingCommit.mapped().surfaceId != rootShadowNode->getSurfaceId()) {
+    return;
+  }
+  const auto surfaceIt = surfaces_.find(pendingCommit.mapped().surfaceId);
+  if (surfaceIt == surfaces_.end()) {
+    return;
+  }
+  rememberRoot(surfaceIt->second, rootShadowNode, pendingCommit.mapped().epoch);
+}
+
+void SynchronousWritesTracker::rememberRoot(
+    Surface &surface,
+    const RootShadowNode::Shared &rootShadowNode,
+    const Epoch epoch) {
   auto &committedRoots = surface.committedRoots;
   while (!committedRoots.empty() && committedRoots.front().rootShadowNode.expired()) {
     committedRoots.pop_front();
   }
-  committedRoots.push_back({rootShadowNode, surface.epoch});
+  committedRoots.push_back({rootShadowNode, epoch});
 }
 
 void SynchronousWritesTracker::onSynchronousWrite(const UpdatesBatch &synchronousUpdatesBatch) {
@@ -68,8 +94,9 @@ std::vector<ShadowNodeFamily::Shared> SynchronousWritesTracker::getFamiliesToRew
 void SynchronousWritesTracker::onRewrite() {
   auto lock = std::scoped_lock{mutex_};
   for (auto &[_, surface] : surfaces_) {
-    surface.mountedEpoch = surface.reportedEpoch;
-    std::erase_if(surface.writes, [&](const auto &entry) { return entry.second.epoch <= surface.mountedEpoch; });
+    const auto mountedEpoch = surface.reportedEpoch;
+    surface.mountedEpoch = mountedEpoch;
+    std::erase_if(surface.writes, [mountedEpoch](const auto &entry) { return entry.second.epoch <= mountedEpoch; });
   }
 }
 

@@ -113,11 +113,27 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   return rootNode;
 }
 
+#if REACT_NATIVE_VERSION_MINOR >= 88
+void ReanimatedCommitHook::shadowTreeDidCommit(
+    const ShadowTree &,
+    const RootShadowNode::Shared &rootShadowNode,
+    const std::vector<const LayoutableShadowNode *> &) noexcept {
+  if (synchronousWritesTracker_) {
+    synchronousWritesTracker_->onDidCommit(rootShadowNode);
+  }
+}
+#endif
+
 void ReanimatedCommitHook::trackCommit(const RootShadowNode::Shared &rootShadowNode, const bool carriesRegistryValues)
     const {
-  if (synchronousWritesTracker_ && !rootShadowNode->getChildren().empty()) {
-    synchronousWritesTracker_->onCommit(rootShadowNode, carriesRegistryValues);
+  if (!synchronousWritesTracker_) {
+    return;
   }
+  synchronousWritesTracker_->onWillCommit(rootShadowNode, carriesRegistryValues);
+#if REACT_NATIVE_VERSION_MINOR < 88
+  // Before 0.88 there is no `shadowTreeDidCommit`. The root that this hook returns is the only one available.
+  synchronousWritesTracker_->onDidCommit(rootShadowNode);
+#endif
 }
 
 } // namespace reanimated
