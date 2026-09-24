@@ -196,6 +196,11 @@ std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vect
   return region;
 }
 
+void NativeProxy::repairSvgFillRule(const int viewTag, const bool evenOdd) {
+  static const auto method = getJniMethod<void(int, jboolean)>("repairSvgFillRule");
+  method(javaPart_.get(), viewTag, static_cast<jboolean>(evenOdd));
+}
+
 void NativeProxy::synchronouslyUpdateUIProps(
     const std::vector<int> &intBuffer,
     const std::vector<double> &doubleBuffer) {
@@ -270,11 +275,6 @@ bool NativeProxy::cssAnimateTransition(
              startTimestampMs,
              easingId,
              static_cast<jboolean>(persistent)) != JNI_FALSE;
-}
-
-void NativeProxy::repairSvgFillRule(const int viewTag, const bool evenOdd) {
-  static const auto method = getJniMethod<void(int, jboolean)>("repairSvgFillRule");
-  method(javaPart_.get(), viewTag, static_cast<jboolean>(evenOdd));
 }
 
 void NativeProxy::cssRemoveTransition(const int viewTag, const int propertyId) {

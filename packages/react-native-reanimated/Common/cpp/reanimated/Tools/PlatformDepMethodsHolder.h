@@ -35,7 +35,7 @@ using SynchronouslyUpdateUIPropsFunction = std::function<void(const std::vector<
 using SynchronouslyUpdateUIPropsFunction = std::function<void(const int, const folly::dynamic &)>;
 #endif // ANDROID
 using PreserveMountedTagsFunction = std::function<std::optional<std::unique_ptr<int[]>>(std::vector<int> &)>;
-/// Re-applies an SVG fill rule a commit just wrote (see NativeProxy.repairSvgFillRule).
+/// Re-applies an SVG fill rule a commit just wrote (see SvgFillRuleRepair.kt).
 using RepairSvgFillRuleFunction = std::function<void(Tag, bool evenOdd)>;
 using GetAnimationTimestampFunction = std::function<double(void)>;
 

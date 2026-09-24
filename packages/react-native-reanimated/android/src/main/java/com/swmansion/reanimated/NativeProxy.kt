@@ -18,7 +18,6 @@ import com.facebook.react.uimanager.common.UIManagerType
 import com.facebook.soloader.SoLoader
 import com.swmansion.common.GestureHandlerStateManager
 import com.swmansion.reanimated.css.CSSPlatformTransitionsManager
-import com.swmansion.reanimated.css.SvgFillRuleRepair
 import com.swmansion.reanimated.keyboard.KeyboardAnimationManager
 import com.swmansion.reanimated.keyboard.KeyboardWorkletWrapper
 import com.swmansion.reanimated.nativeProxy.AnimationFrameCallback
@@ -240,6 +239,7 @@ open class NativeProxy {
             try {
                 mFabricUIManager.resolveView(viewTag)
             } catch (e: IllegalViewOperationException) {
+                // Thrown, not null, when the tag is registered but the View does not exist yet.
                 null
             } ?: return
         SvgFillRuleRepair.apply(view, evenOdd)

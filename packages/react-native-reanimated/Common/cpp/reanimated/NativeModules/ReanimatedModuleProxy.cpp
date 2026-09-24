@@ -1101,9 +1101,12 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
            /* .mountSynchronously = */ true});
 
 #ifdef ANDROID
-      if (status == ShadowTree::CommitStatus::Succeeded) {
-        // The commit mounted synchronously, so the views already hold these props.
+      // A commit cancelled by commit pausing reaches the views through the React commit that
+      // paused it; react-native-svg's setter leaves a repaired nonzero fill rule alone.
+      if (status == ShadowTree::CommitStatus::Succeeded || status == ShadowTree::CommitStatus::Cancelled) {
         repairSvgFillRules(propsMap);
+      }
+      if (status == ShadowTree::CommitStatus::Succeeded) {
         auto lock = updatesRegistryManager_->lock();
         updatesRegistryManager_->clearPropsToRevert(surfaceId);
       }
@@ -1115,9 +1118,7 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
 }
 
 #ifdef ANDROID
-// react-native-svg (up to 15.15.5) never switches a fill rule back to nonzero on
-// Android (setFillRule ignores FILL_RULE_NONZERO), so an animated fillRule would
-// stick at evenodd; the platform re-applies the value the commit just wrote.
+// react-native-svg on Android never switches fillRule back to nonzero, see SvgFillRuleRepair.kt.
 void ReanimatedModuleProxy::repairSvgFillRules(const PropsMap &propsMap) {
   if (!repairSvgFillRuleFunction_) {
     return;

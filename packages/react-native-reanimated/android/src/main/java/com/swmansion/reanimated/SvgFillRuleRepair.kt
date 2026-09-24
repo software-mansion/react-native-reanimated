@@ -1,11 +1,11 @@
-package com.swmansion.reanimated.css
+package com.swmansion.reanimated
 
 import android.graphics.Path
 import android.view.View
 import java.lang.reflect.Field
 
 /**
- * react-native-svg (up to 15.15.5) never switches a fill rule back to nonzero on Android:
+ * react-native-svg (as of 15.15.5) never switches a fill rule back to nonzero on Android:
  * `RenderableView.setFillRule` assigns its `fillRule` field only for evenodd, so a fill rule that
  * animates sticks at evenodd. The field is public and drives the next draw, so the value a
  * commit just wrote is assigned to it directly. A fixed react-native-svg makes this a no-op.
