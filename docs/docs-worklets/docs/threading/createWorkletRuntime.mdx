@@ -92,9 +92,7 @@ When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, 
   ##### `enableNetworking`
 </Badges>
 
-Determines whether the [networking API](/docs/bundleMode/usage#running-network-requests-in-worklets) - `fetch`, `XMLHttpRequest` and their supporting globals - is installed on the runtime. Defaults to `true`.
-
-Takes effect only in [Bundle Mode](/docs/bundleMode/); outside of it the networking API is never installed. Always disabled together with the Event Loop, because `whatwg-fetch` resolves its responses through `setTimeout`.
+Determines whether the [networking API](/docs/bundleMode/usage#running-network-requests-in-worklets) - `fetch`, `XMLHttpRequest` and their supporting globals - is installed on the Runtime. Defaults to `true`.
 
 <Badges version="0.12.0">
   ##### `enableLocking`

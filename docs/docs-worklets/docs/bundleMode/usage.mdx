@@ -24,7 +24,7 @@ The `importForwarding` API is temporary and will be replaced with a more robust 
 
 ## Running network requests in Worklets
 
-In Bundle Mode, Worklet Runtimes come with a standalone networking module. It needs no configuration beyond the [Bundle Mode setup](/docs/bundleMode/setup) and no feature flag. It's installed on every Worklet Runtime unless you opt out with [`enableNetworking: false`](/docs/threading/createWorkletRuntime#enablenetworking).
+In Bundle Mode, Worklet Runtimes come with a standalone networking module, no longer needing a feature flag. It's installed on every Worklet Runtime unless you opt out with [`enableNetworking: false`](/docs/threading/createWorkletRuntime#enablenetworking).
 
 ```tsx
 const runtime = createWorkletRuntime({ name: 'worker' });
@@ -36,17 +36,17 @@ scheduleOnRuntime(runtime, async () => {
 });
 ```
 
-| API | Supported | Notes |
-| --- | :---: | --- |
-| `fetch`, `Headers`, `Request`, `Response` | ✅ | Provided by the [whatwg-fetch](https://github.com/JakeChampion/fetch) polyfill. |
-| `XMLHttpRequest` | ✅ | Download and upload progress events, `arraybuffer` and `blob` response types, timeouts and aborting. Libraries built on top of it, such as Axios, work out of the box. |
-| `Blob`, `FileReader` | ✅ | Backed by in-memory data. |
+| API | Supported |
+| --- | --- |
+| `fetch`, `Headers`, `Request`, `Response` | ✅ |
+| `XMLHttpRequest` | ✅ |
+| `Blob`, `FileReader` | ✅ |
 | `AbortController`, `AbortSignal` | ✅ | |
-| `FormData` | ⚠️ | String fields only, encoded as `multipart/form-data`. File parts, such as `{ uri: ... }` objects, are not supported. |
-| Response streaming | ❌ | `Response.body` is `undefined`, and `XMLHttpRequest.responseText` is only readable once the request completes. |
-| `WebSocket` | ❌ | Not available. |
+| `FormData` | String fields only, encoded as `multipart/form-data`. |
+| Response streaming | ❌ |
+| `WebSocket` | ❌ |
 
-Requests are made by the platform's own networking stack - `NSURLSession` on iOS and OkHttp on Android - so they share the app's cookie storage and its TLS configuration.
+Requests are made by the platform's own networking stack, they share the app's cookie storage and its TLS configuration.
 
 ## Reference
 
