@@ -294,6 +294,7 @@ jobs:
           git status --short
 
       - name: Write the report
+        id: build-report
         if: failure()
         env:
           ISSUE_TITLE: ${{ github.event.issue.title }}
@@ -306,10 +307,56 @@ jobs:
           PLAN_COST_USD: ${{ needs.plan.outputs.cost-usd }}
           FAILED_STEP: ${{ steps.prepare.outcome == 'failure' && 'Prepare the app' || steps.build.outcome == 'failure' && 'Build the app for the iOS simulator' || '' }}
           REPORT_FILE: ${{ env.WORK_DIR }}/report.md
-        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts report
+        run: |
+          node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts report
+          printf '%s\n' "$FAILED_STEP" > "$WORK_DIR/failed-step.txt"
+
+      - name: Upload the report
+        if: always() && steps.build-report.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: argent-cloud-report-issue-${{ github.event.issue.number }}
+          path: |
+            ${{ env.WORK_DIR }}/report.md
+            ${{ env.WORK_DIR }}/failed-step.txt
+          if-no-files-found: error
+          retention-days: 30
+
+  report-build-failure:
+    needs: [plan, build]
+    if: always() && needs.build.result == 'failure'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            /.nvmrc
+            /.github/workflows/helper
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Download the plan
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          name: argent-cloud-plan-issue-${{ github.event.issue.number }}
+          path: ${{ env.WORK_DIR }}
+
+      - name: Download the report
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          name: argent-cloud-report-issue-${{ github.event.issue.number }}
+          path: ${{ env.WORK_DIR }}
+
+      - name: Read the failed step
+        run: echo "FAILED_STEP=$(head -n 1 "$WORK_DIR/failed-step.txt")" >> "$GITHUB_ENV"
 
       - name: Resolve the reports repository
-        if: failure()
         env:
           REPO: ${{ secrets.ARGENT_CLOUD_REPORTS_REPO }}
         run: |
@@ -328,7 +375,6 @@ jobs:
 
       - name: Mint a token for the reports repository
         id: reports-token
-        if: failure()
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
         with:
           app-id: ${{ secrets.ARGENT_CLOUD_REPORTS_APP_ID }}
@@ -339,7 +385,6 @@ jobs:
 
       - name: Publish the report
         id: publish
-        if: failure()
         env:
           REPORTS_REPO: ${{ env.REPORTS_REPO }}
           REPORTS_TOKEN: ${{ steps.reports-token.outputs.token }}
@@ -349,26 +394,26 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_URL: ${{ github.event.issue.html_url }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          STATUS: ${{ job.status }}
+          STATUS: failure
           STAGE: build-failed
           PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
           PLAN_COST_USD: ${{ needs.plan.outputs.cost-usd }}
-          FAILED_STEP: ${{ steps.prepare.outcome == 'failure' && 'Prepare the app' || steps.build.outcome == 'failure' && 'Build the app for the iOS simulator' || '' }}
+          FAILED_STEP: ${{ env.FAILED_STEP }}
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts publish
 
       - name: Report to Slack
-        if: failure()
+        if: always()
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_ARGENT_URL }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_URL: ${{ github.event.issue.html_url }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          STATUS: ${{ job.status }}
+          STATUS: failure
           STAGE: build-failed
           PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
           PLAN_COST_USD: ${{ needs.plan.outputs.cost-usd }}
-          FAILED_STEP: ${{ steps.prepare.outcome == 'failure' && 'Prepare the app' || steps.build.outcome == 'failure' && 'Build the app for the iOS simulator' || '' }}
+          FAILED_STEP: ${{ env.FAILED_STEP }}
           REPORT_URL: ${{ steps.publish.outputs.url }}
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts notify
 
