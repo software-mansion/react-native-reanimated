@@ -100,6 +100,8 @@ function adjustDataToInterfaceOrientation(
       return adjustVectorToInterfaceOrientation(data as Value3D);
     case SensorType.ROTATION:
       return adjustRotationToInterfaceOrientation(data as ValueRotation);
+    case SensorType.HINGE:
+      return data;
   }
 }
 
@@ -124,7 +126,7 @@ const getServerSensorAvailability = () => false;
  */
 export function useAnimatedSensor<T extends SensorType>(
   sensorType: T,
-  userConfig?: Partial<SensorConfig>
+  userConfig?: T extends SensorType.HINGE ? never : Partial<SensorConfig>
 ): AnimatedSensor<SensorValueMap[T]> {
   const {
     interval = 'auto',

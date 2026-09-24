@@ -14,6 +14,7 @@ class ReanimatedSensorListener(
     private val interval: Double,
     private val display: Display,
     private val sensorType: ReanimatedSensorType,
+    private val maximumRange: Float,
 ) : SensorEventListener {
     private var lastRead = System.currentTimeMillis().toDouble()
     private var didWarnAboutMislabeledEvent = false
@@ -22,12 +23,22 @@ class ReanimatedSensorListener(
     private val orientation = FloatArray(3)
     private val quaternion = FloatArray(4)
 
+    private companion object {
+        const val HINGE_STATUS_CLOSED = 1f
+        const val HINGE_STATUS_PARTIALLY_OPEN = 2f
+        const val HINGE_STATUS_FULLY_OPEN = 3f
+        const val FLAT_DEGREES = 180f
+    }
+
     override fun onSensorChanged(event: SensorEvent) {
-        val current = System.currentTimeMillis().toDouble()
-        if (current - lastRead < interval) {
-            return
+        // The hinge sensor reports only on change, so a dropped event is never replaced.
+        if (sensorType != ReanimatedSensorType.HINGE) {
+            val current = System.currentTimeMillis().toDouble()
+            if (current - lastRead < interval) {
+                return
+            }
+            lastRead = current
         }
-        lastRead = current
         warnOnceAboutMislabeledEvent(event.sensor)
 
         val orientationDegrees =
@@ -48,6 +59,7 @@ class ReanimatedSensorListener(
                 ReanimatedSensorType.GRAVITY,
                 ReanimatedSensorType.ACCELEROMETER,
                 -> floatArrayOf(-values[0], -values[1], -values[2])
+                ReanimatedSensorType.HINGE -> hingeData(values)
             }
         setter.sensorSetter(data, orientationDegrees)
     }
@@ -84,5 +96,19 @@ class ReanimatedSensorListener(
             -orientation[1], // pitch
             orientation[2], // roll
         )
+    }
+
+    // Android reports degrees and has no hinge status, so we derive it to match iOS.
+    private fun hingeData(values: FloatArray): FloatArray {
+        val degrees = values[0]
+        // Flat counts as fully open, also on devices that fold past flat.
+        val fullyOpenDegrees = minOf(maximumRange, FLAT_DEGREES)
+        val status =
+            when {
+                degrees <= 0f -> HINGE_STATUS_CLOSED
+                degrees >= fullyOpenDegrees -> HINGE_STATUS_FULLY_OPEN
+                else -> HINGE_STATUS_PARTIALLY_OPEN
+            }
+        return floatArrayOf(Math.toRadians(degrees.toDouble()).toFloat(), status)
     }
 }
