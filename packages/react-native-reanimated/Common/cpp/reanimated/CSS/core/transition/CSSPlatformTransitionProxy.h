@@ -57,9 +57,8 @@ class CSSPlatformTransitionProxy {
       bool allowPlatform,
       double timestamp);
 
-  /// Cancels the native transition of every given property, settling each on
-  /// its resting value (teardown, or a property no longer transitioned).
-  void cancelAll(Tag viewTag, const TransitionProperties &properties);
+  /// Stops the native transition of every given property.
+  void cancelAll(Tag viewTag, const TransitionProperties &properties, bool settle);
 
  private:
   struct ActiveTransition {
@@ -82,7 +81,6 @@ class CSSPlatformTransitionProxy {
       const CSSTransitionPropertySettings *settings,
       bool persistent,
       double timestamp);
-  /// `settle` is false only when the loop takes the property over and resumes it.
   void remove(Tag viewTag, const std::string &propertyName, bool settle);
 
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;

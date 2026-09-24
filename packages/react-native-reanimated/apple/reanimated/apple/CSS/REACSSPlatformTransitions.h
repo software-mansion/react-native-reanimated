@@ -27,8 +27,6 @@ NS_ASSUME_NONNULL_BEGIN
                        easing:(const reanimated::css::EasingConfig &)easing
                    persistent:(BOOL)persistent;
 
-/// `settle` shows the committed model value; a hand-off to the loop and a held
-/// (persistent) value keep the last presented frame in the model instead.
 - (void)stopTransitionForTag:(facebook::react::Tag)viewTag
                 propertyName:(const std::string &)propertyName
                       settle:(BOOL)settle;

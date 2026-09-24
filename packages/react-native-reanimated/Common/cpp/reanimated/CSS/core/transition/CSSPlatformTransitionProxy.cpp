@@ -142,13 +142,14 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
     } else {
       // platform -> loop migration cancels on the platform side.
       // Sampled before remove() drops the run this resumes from; nullopt keeps the
-      // diff's own from-value, which the animation has painted past.
+      // diff's own from-value, which the animation has painted past. Settings alone
+      // leave the loop nothing to resume, so the property lands on its committed value.
       std::optional<PlatformValue> resumeFrom;
       if (routing.platform.erase(propertyName) > 0) {
         if (hasValue) {
           resumeFrom = getCurrentValue(viewTag, propertyName, timestamp);
         }
-        remove(viewTag, propertyName, false);
+        remove(viewTag, propertyName, !hasValue);
       }
       routing.loop.insert(propertyName);
       if (hasValue) {
@@ -211,9 +212,12 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
   return loopDiffs;
 }
 
-void CSSPlatformTransitionProxy::cancelAll(const Tag viewTag, const TransitionProperties &properties) {
+void CSSPlatformTransitionProxy::cancelAll(
+    const Tag viewTag,
+    const TransitionProperties &properties,
+    const bool settle) {
   for (const auto &propertyName : properties) {
-    remove(viewTag, propertyName, true);
+    remove(viewTag, propertyName, settle);
   }
 }
 

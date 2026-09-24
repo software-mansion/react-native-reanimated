@@ -20,7 +20,7 @@ CSSTransition::CSSTransition(
       observer_(observer) {}
 
 CSSTransition::~CSSTransition() {
-  platformTransitionProxy_->cancelAll(getViewTag(), routing_.platform);
+  platformTransitionProxy_->cancelAll(getViewTag(), routing_.platform, false);
   if (loopTransition_) {
     // The loop co-owns the transition and removal is only enqueued, so a frame
     // already in flight can still tick it after we are gone. Drop the reporter
@@ -101,14 +101,16 @@ void CSSTransition::setPseudoLockedProperties(TransitionProperties properties) {
   pseudoLockedProperties_ = std::move(properties);
 }
 
-void CSSTransition::cancel() {
+void CSSTransition::cancel(const bool settle) {
   pendingInitialUpdate_ = folly::dynamic::object();
   if (loopTransition_) {
     // Report the cancel before the operation goes away, as animations do.
     loopTransition_->abort(loop_->resolveTimestamp());
     loop_->remove(loopTransition_);
   }
-  platformTransitionProxy_->cancelAll(getViewTag(), routing_.platform);
+  platformTransitionProxy_->cancelAll(getViewTag(), routing_.platform, settle);
+  // The destructor's stop keeps the presented frame, which would undo this settle.
+  routing_.platform.clear();
 }
 
 void CSSTransition::removeProperties(const std::vector<std::string> &propertyNames, const double timestamp) {
@@ -123,7 +125,7 @@ void CSSTransition::removeProperties(const std::vector<std::string> &propertyNam
   }
 
   if (!platformProperties.empty()) {
-    platformTransitionProxy_->cancelAll(getViewTag(), platformProperties);
+    platformTransitionProxy_->cancelAll(getViewTag(), platformProperties, true);
   }
   if (loopTransition_) {
     loopTransition_->removeProperties(propertyNames, timestamp);

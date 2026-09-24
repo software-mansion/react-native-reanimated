@@ -35,8 +35,8 @@ class CSSPlatformTransitionBackend {
       bool persistent) = 0;
 
   /// `settle` lands the property on its committed target. Otherwise the last
-  /// shown frame stays until the loop paints the next one. A held (persistent)
-  /// value has no committed target and keeps its frame either way.
+  /// shown frame stays, for the loop to resume or a leaving view to keep. A held
+  /// (persistent) value has no committed target and keeps its frame either way.
   virtual void stopTransition(Tag viewTag, const std::string &propertyName, bool settle) = 0;
 };
 

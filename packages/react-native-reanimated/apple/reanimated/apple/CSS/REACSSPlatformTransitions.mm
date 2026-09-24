@@ -110,9 +110,9 @@ using namespace reanimated::css;
     if (!layer) {
       return;
     }
-    // A hand-off to the loop keeps the last visible frame in the model so the layer
-    // doesn't snap before the loop paints its first frame. A held (persistent) value
-    // has no committed target in the model, so it keeps its frame as well.
+    // Without settle (a hand-off to the loop, or a view leaving the tree) the last
+    // visible frame goes into the model so the layer doesn't snap. A held (persistent)
+    // value has no committed target in the model, so it keeps its frame as well.
     CAAnimation *animation = [layer animationForKey:keyPath];
     BOOL held = animation != nil && !animation.removedOnCompletion;
     if (!settle || held) {
