@@ -88,17 +88,20 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   // ShadowTree not commited by Reanimated, apply updates from the updates
   // registry manager
   reaShadowNode->unsetReanimatedMountTrait();
+  // The UI thread takes the registry lock on each frame, so the clone runs outside it. Without the commit pause,
+  // Reanimated commits can then start during the clone, and React starts its commit again more often.
+  constexpr bool cloneInsideRegistryLock = StaticFeatureFlags::getFlag("DISABLE_COMMIT_PAUSING_MECHANISM");
   RootShadowNode::Unshared rootNode = newRootShadowNode;
+  PropsMap propsMap;
 
   {
     auto lock = updatesRegistryManager_->lock();
 
-    PropsMap propsMap = updatesRegistryManager_->collectProps();
+    propsMap = updatesRegistryManager_->collectProps();
     updatesRegistryManager_->cancelCommitAfterPause();
 
-    rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
     // Must share the registry lock with `collectProps`, or a write can get the epoch of a snapshot that lacks it.
-    trackCommit(rootNode, true);
+    trackWillCommit(rootNode, true);
     // If the commit comes from React Native then pause commits from
     // Reanimated since the ShadowTree to be committed by Reanimated may not
     // include the new changes from React Native yet and all changes of animated
@@ -108,8 +111,16 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     // (very bad). We don't pause Reanimated commits for state updates coming
     // from React Native as this would break sticky header animations.
     updatesRegistryManager_->pauseReanimatedCommits();
+
+    if constexpr (cloneInsideRegistryLock) {
+      rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
+    }
   }
 
+  if constexpr (!cloneInsideRegistryLock) {
+    rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
+  }
+  trackDidCommit(rootNode);
   return rootNode;
 }
 
@@ -126,13 +137,24 @@ void ReanimatedCommitHook::shadowTreeDidCommit(
 
 void ReanimatedCommitHook::trackCommit(const RootShadowNode::Shared &rootShadowNode, const bool carriesRegistryValues)
     const {
-  if (!synchronousWritesTracker_) {
-    return;
+  trackWillCommit(rootShadowNode, carriesRegistryValues);
+  trackDidCommit(rootShadowNode);
+}
+
+void ReanimatedCommitHook::trackWillCommit(
+    const RootShadowNode::Shared &rootShadowNode,
+    const bool carriesRegistryValues) const {
+  if (synchronousWritesTracker_) {
+    synchronousWritesTracker_->onWillCommit(rootShadowNode, carriesRegistryValues);
   }
-  synchronousWritesTracker_->onWillCommit(rootShadowNode, carriesRegistryValues);
+}
+
+void ReanimatedCommitHook::trackDidCommit([[maybe_unused]] const RootShadowNode::Shared &rootShadowNode) const {
 #if REACT_NATIVE_VERSION_MINOR < 88
   // Before 0.88 there is no `shadowTreeDidCommit`. The root that this hook returns is the only one available.
-  synchronousWritesTracker_->onDidCommit(rootShadowNode);
+  if (synchronousWritesTracker_) {
+    synchronousWritesTracker_->onDidCommit(rootShadowNode);
+  }
 #endif
 }
 
