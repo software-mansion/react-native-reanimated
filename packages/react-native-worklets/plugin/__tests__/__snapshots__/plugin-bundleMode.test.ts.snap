@@ -71,7 +71,6 @@ const foo = require("react-native-worklets/.worklets/1.js").default([x]);"
 exports[`babel plugin in bundleMode source replacement still captures closure even with "no-worklet-closure" directive 2`] = `
 "export default (function foo_testJs1Factory([x]) {
   const foo = function () {
-    'no-worklet-closure';
     "use no memo";
 
     return x;

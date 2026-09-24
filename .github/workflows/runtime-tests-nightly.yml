@@ -18,11 +18,9 @@ jobs:
       fail-fast: false
       matrix:
         configuration: [DebugRuntimeTests, ReleaseRuntimeTests]
-        bundleMode: [false, true]
     uses: ./.github/workflows/runtime-tests-ios-argent.yml
     with:
       configuration: ${{ matrix.configuration }}
-      bundleMode: ${{ matrix.bundleMode }}
     secrets:
       SIM_ROUTER_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME }}
       SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
@@ -33,8 +31,6 @@ jobs:
       fail-fast: false
       matrix:
         configuration: [DebugRuntimeTests, ReleaseRuntimeTests]
-        bundleMode: [false, true]
     uses: ./.github/workflows/runtime-tests-android.yml
     with:
       configuration: ${{ matrix.configuration }}
-      bundleMode: ${{ matrix.bundleMode }}

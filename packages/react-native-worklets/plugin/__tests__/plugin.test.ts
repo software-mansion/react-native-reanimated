@@ -9,6 +9,14 @@ type CapturedFile = { path: string; content: string };
 
 const capturedFiles: CapturedFile[] = [];
 
+// The OXC transform writes its files from Rust, so they never reach the `fs`
+// mock below. Its jest setup records them on `globalThis` instead.
+function nativelyEmittedFiles(): CapturedFile[] {
+  return ((
+    globalThis as { __WORKLETS_OXC_EMITTED__?: CapturedFile[] }
+  ).__WORKLETS_OXC_EMITTED__ ??= []);
+}
+
 jest.mock('fs', () => {
   const actual = jest.requireActual('fs');
   const stagedFiles = new Map<string, string>();
@@ -60,6 +68,7 @@ function runPlugin(
   filename: string = MOCK_LOCATION
 ) {
   const startIndex = capturedFiles.length;
+  const nativeStartIndex = nativelyEmittedFiles().length;
   const strippedInput = input.replace(/<\/?script[^>]*>/g, '');
   const config = {
     filename,
@@ -73,7 +82,10 @@ function runPlugin(
   assert(transformed);
   return {
     code: transformed.code ?? '',
-    files: capturedFiles.slice(startIndex),
+    files:
+      capturedFiles.length > startIndex
+        ? capturedFiles.slice(startIndex)
+        : nativelyEmittedFiles().slice(nativeStartIndex),
   };
 }
 

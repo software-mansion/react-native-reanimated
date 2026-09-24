@@ -4,20 +4,12 @@ env:
 on:
   workflow_call:
     inputs:
-      bundleMode:
-        required: false
-        type: boolean
-        default: false
       configuration:
         required: false
         type: string
         default: DebugRuntimeTests
   workflow_dispatch:
     inputs:
-      bundleMode:
-        required: false
-        type: boolean
-        default: false
       configuration:
         required: false
         type: string
@@ -29,19 +21,15 @@ permissions:
 jobs:
   runtime-tests-android:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    name: ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }}
+    name: ${{ inputs.configuration || 'DebugRuntimeTests' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      matrix:
-        bundleMode: ${{ fromJSON(format('[{0}]', inputs.bundleMode)) }}
     env:
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated
       CONFIGURATION: ${{ inputs.configuration || 'DebugRuntimeTests' }}
     concurrency:
-      group: runtime-tests-android-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'DebugRuntimeTests' }}
+      group: runtime-tests-android-${{ github.workflow }}-${{ github.ref }}-${{ inputs.configuration || 'DebugRuntimeTests' }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -63,10 +51,6 @@ jobs:
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
-
-      - name: Toggle Bundle Mode off (Legacy Eval)
-        if: ${{ !matrix.bundleMode }}
-        run: yarn toggle-bundle-mode
 
       - name: Build Reanimated package
         working-directory: ${{ env.REANIMATED_DIR }}
@@ -145,7 +129,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: android-crash-reports-${{ inputs.configuration || 'DebugRuntimeTests' }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}
+          name: android-crash-reports-${{ inputs.configuration || 'DebugRuntimeTests' }}
           path: apps/fabric-example/crash-reports
           if-no-files-found: ignore
           retention-days: 14

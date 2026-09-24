@@ -50,68 +50,50 @@ pub fn get_closure<'a>(
             continue;
         }
 
-        match r.symbol_id {
-            Some(symbol_id) => {
-                let symbol_scope = scoping.symbol_scope_id(symbol_id);
-                if scope_is_inside(scoping, symbol_scope, function_scope_id) {
-                    continue;
-                }
-                // We must handle recursion and
-                // not capture the function itself.
-                if let Some(fn_name) = self_function_name
-                    && fn_name == r.name
-                    && scoping.symbol_name(symbol_id) == fn_name
-                {
-                    continue;
-                }
+        let Some(symbol_id) = r.symbol_id else {
+            continue;
+        };
+        let symbol_scope = scoping.symbol_scope_id(symbol_id);
+        if scope_is_inside(scoping, symbol_scope, function_scope_id) {
+            continue;
+        }
+        // We must handle recursion and
+        // not capture the function itself.
+        if let Some(fn_name) = self_function_name
+            && fn_name == r.name
+            && scoping.symbol_name(symbol_id) == fn_name
+        {
+            continue;
+        }
 
-                let flags = scoping.symbol_flags(symbol_id);
-                if flags.is_import()
-                    && !binding_is_rebound(scoping, symbol_id)
-                    && let Some(info) = state.imports_by_symbol.get(&symbol_id)
-                {
-                    if matches!(info.shape, ImportShape::Namespace) {
-                        seen.insert(r.name.clone());
-                        result.closure_variables.push(r.name);
-                        continue;
-                    }
-                    let source = &info.source;
-                    let is_rel = source.starts_with('.');
-                    let allowed_for_rel = is_rel
-                        && can_forward_relative_import(filename, &state.forwardable_relative_paths);
-                    let lib_workletizable = !is_rel
-                        && can_forward_module_import(source, &state.forwardable_module_names);
-                    if allowed_for_rel || lib_workletizable {
-                        result.imports.push(info.clone());
-                        seen.insert(r.name);
-                        continue;
-                    }
-                }
-
+        let flags = scoping.symbol_flags(symbol_id);
+        if flags.is_import()
+            && !binding_is_rebound(scoping, symbol_id)
+            && let Some(info) = state.imports_by_symbol.get(&symbol_id)
+        {
+            if matches!(info.shape, ImportShape::Namespace) {
                 seen.insert(r.name.clone());
                 result.closure_variables.push(r.name);
+                continue;
             }
-            None => {
-                if !is_synthesized_init_data(&r.name) {
-                    continue;
-                }
-                seen.insert(r.name.clone());
-                result.closure_variables.push(r.name);
+            let source = &info.source;
+            let is_rel = source.starts_with('.');
+            let allowed_for_rel =
+                is_rel && can_forward_relative_import(filename, &state.forwardable_relative_paths);
+            let lib_workletizable =
+                !is_rel && can_forward_module_import(source, &state.forwardable_module_names);
+            if allowed_for_rel || lib_workletizable {
+                result.imports.push(info.clone());
+                seen.insert(r.name);
+                continue;
             }
         }
+
+        seen.insert(r.name.clone());
+        result.closure_variables.push(r.name);
     }
 
     result
-}
-
-fn is_synthesized_init_data(name: &str) -> bool {
-    let Some(rest) = name.strip_prefix("_worklet_") else {
-        return false;
-    };
-    let Some(digits) = rest.strip_suffix("_init_data") else {
-        return false;
-    };
-    !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit())
 }
 
 pub fn scope_is_inside(scoping: &Scoping, inner: ScopeId, outer: ScopeId) -> bool {

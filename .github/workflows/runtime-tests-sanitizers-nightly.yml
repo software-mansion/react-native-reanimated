@@ -18,7 +18,6 @@ jobs:
     uses: ./.github/workflows/runtime-tests-ios.yml
     with:
       configuration: ReleaseRuntimeTests
-      bundleMode: true
       sanitizer: thread
 
   ios-asan:
@@ -26,5 +25,4 @@ jobs:
     uses: ./.github/workflows/runtime-tests-ios.yml
     with:
       configuration: ReleaseRuntimeTests
-      bundleMode: true
       sanitizer: address

@@ -298,44 +298,21 @@ jobs:
 
   # Not a matrix: a skipped matrix job shows its `name:` unexpanded.
   # Not on pushes to main: too expensive to rerun after every merge.
-  runtime-tests-android-legacy-eval:
-    name: Runtime tests Android (Legacy Eval)
+  runtime-tests-android:
+    name: Runtime tests Android
     needs: changes
     if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-android == 'true') }}
     uses: ./.github/workflows/runtime-tests-android.yml
     with:
       configuration: DebugRuntimeTests
-      bundleMode: false
 
-  runtime-tests-android-bundle-mode:
-    name: Runtime tests Android (Bundle Mode)
-    needs: changes
-    if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-android == 'true') }}
-    uses: ./.github/workflows/runtime-tests-android.yml
-    with:
-      configuration: DebugRuntimeTests
-      bundleMode: true
-
-  runtime-tests-ios-legacy-eval:
-    name: Runtime tests iOS (Legacy Eval)
+  runtime-tests-ios:
+    name: Runtime tests iOS
     needs: changes
     if: ${{ !cancelled() && github.event_name != 'push' && !github.event.pull_request.head.repo.fork && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
     uses: ./.github/workflows/runtime-tests-ios-argent.yml
     with:
       configuration: ReleaseRuntimeTests
-      bundleMode: false
-    secrets:
-      SIM_ROUTER_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME }}
-      SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
-
-  runtime-tests-ios-bundle-mode:
-    name: Runtime tests iOS (Bundle Mode)
-    needs: changes
-    if: ${{ !cancelled() && github.event_name != 'push' && !github.event.pull_request.head.repo.fork && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
-    uses: ./.github/workflows/runtime-tests-ios-argent.yml
-    with:
-      configuration: ReleaseRuntimeTests
-      bundleMode: true
     secrets:
       SIM_ROUTER_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME }}
       SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
@@ -366,10 +343,8 @@ jobs:
       - example-ios-build-check
       - example-next-build-check-and-test
       - example-typescript-check-and-lint
-      - runtime-tests-android-legacy-eval
-      - runtime-tests-android-bundle-mode
-      - runtime-tests-ios-legacy-eval
-      - runtime-tests-ios-bundle-mode
+      - runtime-tests-android
+      - runtime-tests-ios
       - worklets-plugin-static-check
       - yarn-validation
     if: ${{ always() }}

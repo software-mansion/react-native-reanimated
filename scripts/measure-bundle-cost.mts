@@ -78,12 +78,11 @@ function resolveWorkletOrigin(file: string, seen?: Set<string>): string {
   return origin;
 }
 
-function classify(source: string | null, attribute: boolean): string {
+function classify(source: string | null): string {
   if (!source) return 'other';
-  const resolved =
-    attribute && WORKLETS_GEN.test(source)
-      ? resolveWorkletOrigin(source)
-      : source;
+  const resolved = WORKLETS_GEN.test(source)
+    ? resolveWorkletOrigin(source)
+    : source;
   const group = GROUPS.find((g) => g.test.test(resolved));
   return group ? group.label : 'other';
 }
@@ -92,15 +91,8 @@ function fail(message: string): never {
   throw new Error(message);
 }
 
-function parseBool(value: string, name: string): boolean {
-  if (value === 'true') return true;
-  if (value === 'false') return false;
-  fail(`--${name} expects true or false (got "${value}")`);
-}
-
 interface Args {
   platforms: string[];
-  bundleMode: boolean;
   json: boolean;
   keep: boolean;
   help: boolean;
@@ -109,7 +101,6 @@ interface Args {
 function parseArgs(argv: string[]): Args {
   const args: Args = {
     platforms: [],
-    bundleMode: true,
     json: false,
     keep: false,
     help: false,
@@ -120,11 +111,6 @@ function parseArgs(argv: string[]): Args {
     else if (a === '-h' || a === '--help') {
       args.help = true;
       return args;
-    } else if (a.startsWith('--bundle-mode=')) {
-      args.bundleMode = parseBool(
-        a.slice('--bundle-mode='.length),
-        'bundle-mode'
-      );
     } else if (a.startsWith('--platform=')) {
       args.platforms = a.slice('--platform='.length).split(',').filter(Boolean);
     } else if (!a.startsWith('-')) {
@@ -147,54 +133,16 @@ Usage:
 Options:
   --platform=<ios,android>   Platform(s) to bundle (default: ios). May also be
                              passed as positional args.
-  --bundle-mode=<bool>       Build with worklets bundle mode on (default: true).
   --json                     Emit machine-readable JSON instead of a table.
   --keep                     Keep the generated bundle/source-map artifacts.
   -h, --help                 Show this help.`
   );
 }
 
-const TOGGLE_SCRIPT = path.join(
-  MONOREPO_ROOT,
-  'scripts',
-  'toggle-bundle-mode.sh'
-);
-
-const BUNDLE_MODE_ASSIGN =
-  /_WORKLETS_BUNDLE_MODE_ENABLED\s*=\s*(!0|!1|true|false)/g;
-
-/** @returns Whether the built bundle has bundle mode enabled. */
-function detectBundleMode(bundleFile: string): boolean {
-  const matches = [
-    ...fs.readFileSync(bundleFile, 'utf8').matchAll(BUNDLE_MODE_ASSIGN),
-  ];
-  if (matches.length === 0) {
-    throw new Error(
-      'could not find _WORKLETS_BUNDLE_MODE_ENABLED in the bundle; ' +
-        'is react-native-worklets part of the app?'
-    );
-  }
-  return matches.some((m) => m[1] === '!0' || m[1] === 'true');
-}
-
-function toggleBundleMode(): void {
-  const res = spawnSync('bash', [TOGGLE_SCRIPT], {
-    cwd: MONOREPO_ROOT,
-    stdio: ['ignore', 2, 2],
-  });
-  if (res.error) throw res.error;
-  if (res.status !== 0) {
-    throw new Error(
-      `scripts/toggle-bundle-mode.sh failed with exit code ${res.status}`
-    );
-  }
-}
-
 /** Build a minified production bundle with a source map for `platform`. */
 function buildBundle(
   platform: string,
-  outDir: string,
-  attribute: boolean
+  outDir: string
 ): { bundle: string; map: string } {
   const bundle = path.join(outDir, `${platform}.bundle.js`);
   const map = `${bundle}.map`;
@@ -219,9 +167,7 @@ function buildBundle(
     {
       cwd: FABRIC_APP,
       stdio: ['ignore', 'ignore', 'inherit'],
-      env: attribute
-        ? { ...process.env, WORKLETS_WRITE_ORIGIN: '1' }
-        : process.env,
+      env: { ...process.env, WORKLETS_WRITE_ORIGIN: '1' },
     }
   );
   if (res.error) throw res.error;
@@ -231,33 +177,6 @@ function buildBundle(
     );
   }
   return { bundle, map };
-}
-
-/**
- * Build `platform` and make sure the result really is in the requested bundle
- * mode, toggling the repo once and rebuilding if it isn't.
- */
-function buildInRequestedMode(
-  platform: string,
-  outDir: string,
-  args: { bundleMode: boolean },
-  state: { toggled: boolean }
-): { bundle: string; map: string } {
-  const built = buildBundle(platform, outDir, args.bundleMode);
-  if (detectBundleMode(built.bundle) === args.bundleMode) return built;
-
-  if (state.toggled) {
-    throw new Error(
-      'scripts/toggle-bundle-mode.sh ran but the bundle is still ' +
-        `bundle-mode=${!args.bundleMode}`
-    );
-  }
-  console.error(
-    `• bundle came out bundle-mode=${!args.bundleMode}, toggling and rebuilding…`
-  );
-  toggleBundleMode();
-  state.toggled = true;
-  return buildInRequestedMode(platform, outDir, args, state);
 }
 
 /** Read every mapping of a flat source map. */
@@ -290,8 +209,7 @@ async function collectMappings(map: RawSourceMap): Promise<Mapping[]> {
 
 async function attributeBundle(
   bundleFile: string,
-  mapFile: string,
-  attribute: boolean
+  mapFile: string
 ): Promise<{ total: number; groups: Record<string, number> }> {
   const code: string = fs.readFileSync(bundleFile, 'utf8');
   const lines = code.split('\n');
@@ -320,7 +238,7 @@ async function attributeBundle(
     const next = mappings[i + 1];
     const end = next ? byteOf(next[0], next[1]) : total;
     const size = Math.max(0, end - start);
-    groups[classify(source, attribute)] += size;
+    groups[classify(source)] += size;
   }
 
   return { total, groups };
@@ -356,20 +274,11 @@ async function main(): Promise<void> {
   }
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'reanimated-bundle-cost-'));
 
-  const state = { toggled: false };
-
-  const modeLabel = `bundle-mode=${args.bundleMode}`;
-  console.error(`• ${modeLabel}`);
-
   const report: Record<string, Result> = {};
   try {
     for (const platform of args.platforms) {
-      const { bundle, map } = buildInRequestedMode(platform, tmp, args, state);
-      const { total, groups } = await attributeBundle(
-        bundle,
-        map,
-        args.bundleMode
-      );
+      const { bundle, map } = buildBundle(platform, tmp);
+      const { total, groups } = await attributeBundle(bundle, map);
       report[platform] = {
         total,
         gzip: gzipSize(fs.readFileSync(bundle)),
@@ -377,16 +286,15 @@ async function main(): Promise<void> {
       };
     }
   } finally {
-    if (state.toggled) toggleBundleMode();
     if (args.keep) console.error(`\nartifacts kept in ${tmp}`);
     else fs.rmSync(tmp, { recursive: true, force: true });
   }
 
   if (args.json) {
-    console.log(JSON.stringify({ mode: modeLabel, ...report }, null, 2));
+    console.log(JSON.stringify(report, null, 2));
   } else {
     for (const [title, result] of Object.entries(report)) {
-      printReport(`${title}  [${modeLabel}]`, result);
+      printReport(title, result);
     }
   }
 }

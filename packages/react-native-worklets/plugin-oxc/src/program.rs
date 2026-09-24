@@ -8,9 +8,9 @@ use oxc_semantic::SemanticBuilder;
 use oxc_span::{SourceType, Span};
 use oxc_syntax::symbol::SymbolId;
 
+use crate::plugin;
 use crate::types::{ImportInfo, ImportShape, State};
 use crate::{EmittedFile, PluginOptions, TransformResult};
-use crate::{bundle_mode, file_directive, plugin};
 
 const PARSE_ERROR_CODE: &str = "WORKLETS_ERR_PARSE";
 const FLOW_ERROR_CODE: &str = "WORKLETS_ERR_FLOW";
@@ -35,15 +35,11 @@ pub fn run(
     let mut program = parse_program(&allocator, source_text, filename, source_type)?;
     let builder = oxc_ast::AstBuilder::new(&allocator);
 
-    let is_worklet_file = file_directive::process_file_directive(&mut program, builder);
-
     if source_type.is_typescript() {
         strip_typescript(&mut program, &allocator, filename)?;
     }
 
     let mut state = State::new(options, source_text.to_string());
-
-    let flag_enabled = bundle_mode::enable_flag(&mut program, builder, filename);
 
     let semantic_ret = SemanticBuilder::new()
         .with_check_syntax_error(false)
@@ -80,7 +76,7 @@ pub fn run(
     Ok(TransformResult {
         code: printed.code,
         map: printed.map.map(|map| map.to_json_string()),
-        changed: flag_enabled || is_worklet_file || !files.is_empty(),
+        changed: !files.is_empty(),
         files,
     })
 }

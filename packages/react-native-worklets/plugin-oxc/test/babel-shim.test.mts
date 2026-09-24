@@ -28,7 +28,7 @@ test(
           filename: 'test.js',
           babelrc: false,
           configFile: false,
-          plugins: [[shim, { bundleMode: true }]],
+          plugins: [shim],
         }
       );
       assert.ok(result && result.code);

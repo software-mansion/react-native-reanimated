@@ -14,14 +14,12 @@ type PlatformResult = {
 type ExpectedJob = {
   reanimatedVersion: string;
   workletsVersion: string;
-  bundleMode: boolean;
 };
 
 type ResultFile = {
   reanimatedVersion: string;
   workletsVersion: string;
   reactNativeVersion: string;
-  bundleMode: boolean;
   results: Record<string, PlatformResult>;
 };
 
@@ -34,7 +32,6 @@ function parseResultFile(file: string): ResultFile | null {
     const parsed = JSON.parse(fs.readFileSync(file, 'utf8')) as ResultFile;
     if (
       typeof parsed?.reanimatedVersion !== 'string' ||
-      typeof parsed?.bundleMode !== 'boolean' ||
       typeof parsed?.results !== 'object' ||
       parsed.results === null
     ) {
@@ -69,10 +66,6 @@ function readResults(dir: string): ResultFile[] {
   return files;
 }
 
-function jobKey(reanimatedVersion: string, bundleMode: boolean): string {
-  return `${reanimatedVersion} bundle-mode=${bundleMode}`;
-}
-
 function readExpectedJobs(): ExpectedJob[] {
   const raw = process.env.EXPECTED_MATRIX;
   if (!raw) {
@@ -86,12 +79,10 @@ function readExpectedJobs(): ExpectedJob[] {
 }
 
 function missingJobs(results: ResultFile[]): string[] {
-  const measured = new Set(
-    results.map((result) => jobKey(result.reanimatedVersion, result.bundleMode))
-  );
+  const measured = new Set(results.map((result) => result.reanimatedVersion));
   return readExpectedJobs()
-    .map((job) => jobKey(job.reanimatedVersion, job.bundleMode))
-    .filter((key) => !measured.has(key));
+    .map((job) => job.reanimatedVersion)
+    .filter((version) => !measured.has(version));
 }
 
 function groupByVersion(results: ResultFile[]): Map<string, ResultFile[]> {
@@ -151,25 +142,21 @@ function formatSummary(results: ResultFile[], runUrl: string): string {
     '```',
   ];
 
-  const rows: [string, string, boolean][] = [
-    ['reanimated(bundlemode)', REANIMATED, true],
-    ['reanimated(legacy)', REANIMATED, false],
-    ['worklets(bundlemode)', WORKLETS, true],
-    ['worklets(legacy)', WORKLETS, false],
+  const rows: [string, string][] = [
+    ['reanimated', REANIMATED],
+    ['worklets', WORKLETS],
   ];
 
-  for (const [label, group, bundleMode] of rows) {
-    const inMode = (entries: ResultFile[]) =>
-      entries.filter((entry) => entry.bundleMode === bundleMode);
-    const main = sumGroup(inMode(mainEntries), group);
+  for (const [label, group] of rows) {
+    const main = sumGroup(mainEntries, group);
     const baselines = others.map((version) =>
-      sumGroup(inMode(byVersion.get(version)!), group)
+      sumGroup(byVersion.get(version)!, group)
     );
     const changes = baselines
       .map((baseline) => percentChange(main, baseline).padStart(7))
       .join(' ');
     const sizes = [main, ...baselines].map((size) => mb(size)).join(' vs ');
-    lines.push(`${label.padEnd(23)} ${changes}  (${sizes})`);
+    lines.push(`${label.padEnd(10)} ${changes}  (${sizes})`);
   }
 
   lines.push('```', `\n<${runUrl}|bundle cost workflow run>`);
@@ -187,14 +174,12 @@ function formatTable(results: ResultFile[]): string {
     const { workletsVersion, reactNativeVersion } = entries[0];
     const body: string[] = [];
 
-    for (const entry of entries.sort(
-      (a, b) => Number(b.bundleMode) - Number(a.bundleMode)
-    )) {
+    for (const entry of entries) {
       for (const [platform, result] of Object.entries(entry.results).sort()) {
         const reanimated = result.groups[REANIMATED] ?? 0;
         const worklets = result.groups[WORKLETS] ?? 0;
         body.push(
-          `${platform.padEnd(8)} bundle-mode=${String(entry.bundleMode).padEnd(6)} ` +
+          `${platform.padEnd(8)} ` +
             `total ${mb(result.total).padStart(8)}  ` +
             `gzip ${mb(result.gzip).padStart(8)}  ` +
             `reanimated ${mb(reanimated).padStart(8)}  ` +

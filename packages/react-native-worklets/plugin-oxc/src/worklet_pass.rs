@@ -1,9 +1,9 @@
 use oxc_allocator::Allocator;
 use oxc_ast::AstBuilder;
 use oxc_ast::ast::{
-    ArrowFunctionExpression, ClassElement, Declaration, ExportDefaultDeclaration,
-    ExportDefaultDeclarationKind, ExportNamedDeclaration, Expression, Function, ObjectProperty,
-    PropertyKey, PropertyKind, Statement,
+    ArrowFunctionExpression, Declaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind,
+    ExportNamedDeclaration, Expression, Function, ObjectProperty, PropertyKey, PropertyKind,
+    Statement,
 };
 use oxc_ast_visit::{VisitMut, walk_mut};
 use oxc_semantic::Scoping;
@@ -11,16 +11,15 @@ use oxc_span::SPAN;
 use oxc_syntax::scope::ScopeFlags;
 
 use crate::ast::{const_decl, const_declaration, identifier_binding_pattern};
-use crate::class_method::{MethodOutcome, process_if_worklet_method};
 use crate::directives::has_worklet_directive;
 use crate::types::State;
 use crate::worklet_factory::{FactoryContext, WorkletInput, make_worklet_factory};
 
 pub struct WorkletPass<'a, 'b> {
-    pub state: &'b mut State,
+    state: &'b mut State,
     scoping: &'b mut Scoping,
-    pub builder: AstBuilder<'a>,
-    pub allocator: &'a Allocator,
+    builder: AstBuilder<'a>,
+    allocator: &'a Allocator,
     filename: &'b str,
     parent_is_scopable: bool,
 }
@@ -124,19 +123,6 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
             identifier_binding_pattern(self.builder, &decl_name),
             factory_call,
         )));
-    }
-
-    fn visit_class_body(&mut self, body: &mut oxc_ast::ast::ClassBody<'a>) {
-        for element in body.body.iter_mut() {
-            let ClassElement::MethodDefinition(method) = element else {
-                self.visit_class_element(element);
-                continue;
-            };
-            match process_if_worklet_method(self, method) {
-                MethodOutcome::NotAWorklet => self.visit_class_element(element),
-                MethodOutcome::Workletized(property) => *element = property,
-            }
-        }
     }
 
     /**
@@ -255,7 +241,7 @@ impl<'a, 'b> WorkletPass<'a, 'b> {
         Some(self.build_factory(input).0)
     }
 
-    pub fn try_workletize_function(
+    fn try_workletize_function(
         &mut self,
         func: &Function<'a>,
         self_name: Option<&str>,
