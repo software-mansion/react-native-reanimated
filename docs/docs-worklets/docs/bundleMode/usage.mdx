@@ -24,21 +24,29 @@ The `importForwarding` API is temporary and will be replaced with a more robust 
 
 ## Running network requests in Worklets
 
-In Bundle Mode, Worklet Runtimes come with a standalone networking module. It's always enabled and doesn't require any configuration beyond the [Bundle Mode setup](/docs/bundleMode/setup).
+In Bundle Mode, Worklet Runtimes come with a standalone networking module. It needs no configuration beyond the [Bundle Mode setup](/docs/bundleMode/setup) and no feature flag. It's installed on every Worklet Runtime unless you opt out with [`enableNetworking: false`](/docs/threading/createWorkletRuntime#enablenetworking).
 
-The following APIs are available on Worklet Runtimes:
+```tsx
+const runtime = createWorkletRuntime({ name: 'worker' });
 
-- `fetch`, `Headers`, `Request` and `Response`, provided by the [whatwg-fetch](https://github.com/JakeChampion/fetch) polyfill,
-- `XMLHttpRequest`, including download and upload progress events, `arraybuffer` and `blob` response types, timeouts and aborting. Libraries built on top of `XMLHttpRequest`, such as Axios, work out of the box,
-- `FormData` with string fields, encoded as `multipart/form-data`,
-- `Blob` and `FileReader`, backed by in-memory data,
-- `AbortController` and `AbortSignal`.
+scheduleOnRuntime(runtime, async () => {
+  'worklet';
+  const response = await fetch('https://swmansion.com');
+  console.log(response.status);
+});
+```
 
-The implementation has the following limitations:
+| API | Supported | Notes |
+| --- | :---: | --- |
+| `fetch`, `Headers`, `Request`, `Response` | ✅ | Provided by the [whatwg-fetch](https://github.com/JakeChampion/fetch) polyfill. |
+| `XMLHttpRequest` | ✅ | Download and upload progress events, `arraybuffer` and `blob` response types, timeouts and aborting. Libraries built on top of it, such as Axios, work out of the box. |
+| `Blob`, `FileReader` | ✅ | Backed by in-memory data. |
+| `AbortController`, `AbortSignal` | ✅ | |
+| `FormData` | ⚠️ | String fields only, encoded as `multipart/form-data`. File parts, such as `{ uri: ... }` objects, are not supported. |
+| Response streaming | ❌ | `Response.body` is `undefined`, and `XMLHttpRequest.responseText` is only readable once the request completes. |
+| `WebSocket` | ❌ | Not available. |
 
-- Response streaming is not supported. `Response.body` is `undefined` and `XMLHttpRequest.responseText` is only available after the request completes.
-- `FormData` accepts only string values. File parts, such as `{ uri: ... }` objects, are not supported.
-- `WebSocket` is not available.
+Requests are made by the platform's own networking stack - `NSURLSession` on iOS and OkHttp on Android - so they share the app's cookie storage and its TLS configuration.
 
 ## Reference
 

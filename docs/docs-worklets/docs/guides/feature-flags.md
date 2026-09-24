@@ -34,7 +34,7 @@ This feature flags is supposed to improve the visual perception and perceived sm
 ### `FETCH_PREVIEW_ENABLED`
 </Badges>
 
-**Removed in 0.13.0.** The [fetch API on Worklet Runtimes](/docs/bundleMode/usage#running-network-requests-in-worklets) is now always available in [Bundle Mode](/docs/bundleMode/) and no longer requires a feature flag.
+**Removed in 0.13.0.** The [networking API on Worklet Runtimes](/docs/bundleMode/usage#running-network-requests-in-worklets) is enabled by default in [Bundle Mode](/docs/bundleMode/) and no longer requires a feature flag. To leave it out of a particular runtime, pass [`enableNetworking: false`](/docs/threading/createWorkletRuntime#enablenetworking) to `createWorkletRuntime`.
 
 <Badges version="0.9.0">
 ### `ENABLE_CROSS_RUNTIME_STACK_TRACES`
