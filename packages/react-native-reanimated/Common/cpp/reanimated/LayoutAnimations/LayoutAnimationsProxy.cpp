@@ -331,7 +331,7 @@ void LayoutAnimationsProxy::updateLightTree(
   std::unordered_map<Tag, IndexCursors> indexCursors;
   std::unordered_map<Tag, ShadowView> updatedViews;
   std::unordered_map<Tag, std::vector<AncestorOrigin>> oldChains;
-  std::vector<std::pair<std::shared_ptr<LightNode>, std::shared_ptr<LightNode>>> removedSubtrees;
+  std::unordered_set<Tag> removedSubtreeRoots;
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
     const auto &mutation = *it;
     switch (mutation.type) {
@@ -410,12 +410,15 @@ void LayoutAnimationsProxy::updateLightTree(
       case ShadowViewMutation::Delete: {
         const auto it = lightNodes_.find(mutation.oldChildShadowView.tag);
         react_native_assert(it != lightNodes_.end() && "Delete mutation for an unknown node");
-        const auto state = it->second->state;
-        // The root of a removed subtree is withheld until the end of the transaction, where handleSubtreeRemoval
-        // either unmaps it or keeps it mapped for its exiting animation. A COMPLETED or DELETED node has already
-        // been unmapped by its teardown, so unmapping it again is a no-op.
-        if (state == UNDEFINED || state == COMPLETED || state == DELETED) {
-          const auto node = it->second;
+        const auto node = it->second;
+        // The differ removes everything that moves out of a view before its Delete, and inserts into the parent
+        // of the view only after it.
+        if (removedSubtreeRoots.erase(mutation.oldChildShadowView.tag)) {
+          const auto parent = node->parent.lock();
+          react_native_assert(parent && "Parent node is nullptr");
+          handleSubtreeRemoval(node, parent, transaction);
+        }
+        if (node->state == UNDEFINED || node->state == COMPLETED || node->state == DELETED) {
           unmapLightNode(node);
         }
         staleSynchronousProps_.forget(mutation.oldChildShadowView.tag);
@@ -478,7 +481,6 @@ void LayoutAnimationsProxy::updateLightTree(
         const auto tag = node->current.tag;
         const auto parentTag = mutation.parentTag;
         const auto &parent = lightNodes_[parentTag];
-        // Also advances the remove cursor of the parent, which the next Remove from it resumes from.
         const auto hostIndex = parent->toHostIndexForRemove(mutation.index, indexCursors[parentTag]);
         react_native_assert(
             hostIndex < static_cast<int>(parent->children.size()) &&
@@ -494,13 +496,7 @@ void LayoutAnimationsProxy::updateLightTree(
               ShadowViewMutation::RemoveMutation(parentTag, mutation.oldChildShadowView, hostIndex));
           parent->children.erase(parent->children.begin() + hostIndex);
         } else if (!deleted.contains(parentTag)) {
-          // The differ does not always detach the children of a removed view before the view itself:
-          // when it flattens that view as a side effect of unflattening a sibling, the Removes of the
-          // children that move out come after the Remove of their parent. The subtree is withheld in
-          // place, which hides it from the shadow indices of its parent like any exiting view, and is
-          // resolved once every mutation of the transaction has been applied.
-          node->setExitingState(WAITING);
-          removedSubtrees.emplace_back(node, parent);
+          removedSubtreeRoots.insert(tag);
         }
         break;
       }
@@ -510,10 +506,7 @@ void LayoutAnimationsProxy::updateLightTree(
       }
     }
   }
-
-  for (const auto &[node, parent] : removedSubtrees) {
-    handleSubtreeRemoval(node, parent, transaction);
-  }
+  react_native_assert(removedSubtreeRoots.empty() && "React removed a view without deleting it");
 }
 
 void LayoutAnimationsProxy::applyInitialMutationsToLightTree(const ShadowViewMutationList &mutations) const {
@@ -721,9 +714,6 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
   return surfaceId_;
 }
 
-// Runs after every mutation of the transaction has been applied, so the subtree has already lost the
-// children that moved out of it, and React has sent the Delete of everything that is left in it. The
-// root is WAITING until then, the state of a withheld view whose fate is not decided yet.
 // A subtree that animates keeps its place in the host tree, so nothing is emitted for its root.
 // A subtree that does not animate is removed at its current host index. Its teardown mounts at the
 // end of the transaction, so native code that reads a view on unmount still sees its children.
@@ -740,10 +730,9 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(
   if (startAnimationsRecursively(node, transaction, config)) {
     return;
   }
+  react_native_assert(!node->isExiting() && "A subtree that does not animate must stay UNDEFINED");
   const auto hostIndex = parent->removeChild(node);
   react_native_assert(hostIndex != -1 && "Removed node not found in its parent");
-  node->setExitingState(DELETED);
-  unmapLightNode(node);
   cancelLayoutAnimation(node->current.tag);
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     hiddenViewTags_.erase(node->current.tag);

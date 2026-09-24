@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import type { ViewProps } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import Animated, { FadeOut } from 'react-native-reanimated';
 
 import {
@@ -18,7 +19,14 @@ const styles = StyleSheet.create({
   kept: { width: 100, height: 60, backgroundColor: '#2277dd' },
   dropped: { width: 100, height: 60, backgroundColor: '#dd5522' },
   nested: { width: 50, height: 20, backgroundColor: '#ddaa22' },
+  drawer: { width: 300, height: 200 },
 });
+
+const AndroidDrawerLayout = (
+  require('react-native/Libraries/Components/DrawerAndroid/AndroidDrawerLayoutNativeComponent') as {
+    default: React.ComponentType<ViewProps & { drawerWidth?: number }>;
+  }
+).default;
 
 const droppedChildren = {
   plain: <View style={styles.dropped} />,
@@ -164,4 +172,33 @@ describe('View flattening', () => {
       expect(getTestComponent('moved').getTag()).toBe(tag);
     }
   );
+});
+
+function DrawerContent() {
+  const ref = useTestRef('content');
+  return <Animated.View ref={ref} collapsable={false} style={styles.kept} />;
+}
+
+// AndroidDrawerLayout throws when it gets a third child, so a replaced child must be removed before
+// its replacement is inserted.
+function DrawerWithKeyedContent({ contentKey }: { contentKey: string }) {
+  return (
+    <AndroidDrawerLayout style={styles.drawer} drawerWidth={100}>
+      <DrawerContent key={contentKey} />
+      <View collapsable={false} style={styles.dropped} />
+    </AndroidDrawerLayout>
+  );
+}
+
+(Platform.OS === 'android' ? describe : describe.skip)('Removal order', () => {
+  test('replaces a child of a view that holds at most two children', async () => {
+    await render(<DrawerWithKeyedContent contentKey="a" />);
+    await waitForFrames();
+    const tag = getTestComponent('content').getTag();
+
+    await render(<DrawerWithKeyedContent contentKey="b" />);
+    await waitForFrames();
+
+    expect(getTestComponent('content').getTag()).not.toBe(tag);
+  });
 });
