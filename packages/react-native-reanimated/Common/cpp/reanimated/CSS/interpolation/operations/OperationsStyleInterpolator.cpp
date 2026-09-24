@@ -102,8 +102,10 @@ bool OperationsStyleInterpolator::updateKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &fromValue,
     const jsi::Value &toValue) {
-  const auto fromOperations = parseStyleOperations(rt, fromValue);
-  const auto toOperations = parseStyleOperations(rt, toValue);
+  // An absent endpoint is no operations, never the view's style: for a transition that style
+  // already holds the target.
+  const auto fromOperations = parseStyleOperations(rt, fromValue).value_or(StyleOperations{});
+  const auto toOperations = parseStyleOperations(rt, toValue).value_or(StyleOperations{});
 
   const auto equalsReversingAdjustedStartValue = areStyleOperationsEqual(toOperations, reversingAdjustedStartValue_);
   reversingAdjustedStartValue_ = keyframes_.empty() ? fromOperations : keyframes_[0]->toOperations;
@@ -116,8 +118,8 @@ bool OperationsStyleInterpolator::updateKeyframes(
 }
 
 bool OperationsStyleInterpolator::updateKeyframes(const folly::dynamic &fromValue, const folly::dynamic &toValue) {
-  const auto fromOperations = parseStyleOperations(fromValue);
-  const auto toOperations = parseStyleOperations(toValue);
+  const auto fromOperations = parseStyleOperations(fromValue).value_or(StyleOperations{});
+  const auto toOperations = parseStyleOperations(toValue).value_or(StyleOperations{});
 
   const auto equalsReversingAdjustedStartValue = areStyleOperationsEqual(toOperations, reversingAdjustedStartValue_);
   reversingAdjustedStartValue_ = keyframes_.empty() ? fromOperations : keyframes_[0]->toOperations;
