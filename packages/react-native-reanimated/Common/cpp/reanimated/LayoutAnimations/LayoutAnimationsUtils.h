@@ -120,7 +120,7 @@ struct LightNode {
 
   void setExitingState(ExitingState newState) {
     react_native_assert(newState != ExitingState::LIVE && "A light node never becomes live again");
-    const bool startsExiting = !isExiting() && newState != ExitingState::LIVE;
+    const bool startsExiting = !isExiting();
     state = newState;
     if (!startsExiting) {
       return;
