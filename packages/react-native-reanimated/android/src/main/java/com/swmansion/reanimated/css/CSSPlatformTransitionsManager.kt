@@ -52,8 +52,8 @@ internal class CSSPlatformTransitionsManager(
             override fun didDispatchMountItems(uiManager: UIManager) = Unit
 
             override fun didScheduleMountItems(uiManager: UIManager) {
-                // The pull model mounts a transaction on the UI thread right after scheduling
-                // it, past the willMountItems drain.
+                // The pull model executes the transaction on the UI thread right after this
+                // call, without going through willMountItems.
                 if (UiThreadUtil.isOnUiThread()) commands.drain()
             }
         }
