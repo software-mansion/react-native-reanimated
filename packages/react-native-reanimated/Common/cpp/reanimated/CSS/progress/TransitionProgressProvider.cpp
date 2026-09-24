@@ -217,6 +217,20 @@ void TransitionProgressProvider::runProgressProvider(
   observeProperty(propertyName, *provider);
 }
 
+void TransitionProgressProvider::resumeProgressProvider(
+    const std::string &propertyName,
+    const TransitionTiming &timing,
+    const double timestamp) {
+  // The timing's start already includes the delay, see getTiming().
+  const auto provider = std::make_shared<TransitionPropertyProgressProvider>(
+      timing.startTimestamp - timing.delay, timing.duration, timing.delay, timing.easing, timing.reversingFactor);
+  // Caught up before it is observed, so the milestones it has already passed stay unreported.
+  provider->update(timestamp);
+
+  propertyProgressProviders_.insert_or_assign(propertyName, provider);
+  observeProperty(propertyName, *provider);
+}
+
 void TransitionProgressProvider::removeProperties(
     const std::vector<std::string> &propertyNames,
     const double timestamp) {

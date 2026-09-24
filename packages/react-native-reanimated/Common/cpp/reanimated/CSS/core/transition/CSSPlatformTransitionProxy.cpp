@@ -210,6 +210,37 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
   return loopDiffs;
 }
 
+ResumedTransitionRunsMap CSSPlatformTransitionProxy::handOverToLoop(
+    const Tag viewTag,
+    const TransitionProperties &pseudoLockedProperties,
+    CSSTransitionRouting &routing,
+    const double timestamp) {
+  ResumedTransitionRunsMap runs;
+  for (auto it = routing.platform.begin(); it != routing.platform.end();) {
+    const auto &propertyName = *it;
+    const ActiveTransition *active = activeTransitionFor(viewTag, propertyName);
+    // A run that has ended owes no more events, so it stays where its value is held.
+    const bool inFlight =
+        active != nullptr && active->startValue && timestamp < active->timing.startTimestamp + active->timing.duration;
+    if (!inFlight || pseudoLockedProperties.contains(propertyName)) {
+      ++it;
+      continue;
+    }
+
+    runs.emplace(
+        propertyName,
+        ResumedTransitionRun{
+            platformValueToDynamic(*active->startValue),
+            platformValueToDynamic(active->adjustedEnd),
+            active->timing,
+            active->settings});
+    remove(viewTag, propertyName);
+    routing.loop.insert(propertyName);
+    it = routing.platform.erase(it);
+  }
+  return runs;
+}
+
 void CSSPlatformTransitionProxy::cancelAll(const Tag viewTag, const TransitionProperties &properties) {
   for (const auto &propertyName : properties) {
     remove(viewTag, propertyName);

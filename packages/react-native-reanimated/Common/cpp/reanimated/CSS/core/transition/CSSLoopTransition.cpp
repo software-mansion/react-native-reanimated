@@ -64,6 +64,15 @@ folly::dynamic CSSLoopTransition::run(
   return computeCurrentStyle(shadowNode);
 }
 
+void CSSLoopTransition::resume(const ResumedTransitionRunsMap &runs, const double timestamp) {
+  for (const auto &[propertyName, run] : runs) {
+    progressProvider_.setPropertySettings({{propertyName, run.settings}});
+    styleInterpolator_.createOrUpdateInterpolator(propertyName, run.fromValue, run.toValue);
+    styleInterpolator_.setAllowDiscrete(propertyName, run.settings.allowDiscrete);
+    progressProvider_.resumeProgressProvider(propertyName, run.timing, timestamp);
+  }
+}
+
 void CSSLoopTransition::updateSettings(
     const PropertiesSettingsMap &changedPropertiesSettings,
     const std::vector<std::string> &removedProperties,
