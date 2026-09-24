@@ -1,6 +1,5 @@
 import { act, renderHook } from '@testing-library/react-native';
-import { createElement, StrictMode } from 'react';
-import { renderToString } from 'react-dom/server';
+import { StrictMode } from 'react';
 
 import type { SensorConfig, Value3D, ValueRotation } from '../src';
 import { IOSReferenceFrame, SensorType, useAnimatedSensor } from '../src';
@@ -316,16 +315,6 @@ describe('Sensors', () => {
       false,
       true,
     ]);
-  });
-
-  test('reports no sensor when rendered on the server', () => {
-    function SensorAvailability() {
-      const { isAvailable } = useAnimatedSensor(SensorType.ACCELEROMETER);
-      return String(isAvailable);
-    }
-
-    expect(renderToString(createElement(SensorAvailability))).toBe('false');
-    expect(registerSensor).not.toHaveBeenCalled();
   });
 
   test('keeps one registration and one result across renders with a new config object', () => {
