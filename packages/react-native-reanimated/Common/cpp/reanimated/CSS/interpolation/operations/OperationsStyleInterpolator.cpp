@@ -102,8 +102,8 @@ bool OperationsStyleInterpolator::updateKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &fromValue,
     const jsi::Value &toValue) {
-  // An absent endpoint is no operations, never the view's style: for a transition that style
-  // already holds the target.
+  // An absent endpoint is no operations, not the view's style, which on Android already holds
+  // the transition's target.
   const auto fromOperations = parseStyleOperations(rt, fromValue).value_or(StyleOperations{});
   const auto toOperations = parseStyleOperations(rt, toValue).value_or(StyleOperations{});
 
