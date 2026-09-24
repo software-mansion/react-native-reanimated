@@ -20,30 +20,21 @@
 
 namespace reanimated::css {
 
-// Template class implementations
+// Member bodies are defined out-of-line in InterpolatorFactory.cpp and the
+// factory class templates are explicit-instantiated there for every concrete
+// `AllowedTypes...` pack used in the registry. This keeps the heavy codegen
+// (vtable, create(), etc.) confined to a single TU instead of being duplicated
+// in every TU that names `value<...>(default)`.
 template <typename... AllowedTypes>
 class SimpleValueInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
-  template <typename TValue>
-  explicit SimpleValueInterpolatorFactory(const TValue &defaultValue)
-      : PropertyInterpolatorFactory(), defaultValue_(defaultValue) {}
+  explicit SimpleValueInterpolatorFactory(CSSValueVariant<AllowedTypes...> defaultValue);
 
-  bool isDiscreteProperty() const override {
-    // The property is considered discrete if all of the allowed types are
-    // discrete
-    return (Discrete<AllowedTypes> && ...);
-  }
-
-  const CSSValue &getDefaultValue() const override {
-    return defaultValue_;
-  }
-
+  bool isDiscreteProperty() const override;
+  const CSSValue &getDefaultValue() const override;
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
-    return std::make_shared<SimpleValueInterpolator<AllowedTypes...>>(
-        propertyPath, defaultValue_, viewStylesRepository);
-  }
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override;
 
  private:
   const CSSValueVariant<AllowedTypes...> defaultValue_;
@@ -52,20 +43,14 @@ class SimpleValueInterpolatorFactory : public PropertyInterpolatorFactory {
 template <typename... AllowedTypes>
 class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
-  template <typename TValue>
-  explicit ResolvableValueInterpolatorFactory(const TValue &defaultValue, ResolvableValueInterpolatorConfig config)
-      : PropertyInterpolatorFactory(), defaultValue_(defaultValue), config_(std::move(config)) {}
+  ResolvableValueInterpolatorFactory(
+      CSSValueVariant<AllowedTypes...> defaultValue,
+      ResolvableValueInterpolatorConfig config);
 
-  const CSSValue &getDefaultValue() const override {
-    return defaultValue_;
-  }
-
+  const CSSValue &getDefaultValue() const override;
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
-    return std::make_shared<ResolvableValueInterpolator<AllowedTypes...>>(
-        propertyPath, defaultValue_, viewStylesRepository, config_);
-  }
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override;
 
  private:
   const CSSValueVariant<AllowedTypes...> defaultValue_;
