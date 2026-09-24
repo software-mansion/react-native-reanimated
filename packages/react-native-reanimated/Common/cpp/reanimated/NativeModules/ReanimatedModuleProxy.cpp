@@ -78,26 +78,10 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 }
 #endif
 
-#ifdef ANDROID
-// Android reports the latest pulled root, and its mount items can still wait in the queue.
-constexpr bool isReportedRootMounted() {
-  return false;
-}
-#elif __APPLE__
-// Apple pulls and mounts a root in one main queue call, so the report follows its mount items.
-constexpr bool isReportedRootMounted() {
-  return true;
-}
-#else
-constexpr bool isReportedRootMounted() {
-  return false;
-}
-#endif
-
 std::shared_ptr<SynchronousWritesTracker> makeSynchronousWritesTracker() {
   if constexpr (
       shouldUseSynchronousUpdatesInPerformOperations() && !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    return std::make_shared<SynchronousWritesTracker>(isReportedRootMounted());
+    return std::make_shared<SynchronousWritesTracker>();
   }
   return nullptr;
 }
@@ -898,7 +882,7 @@ bool ReanimatedModuleProxy::needsSynchronousPropsRewrite() const {
 }
 
 void ReanimatedModuleProxy::rewriteSynchronousProps() {
-  if (!synchronousWritesTracker_ || !synchronousWritesTracker_->hasWorkForMountCallback()) {
+  if (!synchronousWritesTracker_) {
     return;
   }
   const auto families = synchronousWritesTracker_->getFamiliesToRewrite();
