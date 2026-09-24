@@ -4,7 +4,7 @@ import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import {
   processColorsInProps,
-  processStyleValue,
+  processStylePropInPlace,
   processTransform,
   processTransformOrigin,
   stylePropsBuilder,
@@ -35,16 +35,14 @@ const updateProps: (
   if (isAnimatedProps) {
     processColorsInProps(updates);
     if ('transformOrigin' in updates) {
-      updates.transformOrigin = processStyleValue(
-        processTransformOrigin,
-        updates.transformOrigin
+      processStylePropInPlace(
+        updates,
+        'transformOrigin',
+        processTransformOrigin
       );
     }
     if ('transform' in updates) {
-      updates.transform = processStyleValue(
-        processTransform,
-        updates.transform
-      );
+      processStylePropInPlace(updates, 'transform', processTransform);
     }
   }
 

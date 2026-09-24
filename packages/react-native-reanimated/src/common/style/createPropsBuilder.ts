@@ -6,7 +6,7 @@ import type {
 } from '../types';
 import { ValueProcessorTarget } from '../types';
 import { isRecord } from '../utils';
-import { processStyleValue } from './processStyleValue';
+import { processStyleValue, warnIgnoredStyleValue } from './processStyleValue';
 
 const MAX_PROCESS_DEPTH = 10;
 
@@ -94,7 +94,13 @@ export default function createPropsBuilder<
           continue;
         }
 
-        const processedValue = processStyleValue(configValue, value, context);
+        let processedValue;
+        try {
+          processedValue = processStyleValue(configValue, value, context);
+        } catch (error) {
+          warnIgnoredStyleValue(error);
+          continue;
+        }
 
         if (isRecord(processedValue) && !isRecord(value)) {
           // The value processor may return multiple values for a single property

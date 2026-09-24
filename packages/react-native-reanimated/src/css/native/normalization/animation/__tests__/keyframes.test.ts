@@ -2,7 +2,10 @@
 import {
   getCompoundComponentName,
   getPropsBuilder,
+  logger,
+  WARN_MESSAGES,
 } from '../../../../../common';
+import { ERROR_MESSAGES as COLOR_ERROR_MESSAGES } from '../../../../../common/style/processors/colors';
 import type { Repeat } from '../../../../types';
 import {
   ERROR_MESSAGES,
@@ -104,7 +107,34 @@ const createMockPropsBuilder = () => {
   };
 };
 
+const warn = jest.fn();
+logger.warn = warn;
+
 describe(processKeyframes, () => {
+  afterEach(() => {
+    warn.mockClear();
+  });
+
+  test('ignores a property with an invalid value and warns', () => {
+    const propsBuilder = getPropsBuilder(COMPOUND_COMPONENT_NAME);
+    const keyframes = {
+      from: { opacity: 0, backgroundColor: 'notacolor' },
+      to: { opacity: 1, backgroundColor: 'red' },
+    };
+
+    expect(processKeyframes(keyframes, propsBuilder)).toEqual([
+      { offset: 0, props: { opacity: 0 } },
+      { offset: 1, props: { opacity: 1, backgroundColor: 0xffff0000 } },
+    ]);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(
+      WARN_MESSAGES.ignoredValue(
+        COLOR_ERROR_MESSAGES.invalidColor('notacolor')
+      ),
+      { strict: true }
+    );
+  });
+
   describe('offset handling', () => {
     test('sorts keyframes and accepts percentages', () => {
       const { builder } = createMockPropsBuilder();

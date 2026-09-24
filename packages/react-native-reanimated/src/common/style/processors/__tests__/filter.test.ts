@@ -1,7 +1,14 @@
 'use strict';
 import type { FilterArray } from '../../../types';
 import { ValueProcessorTarget } from '../../../types';
-import { processFilter } from '../filter';
+import { ERROR_MESSAGES as COLOR_ERROR_MESSAGES } from '../colors';
+import { ERROR_MESSAGES, processFilter } from '../filter';
+
+const expectInvalidFilter = (input: unknown) => {
+  expect(() => processFilter(input as string)).toThrow(
+    new Error(`[Reanimated] ${ERROR_MESSAGES.invalidFilter(input)}`)
+  );
+};
 
 describe(processFilter, () => {
   test('returns the same object if not a string', () => {
@@ -233,7 +240,7 @@ describe(processFilter, () => {
     expect(processFilter([{ hueRotate: 90 }])).toEqual([{ hueRotate: 90 }]);
   });
 
-  describe('returns empty array for invalid filter values', () => {
+  describe('throws for invalid filter values', () => {
     describe('string inputs', () => {
       const invalidStringCases: { name: string; input: string }[] = [
         {
@@ -274,12 +281,9 @@ describe(processFilter, () => {
         },
       ];
 
-      test.each(invalidStringCases)(
-        '$name returns empty array',
-        ({ input }) => {
-          expect(processFilter(input)).toEqual([]);
-        }
-      );
+      test.each(invalidStringCases)('$name throws', ({ input }) => {
+        expectInvalidFilter(input);
+      });
     });
 
     describe('array/object filter inputs', () => {
@@ -316,31 +320,53 @@ describe(processFilter, () => {
           name: 'invalidates all array filters if any is invalid',
           input: [{ brightness: 0.5 }, { blur: -5 }],
         },
+        {
+          name: 'empty filter object in array input',
+          input: [{}, { brightness: 1 }] as never,
+        },
       ];
 
-      test.each(invalidArrayCases)('$name returns empty array', ({ input }) => {
-        expect(processFilter(input)).toEqual([]);
+      test.each(invalidArrayCases)('$name throws', ({ input }) => {
+        expectInvalidFilter(input);
       });
     });
   });
 
-  describe('returns empty array for non-filter input type', () => {
-    // Helper to bypass type checking for the function to allow passing
-    // invalid input types
-    const processFilterUntyped = processFilter as (value: unknown) => unknown;
+  describe('drop shadow with an invalid color', () => {
+    test.each([
+      ['drop-shadow(0 0 4px notacolor)', 'notacolor'],
+      ['dropShadow(0 0 4px notacolor)', 'notacolor'],
+      // Only `px` and unitless lengths are lengths, so `4em` is read as a color.
+      ['drop-shadow(2em 4em)', '4em'],
+      [
+        [{ dropShadow: { color: 'notacolor', offsetX: 1, offsetY: 1 } }],
+        'notacolor',
+      ],
+    ])('%p throws the color error', (input, color) => {
+      expect(() => processFilter(input as string)).toThrow(
+        new Error(`[Reanimated] ${COLOR_ERROR_MESSAGES.invalidColor(color)}`)
+      );
+    });
+  });
 
-    const invalidInputTypeCases = [
+  describe('non-filter input type', () => {
+    test.each([
       { name: 'number input', input: 123 },
       { name: 'object input', input: {} },
-      { name: 'null input', input: null },
-      { name: 'undefined input', input: undefined },
-    ];
+    ])('throws for $name', ({ input }) => {
+      expectInvalidFilter(input);
+    });
+  });
 
-    test.each(invalidInputTypeCases)(
-      'returns empty array for $name',
-      ({ input }) => {
-        expect(processFilterUntyped(input)).toEqual([]);
-      }
-    );
+  describe('clearing the filter', () => {
+    test.each([
+      { name: 'none', input: 'none' },
+      { name: 'empty string', input: '' },
+      { name: 'empty array', input: [] },
+      { name: 'null', input: null },
+      { name: 'undefined', input: undefined },
+    ])('returns empty array for $name', ({ input }) => {
+      expect(processFilter(input as string)).toEqual([]);
+    });
   });
 });
