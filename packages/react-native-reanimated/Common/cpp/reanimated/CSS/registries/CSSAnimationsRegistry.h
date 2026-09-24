@@ -32,9 +32,7 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
 
   bool needsFlush() const;
 
-  /// Returns true when the view received a new set of animations (as opposed
-  /// to settings changes of the ones it already runs), which is the moment
-  /// their starting style should reach the view without waiting for a frame.
+  /// Returns true when a new set of animations was installed for the view.
   bool apply(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::string &compoundComponentName,

@@ -1082,7 +1082,6 @@ void ReanimatedModuleProxy::commitCSSAnimationsStartingStyle(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     folly::dynamic &&startingStyle) {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // The backend drains the registries itself; a shadow tree commit would bypass it.
     return;
   }
 
@@ -1092,11 +1091,9 @@ void ReanimatedModuleProxy::commitCSSAnimationsStartingStyle(
   PropsMap propsMap;
   propsMap[shadowNode->getFamilyShared()].emplace_back(std::move(startingStyle));
 
-  // This runs on the JS thread, so no React commit can be in flight and the pause
-  // that keeps the UI thread commits from racing one does not apply. The commit is
-  // also left unmarked on purpose: the React commit that mounted the view may not
-  // have been mounted yet, in which case both land in one mount and the mount hook
-  // must lift that pause like it would for the React mount alone.
+  // On the JS thread no React commit can be in flight, so the commit pause is ignored.
+  // No Reanimated commit trait either, so that the mount hook lifts the pause when this
+  // commit is mounted together with the React commit before it.
   uiManager_->getShadowTreeRegistry().visit(shadowNode->getSurfaceId(), [&](ShadowTree const &shadowTree) {
     shadowTree.commit(
         [&](RootShadowNode const &oldRootShadowNode) -> RootShadowNode::Unshared {

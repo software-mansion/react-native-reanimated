@@ -86,10 +86,9 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   {
     auto lock = updatesRegistryManager_->lock();
 
-    // Nodes this commit drops stop animating now, not once the tree is mounted.
-    // Their per-frame commits from the UI thread would otherwise mount this
-    // tree before the JS thread has registered the animations of the nodes it
-    // adds, showing those views with their own style for a frame.
+    // Stop animating nodes dropped by this commit before it is mounted, as their
+    // per-frame commits could otherwise mount it before the added nodes register
+    // their animations.
     updatesRegistryManager_->handleNodeRemovals(*rootNode);
 
     PropsMap propsMap = updatesRegistryManager_->collectProps();

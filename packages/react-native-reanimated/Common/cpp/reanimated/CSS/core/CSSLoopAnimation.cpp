@@ -72,11 +72,8 @@ void CSSLoopAnimation::schedule(OperationsLoop &loop) {
   }
 
   const auto startTimestamp = progressProvider_->getStartTimestamp(timestamp);
-  // A run whose delay has already elapsed is active from this very moment. Until
-  // its first tick it would still read as pending and contribute nothing to the
-  // style, so the frame that mounts the view would show the view's own style for
-  // one frame before the first keyframe lands. Positioning it now makes that
-  // frame available to whoever commits before the loop ticks.
+  // Without a delay the run is active right away; update it now so that its first
+  // keyframe is part of the style committed at registration, not the next frame.
   if (startTimestamp <= timestamp) {
     progressProvider_->update(timestamp);
   }

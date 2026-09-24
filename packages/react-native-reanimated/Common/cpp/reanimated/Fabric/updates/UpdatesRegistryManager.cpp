@@ -88,8 +88,7 @@ void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadow
       for (auto &registry : registries_) {
         registry->remove(tag);
 #ifdef ANDROID
-        // The view is gone with this tree; a revert would only commit a tree
-        // React has not mounted yet.
+        // There is no view to revert, and the revert commit would mount the tree early.
         registry->dropPropsToRevert(tag);
 #endif
       }

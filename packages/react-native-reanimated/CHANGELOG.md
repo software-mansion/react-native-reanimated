@@ -18,7 +18,7 @@
 
 ### 🐛 Bug fixes
 
-- Commit the style CSS animations start from as soon as they are registered and stop animating views the moment React drops them, so a freshly mounted view no longer shows its own style for a frame before its first keyframe (for example a `display: none` backwards fill) lands. ([#10621](https://github.com/software-mansion/react-native-reanimated/pull/10621) by [@MatiPl01](https://github.com/MatiPl01))
+- Fix a view with CSS animations showing its own style for one frame after mounting, before the first keyframe or the backwards fill was applied. ([#10621](https://github.com/software-mansion/react-native-reanimated/pull/10621) by [@MatiPl01](https://github.com/MatiPl01))
 - Fix a property removed from `transitionProperty` while it transitions to or from `undefined` (its style key was just removed or added) finishing the transition instead of snapping to the committed value. ([#10613](https://github.com/software-mansion/react-native-reanimated/pull/10613) by [@MatiPl01](https://github.com/MatiPl01))
 - Fix a property removed from `transitionProperty` mid-transition reverting to the interpolator default (for example `borderRadius: 0`) instead of the committed style on Android. ([#10614](https://github.com/software-mansion/react-native-reanimated/pull/10614) by [@MatiPl01](https://github.com/MatiPl01))
 - Reject a `backgroundImage` gradient given as an object when a transition hint is not placed between two color stops, and reject gradients with fewer than two color stops in both the object and the string form; React Native crashes on iOS or Android when such values reach the renderer. ([#10589](https://github.com/software-mansion/react-native-reanimated/pull/10589) by [@matipl01](https://github.com/matipl01))
