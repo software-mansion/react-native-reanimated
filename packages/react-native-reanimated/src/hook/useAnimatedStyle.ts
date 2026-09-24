@@ -2,7 +2,6 @@
 import type { RefObject } from 'react';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
-import { isWorkletFunction } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
 import { IS_JEST } from '../common';
@@ -18,6 +17,7 @@ import { startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
 import { updateProps } from '../updateProps';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
+import { isWorkletFunction } from '../workletFunctions';
 import type {
   AnimatedStyleHandle,
   DefaultStyle,
