@@ -3,7 +3,6 @@
 #include <jsi/jsi.h>
 #include <worklets/SharedItems/MemoryManager.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
-#include <worklets/SharedItems/UnpackerLoader.h>
 #include <worklets/Tools/RNRuntimeStatus.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
@@ -32,7 +31,6 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
       const std::shared_ptr<RuntimeBindings> &runtimeBindings,
       const std::shared_ptr<Networking> &networking,
       const BundleModeConfig &bundleModeConfig,
-      const std::shared_ptr<UnpackerLoader> &unpackerLoader,
       const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus,
       RuntimeData::RuntimeId hostRuntimeId)
       : bundleModeConfig_(bundleModeConfig),
@@ -43,7 +41,6 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
         uiWorkletRuntime_(uiWorkletRuntime),
         runtimeBindings_(runtimeBindings),
         networking_(networking),
-        unpackerLoader_(unpackerLoader),
         rnRuntimeStatus_(rnRuntimeStatus),
         hostRuntimeId_(hostRuntimeId) {}
 
@@ -59,7 +56,6 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
         sourceProxy->runtimeBindings_,
         sourceProxy->networking_,
         sourceProxy->bundleModeConfig_,
-        sourceProxy->unpackerLoader_,
         sourceProxy->rnRuntimeStatus_,
         hostRuntimeId);
   }
@@ -76,10 +72,6 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
 
   [[nodiscard]] std::shared_ptr<UIScheduler> getUIScheduler() const {
     return uiScheduler_;
-  }
-
-  [[nodiscard]] bool isBundleModeEnabled() const {
-    return bundleModeConfig_.enabled;
   }
 
   [[nodiscard]] std::shared_ptr<const ScriptBuffer> getScript() const {
@@ -106,10 +98,6 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
     return networking_;
   }
 
-  [[nodiscard]] std::shared_ptr<UnpackerLoader> getUnpackerLoader() const {
-    return unpackerLoader_;
-  }
-
  private:
   const BundleModeConfig bundleModeConfig_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
@@ -119,7 +107,6 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
   const std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
   const std::shared_ptr<RuntimeBindings> runtimeBindings_;
   const std::shared_ptr<Networking> networking_;
-  const std::shared_ptr<UnpackerLoader> unpackerLoader_;
   const std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
   const RuntimeData::RuntimeId hostRuntimeId_;
 };

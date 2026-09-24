@@ -9,7 +9,6 @@
 namespace worklets {
 
 struct BundleModeConfig {
-  bool enabled;
   std::shared_ptr<const ScriptBuffer> script;
   std::string sourceURL;
 };

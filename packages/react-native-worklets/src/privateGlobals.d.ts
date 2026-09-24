@@ -30,35 +30,8 @@ declare global {
 
   var _toString: (value: unknown) => string;
   var __workletsModuleProxy: WorkletsModuleProxy;
-  var _WORKLETS_BUNDLE_MODE_ENABLED: boolean | undefined;
   var _WORKLETS_VERSION_CPP: string | undefined;
   var _WORKLETS_VERSION_JS: string | undefined;
-  var _createSerializableString: (value: string) => FlatSerializableRef<string>;
-  var _createSerializableNumber: (value: number) => FlatSerializableRef<number>;
-  var _createSerializableBoolean: (
-    value: boolean
-  ) => FlatSerializableRef<boolean>;
-  var _createSerializableBigInt: (value: bigint) => FlatSerializableRef<bigint>;
-  var _createSerializableUndefined: () => FlatSerializableRef<undefined>;
-  var _createSerializableNull: () => FlatSerializableRef<null>;
-  var _createSerializableObject: <T extends object>(
-    value: T,
-    shouldRetainRemote: boolean,
-    nativeStateSource?: object
-  ) => FlatSerializableRef<T>;
-  var _createSerializableHostObject: <T extends object>(
-    value: T
-  ) => FlatSerializableRef<T>;
-  var _createSerializableWorklet: (
-    value: object,
-    shouldPersistRemote: boolean
-  ) => FlatSerializableRef<object>;
-  var _createSerializableArray: (
-    value: unknown[]
-  ) => FlatSerializableRef<unknown[]>;
-  var _createSerializableSynchronizable: (
-    value: object
-  ) => FlatShareableRef<object>;
   var __serializer: typeof makeShareableCloneOnUIRecursive;
   /** Available on runtimes with the Hermes microtask queue enabled. */
   var __drainMicrotasks: () => void;
@@ -86,10 +59,6 @@ declare global {
   var _beginSection: (name: string) => void;
   var _endSection: () => void;
   var _getAnimationTimestamp: () => number;
-  var _scheduleOnRuntime: (
-    runtime: WorkletRuntime,
-    worklet: SerializableRef<() => void>
-  ) => void;
   var _scheduleTimeoutCallback: (delay: number, handlerId: number) => void;
   var __runTimeoutCallback: (handlerId: number) => void;
   var _taskQueue: Queue;

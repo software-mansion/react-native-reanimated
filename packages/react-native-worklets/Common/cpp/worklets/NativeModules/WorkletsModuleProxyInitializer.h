@@ -31,8 +31,9 @@ class WorkletsModuleProxyInitializer {
 
   void prepareBundleModeAOT(const BundleModeConfigLoader &loadBundleModeConfig);
 
-  std::shared_ptr<WorkletsModuleProxy>
-  finalize(jsi::Runtime &rnRuntime, bool bundleModeEnabled, const BundleModeConfigLoader &loadBundleModeConfig);
+  std::shared_ptr<WorkletsModuleProxy> finalize(
+      jsi::Runtime &rnRuntime,
+      const BundleModeConfigLoader &loadBundleModeConfig);
 
   void invalidate();
 

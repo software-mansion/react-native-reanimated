@@ -15,32 +15,21 @@ export function makeWorkletFactoryCall(
   path: NodePath<WorkletizableFunction>,
   state: WorkletsPluginPass
 ): CallExpression | MemberExpression {
-  const { factory, factoryCallParamPack, workletHash } = makeWorkletFactory(
-    path,
-    state
-  );
+  const { factoryCallParamPack, workletHash } = makeWorkletFactory(path, state);
 
-  let factoryCall: CallExpression;
-  if (state.opts.bundleMode) {
-    const workletModule = memberExpression(
-      callExpression(identifier('require'), [
-        stringLiteral(
-          `react-native-worklets/${generatedWorkletsDir}/${workletHash}.js`
-        ),
-      ]),
-      identifier('default')
-    );
-    if (factoryCallParamPack.elements.length === 0) {
-      workletModule.loc = path.node.loc;
-      return workletModule;
-    }
-    factoryCall = callExpression(workletModule, [factoryCallParamPack]);
-  } else {
-    factoryCall = callExpression(
-      factory,
-      factoryCallParamPack.elements.length > 0 ? [factoryCallParamPack] : []
-    );
+  const workletModule = memberExpression(
+    callExpression(identifier('require'), [
+      stringLiteral(
+        `react-native-worklets/${generatedWorkletsDir}/${workletHash}.js`
+      ),
+    ]),
+    identifier('default')
+  );
+  if (factoryCallParamPack.elements.length === 0) {
+    workletModule.loc = path.node.loc;
+    return workletModule;
   }
+  const factoryCall = callExpression(workletModule, [factoryCallParamPack]);
 
   addStackTraceDataToWorkletFactory(path, factoryCall);
 

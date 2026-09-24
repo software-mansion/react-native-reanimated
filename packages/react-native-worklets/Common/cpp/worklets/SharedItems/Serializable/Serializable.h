@@ -74,13 +74,6 @@ class SerializableJSRef : public facebook::jsi::NativeState {
 facebook::jsi::Function getValueUnpacker(facebook::jsi::Runtime &rt);
 
 [[nodiscard]]
-facebook::jsi::Value makeSerializableClone(
-    facebook::jsi::Runtime &rt,
-    const facebook::jsi::Value &value,
-    const facebook::jsi::Value &shouldRetainRemote,
-    const facebook::jsi::Value &nativeStateSource);
-
-[[nodiscard]]
 std::shared_ptr<Serializable> extractSerializableOrThrow(
     facebook::jsi::Runtime &rt,
     const facebook::jsi::Value &maybeSerializableValue,

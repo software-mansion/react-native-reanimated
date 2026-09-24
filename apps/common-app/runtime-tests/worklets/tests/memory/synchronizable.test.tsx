@@ -209,9 +209,30 @@ for (const { variantName, config } of VARIANTS) {
       expect(value).toBe(42);
     });
 
-    // TODO: There is no test for serialization from UI Runtime to BG Runtime
-    // because nested `scheduleOnRN` isn't copied properly.
-    // It will be fixed when BundleMode™ becomes the standard.
+    test('Synchronizable serializes correctly from UI Runtime to BG Runtime', async () => {
+      const synchronizable = createSynchronizable(42, config);
+      let readValue = 0;
+
+      const onJSCallback = (value: number) => {
+        readValue = value;
+        notify(NOTIFICATION);
+      };
+
+      // Act
+      scheduleOnUI(() => {
+        'worklet';
+        scheduleOnRuntime(workletRuntime, () => {
+          'worklet';
+          const value = synchronizable.getBlocking();
+          scheduleOnRN(onJSCallback, value);
+        });
+      });
+
+      await waitForNotification(NOTIFICATION);
+
+      // Assert
+      expect(readValue).toBe(42);
+    });
   });
 
   describe(`Test Synchronizable access (${variantName})`, () => {

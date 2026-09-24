@@ -54,9 +54,8 @@ void WorkletsModule::prepareBundleModeAOTCpp() {
   initializer_->prepareBundleModeAOT([this] { return loadBundleModeConfig(); });
 }
 
-void WorkletsModule::installTurboModuleCpp(jboolean bundleModeEnabled) {
-  workletsModuleProxy_ = initializer_->finalize(
-      *rnRuntime_, static_cast<bool>(bundleModeEnabled), [this] { return loadBundleModeConfig(); });
+void WorkletsModule::installTurboModuleCpp() {
+  workletsModuleProxy_ = initializer_->finalize(*rnRuntime_, [this] { return loadBundleModeConfig(); });
 }
 
 std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(
@@ -73,8 +72,7 @@ BundleModeConfig WorkletsModule::loadBundleModeConfig() {
       getJniMethod<JScriptBufferWrapper::javaobject()>("createScriptBufferWrapper");
   const auto jScriptBufferWrapper = jCreateScriptBufferWrapper(javaPart_.get());
   const auto scriptBufferWrapper = jScriptBufferWrapper->cthis();
-  return BundleModeConfig{
-      .enabled = true, .script = scriptBufferWrapper->getScript(), .sourceURL = scriptBufferWrapper->getSourceUrl()};
+  return BundleModeConfig{.script = scriptBufferWrapper->getScript(), .sourceURL = scriptBufferWrapper->getSourceUrl()};
 }
 
 RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame(

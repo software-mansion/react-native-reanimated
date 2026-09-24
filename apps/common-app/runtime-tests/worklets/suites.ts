@@ -1,5 +1,3 @@
-import { isBundleModeEnabled } from 'react-native-worklets';
-
 import type { RuntimeTestSuite } from '../types';
 
 export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
@@ -44,7 +42,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
     },
     // The shims these tests assert on are only active in __DEV__, so the suite
     // stays out of Release builds until Bundle Mode supports them there.
-    disabled: !isBundleModeEnabled() || !__DEV__,
+    disabled: !__DEV__,
   },
   {
     testSuiteName: 'networking',
@@ -53,7 +51,6 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/networking/xhr.test');
       require('./tests/networking/fetch.test');
     },
-    disabled: !isBundleModeEnabled(),
   },
   {
     testSuiteName: 'run loop',
@@ -76,11 +73,9 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/plugin/closures.test');
       require('./tests/plugin/closureFree.test');
-      require('./tests/plugin/fileWorkletization.test');
       require('./tests/plugin/jsxInWorklets.test');
       require('./tests/plugin/recursion.test');
       require('./tests/plugin/versionMismatch.test');
-      require('./tests/plugin/workletClasses.test');
     },
   },
 ];

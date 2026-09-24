@@ -1,0 +1,712 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`babel plugin for DirectiveLiterals doesn't bother other Directive Literals 1`] = `
+"function foo() {
+  'foobar';
+
+  var foo = 'bar';
+}"
+`;
+
+exports[`babel plugin for DirectiveLiterals doesn't transform functions without 'worklet' directive 1`] = `
+"function f(x) {
+  return x + 2;
+}"
+`;
+
+exports[`babel plugin for DirectiveLiterals doesn't transform string literals 1`] = `
+"const foo = function (x) {
+  "use no memo";
+
+  const bar = "worklet";
+  const baz = "worklet";
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+export default foo;"
+`;
+
+exports[`babel plugin for DirectiveLiterals removes "worklet"; directive from worklets 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default;"`;
+
+exports[`babel plugin for DirectiveLiterals removes 'worklet'; directive from worklets 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default;"`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown chained methods before 1`] = `
+"FadeIn.AmogusIn().withCallback(() => {
+  console.log('FadeIn with AmogusIn before');
+});"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown chained methods before with new keyword 1`] = `
+"new FadeIn().AmogusIn().withCallback(() => {
+  console.log('FadeIn with AmogusIn before');
+});"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown objects 1`] = `
+"AmogusIn.withCallback(() => {
+  console.log('AmogusIn');
+});"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown objects chained with known objects 1`] = `
+"AmogusIn.FadeIn().withCallback(() => {
+  console.log('AmogusIn with FadeIn after');
+});"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown objects chained with known objects with new keyword 1`] = `
+"new AmogusIn().FadeIn().withCallback(() => {
+  console.log('AmogusIn with FadeIn after');
+});"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown objects on known chained methods before 1`] = `
+"AmogusIn.build().withCallback(() => {
+  console.log('AmogusIn with build before');
+});"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown objects on known chained methods before with new keyword 1`] = `
+"new AmogusIn().build().withCallback(() => {
+  console.log('AmogusIn with build before');
+});"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown objects with known object chained after 1`] = `
+"AmogusIn.withCallback(() => {
+  console.log('AmogusIn with FadeIn before');
+}).FadeIn();"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown objects with known object chained after with new keyword 1`] = `
+"new AmogusIn().withCallback(() => {
+  console.log('AmogusIn with FadeIn before');
+}).FadeIn();"
+`;
+
+exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown objects with new keyword 1`] = `
+"new AmogusIn().withCallback(() => {
+  console.log('AmogusIn');
+});"
+`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after 1`] = `"FadeIn.withCallback(require("react-native-worklets/.worklets/1.js").default).build();"`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after with new keyword 1`] = `"new FadeIn().withCallback(require("react-native-worklets/.worklets/1.js").default).build();"`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before 1`] = `"FadeIn.build().withCallback(require("react-native-worklets/.worklets/1.js").default);"`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before with new keyword 1`] = `"new FadeIn().build().withCallback(require("react-native-worklets/.worklets/1.js").default);"`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects 1`] = `"FadeIn.build().duration().withCallback(require("react-native-worklets/.worklets/1.js").default);"`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects with new keyword 1`] = `"new FadeIn().build().duration().withCallback(require("react-native-worklets/.worklets/1.js").default);"`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after 1`] = `"FadeIn.withCallback(require("react-native-worklets/.worklets/1.js").default).AmogusIn();"`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after with new keyword 1`] = `"new FadeIn().withCallback(require("react-native-worklets/.worklets/1.js").default).AmogusIn();"`;
+
+exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically 1`] = `"FadeIn.withCallback(require("react-native-worklets/.worklets/1.js").default);"`;
+
+exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically with new keyword 1`] = `"new FadeIn().withCallback(require("react-native-worklets/.worklets/1.js").default);"`;
+
+exports[`babel plugin for async functions makes an async worklet factory 1`] = `
+"const foo = async function () {
+  "use no memo";
+
+  await Promise.resolve();
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+export default foo;"
+`;
+
+exports[`babel plugin for closure capturing captures worklets environment 1`] = `
+"const x = 5;
+const objX = {
+  x
+};
+const f = require("react-native-worklets/.worklets/1.js").default([x, objX]);"
+`;
+
+exports[`babel plugin for closure capturing captures worklets environment 2`] = `
+"export default (function f_null1Factory([x, objX]) {
+  const f = function () {
+    "use no memo";
+
+    return {
+      res: x + objX.x
+    };
+  };
+  f.__closure = [x, objX];
+  f.__workletHash = 1;
+  f.__pluginVersion = "x.y.z";
+  return f;
+});"
+`;
+
+exports[`babel plugin for closure capturing doesn't capture arguments 1`] = `"const f = require("react-native-worklets/.worklets/1.js").default;"`;
+
+exports[`babel plugin for closure capturing doesn't capture objects' properties 1`] = `
+"const foo = {
+  bar: 42
+};
+const f = require("react-native-worklets/.worklets/1.js").default([foo]);"
+`;
+
+exports[`babel plugin for debugging doesn't inject version for worklets in production builds 1`] = `
+"const null1 = function () {
+  "use no memo";
+
+  const x = 1;
+};
+null1.__workletHash = 1;
+export default null1;"
+`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped named FunctionExpression automatically 1`] = `"const animatedStyle = useAnimatedStyle(require("react-native-worklets/.worklets/1.js").default);"`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped named FunctionExpression automatically 2`] = `
+"const foo = function () {
+  "use no memo";
+
+  return {
+    width: 50
+  };
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+export default foo;"
+`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped unnamed FunctionExpression automatically 1`] = `"const animatedStyle = useAnimatedStyle(require("react-native-worklets/.worklets/1.js").default);"`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped unnamed FunctionExpression automatically 2`] = `
+"const null1 = function () {
+  "use no memo";
+
+  return {
+    width: 50
+  };
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+export default null1;"
+`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped worklet reference automatically 1`] = `
+"const style = require("react-native-worklets/.worklets/1.js").default;
+const animatedStyle = useAnimatedStyle(style);"
+`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped worklet reference automatically 2`] = `
+"const null1 = function () {
+  "use no memo";
+
+  return {
+    color: "red",
+    backgroundColor: "blue"
+  };
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+export default null1;"
+`;
+
+exports[`babel plugin for generators makes a generator worklet factory 1`] = `
+"const foo = function* () {
+  "use no memo";
+
+  yield "hello";
+  yield "world";
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+export default foo;"
+`;
+
+exports[`babel plugin for object hooks supports empty object in useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler({});"`;
+
+exports[`babel plugin for object hooks transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler(require("react-native-worklets/.worklets/1.js").default);"`;
+
+exports[`babel plugin for object hooks transforms each object property in useAnimatedScrollHandler 1`] = `
+"useAnimatedScrollHandler({
+  onScroll: require("react-native-worklets/.worklets/1.js").default,
+  onBeginDrag: require("react-native-worklets/.worklets/2.js").default,
+  onEndDrag: require("react-native-worklets/.worklets/3.js").default,
+  onMomentumBegin: require("react-native-worklets/.worklets/4.js").default,
+  onMomentumEnd: require("react-native-worklets/.worklets/5.js").default
+});"
+`;
+
+exports[`babel plugin for object hooks transforms named FunctionExpression as argument of useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler(require("react-native-worklets/.worklets/1.js").default);"`;
+
+exports[`babel plugin for object hooks transforms unnamed FunctionExpression as argument of useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler(require("react-native-worklets/.worklets/1.js").default);"`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped ArrowFunctionExpression automatically 1`] = `
+"useAnimatedScrollHandler({
+  onScroll: require("react-native-worklets/.worklets/1.js").default
+});"
+`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped ObjectMethod automatically 1`] = `
+"useAnimatedScrollHandler({
+  onScroll: require("react-native-worklets/.worklets/1.js").default
+});"
+`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped named FunctionExpression automatically 1`] = `
+"useAnimatedScrollHandler({
+  onScroll: require("react-native-worklets/.worklets/1.js").default
+});"
+`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped unnamed FunctionExpression automatically 1`] = `
+"useAnimatedScrollHandler({
+  onScroll: require("react-native-worklets/.worklets/1.js").default
+});"
+`;
+
+exports[`babel plugin for react-native-gesture-handler doesn't transform chained methods of objects containing Gesture property 1`] = `
+"const foo = Something.Gesture.Tap().onEnd(() => {
+  console.log('onEnd');
+});"
+`;
+
+exports[`babel plugin for react-native-gesture-handler doesn't transform standard callback functions 1`] = `
+"const foo = Something.Tap().onEnd((_event, _success) => {
+  console.log('onEnd');
+});"
+`;
+
+exports[`babel plugin for react-native-gesture-handler doesn't workletize irrelevant chained gesture object callback functions 1`] = `"const foo = Gesture.Tap().toString();"`;
+
+exports[`babel plugin for react-native-gesture-handler transforms spread operator in Animated component 1`] = `
+"function App() {
+  return <Animated.View style={[style, {
+    ...styles.container,
+    width: sharedValue.value
+  }]} />;
+}"
+`;
+
+exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for arrays 1`] = `
+"const foo = function () {
+  "use no memo";
+
+  const bar = [4, 5];
+  const baz = [1, ...[2, 3], ...bar];
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+export default foo;"
+`;
+
+exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for function arguments 1`] = `
+"const foo = function (...args) {
+  "use no memo";
+
+  console.log(args);
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+export default foo;"
+`;
+
+exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for function calls 1`] = `
+"const foo = function (arg) {
+  "use no memo";
+
+  console.log(...arg);
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+export default foo;"
+`;
+
+exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for objects 1`] = `
+"const foo = function () {
+  "use no memo";
+
+  const bar = {
+    d: 4,
+    e: 5
+  };
+  const baz = {
+    a: 1,
+    ...{
+      b: 2,
+      c: 3
+    },
+    ...bar
+  };
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+export default foo;"
+`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes gesture callbacks using the hooks api 1`] = `
+"const foo = useTapGesture({
+  numberOfTaps: 2,
+  onBegin: require("react-native-worklets/.worklets/1.js").default,
+  onStart: require("react-native-worklets/.worklets/2.js").default,
+  onEnd: require("react-native-worklets/.worklets/3.js").default
+});"
+`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes possibly chained gesture object callback functions automatically 1`] = `"const foo = Gesture.Tap().numberOfTaps(2).onBegin(require("react-native-worklets/.worklets/1.js").default).onStart(require("react-native-worklets/.worklets/2.js").default).onEnd(require("react-native-worklets/.worklets/3.js").default);"`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes referenced callbacks 1`] = `
+"const onStart = require("react-native-worklets/.worklets/1.js").default;
+const foo = Gesture.Tap().onStart(onStart);"
+`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes referenced gesture callbacks using the hooks api 1`] = `
+"const onBegin = require("react-native-worklets/.worklets/1.js").default;
+const foo = useTapGesture({
+  numberOfTaps: 2,
+  onBegin: onBegin
+});"
+`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes referenced gesture callbacks using the hooks api and shorthand syntax 1`] = `
+"const onBegin = require("react-native-worklets/.worklets/1.js").default;
+const foo = useTapGesture({
+  numberOfTaps: 2,
+  onBegin
+});"
+`;
+
+exports[`babel plugin for referenced worklets prefers AssignmentExpression over VariableDeclarator 1`] = `
+"let styleFactory = () => 1;
+styleFactory = require("react-native-worklets/.worklets/1.js").default;
+animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets prefers FunctionDeclaration over AssignmentExpression 1`] = `
+"const styleFactory = require("react-native-worklets/.worklets/1.js").default;
+styleFactory = () => "AssignmentExpression";
+animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression on its AssignmentExpression 1`] = `
+"let styleFactory;
+styleFactory = require("react-native-worklets/.worklets/1.js").default;
+animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression on its VariableDeclarator 1`] = `
+"let styleFactory = require("react-native-worklets/.worklets/1.js").default;
+const animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression only on last AssignmentExpression 1`] = `
+"let styleFactory;
+styleFactory = () => 1;
+styleFactory = require("react-native-worklets/.worklets/1.js").default;
+animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes FunctionDeclaration 1`] = `
+"const styleFactory = require("react-native-worklets/.worklets/1.js").default;
+const animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes FunctionExpression on its AssignmentExpression 1`] = `
+"let styleFactory;
+styleFactory = require("react-native-worklets/.worklets/1.js").default;
+animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes FunctionExpression on its VariableDeclarator 1`] = `
+"let styleFactory = require("react-native-worklets/.worklets/1.js").default;
+const animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes FunctionExpression only on last AssignmentExpression 1`] = `
+"let styleFactory;
+styleFactory = function () {
+  return 1;
+};
+styleFactory = require("react-native-worklets/.worklets/1.js").default;
+animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ObjectExpression on its AssignmentExpression 1`] = `
+"let handler;
+handler = {
+  onScroll: require("react-native-worklets/.worklets/1.js").default
+};
+const scrollHandler = useAnimatedScrollHandler(handler);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ObjectExpression on its VariableDeclarator 1`] = `
+"let handler = {
+  onScroll: require("react-native-worklets/.worklets/1.js").default
+};
+const scrollHandler = useAnimatedScrollHandler(handler);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ObjectExpression only on last AssignmentExpression 1`] = `
+"let handler;
+handler = {
+  onScroll: () => 1
+};
+handler = {
+  onScroll: require("react-native-worklets/.worklets/1.js").default
+};
+const scrollHandler = useAnimatedScrollHandler(handler);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes assignments that appear after the worklet is used 1`] = `
+"let styleFactory = () => ({});
+animatedStyle = useAnimatedStyle(styleFactory);
+styleFactory = require("react-native-worklets/.worklets/1.js").default;"
+`;
+
+exports[`babel plugin for referenced worklets workletizes in immediate scope 1`] = `
+"let styleFactory = require("react-native-worklets/.worklets/1.js").default;
+animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes in nested scope 1`] = `
+"function outerScope() {
+  let styleFactory = require("react-native-worklets/.worklets/1.js").default;
+  function innerScope() {
+    animatedStyle = useAnimatedStyle(styleFactory);
+  }
+}"
+`;
+
+exports[`babel plugin for referenced worklets workletizes multiple referencing 1`] = `
+"const secondReference = require("react-native-worklets/.worklets/1.js").default;
+const firstReference = secondReference;
+const animatedStyle = useAnimatedStyle(firstReference);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes recursion 1`] = `"const recursiveWorklet = require("react-native-worklets/.worklets/1.js").default;"`;
+
+exports[`babel plugin for sequence expressions supports SequenceExpression 1`] = `
+"function App() {
+  (0, fun)({
+    onStart() {}
+  }, []);
+}"
+`;
+
+exports[`babel plugin for sequence expressions supports SequenceExpression, many arguments 1`] = `
+"function App() {
+  (0, 3, fun)({
+    onStart: require("react-native-worklets/.worklets/1.js").default
+  }, []);
+}"
+`;
+
+exports[`babel plugin for sequence expressions supports SequenceExpression, with objectHook 1`] = `
+"function App() {
+  (0, useAnimatedScrollHandler)({
+    onScroll: require("react-native-worklets/.worklets/1.js").default
+  }, []);
+}"
+`;
+
+exports[`babel plugin for sequence expressions supports SequenceExpression, with worklet 1`] = `
+"function App() {
+  (0, fun)({
+    onStart: require("react-native-worklets/.worklets/1.js").default
+  }, []);
+}"
+`;
+
+exports[`babel plugin for sequence expressions supports SequenceExpression, with worklet closure 1`] = `
+"function App() {
+  const obj = {
+    a: 1,
+    b: 2
+  };
+  (0, fun)({
+    onStart: require("react-native-worklets/.worklets/1.js").default([obj])
+  }, []);
+}"
+`;
+
+exports[`babel plugin for worklet names appends file name to function name 1`] = `
+"const x = 1;
+const foo = require("react-native-worklets/.worklets/1.js").default([x]);"
+`;
+
+exports[`babel plugin for worklet names appends file name to function name 2`] = `
+"export default (function foo_sourceJs1Factory([x]) {
+  const foo = function () {
+    "use no memo";
+
+    return x;
+  };
+  foo.__closure = [x];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  return foo;
+});"
+`;
+
+exports[`babel plugin for worklet names appends library name to function name 1`] = `
+"const x = 1;
+const foo = require("react-native-worklets/.worklets/1.js").default([x]);"
+`;
+
+exports[`babel plugin for worklet names appends library name to function name 2`] = `
+"export default (function foo_library_sourceJs1Factory([x]) {
+  const foo = function () {
+    "use no memo";
+
+    return x;
+  };
+  foo.__closure = [x];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  return foo;
+});"
+`;
+
+exports[`babel plugin for worklet names handles names with illegal characters 1`] = `
+"const x = 1;
+const foo = require("react-native-worklets/.worklets/1.js").default([x]);"
+`;
+
+exports[`babel plugin for worklet names handles names with illegal characters 2`] = `
+"export default (function foo_SourceJs1Factory([x]) {
+  const foo = function () {
+    "use no memo";
+
+    return x;
+  };
+  foo.__closure = [x];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  return foo;
+});"
+`;
+
+exports[`babel plugin for worklet names preserves recursion 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default;"`;
+
+exports[`babel plugin for worklet names preserves recursion 2`] = `
+"const foo = function () {
+  "use no memo";
+
+  foo(1);
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+export default foo;"
+`;
+
+exports[`babel plugin for worklet names unnamed ArrowFunctionExpression 1`] = `
+"const x = 1;
+require("react-native-worklets/.worklets/1.js").default([x]);"
+`;
+
+exports[`babel plugin for worklet names unnamed ArrowFunctionExpression 2`] = `
+"export default (function null1Factory([x]) {
+  const null1 = function () {
+    "use no memo";
+
+    return x;
+  };
+  null1.__closure = [x];
+  null1.__workletHash = 1;
+  null1.__pluginVersion = "x.y.z";
+  return null1;
+});"
+`;
+
+exports[`babel plugin for worklet names unnamed FunctionExpression 1`] = `
+"const x = 1;
+[require("react-native-worklets/.worklets/1.js").default([x])]();"
+`;
+
+exports[`babel plugin for worklet names unnamed FunctionExpression 2`] = `
+"export default (function null1Factory([x]) {
+  const null1 = function () {
+    "use no memo";
+
+    return x;
+  };
+  null1.__closure = [x];
+  null1.__workletHash = 1;
+  null1.__pluginVersion = "x.y.z";
+  return null1;
+});"
+`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default;"`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnJS in runOnUI 1`] = `"runOnUI(require("react-native-worklets/.worklets/1.js").default)();"`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnUI in runOnJS in runOnUI 1`] = `"runOnUI(require("react-native-worklets/.worklets/1.js").default)();"`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets with depth 3 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default;"`;
+
+exports[`babel plugin for worklet nesting transpiles worklets with functions defined on UI thread to run them on JS 1`] = `"runOnUI(require("react-native-worklets/.worklets/1.js").default)();"`;
+
+exports[`babel plugin generally removes comments from worklets 1`] = `
+"const null1 = function () {
+  "use no memo";
+
+  return true;
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+export default null1;"
+`;
+
+exports[`babel plugin generally supports recursive calls 1`] = `
+"const a = 1;
+const foo = require("react-native-worklets/.worklets/1.js").default([a]);"
+`;
+
+exports[`babel plugin generally supports recursive calls 2`] = `
+"export default (function foo_null1Factory([a]) {
+  const foo = function (t) {
+    "use no memo";
+
+    if (t > 0) {
+      return a + foo(t - 1);
+    }
+  };
+  foo.__closure = [a];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  return foo;
+});"
+`;
+
+exports[`babel plugin generally transforms 1`] = `
+"import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
+function Box() {
+  const offset = useSharedValue(0);
+  const animatedStyles = useAnimatedStyle(require("react-native-worklets/.worklets/1.js").default([offset]));
+  return <>
+              <Animated.View style={[styles.box, animatedStyles]} />
+              <Button onPress={() => offset.value = Math.random()} title="Move" />
+            </>;
+}"
+`;
+
+exports[`babel plugin generally transforms 2`] = `
+"export default (function null1Factory([offset]) {
+  const null1 = function () {
+    "use no memo";
+
+    return {
+      transform: [{
+        translateX: offset.value * 255
+      }]
+    };
+  };
+  null1.__closure = [offset];
+  null1.__workletHash = 1;
+  null1.__pluginVersion = "x.y.z";
+  return null1;
+});"
+`;

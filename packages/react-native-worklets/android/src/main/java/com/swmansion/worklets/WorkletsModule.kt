@@ -60,7 +60,7 @@ class WorkletsModule(
 
     private external fun prepareBundleModeAOTCpp()
 
-    private external fun installTurboModuleCpp(bundleModeEnabled: Boolean)
+    private external fun installTurboModuleCpp()
 
     @OptIn(FrameworkAPI::class)
     @ReactMethod(isBlockingSynchronousMethod = true)
@@ -73,9 +73,9 @@ class WorkletsModule(
 
     @OptIn(FrameworkAPI::class)
     @ReactMethod(isBlockingSynchronousMethod = true)
-    override fun installTurboModule(bundleModeEnabled: Boolean): Boolean {
+    override fun installTurboModule(): Boolean {
         reactApplicationContext.assertOnJSQueueThread()
-        installTurboModuleCpp(bundleModeEnabled)
+        installTurboModuleCpp()
         return true
     }
 

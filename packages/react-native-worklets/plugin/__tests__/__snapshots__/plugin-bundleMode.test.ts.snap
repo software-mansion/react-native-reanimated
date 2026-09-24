@@ -1,7 +1,5 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`babel plugin in bundleMode bundle mode flag toggle does not flip the flag in unrelated files 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;"`;
-
 exports[`babel plugin in bundleMode nested worklets extracts each nested worklet into its own file 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default;"`;
 
 exports[`babel plugin in bundleMode nested worklets extracts each nested worklet into its own file 2`] = `
@@ -73,6 +71,7 @@ const foo = require("react-native-worklets/.worklets/1.js").default([x]);"
 exports[`babel plugin in bundleMode source replacement still captures closure even with "no-worklet-closure" directive 2`] = `
 "export default (function foo_testJs1Factory([x]) {
   const foo = function () {
+    'no-worklet-closure';
     "use no memo";
 
     return x;

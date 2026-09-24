@@ -52,7 +52,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
 
   void prepareBundleModeAOTCpp();
 
-  void installTurboModuleCpp(jboolean bundleModeEnabled);
+  void installTurboModuleCpp();
 
   void startCpp();
 

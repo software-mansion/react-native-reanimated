@@ -8,7 +8,6 @@
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/Serializable/SerializableArray.h>
 #include <worklets/SharedItems/Serializable/SerializableWorklet.h>
-#include <worklets/SharedItems/UnpackerLoader.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/ScriptBuffer.h>
@@ -438,8 +437,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       const std::shared_ptr<const ScriptBuffer> &script,
       const std::string &sourceUrl,
       const std::shared_ptr<Networking> &networking);
-
-  void legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader);
 
   [[nodiscard]] AbortToken abortToken() const noexcept {
     return static_cast<AbortToken>(runtimeId_);

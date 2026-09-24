@@ -118,10 +118,7 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
   const auto script = jsiWorkletsModuleProxy->getScript();
   const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
   const auto runtimeBindings = jsiWorkletsModuleProxy->getRuntimeBindings();
-  const auto bundleModeEnabled = jsiWorkletsModuleProxy->isBundleModeEnabled();
-  const auto unpackerLoader = jsiWorkletsModuleProxy->getUnpackerLoader();
-  const auto nativeLoggingHook =
-      bundleModeEnabled ? runtimeBindings->nativeLoggingHook : RuntimeBindings::NativeLoggingHook{};
+  const auto &nativeLoggingHook = runtimeBindings->nativeLoggingHook;
 
   WorkletRuntimeDecorator::decorate(
       rt,
@@ -133,11 +130,7 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
       eventLoop_,
       nativeLoggingHook);
 
-  if (bundleModeEnabled) {
-    bundleModeInit(jsScheduler, script, sourceUrl, jsiWorkletsModuleProxy->getNetworking());
-  } else {
-    legacyModeInit(unpackerLoader);
-  }
+  bundleModeInit(jsScheduler, script, sourceUrl, jsiWorkletsModuleProxy->getNetworking());
 
   try {
     memoryManager_->loadAllCustomSerializables(shared_from_this());
@@ -162,10 +155,6 @@ void WorkletRuntime::bundleModeInit(
   }
 
   ScriptLoader::loadScript(rt, script, sourceUrl);
-}
-
-void WorkletRuntime::legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader) {
-  unpackerLoader->installUnpackers(*runtime_);
 }
 
 /* #region schedule */
@@ -312,9 +301,7 @@ void scheduleOnRuntime(
     const jsi::Value &serializableWorkletValue) {
   auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-      rt,
-      serializableWorkletValue,
-      "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
+      rt, serializableWorkletValue, "[Worklets] Function passed to `scheduleOnRuntime` is not a serializable worklet.");
   workletRuntime->schedule(serializableWorklet);
 }
 
@@ -326,9 +313,7 @@ void scheduleOnRuntime(
     const std::optional<std::string> &scheduleStack) {
   auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-      rt,
-      serializableWorkletValue,
-      "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
+      rt, serializableWorkletValue, "[Worklets] Function passed to `scheduleOnRuntime` is not a serializable worklet.");
   workletRuntime->scheduleWithStack(serializableWorklet, scheduleStack);
 }
 #endif // NDEBUG

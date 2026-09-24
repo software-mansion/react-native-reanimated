@@ -36,8 +36,7 @@
     "lint:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run lint",
     "lint:root": "oxlint . --ignore-pattern 'packages/**' --ignore-pattern 'apps/**' --ignore-pattern 'docs/**' && yarn run --top-level oxfmt --check --ignore-path .prettiereslintignore .",
     "prepare-vscode": "bash ./scripts/prepare-vscode.sh",
-    "test:scripts": "node --experimental-strip-types --test scripts/__tests__/*.test.mts scripts/changelog/__tests__/*.test.mts",
-    "toggle-bundle-mode": "bash ./scripts/toggle-bundle-mode.sh"
+    "test:scripts": "node --experimental-strip-types --test scripts/__tests__/*.test.mts scripts/changelog/__tests__/*.test.mts"
   },
   "devDependencies": {
     "@babel/core": "7.29.6",
@@ -80,11 +79,6 @@
     "shelljs": "0.10.0",
     "tstyche": "7.2.2",
     "typescript": "5.9.3"
-  },
-  "spacer": {
-    "spacer": {
-      "spacer": "thanks to this spacer changes to dependencies won't require update of bundle mode toggling script patches"
-    }
   },
   "resolutions": {
     "metro": "patch:metro@npm%3A0.87.1#~/.yarn/patches/metro-npm-0.87.1-4800af9fce.patch",

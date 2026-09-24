@@ -12,10 +12,7 @@ import {
   getStaticFeatureFlag as getStaticFeatureFlagReanimated,
   setDynamicFeatureFlag as setDynamicFeatureFlagReanimated,
 } from 'react-native-reanimated';
-import {
-  getStaticFeatureFlag as getStaticFeatureFlagWorklets,
-  isBundleModeEnabled,
-} from 'react-native-worklets';
+import { getStaticFeatureFlag as getStaticFeatureFlagWorklets } from 'react-native-worklets';
 
 function isWeb() {
   return Platform.OS === 'web';
@@ -35,14 +32,6 @@ function getPlatformVersion() {
 
 function getBundle() {
   return __DEV__ ? 'dev' : 'production';
-}
-
-function usesLegacyEvalBytecode() {
-  return !!(() => {
-    'worklet';
-    // @ts-expect-error It's fine
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  })?.__initData?.bytecode;
 }
 
 function getRuntime() {
@@ -136,8 +125,6 @@ export default function AboutExample() {
           <Item label="Architecture" value={getArchitecture()} />
           <Item label="JS runtime" value={getRuntime()} />
           <Item label="RN version" value={getReactNativeVersion()} />
-          <Item label="Bundle mode" value={isBundleModeEnabled()} />
-          <Item label="Legacy eval bytecode" value={usesLegacyEvalBytecode()} />
           <Text style={styles.sectionHeader}>Reanimated static flags</Text>
           {staticFlagsReanimated.map((name) => (
             <Item
