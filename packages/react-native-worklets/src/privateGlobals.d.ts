@@ -33,7 +33,8 @@ declare global {
   var _WORKLETS_VERSION_CPP: string | undefined;
   var _WORKLETS_VERSION_JS: string | undefined;
   var __serializer: typeof makeShareableCloneOnUIRecursive;
-  var __callMicrotasks: () => void;
+  /** Available on runtimes with the Hermes microtask queue enabled. */
+  var __drainMicrotasks: () => void;
   /** Available only on the UI Runtime */
   var __nativeRequestAnimationFrame: (
     callback: (timestamp: number) => void
@@ -58,12 +59,6 @@ declare global {
   var _beginSection: (name: string) => void;
   var _endSection: () => void;
   var _getAnimationTimestamp: () => number;
-  /**
-   * @deprecated Kept for backwards compatibility. Remove it after support for
-   *   Reanimated 4.3 is dropped. Reanimated uses it to handle event updates
-   *   synchronously.
-   */
-  var _microtaskQueueFinalizers: (() => void)[];
   var _scheduleTimeoutCallback: (delay: number, handlerId: number) => void;
   var __runTimeoutCallback: (handlerId: number) => void;
   var _taskQueue: Queue;
@@ -77,14 +72,30 @@ declare global {
     unknown,
     unknown
   >;
-  /** Only in Bundle Mode on Worklet Runtimes. */
-  var TurboModules: Map<string, unknown>;
   /**
    * Native logging hook installed by React Native on the RN Runtime and
    * propagated to Worklet Runtimes in Bundle Mode. Level values match RN's
    * `LOG_LEVELS`: 0 = trace, 1 = info, 2 = warn, 3 = error.
    */
   var nativeLoggingHook: ((message: string, level: number) => void) | undefined;
+  /** Only in Bundle Mode on Worklet Runtimes. */
+  var __workletsNetworking:
+    | {
+        sendRequest(
+          config: {
+            method: string;
+            url: string;
+            headers: Array<[string, string]>;
+            body?: string | ArrayBuffer;
+            timeoutMs: number;
+            withCredentials: boolean;
+          },
+          onEvent: (type: string, payload: unknown) => void
+        ): number;
+        abortRequest(requestId: number): void;
+        decodeText(buffer: ArrayBuffer, encoding?: string): string;
+      }
+    | undefined;
   interface NodeRequire {
     resolveWeak(id: string): number;
     getModules(): Map<number, unknown>;

@@ -10,11 +10,11 @@ import Animated, {
 import {
   describe,
   expect,
+  expectEventually,
   getTestComponent,
   render,
   test,
   useTestRef,
-  wait,
 } from '../../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../../ReJest/types';
 
@@ -51,7 +51,7 @@ const IndependentComponents = ({
 
   useEffect(() => {
     widths.value = withDelay(
-      100,
+      400,
       withTiming(finalWidths, {
         duration,
       })
@@ -74,8 +74,8 @@ describe('withTiming animation of ARRAY', () => {
     scalars?: [number, number, number];
     speed: number;
   }> = [
-    { startWidths: [20, 20, 20], finalWidths: [300, 300, 300], speed: 10000 },
-    { startWidths: [20, 300, 20], finalWidths: [200, 30, 200], speed: 5000 },
+    { startWidths: [20, 20, 20], finalWidths: [300, 300, 300], speed: 900 },
+    { startWidths: [20, 300, 20], finalWidths: [200, 30, 200], speed: 700 },
     { startWidths: [20, 20, 20], finalWidths: [20, 200, 100], speed: 1000 },
     { startWidths: [20, 20, 20], finalWidths: [130, 140, 150], speed: 1000 },
     { startWidths: [20, 20, 20], finalWidths: [130, 140, 150], speed: 500 },
@@ -142,10 +142,9 @@ describe('withTiming animation of ARRAY', () => {
         );
         index += 1;
       }
-      await wait(speed + 200);
       index = 0;
       for (const component of components) {
-        expect(await component.getAnimatedStyle('width')).toBe(
+        await expectEventually(() => component.getAnimatedStyle('width')).toBe(
           finalWidths[index] * scalars[index],
           ComparisonMode.PIXEL
         );

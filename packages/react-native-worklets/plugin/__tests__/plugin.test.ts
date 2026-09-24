@@ -178,9 +178,10 @@ describe('babel plugin', () => {
   describe('for worklet names', () => {
     test('unnamed ArrowFunctionExpression', () => {
       const input = html`<script>
+        const x = 1;
         () => {
           'worklet';
-          return 1;
+          return x;
         };
       </script>`;
 
@@ -193,10 +194,11 @@ describe('babel plugin', () => {
 
     test('unnamed FunctionExpression', () => {
       const input = html`<script>
+        const x = 1;
         [
           function () {
             'worklet';
-            return 1;
+            return x;
           },
         ]();
       </script>`;
@@ -223,9 +225,10 @@ describe('babel plugin', () => {
 
     test('appends file name to function name', () => {
       const input = html`<script>
+        const x = 1;
         function foo() {
           'worklet';
-          return 1;
+          return x;
         }
       </script>`;
 
@@ -240,9 +243,10 @@ describe('babel plugin', () => {
 
     test('appends library name to function name', () => {
       const input = html`<script>
+        const x = 1;
         function foo() {
           'worklet';
-          return 1;
+          return x;
         }
       </script>`;
 
@@ -262,9 +266,10 @@ describe('babel plugin', () => {
 
     test('handles names with illegal characters', () => {
       const input = html`<script>
+        const x = 1;
         function foo() {
           'worklet';
-          return 1;
+          return x;
         }
       </script>`;
 
@@ -383,8 +388,7 @@ describe('babel plugin', () => {
 
       const { code, files } = runPlugin(input);
       expect(files).toHaveLength(1);
-      expect(files[0].content).not.toContain('f.__closure = {};');
-      expect(files[0].content).toMatch(/f\.__closure = \{\s*x,\s*objX\s*\}/gm);
+      expect(files[0].content).toContain('f.__closure = [x, objX]');
       expect(code).toMatchSnapshot();
       expect(files[0].content).toMatchSnapshot();
     });
@@ -399,7 +403,7 @@ describe('babel plugin', () => {
 
       const { code, files } = runPlugin(input);
       expect(files).toHaveLength(1);
-      expect(files[0].content).toContain('f.__closure = {};');
+      expect(files[0].content).not.toContain('__closure');
       expect(code).toMatchSnapshot();
     });
 
@@ -415,7 +419,7 @@ describe('babel plugin', () => {
 
       const { code, files } = runPlugin(input);
       expect(files).toHaveLength(1);
-      expect(files[0].content).toMatch(/f\.__closure = \{\s*foo\s*\}/gm);
+      expect(files[0].content).toContain('f.__closure = [foo]');
       expect(code).toMatchSnapshot();
     });
   });
@@ -872,9 +876,7 @@ describe('babel plugin', () => {
 
       const { code, files } = runPlugin(input);
       expect(files).toHaveLength(1);
-      expect(files[0].content).toMatch(
-        /onStart\.__closure = \{\s*obj\s*\}/gm
-      );
+      expect(files[0].content).toContain('onStart.__closure = [obj]');
       expect(code).toMatchSnapshot();
     });
   });

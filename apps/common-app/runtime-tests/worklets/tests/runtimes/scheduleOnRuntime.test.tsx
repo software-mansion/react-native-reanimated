@@ -4,6 +4,7 @@ import {
   scheduleOnUI,
   runOnRuntimeSync,
 } from 'react-native-worklets';
+
 import {
   beforeEach,
   describe,

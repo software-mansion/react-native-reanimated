@@ -3,6 +3,7 @@
 // TODO: FIX THESE
 // eslint-disable-next-line import/no-unresolved
 import { RuleTester } from '@typescript-eslint/rule-tester';
+
 import { rules } from '../src';
 
 // For reasons unknown the following line causes Jest to hang indefinitely

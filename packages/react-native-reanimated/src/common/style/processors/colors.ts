@@ -1,4 +1,5 @@
 'use strict';
+/* eslint-disable @typescript-eslint/no-deprecated */
 import type {
   DynamicColorIOS as RNDynamicColorIOS,
   OpaqueColorValue,
@@ -22,7 +23,7 @@ export function PlatformColor(...names: string[]): OpaqueColorValue {
   'worklet';
   return (IS_IOS
     ? { semantic: names }
-    : // eslint-disable-next-line camelcase
+    : // eslint-disable-next-line eslint-core/camelcase
       { resource_paths: names }) as unknown as OpaqueColorValue;
 }
 
@@ -165,7 +166,7 @@ function unprocessDynamicColorObjectIOS(
   };
 }
 
-type ProcessedColor =
+export type ProcessedColor =
   | number
   | PlatformColorObject
   | ProcessedDynamicColorObjectIOS;

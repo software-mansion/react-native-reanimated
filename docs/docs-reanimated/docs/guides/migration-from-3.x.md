@@ -4,6 +4,8 @@ title: Migrating from Reanimated 3.x to 4.x
 sidebar_label: Migration from 3.x
 ---
 
+# Migrating from Reanimated 3.x to 4.x
+
 ## Breaking changes
 
 On the API surface level, Reanimated 4.x introduces only some minor renames and other breaking changes between 3.x and 4.x as listed below. All the animation logic you've written in Reanimated v2 or v3 API works in 4.x with little to no changes. Animations based on shared values will work the same way as before, simultaneously and interchangeably with CSS animations and transitions. This means you can adopt CSS animations and transitions in your codebase incrementally at your own pace.
@@ -20,7 +22,16 @@ You can read more about `react-native-worklets` library in its [documentation](h
 
 ### Renamed `react-native-reanimated/plugin`
 
-Change `'react-native-reanimated/plugin'` to `'react-native-worklets/plugin'` in `babel.config.js`.
+Reanimated Babel plugin was moved to `react-native-worklets` and renamed to [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about/). Please make sure to import the plugin from `react-native-worklets/plugin` in your `babel.config.js`.
+
+```diff
+plugins: [
+-  'react-native-reanimated/plugin',
++  'react-native-worklets/plugin',
+],
+```
+
+For backwards compatibility we kept it as an export in Reanimated 4 but we strongly recommend using `react-native-worklets/plugin` directly.
 
 ### Worklet-specific functions should be imported from `react-native-worklets`
 

@@ -49,13 +49,11 @@ export type WorkletRuntime = {
   readonly runtimeId: number;
 };
 
-type WorkletClosure = Record<string, unknown>;
+type WorkletClosure = unknown[];
 
 interface WorkletProps {
-  __closure: WorkletClosure;
+  __closure?: WorkletClosure;
   __workletHash: number;
-  /** Only for Handles. */
-  __init?: () => unknown;
   /** Only in dev builds. */
   __pluginVersion?: string;
 }
@@ -68,7 +66,7 @@ export type WorkletFunction<
 export interface WorkletFactory<
   TArgs extends unknown[] = unknown[],
   TReturn = unknown,
-  TClosureVariables extends Record<string, unknown> = Record<string, unknown>,
+  TClosureVariables extends unknown[] = unknown[],
 > {
   (closureVariables: TClosureVariables): WorkletFunction<TArgs, TReturn>;
 }
@@ -100,6 +98,12 @@ type WorkletRuntimeConfigBase = {
    * by requestAnimationFrame. If not specified, it defaults to 16 ms.
    */
   animationQueuePollingRate?: number;
+  /**
+   * Determines whether the networking API (`fetch`, `XMLHttpRequest` and
+   * their supporting globals) is installed on the runtime. Effective only in
+   * Bundle Mode. If not specified, it defaults to `true`.
+   */
+  enableNetworking?: boolean;
 };
 
 /** Configuration object for creating a worklet runtime. */

@@ -12,12 +12,13 @@ import {
   callTrackerFn,
   describe,
   expect,
+  expectEventually,
   getTestComponent,
   getTrackerCallCount,
   render,
   test,
   useTestRef,
-  wait,
+  waitUntilSettled,
 } from '../../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../../ReJest/types';
 
@@ -164,11 +165,9 @@ describe('withTiming animation of WIDTH', () => {
       const WidthComponentPassive = getTestComponent(
         WIDTH_COMPONENT_PASSIVE_REF
       );
-      await wait(1000);
-      expect(await componentActive.getAnimatedStyle('width')).toBe(
-        finalWidthInPixels,
-        ComparisonMode.PIXEL
-      );
+      await expectEventually(() =>
+        componentActive.getAnimatedStyle('width')
+      ).toBe(finalWidthInPixels, ComparisonMode.PIXEL);
       expect(await WidthComponentPassive.getAnimatedStyle('width')).toBe(
         finalWidthInPixels,
         ComparisonMode.PIXEL
@@ -182,15 +181,15 @@ describe('withTiming animation of WIDTH', () => {
     );
     const componentActive = getTestComponent(WIDTH_COMPONENT_ACTIVE_REF);
     const WidthComponentPassive = getTestComponent(WIDTH_COMPONENT_PASSIVE_REF);
-    await wait(1000);
-    expect(await componentActive.getAnimatedStyle('width')).not.toBe(
-      100,
-      ComparisonMode.PIXEL
+    const settledActive = await waitUntilSettled(() =>
+      componentActive.getAnimatedStyle('width')
     );
-    expect(await WidthComponentPassive.getAnimatedStyle('width')).not.toBe(
-      100,
-      ComparisonMode.PIXEL
+    const settledPassive = await waitUntilSettled(() =>
+      WidthComponentPassive.getAnimatedStyle('width')
     );
+
+    expect(settledActive).not.toBe(100, ComparisonMode.PIXEL);
+    expect(settledPassive).not.toBe(100, ComparisonMode.PIXEL);
   });
 });
 
@@ -227,17 +226,23 @@ describe('withTiming, test CALLBACKS', () => {
 
   test('withTiming - test callback of independent withTiming animations', async () => {
     await render(<CallbackComponent />);
-    await wait(600);
 
-    expect(getTrackerCallCount(Tracker.UseAnimatedStyle)).toBeCalled(3);
-    expect(getTrackerCallCount(Tracker.UseAnimatedStyle)).toBeCalledUI(1);
-    expect(getTrackerCallCount(Tracker.UseAnimatedStyle)).toBeCalledJS(2);
+    await expectEventually(() =>
+      getTrackerCallCount(Tracker.Height)
+    ).toBeCalledUI(1);
 
-    expect(getTrackerCallCount(Tracker.Width)).toBeCalledUI(1);
-    expect(getTrackerCallCount(Tracker.Width)).toBeCalledJS(0);
+    const useAnimatedStyleCalls = await getTrackerCallCount(
+      Tracker.UseAnimatedStyle
+    );
+    expect(useAnimatedStyleCalls).toBeCalled(3);
+    expect(useAnimatedStyleCalls).toBeCalledUI(1);
+    expect(useAnimatedStyleCalls).toBeCalledJS(2);
 
-    expect(getTrackerCallCount(Tracker.Height)).toBeCalledUI(1);
-    expect(getTrackerCallCount(Tracker.Height)).toBeCalledJS(0);
+    const widthCalls = await getTrackerCallCount(Tracker.Width);
+    expect(widthCalls).toBeCalledUI(1);
+    expect(widthCalls).toBeCalledJS(0);
+
+    expect(await getTrackerCallCount(Tracker.Height)).toBeCalledJS(0);
   });
 });
 

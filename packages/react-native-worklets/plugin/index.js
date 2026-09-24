@@ -485,8 +485,8 @@ var require_autoworkletization = __commonJS({
       ["useDerivedValue", [0]],
       ["useAnimatedScrollHandler", [0]],
       ["useAnimatedReaction", [0, 1]],
-      ["withTiming", [2]],
-      ["withSpring", [2]],
+      ["withTiming", [2, 3]],
+      ["withSpring", [2, 3]],
       ["withDecay", [1]],
       ["withRepeat", [3]],
       ["runOnUI", [0]],
@@ -574,10 +574,7 @@ var require_globals = __commonJS({
       return filename.includes(generatedWorkletsDirPath);
     }
     var defaultAllowedPaths = ["react-native-worklets"];
-    var defaultAllowedModules = [
-      "react-native-worklets",
-      "react-native/Libraries/Core/setUpXHR"
-    ];
+    var defaultAllowedModules = ["react-native-worklets"];
   }
 });
 
@@ -692,6 +689,9 @@ var require_closure = __commonJS({
     exports2.getClosure = getClosure;
     var types_12 = require("@babel/types");
     var imports_1 = require_imports();
+    function toClosureIdentifier(node) {
+      return (0, types_12.isJSXIdentifier)(node) ? (0, types_12.identifier)(node.name) : (0, types_12.cloneNode)(node, true);
+    }
     function getClosure(funPath, state) {
       const capturedNames = /* @__PURE__ */ new Set();
       const closureVariables = new Array();
@@ -743,7 +743,7 @@ var require_closure = __commonJS({
             }
           }
           capturedNames.add(name);
-          closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
+          closureVariables.push(toClosureIdentifier(idPath.node));
         }
       }, state);
       return {
@@ -777,7 +777,13 @@ var require_generate = __commonJS({
       const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
       const relativeImports = Array.from(relativeBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, imports_1.createImportPathLiteral)(binding.path.parentPath.node.source.value, state)));
       const imports = [...libraryImports, ...relativeImports];
-      const newProg = (0, types_12.program)([...imports, (0, types_12.exportDefaultDeclaration)(factory)]);
+      const statements = [...factory.body.body];
+      const returnedWorklet = statements.pop();
+      (0, assert_1.default)((0, types_12.isReturnStatement)(returnedWorklet) && returnedWorklet.argument);
+      const newProg = (0, types_12.program)([
+        ...imports,
+        ...factory.params.length === 0 ? [...statements, (0, types_12.exportDefaultDeclaration)(returnedWorklet.argument)] : [(0, types_12.exportDefaultDeclaration)(factory)]
+      ]);
       const transformedProg = (_a = (0, core_1.transformFromAstSync)(newProg, void 0, {
         filename: state.file.opts.filename,
         presets: [resolvePresetTypescript()],
@@ -930,7 +936,7 @@ var require_workletStringCode = __commonJS({
     }
     function getClosurePlugin(closureVariables) {
       const closureDeclaration = (0, types_12.variableDeclaration)("const", [
-        (0, types_12.variableDeclarator)((0, types_12.objectPattern)(closureVariables.map((variable) => (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.identifier)(variable.name), false, true))), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("__closure")))
+        (0, types_12.variableDeclarator)((0, types_12.arrayPattern)(closureVariables.map((variable) => (0, types_12.identifier)(variable.name))), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("__closure")))
       ]);
       return {
         visitor: {
@@ -984,7 +990,14 @@ var require_workletFactory = __commonJS({
       const { closureVariables, moduleBindingsToImport, relativeBindingsToImport } = (0, closure_1.getClosure)(fun, state);
       const clone = (0, types_12.cloneNode)(fun.node);
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
-      const { workletName, reactName } = makeWorkletName(fun, state);
+      const { workletName, reactName: initialReactName } = makeWorkletName(fun, state);
+      let reactName = initialReactName;
+      if (closureVariables.length === 0) {
+        const importedNames = new Set([...moduleBindingsToImport, ...relativeBindingsToImport].map((binding) => binding.identifier.name));
+        while (importedNames.has(reactName)) {
+          reactName = `_${reactName}`;
+        }
+      }
       const funString = (0, workletStringCode_1.buildWorkletString)(transformed.ast, state, closureVariables, workletName);
       (0, assert_1.strict)(funString, "`funString` is undefined.");
       const workletHash = hash(funString);
@@ -994,7 +1007,9 @@ var require_workletFactory = __commonJS({
         (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)((0, types_12.identifier)(reactName), funExpression)
         ]),
-        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(closureVariables.map((variable) => (0, types_12.objectProperty)((0, types_12.cloneNode)(variable, true), (0, types_12.cloneNode)(variable, true), false, true))))),
+        ...closureVariables.length > 0 ? [
+          (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.arrayExpression)(closureVariables.map((variable) => (0, types_12.cloneNode)(variable, true)))))
+        ] : [],
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__workletHash"), false), (0, types_12.numericLiteral)(workletHash)))
       ];
       const shouldInjectVersion = !(0, utils_1.isRelease)(state);
@@ -1003,10 +1018,9 @@ var require_workletFactory = __commonJS({
       }
       statements.push((0, types_12.returnStatement)((0, types_12.identifier)(reactName)));
       const factoryParams = closureVariables.map((variableId) => (0, types_12.cloneNode)(variableId, true));
-      const factoryParamObjectPattern = (0, types_12.objectPattern)(factoryParams.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
-      const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), [factoryParamObjectPattern], (0, types_12.blockStatement)(statements));
+      const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), factoryParams.length > 0 ? [(0, types_12.arrayPattern)(factoryParams.map((param) => (0, types_12.cloneNode)(param, true)))] : [], (0, types_12.blockStatement)(statements));
       const factoryCallArgs = factoryParams.map((param) => (0, types_12.cloneNode)(param, true));
-      const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
+      const factoryCallParamPack = (0, types_12.arrayExpression)(factoryCallArgs);
       (0, imports_1.updateRelativeRequires)(factory, state);
       (0, generate_1.generateWorkletFile)(moduleBindingsToImport, relativeBindingsToImport, factory, workletHash, state);
       return { factoryCallParamPack, workletHash };
@@ -1081,9 +1095,14 @@ var require_workletFactoryCall = __commonJS({
     var workletFactory_1 = require_workletFactory();
     function makeWorkletFactoryCall(path, state) {
       const { factoryCallParamPack, workletHash } = (0, workletFactory_1.makeWorkletFactory)(path, state);
-      const factoryCall = (0, types_12.callExpression)((0, types_12.memberExpression)((0, types_12.callExpression)((0, types_12.identifier)("require"), [
+      const workletModule = (0, types_12.memberExpression)((0, types_12.callExpression)((0, types_12.identifier)("require"), [
         (0, types_12.stringLiteral)(`react-native-worklets/${types_2.generatedWorkletsDir}/${workletHash}.js`)
-      ]), (0, types_12.identifier)("default")), [factoryCallParamPack]);
+      ]), (0, types_12.identifier)("default"));
+      if (factoryCallParamPack.elements.length === 0) {
+        workletModule.loc = path.node.loc;
+        return workletModule;
+      }
+      const factoryCall = (0, types_12.callExpression)(workletModule, [factoryCallParamPack]);
       addStackTraceDataToWorkletFactory(path, factoryCall);
       const replacement = factoryCall;
       return replacement;

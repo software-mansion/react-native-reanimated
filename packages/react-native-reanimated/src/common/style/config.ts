@@ -1,8 +1,9 @@
-/* eslint-disable camelcase */
+/* eslint-disable eslint-core/camelcase */
 'use strict';
 import { IS_ANDROID } from '../constants';
 import {
   processAspectRatio,
+  processBackgroundImage,
   processBoxShadow,
   processColor,
   processFilter,
@@ -192,14 +193,20 @@ export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   mixBlendMode: true,
 
   // @ts-ignore Available since RN 0.87
-  backgroundImage: false, // TODO
-  experimental_backgroundImage: false, // TODO
+  backgroundImage: { process: processBackgroundImage },
+  experimental_backgroundImage: { process: processBackgroundImage },
   // @ts-ignore This type doesn't exist on non-strict-api
   experimental_backgroundPosition: false, // TODO
+  // @ts-ignore Available since RN 0.88
+  backgroundPosition: false, // TODO
   // @ts-ignore This type doesn't exist on non-strict-api
   experimental_backgroundSize: false, // TODO
+  // @ts-ignore Available since RN 0.88
+  backgroundSize: false, // TODO
   // @ts-ignore This type doesn't exist on non-strict-api
   experimental_backgroundRepeat: false, // TODO
+  // @ts-ignore Available since RN 0.88
+  backgroundRepeat: false, // TODO
 
   /** Typography */
   // Font
@@ -207,6 +214,8 @@ export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   fontSize: true,
   fontStyle: true,
   fontVariant: true,
+  // @ts-ignore Available since RN 0.88
+  fontVariationSettings: false, // TODO
   fontWeight: { process: processFontWeight },
   // Alignment
   textAlign: true,
@@ -221,6 +230,8 @@ export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   // Others
   userSelect: true,
   writingDirection: false,
+  // @ts-ignore Available since RN 0.89
+  experimental_textWidthMode: false, // TODO
   includeFontPadding: true,
 
   /** Others */

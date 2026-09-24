@@ -43,7 +43,4 @@ export function isGeneratedWorkletFile(
 }
 
 const defaultAllowedPaths = ['react-native-worklets'];
-const defaultAllowedModules = [
-  'react-native-worklets',
-  'react-native/Libraries/Core/setUpXHR',
-];
+const defaultAllowedModules = ['react-native-worklets'];

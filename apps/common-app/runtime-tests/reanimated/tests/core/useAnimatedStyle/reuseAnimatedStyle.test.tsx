@@ -11,11 +11,11 @@ import { getComparisonModeForProp } from '../../../../ReJest/matchers/Comparator
 import {
   describe,
   expect,
+  expectEventually,
   getTestComponent,
   render,
   test,
   useTestRef,
-  wait,
 } from '../../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../../ReJest/types';
 
@@ -166,21 +166,19 @@ describe('Test reusing animatedStyles', () => {
       const componentTwo = getTestComponent(COMPONENT_REF.TWO);
       const componentThree = getTestComponent(COMPONENT_REF.THREE);
 
-      await wait(600);
-
       // Check the distance from the top
       const finalStyleFull = { height: 80, top: 0, margin: 0, ...finalStyle };
       const { height, margin, top } = finalStyleFull;
+      await expectEventually(() => componentThree.getAnimatedStyle('top')).toBe(
+        top + 5 * margin + 2 * height,
+        ComparisonMode.PIXEL
+      );
       expect(await componentOne.getAnimatedStyle('top')).toBe(
         top + margin,
         ComparisonMode.PIXEL
       );
       expect(await componentTwo.getAnimatedStyle('top')).toBe(
         top + 3 * margin + height,
-        ComparisonMode.PIXEL
-      );
-      expect(await componentThree.getAnimatedStyle('top')).toBe(
-        top + 5 * margin + 2 * height,
         ComparisonMode.PIXEL
       );
 

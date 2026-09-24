@@ -1,6 +1,9 @@
 'use strict';
 
-import type { ShareableGuest, Synchronizable } from 'react-native-worklets';
+import type {
+  FixedSynchronizable,
+  ShareableGuest,
+} from 'react-native-worklets';
 import {
   createShareable,
   createSynchronizable,
@@ -10,21 +13,16 @@ import {
 } from 'react-native-worklets';
 
 import type { Mutable } from './commonTypes';
-import { getStaticFeatureFlag } from './featureFlags';
 import {
   checkInvalidReadDuringRender,
   checkInvalidWriteDuringRender,
   mutableHostDecorator,
 } from './mutablesCommon';
 
-const USE_SYNCHRONIZABLE_FOR_MUTABLES = getStaticFeatureFlag(
-  'USE_SYNCHRONIZABLE_FOR_MUTABLES'
-);
-
 function mutableGuestDecorator<TValue>(
   initial: TValue,
   mutable: ShareableGuest<TValue> & Mutable<TValue>,
-  dirtyFlag?: Synchronizable<boolean>
+  dirtyFlag: FixedSynchronizable<boolean>
 ): ShareableGuest<TValue> & Mutable<TValue> {
   'worklet';
   let latest = initial;
@@ -32,19 +30,18 @@ function mutableGuestDecorator<TValue>(
   Object.defineProperties(mutable, {
     value: {
       get() {
-        if (globalThis.__RUNTIME_KIND === 1) {
-          checkInvalidReadDuringRender();
-        }
-
-        if (globalThis.__RUNTIME_KIND !== 1 || dirtyFlag === undefined) {
+        if (globalThis.__RUNTIME_KIND !== 1) {
           latest = mutable.getSync();
-        } else if (dirtyFlag.getBlocking()) {
-          const uiValueGetter = (svArg: Mutable<TValue>) =>
-            runOnUISync((sv) => {
-              sv.setDirty?.(false);
-              return sv.value;
-            }, svArg);
-          latest = uiValueGetter(mutable as Mutable<TValue>);
+        } else {
+          checkInvalidReadDuringRender();
+          if (dirtyFlag.getDirty()) {
+            const uiValueGetter = (svArg: Mutable<TValue>) =>
+              runOnUISync((sv) => {
+                sv.setDirtyFlag(false);
+                return sv.value;
+              }, svArg);
+            latest = uiValueGetter(mutable as Mutable<TValue>);
+          }
         }
         return latest;
       },
@@ -133,6 +130,13 @@ function mutableGuestDecorator<TValue>(
       configurable: true,
     },
 
+    setDirtyFlag: {
+      value: () => undefined,
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    },
+
     _isReanimatedSharedValue: {
       value: true,
       writable: true,
@@ -145,9 +149,7 @@ function mutableGuestDecorator<TValue>(
 }
 
 export function makeMutable<TValue>(initial: TValue): Mutable<TValue> {
-  const dirtyFlag = USE_SYNCHRONIZABLE_FOR_MUTABLES
-    ? createSynchronizable(false)
-    : undefined;
+  const dirtyFlag = createSynchronizable(false, { fixedType: true });
 
   const shareable = createShareable<TValue, Mutable<TValue>, Mutable<TValue>>(
     UIRuntimeId,

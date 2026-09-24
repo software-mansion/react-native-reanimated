@@ -1,8 +1,8 @@
 #pragma once
 
-#include <reanimated/Fabric/ReanimatedSurfaceTracker.h>
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
 
@@ -17,8 +17,8 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
   ReanimatedCommitHook(
       const std::shared_ptr<UIManager> &uiManager,
       const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-      const std::shared_ptr<LayoutAnimationsProxyCommon> &layoutAnimationsProxy,
-      const std::shared_ptr<ReanimatedSurfaceTracker> &surfaceTracker);
+      const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
+      const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry);
 
   ~ReanimatedCommitHook() noexcept override;
 
@@ -26,7 +26,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
 
   void commitHookWasUnregistered(UIManager const &) noexcept override {}
 
-  void maybeInitializeLayoutAnimations(const ShadowTree &shadowTree);
+  std::shared_ptr<LayoutAnimationsProxyCommon> registerLayoutAnimations(const ShadowTree &shadowTree);
 
   RootShadowNode::Unshared shadowTreeWillCommit(
       ShadowTree const &shadowTree,
@@ -37,8 +37,8 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
  private:
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
-  std::shared_ptr<LayoutAnimationsProxyCommon> layoutAnimationsProxy_;
-  std::shared_ptr<ReanimatedSurfaceTracker> surfaceTracker_;
+  std::shared_ptr<css::ViewStylesRepository> viewStylesRepository_;
+  std::shared_ptr<LayoutAnimationsProxyRegistry> layoutAnimationsProxyRegistry_;
 };
 
 } // namespace reanimated

@@ -8,21 +8,22 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "format": "yarn run --top-level oxfmt .",
-    "lint": "eslint . --max-warnings 0 && yarn run --top-level oxfmt --check .",
+    "lint": "yarn run --top-level oxlint . --max-warnings 0 && yarn run --top-level oxfmt --check .",
     "type:check": "tsc --noEmit",
     "runtime-tests": "node ./scripts/runtime-tests-server.js --launch",
     "runtime-tests:server": "node ./scripts/runtime-tests-server.js"
   },
   "dependencies": {
     "common-app": "workspace:*",
-    "react": "19.2.8",
-    "react-native": "0.87.0",
+    "react": "19.3.0",
+    "react-native": "0.88.0-rc.2",
     "react-native-screens": "4.27.0"
   },
   "devDependencies": {
     "@types/react": "19.2.18",
-    "eslint": "9.37.0",
+    "@types/ws": "8.18.1",
     "typescript": "5.9.3",
+    "worklets-oxc-plugin": "workspace:*",
     "ws": "8.21.0"
   },
   "engines": {
@@ -39,9 +40,9 @@
       "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS": false,
       "IOS_CSS_CORE_ANIMATION": true,
       "ANDROID_CSS_PLATFORM_TRANSITIONS": true,
-      "USE_SYNCHRONIZABLE_FOR_MUTABLES": true,
       "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS": true,
       "ENABLE_SHARED_ELEMENT_TRANSITIONS": true,
+      "USE_LEGACY_LAYOUT_ANIMATIONS_PROXY": false,
       "FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS": true,
       "USE_ANIMATION_BACKEND": false
     }
@@ -49,8 +50,7 @@
   "worklets": {
     "staticFeatureFlags": {
       "RUNTIME_TEST_FLAG": true,
-      "IOS_DYNAMIC_FRAMERATE_ENABLED": true,
-      "FETCH_PREVIEW_ENABLED": false
+      "IOS_DYNAMIC_FRAMERATE_ENABLED": true
     }
   }
 }

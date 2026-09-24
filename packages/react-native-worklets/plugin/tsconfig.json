@@ -12,7 +12,8 @@
     "rootDir": "src",
     "declarationDir": "types",
     "declaration": true,
-    "noEmit": false
+    "noEmit": false,
+    "types": ["node", "jest"]
   },
   "include": ["src"]
 }

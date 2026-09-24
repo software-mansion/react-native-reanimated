@@ -11,29 +11,6 @@ using namespace facebook;
 
 namespace worklets::jsi_utils {
 
-/**
- * Drains Hermes microtasks - we don't use these, but Hermes WeakRefs are
- * cleaned during Hermes microtask checkpoint.
- */
-inline void triggerWeakRefCleanup(jsi::Runtime &rt) {
-  rt.drainMicrotasks();
-}
-
-/**
- * Drains both Worklets and Hermes microtasks.
- */
-inline void drainMicrotasks(jsi::Runtime &rt) {
-  auto callMicrotasks = rt.global().getProperty(rt, "__callMicrotasks");
-  if (callMicrotasks.isObject()) {
-    auto callMicrotasksObject = callMicrotasks.getObject(rt);
-    if (callMicrotasksObject.isFunction(rt)) {
-      callMicrotasksObject.getFunction(rt).call(rt);
-    }
-  }
-
-  triggerWeakRefCleanup(rt);
-}
-
 // `get` functions take a pointer to `jsi::Value` and
 // call an appropriate method to cast to the native type
 template <typename T>
@@ -207,16 +184,25 @@ void addMethod(jsi::Runtime &rt, jsi::Object &obj, const char *name, TFun &&func
           jsi::PropNameID::forAscii(rt, name),
           TLength,
           [func = std::forward<TFun>(func)](
-              jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t) mutable -> jsi::Value {
+              jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t count) mutable -> jsi::Value {
             using TReturn =
                 std::invoke_result_t<TFun &, jsi::Runtime &, const jsi::Value &, const jsi::Value(&)[TLength]>;
-            auto &typed = *reinterpret_cast<const jsi::Value(*)[TLength]>(args);
-            if constexpr (std::is_void_v<TReturn>) {
-              func(rt, thisVal, typed);
-              return jsi::Value::undefined();
-            } else {
-              return func(rt, thisVal, typed);
+            auto invoke = [&](const jsi::Value(&typed)[TLength]) -> jsi::Value {
+              if constexpr (std::is_void_v<TReturn>) {
+                func(rt, thisVal, typed);
+                return jsi::Value::undefined();
+              } else {
+                return func(rt, thisVal, typed);
+              }
+            };
+            if (count < TLength) {
+              jsi::Value padded[TLength];
+              for (size_t i = 0; i < count; ++i) {
+                padded[i] = jsi::Value(rt, args[i]);
+              }
+              return invoke(padded);
             }
+            return invoke(*reinterpret_cast<const jsi::Value(*)[TLength]>(args));
           }));
 }
 

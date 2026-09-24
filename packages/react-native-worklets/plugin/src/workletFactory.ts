@@ -1,12 +1,14 @@
 import type { NodePath } from '@babel/core';
 import generate from '@babel/generator';
 import type {
+  ArrayExpression,
   ExpressionStatement,
-  ObjectExpression,
   ReturnStatement,
   VariableDeclaration,
 } from '@babel/types';
 import {
+  arrayExpression,
+  arrayPattern,
   assignmentExpression,
   blockStatement,
   cloneNode,
@@ -20,9 +22,6 @@ import {
   isObjectMethod,
   memberExpression,
   numericLiteral,
-  objectExpression,
-  objectPattern,
-  objectProperty,
   returnStatement,
   stringLiteral,
   toIdentifier,
@@ -49,7 +48,7 @@ export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
   state: WorkletsPluginPass
 ): {
-  factoryCallParamPack: ObjectExpression;
+  factoryCallParamPack: ArrayExpression;
   workletHash: number;
 } {
   // Returns a new FunctionExpression which is a workletized version of provided
@@ -96,7 +95,22 @@ export function makeWorkletFactory(
       )
     : clone;
 
-  const { workletName, reactName } = makeWorkletName(fun, state);
+  const { workletName, reactName: initialReactName } = makeWorkletName(
+    fun,
+    state
+  );
+  let reactName = initialReactName;
+  if (closureVariables.length === 0) {
+    // The worklet binding will share module scope with forwarded imports.
+    const importedNames = new Set(
+      [...moduleBindingsToImport, ...relativeBindingsToImport].map(
+        (binding) => binding.identifier.name
+      )
+    );
+    while (importedNames.has(reactName)) {
+      reactName = `_${reactName}`;
+    }
+  }
 
   const funString = buildWorkletString(
     transformed.ast,
@@ -122,22 +136,23 @@ export function makeWorkletFactory(
     variableDeclaration('const', [
       variableDeclarator(identifier(reactName), funExpression),
     ]),
-    expressionStatement(
-      assignmentExpression(
-        '=',
-        memberExpression(identifier(reactName), identifier('__closure'), false),
-        objectExpression(
-          closureVariables.map((variable) =>
-            objectProperty(
-              cloneNode(variable, true),
-              cloneNode(variable, true),
-              false,
-              true
+    ...(closureVariables.length > 0
+      ? [
+          expressionStatement(
+            assignmentExpression(
+              '=',
+              memberExpression(
+                identifier(reactName),
+                identifier('__closure'),
+                false
+              ),
+              arrayExpression(
+                closureVariables.map((variable) => cloneNode(variable, true))
+              )
             )
-          )
-        )
-      )
-    ),
+          ),
+        ]
+      : []),
     expressionStatement(
       assignmentExpression(
         '=',
@@ -173,35 +188,17 @@ export function makeWorkletFactory(
     cloneNode(variableId, true)
   );
 
-  const factoryParamObjectPattern = objectPattern(
-    factoryParams.map((param) =>
-      objectProperty(
-        cloneNode(param, true),
-        cloneNode(param, true),
-        false,
-        true
-      )
-    )
-  );
-
   const factory = functionExpression(
     identifier(workletName + 'Factory'),
-    [factoryParamObjectPattern],
+    factoryParams.length > 0
+      ? [arrayPattern(factoryParams.map((param) => cloneNode(param, true)))]
+      : [],
     blockStatement(statements)
   );
 
   const factoryCallArgs = factoryParams.map((param) => cloneNode(param, true));
 
-  const factoryCallParamPack = objectExpression(
-    factoryCallArgs.map((param) =>
-      objectProperty(
-        cloneNode(param, true),
-        cloneNode(param, true),
-        false,
-        true
-      )
-    )
-  );
+  const factoryCallParamPack = arrayExpression(factoryCallArgs);
 
   updateRelativeRequires(factory, state);
 

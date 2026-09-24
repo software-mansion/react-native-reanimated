@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
 import 'react-native-reanimated';
+
 import React from 'react';
+
+import type { Example, ExampleEntry } from '@/components';
+import { REAPlatform } from '@/components';
 
 const AboutExample: React.FC = () =>
   React.createElement(require('./AboutExample').default as React.FC);
@@ -11,65 +15,15 @@ const AndroidDrawPassExample: React.FC = () =>
   React.createElement(require('./AndroidDrawPassExample').default as React.FC);
 const AnimatableRefExample: React.FC = () =>
   React.createElement(require('./AnimatableRefExample').default as React.FC);
-const AnimatedKeyboardExample: React.FC = () =>
-  React.createElement(require('./AnimatedKeyboardExample').default as React.FC);
-const AnimatedListExample: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/AnimatedList').default as React.FC
-  );
-const AnimatedTouchables: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/AnimatedTouchables').default as React.FC
-  );
 const AnimatedPropsExample: React.FC = () =>
   React.createElement(require('./AnimatedPropsExample').default as React.FC);
-const AnimatedSensorAccelerometerExample: React.FC = () =>
-  React.createElement(
-    require('./AnimatedSensorAccelerometerExample').default as React.FC
-  );
-const AnimatedSensorGravityExample: React.FC = () =>
-  React.createElement(
-    require('./AnimatedSensorGravityExample').default as React.FC
-  );
-const AnimatedSensorGyroscopeExample: React.FC = () =>
-  React.createElement(
-    require('./AnimatedSensorGyroscopeExample').default as React.FC
-  );
-const AnimatedSensorMagneticFieldExample: React.FC = () =>
-  React.createElement(
-    require('./AnimatedSensorMagneticFieldExample').default as React.FC
-  );
-const AnimatedSensorRotationExample: React.FC = () =>
-  React.createElement(
-    require('./AnimatedSensorRotationExample').default as React.FC
-  );
-const AnimatedStyleUpdateExample: React.FC = () =>
-  React.createElement(
-    require('./AnimatedStyleUpdateExample').default as React.FC
-  );
-const AnimatedTabBarExample: React.FC = () =>
-  React.createElement(require('./AnimatedTabBarExample').default as React.FC);
-const AnimatedTextWidthExample: React.FC = () =>
-  React.createElement(
-    require('./AnimatedTextWidthExample').default as React.FC
-  );
+const AnimatedSensorExample: React.FC = () =>
+  React.createElement(require('./AnimatedSensorExample').default as React.FC);
 const ArticleProgressExample: React.FC = () =>
   React.createElement(require('./ArticleProgressExample').default as React.FC);
 const BBExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/BBExample').default as React.FC
-  );
-const BasicLayoutAnimation: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/BasicLayoutAnimation').default
-  );
-const BasicNestedAnimation: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/BasicNestedAnimation').default
-  );
-const BasicNestedLayoutAnimation: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/BasicNestedLayoutAnimation').default
   );
 const BokehExample: React.FC = () =>
   React.createElement(require('./BokehExample').default as React.FC);
@@ -83,14 +37,8 @@ const BottomTabsExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/BottomTabs').default as React.FC
   );
-const BouncingBoxExample: React.FC = () =>
-  React.createElement(require('./BouncingBoxExample').default as React.FC);
 const BubblesExample: React.FC = () =>
   React.createElement(require('./BubblesExample').default as React.FC);
-const CardExample: React.FC = () =>
-  React.createElement(
-    require('./SharedElementTransitions/Card').default as React.FC
-  );
 const Carousel: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/Carousel').default as React.FC
@@ -111,14 +59,10 @@ const ChessboardExample: React.FC = () =>
   React.createElement(require('./ChessboardExample').default as React.FC);
 const CircularSliderExample: React.FC = () =>
   React.createElement(require('./CircularSliderExample').default as React.FC);
-const ColorExample: React.FC = () =>
-  React.createElement(require('./ColorExample').default as React.FC);
 const ColorInterpolationExample: React.FC = () =>
   React.createElement(
     require('./ColorInterpolationExample').default as React.FC
   );
-const ContrastColorExample: React.FC = () =>
-  React.createElement(require('./ContrastColorExample').default as React.FC);
 const CombinedTest: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/Combined').default as React.FC
@@ -135,27 +79,13 @@ const ComposedHandlerInternalMergingExample: React.FC = () =>
   React.createElement(
     require('./ComposedHandlerInternalMergingExample').default
   );
-const CopySerializablePerformanceTest: React.FC = () =>
-  React.createElement(
-    require('./CopySerializablePerformanceTest').default as React.FC
-  );
-const CounterExample: React.FC = () =>
-  React.createElement(require('./CounterExample').default as React.FC);
 const CustomLayoutAnimationScreen: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/CustomLayout').default as React.FC
   );
-const CustomTransitionExample: React.FC = () =>
-  React.createElement(
-    require('./SharedElementTransitions/CustomTransition').default
-  );
 const DefaultAnimations: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DefaultAnimations').default as React.FC
-  );
-const DefaultAnimationsOverrides: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/DefaultAnimationsOverrides').default as React.FC
   );
 const DeleteAncestorOfExiting: React.FC = () =>
   React.createElement(
@@ -167,12 +97,6 @@ const DetachAnimatedStylesExample: React.FC = () =>
   );
 const DispatchCommandExample: React.FC = () =>
   React.createElement(require('./DispatchCommandExample').default as React.FC);
-const DragAndSnapExample: React.FC = () =>
-  React.createElement(require('./DragAndSnapExample').default as React.FC);
-const DuplicateTagsExample: React.FC = () =>
-  React.createElement(
-    require('./SharedElementTransitions/DuplicateTags').default
-  );
 const DurationZeroExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DurationZero').default as React.FC
@@ -204,8 +128,6 @@ const NestedExitingCleanupExample: React.FC = () =>
   );
 const ExtrapolationExample: React.FC = () =>
   React.createElement(require('./ExtrapolationExample').default as React.FC);
-const FetchExample: React.FC = () =>
-  React.createElement(require('./FetchExample').default as React.FC);
 const FilterExample: React.FC = () =>
   React.createElement(require('./FilterExample').default as React.FC);
 const FinalFrameAccuracyExample: React.FC = () =>
@@ -224,8 +146,6 @@ const FlatListWithLayoutAnimations: React.FC = () =>
   React.createElement(
     require('./FlatListWithLayoutAnimationsExample').default as React.FC
   );
-const FpsExample: React.FC = () =>
-  React.createElement(require('./FpsExample').default as React.FC);
 const FrameCallbackExample: React.FC = () =>
   React.createElement(require('./FrameCallbackExample').default as React.FC);
 const FreezeExample: React.FC = () =>
@@ -236,27 +156,9 @@ const GalleryExample: React.FC = () =>
   );
 const Game2048Example: React.FC = () =>
   React.createElement(require('./Game2048Example').default as React.FC);
-const GestureHandlerExample: React.FC = () =>
-  React.createElement(require('./GestureHandlerExample').default as React.FC);
-const GetViewPropExample: React.FC = () =>
-  React.createElement(require('./GetViewPropExample').default as React.FC);
 const HabitsExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/HabitsExample').default as React.FC
-  );
-const HermesSamplingProfilerExample: React.FC = () =>
-  React.createElement(
-    require('./HermesSamplingProfilerExample').default as React.FC
-  );
-const IPodExample: React.FC = () =>
-  React.createElement(require('./IPodExample').default as React.FC);
-const ImageStackExample: React.FC = () =>
-  React.createElement(
-    require('./SharedElementTransitions/ImageStack').default as React.FC
-  );
-const InstanceDiscoveryExample: React.FC = () =>
-  React.createElement(
-    require('./InstanceDiscoveryExample').default as React.FC
   );
 const InvalidValueAccessExample: React.FC = () =>
   React.createElement(
@@ -272,18 +174,10 @@ const KeyframeAnimation: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/KeyframeAnimation').default as React.FC
   );
-const LayoutAnimationExample: React.FC = () =>
-  React.createElement(
-    require('./SharedElementTransitions/LayoutAnimation').default
-  );
 const LayoutAnimationBatchSyncExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/LayoutAnimationBatchSyncExample')
       .default as React.FC
-  );
-const LayoutTransitionExample: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/LayoutTransitionExample').default
   );
 const LettersExample: React.FC = () =>
   React.createElement(require('./LettersExample').default as React.FC);
@@ -295,82 +189,40 @@ const ListItemLayoutAnimation: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/ListItemLayoutAnimation').default
   );
-const LogExample: React.FC = () =>
-  React.createElement(require('./LogExample').default as React.FC);
 const ManyScreensExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ManyScreens').default
   );
-const ManyTagsExample: React.FC = () =>
-  React.createElement(
-    require('./SharedElementTransitions/ManyTags').default as React.FC
-  );
 const MatrixTransform: React.FC = () =>
   React.createElement(require('./MatrixTransform').default as React.FC);
-const MeasureExample: React.FC = () =>
-  React.createElement(require('./MeasureExample').default as React.FC);
 const MemoExample: React.FC = () =>
   React.createElement(require('./MemoExample').default as React.FC);
-const Modal: React.FC = () =>
-  React.createElement(require('./LayoutAnimations/Modal').default as React.FC);
 const ModalExitingExample: React.FC = () =>
   React.createElement(require('./ModalExitingExample').default as React.FC);
-const ModalNewAPI: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/ModalNewAPI').default as React.FC
-  );
 const ModalsExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/Modals').default as React.FC
-  );
-const ModifyExample: React.FC = () =>
-  React.createElement(require('./ModifyExample').default as React.FC);
-const MountingUnmounting: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/MountingUnmounting').default as React.FC
   );
 const MoveWithExiting: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/MoveWithExiting').default as React.FC
   );
-const NativeModals: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/NativeModals').default as React.FC
-  );
-const NestedLayoutAnimationConfig: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/NestedLayoutAnimationConfig').default
-  );
-const NestedNativeStacksWithLayout: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/NestedNativeStacksWithLayout').default
-  );
 const NestedRotationExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedRotation').default
+  );
+const SynchronousPropsSETExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/SynchronousPropsExample').default
   );
 const NestedStacksExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedStacks').default
   );
-const NestedTest: React.FC = () =>
-  React.createElement(require('./LayoutAnimations/Nested').default as React.FC);
-const NewestShadowNodesRegistryRemoveExample: React.FC = () =>
-  React.createElement(
-    require('./NewestShadowNodesRegistryRemoveExample').default
-  );
 const NonLayoutPropAndRenderExample: React.FC = () =>
   React.createElement(
     require('./NonLayoutPropAndRenderExample').default as React.FC
   );
-const OldMeasureExample: React.FC = () =>
-  React.createElement(require('./OldMeasureExample').default as React.FC);
-const OlympicAnimation: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/OlympicAnimation').default as React.FC
-  );
-const OpacityTransformExample: React.FC = () =>
-  React.createElement(require('./OpacityTransformExample').default as React.FC);
 const OverlappingBoxesExample: React.FC = () =>
   React.createElement(require('./OverlappingBoxesExample').default as React.FC);
 const PendulumExample: React.FC = () =>
@@ -393,21 +245,11 @@ const ProgressTransitionExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ProgressTransition').default
   );
-const RainbowExample: React.FC = () =>
-  React.createElement(require('./RainbowExample').default as React.FC);
-const ReactionsCounterExample: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/ReactionsCounterExample').default
-  );
 const ReducedMotionExample: React.FC = () =>
   React.createElement(require('./ReducedMotionExample').default as React.FC);
 const ReducedMotionLayoutExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/ReducedMotionLayoutExample').default
-  );
-const ReducedMotionSharedExample: React.FC = () =>
-  React.createElement(
-    require('./SharedElementTransitions/ReducedMotionSharedExample').default
   );
 const RefExample: React.FC = () =>
   React.createElement(require('./RefExample').default as React.FC);
@@ -423,42 +265,24 @@ const ScreenlessBasic: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ScreenlessBasic').default as React.FC
   );
-const ScreenStackExample: React.FC = () =>
-  React.createElement(require('./ScreenStackExample').default as React.FC);
-const ScreenStackHeaderConfigBackgroundColorExample: React.FC = () =>
-  React.createElement(
-    require('./ScreenStackHeaderConfigBackgroundColorExample').default
-  );
-const ScrollEventExample: React.FC = () =>
-  React.createElement(require('./ScrollEventExample').default as React.FC);
 const ScrollPerformanceExample: React.FC = () =>
   React.createElement(
     require('./ScrollPerformanceExample').default as React.FC
   );
 const ScrollToExample: React.FC = () =>
   React.createElement(require('./ScrollToExample').default as React.FC);
-const ScrollViewExample: React.FC = () =>
-  React.createElement(require('./ScrollViewExample').default as React.FC);
 const ScrollViewOffsetExample: React.FC = () =>
   React.createElement(require('./ScrollViewOffsetExample').default as React.FC);
-const ScrollableViewExample: React.FC = () =>
-  React.createElement(require('./ScrollableViewExample').default as React.FC);
 const SetNativePropsExample: React.FC = () =>
   React.createElement(require('./SetNativePropsExample').default as React.FC);
-const ShadowNodesCloningExample: React.FC = () =>
-  React.createElement(
-    require('./ShadowNodesCloningExample').default as React.FC
-  );
 const SharedStyleExample: React.FC = () =>
   React.createElement(require('./SharedStyleExample').default as React.FC);
 const SlowAnimationsExample: React.FC = () =>
   React.createElement(require('./SlowAnimationsExample').default as React.FC);
-const SpringLayoutAnimation: React.FC = () =>
+const SpringPresetsAndClampExample: React.FC = () =>
   React.createElement(
-    require('./LayoutAnimations/SpringLayoutAnimation').default
+    require('./SpringPresetsAndClampExample').default as React.FC
   );
-const SpringPresetsExample: React.FC = () =>
-  React.createElement(require('./SpringPresetsExample').default as React.FC);
 const StickyHeaderExample: React.FC = () =>
   React.createElement(require('./StickyHeaderExample').default as React.FC);
 const StrictDOMExample: React.FC = () =>
@@ -467,22 +291,10 @@ const StrictModeComparison: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/StrictModeComparisonExample').default
   );
-const SvgExample: React.FC = () =>
-  React.createElement(require('./SvgExample').default as React.FC);
-const SwipeableList: React.FC = () =>
-  React.createElement(
-    require('./LayoutAnimations/SwipeableList').default as React.FC
-  );
-const SwipeableListExample: React.FC = () =>
-  React.createElement(require('./SwipeableListExample').default as React.FC);
 const SyncBackToReactExample: React.FC = () =>
   React.createElement(require('./SyncBackToReactExample').default as React.FC);
-const SynchronizablePerformanceExample: React.FC = () =>
-  React.createElement(require('./SynchronizableExample').default as React.FC);
 const SynchronousPropsExample: React.FC = () =>
   React.createElement(require('./SynchronousPropsExample').default as React.FC);
-const SystraceSectionExample: React.FC = () =>
-  React.createElement(require('./SystraceSectionExample').default as React.FC);
 const TabNavigatorExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/TabNavigatorExample').default
@@ -491,8 +303,6 @@ const ThirdPartyComponentsExample: React.FC = () =>
   React.createElement(
     require('./ThirdPartyComponentsExample').default as React.FC
   );
-const TransformExample: React.FC = () =>
-  React.createElement(require('./TransformExample').default as React.FC);
 const TransformOriginExample: React.FC = () =>
   React.createElement(require('./TransformOriginExample').default as React.FC);
 const TransitionRestartExample: React.FC = () =>
@@ -511,34 +321,14 @@ const ViewRecyclingExample: React.FC = () =>
   );
 const WidthExample: React.FC = () =>
   React.createElement(require('./WidthExample').default as React.FC);
-const WithClampExample: React.FC = () =>
-  React.createElement(require('./WithClampExample').default as React.FC);
-const WithoutBabelPluginExample: React.FC = () =>
-  React.createElement(
-    require('./WithoutBabelPluginExample').default as React.FC
-  );
-const WobbleExample: React.FC = () =>
-  React.createElement(require('./WobbleExample').default as React.FC);
 
-export const REAPlatform = {
-  IOS: 'ios',
-  ANDROID: 'android',
-  MACOS: 'macos',
-  WEB: 'web',
-};
+// Sections of the "Show Cases and Regressions" group. Declared before
+// `ALL_EXAMPLES` because its entries reference them.
+const SHOW_CASES = 'Show Cases';
+const SHOW_CASES_AND_REGRESSIONS = 'Show Cases and Regressions';
+const REGRESSIONS = 'Regressions';
 
-export interface Example {
-  icon?: string;
-  title: string;
-  screen: React.FC;
-  shouldWork?: {
-    ios: boolean;
-    android: boolean;
-  };
-  disabledPlatforms?: (typeof REAPlatform)[keyof typeof REAPlatform][];
-}
-
-export const EXAMPLES: Record<string, Example> = {
+const ALL_EXAMPLES: Record<string, Example> = {
   // About
   AboutExample: {
     icon: 'ℹ️',
@@ -549,7 +339,9 @@ export const EXAMPLES: Record<string, Example> = {
   SuspenseLayoutAnimationCrashExample: {
     icon: '💥',
     title: 'Suspense + Layout Animation Crash',
+    section: REGRESSIONS,
     screen: SuspenseLayoutAnimationCrashExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   SettledPropsLeakExample: {
     icon: '🚿',
@@ -568,25 +360,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Inline styles and props',
     screen: InlineStylesAndPropsExample,
   },
-  FpsExample: {
-    icon: '🎞️',
-    title: 'FPS',
-    screen: FpsExample,
-  },
   SlowAnimationsExample: {
     icon: '🐢',
     title: 'Slow animations',
+    section: REGRESSIONS,
     screen: SlowAnimationsExample,
-  },
-  HermesSamplingProfilerExample: {
-    icon: '📊',
-    title: 'Hermes sampling profiler',
-    screen: HermesSamplingProfilerExample,
-  },
-  SystraceSectionExample: {
-    icon: '📊',
-    title: 'Systrace section',
-    screen: SystraceSectionExample,
   },
   SyncBackToReactExample: {
     icon: '🔄',
@@ -596,47 +374,37 @@ export const EXAMPLES: Record<string, Example> = {
   AndroidDrawPassExample: {
     icon: '✍️',
     title: 'Android Draw Pass',
+    section: REGRESSIONS,
     screen: AndroidDrawPassExample,
   },
   DetachAnimatedStylesExample: {
     icon: '⛓️‍💥',
     title: 'Detach animated styles',
+    section: REGRESSIONS,
     screen: DetachAnimatedStylesExample,
   },
   ScrollPerformanceExample: {
     icon: '🚁',
     title: 'Scroll performance',
+    section: REGRESSIONS,
     screen: ScrollPerformanceExample,
   },
   ThirdPartyComponentsExample: {
     icon: '3️⃣',
     title: 'Third party components',
+    section: SHOW_CASES,
     screen: ThirdPartyComponentsExample,
-  },
-  Synchronizable: {
-    icon: '🔄',
-    title: 'Synchronizable performance',
-    screen: SynchronizablePerformanceExample,
-    disabledPlatforms: [REAPlatform.WEB],
   },
   ReactFreeze: {
     icon: '❄️',
     title: 'React freeze',
+    section: REGRESSIONS,
     screen: FreezeExample,
-  },
-  FetchExample: {
-    icon: '📡',
-    title: 'Fetch & XHR',
-    screen: FetchExample,
-  },
-  ModifyExample: {
-    icon: '🪛',
-    title: 'Modify',
-    screen: ModifyExample,
   },
   CircularSliderExample: {
     icon: '🔘',
     title: 'Circular slider',
+    section: SHOW_CASES,
     screen: CircularSliderExample,
   },
   MemoExample: {
@@ -657,17 +425,13 @@ export const EXAMPLES: Record<string, Example> = {
   BottomSheetExample: {
     icon: '⬆️',
     title: 'Bottom sheet',
+    section: REGRESSIONS,
     screen: BottomSheetExample,
-  },
-  CopySerializablePerformanceTest: {
-    icon: '🔄',
-    title: 'Copy serializable performance test',
-    screen: CopySerializablePerformanceTest,
-    disabledPlatforms: [REAPlatform.WEB],
   },
   FlatListWithLayoutAnimations: {
     icon: '🎻',
     title: 'FlatList with layout animations',
+    section: REGRESSIONS,
     screen: FlatListWithLayoutAnimations,
   },
 
@@ -676,51 +440,44 @@ export const EXAMPLES: Record<string, Example> = {
   BokehExample: {
     icon: '✨',
     title: 'Bokeh',
+    section: SHOW_CASES,
     screen: BokehExample,
   },
   BubblesExample: {
     icon: '🫧',
     title: 'Bubbles',
+    section: SHOW_CASES,
     screen: BubblesExample,
-  },
-  OpacityTransformExample: {
-    icon: '🌀',
-    title: 'opacity & transform',
-    screen: OpacityTransformExample,
-  },
-  IPodExample: {
-    icon: '🎧',
-    title: 'iPod',
-    screen: IPodExample,
   },
   EmojiWaterfallExample: {
     icon: '💸',
     title: 'Emoji waterfall',
+    section: REGRESSIONS,
     screen: EmojiWaterfallExample,
   },
   LightBoxExample: {
     icon: '📷',
     title: 'Camera roll',
+    section: SHOW_CASES,
     screen: LightBoxExample,
   },
   LiquidSwipe: {
     icon: '♠️',
     title: 'Liquid swipe',
+    section: SHOW_CASES_AND_REGRESSIONS,
     screen: LiquidSwipe,
-  },
-  SwipeableListExample: {
-    icon: '📞',
-    title: 'Swipeable list',
-    screen: SwipeableListExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   ArticleProgressExample: {
     icon: '📰',
     title: 'Article progress',
+    section: SHOW_CASES,
     screen: ArticleProgressExample,
   },
   LettersExample: {
     icon: '📖',
     title: 'Letters',
+    section: SHOW_CASES,
     screen: LettersExample,
   },
   SetNativePropsExample: {
@@ -731,6 +488,7 @@ export const EXAMPLES: Record<string, Example> = {
   UpdatePropsPerfExample: {
     icon: '🏎️',
     title: 'Update props performance',
+    section: REGRESSIONS,
     screen: UpdatePropsPerfExample,
   },
 
@@ -743,151 +501,71 @@ export const EXAMPLES: Record<string, Example> = {
   AmountExample: {
     icon: '📈',
     title: 'Amount',
+    section: SHOW_CASES,
     screen: AmountExample,
-  },
-  CounterExample: {
-    icon: '🎰',
-    title: 'Counter',
-    screen: CounterExample,
-  },
-  AnimatedTextWidthExample: {
-    icon: '✂️',
-    title: 'Animate text width',
-    screen: AnimatedTextWidthExample,
-  },
-  ColorExample: {
-    icon: '🌈',
-    title: 'Animate colors',
-    screen: ColorExample,
   },
   FilterExample: {
     icon: '🖼️',
     title: 'Animate filter',
+    section: REGRESSIONS,
     screen: FilterExample,
   },
   SynchronousPropsExample: {
     icon: '⚡',
     title: 'Animate synchronous props',
+    section: REGRESSIONS,
     screen: SynchronousPropsExample,
-  },
-  ScreenStackHeaderConfigBackgroundColorExample: {
-    icon: '🎨',
-    title: 'Screen header background color',
-    screen: ScreenStackHeaderConfigBackgroundColorExample,
-    shouldWork: {
-      ios: true,
-      // TODO: fix - on Android AnimatedScreenStackHeaderConfig makes the button presses trigger no React effects
-      android: false,
-    },
-  },
-  ScreenStackExample: {
-    icon: '🥞',
-    title: 'Screen stack',
-    screen: ScreenStackExample,
-  },
-  GestureHandlerExample: {
-    icon: '👌',
-    title: 'Draggable circle',
-    screen: GestureHandlerExample,
-  },
-  SvgExample: {
-    icon: '🟢',
-    title: 'Animated SVG circle',
-    screen: SvgExample,
   },
   PlanetsExample: {
     icon: '🪐',
     title: 'Planets',
+    section: SHOW_CASES,
     screen: PlanetsExample,
   },
-  BouncingBoxExample: {
-    icon: '📦',
-    title: 'Bouncing box',
-    screen: BouncingBoxExample,
-  },
-  AnimatedKeyboardExample: {
-    icon: '⌨️',
-    title: 'useAnimatedKeyboard',
-    screen: AnimatedKeyboardExample,
-  },
-  AnimatedSensorAccelerometerExample: {
-    icon: '🚀',
-    title: 'useAnimatedSensor - accelerometer',
-    screen: AnimatedSensorAccelerometerExample,
-  },
-  AnimatedSensorGyroscopeExample: {
-    icon: '⚖️',
-    title: 'useAnimatedSensor - gyroscope',
-    screen: AnimatedSensorGyroscopeExample,
-  },
-  AnimatedSensorGravityExample: {
-    icon: '🌎',
-    title: 'useAnimatedSensor - gravity',
-    screen: AnimatedSensorGravityExample,
-  },
-  AnimatedSensorMagneticFieldExample: {
-    icon: '🧲',
-    title: 'useAnimatedSensor - magnetic field',
-    screen: AnimatedSensorMagneticFieldExample,
-  },
-  AnimatedSensorRotationExample: {
-    icon: '🔄',
-    title: 'useAnimatedSensor - rotation',
-    screen: AnimatedSensorRotationExample,
+  AnimatedSensorExample: {
+    icon: '📡',
+    title: 'useAnimatedSensor',
+    screen: AnimatedSensorExample,
   },
   FrameCallbackExample: {
     icon: '🗣',
     title: 'useFrameCallback',
     screen: FrameCallbackExample,
   },
-  ScrollViewExample: {
-    icon: '📜',
-    title: 'useAnimatedScrollHandler',
-    screen: ScrollViewExample,
-  },
   ScrollToExample: {
     icon: '🦘',
     title: 'scrollTo',
+    section: REGRESSIONS,
     screen: ScrollToExample,
   },
   ScrollViewOffsetExample: {
     icon: '𝌍',
     title: 'useScrollOffset',
+    section: REGRESSIONS,
     screen: ScrollViewOffsetExample,
-  },
-  InstanceDiscoveryExample: {
-    icon: '🔍',
-    title: 'Instance Discovery',
-    screen: InstanceDiscoveryExample,
   },
   StickyHeaderExample: {
     icon: '🔝',
     title: 'Stinky header',
+    section: REGRESSIONS,
     screen: StickyHeaderExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   DispatchCommandExample: {
     icon: '🫡',
     title: 'Dispatch command',
     screen: DispatchCommandExample,
   },
-  MeasureExample: {
-    icon: '📐',
-    title: 'measure',
-    screen: MeasureExample,
-  },
-  TransformExample: {
-    icon: '🔄',
-    title: 'Transform',
-    screen: TransformExample,
-  },
   WidthExample: {
     icon: '🌲',
     title: 'Layout props',
+    section: REGRESSIONS,
     screen: WidthExample,
   },
   NonLayoutPropAndRenderExample: {
     icon: '🎭',
     title: 'Non-layout prop and render example',
+    section: REGRESSIONS,
     screen: NonLayoutPropAndRenderExample,
   },
   RefExample: {
@@ -898,42 +576,26 @@ export const EXAMPLES: Record<string, Example> = {
   ChessExample: {
     icon: '♟️',
     title: 'Chess',
+    section: SHOW_CASES,
     screen: ChessExample,
   },
   ChessboardExample: {
     icon: '♟️',
     title: 'Chessboard',
+    section: REGRESSIONS,
     screen: ChessboardExample,
   },
   Game2048Example: {
     icon: '🕹️',
     title: '2048',
+    section: REGRESSIONS,
     screen: Game2048Example,
   },
   OverlappingBoxesExample: {
     icon: '🔝',
     title: 'z-index & elevation',
+    section: REGRESSIONS,
     screen: OverlappingBoxesExample,
-  },
-  NewestShadowNodesRegistryRemoveExample: {
-    icon: '🌓',
-    title: 'Conditional',
-    screen: NewestShadowNodesRegistryRemoveExample,
-  },
-  RainbowExample: {
-    icon: '🌈',
-    title: 'Rainbow',
-    screen: RainbowExample,
-  },
-  WithoutBabelPluginExample: {
-    icon: '🔌',
-    title: 'Without Babel plugin',
-    screen: WithoutBabelPluginExample,
-    disabledPlatforms: [
-      REAPlatform.ANDROID,
-      REAPlatform.IOS,
-      REAPlatform.MACOS,
-    ],
   },
   MatrixExample: {
     icon: '🧮',
@@ -944,47 +606,31 @@ export const EXAMPLES: Record<string, Example> = {
   SpringExample: {
     icon: '🕰',
     title: 'Pendulum example',
+    section: SHOW_CASES,
     screen: PendulumExample,
   },
-  SpringPresetsExample: {
+  SpringPresetsAndClampExample: {
     icon: '🛠',
-    title: 'Spring presets',
-    screen: SpringPresetsExample,
-  },
-  SpringClampExample: {
-    icon: '🗜',
-    title: 'Spring with Clamp',
-    screen: WithClampExample,
+    title: 'Spring presets and clamp',
+    section: SHOW_CASES,
+    screen: SpringPresetsAndClampExample,
   },
   ReducedMotionExample: {
     icon: '⏸️',
     title: 'Reduced Motion',
+    section: SHOW_CASES_AND_REGRESSIONS,
     screen: ReducedMotionExample,
-  },
-  GetViewPropExample: {
-    icon: '🔎',
-    title: 'getViewProp',
-    screen: GetViewPropExample,
-    disabledPlatforms: [
-      REAPlatform.WEB,
-      REAPlatform.ANDROID,
-      REAPlatform.IOS,
-      REAPlatform.MACOS,
-    ],
-  },
-  LogExample: {
-    icon: '⌨',
-    title: 'Log test',
-    screen: LogExample,
   },
   HabitsExample: {
     icon: '🧑‍💻',
     title: 'Habits',
+    section: SHOW_CASES,
     screen: HabitsExample,
   },
   PerformanceMonitorExample: {
     icon: '⏱️',
     title: 'Performance monitor',
+    section: REGRESSIONS,
     screen: PerformanceMonitorExample,
   },
   ComposedHandlerConditionalExample: {
@@ -1005,6 +651,7 @@ export const EXAMPLES: Record<string, Example> = {
   BBExample: {
     icon: '💀',
     title: 'BB',
+    section: REGRESSIONS,
     screen: BBExample,
   },
   StrictDOMExample: {
@@ -1015,7 +662,9 @@ export const EXAMPLES: Record<string, Example> = {
   ProfilesExample: {
     icon: '🙆‍♂️',
     title: 'Profiles',
+    section: SHOW_CASES,
     screen: ProfilesExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -1024,7 +673,9 @@ export const EXAMPLES: Record<string, Example> = {
   ProgressTransitionExample: {
     icon: '☕',
     title: 'Progress transition',
+    section: SHOW_CASES,
     screen: ProgressTransitionExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -1033,7 +684,9 @@ export const EXAMPLES: Record<string, Example> = {
   GalleryExample: {
     icon: '🇮🇹',
     title: 'Gallery',
+    section: SHOW_CASES,
     screen: GalleryExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -1041,51 +694,33 @@ export const EXAMPLES: Record<string, Example> = {
   },
   DynamicColorIOSExample: {
     title: 'DynamicColorIOS',
+    section: SHOW_CASES,
     screen: DynamicColorIOSExample,
     icon: '🌗',
     disabledPlatforms: [REAPlatform.ANDROID, REAPlatform.WEB],
   },
   PlatformColorExample: {
     title: 'PlatformColor',
+    section: SHOW_CASES,
     screen: PlatformColorExample,
     icon: '🎨',
     disabledPlatforms: [REAPlatform.WEB],
   },
-  ShadowNodesCloningExample: {
-    icon: '🌑',
-    title: 'Shadow Nodes Cloning',
-    screen: ShadowNodesCloningExample,
-  },
 
   // Old examples
-  AnimatedStyleUpdateExample: {
-    title: 'Animated style update',
-    screen: AnimatedStyleUpdateExample,
-  },
   SharedStyleExample: {
     title: 'Shared style',
     screen: SharedStyleExample,
   },
-  AnimatedTabBarExample: {
-    title: 'Tab bar',
-    screen: AnimatedTabBarExample,
-  },
   ChatHeadsExample: {
     title: 'Chat heads',
+    section: REGRESSIONS,
     screen: ChatHeadsExample,
-  },
-  DragAndSnapExample: {
-    title: 'Drag and snap',
-    screen: DragAndSnapExample,
   },
   ColorInterpolationExample: {
     title: 'Color interpolation',
+    section: SHOW_CASES,
     screen: ColorInterpolationExample,
-  },
-  ContrastColorExample: {
-    icon: '🔲',
-    title: 'Contrast color',
-    screen: ContrastColorExample,
   },
   ExtrapolationExample: {
     title: 'Extrapolation example',
@@ -1093,30 +728,17 @@ export const EXAMPLES: Record<string, Example> = {
   },
   InvertedFlatListExample: {
     title: 'Inverted FlatList example',
+    section: REGRESSIONS,
     screen: InvertedFlatListExample,
-  },
-  OldMeasureExample: {
-    title: 'Accordion',
-    screen: OldMeasureExample,
   },
   PinExample: {
     title: 'PIN example',
+    section: SHOW_CASES,
     screen: PinExample,
-  },
-  ScrollableViewExample: {
-    title: 'Scrollable view example',
-    screen: ScrollableViewExample,
-  },
-  ScrollEventExample: {
-    title: 'Scroll event example',
-    screen: ScrollEventExample,
-  },
-  WobbleExample: {
-    title: 'Wobble example',
-    screen: WobbleExample,
   },
   TransformOriginExample: {
     title: 'Transform origin example',
+    section: SHOW_CASES,
     screen: TransformOriginExample,
   },
 
@@ -1129,29 +751,9 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Interrupted exiting animation (#7493)',
     screen: InterruptedExitingExample,
   },
-  NestedNativeStacksWithLayout: {
-    title: '[LA] Nested NativeStacks with layout',
-    screen: NestedNativeStacksWithLayout,
-  },
-  BasicLayoutAnimation: {
-    title: '[LA] Basic layout animation',
-    screen: BasicLayoutAnimation,
-  },
   LayoutAnimationBatchSync: {
     title: '[LA] Batch synchronization',
     screen: LayoutAnimationBatchSyncExample,
-  },
-  BasicNestedAnimation: {
-    title: '[LA] Basic nested animation',
-    screen: BasicNestedAnimation,
-  },
-  BasicNestedLayoutAnimation: {
-    title: '[LA] Basic nested layout animation',
-    screen: BasicNestedLayoutAnimation,
-  },
-  NestedLayoutAnimations: {
-    title: '[LA] Nested layout animations',
-    screen: NestedTest,
   },
   CombinedLayoutAnimations: {
     title: '[LA] Entering and Exiting with Layout',
@@ -1161,65 +763,21 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Default layout animations',
     screen: DefaultAnimations,
   },
-  DefaultTransitions: {
-    title: '[LA] Default layout transitions',
-    screen: LayoutTransitionExample,
-  },
   KeyframeAnimation: {
     title: '[LA] Keyframe animation',
     screen: KeyframeAnimation,
-  },
-  ParticipantList: {
-    title: '[LA] Participant List',
-    screen: AnimatedListExample,
-  },
-  AnimatedTouchables: {
-    title: '[LA] Animated Touchables',
-    screen: AnimatedTouchables,
-  },
-  OlympicAnimation: {
-    title: '[LA] Olympic animation',
-    screen: OlympicAnimation,
   },
   CustomLayoutAnimation: {
     title: '[LA] Custom layout animation',
     screen: CustomLayoutAnimationScreen,
   },
-  ModalNewAPI: {
-    title: '[LA] ModalNewAPI',
-    screen: ModalNewAPI,
-  },
-  SpringLayoutAnimation: {
-    title: '[LA] Spring Layout Animation',
-    screen: SpringLayoutAnimation,
-  },
-  MountingUnmounting: {
-    title: '[LA] Mounting Unmounting',
-    screen: MountingUnmounting,
-  },
   StrictModeComparison: {
     title: '[LA] Strict Mode Comparison',
     screen: StrictModeComparison,
   },
-  ReactionsCounterExample: {
-    title: '[LA] Reactions counter',
-    screen: ReactionsCounterExample,
-  },
   ListItemLayoutAnimation: {
     title: '[LA] List item layout animation',
     screen: ListItemLayoutAnimation,
-  },
-  SwipeableList: {
-    title: '[LA] Swipeable list',
-    screen: SwipeableList,
-  },
-  Modal: {
-    title: '[LA] Modal',
-    screen: Modal,
-  },
-  NativeModals: {
-    title: '[LA] Native modals (RN and Screens)',
-    screen: NativeModals,
   },
   Carousel: {
     title: '[LA] Carousel',
@@ -1228,10 +786,6 @@ export const EXAMPLES: Record<string, Example> = {
   ReducedMotionLayoutExample: {
     title: '[LA] Reduced Motion',
     screen: ReducedMotionLayoutExample,
-  },
-  NestedLayoutAnimationConfig: {
-    title: '[LA] Nested LayoutAnimationConfig',
-    screen: NestedLayoutAnimationConfig,
   },
   FlatListSkipEnteringExiting: {
     title: '[LA] FlatList skip entering & exiting',
@@ -1273,10 +827,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Exiting tag reuse stress',
     screen: ExitingTagReuseStressExample,
   },
-  DefaultAnimationsOverrides: {
-    title: '[LA] Default layout animations overrides',
-    screen: DefaultAnimationsOverrides,
-  },
   NestedExitingCleanupExample: {
     icon: '🧹',
     title: '[LA] Nested exiting cleanup',
@@ -1289,41 +839,18 @@ export const EXAMPLES: Record<string, Example> = {
 
   // Shared Element Transitions
 
-  CardExample: {
-    title: '[SET] Card',
-    screen: CardExample,
-    shouldWork: {
-      ios: true,
-      android: true,
-    },
-  },
-  CustomTransitionExample: {
-    title: '[SET] Custom transition',
-    screen: CustomTransitionExample,
-    shouldWork: {
-      ios: true,
-      android: true,
-    },
-  },
-  LayoutAnimationExample: {
-    title: '[SET] Layout Animation',
-    screen: LayoutAnimationExample,
-    shouldWork: {
-      ios: true,
-      android: true,
-    },
-  },
   ManyScreensExample: {
     title: '[SET] Many screens',
     screen: ManyScreensExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
     },
   },
-  ManyTagsExample: {
-    title: '[SET] Many tags',
-    screen: ManyTagsExample,
+  SynchronousPropsSETExample: {
+    title: '[LA] Synchronous props',
+    screen: SynchronousPropsSETExample,
     shouldWork: {
       ios: true,
       android: true,
@@ -1332,6 +859,7 @@ export const EXAMPLES: Record<string, Example> = {
   NestedStacksExample: {
     title: '[SET] Nested stacks',
     screen: NestedStacksExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -1340,6 +868,7 @@ export const EXAMPLES: Record<string, Example> = {
   ModalsExample: {
     title: '[SET] Modals',
     screen: ModalsExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // broken header height
       android: true,
@@ -1348,14 +877,7 @@ export const EXAMPLES: Record<string, Example> = {
   FlatListExample: {
     title: '[SET] FlatList',
     screen: FlatListExample,
-    shouldWork: {
-      ios: true,
-      android: true,
-    },
-  },
-  ImageStackExample: {
-    title: '[SET] Image Stack',
-    screen: ImageStackExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -1364,22 +886,16 @@ export const EXAMPLES: Record<string, Example> = {
   RestoreStateExample: {
     title: '[SET] Restore State',
     screen: RestoreStateExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
     },
   },
-  DuplicateTagsExample: {
-    title: '[SET] Duplicate Tags',
-    screen: DuplicateTagsExample,
-  },
-  ReducedMotionSharedExample: {
-    title: '[SET] Reduced Motion',
-    screen: ReducedMotionSharedExample,
-  },
   TransitionRestartExample: {
     title: '[SET] Transition Restart',
     screen: TransitionRestartExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // goes too far up for some reason?
       android: true,
@@ -1388,6 +904,7 @@ export const EXAMPLES: Record<string, Example> = {
   ChangeThemeSharedExample: {
     title: '[SET] Change theme',
     screen: ChangeThemeSharedExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // s2 -> change theme -> go back (progress) will have wrong target
       android: true,
@@ -1396,6 +913,7 @@ export const EXAMPLES: Record<string, Example> = {
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // broken for modals
       android: false, // broken transform, I think due to skew
@@ -1404,6 +922,7 @@ export const EXAMPLES: Record<string, Example> = {
   BorderRadiiExample: {
     title: '[SET] Border Radii',
     screen: BorderRadiiExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // broken on back gesture
       android: true,
@@ -1412,6 +931,7 @@ export const EXAMPLES: Record<string, Example> = {
   TabNavigatorExample: {
     title: '[SET] Tab Navigator',
     screen: TabNavigatorExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -1420,9 +940,59 @@ export const EXAMPLES: Record<string, Example> = {
   ScreenlessBasic: {
     title: '[SET] Screenless Basic',
     screen: ScreenlessBasic,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
     },
   },
 } as const;
+
+/**
+ * `[LA]` and `[SET]` in a title are what assign a screen to its group, matching
+ * the prefix convention the titles already used while the list was flat.
+ */
+function withTitlePrefix(prefix: string): Record<string, Example> {
+  return Object.fromEntries(
+    Object.entries(ALL_EXAMPLES).filter(([, example]) =>
+      example.title.startsWith(prefix)
+    )
+  );
+}
+
+function withoutTitlePrefixes(
+  prefixes: Array<string>
+): Record<string, Example> {
+  return Object.fromEntries(
+    Object.entries(ALL_EXAMPLES).filter(
+      ([, example]) =>
+        !prefixes.some((prefix) => example.title.startsWith(prefix))
+    )
+  );
+}
+
+const LAYOUT_ANIMATION_PREFIX = '[LA]';
+const SHARED_ELEMENT_TRANSITION_PREFIX = '[SET]';
+
+export const EXAMPLES: Record<string, ExampleEntry> = {
+  LayoutAnimations: {
+    examples: withTitlePrefix(LAYOUT_ANIMATION_PREFIX),
+    icon: '📐',
+    title: 'Layout Animations',
+  },
+  SharedElementTransitions: {
+    examples: withTitlePrefix(SHARED_ELEMENT_TRANSITION_PREFIX),
+    hiddenPlatforms: [REAPlatform.WEB],
+    icon: '🔗',
+    title: 'Shared Element Transitions',
+  },
+  ShowCasesAndRegressions: {
+    examples: withoutTitlePrefixes([
+      LAYOUT_ANIMATION_PREFIX,
+      SHARED_ELEMENT_TRANSITION_PREFIX,
+    ]),
+    icon: '🎠',
+    sections: [SHOW_CASES, SHOW_CASES_AND_REGRESSIONS, REGRESSIONS],
+    title: 'Show Cases and Regressions',
+  },
+};

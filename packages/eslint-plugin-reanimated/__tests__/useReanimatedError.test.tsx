@@ -11,6 +11,9 @@ ruleTester.run('use-reanimated-error', rules['use-reanimated-error'], {
     'const err = new Error(`[Reanimated] ${message}`);',
     `const err = new Error();`,
     `const err = new TypeError('Something went wrong');`,
+    `const err = new Error('[Reanimated] Something ' + 'went wrong');`,
+    "const err = new Error('[Reanimated] Something ' + `went ${wrong}`);",
+    'const err = new Error(`[Reanimated] Something ` + went + wrong);',
   ],
   invalid: [
     {
@@ -37,6 +40,16 @@ ruleTester.run('use-reanimated-error', rules['use-reanimated-error'], {
       code: `throw new Error(message);`,
       errors: [{ messageId: 'useReanimatedError' }],
       output: 'throw new Error(`[Reanimated] ${message}`);',
+    },
+    {
+      code: `throw new Error('Something ' + 'went wrong');`,
+      errors: [{ messageId: 'useReanimatedError' }],
+      output: `throw new Error("[Reanimated] Something " + 'went wrong');`,
+    },
+    {
+      code: 'throw new Error(`Something ${bad}` + suffix);',
+      errors: [{ messageId: 'useReanimatedError' }],
+      output: 'throw new Error(`[Reanimated] Something ${bad}` + suffix);',
     },
   ],
 });

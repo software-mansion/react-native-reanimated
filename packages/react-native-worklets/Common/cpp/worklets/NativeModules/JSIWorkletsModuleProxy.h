@@ -2,7 +2,7 @@
 
 #include <jsi/jsi.h>
 #include <worklets/SharedItems/MemoryManager.h>
-#include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/Tools/RNRuntimeStatus.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
@@ -17,29 +17,30 @@ using namespace facebook;
 
 namespace worklets {
 
+class Networking;
 class WorkletRuntime;
 
 class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsModuleProxy> {
  public:
   explicit JSIWorkletsModuleProxy(
-      const bool isDevBundle,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<MemoryManager> &memoryManager,
       const std::shared_ptr<RuntimeManager> &runtimeManager,
       const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
       const std::shared_ptr<RuntimeBindings> &runtimeBindings,
+      const std::shared_ptr<Networking> &networking,
       const BundleModeConfig &bundleModeConfig,
       const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus,
       RuntimeData::RuntimeId hostRuntimeId)
-      : isDevBundle_(isDevBundle),
-        bundleModeConfig_(bundleModeConfig),
+      : bundleModeConfig_(bundleModeConfig),
         jsScheduler_(jsScheduler),
         uiScheduler_(uiScheduler),
         memoryManager_(memoryManager),
         runtimeManager_(runtimeManager),
         uiWorkletRuntime_(uiWorkletRuntime),
         runtimeBindings_(runtimeBindings),
+        networking_(networking),
         rnRuntimeStatus_(rnRuntimeStatus),
         hostRuntimeId_(hostRuntimeId) {}
 
@@ -47,13 +48,13 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
       const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
       RuntimeData::RuntimeId hostRuntimeId) {
     return std::make_shared<JSIWorkletsModuleProxy>(
-        sourceProxy->isDevBundle_,
         sourceProxy->jsScheduler_,
         sourceProxy->uiScheduler_,
         sourceProxy->memoryManager_,
         sourceProxy->runtimeManager_,
         sourceProxy->uiWorkletRuntime_,
         sourceProxy->runtimeBindings_,
+        sourceProxy->networking_,
         sourceProxy->bundleModeConfig_,
         sourceProxy->rnRuntimeStatus_,
         hostRuntimeId);
@@ -71,10 +72,6 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
 
   [[nodiscard]] std::shared_ptr<UIScheduler> getUIScheduler() const {
     return uiScheduler_;
-  }
-
-  [[nodiscard]] bool isDevBundle() const {
-    return isDevBundle_;
   }
 
   [[nodiscard]] std::shared_ptr<const ScriptBuffer> getScript() const {
@@ -97,8 +94,11 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
     return runtimeBindings_;
   }
 
+  [[nodiscard]] std::shared_ptr<Networking> getNetworking() const {
+    return networking_;
+  }
+
  private:
-  const bool isDevBundle_;
   const BundleModeConfig bundleModeConfig_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
@@ -106,6 +106,7 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
   const std::shared_ptr<RuntimeManager> runtimeManager_;
   const std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
   const std::shared_ptr<RuntimeBindings> runtimeBindings_;
+  const std::shared_ptr<Networking> networking_;
   const std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
   const RuntimeData::RuntimeId hostRuntimeId_;
 };

@@ -1,0 +1,125 @@
+---
+title: Transition Callbacks
+sidebar_position: 8
+---
+
+<Badges version="4.6.0">
+  # Transition Callbacks
+</Badges>
+
+Transition callbacks tell you when a CSS transition **runs**, **starts**, **ends**, or is **cancelled**, so you can react to an animation you never drive yourself.
+
+import TransitionCallbacksBasic from '@site/src/examples/css-transitions/TransitionCallbacksBasic';
+import TransitionCallbacksBasicSrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionCallbacksBasic';
+
+<InteractiveExample src={TransitionCallbacksBasicSrc} component={TransitionCallbacksBasic} label="Tap the box"/>
+
+Unlike everything else about a CSS transition, callbacks aren't part of `style` - they are props on the component, next to `onPress` and friends:
+
+```jsx
+<Animated.View
+  style={{
+    width: expanded ? 200 : 120,
+    transitionProperty: 'width',
+    transitionDuration: 500,
+  }}
+  // highlight-start
+  onCSSTransitionEnd={(event) => {
+    console.log(`${event.propertyName} finished after ${event.elapsedTime}s`);
+  }}
+  // highlight-end
+/>
+```
+
+## Reference
+
+```javascript
+function App() {
+  return (
+    <Animated.View
+      style={{ transitionProperty: 'opacity', transitionDuration: 300 }}
+      // highlight-start
+      onCSSTransitionRun={(event) => console.log('run', event.propertyName)}
+      onCSSTransitionStart={(event) => console.log('start', event.propertyName)}
+      onCSSTransitionEnd={(event) => console.log('end', event.propertyName)}
+      onCSSTransitionCancel={(event) => console.log('cancel', event.propertyName)}
+      // highlight-end
+    />
+  );
+}
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  type CSSTransitionEvent = {
+    /** Name of the property that the event refers to. */
+    propertyName: string;
+    /** Time in seconds the transition had been running when the event fired. */
+    elapsedTime: number;
+  };
+
+  type CSSTransitionCallback = (event: CSSTransitionEvent) => void;
+
+  type CSSTransitionCallbacks = {
+    onCSSTransitionRun?: CSSTransitionCallback;
+    onCSSTransitionStart?: CSSTransitionCallback;
+    onCSSTransitionEnd?: CSSTransitionCallback;
+    onCSSTransitionCancel?: CSSTransitionCallback;
+  };
+  ```
+</details>
+
+### Values
+
+#### `onCSSTransitionRun`
+
+Fires when the transition is created, before [`transitionDelay`](/docs/css-transitions/transition-delay) starts counting down.
+
+#### `onCSSTransitionStart`
+
+Fires when the property actually begins to move, that is once the delay has passed. With no delay, `run` and `start` arrive together.
+
+#### `onCSSTransitionEnd`
+
+Fires when the property reaches its target value.
+
+#### `onCSSTransitionCancel`
+
+Fires when the transition is interrupted before finishing - the target changed again, the transition config was removed, or the component unmounted.
+
+import TransitionCallbacksCancel from '@site/src/examples/css-transitions/TransitionCallbacksCancel';
+import TransitionCallbacksCancelSrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionCallbacksCancel';
+
+<InteractiveExample src={TransitionCallbacksCancelSrc} component={TransitionCallbacksCancel} label="Tap twice in a row"/>
+
+## How it works
+
+Each callback receives a [`CSSTransitionEvent`](#reference) describing **one property**. A transition over two properties calls your handler twice, once per property, and `propertyName` tells them apart:
+
+```jsx
+<Animated.View
+  style={{
+    transitionProperty: ['opacity', 'transform'],
+    transitionDuration: 300,
+  }}
+  onCSSTransitionEnd={(event) => {
+    if (event.propertyName === 'opacity') {
+      // ...
+    }
+  }}
+/>
+```
+
+`elapsedTime` is measured in seconds and excludes the delay, so a 300ms transition ends with `elapsedTime: 0.3` whether or not it waited first.
+
+## Remarks
+
+- Callbacks fire only for CSS transitions. Animations have [their own callbacks](/docs/css-animations/animation-callbacks), and [`withTiming`](/docs/animations/withTiming) and friends report completion through their own callback argument instead.
+- Handlers run on the JavaScript thread. The transition itself keeps running natively, so slow work in a callback delays your code, not the animation.
+- A transition that is interrupted emits `cancel` rather than `end`, so the two are mutually exclusive for a given run.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web/>

@@ -38,6 +38,14 @@ function startObservingProgress(
   });
 }
 
+function removeProgressListener(
+  tag: number,
+  sharedValue: SharedValue<number>
+): void {
+  'worklet';
+  sharedValue.removeListener(tag + TAG_OFFSET);
+}
+
 function stopObservingProgress(
   tag: number,
   sharedValue: SharedValue<number>,
@@ -45,7 +53,7 @@ function stopObservingProgress(
   removeView = false
 ): void {
   'worklet';
-  sharedValue.removeListener(tag + TAG_OFFSET);
+  removeProgressListener(tag, sharedValue);
   global._notifyAboutEnd(tag, removeView);
   scheduleFlush();
 }
@@ -119,7 +127,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         value = makeMutableUI(style.initialValues);
         mutableValuesForTag.set(tag, value);
       } else {
-        stopObservingProgress(tag, value, scheduleFlush);
+        removeProgressListener(tag, value);
         value._value = style.initialValues;
       }
 
@@ -155,8 +163,15 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   };
 }
 
-// is-tree-shakable-suppress
-runOnUISync(() => {
-  'worklet';
-  global.LayoutAnimationsManager = createLayoutAnimationManager();
-});
+let isLayoutAnimationsManagerInitialized = false;
+
+export function initializeLayoutAnimationsManager() {
+  if (isLayoutAnimationsManagerInitialized) {
+    return;
+  }
+  runOnUISync(() => {
+    'worklet';
+    global.LayoutAnimationsManager = createLayoutAnimationManager();
+  });
+  isLayoutAnimationsManagerInitialized = true;
+}

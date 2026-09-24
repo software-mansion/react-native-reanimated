@@ -76,18 +76,3 @@ Below we highlight some of the problems that we are aware of (in most cases we a
   </RCTTextView>
   ```
   and `RCTVirtualText` is a virtual component.
-
-### Sponsors
-
-We really appreciate our sponsors! Thanks to them we can develop our library and make the React Native world a better place. Special thanks for:
-
-<div class="community-holder-container">
-
-  <div class="community-holder-container-item">
-    <a href="https://expo.dev">
-    <img class="community-imageHolder" src="https://avatars2.githubusercontent.com/u/12504344?v=3&s=100" />
-    <div>Expo</div>
-    </a>
-  </div>
-
-</div>

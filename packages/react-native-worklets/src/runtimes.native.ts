@@ -77,6 +77,7 @@ export function createWorkletRuntime(
   let animationQueuePollingRate: number;
   let enableEventLoop = true;
   let enableLocking = true;
+  let enableNetworking = true;
   if (typeof nameOrConfig === 'string') {
     name = nameOrConfig;
     initializerFn = initializer;
@@ -101,6 +102,13 @@ export function createWorkletRuntime(
     enableEventLoop = enableLocking
       ? (nameOrConfig?.enableEventLoop ?? true)
       : false;
+    /**
+     * The networking API depends on the Event Loop - `whatwg-fetch` resolves
+     * its responses through `setTimeout`. Without it, requests would hang
+     * instead of failing visibly.
+     */
+    enableNetworking =
+      (nameOrConfig?.enableNetworking ?? true) && enableEventLoop;
   }
 
   const useDefaultQueue = queue === 'default';
@@ -129,7 +137,8 @@ export function createWorkletRuntime(
     useDefaultQueue,
     customQueue,
     enableEventLoop,
-    enableLocking
+    enableLocking,
+    enableNetworking
   );
 }
 

@@ -1,6 +1,7 @@
 'use strict';
 
 import { IS_JEST } from './platformChecker';
+import { mockedRequestAnimationFrame } from './runLoop/uiRuntime/mockedRequestAnimationFrame';
 
 export function scheduleOnUI<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
@@ -110,6 +111,18 @@ function flushUIQueue(): void {
   });
 }
 
+// is-tree-shakable-suppress
+if (!globalThis.requestAnimationFrame) {
+  /**
+   * Server-side rendering evaluates web code in environments without
+   * `requestAnimationFrame`, such as Node.js. Work scheduled there, for example
+   * at module scope, falls back to a timer instead of throwing from a
+   * microtask.
+   */
+  globalThis.requestAnimationFrame =
+    mockedRequestAnimationFrame as unknown as typeof globalThis.requestAnimationFrame;
+}
+
 function drainUIQueue(queue: UIJob[]): void {
   while (queue.length > offset) {
     const [workletFunction, workletArgs, jobResolve] = queue[offset];
@@ -119,4 +132,15 @@ function drainUIQueue(queue: UIJob[]): void {
       jobResolve(result);
     }
   }
+}
+
+/**
+ * Returns the id of the thread which currently executes JavaScript on the
+ * calling Runtime.
+ *
+ * @returns The id of the current thread.
+ * @see https://docs.swmansion.com/react-native-worklets/docs/utility/getCurrentThreadId
+ */
+export function getCurrentThreadId(): string {
+  throw new Error('[Worklets] `getCurrentThreadId` is not supported on web.');
 }

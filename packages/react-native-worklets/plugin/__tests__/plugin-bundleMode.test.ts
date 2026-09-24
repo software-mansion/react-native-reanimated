@@ -12,6 +12,18 @@ type CapturedFile = { path: string; content: string };
 
 const capturedFiles: CapturedFile[] = [];
 
+// The OXC transform writes its files from Rust, so they never reach the `fs`
+// mock below. Its jest setup records them on `globalThis` instead.
+function nativelyEmittedFiles(): CapturedFile[] {
+  return ((
+    globalThis as { __WORKLETS_OXC_EMITTED__?: CapturedFile[] }
+  ).__WORKLETS_OXC_EMITTED__ ??= []);
+}
+
+function emittedFiles(): CapturedFile[] {
+  return capturedFiles.length > 0 ? [...capturedFiles] : nativelyEmittedFiles();
+}
+
 jest.mock('fs', () => {
   const actual = jest.requireActual('fs');
   const stagedFiles = new Map<string, string>();
@@ -57,16 +69,64 @@ function runPlugin(
   };
   const transformed = transformSync(strippedInput, config);
   assert(transformed);
-  return { code: transformed.code ?? '', files: [...capturedFiles] };
+  return { code: transformed.code ?? '', files: emittedFiles() };
 }
 
 describe('babel plugin in bundleMode', () => {
   beforeEach(() => {
     process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
     capturedFiles.length = 0;
+    nativelyEmittedFiles().length = 0;
   });
 
   describe('source replacement', () => {
+    test.each(['arrow', 'method'])(
+      'does not shadow forwarded imports with the closure-free %s worklet binding',
+      (kind) => {
+        const name = kind === 'arrow' ? 'testJs1' : 'read';
+        const body = `{ 'worklet'; return [${name}(), _${name}()]; }`;
+        const expression =
+          kind === 'arrow' ? `() => ${body}` : `{ read() ${body} }.read`;
+        const { files } = runPlugin(
+          `
+          import { first as ${name}, second as _${name} } from 'some-library';
+          const f = ${expression};
+        `,
+          {},
+          { importForwarding: { moduleNames: ['some-library'] } }
+        );
+        expect(files[0].content).toContain(`const __${name} =`);
+        expect(files[0].content).toMatchSnapshot();
+      }
+    );
+
+    test('packs captures in the same order at the call site and in the factory', () => {
+      const { code, files } = runPlugin(`
+        function make(z, missing, a) {
+          return (suffix) => {
+            'worklet';
+            return [z.value, missing, a, suffix];
+          };
+        }
+        module.exports = make;
+      `);
+      expect(code).toMatchSnapshot();
+      expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('exports closure-free worklets without a factory call', () => {
+      const { code, files } = runPlugin(`
+        function factorial(n) {
+          'worklet';
+          return n <= 1 ? 1 : n * factorial(n - 1);
+        }
+        module.exports = factorial;
+      `);
+      expect(code).toMatch(/\.default;/);
+      expect(files[0].content).not.toContain('Factory');
+      expect(files[0].content).not.toContain('__closure');
+    });
+
     test('replaces inline factory with a require to the worklet file', () => {
       const input = html`<script>
         function foo() {
@@ -129,7 +189,7 @@ describe('babel plugin in bundleMode', () => {
       expect(code).toMatchSnapshot();
     });
 
-    test('written file content has factory shape', () => {
+    test('written closure-free file exports the worklet directly', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -276,6 +336,28 @@ describe('babel plugin in bundleMode', () => {
       expect(files[0].content).not.toContain('__source');
     });
 
+    test('captures locally defined JSX components in the closure', () => {
+      const input = html`<script>
+        function LocalComponent() {
+          return null;
+        }
+
+        function renderView() {
+          'worklet';
+          return <LocalComponent />;
+        }
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        { presets: [['@babel/preset-react', { runtime: 'classic' }]] },
+        {},
+        MOCK_TSX_LOCATION
+      );
+      expect(code).toContain('LocalComponent');
+      expect(code).toMatchSnapshot();
+    });
+
     test('rebases relative imports against the worklets directory', () => {
       const input = html`<script>
         import { foo } from './bar';
@@ -342,7 +424,7 @@ describe('babel plugin in bundleMode', () => {
       const fakeFilename = '/not-a-workletizable-package/src/file.ts';
       const { files } = runPlugin(input, {}, {}, fakeFilename);
       expect(files).toHaveLength(1);
-      expect(files[0].content).toContain(`require('./helper')`);
+      expect(files[0].content).toMatch(/require\(["']\.\/helper["']\)/);
       expect(files[0].content).toMatchSnapshot();
     });
   });

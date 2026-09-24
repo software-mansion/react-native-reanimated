@@ -1,6 +1,10 @@
 'use strict';
 
-import { logger, type ValueProcessor } from '../../../../common';
+import {
+  logger,
+  processStyleValue,
+  type ValueProcessor,
+} from '../../../../common';
 import type { CSSGradientStop } from '../../../types';
 import { processColorSVG } from './colors';
 import { processPercentage } from './percentage';
@@ -16,7 +20,7 @@ export const processSVGGradientStops = ((stops) => {
   }
   const intermediate = stops.map((stop) => {
     const rawColor = stop.color && processColorSVG(stop.color);
-    const stopOpacity = processPercentage(stop.opacity ?? 1);
+    const stopOpacity = processStyleValue(processPercentage, stop.opacity ?? 1);
     const finalColor =
       typeof rawColor === 'number' && typeof stopOpacity === 'number'
         ? ((Math.round(((rawColor >>> 24) & 0xff) * stopOpacity) << 24) |
@@ -24,7 +28,7 @@ export const processSVGGradientStops = ((stops) => {
           0
         : rawColor;
     return {
-      offset: processPercentage(stop.offset ?? 0),
+      offset: processStyleValue(processPercentage, stop.offset ?? 0),
       color: finalColor,
     };
   }) as { offset: number; color: number | false | string }[];

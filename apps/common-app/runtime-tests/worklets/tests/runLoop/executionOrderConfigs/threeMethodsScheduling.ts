@@ -1,5 +1,6 @@
-import { incorrect, ThreeMethodsConfig } from './utils';
 import { RuntimeKind } from 'react-native-worklets';
+
+import { incorrect, ThreeMethodsConfig } from './utils';
 
 export const CONFIG: ThreeMethodsConfig[] = [
   // setTimeout
@@ -197,36 +198,19 @@ export const CONFIG: ThreeMethodsConfig[] = [
   ['setTimeout', 2, 'setInterval', 3, 'topLevel', 1, RuntimeKind.UI],
   ['setTimeout', 2, 'setInterval', 3, 'topLevel', 1, RuntimeKind.Worker],
 
-  incorrect(
-    ['setTimeout', 1, 'queueMicrotask', 3, 'setTimeout', 2, RuntimeKind.UI], // incorrect
-    ['setTimeout', 1, 'queueMicrotask', 2, 'setTimeout', 3, RuntimeKind.UI] // correct
-  ),
+  ['setTimeout', 1, 'queueMicrotask', 2, 'setTimeout', 3, RuntimeKind.UI],
   ['setTimeout', 1, 'queueMicrotask', 2, 'setTimeout', 3, RuntimeKind.Worker],
-  incorrect(
-    ['setTimeout', 1, 'queueMicrotask', 3, 'setImmediate', 2, RuntimeKind.UI], // incorrect
-    ['setTimeout', 1, 'queueMicrotask', 2, 'setImmediate', 3, RuntimeKind.UI] // correct
-  ),
+  ['setTimeout', 1, 'queueMicrotask', 2, 'setImmediate', 3, RuntimeKind.UI],
   ['setTimeout', 1, 'queueMicrotask', 2, 'setImmediate', 3, RuntimeKind.Worker],
-  incorrect(
-    [
-      'setTimeout',
-      1,
-      'queueMicrotask',
-      3,
-      'requestAnimationFrame',
-      2,
-      RuntimeKind.UI,
-    ], // incorrect
-    [
-      'setTimeout',
-      1,
-      'queueMicrotask',
-      2,
-      'requestAnimationFrame',
-      3,
-      RuntimeKind.UI,
-    ] // correct
-  ),
+  [
+    'setTimeout',
+    1,
+    'queueMicrotask',
+    2,
+    'requestAnimationFrame',
+    3,
+    RuntimeKind.UI,
+  ],
   [
     'setTimeout',
     1,
@@ -236,10 +220,7 @@ export const CONFIG: ThreeMethodsConfig[] = [
     3,
     RuntimeKind.Worker,
   ],
-  incorrect(
-    ['setTimeout', 1, 'queueMicrotask', 3, 'setInterval', 2, RuntimeKind.UI], // incorrect
-    ['setTimeout', 1, 'queueMicrotask', 2, 'setInterval', 3, RuntimeKind.UI] // correct
-  ),
+  ['setTimeout', 1, 'queueMicrotask', 2, 'setInterval', 3, RuntimeKind.UI],
   ['setTimeout', 1, 'queueMicrotask', 2, 'setInterval', 3, RuntimeKind.Worker],
   ['setTimeout', 2, 'queueMicrotask', 3, 'queueMicrotask', 1, RuntimeKind.UI],
   [
@@ -494,15 +475,9 @@ export const CONFIG: ThreeMethodsConfig[] = [
   ['setImmediate', 2, 'setInterval', 3, 'topLevel', 1, RuntimeKind.UI],
   ['setImmediate', 2, 'setInterval', 3, 'topLevel', 1, RuntimeKind.Worker],
 
-  incorrect(
-    ['setImmediate', 1, 'queueMicrotask', 3, 'setTimeout', 2, RuntimeKind.UI], // incorrect
-    ['setImmediate', 1, 'queueMicrotask', 2, 'setTimeout', 3, RuntimeKind.UI] // correct
-  ),
+  ['setImmediate', 1, 'queueMicrotask', 2, 'setTimeout', 3, RuntimeKind.UI],
   ['setImmediate', 1, 'queueMicrotask', 2, 'setTimeout', 3, RuntimeKind.Worker],
-  incorrect(
-    ['setImmediate', 1, 'queueMicrotask', 3, 'setImmediate', 2, RuntimeKind.UI], // incorrect
-    ['setImmediate', 1, 'queueMicrotask', 2, 'setImmediate', 3, RuntimeKind.UI] // correct
-  ),
+  ['setImmediate', 1, 'queueMicrotask', 2, 'setImmediate', 3, RuntimeKind.UI],
   [
     'setImmediate',
     1,
@@ -512,26 +487,15 @@ export const CONFIG: ThreeMethodsConfig[] = [
     3,
     RuntimeKind.Worker,
   ],
-  incorrect(
-    [
-      'setImmediate',
-      1,
-      'queueMicrotask',
-      3,
-      'requestAnimationFrame',
-      2,
-      RuntimeKind.UI,
-    ], // incorrect
-    [
-      'setImmediate',
-      1,
-      'queueMicrotask',
-      2,
-      'requestAnimationFrame',
-      3,
-      RuntimeKind.UI,
-    ] // correct
-  ),
+  [
+    'setImmediate',
+    1,
+    'queueMicrotask',
+    2,
+    'requestAnimationFrame',
+    3,
+    RuntimeKind.UI,
+  ],
   [
     'setImmediate',
     1,
@@ -541,10 +505,7 @@ export const CONFIG: ThreeMethodsConfig[] = [
     3,
     RuntimeKind.Worker,
   ],
-  incorrect(
-    ['setImmediate', 1, 'queueMicrotask', 3, 'setInterval', 2, RuntimeKind.UI], // incorrect
-    ['setImmediate', 1, 'queueMicrotask', 2, 'setInterval', 3, RuntimeKind.UI] // correct
-  ),
+  ['setImmediate', 1, 'queueMicrotask', 2, 'setInterval', 3, RuntimeKind.UI],
   [
     'setImmediate',
     1,
@@ -1154,9 +1115,9 @@ export const CONFIG: ThreeMethodsConfig[] = [
       'requestAnimationFrame',
       1,
       'queueMicrotask',
-      3,
-      'setTimeout',
       2,
+      'setTimeout',
+      3,
       RuntimeKind.UI,
     ], // incorrect
     [
@@ -1183,9 +1144,9 @@ export const CONFIG: ThreeMethodsConfig[] = [
       'requestAnimationFrame',
       1,
       'queueMicrotask',
-      3,
-      'setImmediate',
       2,
+      'setImmediate',
+      3,
       RuntimeKind.UI,
     ], // incorrect
     [
@@ -1207,26 +1168,15 @@ export const CONFIG: ThreeMethodsConfig[] = [
     1,
     RuntimeKind.Worker,
   ],
-  incorrect(
-    [
-      'requestAnimationFrame',
-      1,
-      'queueMicrotask',
-      3,
-      'requestAnimationFrame',
-      2,
-      RuntimeKind.UI,
-    ], // incorrect
-    [
-      'requestAnimationFrame',
-      1,
-      'queueMicrotask',
-      2,
-      'requestAnimationFrame',
-      3,
-      RuntimeKind.UI,
-    ] // correct
-  ),
+  [
+    'requestAnimationFrame',
+    1,
+    'queueMicrotask',
+    2,
+    'requestAnimationFrame',
+    3,
+    RuntimeKind.UI,
+  ],
   [
     'requestAnimationFrame',
     1,
@@ -1241,9 +1191,9 @@ export const CONFIG: ThreeMethodsConfig[] = [
       'requestAnimationFrame',
       1,
       'queueMicrotask',
-      3,
-      'setInterval',
       2,
+      'setInterval',
+      3,
       RuntimeKind.UI,
     ], // incorrect
     [
@@ -1631,15 +1581,9 @@ export const CONFIG: ThreeMethodsConfig[] = [
   ['setInterval', 2, 'setInterval', 3, 'topLevel', 1, RuntimeKind.UI],
   ['setInterval', 2, 'setInterval', 3, 'topLevel', 1, RuntimeKind.Worker],
 
-  incorrect(
-    ['setInterval', 1, 'queueMicrotask', 3, 'setTimeout', 2, RuntimeKind.UI], // incorrect
-    ['setInterval', 1, 'queueMicrotask', 2, 'setTimeout', 3, RuntimeKind.UI] // correct
-  ),
+  ['setInterval', 1, 'queueMicrotask', 2, 'setTimeout', 3, RuntimeKind.UI],
   ['setInterval', 1, 'queueMicrotask', 2, 'setTimeout', 3, RuntimeKind.Worker],
-  incorrect(
-    ['setInterval', 1, 'queueMicrotask', 3, 'setImmediate', 2, RuntimeKind.UI], // incorrect
-    ['setInterval', 1, 'queueMicrotask', 2, 'setImmediate', 3, RuntimeKind.UI] // correct
-  ),
+  ['setInterval', 1, 'queueMicrotask', 2, 'setImmediate', 3, RuntimeKind.UI],
   [
     'setInterval',
     1,
@@ -1649,26 +1593,15 @@ export const CONFIG: ThreeMethodsConfig[] = [
     3,
     RuntimeKind.Worker,
   ],
-  incorrect(
-    [
-      'setInterval',
-      1,
-      'queueMicrotask',
-      3,
-      'requestAnimationFrame',
-      2,
-      RuntimeKind.UI,
-    ], // incorrect
-    [
-      'setInterval',
-      1,
-      'queueMicrotask',
-      2,
-      'requestAnimationFrame',
-      3,
-      RuntimeKind.UI,
-    ] // correct
-  ),
+  [
+    'setInterval',
+    1,
+    'queueMicrotask',
+    2,
+    'requestAnimationFrame',
+    3,
+    RuntimeKind.UI,
+  ],
   [
     'setInterval',
     1,
@@ -1678,10 +1611,7 @@ export const CONFIG: ThreeMethodsConfig[] = [
     3,
     RuntimeKind.Worker,
   ],
-  incorrect(
-    ['setInterval', 1, 'queueMicrotask', 3, 'setInterval', 2, RuntimeKind.UI], // incorrect
-    ['setInterval', 1, 'queueMicrotask', 2, 'setInterval', 3, RuntimeKind.UI] // correct
-  ),
+  ['setInterval', 1, 'queueMicrotask', 2, 'setInterval', 3, RuntimeKind.UI],
   ['setInterval', 1, 'queueMicrotask', 2, 'setInterval', 3, RuntimeKind.Worker],
   ['setInterval', 2, 'queueMicrotask', 3, 'queueMicrotask', 1, RuntimeKind.UI],
   [

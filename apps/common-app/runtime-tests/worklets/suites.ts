@@ -20,6 +20,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       __DEV__ && require('./tests/runtimes/errorTraces.test');
       __DEV__ && require('./tests/runtimes/loggingFromWorkletRuntime.test');
       require('./tests/runtimes/createWorkletRuntime.test');
+      require('./tests/runtimes/getCurrentThreadId.test');
       require('./tests/runtimes/scheduleOnRN.test');
       require('./tests/runtimes/runOnUISync.test');
       require('./tests/runtimes/scheduleOnRuntime.test');
@@ -38,11 +39,18 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'bundle mode core',
     importTest: () => {
       require('./tests/runtimes/reactNativeImportShim.test');
-      require('./tests/runtimes/turboModuleRegistryShim.test');
     },
     // The shims these tests assert on are only active in __DEV__, so the suite
     // stays out of Release builds until Bundle Mode supports them there.
     disabled: !__DEV__,
+  },
+  {
+    testSuiteName: 'networking',
+    importTest: () => {
+      require('./tests/networking/api.test');
+      require('./tests/networking/xhr.test');
+      require('./tests/networking/fetch.test');
+    },
   },
   {
     testSuiteName: 'run loop',
@@ -63,6 +71,8 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
   {
     testSuiteName: 'babel plugin',
     importTest: () => {
+      require('./tests/plugin/closures.test');
+      require('./tests/plugin/closureFree.test');
       require('./tests/plugin/jsxInWorklets.test');
       require('./tests/plugin/recursion.test');
       require('./tests/plugin/versionMismatch.test');

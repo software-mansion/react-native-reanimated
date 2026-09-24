@@ -1,4 +1,12 @@
 import {
+  runOnUISync,
+  scheduleOnUI,
+  scheduleOnRuntime,
+  runOnRuntimeSync,
+  scheduleOnRN,
+} from 'react-native-worklets';
+
+import {
   describe,
   test,
   beforeEach,
@@ -8,13 +16,6 @@ import {
   waitForNotification,
   getWorkletRuntimesFromPool,
 } from '../../../ReJest/RuntimeTestsApi';
-import {
-  runOnUISync,
-  scheduleOnUI,
-  scheduleOnRuntime,
-  runOnRuntimeSync,
-  scheduleOnRN,
-} from 'react-native-worklets';
 
 declare global {
   var __reportFatalRemoteError:

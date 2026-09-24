@@ -1,55 +1,13 @@
 import React from 'react';
-import {
-  LogBox,
-  NativeModules,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { LogBox, StyleSheet, Text, View } from 'react-native';
 
 import AutoRunRuntimeTestsRunner from './ReJest/AutoRunRuntimeTestsRunner';
+import { deriveWsUrl } from './ReJest/utils/serverUrl';
 import type { RuntimeTestSuite } from './types';
 
 LogBox.ignoreLogs([
   "Deep imports from the 'react-native' package are deprecated",
 ]);
-
-const DEFAULT_PORT = 8082;
-
-interface SourceCodeConstants {
-  scriptURL?: string;
-}
-
-function deriveWsUrl(): string {
-  const override = (globalThis as { __RUNTIME_TESTS_WS_URL__?: string })
-    .__RUNTIME_TESTS_WS_URL__;
-  if (override) {
-    return override;
-  }
-
-  const scriptURL: string | undefined = (
-    NativeModules.SourceCode?.getConstants?.() as
-      | SourceCodeConstants
-      | undefined
-  )?.scriptURL;
-
-  let host = 'localhost';
-  let port = DEFAULT_PORT;
-  if (scriptURL) {
-    const match = /^https?:\/\/([^/:]+)(?::(\d+))?\//.exec(scriptURL);
-    if (match) {
-      host = match[1];
-      if (match[2]) {
-        port = Number(match[2]) + 1;
-      }
-    }
-  } else if (Platform.OS === 'android') {
-    host = '10.0.2.2';
-  }
-
-  return `ws://${host}:${port}`;
-}
 
 interface AutoRunRuntimeTestsAppProps {
   tests: RuntimeTestSuite[];

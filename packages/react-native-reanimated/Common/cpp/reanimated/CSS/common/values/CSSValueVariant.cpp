@@ -7,6 +7,7 @@
 #include <reanimated/CSS/common/values/CSSNumber.h>
 #include <reanimated/CSS/common/values/CSSValueVariant.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
+#include <reanimated/CSS/common/values/complex/CSSGradient.h>
 #include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGPath.h>
@@ -133,6 +134,7 @@ template class CSSValueVariant<CSSLength>;
 template class CSSValueVariant<CSSLength, CSSKeyword>;
 template class CSSValueVariant<CSSDouble>;
 template class CSSValueVariant<CSSDouble, CSSKeyword>;
+template class CSSValueVariant<CSSTextDouble>;
 template class CSSValueVariant<CSSInteger>;
 template class CSSValueVariant<CSSIndex>;
 template class CSSValueVariant<CSSKeyword>;
@@ -141,6 +143,7 @@ template class CSSValueVariant<CSSBoolean>;
 template class CSSValueVariant<CSSColor>;
 template class CSSValueVariant<CSSDisplay>;
 template class CSSValueVariant<CSSBoxShadow>;
+template class CSSValueVariant<CSSGradient>;
 template class CSSValueVariant<CSSDiscreteArray<CSSKeyword>>;
 
 template class CSSValueVariant<SVGPath>;

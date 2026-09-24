@@ -1,4 +1,5 @@
 #pragma once
+#include <mutex>
 #include <string>
 #include <unordered_map>
 
@@ -38,6 +39,7 @@ class DynamicFeatureFlags {
   static void setFlag(const std::string &name, bool value);
 
  private:
+  static std::mutex mutex_;
   static std::unordered_map<std::string, bool> flags_;
 };
 

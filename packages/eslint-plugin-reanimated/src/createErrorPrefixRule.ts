@@ -2,13 +2,19 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 // eslint-disable-next-line import/no-unresolved
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
+function leftmostOperand(node: TSESTree.Node): TSESTree.Node {
+  return node.type === AST_NODE_TYPES.BinaryExpression && node.operator === '+'
+    ? leftmostOperand(node.left)
+    : node;
+}
+
 export function createErrorPrefixRule<MessageId extends string>(
   prefix: string,
   messageId: MessageId
 ): TSESLint.RuleModule<MessageId, []> {
   return {
     create(context) {
-      const sourceCode = context.getSourceCode();
+      const sourceCode = context.sourceCode;
       return {
         NewExpression(node: TSESTree.NewExpression) {
           if (
@@ -27,7 +33,7 @@ export function createErrorPrefixRule<MessageId extends string>(
             return;
           }
 
-          const first = args[0];
+          const first = leftmostOperand(args[0]);
 
           if (
             first.type === AST_NODE_TYPES.Literal &&
@@ -89,6 +95,5 @@ export function createErrorPrefixRule<MessageId extends string>(
       schema: [],
       fixable: 'code',
     },
-    defaultOptions: [],
   };
 }

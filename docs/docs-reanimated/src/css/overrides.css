@@ -168,6 +168,41 @@ button[class*='DocSearch-Button'] {
   word-break: normal;
 }
 
+footer.footer {
+  --ifm-footer-padding-vertical: 40px;
+}
+
+@media (max-width: 996px) {
+  footer.footer {
+    --ifm-footer-padding-vertical: 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  footer.footer {
+    --ifm-footer-padding-vertical: 30px;
+  }
+}
+
+footer .footer__bottom [class*='footer__copyright'] {
+  justify-content: center;
+  padding-bottom: var(--swm-footer-copyright-padding-bottom);
+}
+
+footer .footer__bottom [class*='footer__copyright'] p {
+  text-align: center;
+}
+
+@media (max-width: 996px) {
+  footer .footer__bottom [class*='footer__copyright'] {
+    align-items: center;
+  }
+}
+
+footer .footer__bottom [class*='footer__copyright'] p a[data-privacy-policy] {
+  text-decoration: none;
+}
+
 /* Tabs nested inside details: bump label contrast against the purple details background. */
 details .tabs__item {
   color: var(--swm-details-color) !important;

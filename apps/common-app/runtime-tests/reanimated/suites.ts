@@ -53,8 +53,10 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/core/useSharedValue/synchronization.test');
       require('./tests/core/useSharedValue/numbers.test');
       require('./tests/core/useSharedValue/arrays.test');
+      require('./tests/core/useSharedValue/modify.test');
       require('./tests/core/useSharedValue/objects.test');
       require('./tests/core/useSharedValue/assigningObjects.test');
+      require('./tests/core/useSharedValue/convergence.test');
       require('./tests/core/useAnimatedStyle/reuseAnimatedStyle.test');
       require('./tests/core/useDerivedValue/basic.test');
       require('./tests/core/useDerivedValue/chain.test');
@@ -66,7 +68,16 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
   {
     testSuiteName: 'props',
     importTest: () => {
+      require('./tests/props/backgroundImage.test');
+      require('./tests/props/syncBackToReact.test');
       require('./tests/props/boxShadow.test');
+    },
+  },
+  {
+    testSuiteName: 'css animations',
+    importTest: () => {
+      require('./tests/css/animationCancellation.test');
+      require('./tests/css/backgroundImage.test');
     },
   },
   {
@@ -105,6 +116,18 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     // Remove disabled and skipByDefault when fixed
     disabled: true,
     skipByDefault: true,
+  },
+  {
+    testSuiteName: 'layout animation updates',
+    importTest: () => {
+      require('./tests/layoutAnimations/layout/propUpdates.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animations view flattening',
+    importTest: () => {
+      require('./tests/layoutAnimations/flattening.test');
+    },
   },
   {
     testSuiteName: 'keyframe animations',

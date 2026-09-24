@@ -31,6 +31,9 @@ class AndroidUIScheduler(
 
     private external fun initHybrid(): HybridData
 
+    @DoNotStrip
+    private fun isOnUIThread(): Boolean = UiThreadUtil.isOnUiThread()
+
     external fun triggerUI()
 
     external fun invalidate()
