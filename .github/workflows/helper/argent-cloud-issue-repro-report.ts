@@ -3,6 +3,8 @@ import path from 'node:path';
 
 import { postToSlack } from './slack.ts';
 
+const GITHUB_BODY_LIMIT = 60_000;
+const GITHUB_TITLE_LIMIT = 256;
 const SUMMARY_LIMIT = 600;
 
 type Stage = 'plan-infeasible' | 'build-failed' | 'reproduce';
@@ -17,6 +19,7 @@ type Context = {
   issueUrl: string;
   runUrl: string;
   failedStep: string | undefined;
+  reportUrl: string | undefined;
   plan: Plan | null;
   brief: string | null;
   output: string | null;
@@ -55,12 +58,15 @@ async function main(): Promise<void> {
     case 'report':
       writeReport(readContext());
       break;
+    case 'publish':
+      await publish(readContext());
+      break;
     case 'notify':
       await notify(readContext());
       break;
     default:
       throw new Error(
-        `usage: argent-cloud-issue-repro-report.ts <report|notify>, got '${command ?? ''}'`
+        `usage: argent-cloud-issue-repro-report.ts <report|publish|notify>, got '${command ?? ''}'`
       );
   }
 }
@@ -80,6 +86,7 @@ function readContext(): Context {
     issueUrl: requireEnv('ISSUE_URL'),
     runUrl: requireEnv('RUN_URL'),
     failedStep: process.env.FAILED_STEP || undefined,
+    reportUrl: process.env.REPORT_URL || undefined,
     plan,
     brief: readFile(process.env.BRIEF_FILE),
     output,
@@ -243,6 +250,102 @@ function writeReport(context: Context): void {
   console.log(`wrote ${reportFile}`);
 }
 
+async function publish(context: Context): Promise<void> {
+  const repo = requireEnv('REPORTS_REPO');
+  const token = requireEnv('REPORTS_TOKEN');
+  const runId = requireEnv('RUN_ID');
+  const report = readFile(requireEnv('REPORT_FILE'));
+  if (!report) {
+    throw new Error('the report file is missing or empty');
+  }
+  const apiUrl = process.env.GITHUB_API_URL ?? 'https://api.github.com';
+  const headers = {
+    Accept: 'application/vnd.github+json',
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+    'X-GitHub-Api-Version': '2022-11-28',
+  };
+  const prefix = `${outcomeLabel(context)}: `;
+  const suffix = ` (run ${runId})`;
+  const room = GITHUB_TITLE_LIMIT - prefix.length - suffix.length;
+  const label = issueLabel(context);
+  const title = `${prefix}${label.length > room ? `${label.slice(0, room - 1)}…` : label}${suffix}`;
+  const issue = await githubPost(`${apiUrl}/repos/${repo}/issues`, headers, {
+    title,
+    body: clampBody(
+      report,
+      'The report was truncated. The full file is in the workflow artifacts.'
+    ),
+  });
+  console.log(`opened ${issue.html_url}`);
+  if (process.env.GITHUB_OUTPUT) {
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `url=${issue.html_url}\n`);
+  }
+
+  if (context.stream) {
+    const chunks = splitIntoChunks(context.stream, GITHUB_BODY_LIMIT - 200);
+    for (const [index, chunk] of chunks.entries()) {
+      const part =
+        chunks.length > 1 ? ` (part ${index + 1}/${chunks.length})` : '';
+      await githubPost(
+        `${apiUrl}/repos/${repo}/issues/${issue.number}/comments`,
+        headers,
+        {
+          body: [
+            '<details>',
+            `<summary>Agent stream${part}</summary>`,
+            '',
+            chunk,
+            '',
+            '</details>',
+          ].join('\n'),
+        }
+      );
+    }
+    console.log(`posted the stream in ${chunks.length} comment(s)`);
+  }
+}
+
+async function githubPost(
+  url: string,
+  headers: Record<string, string>,
+  body: Record<string, unknown>
+): Promise<{ number: number; html_url: string }> {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    throw new Error(
+      `GitHub API ${response.status} for ${url}: ${(await response.text()).slice(0, 400)}`
+    );
+  }
+  return (await response.json()) as { number: number; html_url: string };
+}
+
+function clampBody(text: string, note: string): string {
+  if (text.length <= GITHUB_BODY_LIMIT) {
+    return text;
+  }
+  return `${text.slice(0, GITHUB_BODY_LIMIT - note.length - 4)}\n\n_${note}_`;
+}
+
+function splitIntoChunks(content: string, limit: number): string[] {
+  const chunks: string[] = [];
+  let rest = content;
+  while (rest.length > limit) {
+    let cut = rest.lastIndexOf('\n', limit);
+    if (cut < limit / 2) {
+      cut = limit;
+    }
+    chunks.push(rest.slice(0, cut));
+    rest = rest.slice(cut).replace(/^\n/, '');
+  }
+  chunks.push(rest);
+  return chunks;
+}
+
 async function notify(context: Context): Promise<void> {
   const lines = [
     `${outcomeEmoji(context)} Argent Cloud repro ${outcomeLabel(context)}: ${escapeSlack(issueLabel(context))}`,
@@ -252,6 +355,9 @@ async function notify(context: Context): Promise<void> {
     lines.push(`Failed step: ${escapeSlack(context.failedStep)}`);
   }
   lines.push(`Cost: ${costLine(context.costs)}`);
+  if (context.reportUrl) {
+    lines.push(`Report: ${context.reportUrl}`);
+  }
   lines.push(`Issue: ${context.issueUrl}`, `Run: ${context.runUrl}`);
   await postToSlack({ text: lines.join('\n') });
 }
