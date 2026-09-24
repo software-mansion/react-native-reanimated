@@ -142,8 +142,8 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
     } else {
       // platform -> loop migration cancels on the platform side.
       // Sampled before remove() drops the run this resumes from; nullopt keeps the
-      // diff's own from-value, which the animation has painted past. Settings alone
-      // leave the loop nothing to resume, so the property lands on its committed value.
+      // diff's own from-value, which the animation has painted past. Without a new value
+      // the loop has nothing to resume, so the property lands on its committed value.
       std::optional<PlatformValue> resumeFrom;
       if (routing.platform.erase(propertyName) > 0) {
         if (hasValue) {
