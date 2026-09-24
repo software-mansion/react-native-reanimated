@@ -328,7 +328,17 @@ export enum SensorType {
   GRAVITY = 3,
   MAGNETIC_FIELD = 4,
   ROTATION = 5,
+  HINGE = 6,
 }
+
+/** Mirrors `UIHingeStatus`. Android derives it from the angle. */
+export enum HingeStatus {
+  UNKNOWN = 0,
+  CLOSED = 1,
+  PARTIALLY_OPEN = 2,
+  FULLY_OPEN = 3,
+}
+
 export enum IOSReferenceFrame {
   XArbitraryZVertical,
   XArbitraryCorrectedZVertical,
@@ -380,12 +390,20 @@ export type ValueRotation = {
   interfaceOrientation: InterfaceOrientation;
 };
 
+export type ValueHinge = {
+  /** The opening angle of the hinge in radians, 0 when it is closed. */
+  angle: number;
+  status: HingeStatus;
+  interfaceOrientation: InterfaceOrientation;
+};
+
 export type SensorValueMap = {
   [SensorType.ACCELEROMETER]: Value3D;
   [SensorType.GYROSCOPE]: Value3D;
   [SensorType.GRAVITY]: Value3D;
   [SensorType.MAGNETIC_FIELD]: Value3D;
   [SensorType.ROTATION]: ValueRotation;
+  [SensorType.HINGE]: ValueHinge;
 };
 
 export type SensorValue = SensorValueMap[SensorType];

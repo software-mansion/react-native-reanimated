@@ -84,9 +84,11 @@ export type {
   StyleProps,
   TransformArrayItem,
   Value3D,
+  ValueHinge,
   ValueRotation,
 } from './commonTypes';
 export {
+  HingeStatus,
   InterfaceOrientation,
   IOSReferenceFrame,
   KeyboardState,

@@ -10,6 +10,7 @@ enum class ReanimatedSensorType(
     GRAVITY(Sensor.TYPE_GRAVITY),
     MAGNETIC_FIELD(Sensor.TYPE_MAGNETIC_FIELD),
     ROTATION_VECTOR(Sensor.TYPE_ROTATION_VECTOR),
+    HINGE(Sensor.TYPE_HINGE_ANGLE),
     ;
 
     fun getType(): Int = type
@@ -23,6 +24,7 @@ enum class ReanimatedSensorType(
                 3 -> GRAVITY
                 4 -> MAGNETIC_FIELD
                 5 -> ROTATION_VECTOR
+                6 -> HINGE
                 else -> throw IllegalArgumentException("[Reanimated] Unknown sensor type.")
             }
     }

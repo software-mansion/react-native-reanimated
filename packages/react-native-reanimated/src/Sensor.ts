@@ -7,7 +7,7 @@ import type {
   SensorValueMap,
   SharedValue,
 } from './commonTypes';
-import { SensorType } from './commonTypes';
+import { HingeStatus, SensorType } from './commonTypes';
 import { makeMutable } from './mutables';
 import { ReanimatedModule } from './ReanimatedModule';
 
@@ -29,6 +29,8 @@ function createInitialSensorValue(sensorType: SensorType): SensorValue {
         roll: 0,
         interfaceOrientation: 0,
       };
+    case SensorType.HINGE:
+      return { angle: 0, status: HingeStatus.UNKNOWN, interfaceOrientation: 0 };
   }
 }
 

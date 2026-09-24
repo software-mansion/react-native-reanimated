@@ -31,6 +31,7 @@ import {
   GentleSpringConfigWithDuration,
   getAnimatedStyle,
   getUseOfValueInStyleWarning,
+  HingeStatus,
   InterfaceOrientation,
   IOSReferenceFrame,
   isColor,
@@ -81,6 +82,8 @@ const hook = {
         yaw: 0,
         pitch: 0,
         roll: 0,
+        angle: 0,
+        status: HingeStatus.UNKNOWN,
       },
     },
     unregister: NOOP,
@@ -481,6 +484,7 @@ const isSharedValue = {
 };
 
 const commonTypes = {
+  HingeStatus,
   InterfaceOrientation,
   IOSReferenceFrame,
   KeyboardState,

@@ -158,8 +158,7 @@ export function unsubscribeFromKeyboardEvents(listenerId: number): void {
 }
 
 export function isSensorAvailable(sensorType: SensorType): boolean {
-  const sensorContainer = getSensorContainer();
-  return sensorContainer.isSensorAvailable(sensorType);
+  return ReanimatedModule.isSensorAvailable(sensorType);
 }
 
 export function registerSensor<T extends SensorType>(

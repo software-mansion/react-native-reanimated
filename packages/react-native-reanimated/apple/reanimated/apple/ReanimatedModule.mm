@@ -44,6 +44,10 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
   [_nodesManager invalidate];
   _synchronousPropsRewriter = nil;
+  if (_reanimatedModuleProxy) {
+    // The hinge interaction lives on a window, which outlives the module.
+    _reanimatedModuleProxy->cleanupSensors();
+  }
   _reanimatedModuleProxy.reset();
   [super invalidate];
 }
