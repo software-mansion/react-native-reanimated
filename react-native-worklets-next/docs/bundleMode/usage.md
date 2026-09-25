@@ -1,0 +1,49 @@
+# Usage
+
+## Running third party libraries in Worklets
+
+Third party libraries have to be on an allow-list to use them in worklets. This is because libraries can come with side-effects that would break a Worklet Runtime. For instance, a library that imports something from React Native can't be used on a Worklet Runtime. This would load a second instance of React Native and break your app.
+
+To add a library to the allow-list you only need to set `importForwarding.moduleNames` in the Worklets Babel plugin options. It's an array of library names. For instance, if you want to use `my-library` on a Worklet Runtime.
+
+```javascript
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  bundleMode: true,
+  strictGlobal: true, // optional, but recommended
+  // highlight-next-line
+  importForwarding: { moduleNames: ['my-library'] },
+};
+```
+
+The `importForwarding` API is temporary and will be replaced with a more robust solution in the future.
+
+## Running network requests in Worklets
+
+In Bundle Mode, Worklet Runtimes come with a standalone networking module, no longer needing a feature flag. It's installed on every Worklet Runtime unless you opt out with [`enableNetworking: false`](/docs/threading/createWorkletRuntime#enablenetworking).
+
+```tsx
+const runtime = createWorkletRuntime({ name: 'worker' });
+
+scheduleOnRuntime(runtime, async () => {
+  'worklet';
+  const response = await fetch('https://swmansion.com');
+  console.log(response.status);
+});
+```
+
+| API | Supported |
+| --- | --- |
+| `fetch`, `Headers`, `Request`, `Response` | ✅ |
+| `XMLHttpRequest` | ✅ |
+| `Blob`, `FileReader` | ✅ |
+| `AbortController`, `AbortSignal` | ✅ | |
+| `FormData` | String fields only, encoded as `multipart/form-data`. |
+| Response streaming | ❌ |
+| `WebSocket` | coming soon |
+
+Requests are made by the platform's own networking stack, they share the app's cookie storage and its TLS configuration.
+
+## Reference
+
+To see how the setup looks in a real project, you can check out the [Bundle Mode Showcase App](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app) repository.

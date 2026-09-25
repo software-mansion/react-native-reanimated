@@ -1,0 +1,4928 @@
+# React Native Worklets: Multithreading engine for your apps and libraries
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/bundleMode/importForwarding
+# Title: importForwarding
+
+# Import forwarding
+
+Import forwarding is a feature of Bundle Mode that lets you use third-party
+libraries inside worklet functions without adding boilerplate code.
+
+To understand the motivation behind this feature, let's look at the ambiguity
+of using imports inside worklet functions.
+
+## Motivation
+
+Say you have the following code:
+
+```javascript
+import { foo } from 'my-library';
+
+function worklet() {
+  'worklet';
+  foo();
+}
+
+scheduleOnUI(worklet);
+```
+
+Your intent is clearly to invoke `foo` from `my-library` inside the worklet function —
+there shouldn't be any ambiguity. But consider another example.
+
+Say `my-library` is a library that provides a counter:
+
+```javascript title="my-library/index.js"
+let value = 0;
+
+export function incrementValue() {
+  value++;
+}
+
+export function getValue() {
+  return value;
+}
+```
+
+And then you use it like this:
+
+```javascript
+import { incrementValue, getValue } from 'my-library';
+
+incrementValue();
+
+function worklet() {
+  'worklet';
+  const value = getValue();
+  console.log(value);
+}
+
+scheduleOnUI(worklet); // does it log 0 or 1?
+```
+
+Different JavaScript Runtimes don't share any state, so the invocation of
+`incrementValue` on the RN Runtime didn't affect the `value` variable on the
+Worklet Runtime.
+
+So what's the intent behind the `getValue` invocation inside the worklet function here?
+Did the author want to print the state of the RN Runtime or the Worklet Runtime?
+Both interpretations are valid, but during static analysis of the code — which
+the Worklets Babel plugin does — it's impossible to tell which one is correct.
+
+## Disambiguating manually
+
+You can write the same code explicitly, without ambiguity.
+
+### Printing RN Runtime state
+
+```javascript
+import { incrementValue, getValue } from 'my-library';
+
+incrementValue();
+const value = getValue();
+
+function worklet() {
+  'worklet';
+  console.log(value);
+}
+
+scheduleOnUI(worklet); // logs 1
+```
+
+Here you explicitly assigned the result of `getValue` to a variable and passed
+that variable as a closure of the worklet function. It's clear that you wanted to print
+the state of the RN Runtime.
+
+### Printing Worklet Runtime state
+
+```javascript
+import { incrementValue } from 'my-library';
+
+incrementValue();
+
+function worklet() {
+  'worklet';
+  const { getValue } = require('my-library');
+  const value = getValue();
+  console.log(value);
+}
+
+scheduleOnUI(worklet); // logs 0
+```
+
+You used `require` to import `getValue` inside the worklet function. There's no doubt
+that you wanted to print the state of the Worklet Runtime.
+
+### The cost of explicit disambiguation
+
+Writing your code exactly as in the previous example requires you to
+re-specify all the imports in each worklet function, which adds a lot of boilerplate:
+
+```javascript
+function incrementOnce() {
+  'worklet';
+  const { getValue, incrementValue } = require('my-library');
+  incrementValue();
+  const value = getValue();
+  console.log(value);
+}
+
+function incrementTwice() {
+  'worklet';
+  const { getValue, incrementValue } = require('my-library');
+  incrementValue();
+  incrementValue();
+  const value = getValue();
+  console.log(value);
+}
+
+// etc...
+```
+
+## Using import forwarding
+
+Import forwarding lets you state which imports used inside worklet functions should be
+forwarded into the worklet body automatically, so you can drop that boilerplate.
+
+You can configure it via the
+[`importForwarding`](/docs/worklets-plugin/plugin-options#importforwarding)
+option of the Worklets Babel plugin.
+
+### Dropping boilerplate
+
+You can rewrite the code from the [Printing Worklet Runtime
+state](#printing-worklet-runtime-state) example without boilerplate. First,
+configure the Worklets Babel plugin:
+
+```javascript
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  // ...
+  importForwarding: { moduleNames: ['my-library'] },
+};
+```
+
+Then rewrite the code like this:
+
+```javascript
+import { incrementValue, getValue } from 'my-library';
+
+incrementValue();
+
+function worklet() {
+  'worklet';
+  const value = getValue();
+  console.log(value);
+}
+
+scheduleOnUI(worklet); // logs 0
+```
+
+This works because you explicitly stated all imports from `my-library` should
+be forwarded into worklet functions — the worklet function gets its own copy of `my-library`'s
+state.
+
+### Explicit closure capture
+
+What if you wanted to print the state of both the RN Runtime and the Worklet
+Runtime? The same closure pattern still works:
+
+```javascript
+import { incrementValue, getValue } from 'my-library';
+
+incrementValue();
+
+const value = getValue();
+
+function printRN() {
+  'worklet';
+  console.log(value);
+}
+
+function printWorklet() {
+  'worklet';
+  const value = getValue();
+  console.log(value);
+}
+
+scheduleOnUI(printRN); // logs 1
+scheduleOnUI(printWorklet); // logs 0
+```
+
+To learn more about closures, see [this section](/docs/concepts/closures)
+of the Worklets documentation.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/bundleMode/overview
+# Title: overview
+
+# Overview
+
+Bundle Mode is a feature that gives worklet functions access to your whole JavaScript bundle - meaning that any code that's present in the bundle can be executed in any worklet function and on any runtime. This means that third party libraries can be used in worklet functions without the need to patch them. It's also a performance improvement as worklet functions' code can benefit from all the optimizations that pre-compiled bytecode offers.
+
+**Bundle Mode will be the default way of using worklet functions in the future.**
+
+Instructions on how to enable it can be found [here](/docs/bundleMode/setup).
+
+## Legacy Eval Mode
+
+The former way of using worklet functions - where each worklet function is serialized as a string and evaluated individually on the Worklet Runtime - is referred to as **Legacy Eval Mode**. It's still the default mode of running worklet functions, but we strongly recommend opting out of it with the Bundle Mode.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/bundleMode/setup
+# Title: setup
+
+# Setup
+
+To use `react-native-worklets`'s Bundle Mode feature, you need to make the following changes in your repository:
+
+## Configure Worklets plugin
+
+1. **Modify your Babel configuration**. [Worklets plugin](/docs/worklets-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. This is also the source of truth for your app to know if the Bundle Mode is enabled. In your `babel.config.js` file, add the following:
+
+```javascript {2-5,13}
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  bundleMode: true,
+  strictGlobal: true, // optional, but recommended
+}
+
+module.exports = {
+  presets: [
+    ... // don't add it here :)
+  ],
+  plugins: [
+    ...
+    ['react-native-worklets/plugin', workletsPluginOptions],
+  ],
+};
+```
+
+```javascript {7}
+module.exports = {
+  presets: [
+    ... // don't add it here :)
+  ],
+  plugins: [
+    ...
+    'react-native-worklets/plugin-oxc/babel',
+  ],
+};
+```
+
+## Configure Metro
+
+2. **Modify your Metro configuration**. Metro needs to be configured pre-load Bundle Mode entry points into your JavaScript bundle. In your `metro.config.js` file, apply the config required for the bundle mode. For example:
+
+```javascript {3,10}
+// Learn more https://docs.expo.io/guides/customizing-metro
+const { getDefaultConfig, mergeConfig } = require("expo/metro-config");
+const { getBundleModeMetroConfig } = require("react-native-worklets/bundleMode");
+
+/** @type {import('expo/metro-config').MetroConfig} */
+let config = getDefaultConfig(__dirname);
+
+// Your modifications to the config
+
+config = getBundleModeMetroConfig(config);
+
+module.exports = config;
+```
+
+```javascript {6,12-16}
+const {
+  getDefaultConfig,
+  mergeConfig,
+} = require('@react-native/metro-config');
+
+const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
+
+const config = {
+  // Your Metro config
+};
+
+module.exports = mergeConfig(
+  getDefaultConfig(__dirname),
+  bundleModeMetroConfig,
+  config
+);
+```
+
+## Enable seamless Metro bundling
+
+*This step is optional but highly recommended.*
+
+If you run the app after just executing the above steps, you will see an error "Failed to get the SHA-1 for ...":
+
+This is due to fact that Bundle Mode isolates each worklet function in a separate module (file) on the fly and the Metro bundler doesn't index these isolated modules in time.
+
+To fix this issue you can do one of the following:
+
+1. Reload the app and Metro a couple of times until Metro picks up all the new modules. You will have to do it each time. Not recommended.
+2. Patch `metro` package for it to synchronously index new modules created by Bundle Mode. This is the recommended approach. **This patch does not require building React Native from source**. You can find patching instructions in the [Worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
+
+This patch is a temporary workaround until necessary changes are merged into Metro.
+
+## Enable fast refresh on Worklet Runtimes
+
+*This step is optional but highly recommended.*
+
+React Native's Fast Refresh (hot reload) feature doesn't apply to Worklet Runtimes out of the box. Therefore, when you change a worklet function's code you will see an error "\[Worklets] Unable to resolve worklet with hash ...".
+
+This is due to fact that the Fast Refresh update wasn't sent to the Worklet Runtime and it doesn't know that new worklet function with the given hash exists.
+
+To fix this issue you can do one of two thing:
+
+1. Reload the app on each worklet code change. This virtually defeats the purpose of Fast Refresh. Not recommended.
+2. Patch `metro-runtime` package for it to send Fast Refresh updates to Worklet Runtimes. This is the recommended approach. **This patch does not require building React Native from source** You can find patching instructions in the [Worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
+
+This patch is a temporary workaround until necessary changes are merged into Metro.
+
+## Final steps
+
+Make sure to clear your Metro bundler's cache to ensure that all the changes are applied correctly.
+
+```bash
+npm start -- --reset-cache
+```
+
+```bash
+yarn start --reset-cache
+```
+
+And that's it! You can now happily enjoy the Bundle Mode! You can learn more about using the Bundle Mode [here](/docs/bundleMode/usage).
+
+## Reference
+
+To see how the setup looks in a real project, you can check out the [Bundle Mode Showcase App](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app) repository.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/bundleMode/usage
+# Title: usage
+
+# Usage
+
+## Running third party libraries in Worklets
+
+Third party libraries have to be on an allow-list to use them in worklets. This is because libraries can come with side-effects that would break a Worklet Runtime. For instance, a library that imports something from React Native can't be used on a Worklet Runtime. This would load a second instance of React Native and break your app.
+
+To add a library to the allow-list you only need to set `importForwarding.moduleNames` in the Worklets Babel plugin options. It's an array of library names. For instance, if you want to use `my-library` on a Worklet Runtime.
+
+```javascript
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  bundleMode: true,
+  strictGlobal: true, // optional, but recommended
+  // highlight-next-line
+  importForwarding: { moduleNames: ['my-library'] },
+};
+```
+
+The `importForwarding` API is temporary and will be replaced with a more robust solution in the future.
+
+## Running network requests in Worklets
+
+In Bundle Mode, Worklet Runtimes come with a standalone networking module, no longer needing a feature flag. It's installed on every Worklet Runtime unless you opt out with [`enableNetworking: false`](/docs/threading/createWorkletRuntime#enablenetworking).
+
+```tsx
+const runtime = createWorkletRuntime({ name: 'worker' });
+
+scheduleOnRuntime(runtime, async () => {
+  'worklet';
+  const response = await fetch('https://swmansion.com');
+  console.log(response.status);
+});
+```
+
+| API | Supported |
+| --- | --- |
+| `fetch`, `Headers`, `Request`, `Response` | ✅ |
+| `XMLHttpRequest` | ✅ |
+| `Blob`, `FileReader` | ✅ |
+| `AbortController`, `AbortSignal` | ✅ | |
+| `FormData` | String fields only, encoded as `multipart/form-data`. |
+| Response streaming | ❌ |
+| `WebSocket` | coming soon |
+
+Requests are made by the platform's own networking stack, they share the app's cookie storage and its TLS configuration.
+
+## Reference
+
+To see how the setup looks in a real project, you can check out the [Bundle Mode Showcase App](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app) repository.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/concepts/closures
+# Title: closures
+
+# Understanding closures
+
+## What are closures in worklet functions?
+
+What makes [worklet functions](/docs/tutorials/concurrency-model#worklet-functions) special is their **ability to capture variables from their surrounding scope**, similar to regular JavaScript functions. This feature is known as *closures*.
+
+While a closure is [defined as both the function and its lexical environment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Closures), here we will refer to closures as just the captured variables from the surrounding [scope](https://developer.mozilla.org/en-US/docs/Glossary/Scope).
+
+```tsx
+const a = 1;
+const b = 2;
+const c = 3;
+
+function addAB() {
+  'worklet';
+  return a + b + c;
+  // You can access `a` and `b` and `c` here
+  // because they are captured from the surrounding scope.
+
+  // We will refer to `a`, `b`, and `c` as the closure of this worklet.
+}
+```
+
+However, there are some important differences in how closures work in worklet functions compared to regular JavaScript functions.
+
+## Closure behavior on the same JavaScript Runtime
+
+If you call a worklet function on the same runtime where it's defined (the [React Native Runtime](/docs/concepts/runtimeKinds#rn-runtime)), its closure gets copies of references to the original variables. This means that reassigning the original variable will not affect the value inside the worklet function.
+
+```tsx
+let count = 0;
+
+function logCount() {
+  'worklet';
+  console.log(count); // Always prints 0, even if `count` changes later.
+}
+
+count = 1;
+logCount(); // prints 0
+```
+
+This works both ways, so if you reassign inside a worklet function, it won't affect the original variable in the surrounding scope.
+
+```tsx
+let count = 0;
+
+function increment() {
+  'worklet';
+  count += 1; // This modifies the copy of `count`, not the original.
+}
+
+increment();
+console.log(count); // Still prints 0
+```
+
+The behavior is slightly different for object (non-primitive) references:
+
+* Reassigning the reference in the surrounding scope does not affect the worklet function's closure.
+
+  ```tsx
+  let obj = { value: 0 };
+
+  function logValue() {
+    'worklet';
+    console.log(obj.value);
+  }
+
+  obj = { value: 1 };
+  logValue(); // Prints 0
+  ```
+
+* Mutating the object inside the worklet function affects the object in the surrounding scope, since they reference the same object.
+
+  ```tsx
+  let obj = { value: 0 };
+
+  function mutate() {
+    'worklet';
+    obj.value += 1;
+  }
+
+  mutate();
+  console.log(obj.value); // Prints 1
+  ```
+
+* Mutating the object in the surrounding scope affects the object inside the worklet function, since they reference the same object.
+
+  ```tsx
+  let obj = { value: 0 };
+
+  function logValue() {
+    'worklet';
+    console.log(obj.value);
+  }
+
+  obj.value = 1;
+  logValue(); // Prints 1
+  ```
+
+## Closure behavior across different JavaScript Runtimes
+
+When a worklet function is executed in a different JavaScript runtime than the Runtime of its origin (a [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime)), the closure behavior is different again. **The closure in the worklet function becomes an exact copy of the variables from the surrounding scope at the moment of its invocation.** This is a necessity due to the fact that different runtimes cannot share references to the same objects, they cannot share memory directly.
+
+```tsx
+let obj = { value: 0 };
+
+function logValue() {
+  'worklet';
+  console.log(obj.value);
+}
+
+obj.value = 1;
+runOnUISync(logValue); // Prints 0
+```
+
+## Global scoping
+
+In the previous examples we used `console` inside worklet functions. Where does it come from?
+
+In JavaScript, when you use a variable (an [identifier](https://developer.mozilla.org/en-US/docs/Glossary/Identifier)) which isn't defined in the local [scope](https://developer.mozilla.org/en-US/docs/Glossary/Scope) (i.e. inside the function), the JavaScript engine looks for it in the outer scopes, eventually reaching the [global scope](https://developer.mozilla.org/en-US/docs/Glossary/Global_scope). The key point here is that each Worklet Runtime has its own, distinct global scope. This means that global variables are not shared between different runtimes.
+
+**The accessed `console` object inside a worklet function is different on each Runtime!** It's available on every runtime because each Worklet Runtime defines its own `console` object in its global scope.
+
+When you use a global variable inside a worklet function, and invoke it on a runtime - it will access the global scope of that runtime, not the global scope of the original JavaScript Runtime. If the variable doesn't exist in the target runtime's global scope, it will be `undefined`.
+
+```tsx
+global.someValue = 42;
+
+function logSomeValue() {
+  'worklet';
+  console.log(global.someValue);
+}
+
+logSomeValue(); // Prints 42
+// `global` on the UI Runtime doesn't have `someValue`.
+runOnUISync(logSomeValue); // Prints undefined
+```
+
+To have access to a (copy of a) global variable inside a worklet function on a different runtime, you must explicitly assign it to the `global` object on the original runtime. This can be done with a local reference in the closure:
+
+```tsx
+global.someValue = 42;
+// Assign to a local variable to capture it in the closure.
+const localSomeValue = global.someValue;
+
+function assignGlobal() {
+  'worklet';
+  // Assign to the worklet's global scope.
+  global.someValue = localSomeValue;
+}
+
+runOnUISync(assignGlobal);
+
+function logSomeValue() {
+  'worklet';
+  console.log(global.someValue);
+}
+
+runOnUISync(logSomeValue); // Prints 42
+```
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/concepts/runtimeKinds
+# Title: runtimeKinds
+
+# Runtime kinds
+
+The Worklets library differentiates between two types of runtimes - **React Native Runtime** and **Worklet Runtimes**. **Worklet Runtimes** are further divided into **UI Runtime** and **Worker Runtimes**.
+
+## RN Runtime
+
+React Native Runtime - a JavaScript Runtime spawned by React Native. It's the Runtime where React lives and your app's JavaScript code is executed. This Runtime is executed by the React Native's [JS Thread](https://reactnative.dev/architecture/threading-model). This is the only Runtime that has access to the React Native APIs and the app's state and components.
+
+You can learn more about it by reading the [JavaScript Runtime](https://reactnative.dev/docs/javascript-environment) article in the official React Native docs.
+
+There's only one React Native Runtime in your app.
+
+## Worklet Runtime
+
+A JavaScript Runtime spawned by the Worklets library. It's pre-configured to be able to execute worklet functions. It doesn't share any memory with the React Native Runtime or other Worklet Runtimes, but it can communicate with them using specific APIs. It isn't coupled to any thread, but there might be a thread dedicated to its execution.
+
+We differentiate between two kinds of Worklet Runtimes, **UI Runtime** and **Worker Runtimes**.
+
+Each Worklet Runtime has a unique `runtimeId` that can be used to refer to it when communicating between runtimes or creating [Shareables](/docs/memory/shareable) on a specific Worklet Runtime.
+
+### UI Runtime
+
+Special kind of a Worklet Runtime. Its primary function is to execute worklet functions which represent high-priority JavaScript tasks. The UI Runtime is mostly executed by the UI (main) thread. Examples of such tasks are:
+
+* **Synchronous handling of native events**.\
+  Responding to native events like touches on the UI thread allows to react to them on the same frame of the user interaction, without any perceivable delays.
+
+* **Animation calculations**.\
+  Running animations on a main thread, decoupled from heavy business logic on RN Runtime, ensures that they run without interruptions, maintaining stable frame rates.
+
+UI Runtime can be periodically acquired by other threads (other runtimes) to synchronize data.
+
+There's only one UI Runtime in your app.
+
+### Worker Runtime
+
+A Worklet Runtime spawned by [createWorkletRuntime](/docs/threading/createWorkletRuntime) API per user request. Worker Runtimes are designed to execute worklet functions in a separate thread. They allow for custom parallelization of JavaScript code execution, which can be useful for heavy computations or tasks that don't require immediate interaction with the user interface, like data processing or background tasks.
+
+You can customize its behavior and the thread it runs on.
+
+There can be multiple Worker Runtimes in your app running at the same time.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/concepts/sharing-memory
+# Title: Sharing memory
+
+# Sharing memory
+
+The Worklets library lets you run JavaScript on more than one thread. The moment you do that, you have to answer a question that
+single-threaded JavaScript has always let you ignore: **how do two pieces of code, running at the same time, look at the
+same data?**
+
+This page explains why that question has no cheap answer in JavaScript, and why the Worklets library exposes three distinct shared
+memory primitives — the [Serializable](/docs/memory/serializable), the [Synchronizable](/docs/memory/synchronizable),
+and the [Shareable](/docs/memory/shareable) — instead of one.
+
+## JavaScript is single-threaded on purpose
+
+JavaScript is designed around a single-threaded execution model. One call stack, one event loop, one piece of code
+running at a time, all neatly packed into **an abstraction called the JavaScript Virtual Machine — JSVM, which we'll call
+a "Runtime" from here on**. That choice is load-bearing: it means a function that reads and mutates a variable
+cannot be interrupted halfway through by another function doing the same thing. There are no data races, no torn reads,
+no half-written objects. You never need a mutex to increment a counter.
+
+The language leans on this guarantee everywhere. Closures capture variables by reference and expect those references to
+stay coherent. Objects are mutable, passed by reference, and shared freely across the program. None of this would be
+safe if two threads could touch the same heap at the same time — but in single-threaded JavaScript, it is safe by
+construction.
+
+## Parallelism and memory
+
+So what exactly happens when we add another thread into the equation? The naive approach: just tell two threads to do
+some work on the same Runtime. They might work for a short while, but very soon we'll hit an EXC\_BAD\_ACCESS exception —
+at some point one thread is bound to change some underlying reference that the other thread assumes is stable.
+
+The only thing we can do at this point is to give each thread its own Runtime. The crashes go away, everything runs in
+parallel, but we have a new problem: the two Runtimes are like two separate worlds.
+
+For example, you can't just "hand" a JavaScript object from one Runtime to another. A JavaScript object is a collection
+of pointers into one specific engine's heap. Its prototype chain, its hidden class, its property storage or even the
+garbage collector or the global object — all of it is engine-internal state that another Runtime has no way to
+interpret. Force-interpreting such a collection of pointers in another Runtime would be like trying to read a pointer from one
+process and dereference it in another process — it just doesn't work. At this point, probably the simplest way of
+communicating and sharing data between these Runtimes is to connect via a WebSocket — but again, that's very naive.
+
+How, then, do we share this data the right way — with the least overhead, in RAM, and preferably without unnecessary
+copies? It depends on the context and the kind of data we want to share.
+
+## Kinds of shared memory
+
+We can categorize shared memory into three types, based on how they are implemented and how they behave across Runtimes:
+
+### Copy-only memory — Serializable
+
+The simplest of them all: a way to move any value from Runtime A to Runtime B as-is — a number, an object, a string,
+essentially any value that can be expressed as data. However, changes to such a value on any Runtime aren't visible in
+the other Runtimes. Each Runtime is unaware that it has a copy and simply treats its value as the original. **This is
+the [Serializable](/docs/memory/serializable) primitive.**
+
+Each to-be-copied value is serialized into a byte stream and sent through C++ to the other Runtime, where it's
+reconstructed. This is straightforward for primitives like numbers and strings, but for objects it can be more
+complex — for example, how do you handle an object that contains a circular reference? Or a function? The implementation
+of the Serializable has to cover all these edge cases and at least produce a meaningful error when a value can't be
+serialized.
+
+![Serializable](/img/model-serializable.svg)
+
+High-level overview of the Serializable memory model — no Runtime holds ownership of the value, they just exchange
+copies of it.
+
+From the user's perspective, a Serializable is an opaque C++ value that the Worklets library knows how to pass around and turn into
+regular JavaScript values on the other side. In all cases, this is done implicitly by the library APIs, and you never
+need to create Serializables directly.
+
+### Unbound memory — Synchronizable
+
+The simpler type of memory that is actually shared — meaning that changes to it on Runtime A will be seen by Runtime B
+and all the other Runtimes — but not tied to any particular Runtime, *unbound*. This is achieved by keeping the actual
+"real" value outside of any Runtime, in C++, guarded by mutexes and other synchronization primitives. Each JavaScript
+Runtime holds just a specific kind of reference to the C++ value. Each read or write means crossing the boundary between
+JavaScript and C++. Because the memory is thread-safe, each Runtime can safely access it at its own discretion. **This
+is the [Synchronizable](/docs/memory/synchronizable) primitive.**
+
+![Synchronizable](/img/model-synchronizable.svg)
+
+High-level overview of the Synchronizable memory model — the value is kept outside of any Runtime, and each Runtime
+holds a reference to it.
+
+While it might seem like an ideal solution, the cost of keeping the value outside of a Runtime is significant. Each
+access to the Synchronizable means a round trip through C++ and conversions — because our Runtime can't just use the
+C++ type directly, the value has to be converted (to a Serializable) before it can be used in JavaScript. You're also
+severely limited in what you can do with the value — you can't store anything Runtime-specific in it, like a function or
+an object with a prototype chain, because it wouldn't make sense in another Runtime.
+
+### Bound memory — Shareable
+
+This more complex type of shared memory overcomes some issues of unbound memory, but at the cost of being *asymmetric and
+bound to a particular Runtime*.
+
+Operations on unbound memory are much more expensive than operations on plain JavaScript values, because each access has
+to cross the boundary between JavaScript and C++ via JSI. Runtime-bound memory optimizes access time on a single
+designated JavaScript Runtime, called the Host Runtime, by simply holding the value there as a plain JavaScript value.
+Other Runtimes, called Guest Runtimes, only have a specific kind of reference that "knows" that the actual value lives
+on another Runtime — if you want to access it with that reference, you must go to C++, lock the Host Runtime
+exclusively, read the actual value, and return it to the Guest Runtime that initiated the read. **This is the
+[Shareable](/docs/memory/shareable) primitive.**
+
+![Shareable](/img/model-shareable.svg)
+
+High-level overview of the Shareable memory model — the value is kept on the Host Runtime, and the Guest Runtimes hold
+a reference to it.
+
+**The Shareable should be the preferred way of handling non-trivial data sharing since it comes with the least overhead
+when used correctly**. However, it requires a more careful design of your data flow and access patterns, to avoid too many
+round trips between the Guest Runtimes and the Host Runtime.
+
+## Choosing between them
+
+Each of these primitives has its own use cases, and the right one to use depends on your specific needs. Here are some
+general guidelines:
+
+* **You are passing a value across Runtimes once, and the other side does not need to observe further changes.** For
+  example, you want to pass a configuration object between Runtimes.
+  * Use a Serializable. Copy, pass and forget.
+* **You need a value that multiple Runtimes read and write with similar frequency, and you need them to see each other's
+  updates.** For example, you want to keep your application state in a single place and have all Runtimes be able to
+  synchronize on it.
+  * Use a Synchronizable. Read and write only when you need to, maybe even add an event-emitting layer on top of it to
+    avoid polling.
+* **One Runtime dominates access to the value, and other Runtimes only reach in occasionally.** For example, you have an
+  animation engine that reads an animation state on every frame during a critical phase of the rendering pipeline, but
+  sometimes you want to change that state based on user input. Basically, you're writing Reanimated.
+  * Use a Shareable. Keep the value on the Host Runtime and let the Guest Runtimes read it when they need to, but limit
+    the amount of reads and writes of the Guest to avoid too many round trips. Cache the value on the Guest Runtimes if
+    you allow for eventual consistency.
+
+The rest of this section documents each primitive in detail, along with the APIs —
+[createSerializable](/docs/memory/createSerializable), [createSynchronizable](/docs/memory/createSynchronizable),
+[createShareable](/docs/memory/createShareable) — for producing them.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/getting-started/getting-started
+# Title: getting-started
+
+# Getting started
+
+## What is React Native Worklets?
+
+React Native Worklets is a library that allows you to run JavaScript code in parallel on multiple threads and runtimes.
+
+To learn more, explore our tutorials section, starting with the explanation for the [purpose](/docs/tutorials/concurrency-model) of the library.
+
+## Installation
+
+### Step 1: Install the package
+
+Install `react-native-worklets` package from npm:
+
+```bash
+npm install react-native-worklets
+```
+
+```bash
+yarn add react-native-worklets
+```
+
+### Step 2: Configure your project
+
+The remaining steps depend on how you build your app — pick your framework:
+
+Run prebuild to update the native code in the `ios` and `android` directories.
+
+```bash
+npx expo prebuild
+```
+
+```bash
+yarn expo prebuild
+```
+
+And that's it! The Worklets library is now configured in your Expo project.
+
+Don't I need the Worklets babel plugin?
+
+Since [Expo SDK 54](https://expo.dev/changelog/sdk-54-beta#notable-breaking-changes), the Expo starter template includes the Worklets babel plugin by default, so there's nothing to add. On older SDKs, add `react-native-worklets/plugin` to your `babel.config.js` as described in the React Native Community CLI tab.
+
+To learn more about the plugin go to [Worklets babel plugin](/docs/worklets-plugin/about) section.
+
+#### Clear Metro bundler cache (recommended)
+
+```bash
+npx expo start --clear
+```
+
+```bash
+yarn expo start --clear
+```
+
+When using [React Native Community CLI](https://github.com/react-native-community/cli), you need to manually add the `react-native-worklets/plugin` plugin to your `babel.config.js`.
+
+```js {7}
+module.exports = {
+  presets: [
+    ... // don't add it here :)
+  ],
+  plugins: [
+    ...
+    'react-native-worklets/plugin',
+  ],
+};
+```
+
+Worklets Babel plugin comes with several options, you can explore what they are and how to use them in the [Options for Worklets Babel Plugin](/docs/worklets-plugin/plugin-options) section.
+
+Why do I need this?
+
+In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklet functions](/docs/tutorials/concurrency-model#worklet-functions)) to allow them to be passed and run on the [Worklet Runtimes](/docs/concepts/runtimeKinds#worklet-runtime)
+
+To learn more about the plugin go to [Worklets babel plugin](/docs/worklets-plugin/about) section.
+
+#### iOS
+
+While developing for iOS, make sure to install [pods](https://cocoapods.org/) first before running the app:
+
+```bash
+cd ios && pod install && cd ..
+```
+
+#### Clear Metro bundler cache (recommended)
+
+```bash
+npm start -- --reset-cache
+```
+
+```bash
+yarn start --reset-cache
+```
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/guides/call-tables
+# Title: call-tables
+
+# Call tables
+
+Call tables are quick references that show **where a given scheduling function can be called from**, depending on whether [Bundle Mode](/docs/bundleMode) is enabled or not.
+
+### Why does Bundle Mode matter?
+
+In [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode), Worklet Runtimes only have a subset of functionalities of the RN Runtime, due to limitations of serialization of worklet functions. With Bundle Mode enabled, every runtime has access to the full JavaScript bundle, so most threading APIs become available on all runtimes.
+
+### How to read a call table
+
+Take [scheduleOnUI](/docs/threading/scheduleOnUI) as an example:
+
+A green check mark in the table means that the function can be called from that runtime, while a red cross means that calling the function from that runtime will throw an error. So in this case, `scheduleOnUI` can be called from any runtime when Bundle Mode is on, but only from the RN Runtime when Bundle Mode is off:
+
+```tsx {9-11,14-16,20-22}
+import {
+  scheduleOnUI,
+  scheduleOnRuntime,
+  createWorkletRuntime,
+} from 'react-native-worklets';
+
+const workerRuntime = createWorkletRuntime();
+
+// We are on RN Runtime -
+// this is always fine
+scheduleOnUI(/*...*/);
+
+scheduleOnUI(() => {
+  // We are on the UI Runtime -
+  // this is only fine with Bundle Mode enabled
+  scheduleOnUI(/*...*/);
+});
+
+scheduleOnRuntime(workerRuntime, () => {
+  // We are on the Worker Runtime -
+  // this is only fine with Bundle Mode enabled
+  scheduleOnUI(/*...*/);
+});
+```
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/guides/compatibility
+# Title: compatibility
+
+# Compatibility table
+
+> **Info**
+>
+> The Worklets library isn't tested on the Legacy Architecture (Paper). We highly recommend migrating to the New Architecture (Fabric) prior to using the Worklets library.
+
+**The table assumes you're using the latest patch of each minor version of the Worklets library.**
+For example, `0.7.x` shows support for React Native `0.84` because Worklets `0.7.4` added it, even though `0.7.0` didn't have it. If you're on an older patch, check the `compatibility.json` file in the Worklets package for exact version support.
+
+### Supported React Native versions
+
+The rule of thumb is that the Worklets library supports at least the last three minor versions of React Native.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/guides/feature-flags
+# Title: Feature flags
+
+# Feature flags
+
+Feature flags allow developers to opt-in for experimental changes or opt-out from recent changes that have already been made default. Feature flags serve as a tool for incremental rollout of new implementation without affecting the general stability of the library, allowing to gather feedback from early adopters. There are two types of feature flags: static and dynamic.
+
+## Summary of available feature flags
+
+| Feature flag name                                                          |              Type               | Added in | Removed in | Default value |
+| -------------------------------------------------------------------------- | :-----------------------------: | :------: | :--------: | :-----------: |
+| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled)         | [static](#static-feature-flags) |  0.6.0   |  –   |    `true`     |
+| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled)                         | [static](#static-feature-flags) |  0.8.0   |  0.13.0   |    `false`    |
+| [`ENABLE_CROSS_RUNTIME_STACK_TRACES`](#enable_cross_runtime_stack_traces) | [static](#static-feature-flags) |  0.9.0   |  –   |    `true`     |
+
+> **Info**
+>
+> Feature flags available in `react-native-reanimated` are listed [on this page](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags).
+
+## Description of available feature flags
+
+### `IOS_DYNAMIC_FRAMERATE_ENABLED`
+
+This feature flags is supposed to improve the visual perception and perceived smoothness of computationally expensive animations. When enabled, the frame rate will be automatically adjusted for current workload of the UI thread. For instance, if the device fails to run animations in 120 fps which would usually results in irregular frame drops, the mechanism will fallback to stable 60 fps. For more details, see [PR #7624](https://github.com/software-mansion/react-native-reanimated/pull/7624).
+
+### `FETCH_PREVIEW_ENABLED`
+
+**Removed in 0.13.0.** The [networking API on Worklet Runtimes](/docs/bundleMode/usage#running-network-requests-in-worklets) is enabled by default in [Bundle Mode](/docs/bundleMode/) and no longer requires a feature flag. To leave it out of a particular runtime, pass [`enableNetworking: false`](/docs/threading/createWorkletRuntime#enablenetworking) to `createWorkletRuntime`.
+
+### `ENABLE_CROSS_RUNTIME_STACK_TRACES`
+
+When enabled, the JavaScript call site that schedules a worklet function (via `scheduleOnUI`, `scheduleOnRuntime` and similar) is captured and attached to the worklet function. If the worklet function then throws on the worklet runtime, the resulting error stack is stitched together with the original scheduling stack so the LogBox entry points back to the line that scheduled it, rather than ending at the worklet runtime boundary. This makes errors thrown deep inside worklet functions much easier to trace back to their origin in your app code.
+
+This flag only takes effect in development builds (`__DEV__`). In release builds, capturing the scheduling stack is skipped regardless of the flag value to avoid the runtime overhead.
+
+**Capturing extra stack trace data can significantly hurt performance in code paths that perform many async/worklet scheduling calls. We recommend opting out of this flag in those situations.**
+
+Given the following snippet:
+
+```tsx
+import { scheduleOnUI } from 'react-native-worklets';
+
+function hardToDebug(callback: () => void) {
+  'worklet';
+  callback();
+}
+
+function functionThatThrows() {
+  'worklet';
+  throw new Error("I'm not!");
+}
+
+function functionThatDoesntThrow() {
+  'worklet';
+  console.log("I'm okay");
+}
+
+export default function App() {
+  // Which invocation throws?
+  scheduleOnUI(hardToDebug, functionThatDoesntThrow);
+  scheduleOnUI(hardToDebug, functionThatThrows);
+  scheduleOnUI(hardToDebug, functionThatDoesntThrow);
+  return null;
+}
+```
+
+The call stack reported in LogBox differs depending on whether the flag is enabled:
+
+**Enabled**
+
+![Cross-runtime stack trace with flag enabled](/img/cross-runtime-stack-trace-enabled.png)
+
+**Disabled**
+
+![Cross-runtime stack trace with flag disabled](/img/cross-runtime-stack-trace-disabled.png)
+
+The frames without the `[UI]:` prefix (`enqueueUI`, `scheduleOnUI`, `App`, ...) are the ones contributed by this feature. They come from the RN runtime call site that scheduled the worklet function. Without the flag, the stack stops at the worklet runtime boundary and only the `[UI]:` frames are visible.
+
+## Static feature flags
+
+Static flags are intended to be resolved during code compilation and cannot be changed during application runtime. To enable a static feature flag, you need to:
+
+1. Add the following lines to `package.json` of your app
+
+```json
+{
+  // ...
+  "worklets": {
+    "staticFeatureFlags": {
+      "EXAMPLE_STATIC_FLAG": true
+    }
+  }
+}
+```
+
+2. Run `pod install` (iOS only)
+3. Rebuild the native app
+
+> **Warning**
+>
+> Static feature flags are not supported in environments where the Worklets library is prebuilt with the default configuration of flags, like for instance in [Expo Go](https://expo.dev/go) and [RNRepo](https://rnrepo.org/).
+>
+> * It's not possible to modify static feature flags in Expo Go. Please consider using [Expo Prebuild](https://docs.expo.dev/workflow/continuous-native-generation/) instead.
+> * If your project uses RNRepo, you need to force building the Worklets library from source by adding it to the deny list as described in [RNRepo's documentation](https://github.com/software-mansion/rnrepo/blob/main/TROUBLESHOOTING.md#deny-list-configuration).
+
+To read a static feature flag value in JavaScript, you can use `getStaticFeatureFlag` function.
+
+## Dynamic feature flags
+
+Dynamic flags can be modified during runtime and their values can change at any moment of app lifetime. To enable or disable a dynamic feature flag, you need to call `setDynamicFeatureFlag` function.
+
+```tsx
+import { setDynamicFeatureFlag } from 'react-native-worklets';
+
+setDynamicFeatureFlag('EXAMPLE_DYNAMIC_FLAG', true);
+```
+
+To read a dynamic feature flag value in JavaScript, you can use `getDynamicFeatureFlag` function.
+
+## Comparison of static and dynamic feature flags
+
+|                                             | Static feature flags | Dynamic feature flags |
+| ------------------------------------------- | :------------------: | :-------------------: |
+| Value is known during app build             |          ✅          |          ❌           |
+| Value may change during app lifetime        |          ❌          |          ✅           |
+| Value change requires app rebuild           |          ✅          |          ❌           |
+| Can be changed via public JavaScript API    |          ❌          |          ✅           |
+| Can be changed via app's `package.json`     |          ✅          |          ❌           |
+| Can be changed when using Expo Go or RNRepo |          ❌          |          ✅           |
+
+## Remarks for contributors
+
+* Feature flags should switch the implementation to the new experimental behavior only when enabled.
+* Initially, the default value should be false, allowing users to opt-in for the experimental behavior when desired.
+* When the experimental behavior is considered stable, the default value should be set to true, while still allowing users to opt-out if needed.
+* After some period, the feature flag which is enabled by default should be removed from the codebase.
+* Both static and dynamic feature flags should follow upper snake case, i.e. `EXAMPLE_FEATURE_FLAG`.
+* The name of the feature flag should not contain the expression `FEATURE_FLAG` itself.
+* It is recommended to explicitly use `ENABLE_` or `DISABLE_` prefix for feature flags that enable or disable certain parts of the code for the sake of clarity.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/guides/running-on-the-ui-runtime
+# Title: running-on-the-ui-runtime
+
+# Running worklet functions on the UI runtime
+
+The Worklets library provides three functions for running a [worklet function](/docs/tutorials/concurrency-model#worklet-functions) on the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime) from the [RN Runtime](/docs/concepts/runtimeKinds#rn-runtime): [`scheduleOnUI`](/docs/threading/scheduleOnUI), [`runOnUIAsync`](/docs/threading/runOnUIAsync) and [`runOnUISync`](/docs/threading/runOnUISync).
+They differ in whether the worklet function runs asynchronously or synchronously, and in what they return to the caller.
+Use the table below to pick the one that fits your case.
+
+## Comparison
+
+|  | [`scheduleOnUI`](/docs/threading/scheduleOnUI) | [`runOnUIAsync`](/docs/threading/runOnUIAsync) | [`runOnUISync`](/docs/threading/runOnUISync) |
+| --- | --- | --- | --- |
+| **Execution** | Asynchronous | Asynchronous | Synchronous, blocks the caller until the worklet function returns |
+| **Returns** | Nothing | A `Promise` that resolves with the worklet function's return value | The worklet function's return value directly |
+| **Web support** | ✅ | ✅ | ❌ |
+| **Use when** | You want to run a worklet function on the UI Runtime and don't need its result back | You need the worklet function's result back, but don't want to block the calling thread | You need the worklet function's result immediately, within the same synchronous flow |
+
+The values returned by `runOnUIAsync` and `runOnUISync` have to be [serializable](/docs/memory/serializable).
+
+All three functions can be called from the [RN Runtime](/docs/concepts/runtimeKinds#rn-runtime), and additionally from the [UI](/docs/concepts/runtimeKinds#ui-runtime) and [Worker](/docs/concepts/runtimeKinds#worker-runtime) Runtimes when [Bundle Mode](/docs/bundleMode) is enabled.
+See [Call tables](/docs/guides/call-tables) for the full matrix.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/guides/testing-with-jest
+# Title: testing-with-jest
+
+# Testing with Jest
+
+React Native Worklets is primarily a native library, for that reason it requires a proper setup to be tested with Jest. This guide will show you how to set it up when testing in a React Native project.
+
+You have two options for this:
+
+1. **Enforce the use of mock implementation for React Native Worklets.**
+
+   React Native Worklets provides a complete mock implementation for Jest. This is the recommended approach for testing.
+
+2. **Enforce the use of Web implementation for React Native Worklets.**
+
+   React Native Worklets has a separate Web implementation to use in the browser. Use this approach when you want to avoid using artifical mocks.
+
+## Using the mock implementation
+
+Depending on whether you are using TypeScript or JavaScript, apply the following mock:
+
+```js
+jest.mock('react-native-worklets', () =>
+  require('react-native-worklets/src/mock')
+);
+```
+
+```js
+jest.mock('react-native-worklets', () =>
+  require('react-native-worklets/lib/module/mock')
+);
+```
+
+## Using the Web implementation
+
+Override Jest resolver to enforce resolving web implementation of React Native Worklets instead of pulling the native one. Modify your `jest.config.js` file to include the following code:
+
+```js
+module.exports = {
+  // ... other configurations
+  resolver: 'react-native-worklets/jest/resolver',
+};
+```
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/guides/troubleshooting
+# Title: Troubleshooting
+
+# Troubleshooting
+
+### Failed to create a worklet
+
+**Problem:** This usually happens when the Worklets library is not properly installed, e.g. forgetting to include the Worklets Babel plugin in `babel.config.js`.
+
+**Solution:** See [installation docs](/docs/#installation) for more information.
+
+### Native part of Worklets doesn't seem to be initialized
+
+**Problem:** This issue happens when the Worklets library fails to initialize its native side from JavaScript.
+
+**Solution:**
+
+1. If you recently installed or upgraded the Worklets library, make sure to rebuild your app.
+2. Check if your platform is supported by the Worklets library. Currently we support:
+   * Android
+   * iOS
+   * macOS
+   * tvOS
+   * visionOS
+   * Web
+3. If you are using the Worklets library in a brownfield app, make sure to initialize the native library manually.
+
+### Unknown version of Worklets babel plugin
+
+**Problem:** This happens when JavaScript side of the Worklets library fails to get Worklets Babel plugin version.
+
+**Solution:** Part of your code might be transpiled with an outdated version of Worklets Babel plugin. See [Mismatch between JavaScript code version and Worklets Babel plugin version](#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version).
+
+### Mismatch between JavaScript code version and Worklets Babel plugin version
+
+**Problem:** This can happen when you use code that was transpiled with an outdated version of Worklets Babel plugin.
+
+**Solution:** Try resetting your Metro bundler cache with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
+
+If this didn't help, you probably have a dependency that contains already transformed worklet functions bundled with an outdated version of the Worklets Babel plugin. You can find the offending code that was given alongside the error to find that dependency.
+
+### Couldn't determine the version of the native part of Worklets
+
+**Problem:** This happens when the Worklets library fails to determine the version of its native part.
+
+**Solution:** Check if you have rebuilt your app after upgrading `react-native-worklets`. If you use Expo Go, you must use the exact version which is bundled into Expo SDK.
+
+### Mismatch between JavaScript part and native part of Worklets
+
+**Problem:** This happens when the Worklets library has different versions of its JavaScript and native parts.
+
+**Solution:** Check if you have rebuilt your app after upgrading `react-native-worklets`. If you use Expo Go, you must use the exact version which is bundled into Expo SDK.
+
+### C++ side failed to resolve JavaScript code version
+
+See [Couldn't determine the version of the native part of Worklets](#couldnt-determine-the-version-of-the-native-part-of-worklets) and [Unknown version of Worklets Babel plugin](#unknown-version-of-worklets-babel-plugin).
+
+### Mismatch between C++ code version and JavaScript code version
+
+See [Mismatch between JavaScript part and native part of Worklets](#mismatch-between-javascript-part-and-native-part-of-worklets) and [Mismatch between JavaScript code version and Worklets Babel plugin version](#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version).
+
+### TypeError: right operand of 'in' is not an object
+
+**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for the Worklets library.
+
+**Solution:** See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445) for the current workaround (enable `inlineRequires` in `metro.config.js`).
+
+### Cannot read property 'createSerializableString' of undefined
+
+**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for the Worklets library.
+
+**Solution:** See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445) for the current workaround (enable `inlineRequires` in `metro.config.js`).
+
+## Warnings
+
+### Tried to modify key of an object which has been converted to a serializable.
+
+**Problem:** This warning is displayed to inform the user that a shared value should be used or an object used in a worklet function should be accessed more granularly.
+
+#### 1. Not using shared values.
+
+You might get this warning when you do something along the lines of:
+
+```js
+const obj = { prop: 1 };
+
+function worklet() {
+  'worklet';
+  console.log(obj.prop);
+}
+
+scheduleOnUI(worklet);
+obj.prop = 2; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
+scheduleOnUI(worklet);
+```
+
+and expect the results to be `1` and `2`. However, the results will be `1` and `1` because `obj` is not a shared value and is only copied to UI runtime once. Therefore, in development builds, we make the object immutable and add this warning after copying it to signal that it's not a valid use of Reanimated. To fix this, you should use a shared value instead:
+
+**Solution:**
+
+```diff
+-const obj = { prop: 1 };
++const sv = useSharedValue({ prop: 1 });
+
+ function worklet() {
+   'worklet';
+-  console.log(obj.prop);
++  console.log(sv.value.prop);
+ }
+
+ scheduleOnUI(worklet);
+-obj.prop = 2; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
++sv.value = { prop: 2 }; // Everything is fine here.
++// Keep in mind that you cannot modify the property directly with `sv.value.prop = 2` unless you use the `modify` method.
+ scheduleOnUI(worklet);
+```
+
+#### 2. Not accessing object properties granularly.
+
+When you access an object property in a worklet function, you might do something like this:
+
+```js
+const obj = { propAccessedInWorklet: 1, propNotAccessedInWorklet: 2 };
+
+function worklet() {
+  'worklet';
+  console.log(obj.propAccessedInWorklet);
+}
+
+scheduleOnUI(worklet);
+obj.propNotAccessedInWorklet = 3; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
+```
+
+The warning is displayed due to the mechanism explained in the previous case. Since we copy the whole object `obj` instead its accessed properties, it's immutable.
+
+**Solution:**
+
+Assign accessed properties to variables beforehand and use those in the worklet function:
+
+```diff
+ const obj = { propAccessedInWorklet: 1, propNotAccessedInWorklet: 2 };
+
++const propAccessedInWorklet = obj.propAccessedInWorklet;
++
+ function worklet() {
+   'worklet';
+-  console.log(obj.propAccessedInWorklet);
++  console.log(propAccessedInWorklet);
+ }
+
+ scheduleOnUI(worklet);
+-obj.propNotAccessedInWorklet = 3; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
++obj.propNotAccessedInWorklet = 3; // Everything is fine here.
+```
+
+## Threading issues
+
+### Tried to synchronously call a Remote Function
+
+**Problem:** This can happen when you try to call a function that is neither a worklet function nor a Host Function on a different Runtime than it was defined on.
+
+```typescript
+function callee() {
+  console.log('hello');
+}
+function caller() {
+  'worklet';
+  callee(); // <- this will throw in `scheduleOnUI`
+}
+scheduleOnUI(caller);
+```
+
+In this example, `callee` cannot be called from a worklet function ran on UI Runtime because there is no corresponding UI function for `callee`.
+
+**Solution:**
+
+1. If you want to synchronously execute this method, mark it as a worklet function using `worklet` directive:
+
+```diff
+ function callee() {
++  'worklet';
+   console.log("hello");
+ }
+```
+
+2. If you want to execute this function on the RN Runtime, wrap it using `scheduleOnRN`:
+
+```diff
+ function caller() {
+   'worklet';
+-  callee();
++  scheduleOnRN(callee);
+ }
+```
+
+Check [this page](/docs/tutorials/concurrency-model#worklet-functions) to learn more about worklet functions.
+
+### Tried to synchronously call a non-worklet function on the UI thread
+
+See [Tried to synchronously call a Remote Function](#tried-to-synchronously-call-a-remote-function).
+
+### Locally defined function passed to scheduleOnRN
+
+See [this page](/docs/threading/scheduleOnRN#what-functions-can-be-passed-to-scheduleonrn) to learn more about functions that can be passed to `scheduleOnRN`.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/memory/createSerializable
+# Title: createSerializable
+
+# createSerializable
+
+Recursively converts JavaScript values into [Serializable](/docs/memory/serializable) references that can be passed to different JavaScript Runtimes.
+
+The returned reference cannot be manipulated as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Serializable`.
+
+**Functions like `scheduleOnUI`, `runOnUISync`, `scheduleOnRuntime` etc. automatically convert values to Serializable references.**
+
+## Reference
+
+```typescript
+import { createSerializable, scheduleOnUI } from 'react-native-worklets';
+
+const object = {
+  a: 1,
+  b: 2,
+  c: 3,
+};
+
+const serializableRef = createSerializable(object);
+```
+
+Type definitions
+
+```typescript
+function createSerializable<TValue>(value: TValue): SerializableRef<TValue>;
+```
+
+## Arguments
+
+### value
+
+The JavaScript value to be converted into a Serializable reference. It must be one of the supported types listed below.
+
+> **Note**
+>
+> In development builds, the `value` argument is [frozen](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze) after serialization. This prevents misconceptions that changes to the original value would update the already created Serializable.
+>
+> ```typescript
+> import { createSerializable, scheduleOnUI } from 'react-native-worklets';
+>
+> const object = {
+>   a: 1,
+>   b: 2,
+>   c: 4,
+> };
+>
+> object.c = 3; // <-- Correct: you can modify the object before serializing it
+>
+> scheduleOnUI(() => {
+>   // `object` was implicitly serialized with `createSerializable` when passed to `scheduleOnUI`.
+>   console.log(object); // { a: 1, b: 2, c: 3 }
+> });
+>
+> object.a = 10; // <-- Warning: You can't mutate the object after serializing it
+> ```
+
+### Returns
+
+`SerializableRef` - a reference to the Serializable representation of the input value.
+
+## Remarks
+
+* This function automatically detects the type of the input value and applies appropriate serialization strategies.
+* For objects and arrays, it recursively processes nested properties.
+* This function is rarely used as in almost all cases the Worklets library handles the creation of Serializables for you.
+* This function includes cycle detection to prevent infinite recursion.
+* `jsi::NativeState` of a passed value is preserved during serialization.
+* In [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode), `createSerializable` can be called only on the [RN Runtime](/docs/concepts/runtimeKinds#rn-runtime). In Bundle Mode, it can be called from any Runtime. If you need to create a Serializable on a [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime) in Legacy Eval Mode, use deprecated [makeShareableCloneOnUIRecursive](/docs/memory/makeShareableCloneOnUIRecursive) instead.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/memory/createShareable
+# Title: createShareable
+
+# createShareable
+
+> **Note**
+>
+> This page describes the API to create the new [Shareable](/docs/memory/shareable) type, which is a different concept from the old deprecated one coming from `react-native-reanimated`, available with the [makeShareable](/docs/memory/makeShareable) function.
+
+Creates a new [Shareable](/docs/memory/shareable) holding the provided initial value. Returns the created Shareable.
+
+You have to explicitly declare which [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime) will host the Shareable by passing its **runtimeId**.
+
+## Reference
+
+```tsx
+import {
+  createShareable,
+  createWorkletRuntime,
+  UIRuntimeId,
+} from 'react-native-worklets';
+
+// Shareable hosted on the UI Runtime
+const uiShareable = createShareable(UIRuntimeId, 'hello');
+
+// Shareable hosted on a Worker Runtime
+const workerRuntime = createWorkletRuntime({ name: 'background' });
+const workerShareable = createShareable(workerRuntime.runtimeId, 'hello');
+```
+
+Type definitions
+
+```typescript
+function createShareable<
+  TValue = unknown,
+  THostDecorated = unknown,
+  TGuestDecorated = unknown,
+>(
+  hostRuntimeId: number,
+  initial: TValue,
+  config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
+): Shareable<TValue, THostDecorated, TGuestDecorated>;
+
+type ShareableConfig<TValue, THostDecorated, TGuestDecorated> = {
+  hostDecorator?: ShareableHostDecorator<TValue, THostDecorated>;
+  guestDecorator?: ShareableGuestDecorator<TValue, TGuestDecorated>;
+  initSynchronously?: boolean;
+};
+
+type ShareableHostDecorator<TValue = unknown, TDecorated = unknown> = (
+  shareable: ShareableHost<TValue> & TDecorated
+) => ShareableHost<TValue> & TDecorated;
+
+type ShareableGuestDecorator<TValue = unknown, TDecorated = unknown> = (
+  shareable: ShareableGuest<TValue> & TDecorated
+) => ShareableGuest<TValue> & TDecorated;
+
+```
+
+## Arguments
+
+### hostRuntimeId
+
+The **runtimeId** of the [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime) that will host the Shareable. To host on the UI Runtime, use the exported constant [UIRuntimeId](/docs/threading/uiRuntimeId). To host on a Worker Runtime created with [createWorkletRuntime](/docs/threading/createWorkletRuntime), pass its `runtimeId` property.
+
+Hosting on runtimes other than the UI Runtime is available since version 0.9.0.
+
+### initial
+
+The initial value of the Shareable. It must be a value that is convertible to a [Serializable](/docs/memory/serializable).
+
+### config
+
+Optional advanced configuration for the Shareable.
+
+#### hostDecorator
+
+A [worklet function](/docs/tutorials/concurrency-model#worklet-functions) that takes the created [Shareable Host](/docs/memory/shareable#shareable-host) and decorates it with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
+
+#### guestDecorator
+
+A [worklet function](/docs/tutorials/concurrency-model#worklet-functions) that decorates each [Shareable Guest](/docs/memory/shareable#shareable-guest) created for the Shareable with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
+
+#### initSynchronously
+
+By default, the Shareable is initialized asynchronously, which means that the [Shareable Host](/docs/memory/shareable#shareable-host) is created at the time of its first access on the Host Runtime. Setting this flag to `true` forces the Shareable to be initialized synchronously during the call to `createShareable`. It's an escape hatch for situations where your Shareable Host triggers side effects during its initialization.
+
+## Decorator examples
+
+You can add additional properties on the Shareable Host and Shareable Guests:
+
+```tsx
+import {
+  createShareable,
+  scheduleOnUI,
+  UIRuntimeId,
+} from 'react-native-worklets';
+
+type MyShareableHost = {
+  myHostValue: number;
+};
+
+const shareable = createShareable<number, MyShareableHost>(UIRuntimeId, 42, {
+  hostDecorator: (shareable) => {
+    'worklet';
+    shareable.myHostValue = shareable.value + 1;
+    return shareable; // make sure to return the same reference after decorating
+  },
+});
+
+console.log(shareable.myHostValue); // undefined - this is a Shareable Guest
+
+scheduleOnUI(() => {
+  'worklet';
+  console.log(shareable.myHostValue); // 43 - this is a Shareable Host
+});
+```
+
+You can add additional methods:
+
+```tsx
+import {
+  createShareable,
+  scheduleOnUI,
+  UIRuntimeId,
+} from 'react-native-worklets';
+
+type MyShareableGuest = {
+  getAndIncrement(): number;
+};
+
+const shareable = createShareable<number, object, MyShareableGuest>(
+  UIRuntimeId,
+  42,
+  {
+    guestDecorator: (shareable) => {
+      'worklet';
+      shareable.getAndIncrement = () => {
+        const currentValue = shareable.getSync();
+        shareable.setSync(currentValue + 1);
+        return currentValue;
+      };
+      return shareable; // make sure to return the same reference after decorating
+    },
+  }
+);
+
+console.log(shareable.getAndIncrement()); // 42 - this is a Shareable Guest
+
+scheduleOnUI(() => {
+  'worklet';
+  console.log(shareable.value); // 43 - value got incremented
+
+  // error - this is a Shareable Host, it doesn't have getAndIncrement method
+  console.log(shareable.getAndIncrement());
+});
+```
+
+You can also override existing methods and properties:
+
+```tsx
+import { createShareable, UIRuntimeId } from 'react-native-worklets';
+
+type MyShareableGuest = {
+  value: number;
+};
+
+const shareable = createShareable<number, object, MyShareableGuest>(
+  UIRuntimeId,
+  42,
+  {
+    guestDecorator: (shareable) => {
+      'worklet';
+      Object.defineProperty(shareable, 'value', {
+        get: () => shareable.getSync(),
+        set: (newValue) => shareable.setSync(newValue),
+        enumerable: true,
+        configurable: true,
+      });
+      return shareable; // make sure to return the same reference after decorating
+    },
+  }
+);
+
+// Now you can use `shareable.value` on both Host and Guest Runtimes to
+// provide an opaque API layer over the Shareable.
+console.log(shareable.value); // 42
+```
+
+*Fun fact: this technique is used to implement Reanimated's [Shared Values](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue) API on top of Shareables.*
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/memory/createSynchronizable
+# Title: createSynchronizable
+
+# createSynchronizable
+
+Creates a new [Synchronizable](/docs/memory/synchronizable) holding the provided initial value. Returns the created Synchronizable.
+
+By default it creates a [Synchronizable Dynamic](/docs/memory/synchronizable#synchronizable-dynamic).
+
+You can pass a config option to create [Synchronizable Fixed](/docs/memory/synchronizable#synchronizable-fixed) instead.
+
+## Reference
+
+```tsx
+import { createSynchronizable } from 'react-native-worklets';
+
+const synchronizable = createSynchronizable({ a: 42 });
+const counter = createSynchronizable(0, { fixedType: true });
+```
+
+Type definitions
+
+```typescript
+function createSynchronizable<TValue extends number | boolean>(
+  initialValue: TValue,
+  config: SynchronizableConfig & { fixedType: true }
+): FixedSynchronizable<TValue extends boolean ? boolean : number>;
+
+function createSynchronizable<TValue>(
+  initialValue: TValue,
+  config?: SynchronizableConfig
+): Synchronizable<TValue>;
+
+type SynchronizableConfig = {
+  fixedType?: boolean;
+};
+```
+
+## Arguments
+
+### initialValue
+
+The initial value to be held by the created Synchronizable. As it has to be serialized before passing to C++, it must be one of the supported types listed in the [Serializable](/docs/memory/serializable) documentation.
+
+With the [`fixedType` option](#config) it isn't serialized and must be a `number` or a `boolean`.
+
+### config
+
+Optional configuration for the Synchronizable. An object with the following properties:
+
+* `fixedType` - when `true`, the created [Synchronizable Fixed](/docs/memory/synchronizable#synchronizable-fixed) stores its `number` or `boolean` value directly in native memory, without serialization, and exposes the additional [`setDirty`](/docs/memory/synchronizable#setdirty) method. Defaults to `false`.
+
+## Remarks
+
+* In [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode), `createSynchronizable` can be called only on the [RN Runtime](/docs/concepts/runtimeKinds#rn-runtime). In Bundle Mode, it can be called on any Runtime.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/memory/isSerializableRef
+# Title: isSerializableRef
+
+# isSerializableRef
+
+Asserts whether a value is a [Serializable](/docs/memory/serializable) reference.
+
+## Reference
+
+```typescript
+import { isSerializableRef } from 'react-native-worklets';
+const maybeSerializableRef = ...; // type: unknown
+
+console.log(isSerializableRef(maybeSerializableRef)); // logs `true` if `maybeSerializableRef` is a SerializableRef.
+```
+
+Type definitions
+
+```typescript
+function isSerializableRef(value: unknown): value is SerializableRef;
+```
+
+## Arguments
+
+### value
+
+The value to be checked.
+
+## Remarks
+
+* `isSerializableRef` can be called from any JavaScript Runtime.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/memory/isSynchronizable
+# Title: isSynchronizable
+
+# isSynchronizable
+
+Asserts whether a value is a [Synchronizable](/docs/memory/synchronizable).
+
+You can pass a generic type argument to specify the expected value type held by the Synchronizable.
+
+## Reference
+
+```typescript
+import { isSynchronizable } from 'react-native-worklets';
+const maybeSynchronizable = ...; // type: unknown
+
+console.log(isSynchronizable(maybeSynchronizable)); // logs `true` if `maybeSynchronizable` is a Synchronizable.
+
+if (isSynchronizable<number>(maybeSynchronizable)) {
+  // Here, TypeScript knows that `maybeSynchronizable` is of type `Synchronizable<number>`
+  maybeSynchronizable.setBlocking(42);
+}
+```
+
+Type definitions
+
+```typescript
+function isSynchronizable<TValue = unknown>(
+  value: unknown
+): value is Synchronizable<TValue>;
+```
+
+## Arguments
+
+### value
+
+The value to be checked.
+
+## Remarks
+
+* `isSynchronizable` can be called from any JavaScript Runtime.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/memory/makeShareable
+# Title: makeShareable
+
+# makeShareable
+
+`makeShareable` lets you create a `Shareable` object from a given value on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model).
+Any modifications made to this shared object on the UI thread will be automatically visible to all worklet functions on the UI thread.
+
+## Reference
+
+```javascript
+import { makeShareable, executeOnUIRuntimeSync } from 'react-native-worklets';
+
+const shareable = makeShareable({
+  count: 0,
+});
+
+executeOnUIRuntimeSync(() => {
+  console.log(shareable.count); // 0
+})();
+
+executeOnUIRuntimeSync(() => {
+  shareable.count = 1;
+})();
+
+executeOnUIRuntimeSync(() => {
+  console.log(shareable.count); // 1
+})();
+```
+
+Type definitions
+
+```typescript
+function makeShareable<T extends object>(value: T): T;
+```
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/memory/makeShareableCloneOnUIRecursive
+# Title: makeShareableCloneOnUIRecursive
+
+# makeShareableCloneOnUIRecursive
+
+`makeShareableCloneOnUIRecursive` recursively converts JavaScript values into shareable references that can be used on different Runtimes than UI Runtime.
+The reference cannot be manipulated, as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Shareable`.
+To prevent misconceptions about it we freeze the original value for object-like values and for arrays.
+
+**Functions like `runOnUI`, `runOnRuntime`, `runOnJS`, `executeOnUIRuntimeSync` and `runOnUIAsync` automatically convert values to `Shareable` references.**
+
+## Usage
+
+```tsx
+import {
+  makeShareableCloneOnUIRecursive,
+  makeShareableCloneRecursive,
+} from 'react-native-worklets';
+
+// The function `() => { console.log('Hello world!'); }` is converted into a Shareable reference,
+// that can be passed to native C++ code via custom function `global.customWorkletScheduler()`.
+const shareable = makeShareableCloneRecursive(() => {
+  // The string `"Hello world!"` is converted into a Shareable reference,
+  // that can be passed from native C++ code to the JS runtime.
+  return makeShareableCloneOnUIRecursive('Hello world!');
+});
+
+const result = global.customWorkletScheduler(shareable);
+
+console.log(result); // "Hello world!"
+```
+
+Type definitions
+
+```typescript
+export type ShareableRef<T = unknown> = {
+  __hostObjectShareableJSRef: T;
+};
+
+// In case of objects with depth or arrays of objects or arrays of arrays etc.
+// we add this utility type that makes it a `SharaebleRef` of the outermost type.
+export type FlatShareableRef<T> =
+  T extends ShareableRef<infer U> ? ShareableRef<U> : ShareableRef<T>;
+
+function makeShareableCloneOnUIRecursive<T>(value: T): FlatShareableRef<T>;
+```
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/memory/makeShareableCloneRecursive
+# Title: makeShareableCloneRecursive
+
+# makeShareableCloneRecursive
+
+`makeShareableCloneRecursive` recursively converts JavaScript values into shareable references that can be used on different Runtimes than RN Runtime.
+The reference cannot be manipulated, as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Shareable`.
+To prevent misconceptions about it we freeze the original value for object-like values and for arrays.
+
+**Functions like `runOnUI`, `runOnRuntime`, `runOnJS`, `executeOnUIRuntimeSync` and `runOnUIAsync` automatically convert values to `Shareable` references.**
+
+## Usage
+
+```tsx
+import { makeShareableCloneRecursive } from 'react-native-worklets';
+
+// The function `() => { console.log('Hello world!'); }` is converted into a Shareable reference,
+// that can be passed to native C++ code via custom function `global.customWorkletScheduler()`.
+const shareable = makeShareableCloneRecursive(() => {
+  console.log('Hello world!');
+});
+
+// The shareable reference allows the function to be executed on different runtimes,
+// while maintaining its original behavior.
+global.customWorkletScheduler(shareable);
+```
+
+Type definitions
+
+```typescript
+type ShareableRef<T = unknown> = {
+  __hostObjectShareableJSRef: T;
+};
+
+function makeShareableCloneRecursive<T>(value: T): ShareableRef<T> {
+  return value as ShareableRef<T>;
+}
+```
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/memory/registerCustomSerializable
+# Title: registerCustomSerializable
+
+# registerCustomSerializable
+
+`registerCustomSerializable` lets you register your own pre-serialization and post-deserialization logic. This is necessary for objects with prototypes different than just `Object.prototype` or some other built-in prototypes like `Map` etc. The Worklets library can't handle such objects by default to convert into [Serializables](/docs/memory/serializable) hence you need to register them as **Custom Serializables**. This way you can tell the Worklets library how to transfer your custom data structures between different Runtimes without manually serializing and deserializing them every time.
+
+List of supported types for Serialization can be found [here](/docs/memory/serializable#supported-types).
+
+## Reference
+
+```typescript
+const obj = { a: 42 };
+Object.setPrototypeOf(obj, console); // because why not
+
+type ConsoleLike = typeof console;
+
+registerCustomSerializable({
+  name: 'ConsoleLike',
+  determine(value: object): value is ConsoleLike {
+    'worklet';
+    return Object.getPrototypeOf(value) === console;
+  },
+  pack(value: ConsoleLike) {
+    'worklet';
+    return { a: value.a }; // transfer data
+  },
+  unpack(value: object) {
+    'worklet';
+    // recreate object with prototype
+    return Object.create(console, value);
+  },
+});
+```
+
+Type definitions
+
+```typescript
+function registerCustomSerializable<
+  TValue extends object,
+  TPacked extends object,
+>(registrationData: RegistrationData<TValue, TPacked>): void;
+
+type RegistrationData<TValue extends object, TPacked = unknown> = {
+  name: string;
+  determine: (value: object) => value is TValue;
+  pack: (value: TValue) => TPacked;
+  unpack: (value: TPacked) => TValue;
+};
+```
+
+## Arguments
+
+### registrationData
+
+An object containing the registration data for the Custom Serializable.
+
+Available properties:
+
+| Name      | Type                                 | Description                                                                                                                                                                                                                                                                                              |
+| --------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| name      | `string`                             | A unique name for the Custom Serializable. It's used to prevent duplicate registrations of the same Custom Serializable. You will get warned if you attempt to register a Custom Serializable with a name that has already been used.                                                                    |
+| determine | `(value: object) => value is TValue` | A [worklet function](/docs/tutorials/concurrency-model#worklet-functions) that checks whether a given JavaScript value is of the type handled by this Custom Serializable.                                                                                                                                                        |
+| pack      | `(value: TValue) => TPacked`         | A [worklet function](/docs/tutorials/concurrency-model#worklet-functions) that packs the JavaScript value of type `TValue` into a value that can be serialized by default as [Serializable](/docs/memory/serializable). The function must return a [supported type for Serialization](/docs/memory/serializable#supported-types). |
+| unpack    | `(value: TPacked) => TValue`         | A [worklet function](/docs/tutorials/concurrency-model#worklet-functions) that unpacks the packed value, after it's been deserialized from it's packed form, back into the JavaScript value of type `TValue`.                                                                                                                     |
+
+## Motivation
+
+Custom prototypes are bound to a single Runtime and don't exist in other Runtimes. Due to that it's impossible to transfer them between runtimes directly. This is why a pre-serialization (packing) and pre-deserialization (unpacking) logic is required.
+
+Consider the following examples:
+
+```typescript
+const obj = {};
+
+// because why not
+Object.setPrototypeOf(obj, console);
+
+scheduleOnUI(() => {
+  // This will throw because `obj`
+  // had a custom prototype and
+  // it couldn't be serialized.
+  obj.log('Hello!');
+});
+```
+
+```mermaid
+flowchart TD
+    A[obj] -->|automatic serialization| B[no known serialization method, serialized as a dummy value]
+    B -->|scheduleOnUI| C[transferred to UI Runtime]
+    C -->|automatic deserialization| D[deserialized from a dummy value]
+    D -->|"obj.log('Hello!')"| E["<b>Error: serialization failed</b>"]
+    style E fill:#ff000022,stroke:#990000
+```
+
+```typescript
+const obj = {};
+
+// because why not
+Object.setPrototypeOf(obj, console);
+
+type ConsoleLike = typeof console;
+
+registerCustomSerializable({
+  name: 'ConsoleLike',
+  determine(value: object): value is ConsoleLike {
+    'worklet';
+    return Object.getPrototypeOf(value) === console;
+  },
+  pack(value: ConsoleLike) {
+    'worklet';
+    // We don't need to transfer any data,
+    // so we can pack it to an empty object.
+    return {};
+  },
+  unpack(value: object) {
+    'worklet';
+    // We can recreate the original object.
+    return Object.create(console);
+  },
+});
+
+scheduleOnUI(() => {
+  obj.log('Hello!'); // prints 'Hello!'
+});
+```
+
+```mermaid
+flowchart TD
+  A[obj] -->|automatic serialization| B[identified as a Custom Serializable '<i>ConsoleLike</i>']
+  subgraph S1 [ ]
+    B -->|pack| C[packed with Custom Serializable's pack method]
+  end
+  C -->|actual serialization| D[serialized packed object as a default supported type]
+    D -->|scheduleOnUI| E[transferred to Runtime B]
+    E -->|automatic deserialization| F[deserialized to the packed object]
+    F -->|unpack| G
+  subgraph S2 [ ]
+    G[unpacked with Custom Serializable's unpack method]
+  end
+    G -->|"obj.log('Hello!')"| H["<b>'Hello!'</b> printed to console"]
+    style H fill:#00ff0022,stroke:#009900
+```
+
+## Remarks
+
+* To use Custom Serializables which require `new` keyword for instantiation, you need to [disable Worklet Classes](/docs/worklets-plugin/plugin-options#disableworkletclasses) option in Worklets Babel plugin configuration.
+* Custom Serializables are global and shared between all [Worklet Runtimes](/docs/concepts/runtimeKinds#worklet-runtime). Once you register a Custom Serializable, it will be available in all Runtimes.
+* You can use `registerCustomSerializable` only on the [RN Runtime](/docs/concepts/runtimeKinds#rn-runtime).
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/memory/serializable
+# Title: serializable
+
+# Serializable
+
+Serializable is a type of shared memory that holds an immutable value that can be serialized and deserialized across different JavaScript Runtimes. It allows passing JavaScript values between Runtimes while ensuring that the data is correctly transferred and reconstructed. The reference cannot be manipulated, as it doesn't represent any standard JavaScript object.
+
+**You can't pass JavaScript values to other Runtimes without prior serialization.**
+
+![Serializable](/img/serializable.svg)
+
+Serializable memory model
+
+Type definitions
+
+```typescript
+type SerializableRef<TValue = unknown> = {
+  __serializableRef: true;
+  __nativeStateSerializableJSRef: TValue;
+};
+```
+
+## Supported types
+
+If you want to transfer objects with custom prototypes across Runtimes, you can use [registerCustomSerializable](/docs/memory/registerCustomSerializable) to define your own serialization and deserialization logic.
+
+## Remarks
+
+* The JavaScript value of a Serializable is a reference wrapper that only holds the C++ side in its `jsi::NativeState`.
+* The prop `__nativeStateSerializableJSRef` present on the reference doesn't exist in runtime - it's only a TypeScript definition to tell you what type of value is held by the Serializable.
+* Functions that aren't worklet functions are serialized as references to function instances on the respective Runtime, meaning that they can't be invoked on other runtimes, only passed around.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/memory/shareable
+# Title: Shareable
+
+# Shareable
+
+A Shareable is a type of shared memory tied to a specific JavaScript Runtime, called the **Host Runtime**, where it can be freely accessed and modified. Other Runtimes, called **Guest Runtimes**, only have access to a reference to the Shareable. They can read and modify the Shareable, but doing so means crossing the boundary between the JavaScript Runtimes.
+
+A Shareable can hold any value that is convertible to a [Serializable](/docs/memory/serializable).
+
+A Shareable on the **Host Runtime** is called a **Shareable Host**, while on the **Guest Runtimes** it's called a **Shareable Guest**.
+
+A Shareable is useful in scenarios where it's mostly read and updated on the Host Runtime and only occasionally accessed from the Guest Runtimes.
+
+![Shareable](/img/shareable.svg)
+
+Shareable memory model, illustrated with a guest RN Runtime, host UI Runtime, and guest Background Runtime.
+
+Type definitions
+
+```typescript
+type ShareableHostProps<TValue = unknown> = {
+  value: TValue;
+};
+
+type ShareableHostMeta = {
+  isHost: true;
+  __shareableRef: true;
+};
+
+type ShareableHostDecorator<TValue = unknown, TDecorated = unknown> = (
+  shareable: ShareableHost<TValue> & TDecorated
+) => ShareableHost<TValue> & TDecorated;
+
+type ShareableGuestMeta = {
+  isHost: false;
+  __shareableRef: true;
+};
+
+type ShareableGuestProps<TValue = unknown> = {
+  getAsync(): Promise<TValue>;
+  getSync(): TValue;
+  setAsync(value: TValue | ((prev: TValue) => TValue)): void;
+  setSync(value: TValue | ((prev: TValue) => TValue)): void;
+};
+
+type ShareableGuestDecorator<TValue = unknown, TDecorated = unknown> = (
+  shareable: ShareableGuest<TValue> & TDecorated
+) => ShareableGuest<TValue> & TDecorated;
+
+type ShareableHost<
+  TValue = unknown,
+  THostDecorated = unknown,
+> = ShareableHostMeta &
+  ShareableHostProps<TValue> &
+  (THostDecorated extends object ? THostDecorated : object);
+
+type ShareableGuest<
+  TValue = unknown,
+  TGuestDecorated = unknown,
+> = ShareableGuestMeta &
+  ShareableGuestProps<TValue> &
+  (TGuestDecorated extends object ? TGuestDecorated : object);
+
+type Shareable<
+  TValue = unknown,
+  THostDecorated = unknown,
+  TGuestDecorated = unknown,
+> =
+  | (ShareableHost<TValue, THostDecorated> &
+      Partial<
+        ShareableGuestProps<TValue> &
+          (TGuestDecorated extends object ? Partial<TGuestDecorated> : object)
+      >)
+  | (ShareableGuest<TValue, TGuestDecorated> &
+      Partial<
+        ShareableHostProps<TValue> &
+          (THostDecorated extends object ? Partial<THostDecorated> : object)
+      >);
+```
+
+## Reference
+
+```tsx
+import { createShareable, UIRuntimeId } from 'react-native-worklets';
+
+const shareable = createShareable(UIRuntimeId, 42);
+
+console.log(shareable.getSync()); // 42
+```
+
+## Shareable Host
+
+**Shareable Host** is the interface of the Shareable on the **Host Runtime** where the Shareable lives. Besides properties and methods obtained from the [host decorator](/docs/memory/createShareable#hostdecorator), it has the following interface:
+
+### value
+
+A property holding the current value of the Shareable.
+
+### isHost
+
+A boolean property indicating whether the Shareable is being accessed from the Host Runtime. Equal to `true`.
+
+## Shareable Guest
+
+**Shareable Guest** is the interface of the Shareable on the **Guest Runtimes**. Besides properties and methods obtained from the [guest decorator](/docs/memory/createShareable#guestdecorator), it has the following interface:
+
+### isHost
+
+A boolean property indicating whether the Shareable is being accessed from the Host Runtime. Equal to `false`.
+
+### getAsync
+
+An asynchronous method that returns a Promise that resolves to the current value of the Shareable Host. The value is obtained by scheduling a callback on the Host Runtime, which reads the `value` of the Shareable Host and serializes it as the result of the callback.
+
+### getSync
+
+A synchronous method that preempts the Host Runtime on the current thread, reads the `value` of the Shareable Host, serializes the result, and returns it synchronously.
+
+### setAsync
+
+An asynchronous method that schedules a callback on the Host Runtime. The callback modifies the `value` of the Shareable Host. You can either pass a value to `setAsync` or a setter worklet function.
+
+### setSync
+
+A synchronous method that preempts the Host Runtime on the current thread and modifies the `value` of the Shareable Host. You can either pass a value to `setSync` or a setter worklet function.
+
+## Type safety
+
+Due to the inherent complexity of the Shareable API, you can run into situations where you're not certain whether you're operating on a Shareable Host or a Shareable Guest. For these situations, we employed a strongly typed TypeScript interface, where every property is optional until narrowed by the `isHost` property:
+
+```tsx
+import { createShareable, UIRuntimeId } from 'react-native-worklets';
+
+const shareable = createShareable(UIRuntimeId, 42);
+
+// Type error - setSync is optional and only available on Shareable Guest.
+shareable.setSync(42);
+
+if (shareable.isHost === false) {
+  // No type error - we're sure this is a Shareable Guest.
+  shareable.setSync(42);
+}
+```
+
+If you're certain about the runtime context of your Shareable, you can also use non-null assertions to avoid redundant runtime type checks:
+
+```tsx
+import { createShareable, UIRuntimeId } from 'react-native-worklets';
+
+const shareable = createShareable(UIRuntimeId, 42);
+
+// No type error - we're certain of the context.
+shareable.setSync!(42);
+```
+
+## Remarks
+
+* A Shareable doesn't extend the lifetime of the Host Runtime. If the Host Runtime is destroyed, the Shareable becomes unusable and accessing it from the Guest Runtimes will throw an error.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/memory/synchronizable
+# Title: Synchronizable
+
+# Synchronizable
+
+Synchronizable is a type of shared memory not tied to any JavaScript Runtime. It can be accessed from any JavaScript Runtime and C++. The value held by Synchronizable behaves like a standard JavaScript value.
+
+You can use Synchronizable on multiple Runtimes to poll some shared state information without expensive synchronous messaging between Runtimes.
+
+Synchronizable can be accessed both non-exclusively or exclusively - meaning that a thread (Runtime) could obtain it and all other threads (Runtimes) trying to access it will have to wait until it's released.
+
+![Synchronizable](/img/synchronizable.svg)
+
+Synchronizable memory model
+
+## Synchronizable subtypes
+
+Currently there are two subtypes of Synchronizable, which behave slightly different and can store different kind of data.
+
+### Synchronizable Dynamic
+
+General subtype of Synchronizable. It can hold any JavaScript type that is convertible to a [Serializable](/docs/memory/serializable) and you can change that type at your discretion, i.e. hold an instance of Set at one point in time, then a String in the other.
+
+This comes with a drawback, that every read and write has to pass serialization-deserialization layer when crossing the C++ - JavaScript boundary.
+
+### Synchronizable Fixed
+
+Special subtype of Synchronizable that can only hold a fixed type, and only one of the two - either a JavaScript `number` or `boolean`, which are fixed size primitives. The type stored cannot be changed at runtime.
+
+Primitive JavaScript values are trivially serialized and deserialized, therefore **Synchronizable Fixed comes with no overhead, compared to the Dynamic**. For storing boolean flags or simple number state, we highly recommend [using the Fixed type](/docs/memory/createSynchronizable#config).
+
+Type definitions
+
+```typescript
+type Synchronizable<TValue = unknown> = {
+  getDirty(): TValue;
+  getBlocking(): TValue;
+  setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
+  lock(): void;
+  unlock(): void;
+};
+
+type FixedSynchronizable<TValue extends number | boolean = number | boolean> =
+  Synchronizable<TValue> & {
+    setDirty(value: TValue): void;
+  };
+```
+
+## Reference
+
+```tsx
+import { createSynchronizable, scheduleOnUI } from 'react-native-worklets';
+
+// RN Runtime, JS thread
+
+const synchronizable = createSynchronizable({ a: 42 });
+
+scheduleOnUI(() => {
+  // UI Runtime, UI thread
+  const value = synchronizable.getBlocking();
+  console.log(value); // {a: 24}
+});
+
+// Could execute either before or after the UI Runtime reads the value.
+synchronizable.setBlocking({ a: 24 });
+```
+
+![Synchronizable flow](/img/synchronizable-flow.svg)
+
+Possible flow of operations for the above example, assuming that `getBlocking`
+function executes first. Time axis is not to scale.
+
+## Methods
+
+Synchronizable has the following methods to access and modify its value:
+
+### getBlocking
+
+Exclusively obtains the Synchronizable and returns its value, potentially blocking if `getBlocking` or `setBlocking` are being executed on another thread or if the Synchronizable is explicitly locked by another thread.
+
+### getDirty
+
+Non-exclusively obtains the Synchronizable and returns its value. It never blocks, even if the Synchronizable is explicitly locked, therefore could result in a [dirty read](https://en.wikipedia.org/wiki/Write%E2%80%93read_conflict). Useful for scenarios where eventual consistency is acceptable.
+
+### setBlocking
+
+Exclusively obtains the Synchronizable and sets it to the provided value, potentially blocking if either `getBlocking` or `setBlocking` are being executed on another thread or if the Synchronizable is explicitly locked by another thread. You can also pass a setter function that receives the previous value and returns the new value. Synchronizable is **locked for the duration of the setter function execution**.
+
+```tsx
+// Set the value to 42
+synchronizable.setBlocking(42);
+// Increment the value by 1
+synchronizable.setBlocking((prev) => prev + 1);
+```
+
+For non-fixed-type Synchronizables, the value provided to `setBlocking` is serialized automatically. Fixed-type Synchronizables take the plain value without serialization.
+
+### setDirty
+
+Available only on [Synchronizable Fixed](#synchronizable-fixed). Non-exclusively obtains the Synchronizable and sets it to the provided value, potentially blocking if `getBlocking` or `setBlocking` are being executed on another thread or if the Synchronizable is explicitly locked by another thread. It doesn't block when `setDirty` is being executed on another thread, therefore could result in a [lost update](https://en.wikipedia.org/wiki/Write%E2%80%93write_conflict). Accepts a plain value only, not a setter function.
+
+### lock
+
+Exclusively locks the Synchronizable - other threads are blocked when calling `getBlocking`, `setBlocking`, `setDirty` or `lock` until the Synchronizable is unlocked. Multiple calls on the same thread do nothing.
+
+### unlock
+
+Unlocks the Synchronizable. Does nothing on already unlocked Synchronizable. Works only when called from the same thread which locked the Synchronizable. Forgetting to unlock a Synchronizable could lead to deadlocks.
+
+## C++ integration
+
+Synchronizable can be created and accessed from C++ code. The C++ API doesn't support setter functions.
+
+## Remarks
+
+* Synchronizable is not reactive, meaning that there are no built-in mechanisms to notify Runtimes when its value changes. Runtimes need to poll the value to detect changes.
+* Synchronizable on a JavaScript Runtime is a wrapper to a reference to the actual Synchronizable living in C++. The value held by Synchronizable is copied to/from C++ on each access.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/threading/callMicrotasks
+# Title: callMicrotasks
+
+# callMicrotasks
+
+`callMicrotasks` flushes the microtask queue from the UI thread.
+
+## Reference
+
+```javascript
+import { callMicrotasks } from 'react-native-worklets';
+
+callMicrotasks();
+```
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/threading/createWorkletRuntime
+# Title: createWorkletRuntime
+
+# createWorkletRuntime
+
+`createWorkletRuntime` lets you create a new JS runtime which can be used to run [worklet functions](/docs/tutorials/concurrency-model#worklet-functions) possibly on different threads than [JS](/docs/tutorials/concurrency-model#the-react-native-model) or [UI thread](/docs/tutorials/concurrency-model#the-react-native-model). Use this function if you need to integrate with Worklet Runtimes in C++.
+
+The return value represents the runtime. You can pass it to the C++ side using JSI (JavaScript Interface) for further operations.
+
+## Reference
+
+### Usage in JavaScript
+
+```jsx
+import { createWorkletRuntime } from 'react-native-worklets';
+
+function App() {
+  const runtime = createWorkletRuntime({
+    name: 'background',
+    initializer: () => {
+      'worklet';
+      console.log('Runtime initialized!');
+    },
+  });
+}
+```
+
+### Usage in C++
+
+```cpp
+auto runtime = reanimated::extractWorkletRuntime(rt, runtimeValue);
+
+jsi::Runtime &rt = runtime->getJSIRuntime();
+
+auto worklet = reanimated::extractShareableOrThrow<reanimated::ShareableWorklet>(rt, workletValue);
+
+runtime->runGuarded(worklet, ...args);
+```
+
+Type definitions
+
+```typescript
+type WorkletRuntime = {
+  __hostObjectWorkletRuntime: never;
+  readonly name: string;
+  readonly runtimeId: number;
+};
+
+type WorkletRuntimeConfig = {
+  name?: string;
+  initializer?: () => void;
+  animationQueuePollingRate?: number;
+  enableNetworking?: boolean;
+  queue?: 'default' | object | null;
+} & (
+  | { enableEventLoop?: boolean; enableLocking?: true }
+  | { enableEventLoop?: false; enableLocking: false }
+);
+
+function createWorkletRuntime(
+  config?: WorkletRuntimeConfig
+): WorkletRuntime;
+```
+
+### Arguments
+
+#### `config`
+
+Runtime configuration object.
+
+##### `name`
+
+A name of the runtime used in debugging. Defaults to `'anonymous'`.
+
+##### `initializer`
+
+An optional worklet function that will be run synchronously on the same thread immediately after the runtime is created. It can be used to inject some global variables or functions into the runtime.
+
+##### `animationQueuePollingRate`
+
+Time interval in milliseconds between polling of frame callbacks scheduled by `requestAnimationFrame`. Defaults to `16`.
+
+##### `enableEventLoop`
+
+Determines whether to enable the default event loop. Defaults to `true`. Always disabled on runtimes with `enableLocking: false`.
+When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`, `clearImmediate`, and `cancelAnimationFrame`.
+
+##### `enableNetworking`
+
+Determines whether the [networking API](/docs/bundleMode/usage#running-network-requests-in-worklets) - `fetch`, `XMLHttpRequest` and their supporting globals - is installed on the Runtime. Defaults to `true`.
+
+##### `enableLocking`
+
+Determines whether access to the underlying JS runtime is synchronized with a mutex around every JSI operation. If not specified, it defaults to `true`.
+Can be disabled only together with the Event Loop.
+
+Runtime without locking doesn't receive HMR updates and new Custom Serializable registrations.
+
+Disable only when you can guarantee thread safety of all access to the runtime.
+
+##### `queue`
+
+Controls the queue used for scheduling worklet functions on this runtime. Defaults to `'default'`.
+
+* `'default'`: use the built-in queue implementation.
+* An object implementing the C++ `AsyncQueue` interface from `<worklets/RunLoop/AsyncQueue.h>`: use the provided custom queue.
+* `null`: do not attach any queue to the Runtime. Keep in mind that this will effectively disable all asynchronous features like Promises, `setTimeout` etc. Use it if you're going to implement the event-loop for the Runtime yourself.
+
+### Returns
+
+`createWorkletRuntime` returns `WorkletRuntime` which is a `jsi::HostObject<reanimated::WorkletRuntime>`.
+
+## Remarks
+
+* Worklet runtimes come with `performance.now` and `console.*` methods installed out-of-the-box. Other APIs are not available and need to be injected into the runtime or captured via worklet closure.
+
+* In development mode, all unhandled errors thrown in the runtime (except for those thrown in `initializer`) will be caught and thus logged to the console and displayed in a LogBox.
+
+## Platform compatibility
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/threading/executeOnUIRuntimeSync
+# Title: executeOnUIRuntimeSync
+
+# executeOnUIRuntimeSync
+
+`executeOnUIRuntimeSync` lets you run a [workletized](/docs/worklets-plugin/about#autoworkletization) function synchronously on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model).
+
+## Reference
+
+```jsx
+import { executeOnUIRuntimeSync } from 'react-native-worklets';
+
+// RN Runtime, JS thread
+
+const result: number = executeOnUIRuntimeSync((): number => {
+  return 1;
+})();
+
+console.log(result); // 1
+```
+
+Type definitions
+
+```typescript
+function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
+  worklet: (...args: Args) => ReturnValue
+): (...args: Args) => ReturnValue;
+```
+
+### Arguments
+
+#### worklet
+
+A reference to a function you want to execute on the UI Runtime on the current thread. Arguments to your function have to be passed to the function returned from `executeOnUIRuntimeSync` i.e. `executeOnUIRuntimeSync(setValue)(10);`.
+
+### Returns
+
+`executeOnUIRuntimeSync` returns the return value of the worklet function.
+
+> **Info**
+>
+> Don't forget to call the function returned from `executeOnUIRuntimeSync`.
+
+## Remarks
+
+* It's a common mistake to execute function inside of `executeOnUIRuntimeSync` like this: ~~`executeOnUIRuntimeSync(myWorklet(10))()`~~. Here, the correct usage would be `executeOnUIRuntimeSync(myWorklet)(10)`.
+
+* The callback passed as the argument is automatically [workletized](/docs/worklets-plugin/about#autoworkletization) and ready to be run on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model).
+
+* Make sure not to execute `executeOnUIRuntimeSync` on the UI thread as this will result in an error.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/threading/runOnJS
+# Title: runOnJS
+
+# runOnJS
+
+`runOnJS` lets you asynchronously run non-[workletized](/docs/worklets-plugin/about#autoworkletization) functions that couldn't otherwise run on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model). This applies to most external libraries as they don't have their functions marked with `"worklet";` directive.
+
+`runOnJS` is usually used to update React state either on animation finish or conditionally within a gesture.
+
+## Reference
+
+```javascript
+import { runOnJS } from 'react-native-worklets';
+
+function App() {
+  // While on the UI thread
+  runOnJS(navigation.goBack)();
+}
+```
+
+Type definitions
+
+```typescript
+function runOnJS<A extends any[], R>(
+  fn: (...args: A) => R
+): (...args: Parameters<typeof fn>) => void;
+```
+
+### Arguments
+
+#### fn
+
+A reference to a function you want to execute on the [JavaScript thread](/docs/tutorials/concurrency-model#the-react-native-model) from the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model). Arguments to your function have to be passed to the function returned from `runOnJS` i.e. `runOnJS(setValue)(10);`.
+
+### Returns
+
+`runOnJS` returns a function that accepts arguments for the function passed as the first argument. This function can be safely executed on the UI thread.
+
+> **Info**
+>
+> Don't forget to call the function returned from `runOnJS`.
+
+## Example
+
+## Remarks
+
+* Functions passed to `runOnJS` must be defined in the [JavaScript thread](/docs/tutorials/concurrency-model#the-react-native-model) scope, i.e. in the component body or the global scope. The code below won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model):
+
+```jsx
+withTiming(0, {}, () => {
+  // myFunction is defined on the UI thread 🚨
+  const myFunction = () => {
+    // ...
+  };
+  runOnJS(myFunction)(); // 💥
+});
+```
+
+* It's a common mistake to execute function inside of runOnJS like this: ~~`runOnJS(setValue(10))()`~~. Here, the correct usage would be `runOnJS(setValue)(10)`.
+
+* It's safe to run functions via `runOnJS` on the [JavaScript thread](/docs/tutorials/concurrency-model#the-react-native-model), as this has no effect.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/threading/runOnRuntime
+# Title: runOnRuntime
+
+# runOnRuntime
+
+`runOnRuntime` lets you asynchronously run [workletized](/docs/worklets-plugin/about#autoworkletization) functions on a separate worklet runtime on a separate thread.
+
+## Reference
+
+```javascript
+import { createWorkletRuntime, runOnRuntime } from 'react-native-worklets';
+
+const workletRuntime = createWorkletRuntime('background');
+
+function App() {
+  // E.g. in event handler or in an effect
+  // highlight-next-line
+  runOnRuntime(workletRuntime, (greeting) => {
+    console.log(`${greeting} from a separate thread`);
+    // highlight-next-line
+  })('Howdy');
+
+  // ...
+}
+```
+
+Type definitions
+
+```typescript
+function runOnRuntime<A extends any[], R>(
+  workletRuntime: WorkletRuntime,
+  fn: (...args: A) => R
+): (...args: Parameters<typeof fn>) => void;
+```
+
+### Arguments
+
+#### workletRuntime
+
+A reference to worklet runtime created with [`createWorkletRuntime`](/docs/threading/createWorkletRuntime).
+
+#### fn
+
+A reference to a function you want to execute on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model) from the [JavaScript thread](/docs/tutorials/concurrency-model#the-react-native-model). Arguments to your function have to be passed to the function returned from `runOnUI` i.e. `runOnUI(myWorklet)(10);`.
+
+### Returns
+
+`runOnRuntime` returns a function that accepts arguments for the function passed as the first argument.
+
+> **Info**
+>
+> Don't forget to call the function returned from `runOnRuntime`.
+
+## Remarks
+
+* It's a common mistake to execute function inside of `runOnRuntime` like this: ~~`runOnRuntime(myWorklet(10))()`~~. Here, the correct usage would be `runOnRuntime(myWorklet)(10)`.
+
+* The callback passed as the argument will not be [workletized](/docs/worklets-plugin/about#autoworkletization) automatically. You need to add `'worklet';` directive manually to allow the function to be run on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model).
+
+* You may call `runOnRuntime` on any runtime, including the RN runtime, UI runtime and other worklet runtimes.
+
+* The function passed to `runOnRuntime` will be added to an execution queue on a separate thread and executed asynchronously on the specified worklet runtime. The functions will be executed in the order they were added to the queue.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/threading/runOnRuntimeAsync
+# Title: runOnRuntimeAsync
+
+# runOnRuntimeAsync
+
+`runOnRuntimeAsync` lets you asynchronously run [worklet functions](/docs/tutorials/concurrency-model#worklet-functions) on a [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime).
+It returns a Promise of the worklet function's return value. The Promise is resolved asynchronously, not immediately after the callback execution.
+
+## Reference
+
+```javascript
+import { runOnRuntimeAsync, createWorkletRuntime } from 'react-native-worklets';
+
+const backgroundRuntime = createWorkletRuntime({ name: 'background' });
+
+async function performHeavyComputation(data: number[]) {
+  try {
+    const result = await runOnRuntimeAsync(backgroundRuntime, (numbers: number[]) => {
+      'worklet';
+      // Heavy computation on background thread
+      return numbers.reduce((sum, n) => sum + n, 0);
+    }, data);
+
+    console.log('Computation result:', result);
+  } catch (error) {
+    console.error('Computation failed:', error);
+  }
+}
+```
+
+Type definitions
+
+```typescript
+function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): Promise<ReturnValue>;
+```
+
+## Arguments
+
+### workletRuntime
+
+The worklet runtime to run the worklet function on. Created with [`createWorkletRuntime`](/docs/threading/createWorkletRuntime).
+
+### worklet
+
+A reference to a function you want to execute on the [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime). Arguments to your function have to be passed after the worklet function i.e. `runOnRuntimeAsync(workletRuntime, setValue, 10);`.
+
+### args
+
+Arguments to the function you want to execute on the [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime).
+
+## Remarks
+
+* It's a common mistake to execute function inside of `runOnRuntimeAsync` like this: ~~`runOnRuntimeAsync(workletRuntime, myWorklet(10))`~~. Here, the correct usage would be `runOnRuntimeAsync(workletRuntime, myWorklet, 10)`.
+
+* The callback passed as the argument is automatically [workletized](/docs/worklets-plugin/about#autoworkletization) and ready to be run on the [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime).
+
+* Errors thrown in the worklet function will cause the Promise to reject with that error.
+
+## Call table
+
+## Platform compatibility
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/threading/runOnRuntimeAsyncWithId
+# Title: runOnRuntimeAsyncWithId
+
+# runOnRuntimeAsyncWithId
+
+`runOnRuntimeAsyncWithId` is a variant of [runOnRuntimeAsync](/docs/threading/runOnRuntimeAsync) where you use the runtime's id instead of the runtime object. It's useful when you don't have access to the runtime object, but you know its id.
+
+## Reference
+
+```javascript
+import {
+  runOnRuntimeAsyncWithId,
+  createWorkletRuntime,
+} from 'react-native-worklets';
+
+const backgroundRuntime = createWorkletRuntime({ name: 'background' });
+
+async function performHeavyComputation(data: number[]) {
+  const result = await runOnRuntimeAsyncWithId(
+    backgroundRuntime.runtimeId,
+    (numbers: number[]) => {
+      'worklet';
+      return numbers.reduce((sum, n) => sum + n, 0);
+    },
+    data
+  );
+
+  console.log('Computation result:', result);
+}
+```
+
+Type definitions
+
+```typescript
+function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): Promise<ReturnValue>;
+```
+
+## Arguments
+
+### runtimeId
+
+The id of the [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime) to run the worklet function on. You can get the id from the runtime object by accessing its `runtimeId` property.
+
+### worklet
+
+A reference to a function you want to execute on the [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime).
+
+### args
+
+Arguments to the function you want to execute on the [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime).
+
+## Remarks
+
+* `runOnRuntimeAsyncWithId` can target the UI Runtime by passing [UIRuntimeId](/docs/threading/uiRuntimeId) as the runtime id.
+
+* Errors thrown in the worklet function will cause the Promise to reject with that error.
+
+## Call table
+
+## Platform compatibility
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/threading/runOnRuntimeSync
+# Title: runOnRuntimeSync
+
+# runOnRuntimeSync
+
+`runOnRuntimeSync` lets you run a [workletized](/docs/worklets-plugin/about#autoworkletization) function synchronously on a [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime). It's blocking - meaning that it can preempt the runtime from a thread that's currently executing it.
+
+## Reference
+
+```javascript
+import { runOnRuntimeSync, createWorkletRuntime } from 'react-native-worklets';
+
+const workletRuntime = createWorkletRuntime({ name: 'background' });
+
+const result = runOnRuntimeSync(workletRuntime, () => {
+  'worklet';
+  return 2 + 2;
+}); // This will block the RN Runtime until the worklet is finished
+
+console.log(result); // 4
+```
+
+Type definitions
+
+```typescript
+function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue;
+```
+
+## Arguments
+
+### workletRuntime
+
+The worklet runtime to run the worklet function on.
+
+### worklet
+
+A reference to a function you want to execute on the [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime).
+
+### args
+
+Arguments to the function you want to execute on the [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime).
+
+## Call table
+
+## Platform compatibility
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/threading/runOnRuntimeSyncWithId
+# Title: runOnRuntimeSyncWithId
+
+# runOnRuntimeSyncWithId
+
+`runOnRuntimeSyncWithId` is a variant of [runOnRuntimeSync](/docs/threading/runOnRuntimeSync) where you use the runtime's id instead of the runtime object. It's useful when you don't have access to the runtime object, but you know its id.
+
+## Reference
+
+```javascript
+import { runOnRuntimeSyncWithId, createWorkletRuntime } from 'react-native-worklets';
+
+const workletRuntime = createWorkletRuntime({ name: 'background' });
+
+const result = runOnRuntimeSyncWithId(workletRuntime.runtimeId, () => {
+  'worklet';
+  return 2 + 2;
+}); // This will block the RN Runtime until the worklet is finished
+
+console.log(result); // 4
+```
+
+Type definitions
+
+```typescript
+function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue;
+```
+
+## Arguments
+
+### runtimeId
+
+The id of the [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime) to run the worklet function on. You can get the id from the runtime object by accessing its `runtimeId` property.
+
+### worklet
+
+A reference to a function you want to execute on the [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime).
+
+### args
+
+Arguments to the function you want to execute on the [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime).
+
+## Remarks
+
+* `runOnRuntimeSyncWithId` can target the UI Runtime by passing [UIRuntimeId](/docs/threading/uiRuntimeId) as the runtime id.
+
+## Call table
+
+## Platform compatibility
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/threading/runOnUI
+# Title: runOnUI
+
+# runOnUI
+
+`runOnUI` lets you asynchronously run [workletized](/docs/worklets-plugin/about#autoworkletization) functions on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model).
+
+Most commonly used either with an `useEffect` to start an animation on component mount/unmount or with [`measure`](https://docs.swmansion.com/react-native-reanimated/docs/advanced/measure) and [`scrollTo`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/scrollTo) functions which have implementations only on the UI thread.
+
+## Reference
+
+```javascript
+import { runOnUI } from 'react-native-worklets';
+
+function App() {
+  // E.g. in event handler or in an effect
+  // highlight-next-line
+  runOnUI((greeting) => {
+    console.log(`${greeting} from the UI thread`);
+    // highlight-next-line
+  })('Howdy');
+
+  // ...
+}
+```
+
+Type definitions
+
+```typescript
+function runOnUI<A extends any[], R>(
+  fn: (...args: A) => R
+): (...args: Parameters<typeof fn>) => void;
+```
+
+### Arguments
+
+#### fn
+
+A reference to a function you want to execute on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model) from the [JavaScript thread](/docs/tutorials/concurrency-model#the-react-native-model). Arguments to your function have to be passed to the function returned from `runOnUI` i.e. `runOnUI(myWorklet)(10);`.
+
+### Returns
+
+`runOnUI` returns a function that accepts arguments for the function passed as the first argument.
+
+> **Info**
+>
+> Don't forget to call the function returned from `runOnUI`.
+
+## Example
+
+## Remarks
+
+* When implementing your animations you should first reach for more general solutions such as [`useDerivedValue`](https://docs.swmansion.com/react-native-reanimated/docs/core/useDerivedValue), [`useAnimatedReaction`](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useAnimatedReaction) or running code in gesture callbacks and only use `runOnUI` after you've tried other methods.
+
+* It's a common mistake to execute function inside of runOnUI like this: ~~`runOnUI(myWorklet(10))()`~~. Here, the correct usage would be `runOnUI(myWorklet)(10)`.
+
+* The callback passed as the argument is automatically [workletized](/docs/worklets-plugin/about#autoworkletization) and ready to be run on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model).
+
+* Make sure not to execute `runOnUI` on the UI thread as this will result in an error.
+
+* In browsers there's no separate UI thread available. Because of that, on the Web, `runOnUI` behaves similarly to `requestAnimationFrame`. It creates a function that, when called, will be scheduled to run with given arguments on next animation frame.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/threading/runOnUIAsync
+# Title: runOnUIAsync
+
+# runOnUIAsync
+
+`runOnUIAsync` lets you asynchronously run [workletized](/docs/worklets-plugin/about#autoworkletization) functions on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model).
+It returns a Promise of the worklet function's return value. The Promise is resolved asynchronously, not immediately after the callback execution.
+
+To compare it with [`scheduleOnUI`](/docs/threading/scheduleOnUI) and [`runOnUISync`](/docs/threading/runOnUISync), see [Running worklet functions on the UI runtime](/docs/guides/running-on-the-ui-runtime).
+
+## Reference
+
+```javascript
+import { runOnUIAsync } from 'react-native-worklets';
+
+// RN Runtime, JS thread
+
+const result: Promise<number> = runOnUIAsync((): number => {
+  return 1;
+});
+
+await result; // 1
+```
+
+Type definitions
+
+```typescript
+function runOnUIAsync<Args extends unknown[], ReturnValue>(
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): Promise<ReturnValue>;
+```
+
+### Arguments
+
+#### worklet
+
+A reference to a function you want to execute on the UI thread. Arguments to your function have to be passed to the function returned from `runOnUIAsync` i.e. `runOnUIAsync(setValue, 10);`.
+
+## Remarks
+
+* It's a common mistake to execute function inside of `runOnUIAsync` like this: ~~`runOnUIAsync(myWorklet(10))`~~. Here, the correct usage would be `runOnUIAsync(myWorklet, 10)`.
+
+* The callback passed as the argument is automatically [workletized](/docs/worklets-plugin/about#autoworkletization) and ready to be run on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model).
+
+## Call table
+
+## Platform compatibility
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/threading/runOnUISync
+# Title: runOnUISync
+
+# runOnUISync
+
+`runOnUISync` lets you run a [workletized](/docs/worklets-plugin/about#autoworkletization) function synchronously on the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime).
+
+To compare it with [`scheduleOnUI`](/docs/threading/scheduleOnUI) and [`runOnUIAsync`](/docs/threading/runOnUIAsync), see [Running worklet functions on the UI runtime](/docs/guides/running-on-the-ui-runtime).
+
+## Reference
+
+```javascript
+import { runOnUISync } from 'react-native-worklets';
+
+const myFunction = (num: number): number => {
+  'worklet';
+  return num + 1;
+};
+
+const result: number = runOnUISync(myFunction, 0);
+
+console.log(result); // 1
+```
+
+Type definitions
+
+```typescript
+function runOnUISync<Args extends unknown[], ReturnValue>(
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue;
+```
+
+### Arguments
+
+#### worklet
+
+A function you want to execute on the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime).
+
+#### args
+
+Arguments to pass to the function.
+
+### Returns
+
+`runOnUISync` returns the return value of the function passed as the first argument. It can only return values that can be converted to a [Serializable](/docs/memory/serializable).
+
+## Remarks
+
+* The callback passed as the argument is automatically [workletized](/docs/worklets-plugin/about#autoworkletization) and ready to be run on the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime).
+
+## Call table
+
+## Platform compatibility
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/threading/scheduleOnRN
+# Title: scheduleOnRN
+
+# scheduleOnRN
+
+`scheduleOnRN` lets you schedule a function to be executed on the [RN Runtime](/docs/concepts/runtimeKinds#rn-runtime) from any [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime).
+
+To learn more about the different runtime kinds, check [Runtime Kinds](/docs/concepts/runtimeKinds).
+
+`scheduleOnRN` is commonly used to update React state from [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime), e.g. when animation finishes or conditionally within a gesture.
+
+## Reference
+
+```javascript
+import { scheduleOnRN } from 'react-native-worklets';
+
+function App() {
+  // While on the UI thread
+  scheduleOnRN(navigation.goBack);
+}
+```
+
+Type definitions
+
+```typescript
+function scheduleOnRN<Args extends unknown[], ReturnValue>(
+  fun:
+    | ((...args: Args) => ReturnValue)
+    | RemoteFunction<Args, ReturnValue>
+    | WorkletFunction<Args, ReturnValue>,
+  ...args: Args
+): void;
+```
+
+### Arguments
+
+#### fn
+
+A reference to a function you want to execute on the [RN Runtime](/docs/concepts/runtimeKinds#rn-runtime).
+
+#### args
+
+Arguments to the function you want to execute on the [RN Runtime](/docs/concepts/runtimeKinds#rn-runtime).
+
+## Example
+
+## Remarks
+
+### What functions can be passed to `scheduleOnRN`?
+
+Functions passed to `scheduleOnRN` must be defined on the [RN Runtime](/docs/concepts/runtimeKinds#rn-runtime) scope, i.e. in the component body or the global scope. The code below won't work because `myFunction` is defined in the `scheduleOnUI` callback, which is only executed on the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime).
+
+```jsx
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
+
+function App() {
+  //... component code
+
+  scheduleOnUI(() => {
+    // callback is defined on the UI Runtime 🚨
+    // highlight-next-line
+    scheduleOnRN(() => {}); // 💥
+  });
+
+  //... other component code
+}
+```
+
+To fix it, you have to move the function definition to the [RN Runtime](/docs/concepts/runtimeKinds#rn-runtime) scope:
+
+```jsx
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
+
+function App() {
+  //... component code
+
+  // myFunction is defined on the RN Runtime ✅
+  // highlight-next-line
+  const myFunction = () => {};
+
+  scheduleOnUI(() => {
+    scheduleOnRN(myFunction); // 🥳
+  });
+
+  //... other component code
+}
+```
+
+## Implementation Details
+
+* Scheduling function from the [RN Runtime](/docs/concepts/runtimeKinds#rn-runtime) (we are already on RN Runtime) simply
+  uses `queueMicrotask`.
+* When functions need to be scheduled from a [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime), they rely on React Native's scheduling model to forward the function call to the [RN Runtime](/docs/concepts/runtimeKinds#rn-runtime).
+
+## Call table
+
+## Platform compatibility
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/threading/scheduleOnRuntime
+# Title: scheduleOnRuntime
+
+# scheduleOnRuntime
+
+`scheduleOnRuntime` lets you schedule a [worklet function](/docs/tutorials/concurrency-model#worklet-functions) to be executed on a [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime).
+
+## Reference
+
+```javascript
+import { scheduleOnRuntime, createWorkletRuntime } from 'react-native-worklets';
+
+const workletRuntime = createWorkletRuntime({ name: 'background' });
+
+scheduleOnRuntime(workletRuntime, (greeting: string) => {
+  console.log(`${greeting} from the background Worklet Runtime`);
+}, 'Hello');
+```
+
+Type definitions
+
+```typescript
+function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): void;
+```
+
+## Arguments
+
+### workletRuntime
+
+The worklet runtime to schedule the worklet function on.
+
+### worklet
+
+A reference to a function you want to execute on the [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime).
+
+### args
+
+Arguments to the function you want to execute on the [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime).
+
+## Remarks
+
+* The worklet function is scheduled on the Worker Runtime's [Async
+  Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
+
+## Call table
+
+## Platform compatibility
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/threading/scheduleOnRuntimeWithId
+# Title: scheduleOnRuntimeWithId
+
+# scheduleOnRuntimeWithId
+
+`scheduleOnRuntimeWithId` is a variant of [scheduleOnRuntime](/docs/threading/scheduleOnRuntime) where you use the runtime's id instead of the runtime object. It's useful when you don't have access to the runtime object, but you know its id.
+
+## Reference
+
+```javascript
+import { scheduleOnRuntimeWithId, createWorkletRuntime } from 'react-native-worklets';
+
+const workletRuntime = createWorkletRuntime({ name: 'background' });
+
+scheduleOnRuntimeWithId(workletRuntime.runtimeId, (greeting: string) => {
+  console.log(`${greeting} from the background Worklet Runtime`);
+}, 'Hello');
+```
+
+Type definitions
+
+```typescript
+function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): void;
+```
+
+## Arguments
+
+### runtimeId
+
+The id of the [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime) to schedule the worklet function on. You can get the id from the runtime object by accessing its `runtimeId` property.
+
+### worklet
+
+A reference to a function you want to execute on the [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime).
+
+### args
+
+Arguments to the function you want to execute on the [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime).
+
+## Remarks
+
+* The worklet function is scheduled on the Worker Runtime's [Async
+  Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
+* You can target the UI Runtime by passing [UIRuntimeId](/docs/threading/uiRuntimeId) as the runtime id.
+
+## Call table
+
+## Platform compatibility
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/threading/scheduleOnUI
+# Title: scheduleOnUI
+
+# scheduleOnUI
+
+`scheduleOnUI` lets you schedule a function to be executed on the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime). The callback executes asynchronously and doesn't return a value.
+
+To compare it with [`runOnUIAsync`](/docs/threading/runOnUIAsync) and [`runOnUISync`](/docs/threading/runOnUISync), see [Running worklet functions on the UI runtime](/docs/guides/running-on-the-ui-runtime).
+
+## Reference
+
+```javascript
+import { scheduleOnUI } from 'react-native-worklets';
+
+const myFunction = (): void => {
+  'worklet';
+  console.log('Hello from the UI Runtime!');
+};
+
+scheduleOnUI(myFunction); // Hello from the UI Runtime!
+```
+
+Type definitions
+
+```typescript
+function scheduleOnUI<Args extends unknown[], ReturnValue>(
+  fun: (...args: Args) => ReturnValue,
+  ...args: Args
+): void;
+```
+
+### Arguments
+
+#### fun
+
+A reference to a function you want to schedule on the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime).
+
+#### args
+
+Arguments to pass to the function.
+
+## Remarks
+
+* The callback passed as the argument is automatically [workletized](/docs/worklets-plugin/about#autoworkletization) and ready to be run on the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime).
+
+* On the Web, `scheduleOnUI` schedules work to run on the next animation frame using `requestAnimationFrame`.
+
+## Call table
+
+## Platform compatibility
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/threading/uiRuntimeId
+# Title: UIRuntimeId
+
+# UIRuntimeId
+
+The value of the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime)'s id. Each [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime) has a unique id that can be used to target it from functions like [runOnRuntimeSyncWithId](/docs/threading/runOnRuntimeSyncWithId) and [scheduleOnRuntimeWithId](/docs/threading/scheduleOnRuntimeWithId) or to host [Shareables](/docs/memory/shareable) on it with [createShareable](/docs/memory/createShareable).
+
+## Reference
+
+```javascript
+import { UIRuntimeId } from 'react-native-worklets';
+
+console.log(UIRuntimeId); // 2
+```
+
+Type definitions
+
+```typescript
+const UIRuntimeId: number;
+```
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/tutorials/0-concurrency-model
+# Title: 0-concurrency-model
+
+# Concurrency model
+
+To understand the concurrency model of the Worklets library and why it's needed, we have to look at
+how a React Native app is structured.
+
+## The React Native model
+
+A React Native app is, first and foremost, **a native app**. Like every native app, it has a main
+thread — usually called the **User Interface (UI) thread** — that receives touches, lays out views
+and draws them on screen.
+
+Your JavaScript doesn't run there. At startup, the native app creates two things: a separate thread, the
+**JavaScript thread** (JS thread) and a [Hermes](https://reactnative.dev/docs/hermes) JavaScript
+Virtual Machine (JSVM), also called a **JavaScript Runtime**. We'll call this Runtime the
+[React Native Runtime](/docs/concepts/runtimeKinds#rn-runtime). Then, it delegates the execution of
+your JavaScript Bundle to the JS thread and running its
+[event loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model#agent_execution_model)
+there.
+
+The JS thread executes all of your app's JavaScript code — your React components, your business
+logic, your event handlers. Its job is to figure out what the screen should look like and tell the
+UI thread how to render it.
+
+This split is what the official docs call the
+[threading model](https://reactnative.dev/architecture/threading-model).
+
+> **Note**
+>
+> **A JavaScript Runtime and a thread aren't the same thing!**
+>
+> * **A JavaScript Runtime is an execution environment**: a set of native functions (CPU instructions)
+>   to evaluate JavaScript code and data structures to store global objects, allocated JavaScript
+>   values, and the current execution state.
+>
+> * **A thread is an OS-level primitive for executing CPU instructions.** The operating system decides
+>   when and on which CPU core to run the thread.
+>
+> A JavaScript Runtime is an exclusive resource. A thread must acquire it before using it to execute
+> JavaScript code. After the thread finishes execution and releases it, another thread can acquire it.
+
+## Limitations
+
+Since all your app logic lives inside the JavaScript Bundle and is executed only on one thread, you
+might run into situation, when a critical UI event has to wait for the JS thread to trigger a
+respective JavaScript event handler for it, visibly lagging the app.
+
+Similar situation would happen if animation calculations were to be done via `useState` for props state (please don't do this in real apps!) with a
+busy JS thread:
+
+## Overcoming limitations
+
+To solve this issue, we have to somehow move the execution of the UI-critical parts of our app off
+the JS thread. We can't use a
+[native module](https://reactnative.dev/docs/turbo-native-modules-introduction) if we want to keep
+our logic
+purely in JavaScript code. We can't forcefully run some JavaScript code on the UI thread
+concurrently with the RN Runtime. JavaScript Runtimes are single-threaded by design and doing do
+would result in an immediate crash.
+
+This means that we have to create a new Runtime and move the event and animation logic outside the
+RN Runtime to the new Runtime.
+
+Now, when the event comes, we can synchronously handle it on the UI thread, using our new Runtime.
+This is exactly the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime) that the Worklets library
+exposes.
+
+Moreover, we can also offload the heavy computation that kept our JS thread overloaded. It's better
+not to delegate that work to the UI thread as it would make the app unresponsive. We don't want to
+preempt the UI Runtime from another thread either — that could block the UI thread from handling the
+touch event, as it has to wait for the UI Runtime to be released.
+
+What we can do is to spawn *another Runtime and a thread*. We we'll dedicate that thread to execute
+tasks using the new Runtime. We'll call this Runtime a Worker Runtime.
+
+This is how the Worklets library allows you to overcome bottlenecks on the RN Runtime and the JS
+thread, while keeping your app's logic strictly in JavaScript.
+
+## Delegating JavaScript
+
+There's one last bit of the puzzle missing — it's not that simple to just send some JavaScript
+functions from one Runtime to be executed on another Runtime. The single-threaded design of
+JavaScript Runtimes makes casual JavaScript functions closely tied to a given Runtime instance and
+non suitable for any kind of serialization. For that purpose we need some special functions.
+
+## Worklet functions
+
+**A worklet function** (also called just **a worklet**) is a JavaScript function that can be safely
+moved and dispatched across JavaScript Runtimes within a React Native app.
+
+To turn a casual JavaScript function into a worklet function, all you need to do is to the
+**`'worklet'` directive** at the top of your function.
+
+```javascript
+function myWorklet() {
+  'worklet';
+  console.log('I can be safely sent to any Runtime!');
+}
+```
+
+Functions marked with the directive are transformed with the
+[Worklets Babel plugin](/docs/worklets-plugin/about), in a process we call **workletization**,
+into special entities
+that are safe to be juggled between JavaScript runtimes.
+
+It's time to learn how to use these worklet functions — in the next chapter.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/tutorials/1-your-first-worklet
+# Title: 1-your-first-worklet
+
+# Your first worklet function
+
+In this chapter we'll learn the basics of dispatching your JavaScript code to
+[Worklet Runtimes](/docs/concepts/runtimeKinds#worklet-runtime) to execute in parallel, using
+worklet
+functions. We strongly recommend you to become acknowledged with the
+[concurrency model](/docs/tutorials/concurrency-model) before continuing.
+
+## Creating a Worklet Runtime
+
+To actually dispatch some multithreading work, we need another Worklet Runtime as a target. We can
+either use the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime) which is always available,
+or create our own [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime) with
+[`createWorkletRuntime`](/docs/threading/createWorkletRuntime) function.
+
+```js
+import {createWorkletRuntime} from 'react-native-worklets';
+const worker = createWorkletRuntime();
+```
+
+In the next steps we'll dispatch some work to our new Worker Runtime and the UI Runtime.
+
+## Asynchronous execution
+
+Let's start small with dispatching functions that perform only a `console.log` on different
+runtimes. We'll print the TID (platform-specific thread id) of the executing thread too, to show
+that they indeed are dispatched to different thread, with
+[`getCurrentThreadId`](/docs/utility/getCurrentThreadId) function. This function prints the result
+of [`std::this_thread::get_id`](https://en.cppreference.com/w/cpp/thread/get_id).
+
+We'll use [`scheduleOnUI`](/docs/threading/scheduleOnUI) to dispatch to the UI Runtime and
+[`scheduleOnRuntime`](/docs/threading/scheduleOnRuntime) to dispatch to the Worker Runtime. These
+functions are fire-and-forget style — they return immediately after dispatching the worklet
+function, without waiting for it to complete, and do not yield any result.
+
+The log invocations returned different TID for each call, as we actually dispatched the
+worklet function to different threads.
+
+## Synchronous execution
+
+Sometimes you might want to execute a worklet function synchronously, from the same thread, but on
+the other Runtime. For that purpose the Worklets library exposes
+[`runOnUISync`](/docs/threading/runOnUISync) and
+[`runOnRuntimeSync`](/docs/threading/runOnRuntimeSync) methods. These methods are blocking — they
+return only after the worklet function has completed. If a different thread is currently using the Runtime, these methods will wait for the targeted Runtime to be released before executing the worklet function.
+
+All three logs gave us the same result, there was no thread hopping involved.
+
+Knowing when to delegate something asynchronously and when to do it synchronously is the difference
+between smooth user experience and a bad one. Rule of thumb is that **if the operation is not
+critical for the UI, it should be dispatched asynchronously.**
+
+## Passing arguments
+
+If the worklet function you want to call takes arguments, you have to pass them as extra parameters
+for a given method invocation.
+
+## Autoworkletization
+
+In previous code snippets we always marked worklet functions with the `'worklet'` directive.
+However, in most cases you can omit the directive. Worklets Babel plugin
+[automatically detects](/docs/worklets-plugin/about#autoworkletization) which functions should
+be
+treated as worklet functions and applies the transformation regardless. In the future examples we
+will omit the directive whenever applicable.
+
+And talking about the future examples, in the next chapter we'll learn how to return results from
+worklet functions.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/tutorials/2-returning-results
+# Title: 2-returning-results
+
+# Returning results
+
+In the [previous chapter](/docs/tutorials/your-first-worklet) we dispatched some console logs to
+other Runtimes. However, logging itself is not particularly useful.
+
+In this chapter we'll learn how to obtain execution results from dispatched worklet functions.
+
+## Synchronously
+
+Simplest way of returning values. [`runOnUISync`](/docs/threading/runOnUISync) and
+[`runOnRuntimeSync`](/docs/threading/runOnRuntimeSync) functions return the result of a worklet
+function directly to the invoking Runtime:
+
+However, it's not particularly useful to dispatch `foo` synchronously, as we could've just run on
+the same Runtime, by invoking foo:
+
+// TODO: convert this one to a threading simulation
+
+```js
+const result = foo(); // 42
+```
+
+Therefore, we have to return it asynchronously. We'll explore when it's useful to actually return a
+value synchronously in future sections.
+
+## Asynchronously
+
+For asynchronous returns, i.e. results of complex calculations, you can use
+[`runOnUIAsync`](/docs/threading/runOnUIAsync) and
+[`runOnRuntimeAsync`](/docs/threading/runOnRuntimeAsync) functions. They return an awaitable
+promise.
+
+Remember that [`scheduleOnUI`](/docs/threading/scheduleOnUI) and
+[`scheduleOnRuntime`](/docs/threading/scheduleOnRuntime) functions do not return a value.
+
+The scheduling runtime is free to keep executing JavaScript code until you await the returned
+promise. In this example we dispatched the invocations on `complexTask` before awaiting - to execute
+them concurrently. While the RN Runtime awaits, its thread is free to run other tasks.
+
+## With callbacks
+
+Often times, we'll want to return a value through a callback, i.e. update our app's React state
+based on a result of a worklet function executed on another Worklet Runtime. You might be tempted to
+write something like this:
+
+// TODO: convert it to a threading simulation that actually visualizes a crash
+
+```js
+const worker = createWorkletRuntime();
+
+// CORE CODE START
+function Component() {
+    const [state, setState] = useState();
+    // code ...
+    scheduleOnRuntime(worker, () => {
+        const result = doImportantStuff();
+        setState(result); // crash!
+    });
+    // code ...
+// CORE CODE END
+}
+```
+
+This is a common pitfall, and to understand why it crashes, we have to look how it looks in the
+memory of our app.
+
+Diagram: showing where `result`, `setState` lives and how threads interact here
+
+Because `setState` is passed to the Worklet Runtime as a pointer to the callback, we can't just
+invoke it. We have to dispatch it back on the RN Runtime with
+[`scheduleOnRN`](/docs/threading/scheduleOnRN) function.
+
+Alternatively, you can use a promise and `runOnRuntimeAsync` function:
+
+Now that we know how to return the values, let's learn how to use a Worklet Runtime's event loop in
+the next chapter.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/tutorials/3-using-event-loop
+# Title: 3-using-event-loop
+
+# Using the event loop
+
+In the [previous chapter](/docs/tutorials/returning-results) we learned how to return results from
+dispatched worklet functions.
+
+In this chapter we'll learn some theory about event loops, which you can use for more robust
+applications of worklet functions.
+
+## Event loops in React Native
+
+The event loops available in React Native are similar to the ones
+[in the browser](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model).
+All
+functions to use the event loop, like `setTimeout` or `requestAnimationFrame` are available on the
+[RN Runtime](/docs/concepts/runtimeKinds#rn-runtime) and
+[Worklet Runtimes](/docs/concepts/runtimeKinds#worklet-runtime), but they might behave slightly
+different
+based on the context.
+
+## RN Runtime
+
+The RN Runtime's event loop is handled solely by the
+[RN JS thread](https://reactnative.dev/architecture/threading-model). This means, unlike in the
+browser,
+this Runtime's event loop *is not tied to the native rendering layer* and
+[`requestAnimationFrame`](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame)
+is polyfilled with a periodic timer.
+
+The application UI will not wait for the current iteration of the `requestAnimationFrame` queue
+execution to finish when rendering a frame.
+
+figure showing how the RN Runtime raf queue is disjointed from the native rendering layer
+
+## UI Runtime
+
+Conversely to the RN Runtime, the UI Runtime's event loop is based entirely on the native rendering
+layer. All operations scheduled with i.e. `requestAnimationFrame` or `setTimeout` will block the
+native render until they finish.
+
+figure showing how the UI Runtime raf queue it coupled with the native rendering layer
+
+Timers like `setImmediate`, `setTimeout`, `setInterval` on the UI Runtime actually invoke
+`requestAnimationFrame` under the hood. This means that i.e. for 60Hz devices, will be executed only
+once per 16ms, assuming no frame drops.
+
+## Worker Runtime
+
+For a Worker Runtime that runs on its dedicated thread, it's very similar to the RN Runtime. It's
+`requestAnimationFrame` queue is polyfilled with a periodic timer.
+
+For advanced use cases, you can create a Worker Runtime
+[without an event loop](/docs/threading/createWorkletRuntime#enableeventloop) and then implement it
+yourself.
+
+In the next chapter we'll learn how to synchronize with data between JavaScript Runtimes. using the
+available event loop APIs.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/tutorials/4-synchronizing-data
+# Title: 4-synchronizing-data
+
+# Synchronizing data
+
+In the [previous chapter](/docs/tutorials/using-event-loop) we learned some theory about event
+loops, which we'll now put to use.
+
+In this chapter, we'll more advanced patterns of synchronizing data between JavaScript Runtimes,
+where asynchronous returns wouldn't be sufficient.
+
+## Getting the result of a periodic task
+
+Previous examples showed us how to return the result of a singular worklet function at the point of
+its invocation. What if we had a long-running task, yielding results continuously, but we wanted to
+poll the data only occasionally?
+
+We'll explore how can we obtain the value of the local `result` value and pass it to the RN Runtime.
+
+## With callbacks — anti-pattern
+
+We could use the same pattern as
+[returning results with a callback](/docs/tutorials/returning-results#with-callbacks).
+
+**Do not do this!** This will schedule a cross-runtime call every 10ms that updates our
+`polledResult` value — even if we don't need it at the given moment. **For best multi-threading
+performance, it's best to minimize the amount of cross-thread (cross-runtime) operations.**
+
+## With the global object — anti-pattern
+
+The simplest approach would be to store our result on the global object of the Worker Runtime.
+
+Then poll it with another function call, either synchronously or asynchronously:
+
+However, this code doesn't scale well if we want to synchronize with multiple variables. It's
+generally a bad practice to use the global object like this. It's still better than the previous
+anti-pattern, but please **use it as a last resort escape hatch.**
+
+## With a Synchronizable
+
+A [Synchronizable](/docs/memory/synchronizable) is a memory primitive in the Worklets library, that
+lives outside of any Runtime's JavaScript heap. Reading it and writing to it doesn't require making
+cross-runtime call and is the cheapest option of synchronizing the data between Runtimes.
+
+You can find detailed documentation for Synchronizable on its
+[API reference](/docs/memory/synchronizable), but for the sake of this example we'll stick to its
+`getDirty`
+and `setBlocking` methods. `getDirty` method simply returns the value of the Synchronizable, without
+waiting for any
+transactions on it to complete. It's safe to use it here as we don't care about reading the value
+mid-transaction.
+`setBlocking` method updates the value atomically, blocking other writers from modifying it until
+the transaction is complete.
+
+Even though the Synchronizable was created on the RN Runtime, the value actually lives in the native
+heap and both Runtimes (threads) can access it with little overhead and without blocking one
+another.
+
+For this simple case, we can even optimize our code further and use a
+[Synchronizable with a fixed type](/docs/memory/synchronizable#synchronizable-fixed),
+which exposes `setDirty` method and is generally faster than a general
+[Synchronizable with a dynamic type](/docs/memory/synchronizable#synchronizable-dynamic)
+that we just used.
+
+This approach works best when you poll the data frequently or from multiple Runtimes at once.
+
+The downside is the fact, that every call of `setDirty` or `setBlocking` have to cross the
+JavaScript - native boundary and store the value there. This is particularly costly when it comes to
+storing non-primitive types, like objects or arrays - which require
+[serialization](/docs/memory/serializable)
+on each boundary crossing.
+
+## With a Shareable
+
+A [Shareable](/docs/memory/shareable) is another memory primitive, but this contrary to the
+Synchronizable,
+it lives on a designated Runtime, called the Host Runtime. Reading it on other Runtimes, called
+Guest Runtimes,
+means accessing it on its Host Runtime, either synchronously or asynchronously. It's similar in
+principle to the [global object approach](#with-the-global-object--anti-pattern), but with a layer
+of useful
+encapsulation.
+
+To create a Shareable, we have to explicitly state the Host Runtime by its
+[Runtime ID](/docs/concepts/runtimeKinds#worklet-runtime).
+
+```js
+const worker = createWorkletRuntime();
+const result = createShareable(worker.runtimeId, -1);
+```
+
+Shareable is an *asymmetric* type, meaning it has a different structure on the Host Runtime and on
+Guest Runtimes. On the Host Runtime, you can access the value it holds directly as its `value`
+property. On Guest Runtimes you must use its synchronous or asynchronous methods.
+
+This approach works best when the Host Runtime updates the value often and the value is not a
+primitive,
+and Guest Runtimes read it only ever so often.
+
+## Mixing Shareables with Synchronizables
+
+Shareables and Synchronizables are a powerful tool when combined. A Synchronizable can keep
+information about
+the state of the Shareable, i.e. whether it has been updated, so the Guest Runtime can avoid reading
+it if it
+hasn't changed.
+
+This is how [Reanimated Shared Values](https://docs.swmansion.com/reanimated/docs/shared-values) are
+implemented.
+
+A Shareable hosted on the UI Runtime stores the value of the animation progression. When the RN
+Runtime wants
+to read the value to synchronize with the UI — i.e. for component's first render — it checks a
+Synchronizable
+dirtiness flag attached to the Shared Value, to see if the UI Runtime has updated the value. If not,
+it returns the last
+read value, which was cached locally on the RN Runtime.
+
+If the value has been updated — the Synchronizable flag reports its dirty state — only then does the
+RN Runtime
+synchronously preempts the UI Runtime from the UI thread to read the value directly from the Host
+Runtime. All this
+flow is visualized by the simulation below.
+
+## Future tutorials
+
+In the future chapters we'll learn how to integrate with C++ API of the Worklets library for
+use-cases that can't be covered with just JavaScript code.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/utility/getCurrentThreadId
+# Title: getCurrentThreadId
+
+# getCurrentThreadId
+
+`getCurrentThreadId` returns the id of the thread which currently executes JavaScript on the calling [Runtime](/docs/concepts/runtimeKinds). The returned id is a stringified result of [`std::this_thread::get_id()`](https://en.cppreference.com/cpp/thread/get_id).
+
+## Reference
+
+```javascript
+import { getCurrentThreadId, runOnUISync, scheduleOnUI } from 'react-native-worklets';
+
+console.log(getCurrentThreadId()); // The JS thread id.
+
+scheduleOnUI(() => {
+  'worklet';
+  console.log(getCurrentThreadId()); // The UI thread id.
+});
+
+runOnUISync(() => {
+    'worklet';
+    console.log(getCurrentThreadId()); // The JS thread id.
+})
+```
+
+Type definitions
+
+```typescript
+function getCurrentThreadId(): string;
+```
+
+### Returns
+
+`getCurrentThreadId` returns a `string` with the id of the current thread. The format of the id is platform-specific.
+
+## Call table
+
+## Platform compatibility
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/utility/getRuntimeKind
+# Title: getRuntimeKind
+
+# getRuntimeKind
+
+`getRuntimeKind` allows you to get the [kind of the current runtime](/docs/concepts/runtimeKinds). It's useful in advanced scenarios, where you need to check the runtime kind before executing certain code paths or where you need to have separate implementations per runtime.
+
+`getRuntimeKind` is a direct replacement for the deprecated `_WORKLET` global variable.
+
+We recommend using handy shorthands like [isRNRuntime](/docs/utility/isRNRuntime), [isUIRuntime](/docs/utility/isUIRuntime), [isWorkerRuntime](/docs/utility/isWorkerRuntime), and [isWorkletRuntime](/docs/utility/isWorkletRuntime).
+
+## Reference
+
+```typescript
+import {
+  getRuntimeKind,
+  createWorkletRuntime,
+  scheduleOnRuntime,
+  scheduleOnUI,
+} from 'react-native-worklets';
+
+console.log(getRuntimeKind()); // 1 (RN Runtime)
+
+scheduleOnUI(() => {
+  console.log(getRuntimeKind()); // 2 (UI Runtime)
+});
+
+const workerRuntime = createWorkletRuntime();
+scheduleOnRuntime(workerRuntime, () => {
+  console.log(getRuntimeKind()); // 3 (Worker Runtime)
+});
+```
+
+Type definitions
+
+```typescript
+enum RuntimeKind {
+  ReactNative = 1,
+  UI = 2,
+  Worker = 3,
+}
+
+function getRuntimeKind(): RuntimeKind;
+```
+
+### Returns
+
+An enum value representing the current runtime kind:
+
+* `1` for RN Runtime
+* `2` for UI Runtime
+* `3` for Worker Runtime
+
+## Example
+
+```typescript
+import {
+  getRuntimeKind,
+  RuntimeKind,
+  scheduleOnRN,
+  scheduleOnUI,
+} from 'react-native-worklets';
+
+function logToConsole(message: string) {
+  console.log(message);
+}
+
+function log(message: string) {
+  'worklet';
+  if (getRuntimeKind() === RuntimeKind.ReactNative) {
+    console.log(`RN: ${message}`);
+  } else {
+    // Fun fact - this is how `console.log` is implemented on Worklet Runtimes.
+    scheduleOnRN(logToConsole, `UI: ${message}`);
+  }
+}
+
+function randomDispatch() {
+  if (Math.random() > 0.5) {
+    scheduleOnUI(log, 'Hello!');
+  } else {
+    log('Hello!');
+  }
+}
+
+randomDispatch(); // Could log either "RN: Hello!" or "UI: Hello!"
+```
+
+## Optimizations
+
+For micro-optimizations of your code you can skip the invocation of `getRuntimeKind` and use the global variable `__RUNTIME_KIND` directly:
+
+```typescript
+console.log(globalThis.__RUNTIME_KIND); // 1 (RN Runtime)
+```
+
+Be aware that accessing the global variable `__RUNTIME_KIND` before importing anything from `react-native-worklets` might return `undefined` value. This is because the global variable is set only after the `react-native-worklets` module is loaded. This is especially important in Web contexts, where additional bundler optimizations may be in place.
+
+## Remarks
+
+* If you're using the global variable `__RUNTIME_KIND` make sure to reference it by accessing the global object, i.e. `globalThis.__RUNTIME_KIND` to avoid the pitfall where you accidentally reference a local variable with the same name.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/utility/isBundleModeEnabled
+# Title: isBundleModeEnabled
+
+# isBundleModeEnabled
+
+Checks whether [Bundle Mode](/docs/bundleMode) is enabled.
+
+For instructions on how to enable Bundle Mode, see the [Bundle Mode documentation](/docs/bundleMode).
+
+## Reference
+
+```typescript
+import { isBundleModeEnabled } from 'react-native-worklets';
+
+console.log(isBundleModeEnabled()); // true if Bundle Mode is enabled
+```
+
+Type definitions
+
+```typescript
+function isBundleModeEnabled(): boolean;
+```
+
+### Returns
+
+`true` if Bundle Mode is enabled, `false` otherwise (including in [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode) and on the Web).
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/utility/isRNRuntime
+# Title: isRNRuntime
+
+# isRNRuntime
+
+Checks if the current runtime is the [React Native Runtime](/docs/concepts/runtimeKinds#rn-runtime).
+
+## Reference
+
+```typescript
+import {
+  isRNRuntime,
+  scheduleOnUI,
+  scheduleOnRuntime,
+  createWorkletRuntime,
+} from 'react-native-worklets';
+
+// highlight-next-line
+console.log(isRNRuntime()); // true
+
+scheduleOnUI(() => {
+  console.log(isRNRuntime()); // false
+})();
+
+const workerRuntime = createWorkletRuntime();
+scheduleOnRuntime(workerRuntime, () => {
+  console.log(isRNRuntime()); // false
+})();
+```
+
+Type definitions
+
+```typescript
+function isRNRuntime(): boolean;
+```
+
+### Returns
+
+`true` if the current runtime is the RN Runtime, `false` otherwise.
+
+## Remarks
+
+* The function checks the value of `globalThis.__RUNTIME_KIND` to determine the kind of the current runtime. See [getRuntimeKind](/docs/utility/getRuntimeKind) for more details.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/utility/isUIRuntime
+# Title: isUIRuntime
+
+# isUIRuntime
+
+Checks if the current runtime is the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime).
+
+## Reference
+
+```typescript
+import {
+  isUIRuntime,
+  scheduleOnUI,
+  scheduleOnRuntime,
+  createWorkletRuntime,
+} from 'react-native-worklets';
+
+console.log(isUIRuntime()); // false
+
+scheduleOnUI(() => {
+  // highlight-next-line
+  console.log(isUIRuntime()); // true
+})();
+
+const workerRuntime = createWorkletRuntime();
+scheduleOnRuntime(workerRuntime, () => {
+  console.log(isUIRuntime()); // false
+})();
+```
+
+Type definitions
+
+```typescript
+function isUIRuntime(): boolean;
+```
+
+### Returns
+
+`true` if the current runtime is the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime), `false` otherwise.
+
+## Remarks
+
+* The function checks the value of `globalThis.__RUNTIME_KIND` to determine the kind of the current runtime. See [getRuntimeKind](/docs/utility/getRuntimeKind) for more details.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/utility/isWorkerRuntime
+# Title: isWorkerRuntime
+
+# isWorkerRuntime
+
+Checks if the current runtime is a [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime).
+
+## Reference
+
+```typescript
+import {
+  isWorkerRuntime,
+  scheduleOnUI,
+  scheduleOnRuntime,
+  createWorkletRuntime,
+} from 'react-native-worklets';
+
+console.log(isWorkerRuntime()); // false
+
+scheduleOnUI(() => {
+  console.log(isWorkerRuntime()); // false
+})();
+
+const workerRuntime = createWorkletRuntime();
+scheduleOnRuntime(workerRuntime, () => {
+  // highlight-next-line
+  console.log(isWorkerRuntime()); // true
+})();
+```
+
+Type definitions
+
+```typescript
+function isWorkerRuntime(): boolean;
+```
+
+### Returns
+
+`true` if the current runtime is the [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime), `false` otherwise.
+
+## Remarks
+
+* The function checks the value of `globalThis.__RUNTIME_KIND` to determine the kind of the current runtime. See [getRuntimeKind](/docs/utility/getRuntimeKind) for more details.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/utility/isWorkletFunction
+# Title: isWorkletFunction
+
+# isWorkletFunction
+
+`isWorkletFunction` checks if a function is a worklet function. It only works with Worklets Babel plugin enabled. Unless you are doing something with internals of the Worklets library you shouldn't need to use this function.
+
+## Reference
+
+```javascript
+import { isWorkletFunction } from 'react-native-worklets';
+
+const workletFunction = () => {
+  'worklet';
+  return 1;
+};
+
+const isWorkletFunction = isWorkletFunction(workletFunction);
+
+console.log(isWorkletFunction); // true
+
+const nonWorkletFunction = () => {
+  return 1;
+};
+
+const isNonWorkletFunction = isWorkletFunction(nonWorkletFunction);
+
+console.log(isNonWorkletFunction); // false
+```
+
+Type definitions
+
+```typescript
+type WorkletClosure = unknown[];
+
+export type WorkletStackDetails = [
+  error: Error,
+  lineOffset: number,
+  columnOffset: number,
+];
+
+interface WorkletInitData {
+  /** Only when bytecode isn't toggled. */
+  code?: string;
+  /** Only in production builds and explicitly toggled. */
+  bytecode?: ArrayBuffer;
+  /** Only in dev builds. */
+  location?: string;
+  /** Only in dev builds. */
+  sourceMap?: string;
+}
+
+interface WorkletProps {
+  __closure?: WorkletClosure;
+  __workletHash: number;
+  /** Only in Legacy Eval Mode. */
+  __initData?: WorkletInitData;
+  /** `__stackDetails` is removed after parsing. */
+  __stackDetails?: WorkletStackDetails;
+  /** Only in dev builds. */
+  __pluginVersion?: string;
+}
+
+type WorkletFunction<
+  TArgs extends unknown[] = unknown[],
+  TReturn = unknown,
+> = ((...args: TArgs) => TReturn) & WorkletProps;
+
+function isWorkletFunction<
+  Args extends unknown[] = unknown[],
+  ReturnValue = unknown,
+>(value: unknown): value is WorkletFunction<Args, ReturnValue>;
+```
+
+### Arguments
+
+#### value
+
+A function to check if it is a worklet function.
+
+### Returns
+
+`isWorkletFunction` returns a boolean value.
+
+### Remarks
+
+* Do not call it before the worklet function is declared, as it will always return `false` then.
+
+  ```ts
+  isWorkletFunction(myWorklet); // Will always return false.
+
+  function myWorklet() {
+    'worklet';
+  }
+  ```
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/utility/isWorkletRuntime
+# Title: isWorkletRuntime
+
+# isWorkletRuntime
+
+Checks if the current runtime is a [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime), either the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime) or a [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime).
+
+## Reference
+
+```typescript
+import {
+  isWorkletRuntime,
+  scheduleOnUI,
+  scheduleOnRuntime,
+  createWorkletRuntime,
+} from 'react-native-worklets';
+
+console.log(isWorkletRuntime()); // false
+
+scheduleOnUI(() => {
+  // highlight-next-line
+  console.log(isWorkletRuntime()); // true
+})();
+
+const workerRuntime = createWorkletRuntime();
+scheduleOnRuntime(workerRuntime, () => {
+  // highlight-next-line
+  console.log(isWorkletRuntime()); // true
+})();
+```
+
+Type definitions
+
+```typescript
+function isWorkletRuntime(): boolean;
+```
+
+### Returns
+
+`true` if the current runtime is a [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime), `false` otherwise.
+
+## Remarks
+
+* The function checks the value of `globalThis.__RUNTIME_KIND` to determine the kind of the current runtime. See [getRuntimeKind](/docs/utility/getRuntimeKind) for more details.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/worklets-plugin/about
+# Title: About
+
+# Worklets plugin
+
+## What is the Worklets plugin?
+
+The Worklets plugin transforms your code so that it can run on the [Worklet Runtimes](/docs/concepts/runtimeKinds#worklet-runtime). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](#autoworkletization).
+
+The Worklets plugin ships in two implementations. The Babel plugin (`react-native-worklets/plugin`) is the default. Starting from Worklets 0.13 you can also use the [OXC plugin](/docs/worklets-plugin/oxc), a faster Rust port that supports [Bundle Mode](/docs/bundleMode/) only. Everything on this page applies to both.
+
+* A function that contains a `'worklet'` directive at its very top, i.e.:
+
+```ts
+function foo() {
+  'worklet';
+  console.log('Hello from worklet');
+}
+```
+
+* A function that is *autoworkletizable*, i.e.:
+
+```ts
+useAnimatedStyle(() => {
+  // This function will be ran on the UI thread,
+  // hence it's in a workletizable context and will be
+  // autoworkletized. You don't need to add the 'worklet' directive here.
+  return {
+    width: 100,
+  };
+});
+```
+
+## What can be a worklet?
+
+### JavaScript terms
+
+The Worklets plugin supports the following terms as worklets:
+
+#### Function Declarations
+
+```ts
+function foo() {
+  'worklet';
+  console.log('Hello from FunctionDeclaration');
+}
+```
+
+#### Function Expressions
+
+```ts
+const foo = function () {
+  'worklet';
+  console.log('Hello from FunctionExpression');
+};
+```
+
+#### Arrow Function Expressions
+
+```ts
+const foo = () => {
+  'worklet';
+  console.log('Hello from ArrowFunctionExpression');
+};
+```
+
+#### Object Methods
+
+```ts
+const obj = {
+  foo() {
+    'worklet';
+    console.log('Hello from ObjectMethod');
+  },
+};
+```
+
+### Class Methods
+
+## Autoworkletization
+
+To reduce boilerplate code and provide a safer API, the Worklets plugin detects automatically whether a function should be workletized. Thanks to that, you don't need to add the `'worklet'` directive to your callbacks:
+
+```ts
+import { scheduleOnUI } from 'react-native-worklets';
+
+const style = scheduleOnUI((greetings: string) => {
+  // You don't need to add the 'worklet' directive here,
+  // since plugin detects this callback as autoworkletizable.
+  console.log(`${greetings} from UI Runtime`);
+}, 'Hello');
+```
+
+This isn't limited to `useAnimatedStyle` hook - the Worklets plugin autoworkletizes all callbacks for all its API. It also does some for some callbacks in [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/layoutAnimationAutoworkletization.ts) and [React Native Gesture Handler](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/gestureHandlerAutoworkletization.ts) The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
+
+Keep in mind that in more advanced use cases, you might still need to manually mark a function as a worklet function.
+
+### Referencing worklet functions
+
+You can define worklet functions **before** they are used and the plugin will autoworkletize them too:
+
+```ts
+function foo() {
+  // You don't need to add
+  // the 'worklet' directive here.
+  return { width: 100 };
+}
+
+// You don't need to define an inline function here,
+// a reference is enough.
+const style = useAnimatedStyle(foo);
+```
+
+### Objects aggregating worklet functions
+
+In some APIs, like `useAnimatedScrollHandler` you can pass an object that contains worklet functions instead of a function:
+
+```ts
+const handlerObject = {
+  // You don't need to mark these methods as worklets.
+  onBeginDrag() {
+    console.log('Dragging...');
+  },
+  onScroll() {
+    console.log('Scrolling...');
+  },
+};
+
+const handler = useAnimatedScrollHandler(handlerObject);
+```
+
+### \[Experimental] Workletizing whole files
+
+You can mark a file as a workletizable file by adding the `'worklet'` directive to the top of the file.
+
+This will workletize all *top-level* [JavaScript terms](#javascript-terms) automatically. It can come in handy for files that contain multiple worklet functions.
+
+```ts
+// file.ts
+'worklet';
+
+function foo() {
+  // Function 'foo' will be autoworkletized.
+  return { width: 100 };
+}
+
+function bar() {
+  // Function 'bar' will be autoworkletized.
+  function foobar() {
+    // Function 'foobar' won't since it's not defined in top-level scope.
+    console.log("I'm not a worklet");
+  }
+  return { width: 100 };
+}
+```
+
+## Limits of autoworkletization
+
+The plugin cannot infer whether a function is autoworkletizable or not in some contexts.
+
+### Imports
+
+When importing a function from another file or a module and using it as a worklet function, you must manually add the `'worklet'` directive to the function:
+
+```ts
+// foo.ts
+import { bar } from './bar';
+// ...
+const style = useAnimatedStyle(bar);
+
+// bar.ts
+export function bar() {
+  'worklet'; // Won't work without it.
+  return {
+    width: 100,
+  };
+}
+```
+
+### Custom hooks
+
+Currently Reanimated hasn't exposed APIs that would allow you to register your custom hooks for callback workletization. This however, might change in the future.
+
+### Expressions
+
+A function won't get automatically workletized when it's a result of an expression. You have to add the `'worklet';` directive to make it work:
+
+```ts
+const foo = someCondition
+  ? () => {
+      'worklet'; // Won't work without it.
+      return { width: 100 };
+    }
+  : () => {
+      'worklet'; // Won't work without it.
+      return { width: 200 };
+    };
+
+const style = useAnimatedStyle(foo);
+```
+
+In such cases we recommend either handling the conditional logic in the worklet function itself or refactoring your code to eliminate the need for conditional worklet functions.
+
+## Pitfalls
+
+There are some patterns that won't work with the plugin.
+
+### Hoisting worklet functions
+
+Worklet functions aren't hoisted. This means that you can't use worklet functions before they are defined:
+
+```ts
+// The following line crashes,
+// even though 'foo' is marked as a worklet.
+const style = useAnimatedStyle(foo);
+
+function foo() {
+  'worklet';
+  return { width: 100 };
+}
+```
+
+## Notes
+
+If you feel like the Worklets plugin could make use of some new functionality or that its pitfalls are too severe, feel free to let us know on [GitHub](https://github.com/software-mansion/react-native-reanimated/), via an issue or a discussion thread - and as always, PRs are welcome!
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/worklets-plugin/options
+# Title: Options
+
+# Options for Worklets Babel Plugin
+
+Our plugin offers several optional functionalities that you may need to employ advanced APIs:
+
+Type definitions
+
+```typescript
+interface PluginOptions {
+  bundleMode?: boolean;
+  disableInlineStylesWarning?: boolean;
+  disableSourceMaps?: boolean;
+  disableWorkletClasses?: boolean;
+  extraPlugins?: string[];
+  extraPresets?: string[];
+  getHBCBinary?: () => string;
+  globals?: string[];
+  hermesBytecode?: boolean;
+  omitNativeOnlyData?: boolean;
+  relativeSourceLocation?: boolean;
+  strictGlobal?: boolean;
+  substituteWebPlatformChecks?: boolean;
+  importForwarding?: {
+    moduleNames?: string[];
+    relativePaths?: string[];
+  };
+}
+```
+
+## How to use
+
+Using this is straightforward for Babel plugins; you just need to pass an object containing the options to the plugin in your `babel.config.js` file. Make sure to pass the plugin and its options as a **two-element array**.
+
+Here's an example:
+
+```js {13-16}
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  bundleMode: true,
+  disableInlineStylesWarning: true,
+  globals: ['myObjectOnUI'],
+  substituteWebPlatformChecks: true,
+}
+
+module.exports = {
+  ...
+  plugins: [
+    ...
+    [
+      'react-native-worklets/plugin',
+      workletsPluginOptions
+    ],
+  ],
+};
+```
+
+## Options
+
+If you are using the OXC plugin, refer to [OXC plugin options](/docs/worklets-plugin/oxc#options).
+
+### bundleMode
+
+Defaults to `false`.
+
+Enables the [Bundle Mode](/docs/bundleMode/).
+
+### disableInlineStylesWarning
+
+Defaults to `false`.
+
+Turning on this option suppresses a helpful warning when you use [inline shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animations-in-inline-styling) and might unintentionally write:
+
+```tsx
+import Animated, {useSharedValue} from 'react-native-reanimated';
+
+function MyView() {
+  const width = useSharedValue(100);
+  return <Animated.View style={{ width: width.value }}>; // Loss of reactivity when using `width.value` instead of `width`!
+}
+```
+
+You'll receive a warning about accessing `value` in an inline prop and the potential loss of reactivity that it causes. However, because there's no fail-safe mechanism that checks if the accessed property `value` comes from a Shared Value during Babel transpilation, it might cause problems:
+
+```tsx
+import { View } from 'react-native';
+
+interface MyProps {
+  taggedWidth: {
+    tag: string;
+    value: number;
+  };
+}
+
+function MyView({ taggedWidth }) {
+  return <View style={{ width: taggedWidth.value }} />; // This triggers a false warning.
+}
+```
+
+Enable this option to silence such false warnings.
+
+### disableSourceMaps
+
+Defaults to `false`.
+
+This option turns off the source map generation for worklet functions. Mostly used for testing purposes.
+
+### disableWorkletClasses
+
+Defaults to `false`.
+
+Disables [Worklet Classes
+support](/docs/worklets-plugin/about#class-methods).
+You might need to disable this feature when using [Custom
+Serializables](/docs/memory/registerCustomSerializable).
+
+### extraPlugins
+
+Defaults to an empty array.
+
+This is a list of Babel plugins that will be used when transforming worklet functions' code with Worklets Babel Plugin.
+
+### extraPresets
+
+Defaults to an empty array.
+
+This is a list of Babel presets that will be used when transforming worklet functions' code with Worklets Babel Plugin.
+
+### getHBCBinary
+
+> **Caution**
+>
+> Experimental feature.
+
+Defaults to `undefined`.
+
+Returns the absolute path to the Hermes bytecode compiler (`hermesc`) binary.
+This option is part of the experimental [`hermesBytecode`](#hermesbytecode)
+feature and is required when it is enabled — the plugin invokes this binary to
+compile each worklet function.
+
+```js
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  hermesBytecode: true,
+  getHBCBinary: () => {
+    // Return the absolute path to the `hermesc` binary for the current host machine.
+  },
+};
+```
+
+Example implementation is available [here](https://github.com/software-mansion/react-native-reanimated/blob/7881f20a6778d25055e9127efaae0139562fde40/apps/fabric-example/babel.config.js#L28).
+
+### globals
+
+Defaults to an empty array.
+
+This is a list of identifiers (objects) that will not be copied to the UI thread if a worklet function requires them. For instance:
+
+```tsx
+const someReference = 5;
+function foo() {
+  'worklet';
+  return someReference + 1;
+}
+```
+
+In this example, `someReference` is not accessible on the UI thread. Consequently, we must copy it there, ensuring correct scoping, to keep the worklet function from failing. But, consider this:
+
+```tsx
+function bar() {
+  'worklet';
+  return null;
+}
+```
+
+Here, the identifier `null` is already accessible on the UI thread. Therefore, we don't need to copy it and use a copied value there. While it might not immediately seem particularly useful to avoid copying the value, consider the following case:
+
+```tsx
+function setOnJS() {
+  global.something = 'JS THREAD';
+}
+
+function setOnUI() {
+  'worklet';
+  global.something = 'UI THREAD';
+}
+
+function readFromJS() {
+  console.log(global.something);
+}
+
+function readFromUI() {
+  'worklet';
+  console.log(global.something);
+}
+
+function run() {
+  setOnJS();
+  scheduleOnUI(setOnUI);
+  readFromJS();
+  scheduleOnUI(readFromUI);
+}
+```
+
+Without `global` as a blocklisted identifier in this case, you'd only get:
+
+```
+JS THREAD
+JS THREAD
+```
+
+This output occurs because the entire `global` object (!) would be copied to the UI thread for it to be assigned by `setOnUI`. Then, `readOnUI` would again copy the `global` object and read from this copy.
+
+There is a [huge list of identifiers blocklisted by default](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/globals.ts).
+
+### hermesBytecode
+
+> **Caution**
+>
+> Experimental feature.
+
+Defaults to `false`.
+
+Enabled compilation of worklet functions to [Hermes](https://github.com/facebook/hermes) bytecode
+ahead of time instead of shipping them as source strings in [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode).
+At runtime the Worklet Runtime evaluates the precompiled bytecode directly,
+skipping code evaluation overhead costs.
+
+This is a workaround for the [increased memory consumption of `eval` calls
+in Hermes](https://github.com/software-mansion/react-native-reanimated/issues/9650).
+
+Enabling it requires the
+[`getHBCBinary`](#gethbcbinary) option so the plugin can locate the Hermes compiler.
+
+Bytecode is only emitted for production builds.
+This option has no effect in [Bundle Mode](/docs/bundleMode/).
+
+### omitNativeOnlyData
+
+Defaults to `false`.
+
+This option comes in handy for Web apps. Because Babel ordinarily doesn't get information about the target platform, it includes worklet data in the bundle that only Native apps find relevant. If you enable this option, your bundle size will be smaller.
+
+### relativeSourceLocation
+
+Defaults to `false`.
+
+This option dictates the passed file location for a worklet function's source map. If you enable this option, the file paths will be relative to `process.cwd` (the current directory where Babel executes). This can be handy for Jest test snapshots to ensure consistent results across machines.
+
+### strictGlobal
+
+> **Note**
+>
+> We highly recommend enabling this option as it will be enabled by default in the future.
+
+Defaults to `false`.
+
+This option changes how global variables are handled inside worklet functions. You can read more about closures and global scoping [here](/docs/concepts/closures#global-scoping).
+
+With this option disabled, accessing global variables inside worklet functions will lead to capturing them from the scheduler scope:
+
+```tsx
+global.something = 10;
+
+function setOnUI() {
+  'worklet';
+  console.log(something); // Captured from scheduler scope, prints 10
+}
+```
+
+When you enable `strictGlobal`, accessing a global variable inside a worklet function will result in accessing it directly from the global scope of the worklet runtime:
+
+```tsx
+global.something = 10;
+
+function setOnUI() {
+  'worklet';
+  console.log(something); // undefined - accessed from worklet global scope
+}
+```
+
+To actually access the global variable from another runtime you must assign it to a local variable and use it in the worklet function:
+
+```tsx
+global.something = 10;
+const localSomething = global.something;
+
+function setOnUI() {
+  'worklet';
+  console.log(localSomething); // prints 10
+}
+```
+
+While it might seem handy to copy everything implicitly, it can lead to unexpected behavior when the captured object shouldn't be copied between runtimes. Compare this to the [globals option](#globals), which allows you to specify which global variables should not be copied to the worklet runtime at all.
+
+`strictGlobal` takes precedence over the `globals` option.
+
+### substituteWebPlatformChecks
+
+Defaults to `false`.
+
+This option can also be useful for Web apps. In Reanimated, there are numerous checks to determine the right function implementation for a specific target platform. Enabling this option changes all the checks that identify if the target is a Web app to `true`. This alteration can aid in tree-shaking and contribute to reducing the bundle size.
+
+### importForwarding
+
+Defaults to no forwarding (an empty object).
+
+Configures [import forwarding](../bundleMode/importForwarding.mdx) for Bundle
+Mode. See the dedicated page for the full overview.
+
+#### importForwarding.moduleNames
+
+Defaults to an empty array.
+
+List of exact module names that should be forwarded as imports inside worklet functions.
+
+For example, to use all exports from `my-library` directly on the Worklet
+Runtime, add it to the list:
+
+```javascript
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  // ...
+  importForwarding: { moduleNames: ['my-library'] },
+};
+```
+
+At bundle time, when a worklet function imports from `my-library`, the plugin forwards
+that import into the worklet body:
+
+Before
+After (conceptually)
+
+The module name has to be an exact match — with `my-library` in the list, an
+import from `my-library/some-file` won't be forwarded:
+
+Before
+After (conceptually)
+
+#### importForwarding.relativePaths
+
+Defaults to an empty array.
+
+List of paths that determine whether a module should forward its **relative**
+imports inside worklet functions. If a module's path matches any of the provided paths,
+all relative imports inside that module's worklet functions will be forwarded.
+
+Use this when authoring a library that calls helpers via relative imports
+inside its own worklet functions:
+
+```javascript title="my-library/index.js"
+import { someExport } from './utils';
+
+function foo() {
+  'worklet';
+
+  // We want it forwarded.
+  someExport();
+}
+```
+
+Add the library's path to `relativePaths`:
+
+```javascript
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  // ...
+  importForwarding: { relativePaths: ['my-library'] },
+};
+```
+
+At bundle time, the plugin forwards relative imports inside `my-library` into
+the worklet body:
+
+Before
+After (conceptually)
+
+You can also narrow the path to a subdirectory — e.g. `my-library/src` or
+`my-library/src/utils` — to forward imports from only part of the library.
+
+`moduleNames` won't work here: adding `'./utils'` to it would forward every
+`'./utils'` import across the bundle, potentially breaking other libraries
+with a file at the same relative path. `relativePaths` scopes forwarding to a
+specific package.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-worklets-next/docs/worklets-plugin/oxc
+# Title: OXC plugin
+
+# OXC plugin
+
+> **Note**
+>
+> The OXC plugin is a port of the [Worklets Babel plugin](/docs/worklets-plugin/about) to Rust, built on top of [OXC](https://oxc.rs/). It's an opt-in alternative to the Babel plugin, which remains the default for the time being. Only [Bundle Mode](/docs/bundleMode/) is supported.
+
+## Setup
+
+For setup instructions, refer to the [Bundle Mode setup](/docs/bundleMode/setup?worklets-plugin=oxc#configure-worklets-plugin) with the OXC plugin selected in the tabs.
+
+## Options
+
+The OXC plugin accepts the [`importForwarding`](/docs/worklets-plugin/plugin-options#importforwarding) option and it works the same way as in the Babel plugin.
+
+[`bundleMode`](/docs/worklets-plugin/plugin-options#bundlemode) and [`strictGlobal`](/docs/worklets-plugin/plugin-options#strictglobal) are always on and cannot be turned off. The remaining options of the Babel plugin are ignored.
+
+## Notes
+
+Being a port, the OXC plugin might not cover every edge case that the Babel plugin does. If you find a difference in behavior, please let us know on [GitHub](https://github.com/software-mansion/react-native-reanimated/).
+
