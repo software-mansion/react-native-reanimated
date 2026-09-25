@@ -287,7 +287,7 @@ export type AnimatableValue = Animatable | AnimatableValueObject;
 export interface AnimationObject<T = AnimatableValue> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
-  callback?: AnimationCallback | undefined;
+  callback?: AnimationCallback;
   current?: T | undefined;
   toValue?: AnimationObject<T>['current'];
   startValue?: AnimationObject<T>['current'];
