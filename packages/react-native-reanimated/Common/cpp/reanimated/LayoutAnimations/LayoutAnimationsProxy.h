@@ -40,11 +40,15 @@ struct PendingNodeAnimation {
   std::shared_ptr<Serializable> config;
 };
 
-struct SharedContainer {
-  SharedTag sharedTag;
-  std::shared_ptr<LightNode> node;
-  std::shared_ptr<LightNode> restoreBeforeNode;
-  std::shared_ptr<LightNode> restoreAfterNode;
+// The state of one shared tag on a surface. The views in hiddenNodes stay at
+// opacity 0 until they are restored or removed. The other fields describe the
+// transition that runs now.
+struct SharedElement {
+  std::vector<std::shared_ptr<LightNode>> hiddenNodes;
+  std::shared_ptr<LightNode> container;
+  std::shared_ptr<LightNode> source;
+  std::shared_ptr<LightNode> target;
+  bool gestureDriven = false;
 };
 
 // One in-flight back gesture. Created on the first progress event, destroyed
@@ -93,8 +97,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::optional<ProgressTransition> transition_;
   mutable std::optional<UncommittedScreenPop> uncommittedScreenPop_;
   mutable std::shared_ptr<LightNode> topScreen_;
-  mutable std::unordered_map<Tag, SharedContainer> sharedContainers_;
-  mutable std::unordered_set<Tag> hiddenViewTags_;
+  mutable std::unordered_map<SharedTag, SharedElement> sharedElements_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
@@ -205,18 +208,24 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   void insertContainers(TransactionMeta &transaction, int &rootChildCount) const;
 
-  void removeSharedContainer(Tag containerTag, TransactionMeta &transaction) const;
+  void removeSharedContainer(SharedElement &element, TransactionMeta &transaction) const;
+  void finishSharedTransition(SharedElement &element, TransactionMeta &transaction) const;
+  void retargetSharedElement(
+      SharedElement &element,
+      const std::array<std::shared_ptr<LightNode>, 2> &nodes,
+      TransactionMeta &transaction) const;
+  bool isSharedContainer(Tag tag) const;
+  bool showHiddenView(const std::shared_ptr<LightNode> &node) const;
+  void forgetHiddenView(Tag tag) const;
+  void restoreViewsWithoutSharedTag(TransactionMeta &transaction) const;
 
   std::vector<react::Point> getAbsolutePositionsForRootPathView(
       const std::shared_ptr<LightNode> &node,
       bool useViewsOnScreen) const;
   const ShadowView &viewOnScreen(const std::shared_ptr<LightNode> &node) const;
 
-  Tag getOrCreateContainer(
-      const ShadowView &before,
-      const SharedTag &sharedTag,
-      const std::array<std::shared_ptr<LightNode>, 2> &nodes,
-      TransactionMeta &transaction) const;
+  SharedElement &
+  getOrCreateContainer(const ShadowView &before, const SharedTag &sharedTag, TransactionMeta &transaction) const;
 
   void overrideTransform(
       ShadowView &shadowView,
