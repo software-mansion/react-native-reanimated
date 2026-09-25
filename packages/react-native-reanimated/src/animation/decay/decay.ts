@@ -126,6 +126,6 @@ export const withDecay = function (
       lastTimestamp: 0,
       startTimestamp: 0,
       reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
-    } as unknown as DecayAnimation;
+    } as DecayAnimation;
   });
 } as unknown as withDecayType;
