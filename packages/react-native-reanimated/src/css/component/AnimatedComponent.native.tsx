@@ -40,12 +40,12 @@ export default class AnimatedComponent<
 
   _CSSManager?: CSSManager;
 
-  _viewInfo?: ViewInfo;
+  _viewInfo?: ViewInfo | undefined;
   _cssStyle: CSSStyle = {}; // RN style object with Reanimated CSS properties
   _componentRef: AnimatedComponentRef | HTMLElement | null = null;
   _componentDOMRef: HTMLElement | null = null;
   _willUnmount: boolean = false;
-  _forwardedRefCleanup?: () => void;
+  _forwardedRefCleanup?: (() => void) | undefined;
 
   constructor(ChildComponent: AnyComponent, props: P) {
     super(props);

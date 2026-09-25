@@ -140,7 +140,7 @@ export function createAnimatedComponent<
 
   const animatedComponent = (
     props: Omit<AnimatedProps<ComponentProps<TInstance>>, 'ref'> & {
-      ref?: AnimatedComponentRef<TInstance>;
+      ref?: AnimatedComponentRef<TInstance> | undefined;
     }
   ) => (
     <AnimatedComponent
