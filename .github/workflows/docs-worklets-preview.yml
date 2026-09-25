@@ -47,7 +47,7 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@132898c54c57c7cc6b80eb3a89968de8fc283505
         with:
           FOLDER: ${{ env.WORKLETS_DOCS_DIR }}/build
-          TARGET-FOLDER: react-native-worklets-next
+          TARGET_FOLDER: react-native-worklets-next
           BRANCH: gh-pages
           CLEAN: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
