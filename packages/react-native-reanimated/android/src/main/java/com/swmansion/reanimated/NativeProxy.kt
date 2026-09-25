@@ -251,7 +251,7 @@ open class NativeProxy {
     }
 
     private val getViewExistsMethod by lazy {
-        mountingManager.javaClass.getMethod("getViewExists", Int::class.javaPrimitiveType)
+        runCatching { mountingManager.javaClass.getMethod("getViewExists", Int::class.javaPrimitiveType) }.getOrNull()
     }
 
     @DoNotStrip
@@ -261,7 +261,7 @@ open class NativeProxy {
     ) {
         cssPlatformTransitionsManager.onPropsWrittenSynchronously()
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
-            if (getViewExistsMethod.invoke(mountingManager, viewTag) != true) {
+            if (getViewExistsMethod?.invoke(mountingManager, viewTag) == false) {
                 return@parse
             }
             try {
