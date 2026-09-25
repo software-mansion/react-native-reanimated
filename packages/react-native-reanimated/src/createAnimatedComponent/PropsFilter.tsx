@@ -82,18 +82,10 @@ export class PropsFilter implements IPropsFilter {
           props[key] = dummyListener;
         }
       } else if (isSharedValue(value)) {
-        // Pass the initial value of the inline shared value prop on every
-        // render (not just the first one) so that the props committed by React
-        // stay stable across re-renders, like with animated props initial
-        // values. In particular, this keeps the children of <Animated.Text>
-        // with inline `text` prop intact - committing different text children
-        // would replace the RawText shadow node with one from a new family,
-        // detaching it from the animated updates.
+        // Pass the initial value on every render, not just the first one, so that
+        // the prop (e.g. `children` of <Animated.Text>) isn't dropped on re-render.
         if (!this._initialInlinePropValues.has(key)) {
-          this._initialInlinePropValues.set(
-            key,
-            initialUpdaterRun(() => value.value)
-          );
+          this._initialInlinePropValues.set(key, value.value);
         }
         props[key] = this._initialInlinePropValues.get(key);
       } else {

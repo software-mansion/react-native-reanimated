@@ -1,8 +1,6 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
-#include <react/debug/react_native_assert.h>
-
 #include <cstring>
 #include <memory>
 #include <optional>
@@ -18,15 +16,15 @@ bool isTextComponent(const ShadowNode &shadowNode) {
   return !strcmp(shadowNode.getComponentName(), "Paragraph") || !strcmp(shadowNode.getComponentName(), "Text");
 }
 
-std::optional<std::string> extractTextProp(
+std::optional<std::string> extractChildrenProp(
     const std::vector<RawProps> &propsVector,
     std::vector<RawProps> &strippedProps) {
   std::optional<std::string> text;
   for (const auto &props : propsVector) {
     auto propsDynamic = props.toDynamic();
-    if (const auto *textProp = propsDynamic.get_ptr("text")) {
-      text = textProp->asString();
-      propsDynamic.erase("text");
+    if (const auto *childrenProp = propsDynamic.get_ptr("children")) {
+      text = childrenProp->asString();
+      propsDynamic.erase("children");
     }
     if (!propsDynamic.empty()) {
       strippedProps.emplace_back(std::move(propsDynamic));
@@ -36,7 +34,6 @@ std::optional<std::string> extractTextProp(
 }
 
 std::shared_ptr<const ShadowNode> cloneRawTextWithNewText(const ShadowNode &rawTextNode, const std::string &text) {
-  react_native_assert(!strcmp(rawTextNode.getComponentName(), "RawText"));
   PropsParserContext propsParserContext{rawTextNode.getSurfaceId(), *rawTextNode.getContextContainer()};
   auto newProps = rawTextNode.getComponentDescriptor().cloneProps(
       propsParserContext, rawTextNode.getProps(), RawProps(folly::dynamic::object("text", text)));
@@ -91,8 +88,8 @@ std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
   if (propsIt != propsMap.end()) {
     if (isTextComponent(shadowNode)) {
       std::vector<RawProps> strippedProps;
-      if (const auto text = extractTextProp(propsIt->second, strippedProps)) {
-        react_native_assert(!children.empty());
+      const auto text = extractChildrenProp(propsIt->second, strippedProps);
+      if (text && !children.empty()) {
         children[0] = cloneRawTextWithNewText(*children[0], *text);
       }
       newProps = mergeProps(shadowNode, strippedProps);
