@@ -30,8 +30,8 @@
     minmax(0, 1fr) 36px minmax(0, 0.9fr) 36px
     minmax(0, 1fr);
   align-items: stretch;
-  padding: 30px 18px 18px;
-  border-radius: 16px;
+  padding: 44px 18px 18px;
+  border-radius: 0;
   background-color: var(--dg-bg);
 }
 
@@ -60,7 +60,7 @@
 
 .title {
   position: absolute;
-  top: -20px;
+  bottom: 100%;
   left: -2px;
   padding: 2px 12px;
   border: 2px solid var(--dg-border);
@@ -173,46 +173,17 @@
 }
 
 .phone {
+  --phone-width: 96px;
+  --phone-border: var(--dg-ui);
+  --phone-panel: var(--dg-panel);
+  --phone-screen: var(--dg-fill);
   align-self: center;
-  width: 96px;
-  padding: 7px 6px;
-  border: 3px solid var(--dg-ui);
-  border-radius: 18px;
-  background-color: var(--dg-panel);
-}
-
-.phoneNotch {
-  width: 32px;
-  height: 5px;
-  margin: 0 auto 6px;
-  border-radius: 3px;
-  background-color: var(--dg-border);
-}
-
-.phoneScreen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 96px;
-  border-radius: 10px;
-  background-color: var(--dg-fill);
 }
 
 .phoneText {
   font-size: 1.5rem;
   font-weight: 700;
   line-height: 1;
-}
-
-.phoneButton {
-  padding: 4px 10px;
-  border: 2px solid var(--dg-border);
-  border-radius: 999px;
-  background-color: var(--dg-panel);
-  font-size: 0.66rem;
-  font-weight: 600;
 }
 
 @media (max-width: 640px) {

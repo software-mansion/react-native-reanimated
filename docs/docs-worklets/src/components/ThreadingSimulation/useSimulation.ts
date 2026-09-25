@@ -20,6 +20,7 @@ interface SessionOptions {
   uiRuntime: boolean;
   screen: ScreenState | undefined;
   skipTicks: number;
+  bootTicks: number;
   durationTicks: number | undefined;
 }
 
@@ -48,6 +49,7 @@ class Session {
         bundleMode: this.options.bundleMode,
         uiRuntime: this.options.uiRuntime,
         screen: this.options.screen,
+        bootTicks: this.options.bootTicks,
       });
       machine.skip(this.options.skipTicks);
       this.machine = machine;
@@ -154,6 +156,7 @@ export function useSimulation(
   uiRuntime: boolean,
   screen: ScreenState | undefined,
   skipTicks: number,
+  bootTicks: number,
   durationTicks: number | undefined,
   tickMs: number,
   enabled: boolean,
@@ -179,9 +182,19 @@ export function useSimulation(
         uiRuntime,
         screen: (JSON.parse(screenKey) as ScreenState | null) ?? undefined,
         skipTicks,
+        bootTicks,
         durationTicks,
       }),
-    [module, source, bundleMode, uiRuntime, screenKey, skipTicks, durationTicks]
+    [
+      module,
+      source,
+      bundleMode,
+      uiRuntime,
+      screenKey,
+      skipTicks,
+      bootTicks,
+      durationTicks,
+    ]
   );
 
   const [tick, setTick] = useState(0);

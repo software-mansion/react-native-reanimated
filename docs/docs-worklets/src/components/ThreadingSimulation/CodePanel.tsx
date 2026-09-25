@@ -11,6 +11,12 @@ import type { RuntimeDescriptor } from './runtimeColors';
 
 export type LineHistory = Map<number, Map<string, number>>;
 
+export interface GhostCode {
+  code: string;
+  rawToDisplayLine: number[];
+  blockEnds: Map<number, number>;
+}
+
 interface CodePanelProps {
   code: string;
   runtimes: RuntimeDescriptor[];
@@ -20,9 +26,48 @@ interface CodePanelProps {
   history: LineHistory;
   settled: boolean;
   columns?: number;
+  ghost?: GhostCode;
+}
+
+interface CodeListProps {
+  code: string;
+  runtimes: RuntimeDescriptor[];
+  cores: CoreSnapshot[];
+  rawToDisplayLine: number[];
+  blockEnds: Map<number, number>;
+  history: LineHistory;
+  settled: boolean;
+  columns: number;
+  className?: string;
 }
 
 export default function CodePanel({
+  ghost,
+  columns = 1,
+  ...list
+}: CodePanelProps) {
+  if (ghost === undefined) {
+    return <CodeList {...list} columns={columns} />;
+  }
+  return (
+    <div className={styles.codeStack}>
+      <CodeList {...list} columns={columns} />
+      <CodeList
+        code={ghost.code}
+        runtimes={[]}
+        cores={[]}
+        rawToDisplayLine={ghost.rawToDisplayLine}
+        blockEnds={ghost.blockEnds}
+        history={new Map()}
+        settled
+        columns={columns}
+        className={styles.codeGhost}
+      />
+    </div>
+  );
+}
+
+function CodeList({
   code,
   runtimes,
   cores,
@@ -30,8 +75,9 @@ export default function CodePanel({
   blockEnds,
   history,
   settled,
-  columns = 1,
-}: CodePanelProps) {
+  columns,
+  className,
+}: CodeListProps) {
   const blockStartOf = new Map<number, number>();
   for (const [start, end] of blockEnds) {
     for (let line = start; line <= end; line++) {
@@ -67,7 +113,8 @@ export default function CodePanel({
         <div
           className={clsx(
             styles.codeList,
-            columns > 1 && styles.codeListColumns
+            columns > 1 && styles.codeListColumns,
+            className
           )}
           style={columns > 1 ? { columnCount: columns } : undefined}>
           {chunkLines(tokens, blockStartOf).map((chunk, chunkIndex) => (

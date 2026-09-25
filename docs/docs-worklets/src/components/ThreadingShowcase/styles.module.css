@@ -111,9 +111,10 @@
 
 .speed {
   display: flex;
+  flex: 1;
   align-items: center;
   gap: 8px;
-  margin-left: auto;
+  min-width: 0;
   padding: 4px 3px;
   border: 1px solid var(--ifm-color-emphasis-300);
   border-radius: 999px;
@@ -130,8 +131,8 @@
 }
 
 .speedSlider {
-  flex-shrink: 0;
-  width: 160px;
+  flex: 1;
+  min-width: 80px;
   margin: 0;
   accent-color: var(--ifm-color-primary);
   cursor: pointer;

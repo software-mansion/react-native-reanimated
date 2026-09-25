@@ -27,9 +27,9 @@ where asynchronous returns wouldn't be sufficient.
 
 ## Getting the result of a periodic task
 
-Previous examples showed us how to return the result of a singular worklet at the point of its
-invocation. What if we had a long-running task, yielding results continuously, but we wanted to poll
-the data only occasionally?
+Previous examples showed us how to return the result of a singular worklet function at the point of
+its invocation. What if we had a long-running task, yielding results continuously, but we wanted to
+poll the data only occasionally?
 
 <ThreadingSimulation module={SyncPeriodicSnippet} source={SyncPeriodicSource} durationTicks={120} tickMs={200}/>
 
@@ -60,7 +60,7 @@ anti-pattern, but please **use it as a last resort escape hatch.**
 
 ## With a Synchronizable
 
-A [Synchronizable](/docs/memory/synchronizable) is a memory primitive in Worklets library, that
+A [Synchronizable](/docs/memory/synchronizable) is a memory primitive in the Worklets library, that
 lives outside of any Runtime's JavaScript heap. Reading it and writing to it doesn't require making
 cross-runtime call and is the cheapest option of synchronizing the data between Runtimes.
 
@@ -154,5 +154,5 @@ flow is visualized by the simulation below.
 
 ## Future tutorials
 
-In the future chapters we'll learn how to integrate with C++ API of Worklets library for use-cases
-that can't be covered with just JavaScript code.
+In the future chapters we'll learn how to integrate with C++ API of the Worklets library for
+use-cases that can't be covered with just JavaScript code.

@@ -3,6 +3,7 @@ import clsx from 'clsx';
 
 import type { ScreenState } from '@site/src/simulation';
 
+import PhoneFrame from '@site/src/components/PhoneFrame';
 import styles from './styles.module.css';
 
 interface LayoutNode {
@@ -30,12 +31,7 @@ export default function Phone({
   className,
 }: PhoneProps) {
   const tree = isLayoutNode(screen.tree) ? screen.tree : null;
-  const [touched, setTouched] = useState<{
-    id: string;
-    x: number;
-    y: number;
-  } | null>(null);
-  const screenRef = useRef<HTMLDivElement | null>(null);
+  const [touched, setTouched] = useState<{ id: string } | null>(null);
   const touch =
     touched?.id ?? (typeof screen.touch === 'string' ? screen.touch : null);
   const nativeProps = (screen.nativeProps ?? {}) as NativeProps;
@@ -51,15 +47,8 @@ export default function Phone({
   const press =
     onPress === undefined
       ? undefined
-      : (id: string, event: React.MouseEvent) => {
-          const bounds = screenRef.current?.getBoundingClientRect();
-          if (bounds !== undefined) {
-            setTouched({
-              id,
-              x: event.clientX - bounds.left,
-              y: event.clientY - bounds.top,
-            });
-          }
+      : (id: string) => {
+          setTouched({ id });
           onPress(id);
         };
   const pulse = tree === null ? undefined : findPulse(tree, nativeProps);
@@ -77,32 +66,23 @@ export default function Phone({
     return () => window.clearTimeout(timeout);
   }, [pulse]);
   return (
-    <div
-      className={clsx(styles.phone, redrawn && styles.phoneRedrawn, className)}
+    <PhoneFrame
+      className={clsx(styles.phone, className)}
       aria-label="Phone screen"
-      data-help="The app screen. Only the UI thread draws it; other threads send patches that arrive as a draw-frame job. Pressing the button queues a job.">
-      {waves.map((waveId) => (
+      data-help="The app screen. Only the UI thread draws it; other threads send patches that arrive as a draw-frame job. Pressing the button queues a job."
+      overlay={waves.map((waveId) => (
         <span key={waveId} className={styles.phoneWaves} aria-hidden>
           <span className={styles.phoneWaveRing} />
           <span className={styles.phoneWaveRing} />
           <span className={styles.phoneWaveRing} />
         </span>
-      ))}
-      <div className={styles.phoneNotch} />
-      <div className={styles.phoneScreen} ref={screenRef}>
-        {touched !== null && (
-          <span
-            className={styles.phoneTouch}
-            style={{ left: touched.x, top: touched.y }}
-          />
-        )}
-        {tree === null ? (
-          <span className={styles.phoneEmpty}>nothing rendered yet</span>
-        ) : (
-          renderNode(tree, touch, nativeProps, press, 'root')
-        )}
-      </div>
-    </div>
+      ))}>
+      {tree === null ? (
+        <span className={styles.phoneEmpty}>nothing rendered yet</span>
+      ) : (
+        renderNode(tree, touch, nativeProps, press, 'root')
+      )}
+    </PhoneFrame>
   );
 }
 
@@ -147,13 +127,7 @@ function renderNode(
     return <Feed key={key} posts={posts} />;
   }
   if (node.type === 'Speaker') {
-    return (
-      <span key={key} className={styles.phoneSpeaker} aria-label="Speaker">
-        <span />
-        <span />
-        <span />
-      </span>
-    );
+    return null;
   }
   if (node.type === 'Spinner') {
     const rotation = Number(overrides.rotation ?? node.props.rotation ?? 0);

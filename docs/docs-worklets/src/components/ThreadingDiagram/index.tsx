@@ -1,6 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 
+import PhoneFrame from '@site/src/components/PhoneFrame';
 import styles from './styles.module.css';
 
 export default function ThreadingDiagram() {
@@ -50,13 +51,9 @@ export default function ThreadingDiagram() {
             <span className={styles.boxTitle}>Native UI</span>
             <span className={styles.boxDetail}>consumes the updates</span>
           </div>
-          <div className={styles.phone} aria-hidden="true">
-            <div className={styles.phoneNotch} />
-            <div className={styles.phoneScreen}>
-              <span className={styles.phoneText}>1</span>
-              <span className={styles.phoneButton}>Increment</span>
-            </div>
-          </div>
+          <PhoneFrame className={styles.phone} aria-hidden="true">
+            <span className={styles.phoneText}>1</span>
+          </PhoneFrame>
           <span className={styles.note}>draws the views on screen</span>
         </section>
       </div>

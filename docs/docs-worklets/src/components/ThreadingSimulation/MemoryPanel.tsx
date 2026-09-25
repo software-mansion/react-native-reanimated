@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import clsx from 'clsx';
 
 import type { CoreSnapshot, MemorySnapshot } from '@site/src/simulation';
@@ -35,9 +35,98 @@ export default function MemoryPanel({
     cell.accessedBy === null || !settled
       ? undefined
       : allRuntimes.find((candidate) => candidate.id === cell.accessedBy);
+  const rowRef = useRef<HTMLDivElement | null>(null);
+  const rectsRef = useRef(new Map<string, DOMRect>());
+  const animationsRef = useRef(new Map<string, RunningShift>());
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+    if (row === null) {
+      return;
+    }
+    const rects = new Map<string, DOMRect>();
+    const rowRect = row.getBoundingClientRect();
+    const scale = row.offsetWidth === 0 ? 1 : rowRect.width / row.offsetWidth;
+    const relative = (rect: DOMRect) =>
+      new DOMRect(
+        (rect.left - rowRect.left) / scale,
+        (rect.top - rowRect.top) / scale,
+        rect.width / scale,
+        rect.height / scale
+      );
+    const pairs = Array.from(row.children).filter(
+      (child): child is HTMLElement =>
+        child instanceof HTMLElement && child.dataset.runtime !== undefined
+    );
+    const keys = pairs.map((pair) => pair.dataset.runtime as string);
+    const membersChanged =
+      keys.length !== rectsRef.current.size ||
+      keys.some((key) => !rectsRef.current.has(key));
+    for (const pair of pairs) {
+      const key = pair.dataset.runtime as string;
+      const stored = animationsRef.current.get(key);
+      const active =
+        stored !== undefined && stored.animation.playState === 'running';
+      const previous = rectsRef.current.get(key);
+      if (!membersChanged) {
+        rects.set(
+          key,
+          active && previous !== undefined
+            ? previous
+            : relative(pair.getBoundingClientRect())
+        );
+        continue;
+      }
+      const visual = relative(pair.getBoundingClientRect());
+      const elapsed = stored?.animation.currentTime;
+      stored?.animation.cancel();
+      animationsRef.current.delete(key);
+      const target = relative(pair.getBoundingClientRect());
+      rects.set(key, target);
+      if (previous === undefined) {
+        continue;
+      }
+      if (active && stored !== undefined && sameRect(previous, target)) {
+        const animation = pair.animate(stored.keyframes, SHIFT_OPTIONS);
+        animation.currentTime = elapsed ?? 0;
+        animationsRef.current.set(key, {
+          animation,
+          keyframes: stored.keyframes,
+        });
+        continue;
+      }
+      const start = active
+        ? new DOMRect(
+            previous.left + (visual.left - target.left),
+            previous.top + (visual.top - target.top),
+            visual.width,
+            visual.height
+          )
+        : previous;
+      if (sameRect(start, target)) {
+        continue;
+      }
+      const keyframes: Keyframe[] = [
+        {
+          width: `${start.width}px`,
+          transform: `translate(${start.left - target.left}px, ${start.top - target.top}px)`,
+        },
+        { width: `${target.width}px`, transform: 'translate(0, 0)' },
+      ];
+      const animation = pair.animate(keyframes, SHIFT_OPTIONS);
+      animationsRef.current.set(key, { animation, keyframes });
+      animation.finished
+        .then(() => {
+          if (animationsRef.current.get(key)?.animation === animation) {
+            animationsRef.current.delete(key);
+          }
+        })
+        .catch(() => undefined);
+    }
+    rectsRef.current = rects;
+  });
   return (
     <div className={styles.memoryColumn}>
-      <div className={styles.vmRow}>
+      <div className={styles.vmRow} ref={rowRef}>
         {ordered.map((runtime) => {
           const executor = cores.find(
             (candidate) =>
@@ -68,6 +157,7 @@ export default function MemoryPanel({
           return (
             <div
               key={runtime.id}
+              data-runtime={runtime.id}
               className={clsx(
                 styles.vmPair,
                 placeholder && styles.vmPlaceholder
@@ -177,6 +267,24 @@ export default function MemoryPanel({
         </div>
       )}
     </div>
+  );
+}
+
+const SHIFT_OPTIONS: KeyframeAnimationOptions = {
+  duration: 320,
+  easing: 'cubic-bezier(0.2, 0, 0, 1)',
+};
+
+interface RunningShift {
+  animation: Animation;
+  keyframes: Keyframe[];
+}
+
+function sameRect(a: DOMRect, b: DOMRect): boolean {
+  return (
+    Math.abs(a.left - b.left) < 0.5 &&
+    Math.abs(a.top - b.top) < 0.5 &&
+    Math.abs(a.width - b.width) < 0.5
   );
 }
 

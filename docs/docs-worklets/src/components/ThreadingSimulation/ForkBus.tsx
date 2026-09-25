@@ -41,6 +41,32 @@ export default function ForkBus({
         const style = { '--slot': index } as React.CSSProperties;
         return (
           <React.Fragment key={lineKey}>
+            {isActive && (
+              <span
+                className={clsx(styles.busField, styles.busFieldUp, colorClass)}
+                style={style}
+              />
+            )}
+            {isActive && showDown && (
+              <span
+                className={clsx(
+                  styles.busField,
+                  styles.busFieldDown,
+                  colorClass
+                )}
+                style={style}
+              />
+            )}
+            {isActive && (
+              <span
+                className={clsx(
+                  styles.busField,
+                  styles.busFieldRight,
+                  colorClass
+                )}
+                style={style}
+              />
+            )}
             <span
               className={clsx(
                 styles.forkLine,

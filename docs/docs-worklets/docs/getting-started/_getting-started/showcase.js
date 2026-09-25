@@ -67,9 +67,9 @@ export function* renderUI(count) {
 
 export default function* main() {
   const audio = yield createWorkletRuntime({ name: 'audio' });
-  const markdown = yield createWorkletRuntime({ name: 'markdown' });
+  const md = yield createWorkletRuntime({ name: 'markdown' });
   yield scheduleOnRuntime(audio, streamAudio, 1);
-  yield scheduleOnRuntime(markdown, renderMarkdown, 'README.md', 1);
+  yield scheduleOnRuntime(md, renderMarkdown, 'README.md', 1);
   yield scheduleOnUI(animateSpinner, 0);
   yield refreshFeed(1);
 }

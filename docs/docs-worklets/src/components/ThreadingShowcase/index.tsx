@@ -18,6 +18,7 @@ interface ThreadingShowcaseProps {
   tickMs?: number;
 }
 
+const BOOT_TICKS = 4;
 const TICK_STEP_MS = 50;
 const TICK_MIN_MS = 16;
 const TICK_MAX_MS = 1000;
@@ -91,28 +92,32 @@ export default function ThreadingShowcase({
             ? 'four runtimes, four threads'
             : 'everything runs on the JS thread'}
         </span>
-        <label className={styles.speed}>
-          <span className={styles.speedLabel}>tick</span>
-          <input
-            type="range"
-            className={styles.speedSlider}
-            min={TICK_MIN_MS}
-            max={TICK_MAX_MS}
-            step={1}
-            value={tickMs}
-            onChange={(event) =>
-              setTickMs(snapTick(Number(event.target.value)))
-            }
-            aria-label="Tick length in milliseconds"
-          />
-          <span className={styles.speedValue}>{formatTick(tickMs)}</span>
-        </label>
       </div>
       <ThreadingSimulation
+        cpuFooter={
+          <label className={styles.speed}>
+            <span className={styles.speedLabel}>tick</span>
+            <input
+              type="range"
+              className={styles.speedSlider}
+              min={TICK_MIN_MS}
+              max={TICK_MAX_MS}
+              step={1}
+              value={tickMs}
+              onChange={(event) =>
+                setTickMs(snapTick(Number(event.target.value)))
+              }
+              aria-label="Tick length in milliseconds"
+            />
+            <span className={styles.speedValue}>{formatTick(tickMs)}</span>
+          </label>
+        }
         key={enabled ? 'worklets' : 'single'}
         module={variant.module}
         source={variant.source}
         uiRuntime={enabled}
+        bootTicks={BOOT_TICKS}
+        ghostSource={enabled ? single.source : worklets.source}
         phone
         pressHandler={enabled ? 'onPress' : 'handlePress'}
         screen={INITIAL_SCREEN}
@@ -123,6 +128,7 @@ export default function ThreadingShowcase({
         codeOpen={codeOpen}
         onCodeOpenChange={setCodeOpen}
         durationTicks={durationTicks}
+        fitWidth={false}
         tickMs={tickMs}
       />
     </div>

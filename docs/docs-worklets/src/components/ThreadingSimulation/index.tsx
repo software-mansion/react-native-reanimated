@@ -1,5 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import clsx from 'clsx';
+import { flushSync } from 'react-dom';
 
 import type {
   ScreenState,
@@ -7,9 +15,11 @@ import type {
   SnippetModule,
 } from '@site/src/simulation';
 
+import { displaySource, simulate } from '@site/src/simulation';
 import CodePanel from './CodePanel';
 import type { LineHistory } from './CodePanel';
 import CpuPanel, { CORE_COUNT } from './CpuPanel';
+import { SIMULATION_CLOSE_EVENT, SIMULATION_OPEN_EVENT } from './events';
 import ForkBus from './ForkBus';
 import type { BusSlot } from './ForkBus';
 import MemoryPanel from './MemoryPanel';
@@ -41,9 +51,157 @@ interface ThreadingSimulationProps {
   codeOpen?: boolean;
   onCodeOpenChange?: (open: boolean) => void;
   tickMs?: number;
+  fitWidth?: boolean;
+  cpuFooter?: React.ReactNode;
+  bootTicks?: number;
+  ghostSource?: string;
 }
 
 const DEFAULT_TICK_MS = 1800;
+const REVEAL_MS = 480;
+const PAGE_GUTTER = 32;
+
+let zoomPropertyRegistered = false;
+
+function registerZoomProperty(): void {
+  if (
+    zoomPropertyRegistered ||
+    typeof CSS === 'undefined' ||
+    !CSS.registerProperty
+  ) {
+    return;
+  }
+  zoomPropertyRegistered = true;
+  try {
+    CSS.registerProperty({
+      name: '--sim-zoom',
+      syntax: '<number>',
+      inherits: false,
+      initialValue: '1',
+    });
+  } catch {
+    return;
+  }
+}
+
+function sidebarWidth(hidden: boolean): number {
+  if (window.innerWidth < 997) {
+    return 0;
+  }
+  const value = getComputedStyle(document.documentElement).getPropertyValue(
+    hidden ? '--doc-sidebar-hidden-width' : '--doc-sidebar-width'
+  );
+  const parsed = parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : hidden ? 30 : 300;
+}
+const REVEAL_EASING = 'cubic-bezier(0.2, 0, 0, 1)';
+
+type Phase = 'idle' | 'measure' | 'opening' | 'closing';
+
+interface BoxSize {
+  width: number;
+  height: number;
+}
+
+interface BoxParts {
+  outer: HTMLElement;
+  stage: HTMLElement;
+  scene: HTMLElement | null;
+  code: HTMLElement | null;
+}
+
+function animateBox(
+  { outer, stage, scene, code }: BoxParts,
+  from: BoxSize,
+  to: BoxSize,
+  onDone: () => void
+): void {
+  if (
+    Math.abs(from.height - to.height) < 1 &&
+    Math.abs(from.width - to.width) < 1
+  ) {
+    onDone();
+    return;
+  }
+  const columns =
+    scene === null ? '' : getComputedStyle(scene).gridTemplateColumns;
+  outer.style.width = `${from.width}px`;
+  outer.style.overflow = 'clip';
+  outer.style.overflowClipMargin = '8px';
+  stage.style.height = `${from.height}px`;
+  stage.style.overflow = 'clip';
+  stage.style.overflowClipMargin = '8px';
+  if (scene !== null) {
+    scene.style.gridTemplateColumns = columns;
+    scene.style.overflow = 'clip';
+  }
+  let frame = 0;
+  const followEdge = () => {
+    if (scene !== null && code !== null) {
+      const style = getComputedStyle(scene);
+      const inner =
+        scene.clientWidth -
+        parseFloat(style.paddingLeft) -
+        parseFloat(style.paddingRight);
+      code.style.justifySelf = 'start';
+      code.style.width = `${Math.max(inner, 0)}px`;
+    }
+    frame = requestAnimationFrame(followEdge);
+  };
+  followEdge();
+  outer.getBoundingClientRect();
+  outer.style.transition = `width ${REVEAL_MS}ms ${REVEAL_EASING}`;
+  stage.style.transition = `height ${REVEAL_MS}ms ${REVEAL_EASING}`;
+  outer.style.width = `${to.width}px`;
+  stage.style.height = `${to.height}px`;
+  let finished = false;
+  const finish = () => {
+    if (finished) {
+      return;
+    }
+    finished = true;
+    cancelAnimationFrame(frame);
+    flushSync(onDone);
+    for (const element of [outer, stage]) {
+      element.style.width = '';
+      element.style.height = '';
+      element.style.overflow = '';
+      element.style.overflowClipMargin = '';
+      element.style.transition = '';
+    }
+    if (scene !== null) {
+      scene.style.gridTemplateColumns = '';
+      scene.style.overflow = '';
+    }
+    if (code !== null) {
+      code.style.justifySelf = '';
+      code.style.width = '';
+    }
+  };
+  stage.addEventListener(
+    'transitionend',
+    (event) => {
+      if (event.target === stage) {
+        finish();
+      }
+    },
+    { once: true }
+  );
+  window.setTimeout(finish, REVEAL_MS + 100);
+}
+
+function codePanelOf(scene: HTMLElement | null): HTMLElement | null {
+  const code = scene?.getElementsByClassName(styles.areaCode)[0];
+  return code instanceof HTMLElement ? code : null;
+}
+
+function sizeOf(outer: HTMLElement, stage: HTMLElement): BoxSize {
+  return { width: outer.offsetWidth, height: stage.offsetHeight };
+}
+
+function reducedMotion(): boolean {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 const MIN_PULSE_MS = 64;
 
 export default function ThreadingSimulation({
@@ -67,8 +225,18 @@ export default function ThreadingSimulation({
   codeOpen: controlledCodeOpen,
   onCodeOpenChange,
   tickMs = DEFAULT_TICK_MS,
+  fitWidth = true,
+  cpuFooter,
+  bootTicks = 0,
+  ghostSource,
 }: ThreadingSimulationProps) {
   const [open, setOpen] = useState(defaultOpen || alwaysOn);
+  const [phase, setPhase] = useState<Phase>('idle');
+  const simulationId = useId();
+  const outerRef = useRef<HTMLDivElement | null>(null);
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const barRef = useRef<HTMLButtonElement | null>(null);
+  const collapsedSizeRef = useRef<BoxSize | null>(null);
   const [localCodeOpen, setLocalCodeOpen] = useState(!collapsibleCode);
   const [boilerplate, setBoilerplate] = useState(false);
   const [inspecting, setInspecting] = useState(false);
@@ -117,12 +285,28 @@ export default function ThreadingSimulation({
     uiRuntime,
     screen,
     skipTicks,
+    bootTicks,
     durationTicks,
     tickMs,
     open,
     alwaysOn,
     boilerplate
   );
+  const ghost = useMemo(() => {
+    if (ghostSource === undefined) {
+      return undefined;
+    }
+    try {
+      const display = displaySource(ghostSource, { boilerplate });
+      return {
+        code: display.text,
+        rawToDisplayLine: display.rawToDisplayLine,
+        blockEnds: display.blockEnds,
+      };
+    } catch {
+      return undefined;
+    }
+  }, [ghostSource, boilerplate]);
   const boilerplateButton = boilerplateToggle && (
     <button
       type="button"
@@ -133,7 +317,199 @@ export default function ThreadingSimulation({
     </button>
   );
 
+  const expand = () => {
+    if (outerRef.current !== null && stageRef.current !== null) {
+      collapsedSizeRef.current = sizeOf(outerRef.current, stageRef.current);
+    }
+    setOpen(true);
+    setPhase('measure');
+  };
+  const hide = () => {
+    simulation.pause();
+    if (reducedMotion()) {
+      setOpen(false);
+      window.dispatchEvent(
+        new CustomEvent(SIMULATION_CLOSE_EVENT, { detail: simulationId })
+      );
+      return;
+    }
+    setPhase('closing');
+  };
+
+  useLayoutEffect(() => {
+    const stage = stageRef.current;
+    const outer = outerRef.current;
+    const parent = outer?.parentElement;
+    if (fitWidth || stage === null || outer === null || !parent) {
+      return;
+    }
+    const main = outer.closest('main');
+    registerZoomProperty();
+    const fit = (animate: boolean) => {
+      const outerStyle = getComputedStyle(outer);
+      const shownWidth = outerStyle.width;
+      const shownMargin = outerStyle.marginLeft;
+      const shownZoom = getComputedStyle(stage).getPropertyValue('--sim-zoom');
+      outer.style.transition = 'none';
+      stage.style.transition = 'none';
+      stage.style.setProperty('--sim-zoom', '1');
+      outer.style.width = 'max-content';
+      outer.style.maxWidth = 'none';
+      const natural = outer.offsetWidth;
+      outer.style.width = shownWidth;
+      outer.style.marginLeft = shownMargin;
+      stage.style.setProperty('--sim-zoom', shownZoom || '1');
+      outer.getBoundingClientRect();
+      if (animate) {
+        outer.style.transition = '';
+        stage.style.transition = '';
+      }
+      const column = parent.clientWidth;
+      const enhanced = main !== null && main.className.includes('Enhanced');
+      const sidebar = sidebarWidth(enhanced);
+      const mainLeft = sidebar;
+      const mainWidth = document.documentElement.clientWidth - sidebar;
+      const roomy = enhanced ? mainWidth - 2 * PAGE_GUTTER : 0;
+      const available = Math.max(column, roomy);
+      const width = Math.min(natural, available);
+      outer.style.width = `${width}px`;
+      stage.style.setProperty(
+        '--sim-zoom',
+        natural > available ? String(available / natural) : '1'
+      );
+      if (main !== null && width > column) {
+        const parentLeft = parent.getBoundingClientRect().left;
+        outer.style.marginLeft = `${mainLeft + (mainWidth - width) / 2 - parentLeft}px`;
+      } else {
+        outer.style.marginLeft = '0px';
+      }
+      if (!animate) {
+        outer.getBoundingClientRect();
+        outer.style.transition = '';
+        stage.style.transition = '';
+      }
+    };
+    fit(false);
+    let alive = true;
+    document.fonts?.ready.then(() => {
+      if (alive) {
+        fit(false);
+      }
+    });
+    let timer = 0;
+    const settle = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => fit(false), 150);
+    };
+    const resizes = new ResizeObserver(settle);
+    resizes.observe(parent);
+    const classes =
+      main === null
+        ? null
+        : new MutationObserver(() => {
+            fit(true);
+          });
+    if (main !== null && classes !== null) {
+      classes.observe(main, { attributes: true, attributeFilter: ['class'] });
+    }
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+      resizes.disconnect();
+      classes?.disconnect();
+    };
+  }, [fitWidth, open]);
+
+  useLayoutEffect(() => {
+    const stage = stageRef.current;
+    const outer = outerRef.current;
+    if (stage === null || outer === null) {
+      return;
+    }
+    if (phase === 'measure') {
+      const available = outer.parentElement?.clientWidth ?? Infinity;
+      outer.style.maxWidth = 'none';
+      outer.style.width = 'max-content';
+      const natural = outer.offsetWidth;
+      outer.style.maxWidth = '';
+      outer.style.width = '';
+      if (natural > available + 1) {
+        window.dispatchEvent(
+          new CustomEvent(SIMULATION_OPEN_EVENT, { detail: simulationId })
+        );
+      }
+      if (reducedMotion() || collapsedSizeRef.current === null) {
+        setPhase('idle');
+        return;
+      }
+      setPhase('opening');
+      animateBox(
+        {
+          outer,
+          stage,
+          scene: sceneRef.current,
+          code: codePanelOf(sceneRef.current),
+        },
+        collapsedSizeRef.current,
+        sizeOf(outer, stage),
+        () => setPhase('idle')
+      );
+    }
+    if (phase === 'closing') {
+      const scene = sceneRef.current;
+      const code = codePanelOf(scene);
+      const bar = barRef.current;
+      if (scene === null || code === null) {
+        setOpen(false);
+        setPhase('idle');
+        return;
+      }
+      const sceneStyle = getComputedStyle(scene);
+      const stageGap = parseFloat(getComputedStyle(stage).rowGap) || 0;
+      const from = sizeOf(outer, stage);
+      const to = {
+        width: collapsedSizeRef.current?.width ?? from.width,
+        height:
+          code.getBoundingClientRect().bottom -
+          scene.getBoundingClientRect().top +
+          parseFloat(sceneStyle.paddingBottom) +
+          (bar === null ? 0 : stageGap + bar.offsetHeight),
+      };
+      animateBox({ outer, stage, scene, code }, from, to, () => {
+        setOpen(false);
+        setPhase('idle');
+        window.dispatchEvent(
+          new CustomEvent(SIMULATION_CLOSE_EVENT, { detail: simulationId })
+        );
+      });
+    }
+  }, [phase, simulationId]);
   const logs = collectLogs(simulation.snapshots, simulation.tick - 1);
+  const screenKey = JSON.stringify(screen ?? null);
+  const expectedLogs = useMemo(() => {
+    try {
+      const snapshots = simulate(module, source, {
+        bundleMode,
+        uiRuntime,
+        screen: (JSON.parse(screenKey) as ScreenState | null) ?? undefined,
+        skipTicks,
+        bootTicks,
+        durationTicks,
+      });
+      return collectLogs(snapshots, snapshots.length);
+    } catch {
+      return [];
+    }
+  }, [
+    module,
+    source,
+    bundleMode,
+    uiRuntime,
+    screenKey,
+    skipTicks,
+    bootTicks,
+    durationTicks,
+  ]);
   const shownAtRef = useRef(new Map<number, number>());
   useEffect(() => {
     if (simulation.tick === 0) {
@@ -191,26 +567,31 @@ export default function ThreadingSimulation({
 
   if (!open) {
     return (
-      <div className={styles.container}>
+      <div
+        className={clsx(styles.container, !fitWidth && styles.containerFull)}
+        ref={outerRef}>
         {title !== undefined && <p className={styles.title}>{title}</p>}
-        <div className={styles.collapsed}>
-          <CodePanel
-            code={simulation.displayText}
-            runtimes={[]}
-            cores={[]}
-            rawToDisplayLine={simulation.rawToDisplayLine}
-            blockEnds={simulation.blockEnds}
-            history={new Map()}
-            settled
-            columns={codeColumns}
-          />
-          {boilerplateToggle && (
-            <div className={styles.codeFooter}>{boilerplateButton}</div>
-          )}
+        <div className={styles.stage} ref={stageRef}>
+          <div className={clsx(styles.scene, styles.sceneCollapsed)}>
+            <Panel title="Code" className={styles.areaCode}>
+              <CodePanel
+                code={simulation.displayText}
+                runtimes={[]}
+                cores={[]}
+                rawToDisplayLine={simulation.rawToDisplayLine}
+                blockEnds={simulation.blockEnds}
+                history={new Map()}
+                settled
+                columns={codeColumns}
+                ghost={ghost}
+              />
+              <div className={styles.codeFooter}>{boilerplateButton}</div>
+            </Panel>
+          </div>
           <button
             type="button"
-            className={styles.expand}
-            onClick={() => setOpen(true)}
+            className={clsx(styles.toggleBar, styles.toggleBarButton)}
+            onClick={expand}
             aria-expanded={false}>
             <span className={styles.expandChevron} aria-hidden="true" />
             See how it works
@@ -221,229 +602,259 @@ export default function ThreadingSimulation({
   }
 
   return (
-    <div className={styles.container}>
+    <div
+      className={clsx(styles.container, !fitWidth && styles.containerFull)}
+      ref={outerRef}>
       {title !== undefined && <p className={styles.title}>{title}</p>}
-      <div className={styles.body} ref={simulation.containerRef}>
-        {!alwaysOn && (
-          <div className={styles.toolbar}>
-            <button
-              type="button"
-              className={styles.button}
-              onClick={simulation.reset}
-              disabled={simulation.tick === 0}>
-              Reset
-            </button>
-            <button
-              type="button"
-              className={styles.button}
-              onClick={simulation.back}
-              disabled={simulation.tick === 0}>
-              Back
-            </button>
-            <button
-              type="button"
-              className={styles.button}
-              onClick={simulation.step}
-              disabled={simulation.tick >= simulation.lastTick}>
-              Step
-            </button>
-            <button
-              type="button"
-              className={clsx(styles.button, styles.buttonPrimary)}
-              onClick={simulation.togglePlay}>
-              {simulation.playing ? 'Pause' : 'Play'}
-            </button>
-            <button
-              type="button"
-              className={clsx(
-                styles.button,
-                simulation.loop && styles.buttonActive
-              )}
-              onClick={simulation.toggleLoop}
-              aria-pressed={simulation.loop}>
-              Loop
-            </button>
-            <span className={styles.tickLabel}>
-              tick {simulation.tick}
-              {Number.isFinite(simulation.lastTick) &&
-                ` / ${simulation.lastTick}`}
-            </span>
-            <button
-              type="button"
-              className={styles.button}
-              onClick={() => {
-                simulation.pause();
-                setOpen(false);
-              }}>
-              Hide
-            </button>
-          </div>
-        )}
-
-        <div
-          ref={sceneRef}
-          className={clsx(
-            styles.scene,
-            phone && styles.sceneWithPhone,
-            !showMemory && styles.sceneNoMemory,
-            simulation.playing && styles.sceneRunning,
-            inspecting && styles.sceneInspect
-          )}
-          style={
-            {
-              '--propagation': `${simulation.propagationMs}ms`,
-            } as React.CSSProperties
-          }
-          onMouseMove={onInspectMove}
-          onMouseLeave={() => {
-            markInspectTarget(null);
-            setTip(null);
-          }}>
-          <button
-            type="button"
+      <div className={styles.stage} ref={stageRef}>
+        <div className={styles.body} ref={simulation.containerRef}>
+          <div
+            ref={sceneRef}
             className={clsx(
-              styles.inspectButton,
-              inspecting && styles.inspectButtonActive
+              styles.scene,
+              phone && styles.sceneWithPhone,
+              !showMemory && styles.sceneNoMemory,
+              simulation.playing && styles.sceneRunning,
+              inspecting && styles.sceneInspect
             )}
-            onClick={() => {
-              setInspecting((current) => !current);
+            style={
+              {
+                '--propagation': `${simulation.propagationMs}ms`,
+              } as React.CSSProperties
+            }
+            onMouseMove={onInspectMove}
+            onMouseLeave={() => {
               markInspectTarget(null);
               setTip(null);
-            }}
-            aria-pressed={inspecting}
-            aria-label="Explain the simulation elements"
-            title="What is this?">
-            ?
-          </button>
-          {inspecting && tip !== null && (
-            <div
-              className={styles.inspectTip}
-              style={{ left: tip.x, top: tip.y }}
-              role="tooltip">
-              {tip.text}
-            </div>
-          )}
-          <Panel
-            title="Code"
-            className={styles.areaCode}
-            help="The snippet being executed. A highlighted line is executing right now on the thread of that colour; lines fade out over the next three ticks.">
-            <div
+            }}>
+            <button
+              type="button"
               className={clsx(
-                styles.codeReveal,
-                codeOpen && styles.codeRevealOpen
+                styles.inspectButton,
+                inspecting && styles.inspectButtonActive
               )}
-              aria-hidden={!codeOpen}>
-              <div className={styles.codeRevealInner}>
-                <CodePanel
-                  code={simulation.displayText}
-                  runtimes={runtimes}
-                  cores={snapshot.cores}
-                  rawToDisplayLine={simulation.rawToDisplayLine}
-                  blockEnds={simulation.blockEnds}
-                  history={history}
-                  settled={simulation.settled}
-                  columns={codeColumns}
+              onClick={() => {
+                setInspecting((current) => !current);
+                markInspectTarget(null);
+                setTip(null);
+              }}
+              aria-pressed={inspecting}
+              aria-label="Explain the simulation elements"
+              title="What is this?">
+              ?
+            </button>
+            {inspecting && tip !== null && (
+              <div
+                className={styles.inspectTip}
+                style={{ left: tip.x, top: tip.y }}
+                role="tooltip">
+                {tip.text}
+              </div>
+            )}
+            <Panel
+              title="Code"
+              className={styles.areaCode}
+              help="The snippet being executed. A highlighted line is executing right now on the thread of that colour; lines fade out over the next three ticks.">
+              <div
+                className={clsx(
+                  styles.codeReveal,
+                  codeOpen && styles.codeRevealOpen
+                )}
+                aria-hidden={!codeOpen}>
+                <div className={styles.codeRevealInner}>
+                  <CodePanel
+                    code={simulation.displayText}
+                    runtimes={runtimes}
+                    cores={snapshot.cores}
+                    rawToDisplayLine={simulation.rawToDisplayLine}
+                    blockEnds={simulation.blockEnds}
+                    history={history}
+                    settled={simulation.settled}
+                    columns={codeColumns}
+                    ghost={ghost}
+                  />
+                </div>
+              </div>
+              <div
+                className={clsx(
+                  styles.codeFooter,
+                  collapsibleCode && styles.codeFooterCollapsible
+                )}>
+                {collapsibleCode && (
+                  <button
+                    type="button"
+                    className={clsx(
+                      styles.codeToggle,
+                      codeOpen && styles.codeToggleOpen
+                    )}
+                    onClick={() => setCodeOpen(!codeOpen)}
+                    aria-expanded={codeOpen}>
+                    <span className={styles.expandChevron} aria-hidden="true" />
+                    {codeOpen ? 'Hide code' : 'Show code'}
+                  </button>
+                )}
+                {(codeOpen || !collapsibleCode) && boilerplateButton}
+              </div>
+            </Panel>
+            {phone && (
+              <div className={styles.areaPhone}>
+                <Phone
+                  screen={shownScreen}
+                  redrawn={redrawn}
+                  onPress={
+                    pressHandler === undefined
+                      ? undefined
+                      : () => simulation.press(pressHandler)
+                  }
                 />
               </div>
-            </div>
-            <div
-              className={clsx(
-                styles.codeFooter,
-                collapsibleCode && styles.codeFooterCollapsible
-              )}>
-              {collapsibleCode && (
-                <button
-                  type="button"
-                  className={clsx(
-                    styles.codeToggle,
-                    codeOpen && styles.codeToggleOpen
-                  )}
-                  onClick={() => setCodeOpen(!codeOpen)}
-                  aria-expanded={codeOpen}>
-                  <span className={styles.expandChevron} aria-hidden="true" />
-                  {codeOpen ? 'Hide code' : 'Show code'}
-                </button>
-              )}
-              {(codeOpen || !collapsibleCode) && boilerplateButton}
-            </div>
-          </Panel>
-          {phone && (
-            <div className={styles.areaPhone}>
-              <Phone
-                screen={shownScreen}
-                redrawn={redrawn}
-                onPress={
-                  pressHandler === undefined
-                    ? undefined
-                    : () => simulation.press(pressHandler)
-                }
-              />
-            </div>
-          )}
-          <div className={styles.areaSide}>
+            )}
             {showConsole && (
-              <Panel
-                title="Console"
-                className={styles.consolePanel}
-                help="console.log output, tagged with the runtime it ran on and the wall-clock time it was shown.">
-                <div className={styles.console}>
-                  {logs.length === 0 ? (
-                    <span className={styles.consoleEmpty}>no output yet</span>
-                  ) : (
-                    logs.map((log, index) => (
-                      <div key={index} className={styles.consoleEntry}>
-                        <span
-                          className={clsx(
-                            styles.badge,
-                            runtimeClass(log.runtime)
-                          )}>
-                          {badgeName(log.runtime.id)}
-                        </span>
-                        <span>{log.text}</span>
-                        <span className={styles.consoleTime}>
-                          {formatTime(shownAtRef.current.get(log.tick + 1))}
-                        </span>
-                      </div>
-                    ))
-                  )}
+              <div className={styles.sideSizer} aria-hidden="true">
+                <div className={styles.sideSizerPanel}>
+                  <span className={styles.consoleEmpty}>no output yet</span>
+                  {expectedLogs.map((log, index) => (
+                    <div key={index} className={styles.consoleEntry}>
+                      <span className={styles.badge}>
+                        {badgeName(log.runtime.id)}
+                      </span>
+                      <span>{log.text}</span>
+                      <span className={styles.consoleTime}>00:00:00.000</span>
+                    </div>
+                  ))}
                 </div>
+              </div>
+            )}
+            <div className={styles.areaSide}>
+              {showConsole && (
+                <Panel
+                  title="Console"
+                  className={styles.consolePanel}
+                  help="console.log output, tagged with the runtime it ran on and the wall-clock time it was shown.">
+                  <div className={styles.console}>
+                    {logs.length === 0 ? (
+                      <span className={styles.consoleEmpty}>no output yet</span>
+                    ) : (
+                      logs.map((log, index) => (
+                        <div key={index} className={styles.consoleEntry}>
+                          <span
+                            className={clsx(
+                              styles.badge,
+                              runtimeClass(log.runtime)
+                            )}>
+                            {badgeName(log.runtime.id)}
+                          </span>
+                          <span>{log.text}</span>
+                          <span className={styles.consoleTime}>
+                            {formatTime(shownAtRef.current.get(log.tick + 1))}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </Panel>
+              )}
+            </div>
+            <ForkBus
+              slots={slots}
+              showDown={showMemory}
+              pulse={simulation.propagationMs >= MIN_PULSE_MS}
+            />
+            <Panel
+              title="CPU"
+              className={styles.areaCpu}
+              help="The threads. Each thread executes at most one line per tick.">
+              <CpuPanel
+                runtimes={runtimes}
+                cores={snapshot.cores}
+                rawToDisplayLine={simulation.rawToDisplayLine}
+              />
+              {(!alwaysOn || cpuFooter !== undefined) && (
+                <div className={styles.cpuFooter}>
+                  {!alwaysOn && (
+                    <div className={styles.transport}>
+                      <button
+                        type="button"
+                        className={styles.button}
+                        onClick={simulation.reset}
+                        disabled={simulation.tick === 0}>
+                        Reset
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.button}
+                        onClick={simulation.back}
+                        disabled={simulation.tick === 0}>
+                        Back
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.button}
+                        onClick={simulation.step}
+                        disabled={simulation.tick >= simulation.lastTick}>
+                        Step
+                      </button>
+                      <button
+                        type="button"
+                        className={clsx(styles.button, styles.buttonPrimary)}
+                        onClick={simulation.togglePlay}>
+                        {simulation.playing ? 'Pause' : 'Play'}
+                      </button>
+                      <button
+                        type="button"
+                        className={clsx(
+                          styles.button,
+                          simulation.loop && styles.buttonActive
+                        )}
+                        onClick={simulation.toggleLoop}
+                        aria-pressed={simulation.loop}>
+                        Loop
+                      </button>
+                      <span className={styles.tickLabel}>
+                        tick {simulation.tick}
+                        {Number.isFinite(simulation.lastTick) &&
+                          ` / ${simulation.lastTick}`}
+                      </span>
+                    </div>
+                  )}
+                  {cpuFooter}
+                </div>
+              )}
+            </Panel>
+            {showMemory && (
+              <Panel
+                title="Memory"
+                className={styles.areaMemory}
+                help="JavaScript runtimes with their event loops, plus shared memory outside every runtime.">
+                <MemoryPanel
+                  runtimes={everRuntimes.filter(
+                    (runtime) =>
+                      runtime.hasRuntime &&
+                      (runtime.kind !== 'ui' || usedRuntimes.has(runtime.id))
+                  )}
+                  present={new Set(runtimes.map((runtime) => runtime.id))}
+                  allRuntimes={runtimes}
+                  cores={snapshot.cores}
+                  memory={snapshot.memory}
+                  settled={simulation.settled}
+                  steady={steady}
+                />
               </Panel>
             )}
           </div>
-          <ForkBus
-            slots={slots}
-            showDown={showMemory}
-            pulse={simulation.propagationMs >= MIN_PULSE_MS}
-          />
-          <Panel
-            title="CPU"
-            className={styles.areaCpu}
-            help="The threads. Each thread executes at most one line per tick.">
-            <CpuPanel
-              runtimes={runtimes}
-              cores={snapshot.cores}
-              rawToDisplayLine={simulation.rawToDisplayLine}
-            />
-          </Panel>
-          {showMemory && (
-            <Panel
-              title="Memory"
-              className={styles.areaMemory}
-              help="JavaScript runtimes with their event loops, plus shared memory outside every runtime.">
-              <MemoryPanel
-                runtimes={everRuntimes.filter(
-                  (runtime) =>
-                    runtime.hasRuntime &&
-                    (runtime.kind !== 'ui' || usedRuntimes.has(runtime.id))
-                )}
-                present={new Set(runtimes.map((runtime) => runtime.id))}
-                allRuntimes={runtimes}
-                cores={snapshot.cores}
-                memory={snapshot.memory}
-                settled={simulation.settled}
-                steady={steady}
+          {!alwaysOn && (
+            <button
+              type="button"
+              ref={barRef}
+              className={clsx(styles.toggleBar, styles.toggleBarButton)}
+              onClick={hide}
+              aria-expanded>
+              <span
+                className={clsx(styles.expandChevron, styles.collapseChevron)}
+                aria-hidden="true"
               />
-            </Panel>
+              Hide simulation
+            </button>
           )}
         </div>
       </div>
@@ -455,7 +866,10 @@ function collectRuntimes(snapshots: Snapshot[]): RuntimeDescriptor[] {
   const runtimes: RuntimeDescriptor[] = [];
   for (const snapshot of snapshots) {
     for (const core of snapshot.cores) {
-      if (!runtimes.some((candidate) => candidate.id === core.id)) {
+      const known = runtimes.find((candidate) => candidate.id === core.id);
+      if (known !== undefined) {
+        known.hasRuntime = known.hasRuntime || core.hasRuntime;
+      } else {
         runtimes.push({
           id: core.id,
           label: core.label,

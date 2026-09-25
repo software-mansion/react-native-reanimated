@@ -112,7 +112,7 @@ This option turns off the source map generation for worklets. Mostly used for te
 Defaults to `false`.
 
 Disables [Worklet Classes
-support](/docs/worklets-babel-plugin/about#experimental-worklet-classes).
+support](/docs/worklets-babel-plugin/about#class-methods).
 You might need to disable this feature when using [Custom
 Serializables](/docs/memory/registerCustomSerializable).
 

@@ -9,13 +9,13 @@ import FirstWorkletSyncSource from '!!raw-loader!./_your-first-worklet/firstWork
 import * as FirstWorkletArgsSnippet from './_your-first-worklet/firstWorkletArgs';
 import FirstWorkletArgsSource from '!!raw-loader!./_your-first-worklet/firstWorkletArgs';
 
-# Your first worklet
+# Your first worklet function
 
 In this chapter we'll learn the basics of dispatching your JavaScript code to
 [Worklet Runtimes](/docs/concepts/runtimeKinds#worklet-runtime) to execute in parallel, using
 worklet
 functions. We strongly recommend you to become acknowledged with the
-[concurrency-model](/docs/tutorials/concurrency-model) before continuing.
+[concurrency model](/docs/tutorials/concurrency-model) before continuing.
 
 ## Creating a Worklet Runtime
 
@@ -41,25 +41,25 @@ of [`std::this_thread::get_id`](https://en.cppreference.com/w/cpp/thread/get_id)
 
 We'll use [`scheduleOnUI`](/docs/threading/scheduleOnUI) to dispatch to the UI Runtime and
 [`scheduleOnRuntime`](/docs/threading/scheduleOnRuntime) to dispatch to the Worker Runtime. These
-functions are fire-and-forget style — they return immediately after dispatching the worklet, without
-waiting for it to complete, and do not yield any result.
+functions are fire-and-forget style — they return immediately after dispatching the worklet
+function, without waiting for it to complete, and do not yield any result.
 
 <ThreadingSimulation module={FirstWorkletAsyncSnippet} source={FirstWorkletAsyncSource}/>
 
-As expected, the log invocations returned different TID for each call, as we actually dispatched the
+The log invocations returned different TID for each call, as we actually dispatched the
 worklet function to different threads.
 
 ## Synchronous execution
 
-Sometimes you might want to execute a worklet synchronously, from the same thread, but on the other
-Runtime. For that purpose Worklets library exposes [`runOnUISync`](/docs/threading/runOnUISync) and
+Sometimes you might want to execute a worklet function synchronously, from the same thread, but on
+the other Runtime. For that purpose the Worklets library exposes
+[`runOnUISync`](/docs/threading/runOnUISync) and
 [`runOnRuntimeSync`](/docs/threading/runOnRuntimeSync) methods. These methods are blocking — they
-return only after the worklet function has completed. They return a value and might actually have to
-wait until the targeted Runtime is released — if a different thread is currently using it.
+return only after the worklet function has completed. If a different thread is currently using the Runtime, these methods will wait for the targeted Runtime to be released before executing the worklet function.
 
 <ThreadingSimulation module={FirstWorkletSyncSnippet} source={FirstWorkletSyncSource}/>
 
-Note that all 3 logs gave us the same result, there was no thread hopping involved.
+All three logs gave us the same result, there was no thread hopping involved.
 
 Knowing when to delegate something asynchronously and when to do it synchronously is the difference
 between smooth user experience and a bad one. Rule of thumb is that **if the operation is not

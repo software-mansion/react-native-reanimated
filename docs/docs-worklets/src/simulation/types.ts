@@ -288,6 +288,7 @@ export interface SimulateOptions {
   uiRuntime?: boolean;
   screen?: ScreenState;
   skipTicks?: number;
+  bootTicks?: number;
   durationTicks?: number;
   inputs?: ExternalInput[];
   maxTicks?: number;

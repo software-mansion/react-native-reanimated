@@ -1,10 +1,14 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import { useDocsVersion } from '@docusaurus/plugin-content-docs/client';
 import { DocSidebar } from '@swmansion/t-rex-ui';
+import {
+  SIMULATION_CLOSE_EVENT,
+  SIMULATION_OPEN_EVENT,
+} from '@site/src/components/ThreadingSimulation/events';
 
 const SECTIONS = [
-  { id: 'guides', label: 'Guides' },
+  { id: 'guides', label: 'Learn' },
   { id: 'api', label: 'API Reference' },
 ];
 
@@ -72,6 +76,59 @@ export default function DocSidebarWrapper(props) {
     document.addEventListener('click', onClick);
     return () => document.removeEventListener('click', onClick);
   }, []);
+
+  const wideSimulations = useRef(new Set());
+  const hiddenForSimulations = useRef(false);
+
+  useEffect(() => {
+    const isWide = () => {
+      const container = document.querySelector('.theme-doc-sidebar-container');
+      return (
+        container !== null && container.getBoundingClientRect().width > 100
+      );
+    };
+    const toggle = () => {
+      if (typeof props.onCollapse === 'function') {
+        props.onCollapse();
+      }
+    };
+    const onSimulationOpen = (event) => {
+      wideSimulations.current.add(event.detail);
+      if (isWide()) {
+        hiddenForSimulations.current = true;
+        toggle();
+      }
+    };
+    const onSimulationClose = (event) => {
+      wideSimulations.current.delete(event.detail);
+      if (
+        hiddenForSimulations.current &&
+        wideSimulations.current.size === 0 &&
+        !isWide()
+      ) {
+        hiddenForSimulations.current = false;
+        toggle();
+      }
+    };
+    const onManualToggle = (event) => {
+      if (
+        event.target.closest(
+          '[class*="collapseSidebarButton"], [class*="expandButton"]'
+        ) !== null
+      ) {
+        hiddenForSimulations.current = false;
+        wideSimulations.current.clear();
+      }
+    };
+    window.addEventListener(SIMULATION_OPEN_EVENT, onSimulationOpen);
+    window.addEventListener(SIMULATION_CLOSE_EVENT, onSimulationClose);
+    document.addEventListener('click', onManualToggle, true);
+    return () => {
+      window.removeEventListener(SIMULATION_OPEN_EVENT, onSimulationOpen);
+      window.removeEventListener(SIMULATION_CLOSE_EVENT, onSimulationClose);
+      document.removeEventListener('click', onManualToggle, true);
+    };
+  }, [props.onCollapse]);
 
   const sidebar = useMemo(() => {
     if (!hasSections) {

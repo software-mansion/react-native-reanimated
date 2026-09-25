@@ -2,6 +2,12 @@
 sidebar_position: 0
 ---
 
+import BusyThreadDiagram from '@site/src/components/BusyThreadDiagram';
+import SparseAnimationDiagram from '@site/src/components/SparseAnimationDiagram';
+import SameThreadRuntimeDiagram from '@site/src/components/SameThreadRuntimeDiagram';
+import UIRuntimeDiagram from '@site/src/components/UIRuntimeDiagram';
+import WorkerRuntimeDiagram from '@site/src/components/WorkerRuntimeDiagram';
+
 # Concurrency model
 
 To understand the concurrency model of the Worklets library and why it's needed, we have to look at
@@ -13,8 +19,8 @@ A React Native app is, first and foremost, **a native app**. Like every native a
 thread — usually called the **User Interface (UI) thread** — that receives touches, lays out views
 and draws them on screen.
 
-Your JavaScript doesn't run there. At startup, the native app spawns a separate thread, the
-**JavaScript thread** (JS thread), and a [Hermes](https://reactnative.dev/docs/hermes) JavaScript
+Your JavaScript doesn't run there. At startup, the native app creates two things: a separate thread, the
+**JavaScript thread** (JS thread) and a [Hermes](https://reactnative.dev/docs/hermes) JavaScript
 Virtual Machine (JSVM), also called a **JavaScript Runtime**. We'll call this Runtime the
 [React Native Runtime](/docs/concepts/runtimeKinds#rn-runtime). Then, it delegates the execution of
 your JavaScript Bundle to the JS thread and running its
@@ -52,19 +58,12 @@ Since all your app logic lives inside the JavaScript Bundle and is executed only
 might run into situation, when a critical UI event has to wait for the JS thread to trigger a
 respective JavaScript event handler for it, visibly lagging the app.
 
-<ImagePlaceholder>
-  Diagram: UI event waiting for the JS thread event loop to pick it up
+<BusyThreadDiagram/>
 
-  JS thread: executes "busyBusinessLogicTask" in JS code that makes the execution of the touch event
-  to be visibly delayed
-</ImagePlaceholder>
-
-Similar situation would happen if animation calculations were to be done via `useState` props and
+Similar situation would happen if animation calculations were to be done via `useState` for props state (please don't do this in real apps!) with a
 busy JS thread:
 
-<ImagePlaceholder>
-  Code? `useState` animation giving sparse updates (please don't do this)
-</ImagePlaceholder>
+<SparseAnimationDiagram/>
 
 ## Overcoming limitations
 
@@ -79,17 +78,13 @@ would result in an immediate crash.
 This means that we have to create a new Runtime and move the event and animation logic outside the
 RN Runtime to the new Runtime.
 
-<ImagePlaceholder>
-  Visualization of moving the event handler to another JSVM, but not yet other thread.
-</ImagePlaceholder>
+<SameThreadRuntimeDiagram/>
 
 Now, when the event comes, we can synchronously handle it on the UI thread, using our new Runtime.
-This is exactly the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime) that Worklets library
+This is exactly the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime) that the Worklets library
 exposes.
 
-<ImagePlaceholder>
-  Event handler on another JSVM, on another thread.
-</ImagePlaceholder>
+<UIRuntimeDiagram/>
 
 Moreover, we can also offload the heavy computation that kept our JS thread overloaded. It's better
 not to delegate that work to the UI thread as it would make the app unresponsive. We don't want to
@@ -99,12 +94,10 @@ touch event, as it has to wait for the UI Runtime to be released.
 What we can do is to spawn _another Runtime and a thread_. We we'll dedicate that thread to execute
 tasks using the new Runtime. We'll call this Runtime a Worker Runtime.
 
-<ImagePlaceholder>
-  Third runtime joins the party
-</ImagePlaceholder>
+<WorkerRuntimeDiagram/>
 
-This is how Worklets library allow you to overcome bottlenecks on the RN Runtime and the JS thread,
-while keeping your app's logic strictly in JavaScript.
+This is how the Worklets library allows you to overcome bottlenecks on the RN Runtime and the JS
+thread, while keeping your app's logic strictly in JavaScript.
 
 ## Delegating JavaScript
 

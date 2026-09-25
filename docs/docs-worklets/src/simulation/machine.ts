@@ -88,6 +88,7 @@ export class Machine {
   private readonly shared = new Map<number, SharedCell>();
   private nextCellId = 1;
   private readonly readShareable: SnippetFn;
+  private readonly uiBootTick: number;
 
   constructor(snippet: LoadedSnippet, options: SimulateOptions = {}) {
     this.snippet = snippet;
@@ -113,14 +114,28 @@ export class Machine {
       hasLoop: false,
     });
     const uiRuntime = options.uiRuntime ?? true;
+    const bootTicks = Math.max(0, Math.floor(options.bootTicks ?? 0));
+    this.uiBootTick = bootTicks > 0 && uiRuntime ? Math.ceil(bootTicks / 2) : 0;
     this.cores = CORE_SPECS.map((spec) =>
       createCore({
         ...spec,
-        hasRuntime: spec.kind === 'ui' ? uiRuntime : spec.hasRuntime,
+        hasRuntime:
+          spec.kind === 'ui'
+            ? uiRuntime && this.uiBootTick === 0
+            : spec.hasRuntime,
       })
     );
     const entry = snippet.fnInfo.get(snippet.main)!.isNative ? 'ui' : 'rn';
-    this.core(entry).macrotasks.push(this.createJob(snippet.main, [], null));
+    if (bootTicks > 0) {
+      this.core(entry).timers.push({
+        id: this.nextJobId++,
+        due: bootTicks * APP_MS_PER_TICK,
+        callback: () => snippet.main(),
+        label: snippet.fnInfo.get(snippet.main)!.name,
+      });
+    } else {
+      this.core(entry).macrotasks.push(this.createJob(snippet.main, [], null));
+    }
   }
 
   get currentTick(): number {
@@ -145,6 +160,9 @@ export class Machine {
     this.events = [];
     this.tickCount += 1;
     this.now = now;
+    if (this.uiBootTick > 0 && this.tickCount === this.uiBootTick) {
+      this.core('ui').spec.hasRuntime = true;
+    }
     this.applyInputs();
     const cores = [...this.cores];
     for (const core of cores) {
@@ -1335,16 +1353,32 @@ export class Machine {
     for (let index = 0; index < ticks; index++) {
       this.tick();
     }
+    const elapsed = this.now;
     this.tickCount = 0;
     this.now = 0;
     this.events = [];
     for (const core of this.cores) {
+      core.createdAtTick = Math.min(core.createdAtTick - ticks - 1, -1);
+      for (const timer of core.timers) {
+        timer.due -= elapsed;
+      }
+      for (const job of core.macrotasks) {
+        if (job.dueAt !== undefined) {
+          job.dueAt -= elapsed;
+        }
+        if (job.deadline !== undefined) {
+          job.deadline -= elapsed;
+        }
+      }
       if (core.status === 'running') {
         core.status = 'idle';
         core.line = null;
         core.executedRuntime = null;
         core.executedNative = false;
       }
+    }
+    for (const cell of this.shared.values()) {
+      cell.createdAtTick = Math.min(cell.createdAtTick - ticks - 1, -1);
     }
   }
 
