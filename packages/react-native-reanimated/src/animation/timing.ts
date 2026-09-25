@@ -101,7 +101,7 @@ export const withTiming = function (
     function timing(animation: InnerTimingAnimation, now: Timestamp): boolean {
       // eslint-disable-next-line @typescript-eslint/no-shadow
       const { toValue, startTime, startValue } = animation;
-      const runtime = now - startTime;
+      let runtime = now - startTime;
 
       if (runtime >= config.duration) {
         // reset startTime to avoid reusing finished animation config in `start` method
@@ -109,7 +109,26 @@ export const withTiming = function (
         animation.current = toValue;
         return true;
       }
-      const progress = animation.easing(runtime / config.duration);
+
+      if (runtime < 0) {
+        // `startTime` comes from `global.__frameTimestamp || global._getAnimationTimestamp()`
+        // (see `valueSetter`). An animation started outside a frame flush - from a gesture
+        // callback, for instance - takes the second branch and reads the clock at that instant,
+        // while the frame that first progresses it passes its vsync timestamp, which is earlier.
+        // The first tick then sees a small negative runtime.
+        //
+        // Re-baseline rather than extrapolate. The easing is only defined on [0, 1], and
+        // `Easing.bezier` in particular solves for t by Newton-Raphson and divides by the curve's
+        // x-derivative, so a curve whose first control point is x1 = 0 has zero derivative at
+        // t = 0 and the solver diverges just outside the domain.
+        animation.startTime = now;
+        runtime = 0;
+      }
+
+      // Defence in depth, and consistency with the other drivers: `withSpring` and `withDecay`
+      // both clamp their per-frame delta, `withTiming` fed an unbounded value into its easing.
+      const normalizedTime = Math.min(Math.max(runtime / config.duration, 0), 1);
+      const progress = animation.easing(normalizedTime);
       animation.current =
         (startValue as number) + (toValue - (startValue as number)) * progress;
       return false;
