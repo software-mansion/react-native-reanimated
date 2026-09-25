@@ -7,6 +7,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
 
+#include <algorithm>
 #include <cstring>
 #include <memory>
 #include <optional>
@@ -14,6 +15,7 @@
 #include <unordered_set>
 #include <utility>
 #include <variant>
+#include <vector>
 
 namespace reanimated {
 
@@ -60,6 +62,9 @@ void LayoutAnimationsProxyCommon::startSurface(
 
 void LayoutAnimationsProxyCommon::surfaceDidUnmount() {
   cancelAllLayoutAnimations();
+#ifdef ANDROID
+  publishClippingExclusions();
+#endif
 }
 
 void LayoutAnimationsProxyCommon::clearSurfaceState() const {
@@ -679,6 +684,25 @@ void LayoutAnimationsProxyCommon::maybeUpdateWindowDimensions(const ShadowViewMu
 }
 
 #ifdef ANDROID
+void LayoutAnimationsProxyCommon::publishClippingExclusions() const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  std::vector<Tag> excludedTags;
+  for (const auto &[tag, animation] : layoutAnimations_) {
+    excludedTags.push_back(tag);
+  }
+  for (const auto &[tag, pending] : pendingLayoutAnimations_) {
+    excludedTags.push_back(tag);
+  }
+  std::ranges::sort(excludedTags);
+  const auto duplicates = std::ranges::unique(excludedTags);
+  excludedTags.erase(duplicates.begin(), duplicates.end());
+  if (excludedTags == publishedClippingExclusions_) {
+    return;
+  }
+  publishedClippingExclusions_ = std::move(excludedTags);
+  updateClippingExclusions_(surfaceId_, publishedClippingExclusions_);
+}
+
 void LayoutAnimationsProxyCommon::scheduleCleanupPull() const {
   const std::weak_ptr<UIManager> weakUiManager = uiManager_;
   jsInvoker_->invokeAsync([weakUiManager, surfaceId = surfaceId_](jsi::Runtime &) {

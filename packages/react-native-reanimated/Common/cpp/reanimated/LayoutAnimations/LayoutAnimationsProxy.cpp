@@ -238,6 +238,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     keepTransitioningViewsHidden(filteredMutations, propsParserContext);
   }
 
+#ifdef ANDROID
+  publishClippingExclusions();
+#endif
+
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 

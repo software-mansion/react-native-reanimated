@@ -192,6 +192,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
+      updateClippingExclusions_(platformDepMethodsHolder.updateClippingExclusions),
 #endif // ANDROID
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
@@ -1244,6 +1245,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       requestLayoutAnimationFlush,
 #ifdef ANDROID
       filterUnmountedTagsFunction_,
+      updateClippingExclusions_,
       jsInvoker_,
 #endif
 #ifdef __APPLE__
