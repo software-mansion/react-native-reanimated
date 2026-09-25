@@ -1,0 +1,116 @@
+# createWorkletRuntime
+
+`createWorkletRuntime` lets you create a new JS runtime which can be used to run [worklet functions](/docs/tutorials/concurrency-model#worklet-functions) possibly on different threads than [JS](/docs/tutorials/concurrency-model#the-react-native-model) or [UI thread](/docs/tutorials/concurrency-model#the-react-native-model). Use this function if you need to integrate with Worklet Runtimes in C++.
+
+The return value represents the runtime. You can pass it to the C++ side using JSI (JavaScript Interface) for further operations.
+
+## Reference
+
+### Usage in JavaScript
+
+```jsx
+import { createWorkletRuntime } from 'react-native-worklets';
+
+function App() {
+  const runtime = createWorkletRuntime({
+    name: 'background',
+    initializer: () => {
+      'worklet';
+      console.log('Runtime initialized!');
+    },
+  });
+}
+```
+
+### Usage in C++
+
+```cpp
+auto runtime = reanimated::extractWorkletRuntime(rt, runtimeValue);
+
+jsi::Runtime &rt = runtime->getJSIRuntime();
+
+auto worklet = reanimated::extractShareableOrThrow<reanimated::ShareableWorklet>(rt, workletValue);
+
+runtime->runGuarded(worklet, ...args);
+```
+
+Type definitions
+
+```typescript
+type WorkletRuntime = {
+  __hostObjectWorkletRuntime: never;
+  readonly name: string;
+  readonly runtimeId: number;
+};
+
+type WorkletRuntimeConfig = {
+  name?: string;
+  initializer?: () => void;
+  animationQueuePollingRate?: number;
+  enableNetworking?: boolean;
+  queue?: 'default' | object | null;
+} & (
+  | { enableEventLoop?: boolean; enableLocking?: true }
+  | { enableEventLoop?: false; enableLocking: false }
+);
+
+function createWorkletRuntime(
+  config?: WorkletRuntimeConfig
+): WorkletRuntime;
+```
+
+### Arguments
+
+#### `config`
+
+Runtime configuration object.
+
+##### `name`
+
+A name of the runtime used in debugging. Defaults to `'anonymous'`.
+
+##### `initializer`
+
+An optional worklet function that will be run synchronously on the same thread immediately after the runtime is created. It can be used to inject some global variables or functions into the runtime.
+
+##### `animationQueuePollingRate`
+
+Time interval in milliseconds between polling of frame callbacks scheduled by `requestAnimationFrame`. Defaults to `16`.
+
+##### `enableEventLoop`
+
+Determines whether to enable the default event loop. Defaults to `true`. Always disabled on runtimes with `enableLocking: false`.
+When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`, `clearImmediate`, and `cancelAnimationFrame`.
+
+##### `enableNetworking`
+
+Determines whether the [networking API](/docs/bundleMode/usage#running-network-requests-in-worklets) - `fetch`, `XMLHttpRequest` and their supporting globals - is installed on the Runtime. Defaults to `true`.
+
+##### `enableLocking`
+
+Determines whether access to the underlying JS runtime is synchronized with a mutex around every JSI operation. If not specified, it defaults to `true`.
+Can be disabled only together with the Event Loop.
+
+Runtime without locking doesn't receive HMR updates and new Custom Serializable registrations.
+
+Disable only when you can guarantee thread safety of all access to the runtime.
+
+##### `queue`
+
+Controls the queue used for scheduling worklet functions on this runtime. Defaults to `'default'`.
+
+* `'default'`: use the built-in queue implementation.
+* An object implementing the C++ `AsyncQueue` interface from `<worklets/RunLoop/AsyncQueue.h>`: use the provided custom queue.
+* `null`: do not attach any queue to the Runtime. Keep in mind that this will effectively disable all asynchronous features like Promises, `setTimeout` etc. Use it if you're going to implement the event-loop for the Runtime yourself.
+
+### Returns
+
+`createWorkletRuntime` returns `WorkletRuntime` which is a `jsi::HostObject<reanimated::WorkletRuntime>`.
+
+## Remarks
+
+* Worklet runtimes come with `performance.now` and `console.*` methods installed out-of-the-box. Other APIs are not available and need to be injected into the runtime or captured via worklet closure.
+
+* In development mode, all unhandled errors thrown in the runtime (except for those thrown in `initializer`) will be caught and thus logged to the console and displayed in a LogBox.
+
+## Platform compatibility

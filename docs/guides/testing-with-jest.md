@@ -1,133 +1,40 @@
 # Testing with Jest
 
-Reanimated provides testing API, based on Jest. It allows user to mock web-based animations.
+React Native Worklets is primarily a native library, for that reason it requires a proper setup to be tested with Jest. This guide will show you how to set it up when testing in a React Native project.
 
-## Reference
+You have two options for this:
+
+1. **Enforce the use of mock implementation for React Native Worklets.**
+
+   React Native Worklets provides a complete mock implementation for Jest. This is the recommended approach for testing.
+
+2. **Enforce the use of Web implementation for React Native Worklets.**
+
+   React Native Worklets has a separate Web implementation to use in the browser. Use this approach when you want to avoid using artifical mocks.
+
+## Using the mock implementation
+
+Depending on whether you are using TypeScript or JavaScript, apply the following mock:
 
 ```js
-test('reference', () => {
-  // some styles
-
-  const { getByTestId } = render(<AnimatedComponent />);
-  const view = getByTestId('view');
-  const button = getByTestId('button');
-
-  // highlight-next-line
-  expect(view).toHaveAnimatedStyle(style);
-
-  fireEvent.press(button);
-  jest.advanceTimersByTime(250); // if whole animation duration is a 500ms
-
-  style.width = 50; // value of component width after 250ms of animation
-  // highlight-next-line
-  expect(view).toHaveAnimatedStyle(style);
-});
+jest.mock('react-native-worklets', () =>
+  require('react-native-worklets/src/mock')
+);
 ```
 
-## Setup
+```js
+jest.mock('react-native-worklets', () =>
+  require('react-native-worklets/lib/module/mock')
+);
+```
 
-> **Note**
->
-> Before you begin, make sure to follow the respective Jest guide for [React Native Worklets](https://docs.swmansion.com/react-native-worklets/docs/guides/testing).
+## Using the Web implementation
 
-Override Jest resolver to enforce resolving web implementation of Reanimated and React Native Worklets instead of pulling the native one. Modify your `jest.config.js` file to include the following code:
+Override Jest resolver to enforce resolving web implementation of React Native Worklets instead of pulling the native one. Modify your `jest.config.js` file to include the following code:
 
 ```js
 module.exports = {
   // ... other configurations
-  resolver: 'react-native-reanimated/jest/resolver',
+  resolver: 'react-native-worklets/jest/resolver',
 };
 ```
-
-Add the following line to your `jest-setup.js` file:
-
-```js
-require('react-native-reanimated').setUpTests();
-```
-
-* `setUpTests()` can take optional config argument. Default config is `{ fps: 60 }`.
-
-To be sure, check if your `jest.config.js` file contains:
-
-```js
-...
-preset: 'react-native',
-resolver: 'react-native-reanimated/jest/resolver',
-setupFilesAfterEnv: ['./jest-setup.js'],
-...
-```
-
-> **Caution**
->
-> If you use Jest in a version **older than 28**, you should set `setupFiles` property instead of `setupFilesAfterEnv`
-
-## API
-
-### Style checker
-
-#### `expect(component).toHaveAnimatedStyle(expectedStyle)`
-
-Checking equality of selected styles with current component styles.
-
-* `component` - tested component.
-* `expectedStyle` - contains expected styles of testing component, for example `{ width: 100 }`.
-
-#### `expect(component).toHaveAnimatedStyle(expectedStyle, {shouldMatchAllProps: true})`
-
-Checking equality of all current component styles with expected styles.
-
-#### `expect(component).toHaveAnimatedProps(expectedProps)`
-
-Checking equality of selected props with current component props.
-
-* `component` - tested component.
-* `expectedProps` - contains expected props of testing component, for example `{ text: 'name' }`.
-
-#### `getDefaultStyle(component)`
-
-Gets all styles of tested component.
-
-### Timers
-
-You can use Jest's fake timers to control animation progress.
-Check [the full guide about mocking timers on Jest documentation website](https://jestjs.io/docs/timer-mocks).
-
-```js
-jest.useFakeTimers();
-// call animation
-jest.runAllTimers();
-```
-
-If you want more control over animation, you can use `jest.advanceTimersByTime` to move to a certain point in the animation:
-
-```js
-jest.useFakeTimers();
-// call animation
-jest.advanceTimersByTime(250);
-// make assertions on what you expect the styles of a component should be after 250ms
-```
-
-## Example
-
-More examples from `react-native-reanimated` repository:
-
-* [SharedValue.test.tsx](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-reanimated/__tests__/SharedValue.test.tsx)
-* [Animation.test.tsx](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-reanimated/__tests__/Animation.test.tsx)
-
-## Testing `react-native-svg`
-
-Because of how `react-native-svg` manages its props, you need to use the mock provided by Reanimated to enable testing:
-
-```js
-jest.mock('react-native-svg', () => require('react-native-reanimated/mock'));
-```
-
-## Remarks
-
-* Tests must run with Node 16 or newer.
-* If you have custom babel configuration for testing, make sure that Reanimated's babel plugin is enabled in that environment.
-
-## Recommended testing library
-
-* [@testing-library/react-native](https://testing-library.com/docs/react-native-testing-library/intro)
-* [@testing-library/react-hooks](https://react-hooks-testing-library.com/) - for dealing with hooks

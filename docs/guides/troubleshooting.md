@@ -1,154 +1,201 @@
 # Troubleshooting
 
-## Initialization issues
-
-Reanimated has three core components that compose its code:
-
-* C++,
-* Java,
-* JavaScript.
-
-It also depends on React Native Worklets and its Worklets Babel plugin.
-
-All of them are supposed to work correctly only within the same minor version. Therefore, having any of those pieces in your code - directly or indirectly - separate from `react-native-reanimated`, especially having any code transpiled with a different version of the aforementioned plugin will result in undefined behavior and errors.
-
 ### Failed to create a worklet
 
-**Problem:** This usually happens when Reanimated is not properly installed, e.g. forgetting to include the Worklets Babel plugin in `babel.config.js`.
+**Problem:** This usually happens when the Worklets library is not properly installed, e.g. forgetting to include the Worklets Babel plugin in `babel.config.js`.
 
-**Solution:** See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#react-native-community-cli for more information. If the Worklets Babel plugin is already set up correctly, your Metro bundler cache may be stale - reset it with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
+**Solution:** See [installation docs](/docs/#installation) for more information.
 
-### Native part of Reanimated doesn't seem to be initialized
+### Native part of Worklets doesn't seem to be initialized
 
-**Problem:** This issue happens when Reanimated fails to initialize its native side from JavaScript.
+**Problem:** This issue happens when the Worklets library fails to initialize its native side from JavaScript.
 
 **Solution:**
 
-1. If you recently installed or upgraded Reanimated, make sure to rebuild your app.
-2. Check if your platform is supported by Reanimated. Currently we support:
+1. If you recently installed or upgraded the Worklets library, make sure to rebuild your app.
+2. Check if your platform is supported by the Worklets library. Currently we support:
    * Android
    * iOS
    * macOS
    * tvOS
    * visionOS
    * Web
-3. If you are using Reanimated in a brownfield app, make sure to initialize the native library manually.
+3. If you are using the Worklets library in a brownfield app, make sure to initialize the native library manually.
 
-### Using dev bundle in a release app build is not supported
+### Unknown version of Worklets babel plugin
 
-**Problem:** This happens when you use a release build of your app with a development JavaScript bundle.
+**Problem:** This happens when JavaScript side of the Worklets library fails to get Worklets Babel plugin version.
 
-**Solution:** See this [post](https://github.com/software-mansion/react-native-reanimated/issues/4737) for more information.
+**Solution:** Part of your code might be transpiled with an outdated version of Worklets Babel plugin. See [Mismatch between JavaScript code version and Worklets Babel plugin version](#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version).
 
-### Couldn't determine the version of the native part of Reanimated
+### Mismatch between JavaScript code version and Worklets Babel plugin version
 
-**Problem:** This happens when Reanimated fails to determine the version of its native part.
+**Problem:** This can happen when you use code that was transpiled with an outdated version of Worklets Babel plugin.
 
-**Solution:** Check if you have rebuilt your app after upgrading `react-native-reanimated`. If you use Expo Go, you must use the exact version which is bundled into Expo SDK.
+**Solution:** Try resetting your Metro bundler cache with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
 
-### Mismatch between JavaScript part and native part of Reanimated
+If this didn't help, you probably have a dependency that contains already transformed worklet functions bundled with an outdated version of the Worklets Babel plugin. You can find the offending code that was given alongside the error to find that dependency.
 
-**Problem:** This happens when Reanimated has different versions of its JavaScript and native parts.
+### Couldn't determine the version of the native part of Worklets
 
-**Solution:** Check if you have rebuilt your app after upgrading `react-native-reanimated`. If you use Expo Go, you must use the exact version which is bundled into Expo SDK.
+**Problem:** This happens when the Worklets library fails to determine the version of its native part.
+
+**Solution:** Check if you have rebuilt your app after upgrading `react-native-worklets`. If you use Expo Go, you must use the exact version which is bundled into Expo SDK.
+
+### Mismatch between JavaScript part and native part of Worklets
+
+**Problem:** This happens when the Worklets library has different versions of its JavaScript and native parts.
+
+**Solution:** Check if you have rebuilt your app after upgrading `react-native-worklets`. If you use Expo Go, you must use the exact version which is bundled into Expo SDK.
 
 ### C++ side failed to resolve JavaScript code version
 
-See [Couldn't determine the version of the native part of Reanimated](#couldnt-determine-the-version-of-the-native-part-of-reanimated).
+See [Couldn't determine the version of the native part of Worklets](#couldnt-determine-the-version-of-the-native-part-of-worklets) and [Unknown version of Worklets Babel plugin](#unknown-version-of-worklets-babel-plugin).
 
 ### Mismatch between C++ code version and JavaScript code version
 
-See [Mismatch between JavaScript part and native part of Reanimated](#mismatch-between-javascript-part-and-native-part-of-reanimated) and [Mismatch between JavaScript code version and Worklets Babel plugin version](https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version).
+See [Mismatch between JavaScript part and native part of Worklets](#mismatch-between-javascript-part-and-native-part-of-worklets) and [Mismatch between JavaScript code version and Worklets Babel plugin version](#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version).
 
-### C++ side failed to resolve Java code version
+### TypeError: right operand of 'in' is not an object
 
-**Problem:** This happens when Reanimated fails to determine the version of its Java part - most likely because Java part hasn't rebuilt after an upgrade.
+**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for the Worklets library.
 
-**Solution:** Make sure to rebuild your app and see if the problem persists. If it does, feel free to [create an issue on our GitHub](https://github.com/software-mansion/react-native-reanimated/).
+**Solution:** See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445) for the current workaround (enable `inlineRequires` in `metro.config.js`).
 
-### Mismatch between C++ code version and Java code version
+### Cannot read property 'createSerializableString' of undefined
 
-**Problem:** This happens when Reanimated has different versions of its C++ and Java parts.
+**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for the Worklets library.
 
-**Solution:** See [Native side failed to resolve Java code version](#c-side-failed-to-resolve-java-code-version).
-
-### Java side failed to resolve C++ code version
-
-**Problem:** This happens when Reanimated fails to determine the version of its C++ part - most likely because for some reason C++ part hasn't rebuilt after an upgrade.
-
-**Solution:** See [Native side failed to resolve Java code version](#c-side-failed-to-resolve-java-code-version).
-
-### Mismatch between Java code version and C++ code version
-
-**Problem:** This happens when Reanimated has different versions of its Java and C++ parts.
-
-**Solution:** See [Native side failed to resolve Java code version](#c-side-failed-to-resolve-java-code-version).
-
-### Multiple versions of Reanimated were detected
-
-**Problem:** This error usually happens when in your project exists more than one instance of Reanimated. It can occur when some of your dependency has installed Reanimated inside their own `node_modules` instead of using it as a peer dependency. In this case two different versions of Reanimated JavaScript module might try to initialize its native part. You can check which libraries are using Reanimated e.g. with `yarn why react-native-reanimated` or `npm ls react-native-reanimated`.
-
-**Solution:** Modify your `package.json` file accordingly:
-
-* if you use `yarn`, you should add [`resolution` property](https://classic.yarnpkg.com/lang/en/docs/selective-version-resolutions/):
-
-```json
-"resolutions": {
-  "react-native-reanimated": <Reanimated version>
-}
-```
-
-* if you use `npm`, you should add [`overrides` property](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#overrides):
-
-```json
-"overrides": {
-  "react-native-reanimated": <Reanimated version>
-}
-```
-
-After that make sure to run your package manager again, either `yarn` or `npm install`.
-
-### Another instance of Reanimated was detected
-
-See [Multiple versions of Reanimated were detected](#multiple-versions-of-reanimated-were-detected).
-
-### Outdated version of React Native for New Architecture
-
-**Problem:** Reanimated supports New Architecture (Fabric) only on the latest minor release of React Native.
-
-**Solution:** Please upgrade to a newer version of React Native or downgrade to an older version of Reanimated.
-See [the compatibility table](/docs/guides/compatibility) for a full list of supported versions of React Native.
+**Solution:** See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445) for the current workaround (enable `inlineRequires` in `metro.config.js`).
 
 ## Warnings
 
-### Reduced motion setting is enabled on this device.
+### Tried to modify key of an object which has been converted to a serializable.
 
-**Problem:** This warning is displayed to avoid confusion that could arise when Reduced motion is enabled.
+**Problem:** This warning is displayed to inform the user that a shared value should be used or an object used in a worklet function should be accessed more granularly.
 
-**Solution:** Do nothing, this warning is safe to ignore as it is only displayed in development mode to avoid confusion. If you wish to disable it, you can add the following line to your project's root file:
+#### 1. Not using shared values.
+
+You might get this warning when you do something along the lines of:
 
 ```js
-LogBox.ignoreLogs([
-  '[Reanimated] Reduced motion setting is enabled on this device.',
-]);
+const obj = { prop: 1 };
+
+function worklet() {
+  'worklet';
+  console.log(obj.prop);
+}
+
+scheduleOnUI(worklet);
+obj.prop = 2; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
+scheduleOnUI(worklet);
 ```
 
-See [the accessibility overview](/docs/guides/accessibility) to learn more about Reduced Motion.
+and expect the results to be `1` and `2`. However, the results will be `1` and `1` because `obj` is not a shared value and is only copied to UI runtime once. Therefore, in development builds, we make the object immutable and add this warning after copying it to signal that it's not a valid use of Reanimated. To fix this, you should use a shared value instead:
 
-## Dependency issues
+**Solution:**
 
-### Unable to find a specification for RNWorklets depended upon by RNReanimated
+```diff
+-const obj = { prop: 1 };
++const sv = useSharedValue({ prop: 1 });
 
-**Problem:** This happens when you have installed Reanimated 4 but don't have `react-native-worklets` installed as a dependency.
+ function worklet() {
+   'worklet';
+-  console.log(obj.prop);
++  console.log(sv.value.prop);
+ }
 
-**Platform:** iOS
+ scheduleOnUI(worklet);
+-obj.prop = 2; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
++sv.value = { prop: 2 }; // Everything is fine here.
++// Keep in mind that you cannot modify the property directly with `sv.value.prop = 2` unless you use the `modify` method.
+ scheduleOnUI(worklet);
+```
 
-**Solution:** Install `react-native-worklets` with your package manager, i.e. `yarn add react-native-worklets` or `npm i react-native-worklets`. Make sure to install a [compatible version](https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility) of `react-native-worklets` for your Reanimated version.
+#### 2. Not accessing object properties granularly.
 
-### Unable to resolve module react-native-worklets
+When you access an object property in a worklet function, you might do something like this:
 
-**Problem:** This happens when you have installed Reanimated 4 but don't have `react-native-worklets` installed as a dependency.
+```js
+const obj = { propAccessedInWorklet: 1, propNotAccessedInWorklet: 2 };
 
-**Platform:** Web
+function worklet() {
+  'worklet';
+  console.log(obj.propAccessedInWorklet);
+}
 
-**Solution:** Install `react-native-worklets` with your package manager, i.e. `yarn add react-native-worklets` or `npm i react-native-worklets`. Make sure to install a [compatible version](https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility) of `react-native-worklets` for your Reanimated version.
+scheduleOnUI(worklet);
+obj.propNotAccessedInWorklet = 3; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
+```
+
+The warning is displayed due to the mechanism explained in the previous case. Since we copy the whole object `obj` instead its accessed properties, it's immutable.
+
+**Solution:**
+
+Assign accessed properties to variables beforehand and use those in the worklet function:
+
+```diff
+ const obj = { propAccessedInWorklet: 1, propNotAccessedInWorklet: 2 };
+
++const propAccessedInWorklet = obj.propAccessedInWorklet;
++
+ function worklet() {
+   'worklet';
+-  console.log(obj.propAccessedInWorklet);
++  console.log(propAccessedInWorklet);
+ }
+
+ scheduleOnUI(worklet);
+-obj.propNotAccessedInWorklet = 3; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
++obj.propNotAccessedInWorklet = 3; // Everything is fine here.
+```
+
+## Threading issues
+
+### Tried to synchronously call a Remote Function
+
+**Problem:** This can happen when you try to call a function that is neither a worklet function nor a Host Function on a different Runtime than it was defined on.
+
+```typescript
+function callee() {
+  console.log('hello');
+}
+function caller() {
+  'worklet';
+  callee(); // <- this will throw in `scheduleOnUI`
+}
+scheduleOnUI(caller);
+```
+
+In this example, `callee` cannot be called from a worklet function ran on UI Runtime because there is no corresponding UI function for `callee`.
+
+**Solution:**
+
+1. If you want to synchronously execute this method, mark it as a worklet function using `worklet` directive:
+
+```diff
+ function callee() {
++  'worklet';
+   console.log("hello");
+ }
+```
+
+2. If you want to execute this function on the RN Runtime, wrap it using `scheduleOnRN`:
+
+```diff
+ function caller() {
+   'worklet';
+-  callee();
++  scheduleOnRN(callee);
+ }
+```
+
+Check [this page](/docs/tutorials/concurrency-model#worklet-functions) to learn more about worklet functions.
+
+### Tried to synchronously call a non-worklet function on the UI thread
+
+See [Tried to synchronously call a Remote Function](#tried-to-synchronously-call-a-remote-function).
+
+### Locally defined function passed to scheduleOnRN
+
+See [this page](/docs/threading/scheduleOnRN#what-functions-can-be-passed-to-scheduleonrn) to learn more about functions that can be passed to `scheduleOnRN`.
