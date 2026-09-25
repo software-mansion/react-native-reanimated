@@ -71,7 +71,14 @@ void CSSLoopAnimation::schedule(OperationsLoop &loop) {
     return;
   }
 
-  loop.schedule(shared_from_this(), progressProvider_->getStartTimestamp(timestamp));
+  const auto startTimestamp = progressProvider_->getStartTimestamp(timestamp);
+  // The delay has already elapsed, so update the run now to have its current style
+  // stored by apply() instead of waiting for the next frame.
+  if (startTimestamp <= timestamp) {
+    progressProvider_->update(timestamp);
+  }
+
+  loop.schedule(shared_from_this(), startTimestamp);
 }
 
 void CSSLoopAnimation::unschedule(OperationsLoop &loop) {
