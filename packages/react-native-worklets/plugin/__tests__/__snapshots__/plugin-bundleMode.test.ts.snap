@@ -164,6 +164,17 @@ bar.__pluginVersion = "x.y.z";
 export default bar;"
 `;
 
+exports[`babel plugin in bundleMode worklet file emission rebases relative dynamic imports inside the worklet body against the worklets directory 1`] = `
+"const baz = function () {
+  "use no memo";
+
+  return import("../../some-library/helper");
+};
+baz.__workletHash = 1;
+baz.__pluginVersion = "x.y.z";
+export default baz;"
+`;
+
 exports[`babel plugin in bundleMode worklet file emission rebases relative requires inside the worklet body against the worklets directory 1`] = `
 "const baz = function () {
   "use no memo";
