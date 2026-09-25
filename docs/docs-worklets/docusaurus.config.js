@@ -76,6 +76,8 @@ const config = {
 
   baseUrl: '/react-native-worklets/',
 
+  trailingSlash: true,
+
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'software-mansion', // Usually your GitHub org/user name.
@@ -116,7 +118,8 @@ const config = {
             'https://github.com/software-mansion/react-native-reanimated/edit/main/docs/docs-worklets',
           lastVersion: 'current',
           versions: {
-            current: { label: '0.10+' },
+            current: { label: '0.13' },
+            '0.10-0.12': { label: '0.10-0.12', banner: 'none' },
             0.9: { label: '0.9', banner: 'none' },
           },
         },

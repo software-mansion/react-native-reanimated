@@ -996,11 +996,16 @@ ShadowView LayoutAnimationsProxy::cloneViewWithoutOpacity(
 
 // Android's push model applies JS-thread transactions asynchronously on the UI
 // thread. A UI-thread pull can overtake them, so completed animations must not
-// add structural cleanup mutations there. This gate can go away with Android's
-// pull model.
+// add structural cleanup mutations there.
+//
+// Under the pull model there is nothing left to overtake, because every
+// transaction is pulled from the UI thread's frame callback. Keeping the thread
+// check on its own there would mean this never returns true, so no exiting view
+// would ever have its removal flushed, and every one of them would stay mounted
+// for the lifetime of the surface.
 bool LayoutAnimationsProxy::shouldFlushStructuralMutations() const {
 #ifdef ANDROID
-  return !worklets::isOnUIThread(uiScheduler_);
+  return isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_);
 #else
   return true;
 #endif
