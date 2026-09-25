@@ -1,3 +1,4 @@
+#import <worklets/RunLoop/FrameTimestamp.h>
 #import <worklets/Tools/FeatureFlags.h>
 #import <worklets/apple/AnimationFrameQueue.h>
 #import <worklets/apple/AssertJavaScriptQueue.h>
@@ -103,6 +104,9 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
   auto targetTimestamp = displayLink.targetTimestamp;
 #endif // TARGET_OS_OSX
   targetTimestamp = worklets::calculateTimestampWithSlowAnimations(targetTimestamp);
+  // Kept for the whole callback, including JS that runs after the flush clears
+  // its own override (the draw pass re-entered from this frame).
+  worklets::FrameTimestampScope frameTimestampScope(targetTimestamp);
   for (const auto &callback : frameCallbacks) {
     callback(targetTimestamp);
   }
