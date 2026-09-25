@@ -3,8 +3,12 @@ use std::path::{Component, Path, PathBuf};
 
 use oxc_ast::AstBuilder;
 
-use oxc_ast::ast::{Argument, FunctionBody};
-use oxc_ast_visit::{VisitMut, walk_mut::walk_function_body};
+use oxc_allocator::Box;
+use oxc_ast::ast::{Argument, Expression, FunctionBody, ImportExpression, StringLiteral};
+use oxc_ast_visit::{
+    VisitMut,
+    walk_mut::{walk_call_expression, walk_function_body, walk_import_expression},
+};
 use oxc_span::SPAN;
 
 pub fn update_relative_requires<'a>(
@@ -14,13 +18,11 @@ pub fn update_relative_requires<'a>(
     worklets_package_dir: Option<&str>,
     builder: AstBuilder<'a>,
 ) {
-    if !can_forward_relative_import(filename, forwardable_relative_paths) {
-        return;
-    }
     let mut visitor = RelativeRequireRewriter {
         filename,
         worklets_package_dir,
         builder,
+        rebase_requires: can_forward_relative_import(filename, forwardable_relative_paths),
     };
     walk_function_body(&mut visitor, body);
 }
@@ -29,29 +31,44 @@ struct RelativeRequireRewriter<'a, 'b> {
     filename: &'b str,
     worklets_package_dir: Option<&'b str>,
     builder: AstBuilder<'a>,
+    rebase_requires: bool,
 }
 
-impl<'a, 'b> VisitMut<'a> for RelativeRequireRewriter<'a, 'b> {
-    fn visit_call_expression(&mut self, call: &mut oxc_ast::ast::CallExpression<'a>) {
-        oxc_ast_visit::walk_mut::walk_call_expression(self, call);
-
-        if identifier_name(&call.callee) != Some("require") {
-            return;
-        }
-        let Some(Argument::StringLiteral(arg)) = call.arguments.first_mut() else {
-            return;
-        };
-        let value = arg.value.as_str();
+impl<'a, 'b> RelativeRequireRewriter<'a, 'b> {
+    fn rebase(&self, literal: &mut Box<'a, StringLiteral<'a>>) {
+        let value = literal.value.as_str();
         if !value.starts_with('.') {
             return;
         }
-
         let Some(rebased) = create_import_path(self.filename, value, self.worklets_package_dir)
         else {
             return;
         };
         let new_str = self.builder.str(&rebased);
-        *arg = self.builder.alloc_string_literal(SPAN, new_str, None);
+        *literal = self.builder.alloc_string_literal(SPAN, new_str, None);
+    }
+}
+
+impl<'a, 'b> VisitMut<'a> for RelativeRequireRewriter<'a, 'b> {
+    fn visit_call_expression(&mut self, call: &mut oxc_ast::ast::CallExpression<'a>) {
+        walk_call_expression(self, call);
+
+        if !self.rebase_requires || identifier_name(&call.callee) != Some("require") {
+            return;
+        }
+        let Some(Argument::StringLiteral(arg)) = call.arguments.first_mut() else {
+            return;
+        };
+        self.rebase(arg);
+    }
+
+    fn visit_import_expression(&mut self, import: &mut ImportExpression<'a>) {
+        walk_import_expression(self, import);
+
+        let Expression::StringLiteral(source) = &mut import.source else {
+            return;
+        };
+        self.rebase(source);
     }
 }
 
