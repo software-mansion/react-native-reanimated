@@ -121,8 +121,6 @@ export const withTiming = function (
         runtime = 0;
       }
 
-      // Defence in depth, and consistency with the other drivers: `withSpring` and `withDecay`
-      // both clamp their per-frame delta, `withTiming` fed an unbounded value into its easing.
       const normalizedTime = Math.min(Math.max(runtime / config.duration, 0), 1);
       const progress = animation.easing(normalizedTime);
       animation.current =
