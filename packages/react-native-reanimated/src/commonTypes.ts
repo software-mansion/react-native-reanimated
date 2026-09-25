@@ -288,7 +288,7 @@ export interface AnimationObject<T = AnimatableValue> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
   callback?: AnimationCallback;
-  current?: T;
+  current?: T | undefined;
   toValue?: AnimationObject<T>['current'];
   startValue?: AnimationObject<T>['current'];
   finished?: boolean;
