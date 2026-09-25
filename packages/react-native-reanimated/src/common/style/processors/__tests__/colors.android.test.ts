@@ -1,4 +1,6 @@
 'use strict';
+import { logger } from '../../../logger';
+import { WARN_MESSAGES } from '../../processStyleValue';
 import {
   DynamicColorIOS,
   ERROR_MESSAGES,
@@ -7,16 +9,24 @@ import {
   processColorsInProps,
 } from '../colors';
 
+const warn = jest.fn();
+logger.warn = warn;
+
 describe('DynamicColorIOS support on Android', () => {
-  test('processColorsInProps throws for DynamicColorIOS', () => {
+  test('processColorsInProps ignores DynamicColorIOS with a warning', () => {
     const props = {
+      opacity: 0.5,
       backgroundColor: DynamicColorIOS({ light: '#ffffff', dark: '#000000' }),
     };
 
-    expect(() => processColorsInProps(props)).toThrow(
-      new Error(
-        `[Reanimated] ${ERROR_MESSAGES.dynamicNotAvailableOnPlatform()}`
-      )
+    processColorsInProps(props);
+
+    expect(props).toEqual({ opacity: 0.5 });
+    expect(warn).toHaveBeenCalledWith(
+      WARN_MESSAGES.ignoredValue(
+        ERROR_MESSAGES.dynamicNotAvailableOnPlatform()
+      ),
+      { strict: true }
     );
   });
 

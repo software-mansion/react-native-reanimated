@@ -172,6 +172,10 @@ For animating `react-native-svg` components, see [Animating SVG](/docs/guides/an
 
 Style inheritance is not supported. Properties that would normally inherit values (e.g., textDecorationColor inheriting from color) must be provided separately, as inheritance is not implemented.
 
+### Invalid values
+
+A style value that Reanimated cannot process on native, such as `backgroundColor: 'notacolor'` or a transform string with an unknown function, is ignored the way an invalid declaration is ignored in CSS: the property is left out of the keyframe or style it appears in, so the view keeps its current value. In development builds a warning describing the value is logged through the [Reanimated logger](/docs/debugging/logger-configuration) as long as its strict mode is enabled.
+
 ### Relative Margins
 
 Yoga applies relative (%) margins in a different way than the web browser does. In React Native, the margin is added as a space between items without changing dimensions of the se items. As a result, the size of the parent container can change if the total size of its children with added margins exceeds the parent container size.
