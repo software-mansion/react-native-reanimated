@@ -151,9 +151,10 @@ inline jsi::Value createWorkletRuntime(
     std::shared_ptr<SerializableWorklet> &initializer,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop,
-    bool enableLocking) {
-  const auto workletRuntime =
-      runtimeManager->createWorkletRuntime(sourceProxy, name, initializer, queue, enableEventLoop, enableLocking);
+    bool enableLocking,
+    bool enableNetworking) {
+  const auto workletRuntime = runtimeManager->createWorkletRuntime(
+      sourceProxy, name, initializer, queue, enableEventLoop, enableLocking, enableNetworking);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
@@ -230,22 +231,24 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   auto obj = jsi::Object(rt);
   using jsi_utils::at;
 
-  jsi_utils::addMethod<18>(
+  jsi_utils::addMethod<19>(
       rt,
       obj,
       "loadUnpackersWithCode",
-      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[18]) {
+      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[19]) {
         const auto str = [&](size_t i) {
           return args[i].getString(rt).utf8(rt);
         };
-        unpackerLoader->loadCodeUnpackers({
-            CodeUnpacker{.code = str(0), .location = str(1), .sourceMap = str(2)},
-            CodeUnpacker{.code = str(3), .location = str(4), .sourceMap = str(5)},
-            CodeUnpacker{.code = str(6), .location = str(7), .sourceMap = str(8)},
-            CodeUnpacker{.code = str(9), .location = str(10), .sourceMap = str(11)},
-            CodeUnpacker{.code = str(12), .location = str(13), .sourceMap = str(14)},
-            CodeUnpacker{.code = str(15), .location = str(16), .sourceMap = str(17)},
-        });
+        unpackerLoader->loadCodeUnpackers(
+            {
+                CodeUnpacker{.code = str(0), .location = str(1), .sourceMap = str(2)},
+                CodeUnpacker{.code = str(3), .location = str(4), .sourceMap = str(5)},
+                CodeUnpacker{.code = str(6), .location = str(7), .sourceMap = str(8)},
+                CodeUnpacker{.code = str(9), .location = str(10), .sourceMap = str(11)},
+                CodeUnpacker{.code = str(12), .location = str(13), .sourceMap = str(14)},
+                CodeUnpacker{.code = str(15), .location = str(16), .sourceMap = str(17)},
+            },
+            args[18].asBool());
       });
 
   jsi_utils::addMethod<6>(
@@ -525,11 +528,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return serializedResult->toJSValue(rt);
       });
 
-  jsi_utils::addMethod<6>(
+  jsi_utils::addMethod<7>(
       rt,
       obj,
       "createWorkletRuntime",
-      [sourceProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[6]) {
+      [sourceProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[7]) {
         const auto name = at<0>(args).getString(rt).utf8(rt);
         auto serializableInitializer = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Initializer must be a worklet.");
@@ -544,10 +547,19 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
 
         const auto enableEventLoop = at<4>(args).getBool();
         const auto enableLocking = at<5>(args).getBool();
+        const auto enableNetworking = at<6>(args).getBool();
         const auto runtimeManager = sourceProxy->getRuntimeManager();
 
         return createWorkletRuntime(
-            rt, runtimeManager, sourceProxy, name, serializableInitializer, asyncQueue, enableEventLoop, enableLocking);
+            rt,
+            runtimeManager,
+            sourceProxy,
+            name,
+            serializableInitializer,
+            asyncQueue,
+            enableEventLoop,
+            enableLocking,
+            enableNetworking);
       });
 
   jsi_utils::addMethod<3>(

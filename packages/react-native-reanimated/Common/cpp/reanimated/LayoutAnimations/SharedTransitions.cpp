@@ -2,8 +2,9 @@
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/components/rnreanimated/Props.h>
 #include <react/renderer/components/scrollview/ScrollViewState.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
+#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <algorithm>
 #include <ranges>
@@ -14,8 +15,7 @@ namespace reanimated {
 
 // A boundary is active when its `isActive` prop (controlled from JS,
 // e.g. with `useIsFocused`) is true and it's not currently exiting.
-std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findActiveBoundary(
-    const std::shared_ptr<LightNode> &node) const {
+std::shared_ptr<LightNode> LayoutAnimationsProxy::findActiveBoundary(const std::shared_ptr<LightNode> &node) const {
   if (node->isExiting()) {
     return nullptr;
   }
@@ -32,8 +32,7 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findActiveBoundar
   return nullptr;
 }
 
-std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findBoundaryGuess(
-    const std::shared_ptr<LightNode> &node) const {
+std::shared_ptr<LightNode> LayoutAnimationsProxy::findBoundaryGuess(const std::shared_ptr<LightNode> &node) const {
   std::shared_ptr<LightNode> result = nullptr;
 
   if (node->isExiting()) {
@@ -52,7 +51,7 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findBoundaryGuess
   return result;
 }
 
-void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
+void LayoutAnimationsProxy::findSharedElementsOnScreen(
     const std::shared_ptr<LightNode> &node,
     BeforeOrAfter index,
     TransactionMeta &transaction) const {
@@ -68,15 +67,20 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     }
   }
   if (sharedTag) {
-    ShadowView copy = node->current;
+    if (const auto staleTag = staleSynchronousProps_.find(node, LayoutAnimationType::SHARED_ELEMENT_TRANSITION)) {
+      transaction.staleSnapshots[node->current.tag] = *staleTag;
+    }
+    resolveLightNodeProps(node);
+    const bool useViewsOnScreen = index == BEFORE;
+    ShadowView copy = useViewsOnScreen ? viewOnScreen(node) : node->current;
     std::vector<react::Point> absolutePositions;
-    absolutePositions = getAbsolutePositionsForRootPathView(node);
+    absolutePositions = getAbsolutePositionsForRootPathView(node, useViewsOnScreen);
     copy.layoutMetrics.frame.origin = absolutePositions[0];
 
     auto &collectedTransition = transaction.transitionMap[*sharedTag];
     auto &transition = collectedTransition.transition;
     auto &[snapshot, parentTag, transform] = transition;
-    auto newTransform = parseParentTransforms(node, absolutePositions);
+    auto newTransform = parseParentTransforms(node, absolutePositions, useViewsOnScreen);
     const auto &parent = node->parent.lock();
     react_native_assert(parent && "Parent node is nullptr");
 
@@ -98,7 +102,7 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
   }
 }
 
-void LayoutAnimationsProxy_Experimental::resolveTransitionLifecycle(
+void LayoutAnimationsProxy::resolveTransitionLifecycle(
     TransactionMeta &transaction,
     const ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext) const {
@@ -124,7 +128,7 @@ void LayoutAnimationsProxy_Experimental::resolveTransitionLifecycle(
   handleProgressTransition(transaction, mutations, propsParserContext, popSettledThisPull);
 }
 
-bool LayoutAnimationsProxy_Experimental::settleUncommittedScreenPop(TransactionMeta &transaction) const {
+bool LayoutAnimationsProxy::settleUncommittedScreenPop(TransactionMeta &transaction) const {
   if (uncommittedScreenPop_->sourceScreen && !uncommittedScreenPop_->cancelled) {
     return false;
   }
@@ -142,7 +146,7 @@ bool LayoutAnimationsProxy_Experimental::settleUncommittedScreenPop(TransactionM
 
 // A gesture that starts while the previous one still awaits its source
 // removal cannot know its own source screen until topScreen_ is recomputed.
-void LayoutAnimationsProxy_Experimental::resolveDeferredSourceScreen() const {
+void LayoutAnimationsProxy::resolveDeferredSourceScreen() const {
   const bool needsSourceScreen = transition_ && !transition_->sourceScreen &&
       (transition_->state == TransitionState::START || transition_->state == TransitionState::END);
   if (!needsSourceScreen) {
@@ -168,7 +172,7 @@ static void restoreOldTarget(
   }
 }
 
-void LayoutAnimationsProxy_Experimental::handleProgressTransition(
+void LayoutAnimationsProxy::handleProgressTransition(
     TransactionMeta &transaction,
     const ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext,
@@ -208,6 +212,8 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
         if (!beforeNode || !afterNode) {
           continue;
         }
+        warnIfSnapshotIsStale(before, transaction);
+        warnIfSnapshotIsStale(after, transaction);
 
         const auto containerTag = getOrCreateContainer(before, sharedTag, collectedTransition.nodes, transaction);
         auto &container = sharedContainers_.at(containerTag);
@@ -302,7 +308,7 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
   }
 }
 
-void LayoutAnimationsProxy_Experimental::overrideTransform(
+void LayoutAnimationsProxy::overrideTransform(
     ShadowView &shadowView,
     const std::optional<Transform> &transform,
     const PropsParserContext &propsParserContext) const {
@@ -326,7 +332,7 @@ void LayoutAnimationsProxy_Experimental::overrideTransform(
   shadowView.props = newProps;
 }
 
-Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
+Tag LayoutAnimationsProxy::getOrCreateContainer(
     const ShadowView &before,
     const SharedTag &sharedTag,
     const std::array<std::shared_ptr<LightNode>, 2> &nodes,
@@ -357,6 +363,10 @@ Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
   containerView.tag = containerTag;
   auto node = std::make_shared<LightNode>();
   node->current = std::move(containerView);
+#ifdef ANDROID
+  react_native_assert(node->current.props && "Shared container has no props");
+  node->accumulatedRawProps = node->current.props->rawProps;
+#endif
   node->parent = root;
   root->children.push_back(node);
   transaction.containersToInsert.push_back(node);
@@ -371,13 +381,13 @@ Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
   return containerTag;
 }
 
-void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
+void LayoutAnimationsProxy::handleSharedTransitionsStart(
     const std::shared_ptr<LightNode> &afterTopScreen,
     const std::shared_ptr<LightNode> &beforeTopScreen,
     TransactionMeta &transaction,
     const ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext) const {
-  ReanimatedSystraceSection s1("LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart");
+  ReanimatedSystraceSection s1("LayoutAnimationsProxy::handleSharedTransitionsStart");
 
   if (!beforeTopScreen || !afterTopScreen) {
     return;
@@ -393,6 +403,11 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
       const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
           before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
       if (!config) {
+        for (const auto &node : collectedTransition.nodes) {
+          if (node) {
+            transaction.nodesToRestore.push_back(node);
+          }
+        }
         continue;
       }
       const auto &afterNode = collectedTransition.nodes[AFTER];
@@ -400,6 +415,8 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
       if (!afterNode) {
         continue;
       }
+      warnIfSnapshotIsStale(before, transaction);
+      warnIfSnapshotIsStale(after, transaction);
       auto containerTag = getOrCreateContainer(before, sharedTag, collectedTransition.nodes, transaction);
       auto &container = sharedContainers_.at(containerTag);
       restoreOldTarget(container, collectedTransition.nodes, transaction);
@@ -453,7 +470,7 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
   }
 }
 
-void LayoutAnimationsProxy_Experimental::hideTransitioningViews(
+void LayoutAnimationsProxy::hideTransitioningViews(
     BeforeOrAfter index,
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
@@ -464,6 +481,7 @@ void LayoutAnimationsProxy_Experimental::hideTransitioningViews(
     int indexNum = static_cast<int>(index);
     const auto &shadowView = transition.snapshot[indexNum];
     const auto &parentTag = transition.parentTag[indexNum];
+    hiddenViewTags_.insert(shadowView.tag);
     auto m = ShadowViewMutation::UpdateMutation(
         shadowView, cloneViewWithoutOpacity(shadowView, propsParserContext), parentTag);
     hiddenMutations.push_back(m);
@@ -473,11 +491,31 @@ void LayoutAnimationsProxy_Experimental::hideTransitioningViews(
   filteredMutations.insert(insertionPoint, hiddenMutations.begin(), hiddenMutations.end());
 }
 
-std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgress(
-    int tag,
-    double progress,
-    bool isClosing,
-    bool isGoingForward) {
+// The hide in hideTransitioningViews is not stored in the light tree, so a
+// later Update for the same view carries full opacity and would show the view
+// again. Force opacity 0 on every outgoing Update for a hidden view until the
+// restore in cleanupSharedTransitions removes its tag from hiddenViewTags_.
+void LayoutAnimationsProxy::keepTransitioningViewsHidden(
+    ShadowViewMutationList &filteredMutations,
+    const PropsParserContext &propsParserContext) const {
+  if (hiddenViewTags_.empty()) {
+    return;
+  }
+  for (auto &mutation : filteredMutations) {
+    if (mutation.type == ShadowViewMutation::Update && hiddenViewTags_.contains(mutation.newChildShadowView.tag)) {
+      mutation = ShadowViewMutation::UpdateMutation(
+          mutation.oldChildShadowView,
+          cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext),
+          mutation.parentTag);
+    }
+  }
+}
+
+std::optional<SurfaceId>
+LayoutAnimationsProxy::onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) {
+  if constexpr (!StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    return {};
+  }
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   bool isAndroid;
 #ifdef ANDROID
@@ -522,7 +560,10 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
   return {};
 }
 
-std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onGestureCancel(int tag) {
+std::optional<SurfaceId> LayoutAnimationsProxy::onGestureCancel(int tag) {
+  if constexpr (!StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    return {};
+  }
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   if (uncommittedScreenPop_ && uncommittedScreenPop_->sourceScreen &&
       uncommittedScreenPop_->sourceScreen->current.tag == tag) {
@@ -560,7 +601,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onGestureCancel(int
   return surfaceId_;
 }
 
-void LayoutAnimationsProxy_Experimental::insertContainers(TransactionMeta &transaction, int &rootChildCount) const {
+void LayoutAnimationsProxy::insertContainers(TransactionMeta &transaction, int &rootChildCount) const {
   auto &filteredMutations = transaction.filteredMutations;
   ShadowViewMutationList currentMutations;
   std::swap(currentMutations, filteredMutations);
@@ -572,7 +613,7 @@ void LayoutAnimationsProxy_Experimental::insertContainers(TransactionMeta &trans
   filteredMutations.insert(filteredMutations.end(), currentMutations.begin(), currentMutations.end());
 }
 
-void LayoutAnimationsProxy_Experimental::removeSharedContainer(Tag containerTag, TransactionMeta &transaction) const {
+void LayoutAnimationsProxy::removeSharedContainer(Tag containerTag, TransactionMeta &transaction) const {
   const auto containerIt = sharedContainers_.find(containerTag);
   react_native_assert(containerIt != sharedContainers_.end() && "Unknown shared container");
   if (containerIt == sharedContainers_.end()) {
@@ -582,18 +623,20 @@ void LayoutAnimationsProxy_Experimental::removeSharedContainer(Tag containerTag,
   sharedContainers_.erase(containerIt);
 }
 
-void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
+void LayoutAnimationsProxy::cleanupSharedTransitions(
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
   ReanimatedSystraceSection s1("cleanupSharedTransitions");
   auto &filteredMutations = transaction.filteredMutations;
   for (const auto &node : transaction.nodesToRestore) {
     ReanimatedSystraceSection s("Restore tag");
+    hiddenViewTags_.erase(node->current.tag);
     const auto nodeIt = lightNodes_.find(node->current.tag);
     if (nodeIt == lightNodes_.end() || nodeIt->second != node) {
       continue;
     }
-    auto view = node->current;
+    resolveLightNodeProps(node);
+    const auto &view = viewOnScreen(node);
     const auto parent = node->parent.lock();
     react_native_assert(parent && "Parent node is nullptr");
     if (!parent) {
@@ -624,8 +667,22 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
 
 // MARK: Position Calculation
 
-std::vector<react::Point> LayoutAnimationsProxy_Experimental::getAbsolutePositionsForRootPathView(
-    const std::shared_ptr<LightNode> &node) const {
+// A running layout animation keeps the frame that is on screen in its own record.
+// The light node holds the committed layout, which the animation has not reached yet.
+const ShadowView &LayoutAnimationsProxy::viewOnScreen(const std::shared_ptr<LightNode> &node) const {
+  const auto tag = node->current.tag;
+  if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
+    return it->second.currentView;
+  }
+  if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end() && !it->second.shouldRemove) {
+    return it->second.animation.currentView;
+  }
+  return node->current;
+}
+
+std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPathView(
+    const std::shared_ptr<LightNode> &node,
+    const bool useViewsOnScreen) const {
   std::vector<react::Point> viewsAbsolutePositions;
   auto currentNode = node;
   while (currentNode) {
@@ -637,17 +694,16 @@ std::vector<react::Point> LayoutAnimationsProxy_Experimental::getAbsolutePositio
       auto data = state->getData();
       viewPosition -= data.contentOffset;
     }
-    if (!strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
-      const auto &parent = currentNode->parent.lock();
-      react_native_assert(parent && "Parent node is nullptr");
-
-      const float headerHeight =
-          parent->current.layoutMetrics.frame.size.height - currentNode->current.layoutMetrics.frame.size.height;
+    const auto &view = useViewsOnScreen ? viewOnScreen(currentNode) : currentNode->current;
+    const auto parent = currentNode->parent.lock();
+    if (parent && !strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
+      const auto &parentView = useViewsOnScreen ? viewOnScreen(parent) : parent->current;
+      const float headerHeight = parentView.layoutMetrics.frame.size.height - view.layoutMetrics.frame.size.height;
       viewPosition.y += headerHeight;
     }
-    viewPosition += currentNode->current.layoutMetrics.frame.origin;
+    viewPosition += view.layoutMetrics.frame.origin;
     viewsAbsolutePositions.emplace_back(viewPosition);
-    currentNode = currentNode->parent.lock();
+    currentNode = parent;
   }
   for (int i = static_cast<int>(viewsAbsolutePositions.size()) - 2; i >= 0; --i) {
     viewsAbsolutePositions[i] += viewsAbsolutePositions[i + 1];
@@ -655,15 +711,19 @@ std::vector<react::Point> LayoutAnimationsProxy_Experimental::getAbsolutePositio
   return viewsAbsolutePositions;
 }
 
-std::optional<Transform> LayoutAnimationsProxy_Experimental::parseParentTransforms(
+std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     const std::shared_ptr<LightNode> &node,
-    const std::vector<react::Point> &absolutePositions) const {
-  std::vector<std::pair<Transform, TransformOrigin>> transforms;
+    const std::vector<react::Point> &absolutePositions,
+    const bool useViewsOnScreen) const {
+  std::vector<AncestorTransform> transforms;
+  const auto &targetLayoutMetrics = (useViewsOnScreen ? viewOnScreen(node) : node->current).layoutMetrics;
   auto currentNode = node;
   while (currentNode) {
-    const auto &props = static_cast<const ViewProps &>(*currentNode->current.props);
+    resolveLightNodeProps(currentNode);
+    const auto &view = useViewsOnScreen ? viewOnScreen(currentNode) : currentNode->current;
+    const auto &props = static_cast<const ViewProps &>(*view.props);
     auto origin = props.transformOrigin;
-    const auto &viewSize = currentNode->current.layoutMetrics.frame.size;
+    const auto &viewSize = view.layoutMetrics.frame.size;
     if (origin.xy[0].unit == facebook::react::UnitType::Percent) {
       origin.xy[0] = {static_cast<float>(viewSize.width * origin.xy[0].value / 100), UnitType::Point};
     } else if (origin.xy[0].unit == facebook::react::UnitType::Undefined) {
@@ -674,7 +734,7 @@ std::optional<Transform> LayoutAnimationsProxy_Experimental::parseParentTransfor
     } else if (origin.xy[1].unit == facebook::react::UnitType::Undefined) {
       origin.xy[1] = {static_cast<float>(viewSize.height * 0.5), UnitType::Point};
     }
-    transforms.emplace_back(props.transform, origin);
+    transforms.push_back({props.transform, origin, viewSize});
     currentNode = currentNode->parent.lock();
   }
 
@@ -682,7 +742,7 @@ std::optional<Transform> LayoutAnimationsProxy_Experimental::parseParentTransfor
   Transform combinedMatrix;
   bool parentHasTransform = false;
   for (int i = static_cast<int>(transforms.size()) - 1; i >= 0; --i) {
-    auto &[transform, transformOrigin] = transforms[i];
+    auto &[transform, transformOrigin, ownSize] = transforms[i];
     if (transform.operations.empty()) {
       continue;
     } else if (i > 0) {
@@ -694,7 +754,8 @@ std::optional<Transform> LayoutAnimationsProxy_Experimental::parseParentTransfor
     }
     transformOrigin.xy[0].value -= targetViewPosition.x - absolutePositions[i].x;
     transformOrigin.xy[1].value -= targetViewPosition.y - absolutePositions[i].y;
-    combinedMatrix = combinedMatrix * resolveTransform(node->current.layoutMetrics, transform, transformOrigin);
+    combinedMatrix =
+        combinedMatrix * resolveTransform(targetLayoutMetrics.frame.size, ownSize, transform, transformOrigin);
     combinedMatrix.operations.clear();
   }
   if (parentHasTransform) {
@@ -709,14 +770,15 @@ std::optional<Transform> LayoutAnimationsProxy_Experimental::parseParentTransfor
 // from:
 // https://github.com/facebook/react-native/blob/v0.80.0/packages/react-native/ReactCommon/react/renderer/components/view/BaseViewProps.cpp#L548
 // We need a copy of these methods to modify the `resolveTransform` method
-// to accept the transform origin as a parameter instead of as a class field.
-react::Transform LayoutAnimationsProxy_Experimental::resolveTransform(
-    const LayoutMetrics &layoutMetrics,
+// to accept the transform origin as a parameter instead of as a class field,
+// and to resolve percent operations with the size of the view that owns them.
+react::Transform LayoutAnimationsProxy::resolveTransform(
+    const react::Size &originFrameSize,
+    const react::Size &ownSize,
     const Transform &transform,
     const TransformOrigin &transformOrigin) const {
-  const auto &frameSize = layoutMetrics.frame.size;
   auto transformMatrix = Transform{};
-  if (frameSize.width == 0 && frameSize.height == 0) {
+  if (originFrameSize.width == 0 && originFrameSize.height == 0) {
     return transformMatrix;
   }
 
@@ -725,14 +787,13 @@ react::Transform LayoutAnimationsProxy_Experimental::resolveTransform(
     transformMatrix = transform;
   } else {
     for (const auto &operation : transform.operations) {
-      transformMatrix =
-          transformMatrix * Transform::FromTransformOperation(operation, layoutMetrics.frame.size, transform);
+      transformMatrix = transformMatrix * Transform::FromTransformOperation(operation, ownSize, transform);
     }
   }
 
   if (transformOrigin.isSet()) {
     std::array<float, 3> translateOffsets =
-        getTranslateForTransformOrigin(frameSize.width, frameSize.height, transformOrigin);
+        getTranslateForTransformOrigin(originFrameSize.width, originFrameSize.height, transformOrigin);
     transformMatrix = Transform::Translate(translateOffsets[0], translateOffsets[1], translateOffsets[2]) *
         transformMatrix * Transform::Translate(-translateOffsets[0], -translateOffsets[1], -translateOffsets[2]);
   }
@@ -740,7 +801,7 @@ react::Transform LayoutAnimationsProxy_Experimental::resolveTransform(
   return transformMatrix;
 }
 
-std::array<float, 3> LayoutAnimationsProxy_Experimental::getTranslateForTransformOrigin(
+std::array<float, 3> LayoutAnimationsProxy::getTranslateForTransformOrigin(
     float viewWidth,
     float viewHeight,
     const TransformOrigin &transformOrigin) const {

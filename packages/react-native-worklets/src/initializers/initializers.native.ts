@@ -1,9 +1,7 @@
 'use strict';
 
 import { silenceHMRWarnings } from '../bundleMode/metroOverrides';
-import { initializeNetworking } from '../bundleMode/network';
 import { registerReportFatalRemoteError } from '../debug/errors';
-import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
 import { installRemoteFunctionUnpacker } from '../memory/remoteFunctionUnpacker';
@@ -12,6 +10,7 @@ import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker'
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
 import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
 import { installValueUnpacker } from '../memory/valueUnpacker';
+import { installNetworking } from '../networking/install';
 import { setupQueueMicrotask } from '../runLoop/common/queueMicrotaskPolyfill';
 import { setupSetImmediate } from '../runLoop/common/setImmediatePolyfill';
 import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
@@ -173,9 +172,7 @@ function initializeWorkletRuntime() {
       silenceHMRWarnings();
     }
 
-    if (getStaticFeatureFlag('FETCH_PREVIEW_ENABLED')) {
-      initializeNetworking();
-    }
+    installNetworking();
   }
 }
 

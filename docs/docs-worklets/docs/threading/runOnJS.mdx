@@ -13,7 +13,7 @@ This API is deprecated and will be removed in the next major release. Use{' '}
 
 # runOnJS
 
-`runOnJS` lets you asynchronously run non-[workletized](/docs/worklets-babel-plugin/about#autoworkletization) functions that couldn't otherwise run on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model). This applies to most external libraries as they don't have their functions marked with `"worklet";` directive.
+`runOnJS` lets you asynchronously run non-[workletized](/docs/worklets-plugin/about#autoworkletization) functions that couldn't otherwise run on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model). This applies to most external libraries as they don't have their functions marked with `"worklet";` directive.
 
 `runOnJS` is usually used to update React state either on animation finish or conditionally within a gesture.
 

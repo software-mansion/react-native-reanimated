@@ -35,7 +35,7 @@ const sidebars = {
     },
     {
       type: 'doc',
-      id: 'worklets-babel-plugin/about',
+      id: 'worklets-plugin/about',
       label: 'Worklets Babel plugin',
     },
   ],
@@ -68,8 +68,13 @@ const sidebars = {
     },
     {
       type: 'doc',
-      id: 'worklets-babel-plugin/plugin-options',
+      id: 'worklets-plugin/plugin-options',
       label: 'Babel plugin options',
+    },
+    {
+      type: 'doc',
+      id: 'worklets-plugin/oxc',
+      label: 'OXC plugin',
     },
   ],
 };

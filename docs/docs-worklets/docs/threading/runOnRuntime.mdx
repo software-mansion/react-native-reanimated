@@ -13,7 +13,7 @@ This API is deprecated and will be removed in the next major release. Use{' '}
 
 # runOnRuntime
 
-`runOnRuntime` lets you asynchronously run [workletized](/docs/worklets-babel-plugin/about#autoworkletization) functions on a separate worklet runtime on a separate thread.
+`runOnRuntime` lets you asynchronously run [workletized](/docs/worklets-plugin/about#autoworkletization) functions on a separate worklet runtime on a separate thread.
 
 ## Reference
 
@@ -67,7 +67,7 @@ Don't forget to call the function returned from `runOnRuntime`.
 
 - It's a common mistake to execute function inside of `runOnRuntime` like this: ~~`runOnRuntime(myWorklet(10))()`~~. Here, the correct usage would be `runOnRuntime(myWorklet)(10)`.
 
-- The callback passed as the argument will not be [workletized](/docs/worklets-babel-plugin/about#autoworkletization) automatically. You need to add `'worklet';` directive manually to allow the function to be run on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model).
+- The callback passed as the argument will not be [workletized](/docs/worklets-plugin/about#autoworkletization) automatically. You need to add `'worklet';` directive manually to allow the function to be run on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model).
 
 - You may call `runOnRuntime` on any runtime, including the RN runtime, UI runtime and other worklet runtimes.
 

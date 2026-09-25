@@ -20,6 +20,10 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -147,7 +151,9 @@ jobs:
               - 'packages/react-native-worklets/src/**'
               - 'packages/react-native-worklets/package.json'
               - '**/tsconfig*.json'
-              - 'eslint.config.mjs'
+              - '**/.oxlintrc.json'
+              - '.oxfmtrc.json'
+              - 'scripts/oxlint/**'
               - 'yarn.lock'
               - 'apps/common-app/**'
               - 'apps/tvos-example/**'
@@ -163,6 +169,8 @@ jobs:
               - '.github/workflows/ci.yml'
               - '.github/workflows/runtime-tests-android.yml'
               - 'apps/common-app/runtime-tests/**'
+              - 'apps/fabric-example/babel.config.js'
+              - 'apps/fabric-example/metro.config.js'
               - 'apps/fabric-example/package.json'
               - 'apps/common-app/package.json'
               - 'apps/fabric-example/scripts/runtime-tests-server.js'
@@ -183,6 +191,8 @@ jobs:
               - '.github/actions/setup-ccache/**'
               - '.github/actions/save-ccache/**'
               - 'apps/common-app/runtime-tests/**'
+              - 'apps/fabric-example/babel.config.js'
+              - 'apps/fabric-example/metro.config.js'
               - 'apps/fabric-example/package.json'
               - 'apps/common-app/package.json'
               - 'apps/fabric-example/scripts/runtime-tests-server.js'
@@ -204,6 +214,9 @@ jobs:
               - '.github/workflows/ci.yml'
               - '.github/workflows/worklets-plugin-static-check.yml'
               - '.github/workflows/helper/clear-annotations.sh'
+              - '.oxfmtrc.json'
+              - '.oxlintrc.json'
+              - 'scripts/oxlint/**'
               - 'yarn.lock'
               - 'packages/react-native-worklets/package.json'
               - 'packages/react-native-worklets/plugin/**'

@@ -5,6 +5,7 @@
 #endif // ANDROID
 
 #include <memory>
+#include <queue>
 #include <string>
 #include <thread>
 #include <utility>
@@ -90,6 +91,14 @@ void AsyncQueueImpl::push(std::function<void()> &&job) {
     state_->queue.emplace(job);
   }
   state_->cv.notify_one();
+}
+
+void AsyncQueueImpl::abortPending(AbortToken /* abortToken */) {
+  std::queue<std::function<void()>> pendingJobs;
+  {
+    std::unique_lock<std::mutex> lock(state_->mutex);
+    std::swap(pendingJobs, state_->queue);
+  }
 }
 
 AsyncQueueUI::AsyncQueueUI(const std::shared_ptr<UIScheduler> &uiScheduler) : uiScheduler_(uiScheduler) {}

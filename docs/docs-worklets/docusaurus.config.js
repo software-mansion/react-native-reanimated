@@ -76,6 +76,8 @@ const config = {
 
   baseUrl: process.env.DOCS_BASE_URL ?? '/react-native-worklets/',
 
+  trailingSlash: true,
+
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'software-mansion', // Usually your GitHub org/user name.
@@ -116,7 +118,8 @@ const config = {
             'https://github.com/software-mansion/react-native-reanimated/edit/main/docs/docs-worklets',
           lastVersion: 'current',
           versions: {
-            current: { label: '0.10+' },
+            current: { label: '0.13' },
+            '0.10-0.12': { label: '0.10-0.12', banner: 'none' },
             0.9: { label: '0.9', banner: 'none' },
           },
         },
@@ -198,6 +201,22 @@ const config = {
         },
       ],
     ].filter(Boolean),
+    [
+      '@docusaurus/plugin-client-redirects',
+      /** @type {import('@docusaurus/plugin-client-redirects').Options} */
+      ({
+        redirects: [
+          {
+            from: '/docs/worklets-babel-plugin/about',
+            to: '/docs/worklets-plugin/about',
+          },
+          {
+            from: '/docs/worklets-babel-plugin/plugin-options',
+            to: '/docs/worklets-plugin/plugin-options',
+          },
+        ],
+      }),
+    ],
     function svgModulePlugin() {
       return {
         name: 'svg-module-plugin',

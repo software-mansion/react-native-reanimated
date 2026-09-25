@@ -134,12 +134,12 @@ void LayoutAnimationsProxy_Legacy::reconcileContradictedRemovals(
   }
 }
 
-// On android mutations that alter the view hierarchy are only produced on the JS thread (the push model), so to not
-// race with those, we apply the dead nodes cleanup only on the JS thread, unless there is a surface drop, in which case
-// we can safely cleanup on the UI thread since the surface is gone and no more mutations will be produced for it.
+// With Android's push model, structural mutations from the JS thread may still be waiting to mount when a UI-thread
+// pull runs, so dead nodes must be cleaned up on the JS thread. The pull model mounts transactions on the UI thread,
+// where cleanup is safe. A dropped surface can also be cleaned up immediately.
 bool LayoutAnimationsProxy_Legacy::shouldFlushDeadNodes([[maybe_unused]] const bool surfaceDropped) const {
 #ifdef ANDROID
-  return surfaceDropped || !worklets::isOnUIThread(uiScheduler_);
+  return surfaceDropped || isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_);
 #else
   return true;
 #endif
@@ -376,19 +376,21 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
 
       case ShadowViewMutation::Type::Update: {
         auto shouldAnimate = hasLayoutChanged(mutation);
-        const auto layoutConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LayoutAnimationType::LAYOUT);
+        auto layoutConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LayoutAnimationType::LAYOUT);
+        if (!layoutConfig) {
+          layoutConfig = getRetargetLayoutAnimationConfig(tag);
+        }
+        if ((!layoutConfig || !shouldAnimate) && updateEnteringAnimationTarget(tag, mutation.newChildShadowView)) {
+          continue;
+        }
         if (!layoutConfig || (!shouldAnimate && !layoutAnimations_.contains(tag) && !hasPendingLayoutAnimation(tag))) {
-          // We should cancel any ongoing animation here to ensure that the
-          // proper final state is reached for this view However, due to how
-          // RNSScreens handle adding headers (a second commit is triggered to
-          // offset all the elements by the header height) this would lead to
-          // all entering animations being cancelled when a screen with a header
-          // is pushed onto a stack
-          // TODO: find a better solution for this problem
+          if (const auto currentView = takeCompletedLayoutAnimationView(tag)) {
+            mutation.oldChildShadowView = *currentView;
+          }
           filteredMutations.push_back(mutation);
           continue;
         } else if (!shouldAnimate) {
-          updateLayoutAnimationTarget(tag, mutation.newChildShadowView);
+          updateLayoutAnimationTarget(tag, mutation.newChildShadowView, layoutConfig);
           continue;
         }
 

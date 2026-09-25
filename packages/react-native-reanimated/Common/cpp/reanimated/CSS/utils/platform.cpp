@@ -34,7 +34,6 @@ const CSSPropertyTraits *traitsFor(const std::string &propertyName) {
       {"backgroundColor", {CSSValueKind::Color, kTransparentColor}},
       {"borderColor", {CSSValueKind::Color, kBlackColor}},
       {"borderRadius", {CSSValueKind::Scalar, 0.0}},
-      {"borderWidth", {CSSValueKind::Scalar, 0.0}},
       {"shadowColor", {CSSValueKind::Color, kBlackColor}},
       {"shadowOpacity", {CSSValueKind::Scalar, 1.0}},
       {"shadowRadius", {CSSValueKind::Scalar, 0.0}},
@@ -146,6 +145,39 @@ double packColorChannels(const std::array<double, 4> &channels) {
   const uint32_t packed =
       (toByte(channels[3]) << 24) | (toByte(channels[0]) << 16) | (toByte(channels[1]) << 8) | toByte(channels[2]);
   return static_cast<double>(packed);
+}
+
+jsi::Value platformValueToJSI(jsi::Runtime &rt, const PlatformValue &value) {
+  return std::visit(
+      [&rt](const auto &typedValue) -> jsi::Value {
+        using T = std::decay_t<decltype(typedValue)>;
+        if constexpr (std::is_same_v<T, double>) {
+          return jsi::Value(typedValue);
+        } else if constexpr (std::is_same_v<T, std::array<double, 2>>) {
+          jsi::Object size(rt);
+          size.setProperty(rt, "width", typedValue[0]);
+          size.setProperty(rt, "height", typedValue[1]);
+          return jsi::Value(std::move(size));
+        } else {
+          return jsi::Value(packColorChannels(typedValue));
+        }
+      },
+      value);
+}
+
+folly::dynamic platformValueToDynamic(const PlatformValue &value) {
+  return std::visit(
+      [](const auto &typedValue) -> folly::dynamic {
+        using T = std::decay_t<decltype(typedValue)>;
+        if constexpr (std::is_same_v<T, double>) {
+          return typedValue;
+        } else if constexpr (std::is_same_v<T, std::array<double, 2>>) {
+          return folly::dynamic::object("width", typedValue[0])("height", typedValue[1]);
+        } else {
+          return packColorChannels(typedValue);
+        }
+      },
+      value);
 }
 
 std::optional<PlatformValuePair> parsePlatformValues(

@@ -3,6 +3,7 @@
 #include <jsi/jsi.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#include <worklets/Networking/Networking.h>
 #include <worklets/SharedItems/MemoryManager.h>
 #include <worklets/SharedItems/UnpackerLoader.h>
 #include <worklets/Tools/JSLogger.h>
@@ -95,14 +96,9 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
     return uiWorkletRuntime_;
   }
 
-  [[nodiscard]] inline bool isDevBundle() const {
-    return isDevBundle_;
-  }
-
  private:
   void startUIRuntime(const std::shared_ptr<JSIWorkletsModuleProxy> &uiRuntimeProxy);
 
-  bool isDevBundle_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   const std::shared_ptr<JSLogger> jsLogger_;
@@ -112,6 +108,7 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
   const std::shared_ptr<RuntimeManager> runtimeManager_;
   const std::shared_ptr<UnpackerLoader> unpackerLoader_;
   const std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
+  const std::shared_ptr<Networking> networking_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
   std::shared_ptr<JSIWorkletsModuleProxy> rnRuntimeProxy_;
   std::shared_ptr<AnimationFrameBatchinator> animationFrameBatchinator_;

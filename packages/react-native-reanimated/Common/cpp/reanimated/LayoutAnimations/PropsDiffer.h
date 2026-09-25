@@ -46,9 +46,8 @@ class PropsDiffer {
   void diffBackgroundColor(jsi::Runtime &rt);
 
   void diffTransform(jsi::Runtime &rt);
-  static std::vector<TransformOperationWithDefault> getTransformOperationsFromProps(
-      jsi::Runtime &rt,
-      const ViewProps &props);
+  static std::vector<TransformOperationWithDefault>
+  getTransformOperationsFromProps(jsi::Runtime &rt, const ViewProps &props, const react::Size &viewSize);
   static void maybeAddOperationToDiff(
       jsi::Runtime &rt,
       const char *name,

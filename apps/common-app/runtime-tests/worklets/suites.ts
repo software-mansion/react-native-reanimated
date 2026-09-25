@@ -41,11 +41,19 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'bundle mode core',
     importTest: () => {
       require('./tests/runtimes/reactNativeImportShim.test');
-      require('./tests/runtimes/turboModuleRegistryShim.test');
     },
     // The shims these tests assert on are only active in __DEV__, so the suite
     // stays out of Release builds until Bundle Mode supports them there.
     disabled: !isBundleModeEnabled() || !__DEV__,
+  },
+  {
+    testSuiteName: 'networking',
+    importTest: () => {
+      require('./tests/networking/api.test');
+      require('./tests/networking/xhr.test');
+      require('./tests/networking/fetch.test');
+    },
+    disabled: !isBundleModeEnabled(),
   },
   {
     testSuiteName: 'run loop',

@@ -1078,7 +1078,15 @@ var require_globals = __commonJS({
       // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
       "require",
       "fetch",
+      "Headers",
+      "Request",
+      "Response",
       "XMLHttpRequest",
+      "FormData",
+      "AbortController",
+      "AbortSignal",
+      "Blob",
+      "FileReader",
       "WebSocket",
       // Run loop
       "queueMicrotask",
@@ -1132,10 +1140,7 @@ var require_globals = __commonJS({
       exports2.globals = new Set(exports2.defaultGlobals);
     }
     var defaultAllowedPaths = ["react-native-worklets"];
-    var defaultAllowedModules = [
-      "react-native-worklets",
-      "react-native/Libraries/Core/setUpXHR"
-    ];
+    var defaultAllowedModules = ["react-native-worklets"];
     function addCustomGlobals(state) {
       if (state.opts && Array.isArray(state.opts.globals)) {
         state.opts.globals.forEach((name) => {

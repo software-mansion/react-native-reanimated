@@ -11,6 +11,7 @@
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/android/AndroidUIScheduler.h>
 #include <worklets/android/JScriptBufferWrapper.h>
+#include <worklets/android/networking/AndroidNetworkingBackend.h>
 
 #include <memory>
 #include <string>
@@ -28,7 +29,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<jhybridobject> jThis,
       jlong jsContext,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
-      jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler);
+      jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
+      jni::alias_ref<JNetworking::javaobject> networking);
 
   static void registerNatives();
 
@@ -41,7 +43,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<jhybridobject> jThis,
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      const std::shared_ptr<UIScheduler> &uiScheduler);
+      const std::shared_ptr<UIScheduler> &uiScheduler,
+      jni::global_ref<JNetworking::javaobject> networking);
 
   void prepareProxyCpp();
 
@@ -60,16 +63,14 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
     return javaPart_->getClass()->getMethod<Signature>(methodName.c_str());
   }
 
-  std::shared_ptr<RuntimeBindings> getRuntimeBindings();
+  static std::shared_ptr<RuntimeBindings> getRuntimeBindings(
+      const jni::global_ref<jhybridobject> &javaPart,
+      jni::global_ref<JNetworking::javaobject> networking);
 
   BundleModeConfig loadBundleModeConfig();
 
-  RuntimeBindings::RequestAnimationFrame getRequestAnimationFrame();
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-  RuntimeBindings::AbortRequest getAbortRequest();
-  RuntimeBindings::ClearCookies getClearCookies();
-  RuntimeBindings::SendRequest getSendRequest();
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
+  static RuntimeBindings::RequestAnimationFrame getRequestAnimationFrame(
+      const jni::global_ref<jhybridobject> &javaPart);
 
   std::function<bool()> getIsOnJSQueueThread();
 

@@ -1,8 +1,10 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <worklets/Networking/NetworkingBackend.h>
 
 #include <functional>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -29,30 +31,7 @@ struct RuntimeBindings {
 
   const RequestAnimationFrame requestAnimationFrame;
   const NativeLoggingHook nativeLoggingHook;
-
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-  using AbortRequest = std::function<void(jsi::Runtime &rt, double requestId)>;
-  using ClearCookies = std::function<void(jsi::Runtime &rt, jsi::Function &&responseSender)>;
-#ifdef ANDROID
-  using SendRequest = std::function<void(
-      jsi::Runtime &rt,
-      jsi::String &method,
-      jsi::String &url,
-      double requestId,
-      jsi::Array &headers,
-      jsi::Object &data,
-      jsi::String &responseType,
-      bool incrementalUpdates,
-      double timeout,
-      bool withCredentials)>;
-#else
-  using SendRequest = std::function<void(jsi::Runtime &rt, const jsi::Value &query, jsi::Function &&responseSender)>;
-#endif // ANDROID
-
-  const AbortRequest abortRequest;
-  const ClearCookies clearCookies;
-  const SendRequest sendRequest;
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
+  const std::shared_ptr<NetworkingBackend> networkingBackend;
 };
 
 #if defined(ANDROID) || (defined(__APPLE__) && defined(__OBJC__))

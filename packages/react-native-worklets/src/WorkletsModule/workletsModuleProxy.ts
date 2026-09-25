@@ -27,7 +27,8 @@ export interface WorkletsModuleProxy {
     shareableGuestUnpackerSourceMap: string,
     remoteFunctionUnpackerCode: string,
     remoteFunctionUnpackerLocation: string,
-    remoteFunctionUnpackerSourceMap: string
+    remoteFunctionUnpackerSourceMap: string,
+    isDev: boolean
   ): void;
 
   loadUnpackersWithBytecode(
@@ -160,7 +161,8 @@ export interface WorkletsModuleProxy {
     useDefaultQueue: boolean,
     customQueue: object | undefined,
     enableEventLoop: boolean,
-    enableLocking: boolean
+    enableLocking: boolean,
+    enableNetworking: boolean
   ): WorkletRuntime;
 
   scheduleOnRuntime<TValue>(

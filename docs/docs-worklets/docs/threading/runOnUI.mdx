@@ -13,7 +13,7 @@ This API is deprecated and will be removed in the next major release. Use{' '}
 
 # runOnUI
 
-`runOnUI` lets you asynchronously run [workletized](/docs/worklets-babel-plugin/about#autoworkletization) functions on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model).
+`runOnUI` lets you asynchronously run [workletized](/docs/worklets-plugin/about#autoworkletization) functions on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model).
 
 Most commonly used either with an `useEffect` to start an animation on component mount/unmount or with [`measure`](https://docs.swmansion.com/react-native-reanimated/docs/advanced/measure) and [`scrollTo`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/scrollTo) functions which have implementations only on the UI thread.
 
@@ -71,7 +71,7 @@ import RunOnUISrc from '!!raw-loader!@site/src/examples/RunOnUI';
 
 - It's a common mistake to execute function inside of runOnUI like this: ~~`runOnUI(myWorklet(10))()`~~. Here, the correct usage would be `runOnUI(myWorklet)(10)`.
 
-- The callback passed as the argument is automatically [workletized](/docs/worklets-babel-plugin/about#autoworkletization) and ready to be run on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model).
+- The callback passed as the argument is automatically [workletized](/docs/worklets-plugin/about#autoworkletization) and ready to be run on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model).
 
 - Make sure not to execute `runOnUI` on the UI thread as this will result in an error.
 

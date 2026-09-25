@@ -1,6 +1,7 @@
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#include <worklets/Networking/NetworkingInstaller.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
 #include <worklets/WorkletRuntime/ScriptLoader.h>
@@ -69,9 +70,11 @@ WorkletRuntime::WorkletRuntime(
     const std::string &name,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop,
-    bool enableLocking)
+    bool enableLocking,
+    bool enableNetworking)
     : runtimeId_(runtimeId),
       enableLocking_(enableLocking),
+      enableNetworking_(enableNetworking),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       microtaskQueueEnabled_(enableEventLoop || runtimeKind == RuntimeData::RuntimeKind::UI),
       runtime_(makeRuntime(runtimeMutex_, enableLocking_, microtaskQueueEnabled_)),
@@ -85,8 +88,20 @@ WorkletRuntime::WorkletRuntime(
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
   if (enableEventLoop) {
-    eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_, runtimeMutex_);
+    eventLoop_ = std::make_shared<EventLoop>(name_, abortToken(), runtime_, queue_, runtimeMutex_);
     eventLoop_->run();
+  }
+}
+
+WorkletRuntime::~WorkletRuntime() {
+  auto lock = acquireRuntimeLock();
+  if (eventLoop_) {
+    eventLoop_->abortPending();
+    eventLoop_.reset();
+  }
+  if (queue_) {
+    queue_->abortPending(abortToken());
+    queue_.reset();
   }
 }
 
@@ -99,7 +114,6 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
 
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
   jsScheduler_ = jsScheduler;
-  const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
   const auto memoryManager_ = jsiWorkletsModuleProxy->getMemoryManager();
   const auto script = jsiWorkletsModuleProxy->getScript();
   const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
@@ -114,14 +128,13 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
       runtimeKind_,
       name_,
       jsScheduler,
-      isDevBundle,
       microtaskQueueEnabled_,
       jsiWorkletsModuleProxy->toOptimizedObject(rt),
       eventLoop_,
       nativeLoggingHook);
 
   if (bundleModeEnabled) {
-    bundleModeInit(jsScheduler, script, sourceUrl, runtimeBindings);
+    bundleModeInit(jsScheduler, script, sourceUrl, jsiWorkletsModuleProxy->getNetworking());
   } else {
     legacyModeInit(unpackerLoader);
   }
@@ -137,16 +150,18 @@ void WorkletRuntime::bundleModeInit(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<const ScriptBuffer> &script,
     const std::string &sourceUrl,
-    const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
+    const std::shared_ptr<Networking> &networking) {
   jsi::Runtime &rt = *runtime_;
 
   if (!script) {
     throw std::runtime_error("[Worklets] Expected to receive the bundle, but got nullptr instead.");
   }
 
-  ScriptLoader::loadScript(rt, script, sourceUrl);
+  if (networking && enableNetworking_) {
+    NetworkingInstaller::install(rt, networking, runtimeId_);
+  }
 
-  WorkletRuntimeDecorator::postEvaluateScript(rt, runtimeBindings);
+  ScriptLoader::loadScript(rt, script, sourceUrl);
 }
 
 void WorkletRuntime::legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader) {
@@ -239,15 +254,17 @@ void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
       "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
       "async queue is not set. Recreate the runtime with a valid async queue.");
 
-  queue_->push([job = std::move(job), weakThis = weak_from_this()] {
-    const auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
+  queue_->push(
+      [job = std::move(job), weakThis = weak_from_this()] {
+        const auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
 
-    auto lock = strongThis->acquireRuntimeLock();
-    job(*strongThis);
-  });
+        auto lock = strongThis->acquireRuntimeLock();
+        job(*strongThis);
+      },
+      abortToken());
 }
 
 /* #endregion */

@@ -22,13 +22,14 @@ using PlatformValue = std::variant<double, std::array<double, 2>, std::array<dou
 /// Properties the Android backend animates natively; the index is the id the JNI seam
 /// carries and cssPropertyWriterFor switches on. A new one also needs a traitsFor() entry
 /// in platform.cpp and a writer, or its endpoints never parse and it stays on the loop.
-/// borderWidth affects layout, so it stays on the loop; shadowColor (API 28+) is not
-/// routed yet.
-inline constexpr std::array<std::string_view, 4> kAndroidPlatformProperties{
+/// borderWidth affects layout, so it stays on the loop; the writer declines shadowColor
+/// below API 28.
+inline constexpr std::array<std::string_view, 5> kAndroidPlatformProperties{
     "opacity",
     "backgroundColor",
     "borderColor",
     "borderRadius",
+    "shadowColor",
 };
 #endif // ANDROID
 
@@ -39,6 +40,12 @@ std::optional<PlatformValue> lerpPlatformValues(const PlatformValue &from, const
 
 /// Packs normalized [r, g, b, a] into the ARGB int RN's processColor commits.
 double packColorChannels(const std::array<double, 4> &channels);
+
+/// The value in the form the C++ loop takes: a number for scalars and colors,
+/// `{width, height}` for sizes. The jsi::Value form feeds the config path, the
+/// folly::dynamic form the pseudo-selector diffs.
+facebook::jsi::Value platformValueToJSI(facebook::jsi::Runtime &rt, const PlatformValue &value);
+folly::dynamic platformValueToDynamic(const PlatformValue &value);
 
 /// Parses a transition's endpoints, looking the property up once. Null/undefined
 /// falls back to its CSS default; nullopt means the platform can't express the

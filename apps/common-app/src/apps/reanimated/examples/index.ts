@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
 import 'react-native-reanimated';
+
 import React from 'react';
+
 import type { Example, ExampleEntry } from '@/components';
 import { REAPlatform } from '@/components';
 
@@ -61,8 +63,6 @@ const ColorInterpolationExample: React.FC = () =>
   React.createElement(
     require('./ColorInterpolationExample').default as React.FC
   );
-const ContrastColorExample: React.FC = () =>
-  React.createElement(require('./ContrastColorExample').default as React.FC);
 const CombinedTest: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/Combined').default as React.FC
@@ -79,8 +79,6 @@ const ComposedHandlerInternalMergingExample: React.FC = () =>
   React.createElement(
     require('./ComposedHandlerInternalMergingExample').default
   );
-const CounterExample: React.FC = () =>
-  React.createElement(require('./CounterExample').default as React.FC);
 const CustomLayoutAnimationScreen: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/CustomLayout').default as React.FC
@@ -213,6 +211,10 @@ const NestedRotationExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedRotation').default
   );
+const SynchronousPropsSETExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/SynchronousPropsExample').default
+  );
 const NestedStacksExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedStacks').default
@@ -243,8 +245,6 @@ const ProgressTransitionExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ProgressTransition').default
   );
-const RainbowExample: React.FC = () =>
-  React.createElement(require('./RainbowExample').default as React.FC);
 const ReducedMotionExample: React.FC = () =>
   React.createElement(require('./ReducedMotionExample').default as React.FC);
 const ReducedMotionLayoutExample: React.FC = () =>
@@ -275,16 +275,14 @@ const ScrollViewOffsetExample: React.FC = () =>
   React.createElement(require('./ScrollViewOffsetExample').default as React.FC);
 const SetNativePropsExample: React.FC = () =>
   React.createElement(require('./SetNativePropsExample').default as React.FC);
-const ShadowNodesCloningExample: React.FC = () =>
-  React.createElement(
-    require('./ShadowNodesCloningExample').default as React.FC
-  );
 const SharedStyleExample: React.FC = () =>
   React.createElement(require('./SharedStyleExample').default as React.FC);
 const SlowAnimationsExample: React.FC = () =>
   React.createElement(require('./SlowAnimationsExample').default as React.FC);
-const SpringPresetsExample: React.FC = () =>
-  React.createElement(require('./SpringPresetsExample').default as React.FC);
+const SpringPresetsAndClampExample: React.FC = () =>
+  React.createElement(
+    require('./SpringPresetsAndClampExample').default as React.FC
+  );
 const StickyHeaderExample: React.FC = () =>
   React.createElement(require('./StickyHeaderExample').default as React.FC);
 const StrictDOMExample: React.FC = () =>
@@ -323,8 +321,6 @@ const ViewRecyclingExample: React.FC = () =>
   );
 const WidthExample: React.FC = () =>
   React.createElement(require('./WidthExample').default as React.FC);
-const WithClampExample: React.FC = () =>
-  React.createElement(require('./WithClampExample').default as React.FC);
 
 // Sections of the "Show Cases and Regressions" group. Declared before
 // `ALL_EXAMPLES` because its entries reference them.
@@ -333,18 +329,12 @@ const SHOW_CASES_AND_REGRESSIONS = 'Show Cases and Regressions';
 const REGRESSIONS = 'Regressions';
 
 const ALL_EXAMPLES: Record<string, Example> = {
-  // About
-  AboutExample: {
-    icon: 'ℹ️',
-    title: 'About',
-    screen: AboutExample,
-  },
-
   SuspenseLayoutAnimationCrashExample: {
     icon: '💥',
     title: 'Suspense + Layout Animation Crash',
     section: REGRESSIONS,
     screen: SuspenseLayoutAnimationCrashExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   SettledPropsLeakExample: {
     icon: '🚿',
@@ -352,12 +342,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: SettledPropsLeakExample,
   },
 
-  // Empty example for test purposes
-  EmptyExample: {
-    icon: '👻',
-    title: 'Empty',
-    screen: EmptyExample,
-  },
   InlineStylesAndPropsExample: {
     icon: '🎛️',
     title: 'Inline styles and props',
@@ -383,11 +367,13 @@ const ALL_EXAMPLES: Record<string, Example> = {
   DetachAnimatedStylesExample: {
     icon: '⛓️‍💥',
     title: 'Detach animated styles',
+    section: REGRESSIONS,
     screen: DetachAnimatedStylesExample,
   },
   ScrollPerformanceExample: {
     icon: '🚁',
     title: 'Scroll performance',
+    section: REGRESSIONS,
     screen: ScrollPerformanceExample,
   },
   ThirdPartyComponentsExample: {
@@ -399,6 +385,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ReactFreeze: {
     icon: '❄️',
     title: 'React freeze',
+    section: REGRESSIONS,
     screen: FreezeExample,
   },
   CircularSliderExample: {
@@ -466,6 +453,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Liquid swipe',
     section: SHOW_CASES_AND_REGRESSIONS,
     screen: LiquidSwipe,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   ArticleProgressExample: {
     icon: '📰',
@@ -487,6 +475,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   UpdatePropsPerfExample: {
     icon: '🏎️',
     title: 'Update props performance',
+    section: REGRESSIONS,
     screen: UpdatePropsPerfExample,
   },
 
@@ -501,12 +490,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Amount',
     section: SHOW_CASES,
     screen: AmountExample,
-  },
-  CounterExample: {
-    icon: '🎰',
-    title: 'Counter',
-    section: SHOW_CASES,
-    screen: CounterExample,
   },
   FilterExample: {
     icon: '🖼️',
@@ -553,6 +536,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Stinky header',
     section: REGRESSIONS,
     screen: StickyHeaderExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   DispatchCommandExample: {
     icon: '🫡',
@@ -562,11 +546,13 @@ const ALL_EXAMPLES: Record<string, Example> = {
   WidthExample: {
     icon: '🌲',
     title: 'Layout props',
+    section: REGRESSIONS,
     screen: WidthExample,
   },
   NonLayoutPropAndRenderExample: {
     icon: '🎭',
     title: 'Non-layout prop and render example',
+    section: REGRESSIONS,
     screen: NonLayoutPropAndRenderExample,
   },
   RefExample: {
@@ -598,11 +584,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     section: REGRESSIONS,
     screen: OverlappingBoxesExample,
   },
-  RainbowExample: {
-    icon: '🌈',
-    title: 'Rainbow',
-    screen: RainbowExample,
-  },
   MatrixExample: {
     icon: '🧮',
     title: 'useAnimatedStyle with matrix',
@@ -615,17 +596,11 @@ const ALL_EXAMPLES: Record<string, Example> = {
     section: SHOW_CASES,
     screen: PendulumExample,
   },
-  SpringPresetsExample: {
+  SpringPresetsAndClampExample: {
     icon: '🛠',
-    title: 'Spring presets',
+    title: 'Spring presets and clamp',
     section: SHOW_CASES,
-    screen: SpringPresetsExample,
-  },
-  SpringClampExample: {
-    icon: '🗜',
-    title: 'Spring with Clamp',
-    section: SHOW_CASES,
-    screen: WithClampExample,
+    screen: SpringPresetsAndClampExample,
   },
   ReducedMotionExample: {
     icon: '⏸️',
@@ -676,6 +651,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Profiles',
     section: SHOW_CASES,
     screen: ProfilesExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -686,6 +662,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Progress transition',
     section: SHOW_CASES,
     screen: ProgressTransitionExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -696,6 +673,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Gallery',
     section: SHOW_CASES,
     screen: GalleryExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -715,11 +693,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     icon: '🎨',
     disabledPlatforms: [REAPlatform.WEB],
   },
-  ShadowNodesCloningExample: {
-    icon: '🌑',
-    title: 'Shadow Nodes Cloning',
-    screen: ShadowNodesCloningExample,
-  },
 
   // Old examples
   SharedStyleExample: {
@@ -735,11 +708,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Color interpolation',
     section: SHOW_CASES,
     screen: ColorInterpolationExample,
-  },
-  ContrastColorExample: {
-    icon: '🔲',
-    title: 'Contrast color',
-    screen: ContrastColorExample,
   },
   ExtrapolationExample: {
     title: 'Extrapolation example',
@@ -861,6 +829,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ManyScreensExample: {
     title: '[SET] Many screens',
     screen: ManyScreensExample,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  SynchronousPropsSETExample: {
+    title: '[LA] Synchronous props',
+    screen: SynchronousPropsSETExample,
     shouldWork: {
       ios: true,
       android: true,
@@ -869,6 +846,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   NestedStacksExample: {
     title: '[SET] Nested stacks',
     screen: NestedStacksExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -877,6 +855,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ModalsExample: {
     title: '[SET] Modals',
     screen: ModalsExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // broken header height
       android: true,
@@ -885,6 +864,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   FlatListExample: {
     title: '[SET] FlatList',
     screen: FlatListExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -893,6 +873,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   RestoreStateExample: {
     title: '[SET] Restore State',
     screen: RestoreStateExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -901,6 +882,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   TransitionRestartExample: {
     title: '[SET] Transition Restart',
     screen: TransitionRestartExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // goes too far up for some reason?
       android: true,
@@ -909,6 +891,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ChangeThemeSharedExample: {
     title: '[SET] Change theme',
     screen: ChangeThemeSharedExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // s2 -> change theme -> go back (progress) will have wrong target
       android: true,
@@ -917,6 +900,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // broken for modals
       android: false, // broken transform, I think due to skew
@@ -925,6 +909,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   BorderRadiiExample: {
     title: '[SET] Border Radii',
     screen: BorderRadiiExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // broken on back gesture
       android: true,
@@ -933,6 +918,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   TabNavigatorExample: {
     title: '[SET] Tab Navigator',
     screen: TabNavigatorExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -941,6 +927,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ScreenlessBasic: {
     title: '[SET] Screenless Basic',
     screen: ScreenlessBasic,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -975,6 +962,18 @@ const LAYOUT_ANIMATION_PREFIX = '[LA]';
 const SHARED_ELEMENT_TRANSITION_PREFIX = '[SET]';
 
 export const EXAMPLES: Record<string, ExampleEntry> = {
+  // About
+  AboutExample: {
+    icon: 'ℹ️',
+    title: 'About',
+    screen: AboutExample,
+  },
+  // Empty example for test purposes
+  EmptyExample: {
+    icon: '👻',
+    title: 'Empty',
+    screen: EmptyExample,
+  },
   LayoutAnimations: {
     examples: withTitlePrefix(LAYOUT_ANIMATION_PREFIX),
     icon: '📐',
@@ -982,6 +981,7 @@ export const EXAMPLES: Record<string, ExampleEntry> = {
   },
   SharedElementTransitions: {
     examples: withTitlePrefix(SHARED_ELEMENT_TRANSITION_PREFIX),
+    hiddenPlatforms: [REAPlatform.WEB],
     icon: '🔗',
     title: 'Shared Element Transitions',
   },

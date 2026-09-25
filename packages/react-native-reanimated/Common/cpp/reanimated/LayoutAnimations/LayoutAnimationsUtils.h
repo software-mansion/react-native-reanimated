@@ -1,5 +1,6 @@
 #pragma once
 
+#include <folly/dynamic.h>
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/components/rnreanimated/Props.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
@@ -61,7 +62,7 @@ typedef enum class ExitingState : std::uint8_t {
   UNDEFINED = 1,
   WAITING = 2,
   ANIMATING = 3,
-  DEAD = 4,
+  COMPLETED = 4,
   DELETED = 5,
 } ExitingState;
 
@@ -95,6 +96,12 @@ struct IndexCursors {
 struct LightNode {
   ShadowView previous;
   ShadowView current;
+#ifdef ANDROID
+  // React Native stores only the props changed by a commit in `Props::rawProps` on Android.
+  // The full set accumulates here and becomes a `Props` only when a consumer reads the node.
+  folly::dynamic accumulatedRawProps = nullptr;
+  bool propsNeedResolve = false;
+#endif
   ExitingState state = ExitingState::UNDEFINED;
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
@@ -210,7 +217,8 @@ struct LightNode {
   }
 };
 
-static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame &frame) {
+static inline void
+updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame &frame, const react::Point &offset = {}) {
   // we use optional's here to avoid overwriting non-animated values
   if (frame.width) {
     layoutMetrics.frame.size.width = *frame.width;
@@ -219,10 +227,10 @@ static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame
     layoutMetrics.frame.size.height = *frame.height;
   }
   if (frame.x) {
-    layoutMetrics.frame.origin.x = *frame.x;
+    layoutMetrics.frame.origin.x = *frame.x + offset.x;
   }
   if (frame.y) {
-    layoutMetrics.frame.origin.y = *frame.y;
+    layoutMetrics.frame.origin.y = *frame.y + offset.y;
   }
 }
 
