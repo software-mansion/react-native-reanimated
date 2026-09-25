@@ -2,12 +2,12 @@
 id: plugin-options
 sidebar_position: 2
 title: 'Options'
-sidebar_label: 'Options'
+sidebar_label: 'Babel plugin options'
 ---
 
-import CodeBlock from '@theme/CodeBlock';
-
 # Options for Worklets Babel Plugin
+
+import CodeBlock from '@theme/CodeBlock';
 
 Our plugin offers several optional functionalities that you may need to employ advanced APIs:
 
@@ -112,7 +112,7 @@ Enable this option to silence such false warnings.
 
 Defaults to `false`.
 
-This option turns off the source map generation for worklets. Mostly used for testing purposes.
+This option turns off the source map generation for worklet functions. Mostly used for testing purposes.
 
 <Badges version="0.7.0">
   ### disableWorkletClasses
@@ -121,7 +121,7 @@ This option turns off the source map generation for worklets. Mostly used for te
 Defaults to `false`.
 
 Disables [Worklet Classes
-support](/docs/worklets-plugin/about#experimental-worklet-classes).
+support](/docs/worklets-plugin/about#class-methods).
 You might need to disable this feature when using [Custom
 Serializables](/docs/memory/registerCustomSerializable).
 
@@ -129,13 +129,13 @@ Serializables](/docs/memory/registerCustomSerializable).
 
 Defaults to an empty array.
 
-This is a list of Babel plugins that will be used when transforming worklets' code with Worklets Babel Plugin.
+This is a list of Babel plugins that will be used when transforming worklet functions' code with Worklets Babel Plugin.
 
 ### extraPresets
 
 Defaults to an empty array.
 
-This is a list of Babel presets that will be used when transforming worklets' code with Worklets Babel Plugin.
+This is a list of Babel presets that will be used when transforming worklet functions' code with Worklets Babel Plugin.
 
 <Badges version="0.11.0">
   ### getHBCBinary
@@ -150,7 +150,7 @@ Defaults to `undefined`.
 Returns the absolute path to the Hermes bytecode compiler (`hermesc`) binary.
 This option is part of the experimental [`hermesBytecode`](#hermesbytecode)
 feature and is required when it is enabled — the plugin invokes this binary to
-compile each worklet.
+compile each worklet function.
 
 ```js
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
@@ -168,7 +168,7 @@ Example implementation is available [here](https://github.com/software-mansion/r
 
 Defaults to an empty array.
 
-This is a list of identifiers (objects) that will not be copied to the UI thread if a worklet requires them. For instance:
+This is a list of identifiers (objects) that will not be copied to the UI thread if a worklet function requires them. For instance:
 
 ```tsx
 const someReference = 5;
@@ -178,7 +178,7 @@ function foo() {
 }
 ```
 
-In this example, `someReference` is not accessible on the UI thread. Consequently, we must copy it there, ensuring correct scoping, to keep the worklet from failing. But, consider this:
+In this example, `someReference` is not accessible on the UI thread. Consequently, we must copy it there, ensuring correct scoping, to keep the worklet function from failing. But, consider this:
 
 ```tsx
 function bar() {
@@ -237,7 +237,7 @@ Experimental feature.
 
 Defaults to `false`.
 
-Enabled compilation of worklets to [Hermes](https://github.com/facebook/hermes) bytecode
+Enabled compilation of worklet functions to [Hermes](https://github.com/facebook/hermes) bytecode
 ahead of time instead of shipping them as source strings in [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode).
 At runtime the Worklet Runtime evaluates the precompiled bytecode directly,
 skipping code evaluation overhead costs.
@@ -261,7 +261,7 @@ This option comes in handy for Web apps. Because Babel ordinarily doesn't get in
 
 Defaults to `false`.
 
-This option dictates the passed file location for a worklet's source map. If you enable this option, the file paths will be relative to `process.cwd` (the current directory where Babel executes). This can be handy for Jest test snapshots to ensure consistent results across machines.
+This option dictates the passed file location for a worklet function's source map. If you enable this option, the file paths will be relative to `process.cwd` (the current directory where Babel executes). This can be handy for Jest test snapshots to ensure consistent results across machines.
 
 <Badges version="0.8.0">
   ### strictGlobal
@@ -273,9 +273,9 @@ We highly recommend enabling this option as it will be enabled by default in the
 
 Defaults to `false`.
 
-This option changes how global variables are handled inside worklets. You can read more about closures and global scoping [here](/docs/fundamentals/closures#global-scoping).
+This option changes how global variables are handled inside worklet functions. You can read more about closures and global scoping [here](/docs/concepts/closures#global-scoping).
 
-With this option disabled, accessing global variables inside worklets will lead to capturing them from the scheduler scope:
+With this option disabled, accessing global variables inside worklet functions will lead to capturing them from the scheduler scope:
 
 ```tsx
 global.something = 10;
@@ -286,7 +286,7 @@ function setOnUI() {
 }
 ```
 
-When you enable `strictGlobal`, accessing a global variable inside a worklet will result in accessing it directly from the global scope of the worklet runtime:
+When you enable `strictGlobal`, accessing a global variable inside a worklet function will result in accessing it directly from the global scope of the worklet runtime:
 
 ```tsx
 global.something = 10;
@@ -297,7 +297,7 @@ function setOnUI() {
 }
 ```
 
-To actually access the global variable from another runtime you must assign it to a local variable and use it in the worklet:
+To actually access the global variable from another runtime you must assign it to a local variable and use it in the worklet function:
 
 ```tsx
 global.something = 10;
@@ -330,7 +330,7 @@ Mode. See the dedicated page for the full overview.
 
 Defaults to an empty array.
 
-List of exact module names that should be forwarded as imports inside worklets.
+List of exact module names that should be forwarded as imports inside worklet functions.
 
 For example, to use all exports from `my-library` directly on the Worklet
 Runtime, add it to the list:
@@ -343,7 +343,7 @@ const workletsPluginOptions = {
 };
 ```
 
-At bundle time, when a worklet imports from `my-library`, the plugin forwards
+At bundle time, when a worklet function imports from `my-library`, the plugin forwards
 that import into the worklet body:
 
 export const importForwardingBefore = `
@@ -437,11 +437,11 @@ function foo() {
 Defaults to an empty array.
 
 List of paths that determine whether a module should forward its **relative**
-imports inside worklets. If a module's path matches any of the provided paths,
-all relative imports inside that module's worklets will be forwarded.
+imports inside worklet functions. If a module's path matches any of the provided paths,
+all relative imports inside that module's worklet functions will be forwarded.
 
 Use this when authoring a library that calls helpers via relative imports
-inside its own worklets:
+inside its own worklet functions:
 
 ```javascript title="my-library/index.js"
 import { someExport } from './utils';

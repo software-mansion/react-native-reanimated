@@ -4,7 +4,7 @@ sidebar_position: 42 # Use alphabetical order
 
 # scheduleOnRuntime
 
-`scheduleOnRuntime` lets you schedule a [worklet](/docs/fundamentals/glossary#worklet) to be executed on a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
+`scheduleOnRuntime` lets you schedule a [worklet function](/docs/tutorials/concurrency-model#worklet-functions) to be executed on a [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime).
 
 ## Reference
 
@@ -34,19 +34,19 @@ scheduleOnRuntime(workletRuntime, (greeting: string) => {
 
 ### workletRuntime
 
-The worklet runtime to schedule the worklet on.
+The worklet runtime to schedule the worklet function on.
 
 ### worklet
 
-A reference to a function you want to execute on the [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
+A reference to a function you want to execute on the [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime).
 
 ### args
 
-Arguments to the function you want to execute on the [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
+Arguments to the function you want to execute on the [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime).
 
 ## Remarks
 
-- The worklet is scheduled on the Worker Runtime's [Async
+- The worklet function is scheduled on the Worker Runtime's [Async
   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
 
 ## Call table

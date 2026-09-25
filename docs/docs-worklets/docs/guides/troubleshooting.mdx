@@ -8,29 +8,29 @@ sidebar_label: Troubleshooting
 
 ### Failed to create a worklet
 
-**Problem:** This usually happens when Worklets is not properly installed, e.g. forgetting to include the Worklets Babel plugin in `babel.config.js`.
+**Problem:** This usually happens when the Worklets library is not properly installed, e.g. forgetting to include the Worklets Babel plugin in `babel.config.js`.
 
-**Solution:** See [installation docs](/docs/fundamentals/getting-started#installation) for more information.
+**Solution:** See [installation docs](/docs/#installation) for more information.
 
 ### Native part of Worklets doesn't seem to be initialized
 
-**Problem:** This issue happens when Worklets fails to initialize its native side from JavaScript.
+**Problem:** This issue happens when the Worklets library fails to initialize its native side from JavaScript.
 
 **Solution:**
 
-1. If you recently installed or upgraded Worklets, make sure to rebuild your app.
-1. Check if your platform is supported by Worklets. Currently we support:
+1. If you recently installed or upgraded the Worklets library, make sure to rebuild your app.
+1. Check if your platform is supported by the Worklets library. Currently we support:
    - Android
    - iOS
    - macOS
    - tvOS
    - visionOS
    - Web
-1. If you are using Worklets in a brownfield app, make sure to initialize the native library manually.
+1. If you are using the Worklets library in a brownfield app, make sure to initialize the native library manually.
 
 ### Unknown version of Worklets babel plugin
 
-**Problem:** This happens when JavaScript side of Worklets fails to get Worklets Babel plugin version.
+**Problem:** This happens when JavaScript side of the Worklets library fails to get Worklets Babel plugin version.
 
 **Solution:** Part of your code might be transpiled with an outdated version of Worklets Babel plugin. See [Mismatch between JavaScript code version and Worklets Babel plugin version](#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version).
 
@@ -40,17 +40,17 @@ sidebar_label: Troubleshooting
 
 **Solution:** Try resetting your Metro bundler cache with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
 
-If this didn't help, you probably have a dependency that contains already transformed worklets bundled with an outdated version of the Worklets Babel plugin. You can find the offending code that was given alongside the error to find that dependency.
+If this didn't help, you probably have a dependency that contains already transformed worklet functions bundled with an outdated version of the Worklets Babel plugin. You can find the offending code that was given alongside the error to find that dependency.
 
 ### Couldn't determine the version of the native part of Worklets
 
-**Problem:** This happens when Worklets fails to determine the version of its native part.
+**Problem:** This happens when the Worklets library fails to determine the version of its native part.
 
 **Solution:** Check if you have rebuilt your app after upgrading `react-native-worklets`. If you use Expo Go, you must use the exact version which is bundled into Expo SDK.
 
 ### Mismatch between JavaScript part and native part of Worklets
 
-**Problem:** This happens when Worklets has different versions of its JavaScript and native parts.
+**Problem:** This happens when the Worklets library has different versions of its JavaScript and native parts.
 
 **Solution:** Check if you have rebuilt your app after upgrading `react-native-worklets`. If you use Expo Go, you must use the exact version which is bundled into Expo SDK.
 
@@ -64,13 +64,13 @@ See [Mismatch between JavaScript part and native part of Worklets](#mismatch-bet
 
 ### TypeError: right operand of 'in' is not an object
 
-**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for Worklets.
+**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for the Worklets library.
 
 **Solution:** See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445) for the current workaround (enable `inlineRequires` in `metro.config.js`).
 
 ### Cannot read property 'createSerializableString' of undefined
 
-**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for Worklets.
+**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for the Worklets library.
 
 **Solution:** See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445) for the current workaround (enable `inlineRequires` in `metro.config.js`).
 
@@ -78,7 +78,7 @@ See [Mismatch between JavaScript part and native part of Worklets](#mismatch-bet
 
 ### Tried to modify key of an object which has been converted to a serializable.
 
-**Problem:** This warning is displayed to inform the user that a shared value should be used or an object used in a worklet should be accessed more granularly.
+**Problem:** This warning is displayed to inform the user that a shared value should be used or an object used in a worklet function should be accessed more granularly.
 
 #### 1. Not using shared values.
 
@@ -120,7 +120,7 @@ and expect the results to be `1` and `2`. However, the results will be `1` and `
 
 #### 2. Not accessing object properties granularly.
 
-When you access an object property in a worklet, you might do something like this:
+When you access an object property in a worklet function, you might do something like this:
 
 ```js
 const obj = { propAccessedInWorklet: 1, propNotAccessedInWorklet: 2 };
@@ -138,7 +138,7 @@ The warning is displayed due to the mechanism explained in the previous case. Si
 
 **Solution:**
 
-Assign accessed properties to variables beforehand and use those in the worklet:
+Assign accessed properties to variables beforehand and use those in the worklet function:
 
 ```diff
  const obj = { propAccessedInWorklet: 1, propNotAccessedInWorklet: 2 };
@@ -160,7 +160,7 @@ Assign accessed properties to variables beforehand and use those in the worklet:
 
 ### Tried to synchronously call a Remote Function
 
-**Problem:** This can happen when you try to call a function that is neither Worklet nor a Host Function on a different Runtime than it was defined on.
+**Problem:** This can happen when you try to call a function that is neither a worklet function nor a Host Function on a different Runtime than it was defined on.
 
 ```typescript
 function callee() {
@@ -173,11 +173,11 @@ function caller() {
 scheduleOnUI(caller);
 ```
 
-In this example, `callee` cannot be called from a worklet ran on UI Runtime because there is no corresponding UI function for `callee`.
+In this example, `callee` cannot be called from a worklet function ran on UI Runtime because there is no corresponding UI function for `callee`.
 
 **Solution:**
 
-1. If you want to synchronously execute this method, mark it as a worklet using `worklet` directive:
+1. If you want to synchronously execute this method, mark it as a worklet function using `worklet` directive:
 
 ```diff
  function callee() {
@@ -196,7 +196,7 @@ In this example, `callee` cannot be called from a worklet ran on UI Runtime beca
  }
 ```
 
-Check [this page](/docs/fundamentals/glossary#worklet) to learn more about worklets.
+Check [this page](/docs/tutorials/concurrency-model#worklet-functions) to learn more about worklet functions.
 
 ### Tried to synchronously call a non-worklet function on the UI thread
 

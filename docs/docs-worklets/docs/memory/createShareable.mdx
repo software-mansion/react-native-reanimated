@@ -13,7 +13,7 @@ This page describes the API to create the new [Shareable](/docs/memory/shareable
 
 Creates a new [Shareable](/docs/memory/shareable) holding the provided initial value. Returns the created Shareable.
 
-You have to explicitly declare which [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) will host the Shareable by passing its **runtimeId**.
+You have to explicitly declare which [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime) will host the Shareable by passing its **runtimeId**.
 
 ## Reference
 
@@ -67,7 +67,7 @@ const workerShareable = createShareable(workerRuntime.runtimeId, 'hello');
 
 ### hostRuntimeId
 
-The **runtimeId** of the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) that will host the Shareable. To host on the UI Runtime, use the exported constant [UIRuntimeId](/docs/threading/uiRuntimeId). To host on a Worker Runtime created with [createWorkletRuntime](/docs/threading/createWorkletRuntime), pass its `runtimeId` property.
+The **runtimeId** of the [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime) that will host the Shareable. To host on the UI Runtime, use the exported constant [UIRuntimeId](/docs/threading/uiRuntimeId). To host on a Worker Runtime created with [createWorkletRuntime](/docs/threading/createWorkletRuntime), pass its `runtimeId` property.
 
 Hosting on runtimes other than the UI Runtime is available since version 0.9.0.
 
@@ -81,11 +81,11 @@ Optional advanced configuration for the Shareable.
 
 #### hostDecorator
 
-A [worklet](/docs/fundamentals/glossary#worklet) that takes the created [Shareable Host](/docs/memory/shareable#shareable-host) and decorates it with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
+A [worklet function](/docs/tutorials/concurrency-model#worklet-functions) that takes the created [Shareable Host](/docs/memory/shareable#shareable-host) and decorates it with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
 
 #### guestDecorator
 
-A [worklet](/docs/fundamentals/glossary#worklet) that decorates each [Shareable Guest](/docs/memory/shareable#shareable-guest) created for the Shareable with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
+A [worklet function](/docs/tutorials/concurrency-model#worklet-functions) that decorates each [Shareable Guest](/docs/memory/shareable#shareable-guest) created for the Shareable with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
 
 #### initSynchronously
 

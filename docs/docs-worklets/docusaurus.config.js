@@ -74,7 +74,7 @@ const config = {
   // Set the production url of your site here
   url: 'https://docs.swmansion.com',
 
-  baseUrl: '/react-native-worklets/',
+  baseUrl: process.env.DOCS_BASE_URL ?? '/react-native-worklets/',
 
   trailingSlash: true,
 
@@ -136,9 +136,13 @@ const config = {
     ({
       image: 'img/og-image.png',
       colorMode: { respectPrefersColorScheme: true },
+      docs: { sidebar: { hideable: true } },
       metadata: [
         { name: 'og:image:width', content: '1200' },
         { name: 'og:image:height', content: '630' },
+        ...(process.env.DOCS_NOINDEX === 'true'
+          ? [{ name: 'robots', content: 'noindex, nofollow' }]
+          : []),
       ],
       navbar: {
         title: 'React Native Worklets',
@@ -259,6 +263,11 @@ const config = {
             ],
             module: {
               rules: [
+                {
+                  test: /(?:src[\\/]simulation[\\/]snippets|docs[\\/].*[\\/]_[^\\/]+)[\\/][^\\/]+\.jsx?$/,
+                  enforce: 'pre',
+                  use: path.resolve(__dirname, 'src/simulation/snippetNamesLoader.js'),
+                },
                 { test: /\.txt$/, type: 'asset/source' },
                 { test: /\.tsx?$/, use: 'babel-loader' },
                 {

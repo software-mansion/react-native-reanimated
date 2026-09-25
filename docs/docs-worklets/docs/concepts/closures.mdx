@@ -4,9 +4,9 @@ sidebar_position: 3
 
 # Understanding closures
 
-## What are closures in worklets?
+## What are closures in worklet functions?
 
-What makes [worklets](/docs/fundamentals/glossary#worklet) special is their **ability to capture variables from their surrounding scope**, similar to regular JavaScript functions. This feature is known as _closures_.
+What makes [worklet functions](/docs/tutorials/concurrency-model#worklet-functions) special is their **ability to capture variables from their surrounding scope**, similar to regular JavaScript functions. This feature is known as _closures_.
 
 While a closure is [defined as both the function and its lexical environment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Closures), here we will refer to closures as just the captured variables from the surrounding [scope](https://developer.mozilla.org/en-US/docs/Glossary/Scope).
 
@@ -25,11 +25,11 @@ function addAB() {
 }
 ```
 
-However, there are some important differences in how closures work in worklets compared to regular JavaScript functions.
+However, there are some important differences in how closures work in worklet functions compared to regular JavaScript functions.
 
 ## Closure behavior on the same JavaScript Runtime
 
-If you call a worklet on the same runtime where it's defined (the [React Native Runtime](/docs/fundamentals/runtimeKinds#rn-runtime)), its closure gets copies of references to the original variables. This means that reassigning the original variable will not affect the value inside the worklet.
+If you call a worklet function on the same runtime where it's defined (the [React Native Runtime](/docs/concepts/runtimeKinds#rn-runtime)), its closure gets copies of references to the original variables. This means that reassigning the original variable will not affect the value inside the worklet function.
 
 ```tsx
 let count = 0;
@@ -43,7 +43,7 @@ count = 1;
 logCount(); // prints 0
 ```
 
-This works both ways, so if you reassign inside a worklet, it won't affect the original variable in the surrounding scope.
+This works both ways, so if you reassign inside a worklet function, it won't affect the original variable in the surrounding scope.
 
 ```tsx
 let count = 0;
@@ -59,7 +59,7 @@ console.log(count); // Still prints 0
 
 The behavior is slightly different for object (non-primitive) references:
 
-- Reassigning the reference in the surrounding scope does not affect the worklet's closure.
+- Reassigning the reference in the surrounding scope does not affect the worklet function's closure.
 
   ```tsx
   let obj = { value: 0 };
@@ -73,7 +73,7 @@ The behavior is slightly different for object (non-primitive) references:
   logValue(); // Prints 0
   ```
 
-- Mutating the object inside the worklet affects the object in the surrounding scope, since they reference the same object.
+- Mutating the object inside the worklet function affects the object in the surrounding scope, since they reference the same object.
 
   ```tsx
   let obj = { value: 0 };
@@ -87,7 +87,7 @@ The behavior is slightly different for object (non-primitive) references:
   console.log(obj.value); // Prints 1
   ```
 
-- Mutating the object in the surrounding scope affects the object inside the worklet, since they reference the same object.
+- Mutating the object in the surrounding scope affects the object inside the worklet function, since they reference the same object.
 
   ```tsx
   let obj = { value: 0 };
@@ -103,7 +103,7 @@ The behavior is slightly different for object (non-primitive) references:
 
 ## Closure behavior across different JavaScript Runtimes
 
-When a worklet is executed in a different JavaScript runtime than the Runtime of its origin (a [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime)), the closure behavior is different again. **The closure in the worklet becomes an exact copy of the variables from the surrounding scope at the moment of its invocation.** This is a necessity due to the fact that different runtimes cannot share references to the same objects, they cannot share memory directly.
+When a worklet function is executed in a different JavaScript runtime than the Runtime of its origin (a [Worklet Runtime](/docs/concepts/runtimeKinds#worklet-runtime)), the closure behavior is different again. **The closure in the worklet function becomes an exact copy of the variables from the surrounding scope at the moment of its invocation.** This is a necessity due to the fact that different runtimes cannot share references to the same objects, they cannot share memory directly.
 
 ```tsx
 let obj = { value: 0 };
@@ -119,13 +119,13 @@ runOnUISync(logValue); // Prints 0
 
 ## Global scoping
 
-In the previous examples we used `console` inside worklets. Where does it come from?
+In the previous examples we used `console` inside worklet functions. Where does it come from?
 
 In JavaScript, when you use a variable (an [identifier](https://developer.mozilla.org/en-US/docs/Glossary/Identifier)) which isn't defined in the local [scope](https://developer.mozilla.org/en-US/docs/Glossary/Scope) (i.e. inside the function), the JavaScript engine looks for it in the outer scopes, eventually reaching the [global scope](https://developer.mozilla.org/en-US/docs/Glossary/Global_scope). The key point here is that each Worklet Runtime has its own, distinct global scope. This means that global variables are not shared between different runtimes.
 
-**The accessed `console` object inside a worklet is different on each Runtime!** It's available on every runtime because each Worklet Runtime defines its own `console` object in its global scope.
+**The accessed `console` object inside a worklet function is different on each Runtime!** It's available on every runtime because each Worklet Runtime defines its own `console` object in its global scope.
 
-When you use a global variable inside a worklet, and invoke it on a runtime - it will access the global scope of that runtime, not the global scope of the original JavaScript Runtime. If the variable doesn't exist in the target runtime's global scope, it will be `undefined`.
+When you use a global variable inside a worklet function, and invoke it on a runtime - it will access the global scope of that runtime, not the global scope of the original JavaScript Runtime. If the variable doesn't exist in the target runtime's global scope, it will be `undefined`.
 
 ```tsx
 global.someValue = 42;
@@ -140,7 +140,7 @@ logSomeValue(); // Prints 42
 runOnUISync(logSomeValue); // Prints undefined
 ```
 
-To have access to a (copy of a) global variable inside a worklet on a different runtime, you must explicitly assign it to the `global` object on the original runtime. This can be done with a local reference in the closure:
+To have access to a (copy of a) global variable inside a worklet function on a different runtime, you must explicitly assign it to the `global` object on the original runtime. This can be done with a local reference in the closure:
 
 ```tsx
 global.someValue = 42;
