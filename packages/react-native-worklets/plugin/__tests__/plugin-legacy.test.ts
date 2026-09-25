@@ -12,19 +12,6 @@ import { version as packageVersion } from '../../package.json';
 
 const MOCK_LOCATION = '/dev/null';
 
-jest.mock('fs', () => {
-  const actual = jest.requireActual('fs');
-  const nodePath = jest.requireActual('path');
-  const target = nodePath.resolve('/dev/null');
-  return {
-    ...actual,
-    readFileSync: (file: unknown, ...args: unknown[]) =>
-      typeof file === 'string' && nodePath.resolve(file) === target
-        ? Buffer.from('')
-        : actual.readFileSync(file, ...args),
-  };
-});
-
 expect.addSnapshotSerializer({
   test: (v: unknown): v is string =>
     typeof v === 'string' &&
@@ -169,6 +156,25 @@ describe('babel plugin', () => {
 
       const matches = code?.match(new RegExp(`..${MOCK_LOCATION}`, 'g'));
       expect(matches).toHaveLength(2);
+    });
+
+    test('a worklet compiles when its file is not on disk', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          return 1;
+        }
+      </script>`;
+
+      // Source maps stay on: with them off the plugin never looked for the file.
+      const { code } = runPlugin(
+        input,
+        undefined,
+        {},
+        'no-such-directory/no-such-file.js'
+      );
+
+      expect(code).toMatch(/function foo_noSuchFileJs[0-9]+\(\)/gm);
     });
 
     test('removes comments from worklets', () => {
