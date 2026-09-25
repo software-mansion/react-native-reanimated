@@ -1,7 +1,7 @@
 'use strict';
 
 import { initialUpdaterRun } from '../animation';
-import type { StyleProps } from '../commonTypes';
+import type { SharedValue, StyleProps } from '../commonTypes';
 import { isCSSConfigProp, isPseudoSelectorValue } from '../css/utils';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import { isSharedValue } from '../isSharedValue';
@@ -24,7 +24,10 @@ function dummyListener() {
 
 export class PropsFilter implements IPropsFilter {
   private _initialPropsMap = new Map<AnimatedStyleHandle, StyleProps>();
-  private _initialInlinePropValues = new Map<string, unknown>();
+  private _initialInlinePropValues = new Map<
+    string,
+    { sharedValue: SharedValue; value: unknown }
+  >();
 
   public filterNonAnimatedProps(
     component: AnimatedComponentTypeInternal
@@ -84,10 +87,12 @@ export class PropsFilter implements IPropsFilter {
       } else if (isSharedValue(value)) {
         // Pass the initial value on every render, not just the first one, so that
         // the prop (e.g. `children` of <Animated.Text>) isn't dropped on re-render.
-        if (!this._initialInlinePropValues.has(key)) {
-          this._initialInlinePropValues.set(key, value.value);
+        let initial = this._initialInlinePropValues.get(key);
+        if (initial?.sharedValue !== value) {
+          initial = { sharedValue: value, value: value.value };
+          this._initialInlinePropValues.set(key, initial);
         }
-        props[key] = this._initialInlinePropValues.get(key);
+        props[key] = initial.value;
       } else {
         props[key] = value;
       }

@@ -70,7 +70,8 @@ export const _updatePropsJS = (
 
       // For Animated.Text we need to update textContent directly
       if ('children' in rawStyles) {
-        (component as ReanimatedHTMLElement).textContent = rawStyles.children;
+        (component as ReanimatedHTMLElement).textContent =
+          rawStyles.children === '' ? '\u200b' : rawStyles.children;
       }
     } else if (component.props && Object.keys(component.props).length > 0) {
       Object.keys(component.props).forEach((key) => {

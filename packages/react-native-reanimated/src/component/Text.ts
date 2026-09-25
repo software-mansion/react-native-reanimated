@@ -22,6 +22,7 @@ type AnimatedTextProps = Omit<AnimatedProps<TextProps>, 'children' | 'ref'> & {
   children?: AnimatedTextChild | AnimatedTextChild[];
 };
 
+// is-tree-shakable-suppress
 const AnimatedTextBase = createAnimatedComponent(Text);
 
 // is-tree-shakable-suppress

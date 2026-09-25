@@ -22,7 +22,7 @@ export default function EmptyExample() {
     return Math.round(sv.value * 100);
   });
 
-  const emptySv = useDerivedValue(() => {
+  const emptySv = useDerivedValue<string>(() => {
     return sv.value > 0.5 ? 'Blink' : '';
   });
 
@@ -41,6 +41,12 @@ export default function EmptyExample() {
   });
 
   const [, setCount] = useState(0);
+  const [pressCount, setPressCount] = useState(0);
+  const [layoutWidth, setLayoutWidth] = useState(0);
+
+  const opacityStyle = useAnimatedStyle(() => {
+    return { opacity: 0.2 + sv.value * 0.8 };
+  });
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -132,6 +138,54 @@ export default function EmptyExample() {
         </Animated.Text>
       </View>
 
+      {/* Nested text + lineHeight (known Fabric iOS baseline bug) */}
+      <View style={styles.row}>
+        <Animated.Text style={[styles.lineHeight, styles.color1]}>
+          My {numberSv}% should sit on the same line as this text
+        </Animated.Text>
+      </View>
+
+      {/* Nested text + numberOfLines truncation */}
+      <View style={[styles.row, styles.narrow]}>
+        <Animated.Text numberOfLines={1} style={styles.color2}>
+          I am a long text and should be trimmed {textSv} tralalalalalalalalala
+        </Animated.Text>
+      </View>
+
+      {/* onPress on the outer text should also fire when tapping the number */}
+      <View style={styles.row}>
+        <Animated.Text
+          style={styles.color3}
+          onPress={() => setPressCount((c) => c + 1)}>
+          Tapping my {numberSv} should count up too (pressed {pressCount})
+        </Animated.Text>
+      </View>
+
+      {/* onLayout on the outer text should follow the animated width */}
+      <View style={styles.row}>
+        <Animated.Text
+          style={styles.color4}
+          onLayout={(e) => setLayoutWidth(e.nativeEvent.layout.width)}>
+          My width should grow with {textSv}
+        </Animated.Text>
+        <Text> = {Math.round(layoutWidth)}</Text>
+      </View>
+
+      {/* Opacity on the outer text works (it has a native view) */}
+      <View style={styles.row}>
+        <Animated.Text style={[styles.color5, opacityStyle]}>
+          My opacity should be changing {numberSv}
+        </Animated.Text>
+      </View>
+
+      {/* Opacity on a nested text applies only to that text */}
+      <View style={styles.row}>
+        <Text style={styles.color6}>
+          Only my number should fade, not this text{' '}
+          <Animated.Text style={opacityStyle}>{numberSv}</Animated.Text>
+        </Text>
+      </View>
+
       {/* Static Animated.Text */}
       <View style={styles.row}>
         <Animated.Text style={animatedStyle}>Lorem ipsum</Animated.Text>
@@ -163,6 +217,13 @@ const styles = StyleSheet.create({
   },
   italic: {
     fontStyle: 'italic',
+  },
+  lineHeight: {
+    fontSize: 14,
+    lineHeight: 40,
+  },
+  narrow: {
+    width: 220,
   },
   color1: {
     backgroundColor: 'coral',
