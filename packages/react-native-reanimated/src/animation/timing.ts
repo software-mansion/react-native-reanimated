@@ -111,17 +111,22 @@ export const withTiming = function (
       }
 
       if (runtime < 0) {
-        // `startTime` comes from `global.__frameTimestamp || global._getAnimationTimestamp()`
-        // (see `valueSetter`). An animation started outside a frame flush - from a gesture
-        // callback, for instance - takes the second branch and reads the clock at that instant,
-        // while the frame that first progresses it passes its vsync timestamp, which is earlier.
-        // The first tick then sees a small negative runtime. 
-        // This can potentially cause glitches during animations.
+        // `startTime` comes from `global.__frameTimestamp ||
+        // global._getAnimationTimestamp()` (see `valueSetter`). An animation
+        // started outside a frame flush - from a gesture callback, for
+        // instance - takes the second branch and reads the clock at that
+        // instant, while the frame that first progresses it passes its vsync
+        // timestamp, which is earlier. The first tick then sees a small
+        // negative runtime. This can potentially cause glitches during
+        // animations.
         animation.startTime = now;
         runtime = 0;
       }
 
-      const normalizedTime = Math.min(Math.max(runtime / config.duration, 0), 1);
+      const normalizedTime = Math.min(
+        Math.max(runtime / config.duration, 0),
+        1
+      );
       const progress = animation.easing(normalizedTime);
       animation.current =
         (startValue as number) + (toValue - (startValue as number)) * progress;
