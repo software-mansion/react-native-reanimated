@@ -1,6 +1,13 @@
+#import <reanimated/apple/sensor/ReanimatedHingeProbe.h>
 #import <reanimated/apple/sensor/ReanimatedSensor.h>
 
 #if !TARGET_OS_TV && !TARGET_OS_OSX && !TARGET_OS_VISION
+@interface ReanimatedSensor ()
+#if __has_include(<UIKit/UIHingeInteraction.h>)
+- (void)attachHingeInteraction API_AVAILABLE(ios(27.1));
+#endif
+@end
+
 @implementation ReanimatedSensor
 
 + (bool)isAvailable:(ReanimatedSensorType)sensorType
@@ -19,6 +26,8 @@
     case GRAVITY:
     case ROTATION_VECTOR:
       return [motionManager isDeviceMotionAvailable];
+    case HINGE:
+      return [ReanimatedHingeProbe hasHinge];
   }
   return false;
 }
@@ -57,6 +66,8 @@
     return [self initializeMagnetometer];
   } else if (_sensorType == ROTATION_VECTOR) {
     return [self initializeOrientation];
+  } else if (_sensorType == HINGE) {
+    return [self initializeHinge];
   }
 
   return false;
@@ -186,9 +197,52 @@
   return true;
 }
 
+- (bool)initializeHinge
+{
+#if __has_include(<UIKit/UIHingeInteraction.h>)
+  if (@available(iOS 27.1, *)) {
+    // Sensors are registered from the JS thread and interactions are main-thread
+    // only, so all hinge state is read and written on the main queue.
+    dispatch_async(dispatch_get_main_queue(), ^{ [self attachHingeInteraction]; });
+    return true;
+  }
+#endif
+  return false;
+}
+
+#if __has_include(<UIKit/UIHingeInteraction.h>)
+- (void)attachHingeInteraction
+{
+  if (_hingeCancelled) {
+    return;
+  }
+
+  __weak ReanimatedSensor *weakSelf = self;
+  UIHingeInteraction *interaction =
+      [[UIHingeInteraction alloc] initWithUpdateHandler:^(UIHingeInteraction *_, UIHingeInteractionUpdate *update) {
+        ReanimatedSensor *strongSelf = weakSelf;
+        UIHinge *hinge = update.hinge;
+        // nil is not a measurement: it also arrives while the interaction is outside a hierarchy with a hinge.
+        if (strongSelf == nil || hinge == nil) {
+          return;
+        }
+        double data[] = {hinge.angle, (double)hinge.status};
+        strongSelf->_setter(data, [strongSelf getInterfaceOrientation]);
+      }];
+  _hingeInteraction = interaction;
+  [ReanimatedHingeProbe addInteraction:interaction];
+}
+#endif
+
 - (void)cancel
 {
-  if (_sensorType == ACCELEROMETER) {
+  if (_sensorType == HINGE) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      self->_hingeCancelled = true;
+      [ReanimatedHingeProbe removeInteraction:self->_hingeInteraction];
+      self->_hingeInteraction = nil;
+    });
+  } else if (_sensorType == ACCELEROMETER) {
     [_motionManager stopAccelerometerUpdates];
   } else if (_sensorType == GYROSCOPE) {
     [_motionManager stopGyroUpdates];
@@ -268,6 +322,11 @@
 }
 
 - (bool)initializeOrientation
+{
+  return false;
+}
+
+- (bool)initializeHinge
 {
   return false;
 }

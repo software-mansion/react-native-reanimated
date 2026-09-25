@@ -19,6 +19,12 @@ const AnimatedPropsExample: React.FC = () =>
   React.createElement(require('./AnimatedPropsExample').default as React.FC);
 const AnimatedSensorExample: React.FC = () =>
   React.createElement(require('./AnimatedSensorExample').default as React.FC);
+const AnimatedHingeExample: React.FC = () =>
+  React.createElement(require('./AnimatedHingeExample').default as React.FC);
+const AnimatedHingeHorseExample: React.FC = () =>
+  React.createElement(
+    require('./AnimatedHingeHorseExample').default as React.FC
+  );
 const ArticleProgressExample: React.FC = () =>
   React.createElement(require('./ArticleProgressExample').default as React.FC);
 const BBExample: React.FC = () =>
@@ -526,6 +532,16 @@ const ALL_EXAMPLES: Record<string, Example> = {
     icon: '📡',
     title: 'useAnimatedSensor',
     screen: AnimatedSensorExample,
+  },
+  AnimatedHingeExample: {
+    icon: '📖',
+    title: 'useAnimatedSensor (hinge)',
+    screen: AnimatedHingeExample,
+  },
+  AnimatedHingeHorseExample: {
+    icon: '🐎',
+    title: 'useAnimatedSensor (hinge horse)',
+    screen: AnimatedHingeHorseExample,
   },
   FrameCallbackExample: {
     icon: '🗣',

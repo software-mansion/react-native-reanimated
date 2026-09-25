@@ -14,6 +14,8 @@
   int _referenceFrame;
 #if !TARGET_OS_TV && !TARGET_OS_OSX
   CMMotionManager *_motionManager;
+  id<UIInteraction> _hingeInteraction;
+  bool _hingeCancelled;
 #endif
   void (^_setter)(double[], int);
 }
@@ -29,6 +31,7 @@
 - (bool)initializeGravity;
 - (bool)initializeMagnetometer;
 - (bool)initializeOrientation;
+- (bool)initializeHinge;
 - (void)cancel;
 
 @end
