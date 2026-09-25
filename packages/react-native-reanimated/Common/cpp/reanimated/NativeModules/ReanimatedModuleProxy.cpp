@@ -1195,7 +1195,8 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
         std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, viewStylesRepository_, request);
   }
 
-  commitHook_ = std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(
+      uiManager_, updatesRegistryManager_, viewStylesRepository_, layoutAnimationsProxy_);
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
