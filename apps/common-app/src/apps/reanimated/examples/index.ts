@@ -329,13 +329,6 @@ const SHOW_CASES_AND_REGRESSIONS = 'Show Cases and Regressions';
 const REGRESSIONS = 'Regressions';
 
 const ALL_EXAMPLES: Record<string, Example> = {
-  // About
-  AboutExample: {
-    icon: 'ℹ️',
-    title: 'About',
-    screen: AboutExample,
-  },
-
   SuspenseLayoutAnimationCrashExample: {
     icon: '💥',
     title: 'Suspense + Layout Animation Crash',
@@ -349,12 +342,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: SettledPropsLeakExample,
   },
 
-  // Empty example for test purposes
-  EmptyExample: {
-    icon: '👻',
-    title: 'Empty',
-    screen: EmptyExample,
-  },
   InlineStylesAndPropsExample: {
     icon: '🎛️',
     title: 'Inline styles and props',
@@ -975,6 +962,18 @@ const LAYOUT_ANIMATION_PREFIX = '[LA]';
 const SHARED_ELEMENT_TRANSITION_PREFIX = '[SET]';
 
 export const EXAMPLES: Record<string, ExampleEntry> = {
+  // About
+  AboutExample: {
+    icon: 'ℹ️',
+    title: 'About',
+    screen: AboutExample,
+  },
+  // Empty example for test purposes
+  EmptyExample: {
+    icon: '👻',
+    title: 'Empty',
+    screen: EmptyExample,
+  },
   LayoutAnimations: {
     examples: withTitlePrefix(LAYOUT_ANIMATION_PREFIX),
     icon: '📐',
