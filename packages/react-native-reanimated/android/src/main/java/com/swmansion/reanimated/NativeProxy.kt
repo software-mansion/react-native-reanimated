@@ -1,13 +1,17 @@
 package com.swmansion.reanimated
 
 import android.content.ContentResolver
+import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
+import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.common.annotations.FrameworkAPI
 import com.facebook.react.fabric.FabricUIManager
@@ -38,6 +42,12 @@ open class NativeProxy {
         init {
             SoLoader.loadLibrary("reanimated")
         }
+
+        /** How long a tag must go without a synchronous write before its override is released. */
+        private const val OVERRIDE_IDLE_RELEASE_MS = 600L
+
+        /** How often to look for idle tags. */
+        private const val OVERRIDE_SWEEP_INTERVAL_MS = 300L
     }
 
     protected var mNodesManager: NodesManager? = null
@@ -250,6 +260,71 @@ open class NativeProxy {
             }.apply { isAccessible = true }
     }
 
+    // Counterpart to the workaround above. Writing a prop synchronously is not enough on its own:
+    // the animated value never reaches the ShadowTree on this path, so a later mount applies the
+    // tree's value for the same prop and overwrites what we wrote. RN already has the mechanism to
+    // prevent that - `tagToSynchronousMountProps`, which makes `SurfaceMountingManager.updateProps`
+    // let a synchronously written value win over the mounted one.
+    //
+    // Seeding it is what #9681 avoided, because an entry that is never released clamps later
+    // commits and freezes the prop. So we seed on every write and release once the tag goes idle,
+    // which is the half that was missing. `getAnimatedPropsMap` on the RN side tracks `transform`
+    // and `opacity`, so those are the props this covers.
+    private val storeSynchronousMountPropsOverrideMethod by lazy {
+        runCatching {
+            mountingManager.javaClass.methods
+                .first {
+                    it.name.startsWith("storeSynchronousMountPropsOverride") && it.parameterTypes.size == 2
+                }.apply { isAccessible = true }
+        }.getOrNull()
+    }
+
+    private val overrideLastWriteMs = HashMap<Int, Long>()
+    private val overrideSweeper = Handler(Looper.getMainLooper())
+    private var overrideSweepScheduled = false
+
+    private fun seedSynchronousMountPropsOverride(
+        viewTag: Int,
+        props: ReadableMap,
+    ) {
+        val method = storeSynchronousMountPropsOverrideMethod ?: return
+        runCatching { method.invoke(mountingManager, viewTag, props) }
+        overrideLastWriteMs[viewTag] = SystemClock.uptimeMillis()
+        scheduleOverrideSweep()
+    }
+
+    private fun scheduleOverrideSweep() {
+        if (overrideSweepScheduled) return
+        overrideSweepScheduled = true
+        overrideSweeper.postDelayed(::sweepStaleOverrides, OVERRIDE_SWEEP_INTERVAL_MS)
+    }
+
+    /**
+     * Releases overrides for tags Reanimated has stopped animating, so a settled prop can be driven
+     * by React again. Writing a prop as `null` is what removes it from RN's override map, and RN
+     * drops the tag entirely once that map empties.
+     */
+    private fun sweepStaleOverrides() {
+        overrideSweepScheduled = false
+        val method = storeSynchronousMountPropsOverrideMethod ?: return
+        val now = SystemClock.uptimeMillis()
+        val released = ArrayList<Int>()
+
+        for ((viewTag, lastWrite) in overrideLastWriteMs) {
+            if (now - lastWrite < OVERRIDE_IDLE_RELEASE_MS) continue
+            val nulls =
+                JavaOnlyMap().apply {
+                    putNull("transform")
+                    putNull("opacity")
+                }
+            runCatching { method.invoke(mountingManager, viewTag, nulls) }
+            released.add(viewTag)
+        }
+
+        for (viewTag in released) overrideLastWriteMs.remove(viewTag)
+        if (overrideLastWriteMs.isNotEmpty()) scheduleOverrideSweep()
+    }
+
     @DoNotStrip
     fun synchronouslyUpdateUIProps(
         intBuffer: IntArray,
@@ -259,6 +334,7 @@ open class NativeProxy {
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
             try {
                 updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
+                seedSynchronousMountPropsOverride(viewTag, props)
             } catch (e: Exception) {
                 Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag", e)
             }
