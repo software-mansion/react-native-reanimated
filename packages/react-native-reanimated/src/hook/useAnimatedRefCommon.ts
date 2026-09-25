@@ -13,8 +13,14 @@ import type {
   MaybeObserverCleanup,
 } from './commonTypes';
 
+export type AnimatedRefLifecycle = {
+  onAttach: (wrapper: ShadowNodeWrapper) => void;
+  onDetach: (wrapper: ShadowNodeWrapper) => void;
+};
+
 export function useAnimatedRefBase<TRef extends InstanceOrElement>(
-  getWrapper: (ref: InternalHostInstance) => ShadowNodeWrapper
+  getWrapper: (ref: InternalHostInstance) => ShadowNodeWrapper,
+  lifecycle?: AnimatedRefLifecycle
 ): AnimatedRef<TRef> {
   const observers = useRef<Map<AnimatedRefObserver, MaybeObserverCleanup>>(
     new Map()
@@ -31,6 +37,7 @@ export function useAnimatedRefBase<TRef extends InstanceOrElement>(
         // @ts-expect-error this can't be typed well.
         fun.getTag = () => ref.getScrollableNode?.() || findNodeHandle(ref);
         fun.current = ref;
+        lifecycle?.onAttach(wrapperRef.current);
 
         if (observers.size) {
           const currentTag = fun?.getTag?.() ?? null;
@@ -43,6 +50,8 @@ export function useAnimatedRefBase<TRef extends InstanceOrElement>(
             observers.set(observer, observer(currentTag));
           });
         }
+      } else if (wrapperRef.current) {
+        lifecycle?.onDetach(wrapperRef.current);
       }
 
       return wrapperRef.current;
