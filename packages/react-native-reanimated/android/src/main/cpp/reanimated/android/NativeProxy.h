@@ -83,7 +83,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
       double startTimestampMs,
       int easingId,
       bool persistent);
-  void cssRemoveTransition(int viewTag, int propertyId);
+  void cssRemoveTransition(int viewTag, int propertyId, bool settle);
   void cssDefineEasing(int easingId, int type, const std::vector<float> &pointsX, const std::vector<float> &pointsY);
   void cssUndefineEasing(int easingId);
   /// The one place that decides whether CSS transitions run on the platform.

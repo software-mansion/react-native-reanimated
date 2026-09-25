@@ -57,8 +57,8 @@ class CSSPlatformTransitionProxy {
       bool allowPlatform,
       double timestamp);
 
-  /// Cancels the native transition of every given property (teardown).
-  void cancelAll(Tag viewTag, const TransitionProperties &properties);
+  /// Stops the native transition of every given property.
+  void cancelAll(Tag viewTag, const TransitionProperties &properties, bool settle);
 
  private:
   struct ActiveTransition {
@@ -81,7 +81,11 @@ class CSSPlatformTransitionProxy {
       const CSSTransitionPropertySettings *settings,
       bool persistent,
       double timestamp);
-  void remove(Tag viewTag, const std::string &propertyName);
+  /// `settle` lands the property on its committed target; see the backend.
+  void remove(Tag viewTag, const std::string &propertyName, bool settle);
+  /// Hands the property to the loop: returns what the native run shows at
+  /// `timestamp` (nullopt when nothing is in flight) and stops it on that frame.
+  std::optional<PlatformValue> releaseToLoop(Tag viewTag, const std::string &propertyName, double timestamp);
 
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
   /// What the native animation shows at `timestamp`, retraced from the stored run.

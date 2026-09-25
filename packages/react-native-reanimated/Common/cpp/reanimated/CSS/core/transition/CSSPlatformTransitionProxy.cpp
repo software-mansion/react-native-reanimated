@@ -77,7 +77,7 @@ bool CSSPlatformTransitionProxy::apply(
   return true;
 }
 
-void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &propertyName) {
+void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &propertyName, const bool settle) {
   const auto propertiesIt = active_.find(viewTag);
   if (propertiesIt != active_.end()) {
     propertiesIt->second.erase(propertyName);
@@ -87,8 +87,16 @@ void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &pr
   }
 
   if (backend_) {
-    backend_->stopTransition(viewTag, propertyName);
+    backend_->stopTransition(viewTag, propertyName, settle);
   }
+}
+
+std::optional<PlatformValue>
+CSSPlatformTransitionProxy::releaseToLoop(const Tag viewTag, const std::string &propertyName, const double timestamp) {
+  // Read before remove() drops the run this resumes from.
+  const auto resumeFrom = getCurrentValue(viewTag, propertyName, timestamp);
+  remove(viewTag, propertyName, false);
+  return resumeFrom;
 }
 
 std::optional<PlatformValue> CSSPlatformTransitionProxy::getCurrentValue(
@@ -140,15 +148,16 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
       }
       routing.platform.insert(propertyName);
     } else {
-      // platform -> loop migration cancels on the platform side.
-      // Sampled before remove() drops the run this resumes from; nullopt keeps the
-      // diff's own from-value, which the animation has painted past.
+      // platform -> loop migration cancels on the platform side. nullopt keeps the
+      // diff's own from-value, which the animation has painted past. Without a new
+      // value the loop has nothing to resume, so the property lands on its committed value.
       std::optional<PlatformValue> resumeFrom;
       if (routing.platform.erase(propertyName) > 0) {
         if (hasValue) {
-          resumeFrom = getCurrentValue(viewTag, propertyName, timestamp);
+          resumeFrom = releaseToLoop(viewTag, propertyName, timestamp);
+        } else {
+          remove(viewTag, propertyName, true);
         }
-        remove(viewTag, propertyName);
       }
       routing.loop.insert(propertyName);
       if (hasValue) {
@@ -164,9 +173,10 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
   react_native_assert(
       matchedValues == config.changedProperties.size() && "[Reanimated] CSS transition value diff without settings");
 
+  // A property that leaves the transition rests on its committed value at once.
   for (const auto &propertyName : config.removedProperties) {
     if (routing.platform.erase(propertyName) > 0) {
-      remove(viewTag, propertyName);
+      remove(viewTag, propertyName, true);
     } else if (routing.loop.erase(propertyName) > 0) {
       loopConfig.removedProperties.push_back(propertyName);
     }
@@ -196,9 +206,7 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
         }
       }
       routing.platform.erase(propertyName);
-      // Read before remove() drops the run this resumes from.
-      const auto resumeFrom = getCurrentValue(viewTag, propertyName, timestamp);
-      remove(viewTag, propertyName);
+      const auto resumeFrom = releaseToLoop(viewTag, propertyName, timestamp);
       routing.loop.insert(propertyName);
       if (resumeFrom) {
         loopDiffs.emplace(propertyName, std::make_pair(platformValueToDynamic(*resumeFrom), propertyDiff.second));
@@ -210,9 +218,12 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
   return loopDiffs;
 }
 
-void CSSPlatformTransitionProxy::cancelAll(const Tag viewTag, const TransitionProperties &properties) {
+void CSSPlatformTransitionProxy::cancelAll(
+    const Tag viewTag,
+    const TransitionProperties &properties,
+    const bool settle) {
   for (const auto &propertyName : properties) {
-    remove(viewTag, propertyName);
+    remove(viewTag, propertyName, settle);
   }
 }
 
