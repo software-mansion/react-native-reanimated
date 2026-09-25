@@ -331,6 +331,7 @@ void LayoutAnimationsProxy::updateLightTree(
   std::unordered_map<Tag, IndexCursors> indexCursors;
   std::unordered_map<Tag, ShadowView> updatedViews;
   std::unordered_map<Tag, std::vector<AncestorOrigin>> oldChains;
+  std::unordered_set<Tag> removedSubtreeRoots;
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
     const auto &mutation = *it;
     switch (mutation.type) {
@@ -409,11 +410,15 @@ void LayoutAnimationsProxy::updateLightTree(
       case ShadowViewMutation::Delete: {
         const auto it = lightNodes_.find(mutation.oldChildShadowView.tag);
         react_native_assert(it != lightNodes_.end() && "Delete mutation for an unknown node");
-        const auto state = it->second->state;
-        // View flattening emits a child's Delete after its parent's Remove, which may have already torn the child
-        // down.
-        if (state == UNDEFINED || state == COMPLETED || state == DELETED) {
-          const auto node = it->second;
+        const auto node = it->second;
+        // The differ removes everything that moves out of a view before its Delete, and inserts into the parent
+        // of the view only after it.
+        if (removedSubtreeRoots.erase(mutation.oldChildShadowView.tag)) {
+          const auto parent = node->parent.lock();
+          react_native_assert(parent && "Parent node is nullptr");
+          handleSubtreeRemoval(node, parent, transaction);
+        }
+        if (node->state == UNDEFINED || node->state == COMPLETED || node->state == DELETED) {
           unmapLightNode(node);
         }
         staleSynchronousProps_.forget(mutation.oldChildShadowView.tag);
@@ -491,7 +496,7 @@ void LayoutAnimationsProxy::updateLightTree(
               ShadowViewMutation::RemoveMutation(parentTag, mutation.oldChildShadowView, hostIndex));
           parent->children.erase(parent->children.begin() + hostIndex);
         } else if (!deleted.contains(parentTag)) {
-          handleSubtreeRemoval(node, parent, hostIndex, transaction);
+          removedSubtreeRoots.insert(tag);
         }
         break;
       }
@@ -501,6 +506,7 @@ void LayoutAnimationsProxy::updateLightTree(
       }
     }
   }
+  react_native_assert(removedSubtreeRoots.empty() && "React removed a view without deleting it");
 }
 
 void LayoutAnimationsProxy::applyInitialMutationsToLightTree(const ShadowViewMutationList &mutations) const {
@@ -709,12 +715,11 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
 }
 
 // A subtree that animates keeps its place in the host tree, so nothing is emitted for its root.
-// A subtree that does not animate emits its Remove in stream order. Its teardown mounts at the
+// A subtree that does not animate is removed at its current host index. Its teardown mounts at the
 // end of the transaction, so native code that reads a view on unmount still sees its children.
 void LayoutAnimationsProxy::handleSubtreeRemoval(
     const std::shared_ptr<LightNode> &node,
     const std::shared_ptr<LightNode> &parent,
-    const int hostIndex,
     TransactionMeta &transaction) const {
   ReanimatedSystraceSection s("handleSubtreeRemoval");
   const StartAnimationsRecursivelyConfig config = {
@@ -726,6 +731,8 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(
     return;
   }
   react_native_assert(!node->isExiting() && "A subtree that does not animate must stay UNDEFINED");
+  const auto hostIndex = parent->removeChild(node);
+  react_native_assert(hostIndex != -1 && "Removed node not found in its parent");
   cancelLayoutAnimation(node->current.tag);
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     hiddenViewTags_.erase(node->current.tag);
@@ -733,7 +740,6 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(
   transaction.filteredMutations.push_back(
       ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, hostIndex));
   transaction.teardownMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
-  parent->children.erase(parent->children.begin() + hostIndex);
 }
 
 void LayoutAnimationsProxy::flushCompletedRemovals(ShadowViewMutationList &filteredMutations) const {
