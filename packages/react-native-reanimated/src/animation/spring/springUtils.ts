@@ -8,7 +8,7 @@ import type { SpringConfig } from './springConfigs';
 export type DefaultSpringConfig = {
   [K in keyof Required<SpringConfig>]: K extends 'reduceMotion' | 'clamp'
     ? Required<SpringConfig>[K] | undefined
-    : Required<SpringConfig>[K];
+    : Exclude<Required<SpringConfig>[K], undefined>;
 };
 export type WithSpringConfig = SpringConfig;
 
@@ -70,7 +70,7 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
 
 export function safeMergeConfigs<TConfig extends object>(
   defaults: TConfig,
-  userConfig?: Partial<TConfig>
+  userConfig?: { [K in keyof TConfig]?: TConfig[K] | undefined }
 ): TConfig {
   'worklet';
   if (!userConfig) {

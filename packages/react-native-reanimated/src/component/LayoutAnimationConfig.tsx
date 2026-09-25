@@ -61,7 +61,7 @@ function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
 export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps> {
   _childInstance: InstanceWithViewTag | null = null;
   _mergedRef?: RefCallback<InstanceWithViewTag>;
-  _mergedRefSource?: Ref<InstanceWithViewTag>;
+  _mergedRefSource?: Ref<InstanceWithViewTag> | undefined;
 
   _setChildInstance = (instance: InstanceWithViewTag | null) => {
     this._childInstance = instance;
