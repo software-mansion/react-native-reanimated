@@ -1,0 +1,1 @@
+Report the remaining events of a CSS transition running on the iOS or Android platform animation path when transition callbacks are attached mid-flight, instead of losing its `end` (and `start` while it is still delayed).

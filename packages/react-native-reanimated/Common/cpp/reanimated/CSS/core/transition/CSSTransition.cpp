@@ -142,15 +142,37 @@ CSSLoopTransition &CSSTransition::ensureLoopTransition() {
   return *loopTransition_;
 }
 
-void CSSTransition::setEventMask(const CSSEventMask eventMask) {
+folly::dynamic CSSTransition::setEventMask(const CSSEventMask eventMask) {
   if (eventMask == eventMask_) {
-    return;
+    return folly::dynamic::object();
   }
+  const bool wasObserved = eventMask_ != 0;
   eventMask_ = eventMask;
 
   if (loopTransition_) {
     observeMilestones(*loopTransition_);
   }
+  // Only a view nobody listened to can have runs on the platform, which reports no events.
+  if (wasObserved || eventMask_ == 0) {
+    return folly::dynamic::object();
+  }
+  return resumePlatformRunsOnLoop();
+}
+
+folly::dynamic CSSTransition::resumePlatformRunsOnLoop() {
+  const auto timestamp = loop_->resolveTimestamp();
+  const auto runs =
+      platformTransitionProxy_->handOverToLoop(getViewTag(), pseudoLockedProperties_, routing_, timestamp);
+  if (runs.empty()) {
+    return folly::dynamic::object();
+  }
+
+  auto &loopTransition = ensureLoopTransition();
+  loopTransition.resume(runs, timestamp);
+  auto initialUpdate = loopTransition.computeCurrentStyle(shadowNode_);
+  scheduleLoop(timestamp);
+  pendingInitialUpdate_.update(initialUpdate);
+  return initialUpdate;
 }
 
 void CSSTransition::observeMilestones(CSSLoopTransition &loopTransition) {
