@@ -30,7 +30,9 @@
 #include <algorithm>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -192,6 +194,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
+      repairSvgFillRuleFunction_(platformDepMethodsHolder.repairSvgFillRuleFunction),
 #endif // ANDROID
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
@@ -1098,6 +1101,11 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
            /* .mountSynchronously = */ true});
 
 #ifdef ANDROID
+      // A commit cancelled by commit pausing reaches the views through the React commit that
+      // paused it; react-native-svg's setter leaves a repaired nonzero fill rule alone.
+      if (status == ShadowTree::CommitStatus::Succeeded || status == ShadowTree::CommitStatus::Cancelled) {
+        repairSvgFillRules(propsMap);
+      }
       if (status == ShadowTree::CommitStatus::Succeeded) {
         auto lock = updatesRegistryManager_->lock();
         updatesRegistryManager_->clearPropsToRevert(surfaceId);
@@ -1108,6 +1116,31 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
     });
   }
 }
+
+#ifdef ANDROID
+// react-native-svg on Android never switches fillRule back to nonzero, see SvgFillRuleRepair.kt.
+void ReanimatedModuleProxy::repairSvgFillRules(const PropsMap &propsMap) {
+  if (!repairSvgFillRuleFunction_) {
+    return;
+  }
+  for (const auto &[family, propsVector] : propsMap) {
+    if (!std::string_view(family->getComponentName()).starts_with("RNSVG")) {
+      continue;
+    }
+    std::optional<bool> evenOdd;
+    for (const auto &rawProps : propsVector) {
+      const auto props = rawProps.toDynamic();
+      const auto it = props.find("fillRule");
+      if (it != props.items().end() && it->second.isNumber()) {
+        evenOdd = it->second.asDouble() == 0;
+      }
+    }
+    if (evenOdd.has_value()) {
+      repairSvgFillRuleFunction_(family->getTag(), *evenOdd);
+    }
+  }
+}
+#endif // ANDROID
 
 void ReanimatedModuleProxy::dispatchCommand(
     jsi::Runtime &rt,
