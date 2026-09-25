@@ -251,9 +251,7 @@ open class NativeProxy {
     }
 
     private val getViewExistsMethod by lazy {
-        mountingManager.javaClass.methods
-            .first { it.name == "getViewExists" && it.parameterTypes.size == 1 }
-            .apply { isAccessible = true }
+        mountingManager.javaClass.getMethod("getViewExists", Int::class.javaPrimitiveType)
     }
 
     @DoNotStrip
@@ -263,10 +261,11 @@ open class NativeProxy {
     ) {
         cssPlatformTransitionsManager.onPropsWrittenSynchronously()
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
+            if (getViewExistsMethod.invoke(mountingManager, viewTag) != true) {
+                return@parse
+            }
             try {
-                if (getViewExistsMethod.invoke(mountingManager, viewTag) == true) {
-                    updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
-                }
+                updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
             } catch (e: Exception) {
                 Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag: ${e.cause ?: e}")
             }
