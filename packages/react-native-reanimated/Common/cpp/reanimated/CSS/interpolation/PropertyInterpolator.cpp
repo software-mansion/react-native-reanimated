@@ -13,6 +13,10 @@ PropertyInterpolator::PropertyInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : propertyPath_(std::move(propertyPath)), viewStylesRepository_(viewStylesRepository) {}
 
+folly::dynamic PropertyInterpolator::getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const {
+  return viewStylesRepository_->getStyleProp(shadowNode->getTag(), propertyPath_);
+}
+
 bool PropertyInterpolatorFactory::isDiscreteProperty() const {
   return false;
 }

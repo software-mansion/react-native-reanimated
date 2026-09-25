@@ -246,10 +246,12 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   scheduleOnUI<TValue>(
     serializableArrayOfWorklets: SerializableRef<TValue[]>,
+    serializableArrayOfArguments: SerializableRef<unknown[]>,
     scheduleStacks: string[] | undefined
   ) {
     return this.#workletsModuleProxy.scheduleOnUI(
       serializableArrayOfWorklets,
+      serializableArrayOfArguments,
       scheduleStacks
     );
   }
@@ -267,7 +269,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     useDefaultQueue: boolean,
     customQueue: object | undefined,
     enableEventLoop: boolean,
-    enableLocking: boolean
+    enableLocking: boolean,
+    enableNetworking: boolean
   ) {
     return this.#workletsModuleProxy.createWorkletRuntime(
       name,
@@ -275,7 +278,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       useDefaultQueue,
       customQueue,
       enableEventLoop,
-      enableLocking
+      enableLocking,
+      enableNetworking
     );
   }
 
@@ -404,6 +408,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     this.#workletsModuleProxy.setDynamicFeatureFlag(name, value);
   }
 
+  getCurrentThreadId(): string {
+    return this.#workletsModuleProxy.getCurrentThreadId();
+  }
+
   getUIRuntimeHolder(): object {
     return this.#workletsModuleProxy.getUIRuntimeHolder();
   }
@@ -466,7 +474,8 @@ function installUnpackers(workletsModuleProxy: WorkletsModuleProxy) {
       shareableGuest.sourceMap ?? '',
       remoteFunction.code!,
       remoteFunction.location ?? '',
-      remoteFunction.sourceMap ?? ''
+      remoteFunction.sourceMap ?? '',
+      __DEV__
     );
   }
 }

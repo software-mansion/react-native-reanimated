@@ -184,16 +184,25 @@ void addMethod(jsi::Runtime &rt, jsi::Object &obj, const char *name, TFun &&func
           jsi::PropNameID::forAscii(rt, name),
           TLength,
           [func = std::forward<TFun>(func)](
-              jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t) mutable -> jsi::Value {
+              jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t count) mutable -> jsi::Value {
             using TReturn =
                 std::invoke_result_t<TFun &, jsi::Runtime &, const jsi::Value &, const jsi::Value(&)[TLength]>;
-            auto &typed = *reinterpret_cast<const jsi::Value(*)[TLength]>(args);
-            if constexpr (std::is_void_v<TReturn>) {
-              func(rt, thisVal, typed);
-              return jsi::Value::undefined();
-            } else {
-              return func(rt, thisVal, typed);
+            auto invoke = [&](const jsi::Value(&typed)[TLength]) -> jsi::Value {
+              if constexpr (std::is_void_v<TReturn>) {
+                func(rt, thisVal, typed);
+                return jsi::Value::undefined();
+              } else {
+                return func(rt, thisVal, typed);
+              }
+            };
+            if (count < TLength) {
+              jsi::Value padded[TLength];
+              for (size_t i = 0; i < count; ++i) {
+                padded[i] = jsi::Value(rt, args[i]);
+              }
+              return invoke(padded);
             }
+            return invoke(*reinterpret_cast<const jsi::Value(*)[TLength]>(args));
           }));
 }
 

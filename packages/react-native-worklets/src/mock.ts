@@ -73,6 +73,7 @@ const WorkletAPI = {
   },
   createWorkletRuntime: NOOP_FACTORY,
   executeOnUIRuntimeSync: ID,
+  getCurrentThreadId: () => '0',
   getDynamicFeatureFlag: () => false,
   getRuntimeKind: () => RuntimeKind.ReactNative,
   getStaticFeatureFlag: () => false,

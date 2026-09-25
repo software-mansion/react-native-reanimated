@@ -1,5 +1,3 @@
-import '../src/layoutReanimation/animationsManager.native';
-
 import type {
   AnimatableValue,
   AnimationObject,
@@ -7,11 +5,13 @@ import type {
   Timestamp,
 } from '../src/commonTypes';
 import { LayoutAnimationType } from '../src/commonTypes';
+import { initializeLayoutAnimationsManager } from '../src/layoutReanimation/animationsManager.native';
 
 jest.mock('react-native-worklets', () =>
   jest.requireActual('../../react-native-worklets/src/mock')
 );
 
+initializeLayoutAnimationsManager();
 const manager = globalThis.LayoutAnimationsManager;
 const originalGlobals = {
   frameTimestamp: globalThis.__frameTimestamp,
@@ -92,6 +92,12 @@ describe('LayoutAnimationsManager', () => {
     globalThis._notifyAboutEnd = originalGlobals.notifyAboutEnd;
     globalThis._maybeFlushUIUpdatesQueue =
       originalGlobals.maybeFlushUIUpdatesQueue;
+  });
+
+  test('initializes only once', () => {
+    initializeLayoutAnimationsManager();
+
+    expect(globalThis.LayoutAnimationsManager).toBe(manager);
   });
 
   test('uses one start timestamp for animations started before the next frame', () => {

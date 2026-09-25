@@ -1,0 +1,28 @@
+---
+id: oxc
+sidebar_position: 3
+title: 'OXC plugin'
+sidebar_label: 'OXC plugin'
+---
+
+<Badges version="0.13.0">
+  # OXC plugin
+</Badges>
+
+:::note
+The OXC plugin is a port of the [Worklets Babel plugin](/docs/worklets-plugin/about) to Rust, built on top of [OXC](https://oxc.rs/). It's an opt-in alternative to the Babel plugin, which remains the default for the time being. Only [Bundle Mode](/docs/bundleMode/) is supported.
+:::
+
+## Setup
+
+For setup instructions, refer to the [Bundle Mode setup](/docs/bundleMode/setup?worklets-plugin=oxc#configure-worklets-plugin) with the OXC plugin selected in the tabs.
+
+## Options
+
+The OXC plugin accepts the [`importForwarding`](/docs/worklets-plugin/plugin-options#importforwarding) option and it works the same way as in the Babel plugin.
+
+[`bundleMode`](/docs/worklets-plugin/plugin-options#bundlemode) and [`strictGlobal`](/docs/worklets-plugin/plugin-options#strictglobal) are always on and cannot be turned off. The remaining options of the Babel plugin are ignored.
+
+## Notes
+
+Being a port, the OXC plugin might not cover every edge case that the Babel plugin does. If you find a difference in behavior, please let us know on [GitHub](https://github.com/software-mansion/react-native-reanimated/).

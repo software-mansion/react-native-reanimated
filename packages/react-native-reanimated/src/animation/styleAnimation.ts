@@ -187,7 +187,7 @@ export function withStyleAnimation(
             currentEntry.path
           );
           let prevVal = resolvePath(value, currentEntry.path);
-          if (prevAnimation && !prevVal) {
+          if (prevAnimation && prevVal === undefined) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             prevVal = (prevAnimation as any).current;
           }

@@ -76,6 +76,8 @@ const config = {
 
   baseUrl: '/react-native-worklets/',
 
+  trailingSlash: true,
+
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'software-mansion', // Usually your GitHub org/user name.
@@ -110,19 +112,24 @@ const config = {
         docs: {
           breadcrumbs: false,
           sidebarPath: require.resolve('./sidebars.js'),
-          sidebarCollapsible: false,
+          sidebarCollapsible: true,
+          sidebarCollapsed: false,
           editUrl:
             'https://github.com/software-mansion/react-native-reanimated/edit/main/docs/docs-worklets',
           lastVersion: 'current',
           versions: {
-            current: { label: '0.10' },
-            '0.9': { label: '0.9', banner: 'none' },
+            current: { label: '0.13' },
+            '0.10-0.12': { label: '0.10-0.12', banner: 'none' },
+            0.9: { label: '0.9', banner: 'none' },
           },
         },
         theme: { customCss: require.resolve('./src/css/index.css') },
       }),
     ],
-    require.resolve('@swmansion/t-rex-ui/preset'),
+    [
+      require.resolve('@swmansion/t-rex-ui/preset'),
+      { collapsibleSidebar: true },
+    ],
   ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */

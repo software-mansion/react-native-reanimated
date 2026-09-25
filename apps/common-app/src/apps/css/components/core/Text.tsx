@@ -1,3 +1,4 @@
+import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import type {
   GestureResponderEvent,
@@ -61,7 +62,7 @@ export default function Text({
   variant,
   ...rest
 }: TextProps) {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
 
   const getVariantProps = (textVariant: FontVariant, extraStyle = {}) => ({
     ...rest,
@@ -69,7 +70,7 @@ export default function Text({
       navLink &&
       ((args: GestureResponderEvent) => {
         onPress?.(args);
-        navigation.navigate(navLink as never);
+        navigation.navigate<string>(navLink);
       }),
     style: [
       text[textVariant],

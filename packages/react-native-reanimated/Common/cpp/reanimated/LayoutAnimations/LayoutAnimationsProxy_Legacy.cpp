@@ -2,11 +2,16 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <worklets/Compat/StableApi.h>
 
+#ifdef ANDROID
+#include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
+#endif // ANDROID
+
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
 #include <memory>
+#include <optional>
 #include <ranges>
 #include <set>
 #include <string>
@@ -36,6 +41,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 #endif
   react_native_assert(surfaceId == surfaceId_ && "pull routed to the wrong surface's proxy");
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  auto configLock = layoutAnimationsManager_->lockAndFlushConfigUpdates();
   PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
   ShadowViewMutationList filteredMutations;
 
@@ -66,6 +72,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 
   handleUpdatesAndEnterings(filteredMutations, movedViews, mutations, propsParserContext);
 
+  configLock.unlock();
   flushLayoutAnimationOperations(lock);
 
   addOngoingAnimations(filteredMutations);
@@ -127,12 +134,12 @@ void LayoutAnimationsProxy_Legacy::reconcileContradictedRemovals(
   }
 }
 
-// On android mutations that alter the view hierarchy are only produced on the JS thread (the push model), so to not
-// race with those, we apply the dead nodes cleanup only on the JS thread, unless there is a surface drop, in which case
-// we can safely cleanup on the UI thread since the surface is gone and no more mutations will be produced for it.
+// With Android's push model, structural mutations from the JS thread may still be waiting to mount when a UI-thread
+// pull runs, so dead nodes must be cleaned up on the JS thread. The pull model mounts transactions on the UI thread,
+// where cleanup is safe. A dropped surface can also be cleaned up immediately.
 bool LayoutAnimationsProxy_Legacy::shouldFlushDeadNodes([[maybe_unused]] const bool surfaceDropped) const {
 #ifdef ANDROID
-  return surfaceDropped || !worklets::isOnUIThread(uiScheduler_);
+  return surfaceDropped || isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_);
 #else
   return true;
 #endif
@@ -369,19 +376,21 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
 
       case ShadowViewMutation::Type::Update: {
         auto shouldAnimate = hasLayoutChanged(mutation);
-        const auto layoutConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LayoutAnimationType::LAYOUT);
+        auto layoutConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LayoutAnimationType::LAYOUT);
+        if (!layoutConfig) {
+          layoutConfig = getRetargetLayoutAnimationConfig(tag);
+        }
+        if ((!layoutConfig || !shouldAnimate) && updateEnteringAnimationTarget(tag, mutation.newChildShadowView)) {
+          continue;
+        }
         if (!layoutConfig || (!shouldAnimate && !layoutAnimations_.contains(tag) && !hasPendingLayoutAnimation(tag))) {
-          // We should cancel any ongoing animation here to ensure that the
-          // proper final state is reached for this view However, due to how
-          // RNSScreens handle adding headers (a second commit is triggered to
-          // offset all the elements by the header height) this would lead to
-          // all entering animations being cancelled when a screen with a header
-          // is pushed onto a stack
-          // TODO: find a better solution for this problem
+          if (const auto currentView = takeCompletedLayoutAnimationView(tag)) {
+            mutation.oldChildShadowView = *currentView;
+          }
           filteredMutations.push_back(mutation);
           continue;
         } else if (!shouldAnimate) {
-          updateLayoutAnimationTarget(tag, mutation.newChildShadowView);
+          updateLayoutAnimationTarget(tag, mutation.newChildShadowView, layoutConfig);
           continue;
         }
 
@@ -410,19 +419,23 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
 
 void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &mutations) const {
 #ifdef ANDROID
-  std::vector<int> tagsToUpdate;
-  tagsToUpdate.reserve(updateMap_.size());
+  std::optional<std::unique_ptr<int[]>> maybeCorrectedTags;
 
-  for (const auto &[tag, _] : updateMap_) {
-    tagsToUpdate.push_back(tag);
+  if (!isMountingCoordinatorPullModelEnabled()) {
+    std::vector<int> tagsToUpdate;
+    tagsToUpdate.reserve(updateMap_.size());
+
+    for (const auto &[tag, _] : updateMap_) {
+      tagsToUpdate.push_back(tag);
+    }
+
+    maybeCorrectedTags = preserveMountedTags_(tagsToUpdate);
+    if (!maybeCorrectedTags.has_value()) {
+      return;
+    }
   }
 
-  auto maybeCorrectedTags = preserveMountedTags_(tagsToUpdate);
-  if (!maybeCorrectedTags.has_value()) {
-    return;
-  }
-
-  auto correctedTags = maybeCorrectedTags->get();
+  const auto correctedTags = maybeCorrectedTags.has_value() ? maybeCorrectedTags->get() : nullptr;
 
   // since the map is not updated, we can assume that the ordering of tags in
   // correctedTags matches the iterator
@@ -431,7 +444,7 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &
   for (auto &[tag, updateValues] : updateMap_) {
 #ifdef ANDROID
     i++;
-    if (correctedTags[i] == -1) {
+    if (correctedTags != nullptr && correctedTags[i] == -1) {
       // skip views that have not been mounted yet
       // on Android we start entering animations from the JS thread
       // so it might happen, that the first frame of the animation goes through

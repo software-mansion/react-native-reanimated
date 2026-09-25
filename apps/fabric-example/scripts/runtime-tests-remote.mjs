@@ -30,11 +30,11 @@
 // `install` boots the sim and uploads the app (once per job);
 // `run` executes one library's suites (once per workflow step, like --launch).
 
-import path from 'node:path';
-import fs from 'node:fs';
-import os from 'node:os';
-import http from 'node:http';
 import { spawn, execFile, execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import http from 'node:http';
+import os from 'node:os';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -246,11 +246,11 @@ async function install() {
   }
   log(`booting remote simulator ${UDID}`);
   await simRemote(['simctl', 'boot', UDID]).catch(() => {}); // tolerate already-booted
-  await simRemote(['simctl', 'bootstatus', UDID, '-b'], { timeout: 300_000 });
+  await simRemote(['simctl', 'bootstatus', UDID, '-b'], { timeout: 900_000 });
   log(`uploading ${APP_PATH} to the orchestrator (QUIC)`);
   await simRemote(['simctl', 'uninstall', UDID, BUNDLE_ID]).catch(() => {});
   await simRemote(['simctl', 'install', UDID, path.resolve(APP_PATH)], {
-    timeout: 300_000,
+    timeout: 900_000,
   });
   log('install done');
 }
@@ -304,6 +304,8 @@ async function runLibrary() {
     String(CONNECT_TIMEOUT),
     '--idle-timeout',
     String(IDLE_TIMEOUT),
+    '--after-suite',
+    'sim-remote keepalive',
   ];
   if (ONLY) {
     serverArgs.push('--only', ONLY);

@@ -364,7 +364,7 @@ function cloneObjectProperties<T extends object>(
   shouldPersistRemote: boolean,
   depth: number
 ): Record<string, unknown> {
-  const clonedProps: Record<string, unknown> = {};
+  const clonedProps: Record<string, unknown> = Object.create(null);
   for (const [key, element] of Object.entries(value)) {
     // We don't need to clone __initData field as it contains long strings
     // representing the worklet code, source map, and location, and we will
@@ -840,7 +840,10 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
           '[Worklets] Promises cannot be converted to serializable.'
         );
       }
-      const toAdapt: Record<string, FlatSerializableRef<TValue>> = {};
+      const toAdapt: Record<
+        string,
+        FlatSerializableRef<TValue>
+      > = Object.create(null);
       for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
       }

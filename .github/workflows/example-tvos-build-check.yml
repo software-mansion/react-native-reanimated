@@ -5,6 +5,8 @@ on:
   pull_request:
     paths:
       - .github/workflows/example-tvos-build-check.yml
+      - .github/actions/install-pods/**
+      - .github/actions/save-pods/**
   schedule:
     - cron: '37 19 * * *'
   workflow_call:
@@ -75,6 +77,7 @@ jobs:
           needs-compile-database: 'false'
 
       - name: Install Pods (with caching)
+        id: install-pods
         if: steps.result-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/install-pods
         with:
@@ -91,6 +94,17 @@ jobs:
         uses: ./.github/actions/save-ccache
         with:
           key-prefix: tvos-${{ env.CONFIGURATION }}
+
+      # Pods do not depend on the configuration; one leg saves so the nightly
+      # fan-out does not race for the key.
+      - name: Save Pods cache
+        if: steps.result-cache.outputs.cache-hit != 'true' && env.CONFIGURATION == 'Debug'
+        uses: ./.github/actions/save-pods
+        with:
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+          pod-directory: ios
+          cache-hit: ${{ steps.install-pods.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.install-pods.outputs.cache-primary-key }}
 
       - name: Mark build successful
         if: steps.result-cache.outputs.cache-hit != 'true'

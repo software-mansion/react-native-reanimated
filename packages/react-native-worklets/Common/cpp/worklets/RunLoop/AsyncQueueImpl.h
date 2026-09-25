@@ -25,7 +25,11 @@ class AsyncQueueImpl : public AsyncQueue {
 
   ~AsyncQueueImpl() override;
 
+  using AsyncQueue::push;
+
   void push(std::function<void()> &&job) override;
+
+  void abortPending(AbortToken abortToken) override;
 
  private:
   static void runLoop(const std::shared_ptr<AsyncQueueState> &state);
@@ -38,6 +42,8 @@ class AsyncQueueUI : public AsyncQueue {
   explicit AsyncQueueUI(const std::shared_ptr<UIScheduler> &uiScheduler);
 
   ~AsyncQueueUI() override = default;
+
+  using AsyncQueue::push;
 
   void push(std::function<void()> &&job) override;
 

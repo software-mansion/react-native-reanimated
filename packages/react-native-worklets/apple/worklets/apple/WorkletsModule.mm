@@ -1,12 +1,14 @@
-#import <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#import <worklets/NativeModules/WorkletsModuleProxyInitializer.h>
+#import <worklets/Tools/JSScheduler.h>
 #import <worklets/Tools/RNRuntimeStatus.h>
-#import <worklets/Tools/ScriptBuffer.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
-#import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
+#import <worklets/WorkletRuntime/BundleModeConfig.h>
+#import <worklets/WorkletRuntime/RuntimeBindings.h>
 #import <worklets/apple/AnimationFrameQueue.h>
 #import <worklets/apple/AssertJavaScriptQueue.h>
 #import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/IOSUIScheduler.h>
+#import <worklets/apple/Networking/AppleNetworkingBackend.h>
 #import <worklets/apple/ScriptLoader.h>
 #import <worklets/apple/WorkletsModule.h>
 
@@ -15,11 +17,8 @@
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
 
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-#import <React/RCTNetworking.h>
-#import <ReactCommon/RCTTurboModule.h>
-#import <worklets/apple/Networking/WorkletsNetworking.h>
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
+#import <memory>
+#import <string>
 
 using namespace worklets;
 
@@ -27,13 +26,24 @@ using namespace worklets;
 - (void *)runtime;
 @end
 
+namespace {
+
+BundleModeConfig makeBundleModeConfig(NSURL *bundleURL)
+{
+  return BundleModeConfig{
+      .enabled = true,
+      .script = getScript(bundleURL),
+      .sourceURL = bundleURL != nil ? std::string([[bundleURL absoluteString] UTF8String]) : std::string{}};
+}
+
+} // namespace
+
 @implementation WorkletsModule {
   AnimationFrameQueue *animationFrameQueue_;
-  std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+  std::shared_ptr<IOSUIScheduler> uiScheduler_;
   std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-  WorkletsNetworking *workletsNetworking_;
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
+  std::shared_ptr<WorkletsModuleProxyInitializer> initializer_;
+  std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -45,13 +55,34 @@ using namespace worklets;
   return workletsModuleProxy_;
 }
 
+@synthesize bridge = _bridge;
 @synthesize bundleManager = bundleManager_;
 @synthesize callInvoker = callInvoker_;
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-@synthesize moduleRegistry = moduleRegistry_;
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
 RCT_EXPORT_MODULE(WorkletsModule);
+
+- (void)initialize
+{
+  [self createPlatformObjects];
+  [self createInitializer];
+
+  const auto initializer = initializer_;
+  dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{ initializer->prepareProxy(); });
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(prepareBundleMode)
+{
+  AssertJavaScriptQueue();
+
+  initializer_->beginBundleModeAOT();
+
+  const auto initializer = initializer_;
+  const auto loadBundleModeConfig = [self makeBundleModeConfigLoader];
+  dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+    initializer->prepareBundleModeAOT(loadBundleModeConfig);
+  });
+  return @YES;
+}
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnabled)
 {
@@ -61,39 +92,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
   AssertJavaScriptQueue();
 
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
-
-  std::string sourceURL = "";
-  std::shared_ptr<const ScriptBuffer> script = nullptr;
-
-  if (bundleModeEnabled) {
-    NSURL *url = bundleManager_.bundleURL;
-    script = getScript(url);
-    sourceURL = [[url absoluteString] UTF8String];
-  }
-
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-  id networkingModule = [moduleRegistry_ moduleForClass:RCTNetworking.class];
-  workletsNetworking_ = [[WorkletsNetworking alloc] init:networkingModule];
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
-
-  auto jsCallInvoker = callInvoker_.callInvoker;
-  auto uiScheduler = std::make_shared<IOSUIScheduler>();
-  auto isJavaScriptQueue = []() -> bool {
-    return IsJavaScriptQueue();
-  };
-  animationFrameQueue_ = [AnimationFrameQueue new];
-  auto runtimeBindings = [self getRuntimeBindings:rnRuntime bundleModeEnabled:bundleModeEnabled];
-  rnRuntimeStatus_ = std::make_shared<RNRuntimeStatus>();
-
-  workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime,
-      jsCallInvoker,
-      uiScheduler,
-      std::move(isJavaScriptQueue),
-      runtimeBindings,
-      BundleModeConfig{.enabled = static_cast<bool>(bundleModeEnabled), .script = script, .sourceURL = sourceURL},
-      rnRuntimeStatus_);
-
+  workletsModuleProxy_ =
+      initializer_->finalize(rnRuntime, static_cast<bool>(bundleModeEnabled), [self makeBundleModeConfigLoader]);
   return @YES;
 }
 
@@ -118,9 +118,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
   if (rnRuntimeStatus_) {
     rnRuntimeStatus_->setDead();
   }
+  if (initializer_) {
+    initializer_->invalidate();
+    initializer_.reset();
+  }
   workletsModuleProxy_.reset();
-
-  [super invalidate];
 }
 
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
@@ -130,36 +132,42 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
   return std::make_shared<facebook::react::NativeWorkletsModuleSpecJSI>(params);
 }
 
-- (std::shared_ptr<RuntimeBindings>)getRuntimeBindings:(jsi::Runtime &)rnRuntime
-                                     bundleModeEnabled:(BOOL)bundleModeEnabled
+- (void)createPlatformObjects
+{
+  animationFrameQueue_ = [AnimationFrameQueue new];
+  uiScheduler_ = std::make_shared<IOSUIScheduler>();
+  rnRuntimeStatus_ = std::make_shared<RNRuntimeStatus>();
+}
+
+- (void)createInitializer
+{
+  react_native_assert(self.bridge != nullptr);
+  react_native_assert(self.bridge.runtime != nullptr);
+
+  jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
+  const auto jsScheduler =
+      std::make_shared<JSScheduler>(rnRuntime, callInvoker_.callInvoker, []() -> bool { return IsJavaScriptQueue(); });
+  initializer_ = std::make_shared<WorkletsModuleProxyInitializer>(
+      jsScheduler, uiScheduler_, [self getRuntimeBindings], rnRuntimeStatus_);
+}
+
+- (WorkletsModuleProxyInitializer::BundleModeConfigLoader)makeBundleModeConfigLoader
+{
+  NSURL *bundleURL = bundleManager_.bundleURL;
+  return [bundleURL] {
+    return makeBundleModeConfig(bundleURL);
+  };
+}
+
+- (std::shared_ptr<RuntimeBindings>)getRuntimeBindings
 {
   return std::make_shared<RuntimeBindings>(RuntimeBindings{
       .requestAnimationFrame = [animationFrameQueue =
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
       },
-      .nativeLoggingHook =
-          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{}
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-      ,
-      .abortRequest =
-          [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, const jsi::Value &requestID) {
-            [workletsNetworking jsiAbortRequest:requestID.asNumber()];
-            return jsi::Value::undefined();
-          },
-      .clearCookies =
-          [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, jsi::Function &&responseSender) {
-            [workletsNetworking jsiClearCookies:rt responseSender:(std::move(responseSender))];
-            return jsi::Value::undefined();
-          },
-      .sendRequest =
-          [workletsNetworking = workletsNetworking_](
-              jsi::Runtime &rt, const jsi::Value &query, jsi::Function &&responseSender) {
-            [workletsNetworking jsiSendRequest:rt jquery:query responseSender:(std::move(responseSender))];
-            return jsi::Value::undefined();
-          }
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
-  });
+      .nativeLoggingHook = makeNativeLoggingHook(),
+      .networkingBackend = std::make_shared<AppleNetworkingBackend>()});
 }
 
 @end

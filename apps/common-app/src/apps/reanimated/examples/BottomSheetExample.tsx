@@ -1,6 +1,6 @@
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import React, { useCallback, useRef } from 'react';
 import { StyleSheet, Text } from 'react-native';
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 
 export default function BottomSheetExample() {
   const bottomSheetRef = useRef<BottomSheet>(null);
