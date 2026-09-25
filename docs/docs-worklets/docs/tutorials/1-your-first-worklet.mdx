@@ -11,16 +11,17 @@ import FirstWorkletArgsSource from '!!raw-loader!./_your-first-worklet/firstWork
 
 # Your first worklet
 
-In this chapter we'll learn the basics of dispatching your JavaScript code to [Worklet
-Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime) to execute in parallel, using worklet
+In this chapter we'll learn the basics of dispatching your JavaScript code to
+[Worklet Runtimes](/docs/concepts/runtimeKinds#worklet-runtime) to execute in parallel, using
+worklet
 functions. We strongly recommend you to become acknowledged with the
 [concurrency-model](/docs/tutorials/concurrency-model) before continuing.
 
 ## Creating a Worklet Runtime
 
 To actually dispatch some multithreading work, we need another Worklet Runtime as a target. We can
-either use the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime) which is always available,
-or create our own [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime) with
+either use the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime) which is always available,
+or create our own [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime) with
 [`createWorkletRuntime`](/docs/threading/createWorkletRuntime) function.
 
 ```js
@@ -74,8 +75,9 @@ for a given method invocation.
 ## Autoworkletization
 
 In previous code snippets we always marked worklet functions with the `'worklet'` directive.
-However, in most cases you can omit the directive. Worklets Babel plugin [automatically
-detects](/docs/worklets-babel-plugin/about#automatic-workletization) which functions should be
+However, in most cases you can omit the directive. Worklets Babel plugin
+[automatically detects](/docs/worklets-babel-plugin/about#autoworkletization) which functions should
+be
 treated as worklet functions and applies the transformation regardless. In the future examples we
 will omit the directive whenever applicable.
 

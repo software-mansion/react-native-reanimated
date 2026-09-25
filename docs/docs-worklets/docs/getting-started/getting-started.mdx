@@ -1,5 +1,6 @@
 ---
-sidebar_position: 1
+slug: /
+displayed_sidebar: guides
 hide_table_of_contents: true
 ---
 
@@ -16,7 +17,7 @@ import ShowcaseSingleSource from '!!raw-loader!./_getting-started/showcaseSingle
 
 React Native Worklets is a library that allows you to run JavaScript code in parallel on multiple threads and runtimes.
 
-To learn more, explore our tutorials section, starting with the explanation for the [purpose](/docs/tutorials/purpose) of the library.
+To learn more, explore our tutorials section, starting with the explanation for the [purpose](/docs/tutorials/concurrency-model) of the library.
 
 <ThreadingShowcase single={{ module: ShowcaseSingleSnippet, source: ShowcaseSingleSource }} worklets={{ module: ShowcaseSnippet, source: ShowcaseSource }}/>
 
@@ -111,7 +112,7 @@ The remaining steps depend on how you build your app — pick your framework:
     <details>
       <summary>Why do I need this?</summary>
 
-      In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime)
+      In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklets](/docs/tutorials/concurrency-model#worklet-functions)) to allow them to be passed and run on the [Worklet Runtimes](/docs/concepts/runtimeKinds#worklet-runtime)
 
       To learn more about the plugin go to [Worklets babel plugin](/docs/worklets-babel-plugin/about) section.
     </details>

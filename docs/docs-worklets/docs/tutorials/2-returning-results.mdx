@@ -41,8 +41,9 @@ value synchronously in future sections.
 ## Asynchronously
 
 For asynchronous returns, i.e. results of complex calculations, you can use
-[`runOnUIAsync`](/docs/worklets/runOnUIAsync) and
-[`runOnRuntimeAsync`](/docs/worklets/runOnRuntimeAsync) functions. They return an awaitable promise.
+[`runOnUIAsync`](/docs/threading/runOnUIAsync) and
+[`runOnRuntimeAsync`](/docs/threading/runOnRuntimeAsync) functions. They return an awaitable
+promise.
 
 Remember that [`scheduleOnUI`](/docs/threading/scheduleOnUI) and
 [`scheduleOnRuntime`](/docs/threading/scheduleOnRuntime) functions do not return a value.

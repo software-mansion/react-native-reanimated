@@ -44,7 +44,8 @@ function pin(names) {
   return names
     .map(
       (name) =>
-        `Object.defineProperty(${name}, 'name', { value: '${name}', configurable: true });`
+        `Object.defineProperty(${name}, 'name', { value: '${name}', configurable: true });` +
+        `Object.defineProperty(${name}.prototype, Symbol.for('worklets.snippetFn'), { value: ${name}, configurable: true });`
     )
     .join('\n');
 }

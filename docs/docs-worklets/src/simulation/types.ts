@@ -82,6 +82,7 @@ export interface SharedCell {
   kind: MemoryKind;
   value: unknown;
   host: CoreId | null;
+  guests: Set<CoreId>;
   accessedBy: CoreId | null;
   accessTick: number;
   createdAtTick: number;
@@ -92,6 +93,7 @@ export interface MemorySnapshot {
   kind: MemoryKind;
   value: string;
   host: CoreId | null;
+  guests: CoreId[];
   accessedBy: CoreId | null;
 }
 

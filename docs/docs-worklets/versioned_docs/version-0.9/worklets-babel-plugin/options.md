@@ -213,7 +213,7 @@ We highly recommend enabling this option as it will be enabled by default in the
 
 Defaults to `false`.
 
-This option changes how global variables are handled inside worklets. You can read more about closures and global scoping [here](/docs/fundamentals/closures#global-scoping).
+This option changes how global variables are handled inside worklets. You can read more about closures and global scoping [here](/docs/0.9/fundamentals/closures#global-scoping).
 
 With this option disabled, accessing global variables inside worklets will lead to capturing them from the scheduler scope:
 

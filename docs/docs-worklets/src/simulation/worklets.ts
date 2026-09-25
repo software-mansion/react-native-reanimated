@@ -120,6 +120,8 @@ export function setTimeout(callback: () => unknown, ms = 0): number {
   return dispatch('setTimeout', [callback, ms]) as number;
 }
 
+export const UIRuntimeId = 1;
+
 export function requestAnimationFrame(callback: () => unknown): number {
   return dispatch('setTimeout', [callback, FRAME_MS]) as number;
 }

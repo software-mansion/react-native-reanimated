@@ -4,7 +4,7 @@ sidebar_position: 42 # Use alphabetical order
 
 # runOnUIAsync
 
-`runOnUIAsync` lets you asynchronously run [workletized](/docs/fundamentals/glossary#to-workletize) functions on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+`runOnUIAsync` lets you asynchronously run [workletized](/docs/worklets-babel-plugin/about#autoworkletization) functions on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model).
 It returns a Promise of the worklet's return value. The Promise is resolved asynchronously, not immediately after the callback execution.
 
 To compare it with [`scheduleOnUI`](/docs/threading/scheduleOnUI) and [`runOnUISync`](/docs/threading/runOnUISync), see [Running worklets on the UI runtime](/docs/guides/running-on-the-ui-runtime).
@@ -44,7 +44,7 @@ A reference to a function you want to execute on the UI thread. Arguments to you
 
 - It's a common mistake to execute function inside of `runOnUIAsync` like this: ~~`runOnUIAsync(myWorklet(10))`~~. Here, the correct usage would be `runOnUIAsync(myWorklet, 10)`.
 
-- The callback passed as the argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ready to be run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+- The callback passed as the argument is automatically [workletized](/docs/worklets-babel-plugin/about#autoworkletization) and ready to be run on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model).
 
 ## Call table
 

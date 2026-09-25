@@ -1440,6 +1440,16 @@
   background-color: var(--rt-fill);
 }
 
+.shareableGuest {
+  border-style: dashed;
+}
+
+.shareableHost {
+  font-family: var(--swm-code-font, var(--ifm-font-family-monospace));
+  font-size: 0.72rem;
+  color: var(--sim-muted);
+}
+
 .shareableLabel {
   font-size: 0.62rem;
   text-transform: uppercase;

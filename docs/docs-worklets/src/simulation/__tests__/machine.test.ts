@@ -776,6 +776,7 @@ describe('Machine semantics', () => {
     const last = snapshots[snapshots.length - 1];
     assert.equal(last.memory[0].kind, 'shareable');
     assert.equal(last.memory[0].host, 'worker:worker');
+    assert.deepEqual(last.memory[0].guests, ['rn']);
   });
 
   it('a Synchronizable is written by the worker and read by RN without a cross-runtime call', () => {

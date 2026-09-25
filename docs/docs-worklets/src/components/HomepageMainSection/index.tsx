@@ -19,7 +19,7 @@ export default function HomepageMainSection(): JSX.Element {
       <div className={styles.buttons}>
         <HomepageButton
           title="Get started"
-          href="/react-native-worklets/docs/getting-started"
+          href="/react-native-worklets/docs/"
         />
         <HomepageButton
           hideArrow

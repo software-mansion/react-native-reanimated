@@ -15,18 +15,18 @@ and draws them on screen.
 
 Your JavaScript doesn't run there. At startup, the native app spawns a separate thread, the
 **JavaScript thread** (JS thread), and a [Hermes](https://reactnative.dev/docs/hermes) JavaScript
-Virtual Machine (JSVM), also called a **JavaScript Runtime**. We'll call this Runtime the [React
-Native Runtime](/docs/fundamentals/runtimeKinds#rn-runtime). Then, it delegates the execution of
-your JavaScript Bundle to the JS thread and running its [event
-loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model#agent_execution_model)
+Virtual Machine (JSVM), also called a **JavaScript Runtime**. We'll call this Runtime the
+[React Native Runtime](/docs/concepts/runtimeKinds#rn-runtime). Then, it delegates the execution of
+your JavaScript Bundle to the JS thread and running its
+[event loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model#agent_execution_model)
 there.
 
 The JS thread executes all of your app's JavaScript code — your React components, your business
 logic, your event handlers. Its job is to figure out what the screen should look like and tell the
 UI thread how to render it.
 
-This split is what the official docs call the [threading
-model](https://reactnative.dev/architecture/threading-model).
+This split is what the official docs call the
+[threading model](https://reactnative.dev/architecture/threading-model).
 
 <ThreadingDiagram/>
 
@@ -69,8 +69,9 @@ busy JS thread:
 ## Overcoming limitations
 
 To solve this issue, we have to somehow move the execution of the UI-critical parts of our app off
-the JS thread. We can't use a [native
-module](https://reactnative.dev/docs/turbo-native-modules-introduction) if we want to keep our logic
+the JS thread. We can't use a
+[native module](https://reactnative.dev/docs/turbo-native-modules-introduction) if we want to keep
+our logic
 purely in JavaScript code. We can't forcefully run some JavaScript code on the UI thread
 concurrently with the RN Runtime. JavaScript Runtimes are single-threaded by design and doing do
 would result in an immediate crash.
@@ -83,7 +84,7 @@ RN Runtime to the new Runtime.
 </ImagePlaceholder>
 
 Now, when the event comes, we can synchronously handle it on the UI thread, using our new Runtime.
-This is exactly the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime) that Worklets library
+This is exactly the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime) that Worklets library
 exposes.
 
 <ImagePlaceholder>
@@ -127,8 +128,9 @@ function myWorklet() {
 }
 ```
 
-Functions marked with the directive are transformed with the [Worklets Babel
-plugin](/docs/worklets-babel-plugin), in a process we call **workletization**, into special entities
+Functions marked with the directive are transformed with the
+[Worklets Babel plugin](/docs/worklets-babel-plugin/about), in a process we call **workletization**,
+into special entities
 that are safe to be juggled between JavaScript runtimes.
 
 It's time to learn how to use these worklet functions — in the next chapter.

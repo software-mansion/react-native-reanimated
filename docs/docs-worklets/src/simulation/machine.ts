@@ -57,6 +57,7 @@ export const CORE_SPECS: CoreSpec[] = [
 export const DEFAULT_MAX_TICKS = 1000;
 export const DEFAULT_MAX_DEPTH = 32;
 const HIDDEN_STEP_LIMIT = 100;
+const SNIPPET_FN_TAG = Symbol.for('worklets.snippetFn');
 
 const BUNDLE_MODE_GUARD_MESSAGE =
   '[Worklets] scheduleOnUI cannot be called on Worklet Runtimes outside of the Bundle Mode.';
@@ -225,6 +226,7 @@ export class Machine {
         kind: cell.kind,
         value: formatValue(cell.value),
         host: cell.host,
+        guests: [...cell.guests],
         accessedBy: cell.accessTick === this.tickCount ? cell.accessedBy : null,
       }));
   }
@@ -379,6 +381,7 @@ export class Machine {
     }
     if (api === 'shareableGetSync') {
       const cell = this.cell(args[0]);
+      this.addGuest(core, cell);
       return this.acquireRuntime(core, cell.host!, [
         this.readShareable,
         cell.id,
@@ -386,6 +389,9 @@ export class Machine {
     }
     if (api === 'shareableGetAsync') {
       const cell = this.cell(args[0]);
+      this.addGuest(core, cell);
+      cell.accessedBy = core.spec.id;
+      cell.accessTick = this.tickCount;
       return this.scheduleAsync(
         core,
         'runOnRuntimeAsync',
@@ -483,7 +489,7 @@ export class Machine {
         'a setTimeout callback must call an exported snippet function'
       );
     }
-    const fn = this.snippet.protoToFn.get(Object.getPrototypeOf(gen) as object);
+    const fn = this.fnOfGenerator(gen as object);
     if (fn === undefined) {
       throw new SnippetError(
         'a setTimeout callback must call an exported snippet function'
@@ -522,9 +528,7 @@ export class Machine {
       if (!isGeneratorObject(gen)) {
         continue;
       }
-      const fn = this.snippet.protoToFn.get(
-        Object.getPrototypeOf(gen) as object
-      );
+      const fn = this.fnOfGenerator(gen as object);
       if (fn === undefined) {
         this.fail(
           core,
@@ -583,16 +587,28 @@ export class Machine {
     initial: unknown
   ): number {
     const id = this.nextCellId++;
-    this.shared.set(id, {
+    const cell: SharedCell = {
       id,
       kind,
       value: cloneArgs([initial])[0],
       host,
+      guests: new Set(),
       accessedBy: core.spec.id,
       accessTick: this.tickCount,
       createdAtTick: this.tickCount,
-    });
+    };
+    this.shared.set(id, cell);
+    if (kind === 'shareable') {
+      this.addGuest(core, cell);
+    }
     return id;
+  }
+
+  private addGuest(core: CoreState, cell: SharedCell): void {
+    const runtime = this.currentRuntime(core);
+    if (runtime !== null && runtime !== cell.host) {
+      cell.guests.add(runtime);
+    }
   }
 
   private readCell(core: CoreState, id: unknown): unknown {
@@ -632,6 +648,17 @@ export class Machine {
         'a Shareable value can be accessed directly only on its Host Runtime; use getSync or getAsync on Guest Runtimes'
       );
     }
+  }
+
+  private fnOfGenerator(gen: object): SnippetFn | undefined {
+    const known = this.snippet.protoToFn.get(
+      Object.getPrototypeOf(gen) as object
+    );
+    if (known !== undefined) {
+      return known;
+    }
+    const tagged = (gen as Record<symbol, unknown>)[SNIPPET_FN_TAG];
+    return this.registerFn(tagged) ? tagged : undefined;
   }
 
   private registerFn(fn: unknown): fn is SnippetFn {
@@ -710,7 +737,7 @@ export class Machine {
       );
       return;
     }
-    const fn = this.snippet.protoToFn.get(Object.getPrototypeOf(gen) as object);
+    const fn = this.fnOfGenerator(gen as object);
     if (fn === undefined) {
       this.fail(
         core,
@@ -1182,9 +1209,7 @@ export class Machine {
       return;
     }
     if (isGeneratorObject(result.value)) {
-      const callee = this.snippet.protoToFn.get(
-        Object.getPrototypeOf(result.value) as object
-      );
+      const callee = this.fnOfGenerator(result.value as object);
       if (callee === undefined) {
         this.fail(
           core,
@@ -1277,9 +1302,7 @@ export class Machine {
         continue;
       }
       if (isGeneratorObject(result.value)) {
-        const callee = this.snippet.protoToFn.get(
-          Object.getPrototypeOf(result.value) as object
-        );
+        const callee = this.fnOfGenerator(result.value as object);
         if (callee === undefined) {
           this.fail(
             core,

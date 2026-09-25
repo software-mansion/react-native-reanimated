@@ -77,12 +77,13 @@ State (in addition to the resource state): value, last accessing thread.
 
 ### Shareable
 
-A value that lives in its host runtime. It is not a resource of its own: the
-host runtime is. `value` is readable and writable only by the thread holding
-the host runtime. `getSync` requests the host runtime; `getAsync` schedules an
+A value that lives in its **host** runtime. It is not a resource of its own:
+the host runtime is. `value` is readable and writable only by the thread
+holding the host runtime. Every other runtime that created it or read it holds
+a **guest** handle. `getSync` requests the host runtime; `getAsync` schedules an
 internal job on the host runtime and returns a promise.
 
-State: value, host, last accessing thread.
+State: value, host, guests, last accessing thread.
 
 ### Job
 
@@ -224,7 +225,8 @@ The snapshot is derived from the committed state:
 
 - Each thread reports the resources it holds, the resource it waits for, the
   line it executed, and its native queue if it has one.
-- Each runtime reports its holder, its globals and the Shareables it hosts.
+- Each runtime reports its holder, its globals, the Shareables it hosts and
+  the Shareable guests it holds.
 - Each event loop reports its holder and its contents: queued jobs, pending
   timers (by due time), suspended jobs (marked `awaiting`).
 - Synchronizables and Shareables report which thread accessed them this

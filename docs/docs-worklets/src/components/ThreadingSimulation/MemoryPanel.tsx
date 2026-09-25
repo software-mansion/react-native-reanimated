@@ -58,6 +58,10 @@ export default function MemoryPanel({
           const shareables = memory.filter(
             (cell) => cell.kind === 'shareable' && cell.host === runtime.id
           );
+          const guests = memory.filter(
+            (cell) =>
+              cell.kind === 'shareable' && cell.guests.includes(runtime.id)
+          );
           const placeholder = !present.has(runtime.id);
           const driving =
             running && executor !== undefined && executor.id === runtime.id;
@@ -112,9 +116,34 @@ export default function MemoryPanel({
                         accessor !== undefined && runtimeClass(accessor),
                         accessor !== undefined && styles.shareableActive
                       )}
-                      data-help="A Shareable: a value living in this host runtime. Other threads read it with getSync (borrowing the runtime) or getAsync (a job on the host).">
-                      <span className={styles.shareableLabel}>Shareable</span>
+                      data-help="A Shareable Host: the value lives in this runtime. Only the thread holding this runtime reads or writes it directly.">
+                      <span className={styles.shareableLabel}>
+                        Shareable Host
+                      </span>
                       <span className={styles.cellNumber}>{cell.value}</span>
+                    </span>
+                  );
+                })}
+                {guests.map((cell) => {
+                  const accessor = accessorOf(cell);
+                  const active =
+                    accessor !== undefined && accessor.id === runtime.id;
+                  return (
+                    <span
+                      key={`guest-${cell.id}`}
+                      className={clsx(
+                        styles.shareable,
+                        styles.shareableGuest,
+                        active && runtimeClass(accessor),
+                        active && styles.shareableActive
+                      )}
+                      data-help={`A Shareable Guest: a handle to the value hosted on the ${badgeName(cell.host!)} Runtime. This runtime reads it with getSync (borrowing the host) or getAsync (a job on the host).`}>
+                      <span className={styles.shareableLabel}>
+                        Shareable Guest
+                      </span>
+                      <span className={styles.shareableHost}>
+                        {badgeName(cell.host!)}
+                      </span>
                     </span>
                   );
                 })}

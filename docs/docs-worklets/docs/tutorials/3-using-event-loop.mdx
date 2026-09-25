@@ -12,17 +12,20 @@ applications of worklet functions.
 
 ## Event loops in React Native
 
-The event loops available in React Native are similar to the ones [in the
-browser](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model). All
+The event loops available in React Native are similar to the ones
+[in the browser](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model).
+All
 functions to use the event loop, like `setTimeout` or `requestAnimationFrame` are available on the
-[RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) and [Worklet
-Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime), but they might behave slightly different
+[RN Runtime](/docs/concepts/runtimeKinds#rn-runtime) and
+[Worklet Runtimes](/docs/concepts/runtimeKinds#worklet-runtime), but they might behave slightly
+different
 based on the context.
 
 ## RN Runtime
 
-The RN Runtime's event loop is handled solely by the [RN JS
-thread](https://reactnative.dev/architecture/threading-model). This means, unlike in the browser,
+The RN Runtime's event loop is handled solely by the
+[RN JS thread](https://reactnative.dev/architecture/threading-model). This means, unlike in the
+browser,
 this Runtime's event loop _is not tied to the native rendering layer_ and
 [`requestAnimationFrame`](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame)
 is polyfilled with a periodic timer.
@@ -59,8 +62,9 @@ once per 16ms, assuming no frame drops.
 For a Worker Runtime that runs on its dedicated thread, it's very similar to the RN Runtime. It's
 `requestAnimationFrame` queue is polyfilled with a periodic timer.
 
-For advanced use cases, you can create a Worker Runtime [without an event
-loop](/docs/threading/createWorkletRuntime#enableeventloop) and then implement it yourself.
+For advanced use cases, you can create a Worker Runtime
+[without an event loop](/docs/threading/createWorkletRuntime#enableeventloop) and then implement it
+yourself.
 
 {/* TODO: code snippet showing how to use Worker Runtime timers */}
 

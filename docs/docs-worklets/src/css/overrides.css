@@ -228,3 +228,79 @@ footer .footer__bottom [class*='footer__copyright'] p a[data-privacy-policy] {
 [class*='_badge_'][class*='_deprecated_'] {
   display: none;
 }
+
+.theme-doc-sidebar-menu .sidebar-section {
+  margin: 0;
+}
+
+.theme-doc-sidebar-menu .sidebar-section > .menu__link,
+.theme-doc-sidebar-menu .sidebar-section > .sidebar-section-button {
+  display: block;
+  width: calc(100% + 20px);
+  margin: 0 0 4px -10px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.25;
+  text-align: left;
+  color: var(--ifm-font-color-base);
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+
+.theme-doc-sidebar-menu .sidebar-section > .sidebar-section-button:hover {
+  color: var(--ifm-link-color);
+}
+
+.theme-doc-sidebar-menu .menu__list-item.sidebar-section--active > a.menu__link,
+.theme-doc-sidebar-menu
+  .menu__list-item.sidebar-section--active
+  > a.menu__link:hover,
+.theme-doc-sidebar-menu .sidebar-section--active > .sidebar-section-button {
+  color: var(--ifm-link-color) !important;
+  background-color: color-mix(in srgb, var(--ifm-link-color) 14%, transparent);
+}
+
+.theme-doc-sidebar-menu .sidebar-section-divider {
+  margin: 8px 0 12px;
+}
+
+.theme-doc-sidebar-menu .sidebar-section-divider > hr {
+  height: 1px;
+  margin: 0;
+  border: none;
+  background-color: var(--ifm-color-emphasis-300);
+}
+
+/* Code blocks on pages share the look of the threading simulation's code panel. */
+:root {
+  --swm-code-panel: #ffffff;
+  --swm-code-panel-border: #87cce8;
+}
+
+[data-theme='dark'] {
+  --swm-code-panel: #1e2c3a;
+  --swm-code-panel-border: #3f7c99;
+}
+
+.theme-code-block {
+  --prism-background-color: var(--swm-code-panel);
+  border: 2px solid var(--swm-code-panel-border);
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.theme-code-block pre,
+.theme-code-block code {
+  font-family: var(--swm-code-font, var(--ifm-font-family-monospace));
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.theme-code-block pre {
+  padding: 10px 12px;
+}
