@@ -134,12 +134,12 @@ void LayoutAnimationsProxy_Legacy::reconcileContradictedRemovals(
   }
 }
 
-// On android mutations that alter the view hierarchy are only produced on the JS thread (the push model), so to not
-// race with those, we apply the dead nodes cleanup only on the JS thread, unless there is a surface drop, in which case
-// we can safely cleanup on the UI thread since the surface is gone and no more mutations will be produced for it.
+// With Android's push model, structural mutations from the JS thread may still be waiting to mount when a UI-thread
+// pull runs, so dead nodes must be cleaned up on the JS thread. The pull model mounts transactions on the UI thread,
+// where cleanup is safe. A dropped surface can also be cleaned up immediately.
 bool LayoutAnimationsProxy_Legacy::shouldFlushDeadNodes([[maybe_unused]] const bool surfaceDropped) const {
 #ifdef ANDROID
-  return surfaceDropped || !worklets::isOnUIThread(uiScheduler_);
+  return surfaceDropped || isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_);
 #else
   return true;
 #endif
