@@ -219,10 +219,6 @@ const NestedStacksExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedStacks').default
   );
-const NonLayoutPropAndRenderExample: React.FC = () =>
-  React.createElement(
-    require('./NonLayoutPropAndRenderExample').default as React.FC
-  );
 const OverlappingBoxesExample: React.FC = () =>
   React.createElement(require('./OverlappingBoxesExample').default as React.FC);
 const PendulumExample: React.FC = () =>
@@ -561,12 +557,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Layout props',
     section: REGRESSIONS,
     screen: WidthExample,
-  },
-  NonLayoutPropAndRenderExample: {
-    icon: '🎭',
-    title: 'Non-layout prop and render example',
-    section: REGRESSIONS,
-    screen: NonLayoutPropAndRenderExample,
   },
   RefExample: {
     icon: '🦑',
