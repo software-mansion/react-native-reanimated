@@ -18,6 +18,7 @@
   void (^_setter)(double[], int);
 }
 
++ (bool)isAvailable:(ReanimatedSensorType)sensorType;
 - (instancetype)init:(ReanimatedSensorType)sensorType
              interval:(int)interval
     iosReferenceFrame:(int)iosReferenceFrame

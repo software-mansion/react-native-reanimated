@@ -4,14 +4,26 @@ import type { SerializableRef } from 'react-native-worklets';
 import type {
   SensorConfig,
   SensorType,
+  SensorValue,
+  SensorValueMap,
   SharedValue,
-  Value3D,
-  ValueRotation,
 } from './commonTypes';
+import { ReanimatedModule } from './ReanimatedModule';
 import Sensor from './Sensor';
 
 export class SensorContainer {
   private nativeSensors: Map<number, Sensor> = new Map();
+  // The sensors of a device do not change while the app runs.
+  private availability: Map<SensorType, boolean> = new Map();
+
+  isSensorAvailable(sensorType: SensorType): boolean {
+    let isAvailable = this.availability.get(sensorType);
+    if (isAvailable === undefined) {
+      isAvailable = ReanimatedModule.isSensorAvailable(sensorType);
+      this.availability.set(sensorType, isAvailable);
+    }
+    return isAvailable;
+  }
 
   getSensorId(sensorType: SensorType, config: SensorConfig) {
     return (
@@ -21,25 +33,27 @@ export class SensorContainer {
     );
   }
 
-  initializeSensor(
-    sensorType: SensorType,
+  initializeSensor<T extends SensorType>(
+    sensorType: T,
     config: SensorConfig
-  ): SharedValue<Value3D | ValueRotation> {
+  ): SharedValue<SensorValueMap[T]> {
     const sensorId = this.getSensorId(sensorType, config);
 
     if (!this.nativeSensors.has(sensorId)) {
-      const newSensor = new Sensor(sensorType, config);
-      this.nativeSensors.set(sensorId, newSensor);
+      this.nativeSensors.set(
+        sensorId,
+        new Sensor<SensorType>(sensorType, config)
+      );
     }
 
-    const sensor = this.nativeSensors.get(sensorId);
+    const sensor = this.nativeSensors.get(sensorId) as Sensor<T> | undefined;
     return sensor!.getSharedValue();
   }
 
   registerSensor(
     sensorType: SensorType,
     config: SensorConfig,
-    handler: SerializableRef<(data: Value3D | ValueRotation) => void>
+    handler: SerializableRef<(data: SensorValue) => void>
   ): number {
     const sensorId = this.getSensorId(sensorType, config);
 

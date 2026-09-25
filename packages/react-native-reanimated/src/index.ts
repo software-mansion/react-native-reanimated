@@ -78,6 +78,8 @@ export type {
   LayoutAnimationType,
   MeasuredDimensions,
   SensorConfig,
+  SensorValue,
+  SensorValueMap,
   SharedValue,
   StyleProps,
   TransformArrayItem,

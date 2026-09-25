@@ -60,6 +60,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
   void registerEventHandler();
   void maybeFlushUIUpdatesQueue();
   void setGestureState(int handlerTag, int newState);
+  bool isSensorAvailable(int sensorType);
   int registerSensor(int sensorType, int interval, int iosReferenceFrame, std::function<void(double[], int)> setter);
   void unregisterSensor(int sensorId);
   int subscribeForKeyboardEvents(

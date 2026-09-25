@@ -10,11 +10,10 @@ import { IS_JEST } from '../common';
 import type {
   InternalHostInstance,
   LayoutAnimationBatchItem,
+  SensorValue,
   SettledUpdate,
   ShadowNodeWrapper,
   StyleProps,
-  Value3D,
-  ValueRotation,
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
@@ -86,11 +85,15 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
   }
 
+  isSensorAvailable(sensorType: number) {
+    return this.#reanimatedModuleProxy.isSensorAvailable(sensorType);
+  }
+
   registerSensor(
     sensorType: number,
     interval: number,
     iosReferenceFrame: number,
-    handler: SerializableRef<(data: Value3D | ValueRotation) => void>
+    handler: SerializableRef<(data: SensorValue) => void>
   ) {
     return this.#reanimatedModuleProxy.registerSensor(
       sensorType,

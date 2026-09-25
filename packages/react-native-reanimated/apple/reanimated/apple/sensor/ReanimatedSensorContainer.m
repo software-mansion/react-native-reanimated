@@ -14,6 +14,11 @@ static NSNumber *_nextSensorId = nil;
   return self;
 }
 
+- (bool)isSensorAvailable:(ReanimatedSensorType)sensorType
+{
+  return [ReanimatedSensor isAvailable:sensorType];
+}
+
 - (int)registerSensor:(ReanimatedSensorType)sensorType
              interval:(int)interval
     iosReferenceFrame:(int)iosReferenceFrame

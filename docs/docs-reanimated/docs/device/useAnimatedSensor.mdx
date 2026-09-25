@@ -40,10 +40,10 @@ function App() {
   ```typescript
   // --- Function declaration ---
 
-  function useAnimatedSensor(
-    sensorType: SensorType,
+  function useAnimatedSensor<T extends SensorType>(
+    sensorType: T,
     config?: Partial<SensorConfig>
-  ): AnimatedSensor<ValueRotation | Value3D>;
+  ): AnimatedSensor<SensorValueMap[T]>;
 
   // --- Configuration types ---
 
@@ -71,7 +71,17 @@ function App() {
 
   // --- Return types ---
 
-  type AnimatedSensor<T extends Value3D | ValueRotation> = {
+  type SensorValueMap = {
+    [SensorType.ACCELEROMETER]: Value3D;
+    [SensorType.GYROSCOPE]: Value3D;
+    [SensorType.GRAVITY]: Value3D;
+    [SensorType.MAGNETIC_FIELD]: Value3D;
+    [SensorType.ROTATION]: ValueRotation;
+  };
+
+  type SensorValue = SensorValueMap[SensorType];
+
+  type AnimatedSensor<T extends SensorValue> = {
     sensor: SharedValue<T>;
     unregister: () => void;
     isAvailable: boolean;
@@ -143,7 +153,7 @@ You can specify the iOS reference frame using an `IOSReferenceFrame` enum contai
 | ----------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | sensor      | `SharedValue<Value3D｜ValueRotation>` | A [shared value](/docs/fundamentals/glossary#shared-value) containing the sensor measurements. The values returned by the sensor depend on the type of sensor you choose with \[sensor(/docs/docs/device/useAnimatedSensor#sensortype) argument. |
 | unregister  | `() => void`                          | Allows to stop listening to sensor updates on call.                                                                                                                                                                                             |
-| isAvailable | `boolean`                             | Indicates whether sensor is available to use. You won't be able to use a sensor when it's missing from the device or the app doesn't have permission to access it.                                                                              |
+| isAvailable | `boolean`                             | Whether the device has the sensor. It's correct from the first render and doesn't reflect a missing permission.                                                                                                                                 |
 | config      | `SensorConfig`                        | An object containing sensor configuration.                                                                                                                                                                                                      |
 
 The shared value returned from the **rotation sensor** is an object contain Euler angles, a quaternion and an interface orientation:
