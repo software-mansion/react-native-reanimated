@@ -202,3 +202,72 @@ function DrawerWithKeyedContent({ contentKey }: { contentKey: string }) {
     expect(getTestComponent('content').getTag()).not.toBe(tag);
   });
 });
+
+function SwappedPair({ swapped }: { swapped: boolean }) {
+  const first = useTestRef('first');
+  const second = useTestRef('second');
+  return (
+    <View>
+      {[first, second].map((ref, index) => (
+        <View key={index} style={swapped ? styles.wrapper : undefined}>
+          <View style={swapped ? undefined : styles.wrapper}>
+            <Animated.View ref={ref} style={styles.kept} />
+            <View style={styles.dropped} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// At step 2 the flattened wrapper stays in its parent until its Delete, while the parent also loses a
+// sibling below it and still holds the exiting view removed at step 1.
+function SwapBesideRemovals({ step }: { step: number }) {
+  const ref = useTestRef('moved');
+  return (
+    <View>
+      {step === 0 && (
+        <Animated.View
+          exiting={FadeOut.duration(1000)}
+          style={styles.dropped}
+        />
+      )}
+      {step < 2 && <View style={styles.dropped} />}
+      <View style={step === 2 ? styles.wrapper : undefined}>
+        <View style={step === 2 ? undefined : styles.wrapper}>
+          <Animated.View ref={ref} style={styles.kept} />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+describe('Removed subtrees', () => {
+  test('swaps flattening in two wrappers of one parent', async () => {
+    await render(<SwappedPair swapped={false} />);
+    await waitForFrames();
+    const firstTag = getTestComponent('first').getTag();
+    const secondTag = getTestComponent('second').getTag();
+
+    await render(<SwappedPair swapped />);
+    await waitForFrames();
+    await render(<SwappedPair swapped={false} />);
+    await waitForFrames();
+
+    expect(getTestComponent('first').getTag()).toBe(firstTag);
+    expect(getTestComponent('second').getTag()).toBe(secondTag);
+  });
+
+  test('swaps flattening beside a removed sibling and an exiting one', async () => {
+    await render(<SwapBesideRemovals step={0} />);
+    await waitForFrames();
+    const tag = getTestComponent('moved').getTag();
+
+    await render(<SwapBesideRemovals step={1} />);
+    await waitForFrames();
+    await render(<SwapBesideRemovals step={2} />);
+    await wait(1200);
+
+    expect(getTestComponent('moved').getTag()).toBe(tag);
+  });
+});
