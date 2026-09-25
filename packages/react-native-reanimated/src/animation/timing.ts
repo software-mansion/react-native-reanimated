@@ -115,12 +115,8 @@ export const withTiming = function (
         // (see `valueSetter`). An animation started outside a frame flush - from a gesture
         // callback, for instance - takes the second branch and reads the clock at that instant,
         // while the frame that first progresses it passes its vsync timestamp, which is earlier.
-        // The first tick then sees a small negative runtime.
-        //
-        // Re-baseline rather than extrapolate. The easing is only defined on [0, 1], and
-        // `Easing.bezier` in particular solves for t by Newton-Raphson and divides by the curve's
-        // x-derivative, so a curve whose first control point is x1 = 0 has zero derivative at
-        // t = 0 and the solver diverges just outside the domain.
+        // The first tick then sees a small negative runtime. 
+        // This can potentially cause glitches during animations.
         animation.startTime = now;
         runtime = 0;
       }
