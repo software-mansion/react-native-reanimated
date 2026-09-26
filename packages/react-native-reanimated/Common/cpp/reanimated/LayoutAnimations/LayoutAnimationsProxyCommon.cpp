@@ -506,7 +506,11 @@ std::shared_ptr<Serializable> LayoutAnimationsProxyCommon::getRetargetLayoutAnim
 
 bool LayoutAnimationsProxyCommon::updateEnteringAnimationTarget(const Tag tag, const ShadowView &finalView) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  const auto opacity = static_cast<const ViewProps &>(*finalView.props).opacity;
+  // Only ViewKind nodes carry ViewProps. On Android a nested <Text> forms a view whose props are TextProps,
+  // so casting them to ViewProps would read past the end of the smaller object.
+  const auto opacity = finalView.traits.check(ShadowNodeTraits::Trait::ViewKind)
+      ? std::optional<double>(static_cast<const ViewProps &>(*finalView.props).opacity)
+      : std::nullopt;
   if (const auto pendingIt = pendingLayoutAnimations_.find(tag); pendingIt != pendingLayoutAnimations_.end()) {
     if (pendingIt->second.type != LayoutAnimationType::ENTERING) {
       return false;
