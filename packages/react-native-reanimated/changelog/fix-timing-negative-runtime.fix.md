@@ -1,0 +1,2 @@
+Fix `withTiming` extrapolating its easing when the first frame reports a timestamp earlier than the animation's `startTime`, which happens when the animation is started outside a frame flush. With an easing whose first control point is `x1 = 0` the Newton-Raphson solver in `Easing.bezier` diverges just outside its domain, so the animated value could land orders of magnitude out of range for a single frame.
+pr: 10720
