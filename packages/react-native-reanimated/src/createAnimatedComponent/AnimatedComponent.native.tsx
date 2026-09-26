@@ -10,6 +10,7 @@ import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import { getStaticFeatureFlag } from '../featureFlags';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
+import { isSharedValue } from '../isSharedValue';
 import { SharedTransition } from '../layoutReanimation/SharedTransition';
 import { PropsRegistryGarbageCollector } from '../PropsRegistryGarbageCollector';
 import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
@@ -444,6 +445,15 @@ export default class AnimatedComponent
       nativeID = `${this.reanimatedID}`;
     }
 
+    if (
+      this.ChildComponent.displayName === 'Text' &&
+      isSharedValue(this.props.children)
+    ) {
+      filteredProps.children = normalizeTextProp(
+        this.state.settledProps?.children ?? filteredProps.children
+      );
+    }
+
     // TODO: Remove need for this \/\/\/\/.
     // RNSVG expects Gradient elem to have stops passed as children. When we want to animate them,
     // we provide them using `gradient` prop.
@@ -462,6 +472,7 @@ export default class AnimatedComponent
         nativeID,
         ...filteredProps,
         ...this.state.settledProps,
+        children: filteredProps.children,
         style: [...flattenArray(filteredProps.style), this.state.settledStyle],
         ...jestProps,
       });
@@ -494,4 +505,11 @@ function filterOutAnimatedStyles(
       }
       return styleElement;
     });
+}
+
+function normalizeTextProp(text: unknown): string {
+  if (text === '') {
+    return '\u200b'; // use zero-width space when text is empty to prevent collapsing of the Text component
+  }
+  return String(text); // convert numbers to string, keep strings as they are
 }
