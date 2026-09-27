@@ -153,8 +153,8 @@ export default class AnimatedComponent
     // props may be passed as top-level props, all the other ones are
     // style-only.
     const animatedPropsKeys = new Set([
-      ...this._animatedProps.flatMap((animatedProp) =>
-        Object.keys(animatedProp.initial?.value ?? {})
+      ...this._animatedProps.flatMap(
+        (animatedProp) => animatedProp.animatedPropsKeys?.value ?? []
       ),
       ...Object.keys(this._InlinePropManager._inlineTopLevelProps),
     ]);

@@ -6,7 +6,7 @@ import { makeShareable } from 'react-native-worklets';
 import { initialUpdaterRun } from '../animation';
 import { logger } from '../common';
 import type { AnimatedPropsAdapterWorklet } from '../commonTypes';
-import { startMapper, stopMapper } from '../core';
+import { makeMutable, startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type {
@@ -86,12 +86,16 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
         isAnimationCancelled: false,
         isAnimationRunning: false,
       }),
+      animatedPropsKeys: isAnimatedProps
+        ? makeMutable(Object.keys(initialStyle))
+        : undefined,
       viewDescriptors: makeViewDescriptorsSet(),
       styleUpdaterContainer: { current: undefined },
     };
   }
 
-  const { initial, remoteState, viewDescriptors } = animatedUpdaterData.current;
+  const { initial, remoteState, viewDescriptors, animatedPropsKeys } =
+    animatedUpdaterData.current;
   const shareableViewDescriptors = viewDescriptors.shareableViewDescriptors;
 
   dependencies.push(shareableViewDescriptors);
@@ -105,6 +109,22 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
         adaptersArray.forEach((adapter) => {
           adapter(newValues as Record<string, unknown>);
         });
+        return newValues;
+      }) as WorkletFunction<[], Style>;
+    }
+    if (animatedPropsKeys) {
+      // Animated props may return keys that were absent from the initial run.
+      // Settled updates are sorted into props or style by these keys.
+      const propsUpdater = updaterFn;
+      updaterFn = (() => {
+        'worklet';
+        const newValues = propsUpdater();
+        const newKeys = Object.keys(newValues).filter(
+          (key) => !animatedPropsKeys.value.includes(key)
+        );
+        if (newKeys.length > 0) {
+          animatedPropsKeys.value = [...animatedPropsKeys.value, ...newKeys];
+        }
         return newValues;
       }) as WorkletFunction<[], Style>;
     }
@@ -152,6 +172,7 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
       {
         viewDescriptors,
         initial,
+        animatedPropsKeys,
       },
       styleUpdaterContainer
     );

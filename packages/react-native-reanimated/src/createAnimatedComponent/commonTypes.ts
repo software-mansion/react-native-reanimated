@@ -19,6 +19,7 @@ import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 export interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;
   initial?: SharedValue<StyleProps>;
+  animatedPropsKeys?: SharedValue<string[]>;
   styleUpdaterContainer?: StyleUpdaterContainer;
 }
 

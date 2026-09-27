@@ -47,6 +47,7 @@ export interface AnimatedUpdaterData {
   };
   remoteState: AnimatedState;
   viewDescriptors: ViewDescriptorsSet;
+  animatedPropsKeys?: SharedValue<string[]>;
   styleUpdaterContainer: StyleUpdaterContainer;
 }
 
