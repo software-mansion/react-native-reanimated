@@ -1,112 +1,71 @@
 'use strict';
 
-import { mockedRequestAnimationFrame } from './runLoop/uiRuntime/mockedRequestAnimationFrame';
+import { NOOP } from './common';
 import { RuntimeKind } from './runtimeKind';
-import { isWorkletFunction } from './workletFunction';
 
-const NOOP = () => {};
-const NOOP_FACTORY = () => NOOP;
-const UI_RUNTIME_HOLDER = {};
-const UI_SCHEDULER_HOLDER = {};
-const ID = <TValue>(value: TValue) => value;
-const IMMEDIATE_CALLBACK_INVOCATION = <TCallback>(callback: () => TCallback) =>
-  callback();
+const IMMEDIATE_CALLBACK_INVOCATION = (
+  _runtimeOrWorklet: unknown,
+  workletOrUndefined?: (...args: unknown[]) => unknown
+) => {
+  if (typeof _runtimeOrWorklet === 'function') {
+    _runtimeOrWorklet();
+  }
+  if (typeof workletOrUndefined === 'function') {
+    workletOrUndefined();
+  }
+};
 
-globalThis._WORKLET = false;
-globalThis.__RUNTIME_KIND = RuntimeKind.ReactNative;
-globalThis._log = console.log;
-globalThis._getAnimationTimestamp = () => performance.now();
-// requestAnimationFrame react-native jest's setup is incorrect as it polyfills
-// the method directly using setTimeout, therefore the callback doesn't get the
-// expected timestamp as the only argument.
-// We override this setup here to make sure that callbacks get the proper timestamps
-// when executed. For non-jest environments we define requestAnimationFrame in setupRequestAnimationFrame
-// @ts-ignore TypeScript uses Node definition for rAF, setTimeout, etc which returns a Timeout object rather than a number
-globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
+const mockedRequestAnimationFrame = (callback: () => void) => {
+  return setTimeout(callback, 16); // 60 fps -> 16.6 ms
+};
 
+/**
+ * JS-only mock of the Worklets public API for Jest and Node environments.
+ *
+ * `packages/react-native-worklets/src/index.ts` is the single source of truth
+ * for the public API surface.
+ */
 const WorkletAPI = {
-  callMicrotasks: NOOP,
-  createSerializable: ID,
-  createShareable<TValue>(_hostRuntimeId: number, initial: TValue) {
-    let value = initial;
-    const set = (next: TValue | ((prev: TValue) => TValue)) => {
-      value =
-        typeof next === 'function'
-          ? (next as (prev: TValue) => TValue)(value)
-          : next;
-    };
-    return {
-      isHost: false,
-      __shareableRef: true,
-      getAsync: () => Promise.resolve(value),
-      getSync: () => value,
-      setAsync: set,
-      setSync: set,
-    };
-  },
-  createSynchronizable: <TValue>(
-    initialValue: TValue,
-    config?: { fixedType?: boolean }
+  createSerializable: (value: unknown) => value,
+  createSynchronizable: (value: unknown) => value,
+  createWorkletRuntime: (
+    name?: string,
+    initializer?: () => void,
+    _useDefaultQueue?: boolean,
+    _customQueue?: object,
+    _enableEventLoop?: boolean,
+    _enableLocking?: boolean,
+    _enableNetworking?: boolean
   ) => {
-    let value = initialValue;
-    const synchronizable = {
-      __synchronizableRef: true,
-      getDirty: () => value,
-      getBlocking: () => value,
-      setBlocking: (newValue: TValue | ((prev: TValue) => TValue)) => {
-        value =
-          typeof newValue === 'function'
-            ? (newValue as (prev: TValue) => TValue)(value)
-            : newValue;
-      },
-      lock: NOOP,
-      unlock: NOOP,
-    };
-    if (config?.fixedType) {
-      Object.assign(synchronizable, {
-        setDirty: (newValue: TValue) => {
-          value = newValue;
-        },
-      });
-    }
-    return synchronizable;
+    initializer?.();
+    return { name };
   },
-  createWorkletRuntime: NOOP_FACTORY,
-  executeOnUIRuntimeSync: ID,
-  getCurrentThreadId: () => '0',
   getDynamicFeatureFlag: () => false,
-  getRuntimeKind: () => RuntimeKind.ReactNative,
   getStaticFeatureFlag: () => false,
-  getUIRuntimeHolder: () => UI_RUNTIME_HOLDER,
-  getUISchedulerHolder: () => UI_SCHEDULER_HOLDER,
-  isBundleModeEnabled: () => false,
-  isRNRuntime: () => true,
-  isSerializableRef: ID,
-  isShareable: (value: unknown) =>
-    typeof value === 'object' &&
-    value !== null &&
-    !!(value as Record<string, unknown>).__shareableRef,
-  isShareableRef: () => true,
+  isClonable: () => false,
+  isCustomSerializable: () => false,
+  isRemoteFunction: () => false,
+  isSerializable: () => false,
   isSynchronizable: () => false,
-  isUIRuntime: () => false, // maybe it should be true?
-  isWorkerRuntime: () => false,
-  isWorkletFunction: isWorkletFunction,
-  isWorkletRuntime: () => false,
-  makeShareable: ID,
-  makeShareableCloneOnUIRecursive: ID,
-  makeShareableCloneRecursive: ID,
+  isWorkletFunction: () => false,
+  makeShareable: (value: unknown) => value,
+  makeShareableCloneRecursive: (value: unknown) => value,
   registerCustomSerializable: NOOP,
   runOnJS<Args extends unknown[], ReturnValue>(
     fun: (...args: Args) => ReturnValue
   ): (...args: Args) => void {
-    return (...args) =>
-      queueMicrotask(
-        args.length
-          ? () => (fun as (...args: Args) => ReturnValue)(...args)
-          : (fun as () => ReturnValue)
-      );
+    return (...args) => {
+      fun(...args);
+    };
   },
-  runOnRuntime: ID,
+  runOnRuntime<Args extends unknown[], ReturnValue>(
+    _workletRuntime: unknown,
+    worklet: (...args: Args) => ReturnValue
+  ): (...args: Args) => void {
+    return (...args) => {
+      worklet(...args);
+    };
+  },
   runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
     _workletRuntime: unknown,
     worklet: (...args: Args) => ReturnValue,
@@ -191,7 +150,9 @@ const WorkletAPI = {
   shareableMappingCache: new Map(),
   toggleSlowAnimationsOnUIRuntime: () => false,
   UIRuntimeId: RuntimeKind.UI,
-  WorkletsModule: {},
+  WorkletsModule: {
+    propagateModuleUpdate: NOOP,
+  },
 };
 
 module.exports = {
