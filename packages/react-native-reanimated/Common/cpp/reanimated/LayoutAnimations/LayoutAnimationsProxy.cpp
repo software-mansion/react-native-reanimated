@@ -656,14 +656,16 @@ void LayoutAnimationsProxy::initializeLightTree(const ShadowTreeRevision &baseRe
 
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   react_native_assert(!isLightTreeInitialized() && "Light tree is already initialized");
+  const auto root = std::make_shared<LightNode>();
   if (baseRevision.rootShadowNode) {
     const auto &size = baseRevision.rootShadowNode->getLayoutMetrics().frame.size;
     window_ = {size.width, size.height};
+    root->current = ShadowView(*baseRevision.rootShadowNode);
+  } else {
+    root->current.componentName = "RootView";
+    root->current.tag = surfaceId_;
+    root->current.props = std::make_shared<BaseViewProps>();
   }
-  const auto root = std::make_shared<LightNode>();
-  root->current.componentName = "RootView";
-  root->current.tag = surfaceId_;
-  root->current.props = std::make_shared<BaseViewProps>();
   lightNodes_[surfaceId_] = root;
   applyInitialMutationsToLightTree(initialMutations);
   for (const auto &[revisionNumber, mutations] : pendingTransactions_) {
