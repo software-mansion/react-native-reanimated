@@ -384,14 +384,14 @@ const CSSTransition = () => {
 
 const AnimatedStyleAnimation = () => {
   const ref = useTestRef(ANIMATED_STYLE_REF);
-  const sv = useSharedValue(FROM);
+  const target = useSharedValue(FROM);
 
   useEffect(() => {
-    sv.value = TO;
-  }, [sv]);
+    target.set(TO);
+  }, [target]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    left: withTiming(sv.value, {
+    left: withTiming(target.get(), {
       duration: DEMO_DURATION_MS,
       easing: Easing.linear,
     }),
@@ -534,7 +534,7 @@ export async function goHome() {
 
 // --- Drivers - the only thing that differs between the two environments ---
 
-type Driver = {
+export type Driver = {
   name: string;
   mount: () => Promise<void>;
   freeze: () => Promise<void>;
