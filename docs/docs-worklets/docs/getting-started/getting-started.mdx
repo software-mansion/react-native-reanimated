@@ -1,15 +1,24 @@
 ---
-sidebar_position: 1
+slug: /
+displayed_sidebar: guides
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import * as ShowcaseSnippet from './_getting-started/showcase';
+import ShowcaseSource from '!!raw-loader!./_getting-started/showcase';
+import * as ShowcaseSingleSnippet from './_getting-started/showcaseSingle';
+import ShowcaseSingleSource from '!!raw-loader!./_getting-started/showcaseSingle';
 
 # Getting started
 
 ## What is React Native Worklets?
 
 React Native Worklets is a library that allows you to run JavaScript code in parallel on multiple threads and runtimes.
+
+To learn more, explore our tutorials section, starting with the explanation for the [purpose](/docs/tutorials/concurrency-model) of the library.
+
+<ThreadingShowcase single={{ module: ShowcaseSingleSnippet, source: ShowcaseSingleSource }} worklets={{ module: ShowcaseSnippet, source: ShowcaseSource }}/>
 
 ## Installation
 
@@ -53,7 +62,7 @@ The remaining steps depend on how you build your app — pick your framework:
       </TabItem>
     </Tabs>
 
-    And that's it! Worklets library is now configured in your Expo project.
+    And that's it! The Worklets library is now configured in your Expo project.
 
     <details>
       <summary>Don't I need the Worklets babel plugin?</summary>
@@ -102,7 +111,7 @@ The remaining steps depend on how you build your app — pick your framework:
     <details>
       <summary>Why do I need this?</summary>
 
-      In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime)
+      In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklet functions](/docs/tutorials/concurrency-model#worklet-functions)) to allow them to be passed and run on the [Worklet Runtimes](/docs/concepts/runtimeKinds#worklet-runtime)
 
       To learn more about the plugin go to [Worklets babel plugin](/docs/worklets-plugin/about) section.
     </details>

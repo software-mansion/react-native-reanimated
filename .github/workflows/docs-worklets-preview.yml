@@ -1,0 +1,54 @@
+name: docs worklets preview
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  push:
+    branches:
+      - '@tjzel/worklets/docs-sim'
+    paths:
+      - docs/docs-worklets/**
+      - .github/workflows/docs-worklets-preview.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docs-worklets-preview
+  cancel-in-progress: true
+
+jobs:
+  docs-worklets-preview:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    env:
+      WORKLETS_DOCS_DIR: docs/docs-worklets
+      DOCS_BASE_URL: /react-native-worklets-next/
+      DOCS_NOINDEX: 'true'
+    steps:
+      - name: Check out
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Install monorepo node dependencies
+        run: yarn install
+
+      - name: Lint Worklets docs
+        working-directory: ${{ env.WORKLETS_DOCS_DIR }}
+        run: yarn lint
+
+      - name: Test the threading simulation
+        working-directory: ${{ env.WORKLETS_DOCS_DIR }}
+        run: yarn test
+
+      - name: Build Worklets docs preview
+        working-directory: ${{ env.WORKLETS_DOCS_DIR }}
+        run: yarn build
+
+      # a
+      - name: Publish the preview next to the main docs
+        uses: JamesIves/github-pages-deploy-action@132898c54c57c7cc6b80eb3a89968de8fc283505
+        with:
+          FOLDER: ${{ env.WORKLETS_DOCS_DIR }}/build
+          TARGET_FOLDER: react-native-worklets-next
+          BRANCH: gh-pages
+          CLEAN: false
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -13,8 +13,12 @@ import DeprecatedBanner from '@site/src/components/DeprecatedBanner';
 import { Badges } from '@swmansion/t-rex-ui';
 import SerializableSupportedTypesTable from '@site/src/components/SerializableTypes';
 import SVGDiagram from '@site/src/components/SVGDiagram';
+import ImagePlaceholder from '@site/src/components/ImagePlaceholder';
 import PlatformTable from '@site/src/components/PlatformTable';
 import CallTable from '@site/src/components/CallTable';
+import ThreadingSimulation from '@site/src/components/ThreadingSimulation';
+import ThreadingDiagram from '@site/src/components/ThreadingDiagram';
+import ThreadingShowcase from '@site/src/components/ThreadingShowcase';
 
 export default {
   // Re-use the default mapping
@@ -32,6 +36,10 @@ export default {
   WorkletsCompatibility,
   SerializableSupportedTypesTable,
   SVGDiagram,
+  ImagePlaceholder,
   PlatformTable,
   CallTable,
+  ThreadingSimulation,
+  ThreadingDiagram,
+  ThreadingShowcase,
 };
