@@ -103,13 +103,6 @@ export const withTiming = function (
       const { toValue, startTime, startValue } = animation;
       let runtime = now - startTime;
 
-      if (runtime >= config.duration) {
-        // reset startTime to avoid reusing finished animation config in `start` method
-        animation.startTime = 0;
-        animation.current = toValue;
-        return true;
-      }
-
       if (runtime < 0) {
         // `startTime` comes from `global.__frameTimestamp ||
         // global._getAnimationTimestamp()` (see `valueSetter`). An animation
@@ -121,6 +114,13 @@ export const withTiming = function (
         // animations.
         animation.startTime = now;
         runtime = 0;
+      }
+
+      if (runtime >= config.duration) {
+        // reset startTime to avoid reusing finished animation config in `start` method
+        animation.startTime = 0;
+        animation.current = toValue;
+        return true;
       }
 
       const normalizedTime = Math.min(
