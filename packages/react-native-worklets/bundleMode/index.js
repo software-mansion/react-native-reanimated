@@ -9,6 +9,8 @@ const prepareBundleModePolyfillPath = path.join(
 );
 
 const workletsPackageName = 'react-native-worklets';
+const realReactNativeModuleName =
+  'react-native-worklets/bundleMode/realReactNative';
 const workletsDirPath = path.posix.join(workletsPackageName, '.worklets');
 const workletsSrcEntryPath = path.posix.join(
   workletsPackageName,
@@ -28,6 +30,10 @@ function bundleModeResolveRequest(
   /** @type {any} */ platform,
   /** @type {any} */ userConfigResolveRequest
 ) {
+  if (moduleName === realReactNativeModuleName) {
+    // Bypass user remappers while retaining Metro's platform-aware resolution.
+    return context.resolveRequest(context, 'react-native', platform);
+  }
   if (moduleName.startsWith(workletsDirPath)) {
     const fullModuleName = path.join(workletsPackageParentDir, moduleName);
     return { type: 'sourceFile', filePath: fullModuleName };
@@ -57,6 +63,9 @@ const bundleModeMetroConfig = {
       /** @type {string} */ moduleName,
       /** @type {any} */ platform
     ) => {
+      if (moduleName === realReactNativeModuleName) {
+        return context.resolveRequest(context, 'react-native', platform);
+      }
       if (moduleName.startsWith(workletsDirPath)) {
         const fullModuleName = path.join(workletsPackageParentDir, moduleName);
         return { type: 'sourceFile', filePath: fullModuleName };
