@@ -160,7 +160,7 @@ open class NativeProxy {
 
     private external fun invalidateCpp()
 
-    external fun toggleSlowAnimationsOnUIRuntime()
+    private external fun toggleSlowAnimationsOnUIRuntime()
 
     protected fun getHybridData(): HybridData = mHybridData
 
@@ -214,7 +214,7 @@ open class NativeProxy {
         }
         mNodesManager!!.enableSlowAnimations(slowAnimationsEnabled, animationsDragFactor)
         cssPlatformTransitionsManager.enableSlowAnimations(slowAnimationsEnabled, animationsDragFactor)
-        toggleSlowAnimationsOnUIRuntime()
+        ifNotInvalidated(Unit) { toggleSlowAnimationsOnUIRuntime() }
     }
 
     private fun addDevMenuOption() {
