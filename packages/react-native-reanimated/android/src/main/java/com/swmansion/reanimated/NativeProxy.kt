@@ -169,14 +169,14 @@ open class NativeProxy {
         fallback: T,
         block: () -> T,
     ): T {
-        if (mInvalidated.get()) {
-            return fallback
-        }
         val readLock = mNativeStateLock.readLock()
         if (!readLock.tryLock()) {
             return fallback
         }
         try {
+            if (mInvalidated.get()) {
+                return fallback
+            }
             return block()
         } finally {
             readLock.unlock()
