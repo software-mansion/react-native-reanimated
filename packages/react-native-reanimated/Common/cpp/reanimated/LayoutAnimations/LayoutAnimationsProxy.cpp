@@ -405,10 +405,13 @@ void LayoutAnimationsProxy::updateLightTree(
       }
       case ShadowViewMutation::Delete: {
         const auto tag = mutation.oldChildShadowView.tag;
+        const auto it = lightNodes_.find(tag);
+        react_native_assert(
+            (it == lightNodes_.end() || it->second->isExiting()) &&
+            "Delete mutation for a view that React did not remove");
         // The differ removes everything that moves out of a view before its Delete, and inserts into the parent
         // of the view only after it.
         if (removedSubtreeRoots.erase(tag)) {
-          const auto it = lightNodes_.find(tag);
           react_native_assert(it != lightNodes_.end() && "Delete mutation for an unknown node");
           const auto node = it->second;
           const auto parent = node->parent.lock();
