@@ -191,7 +191,9 @@ const WorkletAPI = {
   shareableMappingCache: new Map(),
   toggleSlowAnimationsOnUIRuntime: () => false,
   UIRuntimeId: RuntimeKind.UI,
-  WorkletsModule: {},
+  WorkletsModule: {
+    propagateModuleUpdate: NOOP,
+  },
 };
 
 module.exports = {
