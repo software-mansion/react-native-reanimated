@@ -357,6 +357,26 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       endLayoutAnimation,
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction,
       requestAnimationFrame);
+
+  if constexpr (StaticFeatureFlags::getFlag("RUNTIME_TEST_FLAG")) {
+    jsi_utils::installJsiFunction(
+        uiRuntime,
+        "_obtainMountedViewProps",
+        [obtainMountedViewProps = platformDepMethodsHolder.obtainMountedViewProps](
+            jsi::Runtime &rt, const jsi::Value &tag) -> jsi::Value {
+          const auto props = obtainMountedViewProps(static_cast<Tag>(tag.asNumber()));
+          if (!props) {
+            return jsi::Value::null();
+          }
+          jsi::Object result(rt);
+          result.setProperty(rt, "x", props->x);
+          result.setProperty(rt, "y", props->y);
+          result.setProperty(rt, "width", props->width);
+          result.setProperty(rt, "height", props->height);
+          result.setProperty(rt, "opacity", props->opacity);
+          return result;
+        });
+  }
 }
 
 ReanimatedModuleProxy::~ReanimatedModuleProxy() {
