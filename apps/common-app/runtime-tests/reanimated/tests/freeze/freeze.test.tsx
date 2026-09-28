@@ -8,7 +8,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Freeze } from 'react-freeze';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 import Animated, {
   css,
   Easing,
@@ -34,43 +34,26 @@ import {
 
 // The `❄️ React freeze` example screen
 // (apps/common-app/src/apps/reanimated/examples/FreezeExample.tsx) as a runtime
-// test: three boxes animating the same property over the same duration through
-// three different backends, plus the screen's switch, all inside a `<Freeze>`.
+// test, in two environments: frozen by a prop, and frozen the way the screen
+// does it, by pushing a native stack screen.
 //
-// The subtree is the same everywhere. What differs is the *environment* the
-// freeze happens in, and that is the one variable this suite is built around:
+// `<Freeze>` is the only freezing in either one. Navigation does not freeze by
+// itself - react-native-screens defaults `freezeOnBlur` to `freezeEnabled()`,
+// which stays `false` until an app calls `enableFreeze()`, and nothing here
+// does.
 //
-//   * `prop-driven` hides the subtree by re-rendering it with `frozen`, with
-//     nothing else in the picture. This is the control.
-//   * `under a native stack` hides it the way the screen does - the home
-//     screen's own button sets `frozen` and pushes screen 1, so
-//     react-native-screens detaches the screen on top of React's Suspense.
-//
-// Navigation does not freeze anything by itself: react-native-screens defaults
-// `freezeOnBlur` to `freezeEnabled()`, which is `false` until an app calls
-// `enableFreeze()`, and nothing in this repo does. The `<Freeze>` below is the
-// only freezing in either environment.
-//
-// Two deviations from the screen, both forced by what can be read back from
-// native - `getViewProp` serves eight props and no transform:
-//
-//   * every box animates `left` where the screen animates `translateX`. The
-//     range is moved so the boxes stay on screen, as they do on the screen
-//     itself: a 100px box sits at 20..120 at the start and 200..300 at the end;
-//   * button presses are function calls. ReJest cannot tap, so the switch and
-//     every screen register their `onPress` handlers in `controls` and the test
-//     calls them. The handler bodies are the screen's, verbatim.
+// The boxes animate `left` where the screen animates `translateX`, because
+// `getViewProp` serves eight props and no transform. Presses are function calls
+// through `controls`, because ReJest cannot tap.
 
 const DEMO_DURATION_MS = 4000;
 
-// The freeze has to dominate the run, otherwise a case that claims to measure
-// what happens *during* a freeze is mostly measuring what happens around it.
-// 2200ms of a 4000ms animation is ~55% in the prop-driven environment and ~70%
-// under the navigator, where a push and a pop add their own time.
+// Has to dominate the run, or a case measures what happens around the freeze
+// rather than during it: ~55% of the animation, ~70% once a push and a pop are
+// added.
 const FREEZE_MS = 2200;
 
-// Preserving state across a freeze is instantaneous - it either survived the
-// hide or it did not - so those cases do not need to pay for a long one.
+// State either survives the hide or it does not; no need for a long freeze.
 const SHORT_FREEZE_MS = 600;
 
 const FROM = 20;
@@ -81,43 +64,26 @@ const MIDPOINT = (FROM + TO) / 2;
 const SWITCH_DURATION_MS = 300;
 const SWITCH_TRAVEL_PX = 20;
 
-// The three boxes are compared against each other, never against the wall
-// clock, which is the invariant the example screen is built around. Reads go
-// out in parallel but land a frame or two apart, and the transition starts one
-// frame after the other two, so a few px of spread is normal. A restart or a
-// pause across the freeze is worth 50px or more.
+// Reads land a frame or two apart, so a few px of spread is normal; a restart
+// or a pause is worth 50px or more.
 const SPREAD_TOLERANCE_PX = 20;
 
-// Travel is checked against the wall time between two reads. The slack is what
-// a re-render, a push, a pop and a re-attach can add on either side of a read,
-// expressed in pixels at the animation's own speed.
+// Slack for what a re-render, a push, a pop and a re-attach add around a read.
 const TIMING_TOLERANCE_MS = 500;
 const TIMING_TOLERANCE_PX = (TIMING_TOLERANCE_MS / DEMO_DURATION_MS) * TRAVEL;
 
-// Two of the three boxes start from an effect, and an effect that has not
-// reached the UI runtime before React hides the subtree does not start at all -
-// it starts at the thaw instead. Every case therefore waits for all three to be
-// moving before it freezes anything. `BOX_START_PX` is ~45ms of travel,
-// comfortably clear of the pixel grid's rounding.
+// Two boxes start from an effect, and an effect that has not reached the UI
+// runtime before the hide starts at the thaw instead - so every case waits for
+// all three to be moving first.
 const BOX_START_PX = 2;
 const BOX_START_TIMEOUT_MS = 2000;
 
-// How long `worstAlignmentReport` samples for, and how many frames it leaves
-// between samples. Each sample is three native round trips, and a drift worth
-// catching lasts far longer than three frames.
 const ALIGNMENT_WATCH_MS = 400;
 const ALIGNMENT_SAMPLE_FRAMES = 3;
 
-// A thaw has to finish and React has to re-attach the host views before
-// anything inside the subtree can be read, and `render` only waits for refs it
-// has not seen before.
-// When React shows the subtree again it re-commits the host views with the
-// style `PropsFilter` cached on the very first render - for these boxes that is
-// `left: FROM`. The next animation frame overwrites it, so the stale value is
-// only readable for a frame or two: sampling every two frames after a thaw read
-// `anim=20` at +2ms and `anim=126`, level with the CSS boxes, at +36ms. Reading
-// inside that window measures the re-commit rather than the animation, so every
-// thaw settles first.
+// Showing the subtree again re-commits the host views with the style
+// `PropsFilter` cached on the first render - `left: FROM` here. The next frame
+// overwrites it, so a read taken too early measures the re-commit.
 const THAW_SETTLE_FRAMES = 3;
 
 const REATTACH_TIMEOUT_MS = 3000;
@@ -130,22 +96,16 @@ const SWITCH_REF = 'freezeSwitchToggle';
 
 const BOX_REFS = [CSS_ANIMATION_REF, CSS_TRANSITION_REF, ANIMATED_STYLE_REF];
 
-// Every check returns its verdict as a string: one of these when it is
-// satisfied, or a sentence naming the offending boxes when it is not. ReJest
-// prints `Expected <expected> received <actual>`, so a red line reads as
-// `Expected aligned received <what actually happened>` rather than comparing
-// against an empty string, which prints as nothing at all.
+// Every check reports a string, so ReJest's `Expected <x> received <y>` names
+// the offending boxes instead of comparing against an empty string.
 const ALIGNED = 'aligned';
 const IN_RANGE = 'in range';
 const ON_TIME = 'on time';
 const ALL_STARTED = 'all started';
 const NO_LEAKS = 'no leaks';
 
-// Runs once per React instance. React detaches a hidden subtree's host views
-// but leaves its effects connected (`a frozen subtree is detached but never
-// torn down` asserts both), so an effect cleanup never fires for a freeze and a
-// mount/unmount pair could not tell a freeze from a teardown anyway. A second
-// construction can.
+// React leaves a hidden subtree's effects connected, so no cleanup fires for a
+// freeze and only a second construction distinguishes one from a teardown.
 const SUBTREE_CONSTRUCTED = 'freezeSubtreeConstructed';
 
 const SWITCH_TOGGLE = 'switch/toggle';
@@ -154,12 +114,7 @@ const SCREEN_1_TO_SCREEN_2 = 'screen1/goToScreen2';
 const SCREEN_2_TO_SCREEN_3 = 'screen2/goToScreen3';
 const BACK_BUTTONS = ['screen3/goBack', 'screen2/goBack', 'screen1/goBack'];
 
-/**
- * The handlers the rendered tree is currently offering, which doubles as a
- * record of what is mounted: a screen registers on mount and drops out on
- * unmount, so waiting for a key to appear or disappear is how this suite waits
- * for a push or a pop to land.
- */
+/** Doubles as a mount record: a key appears on mount and drops on unmount. */
 const controls: Record<string, () => void> = {};
 
 function useControl(name: string, handler: () => void) {
@@ -191,7 +146,6 @@ async function waitForControl(
   }
 }
 
-/** Presses a button once it exists, the way a user would have to. */
 async function press(name: string) {
   await waitForControl(name, true);
   controls[name]();
@@ -217,12 +171,8 @@ async function readLeft(name: string, timeoutMs = REATTACH_TIMEOUT_MS) {
 }
 
 /**
- * Whether the view is still in the hierarchy; a frozen subtree's is not.
- *
- * React detaches the ref when it hides the subtree, so a missing tag is the
- * signature of a freeze and the only thing reported as detached. Anything else
- * that goes wrong with the read is a real problem and is left to throw, rather
- * than being reported here as a successful freeze.
+ * A missing tag is the signature of a freeze; any other read failure is left to
+ * throw rather than reported as one.
  */
 async function isAttached(name: string) {
   const component = getTestComponent(name);
@@ -236,7 +186,6 @@ async function isAttached(name: string) {
   return true;
 }
 
-/** Box positions, the refs they belong to, and when they were in hand. */
 type Reading = {
   refs: readonly string[];
   values: number[];
@@ -249,10 +198,6 @@ async function readBoxes(refs: readonly string[] = BOX_REFS): Promise<Reading> {
   return { refs, values, at: performance.now() };
 }
 
-/**
- * `ALIGNED` when the boxes are within `SPREAD_TOLERANCE_PX` of one another,
- * otherwise every box, where it is and by how far they disagree.
- */
 function alignmentReport({ refs, values }: Reading) {
   const spread = Math.max(...values) - Math.min(...values);
 
@@ -267,10 +212,6 @@ function alignmentReport({ refs, values }: Reading) {
   return `${positions} - spread ${spread.toFixed(1)}px, tolerated ${SPREAD_TOLERANCE_PX}px`;
 }
 
-/**
- * `IN_RANGE` when every box sits inside [`min`, `max`], otherwise the ones that
- * do not and the band they were measured against.
- */
 function rangeReport({ refs, values }: Reading, min: number, max: number) {
   const outside = refs
     .map((name, index) => ({ name, value: values[index] }))
@@ -286,12 +227,7 @@ function rangeReport({ refs, values }: Reading, min: number, max: number) {
     .concat(` - outside [${min.toFixed(1)}, ${max.toFixed(1)}]`);
 }
 
-/**
- * Samples the boxes for `durationMs` and reports the worst misalignment seen,
- * or `ALIGNED` if they never drifted apart. One reading pair can land a frame
- * or two apart, so a window of samples is what tells a drifting box from a
- * late-read one.
- */
+/** A window of samples is what tells a drifting box from a late-read one. */
 async function worstAlignmentReport(
   durationMs: number,
   refs: readonly string[] = BOX_REFS
@@ -315,11 +251,6 @@ async function worstAlignmentReport(
   return report;
 }
 
-/**
- * Waits until every box has left `FROM`, then names the ones that never did. A
- * box still sitting on `FROM` has not started, and a freeze measured from there
- * would report the start-up rather than the freeze.
- */
 async function startedReport(
   refs: readonly string[] = BOX_REFS,
   timeoutMs = BOX_START_TIMEOUT_MS
@@ -346,11 +277,7 @@ async function startedReport(
   return `${stalled.join(', ')} - still on ${FROM} after ${timeoutMs}ms`;
 }
 
-/**
- * `ON_TIME` when every box moved by the distance the wall time between the two
- * reads is worth. A freeze that paused the clock reports ~0 travel, one that
- * restarted it reports a large negative.
- */
+/** A paused clock reports ~0 travel here, a restarted one a large negative. */
 function travelReport(before: Reading, after: Reading): string {
   const elapsedMs = after.at - before.at;
   const nominal = (elapsedMs / DEMO_DURATION_MS) * TRAVEL;
@@ -359,9 +286,7 @@ function travelReport(before: Reading, after: Reading): string {
     .map((name, index) => ({
       name,
       travel: after.values[index] - before.values[index],
-      // A box that reached `TO` inside the window cannot have travelled the
-      // whole nominal distance, so cap what is asked of it by how far it had
-      // left to go.
+      // A box that reached `TO` mid-window cannot have travelled it all.
       expected: Math.min(nominal, TO - before.values[index]),
     }))
     .filter(
@@ -382,10 +307,6 @@ function travelReport(before: Reading, after: Reading): string {
     .concat(` in ${elapsedMs.toFixed(0)}ms (±${TIMING_TOLERANCE_PX}px)`);
 }
 
-/**
- * `NO_LEAKS` when none of the four registries `_registriesLeakCheck` reports on
- * still holds records, otherwise the ones that do.
- */
 function leakingRegistries() {
   if (typeof global._registriesLeakCheck !== 'function') {
     return '`_registriesLeakCheck` is missing - it is only installed in a build with IS_REANIMATED_EXAMPLE_APP';
@@ -408,15 +329,12 @@ async function expectAllBoxesToFinish(refs: readonly string[] = BOX_REFS) {
   ).toBe(IN_RANGE);
 }
 
-// ---------------------------------------------------------------------------
-// The subtree under test - the example screen's four animated pieces
-// ---------------------------------------------------------------------------
+// --- The subtree under test - the example screen's four animated pieces ---
 
 const AnimatedSwitch = () => {
   const ref = useTestRef(SWITCH_REF);
   const isOn = useSharedValue(false);
 
-  // The example screen's `Pressable`; ReJest cannot tap one.
   useControl(SWITCH_TOGGLE, () => isOn.set((x) => !x));
 
   const animatedStyles = useAnimatedStyle(() => ({
@@ -493,17 +411,13 @@ function FreezeFixture({ frozen }: { frozen: boolean }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Environment 1: the fixture on its own, frozen by a prop
-// ---------------------------------------------------------------------------
+// --- Environment 1: the fixture on its own, frozen by a prop ---
 
 function PlainFixture({ frozen }: { frozen: boolean }) {
   return <FreezeFixture frozen={frozen} />;
 }
 
-// ---------------------------------------------------------------------------
-// Environment 2: the fixture inside the example screen's native stack
-// ---------------------------------------------------------------------------
+// --- Environment 2: the fixture inside the example screen's native stack ---
 
 type StackParamList = {
   home: undefined;
@@ -539,7 +453,11 @@ function Screen1() {
   useControl(SCREEN_1_TO_SCREEN_2, () => navigation.navigate('screen2'));
   useControl('screen1/goBack', () => navigation.goBack());
 
-  return <View style={[styles.container, styles.screenOne]} />;
+  return (
+    <View style={styles.container}>
+      <Text>Screen 1</Text>
+    </View>
+  );
 }
 
 function Screen2() {
@@ -548,7 +466,11 @@ function Screen2() {
   useControl(SCREEN_2_TO_SCREEN_3, () => navigation.navigate('screen3'));
   useControl('screen2/goBack', () => navigation.goBack());
 
-  return <View style={[styles.container, styles.screenTwo]} />;
+  return (
+    <View style={styles.container}>
+      <Text>Screen 2</Text>
+    </View>
+  );
 }
 
 function Screen3() {
@@ -556,15 +478,18 @@ function Screen3() {
 
   useControl('screen3/goBack', () => navigation.goBack());
 
-  return <View style={[styles.container, styles.screenThree]} />;
+  return (
+    <View style={styles.container}>
+      <Text>Screen 3</Text>
+    </View>
+  );
 }
 
 const Stack = createNativeStackNavigator<StackParamList>();
 
 function NavigatorFixture() {
   return (
-    // The runtime-tests host has no navigation container of its own today; the
-    // independent tree keeps this suite working if it ever grows one.
+    // Keeps working if the runtime-tests host ever grows its own container.
     <NavigationIndependentTree>
       <NavigationContainer>
         <Stack.Navigator
@@ -589,29 +514,20 @@ async function goHome() {
     }
   }
 
-  // Home is back once its host views are readable again. A control key cannot
-  // gate on that: React leaves a hidden subtree's effects connected, so
-  // `SWITCH_TOGGLE` stays registered for the whole trip. A successful read is
-  // the only honest signal, and `readLeft` retries until it gets one.
+  // A control key cannot gate on the thaw: effects stay registered while
+  // hidden, so a successful read is the only signal.
   await readLeft(SWITCH_REF);
 
-  // ...but a successful read is not yet a correct one, so settle here rather
-  // than in the driver: the deep-stack cases pop their way back through
-  // `goHome` directly and would otherwise read the re-commit.
+  // Settles here, not in the driver: the deep-stack cases pop through `goHome`.
   await waitForFrames(THAW_SETTLE_FRAMES);
 }
 
-// ---------------------------------------------------------------------------
-// Drivers - the only thing that differs between the two environments
-// ---------------------------------------------------------------------------
+// --- Drivers - the only thing that differs between the two environments ---
 
 type Driver = {
   name: string;
-  /** Renders the fixture, thawed, and waits for every box to be moving. */
   mount: () => Promise<void>;
-  /** Hides the subtree the way this environment does it. */
   freeze: () => Promise<void>;
-  /** Brings it back. */
   thaw: () => Promise<void>;
 };
 
@@ -646,9 +562,7 @@ const navigatorDriver: Driver = {
 
 const DRIVERS = [plainDriver, navigatorDriver];
 
-// ---------------------------------------------------------------------------
-// Cases that run in both environments
-// ---------------------------------------------------------------------------
+// --- Cases that run in both environments ---
 
 for (const driver of DRIVERS) {
   describe(`react-freeze *${driver.name}*`, () => {
@@ -664,17 +578,10 @@ for (const driver of DRIVERS) {
 
       const after = await readBoxes();
 
-      // Still level with one another, and staying that way - a box that came
-      // back on a different clock shows up here rather than at the endpoint.
       expect(await worstAlignmentReport(ALIGNMENT_WATCH_MS)).toBe(ALIGNED);
 
-      // Past the midpoint and short of the end: the freeze cost more than half
-      // of the animation, and the animation spent all of it moving.
+      // Past the midpoint: the freeze cost more than half of the animation.
       expect(rangeReport(after, MIDPOINT, TO - 1)).toBe(IN_RANGE);
-
-      // ...by exactly the distance the time spent frozen is worth. A freeze
-      // that paused the clock reports ~0 travel here, one that restarted it
-      // reports a large negative.
       expect(travelReport(before, after)).toBe(ON_TIME);
 
       await expectAllBoxesToFinish();
@@ -683,8 +590,7 @@ for (const driver of DRIVERS) {
     test('the switch keeps its state across a freeze', async () => {
       await driver.mount();
 
-      // `left` is read as the Yoga frame origin, so the resting position is the
-      // switch container's padding rather than 0.
+      // `left` is the Yoga frame origin, so resting is the container padding.
       const off = await readLeft(SWITCH_REF);
       const on = off + SWITCH_TRAVEL_PX;
 
@@ -698,19 +604,14 @@ for (const driver of DRIVERS) {
       await wait(SHORT_FREEZE_MS);
       await driver.thaw();
 
-      // The knob is where it was left: the shared value, the animated style and
-      // the host view all came back intact. A subtree that had been torn down
-      // and rebuilt would be back at `off`.
+      // A subtree that had been torn down and rebuilt would be back at `off`.
       await expectEventually(
         () => readLeft(SWITCH_REF),
         REATTACH_TIMEOUT_MS
       ).toBeWithinRange(on - 1, on + 1);
 
-      // Nothing was built twice: the freeze hid the subtree, it did not replace
-      // it.
       expect(await getTrackerCallCount(SUBTREE_CONSTRUCTED)).toBeCalledJS(1);
 
-      // And the switch still answers afterwards.
       await press(SWITCH_TOGGLE);
       await expectEventually(
         () => readLeft(SWITCH_REF),
@@ -726,8 +627,7 @@ for (const driver of DRIVERS) {
       await wait(SHORT_FREEZE_MS);
       await driver.thaw();
 
-      // `animationFillMode: 'both'` and the settled transition both have to
-      // survive: nothing reverts to `FROM` and nothing replays.
+      // `animationFillMode: 'both'` and the settled transition both survive.
       const settled = await readBoxes();
       expect(alignmentReport(settled)).toBe(ALIGNED);
       expect(rangeReport(settled, TO - 1, TO + 1)).toBe(IN_RANGE);
@@ -744,15 +644,11 @@ for (const driver of DRIVERS) {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Cases that only the prop-driven environment can express
-// ---------------------------------------------------------------------------
+// --- Cases that only the prop-driven environment can express ---
 
 describe('react-freeze *prop-driven only*', () => {
-  // `_registriesLeakCheck` reports on the whole app, and the runtime-tests host
-  // renders nothing animated of its own, so an empty render area must mean
-  // empty registries. A failure here points at a leak in an earlier suite
-  // rather than at this one.
+  // Whole-app check, so a failure here points at an earlier suite, not this
+  // one.
   test('the registries start empty', async () => {
     await clearRenderOutput();
 
@@ -762,9 +658,6 @@ describe('react-freeze *prop-driven only*', () => {
   test('the three boxes stay aligned for the whole animation', async () => {
     await plainDriver.mount();
 
-    // The example screen's own invariant, watched frame by frame rather than
-    // sampled at the ends: whatever each backend does between commits, the
-    // three boxes are at the same x throughout.
     expect(await worstAlignmentReport(DEMO_DURATION_MS)).toBe(ALIGNED);
 
     await expectAllBoxesToFinish();
@@ -776,14 +669,12 @@ describe('react-freeze *prop-driven only*', () => {
 
     await plainDriver.freeze();
 
-    // The freeze has to be real: React takes the hidden subtree's host views
-    // out of the hierarchy, so nothing inside it can be read.
+    // React takes a hidden subtree's host views out of the hierarchy.
     expect(await isAttached(SWITCH_REF)).toBe(false);
 
     await plainDriver.thaw();
     await expectEventually(() => isAttached(SWITCH_REF)).toBe(true);
 
-    // Yet nothing was thrown away - the instance is never re-created.
     expect(await getTrackerCallCount(SUBTREE_CONSTRUCTED)).toBeCalledJS(1);
   });
 
@@ -792,8 +683,7 @@ describe('react-freeze *prop-driven only*', () => {
 
     let previous = await readBoxes();
 
-    // A cadence no navigator can reach: hidden and shown again three times
-    // inside a fifth of the animation.
+    // A cadence no navigator can reach.
     for (let cycle = 0; cycle < 3; cycle++) {
       await plainDriver.freeze();
       await wait(150);
@@ -802,7 +692,6 @@ describe('react-freeze *prop-driven only*', () => {
 
       const current = await readBoxes();
       expect(alignmentReport(current)).toBe(ALIGNED);
-      // Monotonic across every cycle - never a restart, never a rewind.
       expect(travelReport(previous, current)).toBe(ON_TIME);
       previous = current;
     }
@@ -826,9 +715,7 @@ describe('react-freeze *prop-driven only*', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Cases that only exist once a navigator is involved
-// ---------------------------------------------------------------------------
+// --- Cases that only exist once a navigator is involved ---
 
 describe('react-freeze *under a native stack only*', () => {
   /** Home -> 1 -> 2 -> 3, dwelling on each one. */
@@ -854,9 +741,9 @@ describe('react-freeze *under a native stack only*', () => {
 
     const after = await readBoxes();
 
-    // Home freezes once no matter how deep the stack goes - pushing screens 2
-    // and 3 never touches it - so this differs from the shallow case only in
-    // how many transitions ran while it was hidden.
+    // Home freezes once however deep the stack goes: pushing 2 and 3 never
+    // touches it, so only the number of transitions differs from the shallow
+    // case.
     expect(await worstAlignmentReport(ALIGNMENT_WATCH_MS)).toBe(ALIGNED);
     expect(rangeReport(after, MIDPOINT, TO - 1)).toBe(IN_RANGE);
     expect(travelReport(before, after)).toBe(ON_TIME);
@@ -876,7 +763,6 @@ describe('react-freeze *under a native stack only*', () => {
 
       const current = await readBoxes();
       expect(alignmentReport(current)).toBe(ALIGNED);
-      // Monotonic across both trips - never a restart, never a rewind.
       expect(travelReport(previous, current)).toBe(ON_TIME);
       previous = current;
     }
@@ -888,8 +774,6 @@ describe('react-freeze *under a native stack only*', () => {
     await navigatorDriver.mount();
     await goThreeScreensDeep(SHORT_FREEZE_MS / 3);
 
-    // Home is frozen and buried under three screens - its animations are
-    // running with nothing of it on screen.
     await clearRenderOutput();
 
     await expectEventually(leakingRegistries).toBe(NO_LEAKS);
@@ -899,22 +783,9 @@ describe('react-freeze *under a native stack only*', () => {
 const styles = css.create({
   container: {
     flex: 1,
-    // Left-aligned so `left` reads as the raw frame origin rather than the
-    // centred one - see the note on `FROM` and `TO`.
+    // Left-aligned so `left` reads as the raw frame origin.
     alignItems: 'flex-start',
     rowGap: 40,
-  },
-  // The pushed screens carry no content of their own, so without these the
-  // whole trip looks like one blank screen when a human watches the run. A
-  // different tint per screen makes every push and pop visible.
-  screenOne: {
-    backgroundColor: '#ef9a9a',
-  },
-  screenTwo: {
-    backgroundColor: '#a5d6a7',
-  },
-  screenThree: {
-    backgroundColor: '#90caf9',
   },
   switchContainer: {
     width: 50,
