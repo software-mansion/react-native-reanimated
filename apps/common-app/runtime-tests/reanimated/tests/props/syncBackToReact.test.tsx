@@ -1,10 +1,16 @@
 import type { ComponentRef } from 'react';
 import { forwardRef, useEffect } from 'react';
-import type { BoxShadowValue, ViewProps, ViewStyle } from 'react-native';
-import { StyleSheet, View } from 'react-native';
+import type {
+  BoxShadowValue,
+  ScrollViewProps,
+  ViewProps,
+  ViewStyle,
+} from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, {
   interpolate,
   interpolateColor,
+  useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -29,6 +35,9 @@ const NOTIFICATION_NAME = 'SYNC_BACK_ANIMATION_FINISHED';
 // 500 ms is for the React render after setState and for a slow emulator.
 // If you change one of the two constants, change this value.
 const SYNC_BACK_DELAY_MS = 2000;
+const LATE_CONTENT_OFFSET_Y = 100;
+const SETTLED_OPACITY = 0.5;
+const SETTLED_BORDER_RADIUS = 10;
 
 type Gradient = Exclude<
   NonNullable<ViewStyle['backgroundImage']>,
@@ -152,6 +161,99 @@ describe('sync of settled props back to React', () => {
       check(received.value as ViewStyle);
     }
   );
+});
+
+type ScrollBoxAnimatedProps = ScrollViewProps & { borderRadius?: number };
+
+type ReceivedProps = {
+  props: ScrollBoxAnimatedProps;
+  style: ViewStyle;
+};
+
+type ScrollBoxProps = ScrollBoxAnimatedProps & {
+  onProps: (received: ReceivedProps) => void;
+};
+
+const ScrollBox = forwardRef<ComponentRef<typeof ScrollView>, ScrollBoxProps>(
+  ({ onProps, ...props }, ref) => {
+    onProps({ props, style: StyleSheet.flatten(props.style) ?? {} });
+    return <ScrollView ref={ref} {...props} />;
+  }
+);
+
+const AnimatedScrollBox = Animated.createAnimatedComponent(ScrollBox);
+
+function AnimatedPropsAndStyleComponent({
+  onProps,
+}: {
+  onProps: (received: ReceivedProps) => void;
+}) {
+  const progress = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0, 1], [1, SETTLED_OPACITY]),
+    borderRadius: progress.value * SETTLED_BORDER_RADIUS,
+  }));
+  const animatedProps = useAnimatedProps<ScrollBoxAnimatedProps>(() =>
+    progress.value === 0
+      ? {}
+      : {
+          contentOffset: { x: 0, y: progress.value * LATE_CONTENT_OFFSET_Y },
+          borderRadius: progress.value * SETTLED_BORDER_RADIUS,
+        }
+  );
+
+  useEffect(() => {
+    progress.value = withTiming(1, { duration: 200 }, () => {
+      notify(NOTIFICATION_NAME);
+    });
+  }, [progress]);
+
+  return (
+    <View style={styles.container}>
+      <AnimatedScrollBox
+        animatedProps={animatedProps}
+        style={[styles.box, animatedStyle]}
+        onProps={onProps}
+      />
+    </View>
+  );
+}
+
+async function renderAndWaitForSyncBack() {
+  const [received, setReceived] = createTestValue<ReceivedProps>({
+    props: {},
+    style: {},
+  });
+
+  await render(<AnimatedPropsAndStyleComponent onProps={setReceived} />);
+  await waitForNotification(NOTIFICATION_NAME);
+  await wait(SYNC_BACK_DELAY_MS);
+
+  return received.value as ReceivedProps;
+}
+
+describe('sync of settled animated props back to React', () => {
+  test('React receives a prop first returned after mount as a top-level prop', async () => {
+    const { props, style } = await renderAndWaitForSyncBack();
+
+    expect(props.contentOffset?.y).toBe(LATE_CONTENT_OFFSET_Y);
+    expect('contentOffset' in style).toBe(false);
+  });
+
+  test('React receives an animated style value only inside style', async () => {
+    const { props, style } = await renderAndWaitForSyncBack();
+
+    expect(style.opacity as number).toBe(SETTLED_OPACITY);
+    expect('opacity' in props).toBe(false);
+  });
+
+  test('React receives a value written by both animated props and animated style as a prop and inside style', async () => {
+    const { props, style } = await renderAndWaitForSyncBack();
+
+    expect(props.borderRadius).toBe(SETTLED_BORDER_RADIUS);
+    expect(style.borderRadius as number).toBe(SETTLED_BORDER_RADIUS);
+  });
 });
 
 const styles = StyleSheet.create({

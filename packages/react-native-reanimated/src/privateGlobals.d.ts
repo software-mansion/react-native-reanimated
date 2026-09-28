@@ -42,6 +42,7 @@ declare global {
           shadowNodeWrapper: ShadowNodeWrapper;
 
           updates: PropUpdates;
+          isAnimatedProps: boolean;
         }[]
       ) => void)
     | undefined;
