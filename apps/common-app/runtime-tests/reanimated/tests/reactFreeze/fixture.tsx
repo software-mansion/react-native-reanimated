@@ -34,8 +34,10 @@ import {
 
 // The `❄️ React freeze` example screen
 // (apps/common-app/src/apps/reanimated/examples/FreezeExample.tsx) as a runtime
-// test, in two environments: frozen by a prop, and frozen the way the screen
-// does it, by pushing a native stack screen.
+// test, in two environments: frozen by a prop (`propDriven.test.tsx`), and
+// frozen the way the screen does it, by pushing a native stack screen
+// (`nativeStack.test.tsx`). This module holds the fixture, the drivers and the
+// cases both environments share.
 //
 // `<Freeze>` is the only freezing in either one. Navigation does not freeze by
 // itself - react-native-screens defaults `freezeOnBlur` to `freezeEnabled()`,
@@ -46,20 +48,20 @@ import {
 // `getViewProp` serves eight props and no transform. Presses are function calls
 // through `controls`, because ReJest cannot tap.
 
-const DEMO_DURATION_MS = 4000;
+export const DEMO_DURATION_MS = 4000;
 
 // Has to dominate the run, or a case measures what happens around the freeze
 // rather than during it: ~55% of the animation, ~70% once a push and a pop are
 // added.
-const FREEZE_MS = 2200;
+export const FREEZE_MS = 2200;
 
 // State either survives the hide or it does not; no need for a long freeze.
-const SHORT_FREEZE_MS = 600;
+export const SHORT_FREEZE_MS = 600;
 
 const FROM = 20;
-const TO = 200;
+export const TO = 200;
 const TRAVEL = TO - FROM;
-const MIDPOINT = (FROM + TO) / 2;
+export const MIDPOINT = (FROM + TO) / 2;
 
 const SWITCH_DURATION_MS = 300;
 const SWITCH_TRAVEL_PX = 20;
@@ -78,7 +80,7 @@ const TIMING_TOLERANCE_PX = (TIMING_TOLERANCE_MS / DEMO_DURATION_MS) * TRAVEL;
 const BOX_START_PX = 2;
 const BOX_START_TIMEOUT_MS = 2000;
 
-const ALIGNMENT_WATCH_MS = 400;
+export const ALIGNMENT_WATCH_MS = 400;
 const ALIGNMENT_SAMPLE_FRAMES = 3;
 
 // Showing the subtree again re-commits the host views with the style
@@ -92,26 +94,26 @@ const CONTROL_TIMEOUT_MS = 5000;
 const CSS_ANIMATION_REF = 'freezeCssAnimationBox';
 const CSS_TRANSITION_REF = 'freezeCssTransitionBox';
 const ANIMATED_STYLE_REF = 'freezeAnimatedStyleBox';
-const SWITCH_REF = 'freezeSwitchToggle';
+export const SWITCH_REF = 'freezeSwitchToggle';
 
 const BOX_REFS = [CSS_ANIMATION_REF, CSS_TRANSITION_REF, ANIMATED_STYLE_REF];
 
 // Every check reports a string, so ReJest's `Expected <x> received <y>` names
 // the offending boxes instead of comparing against an empty string.
-const ALIGNED = 'aligned';
-const IN_RANGE = 'in range';
-const ON_TIME = 'on time';
+export const ALIGNED = 'aligned';
+export const IN_RANGE = 'in range';
+export const ON_TIME = 'on time';
 const ALL_STARTED = 'all started';
-const NO_LEAKS = 'no leaks';
+export const NO_LEAKS = 'no leaks';
 
 // React leaves a hidden subtree's effects connected, so no cleanup fires for a
 // freeze and only a second construction distinguishes one from a teardown.
-const SUBTREE_CONSTRUCTED = 'freezeSubtreeConstructed';
+export const SUBTREE_CONSTRUCTED = 'freezeSubtreeConstructed';
 
 const SWITCH_TOGGLE = 'switch/toggle';
 const HOME_TO_SCREEN_1 = 'home/goToScreen1';
-const SCREEN_1_TO_SCREEN_2 = 'screen1/goToScreen2';
-const SCREEN_2_TO_SCREEN_3 = 'screen2/goToScreen3';
+export const SCREEN_1_TO_SCREEN_2 = 'screen1/goToScreen2';
+export const SCREEN_2_TO_SCREEN_3 = 'screen2/goToScreen3';
 const BACK_BUTTONS = ['screen3/goBack', 'screen2/goBack', 'screen1/goBack'];
 
 /** Doubles as a mount record: a key appears on mount and drops on unmount. */
@@ -129,7 +131,7 @@ function useControl(name: string, handler: () => void) {
   });
 }
 
-async function waitForControl(
+export async function waitForControl(
   name: string,
   present: boolean,
   timeoutMs = CONTROL_TIMEOUT_MS
@@ -146,7 +148,7 @@ async function waitForControl(
   }
 }
 
-async function press(name: string) {
+export async function press(name: string) {
   await waitForControl(name, true);
   controls[name]();
   await waitForFrames(1);
@@ -174,7 +176,7 @@ async function readLeft(name: string, timeoutMs = REATTACH_TIMEOUT_MS) {
  * A missing tag is the signature of a freeze; any other read failure is left to
  * throw rather than reported as one.
  */
-async function isAttached(name: string) {
+export async function isAttached(name: string) {
   const component = getTestComponent(name);
 
   if (component.getTag() === -1) {
@@ -192,13 +194,15 @@ type Reading = {
   at: number;
 };
 
-async function readBoxes(refs: readonly string[] = BOX_REFS): Promise<Reading> {
+export async function readBoxes(
+  refs: readonly string[] = BOX_REFS
+): Promise<Reading> {
   const values = await Promise.all(refs.map((name) => readLeft(name)));
 
   return { refs, values, at: performance.now() };
 }
 
-function alignmentReport({ refs, values }: Reading) {
+export function alignmentReport({ refs, values }: Reading) {
   const spread = Math.max(...values) - Math.min(...values);
 
   if (spread <= SPREAD_TOLERANCE_PX) {
@@ -212,7 +216,11 @@ function alignmentReport({ refs, values }: Reading) {
   return `${positions} - spread ${spread.toFixed(1)}px, tolerated ${SPREAD_TOLERANCE_PX}px`;
 }
 
-function rangeReport({ refs, values }: Reading, min: number, max: number) {
+export function rangeReport(
+  { refs, values }: Reading,
+  min: number,
+  max: number
+) {
   const outside = refs
     .map((name, index) => ({ name, value: values[index] }))
     .filter(({ value }) => value < min || value > max);
@@ -228,7 +236,7 @@ function rangeReport({ refs, values }: Reading, min: number, max: number) {
 }
 
 /** A window of samples is what tells a drifting box from a late-read one. */
-async function worstAlignmentReport(
+export async function worstAlignmentReport(
   durationMs: number,
   refs: readonly string[] = BOX_REFS
 ) {
@@ -278,7 +286,7 @@ async function startedReport(
 }
 
 /** A paused clock reports ~0 travel here, a restarted one a large negative. */
-function travelReport(before: Reading, after: Reading): string {
+export function travelReport(before: Reading, after: Reading): string {
   const elapsedMs = after.at - before.at;
   const nominal = (elapsedMs / DEMO_DURATION_MS) * TRAVEL;
 
@@ -307,7 +315,7 @@ function travelReport(before: Reading, after: Reading): string {
     .concat(` in ${elapsedMs.toFixed(0)}ms (±${TIMING_TOLERANCE_PX}px)`);
 }
 
-function leakingRegistries() {
+export function leakingRegistries() {
   if (typeof global._registriesLeakCheck !== 'function') {
     return '`_registriesLeakCheck` is missing - it is only installed in a build with IS_REANIMATED_EXAMPLE_APP';
   }
@@ -322,7 +330,9 @@ function leakingRegistries() {
   return leaking === '' ? NO_LEAKS : leaking;
 }
 
-async function expectAllBoxesToFinish(refs: readonly string[] = BOX_REFS) {
+export async function expectAllBoxesToFinish(
+  refs: readonly string[] = BOX_REFS
+) {
   await expectEventually(
     async () => rangeReport(await readBoxes(refs), TO - 1, TO + 1),
     DEMO_DURATION_MS + 1000
@@ -506,7 +516,7 @@ function NavigatorFixture() {
 }
 
 /** Pops every pushed screen, deepest first, and waits for home to be back. */
-async function goHome() {
+export async function goHome() {
   for (const button of BACK_BUTTONS) {
     if (button in controls) {
       await press(button);
@@ -531,7 +541,7 @@ type Driver = {
   thaw: () => Promise<void>;
 };
 
-const plainDriver: Driver = {
+export const plainDriver: Driver = {
   name: 'prop-driven',
   mount: async () => {
     await render(<PlainFixture frozen={false} />);
@@ -547,7 +557,7 @@ const plainDriver: Driver = {
   },
 };
 
-const navigatorDriver: Driver = {
+export const navigatorDriver: Driver = {
   name: 'under a native stack',
   mount: async () => {
     await render(<NavigatorFixture />);
@@ -560,11 +570,9 @@ const navigatorDriver: Driver = {
   thaw: goHome,
 };
 
-const DRIVERS = [plainDriver, navigatorDriver];
+// --- Cases that run in both environments - only the driver differs ---
 
-// --- Cases that run in both environments ---
-
-for (const driver of DRIVERS) {
+export function describeSharedCases(driver: Driver) {
   describe(`react-freeze *${driver.name}*`, () => {
     test('animations keep running while the subtree is frozen', async () => {
       await driver.mount();
@@ -643,142 +651,6 @@ for (const driver of DRIVERS) {
     });
   });
 }
-
-// --- Cases that only the prop-driven environment can express ---
-
-describe('react-freeze *prop-driven only*', () => {
-  // Whole-app check, so a failure here points at an earlier suite, not this
-  // one.
-  test('the registries start empty', async () => {
-    await clearRenderOutput();
-
-    await expectEventually(leakingRegistries).toBe(NO_LEAKS);
-  });
-
-  test('the three boxes stay aligned for the whole animation', async () => {
-    await plainDriver.mount();
-
-    expect(await worstAlignmentReport(DEMO_DURATION_MS)).toBe(ALIGNED);
-
-    await expectAllBoxesToFinish();
-  });
-
-  test('a frozen subtree is detached but never torn down', async () => {
-    await plainDriver.mount();
-    expect(await isAttached(SWITCH_REF)).toBe(true);
-
-    await plainDriver.freeze();
-
-    // React takes a hidden subtree's host views out of the hierarchy.
-    expect(await isAttached(SWITCH_REF)).toBe(false);
-
-    await plainDriver.thaw();
-    await expectEventually(() => isAttached(SWITCH_REF)).toBe(true);
-
-    expect(await getTrackerCallCount(SUBTREE_CONSTRUCTED)).toBeCalledJS(1);
-  });
-
-  test('survives repeated freeze cycles', async () => {
-    await plainDriver.mount();
-
-    let previous = await readBoxes();
-
-    // A cadence no navigator can reach.
-    for (let cycle = 0; cycle < 3; cycle++) {
-      await plainDriver.freeze();
-      await wait(150);
-      await plainDriver.thaw();
-      await waitForFrames(2);
-
-      const current = await readBoxes();
-      expect(alignmentReport(current)).toBe(ALIGNED);
-      expect(travelReport(previous, current)).toBe(ON_TIME);
-      previous = current;
-    }
-
-    await expectAllBoxesToFinish();
-  });
-
-  test('unmounting a running subtree leaves no records behind', async () => {
-    await plainDriver.mount();
-    await clearRenderOutput();
-
-    await expectEventually(leakingRegistries).toBe(NO_LEAKS);
-  });
-
-  test('unmounting a settled subtree leaves no records behind', async () => {
-    await plainDriver.mount();
-    await expectAllBoxesToFinish();
-    await clearRenderOutput();
-
-    await expectEventually(leakingRegistries).toBe(NO_LEAKS);
-  });
-});
-
-// --- Cases that only exist once a navigator is involved ---
-
-describe('react-freeze *under a native stack only*', () => {
-  /** Home -> 1 -> 2 -> 3, dwelling on each one. */
-  async function goThreeScreensDeep(dwellMs: number) {
-    await navigatorDriver.freeze();
-    await wait(dwellMs);
-    await press(SCREEN_1_TO_SCREEN_2);
-    await waitForControl(SCREEN_2_TO_SCREEN_3, true);
-    await wait(dwellMs);
-    await press(SCREEN_2_TO_SCREEN_3);
-    await waitForControl('screen3/goBack', true);
-    await wait(dwellMs);
-  }
-
-  test('the boxes keep animating three screens deep', async () => {
-    await navigatorDriver.mount();
-    expect(await worstAlignmentReport(ALIGNMENT_WATCH_MS)).toBe(ALIGNED);
-
-    const before = await readBoxes();
-
-    await goThreeScreensDeep(FREEZE_MS / 3);
-    await goHome();
-
-    const after = await readBoxes();
-
-    // Home freezes once however deep the stack goes: pushing 2 and 3 never
-    // touches it, so only the number of transitions differs from the shallow
-    // case.
-    expect(await worstAlignmentReport(ALIGNMENT_WATCH_MS)).toBe(ALIGNED);
-    expect(rangeReport(after, MIDPOINT, TO - 1)).toBe(IN_RANGE);
-    expect(travelReport(before, after)).toBe(ON_TIME);
-
-    await expectAllBoxesToFinish();
-  });
-
-  test('a second round trip picks up where the first one left off', async () => {
-    await navigatorDriver.mount();
-
-    let previous = await readBoxes();
-
-    for (let trip = 0; trip < 2; trip++) {
-      await navigatorDriver.freeze();
-      await wait(SHORT_FREEZE_MS);
-      await navigatorDriver.thaw();
-
-      const current = await readBoxes();
-      expect(alignmentReport(current)).toBe(ALIGNED);
-      expect(travelReport(previous, current)).toBe(ON_TIME);
-      previous = current;
-    }
-
-    await expectAllBoxesToFinish();
-  });
-
-  test('unmounting the navigator three screens deep leaves no records behind', async () => {
-    await navigatorDriver.mount();
-    await goThreeScreensDeep(SHORT_FREEZE_MS / 3);
-
-    await clearRenderOutput();
-
-    await expectEventually(leakingRegistries).toBe(NO_LEAKS);
-  });
-});
 
 const styles = css.create({
   container: {
