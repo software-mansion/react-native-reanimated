@@ -112,7 +112,7 @@ This option turns off the source map generation for worklets. Mostly used for te
 Defaults to `false`.
 
 Disables [Worklet Classes
-support](/docs/worklets-babel-plugin/about#experimental-worklet-classes).
+support](/docs/0.9/worklets-babel-plugin/about#experimental-worklet-classes).
 You might need to disable this feature when using [Custom
 Serializables](/docs/memory/registerCustomSerializable).
 
@@ -267,12 +267,12 @@ This option allows you to register modules as safe to use on Worklet Runtimes in
 
 ### importForwarding
 
-Configures [import forwarding](/docs/bundleMode/importForwarding) for Bundle Mode. See the [0.10 docs](/docs/worklets-babel-plugin/plugin-options#importforwarding) for the full reference.
+Configures [import forwarding](/docs/bundleMode/importForwarding) for Bundle Mode. See the [0.10 docs](/docs/0.10-0.12/worklets-babel-plugin/plugin-options#importforwarding) for the full reference.
 
 #### importForwarding.moduleNames
 
-See the [0.10 docs](/docs/worklets-babel-plugin/plugin-options#importforwardingmodulenames).
+See the [0.10 docs](/docs/0.10-0.12/worklets-babel-plugin/plugin-options#importforwardingmodulenames).
 
 #### importForwarding.relativePaths
 
-See the [0.10 docs](/docs/worklets-babel-plugin/plugin-options#importforwardingrelativepaths).
+See the [0.10 docs](/docs/0.10-0.12/worklets-babel-plugin/plugin-options#importforwardingrelativepaths).

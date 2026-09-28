@@ -63,8 +63,6 @@ const ColorInterpolationExample: React.FC = () =>
   React.createElement(
     require('./ColorInterpolationExample').default as React.FC
   );
-const ContrastColorExample: React.FC = () =>
-  React.createElement(require('./ContrastColorExample').default as React.FC);
 const CombinedTest: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/Combined').default as React.FC
@@ -331,13 +329,6 @@ const SHOW_CASES_AND_REGRESSIONS = 'Show Cases and Regressions';
 const REGRESSIONS = 'Regressions';
 
 const ALL_EXAMPLES: Record<string, Example> = {
-  // About
-  AboutExample: {
-    icon: 'ℹ️',
-    title: 'About',
-    screen: AboutExample,
-  },
-
   SuspenseLayoutAnimationCrashExample: {
     icon: '💥',
     title: 'Suspense + Layout Animation Crash',
@@ -351,12 +342,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: SettledPropsLeakExample,
   },
 
-  // Empty example for test purposes
-  EmptyExample: {
-    icon: '👻',
-    title: 'Empty',
-    screen: EmptyExample,
-  },
   InlineStylesAndPropsExample: {
     icon: '🎛️',
     title: 'Inline styles and props',
@@ -382,11 +367,13 @@ const ALL_EXAMPLES: Record<string, Example> = {
   DetachAnimatedStylesExample: {
     icon: '⛓️‍💥',
     title: 'Detach animated styles',
+    section: REGRESSIONS,
     screen: DetachAnimatedStylesExample,
   },
   ScrollPerformanceExample: {
     icon: '🚁',
     title: 'Scroll performance',
+    section: REGRESSIONS,
     screen: ScrollPerformanceExample,
   },
   ThirdPartyComponentsExample: {
@@ -398,6 +385,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ReactFreeze: {
     icon: '❄️',
     title: 'React freeze',
+    section: REGRESSIONS,
     screen: FreezeExample,
   },
   CircularSliderExample: {
@@ -564,6 +552,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   NonLayoutPropAndRenderExample: {
     icon: '🎭',
     title: 'Non-layout prop and render example',
+    section: REGRESSIONS,
     screen: NonLayoutPropAndRenderExample,
   },
   RefExample: {
@@ -719,11 +708,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Color interpolation',
     section: SHOW_CASES,
     screen: ColorInterpolationExample,
-  },
-  ContrastColorExample: {
-    icon: '🔲',
-    title: 'Contrast color',
-    screen: ContrastColorExample,
   },
   ExtrapolationExample: {
     title: 'Extrapolation example',
@@ -978,6 +962,18 @@ const LAYOUT_ANIMATION_PREFIX = '[LA]';
 const SHARED_ELEMENT_TRANSITION_PREFIX = '[SET]';
 
 export const EXAMPLES: Record<string, ExampleEntry> = {
+  // About
+  AboutExample: {
+    icon: 'ℹ️',
+    title: 'About',
+    screen: AboutExample,
+  },
+  // Empty example for test purposes
+  EmptyExample: {
+    icon: '👻',
+    title: 'Empty',
+    screen: EmptyExample,
+  },
   LayoutAnimations: {
     examples: withTitlePrefix(LAYOUT_ANIMATION_PREFIX),
     icon: '📐',

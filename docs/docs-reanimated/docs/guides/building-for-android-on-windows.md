@@ -4,6 +4,8 @@ title: Building for Android on Windows
 sidebar_label: Building for Android on Windows
 ---
 
+# Building for Android on Windows
+
 This article provides basic troubleshooting steps for issues that may happen when building React Native apps with Reanimated for Android devices on Windows host machine.
 
 There are many possible errors including, but not limited to:

@@ -44,4 +44,23 @@ describe('web threads implementation', () => {
       })
     ).rejects.toBe(error);
   });
+
+  test('executes callbacks when requestAnimationFrame is unavailable', async () => {
+    const descriptor = Object.getOwnPropertyDescriptor(
+      globalThis,
+      'requestAnimationFrame'
+    );
+    // @ts-expect-error Simulates a server environment such as Node.js.
+    delete globalThis.requestAnimationFrame;
+    try {
+      await jest.isolateModulesAsync(async () => {
+        const threads = await import('../src/threads');
+        await expect(threads.runOnUIAsync(() => 'done')).resolves.toBe('done');
+      });
+    } finally {
+      if (descriptor) {
+        Object.defineProperty(globalThis, 'requestAnimationFrame', descriptor);
+      }
+    }
+  });
 });

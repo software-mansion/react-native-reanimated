@@ -412,7 +412,7 @@ void LayoutAnimationsProxy::updateLightTree(
         const auto state = it->second->state;
         // View flattening emits a child's Delete after its parent's Remove, which may have already torn the child
         // down.
-        if (state == UNDEFINED || state == DEAD || state == DELETED) {
+        if (state == UNDEFINED || state == COMPLETED || state == DELETED) {
           const auto node = it->second;
           unmapLightNode(node);
         }
@@ -703,7 +703,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
     react_native_assert(false && "LightNode not found");
     return surfaceId_;
   }
-  nodeIt->second->setExitingState(DEAD);
+  nodeIt->second->setExitingState(COMPLETED);
 
   return surfaceId_;
 }
@@ -755,14 +755,14 @@ void LayoutAnimationsProxy::flushCompletedRemovals(ShadowViewMutationList &filte
       continue;
     }
     const auto nodeIt = lightNodes_.find(tag);
-    if (nodeIt == lightNodes_.end() || nodeIt->second->state != DEAD) {
+    if (nodeIt == lightNodes_.end() || nodeIt->second->state != COMPLETED) {
       continue;
     }
     const auto node = nodeIt->second;
     auto parent = node->parent.lock();
     react_native_assert(parent && "Parent node is nullptr");
     auto index = parent->removeChild(node);
-    react_native_assert(index != -1 && "Dead node not found");
+    react_native_assert(index != -1 && "Completed node not found");
 
     endAnimationsRecursively(node, index, filteredMutations);
     maybeDropAncestors(parent, filteredMutations);
@@ -910,7 +910,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
     index--;
     auto &subNode = *it;
     if (subNode->state != UNDEFINED) {
-      if (shouldAnimate && subNode->state != DEAD) {
+      if (shouldAnimate && subNode->state != COMPLETED) {
         hasAnimatedChildren = true;
       } else {
         endAnimationsRecursively(subNode, index, mutations);
@@ -996,11 +996,16 @@ ShadowView LayoutAnimationsProxy::cloneViewWithoutOpacity(
 
 // Android's push model applies JS-thread transactions asynchronously on the UI
 // thread. A UI-thread pull can overtake them, so completed animations must not
-// add structural cleanup mutations there. This gate can go away with Android's
-// pull model.
+// add structural cleanup mutations there.
+//
+// Under the pull model there is nothing left to overtake, because every
+// transaction is pulled from the UI thread's frame callback. Keeping the thread
+// check on its own there would mean this never returns true, so no exiting view
+// would ever have its removal flushed, and every one of them would stay mounted
+// for the lifetime of the surface.
 bool LayoutAnimationsProxy::shouldFlushStructuralMutations() const {
 #ifdef ANDROID
-  return !worklets::isOnUIThread(uiScheduler_);
+  return isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_);
 #else
   return true;
 #endif

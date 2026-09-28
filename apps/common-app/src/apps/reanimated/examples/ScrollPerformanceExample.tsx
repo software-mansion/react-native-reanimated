@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, {
+  PerformanceMonitor,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -9,11 +10,14 @@ import Animated, {
 
 export default function ScrollPerformanceExample() {
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {Array.from({ length: 500 }).map((_, index) => (
-        <Item key={index} />
-      ))}
-    </ScrollView>
+    <>
+      <PerformanceMonitor />
+      <ScrollView contentContainerStyle={styles.container}>
+        {Array.from({ length: 500 }).map((_, index) => (
+          <Item key={index} />
+        ))}
+      </ScrollView>
+    </>
   );
 }
 
