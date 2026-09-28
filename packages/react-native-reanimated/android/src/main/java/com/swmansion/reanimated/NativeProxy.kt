@@ -261,10 +261,11 @@ open class NativeProxy {
     ) {
         cssPlatformTransitionsManager.onPropsWrittenSynchronously()
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
-            if (getViewExistsMethod?.invoke(mountingManager, viewTag) == false) {
-                return@parse
-            }
             try {
+                // The props stay in the registry, and the commit hook applies them to the shadow tree.
+                if (getViewExistsMethod?.invoke(mountingManager, viewTag) == false) {
+                    return@parse
+                }
                 updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
             } catch (e: Exception) {
                 Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag: ${e.cause ?: e}")
