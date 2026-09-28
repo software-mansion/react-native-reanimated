@@ -11,6 +11,8 @@ namespace reanimated {
 
 class AnimatedPropsRegistry : public UpdatesRegistry {
  public:
+  bool isEmpty() const override;
+
   void update(jsi::Runtime &rt, const jsi::Value &operations, double timestamp);
 
   /// Returns updates that settled (received no update since `settledTimestamp`)
