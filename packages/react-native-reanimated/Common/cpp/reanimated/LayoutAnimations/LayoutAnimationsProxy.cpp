@@ -147,9 +147,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   }
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
   TransactionMeta transaction;
-  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    restoreViewsWithoutSharedTag(transaction);
-  }
   const bool removesRootChildren = std::ranges::any_of(mutations, [this](const auto &mutation) {
     return mutation.type == ShadowViewMutation::Remove && mutation.parentTag == surfaceId_;
   });
@@ -1049,6 +1046,7 @@ void LayoutAnimationsProxy::cleanupAnimations(
       finishSharedTransition(element, transaction);
     }
 
+    restoreViewsWithoutSharedTag(transaction);
     cleanupSharedTransitions(transaction, propsParserContext);
   }
   cleanupCompletedAnimations(transaction.filteredMutations, propsParserContext, true, preservedContainerTags);
