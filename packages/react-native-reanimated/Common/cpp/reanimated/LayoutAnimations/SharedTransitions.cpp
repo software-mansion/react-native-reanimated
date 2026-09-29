@@ -655,12 +655,20 @@ void LayoutAnimationsProxy::restoreViewsWithoutSharedTag(TransactionMeta &transa
   auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
   for (const auto &[_, element] : sharedElements_) {
     for (const auto &node : element.hiddenNodes) {
-      const bool isInTransition = element.container && (node == element.source || node == element.target);
-      if (!isInTransition && !sharedTransitionManager_->tagToName_.contains(node->current.tag)) {
+      if (!isWaitingForTransition(element, node) && !sharedTransitionManager_->tagToName_.contains(node->current.tag)) {
         transaction.nodesToRestore.push_back(node);
       }
     }
   }
+}
+
+bool LayoutAnimationsProxy::isWaitingForTransition(const SharedElement &element, const std::shared_ptr<LightNode> &node)
+    const {
+  if (element.container && (node == element.source || node == element.target)) {
+    return true;
+  }
+  return uncommittedScreenPop_ &&
+      std::ranges::find(uncommittedScreenPop_->sourceNodes, node) != uncommittedScreenPop_->sourceNodes.end();
 }
 
 void LayoutAnimationsProxy::cleanupSharedTransitions(

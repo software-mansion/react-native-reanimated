@@ -218,6 +218,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   bool showHiddenView(const std::shared_ptr<LightNode> &node) const;
   void forgetHiddenView(Tag tag) const;
   void restoreViewsWithoutSharedTag(TransactionMeta &transaction) const;
+  bool isWaitingForTransition(const SharedElement &element, const std::shared_ptr<LightNode> &node) const;
 
   std::vector<react::Point> getAbsolutePositionsForRootPathView(
       const std::shared_ptr<LightNode> &node,
