@@ -33,6 +33,7 @@ struct StartAnimationsRecursivelyConfig {
   bool shouldRemoveSubviewsWithoutAnimations;
   bool shouldAnimate;
   bool isScreenPop;
+  bool defersTeardown;
 };
 
 struct PendingNodeAnimation {
@@ -93,6 +94,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::optional<ProgressTransition> transition_;
   mutable std::optional<UncommittedScreenPop> uncommittedScreenPop_;
   mutable std::shared_ptr<LightNode> topScreen_;
+  // screens that forceScreenSnapshot_ switched to snapshots after updates; React Native Screens never switches them
+  // back
+  mutable std::unordered_set<Tag> snapshottedScreens_;
   mutable std::unordered_map<Tag, SharedContainer> sharedContainers_;
   mutable std::unordered_set<Tag> hiddenViewTags_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
@@ -245,6 +249,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &node,
       const std::shared_ptr<LightNode> &parent,
       TransactionMeta &transaction) const;
+  bool holdsSnapshottedScreen(const std::shared_ptr<LightNode> &node) const;
   void flushCompletedRemovals(ShadowViewMutationList &filteredMutations) const;
 
   void addOngoingAnimations(ShadowViewMutationList &mutations) const;
