@@ -12,11 +12,13 @@ ReanimatedMountHook::ReanimatedMountHook(
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
     const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
     const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry,
+    const std::shared_ptr<SynchronousWritesTracker> &synchronousWritesTracker,
     const std::function<void()> &requestFlush)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
       viewStylesRepository_(viewStylesRepository),
       layoutAnimationsProxyRegistry_(layoutAnimationsProxyRegistry),
+      synchronousWritesTracker_(synchronousWritesTracker),
       requestFlush_(requestFlush) {
   uiManager_->registerMountHook(*this);
 }
@@ -33,6 +35,10 @@ void ReanimatedMountHook::shadowTreeDidMount(
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     // With the animation backend this hook only tracks surface unmounts.
     return;
+  }
+
+  if (synchronousWritesTracker_) {
+    synchronousWritesTracker_->onMountReport(rootShadowNode);
   }
 
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
@@ -72,6 +78,9 @@ void ReanimatedMountHook::shadowTreeDidMount(
 void ReanimatedMountHook::shadowTreeDidUnmount(SurfaceId surfaceId, HighResTimeStamp /*unmountTime*/) noexcept {
   if (layoutAnimationsProxyRegistry_) {
     layoutAnimationsProxyRegistry_->remove(surfaceId);
+  }
+  if (synchronousWritesTracker_) {
+    synchronousWritesTracker_->onSurfaceStop(surfaceId);
   }
 
   auto lock = updatesRegistryManager_->lock();
