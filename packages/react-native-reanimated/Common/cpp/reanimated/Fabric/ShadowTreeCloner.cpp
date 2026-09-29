@@ -83,6 +83,10 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRo
     }
   }
 
+  if (childrenMap.empty()) {
+    return nullptr;
+  }
+
   // This cast is safe, because this function returns a clone
   // of the oldRootNode, which is an instance of RootShadowNode
   return std::static_pointer_cast<RootShadowNode>(

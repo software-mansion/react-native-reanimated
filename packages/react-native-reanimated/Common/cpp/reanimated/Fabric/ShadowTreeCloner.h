@@ -16,6 +16,7 @@ namespace reanimated {
 using PropsMap = std::unordered_map<ShadowNodeFamily::Shared, std::vector<RawProps>>;
 using ChildrenMap = std::unordered_map<ShadowNodeFamily::Shared, std::unordered_set<int>>;
 
+/// Returns nullptr when none of the families in propsMap is in the tree.
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRootNode, const PropsMap &propsMap);
 
 } // namespace reanimated
