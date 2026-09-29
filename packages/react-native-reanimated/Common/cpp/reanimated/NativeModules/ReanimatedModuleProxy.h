@@ -21,6 +21,7 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
+#include <reanimated/Fabric/updates/SynchronousWritesTracker.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
@@ -108,6 +109,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   void performOperations();
   void performNonLayoutOperations();
+  bool hasSynchronousWritesTracker() const;
+  void rewriteSynchronousProps();
   void flushLayoutAnimationOperations();
   void executeLayoutAnimationsRequests();
 
@@ -205,6 +208,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   void commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
   void applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch);
+  void writeSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch);
 
   std::shared_ptr<UIManagerAnimationBackend> getAnimationBackend();
   AnimationMutations runGrandCallback(AnimationTimestamp timestamp, GrandCallbackSource source);
@@ -253,9 +257,10 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
   const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
+  const std::shared_ptr<SynchronousWritesTracker> synchronousWritesTracker_;
 
 #ifdef ANDROID
-  // Reused across `applySynchronousUpdates` calls to avoid per-frame heap
+  // Reused across `writeSynchronousPropsToViews` calls to avoid per-frame heap
   // allocations. Access only on the UI thread.
   std::vector<int> synchronousPropsIntBuffer_;
   std::vector<double> synchronousPropsDoubleBuffer_;
