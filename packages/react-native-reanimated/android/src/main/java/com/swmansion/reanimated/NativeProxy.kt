@@ -230,6 +230,21 @@ open class NativeProxy {
         return true
     }
 
+    @DoNotStrip
+    fun repairSvgFillRule(
+        viewTag: Int,
+        evenOdd: Boolean,
+    ) {
+        val view =
+            try {
+                mFabricUIManager.resolveView(viewTag)
+            } catch (e: IllegalViewOperationException) {
+                // Thrown, not null, when the tag is registered but the View does not exist yet.
+                null
+            } ?: return
+        SvgFillRuleRepair.apply(view, evenOdd)
+    }
+
     // TODO(#9681): Temporary workaround. Since RN 0.86,
     // overrideBySynchronousMountPropsAtMountingAndroid defaults on, so RN's only public
     // synchronous-update API (synchronouslyUpdateViewOnUIThread) seeds the tagToSynchronousMountProps
