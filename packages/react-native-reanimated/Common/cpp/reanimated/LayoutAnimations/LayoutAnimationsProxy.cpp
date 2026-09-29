@@ -432,10 +432,13 @@ void LayoutAnimationsProxy::updateLightTree(
         bool hasSharedTransition = false;
         if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
           auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
-          hasSharedTransition = sharedTransitionManager_->tagToName_.contains(tag);
+          hasSharedTransition = mutation.newChildShadowView.traits.check(ShadowNodeTraits::Trait::ViewKind) &&
+              sharedTransitionManager_->tagToName_.contains(tag);
         }
         const auto layoutConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT);
-        const auto enteringConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, ENTERING);
+        const auto enteringConfig = isViewKind(mutation.newChildShadowView)
+            ? layoutAnimationsManager_->getLayoutAnimationConfig(tag, ENTERING)
+            : nullptr;
         if (moved.contains(tag)) {
           const auto offset = reparentOffset(oldChains.at(tag), ancestorOrigins(parent, {}));
           node->previous.layoutMetrics.frame.origin += offset;
@@ -835,7 +838,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(ShadowViewMutationList &mutatio
     mutations.push_back(
         ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
     layoutAnimation.currentView = newView;
-    if (layoutAnimation.opacity && static_cast<const ViewProps &>(*newView.props).opacity == *layoutAnimation.opacity) {
+    if (layoutAnimation.opacity && getViewProps(newView).opacity == *layoutAnimation.opacity) {
       layoutAnimation.opacity.reset();
     }
   }
@@ -990,6 +993,7 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
 ShadowView LayoutAnimationsProxy::cloneViewWithoutOpacity(
     const ShadowView &shadowView,
     const PropsParserContext &propsParserContext) const {
+  react_native_assert(isViewKind(shadowView) && "Only ViewKind views have ViewProps");
   auto newView = shadowView;
   folly::dynamic rawProps = folly::dynamic::object("opacity", 0);
 #ifdef ANDROID
@@ -1075,9 +1079,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
     const std::shared_ptr<Serializable> &config) const {
   resolveLightNodeProps(node);
   const auto &newChildShadowView = node->current;
-  const auto &props = newChildShadowView.props;
-  auto &viewProps = static_cast<const ViewProps &>(*props);
-  const auto opacity = viewProps.opacity;
+  const auto opacity = getViewProps(newChildShadowView).opacity;
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
