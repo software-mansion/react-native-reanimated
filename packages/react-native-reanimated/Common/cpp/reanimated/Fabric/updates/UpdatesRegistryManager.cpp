@@ -21,8 +21,10 @@ UpdatesRegistryManager::ScopedLock::~ScopedLock() {
   tCurrentThreadHoldsLock = false;
 }
 
-UpdatesRegistryManager::UpdatesRegistryManager(const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
-    : staticPropsRegistry_(staticPropsRegistry) {}
+UpdatesRegistryManager::UpdatesRegistryManager(
+    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
+    const std::shared_ptr<MountedRootsRegistry> &mountedRootsRegistry)
+    : staticPropsRegistry_(staticPropsRegistry), mountedRootsRegistry_(mountedRootsRegistry) {}
 
 UpdatesRegistryManager::ScopedLock UpdatesRegistryManager::lock() const {
   return ScopedLock{mutex_};
@@ -78,7 +80,7 @@ void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
   }
 }
 
-void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadowNode) {
+void UpdatesRegistryManager::handleNodeRemovals() {
   react_native_assert(isLockedByCurrentThread());
   RemovableShadowNodes remainingShadowNodes;
 
@@ -87,14 +89,15 @@ void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadow
       continue;
     }
 
-    if (shadowNodeFamily->getAncestors(rootShadowNode).empty()) {
-      for (auto &registry : registries_) {
-        registry->removeUnmounted(shadowNodeFamily);
-      }
-      staticPropsRegistry_->remove(tag);
-    } else {
+    if (mountedRootsRegistry_->isMounted(*shadowNodeFamily)) {
       remainingShadowNodes.emplace(tag, shadowNodeFamily);
+      continue;
     }
+
+    for (auto &registry : registries_) {
+      registry->removeUnmounted(shadowNodeFamily);
+    }
+    staticPropsRegistry_->remove(tag);
   }
 
   removableShadowNodes_ = std::move(remainingShadowNodes);
