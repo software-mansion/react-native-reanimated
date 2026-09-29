@@ -1031,11 +1031,11 @@ void LayoutAnimationsProxy::cleanupAnimations(
   ReanimatedSystraceSection s("cleanupAnimations");
   std::unordered_set<Tag> preservedContainerTags;
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    for (auto &[_, element] : sharedElements_) {
-      if (!element.container) {
+    for (auto &[sharedTag, element] : sharedElements_) {
+      if (!element.run) {
         continue;
       }
-      const auto tag = element.container->current.tag;
+      const auto tag = element.run->container->current.tag;
       if (!completedAnimations_.contains(tag) || hasPendingLayoutAnimation(tag)) {
         continue;
       }
@@ -1043,10 +1043,10 @@ void LayoutAnimationsProxy::cleanupAnimations(
         preservedContainerTags.insert(tag);
         continue;
       }
-      finishSharedTransition(element, transaction);
+      finishSharedTransition(sharedTag, element, transaction);
     }
 
-    restoreViewsWithoutSharedTag(transaction);
+    queuePendingRestores(transaction);
     cleanupSharedTransitions(transaction, propsParserContext);
   }
   cleanupCompletedAnimations(transaction.filteredMutations, propsParserContext, true, preservedContainerTags);

@@ -40,15 +40,30 @@ struct PendingNodeAnimation {
   std::shared_ptr<Serializable> config;
 };
 
-// The state of one shared tag on a surface. The views in hiddenNodes stay at
-// opacity 0 until they are restored or removed. The other fields describe the
-// transition that runs now.
-struct SharedElement {
-  std::vector<std::shared_ptr<LightNode>> hiddenNodes;
+struct SharedTransitionRun {
   std::shared_ptr<LightNode> container;
   std::shared_ptr<LightNode> source;
   std::shared_ptr<LightNode> target;
   bool gestureDriven = false;
+};
+
+// Asks to show a view that the shared tag hid. The request is stale when the
+// view is hidden for a different shared tag now.
+struct RestoreRequest {
+  SharedTag sharedTag;
+  std::shared_ptr<LightNode> node;
+};
+
+struct HiddenView {
+  std::shared_ptr<LightNode> node;
+  bool restoreDeferred = false;
+};
+
+// A view in hiddenViews stays at opacity 0 until it is restored or removed,
+// also after the run ends. A view is in the hiddenViews of one shared tag only.
+struct SharedElement {
+  std::vector<HiddenView> hiddenViews;
+  std::optional<SharedTransitionRun> run;
 };
 
 // One in-flight back gesture. Created on the first progress event, destroyed
@@ -63,10 +78,10 @@ struct ProgressTransition {
 
 // A finished gesture whose hidden source views wait for React to commit the
 // navigation. The wait ends when React deletes sourceScreen, or a late cancel
-// sets cancelled and the next pull restores sourceNodes.
+// sets cancelled and the next pull restores sources.
 struct UncommittedScreenPop {
   std::shared_ptr<LightNode> sourceScreen;
-  std::vector<std::shared_ptr<LightNode>> sourceNodes;
+  std::vector<RestoreRequest> sources;
   bool cancelled = false;
 };
 
@@ -88,7 +103,7 @@ struct TransactionMeta {
   std::vector<PendingNodeAnimation> entering;
   std::vector<PendingNodeAnimation> exiting;
   std::vector<std::shared_ptr<LightNode>> containersToInsert;
-  std::vector<std::shared_ptr<LightNode>> nodesToRestore;
+  std::vector<RestoreRequest> restoreRequests;
   std::vector<std::shared_ptr<LightNode>> containersToRemove;
   std::unordered_map<Tag, Tag> staleSnapshots;
 };
@@ -208,25 +223,26 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   void insertContainers(TransactionMeta &transaction, int &rootChildCount) const;
 
-  void removeSharedContainer(SharedElement &element, TransactionMeta &transaction) const;
-  void finishSharedTransition(SharedElement &element, TransactionMeta &transaction) const;
-  void retargetSharedElement(
-      SharedElement &element,
+  SharedTransitionRun &startSharedTransitionRun(
+      const ShadowView &before,
+      const SharedTag &sharedTag,
       const std::array<std::shared_ptr<LightNode>, 2> &nodes,
+      bool gestureDriven,
       TransactionMeta &transaction) const;
+  std::shared_ptr<LightNode> createSharedContainer(const ShadowView &before, TransactionMeta &transaction) const;
+  void finishSharedTransition(const SharedTag &sharedTag, SharedElement &element, TransactionMeta &transaction) const;
   bool isSharedContainer(Tag tag) const;
-  bool showHiddenView(const std::shared_ptr<LightNode> &node) const;
+  void hideInSharedElement(const SharedTag &sharedTag, const std::shared_ptr<LightNode> &node) const;
+  bool showHiddenView(const RestoreRequest &request) const;
+  void deferRestore(const RestoreRequest &request) const;
   void forgetHiddenView(Tag tag) const;
-  void restoreViewsWithoutSharedTag(TransactionMeta &transaction) const;
-  bool isWaitingForTransition(const SharedElement &element, const std::shared_ptr<LightNode> &node) const;
+  void queuePendingRestores(TransactionMeta &transaction) const;
+  bool isInSharedTransition(const std::shared_ptr<LightNode> &node) const;
 
   std::vector<react::Point> getAbsolutePositionsForRootPathView(
       const std::shared_ptr<LightNode> &node,
       bool useViewsOnScreen) const;
   const ShadowView &viewOnScreen(const std::shared_ptr<LightNode> &node) const;
-
-  SharedElement &
-  getOrCreateContainer(const ShadowView &before, const SharedTag &sharedTag, TransactionMeta &transaction) const;
 
   void overrideTransform(
       ShadowView &shadowView,
