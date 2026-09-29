@@ -256,6 +256,7 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
     return;
   }
   lightNodes_.erase(it);
+  visibleScreens_.erase(node->current.tag);
   if (node == topScreen_) {
     topScreen_ = nullptr;
   }
@@ -981,6 +982,7 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
     sharedElements_.clear();
     transition_.reset();
     uncommittedScreenPop_.reset();
+    visibleScreens_.clear();
   }
 #ifdef ANDROID
   cleanupPullScheduled_ = false;
