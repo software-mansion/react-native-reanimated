@@ -130,7 +130,7 @@ export function useAnimatedSensor<T extends SensorType>(
     [sensorType, config]
   );
 
-  const unregisterRef = useRef(NOOP);
+  const registrationRef = useRef({ sensorType, config, unregister: NOOP });
 
   useEffect(() => {
     const id = registerSensor(sensorType, config, (data) => {
@@ -147,7 +147,7 @@ export function useAnimatedSensor<T extends SensorType>(
         unregisterSensor(id);
       }
     };
-    unregisterRef.current = unregister;
+    registrationRef.current = { sensorType, config, unregister };
 
     return unregister;
   }, [sensorType, config, sensor, adjustToInterfaceOrientation]);
@@ -157,8 +157,16 @@ export function useAnimatedSensor<T extends SensorType>(
       sensor,
       isAvailable,
       config,
-      unregister: () => unregisterRef.current(),
+      unregister: () => {
+        const registration = registrationRef.current;
+        if (
+          registration.sensorType === sensorType &&
+          registration.config === config
+        ) {
+          registration.unregister();
+        }
+      },
     }),
-    [sensor, isAvailable, config]
+    [sensorType, sensor, isAvailable, config]
   );
 }

@@ -399,4 +399,31 @@ describe('Sensors', () => {
 
     expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1], [2]]);
   });
+
+  test('ignores unregister on a stale result after a change of sensor type', () => {
+    const { result, rerender } = renderHook(
+      (sensorType: SensorType) => useAnimatedSensor(sensorType),
+      { initialProps: SensorType.ACCELEROMETER }
+    );
+    const stale = result.current;
+
+    rerender(SensorType.GRAVITY);
+    stale.unregister();
+
+    expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1]]);
+  });
+
+  test('ignores unregister on a stale result after a change of config', () => {
+    const { result, rerender } = renderHook(
+      (interval: number) =>
+        useAnimatedSensor(SensorType.ACCELEROMETER, { interval }),
+      { initialProps: 100 }
+    );
+    const stale = result.current;
+
+    rerender(200);
+    stale.unregister();
+
+    expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1]]);
+  });
 });
