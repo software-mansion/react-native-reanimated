@@ -19,6 +19,7 @@ enum class SensorType : std::uint8_t {
   GRAVITY = 3,
   MAGNETIC_FIELD = 4,
   ROTATION_VECTOR = 5,
+  HINGE = 6,
 };
 
 class AnimatedSensorModule {
