@@ -85,8 +85,6 @@ export class PropsFilter implements IPropsFilter {
           props[key] = dummyListener;
         }
       } else if (isSharedValue(value)) {
-        // Pass the initial value on every render, not just the first one, so that
-        // the prop (e.g. `children` of <Animated.Text>) isn't dropped on re-render.
         let initial = this._initialInlinePropValues.get(key);
         if (initial?.sharedValue !== value) {
           initial = { sharedValue: value, value: value.value };
