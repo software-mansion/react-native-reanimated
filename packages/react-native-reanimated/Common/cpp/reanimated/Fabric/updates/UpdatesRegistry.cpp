@@ -42,6 +42,10 @@ void UpdatesRegistry::remove(const Tag tag) {
   removeTag(tag);
 }
 
+void UpdatesRegistry::removeUnmounted(const ShadowNodeFamily::Shared &shadowNodeFamily) {
+  remove(shadowNodeFamily->getTag());
+}
+
 void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   flush(updatesBatch);
@@ -226,6 +230,10 @@ void UpdatesRegistry::removeFromUpdatesRegistry(const Tag tag) {
   updatePropsToRevert(tag);
 #endif
   updatesRegistry_.erase(tag);
+}
+
+void UpdatesRegistry::removePendingUpdates(const Tag tag) {
+  std::erase_if(updatesBatch_, [tag](const auto &update) { return update.first->getTag() == tag; });
 }
 
 void UpdatesRegistry::flushUpdatesToRegistry(const UpdatesBatch &updatesBatch) {

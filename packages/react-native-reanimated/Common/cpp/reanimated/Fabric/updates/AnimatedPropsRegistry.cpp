@@ -5,6 +5,7 @@
 
 #include <react/debug/react_native_assert.h>
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <utility>
@@ -36,6 +37,9 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     auto item = operationsArray.getValueAtIndex(rt, i).asObject(rt);
     auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+    if (isUnmounted(shadowNode->getFamily())) {
+      continue;
+    }
 
     jsi::Value updates = item.getProperty(rt, "updates");
     roundTextMetrics(rt, updates);
@@ -117,6 +121,30 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const 
   }
 
   return jsi::Value(rt, array);
+}
+
+void AnimatedPropsRegistry::removeUnmounted(const ShadowNodeFamily::Shared &shadowNodeFamily) {
+  const auto tag = shadowNodeFamily->getTag();
+  remove(tag);
+  removePendingUpdates(tag);
+  unmountedFamilies_[tag] = shadowNodeFamily;
+  if (unmountedFamilies_.size() >= unmountedFamiliesPruneThreshold_) {
+    pruneExpiredUnmountedFamilies();
+  }
+}
+
+void AnimatedPropsRegistry::handleRemount(const Tag tag) {
+  unmountedFamilies_.erase(tag);
+}
+
+bool AnimatedPropsRegistry::isUnmounted(const ShadowNodeFamily &shadowNodeFamily) const {
+  const auto it = unmountedFamilies_.find(shadowNodeFamily.getTag());
+  return it != unmountedFamilies_.end() && it->second.lock().get() == &shadowNodeFamily;
+}
+
+void AnimatedPropsRegistry::pruneExpiredUnmountedFamilies() {
+  std::erase_if(unmountedFamilies_, [](const auto &entry) { return entry.second.expired(); });
+  unmountedFamiliesPruneThreshold_ = std::max(MIN_UNMOUNTED_FAMILIES_PRUNE_THRESHOLD, 2 * unmountedFamilies_.size());
 }
 
 void AnimatedPropsRegistry::removeTag(const Tag tag) {

@@ -49,6 +49,8 @@ class UpdatesRegistry {
   folly::dynamic get(Tag tag) const;
   void mergeInto(Tag tag, folly::dynamic &target) const;
   void remove(Tag tag);
+  virtual void removeUnmounted(const ShadowNodeFamily::Shared &shadowNodeFamily);
+  virtual void handleRemount(Tag /*tag*/) {}
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;
@@ -100,6 +102,9 @@ class UpdatesRegistry {
 
   /// Assumes the caller already locked the registry.
   void removeFromUpdatesRegistry(Tag tag);
+
+  /// Assumes the caller already locked the registry.
+  void removePendingUpdates(Tag tag);
 
  private:
   UpdatesBatch updatesBatch_;
