@@ -3,6 +3,7 @@
 #include <reanimated/CSS/InterpolatorRegistry.h>
 #include <reanimated/CSS/registries/StaticPropsRegistry.h>
 
+#include <reanimated/Fabric/MountedRootsRegistry.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
@@ -27,7 +28,9 @@ class UpdatesRegistryManager {
     std::lock_guard<std::mutex> guard_;
   };
 
-  explicit UpdatesRegistryManager(const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry);
+  UpdatesRegistryManager(
+      const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
+      const std::shared_ptr<MountedRootsRegistry> &mountedRootsRegistry);
 
   ScopedLock lock() const;
   static bool isLockedByCurrentThread();
@@ -46,7 +49,7 @@ class UpdatesRegistryManager {
 
   void markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode);
   void unmarkNodeAsRemovable(Tag viewTag);
-  void handleNodeRemovals(const RootShadowNode &rootShadowNode);
+  void handleNodeRemovals();
   PropsMap collectProps();
   void mergeRegistryProps(Tag viewTag, folly::dynamic &target);
 
@@ -65,6 +68,7 @@ class UpdatesRegistryManager {
   RemovableShadowNodes removableShadowNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
+  const std::shared_ptr<MountedRootsRegistry> mountedRootsRegistry_;
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;
