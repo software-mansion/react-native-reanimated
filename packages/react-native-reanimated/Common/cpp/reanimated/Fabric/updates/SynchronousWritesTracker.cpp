@@ -35,7 +35,7 @@ void SynchronousWritesTracker::onDidCommit(const RootShadowNode::Shared &rootSha
 }
 
 void SynchronousWritesTracker::rememberRoot(
-    Surface &surface,
+    SurfaceState &surface,
     const RootShadowNode::Shared &rootShadowNode,
     const Epoch epoch) {
   auto &committedRoots = surface.committedRoots;

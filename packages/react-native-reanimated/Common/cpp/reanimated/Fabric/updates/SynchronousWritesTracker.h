@@ -48,7 +48,7 @@ class SynchronousWritesTracker {
     Epoch epoch;
   };
 
-  struct Surface {
+  struct SurfaceState {
     // Number of commits that carried registry values. A write with epoch N is newer than the values in commits 1..N.
     Epoch epoch{0};
     // Android reports a mount at the pull, before the mount items run. The next mount callback writes the props
@@ -61,12 +61,14 @@ class SynchronousWritesTracker {
     std::unordered_map<Tag, Write> writes;
   };
 
-  static void rememberRoot(Surface &surface, const RootShadowNode::Shared &rootShadowNode, Epoch epoch);
+  static void rememberRoot(SurfaceState &surface, const RootShadowNode::Shared &rootShadowNode, Epoch epoch);
 
   mutable std::mutex mutex_;
-  // One thread runs the two commit callbacks of one commit. This map holds the epoch between them.
+  // Carries the epoch from `onWillCommit` (known at the registry read) to `onDidCommit` (final root, after all
+  // hooks). Both run on the committing thread, but commits on different threads can overlap on one surface, so
+  // the key is the thread. A failed or cancelled commit gets no `onDidCommit`; `onWillCommit` drops its entry.
   std::unordered_map<std::thread::id, PendingCommit> pendingCommits_;
-  std::unordered_map<SurfaceId, Surface> surfaces_;
+  std::unordered_map<SurfaceId, SurfaceState> surfaces_;
 };
 
 } // namespace reanimated
