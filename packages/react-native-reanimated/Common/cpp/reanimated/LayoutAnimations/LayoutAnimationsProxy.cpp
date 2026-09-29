@@ -167,8 +167,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     updateLightTree(propsParserContext, mutations, transaction);
     resolveTransitionLifecycle(transaction, mutations, propsParserContext);
   } else if (!mutations.empty()) {
-    auto root = lightNodes_[surfaceId_];
-    react_native_assert(root && "Root node not found");
     auto beforeTopScreen = topScreen_;
     if (beforeTopScreen) {
       ReanimatedSystraceSection s("find before elements");
@@ -177,7 +175,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
     updateLightTree(propsParserContext, mutations, transaction);
 
-    auto afterTopScreen = findActiveBoundary(root);
+    auto afterTopScreen = findActiveBoundary();
     topScreen_ = afterTopScreen;
     if (afterTopScreen) {
       ReanimatedSystraceSection s("find after elements");
@@ -249,6 +247,17 @@ bool LayoutAnimationsProxy::isLightNodeMapped(const std::shared_ptr<LightNode> &
   return nodeIt != lightNodes_.end() && nodeIt->second == node;
 }
 
+void LayoutAnimationsProxy::mapLightNode(const std::shared_ptr<LightNode> &node) const {
+  const auto tag = node->current.tag;
+  react_native_assert(!lightNodes_.contains(tag) && "LightNode already exists");
+  lightNodes_[tag] = node;
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    if (isSETBoundary(node)) {
+      boundaryTags_.insert(tag);
+    }
+  }
+}
+
 // the only erase of lightNodes_ once the tree is initialized
 void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &node) const {
   const auto it = lightNodes_.find(node->current.tag);
@@ -256,6 +265,7 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
     return;
   }
   lightNodes_.erase(it);
+  boundaryTags_.erase(node->current.tag);
   if (node == topScreen_) {
     topScreen_ = nullptr;
   }
@@ -393,12 +403,11 @@ void LayoutAnimationsProxy::updateLightTree(
       case ShadowViewMutation::Create: {
         const auto &node = std::make_shared<LightNode>();
         node->current = mutation.newChildShadowView;
-        react_native_assert(!lightNodes_.contains(mutation.newChildShadowView.tag) && "LightNode already exists");
 
         if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
           hiddenViewTags_.erase(mutation.newChildShadowView.tag);
         }
-        lightNodes_[mutation.newChildShadowView.tag] = node;
+        mapLightNode(node);
         staleSynchronousProps_.forget(mutation.newChildShadowView.tag);
         filteredMutations.push_back(mutation);
         break;
@@ -524,12 +533,12 @@ void LayoutAnimationsProxy::applyInitialMutationsToLightTree(const ShadowViewMut
       case ShadowViewMutation::Create: {
         const auto &node = std::make_shared<LightNode>();
         node->current = mutation.newChildShadowView;
-        react_native_assert(!lightNodes_.contains(mutation.newChildShadowView.tag) && "LightNode already exists");
-        lightNodes_[mutation.newChildShadowView.tag] = node;
+        mapLightNode(node);
         break;
       }
       case ShadowViewMutation::Delete: {
         lightNodes_.erase(mutation.oldChildShadowView.tag);
+        boundaryTags_.erase(mutation.oldChildShadowView.tag);
         break;
       }
       case ShadowViewMutation::Insert: {
@@ -683,7 +692,7 @@ void LayoutAnimationsProxy::initializeLightTree(const ShadowTreeRevision &baseRe
   }
   pendingTransactions_.clear();
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    topScreen_ = findActiveBoundary(lightNodes_.at(surfaceId_));
+    topScreen_ = findActiveBoundary();
   }
 }
 

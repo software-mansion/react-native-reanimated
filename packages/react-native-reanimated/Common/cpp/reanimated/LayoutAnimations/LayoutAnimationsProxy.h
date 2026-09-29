@@ -97,6 +97,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::unordered_set<Tag> hiddenViewTags_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
+  // Mapped REASharedTransitionBoundary nodes, so that finding the active
+  // boundary does not walk the whole light tree on every pull.
+  mutable std::unordered_set<Tag> boundaryTags_;
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
   mutable bool surfaceToRemove_ = false;
 #ifdef ANDROID
@@ -195,11 +198,17 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void shadowTreeWillCommit(bool isSurfaceRemoval) override;
   void clearSurfaceState() const override;
 
-  std::shared_ptr<LightNode> findActiveBoundary(const std::shared_ptr<LightNode> &node) const;
+  void mapLightNode(const std::shared_ptr<LightNode> &node) const;
+  std::shared_ptr<LightNode> findActiveBoundary() const;
   std::shared_ptr<LightNode> findBoundaryGuess(const std::shared_ptr<LightNode> &node) const;
 
   void findSharedElementsOnScreen(
+      const std::shared_ptr<LightNode> &screen,
+      BeforeOrAfter index,
+      TransactionMeta &transaction) const;
+  void collectSharedElement(
       const std::shared_ptr<LightNode> &node,
+      const SharedTag &sharedTag,
       BeforeOrAfter index,
       TransactionMeta &transaction) const;
 

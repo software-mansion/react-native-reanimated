@@ -7,29 +7,114 @@
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <algorithm>
+#include <iterator>
+#include <memory>
 #include <ranges>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace reanimated {
 
 // MARK: Shared Element Transitions
 
-// A boundary is active when its `isActive` prop (controlled from JS,
-// e.g. with `useIsFocused`) is true and it's not currently exiting.
-std::shared_ptr<LightNode> LayoutAnimationsProxy::findActiveBoundary(const std::shared_ptr<LightNode> &node) const {
-  if (node->isExiting()) {
-    return nullptr;
-  }
-  if (isSETBoundary(node) && isBoundaryActive(node)) {
-    return node;
-  }
-  for (const auto &child : std::views::reverse(node->children)) {
-    auto top = findActiveBoundary(child);
-    if (top) {
-      return top;
+namespace {
+// Positions of nodes in their parents' children, scanning a parent that is
+// asked about more than once only once, so that many shared elements under
+// one parent (e.g. a grid) don't make a lookup quadratic.
+class ChildIndices {
+ public:
+  int indexOf(const std::shared_ptr<LightNode> &parent, const std::shared_ptr<LightNode> &child) {
+    auto &entry = parents_[parent.get()];
+    if (++entry.lookups == 1) {
+      const auto childIt = std::ranges::find(parent->children, child);
+      return childIt == parent->children.end() ? -1
+                                               : static_cast<int>(std::distance(parent->children.begin(), childIt));
     }
+    if (entry.indices.empty()) {
+      for (int i = 0; i < static_cast<int>(parent->children.size()); i++) {
+        entry.indices.emplace(parent->children[i].get(), i);
+      }
+    }
+    const auto indexIt = entry.indices.find(child.get());
+    return indexIt == entry.indices.end() ? -1 : indexIt->second;
   }
 
-  return nullptr;
+ private:
+  struct Parent {
+    int lookups = 0;
+    std::unordered_map<const LightNode *, int> indices;
+  };
+  std::unordered_map<const LightNode *, Parent> parents_;
+};
+
+// Child indices on the way from `ancestor` down to `node`. Returns false when
+// `node` is not mounted under `ancestor` or when the path crosses an exiting
+// node, which every walk of the light tree skips with its subtree.
+bool pathFromAncestor(
+    const std::shared_ptr<LightNode> &node,
+    const std::shared_ptr<LightNode> &ancestor,
+    ChildIndices &childIndices,
+    std::vector<int> &path) {
+  path.clear();
+  std::vector<std::shared_ptr<LightNode>> chain;
+  for (auto current = node; current != ancestor; current = current->parent.lock()) {
+    if (!current || current->isExiting()) {
+      return false;
+    }
+    chain.push_back(current);
+  }
+  if (ancestor->isExiting()) {
+    return false;
+  }
+  for (const auto &current : std::views::reverse(chain)) {
+    const auto index = childIndices.indexOf(current->parent.lock(), current);
+    if (index == -1) {
+      return false;
+    }
+    path.push_back(index);
+  }
+  return true;
+}
+
+// Whether a walk that visits a node before its children and the children
+// from the last one reaches `lhs` before `rhs`.
+bool precedesInReversePreorder(const std::vector<int> &lhs, const std::vector<int> &rhs) {
+  const auto [lhsIt, rhsIt] = std::ranges::mismatch(lhs, rhs);
+  if (lhsIt != lhs.end() && rhsIt != rhs.end()) {
+    return *lhsIt > *rhsIt;
+  }
+  return lhs.size() < rhs.size();
+}
+} // namespace
+
+// A boundary is active when its `isActive` prop (controlled from JS,
+// e.g. with `useIsFocused`) is true and it's not currently exiting.
+// The top screen is the active boundary that a reverse pre-order walk of the
+// light tree reaches first. It is picked among the mapped boundaries, since
+// this runs on every pull and the light tree can hold thousands of nodes.
+std::shared_ptr<LightNode> LayoutAnimationsProxy::findActiveBoundary() const {
+  const auto &root = lightNodes_.at(surfaceId_);
+  std::shared_ptr<LightNode> topBoundary;
+  ChildIndices childIndices;
+  std::vector<int> topPath;
+  std::vector<int> path;
+  for (const auto tag : boundaryTags_) {
+    const auto boundaryIt = lightNodes_.find(tag);
+    react_native_assert(boundaryIt != lightNodes_.end() && boundaryIt->second && "Boundary is not mapped");
+    if (boundaryIt == lightNodes_.end() || !boundaryIt->second) {
+      continue;
+    }
+    const auto &boundary = boundaryIt->second;
+    if (!isBoundaryActive(boundary) || !pathFromAncestor(boundary, root, childIndices, path)) {
+      continue;
+    }
+    if (!topBoundary || precedesInReversePreorder(path, topPath)) {
+      topBoundary = boundary;
+      std::swap(topPath, path);
+    }
+  }
+  return topBoundary;
 }
 
 std::shared_ptr<LightNode> LayoutAnimationsProxy::findBoundaryGuess(const std::shared_ptr<LightNode> &node) const {
@@ -51,54 +136,72 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::findBoundaryGuess(const std::s
   return result;
 }
 
+// Collects the shared elements mounted under `screen` in the order of a
+// pre-order walk of its subtree. The candidates come from the registered
+// shared tags, since the screen can hold thousands of other nodes.
 void LayoutAnimationsProxy::findSharedElementsOnScreen(
-    const std::shared_ptr<LightNode> &node,
+    const std::shared_ptr<LightNode> &screen,
     BeforeOrAfter index,
     TransactionMeta &transaction) const {
-  if (node->isExiting()) {
-    return;
-  }
-  std::optional<SharedTag> sharedTag;
-  if (node->current.traits.check(ShadowNodeTraits::Trait::ViewKind)) {
+  struct SharedElement {
+    std::vector<int> path;
+    std::shared_ptr<LightNode> node;
+    SharedTag sharedTag;
+  };
+  std::vector<SharedElement> sharedElements;
+  {
     auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
-    const auto it = sharedTransitionManager_->tagToName_.find(node->current.tag);
-    if (it != sharedTransitionManager_->tagToName_.end()) {
-      sharedTag = it->second;
+    ChildIndices childIndices;
+    std::vector<int> path;
+    for (const auto &[tag, sharedTag] : sharedTransitionManager_->tagToName_) {
+      const auto nodeIt = lightNodes_.find(tag);
+      if (nodeIt == lightNodes_.end() || !nodeIt->second ||
+          !nodeIt->second->current.traits.check(ShadowNodeTraits::Trait::ViewKind) ||
+          !pathFromAncestor(nodeIt->second, screen, childIndices, path)) {
+        continue;
+      }
+      sharedElements.push_back({.path = std::move(path), .node = nodeIt->second, .sharedTag = sharedTag});
     }
   }
-  if (sharedTag) {
-    if (const auto staleTag = staleSynchronousProps_.find(node, LayoutAnimationType::SHARED_ELEMENT_TRANSITION)) {
-      transaction.staleSnapshots[node->current.tag] = *staleTag;
-    }
-    resolveLightNodeProps(node);
-    const bool useViewsOnScreen = index == BEFORE;
-    ShadowView copy = useViewsOnScreen ? viewOnScreen(node) : node->current;
-    std::vector<react::Point> absolutePositions;
-    absolutePositions = getAbsolutePositionsForRootPathView(node, useViewsOnScreen);
-    copy.layoutMetrics.frame.origin = absolutePositions[0];
-
-    auto &collectedTransition = transaction.transitionMap[*sharedTag];
-    auto &transition = collectedTransition.transition;
-    auto &[snapshot, parentTag, transform] = transition;
-    auto newTransform = parseParentTransforms(node, absolutePositions, useViewsOnScreen);
-    const auto &parent = node->parent.lock();
-    react_native_assert(parent && "Parent node is nullptr");
-
-    int indexNum = static_cast<int>(index);
-    transform[indexNum] = std::move(newTransform);
-    snapshot[indexNum] = copy;
-    parentTag[indexNum] = parent->current.tag;
-    collectedTransition.nodes[indexNum] = node;
-
-    if (parentTag[BEFORE] && parentTag[AFTER]) {
-      transaction.transitions.emplace_back(*sharedTag, collectedTransition);
-    } else if (parentTag[AFTER]) {
-      // TODO (future): this is adding unnecessary views to the list
-      transaction.nodesToRestore.push_back(node);
-    }
+  std::ranges::sort(sharedElements, std::ranges::less{}, &SharedElement::path);
+  for (const auto &sharedElement : sharedElements) {
+    collectSharedElement(sharedElement.node, sharedElement.sharedTag, index, transaction);
   }
-  for (auto &child : node->children) {
-    findSharedElementsOnScreen(child, index, transaction);
+}
+
+void LayoutAnimationsProxy::collectSharedElement(
+    const std::shared_ptr<LightNode> &node,
+    const SharedTag &sharedTag,
+    BeforeOrAfter index,
+    TransactionMeta &transaction) const {
+  if (const auto staleTag = staleSynchronousProps_.find(node, LayoutAnimationType::SHARED_ELEMENT_TRANSITION)) {
+    transaction.staleSnapshots[node->current.tag] = *staleTag;
+  }
+  resolveLightNodeProps(node);
+  const bool useViewsOnScreen = index == BEFORE;
+  ShadowView copy = useViewsOnScreen ? viewOnScreen(node) : node->current;
+  std::vector<react::Point> absolutePositions;
+  absolutePositions = getAbsolutePositionsForRootPathView(node, useViewsOnScreen);
+  copy.layoutMetrics.frame.origin = absolutePositions[0];
+
+  auto &collectedTransition = transaction.transitionMap[sharedTag];
+  auto &transition = collectedTransition.transition;
+  auto &[snapshot, parentTag, transform] = transition;
+  auto newTransform = parseParentTransforms(node, absolutePositions, useViewsOnScreen);
+  const auto &parent = node->parent.lock();
+  react_native_assert(parent && "Parent node is nullptr");
+
+  int indexNum = static_cast<int>(index);
+  transform[indexNum] = std::move(newTransform);
+  snapshot[indexNum] = copy;
+  parentTag[indexNum] = parent->current.tag;
+  collectedTransition.nodes[indexNum] = node;
+
+  if (parentTag[BEFORE] && parentTag[AFTER]) {
+    transaction.transitions.emplace_back(sharedTag, collectedTransition);
+  } else if (parentTag[AFTER]) {
+    // TODO (future): this is adding unnecessary views to the list
+    transaction.nodesToRestore.push_back(node);
   }
 }
 
@@ -139,7 +242,7 @@ bool LayoutAnimationsProxy::settleUncommittedScreenPop(TransactionMeta &transact
       }
     }
   }
-  topScreen_ = findActiveBoundary(lightNodes_.at(surfaceId_));
+  topScreen_ = findActiveBoundary();
   uncommittedScreenPop_.reset();
   return true;
 }
@@ -297,7 +400,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
         uncommittedScreenPop_ = UncommittedScreenPop{transition_->sourceScreen, std::move(sourceNodes)};
       }
     } else {
-      topScreen_ = findActiveBoundary(lightNodes_.at(surfaceId_));
+      topScreen_ = findActiveBoundary();
       for (const auto &node : sourceNodes) {
         if (isLightNodeMapped(node)) {
           transaction.nodesToRestore.push_back(node);
