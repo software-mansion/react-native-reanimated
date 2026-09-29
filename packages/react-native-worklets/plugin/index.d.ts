@@ -1,9 +1,9 @@
 export interface PluginOptions {
   /**
    * Enables the [Bundle
-   * Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode).
+   * Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/).
    *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#bundle-mode}
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#bundle-mode}
    *
    * - Defaults to `false`.
    */
@@ -11,9 +11,9 @@ export interface PluginOptions {
   /**
    * Turning on this option suppresses a helpful warning when you use [inline
    * shared
-   * values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animations-in-inline-styling).
+   * values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#animations-in-inline-styling).
    *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#disableinlinestyleswarning}
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#disableinlinestyleswarning}
    *
    * - Defaults to `false`.
    */
@@ -22,18 +22,18 @@ export interface PluginOptions {
    * This option turns off the source map generation for worklets. Mostly used
    * for testing purposes.
    *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#disablesourcemaps}
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#disablesourcemaps}
    *
    * - Defaults to `false`.
    */
   disableSourceMaps?: boolean;
   /**
    * Disables [Worklet Classes
-   * support](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about#experimental-worklet-classes).
+   * support](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about/#experimental-worklet-classes).
    * You might need to disable this feature when using [Custom
-   * Serializables](https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable).
+   * Serializables](https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable/).
    *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#disableworkletclasses}
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#disableworkletclasses}
    *
    * - Defaults to `false`.
    */
@@ -42,7 +42,7 @@ export interface PluginOptions {
    * This is a list of Babel plugins that will be used when transforming
    * worklets' code with Worklets Babel Plugin.
    *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#extraplugins}
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#extraplugins}
    *
    * - Defaults to an empty array `[]`.
    */
@@ -51,7 +51,7 @@ export interface PluginOptions {
    * This is a list of Babel presets that will be used when transforming
    * worklets' code with Worklets Babel Plugin.
    *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#extrapresets}
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#extrapresets}
    *
    * - Defaults to an empty array `[]`.
    */
@@ -60,7 +60,7 @@ export interface PluginOptions {
    * This is a list of identifiers (objects) that will not be copied to the UI
    * thread if a worklet requires them.
    *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#globals}
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#globals}
    *
    * - Defaults to an empty array `[]`.
    */
@@ -90,7 +90,7 @@ export interface PluginOptions {
    * the bundle that only Native apps find relevant. If you enable this
    * option, your bundle size will be smaller.
    *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#omitnativeonlydata}
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#omitnativeonlydata}
    *
    * - Defaults to `false`.
    */
@@ -102,7 +102,7 @@ export interface PluginOptions {
    * handy for Jest test snapshots to ensure consistent results across
    * machines.
    *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#relativesourcelocation}
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#relativesourcelocation}
    *
    * - Defaults to `false`.
    */
@@ -111,7 +111,7 @@ export interface PluginOptions {
    * This option makes it so no global identifiers are implicitly captured in
    * worklets' closures between runtimes.
    *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#strictglobal}
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#strictglobal}
    *
    * Defaults to `false`.
    */
@@ -123,17 +123,17 @@ export interface PluginOptions {
    * that identify if the target is a Web app to `true`. This alteration can
    * aid in tree-shaking and contribute to reducing the bundle size.
    *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#substitutewebplatformchecks}
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#substitutewebplatformchecks}
    *
    * - Defaults to `false`.
    */
   substituteWebPlatformChecks?: boolean;
   /**
    * Configures [import
-   * forwarding](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/importForwarding)
+   * forwarding](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/importForwarding/)
    * for the Bundle Mode.
    *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#importforwarding}
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwarding}
    */
   importForwarding?: {
     /**
@@ -143,7 +143,7 @@ export interface PluginOptions {
      * The module name has to be an exact match — with `'my-library'` in the
      * list, an import from `'my-library/some-file'` won't be forwarded.
      *
-     * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#importforwardingmodulenames}
+     * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwardingmodulenames}
      *
      * - Defaults to an empty array `[]`.
      */
@@ -159,7 +159,7 @@ export interface PluginOptions {
      * relative imports (like `'./utils'`) from a specific package, without
      * affecting identically-named relative imports in other packages.
      *
-     * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#importforwardingrelativepaths}
+     * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwardingrelativepaths}
      *
      * - Defaults to an empty array `[]`.
      */

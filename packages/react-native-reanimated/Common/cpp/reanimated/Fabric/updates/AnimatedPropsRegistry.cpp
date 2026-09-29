@@ -1,6 +1,7 @@
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/Tools/FeatureFlags.h>
+#include <reanimated/Tools/TextMetrics.h>
 
 #include <react/debug/react_native_assert.h>
 
@@ -17,6 +18,16 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
 }
 
+static void roundTextMetrics(jsi::Runtime &rt, const jsi::Value &updates) {
+  const auto object = updates.asObject(rt);
+  for (const auto *propName : TEXT_METRIC_PROP_NAMES) {
+    const auto value = object.getProperty(rt, propName);
+    if (value.isNumber()) {
+      object.setProperty(rt, propName, roundTextMetric(value.asNumber()));
+    }
+  }
+}
+
 void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   auto operationsArray = operations.asObject(rt).asArray(rt);
@@ -27,6 +38,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
     jsi::Value updates = item.getProperty(rt, "updates");
+    roundTextMetrics(rt, updates);
 
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
       addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates);

@@ -7,7 +7,7 @@ sidebar_label: Animations
 Animations are first-class citizens in Reanimated 2.
 The library comes bundled with a number of animation helper methods that make it very easy to go from immediate property updates into animated ones.
 
-In the previous article about [Shared Values](shared-values) we learned about the `useAnimatedStyle` hook, that allows for creating an association between Reanimated code and view properties.
+In the previous article about [Shared Values](/docs/2.x/fundamentals/shared-values) we learned about the `useAnimatedStyle` hook, that allows for creating an association between Reanimated code and view properties.
 We also learned how to perform animated transitions of Shared Values.
 This, however, is not the only way how animations can be started.
 On top of that Reanimated provides a number of animation modifiers and ways for animations to be customized.
@@ -120,7 +120,7 @@ To illustrate how interruptions perform in practice, please take a look at the b
 ## Customizing Animations
 
 Reanimated currently provides three built-in animation helpers: [`withTiming`](/docs/2.x/api/animations/withTiming), [`withSpring`](/docs/2.x/api/animations/withSpring), and [`withDecay`](/docs/2.x/api/animations/withDecay).
-There are ways of expanding that with your own custom animations (animation helpers are built on top of the [worklets](worklets) abstraction), but we are not yet ready to document that as we still plan some changes in that part of the API.
+There are ways of expanding that with your own custom animations (animation helpers are built on top of the [worklets](/docs/2.x/fundamentals/worklets) abstraction), but we are not yet ready to document that as we still plan some changes in that part of the API.
 However, the built-in methods along with the animation modifiers (that we discuss later on), already provide great flexibility.
 Below we discuss some of the most common configuration options of the animation helpers, and we refer to the documentation page of [`withTiming`](/docs/2.x/api/animations/withTiming) and [`withSpring`](/docs/2.x/api/animations/withSpring) for the complete set of parameters.
 
