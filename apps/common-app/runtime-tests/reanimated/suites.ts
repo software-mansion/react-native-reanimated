@@ -143,6 +143,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'layout animations native stack removal',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeStackRemoval.test');
+    },
+  },
+  {
     testSuiteName: 'keyframe animations',
     importTest: () => {
       require('./tests/layoutAnimations/keyframe/basic.test');
