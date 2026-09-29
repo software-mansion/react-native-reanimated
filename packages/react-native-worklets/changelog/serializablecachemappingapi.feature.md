@@ -1,0 +1,1 @@
+Add `setSerializableReplacement`, `hasSerializableReplacement` and `removeSerializableReplacement` to send a different value to other runtimes in place of an object, and deprecate `serializableMappingCache`.

@@ -1,0 +1,42 @@
+---
+sidebar_position: 42 # Use alphabetical order
+---
+
+<Badges version="0.14.0">
+  # hasSerializableReplacement
+</Badges>
+
+Checks whether an object has a serialized counterpart. An object has one after [setSerializableReplacement](/docs/memory/setSerializableReplacement), or after it was [serialized](/docs/memory/serializable) already.
+
+## Reference
+
+```typescript
+import {
+  hasSerializableReplacement,
+  setSerializableReplacement,
+} from 'react-native-worklets';
+
+const flag = { current: false };
+console.log(hasSerializableReplacement(flag)); // logs `false`
+
+setSerializableReplacement(flag, { current: true });
+console.log(hasSerializableReplacement(flag)); // logs `true`
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function hasSerializableReplacement(value: object): boolean;
+  ```
+</details>
+
+## Arguments
+
+### value
+
+The object to check. It's compared by reference.
+
+## Remarks
+
+- On the Web `hasSerializableReplacement` always returns `false`.

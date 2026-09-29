@@ -79,6 +79,7 @@ const WorkletAPI = {
   getStaticFeatureFlag: () => false,
   getUIRuntimeHolder: () => UI_RUNTIME_HOLDER,
   getUISchedulerHolder: () => UI_SCHEDULER_HOLDER,
+  hasSerializableReplacement: () => false,
   isBundleModeEnabled: () => false,
   isRNRuntime: () => true,
   isSerializableRef: ID,
@@ -96,6 +97,7 @@ const WorkletAPI = {
   makeShareableCloneOnUIRecursive: ID,
   makeShareableCloneRecursive: ID,
   registerCustomSerializable: NOOP,
+  removeSerializableReplacement: NOOP,
   runOnJS<Args extends unknown[], ReturnValue>(
     fun: (...args: Args) => ReturnValue
   ): (...args: Args) => void {
@@ -188,6 +190,7 @@ const WorkletAPI = {
   },
   serializableMappingCache: new Map(),
   setDynamicFeatureFlag: NOOP,
+  setSerializableReplacement: NOOP,
   shareableMappingCache: new Map(),
   toggleSlowAnimationsOnUIRuntime: () => false,
   UIRuntimeId: RuntimeKind.UI,
