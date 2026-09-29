@@ -148,8 +148,6 @@ const FlatListWithLayoutAnimations: React.FC = () =>
   );
 const FrameCallbackExample: React.FC = () =>
   React.createElement(require('./FrameCallbackExample').default as React.FC);
-const FreezeExample: React.FC = () =>
-  React.createElement(require('./FreezeExample').default as React.FC);
 const GalleryExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/Gallery').default as React.FC
@@ -381,12 +379,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Third party components',
     section: SHOW_CASES,
     screen: ThirdPartyComponentsExample,
-  },
-  ReactFreeze: {
-    icon: '❄️',
-    title: 'React freeze',
-    section: REGRESSIONS,
-    screen: FreezeExample,
   },
   CircularSliderExample: {
     icon: '🔘',
