@@ -42,6 +42,31 @@ void UpdatesRegistry::remove(const Tag tag) {
   removeTag(tag);
 }
 
+void UpdatesRegistry::removeUnmounted(const Tag tag) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  removedTags_.insert(tag);
+  removeTag(tag);
+}
+
+void UpdatesRegistry::forgetRemoved(const Tag tag) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  removedTags_.erase(tag);
+}
+
+void UpdatesRegistry::takeIgnoredTags(std::unordered_set<Tag> &ignoredTags) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  ignoredTags.merge(ignoredTags_);
+  ignoredTags_.clear();
+}
+
+bool UpdatesRegistry::ignoreRemoved(const Tag tag) {
+  if (!removedTags_.contains(tag)) {
+    return false;
+  }
+  ignoredTags_.insert(tag);
+  return true;
+}
+
 void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   flush(updatesBatch);
@@ -140,6 +165,9 @@ void UpdatesRegistry::addAnimatedPropsToBatch(
     const ShadowNodeFamily::Shared &shadowNodeFamily,
     AnimatedProps animatedProps,
     bool hasLayoutUpdates) {
+  if (ignoreRemoved(shadowNodeFamily->getTag())) {
+    return;
+  }
   if (!hasLayoutUpdates) {
     for (const auto &prop : animatedProps.props) {
       if (isLayoutProp(prop->propName)) {
@@ -200,6 +228,9 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
 }
 
 void UpdatesRegistry::addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props) {
+  if (ignoreRemoved(shadowNodeFamily->getTag())) {
+    return;
+  }
   updatesBatch_.emplace_back(shadowNodeFamily, props);
 }
 
@@ -231,6 +262,9 @@ void UpdatesRegistry::removeFromUpdatesRegistry(const Tag tag) {
 void UpdatesRegistry::flushUpdatesToRegistry(const UpdatesBatch &updatesBatch) {
   for (auto &[shadowNodeFamily, props] : updatesBatch) {
     const auto tag = shadowNodeFamily->getTag();
+    if (ignoreRemoved(tag)) {
+      continue;
+    }
     auto it = updatesRegistry_.find(tag);
 
     if (it == updatesRegistry_.cend()) {

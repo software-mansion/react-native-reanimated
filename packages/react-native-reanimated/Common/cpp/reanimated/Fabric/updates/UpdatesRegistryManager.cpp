@@ -3,7 +3,9 @@
 
 #include <react/debug/react_native_assert.h>
 
+#include <algorithm>
 #include <memory>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -73,6 +75,9 @@ void UpdatesRegistryManager::markNodeAsRemovable(const std::shared_ptr<const Sha
 void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
   react_native_assert(isLockedByCurrentThread());
   removableShadowNodes_.erase(viewTag);
+  if (removedShadowNodes_.contains(viewTag)) {
+    forgetRemovedShadowNode(viewTag);
+  }
 }
 
 void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadowNode) {
@@ -86,15 +91,64 @@ void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadow
 
     if (shadowNodeFamily->getAncestors(rootShadowNode).empty()) {
       for (auto &registry : registries_) {
-        registry->remove(tag);
+        registry->removeUnmounted(tag);
       }
       staticPropsRegistry_->remove(tag);
+      // The view's mapper is stopped asynchronously and can still update it,
+      // so the registries keep ignoring the tag while the view can be reached.
+      removedShadowNodes_.emplace(tag, shadowNodeFamily);
     } else {
       remainingShadowNodes.emplace(tag, shadowNodeFamily);
     }
   }
 
   removableShadowNodes_ = std::move(remainingShadowNodes);
+  forgetReattachedShadowNodes(rootShadowNode);
+  pruneRemovedShadowNodes();
+}
+
+void UpdatesRegistryManager::forgetRemovedShadowNode(const Tag tag) {
+  for (auto &registry : registries_) {
+    registry->forgetRemoved(tag);
+  }
+  removedShadowNodes_.erase(tag);
+}
+
+// A removed view can be shown again without mounting its component again,
+// so only the views that are still being updated are checked for that.
+void UpdatesRegistryManager::forgetReattachedShadowNodes(const RootShadowNode &rootShadowNode) {
+  std::unordered_set<Tag> ignoredTags;
+  for (auto &registry : registries_) {
+    registry->takeIgnoredTags(ignoredTags);
+  }
+  for (const auto tag : ignoredTags) {
+    const auto it = removedShadowNodes_.find(tag);
+    if (it == removedShadowNodes_.end()) {
+      continue;
+    }
+    const auto shadowNodeFamily = it->second.lock();
+    if (shadowNodeFamily && !shadowNodeFamily->getAncestors(rootShadowNode).empty()) {
+      forgetRemovedShadowNode(tag);
+    }
+  }
+}
+
+// A destroyed family has no shadow node wrappers left, so no update can reach
+// its tag anymore. Pruning runs when the map doubles, to stay amortized O(1).
+void UpdatesRegistryManager::pruneRemovedShadowNodes() {
+  if (removedShadowNodes_.size() <= removedShadowNodesPruneThreshold_) {
+    return;
+  }
+  std::vector<Tag> destroyedTags;
+  for (const auto &[tag, shadowNodeFamily] : removedShadowNodes_) {
+    if (shadowNodeFamily.expired()) {
+      destroyedTags.push_back(tag);
+    }
+  }
+  for (const auto tag : destroyedTags) {
+    forgetRemovedShadowNode(tag);
+  }
+  removedShadowNodesPruneThreshold_ = std::max<size_t>(removedShadowNodes_.size() * 2, 64);
 }
 
 PropsMap UpdatesRegistryManager::collectProps() {

@@ -49,6 +49,12 @@ class UpdatesRegistry {
   folly::dynamic get(Tag tag) const;
   void mergeInto(Tag tag, folly::dynamic &target) const;
   void remove(Tag tag);
+  // Called once the view has left the shadow tree. Updates for the tag are
+  // ignored until `forgetRemoved`, as its mapper can still run for a few frames.
+  void removeUnmounted(Tag tag);
+  void forgetRemoved(Tag tag);
+  // Moves out the removed tags whose updates were ignored since the last call.
+  void takeIgnoredTags(std::unordered_set<Tag> &ignoredTags);
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;
@@ -103,6 +109,10 @@ class UpdatesRegistry {
 
  private:
   UpdatesBatch updatesBatch_;
+  std::unordered_set<Tag> removedTags_;
+  std::unordered_set<Tag> ignoredTags_;
+
+  bool ignoreRemoved(Tag tag);
 
   UpdatesBatchAnimatedProps updatesBatchAnimatedProps_;
   AnimatedPropsBuilder animatedPropsBuilder_;

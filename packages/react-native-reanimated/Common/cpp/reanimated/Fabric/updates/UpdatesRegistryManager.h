@@ -58,11 +58,19 @@ class UpdatesRegistryManager {
 
  private:
   using RemovableShadowNodes = std::unordered_map<Tag, ShadowNodeFamily::Shared>;
+  using RemovedShadowNodes = std::unordered_map<Tag, std::weak_ptr<const ShadowNodeFamily>>;
+
+  void forgetRemovedShadowNode(Tag tag);
+  void forgetReattachedShadowNodes(const RootShadowNode &rootShadowNode);
+  void pruneRemovedShadowNodes();
 
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
   std::atomic<bool> shouldCommitAfterPause_;
   RemovableShadowNodes removableShadowNodes_;
+  // Views that left the shadow tree, kept until nothing can update them anymore.
+  RemovedShadowNodes removedShadowNodes_;
+  size_t removedShadowNodesPruneThreshold_ = 0;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 
