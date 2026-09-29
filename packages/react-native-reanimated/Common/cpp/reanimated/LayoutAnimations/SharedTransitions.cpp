@@ -59,7 +59,7 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
     return;
   }
   std::optional<SharedTag> sharedTag;
-  {
+  if (node->current.traits.check(ShadowNodeTraits::Trait::ViewKind)) {
     auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
     const auto it = sharedTransitionManager_->tagToName_.find(node->current.tag);
     if (it != sharedTransitionManager_->tagToName_.end()) {
