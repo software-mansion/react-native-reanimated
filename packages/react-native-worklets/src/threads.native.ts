@@ -255,6 +255,38 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
   }
 }
 
+export function experimental_runOnRNSync<Args extends unknown[], ReturnValue>(
+  fun:
+    | ((...args: Args) => ReturnValue)
+    | RemoteFunction
+    | WorkletFunction<Args, ReturnValue>,
+  ...args: Args
+): ReturnValue {
+  'worklet';
+  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
+    return (fun as (...args: Args) => ReturnValue)(...args);
+  }
+  return globalThis.__workletsModuleProxy.runOnRNSync(
+    isWorkletFunction<Args, ReturnValue>(fun)
+      ? globalThis.__serializer(fun)
+      : fun,
+    (args.length > 0
+      ? globalThis.__serializer(args)
+      : undefined) as SerializableRef<Args>
+  );
+}
+
+function runOnRNSyncOnRN<Args extends unknown[], ReturnValue>(
+  fun: (...args: Args) => ReturnValue,
+  ...args: Args
+): SerializableRef<ReturnValue> {
+  return createSerializable(fun(...args));
+}
+
+export function registerRunOnRNSync() {
+  globalThis.__runOnRNSync = runOnRNSyncOnRN;
+}
+
 /**
  * Lets you asynchronously run
  * non-[workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize)

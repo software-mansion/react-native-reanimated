@@ -17,7 +17,7 @@ import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
 import { setupRequestAnimationFrame } from '../runLoop/uiRuntime/requestAnimationFrame';
 import { setupSetTimeout } from '../runLoop/uiRuntime/setTimeoutPolyfill';
 import { RuntimeKind } from '../runtimeKind';
-import { runOnUISync, scheduleOnRN } from '../threads';
+import { registerRunOnRNSync, runOnUISync, scheduleOnRN } from '../threads';
 import type { ValueUnpacker } from '../types';
 import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
@@ -163,6 +163,7 @@ function initializeRNRuntime() {
   }
 
   registerReportFatalRemoteError();
+  registerRunOnRNSync();
 }
 
 /** A function that should be run only on Worklet runtimes. */
