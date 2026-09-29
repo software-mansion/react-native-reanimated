@@ -65,36 +65,49 @@ bool UpdatesRegistryManager::shouldCommitAfterPause() {
   return shouldCommitAfterPause_.exchange(false);
 }
 
-void UpdatesRegistryManager::markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode) {
+void UpdatesRegistryManager::addDetachedNode(const ShadowNodeFamily::Shared &shadowNodeFamily) {
   react_native_assert(isLockedByCurrentThread());
-  removableShadowNodes_[shadowNode->getTag()] = shadowNode->getFamilyShared();
+  detachedNodes_[shadowNodeFamily->getTag()] = shadowNodeFamily;
 }
 
-void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
+void UpdatesRegistryManager::removeDetachedNode(const Tag viewTag) {
   react_native_assert(isLockedByCurrentThread());
-  removableShadowNodes_.erase(viewTag);
+  detachedNodes_.erase(viewTag);
 }
 
-void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadowNode) {
+void UpdatesRegistryManager::evictNode(const Tag viewTag) {
   react_native_assert(isLockedByCurrentThread());
-  RemovableShadowNodes remainingShadowNodes;
+  for (auto &registry : registries_) {
+    registry->remove(viewTag);
+  }
+  staticPropsRegistry_->remove(viewTag);
+}
 
-  for (const auto &[tag, shadowNodeFamily] : removableShadowNodes_) {
-    if (!shadowNodeFamily) {
-      continue;
-    }
+void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &committedRoot) {
+  react_native_assert(isLockedByCurrentThread());
+  const auto surfaceId = committedRoot.getSurfaceId();
 
-    if (shadowNodeFamily->getAncestors(rootShadowNode).empty()) {
-      for (auto &registry : registries_) {
-        registry->remove(tag);
-      }
-      staticPropsRegistry_->remove(tag);
+  for (auto it = detachedNodes_.begin(); it != detachedNodes_.end();) {
+    const auto &family = it->second;
+    if (family->getSurfaceId() == surfaceId && family->getAncestors(committedRoot).empty()) {
+      evictNode(it->first);
+      it = detachedNodes_.erase(it);
     } else {
-      remainingShadowNodes.emplace(tag, shadowNodeFamily);
+      ++it;
     }
   }
+}
 
-  removableShadowNodes_ = std::move(remainingShadowNodes);
+void UpdatesRegistryManager::handleSurfaceUnmount(const SurfaceId surfaceId) {
+  react_native_assert(isLockedByCurrentThread());
+  for (auto it = detachedNodes_.begin(); it != detachedNodes_.end();) {
+    if (it->second->getSurfaceId() == surfaceId) {
+      evictNode(it->first);
+      it = detachedNodes_.erase(it);
+    } else {
+      ++it;
+    }
+  }
 }
 
 PropsMap UpdatesRegistryManager::collectProps() {

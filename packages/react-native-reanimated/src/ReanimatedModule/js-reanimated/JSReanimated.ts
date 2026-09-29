@@ -288,18 +288,6 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
-  markNodeAsRemovable(_shadowNodeWrapper: ShadowNodeWrapper): void {
-    throw new Error(
-      '[Reanimated] markNodeAsRemovable is not available in JSReanimated.'
-    );
-  }
-
-  unmarkNodeAsRemovable(_viewTag: number): void {
-    throw new Error(
-      '[Reanimated] unmarkNodeAsRemovable is not available in JSReanimated.'
-    );
-  }
-
   registerCSSKeyframes(
     _animationName: string,
     _compoundComponentName: string,

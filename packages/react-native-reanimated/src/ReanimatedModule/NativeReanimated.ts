@@ -181,14 +181,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.setCSSEventHandler(handler);
   }
 
-  markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper) {
-    this.#reanimatedModuleProxy.markNodeAsRemovable(shadowNodeWrapper);
-  }
-
-  unmarkNodeAsRemovable(viewTag: number) {
-    this.#reanimatedModuleProxy.unmarkNodeAsRemovable(viewTag);
-  }
-
   registerCSSKeyframes(
     animationName: string,
     compoundComponentName: string,

@@ -55,8 +55,10 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   if (newRootShadowNode->getChildren().empty()) {
     // A stopping surface commits an empty root; its mount is not reported on a paused Android host.
+    const auto surfaceId = shadowTree.getSurfaceId();
     auto lock = updatesRegistryManager_->lock();
-    viewStylesRepository_->removeSurface(shadowTree.getSurfaceId());
+    viewStylesRepository_->removeSurface(surfaceId);
+    updatesRegistryManager_->handleSurfaceUnmount(surfaceId);
   }
 
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(newRootShadowNode);

@@ -346,6 +346,11 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       progressLayoutAnimation,
       endLayoutAnimation,
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction,
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &operations) {
+        if (const auto strongThis = weakThis.lock()) {
+          strongThis->notifyViewsLifecycle(rt, operations);
+        }
+      },
       requestAnimationFrame);
 }
 
@@ -504,15 +509,47 @@ void ReanimatedModuleProxy::setViewStyle(jsi::Runtime &rt, const jsi::Value &vie
   staticPropsRegistry_->set(rt, viewTag.asNumber(), viewStyle);
 }
 
-void ReanimatedModuleProxy::markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  auto lock = updatesRegistryManager_->lock();
-  updatesRegistryManager_->markNodeAsRemovable(shadowNode);
-}
+void ReanimatedModuleProxy::notifyViewsLifecycle(jsi::Runtime &rt, const jsi::Value &operations) {
+  const auto operationsArray = operations.asObject(rt).asArray(rt);
+  const auto length = operationsArray.size(rt);
 
-void ReanimatedModuleProxy::unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &viewTag) {
+  std::vector<std::pair<std::shared_ptr<const ShadowNode>, bool>> parsedOperations;
+  parsedOperations.reserve(length);
+  for (size_t i = 0; i < length; ++i) {
+    const auto operation = operationsArray.getValueAtIndex(rt, i).asObject(rt);
+    parsedOperations.emplace_back(
+        shadowNodeFromValue(rt, operation.getProperty(rt, "shadowNodeWrapper")),
+        operation.getProperty(rt, "attached").getBool());
+  }
+
+  // A detach is judged against the surface's committed tree, which already reflects the
+  // removal that triggered it; the mounted snapshot can lag behind a node's own mount.
+  // Read the trees before taking the updates lock, which must never be held while taking
+  // a ShadowTree lock. A missing tree means the surface has stopped.
+  std::unordered_map<SurfaceId, RootShadowNode::Shared> committedRoots;
+  for (const auto &[shadowNode, attached] : parsedOperations) {
+    const auto surfaceId = shadowNode->getSurfaceId();
+    if (attached || committedRoots.contains(surfaceId)) {
+      continue;
+    }
+    auto &root = committedRoots[surfaceId];
+    uiManager_->getShadowTreeRegistry().visit(
+        surfaceId, [&](const ShadowTree &shadowTree) { root = shadowTree.getCurrentRevision().rootShadowNode; });
+  }
+
   auto lock = updatesRegistryManager_->lock();
-  updatesRegistryManager_->unmarkNodeAsRemovable(viewTag.asNumber());
+  for (const auto &[shadowNode, attached] : parsedOperations) {
+    if (attached) {
+      updatesRegistryManager_->removeDetachedNode(shadowNode->getTag());
+      continue;
+    }
+    const auto &root = committedRoots[shadowNode->getSurfaceId()];
+    if (root && !shadowNode->getFamily().getAncestors(*root).empty()) {
+      updatesRegistryManager_->addDetachedNode(shadowNode->getFamilyShared());
+    } else {
+      updatesRegistryManager_->evictNode(shadowNode->getTag());
+    }
+  }
 }
 
 void ReanimatedModuleProxy::registerCSSKeyframes(
@@ -1076,7 +1113,7 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
 
   // No registry lock is held here - shadowTree.commit re-enters via ReanimatedCommitHook.
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
-    shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
+    const bool isSurfaceAlive = shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
       const auto status = shadowTree.commit(
           [&](RootShadowNode const &oldRootShadowNode) -> RootShadowNode::Unshared {
             if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
@@ -1106,6 +1143,16 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
       (void)status;
 #endif
     });
+
+#ifdef ANDROID
+    if (!isSurfaceAlive) {
+      // A stopped surface has no tree to commit its reverts to.
+      auto lock = updatesRegistryManager_->lock();
+      updatesRegistryManager_->clearPropsToRevert(surfaceId);
+    }
+#else
+    (void)isSurfaceAlive;
+#endif
   }
 }
 
@@ -1470,30 +1517,6 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
           return;
         }
         strongThis->setViewStyle(rt, at<0>(args), at<1>(args));
-      });
-
-  addMethod<1>(
-      rt,
-      obj,
-      "markNodeAsRemovable",
-      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-        strongThis->markNodeAsRemovable(rt, at<0>(args));
-      });
-
-  addMethod<1>(
-      rt,
-      obj,
-      "unmarkNodeAsRemovable",
-      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-        strongThis->unmarkNodeAsRemovable(rt, at<0>(args));
       });
 
   addMethod<3>(
