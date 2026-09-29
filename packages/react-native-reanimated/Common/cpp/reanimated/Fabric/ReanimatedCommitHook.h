@@ -1,7 +1,7 @@
 #pragma once
 
-#include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/Compat/ReactNativeVersionCompat.h>
+#include <reanimated/Fabric/MountedRootsRegistry.h>
 #include <reanimated/Fabric/updates/SynchronousWritesTracker.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
@@ -20,7 +20,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
   ReanimatedCommitHook(
       const std::shared_ptr<UIManager> &uiManager,
       const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-      const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
+      const std::shared_ptr<MountedRootsRegistry> &mountedRootsRegistry,
       const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry,
       const std::shared_ptr<SynchronousWritesTracker> &synchronousWritesTracker);
 
@@ -50,7 +50,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
 
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
-  std::shared_ptr<css::ViewStylesRepository> viewStylesRepository_;
+  std::shared_ptr<MountedRootsRegistry> mountedRootsRegistry_;
   std::shared_ptr<LayoutAnimationsProxyRegistry> layoutAnimationsProxyRegistry_;
   std::shared_ptr<SynchronousWritesTracker> synchronousWritesTracker_;
 };

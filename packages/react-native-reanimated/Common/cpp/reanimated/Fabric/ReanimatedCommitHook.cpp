@@ -15,12 +15,12 @@ namespace reanimated {
 ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-    const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
+    const std::shared_ptr<MountedRootsRegistry> &mountedRootsRegistry,
     const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry,
     const std::shared_ptr<SynchronousWritesTracker> &synchronousWritesTracker)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
-      viewStylesRepository_(viewStylesRepository),
+      mountedRootsRegistry_(mountedRootsRegistry),
       layoutAnimationsProxyRegistry_(layoutAnimationsProxyRegistry),
       synchronousWritesTracker_(synchronousWritesTracker) {
   uiManager_->registerCommitHook(*this);
@@ -58,7 +58,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   if (newRootShadowNode->getChildren().empty()) {
     // A stopping surface commits an empty root; its mount is not reported on a paused Android host.
     auto lock = updatesRegistryManager_->lock();
-    viewStylesRepository_->removeSurface(shadowTree.getSurfaceId());
+    mountedRootsRegistry_->remove(shadowTree.getSurfaceId());
     if (synchronousWritesTracker_) {
       synchronousWritesTracker_->onSurfaceStop(shadowTree.getSurfaceId());
     }
