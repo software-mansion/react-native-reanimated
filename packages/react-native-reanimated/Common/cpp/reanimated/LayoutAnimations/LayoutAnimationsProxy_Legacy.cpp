@@ -23,6 +23,25 @@
 
 namespace reanimated {
 
+namespace {
+
+// Splits the list so that no chunk contains a Remove after an Insert
+std::vector<ShadowViewMutationList> splitIntoDifferOrderedChunks(ShadowViewMutationList mutations) {
+  std::vector<ShadowViewMutationList> chunks(1);
+  auto chunkHasInsert = false;
+  for (auto &mutation : mutations) {
+    if (mutation.type == ShadowViewMutation::Remove && chunkHasInsert) {
+      chunks.emplace_back();
+      chunkHasInsert = false;
+    }
+    chunkHasInsert = chunkHasInsert || mutation.type == ShadowViewMutation::Insert;
+    chunks.back().push_back(std::move(mutation));
+  }
+  return chunks;
+}
+
+} // namespace
+
 // We never modify the Shadow Tree, we just send some additional
 // mutations to the mounting layer.
 // When animations finish, the Host Tree will represent the most recent Shadow
@@ -45,14 +64,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
   ShadowViewMutationList filteredMutations;
 
-  std::vector<std::shared_ptr<MutationNode>> roots;
-  std::unordered_map<Tag, Tag> movedViews;
-
   reconcileContradictedRemovals(mutations, filteredMutations);
 
   addOngoingAnimations(filteredMutations);
-
-  parseRemoveMutations(movedViews, mutations, roots);
 
   // We recognize dropped surfaces by the presence of a Remove mutation for a root child. This can produce false
   // positives. Ideal solution will be to introduce an appropriate API in RN
@@ -65,12 +79,23 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
     surfaceToRemove_ = false;
   }
   const bool flushDeadNodes = shouldFlushDeadNodes(surfaceDropped);
-  handleRemovals(filteredMutations, roots, surfaceDropped, flushDeadNodes);
+
+  // We emit Removes before Inserts. RN's LayoutAnimation driver can add Removes after Inserts, with indices that
+  // expect those Inserts to be done first. Process each part separately to keep that order.
+  auto isFirstChunk = true;
+  for (auto &chunk : splitIntoDifferOrderedChunks(std::move(mutations))) {
+    std::vector<std::shared_ptr<MutationNode>> roots;
+    std::unordered_map<Tag, Tag> movedViews;
+
+    parseRemoveMutations(movedViews, chunk, roots);
+    handleRemovals(filteredMutations, roots, surfaceDropped, isFirstChunk && flushDeadNodes);
+    handleUpdatesAndEnterings(filteredMutations, movedViews, chunk, propsParserContext);
+    isFirstChunk = false;
+  }
+
 #ifdef ANDROID
   maybeScheduleCleanupPull(flushDeadNodes);
 #endif // ANDROID
-
-  handleUpdatesAndEnterings(filteredMutations, movedViews, mutations, propsParserContext);
 
   configLock.unlock();
   flushLayoutAnimationOperations(lock);
