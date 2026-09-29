@@ -1199,7 +1199,8 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
   };
 
   // TODO: with the animation backend we still need a way to handleNodeRemovals,
-  // for now we leave this to leak the memory, a fix will come in a follow-up
+  // for now we leave this to leak the memory, a fix will come in a follow-up.
+  // The fix must also clear `updatesBatchAnimatedProps_` in `removePendingUpdates`.
   mountHook_ = std::make_shared<ReanimatedMountHook>(
       uiManager_, updatesRegistryManager_, viewStylesRepository_, layoutAnimationsProxyRegistry_, request);
 
