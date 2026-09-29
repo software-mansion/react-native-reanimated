@@ -10,10 +10,12 @@
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <ranges>
 #include <set>
+#include <span>
 #include <string>
 #include <thread>
 #include <unordered_map>
@@ -25,19 +27,18 @@ namespace reanimated {
 
 namespace {
 
-// Splits the list so that no chunk contains a Remove after an Insert
-std::vector<ShadowViewMutationList> splitIntoDifferOrderedChunks(ShadowViewMutationList mutations) {
-  std::vector<ShadowViewMutationList> chunks(1);
-  auto chunkHasInsert = false;
-  for (auto &mutation : mutations) {
-    if (mutation.type == ShadowViewMutation::Remove && chunkHasInsert) {
-      chunks.emplace_back();
-      chunkHasInsert = false;
-    }
-    chunkHasInsert = chunkHasInsert || mutation.type == ShadowViewMutation::Insert;
-    chunks.back().push_back(std::move(mutation));
-  }
-  return chunks;
+std::span<ShadowViewMutation> takeRemovesThenInserts(std::span<ShadowViewMutation> &mutations) {
+  const auto isInsert = [](const ShadowViewMutation &mutation) {
+    return mutation.type == ShadowViewMutation::Insert;
+  };
+  const auto isRemove = [](const ShadowViewMutation &mutation) {
+    return mutation.type == ShadowViewMutation::Remove;
+  };
+  const auto firstInsert = std::find_if(mutations.begin(), mutations.end(), isInsert);
+  const auto nextRemove = std::find_if(firstInsert, mutations.end(), isRemove);
+  const auto batch = mutations.first(nextRemove - mutations.begin());
+  mutations = mutations.subspan(batch.size());
+  return batch;
 }
 
 } // namespace
@@ -80,17 +81,14 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   }
   const bool flushDeadNodes = shouldFlushDeadNodes(surfaceDropped);
 
-  // We emit Removes before Inserts. RN's LayoutAnimation driver can add Removes after Inserts, with indices that
-  // expect those Inserts to be done first. Process each part separately to keep that order.
-  auto isFirstChunk = true;
-  for (auto &chunk : splitIntoDifferOrderedChunks(std::move(mutations))) {
+  for (auto remaining = std::span(mutations); !remaining.empty();) {
+    const auto batch = takeRemovesThenInserts(remaining);
     std::vector<std::shared_ptr<MutationNode>> roots;
     std::unordered_map<Tag, Tag> movedViews;
 
-    parseRemoveMutations(movedViews, chunk, roots);
-    handleRemovals(filteredMutations, roots, surfaceDropped, isFirstChunk && flushDeadNodes);
-    handleUpdatesAndEnterings(filteredMutations, movedViews, chunk, propsParserContext);
-    isFirstChunk = false;
+    parseRemoveMutations(movedViews, batch, roots);
+    handleRemovals(filteredMutations, roots, surfaceDropped, flushDeadNodes);
+    handleUpdatesAndEnterings(filteredMutations, movedViews, batch, propsParserContext);
   }
 
 #ifdef ANDROID
@@ -220,7 +218,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
  */
 void LayoutAnimationsProxy_Legacy::parseRemoveMutations(
     std::unordered_map<Tag, Tag> &movedViews,
-    ShadowViewMutationList &mutations,
+    std::span<ShadowViewMutation> mutations,
     std::vector<std::shared_ptr<MutationNode>> &roots) const {
   std::set<Tag> deletedViews;
   std::unordered_map<Tag, std::vector<std::shared_ptr<MutationNode>>> childrenForTag, unflattenedChildrenForTag;
@@ -345,7 +343,7 @@ void LayoutAnimationsProxy_Legacy::handleRemovals(
 void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
     ShadowViewMutationList &filteredMutations,
     const std::unordered_map<Tag, Tag> &movedViews,
-    ShadowViewMutationList &mutations,
+    std::span<ShadowViewMutation> mutations,
     const PropsParserContext &propsParserContext) const {
   std::unordered_map<Tag, ShadowView> oldShadowViewsForReparentings;
   for (auto &mutation : mutations) {
