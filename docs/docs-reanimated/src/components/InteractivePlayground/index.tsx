@@ -15,6 +15,7 @@ import useRepeatPlayground from './useRepeatPlayground';
 import useInterpolateColorPlayground from './useInterpolateColorPlayground';
 import useContrastColorPlayground from './useContrastColorPlayground';
 import useAnimatedSensorPlayground from './useAnimatedSensorPlayground';
+import useAnimatedHingePlayground from './useAnimatedHingePlayground';
 import useDecayPlayground from './useDecayPlayground';
 
 import Reset from '@site/static/img/reset.svg';
@@ -38,6 +39,7 @@ export {
   useInterpolateColorPlayground,
   useContrastColorPlayground,
   useAnimatedSensorPlayground,
+  useAnimatedHingePlayground,
   useDecayPlayground,
 };
 
@@ -211,6 +213,9 @@ export function Range({
           value={value}
           onChange={(e) => {
             const newValue = parseFloat(e.target.value);
+            if (!Number.isFinite(newValue)) {
+              return;
+            }
             onChange(newValue > max ? max : newValue <= min ? min : newValue);
           }}
         />
