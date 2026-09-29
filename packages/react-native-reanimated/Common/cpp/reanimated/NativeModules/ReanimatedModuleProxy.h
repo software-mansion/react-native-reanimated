@@ -241,6 +241,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
+  const std::shared_ptr<MountedRootsRegistry> mountedRootsRegistry_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   const std::shared_ptr<OperationsLoop> operationsLoop_;
   const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;

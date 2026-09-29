@@ -164,14 +164,16 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
 #endif
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
-      updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
+      mountedRootsRegistry_(std::make_shared<MountedRootsRegistry>()),
+      updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_, mountedRootsRegistry_)),
       operationsLoop_(std::make_shared<OperationsLoop>(
           uiScheduler,
           platformDepMethodsHolder.requestRender,
           platformDepMethodsHolder.getAnimationTimestamp,
           updatesRegistryManager_)),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
-      viewStylesRepository_(std::make_shared<ViewStylesRepository>(staticPropsRegistry_, animatedPropsRegistry_)),
+      viewStylesRepository_(
+          std::make_shared<ViewStylesRepository>(staticPropsRegistry_, animatedPropsRegistry_, mountedRootsRegistry_)),
       cssEventsEmitter_(std::make_shared<CSSEventsEmitter>(jsCallInvoker)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>(
@@ -1202,10 +1204,10 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
   // for now we leave this to leak the memory, a fix will come in a follow-up.
   // The fix must also clear `updatesBatchAnimatedProps_` in `removePendingUpdates`.
   mountHook_ = std::make_shared<ReanimatedMountHook>(
-      uiManager_, updatesRegistryManager_, viewStylesRepository_, layoutAnimationsProxyRegistry_, request);
+      uiManager_, updatesRegistryManager_, mountedRootsRegistry_, layoutAnimationsProxyRegistry_, request);
 
   commitHook_ = std::make_shared<ReanimatedCommitHook>(
-      uiManager_, updatesRegistryManager_, viewStylesRepository_, layoutAnimationsProxyRegistry_);
+      uiManager_, updatesRegistryManager_, mountedRootsRegistry_, layoutAnimationsProxyRegistry_);
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {

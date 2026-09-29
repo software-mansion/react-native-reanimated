@@ -10,12 +10,12 @@ namespace reanimated {
 ReanimatedMountHook::ReanimatedMountHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-    const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
+    const std::shared_ptr<MountedRootsRegistry> &mountedRootsRegistry,
     const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry,
     const std::function<void()> &requestFlush)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
-      viewStylesRepository_(viewStylesRepository),
+      mountedRootsRegistry_(mountedRootsRegistry),
       layoutAnimationsProxyRegistry_(layoutAnimationsProxyRegistry),
       requestFlush_(requestFlush) {
   uiManager_->registerMountHook(*this);
@@ -49,14 +49,13 @@ void ReanimatedMountHook::shadowTreeDidMount(
 
   {
     auto lock = updatesRegistryManager_->lock();
-    // Record the mounted tree for relative-length resolution.
-    viewStylesRepository_->setLastMountedRoot(rootShadowNode);
+    mountedRootsRegistry_->set(rootShadowNode);
 
     // Always drain removable nodes, even on Reanimated's own commits. While CSS
     // animations run every mount carries the mount trait, so returning early here
     // would skip removals for the whole animation and leak unmounted nodes if the
     // tree is torn down mid-animation.
-    updatesRegistryManager_->handleNodeRemovals(*rootShadowNode);
+    updatesRegistryManager_->handleNodeRemovals();
 
     if (!isReanimatedMount) {
       // When a commit from React Native has finished, we reset the skip commit
@@ -75,7 +74,7 @@ void ReanimatedMountHook::shadowTreeDidUnmount(SurfaceId surfaceId, HighResTimeS
   }
 
   auto lock = updatesRegistryManager_->lock();
-  viewStylesRepository_->removeSurface(surfaceId);
+  mountedRootsRegistry_->remove(surfaceId);
 }
 
 } // namespace reanimated
