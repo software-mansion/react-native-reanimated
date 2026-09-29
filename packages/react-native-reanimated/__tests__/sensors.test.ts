@@ -1,9 +1,13 @@
-import { act, renderHook } from '@testing-library/react-hooks';
+import { act, renderHook } from '@testing-library/react-native';
+import { StrictMode } from 'react';
 
-import type { SensorConfig, Value3D, ValueRotation } from '../src';
-import { SensorType, useAnimatedSensor } from '../src';
+import type { SensorConfig, SensorValue, Value3D, ValueRotation } from '../src';
+import { IOSReferenceFrame, SensorType, useAnimatedSensor } from '../src';
+import { registerSensor, unregisterSensor } from '../src/core';
 
-let eventHandler: (data: Value3D | ValueRotation) => void;
+let eventHandler: (data: SensorValue) => void;
+let mockNextSensorId = 1;
+const mockUnavailableSensorType = SensorType.GYROSCOPE;
 
 jest.mock('../src/core', () => {
   const originalModule = jest.requireActual('../src/core');
@@ -11,15 +15,36 @@ jest.mock('../src/core', () => {
   return {
     __esModule: true,
     ...originalModule,
-    registerSensor: (
-      sensorType: number,
-      config: SensorConfig,
-      _eventHandler: (data: Value3D | ValueRotation) => void
-    ) => {
-      eventHandler = _eventHandler;
-    },
+    isSensorAvailable: (sensorType: SensorType) =>
+      sensorType !== mockUnavailableSensorType,
+    registerSensor: jest.fn(
+      (
+        sensorType: SensorType,
+        config: SensorConfig,
+        _eventHandler: (data: SensorValue) => void
+      ) => {
+        eventHandler = _eventHandler;
+        return sensorType === mockUnavailableSensorType
+          ? -1
+          : mockNextSensorId++;
+      }
+    ),
+    unregisterSensor: jest.fn(),
   };
 });
+
+function renderSensorHook<Props, Result>(
+  useSensor: (props: Props) => Result,
+  options?: { initialProps?: Props; wrapper?: typeof StrictMode }
+) {
+  const renders: Result[] = [];
+  const hook = renderHook((props: Props) => {
+    const result = useSensor(props);
+    renders.push(result);
+    return result;
+  }, options);
+  return { ...hook, renders };
+}
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -57,6 +82,11 @@ expect.extend({
 });
 
 describe('Sensors', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockNextSensorId = 1;
+  });
+
   test('returns rotation sensors', () => {
     const { result } = renderHook(() =>
       useAnimatedSensor(SensorType.ROTATION, {
@@ -250,5 +280,123 @@ describe('Sensors', () => {
     };
 
     expect(result.current.sensor.value).toStrictEqual(data270);
+  });
+
+  test('reports availability on the first render', () => {
+    const available = renderSensorHook(() =>
+      useAnimatedSensor(SensorType.ACCELEROMETER)
+    );
+    const unavailable = renderSensorHook(() =>
+      useAnimatedSensor(mockUnavailableSensorType)
+    );
+
+    expect(available.renders.map((result) => result.isAvailable)).toEqual([
+      true,
+    ]);
+    expect(unavailable.renders.map((result) => result.isAvailable)).toEqual([
+      false,
+    ]);
+  });
+
+  test('reports availability in the render that changes the sensor type', () => {
+    const { renders, rerender } = renderSensorHook(
+      (sensorType: SensorType) => useAnimatedSensor(sensorType),
+      { initialProps: SensorType.ACCELEROMETER }
+    );
+
+    rerender(mockUnavailableSensorType);
+    rerender(SensorType.ACCELEROMETER);
+
+    expect(renders.map((result) => result.isAvailable)).toEqual([
+      true,
+      false,
+      true,
+    ]);
+  });
+
+  test('keeps one registration and one result across renders with a new config object', () => {
+    const { renders, rerender } = renderSensorHook(() =>
+      useAnimatedSensor(SensorType.ACCELEROMETER, { interval: 100 })
+    );
+
+    rerender(undefined);
+    rerender(undefined);
+
+    expect(renders).toHaveLength(3);
+    expect(renders[1]).toBe(renders[0]);
+    expect(renders[2]).toBe(renders[0]);
+    expect(registerSensor).toHaveBeenCalledTimes(1);
+    expect(unregisterSensor).not.toHaveBeenCalled();
+  });
+
+  test('registers again after a change of config', () => {
+    const { result, rerender } = renderHook(
+      (interval: number) =>
+        useAnimatedSensor(SensorType.ACCELEROMETER, { interval }),
+      { initialProps: 100 }
+    );
+
+    rerender(200);
+
+    expect(registerSensor).toHaveBeenCalledTimes(2);
+    expect(jest.mocked(registerSensor).mock.calls[1][1]).toEqual({
+      interval: 200,
+      adjustToInterfaceOrientation: true,
+      iosReferenceFrame: IOSReferenceFrame.Auto,
+    });
+    expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1]]);
+    expect(result.current.config.interval).toBe(200);
+  });
+
+  test('does not unregister an unavailable sensor', () => {
+    const { result, unmount } = renderHook(() =>
+      useAnimatedSensor(mockUnavailableSensorType)
+    );
+
+    result.current.unregister();
+    unmount();
+
+    expect(unregisterSensor).not.toHaveBeenCalled();
+  });
+
+  test('unregisters once after a manual unregister and an unmount', () => {
+    const { result, rerender, unmount } = renderHook(() =>
+      useAnimatedSensor(SensorType.ACCELEROMETER)
+    );
+    rerender(undefined);
+
+    result.current.unregister();
+    unmount();
+
+    expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1]]);
+  });
+
+  test('releases every registration under Strict Mode', () => {
+    const { result, unmount } = renderHook(
+      () => useAnimatedSensor(SensorType.ACCELEROMETER),
+      { wrapper: StrictMode }
+    );
+
+    expect(registerSensor).toHaveBeenCalledTimes(2);
+    expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1]]);
+
+    result.current.unregister();
+    unmount();
+
+    expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1], [2]]);
+  });
+
+  test('unregisters the current registration after a change of sensor type', () => {
+    const { result, rerender } = renderHook(
+      (sensorType: SensorType) => useAnimatedSensor(sensorType),
+      { initialProps: SensorType.ACCELEROMETER }
+    );
+
+    rerender(SensorType.GRAVITY);
+    expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1]]);
+
+    result.current.unregister();
+
+    expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1], [2]]);
   });
 });

@@ -3,6 +3,26 @@
 #if !TARGET_OS_TV && !TARGET_OS_OSX && !TARGET_OS_VISION
 @implementation ReanimatedSensor
 
++ (bool)isAvailable:(ReanimatedSensorType)sensorType
+{
+  static CMMotionManager *motionManager;
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{ motionManager = [[CMMotionManager alloc] init]; });
+
+  switch (sensorType) {
+    case ACCELEROMETER:
+      return [motionManager isAccelerometerAvailable];
+    case GYROSCOPE:
+      return [motionManager isGyroAvailable];
+    case MAGNETIC_FIELD:
+      return [motionManager isMagnetometerAvailable];
+    case GRAVITY:
+    case ROTATION_VECTOR:
+      return [motionManager isDeviceMotionAvailable];
+  }
+  return false;
+}
+
 - (instancetype)init:(ReanimatedSensorType)sensorType
              interval:(int)interval
     iosReferenceFrame:(int)iosReferenceFrame
@@ -23,6 +43,10 @@
 
 - (bool)initialize
 {
+  if (![ReanimatedSensor isAvailable:_sensorType]) {
+    return false;
+  }
+
   if (_sensorType == ACCELEROMETER) {
     return [self initializeAccelerometer];
   } else if (_sensorType == GYROSCOPE) {
@@ -40,9 +64,6 @@
 
 - (bool)initializeGyroscope
 {
-  if (![_motionManager isGyroAvailable]) {
-    return false;
-  }
   [_motionManager setGyroUpdateInterval:_interval];
   [_motionManager startGyroUpdates];
   [_motionManager
@@ -62,9 +83,6 @@
 
 - (bool)initializeAccelerometer
 {
-  if (![_motionManager isAccelerometerAvailable]) {
-    return false;
-  }
   [_motionManager setAccelerometerUpdateInterval:_interval];
   [_motionManager startAccelerometerUpdates];
   [_motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue mainQueue]
@@ -88,9 +106,6 @@
 
 - (bool)initializeGravity
 {
-  if (![_motionManager isDeviceMotionAvailable]) {
-    return false;
-  }
   [_motionManager setDeviceMotionUpdateInterval:_interval];
   [_motionManager setShowsDeviceMovementDisplay:YES];
   [_motionManager
@@ -113,9 +128,6 @@
 
 - (bool)initializeMagnetometer
 {
-  if (![_motionManager isMagnetometerAvailable]) {
-    return false;
-  }
   [_motionManager setMagnetometerUpdateInterval:_interval];
   [_motionManager startMagnetometerUpdates];
   [_motionManager
@@ -136,9 +148,6 @@
 
 - (bool)initializeOrientation
 {
-  if (![_motionManager isDeviceMotionAvailable]) {
-    return false;
-  }
   [_motionManager setDeviceMotionUpdateInterval:_interval];
 
   [_motionManager setShowsDeviceMovementDisplay:YES];
@@ -218,6 +227,11 @@
 #else
 
 @implementation ReanimatedSensor
+
++ (bool)isAvailable:(ReanimatedSensorType)sensorType
+{
+  return false;
+}
 
 - (instancetype)init:(ReanimatedSensorType)sensorType
              interval:(int)interval
