@@ -3,6 +3,7 @@
 #include <folly/dynamic.h>
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/components/rnreanimated/Props.h>
+#include <react/renderer/components/view/ViewProps.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
@@ -281,6 +282,15 @@ static inline bool isRoot(const std::shared_ptr<LightNode> &node) {
 
 static inline bool hasLayoutChanged(const ShadowViewMutation &mutation) {
   return mutation.oldChildShadowView.layoutMetrics.frame != mutation.newChildShadowView.layoutMetrics.frame;
+}
+
+static inline bool isViewKind(const ShadowView &view) {
+  return view.traits.check(ShadowNodeTraits::Trait::ViewKind);
+}
+
+static inline const ViewProps &getViewProps(const ShadowView &view) {
+  react_native_assert(isViewKind(view) && "Only ViewKind views have ViewProps");
+  return static_cast<const ViewProps &>(*view.props);
 }
 
 } // namespace reanimated

@@ -129,6 +129,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'layout animations nested text',
+    importTest: () => {
+      require('./tests/layoutAnimations/nestedText.test');
+    },
+  },
+  {
     testSuiteName: 'shared element transitions',
     importTest: () => {
       require('./tests/layoutAnimations/sharedTransition.test');
