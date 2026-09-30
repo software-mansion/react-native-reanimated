@@ -238,6 +238,126 @@ if (isBundleModeEnabled()) {
   };
 }
 
+export function createSerializableArray<TValue extends unknown[]>(
+  value: TValue
+): SerializableRef<TValue> {
+  if (__DEV__ && !Array.isArray(value)) {
+    throw new Error('[Worklets] `createSerializableArray` expects an array.');
+  }
+  return (
+    (getFromCache(value) as SerializableRef<TValue> | undefined) ??
+    cloneArray(value, false, 0)
+  );
+}
+
+export function createSerializableObject<TValue extends object>(
+  value: TValue
+): SerializableRef<TValue> {
+  if (
+    __DEV__ &&
+    (typeof value !== 'object' ||
+      value === null ||
+      !isPlainJSObject(value) ||
+      isSynchronizable(value) ||
+      isWorkletFunction(value))
+  ) {
+    throw new Error(
+      '[Worklets] `createSerializableObject` expects a plain object.'
+    );
+  }
+  return (
+    (getFromCache(value) as SerializableRef<TValue> | undefined) ??
+    clonePlainJSObject(value, false, 0)
+  );
+}
+
+export function createSerializableMap<TKey, TValue>(
+  value: Map<TKey, TValue>
+): SerializableRef<Map<TKey, TValue>> {
+  if (__DEV__ && !(value instanceof Map)) {
+    throw new Error('[Worklets] `createSerializableMap` expects a Map.');
+  }
+  return ((getFromCache(value) as SerializableRef<Map<unknown, unknown>>) ??
+    cloneMap(value)) as SerializableRef<Map<TKey, TValue>>;
+}
+
+export function createSerializableSet<TValue>(
+  value: Set<TValue>
+): SerializableRef<Set<TValue>> {
+  if (__DEV__ && !(value instanceof Set)) {
+    throw new Error('[Worklets] `createSerializableSet` expects a Set.');
+  }
+  return ((getFromCache(value) as SerializableRef<Set<unknown>>) ??
+    cloneSet(value)) as SerializableRef<Set<TValue>>;
+}
+
+export function createSerializableError<TValue extends Error>(
+  value: TValue
+): SerializableRef<TValue> {
+  if (__DEV__ && !(value instanceof Error)) {
+    throw new Error('[Worklets] `createSerializableError` expects an Error.');
+  }
+  return ((getFromCache(value) as SerializableRef<Error>) ??
+    cloneError(value)) as SerializableRef<TValue>;
+}
+
+export function createSerializableRegExp(
+  value: RegExp
+): SerializableRef<RegExp> {
+  if (__DEV__ && !(value instanceof RegExp)) {
+    throw new Error('[Worklets] `createSerializableRegExp` expects a RegExp.');
+  }
+  return (
+    (getFromCache(value) as SerializableRef<RegExp> | undefined) ??
+    cloneRegExp(value)
+  );
+}
+
+export function createSerializableArrayBuffer(
+  value: ArrayBuffer
+): SerializableRef<ArrayBuffer> {
+  if (__DEV__ && !(value instanceof ArrayBuffer)) {
+    throw new Error(
+      '[Worklets] `createSerializableArrayBuffer` expects an ArrayBuffer.'
+    );
+  }
+  return (
+    (getFromCache(value) as SerializableRef<ArrayBuffer> | undefined) ??
+    cloneArrayBuffer(value)
+  );
+}
+
+export function createSerializableArrayBufferView<
+  TValue extends ArrayBufferView,
+>(value: TValue): SerializableRef<TValue> {
+  if (__DEV__ && !ArrayBuffer.isView(value)) {
+    throw new Error(
+      '[Worklets] `createSerializableArrayBufferView` expects a typed array or a DataView.'
+    );
+  }
+  return (
+    (getFromCache(value) as SerializableRef<TValue> | undefined) ??
+    cloneArrayBufferView(value)
+  );
+}
+
+export function createSerializableHostObject<TValue extends object>(
+  value: TValue
+): SerializableRef<TValue> {
+  if (
+    __DEV__ &&
+    (typeof value !== 'object' || value === null || !isHostObject(value))
+  ) {
+    throw new Error(
+      '[Worklets] `createSerializableHostObject` expects a host object.'
+    );
+  }
+  return (
+    (getFromCache(value) as SerializableRef<TValue> | undefined) ??
+    cloneHostObject(value)
+  );
+}
+
 if (!globalThis.__customSerializationRegistry) {
   globalThis.__customSerializationRegistry =
     [] as typeof globalThis.__customSerializationRegistry;

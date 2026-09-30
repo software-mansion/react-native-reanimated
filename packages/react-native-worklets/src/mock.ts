@@ -27,6 +27,15 @@ globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
 const WorkletAPI = {
   callMicrotasks: NOOP,
   createSerializable: ID,
+  createSerializableArray: ID,
+  createSerializableArrayBuffer: ID,
+  createSerializableArrayBufferView: ID,
+  createSerializableError: ID,
+  createSerializableHostObject: ID,
+  createSerializableMap: ID,
+  createSerializableObject: ID,
+  createSerializableRegExp: ID,
+  createSerializableSet: ID,
   createShareable<TValue>(_hostRuntimeId: number, initial: TValue) {
     let value = initial;
     const set = (next: TValue | ((prev: TValue) => TValue)) => {

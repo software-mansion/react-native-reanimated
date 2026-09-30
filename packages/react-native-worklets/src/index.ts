@@ -30,6 +30,15 @@ export { isShareable } from './memory/isShareable';
 export { isSynchronizable } from './memory/isSynchronizable';
 export {
   createSerializable,
+  createSerializableArray,
+  createSerializableArrayBuffer,
+  createSerializableArrayBufferView,
+  createSerializableError,
+  createSerializableHostObject,
+  createSerializableMap,
+  createSerializableObject,
+  createSerializableRegExp,
+  createSerializableSet,
   isSerializableRef,
   registerCustomSerializable,
 } from './memory/serializable';
