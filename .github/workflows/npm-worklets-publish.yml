@@ -74,13 +74,13 @@ jobs:
           node-version-file: '.nvmrc'
       - name: Install monorepo dependencies
         run: yarn install --immutable
-      - name: Build OXC plugin (darwin)
+      - name: Build Oxc plugin (darwin)
         if: matrix.name == 'darwin'
         run: yarn workspace worklets-oxc-plugin build:all
-      - name: Build OXC plugin (linux-arm64)
+      - name: Build Oxc plugin (linux-arm64)
         if: matrix.name == 'linux-arm64'
         run: yarn workspace worklets-oxc-plugin build
-      - name: Build OXC plugin (win32)
+      - name: Build Oxc plugin (win32)
         if: matrix.name == 'win32'
         working-directory: packages/react-native-worklets/plugin-oxc
         run: |
@@ -90,7 +90,7 @@ jobs:
             cargo xwin build --release --target "$target"
             CARGO_BUILD_TARGET="$target" node --experimental-strip-types scripts/post-build.mts release
           done
-      - name: Upload OXC plugin
+      - name: Upload Oxc plugin
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: oxc-plugin-${{ matrix.name }}

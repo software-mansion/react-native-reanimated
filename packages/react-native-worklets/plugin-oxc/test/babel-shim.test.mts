@@ -11,7 +11,7 @@ try {
 }
 
 test(
-  'babel shim runs the OXC transform when used as a babel plugin',
+  'babel shim runs the Oxc transform when used as a babel plugin',
   { skip: !babelCore },
   () => {
     const fs = require_('fs');
