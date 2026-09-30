@@ -74,5 +74,5 @@
 
 - [About](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about)
 - [Options](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/options)
-- [OXC plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/oxc)
+- [Oxc plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/oxc)
 

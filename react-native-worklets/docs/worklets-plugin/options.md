@@ -55,7 +55,7 @@ module.exports = {
 
 ## Options
 
-If you are using the OXC plugin, refer to [OXC plugin options](/docs/worklets-plugin/oxc#options).
+If you are using the Oxc plugin, refer to [Oxc plugin options](/docs/worklets-plugin/oxc#options).
 
 ### bundleMode
 
