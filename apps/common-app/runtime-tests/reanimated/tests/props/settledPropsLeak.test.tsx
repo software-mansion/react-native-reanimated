@@ -340,12 +340,9 @@ describe('settled animated style and props of a wrapped component', () => {
       const rendersBeforeSync = received.length;
       await wait(SYNC_BACK_DELAY_MS);
 
-      // The settled values were synced back, so the test checks that render.
       expect(received.length > rendersBeforeSync).toBe(true);
       expectSettledProps(received[received.length - 1], mode);
 
-      // An unrelated render after settle (like dismissing a LogBox warning)
-      // must keep the settled values.
       const rendersBeforeRerender = received.length;
       await renderBox(1);
       expect(received.length > rendersBeforeRerender).toBe(true);
