@@ -137,6 +137,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'layout animations re-created views',
+    importTest: () => {
+      require('./tests/layoutAnimations/recreatedViews.test');
+    },
+  },
+  {
     testSuiteName: 'shared element transitions',
     importTest: () => {
       require('./tests/layoutAnimations/sharedTransition.test');
