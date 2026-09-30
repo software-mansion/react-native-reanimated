@@ -26,16 +26,16 @@ The app is always scaffolded by the build job from the official React Native CLI
 1. The kind of app: `rn-cli` (React Native CLI, Bare) or `expo` (Expo Dev Client or Expo Go). Read the `Workflow` field and the linked repository. Default to `rn-cli`. For `expo`, pick the Expo SDK major whose bundled React Native matches `reactNativeVersion` and put it in `expoSdkVersion`.
 1. The architecture: `fabric` unless the `Architecture` field or the linked repository says Legacy Architecture (Paper renderer).
 1. Reproduction steps that a tester can follow on a simulator with no source access: what to tap, what to look at, how long to wait and what a pass and a fail look like. Bake any needed controls into the screen, for example a button with a visible label, and name them in the steps.
-1. How the tester verifies the result, in `verification`. Prefer an on-screen signal: render state with `<Text>` and describe the pass and the fail output. When the symptom is not visual, say what to measure, how, and which values mean pass and fail.
+1. How the tester verifies the result, in `verification`. The signal must be on screen: render state with `<Text>` and describe the pass and the fail output. A crash or a frozen screen is also a usable signal.
 
 ## What the tester can do
 
-The tester is an agent on a Mac with the app installed on an iOS simulator. It has Argent to tap, type, swipe, read the screen and take screenshots. It also has `xcrun simctl`, so it can read the simulator system log with `xcrun simctl spawn <udid> log stream`, measure the app process with `ps -o rss` on the host, and collect crash reports. Design the reproduction for that tester:
+The tester is an agent on a Mac with the app installed on an iOS simulator. It has Argent to tap, type, swipe, read the screen and take screenshots, and `sim-remote simctl` to boot the simulator and install and launch the app. That is all. It cannot run programs on the Mac or inside the simulator, so it cannot read process memory, system logs or Instruments traces, and it cannot see `console.log` output from a Release bundle. Design the reproduction for that tester:
 
 - Visual bugs: make the wrong and the right rendering unmistakable, for example large colored blocks with labels.
-- Memory and resource bugs: add a button that performs the suspect work many times, show an iteration counter on screen, and tell the tester to compare the process memory before and after. State the growth that counts as a fail, for example more than 50 MB after 10,000 iterations.
-- Crashes and hangs: name the action that crashes. A crash report or a frozen screen is the fail signal.
-- Logs: `console.log` from JavaScript is not visible in a Release bundle, so do not rely on it. Native logging that goes to the system log is visible through `log stream`.
+- State and timing bugs: render every value that matters as `<Text>`, including counters, timestamps and the last event, so the tester can read it from a screenshot.
+- Crashes and hangs: name the action that crashes. A crashed app or a frozen screen is the fail signal.
+- Memory and resource bugs: there is no way to measure memory. Reproduce them only when the leak has a consequence the app can show on screen, for example a counter of live native objects that the library exposes, a measurable slowdown that the app times itself and renders, or a crash after a bounded number of iterations. When no such consequence exists, set `feasible: false` and say that the verification needs a memory profiler.
 
 ## Constraints of the build
 
@@ -50,9 +50,10 @@ The tester is an agent on a Mac with the app installed on an iOS simulator. It h
 - the bug exists only on Android, web, macOS, tvOS or a real device and cannot occur on an iOS simulator;
 - the bug exists only in a Debug bundle or needs Metro, for example a `__DEV__` warning;
 - triggering the bug needs custom native code or a package outside the allowlist, and no path through the public API of Reanimated, Worklets or React Native reaches the same mechanism;
+- the symptom can be observed only with a memory or CPU profiler, a debugger or system logs, and nothing the app can render on screen reflects it;
 - the issue has no reproduction and the description is too vague to design one.
 
-An issue that names an external library is not a reason by itself. An issue whose symptom is not visual is not a reason by itself.
+An issue that names an external library is not a reason by itself. An issue whose symptom is not visual is not a reason by itself when the app can render a proxy for it.
 
 ## Output
 

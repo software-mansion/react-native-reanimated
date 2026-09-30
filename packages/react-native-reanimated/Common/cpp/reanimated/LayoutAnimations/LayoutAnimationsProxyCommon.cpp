@@ -209,7 +209,7 @@ void LayoutAnimationsProxyCommon::applySynchronousPropsToLayoutAnimation(const T
               start.after.props = mergeSynchronousProps(start.after, props);
               if constexpr (std::is_same_v<Start, ManagedLayoutAnimationStart>) {
                 if (propsIncludeOpacity && start.opacity) {
-                  start.opacity = static_cast<const ViewProps &>(*start.after.props).opacity;
+                  start.opacity = getViewProps(start.after).opacity;
                 }
               }
             }
@@ -231,7 +231,7 @@ void LayoutAnimationsProxyCommon::applySynchronousPropsToLayoutAnimation(const T
   animation->finalView.props = mergeSynchronousProps(animation->finalView, props);
   animation->currentView.props = mergeSynchronousProps(animation->currentView, props);
   if (propsIncludeOpacity && animation->opacity) {
-    animation->opacity = static_cast<const ViewProps &>(*animation->finalView.props).opacity;
+    animation->opacity = getViewProps(animation->finalView).opacity;
   }
   if (const auto it = updateMap_.find(tag); it != updateMap_.end() && it->second.newProps) {
     auto pendingView = animation->finalView;
@@ -511,7 +511,6 @@ std::shared_ptr<Serializable> LayoutAnimationsProxyCommon::getRetargetLayoutAnim
 
 bool LayoutAnimationsProxyCommon::updateEnteringAnimationTarget(const Tag tag, const ShadowView &finalView) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  const auto opacity = static_cast<const ViewProps &>(*finalView.props).opacity;
   if (const auto pendingIt = pendingLayoutAnimations_.find(tag); pendingIt != pendingLayoutAnimations_.end()) {
     if (pendingIt->second.type != LayoutAnimationType::ENTERING) {
       return false;
@@ -520,7 +519,7 @@ bool LayoutAnimationsProxyCommon::updateEnteringAnimationTarget(const Tag tag, c
     react_native_assert(operationIndex < layoutAnimationOperations_.size());
     if (auto *start = std::get_if<ManagedLayoutAnimationStart>(&layoutAnimationOperations_[operationIndex])) {
       start->after = finalView;
-      start->opacity = opacity;
+      start->opacity = getViewProps(finalView).opacity;
       return true;
     }
     react_native_assert(false && "Pending managed layout animation not found");
@@ -529,7 +528,7 @@ bool LayoutAnimationsProxyCommon::updateEnteringAnimationTarget(const Tag tag, c
       animationIt != layoutAnimations_.end() && animationIt->second.type == LayoutAnimationType::ENTERING) {
     animationIt->second.finalView = finalView;
     if (animationIt->second.opacity) {
-      animationIt->second.opacity = opacity;
+      animationIt->second.opacity = getViewProps(finalView).opacity;
     }
     return true;
   }

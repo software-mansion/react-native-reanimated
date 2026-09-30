@@ -147,7 +147,8 @@
     "./**/runtimeKind.{js,ts}",
     "./**/serializable.native.{js,ts}",
     "./**/initializers.native.{js,ts}",
-    "./**/featureFlags.native.{js,ts}"
+    "./**/featureFlags.native.{js,ts}",
+    "./**/threads.{js,ts}"
   ],
   "codegenConfig": {
     "name": "rnworklets",

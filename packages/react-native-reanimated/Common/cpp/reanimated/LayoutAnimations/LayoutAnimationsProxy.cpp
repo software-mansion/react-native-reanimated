@@ -292,17 +292,13 @@ void LayoutAnimationsProxy::reconcileContradictedRemovals(
     }
     const auto tag = mutation.newChildShadowView.tag;
     const auto it = lightNodes_.find(tag);
-    if (it == lightNodes_.end() || it->second->state == UNDEFINED) {
+    if (it == lightNodes_.end() || it->second->state == LIVE) {
       continue;
     }
     const auto node = it->second;
     completedAnimations_.erase(tag);
     updateMap_.erase(tag);
     unmapLightNode(node);
-    if (node->state == DELETED) {
-      // already unmounted — only the stale map entry had to go
-      continue;
-    }
     const auto parent = node->parent.lock();
     react_native_assert(parent && "Parent node is nullptr");
     if (!parent) {
@@ -335,6 +331,7 @@ void LayoutAnimationsProxy::updateLightTree(
   std::unordered_map<Tag, IndexCursors> indexCursors;
   std::unordered_map<Tag, ShadowView> updatedViews;
   std::unordered_map<Tag, std::vector<AncestorOrigin>> oldChains;
+  std::unordered_set<Tag> removedSubtreeRoots;
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
     const auto &mutation = *it;
     switch (mutation.type) {
@@ -411,16 +408,21 @@ void LayoutAnimationsProxy::updateLightTree(
         break;
       }
       case ShadowViewMutation::Delete: {
-        const auto it = lightNodes_.find(mutation.oldChildShadowView.tag);
-        react_native_assert(it != lightNodes_.end() && "Delete mutation for an unknown node");
-        const auto state = it->second->state;
-        // View flattening emits a child's Delete after its parent's Remove, which may have already torn the child
-        // down.
-        if (state == UNDEFINED || state == COMPLETED || state == DELETED) {
+        const auto tag = mutation.oldChildShadowView.tag;
+        const auto it = lightNodes_.find(tag);
+        react_native_assert(
+            (it == lightNodes_.end() || it->second->isExiting()) &&
+            "Delete mutation for a view that React did not remove");
+        // The differ removes everything that moves out of a view before its Delete, and inserts into the parent
+        // of the view only after it.
+        if (removedSubtreeRoots.erase(tag)) {
+          react_native_assert(it != lightNodes_.end() && "Delete mutation for an unknown node");
           const auto node = it->second;
-          unmapLightNode(node);
+          const auto parent = node->parent.lock();
+          react_native_assert(parent && "Parent node is nullptr");
+          handleSubtreeRemoval(node, parent, transaction);
         }
-        staleSynchronousProps_.forget(mutation.oldChildShadowView.tag);
+        staleSynchronousProps_.forget(tag);
         break;
       }
       case ShadowViewMutation::Insert: {
@@ -434,10 +436,13 @@ void LayoutAnimationsProxy::updateLightTree(
         bool hasSharedTransition = false;
         if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
           auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
-          hasSharedTransition = sharedTransitionManager_->tagToName_.contains(tag);
+          hasSharedTransition = mutation.newChildShadowView.traits.check(ShadowNodeTraits::Trait::ViewKind) &&
+              sharedTransitionManager_->tagToName_.contains(tag);
         }
         const auto layoutConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT);
-        const auto enteringConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, ENTERING);
+        const auto enteringConfig = isViewKind(mutation.newChildShadowView)
+            ? layoutAnimationsManager_->getLayoutAnimationConfig(tag, ENTERING)
+            : nullptr;
         if (moved.contains(tag)) {
           const auto offset = reparentOffset(oldChains.at(tag), ancestorOrigins(parent, {}));
           node->previous.layoutMetrics.frame.origin += offset;
@@ -480,6 +485,7 @@ void LayoutAnimationsProxy::updateLightTree(
         const auto tag = node->current.tag;
         const auto parentTag = mutation.parentTag;
         const auto &parent = lightNodes_[parentTag];
+        react_native_assert(parent && "Remove mutation from an unknown parent");
         const auto hostIndex = parent->toHostIndexForRemove(mutation.index, indexCursors[parentTag]);
         react_native_assert(
             hostIndex < static_cast<int>(parent->children.size()) &&
@@ -494,8 +500,11 @@ void LayoutAnimationsProxy::updateLightTree(
           filteredMutations.push_back(
               ShadowViewMutation::RemoveMutation(parentTag, mutation.oldChildShadowView, hostIndex));
           parent->children.erase(parent->children.begin() + hostIndex);
-        } else if (!deleted.contains(parentTag)) {
-          handleSubtreeRemoval(node, parent, hostIndex, transaction);
+        } else {
+          node->setExitingState(DECISION_PENDING);
+          if (!deleted.contains(parentTag)) {
+            removedSubtreeRoots.insert(tag);
+          }
         }
         break;
       }
@@ -505,6 +514,7 @@ void LayoutAnimationsProxy::updateLightTree(
       }
     }
   }
+  react_native_assert(removedSubtreeRoots.empty() && "React removed a view without deleting it");
 }
 
 void LayoutAnimationsProxy::applyInitialMutationsToLightTree(const ShadowViewMutationList &mutations) const {
@@ -660,14 +670,16 @@ void LayoutAnimationsProxy::initializeLightTree(const ShadowTreeRevision &baseRe
 
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   react_native_assert(!isLightTreeInitialized() && "Light tree is already initialized");
+  const auto root = std::make_shared<LightNode>();
   if (baseRevision.rootShadowNode) {
     const auto &size = baseRevision.rootShadowNode->getLayoutMetrics().frame.size;
     window_ = {size.width, size.height};
+    root->current = ShadowView(*baseRevision.rootShadowNode);
+  } else {
+    root->current.componentName = "RootView";
+    root->current.tag = surfaceId_;
+    root->current.props = std::make_shared<BaseViewProps>();
   }
-  const auto root = std::make_shared<LightNode>();
-  root->current.componentName = "RootView";
-  root->current.tag = surfaceId_;
-  root->current.props = std::make_shared<BaseViewProps>();
   lightNodes_[surfaceId_] = root;
   applyInitialMutationsToLightTree(initialMutations);
   for (const auto &[revisionNumber, mutations] : pendingTransactions_) {
@@ -713,12 +725,11 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
 }
 
 // A subtree that animates keeps its place in the host tree, so nothing is emitted for its root.
-// A subtree that does not animate emits its Remove in stream order. Its teardown mounts at the
+// A subtree that does not animate is removed at its current host index. Its teardown mounts at the
 // end of the transaction, so native code that reads a view on unmount still sees its children.
 void LayoutAnimationsProxy::handleSubtreeRemoval(
     const std::shared_ptr<LightNode> &node,
     const std::shared_ptr<LightNode> &parent,
-    const int hostIndex,
     TransactionMeta &transaction) const {
   ReanimatedSystraceSection s("handleSubtreeRemoval");
   const StartAnimationsRecursivelyConfig config = {
@@ -729,7 +740,11 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(
   if (startAnimationsRecursively(node, transaction, config)) {
     return;
   }
-  react_native_assert(!node->isExiting() && "A subtree that does not animate must stay UNDEFINED");
+  react_native_assert(node->state == DECISION_PENDING && "A subtree that does not animate stays DECISION_PENDING");
+  const auto hostIndex = parent->removeChild(node);
+  react_native_assert(hostIndex != -1 && "Removed node not found in its parent");
+  node->setExitingState(TORN_DOWN);
+  unmapLightNode(node);
   cancelLayoutAnimation(node->current.tag);
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     hiddenViewTags_.erase(node->current.tag);
@@ -737,7 +752,6 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(
   transaction.filteredMutations.push_back(
       ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, hostIndex));
   transaction.teardownMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
-  parent->children.erase(parent->children.begin() + hostIndex);
 }
 
 void LayoutAnimationsProxy::flushCompletedRemovals(ShadowViewMutationList &filteredMutations) const {
@@ -828,7 +842,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(ShadowViewMutationList &mutatio
     mutations.push_back(
         ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
     layoutAnimation.currentView = newView;
-    if (layoutAnimation.opacity && static_cast<const ViewProps &>(*newView.props).opacity == *layoutAnimation.opacity) {
+    if (layoutAnimation.opacity && getViewProps(newView).opacity == *layoutAnimation.opacity) {
       layoutAnimation.opacity.reset();
     }
   }
@@ -841,7 +855,7 @@ void LayoutAnimationsProxy::endAnimationsRecursively(
     ShadowViewMutationList &mutations) const {
   const auto tag = node->current.tag;
   cancelLayoutAnimation(tag);
-  node->setExitingState(DELETED);
+  node->setExitingState(TORN_DOWN);
   unmapLightNode(node);
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
@@ -849,7 +863,7 @@ void LayoutAnimationsProxy::endAnimationsRecursively(
   const int childrenSize = static_cast<int>(node->children.size());
   for (int i = childrenSize - 1; i >= 0; i--) {
     auto &subNode = node->children[i];
-    if (subNode->state != DELETED) {
+    if (subNode->state != TORN_DOWN) {
       endAnimationsRecursively(subNode, i, mutations);
     }
   }
@@ -867,7 +881,7 @@ void LayoutAnimationsProxy::endAnimationsRecursively(
 void LayoutAnimationsProxy::maybeDropAncestors(
     const std::shared_ptr<LightNode> &node,
     ShadowViewMutationList &cleanupMutations) const {
-  if (node->children.size() != 0 || node->state == ANIMATING || node->state == UNDEFINED) {
+  if (node->children.size() != 0 || node->state == ANIMATING || node->state == LIVE) {
     return;
   }
 
@@ -876,7 +890,7 @@ void LayoutAnimationsProxy::maybeDropAncestors(
   auto index = parent->removeChild(node);
   react_native_assert(index != -1 && "Child node not found");
 
-  node->setExitingState(DELETED);
+  node->setExitingState(TORN_DOWN);
   unmapLightNode(node);
   cancelLayoutAnimation(node->current.tag);
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
@@ -891,6 +905,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
     const std::shared_ptr<LightNode> &node,
     TransactionMeta &transaction,
     StartAnimationsRecursivelyConfig config) const {
+  react_native_assert(node->state == DECISION_PENDING && "Subtree removal of a view that React does not delete");
   auto &mutations = transaction.teardownMutations;
   auto &[shouldRemoveSubviewsWithoutAnimations, shouldAnimate, isScreenPop] = config;
   if (isRNSScreenOrStack(node)) {
@@ -913,7 +928,8 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
   for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
     index--;
     auto &subNode = *it;
-    if (subNode->state != UNDEFINED) {
+    react_native_assert(subNode->isExiting() && "Subtree removal of a view that React does not delete");
+    if (subNode->state != DECISION_PENDING) {
       if (shouldAnimate && subNode->state != COMPLETED) {
         hasAnimatedChildren = true;
       } else {
@@ -929,13 +945,11 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
       }
       mutations.push_back(ShadowViewMutation::RemoveMutation(node->current.tag, subNode->current, index));
       toBeRemoved.push_back(subNode);
-      subNode->setExitingState(DELETED);
+      subNode->setExitingState(TORN_DOWN);
+      unmapLightNode(subNode);
       mutations.push_back(ShadowViewMutation::DeleteMutation(subNode->current));
     } else {
       subNode->setExitingState(WAITING);
-      // register withheld subtree members, so that reconcileContradictedRemovals
-      // can find them when React re-creates their tags
-      lightNodes_[subNode->current.tag] = subNode;
     }
   }
 
@@ -947,7 +961,6 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
 
   if (hasExitAnimation) {
     node->setExitingState(ANIMATING);
-    lightNodes_[node->current.tag] = node;
     transaction.exiting.push_back({node, exitConfig});
   } else {
     if (!shouldAnimate) {
@@ -955,7 +968,6 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
     }
     if (hasAnimatedChildren) {
       node->setExitingState(WAITING);
-      lightNodes_[node->current.tag] = node;
     }
   }
 
@@ -985,6 +997,7 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
 ShadowView LayoutAnimationsProxy::cloneViewWithoutOpacity(
     const ShadowView &shadowView,
     const PropsParserContext &propsParserContext) const {
+  react_native_assert(isViewKind(shadowView) && "Only ViewKind views have ViewProps");
   auto newView = shadowView;
   folly::dynamic rawProps = folly::dynamic::object("opacity", 0);
 #ifdef ANDROID
@@ -1000,11 +1013,16 @@ ShadowView LayoutAnimationsProxy::cloneViewWithoutOpacity(
 
 // Android's push model applies JS-thread transactions asynchronously on the UI
 // thread. A UI-thread pull can overtake them, so completed animations must not
-// add structural cleanup mutations there. This gate can go away with Android's
-// pull model.
+// add structural cleanup mutations there.
+//
+// Under the pull model there is nothing left to overtake, because every
+// transaction is pulled from the UI thread's frame callback. Keeping the thread
+// check on its own there would mean this never returns true, so no exiting view
+// would ever have its removal flushed, and every one of them would stay mounted
+// for the lifetime of the surface.
 bool LayoutAnimationsProxy::shouldFlushStructuralMutations() const {
 #ifdef ANDROID
-  return !worklets::isOnUIThread(uiScheduler_);
+  return isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_);
 #else
   return true;
 #endif
@@ -1065,9 +1083,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
     const std::shared_ptr<Serializable> &config) const {
   resolveLightNodeProps(node);
   const auto &newChildShadowView = node->current;
-  const auto &props = newChildShadowView.props;
-  auto &viewProps = static_cast<const ViewProps &>(*props);
-  const auto opacity = viewProps.opacity;
+  const auto opacity = getViewProps(newChildShadowView).opacity;
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{

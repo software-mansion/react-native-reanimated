@@ -32,6 +32,7 @@
     "format:md": "remark --output --ext md . && remark --rc-path .remarkrc.mdx.mjs --output --ext mdx .",
     "format:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run format",
     "lint": "yarn lint:root && yarn lint:workspaces",
+    "lint:md": "remark --rc-path .remarkrc.docs.mjs --frail --quiet --ext md,mdx --ignore-pattern '**/_*.{md,mdx}' --ignore-pattern '**/_*/**' docs/docs-reanimated/docs docs/docs-worklets/docs",
     "lint:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run lint",
     "lint:root": "oxlint . --ignore-pattern 'packages/**' --ignore-pattern 'apps/**' --ignore-pattern 'docs/**' && yarn run --top-level oxfmt --check --ignore-path .prettiereslintignore .",
     "prepare-vscode": "bash ./scripts/prepare-vscode.sh",

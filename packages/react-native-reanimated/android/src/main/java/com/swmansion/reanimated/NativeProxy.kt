@@ -8,8 +8,11 @@ import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.UIManager
+import com.facebook.react.bridge.UIManagerListener
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.common.annotations.FrameworkAPI
+import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
 import com.facebook.react.uimanager.IllegalViewOperationException
@@ -66,9 +69,32 @@ open class NativeProxy {
      */
     private val mInvalidated = AtomicBoolean(false)
 
+    /** A mount callback on the UI thread must not run native code while a different thread destroys it. */
+    private val invalidationLock = Any()
+
     @field:DoNotStrip
     @Suppress("unused")
     private val mHybridData: HybridData
+
+    @OptIn(UnstableReactNativeAPI::class)
+    private val mountListener =
+        object : UIManagerListener {
+            override fun willDispatchViewUpdates(uiManager: UIManager) = Unit
+
+            override fun willMountItems(uiManager: UIManager) = Unit
+
+            override fun didMountItems(uiManager: UIManager) {
+                synchronized(invalidationLock) {
+                    if (!mInvalidated.get()) {
+                        rewriteSynchronousProps()
+                    }
+                }
+            }
+
+            override fun didDispatchMountItems(uiManager: UIManager) = Unit
+
+            override fun didScheduleMountItems(uiManager: UIManager) = Unit
+        }
 
     constructor(context: ReactApplicationContext, nodesManager: NodesManager) {
         context.assertOnJSQueueThread()
@@ -112,6 +138,10 @@ open class NativeProxy {
         if (BuildConfig.DEBUG) {
             checkCppVersion() // injectCppVersion should be called during initHybrid above
         }
+        if (hasSynchronousWritesTracker()) {
+            @OptIn(UnstableReactNativeAPI::class)
+            mFabricUIManager.addUIManagerEventListener(mountListener)
+        }
     }
 
     private external fun initHybrid(
@@ -129,6 +159,10 @@ open class NativeProxy {
 
     external fun performNonLayoutOperations()
 
+    private external fun hasSynchronousWritesTracker(): Boolean
+
+    private external fun rewriteSynchronousProps()
+
     external fun installJSIBindings()
 
     private external fun invalidateCpp()
@@ -141,11 +175,15 @@ open class NativeProxy {
         if (mInvalidated.getAndSet(true)) {
             return
         }
+        @OptIn(UnstableReactNativeAPI::class)
+        mFabricUIManager.removeUIManagerEventListener(mountListener)
         pseudoSelectorManager.invalidate()
         cssPlatformTransitionsManager.invalidate()
         subviewClippingGuard.invalidate()
-        if (mHybridData.isValid) {
-            invalidateCpp()
+        synchronized(invalidationLock) {
+            if (mHybridData.isValid) {
+                invalidateCpp()
+            }
         }
     }
 
@@ -262,6 +300,10 @@ open class NativeProxy {
             }.apply { isAccessible = true }
     }
 
+    private val getViewExistsMethod by lazy {
+        runCatching { mountingManager.javaClass.getMethod("getViewExists", Int::class.javaPrimitiveType) }.getOrNull()
+    }
+
     @DoNotStrip
     fun synchronouslyUpdateUIProps(
         intBuffer: IntArray,
@@ -270,9 +312,13 @@ open class NativeProxy {
         cssPlatformTransitionsManager.onPropsWrittenSynchronously()
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
             try {
+                // The props stay in the registry, and the commit hook applies them to the shadow tree.
+                if (getViewExistsMethod?.invoke(mountingManager, viewTag) == false) {
+                    return@parse
+                }
                 updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
             } catch (e: Exception) {
-                Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag", e)
+                Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag: ${e.cause ?: e}")
             }
         }
     }

@@ -51,3 +51,5 @@ jobs:
       - name: Show markdown diff
         if: failure() && steps.md-format.outcome == 'failure'
         run: git diff
+      - name: Check documentation page titles
+        run: yarn lint:md

@@ -333,6 +333,10 @@ const appearanceRoutes = {
         Component: baseAnimatedProperties.appearance.others.BackfaceVisibility,
         name: 'Backface Visibility',
       },
+      BackgroundImage: {
+        Component: baseAnimatedProperties.appearance.others.BackgroundImage,
+        name: 'Background Image',
+      },
       MixBlendMode: {
         Component: baseAnimatedProperties.appearance.others.MixBlendMode,
         name: 'Mix Blend Mode',
