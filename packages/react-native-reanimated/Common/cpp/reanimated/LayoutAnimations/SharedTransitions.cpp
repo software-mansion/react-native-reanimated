@@ -154,7 +154,7 @@ void LayoutAnimationsProxy::resolveDeferredSourceScreen() const {
     return;
   }
   const auto sourceScreen = topScreen_ ? findParentRNSScreen(topScreen_) : nullptr;
-  if (!sourceScreen || !transition_->targetScreen ||
+  if (!sourceScreen || !visibleScreens_.contains(sourceScreen->current.tag) || !transition_->targetScreen ||
       sourceScreen->current.tag == transition_->targetScreen->current.tag) {
     transition_->state = TransitionState::CANCELLED;
     transition_->updated = true;
@@ -510,48 +510,49 @@ LayoutAnimationsProxy::onTransitionProgress(int tag, double progress, bool isClo
   if constexpr (!StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     return {};
   }
-  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  bool isAndroid;
 #ifdef ANDROID
-  isAndroid = true;
-#else
-  isAndroid = false;
+  return {};
 #endif
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  updateVisibleScreens(tag, progress, isClosing);
+  if (!isClosing && isUncommittedScreenPopSource(tag)) {
+    return cancelUncommittedScreenPop();
+  }
   // TODO (future): this new approach causes all back transitions to be progress
   // transitions (maybe that's ok?)
-  if (!isClosing && !isGoingForward && !isAndroid) {
-    if (transition_ && (!transition_->targetScreen || tag != transition_->targetScreen->current.tag)) {
+  if (isClosing || isGoingForward) {
+    return {};
+  }
+  if (transition_ && (!transition_->targetScreen || tag != transition_->targetScreen->current.tag)) {
+    return {};
+  }
+  if (transition_ && transition_->state == TransitionState::CANCELLED) {
+    return {};
+  }
+  if (!transition_) {
+    const auto targetIt = lightNodes_.find(tag);
+    if (targetIt == lightNodes_.end() || !targetIt->second || progress >= 1) {
       return {};
     }
-    if (transition_ && transition_->state == TransitionState::CANCELLED) {
-      return {};
-    }
-    if (!transition_) {
-      const auto targetIt = lightNodes_.find(tag);
-      if (targetIt == lightNodes_.end() || !targetIt->second || progress >= 1) {
+    std::shared_ptr<LightNode> sourceScreen;
+    if (!uncommittedScreenPop_) {
+      sourceScreen = topScreen_ ? findParentRNSScreen(topScreen_) : nullptr;
+      if (!sourceScreen || sourceScreen->current.tag == tag || !visibleScreens_.contains(sourceScreen->current.tag)) {
         return {};
       }
-      std::shared_ptr<LightNode> sourceScreen;
-      if (!uncommittedScreenPop_) {
-        sourceScreen = topScreen_ ? findParentRNSScreen(topScreen_) : nullptr;
-        if (!sourceScreen || sourceScreen->current.tag == tag) {
-          return {};
-        }
-      }
-      transition_ = ProgressTransition{
-          .sourceScreen = sourceScreen,
-          .targetScreen = targetIt->second,
-      };
     }
-    transition_->progress = progress;
-    if ((transition_->state == TransitionState::START || transition_->state == TransitionState::ACTIVE) &&
-        progress == 1) {
-      transition_->state = TransitionState::END;
-    }
-    transition_->updated = true;
-    return surfaceId_;
+    transition_ = ProgressTransition{
+        .sourceScreen = sourceScreen,
+        .targetScreen = targetIt->second,
+    };
   }
-  return {};
+  transition_->progress = progress;
+  if ((transition_->state == TransitionState::START || transition_->state == TransitionState::ACTIVE) &&
+      progress == 1) {
+    transition_->state = TransitionState::END;
+  }
+  transition_->updated = true;
+  return surfaceId_;
 }
 
 std::optional<SurfaceId> LayoutAnimationsProxy::onGestureCancel(int tag) {
@@ -559,13 +560,8 @@ std::optional<SurfaceId> LayoutAnimationsProxy::onGestureCancel(int tag) {
     return {};
   }
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  if (uncommittedScreenPop_ && uncommittedScreenPop_->sourceScreen &&
-      uncommittedScreenPop_->sourceScreen->current.tag == tag) {
-    if (uncommittedScreenPop_->cancelled) {
-      return {};
-    }
-    uncommittedScreenPop_->cancelled = true;
-    return surfaceId_;
+  if (isUncommittedScreenPopSource(tag)) {
+    return cancelUncommittedScreenPop();
   }
 
   if (!transition_ || transition_->state == TransitionState::CANCELLED) {
@@ -592,6 +588,31 @@ std::optional<SurfaceId> LayoutAnimationsProxy::onGestureCancel(int tag) {
 
   transition_->state = TransitionState::CANCELLED;
   transition_->updated = true;
+  return surfaceId_;
+}
+
+void LayoutAnimationsProxy::updateVisibleScreens(const int tag, const double progress, const bool isClosing) const {
+  if (progress != 1 || !lightNodes_.contains(tag)) {
+    return;
+  }
+  if (isClosing) {
+    visibleScreens_.erase(tag);
+  } else {
+    visibleScreens_.insert(tag);
+  }
+}
+
+bool LayoutAnimationsProxy::isUncommittedScreenPopSource(const int tag) const {
+  return uncommittedScreenPop_ && uncommittedScreenPop_->sourceScreen &&
+      uncommittedScreenPop_->sourceScreen->current.tag == tag;
+}
+
+std::optional<SurfaceId> LayoutAnimationsProxy::cancelUncommittedScreenPop() const {
+  react_native_assert(uncommittedScreenPop_ && "No uncommitted screen pop to cancel");
+  if (uncommittedScreenPop_->cancelled) {
+    return {};
+  }
+  uncommittedScreenPop_->cancelled = true;
   return surfaceId_;
 }
 
