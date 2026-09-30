@@ -5,7 +5,10 @@ import { registerReportFatalRemoteError } from '../debug/errors';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
 import { installRemoteFunctionUnpacker } from '../memory/remoteFunctionUnpacker';
-import { makeShareableCloneOnUIRecursive } from '../memory/serializable';
+import {
+  createSerializable,
+  makeShareableCloneOnUIRecursive,
+} from '../memory/serializable';
 import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
 import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
@@ -17,7 +20,7 @@ import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
 import { setupRequestAnimationFrame } from '../runLoop/uiRuntime/requestAnimationFrame';
 import { setupSetTimeout } from '../runLoop/uiRuntime/setTimeoutPolyfill';
 import { RuntimeKind } from '../runtimeKind';
-import { registerRunOnRNSync, runOnUISync, scheduleOnRN } from '../threads';
+import { runOnUISync, scheduleOnRN } from '../threads';
 import type { ValueUnpacker } from '../types';
 import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
@@ -163,7 +166,7 @@ function initializeRNRuntime() {
   }
 
   registerReportFatalRemoteError();
-  registerRunOnRNSync();
+  globalThis.__runOnRNSync = (fun, ...args) => createSerializable(fun(...args));
 }
 
 /** A function that should be run only on Worklet runtimes. */

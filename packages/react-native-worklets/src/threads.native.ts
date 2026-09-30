@@ -276,17 +276,6 @@ export function experimental_runOnRNSync<Args extends unknown[], ReturnValue>(
   );
 }
 
-function runOnRNSyncOnRN<Args extends unknown[], ReturnValue>(
-  fun: (...args: Args) => ReturnValue,
-  ...args: Args
-): SerializableRef<ReturnValue> {
-  return createSerializable(fun(...args));
-}
-
-export function registerRunOnRNSync() {
-  globalThis.__runOnRNSync = runOnRNSyncOnRN;
-}
-
 /**
  * Lets you asynchronously run
  * non-[workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize)
