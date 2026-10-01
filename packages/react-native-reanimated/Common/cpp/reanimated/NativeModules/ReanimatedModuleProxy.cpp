@@ -78,16 +78,6 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 }
 #endif
 
-bool doesInsertWriteProps() {
-#ifdef __APPLE__
-  return true;
-#elif defined(ANDROID)
-  return ReactNativeFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid();
-#else
-  return false;
-#endif
-}
-
 std::shared_ptr<SynchronousWritesTracker> makeSynchronousWritesTracker() {
   if constexpr (
       shouldUseSynchronousUpdatesInPerformOperations() && !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
@@ -180,6 +170,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef __APPLE__
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
+      readMountedViewProps_(platformDepMethodsHolder.readMountedViewPropsFunction),
 #endif
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
@@ -1292,6 +1283,9 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
     });
   };
 
+  constexpr bool keepsSynchronousPropsInReinserts =
+      shouldUseSynchronousUpdatesInPerformOperations() && !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND");
+
   const LayoutAnimationsProxyDependencies dependencies{
       layoutAnimationsManager_,
       componentDescriptorRegistry,
@@ -1300,13 +1294,14 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       uiScheduler_,
       uiManager_,
       requestLayoutAnimationFlush,
-      makeSynchronousPropsReader(),
 #ifdef ANDROID
       filterUnmountedTagsFunction_,
       jsInvoker_,
+      keepsSynchronousPropsInReinserts ? makeSynchronousPropsReader() : nullptr,
 #endif
 #ifdef __APPLE__
       forceScreenSnapshot_,
+      keepsSynchronousPropsInReinserts ? readMountedViewProps_ : nullptr,
 #endif
   };
 
@@ -1317,40 +1312,27 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
   }
 }
 
+#ifdef ANDROID
 SynchronousPropsReader ReanimatedModuleProxy::makeSynchronousPropsReader() {
-  if constexpr (
-      shouldUseSynchronousUpdatesInPerformOperations() && !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    if (doesInsertWriteProps()) {
-      return [weakThis = weak_from_this()](const std::vector<Tag> &tags) -> SynchronousPropsByTag {
-        const auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return {};
-        }
-        return strongThis->readSynchronousProps(tags);
-      };
-    }
+  if (!ReactNativeFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid()) {
+    return nullptr;
   }
-  return nullptr;
+  return [weakThis = weak_from_this()](const std::vector<Tag> &tags) {
+    const auto strongThis = weakThis.lock();
+    return strongThis ? strongThis->readSynchronousProps(tags)
+                      : std::vector<folly::dynamic>(tags.size(), folly::dynamic::object());
+  };
 }
 
-SynchronousPropsByTag ReanimatedModuleProxy::readSynchronousProps(const std::vector<Tag> &tags) {
-  SynchronousPropsByTag synchronousPropsByTag;
+std::vector<folly::dynamic> ReanimatedModuleProxy::readSynchronousProps(const std::vector<Tag> &tags) {
+  std::vector<folly::dynamic> synchronousProps(tags.size(), folly::dynamic::object());
   auto lock = updatesRegistryManager_->lock();
-  for (const auto tag : tags) {
-    folly::dynamic registryProps = folly::dynamic::object;
-    updatesRegistryManager_->mergeRegistryProps(tag, registryProps);
-    folly::dynamic synchronousProps = folly::dynamic::object;
-    for (const auto &[key, value] : registryProps.items()) {
-      if (isSynchronousPropName(key.asString())) {
-        synchronousProps[key] = value;
-      }
-    }
-    if (!synchronousProps.empty()) {
-      synchronousPropsByTag.emplace(tag, std::move(synchronousProps));
-    }
+  for (size_t i = 0; i < tags.size(); i++) {
+    updatesRegistryManager_->mergeRegistryProps(tags[i], synchronousProps[i], isSynchronousPropName);
   }
-  return synchronousPropsByTag;
+  return synchronousProps;
 }
+#endif // ANDROID
 
 #ifdef IS_REANIMATED_EXAMPLE_APP
 

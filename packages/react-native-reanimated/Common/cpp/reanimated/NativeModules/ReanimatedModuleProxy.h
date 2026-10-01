@@ -209,8 +209,10 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
   void applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch);
   void writeSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch);
+#ifdef ANDROID
   SynchronousPropsReader makeSynchronousPropsReader();
-  SynchronousPropsByTag readSynchronousProps(const std::vector<Tag> &tags);
+  std::vector<folly::dynamic> readSynchronousProps(const std::vector<Tag> &tags);
+#endif
 
   std::shared_ptr<UIManagerAnimationBackend> getAnimationBackend();
   AnimationMutations runGrandCallback(AnimationTimestamp timestamp, GrandCallbackSource source);
@@ -245,6 +247,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
+  ReadMountedViewPropsFunction readMountedViewProps_;
 #endif
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;

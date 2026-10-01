@@ -80,7 +80,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 
   dropUpdatesForDeletedViews(filteredMutations);
 
-  mergeSynchronousPropsIntoReinserts(mutations, filteredMutations);
+  keepSynchronousPropsInReinserts(mutations, filteredMutations);
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }

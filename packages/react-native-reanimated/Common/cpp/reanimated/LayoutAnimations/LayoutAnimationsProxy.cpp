@@ -143,7 +143,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   auto configLock = layoutAnimationsManager_->lockAndFlushConfigUpdates();
   if (!isLightTreeInitialized()) {
     pendingTransactions_.emplace_back(telemetry.getRevisionNumber(), mutations);
-    mergeSynchronousPropsIntoReinserts(mutations, mutations);
+    keepSynchronousPropsInReinserts(mutations, mutations);
     return MountingTransaction{surfaceId, transactionNumber, std::move(mutations), telemetry};
   }
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
@@ -241,7 +241,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     keepTransitioningViewsHidden(filteredMutations, propsParserContext);
   }
 
-  mergeSynchronousPropsIntoReinserts(mutations, filteredMutations);
+  keepSynchronousPropsInReinserts(mutations, filteredMutations);
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }

@@ -12,9 +12,11 @@
 #import <reanimated/apple/pseudoSelectors/REAPseudoSelectorAttachQueue.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
+#import <React/RCTAssert.h>
 #import <React/RCTComponentViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
 #import <React/RCTMountingManager.h>
+#import <React/RCTViewComponentView.h>
 
 #import <memory>
 #import <variant>
@@ -208,6 +210,22 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
   return forceScreenSnapshot;
 }
 
+ReadMountedViewPropsFunction makeReadMountedViewPropsFunction(REANodesManager *nodesManager)
+{
+  auto readMountedViewProps = [=](Tag tag) -> Props::Shared {
+    RCTAssertMainQueue();
+    RCTSurfacePresenter *surfacePresenter = nodesManager.surfacePresenter;
+    RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
+    REAUIView<RCTComponentViewProtocol> *componentView = [componentViewRegistry findComponentViewWithTag:tag];
+    // The default `props` getter of `UIView` asserts.
+    if (![componentView isKindOfClass:[RCTViewComponentView class]]) {
+      return nullptr;
+    }
+    return [componentView props];
+  };
+  return readMountedViewProps;
+}
+
 PlatformAttachPseudoSelectorFunction makeAttachPseudoSelectorFunction(REAPseudoSelectorAttachQueue *attachQueue)
 {
   return [attachQueue](Tag tag, PseudoSelector selector, std::function<void(bool)> callback) {
@@ -229,6 +247,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto requestRender = makeRequestRender(nodesManager);
 
   auto forceScreenSnapshotFunction = makeForceScreenSnapshotFunction(nodesManager);
+
+  auto readMountedViewPropsFunction = makeReadMountedViewPropsFunction(nodesManager);
 
   auto synchronouslyUpdateUIPropsFunction = makeSynchronouslyUpdateUIPropsFunction(nodesManager);
 
@@ -260,6 +280,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
+      readMountedViewPropsFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,

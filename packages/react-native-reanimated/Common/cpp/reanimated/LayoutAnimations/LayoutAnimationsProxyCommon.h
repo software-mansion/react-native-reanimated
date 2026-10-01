@@ -63,8 +63,10 @@ struct LayoutAnimationCancellation {
 using LayoutAnimationOperation =
     std::variant<ManagedLayoutAnimationStart, ProgressLayoutAnimationStart, LayoutAnimationCancellation>;
 
-using SynchronousPropsByTag = std::unordered_map<Tag, folly::dynamic>;
-using SynchronousPropsReader = std::function<SynchronousPropsByTag(const std::vector<Tag> &)>;
+#ifdef ANDROID
+// Returns one object for each tag, in the order of the tags.
+using SynchronousPropsReader = std::function<std::vector<folly::dynamic>(const std::vector<Tag> &)>;
+#endif
 
 struct LayoutAnimationsProxyDependencies {
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager;
@@ -74,13 +76,14 @@ struct LayoutAnimationsProxyDependencies {
   std::shared_ptr<UIScheduler> uiScheduler;
   std::shared_ptr<facebook::react::UIManager> uiManager;
   std::function<void(SurfaceId)> requestLayoutAnimationFlush;
-  SynchronousPropsReader readSynchronousProps;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker;
+  SynchronousPropsReader readSynchronousProps;
 #endif
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot;
+  ReadMountedViewPropsFunction readMountedViewProps;
 #endif
 };
 
@@ -95,12 +98,16 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
         uiRuntime_(dependencies.uiRuntime),
         uiScheduler_(dependencies.uiScheduler),
         uiManager_(dependencies.uiManager),
-        requestLayoutAnimationFlush_(dependencies.requestLayoutAnimationFlush),
-        readSynchronousProps_(dependencies.readSynchronousProps)
+        requestLayoutAnimationFlush_(dependencies.requestLayoutAnimationFlush)
 #ifdef ANDROID
         ,
         preserveMountedTags_(dependencies.filterUnmountedTagsFunction),
-        jsInvoker_(dependencies.jsInvoker)
+        jsInvoker_(dependencies.jsInvoker),
+        readSynchronousProps_(dependencies.readSynchronousProps)
+#endif
+#ifdef __APPLE__
+        ,
+        readMountedViewProps_(dependencies.readMountedViewProps)
 #endif
   {
   }
@@ -120,7 +127,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void flushLayoutAnimationOperations() const;
 
  protected:
-  void mergeSynchronousPropsIntoReinserts(
+  void keepSynchronousPropsInReinserts(
       const ShadowViewMutationList &mutations,
       ShadowViewMutationList &filteredMutations) const;
   Props::Shared mergeSynchronousProps(const ShadowView &view, const folly::dynamic &props) const;
@@ -174,10 +181,13 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   const std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<facebook::react::UIManager> uiManager_;
   std::function<void(SurfaceId)> requestLayoutAnimationFlush_;
-  SynchronousPropsReader readSynchronousProps_;
 #ifdef ANDROID
   PreserveMountedTagsFunction preserveMountedTags_;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker_;
+  SynchronousPropsReader readSynchronousProps_;
+#endif
+#ifdef __APPLE__
+  ReadMountedViewPropsFunction readMountedViewProps_;
 #endif
 
  private:
