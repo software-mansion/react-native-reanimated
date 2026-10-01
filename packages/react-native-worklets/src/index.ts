@@ -77,9 +77,9 @@ export {
 } from './runtimes';
 export {
   executeOnUIRuntimeSync,
-  experimental_runOnRNSync,
   getCurrentThreadId,
   runOnJS,
+  runOnRNSync,
   runOnUI,
   runOnUIAsync,
   runOnUISync,

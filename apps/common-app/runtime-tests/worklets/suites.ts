@@ -25,7 +25,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runtimes/getCurrentThreadId.test');
       require('./tests/runtimes/scheduleOnRN.test');
       require('./tests/runtimes/runOnUISync.test');
-      require('./tests/runtimes/experimental_runOnRNSync.test');
+      require('./tests/runtimes/runOnRNSync.test');
       require('./tests/runtimes/scheduleOnRuntime.test');
       require('./tests/runtimes/scheduleOnUI.test');
       require('./tests/runtimes/runOnRuntimeSync.test');

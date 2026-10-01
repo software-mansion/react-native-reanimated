@@ -255,7 +255,25 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
   }
 }
 
-export function experimental_runOnRNSync<Args extends unknown[], ReturnValue>(
+/**
+ * Lets you run a function synchronously on the [RN
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime)
+ * from any runtime and get its return value.
+ *
+ * - This function cannot be called from the [UI
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
+ *   or a [Worker
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
+ *   unless the [Bundle
+ *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
+ *   enabled.
+ *
+ * @param fun - A function you want to run on the RN Runtime.
+ * @param args - Arguments to pass to the function.
+ * @returns The return value of the function passed as the first argument.
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRNSync
+ */
+export function runOnRNSync<Args extends unknown[], ReturnValue>(
   fun:
     | ((...args: Args) => ReturnValue)
     | RemoteFunction
@@ -417,7 +435,7 @@ if (__DEV__ && !isBundleModeEnabled()) {
    * QoL guards to give a meaningful error message when the user tries to call
    * these functions on Worklet Runtimes outside of the Bundle Mode.
    */
-  addNoBundleModeGuardImplementation(experimental_runOnRNSync);
+  addNoBundleModeGuardImplementation(runOnRNSync);
   addNoBundleModeGuardImplementation(runOnUIAsync);
   addNoBundleModeGuardImplementation(runOnUISync);
   addNoBundleModeGuardImplementation(scheduleOnUI);
