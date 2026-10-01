@@ -47,7 +47,7 @@ using KeyboardEventSubscribeFunction = std::function<int(std::function<void(int,
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
-using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
+using ForceScreenSnapshotFunction = std::function<bool(Tag tag)>;
 
 using PlatformAttachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector, std::function<void(bool)>)>;
 using PlatformDetachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector)>;

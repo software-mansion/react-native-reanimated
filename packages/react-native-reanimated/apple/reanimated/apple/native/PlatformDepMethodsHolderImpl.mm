@@ -194,14 +194,16 @@ std::shared_ptr<css::CSSPlatformTransitionBackend> makePlatformTransitionBackend
 
 ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
 {
-  auto forceScreenSnapshot = [=](Tag tag) {
+  auto forceScreenSnapshot = [=](Tag tag) -> bool {
     RCTSurfacePresenter *surfacePresenter = nodesManager.surfacePresenter;
     RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
     REAUIView<RCTComponentViewProtocol> *maybeRNSScreenView = [componentViewRegistry findComponentViewWithTag:tag];
     SEL setSnapshotAfterUpdatesSelector = @selector(setSnapshotAfterUpdates:);
     if ([maybeRNSScreenView respondsToSelector:setSnapshotAfterUpdatesSelector]) {
       [static_cast<id<RNScreenViewOptionalProtocol>>(maybeRNSScreenView) setSnapshotAfterUpdates:YES];
+      return true;
     }
+    return false;
   };
   return forceScreenSnapshot;
 }
