@@ -1,5 +1,6 @@
 import {
   experimental_runOnRNSync,
+  isBundleModeEnabled,
   runOnUISync,
   scheduleOnRN,
   scheduleOnRuntime,
@@ -67,107 +68,130 @@ describe('experimental_runOnRNSync', () => {
     counter = 0;
   });
 
-  workletSources.forEach(({ name, scheduleOnTarget }) => {
-    test(`returns the result of a remote function from ${name} Runtime`, async () => {
-      scheduleOnTarget(() => {
-        'worklet';
-        scheduleOnRN(callbackPass, experimental_runOnRNSync(add, 20, 22));
-      });
-
-      await waitForNotification(PASS_NOTIFICATION);
-      expect(value).toBe(42);
-    });
-
-    test(`runs a remote function on the RN Runtime from ${name} Runtime`, async () => {
-      scheduleOnTarget(() => {
-        'worklet';
-        scheduleOnRN(callbackPass, experimental_runOnRNSync(getRuntimeKind));
-      });
-
-      await waitForNotification(PASS_NOTIFICATION);
-      expect(value).toBe(1);
-    });
-
-    test(`runs a worklet on the RN Runtime from ${name} Runtime`, async () => {
-      scheduleOnTarget(() => {
-        'worklet';
-        const result = experimental_runOnRNSync(() => {
-          'worklet';
-          return globalThis.__RUNTIME_KIND;
-        });
-        scheduleOnRN(callbackPass, result);
-      });
-
-      await waitForNotification(PASS_NOTIFICATION);
-      expect(value).toBe(1);
-    });
-
-    test(`returns an object from ${name} Runtime`, async () => {
-      scheduleOnTarget(() => {
-        'worklet';
-        scheduleOnRN(
-          callbackPass,
-          JSON.stringify(experimental_runOnRNSync(makeObject))
-        );
-      });
-
-      await waitForNotification(PASS_NOTIFICATION);
-      expect(value).toBe(JSON.stringify(makeObject()));
-    });
-
-    test(`sees RN Runtime state synchronously from ${name} Runtime`, async () => {
-      scheduleOnTarget(() => {
-        'worklet';
-        const first = experimental_runOnRNSync(increment);
-        const second = experimental_runOnRNSync(increment);
-        scheduleOnRN(callbackPass, JSON.stringify([first, second]));
-      });
-
-      await waitForNotification(PASS_NOTIFICATION);
-      expect(value).toBe(JSON.stringify([1, 2]));
-    });
-
-    test(`rethrows an error from the RN Runtime on ${name} Runtime`, async () => {
-      scheduleOnTarget(() => {
-        'worklet';
-        try {
-          experimental_runOnRNSync(throwError);
-        } catch (error) {
-          scheduleOnRN(callbackFail, (error as Error).message);
-        }
-      });
-
-      await waitForNotification(FAIL_NOTIFICATION);
-      expect(errorMessage).toInclude('Error thrown on the RN Runtime');
-    });
-
-    test(`throws when a locally defined function is passed on ${name} Runtime`, async () => {
-      scheduleOnTarget(() => {
-        'worklet';
-        try {
-          experimental_runOnRNSync(() => 42);
-        } catch (error) {
-          scheduleOnRN(callbackFail, (error as Error).message);
-        }
-      });
-
-      await waitForNotification(FAIL_NOTIFICATION);
-      expect(errorMessage).toInclude(
-        'Locally defined function passed to experimental_runOnRNSync'
-      );
-    });
-  });
-
   test('calls the function directly on the RN Runtime', () => {
     expect(experimental_runOnRNSync(add, 20, 22)).toBe(42);
   });
 
-  test('runs on the RN Runtime from runOnUISync without a deadlock', () => {
-    const result = runOnUISync(() => {
-      'worklet';
-      return experimental_runOnRNSync(add, 20, 22);
+  if (isBundleModeEnabled()) {
+    workletSources.forEach(({ name, scheduleOnTarget }) => {
+      test(`returns the result of a remote function from ${name} Runtime`, async () => {
+        scheduleOnTarget(() => {
+          'worklet';
+          scheduleOnRN(callbackPass, experimental_runOnRNSync(add, 20, 22));
+        });
+
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(value).toBe(42);
+      });
+
+      test(`runs a remote function on the RN Runtime from ${name} Runtime`, async () => {
+        scheduleOnTarget(() => {
+          'worklet';
+          scheduleOnRN(callbackPass, experimental_runOnRNSync(getRuntimeKind));
+        });
+
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(value).toBe(1);
+      });
+
+      test(`runs a worklet on the RN Runtime from ${name} Runtime`, async () => {
+        scheduleOnTarget(() => {
+          'worklet';
+          const result = experimental_runOnRNSync(() => {
+            'worklet';
+            return globalThis.__RUNTIME_KIND;
+          });
+          scheduleOnRN(callbackPass, result);
+        });
+
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(value).toBe(1);
+      });
+
+      test(`returns an object from ${name} Runtime`, async () => {
+        scheduleOnTarget(() => {
+          'worklet';
+          scheduleOnRN(
+            callbackPass,
+            JSON.stringify(experimental_runOnRNSync(makeObject))
+          );
+        });
+
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(value).toBe(JSON.stringify(makeObject()));
+      });
+
+      test(`sees RN Runtime state synchronously from ${name} Runtime`, async () => {
+        scheduleOnTarget(() => {
+          'worklet';
+          const first = experimental_runOnRNSync(increment);
+          const second = experimental_runOnRNSync(increment);
+          scheduleOnRN(callbackPass, JSON.stringify([first, second]));
+        });
+
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(value).toBe(JSON.stringify([1, 2]));
+      });
+
+      test(`rethrows an error from the RN Runtime on ${name} Runtime`, async () => {
+        scheduleOnTarget(() => {
+          'worklet';
+          try {
+            experimental_runOnRNSync(throwError);
+          } catch (error) {
+            scheduleOnRN(callbackFail, (error as Error).message);
+          }
+        });
+
+        await waitForNotification(FAIL_NOTIFICATION);
+        expect(errorMessage).toInclude('Error thrown on the RN Runtime');
+      });
+
+      test(`throws when a locally defined function is passed on ${name} Runtime`, async () => {
+        scheduleOnTarget(() => {
+          'worklet';
+          try {
+            experimental_runOnRNSync(() => 42);
+          } catch (error) {
+            scheduleOnRN(callbackFail, (error as Error).message);
+          }
+        });
+
+        await waitForNotification(FAIL_NOTIFICATION);
+        expect(errorMessage).toInclude(
+          'Locally defined function passed to experimental_runOnRNSync'
+        );
+      });
     });
 
-    expect(result).toBe(42);
-  });
+    test('runs on the RN Runtime from runOnUISync without a deadlock', () => {
+      const result = runOnUISync(() => {
+        'worklet';
+        return experimental_runOnRNSync(add, 20, 22);
+      });
+
+      expect(result).toBe(42);
+    });
+  } else if (__DEV__) {
+    workletSources.forEach(({ name, scheduleOnTarget }) => {
+      test(`throws on ${name} Runtime outside of the Bundle Mode`, async () => {
+        scheduleOnTarget(() => {
+          'worklet';
+          try {
+            experimental_runOnRNSync(add, 20, 22);
+          } catch (error) {
+            scheduleOnRN(
+              callbackFail,
+              error instanceof Error ? error.message : String(error)
+            );
+          }
+        });
+
+        await waitForNotification(FAIL_NOTIFICATION);
+        expect(errorMessage).toBe(
+          '[Worklets] experimental_runOnRNSync cannot be called on Worklet Runtimes outside of the Bundle Mode.'
+        );
+      });
+    });
+  }
 });

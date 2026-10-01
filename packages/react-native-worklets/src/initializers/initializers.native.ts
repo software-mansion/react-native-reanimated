@@ -5,10 +5,7 @@ import { registerReportFatalRemoteError } from '../debug/errors';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
 import { installRemoteFunctionUnpacker } from '../memory/remoteFunctionUnpacker';
-import {
-  createSerializable,
-  makeShareableCloneOnUIRecursive,
-} from '../memory/serializable';
+import { makeShareableCloneOnUIRecursive } from '../memory/serializable';
 import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
 import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
@@ -166,8 +163,7 @@ function initializeRNRuntime() {
   }
 
   registerReportFatalRemoteError();
-  globalThis.__serializer =
-    createSerializable as typeof makeShareableCloneOnUIRecursive;
+  setupSerializer();
 }
 
 /** A function that should be run only on Worklet runtimes. */

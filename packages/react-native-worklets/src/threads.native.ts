@@ -263,7 +263,6 @@ export function experimental_runOnRNSync<Args extends unknown[], ReturnValue>(
     | WorkletFunction<Args, ReturnValue>,
   ...args: Args
 ): ReturnValue {
-  'worklet';
   if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     return (fun as (...args: Args) => ReturnValue)(...args);
   }
@@ -420,6 +419,7 @@ if (__DEV__ && !isBundleModeEnabled()) {
    * QoL guards to give a meaningful error message when the user tries to call
    * these functions on Worklet Runtimes outside of the Bundle Mode.
    */
+  addNoBundleModeGuardImplementation(experimental_runOnRNSync);
   addNoBundleModeGuardImplementation(runOnUIAsync);
   addNoBundleModeGuardImplementation(runOnUISync);
   addNoBundleModeGuardImplementation(scheduleOnUI);
