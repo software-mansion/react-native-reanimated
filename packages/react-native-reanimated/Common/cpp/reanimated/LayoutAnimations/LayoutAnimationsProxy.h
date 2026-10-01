@@ -164,7 +164,16 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const override;
 
-  void reconcileContradictedRemovals(const ShadowViewMutationList &mutations, TransactionMeta &transaction) const;
+  void reconcileContradictedRemovals(
+      const ShadowViewMutationList &mutations,
+      TransactionMeta &transaction,
+      const PropsParserContext &propsParserContext) const;
+#ifdef ANDROID
+  ShadowView resetPropsMissingFrom(
+      const ShadowView &view,
+      const ShadowView &mounted,
+      const PropsParserContext &propsParserContext) const;
+#endif
 
   void handleSharedTransitionsStart(
       const std::shared_ptr<LightNode> &afterTopScreen,
