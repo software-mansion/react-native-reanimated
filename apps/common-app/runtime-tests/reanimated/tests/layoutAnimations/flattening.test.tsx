@@ -15,21 +15,25 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 
 const styles = StyleSheet.create({
+  drawer: { height: 200, width: 300 },
+  dropped: { backgroundColor: '#dd5522', height: 60, width: 100 },
+  kept: { backgroundColor: '#2277dd', height: 60, width: 100 },
+  nested: { backgroundColor: '#ddaa22', height: 20, width: 50 },
   wrapper: { opacity: 0.5 },
-  kept: { width: 100, height: 60, backgroundColor: '#2277dd' },
-  dropped: { width: 100, height: 60, backgroundColor: '#dd5522' },
-  nested: { width: 50, height: 20, backgroundColor: '#ddaa22' },
-  drawer: { width: 300, height: 200 },
 });
 
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 const AndroidDrawerLayout = (
   require('react-native/Libraries/Components/DrawerAndroid/AndroidDrawerLayoutNativeComponent') as {
     default: React.ComponentType<ViewProps & { drawerWidth?: number }>;
   }
 ).default;
+/* eslint-enable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
 const droppedChildren = {
-  plain: <View style={styles.dropped} />,
+  exiting: (
+    <Animated.View exiting={FadeOut.duration(300)} style={styles.dropped} />
+  ),
   nested: (
     <View style={styles.dropped}>
       <View style={styles.nested}>
@@ -37,14 +41,12 @@ const droppedChildren = {
       </View>
     </View>
   ),
-  exiting: (
-    <Animated.View exiting={FadeOut.duration(300)} style={styles.dropped} />
-  ),
+  plain: <View style={styles.dropped} />,
 };
 
 function FlattenedWrapper({
-  flat,
   dropped,
+  flat,
 }: {
   flat: boolean;
   dropped: keyof typeof droppedChildren;
@@ -63,8 +65,8 @@ function FlattenedWrapper({
 // Removes of its children. `moved` stays mounted throughout, so its FadeOut must
 // never start.
 function SwappedWrappers({
-  swapped,
   exiting,
+  swapped,
 }: {
   swapped: boolean;
   exiting: boolean;
@@ -74,8 +76,8 @@ function SwappedWrappers({
     <View style={swapped ? styles.wrapper : undefined}>
       <View style={swapped ? undefined : styles.wrapper}>
         <Animated.View
-          ref={ref}
           exiting={exiting ? FadeOut.duration(300) : undefined}
+          ref={ref}
           style={styles.kept}
         />
         <View style={styles.dropped} />
@@ -85,8 +87,8 @@ function SwappedWrappers({
 }
 
 function SwappedWrappersDroppingSibling({
-  swapped,
   dropped,
+  swapped,
 }: {
   swapped: boolean;
   dropped: keyof typeof droppedChildren;
@@ -106,16 +108,16 @@ describe('View flattening', () => {
   test.each(['plain', 'nested', 'exiting'] as const)(
     'flattens a parent while one of its children is deleted, child: %s',
     async (dropped) => {
-      await render(<FlattenedWrapper flat={false} dropped={dropped} />);
+      await render(<FlattenedWrapper dropped={dropped} flat={false} />);
       await waitForFrames();
       const tag = getTestComponent('kept').getTag();
 
-      await render(<FlattenedWrapper flat dropped={dropped} />);
+      await render(<FlattenedWrapper dropped={dropped} flat />);
       await waitForFrames();
       // unflattens the wrapper while it may still be withheld for the exiting child
-      await render(<FlattenedWrapper flat={false} dropped={dropped} />);
+      await render(<FlattenedWrapper dropped={dropped} flat={false} />);
       await waitForFrames();
-      await render(<FlattenedWrapper flat dropped={dropped} />);
+      await render(<FlattenedWrapper dropped={dropped} flat />);
       await wait(500);
 
       expect(getTestComponent('kept').getTag()).toBe(tag);
@@ -125,15 +127,15 @@ describe('View flattening', () => {
   test.each([false, true])(
     'unflattens a parent while its child flattens, moved child exiting: %s',
     async (exiting) => {
-      await render(<SwappedWrappers swapped={false} exiting={exiting} />);
+      await render(<SwappedWrappers exiting={exiting} swapped={false} />);
       await waitForFrames();
       const tag = getTestComponent('moved').getTag();
 
-      await render(<SwappedWrappers swapped exiting={exiting} />);
+      await render(<SwappedWrappers exiting={exiting} swapped />);
       await waitForFrames();
-      await render(<SwappedWrappers swapped={false} exiting={exiting} />);
+      await render(<SwappedWrappers exiting={exiting} swapped={false} />);
       await waitForFrames();
-      await render(<SwappedWrappers swapped exiting={exiting} />);
+      await render(<SwappedWrappers exiting={exiting} swapped />);
       await wait(100);
       // a FadeOut started on the moved view would be about a third through by now
       expect(
@@ -151,21 +153,21 @@ describe('View flattening', () => {
     'unflattens a parent while its child flattens and drops a sibling of the moved child: %s',
     async (dropped) => {
       await render(
-        <SwappedWrappersDroppingSibling swapped={false} dropped={dropped} />
+        <SwappedWrappersDroppingSibling dropped={dropped} swapped={false} />
       );
       await waitForFrames();
       const tag = getTestComponent('moved').getTag();
 
       await render(
-        <SwappedWrappersDroppingSibling swapped dropped={dropped} />
+        <SwappedWrappersDroppingSibling dropped={dropped} swapped />
       );
       await waitForFrames();
       await render(
-        <SwappedWrappersDroppingSibling swapped={false} dropped={dropped} />
+        <SwappedWrappersDroppingSibling dropped={dropped} swapped={false} />
       );
       await waitForFrames();
       await render(
-        <SwappedWrappersDroppingSibling swapped dropped={dropped} />
+        <SwappedWrappersDroppingSibling dropped={dropped} swapped />
       );
       await wait(500);
 
@@ -176,14 +178,14 @@ describe('View flattening', () => {
 
 function DrawerContent() {
   const ref = useTestRef('content');
-  return <Animated.View ref={ref} collapsable={false} style={styles.kept} />;
+  return <Animated.View collapsable={false} ref={ref} style={styles.kept} />;
 }
 
 // AndroidDrawerLayout throws when it gets a third child, so a replaced child must be removed before
 // its replacement is inserted.
 function DrawerWithKeyedContent({ contentKey }: { contentKey: string }) {
   return (
-    <AndroidDrawerLayout style={styles.drawer} drawerWidth={100}>
+    <AndroidDrawerLayout drawerWidth={100} style={styles.drawer}>
       <DrawerContent key={contentKey} />
       <View collapsable={false} style={styles.dropped} />
     </AndroidDrawerLayout>
