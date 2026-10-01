@@ -63,6 +63,9 @@ struct LayoutAnimationCancellation {
 using LayoutAnimationOperation =
     std::variant<ManagedLayoutAnimationStart, ProgressLayoutAnimationStart, LayoutAnimationCancellation>;
 
+using SynchronousPropsByTag = std::unordered_map<Tag, folly::dynamic>;
+using SynchronousPropsReader = std::function<SynchronousPropsByTag(const std::vector<Tag> &)>;
+
 struct LayoutAnimationsProxyDependencies {
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager;
   SharedComponentDescriptorRegistry componentDescriptorRegistry;
@@ -71,6 +74,7 @@ struct LayoutAnimationsProxyDependencies {
   std::shared_ptr<UIScheduler> uiScheduler;
   std::shared_ptr<facebook::react::UIManager> uiManager;
   std::function<void(SurfaceId)> requestLayoutAnimationFlush;
+  SynchronousPropsReader readSynchronousProps;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker;
@@ -91,7 +95,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
         uiRuntime_(dependencies.uiRuntime),
         uiScheduler_(dependencies.uiScheduler),
         uiManager_(dependencies.uiManager),
-        requestLayoutAnimationFlush_(dependencies.requestLayoutAnimationFlush)
+        requestLayoutAnimationFlush_(dependencies.requestLayoutAnimationFlush),
+        readSynchronousProps_(dependencies.readSynchronousProps)
 #ifdef ANDROID
         ,
         preserveMountedTags_(dependencies.filterUnmountedTagsFunction),
@@ -115,6 +120,9 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void flushLayoutAnimationOperations() const;
 
  protected:
+  void mergeSynchronousPropsIntoReinserts(
+      const ShadowViewMutationList &mutations,
+      ShadowViewMutationList &filteredMutations) const;
   Props::Shared mergeSynchronousProps(const ShadowView &view, const folly::dynamic &props) const;
   bool hasLayoutAnimationRecords() const;
   void applySynchronousPropsToLayoutAnimation(Tag tag, const folly::dynamic &props) const;
@@ -166,6 +174,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   const std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<facebook::react::UIManager> uiManager_;
   std::function<void(SurfaceId)> requestLayoutAnimationFlush_;
+  SynchronousPropsReader readSynchronousProps_;
 #ifdef ANDROID
   PreserveMountedTagsFunction preserveMountedTags_;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker_;

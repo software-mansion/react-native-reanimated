@@ -1290,6 +1290,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       uiScheduler_,
       uiManager_,
       requestLayoutAnimationFlush,
+      makeSynchronousPropsReader(),
 #ifdef ANDROID
       filterUnmountedTagsFunction_,
       jsInvoker_,
@@ -1304,6 +1305,41 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
   } else {
     layoutAnimationsProxyRegistry_ = createLayoutAnimationsProxyLegacyRegistry(dependencies);
   }
+}
+
+SynchronousPropsReader ReanimatedModuleProxy::makeSynchronousPropsReader() {
+#ifdef __APPLE__
+  if constexpr (
+      shouldUseSynchronousUpdatesInPerformOperations() && !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    return [weakThis = weak_from_this()](const std::vector<Tag> &tags) -> SynchronousPropsByTag {
+      const auto strongThis = weakThis.lock();
+      if (!strongThis) {
+        return {};
+      }
+      return strongThis->readSynchronousProps(tags);
+    };
+  }
+#endif // __APPLE__
+  return nullptr;
+}
+
+SynchronousPropsByTag ReanimatedModuleProxy::readSynchronousProps(const std::vector<Tag> &tags) {
+  SynchronousPropsByTag synchronousPropsByTag;
+  auto lock = updatesRegistryManager_->lock();
+  for (const auto tag : tags) {
+    folly::dynamic registryProps = folly::dynamic::object;
+    updatesRegistryManager_->mergeRegistryProps(tag, registryProps);
+    folly::dynamic synchronousProps = folly::dynamic::object;
+    for (const auto &[key, value] : registryProps.items()) {
+      if (isSynchronousPropName(key.asString())) {
+        synchronousProps[key] = value;
+      }
+    }
+    if (!synchronousProps.empty()) {
+      synchronousPropsByTag.emplace(tag, std::move(synchronousProps));
+    }
+  }
+  return synchronousPropsByTag;
 }
 
 #ifdef IS_REANIMATED_EXAMPLE_APP

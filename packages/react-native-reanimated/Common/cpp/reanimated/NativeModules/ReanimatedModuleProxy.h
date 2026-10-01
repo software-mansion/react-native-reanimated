@@ -209,6 +209,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
   void applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch);
   void writeSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch);
+  SynchronousPropsReader makeSynchronousPropsReader();
+  SynchronousPropsByTag readSynchronousProps(const std::vector<Tag> &tags);
 
   std::shared_ptr<UIManagerAnimationBackend> getAnimationBackend();
   AnimationMutations runGrandCallback(AnimationTimestamp timestamp, GrandCallbackSource source);

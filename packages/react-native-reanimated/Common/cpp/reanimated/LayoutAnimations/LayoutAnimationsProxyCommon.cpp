@@ -17,6 +17,24 @@
 
 namespace reanimated {
 
+namespace {
+
+std::unordered_map<Tag, Props::Shared> collectReinsertedProps(const ShadowViewMutationList &mutations) {
+  std::unordered_set<Tag> createdTags;
+  std::unordered_map<Tag, Props::Shared> reinsertedProps;
+  for (const auto &mutation : mutations) {
+    const auto &view = mutation.newChildShadowView;
+    if (mutation.type == ShadowViewMutation::Create) {
+      createdTags.insert(view.tag);
+    } else if (mutation.type == ShadowViewMutation::Insert && !createdTags.contains(view.tag)) {
+      reinsertedProps.emplace(view.tag, view.props);
+    }
+  }
+  return reinsertedProps;
+}
+
+} // namespace
+
 #ifdef ANDROID
 namespace {
 const ShadowNode *findShadowNode(const ShadowNode &node, const Tag tag) {
@@ -154,6 +172,46 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations(std::unique_loc
     return;
   }
   flushLayoutAnimationOperationsLocked();
+}
+
+// iOS writes the props of the shadow node to the view on Insert. For a view that exists already, those props lack
+// the values that were written synchronously.
+void LayoutAnimationsProxyCommon::mergeSynchronousPropsIntoReinserts(
+    const ShadowViewMutationList &mutations,
+    ShadowViewMutationList &filteredMutations) const {
+  if (!readSynchronousProps_) {
+    return;
+  }
+  const auto reinsertedProps = collectReinsertedProps(mutations);
+  if (reinsertedProps.empty()) {
+    return;
+  }
+
+  std::vector<ShadowViewMutation *> reinserts;
+  std::vector<Tag> reinsertedTags;
+  for (auto &mutation : filteredMutations) {
+    if (mutation.type != ShadowViewMutation::Insert) {
+      continue;
+    }
+    const auto &view = mutation.newChildShadowView;
+    const auto it = reinsertedProps.find(view.tag);
+    // A layout animation gives the Insert its own props. They must stay.
+    if (it != reinsertedProps.end() && it->second == view.props) {
+      reinserts.push_back(&mutation);
+      reinsertedTags.push_back(view.tag);
+    }
+  }
+  if (reinserts.empty()) {
+    return;
+  }
+
+  const auto synchronousProps = readSynchronousProps_(reinsertedTags);
+  for (auto *mutation : reinserts) {
+    auto &view = mutation->newChildShadowView;
+    if (const auto it = synchronousProps.find(view.tag); it != synchronousProps.end()) {
+      view.props = mergeSynchronousProps(view, it->second);
+    }
+  }
 }
 
 Props::Shared LayoutAnimationsProxyCommon::mergeSynchronousProps(const ShadowView &view, const folly::dynamic &props)
