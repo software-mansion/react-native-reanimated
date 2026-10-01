@@ -244,7 +244,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void handleSubtreeRemoval(
       const std::shared_ptr<LightNode> &node,
       const std::shared_ptr<LightNode> &parent,
-      int hostIndex,
       TransactionMeta &transaction) const;
   void flushCompletedRemovals(ShadowViewMutationList &filteredMutations) const;
 
