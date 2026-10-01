@@ -203,7 +203,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   auto rootChildCount = static_cast<int>(lightNodes_[surfaceId_]->children.size());
   const bool flushStructuralMutations = shouldFlushStructuralMutations();
 
-  reconcileContradictedRemovals(mutations, transaction);
+  reconcileContradictedRemovals(mutations, transaction, propsParserContext);
 
   if constexpr (!StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (!mutations.empty()) {
@@ -324,7 +324,8 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
 // becomes an Update of it, because Android mounts the Deletes of a transaction after its Creates.
 void LayoutAnimationsProxy::reconcileContradictedRemovals(
     const ShadowViewMutationList &mutations,
-    TransactionMeta &transaction) const {
+    TransactionMeta &transaction,
+    [[maybe_unused]] const PropsParserContext &propsParserContext) const {
   auto &filteredMutations = transaction.filteredMutations;
   auto &recreatedTags = transaction.recreatedTags;
   std::vector<std::shared_ptr<LightNode>> recreatedNodes;
@@ -341,8 +342,12 @@ void LayoutAnimationsProxy::reconcileContradictedRemovals(
     const auto parent = node->parent.lock();
     react_native_assert(parent && "Parent node is nullptr");
     recreatedTags.insert(tag);
-    filteredMutations.push_back(
-        ShadowViewMutation::UpdateMutation(mountedView(node), mutation.newChildShadowView, parent->current.tag));
+    const auto &mounted = mountedView(node);
+    auto recreated = mutation.newChildShadowView;
+#ifdef ANDROID
+    recreated = resetPropsMissingFrom(recreated, mounted, propsParserContext);
+#endif
+    filteredMutations.push_back(ShadowViewMutation::UpdateMutation(mounted, recreated, parent->current.tag));
     recreatedNodes.push_back(node);
   }
   tearDown(collectRemovals(recreatedNodes), filteredMutations);
@@ -350,6 +355,29 @@ void LayoutAnimationsProxy::reconcileContradictedRemovals(
     return mutation.type == ShadowViewMutation::Delete && recreatedTags.contains(mutation.oldChildShadowView.tag);
   });
 }
+
+#ifdef ANDROID
+// Android applies the raw props of an Update as they are, so a prop that the mounted view has and the view leaves
+// out is set to null, which resets it.
+ShadowView LayoutAnimationsProxy::resetPropsMissingFrom(
+    const ShadowView &view,
+    const ShadowView &mounted,
+    const PropsParserContext &propsParserContext) const {
+  auto rawProps = view.props->rawProps;
+  for (const auto &[name, _] : mounted.props->rawProps.items()) {
+    if (rawProps.count(name) == 0) {
+      rawProps[name] = nullptr;
+    }
+  }
+  if (rawProps.size() == view.props->rawProps.size()) {
+    return view;
+  }
+  auto newView = view;
+  newView.props = componentDescriptorRegistry_->at(view.componentHandle)
+                      .cloneProps(propsParserContext, view.props, RawProps(std::move(rawProps)));
+  return newView;
+}
+#endif
 
 bool LayoutAnimationsProxy::shouldOverridePullTransaction() const {
   // we need to listen to every possible mutation to keep the light tree updated
