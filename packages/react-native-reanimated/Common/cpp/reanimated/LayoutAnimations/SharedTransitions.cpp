@@ -316,6 +316,7 @@ void LayoutAnimationsProxy::overrideTransform(
   if (!transform) {
     return;
   }
+  react_native_assert(isViewKind(shadowView) && "Only ViewKind views have ViewProps");
 #ifdef ANDROID
   auto array = folly::dynamic::array(folly::dynamic::object("matrix", transform->operator folly::dynamic()));
   const folly::dynamic newTransformDynamic = folly::dynamic::object("transform", array);
@@ -642,7 +643,7 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
     if (!parent) {
       continue;
     }
-    const auto opacity = static_cast<const ViewProps &>(*view.props).opacity;
+    const auto opacity = getViewProps(view).opacity;
     filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
         cloneViewWithoutOpacity(view, propsParserContext),
         cloneViewWithOpacity(view, opacity, propsParserContext),
@@ -721,7 +722,7 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
   while (currentNode) {
     resolveLightNodeProps(currentNode);
     const auto &view = useViewsOnScreen ? viewOnScreen(currentNode) : currentNode->current;
-    const auto &props = static_cast<const ViewProps &>(*view.props);
+    const auto &props = getViewProps(view);
     auto origin = props.transformOrigin;
     const auto &viewSize = view.layoutMetrics.frame.size;
     if (origin.xy[0].unit == facebook::react::UnitType::Percent) {

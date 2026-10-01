@@ -356,8 +356,9 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
         }
 
         transferConfigFromNativeID(mutation.newChildShadowView.props->nativeId, mutation.newChildShadowView.tag);
-        const auto enteringConfig =
-            layoutAnimationsManager_->getLayoutAnimationConfig(tag, LayoutAnimationType::ENTERING);
+        const auto enteringConfig = isViewKind(mutation.newChildShadowView)
+            ? layoutAnimationsManager_->getLayoutAnimationConfig(tag, LayoutAnimationType::ENTERING)
+            : nullptr;
         if (!enteringConfig) {
           filteredMutations.push_back(mutation);
           continue;
@@ -470,7 +471,7 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &
     mutations.push_back(
         ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
     layoutAnimation.currentView = newView;
-    if (layoutAnimation.opacity && static_cast<const ViewProps &>(*newView.props).opacity == *layoutAnimation.opacity) {
+    if (layoutAnimation.opacity && getViewProps(newView).opacity == *layoutAnimation.opacity) {
       layoutAnimation.opacity.reset();
     }
   }
@@ -653,14 +654,13 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "start entering animation for tag " << tag << std::endl;
 #endif
-  auto &viewProps = static_cast<const ViewProps &>(*mutation.newChildShadowView.props);
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
       .tag = tag,
       .type = LayoutAnimationType::ENTERING,
       .before = mutation.newChildShadowView,
       .after = mutation.newChildShadowView,
       .parentTag = mutation.parentTag,
-      .opacity = viewProps.opacity,
+      .opacity = getViewProps(mutation.newChildShadowView).opacity,
       .config = config,
   });
 }
