@@ -1024,7 +1024,7 @@ ShadowView LayoutAnimationsProxy::cloneViewWithoutOpacity(
   auto newView = shadowView;
   folly::dynamic rawProps = folly::dynamic::object("opacity", 0);
 #ifdef ANDROID
-  rawProps = folly::dynamic::merge(shadowView.props->rawProps, rawProps);
+  rawProps = withBaseRawProps(shadowView.props, rawProps);
 #endif
   auto newProps = componentDescriptorRegistry_->at(newView.componentHandle)
                       .cloneProps(propsParserContext, newView.props, RawProps(rawProps));
