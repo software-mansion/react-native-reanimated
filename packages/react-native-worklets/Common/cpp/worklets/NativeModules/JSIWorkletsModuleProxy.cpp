@@ -151,7 +151,7 @@ jsi::Value runOnRNSync(
   const auto funObject = funValue.getObject(rt);
   std::shared_ptr<Serializable> serializableFun;
   std::optional<jsi::HostFunctionType> hostFun;
-  if (!funObject.getProperty(rt, "__remoteFunction").isUndefined()) [[likely]] { // NOLINT(readability/braces)
+  if (!funObject.getProperty(rt, "__remoteFunction").isUndefined()) [[likely]] {
     serializableFun = extractSerializableOrThrow<SerializableRemoteFunction>(rt, funValue);
   } else if (funObject.isFunction(rt) && funObject.getFunction(rt).isHostFunction(rt)) {
     hostFun = funObject.getFunction(rt).getHostFunction(rt);
@@ -485,7 +485,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             ? nullptr
             : extractSerializableOrThrow<SerializableArray>(rt, remoteArgs, "[Worklets] Args must be an array.");
 
-        if (!fun.getProperty(rt, "__remoteFunction").isUndefined()) [[likely]] { // NOLINT(readability/braces)
+        if (!fun.getProperty(rt, "__remoteFunction").isUndefined()) [[likely]] {
           const auto remoteFunction = extractSerializableOrThrow<SerializableRemoteFunction>(rt, fun);
           jsScheduler->scheduleOnJS([remoteFunction, serializableArgs](jsi::Runtime &rnRuntime) {
             const auto unpackedFun = remoteFunction->toJSValue(rnRuntime).getObject(rnRuntime).getFunction(rnRuntime);
