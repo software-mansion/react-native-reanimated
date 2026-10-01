@@ -188,7 +188,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
       // shared element, the issue should be gone with the new stack
       // implementation
       if (auto screen = findParentRNSScreen(afterTopScreen)) {
-        forceScreenSnapshot_(screen->current.tag);
+        if (forceScreenSnapshot_(screen->current.tag)) {
+          snapshottedScreens_.insert(screen->current.tag);
+        }
       }
 #endif
     }
@@ -256,6 +258,7 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
     return;
   }
   lightNodes_.erase(it);
+  snapshottedScreens_.erase(node->current.tag);
   if (node == topScreen_) {
     topScreen_ = nullptr;
   }
@@ -721,17 +724,20 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
 }
 
 // A subtree that animates keeps its place in the host tree, so nothing is emitted for its root.
-// A subtree that does not animate is removed at its current host index. Its teardown mounts at the
-// end of the transaction, so native code that reads a view on unmount still sees its children.
+// A subtree that does not animate is removed at its current host index after its descendants, like React
+// removes it. On iOS a subtree that holds a screen React Native Screens snapshots is removed before its
+// descendants instead, and their teardown mounts at the end of the transaction.
 void LayoutAnimationsProxy::handleSubtreeRemoval(
     const std::shared_ptr<LightNode> &node,
     const std::shared_ptr<LightNode> &parent,
     TransactionMeta &transaction) const {
   ReanimatedSystraceSection s("handleSubtreeRemoval");
+  const bool defersTeardown = holdsSnapshottedScreen(node);
   const StartAnimationsRecursivelyConfig config = {
       .shouldRemoveSubviewsWithoutAnimations = true,
       .shouldAnimate = !transaction.surfaceDropped,
       .isScreenPop = false,
+      .defersTeardown = defersTeardown,
   };
   if (startAnimationsRecursively(node, transaction, config)) {
     return;
@@ -747,7 +753,22 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(
   }
   transaction.filteredMutations.push_back(
       ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, hostIndex));
-  transaction.teardownMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
+  (defersTeardown ? transaction.teardownMutations : transaction.filteredMutations)
+      .push_back(ShadowViewMutation::DeleteMutation(node->current));
+}
+
+// React Native Screens snapshots a screen in snapshottedScreens_ after pending updates when the screen is removed,
+// so its content must still be mounted then.
+bool LayoutAnimationsProxy::holdsSnapshottedScreen([[maybe_unused]] const std::shared_ptr<LightNode> &node) const {
+#ifdef __APPLE__
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    return std::ranges::any_of(snapshottedScreens_, [&](const Tag tag) {
+      const auto it = lightNodes_.find(tag);
+      return it != lightNodes_.end() && isInSubtree(it->second, node);
+    });
+  }
+#endif
+  return false;
 }
 
 void LayoutAnimationsProxy::flushCompletedRemovals(ShadowViewMutationList &filteredMutations) const {
@@ -902,8 +923,8 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
     TransactionMeta &transaction,
     StartAnimationsRecursivelyConfig config) const {
   react_native_assert(node->state == DECISION_PENDING && "Subtree removal of a view that React does not delete");
-  auto &mutations = transaction.teardownMutations;
-  auto &[shouldRemoveSubviewsWithoutAnimations, shouldAnimate, isScreenPop] = config;
+  auto &[shouldRemoveSubviewsWithoutAnimations, shouldAnimate, isScreenPop, defersTeardown] = config;
+  auto &mutations = defersTeardown ? transaction.teardownMutations : transaction.filteredMutations;
   if (isRNSScreenOrStack(node)) {
     isScreenPop = true;
   }
@@ -979,6 +1000,7 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
   LayoutAnimationsProxyCommon::clearSurfaceState();
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     sharedContainers_.clear();
+    snapshottedScreens_.clear();
     transition_.reset();
     uncommittedScreenPop_.reset();
   }
