@@ -9,10 +9,7 @@ import type { makeShareableCloneOnUIRecursive } from './memory/serializable';
 import type { ShareableGuestUnpacker } from './memory/shareableGuestUnpacker';
 import type { ShareableHostUnpacker } from './memory/shareableHostUnpacker';
 import type { SynchronizableUnpacker } from './memory/synchronizableUnpacker';
-import type {
-  CustomSerializationRegistry,
-  SerializableRef,
-} from './memory/types';
+import type { CustomSerializationRegistry } from './memory/types';
 import type { Queue } from './runLoop/workletRuntime/taskQueue';
 import type { ValueUnpacker } from './types';
 import type { WorkletsModuleProxy } from './WorkletsModule/workletsModuleProxy';
@@ -71,13 +68,6 @@ declare global {
   ) => void;
   /** Available only on RN Runtime */
   var __reportFatalRemoteError: typeof reportFatalRemoteError | undefined;
-  /** Available only on RN Runtime */
-  var __runOnRNSync:
-    | ((
-        fun: (...args: unknown[]) => unknown,
-        ...args: unknown[]
-      ) => SerializableRef)
-    | undefined;
   var __valueUnpacker: ValueUnpacker;
   var __synchronizableUnpacker: SynchronizableUnpacker;
   var __customSerializationRegistry: CustomSerializationRegistry;

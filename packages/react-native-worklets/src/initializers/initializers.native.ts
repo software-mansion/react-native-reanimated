@@ -166,7 +166,8 @@ function initializeRNRuntime() {
   }
 
   registerReportFatalRemoteError();
-  globalThis.__runOnRNSync = (fun, ...args) => createSerializable(fun(...args));
+  globalThis.__serializer =
+    createSerializable as typeof makeShareableCloneOnUIRecursive;
 }
 
 /** A function that should be run only on Worklet runtimes. */
