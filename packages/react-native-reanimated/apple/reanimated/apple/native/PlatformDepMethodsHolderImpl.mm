@@ -217,7 +217,7 @@ ObtainMountedViewPropsFunction makeObtainMountedViewPropsFunction(REANodesManage
     RCTComponentViewRegistry *componentViewRegistry =
         nodesManager.surfacePresenter.mountingManager.componentViewRegistry;
     REAUIView *view = [componentViewRegistry findComponentViewWithTag:tag];
-    if (view == nil) {
+    if (view == nil || view.window == nil) {
       return std::nullopt;
     }
     const CGSize size = view.bounds.size;
