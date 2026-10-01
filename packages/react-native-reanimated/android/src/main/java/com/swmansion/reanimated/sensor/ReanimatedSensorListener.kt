@@ -4,6 +4,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.util.Log
 import android.view.Display
 import android.view.Surface
 import com.swmansion.reanimated.nativeProxy.SensorSetter
@@ -12,8 +13,10 @@ class ReanimatedSensorListener(
     private val setter: SensorSetter,
     private val interval: Double,
     private val display: Display,
+    private val sensorType: ReanimatedSensorType,
 ) : SensorEventListener {
     private var lastRead = System.currentTimeMillis().toDouble()
+    private var didWarnAboutMislabeledEvent = false
 
     private val rotation = FloatArray(9)
     private val orientation = FloatArray(3)
@@ -24,8 +27,8 @@ class ReanimatedSensorListener(
         if (current - lastRead < interval) {
             return
         }
-        val sensorType = event.sensor.type
         lastRead = current
+        warnOnceAboutMislabeledEvent(event.sensor)
 
         val orientationDegrees =
             when (display.rotation) {
@@ -35,43 +38,51 @@ class ReanimatedSensorListener(
                 else -> 0
             }
 
-        when (sensorType) {
-            Sensor.TYPE_ROTATION_VECTOR -> {
-                SensorManager.getQuaternionFromVector(quaternion, event.values)
-                SensorManager.getRotationMatrixFromVector(rotation, event.values)
-                SensorManager.getOrientation(rotation, orientation)
-                val data =
-                    floatArrayOf(
-                        quaternion[1], // qx
-                        quaternion[3], // qy -> we set qz to match iOS
-                        -quaternion[2], // qz -> we set -qy to match iOS
-                        quaternion[0], // qw
-                        // make Android consistent with iOS, which is better documented here:
-                        // https://developer.apple.com/documentation/coremotion/getting_processed_device-motion_data/
-                        -orientation[0], // yaw
-                        -orientation[1], // pitch
-                        orientation[2], // roll
-                    )
-                setter.sensorSetter(data, orientationDegrees)
+        val values = event.values
+        val data =
+            when (sensorType) {
+                ReanimatedSensorType.ROTATION_VECTOR -> rotationData(values)
+                ReanimatedSensorType.GYROSCOPE,
+                ReanimatedSensorType.MAGNETIC_FIELD,
+                -> floatArrayOf(values[0], values[1], values[2])
+                ReanimatedSensorType.GRAVITY,
+                ReanimatedSensorType.ACCELEROMETER,
+                -> floatArrayOf(-values[0], -values[1], -values[2])
             }
-            Sensor.TYPE_GYROSCOPE,
-            Sensor.TYPE_MAGNETIC_FIELD,
-            -> {
-                val data = floatArrayOf(event.values[0], event.values[1], event.values[2])
-                setter.sensorSetter(data, orientationDegrees)
-            }
-            Sensor.TYPE_GRAVITY,
-            Sensor.TYPE_LINEAR_ACCELERATION,
-            -> {
-                val data = floatArrayOf(-event.values[0], -event.values[1], -event.values[2])
-                setter.sensorSetter(data, orientationDegrees)
-            }
-            else -> throw IllegalArgumentException("[Reanimated] Unknown sensor type.")
-        }
+        setter.sensorSetter(data, orientationDegrees)
     }
 
     override fun onAccuracyChanged(
         sensor: Sensor,
         accuracy: Int,
     ) {}
+
+    private fun warnOnceAboutMislabeledEvent(eventSensor: Sensor) {
+        if (didWarnAboutMislabeledEvent || eventSensor.type == sensorType.getType()) {
+            return
+        }
+        didWarnAboutMislabeledEvent = true
+        Log.w(
+            "Reanimated",
+            "Sensor $sensorType (type ${sensorType.getType()}) receives events from " +
+                "\"${eventSensor.name}\" (type ${eventSensor.type}).",
+        )
+    }
+
+    private fun rotationData(values: FloatArray): FloatArray {
+        SensorManager.getQuaternionFromVector(quaternion, values)
+        SensorManager.getRotationMatrixFromVector(rotation, values)
+        SensorManager.getOrientation(rotation, orientation)
+        return floatArrayOf(
+            quaternion[1], // qx
+            quaternion[3], // qy -> we set qz to match iOS
+            -quaternion[2], // qz -> we set -qy to match iOS
+            quaternion[0], // qw
+            // make Android consistent with iOS, which is better documented here:
+            // https://developer.apple.com/documentation/coremotion/getting_processed_device-motion_data/
+            -orientation[0], // yaw
+            -orientation[1], // pitch
+            orientation[2], // roll
+        )
+    }
 }

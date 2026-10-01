@@ -264,6 +264,15 @@ static inline std::shared_ptr<LightNode> findParentRNSScreen(const std::shared_p
   return current;
 }
 
+static inline bool isInSubtree(std::shared_ptr<LightNode> node, const std::shared_ptr<LightNode> &root) {
+  for (; node; node = node->parent.lock()) {
+    if (node == root) {
+      return true;
+    }
+  }
+  return false;
+}
+
 static inline bool isSETBoundary(const std::shared_ptr<LightNode> &node) {
   return !std::strcmp(node->current.componentName, "REASharedTransitionBoundary");
 }

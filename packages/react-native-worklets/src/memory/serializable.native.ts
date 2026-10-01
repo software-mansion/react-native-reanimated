@@ -599,6 +599,7 @@ function cloneRegExp(value: RegExp): SerializableRef<RegExp> {
     value.flags
   );
   serializableMappingCache.set(value, clone);
+  serializableMappingCache.set(clone);
   return clone;
 }
 
@@ -606,6 +607,7 @@ function cloneError(value: Error): SerializableRef<Error> {
   const { name, message, stack } = value;
   const clone = WorkletsModule.createSerializableError(name, message, stack);
   serializableMappingCache.set(value, clone);
+  serializableMappingCache.set(clone);
   return clone;
 }
 
@@ -637,6 +639,7 @@ function cloneArrayBufferView<TValue extends ArrayBufferView>(
     length
   );
   serializableMappingCache.set(value, clone);
+  serializableMappingCache.set(clone);
   return clone;
 }
 
