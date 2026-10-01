@@ -52,7 +52,8 @@ using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 using ForceScreenSnapshotFunction = std::function<bool(Tag tag)>;
 using ReadMountedViewPropsFunction = std::function<Props::Shared(Tag tag)>;
 
-// The frame is in points, relative to the parent and without transforms.
+// A view is mounted while it is attached to the window. The frame is in points, relative to the parent and without
+// transforms.
 struct MountedViewProps {
   double x;
   double y;

@@ -281,6 +281,9 @@ open class NativeProxy {
             } catch (e: IllegalViewOperationException) {
                 null
             } ?: return null
+        if (!view.isAttachedToWindow) {
+            return null
+        }
         return floatArrayOf(
             PixelUtil.toDIPFromPixel(view.left.toFloat()),
             PixelUtil.toDIPFromPixel(view.top.toFloat()),
