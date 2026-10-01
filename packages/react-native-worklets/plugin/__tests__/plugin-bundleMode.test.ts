@@ -14,7 +14,7 @@ type CapturedFile = { path: string; content: string };
 
 const capturedFiles: CapturedFile[] = [];
 
-// The OXC transform writes its files from Rust, so they never reach the `fs`
+// The Oxc transform writes its files from Rust, so they never reach the `fs`
 // mock below. Its jest setup records them on `globalThis` instead.
 function nativelyEmittedFiles(): CapturedFile[] {
   return ((
