@@ -1,9 +1,9 @@
-import { Easing, ReduceMotion, withTiming } from '../src';
 import type {
   EasingFunction,
   EasingFunctionFactory,
   TimingAnimation,
 } from '../src';
+import { Easing, ReduceMotion, withTiming } from '../src';
 
 const START = 1_000;
 
