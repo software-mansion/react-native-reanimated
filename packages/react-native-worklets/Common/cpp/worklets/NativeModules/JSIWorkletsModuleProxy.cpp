@@ -143,11 +143,33 @@ runOnRuntimeSync(jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const 
 }
 #endif // NDEBUG
 
+template <typename TCall>
+void callOnRN(
+    [[maybe_unused]] const std::shared_ptr<JSScheduler> &jsScheduler,
+    [[maybe_unused]] jsi::Runtime &rnRuntime,
+    [[maybe_unused]] const std::optional<std::string> &scheduleStack,
+    TCall &&call) {
+#ifndef NDEBUG
+  try {
+    call();
+  } catch (jsi::JSError &error) {
+    JSLogger::handleJSError(jsScheduler, rnRuntime, RuntimeData::rnRuntimeName, error, scheduleStack);
+  }
+#else
+  call();
+#endif // NDEBUG
+}
+
 jsi::Value runOnRNSync(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     jsi::Runtime &rt,
     const jsi::Value &funValue,
-    const jsi::Value &argsValue) {
+    const jsi::Value &argsValue
+#ifndef NDEBUG
+    ,
+    const std::optional<std::string> &scheduleStack
+#endif // NDEBUG
+) {
   const auto funObject = funValue.asObject(rt);
   std::shared_ptr<Serializable> serializableFun;
   std::optional<jsi::HostFunctionType> hostFun;
@@ -182,7 +204,12 @@ jsi::Value runOnRNSync(
       serializedResult = extractSerializableOrThrow(rnRuntime, serializer.call(rnRuntime, result));
     } catch (const jsi::JSError &error) {
       errorMessage = error.getMessage();
+#ifndef NDEBUG
+      errorStack =
+          JSLogger::joinStacks(error.getMessage(), error.getStack(), RuntimeData::rnRuntimeName, scheduleStack);
+#else
       errorStack = error.getStack();
+#endif // NDEBUG
     } catch (const std::exception &error) {
       errorMessage = error.what();
     }
@@ -471,11 +498,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         registerCustomSerializable(runtimeManager, memoryManager, determine, pack, unpack, typeId);
       });
 
-  jsi_utils::addMethod<2>(
+  jsi_utils::addMethod<3>(
       rt,
       obj,
       "scheduleOnRN",
-      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
         const auto &fun = at<0>(args).getObject(rt).getFunction(rt);
         const auto &remoteArgs = at<1>(args);
 
@@ -483,29 +510,40 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             ? nullptr
             : extractSerializableOrThrow<SerializableArray>(rt, remoteArgs, "[Worklets] Args must be an array.");
 
+        std::optional<std::string> scheduleStack;
+        if (at<2>(args).isString()) {
+          scheduleStack = at<2>(args).asString(rt).utf8(rt);
+        }
+
         if (!fun.getProperty(rt, "__remoteFunction").isUndefined()) [[likely]] { // NOLINT(readability/braces)
           const auto remoteFunction = extractSerializableOrThrow<SerializableRemoteFunction>(rt, fun);
-          jsScheduler->scheduleOnJS([remoteFunction, serializableArgs](jsi::Runtime &rnRuntime) {
-            const auto unpackedFun = remoteFunction->toJSValue(rnRuntime).getObject(rnRuntime).getFunction(rnRuntime);
-            if (serializableArgs == nullptr) {
-              // fast path for remote function w/o arguments
-              unpackedFun.call(rnRuntime);
-            } else {
-              const auto args = serializableArgs->getJSIValueArr(rnRuntime);
-              unpackedFun.call(rnRuntime, args.data(), args.size());
-            }
+          jsScheduler->scheduleOnJS([jsScheduler, remoteFunction, serializableArgs, scheduleStack](
+                                        jsi::Runtime &rnRuntime) {
+            callOnRN(jsScheduler, rnRuntime, scheduleStack, [&]() {
+              const auto unpackedFun = remoteFunction->toJSValue(rnRuntime).getObject(rnRuntime).getFunction(rnRuntime);
+              if (serializableArgs == nullptr) {
+                // fast path for remote function w/o arguments
+                unpackedFun.call(rnRuntime);
+              } else {
+                const auto args = serializableArgs->getJSIValueArr(rnRuntime);
+                unpackedFun.call(rnRuntime, args.data(), args.size());
+              }
+            });
           });
         } else if (fun.isHostFunction(rt)) {
           auto hostFun = fun.getHostFunction(rt);
-          jsScheduler->scheduleOnJS([hostFun = std::move(hostFun), serializableArgs](jsi::Runtime &rnRuntime) {
-            if (serializableArgs == nullptr) {
-              // fast path for host function w/o arguments
-              hostFun(rnRuntime, jsi::Value::undefined(), nullptr, 0);
-            } else {
-              const auto args = serializableArgs->getJSIValueArr(rnRuntime);
-              hostFun(rnRuntime, jsi::Value::undefined(), args.data(), args.size());
-            }
-          });
+          jsScheduler->scheduleOnJS(
+              [jsScheduler, hostFun = std::move(hostFun), serializableArgs, scheduleStack](jsi::Runtime &rnRuntime) {
+                callOnRN(jsScheduler, rnRuntime, scheduleStack, [&]() {
+                  if (serializableArgs == nullptr) {
+                    // fast path for host function w/o arguments
+                    hostFun(rnRuntime, jsi::Value::undefined(), nullptr, 0);
+                  } else {
+                    const auto args = serializableArgs->getJSIValueArr(rnRuntime);
+                    hostFun(rnRuntime, jsi::Value::undefined(), args.data(), args.size());
+                  }
+                });
+              });
         } else {
           const auto fnName = fun.getProperty(rt, "name").getString(rt).utf8(rt);
           const auto nameInError = fnName.empty() ? "" : " (" + fnName + ")";
@@ -515,12 +553,20 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
       });
 
-  jsi_utils::addMethod<2>(
+  jsi_utils::addMethod<3>(
       rt,
       obj,
       "runOnRNSync",
-      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+#ifndef NDEBUG
+        std::optional<std::string> scheduleStack;
+        if (at<2>(args).isString()) {
+          scheduleStack = at<2>(args).asString(rt).utf8(rt);
+        }
+        return runOnRNSync(jsScheduler, rt, at<0>(args), at<1>(args), scheduleStack);
+#else
         return runOnRNSync(jsScheduler, rt, at<0>(args), at<1>(args));
+#endif // NDEBUG
       });
 
   jsi_utils::addMethod<3>(
