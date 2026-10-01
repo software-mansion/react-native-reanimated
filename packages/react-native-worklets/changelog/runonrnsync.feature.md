@@ -1,1 +1,1 @@
-Add experimental `experimental_runOnRNSync` to run a function synchronously on the RN Runtime from any runtime, and add cross-runtime stack traces to errors thrown by functions scheduled with `scheduleOnRN`.
+Add experimental `experimental_runOnRNSync` to run a function synchronously on the RN Runtime from any runtime.

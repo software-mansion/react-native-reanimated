@@ -53,8 +53,7 @@ static std::string labelStackFrames(const std::string &rawStack, const std::stri
   while (pos != std::string::npos) {
     size_t next = rawStack.find(sep, pos + sep.size());
     size_t end = (next == std::string::npos) ? rawStack.size() : next;
-    const auto frame = rawStack.substr(pos + sep.size(), end - (pos + sep.size()));
-    result += frame.starts_with(" [") ? sep + frame : "\n    at [" + label + "]:" + frame;
+    result += "\n    at [" + label + "]:" + rawStack.substr(pos + sep.size(), end - (pos + sep.size()));
     pos = next;
   }
   return result;
@@ -79,23 +78,14 @@ void JSLogger::handleJSError(
   }
 
   const auto &message = error.getMessage();
-  const auto combined = joinStacks(message, error.getStack(), runtimeName, scheduleStack);
-  reportFatalErrorOnJS(jsScheduler, JSErrorData{.message = message, .stack = combined, .name = name});
-}
-
-std::string JSLogger::joinStacks(
-    const std::string &message,
-    const std::string &rawStack,
-    const std::string &runtimeName,
-    const std::optional<std::string> &scheduleStack) {
-  std::string combined = message + labelStackFrames(rawStack, runtimeName);
+  std::string combined = message + labelStackFrames(error.getStack(), runtimeName);
   if (scheduleStack.has_value()) {
     auto pos = scheduleStack->find("\n    at");
     if (pos != std::string::npos) {
       combined += scheduleStack->substr(pos);
     }
   }
-  return combined;
+  reportFatalErrorOnJS(jsScheduler, JSErrorData{.message = message, .stack = combined, .name = name});
 }
 #endif // NDEBUG
 

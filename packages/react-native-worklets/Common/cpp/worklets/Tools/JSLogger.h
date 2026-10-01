@@ -37,12 +37,6 @@ class JSLogger {
       const std::string &runtimeName,
       facebook::jsi::JSError &error,
       const std::optional<std::string> &scheduleStack);
-
-  static std::string joinStacks(
-      const std::string &message,
-      const std::string &rawStack,
-      const std::string &runtimeName,
-      const std::optional<std::string> &scheduleStack);
 #endif // NDEBUG
 
  private:

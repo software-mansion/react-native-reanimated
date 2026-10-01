@@ -1,6 +1,4 @@
 import {
-  experimental_runOnRNSync,
-  isBundleModeEnabled,
   runOnUISync,
   scheduleOnUI,
   scheduleOnRuntime,
@@ -151,84 +149,4 @@ describe('Error traces from UI', () => {
     expect(errorData?.stack).not.toInclude('at [UI]: functionNameJob1');
     expect(errorData?.stack).not.toInclude('at [UI]: functionNameJob3');
   });
-});
-
-describe('Error traces from RN', () => {
-  let errorData: Error | null = null;
-  let caughtStack = '';
-
-  const [testRuntime] = getWorkletRuntimesFromPool(1);
-
-  beforeEach(() => {
-    caughtStack = '';
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    globalThis.__reportFatalRemoteError = (a: Error, _: boolean) => {
-      errorData = a;
-      notify('errorReported');
-    };
-  });
-
-  afterEach(() => {
-    globalThis.__reportFatalRemoteError = originalReportFatalRemoteError;
-  });
-
-  function functionNameRN() {
-    throw new Error();
-  }
-
-  const reportCaughtStack = (stack: string) => {
-    caughtStack = stack;
-    notify('stackCaught');
-  };
-
-  test('scheduleOnRN from UI has good stack trace added', async () => {
-    scheduleOnUI(function functionNameUICaller() {
-      'worklet';
-      scheduleOnRN(functionNameRN);
-    });
-
-    await waitForNotification('errorReported');
-    expect(errorData?.stack).toInclude('at [RN]: functionNameRN');
-    expect(errorData?.stack).toInclude('functionNameUICaller');
-  });
-
-  test('scheduleOnRN from a Worker Runtime has good stack trace added', async () => {
-    scheduleOnRuntime(testRuntime, function functionNameWorkerCaller() {
-      'worklet';
-      scheduleOnRN(functionNameRN);
-    });
-
-    await waitForNotification('errorReported');
-    expect(errorData?.stack).toInclude('at [RN]: functionNameRN');
-    expect(errorData?.stack).toInclude('functionNameWorkerCaller');
-  });
-
-  if (isBundleModeEnabled()) {
-    test('experimental_runOnRNSync rethrows with the RN stack and the caller stack', async () => {
-      scheduleOnUI(function functionNameSyncCaller() {
-        'worklet';
-        try {
-          experimental_runOnRNSync(functionNameRN);
-        } catch (error) {
-          scheduleOnRN(reportCaughtStack, (error as Error).stack ?? '');
-        }
-      });
-
-      await waitForNotification('stackCaught');
-      expect(caughtStack).toInclude('at [RN]: functionNameRN');
-      expect(caughtStack).toInclude('functionNameSyncCaller');
-    });
-
-    test('uncaught experimental_runOnRNSync error keeps RN frames and labels UI frames', async () => {
-      scheduleOnUI(function functionNameUncaughtCaller() {
-        'worklet';
-        experimental_runOnRNSync(functionNameRN);
-      });
-
-      await waitForNotification('errorReported');
-      expect(errorData?.stack).toInclude('at [RN]: functionNameRN');
-      expect(errorData?.stack).toInclude('at [UI]: functionNameUncaughtCaller');
-      expect(errorData?.stack).not.toInclude('[UI]: [RN]');
-    });
-  }
 });
