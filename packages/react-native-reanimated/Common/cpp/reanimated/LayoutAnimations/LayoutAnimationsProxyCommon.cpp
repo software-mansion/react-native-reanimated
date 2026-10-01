@@ -174,8 +174,8 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations(std::unique_loc
   flushLayoutAnimationOperationsLocked();
 }
 
-// iOS writes the props of the shadow node to the view on Insert. For a view that exists already, those props lack
-// the values that were written synchronously.
+// On Insert, iOS (and Android with accumulated raw props) writes the props of the shadow node to the view. For a
+// view that exists already, those props lack the values that were written synchronously.
 void LayoutAnimationsProxyCommon::mergeSynchronousPropsIntoReinserts(
     const ShadowViewMutationList &mutations,
     ShadowViewMutationList &filteredMutations) const {

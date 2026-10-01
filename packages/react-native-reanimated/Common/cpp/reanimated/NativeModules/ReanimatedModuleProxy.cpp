@@ -78,6 +78,16 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 }
 #endif
 
+bool doesInsertWriteProps() {
+#ifdef __APPLE__
+  return true;
+#elif defined(ANDROID)
+  return ReactNativeFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid();
+#else
+  return false;
+#endif
+}
+
 std::shared_ptr<SynchronousWritesTracker> makeSynchronousWritesTracker() {
   if constexpr (
       shouldUseSynchronousUpdatesInPerformOperations() && !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
@@ -1308,18 +1318,18 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
 }
 
 SynchronousPropsReader ReanimatedModuleProxy::makeSynchronousPropsReader() {
-#ifdef __APPLE__
   if constexpr (
       shouldUseSynchronousUpdatesInPerformOperations() && !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    return [weakThis = weak_from_this()](const std::vector<Tag> &tags) -> SynchronousPropsByTag {
-      const auto strongThis = weakThis.lock();
-      if (!strongThis) {
-        return {};
-      }
-      return strongThis->readSynchronousProps(tags);
-    };
+    if (doesInsertWriteProps()) {
+      return [weakThis = weak_from_this()](const std::vector<Tag> &tags) -> SynchronousPropsByTag {
+        const auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return {};
+        }
+        return strongThis->readSynchronousProps(tags);
+      };
+    }
   }
-#endif // __APPLE__
   return nullptr;
 }
 
