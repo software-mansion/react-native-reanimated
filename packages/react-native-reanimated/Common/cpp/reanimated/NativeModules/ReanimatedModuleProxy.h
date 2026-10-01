@@ -260,6 +260,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   const std::shared_ptr<SynchronousWritesTracker> synchronousWritesTracker_;
 
 #ifdef ANDROID
+  const UpdateClippingExclusionsFunction updateClippingExclusions_;
+
   // Reused across `writeSynchronousPropsToViews` calls to avoid per-frame heap
   // allocations. Access only on the UI thread.
   std::vector<int> synchronousPropsIntBuffer_;

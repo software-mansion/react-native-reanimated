@@ -202,6 +202,9 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
 #endif // ANDROID
       synchronousWritesTracker_(makeSynchronousWritesTracker()),
+#ifdef ANDROID
+      updateClippingExclusions_(platformDepMethodsHolder.updateClippingExclusions),
+#endif // ANDROID
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
   // Add registries in order of their priority (from the lowest to the
@@ -1292,6 +1295,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       requestLayoutAnimationFlush,
 #ifdef ANDROID
       filterUnmountedTagsFunction_,
+      updateClippingExclusions_,
       jsInvoker_,
 #endif
 #ifdef __APPLE__

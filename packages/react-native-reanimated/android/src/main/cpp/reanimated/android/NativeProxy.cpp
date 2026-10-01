@@ -206,6 +206,13 @@ std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vect
   return region;
 }
 
+void NativeProxy::updateClippingExclusions(SurfaceId surfaceId, const std::vector<int> &tags) {
+  static const auto method = getJniMethod<void(jint, jni::alias_ref<jni::JArrayInt>)>("updateClippingExclusions");
+  auto jTags = jni::JArrayInt::newArray(tags.size());
+  jTags->setRegion(0, tags.size(), tags.data());
+  method(javaPart_.get(), surfaceId, jTags);
+}
+
 void NativeProxy::synchronouslyUpdateUIProps(
     const std::vector<int> &intBuffer,
     const std::vector<double> &doubleBuffer) {
@@ -371,6 +378,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto preserveMountedTags = bindThis(&NativeProxy::preserveMountedTags);
 
+  auto updateClippingExclusions = bindThis(&NativeProxy::updateClippingExclusions);
+
   auto synchronouslyUpdateUIPropsFunction = bindThis(&NativeProxy::synchronouslyUpdateUIProps);
 
   auto registerSensorFunction = bindThis(&NativeProxy::registerSensor);
@@ -394,6 +403,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   return {
       requestRender,
       preserveMountedTags,
+      updateClippingExclusions,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,
