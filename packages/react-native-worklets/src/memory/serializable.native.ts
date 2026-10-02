@@ -358,6 +358,128 @@ export function createSerializableHostObject<TValue extends object>(
   );
 }
 
+export function createSerializableString(
+  value: string
+): SerializableRef<string> {
+  if (__DEV__ && typeof value !== 'string') {
+    throw new Error('[Worklets] `createSerializableString` expects a string.');
+  }
+  const clone = cloneString(value);
+  serializableMappingCache.set(clone);
+  return clone;
+}
+
+export function createSerializableNumber(
+  value: number
+): SerializableRef<number> {
+  if (__DEV__ && typeof value !== 'number') {
+    throw new Error('[Worklets] `createSerializableNumber` expects a number.');
+  }
+  const clone = cloneNumber(value);
+  serializableMappingCache.set(clone);
+  return clone;
+}
+
+export function createSerializableBoolean(
+  value: boolean
+): SerializableRef<boolean> {
+  if (__DEV__ && typeof value !== 'boolean') {
+    throw new Error(
+      '[Worklets] `createSerializableBoolean` expects a boolean.'
+    );
+  }
+  const clone = cloneBoolean(value);
+  serializableMappingCache.set(clone);
+  return clone;
+}
+
+export function createSerializableBigInt(
+  value: bigint
+): SerializableRef<bigint> {
+  if (__DEV__ && typeof value !== 'bigint') {
+    throw new Error('[Worklets] `createSerializableBigInt` expects a bigint.');
+  }
+  const clone = cloneBigInt(value);
+  serializableMappingCache.set(clone);
+  return clone;
+}
+
+export function createSerializableNull(value: null): SerializableRef<null> {
+  if (__DEV__ && value !== null) {
+    throw new Error('[Worklets] `createSerializableNull` expects null.');
+  }
+  const clone = cloneNull();
+  serializableMappingCache.set(clone);
+  return clone;
+}
+
+export function createSerializableUndefined(
+  value: undefined
+): SerializableRef<undefined> {
+  if (__DEV__ && value !== undefined) {
+    throw new Error(
+      '[Worklets] `createSerializableUndefined` expects undefined.'
+    );
+  }
+  const clone = cloneUndefined();
+  serializableMappingCache.set(clone);
+  return clone;
+}
+
+export function createSerializableWorklet<
+  TValue extends (...args: never[]) => unknown,
+>(value: TValue): SerializableRef<TValue> {
+  if (__DEV__ && !isWorkletFunction(value)) {
+    throw new Error(
+      '[Worklets] `createSerializableWorklet` expects a worklet.'
+    );
+  }
+  return (
+    (getFromCache(value) as SerializableRef<TValue> | undefined) ??
+    (cloneWorklet(
+      value as unknown as WorkletFunction,
+      false,
+      0
+    ) as unknown as SerializableRef<TValue>)
+  );
+}
+
+export function createSerializableRemoteFunction<
+  TValue extends (...args: never[]) => unknown,
+>(value: TValue): SerializableRef<TValue> {
+  if (__DEV__ && (typeof value !== 'function' || isWorkletFunction(value))) {
+    throw new Error(
+      '[Worklets] `createSerializableRemoteFunction` expects a function that is not a worklet.'
+    );
+  }
+  const cached = getFromCache(value);
+  const serializable =
+    globalThis.WeakRef && cached instanceof WeakRef ? cached.deref() : cached;
+  return (
+    (serializable as SerializableRef<TValue> | undefined) ??
+    (cloneNonWorkletFunction(
+      value as unknown as () => unknown
+    ) as unknown as SerializableRef<TValue>)
+  );
+}
+
+export function createSerializableTurboModuleLike<TValue extends object>(
+  value: TValue
+): SerializableRef<TValue> {
+  if (
+    __DEV__ &&
+    (typeof value !== 'object' || value === null || !isTurboModuleLike(value))
+  ) {
+    throw new Error(
+      '[Worklets] `createSerializableTurboModuleLike` expects a TurboModule-like object.'
+    );
+  }
+  return (
+    (getFromCache(value) as SerializableRef<TValue> | undefined) ??
+    cloneTurboModuleLike(value, false, 0)
+  );
+}
+
 if (!globalThis.__customSerializationRegistry) {
   globalThis.__customSerializationRegistry =
     [] as typeof globalThis.__customSerializationRegistry;
@@ -635,6 +757,7 @@ function cloneTurboModuleLike<TValue extends object>(
     clonedProps,
     proto
   ) as SerializableRef<TValue>;
+  serializableMappingCache.set(clone);
   return clone;
 }
 
@@ -719,6 +842,7 @@ function cloneRegExp(value: RegExp): SerializableRef<RegExp> {
     value.flags
   );
   serializableMappingCache.set(value, clone);
+  serializableMappingCache.set(clone);
   return clone;
 }
 
@@ -726,6 +850,7 @@ function cloneError(value: Error): SerializableRef<Error> {
   const { name, message, stack } = value;
   const clone = WorkletsModule.createSerializableError(name, message, stack);
   serializableMappingCache.set(value, clone);
+  serializableMappingCache.set(clone);
   return clone;
 }
 
@@ -757,6 +882,7 @@ function cloneArrayBufferView<TValue extends ArrayBufferView>(
     length
   );
   serializableMappingCache.set(value, clone);
+  serializableMappingCache.set(clone);
   return clone;
 }
 

@@ -20,20 +20,28 @@ scheduleOnUI(() => {
 });
 ```
 
-| Function                            | Accepts                                    |
-| ----------------------------------- | ------------------------------------------ |
-| `createSerializableArray`           | `Array`                                    |
-| `createSerializableObject`          | Plain object                               |
-| `createSerializableMap`             | `Map`                                      |
-| `createSerializableSet`             | `Set`                                      |
-| `createSerializableError`           | `Error`                                    |
-| `createSerializableRegExp`          | `RegExp`                                   |
-| `createSerializableArrayBuffer`     | `ArrayBuffer`                              |
+| Function | Accepts |
+| --- | --- |
+| `createSerializableString` | `string` |
+| `createSerializableNumber` | `number` |
+| `createSerializableBoolean` | `boolean` |
+| `createSerializableBigInt` | `bigint` |
+| `createSerializableNull` | `null` |
+| `createSerializableUndefined` | `undefined` |
+| `createSerializableArray` | `Array` |
+| `createSerializableObject` | Plain object |
+| `createSerializableMap` | `Map` |
+| `createSerializableSet` | `Set` |
+| `createSerializableError` | `Error` |
+| `createSerializableRegExp` | `RegExp` |
+| `createSerializableArrayBuffer` | `ArrayBuffer` |
 | `createSerializableArrayBufferView` | Typed array, for example `Uint8Array`, or `DataView` |
-| `createSerializableHostObject`      | JSI host object                            |
+| `createSerializableWorklet` | [Worklet](/docs/fundamentals/glossary#worklet) |
+| `createSerializableRemoteFunction` | Function that is not a worklet. Other runtimes can call it only through [`scheduleOnRN`](/docs/threading/scheduleOnRN) |
+| `createSerializableHostObject` | JSI host object |
+| `createSerializableTurboModuleLike` | TurboModule-like object |
 
 ## Remarks
 
 - Elements of arrays, objects, maps and sets are converted with `createSerializable`.
-- For primitives, use [createSerializable](/docs/memory/createSerializable).
 - On the Web these functions return the value unchanged.

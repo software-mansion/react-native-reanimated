@@ -1,12 +1,22 @@
+import { TurboModuleRegistry } from 'react-native';
 import {
   createSerializableArray,
   createSerializableArrayBuffer,
   createSerializableArrayBufferView,
+  createSerializableBigInt,
+  createSerializableBoolean,
   createSerializableError,
   createSerializableMap,
+  createSerializableNull,
+  createSerializableNumber,
   createSerializableObject,
   createSerializableRegExp,
+  createSerializableRemoteFunction,
   createSerializableSet,
+  createSerializableString,
+  createSerializableTurboModuleLike,
+  createSerializableUndefined,
+  createSerializableWorklet,
   scheduleOnRN,
   scheduleOnRuntime,
   scheduleOnUI,
@@ -174,6 +184,114 @@ describe('Test createSerializable[Type]', () => {
         await waitForNotification(PASS_NOTIFICATION);
         expect(result).toBe(true);
       });
+
+      test('createSerializableString', async () => {
+        const serializable = createSerializableString('foo');
+        scheduleOnTarget(() => {
+          'worklet';
+          const value = serializable as unknown;
+          scheduleOnRN(callbackPass, value === 'foo');
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
+      test('createSerializableNumber', async () => {
+        const serializable = createSerializableNumber(42);
+        scheduleOnTarget(() => {
+          'worklet';
+          const value = serializable as unknown;
+          scheduleOnRN(callbackPass, value === 42);
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
+      test('createSerializableBoolean', async () => {
+        const serializable = createSerializableBoolean(true);
+        scheduleOnTarget(() => {
+          'worklet';
+          const value = serializable as unknown;
+          scheduleOnRN(callbackPass, value === true);
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
+      test('createSerializableBigInt', async () => {
+        const serializable = createSerializableBigInt(BigInt(42));
+        scheduleOnTarget(() => {
+          'worklet';
+          const value = serializable as unknown;
+          scheduleOnRN(callbackPass, value === BigInt(42));
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
+      test('createSerializableNull', async () => {
+        const serializable = createSerializableNull(null);
+        scheduleOnTarget(() => {
+          'worklet';
+          const value = serializable as unknown;
+          scheduleOnRN(callbackPass, value === null);
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
+      test('createSerializableUndefined', async () => {
+        const serializable = createSerializableUndefined(undefined);
+        scheduleOnTarget(() => {
+          'worklet';
+          const value = serializable as unknown;
+          scheduleOnRN(callbackPass, value === undefined);
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
+      test('createSerializableWorklet', async () => {
+        const serializable = createSerializableWorklet((a: number) => {
+          'worklet';
+          return a + 1;
+        });
+        scheduleOnTarget(() => {
+          'worklet';
+          const value = serializable as unknown as (a: number) => number;
+          scheduleOnRN(callbackPass, value(41) === 42);
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
+      test('createSerializableRemoteFunction', async () => {
+        const serializable = createSerializableRemoteFunction(callbackPass);
+        scheduleOnTarget(() => {
+          'worklet';
+          scheduleOnRN(serializable as unknown as typeof callbackPass, true);
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
+      test('createSerializableTurboModuleLike', async () => {
+        const serializable = createSerializableTurboModuleLike(
+          TurboModuleRegistry.getEnforcing('Clipboard')
+        );
+        scheduleOnTarget(() => {
+          'worklet';
+          const value = serializable as unknown as object;
+          scheduleOnRN(
+            callbackPass,
+            Object.keys(value).every(
+              (key) => key in Object.getPrototypeOf(value)
+            )
+          );
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
     });
   });
 
@@ -198,6 +316,20 @@ describe('Test createSerializable[Type]', () => {
         );
       }).toThrow(
         '`createSerializableArrayBufferView` expects a typed array or a DataView.'
+      );
+      await expect(() => {
+        createSerializableNumber('42' as unknown as number);
+      }).toThrow('`createSerializableNumber` expects a number.');
+      await expect(() => {
+        createSerializableWorklet(() => 42);
+      }).toThrow('`createSerializableWorklet` expects a worklet.');
+      await expect(() => {
+        createSerializableRemoteFunction(() => {
+          'worklet';
+          return 42;
+        });
+      }).toThrow(
+        '`createSerializableRemoteFunction` expects a function that is not a worklet.'
       );
     });
   }

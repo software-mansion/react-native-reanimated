@@ -72,6 +72,58 @@ export function createSerializableHostObject<TValue extends object>(
   return createSerializable(value);
 }
 
+export function createSerializableString(
+  value: string
+): SerializableRef<string> {
+  return createSerializable(value);
+}
+
+export function createSerializableNumber(
+  value: number
+): SerializableRef<number> {
+  return createSerializable(value);
+}
+
+export function createSerializableBoolean(
+  value: boolean
+): SerializableRef<boolean> {
+  return createSerializable(value);
+}
+
+export function createSerializableBigInt(
+  value: bigint
+): SerializableRef<bigint> {
+  return createSerializable(value);
+}
+
+export function createSerializableNull(value: null): SerializableRef<null> {
+  return createSerializable(value);
+}
+
+export function createSerializableUndefined(
+  value: undefined
+): SerializableRef<undefined> {
+  return createSerializable(value);
+}
+
+export function createSerializableWorklet<
+  TValue extends (...args: never[]) => unknown,
+>(value: TValue): SerializableRef<TValue> {
+  return createSerializable(value);
+}
+
+export function createSerializableRemoteFunction<
+  TValue extends (...args: never[]) => unknown,
+>(value: TValue): SerializableRef<TValue> {
+  return createSerializable(value);
+}
+
+export function createSerializableTurboModuleLike<TValue extends object>(
+  value: TValue
+): SerializableRef<TValue> {
+  return createSerializable(value);
+}
+
 export function makeShareableCloneOnUIRecursive<TValue>(
   value: TValue
 ): FlatSerializableRef<TValue> {
