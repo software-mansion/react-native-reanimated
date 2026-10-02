@@ -1317,19 +1317,16 @@ SynchronousPropsReader ReanimatedModuleProxy::makeSynchronousPropsReader() {
   if (!ReactNativeFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid()) {
     return nullptr;
   }
-  return [weakThis = weak_from_this()](const std::vector<Tag> &tags) {
+  return [weakThis = weak_from_this()](const Tag tag) {
     const auto strongThis = weakThis.lock();
-    return strongThis ? strongThis->readSynchronousProps(tags)
-                      : std::vector<folly::dynamic>(tags.size(), folly::dynamic::object());
+    return strongThis ? strongThis->readSynchronousProps(tag) : folly::dynamic::object();
   };
 }
 
-std::vector<folly::dynamic> ReanimatedModuleProxy::readSynchronousProps(const std::vector<Tag> &tags) {
-  std::vector<folly::dynamic> synchronousProps(tags.size(), folly::dynamic::object());
+folly::dynamic ReanimatedModuleProxy::readSynchronousProps(const Tag tag) {
+  folly::dynamic synchronousProps = folly::dynamic::object;
   auto lock = updatesRegistryManager_->lock();
-  for (size_t i = 0; i < tags.size(); i++) {
-    updatesRegistryManager_->mergeRegistryProps(tags[i], synchronousProps[i], isSynchronousPropName);
-  }
+  updatesRegistryManager_->mergeRegistryProps(tag, synchronousProps, isSynchronousPropName);
   return synchronousProps;
 }
 #endif // ANDROID

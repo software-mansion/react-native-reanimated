@@ -17,42 +17,6 @@
 
 namespace reanimated {
 
-namespace {
-
-#ifdef __APPLE__
-bool changesProps(const ShadowViewMutation &mutation) {
-  return mutation.type == ShadowViewMutation::Update &&
-      mutation.oldChildShadowView.props != mutation.newChildShadowView.props;
-}
-#endif
-
-// A view that moves gets a Remove and an Insert in one transaction. The result maps the tag of each such view to
-// the props of its shadow node.
-std::unordered_map<Tag, const Props *> collectReinsertedShadowProps(const ShadowViewMutationList &mutations) {
-  std::unordered_map<Tag, const Props *> shadowProps;
-  const auto hasType = [&](const ShadowViewMutation::Type type) {
-    return std::ranges::any_of(mutations, [type](const auto &mutation) { return mutation.type == type; });
-  };
-  if (!hasType(ShadowViewMutation::Remove) || !hasType(ShadowViewMutation::Insert)) {
-    return shadowProps;
-  }
-  std::unordered_set<Tag> removedTags;
-  for (const auto &mutation : mutations) {
-    if (mutation.type == ShadowViewMutation::Remove) {
-      removedTags.insert(mutation.oldChildShadowView.tag);
-    }
-  }
-  for (const auto &mutation : mutations) {
-    const auto &view = mutation.newChildShadowView;
-    if (mutation.type == ShadowViewMutation::Insert && removedTags.contains(view.tag)) {
-      shadowProps.emplace(view.tag, view.props.get());
-    }
-  }
-  return shadowProps;
-}
-
-} // namespace
-
 #ifdef ANDROID
 namespace {
 const ShadowNode *findShadowNode(const ShadowNode &node, const Tag tag) {
@@ -192,79 +156,23 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations(std::unique_loc
   flushLayoutAnimationOperationsLocked();
 }
 
-// On Insert, iOS (and Android with accumulated raw props) writes the props of the shadow node to the view. For a
-// view that only moves, those props lack the values that were written synchronously. An Insert that a layout
-// animation filled with its own props stays as it is.
-void LayoutAnimationsProxyCommon::keepSynchronousPropsInReinserts(
-    const ShadowViewMutationList &mutations,
-    ShadowViewMutationList &filteredMutations) const {
+// iOS, and Android with accumulated raw props, write the props of an Insert to the view. The shadow props of a view
+// that only moves lack the values that were written synchronously.
+Props::Shared LayoutAnimationsProxyCommon::propsOfMountedView(const ShadowView &view) const {
 #ifdef __APPLE__
-  if (!readMountedViewProps_) {
-    return;
-  }
-  const auto shadowProps = collectReinsertedShadowProps(mutations);
-  if (shadowProps.empty()) {
-    return;
-  }
-  const auto changesPropsOfReinsert = [&](const ShadowViewMutation &mutation) {
-    return changesProps(mutation) && shadowProps.contains(mutation.newChildShadowView.tag);
-  };
-  std::unordered_set<Tag> tagsWithChangedShadowProps;
-  for (const auto &mutation : mutations) {
-    if (changesPropsOfReinsert(mutation)) {
-      tagsWithChangedShadowProps.insert(mutation.newChildShadowView.tag);
-    }
-  }
-
-  // The Insert gets the props that the view holds when the mount reaches it: the props of an Update that comes
-  // earlier in this transaction, or else the props of the mounted view, which include the synchronous writes.
-  // When an Update with new shadow props does not come before the Insert, the Insert keeps those shadow props.
-  std::unordered_map<Tag, Props::Shared> updatedProps;
-  for (auto &mutation : filteredMutations) {
-    auto &view = mutation.newChildShadowView;
-    if (changesPropsOfReinsert(mutation)) {
-      updatedProps.insert_or_assign(view.tag, view.props);
-      continue;
-    }
-    const auto shadowPropsIt = shadowProps.find(view.tag);
-    if (mutation.type != ShadowViewMutation::Insert || shadowPropsIt == shadowProps.end() ||
-        shadowPropsIt->second != view.props.get()) {
-      continue;
-    }
-    if (const auto updatedPropsIt = updatedProps.find(view.tag); updatedPropsIt != updatedProps.end()) {
-      view.props = updatedPropsIt->second;
-    } else if (!tagsWithChangedShadowProps.contains(view.tag)) {
-      if (auto mountedProps = readMountedViewProps_(view.tag)) {
-        view.props = std::move(mountedProps);
-      }
+  if (readMountedViewProps_) {
+    if (auto mountedProps = readMountedViewProps_(view.tag)) {
+      return mountedProps;
     }
   }
 #elif defined(ANDROID)
-  if (!readSynchronousProps_) {
-    return;
-  }
-  const auto shadowProps = collectReinsertedShadowProps(mutations);
-  if (shadowProps.empty()) {
-    return;
-  }
-  std::vector<ShadowViewMutation *> reinserts;
-  std::vector<Tag> tags;
-  for (auto &mutation : filteredMutations) {
-    const auto &view = mutation.newChildShadowView;
-    const auto it = shadowProps.find(view.tag);
-    if (mutation.type == ShadowViewMutation::Insert && it != shadowProps.end() && it->second == view.props.get()) {
-      reinserts.push_back(&mutation);
-      tags.push_back(view.tag);
-    }
-  }
-  const auto synchronousProps = readSynchronousProps_(tags);
-  for (size_t i = 0; i < reinserts.size(); i++) {
-    if (!synchronousProps[i].empty()) {
-      auto &view = reinserts[i]->newChildShadowView;
-      view.props = mergeSynchronousProps(view, synchronousProps[i]);
+  if (readSynchronousProps_) {
+    if (const auto synchronousProps = readSynchronousProps_(view.tag); !synchronousProps.empty()) {
+      return mergeSynchronousProps(view, synchronousProps);
     }
   }
 #endif
+  return view.props;
 }
 
 Props::Shared LayoutAnimationsProxyCommon::mergeSynchronousProps(const ShadowView &view, const folly::dynamic &props)

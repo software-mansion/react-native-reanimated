@@ -143,7 +143,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   auto configLock = layoutAnimationsManager_->lockAndFlushConfigUpdates();
   if (!isLightTreeInitialized()) {
     pendingTransactions_.emplace_back(telemetry.getRevisionNumber(), mutations);
-    keepSynchronousPropsInReinserts(mutations, mutations);
     return MountingTransaction{surfaceId, transactionNumber, std::move(mutations), telemetry};
   }
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
@@ -240,8 +239,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     keepTransitioningViewsHidden(filteredMutations, propsParserContext);
   }
-
-  keepSynchronousPropsInReinserts(mutations, filteredMutations);
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
@@ -460,8 +457,13 @@ void LayoutAnimationsProxy::updateLightTree(
             filteredMutations.push_back(
                 ShadowViewMutation::InsertMutation(mutation.parentTag, node->previous, hostIndex));
           } else {
-            filteredMutations.push_back(
-                ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
+            auto view = mutation.newChildShadowView;
+            const auto updatedViewIt = updatedViews.find(tag);
+            const bool propsChanged = updatedViewIt != updatedViews.end() && updatedViewIt->second.props != view.props;
+            if (!propsChanged) {
+              view.props = propsOfMountedView(view);
+            }
+            filteredMutations.push_back(ShadowViewMutation::InsertMutation(mutation.parentTag, view, hostIndex));
           }
         } else if (enteringConfig) {
           transaction.entering.push_back({node, enteringConfig});

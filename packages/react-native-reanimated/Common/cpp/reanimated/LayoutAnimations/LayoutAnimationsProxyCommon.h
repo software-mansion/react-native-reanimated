@@ -64,8 +64,7 @@ using LayoutAnimationOperation =
     std::variant<ManagedLayoutAnimationStart, ProgressLayoutAnimationStart, LayoutAnimationCancellation>;
 
 #ifdef ANDROID
-// Returns one object for each tag, in the order of the tags.
-using SynchronousPropsReader = std::function<std::vector<folly::dynamic>(const std::vector<Tag> &)>;
+using SynchronousPropsReader = std::function<folly::dynamic(Tag tag)>;
 #endif
 
 struct LayoutAnimationsProxyDependencies {
@@ -127,9 +126,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void flushLayoutAnimationOperations() const;
 
  protected:
-  void keepSynchronousPropsInReinserts(
-      const ShadowViewMutationList &mutations,
-      ShadowViewMutationList &filteredMutations) const;
+  Props::Shared propsOfMountedView(const ShadowView &view) const;
   Props::Shared mergeSynchronousProps(const ShadowView &view, const folly::dynamic &props) const;
   bool hasLayoutAnimationRecords() const;
   void applySynchronousPropsToLayoutAnimation(Tag tag, const folly::dynamic &props) const;

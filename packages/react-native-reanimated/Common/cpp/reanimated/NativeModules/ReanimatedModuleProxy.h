@@ -211,7 +211,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void writeSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch);
 #ifdef ANDROID
   SynchronousPropsReader makeSynchronousPropsReader();
-  std::vector<folly::dynamic> readSynchronousProps(const std::vector<Tag> &tags);
+  folly::dynamic readSynchronousProps(Tag tag);
 #endif
 
   std::shared_ptr<UIManagerAnimationBackend> getAnimationBackend();
