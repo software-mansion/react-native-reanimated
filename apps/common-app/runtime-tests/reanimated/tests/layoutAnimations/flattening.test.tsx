@@ -150,6 +150,8 @@ describe('View flattening', () => {
       await waitForFrames();
       const secondDroppedTags = getDroppedTags(dropped);
       await expectMountedNatively(secondDroppedTags, true);
+      await wait(500);
+      await expectMountedNatively(firstDroppedTags, false);
       await render(<FlattenedWrapper flat dropped={dropped} />);
       await wait(500);
 
