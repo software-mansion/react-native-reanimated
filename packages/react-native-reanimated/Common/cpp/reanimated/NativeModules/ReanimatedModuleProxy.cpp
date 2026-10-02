@@ -170,6 +170,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef __APPLE__
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
+      readMountedViewProps_(platformDepMethodsHolder.readMountedViewPropsFunction),
 #endif
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
@@ -1282,6 +1283,9 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
     });
   };
 
+  constexpr bool keepsSynchronousPropsInReinserts =
+      shouldUseSynchronousUpdatesInPerformOperations() && !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND");
+
   const LayoutAnimationsProxyDependencies dependencies{
       layoutAnimationsManager_,
       componentDescriptorRegistry,
@@ -1293,9 +1297,11 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
 #ifdef ANDROID
       filterUnmountedTagsFunction_,
       jsInvoker_,
+      keepsSynchronousPropsInReinserts ? makeSynchronousPropsReader() : nullptr,
 #endif
 #ifdef __APPLE__
       forceScreenSnapshot_,
+      keepsSynchronousPropsInReinserts ? readMountedViewProps_ : nullptr,
 #endif
   };
 
@@ -1305,6 +1311,25 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
     layoutAnimationsProxyRegistry_ = createLayoutAnimationsProxyLegacyRegistry(dependencies);
   }
 }
+
+#ifdef ANDROID
+SynchronousPropsReader ReanimatedModuleProxy::makeSynchronousPropsReader() {
+  if (!ReactNativeFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid()) {
+    return nullptr;
+  }
+  return [weakThis = weak_from_this()](const Tag tag) {
+    const auto strongThis = weakThis.lock();
+    return strongThis ? strongThis->readSynchronousProps(tag) : folly::dynamic::object();
+  };
+}
+
+folly::dynamic ReanimatedModuleProxy::readSynchronousProps(const Tag tag) {
+  folly::dynamic synchronousProps = folly::dynamic::object;
+  auto lock = updatesRegistryManager_->lock();
+  updatesRegistryManager_->mergeRegistryProps(tag, synchronousProps, isSynchronousPropName);
+  return synchronousProps;
+}
+#endif // ANDROID
 
 #ifdef IS_REANIMATED_EXAMPLE_APP
 
