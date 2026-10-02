@@ -3,6 +3,7 @@
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -71,7 +72,11 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
 #endif // NDEBUG
 
   if (initializer) {
-    workletRuntime->runSyncAndDiscard(initializer);
+    try {
+      workletRuntime->runSyncAndDiscard(initializer);
+    } catch (const jsi::JSError &error) {
+      throw std::runtime_error(error.getMessage());
+    }
   }
 
   registerRuntime(runtimeId, workletRuntime);

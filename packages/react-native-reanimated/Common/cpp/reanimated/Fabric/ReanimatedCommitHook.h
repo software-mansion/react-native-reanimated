@@ -1,12 +1,15 @@
 #pragma once
 
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
+#include <reanimated/Compat/ReactNativeVersionCompat.h>
+#include <reanimated/Fabric/updates/SynchronousWritesTracker.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
 
 #include <memory>
+#include <vector>
 
 using namespace facebook::react;
 
@@ -18,7 +21,8 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
       const std::shared_ptr<UIManager> &uiManager,
       const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
       const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
-      const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry);
+      const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry,
+      const std::shared_ptr<SynchronousWritesTracker> &synchronousWritesTracker);
 
   ~ReanimatedCommitHook() noexcept override;
 
@@ -34,11 +38,21 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
       RootShadowNode::Unshared const &newRootShadowNode,
       const ShadowTreeCommitOptions &commitOptions) noexcept override;
 
+#if REACT_NATIVE_VERSION_MINOR >= 88
+  void shadowTreeDidCommit(
+      const ShadowTree &shadowTree,
+      const RootShadowNode::Shared &rootShadowNode,
+      const std::vector<const LayoutableShadowNode *> &affectedLayoutableNodes) noexcept override;
+#endif
+
  private:
+  void trackCommit(const RootShadowNode::Shared &rootShadowNode, bool carriesRegistryValues) const;
+
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   std::shared_ptr<css::ViewStylesRepository> viewStylesRepository_;
   std::shared_ptr<LayoutAnimationsProxyRegistry> layoutAnimationsProxyRegistry_;
+  std::shared_ptr<SynchronousWritesTracker> synchronousWritesTracker_;
 };
 
 } // namespace reanimated

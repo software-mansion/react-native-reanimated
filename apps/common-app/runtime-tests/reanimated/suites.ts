@@ -71,6 +71,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/props/backgroundImage.test');
       require('./tests/props/syncBackToReact.test');
       require('./tests/props/boxShadow.test');
+      require('./tests/props/nonLayoutPropAndRender.test');
     },
   },
   {
@@ -127,6 +128,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'layout animations view flattening',
     importTest: () => {
       require('./tests/layoutAnimations/flattening.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animations nested text',
+    importTest: () => {
+      require('./tests/layoutAnimations/nestedText.test');
     },
   },
   {
