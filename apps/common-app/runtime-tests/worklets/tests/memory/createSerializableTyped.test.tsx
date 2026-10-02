@@ -1,4 +1,3 @@
-import { TurboModuleRegistry } from 'react-native';
 import {
   createSerializableArray,
   createSerializableArrayBuffer,
@@ -14,7 +13,6 @@ import {
   createSerializableRemoteFunction,
   createSerializableSet,
   createSerializableString,
-  createSerializableTurboModuleLike,
   createSerializableUndefined,
   createSerializableWorklet,
   scheduleOnRN,
@@ -270,24 +268,6 @@ describe('Test createSerializable[Type]', () => {
         scheduleOnTarget(() => {
           'worklet';
           scheduleOnRN(serializable as unknown as typeof callbackPass, true);
-        });
-        await waitForNotification(PASS_NOTIFICATION);
-        expect(result).toBe(true);
-      });
-
-      test('createSerializableTurboModuleLike', async () => {
-        const serializable = createSerializableTurboModuleLike(
-          TurboModuleRegistry.getEnforcing('Clipboard')
-        );
-        scheduleOnTarget(() => {
-          'worklet';
-          const value = serializable as unknown as object;
-          scheduleOnRN(
-            callbackPass,
-            Object.keys(value).every(
-              (key) => key in Object.getPrototypeOf(value)
-            )
-          );
         });
         await waitForNotification(PASS_NOTIFICATION);
         expect(result).toBe(true);

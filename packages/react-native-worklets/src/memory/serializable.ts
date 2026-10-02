@@ -118,12 +118,6 @@ export function createSerializableRemoteFunction<
   return createSerializable(value);
 }
 
-export function createSerializableTurboModuleLike<TValue extends object>(
-  value: TValue
-): SerializableRef<TValue> {
-  return createSerializable(value);
-}
-
 export function makeShareableCloneOnUIRecursive<TValue>(
   value: TValue
 ): FlatSerializableRef<TValue> {

@@ -42,7 +42,6 @@ const WorkletAPI = {
   createSerializableRemoteFunction: ID,
   createSerializableSet: ID,
   createSerializableString: ID,
-  createSerializableTurboModuleLike: ID,
   createSerializableUndefined: ID,
   createSerializableWorklet: ID,
   createShareable<TValue>(_hostRuntimeId: number, initial: TValue) {

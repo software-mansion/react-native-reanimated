@@ -45,7 +45,6 @@ export {
   createSerializableRemoteFunction,
   createSerializableSet,
   createSerializableString,
-  createSerializableTurboModuleLike,
   createSerializableUndefined,
   createSerializableWorklet,
   isSerializableRef,

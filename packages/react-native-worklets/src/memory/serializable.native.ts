@@ -463,23 +463,6 @@ export function createSerializableRemoteFunction<
   );
 }
 
-export function createSerializableTurboModuleLike<TValue extends object>(
-  value: TValue
-): SerializableRef<TValue> {
-  if (
-    __DEV__ &&
-    (typeof value !== 'object' || value === null || !isTurboModuleLike(value))
-  ) {
-    throw new Error(
-      '[Worklets] `createSerializableTurboModuleLike` expects a TurboModule-like object.'
-    );
-  }
-  return (
-    (getFromCache(value) as SerializableRef<TValue> | undefined) ??
-    cloneTurboModuleLike(value, false, 0)
-  );
-}
-
 if (!globalThis.__customSerializationRegistry) {
   globalThis.__customSerializationRegistry =
     [] as typeof globalThis.__customSerializationRegistry;
@@ -757,7 +740,6 @@ function cloneTurboModuleLike<TValue extends object>(
     clonedProps,
     proto
   ) as SerializableRef<TValue>;
-  serializableMappingCache.set(clone);
   return clone;
 }
 

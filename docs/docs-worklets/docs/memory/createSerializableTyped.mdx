@@ -37,9 +37,8 @@ scheduleOnUI(() => {
 | `createSerializableArrayBuffer` | `ArrayBuffer` |
 | `createSerializableArrayBufferView` | Typed array, for example `Uint8Array`, or `DataView` |
 | `createSerializableWorklet` | [Worklet](/docs/fundamentals/glossary#worklet) |
-| `createSerializableRemoteFunction` | Function that is not a worklet. Other runtimes can call it only through [`scheduleOnRN`](/docs/threading/scheduleOnRN) |
+| `createSerializableRemoteFunction` | Function that is not a worklet. In the [Bundle Mode](/docs/bundleMode/) it can be a function from any runtime, otherwise only from the RN Runtime |
 | `createSerializableHostObject` | JSI host object |
-| `createSerializableTurboModuleLike` | TurboModule-like object |
 
 ## Remarks
 
