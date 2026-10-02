@@ -250,7 +250,8 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
       fun,
       (args.length > 0
         ? globalThis.__serializer(args)
-        : undefined) as SerializableRef<Args>
+        : undefined) as SerializableRef<Args>,
+      SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
     );
   }
 }
@@ -289,7 +290,8 @@ export function runOnRNSync<Args extends unknown[], ReturnValue>(
       : fun,
     (args.length > 0
       ? globalThis.__serializer(args)
-      : undefined) as SerializableRef<Args>
+      : undefined) as SerializableRef<Args>,
+    SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
   );
 }
 
