@@ -84,6 +84,14 @@ MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(REANodesMa
   return maybeFlushUIUpdatesQueueFunction;
 }
 
+IsSensorAvailableFunction makeIsSensorAvailableFunction(ReanimatedSensorContainer *reanimatedSensorContainer)
+{
+  auto isSensorAvailableFunction = [=](int sensorType) -> bool {
+    return [reanimatedSensorContainer isSensorAvailable:(ReanimatedSensorType)sensorType];
+  };
+  return isSensorAvailableFunction;
+}
+
 RegisterSensorFunction makeRegisterSensorFunction(ReanimatedSensorContainer *reanimatedSensorContainer)
 {
   auto registerSensorFunction = [=](int sensorType,
@@ -236,6 +244,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   ReanimatedSensorContainer *reanimatedSensorContainer = [[ReanimatedSensorContainer alloc] init];
 
+  auto isSensorAvailableFunction = makeIsSensorAvailableFunction(reanimatedSensorContainer);
+
   auto registerSensorFunction = makeRegisterSensorFunction(reanimatedSensorContainer);
 
   auto unregisterSensorFunction = makeUnregisterSensorFunction(reanimatedSensorContainer);
@@ -262,6 +272,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       forceScreenSnapshotFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
+      isSensorAvailableFunction,
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
