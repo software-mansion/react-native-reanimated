@@ -9,6 +9,7 @@ import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import { getStaticFeatureFlag } from '../featureFlags';
+import { isSharedValue } from '../isSharedValue';
 import { type BaseAnimationBuilder } from '../layoutReanimation';
 import { SharedTransition } from '../layoutReanimation/SharedTransition';
 import {
@@ -419,6 +420,13 @@ export default class AnimatedComponent
           };
     }
 
+    if (
+      this.ChildComponent.displayName === 'Text' &&
+      isSharedValue(this.props.children)
+    ) {
+      filteredProps.children = normalizeTextProp(filteredProps.children);
+    }
+
     // TODO: Remove need for this \/\/\/\/.
     // RNSVG expects Gradient elem to have stops passed as children. When we want to animate them,
     // we provide them using `gradient` prop.
@@ -436,4 +444,11 @@ export default class AnimatedComponent
 
     return super.render(childProps);
   }
+}
+
+function normalizeTextProp(text: unknown): string {
+  if (text === '') {
+    return '\u200b'; // use zero-width space when text is empty to prevent collapsing of the Text component
+  }
+  return String(text); // convert numbers to string, keep strings as they are
 }
