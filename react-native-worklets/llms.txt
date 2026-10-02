@@ -45,6 +45,7 @@
 - [createWorkletRuntime](https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime)
 - [executeOnUIRuntimeSync](https://docs.swmansion.com/react-native-worklets/docs/threading/executeOnUIRuntimeSync)
 - [runOnJS](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnJS)
+- [runOnRNSync](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRNSync)
 - [runOnRuntime](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntime)
 - [runOnRuntimeAsync](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntimeAsync)
 - [runOnRuntimeAsyncWithId](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntimeAsyncWithId)
