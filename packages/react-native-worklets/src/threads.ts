@@ -54,7 +54,7 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
   );
 }
 
-export function experimental_runOnRNSync<Args extends unknown[], ReturnValue>(
+export function runOnRNSync<Args extends unknown[], ReturnValue>(
   fun: (...args: Args) => ReturnValue,
   ...args: Args
 ): ReturnValue {

@@ -328,7 +328,7 @@
     "eslint-core/camelcase": [
       "error",
       {
-        "allow": ["^experimental_"],
+        "allow": [],
         "ignoreDestructuring": false,
         "ignoreGlobals": false,
         "ignoreImports": false,

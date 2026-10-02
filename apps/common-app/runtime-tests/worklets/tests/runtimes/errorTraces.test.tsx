@@ -1,5 +1,5 @@
 import {
-  experimental_runOnRNSync,
+  runOnRNSync,
   isBundleModeEnabled,
   runOnUISync,
   scheduleOnUI,
@@ -204,11 +204,11 @@ describe('Error traces from RN', () => {
   });
 
   if (isBundleModeEnabled()) {
-    test('experimental_runOnRNSync rethrows with the RN stack and the caller stack', async () => {
+    test('runOnRNSync rethrows with the RN stack and the caller stack', async () => {
       scheduleOnUI(function functionNameSyncCaller() {
         'worklet';
         try {
-          experimental_runOnRNSync(functionNameRN);
+          runOnRNSync(functionNameRN);
         } catch (error) {
           scheduleOnRN(reportCaughtStack, (error as Error).stack ?? '');
         }
@@ -219,10 +219,10 @@ describe('Error traces from RN', () => {
       expect(caughtStack).toInclude('functionNameSyncCaller');
     });
 
-    test('uncaught experimental_runOnRNSync error keeps RN frames and labels UI frames', async () => {
+    test('uncaught runOnRNSync error keeps RN frames and labels UI frames', async () => {
       scheduleOnUI(function functionNameUncaughtCaller() {
         'worklet';
-        experimental_runOnRNSync(functionNameRN);
+        runOnRNSync(functionNameRN);
       });
 
       await waitForNotification('errorReported');

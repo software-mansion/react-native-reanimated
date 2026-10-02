@@ -170,18 +170,18 @@ jsi::Value runOnRNSync(
     const std::optional<std::string> &scheduleStack
 #endif // NDEBUG
 ) {
-  const auto funObject = funValue.asObject(rt);
+  const auto funObject = funValue.getObject(rt);
   std::shared_ptr<Serializable> serializableFun;
   std::optional<jsi::HostFunctionType> hostFun;
-  if (!funObject.getProperty(rt, "__remoteFunction").isUndefined()) {
+  if (!funObject.getProperty(rt, "__remoteFunction").isUndefined()) [[likely]] {
     serializableFun = extractSerializableOrThrow<SerializableRemoteFunction>(rt, funValue);
-  } else if (funObject.isFunction(rt) && funObject.asFunction(rt).isHostFunction(rt)) {
-    hostFun = funObject.asFunction(rt).getHostFunction(rt);
+  } else if (funObject.isFunction(rt) && funObject.getFunction(rt).isHostFunction(rt)) {
+    hostFun = funObject.getFunction(rt).getHostFunction(rt);
   } else {
     serializableFun = extractSerializableOrThrow<SerializableWorklet>(
         rt,
         funValue,
-        "[Worklets] Locally defined function passed to experimental_runOnRNSync. Only worklets, functions defined on the RN Runtime and host functions can be run on the RN Runtime.");
+        "[Worklets] Locally defined function passed to runOnRNSync. Only worklets, functions defined on the RN Runtime and host functions can be run on the RN Runtime.");
   }
 
   const auto serializableArgs = argsValue.isUndefined()
@@ -198,10 +198,12 @@ jsi::Value runOnRNSync(
           serializableArgs == nullptr ? std::vector<jsi::Value>{} : serializableArgs->getJSIValueArr(rnRuntime);
       const auto result = hostFun.has_value()
           ? (*hostFun)(rnRuntime, jsi::Value::undefined(), args.data(), args.size())
-          : serializableFun->toJSValue(rnRuntime).asObject(rnRuntime).asFunction(rnRuntime).call(
+          : serializableFun->toJSValue(rnRuntime).getObject(rnRuntime).getFunction(rnRuntime).call(
                 rnRuntime, args.data(), args.size());
-      const auto serializer = rnRuntime.global().getPropertyAsFunction(rnRuntime, "__serializer");
-      serializedResult = extractSerializableOrThrow(rnRuntime, serializer.call(rnRuntime, result));
+      serializedResult = result.isUndefined()
+          ? nullptr
+          : extractSerializableOrThrow(
+                rnRuntime, rnRuntime.global().getPropertyAsFunction(rnRuntime, "__serializer").call(rnRuntime, result));
     } catch (const jsi::JSError &error) {
       errorMessage = error.getMessage();
 #ifndef NDEBUG
@@ -515,7 +517,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
           scheduleStack = at<2>(args).asString(rt).utf8(rt);
         }
 
-        if (!fun.getProperty(rt, "__remoteFunction").isUndefined()) [[likely]] { // NOLINT(readability/braces)
+        if (!fun.getProperty(rt, "__remoteFunction").isUndefined()) [[likely]] {
           const auto remoteFunction = extractSerializableOrThrow<SerializableRemoteFunction>(rt, fun);
           jsScheduler->scheduleOnJS([jsScheduler, remoteFunction, serializableArgs, scheduleStack](
                                         jsi::Runtime &rnRuntime) {

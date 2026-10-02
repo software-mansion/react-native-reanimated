@@ -199,9 +199,7 @@ class NodesManager(
                 Trace.beginSection("onEventDispatch")
             }
 
-            if (mNativeProxy == null) {
-                return
-            }
+            val nativeProxy = mNativeProxy ?: return
             // Events can be dispatched from any thread so we have to make sure handleEvent is run from
             // the UI thread.
             if (UiThreadUtil.isOnUiThread()) {
@@ -213,7 +211,7 @@ class NodesManager(
             } else {
                 val eventName = mCustomEventNamesResolver.resolveCustomEventName(event.eventName) ?: return
                 val viewTag = event.viewTag
-                val shouldSaveEvent = mNativeProxy!!.isAnyHandlerWaitingForEvent(eventName, viewTag)
+                val shouldSaveEvent = nativeProxy.isAnyHandlerWaitingForEvent(eventName, viewTag)
                 if (shouldSaveEvent) {
                     mEventQueue.offer(CopiedEvent(event))
                 }

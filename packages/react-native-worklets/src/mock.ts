@@ -73,12 +73,6 @@ const WorkletAPI = {
   },
   createWorkletRuntime: NOOP_FACTORY,
   executeOnUIRuntimeSync: ID,
-  experimental_runOnRNSync<Args extends unknown[], ReturnValue>(
-    fun: (...args: Args) => ReturnValue,
-    ...args: Args
-  ): ReturnValue {
-    return fun(...args);
-  },
   getCurrentThreadId: () => '0',
   getDynamicFeatureFlag: () => false,
   getRuntimeKind: () => RuntimeKind.ReactNative,
@@ -112,6 +106,7 @@ const WorkletAPI = {
           : (fun as () => ReturnValue)
       );
   },
+  runOnRNSync: IMMEDIATE_CALLBACK_INVOCATION,
   runOnRuntime: ID,
   runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
     _workletRuntime: unknown,
