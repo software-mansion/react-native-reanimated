@@ -156,6 +156,25 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations(std::unique_loc
   flushLayoutAnimationOperationsLocked();
 }
 
+// iOS, and Android with accumulated raw props, write the props of an Insert to the view. The shadow props of a view
+// that only moves lack the values that were written synchronously.
+Props::Shared LayoutAnimationsProxyCommon::propsOfMountedView(const ShadowView &view) const {
+#ifdef __APPLE__
+  if (readMountedViewProps_) {
+    if (auto mountedProps = readMountedViewProps_(view.tag)) {
+      return mountedProps;
+    }
+  }
+#elif defined(ANDROID)
+  if (readSynchronousProps_) {
+    if (const auto synchronousProps = readSynchronousProps_(view.tag); !synchronousProps.empty()) {
+      return mergeSynchronousProps(view, synchronousProps);
+    }
+  }
+#endif
+  return view.props;
+}
+
 Props::Shared LayoutAnimationsProxyCommon::mergeSynchronousProps(const ShadowView &view, const folly::dynamic &props)
     const {
   auto rawProps = props;
