@@ -4,6 +4,7 @@
 
 #include <react/renderer/uimanager/UIManager.h>
 
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -20,7 +21,12 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   /// be committed, so the registry entries are redundant.
   jsi::Value collectSettledUpdates(jsi::Runtime &rt, double settledTimestamp);
 
+  void removeUnmounted(const ShadowNodeFamily::Shared &shadowNodeFamily) override;
+  void handleRemount(Tag tag) override;
+
  private:
+  static constexpr size_t MIN_UNMOUNTED_FAMILIES_PRUNE_THRESHOLD = 256;
+
   std::unordered_map<Tag, double> timestampMap_;
   // Tags whose latest values have already been pushed to React `settledProps`.
   // Intentionally retained after eviction to detect re-animation staleness.
@@ -28,6 +34,13 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   // Tags that were synced to React but received a fresh worklet update since;
   // their `settledProps` are stale and need to be refreshed on the next sync.
   std::unordered_set<Tag> invalidatedTags_;
+  // A mapper can still update a view for some frames after the view left the
+  // shadow tree. These updates must not add the view to the registry again.
+  std::unordered_map<Tag, std::weak_ptr<const ShadowNodeFamily>> unmountedFamilies_;
+  size_t unmountedFamiliesPruneThreshold_ = MIN_UNMOUNTED_FAMILIES_PRUNE_THRESHOLD;
+
+  bool isUnmounted(const ShadowNodeFamily &shadowNodeFamily) const;
+  void pruneExpiredUnmountedFamilies();
 
   void removeTag(Tag tag) override;
 };
