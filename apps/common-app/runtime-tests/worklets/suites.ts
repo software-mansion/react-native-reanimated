@@ -7,6 +7,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'memory',
     importTest: () => {
       require('./tests/memory/createSerializable.test');
+      require('./tests/memory/createSerializableTyped.test');
       require('./tests/memory/createSerializableOnUI.test');
       require('./tests/memory/isSerializableRef.test');
       require('./tests/memory/retainingSerializable.test');
