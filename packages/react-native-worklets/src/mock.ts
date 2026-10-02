@@ -106,6 +106,7 @@ const WorkletAPI = {
           : (fun as () => ReturnValue)
       );
   },
+  runOnRNSync: IMMEDIATE_CALLBACK_INVOCATION,
   runOnRuntime: ID,
   runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
     _workletRuntime: unknown,

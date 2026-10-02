@@ -244,6 +244,13 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     this.#workletsModuleProxy.scheduleOnRN(fun, args);
   }
 
+  runOnRNSync<TArgs extends unknown[], TReturn>(
+    fun: RemoteFunction | SerializableRef | ((...args: TArgs) => unknown),
+    args: SerializableRef<TArgs> | undefined
+  ): TReturn {
+    return this.#workletsModuleProxy.runOnRNSync(fun, args);
+  }
+
   scheduleOnUI<TValue>(
     serializableArrayOfWorklets: SerializableRef<TValue[]>,
     serializableArrayOfArguments: SerializableRef<unknown[]>,

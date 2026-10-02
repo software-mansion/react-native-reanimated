@@ -144,6 +144,11 @@ export interface WorkletsModuleProxy {
     args: SerializableRef<TArgs> | undefined
   ): void;
 
+  runOnRNSync<TArgs extends unknown[], TReturn>(
+    fun: RemoteFunction | SerializableRef | ((...args: TArgs) => unknown),
+    args: SerializableRef<TArgs> | undefined
+  ): TReturn;
+
   scheduleOnUI<TValue>(
     serializableArrayOfWorklets: SerializableRef<TValue[]>,
     serializableArrayOfArguments: SerializableRef<unknown[]>,

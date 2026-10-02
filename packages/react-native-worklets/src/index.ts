@@ -79,6 +79,7 @@ export {
   executeOnUIRuntimeSync,
   getCurrentThreadId,
   runOnJS,
+  runOnRNSync,
   runOnUI,
   runOnUIAsync,
   runOnUISync,
