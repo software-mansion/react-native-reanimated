@@ -320,7 +320,7 @@ void LayoutAnimationsProxy::overrideTransform(
 #ifdef ANDROID
   auto array = folly::dynamic::array(folly::dynamic::object("matrix", transform->operator folly::dynamic()));
   const folly::dynamic newTransformDynamic = folly::dynamic::object("transform", array);
-  auto newRawProps = folly::dynamic::merge(shadowView.props->rawProps, newTransformDynamic);
+  auto newRawProps = withBaseRawProps(shadowView.props, newTransformDynamic);
   auto newProps = componentDescriptorRegistry_->at(shadowView.componentHandle)
                       .cloneProps(propsParserContext, shadowView.props, RawProps(newRawProps));
   auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));

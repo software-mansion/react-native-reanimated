@@ -92,8 +92,7 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
   }
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
 #ifdef RN_SERIALIZABLE_STATE
-  rawProps = std::make_shared<RawProps>(
-      folly::dynamic::merge(layoutAnimation.finalView.props->rawProps, (folly::dynamic)*rawProps));
+  rawProps = std::make_shared<RawProps>(withBaseRawProps(layoutAnimation.finalView.props, (folly::dynamic)*rawProps));
 #endif
   auto newProps = componentDescriptorRegistry_->at(layoutAnimation.finalView.componentHandle)
                       .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(*rawProps));
@@ -179,7 +178,7 @@ Props::Shared LayoutAnimationsProxyCommon::mergeSynchronousProps(const ShadowVie
     const {
   auto rawProps = props;
 #ifdef RN_SERIALIZABLE_STATE
-  rawProps = folly::dynamic::merge(view.props->rawProps, rawProps);
+  rawProps = withBaseRawProps(view.props, rawProps);
 #endif
   const PropsParserContext propsParserContext{view.surfaceId, *contextContainer_};
   return componentDescriptorRegistry_->at(view.componentHandle)
@@ -676,7 +675,7 @@ ShadowView LayoutAnimationsProxyCommon::cloneViewWithOpacity(
   auto newView = shadowView;
   folly::dynamic opacityProps = folly::dynamic::object("opacity", opacity);
 #ifdef ANDROID
-  opacityProps = folly::dynamic::merge(shadowView.props->rawProps, opacityProps);
+  opacityProps = withBaseRawProps(shadowView.props, opacityProps);
 #endif
   newView.props = componentDescriptorRegistry_->at(newView.componentHandle)
                       .cloneProps(propsParserContext, newView.props, RawProps(opacityProps));
