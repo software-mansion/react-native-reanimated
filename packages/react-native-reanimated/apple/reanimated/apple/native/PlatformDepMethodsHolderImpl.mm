@@ -208,6 +208,31 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
   return forceScreenSnapshot;
 }
 
+ObtainMountedViewPropsFunction makeObtainMountedViewPropsFunction(REANodesManager *nodesManager)
+{
+  return [=](Tag tag) -> std::optional<MountedViewProps> {
+#if TARGET_OS_OSX
+    return std::nullopt;
+#else
+    RCTComponentViewRegistry *componentViewRegistry =
+        nodesManager.surfacePresenter.mountingManager.componentViewRegistry;
+    REAUIView *view = [componentViewRegistry findComponentViewWithTag:tag];
+    if (view == nil || view.window == nil) {
+      return std::nullopt;
+    }
+    const CGSize size = view.bounds.size;
+    const CGPoint anchor = view.layer.anchorPoint;
+    return MountedViewProps{
+        .x = view.center.x - size.width * anchor.x,
+        .y = view.center.y - size.height * anchor.y,
+        .width = size.width,
+        .height = size.height,
+        .opacity = view.alpha,
+    };
+#endif
+  };
+}
+
 PlatformAttachPseudoSelectorFunction makeAttachPseudoSelectorFunction(REAPseudoSelectorAttachQueue *attachQueue)
 {
   return [attachQueue](Tag tag, PseudoSelector selector, std::function<void(bool)> callback) {
@@ -255,6 +280,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(attachQueue);
   auto detachPseudoSelectorFunction = makeDetachPseudoSelectorFunction(attachQueue);
 
+  auto obtainMountedViewPropsFunction = makeObtainMountedViewPropsFunction(nodesManager);
+
   auto platformTransitionBackend = makePlatformTransitionBackend(nodesManager);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
@@ -270,6 +297,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       maybeFlushUIUpdatesQueueFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
+      obtainMountedViewPropsFunction,
       platformTransitionBackend,
   };
   return platformDepMethodsHolder;
