@@ -138,6 +138,14 @@ void NativeProxy::performNonLayoutOperations() {
   reanimatedModuleProxy_->performNonLayoutOperations();
 }
 
+bool NativeProxy::hasSynchronousWritesTracker() {
+  return reanimatedModuleProxy_->hasSynchronousWritesTracker();
+}
+
+void NativeProxy::rewriteSynchronousProps() {
+  reanimatedModuleProxy_->rewriteSynchronousProps();
+}
+
 bool NativeProxy::getIsReducedMotion() {
   static const auto method = getJniMethod<jboolean()>("getIsReducedMotion");
   return method(javaPart_.get());
@@ -151,9 +159,11 @@ void NativeProxy::registerNatives() {
   registerHybrid(
       {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
        makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
-       makeNativeMethod("isAnyHandlerWaitingForEvent", NativeProxy::isAnyHandlerWaitingForEvent),
-       makeNativeMethod("performOperations", NativeProxy::performOperations),
-       makeNativeMethod("performNonLayoutOperations", NativeProxy::performNonLayoutOperations),
+       makeNativeMethod("isAnyHandlerWaitingForEventCpp", NativeProxy::isAnyHandlerWaitingForEvent),
+       makeNativeMethod("performOperationsCpp", NativeProxy::performOperations),
+       makeNativeMethod("performNonLayoutOperationsCpp", NativeProxy::performNonLayoutOperations),
+       makeNativeMethod("hasSynchronousWritesTracker", NativeProxy::hasSynchronousWritesTracker),
+       makeNativeMethod("rewriteSynchronousProps", NativeProxy::rewriteSynchronousProps),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp),
        makeNativeMethod("toggleSlowAnimationsOnUIRuntime", NativeProxy::toggleSlowAnimationsOnUIRuntime)});
 }

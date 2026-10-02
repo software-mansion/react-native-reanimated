@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   SharedTransition,
   SharedTransitionBoundary,
@@ -11,6 +11,7 @@ import {
   notify,
   render,
   test,
+  wait,
   waitForFrames,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
@@ -55,7 +56,32 @@ function Screens({
   );
 }
 
+// On Android a nested Text forms a view whose props are TextProps, not ViewProps.
+function NestedTextScreens({ targetActive }: { targetActive: boolean }) {
+  return (
+    <View style={styles.container}>
+      <SharedTransitionBoundary isActive={!targetActive}>
+        <Text>
+          source <Animated.Text sharedTransitionTag="text">inner</Animated.Text>
+        </Text>
+      </SharedTransitionBoundary>
+      <SharedTransitionBoundary isActive={targetActive}>
+        <Text>
+          target <Animated.Text sharedTransitionTag="text">inner</Animated.Text>
+        </Text>
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
 describe('Shared element transition between boundaries', () => {
+  test('ignores a nested Text with a shared tag', async () => {
+    await render(<NestedTextScreens targetActive={false} />);
+    await waitForFrames();
+    await render(<NestedTextScreens targetActive />);
+    await wait(500);
+  });
+
   test('runs to completion', async () => {
     const finished: boolean[] = [];
     const transition = createTransition(finished);
