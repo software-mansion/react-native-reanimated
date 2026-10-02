@@ -80,11 +80,36 @@ function FlattenedWrapper({
   flat: boolean;
   dropped: DroppedKind;
 }) {
+  const wrapperRef = useTestRef('wrapper');
   const ref = useTestRef('kept');
   return (
-    <View style={flat ? undefined : styles.wrapper}>
+    <View ref={wrapperRef} style={flat ? undefined : styles.wrapper}>
       <Animated.View ref={ref} style={styles.kept} />
       {!flat && <DroppedChild kind={dropped} />}
+    </View>
+  );
+}
+
+function NestedFlattenedWrappers({
+  flat,
+  flattensOuter,
+  dropped,
+}: {
+  flat: boolean;
+  flattensOuter: boolean;
+  dropped: DroppedKind;
+}) {
+  const outerRef = useTestRef('outer');
+  const innerRef = useTestRef('inner');
+  const keptRef = useTestRef('kept');
+  return (
+    <View
+      ref={outerRef}
+      style={flat && flattensOuter ? undefined : styles.wrapper}>
+      <View ref={innerRef} style={flat ? undefined : styles.wrapper}>
+        <Animated.View ref={keptRef} style={styles.kept} />
+        {!flat && <DroppedChild kind={dropped} />}
+      </View>
     </View>
   );
 }
@@ -150,6 +175,8 @@ describe('View flattening', () => {
       await waitForFrames();
       const secondDroppedTags = getDroppedTags(dropped);
       await expectMountedNatively(secondDroppedTags, true);
+      const wrapperTag = getTestComponent('wrapper').getTag();
+      expect(await isViewMountedNatively(wrapperTag)).toBe(true);
       await wait(500);
       await expectMountedNatively(firstDroppedTags, false);
       await render(<FlattenedWrapper flat dropped={dropped} />);
@@ -159,6 +186,53 @@ describe('View flattening', () => {
       expect(await isViewMountedNatively(tag)).toBe(true);
       await expectMountedNatively(firstDroppedTags, false);
       await expectMountedNatively(secondDroppedTags, false);
+    }
+  );
+
+  test.each(
+    [true, false].flatMap((flattensOuter) =>
+      (['plain', 'nested', 'exiting'] as const).map((dropped) => ({
+        parents: flattensOuter ? 'both parents' : 'the inner parent',
+        flattensOuter,
+        dropped,
+      }))
+    )
+  )(
+    'flattens ${parents} of two nested ones while a child of the inner one is deleted, child: ${dropped}',
+    async ({ flattensOuter, dropped }) => {
+      const renderWrappers = (flat: boolean) =>
+        render(
+          <NestedFlattenedWrappers
+            flat={flat}
+            flattensOuter={flattensOuter}
+            dropped={dropped}
+          />
+        );
+      await renderWrappers(false);
+      await waitForFrames();
+      const tag = getTestComponent('kept').getTag();
+      const outerTag = getTestComponent('outer').getTag();
+      const innerTag = getTestComponent('inner').getTag();
+      const firstDroppedTag = getTestComponent('dropped').getTag();
+      expect(await isViewMountedNatively(firstDroppedTag)).toBe(true);
+
+      await renderWrappers(true);
+      await waitForFrames();
+      // unflattens the wrappers while they may still be withheld for the exiting child
+      await renderWrappers(false);
+      await waitForFrames();
+      const secondDroppedTag = getTestComponent('dropped').getTag();
+      expect(await isViewMountedNatively(outerTag)).toBe(true);
+      expect(await isViewMountedNatively(innerTag)).toBe(true);
+      expect(await isViewMountedNatively(secondDroppedTag)).toBe(true);
+      await renderWrappers(true);
+      await wait(500);
+
+      expect(getTestComponent('kept').getTag()).toBe(tag);
+      expect(await isViewMountedNatively(tag)).toBe(true);
+      expect(await isViewMountedNatively(outerTag)).toBe(!flattensOuter);
+      expect(await isViewMountedNatively(firstDroppedTag)).toBe(false);
+      expect(await isViewMountedNatively(secondDroppedTag)).toBe(false);
     }
   );
 
