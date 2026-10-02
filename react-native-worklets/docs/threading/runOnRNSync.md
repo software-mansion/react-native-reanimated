@@ -43,7 +43,7 @@ Arguments to pass to the function. They must be convertible to a [Serializable](
 
 * When called on the RN Runtime, `runOnRNSync` calls the function directly.
 * On the UI Runtime and Worker Runtimes, `runOnRNSync` works only with the [Bundle Mode](/docs/bundleMode/).
-* An error thrown by the function is rethrown on the calling runtime with the same message and stack.
+* An error thrown by the function is rethrown on the calling runtime with the same message. In development builds its stack holds the RN Runtime frames, labeled `[RN]`, followed by the stack of the `runOnRNSync` call.
 * The calling thread is blocked while the JavaScript thread runs the function. Don't call `runOnRNSync` in code that runs every frame.
 * `runOnRNSync` deadlocks if the JavaScript thread is waiting for the calling runtime at the same time. For example, a worklet on the UI Runtime must not call `runOnRNSync` while the RN Runtime waits in [`runOnUISync`](/docs/threading/runOnUISync) for the UI Runtime. Calling `runOnRNSync` from inside `runOnUISync` is safe, because that worklet already runs on the JavaScript thread.
 

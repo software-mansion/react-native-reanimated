@@ -15,7 +15,7 @@
 
 <script>!function(){try{var e=location.pathname;if(["/react-native-worklets/docs","/react-native-worklets/search"].some(function(t){return e===t||0===e.indexOf(t+"/")}))return;var t=localStorage.getItem("swm.topbarbanner.v1.react-native-worklets-topbar-1.ea15c4216158c4097b65fe6504a4b3b7");if(!t)return;var r=JSON.parse(t);if(!r||"number"!=typeof r.height||r.height<5)return;if(Date.now()-r.timestamp>=2592e6)return;var a=document.documentElement;a.style.setProperty("--banner-height-react-native-worklets-topbar-1-ea15c4216158c4097b65fe6504a4b3b7",r.height+"px"),"string"==typeof r.bgColor&&a.style.setProperty("--banner-bg-react-native-worklets-topbar-1-ea15c4216158c4097b65fe6504a4b3b7",r.bgColor)}catch(e){}}()</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://swmansion.com/#organization","name":"Software Mansion","url":"https://swmansion.com","sameAs":["https://github.com/software-mansion","https://www.linkedin.com/company/software-mansion/","https://twitter.com/swmansion","https://www.youtube.com/c/SoftwareMansion"]},{"@type":"SoftwareSourceCode","name":"React Native Worklets","description":"Multithreading engine for React Native apps and libraries.","codeRepository":"https://github.com/software-mansion/react-native-reanimated","programmingLanguage":["TypeScript","C++"],"runtimePlatform":"React Native","author":{"@id":"https://swmansion.com/#organization"},"maintainer":{"@id":"https://swmansion.com/#organization"}}]}</script><link rel="stylesheet" href="/react-native-worklets/assets/css/styles.0eb50243.css">
-<script src="/react-native-worklets/assets/js/runtime~main.d820f4ae.js" defer="defer"></script>
+<script src="/react-native-worklets/assets/js/runtime~main.77b18f9e.js" defer="defer"></script>
 <script src="/react-native-worklets/assets/js/main.43df1049.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -42,7 +42,7 @@
 <ul>
 <li>When called on the RN Runtime, <code>runOnRNSync</code> calls the function directly.</li>
 <li>On the UI Runtime and Worker Runtimes, <code>runOnRNSync</code> works only with the <a href="/react-native-worklets/docs/bundleMode/">Bundle Mode</a>.</li>
-<li>An error thrown by the function is rethrown on the calling runtime with the same message and stack.</li>
+<li>An error thrown by the function is rethrown on the calling runtime with the same message. In development builds its stack holds the RN Runtime frames, labeled <code>[RN]</code>, followed by the stack of the <code>runOnRNSync</code> call.</li>
 <li>The calling thread is blocked while the JavaScript thread runs the function. Don&#x27;t call <code>runOnRNSync</code> in code that runs every frame.</li>
 <li><code>runOnRNSync</code> deadlocks if the JavaScript thread is waiting for the calling runtime at the same time. For example, a worklet on the UI Runtime must not call <code>runOnRNSync</code> while the RN Runtime waits in <a href="/react-native-worklets/docs/threading/runOnUISync/"><code>runOnUISync</code></a> for the UI Runtime. Calling <code>runOnRNSync</code> from inside <code>runOnUISync</code> is safe, because that worklet already runs on the JavaScript thread.</li>
 </ul>
