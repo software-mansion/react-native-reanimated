@@ -27,6 +27,7 @@
 ## Memory
 
 - [createSerializable](https://docs.swmansion.com/react-native-worklets/docs/memory/createSerializable)
+- [createSerializableTyped](https://docs.swmansion.com/react-native-worklets/docs/memory/createSerializableTyped)
 - [createShareable](https://docs.swmansion.com/react-native-worklets/docs/memory/createShareable)
 - [createSynchronizable](https://docs.swmansion.com/react-native-worklets/docs/memory/createSynchronizable)
 - [isSerializableRef](https://docs.swmansion.com/react-native-worklets/docs/memory/isSerializableRef)
