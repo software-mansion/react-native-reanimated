@@ -6,6 +6,7 @@
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
+#include <react/renderer/core/Props.h>
 #include <react/renderer/core/ReactPrimitives.h>
 
 #include <memory>
@@ -48,6 +49,7 @@ using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
 using ForceScreenSnapshotFunction = std::function<bool(Tag tag)>;
+using ReadMountedViewPropsFunction = std::function<Props::Shared(Tag tag)>;
 
 using PlatformAttachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector, std::function<void(bool)>)>;
 using PlatformDetachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector)>;
@@ -59,6 +61,7 @@ struct PlatformDepMethodsHolder {
 #endif // ANDROID
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshotFunction;
+  ReadMountedViewPropsFunction readMountedViewPropsFunction;
 #endif
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   GetAnimationTimestampFunction getAnimationTimestamp;

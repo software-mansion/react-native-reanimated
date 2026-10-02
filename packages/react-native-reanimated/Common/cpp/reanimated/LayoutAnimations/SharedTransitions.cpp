@@ -493,9 +493,10 @@ void LayoutAnimationsProxy::hideTransitioningViews(
 }
 
 // The hide in hideTransitioningViews is not stored in the light tree, so a
-// later Update for the same view carries full opacity and would show the view
-// again. Force opacity 0 on every outgoing Update for a hidden view until the
-// restore in cleanupSharedTransitions removes its tag from hiddenViewTags_.
+// later Update or Insert for the same view carries full opacity and would show
+// the view again. Force opacity 0 on every outgoing Update and Insert for a
+// hidden view until the restore in cleanupSharedTransitions removes its tag
+// from hiddenViewTags_.
 void LayoutAnimationsProxy::keepTransitioningViewsHidden(
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext) const {
@@ -503,11 +504,9 @@ void LayoutAnimationsProxy::keepTransitioningViewsHidden(
     return;
   }
   for (auto &mutation : filteredMutations) {
-    if (mutation.type == ShadowViewMutation::Update && hiddenViewTags_.contains(mutation.newChildShadowView.tag)) {
-      mutation = ShadowViewMutation::UpdateMutation(
-          mutation.oldChildShadowView,
-          cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext),
-          mutation.parentTag);
+    const bool writesProps = mutation.type == ShadowViewMutation::Update || mutation.type == ShadowViewMutation::Insert;
+    if (writesProps && hiddenViewTags_.contains(mutation.newChildShadowView.tag)) {
+      mutation.newChildShadowView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
     }
   }
 }

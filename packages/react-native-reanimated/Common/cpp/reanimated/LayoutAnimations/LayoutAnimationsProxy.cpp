@@ -457,8 +457,13 @@ void LayoutAnimationsProxy::updateLightTree(
             filteredMutations.push_back(
                 ShadowViewMutation::InsertMutation(mutation.parentTag, node->previous, hostIndex));
           } else {
-            filteredMutations.push_back(
-                ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
+            auto view = mutation.newChildShadowView;
+            const auto updatedViewIt = updatedViews.find(tag);
+            const bool propsChanged = updatedViewIt != updatedViews.end() && updatedViewIt->second.props != view.props;
+            if (!propsChanged) {
+              view.props = propsOfMountedView(view);
+            }
+            filteredMutations.push_back(ShadowViewMutation::InsertMutation(mutation.parentTag, view, hostIndex));
           }
         } else if (enteringConfig) {
           transaction.entering.push_back({node, enteringConfig});
