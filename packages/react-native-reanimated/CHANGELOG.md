@@ -1,5 +1,29 @@
 # Changelog
 
+## 4.7.1 — 2026-10-02
+
+### 🐛 Bug fixes
+
+- Fix a reset of synchronously updated props to old values when a commit moves a view to another position in its parent, for example after a `zIndex` change of a sibling, on iOS and on Android with `enableAccumulatedUpdatesInRawPropsAndroid`. ([#10800](https://github.com/software-mansion/react-native-reanimated/pull/10800) by [@pawicao](https://github.com/pawicao))
+- Fix an Android crash with `[Reanimated] Unknown sensor type.` in `useAnimatedSensor` on devices that deliver sensor events labeled with a sensor other than the registered one. ([#10792](https://github.com/software-mansion/react-native-reanimated/pull/10792) by [@pawicao](https://github.com/pawicao))
+- Fix an Android crash with `react-native-screens` before 4.27 when a native stack screen that holds a nested stack with header buttons is removed. ([#10754](https://github.com/software-mansion/react-native-reanimated/pull/10754) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+- Fix shared element transitions casting the props of a nested `<Text>` with a `sharedTransitionTag` on Android to view props. ([#10741](https://github.com/software-mansion/react-native-reanimated/pull/10741) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+- Fix a native crash on Android caused by reading `opacity` from the props of a `<Text>` nested in another `<Text>` as if they were view props. ([#10732](https://github.com/software-mansion/react-native-reanimated/pull/10732) by [@hirvesh](https://github.com/hirvesh))
+- Fix `withTiming` extrapolating its easing when the first frame reports a timestamp earlier than the animation's `startTime`, which happens when the animation is started outside a frame flush. With an easing whose first control point is `x1 = 0` the Newton-Raphson solver in `Easing.bezier` diverges just outside its domain, so the animated value could land orders of magnitude out of range for a single frame. ([#10720](https://github.com/software-mansion/react-native-reanimated/pull/10720) by [@piaskowyk](https://github.com/piaskowyk))
+- Flush completed exiting view removals in the legacy layout animations proxy when Android's mounting coordinator pull model is enabled. ([#10704](https://github.com/software-mansion/react-native-reanimated/pull/10704) by [@piaskowyk](https://github.com/piaskowyk))
+- Fix exiting Layout Animations leaking their views on Android under the mounting coordinator pull model, where the structural cleanup of a finished animation was never flushed. ([#10682](https://github.com/software-mansion/react-native-reanimated/pull/10682) by [@piaskowyk](https://github.com/piaskowyk))
+- Fix a crash of the Layout Animations proxy (`shadowIndex is out of range`, `Indices are wrong in Remove mutation`, or memory corruption in release builds) when a view flattens in the same commit in which its parent unflattens. ([#10676](https://github.com/software-mansion/react-native-reanimated/pull/10676) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+- Fix an Android crash in `performOperations` when the React host is torn down while a CSS or layout animation runs in the background, for example on an `expo-updates` restart. ([#10661](https://github.com/software-mansion/react-native-reanimated/pull/10661) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+- Fix an animated view that showed an older value for one frame when a React commit mounted over a newer synchronous write, with `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` or `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` on. ([#10631](https://github.com/software-mansion/react-native-reanimated/pull/10631) by [@pawicao](https://github.com/pawicao))
+- Fix a crash in `useAnimatedKeyboard` on iOS when the app delegate does not declare `window`, as in apps that use the UIScene lifecycle. ([#10587](https://github.com/software-mansion/react-native-reanimated/pull/10587) by [@CAMOBAP](https://github.com/CAMOBAP))
+- Skip synchronous Android prop updates for unmounted views to avoid throwing and logging mounting-layer exceptions on the UI thread. ([#10435](https://github.com/software-mansion/react-native-reanimated/pull/10435) by [@ryan-saffer](https://github.com/ryan-saffer))
+
+### 💡 Others
+
+- Initialize the layout animations light tree root from the committed root shadow node. ([#10737](https://github.com/software-mansion/react-native-reanimated/pull/10737) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+- Simplify the light tree based Layout Animations proxy so that every view React deletes waits for one decision of how it exits, and name the states of a light node after what they mean. ([#10677](https://github.com/software-mansion/react-native-reanimated/pull/10677) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+- Rename the `DEAD` exiting state of the light tree based Layout Animations proxy to `COMPLETED`. ([#10629](https://github.com/software-mansion/react-native-reanimated/pull/10629) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+
 ## 4.7.0 — 2026-09-18
 
 ### 🛠 Breaking changes
