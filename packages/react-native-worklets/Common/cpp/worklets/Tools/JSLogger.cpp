@@ -54,7 +54,14 @@ static std::string labelStackFrames(const std::string &rawStack, const std::stri
     size_t next = rawStack.find(sep, pos + sep.size());
     size_t end = (next == std::string::npos) ? rawStack.size() : next;
     const auto frame = rawStack.substr(pos + sep.size(), end - (pos + sep.size()));
-    result += frame.starts_with(" [") ? sep + frame : "\n    at [" + label + "]:" + frame;
+    if (frame.starts_with(" [")) {
+      result += sep;
+    } else {
+      result += "\n    at [";
+      result += label;
+      result += "]:";
+    }
+    result += frame;
     pos = next;
   }
   return result;
