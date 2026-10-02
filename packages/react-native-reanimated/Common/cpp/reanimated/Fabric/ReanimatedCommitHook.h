@@ -47,6 +47,8 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
 
  private:
   void trackCommit(const RootShadowNode::Shared &rootShadowNode, bool carriesRegistryValues) const;
+  void trackWillCommit(const RootShadowNode::Shared &rootShadowNode, bool carriesRegistryValues) const;
+  void trackDidCommit(const RootShadowNode::Shared &rootShadowNode) const;
 
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
