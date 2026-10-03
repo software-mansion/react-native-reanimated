@@ -42,7 +42,9 @@ function assignTransformRules(
 // convert it to `px`. Therefore if we want to keep transform we have to add 'px' suffix to each of translate values
 // that are present inside transform.
 //
-function addPxToTransform(transform: TransformType) {
+function addPxToTransform(
+  transform: TransformType | readonly ReanimatedWebTransformProperties[]
+) {
   type RNTransformProp = NonNullable<(typeof transform)[number]>;
 
   // @ts-ignore `existingTransform` cannot be string because in that case
@@ -74,7 +76,7 @@ export function createCustomKeyFrameAnimation(
 ) {
   for (const value of Object.values(keyframeDefinitions)) {
     if (value.transform) {
-      value.transform = addPxToTransform(value.transform as TransformType);
+      value.transform = addPxToTransform(value.transform);
     }
   }
 

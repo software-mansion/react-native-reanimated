@@ -26,7 +26,7 @@ export type LoggerConfig = {
 
 export type LoggerConfigInternal = {
   logFunction: LogFunction;
-  onLog?: LogFunction;
+  onLog?: LogFunction | undefined;
 } & Required<LoggerConfig>;
 
 function logToConsole(data: LogData) {

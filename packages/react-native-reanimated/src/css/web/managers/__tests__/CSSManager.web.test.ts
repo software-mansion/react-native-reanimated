@@ -10,7 +10,9 @@ jest.mock('../CSSTransitionsManager');
 
 const builderKey = () => jest.mocked(CSSAnimationsManager).mock.calls[0][1];
 
-const viewInfo = (DOMElement: ViewInfo['DOMElement']): ViewInfo => ({
+const viewInfo = (
+  DOMElement: Exclude<ViewInfo['DOMElement'], undefined>
+): ViewInfo => ({
   viewTag: null,
   shadowNodeWrapper: null,
   DOMElement,
