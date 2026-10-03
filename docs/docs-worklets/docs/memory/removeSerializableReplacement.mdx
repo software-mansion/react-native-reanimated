@@ -1,0 +1,47 @@
+---
+sidebar_position: 42 # Use alphabetical order
+---
+
+<Badges version="0.14.0">
+  # removeSerializableReplacement
+</Badges>
+
+Removes a replacement set with [setSerializableReplacement](/docs/memory/setSerializableReplacement). The next time the object is [serialized](/docs/memory/serializable), Worklets serializes the object itself.
+
+## Reference
+
+```typescript
+import {
+  removeSerializableReplacement,
+  scheduleOnUI,
+  setSerializableReplacement,
+} from 'react-native-worklets';
+
+const flag = { current: false };
+setSerializableReplacement(flag, { current: true });
+removeSerializableReplacement(flag);
+
+scheduleOnUI(() => {
+  console.log(flag.current); // logs `false`
+});
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function removeSerializableReplacement(value: object): void;
+  ```
+</details>
+
+## Arguments
+
+### value
+
+The object whose replacement to remove. It's compared by reference.
+
+## Remarks
+
+- If `value` has no replacement, `removeSerializableReplacement` does nothing.
+- Passing a [SerializableRef](/docs/memory/isSerializableRef) does nothing.
+- On the Web `removeSerializableReplacement` does nothing.

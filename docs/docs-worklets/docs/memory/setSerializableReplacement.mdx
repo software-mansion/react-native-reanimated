@@ -1,0 +1,47 @@
+---
+sidebar_position: 42 # Use alphabetical order
+---
+
+<Badges version="0.14.0">
+  # setSerializableReplacement
+</Badges>
+
+`setSerializableReplacement` makes Worklets send a different value to other Runtimes in place of a given object. Whenever the object is [serialized](/docs/memory/serializable), for example when a [worklet](/docs/fundamentals/glossary#worklet) captures it in its closure, the replacement is sent instead.
+
+## Reference
+
+```typescript
+import { scheduleOnUI, setSerializableReplacement } from 'react-native-worklets';
+
+const flag = { current: false };
+setSerializableReplacement(flag, { current: true });
+
+scheduleOnUI(() => {
+  console.log(flag.current); // logs `true`
+});
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function setSerializableReplacement(value: object, replacement: unknown): void;
+  ```
+</details>
+
+## Arguments
+
+### value
+
+The object to replace. It's compared by reference.
+
+### replacement
+
+The value to send in place of `value`. It's serialized once, when `setSerializableReplacement` is called. It can also be a [SerializableRef](/docs/memory/isSerializableRef), which is used as is.
+
+## Remarks
+
+- A replacement overrides an earlier one for the same `value`.
+- Use [hasSerializableReplacement](/docs/memory/hasSerializableReplacement) to check whether `value` already has a replacement.
+- Use [removeSerializableReplacement](/docs/memory/removeSerializableReplacement) to remove the replacement.
+- On the Web `setSerializableReplacement` does nothing, because values aren't serialized there.

@@ -2,10 +2,10 @@
 import { useState } from 'react';
 import type { HostInstance } from 'react-native';
 import {
-  createSerializable,
   createShareable,
+  hasSerializableReplacement,
   scheduleOnUI,
-  serializableMappingCache,
+  setSerializableReplacement,
   UIRuntimeId,
 } from 'react-native-worklets';
 
@@ -38,9 +38,8 @@ export function useAnimatedRef<
     return currentWrapper;
   });
 
-  if (!serializableMappingCache.get(resultRef)) {
-    const animatedRefSerializable = createSerializable(sharedWrapper);
-    serializableMappingCache.set(resultRef, animatedRefSerializable);
+  if (!hasSerializableReplacement(resultRef)) {
+    setSerializableReplacement(resultRef, sharedWrapper);
   }
 
   return resultRef;
