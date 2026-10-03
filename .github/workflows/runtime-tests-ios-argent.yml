@@ -95,7 +95,9 @@ jobs:
             '!apps/fabric-example/scripts/**',
             'apps/common-app/**',
             'packages/react-native-reanimated/**',
-            'packages/react-native-worklets/**'
+            'packages/react-native-worklets/**',
+            'scripts/patches/**',
+            'scripts/toggle-bundle-mode.sh'
             ) }}
 
       - name: Use Ruby version from `.ruby-version` file
