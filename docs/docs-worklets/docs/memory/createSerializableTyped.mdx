@@ -1,0 +1,46 @@
+---
+sidebar_position: 42 # Use alphabetical order
+sidebar_label: createSerializable[Type]
+---
+
+<Badges version="0.14.0">
+  # createSerializable\[Type]
+</Badges>
+
+Typed versions of [createSerializable](/docs/memory/createSerializable). Each one accepts one type of value. In development builds, it throws if it gets anything else.
+
+```typescript
+import { createSerializableMap, scheduleOnUI } from 'react-native-worklets';
+
+const serializableMap = createSerializableMap(new Map([['answer', 42]]));
+
+scheduleOnUI(() => {
+  'worklet';
+  console.log(serializableMap.get('answer')); // 42
+});
+```
+
+| Function | Accepts |
+| --- | --- |
+| `createSerializableString` | `string` |
+| `createSerializableNumber` | `number` |
+| `createSerializableBoolean` | `boolean` |
+| `createSerializableBigInt` | `bigint` |
+| `createSerializableNull` | `null` |
+| `createSerializableUndefined` | `undefined` |
+| `createSerializableArray` | `Array` |
+| `createSerializableObject` | Plain object |
+| `createSerializableMap` | `Map` |
+| `createSerializableSet` | `Set` |
+| `createSerializableError` | `Error` |
+| `createSerializableRegExp` | `RegExp` |
+| `createSerializableArrayBuffer` | `ArrayBuffer` |
+| `createSerializableArrayBufferView` | Typed array, for example `Uint8Array`, or `DataView` |
+| `createSerializableWorklet` | [Worklet](/docs/fundamentals/glossary#worklet) |
+| `createSerializableRemoteFunction` | Function that is not a worklet. In the [Bundle Mode](/docs/bundleMode/) it can be a function from any runtime, otherwise only from the RN Runtime |
+| `createSerializableHostObject` | JSI host object |
+
+## Remarks
+
+- Elements of arrays, objects, maps and sets are converted with `createSerializable`.
+- On the Web these functions return the value unchanged.
