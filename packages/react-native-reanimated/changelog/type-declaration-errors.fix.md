@@ -1,0 +1,1 @@
+Fix two shipped type declarations that break consumers under `exactOptionalPropertyTypes` or `skipLibCheck: false` - `AnimationObject.current` accepts the `undefined` that `withDecay` creates the animation with, so `DecayAnimation` extends it, and the global `Navigator` augmentation declares `userAgent` and `vendor` `readonly` to match the DOM lib.
