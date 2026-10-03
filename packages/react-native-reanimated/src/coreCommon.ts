@@ -1,0 +1,173 @@
+'use strict';
+import { isEdgeToEdge } from 'react-native-is-edge-to-edge';
+
+import { logger } from './common';
+import type {
+  InternalHostInstance,
+  LayoutAnimationBatchItem,
+  SensorConfig,
+  SensorType,
+  SharedValue,
+  Value3D,
+  ValueRotation,
+} from './commonTypes';
+import { ReanimatedModule } from './ReanimatedModule';
+import { SensorContainer } from './SensorContainer';
+
+export { startMapper, stopMapper } from './mappers';
+export { makeMutable } from './mutables';
+
+export const EDGE_TO_EDGE = /* @__PURE__ */ isEdgeToEdge();
+
+/**
+ * @deprecated Please use the exported variable `reanimatedVersion` instead.
+ * @returns `false` in Reanimated 4, `true` in Reanimated 3, doesn't exist in
+ *   Reanimated 2 or 1
+ */
+export const isReanimated3 = () => {
+  logger.warn(
+    'The `isReanimated3` function is deprecated. Please use the exported variable `reanimatedVersion` instead.'
+  );
+  return false;
+};
+
+// Superseded by check in `/src/threads.ts`.
+// Used by `react-navigation` to detect if using Reanimated 2 or 3.
+/**
+ * @deprecated Please use the exported variable `reanimatedVersion` instead.
+ * @returns `false` in Reanimated 4, `true` in Reanimated 3, doesn't exist in
+ *   Reanimated 2 or 1
+ */
+export const isConfigured = isReanimated3;
+
+export function getViewProp<T>(
+  viewTag: number,
+  propName: string,
+  component?: InternalHostInstance | null
+): Promise<T> {
+  if (!component) {
+    throw new Error(
+      '[Reanimated] Function `getViewProp` requires a component to be passed as an argument on Fabric.'
+    );
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  return new Promise((resolve, reject) => {
+    return ReanimatedModule.getViewProp(
+      viewTag,
+      propName,
+      component,
+      (result: T) => {
+        if (typeof result === 'string' && result.slice(0, 6) === 'error:') {
+          // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+          reject(result);
+        } else {
+          resolve(result);
+        }
+      }
+    );
+  });
+}
+
+export function getSensorContainer(): SensorContainer {
+  if (!globalThis.__sensorContainer) {
+    globalThis.__sensorContainer = new SensorContainer();
+  }
+  return globalThis.__sensorContainer;
+}
+
+export function createEventHandlerWorklet<TEvent>(
+  eventHandler: (event: TEvent) => void
+) {
+  return function handleEvent(_eventTimestamp: number, event: TEvent) {
+    'worklet';
+    eventHandler(event);
+    // We call mappers here to make sure view updates can be applied in the same frame after an event.
+    if (globalThis.__mapperRun) {
+      globalThis.__mapperRun();
+    } else {
+      function runMappers() {
+        if (globalThis.__mapperRun) {
+          globalThis.__mapperRun();
+        } else {
+          requestAnimationFrame(runMappers);
+        }
+      }
+      requestAnimationFrame(runMappers);
+    }
+  };
+}
+
+export function unregisterEventHandler(id: number): void {
+  return ReanimatedModule.unregisterEventHandler(id);
+}
+
+export function createKeyboardEventHandlerWorklet(
+  eventHandler: (state: number, height: number) => void
+) {
+  // TODO: this should really go with the same code path as other events, that is
+  // via registerEventHandler. For now we are copying the code from there.
+  return function handleEvent(state: number, height: number) {
+    'worklet';
+    eventHandler(state, height);
+    // We call mappers here to make sure view updates can be applied in the same frame after an event.
+    if (globalThis.__mapperRun) {
+      globalThis.__mapperRun();
+    } else {
+      function runMappers() {
+        if (globalThis.__mapperRun) {
+          globalThis.__mapperRun();
+        } else {
+          requestAnimationFrame(runMappers);
+        }
+      }
+      requestAnimationFrame(runMappers);
+    }
+  };
+}
+
+export function unsubscribeFromKeyboardEvents(listenerId: number): void {
+  return ReanimatedModule.unsubscribeFromKeyboardEvents(listenerId);
+}
+
+export function initializeSensor(
+  sensorType: SensorType,
+  config: SensorConfig
+): SharedValue<Value3D | ValueRotation> {
+  const sensorContainer = getSensorContainer();
+  return sensorContainer.initializeSensor(sensorType, config);
+}
+
+export function unregisterSensor(sensorId: number): void {
+  const sensorContainer = getSensorContainer();
+  return sensorContainer.unregisterSensor(sensorId);
+}
+
+/**
+ * @deprecated This function no longer has any effect in Reanimated and will be
+ *   removed in the future.
+ */
+export function enableLayoutAnimations(
+  _flag: boolean,
+  _isCallByUser = true
+): void {
+  logger.warn(
+    '`enableLayoutAnimations` is deprecated and will be removed in the future.'
+  );
+}
+
+export function configureLayoutAnimationBatch(
+  layoutAnimationsBatch: LayoutAnimationBatchItem[]
+): void {
+  ReanimatedModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
+}
+
+export function setShouldAnimateExitingForTag(
+  viewTag: number | HTMLElement,
+  shouldAnimate: boolean
+) {
+  ReanimatedModule.setShouldAnimateExitingForTag(
+    viewTag as number,
+    shouldAnimate
+  );
+}

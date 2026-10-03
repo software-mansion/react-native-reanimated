@@ -1,6 +1,4 @@
 'use strict';
-import { RuntimeKind } from 'react-native-worklets';
-
 import type {
   AnimationObject,
   EasingFunction,
@@ -31,10 +29,7 @@ export function defineAnimation<
   U extends AnimationObject | StyleLayoutAnimation = T, // type that's received
 >(starting: AnimationToDecoration<T, U>, factory: () => T): T {
   'worklet';
-  if (
-    globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative &&
-    IN_STYLE_UPDATER.current
-  ) {
+  if (IN_STYLE_UPDATER.current) {
     return starting as unknown as T;
   }
   const create = () => {
