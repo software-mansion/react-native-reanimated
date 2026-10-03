@@ -1,0 +1,1 @@
+Fix a worklet whose parameter default reads a captured binding throwing `ReferenceError` on the UI thread - the closure destructure lands in the body, which a parameter expression cannot see, so such a parameter is hoisted into the body after it.
