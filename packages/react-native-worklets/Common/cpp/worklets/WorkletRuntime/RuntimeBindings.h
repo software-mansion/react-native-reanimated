@@ -20,6 +20,9 @@ namespace worklets {
 
 struct RuntimeBindings {
   using RequestAnimationFrame = std::function<void(std::function<void(const double)>)>;
+  // Timestamp, in milliseconds, of the platform frame currently being produced.
+  // NaN when no frame is in progress. Must not return a finished frame's timestamp.
+  using GetCurrentFrameTimestamp = std::function<double()>;
   // Host function extracted from RN runtime's `global.nativeLoggingHook`, used
   // to forward logs from Worklet runtimes to the native console in Bundle Mode.
   // Signature:
@@ -30,6 +33,7 @@ struct RuntimeBindings {
   using NativeLoggingHook = jsi::HostFunctionType;
 
   const RequestAnimationFrame requestAnimationFrame;
+  const GetCurrentFrameTimestamp getCurrentFrameTimestamp;
   const NativeLoggingHook nativeLoggingHook;
   const std::shared_ptr<NetworkingBackend> networkingBackend;
 };
