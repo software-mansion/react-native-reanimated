@@ -13,6 +13,13 @@ describe(processFontWeight, () => {
   test('returns undefined for unsupported values', () => {
     expect(processFontWeight('unknown')).toBeUndefined();
   });
+
+  test.each(['constructor', 'toString', '__proto__', 'hasOwnProperty'])(
+    'returns undefined for the Object.prototype member %p',
+    (value) => {
+      expect(processFontWeight(value)).toBeUndefined();
+    }
+  );
 });
 
 describe(processFontVariant, () => {
