@@ -39,7 +39,12 @@ void CSSTransitionsRegistry::setEventMask(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const CSSEventMask eventMask) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
-  getOrCreateTransition(shadowNode)->setEventMask(eventMask);
+  const auto &transition = getOrCreateTransition(shadowNode);
+  // Recorded right away: a run in the same call resumes a moved property from here.
+  auto initialUpdate = transition->setEventMask(eventMask);
+  if (!initialUpdate.empty()) {
+    recordInitialUpdate(transition, initialUpdate);
+  }
 }
 
 void CSSTransitionsRegistry::run(

@@ -72,6 +72,8 @@ class TransitionProgressProvider final {
   void setMilestoneReporter(MilestoneReporter reporter);
 
   void runProgressProvider(const std::string &propertyName, bool isReversed, double timestamp);
+  /// Continues a run started elsewhere, reporting only the milestones still ahead of it.
+  void resumeProgressProvider(const std::string &propertyName, const TransitionTiming &timing, double timestamp);
   void abort(double timestamp);
   void removeProperties(const std::vector<std::string> &propertyNames, double timestamp);
   void removeProperty(const std::string &propertyName, double timestamp);

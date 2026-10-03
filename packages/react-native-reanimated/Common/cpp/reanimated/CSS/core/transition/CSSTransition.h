@@ -64,7 +64,8 @@ class CSSTransition {
 
   void setPseudoLockedProperties(TransitionProperties properties);
 
-  void setEventMask(CSSEventMask eventMask);
+  /// Returns the first loop frame of the platform runs that listening moved to the loop.
+  folly::dynamic setEventMask(CSSEventMask eventMask);
 
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;
@@ -86,6 +87,7 @@ class CSSTransition {
   CSSLoopTransition &ensureLoopTransition();
   void dropPending(const std::vector<std::string> &propertyNames);
   void scheduleLoop(double timestamp);
+  folly::dynamic resumePlatformRunsOnLoop();
   void observeMilestones(CSSLoopTransition &loopTransition);
   void reportMilestone(RunMilestone milestone, const std::string &propertyName, double elapsedTime);
   void emitEvent(CSSEventType type, const std::string &propertyName, double elapsedTime) const;
