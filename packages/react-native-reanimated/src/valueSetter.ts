@@ -45,10 +45,6 @@ export function valueSetter<Value>(
     const initializeAnimation = (timestamp: number) => {
       animation.onStart(animation, mutable.value, timestamp, previousAnimation);
     };
-    const currentTimestamp =
-      global.__frameTimestamp || global._getAnimationTimestamp();
-    initializeAnimation(currentTimestamp);
-
     const step = (timestamp: number) => {
       if (animation.cancelled) {
         return;
@@ -66,7 +62,22 @@ export function valueSetter<Value>(
 
     mutable._animation = animation;
 
-    step(currentTimestamp);
+    if (global.__frameTimestamp !== undefined) {
+      const currentTimestamp = global.__frameTimestamp;
+      initializeAnimation(currentTimestamp);
+      step(currentTimestamp);
+    } else {
+      // Start on the next vsync so the animation clock matches the frame
+      // callback timestamp (avoids a negative first-step elapsed time on web).
+      // See https://github.com/software-mansion/react-native-reanimated/issues/10752
+      requestAnimationFrame((timestamp) => {
+        if (animation.cancelled) {
+          return;
+        }
+        initializeAnimation(timestamp);
+        step(timestamp);
+      });
+    }
   } else {
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
