@@ -380,8 +380,9 @@ open class NativeProxy {
     fun cssRemoveTransition(
         viewTag: Int,
         propertyId: Int,
+        settle: Boolean,
     ) {
-        cssPlatformTransitionsManager.removeTransition(viewTag, propertyId)
+        cssPlatformTransitionsManager.removeTransition(viewTag, propertyId, settle)
     }
 
     @DoNotStrip

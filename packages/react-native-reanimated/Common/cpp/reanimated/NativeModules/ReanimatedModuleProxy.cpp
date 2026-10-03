@@ -586,7 +586,7 @@ void ReanimatedModuleProxy::runCSSTransition(
 
 void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) {
   auto lock = updatesRegistryManager_->lock();
-  cssTransitionsRegistry_->remove(viewTag.asNumber());
+  cssTransitionsRegistry_->detach(viewTag.asNumber());
 }
 
 void ReanimatedModuleProxy::registerPseudoStyles(

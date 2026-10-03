@@ -23,6 +23,10 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
 
   bool needsFlush() const;
 
+  /// Drops the transition of a view that stays on screen; its platform-driven
+  /// properties land on their committed values.
+  void detach(Tag viewTag);
+
   // TODO: In the future we want to decouple config update and run
   void updateConfigOrRun(
       jsi::Runtime &rt,
@@ -70,6 +74,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   std::unordered_set<Tag> updatedTags_;
 
   void removeTag(Tag viewTag) override;
+  void removeTransition(Tag viewTag, bool settle);
   const std::shared_ptr<CSSTransition> &getOrCreateTransition(const std::shared_ptr<const ShadowNode> &shadowNode);
   void updateInUpdatesRegistry(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &updates);
   void recordInitialUpdate(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &initialUpdate);
