@@ -430,7 +430,7 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   }
 
   propagateModuleUpdate(code: string, sourceUrl: string): void {
-    this.#workletsModuleProxy.propagateModuleUpdate(code, sourceUrl);
+    this.#workletsModuleProxy.propagateModuleUpdate?.(code, sourceUrl);
   }
 
   toggleSlowAnimationsOnUIRuntime(): boolean {
