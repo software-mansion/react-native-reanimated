@@ -17,24 +17,25 @@ export function updateRelativeRequires(
   traverse(node, {
     noScope: true,
     CallExpression(nodePath) {
+      const specifier = nodePath.get('arguments')[0];
       if (
-        nodePath.get('callee').isIdentifier({ name: 'require' }) &&
-        nodePath.get('arguments')[0]?.isStringLiteral()
+        !specifier?.isStringLiteral() ||
+        !specifier.node.value.startsWith('.')
       ) {
-        const requiredModule = nodePath.get(
-          'arguments'
-        )[0] as NodePath<StringLiteral>;
-        if (
-          requiredModule.node.value.startsWith('.') &&
+        return;
+      }
+      const callee = nodePath.get('callee');
+      const shouldRebase =
+        callee.isImport() ||
+        (callee.isIdentifier({ name: 'require' }) &&
           canForwardRelativeImport(
             state.file.opts.filename || '',
             state.importForwarding.relativePaths
-          )
-        ) {
-          requiredModule.replaceWith(
-            createImportPathLiteral(requiredModule.node.value, state)
-          );
-        }
+          ));
+      if (shouldRebase) {
+        specifier.replaceWith(
+          createImportPathLiteral(specifier.node.value, state)
+        );
       }
     },
   });
