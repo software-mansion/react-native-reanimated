@@ -82,6 +82,13 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'react-freeze',
+    importTest: () => {
+      require('./tests/reactFreeze/propDriven.test');
+      require('./tests/reactFreeze/nativeStack.test');
+    },
+  },
+  {
     testSuiteName: 'utilities',
     importTest: () => {
       require('./tests/utilities/relativeCoords.test');
