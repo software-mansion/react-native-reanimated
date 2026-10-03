@@ -1,0 +1,46 @@
+name: Github Actions cache cleanup
+on:
+  pull_request_target:
+    types: [closed]
+  schedule:
+    - cron: '7 1 * * *' # at 01:07 every day, before the nightly builds
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  REPO: ${{ github.repository }}
+
+jobs:
+  closed-pull-request:
+    if: github.repository == 'software-mansion/react-native-reanimated' && github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete the caches of the closed pull request
+        env:
+          REF: refs/pull/${{ github.event.pull_request.number }}/merge
+        run: |
+          gh api --paginate "repos/${REPO}/actions/caches?ref=${REF}&per_page=100" --jq '.actions_caches[].id' |
+          while read -r id; do
+            echo "Deleting cache ${id}"
+            gh api -X DELETE "repos/${REPO}/actions/caches/${id}"
+          done
+
+  # Pods entries are meant to be saved from main only (see save-pods). Runs of
+  # pull requests based on a branch that predates that guard still save them
+  # on their own ref, ~0.5 GB each, where nothing else can restore them.
+  pull-request-pods:
+    if: github.repository == 'software-mansion/react-native-reanimated' && github.event_name != 'pull_request_target'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete Pods caches saved on pull request refs
+        run: |
+          gh api --paginate "repos/${REPO}/actions/caches?key=pods-&per_page=100" \
+            --jq '.actions_caches[] | select(.ref | startswith("refs/pull/")) | "\(.id) \(.ref) \(.key)"' |
+          while read -r id ref key; do
+            echo "Deleting cache ${id} (${ref} ${key})"
+            gh api -X DELETE "repos/${REPO}/actions/caches/${id}"
+          done

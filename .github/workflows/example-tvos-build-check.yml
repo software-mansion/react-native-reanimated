@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   example-tvos-build-check:
