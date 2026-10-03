@@ -66,6 +66,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'event handlers',
+    importTest: () => {
+      require('./tests/events/useAnimatedScrollHandlerMemo.test');
+    },
+  },
+  {
     testSuiteName: 'props',
     importTest: () => {
       require('./tests/props/backgroundImage.test');
