@@ -98,6 +98,12 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 #ifndef NDEBUG
   /// Gives the callback the native animation trace events recorded since the last call.
   void takeNativeAnimationTrace(jsi::Runtime &rt, const jsi::Value &callback);
+  /// The next `count` layout animation starts of the view go to the native host.
+  void armNativeLayoutStart(Tag tag, double durationMs, double delayMs, bool animatesOpacity, int count);
+  /// Cancels the last native layout command of the view.
+  void cancelNativeLayoutCommand(Tag tag);
+  void
+  sampleNativeAnimationTarget(jsi::Runtime &rt, Tag tag, const std::string &targetName, const jsi::Value &callback);
 #endif
   jsi::Value setDynamicFeatureFlag(jsi::Runtime &rt, const jsi::Value &name, const jsi::Value &value);
 
@@ -115,6 +121,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void performNonLayoutOperations();
   bool hasSynchronousWritesTracker() const;
   void rewriteSynchronousProps();
+  /// The platform reports that a transaction of the surface is on the host views. UI thread only.
+  void surfaceDidMount(SurfaceId surfaceId);
   void flushLayoutAnimationOperations();
   void executeLayoutAnimationsRequests();
 

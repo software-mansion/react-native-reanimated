@@ -134,6 +134,10 @@ const FinalFrameAccuracyExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/FinalFrameAccuracy').default as React.FC
   );
+const FinalStateFirstBenchExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/FinalStateFirstBench').default as React.FC
+  );
 const FlatListExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/FlatList').default as React.FC
@@ -812,6 +816,10 @@ const ALL_EXAMPLES: Record<string, Example> = {
   FinalFrameAccuracyExample: {
     screen: FinalFrameAccuracyExample,
     title: '[LA] Final frame accuracy',
+  },
+  FinalStateFirstBenchExample: {
+    screen: FinalStateFirstBenchExample,
+    title: '[LA] Final-state-first bench',
   },
 
   // Shared Element Transitions

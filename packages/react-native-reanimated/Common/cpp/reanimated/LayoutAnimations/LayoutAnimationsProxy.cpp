@@ -73,7 +73,11 @@ LayoutAnimationsProxy::LayoutAnimationsProxy(
     const SurfaceId surfaceId,
     const LayoutAnimationsProxyDependencies &dependencies)
     : LayoutAnimationsProxyCommon(surfaceId, dependencies),
-      sharedTransitionManager_(dependencies.layoutAnimationsManager->getSharedTransitionManager()) {
+      sharedTransitionManager_(dependencies.layoutAnimationsManager->getSharedTransitionManager()),
+      nativeAnimationHost_(
+          StaticFeatureFlags::getFlag("IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION") ? dependencies.nativeAnimationHost
+                                                                              : nullptr),
+      getAnimationTimestamp_(dependencies.getAnimationTimestamp) {
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
 #endif
@@ -140,6 +144,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   ReanimatedSystraceSection d("pullTransaction");
   react_native_assert(surfaceId == surfaceId_ && "pull routed to the wrong surface's proxy");
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  react_native_assert(pendingNativeStarts_.empty() && "a pull came before the mount report of the last pull");
+#ifndef NDEBUG
+  pulledTransactionNumber_ = transactionNumber;
+#endif
   auto configLock = layoutAnimationsManager_->lockAndFlushConfigUpdates();
   if (!isLightTreeInitialized()) {
     pendingTransactions_.emplace_back(telemetry.getRevisionNumber(), mutations);
@@ -258,6 +266,10 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
     return;
   }
   lightNodes_.erase(it);
+#ifndef NDEBUG
+  armedNativeStarts_.erase(node->current.tag);
+  lastNativeCommands_.erase(node->current.tag);
+#endif
   snapshottedScreens_.erase(node->current.tag);
   if (node == topScreen_) {
     topScreen_ = nullptr;
@@ -380,16 +392,16 @@ void LayoutAnimationsProxy::updateLightTree(
           break;
         }
         if (config && shouldAnimate) {
-          transaction.layout.push_back({node, config});
+          if (auto nativeStart = makeNativeLayoutStart(mutation, node, transaction)) {
+            filteredMutations.push_back(std::move(nativeStart->update));
+            pendingNativeStarts_.push_back(std::move(nativeStart->start));
+          } else {
+            transaction.layout.push_back({node, config});
+          }
         } else if (config && (layoutAnimations_.contains(tag) || hasPendingLayoutAnimation(tag))) {
           updateLayoutAnimationTarget(tag, node->current, config);
         } else {
-          if (const auto currentView = takeCompletedLayoutAnimationView(tag)) {
-            filteredMutations.push_back(
-                ShadowViewMutation::UpdateMutation(*currentView, node->current, mutation.parentTag));
-          } else {
-            filteredMutations.push_back(mutation);
-          }
+          filteredMutations.push_back(updateToMount(mutation, node));
         }
         break;
       }
@@ -863,6 +875,9 @@ void LayoutAnimationsProxy::addOngoingAnimations(ShadowViewMutationList &mutatio
 
     mutations.push_back(
         ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
+#ifndef NDEBUG
+    traceFirstFrameUpdates(layoutAnimation.currentView, newView);
+#endif
     layoutAnimation.currentView = newView;
     if (layoutAnimation.opacity && getViewProps(newView).opacity == *layoutAnimation.opacity) {
       layoutAnimation.opacity.reset();
@@ -996,6 +1011,129 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
   return wantAnimateExit;
 }
 
+ShadowViewMutation LayoutAnimationsProxy::updateToMount(
+    const ShadowViewMutation &mutation,
+    const std::shared_ptr<LightNode> &node) const {
+  if (const auto currentView = takeCompletedLayoutAnimationView(node->current.tag)) {
+    return ShadowViewMutation::UpdateMutation(*currentView, node->current, mutation.parentTag);
+  }
+  return mutation;
+}
+
+std::optional<LayoutAnimationsProxy::NativeLayoutStart> LayoutAnimationsProxy::makeNativeLayoutStart(
+    [[maybe_unused]] const ShadowViewMutation &mutation,
+    [[maybe_unused]] const std::shared_ptr<LightNode> &node,
+    [[maybe_unused]] TransactionMeta &transaction) const {
+#ifndef NDEBUG
+  const auto tag = node->current.tag;
+  const auto armedStartIt = armedNativeStarts_.find(tag);
+  // An active frame-driven animation stays frame-driven until it ends.
+  if (armedStartIt == armedNativeStarts_.end() || layoutAnimations_.contains(tag) || hasPendingLayoutAnimation(tag)) {
+    return std::nullopt;
+  }
+  if (!transaction.nativeStartTimestampMs) {
+    transaction.nativeStartTimestampMs = getAnimationTimestamp_();
+  }
+  auto update = updateToMount(mutation, node);
+  native_animation::AnimationRequest request{
+      .handle = {surfaceId_, tag, native_animation::AnimationOwner::Layout, ++nativeStartGeneration_},
+      .originTimestampMs = *transaction.nativeStartTimestampMs,
+      .tracks = makeTracks(armedStartIt->second, update.oldChildShadowView, update.newChildShadowView),
+  };
+  if (--armedStartIt->second.count == 0) {
+    armedNativeStarts_.erase(armedStartIt);
+  }
+  NativeCommand nativeCommand{request.handle, {}};
+  for (const auto &track : request.tracks) {
+    nativeCommand.targetsWithoutFrameUpdate.push_back(track.target);
+  }
+  lastNativeCommands_.insert_or_assign(tag, std::move(nativeCommand));
+  nativeAnimationHost_->trace().record(
+      {.event = native_animation::TraceEventType::LayoutStartPending,
+       .handle = request.handle,
+       .objective = 6,
+       .transactionNumber = pulledTransactionNumber_});
+  return NativeLayoutStart{std::move(update), {std::move(request), nativeStartTraceClient_}};
+#else
+  return std::nullopt;
+#endif
+}
+
+void LayoutAnimationsProxy::surfaceDidMount() {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  auto nativeStarts = std::exchange(pendingNativeStarts_, {});
+#ifndef NDEBUG
+  for (const auto &track : std::exchange(pulledFirstFrameUpdates_, {})) {
+    nativeAnimationHost_->trace().record(
+        {.event = native_animation::TraceEventType::FrameUpdateMounted,
+         .handle = track.handle,
+         .target = track.target,
+         .objective = 6,
+         .transactionNumber = pulledTransactionNumber_});
+  }
+  const auto transactionNumber = pulledTransactionNumber_;
+#endif
+  lock.unlock();
+
+  if (nativeStarts.empty()) {
+    return;
+  }
+#ifndef NDEBUG
+  for (const auto &nativeStart : nativeStarts) {
+    nativeAnimationHost_->trace().record(
+        {.event = native_animation::TraceEventType::LayoutStartMounted,
+         .handle = nativeStart.request.handle,
+         .objective = 6,
+         .transactionNumber = transactionNumber});
+  }
+#endif
+  nativeAnimationHost_->startAfterMount(nativeStarts);
+}
+
+#ifndef NDEBUG
+void LayoutAnimationsProxy::traceFirstFrameUpdates(const ShadowView &currentView, const ShadowView &newView) const {
+  const auto nativeCommandIt = lastNativeCommands_.find(newView.tag);
+  if (nativeCommandIt == lastNativeCommands_.end()) {
+    return;
+  }
+  auto &nativeCommand = nativeCommandIt->second;
+  const auto changes = [&](const native_animation::AnimationTarget target) {
+    if (target == native_animation::AnimationTarget::Opacity) {
+      return mountedOpacity(currentView) != mountedOpacity(newView);
+    }
+    const auto currentPosition = mountedPosition(currentView);
+    const auto newPosition = mountedPosition(newView);
+    return currentPosition.x != newPosition.x || currentPosition.y != newPosition.y;
+  };
+  std::erase_if(nativeCommand.targetsWithoutFrameUpdate, [&](const native_animation::AnimationTarget target) {
+    if (!changes(target)) {
+      return false;
+    }
+    pulledFirstFrameUpdates_.push_back({nativeCommand.handle, target});
+    return true;
+  });
+}
+
+bool LayoutAnimationsProxy::armNativeLayoutStart(const Tag tag, const ArmedNativeLayoutStart &armedStart) {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (!nativeAnimationHost_ || !lightNodes_.contains(tag) || armedStart.count < 1) {
+    return false;
+  }
+  armedNativeStarts_.insert_or_assign(tag, armedStart);
+  return true;
+}
+
+bool LayoutAnimationsProxy::cancelNativeLayoutCommand(const Tag tag) {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  const auto nativeCommandIt = lastNativeCommands_.find(tag);
+  if (nativeCommandIt == lastNativeCommands_.end()) {
+    return false;
+  }
+  nativeAnimationHost_->cancel(nativeCommandIt->second.handle, native_animation::TrackStopMode::SettleToModel);
+  return true;
+}
+#endif
+
 void LayoutAnimationsProxy::shadowTreeWillCommit(const bool isSurfaceRemoval) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   surfaceToRemove_ = isSurfaceRemoval;
@@ -1003,6 +1141,12 @@ void LayoutAnimationsProxy::shadowTreeWillCommit(const bool isSurfaceRemoval) {
 
 void LayoutAnimationsProxy::clearSurfaceState() const {
   LayoutAnimationsProxyCommon::clearSurfaceState();
+  pendingNativeStarts_.clear();
+#ifndef NDEBUG
+  armedNativeStarts_.clear();
+  lastNativeCommands_.clear();
+  pulledFirstFrameUpdates_.clear();
+#endif
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     sharedContainers_.clear();
     snapshottedScreens_.clear();

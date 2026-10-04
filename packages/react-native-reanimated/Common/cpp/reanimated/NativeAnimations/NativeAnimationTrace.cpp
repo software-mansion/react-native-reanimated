@@ -21,6 +21,18 @@ std::string_view toString(const TraceEventType event) {
       return "Ended";
     case TraceEventType::SurfaceClosed:
       return "SurfaceClosed";
+    case TraceEventType::LayoutStartPending:
+      return "LayoutStartPending";
+    case TraceEventType::LayoutStartMounted:
+      return "LayoutStartMounted";
+    case TraceEventType::FrameUpdateMounted:
+      return "FrameUpdateMounted";
+    case TraceEventType::FirstFrameSampled:
+      return "FirstFrameSampled";
+    case TraceEventType::ClientAdmitted:
+      return "ClientAdmitted";
+    case TraceEventType::ClientEnded:
+      return "ClientEnded";
   }
 }
 
@@ -66,6 +78,30 @@ std::string_view toString(const AnimationTarget target) {
     case AnimationTarget::ShadowOffset:
       return "ShadowOffset";
   }
+}
+
+std::optional<AnimationTarget> targetFromString(const std::string_view name) {
+  using enum AnimationTarget;
+  for (const auto target :
+       {Opacity,
+        Position,
+        PositionX,
+        PositionY,
+        Size,
+        Width,
+        Height,
+        BackgroundColor,
+        BorderColor,
+        BorderRadius,
+        ShadowColor,
+        ShadowOpacity,
+        ShadowRadius,
+        ShadowOffset}) {
+    if (toString(target) == name) {
+      return target;
+    }
+  }
+  return std::nullopt;
 }
 
 std::string_view toString(const EndpointPolicy policy) {
@@ -117,14 +153,17 @@ std::string_view toString(const AnimationResultReason reason) {
   }
 }
 
+double TraceRecorder::now() {
+  return std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
 void TraceRecorder::record(TraceEvent event) {
-  const auto now = std::chrono::steady_clock::now().time_since_epoch();
   event.sequence = ++sequence_;
-  event.monotonicTimeMs = std::chrono::duration<double, std::milli>(now).count();
+  event.monotonicTimeMs = now();
   if (events_.size() == Capacity) {
     events_.pop_front();
   }
-  events_.push_back(event);
+  events_.push_back(std::move(event));
 }
 
 std::vector<TraceEvent> TraceRecorder::take() {

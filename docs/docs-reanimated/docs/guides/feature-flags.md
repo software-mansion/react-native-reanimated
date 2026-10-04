@@ -30,6 +30,7 @@ Feature flags are available since Reanimated 4.
 | [`USE_ANIMATION_BACKEND`](#use_animation_backend)                                                   | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
 | [`IOS_CSS_CORE_ANIMATION`](#ios_css_core_animation-and-android_css_platform_transitions)            | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
 | [`ANDROID_CSS_PLATFORM_TRANSITIONS`](#ios_css_core_animation-and-android_css_platform_transitions)  | [static](#static-feature-flags) |  4.6.0   |  –   |                  `false`                  |
+| [`IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION`](#ios_layout_animations_core_animation)                     | [static](#static-feature-flags) |  4.8.0   |  –   |                  `false`                  |
 | [`TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS`](#track_synchronous_props_in_layout_animations)                               | [dynamic](#dynamic-feature-flags)|  4.7.0   |  –   | `false`                                   |
 
 :::info
@@ -201,6 +202,10 @@ Known limitation on iOS. `backgroundColor`, `borderColor` and `borderRadius` are
 
 All three share that layer, so this is easiest to hit with a combination of them. A view with a visible border and the default `overflow` doesn't animate its `backgroundColor` either, even though the transition changes nothing about the border. `opacity` and the `shadow*` properties aren't affected, React Native always keeps them on the view's own layer.
 :::
+
+### `IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION`
+
+This flag prepares layout animations that Core Animation plays on iOS. It is experimental and defaults to `false`. No layout animation uses the Core Animation route yet, so the flag changes no animation.
 
 ### `TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS`
 

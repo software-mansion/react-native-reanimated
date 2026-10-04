@@ -215,9 +215,13 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost;
   std::shared_ptr<css::CSSPlatformTransitionBackend> platformTransitionBackend;
-  if constexpr (StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
+  if constexpr (
+      StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION") ||
+      StaticFeatureFlags::getFlag("IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION")) {
     nativeAnimationHost = native_animation::NativeAnimationHost::create(
         native_animation::makeCoreAnimationPlatform(nodesManager.surfacePresenter));
+  }
+  if constexpr (StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
     platformTransitionBackend = css::makeCSSPlatformTransitionBackend(nativeAnimationHost);
   }
 

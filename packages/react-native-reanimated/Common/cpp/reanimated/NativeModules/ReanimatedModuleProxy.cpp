@@ -462,6 +462,14 @@ jsi::Value ReanimatedModuleProxy::getStaticFeatureFlag(jsi::Runtime &rt, const j
 #ifndef NDEBUG
 namespace {
 
+jsi::Array componentsToJSI(jsi::Runtime &rt, const std::vector<double> &components) {
+  auto array = jsi::Array(rt, components.size());
+  for (size_t index = 0; index < components.size(); ++index) {
+    array.setValueAtIndex(rt, index, components[index]);
+  }
+  return array;
+}
+
 jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent &event) {
   const auto toJSIString = [&rt](const auto value) {
     return jsi::String::createFromUtf8(rt, std::string(native_animation::toString(value)));
@@ -489,6 +497,12 @@ jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent
     object.setProperty(rt, "outcome", toJSIString(event.result->outcome));
     object.setProperty(rt, "reason", toJSIString(event.result->reason));
   }
+  if (event.transactionNumber) {
+    object.setProperty(rt, "transactionNumber", static_cast<double>(*event.transactionNumber));
+  }
+  if (!event.presentationValue.empty()) {
+    object.setProperty(rt, "presentationValue", componentsToJSI(rt, event.presentationValue));
+  }
   return object;
 }
 
@@ -509,6 +523,55 @@ void ReanimatedModuleProxy::takeNativeAnimationTrace(jsi::Runtime &rt, const jsi
     nativeAnimationHost_->takeTrace(deliver);
   } else {
     deliver({});
+  }
+}
+
+void ReanimatedModuleProxy::armNativeLayoutStart(
+    const Tag tag,
+    const double durationMs,
+    const double delayMs,
+    const bool animatesOpacity,
+    const int count) {
+  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag, durationMs, delayMs, animatesOpacity, count] {
+    if (const auto strongThis = weakThis.lock()) {
+      strongThis->layoutAnimationsProxyRegistry_->armNativeLayoutStart(
+          tag, {durationMs, delayMs, animatesOpacity, count});
+    }
+  });
+}
+
+void ReanimatedModuleProxy::cancelNativeLayoutCommand(const Tag tag) {
+  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag] {
+    if (const auto strongThis = weakThis.lock()) {
+      strongThis->layoutAnimationsProxyRegistry_->cancelNativeLayoutCommand(tag);
+    }
+  });
+}
+
+void ReanimatedModuleProxy::sampleNativeAnimationTarget(
+    jsi::Runtime &rt,
+    const Tag tag,
+    const std::string &targetName,
+    const jsi::Value &callback) {
+  const auto function = std::make_shared<jsi::Function>(callback.getObject(rt).asFunction(rt));
+  const auto deliver = [jsInvoker = jsInvoker_, function](std::optional<native_animation::TargetSample> sample) {
+    jsInvoker->invokeAsync([function, sample = std::move(sample)](jsi::Runtime &rt) {
+      if (!sample) {
+        function->call(rt, jsi::Value::undefined());
+        return;
+      }
+      jsi::Object object(rt);
+      object.setProperty(rt, "model", componentsToJSI(rt, sample->model));
+      object.setProperty(rt, "presentation", componentsToJSI(rt, sample->presentation));
+      object.setProperty(rt, "monotonicTimeMs", sample->monotonicTimeMs);
+      function->call(rt, object);
+    });
+  };
+  const auto target = native_animation::targetFromString(targetName);
+  if (nativeAnimationHost_ && target) {
+    nativeAnimationHost_->sampleTarget(tag, *target, deliver);
+  } else {
+    deliver(std::nullopt);
   }
 }
 #endif // NDEBUG
@@ -948,6 +1011,13 @@ bool ReanimatedModuleProxy::hasSynchronousWritesTracker() const {
   return synchronousWritesTracker_ != nullptr;
 }
 
+void ReanimatedModuleProxy::surfaceDidMount(const SurfaceId surfaceId) {
+  rewriteSynchronousProps();
+  if constexpr (StaticFeatureFlags::getFlag("IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION")) {
+    layoutAnimationsProxyRegistry_->surfaceDidMount(surfaceId);
+  }
+}
+
 void ReanimatedModuleProxy::rewriteSynchronousProps() {
   if (!synchronousWritesTracker_) {
     return;
@@ -1361,6 +1431,8 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       uiScheduler_,
       uiManager_,
       requestLayoutAnimationFlush,
+      nativeAnimationHost_,
+      getAnimationTimestamp_,
 #ifdef ANDROID
       filterUnmountedTagsFunction_,
       jsInvoker_,
@@ -1716,6 +1788,42 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
       [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         if (const auto strongThis = weakThis.lock()) {
           strongThis->takeNativeAnimationTrace(rt, at<0>(args));
+        }
+      });
+
+  addMethod<5>(
+      rt,
+      obj,
+      "armNativeLayoutStart",
+      [weakThis = weak_from_this()](jsi::Runtime &, const jsi::Value &, const jsi::Value(&args)[5]) {
+        if (const auto strongThis = weakThis.lock()) {
+          strongThis->armNativeLayoutStart(
+              static_cast<Tag>(at<0>(args).asNumber()),
+              at<1>(args).asNumber(),
+              at<2>(args).asNumber(),
+              at<3>(args).asBool(),
+              static_cast<int>(at<4>(args).asNumber()));
+        }
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "cancelNativeLayoutCommand",
+      [weakThis = weak_from_this()](jsi::Runtime &, const jsi::Value &, const jsi::Value(&args)[1]) {
+        if (const auto strongThis = weakThis.lock()) {
+          strongThis->cancelNativeLayoutCommand(static_cast<Tag>(at<0>(args).asNumber()));
+        }
+      });
+
+  addMethod<3>(
+      rt,
+      obj,
+      "sampleNativeAnimationTarget",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+        if (const auto strongThis = weakThis.lock()) {
+          strongThis->sampleNativeAnimationTarget(
+              rt, static_cast<Tag>(at<0>(args).asNumber()), at<1>(args).asString(rt).utf8(rt), at<2>(args));
         }
       });
 #endif // NDEBUG

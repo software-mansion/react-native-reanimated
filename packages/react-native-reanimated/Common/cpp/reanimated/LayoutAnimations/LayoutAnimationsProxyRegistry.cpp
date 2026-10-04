@@ -25,6 +25,38 @@ std::shared_ptr<LayoutAnimationsProxyCommon> LayoutAnimationsProxyRegistry::regi
   return instance;
 }
 
+void LayoutAnimationsProxyRegistry::surfaceDidMount(const SurfaceId surfaceId) const {
+  std::shared_ptr<LayoutAnimationsProxyCommon> instance;
+  {
+    const std::lock_guard<std::mutex> lock(instancesMutex_);
+    const auto it = instances_.find(surfaceId);
+    if (it == instances_.end()) {
+      return;
+    }
+    instance = it->second;
+  }
+  instance->surfaceDidMount();
+}
+
+#ifndef NDEBUG
+void LayoutAnimationsProxyRegistry::armNativeLayoutStart(const Tag tag, const ArmedNativeLayoutStart &armedStart)
+    const {
+  for (const auto &instance : instances()) {
+    if (instance->armNativeLayoutStart(tag, armedStart)) {
+      return;
+    }
+  }
+}
+
+void LayoutAnimationsProxyRegistry::cancelNativeLayoutCommand(const Tag tag) const {
+  for (const auto &instance : instances()) {
+    if (instance->cancelNativeLayoutCommand(tag)) {
+      return;
+    }
+  }
+}
+#endif
+
 void LayoutAnimationsProxyRegistry::remove(const SurfaceId surfaceId) {
   std::shared_ptr<LayoutAnimationsProxyCommon> instance;
   {
