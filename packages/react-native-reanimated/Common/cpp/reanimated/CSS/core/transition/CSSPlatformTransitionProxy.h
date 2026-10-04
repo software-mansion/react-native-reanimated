@@ -40,6 +40,7 @@ class CSSPlatformTransitionProxy {
   /// the loop-routed remainder to run.
   CSSTransitionConfig processConfig(
       jsi::Runtime &rt,
+      SurfaceId surfaceId,
       Tag viewTag,
       const CSSTransitionConfig &config,
       CSSTransitionRouting &routing,
@@ -50,6 +51,7 @@ class CSSPlatformTransitionProxy {
   /// express migrates to the loop. Updates `routing`, returns the loop diffs.
   /// Only a property still pseudo-locked after the toggle needs its value held.
   PropertyValueDynamicDiffsMap processDynamicDiffs(
+      SurfaceId surfaceId,
       Tag viewTag,
       const PropertyValueDynamicDiffsMap &propertyDiffs,
       const TransitionProperties &pseudoLockedProperties,
@@ -58,7 +60,18 @@ class CSSPlatformTransitionProxy {
       double timestamp);
 
   /// Cancels the native transition of every given property (teardown).
-  void cancelAll(Tag viewTag, const TransitionProperties &properties);
+  void cancelAll(SurfaceId surfaceId, Tag viewTag, const TransitionProperties &properties);
+
+  /// A native run that the platform ended before CSS stopped it, in the form the loop continues from.
+  struct EndedRun {
+    PlatformValue startValue;
+    PlatformValue endValue;
+    TransitionTiming timing;
+    CSSTransitionPropertySettings settings;
+  };
+
+  /// Drops the record of the run. Nullopt when a newer run or a stop replaced it.
+  std::optional<EndedRun> takeEndedRun(Tag viewTag, const std::string &propertyName, CSSPlatformTransitionRunId runId);
 
  private:
   struct ActiveTransition {
@@ -69,19 +82,22 @@ class CSSPlatformTransitionProxy {
     PlatformValue adjustedEnd;
     TransitionTiming timing;
     CSSTransitionPropertySettings settings;
+    CSSPlatformTransitionRunId runId;
   };
 
   bool canRoute(const std::string &propertyName, const EasingConfig &easing) const;
   /// Null `settings` is the pseudo-selector toggle path, which reuses the stored ones.
   bool apply(
+      SurfaceId surfaceId,
       Tag viewTag,
       const std::string &propertyName,
       const PlatformValue &fromValue,
       const PlatformValue &toValue,
       const CSSTransitionPropertySettings *settings,
-      bool persistent,
+      bool holdsEndValue,
       double timestamp);
-  void remove(Tag viewTag, const std::string &propertyName);
+  void forget(Tag viewTag, const std::string &propertyName);
+  void remove(SurfaceId surfaceId, Tag viewTag, const std::string &propertyName);
 
   const ActiveTransition *activeTransitionFor(Tag viewTag, const std::string &propertyName) const;
   /// What the native animation shows at `timestamp`, retraced from the stored run.
