@@ -47,20 +47,25 @@ export function describeNativeTiming(
     return undefined;
   }
   if (easing === LINEAR) {
-    return { toValue, durationMs: duration, delayMs: 0 };
+    return { toValue, durationMs: duration, delaysMs: [] };
   }
   const cubicBezier =
     easing === EASE
       ? EASE_CONTROL_POINTS
       : (easing as EasingFunctionFactory).bezier;
   return (
-    cubicBezier && { toValue, durationMs: duration, delayMs: 0, cubicBezier }
+    cubicBezier && {
+      toValue,
+      durationMs: duration,
+      delaysMs: [],
+      cubicBezier,
+    }
   );
 }
 
 /**
- * A negative delay starts the animation at once, so each wrapper adds no less
- * than zero.
+ * A negative delay starts the animation at once, so each wrapper counts as no
+ * less than zero.
  */
 export function delayNativeTiming(
   delayMs: number,
@@ -74,6 +79,6 @@ export function delayNativeTiming(
   }
   return {
     ...nativeTiming,
-    delayMs: nativeTiming.delayMs + Math.max(0, delayMs),
+    delaysMs: [Math.max(0, delayMs), ...nativeTiming.delaysMs],
   };
 }
