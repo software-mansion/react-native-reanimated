@@ -205,7 +205,16 @@ All three share that layer, so this is easiest to hit with a combination of them
 
 ### `IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION`
 
-This flag prepares layout animations that Core Animation plays on iOS. It is experimental and defaults to `false`. No layout animation uses the Core Animation route yet, so the flag changes no animation.
+This flag lets Core Animation play some layout animations on iOS. It is experimental and defaults to `false`.
+
+Core Animation plays a `layout` animation only when all these conditions are true:
+
+- The builder returns animations only for `originX`, `originY`, and `opacity`, each with an initial value.
+- Each animation is a `withTiming`, optionally inside `withDelay`, with a duration above zero and no callback.
+- The easing is `Easing.linear`, `Easing.ease`, or `Easing.bezier`.
+- The size of the view does not change.
+
+Every other layout animation runs as before. That includes each layout transition preset. A change of the layout during such an animation is not yet smooth.
 
 ### `TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS`
 

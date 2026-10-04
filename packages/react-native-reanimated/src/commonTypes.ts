@@ -114,9 +114,42 @@ export type LayoutAnimationStartFunction = (
   config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
 ) => void;
 
+/** What the native route reads from the result of a layout animation builder. */
+export type LayoutAnimationBuildSummary = {
+  /** The start time of the animation. All starts of one batch share it. */
+  originMs: number;
+  /** The builder gave more animations than the caller can route. */
+  exceedsLimit: boolean;
+  /** An initial value has no animation. */
+  hasInitialOnlyKeys: boolean;
+  leaves: {
+    key: string;
+    initialValue: unknown;
+    timing?: NativeTimingDescription;
+  }[];
+};
+
 export type LayoutAnimationsManager = {
   start: LayoutAnimationStartFunction;
   stop: (tag: number) => void;
+  /**
+   * Calls the builder and keeps its result under `buildId`. Has no result when
+   * the builder throws; `startBuilt` then throws the error.
+   */
+  build: (
+    buildId: number,
+    yogaValues: Partial<LayoutAnimationValues>,
+    config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
+    maxLeaves: number
+  ) => LayoutAnimationBuildSummary | undefined;
+  /** Starts the frame-driven animation of a build and releases the build. */
+  startBuilt: (tag: number, type: LayoutAnimationType, buildId: number) => void;
+  /**
+   * Calls the callback of a build that plays natively. A second call does
+   * nothing.
+   */
+  finishBuilt: (buildId: number, finished: boolean) => void;
+  releaseBuilt: (buildId: number) => void;
 };
 
 export interface ILayoutAnimationBuilder {
@@ -284,10 +317,23 @@ export type AnimatableValueObject = { [key: string]: Animatable };
 
 export type AnimatableValue = Animatable | AnimatableValueObject;
 
+/**
+ * The data of a `withTiming` animation, with the delays of its `withDelay`
+ * wrappers, that a native layout animation can play.
+ */
+export type NativeTimingDescription = {
+  toValue: number;
+  durationMs: number;
+  delayMs: number;
+  /** The control points of the easing. A linear easing has none. */
+  cubicBezier?: [number, number, number, number];
+};
+
 export interface AnimationObject<T = AnimatableValue> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
   callback?: AnimationCallback;
+  __nativeTiming?: NativeTimingDescription;
   current?: T;
   toValue?: AnimationObject<T>['current'];
   startValue?: AnimationObject<T>['current'];

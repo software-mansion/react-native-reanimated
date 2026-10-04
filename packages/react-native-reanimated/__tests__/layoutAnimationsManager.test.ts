@@ -194,4 +194,79 @@ describe('LayoutAnimationsManager', () => {
     expect(globalThis._notifyAboutEnd).toHaveBeenNthCalledWith(1, 9, false);
     expect(globalThis._notifyAboutEnd).toHaveBeenNthCalledWith(2, 9, false);
   });
+  describe('builds', () => {
+    const summaryOf = (buildId: number, config: () => LayoutAnimation) =>
+      manager.build(buildId, {}, config, 3);
+
+    test('the builder runs one time for a build and its frame-driven start', () => {
+      const startTimestamps: number[] = [];
+      const config = jest.fn(makeConfig(startTimestamps));
+      getAnimationTimestamp.mockReturnValueOnce(100).mockReturnValueOnce(200);
+
+      const summary = summaryOf(1, config);
+      manager.startBuilt(10, LayoutAnimationType.LAYOUT, 1);
+
+      expect(config).toHaveBeenCalledTimes(1);
+      expect(summary?.originMs).toBe(100);
+      expect(startTimestamps).toEqual([100]);
+    });
+
+    test('the summary gives each leaf with its initial value', () => {
+      const summary = summaryOf(2, () => ({
+        initialValues: { originX: 5, opacity: 1 },
+        animations: {
+          originX: { __nativeTiming: { toValue: 9 } } as unknown as number,
+          originY: {
+            reduceMotion: true,
+            __nativeTiming: {},
+          } as unknown as number,
+        },
+      }));
+      manager.releaseBuilt(2);
+
+      expect(summary).toMatchObject({
+        exceedsLimit: false,
+        hasInitialOnlyKeys: true,
+        leaves: [
+          { key: 'originX', initialValue: 5, timing: { toValue: 9 } },
+          { key: 'originY', initialValue: undefined, timing: undefined },
+        ],
+      });
+    });
+
+    test('the summary has no leaves when the builder gives too many', () => {
+      const summary = summaryOf(3, () => ({
+        initialValues: {},
+        animations: { originX: 1, originY: 1, width: 1, height: 1 },
+      }));
+      manager.releaseBuilt(3);
+
+      expect(summary).toMatchObject({ exceedsLimit: true, leaves: [] });
+    });
+
+    test('a builder error goes to the frame-driven start and the builder does not run again', () => {
+      const config = jest.fn(() => {
+        throw new Error('[Reanimated] builder error');
+      });
+
+      expect(summaryOf(4, config)).toBeUndefined();
+      expect(() =>
+        manager.startBuilt(11, LayoutAnimationType.LAYOUT, 4)
+      ).toThrow('builder error');
+      expect(config).toHaveBeenCalledTimes(1);
+    });
+
+    test('the callback of a native build gets one result', () => {
+      const callback = jest.fn();
+      const config = makePendingConfig(callback);
+      summaryOf(5, () => Object.freeze(config()));
+
+      manager.finishBuilt(5, false);
+      manager.finishBuilt(5, true);
+      manager.releaseBuilt(5);
+      manager.finishBuilt(5, true);
+
+      expect(callback.mock.calls).toEqual([[false]]);
+    });
+  });
 });
