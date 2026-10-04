@@ -210,7 +210,7 @@ This flag lets Core Animation play some layout animations on iOS. It is experime
 Core Animation plays a `layout` animation only when all these conditions are true:
 
 - The builder returns animations only for `originX`, `originY`, and `opacity`, each with an initial value.
-- Each animation is a `withTiming`, optionally inside `withDelay`, with a duration above zero and no callback.
+- Each animation is a `withTiming`, optionally inside `withDelay`, with no callback.
 - The easing is `Easing.linear`, `Easing.ease`, or `Easing.bezier`.
 - The size of the view does not change.
 
