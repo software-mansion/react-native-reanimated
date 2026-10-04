@@ -19,6 +19,18 @@ enum class TraceEventType : uint8_t {
   TrackEnded,
   Ended,
   SurfaceClosed,
+  /// Layout let the final state of the view mount and holds a start for the mount report.
+  LayoutStartPending,
+  /// The transaction of the pending start is on the host views.
+  LayoutStartMounted,
+  /// The first frame-driven update of a view after its native command is on the host views.
+  FrameUpdateMounted,
+  /// The value on screen at the first display frame after a start in a mount report.
+  FirstFrameSampled,
+  /// The trace client got the admission report.
+  ClientAdmitted,
+  /// The trace client got the result.
+  ClientEnded,
 };
 
 struct TraceEvent {
@@ -34,18 +46,25 @@ struct TraceEvent {
   std::optional<EndpointPolicy> endpointPolicy;
   std::optional<bool> finished;
   std::optional<AnimationResult> result;
+  std::optional<int64_t> transactionNumber;
+  /// The components of the value on screen.
+  std::vector<double> presentationValue;
 };
 
 std::string_view toString(TraceEventType event);
 std::string_view toString(AnimationOwner owner);
 std::string_view toString(AnimationTarget target);
+std::optional<AnimationTarget> targetFromString(std::string_view name);
 std::string_view toString(EndpointPolicy policy);
 std::string_view toString(AnimationOutcome outcome);
 std::string_view toString(AnimationResultReason reason);
 
-/// Development record of host lifecycle facts. It keeps the newest events. UI thread only.
+/// Development record of lifecycle facts. Each layer records its own events at the point where the fact
+/// occurs. It keeps the newest events. UI thread only.
 class TraceRecorder {
  public:
+  static double now();
+
   void record(TraceEvent event);
   std::vector<TraceEvent> take();
 
