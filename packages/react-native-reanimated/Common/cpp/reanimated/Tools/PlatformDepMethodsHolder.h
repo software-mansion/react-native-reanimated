@@ -2,6 +2,7 @@
 
 #include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionBackend.h>
+#include <reanimated/NativeAnimations/NativeAnimationHost.h>
 #include <reanimated/PseudoStyles/PseudoSelector.h>
 
 #include <folly/dynamic.h>
@@ -76,6 +77,8 @@ struct PlatformDepMethodsHolder {
   // Optional and last, so a platform without them just omits them; null keeps
   // CSS transitions and animations on the C++ loop.
   std::shared_ptr<css::CSSPlatformTransitionBackend> platformTransitionBackend;
+  // Null on a platform that plays no animation through the shared native boundary.
+  std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost;
   std::shared_ptr<css::CSSPlatformAnimationFactory> platformAnimationFactory;
 };
 

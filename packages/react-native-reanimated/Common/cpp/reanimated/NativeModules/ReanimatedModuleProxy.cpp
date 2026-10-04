@@ -198,6 +198,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           platformDepMethodsHolder.detachPseudoSelector,
           cssTransitionsRegistry_,
           updatesRegistryManager_)),
+      nativeAnimationHost_(platformDepMethodsHolder.nativeAnimationHost),
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
@@ -224,6 +225,17 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 }
 
 void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMethodsHolder) {
+  if (const auto &platformTransitionBackend = platformDepMethodsHolder.platformTransitionBackend) {
+    platformTransitionBackend->setRunEndedListener(
+        [weakThis = weak_from_this()](
+            const Tag viewTag, const std::string &propertyName, const css::CSSPlatformTransitionRunId runId) {
+          if (const auto strongThis = weakThis.lock()) {
+            auto lock = strongThis->updatesRegistryManager_->lock();
+            strongThis->cssTransitionsRegistry_->movePlatformRunToLoop(viewTag, propertyName, runId);
+          }
+        });
+  }
+
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     // Backend path: callbacks are drained later inside runGrandCallback under
     // the manager lock; no wrap needed here.
@@ -446,6 +458,60 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
 jsi::Value ReanimatedModuleProxy::getStaticFeatureFlag(jsi::Runtime &rt, const jsi::Value &name) {
   return reanimated::StaticFeatureFlags::getFlag(name.asString(rt).utf8(rt));
 }
+
+#ifndef NDEBUG
+namespace {
+
+jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent &event) {
+  const auto toJSIString = [&rt](const auto value) {
+    return jsi::String::createFromUtf8(rt, std::string(native_animation::toString(value)));
+  };
+  jsi::Object object(rt);
+  object.setProperty(rt, "schemaVersion", static_cast<int>(event.schemaVersion));
+  object.setProperty(rt, "sequence", static_cast<double>(event.sequence));
+  object.setProperty(rt, "monotonicTimeMs", event.monotonicTimeMs);
+  object.setProperty(rt, "event", toJSIString(event.event));
+  object.setProperty(rt, "surfaceId", event.handle.surfaceId);
+  object.setProperty(rt, "tag", event.handle.tag);
+  object.setProperty(rt, "owner", toJSIString(event.handle.owner));
+  object.setProperty(rt, "generation", static_cast<double>(event.handle.generation));
+  object.setProperty(rt, "objective", static_cast<int>(event.objective));
+  if (event.target) {
+    object.setProperty(rt, "target", toJSIString(*event.target));
+  }
+  if (event.endpointPolicy) {
+    object.setProperty(rt, "endpointPolicy", toJSIString(*event.endpointPolicy));
+  }
+  if (event.finished) {
+    object.setProperty(rt, "finished", *event.finished);
+  }
+  if (event.result) {
+    object.setProperty(rt, "outcome", toJSIString(event.result->outcome));
+    object.setProperty(rt, "reason", toJSIString(event.result->reason));
+  }
+  return object;
+}
+
+} // namespace
+
+void ReanimatedModuleProxy::takeNativeAnimationTrace(jsi::Runtime &rt, const jsi::Value &callback) {
+  const auto function = std::make_shared<jsi::Function>(callback.getObject(rt).asFunction(rt));
+  const auto deliver = [jsInvoker = jsInvoker_, function](std::vector<native_animation::TraceEvent> events) {
+    jsInvoker->invokeAsync([function, events = std::move(events)](jsi::Runtime &rt) {
+      auto array = jsi::Array(rt, events.size());
+      for (size_t index = 0; index < events.size(); ++index) {
+        array.setValueAtIndex(rt, index, traceEventToJSI(rt, events[index]));
+      }
+      function->call(rt, array);
+    });
+  };
+  if (nativeAnimationHost_) {
+    nativeAnimationHost_->takeTrace(deliver);
+  } else {
+    deliver({});
+  }
+}
+#endif // NDEBUG
 
 jsi::Value
 ReanimatedModuleProxy::setDynamicFeatureFlag(jsi::Runtime &rt, const jsi::Value &name, const jsi::Value &value) {
@@ -1246,6 +1312,7 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
       viewStylesRepository_,
       layoutAnimationsProxyRegistry_,
       synchronousWritesTracker_,
+      nativeAnimationHost_,
       request);
 
   commitHook_ = std::make_shared<ReanimatedCommitHook>(
@@ -1640,6 +1707,18 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
         }
         strongThis->runCSSTransition(rt, at<0>(args), at<1>(args), at<2>(args));
       });
+
+#ifndef NDEBUG
+  addMethod<1>(
+      rt,
+      obj,
+      "takeNativeAnimationTrace",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        if (const auto strongThis = weakThis.lock()) {
+          strongThis->takeNativeAnimationTrace(rt, at<0>(args));
+        }
+      });
+#endif // NDEBUG
 
   addMethod<1>(
       rt,

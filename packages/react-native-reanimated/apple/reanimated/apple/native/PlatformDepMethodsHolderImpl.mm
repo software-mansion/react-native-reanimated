@@ -1,7 +1,7 @@
-#import <reanimated/CSS/utils/platform.h>
 #import <reanimated/Tools/FeatureFlags.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
-#import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
+#import <reanimated/apple/CSS/REACSSPlatformTransitionBackend.h>
+#import <reanimated/apple/NativeAnimations/REANativeAnimationPlatform.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REASlowAnimations.h>
@@ -19,7 +19,6 @@
 #import <React/RCTViewComponentView.h>
 
 #import <memory>
-#import <variant>
 
 @protocol RNScreenViewOptionalProtocol <NSObject>
 @required
@@ -133,67 +132,6 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
   return unsubscribeFromKeyboardEventsFunction;
 }
 
-namespace {
-
-/// Drives CSS transitions through Core Animation on the view's layer.
-class REACSSPlatformTransitionBackend : public css::CSSPlatformTransitionBackend {
- public:
-  explicit REACSSPlatformTransitionBackend(REACSSPlatformTransitions *platformTransitions)
-      : platformTransitions_(platformTransitions)
-  {
-  }
-
-  bool canRoute(const std::string &propertyName, const css::EasingConfig &easing) const override
-  {
-    // TODO: border props snap when RN rasterizes the border (the view fails
-    // useCoreAnimationBorderRendering); route them only when the layer draws them.
-    // CAMediaTimingFunction carries only linear and cubic-bezier curves.
-    return css::hasPlatformValueTraits(propertyName) &&
-        (std::holds_alternative<css::LinearEasing>(easing) || std::holds_alternative<css::CubicBezierEasing>(easing));
-  }
-
-  bool startTransition(
-      Tag viewTag,
-      const std::string &propertyName,
-      const css::PlatformValue &fromValue,
-      const css::PlatformValue &toValue,
-      double durationMs,
-      double startTimestampMs,
-      const css::EasingConfig &easing,
-      bool persistent) override
-  {
-    return [platformTransitions_ startTransitionForTag:viewTag
-                                          propertyName:propertyName
-                                             fromValue:fromValue
-                                               toValue:toValue
-                                            durationMs:durationMs
-                                      startTimestampMs:startTimestampMs
-                                                easing:easing
-                                            persistent:persistent];
-  }
-
-  void stopTransition(Tag viewTag, const std::string &propertyName) override
-  {
-    [platformTransitions_ stopTransitionForTag:viewTag propertyName:propertyName];
-  }
-
- private:
-  REACSSPlatformTransitions *platformTransitions_;
-};
-
-/// The one place that decides whether CSS transitions run on Core Animation.
-std::shared_ptr<css::CSSPlatformTransitionBackend> makePlatformTransitionBackend(REANodesManager *nodesManager)
-{
-  if constexpr (!StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
-    return nullptr;
-  }
-  REACSSPlatformTransitions *platformTransitions =
-      [[REACSSPlatformTransitions alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
-  return std::make_shared<REACSSPlatformTransitionBackend>(platformTransitions);
-}
-
-} // namespace
-
 ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
 {
   auto forceScreenSnapshot = [=](Tag tag) -> bool {
@@ -275,7 +213,13 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(attachQueue);
   auto detachPseudoSelectorFunction = makeDetachPseudoSelectorFunction(attachQueue);
 
-  auto platformTransitionBackend = makePlatformTransitionBackend(nodesManager);
+  std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost;
+  std::shared_ptr<css::CSSPlatformTransitionBackend> platformTransitionBackend;
+  if constexpr (StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
+    nativeAnimationHost = native_animation::NativeAnimationHost::create(
+        native_animation::makeCoreAnimationPlatform(nodesManager.surfacePresenter));
+    platformTransitionBackend = css::makeCSSPlatformTransitionBackend(nativeAnimationHost);
+  }
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
@@ -292,6 +236,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
       platformTransitionBackend,
+      nativeAnimationHost,
   };
   return platformDepMethodsHolder;
 }

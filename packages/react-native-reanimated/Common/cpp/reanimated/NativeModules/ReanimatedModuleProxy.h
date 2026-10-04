@@ -95,6 +95,10 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
       const jsi::Value &callback);
 
   jsi::Value getStaticFeatureFlag(jsi::Runtime &rt, const jsi::Value &name);
+#ifndef NDEBUG
+  /// Gives the callback the native animation trace events recorded since the last call.
+  void takeNativeAnimationTrace(jsi::Runtime &rt, const jsi::Value &callback);
+#endif
   jsi::Value setDynamicFeatureFlag(jsi::Runtime &rt, const jsi::Value &name, const jsi::Value &value);
 
   jsi::Value configureLayoutAnimationBatch(jsi::Runtime &rt, const jsi::Value &layoutAnimationsBatch);
@@ -260,6 +264,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
   const std::shared_ptr<PseudoStylesRegistry> pseudoStylesRegistry_;
 
+  const std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost_;
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
   const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
   const std::shared_ptr<SynchronousWritesTracker> synchronousWritesTracker_;
