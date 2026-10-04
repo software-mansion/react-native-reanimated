@@ -1,6 +1,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/LayoutAnimations/NativeLayoutTracks.h>
 #include <reanimated/NativeAnimations/NativeAnimationRealization.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <cmath>
 #include <optional>
@@ -88,12 +89,6 @@ makeTrack(jsi::Runtime &rt, const jsi::Object &leaf, const ShadowView &before, c
     return TrackBuildFailure::UnsupportedTiming;
   }
   const auto timing = timingValue.asObject(rt);
-  const auto durationMs = numberOf(timing.getProperty(rt, "durationMs"));
-  // TODO (Objective 08): the form of a zero duration that holds the start value through the delay.
-  if (durationMs == 0) {
-    return TrackBuildFailure::UnsupportedTiming;
-  }
-
   const auto toValue = numberOf(timing.getProperty(rt, "toValue"));
   const auto start = initialValue.getNumber();
   const AnimationValue startValue = start + target->modelOffset;
@@ -104,7 +99,7 @@ makeTrack(jsi::Runtime &rt, const jsi::Object &leaf, const ShadowView &before, c
       .segments =
           {{.endOffset = 1, .endValue = toValue + target->modelOffset, .timingFromPrevious = leafEasing(rt, timing)}},
       .delayMs = numberOf(timing.getProperty(rt, "delayMs")),
-      .durationMs = durationMs,
+      .durationMs = numberOf(timing.getProperty(rt, "durationMs")),
       .endpointPolicy = EndpointPolicy::MountedModelMustMatchEndpoint,
   };
   if (const auto failure = validateTrack(track)) {
@@ -132,6 +127,7 @@ std::variant<NativeLayoutTracks, TrackBuildFailure> makeNativeLayoutTracks(
     const jsi::Object &buildSummary,
     const ShadowView &before,
     const ShadowView &after) {
+  ReanimatedSystraceSection section("makeNativeLayoutTracks");
   // TODO (Objective 10): Size is no native target, and the model position depends on the size.
   if (!isSameSize(before.layoutMetrics.frame.size, after.layoutMetrics.frame.size)) {
     return TrackBuildFailure::UnsupportedTarget;
