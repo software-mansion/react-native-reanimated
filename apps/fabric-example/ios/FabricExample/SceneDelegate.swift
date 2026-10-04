@@ -5,7 +5,7 @@ import UIKit
 
 class SceneDelegate: RCTDefaultReactNativeFactoryDelegate, UIWindowSceneDelegate {
   var window: UIWindow?
-  var reactNativeFactory: RCTReactNativeFactory?
+  @objc var reactNativeFactory: RCTReactNativeFactory?
 
   func scene(
     _ scene: UIScene,
