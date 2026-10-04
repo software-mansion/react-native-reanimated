@@ -47,6 +47,12 @@ std::optional<NativeLayoutBuildEnd> NativeLayoutGroups::start(const AnimationReq
   return oldGroupEnd;
 }
 
+std::vector<TrackKey> NativeLayoutGroups::members(const Tag tag) {
+  const std::lock_guard<std::mutex> lock(mutex_);
+  const auto groupIt = groups_.find(tag);
+  return groupIt == groups_.end() ? std::vector<TrackKey>{} : groupIt->second.members;
+}
+
 std::optional<NativeLayoutBuildEnd> NativeLayoutGroups::cancel(const Tag tag) {
   const std::lock_guard<std::mutex> lock(mutex_);
   const auto groupIt = groups_.find(tag);

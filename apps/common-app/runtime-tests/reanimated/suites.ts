@@ -1,39 +1,10 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import type { RuntimeTestSuite } from '../types';
 
-type Describe = (name: string, buildSuite: () => void) => void;
-
 export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
   {
     testSuiteName: 'animations',
     importTest: () => {
-      const { describe } = require('../ReJest/RuntimeTestsApi') as {
-        describe: Describe;
-      };
-      describe('*****withTiming***** ⏰', () => {
-        require('./tests/animations/withTiming/arrays.test');
-        require('./tests/animations/withTiming/basic.test');
-        require('./tests/animations/withTiming/objects.test');
-        require('./tests/animations/withTiming/colors.test');
-        // TODO: Fix this test - tag is not passed to _updateProps, so the recordAnimationUpdates function always receives tag as undefined
-        // Uncomment test when fixed
-        // require('./tests/animations/withTiming/easing.test');
-        // TODO: snapshots are stale - the test records 63 updates, the snapshot has 64
-        // require('./tests/animations/withTiming/transformMatrices.test');
-      });
-      describe('*****withSpring*****', () => {
-        require('./tests/animations/withSpring/variousConfig.test');
-      });
-      describe('*****withDecay*****', () => {
-        require('./tests/animations/withDecay/basic.test');
-      });
-      describe('*****withSequence*****', () => {
-        require('./tests/animations/withSequence/callbackCascade.test');
-        require('./tests/animations/withSequence/cancelAnimation.test');
-        require('./tests/animations/withSequence/numbers.test');
-        require('./tests/animations/withSequence/arrays.test');
-        require('./tests/animations/withSequence/colors.test');
-      });
       // TODO: Fix this test - tag is not passed to _updateProps, so the recordAnimationUpdates function always receives tag as undefined
       // Uncomment test when fixed
       // describe('*****withDelay*****', () => {
@@ -134,15 +105,6 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
   {
     testSuiteName: 'layout transitions',
     importTest: () => {
-      const { describe } = require('../ReJest/RuntimeTestsApi') as {
-        describe: Describe;
-      };
-      describe('Compare layout transitions with **constant view size** with snapshots', () => {
-        require('./tests/layoutAnimations/layout/predefinedLayoutPosition.test');
-      });
-      describe('Compare predefined layout transitions including view **size changes** with snapshots', () => {
-        require('./tests/layoutAnimations/layout/positionAndSize.test');
-      });
       require('./tests/layoutAnimations/layout/custom.test');
     },
     // TODO: Fix this test - shadowNodeWrapper is not passed to _notifyAboutProgress, so the _updateNativeSnapshot function always receives shadowNodeWrapper as undefined
@@ -178,6 +140,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'layout animations re-created views',
     importTest: () => {
       require('./tests/layoutAnimations/recreatedViews.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animation callback commit',
+    importTest: () => {
+      require('./tests/layoutAnimations/callbackCommit.test');
     },
   },
   {

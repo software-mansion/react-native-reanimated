@@ -36,6 +36,8 @@ class NativeLayoutGroups final : public native_animation::NativeAnimationClient 
   /// The request becomes the group of its view. The tracks of the old group that the request does not replace
   /// join it with their keys. Gives the end of the old group, whose callback result is `false`.
   std::optional<NativeLayoutBuildEnd> start(const native_animation::AnimationRequest &request);
+  /// The tracks that the group of the view waits for.
+  std::vector<native_animation::TrackKey> members(facebook::react::Tag tag);
   /// Stops each track of the group of the view. Gives the end of the group, whose callback result is `false`.
   std::optional<NativeLayoutBuildEnd> cancel(facebook::react::Tag tag);
   /// Ends all groups with `false` and releases all builds. The host stops the tracks when the surface closes.

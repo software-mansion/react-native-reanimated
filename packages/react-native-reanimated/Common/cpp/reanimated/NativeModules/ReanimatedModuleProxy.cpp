@@ -527,6 +527,9 @@ jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent
   if (event.transactionNumber) {
     object.setProperty(rt, "transactionNumber", static_cast<double>(*event.transactionNumber));
   }
+  if (event.leafValue) {
+    object.setProperty(rt, "leafValue", *event.leafValue);
+  }
   return object;
 }
 
@@ -924,6 +927,12 @@ void ReanimatedModuleProxy::performOperations() {
 
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
+  // A callback of a layout animation can ask for a flush inside a pull. The next frame does that flush.
+  if (LayoutAnimationsPull::isRunningOnThisThread()) {
+    requestRender_([](const double) {});
+    return;
+  }
+
   flushLayoutAnimationOperations();
   executeLayoutAnimationsRequests();
 
@@ -1040,10 +1049,10 @@ bool ReanimatedModuleProxy::hasSynchronousWritesTracker() const {
 }
 
 void ReanimatedModuleProxy::surfaceDidMount(const SurfaceId surfaceId) {
-  rewriteSynchronousProps();
   if constexpr (StaticFeatureFlags::getFlag("IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION")) {
     layoutAnimationsProxyRegistry_->surfaceDidMount(surfaceId);
   }
+  rewriteSynchronousProps();
 }
 
 void ReanimatedModuleProxy::rewriteSynchronousProps() {
