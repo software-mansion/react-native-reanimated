@@ -4,6 +4,7 @@
 #include <reanimated/Compat/ReactNativeGraphics.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
+#include <reanimated/LayoutAnimations/LiveLayoutLeaf.h>
 
 #include <jsi/jsi.h>
 #include <atomic>
@@ -127,16 +128,24 @@ class LayoutAnimationsManager {
       const LayoutAnimationType type,
       const jsi::Object &values,
       const std::shared_ptr<Serializable> &config);
+  /// Gives the value that each live leaf of a view has at the start time of this batch.
+  jsi::Object captureLiveLayoutLeaves(jsi::Runtime &rt, const LiveLayoutLeaves &liveLeaves);
   /// Calls the builder of `config` one time and keeps its result on the UI runtime under `buildId`. Gives the
-  /// summary of the result, or undefined when the builder throws.
+  /// summary of the result, or undefined when the builder throws. `liveLeaves` are the live leaves of the view.
   jsi::Value buildLayoutAnimation(
       jsi::Runtime &rt,
       uint64_t buildId,
       const jsi::Object &values,
       const std::shared_ptr<Serializable> &config,
-      size_t maxLeaves);
-  /// Starts the frame-driven animation of the build.
-  bool startBuiltLayoutAnimation(jsi::Runtime &rt, int tag, LayoutAnimationType type, uint64_t buildId);
+      size_t maxLeaves,
+      const LiveLayoutLeaves &liveLeaves);
+  /// Starts the frame-driven animation of the build. It continues the `liveLeaves` of the view.
+  bool startBuiltLayoutAnimation(
+      jsi::Runtime &rt,
+      int tag,
+      LayoutAnimationType type,
+      uint64_t buildId,
+      const LiveLayoutLeaves &liveLeaves);
   /// Gives the result to the callback of a build that plays natively.
   void finishBuiltLayoutAnimation(jsi::Runtime &rt, uint64_t buildId, bool finished);
   void releaseBuiltLayoutAnimation(jsi::Runtime &rt, uint64_t buildId);
@@ -155,6 +164,7 @@ class LayoutAnimationsManager {
       const char *methodName,
       const std::function<void(jsi::Runtime &, const jsi::Function &)> &call);
   std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(const LayoutAnimationType type);
+  static jsi::Array toJSValue(jsi::Runtime &rt, const LiveLayoutLeaves &liveLeaves);
 
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimationsForNativeID_;

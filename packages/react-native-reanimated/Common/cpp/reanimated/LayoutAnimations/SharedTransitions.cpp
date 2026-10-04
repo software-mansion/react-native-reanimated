@@ -248,6 +248,9 @@ void LayoutAnimationsProxy::collectSharedElement(
   } else {
     copy = useViewsOnScreen ? viewOnScreen(node) : node->current;
     absolutePositions = getAbsolutePositionsForRootPathView(node, useViewsOnScreen);
+    if (const auto shown = useViewsOnScreen ? viewWithLiveLeafValues(copy) : std::nullopt) {
+      copy.props = shown->props;
+    }
     copy.layoutMetrics.frame.origin = absolutePositions[0];
     ancestors = collectAncestors(node, useViewsOnScreen);
     newTransform = parseParentTransforms(ancestors, absolutePositions);
@@ -1896,7 +1899,8 @@ std::optional<Transform> LayoutAnimationsProxy::transformsAboveNestedCarrier(
 // be from before an attach in this pull, which returned the carrier to its committed layout.
 ShadowView LayoutAnimationsProxy::inParentSpace(const ShadowView &snapshot, const std::shared_ptr<LightNode> &node)
     const {
-  auto view = mountedView(node);
+  const auto &mounted = mountedView(node);
+  auto view = viewWithLiveLeafValues(mounted).value_or(mounted);
   view.layoutMetrics = snapshot.layoutMetrics;
   view.layoutMetrics.frame.origin = snapshot.layoutMetrics.frame.origin - originOnScreen(node->parent.lock());
   return view;
@@ -2435,6 +2439,7 @@ void LayoutAnimationsProxy::hideTransitioningViews(
       continue;
     }
     hideInSharedElement(sharedTag, node);
+    cancelNativeOpacityAnimation(shadowView.tag);
     auto m = createPropsUpdate(
         shadowView, cloneViewWithoutOpacity(shadowView, propsParserContext), parentTag, propsParserContext);
     hiddenMutations.push_back(m);
@@ -3417,7 +3422,8 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
     react::Point viewPosition = scrollPosition(currentNode, node, scrollOffsets);
     const auto &view = pathView(currentNode, node, useViewsOnScreen);
     const auto parent = currentNode->parent.lock();
-    auto origin = view.layoutMetrics.frame.origin;
+    const auto shown = useViewsOnScreen ? viewWithLiveLeafValues(view) : std::nullopt;
+    auto origin = (shown ? *shown : view).layoutMetrics.frame.origin;
     // A screen below a header ends at the bottom of its stack. On Android, the frame of a new screen
     // can also start below the header until React Native Screens sends the native frame.
     if (parent && !strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
