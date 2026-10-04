@@ -497,6 +497,9 @@ jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent
     object.setProperty(rt, "outcome", toJSIString(event.result->outcome));
     object.setProperty(rt, "reason", toJSIString(event.result->reason));
   }
+  if (event.buildFailure) {
+    object.setProperty(rt, "buildFailure", toJSIString(*event.buildFailure));
+  }
   if (event.transactionNumber) {
     object.setProperty(rt, "transactionNumber", static_cast<double>(*event.transactionNumber));
   }
@@ -524,28 +527,6 @@ void ReanimatedModuleProxy::takeNativeAnimationTrace(jsi::Runtime &rt, const jsi
   } else {
     deliver({});
   }
-}
-
-void ReanimatedModuleProxy::armNativeLayoutStart(
-    const Tag tag,
-    const double durationMs,
-    const double delayMs,
-    const bool animatesOpacity,
-    const int count) {
-  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag, durationMs, delayMs, animatesOpacity, count] {
-    if (const auto strongThis = weakThis.lock()) {
-      strongThis->layoutAnimationsProxyRegistry_->armNativeLayoutStart(
-          tag, {durationMs, delayMs, animatesOpacity, count});
-    }
-  });
-}
-
-void ReanimatedModuleProxy::cancelNativeLayoutCommand(const Tag tag) {
-  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag] {
-    if (const auto strongThis = weakThis.lock()) {
-      strongThis->layoutAnimationsProxyRegistry_->cancelNativeLayoutCommand(tag);
-    }
-  });
 }
 
 void ReanimatedModuleProxy::sampleNativeAnimationTarget(
@@ -1432,7 +1413,6 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       uiManager_,
       requestLayoutAnimationFlush,
       nativeAnimationHost_,
-      getAnimationTimestamp_,
 #ifdef ANDROID
       filterUnmountedTagsFunction_,
       jsInvoker_,
@@ -1788,31 +1768,6 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
       [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         if (const auto strongThis = weakThis.lock()) {
           strongThis->takeNativeAnimationTrace(rt, at<0>(args));
-        }
-      });
-
-  addMethod<5>(
-      rt,
-      obj,
-      "armNativeLayoutStart",
-      [weakThis = weak_from_this()](jsi::Runtime &, const jsi::Value &, const jsi::Value(&args)[5]) {
-        if (const auto strongThis = weakThis.lock()) {
-          strongThis->armNativeLayoutStart(
-              static_cast<Tag>(at<0>(args).asNumber()),
-              at<1>(args).asNumber(),
-              at<2>(args).asNumber(),
-              at<3>(args).asBool(),
-              static_cast<int>(at<4>(args).asNumber()));
-        }
-      });
-
-  addMethod<1>(
-      rt,
-      obj,
-      "cancelNativeLayoutCommand",
-      [weakThis = weak_from_this()](jsi::Runtime &, const jsi::Value &, const jsi::Value(&args)[1]) {
-        if (const auto strongThis = weakThis.lock()) {
-          strongThis->cancelNativeLayoutCommand(static_cast<Tag>(at<0>(args).asNumber()));
         }
       });
 

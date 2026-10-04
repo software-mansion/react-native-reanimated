@@ -11,7 +11,6 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
-#include <reanimated/LayoutAnimations/NativeLayoutStart.h>
 #include <reanimated/NativeAnimations/NativeAnimationHost.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
@@ -49,6 +48,8 @@ struct ManagedLayoutAnimationStart {
   Tag parentTag;
   std::optional<double> opacity;
   std::shared_ptr<Serializable> config;
+  /// Has a value when the UI runtime already holds the result of the builder of `config`.
+  std::optional<uint64_t> buildId;
 };
 
 struct ProgressLayoutAnimationStart {
@@ -78,7 +79,6 @@ struct LayoutAnimationsProxyDependencies {
   std::shared_ptr<facebook::react::UIManager> uiManager;
   std::function<void(SurfaceId)> requestLayoutAnimationFlush;
   std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost;
-  GetAnimationTimestampFunction getAnimationTimestamp;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker;
@@ -126,14 +126,6 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   /// The platform reports that the transaction of the last pull is on the host views. UI thread only.
   virtual void surfaceDidMount() {}
   virtual void surfaceDidUnmount();
-#ifndef NDEBUG
-  virtual bool armNativeLayoutStart(Tag /*tag*/, const ArmedNativeLayoutStart & /*armedStart*/) {
-    return false;
-  }
-  virtual bool cancelNativeLayoutCommand(Tag /*tag*/) {
-    return false;
-  }
-#endif
   virtual void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const;
   ~LayoutAnimationsProxyCommon() override = default;
 
@@ -149,6 +141,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void enqueueLayoutAnimation(ManagedLayoutAnimationStart start) const;
   void enqueueLayoutAnimation(ProgressLayoutAnimationStart start) const;
   void flushLayoutAnimationOperations(std::unique_lock<std::recursive_mutex> &lock) const;
+  /// The values that the builder of the layout animation gets.
+  jsi::Object layoutAnimationValues(const ManagedLayoutAnimationStart &start, Rect window) const;
   void cancelLayoutAnimation(Tag tag) const;
   void cancelAllLayoutAnimations() const;
   bool hasPendingLayoutAnimation(Tag tag) const;
@@ -219,7 +213,9 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   };
 #endif
 
-  void reconcileLayoutAnimationOperations(std::deque<LayoutAnimationOperation> &operations) const;
+  /// Removes the operations that a later cancellation of their view makes void. Gives the builds of the
+  /// removed starts.
+  std::vector<uint64_t> reconcileLayoutAnimationOperations(std::deque<LayoutAnimationOperation> &operations) const;
   void flushLayoutAnimationOperationsLocked() const;
   std::optional<PreparedLayoutAnimationOperation> takeNextLayoutAnimationOperation(
       std::deque<LayoutAnimationOperation> &operations) const;

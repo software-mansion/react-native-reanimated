@@ -106,20 +106,54 @@ void LayoutAnimationsManager::startLayoutAnimation(
   if (!config) {
     return;
   }
-  // TODO: cache the following!!
-  jsi::Value layoutAnimationRepositoryAsValue =
-      rt.global().getPropertyAsObject(rt, "global").getProperty(rt, "LayoutAnimationsManager");
-  jsi::Function startAnimationForTag =
-      layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "start");
-  startAnimationForTag.call(rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, config->toJSValue(rt));
+  getManagerFunction(rt, "start")
+      .call(rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, config->toJSValue(rt));
+}
+
+jsi::Value LayoutAnimationsManager::buildLayoutAnimation(
+    jsi::Runtime &rt,
+    const uint64_t buildId,
+    const jsi::Object &values,
+    const std::shared_ptr<Serializable> &config,
+    const size_t maxLeaves) {
+  return getManagerFunction(rt, "build")
+      .call(
+          rt,
+          jsi::Value(static_cast<double>(buildId)),
+          values,
+          config->toJSValue(rt),
+          jsi::Value(static_cast<double>(maxLeaves)));
+}
+
+void LayoutAnimationsManager::startBuiltLayoutAnimation(
+    jsi::Runtime &rt,
+    const int tag,
+    const LayoutAnimationType type,
+    const uint64_t buildId) {
+  getManagerFunction(rt, "startBuilt")
+      .call(rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), jsi::Value(static_cast<double>(buildId)));
+}
+
+void LayoutAnimationsManager::finishBuiltLayoutAnimation(
+    jsi::Runtime &rt,
+    const uint64_t buildId,
+    const bool finished) {
+  getManagerFunction(rt, "finishBuilt").call(rt, jsi::Value(static_cast<double>(buildId)), jsi::Value(finished));
+}
+
+void LayoutAnimationsManager::releaseBuiltLayoutAnimation(jsi::Runtime &rt, const uint64_t buildId) {
+  getManagerFunction(rt, "releaseBuilt").call(rt, jsi::Value(static_cast<double>(buildId)));
 }
 
 void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const {
-  jsi::Value layoutAnimationRepositoryAsValue =
-      rt.global().getPropertyAsObject(rt, "global").getProperty(rt, "LayoutAnimationsManager");
-  jsi::Function cancelLayoutAnimation =
-      layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "stop");
-  cancelLayoutAnimation.call(rt, jsi::Value(tag));
+  getManagerFunction(rt, "stop").call(rt, jsi::Value(tag));
+}
+
+jsi::Function LayoutAnimationsManager::getManagerFunction(jsi::Runtime &rt, const char *name) {
+  return rt.global()
+      .getPropertyAsObject(rt, "global")
+      .getPropertyAsObject(rt, "LayoutAnimationsManager")
+      .getPropertyAsFunction(rt, name);
 }
 
 void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, const int tag) {

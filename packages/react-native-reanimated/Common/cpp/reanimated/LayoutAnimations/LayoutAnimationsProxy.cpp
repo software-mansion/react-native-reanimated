@@ -5,6 +5,7 @@
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
+#include <reanimated/LayoutAnimations/NativeLayoutTracks.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
@@ -15,6 +16,7 @@
 #endif // ANDROID
 
 #include <algorithm>
+#include <atomic>
 #include <memory>
 #include <optional>
 #include <ranges>
@@ -61,6 +63,29 @@ std::vector<AncestorOrigin> ancestorOrigins(
 }
 } // namespace
 
+namespace {
+void deliverNativeBuildEnds(
+    LayoutAnimationsManager &layoutAnimationsManager,
+    jsi::Runtime &uiRuntime,
+    const NativeLayoutBuildEnds &buildEnds) {
+  for (const auto &[buildId, callbackResult, isReleased] : buildEnds) {
+    if (callbackResult) {
+      layoutAnimationsManager.finishBuiltLayoutAnimation(uiRuntime, buildId, *callbackResult);
+    }
+    if (isReleased) {
+      layoutAnimationsManager.releaseBuiltLayoutAnimation(uiRuntime, buildId);
+    }
+  }
+}
+
+/// A build id is also the generation of the native command of the build, and the UI runtime keeps the
+/// builds of all surfaces in one map.
+uint64_t makeBuildId() {
+  static std::atomic<uint64_t> lastBuildId{0};
+  return ++lastBuildId;
+}
+} // namespace
+
 std::shared_ptr<LayoutAnimationsProxyRegistry> createLayoutAnimationsProxyDefaultRegistry(
     const LayoutAnimationsProxyDependencies &dependencies) {
   return std::make_shared<LayoutAnimationsProxyRegistry>(
@@ -77,7 +102,14 @@ LayoutAnimationsProxy::LayoutAnimationsProxy(
       nativeAnimationHost_(
           StaticFeatureFlags::getFlag("IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION") ? dependencies.nativeAnimationHost
                                                                               : nullptr),
-      getAnimationTimestamp_(dependencies.getAnimationTimestamp) {
+      nativeLayoutGroups_(
+          nativeAnimationHost_ ? std::make_shared<NativeLayoutGroups>(
+                                     nativeAnimationHost_,
+                                     [layoutAnimationsManager = layoutAnimationsManager_,
+                                      &uiRuntime = uiRuntime_](const NativeLayoutBuildEnds &buildEnds) {
+                                       deliverNativeBuildEnds(*layoutAnimationsManager, uiRuntime, buildEnds);
+                                     })
+                               : nullptr) {
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
 #endif
@@ -212,11 +244,13 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     handleSharedTransitionsStart(afterTopScreen, beforeTopScreen, transaction, mutations, propsParserContext);
   }
 
+  configLock.unlock();
+
   for (const auto &[node, config] : transaction.entering) {
     startEnteringAnimation(node, config);
   }
   for (const auto &[node, config] : transaction.layout) {
-    startLayoutAnimation(node, config);
+    startLayoutAnimation(node, config, transaction);
   }
   for (const auto &[node, config] : transaction.exiting) {
     startExitingAnimation(node, config);
@@ -229,7 +263,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     flushCompletedRemovals(filteredMutations);
   }
 
-  configLock.unlock();
   flushLayoutAnimationOperations(lock);
 
   addOngoingAnimations(filteredMutations);
@@ -247,6 +280,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     keepTransitioningViewsHidden(filteredMutations, propsParserContext);
   }
+
+  flushNativeBuildEnds();
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
@@ -266,9 +301,9 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
     return;
   }
   lightNodes_.erase(it);
+  cancelNativeLayoutAnimation(node->current.tag);
 #ifndef NDEBUG
-  armedNativeStarts_.erase(node->current.tag);
-  lastNativeCommands_.erase(node->current.tag);
+  nativeTracksWithoutFrameUpdate_.erase(node->current.tag);
 #endif
   snapshottedScreens_.erase(node->current.tag);
   if (node == topScreen_) {
@@ -392,12 +427,7 @@ void LayoutAnimationsProxy::updateLightTree(
           break;
         }
         if (config && shouldAnimate) {
-          if (auto nativeStart = makeNativeLayoutStart(mutation, node, transaction)) {
-            filteredMutations.push_back(std::move(nativeStart->update));
-            pendingNativeStarts_.push_back(std::move(nativeStart->start));
-          } else {
-            transaction.layout.push_back({node, config});
-          }
+          transaction.layout.push_back({node, config});
         } else if (config && (layoutAnimations_.contains(tag) || hasPendingLayoutAnimation(tag))) {
           updateLayoutAnimationTarget(tag, node->current, config);
         } else {
@@ -1020,43 +1050,74 @@ ShadowViewMutation LayoutAnimationsProxy::updateToMount(
   return mutation;
 }
 
-std::optional<LayoutAnimationsProxy::NativeLayoutStart> LayoutAnimationsProxy::makeNativeLayoutStart(
-    [[maybe_unused]] const ShadowViewMutation &mutation,
-    [[maybe_unused]] const std::shared_ptr<LightNode> &node,
-    [[maybe_unused]] TransactionMeta &transaction) const {
+bool LayoutAnimationsProxy::startNativeLayoutAnimation(ManagedLayoutAnimationStart &start, TransactionMeta &transaction)
+    const {
+  const auto tag = start.tag;
+  if (const auto completedView = takeCompletedLayoutAnimationView(tag)) {
+    start.before = *completedView;
+  }
+  const auto buildId = makeBuildId();
+  start.buildId = buildId;
+  const native_animation::AnimationHandle handle{surfaceId_, tag, native_animation::AnimationOwner::Layout, buildId};
+
+  const auto buildSummary = layoutAnimationsManager_->buildLayoutAnimation(
+      uiRuntime_, buildId, layoutAnimationValues(start, window_), start.config, MAX_NATIVE_LAYOUT_LEAVES);
+  if (!buildSummary.isObject()) {
+    return false;
+  }
+  auto build = makeNativeLayoutTracks(uiRuntime_, buildSummary.asObject(uiRuntime_), start.before, start.after);
+  if ([[maybe_unused]] const auto *failure = std::get_if<native_animation::TrackBuildFailure>(&build)) {
 #ifndef NDEBUG
-  const auto tag = node->current.tag;
-  const auto armedStartIt = armedNativeStarts_.find(tag);
-  // An active frame-driven animation stays frame-driven until it ends.
-  if (armedStartIt == armedNativeStarts_.end() || layoutAnimations_.contains(tag) || hasPendingLayoutAnimation(tag)) {
-    return std::nullopt;
+    nativeAnimationHost_->trace().record(
+        {.event = native_animation::TraceEventType::LayoutBuildFailed,
+         .handle = handle,
+         .objective = 7,
+         .buildFailure = *failure,
+         .transactionNumber = pulledTransactionNumber_});
+#endif
+    return false;
   }
-  if (!transaction.nativeStartTimestampMs) {
-    transaction.nativeStartTimestampMs = getAnimationTimestamp_();
-  }
-  auto update = updateToMount(mutation, node);
-  native_animation::AnimationRequest request{
-      .handle = {surfaceId_, tag, native_animation::AnimationOwner::Layout, ++nativeStartGeneration_},
-      .originTimestampMs = *transaction.nativeStartTimestampMs,
-      .tracks = makeTracks(armedStartIt->second, update.oldChildShadowView, update.newChildShadowView),
-  };
-  if (--armedStartIt->second.count == 0) {
-    armedNativeStarts_.erase(armedStartIt);
-  }
-  NativeCommand nativeCommand{request.handle, {}};
+  auto &[originTimestampMs, tracks] = std::get<NativeLayoutTracks>(build);
+  native_animation::AnimationRequest request{handle, originTimestampMs, std::move(tracks)};
+
+#ifndef NDEBUG
+  auto &tracksWithoutFrameUpdate = nativeTracksWithoutFrameUpdate_[tag];
   for (const auto &track : request.tracks) {
-    nativeCommand.targetsWithoutFrameUpdate.push_back(track.target);
+    std::erase_if(tracksWithoutFrameUpdate, [&track](const native_animation::TrackKey &key) {
+      return native_animation::targetsOverlap(key.target, track.target);
+    });
+    tracksWithoutFrameUpdate.push_back({handle, track.target});
   }
-  lastNativeCommands_.insert_or_assign(tag, std::move(nativeCommand));
   nativeAnimationHost_->trace().record(
       {.event = native_animation::TraceEventType::LayoutStartPending,
-       .handle = request.handle,
-       .objective = 6,
+       .handle = handle,
+       .objective = 7,
        .transactionNumber = pulledTransactionNumber_});
-  return NativeLayoutStart{std::move(update), {std::move(request), nativeStartTraceClient_}};
-#else
-  return std::nullopt;
 #endif
+  if (const auto oldGroupEnd = nativeLayoutGroups_->start(request)) {
+    pendingNativeBuildEnds_.push_back(*oldGroupEnd);
+  }
+  transaction.filteredMutations.push_back(
+      ShadowViewMutation::UpdateMutation(start.before, start.after, start.parentTag));
+  pendingNativeStarts_.push_back({std::move(request), nativeLayoutGroups_});
+  return true;
+}
+
+void LayoutAnimationsProxy::cancelNativeLayoutAnimation(const Tag tag) const {
+  if (!nativeLayoutGroups_) {
+    return;
+  }
+  if (const auto groupEnd = nativeLayoutGroups_->cancel(tag)) {
+    pendingNativeBuildEnds_.push_back(*groupEnd);
+  }
+}
+
+void LayoutAnimationsProxy::flushNativeBuildEnds() const {
+  if (pendingNativeBuildEnds_.empty()) {
+    return;
+  }
+  react_native_assert(worklets::isOnUIThread(uiScheduler_) && "a native build end needs the UI runtime");
+  deliverNativeBuildEnds(*layoutAnimationsManager_, uiRuntime_, std::exchange(pendingNativeBuildEnds_, {}));
 }
 
 void LayoutAnimationsProxy::surfaceDidMount() {
@@ -1068,7 +1129,7 @@ void LayoutAnimationsProxy::surfaceDidMount() {
         {.event = native_animation::TraceEventType::FrameUpdateMounted,
          .handle = track.handle,
          .target = track.target,
-         .objective = 6,
+         .objective = 7,
          .transactionNumber = pulledTransactionNumber_});
   }
   const auto transactionNumber = pulledTransactionNumber_;
@@ -1083,7 +1144,7 @@ void LayoutAnimationsProxy::surfaceDidMount() {
     nativeAnimationHost_->trace().record(
         {.event = native_animation::TraceEventType::LayoutStartMounted,
          .handle = nativeStart.request.handle,
-         .objective = 6,
+         .objective = 7,
          .transactionNumber = transactionNumber});
   }
 #endif
@@ -1092,45 +1153,27 @@ void LayoutAnimationsProxy::surfaceDidMount() {
 
 #ifndef NDEBUG
 void LayoutAnimationsProxy::traceFirstFrameUpdates(const ShadowView &currentView, const ShadowView &newView) const {
-  const auto nativeCommandIt = lastNativeCommands_.find(newView.tag);
-  if (nativeCommandIt == lastNativeCommands_.end()) {
+  const auto tracksIt = nativeTracksWithoutFrameUpdate_.find(newView.tag);
+  if (tracksIt == nativeTracksWithoutFrameUpdate_.end()) {
     return;
   }
-  auto &nativeCommand = nativeCommandIt->second;
   const auto changes = [&](const native_animation::AnimationTarget target) {
-    if (target == native_animation::AnimationTarget::Opacity) {
-      return mountedOpacity(currentView) != mountedOpacity(newView);
+    switch (target) {
+      case native_animation::AnimationTarget::PositionX:
+        return mountedPosition(currentView).x != mountedPosition(newView).x;
+      case native_animation::AnimationTarget::PositionY:
+        return mountedPosition(currentView).y != mountedPosition(newView).y;
+      default:
+        return mountedOpacity(currentView) != mountedOpacity(newView);
     }
-    const auto currentPosition = mountedPosition(currentView);
-    const auto newPosition = mountedPosition(newView);
-    return currentPosition.x != newPosition.x || currentPosition.y != newPosition.y;
   };
-  std::erase_if(nativeCommand.targetsWithoutFrameUpdate, [&](const native_animation::AnimationTarget target) {
-    if (!changes(target)) {
+  std::erase_if(tracksIt->second, [&](const native_animation::TrackKey &track) {
+    if (!changes(track.target)) {
       return false;
     }
-    pulledFirstFrameUpdates_.push_back({nativeCommand.handle, target});
+    pulledFirstFrameUpdates_.push_back(track);
     return true;
   });
-}
-
-bool LayoutAnimationsProxy::armNativeLayoutStart(const Tag tag, const ArmedNativeLayoutStart &armedStart) {
-  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  if (!nativeAnimationHost_ || !lightNodes_.contains(tag) || armedStart.count < 1) {
-    return false;
-  }
-  armedNativeStarts_.insert_or_assign(tag, armedStart);
-  return true;
-}
-
-bool LayoutAnimationsProxy::cancelNativeLayoutCommand(const Tag tag) {
-  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  const auto nativeCommandIt = lastNativeCommands_.find(tag);
-  if (nativeCommandIt == lastNativeCommands_.end()) {
-    return false;
-  }
-  nativeAnimationHost_->cancel(nativeCommandIt->second.handle, native_animation::TrackStopMode::SettleToModel);
-  return true;
 }
 #endif
 
@@ -1142,9 +1185,17 @@ void LayoutAnimationsProxy::shadowTreeWillCommit(const bool isSurfaceRemoval) {
 void LayoutAnimationsProxy::clearSurfaceState() const {
   LayoutAnimationsProxyCommon::clearSurfaceState();
   pendingNativeStarts_.clear();
+  if (nativeLayoutGroups_) {
+    scheduleOnUI(
+        uiScheduler_,
+        [layoutAnimationsManager = layoutAnimationsManager_,
+         &uiRuntime = uiRuntime_,
+         buildEnds = nativeLayoutGroups_->clear()]() {
+          deliverNativeBuildEnds(*layoutAnimationsManager, uiRuntime, buildEnds);
+        });
+  }
 #ifndef NDEBUG
-  armedNativeStarts_.clear();
-  lastNativeCommands_.clear();
+  nativeTracksWithoutFrameUpdate_.clear();
   pulledFirstFrameUpdates_.clear();
 #endif
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
@@ -1271,6 +1322,7 @@ void LayoutAnimationsProxy::startExitingAnimation(
   const auto &oldChildShadowView = node->current;
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
+  cancelNativeLayoutAnimation(oldChildShadowView.tag);
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
       .tag = oldChildShadowView.tag,
       .type = LayoutAnimationType::EXITING,
@@ -1283,23 +1335,31 @@ void LayoutAnimationsProxy::startExitingAnimation(
 
 void LayoutAnimationsProxy::startLayoutAnimation(
     const std::shared_ptr<LightNode> &node,
-    const std::shared_ptr<Serializable> &config) const {
+    const std::shared_ptr<Serializable> &config,
+    TransactionMeta &transaction) const {
   if (const auto staleTag = staleSynchronousProps_.find(node, LayoutAnimationType::LAYOUT)) {
     warnAboutStaleSynchronousProps(node->current.tag, *staleTag, LayoutAnimationType::LAYOUT);
   }
   resolveLightNodeProps(node);
-  const auto &oldChildShadowView = node->previous;
-  const auto &newChildShadowView = node->current;
+  const auto tag = node->current.tag;
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
-  enqueueLayoutAnimation(ManagedLayoutAnimationStart{
-      .tag = oldChildShadowView.tag,
+  ManagedLayoutAnimationStart start{
+      .tag = tag,
       .type = LayoutAnimationType::LAYOUT,
-      .before = oldChildShadowView,
-      .after = newChildShadowView,
+      .before = node->previous,
+      .after = node->current,
       .parentTag = parent->current.tag,
       .config = config,
-  });
+  };
+  // An active frame-driven animation stays frame-driven until it ends.
+  const bool canStartNatively = nativeLayoutGroups_ && worklets::isOnUIThread(uiScheduler_) &&
+      isLightNodeMapped(node) && !layoutAnimations_.contains(tag) && !hasPendingLayoutAnimation(tag);
+  if (canStartNatively && startNativeLayoutAnimation(start, transaction)) {
+    return;
+  }
+  cancelNativeLayoutAnimation(tag);
+  enqueueLayoutAnimation(std::move(start));
 }
 
 void LayoutAnimationsProxy::startSharedTransition(
@@ -1307,6 +1367,7 @@ void LayoutAnimationsProxy::startSharedTransition(
     const ShadowView &before,
     const ShadowView &after,
     const std::shared_ptr<Serializable> &config) const {
+  cancelNativeLayoutAnimation(tag);
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
       .tag = tag,
       .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION,
@@ -1319,6 +1380,7 @@ void LayoutAnimationsProxy::startSharedTransition(
 
 void LayoutAnimationsProxy::startProgressTransition(const int tag, const ShadowView &before, const ShadowView &after)
     const {
+  cancelNativeLayoutAnimation(tag);
   enqueueLayoutAnimation(ProgressLayoutAnimationStart{
       .tag = tag,
       .before = before,

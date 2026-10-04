@@ -39,9 +39,13 @@ struct AnimationTrack {
 
 enum class TrackBuildFailure : uint8_t {
   UnsupportedTarget,
+  UnsupportedValue,
   UnsupportedTiming,
   UnsupportedTrackForm,
   InvalidValue,
+  /// The end value is not the value that the mounted model will hold.
+  EndpointMismatch,
+  ResourceLimit,
 };
 
 std::optional<TrackBuildFailure> validateTrack(const AnimationTrack &track);

@@ -5,7 +5,9 @@ import { runOnUISync } from 'react-native-worklets';
 
 import { cancelAnimation, withStyleAnimation } from '../animation';
 import type {
+  AnimationObject,
   LayoutAnimation,
+  LayoutAnimationBuildSummary,
   LayoutAnimationsManager,
   LayoutAnimationValues,
   Mutable,
@@ -58,10 +60,33 @@ function stopObservingProgress(
   scheduleFlush();
 }
 
+type LayoutAnimationBuild = {
+  /** Absent when the builder threw `error`. */
+  style?: LayoutAnimation;
+  error?: unknown;
+  originMs: number;
+  hasCallbackResult?: boolean;
+};
+
+function summarizeLeaf(
+  key: string,
+  initialValue: unknown,
+  animation: unknown
+): LayoutAnimationBuildSummary['leaves'][number] {
+  'worklet';
+  const { reduceMotion, __nativeTiming } = (animation ?? {}) as AnimationObject;
+  return {
+    key,
+    initialValue,
+    timing: reduceMotion ? undefined : __nativeTiming,
+  };
+}
+
 function createLayoutAnimationManager(): LayoutAnimationsManager {
   'worklet';
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
+  const builds = new Map<number, LayoutAnimationBuild>();
 
   // Layout animation starts are scheduled separately on the UI runtime. With
   // a large number of views, sampling the clock for every start noticeably
@@ -111,43 +136,60 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       yogaValues: Partial<LayoutAnimationValues>,
       config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
     ) {
-      const style = config(yogaValues);
-      let currentAnimation = style.animations;
-
-      // When layout animation is requested, but a previous one is still running, we merge
-      // new layout animation targets into the ongoing animation
-      const previousAnimation = currentAnimationForTag.get(tag);
-      if (previousAnimation) {
-        currentAnimation = { ...previousAnimation, ...style.animations };
+      startStyle(tag, type, config(yogaValues), getStartTimestamp());
+    },
+    build(
+      buildId: number,
+      yogaValues: Partial<LayoutAnimationValues>,
+      config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
+      maxLeaves: number
+    ): LayoutAnimationBuildSummary | undefined {
+      const originMs = getStartTimestamp();
+      let style: LayoutAnimation;
+      try {
+        style = config(yogaValues);
+      } catch (error) {
+        builds.set(buildId, { error, originMs });
+        return undefined;
       }
-      currentAnimationForTag.set(tag, currentAnimation);
-
-      let value = mutableValuesForTag.get(tag);
-      if (value === undefined) {
-        value = makeMutableUI(style.initialValues);
-        mutableValuesForTag.set(tag, value);
-      } else {
-        removeProgressListener(tag, value);
-        value._value = style.initialValues;
+      builds.set(buildId, { style, originMs });
+      const animations = (style.animations ?? {}) as Record<string, unknown>;
+      const initialValues = (style.initialValues ?? {}) as Record<
+        string,
+        unknown
+      >;
+      const keys = Object.keys(animations);
+      const exceedsLimit = keys.length > maxLeaves;
+      return {
+        originMs,
+        exceedsLimit,
+        hasInitialOnlyKeys: Object.keys(initialValues).some(
+          (key) => !(key in animations)
+        ),
+        leaves: exceedsLimit
+          ? []
+          : keys.map((key) =>
+              summarizeLeaf(key, initialValues[key], animations[key])
+            ),
+      };
+    },
+    startBuilt(tag: number, type: LayoutAnimationType, buildId: number) {
+      const build = builds.get(buildId)!;
+      builds.delete(buildId);
+      if (!build.style) {
+        throw build.error;
       }
-
-      const animation = withStyleAnimation(currentAnimation, (finished) => {
-        if (finished) {
-          currentAnimationForTag.delete(tag);
-          mutableValuesForTag.delete(tag);
-          const shouldRemoveView = type === LayoutAnimationType.EXITING;
-          stopObservingProgress(tag, value, scheduleFlush, shouldRemoveView);
-        }
-        if (style.callback) {
-          style.callback(finished);
-        }
-      });
-
-      startObservingProgress(tag, value, scheduleFlush);
-      const previousFrameTimestamp = global.__frameTimestamp;
-      global.__frameTimestamp ??= getLayoutAnimationStartTimestamp();
-      value.value = animation;
-      global.__frameTimestamp = previousFrameTimestamp;
+      startStyle(tag, type, build.style, build.originMs);
+    },
+    finishBuilt(buildId: number, finished: boolean) {
+      const build = builds.get(buildId);
+      if (build && !build.hasCallbackResult) {
+        build.hasCallbackResult = true;
+        build.style?.callback?.(finished);
+      }
+    },
+    releaseBuilt(buildId: number) {
+      builds.delete(buildId);
     },
     stop(tag: number) {
       const value = mutableValuesForTag.get(tag);
@@ -161,6 +203,54 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       mutableValuesForTag.delete(tag);
     },
   };
+
+  function getStartTimestamp(): number {
+    return global.__frameTimestamp ?? getLayoutAnimationStartTimestamp();
+  }
+
+  function startStyle(
+    tag: number,
+    type: LayoutAnimationType,
+    style: LayoutAnimation,
+    startTimestamp: number
+  ) {
+    let currentAnimation = style.animations;
+
+    // When layout animation is requested, but a previous one is still running, we merge
+    // new layout animation targets into the ongoing animation
+    const previousAnimation = currentAnimationForTag.get(tag);
+    if (previousAnimation) {
+      currentAnimation = { ...previousAnimation, ...style.animations };
+    }
+    currentAnimationForTag.set(tag, currentAnimation);
+
+    let value = mutableValuesForTag.get(tag);
+    if (value === undefined) {
+      value = makeMutableUI(style.initialValues);
+      mutableValuesForTag.set(tag, value);
+    } else {
+      removeProgressListener(tag, value);
+      value._value = style.initialValues;
+    }
+
+    const animation = withStyleAnimation(currentAnimation, (finished) => {
+      if (finished) {
+        currentAnimationForTag.delete(tag);
+        mutableValuesForTag.delete(tag);
+        const shouldRemoveView = type === LayoutAnimationType.EXITING;
+        stopObservingProgress(tag, value, scheduleFlush, shouldRemoveView);
+      }
+      if (style.callback) {
+        style.callback(finished);
+      }
+    });
+
+    startObservingProgress(tag, value, scheduleFlush);
+    const previousFrameTimestamp = global.__frameTimestamp;
+    global.__frameTimestamp = startTimestamp;
+    value.value = animation;
+    global.__frameTimestamp = previousFrameTimestamp;
+  }
 }
 
 let isLayoutAnimationsManagerInitialized = false;

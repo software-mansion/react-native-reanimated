@@ -1,3 +1,4 @@
+#import <reanimated/NativeAnimations/NativeAnimationRealization.h>
 #import <reanimated/apple/NativeAnimations/REANativeAnimationPlatform.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REASlowAnimations.h>
@@ -11,8 +12,6 @@
 #import <React/RCTUtils.h>
 
 #import <QuartzCore/QuartzCore.h>
-
-#import <react/renderer/components/view/ViewProps.h>
 
 #import <algorithm>
 #import <cmath>
@@ -206,18 +205,10 @@ bool modelMatchesEndpoint(CALayer *layer, const AnimationTrack &track)
   return model != nil && std::visit(ModelMatchesVisitor{model}, track.segments.back().endValue);
 }
 
-/// False when React Native puts more than the prop of the target into the model value. A start value that
-/// comes from the prop is then not the value on screen. The opacity filter multiplies the layer opacity.
 bool modelHoldsOnlyProp(REAUIView<RCTComponentViewProtocol> *view, const AnimationTarget target)
 {
-  if (target != AnimationTarget::Opacity) {
-    return true;
-  }
   const auto viewProps = std::dynamic_pointer_cast<const facebook::react::ViewProps>([view props]);
-  return viewProps == nullptr ||
-      std::ranges::none_of(viewProps->filter, [](const facebook::react::FilterFunction &filter) {
-           return filter.type == facebook::react::FilterType::Opacity;
-         });
+  return viewProps == nullptr || modelHoldsOnlyProp(*viewProps, target);
 }
 
 struct TimingFunctionVisitor {

@@ -59,6 +59,19 @@ class LayoutAnimationsManager {
       const LayoutAnimationType type,
       const jsi::Object &values,
       const std::shared_ptr<Serializable> &config);
+  /// Calls the builder of `config` one time and keeps its result on the UI runtime under `buildId`. Gives the
+  /// summary of the result, or undefined when the builder throws.
+  jsi::Value buildLayoutAnimation(
+      jsi::Runtime &rt,
+      uint64_t buildId,
+      const jsi::Object &values,
+      const std::shared_ptr<Serializable> &config,
+      size_t maxLeaves);
+  /// Starts the frame-driven animation of the build.
+  void startBuiltLayoutAnimation(jsi::Runtime &rt, int tag, LayoutAnimationType type, uint64_t buildId);
+  /// Gives the result to the callback of a build that plays natively.
+  void finishBuiltLayoutAnimation(jsi::Runtime &rt, uint64_t buildId, bool finished);
+  void releaseBuiltLayoutAnimation(jsi::Runtime &rt, uint64_t buildId);
   void clearLayoutAnimationConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
@@ -66,6 +79,7 @@ class LayoutAnimationsManager {
 
  private:
   std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(const LayoutAnimationType type);
+  static jsi::Function getManagerFunction(jsi::Runtime &rt, const char *name);
 
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimationsForNativeID_;

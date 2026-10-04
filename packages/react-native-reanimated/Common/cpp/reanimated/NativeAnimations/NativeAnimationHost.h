@@ -41,8 +41,6 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   void takeTrace(std::function<void(std::vector<TraceEvent>)> receiver);
   /// UI thread only.
   TraceRecorder &trace();
-  /// A client that records each report that it gets.
-  std::shared_ptr<NativeAnimationClient> makeTraceClient();
   void sampleTarget(Tag tag, AnimationTarget target, std::function<void(std::optional<TargetSample>)> receiver);
 #endif
 

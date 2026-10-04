@@ -9,6 +9,7 @@ import type {
 } from '../commonTypes';
 import type { EasingFunctionFactory } from '../Easing';
 import { Easing } from '../Easing';
+import { describeNativeTiming } from './nativeTiming';
 import {
   assertEasingIsWorklet,
   defineAnimation,
@@ -164,7 +165,7 @@ export const withTiming = function (
       }
     }
 
-    return {
+    const animation = {
       type: 'timing',
       onFrame: timing,
       onStart: onStart as (animation: TimingAnimation, now: number) => boolean,
@@ -177,5 +178,15 @@ export const withTiming = function (
       callback,
       reduceMotion: getReduceMotionForAnimation(userConfig?.reduceMotion),
     } as TimingAnimation;
+    const nativeTiming = describeNativeTiming(
+      toValue,
+      config,
+      callback,
+      userConfig?.reduceMotion
+    );
+    if (nativeTiming) {
+      animation.__nativeTiming = nativeTiming;
+    }
+    return animation;
   });
 } as withTimingType;

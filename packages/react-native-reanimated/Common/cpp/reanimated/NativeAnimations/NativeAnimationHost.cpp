@@ -102,33 +102,6 @@ TraceRecorder &NativeAnimationHost::trace() {
   return trace_;
 }
 
-std::shared_ptr<NativeAnimationClient> NativeAnimationHost::makeTraceClient() {
-  class TraceClient final : public NativeAnimationClient {
-   public:
-    explicit TraceClient(std::weak_ptr<NativeAnimationHost> host) : host_(std::move(host)) {}
-
-    void onAnimationAdmitted(const AnimationHandle &handle) override {
-      record({.event = TraceEventType::ClientAdmitted, .handle = handle, .objective = 6});
-    }
-
-    void onTrackEnded(const TrackKey & /*track*/, bool /*finished*/) override {}
-
-    void onAnimationEnded(const AnimationHandle &handle, const AnimationResult result) override {
-      record({.event = TraceEventType::ClientEnded, .handle = handle, .objective = 6, .result = result});
-    }
-
-   private:
-    void record(TraceEvent event) const {
-      if (const auto host = host_.lock()) {
-        host->trace_.record(std::move(event));
-      }
-    }
-
-    const std::weak_ptr<NativeAnimationHost> host_;
-  };
-  return std::make_shared<TraceClient>(weak_from_this());
-}
-
 void NativeAnimationHost::traceFirstFrame(const AnimationRequest &request) {
   for (const auto &track : request.tracks) {
     platform_->sampleAtNextFrame(
@@ -142,7 +115,7 @@ void NativeAnimationHost::traceFirstFrame(const AnimationRequest &request) {
                 .event = TraceEventType::FirstFrameSampled,
                 .handle = key.handle,
                 .target = key.target,
-                .objective = 6,
+                .objective = 7,
                 .presentationValue = sample->presentation});
           }
         });

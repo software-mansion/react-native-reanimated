@@ -1,62 +1,55 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Button,
-  findNodeHandle,
   Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import type { LayoutAnimationFunction } from 'react-native-reanimated';
 import Animated, {
+  Easing,
   getStaticFeatureFlag,
-  LinearTransition,
+  withTiming,
 } from 'react-native-reanimated';
-
-type NativeAnimationDevTools = {
-  armNativeLayoutStart?: (
-    tag: number,
-    durationMs: number,
-    delayMs: number,
-    animatesOpacity: boolean,
-    count: number
-  ) => void;
-};
-
-const devTools = (
-  globalThis as unknown as { __reanimatedModuleProxy: NativeAnimationDevTools }
-).__reanimatedModuleProxy;
 
 const DURATION = 8000;
 const TRAVEL = 220;
+
+// Position leaves with a linear easing: the subset that the native host plays.
+const NATIVE_MOVE: LayoutAnimationFunction = (values) => {
+  'worklet';
+  const config = { duration: DURATION, easing: Easing.linear };
+  return {
+    initialValues: {
+      originX: values.currentOriginX,
+      originY: values.currentOriginY,
+    },
+    animations: {
+      originX: withTiming(values.targetOriginX, config),
+      originY: withTiming(values.targetOriginY, config),
+    },
+  };
+};
 
 export default function FinalStateFirstBench() {
   const [isAtEnd, setIsAtEnd] = useState(false);
   const [boxPresses, setBoxPresses] = useState(0);
   const [trackPresses, setTrackPresses] = useState(0);
-  const boxRef = useRef<Animated.View>(null);
 
   if (
     Platform.OS !== 'ios' ||
-    devTools.armNativeLayoutStart === undefined ||
     !getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION')
   ) {
     return (
       <Text style={styles.label}>
-        This bench needs a development build of the native code on iOS with the
-        IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION flag.
+        This bench needs iOS with the IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION flag.
       </Text>
     );
   }
 
-  const move = () => {
-    const tag = findNodeHandle(boxRef.current);
-    if (typeof tag !== 'number') {
-      return;
-    }
-    devTools.armNativeLayoutStart?.(tag, DURATION, 0, false, 1);
-    setIsAtEnd((value) => !value);
-  };
+  const move = () => setIsAtEnd((value) => !value);
 
   return (
     <View style={styles.container}>
@@ -69,8 +62,7 @@ export default function FinalStateFirstBench() {
         style={styles.track}
         onPress={() => setTrackPresses((count) => count + 1)}>
         <Animated.View
-          ref={boxRef}
-          layout={LinearTransition}
+          layout={NATIVE_MOVE}
           style={[styles.mover, { marginLeft: isAtEnd ? TRAVEL : 0 }]}>
           <Pressable
             accessibilityLabel="bench-box"

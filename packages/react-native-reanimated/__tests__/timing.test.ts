@@ -1,4 +1,4 @@
-import { Easing, ReduceMotion, withTiming } from '../src';
+import { Easing, ReduceMotion, withDelay, withTiming } from '../src';
 import type {
   EasingFunction,
   EasingFunctionFactory,
@@ -214,5 +214,11 @@ describe('withTiming', () => {
       expect(animation.startTime).toBe(START + 400);
       expect(animation.startValue).toBe(25);
     });
+  });
+
+  test('has no native timing description when the native layout route is off', () => {
+    const animation = withTiming(100, { easing: Easing.linear });
+    expect('__nativeTiming' in animation).toBe(false);
+    expect('__nativeTiming' in withDelay(50, animation)).toBe(false);
   });
 });

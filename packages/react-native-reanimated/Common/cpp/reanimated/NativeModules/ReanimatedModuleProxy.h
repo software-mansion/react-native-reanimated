@@ -98,10 +98,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 #ifndef NDEBUG
   /// Gives the callback the native animation trace events recorded since the last call.
   void takeNativeAnimationTrace(jsi::Runtime &rt, const jsi::Value &callback);
-  /// The next `count` layout animation starts of the view go to the native host.
-  void armNativeLayoutStart(Tag tag, double durationMs, double delayMs, bool animatesOpacity, int count);
-  /// Cancels the last native layout command of the view.
-  void cancelNativeLayoutCommand(Tag tag);
   void
   sampleNativeAnimationTarget(jsi::Runtime &rt, Tag tag, const std::string &targetName, const jsi::Value &callback);
 #endif
