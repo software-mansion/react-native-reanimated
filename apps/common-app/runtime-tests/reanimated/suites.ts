@@ -102,6 +102,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'css native transitions',
+    importTest: () => {
+      require('./tests/css/nativeTransitions.test');
+    },
+  },
+  {
     testSuiteName: 'utilities',
     importTest: () => {
       require('./tests/utilities/relativeCoords.test');

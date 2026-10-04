@@ -25,6 +25,7 @@ class TransitionPropertyProgressProvider final : public KeyframeProgressProvider
       double delay,
       EasingConfig easing,
       double reversingShorteningFactor);
+  explicit TransitionPropertyProgressProvider(const TransitionTiming &timing);
 
   double getGlobalProgress() const override;
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
@@ -72,6 +73,7 @@ class TransitionProgressProvider final {
   void setMilestoneReporter(MilestoneReporter reporter);
 
   void runProgressProvider(const std::string &propertyName, bool isReversed, double timestamp);
+  void resumeProgressProvider(const std::string &propertyName, const TransitionTiming &timing);
   void abort(double timestamp);
   void removeProperties(const std::vector<std::string> &propertyNames, double timestamp);
   void removeProperty(const std::string &propertyName, double timestamp);
