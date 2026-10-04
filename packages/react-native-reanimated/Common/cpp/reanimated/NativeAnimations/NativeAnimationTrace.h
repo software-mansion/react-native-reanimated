@@ -27,10 +27,12 @@ enum class TraceEventType : uint8_t {
   FrameUpdateMounted,
   /// The value on screen at the first display frame after a start in a mount report.
   FirstFrameSampled,
-  /// The trace client got the admission report.
+  /// The layout client got the admission report.
   ClientAdmitted,
-  /// The trace client got the result.
+  /// The layout client got the result.
   ClientEnded,
+  /// Layout keeps the animation of a build frame-driven. The event gives the reason.
+  LayoutBuildFailed,
 };
 
 struct TraceEvent {
@@ -46,6 +48,7 @@ struct TraceEvent {
   std::optional<EndpointPolicy> endpointPolicy;
   std::optional<bool> finished;
   std::optional<AnimationResult> result;
+  std::optional<TrackBuildFailure> buildFailure;
   std::optional<int64_t> transactionNumber;
   /// The components of the value on screen.
   std::vector<double> presentationValue;
@@ -58,6 +61,7 @@ std::optional<AnimationTarget> targetFromString(std::string_view name);
 std::string_view toString(EndpointPolicy policy);
 std::string_view toString(AnimationOutcome outcome);
 std::string_view toString(AnimationResultReason reason);
+std::string_view toString(TrackBuildFailure failure);
 
 /// Development record of lifecycle facts. Each layer records its own events at the point where the fact
 /// occurs. It keeps the newest events. UI thread only.

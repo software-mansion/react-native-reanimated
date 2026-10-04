@@ -38,25 +38,6 @@ void LayoutAnimationsProxyRegistry::surfaceDidMount(const SurfaceId surfaceId) c
   instance->surfaceDidMount();
 }
 
-#ifndef NDEBUG
-void LayoutAnimationsProxyRegistry::armNativeLayoutStart(const Tag tag, const ArmedNativeLayoutStart &armedStart)
-    const {
-  for (const auto &instance : instances()) {
-    if (instance->armNativeLayoutStart(tag, armedStart)) {
-      return;
-    }
-  }
-}
-
-void LayoutAnimationsProxyRegistry::cancelNativeLayoutCommand(const Tag tag) const {
-  for (const auto &instance : instances()) {
-    if (instance->cancelNativeLayoutCommand(tag)) {
-      return;
-    }
-  }
-}
-#endif
-
 void LayoutAnimationsProxyRegistry::remove(const SurfaceId surfaceId) {
   std::shared_ptr<LayoutAnimationsProxyCommon> instance;
   {
