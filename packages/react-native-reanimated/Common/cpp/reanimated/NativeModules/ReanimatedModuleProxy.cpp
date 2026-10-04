@@ -879,6 +879,12 @@ void ReanimatedModuleProxy::performOperations() {
 
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
+  // A callback of a layout animation can ask for a flush inside a pull. The next frame does that flush.
+  if (LayoutAnimationsPull::isRunningOnThisThread()) {
+    requestRender_([](const double) {});
+    return;
+  }
+
   flushLayoutAnimationOperations();
   executeLayoutAnimationsRequests();
 

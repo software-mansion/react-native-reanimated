@@ -174,6 +174,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
   ReanimatedSystraceSection d("pullTransaction");
+  const LayoutAnimationsPull pull;
   react_native_assert(surfaceId == surfaceId_ && "pull routed to the wrong surface's proxy");
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   react_native_assert(pendingNativeStarts_.empty() && "a pull came before the mount report of the last pull");

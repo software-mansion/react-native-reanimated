@@ -143,6 +143,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'layout animation callback commit',
+    importTest: () => {
+      require('./tests/layoutAnimations/callbackCommit.test');
+    },
+  },
+  {
     testSuiteName: 'native layout starts',
     importTest: () => {
       require('./tests/layoutAnimations/nativeLayoutStarts.test');

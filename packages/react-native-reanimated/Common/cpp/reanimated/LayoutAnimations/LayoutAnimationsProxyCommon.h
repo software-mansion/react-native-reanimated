@@ -90,6 +90,27 @@ struct LayoutAnimationsProxyDependencies {
 #endif
 };
 
+/// The time in which a thread runs a pull of a layout animations proxy. The mounting coordinator holds its
+/// lock for the pull, so a commit of the same surface on that thread in that time cannot end.
+class LayoutAnimationsPull final {
+ public:
+  LayoutAnimationsPull() {
+    ++depth_;
+  }
+  ~LayoutAnimationsPull() {
+    --depth_;
+  }
+  LayoutAnimationsPull(const LayoutAnimationsPull &) = delete;
+  LayoutAnimationsPull &operator=(const LayoutAnimationsPull &) = delete;
+
+  static bool isRunningOnThisThread() {
+    return depth_ > 0;
+  }
+
+ private:
+  inline static thread_local int depth_ = 0;
+};
+
 class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDelegate,
                                     public std::enable_shared_from_this<LayoutAnimationsProxyCommon> {
  public:
