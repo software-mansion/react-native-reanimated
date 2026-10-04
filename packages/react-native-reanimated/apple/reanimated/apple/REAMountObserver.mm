@@ -1,10 +1,10 @@
 #import <reanimated/apple/REASurfacePresenterCompat.h>
 
-#import <reanimated/apple/REASynchronousPropsRewriter.h>
+#import <reanimated/apple/REAMountObserver.h>
 
 #import <React/RCTAssert.h>
 
-@implementation REASynchronousPropsRewriter {
+@implementation REAMountObserver {
   __weak RCTSurfacePresenter *_surfacePresenter;
   std::weak_ptr<reanimated::ReanimatedModuleProxy> _reanimatedModuleProxy;
 }
@@ -30,7 +30,7 @@
 {
   RCTAssertMainQueue();
   if (const auto reanimatedModuleProxy = _reanimatedModuleProxy.lock()) {
-    reanimatedModuleProxy->rewriteSynchronousProps();
+    reanimatedModuleProxy->surfaceDidMount(static_cast<facebook::react::SurfaceId>(rootTag));
   }
 }
 
