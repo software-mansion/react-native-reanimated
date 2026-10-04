@@ -3,7 +3,6 @@
 #include <reanimated/NativeAnimations/NativeAnimationTrace.h>
 
 #include <chrono>
-#include <utility>
 
 namespace reanimated::native_animation {
 
@@ -27,8 +26,6 @@ std::string_view toString(const TraceEventType event) {
       return "LayoutStartMounted";
     case TraceEventType::FrameUpdateMounted:
       return "FrameUpdateMounted";
-    case TraceEventType::FirstFrameSampled:
-      return "FirstFrameSampled";
     case TraceEventType::ClientAdmitted:
       return "ClientAdmitted";
     case TraceEventType::ClientEnded:
@@ -184,7 +181,7 @@ void TraceRecorder::record(TraceEvent event) {
   if (events_.size() == Capacity) {
     events_.pop_front();
   }
-  events_.push_back(std::move(event));
+  events_.push_back(event);
 }
 
 std::vector<TraceEvent> TraceRecorder::take() {
