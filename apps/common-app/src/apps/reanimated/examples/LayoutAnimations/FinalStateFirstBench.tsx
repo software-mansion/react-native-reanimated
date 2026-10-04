@@ -11,30 +11,41 @@ import type { LayoutAnimationFunction } from 'react-native-reanimated';
 import Animated, {
   Easing,
   getStaticFeatureFlag,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
 const DURATION = 8000;
 const TRAVEL = 220;
+const DROP = 80;
 
-// Position leaves with a linear easing: the subset that the native host plays.
-const NATIVE_MOVE: LayoutAnimationFunction = (values) => {
+// A spring has no native form, so a drop during a native move gives the view to the frame driver.
+const MOVE_OR_SPRING_DROP: LayoutAnimationFunction = (values) => {
   'worklet';
-  const config = { duration: DURATION, easing: Easing.linear };
+  const isDrop = values.targetOriginY !== values.currentOriginY;
   return {
     initialValues: {
       originX: values.currentOriginX,
       originY: values.currentOriginY,
     },
     animations: {
-      originX: withTiming(values.targetOriginX, config),
-      originY: withTiming(values.targetOriginY, config),
+      originX: withTiming(values.targetOriginX, {
+        duration: DURATION,
+        easing: Easing.linear,
+      }),
+      originY: isDrop
+        ? withSpring(values.targetOriginY)
+        : withTiming(values.targetOriginY, {
+            duration: DURATION,
+            easing: Easing.linear,
+          }),
     },
   };
 };
 
 export default function FinalStateFirstBench() {
   const [isAtEnd, setIsAtEnd] = useState(false);
+  const [isDown, setIsDown] = useState(false);
   const [boxPresses, setBoxPresses] = useState(0);
   const [trackPresses, setTrackPresses] = useState(0);
 
@@ -54,6 +65,10 @@ export default function FinalStateFirstBench() {
   return (
     <View style={styles.container}>
       <Button title="Move with the native host (8 s)" onPress={move} />
+      <Button
+        title="Drop with a spring (frame driver)"
+        onPress={() => setIsDown((value) => !value)}
+      />
       <Text style={styles.label} accessibilityLabel="bench-counters">
         {`Box presses: ${boxPresses}. Track presses: ${trackPresses}. Final position: ${isAtEnd ? 'end' : 'start'}.`}
       </Text>
@@ -62,8 +77,11 @@ export default function FinalStateFirstBench() {
         style={styles.track}
         onPress={() => setTrackPresses((count) => count + 1)}>
         <Animated.View
-          layout={NATIVE_MOVE}
-          style={[styles.mover, { marginLeft: isAtEnd ? TRAVEL : 0 }]}>
+          layout={MOVE_OR_SPRING_DROP}
+          style={[
+            styles.mover,
+            { marginLeft: isAtEnd ? TRAVEL : 0, marginTop: isDown ? DROP : 0 },
+          ]}>
           <Pressable
             accessibilityLabel="bench-box"
             style={styles.box}
@@ -85,7 +103,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   track: {
-    height: 80,
+    height: 80 + DROP,
     backgroundColor: 'lightgray',
   },
   mover: {

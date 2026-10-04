@@ -114,6 +114,11 @@ export type LayoutAnimationStartFunction = (
   config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
 ) => void;
 
+/** A native timing with the sum of its delays. */
+export type NativeLeafTiming = Omit<NativeTimingDescription, 'delaysMs'> & {
+  delayMs: number;
+};
+
 /** What the native route reads from the result of a layout animation builder. */
 export type LayoutAnimationBuildSummary = {
   /** The start time of the animation. All starts of one batch share it. */
@@ -122,11 +127,24 @@ export type LayoutAnimationBuildSummary = {
   exceedsLimit: boolean;
   /** An initial value has no animation. */
   hasInitialOnlyKeys: boolean;
+  /**
+   * The frame driver gives a result that native playback cannot repeat, because
+   * of a live leaf of the view.
+   */
+  needsFrameDriver: boolean;
   leaves: {
     key: string;
     initialValue: unknown;
-    timing?: NativeTimingDescription;
+    timing?: NativeLeafTiming;
+    /** The live leaf of the key keeps its timeline, so the key needs no track. */
+    continuesLiveLeaf: boolean;
   }[];
+};
+
+/** A leaf of a build whose native track plays on the view of a new start. */
+export type LiveLayoutLeaf = {
+  buildId: number;
+  key: string;
 };
 
 export type LayoutAnimationsManager = {
@@ -140,10 +158,22 @@ export type LayoutAnimationsManager = {
     buildId: number,
     yogaValues: Partial<LayoutAnimationValues>,
     config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
-    maxLeaves: number
+    maxLeaves: number,
+    liveLeaves: LiveLayoutLeaf[]
   ) => LayoutAnimationBuildSummary | undefined;
-  /** Starts the frame-driven animation of a build and releases the build. */
-  startBuilt: (tag: number, type: LayoutAnimationType, buildId: number) => void;
+  /** Gives the value that each live leaf has at the start time of this batch. */
+  captureLiveLeaves: (liveLeaves: LiveLayoutLeaf[]) => Record<string, number>;
+  /**
+   * Starts the frame-driven animation of a build and releases the build. The
+   * animation continues the live leaves from their state at the start time of
+   * the build.
+   */
+  startBuilt: (
+    tag: number,
+    type: LayoutAnimationType,
+    buildId: number,
+    liveLeaves: LiveLayoutLeaf[]
+  ) => void;
   /**
    * Calls the callback of a build that plays natively. A second call does
    * nothing.
@@ -324,7 +354,8 @@ export type AnimatableValue = Animatable | AnimatableValueObject;
 export type NativeTimingDescription = {
   toValue: number;
   durationMs: number;
-  delayMs: number;
+  /** The delay of each `withDelay` wrapper, the outer one first. */
+  delaysMs: number[];
   /** The control points of the easing. A linear easing has none. */
   cubicBezier?: [number, number, number, number];
 };

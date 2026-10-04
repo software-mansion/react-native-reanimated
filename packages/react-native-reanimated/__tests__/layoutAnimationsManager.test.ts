@@ -1,3 +1,4 @@
+import { Easing, withDelay, withTiming } from '../src';
 import type {
   AnimatableValue,
   AnimationObject,
@@ -6,6 +7,12 @@ import type {
 } from '../src/commonTypes';
 import { LayoutAnimationType } from '../src/commonTypes';
 import { initializeLayoutAnimationsManager } from '../src/layoutReanimation/animationsManager.native';
+
+jest.mock('../src/featureFlags', () => ({
+  ...jest.requireActual('../src/featureFlags'),
+  getStaticFeatureFlag: (name: string) =>
+    name === 'IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION',
+}));
 
 jest.mock('react-native-worklets', () =>
   jest.requireActual('../../react-native-worklets/src/mock')
@@ -196,7 +203,7 @@ describe('LayoutAnimationsManager', () => {
   });
   describe('builds', () => {
     const summaryOf = (buildId: number, config: () => LayoutAnimation) =>
-      manager.build(buildId, {}, config, 3);
+      manager.build(buildId, {}, config, 3, []);
 
     test('the builder runs one time for a build and its frame-driven start', () => {
       const startTimestamps: number[] = [];
@@ -204,7 +211,7 @@ describe('LayoutAnimationsManager', () => {
       getAnimationTimestamp.mockReturnValueOnce(100).mockReturnValueOnce(200);
 
       const summary = summaryOf(1, config);
-      manager.startBuilt(10, LayoutAnimationType.LAYOUT, 1);
+      manager.startBuilt(10, LayoutAnimationType.LAYOUT, 1, []);
 
       expect(config).toHaveBeenCalledTimes(1);
       expect(summary?.originMs).toBe(100);
@@ -215,7 +222,9 @@ describe('LayoutAnimationsManager', () => {
       const summary = summaryOf(2, () => ({
         initialValues: { originX: 5, opacity: 1 },
         animations: {
-          originX: { __nativeTiming: { toValue: 9 } } as unknown as number,
+          originX: {
+            __nativeTiming: { toValue: 9, delaysMs: [10, 20] },
+          } as unknown as number,
           originY: {
             reduceMotion: true,
             __nativeTiming: {},
@@ -227,9 +236,15 @@ describe('LayoutAnimationsManager', () => {
       expect(summary).toMatchObject({
         exceedsLimit: false,
         hasInitialOnlyKeys: true,
+        needsFrameDriver: false,
         leaves: [
-          { key: 'originX', initialValue: 5, timing: { toValue: 9 } },
-          { key: 'originY', initialValue: undefined, timing: undefined },
+          {
+            key: 'originX',
+            initialValue: 5,
+            timing: { toValue: 9, delayMs: 30 },
+            continuesLiveLeaf: false,
+          },
+          { key: 'originY', initialValue: undefined },
         ],
       });
     });
@@ -251,7 +266,7 @@ describe('LayoutAnimationsManager', () => {
 
       expect(summaryOf(4, config)).toBeUndefined();
       expect(() =>
-        manager.startBuilt(11, LayoutAnimationType.LAYOUT, 4)
+        manager.startBuilt(11, LayoutAnimationType.LAYOUT, 4, [])
       ).toThrow('builder error');
       expect(config).toHaveBeenCalledTimes(1);
     });
@@ -267,6 +282,181 @@ describe('LayoutAnimationsManager', () => {
       manager.finishBuilt(5, true);
 
       expect(callback.mock.calls).toEqual([[false]]);
+    });
+  });
+
+  describe('live leaves of native tracks', () => {
+    const TAG = 20;
+    const X = { buildId: 21, key: 'originX' };
+    let frames: Array<(timestamp: number) => void>;
+    const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
+
+    const onUIRuntime = <T>(create: () => T): T => {
+      const runtimeKind = globalThis.__RUNTIME_KIND;
+      globalThis.__RUNTIME_KIND = 2;
+      try {
+        return create();
+      } finally {
+        globalThis.__RUNTIME_KIND = runtimeKind;
+      }
+    };
+    const timing = (toValue: number, duration: number) =>
+      onUIRuntime(() =>
+        withTiming(toValue, { duration, easing: Easing.linear })
+      );
+    const configOf =
+      (
+        initialValues: Record<string, number>,
+        animations: Record<string, unknown>,
+        callback?: (finished: boolean) => void
+      ) =>
+      (): LayoutAnimation => ({
+        initialValues,
+        animations: animations as Record<string, number>,
+        callback,
+      });
+    const lastProgress = () =>
+      (globalThis._notifyAboutProgress as jest.Mock).mock.calls.at(-1)[1];
+    const runFrame = (timestamp: number) => {
+      globalThis.__frameTimestamp = timestamp;
+      frames.splice(0).forEach((frame) => frame(timestamp));
+      globalThis.__frameTimestamp = undefined;
+    };
+    const startBatchAt = (timestamp: number) => {
+      frameFinalizers.splice(0).forEach((finalizer) => finalizer());
+      getAnimationTimestamp.mockReturnValue(timestamp);
+    };
+
+    beforeEach(() => {
+      frames = [];
+      globalThis.requestAnimationFrame = (frame) => frames.push(frame);
+      // The native X: 0 to 100 in 400 ms, from the time 1000.
+      startBatchAt(1000);
+      manager.build(
+        X.buildId,
+        {},
+        configOf({ originX: 0 }, { originX: timing(100, 400) }),
+        3,
+        []
+      );
+      startBatchAt(1100);
+    });
+
+    afterEach(() => {
+      manager.stop(TAG);
+      manager.releaseBuilt(X.buildId);
+      globalThis.requestAnimationFrame = originalRequestAnimationFrame;
+    });
+
+    test('the capture gives the value of each live leaf at the batch time', () => {
+      expect(manager.captureLiveLeaves([X])).toEqual({ originX: 25 });
+    });
+
+    test('a new leaf with another end value replaces the live leaf', () => {
+      const summary = manager.build(
+        22,
+        {},
+        configOf({ originX: 25 }, { originX: timing(50, 400) }),
+        3,
+        [X]
+      );
+      manager.releaseBuilt(22);
+      expect(summary).toMatchObject({
+        needsFrameDriver: false,
+        leaves: [{ key: 'originX', continuesLiveLeaf: false }],
+      });
+    });
+
+    test('a new leaf with the same end value and timing continues the live leaf', () => {
+      const summary = manager.build(
+        22,
+        {},
+        configOf(
+          { originX: 25, originY: 0 },
+          { originX: timing(100, 400), originY: timing(40, 400) }
+        ),
+        3,
+        [X]
+      );
+      manager.releaseBuilt(22);
+      expect(summary).toMatchObject({
+        needsFrameDriver: false,
+        leaves: [
+          { key: 'originX', continuesLiveLeaf: true },
+          { key: 'originY', continuesLiveLeaf: false },
+        ],
+      });
+    });
+
+    test('a new leaf with the same end value and another duration needs the frame driver', () => {
+      const summary = manager.build(
+        22,
+        {},
+        configOf({ originX: 25 }, { originX: timing(100, 200) }),
+        3,
+        [X]
+      );
+      manager.releaseBuilt(22);
+      expect(summary?.needsFrameDriver).toBe(true);
+    });
+
+    test('a frame-driven start keeps a live leaf that it does not replace on its timeline', () => {
+      const callback = jest.fn();
+      manager.build(
+        22,
+        {},
+        configOf({ originY: 0 }, { originY: timing(40, 100) }, callback),
+        3,
+        [X]
+      );
+      manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, 22, [X]);
+      expect(lastProgress()).toEqual({ originX: 25, originY: 0 });
+
+      runFrame(1150);
+      expect(lastProgress()).toEqual({ originX: 37.5, originY: 20 });
+      runFrame(1300);
+      expect(lastProgress()).toEqual({ originX: 75, originY: 40 });
+      expect(callback).not.toHaveBeenCalled();
+      runFrame(1400);
+      expect(lastProgress()).toEqual({ originX: 100, originY: 40 });
+      expect(callback.mock.calls).toEqual([[true]]);
+    });
+
+    test('a frame-driven start with the same end value keeps the start time and takes the new duration', () => {
+      manager.build(
+        22,
+        {},
+        configOf({ originX: 25 }, { originX: timing(100, 200) }),
+        3,
+        [X]
+      );
+      manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, 22, [X]);
+      // 100 ms of 200 ms from the start time and the start value of the live leaf.
+      expect(lastProgress()).toEqual({ originX: 50 });
+      runFrame(1150);
+      expect(lastProgress()).toEqual({ originX: 75 });
+    });
+
+    test('a delayed frame-driven start runs the live leaf until its delay ends', () => {
+      const delayed = onUIRuntime(() =>
+        withDelay(100, timing(0, 100) as unknown as number)
+      );
+      manager.build(
+        22,
+        {},
+        configOf({ originX: 25 }, { originX: delayed }),
+        3,
+        [X]
+      );
+      manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, 22, [X]);
+      expect(lastProgress()).toEqual({ originX: 25 });
+      runFrame(1150);
+      expect(lastProgress()).toEqual({ originX: 37.5 });
+      // The new leaf starts in the frame in which its delay ends, from the value of the frame before.
+      runFrame(1200);
+      expect(lastProgress()).toEqual({ originX: 37.5 });
+      runFrame(1250);
+      expect(lastProgress()).toEqual({ originX: 18.75 });
     });
   });
 });

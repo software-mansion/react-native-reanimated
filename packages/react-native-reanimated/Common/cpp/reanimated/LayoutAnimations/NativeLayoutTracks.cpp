@@ -1,3 +1,4 @@
+#include <react/debug/react_native_assert.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/LayoutAnimations/NativeLayoutTracks.h>
 #include <reanimated/NativeAnimations/NativeAnimationRealization.h>
@@ -21,8 +22,6 @@ constexpr double ENDPOINT_TOLERANCE = 0.01;
 /// How one layout animation key maps to a native target of the view.
 struct LeafTarget {
   AnimationTarget target;
-  /// The value of the key that the view has before the commit.
-  double current;
   /// The value of the key that the mounted view has after the commit.
   double mounted;
   /// The model value of the target is the key value plus this offset.
@@ -35,21 +34,36 @@ bool isSameSize(const react::Size &lhs, const react::Size &rhs) {
       std::abs(lhs.height - rhs.height) <= ENDPOINT_TOLERANCE;
 }
 
-std::optional<LeafTarget> leafTarget(const std::string &key, const ShadowView &before, const ShadowView &after) {
-  const auto &currentFrame = before.layoutMetrics.frame;
+constexpr const char *ORIGIN_X_KEY = "originX";
+constexpr const char *ORIGIN_Y_KEY = "originY";
+constexpr const char *OPACITY_KEY = "opacity";
+
+std::optional<LeafTarget> leafTarget(const std::string &key, const ShadowView &after) {
   const auto &mountedFrame = after.layoutMetrics.frame;
-  if (key == "originX") {
-    return LeafTarget{
-        AnimationTarget::PositionX, currentFrame.origin.x, mountedFrame.origin.x, mountedFrame.size.width / 2};
+  if (key == ORIGIN_X_KEY) {
+    return LeafTarget{AnimationTarget::PositionX, mountedFrame.origin.x, mountedFrame.size.width / 2};
   }
-  if (key == "originY") {
-    return LeafTarget{
-        AnimationTarget::PositionY, currentFrame.origin.y, mountedFrame.origin.y, mountedFrame.size.height / 2};
+  if (key == ORIGIN_Y_KEY) {
+    return LeafTarget{AnimationTarget::PositionY, mountedFrame.origin.y, mountedFrame.size.height / 2};
   }
-  if (key == "opacity" && isViewKind(after) && modelHoldsOnlyProp(getViewProps(after), AnimationTarget::Opacity)) {
-    return LeafTarget{AnimationTarget::Opacity, mountedOpacity(before), mountedOpacity(after), 0};
+  if (key == OPACITY_KEY && isViewKind(after) && modelHoldsOnlyProp(getViewProps(after), AnimationTarget::Opacity)) {
+    return LeafTarget{AnimationTarget::Opacity, mountedOpacity(after), 0};
   }
   return std::nullopt;
+}
+
+const char *leafKey(const AnimationTarget target) {
+  switch (target) {
+    case AnimationTarget::PositionX:
+      return ORIGIN_X_KEY;
+    case AnimationTarget::PositionY:
+      return ORIGIN_Y_KEY;
+    case AnimationTarget::Opacity:
+      return OPACITY_KEY;
+    default:
+      react_native_assert(false && "a layout track has a target with no leaf key");
+      return "";
+  }
 }
 
 /// Not a number when the value is not a number, so that the track validation refuses it.
@@ -75,8 +89,8 @@ AnimationTiming leafEasing(jsi::Runtime &rt, const jsi::Object &timing) {
 }
 
 std::variant<AnimationTrack, TrackBuildFailure>
-makeTrack(jsi::Runtime &rt, const jsi::Object &leaf, const ShadowView &before, const ShadowView &after) {
-  const auto target = leafTarget(leaf.getProperty(rt, "key").asString(rt).utf8(rt), before, after);
+makeTrack(jsi::Runtime &rt, const jsi::Object &leaf, const ShadowView &after) {
+  const auto target = leafTarget(leaf.getProperty(rt, "key").asString(rt).utf8(rt), after);
   if (!target) {
     return TrackBuildFailure::UnsupportedTarget;
   }
@@ -90,12 +104,9 @@ makeTrack(jsi::Runtime &rt, const jsi::Object &leaf, const ShadowView &before, c
   }
   const auto timing = timingValue.asObject(rt);
   const auto toValue = numberOf(timing.getProperty(rt, "toValue"));
-  const auto start = initialValue.getNumber();
-  const AnimationValue startValue = start + target->modelOffset;
   AnimationTrack track{
       .target = target->target,
-      .start =
-          start == target->current ? AnimationStart{VisualValueIfInterrupting{startValue}} : AnimationStart{startValue},
+      .start = AnimationValue{initialValue.getNumber() + target->modelOffset},
       .segments =
           {{.endOffset = 1, .endValue = toValue + target->modelOffset, .timingFromPrevious = leafEasing(rt, timing)}},
       .delayMs = numberOf(timing.getProperty(rt, "delayMs")),
@@ -122,6 +133,23 @@ double mountedOpacity(const ShadowView &view) {
   return getViewProps(view).opacity;
 }
 
+LiveLayoutLeaves liveLayoutLeaves(const std::vector<TrackKey> &tracks) {
+  LiveLayoutLeaves leaves;
+  leaves.reserve(tracks.size());
+  for (const auto &track : tracks) {
+    leaves.push_back({track.handle.generation, leafKey(track.target)});
+  }
+  return leaves;
+}
+
+LiveLeafValues liveLeafValues(jsi::Runtime &rt, const jsi::Object &leafValues) {
+  const auto valueOf = [&](const char *key) -> std::optional<double> {
+    const auto value = leafValues.getProperty(rt, key);
+    return value.isNumber() ? std::optional(value.getNumber()) : std::nullopt;
+  };
+  return {valueOf(ORIGIN_X_KEY), valueOf(ORIGIN_Y_KEY), valueOf(OPACITY_KEY)};
+}
+
 std::variant<NativeLayoutTracks, TrackBuildFailure> makeNativeLayoutTracks(
     jsi::Runtime &rt,
     const jsi::Object &buildSummary,
@@ -144,11 +172,17 @@ std::variant<NativeLayoutTracks, TrackBuildFailure> makeNativeLayoutTracks(
   NativeLayoutTracks result{buildSummary.getProperty(rt, "originMs").asNumber(), {}};
   result.tracks.reserve(leafCount);
   for (size_t index = 0; index < leafCount; ++index) {
-    auto track = makeTrack(rt, leaves.getValueAtIndex(rt, index).asObject(rt), before, after);
+    const auto leaf = leaves.getValueAtIndex(rt, index).asObject(rt);
+    auto track = makeTrack(rt, leaf, after);
     if (const auto *failure = std::get_if<TrackBuildFailure>(&track)) {
       return *failure;
     }
-    result.tracks.push_back(std::get<AnimationTrack>(std::move(track)));
+    if (!leaf.getProperty(rt, "continuesLiveLeaf").asBool()) {
+      result.tracks.push_back(std::get<AnimationTrack>(std::move(track)));
+    }
+  }
+  if (buildSummary.getProperty(rt, "needsFrameDriver").asBool() || result.tracks.empty()) {
+    return TrackBuildFailure::UnsupportedContinuation;
   }
   return result;
 }

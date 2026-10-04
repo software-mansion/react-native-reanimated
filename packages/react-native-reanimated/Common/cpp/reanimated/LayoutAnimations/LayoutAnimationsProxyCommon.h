@@ -50,6 +50,8 @@ struct ManagedLayoutAnimationStart {
   std::shared_ptr<Serializable> config;
   /// Has a value when the UI runtime already holds the result of the builder of `config`.
   std::optional<uint64_t> buildId;
+  /// The leaves of the view that native tracks play at the build. A frame-driven start continues them.
+  LiveLayoutLeaves liveLeaves;
 };
 
 struct ProgressLayoutAnimationStart {
@@ -162,8 +164,12 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void enqueueLayoutAnimation(ManagedLayoutAnimationStart start) const;
   void enqueueLayoutAnimation(ProgressLayoutAnimationStart start) const;
   void flushLayoutAnimationOperations(std::unique_lock<std::recursive_mutex> &lock) const;
-  /// The values that the builder of the layout animation gets.
-  jsi::Object layoutAnimationValues(const ManagedLayoutAnimationStart &start, Rect window) const;
+  /// The values that the builder of the layout animation gets for a view that shows `current`.
+  jsi::Object layoutAnimationValues(
+      LayoutAnimationType type,
+      const ShadowView &currentView,
+      const ShadowView &targetView,
+      Rect window) const;
   void cancelLayoutAnimation(Tag tag) const;
   void cancelAllLayoutAnimations() const;
   bool hasPendingLayoutAnimation(Tag tag) const;

@@ -390,10 +390,15 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
     const auto &start = preparedStart->start;
 
     if (start.buildId) {
-      layoutAnimationsManager_->startBuiltLayoutAnimation(uiRuntime_, start.tag, start.type, *start.buildId);
+      layoutAnimationsManager_->startBuiltLayoutAnimation(
+          uiRuntime_, start.tag, start.type, *start.buildId, start.liveLeaves);
     } else {
       layoutAnimationsManager_->startLayoutAnimation(
-          uiRuntime_, start.tag, start.type, layoutAnimationValues(start, preparedStart->window), start.config);
+          uiRuntime_,
+          start.tag,
+          start.type,
+          layoutAnimationValues(start.type, start.before, start.after, preparedStart->window),
+          start.config);
     }
   }
   if (!layoutAnimationOperations_.empty()) {
@@ -402,16 +407,18 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
 }
 
 jsi::Object LayoutAnimationsProxyCommon::layoutAnimationValues(
-    const ManagedLayoutAnimationStart &start,
+    const LayoutAnimationType type,
+    const ShadowView &currentView,
+    const ShadowView &targetView,
     const Rect window) const {
   jsi::Object values(uiRuntime_);
-  if (start.type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
-    auto propsDiffer = PropsDiffer(uiRuntime_, start.before, start.after);
+  if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
+    auto propsDiffer = PropsDiffer(uiRuntime_, currentView, targetView);
     values = propsDiffer.computeDiff(uiRuntime_);
   } else {
-    const Snapshot current(start.before, window);
-    const Snapshot target(start.after, window);
-    if (start.type != LayoutAnimationType::ENTERING) {
+    const Snapshot current(currentView, window);
+    const Snapshot target(targetView, window);
+    if (type != LayoutAnimationType::ENTERING) {
       values.setProperty(uiRuntime_, "currentOriginX", current.x);
       values.setProperty(uiRuntime_, "currentGlobalOriginX", current.x);
       values.setProperty(uiRuntime_, "currentOriginY", current.y);
@@ -419,7 +426,7 @@ jsi::Object LayoutAnimationsProxyCommon::layoutAnimationValues(
       values.setProperty(uiRuntime_, "currentWidth", current.width);
       values.setProperty(uiRuntime_, "currentHeight", current.height);
     }
-    if (start.type != LayoutAnimationType::EXITING) {
+    if (type != LayoutAnimationType::EXITING) {
       values.setProperty(uiRuntime_, "targetOriginX", target.x);
       values.setProperty(uiRuntime_, "targetGlobalOriginX", target.x);
       values.setProperty(uiRuntime_, "targetOriginY", target.y);

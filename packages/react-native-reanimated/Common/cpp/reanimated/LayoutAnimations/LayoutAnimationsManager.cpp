@@ -111,12 +111,17 @@ void LayoutAnimationsManager::startLayoutAnimation(
       .call(rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, config->toJSValue(rt));
 }
 
+jsi::Object LayoutAnimationsManager::captureLiveLayoutLeaves(jsi::Runtime &rt, const LiveLayoutLeaves &liveLeaves) {
+  return getManagerFunction(rt, "captureLiveLeaves").call(rt, toJSValue(rt, liveLeaves)).asObject(rt);
+}
+
 jsi::Value LayoutAnimationsManager::buildLayoutAnimation(
     jsi::Runtime &rt,
     const uint64_t buildId,
     const jsi::Object &values,
     const std::shared_ptr<Serializable> &config,
-    const size_t maxLeaves) {
+    const size_t maxLeaves,
+    const LiveLayoutLeaves &liveLeaves) {
   ReanimatedSystraceSection section("LayoutAnimationsManager::buildLayoutAnimation");
   return getManagerFunction(rt, "build")
       .call(
@@ -124,16 +129,23 @@ jsi::Value LayoutAnimationsManager::buildLayoutAnimation(
           jsi::Value(static_cast<double>(buildId)),
           values,
           config->toJSValue(rt),
-          jsi::Value(static_cast<double>(maxLeaves)));
+          jsi::Value(static_cast<double>(maxLeaves)),
+          toJSValue(rt, liveLeaves));
 }
 
 void LayoutAnimationsManager::startBuiltLayoutAnimation(
     jsi::Runtime &rt,
     const int tag,
     const LayoutAnimationType type,
-    const uint64_t buildId) {
+    const uint64_t buildId,
+    const LiveLayoutLeaves &liveLeaves) {
   getManagerFunction(rt, "startBuilt")
-      .call(rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), jsi::Value(static_cast<double>(buildId)));
+      .call(
+          rt,
+          jsi::Value(tag),
+          jsi::Value(static_cast<int>(type)),
+          jsi::Value(static_cast<double>(buildId)),
+          toJSValue(rt, liveLeaves));
 }
 
 void LayoutAnimationsManager::finishBuiltLayoutAnimation(
@@ -149,6 +161,17 @@ void LayoutAnimationsManager::releaseBuiltLayoutAnimation(jsi::Runtime &rt, cons
 
 void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const {
   getManagerFunction(rt, "stop").call(rt, jsi::Value(tag));
+}
+
+jsi::Array LayoutAnimationsManager::toJSValue(jsi::Runtime &rt, const LiveLayoutLeaves &liveLeaves) {
+  jsi::Array leaves(rt, liveLeaves.size());
+  for (size_t index = 0; index < liveLeaves.size(); ++index) {
+    jsi::Object leaf(rt);
+    leaf.setProperty(rt, "buildId", static_cast<double>(liveLeaves[index].buildId));
+    leaf.setProperty(rt, "key", jsi::String::createFromUtf8(rt, liveLeaves[index].key));
+    leaves.setValueAtIndex(rt, index, std::move(leaf));
+  }
+  return leaves;
 }
 
 jsi::Function LayoutAnimationsManager::getManagerFunction(jsi::Runtime &rt, const char *name) {

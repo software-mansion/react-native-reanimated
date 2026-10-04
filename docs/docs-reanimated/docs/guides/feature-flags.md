@@ -214,7 +214,11 @@ Core Animation plays a `layout` animation only when all these conditions are tru
 - The easing is `Easing.linear`, `Easing.ease`, or `Easing.bezier`.
 - The size of the view does not change.
 
-Every other layout animation runs as before. That includes each layout transition preset. A change of the layout during such an animation is not yet smooth.
+Every other layout animation runs as before. That includes each layout transition preset.
+
+A later animation of the view (a layout animation, an exit, or a shared transition) gets the values on screen as its current values. An initial value that the builder sets stays the start value. A layout animation that starts during a Core Animation playback also plays with Core Animation when it does not need the state of the earlier one. An animation with a delay, or with the same end value and a different duration or easing, needs that state and runs as before.
+
+A write to `opacity` from a style, an animated style, or a CSS transition or animation does not show while Core Animation plays the opacity of a layout animation. The written value shows when that animation ends.
 
 ### `TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS`
 

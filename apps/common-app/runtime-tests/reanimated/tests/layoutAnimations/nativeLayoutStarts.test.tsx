@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Modal, Platform, StyleSheet, View } from 'react-native';
+import React from 'react';
+import { Platform, View } from 'react-native';
 import type {
   EasingFunction,
   EasingFunctionFactory,
@@ -17,11 +17,8 @@ import Animated, {
   SequencedTransition,
   useAnimatedStyle,
   useSharedValue,
-  withDelay,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
 
 import {
   describe,
@@ -37,386 +34,62 @@ import {
   startSecondSurface,
   stopSecondSurface,
 } from '../../../ReJest/secondSurface';
-
-type TraceEvent = {
-  event: string;
-  surfaceId: number;
-  tag: number;
-  owner: string;
-  generation: number;
-  monotonicTimeMs: number;
-  target?: string;
-  endpointPolicy?: string;
-  finished?: boolean;
-  outcome?: string;
-  reason?: string;
-  buildFailure?: string;
-  transactionNumber?: number;
-};
-
-type TargetSample = {
-  model: number[];
-  presentation: number[];
-  /**
-   * The platform key of each physical playback on the view:
-   * `reanimated.<owner>.<generation>.<target>`.
-   */
-  playbackKeys: string[];
-  monotonicTimeMs: number;
-};
-
-type NativeAnimationDevTools = {
-  takeNativeAnimationTrace?: (callback: (events: TraceEvent[]) => void) => void;
-  sampleNativeAnimationTarget?: (
-    tag: number,
-    target: string,
-    callback: (sample: TargetSample | undefined) => void
-  ) => void;
-};
-
-const devTools = (
-  globalThis as unknown as { __reanimatedModuleProxy: NativeAnimationDevTools }
-).__reanimatedModuleProxy;
-
-// The entries exist only in development builds of the native code, and the route only with the flag.
-const hasNativeLayoutStarts =
-  Platform.OS === 'ios' &&
-  getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION') &&
-  devTools.takeNativeAnimationTrace !== undefined;
-
-const BOX_REF = 'NativeLayoutStartBox';
-const BOX_SIZE = 50;
-const START_LEFT = 0;
-const END_LEFT = 100;
-const END_TOP = 40;
-const DURATION = 400;
-const POSITION_TOLERANCE = 0.5;
-const REPEATED_STARTS = 30;
-const PRESET_WAIT = 1500;
-const FILTER_OPACITY = 0.5;
-// The travel of two display frames at 60 fps.
-const FIRST_FRAME_TRAVEL = ((END_LEFT - START_LEFT) / DURATION) * 34;
-const FRAME_MS = 1000 / 60;
-
-const centerOf = (origin: number) => origin + BOX_SIZE / 2;
-
-function takeTrace(): Promise<TraceEvent[]> {
-  return new Promise((resolve) => {
-    devTools.takeNativeAnimationTrace?.(resolve);
-  });
-}
-
-async function takeTraceOf(tag: number) {
-  return (await takeTrace()).filter((event) => event.tag === tag);
-}
-
-const isHostEvent = ({ event }: TraceEvent) =>
-  event !== 'ClientAdmitted' && event !== 'ClientEnded';
-
-const isClientReport = ({ event }: TraceEvent) =>
-  event === 'ClientAdmitted' || event === 'ClientEnded';
-
-function sample(tag: number, target: string): Promise<TargetSample> {
-  return new Promise((resolve, reject) => {
-    devTools.sampleNativeAnimationTarget?.(tag, target, (targetSample) =>
-      targetSample ? resolve(targetSample) : reject(new Error('no view'))
-    );
-  });
-}
-
-const playbackCountOf = ({ playbackKeys }: TargetSample, generation: number) =>
-  playbackKeys.filter((key) => key.split('.')[2] === `${generation}`).length;
-
-async function takeTraceUntilSurfaceClosed(surfaceId: number) {
-  const events: TraceEvent[] = [];
-  const isClosed = () =>
-    events.some(
-      (event) =>
-        event.event === 'SurfaceClosed' && event.surfaceId === surfaceId
-    );
-  for (let attempt = 0; attempt < 40 && !isClosed(); attempt++) {
-    await wait(25);
-    events.push(...(await takeTrace()));
-  }
-  return events;
-}
-
-function summarize(events: TraceEvent[]) {
-  return events
-    .map(({ event, target, finished, outcome, reason, buildFailure }) =>
-      [event, target, finished, outcome, reason, buildFailure]
-        .filter((part) => part !== undefined)
-        .join(':')
-    )
-    .join(' > ');
-}
-
-const callbacks: string[] = [];
-const callbackTimes: Record<string, number> = {};
-function recordCallback(name: string, finished: boolean) {
-  callbacks.push(`${name}:${finished}`);
-  callbackTimes[name] = performance.now();
-}
-
-let builderCalls = 0;
-function recordBuilderCall() {
-  builderCalls++;
-}
-
-type Key = 'originX' | 'originY' | 'opacity' | 'width' | 'height';
-
-type Leaf = {
-  duration?: number;
-  /** Each entry is one `withDelay` wrapper, the outer one first. */
-  delays?: number[];
-  easing?: EasingFunction | EasingFunctionFactory | 'default';
-  /**
-   * The opacity before the commit, or an offset from the current value of a
-   * layout key.
-   */
-  initial?: number | 'none';
-  /**
-   * The opacity after the commit, or an offset from the target value of a
-   * layout key.
-   */
-  to?: number;
-  isSpring?: boolean;
-  hasCallback?: boolean;
-  reduceMotion?: ReduceMotion;
-  /** The leaf exists only when the layout value of its key changes. */
-  onlyWhenChanged?: boolean;
-  /** The builder sets reduced motion on the animation after its creation. */
-  setsReduceMotion?: boolean;
-};
-
-type LayoutOptions = {
-  name?: string;
-  initialOnlyKey?: string;
-  /**
-   * The builder keeps the UI thread for this time, so the start is late on its
-   * timeline.
-   */
-  blocksForMs?: number;
-};
-
-function layoutOf(
-  leaves: Partial<Record<Key, Leaf>>,
-  { name, initialOnlyKey, blocksForMs = 0 }: LayoutOptions = {}
-): LayoutAnimationFunction {
-  return (values) => {
-    'worklet';
-    scheduleOnRN(recordBuilderCall);
-    const blockEnd = global._getAnimationTimestamp() + blocksForMs;
-    while (global._getAnimationTimestamp() < blockEnd) {
-      // The builder runs between the time origin and the admission.
-    }
-    const current: Record<string, number> = {
-      originX: values.currentOriginX,
-      originY: values.currentOriginY,
-      width: values.currentWidth,
-      height: values.currentHeight,
-    };
-    const target: Record<string, number> = {
-      originX: values.targetOriginX,
-      originY: values.targetOriginY,
-      width: values.targetWidth,
-      height: values.targetHeight,
-    };
-    const initialValues: Record<string, number> = {};
-    const animations: Record<string, unknown> = {};
-    for (const key of Object.keys(leaves)) {
-      const leaf = leaves[key as Key]!;
-      if (leaf.onlyWhenChanged && current[key] === target[key]) {
-        continue;
-      }
-      const isLayoutKey = key in target;
-      const toValue = isLayoutKey ? target[key] + (leaf.to ?? 0) : leaf.to!;
-      if (leaf.initial !== 'none') {
-        initialValues[key] = isLayoutKey
-          ? current[key] + (leaf.initial ?? 0)
-          : leaf.initial!;
-      }
-      const config: Record<string, unknown> = {
-        duration: leaf.duration ?? DURATION,
-        reduceMotion: leaf.reduceMotion,
-      };
-      if (leaf.easing !== 'default') {
-        config.easing = leaf.easing ?? Easing.linear;
-      }
-      let animation = leaf.isSpring
-        ? withSpring(toValue)
-        : withTiming(
-            toValue,
-            config,
-            leaf.hasCallback
-              ? () => {
-                  'worklet';
-                }
-              : undefined
-          );
-      for (const delay of [...(leaf.delays ?? [])].reverse()) {
-        animation = withDelay(delay, animation);
-      }
-      if (leaf.setsReduceMotion) {
-        (animation as { reduceMotion?: boolean }).reduceMotion = true;
-      }
-      animations[key] = animation;
-    }
-    if (initialOnlyKey) {
-      initialValues[initialOnlyKey] = 1;
-    }
-    return {
-      initialValues,
-      animations,
-      callback: name
-        ? (finished: boolean) => {
-            'worklet';
-            scheduleOnRN(recordCallback, name, finished);
-          }
-        : undefined,
-    };
-  };
-}
-
-const MALFORMED_BEZIER = {
-  bezier: 'ease',
-  factory: () => {
-    'worklet';
-    return (t: number) => {
-      'worklet';
-      return t;
-    };
-  },
-} as unknown as EasingFunctionFactory;
-
-const MOVE = layoutOf({ originX: {}, originY: {} });
-
-type BoxProps = {
-  left: number;
-  top?: number;
-  width?: number;
-  opacity?: number;
-  hasOpacityFilter?: boolean;
-  layout?: Parameters<typeof Animated.View>[0]['layout'];
-  refName?: string;
-};
-
-function Box({
-  left,
-  top = 0,
-  width = BOX_SIZE,
-  opacity = 1,
-  hasOpacityFilter = false,
-  layout = MOVE,
-  refName = BOX_REF,
-}: BoxProps) {
-  const ref = useTestRef(refName);
-  return (
-    <Animated.View
-      ref={ref}
-      layout={layout}
-      style={[
-        styles.box,
-        { marginLeft: left, marginTop: top, width, opacity },
-        hasOpacityFilter && { filter: [{ opacity: FILTER_OPACITY }] },
-      ]}
-    />
-  );
-}
-
-function Scene({
-  isMounted = true,
-  ...box
-}: BoxProps & { isMounted?: boolean }) {
-  return <View style={styles.container}>{isMounted && <Box {...box} />}</View>;
-}
-
-const ROW_REFS = Array.from(
-  { length: 150 },
-  (_, index) => `NativeLayoutStartRowBox${index}`
-);
-const LONG_MOVE = layoutOf({ originX: { duration: 4 * DURATION } });
-
-function Row({ left, count }: { left: number; count: number }) {
-  return (
-    <View style={styles.container}>
-      {ROW_REFS.slice(0, count).map((refName) => (
-        <View key={refName} style={styles.rowItem}>
-          <Box left={left} refName={refName} layout={LONG_MOVE} />
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function ModalScene({ left }: { left: number }) {
-  return (
-    <Modal visible transparent animationType="none">
-      <View style={styles.container}>
-        <Box left={left} />
-      </View>
-    </Modal>
-  );
-}
-
-const SECOND_BOX_REF = 'NativeLayoutStartSecondSurfaceBox';
-const SECOND_CSS_BOX_REF = 'NativeLayoutStartSecondSurfaceCSSBox';
-let setSecondSurfaceLeft: (left: number) => void = () => {};
-let setSecondSurfaceOpacity: (opacity: number) => void = () => {};
-
-function SecondSurfaceScene() {
-  const [left, setLeft] = useState(START_LEFT);
-  const [opacity, setOpacity] = useState(1);
-  const cssBoxRef = useTestRef(SECOND_CSS_BOX_REF);
-  setSecondSurfaceLeft = setLeft;
-  setSecondSurfaceOpacity = setOpacity;
-  return (
-    <View style={styles.container}>
-      <Box left={left} refName={SECOND_BOX_REF} layout={LONG_MOVE} />
-      <Animated.View
-        ref={cssBoxRef}
-        style={[
-          styles.box,
-          {
-            opacity,
-            transitionProperty: 'opacity',
-            transitionDuration: 4 * DURATION,
-            transitionTimingFunction: 'linear',
-          },
-        ]}
-      />
-    </View>
-  );
-}
-
-async function renderBox(box: Partial<BoxProps> = {}) {
-  await render(<Scene left={START_LEFT} {...box} />);
-  await wait(50);
-  await takeTrace();
-  callbacks.length = 0;
-  builderCalls = 0;
-  return getTestComponent(BOX_REF).getTag();
-}
-
-const NATIVE_START =
-  'LayoutStartPending > LayoutStartMounted > Received > TrackStarted:PositionX > TrackStarted:PositionY > Admitted';
-const NATIVE_END =
-  'TrackEnded:PositionX:true > TrackEnded:PositionY:true > Ended:Finished:None';
-
-// `summarizeEnd` of a command that started and ended.
-const SORTED_START_AND_END = `TrackEnded:PositionX:true > TrackEnded:PositionY:true > ${NATIVE_START} > Ended:Finished:None`;
-
-// Tracks that end in one display frame report in no fixed order.
-function summarizeEnd(events: TraceEvent[]) {
-  const hostEvents = events.filter(isHostEvent);
-  const isTrackEnd = ({ event }: TraceEvent) => event === 'TrackEnded';
-  return summarize([
-    ...hostEvents
-      .filter(isTrackEnd)
-      .sort((a, b) => a.target!.localeCompare(b.target!)),
-    ...hostEvents.filter((event) => !isTrackEnd(event)),
-  ]);
-}
+import type { Key, Leaf, LayoutOptions, BoxProps } from './nativeLayoutTestKit';
+import {
+  devTools,
+  hasNativeLayoutStarts,
+  BOX_REF,
+  BOX_SIZE,
+  START_LEFT,
+  END_LEFT,
+  END_TOP,
+  DURATION,
+  POSITION_TOLERANCE,
+  REPEATED_STARTS,
+  PRESET_WAIT,
+  FIRST_FRAME_TRAVEL,
+  FRAME_MS,
+  centerOf,
+  takeTrace,
+  takeTraceOf,
+  isHostEvent,
+  isClientReport,
+  sample,
+  playbackCountOf,
+  takeTraceUntilSurfaceClosed,
+  summarize,
+  callbacks,
+  callbackTimes,
+  builderCalls,
+  layoutOf,
+  MALFORMED_BEZIER,
+  Box,
+  Scene,
+  ROW_REFS,
+  LONG_MOVE,
+  Row,
+  ModalScene,
+  SECOND_BOX_REF,
+  SECOND_CSS_BOX_REF,
+  setSecondSurfaceLeft,
+  setSecondSurfaceOpacity,
+  SecondSurfaceScene,
+  renderBox,
+  NATIVE_START,
+  NATIVE_END,
+  SORTED_START_AND_END,
+  summarizeEnd,
+  FRAME_BOX_REF,
+  PAIR_DURATION,
+  PAIR_LEFT,
+  PAIR_TOP,
+  START_OPACITY,
+  END_OPACITY,
+  OPACITY_TOLERANCE,
+  Pair,
+  curveOf,
+  styles,
+} from './nativeLayoutTestKit';
 
 describe('native layout starts after the mount of the final state', () => {
   if (!hasNativeLayoutStarts) {
@@ -797,7 +470,7 @@ describe('native layout starts after the mount of the final state', () => {
     await render(null);
   });
 
-  test('a second native start replaces the first one from the value on screen', async () => {
+  test('a second native start replaces the X track from its value at the pull and keeps the Y track', async () => {
     const tag = await renderBox();
     await render(<Scene left={END_LEFT} />);
     await wait(DURATION / 2);
@@ -806,9 +479,9 @@ describe('native layout starts after the mount of the final state', () => {
 
     await render(<Scene left={2 * END_LEFT} />);
     await wait(DURATION / 4);
-    const events = await takeTraceOf(tag);
-    expect(summarize(events.filter(isHostEvent))).toBe(
-      'LayoutStartPending > LayoutStartMounted > Received > TrackEnded:PositionX:false > Ended:Interrupted:None > TrackEnded:PositionY:false > TrackStarted:PositionX > TrackStarted:PositionY > Admitted'
+    const events = (await takeTraceOf(tag)).filter(isHostEvent);
+    expect(summarize(events)).toBe(
+      'LayoutStartPending > LayoutStartMounted > Received > TrackEnded:PositionX:false > Ended:Interrupted:None > TrackStarted:PositionX > Admitted'
     );
     expect(events[4].generation).toBe(firstGeneration);
     expect(events[0].generation > firstGeneration).toBe(true);
@@ -822,8 +495,10 @@ describe('native layout starts after the mount of the final state', () => {
       centerOf(START_LEFT) + firstProgress * (END_LEFT - START_LEFT);
     const replaced = await sample(tag, 'PositionX');
     const { presentation, monotonicTimeMs } = replaced;
+    // The Y leaf has the same end value and timing, so its track stays.
     expect(replaced.playbackKeys.length).toBe(2);
-    expect(playbackCountOf(replaced, secondPending.generation)).toBe(2);
+    expect(playbackCountOf(replaced, secondPending.generation)).toBe(1);
+    expect(playbackCountOf(replaced, firstGeneration)).toBe(1);
     const progress =
       (monotonicTimeMs - secondPending.monotonicTimeMs) / DURATION;
     const expectedX = startX + progress * (centerOf(2 * END_LEFT) - startX);
@@ -974,10 +649,11 @@ describe('native layout starts after the mount of the final state', () => {
     await render(null);
   });
 
-  test('a frame-driven start during native playback cancels the group: false one time, then the frame-driven result', async () => {
+  test('a frame-driven start during native playback takes the X track at the mount of its first update', async () => {
+    const xDuration = 3 * DURATION;
     const layout = layoutOf(
       {
-        originX: { duration: 3 * DURATION, onlyWhenChanged: true },
+        originX: { duration: xDuration, onlyWhenChanged: true },
         originY: { isSpring: true, onlyWhenChanged: true },
       },
       { name: 'mixed' }
@@ -985,27 +661,53 @@ describe('native layout starts after the mount of the final state', () => {
     const tag = await renderBox({ layout });
     await render(<Scene left={END_LEFT} layout={layout} />);
     await wait(DURATION);
-    const nativeGeneration = (await takeTraceOf(tag))[0].generation;
+    const nativePending = (await takeTraceOf(tag))[0];
     const before = await sample(tag, 'PositionX');
     expect(before.presentation[0] < centerOf(END_LEFT)).toBe(true);
+    expect(Math.abs(before.model[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
 
     await render(<Scene left={END_LEFT} top={END_TOP} layout={layout} />);
     await wait(100);
     const events = await takeTraceOf(tag);
     expect(summarize(events)).toBe(
-      'LayoutBuildFailed:UnsupportedTiming > TrackEnded:PositionX:false > Ended:Cancelled:None > ClientEnded:Cancelled:None'
+      'LayoutLeafCaptured:PositionX > LayoutBuildFailed:UnsupportedTiming > FrameUpdateMounted:PositionX > TrackEnded:PositionX:false > Ended:Cancelled:None > ClientEnded:Cancelled:None'
     );
-    expect(events[1].generation).toBe(nativeGeneration);
-    expect(callbacks[0]).toBe('mixed:false');
-    // The limit that Objective 09 removes: the X value on screen goes to the model value at the cancel.
+    // The capture, the build, and the first frame-driven X value are in one transaction.
+    const [captured, failed, frameUpdate, trackEnd] = events;
+    expect(failed.transactionNumber).toBe(captured.transactionNumber);
+    expect(frameUpdate.transactionNumber).toBe(captured.transactionNumber);
+    for (const event of [captured, frameUpdate, trackEnd]) {
+      expect(event.generation).toBe(nativePending.generation);
+    }
+    expect(callbacks.join()).toBe('mixed:false');
+
+    // The frame driver has the X leaf of the native build on its timeline.
     const after = await sample(tag, 'PositionX');
     expect(after.playbackKeys.length).toBe(0);
-    expect(Math.abs(after.presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(
-      true
-    );
+    const progress =
+      (after.monotonicTimeMs - nativePending.monotonicTimeMs) / xDuration;
+    const expectedX = centerOf(START_LEFT) + progress * (END_LEFT - START_LEFT);
+    // The frame driver is at most one display frame behind the timeline of the leaf.
+    const xFrameTravel = (FRAME_MS * (END_LEFT - START_LEFT)) / xDuration;
+    expect(
+      Math.abs(after.model[0] - expectedX) < POSITION_TOLERANCE + xFrameTravel
+    ).toBe(true);
+    expect(after.model[0] > before.presentation[0]).toBe(true);
+    // The captured X is the value of the native track at the pull.
+    const capturedProgress =
+      (captured.monotonicTimeMs - nativePending.monotonicTimeMs) / xDuration;
+    expect(
+      Math.abs(
+        captured.leafValue! -
+          (START_LEFT + capturedProgress * (END_LEFT - START_LEFT))
+      ) <
+        POSITION_TOLERANCE + xFrameTravel
+    ).toBe(true);
 
-    await wait(4 * DURATION);
+    await wait(xDuration);
     expect(callbacks.join()).toBe('mixed:false,mixed:true');
+    const end = await sample(tag, 'PositionX');
+    expect(Math.abs(end.model[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
     expect((await takeTraceOf(tag)).filter(isHostEvent).length).toBe(0);
     await render(null);
   });
@@ -1304,7 +1006,7 @@ describe('native layout starts with no duration', () => {
     await wait(DURATION / 2);
     await takeTrace();
 
-    await render(<Scene left={2 * END_LEFT} layout={second} />);
+    await render(<Scene left={2 * END_LEFT} top={END_TOP} layout={second} />);
     await wait(50);
     expect(summarize((await takeTraceOf(tag)).filter(isHostEvent))).toBe(
       `LayoutStartPending > LayoutStartMounted > Received > TrackEnded:PositionX:false > Ended:Interrupted:None > TrackEnded:PositionY:false > ${NATIVE_START_AND_END.replace('LayoutStartPending > LayoutStartMounted > Received > ', '')}`
@@ -1318,8 +1020,7 @@ describe('native layout starts with no duration', () => {
     await render(null);
   });
 
-  // The value that the replaced track showed stays for the delay. Objective 09 gives the transfer rule.
-  test('a hold that replaces a playing track keeps the value on screen through its delay', async () => {
+  test('a hold that replaces a playing track goes to the frame driver, and the old value continues through its delay', async () => {
     const first = layoutOf({
       originX: { duration: 4 * DURATION },
       originY: {},
@@ -1335,11 +1036,10 @@ describe('native layout starts with no duration', () => {
     const early = await sample(tag, 'PositionX');
     await wait(DURATION / 2);
     const late = await sample(tag, 'PositionX');
-    expect(early.presentation[0] > centerOf(START_LEFT)).toBe(true);
-    expect(early.presentation[0] < centerOf(END_LEFT)).toBe(true);
-    expect(Math.abs(late.presentation[0] - early.presentation[0]) < 0.01).toBe(
-      true
-    );
+    expect(early.playbackKeys.length).toBe(0);
+    expect(early.model[0] > centerOf(START_LEFT)).toBe(true);
+    expect(late.model[0] > early.model[0]).toBe(true);
+    expect(late.model[0] < centerOf(END_LEFT)).toBe(true);
     expect(callbacks.length).toBe(0);
 
     await wait(DURATION / 2);
@@ -1477,38 +1177,6 @@ describe('a native layout start that is late on its timeline', () => {
     await render(null);
   });
 });
-
-const FRAME_BOX_REF = 'NativeLayoutStartFrameDrivenBox';
-const PAIR_DURATION = 3000;
-const PAIR_LEFT = 200;
-const PAIR_TOP = 60;
-const START_OPACITY = 1;
-const END_OPACITY = 0.2;
-const OPACITY_TOLERANCE = 0.01;
-
-type PairProps = {
-  left: number;
-  top: number;
-  opacity: number;
-  nativeLayout: LayoutAnimationFunction;
-  frameLayout: LayoutAnimationFunction;
-};
-
-function Pair({ nativeLayout, frameLayout, ...box }: PairProps) {
-  return (
-    <View>
-      <View style={styles.pairCell}>
-        <Box {...box} layout={nativeLayout} />
-      </View>
-      <View style={styles.pairCell}>
-        <Box {...box} layout={frameLayout} refName={FRAME_BOX_REF} />
-      </View>
-    </View>
-  );
-}
-
-const curveOf = (easing: EasingFunction | EasingFunctionFactory) =>
-  typeof easing === 'function' ? easing : easing.factory();
 
 describe('native layout timing against the curve and the frame driver', () => {
   if (!hasNativeLayoutStarts) {
@@ -1895,22 +1563,4 @@ describe('native layout starts on two surfaces', () => {
     expect((await takeTraceOf(secondTag)).length).toBe(0);
     await render(null);
   });
-});
-
-const styles = StyleSheet.create({
-  container: {
-    width: 300,
-    height: 120,
-  },
-  rowItem: {
-    height: 2,
-  },
-  pairCell: {
-    height: BOX_SIZE + PAIR_TOP,
-  },
-  box: {
-    width: BOX_SIZE,
-    height: BOX_SIZE,
-    backgroundColor: 'teal',
-  },
 });

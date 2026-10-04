@@ -155,6 +155,18 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'native layout continuity',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutContinuity.test');
+    },
+  },
+  {
+    testSuiteName: 'native layout writers',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutWriters.test');
+    },
+  },
+  {
     testSuiteName: 'shared element transitions',
     importTest: () => {
       require('./tests/layoutAnimations/sharedTransition.test');

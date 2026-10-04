@@ -141,9 +141,17 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   /// is then in the transaction, and the request starts after that mount. Else the UI runtime holds the
   /// result of the builder under the build of `start`. UI thread only.
   bool startNativeLayoutAnimation(ManagedLayoutAnimationStart &start, TransactionMeta &transaction) const;
-  /// Ends the native playback of the view. A frame-driven animation or a removal takes the view.
-  // TODO (Objective 09): a frame-driven start must continue from the value on screen.
+  /// Runs the builder of `start` one time with the values that the view shows, and keeps the result on the UI
+  /// runtime under the build of `start`. Gives the summary of the result. UI thread only.
+  jsi::Value buildLayoutAnimation(ManagedLayoutAnimationStart &start) const;
+  /// Gives the view of `start` to the frame driver: the start gets the live leaves of the view, and the native
+  /// playback of the view ends. UI thread only when the view has live leaves.
+  void continueOnFrameDriver(ManagedLayoutAnimationStart &start) const;
+  /// Ends the native playback of the view. Its group gets `false`.
   void cancelNativeLayoutAnimation(Tag tag) const;
+  /// Ends the native playback of a view that goes hidden when it has an opacity track. That track shows the
+  /// view until it ends; a group with no opacity track continues on the hidden view.
+  void cancelNativeOpacityAnimation(Tag tag) const;
   void flushNativeBuildEnds() const;
   /// The update that brings the host view to the final state of `node`.
   ShadowViewMutation updateToMount(const ShadowViewMutation &mutation, const std::shared_ptr<LightNode> &node) const;
@@ -247,6 +255,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &node,
       bool useViewsOnScreen) const;
   const ShadowView &viewOnScreen(const std::shared_ptr<LightNode> &node) const;
+  /// `mounted` with the values that the live native tracks of the view show at the time of this batch.
+  /// UI thread only.
+  ShadowView viewWithLiveLeafValues(const ShadowView &mounted, const LiveLayoutLeaves &liveLeaves) const;
+  /// The same for the live native tracks of the view; no value when it has none. The capture runs only
+  /// animation code of the library, so the caller can hold the config lock.
+  std::optional<ShadowView> viewWithLiveLeafValues(const ShadowView &mounted) const;
 
   Tag getOrCreateContainer(
       const ShadowView &before,

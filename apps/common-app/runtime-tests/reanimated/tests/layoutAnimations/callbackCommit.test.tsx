@@ -13,14 +13,19 @@ import { scheduleOnRN } from 'react-native-worklets';
 import {
   describe,
   expect,
+  getTestComponent,
   render,
   test,
+  useTestRef,
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
+import { hasNativeLayoutStarts, sample } from './nativeLayoutTestKit';
 
 const DURATION = 1200;
 const TRAVEL = 200;
 const DROP = 60;
+const BOX_SIZE = 50;
+const BOX_REF = 'CallbackCommitBox';
 
 const callbacks: string[] = [];
 function recordCallback(finished: boolean) {
@@ -42,6 +47,7 @@ function Box({
   top: number;
   hasLeafCallback: boolean;
 }) {
+  const ref = useTestRef(BOX_REF);
   const left = useSharedValue(0);
   const commits = useSharedValue(0);
   moveBox = (value) => {
@@ -90,6 +96,7 @@ function Box({
   return (
     <View style={styles.container}>
       <Animated.View
+        ref={ref}
         layout={layout}
         style={[styles.box, { marginTop: top }, animatedStyle]}
       />
@@ -106,9 +113,21 @@ describe('a commit from a layout animation callback', () => {
       callbacks.length = 0;
       moveBox(TRAVEL);
       await wait(DURATION / 4);
+      const tag = getTestComponent(BOX_REF).getTag();
+      if (hasNativeLayoutStarts) {
+        const { playbackKeys } = await sample(tag, 'Position');
+        expect(playbackKeys.length).toBe(hasLeafCallback ? 0 : 2);
+      }
       await render(<Box top={DROP} hasLeafCallback={hasLeafCallback} />);
       await wait(2.5 * DURATION);
       expect(callbacks.join()).toBe('false,false,true');
+      if (hasNativeLayoutStarts) {
+        const { model, playbackKeys } = await sample(tag, 'Position');
+        expect(playbackKeys.length).toBe(0);
+        expect(Math.abs(model[0] - (TRAVEL / 2 + BOX_SIZE / 2)) < 0.01).toBe(
+          true
+        );
+      }
       await render(null);
     });
   }
@@ -120,8 +139,8 @@ const styles = StyleSheet.create({
     height: 200,
   },
   box: {
-    width: 50,
-    height: 50,
+    width: BOX_SIZE,
+    height: BOX_SIZE,
     backgroundColor: 'teal',
   },
 });
