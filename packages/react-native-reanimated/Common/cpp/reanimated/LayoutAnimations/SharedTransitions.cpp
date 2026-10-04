@@ -69,6 +69,9 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
     ShadowView copy = useViewsOnScreen ? viewOnScreen(node) : node->current;
     std::vector<react::Point> absolutePositions;
     absolutePositions = getAbsolutePositionsForRootPathView(node, useViewsOnScreen);
+    if (const auto shown = useViewsOnScreen ? viewWithLiveLeafValues(copy) : std::nullopt) {
+      copy.props = shown->props;
+    }
     copy.layoutMetrics.frame.origin = absolutePositions[0];
 
     auto &collectedTransition = transaction.transitionMap[*sharedTag];
@@ -472,6 +475,7 @@ void LayoutAnimationsProxy::hideTransitioningViews(
     const auto &node = collectedTransition.nodes[indexNum];
     react_native_assert(node && "Shared transition view not found");
     hideInSharedElement(sharedTag, node);
+    cancelNativeOpacityAnimation(shadowView.tag);
     auto m = ShadowViewMutation::UpdateMutation(
         shadowView, cloneViewWithoutOpacity(shadowView, propsParserContext), parentTag);
     hiddenMutations.push_back(m);
@@ -825,7 +829,8 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
       const float headerHeight = parentView.layoutMetrics.frame.size.height - view.layoutMetrics.frame.size.height;
       viewPosition.y += headerHeight;
     }
-    viewPosition += view.layoutMetrics.frame.origin;
+    const auto shown = useViewsOnScreen ? viewWithLiveLeafValues(view) : std::nullopt;
+    viewPosition += (shown ? *shown : view).layoutMetrics.frame.origin;
     viewsAbsolutePositions.emplace_back(viewPosition);
     currentNode = parent;
   }
