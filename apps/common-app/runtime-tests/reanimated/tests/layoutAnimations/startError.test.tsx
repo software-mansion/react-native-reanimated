@@ -99,13 +99,19 @@ function readFrameTimestampOnUI() {
 async function throwFromLayoutAnimationStart() {
   await runOnUIBlocking(() => {
     'worklet';
-    global.originalLayoutAnimationsManager = global.LayoutAnimationsManager;
-    global.LayoutAnimationsManager = {
-      start: () => {
-        throw new Error(START_ERROR);
-      },
-      stop: global.originalLayoutAnimationsManager.stop,
+    const throwStartError = () => {
+      throw new Error(START_ERROR);
     };
+    global.originalLayoutAnimationsManager = global.LayoutAnimationsManager;
+    global.LayoutAnimationsManager = Object.assign(
+      {},
+      global.originalLayoutAnimationsManager,
+      {
+        start: throwStartError,
+        build: throwStartError,
+        startBuilt: throwStartError,
+      }
+    );
   });
 }
 
