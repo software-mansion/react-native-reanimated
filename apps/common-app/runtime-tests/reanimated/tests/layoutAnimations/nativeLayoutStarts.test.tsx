@@ -71,10 +71,12 @@ import {
   ModalScene,
   SECOND_BOX_REF,
   SECOND_CSS_BOX_REF,
-  setSecondSurfaceLeft,
+  setSecondSurfaceBox,
   setSecondSurfaceOpacity,
   SecondSurfaceScene,
   renderBox,
+  mountScene,
+  pairLayoutsOf,
   NATIVE_START,
   NATIVE_END,
   SORTED_START_AND_END,
@@ -1189,7 +1191,7 @@ describe('native layout timing against the curve and the frame driver', () => {
     easing: EasingFunction | EasingFunctionFactory,
     hasOpacity: boolean
   ) {
-    const leavesOf = (hasCallback: boolean): Partial<Record<Key, Leaf>> => ({
+    return pairLayoutsOf((hasCallback) => ({
       originX: { duration: PAIR_DURATION, easing },
       originY: { duration: PAIR_DURATION, hasCallback },
       ...(hasOpacity && {
@@ -1200,11 +1202,7 @@ describe('native layout timing against the curve and the frame driver', () => {
           to: END_OPACITY,
         },
       }),
-    });
-    return {
-      nativeLayout: layoutOf(leavesOf(false), { name: 'native' }),
-      frameLayout: layoutOf(leavesOf(true), { name: 'frame' }),
-    };
+    }));
   }
 
   // The four samples are next to each other in the host queue.
@@ -1229,12 +1227,9 @@ describe('native layout timing against the curve and the frame driver', () => {
   }
 
   async function renderPair(layouts: ReturnType<typeof pairLayouts>) {
-    await render(
+    await mountScene(
       <Pair left={START_LEFT} top={0} opacity={START_OPACITY} {...layouts} />
     );
-    await wait(50);
-    await takeTrace();
-    callbacks.length = 0;
     return samplePair();
   }
 
@@ -1508,7 +1503,7 @@ describe('native layout starts on two surfaces', () => {
     const secondTag = getTestComponent(SECOND_BOX_REF).getTag();
 
     await render(<Scene left={END_LEFT} />);
-    setSecondSurfaceLeft(END_LEFT);
+    setSecondSurfaceBox({ left: END_LEFT });
     await wait(DURATION * 5);
 
     const events = (await takeTrace()).filter(
@@ -1532,7 +1527,7 @@ describe('native layout starts on two surfaces', () => {
     const cssTag = getTestComponent(SECOND_CSS_BOX_REF).getTag();
 
     await render(<Scene left={END_LEFT} layout={LONG_MOVE} />);
-    setSecondSurfaceLeft(END_LEFT);
+    setSecondSurfaceBox({ left: END_LEFT });
     setSecondSurfaceOpacity(0.2);
     await wait(DURATION * 1.5);
     await takeTrace();

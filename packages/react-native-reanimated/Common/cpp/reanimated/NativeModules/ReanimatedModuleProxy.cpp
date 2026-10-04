@@ -1004,10 +1004,10 @@ bool ReanimatedModuleProxy::hasSynchronousWritesTracker() const {
 }
 
 void ReanimatedModuleProxy::surfaceDidMount(const SurfaceId surfaceId) {
-  rewriteSynchronousProps();
   if constexpr (StaticFeatureFlags::getFlag("IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION")) {
     layoutAnimationsProxyRegistry_->surfaceDidMount(surfaceId);
   }
+  rewriteSynchronousProps();
 }
 
 void ReanimatedModuleProxy::rewriteSynchronousProps() {

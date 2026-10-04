@@ -82,6 +82,8 @@ export const FILTER_OPACITY = 0.5;
 // The travel of two display frames at 60 fps.
 export const FIRST_FRAME_TRAVEL = ((END_LEFT - START_LEFT) / DURATION) * 34;
 export const FRAME_MS = 1000 / 60;
+export const LAYOUT_DURATION = 4 * DURATION;
+export const SAMPLED_OPACITY_TOLERANCE = 0.03;
 
 export const centerOf = (origin: number) => origin + BOX_SIZE / 2;
 
@@ -110,6 +112,59 @@ export function sample(tag: number, target: string): Promise<TargetSample> {
       targetSample ? resolve(targetSample) : reject(new Error('no view'))
     );
   });
+}
+
+export async function sampleOpacity(tag: number) {
+  const { model, presentation, playbackKeys, monotonicTimeMs } = await sample(
+    tag,
+    'Opacity'
+  );
+  return {
+    model: model[0],
+    presentation: presentation[0],
+    keys: playbackKeys.length,
+    time: monotonicTimeMs,
+  };
+}
+
+export async function sampleOpacityPair(nativeTag: number, frameTag: number) {
+  const [native, frame] = await Promise.all([
+    sampleOpacity(nativeTag),
+    sampleOpacity(frameTag),
+  ]);
+  return { native, frame };
+}
+
+export async function samplePosition(tag: number) {
+  const { model, presentation, playbackKeys } = await sample(tag, 'Position');
+  return {
+    x: model[0],
+    y: model[1],
+    presentationX: presentation[0],
+    keys: playbackKeys.length,
+  };
+}
+
+export const isNear = (value: number, expected: number, tolerance = 0.01) =>
+  Math.abs(value - expected) < tolerance;
+
+export const linearAt =
+  (from: number, to: number, startMs: number, durationMs: number) =>
+  (timeMs: number) =>
+    from +
+    (to - from) * Math.min(1, Math.max(0, (timeMs - startMs) / durationMs));
+
+export async function sampleRows(
+  tag: number,
+  count: number,
+  intervalMs: number
+) {
+  const rows = [];
+  for (let index = 0; index < count; index++) {
+    rows.push(await sampleOpacity(tag));
+    await wait(intervalMs);
+  }
+  return rows;
 }
 
 export const playbackCountOf = (
@@ -179,6 +234,8 @@ export type Leaf = {
   setsReduceMotion?: boolean;
 };
 
+export type Leaves = Partial<Record<Key, Leaf>>;
+
 export type LayoutOptions = {
   name?: string;
   initialOnlyKey?: string;
@@ -189,17 +246,22 @@ export type LayoutOptions = {
   blocksForMs?: number;
 };
 
+export function blockUIThread(durationMs: number) {
+  'worklet';
+  const end = global._getAnimationTimestamp() + durationMs;
+  while (global._getAnimationTimestamp() < end) {
+    continue;
+  }
+}
+
 export function layoutOf(
-  leaves: Partial<Record<Key, Leaf>>,
+  leaves: Leaves,
   { name, initialOnlyKey, blocksForMs = 0 }: LayoutOptions = {}
 ): LayoutAnimationFunction {
   return (values) => {
     'worklet';
     scheduleOnRN(recordBuilderCall);
-    const blockEnd = global._getAnimationTimestamp() + blocksForMs;
-    while (global._getAnimationTimestamp() < blockEnd) {
-      // The builder runs between the time origin and the admission.
-    }
+    blockUIThread(blocksForMs);
     const current: Record<string, number> = {
       originX: values.currentOriginX,
       originY: values.currentOriginY,
@@ -328,7 +390,7 @@ export const ROW_REFS = Array.from(
   { length: 150 },
   (_, index) => `NativeLayoutStartRowBox${index}`
 );
-export const LONG_MOVE = layoutOf({ originX: { duration: 4 * DURATION } });
+export const LONG_MOVE = layoutOf({ originX: { duration: LAYOUT_DURATION } });
 
 export function Row({ left, count }: { left: number; count: number }) {
   return (
@@ -352,43 +414,73 @@ export function ModalScene({ left }: { left: number }) {
   );
 }
 
+type PairBoxProps = { layout: LayoutAnimationFunction; refName?: string };
+
+type SurfaceBox = { left: number; top?: number };
+
 export const SECOND_BOX_REF = 'NativeLayoutStartSecondSurfaceBox';
 export const SECOND_CSS_BOX_REF = 'NativeLayoutStartSecondSurfaceCSSBox';
-export let setSecondSurfaceLeft: (left: number) => void = () => {};
+export let setSecondSurfaceBox: (box: SurfaceBox) => void = () => {};
 export let setSecondSurfaceOpacity: (opacity: number) => void = () => {};
 
-export function SecondSurfaceScene() {
-  const [left, setLeft] = useState(START_LEFT);
+function SecondSurfaceCSSBox() {
   const [opacity, setOpacity] = useState(1);
-  const cssBoxRef = useTestRef(SECOND_CSS_BOX_REF);
-  setSecondSurfaceLeft = setLeft;
+  const ref = useTestRef(SECOND_CSS_BOX_REF);
   setSecondSurfaceOpacity = setOpacity;
   return (
-    <View style={styles.container}>
-      <Box left={left} refName={SECOND_BOX_REF} layout={LONG_MOVE} />
-      <Animated.View
-        ref={cssBoxRef}
-        style={[
-          styles.box,
-          {
-            opacity,
-            transitionProperty: 'opacity',
-            transitionDuration: 4 * DURATION,
-            transitionTimingFunction: 'linear',
-          },
-        ]}
-      />
-    </View>
+    <Animated.View
+      ref={ref}
+      style={[
+        styles.box,
+        {
+          opacity,
+          transitionProperty: 'opacity',
+          transitionDuration: LAYOUT_DURATION,
+          transitionTimingFunction: 'linear',
+        },
+      ]}
+    />
   );
 }
 
-export async function renderBox(box: Partial<BoxProps> = {}) {
-  await render(<Scene left={START_LEFT} {...box} />);
+export function secondSurfaceSceneOf({
+  layout = LONG_MOVE,
+  BoxComponent = Box,
+  hasCSSBox = false,
+}: {
+  layout?: LayoutAnimationFunction;
+  BoxComponent?: React.ComponentType<SurfaceBox & PairBoxProps>;
+  hasCSSBox?: boolean;
+} = {}) {
+  return function SecondSurfaceScene() {
+    const [box, setBox] = useState<SurfaceBox>({ left: START_LEFT });
+    setSecondSurfaceBox = setBox;
+    return (
+      <View style={styles.container}>
+        <BoxComponent {...box} refName={SECOND_BOX_REF} layout={layout} />
+        {hasCSSBox && <SecondSurfaceCSSBox />}
+      </View>
+    );
+  };
+}
+
+export const SecondSurfaceScene = secondSurfaceSceneOf({ hasCSSBox: true });
+
+export async function mountScene(
+  scene: Parameters<typeof render>[0],
+  refName = BOX_REF
+) {
+  await render(scene);
   await wait(50);
   await takeTrace();
   callbacks.length = 0;
+  return getTestComponent(refName).getTag();
+}
+
+export async function renderBox(box: Partial<BoxProps> = {}) {
+  const tag = await mountScene(<Scene left={START_LEFT} {...box} />);
   builderCalls = 0;
-  return getTestComponent(BOX_REF).getTag();
+  return tag;
 }
 
 export const NATIVE_START =
@@ -420,33 +512,60 @@ export const START_OPACITY = 1;
 export const END_OPACITY = 0.2;
 export const OPACITY_TOLERANCE = 0.01;
 
-export type PairProps = {
-  left: number;
-  top: number;
-  opacity: number;
-  nativeLayout: LayoutAnimationFunction;
-  frameLayout: LayoutAnimationFunction;
-  exiting?: BoxProps['exiting'];
+export const pairLayoutsOf = (leaves: (hasCallback: boolean) => Leaves) => ({
+  nativeLayout: layoutOf(leaves(false), { name: 'native' }),
+  frameLayout: layoutOf(leaves(true), { name: 'frame' }),
+});
+
+type PairLayouts = ReturnType<typeof pairLayoutsOf>;
+
+type PairOfProps<TBox extends object> = PairLayouts & {
+  box: TBox;
+  BoxComponent: React.ComponentType<TBox & PairBoxProps>;
   isMounted?: boolean;
+  padding?: number;
 };
+
+export function PairOf<TBox extends object>({
+  box,
+  BoxComponent,
+  nativeLayout,
+  frameLayout,
+  isMounted = true,
+  padding = 0,
+}: PairOfProps<TBox>) {
+  const cellStyle = [styles.pairCell, { paddingLeft: padding }];
+  return (
+    <View>
+      <View style={cellStyle}>
+        {isMounted && <BoxComponent {...box} layout={nativeLayout} />}
+      </View>
+      <View style={cellStyle}>
+        {isMounted && (
+          <BoxComponent {...box} layout={frameLayout} refName={FRAME_BOX_REF} />
+        )}
+      </View>
+    </View>
+  );
+}
+
+export type PairProps = Pick<BoxProps, 'left' | 'top' | 'opacity' | 'exiting'> &
+  PairLayouts & { isMounted?: boolean };
 
 export function Pair({
   nativeLayout,
   frameLayout,
-  isMounted = true,
+  isMounted,
   ...box
 }: PairProps) {
   return (
-    <View>
-      <View style={styles.pairCell}>
-        {isMounted && <Box {...box} layout={nativeLayout} />}
-      </View>
-      <View style={styles.pairCell}>
-        {isMounted && (
-          <Box {...box} layout={frameLayout} refName={FRAME_BOX_REF} />
-        )}
-      </View>
-    </View>
+    <PairOf
+      BoxComponent={Box}
+      box={box}
+      nativeLayout={nativeLayout}
+      frameLayout={frameLayout}
+      isMounted={isMounted}
+    />
   );
 }
 

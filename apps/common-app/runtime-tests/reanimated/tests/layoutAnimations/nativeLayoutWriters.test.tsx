@@ -38,6 +38,15 @@ import {
   isHostEvent,
   layoutOf,
   sample,
+  isNear,
+  LAYOUT_DURATION,
+  linearAt,
+  mountScene,
+  pairLayoutsOf,
+  SAMPLED_OPACITY_TOLERANCE,
+  sampleOpacity,
+  sampleOpacityPair,
+  sampleRows,
   START_LEFT,
   summarize,
   takeTrace,
@@ -45,9 +54,7 @@ import {
 } from './nativeLayoutTestKit';
 
 const WRITER_REF = 'NativeLayoutWriterBox';
-const LAYOUT_DURATION = 4 * DURATION;
 const CSS_DURATION = 6 * DURATION;
-const OPACITY_TOLERANCE = 0.03;
 const FOCUSED_OPACITY = 0.4;
 
 type WriterProps = {
@@ -181,34 +188,15 @@ function ClippedBox({ left, layout }: WriterProps) {
   );
 }
 
-async function sampleOpacity(tag: number) {
-  const { model, presentation, playbackKeys, monotonicTimeMs } = await sample(
-    tag,
-    'Opacity'
-  );
-  return {
-    model: model[0],
-    screen: presentation[0],
-    keys: playbackKeys.length,
-    time: monotonicTimeMs,
-  };
-}
-
-async function sampleRows(tag: number, count: number, intervalMs: number) {
-  const rows = [];
-  for (let index = 0; index < count; index++) {
-    rows.push(await sampleOpacity(tag));
-    await wait(intervalMs);
-  }
-  return rows;
-}
-
 describe('native layout animations and other writers of the view', () => {
   if (!hasNativeLayoutStarts) {
     return;
   }
   const hasNativeCSS = getStaticFeatureFlag('IOS_CSS_CORE_ANIMATION');
   const testWithNativeCSS = hasNativeCSS ? test : () => {};
+  const hasSynchronousProps = getStaticFeatureFlag(
+    'IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS'
+  );
 
   // The opacity track goes from 0.3 to the mounted value 1.
   const fadeIn = (name: string) =>
@@ -220,22 +208,19 @@ describe('native layout animations and other writers of the view', () => {
       { name }
     );
   const fadeInAt = (startMs: number, timeMs: number) =>
-    0.3 + 0.7 * Math.min(1, (timeMs - startMs) / LAYOUT_DURATION);
+    linearAt(0.3, 1, startMs, LAYOUT_DURATION)(timeMs);
 
   for (const usesAnimatedProps of [false, true]) {
     test(`${usesAnimatedProps ? 'animated props write' : 'an animated style writes'} the opacity during a native opacity track`, async () => {
       const layout = fadeIn('style');
-      await render(
+      const tag = await mountScene(
         <AnimatedStyleBox
           left={START_LEFT}
           layout={layout}
           usesAnimatedProps={usesAnimatedProps}
-        />
+        />,
+        WRITER_REF
       );
-      await wait(50);
-      const tag = getTestComponent(WRITER_REF).getTag();
-      await takeTrace();
-      callbacks.length = 0;
 
       await render(
         <AnimatedStyleBox
@@ -251,17 +236,20 @@ describe('native layout animations and other writers of the view', () => {
       const rows = await sampleRows(tag, 4, LAYOUT_DURATION / 8);
       for (const row of rows) {
         expect(row.keys).toBe(2);
-        expect(Math.abs(row.model - 0.6) < 0.01).toBe(true);
+        expect(isNear(row.model, 0.6)).toBe(true);
         expect(
-          Math.abs(row.screen - fadeInAt(pending.monotonicTimeMs, row.time)) <
-            OPACITY_TOLERANCE
+          isNear(
+            row.presentation,
+            fadeInAt(pending.monotonicTimeMs, row.time),
+            SAMPLED_OPACITY_TOLERANCE
+          )
         ).toBe(true);
       }
 
       await wait(LAYOUT_DURATION / 2);
       const end = await sampleOpacity(tag);
       expect(end.keys).toBe(0);
-      expect(Math.abs(end.screen - 0.6) < 0.01).toBe(true);
+      expect(isNear(end.presentation, 0.6)).toBe(true);
       expect(callbacks.join()).toBe('style:true');
       const ends = (await takeTraceOf(tag)).filter(isHostEvent);
       expect(ends.length).toBe(3);
@@ -281,18 +269,15 @@ describe('native layout animations and other writers of the view', () => {
         },
         { name: 'over-css' }
       );
-      await render(
+      const tag = await mountScene(
         <CSSBox
           left={START_LEFT}
           opacity={1}
           layout={layout}
           cssDuration={CSS_DURATION}
-        />
+        />,
+        WRITER_REF
       );
-      await wait(50);
-      const tag = getTestComponent(WRITER_REF).getTag();
-      await takeTrace();
-      callbacks.length = 0;
 
       await render(
         <CSSBox
@@ -335,7 +320,11 @@ describe('native layout animations and other writers of the view', () => {
       for (const row of during) {
         expect(row.keys).toBe(2);
         expect(
-          Math.abs(row.screen - layoutAt(row.time)) < OPACITY_TOLERANCE
+          isNear(
+            row.presentation,
+            layoutAt(row.time),
+            SAMPLED_OPACITY_TOLERANCE
+          )
         ).toBe(true);
       }
 
@@ -343,28 +332,25 @@ describe('native layout animations and other writers of the view', () => {
       const after = await sampleRows(tag, 3, DURATION / 2);
       for (const row of after) {
         expect(row.keys).toBe(0);
-        expect(Math.abs(row.screen - cssAt(row.time)) < OPACITY_TOLERANCE).toBe(
-          true
-        );
+        expect(
+          isNear(row.presentation, cssAt(row.time), SAMPLED_OPACITY_TOLERANCE)
+        ).toBe(true);
       }
       expect(callbacks.join()).toBe('over-css:true');
 
       await wait(CSS_DURATION);
       const end = await sampleOpacity(tag);
-      expect(Math.abs(end.screen - 0.2) < 0.01).toBe(true);
+      expect(isNear(end.presentation, 0.2)).toBe(true);
       await render(null);
     }
   );
 
   test('a CSS transition start during a native layout opacity track runs on the loop, and its value shows after the layout track', async () => {
     const layout = fadeIn('under-css');
-    await render(
-      <CSSBox left={START_LEFT} layout={layout} cssDuration={CSS_DURATION} />
+    const tag = await mountScene(
+      <CSSBox left={START_LEFT} layout={layout} cssDuration={CSS_DURATION} />,
+      WRITER_REF
     );
-    await wait(50);
-    const tag = getTestComponent(WRITER_REF).getTag();
-    await takeTrace();
-    callbacks.length = 0;
 
     await render(
       <CSSBox left={END_LEFT} layout={layout} cssDuration={CSS_DURATION} />
@@ -403,8 +389,11 @@ describe('native layout animations and other writers of the view', () => {
     for (const row of during) {
       expect(row.keys).toBe(2);
       expect(
-        Math.abs(row.screen - fadeInAt(pending.monotonicTimeMs, row.time)) <
-          OPACITY_TOLERANCE
+        isNear(
+          row.presentation,
+          fadeInAt(pending.monotonicTimeMs, row.time),
+          SAMPLED_OPACITY_TOLERANCE
+        )
       ).toBe(true);
     }
 
@@ -412,15 +401,15 @@ describe('native layout animations and other writers of the view', () => {
     const after = await sampleRows(tag, 3, DURATION / 2);
     for (const row of after) {
       expect(row.keys).toBe(0);
-      expect(Math.abs(row.screen - cssAt(row.time)) < OPACITY_TOLERANCE).toBe(
-        true
-      );
+      expect(
+        isNear(row.presentation, cssAt(row.time), SAMPLED_OPACITY_TOLERANCE)
+      ).toBe(true);
     }
     expect(callbacks.join()).toBe('under-css:true');
 
     await wait(CSS_DURATION);
     const end = await sampleOpacity(tag);
-    expect(Math.abs(end.screen - 0.5) < 0.01).toBe(true);
+    expect(isNear(end.presentation, 0.5)).toBe(true);
     await render(null);
   });
 
@@ -435,11 +424,10 @@ describe('native layout animations and other writers of the view', () => {
         cssDuration: LAYOUT_DURATION,
         cssProperty: 'backgroundColor',
       } as const;
-      await render(<CSSBox left={START_LEFT} layout={layout} {...css} />);
-      await wait(50);
-      const tag = getTestComponent(WRITER_REF).getTag();
-      await takeTrace();
-      callbacks.length = 0;
+      const tag = await mountScene(
+        <CSSBox left={START_LEFT} layout={layout} {...css} />,
+        WRITER_REF
+      );
 
       await render(
         <CSSBox
@@ -480,11 +468,10 @@ describe('native layout animations and other writers of the view', () => {
 
   test('a CSS animation of the opacity that starts during a native layout opacity track shows after the track', async () => {
     const layout = fadeIn('under-animation');
-    await render(<CSSBox left={START_LEFT} layout={layout} />);
-    await wait(50);
-    const tag = getTestComponent(WRITER_REF).getTag();
-    await takeTrace();
-    callbacks.length = 0;
+    const tag = await mountScene(
+      <CSSBox left={START_LEFT} layout={layout} />,
+      WRITER_REF
+    );
 
     await render(<CSSBox left={END_LEFT} layout={layout} />);
     await wait(LAYOUT_DURATION / 4);
@@ -498,8 +485,11 @@ describe('native layout animations and other writers of the view', () => {
       expect(row.keys).toBe(2);
       expect(row.model < 0.85).toBe(true);
       expect(
-        Math.abs(row.screen - fadeInAt(pending.monotonicTimeMs, row.time)) <
-          OPACITY_TOLERANCE
+        isNear(
+          row.presentation,
+          fadeInAt(pending.monotonicTimeMs, row.time),
+          SAMPLED_OPACITY_TOLERANCE
+        )
       ).toBe(true);
     }
 
@@ -507,8 +497,8 @@ describe('native layout animations and other writers of the view', () => {
     const after = await sampleRows(tag, 3, DURATION / 2);
     for (const row of after) {
       expect(row.keys).toBe(0);
-      expect(row.screen < 0.85).toBe(true);
-      expect(Math.abs(row.screen - row.model) < 0.01).toBe(true);
+      expect(row.presentation < 0.85).toBe(true);
+      expect(isNear(row.presentation, row.model)).toBe(true);
     }
     expect(callbacks.join()).toBe('under-animation:true');
     await render(null);
@@ -520,11 +510,10 @@ describe('native layout animations and other writers of the view', () => {
   ] as const) {
     test(`a CSS animation of the opacity that ends during a native layout opacity track leaves ${fill === 'once' ? 'the style value' : 'its fill value'}`, async () => {
       const layout = fadeIn('under-fill');
-      await render(<CSSBox left={START_LEFT} layout={layout} />);
-      await wait(50);
-      const tag = getTestComponent(WRITER_REF).getTag();
-      await takeTrace();
-      callbacks.length = 0;
+      const tag = await mountScene(
+        <CSSBox left={START_LEFT} layout={layout} />,
+        WRITER_REF
+      );
       await render(<CSSBox left={END_LEFT} layout={layout} />);
       await wait(LAYOUT_DURATION / 4);
       await render(
@@ -533,12 +522,14 @@ describe('native layout animations and other writers of the view', () => {
       await wait(2 * DURATION);
       const during = await sampleOpacity(tag);
       expect(during.keys).toBe(2);
-      expect(Math.abs(during.model - endOpacity) < 0.01).toBe(true);
-      expect(during.screen > 0.81 && during.screen < 0.95).toBe(true);
+      expect(isNear(during.model, endOpacity)).toBe(true);
+      expect(during.presentation > 0.81 && during.presentation < 0.95).toBe(
+        true
+      );
       await wait(LAYOUT_DURATION / 2);
       const after = await sampleOpacity(tag);
       expect(after.keys).toBe(0);
-      expect(Math.abs(after.screen - endOpacity) < 0.01).toBe(true);
+      expect(isNear(after.presentation, endOpacity)).toBe(true);
       expect(callbacks.join()).toBe('under-fill:true');
       await render(null);
     });
@@ -547,11 +538,10 @@ describe('native layout animations and other writers of the view', () => {
   test('a React commit after a CSS loop transition ended under a native layout opacity track keeps the layout value on screen', async () => {
     const layout = fadeIn('after-css');
     const css = { cssDuration: DURATION / 2 };
-    await render(<CSSBox left={START_LEFT} layout={layout} {...css} />);
-    await wait(50);
-    const tag = getTestComponent(WRITER_REF).getTag();
-    await takeTrace();
-    callbacks.length = 0;
+    const tag = await mountScene(
+      <CSSBox left={START_LEFT} layout={layout} {...css} />,
+      WRITER_REF
+    );
     await render(<CSSBox left={END_LEFT} layout={layout} {...css} />);
     await wait(LAYOUT_DURATION / 8);
     const pending = (await takeTraceOf(tag))[0];
@@ -572,16 +562,19 @@ describe('native layout animations and other writers of the view', () => {
     const during = await sampleRows(tag, 2, LAYOUT_DURATION / 8);
     for (const row of during) {
       expect(row.keys).toBe(2);
-      expect(Math.abs(row.model - 0.5) < 0.01).toBe(true);
+      expect(isNear(row.model, 0.5)).toBe(true);
       expect(
-        Math.abs(row.screen - fadeInAt(pending.monotonicTimeMs, row.time)) <
-          OPACITY_TOLERANCE
+        isNear(
+          row.presentation,
+          fadeInAt(pending.monotonicTimeMs, row.time),
+          SAMPLED_OPACITY_TOLERANCE
+        )
       ).toBe(true);
     }
     await wait(LAYOUT_DURATION / 2);
     const after = await sampleOpacity(tag);
     expect(after.keys).toBe(0);
-    expect(Math.abs(after.screen - 0.5) < 0.01).toBe(true);
+    expect(isNear(after.presentation, 0.5)).toBe(true);
     expect(callbacks.join()).toBe('after-css:true');
     await render(null);
   });
@@ -613,21 +606,15 @@ describe('native layout animations and other writers of the view', () => {
 
   test('a frame-driven start takes a view whose opacity a CSS loop transition and a native layout track have', async () => {
     const FRAME_REF = 'NativeLayoutWriterFrameBox';
-    const leaves = (hasCallback: boolean) =>
-      layoutOf(
-        {
-          originX: {
-            duration: LAYOUT_DURATION,
-            onlyWhenChanged: true,
-            hasCallback,
-          },
-          opacity: { duration: LAYOUT_DURATION, initial: 0.9, to: 0.2 },
-          originY: { isSpring: true, onlyWhenChanged: true },
-        },
-        { name: hasCallback ? 'frame' : 'native' }
-      );
-    const nativeLayout = leaves(false);
-    const frameLayout = leaves(true);
+    const { nativeLayout, frameLayout } = pairLayoutsOf((hasCallback) => ({
+      originX: {
+        duration: LAYOUT_DURATION,
+        onlyWhenChanged: true,
+        hasCallback,
+      },
+      opacity: { duration: LAYOUT_DURATION, initial: 0.9, to: 0.2 },
+      originY: { isSpring: true, onlyWhenChanged: true },
+    }));
     const pair = (left: number, top: number, opacity: number) => (
       <View>
         <CSSBox
@@ -647,12 +634,8 @@ describe('native layout animations and other writers of the view', () => {
         />
       </View>
     );
-    await render(pair(START_LEFT, 0, 1));
-    await wait(50);
-    const tag = getTestComponent(WRITER_REF).getTag();
+    const tag = await mountScene(pair(START_LEFT, 0, 1), WRITER_REF);
     const frameTag = getTestComponent(FRAME_REF).getTag();
-    await takeTrace();
-    callbacks.length = 0;
     await render(pair(START_LEFT, 0, 0.2));
     await wait(CSS_DURATION / 6);
     await render(pair(END_LEFT, 0, 0.2));
@@ -662,25 +645,23 @@ describe('native layout animations and other writers of the view', () => {
     expect((await sampleOpacity(tag)).keys).toBe(hasNativeCSS ? 2 : 0);
     await render(pair(END_LEFT, 30, 0.2));
     await wait(2 * FRAME_MS);
-    // The frame-driven layout value is the model value of each box while the layout animation runs.
+    // With the synchronous props path, the value of the CSS loop shows on each box.
     for (let index = 0; index < 8; index++) {
-      const [native, frame] = await Promise.all([
-        sampleOpacity(tag),
-        sampleOpacity(frameTag),
-      ]);
+      const { native, frame } = await sampleOpacityPair(tag, frameTag);
       expect(native.keys).toBe(0);
-      expect(Math.abs(native.screen - frame.model) < OPACITY_TOLERANCE).toBe(
-        true
-      );
+      expect(
+        isNear(
+          native.presentation,
+          hasSynchronousProps ? frame.presentation : frame.model,
+          SAMPLED_OPACITY_TOLERANCE
+        )
+      ).toBe(true);
       await wait(LAYOUT_DURATION / 16);
     }
     await wait(CSS_DURATION);
-    const [native, frame] = await Promise.all([
-      sampleOpacity(tag),
-      sampleOpacity(frameTag),
-    ]);
-    expect(Math.abs(native.screen - 0.2) < 0.01).toBe(true);
-    expect(Math.abs(frame.model - 0.2) < 0.01).toBe(true);
+    const { native, frame } = await sampleOpacityPair(tag, frameTag);
+    expect(isNear(native.presentation, 0.2)).toBe(true);
+    expect(isNear(frame.model, 0.2)).toBe(true);
     expect(native.keys).toBe(0);
     await render(null);
   });
@@ -717,7 +698,7 @@ describe('native layout animations and other writers of the view', () => {
       }
       const held = await sampleOpacity(tag);
       expect(held.keys).toBe(1);
-      expect(Math.abs(held.screen - FOCUSED_OPACITY) < 0.01).toBe(true);
+      expect(isNear(held.presentation, FOCUSED_OPACITY)).toBe(true);
       await takeTrace();
       callbacks.length = 0;
 
@@ -733,12 +714,12 @@ describe('native layout animations and other writers of the view', () => {
       expect(events[3].owner).toBe('CSSTransition');
       for (const row of during) {
         expect(row.keys).toBe(2);
-        expect(row.screen > 0.9).toBe(true);
+        expect(row.presentation > 0.9).toBe(true);
       }
       await wait(DURATION);
       const after = await sampleRows(tag, 2, DURATION / 2);
       expect(callbacks.join()).toBe('over-hold:true');
-      expect(Math.abs(after[1].screen - FOCUSED_OPACITY) < 0.01).toBe(true);
+      expect(isNear(after[1].presentation, FOCUSED_OPACITY)).toBe(true);
       inputRef.current?.blur();
       await wait(DURATION * 1.5);
       await render(null);
@@ -759,11 +740,10 @@ describe('a native layout track that the platform removes', () => {
       },
       { name: 'clipped' }
     );
-    await render(<ClippedBox left={START_LEFT} layout={layout} />);
-    await wait(50);
-    const tag = getTestComponent(WRITER_REF).getTag();
-    await takeTrace();
-    callbacks.length = 0;
+    const tag = await mountScene(
+      <ClippedBox left={START_LEFT} layout={layout} />,
+      WRITER_REF
+    );
 
     await render(<ClippedBox left={END_LEFT} layout={layout} />);
     await wait(LAYOUT_DURATION / 4);
@@ -776,7 +756,7 @@ describe('a native layout track that the platform removes', () => {
     expect(callbacks.join()).toBe('clipped:false');
     const end = await sampleOpacity(tag);
     expect(end.keys).toBe(0);
-    expect(Math.abs(end.screen - 1) < 0.01).toBe(true);
+    expect(isNear(end.presentation, 1)).toBe(true);
 
     await wait(2 * LAYOUT_DURATION);
     expect(callbacks.join()).toBe('clipped:false');

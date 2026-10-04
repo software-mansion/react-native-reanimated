@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { LayoutAnimationFunction } from 'react-native-reanimated';
 import Animated, {
@@ -23,9 +23,8 @@ import {
   startSecondSurface,
   stopSecondSurface,
 } from '../../../ReJest/secondSurface';
-import type { Key, Leaf, PairProps } from './nativeLayoutTestKit';
+import type { Key, Leaf, Leaves, PairProps } from './nativeLayoutTestKit';
 import {
-  Box,
   BOX_REF,
   BOX_SIZE,
   callbacks,
@@ -43,7 +42,12 @@ import {
   takeTraceUntilSurfaceClosed,
   hasNativeLayoutStarts,
   layoutOf,
+  mountScene,
+  pairLayoutsOf,
   sample,
+  SECOND_BOX_REF,
+  secondSurfaceSceneOf,
+  setSecondSurfaceBox,
   START_LEFT,
   takeTrace,
 } from './nativeLayoutTestKit';
@@ -181,24 +185,16 @@ describe('native layout continuity', () => {
     layouts: Pick<PairProps, 'nativeLayout' | 'frameLayout'>,
     opacity = 1
   ) {
-    await render(
+    await mountScene(
       <Pair left={START_LEFT} top={0} opacity={opacity} {...layouts} />
     );
-    await wait(50);
-    await takeTrace();
-    callbacks.length = 0;
   }
 
-  const pairOf = (
-    leaves: Partial<Record<Key, Leaf>>,
-    frameKey: Key = 'originX'
-  ) => ({
-    nativeLayout: layoutOf(leaves, { name: 'native' }),
-    frameLayout: layoutOf(
-      { ...leaves, [frameKey]: { ...leaves[frameKey], hasCallback: true } },
-      { name: 'frame' }
-    ),
-  });
+  const pairOf = (leaves: Leaves, frameKey: Key = 'originX') =>
+    pairLayoutsOf((hasCallback) => ({
+      ...leaves,
+      [frameKey]: { ...leaves[frameKey], hasCallback },
+    }));
 
   // The tolerance of the semantic contract: 0.5 pt and one display frame of the leaf with the given duration.
   const oneFrame = (durationMs = PAIR_DURATION) =>
@@ -688,32 +684,15 @@ describe('native layout continuity', () => {
   });
 });
 
-let setTransferSurfaceBox: (box: {
-  left: number;
-  top: number;
-}) => void = () => {};
-const TRANSFER_SURFACE_BOX_REF = 'NativeLayoutContinuitySecondSurfaceBox';
-const TRANSFER_SURFACE_LAYOUT = layoutOf(
-  {
-    originX: { duration: PAIR_DURATION, onlyWhenChanged: true },
-    originY: { isSpring: true, onlyWhenChanged: true },
-  },
-  { name: 'surface' }
-);
-
-function TransferSurfaceScene() {
-  const [box, setBox] = useState({ left: START_LEFT, top: 0 });
-  setTransferSurfaceBox = setBox;
-  return (
-    <View style={styles.sharedScreens}>
-      <Box
-        {...box}
-        refName={TRANSFER_SURFACE_BOX_REF}
-        layout={TRANSFER_SURFACE_LAYOUT}
-      />
-    </View>
-  );
-}
+const TransferSurfaceScene = secondSurfaceSceneOf({
+  layout: layoutOf(
+    {
+      originX: { duration: PAIR_DURATION, onlyWhenChanged: true },
+      originY: { isSpring: true, onlyWhenChanged: true },
+    },
+    { name: 'surface' }
+  ),
+});
 
 describe('native layout continuity on a second surface', () => {
   if (!hasNativeLayoutStarts || !isSecondSurfaceAvailable()) {
@@ -722,12 +701,12 @@ describe('native layout continuity on a second surface', () => {
 
   test('the stop of a surface after a frame-driven start took a native track gives each callback one result', async () => {
     const surfaceId = await startSecondSurface(TransferSurfaceScene);
-    const tag = getTestComponent(TRANSFER_SURFACE_BOX_REF).getTag();
+    const tag = getTestComponent(SECOND_BOX_REF).getTag();
     await takeTrace();
     callbacks.length = 0;
-    setTransferSurfaceBox({ left: PAIR_LEFT, top: 0 });
+    setSecondSurfaceBox({ left: PAIR_LEFT, top: 0 });
     await wait(PAIR_DURATION / 4);
-    setTransferSurfaceBox({ left: PAIR_LEFT, top: PAIR_TOP });
+    setSecondSurfaceBox({ left: PAIR_LEFT, top: PAIR_TOP });
     await wait(4 * FRAME_MS);
     expect(callbacks.join()).toBe('surface:false');
     await stopSecondSurface(surfaceId);
