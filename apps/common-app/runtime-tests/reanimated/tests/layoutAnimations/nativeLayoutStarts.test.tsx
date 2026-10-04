@@ -52,12 +52,16 @@ type TraceEvent = {
   reason?: string;
   buildFailure?: string;
   transactionNumber?: number;
-  presentationValue?: number[];
 };
 
 type TargetSample = {
   model: number[];
   presentation: number[];
+  /**
+   * The platform key of each physical playback on the view:
+   * `reanimated.<owner>.<generation>.<target>`.
+   */
+  playbackKeys: string[];
   monotonicTimeMs: number;
 };
 
@@ -92,6 +96,7 @@ const PRESET_WAIT = 1500;
 const FILTER_OPACITY = 0.5;
 // The travel of two display frames at 60 fps.
 const FIRST_FRAME_TRAVEL = ((END_LEFT - START_LEFT) / DURATION) * 34;
+const FRAME_MS = 1000 / 60;
 
 const centerOf = (origin: number) => origin + BOX_SIZE / 2;
 
@@ -106,9 +111,7 @@ async function takeTraceOf(tag: number) {
 }
 
 const isHostEvent = ({ event }: TraceEvent) =>
-  event !== 'FirstFrameSampled' &&
-  event !== 'ClientAdmitted' &&
-  event !== 'ClientEnded';
+  event !== 'ClientAdmitted' && event !== 'ClientEnded';
 
 const isClientReport = ({ event }: TraceEvent) =>
   event === 'ClientAdmitted' || event === 'ClientEnded';
@@ -120,6 +123,9 @@ function sample(tag: number, target: string): Promise<TargetSample> {
     );
   });
 }
+
+const playbackCountOf = ({ playbackKeys }: TargetSample, generation: number) =>
+  playbackKeys.filter((key) => key.split('.')[2] === `${generation}`).length;
 
 async function takeTraceUntilSurfaceClosed(surfaceId: number) {
   const events: TraceEvent[] = [];
@@ -146,8 +152,10 @@ function summarize(events: TraceEvent[]) {
 }
 
 const callbacks: string[] = [];
+const callbackTimes: Record<string, number> = {};
 function recordCallback(name: string, finished: boolean) {
   callbacks.push(`${name}:${finished}`);
+  callbackTimes[name] = performance.now();
 }
 
 let builderCalls = 0;
@@ -184,15 +192,24 @@ type Leaf = {
 type LayoutOptions = {
   name?: string;
   initialOnlyKey?: string;
+  /**
+   * The builder keeps the UI thread for this time, so the start is late on its
+   * timeline.
+   */
+  blocksForMs?: number;
 };
 
 function layoutOf(
   leaves: Partial<Record<Key, Leaf>>,
-  { name, initialOnlyKey }: LayoutOptions = {}
+  { name, initialOnlyKey, blocksForMs = 0 }: LayoutOptions = {}
 ): LayoutAnimationFunction {
   return (values) => {
     'worklet';
     scheduleOnRN(recordBuilderCall);
+    const blockEnd = global._getAnimationTimestamp() + blocksForMs;
+    while (global._getAnimationTimestamp() < blockEnd) {
+      // The builder runs between the time origin and the admission.
+    }
     const current: Record<string, number> = {
       originX: values.currentOriginX,
       originY: values.currentOriginY,
@@ -315,18 +332,15 @@ function Scene({
 }
 
 const ROW_REFS = Array.from(
-  { length: 40 },
+  { length: 150 },
   (_, index) => `NativeLayoutStartRowBox${index}`
 );
-const LONG_MOVE = layoutOf({
-  originX: { duration: 4 * DURATION },
-  originY: {},
-});
+const LONG_MOVE = layoutOf({ originX: { duration: 4 * DURATION } });
 
-function Row({ left }: { left: number }) {
+function Row({ left, count }: { left: number; count: number }) {
   return (
     <View style={styles.container}>
-      {ROW_REFS.map((refName) => (
+      {ROW_REFS.slice(0, count).map((refName) => (
         <View key={refName} style={styles.rowItem}>
           <Box left={left} refName={refName} layout={LONG_MOVE} />
         </View>
@@ -389,6 +403,9 @@ const NATIVE_START =
 const NATIVE_END =
   'TrackEnded:PositionX:true > TrackEnded:PositionY:true > Ended:Finished:None';
 
+// `summarizeEnd` of a command that started and ended.
+const SORTED_START_AND_END = `TrackEnded:PositionX:true > TrackEnded:PositionY:true > ${NATIVE_START} > Ended:Finished:None`;
+
 // Tracks that end in one display frame report in no fixed order.
 function summarizeEnd(events: TraceEvent[]) {
   const hostEvents = events.filter(isHostEvent);
@@ -417,10 +434,10 @@ describe('native layout starts after the mount of the final state', () => {
     expect(events[1].transactionNumber).toBe(events[0].transactionNumber);
     expect(events[3].endpointPolicy).toBe('MountedModelMustMatchEndpoint');
 
-    const { model, presentation, monotonicTimeMs } = await sample(
-      tag,
-      'PositionX'
-    );
+    const playing = await sample(tag, 'PositionX');
+    const { model, presentation, monotonicTimeMs } = playing;
+    expect(playing.playbackKeys.length).toBe(2);
+    expect(playbackCountOf(playing, events[0].generation)).toBe(2);
     expect(Math.abs(model[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
     const progress = (monotonicTimeMs - events[0].monotonicTimeMs) / DURATION;
     const expectedX = centerOf(START_LEFT) + progress * (END_LEFT - START_LEFT);
@@ -432,6 +449,7 @@ describe('native layout starts after the mount of the final state', () => {
     await wait(DURATION);
     expect(summarizeEnd(await takeTraceOf(tag))).toBe(NATIVE_END);
     const end = await sample(tag, 'PositionX');
+    expect(end.playbackKeys.length).toBe(0);
     expect(Math.abs(end.presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(
       true
     );
@@ -481,6 +499,12 @@ describe('native layout starts after the mount of the final state', () => {
     ['Easing.ease', Easing.ease],
     ['Easing.in(Easing.ease)', Easing.in(Easing.ease)],
     ['Easing.bezier', Easing.bezier(0.25, 0.1, 0.25, 1)],
+    // The value that this test reads stays in the range of the start value and the end value; the value on
+    // screen does not.
+    [
+      'Easing.bezier that leaves the unit range',
+      Easing.bezier(0.3, -0.4, 0.7, 1.6),
+    ],
   ];
   for (const [easingName, easing] of supportedEasings) {
     test(`${easingName} plays natively`, async () => {
@@ -556,11 +580,6 @@ describe('native layout starts after the mount of the final state', () => {
     [
       'reduced motion on a leaf',
       { originX: { reduceMotion: ReduceMotion.Always } },
-      'UnsupportedTiming',
-    ],
-    [
-      'a zero duration',
-      { originX: { duration: 0, delays: [100] } },
       'UnsupportedTiming',
     ],
     [
@@ -801,7 +820,10 @@ describe('native layout starts after the mount of the final state', () => {
     );
     const startX =
       centerOf(START_LEFT) + firstProgress * (END_LEFT - START_LEFT);
-    const { presentation, monotonicTimeMs } = await sample(tag, 'PositionX');
+    const replaced = await sample(tag, 'PositionX');
+    const { presentation, monotonicTimeMs } = replaced;
+    expect(replaced.playbackKeys.length).toBe(2);
+    expect(playbackCountOf(replaced, secondPending.generation)).toBe(2);
     const progress =
       (monotonicTimeMs - secondPending.monotonicTimeMs) / DURATION;
     const expectedX = startX + progress * (centerOf(2 * END_LEFT) - startX);
@@ -837,6 +859,8 @@ describe('native layout starts after the mount of the final state', () => {
     expect(events[7].generation > firstGeneration).toBe(true);
     expect(callbacks.join()).toBe('group:false');
     const x = await sample(tag, 'PositionX');
+    expect(x.playbackKeys.length).toBe(1);
+    expect(playbackCountOf(x, firstGeneration)).toBe(1);
     expect(x.presentation[0] < centerOf(END_LEFT)).toBe(true);
 
     await wait(2 * DURATION);
@@ -975,6 +999,7 @@ describe('native layout starts after the mount of the final state', () => {
     expect(callbacks[0]).toBe('mixed:false');
     // The limit that Objective 09 removes: the X value on screen goes to the model value at the cancel.
     const after = await sample(tag, 'PositionX');
+    expect(after.playbackKeys.length).toBe(0);
     expect(Math.abs(after.presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(
       true
     );
@@ -1026,20 +1051,25 @@ describe('native layout starts after the mount of the final state', () => {
     await render(null);
   });
 
-  test('all starts of one mount use one time origin', async () => {
-    await render(<Row left={START_LEFT} />);
+  test('all starts of one large mount use one time origin', async () => {
+    const count = ROW_REFS.length;
+    await render(<Row left={START_LEFT} count={count} />);
     await wait(50);
     const tags = ROW_REFS.map((refName) => getTestComponent(refName).getTag());
     await takeTrace();
-    await render(<Row left={END_LEFT} />);
+    await render(<Row left={END_LEFT} count={count} />);
     await wait(DURATION);
 
-    const mounted = (await takeTrace()).filter(
+    const events = await takeTrace();
+    const mounted = events.filter(
       (event) => event.event === 'LayoutStartMounted'
     );
-    expect(mounted.length).toBe(tags.length);
+    expect(mounted.length).toBe(count);
     expect(new Set(mounted.map((event) => event.transactionNumber)).size).toBe(
       1
+    );
+    expect(events.filter((event) => event.event === 'Admitted').length).toBe(
+      count
     );
     // Each sample has its own time, so compare the time at which each track was at its start value.
     const speed = (END_LEFT - START_LEFT) / (4 * DURATION);
@@ -1050,7 +1080,8 @@ describe('native layout starts after the mount of the final state', () => {
         monotonicTimeMs - (presentation[0] - centerOf(START_LEFT)) / speed
       );
     }
-    expect(Math.max(...origins) - Math.min(...origins) < 17).toBe(true);
+    expect(Math.max(...origins) - Math.min(...origins) < FRAME_MS).toBe(true);
+    await wait(4 * DURATION);
     await render(null);
   });
 
@@ -1143,6 +1174,528 @@ describe('native layout starts after the mount of the final state', () => {
     expect(summarizeEnd(await takeTraceOf(tag))).toBe(NATIVE_END);
     await render(null);
     await wait(300);
+  });
+});
+
+describe('native layout starts with no duration', () => {
+  if (!hasNativeLayoutStarts) {
+    return;
+  }
+
+  const NATIVE_START_AND_END = `${NATIVE_START} > TrackEnded:PositionX:true > TrackEnded:PositionY:true > Ended:Finished:None`;
+
+  test('a delay holds the start value, then the endpoint shows and the callback gets true', async () => {
+    // The Y track has the timeline end of the hold, so its end report is the time reference.
+    const layout = layoutOf(
+      { originX: { duration: 0, delays: [DURATION] }, originY: {} },
+      { name: 'hold' }
+    );
+    const tag = await renderBox({ layout });
+    await render(<Scene left={END_LEFT} layout={layout} />);
+    await wait(DURATION / 2);
+
+    const startEvents = (await takeTraceOf(tag)).filter(isHostEvent);
+    expect(summarize(startEvents)).toBe(NATIVE_START);
+    const held = await sample(tag, 'PositionX');
+    expect(playbackCountOf(held, startEvents[0].generation)).toBe(2);
+    expect(Math.abs(held.model[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
+    expect(Math.abs(held.presentation[0] - centerOf(START_LEFT)) < 0.01).toBe(
+      true
+    );
+    expect(callbacks.length).toBe(0);
+
+    await wait(DURATION);
+    const endEvents = (await takeTraceOf(tag)).filter(isHostEvent);
+    expect(summarizeEnd(endEvents)).toBe(NATIVE_END);
+    const endTimeOf = (target: string) =>
+      endEvents.find((event) => event.target === target)!.monotonicTimeMs;
+    const holdEnd = endTimeOf('PositionX');
+    expect(holdEnd - startEvents[0].monotonicTimeMs > DURATION - FRAME_MS).toBe(
+      true
+    );
+    expect(Math.abs(holdEnd - endTimeOf('PositionY')) < FRAME_MS).toBe(true);
+    const end = await sample(tag, 'PositionX');
+    expect(end.playbackKeys.length).toBe(0);
+    expect(Math.abs(end.presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(
+      true
+    );
+    expect(callbacks.join()).toBe('hold:true');
+    await render(null);
+  });
+
+  test('each negative delay wrapper counts as zero before the hold', async () => {
+    const leaf = { duration: 0, delays: [-DURATION, DURATION] };
+    const layout = layoutOf({ originX: leaf, originY: leaf });
+    const tag = await renderBox({ layout });
+    await render(<Scene left={END_LEFT} layout={layout} />);
+    await wait(DURATION / 2);
+    const held = await sample(tag, 'PositionX');
+    expect(Math.abs(held.presentation[0] - centerOf(START_LEFT)) < 0.01).toBe(
+      true
+    );
+    await wait(DURATION);
+    expect(summarizeEnd(await takeTraceOf(tag))).toBe(SORTED_START_AND_END);
+    await render(null);
+  });
+
+  test('no delay ends each track with the admission and starts no playback', async () => {
+    const leaf = { duration: 0 };
+    const layout = layoutOf({ originX: leaf, originY: leaf }, { name: 'now' });
+    const tag = await renderBox({ layout });
+    await render(<Scene left={END_LEFT} layout={layout} />);
+    await wait(50);
+
+    const events = await takeTraceOf(tag);
+    expect(summarize(events.filter(isHostEvent))).toBe(NATIVE_START_AND_END);
+    expect(summarize(events.filter(isClientReport))).toBe(
+      'ClientAdmitted > ClientEnded:Finished:None'
+    );
+    const { model, presentation, playbackKeys } = await sample(
+      tag,
+      'PositionX'
+    );
+    expect(playbackKeys.length).toBe(0);
+    expect(Math.abs(model[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
+    expect(Math.abs(presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
+    expect(callbacks.join()).toBe('now:true');
+    expect(builderCalls).toBe(1);
+    await render(null);
+  });
+
+  test('a track with no duration ends with the admission and the other track of its command plays', async () => {
+    const layout = layoutOf(
+      { originX: { duration: 0 }, originY: {} },
+      { name: 'mixed' }
+    );
+    const tag = await renderBox({ layout });
+    await render(<Scene left={END_LEFT} top={END_TOP} layout={layout} />);
+    await wait(DURATION / 2);
+
+    expect(summarize((await takeTraceOf(tag)).filter(isHostEvent))).toBe(
+      `${NATIVE_START} > TrackEnded:PositionX:true`
+    );
+    const x = await sample(tag, 'PositionX');
+    expect(x.playbackKeys.length).toBe(1);
+    expect(Math.abs(x.presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
+    const y = await sample(tag, 'PositionY');
+    expect(y.presentation[0] > y.model[0] - END_TOP).toBe(true);
+    expect(y.presentation[0] < y.model[0]).toBe(true);
+    expect(callbacks.length).toBe(0);
+
+    await wait(DURATION);
+    expect(summarize((await takeTraceOf(tag)).filter(isHostEvent))).toBe(
+      'TrackEnded:PositionY:true > Ended:Finished:None'
+    );
+    expect(callbacks.join()).toBe('mixed:true');
+    await render(null);
+  });
+
+  test('a start with no duration replaces a playing command: false, then true, and the endpoint shows', async () => {
+    const first = layoutOf(
+      { originX: { duration: 4 * DURATION }, originY: {} },
+      { name: 'first' }
+    );
+    const second = layoutOf(
+      { originX: { duration: 0 }, originY: { duration: 0 } },
+      { name: 'second' }
+    );
+    const tag = await renderBox({ layout: first });
+    await render(<Scene left={END_LEFT} layout={first} />);
+    await wait(DURATION / 2);
+    await takeTrace();
+
+    await render(<Scene left={2 * END_LEFT} layout={second} />);
+    await wait(50);
+    expect(summarize((await takeTraceOf(tag)).filter(isHostEvent))).toBe(
+      `LayoutStartPending > LayoutStartMounted > Received > TrackEnded:PositionX:false > Ended:Interrupted:None > TrackEnded:PositionY:false > ${NATIVE_START_AND_END.replace('LayoutStartPending > LayoutStartMounted > Received > ', '')}`
+    );
+    const { presentation, playbackKeys } = await sample(tag, 'PositionX');
+    expect(playbackKeys.length).toBe(0);
+    expect(Math.abs(presentation[0] - centerOf(2 * END_LEFT)) < 0.01).toBe(
+      true
+    );
+    expect(callbacks.join()).toBe('first:false,second:true');
+    await render(null);
+  });
+
+  // The value that the replaced track showed stays for the delay. Objective 09 gives the transfer rule.
+  test('a hold that replaces a playing track keeps the value on screen through its delay', async () => {
+    const first = layoutOf({
+      originX: { duration: 4 * DURATION },
+      originY: {},
+    });
+    const leaf = { duration: 0, delays: [DURATION] };
+    const second = layoutOf({ originX: leaf, originY: leaf }, { name: 'hold' });
+    const tag = await renderBox({ layout: first });
+    await render(<Scene left={END_LEFT} layout={first} />);
+    await wait(DURATION);
+
+    await render(<Scene left={2 * END_LEFT} layout={second} />);
+    await wait(DURATION / 4);
+    const early = await sample(tag, 'PositionX');
+    await wait(DURATION / 2);
+    const late = await sample(tag, 'PositionX');
+    expect(early.presentation[0] > centerOf(START_LEFT)).toBe(true);
+    expect(early.presentation[0] < centerOf(END_LEFT)).toBe(true);
+    expect(Math.abs(late.presentation[0] - early.presentation[0]) < 0.01).toBe(
+      true
+    );
+    expect(callbacks.length).toBe(0);
+
+    await wait(DURATION / 2);
+    const end = await sample(tag, 'PositionX');
+    expect(Math.abs(end.presentation[0] - centerOf(2 * END_LEFT)) < 0.01).toBe(
+      true
+    );
+    expect(callbacks.join()).toBe('hold:true');
+    await render(null);
+  });
+
+  test('a new Y with no duration replaces the playing Y and keeps the long X: one false, then true after X ends', async () => {
+    const long = { duration: 3 * DURATION, onlyWhenChanged: true };
+    const first = layoutOf({ originX: long, originY: long }, { name: 'first' });
+    const second = layoutOf(
+      { originX: long, originY: { duration: 0, onlyWhenChanged: true } },
+      { name: 'second' }
+    );
+    const tag = await renderBox({ layout: first });
+    await render(<Scene left={END_LEFT} top={END_TOP} layout={first} />);
+    await wait(DURATION / 4);
+    const firstGeneration = (await takeTraceOf(tag))[0].generation;
+
+    await render(<Scene left={END_LEFT} top={0} layout={second} />);
+    await wait(DURATION / 2);
+    const events = (await takeTraceOf(tag)).filter(isHostEvent);
+    expect(summarize(events)).toBe(
+      'LayoutStartPending > LayoutStartMounted > Received > TrackEnded:PositionY:false > Ended:Interrupted:None > TrackStarted:PositionY > Admitted > TrackEnded:PositionY:true > Ended:Finished:None'
+    );
+    expect(events[3].generation).toBe(firstGeneration);
+    expect(callbacks.join()).toBe('first:false');
+    const x = await sample(tag, 'PositionX');
+    expect(x.playbackKeys.length).toBe(1);
+    expect(playbackCountOf(x, firstGeneration)).toBe(1);
+    expect(x.presentation[0] < centerOf(END_LEFT)).toBe(true);
+
+    await wait(3 * DURATION);
+    const lateEvents = (await takeTraceOf(tag)).filter(isHostEvent);
+    expect(summarize(lateEvents)).toBe('TrackEnded:PositionX:true');
+    expect(lateEvents[0].generation).toBe(firstGeneration);
+    expect(callbacks.join()).toBe('first:false,second:true');
+    expect((await sample(tag, 'PositionX')).playbackKeys.length).toBe(0);
+    await render(null);
+  });
+});
+
+describe('a native layout start that is late on its timeline', () => {
+  if (!hasNativeLayoutStarts) {
+    return;
+  }
+
+  const TRAVEL = END_LEFT - START_LEFT;
+  const LATE_DURATION = 4 * DURATION;
+  const FRAME_TRAVEL = (FRAME_MS * TRAVEL) / LATE_DURATION;
+
+  // The builder ends when the pull records the pending start, so the origin is `blocksForMs` before that
+  // event, and earlier by the time from the frame timestamp to the builder call.
+  async function sampleLateStart(tag: number, blocksForMs: number) {
+    const pending = (await takeTraceOf(tag)).find(
+      (event) => event.event === 'LayoutStartPending'
+    );
+    const { presentation, monotonicTimeMs } = await sample(tag, 'PositionX');
+    return {
+      x: presentation[0],
+      leastElapsedMs: monotonicTimeMs - pending!.monotonicTimeMs + blocksForMs,
+    };
+  }
+
+  test('a start that is late by less than its duration continues at the elapsed time', async () => {
+    const blocksForMs = DURATION;
+    const duration = LATE_DURATION;
+    const layout = layoutOf(
+      { originX: { duration }, originY: { duration } },
+      { blocksForMs }
+    );
+    const tag = await renderBox({ layout });
+    await render(<Scene left={END_LEFT} layout={layout} />);
+    const { x, leastElapsedMs } = await sampleLateStart(tag, blocksForMs);
+    const leastX = centerOf(START_LEFT) + (leastElapsedMs / duration) * TRAVEL;
+    expect(x > leastX - POSITION_TOLERANCE).toBe(true);
+    expect(x < leastX + FRAME_TRAVEL + POSITION_TOLERANCE).toBe(true);
+    await wait(duration);
+    await render(null);
+  });
+
+  test('a delay that is over at admission does not run again', async () => {
+    const blocksForMs = DURATION;
+    const duration = LATE_DURATION;
+    const leaf = { duration, delays: [DURATION / 2] };
+    const layout = layoutOf({ originX: leaf, originY: leaf }, { blocksForMs });
+    const tag = await renderBox({ layout });
+    await render(<Scene left={END_LEFT} layout={layout} />);
+    const { x, leastElapsedMs } = await sampleLateStart(tag, blocksForMs);
+    const leastX =
+      centerOf(START_LEFT) +
+      ((leastElapsedMs - DURATION / 2) / duration) * TRAVEL;
+    expect(x > leastX - POSITION_TOLERANCE).toBe(true);
+    expect(x < leastX + FRAME_TRAVEL + POSITION_TOLERANCE).toBe(true);
+    await wait(duration);
+    await render(null);
+  });
+
+  test('a timeline that is over at admission ends with true and shows the endpoint', async () => {
+    const layout = layoutOf(
+      { originX: { delays: [DURATION / 4] }, originY: {} },
+      { name: 'late', blocksForMs: 2 * DURATION }
+    );
+    const tag = await renderBox({ layout });
+    await render(<Scene left={END_LEFT} layout={layout} />);
+    const { presentation } = await sample(tag, 'PositionX');
+    expect(Math.abs(presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
+    await wait(100);
+    expect((await sample(tag, 'PositionX')).playbackKeys.length).toBe(0);
+    const events = (await takeTraceOf(tag)).filter(isHostEvent);
+    expect(summarizeEnd(events)).toBe(SORTED_START_AND_END);
+    expect(callbacks.join()).toBe('late:true');
+    await render(null);
+  });
+
+  test('a hold that is over at admission ends with true and shows the endpoint', async () => {
+    const leaf = { duration: 0, delays: [DURATION / 4] };
+    const layout = layoutOf(
+      { originX: leaf, originY: leaf },
+      { name: 'late', blocksForMs: DURATION }
+    );
+    const tag = await renderBox({ layout });
+    await render(<Scene left={END_LEFT} layout={layout} />);
+    const { presentation } = await sample(tag, 'PositionX');
+    expect(Math.abs(presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
+    await wait(100);
+    expect((await sample(tag, 'PositionX')).playbackKeys.length).toBe(0);
+    const events = (await takeTraceOf(tag)).filter(isHostEvent);
+    expect(summarizeEnd(events)).toBe(SORTED_START_AND_END);
+    expect(callbacks.join()).toBe('late:true');
+    await render(null);
+  });
+});
+
+const FRAME_BOX_REF = 'NativeLayoutStartFrameDrivenBox';
+const PAIR_DURATION = 3000;
+const PAIR_LEFT = 200;
+const PAIR_TOP = 60;
+const START_OPACITY = 1;
+const END_OPACITY = 0.2;
+const OPACITY_TOLERANCE = 0.01;
+
+type PairProps = {
+  left: number;
+  top: number;
+  opacity: number;
+  nativeLayout: LayoutAnimationFunction;
+  frameLayout: LayoutAnimationFunction;
+};
+
+function Pair({ nativeLayout, frameLayout, ...box }: PairProps) {
+  return (
+    <View>
+      <View style={styles.pairCell}>
+        <Box {...box} layout={nativeLayout} />
+      </View>
+      <View style={styles.pairCell}>
+        <Box {...box} layout={frameLayout} refName={FRAME_BOX_REF} />
+      </View>
+    </View>
+  );
+}
+
+const curveOf = (easing: EasingFunction | EasingFunctionFactory) =>
+  typeof easing === 'function' ? easing : easing.factory();
+
+describe('native layout timing against the curve and the frame driver', () => {
+  if (!hasNativeLayoutStarts) {
+    return;
+  }
+
+  // X and the opacity have the curve. Y is linear in the same command, so it gives the progress of the
+  // timeline at the instant of each sample.
+  function pairLayouts(
+    easing: EasingFunction | EasingFunctionFactory,
+    hasOpacity: boolean
+  ) {
+    const leavesOf = (hasCallback: boolean): Partial<Record<Key, Leaf>> => ({
+      originX: { duration: PAIR_DURATION, easing },
+      originY: { duration: PAIR_DURATION, hasCallback },
+      ...(hasOpacity && {
+        opacity: {
+          duration: PAIR_DURATION,
+          easing,
+          initial: START_OPACITY,
+          to: END_OPACITY,
+        },
+      }),
+    });
+    return {
+      nativeLayout: layoutOf(leavesOf(false), { name: 'native' }),
+      frameLayout: layoutOf(leavesOf(true), { name: 'frame' }),
+    };
+  }
+
+  // The four samples are next to each other in the host queue.
+  async function samplePair() {
+    const nativeTag = getTestComponent(BOX_REF).getTag();
+    const frameTag = getTestComponent(FRAME_BOX_REF).getTag();
+    const [position, opacity, framePosition, frameOpacity] = await Promise.all([
+      sample(nativeTag, 'Position'),
+      sample(nativeTag, 'Opacity'),
+      sample(frameTag, 'Position'),
+      sample(frameTag, 'Opacity'),
+    ]);
+    return {
+      x: position.presentation[0],
+      y: position.presentation[1],
+      opacity: opacity.presentation[0],
+      frameX: framePosition.model[0],
+      frameOpacity: frameOpacity.model[0],
+      endX: position.model[0],
+      endY: position.model[1],
+    };
+  }
+
+  async function renderPair(layouts: ReturnType<typeof pairLayouts>) {
+    await render(
+      <Pair left={START_LEFT} top={0} opacity={START_OPACITY} {...layouts} />
+    );
+    await wait(50);
+    await takeTrace();
+    callbacks.length = 0;
+    return samplePair();
+  }
+
+  const isBetween = (
+    value: number,
+    first: number,
+    second: number,
+    tolerance: number
+  ) =>
+    value > Math.min(first, second) - tolerance &&
+    value < Math.max(first, second) + tolerance;
+
+  const curves: [string, EasingFunction | EasingFunctionFactory, boolean][] = [
+    ['Easing.linear', Easing.linear, true],
+    ['Easing.ease', Easing.ease, true],
+    [
+      'Easing.bezier(0.25, 0.1, 0.25, 1)',
+      Easing.bezier(0.25, 0.1, 0.25, 1),
+      true,
+    ],
+    ['Easing.bezier(0.7, 0, 0.3, 1)', Easing.bezier(0.7, 0, 0.3, 1), false],
+  ];
+  for (const [curveName, easing, hasOpacity] of curves) {
+    test(`${curveName}: the native values are on the curve and the frame driver is one frame or less from it`, async () => {
+      const layouts = pairLayouts(easing, hasOpacity);
+      const start = await renderPair(layouts);
+      const endOpacity = hasOpacity ? END_OPACITY : START_OPACITY;
+      await render(
+        <Pair
+          left={PAIR_LEFT}
+          top={PAIR_TOP}
+          opacity={endOpacity}
+          {...layouts}
+        />
+      );
+
+      const curve = curveOf(easing);
+      const xAt = (progress: number) =>
+        start.x + curve(progress) * (PAIR_LEFT - START_LEFT);
+      const opacityAt = (progress: number) =>
+        START_OPACITY + curve(progress) * (endOpacity - START_OPACITY);
+      const frameProgress = FRAME_MS / PAIR_DURATION;
+
+      for (let checkpoint = 0; checkpoint < 8; checkpoint++) {
+        const { x, y, opacity, frameX, frameOpacity, endX, endY } =
+          await samplePair();
+        expect(Math.abs(endX - start.x - (PAIR_LEFT - START_LEFT)) < 0.01).toBe(
+          true
+        );
+        const progress = (y - start.y) / (endY - start.y);
+        expect(progress >= 0 && progress < 1).toBe(true);
+        expect(Math.abs(x - xAt(progress)) < POSITION_TOLERANCE).toBe(true);
+        expect(
+          Math.abs(opacity - opacityAt(progress)) < OPACITY_TOLERANCE
+        ).toBe(true);
+        const frameBefore = Math.max(0, progress - frameProgress);
+        const frameAfter = Math.min(1, progress + frameProgress);
+        expect(
+          isBetween(
+            frameX,
+            xAt(frameBefore),
+            xAt(frameAfter),
+            POSITION_TOLERANCE
+          )
+        ).toBe(true);
+        expect(
+          isBetween(
+            frameOpacity,
+            opacityAt(frameBefore),
+            opacityAt(frameAfter),
+            OPACITY_TOLERANCE
+          )
+        ).toBe(true);
+        await wait(PAIR_DURATION / 9);
+      }
+
+      await wait(PAIR_DURATION / 4);
+      const end = await samplePair();
+      expect(Math.abs(end.x - end.endX) < 0.01).toBe(true);
+      expect(Math.abs(end.frameX - end.endX) < 0.01).toBe(true);
+      expect(Math.abs(end.opacity - endOpacity) < 0.01).toBe(true);
+      expect([...callbacks].sort().join()).toBe('frame:true,native:true');
+      expect(
+        Math.abs(callbackTimes.native - callbackTimes.frame) < FRAME_MS
+      ).toBe(true);
+      await render(null);
+    });
+  }
+
+  test('a replacement during playback continues both drivers from one value within the travel of one frame', async () => {
+    const layouts = pairLayouts(Easing.linear, false);
+    await renderPair(layouts);
+    await render(
+      <Pair left={PAIR_LEFT} top={PAIR_TOP} opacity={1} {...layouts} />
+    );
+    await wait(PAIR_DURATION / 3);
+    await render(
+      <Pair left={PAIR_LEFT / 4} top={0} opacity={1} {...layouts} />
+    );
+
+    // The native start reads the value on screen at its admission. The frame driver has the value of its
+    // last frame before the pull.
+    const startTolerance =
+      POSITION_TOLERANCE + (FRAME_MS * PAIR_LEFT) / PAIR_DURATION;
+    for (let checkpoint = 0; checkpoint < 4; checkpoint++) {
+      const { x, frameX } = await samplePair();
+      expect(Math.abs(x - frameX) < startTolerance).toBe(true);
+      await wait(PAIR_DURATION / 5);
+    }
+    await wait(PAIR_DURATION / 2);
+    const end = await samplePair();
+    expect(Math.abs(end.x - end.endX) < 0.01).toBe(true);
+    expect(Math.abs(end.frameX - end.endX) < 0.01).toBe(true);
+    expect([...callbacks].sort().join()).toBe(
+      'frame:false,frame:true,native:false,native:true'
+    );
+    await render(null);
+  });
+
+  test('the removal of the views during playback gives both drivers false one time', async () => {
+    const layouts = pairLayouts(Easing.linear, false);
+    await renderPair(layouts);
+    await render(
+      <Pair left={PAIR_LEFT} top={PAIR_TOP} opacity={1} {...layouts} />
+    );
+    await wait(PAIR_DURATION / 3);
+    await render(null);
+    await wait(100);
+    expect([...callbacks].sort().join()).toBe('frame:false,native:false');
   });
 });
 
@@ -1244,9 +1797,7 @@ describe('native layout starts from a client callback', () => {
       <ReentryScene left={END_LEFT} followerLayout={FOLLOWER_LAYOUT} />
     );
     await wait(DURATION * 1.5);
-    const events = (await takeTrace()).filter(
-      (event) => event.event !== 'FirstFrameSampled'
-    );
+    const events = await takeTrace();
     const indexOf = (tag: number, name: string) =>
       events.findIndex((event) => event.tag === tag && event.event === name);
     const leaderResult = indexOf(leaderTag, 'ClientEnded');
@@ -1353,6 +1904,9 @@ const styles = StyleSheet.create({
   },
   rowItem: {
     height: 2,
+  },
+  pairCell: {
+    height: BOX_SIZE + PAIR_TOP,
   },
   box: {
     width: BOX_SIZE,

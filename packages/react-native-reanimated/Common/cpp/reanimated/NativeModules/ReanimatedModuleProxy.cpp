@@ -503,9 +503,6 @@ jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent
   if (event.transactionNumber) {
     object.setProperty(rt, "transactionNumber", static_cast<double>(*event.transactionNumber));
   }
-  if (!event.presentationValue.empty()) {
-    object.setProperty(rt, "presentationValue", componentsToJSI(rt, event.presentationValue));
-  }
   return object;
 }
 
@@ -544,6 +541,11 @@ void ReanimatedModuleProxy::sampleNativeAnimationTarget(
       jsi::Object object(rt);
       object.setProperty(rt, "model", componentsToJSI(rt, sample->model));
       object.setProperty(rt, "presentation", componentsToJSI(rt, sample->presentation));
+      auto playbackKeys = jsi::Array(rt, sample->playbackKeys.size());
+      for (size_t index = 0; index < sample->playbackKeys.size(); ++index) {
+        playbackKeys.setValueAtIndex(rt, index, jsi::String::createFromUtf8(rt, sample->playbackKeys[index]));
+      }
+      object.setProperty(rt, "playbackKeys", playbackKeys);
       object.setProperty(rt, "monotonicTimeMs", sample->monotonicTimeMs);
       function->call(rt, object);
     });
