@@ -40,7 +40,7 @@ enum ReduceMotion {
 
 An object with following properties:
 
-| Name             | Type Description |
+| Name             | Type             | Description |
 | ---------------- | ---------------- | ------------------------------------------------ |
 | min  | `number`         | The lowest value your animation can ever reach   |
 | max  | `number`         | The greatest value your animation can ever reach |
