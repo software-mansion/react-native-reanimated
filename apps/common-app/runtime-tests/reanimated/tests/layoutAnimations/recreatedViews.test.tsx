@@ -1,4 +1,5 @@
 import React, { Suspense, use } from 'react';
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeOut } from 'react-native-reanimated';
 
@@ -44,6 +45,15 @@ function HiddenBox({ hidden }: { hidden: boolean }) {
   );
 }
 
+function Wrapper({ style, withBox }: { style?: ViewStyle; withBox: boolean }) {
+  const ref = useTestRef('wrapper');
+  return (
+    <View ref={ref} style={style}>
+      {withBox && <Box />}
+    </View>
+  );
+}
+
 const delays = new Map<string, Promise<void>>();
 
 function Suspending({ dataKey }: { dataKey: string }) {
@@ -66,16 +76,16 @@ function SuspendedBox({ dataKey }: { dataKey: string }) {
   );
 }
 
-async function expectBoxShownAt(tag: number) {
-  const box = getTestComponent('box');
-  expect(box.getTag()).toBe(tag);
+async function expectShownAt(name: string, tag: number) {
+  const component = getTestComponent(name);
+  expect(component.getTag()).toBe(tag);
   await expectEventually(
-    async () => (await box.getMountedViewProps())?.opacity
+    async () => (await component.getMountedViewProps())?.opacity
   ).toBe(1, ComparisonMode.FLOAT_DISTANCE);
 }
 
-// React Native hides a `display: none` view by leaving it out of the mounted tree, so showing it
-// again creates the same tag while its exit animation still runs.
+// On iOS, React Native hides a `display: none` view by leaving it out of the mounted tree, so
+// showing it again creates the same tag while its exit animation still runs.
 describe('Views that React re-creates', () => {
   test('shows a view again while its exit animation runs', async () => {
     await render(<HiddenBox hidden={false} />);
@@ -87,7 +97,7 @@ describe('Views that React re-creates', () => {
     await render(<HiddenBox hidden={false} />);
     await wait(EXIT_MS);
 
-    await expectBoxShownAt(tag);
+    await expectShownAt('box', tag);
   });
 
   test('shows a suspended view again while its exit animation runs', async () => {
@@ -98,6 +108,28 @@ describe('Views that React re-creates', () => {
     await render(<SuspendedBox dataKey="second" />);
     await wait(EXIT_MS);
 
-    await expectBoxShownAt(tag);
+    await expectShownAt('box', tag);
+  });
+
+  // A wrapper without a style flattens, and its removal is withheld while its child exits.
+  test('shows a flattened wrapper again without the props of its earlier commits', async () => {
+    await render(
+      <Wrapper style={{ opacity: 0.5, backgroundColor: '#aa0000' }} withBox />
+    );
+    await waitForFrames();
+    await render(
+      <Wrapper style={{ opacity: 0.5, backgroundColor: '#00aa00' }} withBox />
+    );
+    await waitForFrames();
+    const tag = getTestComponent('wrapper').getTag();
+
+    await render(<Wrapper withBox={false} />);
+    await waitForFrames();
+    await render(
+      <Wrapper style={{ backgroundColor: '#00aa00' }} withBox={false} />
+    );
+    await wait(EXIT_MS);
+
+    await expectShownAt('wrapper', tag);
   });
 });

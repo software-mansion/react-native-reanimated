@@ -145,6 +145,7 @@ const ShadowView &LayoutAnimationsProxy::mountedView(const std::shared_ptr<Light
       completedAnimationIt != completedAnimations_.end()) {
     return completedAnimationIt->second.animation.currentView;
   }
+  resolveLightNodeProps(node);
   return node->current;
 }
 
