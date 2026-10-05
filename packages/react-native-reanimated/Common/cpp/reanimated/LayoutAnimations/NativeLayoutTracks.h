@@ -4,6 +4,8 @@
 #include <reanimated/NativeAnimations/NativeAnimationHost.h>
 #include <reanimated/NativeAnimations/NativeAnimationTrack.h>
 
+#include <folly/dynamic.h>
+#include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
 #include <react/renderer/mounting/ShadowView.h>
 
@@ -13,11 +15,14 @@
 
 namespace reanimated {
 
-/// The number of layout animation leaves that the native route takes: one for each native target.
-inline constexpr size_t MAX_NATIVE_LAYOUT_LEAVES = 5;
+/// A number, or the matrix of the style transform.
+using LeafValue = std::variant<double, facebook::react::Transform>;
 
 /// The value that `view` has for the layout animation key of `target`.
-double leafValue(native_animation::AnimationTarget target, const facebook::react::ShadowView &view);
+LeafValue leafValue(native_animation::AnimationTarget target, const facebook::react::ShadowView &view);
+
+/// True when the mount of `view` gives the model the end value of `track`.
+bool endsAtMountedValue(const native_animation::AnimationTrack &track, const facebook::react::ShadowView &view);
 
 struct NativeLayoutTracks {
   double originTimestampMs;
@@ -34,6 +39,8 @@ struct LiveLeafValues {
   std::optional<double> width;
   std::optional<double> height;
   std::optional<double> opacity;
+  /// In the form of the style prop.
+  std::optional<folly::dynamic> transform;
 };
 
 /// Reads the result of `LayoutAnimationsManager.captureLiveLeaves` on the UI runtime.
