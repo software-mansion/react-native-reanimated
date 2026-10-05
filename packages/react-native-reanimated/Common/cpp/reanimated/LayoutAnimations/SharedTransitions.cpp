@@ -676,8 +676,8 @@ const ShadowView &LayoutAnimationsProxy::viewOnScreen(const std::shared_ptr<Ligh
   if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
     return it->second.currentView;
   }
-  if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end() && !it->second.shouldRemove) {
-    return it->second.animation.currentView;
+  if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end()) {
+    return it->second.currentView;
   }
   return node->current;
 }

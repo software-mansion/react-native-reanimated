@@ -186,8 +186,8 @@ std::optional<ShadowView> LayoutAnimationsProxy::reparentLayoutAnimation(
     return animation.currentView;
   }
   if (const auto completedAnimationIt = completedAnimations_.find(tag);
-      completedAnimationIt != completedAnimations_.end() && !completedAnimationIt->second.shouldRemove) {
-    auto &animation = completedAnimationIt->second.animation;
+      completedAnimationIt != completedAnimations_.end()) {
+    auto &animation = completedAnimationIt->second;
     animation.parentTag = parentTag;
     animation.currentView.layoutMetrics.frame.origin += offset;
     animation.frameOffset += offset;
@@ -784,13 +784,12 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
     return {};
   }
 
-  completedAnimations_.insert_or_assign(
-      tag, CompletedLayoutAnimation{.animation = layoutAnimationIt->second, .shouldRemove = shouldRemove});
-  layoutAnimations_.erase(layoutAnimationIt);
-
   if (!shouldRemove) {
+    completedAnimations_.insert_or_assign(tag, std::move(layoutAnimationIt->second));
+    layoutAnimations_.erase(layoutAnimationIt);
     return surfaceId_;
   }
+  layoutAnimations_.erase(layoutAnimationIt);
 
   const auto nodeIt = lightNodes_.find(tag);
   // the withheld removal may have already been flushed (e.g. reconciled after
@@ -800,9 +799,14 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
     react_native_assert(false && "LightNode not found");
     return surfaceId_;
   }
-  nodeIt->second->setExitingState(COMPLETED);
+  completeExit(nodeIt->second);
 
   return surfaceId_;
+}
+
+void LayoutAnimationsProxy::completeExit(const std::shared_ptr<LightNode> &node) const {
+  node->setExitingState(COMPLETED);
+  completedExits_.push_back(node);
 }
 
 // A subtree that animates keeps its place in the host tree, so nothing is emitted for its root.
@@ -856,26 +860,15 @@ bool LayoutAnimationsProxy::holdsSnapshottedScreen([[maybe_unused]] const std::s
 void LayoutAnimationsProxy::flushCompletedRemovals(ShadowViewMutationList &filteredMutations) const {
   ReanimatedSystraceSection s("flushCompletedRemovals");
 
-  std::vector<Tag> completedRemovalTags;
-  completedRemovalTags.reserve(completedAnimations_.size());
-  for (const auto &[tag, completedAnimation] : completedAnimations_) {
-    if (hasPendingLayoutAnimation(tag) || !completedAnimation.shouldRemove) {
+  for (const auto &node : std::exchange(completedExits_, {})) {
+    // The teardown of another view can remove the node first.
+    if (node->state != COMPLETED) {
       continue;
     }
-    completedRemovalTags.push_back(tag);
-  }
-
-  for (const auto tag : completedRemovalTags) {
-    const auto completedAnimationIt = completedAnimations_.find(tag);
-    if (completedAnimationIt == completedAnimations_.end() || hasPendingLayoutAnimation(tag) ||
-        !completedAnimationIt->second.shouldRemove) {
+    if (hasPendingLayoutAnimation(node->current.tag)) {
+      completedExits_.push_back(node);
       continue;
     }
-    const auto nodeIt = lightNodes_.find(tag);
-    if (nodeIt == lightNodes_.end() || nodeIt->second->state != COMPLETED) {
-      continue;
-    }
-    const auto node = nodeIt->second;
     auto parent = node->parent.lock();
     react_native_assert(parent && "Parent node is nullptr");
     auto index = parent->removeChild(node);
@@ -925,13 +918,12 @@ void LayoutAnimationsProxy::addOngoingAnimations(ShadowViewMutationList &mutatio
 
     auto layoutAnimationIt = layoutAnimations_.find(tag);
     auto completedAnimationIt = completedAnimations_.find(tag);
-    if (layoutAnimationIt == layoutAnimations_.end() &&
-        (completedAnimationIt == completedAnimations_.end() || completedAnimationIt->second.shouldRemove)) {
+    if (layoutAnimationIt == layoutAnimations_.end() && completedAnimationIt == completedAnimations_.end()) {
       continue;
     }
 
-    auto &layoutAnimation = layoutAnimationIt != layoutAnimations_.end() ? layoutAnimationIt->second
-                                                                         : completedAnimationIt->second.animation;
+    auto &layoutAnimation =
+        layoutAnimationIt != layoutAnimations_.end() ? layoutAnimationIt->second : completedAnimationIt->second;
     auto newView = layoutAnimation.finalView;
     if (updateValues.newProps) {
       newView.props = updateValues.newProps;
@@ -1333,6 +1325,7 @@ void LayoutAnimationsProxy::shadowTreeWillCommit(const bool isSurfaceRemoval) {
 
 void LayoutAnimationsProxy::clearSurfaceState() const {
   LayoutAnimationsProxyCommon::clearSurfaceState();
+  completedExits_.clear();
   pendingNativeStarts_.clear();
   if (nativeLayoutGroups_) {
     scheduleOnUI(
@@ -1419,15 +1412,17 @@ void LayoutAnimationsProxy::cleanupAnimations(
 
     cleanupSharedTransitions(transaction, propsParserContext);
   }
-  cleanupCompletedAnimations(transaction.filteredMutations, propsParserContext, true, preservedContainerTags);
+  cleanupCompletedAnimations(transaction.filteredMutations, propsParserContext, preservedContainerTags);
 }
 
 #ifdef ANDROID
 bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
-  return std::ranges::any_of(completedAnimations_, [this](const auto &entry) {
-    const auto &[tag, completedAnimation] = entry;
-    return !hasPendingLayoutAnimation(tag) && (completedAnimation.shouldRemove || sharedContainers_.contains(tag));
+  const bool hasCompletedExit = std::ranges::any_of(completedExits_, [this](const auto &node) {
+    return node->state == COMPLETED && !hasPendingLayoutAnimation(node->current.tag);
   });
+  return hasCompletedExit || std::ranges::any_of(completedAnimations_, [this](const auto &entry) {
+           return !hasPendingLayoutAnimation(entry.first) && sharedContainers_.contains(entry.first);
+         });
 }
 
 void LayoutAnimationsProxy::maybeScheduleCleanupPull(const bool flushedStructuralMutations) const {
