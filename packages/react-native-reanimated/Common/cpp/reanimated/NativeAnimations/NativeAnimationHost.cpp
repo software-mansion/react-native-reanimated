@@ -88,6 +88,10 @@ bool NativeAnimationHost::canRealize(const AnimationTrack &track, const facebook
   return platform_->canRealize(track, view);
 }
 
+bool NativeAnimationHost::isMountedInWindow(const Tag tag) const {
+  return platform_->isInWindow(tag);
+}
+
 #ifndef NDEBUG
 void NativeAnimationHost::takeTrace(std::function<void(std::vector<TraceEvent>)> receiver) {
   enqueue([weakThis = weak_from_this(), receiver = std::move(receiver)] {

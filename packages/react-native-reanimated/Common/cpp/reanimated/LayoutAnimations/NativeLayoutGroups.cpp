@@ -24,10 +24,13 @@ NativeLayoutGroups::NativeLayoutGroups(std::shared_ptr<NativeAnimationHost> host
 
 std::optional<NativeLayoutBuildEnd> NativeLayoutGroups::start(
     const AnimationRequest &request,
-    std::shared_ptr<worklets::Serializable> config) {
+    std::shared_ptr<worklets::Serializable> retargetConfig) {
   const std::lock_guard<std::mutex> lock(mutex_);
   Group group{
-      .buildId = request.handle.generation, .config = std::move(config), .members = {}, .replacedAtAdmission = {}};
+      .buildId = request.handle.generation,
+      .retargetConfig = std::move(retargetConfig),
+      .members = {},
+      .replacedAtAdmission = {}};
   std::optional<NativeLayoutBuildEnd> oldGroupEnd;
 
   if (const auto oldGroupIt = groups_.find(request.handle.tag); oldGroupIt != groups_.end()) {
@@ -68,10 +71,10 @@ bool NativeLayoutGroups::canContinueOn(const facebook::react::ShadowView &view) 
          });
 }
 
-std::shared_ptr<worklets::Serializable> NativeLayoutGroups::config(const Tag tag) {
+std::shared_ptr<worklets::Serializable> NativeLayoutGroups::retargetConfig(const Tag tag) {
   const std::lock_guard<std::mutex> lock(mutex_);
   const auto groupIt = groups_.find(tag);
-  return groupIt == groups_.end() ? nullptr : groupIt->second.config;
+  return groupIt == groups_.end() ? nullptr : groupIt->second.retargetConfig;
 }
 
 std::optional<NativeLayoutBuildEnd> NativeLayoutGroups::cancel(const Tag tag) {

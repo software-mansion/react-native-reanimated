@@ -1,4 +1,5 @@
 #include <react/debug/react_native_assert.h>
+#include <react/renderer/components/view/ViewShadowNode.h>
 #include <react/renderer/mounting/Differentiator.h>
 #include <react/renderer/mounting/MountingCoordinator.h>
 #include <react/renderer/mounting/ShadowTree.h>
@@ -17,6 +18,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cstring>
 #include <memory>
 #include <optional>
 #include <ranges>
@@ -30,6 +32,30 @@ using enum LayoutAnimationType;
 using enum ExitingState;
 
 namespace {
+#ifndef NDEBUG
+std::string_view toString(const LayoutAnimationType type) {
+  switch (type) {
+    case ENTERING:
+      return "Entering";
+    case EXITING:
+      return "Exiting";
+    case LAYOUT:
+      return "Layout";
+    case SHARED_ELEMENT_TRANSITION:
+      return "SharedElementTransition";
+    case SHARED_ELEMENT_TRANSITION_NATIVE_ID:
+      return "SharedElementTransitionNativeID";
+    case PROGRESS:
+      return "Progress";
+  }
+}
+
+/// The roadmap objective that gave the native route to the type.
+uint8_t traceObjectiveOf(const LayoutAnimationType type) {
+  return type == LAYOUT ? 7 : 11;
+}
+#endif
+
 struct AncestorOrigin {
   Tag tag;
   react::Point origin;
@@ -76,6 +102,11 @@ void deliverNativeBuildEnds(
       layoutAnimationsManager.releaseBuiltLayoutAnimation(uiRuntime, buildId);
     }
   }
+}
+
+/// React Native puts a child of such a view in the view tree only while the child is in the clip rectangle.
+bool removesClippedSubviews(const ShadowView &view) {
+  return isViewKind(view) && getViewProps(view).removeClippedSubviews;
 }
 
 /// A build id is also the generation of the native command of the build, and the UI runtime keeps the
@@ -248,7 +279,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   configLock.unlock();
 
   for (const auto &[node, config] : transaction.entering) {
-    startEnteringAnimation(node, config);
+    startEnteringAnimation(node, config, transaction, propsParserContext);
   }
   for (const auto &[node, config] : transaction.layout) {
     startLayoutAnimation(node, config, transaction);
@@ -376,7 +407,8 @@ void LayoutAnimationsProxy::updateLightTree(
     TransactionMeta &transaction) const {
   ReanimatedSystraceSection s("updateLightTree");
   auto &filteredMutations = transaction.filteredMutations;
-  std::unordered_set<Tag> inserted, moved, deleted;
+  auto &inserted = transaction.insertedTags;
+  std::unordered_set<Tag> moved, deleted;
   std::unordered_map<Tag, IndexCursors> indexCursors;
   std::unordered_map<Tag, ShadowView> updatedViews;
   std::unordered_map<Tag, std::vector<AncestorOrigin>> oldChains;
@@ -517,9 +549,6 @@ void LayoutAnimationsProxy::updateLightTree(
           transaction.entering.push_back({node, enteringConfig});
           filteredMutations.push_back(
               ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
-          auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
-          filteredMutations.push_back(
-              ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, hiddenView, mutation.parentTag));
         } else if (hasSharedTransition && isInsideInactiveBoundary(node)) {
           filteredMutations.push_back(
               ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
@@ -1051,7 +1080,7 @@ std::shared_ptr<Serializable> LayoutAnimationsProxy::runningLayoutAnimationConfi
   if (auto config = getRetargetLayoutAnimationConfig(tag)) {
     return config;
   }
-  return nativeLayoutGroups_ ? nativeLayoutGroups_->config(tag) : nullptr;
+  return nativeLayoutGroups_ ? nativeLayoutGroups_->retargetConfig(tag) : nullptr;
 }
 
 ShadowViewMutation LayoutAnimationsProxy::updateToMount(
@@ -1063,8 +1092,51 @@ ShadowViewMutation LayoutAnimationsProxy::updateToMount(
   return mutation;
 }
 
-bool LayoutAnimationsProxy::startNativeLayoutAnimation(ManagedLayoutAnimationStart &start, TransactionMeta &transaction)
+bool LayoutAnimationsProxy::admitsNativeStart(const std::shared_ptr<LightNode> &node) const {
+  const auto tag = node->current.tag;
+  return nativeLayoutGroups_ && worklets::isOnUIThread(uiScheduler_) && isLightNodeMapped(node) && !node->isExiting() &&
+      !layoutAnimations_.contains(tag) && !hasPendingLayoutAnimation(tag);
+}
+
+bool LayoutAnimationsProxy::admitsNativeEnteringStart(
+    const std::shared_ptr<LightNode> &node,
+    const TransactionMeta &transaction) const {
+  if (!admitsNativeStart(node)) {
+    return false;
+  }
+  if (mountsInWindow(node, transaction)) {
+    return true;
+  }
+#ifndef NDEBUG
+  nativeAnimationHost_->trace().record(
+      {.event = native_animation::TraceEventType::LayoutStartRefused,
+       .handle = {surfaceId_, node->current.tag, native_animation::AnimationOwner::Layout, 0},
+       .objective = traceObjectiveOf(ENTERING),
+       .result =
+           native_animation::AnimationResult{
+               native_animation::AnimationOutcome::Rejected,
+               native_animation::AnimationResultReason::TargetUnavailable},
+       .transactionNumber = pulledTransactionNumber_,
+       .layoutAnimationType = toString(ENTERING)});
+#endif
+  return false;
+}
+
+bool LayoutAnimationsProxy::mountsInWindow(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction)
     const {
+  auto ancestor = node->parent.lock();
+  while (ancestor && transaction.insertedTags.contains(ancestor->current.tag)) {
+    if (std::strcmp(ancestor->current.componentName, ViewComponentName) != 0 ||
+        removesClippedSubviews(ancestor->current)) {
+      return false;
+    }
+    ancestor = ancestor->parent.lock();
+  }
+  return ancestor && !removesClippedSubviews(ancestor->current) &&
+      nativeAnimationHost_->isMountedInWindow(ancestor->current.tag);
+}
+
+bool LayoutAnimationsProxy::startNativePlayback(ManagedLayoutAnimationStart &start) const {
   const auto tag = start.tag;
   if (const auto completedView = takeCompletedLayoutAnimationView(tag)) {
     start.before = *completedView;
@@ -1082,9 +1154,10 @@ bool LayoutAnimationsProxy::startNativeLayoutAnimation(ManagedLayoutAnimationSta
     nativeAnimationHost_->trace().record(
         {.event = native_animation::TraceEventType::LayoutBuildFailed,
          .handle = handle,
-         .objective = 7,
+         .objective = traceObjectiveOf(start.type),
          .buildFailure = *failure,
-         .transactionNumber = pulledTransactionNumber_});
+         .transactionNumber = pulledTransactionNumber_,
+         .layoutAnimationType = toString(start.type)});
 #endif
     return false;
   }
@@ -1102,14 +1175,14 @@ bool LayoutAnimationsProxy::startNativeLayoutAnimation(ManagedLayoutAnimationSta
   nativeAnimationHost_->trace().record(
       {.event = native_animation::TraceEventType::LayoutStartPending,
        .handle = handle,
-       .objective = 7,
-       .transactionNumber = pulledTransactionNumber_});
+       .objective = traceObjectiveOf(start.type),
+       .transactionNumber = pulledTransactionNumber_,
+       .layoutAnimationType = toString(start.type)});
 #endif
-  if (const auto oldGroupEnd = nativeLayoutGroups_->start(request, start.config)) {
+  const auto retargetConfig = start.type == LayoutAnimationType::LAYOUT ? start.config : nullptr;
+  if (const auto oldGroupEnd = nativeLayoutGroups_->start(request, retargetConfig)) {
     pendingNativeBuildEnds_.push_back(*oldGroupEnd);
   }
-  transaction.filteredMutations.push_back(
-      ShadowViewMutation::UpdateMutation(start.before, start.after, start.parentTag));
   pendingNativeStarts_.push_back({std::move(request), nativeLayoutGroups_});
   return true;
 }
@@ -1285,9 +1358,6 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
 #endif
 }
 
-// When entering animations start, we temporarily set opacity to 0
-// so that we can immediately insert the view at the right position
-// and schedule the animation on the UI thread
 ShadowView LayoutAnimationsProxy::cloneViewWithoutOpacity(
     const ShadowView &shadowView,
     const PropsParserContext &propsParserContext) const {
@@ -1374,21 +1444,29 @@ void LayoutAnimationsProxy::maybeScheduleCleanupPull(const bool flushedStructura
 
 void LayoutAnimationsProxy::startEnteringAnimation(
     const std::shared_ptr<LightNode> &node,
-    const std::shared_ptr<Serializable> &config) const {
+    const std::shared_ptr<Serializable> &config,
+    TransactionMeta &transaction,
+    const PropsParserContext &propsParserContext) const {
   resolveLightNodeProps(node);
-  const auto &newChildShadowView = node->current;
-  const auto opacity = getViewProps(newChildShadowView).opacity;
+  const auto &insertedView = node->current;
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
-  enqueueLayoutAnimation(ManagedLayoutAnimationStart{
-      .tag = newChildShadowView.tag,
+  ManagedLayoutAnimationStart start{
+      .tag = insertedView.tag,
       .type = LayoutAnimationType::ENTERING,
-      .before = newChildShadowView,
-      .after = newChildShadowView,
+      .before = insertedView,
+      .after = insertedView,
       .parentTag = parent->current.tag,
-      .opacity = opacity,
+      .opacity = getViewProps(insertedView).opacity,
       .config = config,
-  });
+  };
+  if (admitsNativeEnteringStart(node, transaction) && startNativePlayback(start)) {
+    return;
+  }
+  // The frame driver writes the initial values after the mount of the view.
+  transaction.filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
+      insertedView, cloneViewWithoutOpacity(insertedView, propsParserContext), start.parentTag));
+  enqueueLayoutAnimation(std::move(start));
 }
 
 void LayoutAnimationsProxy::startExitingAnimation(
@@ -1429,10 +1507,9 @@ void LayoutAnimationsProxy::startLayoutAnimation(
       .parentTag = parent->current.tag,
       .config = config,
   };
-  // An active frame-driven animation stays frame-driven until it ends.
-  const bool canStartNatively = nativeLayoutGroups_ && worklets::isOnUIThread(uiScheduler_) &&
-      isLightNodeMapped(node) && !layoutAnimations_.contains(tag) && !hasPendingLayoutAnimation(tag);
-  if (canStartNatively && startNativeLayoutAnimation(start, transaction)) {
+  if (admitsNativeStart(node) && startNativePlayback(start)) {
+    transaction.filteredMutations.push_back(
+        ShadowViewMutation::UpdateMutation(start.before, start.after, start.parentTag));
     return;
   }
   continueOnFrameDriver(start);

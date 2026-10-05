@@ -506,6 +506,10 @@ jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent
   if (event.leafValue) {
     object.setProperty(rt, "leafValue", *event.leafValue);
   }
+  if (event.layoutAnimationType) {
+    object.setProperty(
+        rt, "layoutAnimationType", jsi::String::createFromUtf8(rt, std::string(*event.layoutAnimationType)));
+  }
   return object;
 }
 

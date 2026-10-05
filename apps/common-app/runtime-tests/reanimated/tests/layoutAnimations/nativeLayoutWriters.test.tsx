@@ -29,6 +29,7 @@ import {
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
 import {
+  ClippingScrollView,
   BOX_SIZE,
   callbacks,
   DURATION,
@@ -177,14 +178,14 @@ const scrollRef = React.createRef<ComponentRef<typeof ScrollView>>();
 function ClippedBox({ left, layout }: WriterProps) {
   const ref = useTestRef(WRITER_REF);
   return (
-    <ScrollView ref={scrollRef} removeClippedSubviews style={styles.scroll}>
+    <ClippingScrollView scrollRef={scrollRef} style={styles.scroll}>
       <Animated.View
         ref={ref}
         layout={layout}
         style={[styles.box, { marginLeft: left }]}
       />
       <View style={styles.scrollFiller} />
-    </ScrollView>
+    </ClippingScrollView>
   );
 }
 

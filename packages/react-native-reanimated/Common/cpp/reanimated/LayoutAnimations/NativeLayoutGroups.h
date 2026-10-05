@@ -35,18 +35,20 @@ class NativeLayoutGroups final : public native_animation::NativeAnimationClient 
   NativeLayoutGroups(std::shared_ptr<native_animation::NativeAnimationHost> host, BuildEndListener onBuildsEnded);
 
   /// The request becomes the group of its view. The tracks of the old group that the request does not replace
-  /// join it with their keys. Gives the end of the old group, whose callback result is `false`. `config` is
-  /// the layout animation of the view that the request plays.
+  /// join it with their keys. Gives the end of the old group, whose callback result is `false`.
+  /// `retargetConfig` is the layout animation that the request plays. It is null for a request that plays an
+  /// entering animation, because a frame change of the view does not start that animation again.
   std::optional<NativeLayoutBuildEnd> start(
       const native_animation::AnimationRequest &request,
-      std::shared_ptr<worklets::Serializable> config);
+      std::shared_ptr<worklets::Serializable> retargetConfig);
   /// The tracks that the group of the view waits for.
   std::vector<native_animation::TrackKey> members(facebook::react::Tag tag);
   /// False when the host cannot play a track of the group of `view` on that view any more
   /// (`NativeAnimationHost::canRealize`).
   bool canContinueOn(const facebook::react::ShadowView &view);
-  /// The layout animation that the group of the view plays. Null when the view has no group.
-  std::shared_ptr<worklets::Serializable> config(facebook::react::Tag tag);
+  /// The layout animation that a frame change of the view starts while its group plays. Null when the view
+  /// has no group, or when its group plays an entering animation.
+  std::shared_ptr<worklets::Serializable> retargetConfig(facebook::react::Tag tag);
   /// Stops each track of the group of the view. Gives the end of the group, whose callback result is `false`.
   std::optional<NativeLayoutBuildEnd> cancel(facebook::react::Tag tag);
   /// Ends all groups with `false` and releases all builds. The host stops the tracks when the surface closes.
@@ -65,7 +67,7 @@ class NativeLayoutGroups final : public native_animation::NativeAnimationClient 
 
   struct Group {
     uint64_t buildId;
-    std::shared_ptr<worklets::Serializable> config;
+    std::shared_ptr<worklets::Serializable> retargetConfig;
     std::vector<Member> members;
     /// The tracks that the command of the group stops at its admission. They play until then.
     std::vector<native_animation::TrackKey> replacedAtAdmission;

@@ -484,6 +484,12 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     return surface != nil && RCTSurfaceStageIsRunning(surface.stage);
   }
 
+  bool isInWindow(const Tag tag) override
+  {
+    RCTAssertMainQueue();
+    return mountedView(tag).window != nil;
+  }
+
   MountedAnimationResolution resolve(const AnimationRequest &request) override
   {
     ReanimatedSystraceSection section("CoreAnimationPlatform::resolve");

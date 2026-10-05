@@ -33,6 +33,8 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   void startAfterMount(const std::vector<MountedStart> &starts);
   /// The static answer of the platform (`NativeAnimationPlatform::canRealize`). Any thread.
   bool canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) const;
+  /// True when the mounted view of the tag is in a window. UI thread only.
+  bool isMountedInWindow(Tag tag) const;
   /// Stops every track that the command still owns, also after its result. Reports Cancelled when the
   /// command had no result.
   void cancel(const AnimationHandle &handle, TrackStopMode mode);

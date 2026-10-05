@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import type { ComponentRef, RefObject } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { ImageSourcePropType, StyleProp, ViewStyle } from 'react-native';
-import { Modal, Platform, StyleSheet, View } from 'react-native';
+import { Modal, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import type {
   EasingFunction,
   EasingFunctionFactory,
@@ -10,12 +11,13 @@ import Animated, {
   Easing,
   getStaticFeatureFlag,
   LinearTransition,
+  makeMutable,
   ReduceMotion,
   withDelay,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
+import { runOnUISync, scheduleOnRN } from 'react-native-worklets';
 
 import {
   getTestComponent,
@@ -39,6 +41,7 @@ export type TraceEvent = {
   buildFailure?: string;
   transactionNumber?: number;
   leafValue?: number;
+  layoutAnimationType?: string;
 };
 
 export type TargetSample = {
@@ -75,6 +78,13 @@ export const hasNativeLayoutStarts =
   Platform.OS === 'ios' &&
   getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION') &&
   devTools.takeNativeAnimationTrace !== undefined;
+
+// The samples need the native animation host, which each of the two flags creates.
+export const hasTargetSamples =
+  Platform.OS === 'ios' &&
+  (getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION') ||
+    getStaticFeatureFlag('IOS_CSS_CORE_ANIMATION')) &&
+  devTools.sampleNativeAnimationTarget !== undefined;
 
 export const BOX_REF = 'NativeLayoutStartBox';
 export const BOX_SIZE = 50;
@@ -172,6 +182,68 @@ export async function sampleRows(
     await wait(intervalMs);
   }
   return rows;
+}
+
+export const twinStartTime = makeMutable(0);
+
+/**
+ * A linear easing that is no native easing, so its animation is frame-driven.
+ * It gives the start time of its animation on the animation clock.
+ */
+export const recordedLinearOf = (durationMs: number) => (progress: number) => {
+  'worklet';
+  const now = global.__frameTimestamp ?? global._getAnimationTimestamp();
+  twinStartTime.value = now - progress * durationMs;
+  return progress;
+};
+
+/**
+ * The curve of `easing` in a form that is no native easing, so its animation is
+ * frame-driven. It gives the start time of its animation on the animation
+ * clock.
+ */
+export const recordedCurveOf = (
+  easing: EasingFunction | EasingFunctionFactory,
+  durationMs: number
+) => {
+  const curve = curveOf(easing);
+  return (progress: number) => {
+    'worklet';
+    const now = global.__frameTimestamp ?? global._getAnimationTimestamp();
+    twinStartTime.value = now - progress * durationMs;
+    return curve(progress);
+  };
+};
+
+/** The easings with a native form that are not linear. */
+export const CURVED_EASINGS: Record<
+  string,
+  EasingFunction | EasingFunctionFactory
+> = {
+  'Easing.ease': Easing.ease,
+  'a Bezier curve': Easing.bezier(0.3, 0, 0.7, 1),
+};
+
+const animationTime = () => {
+  'worklet';
+  return global._getAnimationTimestamp();
+};
+
+/** The time of the sample clock minus the time of the animation clock. */
+export async function sampleClockOffset(tag: number) {
+  let best = { width: Infinity, offset: 0 };
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const before = runOnUISync(animationTime);
+    const { monotonicTimeMs } = await sample(tag, 'Transform');
+    const after = runOnUISync(animationTime);
+    if (after - before < best.width) {
+      best = {
+        width: after - before,
+        offset: monotonicTimeMs - (before + after) / 2,
+      };
+    }
+  }
+  return best;
 }
 
 export const playbackCountOf = (
@@ -466,6 +538,30 @@ export function Row({ left, count }: { left: number; count: number }) {
   );
 }
 
+export type ScrollViewRef = RefObject<ComponentRef<typeof ScrollView> | null>;
+
+/**
+ * A scroll view that takes its children out of the window when they are out of
+ * its clip rectangle. React Native recycles a view with its old props and with
+ * no clipping, so the clipping starts only when the prop changes.
+ */
+export function ClippingScrollView({
+  scrollRef,
+  style,
+  children,
+}: React.PropsWithChildren<{
+  scrollRef?: ScrollViewRef;
+  style?: StyleProp<ViewStyle>;
+}>) {
+  const [clips, setClips] = useState(false);
+  useEffect(() => setClips(true), []);
+  return (
+    <ScrollView ref={scrollRef} removeClippedSubviews={clips} style={style}>
+      {children}
+    </ScrollView>
+  );
+}
+
 export function ModalScene({ left }: { left: number }) {
   return (
     <Modal visible transparent animationType="none">
@@ -631,8 +727,9 @@ export function Pair({
   );
 }
 
-export const curveOf = (easing: EasingFunction | EasingFunctionFactory) =>
-  typeof easing === 'function' ? easing : easing.factory();
+export function curveOf(easing: EasingFunction | EasingFunctionFactory) {
+  return typeof easing === 'function' ? easing : easing.factory();
+}
 
 const SIZE_BOX_IMAGE =
   require('../../../../src/apps/reanimated/examples/assets/doge.png') as ImageSourcePropType;
