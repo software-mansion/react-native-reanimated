@@ -62,6 +62,9 @@ enum class TrackPlayback : uint8_t {
   Immediate,
 };
 
+/// False when the track has an explicit start value and each segment ends at that value.
+bool changesValue(const AnimationTrack &track);
+
 /// A track with no duration has a playback of its own only when the mounted model holds its end value.
 TrackPlayback playbackOf(const AnimationTrack &track);
 
