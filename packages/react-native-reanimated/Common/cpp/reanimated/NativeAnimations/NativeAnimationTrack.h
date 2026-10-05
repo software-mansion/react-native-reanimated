@@ -27,7 +27,9 @@ enum class EndpointPolicy : uint8_t {
   HoldWithoutCommit,
 };
 
-/// Segment offsets increase strictly in (0, 1] and the last one is 1.
+/// Segment offsets increase strictly in (0, 1] and the last one is 1. A `Transform` track has an explicit start
+/// value, the same operation kinds in each of its values, and one value for each perspective: the value on
+/// screen of a transform has no operation list.
 struct AnimationTrack {
   AnimationTarget target;
   AnimationStart start;

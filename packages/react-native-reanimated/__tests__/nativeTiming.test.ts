@@ -33,6 +33,17 @@ describe('native timing description', () => {
     });
   });
 
+  test('a number with a unit keeps its unit', () => {
+    const animation = onUIRuntime(() =>
+      withTiming('90deg', { duration: 200, easing: Easing.linear })
+    );
+    expect(describe_(animation)).toEqual({
+      toValue: '90deg',
+      durationMs: 200,
+      delaysMs: [],
+    });
+  });
+
   test.each([
     ['Easing.ease', Easing.ease, [0.42, 0, 1, 1]],
     ['Easing.in(Easing.ease)', Easing.in(Easing.ease), [0.42, 0, 1, 1]],
@@ -59,8 +70,8 @@ describe('native timing description', () => {
     ],
     ['a callback', () => withTiming(10, { easing: Easing.linear }, jest.fn())],
     [
-      'a target that is not a number',
-      () => withTiming('10%', { easing: Easing.linear }),
+      'a target that is not a number or a string',
+      () => withTiming([10, 20], { easing: Easing.linear }),
     ],
     [
       'reduced motion',
