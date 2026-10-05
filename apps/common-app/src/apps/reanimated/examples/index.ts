@@ -821,6 +821,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   EnteringMovedBeforeFirstPaint: {
     title: '[LA] Entering view moved before first paint',
     screen: EnteringMovedBeforeFirstPaint,
+    disabledPlatforms: [REAPlatform.WEB],
   },
 
   // Shared Element Transitions
