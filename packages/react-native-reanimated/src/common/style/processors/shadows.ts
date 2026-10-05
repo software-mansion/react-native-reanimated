@@ -11,10 +11,6 @@ const ERROR_MESSAGES = {
     'worklet';
     return `Box shadow value must be a string or an array of shadow objects (e.g. [{ offsetX, offsetY, color }]). Received: ${JSON.stringify(value)}.`;
   },
-  invalidColor(color: string, boxShadow: string) {
-    'worklet';
-    return `Invalid color "${color}" in box shadow "${boxShadow}".`;
-  },
 };
 
 export type ProcessedBoxShadowValue = {
@@ -62,18 +58,11 @@ export const processBoxShadow: ValueProcessor<
       blurRadius = 0,
       ...rest
     } = shadow;
-    const processedColor = processColor(color, context);
-
-    if (processedColor === undefined) {
-      throw new Error(
-        `[Reanimated] ${ERROR_MESSAGES.invalidColor(color, JSON.stringify(shadow))}`
-      );
-    }
 
     return {
       ...rest,
       blurRadius: parseBlurRadius(blurRadius as string),
-      color: processedColor,
+      color: processColor(color, context),
       offsetX: parseFloat(offsetX as string),
       offsetY: parseFloat(offsetY as string),
       spreadDistance: parseFloat(spreadDistance as string),
