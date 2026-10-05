@@ -288,7 +288,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     keepTransitioningViewsHidden(filteredMutations, propsParserContext);
   }
 
-  react_native_assert(!deletesACreatedTag(filteredMutations) && "Transaction deletes a view that it creates");
+  react_native_assert(!deletesCreatedTag(filteredMutations) && "Transaction deletes a view that it creates");
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 

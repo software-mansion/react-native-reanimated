@@ -314,7 +314,7 @@ static inline const ViewProps &getViewProps(const ShadowView &view) {
 
 // Android mounts the Deletes of a transaction after its Creates, so a transaction that deletes and
 // creates one tag loses the created view.
-static inline bool deletesACreatedTag(const ShadowViewMutationList &mutations) {
+static inline bool deletesCreatedTag(const ShadowViewMutationList &mutations) {
   std::unordered_set<Tag> created;
   for (const auto &mutation : mutations) {
     if (mutation.type == ShadowViewMutation::Create) {
