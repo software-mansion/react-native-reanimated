@@ -101,6 +101,11 @@ const DurationZeroExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DurationZero').default as React.FC
   );
+const EnteringMovedBeforeFirstPaint: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/EnteringMovedBeforeFirstPaint')
+      .default as React.FC
+  );
 const ExitingTagReuseStressExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/ExitingTagReuseStressExample')
@@ -812,6 +817,10 @@ const ALL_EXAMPLES: Record<string, Example> = {
   FinalFrameAccuracyExample: {
     screen: FinalFrameAccuracyExample,
     title: '[LA] Final frame accuracy',
+  },
+  EnteringMovedBeforeFirstPaint: {
+    title: '[LA] Entering view moved before first paint',
+    screen: EnteringMovedBeforeFirstPaint,
   },
 
   // Shared Element Transitions
