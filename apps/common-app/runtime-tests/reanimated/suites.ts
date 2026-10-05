@@ -131,6 +131,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'layout animations entering',
+    importTest: () => {
+      require('./tests/layoutAnimations/entering/movedBeforeFirstPaint.test');
+    },
+  },
+  {
     testSuiteName: 'layout animations nested text',
     importTest: () => {
       require('./tests/layoutAnimations/nestedText.test');
