@@ -364,11 +364,10 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
           continue;
         }
 
-        startEnteringAnimation(tag, mutation, enteringConfig);
-        filteredMutations.push_back(mutation);
-
         // temporarily set opacity to 0 to prevent flickering on android
         std::shared_ptr<ShadowView> newView = cloneViewWithoutOpacity(mutation, propsParserContext);
+        startEnteringAnimation(tag, mutation, *newView, enteringConfig);
+        filteredMutations.push_back(mutation);
 
         filteredMutations.push_back(
             ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, *newView, parentTag));
@@ -651,6 +650,7 @@ bool LayoutAnimationsProxy_Legacy::shouldOverridePullTransaction() const {
 void LayoutAnimationsProxy_Legacy::startEnteringAnimation(
     const int tag,
     ShadowViewMutation &mutation,
+    const ShadowView &hiddenView,
     const std::shared_ptr<Serializable> &config) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "start entering animation for tag " << tag << std::endl;
@@ -658,7 +658,7 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
       .tag = tag,
       .type = LayoutAnimationType::ENTERING,
-      .before = mutation.newChildShadowView,
+      .before = hiddenView,
       .after = mutation.newChildShadowView,
       .parentTag = mutation.parentTag,
       .opacity = getViewProps(mutation.newChildShadowView).opacity,
