@@ -84,6 +84,10 @@ void NativeAnimationHost::closeSurface(const SurfaceId surfaceId) {
   });
 }
 
+bool NativeAnimationHost::canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) const {
+  return platform_->canRealize(track, view);
+}
+
 #ifndef NDEBUG
 void NativeAnimationHost::takeTrace(std::function<void(std::vector<TraceEvent>)> receiver) {
   enqueue([weakThis = weak_from_this(), receiver = std::move(receiver)] {

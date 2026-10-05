@@ -5,6 +5,7 @@
 #include <reanimated/Compat/ReactNativeDebug.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
+#include <reanimated/LayoutAnimations/NativeLayoutTracks.h>
 #include <reanimated/LayoutAnimations/SharedTransitionValuesFactory.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
@@ -246,11 +247,8 @@ void LayoutAnimationsProxy::collectSharedElement(
     ancestorOpacity[indexNum] = 1;
     clip[indexNum] = carrierClipOnScreen(*carried);
   } else {
-    copy = useViewsOnScreen ? viewOnScreen(node) : node->current;
+    copy = useViewsOnScreen ? shownView(node) : node->current;
     absolutePositions = getAbsolutePositionsForRootPathView(node, useViewsOnScreen);
-    if (const auto shown = useViewsOnScreen ? viewWithLiveLeafValues(copy) : std::nullopt) {
-      copy.props = shown->props;
-    }
     copy.layoutMetrics.frame.origin = absolutePositions[0];
     ancestors = collectAncestors(node, useViewsOnScreen);
     newTransform = parseParentTransforms(ancestors, absolutePositions);
@@ -1899,8 +1897,7 @@ std::optional<Transform> LayoutAnimationsProxy::transformsAboveNestedCarrier(
 // be from before an attach in this pull, which returned the carrier to its committed layout.
 ShadowView LayoutAnimationsProxy::inParentSpace(const ShadowView &snapshot, const std::shared_ptr<LightNode> &node)
     const {
-  const auto &mounted = mountedView(node);
-  auto view = viewWithLiveLeafValues(mounted).value_or(mounted);
+  auto view = viewWithLiveLeafValues(mountedView(node));
   view.layoutMetrics = snapshot.layoutMetrics;
   view.layoutMetrics.frame.origin = snapshot.layoutMetrics.frame.origin - originOnScreen(node->parent.lock());
   return view;
@@ -3378,6 +3375,16 @@ const ShadowView &LayoutAnimationsProxy::viewOnScreen(const std::shared_ptr<Ligh
   return node->current;
 }
 
+ShadowView LayoutAnimationsProxy::shownView(const std::shared_ptr<LightNode> &node) const {
+  return viewWithLiveLeafValues(viewOnScreen(node));
+}
+
+ShadowView LayoutAnimationsProxy::viewWithLiveLeafValues(const ShadowView &mounted) const {
+  return nativeLayoutGroups_
+      ? viewWithLiveLeafValues(mounted, liveLayoutLeaves(nativeLayoutGroups_->members(mounted.tag)))
+      : mounted;
+}
+
 // A detached ancestor is at the root, so the path from a view to the root ends at it on screen.
 bool LayoutAnimationsProxy::endsPathOnScreen(
     const std::shared_ptr<LightNode> &pathNode,
@@ -3386,14 +3393,14 @@ bool LayoutAnimationsProxy::endsPathOnScreen(
   return useViewsOnScreen && pathNode != node && pathNode->placement() == CarrierPlacement::AT_ROOT;
 }
 
-const ShadowView &LayoutAnimationsProxy::pathView(
+ShadowView LayoutAnimationsProxy::pathView(
     const std::shared_ptr<LightNode> &pathNode,
     const std::shared_ptr<LightNode> &node,
     const bool useViewsOnScreen) const {
   if (const auto *carried = endsPathOnScreen(pathNode, node, useViewsOnScreen) ? runOfCarrier(pathNode) : nullptr) {
     return carrierViewOnScreen(*carried);
   }
-  return useViewsOnScreen ? viewOnScreen(pathNode) : pathNode->current;
+  return useViewsOnScreen ? shownView(pathNode) : pathNode->current;
 }
 
 // The offset of a scroll view moves the views in it, not the scroll view.
@@ -3422,12 +3429,11 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
     react::Point viewPosition = scrollPosition(currentNode, node, scrollOffsets);
     const auto &view = pathView(currentNode, node, useViewsOnScreen);
     const auto parent = currentNode->parent.lock();
-    const auto shown = useViewsOnScreen ? viewWithLiveLeafValues(view) : std::nullopt;
-    auto origin = (shown ? *shown : view).layoutMetrics.frame.origin;
+    auto origin = view.layoutMetrics.frame.origin;
     // A screen below a header ends at the bottom of its stack. On Android, the frame of a new screen
     // can also start below the header until React Native Screens sends the native frame.
     if (parent && !strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
-      const auto &parentView = useViewsOnScreen ? viewOnScreen(parent) : parent->current;
+      const auto parentView = useViewsOnScreen ? shownView(parent) : parent->current;
       origin.y = parentView.layoutMetrics.frame.size.height - view.layoutMetrics.frame.size.height;
     }
     viewPosition += origin;
