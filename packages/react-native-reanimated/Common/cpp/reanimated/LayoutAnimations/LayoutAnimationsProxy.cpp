@@ -289,6 +289,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   }
 
   react_native_assert(!deletesCreatedTag(filteredMutations) && "Transaction deletes a view that it creates");
+#ifdef ANDROID
+  holdFramesUntilBatchIsQueued(filteredMutations);
+#endif
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 
@@ -920,7 +923,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) c
       // https://github.com/software-mansion/react-native-reanimated/issues/7493
       continue;
     }
-    if (transaction.dueRemovals.contains(tag)) {
+    if (transaction.dueRemovals.contains(tag) || unqueuedBatchTags_.contains(tag)) {
       continue;
     }
 #endif
@@ -948,7 +951,11 @@ void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) c
       layoutAnimation.opacity.reset();
     }
   }
+#ifdef ANDROID
+  std::erase_if(updateMap_, [this](const auto &update) { return !unqueuedBatchTags_.contains(update.first); });
+#else
   updateMap_.clear();
+#endif
 }
 
 void LayoutAnimationsProxy::endAnimationsRecursively(
@@ -1068,6 +1075,7 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
   }
 #ifdef ANDROID
   cleanupPullScheduled_ = false;
+  unqueuedBatchTags_.clear();
 #endif
 }
 
@@ -1118,6 +1126,9 @@ void LayoutAnimationsProxy::cleanupAnimations(
   if (!flushStructuralMutations) {
     preservedTags = transaction.dueRemovals;
   }
+  for (const auto &[tag, _] : unqueuedBatchTags_) {
+    preservedTags.insert(tag);
+  }
 #endif
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     for (const auto &[tag, _] : completedAnimations_) {
@@ -1157,6 +1168,53 @@ void LayoutAnimationsProxy::maybeScheduleCleanupPull(const bool flushedStructura
   } else if (hasPendingStructuralCleanup() && !cleanupPullScheduled_) {
     cleanupPullScheduled_ = true;
     scheduleCleanupPull();
+  }
+}
+
+// The push model queues the batch after the pull returns, in the same JS task. A frame that the UI thread pulls
+// in between mounts before the batch, so the frames of its views wait for the next JS task.
+void LayoutAnimationsProxy::holdFramesUntilBatchIsQueued(const ShadowViewMutationList &mutations) const {
+  if (mutations.empty() || isMountingCoordinatorPullModelEnabled() || worklets::isOnUIThread(uiScheduler_)) {
+    return;
+  }
+  std::vector<Tag> tags;
+  for (const auto &mutation : mutations) {
+    const auto isRemoval = mutation.type == ShadowViewMutation::Remove || mutation.type == ShadowViewMutation::Delete;
+    const auto tag = (isRemoval ? mutation.oldChildShadowView : mutation.newChildShadowView).tag;
+    const auto hasRecord =
+        layoutAnimations_.contains(tag) || completedAnimations_.contains(tag) || hasPendingLayoutAnimation(tag);
+    if (hasRecord) {
+      tags.push_back(tag);
+      unqueuedBatchTags_[tag]++;
+    }
+  }
+  if (tags.empty()) {
+    return;
+  }
+  jsInvoker_->invokeAsync([this, weakThis = weak_from_this(), tags = std::move(tags)](jsi::Runtime &) {
+    if (const auto strongThis = weakThis.lock()) {
+      releaseFramesOfQueuedBatch(tags);
+    }
+  });
+}
+
+void LayoutAnimationsProxy::releaseFramesOfQueuedBatch(const std::vector<Tag> &tags) const {
+  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  bool hasHeldFrame = false;
+  for (const auto tag : tags) {
+    const auto it = unqueuedBatchTags_.find(tag);
+    if (it == unqueuedBatchTags_.end()) {
+      continue;
+    }
+    if (--it->second == 0) {
+      unqueuedBatchTags_.erase(it);
+    }
+    const auto completedIt = completedAnimations_.find(tag);
+    const auto waitsForCleanup = completedIt != completedAnimations_.end() && !completedIt->second.shouldRemove;
+    hasHeldFrame = hasHeldFrame || updateMap_.contains(tag) || waitsForCleanup;
+  }
+  if (hasHeldFrame) {
+    schedulePullOnNextFrame();
   }
 }
 #endif

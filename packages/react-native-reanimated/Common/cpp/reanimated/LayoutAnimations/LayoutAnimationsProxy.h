@@ -107,6 +107,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable bool surfaceToRemove_ = false;
 #ifdef ANDROID
   mutable bool cleanupPullScheduled_ = false;
+  // tags of JS-thread batches that are not in the mount queue yet
+  mutable std::unordered_map<Tag, int> unqueuedBatchTags_;
 #endif
 
 #ifdef __APPLE__
@@ -191,6 +193,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 #ifdef ANDROID
   bool hasPendingStructuralCleanup() const;
   void maybeScheduleCleanupPull(bool flushedStructuralMutations) const;
+  void holdFramesUntilBatchIsQueued(const ShadowViewMutationList &mutations) const;
+  void releaseFramesOfQueuedBatch(const std::vector<Tag> &tags) const;
 #endif
 
   void hideTransitioningViews(
