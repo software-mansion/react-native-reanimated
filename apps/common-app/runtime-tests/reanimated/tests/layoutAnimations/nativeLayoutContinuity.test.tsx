@@ -39,6 +39,7 @@ import {
   BOX_SIZE,
   callbacks,
   callbackTimes,
+  centerOf,
   END_OPACITY,
   FRAME_BOX_REF,
   FRAME_MS,
@@ -808,43 +809,212 @@ describe('native layout continuity', () => {
     });
   }
 
-  test('a shared transition hides a source view whose native opacity track plays', async () => {
+  const HIDDEN_OPACITY: Leaves = {
+    opacity: { duration: PAIR_DURATION, initial: 1, to: 0.5 },
+  };
+  // The callback of the X leaf keeps the layout animation of the second route on the frame driver.
+  const HIDDEN_ROUTES = [false, true];
+
+  /**
+   * Mounts the source of a shared transition with a layout animation of its X
+   * and of `extraLeaves`.
+   */
+  async function mountSharedSource(hasCallback: boolean, extraLeaves: Leaves) {
+    const layout = layoutOf(
+      { originX: { duration: PAIR_DURATION, hasCallback }, ...extraLeaves },
+      { name: 'hidden' }
+    );
+    const screens = (left: number, opacity: number, showTarget: boolean) => (
+      <SharedScreens
+        left={left}
+        opacity={opacity}
+        showTarget={showTarget}
+        layout={layout}
+      />
+    );
+    await render(screens(START_LEFT, 1, false));
+    await wait(50);
+    const tag = getTestComponent(SHARED_SOURCE_REF).getTag();
+    await takeTrace();
+    callbacks.length = 0;
+    return { tag, screens };
+  }
+
+  /**
+   * The X that a hidden source shows. The source shows no opacity and has
+   * `keys` playbacks.
+   */
+  async function sampleHiddenX(tag: number, keys = 0) {
+    const opacity = await sample(tag, 'Opacity');
+    expect(opacity.presentation[0]).toBe(0);
+    expect(opacity.playbackKeys.length).toBe(keys);
+    return (await sample(tag, 'Position')).presentation[0];
+  }
+
+  type HiddenRoute = { shownX: number[]; callbackMs: number };
+
+  // The native route and the frame driver show the same X, and the callback comes at the end of the animation.
+  function expectHiddenRoutesAgree([native, frame]: HiddenRoute[]) {
+    native.shownX.forEach((x, index) => {
+      expect(Math.abs(x - frame.shownX[index]) < 2 * oneFrame() + 0.5).toBe(
+        true
+      );
+    });
+    expect(Math.abs(native.callbackMs - frame.callbackMs) < 4 * FRAME_MS).toBe(
+      true
+    );
+    expect(
+      native.callbackMs > PAIR_DURATION &&
+        native.callbackMs < PAIR_DURATION + 6 * FRAME_MS
+    ).toBe(true);
+  }
+
+  const hiddenSourceCases: [string, Leaves, number][] = [
+    ['opacity track', HIDDEN_OPACITY, 0.5],
+    ['X track only', {}, 1],
+  ];
+  for (const [caseName, extraLeaves, endOpacity] of hiddenSourceCases) {
+    test(`a shared transition hides a source view whose native ${caseName} plays, and the layout animation ends as on the frame driver`, async () => {
+      if (!getStaticFeatureFlag('ENABLE_SHARED_ELEMENT_TRANSITIONS')) {
+        return;
+      }
+      const nativeKeys = Object.keys(extraLeaves).length + 1;
+      const routes: HiddenRoute[] = [];
+      for (const hasCallback of HIDDEN_ROUTES) {
+        const { tag, screens } = await mountSharedSource(
+          hasCallback,
+          extraLeaves
+        );
+        const waitUntil = (elapsedMs: number) =>
+          wait(Math.max(0, startMs + elapsedMs - performance.now()));
+        const startMs = performance.now();
+        await render(screens(PAIR_LEFT, endOpacity, false));
+        await waitUntil(PAIR_DURATION / 3);
+        const before = await sample(tag, 'Opacity');
+        expect(before.playbackKeys.length).toBe(hasCallback ? 0 : nativeKeys);
+        await render(screens(PAIR_LEFT, endOpacity, true));
+        await wait(2 * FRAME_MS);
+        const containerTag = await findSharedContainerTag();
+        const container = await sample(containerTag!, 'Opacity');
+        // The container starts at the opacity that the source showed.
+        expect(
+          Math.abs(container.model[0] - before.presentation[0]) < 0.02
+        ).toBe(true);
+
+        const shownX = [];
+        for (const fraction of [0.4, 0.5, 0.7, 0.9]) {
+          await waitUntil(fraction * PAIR_DURATION);
+          // The frame driver took the group with the opacity track; the X track alone continues natively.
+          shownX.push(
+            await sampleHiddenX(tag, hasCallback || nativeKeys > 1 ? 0 : 1)
+          );
+        }
+        expect(callbacks.length).toBe(0);
+
+        await waitUntil(PAIR_DURATION + 150);
+        expect(callbacks.join()).toBe('hidden:true');
+        await sampleHiddenX(tag);
+        routes.push({ shownX, callbackMs: callbackTimes.hidden - startMs });
+        await render(null);
+        await wait(100);
+      }
+
+      expectHiddenRoutesAgree(routes);
+      const [native] = routes;
+      expect(
+        native.shownX[3] > native.shownX[0] + 0.4 * (PAIR_LEFT - START_LEFT)
+      ).toBe(true);
+    });
+  }
+
+  test('a move of a source view in the commit in which a shared transition hides it ends its native tracks, and X continues from the value on screen as on the frame driver', async () => {
     if (!getStaticFeatureFlag('ENABLE_SHARED_ELEMENT_TRANSITIONS')) {
       return;
     }
-    for (const hasCallback of [false, true]) {
-      const layout = layoutOf({
-        originX: { duration: PAIR_DURATION, hasCallback },
-        opacity: { duration: PAIR_DURATION, initial: 1, to: 0.5 },
-      });
-      const screens = (left: number, opacity: number, showTarget: boolean) => (
-        <SharedScreens
-          left={left}
-          opacity={opacity}
-          showTarget={showTarget}
-          layout={layout}
-        />
+    const routes: HiddenRoute[] = [];
+    for (const hasCallback of HIDDEN_ROUTES) {
+      const { tag, screens } = await mountSharedSource(
+        hasCallback,
+        HIDDEN_OPACITY
       );
-      await render(screens(START_LEFT, 1, false));
-      await wait(50);
-      const tag = getTestComponent(SHARED_SOURCE_REF).getTag();
       await render(screens(PAIR_LEFT, 0.5, false));
       await wait(PAIR_DURATION / 3);
-      const before = await sample(tag, 'Opacity');
+      const before = await sample(tag, 'Position');
       expect(before.playbackKeys.length).toBe(hasCallback ? 0 : 2);
-      await render(screens(PAIR_LEFT, 0.5, true));
+      await takeTraceOf(tag);
+      const hideMs = performance.now();
+      const waitUntil = (elapsedMs: number) =>
+        wait(Math.max(0, hideMs + elapsedMs - performance.now()));
+      await render(screens(PAIR_LEFT / 2, 0.5, true));
+
       await wait(2 * FRAME_MS);
-      const containerTag = await findSharedContainerTag();
-      const container = await sample(containerTag!, 'Opacity');
-      const source = await sample(tag, 'Opacity');
-      expect(source.presentation[0]).toBe(0);
-      // The container starts at the opacity that the source showed.
-      expect(Math.abs(container.model[0] - before.presentation[0]) < 0.02).toBe(
-        true
+      const shownX = [await sampleHiddenX(tag)];
+      expect(
+        Math.abs(shownX[0] - before.presentation[0]) < 3 * oneFrame()
+      ).toBe(true);
+      expect(callbacks.join()).toBe('hidden:false');
+      // A hidden view admits no native start, so the frame driver plays the second animation on each route.
+      const playbackEvents = (await takeTraceOf(tag)).filter(({ event }) =>
+        ['TrackStarted', 'TrackEnded', 'Ended'].includes(event)
       );
-      await wait(PAIR_DURATION / 2);
+      expect(summarize(playbackEvents)).toBe(
+        hasCallback
+          ? ''
+          : 'TrackEnded:PositionX:false > TrackEnded:Opacity:false > Ended:Cancelled:None'
+      );
+      for (const fraction of [0.25, 0.5, 0.75]) {
+        await waitUntil(fraction * PAIR_DURATION);
+        shownX.push(await sampleHiddenX(tag));
+      }
+      expect(callbacks.join()).toBe('hidden:false');
+
+      await waitUntil(PAIR_DURATION + 150);
+      expect(callbacks.join()).toBe('hidden:false,hidden:true');
+      expect(
+        Math.abs((await sampleHiddenX(tag)) - centerOf(PAIR_LEFT / 2)) < 0.01
+      ).toBe(true);
+      routes.push({ shownX, callbackMs: callbackTimes.hidden - hideMs });
       await render(null);
+      await wait(100);
     }
+    expectHiddenRoutesAgree(routes);
+  });
+
+  test('a layout animation with an opacity leaf that starts in the commit in which a shared transition hides its view starts no native track and ends as on the frame driver', async () => {
+    if (!getStaticFeatureFlag('ENABLE_SHARED_ELEMENT_TRANSITIONS')) {
+      return;
+    }
+    const routes: HiddenRoute[] = [];
+    for (const hasCallback of HIDDEN_ROUTES) {
+      const { tag, screens } = await mountSharedSource(
+        hasCallback,
+        HIDDEN_OPACITY
+      );
+      const startMs = performance.now();
+      const waitUntil = (elapsedMs: number) =>
+        wait(Math.max(0, startMs + elapsedMs - performance.now()));
+      await render(screens(PAIR_LEFT, 0.5, true));
+
+      const shownX = [];
+      for (const fraction of [0.1, 0.4, 0.7, 0.9]) {
+        await waitUntil(fraction * PAIR_DURATION);
+        shownX.push(await sampleHiddenX(tag));
+      }
+      expect(callbacks.length).toBe(0);
+      expect(shownX[3] > shownX[0] + 0.6 * (PAIR_LEFT - START_LEFT)).toBe(true);
+
+      await waitUntil(PAIR_DURATION + 150);
+      expect(callbacks.join()).toBe('hidden:true');
+      expect(
+        Math.abs((await sampleHiddenX(tag)) - centerOf(PAIR_LEFT)) < 0.01
+      ).toBe(true);
+      // The native route makes no build for a hidden view.
+      expect(summarize(await takeTraceOf(tag))).toBe('');
+      routes.push({ shownX, callbackMs: callbackTimes.hidden - startMs });
+      await render(null);
+      await wait(100);
+    }
+    expectHiddenRoutesAgree(routes);
   });
 });
 
@@ -1419,8 +1589,8 @@ describe('native layout size continuity', () => {
       expect(targetsOf(events, 'TrackStarted')).toBe('Width');
       expectOneTrackReplaced(before.playbackKeys, rows[0].playbackKeys);
       expectOneEndForEachTrack(events, 'Width', ['PositionX']);
-      expect(distances.during < TOLERANCE).toBe(true);
-      expect(distances.atEnd < 0.01).toBe(true);
+      expect(distances.during).toBeWithinRange(0, TOLERANCE);
+      expect(distances.atEnd).toBeWithinRange(0, 0.01);
       expect(distances.keysAtEnd).toBe(0);
       expect([...callbacks].sort().join()).toBe(
         'frame:false,frame:true,native:false,native:true'

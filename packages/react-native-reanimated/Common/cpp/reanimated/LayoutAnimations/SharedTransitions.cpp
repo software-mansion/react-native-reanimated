@@ -484,7 +484,7 @@ void LayoutAnimationsProxy::hideTransitioningViews(
     const auto &shadowView = transition.snapshot[indexNum];
     const auto &parentTag = transition.parentTag[indexNum];
     hiddenViewTags_.insert(shadowView.tag);
-    cancelNativeOpacityAnimation(shadowView.tag);
+    transaction.hiddenTags.push_back(shadowView.tag);
     auto m = ShadowViewMutation::UpdateMutation(
         shadowView, cloneViewWithoutOpacity(shadowView, propsParserContext), parentTag);
     hiddenMutations.push_back(m);

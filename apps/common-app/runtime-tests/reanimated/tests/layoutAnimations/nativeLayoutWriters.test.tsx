@@ -28,11 +28,15 @@ import {
   useTestRef,
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
+import type { PairProps } from './nativeLayoutTestKit';
 import {
   ClippingScrollView,
+  BOX_REF,
   BOX_SIZE,
   callbacks,
+  callbackTimes,
   DURATION,
+  FRAME_BOX_REF,
   END_LEFT,
   FRAME_MS,
   hasNativeLayoutStarts,
@@ -43,13 +47,20 @@ import {
   LAYOUT_DURATION,
   linearAt,
   mountScene,
+  Pair,
+  PAIR_CELL_HEIGHT,
+  PAIR_DURATION,
+  PAIR_LEFT,
+  PAIR_TOP,
   pairLayoutsOf,
+  POSITION_TOLERANCE,
   SAMPLED_OPACITY_TOLERANCE,
   sampleOpacity,
   sampleOpacityPair,
   sampleRows,
   START_LEFT,
   summarize,
+  summarizeEnd,
   takeTrace,
   takeTraceOf,
 } from './nativeLayoutTestKit';
@@ -175,19 +186,19 @@ function FocusableBox({ left, opacity = 1, layout }: WriterProps) {
 
 const scrollRef = React.createRef<ComponentRef<typeof ScrollView>>();
 
-function ClippedBox({ left, layout }: WriterProps) {
-  const ref = useTestRef(WRITER_REF);
+/** A scroll to `CLIPPED_OFFSET` takes the two boxes out of the window. */
+function ClippedPair(pair: PairProps) {
   return (
     <ClippingScrollView scrollRef={scrollRef} style={styles.scroll}>
-      <Animated.View
-        ref={ref}
-        layout={layout}
-        style={[styles.box, { marginLeft: left }]}
-      />
+      <Pair {...pair} />
       <View style={styles.scrollFiller} />
     </ClippingScrollView>
   );
 }
+
+const CLIPPED_OFFSET = 1500;
+const scrollTo = (y: number) =>
+  scrollRef.current?.scrollTo({ y, animated: false });
 
 describe('native layout animations and other writers of the view', () => {
   if (!hasNativeLayoutStarts) {
@@ -728,40 +739,250 @@ describe('native layout animations and other writers of the view', () => {
   );
 });
 
-describe('a native layout track that the platform removes', () => {
+describe('a native layout group whose tracks the platform removes', () => {
   if (!hasNativeLayoutStarts) {
     return;
   }
 
-  test('a clipped view loses its tracks: the group gets false one time and no track stays', async () => {
-    const layout = layoutOf(
-      {
-        originX: { duration: LAYOUT_DURATION },
-        opacity: { duration: 2 * LAYOUT_DURATION, initial: 0.3, to: 1 },
-      },
-      { name: 'clipped' }
-    );
-    const tag = await mountScene(
-      <ClippedBox left={START_LEFT} layout={layout} />,
-      WRITER_REF
-    );
+  type Clipped = { nativeTag: number; frameTag: number; startMs: number };
 
-    await render(<ClippedBox left={END_LEFT} layout={layout} />);
-    await wait(LAYOUT_DURATION / 4);
+  /** Mounts the pair, then renders `moved`. */
+  async function move(mounted: PairProps, moved: PairProps): Promise<Clipped> {
+    await mountScene(<ClippedPair {...mounted} />);
+    const tags = {
+      nativeTag: getTestComponent(BOX_REF).getTag(),
+      frameTag: getTestComponent(FRAME_BOX_REF).getTag(),
+    };
+    const startMs = performance.now();
+    await render(<ClippedPair {...moved} />);
+    return { ...tags, startMs };
+  }
+
+  const waitUntil = ({ startMs }: Clipped, elapsedMs: number) =>
+    wait(Math.max(0, startMs + elapsedMs - performance.now()));
+
+  async function readBox(tag: number) {
+    const [position, opacity] = await Promise.all([
+      sample(tag, 'Position'),
+      sample(tag, 'Opacity'),
+    ]);
+    return {
+      x: position.model[0],
+      y: position.model[1],
+      opacity: opacity.model[0],
+      shownX: position.presentation[0],
+      shownY: position.presentation[1],
+      shownOpacity: opacity.presentation[0],
+      keys: position.playbackKeys.length,
+    };
+  }
+
+  /** The frame-driven box is the reference. It is one cell below the native box. */
+  async function readPair({ nativeTag, frameTag }: Clipped) {
+    const [native, frame] = await Promise.all([
+      readBox(nativeTag),
+      readBox(frameTag),
+    ]);
+    return { native, frame: { ...frame, y: frame.y - PAIR_CELL_HEIGHT } };
+  }
+
+  const isFrameUpdate = ({ event }: { event: string }) =>
+    event === 'FrameUpdateMounted';
+
+  async function takeTransferTrace({ nativeTag }: Clipped) {
+    const events = await takeTraceOf(nativeTag);
+    return {
+      host: summarizeEnd(events.filter((event) => !isFrameUpdate(event))),
+      hasFrameUpdate: events.some(isFrameUpdate),
+    };
+  }
+
+  const sortedCallbacks = () => callbacks.slice().sort().join();
+
+  // 0.5 pt and two display frames of a leaf that moves `distance` in `durationMs`.
+  const twoFrames = (distance: number, durationMs: number) =>
+    POSITION_TOLERANCE + (2 * FRAME_MS * distance) / durationMs;
+
+  test('a clip of the view gives its layout group to the frame driver: the view shows the values of the frame driver after a scroll back, and the callback gets true one time at the natural end', async () => {
+    const opacityDuration = 2 * LAYOUT_DURATION;
+    const layouts = pairLayoutsOf((hasCallback) => ({
+      originX: { duration: LAYOUT_DURATION, hasCallback },
+      opacity: { duration: opacityDuration, initial: 0.3, to: 1 },
+    }));
+    const clipped = await move(
+      { left: START_LEFT, ...layouts },
+      { left: END_LEFT, ...layouts }
+    );
+    await waitUntil(clipped, LAYOUT_DURATION / 4);
     await takeTrace();
-    scrollRef.current?.scrollTo({ y: 1500, animated: false });
-    await wait(LAYOUT_DURATION / 4);
-    const events = await takeTraceOf(tag);
-    expect(events.filter(({ event }) => event === 'Ended').length).toBe(1);
-    expect(events.filter(({ event }) => event === 'TrackEnded').length).toBe(2);
-    expect(callbacks.join()).toBe('clipped:false');
-    const end = await sampleOpacity(tag);
-    expect(end.keys).toBe(0);
-    expect(isNear(end.presentation, 1)).toBe(true);
+    scrollTo(CLIPPED_OFFSET);
+    await waitUntil(clipped, LAYOUT_DURATION / 2);
+    const transfer = await takeTransferTrace(clipped);
+    expect(transfer.host).toBe(
+      'TrackEnded:Opacity:false > TrackEnded:PositionX:false > Ended:Interrupted:PlatformRemoved'
+    );
+    expect(transfer.hasFrameUpdate).toBe(true);
+    expect(callbacks.length).toBe(0);
+    const hidden = await readPair(clipped);
+    expect(hidden.native.keys).toBe(0);
+    expect(
+      isNear(
+        hidden.native.x,
+        hidden.frame.x,
+        twoFrames(END_LEFT, LAYOUT_DURATION)
+      )
+    ).toBe(true);
+    expect(
+      isNear(
+        hidden.native.opacity,
+        hidden.frame.opacity,
+        SAMPLED_OPACITY_TOLERANCE
+      )
+    ).toBe(true);
 
-    await wait(2 * LAYOUT_DURATION);
-    expect(callbacks.join()).toBe('clipped:false');
-    expect((await takeTraceOf(tag)).length).toBe(0);
+    scrollTo(0);
+    await wait(4 * FRAME_MS);
+    await waitUntil(clipped, 0.75 * LAYOUT_DURATION);
+    const shown = await readPair(clipped);
+    expect(shown.native.keys).toBe(0);
+    expect(
+      isNear(
+        shown.native.shownX,
+        shown.frame.x,
+        twoFrames(END_LEFT, LAYOUT_DURATION)
+      )
+    ).toBe(true);
+    expect(shown.native.shownX > START_LEFT + BOX_SIZE / 2 + 10).toBe(true);
+    expect(shown.native.shownX < END_LEFT + BOX_SIZE / 2 - 10).toBe(true);
+    expect(
+      isNear(
+        shown.native.shownOpacity,
+        shown.frame.opacity,
+        SAMPLED_OPACITY_TOLERANCE
+      )
+    ).toBe(true);
+    expect(callbacks.length).toBe(0);
+
+    await waitUntil(clipped, opacityDuration + 400);
+    expect(sortedCallbacks()).toBe('frame:true,native:true');
+    expect(
+      Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
+    ).toBe(true);
+    const end = await readBox(clipped.nativeTag);
+    expect(end.keys).toBe(0);
+    expect(isNear(end.shownOpacity, 1)).toBe(true);
+    expect(isNear(end.shownX, END_LEFT + BOX_SIZE / 2)).toBe(true);
+    await render(null);
+  });
+
+  test('a clip after a replacement that kept a native track of the older build: the callback of the old group has false, and the callback of the new group gets true at the natural end', async () => {
+    const replacementAt = PAIR_DURATION / 5;
+    const layouts = pairLayoutsOf((hasCallback) => ({
+      originX: { duration: PAIR_DURATION, onlyWhenChanged: true, hasCallback },
+      originY: {
+        duration: PAIR_DURATION / 2,
+        onlyWhenChanged: true,
+        hasCallback,
+      },
+    }));
+    const clipped = await move(
+      { left: START_LEFT, top: 0, ...layouts },
+      { left: PAIR_LEFT, top: 0, ...layouts }
+    );
+    await waitUntil(clipped, replacementAt);
+    await render(<ClippedPair left={PAIR_LEFT} top={PAIR_TOP} {...layouts} />);
+    await waitUntil(clipped, replacementAt + 150);
+    expect(sortedCallbacks()).toBe('frame:false,native:false');
+    await takeTrace();
+    scrollTo(CLIPPED_OFFSET);
+    await waitUntil(clipped, replacementAt + 450);
+    const transfer = await takeTransferTrace(clipped);
+    expect(transfer.host).toBe(
+      'TrackEnded:PositionX:false > TrackEnded:PositionY:false > Ended:Interrupted:PlatformRemoved > Ended:Interrupted:PlatformRemoved'
+    );
+    expect(transfer.hasFrameUpdate).toBe(true);
+    expect(callbacks.length).toBe(2);
+
+    scrollTo(0);
+    await waitUntil(clipped, replacementAt + 750);
+    const shown = await readPair(clipped);
+    expect(shown.native.keys).toBe(0);
+    expect(
+      isNear(
+        shown.native.shownX,
+        shown.frame.x,
+        twoFrames(PAIR_LEFT, PAIR_DURATION)
+      )
+    ).toBe(true);
+    expect(
+      isNear(
+        shown.native.shownY,
+        shown.frame.y,
+        twoFrames(PAIR_TOP, PAIR_DURATION / 2)
+      )
+    ).toBe(true);
+    expect(shown.native.shownX < PAIR_LEFT - 20).toBe(true);
+    expect(shown.native.shownY < PAIR_TOP + BOX_SIZE / 2 - 5).toBe(true);
+    expect(callbacks.length).toBe(2);
+
+    await waitUntil(clipped, PAIR_DURATION + 400);
+    expect(sortedCallbacks()).toBe(
+      'frame:false,frame:true,native:false,native:true'
+    );
+    expect(
+      Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
+    ).toBe(true);
+    await render(null);
+  });
+
+  test('a frame change of a clipped view after the frame driver took its layout group starts no native track, and the view agrees with the frame driver', async () => {
+    const changeAt = 0.3 * PAIR_DURATION;
+    const layouts = pairLayoutsOf((hasCallback) => ({
+      originX: { duration: PAIR_DURATION, hasCallback },
+    }));
+    const clipped = await move(
+      { left: START_LEFT, ...layouts },
+      { left: PAIR_LEFT / 2, ...layouts }
+    );
+    await waitUntil(clipped, 0.15 * PAIR_DURATION);
+    await takeTrace();
+    scrollTo(CLIPPED_OFFSET);
+    await waitUntil(clipped, changeAt);
+    const transfer = await takeTransferTrace(clipped);
+    expect(transfer.host).toBe(
+      'TrackEnded:PositionX:false > Ended:Interrupted:PlatformRemoved'
+    );
+    expect(callbacks.length).toBe(0);
+
+    await render(<ClippedPair left={PAIR_LEFT} {...layouts} />);
+    await wait(100);
+    const change = await takeTransferTrace(clipped);
+    expect(change.host).toBe('');
+    expect(sortedCallbacks()).toBe('frame:false,native:false');
+
+    scrollTo(0);
+    for (const fraction of [0.2, 0.5, 0.8]) {
+      await waitUntil(clipped, changeAt + fraction * PAIR_DURATION);
+      const shown = await readPair(clipped);
+      expect(shown.native.keys).toBe(0);
+      expect(
+        isNear(
+          shown.native.shownX,
+          shown.frame.x,
+          twoFrames(PAIR_LEFT, PAIR_DURATION)
+        )
+      ).toBe(true);
+      expect(shown.native.shownX < PAIR_LEFT + BOX_SIZE / 2 - 5).toBe(true);
+    }
+    expect(callbacks.length).toBe(2);
+
+    await waitUntil(clipped, changeAt + PAIR_DURATION + 400);
+    expect(sortedCallbacks()).toBe(
+      'frame:false,frame:true,native:false,native:true'
+    );
+    expect(
+      Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
+    ).toBe(true);
     await render(null);
   });
 });
@@ -777,7 +998,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'teal',
   },
   scroll: {
-    height: 100,
+    height: 2 * PAIR_CELL_HEIGHT,
   },
   scrollFiller: {
     height: 3000,

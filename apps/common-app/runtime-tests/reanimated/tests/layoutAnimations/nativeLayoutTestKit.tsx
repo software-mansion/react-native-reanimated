@@ -162,6 +162,32 @@ export async function samplePosition(tag: number) {
   };
 }
 
+/**
+ * What one leaf of an entering or exiting animation shows in the first
+ * component of a sample target.
+ */
+export type Track = {
+  sampleTarget: 'Opacity' | 'Position' | 'Transform';
+  traceTarget: string;
+  from: number;
+  to: number;
+};
+
+export async function readTrack(tag: number, { sampleTarget }: Track) {
+  const { model, presentation, playbackKeys, monotonicTimeMs } = await sample(
+    tag,
+    sampleTarget
+  );
+  return {
+    shown: presentation[0],
+    model: model[0],
+    keys: playbackKeys.length,
+    timeMs: monotonicTimeMs,
+  };
+}
+
+export type TrackReading = Awaited<ReturnType<typeof readTrack>>;
+
 export const isNear = (value: number, expected: number, tolerance = 0.01) =>
   Math.abs(value - expected) < tolerance;
 
@@ -281,6 +307,12 @@ export function recordCallback(name: string, finished: boolean) {
   callbacks.push(`${name}:${finished}`);
   callbackTimes[name] = performance.now();
 }
+
+/** A callback of a layout animation that records its result under `name`. */
+export const callbackOf = (name: string) => (finished: boolean) => {
+  'worklet';
+  scheduleOnRN(recordCallback, name, finished);
+};
 
 export let builderCalls = 0;
 export function recordBuilderCall() {

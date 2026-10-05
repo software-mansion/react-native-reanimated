@@ -49,11 +49,6 @@ std::string_view toString(const LayoutAnimationType type) {
       return "Progress";
   }
 }
-
-/// The roadmap objective that gave the native route to the type.
-uint8_t traceObjectiveOf(const LayoutAnimationType type) {
-  return type == LAYOUT ? 7 : 11;
-}
 #endif
 
 struct AncestorOrigin {
@@ -94,12 +89,12 @@ void deliverNativeBuildEnds(
     LayoutAnimationsManager &layoutAnimationsManager,
     jsi::Runtime &uiRuntime,
     const NativeLayoutBuildEnds &buildEnds) {
-  for (const auto &[buildId, callbackResult, isReleased] : buildEnds) {
-    if (callbackResult) {
-      layoutAnimationsManager.finishBuiltLayoutAnimation(uiRuntime, buildId, *callbackResult);
+  for (const auto &buildEnd : buildEnds) {
+    if (buildEnd.callbackResult) {
+      layoutAnimationsManager.finishBuiltLayoutAnimation(uiRuntime, buildEnd.buildId, *buildEnd.callbackResult);
     }
-    if (isReleased) {
-      layoutAnimationsManager.releaseBuiltLayoutAnimation(uiRuntime, buildId);
+    if (buildEnd.isReleased) {
+      layoutAnimationsManager.releaseBuiltLayoutAnimation(uiRuntime, buildEnd.buildId);
     }
   }
 }
@@ -132,15 +127,7 @@ LayoutAnimationsProxy::LayoutAnimationsProxy(
       sharedTransitionManager_(dependencies.layoutAnimationsManager->getSharedTransitionManager()),
       nativeAnimationHost_(
           StaticFeatureFlags::getFlag("IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION") ? dependencies.nativeAnimationHost
-                                                                              : nullptr),
-      nativeLayoutGroups_(
-          nativeAnimationHost_ ? std::make_shared<NativeLayoutGroups>(
-                                     nativeAnimationHost_,
-                                     [layoutAnimationsManager = layoutAnimationsManager_,
-                                      &uiRuntime = uiRuntime_](const NativeLayoutBuildEnds &buildEnds) {
-                                       deliverNativeBuildEnds(*layoutAnimationsManager, uiRuntime, buildEnds);
-                                     })
-                               : nullptr) {
+                                                                              : nullptr) {
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
 #endif
@@ -286,6 +273,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   }
   for (const auto &[node, config] : transaction.exiting) {
     startExitingAnimation(node, config);
+  }
+  // After the starts: a start on a view that the transaction hides takes the live leaves of its native group.
+  for (const auto tag : transaction.hiddenTags) {
+    hideNativeOpacityAnimation(tag);
   }
 
   filteredMutations.insert(
@@ -734,6 +725,14 @@ void LayoutAnimationsProxy::startSurface(
     const ShadowTree &shadowTree,
     std::weak_ptr<const MountingOverrideDelegate> mountingOverrideDelegate) {
   react_native_assert(shadowTree.getSurfaceId() == surfaceId_ && "surface registered with the wrong proxy");
+  if (nativeAnimationHost_) {
+    nativeLayoutGroups_ = std::make_shared<NativeLayoutGroups>(
+        nativeAnimationHost_, [weakThis = weak_from_this()](NativeLayoutBuildEnds buildEnds) {
+          if (const auto strongThis = std::static_pointer_cast<LayoutAnimationsProxy>(weakThis.lock())) {
+            strongThis->endNativeBuilds(std::move(buildEnds));
+          }
+        });
+  }
   const auto mountingCoordinator = shadowTree.getMountingCoordinator();
   mountingCoordinator->setMountingOverrideDelegate(std::move(mountingOverrideDelegate));
   // The delegate must be set before the base revision is read, so that every
@@ -1084,16 +1083,21 @@ ShadowViewMutation LayoutAnimationsProxy::updateToMount(
   return mutation;
 }
 
-bool LayoutAnimationsProxy::admitsNativeStart(const std::shared_ptr<LightNode> &node) const {
+bool LayoutAnimationsProxy::admitsNativeStart(const std::shared_ptr<LightNode> &node, const LayoutAnimationType type)
+    const {
   const auto tag = node->current.tag;
-  return nativeLayoutGroups_ && worklets::isOnUIThread(uiScheduler_) && isLightNodeMapped(node) && !node->isExiting() &&
-      !layoutAnimations_.contains(tag) && !hasPendingLayoutAnimation(tag);
+  const bool isExit = type == LayoutAnimationType::EXITING;
+  // The frame driver mounts the last update of an animation that it completed, so it takes the exit then.
+  const bool hasFrameDrivenState = layoutAnimations_.contains(tag) || hasPendingLayoutAnimation(tag) ||
+      (isExit && completedAnimations_.contains(tag));
+  return nativeLayoutGroups_ && worklets::isOnUIThread(uiScheduler_) && isLightNodeMapped(node) &&
+      node->isExiting() == isExit && !hasFrameDrivenState && !hiddenViewTags_.contains(tag);
 }
 
 bool LayoutAnimationsProxy::admitsNativeEnteringStart(
     const std::shared_ptr<LightNode> &node,
     const TransactionMeta &transaction) const {
-  if (!admitsNativeStart(node)) {
+  if (!admitsNativeStart(node, ENTERING)) {
     return false;
   }
   if (mountsInWindow(node, transaction)) {
@@ -1139,8 +1143,12 @@ bool LayoutAnimationsProxy::startNativePlayback(ManagedLayoutAnimationStart &sta
   }
   const auto buildId = *start.buildId;
   const native_animation::AnimationHandle handle{surfaceId_, tag, native_animation::AnimationOwner::Layout, buildId};
-  auto build =
-      makeNativeLayoutTracks(uiRuntime_, buildSummary.asObject(uiRuntime_), start.after, *nativeAnimationHost_);
+  // An exiting animation ends at values that the view never gets.
+  const auto endpointPolicy = start.type == LayoutAnimationType::EXITING
+      ? native_animation::EndpointPolicy::HoldWithoutCommit
+      : native_animation::EndpointPolicy::MountedModelMustMatchEndpoint;
+  auto build = makeNativeLayoutTracks(
+      uiRuntime_, buildSummary.asObject(uiRuntime_), start.after, *nativeAnimationHost_, endpointPolicy);
   if ([[maybe_unused]] const auto *failure = std::get_if<native_animation::TrackBuildFailure>(&build)) {
 #ifndef NDEBUG
     nativeAnimationHost_->trace().record(
@@ -1171,8 +1179,7 @@ bool LayoutAnimationsProxy::startNativePlayback(ManagedLayoutAnimationStart &sta
        .transactionNumber = pulledTransactionNumber_,
        .layoutAnimationType = toString(start.type)});
 #endif
-  const auto retargetConfig = start.type == LayoutAnimationType::LAYOUT ? start.config : nullptr;
-  if (const auto oldGroupEnd = nativeLayoutGroups_->start(request, retargetConfig)) {
+  if (const auto oldGroupEnd = nativeLayoutGroups_->start(request, start.type, start.config)) {
     pendingNativeBuildEnds_.push_back(*oldGroupEnd);
   }
   pendingNativeStarts_.push_back({std::move(request), nativeLayoutGroups_});
@@ -1251,15 +1258,19 @@ void LayoutAnimationsProxy::cancelNativeLayoutAnimation(const Tag tag) const {
   }
 }
 
-void LayoutAnimationsProxy::cancelNativeOpacityAnimation(const Tag tag) const {
+void LayoutAnimationsProxy::hideNativeOpacityAnimation(const Tag tag) const {
   if (!nativeLayoutGroups_) {
     return;
   }
   const auto isOpacityTrack = [](const native_animation::TrackKey &track) {
     return track.target == native_animation::AnimationTarget::Opacity;
   };
-  if (std::ranges::any_of(nativeLayoutGroups_->members(tag), isOpacityTrack)) {
-    cancelNativeLayoutAnimation(tag);
+  if (!std::ranges::any_of(nativeLayoutGroups_->members(tag), isOpacityTrack)) {
+    return;
+  }
+  if (const auto groupEnd = nativeLayoutGroups_->cancelForFrameDriver(tag);
+      groupEnd && !transferToFrameDriver(*groupEnd)) {
+    pendingNativeBuildEnds_.push_back(*groupEnd);
   }
 }
 
@@ -1267,8 +1278,68 @@ void LayoutAnimationsProxy::flushNativeBuildEnds() const {
   if (pendingNativeBuildEnds_.empty()) {
     return;
   }
+  endNativeBuilds(std::exchange(pendingNativeBuildEnds_, {}));
+}
+
+void LayoutAnimationsProxy::endNativeBuilds(NativeLayoutBuildEnds buildEnds) const {
   react_native_assert(worklets::isOnUIThread(uiScheduler_) && "a native build end needs the UI runtime");
-  deliverNativeBuildEnds(*layoutAnimationsManager_, uiRuntime_, std::exchange(pendingNativeBuildEnds_, {}));
+  const auto transferredCount = std::erase_if(
+      buildEnds, [this](const NativeLayoutBuildEnd &buildEnd) { return transferToFrameDriver(buildEnd); });
+  // The frame-driven start reads the builds of the joined tracks, so it runs before their release.
+  if (transferredCount > 0) {
+    flushLayoutAnimationOperations();
+  }
+  completeNativeExits(buildEnds);
+  deliverNativeBuildEnds(*layoutAnimationsManager_, uiRuntime_, buildEnds);
+}
+
+bool LayoutAnimationsProxy::transferToFrameDriver(const NativeLayoutBuildEnd &buildEnd) const {
+  if (!buildEnd.frameDriverHandover) {
+    return false;
+  }
+  const auto &handover = *buildEnd.frameDriverHandover;
+  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  const auto nodeIt = lightNodes_.find(handover.tag);
+  if (nodeIt == lightNodes_.end()) {
+    return false;
+  }
+  const auto &node = nodeIt->second;
+  if (handover.type == LayoutAnimationType::EXITING && node->state != ANIMATING) {
+    return false;
+  }
+  const auto parent = node->parent.lock();
+  react_native_assert(parent && "Parent node is nullptr");
+  enqueueLayoutAnimation(ManagedLayoutAnimationStart{
+      .tag = handover.tag,
+      .type = handover.type,
+      .before = node->current,
+      .after = node->current,
+      .parentTag = parent->current.tag,
+      .config = handover.config,
+      .buildId = buildEnd.buildId,
+      .liveLeaves = liveLayoutLeaves(handover.joinedTracks),
+  });
+  return true;
+}
+
+void LayoutAnimationsProxy::completeNativeExits(const NativeLayoutBuildEnds &buildEnds) const {
+  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  bool hasCompletedExit = false;
+  for (const auto &buildEnd : buildEnds) {
+    if (!buildEnd.exitedTag) {
+      continue;
+    }
+    const auto nodeIt = lightNodes_.find(*buildEnd.exitedTag);
+    // A removal that stops the exiting animation takes the node away itself.
+    if (nodeIt == lightNodes_.end() || nodeIt->second->state != ANIMATING) {
+      continue;
+    }
+    completeExit(nodeIt->second);
+    hasCompletedExit = true;
+  }
+  if (hasCompletedExit) {
+    schedulePullOnNextFrame();
+  }
 }
 
 void LayoutAnimationsProxy::surfaceDidMount() {
@@ -1479,6 +1550,9 @@ void LayoutAnimationsProxy::startExitingAnimation(
       .parentTag = parent->current.tag,
       .config = config,
   };
+  if (admitsNativeStart(node, start.type) && startNativePlayback(start)) {
+    return;
+  }
   continueOnFrameDriver(start);
   enqueueLayoutAnimation(std::move(start));
 }
@@ -1502,7 +1576,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
       .parentTag = parent->current.tag,
       .config = config,
   };
-  if (admitsNativeStart(node) && startNativePlayback(start)) {
+  if (admitsNativeStart(node, start.type) && startNativePlayback(start)) {
     transaction.filteredMutations.push_back(
         ShadowViewMutation::UpdateMutation(start.before, start.after, start.parentTag));
     return;

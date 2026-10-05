@@ -79,6 +79,8 @@ using CollectedTransitions = std::vector<std::pair<SharedTag, CollectedTransitio
 struct TransactionMeta {
   /// The views that the transaction inserts.
   std::unordered_set<Tag> insertedTags;
+  /// The views that a shared transition hides in the transaction.
+  std::vector<Tag> hiddenTags;
   ShadowViewMutationList filteredMutations;
   ShadowViewMutationList teardownMutations;
   bool surfaceDropped = false;
@@ -118,8 +120,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 #endif
   mutable StaleSynchronousPropsTracker staleSynchronousProps_;
   const std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost_;
-  /// Null when layout animations have no native route.
-  const std::shared_ptr<NativeLayoutGroups> nativeLayoutGroups_;
+  /// Null when layout animations have no native route, and before the start of the surface.
+  std::shared_ptr<NativeLayoutGroups> nativeLayoutGroups_;
   /// The native starts of the last pull. The mount report of that transaction takes them.
   mutable std::vector<native_animation::MountedStart> pendingNativeStarts_;
   /// The build ends that the pull gives to the UI runtime before it returns.
@@ -145,9 +147,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &node,
       const std::shared_ptr<Serializable> &config,
       TransactionMeta &transaction) const;
-  /// True when a layout or entering start of the view can ask for native playback. A view with a frame-driven
-  /// animation stays frame-driven until that animation ends.
-  bool admitsNativeStart(const std::shared_ptr<LightNode> &node) const;
+  /// True when a start of type `type` on the view can ask for native playback. A view with a frame-driven
+  /// animation stays frame-driven until that animation ends. A view that React removed admits only the start
+  /// of its exiting animation, so no later request starts on it. A view that a shared transition hides admits
+  /// no start: a native opacity track shows the view.
+  bool admitsNativeStart(const std::shared_ptr<LightNode> &node, LayoutAnimationType type) const;
   /// True when the entering start of a view that the transaction inserts can ask for native playback: the view
   /// admits a native start, and the mount of the transaction puts it in a window. UI thread only.
   bool admitsNativeEnteringStart(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction) const;
@@ -156,7 +160,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   /// only.
   bool mountsInWindow(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction) const;
   /// True when the native host plays the whole animation of `start`. The request then starts after the mount
-  /// of this transaction, which must give the view the state `start.after`. Else the UI runtime holds the
+  /// of this transaction, which must leave the view in the state `start.after`. Else the UI runtime holds the
   /// result of the builder under the build of `start`. UI thread only.
   bool startNativePlayback(ManagedLayoutAnimationStart &start) const;
   /// Runs the builder of `start` one time with the values that the view shows, and keeps the result on the UI
@@ -167,10 +171,20 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void continueOnFrameDriver(ManagedLayoutAnimationStart &start) const;
   /// Ends the native playback of the view. Its group gets `false`.
   void cancelNativeLayoutAnimation(Tag tag) const;
-  /// Ends the native playback of a view that goes hidden when it has an opacity track. That track shows the
-  /// view until it ends; a group with no opacity track continues on the hidden view.
-  void cancelNativeOpacityAnimation(Tag tag) const;
+  /// Gives the layout animation of a view that a shared transition hides to the frame driver when the view
+  /// has a native opacity track. That track shows the view until it ends; a group with no opacity track
+  /// continues on the hidden view.
+  void hideNativeOpacityAnimation(Tag tag) const;
   void flushNativeBuildEnds() const;
+  /// Gives the callbacks and the releases of `buildEnds` to the UI runtime. A view whose exiting animation
+  /// got its result leaves in the next pull. An end with a handover gets no result when the frame driver takes
+  /// its build. UI thread only.
+  void endNativeBuilds(NativeLayoutBuildEnds buildEnds) const;
+  /// Enqueues the frame-driven start of the build of `buildEnd` when the end has a handover and layout still
+  /// keeps the view. The build then plays on its own timeline from its origin and its callback stays open.
+  /// False when the end applies.
+  bool transferToFrameDriver(const NativeLayoutBuildEnd &buildEnd) const;
+  void completeNativeExits(const NativeLayoutBuildEnds &buildEnds) const;
   /// The config of the layout animation that runs on the view, on the frame driver or natively.
   std::shared_ptr<Serializable> runningLayoutAnimationConfig(Tag tag) const;
   /// The update that brings the host view to the final state of `node`.

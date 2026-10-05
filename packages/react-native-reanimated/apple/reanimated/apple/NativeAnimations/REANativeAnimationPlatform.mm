@@ -606,7 +606,12 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
       return;
     }
     if (!(finished && holdsEndValue)) {
+      CALayer *layer = trackIt->second;
       tracks_.erase(trackIt);
+      if (holdsEndValue) {
+        // Core Animation stops an animation that holds its end value but keeps it on the layer.
+        [layer removeAnimationForKey:animationKeyForTrack(track)];
+      }
     }
     trackEndListener_(track, finished);
   }
