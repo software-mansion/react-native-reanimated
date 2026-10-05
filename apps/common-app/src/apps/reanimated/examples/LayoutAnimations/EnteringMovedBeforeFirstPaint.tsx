@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn, ReduceMotion } from 'react-native-reanimated';
 import { createSynchronizable, scheduleOnUI } from 'react-native-worklets';
 
 // Each row mounts at the top and moves to its slot in a layout effect, before
@@ -9,7 +9,13 @@ import { createSynchronizable, scheduleOnUI } from 'react-native-worklets';
 const ROWS = Array.from({ length: 10 }, (_, index) => `Row ${index + 1}`);
 const ROW_HEIGHT = 56;
 
-function List({ onPlaced }: { onPlaced?: () => void }) {
+function List({
+  onPlaced,
+  reduceMotion,
+}: {
+  onPlaced?: () => void;
+  reduceMotion: boolean;
+}) {
   const [placed, setPlaced] = useState(false);
 
   useLayoutEffect(() => {
@@ -28,7 +34,11 @@ function List({ onPlaced }: { onPlaced?: () => void }) {
         <View
           key={label}
           style={[styles.cell, { top: placed ? index * ROW_HEIGHT : 0 }]}>
-          <Animated.View entering={FadeIn} style={styles.row}>
+          <Animated.View
+            entering={
+              reduceMotion ? FadeIn.reduceMotion(ReduceMotion.Always) : FadeIn
+            }
+            style={styles.row}>
             <Text style={styles.label}>{label}</Text>
           </Animated.View>
         </View>
@@ -61,6 +71,7 @@ export default function EnteringMovedBeforeFirstPaint() {
   const [list, setList] = useState<{ key: number; onPlaced?: () => void }>({
     key: 0,
   });
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   const remount = () => setList(({ key }) => ({ key: key + 1 }));
 
@@ -78,7 +89,15 @@ export default function EnteringMovedBeforeFirstPaint() {
         <Button title="Remount" onPress={remount} />
         <Button title="Remount, held UI" onPress={remountWithHeldUIThread} />
       </View>
-      <List key={list.key} onPlaced={list.onPlaced} />
+      <Button
+        title={`Reduce motion: ${reduceMotion ? 'on' : 'off'}`}
+        onPress={() => setReduceMotion((value) => !value)}
+      />
+      <List
+        key={list.key}
+        onPlaced={list.onPlaced}
+        reduceMotion={reduceMotion}
+      />
     </View>
   );
 }
