@@ -84,15 +84,20 @@ const SHARED_CONTAINER_TAGS = 300;
 function SharedParent({
   left,
   layout,
+  transform,
   children,
-}: React.PropsWithChildren<{ left: number; layout: LayoutAnimationFunction }>) {
+}: React.PropsWithChildren<{
+  left: number;
+  layout: LayoutAnimationFunction;
+  transform: ViewStyle['transform'];
+}>) {
   const ref = useTestRef(SHARED_PARENT_REF);
   return (
     <Animated.View
       ref={ref}
       collapsable={false}
       layout={layout}
-      style={[styles.sharedParent, { marginLeft: left }]}>
+      style={[styles.sharedParent, { marginLeft: left, transform }]}>
       {children}
     </Animated.View>
   );
@@ -107,6 +112,8 @@ type SharedScreensProps = {
   layout: LayoutAnimationFunction;
   /** The parent of the source has the layout animation and the move. */
   movesParent?: boolean;
+  /** For the view that has the layout animation. */
+  transform?: ViewStyle['transform'];
 };
 
 function SharedScreens({
@@ -117,6 +124,7 @@ function SharedScreens({
   showTarget,
   layout,
   movesParent = false,
+  transform,
 }: SharedScreensProps) {
   const sourceRef = useTestRef(SHARED_SOURCE_REF);
   const source = (
@@ -128,6 +136,7 @@ function SharedScreens({
       style={[
         styles.sharedBox,
         { marginLeft: movesParent ? 0 : left, width, height, opacity },
+        !movesParent && { transform },
       ]}
     />
   );
@@ -135,7 +144,7 @@ function SharedScreens({
     <View style={styles.sharedScreens}>
       <SharedTransitionBoundary isActive={!showTarget}>
         {movesParent ? (
-          <SharedParent left={left} layout={layout}>
+          <SharedParent left={left} layout={layout} transform={transform}>
             {source}
           </SharedParent>
         ) : (
@@ -738,6 +747,66 @@ describe('native layout continuity', () => {
       await render(null);
     }
   });
+
+  const sharedTransformCases: [string, boolean][] = [
+    ['a view', false],
+    ['a child of a view', true],
+  ];
+  for (const [caseName, movesParent] of sharedTransformCases) {
+    test(`a shared transition from ${caseName} with a native transform track starts at the place on screen`, async () => {
+      if (!getStaticFeatureFlag('ENABLE_SHARED_ELEMENT_TRANSITIONS')) {
+        return;
+      }
+      const TRAVEL = 90;
+      const containerStarts: number[] = [];
+      for (const hasCallback of [false, true]) {
+        const layout = layoutOf(
+          {},
+          {
+            transform: {
+              operations: [['translateX', 0, TRAVEL]],
+              shared: { duration: PAIR_DURATION, hasCallback },
+            },
+          }
+        );
+        const screens = (left: number, showTarget: boolean) => (
+          <SharedScreens
+            left={left}
+            showTarget={showTarget}
+            layout={layout}
+            movesParent={movesParent}
+            transform={[{ translateX: TRAVEL }]}
+          />
+        );
+        await render(screens(START_LEFT, false));
+        await wait(50);
+        const tag = getTestComponent(
+          movesParent ? SHARED_PARENT_REF : SHARED_SOURCE_REF
+        ).getTag();
+        await render(screens(START_LEFT + 2, false));
+        await wait(PAIR_DURATION / 3);
+        const moving = await sample(tag, 'Transform');
+        expect(moving.playbackKeys.length).toBe(hasCallback ? 0 : 1);
+        const shown = (hasCallback ? moving.model : moving.presentation)[12];
+        expect(shown > TRAVEL / 6 && shown < TRAVEL / 2).toBe(true);
+        await render(screens(START_LEFT + 2, true));
+        await wait(2 * FRAME_MS);
+        const containerTag = await findSharedContainerTag();
+        const [position, transform] = await Promise.all([
+          sample(containerTag!, 'PositionX'),
+          sample(containerTag!, 'Transform'),
+        ]);
+        containerStarts.push(position.model[0] + transform.model[12] - shown);
+        await wait(PAIR_DURATION / 2);
+        await render(null);
+      }
+      // The container moves to the target for two frames after its start.
+      expect(
+        Math.abs(containerStarts[0] - containerStarts[1]) <
+          2 * oneFrame() + (3 * FRAME_MS * TRAVEL) / PAIR_DURATION
+      ).toBe(true);
+    });
+  }
 
   test('a shared transition hides a source view whose native opacity track plays', async () => {
     if (!getStaticFeatureFlag('ENABLE_SHARED_ELEMENT_TRANSITIONS')) {

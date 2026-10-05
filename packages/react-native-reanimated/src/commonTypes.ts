@@ -114,16 +114,35 @@ export type LayoutAnimationStartFunction = (
   config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
 ) => void;
 
-/** A native timing with the sum of its delays. */
-export type NativeLeafTiming = Omit<NativeTimingDescription, 'delaysMs'> & {
+/**
+ * One operation of a `transform` leaf in its native form: a length in points,
+ * an angle in radians, or a factor.
+ */
+export type NativeTransformOperation = { kind: string; value: number };
+
+/** The native form of a leaf value: a number, or the operations of `transform`. */
+export type NativeLeafValue = number | NativeTransformOperation[];
+
+/** A native timing with its end value and the sum of its delays. */
+export type NativeLeafTiming<TValue = NativeLeafValue> = Pick<
+  NativeTimingDescription,
+  'durationMs' | 'cubicBezier'
+> & {
+  toValue: TValue;
   delayMs: number;
+};
+
+/** What the native route takes from one layout animation. */
+export type NativeLayoutLimits = {
+  leaves: number;
+  transformOperations: number;
 };
 
 /** What the native route reads from the result of a layout animation builder. */
 export type LayoutAnimationBuildSummary = {
   /** The start time of the animation. All starts of one batch share it. */
   originMs: number;
-  /** The builder gave more animations than the caller can route. */
+  /** The builder gave more animations or operations than the caller can route. */
   exceedsLimit: boolean;
   /** An initial value has no animation. */
   hasInitialOnlyKeys: boolean;
@@ -134,6 +153,10 @@ export type LayoutAnimationBuildSummary = {
   needsFrameDriver: boolean;
   leaves: {
     key: string;
+    /**
+     * The value of the builder, or the native form of a `transform` leaf. A
+     * `transform` leaf with no native form has no value.
+     */
     initialValue: unknown;
     timing?: NativeLeafTiming;
     /** The live leaf of the key keeps its timeline, so the key needs no track. */
@@ -158,11 +181,11 @@ export type LayoutAnimationsManager = {
     buildId: number,
     yogaValues: Partial<LayoutAnimationValues>,
     config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
-    maxLeaves: number,
+    limits: NativeLayoutLimits,
     liveLeaves: LiveLayoutLeaf[]
   ) => LayoutAnimationBuildSummary | undefined;
   /** Gives the value that each live leaf has at the start time of this batch. */
-  captureLiveLeaves: (liveLeaves: LiveLayoutLeaf[]) => Record<string, number>;
+  captureLiveLeaves: (liveLeaves: LiveLayoutLeaf[]) => Record<string, unknown>;
   /**
    * Starts the frame-driven animation of a build and releases the build. The
    * animation continues the live leaves from their state at the start time of
@@ -352,7 +375,8 @@ export type AnimatableValue = Animatable | AnimatableValueObject;
  * wrappers, that a native layout animation can play.
  */
 export type NativeTimingDescription = {
-  toValue: number;
+  /** A string is a number with a unit. */
+  toValue: number | string;
   durationMs: number;
   /** The delay of each `withDelay` wrapper, the outer one first. */
   delaysMs: number[];

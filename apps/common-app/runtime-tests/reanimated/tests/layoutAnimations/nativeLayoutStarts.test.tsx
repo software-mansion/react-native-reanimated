@@ -38,6 +38,7 @@ import type {
   Key,
   Leaf,
   LayoutOptions,
+  Operation,
   BoxProps,
   Frame,
   PairLayouts,
@@ -72,6 +73,7 @@ import {
   callbackTimes,
   builderCalls,
   layoutOf,
+  endTransformOf,
   MALFORMED_BEZIER,
   Box,
   Scene,
@@ -216,6 +218,146 @@ describe('native layout starts after the mount of the final state', () => {
     });
   }
 
+  const transformCase = (
+    operations: Operation[],
+    transform = endTransformOf(operations),
+    box: Partial<BoxProps> = {}
+  ): [LayoutOptions, Partial<BoxProps>] => [
+    { transform: { operations } },
+    { transform, ...box },
+  ];
+  const TURN: Operation = ['rotate', 0, 1];
+  const MATRIX = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 0, 0, 1];
+  const transformFailures: [
+    string,
+    Partial<Record<Key, Leaf>>,
+    string,
+    LayoutOptions,
+    Partial<BoxProps>,
+  ][] = [
+    [
+      'a skewX operation',
+      {},
+      'UnsupportedValue',
+      ...transformCase([['skewX', '0deg', '30deg']]),
+    ],
+    [
+      'a skewY operation',
+      {},
+      'UnsupportedValue',
+      ...transformCase([['skewY', '0deg', '30deg']]),
+    ],
+    [
+      'a translate operation',
+      {},
+      'UnsupportedValue',
+      ...transformCase([['translate', [0, 0], [10, 20]]]),
+    ],
+    [
+      'an operation of an unknown kind',
+      {},
+      'UnsupportedValue',
+      ...transformCase([['translateZ', 0, 10]], [{ translateX: 0 }]),
+    ],
+    [
+      'a matrix operation',
+      {},
+      'UnsupportedValue',
+      ...transformCase([['matrix', MATRIX, MATRIX]]),
+    ],
+    [
+      'a perspective that changes',
+      {},
+      'UnsupportedValue',
+      ...transformCase([['perspective', 300, 500], TURN]),
+    ],
+    [
+      'a translation in percent',
+      {},
+      'UnsupportedValue',
+      ...transformCase([['translateX', '0%', '50%']]),
+    ],
+    [
+      'an angle that changes its unit',
+      {},
+      'UnsupportedValue',
+      ...transformCase([['rotate', '0rad', '90deg']]),
+    ],
+    [
+      'a transform leaf with no initial value',
+      {},
+      'UnsupportedValue',
+      { transform: { operations: [TURN], hasNoInitialValue: true } },
+      { transform: endTransformOf([TURN]) },
+    ],
+    [
+      'operations with two durations',
+      {},
+      'UnsupportedTiming',
+      ...transformCase([
+        TURN,
+        ['translateX', 0, 10, { duration: 2 * DURATION }],
+      ]),
+    ],
+    [
+      'an operation with a delay of its own',
+      {},
+      'UnsupportedTiming',
+      ...transformCase([TURN, ['translateX', 0, 10, { delays: [50] }]]),
+    ],
+    [
+      'an operation with a spring',
+      {},
+      'UnsupportedTiming',
+      ...transformCase([TURN, ['translateX', 0, 10, { isSpring: true }]]),
+    ],
+    [
+      'a transform leaf on a view with a transform origin',
+      {},
+      'UnsupportedTarget',
+      ...transformCase([TURN], undefined, { transformOrigin: 'top left' }),
+    ],
+    [
+      'a transform leaf on a view with a translation in percent',
+      {},
+      'UnsupportedTarget',
+      ...transformCase(
+        [['translateX', 25, 25], TURN],
+        [{ translateX: '50%' }, { rotate: '1rad' }]
+      ),
+    ],
+    [
+      'an end transform that the style does not have',
+      {},
+      'EndpointMismatch',
+      ...transformCase([TURN], [{ rotate: '0.5rad' }]),
+    ],
+    [
+      'a perspective that the style does not have',
+      {},
+      'EndpointMismatch',
+      ...transformCase(
+        [
+          ['perspective', 500, 500],
+          ['rotateX', '90deg', '0deg'],
+        ],
+        [{ rotateX: '0deg' }]
+      ),
+    ],
+    [
+      'more operations than the limit',
+      {},
+      'ResourceLimit',
+      ...transformCase([
+        TURN,
+        ['translateX', 0, 10],
+        ['translateY', 0, 10],
+        ['scaleX', 1, 2],
+        ['scaleY', 1, 2],
+      ]),
+    ],
+  ];
+
   const frameDrivenBuilds: [
     string,
     Partial<Record<Key, Leaf>>,
@@ -298,7 +440,9 @@ describe('native layout starts after the mount of the final state', () => {
         borderRadius: { initial: 0, to: 0 },
       },
       'ResourceLimit',
+      { transform: { operations: [['rotate', 0, 0]] } },
     ],
+    ...transformFailures,
     [
       'an end value that the mount does not give',
       { originX: { to: 10 } },
@@ -338,7 +482,13 @@ describe('native layout starts after the mount of the final state', () => {
     });
   }
 
-  const nativeBuilds: [string, Partial<Record<Key, Leaf>>, string[]][] = [
+  const nativeBuilds: [
+    string,
+    Partial<Record<Key, Leaf>>,
+    string[],
+    LayoutOptions?,
+    Partial<BoxProps>?,
+  ][] = [
     [
       'a size leaf that does not change',
       { originX: {}, width: {} },
@@ -360,12 +510,35 @@ describe('native layout starts after the mount of the final state', () => {
       },
       ['PositionX', 'PositionY', 'Width', 'Height', 'Opacity'],
     ],
+    [
+      'a transform leaf with the largest number of operations',
+      {},
+      ['Transform'],
+      ...transformCase([
+        ['perspective', 500, 500],
+        ['rotateY', '0deg', '40deg'],
+        ['translateX', 0, 10, { isPlain: true }],
+        ['scale', 1, 1.2],
+      ]),
+    ],
+    [
+      'the largest number of leaves',
+      {
+        originX: {},
+        originY: {},
+        width: {},
+        height: {},
+        opacity: { initial: 1, to: 1 },
+      },
+      ['PositionX', 'PositionY', 'Width', 'Height', 'Opacity', 'Transform'],
+      ...transformCase([TURN]),
+    ],
   ];
-  for (const [caseName, leaves, targets] of nativeBuilds) {
+  for (const [caseName, leaves, targets, options, box] of nativeBuilds) {
     test(`${caseName} plays natively: ${targets.join(', ')}`, async () => {
-      const layout = layoutOf(leaves, { name: 'native' });
-      const tag = await renderBox({ layout });
-      await render(<Scene left={END_LEFT} layout={layout} />);
+      const layout = layoutOf(leaves, { ...options, name: 'native' });
+      const tag = await renderBox({ layout, ...box });
+      await render(<Scene left={END_LEFT} layout={layout} {...box} />);
       await wait(DURATION * 1.5);
 
       const events = (await takeTraceOf(tag)).filter(isHostEvent);

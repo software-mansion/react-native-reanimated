@@ -155,6 +155,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'native layout transform',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutTransform.test');
+    },
+  },
+  {
     testSuiteName: 'native layout continuity',
     importTest: () => {
       require('./tests/layoutAnimations/nativeLayoutContinuity.test');

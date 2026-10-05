@@ -49,6 +49,11 @@ export type TargetSample = {
    * `reanimated.<owner>.<generation>.<target>`.
    */
   playbackKeys: string[];
+  /**
+   * The physical animations of the playback of the target, in the order in
+   * which the platform applies them.
+   */
+  members: { property: string; from: number[]; to: number[] }[];
   monotonicTimeMs: number;
 };
 
@@ -244,9 +249,36 @@ export type Leaf = {
 
 export type Leaves = Partial<Record<Key, Leaf>>;
 
+export type OperationLeaf = Leaf & {
+  /** The array of animations holds the end value and no animation. */
+  isPlain?: boolean;
+};
+
+export type Operation = [
+  kind: string,
+  from: number | string | number[],
+  to: number | string | number[],
+  leaf?: OperationLeaf,
+];
+
+/** The style transform that the mount of the end state of `operations` needs. */
+export const endTransformOf = (operations: Operation[]) =>
+  operations.map(([kind, , to]) => ({
+    [kind]:
+      kind.startsWith('rotate') && typeof to === 'number' ? `${to}rad` : to,
+  })) as ViewStyle['transform'];
+
+export type TransformLeaf = {
+  operations: Operation[];
+  /** For each operation that does not set the property. */
+  shared?: Leaf;
+  hasNoInitialValue?: boolean;
+};
+
 export type LayoutOptions = {
   name?: string;
   initialOnlyKey?: string;
+  transform?: TransformLeaf;
   /**
    * The builder keeps the UI thread for this time, so the start is late on its
    * timeline.
@@ -264,38 +296,14 @@ export function blockUIThread(durationMs: number) {
 
 export function layoutOf(
   leaves: Leaves,
-  { name, initialOnlyKey, blocksForMs = 0 }: LayoutOptions = {}
+  { name, initialOnlyKey, transform, blocksForMs = 0 }: LayoutOptions = {}
 ): LayoutAnimationFunction {
   return (values) => {
     'worklet';
     scheduleOnRN(recordBuilderCall);
     blockUIThread(blocksForMs);
-    const current: Record<string, number> = {
-      originX: values.currentOriginX,
-      originY: values.currentOriginY,
-      width: values.currentWidth,
-      height: values.currentHeight,
-    };
-    const target: Record<string, number> = {
-      originX: values.targetOriginX,
-      originY: values.targetOriginY,
-      width: values.targetWidth,
-      height: values.targetHeight,
-    };
-    const initialValues: Record<string, number> = {};
-    const animations: Record<string, unknown> = {};
-    for (const key of Object.keys(leaves)) {
-      const leaf = leaves[key as Key]!;
-      if (leaf.onlyWhenChanged && current[key] === target[key]) {
-        continue;
-      }
-      const isLayoutKey = key in target;
-      const toValue = isLayoutKey ? target[key] + (leaf.to ?? 0) : leaf.to!;
-      if (leaf.initial !== 'none') {
-        initialValues[key] = isLayoutKey
-          ? current[key] + (leaf.initial ?? 0)
-          : leaf.initial!;
-      }
+    const animationOf = (toValue: number | string | number[], leaf: Leaf) => {
+      'worklet';
       const config: Record<string, unknown> = {
         duration: leaf.duration ?? DURATION,
         reduceMotion: leaf.reduceMotion,
@@ -320,7 +328,47 @@ export function layoutOf(
       if (leaf.setsReduceMotion) {
         (animation as { reduceMotion?: boolean }).reduceMotion = true;
       }
-      animations[key] = animation;
+      return animation;
+    };
+    const current: Record<string, number> = {
+      originX: values.currentOriginX,
+      originY: values.currentOriginY,
+      width: values.currentWidth,
+      height: values.currentHeight,
+    };
+    const target: Record<string, number> = {
+      originX: values.targetOriginX,
+      originY: values.targetOriginY,
+      width: values.targetWidth,
+      height: values.targetHeight,
+    };
+    const initialValues: Record<string, unknown> = {};
+    const animations: Record<string, unknown> = {};
+    for (const key of Object.keys(leaves)) {
+      const leaf = leaves[key as Key]!;
+      if (leaf.onlyWhenChanged && current[key] === target[key]) {
+        continue;
+      }
+      const isLayoutKey = key in target;
+      const toValue = isLayoutKey ? target[key] + (leaf.to ?? 0) : leaf.to!;
+      if (leaf.initial !== 'none') {
+        initialValues[key] = isLayoutKey
+          ? current[key] + (leaf.initial ?? 0)
+          : leaf.initial!;
+      }
+      animations[key] = animationOf(toValue, leaf);
+    }
+    if (transform) {
+      if (!transform.hasNoInitialValue) {
+        initialValues.transform = transform.operations.map(([kind, from]) => ({
+          [kind]: from,
+        }));
+      }
+      animations.transform = transform.operations.map(([kind, , to, leaf]) => ({
+        [kind]: leaf?.isPlain
+          ? to
+          : animationOf(to, { ...transform.shared, ...leaf }),
+      }));
     }
     if (initialOnlyKey) {
       initialValues[initialOnlyKey] = 1;
@@ -357,6 +405,8 @@ export type BoxProps = {
   width?: number;
   opacity?: number;
   hasOpacityFilter?: boolean;
+  transform?: ViewStyle['transform'];
+  transformOrigin?: ViewStyle['transformOrigin'];
   layout?: Parameters<typeof Animated.View>[0]['layout'];
   exiting?: Parameters<typeof Animated.View>[0]['exiting'];
   refName?: string;
@@ -368,6 +418,8 @@ export function Box({
   width = BOX_SIZE,
   opacity = 1,
   hasOpacityFilter = false,
+  transform,
+  transformOrigin,
   layout = MOVE,
   exiting,
   refName = BOX_REF,
@@ -381,6 +433,8 @@ export function Box({
       style={[
         styles.box,
         { marginLeft: left, marginTop: top, width, opacity },
+        transform !== undefined && { transform },
+        transformOrigin !== undefined && { transformOrigin },
         hasOpacityFilter && { filter: [{ opacity: FILTER_OPACITY }] },
       ]}
     />

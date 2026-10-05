@@ -1122,13 +1122,15 @@ jsi::Value LayoutAnimationsProxy::buildLayoutAnimation(ManagedLayoutAnimationSta
   const auto capturedView = viewWithLiveLeafValues(start.before, start.liveLeaves);
 #ifndef NDEBUG
   for (const auto &track : liveTracks) {
+    const auto capturedValue = leafValue(track.target, capturedView);
+    const auto *scalar = std::get_if<double>(&capturedValue);
     nativeAnimationHost_->trace().record(
         {.event = native_animation::TraceEventType::LayoutLeafCaptured,
          .handle = track.handle,
          .target = track.target,
          .objective = 9,
          .transactionNumber = pulledTransactionNumber_,
-         .leafValue = leafValue(track.target, capturedView)});
+         .leafValue = scalar == nullptr ? std::nullopt : std::optional(*scalar)});
   }
 #endif
   return layoutAnimationsManager_->buildLayoutAnimation(
@@ -1136,7 +1138,7 @@ jsi::Value LayoutAnimationsProxy::buildLayoutAnimation(ManagedLayoutAnimationSta
       *start.buildId,
       layoutAnimationValues(start.type, capturedView, start.after, window_),
       start.config,
-      MAX_NATIVE_LAYOUT_LEAVES,
+      NativeLayoutLimits{},
       start.liveLeaves);
 }
 
@@ -1147,9 +1149,16 @@ ShadowView LayoutAnimationsProxy::viewWithLiveLeafValues(const ShadowView &mount
   }
   const auto values =
       liveLeafValues(uiRuntime_, layoutAnimationsManager_->captureLiveLayoutLeaves(uiRuntime_, liveLeaves));
-  auto shown = values.opacity
-      ? cloneViewWithOpacity(mounted, *values.opacity, PropsParserContext{surfaceId_, *contextContainer_})
-      : mounted;
+  folly::dynamic liveProps = folly::dynamic::object;
+  if (values.opacity) {
+    liveProps["opacity"] = *values.opacity;
+  }
+  if (values.transform) {
+    liveProps["transform"] = *values.transform;
+  }
+  auto shown = liveProps.empty()
+      ? mounted
+      : cloneViewWithProps(mounted, std::move(liveProps), PropsParserContext{surfaceId_, *contextContainer_});
   auto &frame = shown.layoutMetrics.frame;
   frame.origin.x = static_cast<react::Float>(values.originX.value_or(frame.origin.x));
   frame.origin.y = static_cast<react::Float>(values.originY.value_or(frame.origin.y));

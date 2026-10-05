@@ -3,6 +3,8 @@
 #include <reanimated/LayoutAnimations/NativeLayoutTracks.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
+#include <algorithm>
+#include <array>
 #include <cmath>
 #include <optional>
 #include <string>
@@ -16,53 +18,66 @@ using namespace native_animation;
 namespace {
 
 /// How one layout animation key maps to a native target of the view.
-struct LeafTarget {
+struct LeafKey {
+  const char *name;
   AnimationTarget target;
-  /// The model value of the target is the key value plus this offset.
-  double modelOffset;
 };
 
-constexpr const char *ORIGIN_X_KEY = "originX";
-constexpr const char *ORIGIN_Y_KEY = "originY";
-constexpr const char *WIDTH_KEY = "width";
-constexpr const char *HEIGHT_KEY = "height";
-constexpr const char *OPACITY_KEY = "opacity";
+constexpr std::array LEAF_KEYS{
+    LeafKey{"originX", AnimationTarget::PositionX},
+    LeafKey{"originY", AnimationTarget::PositionY},
+    LeafKey{"width", AnimationTarget::Width},
+    LeafKey{"height", AnimationTarget::Height},
+    LeafKey{"opacity", AnimationTarget::Opacity},
+    LeafKey{"transform", AnimationTarget::Transform},
+};
 
-std::optional<LeafTarget> leafTarget(const std::string &key, const ShadowView &after) {
-  const auto &mountedSize = after.layoutMetrics.frame.size;
-  if (key == ORIGIN_X_KEY) {
-    return LeafTarget{AnimationTarget::PositionX, mountedSize.width / 2};
+struct OperationName {
+  const char *name;
+  TransformOperationKind kind;
+};
+
+constexpr std::array OPERATION_NAMES{
+    OperationName{"translateX", TransformOperationKind::TranslateX},
+    OperationName{"translateY", TransformOperationKind::TranslateY},
+    OperationName{"scale", TransformOperationKind::Scale},
+    OperationName{"scaleX", TransformOperationKind::ScaleX},
+    OperationName{"scaleY", TransformOperationKind::ScaleY},
+    OperationName{"rotateX", TransformOperationKind::RotateX},
+    OperationName{"rotateY", TransformOperationKind::RotateY},
+    OperationName{"rotateZ", TransformOperationKind::RotateZ},
+    OperationName{"rotate", TransformOperationKind::RotateZ},
+    OperationName{"perspective", TransformOperationKind::Perspective},
+};
+
+bool isViewProp(const AnimationTarget target) {
+  return target == AnimationTarget::Opacity || target == AnimationTarget::Transform;
+}
+
+std::optional<AnimationTarget> leafTarget(const std::string &key, const ShadowView &after) {
+  const auto entry = std::ranges::find_if(LEAF_KEYS, [&key](const LeafKey &leafKey) { return key == leafKey.name; });
+  if (entry == LEAF_KEYS.end() || (isViewProp(entry->target) && !isViewKind(after))) {
+    return std::nullopt;
   }
-  if (key == ORIGIN_Y_KEY) {
-    return LeafTarget{AnimationTarget::PositionY, mountedSize.height / 2};
-  }
-  if (key == WIDTH_KEY) {
-    return LeafTarget{AnimationTarget::Width, 0};
-  }
-  if (key == HEIGHT_KEY) {
-    return LeafTarget{AnimationTarget::Height, 0};
-  }
-  if (key == OPACITY_KEY && isViewKind(after)) {
-    return LeafTarget{AnimationTarget::Opacity, 0};
-  }
-  return std::nullopt;
+  return entry->target;
 }
 
 const char *leafKey(const AnimationTarget target) {
+  const auto entry = std::ranges::find(LEAF_KEYS, target, &LeafKey::target);
+  react_native_assert(entry != LEAF_KEYS.end() && "a layout track has a target with no leaf key");
+  return entry->name;
+}
+
+/// The model value of a scalar target is the key value plus this offset.
+double modelOffset(const AnimationTarget target, const ShadowView &view) {
+  const auto &size = view.layoutMetrics.frame.size;
   switch (target) {
     case AnimationTarget::PositionX:
-      return ORIGIN_X_KEY;
+      return size.width / 2;
     case AnimationTarget::PositionY:
-      return ORIGIN_Y_KEY;
-    case AnimationTarget::Width:
-      return WIDTH_KEY;
-    case AnimationTarget::Height:
-      return HEIGHT_KEY;
-    case AnimationTarget::Opacity:
-      return OPACITY_KEY;
+      return size.height / 2;
     default:
-      react_native_assert(false && "a layout track has a target with no leaf key");
-      return "";
+      return 0;
   }
 }
 
@@ -88,27 +103,65 @@ AnimationTiming leafEasing(jsi::Runtime &rt, const jsi::Object &timing) {
   return CubicBezierTiming{controlPoint("0"), controlPoint("1"), controlPoint("2"), controlPoint("3")};
 }
 
+std::variant<AnimationValue, TrackBuildFailure> transformOf(jsi::Runtime &rt, const jsi::Value &value) {
+  if (!value.isObject() || !value.getObject(rt).isArray(rt)) {
+    return TrackBuildFailure::UnsupportedValue;
+  }
+  const auto operations = value.getObject(rt).getArray(rt);
+  const auto count = operations.size(rt);
+  AnimationTransform transform;
+  transform.operations.reserve(count);
+  for (size_t index = 0; index < count; ++index) {
+    const auto operation = operations.getValueAtIndex(rt, index).asObject(rt);
+    const auto kind = operation.getProperty(rt, "kind").asString(rt).utf8(rt);
+    const auto name = std::ranges::find_if(
+        OPERATION_NAMES, [&kind](const OperationName &operationName) { return kind == operationName.name; });
+    if (name == OPERATION_NAMES.end()) {
+      return TrackBuildFailure::UnsupportedValue;
+    }
+    transform.operations.push_back({name->kind, numberOf(operation.getProperty(rt, "value"))});
+  }
+  return transform;
+}
+
+/// The native value of a leaf value of the build summary on the view that the commit leaves.
+std::variant<AnimationValue, TrackBuildFailure>
+nativeValue(jsi::Runtime &rt, const jsi::Value &value, const AnimationTarget target, const ShadowView &after) {
+  if (target == AnimationTarget::Transform) {
+    return transformOf(rt, value);
+  }
+  if (!value.isNumber()) {
+    return TrackBuildFailure::UnsupportedValue;
+  }
+  return AnimationValue{value.getNumber() + modelOffset(target, after)};
+}
+
 std::variant<AnimationTrack, TrackBuildFailure>
 makeTrack(jsi::Runtime &rt, const jsi::Object &leaf, const ShadowView &after, const NativeAnimationHost &host) {
   const auto target = leafTarget(leaf.getProperty(rt, "key").asString(rt).utf8(rt), after);
   if (!target) {
     return TrackBuildFailure::UnsupportedTarget;
   }
-  const auto initialValue = leaf.getProperty(rt, "initialValue");
-  if (!initialValue.isNumber()) {
-    return TrackBuildFailure::UnsupportedValue;
+  auto start = nativeValue(rt, leaf.getProperty(rt, "initialValue"), *target, after);
+  if (const auto *failure = std::get_if<TrackBuildFailure>(&start)) {
+    return *failure;
   }
   const auto timingValue = leaf.getProperty(rt, "timing");
   if (!timingValue.isObject()) {
     return TrackBuildFailure::UnsupportedTiming;
   }
   const auto timing = timingValue.asObject(rt);
-  const auto toValue = numberOf(timing.getProperty(rt, "toValue"));
+  auto end = nativeValue(rt, timing.getProperty(rt, "toValue"), *target, after);
+  if (const auto *failure = std::get_if<TrackBuildFailure>(&end)) {
+    return *failure;
+  }
   AnimationTrack track{
-      .target = target->target,
-      .start = AnimationValue{initialValue.getNumber() + target->modelOffset},
+      .target = *target,
+      .start = std::get<AnimationValue>(std::move(start)),
       .segments =
-          {{.endOffset = 1, .endValue = toValue + target->modelOffset, .timingFromPrevious = leafEasing(rt, timing)}},
+          {{.endOffset = 1,
+            .endValue = std::get<AnimationValue>(std::move(end)),
+            .timingFromPrevious = leafEasing(rt, timing)}},
       .delayMs = numberOf(timing.getProperty(rt, "delayMs")),
       .durationMs = numberOf(timing.getProperty(rt, "durationMs")),
       .endpointPolicy = EndpointPolicy::MountedModelMustMatchEndpoint,
@@ -119,7 +172,7 @@ makeTrack(jsi::Runtime &rt, const jsi::Object &leaf, const ShadowView &after, co
   if (!host.canRealize(track, after)) {
     return TrackBuildFailure::UnsupportedTarget;
   }
-  if (std::abs(toValue - leafValue(target->target, after)) > ENDPOINT_TOLERANCE) {
+  if (!endsAtMountedValue(track, after)) {
     return TrackBuildFailure::EndpointMismatch;
   }
   return track;
@@ -127,7 +180,7 @@ makeTrack(jsi::Runtime &rt, const jsi::Object &leaf, const ShadowView &after, co
 
 } // namespace
 
-double leafValue(const AnimationTarget target, const ShadowView &view) {
+LeafValue leafValue(const AnimationTarget target, const ShadowView &view) {
   const auto &frame = view.layoutMetrics.frame;
   switch (target) {
     case AnimationTarget::PositionX:
@@ -140,10 +193,22 @@ double leafValue(const AnimationTarget target, const ShadowView &view) {
       return frame.size.height;
     case AnimationTarget::Opacity:
       return getViewProps(view).opacity;
+    case AnimationTarget::Transform:
+      return getViewProps(view).resolveTransform(view.layoutMetrics);
     default:
       react_native_assert(false && "a layout track has a target with no leaf key");
-      return 0;
+      return 0.0;
   }
+}
+
+bool endsAtMountedValue(const AnimationTrack &track, const ShadowView &view) {
+  const auto &end = track.segments.back().endValue;
+  const auto mounted = leafValue(track.target, view);
+  if (const auto *matrix = std::get_if<facebook::react::Transform>(&mounted)) {
+    return isSameMatrix(matrixOf(std::get<AnimationTransform>(end)), *matrix);
+  }
+  const auto endKeyValue = std::get<double>(end) - modelOffset(track.target, view);
+  return std::abs(endKeyValue - std::get<double>(mounted)) <= ENDPOINT_TOLERANCE;
 }
 
 LiveLayoutLeaves liveLayoutLeaves(const std::vector<TrackKey> &tracks) {
@@ -156,11 +221,18 @@ LiveLayoutLeaves liveLayoutLeaves(const std::vector<TrackKey> &tracks) {
 }
 
 LiveLeafValues liveLeafValues(jsi::Runtime &rt, const jsi::Object &leafValues) {
-  const auto valueOf = [&](const char *key) -> std::optional<double> {
-    const auto value = leafValues.getProperty(rt, key);
+  const auto valueOf = [&](const AnimationTarget target) -> std::optional<double> {
+    const auto value = leafValues.getProperty(rt, leafKey(target));
     return value.isNumber() ? std::optional(value.getNumber()) : std::nullopt;
   };
-  return {valueOf(ORIGIN_X_KEY), valueOf(ORIGIN_Y_KEY), valueOf(WIDTH_KEY), valueOf(HEIGHT_KEY), valueOf(OPACITY_KEY)};
+  const auto transform = leafValues.getProperty(rt, leafKey(AnimationTarget::Transform));
+  return {
+      .originX = valueOf(AnimationTarget::PositionX),
+      .originY = valueOf(AnimationTarget::PositionY),
+      .width = valueOf(AnimationTarget::Width),
+      .height = valueOf(AnimationTarget::Height),
+      .opacity = valueOf(AnimationTarget::Opacity),
+      .transform = transform.isObject() ? std::optional(jsi::dynamicFromValue(rt, transform)) : std::nullopt};
 }
 
 std::variant<NativeLayoutTracks, TrackBuildFailure> makeNativeLayoutTracks(

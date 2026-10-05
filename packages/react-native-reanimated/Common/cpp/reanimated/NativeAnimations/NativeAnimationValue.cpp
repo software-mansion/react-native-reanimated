@@ -1,5 +1,6 @@
 #include <reanimated/NativeAnimations/NativeAnimationValue.h>
 
+#include <algorithm>
 #include <cmath>
 
 namespace reanimated::native_animation {
@@ -20,10 +21,45 @@ struct FiniteVisitor {
     return std::isfinite(color.red) && std::isfinite(color.green) && std::isfinite(color.blue) &&
         std::isfinite(color.alpha);
   }
+  bool operator()(const AnimationTransform &transform) const {
+    return std::ranges::all_of(transform.operations, [](const AnimationTransformOperation &operation) {
+      return std::isfinite(operation.value);
+    });
+  }
 };
 
-bool isClose(const double lhs, const double rhs) {
-  return std::abs(lhs - rhs) <= ENDPOINT_TOLERANCE;
+bool isClose(const double lhs, const double rhs, const double tolerance = ENDPOINT_TOLERANCE) {
+  return std::abs(lhs - rhs) <= tolerance;
+}
+
+bool isLength(const TransformOperationKind kind) {
+  return kind == TransformOperationKind::TranslateX || kind == TransformOperationKind::TranslateY ||
+      kind == TransformOperationKind::Perspective;
+}
+
+facebook::react::Transform matrixOf(const AnimationTransformOperation &operation) {
+  using facebook::react::Transform;
+  const auto value = static_cast<facebook::react::Float>(operation.value);
+  switch (operation.kind) {
+    case TransformOperationKind::TranslateX:
+      return Transform::Translate(value, 0, 0);
+    case TransformOperationKind::TranslateY:
+      return Transform::Translate(0, value, 0);
+    case TransformOperationKind::Scale:
+      return Transform::Scale(value, value, value);
+    case TransformOperationKind::ScaleX:
+      return Transform::Scale(value, 1, 1);
+    case TransformOperationKind::ScaleY:
+      return Transform::Scale(1, value, 1);
+    case TransformOperationKind::RotateX:
+      return Transform::RotateX(value);
+    case TransformOperationKind::RotateY:
+      return Transform::RotateY(value);
+    case TransformOperationKind::RotateZ:
+      return Transform::RotateZ(value);
+    case TransformOperationKind::Perspective:
+      return Transform::Perspective(value);
+  }
 }
 
 struct SameValueVisitor {
@@ -40,6 +76,16 @@ struct SameValueVisitor {
     return isClose(lhs.red, rhs.red) && isClose(lhs.green, rhs.green) && isClose(lhs.blue, rhs.blue) &&
         isClose(lhs.alpha, rhs.alpha);
   }
+  bool operator()(const AnimationTransform &lhs, const AnimationTransform &rhs) const {
+    return hasSameOperationKinds(lhs, rhs) &&
+        std::ranges::equal(
+               lhs.operations,
+               rhs.operations,
+               [](const AnimationTransformOperation &left, const AnimationTransformOperation &right) {
+                 return isClose(
+                     left.value, right.value, isLength(left.kind) ? ENDPOINT_TOLERANCE : MATRIX_CELL_TOLERANCE);
+               });
+  }
   template <typename Lhs, typename Rhs>
   bool operator()(const Lhs &, const Rhs &) const {
     return false;
@@ -50,6 +96,31 @@ struct SameValueVisitor {
 
 bool isSameValue(const AnimationValue &lhs, const AnimationValue &rhs) {
   return std::visit(SameValueVisitor{}, lhs, rhs);
+}
+
+bool hasSameOperationKinds(const AnimationTransform &lhs, const AnimationTransform &rhs) {
+  return std::ranges::equal(
+      lhs.operations, rhs.operations, {}, &AnimationTransformOperation::kind, &AnimationTransformOperation::kind);
+}
+
+facebook::react::Transform matrixOf(const AnimationTransform &transform) {
+  facebook::react::Transform matrix;
+  for (const auto &operation : transform.operations) {
+    matrix = matrix * matrixOf(operation);
+  }
+  return matrix;
+}
+
+bool isSameMatrix(const facebook::react::Transform &lhs, const facebook::react::Transform &rhs) {
+  constexpr size_t firstTranslationCell = 12;
+  constexpr size_t lastTranslationCell = 14;
+  for (size_t cell = 0; cell < lhs.matrix.size(); ++cell) {
+    const bool isTranslation = cell >= firstTranslationCell && cell <= lastTranslationCell;
+    if (!isClose(lhs.matrix[cell], rhs.matrix[cell], isTranslation ? ENDPOINT_TOLERANCE : MATRIX_CELL_TOLERANCE)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool valueMatchesTarget(const AnimationValue &value, const AnimationTarget target) {
@@ -72,6 +143,8 @@ bool valueMatchesTarget(const AnimationValue &value, const AnimationTarget targe
     case AnimationTarget::ShadowOpacity:
     case AnimationTarget::ShadowRadius:
       return std::holds_alternative<double>(value);
+    case AnimationTarget::Transform:
+      return std::holds_alternative<AnimationTransform>(value);
   }
   return false;
 }

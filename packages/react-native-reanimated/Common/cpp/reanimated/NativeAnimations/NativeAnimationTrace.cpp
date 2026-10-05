@@ -78,6 +78,8 @@ std::string_view toString(const AnimationTarget target) {
       return "ShadowRadius";
     case AnimationTarget::ShadowOffset:
       return "ShadowOffset";
+    case AnimationTarget::Transform:
+      return "Transform";
   }
 }
 
@@ -97,7 +99,8 @@ std::optional<AnimationTarget> targetFromString(const std::string_view name) {
         ShadowColor,
         ShadowOpacity,
         ShadowRadius,
-        ShadowOffset}) {
+        ShadowOffset,
+        Transform}) {
     if (toString(target) == name) {
       return target;
     }

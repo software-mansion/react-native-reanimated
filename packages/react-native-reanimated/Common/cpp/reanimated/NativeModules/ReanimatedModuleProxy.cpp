@@ -549,6 +549,16 @@ void ReanimatedModuleProxy::sampleNativeAnimationTarget(
         playbackKeys.setValueAtIndex(rt, index, jsi::String::createFromUtf8(rt, sample->playbackKeys[index]));
       }
       object.setProperty(rt, "playbackKeys", playbackKeys);
+      auto members = jsi::Array(rt, sample->members.size());
+      for (size_t index = 0; index < sample->members.size(); ++index) {
+        const auto &member = sample->members[index];
+        jsi::Object memberObject(rt);
+        memberObject.setProperty(rt, "property", jsi::String::createFromUtf8(rt, member.property));
+        memberObject.setProperty(rt, "from", componentsToJSI(rt, member.from));
+        memberObject.setProperty(rt, "to", componentsToJSI(rt, member.to));
+        members.setValueAtIndex(rt, index, memberObject);
+      }
+      object.setProperty(rt, "members", members);
       object.setProperty(rt, "monotonicTimeMs", sample->monotonicTimeMs);
       function->call(rt, object);
     });

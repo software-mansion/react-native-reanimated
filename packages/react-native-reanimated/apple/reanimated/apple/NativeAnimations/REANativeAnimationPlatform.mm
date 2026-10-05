@@ -6,6 +6,7 @@
 #import <React/RCTAssert.h>
 #import <React/RCTComponentViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
+#import <React/RCTConversions.h>
 #import <React/RCTFabricSurface.h>
 #import <React/RCTMountingManager.h>
 #import <React/RCTUtils.h>
@@ -80,7 +81,42 @@ NSString *keyPathForTarget(const AnimationTarget target)
       return @"shadowRadius";
     case AnimationTarget::ShadowOffset:
       return @"shadowOffset";
+    case AnimationTarget::Transform:
+      return @"transform";
   }
+}
+
+/// A perspective has no value function. A track holds one value for it.
+CAValueFunctionName valueFunctionNameForKind(const TransformOperationKind kind)
+{
+  switch (kind) {
+    case TransformOperationKind::TranslateX:
+      return kCAValueFunctionTranslateX;
+    case TransformOperationKind::TranslateY:
+      return kCAValueFunctionTranslateY;
+    case TransformOperationKind::Scale:
+      return kCAValueFunctionScale;
+    case TransformOperationKind::ScaleX:
+      return kCAValueFunctionScaleX;
+    case TransformOperationKind::ScaleY:
+      return kCAValueFunctionScaleY;
+    case TransformOperationKind::RotateX:
+      return kCAValueFunctionRotateX;
+    case TransformOperationKind::RotateY:
+      return kCAValueFunctionRotateY;
+    case TransformOperationKind::RotateZ:
+      return kCAValueFunctionRotateZ;
+    case TransformOperationKind::Perspective:
+      return nil;
+  }
+}
+
+/// The components whose picture with a transform track is equal to the picture of the frame driver.
+bool playsTransform(const char *componentName)
+{
+  static constexpr const char *components[] = {"View", "Paragraph", "Image"};
+  return std::ranges::any_of(
+      components, [componentName](const char *component) { return std::strcmp(componentName, component) == 0; });
 }
 
 NSString *const kAnimationKeyPrefix = @"reanimated.";
@@ -100,6 +136,30 @@ CGColorSpaceRef sharedSRGBColorSpace()
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{ space = CGColorSpaceCreateWithName(kCGColorSpaceSRGB); });
   return space;
+}
+
+facebook::react::Transform matrixOf(const CATransform3D &transform)
+{
+  facebook::react::Transform matrix;
+  const CGFloat cells[] = {
+      transform.m11,
+      transform.m12,
+      transform.m13,
+      transform.m14,
+      transform.m21,
+      transform.m22,
+      transform.m23,
+      transform.m24,
+      transform.m31,
+      transform.m32,
+      transform.m33,
+      transform.m34,
+      transform.m41,
+      transform.m42,
+      transform.m43,
+      transform.m44};
+  std::copy(std::begin(cells), std::end(cells), matrix.matrix.begin());
+  return matrix;
 }
 
 struct ObjectFromValueVisitor {
@@ -127,6 +187,10 @@ struct ObjectFromValueVisitor {
   {
     const CGFloat components[4] = {color.red, color.green, color.blue, color.alpha};
     return (__bridge_transfer id)CGColorCreate(sharedSRGBColorSpace(), components);
+  }
+  id operator()(const AnimationTransform &transform) const
+  {
+    return [NSValue valueWithCATransform3D:RCTCATransform3DFromTransformMatrix(matrixOf(transform))];
   }
 };
 
@@ -169,6 +233,10 @@ struct ModelMatchesVisitor {
   {
     return CGColorEqualToColor((__bridge CGColorRef)model, (__bridge CGColorRef)ObjectFromValueVisitor{}(color));
   }
+  bool operator()(const AnimationTransform &transform) const
+  {
+    return isSameMatrix(matrixOf([model CATransform3DValue]), matrixOf(transform));
+  }
 };
 
 bool modelMatchesEndpoint(CALayer *layer, const AnimationTrack &track)
@@ -191,6 +259,17 @@ bool hasOpacityFilter(REAUIView<RCTComponentViewProtocol> *view)
   return viewProps != nullptr && hasOpacityFilter(*viewProps);
 }
 
+/// React Native makes the matrix of a transform origin and of a percent translation from the size at the
+/// mount.
+bool hasSizeDependentTransform(const facebook::react::ViewProps &viewProps)
+{
+  using namespace facebook::react;
+  return viewProps.transformOrigin.isSet() ||
+      std::ranges::any_of(viewProps.transform.operations, [](const TransformOperation &operation) {
+           return operation.x.unit == UnitType::Percent || operation.y.unit == UnitType::Percent;
+         });
+}
+
 /// False when React Native draws a part of the view from the size at the mount: a private layer, a shadow
 /// path, a transform origin, or a percent translation.
 bool pictureFollowsBounds(
@@ -206,14 +285,9 @@ bool pictureFollowsBounds(
   const bool hasCircularRadii = radii.isUniform() && radii.topLeft.horizontal == radii.topLeft.vertical;
   const bool hasOnlyOpacityFilters = std::ranges::all_of(
       viewProps.filter, [](const FilterFunction &filter) { return filter.type == FilterType::Opacity; });
-  const bool hasSizeDependentTransform =
-      viewProps.transformOrigin.isSet() ||
-      std::ranges::any_of(viewProps.transform.operations, [](const TransformOperation &operation) {
-        return operation.x.unit == UnitType::Percent || operation.y.unit == UnitType::Percent;
-      });
   return hasNoBorder && hasCircularRadii && viewProps.outlineWidth == 0 && viewProps.boxShadow.empty() &&
       hasOnlyOpacityFilters && viewProps.backgroundImage.empty() && viewProps.shadowOpacity == 0 &&
-      !hasSizeDependentTransform;
+      !hasSizeDependentTransform(viewProps);
 }
 
 /// The mounted form: a private layer has no delegate.
@@ -254,10 +328,21 @@ std::vector<double> componentsOfValue(id value)
   if ([value isKindOfClass:[NSNumber class]]) {
     return {[value doubleValue]};
   }
+  if ([value isKindOfClass:[NSArray class]]) {
+    std::vector<double> components;
+    for (NSNumber *number in value) {
+      components.push_back(number.doubleValue);
+    }
+    return components;
+  }
   if (![value isKindOfClass:[NSValue class]]) {
     return {};
   }
   const char *type = [value objCType];
+  if (strcmp(type, @encode(CATransform3D)) == 0) {
+    const auto matrix = matrixOf([value CATransform3DValue]).matrix;
+    return {matrix.begin(), matrix.end()};
+  }
   if (strcmp(type, @encode(CGPoint)) == 0) {
 #if TARGET_OS_OSX
     const NSPoint point = [value pointValue];
@@ -286,6 +371,28 @@ std::vector<std::string> playbackKeys(CALayer *layer)
     }
   }
   return keys;
+}
+
+std::vector<PlaybackMember> playbackMembers(CALayer *layer, const AnimationTarget target)
+{
+  NSString *targetSuffix = [NSString stringWithFormat:@".%u", static_cast<unsigned>(target)];
+  std::vector<PlaybackMember> members;
+  for (NSString *key in layer.animationKeys) {
+    if (![key hasPrefix:kAnimationKeyPrefix] || ![key hasSuffix:targetSuffix]) {
+      continue;
+    }
+    CAAnimation *playback = [layer animationForKey:key];
+    NSArray<CAAnimation *> *animations =
+        [playback isKindOfClass:[CAAnimationGroup class]] ? ((CAAnimationGroup *)playback).animations : @[ playback ];
+    for (CABasicAnimation *animation in animations) {
+      NSString *function = animation.valueFunction.name;
+      NSString *property =
+          function == nil ? animation.keyPath : [NSString stringWithFormat:@"%@.%@", animation.keyPath, function];
+      members.push_back(
+          {property.UTF8String, componentsOfValue(animation.fromValue), componentsOfValue(animation.toValue)});
+    }
+  }
+  return members;
 }
 #endif // NDEBUG
 
@@ -324,6 +431,11 @@ class CoreAnimationMountedAnimation final : public MountedAnimation {
   CAAnimation *makeAnimation(const AnimationTrack &track, id fromValue, id toValue) const;
   NSArray<CABasicAnimation *> *makeValueAnimations(AnimationTarget target, id fromValue, id toValue) const;
   CABasicAnimation *makeOffsetAnimation(NSString *keyPath, double fromOffset, double toOffset) const;
+  NSArray<CABasicAnimation *> *makeTransformAnimations(const AnimationTransform &start, const AnimationTransform &end)
+      const;
+  CABasicAnimation *makeOperationAnimation(
+      const AnimationTransformOperation &start,
+      const AnimationTransformOperation &end) const;
 
   CoreAnimationPlatform &platform_;
   __strong CALayer *layer_;
@@ -352,9 +464,17 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     if (track.target == AnimationTarget::Opacity) {
       return !hasOpacityFilter(viewProps);
     }
-    return !changesSize ||
-        (std::strcmp(view.componentName, ViewComponentName) == 0 &&
-         pictureFollowsBounds(viewProps, view.layoutMetrics));
+    if (!changesValue(track)) {
+      return true;
+    }
+    if (changesSize) {
+      return std::strcmp(view.componentName, ViewComponentName) == 0 &&
+          pictureFollowsBounds(viewProps, view.layoutMetrics);
+    }
+    if (track.target == AnimationTarget::Transform) {
+      return playsTransform(view.componentName) && !hasSizeDependentTransform(viewProps);
+    }
+    return true;
   }
 
   bool isSurfaceRunning(const SurfaceId surfaceId) override
@@ -432,7 +552,8 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     return TargetSample{
         componentsOfValue([layer valueForKeyPath:keyPath]),
         componentsOfValue(currentVisualValue(layer, keyPath)),
-        playbackKeys(layer)};
+        playbackKeys(layer),
+        playbackMembers(layer, target)};
   }
 #endif
 
@@ -542,23 +663,29 @@ CAAnimation *CoreAnimationMountedAnimation::makeAnimation(const AnimationTrack &
   const CFTimeInterval duration =
       holdsStartValue ? delay : calculateMediaDurationFromSlowAnimationsDuration(track.durationMs / 1000.0);
 
-  NSArray<CABasicAnimation *> *members =
-      makeValueAnimations(track.target, fromValue, holdsStartValue ? fromValue : toValue);
+  NSArray<CABasicAnimation *> *members;
+  if (track.target == AnimationTarget::Transform) {
+    const auto &start = std::get<AnimationTransform>(std::get<AnimationValue>(track.start));
+    const auto &end = std::get<AnimationTransform>(track.segments.back().endValue);
+    members = makeTransformAnimations(start, holdsStartValue ? start : end);
+  } else {
+    members = makeValueAnimations(track.target, fromValue, holdsStartValue ? fromValue : toValue);
+  }
+  CAMediaTimingFunction *timingFunction =
+      holdsStartValue ? nil : std::visit(TimingFunctionVisitor{}, track.segments.back().timingFromPrevious);
+  for (CABasicAnimation *member in members) {
+    member.duration = duration;
+    member.fillMode = kCAFillModeBoth;
+    member.timingFunction = timingFunction;
+  }
   CAAnimation *animation = members.firstObject;
   if (members.count > 1) {
-    for (CABasicAnimation *member in members) {
-      member.duration = duration;
-      member.fillMode = kCAFillModeBoth;
-    }
     CAAnimationGroup *group = [CAAnimationGroup animation];
     group.animations = members;
     animation = group;
   }
   animation.duration = duration;
   animation.beginTime = holdsStartValue ? layerOrigin : layerOrigin + delay;
-  if (!holdsStartValue) {
-    animation.timingFunction = std::visit(TimingFunctionVisitor{}, track.segments.back().timingFromPrevious);
-  }
   animation.fillMode = holdsEndValue ? kCAFillModeBoth : kCAFillModeBackwards;
   animation.removedOnCompletion = !holdsEndValue;
   return animation;
@@ -604,6 +731,38 @@ CABasicAnimation *CoreAnimationMountedAnimation::makeOffsetAnimation(
   animation.additive = YES;
   animation.fromValue = @(fromOffset);
   animation.toValue = @(toOffset);
+  return animation;
+}
+
+/// The first member hides the model and each animation before it. The screen applies the members after it to
+/// a point in their order, and a style transform applies its last operation first.
+NSArray<CABasicAnimation *> *CoreAnimationMountedAnimation::makeTransformAnimations(
+    const AnimationTransform &start,
+    const AnimationTransform &end) const
+{
+  CABasicAnimation *base = [CABasicAnimation animationWithKeyPath:keyPathForTarget(AnimationTarget::Transform)];
+  base.fromValue = base.toValue = [NSValue valueWithCATransform3D:CATransform3DIdentity];
+  NSMutableArray<CABasicAnimation *> *members = [NSMutableArray arrayWithObject:base];
+  for (size_t index = start.operations.size(); index-- > 0;) {
+    [members addObject:makeOperationAnimation(start.operations[index], end.operations[index])];
+  }
+  return members;
+}
+
+CABasicAnimation *CoreAnimationMountedAnimation::makeOperationAnimation(
+    const AnimationTransformOperation &start,
+    const AnimationTransformOperation &end) const
+{
+  CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:keyPathForTarget(AnimationTarget::Transform)];
+  animation.additive = YES;
+  if (start.value == end.value) {
+    animation.fromValue = animation.toValue = ObjectFromValueVisitor{}(AnimationTransform{{start}});
+    return animation;
+  }
+  const bool hasThreeFactors = start.kind == TransformOperationKind::Scale;
+  animation.valueFunction = [CAValueFunction functionWithName:valueFunctionNameForKind(start.kind)];
+  animation.fromValue = hasThreeFactors ? @[ @(start.value), @(start.value), @(start.value) ] : @(start.value);
+  animation.toValue = hasThreeFactors ? @[ @(end.value), @(end.value), @(end.value) ] : @(end.value);
   return animation;
 }
 

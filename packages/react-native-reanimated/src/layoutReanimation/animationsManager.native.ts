@@ -5,20 +5,26 @@ import { runOnUISync } from 'react-native-worklets';
 
 import { cancelAnimation, withStyleAnimation } from '../animation';
 import type {
-  AnimationObject,
   LayoutAnimation,
   LayoutAnimationBuildSummary,
   LayoutAnimationsManager,
   LayoutAnimationValues,
   LiveLayoutLeaf,
+  NativeLayoutLimits,
   Mutable,
   SharedValue,
 } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { getStaticFeatureFlag } from '../featureFlags';
 import { mutableHostDecorator } from '../mutablesCommon';
-import type { LiveLeafRelation } from './nativeLeaves';
-import { advanceNativeLeaf, relateToLiveLeaf } from './nativeLeaves';
+import type { LiveLeafRelation, NativeLeaf } from './nativeLeaves';
+import {
+  advanceNativeLeaf,
+  animatePlainOperations,
+  currentOfNativeLeaf,
+  relateToLiveLeaf,
+  summarizeNativeLeaf,
+} from './nativeLeaves';
 
 const TAG_OFFSET = 1e9;
 
@@ -70,27 +76,6 @@ type LayoutAnimationBuild = {
   originMs: number;
   hasCallbackResult?: boolean;
 };
-
-function summarizeLeaf(
-  key: string,
-  initialValue: unknown,
-  animation: unknown,
-  continuesLiveLeaf: boolean
-): LayoutAnimationBuildSummary['leaves'][number] {
-  'worklet';
-  const { reduceMotion, __nativeTiming } = (animation ?? {}) as AnimationObject;
-  if (reduceMotion || !__nativeTiming) {
-    return { key, initialValue, continuesLiveLeaf };
-  }
-  const { delaysMs, ...timing } = __nativeTiming;
-  const delayMs = delaysMs.reduce((sum, each) => sum + each, 0);
-  return {
-    key,
-    initialValue,
-    continuesLiveLeaf,
-    timing: { ...timing, delayMs },
-  };
-}
 
 function createLayoutAnimationManager(): LayoutAnimationsManager {
   'worklet';
@@ -152,7 +137,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       buildId: number,
       yogaValues: Partial<LayoutAnimationValues>,
       config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
-      maxLeaves: number,
+      limits: NativeLayoutLimits,
       liveLeaves: LiveLayoutLeaf[]
     ): LayoutAnimationBuildSummary | undefined {
       const originMs = getStartTimestamp();
@@ -170,12 +155,28 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         unknown
       >;
       const keys = Object.keys(animations);
-      const exceedsLimit = keys.length > maxLeaves;
+      const { transform } = animations;
+      const exceedsLimit =
+        keys.length > limits.leaves ||
+        (Array.isArray(transform) &&
+          transform.length > limits.transformOperations);
+      if (exceedsLimit) {
+        return {
+          originMs,
+          exceedsLimit,
+          hasInitialOnlyKeys: false,
+          needsFrameDriver: false,
+          leaves: [],
+        };
+      }
+      if (Array.isArray(transform)) {
+        animatePlainOperations(transform);
+      }
       const relations: Record<string, LiveLeafRelation> = {};
       for (const liveLeaf of liveLeaves) {
         relations[liveLeaf.key] = relateToLiveLeaf(
           advanceLiveLeaf(liveLeaf, originMs),
-          animations[liveLeaf.key] as AnimationObject | undefined
+          animations[liveLeaf.key] as NativeLeaf | undefined
         );
       }
       return {
@@ -185,23 +186,20 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
           (key) => !(key in animations)
         ),
         needsFrameDriver: Object.values(relations).includes('frameDriver'),
-        leaves: exceedsLimit
-          ? []
-          : keys.map((key) =>
-              summarizeLeaf(
-                key,
-                initialValues[key],
-                animations[key],
-                relations[key] === 'continues'
-              )
-            ),
+        leaves: keys.map((key) => ({
+          key,
+          ...summarizeNativeLeaf(initialValues[key], animations[key]),
+          continuesLiveLeaf: relations[key] === 'continues',
+        })),
       };
     },
-    captureLiveLeaves(liveLeaves: LiveLayoutLeaf[]): Record<string, number> {
+    captureLiveLeaves(liveLeaves: LiveLayoutLeaf[]): Record<string, unknown> {
       const now = getStartTimestamp();
-      const values: Record<string, number> = {};
+      const values: Record<string, unknown> = {};
       for (const liveLeaf of liveLeaves) {
-        values[liveLeaf.key] = advanceLiveLeaf(liveLeaf, now).current as number;
+        values[liveLeaf.key] = currentOfNativeLeaf(
+          advanceLiveLeaf(liveLeaf, now)
+        );
       }
       return values;
     },
@@ -248,10 +246,10 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   function advanceLiveLeaf(
     { buildId, key }: LiveLayoutLeaf,
     now: number
-  ): AnimationObject {
+  ): NativeLeaf {
     const { style, originMs } = builds.get(buildId)!;
-    const leaf = (style!.animations as Record<string, AnimationObject>)[key];
-    const initialValue = (style!.initialValues as Record<string, number>)[key];
+    const leaf = (style!.animations as Record<string, NativeLeaf>)[key];
+    const initialValue = (style!.initialValues as Record<string, unknown>)[key];
     advanceNativeLeaf(leaf, initialValue, originMs, now);
     return leaf;
   }
@@ -265,12 +263,12 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
     liveLeaves: LiveLayoutLeaf[],
     now: number
   ) {
-    const animations: Record<string, AnimationObject> = {};
+    const animations: Record<string, NativeLeaf> = {};
     const values: Record<string, unknown> = {};
     for (const liveLeaf of liveLeaves) {
       const leaf = advanceLiveLeaf(liveLeaf, now);
       animations[liveLeaf.key] = leaf;
-      values[liveLeaf.key] = leaf.current;
+      values[liveLeaf.key] = currentOfNativeLeaf(leaf);
     }
     const value = makeMutableUI(values);
     value._animation = withStyleAnimation(animations);
