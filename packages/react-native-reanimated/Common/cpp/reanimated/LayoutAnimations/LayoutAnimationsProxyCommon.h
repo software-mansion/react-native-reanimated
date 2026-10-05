@@ -32,6 +32,7 @@ struct LayoutAnimation {
   LayoutAnimationType type;
   std::shared_ptr<Serializable> config;
   react::Point frameOffset;
+  Frame lastFrame;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 };
 

@@ -610,7 +610,11 @@ std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentPendingLayoutAnim
       continue;
     }
     start->parentTag = parentTag;
-    start->before.layoutMetrics.frame.origin += offset;
+    if (start->type == LayoutAnimationType::ENTERING) {
+      start->before.layoutMetrics = newView.layoutMetrics;
+    } else {
+      start->before.layoutMetrics.frame.origin += offset;
+    }
     start->after = newView;
     currentView = start->before;
   }

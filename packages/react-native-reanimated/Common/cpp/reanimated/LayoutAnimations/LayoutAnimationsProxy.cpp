@@ -92,6 +92,17 @@ std::unordered_set<Tag> collectRemovals(const std::vector<std::shared_ptr<LightN
   }
   return removals;
 }
+
+// On Android the Insert of a moved view can mount after a later frame from the UI thread, so an entering view
+// is inserted at the layout that the next frame writes.
+void reinsertCurrentView(LayoutAnimation &animation, const react::Point offset, const Frame &animatedFrame) {
+  if (animation.type != ENTERING) {
+    animation.currentView.layoutMetrics.frame.origin += offset;
+    return;
+  }
+  animation.currentView.layoutMetrics = animation.finalView.layoutMetrics;
+  updateLayoutMetrics(animation.currentView.layoutMetrics, animatedFrame, animation.frameOffset);
+}
 } // namespace
 
 std::shared_ptr<LayoutAnimationsProxyRegistry> createLayoutAnimationsProxyDefaultRegistry(
@@ -159,19 +170,20 @@ std::optional<ShadowView> LayoutAnimationsProxy::reparentLayoutAnimation(
   if (const auto animationIt = layoutAnimations_.find(tag); animationIt != layoutAnimations_.end()) {
     auto &animation = animationIt->second;
     animation.parentTag = parentTag;
-    animation.currentView.layoutMetrics.frame.origin += offset;
     animation.startView.layoutMetrics.frame.origin += offset;
     animation.frameOffset += offset;
     animation.finalView = newView;
+    reinsertCurrentView(animation, offset, animation.lastFrame);
     return animation.currentView;
   }
   if (const auto completedAnimationIt = completedAnimations_.find(tag);
       completedAnimationIt != completedAnimations_.end() && !completedAnimationIt->second.shouldRemove) {
     auto &animation = completedAnimationIt->second.animation;
     animation.parentTag = parentTag;
-    animation.currentView.layoutMetrics.frame.origin += offset;
     animation.frameOffset += offset;
     animation.finalView = newView;
+    const Frame noAnimatedFrame;
+    reinsertCurrentView(animation, offset, noAnimatedFrame);
     return animation.currentView;
   }
   return pendingCurrentView;
@@ -943,6 +955,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) c
     mutations.push_back(
         ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
     layoutAnimation.currentView = newView;
+    layoutAnimation.lastFrame = updateValues.frame;
     if (layoutAnimation.opacity &&
         (updateValues.animatesOpacity || getViewProps(newView).opacity == *layoutAnimation.opacity)) {
       layoutAnimation.opacity.reset();
