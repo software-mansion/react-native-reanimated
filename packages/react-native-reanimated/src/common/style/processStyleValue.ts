@@ -56,7 +56,6 @@ export function processStylePropInPlace<V, R>(
   processor: ValueProcessor<V, R>
 ) {
   'worklet';
-  // null resets the prop, the same as in React Native.
   if (props[key] === null) {
     return;
   }
