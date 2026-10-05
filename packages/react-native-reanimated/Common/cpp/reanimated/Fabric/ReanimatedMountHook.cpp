@@ -61,4 +61,9 @@ void ReanimatedMountHook::shadowTreeDidMount(
   }
 }
 
+void ReanimatedMountHook::shadowTreeDidUnmount(SurfaceId surfaceId, HighResTimeStamp /*unmountTime*/) noexcept {
+  auto lock = updatesRegistryManager_->lock();
+  viewStylesRepository_->removeSurface(surfaceId);
+}
+
 } // namespace reanimated

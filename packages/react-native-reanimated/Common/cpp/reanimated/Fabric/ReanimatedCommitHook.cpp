@@ -15,9 +15,11 @@ namespace reanimated {
 ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
+    const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
     const std::shared_ptr<LayoutAnimationsProxyCommon> &layoutAnimationsProxy)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
+      viewStylesRepository_(viewStylesRepository),
       layoutAnimationsProxy_(layoutAnimationsProxy) {
   uiManager_->registerCommitHook(*this);
 }
@@ -50,7 +52,7 @@ void ReanimatedCommitHook::maybeInitializeLayoutAnimations(SurfaceId surfaceId) 
 }
 
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
-    ShadowTree const &,
+    ShadowTree const &shadowTree,
     RootShadowNode::Shared const &,
     RootShadowNode::Unshared const &newRootShadowNode,
     const ShadowTreeCommitOptions &commitOptions) noexcept {
@@ -60,6 +62,12 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     return newRootShadowNode;
+  }
+
+  if (newRootShadowNode->getChildren().empty()) {
+    // A stopping surface commits an empty root; its mount is not reported on a paused Android host.
+    auto lock = updatesRegistryManager_->lock();
+    viewStylesRepository_->removeSurface(shadowTree.getSurfaceId());
   }
 
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(newRootShadowNode);
