@@ -153,6 +153,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   /// view until it ends; a group with no opacity track continues on the hidden view.
   void cancelNativeOpacityAnimation(Tag tag) const;
   void flushNativeBuildEnds() const;
+  /// The config of the layout animation that runs on the view, on the frame driver or natively.
+  std::shared_ptr<Serializable> runningLayoutAnimationConfig(Tag tag) const;
   /// The update that brings the host view to the final state of `node`.
   ShadowViewMutation updateToMount(const ShadowViewMutation &mutation, const std::shared_ptr<LightNode> &node) const;
   void startSharedTransition(
@@ -255,12 +257,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &node,
       bool useViewsOnScreen) const;
   const ShadowView &viewOnScreen(const std::shared_ptr<LightNode> &node) const;
+  /// The view on screen with the values that its live native tracks show. UI thread only. The capture runs
+  /// only animation code of the library, so the caller can hold the config lock.
+  ShadowView shownView(const std::shared_ptr<LightNode> &node) const;
   /// `mounted` with the values that the live native tracks of the view show at the time of this batch.
   /// UI thread only.
   ShadowView viewWithLiveLeafValues(const ShadowView &mounted, const LiveLayoutLeaves &liveLeaves) const;
-  /// The same for the live native tracks of the view; no value when it has none. The capture runs only
-  /// animation code of the library, so the caller can hold the config lock.
-  std::optional<ShadowView> viewWithLiveLeafValues(const ShadowView &mounted) const;
 
   Tag getOrCreateContainer(
       const ShadowView &before,

@@ -36,6 +36,7 @@ enum class AnimationTarget : uint8_t {
   PositionX,
   PositionY,
   Size,
+  /// The size changes and the origin of the frame stays.
   Width,
   Height,
   BackgroundColor,
@@ -49,6 +50,8 @@ enum class AnimationTarget : uint8_t {
 
 /// Position overlaps its two axes and Size overlaps its two dimensions. Other targets overlap only themselves.
 bool targetsOverlap(AnimationTarget lhs, AnimationTarget rhs);
+
+bool isSizeTarget(AnimationTarget target);
 
 /// One physical track. It carries the command identity, so a late event cannot reach a replacement.
 struct TrackKey {

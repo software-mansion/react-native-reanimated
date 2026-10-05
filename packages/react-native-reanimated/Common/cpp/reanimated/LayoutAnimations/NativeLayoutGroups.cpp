@@ -22,9 +22,12 @@ void appendHandles(std::vector<AnimationHandle> &handles, const std::vector<Trac
 NativeLayoutGroups::NativeLayoutGroups(std::shared_ptr<NativeAnimationHost> host, BuildEndListener onBuildsEnded)
     : host_(std::move(host)), onBuildsEnded_(std::move(onBuildsEnded)) {}
 
-std::optional<NativeLayoutBuildEnd> NativeLayoutGroups::start(const AnimationRequest &request) {
+std::optional<NativeLayoutBuildEnd> NativeLayoutGroups::start(
+    const AnimationRequest &request,
+    std::shared_ptr<worklets::Serializable> config) {
   const std::lock_guard<std::mutex> lock(mutex_);
-  Group group{.buildId = request.handle.generation, .members = {}, .replacedAtAdmission = {}};
+  Group group{
+      .buildId = request.handle.generation, .config = std::move(config), .members = {}, .replacedAtAdmission = {}};
   std::optional<NativeLayoutBuildEnd> oldGroupEnd;
 
   if (const auto oldGroupIt = groups_.find(request.handle.tag); oldGroupIt != groups_.end()) {
@@ -33,14 +36,18 @@ std::optional<NativeLayoutBuildEnd> NativeLayoutGroups::start(const AnimationReq
     group.replacedAtAdmission = std::move(oldGroup.replacedAtAdmission);
     for (const auto &member : oldGroup.members) {
       const auto isReplaced = std::ranges::any_of(request.tracks, [&member](const AnimationTrack &track) {
-        return targetsOverlap(track.target, member.target);
+        return targetsOverlap(track.target, member.key.target);
       });
-      (isReplaced ? group.replacedAtAdmission : group.members).push_back(member);
+      if (isReplaced) {
+        group.replacedAtAdmission.push_back(member.key);
+      } else {
+        group.members.push_back(member);
+      }
     }
   }
 
   for (const auto &track : request.tracks) {
-    group.members.push_back({request.handle, track.target});
+    group.members.push_back({{request.handle, track.target}, track});
   }
   liveTrackCounts_.insert_or_assign(group.buildId, request.tracks.size());
   groups_.insert_or_assign(request.handle.tag, std::move(group));
@@ -50,7 +57,21 @@ std::optional<NativeLayoutBuildEnd> NativeLayoutGroups::start(const AnimationReq
 std::vector<TrackKey> NativeLayoutGroups::members(const Tag tag) {
   const std::lock_guard<std::mutex> lock(mutex_);
   const auto groupIt = groups_.find(tag);
-  return groupIt == groups_.end() ? std::vector<TrackKey>{} : groupIt->second.members;
+  return groupIt == groups_.end() ? std::vector<TrackKey>{} : keysOf(groupIt->second.members);
+}
+
+bool NativeLayoutGroups::canContinueOn(const facebook::react::ShadowView &view) {
+  const std::lock_guard<std::mutex> lock(mutex_);
+  const auto groupIt = groups_.find(view.tag);
+  return groupIt == groups_.end() || std::ranges::all_of(groupIt->second.members, [&](const Member &member) {
+           return host_->canRealize(member.track, view);
+         });
+}
+
+std::shared_ptr<worklets::Serializable> NativeLayoutGroups::config(const Tag tag) {
+  const std::lock_guard<std::mutex> lock(mutex_);
+  const auto groupIt = groups_.find(tag);
+  return groupIt == groups_.end() ? nullptr : groupIt->second.config;
 }
 
 std::optional<NativeLayoutBuildEnd> NativeLayoutGroups::cancel(const Tag tag) {
@@ -103,7 +124,8 @@ void NativeLayoutGroups::onTrackEnded(const TrackKey &track, const bool finished
     }
     if (groupIt != groups_.end()) {
       auto &group = groupIt->second;
-      if (const auto memberIt = std::ranges::find(group.members, track); memberIt != group.members.end()) {
+      if (const auto memberIt = std::ranges::find(group.members, track, &Member::key);
+          memberIt != group.members.end()) {
         if (!finished) {
           ends.push_back(fail(groupIt));
         } else if (group.members.size() == 1) {
@@ -137,7 +159,8 @@ void NativeLayoutGroups::onAnimationEnded(const AnimationHandle &handle, const A
     }
     const auto groupIt = groups_.find(handle.tag);
     const auto needsCommand = [&handle](const Group &group) {
-      return std::ranges::any_of(group.members, [&handle](const TrackKey &member) { return member.handle == handle; });
+      return std::ranges::any_of(
+          group.members, [&handle](const Member &member) { return member.key.handle == handle; });
     };
     const bool hasOpenCallback = groupIt != groups_.end() && groupIt->second.buildId == handle.generation;
     if (!hasOpenCallback) {
@@ -152,6 +175,15 @@ void NativeLayoutGroups::onAnimationEnded(const AnimationHandle &handle, const A
   }
 }
 
+std::vector<TrackKey> NativeLayoutGroups::keysOf(const std::vector<Member> &members) {
+  std::vector<TrackKey> keys;
+  keys.reserve(members.size());
+  for (const auto &member : members) {
+    keys.push_back(member.key);
+  }
+  return keys;
+}
+
 NativeLayoutBuildEnd NativeLayoutGroups::groupEnd(const uint64_t buildId, const bool callbackResult) const {
   return {buildId, callbackResult, !liveTrackCounts_.contains(buildId)};
 }
@@ -161,7 +193,7 @@ NativeLayoutBuildEnd NativeLayoutGroups::fail(const GroupMap::iterator groupIt) 
   groups_.erase(groupIt);
 
   std::vector<AnimationHandle> handles;
-  appendHandles(handles, group.members);
+  appendHandles(handles, keysOf(group.members));
   appendHandles(handles, group.replacedAtAdmission);
   for (const auto &handle : handles) {
     host_->cancel(handle, TrackStopMode::SettleToModel);

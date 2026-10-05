@@ -2,6 +2,8 @@
 
 #include <reanimated/NativeAnimations/NativeAnimationRequest.h>
 
+#include <react/renderer/mounting/ShadowView.h>
+
 #include <functional>
 #include <memory>
 #include <optional>
@@ -47,7 +49,7 @@ struct TargetSample {
 };
 #endif
 
-/// The platform part of the host. All calls are on the platform UI thread.
+/// The platform part of the host. All calls but `canRealize` are on the platform UI thread.
 class NativeAnimationPlatform {
  public:
   using TrackEndListener = std::function<void(const TrackKey &track, bool finished)>;
@@ -55,6 +57,10 @@ class NativeAnimationPlatform {
   virtual ~NativeAnimationPlatform() = default;
 
   virtual void setTrackEndListener(TrackEndListener listener) = 0;
+
+  /// False when the component and the props of `view` show that the platform cannot play the track on the
+  /// host view. Reads no mounted state, so a client can ask before the mount.
+  virtual bool canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) = 0;
 
   virtual bool isSurfaceRunning(SurfaceId surfaceId) = 0;
   /// Finds the mounted view, converts the tracks, and checks the model endpoints. Changes no state and reads

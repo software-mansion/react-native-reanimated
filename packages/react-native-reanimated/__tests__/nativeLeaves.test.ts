@@ -153,6 +153,21 @@ describe('relateToLiveLeaf', () => {
     );
   });
 
+  test('a constant leaf over a live constant leaf continues it before its end and replaces it after its end', () => {
+    const constantLive = (elapsed: number) => {
+      const leaf = onUIRuntime(() => timing());
+      advanceNativeLeaf(leaf, END, ORIGIN, ORIGIN + elapsed);
+      return leaf;
+    };
+    const started = constantLive(100);
+    expect(started.current).toBe(END);
+    expect(relateToLiveLeaf(started, bare())).toBe('continues');
+
+    const finished = constantLive(2 * DURATION);
+    expect(finished.finished).toBe(true);
+    expect(relateToLiveLeaf(finished, bare())).toBe('replaces');
+  });
+
   test('a delayed leaf needs the frame driver', () => {
     expect(relateToLiveLeaf(live(bare()), wrapped([50]))).toBe('frameDriver');
   });

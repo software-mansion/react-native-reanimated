@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/NativeAnimations/NativeAnimationHost.h>
 
 #include <functional>
@@ -34,10 +35,18 @@ class NativeLayoutGroups final : public native_animation::NativeAnimationClient 
   NativeLayoutGroups(std::shared_ptr<native_animation::NativeAnimationHost> host, BuildEndListener onBuildsEnded);
 
   /// The request becomes the group of its view. The tracks of the old group that the request does not replace
-  /// join it with their keys. Gives the end of the old group, whose callback result is `false`.
-  std::optional<NativeLayoutBuildEnd> start(const native_animation::AnimationRequest &request);
+  /// join it with their keys. Gives the end of the old group, whose callback result is `false`. `config` is
+  /// the layout animation of the view that the request plays.
+  std::optional<NativeLayoutBuildEnd> start(
+      const native_animation::AnimationRequest &request,
+      std::shared_ptr<worklets::Serializable> config);
   /// The tracks that the group of the view waits for.
   std::vector<native_animation::TrackKey> members(facebook::react::Tag tag);
+  /// False when the host cannot play a track of the group of `view` on that view any more
+  /// (`NativeAnimationHost::canRealize`).
+  bool canContinueOn(const facebook::react::ShadowView &view);
+  /// The layout animation that the group of the view plays. Null when the view has no group.
+  std::shared_ptr<worklets::Serializable> config(facebook::react::Tag tag);
   /// Stops each track of the group of the view. Gives the end of the group, whose callback result is `false`.
   std::optional<NativeLayoutBuildEnd> cancel(facebook::react::Tag tag);
   /// Ends all groups with `false` and releases all builds. The host stops the tracks when the surface closes.
@@ -49,14 +58,21 @@ class NativeLayoutGroups final : public native_animation::NativeAnimationClient 
       override;
 
  private:
+  struct Member {
+    native_animation::TrackKey key;
+    native_animation::AnimationTrack track;
+  };
+
   struct Group {
     uint64_t buildId;
-    std::vector<native_animation::TrackKey> members;
+    std::shared_ptr<worklets::Serializable> config;
+    std::vector<Member> members;
     /// The tracks that the command of the group stops at its admission. They play until then.
     std::vector<native_animation::TrackKey> replacedAtAdmission;
   };
   using GroupMap = std::unordered_map<facebook::react::Tag, Group>;
 
+  static std::vector<native_animation::TrackKey> keysOf(const std::vector<Member> &members);
   /// The end of a group that is no longer in `groups_`. The lock is held.
   NativeLayoutBuildEnd groupEnd(uint64_t buildId, bool callbackResult) const;
   /// Stops the tracks of the group and removes it. Gives its end. The lock is held.

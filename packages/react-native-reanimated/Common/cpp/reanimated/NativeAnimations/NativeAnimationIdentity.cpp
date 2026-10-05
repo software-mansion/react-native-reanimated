@@ -32,4 +32,8 @@ size_t TrackKeyHash::operator()(const TrackKey &key) const noexcept {
   return facebook::react::hash_combine(AnimationHandleHash{}(key.handle), static_cast<uint8_t>(key.target));
 }
 
+bool isSizeTarget(const AnimationTarget target) {
+  return target == AnimationTarget::Size || target == AnimationTarget::Width || target == AnimationTarget::Height;
+}
+
 } // namespace reanimated::native_animation

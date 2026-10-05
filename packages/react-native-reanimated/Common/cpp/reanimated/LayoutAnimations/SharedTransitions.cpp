@@ -4,6 +4,7 @@
 #include <react/renderer/components/scrollview/ScrollViewState.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
+#include <reanimated/LayoutAnimations/NativeLayoutTracks.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <algorithm>
@@ -72,12 +73,9 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
     }
     resolveLightNodeProps(node);
     const bool useViewsOnScreen = index == BEFORE;
-    ShadowView copy = useViewsOnScreen ? viewOnScreen(node) : node->current;
+    ShadowView copy = useViewsOnScreen ? shownView(node) : node->current;
     std::vector<react::Point> absolutePositions;
     absolutePositions = getAbsolutePositionsForRootPathView(node, useViewsOnScreen);
-    if (const auto shown = useViewsOnScreen ? viewWithLiveLeafValues(copy) : std::nullopt) {
-      copy.props = shown->props;
-    }
     copy.layoutMetrics.frame.origin = absolutePositions[0];
 
     auto &collectedTransition = transaction.transitionMap[*sharedTag];
@@ -684,6 +682,12 @@ const ShadowView &LayoutAnimationsProxy::viewOnScreen(const std::shared_ptr<Ligh
   return node->current;
 }
 
+ShadowView LayoutAnimationsProxy::shownView(const std::shared_ptr<LightNode> &node) const {
+  const auto &view = viewOnScreen(node);
+  return nativeLayoutGroups_ ? viewWithLiveLeafValues(view, liveLayoutLeaves(nativeLayoutGroups_->members(view.tag)))
+                             : view;
+}
+
 std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPathView(
     const std::shared_ptr<LightNode> &node,
     const bool useViewsOnScreen) const {
@@ -698,15 +702,14 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
       auto data = state->getData();
       viewPosition -= data.contentOffset;
     }
-    const auto &view = useViewsOnScreen ? viewOnScreen(currentNode) : currentNode->current;
+    const auto view = useViewsOnScreen ? shownView(currentNode) : currentNode->current;
     const auto parent = currentNode->parent.lock();
     if (parent && !strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
-      const auto &parentView = useViewsOnScreen ? viewOnScreen(parent) : parent->current;
+      const auto parentView = useViewsOnScreen ? shownView(parent) : parent->current;
       const float headerHeight = parentView.layoutMetrics.frame.size.height - view.layoutMetrics.frame.size.height;
       viewPosition.y += headerHeight;
     }
-    const auto shown = useViewsOnScreen ? viewWithLiveLeafValues(view) : std::nullopt;
-    viewPosition += (shown ? *shown : view).layoutMetrics.frame.origin;
+    viewPosition += view.layoutMetrics.frame.origin;
     viewsAbsolutePositions.emplace_back(viewPosition);
     currentNode = parent;
   }
@@ -721,11 +724,10 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     const std::vector<react::Point> &absolutePositions,
     const bool useViewsOnScreen) const {
   std::vector<AncestorTransform> transforms;
-  const auto &targetLayoutMetrics = (useViewsOnScreen ? viewOnScreen(node) : node->current).layoutMetrics;
   auto currentNode = node;
   while (currentNode) {
     resolveLightNodeProps(currentNode);
-    const auto &view = useViewsOnScreen ? viewOnScreen(currentNode) : currentNode->current;
+    const auto view = useViewsOnScreen ? shownView(currentNode) : currentNode->current;
     const auto &props = getViewProps(view);
     auto origin = props.transformOrigin;
     const auto &viewSize = view.layoutMetrics.frame.size;
@@ -743,6 +745,7 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     currentNode = currentNode->parent.lock();
   }
 
+  const auto targetSize = transforms.front().ownSize;
   const auto &targetViewPosition = absolutePositions[0];
   Transform combinedMatrix;
   bool parentHasTransform = false;
@@ -759,8 +762,7 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     }
     transformOrigin.xy[0].value -= targetViewPosition.x - absolutePositions[i].x;
     transformOrigin.xy[1].value -= targetViewPosition.y - absolutePositions[i].y;
-    combinedMatrix =
-        combinedMatrix * resolveTransform(targetLayoutMetrics.frame.size, ownSize, transform, transformOrigin);
+    combinedMatrix = combinedMatrix * resolveTransform(targetSize, ownSize, transform, transformOrigin);
     combinedMatrix.operations.clear();
   }
   if (parentHasTransform) {

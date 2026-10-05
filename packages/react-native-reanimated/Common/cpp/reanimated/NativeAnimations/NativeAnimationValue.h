@@ -37,6 +37,11 @@ struct VisualValueIfInterrupting {
 
 using AnimationStart = std::variant<AnimationValue, CurrentVisualValue, VisualValueIfInterrupting>;
 
+/// The tolerance of the semantic contract for a final host value.
+inline constexpr double ENDPOINT_TOLERANCE = 0.01;
+
+/// True when each component of the two values differs by at most `ENDPOINT_TOLERANCE`.
+bool isSameValue(const AnimationValue &lhs, const AnimationValue &rhs);
 bool valueMatchesTarget(const AnimationValue &value, AnimationTarget target);
 bool isFinite(const AnimationValue &value);
 

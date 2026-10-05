@@ -28,7 +28,7 @@ import {
   startSecondSurface,
   stopSecondSurface,
 } from '../../../ReJest/secondSurface';
-import type { Leaves } from './nativeLayoutTestKit';
+import type { Leaves, TraceEvent } from './nativeLayoutTestKit';
 import {
   blockUIThread,
   BOX_REF,
@@ -44,6 +44,8 @@ import {
   LAYOUT_DURATION,
   layoutOf,
   linearAt,
+  POSITION_TOLERANCE,
+  sample,
   mountScene,
   PairOf,
   pairLayoutsOf,
@@ -122,6 +124,7 @@ const colors: Record<string, SharedValue<string>> = {};
 type WriterBoxProps = {
   left: number;
   top?: number;
+  width?: number;
   layout?: LayoutAnimationFunction;
   initialOpacity?: number;
   refName?: string;
@@ -130,6 +133,7 @@ type WriterBoxProps = {
 function WriterBox({
   left,
   top = 0,
+  width = BOX_SIZE,
   layout,
   initialOpacity = 0.5,
   refName = BOX_REF,
@@ -142,7 +146,11 @@ function WriterBox({
     <Animated.View
       ref={ref}
       layout={layout}
-      style={[styles.box, { marginLeft: left, marginTop: top }, animatedStyle]}
+      style={[
+        styles.box,
+        { marginLeft: left, marginTop: top, width },
+        animatedStyle,
+      ]}
     />
   );
 }
@@ -730,6 +738,131 @@ describe('native layout animations and the synchronous props path', () => {
     expect(callbacks.join()).toBe('removed:false');
     expect(summarize((await takeTraceOf(tag)).filter(isHostEvent))).toBe(
       CANCELLED_GROUP
+    );
+    await wait(LAYOUT_DURATION);
+    expect(callbacks.join()).toBe('removed:false');
+    expect((await takeTraceOf(tag)).length).toBe(0);
+    await render(null);
+  });
+
+  const WIDE = 3 * BOX_SIZE;
+  const WIDTH_START =
+    'LayoutStartPending > LayoutStartMounted > Received > TrackStarted:Width > Admitted';
+  const WIDTH_END = 'TrackEnded:Width:true > Ended:Finished:None';
+  // 0.5 pt and the travel of two display frames of the width.
+  const WIDTH_TOLERANCE =
+    POSITION_TOLERANCE + (2 * FRAME_MS * (WIDE - BOX_SIZE)) / LAYOUT_DURATION;
+
+  const widthScene = (
+    layout: LayoutAnimationFunction,
+    width: number,
+    isMounted = true
+  ) => (
+    <View style={styles.container}>
+      {isMounted && (
+        <WriterBox left={START_LEFT} width={width} layout={layout} />
+      )}
+    </View>
+  );
+
+  async function expectWidthOnTrack(tag: number, startEvents: TraceEvent[]) {
+    const widthAt = linearAt(
+      BOX_SIZE,
+      WIDE,
+      startEvents[0].monotonicTimeMs,
+      LAYOUT_DURATION
+    );
+    const width = await sample(tag, 'Width');
+    expect(width.playbackKeys.length).toBe(1);
+    expect(width.model[0]).toBe(WIDE);
+    expect(
+      isNear(
+        width.presentation[0],
+        widthAt(width.monotonicTimeMs),
+        WIDTH_TOLERANCE
+      )
+    ).toBe(true);
+  }
+
+  async function expectWidthEnd(tag: number, opacity: number, name: string) {
+    const end = await sampleOpacity(tag);
+    expect(end.keys).toBe(0);
+    expect(isNear(end.model, opacity)).toBe(true);
+    expect(isNear(end.presentation, opacity)).toBe(true);
+    expect((await sample(tag, 'Width')).presentation[0]).toBe(WIDE);
+    expect(callbacks.join()).toBe(`${name}:true`);
+    expect(summarize((await takeTraceOf(tag)).filter(isHostEvent))).toBe(
+      WIDTH_END
+    );
+  }
+
+  test('an opacity write during a native width track shows at once and keeps the track', async () => {
+    const layout = layoutOf(
+      { width: { duration: LAYOUT_DURATION } },
+      { name: 'width' }
+    );
+    const tag = await mountScene(widthScene(layout, BOX_SIZE));
+    await render(widthScene(layout, WIDE));
+    await wait(LAYOUT_DURATION / 4);
+    const startEvents = (await takeTraceOf(tag)).filter(isHostEvent);
+    expect(summarize(startEvents)).toBe(WIDTH_START);
+    for (const value of [0.6, 0.7]) {
+      opacities[BOX_REF].value = value;
+      await wait(2 * FRAME_MS);
+      const written = await sampleOpacity(tag);
+      expect(written.keys).toBe(1);
+      expect(isNear(written.model, value)).toBe(true);
+      expect(isNear(written.presentation, value)).toBe(true);
+      await expectWidthOnTrack(tag, startEvents);
+      await wait(LAYOUT_DURATION / 8);
+    }
+    await wait(LAYOUT_DURATION);
+    await expectWidthEnd(tag, 0.7, 'width');
+    await render(null);
+  });
+
+  test('an opacity write between a commit and its mount keeps the native width start', async () => {
+    const layout = layoutOf(
+      { width: { duration: LAYOUT_DURATION } },
+      { name: 'width' }
+    );
+    const tag = await mountScene(widthScene(layout, BOX_SIZE));
+    writeAfterBlock([opacities[BOX_REF]], 0.8);
+    await render(widthScene(layout, WIDE));
+    await wait(3 * FRAME_MS);
+    const startEvents = (await takeTraceOf(tag)).filter(isHostEvent);
+    expect(summarize(startEvents)).toBe(WIDTH_START);
+    for (let index = 0; index < 2; index++) {
+      const written = await sampleOpacity(tag);
+      expect(written.keys).toBe(1);
+      expect(isNear(written.model, 0.8)).toBe(true);
+      expect(isNear(written.presentation, 0.8)).toBe(true);
+      await expectWidthOnTrack(tag, startEvents);
+      await wait(LAYOUT_DURATION / 2);
+    }
+    await wait(LAYOUT_DURATION / 4);
+    await expectWidthEnd(tag, 0.8, 'width');
+    await render(null);
+  });
+
+  test('the removal of the view after an opacity write during a native width track gives the callback false one time', async () => {
+    const layout = layoutOf(
+      { width: { duration: LAYOUT_DURATION } },
+      { name: 'removed' }
+    );
+    const tag = await mountScene(widthScene(layout, BOX_SIZE));
+    await render(widthScene(layout, WIDE));
+    await wait(LAYOUT_DURATION / 4);
+    const startEvents = (await takeTraceOf(tag)).filter(isHostEvent);
+    expect(summarize(startEvents)).toBe(WIDTH_START);
+    opacities[BOX_REF].value = 0.6;
+    await wait(4 * FRAME_MS);
+    await expectWidthOnTrack(tag, startEvents);
+    await render(widthScene(layout, WIDE, false));
+    await wait(200);
+    expect(callbacks.join()).toBe('removed:false');
+    expect(summarize((await takeTraceOf(tag)).filter(isHostEvent))).toBe(
+      'TrackEnded:Width:false > Ended:Cancelled:None'
     );
     await wait(LAYOUT_DURATION);
     expect(callbacks.join()).toBe('removed:false');

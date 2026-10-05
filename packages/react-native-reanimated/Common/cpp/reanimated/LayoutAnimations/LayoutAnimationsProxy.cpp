@@ -418,14 +418,17 @@ void LayoutAnimationsProxy::updateLightTree(
         react_native_assert(node && "LightNode not found");
         updateLightNodeProps(node, mutation.oldChildShadowView, mutation.newChildShadowView);
         auto tag = mutation.newChildShadowView.tag;
-        if (mutation.oldChildShadowView.props != mutation.newChildShadowView.props) {
+        const bool hasNewProps = mutation.oldChildShadowView.props != mutation.newChildShadowView.props;
+        if (hasNewProps) {
           staleSynchronousProps_.forget(tag);
         }
         auto config = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT);
         if (!config) {
-          config = getRetargetLayoutAnimationConfig(tag);
+          config = runningLayoutAnimationConfig(tag);
         }
-        const auto shouldAnimate = hasLayoutChanged(mutation);
+        const bool leavesNativeRoute =
+            hasNewProps && nativeLayoutGroups_ && !nativeLayoutGroups_->canContinueOn(node->current);
+        const auto shouldAnimate = hasLayoutChanged(mutation) || leavesNativeRoute;
         if ((!config || !shouldAnimate) && updateEnteringAnimationTarget(tag, node->current)) {
           break;
         }
@@ -1044,6 +1047,13 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
   return wantAnimateExit;
 }
 
+std::shared_ptr<Serializable> LayoutAnimationsProxy::runningLayoutAnimationConfig(const Tag tag) const {
+  if (auto config = getRetargetLayoutAnimationConfig(tag)) {
+    return config;
+  }
+  return nativeLayoutGroups_ ? nativeLayoutGroups_->config(tag) : nullptr;
+}
+
 ShadowViewMutation LayoutAnimationsProxy::updateToMount(
     const ShadowViewMutation &mutation,
     const std::shared_ptr<LightNode> &node) const {
@@ -1065,7 +1075,8 @@ bool LayoutAnimationsProxy::startNativeLayoutAnimation(ManagedLayoutAnimationSta
   }
   const auto buildId = *start.buildId;
   const native_animation::AnimationHandle handle{surfaceId_, tag, native_animation::AnimationOwner::Layout, buildId};
-  auto build = makeNativeLayoutTracks(uiRuntime_, buildSummary.asObject(uiRuntime_), start.before, start.after);
+  auto build =
+      makeNativeLayoutTracks(uiRuntime_, buildSummary.asObject(uiRuntime_), start.after, *nativeAnimationHost_);
   if ([[maybe_unused]] const auto *failure = std::get_if<native_animation::TrackBuildFailure>(&build)) {
 #ifndef NDEBUG
     nativeAnimationHost_->trace().record(
@@ -1094,7 +1105,7 @@ bool LayoutAnimationsProxy::startNativeLayoutAnimation(ManagedLayoutAnimationSta
        .objective = 7,
        .transactionNumber = pulledTransactionNumber_});
 #endif
-  if (const auto oldGroupEnd = nativeLayoutGroups_->start(request)) {
+  if (const auto oldGroupEnd = nativeLayoutGroups_->start(request, start.config)) {
     pendingNativeBuildEnds_.push_back(*oldGroupEnd);
   }
   transaction.filteredMutations.push_back(
@@ -1108,26 +1119,22 @@ jsi::Value LayoutAnimationsProxy::buildLayoutAnimation(ManagedLayoutAnimationSta
   start.buildId = makeBuildId();
   const auto liveTracks = nativeLayoutGroups_->members(start.tag);
   start.liveLeaves = liveLayoutLeaves(liveTracks);
-  const auto shownView = viewWithLiveLeafValues(start.before, start.liveLeaves);
+  const auto capturedView = viewWithLiveLeafValues(start.before, start.liveLeaves);
 #ifndef NDEBUG
   for (const auto &track : liveTracks) {
-    const auto &origin = shownView.layoutMetrics.frame.origin;
-    const auto value = track.target == native_animation::AnimationTarget::PositionX ? origin.x
-        : track.target == native_animation::AnimationTarget::PositionY              ? origin.y
-                                                                                    : mountedOpacity(shownView);
     nativeAnimationHost_->trace().record(
         {.event = native_animation::TraceEventType::LayoutLeafCaptured,
          .handle = track.handle,
          .target = track.target,
          .objective = 9,
          .transactionNumber = pulledTransactionNumber_,
-         .leafValue = value});
+         .leafValue = leafValue(track.target, capturedView)});
   }
 #endif
   return layoutAnimationsManager_->buildLayoutAnimation(
       uiRuntime_,
       *start.buildId,
-      layoutAnimationValues(start.type, shownView, start.after, window_),
+      layoutAnimationValues(start.type, capturedView, start.after, window_),
       start.config,
       MAX_NATIVE_LAYOUT_LEAVES,
       start.liveLeaves);
@@ -1143,18 +1150,12 @@ ShadowView LayoutAnimationsProxy::viewWithLiveLeafValues(const ShadowView &mount
   auto shown = values.opacity
       ? cloneViewWithOpacity(mounted, *values.opacity, PropsParserContext{surfaceId_, *contextContainer_})
       : mounted;
-  auto &origin = shown.layoutMetrics.frame.origin;
-  origin.x = static_cast<react::Float>(values.originX.value_or(origin.x));
-  origin.y = static_cast<react::Float>(values.originY.value_or(origin.y));
+  auto &frame = shown.layoutMetrics.frame;
+  frame.origin.x = static_cast<react::Float>(values.originX.value_or(frame.origin.x));
+  frame.origin.y = static_cast<react::Float>(values.originY.value_or(frame.origin.y));
+  frame.size.width = static_cast<react::Float>(values.width.value_or(frame.size.width));
+  frame.size.height = static_cast<react::Float>(values.height.value_or(frame.size.height));
   return shown;
-}
-
-std::optional<ShadowView> LayoutAnimationsProxy::viewWithLiveLeafValues(const ShadowView &mounted) const {
-  if (!nativeLayoutGroups_) {
-    return std::nullopt;
-  }
-  const auto liveLeaves = liveLayoutLeaves(nativeLayoutGroups_->members(mounted.tag));
-  return liveLeaves.empty() ? std::nullopt : std::optional(viewWithLiveLeafValues(mounted, liveLeaves));
 }
 
 void LayoutAnimationsProxy::continueOnFrameDriver(ManagedLayoutAnimationStart &start) const {
@@ -1233,18 +1234,8 @@ void LayoutAnimationsProxy::traceFirstFrameUpdates(const ShadowView &currentView
   if (tracksIt == nativeTracksWithoutFrameUpdate_.end()) {
     return;
   }
-  const auto changes = [&](const native_animation::AnimationTarget target) {
-    switch (target) {
-      case native_animation::AnimationTarget::PositionX:
-        return mountedPosition(currentView).x != mountedPosition(newView).x;
-      case native_animation::AnimationTarget::PositionY:
-        return mountedPosition(currentView).y != mountedPosition(newView).y;
-      default:
-        return mountedOpacity(currentView) != mountedOpacity(newView);
-    }
-  };
   std::erase_if(tracksIt->second, [&](const native_animation::TrackKey &track) {
-    if (!changes(track.target)) {
+    if (leafValue(track.target, currentView) == leafValue(track.target, newView)) {
       return false;
     }
     pulledFirstFrameUpdates_.push_back(track);

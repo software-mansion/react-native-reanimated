@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { ImageSourcePropType, StyleProp, ViewStyle } from 'react-native';
 import { Modal, Platform, StyleSheet, View } from 'react-native';
 import type {
   EasingFunction,
@@ -8,6 +9,7 @@ import type {
 import Animated, {
   Easing,
   getStaticFeatureFlag,
+  LinearTransition,
   ReduceMotion,
   withDelay,
   withSpring,
@@ -208,7 +210,13 @@ export function recordBuilderCall() {
   builderCalls++;
 }
 
-export type Key = 'originX' | 'originY' | 'opacity' | 'width' | 'height';
+export type Key =
+  | 'originX'
+  | 'originY'
+  | 'opacity'
+  | 'width'
+  | 'height'
+  | 'borderRadius';
 
 export type Leaf = {
   duration?: number;
@@ -517,9 +525,9 @@ export const pairLayoutsOf = (leaves: (hasCallback: boolean) => Leaves) => ({
   frameLayout: layoutOf(leaves(true), { name: 'frame' }),
 });
 
-type PairLayouts = ReturnType<typeof pairLayoutsOf>;
+type PairLayoutFunctions = ReturnType<typeof pairLayoutsOf>;
 
-type PairOfProps<TBox extends object> = PairLayouts & {
+type PairOfProps<TBox extends object> = PairLayoutFunctions & {
   box: TBox;
   BoxComponent: React.ComponentType<TBox & PairBoxProps>;
   isMounted?: boolean;
@@ -550,7 +558,7 @@ export function PairOf<TBox extends object>({
 }
 
 export type PairProps = Pick<BoxProps, 'left' | 'top' | 'opacity' | 'exiting'> &
-  PairLayouts & { isMounted?: boolean };
+  PairLayoutFunctions & { isMounted?: boolean };
 
 export function Pair({
   nativeLayout,
@@ -572,6 +580,221 @@ export function Pair({
 export const curveOf = (easing: EasingFunction | EasingFunctionFactory) =>
   typeof easing === 'function' ? easing : easing.factory();
 
+const SIZE_BOX_IMAGE =
+  require('../../../../src/apps/reanimated/examples/assets/doge.png') as ImageSourcePropType;
+
+export type Frame = { x: number; y: number; width: number; height: number };
+
+const frameOf = (
+  [centerX, centerY]: number[],
+  [width, height]: number[]
+): Frame => ({
+  x: centerX - width / 2,
+  y: centerY - height / 2,
+  width,
+  height,
+});
+
+export async function sampleFrame(tag: number) {
+  const [position, size] = await Promise.all([
+    sample(tag, 'Position'),
+    sample(tag, 'Size'),
+  ]);
+  return {
+    model: frameOf(position.model, size.model),
+    presentation: frameOf(position.presentation, size.presentation),
+    playbackKeys: size.playbackKeys,
+    monotonicTimeMs: size.monotonicTimeMs,
+  };
+}
+
+export const frameDistance = (first: Frame, second: Frame) =>
+  Math.max(
+    Math.abs(first.x - second.x),
+    Math.abs(first.y - second.y),
+    Math.abs(first.width - second.width),
+    Math.abs(first.height - second.height)
+  );
+
+type SizeBoxHost = 'View' | 'Text' | 'Image' | 'ScrollView';
+
+type SizeBoxHostProps = React.PropsWithChildren<{
+  ref: ReturnType<typeof useTestRef>;
+  layout: BoxProps['layout'];
+  collapsable: boolean;
+  source?: ImageSourcePropType;
+  style: StyleProp<ViewStyle>;
+}>;
+
+const SIZE_BOX_HOSTS: Record<
+  SizeBoxHost,
+  React.ComponentType<SizeBoxHostProps>
+> = {
+  View: Animated.View,
+  Text: Animated.Text,
+  // The props of an Image have no children and no `overflow: 'scroll'`.
+  Image: Animated.Image as React.ComponentType<SizeBoxHostProps>,
+  ScrollView: Animated.ScrollView,
+};
+
+export type SizeBoxProps = React.PropsWithChildren<{
+  left?: number;
+  top?: number;
+  width?: number;
+  height?: number;
+  host?: SizeBoxHost;
+  style?: StyleProp<ViewStyle>;
+  layout?: BoxProps['layout'];
+  refName?: string;
+}>;
+
+export function SizeBox({
+  left = 0,
+  top = 0,
+  width = BOX_SIZE,
+  height = BOX_SIZE,
+  host = 'View',
+  style,
+  layout,
+  refName = BOX_REF,
+  children,
+}: SizeBoxProps) {
+  const ref = useTestRef(refName);
+  const Host = SIZE_BOX_HOSTS[host];
+  return (
+    <Host
+      ref={ref}
+      layout={layout}
+      collapsable={false}
+      source={host === 'Image' ? SIZE_BOX_IMAGE : undefined}
+      style={[
+        styles.sizeBox,
+        { marginLeft: left, marginTop: top, width, height },
+        style,
+      ]}>
+      {host === 'Text' ? 'Text' : children}
+    </Host>
+  );
+}
+
+export function SizeScene(box: SizeBoxProps) {
+  return (
+    <View style={styles.container}>
+      <SizeBox {...box} />
+    </View>
+  );
+}
+
+export const SIZE_CELL_HEIGHT = 220;
+export const SIZE_CELL_WIDTH = 200;
+
+/** Where the cell of the frame-driven box is from the cell of the native box. */
+export type PairOffset = { x: number; y: number };
+export const PAIR_IN_COLUMN: PairOffset = { x: 0, y: SIZE_CELL_HEIGHT };
+// The layout gives the two boxes of a row the same vertical values.
+export const PAIR_IN_ROW: PairOffset = { x: SIZE_CELL_WIDTH, y: 0 };
+
+export type SizePairProps = Omit<SizeBoxProps, 'layout' | 'refName'> & {
+  nativeLayout: BoxProps['layout'];
+  frameLayout: BoxProps['layout'];
+  inRow?: boolean;
+};
+
+export type PairLayouts = Pick<SizePairProps, 'nativeLayout' | 'frameLayout'>;
+
+/**
+ * The frame-driven box has the leaves of LinearTransition and a callback on one
+ * leaf.
+ */
+export const linearPairOf = (durationMs: number): PairLayouts => ({
+  nativeLayout: LinearTransition.duration(durationMs).easing(Easing.linear),
+  frameLayout: layoutOf({
+    originX: { duration: durationMs, hasCallback: true },
+    originY: { duration: durationMs },
+    width: { duration: durationMs },
+    height: { duration: durationMs },
+  }),
+});
+
+export function SizePair({
+  nativeLayout,
+  frameLayout,
+  inRow = false,
+  ...box
+}: SizePairProps) {
+  const cellStyle = [styles.sizeCell, inRow && styles.sizeRowCell];
+  return (
+    <View style={inRow && styles.sizeRow}>
+      <View style={cellStyle}>
+        <SizeBox {...box} layout={nativeLayout} />
+      </View>
+      <View style={cellStyle}>
+        <SizeBox {...box} layout={frameLayout} refName={FRAME_BOX_REF} />
+      </View>
+    </View>
+  );
+}
+
+export async function sampleFramePair(offset = PAIR_IN_COLUMN) {
+  const [native, frame] = await Promise.all([
+    sampleFrame(getTestComponent(BOX_REF).getTag()),
+    sampleFrame(getTestComponent(FRAME_BOX_REF).getTag()),
+  ]);
+  return {
+    native: native.presentation,
+    end: native.model,
+    frame: {
+      ...frame.model,
+      x: frame.model.x - offset.x,
+      y: frame.model.y - offset.y,
+    },
+    playbackKeys: native.playbackKeys,
+    monotonicTimeMs: native.monotonicTimeMs,
+  };
+}
+
+export type FramePairRow = Awaited<ReturnType<typeof sampleFramePair>>;
+
+/**
+ * One row at each fraction of `durationMs` after the call, then one row after
+ * the end.
+ */
+export async function sampleFramePairAt(
+  durationMs: number,
+  fractions = [0.25, 0.5, 0.75],
+  offset = PAIR_IN_COLUMN
+) {
+  const start = performance.now();
+  const waitUntil = (elapsedMs: number) =>
+    wait(Math.max(0, start + elapsedMs - performance.now()));
+  const rows: FramePairRow[] = [];
+  for (const fraction of fractions) {
+    await waitUntil(fraction * durationMs);
+    rows.push(await sampleFramePair(offset));
+  }
+  await waitUntil(durationMs + 300);
+  rows.push(await sampleFramePair(offset));
+  return rows;
+}
+
+/**
+ * The largest distance of the native box from the frame-driven box before the
+ * end, and at the end.
+ */
+export function framePairDistances(rows: FramePairRow[]) {
+  const end = rows[rows.length - 1];
+  return {
+    during: Math.max(
+      ...rows.slice(0, -1).map((row) => frameDistance(row.native, row.frame))
+    ),
+    atEnd: Math.max(
+      frameDistance(end.native, end.frame),
+      frameDistance(end.native, end.end)
+    ),
+    keysAtEnd: end.playbackKeys.length,
+  };
+}
+
 export const styles = StyleSheet.create({
   container: {
     width: 300,
@@ -587,5 +810,17 @@ export const styles = StyleSheet.create({
     width: BOX_SIZE,
     height: BOX_SIZE,
     backgroundColor: 'teal',
+  },
+  sizeBox: {
+    backgroundColor: 'teal',
+  },
+  sizeCell: {
+    height: SIZE_CELL_HEIGHT,
+  },
+  sizeRow: {
+    flexDirection: 'row',
+  },
+  sizeRowCell: {
+    width: SIZE_CELL_WIDTH,
   },
 });

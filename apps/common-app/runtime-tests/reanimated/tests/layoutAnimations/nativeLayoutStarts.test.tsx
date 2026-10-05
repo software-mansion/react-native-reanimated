@@ -34,7 +34,16 @@ import {
   startSecondSurface,
   stopSecondSurface,
 } from '../../../ReJest/secondSurface';
-import type { Key, Leaf, LayoutOptions, BoxProps } from './nativeLayoutTestKit';
+import type {
+  Key,
+  Leaf,
+  LayoutOptions,
+  BoxProps,
+  Frame,
+  PairLayouts,
+  SizeBoxProps,
+  TraceEvent,
+} from './nativeLayoutTestKit';
 import {
   devTools,
   hasNativeLayoutStarts,
@@ -45,6 +54,7 @@ import {
   END_TOP,
   DURATION,
   POSITION_TOLERANCE,
+  FILTER_OPACITY,
   REPEATED_STARTS,
   PRESET_WAIT,
   FIRST_FRAME_TRAVEL,
@@ -91,6 +101,14 @@ import {
   Pair,
   curveOf,
   styles,
+  SizePair,
+  SizeScene,
+  sampleFrame,
+  sampleFramePairAt,
+  framePairDistances,
+  frameDistance,
+  linearPairOf,
+  PAIR_IN_ROW,
 } from './nativeLayoutTestKit';
 
 describe('native layout starts after the mount of the final state', () => {
@@ -262,11 +280,6 @@ describe('native layout starts after the mount of the final state', () => {
       { originX: { duration: NaN } },
       'InvalidValue',
     ],
-    [
-      'a size leaf that does not change',
-      { originX: {}, width: {} },
-      'UnsupportedTarget',
-    ],
     ['no initial value', { originX: { initial: 'none' } }, 'UnsupportedValue'],
     [
       'an initial value with no animation',
@@ -276,7 +289,14 @@ describe('native layout starts after the mount of the final state', () => {
     ],
     [
       'more leaves than native targets',
-      { originX: {}, originY: {}, width: {}, height: {} },
+      {
+        originX: {},
+        originY: {},
+        width: {},
+        height: {},
+        opacity: { initial: 1, to: 1 },
+        borderRadius: { initial: 0, to: 0 },
+      },
       'ResourceLimit',
     ],
     [
@@ -318,24 +338,66 @@ describe('native layout starts after the mount of the final state', () => {
     });
   }
 
-  test('a size change in the commit keeps the animation frame-driven', async () => {
+  const nativeBuilds: [string, Partial<Record<Key, Leaf>>, string[]][] = [
+    [
+      'a size leaf that does not change',
+      { originX: {}, width: {} },
+      ['PositionX', 'Width'],
+    ],
+    [
+      'one leaf for each layout key',
+      { originX: {}, originY: {}, width: {}, height: {} },
+      ['PositionX', 'PositionY', 'Width', 'Height'],
+    ],
+    [
+      'one leaf for each native target',
+      {
+        originX: {},
+        originY: {},
+        width: {},
+        height: {},
+        opacity: { initial: 1, to: 1 },
+      },
+      ['PositionX', 'PositionY', 'Width', 'Height', 'Opacity'],
+    ],
+  ];
+  for (const [caseName, leaves, targets] of nativeBuilds) {
+    test(`${caseName} plays natively: ${targets.join(', ')}`, async () => {
+      const layout = layoutOf(leaves, { name: 'native' });
+      const tag = await renderBox({ layout });
+      await render(<Scene left={END_LEFT} layout={layout} />);
+      await wait(DURATION * 1.5);
+
+      const events = (await takeTraceOf(tag)).filter(isHostEvent);
+      expect(summarize(events.slice(0, 4 + targets.length))).toBe(
+        `LayoutStartPending > LayoutStartMounted > Received > ${targets
+          .map((target) => `TrackStarted:${target}`)
+          .join(' > ')} > Admitted`
+      );
+      expect(summarize(events.slice(-1))).toBe('Ended:Finished:None');
+      expect(callbacks.join()).toBe('native:true');
+      await render(null);
+    });
+  }
+
+  test('position leaves play natively on a view whose size changes in the commit', async () => {
     const tag = await renderBox();
     await render(<Scene left={END_LEFT} width={2 * BOX_SIZE} />);
-    await wait(DURATION * 1.5);
-    expect(
-      summarize(
-        (await takeTraceOf(tag)).filter(
-          (event) => event.event !== 'FrameUpdateMounted'
-        )
-      )
-    ).toBe('LayoutBuildFailed:UnsupportedTarget');
+    await wait(DURATION / 2);
+    expect(summarize((await takeTraceOf(tag)).filter(isHostEvent))).toBe(
+      NATIVE_START
+    );
+    const { model, presentation } = await sampleFrame(tag);
+    expect(model.width).toBe(2 * BOX_SIZE);
+    expect(presentation.width).toBe(2 * BOX_SIZE);
+    expect(presentation.x > START_LEFT).toBe(true);
+    expect(presentation.x < END_LEFT).toBe(true);
+    await wait(DURATION);
+    expect(summarizeEnd(await takeTraceOf(tag))).toBe(NATIVE_END);
     await render(null);
   });
 
   const presets = {
-    'LinearTransition with a linear easing': LinearTransition.duration(
-      DURATION
-    ).easing(Easing.linear),
     LinearTransition,
     FadingTransition,
     SequencedTransition,
@@ -1558,4 +1620,618 @@ describe('native layout starts on two surfaces', () => {
     expect((await takeTraceOf(secondTag)).length).toBe(0);
     await render(null);
   });
+});
+
+type SizeBoxFrame = Required<
+  Pick<SizeBoxProps, 'left' | 'top' | 'width' | 'height'>
+>;
+
+describe('native layout size', () => {
+  if (!hasNativeLayoutStarts) {
+    return;
+  }
+
+  const SIZE_DURATION = 2000;
+  const ROUTE_DURATION = DURATION;
+  const START: SizeBoxFrame = { left: 0, top: 0, width: 50, height: 50 };
+  const MOVED: SizeBoxFrame = { left: 120, top: 40, width: 50, height: 50 };
+  const RESIZED: SizeBoxFrame = { left: 0, top: 0, width: 150, height: 90 };
+  const MOVED_AND_RESIZED: SizeBoxFrame = {
+    ...MOVED,
+    ...{ width: 150, height: 90 },
+  };
+  // 0.5 pt and the travel of one display frame at the mean speed of `travel` in `durationMs`.
+  const toleranceOf = (travel: number, durationMs: number) =>
+    POSITION_TOLERANCE + (FRAME_MS * travel) / durationMs;
+  const LINEAR_TOLERANCE = toleranceOf(120, SIZE_DURATION);
+
+  const startOf = (...targets: string[]) =>
+    `LayoutStartPending > LayoutStartMounted > Received > ${targets
+      .map((target) => `TrackStarted:${target}`)
+      .join(' > ')} > Admitted`;
+  const FOUR_TRACKS = startOf('PositionX', 'PositionY', 'Width', 'Height');
+
+  const isStartEvent = ({ event }: TraceEvent) =>
+    event !== 'TrackEnded' && event !== 'Ended';
+  const summarizeStart = (events: TraceEvent[]) =>
+    summarize(events.filter(isHostEvent).filter(isStartEvent));
+  const summarizeResults = (events: TraceEvent[]) =>
+    summarize(events.filter(({ event }) => event === 'Ended'));
+
+  const linearLayout = (durationMs: number) =>
+    LinearTransition.duration(durationMs).easing(Easing.linear);
+  const linearPair = linearPairOf(SIZE_DURATION);
+
+  async function playPair(
+    layouts: PairLayouts,
+    start: SizeBoxProps,
+    end: SizeBoxProps,
+    fractions?: number[]
+  ) {
+    const tag = await mountScene(<SizePair {...start} {...layouts} inRow />);
+    await render(<SizePair {...end} {...layouts} inRow />);
+    const rows = await sampleFramePairAt(SIZE_DURATION, fractions, PAIR_IN_ROW);
+    const events = await takeTraceOf(tag);
+    return { rows, events, distances: framePairDistances(rows) };
+  }
+
+  const linearCases: [string, SizeBoxFrame][] = [
+    ['a position change', MOVED],
+    ['a position change and a size change', MOVED_AND_RESIZED],
+    ['a size change', RESIZED],
+  ];
+  for (const [caseName, end] of linearCases) {
+    test(`LinearTransition with a linear easing plays ${caseName} on four native tracks and agrees with the frame driver`, async () => {
+      const { rows, events, distances } = await playPair(
+        linearPair,
+        START,
+        end
+      );
+      expect(summarizeStart(events)).toBe(FOUR_TRACKS);
+      expect(summarizeResults(events)).toBe('Ended:Finished:None');
+      expect(distances.during < LINEAR_TOLERANCE).toBe(true);
+      expect(distances.atEnd < 0.01).toBe(true);
+      expect(distances.keysAtEnd).toBe(0);
+      expect(frameDistance(rows[1].native, rows[1].end) > 0.01).toBe(true);
+      await render(null);
+    });
+  }
+
+  type TimedLeaf = {
+    dimension: keyof Frame;
+    travel: number;
+    duration: number;
+    delay: number;
+    easing: EasingFunction | EasingFunctionFactory;
+  };
+
+  // The part of the travel that the leaf shows at a time after the start.
+  const progressOf = ({ duration, delay, easing }: TimedLeaf, timeMs: number) =>
+    curveOf(easing)(Math.min(1, Math.max(0, (timeMs - delay) / duration)));
+
+  const isHeldAt = ({ delay }: TimedLeaf, timeMs: number) =>
+    timeMs + FRAME_MS <= delay;
+  const isCompleteAt = ({ delay, duration }: TimedLeaf, timeMs: number) =>
+    timeMs - FRAME_MS >= delay + duration;
+
+  // 0.5 pt and the travel of the leaf in one display frame before or after the time.
+  const leafToleranceAt = (leaf: TimedLeaf, timeMs: number) =>
+    POSITION_TOLERANCE +
+    Math.abs(leaf.travel) *
+      Math.max(
+        Math.abs(
+          progressOf(leaf, timeMs + FRAME_MS) - progressOf(leaf, timeMs)
+        ),
+        Math.abs(progressOf(leaf, timeMs) - progressOf(leaf, timeMs - FRAME_MS))
+      );
+
+  test('four leaves with different durations, delays, and easings agree with the frame driver', async () => {
+    const timedLeaves: Record<
+      'originX' | 'originY' | 'width' | 'height',
+      TimedLeaf
+    > = {
+      originX: {
+        dimension: 'x',
+        travel: MOVED_AND_RESIZED.left - START.left,
+        duration: SIZE_DURATION,
+        delay: 0,
+        easing: Easing.linear,
+      },
+      originY: {
+        dimension: 'y',
+        travel: MOVED_AND_RESIZED.top - START.top,
+        duration: SIZE_DURATION / 2,
+        delay: SIZE_DURATION / 4,
+        easing: Easing.ease,
+      },
+      width: {
+        dimension: 'width',
+        travel: MOVED_AND_RESIZED.width - START.width,
+        duration: SIZE_DURATION / 2,
+        delay: 0,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      },
+      height: {
+        dimension: 'height',
+        travel: MOVED_AND_RESIZED.height - START.height,
+        duration: 0.75 * SIZE_DURATION,
+        delay: SIZE_DURATION / 8,
+        easing: Easing.bezier(0.7, 0, 0.3, 1),
+      },
+    };
+    const leafOf = ({ duration, delay, easing }: TimedLeaf): Leaf => ({
+      duration,
+      delays: delay > 0 ? [delay] : undefined,
+      easing,
+    });
+    const layouts = pairLayoutsOf((hasCallback) => ({
+      originX: { ...leafOf(timedLeaves.originX), hasCallback },
+      originY: leafOf(timedLeaves.originY),
+      width: leafOf(timedLeaves.width),
+      height: leafOf(timedLeaves.height),
+    }));
+    const fractions = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
+    const { rows, events, distances } = await playPair(
+      layouts,
+      START,
+      MOVED_AND_RESIZED,
+      fractions
+    );
+    expect(summarizeStart(events)).toBe(FOUR_TRACKS);
+    expect(summarizeResults(events)).toBe('Ended:Finished:None');
+    fractions.forEach((fraction, index) => {
+      const timeMs = fraction * SIZE_DURATION;
+      const { native, frame, end } = rows[index];
+      for (const leaf of Object.values(timedLeaves)) {
+        const { dimension, travel } = leaf;
+        expect(
+          Math.abs(native[dimension] - frame[dimension]) <
+            leafToleranceAt(leaf, timeMs)
+        ).toBe(true);
+        if (isHeldAt(leaf, timeMs)) {
+          expect(
+            Math.abs(native[dimension] - (end[dimension] - travel)) < 0.01
+          ).toBe(true);
+        }
+        if (isCompleteAt(leaf, timeMs)) {
+          expect(Math.abs(native[dimension] - end[dimension]) < 0.01).toBe(
+            true
+          );
+        }
+      }
+    });
+    expect(distances.atEnd < 0.01).toBe(true);
+    expect(distances.keysAtEnd).toBe(0);
+    expect([...callbacks].sort().join()).toBe('frame:true,native:true');
+    await render(null);
+  });
+
+  test('position leaves on a view whose size changes in the commit play natively and agree with the frame driver', async () => {
+    const layouts = pairLayoutsOf((hasCallback) => ({
+      originX: { duration: SIZE_DURATION, hasCallback },
+      originY: { duration: SIZE_DURATION },
+    }));
+    const { rows, events, distances } = await playPair(
+      layouts,
+      START,
+      MOVED_AND_RESIZED
+    );
+    expect(summarizeStart(events)).toBe(startOf('PositionX', 'PositionY'));
+    expect(summarizeResults(events)).toBe('Ended:Finished:None');
+    expect(distances.during < LINEAR_TOLERANCE).toBe(true);
+    expect(distances.atEnd < 0.01).toBe(true);
+    expect(rows[0].native.width).toBe(MOVED_AND_RESIZED.width);
+    await render(null);
+  });
+
+  test('fractional values of the frame play on four native tracks and agree with the frame driver', async () => {
+    const { events, distances } = await playPair(
+      linearPair,
+      { left: 10.4, top: 10.4, width: 50.3, height: 50.3 },
+      { left: 110.4, top: 60.4, width: 100.3, height: 100.3 }
+    );
+    expect(summarizeStart(events)).toBe(FOUR_TRACKS);
+    expect(summarizeResults(events)).toBe('Ended:Finished:None');
+    expect(distances.during < LINEAR_TOLERANCE).toBe(true);
+    expect(distances.atEnd < 0.01).toBe(true);
+    expect(distances.keysAtEnd).toBe(0);
+    await render(null);
+  });
+
+  const constantSizeLeaves: [string, Leaf][] = [
+    ['delayed', { duration: SIZE_DURATION / 2, delays: [SIZE_DURATION / 4] }],
+    ['immediate', { duration: 0 }],
+  ];
+  const hostsWithNoNativeSizeChange: [string, SizeBoxProps['host']][] = [
+    ['a Text', 'Text'],
+    ['an Image', 'Image'],
+  ];
+  for (const [hostName, host] of hostsWithNoNativeSizeChange) {
+    for (const [leafName, sizeLeaf] of constantSizeLeaves) {
+      test(`a position change of ${hostName} with ${leafName} size leaves that do not change plays on four native tracks and agrees with the frame driver`, async () => {
+        const layouts = pairLayoutsOf((hasCallback) => ({
+          originX: { duration: SIZE_DURATION, hasCallback },
+          originY: { duration: SIZE_DURATION },
+          width: sizeLeaf,
+          height: sizeLeaf,
+        }));
+        const { rows, events, distances } = await playPair(
+          layouts,
+          { ...START, host },
+          { ...MOVED, host }
+        );
+        expect(summarizeStart(events)).toBe(FOUR_TRACKS);
+        expect(summarizeResults(events)).toBe('Ended:Finished:None');
+        expect(distances.during < LINEAR_TOLERANCE).toBe(true);
+        expect(distances.atEnd < 0.01).toBe(true);
+        expect(rows[1].native.width).toBe(START.width);
+        expect(rows[1].native.height).toBe(START.height);
+        expect([...callbacks].sort().join()).toBe('frame:true,native:true');
+        await render(null);
+      });
+    }
+  }
+
+  // A size leaf with a start value at most 0.01 pt from its end value does not change the size.
+  const sizeLeafOffsets: [number, boolean][] = [
+    [0.009, true],
+    [0.011, false],
+  ];
+  for (const [offset, isNative] of sizeLeafOffsets) {
+    test(`a size leaf of a Text that starts ${offset} pt from its end value ${isNative ? 'plays natively' : 'keeps the whole animation frame-driven: UnsupportedTarget'}`, async () => {
+      const layout = layoutOf({
+        originX: { duration: ROUTE_DURATION },
+        width: { duration: ROUTE_DURATION, initial: offset },
+      });
+      const tag = await mountScene(<SizeScene host="Text" layout={layout} />);
+      await render(<SizeScene host="Text" left={END_LEFT} layout={layout} />);
+      await wait(ROUTE_DURATION * 1.5);
+      const events = (await takeTraceOf(tag)).filter(
+        (event) => event.event !== 'FrameUpdateMounted'
+      );
+      expect(summarizeStart(events)).toBe(
+        isNative
+          ? startOf('PositionX', 'Width')
+          : 'LayoutBuildFailed:UnsupportedTarget'
+      );
+      expect(summarizeResults(events)).toBe(
+        isNative ? 'Ended:Finished:None' : ''
+      );
+      await render(null);
+    });
+  }
+
+  const HELD: SizeBoxFrame = { left: 120, top: 0, width: 150, height: 50 };
+
+  test('a delayed width with no duration holds the start width during a native X, then shows the end width', async () => {
+    const layouts = pairLayoutsOf((hasCallback) => ({
+      originX: { duration: SIZE_DURATION, hasCallback },
+      width: { duration: 0, delays: [SIZE_DURATION / 2] },
+    }));
+    const { rows, events, distances } = await playPair(
+      layouts,
+      START,
+      HELD,
+      [0.2, 0.4, 0.6, 0.8]
+    );
+    expect(summarizeStart(events)).toBe(startOf('PositionX', 'Width'));
+    expect(summarizeResults(events)).toBe('Ended:Finished:None');
+    expect(distances.during < LINEAR_TOLERANCE).toBe(true);
+    expect(distances.atEnd < 0.01).toBe(true);
+    expect(rows[1].native.width).toBe(START.width);
+    expect(rows[2].native.width).toBe(HELD.width);
+    await render(null);
+  });
+
+  test('a delayed height with no duration holds the start height during a native Y, then shows the end height', async () => {
+    const tall: SizeBoxFrame = { left: 0, top: 40, width: 50, height: 130 };
+    const layouts = pairLayoutsOf((hasCallback) => ({
+      originY: { duration: SIZE_DURATION, hasCallback },
+      height: { duration: 0, delays: [SIZE_DURATION / 2] },
+    }));
+    const { rows, events, distances } = await playPair(
+      layouts,
+      START,
+      tall,
+      [0.2, 0.4, 0.6, 0.8]
+    );
+    expect(summarizeStart(events)).toBe(startOf('PositionY', 'Height'));
+    expect(summarizeResults(events)).toBe('Ended:Finished:None');
+    expect(distances.during < LINEAR_TOLERANCE).toBe(true);
+    expect(distances.atEnd < 0.01).toBe(true);
+    expect(rows[1].native.height).toBe(START.height);
+    expect(rows[2].native.height).toBe(tall.height);
+    await render(null);
+  });
+
+  test('a width with no duration shows the end width at once during a native X', async () => {
+    const layouts = pairLayoutsOf((hasCallback) => ({
+      originX: { duration: SIZE_DURATION, hasCallback },
+      width: { duration: 0 },
+    }));
+    const { rows, events, distances } = await playPair(
+      layouts,
+      START,
+      HELD,
+      [0.05, 0.25, 0.5, 0.75]
+    );
+    expect(
+      summarize(events.filter(isHostEvent)).startsWith(
+        `${startOf('PositionX', 'Width')} > TrackEnded:Width:true`
+      )
+    ).toBe(true);
+    expect(summarizeResults(events)).toBe('Ended:Finished:None');
+    expect(distances.during < LINEAR_TOLERANCE).toBe(true);
+    expect(distances.atEnd < 0.01).toBe(true);
+    expect(rows[0].native.width).toBe(HELD.width);
+    await render(null);
+  });
+
+  test('a delayed width agrees with the frame driver during a native X', async () => {
+    const layouts = pairLayoutsOf((hasCallback) => ({
+      originX: { duration: SIZE_DURATION, hasCallback },
+      width: { duration: SIZE_DURATION / 2, delays: [SIZE_DURATION / 3] },
+    }));
+    const { rows, events, distances } = await playPair(
+      layouts,
+      START,
+      HELD,
+      [0.15, 0.3, 0.45, 0.6, 0.75, 0.9]
+    );
+    expect(summarizeStart(events)).toBe(startOf('PositionX', 'Width'));
+    expect(summarizeResults(events)).toBe('Ended:Finished:None');
+    expect(distances.during < toleranceOf(100, SIZE_DURATION / 2)).toBe(true);
+    expect(distances.atEnd < 0.01).toBe(true);
+    expect(rows[1].native.width).toBe(START.width);
+    await render(null);
+  });
+
+  const WIDTH_AXIS = {
+    size: 'width',
+    origin: 'originX',
+    edge: 'left',
+    tracks: ['PositionX', 'Width'],
+  } as const;
+  const HEIGHT_AXIS = {
+    size: 'height',
+    origin: 'originY',
+    edge: 'top',
+    tracks: ['PositionY', 'Height'],
+  } as const;
+  type SizeAxis = typeof WIDTH_AXIS | typeof HEIGHT_AXIS;
+  const zeroSizeCases: [string, SizeAxis, number, number][] = [
+    ['width from 0 to 100', WIDTH_AXIS, 0, 100],
+    ['width from 100 to 0', WIDTH_AXIS, 100, 0],
+    ['width from 0 to 0', WIDTH_AXIS, 0, 0],
+    ['height from 0 to 100', HEIGHT_AXIS, 0, 100],
+  ];
+  for (const [caseName, axis, startSize, endSize] of zeroSizeCases) {
+    test(`a ${caseName} gives finite values and agrees with the frame driver`, async () => {
+      const layouts = pairLayoutsOf((hasCallback) => ({
+        [axis.origin]: { duration: SIZE_DURATION, hasCallback },
+        [axis.size]: { duration: SIZE_DURATION },
+      }));
+      const { rows, events, distances } = await playPair(
+        layouts,
+        { ...START, [axis.size]: startSize },
+        { ...START, [axis.edge]: 60, [axis.size]: endSize }
+      );
+      expect(summarizeStart(events)).toBe(startOf(...axis.tracks));
+      expect(summarizeResults(events)).toBe('Ended:Finished:None');
+      const values = rows.flatMap(({ native, frame }) => [
+        ...Object.values(native),
+        ...Object.values(frame),
+      ]);
+      expect(values.every(Number.isFinite)).toBe(true);
+      expect(distances.during < LINEAR_TOLERANCE).toBe(true);
+      expect(distances.atEnd < 0.01).toBe(true);
+      expect([...callbacks].sort().join()).toBe('frame:true,native:true');
+      await render(null);
+    });
+  }
+
+  const WIDER = { width: 2 * BOX_SIZE, height: BOX_SIZE };
+  const TALLER = { width: BOX_SIZE, height: 2 * BOX_SIZE };
+  const BORDER = { style: { borderWidth: 2, borderColor: 'black' } };
+  const sizeChangesOnTheFrameDriver: [
+    string,
+    Partial<SizeBoxProps>,
+    typeof WIDER,
+  ][] = [
+    ['a size change of a View with a border', BORDER, WIDER],
+    ['a height change of a View with a border', BORDER, TALLER],
+    [
+      'a size change of a View with a radius that is not uniform',
+      { style: { borderTopLeftRadius: 12 } },
+      WIDER,
+    ],
+    [
+      'a size change of a View with a box shadow',
+      { style: { boxShadow: '4px 4px 6px 0px rgba(0, 0, 0, 0.8)' } },
+      WIDER,
+    ],
+    [
+      'a size change of a View with an outline',
+      { style: { outlineWidth: 3, outlineColor: 'red' } },
+      WIDER,
+    ],
+    [
+      'a size change of a View with a filter',
+      { style: { filter: [{ brightness: 0.5 }] } },
+      WIDER,
+    ],
+    [
+      'a size change of a View with a background image',
+      {
+        style: {
+          experimental_backgroundImage: 'linear-gradient(to right, red, blue)',
+        },
+      },
+      WIDER,
+    ],
+    [
+      'a size change of a View with a legacy shadow',
+      {
+        style: {
+          shadowColor: 'black',
+          shadowOpacity: 0.8,
+          shadowRadius: 6,
+          shadowOffset: { width: 0, height: 4 },
+        },
+      },
+      WIDER,
+    ],
+    [
+      'a size change of a View with a transform origin',
+      {
+        style: {
+          transformOrigin: 'top left',
+          transform: [{ rotate: '20deg' }],
+        },
+      },
+      WIDER,
+    ],
+    [
+      'a size change of a View with a percent translation',
+      { style: { transform: [{ translateX: '50%' }] } },
+      WIDER,
+    ],
+    [
+      'a size change of a View with a dashed border of zero width',
+      { style: { borderWidth: 0, borderStyle: 'dashed' } },
+      WIDER,
+    ],
+    [
+      'a size change of a View with a border of zero width and a colour for each side',
+      {
+        style: {
+          borderWidth: 0,
+          borderLeftColor: 'red',
+          borderRightColor: 'blue',
+          borderTopColor: 'green',
+          borderBottomColor: 'black',
+        },
+      },
+      WIDER,
+    ],
+    [
+      'a size change of a View with an elliptical radius',
+      { style: { borderRadius: '30%' } },
+      WIDER,
+    ],
+    [
+      'a height change of a View with a percent translation',
+      { style: { transform: [{ translateY: '50%' }] } },
+      TALLER,
+    ],
+    ['a size change of a Text', { host: 'Text' }, WIDER],
+    ['a size change of an Image', { host: 'Image' }, WIDER],
+    ['a size change of a ScrollView', { host: 'ScrollView' }, WIDER],
+  ];
+  for (const [caseName, box, end] of sizeChangesOnTheFrameDriver) {
+    test(`${caseName} keeps the whole animation frame-driven: UnsupportedTarget`, async () => {
+      const layout = linearLayout(ROUTE_DURATION);
+      const tag = await mountScene(<SizeScene {...box} layout={layout} />);
+      await render(<SizeScene {...box} {...end} layout={layout} />);
+      await wait(ROUTE_DURATION * 1.5);
+      const events = (await takeTraceOf(tag)).filter(
+        (event) => event.event !== 'FrameUpdateMounted'
+      );
+      expect(summarize(events)).toBe('LayoutBuildFailed:UnsupportedTarget');
+      const { model } = await sampleFrame(tag);
+      const changed = end === TALLER ? 'height' : 'width';
+      expect(Math.abs(model[changed] - end[changed]) < 0.01).toBe(true);
+      await render(null);
+    });
+  }
+
+  const sizeChangesOnNativeTracks: [
+    string,
+    Partial<SizeBoxProps>,
+    SizeBoxFrame,
+    SizeBoxFrame,
+  ][] = [
+    [
+      'a size change of a View with a static rotation',
+      { style: { transform: [{ rotate: '20deg' }] } },
+      START,
+      RESIZED,
+    ],
+    [
+      'a size change of a View with a static scale',
+      { style: { transform: [{ scale: 1.5 }] } },
+      START,
+      RESIZED,
+    ],
+    [
+      'a size change of a View with a continuous border curve and a radius',
+      { style: { borderCurve: 'continuous', borderRadius: 12 } },
+      START,
+      RESIZED,
+    ],
+    [
+      'a size change of a View with an opacity filter',
+      { style: { filter: [{ opacity: FILTER_OPACITY }] } },
+      START,
+      RESIZED,
+    ],
+    [
+      'a size change of a View with a blend mode',
+      { style: { mixBlendMode: 'multiply' } },
+      START,
+      RESIZED,
+    ],
+    [
+      'a size change of a View with its own stacking context',
+      { style: { isolation: 'isolate' } },
+      START,
+      RESIZED,
+    ],
+    [
+      'a change to a smaller size of a View with a clip and a radius',
+      { style: { overflow: 'hidden', borderRadius: 12 } },
+      RESIZED,
+      START,
+    ],
+  ];
+  for (const [caseName, box, start, end] of sizeChangesOnNativeTracks) {
+    test(`${caseName} plays on four native tracks and agrees with the frame driver`, async () => {
+      const { rows, events, distances } = await playPair(
+        linearPair,
+        { ...start, ...box },
+        { ...end, ...box }
+      );
+      expect(summarizeStart(events)).toBe(FOUR_TRACKS);
+      expect(summarizeResults(events)).toBe('Ended:Finished:None');
+      expect(rows[1].playbackKeys.length).toBe(4);
+      expect(frameDistance(rows[1].native, rows[1].end) > 0.01).toBe(true);
+      expect(distances.during < LINEAR_TOLERANCE).toBe(true);
+      expect(distances.atEnd < 0.01).toBe(true);
+      expect(distances.keysAtEnd).toBe(0);
+      await render(null);
+    });
+  }
+
+  const positionChangesOnNativeTracks: [string, Partial<SizeBoxProps>][] = [
+    ['a Text', { host: 'Text' }],
+    ['an Image', { host: 'Image' }],
+  ];
+  for (const [caseName, box] of positionChangesOnNativeTracks) {
+    test(`LinearTransition with a linear easing plays a position change of ${caseName} on four native tracks`, async () => {
+      const layout = linearLayout(ROUTE_DURATION);
+      const tag = await mountScene(<SizeScene {...box} layout={layout} />);
+      await render(<SizeScene {...box} left={END_LEFT} layout={layout} />);
+      await wait(ROUTE_DURATION / 2);
+      const playing = await sampleFrame(tag);
+      await wait(ROUTE_DURATION);
+      const events = await takeTraceOf(tag);
+      expect(summarizeStart(events)).toBe(FOUR_TRACKS);
+      expect(summarizeResults(events)).toBe('Ended:Finished:None');
+      expect(playing.playbackKeys.length).toBe(4);
+      expect(playing.presentation.x > START_LEFT).toBe(true);
+      expect(playing.presentation.x < END_LEFT).toBe(true);
+      expect(playing.presentation.width).toBe(BOX_SIZE);
+      await render(null);
+    });
+  }
 });

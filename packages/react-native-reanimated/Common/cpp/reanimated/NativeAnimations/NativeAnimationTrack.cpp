@@ -1,5 +1,7 @@
 #include <reanimated/NativeAnimations/NativeAnimationTrack.h>
 
+#include <algorithm>
+
 #include <cmath>
 
 namespace reanimated::native_animation {
@@ -55,6 +57,13 @@ TrackPlayback playbackOf(const AnimationTrack &track) {
     return TrackPlayback::Interpolated;
   }
   return track.delayMs > 0 ? TrackPlayback::HeldThroughDelay : TrackPlayback::Immediate;
+}
+
+bool changesValue(const AnimationTrack &track) {
+  const auto *start = std::get_if<AnimationValue>(&track.start);
+  return start == nullptr || !std::ranges::all_of(track.segments, [start](const AnimationSegment &segment) {
+           return isSameValue(*start, segment.endValue);
+         });
 }
 
 } // namespace reanimated::native_animation
