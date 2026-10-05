@@ -1,4 +1,4 @@
-import { Easing, withDelay, withTiming } from '../src';
+import { Easing, withDelay, withSpring, withTiming } from '../src';
 import type {
   AnimatableValue,
   AnimationObject,
@@ -71,6 +71,8 @@ function makePendingConfig(callback: jest.Mock) {
     callback,
   });
 }
+
+const LIMITS = { leaves: 3, transformOperations: 4 };
 
 describe('LayoutAnimationsManager', () => {
   let frameFinalizers: Array<() => void>;
@@ -203,7 +205,7 @@ describe('LayoutAnimationsManager', () => {
   });
   describe('builds', () => {
     const summaryOf = (buildId: number, config: () => LayoutAnimation) =>
-      manager.build(buildId, {}, config, 3, []);
+      manager.build(buildId, {}, config, LIMITS, []);
 
     test('the builder runs one time for a build and its frame-driven start', () => {
       const startTimestamps: number[] = [];
@@ -247,6 +249,22 @@ describe('LayoutAnimationsManager', () => {
           { key: 'originY', initialValue: undefined },
         ],
       });
+    });
+
+    test('a scalar leaf whose end value is a string has no timing', () => {
+      const summary = summaryOf(6, () => ({
+        initialValues: { originX: 5 },
+        animations: {
+          originX: {
+            __nativeTiming: { toValue: '9px', durationMs: 100, delaysMs: [] },
+          } as unknown as number,
+        },
+      }));
+      manager.releaseBuilt(6);
+
+      expect(summary?.leaves).toEqual([
+        { key: 'originX', initialValue: 5, continuesLiveLeaf: false },
+      ]);
     });
 
     test('the summary has no leaves when the builder gives too many', () => {
@@ -336,7 +354,7 @@ describe('LayoutAnimationsManager', () => {
         X.buildId,
         {},
         configOf({ originX: 0 }, { originX: timing(100, 400) }),
-        3,
+        LIMITS,
         []
       );
       startBatchAt(1100);
@@ -357,7 +375,7 @@ describe('LayoutAnimationsManager', () => {
         22,
         {},
         configOf({ originX: 25 }, { originX: timing(50, 400) }),
-        3,
+        LIMITS,
         [X]
       );
       manager.releaseBuilt(22);
@@ -375,7 +393,7 @@ describe('LayoutAnimationsManager', () => {
           { originX: 25, originY: 0 },
           { originX: timing(100, 400), originY: timing(40, 400) }
         ),
-        3,
+        LIMITS,
         [X]
       );
       manager.releaseBuilt(22);
@@ -393,7 +411,7 @@ describe('LayoutAnimationsManager', () => {
         22,
         {},
         configOf({ originX: 25 }, { originX: timing(100, 200) }),
-        3,
+        LIMITS,
         [X]
       );
       manager.releaseBuilt(22);
@@ -406,7 +424,7 @@ describe('LayoutAnimationsManager', () => {
         22,
         {},
         configOf({ originY: 0 }, { originY: timing(40, 100) }, callback),
-        3,
+        LIMITS,
         [X]
       );
       manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, 22, [X]);
@@ -427,7 +445,7 @@ describe('LayoutAnimationsManager', () => {
         22,
         {},
         configOf({ originX: 25 }, { originX: timing(100, 200) }),
-        3,
+        LIMITS,
         [X]
       );
       manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, 22, [X]);
@@ -445,7 +463,7 @@ describe('LayoutAnimationsManager', () => {
         22,
         {},
         configOf({ originX: 25 }, { originX: delayed }),
-        3,
+        LIMITS,
         [X]
       );
       manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, 22, [X]);
@@ -457,6 +475,507 @@ describe('LayoutAnimationsManager', () => {
       expect(lastProgress()).toEqual({ originX: 37.5 });
       runFrame(1250);
       expect(lastProgress()).toEqual({ originX: 18.75 });
+    });
+
+    describe('a transform leaf', () => {
+      type Operations = Record<string, unknown>[];
+      const T = { buildId: 31, key: 'transform' };
+      const FRAME_TAG = 32;
+      const DEGREE = Math.PI / 180;
+      const DURATION = 400;
+
+      const move = (toValue: number | string, duration = DURATION) =>
+        onUIRuntime(() =>
+          withTiming(toValue, { duration, easing: Easing.linear })
+        );
+      const transformOf = (
+        initial: Operations,
+        animations: Operations,
+        others: Record<string, unknown> = {}
+      ) =>
+        configOf({ transform: initial } as unknown as Record<string, number>, {
+          transform: animations,
+          ...others,
+        });
+      const leafOf = (
+        config: () => LayoutAnimation,
+        live = [] as (typeof T)[]
+      ) => {
+        const summary = manager.build(
+          33,
+          {},
+          config,
+          { leaves: 6, transformOperations: 4 },
+          live
+        )!;
+        manager.releaseBuilt(33);
+        return { ...summary, leaf: summary.leaves[0] };
+      };
+      const operationsOf = (value: unknown) =>
+        value as { kind: string; value: number }[];
+      // React Native reads a number as radians and a string with its unit.
+      const scalarOf = (operation: Record<string, unknown>) => {
+        const value = Object.values(operation)[0];
+        return typeof value === 'string'
+          ? parseFloat(value) * (value.endsWith('deg') ? DEGREE : 1)
+          : (value as number);
+      };
+      const shownScalars = () =>
+        (lastProgress().transform as Record<string, unknown>[]).map(scalarOf);
+
+      const nativeForms: [string, Operations, () => Operations][] = [
+        [
+          'numbers',
+          [{ rotate: 0 }, { translateX: 5 }],
+          () => [{ rotate: move(2) }, { translateX: move(45) }],
+        ],
+        [
+          'angles in degrees',
+          [{ rotate: '10deg' }, { rotateX: '0deg' }],
+          () => [{ rotate: move('100deg') }, { rotateX: move('-720deg') }],
+        ],
+        [
+          'angles in radians',
+          [{ rotateY: '0rad' }, { rotateZ: '1rad' }],
+          () => [{ rotateY: move('3rad') }, { rotateZ: move('1rad') }],
+        ],
+        [
+          'a plain value that is not the initial value',
+          [{ scale: 1 }, { translateX: 0 }],
+          () => [{ scale: move(2) }, { translateX: 30 }],
+        ],
+        [
+          'a plain angle',
+          [{ rotate: '10deg' }, { scaleX: 1 }],
+          () => [{ rotate: '40deg' }, { scaleX: move(0.5) }],
+        ],
+        [
+          'a timing with no duration',
+          [{ translateY: 0 }, { scaleY: 1 }],
+          () => [{ translateY: move(20, 0) }, { scaleY: move(3) }],
+        ],
+      ];
+      test.each(nativeForms)(
+        '%s: the summary has the values that the frame driver shows',
+        (_, initial, animations) => {
+          const { leaf } = leafOf(transformOf(initial, animations()));
+          const starts = operationsOf(leaf.initialValue);
+          const ends = operationsOf(leaf.timing!.toValue);
+          expect(leaf.timing).toMatchObject({
+            durationMs: DURATION,
+            delayMs: 0,
+          });
+          expect(starts.map(({ kind }) => kind)).toEqual(
+            initial.map((operation) => Object.keys(operation)[0])
+          );
+
+          startBatchAt(2000);
+          manager.start(
+            FRAME_TAG,
+            LayoutAnimationType.LAYOUT,
+            {},
+            transformOf(initial, animations())
+          );
+          for (const elapsed of [0, 100, 200, 400]) {
+            if (elapsed > 0) {
+              runFrame(2000 + elapsed);
+            }
+            shownScalars().forEach((shown, index) => {
+              const start = starts[index].value;
+              const end = ends[index].value;
+              expect(shown).toBeCloseTo(
+                start + ((end - start) * elapsed) / DURATION,
+                6
+              );
+            });
+          }
+          manager.stop(FRAME_TAG);
+        }
+      );
+
+      test.each<[string, Operations, () => Operations]>([
+        [
+          'radians to degrees',
+          [{ rotate: '0rad' }],
+          () => [{ rotate: move('90deg') }],
+        ],
+        [
+          'a number to degrees',
+          [{ rotate: 0 }],
+          () => [{ rotate: move('90deg') }],
+        ],
+        [
+          'degrees to a number',
+          [{ rotate: '0deg' }],
+          () => [{ rotate: move(90) }],
+        ],
+        [
+          'an angle with another unit',
+          [{ rotate: '0turn' }],
+          () => [{ rotate: move('1turn') }],
+        ],
+        [
+          'a translation in percent',
+          [{ translateX: '0%' }],
+          () => [{ translateX: move('50%') }],
+        ],
+        ['no initial value', [], () => [{ rotate: move(1) }]],
+        [
+          'an initial value of another operation',
+          [{ rotateX: 0 }],
+          () => [{ rotate: move(1) }],
+        ],
+        [
+          'two keys in one operation',
+          [{ scaleX: 1, scaleY: 1 }],
+          () => [{ scaleX: move(2), scaleY: move(2) }],
+        ],
+        [
+          'a matrix',
+          [{ matrix: [1, 0, 0, 1, 0, 0] }],
+          () => [{ matrix: move(1) }],
+        ],
+      ])('%s has no native values', (_, initial, animations) => {
+        const { leaf } = leafOf(transformOf(initial, animations()));
+        expect(leaf.initialValue).toBeUndefined();
+        expect(leaf.timing).toBeUndefined();
+      });
+
+      test.each<[string, () => Operations]>([
+        [
+          'two durations',
+          () => [{ rotate: move(1) }, { translateX: move(10, 200) }],
+        ],
+        [
+          'a delay on one operation',
+          () => [
+            { rotate: move(1) },
+            {
+              translateX: onUIRuntime(() =>
+                withDelay(100, move(10) as unknown as number)
+              ),
+            },
+          ],
+        ],
+        [
+          'a second easing',
+          () => [
+            { rotate: move(1) },
+            {
+              translateX: onUIRuntime(() =>
+                withTiming(10, { duration: DURATION, easing: Easing.ease })
+              ),
+            },
+          ],
+        ],
+        [
+          'an operation that does not change, with another duration',
+          () => [{ rotate: move(1) }, { translateX: move(0, 800) }],
+        ],
+        [
+          'a spring',
+          () => [
+            { rotate: move(1) },
+            { translateX: onUIRuntime(() => withSpring(10)) },
+          ],
+        ],
+      ])('%s: the leaf has values and no timing', (_, animations) => {
+        const { leaf } = leafOf(
+          transformOf([{ rotate: 0 }, { translateX: 0 }], animations())
+        );
+        expect(operationsOf(leaf.initialValue).length).toBe(2);
+        expect(leaf.timing).toBeUndefined();
+      });
+
+      test.each<[string, unknown, number | string, unknown[]]>([
+        ['radians to degrees', '0rad', '90deg', ['0rad', '45rad', '90rad']],
+        ['degrees to a number', '0deg', 90, ['0deg', '45deg', '90deg']],
+        ['a number to degrees', 0, '90deg', [null, null, '90deg']],
+      ])(
+        'the frame driver gives %s the unit of the initial value',
+        (_, initial, toValue, shown) => {
+          startBatchAt(2000);
+          manager.start(
+            FRAME_TAG,
+            LayoutAnimationType.LAYOUT,
+            {},
+            transformOf([{ rotate: initial }], [{ rotate: move(toValue) }])
+          );
+          const rotations = [0, 200, 400].map((elapsed) => {
+            if (elapsed > 0) {
+              runFrame(2000 + elapsed);
+            }
+            return JSON.parse(JSON.stringify(lastProgress())).transform[0]
+              .rotate;
+          });
+          expect(rotations).toEqual(shown);
+          manager.stop(FRAME_TAG);
+        }
+      );
+
+      test('a leaf with more operations than the limit has no summary and keeps its plain values', () => {
+        const animations = [
+          { rotate: 1 },
+          { translateX: 10 },
+          { translateY: 10 },
+          { scaleX: 2 },
+          { scaleY: 2 },
+        ];
+        const summary = manager.build(
+          33,
+          {},
+          transformOf(animations, animations),
+          { leaves: 6, transformOperations: 4 },
+          []
+        );
+        manager.releaseBuilt(33);
+        expect(summary).toMatchObject({ exceedsLimit: true, leaves: [] });
+        expect(animations[0].rotate).toBe(1);
+      });
+
+      test('one delay on each operation is the delay of the leaf', () => {
+        const delayed = (toValue: number) =>
+          onUIRuntime(() => withDelay(100, move(toValue) as unknown as number));
+        const { leaf } = leafOf(
+          transformOf(
+            [{ rotate: 0 }, { translateX: 0 }],
+            [{ rotate: delayed(1) }, { translateX: delayed(10) }]
+          )
+        );
+        expect(leaf.timing).toMatchObject({
+          durationMs: DURATION,
+          delayMs: 100,
+        });
+      });
+
+      test('a leaf of plain values has a timing with no duration', () => {
+        const { leaf } = leafOf(
+          transformOf(
+            [{ rotate: 0 }, { translateX: 0 }],
+            [{ rotate: 1 }, { translateX: 10 }]
+          )
+        );
+        expect(leaf).toMatchObject({
+          initialValue: [
+            { kind: 'rotate', value: 1 },
+            { kind: 'translateX', value: 10 },
+          ],
+          timing: { durationMs: 0, delayMs: 0 },
+        });
+      });
+
+      describe('with a native track', () => {
+        const liveConfig = (rotate: [unknown, number | string]) =>
+          transformOf(
+            [{ rotate: rotate[0] }, { translateX: 0 }],
+            [{ rotate: move(rotate[1]) }, { translateX: move(100) }]
+          );
+        const NUMBERS: [unknown, number | string] = [0, 2];
+        const DEGREES: [unknown, number | string] = ['0deg', '90deg'];
+        const buildLive = (rotate = NUMBERS) => {
+          startBatchAt(1000);
+          manager.build(T.buildId, {}, liveConfig(rotate), LIMITS, []);
+          startBatchAt(1100);
+        };
+
+        afterEach(() => {
+          manager.stop(FRAME_TAG);
+          manager.releaseBuilt(T.buildId);
+        });
+
+        test('the capture gives each operation at the batch time', () => {
+          buildLive();
+          expect(manager.captureLiveLeaves([T])).toEqual({
+            transform: [{ rotate: 0.5 }, { translateX: 25 }],
+          });
+        });
+
+        test('the capture keeps the unit of an angle', () => {
+          buildLive(DEGREES);
+          expect(manager.captureLiveLeaves([T])).toEqual({
+            transform: [{ rotate: '22.5deg' }, { translateX: 25 }],
+          });
+        });
+
+        const relations: [string, () => Operations, boolean, boolean][] = [
+          [
+            'the same end values and timing',
+            () => [{ rotate: move(2) }, { translateX: move(100) }],
+            true,
+            false,
+          ],
+          [
+            'other end values',
+            () => [{ rotate: move(1) }, { translateX: move(50) }],
+            false,
+            false,
+          ],
+          [
+            'one other end value',
+            () => [{ rotate: move(2) }, { translateX: move(50) }],
+            false,
+            true,
+          ],
+          [
+            'the same end values and another duration',
+            () => [{ rotate: move(2, 200) }, { translateX: move(100, 200) }],
+            false,
+            true,
+          ],
+          [
+            'a plain value beside the same end value',
+            () => [{ rotate: move(2) }, { translateX: 100 }],
+            false,
+            true,
+          ],
+          [
+            'another operation',
+            () => [{ rotateX: move(2) }, { translateX: move(100) }],
+            false,
+            true,
+          ],
+          ['one operation less', () => [{ rotate: move(2) }], false, true],
+        ];
+        test.each(relations)(
+          'a new leaf with %s: continues %s, needs the frame driver %s',
+          (_, animations, continuesLiveLeaf, needsFrameDriver) => {
+            buildLive();
+            const summary = leafOf(
+              transformOf([{ rotate: 0.5 }, { translateX: 25 }], animations()),
+              [T]
+            );
+            expect(summary.needsFrameDriver).toBe(needsFrameDriver);
+            expect(summary.leaf.continuesLiveLeaf).toBe(continuesLiveLeaf);
+          }
+        );
+
+        test('an absent leaf continues a live leaf of numbers and needs the frame driver for an angle with a unit', () => {
+          const next = () => configOf({ originY: 0 }, { originY: move(40) });
+          buildLive();
+          expect(leafOf(next(), [T]).needsFrameDriver).toBe(false);
+          manager.releaseBuilt(T.buildId);
+          buildLive(DEGREES);
+          expect(leafOf(next(), [T]).needsFrameDriver).toBe(true);
+        });
+
+        test('a new leaf with the same angle in degrees replaces the live leaf', () => {
+          buildLive(DEGREES);
+          const summary = leafOf(
+            transformOf(
+              [{ rotate: '22.5deg' }, { translateX: 25 }],
+              [{ rotate: move('90deg') }, { translateX: move(50) }]
+            ),
+            [T]
+          );
+          expect(summary.needsFrameDriver).toBe(false);
+          expect(summary.leaf.continuesLiveLeaf).toBe(false);
+        });
+
+        const laterStarts: [
+          string,
+          (rotate: typeof NUMBERS) => () => LayoutAnimation,
+        ][] = [
+          [
+            'no transform leaf',
+            () => configOf({ originY: 0 }, { originY: move(40, 100) }),
+          ],
+          [
+            'the same end values',
+            ([start, end]) =>
+              transformOf(
+                [{ rotate: start === 0 ? 0.5 : '22.5deg' }, { translateX: 25 }],
+                [{ rotate: move(end) }, { translateX: move(100) }]
+              ),
+          ],
+          [
+            'one other end value',
+            ([start, end]) =>
+              transformOf(
+                [{ rotate: start === 0 ? 0.5 : '22.5deg' }, { translateX: 25 }],
+                [{ rotate: move(end) }, { translateX: move(-50, 200) }]
+              ),
+          ],
+        ];
+        for (const [unitName, rotate] of [
+          ['numbers', NUMBERS],
+          ['degrees', DEGREES],
+        ] as const) {
+          test.each(laterStarts)(
+            `${unitName}: a frame-driven start with %s gives the frames of the frame driver alone`,
+            (_, next) => {
+              const framesOf = (startNext: () => void) => {
+                const shown = [];
+                startNext();
+                shown.push(lastProgress());
+                for (const timestamp of [1150, 1200, 1300, 1500]) {
+                  runFrame(timestamp);
+                  shown.push(lastProgress());
+                }
+                manager.stop(FRAME_TAG);
+                return JSON.parse(JSON.stringify(shown));
+              };
+
+              buildLive(rotate);
+              const transferred = framesOf(() => {
+                manager.build(34, {}, next(rotate), LIMITS, [T]);
+                manager.startBuilt(FRAME_TAG, LayoutAnimationType.LAYOUT, 34, [
+                  T,
+                ]);
+              });
+
+              startBatchAt(1000);
+              manager.start(
+                FRAME_TAG,
+                LayoutAnimationType.LAYOUT,
+                {},
+                liveConfig(rotate)
+              );
+              runFrame(1100);
+              startBatchAt(1100);
+              const frameDriven = framesOf(() =>
+                manager.start(
+                  FRAME_TAG,
+                  LayoutAnimationType.LAYOUT,
+                  {},
+                  next(rotate)
+                )
+              );
+
+              expect(transferred).toEqual(frameDriven);
+            }
+          );
+        }
+
+        test('the frame driver keeps the timeline of a number for the same end value and starts an angle with a unit again', () => {
+          const rotationsAfterRestart = (rotate: typeof NUMBERS) => {
+            startBatchAt(1000);
+            manager.start(
+              FRAME_TAG,
+              LayoutAnimationType.LAYOUT,
+              {},
+              liveConfig(rotate)
+            );
+            runFrame(1100);
+            startBatchAt(1100);
+            manager.start(
+              FRAME_TAG,
+              LayoutAnimationType.LAYOUT,
+              {},
+              laterStarts[1][1](rotate)
+            );
+            runFrame(1200);
+            const rotation = shownScalars()[0];
+            manager.stop(FRAME_TAG);
+            return rotation;
+          };
+          // The first timeline gives one half of the way at 1200.
+          expect(rotationsAfterRestart(NUMBERS)).toBeCloseTo(1, 6);
+          expect(rotationsAfterRestart(DEGREES)).toBeCloseTo(
+            (22.5 + 67.5 / 4) * DEGREE,
+            6
+          );
+        });
+      });
     });
   });
 });
