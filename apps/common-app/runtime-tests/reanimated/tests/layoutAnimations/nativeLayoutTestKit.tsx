@@ -73,10 +73,12 @@ export const devTools = (
   globalThis as unknown as { __reanimatedModuleProxy: NativeAnimationDevTools }
 ).__reanimatedModuleProxy;
 
-// The entries exist only in development builds of the native code, and the route only with the flag.
+// The entries exist only in development builds of the native code, and the route only with the flag. The legacy
+// proxy has no native route.
 export const hasNativeLayoutStarts =
   Platform.OS === 'ios' &&
   getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION') &&
+  !getStaticFeatureFlag('USE_LEGACY_LAYOUT_ANIMATIONS_PROXY') &&
   devTools.takeNativeAnimationTrace !== undefined;
 
 // The samples need the native animation host, which each of the two flags creates.
