@@ -155,6 +155,18 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'native layout entering',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutEntering.test');
+    },
+  },
+  {
+    testSuiteName: 'native layout exiting',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutExiting.test');
+    },
+  },
+  {
     testSuiteName: 'shared element transitions',
     importTest: () => {
       require('./tests/layoutAnimations/sharedTransition.test');
