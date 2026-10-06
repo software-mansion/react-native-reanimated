@@ -40,6 +40,12 @@ const JS_THREAD_STALL_MS = 3000;
 const LATE_CONTENT_OFFSET_Y = 100;
 const SETTLED_OPACITY = 0.5;
 const SETTLED_BORDER_RADIUS = 10;
+const SECOND_WRITE_NOTIFICATION_NAME = 'SYNC_BACK_SECOND_WRITE_FINISHED';
+// React receives the first value after 1700 ms at the most. Native removes the
+// settled entry on the next read, 500 ms later. The second write starts after
+// that, with a margin for a slow emulator.
+const SECOND_WRITE_DELAY_MS = 4000;
+const SECOND_WRITE_BORDER_RADIUS = 20;
 
 type Gradient = Exclude<
   NonNullable<ViewStyle['backgroundImage']>,
@@ -281,6 +287,85 @@ describe('sync of settled animated props back to React', () => {
     expect(props.borderRadius).toBe(SETTLED_BORDER_RADIUS);
     expect(style.borderRadius as number).toBe(SETTLED_BORDER_RADIUS);
   });
+});
+
+type WriteOrigin = 'animatedProps' | 'animatedStyle';
+
+function SecondWriteComponent({
+  secondWriteOrigin,
+  onProps,
+}: {
+  secondWriteOrigin: WriteOrigin;
+  onProps: (received: ReceivedProps) => void;
+}) {
+  const styleBorderRadius = useSharedValue(0);
+  const propsBorderRadius = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    borderRadius: styleBorderRadius.value,
+  }));
+  const animatedProps = useAnimatedProps<ScrollBoxAnimatedProps>(() => ({
+    borderRadius: propsBorderRadius.value,
+  }));
+
+  useEffect(() => {
+    styleBorderRadius.value = withTiming(SETTLED_BORDER_RADIUS, {
+      duration: 200,
+    });
+    propsBorderRadius.value = withTiming(SETTLED_BORDER_RADIUS, {
+      duration: 200,
+    });
+    const secondWriteBorderRadius =
+      secondWriteOrigin === 'animatedStyle'
+        ? styleBorderRadius
+        : propsBorderRadius;
+    const secondWriteTimeout = setTimeout(() => {
+      secondWriteBorderRadius.value = withTiming(
+        SECOND_WRITE_BORDER_RADIUS,
+        { duration: 200 },
+        () => {
+          notify(SECOND_WRITE_NOTIFICATION_NAME);
+        }
+      );
+    }, SECOND_WRITE_DELAY_MS);
+
+    return () => clearTimeout(secondWriteTimeout);
+  }, [styleBorderRadius, propsBorderRadius, secondWriteOrigin]);
+
+  return (
+    <View style={styles.container}>
+      <AnimatedScrollBox
+        animatedProps={animatedProps}
+        style={[styles.box, animatedStyle]}
+        onProps={onProps}
+      />
+    </View>
+  );
+}
+
+describe('sync of a value written by both origins after native removed the settled entry', () => {
+  test.each<WriteOrigin>(['animatedStyle', 'animatedProps'])(
+    'React receives a later value written only by %s as a prop and inside style',
+    async (secondWriteOrigin) => {
+      const [received, setReceived] = createTestValue<ReceivedProps>({
+        props: {},
+        style: {},
+      });
+
+      await render(
+        <SecondWriteComponent
+          secondWriteOrigin={secondWriteOrigin}
+          onProps={setReceived}
+        />
+      );
+      await waitForNotification(SECOND_WRITE_NOTIFICATION_NAME);
+      await wait(SYNC_BACK_DELAY_MS);
+
+      const { props, style } = received.value as ReceivedProps;
+      expect(props.borderRadius).toBe(SECOND_WRITE_BORDER_RADIUS);
+      expect(style.borderRadius as number).toBe(SECOND_WRITE_BORDER_RADIUS);
+    }
+  );
 });
 
 const styles = StyleSheet.create({
