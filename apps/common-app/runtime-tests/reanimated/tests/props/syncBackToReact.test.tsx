@@ -47,6 +47,8 @@ const SECOND_WRITE_NOTIFICATION_NAME = 'SYNC_BACK_SECOND_WRITE_FINISHED';
 const SECOND_WRITE_DELAY_MS = 4000;
 const SECOND_WRITE_BORDER_RADIUS = 20;
 const SETTLED_BLUR_RADIUS = 8;
+// processBoxShadow of Reanimated adds this color when a shadow has none.
+const STYLE_BUILDER_DEFAULT_SHADOW_COLOR = '#000000';
 const SETTLED_GRADIENT_ANGLE = 225;
 
 type Gradient = Exclude<
@@ -435,6 +437,8 @@ async function renderAndWaitForLastWriteSyncBack(
   return received.value as ReceivedProps;
 }
 
+// Android throws when `useAnimatedProps` sends a color string in a boxShadow
+// or a backgroundImage string to a View. A ScrollView ignores backgroundImage.
 function getBoxShadow(progress: number): StyleBuilderValues {
   'worklet';
   return {
@@ -444,7 +448,6 @@ function getBoxShadow(progress: number): StyleBuilderValues {
         offsetY: 4,
         blurRadius: interpolate(progress, [0, 1], [1, SETTLED_BLUR_RADIUS]),
         spreadDistance: 0,
-        color: '#ff0000',
       },
     ],
   };
@@ -458,22 +461,35 @@ function getBackgroundImage(progress: number): StyleBuilderValues {
 }
 
 describe('sync of a value that only the style props builder processes, written by both origins', () => {
-  test.each<WriteOrigin>(['animatedStyle', 'animatedProps'])(
-    'React receives a boxShadow it can process as a prop and inside style when %s wrote last',
-    async (lastWriteOrigin) => {
-      const { props, style } = await renderAndWaitForLastWriteSyncBack(
-        getBoxShadow,
-        lastWriteOrigin
-      );
+  test('React receives a boxShadow it can process as a prop and inside style when animatedStyle wrote last', async () => {
+    const { props, style } = await renderAndWaitForLastWriteSyncBack(
+      getBoxShadow,
+      'animatedStyle'
+    );
 
-      for (const boxShadow of [props.boxShadow, style.boxShadow]) {
-        const [shadow] = boxShadow as BoxShadowValue[];
-        expect(shadow.blurRadius as number).toBe(SETTLED_BLUR_RADIUS);
-        expect(typeof shadow.color).toBe('string');
-        expect(shadow.color as string).toBe('#ff0000', ComparisonMode.COLOR);
-      }
+    for (const boxShadow of [props.boxShadow, style.boxShadow]) {
+      const [shadow] = boxShadow as BoxShadowValue[];
+      expect(shadow.blurRadius as number).toBe(SETTLED_BLUR_RADIUS);
+      expect(typeof shadow.color).toBe('string');
+      expect(shadow.color as string).toBe(
+        STYLE_BUILDER_DEFAULT_SHADOW_COLOR,
+        ComparisonMode.COLOR
+      );
     }
-  );
+  });
+
+  test('React receives a boxShadow unchanged as a prop and inside style when animatedProps wrote last', async () => {
+    const { props, style } = await renderAndWaitForLastWriteSyncBack(
+      getBoxShadow,
+      'animatedProps'
+    );
+
+    for (const boxShadow of [props.boxShadow, style.boxShadow]) {
+      const [shadow] = boxShadow as BoxShadowValue[];
+      expect(shadow.blurRadius as number).toBe(SETTLED_BLUR_RADIUS);
+      expect('color' in shadow).toBe(false);
+    }
+  });
 
   test('React receives a backgroundImage it can process as a prop and inside style when animatedStyle wrote last', async () => {
     const { props, style } = await renderAndWaitForLastWriteSyncBack(
