@@ -317,10 +317,10 @@ void LayoutAnimationsProxy::overrideTransform(
     return;
   }
   react_native_assert(isViewKind(shadowView) && "Only ViewKind views have ViewProps");
-#ifdef ANDROID
+#ifdef RN_SERIALIZABLE_STATE
   auto array = folly::dynamic::array(folly::dynamic::object("matrix", transform->operator folly::dynamic()));
-  const folly::dynamic newTransformDynamic = folly::dynamic::object("transform", array);
-  auto newRawProps = withBaseRawProps(shadowView.props, newTransformDynamic);
+  folly::dynamic newTransformDynamic = folly::dynamic::object("transform", array);
+  auto newRawProps = withBaseRawProps(shadowView.props, std::move(newTransformDynamic));
   auto newProps = componentDescriptorRegistry_->at(shadowView.componentHandle)
                       .cloneProps(propsParserContext, shadowView.props, RawProps(newRawProps));
   auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));

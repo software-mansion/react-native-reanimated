@@ -1023,8 +1023,8 @@ ShadowView LayoutAnimationsProxy::cloneViewWithoutOpacity(
   react_native_assert(isViewKind(shadowView) && "Only ViewKind views have ViewProps");
   auto newView = shadowView;
   folly::dynamic rawProps = folly::dynamic::object("opacity", 0);
-#ifdef ANDROID
-  rawProps = withBaseRawProps(shadowView.props, rawProps);
+#ifdef RN_SERIALIZABLE_STATE
+  rawProps = withBaseRawProps(shadowView.props, std::move(rawProps));
 #endif
   auto newProps = componentDescriptorRegistry_->at(newView.componentHandle)
                       .cloneProps(propsParserContext, newView.props, RawProps(rawProps));
