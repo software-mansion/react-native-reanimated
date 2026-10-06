@@ -249,8 +249,8 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressSharedTransitionGe
   if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
     animation = &it->second;
   } else if (const auto it = completedAnimations_.find(tag);
-             it != completedAnimations_.end() && !it->second.shouldRemove && it->second.animation.geometryProgress) {
-    animation = &it->second.animation;
+             it != completedAnimations_.end() && it->second.geometryProgress) {
+    animation = &it->second;
   }
   if (!animation || hasPendingLayoutAnimation(tag)) {
     return {};
@@ -480,9 +480,8 @@ void LayoutAnimationsProxyCommon::applySynchronousPropsToLayoutAnimation(const T
   LayoutAnimation *animation = nullptr;
   if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
     animation = &it->second;
-  } else if (const auto it = completedAnimations_.find(tag);
-             it != completedAnimations_.end() && !it->second.shouldRemove) {
-    animation = &it->second.animation;
+  } else if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end()) {
+    animation = &it->second;
   }
   if (animation == nullptr) {
     return;
@@ -534,8 +533,8 @@ ShadowView LayoutAnimationsProxyCommon::materializeLayoutAnimation(
     if (activeAnimationIt != layoutAnimations_.end()) {
       currentView = currentViewOf(activeAnimationIt->second);
     } else if (const auto completedAnimationIt = completedAnimations_.find(tag);
-               completedAnimationIt != completedAnimations_.end() && !completedAnimationIt->second.shouldRemove) {
-      currentView = currentViewOf(completedAnimationIt->second.animation);
+               completedAnimationIt != completedAnimations_.end()) {
+      currentView = currentViewOf(completedAnimationIt->second);
     }
   }
 
@@ -929,10 +928,10 @@ bool LayoutAnimationsProxyCommon::updateEnteringAnimationTarget(const Tag tag, c
 std::optional<ShadowView> LayoutAnimationsProxyCommon::takeCompletedLayoutAnimationView(const Tag tag) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const auto it = completedAnimations_.find(tag);
-  if (it == completedAnimations_.end() || it->second.shouldRemove || hasPendingLayoutAnimation(tag)) {
+  if (it == completedAnimations_.end() || hasPendingLayoutAnimation(tag)) {
     return std::nullopt;
   }
-  auto &animation = it->second.animation;
+  auto &animation = it->second;
   if (animation.type != LayoutAnimationType::LAYOUT && animation.type != LayoutAnimationType::ENTERING) {
     return std::nullopt;
   }
@@ -950,7 +949,7 @@ std::optional<ShadowView> LayoutAnimationsProxyCommon::layoutAnimationViewOnScre
   }
   if (const auto completedAnimationIt = completedAnimations_.find(tag);
       completedAnimationIt != completedAnimations_.end()) {
-    return currentViewOf(completedAnimationIt->second.animation);
+    return currentViewOf(completedAnimationIt->second);
   }
   if (const auto pendingIt = pendingLayoutAnimations_.find(tag); pendingIt != pendingLayoutAnimations_.end()) {
     if (const auto *managedStart =
@@ -1010,9 +1009,9 @@ std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentLayoutAnimation(c
     return currentViewOf(animationIt->second);
   }
   if (const auto completedAnimationIt = completedAnimations_.find(tag);
-      completedAnimationIt != completedAnimations_.end() && !completedAnimationIt->second.shouldRemove) {
-    completedAnimationIt->second.animation.parentTag = parentTag;
-    return currentViewOf(completedAnimationIt->second.animation);
+      completedAnimationIt != completedAnimations_.end()) {
+    completedAnimationIt->second.parentTag = parentTag;
+    return currentViewOf(completedAnimationIt->second);
   }
   return pendingCurrentView;
 }
@@ -1048,23 +1047,17 @@ std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentPendingLayoutAnim
 void LayoutAnimationsProxyCommon::cleanupCompletedAnimations(
     ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext,
-    const bool preserveRemovals,
     const std::unordered_set<Tag> &preservedTags) const {
 #ifdef ANDROID
   std::vector<OpacityRestoration> opacityRestorations;
 #endif
   for (auto it = completedAnimations_.begin(); it != completedAnimations_.end();) {
     const auto tag = it->first;
-    auto &completedAnimation = it->second;
-    if (hasPendingLayoutAnimation(tag)) {
+    if (hasPendingLayoutAnimation(tag) || preservedTags.contains(tag)) {
       ++it;
       continue;
     }
-    if ((preserveRemovals && completedAnimation.shouldRemove) || preservedTags.contains(tag)) {
-      ++it;
-      continue;
-    }
-    auto &animation = completedAnimation.animation;
+    auto &animation = it->second;
     auto finalView = animation.currentView;
     if (needsFinalFrameReconciliation(animation.type)) {
       if (animation.currentView == animation.startView) {
@@ -1073,7 +1066,7 @@ void LayoutAnimationsProxyCommon::cleanupCompletedAnimations(
         finalView.layoutMetrics = animation.finalView.layoutMetrics;
       }
     }
-    if (!completedAnimation.shouldRemove && animation.opacity) {
+    if (animation.opacity) {
 #ifdef ANDROID
       opacityRestorations.push_back(OpacityRestoration{
           .shadowView = animation.finalView,
@@ -1083,9 +1076,8 @@ void LayoutAnimationsProxyCommon::cleanupCompletedAnimations(
       finalView = cloneViewWithOpacity(finalView, *animation.opacity, propsParserContext);
 #endif
     }
-    if (!completedAnimation.shouldRemove &&
-        (finalView.props != animation.currentView.props ||
-         finalView.layoutMetrics != animation.currentView.layoutMetrics)) {
+    if (finalView.props != animation.currentView.props ||
+        finalView.layoutMetrics != animation.currentView.layoutMetrics) {
       mutations.push_back(ShadowViewMutation::UpdateMutation(animation.currentView, finalView, animation.parentTag));
     }
     updateMap_.erase(tag);

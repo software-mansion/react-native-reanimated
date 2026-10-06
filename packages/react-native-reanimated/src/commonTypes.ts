@@ -154,6 +154,11 @@ export type LayoutAnimationBuildSummary = {
    * of a live leaf of the view.
    */
   needsFrameDriver: boolean;
+  /**
+   * A leaf has the key of a live leaf of the view and does not continue it. An
+   * exit then starts from the live value.
+   */
+  replacesLiveLeaf: boolean;
   leaves: {
     key: string;
     /**

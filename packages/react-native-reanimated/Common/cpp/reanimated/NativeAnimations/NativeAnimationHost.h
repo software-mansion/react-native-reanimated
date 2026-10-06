@@ -33,6 +33,8 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   void startAfterMount(const std::vector<MountedStart> &starts);
   /// The static answer of the platform (`NativeAnimationPlatform::canRealize`). Any thread.
   bool canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) const;
+  /// True when the mounted view of the tag is in a window. UI thread only.
+  bool isMountedInWindow(Tag tag) const;
   /// Stops every track that the command still owns, also after its result. Reports Cancelled when the
   /// command had no result.
   void cancel(const AnimationHandle &handle, TrackStopMode mode);
@@ -75,8 +77,8 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   admit(const AnimationRequest &request, const std::weak_ptr<NativeAnimationClient> &client, Deliveries &deliveries);
   void runCancel(const AnimationHandle &handle, TrackStopMode mode);
   void runCloseSurface(SurfaceId surfaceId);
-  void onTrackEnded(const TrackKey &key, bool finished);
-  void endTrack(const TrackKey &key, bool finished, Deliveries &deliveries);
+  void onPlatformTrackEnded(const TrackKey &key, bool finished);
+  void endTrack(const TrackKey &key, TrackEnd end, Deliveries &deliveries);
 
   std::optional<AnimationResultReason> validate(const AnimationRequest &request) const;
   std::vector<TrackKey> conflictingTracks(const AnimationRequest &request) const;
@@ -92,7 +94,7 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
       const std::weak_ptr<NativeAnimationClient> &client,
       Track &track,
       const TrackKey &key,
-      bool finished,
+      TrackEnd end,
       Deliveries &deliveries);
 
   const std::shared_ptr<NativeAnimationPlatform> platform_;
