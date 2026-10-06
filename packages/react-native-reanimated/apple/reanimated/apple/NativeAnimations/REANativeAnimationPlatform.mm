@@ -384,17 +384,96 @@ std::vector<PlaybackMember> playbackMembers(CALayer *layer, const AnimationTarge
     CAAnimation *playback = [layer animationForKey:key];
     NSArray<CAAnimation *> *animations =
         [playback isKindOfClass:[CAAnimationGroup class]] ? ((CAAnimationGroup *)playback).animations : @[ playback ];
-    for (CABasicAnimation *animation in animations) {
+    for (CAKeyframeAnimation *animation in animations) {
       NSString *function = animation.valueFunction.name;
       NSString *property =
           function == nil ? animation.keyPath : [NSString stringWithFormat:@"%@.%@", animation.keyPath, function];
-      members.push_back(
-          {property.UTF8String, componentsOfValue(animation.fromValue), componentsOfValue(animation.toValue)});
+      PlaybackMember member{property.UTF8String, {}};
+      for (id value in animation.values) {
+        member.values.push_back(componentsOfValue(value));
+      }
+      members.push_back(std::move(member));
     }
   }
   return members;
 }
 #endif // NDEBUG
+
+/// One physical animation of a track. It has one value for the start of the track and one for the end of
+/// each segment.
+struct TrackMember {
+  NSString *keyPath;
+  NSArray *values;
+  bool isAdditive{false};
+  CAValueFunction *valueFunction{nil};
+};
+
+CAKeyframeAnimation *makePropertyAnimation(
+    const TrackMember &member,
+    NSArray<NSNumber *> *keyTimes,
+    NSArray<CAMediaTimingFunction *> *timingFunctions)
+{
+  CAKeyframeAnimation *animation = [CAKeyframeAnimation animationWithKeyPath:member.keyPath];
+  animation.values = member.values;
+  animation.keyTimes = keyTimes;
+  animation.timingFunctions = timingFunctions;
+  animation.additive = member.isAdditive;
+  animation.valueFunction = member.valueFunction;
+  return animation;
+}
+
+TrackMember makeOffsetMember(NSString *keyPath, NSArray<NSNumber *> *values, const double model, const double scale)
+{
+  NSMutableArray<NSNumber *> *offsets = [NSMutableArray arrayWithCapacity:values.count];
+  for (NSNumber *value in values) {
+    [offsets addObject:@((value.doubleValue - model) * scale)];
+  }
+  return {.keyPath = keyPath, .values = offsets, .isAdditive = true};
+}
+
+TrackMember makeOperationMember(const std::vector<AnimationTransformOperation> &values)
+{
+  NSString *keyPath = keyPathForTarget(AnimationTarget::Transform);
+  const auto &start = values.front();
+  const bool changesValue = std::ranges::any_of(
+      values, [&start](const AnimationTransformOperation &operation) { return operation.value != start.value; });
+  NSMutableArray *objects = [NSMutableArray arrayWithCapacity:values.size()];
+  if (!changesValue) {
+    for (size_t index = 0; index < values.size(); ++index) {
+      [objects addObject:ObjectFromValueVisitor{}(AnimationTransform{{start}})];
+    }
+    return {.keyPath = keyPath, .values = objects, .isAdditive = true};
+  }
+  const bool hasThreeFactors = start.kind == TransformOperationKind::Scale;
+  for (const auto &[kind, value] : values) {
+    [objects addObject:hasThreeFactors ? @[ @(value), @(value), @(value) ] : @(value)];
+  }
+  return {
+      .keyPath = keyPath,
+      .values = objects,
+      .isAdditive = true,
+      .valueFunction = [CAValueFunction functionWithName:valueFunctionNameForKind(start.kind)]};
+}
+
+/// The first member hides the model and each animation before it. The screen applies the members after it to
+/// a point in their order, and a style transform applies its last operation first.
+std::vector<TrackMember> makeTransformMembers(const std::vector<AnimationTransform> &values)
+{
+  NSMutableArray *identities = [NSMutableArray arrayWithCapacity:values.size()];
+  for (size_t index = 0; index < values.size(); ++index) {
+    [identities addObject:[NSValue valueWithCATransform3D:CATransform3DIdentity]];
+  }
+  std::vector<TrackMember> members{{.keyPath = keyPathForTarget(AnimationTarget::Transform), .values = identities}};
+  for (size_t index = values.front().operations.size(); index-- > 0;) {
+    std::vector<AnimationTransformOperation> operationValues;
+    operationValues.reserve(values.size());
+    for (const auto &transform : values) {
+      operationValues.push_back(transform.operations[index]);
+    }
+    members.push_back(makeOperationMember(operationValues));
+  }
+  return members;
+}
 
 class CoreAnimationPlatform;
 
@@ -428,14 +507,9 @@ class CoreAnimationMountedAnimation final : public MountedAnimation {
     }
   };
 
-  CAAnimation *makeAnimation(const AnimationTrack &track, id fromValue, id toValue) const;
-  NSArray<CABasicAnimation *> *makeValueAnimations(AnimationTarget target, id fromValue, id toValue) const;
-  CABasicAnimation *makeOffsetAnimation(NSString *keyPath, double fromOffset, double toOffset) const;
-  NSArray<CABasicAnimation *> *makeTransformAnimations(const AnimationTransform &start, const AnimationTransform &end)
-      const;
-  CABasicAnimation *makeOperationAnimation(
-      const AnimationTransformOperation &start,
-      const AnimationTransformOperation &end) const;
+  CAAnimation *makeAnimation(const AnimationTrack &track, id startValue) const;
+  std::vector<TrackMember> makeMembers(const AnimationTrack &track, id startValue) const;
+  std::vector<TrackMember> makeValueMembers(AnimationTarget target, NSArray *values) const;
 
   CoreAnimationPlatform &platform_;
   __strong CALayer *layer_;
@@ -500,9 +574,6 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
       return AnimationResultReason::TargetUnavailable;
     }
     for (const auto &track : request.tracks) {
-      if (!canPlayWithCoreAnimation(track)) {
-        return AnimationResultReason::UnsupportedRealization;
-      }
       if (isSizeTarget(track.target) && changesValue(track) && !pictureFollowsBounds(view)) {
         return AnimationResultReason::UnsupportedRealization;
       }
@@ -650,20 +721,19 @@ void CoreAnimationMountedAnimation::start(const std::vector<TrackKey> &replacedT
     if (playbackOf(track) == TrackPlayback::Immediate) {
       continue;
     }
-    id endValue = objectFromValue(track.segments.back().endValue);
     if (track.endpointPolicy == EndpointPolicy::ExecutorCommitsEndpoint) {
-      [layer_ setValue:endValue forKeyPath:keyPathForTarget(track.target)];
+      [layer_ setValue:objectFromValue(track.segments.back().endValue) forKeyPath:keyPathForTarget(track.target)];
     }
     platform_.play(
         {request_.handle, track.target},
         layer_,
-        makeAnimation(track, startValues_[index], endValue),
+        makeAnimation(track, startValues_[index]),
         track.endpointPolicy == EndpointPolicy::HoldWithoutCommit);
   }
   [CATransaction commit];
 }
 
-CAAnimation *CoreAnimationMountedAnimation::makeAnimation(const AnimationTrack &track, id fromValue, id toValue) const
+CAAnimation *CoreAnimationMountedAnimation::makeAnimation(const AnimationTrack &track, id startValue) const
 {
   const bool holdsEndValue = track.endpointPolicy == EndpointPolicy::HoldWithoutCommit;
   const bool holdsStartValue = playbackOf(track) == TrackPlayback::HeldThroughDelay;
@@ -674,20 +744,18 @@ CAAnimation *CoreAnimationMountedAnimation::makeAnimation(const AnimationTrack &
   const CFTimeInterval duration =
       holdsStartValue ? delay : calculateMediaDurationFromSlowAnimationsDuration(track.durationMs / 1000.0);
 
-  NSArray<CABasicAnimation *> *members;
-  if (track.target == AnimationTarget::Transform) {
-    const auto &start = std::get<AnimationTransform>(std::get<AnimationValue>(track.start));
-    const auto &end = std::get<AnimationTransform>(track.segments.back().endValue);
-    members = makeTransformAnimations(start, holdsStartValue ? start : end);
-  } else {
-    members = makeValueAnimations(track.target, fromValue, holdsStartValue ? fromValue : toValue);
+  NSMutableArray<NSNumber *> *keyTimes = [NSMutableArray arrayWithObject:@0];
+  NSMutableArray<CAMediaTimingFunction *> *timingFunctions = [NSMutableArray array];
+  for (const auto &segment : track.segments) {
+    [keyTimes addObject:@(segment.endOffset)];
+    [timingFunctions addObject:std::visit(TimingFunctionVisitor{}, segment.timingFromPrevious)];
   }
-  CAMediaTimingFunction *timingFunction =
-      holdsStartValue ? nil : std::visit(TimingFunctionVisitor{}, track.segments.back().timingFromPrevious);
-  for (CABasicAnimation *member in members) {
-    member.duration = duration;
-    member.fillMode = kCAFillModeBoth;
-    member.timingFunction = timingFunction;
+  NSMutableArray<CAAnimation *> *members = [NSMutableArray array];
+  for (const auto &member : makeMembers(track, startValue)) {
+    CAKeyframeAnimation *memberAnimation = makePropertyAnimation(member, keyTimes, timingFunctions);
+    memberAnimation.duration = duration;
+    memberAnimation.fillMode = kCAFillModeBoth;
+    [members addObject:memberAnimation];
   }
   CAAnimation *animation = members.firstObject;
   if (members.count > 1) {
@@ -702,87 +770,49 @@ CAAnimation *CoreAnimationMountedAnimation::makeAnimation(const AnimationTrack &
   return animation;
 }
 
+std::vector<TrackMember> CoreAnimationMountedAnimation::makeMembers(const AnimationTrack &track, id startValue) const
+{
+  const bool holdsStartValue = playbackOf(track) == TrackPlayback::HeldThroughDelay;
+  if (track.target == AnimationTarget::Transform) {
+    const auto &start = std::get<AnimationTransform>(std::get<AnimationValue>(track.start));
+    std::vector<AnimationTransform> values{start};
+    for (const auto &segment : track.segments) {
+      values.push_back(holdsStartValue ? start : std::get<AnimationTransform>(segment.endValue));
+    }
+    return makeTransformMembers(values);
+  }
+  NSMutableArray *values = [NSMutableArray arrayWithObject:startValue];
+  for (const auto &segment : track.segments) {
+    [values addObject:holdsStartValue ? startValue : objectFromValue(segment.endValue)];
+  }
+  return makeValueMembers(track.target, values);
+}
+
 /// A position plays as an offset from the model, because a value animation hides the animations of its key
 /// path that begin before it. A size moves the position by half of its offset, so the frame origin stays.
-NSArray<CABasicAnimation *> *
-CoreAnimationMountedAnimation::makeValueAnimations(const AnimationTarget target, id fromValue, id toValue) const
+std::vector<TrackMember> CoreAnimationMountedAnimation::makeValueMembers(const AnimationTarget target, NSArray *values)
+    const
 {
   NSString *keyPath = keyPathForTarget(target);
-  const auto offsetOf = [this, keyPath](id value) {
-    return [value doubleValue] - [[layer_ valueForKeyPath:keyPath] doubleValue];
+  const auto model = [this, keyPath] {
+    return [[layer_ valueForKeyPath:keyPath] doubleValue];
   };
   switch (target) {
     case AnimationTarget::PositionX:
     case AnimationTarget::PositionY:
-      return @[ makeOffsetAnimation(keyPath, offsetOf(fromValue), offsetOf(toValue)) ];
+      return {makeOffsetMember(keyPath, values, model(), 1)};
     case AnimationTarget::Width:
     case AnimationTarget::Height: {
-      CABasicAnimation *size = [CABasicAnimation animationWithKeyPath:keyPath];
-      size.fromValue = fromValue;
-      size.toValue = toValue;
       NSString *positionKeyPath =
           keyPathForTarget(target == AnimationTarget::Width ? AnimationTarget::PositionX : AnimationTarget::PositionY);
-      return @[ size, makeOffsetAnimation(positionKeyPath, offsetOf(fromValue) / 2, offsetOf(toValue) / 2) ];
+      return {{.keyPath = keyPath, .values = values}, makeOffsetMember(positionKeyPath, values, model(), 0.5)};
     }
-    default: {
-      CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:keyPath];
-      animation.fromValue = fromValue;
-      animation.toValue = toValue;
-      return @[ animation ];
-    }
+    default:
+      return {{.keyPath = keyPath, .values = values}};
   }
-}
-
-CABasicAnimation *CoreAnimationMountedAnimation::makeOffsetAnimation(
-    NSString *keyPath,
-    const double fromOffset,
-    const double toOffset) const
-{
-  CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:keyPath];
-  animation.additive = YES;
-  animation.fromValue = @(fromOffset);
-  animation.toValue = @(toOffset);
-  return animation;
-}
-
-/// The first member hides the model and each animation before it. The screen applies the members after it to
-/// a point in their order, and a style transform applies its last operation first.
-NSArray<CABasicAnimation *> *CoreAnimationMountedAnimation::makeTransformAnimations(
-    const AnimationTransform &start,
-    const AnimationTransform &end) const
-{
-  CABasicAnimation *base = [CABasicAnimation animationWithKeyPath:keyPathForTarget(AnimationTarget::Transform)];
-  base.fromValue = base.toValue = [NSValue valueWithCATransform3D:CATransform3DIdentity];
-  NSMutableArray<CABasicAnimation *> *members = [NSMutableArray arrayWithObject:base];
-  for (size_t index = start.operations.size(); index-- > 0;) {
-    [members addObject:makeOperationAnimation(start.operations[index], end.operations[index])];
-  }
-  return members;
-}
-
-CABasicAnimation *CoreAnimationMountedAnimation::makeOperationAnimation(
-    const AnimationTransformOperation &start,
-    const AnimationTransformOperation &end) const
-{
-  CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:keyPathForTarget(AnimationTarget::Transform)];
-  animation.additive = YES;
-  if (start.value == end.value) {
-    animation.fromValue = animation.toValue = ObjectFromValueVisitor{}(AnimationTransform{{start}});
-    return animation;
-  }
-  const bool hasThreeFactors = start.kind == TransformOperationKind::Scale;
-  animation.valueFunction = [CAValueFunction functionWithName:valueFunctionNameForKind(start.kind)];
-  animation.fromValue = hasThreeFactors ? @[ @(start.value), @(start.value), @(start.value) ] : @(start.value);
-  animation.toValue = hasThreeFactors ? @[ @(end.value), @(end.value), @(end.value) ] : @(end.value);
-  return animation;
 }
 
 } // namespace
-
-bool canPlayWithCoreAnimation(const AnimationTrack &track)
-{
-  return track.segments.size() == 1;
-}
 
 std::shared_ptr<NativeAnimationPlatform> makeCoreAnimationPlatform(RCTSurfacePresenter *surfacePresenter)
 {

@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import type { ComponentRef, RefObject } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { ImageSourcePropType, StyleProp, ViewStyle } from 'react-native';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import type {
   EasingFunction,
   EasingFunctionFactory,
+  EntryExitAnimationFunction,
+  LayoutAnimation,
   LayoutAnimationFunction,
 } from 'react-native-reanimated';
 import Animated, {
@@ -53,9 +56,10 @@ export type TargetSample = {
   playbackKeys: string[];
   /**
    * The physical animations of the playback of the target, in the order in
-   * which the platform applies them.
+   * which the platform applies them. Each has its value at the start and at the
+   * end of each segment.
    */
-  members: { property: string; from: number[]; to: number[] }[];
+  members: { property: string; values: number[][] }[];
   monotonicTimeMs: number;
 };
 
@@ -127,6 +131,20 @@ export type Track = {
   traceTarget: string;
   from: number;
   to: number;
+  /** Absent for a linear easing. */
+  easing?: TrackEasing;
+};
+
+/** The curve of an easing, and the time at which the curve has a progress. */
+export type TrackEasing = { curve: EasingFunction; timeOf: EasingFunction };
+
+/** The default easing of `withTiming`. */
+export const DEFAULT_EASING: TrackEasing = {
+  curve: Easing.inOut(Easing.quad),
+  timeOf: (progress) =>
+    progress < 0.5
+      ? Math.sqrt(Math.max(0, progress) / 2)
+      : 1 - Math.sqrt(Math.max(0, 1 - progress) / 2),
 };
 
 export async function readTrack(tag: number, { sampleTarget }: Track) {
@@ -145,8 +163,8 @@ export async function readTrack(tag: number, { sampleTarget }: Track) {
 export const twinStartTime = makeMutable(0);
 
 /**
- * A linear easing that is no native easing, so its animation is frame-driven.
- * It gives the start time of its animation on the animation clock.
+ * A linear easing that gives the start time of its animation on the animation
+ * clock. Use it in a frame-driven animation: each call writes the time.
  */
 export const recordedLinearOf = (durationMs: number) => (progress: number) => {
   'worklet';
@@ -154,6 +172,120 @@ export const recordedLinearOf = (durationMs: number) => (progress: number) => {
   twinStartTime.value = now - progress * durationMs;
   return progress;
 };
+
+/**
+ * The curve of `easing` in a form that gives the start time of its animation on
+ * the animation clock. Use it in a frame-driven animation.
+ */
+export const recordedCurveOf = (
+  easing: EasingFunction | EasingFunctionFactory,
+  durationMs: number
+) => {
+  const curve = curveOf(easing);
+  return (progress: number) => {
+    'worklet';
+    const now = global.__frameTimestamp ?? global._getAnimationTimestamp();
+    twinStartTime.value = now - progress * durationMs;
+    return curve(progress);
+  };
+};
+
+type AnimationFunction = (values: never) => LayoutAnimation;
+type AnimationValues =
+  | Parameters<EntryExitAnimationFunction>[0]
+  | Parameters<LayoutAnimationFunction>[0];
+
+type AnimationSource = { build: () => AnimationFunction } | AnimationFunction;
+type BuiltLeaf = Partial<FrameAnimation> & { __nativeTiming?: unknown };
+
+/**
+ * The animation of a builder or of a function, with a call of `prepare` for
+ * each leaf of each build.
+ */
+function withPreparedLeaves(
+  animation: AnimationSource,
+  prepare: (leaf: BuiltLeaf) => void
+) {
+  const build = (
+    typeof animation === 'function' ? animation : animation.build()
+  ) as (values: AnimationValues) => LayoutAnimation;
+  return (values: AnimationValues) => {
+    'worklet';
+    const result = build(values);
+    const leaves = Object.values(result.animations).flatMap((leaf) =>
+      Array.isArray(leaf)
+        ? leaf.flatMap((operation: Record<string, unknown>) =>
+            Object.values(operation)
+          )
+        : [leaf]
+    );
+    for (const leaf of leaves) {
+      if (typeof leaf === 'object' && leaf !== null) {
+        prepare(leaf as BuiltLeaf);
+      }
+    }
+    return result;
+  };
+}
+
+/**
+ * The animation of a builder or of a function with no native description on its
+ * leaves. It is frame-driven, and its trace has the failure
+ * `UnsupportedTiming`.
+ */
+export function frameDrivenOf(animation: AnimationSource) {
+  return withPreparedLeaves(animation, (leaf) => {
+    'worklet';
+    delete leaf.__nativeTiming;
+    recordFrameTimes(leaf);
+  });
+}
+
+export const namedBuilderCalls: string[] = [];
+function recordNamedBuilderCall(name: string) {
+  namedBuilderCalls.push(name);
+}
+
+/**
+ * The animation of a builder or of a function, with a record of each call of
+ * its function under `name`.
+ */
+export function countedOf(
+  name: string,
+  animation: { build: () => AnimationFunction } | AnimationFunction
+) {
+  const build = (
+    typeof animation === 'function' ? animation : animation.build()
+  ) as (values: AnimationValues) => LayoutAnimation;
+  return (values: AnimationValues) => {
+    'worklet';
+    scheduleOnRN(recordNamedBuilderCall, name);
+    return build(values);
+  };
+}
+
+type FrameAnimation = {
+  onFrame: (animation: FrameAnimation, now: number) => boolean;
+};
+
+/**
+ * The time of the last frame of an animation of `frameDrivenOf` or of
+ * `frameTimedOf`.
+ */
+export const frameDriverFrameTime = makeMutable(0);
+
+// A leaf of EntryExitTransition can be an object that is not an animation.
+function recordFrameTimes(animation: Partial<FrameAnimation>) {
+  'worklet';
+  const onFrame = animation.onFrame;
+  if (!onFrame) {
+    return;
+  }
+  animation.onFrame = (self, now) => {
+    frameDriverFrameTime.value = now;
+    return onFrame(self, now);
+  };
+}
 
 const animationTime = () => {
   'worklet';
@@ -427,6 +559,30 @@ export function Scene({
 
 export const LONG_MOVE = layoutOf({ originX: { duration: LAYOUT_DURATION } });
 
+export type ScrollViewRef = RefObject<ComponentRef<typeof ScrollView> | null>;
+
+/**
+ * A scroll view that takes its children out of the window when they are out of
+ * its clip rectangle. React Native recycles a view with its old props and with
+ * no clipping, so the clipping starts only when the prop changes.
+ */
+export function ClippingScrollView({
+  scrollRef,
+  style,
+  children,
+}: React.PropsWithChildren<{
+  scrollRef?: ScrollViewRef;
+  style?: StyleProp<ViewStyle>;
+}>) {
+  const [clips, setClips] = useState(false);
+  useEffect(() => setClips(true), []);
+  return (
+    <ScrollView ref={scrollRef} removeClippedSubviews={clips} style={style}>
+      {children}
+    </ScrollView>
+  );
+}
+
 type PairBoxProps = { layout: LayoutAnimationFunction; refName?: string };
 
 type SurfaceBox = { left: number; top?: number };
@@ -552,6 +708,10 @@ export function PairOf<TBox extends object>({
       </View>
     </View>
   );
+}
+
+export function curveOf(easing: EasingFunction | EasingFunctionFactory) {
+  return typeof easing === 'function' ? easing : easing.factory();
 }
 
 const SIZE_BOX_IMAGE =
