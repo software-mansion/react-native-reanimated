@@ -12,28 +12,26 @@ import {
   alignmentReport,
   describeSharedCases,
   expectAllBoxesToFinish,
+  expectSwitchToSurvive,
   FREEZE_MS,
   goHome,
   IN_RANGE,
   leakingRegistries,
-  MIDPOINT,
   navigatorDriver,
   NO_LEAKS,
   ON_TIME,
+  pastHalfwayReport,
   press,
-  rangeReport,
   readBoxes,
   SCREEN_1_TO_SCREEN_2,
   SCREEN_2_TO_SCREEN_3,
   SHORT_FREEZE_MS,
-  TO,
   travelReport,
   waitForControl,
   worstAlignmentReport,
 } from './fixture';
 
-// The fixture frozen the way the example screen does it: by pushing a native
-// stack screen over it.
+// The fixture frozen by pushing a native stack screen over it.
 
 describeSharedCases(navigatorDriver);
 
@@ -61,14 +59,20 @@ describe('react-freeze *under a native stack only*', () => {
 
     const after = await readBoxes();
 
-    // Home freezes once however deep the stack goes: pushing 2 and 3 never
-    // touches it, so only the number of transitions differs from the shallow
-    // case.
+    // Home freezes once however deep the stack goes.
     expect(await worstAlignmentReport(ALIGNMENT_WATCH_MS)).toBe(ALIGNED);
-    expect(rangeReport(after, MIDPOINT, TO - 1)).toBe(IN_RANGE);
+    expect(pastHalfwayReport(after)).toBe(IN_RANGE);
     expect(travelReport(before, after)).toBe(ON_TIME);
 
     await expectAllBoxesToFinish();
+  });
+
+  test('the switch keeps its state three screens deep', async () => {
+    await navigatorDriver.mount();
+    await expectSwitchToSurvive(async () => {
+      await goThreeScreensDeep(SHORT_FREEZE_MS / 3);
+      await goHome();
+    });
   });
 
   test('a second round trip picks up where the first one left off', async () => {
