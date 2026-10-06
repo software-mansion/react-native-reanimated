@@ -3,27 +3,27 @@ import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useAnimatedSensor,
+  useDerivedValue,
   SensorType,
+  HingeStatus,
 } from 'react-native-reanimated';
 
 export default function App() {
   // highlight-next-line
   const hinge = useAnimatedSensor(SensorType.HINGE);
 
+  const foldAngle = useDerivedValue(() => {
+    const { angle, status } = hinge.sensor.value;
+    // highlight-next-line
+    return status === HingeStatus.UNKNOWN ? 0 : (Math.PI - angle) / 2;
+  });
+
   const leftStyle = useAnimatedStyle(() => ({
-    transform: [
-      { perspective: 600 },
-      // highlight-next-line
-      { rotateY: `${(Math.PI - hinge.sensor.value.angle) / 2}rad` },
-    ],
+    transform: [{ perspective: 600 }, { rotateY: `${foldAngle.value}rad` }],
   }));
 
   const rightStyle = useAnimatedStyle(() => ({
-    transform: [
-      { perspective: 600 },
-      // highlight-next-line
-      { rotateY: `${-(Math.PI - hinge.sensor.value.angle) / 2}rad` },
-    ],
+    transform: [{ perspective: 600 }, { rotateY: `${-foldAngle.value}rad` }],
   }));
 
   return (
