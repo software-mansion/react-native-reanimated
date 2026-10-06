@@ -1,0 +1,1 @@
+Layout, entering, and exiting animations with a `withSequence` of timings whose phases each have a duration (for example the Bounce presets, `SequencedTransition`, `JumpingTransition`, and `Keyframe` with more than one point) play natively on their declared timeline on iOS with the `IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION` flag.

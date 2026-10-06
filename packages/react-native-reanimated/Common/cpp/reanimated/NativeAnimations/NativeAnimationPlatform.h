@@ -42,8 +42,8 @@ using MountedAnimationResolution = std::variant<std::unique_ptr<MountedAnimation
 struct PlaybackMember {
   /// The platform name of what the member animates.
   std::string property;
-  std::vector<double> from;
-  std::vector<double> to;
+  /// The components of the value at the start and at the end of each segment.
+  std::vector<std::vector<double>> values;
 };
 
 /// The components of the model value and of the value on screen. For a transform they are the 16 cells of
