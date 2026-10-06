@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React, { Dispatch, useId } from 'react';
+import React, { Dispatch, useId, useState } from 'react';
 import styles from './styles.module.css';
 
 import BrowserOnly from '@docusaurus/BrowserOnly';
@@ -199,6 +199,8 @@ export function Range({
   label,
   step = 1,
 }: RangeProps) {
+  const [draft, setDraft] = useState<string | null>(null);
+
   return (
     <>
       <div className={styles.row}>
@@ -210,12 +212,15 @@ export function Range({
           size="small"
           slotProps={{ htmlInput: { min: min, max: max, step: step } }}
           sx={TextFieldStyling}
-          value={value}
+          value={draft ?? value}
+          onBlur={() => setDraft(null)}
           onChange={(e) => {
             const newValue = parseFloat(e.target.value);
             if (!Number.isFinite(newValue)) {
+              setDraft(e.target.value);
               return;
             }
+            setDraft(null);
             onChange(newValue > max ? max : newValue <= min ? min : newValue);
           }}
         />
