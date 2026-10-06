@@ -30,10 +30,15 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
  private:
   static constexpr size_t MIN_UNMOUNTED_FAMILIES_PRUNE_THRESHOLD = 256;
 
+  struct KeyOrigins {
+    bool writtenByAnimatedProps = false;
+    bool writtenByAnimatedStyle = false;
+    bool lastWrittenByAnimatedStyle = false;
+  };
+
   struct WriteHistory {
     double lastWriteTimestamp = 0;
-    std::unordered_set<std::string> animatedPropsKeys;
-    std::unordered_set<std::string> animatedStyleKeys;
+    std::unordered_map<std::string, KeyOrigins> keyOrigins;
   };
 
   // Kept after eviction of the registry entry, until `removeTag`. Each sync
