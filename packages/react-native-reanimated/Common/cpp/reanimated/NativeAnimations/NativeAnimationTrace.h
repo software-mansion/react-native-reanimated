@@ -31,6 +31,9 @@ enum class TraceEventType : uint8_t {
   ClientEnded,
   /// Layout keeps the animation of a build frame-driven. The event gives the reason.
   LayoutBuildFailed,
+  /// Layout keeps an animation frame-driven and makes no build for the native route. The result of the event
+  /// gives the reason.
+  LayoutStartRefused,
   /// A layout animation build got the value of the key of a live track at the time of its batch.
   LayoutLeafCaptured,
 };
@@ -52,6 +55,9 @@ struct TraceEvent {
   std::optional<int64_t> transactionNumber;
   /// The value of the layout animation key that a capture got.
   std::optional<double> leafValue;
+  /// The name that the layout domain gives to the type of the animation of a pending start, a refused start,
+  /// or a build failure.
+  std::optional<std::string_view> layoutAnimationType;
 };
 
 std::string_view toString(TraceEventType event);

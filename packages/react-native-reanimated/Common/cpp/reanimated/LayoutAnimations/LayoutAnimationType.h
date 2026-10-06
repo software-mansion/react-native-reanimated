@@ -11,6 +11,13 @@ typedef enum class LayoutAnimationType : std::uint8_t {
   PROGRESS = 6,
 } LayoutAnimationType;
 
+#ifndef NDEBUG
+/// The roadmap objective that gave the native route to the type, for the development trace.
+inline std::uint8_t traceObjectiveOf(const LayoutAnimationType type) {
+  return type == LayoutAnimationType::LAYOUT ? 7 : 11;
+}
+#endif
+
 inline bool needsFinalFrameReconciliation(const LayoutAnimationType type) {
   return type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION && type != LayoutAnimationType::PROGRESS;
 }
