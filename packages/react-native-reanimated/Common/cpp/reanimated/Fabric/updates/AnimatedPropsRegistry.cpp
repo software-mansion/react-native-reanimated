@@ -57,9 +57,8 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
       addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates);
     } else {
       const auto dynamicUpdates = jsi::dynamicFromValue(rt, updates);
-      // When USE_ANIMATION_BACKEND is enabled, updates bypass `updatesRegistry_`,
-      // so entries added to `writeHistories_` would never be synced and thus never
-      // evicted, leaking until view unmount.
+      // With USE_ANIMATION_BACKEND, no update reaches `updatesRegistry_`, so
+      // `collectSettledUpdates` never reads `writeHistories_`.
       if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
         const bool isAnimatedProps = item.getProperty(rt, "isAnimatedProps").asBool();
         trackUpdate(shadowNode->getTag(), dynamicUpdates, isAnimatedProps, timestamp);
@@ -119,7 +118,6 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const 
       // entry is redundant. `syncedTags_` is intentionally retained to detect
       // re-animation staleness. Note that `syncedTags_` and `invalidatedTags_`
       // are disjoint — `update()` moves tags from the former to the latter.
-      writeHistories_.erase(viewTag);
       it = updatesRegistry_.erase(it);
       continue;
     }

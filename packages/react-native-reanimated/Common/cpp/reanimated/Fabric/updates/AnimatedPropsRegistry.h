@@ -28,6 +28,8 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
     std::unordered_set<std::string> animatedStyleKeys;
   };
 
+  // Kept after eviction of the registry entry, until `removeTag`. Each sync
+  // must send a key to the same React fields as the syncs before it.
   std::unordered_map<Tag, WriteHistory> writeHistories_;
   // Tags whose latest values have already been pushed to React `settledProps`.
   // Intentionally retained after eviction to detect re-animation staleness.
