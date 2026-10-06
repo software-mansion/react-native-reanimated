@@ -563,6 +563,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::onGestureCancel(int tag) {
     return {};
   }
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  markScreenVisible(tag);
   if (isUncommittedScreenPopSource(tag)) {
     return cancelUncommittedScreenPop();
   }
@@ -595,12 +596,18 @@ std::optional<SurfaceId> LayoutAnimationsProxy::onGestureCancel(int tag) {
 }
 
 void LayoutAnimationsProxy::updateVisibleScreens(const int tag, const double progress, const bool isClosing) const {
-  if (progress != 1 || !lightNodes_.contains(tag)) {
+  if (progress != 1) {
     return;
   }
   if (isClosing) {
     visibleScreens_.erase(tag);
   } else {
+    markScreenVisible(tag);
+  }
+}
+
+void LayoutAnimationsProxy::markScreenVisible(const int tag) const {
+  if (lightNodes_.contains(tag)) {
     visibleScreens_.insert(tag);
   }
 }

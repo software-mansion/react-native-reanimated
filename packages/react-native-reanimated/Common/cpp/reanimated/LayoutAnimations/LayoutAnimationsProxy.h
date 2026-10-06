@@ -118,8 +118,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   // screens that forceScreenSnapshot_ switched to snapshots after updates; React Native Screens never switches them
   // back
   mutable std::unordered_set<Tag> snapshottedScreens_;
-  // A screen is visible from the end of its appear transition to the end of its
-  // disappear transition. Only a visible screen can be the source of a back transition.
+  // A screen becomes visible when its appear transition ends or its dismiss gesture is cancelled.
+  // It stays visible until its disappear transition ends. Only a visible screen can be the source
+  // of a back transition.
   mutable std::unordered_set<Tag> visibleScreens_;
   mutable std::unordered_map<SharedTag, SharedElement> sharedElements_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
@@ -233,6 +234,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) override;
   std::optional<SurfaceId> onGestureCancel(int tag) override;
   void updateVisibleScreens(int tag, double progress, bool isClosing) const;
+  void markScreenVisible(int tag) const;
   bool isUncommittedScreenPopSource(int tag) const;
   std::optional<SurfaceId> cancelUncommittedScreenPop() const;
   void shadowTreeWillCommit(bool isSurfaceRemoval) override;
