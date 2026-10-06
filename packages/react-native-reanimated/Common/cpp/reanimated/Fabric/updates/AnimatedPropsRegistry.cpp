@@ -7,7 +7,6 @@
 
 #include <memory>
 #include <string>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -27,18 +26,6 @@ static void roundTextMetrics(jsi::Runtime &rt, const jsi::Value &updates) {
       object.setProperty(rt, propName, roundTextMetric(value.asNumber()));
     }
   }
-}
-
-static jsi::Object
-pickProps(jsi::Runtime &rt, const folly::dynamic &props, const std::unordered_set<std::string> &keys) {
-  jsi::Object pickedProps(rt);
-  for (const auto &[key, value] : props.items()) {
-    const auto &keyString = key.getString();
-    if (keys.contains(keyString)) {
-      pickedProps.setProperty(rt, keyString.c_str(), jsi::valueFromDynamic(rt, value));
-    }
-  }
-  return pickedProps;
 }
 
 void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp) {
@@ -76,9 +63,14 @@ void AnimatedPropsRegistry::trackUpdate(
   auto &writeHistory = writeHistories_[tag];
   writeHistory.lastWriteTimestamp = timestamp;
 
-  auto &writtenKeys = isAnimatedProps ? writeHistory.animatedPropsKeys : writeHistory.animatedStyleKeys;
   for (const auto &key : updates.keys()) {
-    writtenKeys.insert(key.getString());
+    auto &keyOrigins = writeHistory.keyOrigins[key.getString()];
+    if (isAnimatedProps) {
+      keyOrigins.writtenByAnimatedProps = true;
+    } else {
+      keyOrigins.writtenByAnimatedStyle = true;
+    }
+    keyOrigins.lastWrittenByAnimatedStyle = !isAnimatedProps;
   }
 
   invalidateSyncedTag(tag);
@@ -97,10 +89,39 @@ jsi::Object AnimatedPropsRegistry::createSettledUpdate(
     const Tag viewTag,
     const folly::dynamic &props,
     const WriteHistory &writeHistory) {
+  jsi::Object settledProps(rt);
+  jsi::Object settledStyle(rt);
+  std::vector<const std::string *> keysLastWrittenByAnimatedStyle;
+
+  for (const auto &[key, value] : props.items()) {
+    const auto &keyString = key.getString();
+    const auto keyOriginsIt = writeHistory.keyOrigins.find(keyString);
+    if (keyOriginsIt == writeHistory.keyOrigins.end()) {
+      continue;
+    }
+    const auto &keyOrigins = keyOriginsIt->second;
+    if (keyOrigins.writtenByAnimatedProps) {
+      settledProps.setProperty(rt, keyString.c_str(), jsi::valueFromDynamic(rt, value));
+    }
+    if (keyOrigins.writtenByAnimatedStyle) {
+      settledStyle.setProperty(rt, keyString.c_str(), jsi::valueFromDynamic(rt, value));
+    }
+    if (keyOrigins.lastWrittenByAnimatedStyle) {
+      keysLastWrittenByAnimatedStyle.push_back(&keyString);
+    }
+  }
+
+  jsi::Array keysLastWrittenByAnimatedStyleArray(rt, keysLastWrittenByAnimatedStyle.size());
+  for (size_t i = 0; i < keysLastWrittenByAnimatedStyle.size(); ++i) {
+    keysLastWrittenByAnimatedStyleArray.setValueAtIndex(
+        rt, i, jsi::String::createFromUtf8(rt, *keysLastWrittenByAnimatedStyle[i]));
+  }
+
   jsi::Object settledUpdate(rt);
   settledUpdate.setProperty(rt, "viewTag", viewTag);
-  settledUpdate.setProperty(rt, "props", pickProps(rt, props, writeHistory.animatedPropsKeys));
-  settledUpdate.setProperty(rt, "style", pickProps(rt, props, writeHistory.animatedStyleKeys));
+  settledUpdate.setProperty(rt, "props", std::move(settledProps));
+  settledUpdate.setProperty(rt, "style", std::move(settledStyle));
+  settledUpdate.setProperty(rt, "keysLastWrittenByAnimatedStyle", std::move(keysLastWrittenByAnimatedStyleArray));
   return settledUpdate;
 }
 

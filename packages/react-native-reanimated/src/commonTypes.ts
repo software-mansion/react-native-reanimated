@@ -395,6 +395,7 @@ export type SettledUpdate = {
   viewTag: number;
   props: StyleProps;
   style: StyleProps;
+  keysLastWrittenByAnimatedStyle: string[];
 };
 
 export enum KeyboardState {
