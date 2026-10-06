@@ -1,10 +1,15 @@
 'use strict';
+import type { EasingCurveFits } from '../animation/nativeEasingCurve';
+import { fitEasingCurveOnce } from '../animation/nativeEasingCurve';
 import { withPlainValue } from '../animation/styleAnimation';
 import { recognizePrefixSuffix } from '../animation/utilCommon';
 import type {
   AnimationObject,
-  NativeLeafTiming,
+  NativeEasing,
+  NativeLeafSegment,
+  NativeLeafTrack,
   NativeTimingDescription,
+  NativeTimingPhase,
   NativeTransformOperation,
 } from '../commonTypes';
 
@@ -22,9 +27,15 @@ export type TransformOperationLeaf = Record<string, AnimationObject>;
 /** The animation of a scalar key, or the operations of `transform`. */
 export type NativeLeaf = AnimationObject | TransformOperationLeaf[];
 
-type LeafSummary = { initialValue: unknown; timing?: NativeLeafTiming };
-type AnimationTiming = NativeLeafTiming<number | string>;
-type TimingCurve = Pick<NativeTimingDescription, 'durationMs' | 'cubicBezier'>;
+type LeafSummary = { initialValue: unknown; track?: NativeLeafTrack };
+
+/** The sum of the holds of a leaf, then its one timing. */
+type LeafTimeline = { delayMs: number; timing: NativeTimingPhase };
+
+/** The easing of a timing in segments of progress from 0 to 1. */
+type ProgressSegment = Omit<NativeLeafSegment, 'endValue'> & {
+  endProgress: number;
+};
 
 const ANGLE_KINDS = ['rotate', 'rotateX', 'rotateY', 'rotateZ'];
 const RADIANS_IN_UNIT: Record<string, number> = {
@@ -32,43 +43,170 @@ const RADIANS_IN_UNIT: Record<string, number> = {
   rad: 1,
 };
 
+const PROGRESS_TOLERANCE = 0.001;
+const POINTS_TOLERANCE = 0.25;
+const KEYS_IN_POINTS = ['originX', 'originY', 'width', 'height'];
+const STRAIGHT_LINE: ProgressSegment[] = [{ endOffset: 1, endProgress: 1 }];
+const AT_REST: LeafTimeline = {
+  delayMs: 0,
+  timing: {
+    kind: 'timing',
+    durationMs: 0,
+    toValue: 0,
+    easing: { kind: 'linear' },
+  },
+};
+
 function kindOf(operation: TransformOperationLeaf): string {
   'worklet';
   return Object.keys(operation)[0];
 }
 
+function timingOf(
+  description: NativeTimingDescription | undefined
+): NativeTimingPhase | undefined {
+  'worklet';
+  const lastPhase = description?.phases[description.phases.length - 1];
+  return lastPhase?.kind === 'timing' ? lastPhase : undefined;
+}
+
+function hasSameEasing(live: NativeEasing, next: NativeEasing): boolean {
+  'worklet';
+  if (live.kind === 'cubicBezier' && next.kind === 'cubicBezier') {
+    return live.controlPoints.every(
+      (point, index) => point === next.controlPoints[index]
+    );
+  }
+  if (live.kind === 'function' && next.kind === 'function') {
+    return live.easing === next.easing;
+  }
+  return live.kind === next.kind;
+}
+
 function hasSameCurve(
-  live: TimingCurve | undefined,
-  next: TimingCurve | undefined
+  live: NativeTimingPhase | undefined,
+  next: NativeTimingPhase | undefined
 ): boolean {
   'worklet';
-  if (!live || !next || live.durationMs !== next.durationMs) {
-    return false;
-  }
-  const liveBezier = live.cubicBezier;
-  const nextBezier = next.cubicBezier;
-  if (!liveBezier || !nextBezier) {
-    return liveBezier === nextBezier;
-  }
-  return liveBezier.every((point, index) => point === nextBezier[index]);
+  return (
+    !!live &&
+    !!next &&
+    live.durationMs === next.durationMs &&
+    hasSameEasing(live.easing, next.easing)
+  );
 }
 
 function hasUnit(animation: AnimationObject): boolean {
   'worklet';
-  return typeof animation.__nativeTiming?.toValue === 'string';
+  return typeof timingOf(animation.__nativeTiming)?.toValue === 'string';
 }
 
-function timingOf(animation: unknown): AnimationTiming | undefined {
+function timelineOf(animation: unknown): LeafTimeline | undefined {
   'worklet';
   const { reduceMotion, __nativeTiming } = (animation ?? {}) as AnimationObject;
   if (reduceMotion || !__nativeTiming) {
     return undefined;
   }
-  const { delaysMs, ...timing } = __nativeTiming;
-  return {
-    ...timing,
-    delayMs: delaysMs.reduce((sum, each) => sum + each, 0),
-  };
+  const { phases } = __nativeTiming;
+  let delayMs = 0;
+  let index = 0;
+  while (phases[index].kind === 'hold') {
+    delayMs += phases[index++].durationMs;
+  }
+  const timing = phases[index];
+  return index === phases.length - 1 && timing.kind === 'timing'
+    ? { delayMs, timing }
+    : undefined;
+}
+
+/** The end of each phase but the last, from the start of the animation. */
+function stepTimesOf(description: NativeTimingDescription | undefined) {
+  'worklet';
+  const stepTimes: number[] = [];
+  let phaseEnd = 0;
+  for (const { durationMs } of description?.phases.slice(0, -1) ?? []) {
+    phaseEnd += durationMs;
+    stepTimes.push(phaseEnd);
+  }
+  return stepTimes;
+}
+
+/**
+ * Has no result for an easing function with no fit. The control points of a
+ * fitted segment make its easing a cubic polynomial of time.
+ */
+function progressSegmentsOf(
+  easing: NativeEasing,
+  tolerance: number,
+  fits: EasingCurveFits
+): ProgressSegment[] | undefined {
+  'worklet';
+  if (easing.kind === 'linear') {
+    return STRAIGHT_LINE;
+  }
+  if (easing.kind === 'cubicBezier') {
+    return [
+      { endOffset: 1, endProgress: 1, cubicBezier: easing.controlPoints },
+    ];
+  }
+  const segments: ProgressSegment[] = [];
+  let startProgress = 0;
+  const pieces = fitEasingCurveOnce(fits, easing.easing, tolerance) ?? [];
+  for (const piece of pieces) {
+    const { endOffset, endProgress, controlProgress } = piece;
+    const rise = endProgress - startProgress;
+    const controlOf = (control: number) => (control - startProgress) / rise;
+    segments.push(
+      rise === 0
+        ? { endOffset, endProgress }
+        : {
+            endOffset,
+            endProgress,
+            cubicBezier: [
+              1 / 3,
+              controlOf(controlProgress[0]),
+              2 / 3,
+              controlOf(controlProgress[1]),
+            ],
+          }
+    );
+    startProgress = endProgress;
+  }
+  return segments.length > 0 ? segments : undefined;
+}
+
+/**
+ * `valueAt` gives the value of the leaf at a progress of its timing. A leaf
+ * that does not change its value, or that has no duration, needs no easing.
+ */
+function trackOf<TValue>(
+  { delayMs, timing }: LeafTimeline,
+  changesValue: boolean,
+  tolerance: number,
+  fits: EasingCurveFits,
+  valueAt: (progress: number) => TValue
+): NativeLeafTrack<TValue> | undefined {
+  'worklet';
+  const { durationMs, easing } = timing;
+  const segments =
+    changesValue && durationMs > 0
+      ? progressSegmentsOf(easing, tolerance, fits)
+      : STRAIGHT_LINE;
+  return (
+    segments && {
+      delayMs,
+      durationMs,
+      segments: segments.map(({ endProgress, ...segment }) => ({
+        ...segment,
+        endValue: valueAt(endProgress),
+      })),
+    }
+  );
+}
+
+function valueBetween(start: number, end: number, progress: number): number {
+  'worklet';
+  return progress === 1 ? end : start + (end - start) * progress;
 }
 
 /**
@@ -99,19 +237,9 @@ function hasSameUnit(start: unknown, end: unknown): boolean {
   );
 }
 
-function isAtRest({ durationMs, delayMs }: AnimationTiming): boolean {
+function isAtRest({ delayMs, timing }: LeafTimeline): boolean {
   'worklet';
-  return durationMs === 0 && delayMs === 0;
-}
-
-/** The end of each delay of an animation, from its start. */
-function delayEndsOf(animation: AnimationObject): number[] {
-  'worklet';
-  let delayEnd = 0;
-  return (animation.__nativeTiming?.delaysMs ?? []).map((delayMs) => {
-    delayEnd += delayMs;
-    return delayEnd;
-  });
+  return timing.durationMs === 0 && delayMs === 0;
 }
 
 function advanceAnimation(
@@ -124,13 +252,13 @@ function advanceAnimation(
   if (animation.finished) {
     return;
   }
-  animation.onStart(animation, initialValue, originMs, undefined);
-  // A delay starts its animation in the frame in which the delay ends.
-  for (const delayEnd of delayEndsOf(animation)) {
-    if (originMs + delayEnd >= now) {
+  animation.onStart(animation, initialValue, originMs, null);
+  // A wrapper starts its next animation in the frame in which a phase ends.
+  for (const stepTime of stepTimesOf(animation.__nativeTiming)) {
+    if (originMs + stepTime >= now) {
       break;
     }
-    animation.onFrame(animation, originMs + delayEnd);
+    animation.onFrame(animation, originMs + stepTime);
   }
   if (animation.onFrame(animation, now)) {
     animation.finished = true;
@@ -169,77 +297,127 @@ function relateAnimations(
   if (!keepsStartTime) {
     return 'replaces';
   }
-  return hasSameCurve(live.__nativeTiming, next.__nativeTiming)
+  return hasSameCurve(
+    timingOf(live.__nativeTiming),
+    timingOf(next.__nativeTiming)
+  )
     ? 'continues'
     : 'frameDriver';
 }
 
 /**
- * The native form has one timing for all operations. An operation with no delay
- * and no duration has its end value from the start.
+ * The native form has one timeline for all operations. An operation with no
+ * delay and no duration has its end value from the start.
  */
 function summarizeTransformLeaf(
   initialValue: unknown,
-  leaf: Record<string, unknown>[]
+  leaf: Record<string, unknown>[],
+  fits: EasingCurveFits
 ): LeafSummary {
   'worklet';
   const starts: NativeTransformOperation[] = [];
   const ends: NativeTransformOperation[] = [];
-  const timings: (AnimationTiming | undefined)[] = [];
+  const timelines: (LeafTimeline | undefined)[] = [];
   for (let index = 0; index < leaf.length; index++) {
     const kinds = Object.keys(leaf[index] ?? {});
     const kind = kinds[0];
-    const timing = timingOf(leaf[index]?.[kind]);
+    const timeline = timelineOf(leaf[index]?.[kind]);
+    const toValue = timeline?.timing.toValue;
     const initial = (initialValue as Record<string, unknown>[] | undefined)?.[
       index
     ]?.[kind];
     const start = nativeScalarOf(kind, initial);
-    const end = timing ? nativeScalarOf(kind, timing.toValue) : start;
+    const end = timeline ? nativeScalarOf(kind, toValue) : start;
     const hasNativeValues =
       kinds.length === 1 &&
       start !== undefined &&
       end !== undefined &&
-      (!timing || hasSameUnit(initial, timing.toValue));
+      (!timeline || hasSameUnit(initial, toValue));
     if (!hasNativeValues) {
       return { initialValue: undefined };
     }
-    const startsAtEnd = timing !== undefined && isAtRest(timing);
+    const startsAtEnd = timeline !== undefined && isAtRest(timeline);
     starts.push({ kind, value: startsAtEnd ? end : start });
     ends.push({ kind, value: end });
-    timings.push(timing);
+    timelines.push(timeline);
   }
-  const moving = timings.filter(
-    (timing): timing is AnimationTiming => !!timing && !isAtRest(timing)
+  const moving = timelines.filter(
+    (timeline): timeline is LeafTimeline => !!timeline && !isAtRest(timeline)
   );
-  const shared = moving[0] ?? { durationMs: 0, delayMs: 0 };
-  const hasOneTiming =
-    !timings.includes(undefined) &&
+  const shared = moving[0] ?? AT_REST;
+  const hasOneTimeline =
+    !timelines.includes(undefined) &&
     moving.every(
-      (timing) =>
-        timing.delayMs === shared.delayMs && hasSameCurve(timing, shared)
+      ({ delayMs, timing }) =>
+        delayMs === shared.delayMs && hasSameCurve(timing, shared.timing)
     );
-  if (!hasOneTiming) {
+  if (!hasOneTimeline) {
     return { initialValue: starts };
   }
-  return { initialValue: starts, timing: { ...shared, toValue: ends } };
+  const changesValue = starts.some(
+    ({ value }, index) => value !== ends[index].value
+  );
+  const track = trackOf(
+    shared,
+    changesValue,
+    PROGRESS_TOLERANCE,
+    fits,
+    (progress) =>
+      starts.map(({ kind, value }, index) => ({
+        kind,
+        value: valueBetween(value, ends[index].value, progress),
+      }))
+  );
+  return { initialValue: starts, track };
 }
 
 /**
- * What the native route reads from a leaf of a builder result. A scalar leaf
- * has a timing only for an end value that is a number.
+ * The tolerance of the fit of an easing function, as a part of the change of
+ * the value: 0.001, and for a value in points no more than 0.25 pt. Each
+ * smaller tolerance is a half of the one before it, so that one function has
+ * few fits.
+ */
+function fitToleranceOf(key: string, change: number): number {
+  'worklet';
+  const halvings = KEYS_IN_POINTS.includes(key)
+    ? Math.ceil(Math.log2((change * PROGRESS_TOLERANCE) / POINTS_TOLERANCE))
+    : 0;
+  return PROGRESS_TOLERANCE / 2 ** Math.max(0, halvings);
+}
+
+/**
+ * What the native route reads from the leaf of `key` of a builder result. A
+ * scalar leaf has a track only when its values are numbers. `fits` keeps the
+ * fit of each easing function.
  */
 export function summarizeNativeLeaf(
+  key: string,
   initialValue: unknown,
-  leaf: unknown
+  leaf: unknown,
+  fits: EasingCurveFits
 ): LeafSummary {
   'worklet';
   if (Array.isArray(leaf)) {
-    return summarizeTransformLeaf(initialValue, leaf);
+    return summarizeTransformLeaf(initialValue, leaf, fits);
   }
-  const timing = timingOf(leaf);
-  return typeof timing?.toValue === 'number'
-    ? { initialValue, timing: timing as NativeLeafTiming }
-    : { initialValue };
+  const timeline = timelineOf(leaf);
+  const end = timeline?.timing.toValue;
+  if (
+    !timeline ||
+    typeof end !== 'number' ||
+    typeof initialValue !== 'number'
+  ) {
+    return { initialValue };
+  }
+  const change = Math.abs(end - initialValue);
+  const track = trackOf(
+    timeline,
+    change > 0,
+    fitToleranceOf(key, change),
+    fits,
+    (progress) => valueBetween(initialValue, end, progress)
+  );
+  return { initialValue, track };
 }
 
 /** The frame driver gives each operation that is a plain value an animation. */
@@ -285,18 +463,20 @@ export function advanceNativeLeaf(
 }
 
 /**
- * The times, from the start of the leaves, at which a delay of one of them
- * ends. The earliest time is first.
+ * The times, from the start of the leaves, at which a phase of one of them ends
+ * and another phase follows. The earliest time is first.
  */
-export function delayEndsOfLeaves(leaves: NativeLeaf[]): number[] {
+export function phaseEndsOf(leaves: NativeLeaf[]): number[] {
   'worklet';
   const animations = leaves.flatMap((leaf) =>
     Array.isArray(leaf)
       ? leaf.map((operation) => operation[kindOf(operation)])
       : [leaf]
   );
-  const delayEnds = animations.flatMap(delayEndsOf);
-  return [...new Set(delayEnds)].sort((first, second) => first - second);
+  const phaseEnds = animations.flatMap((animation) =>
+    stepTimesOf(animation.__nativeTiming)
+  );
+  return [...new Set(phaseEnds)].sort((first, second) => first - second);
 }
 
 /** The value on screen of a leaf that `advanceNativeLeaf` brought to a time. */

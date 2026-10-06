@@ -80,7 +80,14 @@ function makePendingConfig(callback: jest.Mock) {
   });
 }
 
-const LIMITS = { leaves: 3, transformOperations: 4 };
+const LIMITS = { leaves: 3, transformOperations: 4, segments: 8 };
+
+const linearPhase = (toValue: number | string, durationMs: number) => ({
+  kind: 'timing',
+  durationMs,
+  toValue,
+  easing: { kind: 'linear' },
+});
 
 const onUIRuntime = <T>(create: () => T): T => {
   const runtimeKind = globalThis.__RUNTIME_KIND;
@@ -243,11 +250,17 @@ describe('LayoutAnimationsManager', () => {
         initialValues: { originX: 5, opacity: 1 },
         animations: {
           originX: {
-            __nativeTiming: { toValue: 9, delaysMs: [10, 20] },
+            __nativeTiming: {
+              phases: [
+                { kind: 'hold', durationMs: 10 },
+                { kind: 'hold', durationMs: 20 },
+                linearPhase(9, 100),
+              ],
+            },
           } as unknown as number,
           originY: {
             reduceMotion: true,
-            __nativeTiming: {},
+            __nativeTiming: { phases: [linearPhase(9, 100)] },
           } as unknown as number,
         },
       }));
@@ -261,7 +274,11 @@ describe('LayoutAnimationsManager', () => {
           {
             key: 'originX',
             initialValue: 5,
-            timing: { toValue: 9, delayMs: 30 },
+            track: {
+              delayMs: 30,
+              durationMs: 100,
+              segments: [{ endOffset: 1, endValue: 9 }],
+            },
             continuesLiveLeaf: false,
           },
           { key: 'originY', initialValue: undefined },
@@ -269,12 +286,12 @@ describe('LayoutAnimationsManager', () => {
       });
     });
 
-    test('a scalar leaf whose end value is a string has no timing', () => {
+    test('a scalar leaf whose end value is a string has no track', () => {
       const summary = summaryOf(6, () => ({
         initialValues: { originX: 5 },
         animations: {
           originX: {
-            __nativeTiming: { toValue: '9px', durationMs: 100, delaysMs: [] },
+            __nativeTiming: { phases: [linearPhase('9px', 100)] },
           } as unknown as number,
         },
       }));
@@ -355,7 +372,11 @@ describe('LayoutAnimationsManager', () => {
         {
           key: 'opacity',
           initialValue: 0,
-          timing: { toValue: 1, durationMs: 400, delayMs: 0 },
+          track: {
+            delayMs: 0,
+            durationMs: 400,
+            segments: [{ endOffset: 1, endValue: 1 }],
+          },
           continuesLiveLeaf: false,
         },
       ]);
@@ -363,7 +384,11 @@ describe('LayoutAnimationsManager', () => {
         {
           key: 'originX',
           initialValue: -370,
-          timing: { toValue: 30, durationMs: 400, delayMs: 0 },
+          track: {
+            delayMs: 0,
+            durationMs: 400,
+            segments: [{ endOffset: 1, endValue: 30 }],
+          },
           continuesLiveLeaf: false,
         },
       ]);
@@ -377,7 +402,7 @@ describe('LayoutAnimationsManager', () => {
       const entering = linear(new FadeIn()).delay(800).randomDelay().build();
 
       const delays = [leavesOf(entering), leavesOf(entering)].map(
-        (leaves) => leaves?.[0].timing?.delayMs
+        (leaves) => leaves?.[0].track?.delayMs
       );
       random.mockRestore();
 
@@ -387,14 +412,14 @@ describe('LayoutAnimationsManager', () => {
     test('a negative delay of a preset is no delay', () => {
       const leaves = leavesOf(linear(new FadeIn()).delay(-500).build());
 
-      expect(leaves?.[0].timing).toEqual({
-        toValue: 1,
-        durationMs: 400,
+      expect(leaves?.[0].track).toEqual({
         delayMs: 0,
+        durationMs: 400,
+        segments: [{ endOffset: 1, endValue: 1 }],
       });
     });
 
-    test('a preset with reduced motion has no timing', () => {
+    test('a preset with reduced motion has no track', () => {
       const withDelayWrapper = linear(new FadeIn())
         .delay(100)
         .reduceMotion(ReduceMotion.Always);
@@ -402,8 +427,236 @@ describe('LayoutAnimationsManager', () => {
         ReduceMotion.Always
       );
 
-      expect(leavesOf(withDelayWrapper.build())?.[0].timing).toBeUndefined();
-      expect(leavesOf(withoutDelayWrapper.build())?.[0].timing).toBeUndefined();
+      expect(leavesOf(withDelayWrapper.build())?.[0].track).toBeUndefined();
+      expect(leavesOf(withoutDelayWrapper.build())?.[0].track).toBeUndefined();
+    });
+  });
+
+  describe('tracks of an easing function', () => {
+    type Segment = {
+      endOffset: number;
+      endValue: unknown;
+      cubicBezier?: number[];
+    };
+    let lastBuildId = 200;
+    const summaryOf = (
+      key: string,
+      initial: unknown,
+      create: () => unknown,
+      limits = LIMITS
+    ) => {
+      const buildId = ++lastBuildId;
+      const summary = manager.build(
+        buildId,
+        {},
+        () =>
+          ({
+            initialValues: { [key]: initial },
+            animations: { [key]: onUIRuntime(create) },
+          }) as LayoutAnimation,
+        limits,
+        []
+      );
+      manager.releaseBuilt(buildId);
+      return summary!;
+    };
+    const segmentsOf = (...args: Parameters<typeof summaryOf>) =>
+      summaryOf(...args).leaves[0].track?.segments as Segment[] | undefined;
+    const counted = (easing: (time: number) => number) => {
+      const counter = { calls: 0 };
+      return {
+        counter,
+        easing: (time: number) => {
+          counter.calls++;
+          return easing(time);
+        },
+      };
+    };
+    /** The value of a track of numbers at a part of its duration. */
+    const valueAt = (start: number, segments: Segment[], time: number) => {
+      let offset = 0;
+      let value = start;
+      for (const { endOffset, endValue, cubicBezier } of segments) {
+        if (time <= endOffset) {
+          const [x1, y1, x2, y2] = cubicBezier ?? [1 / 3, 1 / 3, 2 / 3, 2 / 3];
+          expect([x1, x2]).toEqual([1 / 3, 2 / 3]);
+          const u = (time - offset) / (endOffset - offset);
+          const progress =
+            3 * (1 - u) * (1 - u) * u * y1 + 3 * (1 - u) * u * u * y2 + u ** 3;
+          return value + ((endValue as number) - value) * progress;
+        }
+        offset = endOffset;
+        value = endValue as number;
+      }
+      return NaN;
+    };
+
+    test('the default easing is two segments that are exact', () => {
+      const segments = segmentsOf('opacity', 0, () =>
+        withTiming(1, { duration: 400 })
+      )!;
+      expect(segments).toHaveLength(2);
+      expect(segments.map(({ endOffset }) => endOffset)).toEqual([0.5, 1]);
+      expect(segments.map(({ endValue }) => endValue)).toEqual([0.5, 1]);
+      [1 / 3, 0, 2 / 3, 1 / 3].forEach((point, index) =>
+        expect(segments[0].cubicBezier![index]).toBeCloseTo(point, 12)
+      );
+      [1 / 3, 2 / 3, 2 / 3, 1].forEach((point, index) =>
+        expect(segments[1].cubicBezier![index]).toBeCloseTo(point, 12)
+      );
+    });
+
+    test.each([
+      ['Easing.bounce', Easing.bounce, 0.1],
+      ['Easing.out(Easing.back(1.7))', Easing.out(Easing.back(1.7)), 1e-9],
+      ['Easing.elastic(2)', Easing.elastic(2), 0.1],
+    ])(
+      'the track of %s is the value of the frame driver at each time',
+      (_, easing, tolerance) => {
+        const segments = segmentsOf(
+          'originX',
+          20,
+          () => withTiming(120, { easing }),
+          { ...LIMITS, segments: 64 }
+        )!;
+        for (let index = 0; index <= 1000; index++) {
+          const time = index / 1000;
+          const difference =
+            valueAt(20, segments, time) - (20 + 100 * easing(time));
+          expect(Math.abs(difference)).toBeLessThanOrEqual(tolerance);
+        }
+      }
+    );
+
+    test('a longer travel in points gives more segments, and a value that is not in points does not', () => {
+      const counts = (key: string) =>
+        [100, 2500].map(
+          (end) =>
+            segmentsOf(key, 0, () => withTiming(end, { easing: Easing.sin }))
+              ?.length
+        );
+      expect(counts('originX')).toEqual([2, 4]);
+      expect(counts('width')).toEqual([2, 4]);
+      expect(counts('opacity')).toEqual([2, 2]);
+    });
+
+    test.each([
+      ['Easing.steps(4)', Easing.steps(4), 100],
+      ['Easing.circle', Easing.circle, 100],
+      ['Easing.exp over 251 pt', Easing.exp, 251],
+    ])('%s has no track', (_, easing, end) => {
+      expect(
+        segmentsOf('originX', 0, () => withTiming(end, { easing }))
+      ).toBeUndefined();
+    });
+
+    test('Easing.exp over 250 pt has a track', () => {
+      expect(
+        segmentsOf('originX', 0, () => withTiming(250, { easing: Easing.exp }))
+      ).toHaveLength(4);
+    });
+
+    test('a part of an easing with no change is a segment that keeps the value of the segment before it', () => {
+      const easing = (time: number) =>
+        time < 0.25 ? 2 * time : time < 0.75 ? 0.5 : 2 * time - 1;
+      const segments = segmentsOf('opacity', 0, () =>
+        withTiming(1, { easing })
+      )!;
+      expect(
+        segments.map(({ endOffset, endValue }) => [endOffset, endValue])
+      ).toEqual([
+        [0.25, 0.5],
+        [0.5, 0.5],
+        [0.75, 0.5],
+        [1, 1],
+      ]);
+      expect(segments[1].cubicBezier).toBeUndefined();
+      expect(segments[2].cubicBezier).toBeUndefined();
+    });
+
+    test.each([
+      ['a leaf with no duration', 0, 100, 0],
+      ['a leaf that does not change its value', 100, 100, 400],
+    ])(
+      '%s is one segment and the easing does not run',
+      (_, initial, end, duration) => {
+        const { counter, easing } = counted(Easing.bounce);
+        const segments = segmentsOf('originX', initial, () =>
+          withTiming(end, { duration, easing })
+        );
+        expect(segments).toEqual([{ endOffset: 1, endValue: end }]);
+        expect(counter.calls).toBe(0);
+      }
+    );
+
+    test('a leaf with the easing function and the tolerance of an earlier leaf uses the fit of that leaf', () => {
+      const { counter, easing } = counted(Easing.sin);
+      const animation = (end: number) => () => withTiming(end, { easing });
+      segmentsOf('opacity', 0, animation(1));
+      const callsOfFirstFit = counter.calls;
+      expect(callsOfFirstFit).toBeGreaterThan(0);
+
+      expect(segmentsOf('opacity', 0.5, animation(1))).toHaveLength(2);
+      expect(segmentsOf('originX', 0, animation(250))).toHaveLength(2);
+      expect(counter.calls).toBe(callsOfFirstFit);
+
+      segmentsOf('originX', 0, animation(251));
+      const callsOfSecondFit = counter.calls;
+      expect(callsOfSecondFit).toBeGreaterThan(callsOfFirstFit);
+      segmentsOf('originX', 0, animation(500));
+      expect(counter.calls).toBe(callsOfSecondFit);
+    });
+
+    test('more segments than the limit give no leaves', () => {
+      const withDefault = () => withTiming(1);
+      const limitOf = (segments: number) => ({ ...LIMITS, segments });
+      expect(summaryOf('opacity', 0, withDefault, limitOf(2))).toMatchObject({
+        exceedsLimit: false,
+      });
+      expect(summaryOf('opacity', 0, withDefault, limitOf(1))).toMatchObject({
+        exceedsLimit: true,
+        leaves: [],
+      });
+      expect(
+        summaryOf('opacity', 0, () => withTiming(1, { easing: Easing.bounce }))
+      ).toMatchObject({ exceedsLimit: true, leaves: [] });
+    });
+
+    test('the operations of a transform with the default easing have one track', () => {
+      const segments = segmentsOf(
+        'transform',
+        [{ scale: 0 }, { rotate: '0deg' }],
+        () => [{ scale: withTiming(1) }, { rotate: withTiming('90deg') }]
+      )!;
+      expect(segments.map(({ endOffset }) => endOffset)).toEqual([0.5, 1]);
+      expect(segments[0].endValue).toEqual([
+        { kind: 'scale', value: 0.5 },
+        { kind: 'rotate', value: Math.PI / 4 },
+      ]);
+      expect(segments[1].endValue).toEqual([
+        { kind: 'scale', value: 1 },
+        { kind: 'rotate', value: Math.PI / 2 },
+      ]);
+    });
+
+    test('operations with one easing function have one track, and with two functions they have none', () => {
+      const shared = Easing.out(Easing.quad);
+      const operations =
+        (first: typeof shared, second: typeof shared) => () => [
+          { scale: withTiming(1, { easing: first }) },
+          { translateX: withTiming(10, { easing: second }) },
+        ];
+      const initial = [{ scale: 0 }, { translateX: 0 }];
+      expect(
+        segmentsOf('transform', initial, operations(shared, shared))
+      ).toHaveLength(1);
+      expect(
+        segmentsOf(
+          'transform',
+          initial,
+          operations(shared, Easing.out(Easing.quad))
+        )
+      ).toBeUndefined();
     });
   });
 
@@ -592,6 +845,40 @@ describe('LayoutAnimationsManager', () => {
       expect(lastProgress()).toEqual({ originY: 100 });
     });
 
+    test('an easing with mutable state: the track is the fit of the build, a later build has the same fit, and the frame driver reads the state in each frame', () => {
+      const state = { exponent: 1 };
+      const easing = (time: number) => time ** state.exponent;
+      const config = configOf(
+        { originY: 0 },
+        {
+          originY: onUIRuntime(() =>
+            withTiming(100, { duration: 400, easing })
+          ),
+        }
+      );
+      const segmentsOf = (buildId: number) =>
+        manager.build(buildId, {}, config, LIMITS, [])!.leaves[0].track!
+          .segments;
+      startBatchAt(2000);
+      const atBuild = segmentsOf(24);
+      expect(atBuild).toHaveLength(1);
+      expect(atBuild[0].endValue).toBe(100);
+      [1 / 3, 1 / 3, 2 / 3, 2 / 3].forEach((point, index) =>
+        expect(atBuild[0].cubicBezier![index]).toBeCloseTo(point, 12)
+      );
+
+      state.exponent = 2;
+      expect(segmentsOf(25)).toEqual(atBuild);
+      manager.releaseBuilt(25);
+
+      manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, 24, []);
+      runFrame(2200);
+      expect(lastProgress()).toEqual({ originY: 25 });
+      state.exponent = 3;
+      runFrame(2200);
+      expect(lastProgress()).toEqual({ originY: 12.5 });
+    });
+
     describe('a transform leaf', () => {
       type Operations = Record<string, unknown>[];
       const T = { buildId: 31, key: 'transform' };
@@ -620,7 +907,7 @@ describe('LayoutAnimationsManager', () => {
           33,
           {},
           config,
-          { leaves: 6, transformOperations: 4 },
+          { leaves: 6, transformOperations: 4, segments: 8 },
           live
         )!;
         manager.releaseBuilt(33);
@@ -675,8 +962,8 @@ describe('LayoutAnimationsManager', () => {
         (_, initial, animations) => {
           const { leaf } = leafOf(transformOf(initial, animations()));
           const starts = operationsOf(leaf.initialValue);
-          const ends = operationsOf(leaf.timing!.toValue);
-          expect(leaf.timing).toMatchObject({
+          const ends = operationsOf(leaf.track!.segments[0].endValue);
+          expect(leaf.track).toMatchObject({
             durationMs: DURATION,
             delayMs: 0,
           });
@@ -753,7 +1040,7 @@ describe('LayoutAnimationsManager', () => {
       ])('%s has no native values', (_, initial, animations) => {
         const { leaf } = leafOf(transformOf(initial, animations()));
         expect(leaf.initialValue).toBeUndefined();
-        expect(leaf.timing).toBeUndefined();
+        expect(leaf.track).toBeUndefined();
       });
 
       test.each<[string, () => Operations]>([
@@ -794,12 +1081,12 @@ describe('LayoutAnimationsManager', () => {
             { translateX: onUIRuntime(() => withSpring(10)) },
           ],
         ],
-      ])('%s: the leaf has values and no timing', (_, animations) => {
+      ])('%s: the leaf has values and no track', (_, animations) => {
         const { leaf } = leafOf(
           transformOf([{ rotate: 0 }, { translateX: 0 }], animations())
         );
         expect(operationsOf(leaf.initialValue).length).toBe(2);
-        expect(leaf.timing).toBeUndefined();
+        expect(leaf.track).toBeUndefined();
       });
 
       test.each<[string, unknown, number | string, unknown[]]>([
@@ -857,13 +1144,13 @@ describe('LayoutAnimationsManager', () => {
             [{ rotate: delayed(1) }, { translateX: delayed(10) }]
           )
         );
-        expect(leaf.timing).toMatchObject({
+        expect(leaf.track).toMatchObject({
           durationMs: DURATION,
           delayMs: 100,
         });
       });
 
-      test('a leaf of plain values has a timing with no duration', () => {
+      test('a leaf of plain values has a track with no duration', () => {
         const { leaf } = leafOf(
           transformOf(
             [{ rotate: 0 }, { translateX: 0 }],
@@ -875,7 +1162,7 @@ describe('LayoutAnimationsManager', () => {
             { kind: 'rotate', value: 1 },
             { kind: 'translateX', value: 10 },
           ],
-          timing: { durationMs: 0, delayMs: 0 },
+          track: { durationMs: 0, delayMs: 0 },
         });
       });
 

@@ -87,6 +87,56 @@ describe('advanceNativeLeaf', () => {
   });
 });
 
+describe('advanceNativeLeaf against a run of frames', () => {
+  const delayed = (delayMs: number) =>
+    onUIRuntime(() =>
+      withDelay(delayMs, withTiming(END, { duration: DURATION }))
+    );
+
+  /** The leaf as the frame driver leaves it: one step for each frame. */
+  function runFrames(leaf: AnimationObject, frameMs: number, elapsed: number) {
+    leaf.onStart(leaf, START, ORIGIN, undefined);
+    for (let now = ORIGIN + frameMs; now <= ORIGIN + elapsed; now += frameMs) {
+      if (leaf.onFrame(leaf, now)) {
+        break;
+      }
+    }
+    return leaf.current as number;
+  }
+
+  test.each([40, 100, 140, 300, 500, 600])(
+    'at %i ms a delayed leaf with the default easing has the value of frames that meet the end of the delay',
+    (elapsed) => {
+      const leaf = delayed(100);
+      advanceNativeLeaf(leaf, START, ORIGIN, ORIGIN + elapsed);
+      expect(leaf.current).toBeCloseTo(runFrames(delayed(100), 10, elapsed), 6);
+    }
+  );
+
+  test('with frames that do not meet the end of the delay, the frame-driven leaf is late by less than one frame', () => {
+    const FRAME = 1000 / 60;
+    const curve = Easing.inOut(Easing.quad);
+    for (let frame = 1; frame * FRAME < 600; frame++) {
+      const elapsed = frame * FRAME;
+      const leaf = delayed(100);
+      advanceNativeLeaf(leaf, START, ORIGIN, ORIGIN + elapsed);
+      const expected =
+        START +
+        (END - START) *
+          curve(Math.min(1, Math.max(0, (elapsed - 100) / DURATION)));
+      expect(leaf.current).toBeCloseTo(expected, 6);
+
+      const lateBy =
+        START +
+        (END - START) *
+          curve(Math.min(1, Math.max(0, (elapsed - 100 - FRAME) / DURATION)));
+      const frameDriven = runFrames(delayed(100), FRAME, elapsed + 0.001);
+      expect(frameDriven).toBeGreaterThanOrEqual(lateBy - 1e-6);
+      expect(frameDriven).toBeLessThanOrEqual(expected + 1e-6);
+    }
+  });
+});
+
 describe('relateToLiveLeaf', () => {
   const live = (leaf: AnimationObject, elapsed = 100) => {
     advanceNativeLeaf(leaf, START, ORIGIN, ORIGIN + elapsed);
@@ -145,6 +195,29 @@ describe('relateToLiveLeaf', () => {
         )
       )
     ).toBe('continues');
+  });
+
+  test('a timing with the same end value and an easing function continues only with the same function', () => {
+    const withEasing = (easing?: (time: number) => number) =>
+      onUIRuntime(() =>
+        withTiming(END, { duration: DURATION, ...(easing && { easing }) })
+      );
+    const shared = Easing.out(Easing.quad);
+    expect(relateToLiveLeaf(live(withEasing()), withEasing())).toBe(
+      'continues'
+    );
+    expect(relateToLiveLeaf(live(withEasing(shared)), withEasing(shared))).toBe(
+      'continues'
+    );
+    expect(
+      relateToLiveLeaf(
+        live(withEasing(shared)),
+        withEasing(Easing.out(Easing.quad))
+      )
+    ).toBe('frameDriver');
+    expect(relateToLiveLeaf(live(withEasing(shared)), bare())).toBe(
+      'frameDriver'
+    );
   });
 
   test('a timing with the same end value replaces a live leaf whose timeline is over', () => {

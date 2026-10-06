@@ -5,6 +5,7 @@ import type {
   AnimationCallback,
   AnimationObject,
   EasingFunction,
+  NativeEasing,
   NativeTimingDescription,
   ReduceMotion,
 } from '../commonTypes';
@@ -20,10 +21,28 @@ const LINEAR = Easing.linear;
 const EASE = Easing.ease;
 const EASE_CONTROL_POINTS: [number, number, number, number] = [0.42, 0, 1, 1];
 
+function describeEasing(
+  easing: EasingFunction | EasingFunctionFactory
+): NativeEasing {
+  'worklet';
+  if (easing === LINEAR) {
+    return { kind: 'linear' };
+  }
+  if (easing === EASE) {
+    return { kind: 'cubicBezier', controlPoints: EASE_CONTROL_POINTS };
+  }
+  if (typeof easing === 'function') {
+    return { kind: 'function', easing };
+  }
+  return easing.bezier
+    ? { kind: 'cubicBezier', controlPoints: easing.bezier }
+    : { kind: 'function', easing: easing.factory() };
+}
+
 /**
  * Has no result for an animation that native playback cannot repeat: a callback
- * on the animation, reduced motion, a target that is not a number or a string,
- * or an easing other than linear and cubic Bezier.
+ * on the animation, reduced motion, or a target that is not a number or a
+ * string.
  */
 export function describeNativeTiming(
   toValue: AnimatableValue,
@@ -46,21 +65,16 @@ export function describeNativeTiming(
   ) {
     return undefined;
   }
-  if (easing === LINEAR) {
-    return { toValue, durationMs: duration, delaysMs: [] };
-  }
-  const cubicBezier =
-    easing === EASE
-      ? EASE_CONTROL_POINTS
-      : (easing as EasingFunctionFactory).bezier;
-  return (
-    cubicBezier && {
-      toValue,
-      durationMs: duration,
-      delaysMs: [],
-      cubicBezier,
-    }
-  );
+  return {
+    phases: [
+      {
+        kind: 'timing',
+        durationMs: duration,
+        toValue,
+        easing: describeEasing(easing),
+      },
+    ],
+  };
 }
 
 /**
@@ -78,7 +92,9 @@ export function delayNativeTiming(
     return undefined;
   }
   return {
-    ...nativeTiming,
-    delaysMs: [Math.max(0, delayMs), ...nativeTiming.delaysMs],
+    phases: [
+      { kind: 'hold', durationMs: Math.max(0, delayMs) },
+      ...nativeTiming.phases,
+    ],
   };
 }

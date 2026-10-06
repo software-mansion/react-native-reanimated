@@ -39,6 +39,7 @@ import {
   isHostEvent,
   layoutOf,
   mountScene,
+  frameDrivenOf,
   recordedLinearOf,
   sample,
   sampleClockOffset,
@@ -223,18 +224,20 @@ describe('native layout transform', () => {
     test(`${kind} from ${String(from)} to ${String(to)} plays natively and agrees with the frame driver`, async () => {
       const layouts = {
         ...transformPairOf([operation]),
-        frameLayout: layoutOf(
-          {},
-          {
-            name: 'frame',
-            transform: {
-              operations: [operation],
-              shared: {
-                duration: TRANSFORM_DURATION,
-                easing: recordedLinearOf(TRANSFORM_DURATION),
+        frameLayout: frameDrivenOf(
+          layoutOf(
+            {},
+            {
+              name: 'frame',
+              transform: {
+                operations: [operation],
+                shared: {
+                  duration: TRANSFORM_DURATION,
+                  easing: recordedLinearOf(TRANSFORM_DURATION),
+                },
               },
-            },
-          }
+            }
+          )
         ),
       };
       const style = endTransformOf([operation]);
@@ -314,10 +317,10 @@ describe('native layout transform', () => {
     expect(translateThenRotate.properties.join()).toBe(
       'transform,transform.rotateZ,transform.translateX'
     );
-    expect(translateThenRotate.members[0].from.join()).toBe(
+    expect(translateThenRotate.members[0].values[0].join()).toBe(
       '1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1'
     );
-    expect(translateThenRotate.members[2].to.join()).toBe('100');
+    expect(translateThenRotate.members[2].values[1].join()).toBe('100');
 
     const rotateThenTranslate = await membersOf([
       ['rotate', 0, 1.5],
@@ -335,12 +338,12 @@ describe('native layout transform', () => {
     ]);
     expect(summarizeStart(events)).toBe(TRANSFORM_START);
     expect(properties.join()).toBe('transform,transform,transform.rotateZ');
-    expect(Math.abs(members[1].from[0] - Math.cos(20 * DEGREE)) < 1e-6).toBe(
-      true
-    );
-    expect(members[1].from.join()).toBe(members[1].to.join());
-    expect(Math.abs(members[2].from[0] - 10 * DEGREE) < 1e-6).toBe(true);
-    expect(Math.abs(members[2].to[0] - 100 * DEGREE) < 1e-6).toBe(true);
+    expect(
+      Math.abs(members[1].values[0][0] - Math.cos(20 * DEGREE)) < 1e-6
+    ).toBe(true);
+    expect(members[1].values[0].join()).toBe(members[1].values[1].join());
+    expect(Math.abs(members[2].values[0][0] - 10 * DEGREE) < 1e-6).toBe(true);
+    expect(Math.abs(members[2].values[1][0] - 100 * DEGREE) < 1e-6).toBe(true);
   });
 
   test('a perspective is a matrix member and scale has one factor for each axis', async () => {
@@ -352,12 +355,12 @@ describe('native layout transform', () => {
     expect(flip.properties.join()).toBe(
       'transform,transform.rotateX,transform'
     );
-    expect(Math.abs(flip.members[2].from[11] + 1 / 500) < 1e-6).toBe(true);
+    expect(Math.abs(flip.members[2].values[0][11] + 1 / 500) < 1e-6).toBe(true);
 
     const zoom = await membersOf([['scale', 0.5, 1.5]]);
     expect(zoom.properties.join()).toBe('transform,transform.scale');
-    expect(zoom.members[1].from.join()).toBe('0.5,0.5,0.5');
-    expect(zoom.members[1].to.join()).toBe('1.5,1.5,1.5');
+    expect(zoom.members[1].values[0].join()).toBe('0.5,0.5,0.5');
+    expect(zoom.members[1].values[1].join()).toBe('1.5,1.5,1.5');
   });
 
   test('a rotation of two turns shows one quarter turn at one eighth of its time', async () => {
@@ -558,7 +561,7 @@ describe('native layout transform continuity', () => {
       'a frame-driven start with no transform leaf',
       FIRST,
       undefined,
-      { originX: { easing: 'default' } },
+      { originX: { hasCallback: true } },
       'UnsupportedTiming',
     ],
     [
@@ -626,7 +629,7 @@ describe('native layout transform continuity', () => {
       FIRST_STYLE,
       0.1
     );
-    const leaves: Leaves = { originX: { easing: 'default' } };
+    const leaves: Leaves = { originX: { hasCallback: true } };
     const start = performance.now();
     await render(
       pairSceneOf(

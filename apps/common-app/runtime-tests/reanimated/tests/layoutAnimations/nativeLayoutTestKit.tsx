@@ -5,6 +5,8 @@ import { Modal, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import type {
   EasingFunction,
   EasingFunctionFactory,
+  EntryExitAnimationFunction,
+  LayoutAnimation,
   LayoutAnimationFunction,
 } from 'react-native-reanimated';
 import Animated, {
@@ -24,6 +26,7 @@ import {
   render,
   useTestRef,
   wait,
+  waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
 
 export type TraceEvent = {
@@ -54,9 +57,10 @@ export type TargetSample = {
   playbackKeys: string[];
   /**
    * The physical animations of the playback of the target, in the order in
-   * which the platform applies them.
+   * which the platform applies them. Each has its value at the start and at the
+   * end of each segment.
    */
-  members: { property: string; from: number[]; to: number[] }[];
+  members: { property: string; values: number[][] }[];
   monotonicTimeMs: number;
 };
 
@@ -96,7 +100,6 @@ export const END_TOP = 40;
 export const DURATION = 400;
 export const POSITION_TOLERANCE = 0.5;
 export const REPEATED_STARTS = 30;
-export const PRESET_WAIT = 1500;
 export const FILTER_OPACITY = 0.5;
 // The travel of two display frames at 60 fps.
 export const FIRST_FRAME_TRAVEL = ((END_LEFT - START_LEFT) / DURATION) * 34;
@@ -173,6 +176,20 @@ export type Track = {
   traceTarget: string;
   from: number;
   to: number;
+  /** Absent for a linear easing. */
+  easing?: TrackEasing;
+};
+
+/** The curve of an easing, and the time at which the curve has a progress. */
+export type TrackEasing = { curve: EasingFunction; timeOf: EasingFunction };
+
+/** The default easing of `withTiming`. */
+export const DEFAULT_EASING: TrackEasing = {
+  curve: Easing.inOut(Easing.quad),
+  timeOf: (progress) =>
+    progress < 0.5
+      ? Math.sqrt(Math.max(0, progress) / 2)
+      : 1 - Math.sqrt(Math.max(0, 1 - progress) / 2),
 };
 
 export async function readTrack(tag: number, { sampleTarget }: Track) {
@@ -215,8 +232,8 @@ export async function sampleRows(
 export const twinStartTime = makeMutable(0);
 
 /**
- * A linear easing that is no native easing, so its animation is frame-driven.
- * It gives the start time of its animation on the animation clock.
+ * A linear easing that gives the start time of its animation on the animation
+ * clock. Use it in a frame-driven animation: each call writes the time.
  */
 export const recordedLinearOf = (durationMs: number) => (progress: number) => {
   'worklet';
@@ -226,9 +243,8 @@ export const recordedLinearOf = (durationMs: number) => (progress: number) => {
 };
 
 /**
- * The curve of `easing` in a form that is no native easing, so its animation is
- * frame-driven. It gives the start time of its animation on the animation
- * clock.
+ * The curve of `easing` in a form that gives the start time of its animation on
+ * the animation clock. Use it in a frame-driven animation.
  */
 export const recordedCurveOf = (
   easing: EasingFunction | EasingFunctionFactory,
@@ -243,13 +259,147 @@ export const recordedCurveOf = (
   };
 };
 
-/** The easings with a native form that are not linear. */
+type AnimationFunction = (values: never) => LayoutAnimation;
+type AnimationValues =
+  | Parameters<EntryExitAnimationFunction>[0]
+  | Parameters<LayoutAnimationFunction>[0];
+
+/**
+ * The animation of a builder or of a function with no native description on its
+ * leaves. It is frame-driven, and its trace has the failure
+ * `UnsupportedTiming`.
+ */
+export function frameDrivenOf(
+  animation: { build: () => AnimationFunction } | AnimationFunction
+) {
+  const build = (
+    typeof animation === 'function' ? animation : animation.build()
+  ) as (values: AnimationValues) => LayoutAnimation;
+  return (values: AnimationValues) => {
+    'worklet';
+    const result = build(values);
+    const animations = Object.values(result.animations).flatMap((leaf) =>
+      Array.isArray(leaf)
+        ? leaf.flatMap((operation: Record<string, unknown>) =>
+            Object.values(operation)
+          )
+        : [leaf]
+    );
+    for (const animation of animations) {
+      if (typeof animation === 'object' && animation !== null) {
+        delete (animation as { __nativeTiming?: unknown }).__nativeTiming;
+        recordFrameTimes(animation as Partial<FrameAnimation>);
+      }
+    }
+    return result;
+  };
+}
+
+export const namedBuilderCalls: string[] = [];
+function recordNamedBuilderCall(name: string) {
+  namedBuilderCalls.push(name);
+}
+
+/**
+ * The animation of a builder or of a function, with a record of each call of
+ * its function under `name`.
+ */
+export function countedOf(
+  name: string,
+  animation: { build: () => AnimationFunction } | AnimationFunction
+) {
+  const build = (
+    typeof animation === 'function' ? animation : animation.build()
+  ) as (values: AnimationValues) => LayoutAnimation;
+  return (values: AnimationValues) => {
+    'worklet';
+    scheduleOnRN(recordNamedBuilderCall, name);
+    return build(values);
+  };
+}
+
+type FrameAnimation = {
+  onFrame: (animation: FrameAnimation, now: number) => boolean;
+};
+
+/** The time of the last frame of an animation of `frameDrivenOf`. */
+const frameDriverFrameTime = makeMutable(0);
+
+// A leaf of EntryExitTransition can be an object that is not an animation.
+function recordFrameTimes(animation: Partial<FrameAnimation>) {
+  'worklet';
+  const onFrame = animation.onFrame;
+  if (!onFrame) {
+    return;
+  }
+  animation.onFrame = (self, now) => {
+    frameDriverFrameTime.value = now;
+    return onFrame(self, now);
+  };
+}
+
+const frameDriverClock = () => {
+  'worklet';
+  return {
+    frameTime: frameDriverFrameTime.value,
+    now: global._getAnimationTimestamp(),
+  };
+};
+
+export type FrameDriverRow<TRow> = TRow & {
+  /**
+   * The time after the samples minus the time of the last frame of the frame
+   * driver before them. More than one display frame: the frame driver has no
+   * frame for the instant of the samples.
+   */
+  lateMs: number;
+  /** `lateMs` of each row that was taken again. */
+  lateFramesMs: number[];
+};
+
+const FRAME_DRIVER_TRIES = 5;
+let frameDriverRetakes = 0;
+
+/**
+ * The samples of `take` at an instant for which an animation of `frameDrivenOf`
+ * has its frame. The frame driver has no frame while the main thread is busy,
+ * and a native animation plays on: samples of such an instant do not compare
+ * the two at one time, so they are taken again after the next frames.
+ */
+export async function takeAtFrameDriverFrame<TRow extends object>(
+  take: () => Promise<TRow>
+): Promise<FrameDriverRow<TRow>> {
+  const lateFramesMs: number[] = [];
+  for (;;) {
+    const { frameTime } = runOnUISync(frameDriverClock);
+    const row = await take();
+    const lateMs = runOnUISync(frameDriverClock).now - frameTime;
+    if (lateMs <= FRAME_MS || lateFramesMs.length === FRAME_DRIVER_TRIES) {
+      return { ...row, lateMs, lateFramesMs };
+    }
+    lateFramesMs.push(lateMs);
+    frameDriverRetakes++;
+    console.log(
+      `FRAME-DRIVER-RETAKE | ${frameDriverRetakes} | try ${lateFramesMs.length} | frame of the twin late ${lateMs.toFixed(1)} ms`
+    );
+    await waitForFrames();
+  }
+}
+
+/**
+ * Easings with a native form that are not linear: two have control points, and
+ * the native route fits the others.
+ */
 export const CURVED_EASINGS: Record<
   string,
   EasingFunction | EasingFunctionFactory
 > = {
   'Easing.ease': Easing.ease,
   'a Bezier curve': Easing.bezier(0.3, 0, 0.7, 1),
+  'Easing.inOut(Easing.quad)': Easing.inOut(Easing.quad),
+  'Easing.sin': Easing.sin,
+  'Easing.out(Easing.exp)': Easing.out(Easing.exp),
+  'Easing.bounce': Easing.bounce,
 };
 
 const animationTime = () => {
@@ -961,6 +1111,18 @@ export async function sampleFramePairAt(
   rows.push(await sampleFramePair(offset));
   return rows;
 }
+
+const frameText = ({ x, y, width, height }: Frame) =>
+  [x, y, width, height].map((value) => value.toFixed(2)).join(' ');
+
+/** The two frames of each row, with the time of the row from the first row. */
+export const describeFramePairRows = (rows: FramePairRow[]) =>
+  rows
+    .map(
+      ({ native, frame, monotonicTimeMs }) =>
+        `${(monotonicTimeMs - rows[0].monotonicTimeMs).toFixed(1)} ms native ${frameText(native)} frame driver ${frameText(frame)}`
+    )
+    .join(' | ');
 
 /**
  * The largest distance of the native box from the frame-driven box before the

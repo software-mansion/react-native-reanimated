@@ -167,6 +167,7 @@ jsi::Object LayoutAnimationsManager::toJSValue(jsi::Runtime &rt, const NativeLay
   jsi::Object object(rt);
   object.setProperty(rt, "leaves", static_cast<double>(limits.leaves));
   object.setProperty(rt, "transformOperations", static_cast<double>(limits.transformOperations));
+  object.setProperty(rt, "segments", static_cast<double>(limits.segments));
   return object;
 }
 

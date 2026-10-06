@@ -558,8 +558,11 @@ void ReanimatedModuleProxy::sampleNativeAnimationTarget(
         const auto &member = sample->members[index];
         jsi::Object memberObject(rt);
         memberObject.setProperty(rt, "property", jsi::String::createFromUtf8(rt, member.property));
-        memberObject.setProperty(rt, "from", componentsToJSI(rt, member.from));
-        memberObject.setProperty(rt, "to", componentsToJSI(rt, member.to));
+        auto values = jsi::Array(rt, member.values.size());
+        for (size_t valueIndex = 0; valueIndex < member.values.size(); ++valueIndex) {
+          values.setValueAtIndex(rt, valueIndex, componentsToJSI(rt, member.values[valueIndex]));
+        }
+        memberObject.setProperty(rt, "values", values);
         members.setValueAtIndex(rt, index, memberObject);
       }
       object.setProperty(rt, "members", members);

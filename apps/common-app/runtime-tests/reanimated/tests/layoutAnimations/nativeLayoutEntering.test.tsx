@@ -5,8 +5,8 @@ import { Dimensions, Modal, ScrollView, StyleSheet, View } from 'react-native';
 import type {
   ComplexAnimationBuilder,
   EasingFunction,
+  EasingFunctionFactory,
   EntryAnimationsValues,
-  EntryExitAnimationFunction,
 } from 'react-native-reanimated';
 import Animated, {
   Easing,
@@ -22,7 +22,6 @@ import Animated, {
   withTiming,
   ZoomIn,
 } from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
 
 import {
   describe,
@@ -46,6 +45,7 @@ import {
   callbackTimes,
   centerOf,
   ClippingScrollView,
+  countedOf,
   CURVED_EASINGS,
   curveOf,
   FRAME_BOX_REF,
@@ -53,9 +53,13 @@ import {
   hasNativeLayoutStarts,
   hasTargetSamples,
   isHostEvent,
+  namedBuilderCalls,
   readTrack,
+  sample,
+  frameDrivenOf,
   recordedCurveOf,
   recordedLinearOf,
+  DEFAULT_EASING,
   sampleClockOffset,
   styles,
   summarize,
@@ -113,23 +117,30 @@ const timed = (
     : builder.duration(durationMs).delay(delayMs);
 
 /**
- * The native box has a linear easing; an easing with no native form keeps its
- * twin frame-driven.
+ * The native box has a linear easing, or the default easing when
+ * `hasDefaultEasing` is set. Its twin is frame-driven on the same curve.
  */
 const presetPairOf =
-  (create: () => ComplexAnimationBuilder) =>
-  (timing: Timing = {}): Pair => ({
-    native: {
-      entering: timed(create(), timing)
-        .easing(Easing.linear)
-        .withCallback(callbackOf('native')),
-    },
-    frame: {
-      entering: timed(create(), timing)
-        .easing(recordedLinearOf(timing.durationMs ?? ENTER_DURATION))
-        .withCallback(callbackOf('frame')),
-    },
-  });
+  (create: () => ComplexAnimationBuilder, hasDefaultEasing = false) =>
+  (timing: Timing = {}): Pair => {
+    const durationMs = timing.durationMs ?? ENTER_DURATION;
+    const native = timed(create(), timing).withCallback(callbackOf('native'));
+    const frame = timed(create(), timing).withCallback(callbackOf('frame'));
+    return {
+      native: {
+        entering: hasDefaultEasing ? native : native.easing(Easing.linear),
+      },
+      frame: {
+        entering: frameDrivenOf(
+          frame.easing(
+            hasDefaultEasing
+              ? recordedCurveOf(DEFAULT_EASING.curve, durationMs)
+              : recordedLinearOf(durationMs)
+          )
+        ),
+      },
+    };
+  };
 
 const customEnteringOf = (
   name: string,
@@ -161,15 +172,54 @@ const customEnteringOf = (
 const customPairOf = (timing: Timing = {}): Pair => ({
   native: { entering: customEnteringOf('native', Easing.linear, timing) },
   frame: {
-    entering: customEnteringOf(
-      'frame',
-      recordedLinearOf(timing.durationMs ?? ENTER_DURATION),
-      timing
+    entering: frameDrivenOf(
+      customEnteringOf(
+        'frame',
+        recordedLinearOf(timing.durationMs ?? ENTER_DURATION),
+        timing
+      )
     ),
   },
 });
 
 const fadePairOf = presetPairOf(() => new FadeIn());
+
+/** A FadeIn with `easing`, and its frame-driven twin on the same curve. */
+const easedFadePairOf = (
+  easing: EasingFunction | EasingFunctionFactory
+): Pair => ({
+  native: {
+    entering: new FadeIn()
+      .duration(ENTER_DURATION)
+      .easing(easing)
+      .withCallback(callbackOf('native')),
+  },
+  frame: {
+    entering: frameDrivenOf(
+      new FadeIn()
+        .duration(ENTER_DURATION)
+        .easing(recordedCurveOf(easing, ENTER_DURATION))
+        .withCallback(callbackOf('frame'))
+    ),
+  },
+});
+
+const HOLD = { from: 0.25, to: 0.75, value: 0.5 };
+
+/** No change from 25 % to 75 % of the time. */
+function easingWithHold(time: number) {
+  'worklet';
+  if (time < HOLD.from) {
+    return 2 * time;
+  }
+  return time < HOLD.to ? HOLD.value : 2 * time - 1;
+}
+
+/** The number of segments of the native track of a target. */
+async function segmentCountOf(tag: number, target: string) {
+  const { members } = await sample(tag, target);
+  return members[0].values.length - 1;
+}
 
 const CASES: Record<string, EnteringCase> = {
   FadeIn: { pairOf: fadePairOf, tracks: [OPACITY] },
@@ -186,6 +236,24 @@ const CASES: Record<string, EnteringCase> = {
     ],
   },
 };
+
+/** The cases whose native box has the tracks of the default easing. */
+const DEFAULT_EASING_CASES: Record<string, EnteringCase> = {
+  'FadeIn with the default easing': {
+    pairOf: presetPairOf(() => new FadeIn(), true),
+    tracks: [{ ...OPACITY, easing: DEFAULT_EASING }],
+  },
+  'SlideInLeft with the default easing': {
+    pairOf: presetPairOf(() => new SlideInLeft(), true),
+    tracks: [{ ...SLIDE, easing: DEFAULT_EASING }],
+  },
+  'ZoomIn with the default easing': {
+    pairOf: presetPairOf(() => new ZoomIn(), true),
+    tracks: [{ ...SCALE, easing: DEFAULT_EASING }],
+  },
+};
+
+const TIMELINE_CASES = { ...CASES, ...DEFAULT_EASING_CASES };
 
 type BoxProps = BoxAnimations & {
   refName: string;
@@ -375,32 +443,11 @@ const pairInClippingViewOf = ({ isNew, areBoxesClipped }: ClippingViewForm) =>
     );
   };
 
-const builderCalls: string[] = [];
-function recordBuilderCall(name: string) {
-  builderCalls.push(name);
-}
-
-type EnteringFunction = (
-  values: EntryAnimationsValues
-) => ReturnType<EntryExitAnimationFunction>;
-
-/** The animation of `entering`, with a record of each call of its builder. */
-const countedOf = (name: string, entering: BoxAnimations['entering']) => {
-  const build = (
-    typeof entering === 'function'
-      ? entering
-      : (entering as ComplexAnimationBuilder).build()
-  ) as EnteringFunction;
-  return (values: EntryAnimationsValues) => {
-    'worklet';
-    scheduleOnRN(recordBuilderCall, name);
-    return build(values);
-  };
-};
+type Counted = Parameters<typeof countedOf>[1];
 
 const countedPairOf = ({ native, frame }: Pair): Pair => ({
-  native: { entering: countedOf('native', native.entering) },
-  frame: { entering: countedOf('frame', frame.entering) },
+  native: { entering: countedOf('native', native.entering as Counted) },
+  frame: { entering: countedOf('frame', frame.entering as Counted) },
 });
 
 type Entered = {
@@ -421,7 +468,7 @@ async function enter(
   const clock = await sampleClockOffset(getTestComponent(CLOCK_REF).getTag());
   await takeTrace();
   callbacks.length = 0;
-  builderCalls.length = 0;
+  namedBuilderCalls.length = 0;
   const startMs = performance.now();
   await render(<Scene {...pair} isMounted />);
   return {
@@ -472,17 +519,24 @@ const endOf = (tracks: Track[], finished = true) =>
 const pendingStartOf = (events: TraceEvent[]) =>
   events.find(({ event }) => event === 'LayoutStartPending')!;
 
-const rangeOf = ({ from, to }: Track) => Math.abs(to - from);
+// The default easing moves by no more than two times its mean speed.
+const rangeOf = ({ from, to, easing }: Track) =>
+  Math.abs(to - from) * (easing ? 2 : 1);
 
 /** The change of the value of a track in two display frames. */
 const twoFramesOf = (track: Track, durationMs = ENTER_DURATION) =>
   VALUE_TOLERANCE + (2 * FRAME_MS * rangeOf(track)) / durationMs;
 
-const progressOf = ({ from, to }: Track, value: number) =>
-  (value - from) / (to - from);
+/** The part of the duration at which the track has the value. */
+const progressOf = ({ from, to, easing }: Track, value: number) => {
+  const progress = (value - from) / (to - from);
+  return easing ? easing.timeOf(progress) : progress;
+};
 
-const valueAt = ({ from, to }: Track, progress: number) =>
-  from + (to - from) * Math.min(1, Math.max(0, progress));
+const valueAt = ({ from, to, easing }: Track, progress: number) => {
+  const time = Math.min(1, Math.max(0, progress));
+  return from + (to - from) * (easing ? easing.curve(time) : time);
+};
 
 const isNear = (value: number, expected: number, tolerance = VALUE_TOLERANCE) =>
   Math.abs(value - expected) < tolerance;
@@ -540,7 +594,7 @@ describe('native layout entering', () => {
     return;
   }
 
-  for (const [caseName, { pairOf, tracks }] of Object.entries(CASES)) {
+  for (const [caseName, { pairOf, tracks }] of Object.entries(TIMELINE_CASES)) {
     test(`${caseName} starts natively on the mounted final state, and a sample after its first display frames is on the timeline from the initial value`, async () => {
       const entered = await enter(pairOf());
       await wait(FIRST_FRAMES_MS);
@@ -762,20 +816,7 @@ describe('native layout entering', () => {
   for (const [easingName, easing] of Object.entries(CURVED_EASINGS)) {
     test(`FadeIn with ${easingName} plays natively on the curve of the frame driver`, async () => {
       const curve = curveOf(easing);
-      const entered = await enter({
-        native: {
-          entering: new FadeIn()
-            .duration(ENTER_DURATION)
-            .easing(easing)
-            .withCallback(callbackOf('native')),
-        },
-        frame: {
-          entering: new FadeIn()
-            .duration(ENTER_DURATION)
-            .easing(recordedCurveOf(easing, ENTER_DURATION))
-            .withCallback(callbackOf('frame')),
-        },
-      });
+      const entered = await enter(easedFadePairOf(easing));
       await waitUntil(entered, 100);
       const events = await takeTraceOfPair(entered);
       expect(summarize(events.native.filter(isHostEvent))).toBe(
@@ -796,7 +837,7 @@ describe('native layout entering', () => {
           isNear(native.shown, frame.model, 2 * twoFramesOf(OPACITY))
         ).toBe(true);
         expect(isNear(native.shown, fraction, 0.02)).toBe(
-          fraction === 0.5 && easingName === 'a Bezier curve'
+          isNear(curve(fraction), fraction, 0.001)
         );
       }
 
@@ -809,30 +850,53 @@ describe('native layout entering', () => {
     });
   }
 
-  test('a preset with the default easing stays frame-driven: UnsupportedTiming', async () => {
-    const durationMs = 400;
-    const defaultEasing = (name: string) => ({
-      entering: new FadeIn()
-        .duration(durationMs)
-        .withCallback(callbackOf(name)),
-    });
-    const entered = await enter({
-      native: defaultEasing('native'),
-      frame: defaultEasing('frame'),
-    });
-    await waitUntil(entered, durationMs / 2);
+  test('FadeIn with an easing that has no change from 25 % to 75 % of its time plays natively and holds the value of that part with no step', async () => {
+    const entered = await enter(easedFadePairOf(easingWithHold));
+    await waitUntil(entered, 100);
     const events = await takeTraceOfPair(entered);
-    expect(summarize(events.native)).toBe(
-      'LayoutBuildFailed:UnsupportedTiming'
+    expect(summarize(events.native.filter(isHostEvent))).toBe(
+      startOf([OPACITY])
     );
-    const middle = await readTrack(entered.nativeTag, OPACITY);
-    expect(middle.keys).toBe(0);
-    expect(middle.model > 0 && middle.model < 1).toBe(true);
+    expect(summarize(events.frame)).toBe('LayoutBuildFailed:UnsupportedTiming');
+    const { members } = await sample(entered.nativeTag, 'Opacity');
+    expect(members[0].values.map(([value]) => value).join()).toBe(
+      '0,0.5,0.5,0.5,1'
+    );
 
-    await waitUntil(entered, durationMs + 300);
-    expect(isNear((await readTrack(entered.nativeTag, OPACITY)).model, 1)).toBe(
-      true
-    );
+    const twinTimeOf = ({ timeMs }: TrackReading) =>
+      (timeMs - entered.clockOffset - twinStartTime.value) / ENTER_DURATION;
+    const twoFrames = (2 * FRAME_MS) / ENTER_DURATION;
+    const rows: string[] = [];
+    let isOnCurve = true;
+    let heldRows = 0;
+    for (let percent = 10; percent <= 90; percent += 2) {
+      await waitUntil(entered, (percent / 100) * ENTER_DURATION);
+      const { native, frame } = await readPair(entered, OPACITY);
+      const twinTime = twinTimeOf(native);
+      const isHeld =
+        twinTime > HOLD.from + twoFrames && twinTime < HOLD.to - twoFrames;
+      const checks = isHeld
+        ? [native.shown === HOLD.value, frame.model === HOLD.value]
+        : [
+            isNear(native.shown, easingWithHold(twinTime), 0.02),
+            isNear(native.shown, frame.model, 2 * twoFramesOf(OPACITY)),
+          ];
+      isOnCurve &&= !checks.includes(false);
+      heldRows += isHeld ? 1 : 0;
+      rows.push(
+        `${twinTime.toFixed(4)} native ${native.shown} frame driver ${frame.model} checks ${checks.join()}`
+      );
+    }
+    if (!isOnCurve || heldRows < 20) {
+      console.log(`HOLD-ROWS | ${rows.join(' | ')}`);
+    }
+    expect(isOnCurve).toBe(true);
+    expect(heldRows >= 20).toBe(true);
+
+    await waitUntil(entered, ENTER_DURATION + 300);
+    const end = await readTrack(entered.nativeTag, OPACITY);
+    expect(isNear(end.shown, 1)).toBe(true);
+    expect(end.keys).toBe(0);
     expect(sortedCallbacks()).toBe('frame:true,native:true');
     await render(null);
   });
@@ -1036,7 +1100,7 @@ describe('native layout entering in new ancestors', () => {
           PairInNewModal
         );
         await expectFrameDrivenPair(entered, tracks, timing);
-        expect(builderCalls.slice().sort().join()).toBe('frame,native');
+        expect(namedBuilderCalls.slice().sort().join()).toBe('frame,native');
         await render(null);
         await wait(300);
       });
@@ -1302,7 +1366,7 @@ describe('native layout entering and a clip of its view', () => {
     expect(
       Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
     ).toBe(true);
-    expect(builderCalls.slice().sort().join()).toBe('frame,native');
+    expect(namedBuilderCalls.slice().sort().join()).toBe('frame,native');
     const end = await readTrack(entered.nativeTag, OPACITY);
     expect(isNear(end.shown, 1)).toBe(true);
     expect(end.keys).toBe(0);
@@ -1310,29 +1374,100 @@ describe('native layout entering and a clip of its view', () => {
     await render(null);
   }
 
-  test('a clip of the view gives its native entering group to the frame driver: the view shows the value of the frame driver after a scroll back, and the callback gets true one time at the natural end', async () => {
-    const entered = await enter(countedPairOf(fadePairOf()), PairInViewToClip);
-    await waitUntil(entered, 0.15 * ENTER_DURATION);
+  type ClippedTrack = {
+    trackName: string;
+    pairOf: () => Pair;
+    curve: EasingFunction;
+    segments: number;
+    /** The parts of the duration at which the clip and the two readings are. */
+    clipAt: number;
+    hiddenAt: number;
+    shownAt: number;
+  };
+  const clippedTracks: ClippedTrack[] = [
+    {
+      trackName: 'one segment',
+      pairOf: fadePairOf,
+      curve: Easing.linear,
+      segments: 1,
+      clipAt: 0.15,
+      hiddenAt: 0.3,
+      shownAt: 0.6,
+    },
+    {
+      trackName: 'the two segments of the default easing',
+      pairOf: DEFAULT_EASING_CASES['FadeIn with the default easing'].pairOf,
+      curve: DEFAULT_EASING.curve,
+      segments: 2,
+      clipAt: 0.15,
+      hiddenAt: 0.3,
+      shownAt: 0.6,
+    },
+    // Easing.bounce moves slower than its mean speed at the times of the two readings.
+    {
+      trackName: 'the 22 segments of Easing.bounce',
+      pairOf: () => easedFadePairOf(Easing.bounce),
+      curve: Easing.bounce,
+      segments: 22,
+      clipAt: 0.4,
+      hiddenAt: 0.55,
+      shownAt: 0.8,
+    },
+  ];
+  for (const track of clippedTracks) {
+    const { trackName, pairOf, curve, segments } = track;
+    test(`a clip of the view gives its native entering group of ${trackName} to the frame driver: the view shows the value of the frame driver after a scroll back, and the callback gets true one time at the natural end`, async () => {
+      const entered = await enter(countedPairOf(pairOf()), PairInViewToClip);
+      await waitUntil(entered, track.clipAt * ENTER_DURATION);
+      const start = await takeTraceOfPair(entered);
+      expect(summarize(start.native.filter(isHostEvent))).toBe(
+        startOf([OPACITY])
+      );
+      expect(await segmentCountOf(entered.nativeTag, 'Opacity')).toBe(segments);
+      scrollTo(CLIPPED_OFFSET);
+      await waitUntil(entered, track.hiddenAt * ENTER_DURATION);
+      const transfer = await takeTransferTrace(entered.nativeTag);
+      expect(transfer.host).toBe(PLATFORM_REMOVED);
+      expect(transfer.hasFrameUpdate).toBe(true);
+      expect(callbacks.length).toBe(0);
+      const hidden = await readOnFrameDriver(entered, ENTER_DURATION);
+      expect(isNear(hidden.model, curve(track.hiddenAt), 0.08)).toBe(true);
+
+      scrollTo(0);
+      await waitUntil(entered, track.shownAt * ENTER_DURATION);
+      const shown = await readOnFrameDriver(entered, ENTER_DURATION);
+      expect(isNear(shown.shown, shown.model, twoFramesOf(OPACITY))).toBe(true);
+      expect(isNear(shown.shown, curve(track.shownAt), 0.08)).toBe(true);
+      expect(callbacks.length).toBe(0);
+      await expectTrueAtNaturalEnd(entered, ENTER_DURATION);
+    });
+  }
+
+  test('a clip of the view after the delay of its native entering group ended: the frame driver continues the animation at the value of its timeline', async () => {
+    const timing = { durationMs: 1000, delayMs: 500 };
+    const entered = await enter(
+      countedPairOf(fadePairOf(timing)),
+      PairInViewToClip
+    );
+    await waitUntil(entered, 800);
     const start = await takeTraceOfPair(entered);
     expect(summarize(start.native.filter(isHostEvent))).toBe(
       startOf([OPACITY])
     );
     scrollTo(CLIPPED_OFFSET);
-    await waitUntil(entered, 0.3 * ENTER_DURATION);
+    await waitUntil(entered, 1000);
     const transfer = await takeTransferTrace(entered.nativeTag);
     expect(transfer.host).toBe(PLATFORM_REMOVED);
-    expect(transfer.hasFrameUpdate).toBe(true);
     expect(callbacks.length).toBe(0);
-    const hidden = await readOnFrameDriver(entered, ENTER_DURATION);
-    expect(isNear(hidden.model, 0.3, 0.08)).toBe(true);
+    const hidden = await readOnFrameDriver(entered, timing.durationMs);
+    expect(isNear(hidden.model, 0.5, 0.1)).toBe(true);
 
     scrollTo(0);
-    await waitUntil(entered, 0.6 * ENTER_DURATION);
-    const shown = await readOnFrameDriver(entered, ENTER_DURATION);
-    expect(isNear(shown.shown, shown.model, twoFramesOf(OPACITY))).toBe(true);
-    expect(isNear(shown.shown, 0.6, 0.08)).toBe(true);
+    await waitUntil(entered, 1250);
+    const shown = await readOnFrameDriver(entered, timing.durationMs);
+    expect(isNear(shown.shown, 0.75, 0.1)).toBe(true);
     expect(callbacks.length).toBe(0);
-    await expectTrueAtNaturalEnd(entered, ENTER_DURATION);
+    await expectTrueAtNaturalEnd(entered, 1500);
   });
 
   test('a clip of the view in the delay of its native entering group: the view shows the initial value after a scroll back until the delay ends, then the frame driver plays the animation', async () => {
@@ -1371,33 +1506,6 @@ describe('native layout entering and a clip of its view', () => {
     expect(isNear(playing.shown, 0.5, 0.1)).toBe(true);
     expect(callbacks.length).toBe(0);
     await expectTrueAtNaturalEnd(entered, 2000);
-  });
-
-  test('a clip of the view after the delay of its native entering group ended: the frame driver continues the animation at the value of its timeline', async () => {
-    const timing = { durationMs: 1000, delayMs: 500 };
-    const entered = await enter(
-      countedPairOf(fadePairOf(timing)),
-      PairInViewToClip
-    );
-    await waitUntil(entered, 800);
-    const start = await takeTraceOfPair(entered);
-    expect(summarize(start.native.filter(isHostEvent))).toBe(
-      startOf([OPACITY])
-    );
-    scrollTo(CLIPPED_OFFSET);
-    await waitUntil(entered, 1000);
-    const transfer = await takeTransferTrace(entered.nativeTag);
-    expect(transfer.host).toBe(PLATFORM_REMOVED);
-    expect(callbacks.length).toBe(0);
-    const hidden = await readOnFrameDriver(entered, timing.durationMs);
-    expect(isNear(hidden.model, 0.5, 0.1)).toBe(true);
-
-    scrollTo(0);
-    await waitUntil(entered, 1250);
-    const shown = await readOnFrameDriver(entered, timing.durationMs);
-    expect(isNear(shown.shown, 0.75, 0.1)).toBe(true);
-    expect(callbacks.length).toBe(0);
-    await expectTrueAtNaturalEnd(entered, 1500);
   });
 });
 
@@ -1574,12 +1682,15 @@ describe('entering of a parent and its child in one commit', () => {
 
   type Family = { parent: BoxAnimations; child: BoxAnimations };
 
-  const familyOf = (easingOf: () => EasingFunction): Family => {
-    const enteringOf = (name: string) =>
-      new FadeIn()
+  const familyOf = (isNative: boolean): Family => {
+    const enteringOf = (name: string) => {
+      const entering = new FadeIn()
         .duration(DURATION)
-        .easing(easingOf())
         .withCallback(callbackOf(name));
+      return isNative
+        ? entering.easing(Easing.linear)
+        : frameDrivenOf(entering.easing(recordedLinearOf(DURATION)));
+    };
     return {
       parent: { entering: enteringOf('parent') },
       child: { entering: enteringOf('child') },
@@ -1608,10 +1719,8 @@ describe('entering of a parent and its child in one commit', () => {
   }
 
   const families = {
-    'with a linear easing': familyOf(() => Easing.linear),
-    'with an easing that has no native form': familyOf(() =>
-      recordedLinearOf(DURATION)
-    ),
+    'with a linear easing': familyOf(true),
+    'with no native description': familyOf(false),
   };
   for (const [caseName, family] of Object.entries(families)) {
     test(`a parent and its child that enter in one commit ${caseName} both show their initial value first and end at the model`, async () => {

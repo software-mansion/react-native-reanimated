@@ -6,15 +6,10 @@ import type {
   LayoutAnimationFunction,
 } from 'react-native-reanimated';
 import Animated, {
-  CurvedTransition,
   Easing,
-  EntryExitTransition,
-  FadingTransition,
   getStaticFeatureFlag,
-  JumpingTransition,
   LinearTransition,
   ReduceMotion,
-  SequencedTransition,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -57,7 +52,6 @@ import {
   POSITION_TOLERANCE,
   FILTER_OPACITY,
   REPEATED_STARTS,
-  PRESET_WAIT,
   FIRST_FRAME_TRAVEL,
   FRAME_MS,
   centerOf,
@@ -102,6 +96,7 @@ import {
   OPACITY_TOLERANCE,
   Pair,
   curveOf,
+  describeFramePairRows,
   styles,
   SizePair,
   SizeScene,
@@ -366,16 +361,24 @@ describe('native layout starts after the mount of the final state', () => {
     Partial<BoxProps>?,
   ][] = [
     [
-      'the default easing',
-      { originX: { easing: 'default' } },
+      'an easing with a step',
+      { originX: { easing: Easing.steps(4) } },
       'UnsupportedTiming',
     ],
     [
-      'Easing.out(Easing.ease)',
-      { originX: { easing: Easing.out(Easing.ease) } },
+      'an easing with no fit',
+      { originX: { easing: Easing.circle } },
       'UnsupportedTiming',
     ],
-    ['Easing.quad', { originX: { easing: Easing.quad } }, 'UnsupportedTiming'],
+    [
+      'more segments than the native route takes',
+      {
+        originX: { easing: Easing.bounce },
+        width: { easing: Easing.bounce, initial: 10 },
+        opacity: { easing: Easing.bounce, initial: 0.5, to: 1 },
+      },
+      'ResourceLimit',
+    ],
     [
       'a spring beside a timing',
       { originX: {}, originY: { isSpring: true } },
@@ -489,6 +492,21 @@ describe('native layout starts after the mount of the final state', () => {
     LayoutOptions?,
     Partial<BoxProps>?,
   ][] = [
+    ['the default easing', { originX: { easing: 'default' } }, ['PositionX']],
+    [
+      'Easing.out(Easing.ease)',
+      { originX: { easing: Easing.out(Easing.ease) } },
+      ['PositionX'],
+    ],
+    ['Easing.quad', { originX: { easing: Easing.quad } }, ['PositionX']],
+    [
+      'the 22 segments of Easing.bounce on each of two leaves',
+      {
+        originX: { easing: Easing.bounce },
+        opacity: { easing: Easing.bounce, initial: 0.5, to: 1 },
+      },
+      ['PositionX', 'Opacity'],
+    ],
     [
       'a size leaf that does not change',
       { originX: {}, width: {} },
@@ -569,33 +587,6 @@ describe('native layout starts after the mount of the final state', () => {
     expect(summarizeEnd(await takeTraceOf(tag))).toBe(NATIVE_END);
     await render(null);
   });
-
-  const presets = {
-    LinearTransition,
-    FadingTransition,
-    SequencedTransition,
-    CurvedTransition,
-    JumpingTransition,
-    EntryExitTransition,
-  };
-  for (const [presetName, preset] of Object.entries(presets)) {
-    test(`${presetName} stays frame-driven`, async () => {
-      const tag = await renderBox({ layout: preset });
-      await render(<Scene left={END_LEFT} layout={preset} />);
-      await wait(50);
-      const events = (await takeTraceOf(tag)).filter(
-        (event) => event.event !== 'FrameUpdateMounted'
-      );
-      expect(events.length).toBe(1);
-      expect(events[0].event).toBe('LayoutBuildFailed');
-      const moving = await sample(tag, 'PositionX');
-      expect(moving.model[0] < centerOf(END_LEFT)).toBe(true);
-      await wait(PRESET_WAIT);
-      const end = await sample(tag, 'PositionX');
-      expect(Math.abs(end.model[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
-      await render(null);
-    });
-  }
 
   test('each negative delay wrapper counts as zero before the sum', async () => {
     const layout = layoutOf({
@@ -1422,10 +1413,7 @@ describe('native layout timing against the curve and the frame driver', () => {
 
   // X and the opacity have the curve. Y is linear in the same command, so it gives the progress of the
   // timeline at the instant of each sample.
-  function pairLayouts(
-    easing: EasingFunction | EasingFunctionFactory,
-    hasOpacity: boolean
-  ) {
+  function pairLayouts(easing: Leaf['easing'], hasOpacity: boolean) {
     return pairLayoutsOf((hasCallback) => ({
       originX: { duration: PAIR_DURATION, easing },
       originY: { duration: PAIR_DURATION, hasCallback },
@@ -1458,6 +1446,7 @@ describe('native layout timing against the curve and the frame driver', () => {
       frameOpacity: frameOpacity.model[0],
       endX: position.model[0],
       endY: position.model[1],
+      keys: position.playbackKeys.length,
     };
   }
 
@@ -1477,8 +1466,18 @@ describe('native layout timing against the curve and the frame driver', () => {
     value > Math.min(first, second) - tolerance &&
     value < Math.max(first, second) + tolerance;
 
-  const curves: [string, EasingFunction | EasingFunctionFactory, boolean][] = [
+  const DEFAULT_CURVE = Easing.inOut(Easing.quad);
+  const OVERSHOOT = Easing.out(Easing.back(1.7));
+
+  // The native route fits each curve after the two Bezier curves. The overshoot curve leaves the range
+  // from 0 to 1, and the presentation layer shows it.
+  const curves: [string, NonNullable<Leaf['easing']>, boolean][] = [
     ['Easing.linear', Easing.linear, true],
+    ['the default easing', 'default', true],
+    ['Easing.sin', Easing.sin, true],
+    ['Easing.out(Easing.exp)', Easing.out(Easing.exp), true],
+    ['Easing.out(Easing.back(1.7))', OVERSHOOT, true],
+    ['Easing.bounce', Easing.bounce, true],
     ['Easing.ease', Easing.ease, true],
     [
       'Easing.bezier(0.25, 0.1, 0.25, 1)',
@@ -1501,88 +1500,152 @@ describe('native layout timing against the curve and the frame driver', () => {
         />
       );
 
-      const curve = curveOf(easing);
+      const curve = easing === 'default' ? DEFAULT_CURVE : curveOf(easing);
       const xAt = (progress: number) =>
         start.x + curve(progress) * (PAIR_LEFT - START_LEFT);
       const opacityAt = (progress: number) =>
         START_OPACITY + curve(progress) * (endOpacity - START_OPACITY);
       const frameProgress = FRAME_MS / PAIR_DURATION;
 
+      const rows: string[] = [];
+      let isOnCurve = true;
       for (let checkpoint = 0; checkpoint < 8; checkpoint++) {
         const { x, y, opacity, frameX, frameOpacity, endX, endY } =
           await samplePair();
-        expect(Math.abs(endX - start.x - (PAIR_LEFT - START_LEFT)) < 0.01).toBe(
-          true
-        );
         const progress = (y - start.y) / (endY - start.y);
-        expect(progress >= 0 && progress < 1).toBe(true);
-        expect(Math.abs(x - xAt(progress)) < POSITION_TOLERANCE).toBe(true);
-        expect(
-          Math.abs(opacity - opacityAt(progress)) < OPACITY_TOLERANCE
-        ).toBe(true);
         const frameBefore = Math.max(0, progress - frameProgress);
         const frameAfter = Math.min(1, progress + frameProgress);
-        expect(
+        const checks = [
+          Math.abs(endX - start.x - (PAIR_LEFT - START_LEFT)) < 0.01,
+          progress >= 0 && progress < 1,
+          Math.abs(x - xAt(progress)) < POSITION_TOLERANCE,
+          Math.abs(opacity - opacityAt(progress)) < OPACITY_TOLERANCE,
           isBetween(
             frameX,
             xAt(frameBefore),
             xAt(frameAfter),
             POSITION_TOLERANCE
-          )
-        ).toBe(true);
-        expect(
+          ),
           isBetween(
             frameOpacity,
             opacityAt(frameBefore),
             opacityAt(frameAfter),
             OPACITY_TOLERANCE
-          )
-        ).toBe(true);
+          ),
+        ];
+        for (const check of checks) {
+          expect(check).toBe(true);
+        }
+        isOnCurve &&= !checks.includes(false);
+        rows.push(
+          [
+            `progress ${progress.toFixed(4)}`,
+            `x ${x.toFixed(2)} curve ${xAt(progress).toFixed(2)} frame driver ${frameX.toFixed(2)} in ${xAt(frameBefore).toFixed(2)}..${xAt(frameAfter).toFixed(2)}`,
+            `opacity ${opacity.toFixed(4)} curve ${opacityAt(progress).toFixed(4)} frame driver ${frameOpacity.toFixed(4)} in ${opacityAt(frameBefore).toFixed(4)}..${opacityAt(frameAfter).toFixed(4)}`,
+            `checks ${checks.join()}`,
+          ].join(', ')
+        );
         await wait(PAIR_DURATION / 9);
       }
 
       await wait(PAIR_DURATION / 4);
       const end = await samplePair();
-      expect(Math.abs(end.x - end.endX) < 0.01).toBe(true);
-      expect(Math.abs(end.frameX - end.endX) < 0.01).toBe(true);
-      expect(Math.abs(end.opacity - endOpacity) < 0.01).toBe(true);
+      const callbackGapMs = callbackTimes.native - callbackTimes.frame;
+      const endChecks = [
+        Math.abs(end.x - end.endX) < 0.01,
+        Math.abs(end.frameX - end.endX) < 0.01,
+        Math.abs(end.opacity - endOpacity) < 0.01,
+        Math.abs(callbackGapMs) < FRAME_MS,
+      ];
+      if (!isOnCurve || endChecks.includes(false)) {
+        console.log(
+          `CURVE-PAIR | ${curveName} | ${rows.join(' | ')} | end x ${end.x.toFixed(2)} frame driver ${end.frameX.toFixed(2)} model ${end.endX.toFixed(2)}, opacity ${end.opacity.toFixed(4)}, native callback ${callbackGapMs.toFixed(1)} ms after the callback of the frame driver, checks ${endChecks.join()}`
+        );
+      }
+      for (const check of endChecks) {
+        expect(check).toBe(true);
+      }
       expect([...callbacks].sort().join()).toBe('frame:true,native:true');
-      expect(
-        Math.abs(callbackTimes.native - callbackTimes.frame) < FRAME_MS
-      ).toBe(true);
       await render(null);
     });
   }
 
-  test('a replacement during playback continues both drivers from one value within the travel of one frame', async () => {
-    const layouts = pairLayouts(Easing.linear, false);
-    await renderPair(layouts);
-    await render(
-      <Pair left={PAIR_LEFT} top={PAIR_TOP} opacity={1} {...layouts} />
-    );
-    await wait(PAIR_DURATION / 3);
-    await render(
-      <Pair left={PAIR_LEFT / 4} top={0} opacity={1} {...layouts} />
-    );
+  type Replaced = {
+    trackName: string;
+    easing: Leaf['easing'];
+    segments: number;
+    largestSlope: number;
+    /** The part of the duration at which the replacement comes. */
+    replacedAt: number;
+  };
+  const replaced: Replaced[] = [
+    {
+      trackName: 'a linear track',
+      easing: Easing.linear,
+      segments: 1,
+      largestSlope: 1,
+      replacedAt: 1 / 3,
+    },
+    {
+      trackName: 'a track of the default easing',
+      easing: 'default',
+      segments: 2,
+      largestSlope: 2,
+      replacedAt: 1 / 3,
+    },
+    // The first part of Easing.bounce is 7.5625 t^2 to t = 1 / 2.75.
+    {
+      trackName: 'a track of the 22 segments of Easing.bounce',
+      easing: Easing.bounce,
+      segments: 22,
+      largestSlope: 5.5,
+      replacedAt: 0.4,
+    },
+  ];
+  for (const {
+    trackName,
+    easing,
+    segments,
+    largestSlope,
+    replacedAt,
+  } of replaced) {
+    test(`a replacement during playback of ${trackName} continues both drivers from one value within the travel of one frame`, async () => {
+      const layouts = pairLayouts(easing, false);
+      await renderPair(layouts);
+      await render(
+        <Pair left={PAIR_LEFT} top={PAIR_TOP} opacity={1} {...layouts} />
+      );
+      await wait(replacedAt * PAIR_DURATION);
+      const { members } = await sample(
+        getTestComponent(BOX_REF).getTag(),
+        'PositionX'
+      );
+      expect(members[0].values.length - 1).toBe(segments);
+      await render(
+        <Pair left={PAIR_LEFT / 4} top={0} opacity={1} {...layouts} />
+      );
 
-    // The native start reads the value on screen at its admission. The frame driver has the value of its
-    // last frame before the pull.
-    const startTolerance =
-      POSITION_TOLERANCE + (FRAME_MS * PAIR_LEFT) / PAIR_DURATION;
-    for (let checkpoint = 0; checkpoint < 4; checkpoint++) {
-      const { x, frameX } = await samplePair();
-      expect(Math.abs(x - frameX) < startTolerance).toBe(true);
-      await wait(PAIR_DURATION / 5);
-    }
-    await wait(PAIR_DURATION / 2);
-    const end = await samplePair();
-    expect(Math.abs(end.x - end.endX) < 0.01).toBe(true);
-    expect(Math.abs(end.frameX - end.endX) < 0.01).toBe(true);
-    expect([...callbacks].sort().join()).toBe(
-      'frame:false,frame:true,native:false,native:true'
-    );
-    await render(null);
-  });
+      // The native start reads the value on screen at its admission. The frame driver has the value of its
+      // last frame before the pull.
+      const startTolerance =
+        POSITION_TOLERANCE +
+        (largestSlope * FRAME_MS * PAIR_LEFT) / PAIR_DURATION;
+      for (let checkpoint = 0; checkpoint < 4; checkpoint++) {
+        const { x, frameX } = await samplePair();
+        expect(Math.abs(x - frameX) < startTolerance).toBe(true);
+        await wait(PAIR_DURATION / 5);
+      }
+      await wait(PAIR_DURATION / 2);
+      const end = await samplePair();
+      expect(Math.abs(end.x - end.endX) < 0.01).toBe(true);
+      expect(Math.abs(end.frameX - end.endX) < 0.01).toBe(true);
+      expect(end.keys).toBe(0);
+      expect([...callbacks].sort().join()).toBe(
+        'frame:false,frame:true,native:false,native:true'
+      );
+      await render(null);
+    });
+  }
 
   test('the removal of the views during playback gives both drivers false one time', async () => {
     const layouts = pairLayouts(Easing.linear, false);
@@ -2128,14 +2191,23 @@ describe('native layout size', () => {
       HELD,
       [0.05, 0.25, 0.5, 0.75]
     );
-    expect(
-      summarize(events.filter(isHostEvent)).startsWith(
+    const route = summarize(events.filter(isHostEvent));
+    const checks = [
+      route.startsWith(
         `${startOf('PositionX', 'Width')} > TrackEnded:Width:true`
-      )
-    ).toBe(true);
+      ),
+      distances.during < LINEAR_TOLERANCE,
+      distances.atEnd < 0.01,
+    ];
+    if (checks.includes(false)) {
+      console.log(
+        `SIZE-PAIR | width with no duration | ${describeFramePairRows(rows)} | ${route} | checks ${checks.join()}`
+      );
+    }
+    for (const check of checks) {
+      expect(check).toBe(true);
+    }
     expect(summarizeResults(events)).toBe('Ended:Finished:None');
-    expect(distances.during < LINEAR_TOLERANCE).toBe(true);
-    expect(distances.atEnd < 0.01).toBe(true);
     expect(rows[0].native.width).toBe(HELD.width);
     await render(null);
   });

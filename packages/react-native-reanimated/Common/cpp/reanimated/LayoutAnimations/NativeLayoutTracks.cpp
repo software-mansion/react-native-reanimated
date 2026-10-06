@@ -9,6 +9,7 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace reanimated {
 
@@ -86,10 +87,10 @@ double numberOf(const jsi::Value &value) {
   return value.isNumber() ? value.getNumber() : std::nan("");
 }
 
-/// A description with no control points is linear. Control points of a wrong form are not numbers, so that
-/// the track validation refuses them.
-AnimationTiming leafEasing(jsi::Runtime &rt, const jsi::Object &timing) {
-  const auto cubicBezier = timing.getProperty(rt, "cubicBezier");
+/// A segment with no control points is linear. Control points of a wrong form are not numbers, so that the
+/// track validation refuses them.
+AnimationTiming segmentEasing(jsi::Runtime &rt, const jsi::Object &segment) {
+  const auto cubicBezier = segment.getProperty(rt, "cubicBezier");
   if (cubicBezier.isUndefined()) {
     return LinearTiming{};
   }
@@ -136,6 +137,26 @@ nativeValue(jsi::Runtime &rt, const jsi::Value &value, const AnimationTarget tar
   return AnimationValue{value.getNumber() + modelOffset(target, after)};
 }
 
+std::variant<std::vector<AnimationSegment>, TrackBuildFailure>
+makeSegments(jsi::Runtime &rt, const jsi::Object &leafTrack, const AnimationTarget target, const ShadowView &after) {
+  const auto leafSegments = leafTrack.getProperty(rt, "segments").asObject(rt).asArray(rt);
+  const auto count = leafSegments.size(rt);
+  std::vector<AnimationSegment> segments;
+  segments.reserve(count);
+  for (size_t index = 0; index < count; ++index) {
+    const auto leafSegment = leafSegments.getValueAtIndex(rt, index).asObject(rt);
+    auto endValue = nativeValue(rt, leafSegment.getProperty(rt, "endValue"), target, after);
+    if (const auto *failure = std::get_if<TrackBuildFailure>(&endValue)) {
+      return *failure;
+    }
+    segments.push_back(
+        {.endOffset = numberOf(leafSegment.getProperty(rt, "endOffset")),
+         .endValue = std::get<AnimationValue>(std::move(endValue)),
+         .timingFromPrevious = segmentEasing(rt, leafSegment)});
+  }
+  return segments;
+}
+
 std::variant<AnimationTrack, TrackBuildFailure> makeTrack(
     jsi::Runtime &rt,
     const jsi::Object &leaf,
@@ -150,24 +171,21 @@ std::variant<AnimationTrack, TrackBuildFailure> makeTrack(
   if (const auto *failure = std::get_if<TrackBuildFailure>(&start)) {
     return *failure;
   }
-  const auto timingValue = leaf.getProperty(rt, "timing");
-  if (!timingValue.isObject()) {
+  const auto leafTrackValue = leaf.getProperty(rt, "track");
+  if (!leafTrackValue.isObject()) {
     return TrackBuildFailure::UnsupportedTiming;
   }
-  const auto timing = timingValue.asObject(rt);
-  auto end = nativeValue(rt, timing.getProperty(rt, "toValue"), *target, after);
-  if (const auto *failure = std::get_if<TrackBuildFailure>(&end)) {
+  const auto leafTrack = leafTrackValue.asObject(rt);
+  auto segments = makeSegments(rt, leafTrack, *target, after);
+  if (const auto *failure = std::get_if<TrackBuildFailure>(&segments)) {
     return *failure;
   }
   AnimationTrack track{
       .target = *target,
       .start = std::get<AnimationValue>(std::move(start)),
-      .segments =
-          {{.endOffset = 1,
-            .endValue = std::get<AnimationValue>(std::move(end)),
-            .timingFromPrevious = leafEasing(rt, timing)}},
-      .delayMs = numberOf(timing.getProperty(rt, "delayMs")),
-      .durationMs = numberOf(timing.getProperty(rt, "durationMs")),
+      .segments = std::get<std::vector<AnimationSegment>>(std::move(segments)),
+      .delayMs = numberOf(leafTrack.getProperty(rt, "delayMs")),
+      .durationMs = numberOf(leafTrack.getProperty(rt, "durationMs")),
       .endpointPolicy = endpointPolicy,
   };
   if (const auto failure = validateTrack(track)) {

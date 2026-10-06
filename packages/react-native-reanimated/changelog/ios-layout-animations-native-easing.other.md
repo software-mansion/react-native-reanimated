@@ -1,0 +1,1 @@
+Layout, entering, and exiting animations with the default easing, or with each easing function that has a fit of cubic pieces, play natively on iOS with the `IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION` flag.

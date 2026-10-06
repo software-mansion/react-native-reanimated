@@ -123,26 +123,40 @@ export type NativeTransformOperation = { kind: string; value: number };
 /** The native form of a leaf value: a number, or the operations of `transform`. */
 export type NativeLeafValue = number | NativeTransformOperation[];
 
-/** A native timing with its end value and the sum of its delays. */
-export type NativeLeafTiming<TValue = NativeLeafValue> = Pick<
-  NativeTimingDescription,
-  'durationMs' | 'cubicBezier'
-> & {
-  toValue: TValue;
+/**
+ * One piece of the timeline of a leaf. It ends at `endOffset` of the duration,
+ * at `endValue`. The control points are in the units of the segment. A segment
+ * with no control points is linear.
+ */
+export type NativeLeafSegment<TValue = NativeLeafValue> = {
+  endOffset: number;
+  endValue: TValue;
+  cubicBezier?: [number, number, number, number];
+};
+
+/** The timeline of a leaf after its delay. The last segment ends at 1. */
+export type NativeLeafTrack<TValue = NativeLeafValue> = {
   delayMs: number;
+  durationMs: number;
+  segments: NativeLeafSegment<TValue>[];
 };
 
 /** What the native route takes from one layout animation. */
 export type NativeLayoutLimits = {
   leaves: number;
   transformOperations: number;
+  /** The sum of the segments of the tracks of the animation. */
+  segments: number;
 };
 
 /** What the native route reads from the result of a layout animation builder. */
 export type LayoutAnimationBuildSummary = {
   /** The start time of the animation. All starts of one batch share it. */
   originMs: number;
-  /** The builder gave more animations or operations than the caller can route. */
+  /**
+   * The builder gave more animations, operations, or segments than the caller
+   * can route.
+   */
   exceedsLimit: boolean;
   /** An initial value has no animation. */
   hasInitialOnlyKeys: boolean;
@@ -158,7 +172,8 @@ export type LayoutAnimationBuildSummary = {
      * `transform` leaf with no native form has no value.
      */
     initialValue: unknown;
-    timing?: NativeLeafTiming;
+    /** Absent when the leaf has no native timeline. */
+    track?: NativeLeafTrack;
     /** The live leaf of the key keeps its timeline, so the key needs no track. */
     continuesLiveLeaf: boolean;
   }[];
@@ -370,18 +385,25 @@ export type AnimatableValueObject = { [key: string]: Animatable };
 
 export type AnimatableValue = Animatable | AnimatableValueObject;
 
-/**
- * The data of a `withTiming` animation, with the delays of its `withDelay`
- * wrappers, that a native layout animation can play.
- */
-export type NativeTimingDescription = {
+/** The easing of a timing phase. The native route fits a function. */
+export type NativeEasing =
+  | { kind: 'linear' }
+  | { kind: 'cubicBezier'; controlPoints: [number, number, number, number] }
+  | { kind: 'function'; easing: EasingFunction };
+
+export type NativeHoldPhase = { kind: 'hold'; durationMs: number };
+
+export type NativeTimingPhase = {
+  kind: 'timing';
+  durationMs: number;
   /** A string is a number with a unit. */
   toValue: number | string;
-  durationMs: number;
-  /** The delay of each `withDelay` wrapper, the outer one first. */
-  delaysMs: number[];
-  /** The control points of the easing. A linear easing has none. */
-  cubicBezier?: [number, number, number, number];
+  easing: NativeEasing;
+};
+
+/** The phases are in the order of time. */
+export type NativeTimingDescription = {
+  phases: (NativeHoldPhase | NativeTimingPhase)[];
 };
 
 export interface AnimationObject<T = AnimatableValue> {

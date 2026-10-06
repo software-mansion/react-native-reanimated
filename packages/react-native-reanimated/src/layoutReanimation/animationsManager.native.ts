@@ -4,6 +4,7 @@ import type { ShareableHost } from 'react-native-worklets';
 import { runOnUISync } from 'react-native-worklets';
 
 import { cancelAnimation, withStyleAnimation } from '../animation';
+import type { EasingCurveFits } from '../animation/nativeEasingCurve';
 import type {
   LayoutAnimation,
   LayoutAnimationBuildSummary,
@@ -22,7 +23,7 @@ import {
   advanceNativeLeaf,
   animatePlainOperations,
   currentOfNativeLeaf,
-  delayEndsOfLeaves,
+  phaseEndsOf,
   relateToLiveLeaf,
   summarizeNativeLeaf,
 } from './nativeLeaves';
@@ -83,6 +84,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
   const builds = new Map<number, LayoutAnimationBuild>();
+  const easingCurveFits: EasingCurveFits = new WeakMap();
 
   // Layout animation starts are scheduled separately on the UI runtime. With
   // a large number of views, sampling the clock for every start noticeably
@@ -157,21 +159,38 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       >;
       const keys = Object.keys(animations);
       const { transform } = animations;
-      const exceedsLimit =
+      const refusal: LayoutAnimationBuildSummary = {
+        originMs,
+        exceedsLimit: true,
+        hasInitialOnlyKeys: false,
+        needsFrameDriver: false,
+        leaves: [],
+      };
+      const hasTooManyLeaves =
         keys.length > limits.leaves ||
         (Array.isArray(transform) &&
           transform.length > limits.transformOperations);
-      if (exceedsLimit) {
-        return {
-          originMs,
-          exceedsLimit,
-          hasInitialOnlyKeys: false,
-          needsFrameDriver: false,
-          leaves: [],
-        };
+      if (hasTooManyLeaves) {
+        return refusal;
       }
       if (Array.isArray(transform)) {
         animatePlainOperations(transform);
+      }
+      const summaries = keys.map((key) => ({
+        key,
+        ...summarizeNativeLeaf(
+          key,
+          initialValues[key],
+          animations[key],
+          easingCurveFits
+        ),
+      }));
+      const segmentCount = summaries.reduce(
+        (sum, { track }) => sum + (track?.segments.length ?? 0),
+        0
+      );
+      if (segmentCount > limits.segments) {
+        return refusal;
       }
       const relations: Record<string, LiveLeafRelation> = {};
       for (const liveLeaf of liveLeaves) {
@@ -182,15 +201,14 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       }
       return {
         originMs,
-        exceedsLimit,
+        exceedsLimit: false,
         hasInitialOnlyKeys: Object.keys(initialValues).some(
           (key) => !(key in animations)
         ),
         needsFrameDriver: Object.values(relations).includes('frameDriver'),
-        leaves: keys.map((key) => ({
-          key,
-          ...summarizeNativeLeaf(initialValues[key], animations[key]),
-          continuesLiveLeaf: relations[key] === 'continues',
+        leaves: summaries.map((summary) => ({
+          ...summary,
+          continuesLiveLeaf: relations[summary.key] === 'continues',
         })),
       };
     },
@@ -219,7 +237,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         throw build.error;
       }
       startStyle(tag, type, build.style, build.originMs);
-      replayDelayEnds(tag, build.style, build.originMs);
+      replayPhaseEnds(tag, build.style, build.originMs);
     },
     finishBuilt(buildId: number, finished: boolean) {
       const build = builds.get(buildId);
@@ -279,11 +297,11 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   }
 
   /**
-   * A start after the origin of its build gets the frame of each delay end that
+   * A start after the origin of its build gets the frame of each phase end that
    * is over, as the frame driver ran it: a delay starts its animation in that
    * frame.
    */
-  function replayDelayEnds(
+  function replayPhaseEnds(
     tag: number,
     style: LayoutAnimation,
     originMs: number
@@ -291,11 +309,11 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
     const animation = mutableValuesForTag.get(tag)?._animation;
     const now = getStartTimestamp();
     const leaves = Object.values(style.animations) as NativeLeaf[];
-    for (const delayEnd of delayEndsOfLeaves(leaves)) {
-      if (!animation || originMs + delayEnd >= now) {
+    for (const phaseEnd of phaseEndsOf(leaves)) {
+      if (!animation || originMs + phaseEnd >= now) {
         return;
       }
-      animation.onFrame(animation, originMs + delayEnd);
+      animation.onFrame(animation, originMs + phaseEnd);
     }
   }
 
