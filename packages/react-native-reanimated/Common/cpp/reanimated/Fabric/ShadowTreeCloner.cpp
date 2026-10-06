@@ -23,9 +23,8 @@ std::optional<std::string> extractChildrenProp(
   for (const auto &props : propsVector) {
     auto propsDynamic = props.toDynamic();
     if (const auto *childrenProp = propsDynamic.get_ptr("children")) {
-      text = childrenProp->asString();
-      if (text->empty()) {
-        text = "\u200b";
+      if (childrenProp->isString() || childrenProp->isNumber()) {
+        text = childrenProp->asString();
       }
       propsDynamic.erase("children");
     }

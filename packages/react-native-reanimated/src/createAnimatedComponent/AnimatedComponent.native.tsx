@@ -29,7 +29,7 @@ import { InlinePropManager } from './InlinePropManager';
 import jsPropsUpdater from './JSPropsUpdater';
 import { NativeEventsManager } from './NativeEventsManager';
 import { PropsFilter } from './PropsFilter';
-import { filterStyles, flattenArray } from './utils';
+import { filterStyles, flattenArray, normalizeTextProp } from './utils';
 
 let id = 0;
 
@@ -449,9 +449,7 @@ export default class AnimatedComponent
       this.ChildComponent.displayName === 'Text' &&
       isSharedValue(this.props.children)
     ) {
-      filteredProps.children = normalizeTextProp(
-        this.state.settledProps?.children ?? filteredProps.children
-      );
+      filteredProps.children = normalizeTextProp(filteredProps.children);
     }
 
     // TODO: Remove need for this \/\/\/\/.
@@ -472,7 +470,6 @@ export default class AnimatedComponent
         nativeID,
         ...filteredProps,
         ...this.state.settledProps,
-        children: filteredProps.children,
         style: [...flattenArray(filteredProps.style), this.state.settledStyle],
         ...jestProps,
       });
@@ -505,11 +502,4 @@ function filterOutAnimatedStyles(
       }
       return styleElement;
     });
-}
-
-function normalizeTextProp(text: unknown): string {
-  if (text === '') {
-    return '\u200b'; // use zero-width space when text is empty to prevent collapsing of the Text component
-  }
-  return String(text); // convert numbers to string, keep strings as they are
 }

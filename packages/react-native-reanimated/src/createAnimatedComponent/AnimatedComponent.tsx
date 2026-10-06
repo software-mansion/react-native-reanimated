@@ -37,7 +37,7 @@ import type {
 import { InlinePropManager } from './InlinePropManager';
 import jsPropsUpdater from './JSPropsUpdater';
 import { PropsFilter } from './PropsFilter';
-import { filterStyles, flattenArray } from './utils';
+import { filterStyles, flattenArray, normalizeTextProp } from './utils';
 
 let id = 0;
 
@@ -444,11 +444,4 @@ export default class AnimatedComponent
 
     return super.render(childProps);
   }
-}
-
-function normalizeTextProp(text: unknown): string {
-  if (text === '') {
-    return '\u200b'; // use zero-width space when text is empty to prevent collapsing of the Text component
-  }
-  return String(text); // convert numbers to string, keep strings as they are
 }

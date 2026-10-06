@@ -35,6 +35,7 @@ const FRAME_MS = 16;
 const MAX_STEP_PER_FRAME = 4;
 // See props/syncBackToReact.test.tsx.
 const SYNC_BACK_DELAY_MS = 2000;
+const EMPTY_TEXT = '\u200b';
 
 const ORIGINAL_UPDATE_PROPS = '__animatedTextTestOriginalUpdateProps';
 
@@ -296,8 +297,12 @@ async function recordScreenFrames(
   run: (recording: PropRecording) => Promise<void>
 ) {
   const frames = await recordTextFrames(run);
-  const counter = frames.filter((frame) => frame !== '' && frame !== 'Blink');
-  const empty = frames.filter((frame) => frame === '' || frame === 'Blink');
+  const counter = frames.filter(
+    (frame) => frame !== EMPTY_TEXT && frame !== 'Blink'
+  );
+  const empty = frames.filter(
+    (frame) => frame === EMPTY_TEXT || frame === 'Blink'
+  );
   return { counter: groupRepeats(counter), empty };
 }
 
@@ -383,6 +388,21 @@ function FadingCounterText({
 }
 
 function StringText({ text }: { text: SharedValue<string> }) {
+  const ref = useTestRef(TEXT_REF);
+  return (
+    <View style={styles.container}>
+      <Animated.Text ref={ref} style={styles.text}>
+        {text}
+      </Animated.Text>
+    </View>
+  );
+}
+
+function NullableText({
+  text,
+}: {
+  text: SharedValue<string | null | undefined>;
+}) {
   const ref = useTestRef(TEXT_REF);
   return (
     <View style={styles.container}>
@@ -790,7 +810,7 @@ describe('Animated.Text with a shared value as children', () => {
       expectEveryViewGotEveryFrame(up.counter);
       expectEveryViewGotEveryFrame(down.counter);
       expect(up.empty.join(',')).toBe('Blink');
-      expect(down.empty.join(',')).toBe('');
+      expect(down.empty.join(',')).toBe(EMPTY_TEXT);
 
       for (const row of GROWING_ROWS) {
         expectRow(
@@ -881,7 +901,7 @@ describe('Animated.Text with a shared value as children', () => {
       expect(empty.every((frame, i) => i === 0 || frame !== empty[i - 1])).toBe(
         true
       );
-      expect(empty[empty.length - 1]).toBe('');
+      expect(empty[empty.length - 1]).toBe(EMPTY_TEXT);
 
       for (const row of MEASURED_ROWS) {
         expectRow(
@@ -1124,6 +1144,28 @@ describe('Animated.Text with a shared value as children', () => {
       expect(widthOfB > widthOfA).toBe(true);
       expect(widthAfterOldChanged).toBe(widthOfB, ComparisonMode.PIXEL);
       expect(widthAfterNewChanged).toBe(widthOfA, ComparisonMode.PIXEL);
+    });
+
+    test('null and undefined show empty text', async () => {
+      const references = await measureReferences({
+        empty: EMPTY_TEXT,
+        abc: 'abc',
+      });
+      const text = makeMutable<string | null | undefined>(null);
+      await render(<NullableText text={text} />);
+      await expectShows(references, 'empty', 'initial null');
+
+      text.value = 'abc';
+      await expectShows(references, 'abc', 'text after null');
+
+      text.value = null;
+      await expectShows(references, 'empty', 'null after text');
+
+      text.value = 'abc';
+      await expectShows(references, 'abc', 'text after null again');
+
+      text.value = undefined;
+      await expectShows(references, 'empty', 'undefined after text');
     });
 
     test('remounting shows the current value', async () => {

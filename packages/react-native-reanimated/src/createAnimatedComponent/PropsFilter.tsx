@@ -1,7 +1,7 @@
 'use strict';
 
 import { initialUpdaterRun } from '../animation';
-import type { SharedValue, StyleProps } from '../commonTypes';
+import type { StyleProps } from '../commonTypes';
 import { isCSSConfigProp, isPseudoSelectorValue } from '../css/utils';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import { isSharedValue } from '../isSharedValue';
@@ -24,10 +24,7 @@ function dummyListener() {
 
 export class PropsFilter implements IPropsFilter {
   private _initialPropsMap = new Map<AnimatedStyleHandle, StyleProps>();
-  private _initialInlinePropValues = new Map<
-    string,
-    { sharedValue: SharedValue; value: unknown }
-  >();
+  private _initialChildren: unknown;
 
   public filterNonAnimatedProps(
     component: AnimatedComponentTypeInternal
@@ -85,12 +82,12 @@ export class PropsFilter implements IPropsFilter {
           props[key] = dummyListener;
         }
       } else if (isSharedValue(value)) {
-        let initial = this._initialInlinePropValues.get(key);
-        if (initial?.sharedValue !== value) {
-          initial = { sharedValue: value, value: value.value };
-          this._initialInlinePropValues.set(key, initial);
+        if (key === 'children') {
+          this._initialChildren ??= value.value;
+          props[key] = this._initialChildren;
+        } else if (component._isFirstRender) {
+          props[key] = value.value;
         }
-        props[key] = initial.value;
       } else {
         props[key] = value;
       }

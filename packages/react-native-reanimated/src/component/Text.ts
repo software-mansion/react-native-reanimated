@@ -4,7 +4,7 @@ import { createElement, forwardRef } from 'react';
 import type { TextProps } from 'react-native';
 import { Text } from 'react-native';
 
-import type { SharedValue } from '../commonTypes';
+import type { SharedValueDisableContravariance } from '../commonTypes';
 import type { AnimatedComponentRef } from '../createAnimatedComponent';
 import { createAnimatedComponent } from '../createAnimatedComponent';
 import type { AnimatedProps } from '../helperTypes';
@@ -16,7 +16,9 @@ type AnimatedTextComplement = ComponentRef<typeof Text> & {
   getNode(): ComponentRef<typeof Text>;
 };
 
-type AnimatedTextChild = ReactNode | SharedValue<string> | SharedValue<number>;
+type AnimatedTextChild =
+  | ReactNode
+  | SharedValueDisableContravariance<string | number | null | undefined>;
 
 type AnimatedTextProps = Omit<AnimatedProps<TextProps>, 'children' | 'ref'> & {
   children?: AnimatedTextChild | AnimatedTextChild[];
@@ -38,7 +40,7 @@ function getSharedValueId(sharedValue: object) {
 }
 
 // is-tree-shakable-suppress
-export const AnimatedText = forwardRef<
+const AnimatedTextWithRef = forwardRef<
   ComponentRef<typeof Text>,
   AnimatedTextProps
 >(({ children, ...props }, ref) => {
@@ -57,7 +59,11 @@ export const AnimatedText = forwardRef<
     { ...props, ref },
     ...(content as ReactNode[])
   );
-}) as unknown as (
+});
+AnimatedTextWithRef.displayName = 'AnimatedText';
+
+// is-tree-shakable-suppress
+export const AnimatedText = AnimatedTextWithRef as unknown as (
   props: AnimatedTextProps & {
     ref?: AnimatedComponentRef<typeof Text>;
   }
