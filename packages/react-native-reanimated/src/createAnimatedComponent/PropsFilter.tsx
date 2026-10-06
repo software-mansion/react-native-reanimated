@@ -24,7 +24,6 @@ function dummyListener() {
 
 export class PropsFilter implements IPropsFilter {
   private _initialPropsMap = new Map<AnimatedStyleHandle, StyleProps>();
-  private _initialChildren: unknown;
 
   public filterNonAnimatedProps(
     component: AnimatedComponentTypeInternal
@@ -82,10 +81,7 @@ export class PropsFilter implements IPropsFilter {
           props[key] = dummyListener;
         }
       } else if (isSharedValue(value)) {
-        if (key === 'children') {
-          this._initialChildren ??= value.value;
-          props[key] = this._initialChildren;
-        } else if (component._isFirstRender) {
+        if (component._isFirstRender) {
           props[key] = value.value;
         }
       } else {
