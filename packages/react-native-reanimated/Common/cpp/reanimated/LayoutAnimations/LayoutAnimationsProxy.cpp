@@ -1173,6 +1173,7 @@ void LayoutAnimationsProxy::maybeScheduleCleanupPull(const bool flushedStructura
 
 // The push model queues the batch after the pull returns, in the same JS task. A frame that the UI thread pulls
 // in between mounts before the batch, so the frames of its views wait for the next JS task.
+// https://github.com/facebook/react-native/blob/v0.88.0-rc.3/packages/react-native/ReactCommon/react/renderer/runtimescheduler/RuntimeScheduler_Modern.cpp#L315-L346
 void LayoutAnimationsProxy::holdFramesUntilBatchIsQueued(const ShadowViewMutationList &mutations) const {
   if (mutations.empty() || isMountingCoordinatorPullModelEnabled() || worklets::isOnUIThread(uiScheduler_)) {
     return;
