@@ -505,11 +505,9 @@ void LayoutAnimationsProxy::updateLightTree(
         parent->children.insert(parent->children.begin() + hostIndex, node);
         node->parent = parent;
         const auto tag = mutation.newChildShadowView.tag;
-        bool hasSharedTransition = false;
+        std::optional<SharedTag> sharedTag;
         if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-          auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
-          hasSharedTransition = mutation.newChildShadowView.traits.check(ShadowNodeTraits::Trait::ViewKind) &&
-              sharedTransitionManager_->tagToName_.contains(tag);
+          sharedTag = findSharedTag(mutation.newChildShadowView);
         }
         const auto layoutConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT);
         const auto enteringConfig = isViewKind(mutation.newChildShadowView)
@@ -545,7 +543,8 @@ void LayoutAnimationsProxy::updateLightTree(
           auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
           filteredMutations.push_back(
               ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, hiddenView, mutation.parentTag));
-        } else if (hasSharedTransition && isInsideInactiveBoundary(node)) {
+        } else if (sharedTag && isInsideInactiveBoundary(node)) {
+          hideInSharedElement(*sharedTag, node);
           filteredMutations.push_back(
               ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
           auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);

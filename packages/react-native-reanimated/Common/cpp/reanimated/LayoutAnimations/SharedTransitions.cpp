@@ -60,15 +60,7 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
   if (node->isExiting()) {
     return;
   }
-  std::optional<SharedTag> sharedTag;
-  if (node->current.traits.check(ShadowNodeTraits::Trait::ViewKind)) {
-    auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
-    const auto it = sharedTransitionManager_->tagToName_.find(node->current.tag);
-    if (it != sharedTransitionManager_->tagToName_.end()) {
-      sharedTag = it->second;
-    }
-  }
-  if (sharedTag) {
+  if (const auto sharedTag = findSharedTag(node->current)) {
     if (const auto staleTag = staleSynchronousProps_.find(node, LayoutAnimationType::SHARED_ELEMENT_TRANSITION)) {
       transaction.staleSnapshots[node->current.tag] = *staleTag;
     }
@@ -101,6 +93,18 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
   for (auto &child : node->children) {
     findSharedElementsOnScreen(child, index, transaction);
   }
+}
+
+std::optional<SharedTag> LayoutAnimationsProxy::findSharedTag(const ShadowView &view) const {
+  if (!isViewKind(view)) {
+    return std::nullopt;
+  }
+  auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
+  const auto it = sharedTransitionManager_->tagToName_.find(view.tag);
+  if (it == sharedTransitionManager_->tagToName_.end()) {
+    return std::nullopt;
+  }
+  return it->second;
 }
 
 void LayoutAnimationsProxy::resolveTransitionLifecycle(
