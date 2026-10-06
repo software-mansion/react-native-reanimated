@@ -403,7 +403,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto unregisterSensorFunction = bindThis(&NativeProxy::unregisterSensor);
 
   // The sensors of an Android device do not change while the app runs.
-  auto observeSensorAvailabilityFunction = [](SensorAvailabilityListener) {
+  auto observeSensorAvailabilityFunction = [](const SensorAvailabilityListener &) {
   };
 
   auto setGestureStateFunction = bindThis(&NativeProxy::setGestureState);
