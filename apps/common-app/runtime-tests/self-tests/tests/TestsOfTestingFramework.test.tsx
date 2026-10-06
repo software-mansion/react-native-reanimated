@@ -20,6 +20,7 @@ import {
   getWorkletRuntimesFromPool,
   notify,
   Presets,
+  recordAnimationUpdates,
   registerValue,
   render,
   test,
@@ -70,6 +71,26 @@ const AnimatedComponent = () => {
         ref={ref2}
         style={[styles.greenComponent, animatedStyle2]}
       />
+    </View>
+  );
+};
+
+const RECORDED_ANIMATION_MS = 500;
+
+const SingleAnimatedView = () => {
+  const widthSV = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    width: withTiming(widthSV.value, { duration: RECORDED_ANIMATION_MS }),
+  }));
+
+  useEffect(() => {
+    widthSV.value = 100;
+  }, [widthSV]);
+
+  return (
+    <View style={styles.container}>
+      <Animated.View style={[styles.brownComponent, animatedStyle]} />
     </View>
   );
 };
@@ -308,6 +329,27 @@ describe('Tests of Test Framework', () => {
     const component = getTestComponent('LayoutAnimation');
     await wait(600);
     expect(await component.getAnimatedStyle('opacity')).toBe(1);
+  });
+
+  test('getUpdates - a second read sees updates recorded after the first - ✅', async () => {
+    const updates = await recordAnimationUpdates();
+    await render(<SingleAnimatedView />);
+    await wait(RECORDED_ANIMATION_MS / 5);
+    const firstCount = (await updates.getUpdates()).length;
+    await wait(RECORDED_ANIMATION_MS);
+    const secondCount = (await updates.getUpdates()).length;
+    expect(secondCount > firstCount).toBe(true);
+  });
+
+  test('getUpdates - reports that nothing was recorded - ✅', async () => {
+    const updates = await recordAnimationUpdates();
+    let message = '';
+    try {
+      await updates.getUpdates();
+    } catch (error) {
+      message = String(error);
+    }
+    expect(message.includes('No updates were recorded')).toBe(true);
   });
 
   // TODO: Fix these tests - tag is not passed to _updateProps, so the recordAnimationUpdates function always receives tag as undefined
