@@ -50,11 +50,7 @@ export class SensorContainer {
     }
 
     const sensor = this.nativeSensors.get(sensorId);
-    if (
-      sensor &&
-      sensor.isAvailable() &&
-      (sensor.isRunning() || sensor.register(handler))
-    ) {
+    if (sensor && (sensor.isRunning() || sensor.register(handler))) {
       sensor.listenersNumber++;
       return sensorId;
     }

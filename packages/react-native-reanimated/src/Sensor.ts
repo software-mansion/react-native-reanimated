@@ -51,22 +51,21 @@ export default class Sensor<T extends SensorType = SensorType> {
 
   register(eventHandler: SerializableRef<(data: SensorValue) => void>) {
     const config = this.config;
-    const sensorType = this.sensorType;
-    this.sensorId = ReanimatedModule.registerSensor(
-      sensorType,
+    const sensorId = ReanimatedModule.registerSensor(
+      this.sensorType,
       config.interval === 'auto' ? -1 : config.interval,
       config.iosReferenceFrame,
       eventHandler as SerializableRef<WorkletFunction>
     );
-    return this.sensorId !== -1;
+    if (sensorId === -1) {
+      return false;
+    }
+    this.sensorId = sensorId;
+    return true;
   }
 
   isRunning() {
-    return this.sensorId !== -1 && this.sensorId !== null;
-  }
-
-  isAvailable() {
-    return this.sensorId !== -1;
+    return this.sensorId !== null;
   }
 
   getSharedValue() {
@@ -74,9 +73,9 @@ export default class Sensor<T extends SensorType = SensorType> {
   }
 
   unregister() {
-    if (this.sensorId !== null && this.sensorId !== -1) {
+    if (this.sensorId !== null) {
       ReanimatedModule.unregisterSensor(this.sensorId);
+      this.sensorId = null;
     }
-    this.sensorId = null;
   }
 }

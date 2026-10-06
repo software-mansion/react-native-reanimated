@@ -117,14 +117,15 @@ class JSReanimated implements IReanimatedModule {
 
     if (!this.isSensorAvailable(sensorType)) {
       // https://w3c.github.io/sensors/#secure-context
-      logger.warn(
+      logger.warnOnce(
         'Sensor is not available.' +
           (IS_WEB && location.protocol !== 'https:'
             ? ' Make sure you use secure origin with `npx expo start --web --https`.'
             : '') +
           (this.platform === Platform.WEB_IOS
             ? ' For iOS web, you will also have to also grant permission in the browser: https://dev.to/li/how-to-requestpermission-for-devicemotion-and-deviceorientation-events-in-ios-13-46g2.'
-            : '')
+            : ''),
+        0
       );
       return -1;
     }
