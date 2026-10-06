@@ -2,6 +2,8 @@
 
 #import <stdatomic.h>
 
+NSNotificationName const ReanimatedHingeProbeDidFindHingeNotification = @"ReanimatedHingeProbeDidFindHingeNotification";
+
 #if !TARGET_OS_TV && !TARGET_OS_OSX && !TARGET_OS_VISION
 
 @interface REAHingeProbeWindow : UIWindow
@@ -53,12 +55,14 @@ static NSHashTable<id<UIInteraction>> *interactions = nil;
 + (void)attachToScene:(UIWindowScene *)scene API_AVAILABLE(ios(27.1))
 {
   probeWindow = [[REAHingeProbeWindow alloc] initWithWindowScene:scene];
-  [probeWindow addInteraction:[[UIHingeInteraction alloc]
-                                  initWithUpdateHandler:^(UIHingeInteraction *_, UIHingeInteractionUpdate *update) {
-                                    if (update.hinge != nil) {
-                                      atomic_store(&hasHinge, true);
-                                    }
-                                  }]];
+  UIHingeInteraction *probe =
+      [[UIHingeInteraction alloc] initWithUpdateHandler:^(UIHingeInteraction *_, UIHingeInteractionUpdate *update) {
+        if (update.hinge != nil && !atomic_exchange(&hasHinge, true)) {
+          [NSNotificationCenter.defaultCenter postNotificationName:ReanimatedHingeProbeDidFindHingeNotification
+                                                            object:nil];
+        }
+      }];
+  [probeWindow addInteraction:probe];
   for (id<UIInteraction> interaction in interactions) {
     [interaction.view removeInteraction:interaction];
     [probeWindow addInteraction:interaction];

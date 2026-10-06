@@ -45,6 +45,10 @@ export interface ReanimatedModuleProxy {
 
   unregisterSensor(sensorId: number): void;
 
+  setSensorAvailabilityHandler(
+    handler: (sensorType: number, isAvailable: boolean) => void
+  ): void;
+
   getStaticFeatureFlag(name: string): boolean;
 
   setDynamicFeatureFlag(name: string, value: boolean): void;

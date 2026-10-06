@@ -1,11 +1,14 @@
 #import <Foundation/Foundation.h>
 
+/// Posted one time on the main thread, when the probe gets its first hinge.
+extern NSNotificationName const ReanimatedHingeProbeDidFindHingeNotification;
+
 #if !TARGET_OS_TV && !TARGET_OS_OSX && !TARGET_OS_VISION
 #import <UIKit/UIKit.h>
 
 /// UIKit reports a hinge only through the updates of a `UIHingeInteraction`,
 /// so the probe attaches one when the app's first scene connects. The answer
-/// arrives a few milliseconds later, before JS renders.
+/// arrives a few milliseconds later, usually before JS renders.
 @interface ReanimatedHingeProbe : NSObject
 
 + (bool)hasHinge;

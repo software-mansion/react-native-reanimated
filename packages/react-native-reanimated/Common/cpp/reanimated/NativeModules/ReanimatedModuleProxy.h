@@ -184,6 +184,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
       const jsi::Value &iosReferenceFrame,
       const jsi::Value &sensorDataContainer);
   void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId);
+  void setSensorAvailabilityHandler(jsi::Runtime &rt, const jsi::Value &handler);
 
   void cleanupSensors();
 
