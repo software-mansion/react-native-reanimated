@@ -104,6 +104,16 @@ function isAtRest({ durationMs, delayMs }: AnimationTiming): boolean {
   return durationMs === 0 && delayMs === 0;
 }
 
+/** The end of each delay of an animation, from its start. */
+function delayEndsOf(animation: AnimationObject): number[] {
+  'worklet';
+  let delayEnd = 0;
+  return (animation.__nativeTiming?.delaysMs ?? []).map((delayMs) => {
+    delayEnd += delayMs;
+    return delayEnd;
+  });
+}
+
 function advanceAnimation(
   animation: AnimationObject,
   initialValue: unknown,
@@ -116,13 +126,11 @@ function advanceAnimation(
   }
   animation.onStart(animation, initialValue, originMs, undefined);
   // A delay starts its animation in the frame in which the delay ends.
-  let delayEnd = originMs;
-  for (const delayMs of animation.__nativeTiming?.delaysMs ?? []) {
-    delayEnd += delayMs;
-    if (delayEnd >= now) {
+  for (const delayEnd of delayEndsOf(animation)) {
+    if (originMs + delayEnd >= now) {
       break;
     }
-    animation.onFrame(animation, delayEnd);
+    animation.onFrame(animation, originMs + delayEnd);
   }
   if (animation.onFrame(animation, now)) {
     animation.finished = true;
@@ -274,6 +282,21 @@ export function advanceNativeLeaf(
       now
     );
   });
+}
+
+/**
+ * The times, from the start of the leaves, at which a delay of one of them
+ * ends. The earliest time is first.
+ */
+export function delayEndsOfLeaves(leaves: NativeLeaf[]): number[] {
+  'worklet';
+  const animations = leaves.flatMap((leaf) =>
+    Array.isArray(leaf)
+      ? leaf.map((operation) => operation[kindOf(operation)])
+      : [leaf]
+  );
+  const delayEnds = animations.flatMap(delayEndsOf);
+  return [...new Set(delayEnds)].sort((first, second) => first - second);
 }
 
 /** The value on screen of a leaf that `advanceNativeLeaf` brought to a time. */

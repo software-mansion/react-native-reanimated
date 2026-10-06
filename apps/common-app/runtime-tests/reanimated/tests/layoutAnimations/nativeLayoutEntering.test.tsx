@@ -1372,6 +1372,33 @@ describe('native layout entering and a clip of its view', () => {
     expect(callbacks.length).toBe(0);
     await expectTrueAtNaturalEnd(entered, 2000);
   });
+
+  test('a clip of the view after the delay of its native entering group ended: the frame driver continues the animation at the value of its timeline', async () => {
+    const timing = { durationMs: 1000, delayMs: 500 };
+    const entered = await enter(
+      countedPairOf(fadePairOf(timing)),
+      PairInViewToClip
+    );
+    await waitUntil(entered, 800);
+    const start = await takeTraceOfPair(entered);
+    expect(summarize(start.native.filter(isHostEvent))).toBe(
+      startOf([OPACITY])
+    );
+    scrollTo(CLIPPED_OFFSET);
+    await waitUntil(entered, 1000);
+    const transfer = await takeTransferTrace(entered.nativeTag);
+    expect(transfer.host).toBe(PLATFORM_REMOVED);
+    expect(callbacks.length).toBe(0);
+    const hidden = await readOnFrameDriver(entered, timing.durationMs);
+    expect(isNear(hidden.model, 0.5, 0.1)).toBe(true);
+
+    scrollTo(0);
+    await waitUntil(entered, 1250);
+    const shown = await readOnFrameDriver(entered, timing.durationMs);
+    expect(isNear(shown.shown, 0.75, 0.1)).toBe(true);
+    expect(callbacks.length).toBe(0);
+    await expectTrueAtNaturalEnd(entered, 1500);
+  });
 });
 
 const FIRST_COMMIT_PAIR = fadePairOf();

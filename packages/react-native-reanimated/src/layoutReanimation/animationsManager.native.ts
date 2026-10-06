@@ -22,6 +22,7 @@ import {
   advanceNativeLeaf,
   animatePlainOperations,
   currentOfNativeLeaf,
+  delayEndsOfLeaves,
   relateToLiveLeaf,
   summarizeNativeLeaf,
 } from './nativeLeaves';
@@ -218,6 +219,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         throw build.error;
       }
       startStyle(tag, type, build.style, build.originMs);
+      replayDelayEnds(tag, build.style, build.originMs);
     },
     finishBuilt(buildId: number, finished: boolean) {
       const build = builds.get(buildId);
@@ -274,6 +276,27 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
     value._animation = withStyleAnimation(animations);
     currentAnimationForTag.set(tag, animations);
     mutableValuesForTag.set(tag, value);
+  }
+
+  /**
+   * A start after the origin of its build gets the frame of each delay end that
+   * is over, as the frame driver ran it: a delay starts its animation in that
+   * frame.
+   */
+  function replayDelayEnds(
+    tag: number,
+    style: LayoutAnimation,
+    originMs: number
+  ) {
+    const animation = mutableValuesForTag.get(tag)?._animation;
+    const now = getStartTimestamp();
+    const leaves = Object.values(style.animations) as NativeLeaf[];
+    for (const delayEnd of delayEndsOfLeaves(leaves)) {
+      if (!animation || originMs + delayEnd >= now) {
+        return;
+      }
+      animation.onFrame(animation, originMs + delayEnd);
+    }
   }
 
   function getStartTimestamp(): number {

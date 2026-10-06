@@ -572,6 +572,26 @@ describe('LayoutAnimationsManager', () => {
       expect(lastProgress()).toEqual({ originX: 18.75 });
     });
 
+    test('a frame-driven start of a build whose delay ended plays the leaf from the end of the delay', () => {
+      const delayed = onUIRuntime(() =>
+        withDelay(500, timing(100, 1000) as unknown as number)
+      );
+      startBatchAt(2000);
+      manager.build(
+        23,
+        {},
+        configOf({ originY: 0 }, { originY: delayed }),
+        LIMITS,
+        []
+      );
+      startBatchAt(3000);
+      manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, 23, []);
+      runFrame(3100);
+      expect(lastProgress()).toEqual({ originY: 60 });
+      runFrame(3500);
+      expect(lastProgress()).toEqual({ originY: 100 });
+    });
+
     describe('a transform leaf', () => {
       type Operations = Record<string, unknown>[];
       const T = { buildId: 31, key: 'transform' };
