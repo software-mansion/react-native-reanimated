@@ -1,5 +1,11 @@
 'use strict';
-import { useEffect, useMemo, useRef } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
 
 import type {
   AnimatedSensor,
@@ -101,6 +107,10 @@ const NOOP = () => {
   // NOOP
 };
 
+const subscribeToSensorAvailability = () => NOOP;
+
+const getServerSensorAvailability = () => false;
+
 /**
  * Lets you create animations based on data from the device's sensors.
  *
@@ -127,9 +137,15 @@ export function useAnimatedSensor<T extends SensorType>(
     [interval, adjustToInterfaceOrientation, iosReferenceFrame]
   );
 
-  const isAvailable = useMemo(
+  const getSensorAvailability = useCallback(
     () => isSensorAvailable(sensorType),
     [sensorType]
+  );
+
+  const isAvailable = useSyncExternalStore(
+    subscribeToSensorAvailability,
+    getSensorAvailability,
+    getServerSensorAvailability
   );
 
   const sensor = useMemo(
