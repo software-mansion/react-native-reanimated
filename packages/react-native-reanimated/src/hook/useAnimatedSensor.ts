@@ -154,9 +154,23 @@ export function useAnimatedSensor<T extends SensorType>(
     [sensorType, config]
   );
 
-  const registrationRef = useRef({ sensorType, config, unregister: NOOP });
+  const registrationRef = useRef({
+    sensorType,
+    config,
+    unregister: NOOP,
+    isUnregisteredByUser: false,
+  });
 
   useEffect(() => {
+    const previousRegistration = registrationRef.current;
+    if (
+      previousRegistration.isUnregisteredByUser &&
+      previousRegistration.sensorType === sensorType &&
+      previousRegistration.config === config
+    ) {
+      return;
+    }
+
     const id = registerSensor(sensorType, config, (data) => {
       'worklet';
       sensor.value = adjustToInterfaceOrientation
@@ -174,7 +188,12 @@ export function useAnimatedSensor<T extends SensorType>(
         unregisterSensor(id);
       }
     };
-    registrationRef.current = { sensorType, config, unregister };
+    registrationRef.current = {
+      sensorType,
+      config,
+      unregister,
+      isUnregisteredByUser: false,
+    };
 
     return unregister;
   }, [sensorType, config, sensor, adjustToInterfaceOrientation, isAvailable]);
@@ -190,6 +209,7 @@ export function useAnimatedSensor<T extends SensorType>(
           registration.sensorType === sensorType &&
           registration.config === config
         ) {
+          registration.isUnregisteredByUser = true;
           registration.unregister();
         }
       },
