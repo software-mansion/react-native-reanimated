@@ -464,7 +464,11 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
 }
 
 jsi::Value ReanimatedModuleProxy::getStaticFeatureFlag(jsi::Runtime &rt, const jsi::Value &name) {
-  return reanimated::StaticFeatureFlags::getFlag(name.asString(rt).utf8(rt));
+  try {
+    return reanimated::StaticFeatureFlags::getFlag(name.asString(rt).utf8(rt));
+  } catch (const std::logic_error &) {
+    return false;
+  }
 }
 
 jsi::Value
