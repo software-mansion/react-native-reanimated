@@ -6,9 +6,11 @@
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
+#include <react/renderer/core/Props.h>
 #include <react/renderer/core/ReactPrimitives.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -47,7 +49,19 @@ using KeyboardEventSubscribeFunction = std::function<int(std::function<void(int,
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
-using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
+using ForceScreenSnapshotFunction = std::function<bool(Tag tag)>;
+using ReadMountedViewPropsFunction = std::function<Props::Shared(Tag tag)>;
+
+// A view is mounted while it is attached to the window. The frame is in points, relative to the parent and without
+// transforms.
+struct MountedViewProps {
+  double x;
+  double y;
+  double width;
+  double height;
+  double opacity;
+};
+using ObtainMountedViewPropsFunction = std::function<std::optional<MountedViewProps>(Tag tag)>;
 
 using PlatformAttachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector, std::function<void(bool)>)>;
 using PlatformDetachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector)>;
@@ -59,6 +73,7 @@ struct PlatformDepMethodsHolder {
 #endif // ANDROID
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshotFunction;
+  ReadMountedViewPropsFunction readMountedViewPropsFunction;
 #endif
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   GetAnimationTimestampFunction getAnimationTimestamp;
@@ -70,6 +85,7 @@ struct PlatformDepMethodsHolder {
   MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
   PlatformAttachPseudoSelectorFunction attachPseudoSelector;
   PlatformDetachPseudoSelectorFunction detachPseudoSelector;
+  ObtainMountedViewPropsFunction obtainMountedViewProps;
   // Optional and last, so a platform without them just omits them; null keeps
   // CSS transitions and animations on the C++ loop.
   std::shared_ptr<css::CSSPlatformTransitionBackend> platformTransitionBackend;

@@ -68,7 +68,7 @@ Committed build artifacts, rebuild them and never hand-edit: `packages/react-nat
 
 ```sh
 yarn                                   # install (needed in every new worktree)
-yarn build-packages                    # builds worklets then reanimated (bob), rebuilds the Babel plugin and the OXC plugin, fills lib/
+yarn build-packages                    # builds worklets then reanimated (bob), rebuilds the Babel plugin and the Oxc plugin, fills lib/
 yarn workspace react-native-worklets build
 yarn workspace <pkg> type:check        # native + web + common-app + type tests
 yarn workspace <pkg> lint              # lint:js + lint:android + lint:apple + lint:clang-tidy (+ lint:plugin)

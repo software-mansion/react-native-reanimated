@@ -71,6 +71,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/props/backgroundImage.test');
       require('./tests/props/syncBackToReact.test');
       require('./tests/props/boxShadow.test');
+      require('./tests/props/nonLayoutPropAndRender.test');
     },
   },
   {
@@ -134,6 +135,36 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'layout animations view flattening',
     importTest: () => {
       require('./tests/layoutAnimations/flattening.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animations entering',
+    importTest: () => {
+      require('./tests/layoutAnimations/entering/movedBeforeFirstPaint.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animations nested text',
+    importTest: () => {
+      require('./tests/layoutAnimations/nestedText.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animations re-created views',
+    importTest: () => {
+      require('./tests/layoutAnimations/recreatedViews.test');
+    },
+  },
+  {
+    testSuiteName: 'shared element transitions',
+    importTest: () => {
+      require('./tests/layoutAnimations/sharedTransition.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animations native stack removal',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeStackRemoval.test');
     },
   },
   {

@@ -33,6 +33,7 @@ struct StartAnimationsRecursivelyConfig {
   bool shouldRemoveSubviewsWithoutAnimations;
   bool shouldAnimate;
   bool isScreenPop;
+  bool defersTeardown;
 };
 
 struct PendingNodeAnimation {
@@ -87,12 +88,17 @@ struct TransactionMeta {
   std::vector<std::shared_ptr<LightNode>> nodesToRestore;
   std::vector<std::shared_ptr<LightNode>> containersToRemove;
   std::unordered_map<Tag, Tag> staleSnapshots;
+  std::unordered_set<Tag> dueRemovals;
+  std::unordered_set<Tag> recreatedTags;
 };
 
 struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::optional<ProgressTransition> transition_;
   mutable std::optional<UncommittedScreenPop> uncommittedScreenPop_;
   mutable std::shared_ptr<LightNode> topScreen_;
+  // screens that forceScreenSnapshot_ switched to snapshots after updates; React Native Screens never switches them
+  // back
+  mutable std::unordered_set<Tag> snapshottedScreens_;
   mutable std::unordered_map<Tag, SharedContainer> sharedContainers_;
   mutable std::unordered_set<Tag> hiddenViewTags_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
@@ -143,6 +149,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   std::optional<ShadowView>
   reparentLayoutAnimation(Tag tag, Tag parentTag, const ShadowView &newView, react::Point offset) const;
+  const ShadowView &mountedView(const std::shared_ptr<LightNode> &node) const;
 
   void applyInitialMutationsToLightTree(const ShadowViewMutationList &mutations) const;
   void updateLightNodeProps(
@@ -157,8 +164,16 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const override;
 
-  void reconcileContradictedRemovals(const ShadowViewMutationList &mutations, ShadowViewMutationList &filteredMutations)
-      const;
+  void reconcileContradictedRemovals(
+      const ShadowViewMutationList &mutations,
+      TransactionMeta &transaction,
+      const PropsParserContext &propsParserContext) const;
+#ifdef ANDROID
+  ShadowView resetPropsMissingFrom(
+      const ShadowView &view,
+      const ShadowView &mounted,
+      const PropsParserContext &propsParserContext) const;
+#endif
 
   void handleSharedTransitionsStart(
       const std::shared_ptr<LightNode> &afterTopScreen,
@@ -244,11 +259,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void handleSubtreeRemoval(
       const std::shared_ptr<LightNode> &node,
       const std::shared_ptr<LightNode> &parent,
-      int hostIndex,
       TransactionMeta &transaction) const;
-  void flushCompletedRemovals(ShadowViewMutationList &filteredMutations) const;
+  bool holdsSnapshottedScreen(const std::shared_ptr<LightNode> &node) const;
+  void collectDueRemovals(TransactionMeta &transaction) const;
+  void tearDown(const std::unordered_set<Tag> &removals, ShadowViewMutationList &mutations) const;
 
-  void addOngoingAnimations(ShadowViewMutationList &mutations) const;
+  void addOngoingAnimations(TransactionMeta &transaction) const;
   ShadowView cloneViewWithoutOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;
 
   bool startAnimationsRecursively(
@@ -257,7 +273,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       StartAnimationsRecursivelyConfig config) const;
   void endAnimationsRecursively(const std::shared_ptr<LightNode> &node, int index, ShadowViewMutationList &mutations)
       const;
-  void maybeDropAncestors(const std::shared_ptr<LightNode> &node, ShadowViewMutationList &cleanupMutations) const;
 
   // MountingOverrideDelegate
 

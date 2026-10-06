@@ -12,9 +12,11 @@
 #import <reanimated/apple/pseudoSelectors/REAPseudoSelectorAttachQueue.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
+#import <React/RCTAssert.h>
 #import <React/RCTComponentViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
 #import <React/RCTMountingManager.h>
+#import <React/RCTViewComponentView.h>
 
 #import <memory>
 #import <variant>
@@ -194,16 +196,59 @@ std::shared_ptr<css::CSSPlatformTransitionBackend> makePlatformTransitionBackend
 
 ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
 {
-  auto forceScreenSnapshot = [=](Tag tag) {
+  auto forceScreenSnapshot = [=](Tag tag) -> bool {
     RCTSurfacePresenter *surfacePresenter = nodesManager.surfacePresenter;
     RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
     REAUIView<RCTComponentViewProtocol> *maybeRNSScreenView = [componentViewRegistry findComponentViewWithTag:tag];
     SEL setSnapshotAfterUpdatesSelector = @selector(setSnapshotAfterUpdates:);
     if ([maybeRNSScreenView respondsToSelector:setSnapshotAfterUpdatesSelector]) {
       [static_cast<id<RNScreenViewOptionalProtocol>>(maybeRNSScreenView) setSnapshotAfterUpdates:YES];
+      return true;
     }
+    return false;
   };
   return forceScreenSnapshot;
+}
+
+ReadMountedViewPropsFunction makeReadMountedViewPropsFunction(REANodesManager *nodesManager)
+{
+  auto readMountedViewProps = [=](Tag tag) -> Props::Shared {
+    RCTAssertMainQueue();
+    RCTSurfacePresenter *surfacePresenter = nodesManager.surfacePresenter;
+    RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
+    REAUIView<RCTComponentViewProtocol> *componentView = [componentViewRegistry findComponentViewWithTag:tag];
+    // The default `props` getter of `UIView` asserts.
+    if (![componentView isKindOfClass:[RCTViewComponentView class]]) {
+      return nullptr;
+    }
+    return [componentView props];
+  };
+  return readMountedViewProps;
+}
+
+ObtainMountedViewPropsFunction makeObtainMountedViewPropsFunction(REANodesManager *nodesManager)
+{
+  return [=](Tag tag) -> std::optional<MountedViewProps> {
+#if TARGET_OS_OSX
+    return std::nullopt;
+#else
+    RCTComponentViewRegistry *componentViewRegistry =
+        nodesManager.surfacePresenter.mountingManager.componentViewRegistry;
+    REAUIView *view = [componentViewRegistry findComponentViewWithTag:tag];
+    if (view == nil || view.window == nil) {
+      return std::nullopt;
+    }
+    const CGSize size = view.bounds.size;
+    const CGPoint anchor = view.layer.anchorPoint;
+    return MountedViewProps{
+        .x = view.center.x - size.width * anchor.x,
+        .y = view.center.y - size.height * anchor.y,
+        .width = size.width,
+        .height = size.height,
+        .opacity = view.alpha,
+    };
+#endif
+  };
 }
 
 PlatformAttachPseudoSelectorFunction makeAttachPseudoSelectorFunction(REAPseudoSelectorAttachQueue *attachQueue)
@@ -227,6 +272,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto requestRender = makeRequestRender(nodesManager);
 
   auto forceScreenSnapshotFunction = makeForceScreenSnapshotFunction(nodesManager);
+
+  auto readMountedViewPropsFunction = makeReadMountedViewPropsFunction(nodesManager);
 
   auto synchronouslyUpdateUIPropsFunction = makeSynchronouslyUpdateUIPropsFunction(nodesManager);
 
@@ -253,11 +300,14 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(attachQueue);
   auto detachPseudoSelectorFunction = makeDetachPseudoSelectorFunction(attachQueue);
 
+  auto obtainMountedViewPropsFunction = makeObtainMountedViewPropsFunction(nodesManager);
+
   auto platformTransitionBackend = makePlatformTransitionBackend(nodesManager);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
+      readMountedViewPropsFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,
@@ -268,6 +318,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       maybeFlushUIUpdatesQueueFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
+      obtainMountedViewPropsFunction,
       platformTransitionBackend,
   };
   return platformDepMethodsHolder;

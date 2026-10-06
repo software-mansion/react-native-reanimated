@@ -90,8 +90,8 @@ class PropsDiffer {
   explicit PropsDiffer(jsi::Runtime &rt, const ShadowView &sourceView, const ShadowView &targetView)
       : sourceView_(sourceView),
         targetView_(targetView),
-        sourceViewProps_(static_cast<const ViewProps &>(*sourceView.props)),
-        targetViewProps_(static_cast<const ViewProps &>(*targetView.props)),
+        sourceViewProps_(getViewProps(sourceView)),
+        targetViewProps_(getViewProps(targetView)),
         sourceValues_(rt),
         targetValues_(rt) {}
 

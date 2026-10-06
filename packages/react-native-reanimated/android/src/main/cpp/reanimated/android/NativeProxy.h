@@ -48,6 +48,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
   // std::shared_ptr<EventListener> eventListener_;
   void installJSIBindings();
   std::optional<std::unique_ptr<int[]>> preserveMountedTags(std::vector<int> &tags);
+  std::optional<MountedViewProps> obtainMountedViewProps(Tag tag);
   void synchronouslyUpdateUIProps(const std::vector<int> &intBuffer, const std::vector<double> &doubleBuffer);
   PlatformDepMethodsHolder getPlatformDependentMethods();
 
@@ -55,6 +56,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
   bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
   void performOperations();
   void performNonLayoutOperations();
+  bool hasSynchronousWritesTracker();
+  void rewriteSynchronousProps();
   bool getIsReducedMotion();
   void requestRender(std::function<void(double)> onRender);
   void registerEventHandler();

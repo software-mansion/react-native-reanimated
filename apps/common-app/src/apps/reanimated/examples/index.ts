@@ -101,6 +101,11 @@ const DurationZeroExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DurationZero').default as React.FC
   );
+const EnteringMovedBeforeFirstPaint: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/EnteringMovedBeforeFirstPaint')
+      .default as React.FC
+  );
 const ExitingTagReuseStressExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/ExitingTagReuseStressExample')
@@ -216,10 +221,6 @@ const SynchronousPropsSETExample: React.FC = () =>
 const NestedStacksExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedStacks').default
-  );
-const NonLayoutPropAndRenderExample: React.FC = () =>
-  React.createElement(
-    require('./NonLayoutPropAndRenderExample').default as React.FC
   );
 const OverlappingBoxesExample: React.FC = () =>
   React.createElement(require('./OverlappingBoxesExample').default as React.FC);
@@ -541,12 +542,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     section: REGRESSIONS,
     screen: WidthExample,
   },
-  NonLayoutPropAndRenderExample: {
-    icon: '🎭',
-    title: 'Non-layout prop and render example',
-    section: REGRESSIONS,
-    screen: NonLayoutPropAndRenderExample,
-  },
   RefExample: {
     icon: '🦑',
     title: 'Ref & useImperativeHandle',
@@ -814,6 +809,11 @@ const ALL_EXAMPLES: Record<string, Example> = {
   FinalFrameAccuracyExample: {
     screen: FinalFrameAccuracyExample,
     title: '[LA] Final frame accuracy',
+  },
+  EnteringMovedBeforeFirstPaint: {
+    title: '[LA] Entering view moved before first paint',
+    screen: EnteringMovedBeforeFirstPaint,
+    disabledPlatforms: [REAPlatform.WEB],
   },
 
   // Shared Element Transitions

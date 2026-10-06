@@ -59,7 +59,7 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
     return;
   }
   std::optional<SharedTag> sharedTag;
-  {
+  if (node->current.traits.check(ShadowNodeTraits::Trait::ViewKind)) {
     auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
     const auto it = sharedTransitionManager_->tagToName_.find(node->current.tag);
     if (it != sharedTransitionManager_->tagToName_.end()) {
@@ -316,6 +316,7 @@ void LayoutAnimationsProxy::overrideTransform(
   if (!transform) {
     return;
   }
+  react_native_assert(isViewKind(shadowView) && "Only ViewKind views have ViewProps");
 #ifdef ANDROID
   auto array = folly::dynamic::array(folly::dynamic::object("matrix", transform->operator folly::dynamic()));
   const folly::dynamic newTransformDynamic = folly::dynamic::object("transform", array);
@@ -492,9 +493,10 @@ void LayoutAnimationsProxy::hideTransitioningViews(
 }
 
 // The hide in hideTransitioningViews is not stored in the light tree, so a
-// later Update for the same view carries full opacity and would show the view
-// again. Force opacity 0 on every outgoing Update for a hidden view until the
-// restore in cleanupSharedTransitions removes its tag from hiddenViewTags_.
+// later Update or Insert for the same view carries full opacity and would show
+// the view again. Force opacity 0 on every outgoing Update and Insert for a
+// hidden view until the restore in cleanupSharedTransitions removes its tag
+// from hiddenViewTags_.
 void LayoutAnimationsProxy::keepTransitioningViewsHidden(
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext) const {
@@ -502,11 +504,9 @@ void LayoutAnimationsProxy::keepTransitioningViewsHidden(
     return;
   }
   for (auto &mutation : filteredMutations) {
-    if (mutation.type == ShadowViewMutation::Update && hiddenViewTags_.contains(mutation.newChildShadowView.tag)) {
-      mutation = ShadowViewMutation::UpdateMutation(
-          mutation.oldChildShadowView,
-          cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext),
-          mutation.parentTag);
+    const bool writesProps = mutation.type == ShadowViewMutation::Update || mutation.type == ShadowViewMutation::Insert;
+    if (writesProps && hiddenViewTags_.contains(mutation.newChildShadowView.tag)) {
+      mutation.newChildShadowView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
     }
   }
 }
@@ -642,7 +642,7 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
     if (!parent) {
       continue;
     }
-    const auto opacity = static_cast<const ViewProps &>(*view.props).opacity;
+    const auto opacity = getViewProps(view).opacity;
     filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
         cloneViewWithoutOpacity(view, propsParserContext),
         cloneViewWithOpacity(view, opacity, propsParserContext),
@@ -721,7 +721,7 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
   while (currentNode) {
     resolveLightNodeProps(currentNode);
     const auto &view = useViewsOnScreen ? viewOnScreen(currentNode) : currentNode->current;
-    const auto &props = static_cast<const ViewProps &>(*view.props);
+    const auto &props = getViewProps(view);
     auto origin = props.transformOrigin;
     const auto &viewSize = view.layoutMetrics.frame.size;
     if (origin.xy[0].unit == facebook::react::UnitType::Percent) {

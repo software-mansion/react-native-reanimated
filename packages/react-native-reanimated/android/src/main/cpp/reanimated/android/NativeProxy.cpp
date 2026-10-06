@@ -138,6 +138,14 @@ void NativeProxy::performNonLayoutOperations() {
   reanimatedModuleProxy_->performNonLayoutOperations();
 }
 
+bool NativeProxy::hasSynchronousWritesTracker() {
+  return reanimatedModuleProxy_->hasSynchronousWritesTracker();
+}
+
+void NativeProxy::rewriteSynchronousProps() {
+  reanimatedModuleProxy_->rewriteSynchronousProps();
+}
+
 bool NativeProxy::getIsReducedMotion() {
   static const auto method = getJniMethod<jboolean()>("getIsReducedMotion");
   return method(javaPart_.get());
@@ -151,9 +159,11 @@ void NativeProxy::registerNatives() {
   registerHybrid(
       {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
        makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
-       makeNativeMethod("isAnyHandlerWaitingForEvent", NativeProxy::isAnyHandlerWaitingForEvent),
-       makeNativeMethod("performOperations", NativeProxy::performOperations),
-       makeNativeMethod("performNonLayoutOperations", NativeProxy::performNonLayoutOperations),
+       makeNativeMethod("isAnyHandlerWaitingForEventCpp", NativeProxy::isAnyHandlerWaitingForEvent),
+       makeNativeMethod("performOperationsCpp", NativeProxy::performOperations),
+       makeNativeMethod("performNonLayoutOperationsCpp", NativeProxy::performNonLayoutOperations),
+       makeNativeMethod("hasSynchronousWritesTracker", NativeProxy::hasSynchronousWritesTracker),
+       makeNativeMethod("rewriteSynchronousProps", NativeProxy::rewriteSynchronousProps),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp),
        makeNativeMethod("toggleSlowAnimationsOnUIRuntime", NativeProxy::toggleSlowAnimationsOnUIRuntime)});
 }
@@ -194,6 +204,22 @@ std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vect
 
   auto region = jArrayInt->getRegion(0, tags.size());
   return region;
+}
+
+std::optional<MountedViewProps> NativeProxy::obtainMountedViewProps(Tag tag) {
+  static const auto method = getJniMethod<jni::local_ref<jni::JArrayFloat>(int)>("obtainMountedViewProps");
+  auto values = method(javaPart_.get(), tag);
+  if (!values) {
+    return std::nullopt;
+  }
+  const auto region = values->getRegion(0, 5);
+  return MountedViewProps{
+      .x = region[0],
+      .y = region[1],
+      .width = region[2],
+      .height = region[3],
+      .opacity = region[4],
+  };
 }
 
 void NativeProxy::synchronouslyUpdateUIProps(
@@ -379,6 +405,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto detachPseudoSelectorFunction = bindThis(&NativeProxy::detachPseudoSelector);
 
+  auto obtainMountedViewPropsFunction = bindThis(&NativeProxy::obtainMountedViewProps);
+
   auto platformTransitionBackend = makePlatformTransitionBackend();
 
   return {
@@ -394,6 +422,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       maybeFlushUiUpdatesQueueFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
+      obtainMountedViewPropsFunction,
       platformTransitionBackend,
   };
 }

@@ -8,11 +8,15 @@ import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.UIManager
+import com.facebook.react.bridge.UIManagerListener
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.common.annotations.FrameworkAPI
+import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
 import com.facebook.react.uimanager.IllegalViewOperationException
+import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.common.UIManagerType
 import com.facebook.soloader.SoLoader
@@ -30,6 +34,8 @@ import com.swmansion.reanimated.sensor.ReanimatedSensorContainer
 import com.swmansion.reanimated.sensor.ReanimatedSensorType
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.write
 
 @Suppress("KotlinJniMissingFunction")
 @OptIn(FrameworkAPI::class)
@@ -64,9 +70,26 @@ open class NativeProxy {
      */
     private val mInvalidated = AtomicBoolean(false)
 
+    // Guards the C++ state that invalidateCpp() destroys against calls from the UI thread.
+    private val mNativeStateLock = ReentrantReadWriteLock()
+
     @field:DoNotStrip
     @Suppress("unused")
     private val mHybridData: HybridData
+
+    @OptIn(UnstableReactNativeAPI::class)
+    private val mountListener =
+        object : UIManagerListener {
+            override fun willDispatchViewUpdates(uiManager: UIManager) = Unit
+
+            override fun willMountItems(uiManager: UIManager) = Unit
+
+            override fun didMountItems(uiManager: UIManager) = ifNotInvalidated(Unit) { rewriteSynchronousProps() }
+
+            override fun didDispatchMountItems(uiManager: UIManager) = Unit
+
+            override fun didScheduleMountItems(uiManager: UIManager) = Unit
+        }
 
     constructor(context: ReactApplicationContext, nodesManager: NodesManager) {
         context.assertOnJSQueueThread()
@@ -109,6 +132,10 @@ open class NativeProxy {
         if (BuildConfig.DEBUG) {
             checkCppVersion() // injectCppVersion should be called during initHybrid above
         }
+        if (hasSynchronousWritesTracker()) {
+            @OptIn(UnstableReactNativeAPI::class)
+            mFabricUIManager.addUIManagerEventListener(mountListener)
+        }
     }
 
     private external fun initHybrid(
@@ -117,31 +144,67 @@ open class NativeProxy {
         fabricUIManager: FabricUIManager,
     ): HybridData
 
-    external fun isAnyHandlerWaitingForEvent(
+    private external fun isAnyHandlerWaitingForEventCpp(
         eventName: String,
         emitterReactTag: Int,
     ): Boolean
 
-    external fun performOperations()
+    private external fun performOperationsCpp()
 
-    external fun performNonLayoutOperations()
+    private external fun performNonLayoutOperationsCpp()
+
+    private external fun hasSynchronousWritesTracker(): Boolean
+
+    private external fun rewriteSynchronousProps()
 
     external fun installJSIBindings()
 
     private external fun invalidateCpp()
 
-    external fun toggleSlowAnimationsOnUIRuntime()
+    private external fun toggleSlowAnimationsOnUIRuntime()
 
     protected fun getHybridData(): HybridData = mHybridData
+
+    // tryLock, because the UI thread may hold the UI runtime lock, which could deadlock with invalidate()
+    private inline fun <T> ifNotInvalidated(
+        fallback: T,
+        block: () -> T,
+    ): T {
+        val readLock = mNativeStateLock.readLock()
+        if (!readLock.tryLock()) {
+            return fallback
+        }
+        try {
+            if (mInvalidated.get()) {
+                return fallback
+            }
+            return block()
+        } finally {
+            readLock.unlock()
+        }
+    }
+
+    fun isAnyHandlerWaitingForEvent(
+        eventName: String,
+        emitterReactTag: Int,
+    ): Boolean = ifNotInvalidated(false) { isAnyHandlerWaitingForEventCpp(eventName, emitterReactTag) }
+
+    fun performOperations() = ifNotInvalidated(Unit) { performOperationsCpp() }
+
+    fun performNonLayoutOperations() = ifNotInvalidated(Unit) { performNonLayoutOperationsCpp() }
 
     fun invalidate() {
         if (mInvalidated.getAndSet(true)) {
             return
         }
+        @OptIn(UnstableReactNativeAPI::class)
+        mFabricUIManager.removeUIManagerEventListener(mountListener)
         pseudoSelectorManager.invalidate()
         cssPlatformTransitionsManager.invalidate()
-        if (mHybridData.isValid) {
-            invalidateCpp()
+        mNativeStateLock.write {
+            if (mHybridData.isValid) {
+                invalidateCpp()
+            }
         }
     }
 
@@ -152,7 +215,7 @@ open class NativeProxy {
         }
         mNodesManager!!.enableSlowAnimations(slowAnimationsEnabled, animationsDragFactor)
         cssPlatformTransitionsManager.enableSlowAnimations(slowAnimationsEnabled, animationsDragFactor)
-        toggleSlowAnimationsOnUIRuntime()
+        ifNotInvalidated(Unit) { toggleSlowAnimationsOnUIRuntime() }
     }
 
     private fun addDevMenuOption() {
@@ -175,8 +238,12 @@ open class NativeProxy {
 
     @DoNotStrip
     fun requestRender(callback: AnimationFrameCallback) {
+        val guardedCallback =
+            object : NodesManager.OnAnimationFrame {
+                override fun onAnimationFrame(timestampMs: Double) = ifNotInvalidated(Unit) { callback.onAnimationFrame(timestampMs) }
+            }
         UiThreadUtil.assertOnUiThread()
-        mNodesManager!!.postOnAnimation(callback)
+        mNodesManager!!.postOnAnimation(guardedCallback)
     }
 
     @DoNotStrip fun getReanimatedJavaVersion(): String = BuildConfig.REANIMATED_VERSION_JAVA
@@ -201,6 +268,29 @@ open class NativeProxy {
                     "/guides/troubleshooting#mismatch-between-java-code-version-and-c-code-version for more information.",
             )
         }
+    }
+
+    @DoNotStrip
+    fun obtainMountedViewProps(tag: Int): FloatArray? {
+        if (!UiThreadUtil.isOnUiThread()) {
+            return null
+        }
+        val view =
+            try {
+                mFabricUIManager.resolveView(tag)
+            } catch (e: IllegalViewOperationException) {
+                null
+            } ?: return null
+        if (!view.isAttachedToWindow) {
+            return null
+        }
+        return floatArrayOf(
+            PixelUtil.toDIPFromPixel(view.left.toFloat()),
+            PixelUtil.toDIPFromPixel(view.top.toFloat()),
+            PixelUtil.toDIPFromPixel(view.width.toFloat()),
+            PixelUtil.toDIPFromPixel(view.height.toFloat()),
+            view.alpha,
+        )
     }
 
     @DoNotStrip
@@ -250,6 +340,10 @@ open class NativeProxy {
             }.apply { isAccessible = true }
     }
 
+    private val getViewExistsMethod by lazy {
+        runCatching { mountingManager.javaClass.getMethod("getViewExists", Int::class.javaPrimitiveType) }.getOrNull()
+    }
+
     @DoNotStrip
     fun synchronouslyUpdateUIProps(
         intBuffer: IntArray,
@@ -258,9 +352,13 @@ open class NativeProxy {
         cssPlatformTransitionsManager.onPropsWrittenSynchronously()
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
             try {
+                // The props stay in the registry, and the commit hook applies them to the shadow tree.
+                if (getViewExistsMethod?.invoke(mountingManager, viewTag) == false) {
+                    return@parse
+                }
                 updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
             } catch (e: Exception) {
-                Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag", e)
+                Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag: ${e.cause ?: e}")
             }
         }
     }
@@ -330,6 +428,7 @@ open class NativeProxy {
     fun registerEventHandler(handler: EventHandler) {
         handler.mCustomEventNamesResolver = mNodesManager!!.getEventNameResolver()
         handler.isInDrawPassProvider = { mNodesManager!!.isInDrawPass() }
+        handler.nativeCallGuard = { receive -> ifNotInvalidated(Unit, receive) }
         mNodesManager!!.registerEventHandler(handler)
     }
 
