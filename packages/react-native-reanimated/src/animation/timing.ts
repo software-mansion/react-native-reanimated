@@ -35,6 +35,8 @@ interface TimingConfig {
 
 export type WithTimingConfig = TimingConfig;
 
+const DEFAULT_EASING = Easing.inOut(Easing.quad);
+
 export interface TimingAnimation extends Animation<TimingAnimation> {
   type: string;
   easing: EasingFunction;
@@ -89,7 +91,7 @@ export const withTiming = function (
     'worklet';
     const config: Required<Omit<TimingConfig, 'reduceMotion'>> = {
       duration: 300,
-      easing: Easing.inOut(Easing.quad),
+      easing: DEFAULT_EASING,
     };
     if (userConfig) {
       Object.keys(userConfig).forEach(
