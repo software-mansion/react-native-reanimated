@@ -173,7 +173,8 @@ std::variant<AnimationTrack, TrackBuildFailure> makeTrack(
   }
   const auto leafTrackValue = leaf.getProperty(rt, "track");
   if (!leafTrackValue.isObject()) {
-    return TrackBuildFailure::UnsupportedTiming;
+    return leaf.getProperty(rt, "hasPhaseOfNoDuration").isBool() ? TrackBuildFailure::UnsupportedTrackForm
+                                                                 : TrackBuildFailure::UnsupportedTiming;
   }
   const auto leafTrack = leafTrackValue.asObject(rt);
   auto segments = makeSegments(rt, leafTrack, *target, after);

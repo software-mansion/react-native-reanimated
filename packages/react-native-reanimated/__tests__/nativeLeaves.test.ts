@@ -1,4 +1,4 @@
-import { Easing, withDelay, withTiming } from '../src';
+import { Easing, withDelay, withSequence, withTiming } from '../src';
 import type { AnimationObject } from '../src/commonTypes';
 import {
   advanceNativeLeaf,
@@ -137,6 +137,231 @@ describe('advanceNativeLeaf against a run of frames', () => {
   });
 });
 
+describe('advanceNativeLeaf of a sequence against a run of frames', () => {
+  type Phase = { delay?: number; duration: number; toValue: number };
+  const part = ({ delay, duration, toValue }: Phase) => {
+    const animation = timing(toValue, duration);
+    return delay === undefined ? animation : withDelay(delay, animation);
+  };
+  const sequenceOf = (phases: Phase[], delay?: number) => () => {
+    const sequence = withSequence(...phases.map(part));
+    return delay === undefined ? sequence : withDelay(delay, sequence);
+  };
+  /** The end of each hold and of each timing, from the start of the leaf. */
+  const boundariesOf = (phases: Phase[], delay = 0) => {
+    const boundaries = delay > 0 ? [delay] : [];
+    let time = delay;
+    for (const phase of phases) {
+      if (phase.delay !== undefined) {
+        boundaries.push((time += phase.delay));
+      }
+      boundaries.push((time += phase.duration));
+    }
+    return boundaries;
+  };
+  /**
+   * The declared value: each part is a straight line from the end of the part
+   * before it.
+   */
+  const declaredValue = (phases: Phase[], delay: number, elapsed: number) => {
+    let time = delay;
+    let value = START;
+    for (const phase of phases) {
+      const start = time + (phase.delay ?? 0);
+      if (elapsed < start + phase.duration) {
+        const progress = Math.max(0, elapsed - start) / phase.duration;
+        return value + (phase.toValue - value) * progress;
+      }
+      time = start + phase.duration;
+      value = phase.toValue;
+    }
+    return value;
+  };
+  /**
+   * The leaf as the frame driver leaves it, with a frame at each boundary and
+   * at `elapsed`.
+   */
+  const runFrames = (
+    leaf: AnimationObject,
+    boundaries: number[],
+    elapsed: number
+  ) => {
+    const frames = [
+      ...boundaries.filter((boundary) => boundary < elapsed),
+      elapsed,
+    ];
+    leaf.onStart(leaf, START, ORIGIN, undefined);
+    const finished = frames.some((frame) => leaf.onFrame(leaf, ORIGIN + frame));
+    return { value: leaf.current as number, finished };
+  };
+  const two = [
+    { duration: 200, toValue: 120 },
+    { duration: 310, toValue: 60 },
+  ];
+  const three = [...two, { duration: 130, toValue: 90 }];
+  const five = [
+    ...three,
+    { duration: 225, toValue: 10 },
+    { duration: 55, toValue: END },
+  ];
+  const withDelayedPart = [
+    two[0],
+    { delay: 70, duration: 310, toValue: 60 },
+    { duration: 130, toValue: 90 },
+  ];
+
+  test.each<[string, Phase[], number | undefined]>([
+    ['two parts', two, undefined],
+    ['three parts', three, undefined],
+    ['five parts', five, undefined],
+    ['a delayed part', withDelayedPart, undefined],
+    ['three parts in a delay', three, 90],
+    ['a delayed part in a delay', withDelayedPart, 90],
+  ])(
+    '%s: the leaf has the declared value and the state of the frame driver in each phase and around each boundary',
+    (_, phases, delay) => {
+      const boundaries = boundariesOf(phases, delay);
+      const middles = boundaries.map(
+        (boundary, index) => (boundary + (boundaries[index - 1] ?? 0)) / 2
+      );
+      const around = boundaries.flatMap((boundary) => [
+        boundary - 1,
+        boundary,
+        boundary + 1,
+      ]);
+      for (const elapsed of [0, ...middles, ...around]) {
+        const leaf = onUIRuntime(sequenceOf(phases, delay));
+        advanceNativeLeaf(leaf, START, ORIGIN, ORIGIN + elapsed);
+        const frameDriven = runFrames(
+          onUIRuntime(sequenceOf(phases, delay)),
+          boundaries,
+          elapsed
+        );
+        expect(leaf.current).toBe(frameDriven.value);
+        expect(!!leaf.finished).toBe(frameDriven.finished);
+        expect(leaf.current).toBeCloseTo(
+          declaredValue(phases, delay ?? 0, elapsed),
+          9
+        );
+      }
+    }
+  );
+
+  test('the frame driver continues a leaf after its advance as it continues its own run', () => {
+    const boundaries = boundariesOf(five);
+    for (const handOver of [100, 199, 200, 201, 400, 640, 700, 866]) {
+      const leaf = onUIRuntime(sequenceOf(five));
+      advanceNativeLeaf(leaf, START, ORIGIN, ORIGIN + handOver);
+      const twin = onUIRuntime(sequenceOf(five));
+      runFrames(twin, boundaries, handOver);
+      for (let elapsed = handOver + 16; elapsed < 1000; elapsed += 16) {
+        const finished = leaf.onFrame(leaf, ORIGIN + elapsed);
+        expect(twin.onFrame(twin, ORIGIN + elapsed)).toBe(finished);
+        expect(leaf.current).toBe(twin.current);
+        if (finished) {
+          break;
+        }
+      }
+      expect(leaf.current).toBe(END);
+    }
+  });
+
+  test.each<[string, Phase[]]>([
+    ['other end values', three],
+    [
+      'the end value of the first part',
+      [...two, { duration: 130, toValue: 120 }],
+    ],
+  ])(
+    'a second advance of a sequence whose last part has %s gives the value of the later time',
+    (_, phases) => {
+      for (const [first, second] of [
+        [100, 300],
+        [300, 600],
+        [600, 620],
+        [600, 700],
+      ]) {
+        const leaf = onUIRuntime(sequenceOf(phases));
+        advanceNativeLeaf(leaf, START, ORIGIN, ORIGIN + first);
+        advanceNativeLeaf(leaf, START, ORIGIN, ORIGIN + second);
+        expect(leaf.current).toBeCloseTo(declaredValue(phases, 0, second), 9);
+      }
+    }
+  );
+});
+
+describe('the frame driver and a phase with no duration', () => {
+  const FRAMES = [0, 16, 32, 100, 116, 132, 200, 216];
+  const valuesOf = (create: () => unknown) => {
+    const leaf = onUIRuntime(create);
+    leaf.onStart(leaf, START, ORIGIN, undefined);
+    const values: Record<number, number> = {};
+    for (const frame of FRAMES) {
+      const finished = leaf.onFrame(leaf, ORIGIN + frame);
+      values[frame] = leaf.current as number;
+      if (finished) {
+        break;
+      }
+    }
+    return values;
+  };
+
+  test('a first phase with no duration shows its value in the first frame, and the next part starts at the origin', () => {
+    expect(
+      valuesOf(() => withSequence(timing(50, 0), timing(100, 100)))
+    ).toEqual({ 0: 50, 16: 58, 32: 66, 100: 100 });
+  });
+
+  test('a first phase with no duration before a delayed part shows its value during the hold, and the part starts in the frame that ends the hold', () => {
+    const create = () =>
+      withSequence(timing(50, 0), withDelay(100, timing(100, 100)));
+    expect(valuesOf(create)).toEqual({
+      0: 50,
+      16: 50,
+      32: 50,
+      100: 50,
+      116: 58,
+      132: 66,
+      200: 100,
+    });
+    for (const elapsed of [0, 50, 99, 100, 101, 150, 200]) {
+      const leaf = onUIRuntime(create);
+      advanceNativeLeaf(leaf, START, ORIGIN, ORIGIN + elapsed);
+      expect(leaf.current).toBeCloseTo(
+        50 + Math.max(0, Math.min(100, elapsed - 100)) / 2,
+        9
+      );
+    }
+  });
+
+  test('a timing with no duration after a delay shows its value in the frame that ends the delay', () => {
+    expect(valuesOf(() => withDelay(100, timing(50, 0)))).toEqual({
+      0: START,
+      16: START,
+      32: START,
+      100: 50,
+    });
+  });
+
+  test('a later phase with no duration shows its value one frame after the end of the part before it, and the next part starts in that frame', () => {
+    const values = valuesOf(() =>
+      withSequence(timing(120, 100), timing(50, 0), timing(90, 100))
+    );
+    expect(values).toMatchObject({ 100: 120, 116: 50, 200: 83.6, 216: 90 });
+    expect(
+      valuesOf(() => withSequence(timing(120, 100), timing(50, 0)))
+    ).toMatchObject({ 100: 120, 116: 50 });
+  });
+
+  test('a delay of zero as a later part starts its animation one frame after the end of the part before it', () => {
+    expect(
+      valuesOf(() =>
+        withSequence(timing(120, 100), withDelay(0, timing(20, 100)))
+      )
+    ).toMatchObject({ 100: 120, 116: 120, 132: 104, 216: 20 });
+  });
+});
+
 describe('relateToLiveLeaf', () => {
   const live = (leaf: AnimationObject, elapsed = 100) => {
     advanceNativeLeaf(leaf, START, ORIGIN, ORIGIN + elapsed);
@@ -243,5 +468,47 @@ describe('relateToLiveLeaf', () => {
 
   test('a delayed leaf needs the frame driver', () => {
     expect(relateToLiveLeaf(live(bare()), wrapped([50]))).toBe('frameDriver');
+  });
+
+  describe('a leaf with more than one timing phase', () => {
+    const sequence = (end = END) =>
+      onUIRuntime(() => withSequence(timing(60, 200), timing(end, 200)));
+
+    test.each<
+      [string, () => AnimationObject, () => AnimationObject | undefined]
+    >([
+      ['a live sequence and no new leaf', sequence, () => undefined],
+      ['a live sequence and a timing with the same end value', sequence, bare],
+      [
+        'a live sequence and a timing with another end value',
+        sequence,
+        () => onUIRuntime(() => timing(END + 1)),
+      ],
+      ['a live sequence and the same sequence', sequence, sequence],
+      ['a live sequence and a delayed timing', sequence, () => wrapped([50])],
+      ['a live timing and a sequence', bare, sequence],
+      [
+        'a live timing and a delayed sequence',
+        bare,
+        () =>
+          onUIRuntime(() =>
+            withDelay(50, withSequence(timing(60, 200), timing(END, 200)))
+          ),
+      ],
+      ['a live delayed timing and a sequence', () => wrapped([50]), sequence],
+      ['a live sequence whose timeline is over and a timing', sequence, bare],
+    ])('%s need the frame driver', (name, liveLeaf, next) => {
+      const elapsed = name.includes('is over') ? 1000 : 100;
+      expect(relateToLiveLeaf(live(liveLeaf(), elapsed), next())).toBe(
+        'frameDriver'
+      );
+    });
+
+    test('a sequence of one timing has the relations of that timing', () => {
+      const single = () => onUIRuntime(() => withSequence(timing()));
+      expect(relateToLiveLeaf(live(bare()), single())).toBe('frameDriver');
+      expect(relateToLiveLeaf(live(single()), undefined)).toBe('frameDriver');
+      expect(relateToLiveLeaf(live(single()), bare())).toBe('replaces');
+    });
   });
 });

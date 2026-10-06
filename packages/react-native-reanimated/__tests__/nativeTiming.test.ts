@@ -1,4 +1,12 @@
-import { Easing, ReduceMotion, withDelay, withTiming } from '../src';
+import {
+  Easing,
+  ReduceMotion,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withSpring,
+  withTiming,
+} from '../src';
 import type { AnimationObject } from '../src/commonTypes';
 import { ReducedMotionManager } from '../src/ReducedMotion';
 
@@ -133,6 +141,105 @@ describe('native timing description', () => {
     expect(
       describe_(onUIRuntime(() => withDelay(100, withDelay(200, timing()))))
     ).toEqual({ phases: [hold(100), hold(200), timingPhase(10, 200)] });
+  });
+
+  describe('of a sequence', () => {
+    const hold = (durationMs: number) => ({ kind: 'hold', durationMs });
+    const part = (toValue: number, duration: number) =>
+      withTiming(toValue, { duration, easing: Easing.linear });
+
+    test('a sequence has the phases of its parts in their order', () => {
+      expect(
+        describe_(onUIRuntime(() => withSequence(part(10, 200), part(20, 100))))
+      ).toEqual({ phases: [timingPhase(10, 200), timingPhase(20, 100)] });
+    });
+
+    test('a delayed part, a sequence as a part, and a delay of the sequence keep their phases', () => {
+      const sequence = () =>
+        withSequence(
+          part(10, 200),
+          withDelay(50, part(20, 100)),
+          withSequence(part(30, 10), part(40, 20))
+        );
+      const phases = [
+        timingPhase(10, 200),
+        hold(50),
+        timingPhase(20, 100),
+        timingPhase(30, 10),
+        timingPhase(40, 20),
+      ];
+      expect(describe_(onUIRuntime(sequence))).toEqual({ phases });
+      expect(describe_(onUIRuntime(() => withDelay(70, sequence())))).toEqual({
+        phases: [hold(70), ...phases],
+      });
+    });
+
+    test.each([
+      [
+        'a callback on a part',
+        () => withSequence(part(10, 200), withTiming(20, {}, jest.fn())),
+      ],
+      [
+        'a callback on a delayed part',
+        () =>
+          withSequence(
+            part(10, 200),
+            withDelay(5, withTiming(20, {}, jest.fn()))
+          ),
+      ],
+      [
+        'reduced motion',
+        () => withSequence(ReduceMotion.Always, part(10, 200), part(20, 100)),
+      ],
+      [
+        'reduced motion on a part',
+        () =>
+          withSequence(
+            part(10, 200),
+            withTiming(20, { reduceMotion: ReduceMotion.Always })
+          ),
+      ],
+      ['a spring part', () => withSequence(part(10, 200), withSpring(20))],
+      [
+        'a repeated part',
+        () => withSequence(part(10, 200), withRepeat(part(20, 100), 2)),
+      ],
+      [
+        'a part whose target is not a number or a string',
+        () => withSequence(part(10, 200), withTiming([10, 20])),
+      ],
+      ['a hold at its start', () => withSequence(withDelay(5, part(10, 200)))],
+      [
+        'a first part that starts with a hold',
+        () =>
+          withSequence(
+            withSequence(withDelay(5, part(10, 200))),
+            part(20, 100)
+          ),
+      ],
+    ])('a sequence with %s has no description', (_, create) => {
+      expect(describe_(onUIRuntime(create))).toBeUndefined();
+    });
+
+    test('a sequence with no part has no description', () => {
+      const warn = jest
+        .spyOn(console, 'warn')
+        .mockImplementation(() => undefined);
+      try {
+        expect(describe_(onUIRuntime(() => withSequence()))).toBeUndefined();
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    test('the frame driver shows the end value of the last part during a hold at the start of a sequence', () => {
+      const sequence = onUIRuntime(() =>
+        withSequence(withDelay(100, part(100, 100)), part(50, 100))
+      ) as unknown as AnimationObject;
+      sequence.onStart(sequence, 20, 1000, undefined);
+      sequence.onFrame(sequence, 1016);
+      expect(sequence.current).toBe(50);
+    });
   });
 
   test('the system reduced motion setting gives no description', () => {

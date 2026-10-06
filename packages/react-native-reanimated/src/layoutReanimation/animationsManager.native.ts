@@ -21,7 +21,7 @@ import { mutableHostDecorator } from '../mutablesCommon';
 import type { LiveLeafRelation, NativeLeaf } from './nativeLeaves';
 import {
   advanceNativeLeaf,
-  animatePlainOperations,
+  animatePlainLeaves,
   currentOfNativeLeaf,
   phaseEndsOf,
   relateToLiveLeaf,
@@ -173,9 +173,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       if (hasTooManyLeaves) {
         return refusal;
       }
-      if (Array.isArray(transform)) {
-        animatePlainOperations(transform);
-      }
+      animatePlainLeaves(animations);
       const summaries = keys.map((key) => ({
         key,
         ...summarizeNativeLeaf(

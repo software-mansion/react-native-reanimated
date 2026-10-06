@@ -216,6 +216,57 @@ export const linearAt =
     from +
     (to - from) * Math.min(1, Math.max(0, (timeMs - startMs) / durationMs));
 
+/**
+ * One part of a declared timeline: a move to `to` from the end value of the
+ * part before it.
+ */
+export type TimedPart = {
+  to: number;
+  startMs: number;
+  durationMs: number;
+  curve: EasingFunction;
+};
+
+/**
+ * The declared value at a time from the start of an animation. A part with no
+ * start time did not start. A part with no duration shows its end value at its
+ * start.
+ */
+export function declaredValueAt(
+  start: number,
+  parts: TimedPart[],
+  timeMs: number
+) {
+  let value = start;
+  for (const { to, startMs, durationMs, curve } of parts) {
+    const elapsed = timeMs - startMs;
+    if (!(elapsed >= 0)) {
+      return value;
+    }
+    if (elapsed < durationMs) {
+      return value + (to - value) * curve(elapsed / durationMs);
+    }
+    value = to;
+  }
+  return value;
+}
+
+/** The largest change of a declared value in one display frame around a time. */
+export function declaredFrameChangeAt(
+  valueAt: (timeMs: number) => number,
+  timeMs: number
+) {
+  const value = valueAt(timeMs);
+  let largest = 0;
+  for (let step = -8; step <= 8; step++) {
+    largest = Math.max(
+      largest,
+      Math.abs(valueAt(timeMs + (step * FRAME_MS) / 8) - value)
+    );
+  }
+  return largest;
+}
+
 export async function sampleRows(
   tag: number,
   count: number,
@@ -264,13 +315,16 @@ type AnimationValues =
   | Parameters<EntryExitAnimationFunction>[0]
   | Parameters<LayoutAnimationFunction>[0];
 
+type AnimationSource = { build: () => AnimationFunction } | AnimationFunction;
+type BuiltLeaf = Partial<FrameAnimation> & { __nativeTiming?: unknown };
+
 /**
- * The animation of a builder or of a function with no native description on its
- * leaves. It is frame-driven, and its trace has the failure
- * `UnsupportedTiming`.
+ * The animation of a builder or of a function, with a call of `prepare` for
+ * each leaf of each build.
  */
-export function frameDrivenOf(
-  animation: { build: () => AnimationFunction } | AnimationFunction
+function withPreparedLeaves(
+  animation: AnimationSource,
+  prepare: (leaf: BuiltLeaf) => void
 ) {
   const build = (
     typeof animation === 'function' ? animation : animation.build()
@@ -278,21 +332,42 @@ export function frameDrivenOf(
   return (values: AnimationValues) => {
     'worklet';
     const result = build(values);
-    const animations = Object.values(result.animations).flatMap((leaf) =>
+    const leaves = Object.values(result.animations).flatMap((leaf) =>
       Array.isArray(leaf)
         ? leaf.flatMap((operation: Record<string, unknown>) =>
             Object.values(operation)
           )
         : [leaf]
     );
-    for (const animation of animations) {
-      if (typeof animation === 'object' && animation !== null) {
-        delete (animation as { __nativeTiming?: unknown }).__nativeTiming;
-        recordFrameTimes(animation as Partial<FrameAnimation>);
+    for (const leaf of leaves) {
+      if (typeof leaf === 'object' && leaf !== null) {
+        prepare(leaf as BuiltLeaf);
       }
     }
     return result;
   };
+}
+
+/**
+ * The animation of a builder or of a function with no native description on its
+ * leaves. It is frame-driven, and its trace has the failure
+ * `UnsupportedTiming`.
+ */
+export function frameDrivenOf(animation: AnimationSource) {
+  return withPreparedLeaves(animation, (leaf) => {
+    'worklet';
+    delete leaf.__nativeTiming;
+    recordFrameTimes(leaf);
+  });
+}
+
+/**
+ * The animation of a builder or of a function with its native description. Each
+ * frame that the frame driver gives to it has a record of its time, as each
+ * frame of an animation of `frameDrivenOf`.
+ */
+export function frameTimedOf(animation: AnimationSource) {
+  return withPreparedLeaves(animation, recordFrameTimes);
 }
 
 export const namedBuilderCalls: string[] = [];
@@ -322,8 +397,11 @@ type FrameAnimation = {
   onFrame: (animation: FrameAnimation, now: number) => boolean;
 };
 
-/** The time of the last frame of an animation of `frameDrivenOf`. */
-const frameDriverFrameTime = makeMutable(0);
+/**
+ * The time of the last frame of an animation of `frameDrivenOf` or of
+ * `frameTimedOf`.
+ */
+export const frameDriverFrameTime = makeMutable(0);
 
 // A leaf of EntryExitTransition can be an object that is not an animation.
 function recordFrameTimes(animation: Partial<FrameAnimation>) {

@@ -174,6 +174,11 @@ export type LayoutAnimationBuildSummary = {
     initialValue: unknown;
     /** Absent when the leaf has no native timeline. */
     track?: NativeLeafTrack;
+    /**
+     * A phase with no duration is not the one phase of the timeline of the
+     * leaf, so the timeline has no track form.
+     */
+    hasPhaseOfNoDuration?: true;
     /** The live leaf of the key keeps its timeline, so the key needs no track. */
     continuesLiveLeaf: boolean;
   }[];

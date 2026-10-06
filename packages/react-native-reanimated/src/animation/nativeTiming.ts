@@ -98,3 +98,27 @@ export function delayNativeTiming(
     ],
   };
 }
+
+/**
+ * The phases of the parts of a sequence in their order. Has no result when a
+ * part has no description, or for reduced motion on the sequence. A sequence
+ * that starts with a hold has no result: the frame driver runs the last part of
+ * the sequence during that hold.
+ */
+export function joinNativeTimings(
+  animations: AnimationObject[],
+  reduceMotion: ReduceMotion | undefined
+): NativeTimingDescription | undefined {
+  'worklet';
+  if (getReduceMotionFromConfig(reduceMotion)) {
+    return undefined;
+  }
+  const phases: NativeTimingDescription['phases'] = [];
+  for (const { __nativeTiming } of animations) {
+    if (!__nativeTiming) {
+      return undefined;
+    }
+    phases.push(...__nativeTiming.phases);
+  }
+  return phases[0].kind === 'hold' ? undefined : { phases };
+}

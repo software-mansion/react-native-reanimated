@@ -1,8 +1,17 @@
 import {
+  BounceIn,
+  BounceInDown,
+  BounceOut,
   Easing,
+  EntryExitTransition,
   FadeIn,
+  FadingTransition,
+  JumpingTransition,
+  Keyframe,
+  SequencedTransition,
   SlideInLeft,
   withDelay,
+  withSequence,
   withSpring,
   withTiming,
 } from '../src';
@@ -432,6 +441,206 @@ describe('LayoutAnimationsManager', () => {
     });
   });
 
+  describe('builds of keyframes and of presets with sequences', () => {
+    const VALUES = {
+      targetOriginX: 30,
+      targetOriginY: 60,
+      targetWidth: 50,
+      targetHeight: 80,
+      targetGlobalOriginX: 30,
+      targetGlobalOriginY: 60,
+      currentOriginX: 10,
+      currentOriginY: 20,
+      currentWidth: 40,
+      currentHeight: 70,
+      currentGlobalOriginX: 10,
+      currentGlobalOriginY: 20,
+      windowWidth: 400,
+      windowHeight: 800,
+    };
+    type Builder = { build: () => unknown };
+    let lastBuildId = 400;
+    const summaryOf = (builder: Builder) => {
+      const animation = builder.build() as (
+        values: typeof VALUES
+      ) => LayoutAnimation;
+      const buildId = ++lastBuildId;
+      const summary = manager.build(
+        buildId,
+        VALUES,
+        () => onUIRuntime(() => animation(VALUES)),
+        { leaves: 6, transformOperations: 8, segments: 64 },
+        []
+      );
+      manager.releaseBuilt(buildId);
+      return summary!;
+    };
+    const tracksOf = (builder: Builder) =>
+      Object.fromEntries(
+        summaryOf(builder).leaves.map(({ key, track }) => [
+          key,
+          track && {
+            delayMs: track.delayMs,
+            durationMs: track.durationMs,
+            ends: track.segments.map(({ endOffset, endValue }) => [
+              endOffset,
+              endValue,
+            ]),
+          },
+        ])
+      );
+    const keyframe = (definitions: Record<string, unknown>) =>
+      new Keyframe(definitions as ConstructorParameters<typeof Keyframe>[0]);
+
+    test('a keyframe with one point for each key is one linear segment', () => {
+      expect(
+        tracksOf(
+          keyframe({ 0: { opacity: 0 }, 100: { opacity: 1 } }).duration(400)
+        )
+      ).toEqual({
+        opacity: { delayMs: 0, durationMs: 400, ends: [[1, 1]] },
+      });
+    });
+
+    test('a keyframe with more points is one segment for each point, and its delay is the delay of the track', () => {
+      const points = () =>
+        keyframe({
+          0: { opacity: 0, originX: 100 },
+          30: { opacity: 1 },
+          100: { opacity: 0.5, originX: 30 },
+        }).duration(400);
+      const ends = [
+        [0.3, 1],
+        [1, 0.5],
+      ];
+      expect(tracksOf(points())).toEqual({
+        opacity: { delayMs: 0, durationMs: 400, ends },
+        originX: { delayMs: 0, durationMs: 400, ends: [[1, 30]] },
+      });
+      expect(tracksOf(points().delay(150))).toEqual({
+        opacity: { delayMs: 150, durationMs: 400, ends },
+        originX: { delayMs: 150, durationMs: 400, ends: [[1, 30]] },
+      });
+    });
+
+    test('an easing on a point is the easing of the segments to that point', () => {
+      const { leaves } = summaryOf(
+        keyframe({
+          0: { opacity: 0 },
+          50: { opacity: 1, easing: Easing.quad },
+          100: { opacity: 0, easing: Easing.bezier(0.1, 0.2, 0.3, 0.4) },
+        })
+      );
+      expect(leaves[0].track?.segments).toEqual([
+        { endOffset: 0.5, endValue: 1, cubicBezier: [1 / 3, 0, 2 / 3, 1 / 3] },
+        { endOffset: 1, endValue: 0, cubicBezier: [0.1, 0.2, 0.3, 0.4] },
+      ]);
+    });
+
+    test('the operations of a keyframe with the same points have one track, and with other points they have none', () => {
+      const transformAt50 = (operations: unknown[]) =>
+        keyframe({
+          0: { transform: [{ scale: 0 }, { rotate: '0deg' }] },
+          50: { transform: operations },
+          100: { transform: [{ scale: 1 }, { rotate: '90deg' }] },
+        });
+      const samePoints = summaryOf(
+        transformAt50([{ scale: 1.2 }, { rotate: '45deg' }])
+      ).leaves[0];
+      expect(samePoints.track?.segments).toEqual([
+        {
+          endOffset: 0.5,
+          endValue: [
+            { kind: 'scale', value: 1.2 },
+            { kind: 'rotate', value: Math.PI / 4 },
+          ],
+        },
+        {
+          endOffset: 1,
+          endValue: [
+            { kind: 'scale', value: 1 },
+            { kind: 'rotate', value: Math.PI / 2 },
+          ],
+        },
+      ]);
+      const otherPoints = summaryOf(transformAt50([{ scale: 1.2 }])).leaves[0];
+      expect(otherPoints.initialValue).toEqual([
+        { kind: 'scale', value: 0 },
+        { kind: 'rotate', value: 0 },
+      ]);
+      expect(otherPoints.track).toBeUndefined();
+      expect(otherPoints.hasPhaseOfNoDuration).toBeUndefined();
+    });
+
+    /** For each leaf: its segment count, or why it has no track. */
+    const routeOf = (builder: Builder) =>
+      Object.fromEntries(
+        summaryOf(builder).leaves.map(
+          ({ key, track, hasPhaseOfNoDuration }) => [
+            key,
+            track
+              ? track.segments.length
+              : hasPhaseOfNoDuration
+                ? 'phase of no duration'
+                : 'no timing',
+          ]
+        )
+      );
+
+    test.each<[string, Builder, Record<string, unknown>]>([
+      ['BounceIn', new BounceIn(), { transform: 8 }],
+      ['BounceInDown', new BounceInDown(), { transform: 8 }],
+      ['BounceOut', new BounceOut(), { transform: 8 }],
+      [
+        'BounceIn with no duration',
+        new BounceIn().duration(0),
+        { transform: 'phase of no duration' },
+      ],
+      [
+        'SequencedTransition',
+        new SequencedTransition(),
+        { originX: 3, originY: 3, width: 3, height: 3 },
+      ],
+      [
+        'SequencedTransition in reverse',
+        new SequencedTransition().reverse(),
+        { originX: 3, originY: 3, width: 3, height: 3 },
+      ],
+      [
+        'FadingTransition',
+        new FadingTransition(),
+        { opacity: 4, originX: 1, originY: 1, width: 1, height: 1 },
+      ],
+      [
+        'JumpingTransition',
+        new JumpingTransition(),
+        { originX: 2, originY: 26, width: 2, height: 2 },
+      ],
+      [
+        'EntryExitTransition',
+        new EntryExitTransition(),
+        {
+          originX: 2,
+          originY: 2,
+          width: 2,
+          height: 2,
+          transform: 1,
+          opacity: 'phase of no duration',
+        },
+      ],
+    ])('%s: the segments of each leaf', (_, builder, route) => {
+      expect(routeOf(builder)).toEqual(route);
+    });
+
+    test('the geometry leaves of FadingTransition have a delay and no duration', () => {
+      expect(tracksOf(new FadingTransition().duration(400)).originX).toEqual({
+        delayMs: 200,
+        durationMs: 0,
+        ends: [[1, 30]],
+      });
+    });
+  });
+
   describe('tracks of an easing function', () => {
     type Segment = {
       endOffset: number;
@@ -660,6 +869,422 @@ describe('LayoutAnimationsManager', () => {
     });
   });
 
+  describe('tracks of a sequence', () => {
+    let lastBuildId = 300;
+    const LIMIT_OF_64 = { ...LIMITS, segments: 64 };
+    const leafOf = (
+      key: string,
+      initial: unknown,
+      create: () => unknown,
+      limits = LIMIT_OF_64
+    ) => {
+      const buildId = ++lastBuildId;
+      const summary = manager.build(
+        buildId,
+        {},
+        () =>
+          ({
+            initialValues: { [key]: initial },
+            animations: { [key]: onUIRuntime(create) },
+          }) as LayoutAnimation,
+        limits,
+        []
+      );
+      manager.releaseBuilt(buildId);
+      return { ...summary!, ...summary!.leaves[0] };
+    };
+    const part = (toValue: number | string, duration: number) =>
+      withTiming(toValue, { duration, easing: Easing.linear });
+
+    test('each linear part is one segment from the end value of the part before it', () => {
+      const { initialValue, track } = leafOf('originX', 20, () =>
+        withSequence(part(120, 200), part(60, 300))
+      );
+      expect(initialValue).toBe(20);
+      expect(track).toEqual({
+        delayMs: 0,
+        durationMs: 500,
+        segments: [
+          { endOffset: 0.4, endValue: 120 },
+          { endOffset: 1, endValue: 60 },
+        ],
+      });
+    });
+
+    test('the first holds are the delay, and a later hold is a segment that keeps the value', () => {
+      const { track } = leafOf('originX', 20, () =>
+        withDelay(
+          90,
+          withSequence(part(120, 200), withDelay(100, part(60, 200)))
+        )
+      );
+      expect(track).toEqual({
+        delayMs: 90,
+        durationMs: 500,
+        segments: [
+          { endOffset: 0.4, endValue: 120 },
+          { endOffset: 0.6, endValue: 120 },
+          { endOffset: 1, endValue: 60 },
+        ],
+      });
+    });
+
+    test('a first part with no duration before a delayed part gives its value to the start, and the hold is the delay', () => {
+      const { initialValue, track, hasPhaseOfNoDuration } = leafOf(
+        'originX',
+        20,
+        () => withSequence(part(50, 0), withDelay(100, part(100, 100)))
+      );
+      expect(initialValue).toBe(50);
+      expect(hasPhaseOfNoDuration).toBeUndefined();
+      expect(track).toEqual({
+        delayMs: 100,
+        durationMs: 100,
+        segments: [{ endOffset: 1, endValue: 100 }],
+      });
+    });
+
+    test('each part with an easing function has the pieces of its fit in its part of the time', () => {
+      const { track } = leafOf('opacity', 0, () =>
+        withSequence(
+          withTiming(1, { duration: 300 }),
+          withTiming(0.5, { duration: 100 })
+        )
+      );
+      const segments = track!.segments as {
+        endOffset: number;
+        endValue: number;
+        cubicBezier: number[];
+      }[];
+      expect(segments.map(({ endOffset }) => endOffset)).toEqual([
+        0.375, 0.75, 0.875, 1,
+      ]);
+      expect(segments.map(({ endValue }) => endValue)).toEqual([
+        0.5, 1, 0.75, 0.5,
+      ]);
+      const easeIn = [1 / 3, 0, 2 / 3, 1 / 3];
+      const easeOut = [1 / 3, 2 / 3, 2 / 3, 1];
+      [easeIn, easeOut, easeIn, easeOut].forEach((controlPoints, index) =>
+        controlPoints.forEach((point, pointIndex) =>
+          expect(segments[index].cubicBezier[pointIndex]).toBeCloseTo(point, 12)
+        )
+      );
+    });
+
+    test('a part that does not change the value is one segment with no fit', () => {
+      const { track } = leafOf('opacity', 1, () =>
+        withSequence(
+          withTiming(1, { duration: 300, easing: Easing.bounce }),
+          withTiming(0, { duration: 100 })
+        )
+      );
+      expect(track?.segments).toHaveLength(3);
+      expect(track?.segments[0]).toEqual({ endOffset: 0.75, endValue: 1 });
+    });
+
+    test('the fit of a part has the tolerance of the travel of that part', () => {
+      const segmentsOf = (firstEnd: number) =>
+        leafOf('originX', 0, () =>
+          withSequence(
+            withTiming(firstEnd, { easing: Easing.sin }),
+            withTiming(firstEnd + 100, { easing: Easing.sin })
+          )
+        ).track!.segments;
+      const short = segmentsOf(100);
+      const long = segmentsOf(4000);
+      expect(long.length).toBeGreaterThan(short.length);
+      const piecesOfSecondPart = (segments: typeof short) =>
+        segments.filter(({ endOffset }) => endOffset > 0.5).length;
+      expect(piecesOfSecondPart(long)).toBe(piecesOfSecondPart(short));
+    });
+
+    test('a first part with no duration gives its value to the start', () => {
+      const { initialValue, track } = leafOf('originX', 20, () =>
+        withSequence(part(50, 0), part(100, 100))
+      );
+      expect(initialValue).toBe(50);
+      expect(track).toEqual({
+        delayMs: 0,
+        durationMs: 100,
+        segments: [{ endOffset: 1, endValue: 100 }],
+      });
+    });
+
+    test.each([
+      [
+        'in the middle',
+        () => withSequence(part(120, 100), part(50, 0), part(90, 100)),
+      ],
+      [
+        'in the middle that keeps the value',
+        () => withSequence(part(120, 100), part(120, 0), part(90, 100)),
+      ],
+      ['at the end', () => withSequence(part(120, 100), part(50, 0))],
+      [
+        'after a delay and before a part',
+        () => withDelay(10, withSequence(part(50, 0), part(100, 100))),
+      ],
+      [
+        'after a first part with no duration',
+        () => withSequence(part(50, 0), part(60, 0), part(100, 100)),
+      ],
+      ['in each part', () => withSequence(part(50, 0), part(60, 0))],
+      [
+        'in a delay of zero of a later part',
+        () => withSequence(part(120, 100), withDelay(0, part(90, 100))),
+      ],
+    ])('a phase with no duration %s has no track form', (_, create) => {
+      const { initialValue, track, hasPhaseOfNoDuration } = leafOf(
+        'originX',
+        20,
+        create
+      );
+      expect(initialValue).toBe(20);
+      expect(track).toBeUndefined();
+      expect(hasPhaseOfNoDuration).toBe(true);
+    });
+
+    test.each([
+      ['a spring', () => withSequence(part(120, 100), withSpring(50))],
+      ['a string', () => withSequence(part(120, 100), part('50px', 100))],
+      [
+        'an easing with no fit',
+        () =>
+          withSequence(
+            part(120, 100),
+            withTiming(50, { easing: Easing.circle })
+          ),
+      ],
+    ])('a sequence with a part of %s has no track', (_, create) => {
+      const leaf = leafOf('originX', 20, create);
+      expect(leaf.track).toBeUndefined();
+      expect(leaf.hasPhaseOfNoDuration).toBeUndefined();
+    });
+
+    test('the segments of a sequence count as the sum over its parts', () => {
+      const parts = (count: number) => () =>
+        withSequence(
+          ...Array.from({ length: count }, (_, index) => withTiming(index % 2))
+        );
+      const limitOf8 = { ...LIMITS, segments: 8 };
+      const atLimit = leafOf('opacity', 1, parts(4), limitOf8);
+      expect(atLimit.exceedsLimit).toBe(false);
+      expect(atLimit.track?.segments).toHaveLength(8);
+      expect(leafOf('opacity', 1, parts(5), limitOf8)).toMatchObject({
+        exceedsLimit: true,
+        leaves: [],
+      });
+    });
+
+    describe('in a transform', () => {
+      const scaleParts = () => withSequence(part(1.2, 100), part(1, 300));
+      const INITIAL = [{ scale: 0 }, { rotate: '0deg' }];
+
+      test('operations with equal phases have one track with the values of each operation in each segment', () => {
+        const { initialValue, track } = leafOf('transform', INITIAL, () => [
+          { scale: scaleParts() },
+          { rotate: withSequence(part('90deg', 100), part('0deg', 300)) },
+        ]);
+        expect(initialValue).toEqual([
+          { kind: 'scale', value: 0 },
+          { kind: 'rotate', value: 0 },
+        ]);
+        expect(track).toEqual({
+          delayMs: 0,
+          durationMs: 400,
+          segments: [
+            {
+              endOffset: 0.25,
+              endValue: [
+                { kind: 'scale', value: 1.2 },
+                { kind: 'rotate', value: Math.PI / 2 },
+              ],
+            },
+            {
+              endOffset: 1,
+              endValue: [
+                { kind: 'scale', value: 1 },
+                { kind: 'rotate', value: 0 },
+              ],
+            },
+          ],
+        });
+      });
+
+      test('an operation of a plain value keeps that value in each segment', () => {
+        const { initialValue, track } = leafOf('transform', INITIAL, () => [
+          { scale: scaleParts() },
+          { rotate: '45deg' },
+        ]);
+        const rotate = { kind: 'rotate', value: Math.PI / 4 };
+        expect(initialValue).toEqual([{ kind: 'scale', value: 0 }, rotate]);
+        expect(track?.segments.map(({ endValue }) => endValue)).toEqual([
+          [{ kind: 'scale', value: 1.2 }, rotate],
+          [{ kind: 'scale', value: 1 }, rotate],
+        ]);
+      });
+
+      test.each([
+        [
+          'other durations',
+          () => withSequence(part('90deg', 200), part('0deg', 200)),
+        ],
+        ['one timing', () => part('90deg', 400)],
+        [
+          'another easing',
+          () =>
+            withSequence(
+              withTiming('90deg', { duration: 100 }),
+              part('0deg', 300)
+            ),
+        ],
+        [
+          'a hold',
+          () =>
+            withSequence(part('90deg', 100), withDelay(100, part('0deg', 200))),
+        ],
+        [
+          'a delay',
+          () =>
+            withDelay(10, withSequence(part('90deg', 100), part('0deg', 300))),
+        ],
+      ])(
+        'an operation with %s has no track with the other operation',
+        (_, rotate) => {
+          const leaf = leafOf('transform', INITIAL, () => [
+            { scale: scaleParts() },
+            { rotate: rotate() },
+          ]);
+          expect(leaf.initialValue).toEqual([
+            { kind: 'scale', value: 0 },
+            { kind: 'rotate', value: 0 },
+          ]);
+          expect(leaf.track).toBeUndefined();
+        }
+      );
+
+      test('a part with another unit than the initial value has no native value', () => {
+        const leaf = leafOf('transform', INITIAL, () => [
+          { scale: scaleParts() },
+          { rotate: withSequence(part('90deg', 100), part('1rad', 300)) },
+        ]);
+        expect(leaf.initialValue).toBeUndefined();
+        expect(leaf.track).toBeUndefined();
+      });
+
+      test('a phase with no duration in the phases of the operations has no track form', () => {
+        const leaf = leafOf('transform', INITIAL, () => [
+          { scale: withSequence(part(1.2, 100), part(1, 0)) },
+          { rotate: withSequence(part('90deg', 100), part('0deg', 0)) },
+        ]);
+        expect(leaf.track).toBeUndefined();
+        expect(leaf.hasPhaseOfNoDuration).toBe(true);
+      });
+    });
+
+    describe('against the frame driver', () => {
+      /** The value of a track of numbers at a time from the start of its leaf. */
+      const trackValueAt = (
+        start: number,
+        {
+          delayMs,
+          durationMs,
+          segments,
+        }: NonNullable<ReturnType<typeof leafOf>['track']>,
+        elapsed: number
+      ) => {
+        const time = Math.min(1, Math.max(0, (elapsed - delayMs) / durationMs));
+        let offset = 0;
+        let value = start;
+        for (const { endOffset, endValue, cubicBezier } of segments) {
+          if (time <= endOffset) {
+            const [, y1, , y2] = cubicBezier ?? [1 / 3, 1 / 3, 2 / 3, 2 / 3];
+            const u = (time - offset) / (endOffset - offset);
+            const progress =
+              3 * (1 - u) * (1 - u) * u * y1 +
+              3 * (1 - u) * u * u * y2 +
+              u ** 3;
+            return value + ((endValue as number) - value) * progress;
+          }
+          offset = endOffset;
+          value = endValue as number;
+        }
+        return NaN;
+      };
+      const eased = (
+        toValue: number,
+        duration: number,
+        easing = Easing.inOut(Easing.quad)
+      ) => withTiming(toValue, { duration, easing });
+      const bounce = () =>
+        withSequence(
+          eased(1.2, 330),
+          eased(0.9, 90),
+          eased(1.1, 90),
+          eased(1, 90)
+        );
+
+      test.each<[string, () => unknown, number[]]>([
+        [
+          'two parts',
+          () => withSequence(eased(1, 225), eased(0.3, 310, Easing.sin)),
+          [225, 535],
+        ],
+        ['the four parts of a bounce preset', bounce, [330, 420, 510, 600]],
+        [
+          'five parts',
+          () =>
+            withSequence(
+              eased(1, 100),
+              eased(0, 130, Easing.exp),
+              eased(2, 55),
+              eased(1, 225, Easing.out(Easing.back(1.7))),
+              eased(0.5, 90)
+            ),
+          [100, 230, 285, 510, 600],
+        ],
+        [
+          'a delayed part in a delay',
+          () =>
+            withDelay(
+              40,
+              withSequence(
+                eased(1, 100),
+                withDelay(70, eased(0, 130)),
+                eased(0.5, 60)
+              )
+            ),
+          [40, 140, 210, 340, 400],
+        ],
+      ])(
+        '%s: the track has the value of the frame driver in each phase and around each boundary',
+        (_, create, boundaries) => {
+          const START = 0.25;
+          const { track } = leafOf('opacity', START, create);
+          const times = boundaries.flatMap((boundary, index) => [
+            (boundary + (boundaries[index - 1] ?? 0)) / 2,
+            boundary - 1,
+            boundary,
+            boundary + 1,
+          ]);
+          for (const elapsed of [0, ...times]) {
+            const leaf = onUIRuntime(create) as AnimationObject;
+            leaf.onStart(leaf, START, 1000, undefined);
+            [
+              ...boundaries.filter((boundary) => boundary < elapsed),
+              elapsed,
+            ].some((frame) => leaf.onFrame(leaf, 1000 + frame));
+            expect(
+              Math.abs(
+                trackValueAt(START, track!, elapsed) - (leaf.current as number)
+              )
+            ).toBeLessThan(0.001 * 2);
+          }
+        }
+      );
+    });
+  });
+
   describe('live leaves of native tracks', () => {
     const TAG = 20;
     const X = { buildId: 21, key: 'originX' };
@@ -843,6 +1468,236 @@ describe('LayoutAnimationsManager', () => {
       expect(lastProgress()).toEqual({ originY: 60 });
       runFrame(3500);
       expect(lastProgress()).toEqual({ originY: 100 });
+    });
+
+    describe('a plain number as a scalar leaf', () => {
+      const plainConfig = (callback?: (finished: boolean) => void) =>
+        configOf(
+          { opacity: 0, originY: 5 },
+          { opacity: timing(1, 100), originY: 30 },
+          callback
+        );
+
+      test('the build gives it the animation of the frame driver, and its track has no duration', () => {
+        const config = plainConfig()();
+        startBatchAt(2000);
+        const summary = manager.build(24, {}, () => config, LIMITS, [])!;
+        manager.releaseBuilt(24);
+        expect(summary.leaves[1]).toEqual({
+          key: 'originY',
+          initialValue: 5,
+          track: {
+            delayMs: 0,
+            durationMs: 0,
+            segments: [{ endOffset: 1, endValue: 30 }],
+          },
+          continuesLiveLeaf: false,
+        });
+        expect(
+          (config.animations.originY as unknown as AnimationObject)
+            .__nativeTiming
+        ).toEqual({ phases: [linearPhase(30, 0)] });
+      });
+
+      test('a plain string has no track', () => {
+        startBatchAt(2000);
+        const summary = manager.build(
+          24,
+          {},
+          configOf({ originY: 5 }, { originY: '30%' }),
+          LIMITS,
+          []
+        )!;
+        manager.releaseBuilt(24);
+        expect(summary.leaves[0].track).toBeUndefined();
+      });
+
+      test('the frame-driven start of the build shows the values of a start with no build in the first frame and at the end', () => {
+        const TWIN_TAG = 25;
+        const shown = (tag: number) => ({
+          ...(globalThis._notifyAboutProgress as jest.Mock).mock.calls
+            .filter(([progressTag]) => progressTag === tag)
+            .at(-1)[1],
+        });
+        const rows: Record<string, number>[][] = [];
+        const readRow = () => rows.push([shown(TAG), shown(TWIN_TAG)]);
+        const callback = jest.fn();
+        const twinCallback = jest.fn();
+        startBatchAt(2000);
+        manager.build(24, {}, plainConfig(callback), LIMITS, []);
+        manager.startBuilt(TAG, LayoutAnimationType.ENTERING, 24, []);
+        manager.start(
+          TWIN_TAG,
+          LayoutAnimationType.ENTERING,
+          {},
+          plainConfig(twinCallback)
+        );
+        readRow();
+        runFrame(2050);
+        readRow();
+        runFrame(2100);
+        readRow();
+
+        expect(rows.map(([native]) => native)).toEqual([
+          { opacity: 0, originY: 30 },
+          { opacity: 0.5, originY: 30 },
+          { opacity: 1, originY: 30 },
+        ]);
+        rows.forEach(([native, twin]) => expect(native).toEqual(twin));
+        expect(callback.mock.calls).toEqual([[true]]);
+        expect(twinCallback.mock.calls).toEqual([[true]]);
+        manager.stop(TWIN_TAG);
+      });
+    });
+
+    describe('a frame-driven start of a build of a sequence', () => {
+      const S = { buildId: 26, key: 'originY' };
+      const sequence = (lastEnd: number) =>
+        onUIRuntime(() =>
+          withSequence(
+            timing(100, 200) as unknown as number,
+            timing(40, 200) as unknown as number,
+            timing(lastEnd, 200) as unknown as number
+          )
+        );
+      const startAt = (time: number, lastEnd: number, captureTime?: number) => {
+        const callback = jest.fn();
+        startBatchAt(2000);
+        manager.build(
+          S.buildId,
+          {},
+          configOf({ originY: 0 }, { originY: sequence(lastEnd) }, callback),
+          LIMITS,
+          []
+        );
+        if (captureTime !== undefined) {
+          startBatchAt(2000 + captureTime);
+          manager.captureLiveLeaves([S]);
+        }
+        startBatchAt(2000 + time);
+        manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, S.buildId, []);
+        return callback;
+      };
+
+      test.each([
+        [100, 50],
+        [199, 99.5],
+        [200, 100],
+        [202, 99.4],
+        [300, 70],
+        [500, 70],
+      ])('at %i ms its first frame shows the declared value', (time, value) => {
+        startAt(time - 1, 100);
+        runFrame(2000 + time);
+        expect(lastProgress().originY).toBeCloseTo(value, 9);
+        manager.stop(TAG);
+      });
+
+      test('it has the later boundaries at the first frame after each declared end, and one callback', () => {
+        const callback = startAt(250, 100);
+        runFrame(2390);
+        expect(lastProgress().originY).toBeCloseTo(43, 9);
+        runFrame(2410);
+        expect(lastProgress()).toEqual({ originY: 40 });
+        runFrame(2510);
+        expect(lastProgress()).toEqual({ originY: 70 });
+        runFrame(2610);
+        expect(lastProgress()).toEqual({ originY: 100 });
+        expect(callback.mock.calls).toEqual([[true]]);
+      });
+
+      test.each([40, 100])(
+        'after a capture in the last part, with the last end value %i, it shows the declared value',
+        (lastEnd) => {
+          const callback = startAt(500, lastEnd, 450);
+          runFrame(2550);
+          expect(lastProgress().originY).toBeCloseTo(
+            40 + ((lastEnd - 40) * 3) / 4,
+            9
+          );
+          runFrame(2600);
+          expect(lastProgress()).toEqual({ originY: lastEnd });
+          expect(callback.mock.calls).toEqual([[true]]);
+        }
+      );
+    });
+
+    describe('a live sequence leaf whose key is absent from a new build', () => {
+      const S = { buildId: 27, key: 'originX' };
+      const NEXT = 28;
+      const FRAMES = [50, 100, 200, 250, 400, 450];
+      const sequenceConfig = () =>
+        configOf(
+          { originX: 0 },
+          {
+            originX: onUIRuntime(() =>
+              withSequence(
+                timing(100, 200) as unknown as number,
+                timing(40, 200) as unknown as number
+              )
+            ),
+          }
+        );
+      const nextConfig = () =>
+        configOf({ originY: 0 }, { originY: timing(40, 400) });
+      // The frame driver writes each frame into one object.
+      const shown = (): Record<string, number> => ({ ...lastProgress() });
+      const framesAfter = (mergeTime: number) =>
+        FRAMES.map((frame) => {
+          runFrame(2000 + mergeTime + frame);
+          return shown();
+        });
+      /** The sequence as a native track until the new build. */
+      const mergeLive = (mergeTime: number) => {
+        startBatchAt(2000);
+        manager.build(S.buildId, {}, sequenceConfig(), LIMITS, []);
+        startBatchAt(2000 + mergeTime);
+        const summary = manager.build(NEXT, {}, nextConfig(), LIMITS, [S]);
+        manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, NEXT, [S]);
+        manager.releaseBuilt(S.buildId);
+        return { summary, atMerge: shown() };
+      };
+      /** The sequence on the frame driver from its start. */
+      const mergeFrameDriven = (mergeTime: number) => {
+        startBatchAt(2000);
+        manager.build(S.buildId, {}, sequenceConfig(), LIMITS, []);
+        manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, S.buildId, []);
+        [200, mergeTime]
+          .filter((frame) => frame <= mergeTime)
+          .forEach((frame) => runFrame(2000 + frame));
+        startBatchAt(2000 + mergeTime);
+        manager.build(NEXT, {}, nextConfig(), LIMITS, []);
+        manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, NEXT, []);
+        return { atMerge: shown() };
+      };
+
+      test.each([
+        [100, 50],
+        [300, 70],
+      ])(
+        'at %i ms the sequence starts again from its value of that time, as a sequence that was frame-driven from its start',
+        (mergeTime, value) => {
+          const live = mergeLive(mergeTime);
+          const liveFrames = framesAfter(mergeTime);
+          manager.stop(TAG);
+          const frameDriven = mergeFrameDriven(mergeTime);
+          const frameDrivenFrames = framesAfter(mergeTime);
+
+          expect(live.summary?.needsFrameDriver).toBe(true);
+          expect(live.atMerge).toEqual({ originX: value, originY: 0 });
+          expect(live.atMerge).toEqual(frameDriven.atMerge);
+          expect(liveFrames).toEqual(frameDrivenFrames);
+          // The first part again: from the value at the merge to 100 in 200 ms, then the second part.
+          expect(liveFrames.map(({ originX }) => originX)).toEqual([
+            value + (100 - value) / 4,
+            value + (100 - value) / 2,
+            100,
+            85,
+            40,
+            40,
+          ]);
+        }
+      );
     });
 
     test('an easing with mutable state: the track is the fit of the build, a later build has the same fit, and the frame driver reads the state in each frame', () => {

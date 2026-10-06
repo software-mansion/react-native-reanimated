@@ -6,6 +6,7 @@ import { recognizePrefixSuffix } from '../animation/utilCommon';
 import type {
   AnimationObject,
   NativeEasing,
+  NativeHoldPhase,
   NativeLeafSegment,
   NativeLeafTrack,
   NativeTimingDescription,
@@ -27,10 +28,45 @@ export type TransformOperationLeaf = Record<string, AnimationObject>;
 /** The animation of a scalar key, or the operations of `transform`. */
 export type NativeLeaf = AnimationObject | TransformOperationLeaf[];
 
-type LeafSummary = { initialValue: unknown; track?: NativeLeafTrack };
+type LoweredTrack<TValue> = {
+  track?: NativeLeafTrack<TValue>;
+  hasPhaseOfNoDuration?: true;
+};
 
-/** The sum of the holds of a leaf, then its one timing. */
-type LeafTimeline = { delayMs: number; timing: NativeTimingPhase };
+type LeafSummary = { initialValue: unknown } & LoweredTrack<
+  number | NativeTransformOperation[]
+>;
+
+type Phase = NativeHoldPhase | NativeTimingPhase;
+
+/** The fields of a phase that do not depend on its end value. */
+type PhaseForm =
+  | Pick<NativeHoldPhase, 'kind' | 'durationMs'>
+  | Pick<NativeTimingPhase, 'kind' | 'durationMs' | 'easing'>;
+
+type TimingValuePhase<TValue> = Omit<NativeTimingPhase, 'toValue'> & {
+  toValue: TValue;
+};
+
+/** A phase whose end value is in the native form of its leaf. */
+type ValuePhase<TValue> = NativeHoldPhase | TimingValuePhase<TValue>;
+
+/**
+ * The value that a leaf shows from its start, the sum of its first holds, then
+ * the phases that follow.
+ */
+type Timeline<TValue> = {
+  start: TValue;
+  delayMs: number;
+  phases: ValuePhase<TValue>[];
+};
+
+/** How the lowering reads the values of one kind of leaf. */
+type ValueReader<TValue> = {
+  between: (start: TValue, end: TValue, progress: number) => TValue;
+  /** Has no result for equal values: they need no easing. */
+  toleranceOf: (start: TValue, end: TValue) => number | undefined;
+};
 
 /** The easing of a timing in segments of progress from 0 to 1. */
 type ProgressSegment = Omit<NativeLeafSegment, 'endValue'> & {
@@ -47,14 +83,12 @@ const PROGRESS_TOLERANCE = 0.001;
 const POINTS_TOLERANCE = 0.25;
 const KEYS_IN_POINTS = ['originX', 'originY', 'width', 'height'];
 const STRAIGHT_LINE: ProgressSegment[] = [{ endOffset: 1, endProgress: 1 }];
-const AT_REST: LeafTimeline = {
+const AT_REST: Timeline<number> = {
+  start: 0,
   delayMs: 0,
-  timing: {
-    kind: 'timing',
-    durationMs: 0,
-    toValue: 0,
-    easing: { kind: 'linear' },
-  },
+  phases: [
+    { kind: 'timing', durationMs: 0, toValue: 0, easing: { kind: 'linear' } },
+  ],
 };
 
 function kindOf(operation: TransformOperationLeaf): string {
@@ -83,17 +117,18 @@ function hasSameEasing(live: NativeEasing, next: NativeEasing): boolean {
   return live.kind === next.kind;
 }
 
-function hasSameCurve(
-  live: NativeTimingPhase | undefined,
-  next: NativeTimingPhase | undefined
+function hasSameForm(
+  first: PhaseForm | undefined,
+  second: PhaseForm | undefined
 ): boolean {
   'worklet';
-  return (
-    !!live &&
-    !!next &&
-    live.durationMs === next.durationMs &&
-    hasSameEasing(live.easing, next.easing)
-  );
+  if (!first || !second || first.durationMs !== second.durationMs) {
+    return false;
+  }
+  if (first.kind === 'hold' || second.kind === 'hold') {
+    return first.kind === second.kind;
+  }
+  return hasSameEasing(first.easing, second.easing);
 }
 
 function hasUnit(animation: AnimationObject): boolean {
@@ -101,22 +136,40 @@ function hasUnit(animation: AnimationObject): boolean {
   return typeof timingOf(animation.__nativeTiming)?.toValue === 'string';
 }
 
-function timelineOf(animation: unknown): LeafTimeline | undefined {
+function hasManyTimings(animation: AnimationObject | undefined): boolean {
+  'worklet';
+  const phases = animation?.__nativeTiming?.phases ?? [];
+  return phases.filter(({ kind }) => kind === 'timing').length > 1;
+}
+
+function phasesOf(animation: unknown): Phase[] | undefined {
   'worklet';
   const { reduceMotion, __nativeTiming } = (animation ?? {}) as AnimationObject;
-  if (reduceMotion || !__nativeTiming) {
-    return undefined;
-  }
-  const { phases } = __nativeTiming;
+  return reduceMotion ? undefined : __nativeTiming?.phases;
+}
+
+/**
+ * A first phase with no duration, before a phase with a duration, gives its
+ * value to the start. The last phase of a description is a timing.
+ */
+function timelineOf<TValue>(
+  initialValue: TValue,
+  phases: ValuePhase<TValue>[]
+): Timeline<TValue> {
+  'worklet';
+  const [first, second] = phases;
+  const jumpsAtStart =
+    first.kind === 'timing' && first.durationMs === 0 && second?.durationMs > 0;
+  let index = jumpsAtStart ? 1 : 0;
   let delayMs = 0;
-  let index = 0;
   while (phases[index].kind === 'hold') {
     delayMs += phases[index++].durationMs;
   }
-  const timing = phases[index];
-  return index === phases.length - 1 && timing.kind === 'timing'
-    ? { delayMs, timing }
-    : undefined;
+  return {
+    start: jumpsAtStart ? first.toValue : initialValue,
+    delayMs,
+    phases: phases.slice(index),
+  };
 }
 
 /** The end of each phase but the last, from the start of the animation. */
@@ -176,32 +229,55 @@ function progressSegmentsOf(
 }
 
 /**
- * `valueAt` gives the value of the leaf at a progress of its timing. A leaf
- * that does not change its value, or that has no duration, needs no easing.
+ * The segments of the phases of a timeline: a hold keeps the value before it,
+ * and a timing has the pieces of its easing from the value before it. A phase
+ * with no duration has a track form only as the one phase of the timeline.
  */
 function trackOf<TValue>(
-  { delayMs, timing }: LeafTimeline,
-  changesValue: boolean,
-  tolerance: number,
-  fits: EasingCurveFits,
-  valueAt: (progress: number) => TValue
-): NativeLeafTrack<TValue> | undefined {
+  { start, delayMs, phases }: Timeline<TValue>,
+  { between, toleranceOf }: ValueReader<TValue>,
+  fits: EasingCurveFits
+): LoweredTrack<TValue> {
   'worklet';
-  const { durationMs, easing } = timing;
-  const segments =
-    changesValue && durationMs > 0
-      ? progressSegmentsOf(easing, tolerance, fits)
-      : STRAIGHT_LINE;
-  return (
-    segments && {
-      delayMs,
-      durationMs,
-      segments: segments.map(({ endProgress, ...segment }) => ({
-        ...segment,
-        endValue: valueAt(endProgress),
-      })),
+  if (phases.length > 1 && phases.some(({ durationMs }) => durationMs === 0)) {
+    return { hasPhaseOfNoDuration: true };
+  }
+  let durationMs = 0;
+  for (const phase of phases) {
+    durationMs += phase.durationMs;
+  }
+  const offsetOf = (timeMs: number) =>
+    durationMs > 0 ? timeMs / durationMs : 1;
+  const segments: NativeLeafSegment<TValue>[] = [];
+  let phaseStartMs = 0;
+  let value = start;
+  for (const phase of phases) {
+    if (phase.kind === 'hold') {
+      segments.push({
+        endOffset: offsetOf(phaseStartMs + phase.durationMs),
+        endValue: value,
+      });
+    } else {
+      const tolerance = toleranceOf(value, phase.toValue);
+      const pieces =
+        tolerance === undefined || phase.durationMs === 0
+          ? STRAIGHT_LINE
+          : progressSegmentsOf(phase.easing, tolerance, fits);
+      if (!pieces) {
+        return {};
+      }
+      for (const { endOffset, endProgress, ...piece } of pieces) {
+        segments.push({
+          ...piece,
+          endOffset: offsetOf(phaseStartMs + endOffset * phase.durationMs),
+          endValue: between(value, phase.toValue, endProgress),
+        });
+      }
+      value = phase.toValue;
     }
-  );
+    phaseStartMs += phase.durationMs;
+  }
+  return { track: { delayMs, durationMs, segments } };
 }
 
 function valueBetween(start: number, end: number, progress: number): number {
@@ -237,9 +313,32 @@ function hasSameUnit(start: unknown, end: unknown): boolean {
   );
 }
 
-function isAtRest({ delayMs, timing }: LeafTimeline): boolean {
+function isAtRest({ delayMs, phases }: Timeline<number>): boolean {
   'worklet';
-  return timing.durationMs === 0 && delayMs === 0;
+  return delayMs === 0 && phases.length === 1 && phases[0].durationMs === 0;
+}
+
+/** The timeline of an operation with no description has no phases. */
+function isDescribed({ phases }: Timeline<number>): boolean {
+  'worklet';
+  return phases.length > 0;
+}
+
+/** The timelines of one shape have their timings at the same indices. */
+function timingAt({ phases }: Timeline<number>, index: number) {
+  'worklet';
+  return phases[index] as TimingValuePhase<number>;
+}
+
+function hasSameShape(first: Timeline<number>, second: Timeline<number>) {
+  'worklet';
+  return (
+    first.delayMs === second.delayMs &&
+    first.phases.length === second.phases.length &&
+    first.phases.every((phase, index) =>
+      hasSameForm(phase, second.phases[index])
+    )
+  );
 }
 
 function advanceAnimation(
@@ -282,6 +381,9 @@ function relateAnimations(
   next: AnimationObject | undefined
 ): LiveLeafRelation {
   'worklet';
+  if (hasManyTimings(live) || hasManyTimings(next)) {
+    return 'frameDriver';
+  }
   const isLiveTiming = live.type === 'timing';
   if (!next) {
     // A merged delay starts again. A merged timing keeps its start time; with a unit it starts again
@@ -297,7 +399,7 @@ function relateAnimations(
   if (!keepsStartTime) {
     return 'replaces';
   }
-  return hasSameCurve(
+  return hasSameForm(
     timingOf(live.__nativeTiming),
     timingOf(next.__nativeTiming)
   )
@@ -306,8 +408,41 @@ function relateAnimations(
 }
 
 /**
- * The native form has one timeline for all operations. An operation with no
- * delay and no duration has its end value from the start.
+ * The timeline of one operation in native scalars: with no phases for an
+ * operation with no description, and no result for a value with no native
+ * form.
+ */
+function operationTimelineOf(
+  kind: string,
+  initialValue: unknown,
+  animation: unknown
+): Timeline<number> | undefined {
+  'worklet';
+  const start = nativeScalarOf(kind, initialValue);
+  if (start === undefined) {
+    return undefined;
+  }
+  const valuePhases: ValuePhase<number>[] = [];
+  for (const phase of phasesOf(animation) ?? []) {
+    if (phase.kind === 'hold') {
+      valuePhases.push(phase);
+      continue;
+    }
+    const toValue = nativeScalarOf(kind, phase.toValue);
+    if (toValue === undefined || !hasSameUnit(initialValue, phase.toValue)) {
+      return undefined;
+    }
+    valuePhases.push({ ...phase, toValue });
+  }
+  return valuePhases.length > 0
+    ? timelineOf(start, valuePhases)
+    : { start, delayMs: 0, phases: [] };
+}
+
+/**
+ * The native form has one timeline for all operations: each operation that
+ * changes has the phases of the others. An operation with no delay and no
+ * duration has its end value from the start.
  */
 function summarizeTransformLeaf(
   initialValue: unknown,
@@ -315,60 +450,70 @@ function summarizeTransformLeaf(
   fits: EasingCurveFits
 ): LeafSummary {
   'worklet';
-  const starts: NativeTransformOperation[] = [];
-  const ends: NativeTransformOperation[] = [];
-  const timelines: (LeafTimeline | undefined)[] = [];
+  const kinds: string[] = [];
+  const timelines: Timeline<number>[] = [];
   for (let index = 0; index < leaf.length; index++) {
-    const kinds = Object.keys(leaf[index] ?? {});
-    const kind = kinds[0];
-    const timeline = timelineOf(leaf[index]?.[kind]);
-    const toValue = timeline?.timing.toValue;
+    const operationKinds = Object.keys(leaf[index] ?? {});
+    const kind = operationKinds[0];
     const initial = (initialValue as Record<string, unknown>[] | undefined)?.[
       index
     ]?.[kind];
-    const start = nativeScalarOf(kind, initial);
-    const end = timeline ? nativeScalarOf(kind, toValue) : start;
-    const hasNativeValues =
-      kinds.length === 1 &&
-      start !== undefined &&
-      end !== undefined &&
-      (!timeline || hasSameUnit(initial, toValue));
-    if (!hasNativeValues) {
+    const timeline =
+      operationKinds.length === 1
+        ? operationTimelineOf(kind, initial, leaf[index][kind])
+        : undefined;
+    if (!timeline) {
       return { initialValue: undefined };
     }
-    const startsAtEnd = timeline !== undefined && isAtRest(timeline);
-    starts.push({ kind, value: startsAtEnd ? end : start });
-    ends.push({ kind, value: end });
+    kinds.push(kind);
     timelines.push(timeline);
   }
-  const moving = timelines.filter(
-    (timeline): timeline is LeafTimeline => !!timeline && !isAtRest(timeline)
+  const operationsOf = (valueOf: (timeline: Timeline<number>) => number) =>
+    timelines.map((timeline, index) => ({
+      kind: kinds[index],
+      value: valueOf(timeline),
+    }));
+  const starts = operationsOf((timeline) =>
+    isAtRest(timeline) ? timingAt(timeline, 0).toValue : timeline.start
   );
+  const moving = timelines.filter((timeline) => !isAtRest(timeline));
   const shared = moving[0] ?? AT_REST;
-  const hasOneTimeline =
-    !timelines.includes(undefined) &&
-    moving.every(
-      ({ delayMs, timing }) =>
-        delayMs === shared.delayMs && hasSameCurve(timing, shared.timing)
-    );
+  const hasOneTimeline = moving.every(
+    (timeline) => isDescribed(timeline) && hasSameShape(timeline, shared)
+  );
   if (!hasOneTimeline) {
     return { initialValue: starts };
   }
-  const changesValue = starts.some(
-    ({ value }, index) => value !== ends[index].value
+  const phases = shared.phases.map(
+    (phase, index): ValuePhase<NativeTransformOperation[]> =>
+      phase.kind === 'hold'
+        ? phase
+        : {
+            ...phase,
+            toValue: operationsOf(
+              (timeline) =>
+                timingAt(timeline, isAtRest(timeline) ? 0 : index).toValue
+            ),
+          }
   );
-  const track = trackOf(
-    shared,
-    changesValue,
-    PROGRESS_TOLERANCE,
-    fits,
-    (progress) =>
-      starts.map(({ kind, value }, index) => ({
-        kind,
-        value: valueBetween(value, ends[index].value, progress),
-      }))
-  );
-  return { initialValue: starts, track };
+  return {
+    initialValue: starts,
+    ...trackOf(
+      { start: starts, delayMs: shared.delayMs, phases },
+      {
+        between: (start, end, progress) =>
+          start.map(({ kind, value }, index) => ({
+            kind,
+            value: valueBetween(value, end[index].value, progress),
+          })),
+        toleranceOf: (start, end) =>
+          start.some(({ value }, index) => value !== end[index].value)
+            ? PROGRESS_TOLERANCE
+            : undefined,
+      },
+      fits
+    ),
+  };
 }
 
 /**
@@ -400,38 +545,52 @@ export function summarizeNativeLeaf(
   if (Array.isArray(leaf)) {
     return summarizeTransformLeaf(initialValue, leaf, fits);
   }
-  const timeline = timelineOf(leaf);
-  const end = timeline?.timing.toValue;
-  if (
-    !timeline ||
-    typeof end !== 'number' ||
-    typeof initialValue !== 'number'
-  ) {
+  const phases = phasesOf(leaf);
+  const hasNumbers =
+    typeof initialValue === 'number' &&
+    phases?.every(
+      (phase) => phase.kind === 'hold' || typeof phase.toValue === 'number'
+    );
+  if (!hasNumbers) {
     return { initialValue };
   }
-  const change = Math.abs(end - initialValue);
-  const track = trackOf(
-    timeline,
-    change > 0,
-    fitToleranceOf(key, change),
-    fits,
-    (progress) => valueBetween(initialValue, end, progress)
-  );
-  return { initialValue, track };
+  const timeline = timelineOf(initialValue, phases as ValuePhase<number>[]);
+  return {
+    initialValue: timeline.start,
+    ...trackOf(
+      timeline,
+      {
+        between: valueBetween,
+        toleranceOf: (start, end) =>
+          start === end
+            ? undefined
+            : fitToleranceOf(key, Math.abs(end - start)),
+      },
+      fits
+    ),
+  };
 }
 
-/** The frame driver gives each operation that is a plain value an animation. */
-export function animatePlainOperations(
-  operations: Record<string, unknown>[]
-): void {
+function animatePlainEntries(values: Record<string, unknown>): void {
   'worklet';
-  for (const operation of operations) {
-    for (const kind of Object.keys(operation ?? {})) {
-      const value = operation[kind];
-      if (typeof value === 'number' || typeof value === 'string') {
-        operation[kind] = withPlainValue(value);
-      }
+  for (const key of Object.keys(values)) {
+    const value = values[key];
+    if (typeof value === 'number' || typeof value === 'string') {
+      values[key] = withPlainValue(value);
     }
+  }
+}
+
+/**
+ * The frame driver gives each scalar leaf and each operation that is a plain
+ * value an animation.
+ */
+export function animatePlainLeaves(animations: Record<string, unknown>): void {
+  'worklet';
+  animatePlainEntries(animations);
+  const { transform } = animations;
+  for (const operation of Array.isArray(transform) ? transform : []) {
+    animatePlainEntries(operation ?? {});
   }
 }
 
