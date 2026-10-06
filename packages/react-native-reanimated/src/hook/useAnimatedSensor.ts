@@ -24,6 +24,7 @@ import {
   initializeSensor,
   isSensorAvailable,
   registerSensor,
+  subscribeToSensorAvailability,
   unregisterSensor,
 } from '../core';
 
@@ -109,8 +110,6 @@ const NOOP = () => {
   // NOOP
 };
 
-const subscribeToSensorAvailability = () => NOOP;
-
 const getServerSensorAvailability = () => false;
 
 /**
@@ -178,7 +177,7 @@ export function useAnimatedSensor<T extends SensorType>(
     registrationRef.current = { sensorType, config, unregister };
 
     return unregister;
-  }, [sensorType, config, sensor, adjustToInterfaceOrientation]);
+  }, [sensorType, config, sensor, adjustToInterfaceOrientation, isAvailable]);
 
   return useMemo(
     () => ({

@@ -107,6 +107,12 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.#reanimatedModuleProxy.unregisterSensor(sensorId);
   }
 
+  setSensorAvailabilityHandler(
+    handler: (sensorType: number, isAvailable: boolean) => void
+  ) {
+    this.#reanimatedModuleProxy.setSensorAvailabilityHandler(handler);
+  }
+
   registerEventHandler<T>(
     eventHandler: SerializableRef<T>,
     eventName: string,

@@ -77,6 +77,10 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
+  setSensorAvailabilityHandler(): void {
+    // noop
+  }
+
   registerSensor(
     sensorType: SensorType,
     interval: number,
