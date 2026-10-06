@@ -10,12 +10,13 @@ import Animated, {
   Easing,
   getStaticFeatureFlag,
   LinearTransition,
+  makeMutable,
   ReduceMotion,
   withDelay,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
+import { runOnUISync, scheduleOnRN } from 'react-native-worklets';
 
 import {
   getTestComponent,
@@ -39,6 +40,7 @@ export type TraceEvent = {
   buildFailure?: string;
   transactionNumber?: number;
   leafValue?: number;
+  layoutAnimationType?: string;
 };
 
 export type TargetSample = {
@@ -70,10 +72,12 @@ export const devTools = (
   globalThis as unknown as { __reanimatedModuleProxy: NativeAnimationDevTools }
 ).__reanimatedModuleProxy;
 
-// The entries exist only in development builds of the native code, and the route only with the flag.
+// The entries exist only in development builds of the native code, and the route only with the flag. The legacy
+// proxy has no native route.
 export const hasNativeLayoutStarts =
   Platform.OS === 'ios' &&
   getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION') &&
+  !getStaticFeatureFlag('USE_LEGACY_LAYOUT_ANIMATIONS_PROXY') &&
   devTools.takeNativeAnimationTrace !== undefined;
 
 export const BOX_REF = 'NativeLayoutStartBox';
@@ -114,6 +118,65 @@ export function sample(tag: number, target: string): Promise<TargetSample> {
   });
 }
 
+/**
+ * What one leaf of an entering or exiting animation shows in the first
+ * component of a sample target.
+ */
+export type Track = {
+  sampleTarget: 'Opacity' | 'Position' | 'Transform';
+  traceTarget: string;
+  from: number;
+  to: number;
+};
+
+export async function readTrack(tag: number, { sampleTarget }: Track) {
+  const { model, presentation, playbackKeys, monotonicTimeMs } = await sample(
+    tag,
+    sampleTarget
+  );
+  return {
+    shown: presentation[0],
+    model: model[0],
+    keys: playbackKeys.length,
+    timeMs: monotonicTimeMs,
+  };
+}
+
+export const twinStartTime = makeMutable(0);
+
+/**
+ * A linear easing that is no native easing, so its animation is frame-driven.
+ * It gives the start time of its animation on the animation clock.
+ */
+export const recordedLinearOf = (durationMs: number) => (progress: number) => {
+  'worklet';
+  const now = global.__frameTimestamp ?? global._getAnimationTimestamp();
+  twinStartTime.value = now - progress * durationMs;
+  return progress;
+};
+
+const animationTime = () => {
+  'worklet';
+  return global._getAnimationTimestamp();
+};
+
+/** The time of the sample clock minus the time of the animation clock. */
+export async function sampleClockOffset(tag: number) {
+  let best = { width: Infinity, offset: 0 };
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const before = runOnUISync(animationTime);
+    const { monotonicTimeMs } = await sample(tag, 'Transform');
+    const after = runOnUISync(animationTime);
+    if (after - before < best.width) {
+      best = {
+        width: after - before,
+        offset: monotonicTimeMs - (before + after) / 2,
+      };
+    }
+  }
+  return best;
+}
+
 export const playbackCountOf = (
   { playbackKeys }: TargetSample,
   generation: number
@@ -135,6 +198,12 @@ export function recordCallback(name: string, finished: boolean) {
   callbacks.push(`${name}:${finished}`);
   callbackTimes[name] = performance.now();
 }
+
+/** A callback of a layout animation that records its result under `name`. */
+export const callbackOf = (name: string) => (finished: boolean) => {
+  'worklet';
+  scheduleOnRN(recordCallback, name, finished);
+};
 
 export let builderCalls = 0;
 export function recordBuilderCall() {

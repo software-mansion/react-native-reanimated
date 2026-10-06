@@ -473,7 +473,7 @@ void LayoutAnimationsProxy::hideTransitioningViews(
     const auto &node = collectedTransition.nodes[indexNum];
     react_native_assert(node && "Shared transition view not found");
     hideInSharedElement(sharedTag, node);
-    cancelNativeOpacityAnimation(shadowView.tag);
+    transaction.hiddenTags.push_back(shadowView.tag);
     auto m = ShadowViewMutation::UpdateMutation(
         shadowView, cloneViewWithoutOpacity(shadowView, propsParserContext), parentTag);
     hiddenMutations.push_back(m);
@@ -800,8 +800,8 @@ const ShadowView &LayoutAnimationsProxy::viewOnScreen(const std::shared_ptr<Ligh
   if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
     return it->second.currentView;
   }
-  if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end() && !it->second.shouldRemove) {
-    return it->second.animation.currentView;
+  if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end()) {
+    return it->second.currentView;
   }
   return node->current;
 }

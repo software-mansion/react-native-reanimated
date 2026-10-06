@@ -136,8 +136,12 @@ nativeValue(jsi::Runtime &rt, const jsi::Value &value, const AnimationTarget tar
   return AnimationValue{value.getNumber() + modelOffset(target, after)};
 }
 
-std::variant<AnimationTrack, TrackBuildFailure>
-makeTrack(jsi::Runtime &rt, const jsi::Object &leaf, const ShadowView &after, const NativeAnimationHost &host) {
+std::variant<AnimationTrack, TrackBuildFailure> makeTrack(
+    jsi::Runtime &rt,
+    const jsi::Object &leaf,
+    const ShadowView &after,
+    const NativeAnimationHost &host,
+    const EndpointPolicy endpointPolicy) {
   const auto target = leafTarget(leaf.getProperty(rt, "key").asString(rt).utf8(rt), after);
   if (!target) {
     return TrackBuildFailure::UnsupportedTarget;
@@ -164,13 +168,19 @@ makeTrack(jsi::Runtime &rt, const jsi::Object &leaf, const ShadowView &after, co
             .timingFromPrevious = leafEasing(rt, timing)}},
       .delayMs = numberOf(timing.getProperty(rt, "delayMs")),
       .durationMs = numberOf(timing.getProperty(rt, "durationMs")),
-      .endpointPolicy = EndpointPolicy::MountedModelMustMatchEndpoint,
+      .endpointPolicy = endpointPolicy,
   };
   if (const auto failure = validateTrack(track)) {
     return *failure;
   }
   if (!host.canRealize(track, after)) {
     return TrackBuildFailure::UnsupportedTarget;
+  }
+  if (endpointPolicy == EndpointPolicy::HoldWithoutCommit) {
+    // The host has no playback of its own for a held track with no duration.
+    return track.durationMs == 0
+        ? std::variant<AnimationTrack, TrackBuildFailure>(TrackBuildFailure::UnsupportedTrackForm)
+        : track;
   }
   if (!endsAtMountedValue(track, after)) {
     return TrackBuildFailure::EndpointMismatch;
@@ -239,7 +249,8 @@ std::variant<NativeLayoutTracks, TrackBuildFailure> makeNativeLayoutTracks(
     jsi::Runtime &rt,
     const jsi::Object &buildSummary,
     const ShadowView &after,
-    const NativeAnimationHost &host) {
+    const NativeAnimationHost &host,
+    const EndpointPolicy endpointPolicy) {
   ReanimatedSystraceSection section("makeNativeLayoutTracks");
   if (buildSummary.getProperty(rt, "exceedsLimit").asBool()) {
     return TrackBuildFailure::ResourceLimit;
@@ -254,7 +265,7 @@ std::variant<NativeLayoutTracks, TrackBuildFailure> makeNativeLayoutTracks(
   result.tracks.reserve(leafCount);
   for (size_t index = 0; index < leafCount; ++index) {
     const auto leaf = leaves.getValueAtIndex(rt, index).asObject(rt);
-    auto track = makeTrack(rt, leaf, after, host);
+    auto track = makeTrack(rt, leaf, after, host, endpointPolicy);
     if (const auto *failure = std::get_if<TrackBuildFailure>(&track)) {
       return *failure;
     }

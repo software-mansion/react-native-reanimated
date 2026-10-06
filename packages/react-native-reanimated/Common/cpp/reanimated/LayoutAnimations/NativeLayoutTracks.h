@@ -49,10 +49,13 @@ LiveLeafValues liveLeafValues(facebook::jsi::Runtime &rt, const facebook::jsi::O
 /// The tracks that play the animation of `buildSummary` (the result of `LayoutAnimationsManager.build` on the
 /// UI runtime) on the view that the commit leaves as `after`, or the first reason why `host` cannot repeat
 /// that animation. A leaf that continues a live leaf has no track: the live track plays it.
+/// `MountedModelMustMatchEndpoint` is for an animation that ends at the state of `after`. `HoldWithoutCommit`
+/// is for an animation that ends at other values, which stay on screen until the owner removes the tracks.
 std::variant<NativeLayoutTracks, native_animation::TrackBuildFailure> makeNativeLayoutTracks(
     facebook::jsi::Runtime &rt,
     const facebook::jsi::Object &buildSummary,
     const facebook::react::ShadowView &after,
-    const native_animation::NativeAnimationHost &host);
+    const native_animation::NativeAnimationHost &host,
+    native_animation::EndpointPolicy endpointPolicy);
 
 } // namespace reanimated

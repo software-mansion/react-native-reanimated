@@ -1,11 +1,19 @@
-import { Easing, withDelay, withSpring, withTiming } from '../src';
+import {
+  Easing,
+  FadeIn,
+  SlideInLeft,
+  withDelay,
+  withSpring,
+  withTiming,
+} from '../src';
 import type {
   AnimatableValue,
   AnimationObject,
+  EntryAnimationsValues,
   LayoutAnimation,
   Timestamp,
 } from '../src/commonTypes';
-import { LayoutAnimationType } from '../src/commonTypes';
+import { LayoutAnimationType, ReduceMotion } from '../src/commonTypes';
 import { initializeLayoutAnimationsManager } from '../src/layoutReanimation/animationsManager.native';
 
 jest.mock('../src/featureFlags', () => ({
@@ -73,6 +81,16 @@ function makePendingConfig(callback: jest.Mock) {
 }
 
 const LIMITS = { leaves: 3, transformOperations: 4 };
+
+const onUIRuntime = <T>(create: () => T): T => {
+  const runtimeKind = globalThis.__RUNTIME_KIND;
+  globalThis.__RUNTIME_KIND = 2;
+  try {
+    return create();
+  } finally {
+    globalThis.__RUNTIME_KIND = runtimeKind;
+  }
+};
 
 describe('LayoutAnimationsManager', () => {
   let frameFinalizers: Array<() => void>;
@@ -303,21 +321,98 @@ describe('LayoutAnimationsManager', () => {
     });
   });
 
+  describe('builds of entering presets', () => {
+    const VALUES = {
+      targetOriginX: 30,
+      targetOriginY: 0,
+      targetWidth: 50,
+      targetHeight: 50,
+      targetGlobalOriginX: 30,
+      targetGlobalOriginY: 0,
+      windowWidth: 400,
+      windowHeight: 800,
+    };
+    let lastBuildId = 100;
+    const leavesOf = (
+      entering: (values: EntryAnimationsValues) => LayoutAnimation
+    ) => {
+      const buildId = ++lastBuildId;
+      const summary = manager.build(
+        buildId,
+        VALUES,
+        () => onUIRuntime(() => entering(VALUES)),
+        LIMITS,
+        []
+      );
+      manager.releaseBuilt(buildId);
+      return summary?.leaves;
+    };
+    const linear = <Builder extends FadeIn | SlideInLeft>(builder: Builder) =>
+      builder.duration(400).easing(Easing.linear);
+
+    test('the initial values of a preset are the start values of its leaves', () => {
+      expect(leavesOf(linear(new FadeIn()).build())).toEqual([
+        {
+          key: 'opacity',
+          initialValue: 0,
+          timing: { toValue: 1, durationMs: 400, delayMs: 0 },
+          continuesLiveLeaf: false,
+        },
+      ]);
+      expect(leavesOf(linear(new SlideInLeft()).build())).toEqual([
+        {
+          key: 'originX',
+          initialValue: -370,
+          timing: { toValue: 30, durationMs: 400, delayMs: 0 },
+          continuesLiveLeaf: false,
+        },
+      ]);
+    });
+
+    test('each build of a preset with a random delay has the one delay that the preset resolved', () => {
+      const random = jest
+        .spyOn(Math, 'random')
+        .mockReturnValueOnce(0.25)
+        .mockReturnValue(0.75);
+      const entering = linear(new FadeIn()).delay(800).randomDelay().build();
+
+      const delays = [leavesOf(entering), leavesOf(entering)].map(
+        (leaves) => leaves?.[0].timing?.delayMs
+      );
+      random.mockRestore();
+
+      expect(delays).toEqual([200, 200]);
+    });
+
+    test('a negative delay of a preset is no delay', () => {
+      const leaves = leavesOf(linear(new FadeIn()).delay(-500).build());
+
+      expect(leaves?.[0].timing).toEqual({
+        toValue: 1,
+        durationMs: 400,
+        delayMs: 0,
+      });
+    });
+
+    test('a preset with reduced motion has no timing', () => {
+      const withDelayWrapper = linear(new FadeIn())
+        .delay(100)
+        .reduceMotion(ReduceMotion.Always);
+      const withoutDelayWrapper = linear(new FadeIn()).reduceMotion(
+        ReduceMotion.Always
+      );
+
+      expect(leavesOf(withDelayWrapper.build())?.[0].timing).toBeUndefined();
+      expect(leavesOf(withoutDelayWrapper.build())?.[0].timing).toBeUndefined();
+    });
+  });
+
   describe('live leaves of native tracks', () => {
     const TAG = 20;
     const X = { buildId: 21, key: 'originX' };
     let frames: Array<(timestamp: number) => void>;
     const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
 
-    const onUIRuntime = <T>(create: () => T): T => {
-      const runtimeKind = globalThis.__RUNTIME_KIND;
-      globalThis.__RUNTIME_KIND = 2;
-      try {
-        return create();
-      } finally {
-        globalThis.__RUNTIME_KIND = runtimeKind;
-      }
-    };
     const timing = (toValue: number, duration: number) =>
       onUIRuntime(() =>
         withTiming(toValue, { duration, easing: Easing.linear })

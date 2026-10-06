@@ -113,6 +113,8 @@ struct LightNode {
   bool propsNeedResolve = false;
 #endif
   ExitingState state = ExitingState::LIVE;
+  /// The last view that the frame driver mounted for the exiting animation that completed the node.
+  std::optional<ShadowView> exitedView;
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
   int exitingChildrenCount = 0;
