@@ -32,6 +32,7 @@ import type {
   InitialComponentProps,
   LayoutAnimationOrBuilder,
   NestedArray,
+  ViewInfo,
 } from './commonTypes';
 import { InlinePropManager } from './InlinePropManager';
 import jsPropsUpdater from './JSPropsUpdater';
@@ -183,8 +184,12 @@ export default class AnimatedComponent
     // noop
   }
 
-  _detachStyles() {
-    const viewTag = this.getComponentViewTag();
+  _detachHostBindings(previousViewInfo: ViewInfo) {
+    this._detachStyles(previousViewInfo.viewTag as number);
+    this._InlinePropManager.detachInlineProps();
+  }
+
+  _detachStyles(viewTag: number = this.getComponentViewTag()) {
     if (viewTag !== -1) {
       for (const style of this._animatedStyles) {
         style.viewDescriptors.remove(viewTag);
