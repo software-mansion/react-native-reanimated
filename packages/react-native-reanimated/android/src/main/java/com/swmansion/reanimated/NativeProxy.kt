@@ -469,12 +469,12 @@ open class NativeProxy {
     @DoNotStrip
     fun getIsReducedMotion(): Boolean {
         val mContentResolver: ContentResolver = mContext.get()!!.contentResolver
-        val rawValue =
-            Settings.Global.getString(
+        val parsedValue =
+            Settings.Global.getFloat(
                 mContentResolver,
                 Settings.Global.TRANSITION_ANIMATION_SCALE,
+                1f,
             )
-        val parsedValue = if (rawValue != null) rawValue.toFloat() else 1f
         return parsedValue == 0f
     }
 
