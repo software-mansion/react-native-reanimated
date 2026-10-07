@@ -60,9 +60,9 @@ export type TargetSample = {
   /**
    * The physical animations of the playback of the target, in the order in
    * which the platform applies them. Each has its value at the start and at the
-   * end of each segment.
+   * end of each segment, and the time of each value as a part of its duration.
    */
-  members: { property: string; values: number[][] }[];
+  members: { property: string; values: number[][]; keyTimes: number[] }[];
   monotonicTimeMs: number;
 };
 

@@ -14,6 +14,7 @@ import Animated, {
   FadeOut,
   getStaticFeatureFlag,
   LinearTransition,
+  makeMutable,
   ReduceMotion,
   SharedTransition,
   SharedTransitionBoundary,
@@ -22,6 +23,7 @@ import Animated, {
   withTiming,
   ZoomIn,
 } from 'react-native-reanimated';
+import { runOnUISync } from 'react-native-worklets';
 
 import {
   describe,
@@ -1440,6 +1442,182 @@ describe('native layout entering and a clip of its view', () => {
       expect(isNear(shown.shown, curve(track.shownAt), 0.08)).toBe(true);
       expect(callbacks.length).toBe(0);
       await expectTrueAtNaturalEnd(entered, ENTER_DURATION);
+    });
+  }
+
+  const SHORT_PART = 0.3;
+  const SMALL = 0.4;
+  type Easings = { scaleX: EasingFunction; scaleY: EasingFunction };
+  /** The two scales commute, so the value on screen is valid for the two. */
+  const twoScalesOf = (
+    name: string,
+    easings: Easings = { scaleX: Easing.linear, scaleY: Easing.linear }
+  ) => {
+    const callback = callbackOf(name);
+    return () => {
+      'worklet';
+      const timing = (durationMs: number, easing: EasingFunction) =>
+        withTiming(1, { duration: durationMs, easing });
+      return {
+        initialValues: { transform: [{ scaleX: SMALL }, { scaleY: SMALL }] },
+        animations: {
+          transform: [
+            { scaleX: timing(SHORT_PART * ENTER_DURATION, easings.scaleX) },
+            { scaleY: timing(ENTER_DURATION, easings.scaleY) },
+          ],
+        },
+        callback,
+      };
+    };
+  };
+  /**
+   * The time and the progress of each frame that the frame driver gave to an
+   * operation of the native box.
+   */
+  const handedFrames = {
+    scaleX: makeMutable<number[][]>([]),
+    scaleY: makeMutable<number[][]>([]),
+  };
+  /** A linear easing that records each call in a frame of the frame driver. */
+  const recordingFramesOf =
+    (frames: { value: number[][] }) => (progress: number) => {
+      'worklet';
+      const frameTime = global.__frameTimestamp;
+      if (frameTime !== undefined && progress > 0) {
+        frames.value.push([frameTime, progress]);
+      }
+      return progress;
+    };
+  const takeHandedFrames = () =>
+    runOnUISync(() => {
+      'worklet';
+      const frames = {
+        scaleX: [...handedFrames.scaleX.value],
+        scaleY: [...handedFrames.scaleY.value],
+      };
+      handedFrames.scaleX.value = [];
+      handedFrames.scaleY.value = [];
+      return frames;
+    });
+  const scaleAt = (part: number) => SMALL + (1 - SMALL) * Math.min(1, part);
+  const twoScalesAt = (part: number) => [
+    scaleAt(part / SHORT_PART),
+    scaleAt(part),
+  ];
+  const TWO_FRAMES_OF_SCALE =
+    0.01 + (2 * FRAME_MS * (1 - SMALL)) / (SHORT_PART * ENTER_DURATION);
+  // The frame driver gives its first frame in a display frame after the platform reports the removal.
+  const HAND_OVER_FRAMES = 2;
+  // The start that a frame gives has the rounding of its progress.
+  const SAME_START_MS = 0.01;
+
+  const clipsOfTwoTimelines: [string, number][] = [
+    ['while the two operations move', 0.1],
+    ['after the end of the shorter operation', 0.45],
+  ];
+  for (const [caseName, clipAt] of clipsOfTwoTimelines) {
+    test(`a clip ${caseName} of a transform with two operation timelines gives the track to the frame driver: from the first frame of the frame driver, each operation continues on its own timeline, and the callback gets true one time at the natural end`, async () => {
+      takeHandedFrames();
+      const entered = await enter(
+        countedPairOf({
+          native: {
+            entering: twoScalesOf('native', {
+              scaleX: recordingFramesOf(handedFrames.scaleX),
+              scaleY: recordingFramesOf(handedFrames.scaleY),
+            }),
+          },
+          frame: {
+            entering: frameDrivenOf(
+              twoScalesOf('frame', {
+                scaleX: Easing.linear,
+                scaleY: recordedLinearOf(ENTER_DURATION),
+              })
+            ),
+          },
+        }),
+        PairInViewToClip
+      );
+      await waitUntil(entered, clipAt * ENTER_DURATION);
+      const start = await takeTraceOfPair(entered);
+      expect(summarize(start.native.filter(isHostEvent))).toBe(
+        'LayoutStartPending > LayoutStartMounted > Received > TrackStarted:Transform > Admitted'
+      );
+      expect(takeHandedFrames().scaleY.length).toBe(0);
+      scrollTo(CLIPPED_OFFSET);
+      const readScales = async (part: number) => {
+        await waitUntil(entered, part * ENTER_DURATION);
+        const [native, frame] = await Promise.all([
+          sample(entered.nativeTag, 'Transform'),
+          sample(entered.frameTag, 'Transform'),
+        ]);
+        expect(native.playbackKeys.length).toBe(0);
+        const declared = twoScalesAt(part);
+        [0, 5].forEach((cell, index) => {
+          expect(
+            isNear(native.model[cell], frame.model[cell], TWO_FRAMES_OF_SCALE)
+          ).toBe(true);
+          expect(isNear(native.model[cell], declared[index], 0.08)).toBe(true);
+        });
+        return native;
+      };
+      const hiddenAt = clipAt + 0.12;
+      await waitUntil(entered, hiddenAt * ENTER_DURATION);
+      const transfer = (await takeTrace()).filter(
+        ({ tag, event }) =>
+          tag === entered.nativeTag && event !== 'FrameUpdateMounted'
+      );
+      expect(summarizeEnd(transfer)).toBe(
+        'TrackEnded:Transform:false > Ended:Interrupted:PlatformRemoved'
+      );
+      expect(callbacks.length).toBe(0);
+
+      const frames = takeHandedFrames();
+      const [firstTime] = frames.scaleY[0];
+      const removedAt = transfer[0].monotonicTimeMs - entered.clockOffset;
+      expect(firstTime > removedAt - FRAME_MS).toBe(true);
+      expect(firstTime < removedAt + HAND_OVER_FRAMES * FRAME_MS).toBe(true);
+      const startOf = ([time, progress]: number[], durationMs: number) =>
+        time - progress * durationMs;
+      const startTime = startOf(frames.scaleY[0], ENTER_DURATION);
+      expect(Math.abs(startTime - twinStartTime.value) < FRAME_MS).toBe(true);
+      expect(
+        frames.scaleY.every((frame) =>
+          isNear(startOf(frame, ENTER_DURATION), startTime, SAME_START_MS)
+        )
+      ).toBe(true);
+      expect(frames.scaleX.length > 0).toBe(clipAt < SHORT_PART);
+      expect(
+        frames.scaleX.every((frame) =>
+          isNear(
+            startOf(frame, SHORT_PART * ENTER_DURATION),
+            startTime,
+            SAME_START_MS
+          )
+        )
+      ).toBe(true);
+      await readScales(hiddenAt);
+
+      scrollTo(0);
+      const shown = await readScales(clipAt + 0.3);
+      expect(
+        isNear(shown.presentation[0], shown.model[0], TWO_FRAMES_OF_SCALE)
+      ).toBe(true);
+      expect(
+        isNear(shown.presentation[5], shown.model[5], TWO_FRAMES_OF_SCALE)
+      ).toBe(true);
+      expect(callbacks.length).toBe(0);
+
+      await waitUntil(entered, ENTER_DURATION + 400);
+      expect(sortedCallbacks()).toBe('frame:true,native:true');
+      expect(
+        Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
+      ).toBe(true);
+      expect(namedBuilderCalls.slice().sort().join()).toBe('frame,native');
+      const end = await sample(entered.nativeTag, 'Transform');
+      expect(end.playbackKeys.length).toBe(0);
+      expect(end.model[0]).toBe(1);
+      expect(end.model[5]).toBe(1);
+      await render(null);
     });
   }
 

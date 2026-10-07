@@ -58,6 +58,7 @@ import {
   recordedCurveOf,
   recordedLinearOf,
   DEFAULT_EASING,
+  sample,
   sampleClockOffset,
   SECOND_BOX_REF,
   styles,
@@ -191,6 +192,60 @@ const unequalExitingOf = (
       },
       callback,
     };
+  };
+};
+
+const HELD_SCALE = 0.5;
+const UNEQUAL_SCALE: Track = { ...SCALE, to: HELD_SCALE };
+
+/**
+ * A `transform` leaf whose operations have two durations. The translation does
+ * not change the first cell of the matrix, which is the scale.
+ */
+const unequalTransformExitingOf = (
+  name: string,
+  easing: EasingFunction,
+  { scaleMs, translateXMs }: { scaleMs: number; translateXMs: number }
+) => {
+  const callback = callbackOf(name);
+  return () => {
+    'worklet';
+    return {
+      initialValues: { transform: [{ translateX: 0 }, { scale: 1 }] },
+      animations: {
+        transform: [
+          {
+            translateX: withTiming(CUSTOM_OFFSET, {
+              duration: translateXMs,
+              easing,
+            }),
+          },
+          { scale: withTiming(HELD_SCALE, { duration: scaleMs, easing }) },
+        ],
+      },
+      callback,
+    };
+  };
+};
+
+/** The scale ends with the exit, and the translation at half of its time. */
+const unequalTransformPairOf = ({
+  durationMs = EXIT_DURATION,
+}: Timing = {}): Pair => {
+  const durations = { scaleMs: durationMs, translateXMs: durationMs / 2 };
+  return {
+    native: {
+      exiting: unequalTransformExitingOf('native', Easing.linear, durations),
+    },
+    frame: {
+      exiting: frameDrivenOf(
+        unequalTransformExitingOf(
+          'frame',
+          recordedLinearOf(durationMs),
+          durations
+        )
+      ),
+    },
   };
 };
 
@@ -619,6 +674,68 @@ describe('native layout exiting', () => {
     });
   }
 
+  test('an exit whose operations have unequal durations is one track: the shorter operation holds its end value until the view leaves, and the callback comes at the end of the longer operation', async () => {
+    const durations = { scaleMs: 400, translateXMs: 1200 };
+    const exited = await exit({
+      native: {
+        exiting: unequalTransformExitingOf('native', Easing.linear, durations),
+      },
+      frame: {
+        exiting: frameDrivenOf(
+          unequalTransformExitingOf(
+            'frame',
+            recordedLinearOf(durations.translateXMs),
+            durations
+          )
+        ),
+      },
+    });
+    const TRANSLATION = 12;
+    for (const elapsedMs of [600, 800, 1050]) {
+      await waitUntil(exited, elapsedMs);
+      const [native, frame] = await Promise.all([
+        sample(exited.nativeTag, 'Transform'),
+        sample(exited.frameTag, 'Transform'),
+      ]);
+      expect(native.playbackKeys.length).toBe(1);
+      expect(isNear(native.presentation[0], HELD_SCALE, 0.0001)).toBe(true);
+      expect(isNear(frame.model[0], HELD_SCALE, 0.0001)).toBe(true);
+      // The value on screen has the translation times the scale.
+      expect(
+        isNear(
+          native.presentation[TRANSLATION] / HELD_SCALE,
+          frame.model[TRANSLATION],
+          VALUE_TOLERANCE +
+            (2 * FRAME_MS * CUSTOM_OFFSET) / durations.translateXMs
+        )
+      ).toBe(true);
+    }
+    expect(
+      summarize((await takeTraceOfPair(exited)).native.filter(isHostEvent))
+    ).toBe(startOf([UNEQUAL_SCALE]));
+    expect(callbacks.length).toBe(0);
+
+    const { shown } = await watchUntilRemoved(exited.nativeTag, [
+      UNEQUAL_SCALE,
+    ]);
+    expect(shown.every(({ progress }) => isNear(progress, 1, 0.001))).toBe(
+      true
+    );
+    await waitUntil(exited, durations.translateXMs + 300);
+    expect(sortedCallbacks()).toBe('frame:true,native:true');
+    expect(
+      Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
+    ).toBe(true);
+    expect(
+      callbackTimes.native - exited.startMs > durations.translateXMs - FRAME_MS
+    ).toBe(true);
+    expect(await hasView(exited.frameTag)).toBe(false);
+    expect(summarizeEnd((await takeTraceOfPair(exited)).native)).toBe(
+      playedAndRemoved([UNEQUAL_SCALE])
+    );
+    await render(null);
+  });
+
   for (const [easingName, easing] of Object.entries(CURVED_EASINGS)) {
     test(`FadeOut with ${easingName} plays natively on the curve of the frame driver`, async () => {
       const curve = curveOf(easing);
@@ -921,15 +1038,27 @@ describe('native layout exiting and the other animations of the view', () => {
     await render(null);
   });
 
-  const joinedTracks: [string, boolean, ExitingCase['pairOf']][] = [
-    ['one segment', false, fadePairOf],
+  const joinedTracks: [string, boolean, ExitingCase['pairOf'], Track][] = [
+    ['one segment', false, fadePairOf, OPACITY],
     [
       'the two segments of the default easing',
       true,
       DEFAULT_EASING_CASES['FadeOut with the default easing'].pairOf,
+      OPACITY,
+    ],
+    [
+      'a transform whose operations have two timelines',
+      false,
+      unequalTransformPairOf,
+      UNEQUAL_SCALE,
     ],
   ];
-  for (const [trackName, hasDefaultEasing, exitPairOf] of joinedTracks) {
+  for (const [
+    trackName,
+    hasDefaultEasing,
+    exitPairOf,
+    exitTrack,
+  ] of joinedTracks) {
     test(`an exit that is shorter than the native layout track of ${trackName} that it joins holds its end value, and the callback comes at the end of that track`, async () => {
       const layoutDuration = 2000;
       const exitDuration = 500;
@@ -949,9 +1078,9 @@ describe('native layout exiting and the other animations of the view', () => {
       );
       await waitUntil(exited, exitDuration + 200);
       expect(sortedCallbacks()).toBe('frameLayout:false,nativeLayout:false');
-      const { native, frame } = await readPair(exited, OPACITY);
-      expect(isNear(native.shown, 0)).toBe(true);
-      expect(isNear(frame.model, 0)).toBe(true);
+      const { native, frame } = await readPair(exited, exitTrack);
+      expect(isNear(native.shown, exitTrack.to)).toBe(true);
+      expect(isNear(frame.model, exitTrack.to)).toBe(true);
 
       await waitUntil(exited, layoutLeftMs + 300);
       expect(sortedCallbacks()).toBe(
@@ -1238,17 +1367,51 @@ describe('native layout exiting of a parent and its child', () => {
     await render(null);
   });
 
-  const heldAndPlaying: [string, EasingFunction][] = [
-    ['one segment', Easing.linear],
-    ['the two segments of the default easing', DEFAULT_EASING.curve],
+  type HeldAndPlaying = {
+    trackName: string;
+    easing: EasingFunction;
+    childOf: (
+      name: string,
+      easing: EasingFunction
+    ) =>
+      | ReturnType<typeof unequalExitingOf>
+      | ReturnType<typeof unequalTransformExitingOf>;
+    /** The host events to the end of the held leaf or operation. */
+    startAndHold: string;
+    held: Track;
+    removal: string;
+  };
+  const leavesOf = (name: string, childEasing: EasingFunction) =>
+    unequalExitingOf(name, childEasing, { opacityMs: 300, originXMs: 2000 });
+  const HELD_LEAF = {
+    childOf: leavesOf,
+    startAndHold: `${startOf([UNEQUAL_OPACITY, UNEQUAL_SLIDE])} > TrackEnded:Opacity:true`,
+    held: UNEQUAL_OPACITY,
+    removal: 'TrackEnded:PositionX:false > Ended:Cancelled:None',
+  };
+  const heldAndPlaying: HeldAndPlaying[] = [
+    { trackName: 'one segment', easing: Easing.linear, ...HELD_LEAF },
+    {
+      trackName: 'the two segments of the default easing',
+      easing: DEFAULT_EASING.curve,
+      ...HELD_LEAF,
+    },
+    {
+      trackName: 'one transform whose first operation holds',
+      easing: Easing.linear,
+      childOf: (name, childEasing) =>
+        unequalTransformExitingOf(name, childEasing, {
+          scaleMs: 300,
+          translateXMs: 2000,
+        }),
+      startAndHold: startOf([UNEQUAL_SCALE]),
+      held: UNEQUAL_SCALE,
+      removal: 'TrackEnded:Transform:false > Ended:Cancelled:None',
+    },
   ];
-  for (const [trackName, easing] of heldAndPlaying) {
+  for (const each of heldAndPlaying) {
+    const { trackName, easing, childOf } = each;
     test(`the end of the exit of a parent removes a child whose exit holds one leaf and plays one leaf, with tracks of ${trackName}: false one time`, async () => {
-      const childOf = (name: string, childEasing: EasingFunction) =>
-        unequalExitingOf(name, childEasing, {
-          opacityMs: 300,
-          originXMs: 2000,
-        });
       const families = {
         native: {
           ...familiesOf([() => new FadeOut(), 1000], [() => new ZoomOut(), 1])
@@ -1276,10 +1439,10 @@ describe('native layout exiting of a parent and its child', () => {
       await waitUntil(exited, 600);
       const events = await takeTraceOfPair(exited);
       expect(summarize(events.native.filter(isHostEvent))).toBe(
-        `${startOf([UNEQUAL_OPACITY, UNEQUAL_SLIDE])} > TrackEnded:Opacity:true`
+        each.startAndHold
       );
-      const held = await readTrack(exited.nativeTag, UNEQUAL_OPACITY);
-      expect(isNear(held.shown, CUSTOM_OPACITY)).toBe(true);
+      const held = await readTrack(exited.nativeTag, each.held);
+      expect(isNear(held.shown, each.held.to)).toBe(true);
       expect(callbacks.length).toBe(0);
 
       await waitUntil(exited, 1300);
@@ -1289,7 +1452,7 @@ describe('native layout exiting of a parent and its child', () => {
       expect(await hasView(exited.nativeTag)).toBe(false);
       expect(await hasView(parents.nativeTag)).toBe(false);
       expect(summarizeEnd((await takeTraceOfPair(exited)).native)).toBe(
-        'TrackEnded:PositionX:false > Ended:Cancelled:None'
+        each.removal
       );
 
       await waitUntil(exited, 2400);

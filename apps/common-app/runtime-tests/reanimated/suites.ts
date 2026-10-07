@@ -161,6 +161,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'native layout operation timelines',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutOperationTimelines.test');
+    },
+  },
+  {
     testSuiteName: 'native layout entering',
     importTest: () => {
       require('./tests/layoutAnimations/nativeLayoutEntering.test');

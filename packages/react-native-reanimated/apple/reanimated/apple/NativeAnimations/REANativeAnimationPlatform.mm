@@ -18,6 +18,8 @@
 #import <algorithm>
 #import <cmath>
 #import <cstring>
+#import <iterator>
+#import <ranges>
 #import <string>
 #import <unordered_map>
 #import <utility>
@@ -188,15 +190,33 @@ struct ObjectFromValueVisitor {
     const CGFloat components[4] = {color.red, color.green, color.blue, color.alpha};
     return (__bridge_transfer id)CGColorCreate(sharedSRGBColorSpace(), components);
   }
-  id operator()(const AnimationTransform &transform) const
-  {
-    return [NSValue valueWithCATransform3D:RCTCATransform3DFromTransformMatrix(matrixOf(transform))];
-  }
 };
 
 id objectFromValue(const AnimationValue &value)
 {
   return std::visit(ObjectFromValueVisitor{}, value);
+}
+
+id objectFromTransform(const AnimationTransform &transform)
+{
+  return [NSValue valueWithCATransform3D:RCTCATransform3DFromTransformMatrix(matrixOf(transform))];
+}
+
+struct EndObjectVisitor {
+  id operator()(const ValueTimeline &timeline) const
+  {
+    return objectFromValue(timeline.segments.back().endValue);
+  }
+  id operator()(const TransformTimelines &body) const
+  {
+    return objectFromTransform(endpointsOf(body).end);
+  }
+};
+
+/// The model value that holds the end of the track.
+id endObjectOf(const AnimationTrack &track)
+{
+  return std::visit(EndObjectVisitor{}, track.body);
 }
 
 struct ModelMatchesVisitor {
@@ -233,16 +253,25 @@ struct ModelMatchesVisitor {
   {
     return CGColorEqualToColor((__bridge CGColorRef)model, (__bridge CGColorRef)ObjectFromValueVisitor{}(color));
   }
-  bool operator()(const AnimationTransform &transform) const
+};
+
+struct ModelMatchesEndpointVisitor {
+  id model;
+
+  bool operator()(const ValueTimeline &timeline) const
   {
-    return isSameMatrix(matrixOf([model CATransform3DValue]), matrixOf(transform));
+    return std::visit(ModelMatchesVisitor{model}, timeline.segments.back().endValue);
+  }
+  bool operator()(const TransformTimelines &body) const
+  {
+    return isSameMatrix(matrixOf([model CATransform3DValue]), matrixOf(endpointsOf(body).end));
   }
 };
 
 bool modelMatchesEndpoint(CALayer *layer, const AnimationTrack &track)
 {
   id model = [layer valueForKeyPath:keyPathForTarget(track.target)];
-  return model != nil && std::visit(ModelMatchesVisitor{model}, track.segments.back().endValue);
+  return model != nil && std::visit(ModelMatchesEndpointVisitor{model}, track.body);
 }
 
 /// React Native multiplies the layer opacity by the opacity filter, so the model does not hold the prop.
@@ -329,74 +358,94 @@ bool hasEdgeAntialiasingInReactNative(const CATransform3D &transform)
   return transform.m12 != 0 || transform.m21 != 0 || transform.m34 != 0;
 }
 
-/// The transform of each key of the track in the order of time. A start that the host reads from the view is
-/// not a key.
-std::vector<const AnimationTransform *> transformKeysOf(const AnimationTrack &track)
-{
-  std::vector<const AnimationTransform *> keys;
-  const auto add = [&keys](const AnimationValue &value) {
-    if (const auto *transform = std::get_if<AnimationTransform>(&value)) {
-      keys.push_back(transform);
-    }
-  };
-  if (const auto *start = std::get_if<AnimationValue>(&track.start)) {
-    add(*start);
-  }
-  for (const AnimationSegment &segment : track.segments) {
-    add(segment.endValue);
-  }
-  return keys;
-}
-
-bool hasValueOtherThanZero(const AnimationTransform &key, const TransformOperationKind kind)
-{
-  return std::ranges::any_of(key.operations, [kind](const AnimationTransformOperation &operation) {
-    return operation.kind == kind && operation.value != 0;
-  });
-}
-
-/// True when the transform has a rotation about the Z axis, a perspective, or rotations about the X and the Y
-/// axes at one time in the part of the time between two keys. The frame driver writes such a transform to the
-/// model, and React Native gives it edge antialiasing.
-bool hasEdgeAntialiasingInFrameDriver(const AnimationTransform &start, const AnimationTransform &end)
-{
-  // An operation has a value other than 0 in the part when it has one at a key of the part.
-  const auto rotatesAbout = [&start, &end](const TransformOperationKind axis) {
-    return hasValueOtherThanZero(start, axis) || hasValueOtherThanZero(end, axis);
-  };
-  const bool hasPerspective = std::ranges::any_of(end.operations, [](const AnimationTransformOperation &operation) {
-    return operation.kind == TransformOperationKind::Perspective;
-  });
-  return hasPerspective || rotatesAbout(TransformOperationKind::RotateZ) ||
-      (rotatesAbout(TransformOperationKind::RotateX) && rotatesAbout(TransformOperationKind::RotateY));
-}
-
-struct EdgeAntialiasingInFrameDriver {
-  /// The frame driver has edge antialiasing in a part of the time of the track and its delay.
-  bool isInPartOfTime{false};
-  /// The frame driver has no edge antialiasing in a part of that time.
-  bool isAbsentFromPartOfTime{false};
+/// A part of the time of a track, in offsets. The delay of the track is the part before 0.
+struct TimeSpan {
+  double start;
+  double end;
 };
 
-EdgeAntialiasingInFrameDriver edgeAntialiasingInFrameDriver(const AnimationTrack &track)
+/// The offset at which the delay of the track starts.
+double delayStartOf(const AnimationTrack &track)
 {
-  const auto keys = transformKeysOf(track);
-  EdgeAntialiasingInFrameDriver result;
-  const auto addPart = [&result](const AnimationTransform &start, const AnimationTransform &end) {
-    if (hasEdgeAntialiasingInFrameDriver(start, end)) {
-      result.isInPartOfTime = true;
-    } else {
-      result.isAbsentFromPartOfTime = true;
+  return track.delayMs > 0 ? -1 : 0;
+}
+
+/// The spans of the time of the track in which a rotation about the axis has a value other than 0. In the delay
+/// of the track each operation has its start value.
+std::vector<TimeSpan> spansOfRotationAbout(const AnimationTrack &track, const TransformOperationKind axis)
+{
+  std::vector<TimeSpan> spans;
+  for (const OperationTimeline &operation : std::get<TransformTimelines>(track.body).operations) {
+    if (operation.kind != axis) {
+      continue;
     }
-  };
-  if (track.delayMs > 0 && !keys.empty()) {
-    // In the delay of the track the transform has its start value.
-    addPart(*keys.front(), *keys.front());
+    double startOffset = delayStartOf(track);
+    double startValue = operation.start;
+    const auto addSpanTo = [&](const double endOffset, const double endValue) {
+      if (startOffset < endOffset && (startValue != 0 || endValue != 0)) {
+        spans.push_back({.start = startOffset, .end = endOffset});
+      }
+      startOffset = endOffset;
+      startValue = endValue;
+    };
+    addSpanTo(0, operation.start);
+    for (const auto &segment : operation.segments) {
+      addSpanTo(segment.endOffset, segment.endValue);
+    }
   }
-  for (size_t keyIndex = 1; keyIndex < keys.size(); keyIndex++) {
-    addPart(*keys[keyIndex - 1], *keys[keyIndex]);
+  return spans;
+}
+
+std::vector<TimeSpan> timeInCommon(const std::vector<TimeSpan> &spans, const std::vector<TimeSpan> &otherSpans)
+{
+  std::vector<TimeSpan> common;
+  for (const TimeSpan &span : spans) {
+    for (const TimeSpan &other : otherSpans) {
+      const TimeSpan overlap{.start = std::max(span.start, other.start), .end = std::min(span.end, other.end)};
+      if (overlap.start < overlap.end) {
+        common.push_back(overlap);
+      }
+    }
   }
-  return result;
+  return common;
+}
+
+/// The spans of the time of the track in which the transform has a rotation about the Z axis, a perspective,
+/// or rotations about the X and the Y axes at one time, in the order of their starts. The frame driver writes
+/// such a transform to the model, and React Native gives it edge antialiasing.
+std::vector<TimeSpan> spansWithEdgeAntialiasingInFrameDriver(const AnimationTrack &track)
+{
+  const auto *body = std::get_if<TransformTimelines>(&track.body);
+  if (body == nullptr) {
+    return {};
+  }
+  const bool hasPerspective = std::ranges::any_of(body->operations, [](const OperationTimeline &operation) {
+    return operation.kind == TransformOperationKind::Perspective;
+  });
+  if (hasPerspective) {
+    return {{.start = delayStartOf(track), .end = 1}};
+  }
+  auto spans = spansOfRotationAbout(track, TransformOperationKind::RotateZ);
+  std::ranges::copy(
+      timeInCommon(
+          spansOfRotationAbout(track, TransformOperationKind::RotateX),
+          spansOfRotationAbout(track, TransformOperationKind::RotateY)),
+      std::back_inserter(spans));
+  std::ranges::sort(spans, {}, &TimeSpan::start);
+  return spans;
+}
+
+/// True when the spans, in the order of their starts, have each time of `span` between them.
+bool isInside(const TimeSpan &span, const std::vector<TimeSpan> &spans)
+{
+  double coveredTo = span.start;
+  for (const TimeSpan &each : spans) {
+    if (each.start > coveredTo) {
+      break;
+    }
+    coveredTo = std::max(coveredTo, each.end);
+  }
+  return coveredTo >= span.end;
 }
 
 /// A layer has one value of edge antialiasing for the time of a track and its delay, and the frame driver has
@@ -404,8 +453,8 @@ EdgeAntialiasingInFrameDriver edgeAntialiasingInFrameDriver(const AnimationTrack
 /// edges of the view differ in the other part.
 bool hasEdgesOfFrameDriver(const AnimationTrack &track)
 {
-  const auto edgeAntialiasing = edgeAntialiasingInFrameDriver(track);
-  return !(edgeAntialiasing.isInPartOfTime && edgeAntialiasing.isAbsentFromPartOfTime);
+  const auto spans = spansWithEdgeAntialiasingInFrameDriver(track);
+  return spans.empty() || isInside({.start = delayStartOf(track), .end = 1}, spans);
 }
 
 /// The edge antialiasing that a `Transform` track gives its layer, as the frame driver has it.
@@ -422,9 +471,8 @@ TrackEdgeAntialiasing edgeAntialiasingOf(const AnimationTrack &track)
     return {};
   }
   return {
-      .duringTrack = edgeAntialiasingInFrameDriver(track).isInPartOfTime,
-      .atHeldEnd =
-          hasEdgeAntialiasingInReactNative([objectFromValue(track.segments.back().endValue) CATransform3DValue])};
+      .duringTrack = !spansWithEdgeAntialiasingInFrameDriver(track).empty(),
+      .atHeldEnd = hasEdgeAntialiasingInReactNative([endObjectOf(track) CATransform3DValue])};
 }
 
 #ifndef NDEBUG
@@ -493,9 +541,12 @@ std::vector<PlaybackMember> playbackMembers(CALayer *layer, const AnimationTarge
       NSString *function = animation.valueFunction.name;
       NSString *property =
           function == nil ? animation.keyPath : [NSString stringWithFormat:@"%@.%@", animation.keyPath, function];
-      PlaybackMember member{property.UTF8String, {}};
+      PlaybackMember member{.property = property.UTF8String};
       for (id value in animation.values) {
         member.values.push_back(componentsOfValue(value));
+      }
+      for (NSNumber *keyTime in animation.keyTimes) {
+        member.keyTimes.push_back(keyTime.doubleValue);
       }
       members.push_back(std::move(member));
     }
@@ -504,78 +555,102 @@ std::vector<PlaybackMember> playbackMembers(CALayer *layer, const AnimationTarge
 }
 #endif // NDEBUG
 
-/// One physical animation of a track. It has one value for the start of the track and one for the end of
-/// each segment.
+/// One physical animation of a track. It has one value, at one key time, for the start of its timeline and
+/// for the end of each segment.
 struct TrackMember {
   NSString *keyPath;
   NSArray *values;
+  NSArray<NSNumber *> *keyTimes;
+  NSArray<CAMediaTimingFunction *> *timingFunctions;
   bool isAdditive{false};
   CAValueFunction *valueFunction{nil};
 };
 
-CAKeyframeAnimation *makePropertyAnimation(
-    const TrackMember &member,
-    NSArray<NSNumber *> *keyTimes,
-    NSArray<CAMediaTimingFunction *> *timingFunctions)
+CAKeyframeAnimation *makePropertyAnimation(const TrackMember &member)
 {
   CAKeyframeAnimation *animation = [CAKeyframeAnimation animationWithKeyPath:member.keyPath];
   animation.values = member.values;
-  animation.keyTimes = keyTimes;
-  animation.timingFunctions = timingFunctions;
+  animation.keyTimes = member.keyTimes;
+  animation.timingFunctions = member.timingFunctions;
   animation.additive = member.isAdditive;
   animation.valueFunction = member.valueFunction;
   return animation;
 }
 
-TrackMember makeOffsetMember(NSString *keyPath, NSArray<NSNumber *> *values, const double model, const double scale)
+/// The key times and the timing functions of the segments of one timeline.
+struct TimelineKeys {
+  NSMutableArray<NSNumber *> *times = [NSMutableArray arrayWithObject:@0];
+  NSMutableArray<CAMediaTimingFunction *> *timingFunctions = [NSMutableArray array];
+};
+
+template <typename Value>
+TimelineKeys keysOf(const std::vector<TimelineSegment<Value>> &segments)
 {
-  NSMutableArray<NSNumber *> *offsets = [NSMutableArray arrayWithCapacity:values.count];
-  for (NSNumber *value in values) {
-    [offsets addObject:@((value.doubleValue - model) * scale)];
+  TimelineKeys keys;
+  for (const auto &segment : segments) {
+    [keys.times addObject:@(segment.endOffset)];
+    [keys.timingFunctions addObject:std::visit(TimingFunctionVisitor{}, segment.timingFromPrevious)];
   }
-  return {.keyPath = keyPath, .values = offsets, .isAdditive = true};
+  return keys;
 }
 
-TrackMember makeOperationMember(const std::vector<AnimationTransformOperation> &values)
+TrackMember makeOffsetMember(const TrackMember &member, NSString *keyPath, const double model, const double scale)
 {
-  NSString *keyPath = keyPathForTarget(AnimationTarget::Transform);
-  const auto &start = values.front();
-  const bool changesValue = std::ranges::any_of(
-      values, [&start](const AnimationTransformOperation &operation) { return operation.value != start.value; });
-  NSMutableArray *objects = [NSMutableArray arrayWithCapacity:values.size()];
-  if (!changesValue) {
-    for (size_t index = 0; index < values.size(); ++index) {
-      [objects addObject:ObjectFromValueVisitor{}(AnimationTransform{{start}})];
-    }
-    return {.keyPath = keyPath, .values = objects, .isAdditive = true};
-  }
-  const bool hasThreeFactors = start.kind == TransformOperationKind::Scale;
-  for (const auto &[kind, value] : values) {
-    [objects addObject:hasThreeFactors ? @[ @(value), @(value), @(value) ] : @(value)];
+  NSMutableArray<NSNumber *> *offsets = [NSMutableArray arrayWithCapacity:member.values.count];
+  for (NSNumber *value in member.values) {
+    [offsets addObject:@((value.doubleValue - model) * scale)];
   }
   return {
       .keyPath = keyPath,
-      .values = objects,
+      .values = offsets,
+      .keyTimes = member.keyTimes,
+      .timingFunctions = member.timingFunctions,
+      .isAdditive = true};
+}
+
+/// A member that holds `transform` for the time of its track.
+TrackMember makeHeldTransformMember(const AnimationTransform &transform, const bool isAdditive)
+{
+  id matrix = objectFromTransform(transform);
+  return
+  {
+    .keyPath = keyPathForTarget(AnimationTarget::Transform), .values = @[ matrix, matrix ], .keyTimes = @[ @0, @1 ],
+    .timingFunctions = @[ TimingFunctionVisitor{}(LinearTiming{}) ], .isAdditive = isAdditive
+  };
+}
+
+TrackMember makeOperationMember(const OperationTimeline &operation, const bool holdsStartValue)
+{
+  const bool changesValue = std::ranges::any_of(
+      operation.segments, [&operation](const auto &segment) { return segment.endValue != operation.start; });
+  if (holdsStartValue || !changesValue) {
+    return makeHeldTransformMember(AnimationTransform{{{operation.kind, operation.start}}}, true);
+  }
+  const bool hasThreeFactors = operation.kind == TransformOperationKind::Scale;
+  const auto objectOf = [hasThreeFactors](const double value) -> id {
+    return hasThreeFactors ? @[ @(value), @(value), @(value) ] : @(value);
+  };
+  NSMutableArray *values = [NSMutableArray arrayWithObject:objectOf(operation.start)];
+  for (const auto &segment : operation.segments) {
+    [values addObject:objectOf(segment.endValue)];
+  }
+  const auto keys = keysOf(operation.segments);
+  return {
+      .keyPath = keyPathForTarget(AnimationTarget::Transform),
+      .values = values,
+      .keyTimes = keys.times,
+      .timingFunctions = keys.timingFunctions,
       .isAdditive = true,
-      .valueFunction = [CAValueFunction functionWithName:valueFunctionNameForKind(start.kind)]};
+      .valueFunction = [CAValueFunction functionWithName:valueFunctionNameForKind(operation.kind)]};
 }
 
 /// The first member hides the model and each animation before it. The screen applies the members after it to
 /// a point in their order, and a style transform applies its last operation first.
-std::vector<TrackMember> makeTransformMembers(const std::vector<AnimationTransform> &values)
+std::vector<TrackMember> makeTransformMembers(const TransformTimelines &body, const bool holdsStartValue)
 {
-  NSMutableArray *identities = [NSMutableArray arrayWithCapacity:values.size()];
-  for (size_t index = 0; index < values.size(); ++index) {
-    [identities addObject:[NSValue valueWithCATransform3D:CATransform3DIdentity]];
-  }
-  std::vector<TrackMember> members{{.keyPath = keyPathForTarget(AnimationTarget::Transform), .values = identities}};
-  for (size_t index = values.front().operations.size(); index-- > 0;) {
-    std::vector<AnimationTransformOperation> operationValues;
-    operationValues.reserve(values.size());
-    for (const auto &transform : values) {
-      operationValues.push_back(transform.operations[index]);
-    }
-    members.push_back(makeOperationMember(operationValues));
+  std::vector<TrackMember> members{makeHeldTransformMember(AnimationTransform{}, false)};
+  for (const auto &operation : std::views::reverse(body.operations)) {
+    members.push_back(makeOperationMember(operation, holdsStartValue));
   }
   return members;
 }
@@ -610,11 +685,19 @@ class CoreAnimationMountedAnimation final : public MountedAnimation {
     {
       return isInterrupting ? currentVisualValue(layer, keyPath) : objectFromValue(start.otherwise);
     }
+    id operator()(const ValueTimeline &timeline) const
+    {
+      return std::visit(*this, timeline.start);
+    }
+    id operator()(const TransformTimelines &body) const
+    {
+      return objectFromTransform(endpointsOf(body).start);
+    }
   };
 
   CAAnimation *makeAnimation(const AnimationTrack &track, id startValue) const;
   std::vector<TrackMember> makeMembers(const AnimationTrack &track, id startValue) const;
-  std::vector<TrackMember> makeValueMembers(AnimationTarget target, NSArray *values) const;
+  std::vector<TrackMember> makeValueMembers(AnimationTarget target, const TrackMember &member) const;
 
   CoreAnimationPlatform &platform_;
   __strong CALayer *layer_;
@@ -836,7 +919,7 @@ std::optional<AnimationResultReason> CoreAnimationMountedAnimation::prepare(
   for (const auto &track : request_.tracks) {
     const bool isInterrupting =
         std::find(interruptedTargets.begin(), interruptedTargets.end(), track.target) != interruptedTargets.end();
-    id startValue = std::visit(StartValueVisitor{layer_, keyPathForTarget(track.target), isInterrupting}, track.start);
+    id startValue = std::visit(StartValueVisitor{layer_, keyPathForTarget(track.target), isInterrupting}, track.body);
     if (startValue == nil) {
       return AnimationResultReason::CurrentValueUnavailable;
     }
@@ -859,7 +942,7 @@ void CoreAnimationMountedAnimation::start(const std::vector<TrackKey> &replacedT
       continue;
     }
     if (track.endpointPolicy == EndpointPolicy::ExecutorCommitsEndpoint) {
-      [layer_ setValue:objectFromValue(track.segments.back().endValue) forKeyPath:keyPathForTarget(track.target)];
+      [layer_ setValue:endObjectOf(track) forKeyPath:keyPathForTarget(track.target)];
     }
     platform_.play(
         {request_.handle, track.target},
@@ -882,15 +965,9 @@ CAAnimation *CoreAnimationMountedAnimation::makeAnimation(const AnimationTrack &
   const CFTimeInterval duration =
       holdsStartValue ? delay : calculateMediaDurationFromSlowAnimationsDuration(track.durationMs / 1000.0);
 
-  NSMutableArray<NSNumber *> *keyTimes = [NSMutableArray arrayWithObject:@0];
-  NSMutableArray<CAMediaTimingFunction *> *timingFunctions = [NSMutableArray array];
-  for (const auto &segment : track.segments) {
-    [keyTimes addObject:@(segment.endOffset)];
-    [timingFunctions addObject:std::visit(TimingFunctionVisitor{}, segment.timingFromPrevious)];
-  }
   NSMutableArray<CAAnimation *> *members = [NSMutableArray array];
   for (const auto &member : makeMembers(track, startValue)) {
-    CAKeyframeAnimation *memberAnimation = makePropertyAnimation(member, keyTimes, timingFunctions);
+    CAKeyframeAnimation *memberAnimation = makePropertyAnimation(member);
     memberAnimation.duration = duration;
     memberAnimation.fillMode = kCAFillModeBoth;
     [members addObject:memberAnimation];
@@ -911,42 +988,44 @@ CAAnimation *CoreAnimationMountedAnimation::makeAnimation(const AnimationTrack &
 std::vector<TrackMember> CoreAnimationMountedAnimation::makeMembers(const AnimationTrack &track, id startValue) const
 {
   const bool holdsStartValue = playbackOf(track) == TrackPlayback::HeldThroughDelay;
-  if (track.target == AnimationTarget::Transform) {
-    const auto &start = std::get<AnimationTransform>(std::get<AnimationValue>(track.start));
-    std::vector<AnimationTransform> values{start};
-    for (const auto &segment : track.segments) {
-      values.push_back(holdsStartValue ? start : std::get<AnimationTransform>(segment.endValue));
-    }
-    return makeTransformMembers(values);
+  if (const auto *body = std::get_if<TransformTimelines>(&track.body)) {
+    return makeTransformMembers(*body, holdsStartValue);
   }
+  const auto &segments = std::get<ValueTimeline>(track.body).segments;
   NSMutableArray *values = [NSMutableArray arrayWithObject:startValue];
-  for (const auto &segment : track.segments) {
+  for (const auto &segment : segments) {
     [values addObject:holdsStartValue ? startValue : objectFromValue(segment.endValue)];
   }
-  return makeValueMembers(track.target, values);
+  const auto keys = keysOf(segments);
+  return makeValueMembers(
+      track.target,
+      {.keyPath = keyPathForTarget(track.target),
+       .values = values,
+       .keyTimes = keys.times,
+       .timingFunctions = keys.timingFunctions});
 }
 
 /// A position plays as an offset from the model, because a value animation hides the animations of its key
 /// path that begin before it. A size moves the position by half of its offset, so the frame origin stays.
-std::vector<TrackMember> CoreAnimationMountedAnimation::makeValueMembers(const AnimationTarget target, NSArray *values)
-    const
+std::vector<TrackMember> CoreAnimationMountedAnimation::makeValueMembers(
+    const AnimationTarget target,
+    const TrackMember &member) const
 {
-  NSString *keyPath = keyPathForTarget(target);
-  const auto model = [this, keyPath] {
-    return [[layer_ valueForKeyPath:keyPath] doubleValue];
+  const auto model = [this, &member] {
+    return [[layer_ valueForKeyPath:member.keyPath] doubleValue];
   };
   switch (target) {
     case AnimationTarget::PositionX:
     case AnimationTarget::PositionY:
-      return {makeOffsetMember(keyPath, values, model(), 1)};
+      return {makeOffsetMember(member, member.keyPath, model(), 1)};
     case AnimationTarget::Width:
     case AnimationTarget::Height: {
       NSString *positionKeyPath =
           keyPathForTarget(target == AnimationTarget::Width ? AnimationTarget::PositionX : AnimationTarget::PositionY);
-      return {{.keyPath = keyPath, .values = values}, makeOffsetMember(positionKeyPath, values, model(), 0.5)};
+      return {member, makeOffsetMember(member, positionKeyPath, model(), 0.5)};
     }
     default:
-      return {{.keyPath = keyPath, .values = values}};
+      return {member};
   }
 }
 

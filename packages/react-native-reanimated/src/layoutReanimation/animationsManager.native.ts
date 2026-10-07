@@ -26,6 +26,7 @@ import {
   leverOf,
   phaseEndsOf,
   relateToLiveLeaf,
+  segmentCountOf,
   summarizeNativeLeaf,
 } from './nativeLeaves';
 
@@ -186,7 +187,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         ),
       }));
       const segmentCount = summaries.reduce(
-        (sum, { track }) => sum + (track?.segments.length ?? 0),
+        (sum, { track }) => sum + (track ? segmentCountOf(track) : 0),
         0
       );
       if (segmentCount > limits.segments) {

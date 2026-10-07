@@ -1080,6 +1080,7 @@ describe('native layout transform and the edge antialiasing of the view', () => 
 
   const HALF = FLAG_DURATION / 2;
   const IN_SECOND_HALF: Leaf = { delays: [HALF], duration: HALF };
+  const IN_FIRST_HALF: Leaf = { duration: HALF };
   const partRows: [string, Operation[], boolean, string][] = [
     [
       'a translation from 20.3 and a rotation from 0 that wait for half of the time stay frame-driven',
@@ -1107,6 +1108,43 @@ describe('native layout transform and the edge antialiasing of the view', () => 
       ],
       true,
       'true,true',
+    ],
+    [
+      'a rotation from 0 that starts at half of the time of a translation stays frame-driven',
+      [
+        ['translateX', 0, 80],
+        ['rotate', '0deg', '90deg', IN_SECOND_HALF],
+      ],
+      false,
+      'false,false',
+    ],
+    [
+      'a rotation from 0 in the first half of the time of a translation plays natively',
+      [
+        ['translateX', 0, 80],
+        ['rotate', '0deg', '90deg', IN_FIRST_HALF],
+      ],
+      true,
+      'true,true',
+    ],
+    [
+      'a rotation from 30deg that starts at half of the time of a translation plays natively',
+      [
+        ['translateX', 0, 80],
+        ['rotate', '30deg', '90deg', IN_SECOND_HALF],
+      ],
+      true,
+      'true,true',
+    ],
+    [
+      'a translation from 20.3 and a rotation from 0 that wait for half of the time of a scale that stays at 1 stay frame-driven',
+      [
+        ['scale', 1, 1],
+        ['translateX', 20.3, 60.6, IN_SECOND_HALF],
+        ['rotate', '0deg', '90deg', IN_SECOND_HALF],
+      ],
+      false,
+      'false,false',
     ],
   ];
   for (const [name, operations, isNative, inFirstHalf] of partRows) {

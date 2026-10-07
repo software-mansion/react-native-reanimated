@@ -44,6 +44,8 @@ struct PlaybackMember {
   std::string property;
   /// The components of the value at the start and at the end of each segment.
   std::vector<std::vector<double>> values;
+  /// The time of each value as a part of the duration of the member.
+  std::vector<double> keyTimes;
 };
 
 /// The components of the model value and of the value on screen. For a transform they are the 16 cells of

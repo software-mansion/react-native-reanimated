@@ -1339,7 +1339,7 @@ describe('native layout keyframes', () => {
         'entering',
         transformAt50([{ scale: 1.2 }]),
         undefined,
-        TWIN_ROUTE,
+        'Transform',
       ],
       ['more points in an exit', 'exiting', fadeOut, undefined, 'Opacity'],
       [

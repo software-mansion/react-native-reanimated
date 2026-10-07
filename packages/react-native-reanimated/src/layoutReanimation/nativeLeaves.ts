@@ -10,6 +10,7 @@ import type {
   NativeHoldPhase,
   NativeLeafSegment,
   NativeLeafTrack,
+  NativeOperationTimeline,
   NativeTimingDescription,
   NativeTimingPhase,
   NativeTransformOperation,
@@ -29,14 +30,12 @@ export type TransformOperationLeaf = Record<string, AnimationObject>;
 /** The animation of a scalar key, or the operations of `transform`. */
 export type NativeLeaf = AnimationObject | TransformOperationLeaf[];
 
-type LoweredTrack<TValue> = {
-  track?: NativeLeafTrack<TValue>;
+type Lowered<TTrack> = {
+  track?: TTrack;
   hasPhaseOfNoDuration?: true;
 };
 
-type LeafSummary = { initialValue: unknown } & LoweredTrack<
-  number | NativeTransformOperation[]
->;
+type LeafSummary = { initialValue: unknown } & Lowered<NativeLeafTrack>;
 
 type Phase = NativeHoldPhase | NativeTimingPhase;
 
@@ -45,29 +44,39 @@ type PhaseForm =
   | Pick<NativeHoldPhase, 'kind' | 'durationMs'>
   | Pick<NativeTimingPhase, 'kind' | 'durationMs' | 'easing'>;
 
-type TimingValuePhase<TValue> = Omit<NativeTimingPhase, 'toValue'> & {
-  toValue: TValue;
-};
-
-/** A phase whose end value is in the native form of its leaf. */
-type ValuePhase<TValue> = NativeHoldPhase | TimingValuePhase<TValue>;
+/** A phase whose end value is a native scalar. */
+type ScalarPhase =
+  | NativeHoldPhase
+  | (Omit<NativeTimingPhase, 'toValue'> & { toValue: number });
 
 /**
  * The value that a leaf shows from its start, the sum of its first holds, then
  * the phases that follow.
  */
-type Timeline<TValue> = {
-  start: TValue;
+type Timeline = {
+  start: number;
   delayMs: number;
-  phases: ValuePhase<TValue>[];
+  phases: ScalarPhase[];
 };
 
-/** How the lowering reads the values of one kind of leaf. */
-type ValueReader<TValue> = {
-  between: (start: TValue, end: TValue, progress: number) => TValue;
-  /** Has no result for equal values: they need no easing. */
-  toleranceOf: (start: TValue, end: TValue) => number | undefined;
+/** The segments of a timeline over the duration of its phases. */
+type TimelineTrack = {
+  delayMs: number;
+  durationMs: number;
+  segments: NativeLeafSegment[];
 };
+
+/**
+ * One operation of a `transform` leaf. It has no timeline when its animation
+ * has no description.
+ */
+type OperationRecord = {
+  kind: string;
+  start: number;
+  timeline: Timeline | undefined;
+};
+
+type DescribedOperation = OperationRecord & { timeline: Timeline };
 
 /**
  * What the fit of an easing function reads. `fits` keeps the fit of each easing
@@ -98,14 +107,6 @@ const KEYS_IN_POINTS = [
   'translateY',
 ];
 const STRAIGHT_LINE: ProgressSegment[] = [{ endOffset: 1, endProgress: 1 }];
-const AT_REST: Timeline<number> = {
-  start: 0,
-  delayMs: 0,
-  phases: [
-    { kind: 'timing', durationMs: 0, toValue: 0, easing: { kind: 'linear' } },
-  ],
-};
-
 function kindOf(operation: TransformOperationLeaf): string {
   'worklet';
   return Object.keys(operation)[0];
@@ -167,10 +168,7 @@ function phasesOf(animation: unknown): Phase[] | undefined {
  * A first phase with no duration, before a phase with a duration, gives its
  * value to the start. The last phase of a description is a timing.
  */
-function timelineOf<TValue>(
-  initialValue: TValue,
-  phases: ValuePhase<TValue>[]
-): Timeline<TValue> {
+function timelineOf(initialValue: number, phases: ScalarPhase[]): Timeline {
   'worklet';
   const [first, second] = phases;
   const jumpsAtStart =
@@ -185,6 +183,30 @@ function timelineOf<TValue>(
     delayMs,
     phases: phases.slice(index),
   };
+}
+
+function durationOf(phases: ScalarPhase[]): number {
+  'worklet';
+  let durationMs = 0;
+  for (const phase of phases) {
+    durationMs += phase.durationMs;
+  }
+  return durationMs;
+}
+
+/**
+ * The largest difference of two times of a leaf that are one time. Each of the
+ * `phaseCount` durations of the leaf has a rounding error, and each term of a
+ * sum of durations adds one.
+ */
+function roundingOf(timeMs: number, phaseCount: number): number {
+  'worklet';
+  return phaseCount * Number.EPSILON * timeMs;
+}
+
+function holdOf(durationMs: number, roundingMs: number): NativeHoldPhase[] {
+  'worklet';
+  return durationMs > roundingMs ? [{ kind: 'hold', durationMs }] : [];
 }
 
 /** The end of each phase but the last, from the start of the animation. */
@@ -243,27 +265,60 @@ function progressSegmentsOf(
   return segments.length > 0 ? segments : undefined;
 }
 
+function valueBetween(start: number, end: number, progress: number): number {
+  'worklet';
+  return progress === 1 ? end : start + (end - start) * progress;
+}
+
 /**
- * The segments of the phases of a timeline: a hold keeps the value before it,
- * and a timing has the pieces of its easing from the value before it. A phase
- * with no duration has a track form only as the one phase of the timeline.
+ * The largest error of a fit in the unit of a scalar key or of an operation
+ * kind: points, or the radians that move a point of the view at `lever` by that
+ * number of points. Has no result for a value with no unit.
  */
-function trackOf<TValue>(
-  { start, delayMs, phases }: Timeline<TValue>,
-  { between, toleranceOf }: ValueReader<TValue>,
-  fits: EasingCurveFits
-): LoweredTrack<TValue> {
+function unitToleranceOf(key: string, lever: number): number | undefined {
+  'worklet';
+  if (KEYS_IN_POINTS.includes(key)) {
+    return POINTS_TOLERANCE;
+  }
+  return ANGLE_KINDS.includes(key) ? POINTS_TOLERANCE / lever : undefined;
+}
+
+/**
+ * The tolerance of the fit of an easing function, as a part of the change of
+ * the value: 0.001, and no more than the tolerance of the unit of the value.
+ * Each smaller tolerance is a half of the one before it, so that one function
+ * has few fits.
+ */
+function fitToleranceOf(key: string, change: number, lever: number): number {
+  'worklet';
+  const unitTolerance = unitToleranceOf(key, lever);
+  const halvings =
+    unitTolerance === undefined
+      ? 0
+      : Math.ceil(Math.log2((change * PROGRESS_TOLERANCE) / unitTolerance));
+  return PROGRESS_TOLERANCE / 2 ** Math.max(0, halvings);
+}
+
+/**
+ * The segments of the phases of the timeline of `key`, a scalar key or an
+ * operation kind: a hold keeps the value before it, and a timing has the pieces
+ * of its easing from the value before it. A phase with no duration has a track
+ * form only as the one phase of the timeline. A timing that changes the value
+ * has a track form only when its easing has a fit.
+ */
+function trackOf(
+  { start, delayMs, phases }: Timeline,
+  key: string,
+  { fits, lever }: Fitting
+): Lowered<TimelineTrack> {
   'worklet';
   if (phases.length > 1 && phases.some(({ durationMs }) => durationMs === 0)) {
     return { hasPhaseOfNoDuration: true };
   }
-  let durationMs = 0;
-  for (const phase of phases) {
-    durationMs += phase.durationMs;
-  }
+  const durationMs = durationOf(phases);
   const offsetOf = (timeMs: number) =>
     durationMs > 0 ? timeMs / durationMs : 1;
-  const segments: NativeLeafSegment<TValue>[] = [];
+  const segments: NativeLeafSegment[] = [];
   let phaseStartMs = 0;
   let value = start;
   for (const phase of phases) {
@@ -273,31 +328,33 @@ function trackOf<TValue>(
         endValue: value,
       });
     } else {
-      const tolerance = toleranceOf(value, phase.toValue);
+      const change = Math.abs(phase.toValue - value);
       const pieces =
-        tolerance === undefined || phase.durationMs === 0
+        change === 0 || phase.durationMs === 0
           ? STRAIGHT_LINE
-          : progressSegmentsOf(phase.easing, tolerance, fits);
+          : progressSegmentsOf(
+              phase.easing,
+              fitToleranceOf(key, change, lever),
+              fits
+            );
       if (!pieces) {
         return {};
       }
-      for (const { endOffset, endProgress, ...piece } of pieces) {
-        segments.push({
-          ...piece,
+      for (const { endOffset, endProgress, cubicBezier } of pieces) {
+        const segment: NativeLeafSegment = {
           endOffset: offsetOf(phaseStartMs + endOffset * phase.durationMs),
-          endValue: between(value, phase.toValue, endProgress),
-        });
+          endValue: valueBetween(value, phase.toValue, endProgress),
+        };
+        if (cubicBezier) {
+          segment.cubicBezier = cubicBezier;
+        }
+        segments.push(segment);
       }
       value = phase.toValue;
     }
     phaseStartMs += phase.durationMs;
   }
   return { track: { delayMs, durationMs, segments } };
-}
-
-function valueBetween(start: number, end: number, progress: number): number {
-  'worklet';
-  return progress === 1 ? end : start + (end - start) * progress;
 }
 
 /**
@@ -330,34 +387,6 @@ function nativeScalarOf(
   return initial.prefix || prefix || !radiansInUnit || !hasUnitOfInitialValue
     ? undefined
     : strippedValue * radiansInUnit;
-}
-
-function isAtRest({ delayMs, phases }: Timeline<number>): boolean {
-  'worklet';
-  return delayMs === 0 && phases.length === 1 && phases[0].durationMs === 0;
-}
-
-/** The timeline of an operation with no description has no phases. */
-function isDescribed({ phases }: Timeline<number>): boolean {
-  'worklet';
-  return phases.length > 0;
-}
-
-/** The timelines of one shape have their timings at the same indices. */
-function timingAt({ phases }: Timeline<number>, index: number) {
-  'worklet';
-  return phases[index] as TimingValuePhase<number>;
-}
-
-function hasSameShape(first: Timeline<number>, second: Timeline<number>) {
-  'worklet';
-  return (
-    first.delayMs === second.delayMs &&
-    first.phases.length === second.phases.length &&
-    first.phases.every((phase, index) =>
-      hasSameForm(phase, second.phases[index])
-    )
-  );
 }
 
 function advanceAnimation(
@@ -427,146 +456,160 @@ function relateAnimations(
 }
 
 /**
- * The timeline of one operation in native scalars: with no phases for an
- * operation with no description, and no result for a value with no native
- * form.
+ * The phases of one operation in native scalars: none for an operation with no
+ * description, and no result for a value with no native form.
  */
-function operationTimelineOf(
+function operationPhasesOf(
   kind: string,
   initialValue: unknown,
   animation: unknown
-): Timeline<number> | undefined {
+): ScalarPhase[] | undefined {
   'worklet';
-  const start = nativeScalarOf(kind, initialValue, initialValue);
-  if (start === undefined) {
-    return undefined;
-  }
-  const valuePhases: ValuePhase<number>[] = [];
+  const scalarPhases: ScalarPhase[] = [];
   for (const phase of phasesOf(animation) ?? []) {
     if (phase.kind === 'hold') {
-      valuePhases.push(phase);
+      scalarPhases.push(phase);
       continue;
     }
     const toValue = nativeScalarOf(kind, phase.toValue, initialValue);
     if (toValue === undefined) {
       return undefined;
     }
-    valuePhases.push({ ...phase, toValue });
+    scalarPhases.push({ ...phase, toValue });
   }
-  return valuePhases.length > 0
-    ? timelineOf(start, valuePhases)
-    : { start, delayMs: 0, phases: [] };
+  return scalarPhases;
 }
 
 /**
- * The largest error of a fit in the unit of a scalar key or of an operation
- * kind: points, or the radians that move a point of the view at `lever` by that
- * number of points. Has no result for a value with no unit.
+ * The timeline of one operation. An operation with no delay and no duration has
+ * its end value from the start and no phases.
  */
-function unitToleranceOf(key: string, lever: number): number | undefined {
+function operationTimelineOf(start: number, phases: ScalarPhase[]): Timeline {
   'worklet';
-  if (KEYS_IN_POINTS.includes(key)) {
-    return POINTS_TOLERANCE;
+  const timeline = timelineOf(start, phases);
+  const [phase] = timeline.phases;
+  const isAtRest =
+    timeline.delayMs === 0 &&
+    timeline.phases.length === 1 &&
+    phase.kind === 'timing' &&
+    phase.durationMs === 0;
+  return isAtRest ? { start: phase.toValue, delayMs: 0, phases: [] } : timeline;
+}
+
+/**
+ * The timeline of an operation in the time of its track, which starts at
+ * `delayMs` and ends at `endMs`: the operation holds its start value before its
+ * first phase and its end value after its last phase. `phaseCount` is the
+ * number of the phases of the operations of the track.
+ */
+function inTrackTime(
+  { start, delayMs: ownDelayMs, phases }: Timeline,
+  delayMs: number,
+  endMs: number,
+  phaseCount: number
+): Timeline {
+  'worklet';
+  if (phases.length === 0) {
+    return {
+      start,
+      delayMs,
+      phases: [{ kind: 'hold', durationMs: endMs - delayMs }],
+    };
   }
-  return ANGLE_KINDS.includes(key) ? POINTS_TOLERANCE / lever : undefined;
+  return {
+    start,
+    delayMs,
+    phases: [
+      ...holdOf(ownDelayMs - delayMs, roundingOf(ownDelayMs, phaseCount)),
+      ...phases,
+      ...holdOf(
+        endMs - ownDelayMs - durationOf(phases),
+        roundingOf(endMs, phaseCount)
+      ),
+    ],
+  };
 }
 
 /**
- * The tolerance of the fit of an easing function, as a part of the change of
- * the value: 0.001, and no more than the tolerance of the unit of the value.
- * Each smaller tolerance is a half of the one before it, so that one function
- * has few fits.
+ * The start of the first phase and the end of the last phase of the timelines,
+ * from the start of their leaf. Timelines with no phases start and end at 0.
  */
-function fitToleranceOf(key: string, change: number, lever: number): number {
+function extentOf(timelines: Timeline[]) {
   'worklet';
-  const unitTolerance = unitToleranceOf(key, lever);
-  const halvings =
-    unitTolerance === undefined
-      ? 0
-      : Math.ceil(Math.log2((change * PROGRESS_TOLERANCE) / unitTolerance));
-  return PROGRESS_TOLERANCE / 2 ** Math.max(0, halvings);
+  const moving = timelines.filter(({ phases }) => phases.length > 0);
+  if (moving.length === 0) {
+    return { delayMs: 0, endMs: 0 };
+  }
+  return {
+    delayMs: Math.min(...moving.map(({ delayMs }) => delayMs)),
+    endMs: Math.max(
+      ...moving.map(({ delayMs, phases }) => delayMs + durationOf(phases))
+    ),
+  };
 }
 
 /**
- * The native form has one timeline for all operations: each operation that
- * changes has the phases of the others. An operation with no delay and no
- * duration has its end value from the start.
+ * The native form has one timeline for each operation, in the time of one
+ * track: the track starts with the first phase of its operations and ends with
+ * their last phase.
  */
 function summarizeTransformLeaf(
   initialValue: unknown,
   leaf: Record<string, unknown>[],
-  { fits, lever }: Fitting
+  fitting: Fitting
 ): LeafSummary {
   'worklet';
-  const kinds: string[] = [];
-  const timelines: Timeline<number>[] = [];
+  const records: OperationRecord[] = [];
+  let phaseCount = 0;
   for (let index = 0; index < leaf.length; index++) {
     const operationKinds = Object.keys(leaf[index] ?? {});
     const kind = operationKinds[0];
     const initial = (initialValue as Record<string, unknown>[] | undefined)?.[
       index
     ]?.[kind];
-    const timeline =
-      operationKinds.length === 1
-        ? operationTimelineOf(kind, initial, leaf[index][kind])
+    const start = nativeScalarOf(kind, initial, initial);
+    const phases =
+      operationKinds.length === 1 && start !== undefined
+        ? operationPhasesOf(kind, initial, leaf[index][kind])
         : undefined;
-    if (!timeline) {
+    if (start === undefined || !phases) {
       return { initialValue: undefined };
     }
-    kinds.push(kind);
-    timelines.push(timeline);
+    const timeline =
+      phases.length > 0 ? operationTimelineOf(start, phases) : undefined;
+    records.push({ kind, start: timeline?.start ?? start, timeline });
+    phaseCount += phases.length;
   }
-  const operationsOf = (valueOf: (timeline: Timeline<number>) => number) =>
-    timelines.map((timeline, index) => ({
-      kind: kinds[index],
-      value: valueOf(timeline),
-    }));
-  const starts = operationsOf((timeline) =>
-    isAtRest(timeline) ? timingAt(timeline, 0).toValue : timeline.start
+  const initialOperations: NativeTransformOperation[] = records.map(
+    ({ kind, start }) => ({ kind, value: start })
   );
-  const moving = timelines.filter((timeline) => !isAtRest(timeline));
-  const shared = moving[0] ?? AT_REST;
-  const hasOneTimeline = moving.every(
-    (timeline) => isDescribed(timeline) && hasSameShape(timeline, shared)
-  );
-  if (!hasOneTimeline) {
-    return { initialValue: starts };
+  const summary: LeafSummary = { initialValue: initialOperations };
+  const isDescribed = (record: OperationRecord): record is DescribedOperation =>
+    record.timeline !== undefined;
+  if (!records.every(isDescribed)) {
+    return summary;
   }
-  const phases = shared.phases.map(
-    (phase, index): ValuePhase<NativeTransformOperation[]> =>
-      phase.kind === 'hold'
-        ? phase
-        : {
-            ...phase,
-            toValue: operationsOf(
-              (timeline) =>
-                timingAt(timeline, isAtRest(timeline) ? 0 : index).toValue
-            ),
-          }
-  );
+  const { delayMs, endMs } = extentOf(records.map(({ timeline }) => timeline));
+  const operations: NativeOperationTimeline[] = [];
+  for (const { kind, start, timeline } of records) {
+    const { track, ...refusal } = trackOf(
+      inTrackTime(timeline, delayMs, endMs, phaseCount),
+      kind,
+      fitting
+    );
+    if (!track) {
+      return { ...summary, ...refusal };
+    }
+    operations.push({ kind, start, segments: track.segments });
+  }
   return {
-    initialValue: starts,
-    ...trackOf(
-      { start: starts, delayMs: shared.delayMs, phases },
-      {
-        between: (start, end, progress) =>
-          start.map(({ kind, value }, index) => ({
-            kind,
-            value: valueBetween(value, end[index].value, progress),
-          })),
-        toleranceOf: (start, end) => {
-          const tolerances = start
-            .map(({ kind, value }, index) => ({
-              kind,
-              change: Math.abs(end[index].value - value),
-            }))
-            .filter(({ change }) => change > 0)
-            .map(({ kind, change }) => fitToleranceOf(kind, change, lever));
-          return tolerances.length > 0 ? Math.min(...tolerances) : undefined;
-        },
-      },
-      fits
-    ),
+    ...summary,
+    track: {
+      kind: 'transform',
+      delayMs,
+      durationMs: endMs - delayMs,
+      operations,
+    },
   };
 }
 
@@ -589,11 +632,11 @@ export function summarizeNativeLeaf(
   key: string,
   initialValue: unknown,
   leaf: unknown,
-  { fits, lever }: Fitting
+  fitting: Fitting
 ): LeafSummary {
   'worklet';
   if (Array.isArray(leaf)) {
-    return summarizeTransformLeaf(initialValue, leaf, { fits, lever });
+    return summarizeTransformLeaf(initialValue, leaf, fitting);
   }
   const phases = phasesOf(leaf);
   const hasNumbers =
@@ -604,21 +647,30 @@ export function summarizeNativeLeaf(
   if (!hasNumbers) {
     return { initialValue };
   }
-  const timeline = timelineOf(initialValue, phases as ValuePhase<number>[]);
+  const timeline = timelineOf(initialValue, phases as ScalarPhase[]);
+  const { track, ...lowered } = trackOf(timeline, key, fitting);
   return {
     initialValue: timeline.start,
-    ...trackOf(
-      timeline,
-      {
-        between: valueBetween,
-        toleranceOf: (start, end) =>
-          start === end
-            ? undefined
-            : fitToleranceOf(key, Math.abs(end - start), lever),
-      },
-      fits
-    ),
+    ...lowered,
+    ...(track && { track: { kind: 'scalar', ...track } }),
   };
+}
+
+/**
+ * The segments that a track takes from the segment budget of its animation. A
+ * `transform` track takes the sum of the segments of its operation timelines,
+ * and one segment when it has no operation.
+ */
+export function segmentCountOf(track: NativeLeafTrack): number {
+  'worklet';
+  if (track.kind === 'scalar') {
+    return track.segments.length;
+  }
+  let count = 0;
+  for (const { segments } of track.operations) {
+    count += segments.length;
+  }
+  return Math.max(1, count);
 }
 
 function animatePlainEntries(values: Record<string, unknown>): void {

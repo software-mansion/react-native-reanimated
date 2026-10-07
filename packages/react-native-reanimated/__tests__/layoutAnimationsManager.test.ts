@@ -19,12 +19,15 @@ import {
 import type {
   AnimatableValue,
   AnimationObject,
+  EasingFunction,
   EntryAnimationsValues,
   LayoutAnimation,
+  NativeLeafTrack,
   Timestamp,
 } from '../src/commonTypes';
 import { LayoutAnimationType, ReduceMotion } from '../src/commonTypes';
 import { initializeLayoutAnimationsManager } from '../src/layoutReanimation/animationsManager.native';
+import { segmentCountOf } from '../src/layoutReanimation/nativeLeaves';
 
 jest.mock('../src/featureFlags', () => ({
   ...jest.requireActual('../src/featureFlags'),
@@ -98,6 +101,14 @@ const linearPhase = (toValue: number | string, durationMs: number) => ({
   toValue,
   easing: { kind: 'linear' },
 });
+
+/** The segments of the track of a leaf of numbers. */
+const scalarSegmentsOf = (track: NativeLeafTrack | undefined) =>
+  track?.kind === 'scalar' ? track.segments : undefined;
+
+/** The timeline of each operation of the track of a `transform` leaf. */
+const timelinesOf = (track: NativeLeafTrack | undefined) =>
+  track?.kind === 'transform' ? track.operations : undefined;
 
 const onUIRuntime = <T>(create: () => T): T => {
   const runtimeKind = globalThis.__RUNTIME_KIND;
@@ -383,6 +394,7 @@ describe('LayoutAnimationsManager', () => {
           key: 'opacity',
           initialValue: 0,
           track: {
+            kind: 'scalar',
             delayMs: 0,
             durationMs: 400,
             segments: [{ endOffset: 1, endValue: 1 }],
@@ -395,6 +407,7 @@ describe('LayoutAnimationsManager', () => {
           key: 'originX',
           initialValue: -370,
           track: {
+            kind: 'scalar',
             delayMs: 0,
             durationMs: 400,
             segments: [{ endOffset: 1, endValue: 30 }],
@@ -423,6 +436,7 @@ describe('LayoutAnimationsManager', () => {
       const leaves = leavesOf(linear(new FadeIn()).delay(-500).build());
 
       expect(leaves?.[0].track).toEqual({
+        kind: 'scalar',
         delayMs: 0,
         durationMs: 400,
         segments: [{ endOffset: 1, endValue: 1 }],
@@ -483,7 +497,7 @@ describe('LayoutAnimationsManager', () => {
           track && {
             delayMs: track.delayMs,
             durationMs: track.durationMs,
-            ends: track.segments.map(({ endOffset, endValue }) => [
+            ends: scalarSegmentsOf(track)?.map(({ endOffset, endValue }) => [
               endOffset,
               endValue,
             ]),
@@ -532,35 +546,38 @@ describe('LayoutAnimationsManager', () => {
           100: { opacity: 0, easing: Easing.bezier(0.1, 0.2, 0.3, 0.4) },
         })
       );
-      expect(leaves[0].track?.segments).toEqual([
+      expect(scalarSegmentsOf(leaves[0].track)).toEqual([
         { endOffset: 0.5, endValue: 1, cubicBezier: [1 / 3, 0, 2 / 3, 1 / 3] },
         { endOffset: 1, endValue: 0, cubicBezier: [0.1, 0.2, 0.3, 0.4] },
       ]);
     });
 
-    test('the operations of a keyframe with the same points have one track, and with other points they have none', () => {
+    test('each operation of a keyframe has a timeline of its own points', () => {
       const transformAt50 = (operations: unknown[]) =>
         keyframe({
           0: { transform: [{ scale: 0 }, { rotate: '0deg' }] },
           50: { transform: operations },
           100: { transform: [{ scale: 1 }, { rotate: '90deg' }] },
         });
+      const scale = {
+        kind: 'scale',
+        start: 0,
+        segments: [
+          { endOffset: 0.5, endValue: 1.2 },
+          { endOffset: 1, endValue: 1 },
+        ],
+      };
       const samePoints = summaryOf(
         transformAt50([{ scale: 1.2 }, { rotate: '45deg' }])
       ).leaves[0];
-      expect(samePoints.track?.segments).toEqual([
+      expect(timelinesOf(samePoints.track)).toEqual([
+        scale,
         {
-          endOffset: 0.5,
-          endValue: [
-            { kind: 'scale', value: 1.2 },
-            { kind: 'rotate', value: Math.PI / 4 },
-          ],
-        },
-        {
-          endOffset: 1,
-          endValue: [
-            { kind: 'scale', value: 1 },
-            { kind: 'rotate', value: Math.PI / 2 },
+          kind: 'rotate',
+          start: 0,
+          segments: [
+            { endOffset: 0.5, endValue: Math.PI / 4 },
+            { endOffset: 1, endValue: Math.PI / 2 },
           ],
         },
       ]);
@@ -569,8 +586,15 @@ describe('LayoutAnimationsManager', () => {
         { kind: 'scale', value: 0 },
         { kind: 'rotate', value: 0 },
       ]);
-      expect(otherPoints.track).toBeUndefined();
-      expect(otherPoints.hasPhaseOfNoDuration).toBeUndefined();
+      expect(otherPoints.track).toMatchObject({ delayMs: 0, durationMs: 500 });
+      expect(timelinesOf(otherPoints.track)).toEqual([
+        scale,
+        {
+          kind: 'rotate',
+          start: 0,
+          segments: [{ endOffset: 1, endValue: Math.PI / 2 }],
+        },
+      ]);
     });
 
     /** For each leaf: its segment count, or why it has no track. */
@@ -580,7 +604,7 @@ describe('LayoutAnimationsManager', () => {
           ({ key, track, hasPhaseOfNoDuration }) => [
             key,
             track
-              ? track.segments.length
+              ? segmentCountOf(track)
               : hasPhaseOfNoDuration
                 ? 'phase of no duration'
                 : 'no timing',
@@ -592,7 +616,7 @@ describe('LayoutAnimationsManager', () => {
       ['BounceIn', new BounceIn(), { transform: 8 }],
       ['BounceInDown', new BounceInDown(), { transform: 8 }],
       ['BounceOut', new BounceOut(), { transform: 8 }],
-      ['ZoomOutRotate', new ZoomOutRotate(), { transform: 2 }],
+      ['ZoomOutRotate', new ZoomOutRotate(), { transform: 4 }],
       [
         'BounceIn with no duration',
         new BounceIn().duration(0),
@@ -673,7 +697,7 @@ describe('LayoutAnimationsManager', () => {
       return summary!;
     };
     const segmentsOf = (...args: Parameters<typeof summaryOf>) =>
-      summaryOf(...args).leaves[0].track?.segments as Segment[] | undefined;
+      scalarSegmentsOf(summaryOf(...args).leaves[0].track);
     const counted = (easing: (time: number) => number) => {
       const counter = { calls: 0 };
       return {
@@ -834,41 +858,51 @@ describe('LayoutAnimationsManager', () => {
       ).toMatchObject({ exceedsLimit: true, leaves: [] });
     });
 
-    test('the operations of a transform with the default easing have one track', () => {
-      const segments = segmentsOf(
-        'transform',
+    const timelinesOfLeaf = (
+      initial: Record<string, unknown>[],
+      create: () => unknown,
+      limits = LIMITS,
+      size?: { targetWidth: number; targetHeight: number }
+    ) =>
+      timelinesOf(
+        summaryOf('transform', initial, create, limits, size).leaves[0].track
+      );
+
+    test('each operation of a transform with the default easing has the two segments of that easing', () => {
+      const timelines = timelinesOfLeaf(
         [{ scale: 0 }, { rotate: '0deg' }],
         () => [{ scale: withTiming(1) }, { rotate: withTiming('90deg') }]
       )!;
-      expect(segments.map(({ endOffset }) => endOffset)).toEqual([0.5, 1]);
-      expect(segments[0].endValue).toEqual([
-        { kind: 'scale', value: 0.5 },
-        { kind: 'rotate', value: Math.PI / 4 },
-      ]);
-      expect(segments[1].endValue).toEqual([
-        { kind: 'scale', value: 1 },
-        { kind: 'rotate', value: Math.PI / 2 },
+      expect(
+        timelines.map(({ kind, start, segments }) => [
+          kind,
+          start,
+          ...segments.map(({ endOffset, endValue }) => [endOffset, endValue]),
+        ])
+      ).toEqual([
+        ['scale', 0, [0.5, 0.5], [1, 1]],
+        ['rotate', 0, [0.5, Math.PI / 4], [1, Math.PI / 2]],
       ]);
     });
 
-    test('operations with one easing function have one track, and with two functions they have none', () => {
+    test('each operation has the fit of its own easing function, also when the functions are two', () => {
       const shared = Easing.out(Easing.quad);
       const operations =
-        (first: typeof shared, second: typeof shared) => () => [
+        (first: (time: number) => number, second: (time: number) => number) =>
+        () => [
           { scale: withTiming(1, { easing: first }) },
           { translateX: withTiming(10, { easing: second }) },
         ];
       const initial = [{ scale: 0 }, { translateX: 0 }];
+      const segmentCounts = (create: () => unknown) =>
+        timelinesOfLeaf(initial, create, { ...LIMITS, segments: 64 })?.map(
+          ({ segments }) => segments.length
+        );
+      expect(segmentCounts(operations(shared, shared))).toEqual([1, 1]);
       expect(
-        segmentsOf('transform', initial, operations(shared, shared))
-      ).toHaveLength(1);
-      expect(
-        segmentsOf(
-          'transform',
-          initial,
-          operations(shared, Easing.out(Easing.quad))
-        )
-      ).toBeUndefined();
+        segmentCounts(operations(shared, Easing.out(Easing.quad)))
+      ).toEqual([1, 1]);
+      expect(segmentCounts(operations(shared, Easing.bounce))).toEqual([1, 22]);
     });
 
     describe('the fit of an operation of a transform', () => {
@@ -879,16 +913,12 @@ describe('LayoutAnimationsManager', () => {
         to: number | string,
         [targetWidth, targetHeight] = [100, 60]
       ) =>
-        segmentsOf(
-          'transform',
+        timelinesOfLeaf(
           [{ [kind]: from }],
           () => [{ [kind]: withTiming(to, { easing: Easing.bounce }) }],
           LIMIT_OF_64,
           { targetWidth, targetHeight }
-        )?.map((segment) => ({
-          ...segment,
-          endValue: (segment.endValue as { value: number }[])[0].value,
-        }));
+        )?.[0].segments;
       const largestDifference = (
         segments: Segment[],
         start: number,
@@ -962,10 +992,8 @@ describe('LayoutAnimationsManager', () => {
         expect(pieces('scale', 1, 400)).toBe(ofOpacity);
       });
 
-      test('operations of one leaf have the fit of the operation that needs the least tolerance', () => {
-        const alone = segmentsOfOperation('translateX', 393, 0)!;
-        const withScale = segmentsOf(
-          'transform',
+      test('each operation of one leaf has the fit of its own span', () => {
+        const [scale, translateX] = timelinesOfLeaf(
           [{ scale: 0 }, { translateX: 393 }],
           () => [
             { scale: withTiming(1, { easing: Easing.bounce }) },
@@ -973,8 +1001,16 @@ describe('LayoutAnimationsManager', () => {
           ],
           LIMIT_OF_64
         )!;
-        expect(withScale.map(({ endOffset }) => endOffset)).toEqual(
-          alone.map(({ endOffset }) => endOffset)
+        expect(scale.segments).toHaveLength(
+          segmentsOfOperation('scale', 0, 1)!.length
+        );
+        expect(translateX.segments.map(({ endOffset }) => endOffset)).toEqual(
+          segmentsOfOperation('translateX', 393, 0)!.map(
+            ({ endOffset }) => endOffset
+          )
+        );
+        expect(translateX.segments.length).toBeGreaterThan(
+          scale.segments.length
         );
       });
     });
@@ -1013,6 +1049,7 @@ describe('LayoutAnimationsManager', () => {
       );
       expect(initialValue).toBe(20);
       expect(track).toEqual({
+        kind: 'scalar',
         delayMs: 0,
         durationMs: 500,
         segments: [
@@ -1030,6 +1067,7 @@ describe('LayoutAnimationsManager', () => {
         )
       );
       expect(track).toEqual({
+        kind: 'scalar',
         delayMs: 90,
         durationMs: 500,
         segments: [
@@ -1049,6 +1087,7 @@ describe('LayoutAnimationsManager', () => {
       expect(initialValue).toBe(50);
       expect(hasPhaseOfNoDuration).toBeUndefined();
       expect(track).toEqual({
+        kind: 'scalar',
         delayMs: 100,
         durationMs: 100,
         segments: [{ endOffset: 1, endValue: 100 }],
@@ -1062,7 +1101,7 @@ describe('LayoutAnimationsManager', () => {
           withTiming(0.5, { duration: 100 })
         )
       );
-      const segments = track!.segments as {
+      const segments = scalarSegmentsOf(track) as {
         endOffset: number;
         endValue: number;
         cubicBezier: number[];
@@ -1089,18 +1128,23 @@ describe('LayoutAnimationsManager', () => {
           withTiming(0, { duration: 100 })
         )
       );
-      expect(track?.segments).toHaveLength(3);
-      expect(track?.segments[0]).toEqual({ endOffset: 0.75, endValue: 1 });
+      expect(scalarSegmentsOf(track)).toHaveLength(3);
+      expect(scalarSegmentsOf(track)?.[0]).toEqual({
+        endOffset: 0.75,
+        endValue: 1,
+      });
     });
 
     test('the fit of a part has the tolerance of the travel of that part', () => {
       const segmentsOf = (firstEnd: number) =>
-        leafOf('originX', 0, () =>
-          withSequence(
-            withTiming(firstEnd, { easing: Easing.sin }),
-            withTiming(firstEnd + 100, { easing: Easing.sin })
-          )
-        ).track!.segments;
+        scalarSegmentsOf(
+          leafOf('originX', 0, () =>
+            withSequence(
+              withTiming(firstEnd, { easing: Easing.sin }),
+              withTiming(firstEnd + 100, { easing: Easing.sin })
+            )
+          ).track
+        )!;
       const short = segmentsOf(100);
       const long = segmentsOf(4000);
       expect(long.length).toBeGreaterThan(short.length);
@@ -1115,6 +1159,7 @@ describe('LayoutAnimationsManager', () => {
       );
       expect(initialValue).toBe(50);
       expect(track).toEqual({
+        kind: 'scalar',
         delayMs: 0,
         durationMs: 100,
         segments: [{ endOffset: 1, endValue: 100 }],
@@ -1180,7 +1225,7 @@ describe('LayoutAnimationsManager', () => {
       const limitOf8 = { ...LIMITS, segments: 8 };
       const atLimit = leafOf('opacity', 1, parts(4), limitOf8);
       expect(atLimit.exceedsLimit).toBe(false);
-      expect(atLimit.track?.segments).toHaveLength(8);
+      expect(scalarSegmentsOf(atLimit.track)).toHaveLength(8);
       expect(leafOf('opacity', 1, parts(5), limitOf8)).toMatchObject({
         exceedsLimit: true,
         leaves: [],
@@ -1190,8 +1235,21 @@ describe('LayoutAnimationsManager', () => {
     describe('in a transform', () => {
       const scaleParts = () => withSequence(part(1.2, 100), part(1, 300));
       const INITIAL = [{ scale: 0 }, { rotate: '0deg' }];
+      const QUARTER_TURN = Math.PI / 2;
+      /** The end of each segment of each operation as a time of the track. */
+      const keysOf = (track: NativeLeafTrack | undefined) =>
+        timelinesOf(track)!.map(({ segments }) =>
+          segments.map(({ endOffset, endValue }) => [
+            Math.round(endOffset * track!.durationMs * 1e6) / 1e6,
+            endValue,
+          ])
+        );
+      const SCALE_KEYS = [
+        [100, 1.2],
+        [400, 1],
+      ];
 
-      test('operations with equal phases have one track with the values of each operation in each segment', () => {
+      test('each operation has a timeline of its own phases with offsets in the time of the track', () => {
         const { initialValue, track } = leafOf('transform', INITIAL, () => [
           { scale: scaleParts() },
           { rotate: withSequence(part('90deg', 100), part('0deg', 300)) },
@@ -1201,46 +1259,65 @@ describe('LayoutAnimationsManager', () => {
           { kind: 'rotate', value: 0 },
         ]);
         expect(track).toEqual({
+          kind: 'transform',
           delayMs: 0,
           durationMs: 400,
-          segments: [
+          operations: [
             {
-              endOffset: 0.25,
-              endValue: [
-                { kind: 'scale', value: 1.2 },
-                { kind: 'rotate', value: Math.PI / 2 },
+              kind: 'scale',
+              start: 0,
+              segments: [
+                { endOffset: 0.25, endValue: 1.2 },
+                { endOffset: 1, endValue: 1 },
               ],
             },
             {
-              endOffset: 1,
-              endValue: [
-                { kind: 'scale', value: 1 },
-                { kind: 'rotate', value: 0 },
+              kind: 'rotate',
+              start: 0,
+              segments: [
+                { endOffset: 0.25, endValue: QUARTER_TURN },
+                { endOffset: 1, endValue: 0 },
               ],
             },
           ],
         });
       });
 
-      test('an operation of a plain value keeps that value in each segment', () => {
+      test('an operation of a plain value has that value from the start in one segment', () => {
         const { initialValue, track } = leafOf('transform', INITIAL, () => [
           { scale: scaleParts() },
           { rotate: '45deg' },
         ]);
-        const rotate = { kind: 'rotate', value: Math.PI / 4 };
-        expect(initialValue).toEqual([{ kind: 'scale', value: 0 }, rotate]);
-        expect(track?.segments.map(({ endValue }) => endValue)).toEqual([
-          [{ kind: 'scale', value: 1.2 }, rotate],
-          [{ kind: 'scale', value: 1 }, rotate],
+        expect(initialValue).toEqual([
+          { kind: 'scale', value: 0 },
+          { kind: 'rotate', value: Math.PI / 4 },
         ]);
+        expect(timelinesOf(track)![1]).toEqual({
+          kind: 'rotate',
+          start: Math.PI / 4,
+          segments: [{ endOffset: 1, endValue: Math.PI / 4 }],
+        });
+        expect(keysOf(track)[0]).toEqual(SCALE_KEYS);
       });
 
-      test.each([
+      test.each<[string, () => unknown, number, number[][], number[][]]>([
         [
           'other durations',
           () => withSequence(part('90deg', 200), part('0deg', 200)),
+          400,
+          SCALE_KEYS,
+          [
+            [200, QUARTER_TURN],
+            [400, 0],
+          ],
         ],
-        ['one timing', () => part('90deg', 400)],
+        [
+          'one timing',
+          () => part('90deg', 400),
+          400,
+          SCALE_KEYS,
+          [[400, QUARTER_TURN]],
+        ],
         [
           'another easing',
           () =>
@@ -1248,29 +1325,142 @@ describe('LayoutAnimationsManager', () => {
               withTiming('90deg', { duration: 100 }),
               part('0deg', 300)
             ),
+          400,
+          SCALE_KEYS,
+          [
+            [50, QUARTER_TURN / 2],
+            [100, QUARTER_TURN],
+            [400, 0],
+          ],
         ],
         [
           'a hold',
           () =>
             withSequence(part('90deg', 100), withDelay(100, part('0deg', 200))),
+          400,
+          SCALE_KEYS,
+          [
+            [100, QUARTER_TURN],
+            [200, QUARTER_TURN],
+            [400, 0],
+          ],
         ],
         [
-          'a delay',
+          'a delay, which the operation holds its start value for',
           () =>
             withDelay(10, withSequence(part('90deg', 100), part('0deg', 300))),
+          410,
+          [...SCALE_KEYS, [410, 1]],
+          [
+            [10, 0],
+            [110, QUARTER_TURN],
+            [410, 0],
+          ],
+        ],
+        [
+          'a shorter time, after which the operation holds its end value',
+          () => part('90deg', 150),
+          400,
+          SCALE_KEYS,
+          [
+            [150, QUARTER_TURN],
+            [400, QUARTER_TURN],
+          ],
         ],
       ])(
-        'an operation with %s has no track with the other operation',
-        (_, rotate) => {
-          const leaf = leafOf('transform', INITIAL, () => [
+        'an operation with %s has its own timeline in the track of the leaf',
+        (_, rotate, durationMs, scaleKeys, rotateKeys) => {
+          const { initialValue, track } = leafOf('transform', INITIAL, () => [
             { scale: scaleParts() },
             { rotate: rotate() },
           ]);
-          expect(leaf.initialValue).toEqual([
+          expect(initialValue).toEqual([
             { kind: 'scale', value: 0 },
             { kind: 'rotate', value: 0 },
           ]);
-          expect(leaf.track).toBeUndefined();
+          expect(track).toMatchObject({ delayMs: 0, durationMs });
+          const [scaleShown, rotateShown] = keysOf(track);
+          expect(scaleShown).toEqual(scaleKeys);
+          expect(rotateShown).toHaveLength(rotateKeys.length);
+          rotateShown.forEach(([time, value], index) => {
+            expect(time).toBeCloseTo(rotateKeys[index][0], 6);
+            expect(value).toBeCloseTo(rotateKeys[index][1], 12);
+          });
+        }
+      );
+
+      test('the delay of the track is the least delay of its operations', () => {
+        const delayed = (delay: number, animation: unknown) =>
+          withDelay(delay, animation as number);
+        const { track } = leafOf('transform', INITIAL, () => [
+          { scale: delayed(80, scaleParts()) },
+          { rotate: delayed(30, part('90deg', 100)) },
+        ]);
+        expect(track).toMatchObject({ delayMs: 30, durationMs: 450 });
+        expect(keysOf(track)).toEqual([
+          [
+            [50, 0],
+            [150, 1.2],
+            [450, 1],
+          ],
+          [
+            [100, QUARTER_TURN],
+            [450, QUARTER_TURN],
+          ],
+        ]);
+      });
+
+      const HOURS = 3_600_000;
+      test.each([
+        ['100 ms', 100],
+        ['3000 hours', 3000 * HOURS],
+      ])(
+        'an operation of seven parts and an operation of one part of %s end at one time, with no hold: their ends differ by the rounding of a sum',
+        (_, wholeMs) => {
+          const sevenths = Array.from({ length: 7 }, (_part, index) =>
+            part(index % 2, wholeMs / 7)
+          );
+          const { track } = leafOf('transform', INITIAL, () => [
+            { scale: withSequence(...sevenths) },
+            { rotate: part('90deg', wholeMs) },
+          ]);
+          const [scale, rotate] = timelinesOf(track)!;
+          expect(track!.durationMs).not.toBe(wholeMs);
+          expect(scale.segments).toHaveLength(7);
+          expect(rotate.segments).toEqual([
+            { endOffset: 1, endValue: QUARTER_TURN },
+          ]);
+        }
+      );
+
+      test('operations whose delays differ by the rounding of a sum start at one time, with no hold', () => {
+        const { track } = leafOf('transform', INITIAL, () => [
+          { scale: withDelay(0.1, withDelay(0.2, part(1, 100))) },
+          { rotate: withDelay(0.3, part('90deg', 100)) },
+        ]);
+        expect(track!.delayMs).toBe(0.3);
+        expect(timelinesOf(track)!.map(({ segments }) => segments)).toEqual([
+          [{ endOffset: 1, endValue: 1 }],
+          [{ endOffset: 1, endValue: QUARTER_TURN }],
+        ]);
+      });
+
+      test.each([
+        ['100 ms', 100],
+        ['3000 hours', 3000 * HOURS],
+      ])(
+        'an operation that ends 0.001 ms before the end of a track of %s holds its end value for that time',
+        (_, wholeMs) => {
+          const { track } = leafOf('transform', INITIAL, () => [
+            { scale: part(1, wholeMs + 0.001) },
+            { rotate: part('90deg', wholeMs) },
+          ]);
+          const [scale, rotate] = timelinesOf(track)!;
+          expect(scale.segments).toHaveLength(1);
+          expect(rotate.segments).toEqual([
+            { endOffset: wholeMs / (wholeMs + 0.001), endValue: QUARTER_TURN },
+            { endOffset: 1, endValue: QUARTER_TURN },
+          ]);
         }
       );
 
@@ -1283,13 +1473,182 @@ describe('LayoutAnimationsManager', () => {
         expect(leaf.track).toBeUndefined();
       });
 
-      test('a phase with no duration in the phases of the operations has no track form', () => {
+      test.each<[string, () => unknown]>([
+        [
+          'in the phases of each operation',
+          () => withSequence(part('90deg', 100), part('0deg', 0)),
+        ],
+        ['in the phases of one operation', () => part('90deg', 400)],
+      ])('a phase with no duration %s has no track form', (_, rotate) => {
         const leaf = leafOf('transform', INITIAL, () => [
           { scale: withSequence(part(1.2, 100), part(1, 0)) },
-          { rotate: withSequence(part('90deg', 100), part('0deg', 0)) },
+          { rotate: rotate() },
         ]);
         expect(leaf.track).toBeUndefined();
         expect(leaf.hasPhaseOfNoDuration).toBe(true);
+      });
+
+      test('an operation with no duration after a delay has no track form beside an operation with a duration', () => {
+        const leaf = leafOf('transform', INITIAL, () => [
+          { scale: scaleParts() },
+          { rotate: withDelay(100, part('90deg', 0)) },
+        ]);
+        expect(leaf.track).toBeUndefined();
+        expect(leaf.hasPhaseOfNoDuration).toBe(true);
+      });
+
+      test('operations with no duration after one delay have a track with no duration', () => {
+        const { initialValue, track } = leafOf('transform', INITIAL, () => [
+          { scale: withDelay(100, part(1, 0)) },
+          { rotate: withDelay(100, part('90deg', 0)) },
+        ]);
+        expect(initialValue).toEqual([
+          { kind: 'scale', value: 0 },
+          { kind: 'rotate', value: 0 },
+        ]);
+        expect(track).toEqual({
+          kind: 'transform',
+          delayMs: 100,
+          durationMs: 0,
+          operations: [
+            {
+              kind: 'scale',
+              start: 0,
+              segments: [{ endOffset: 1, endValue: 1 }],
+            },
+            {
+              kind: 'rotate',
+              start: 0,
+              segments: [{ endOffset: 1, endValue: QUARTER_TURN }],
+            },
+          ],
+        });
+      });
+
+      describe('the segment budget of a transform', () => {
+        const bounce = (toValue: number | string, duration = 400) =>
+          withTiming(toValue, { duration, easing: Easing.bounce });
+        const limitOf = (segments: number) => ({ ...LIMITS, segments });
+        const BOUNCE_PIECES = 22;
+        const FOUR_INITIAL = [
+          { translateX: 0 },
+          { translateY: 0 },
+          { scale: 0.5 },
+          { rotate: '0deg' },
+        ];
+        const fourOperations = () => [
+          { translateX: bounce(100) },
+          { translateY: bounce(40) },
+          { scale: bounce(1) },
+          { rotate: bounce('90deg') },
+        ];
+        /** The rotation ends 100 ms before the scale and holds its end value. */
+        const withHold = () => [
+          { scale: withTiming(1, { duration: 400 }) },
+          { rotate: bounce('90deg', 300) },
+        ];
+        const eased = (
+          toValue: number | string,
+          easing: EasingFunction,
+          duration = 400
+        ) => withTiming(toValue, { duration, easing });
+        const IN_OUT_BOUNCE_PIECES = 38;
+        const IN_OUT_BOUNCE = Easing.inOut(Easing.bounce);
+        /**
+         * 38, 22, 2, and 2 segments, and one hold segment more when the
+         * rotation ends before the others.
+         */
+        const atTheCap = (rotationMs: number) => () => [
+          { translateX: eased(100, IN_OUT_BOUNCE) },
+          { translateY: bounce(40) },
+          { scale: withTiming(1, { duration: 400 }) },
+          { rotate: withTiming('90deg', { duration: rotationMs }) },
+        ];
+        const countsOf = (track: NativeLeafTrack | undefined) =>
+          timelinesOf(track)!.map(({ segments }) => segments.length);
+        const REFUSED = { exceedsLimit: true, leaves: [] };
+
+        test('four operations of 22 segments pass at a limit of 88: the count is the sum of the operation timelines', () => {
+          const atLimit = leafOf(
+            'transform',
+            FOUR_INITIAL,
+            fourOperations,
+            limitOf(4 * BOUNCE_PIECES)
+          );
+          expect(atLimit.exceedsLimit).toBe(false);
+          expect(countsOf(atLimit.track)).toEqual([22, 22, 22, 22]);
+        });
+
+        test('one segment more than the limit gives no leaves, which the native route reports as ResourceLimit', () => {
+          expect(
+            leafOf(
+              'transform',
+              FOUR_INITIAL,
+              fourOperations,
+              limitOf(4 * BOUNCE_PIECES - 1)
+            )
+          ).toMatchObject(REFUSED);
+        });
+
+        test('four operations with Easing.bounce have 88 segments and are frame-driven with ResourceLimit at the limit of 64', () => {
+          expect(
+            leafOf('transform', FOUR_INITIAL, fourOperations)
+          ).toMatchObject(REFUSED);
+        });
+
+        test('three operations with Easing.bounce have 66 segments and are frame-driven with ResourceLimit at the limit of 64', () => {
+          expect(
+            leafOf('transform', FOUR_INITIAL.slice(1), () =>
+              fourOperations().slice(1)
+            )
+          ).toMatchObject(REFUSED);
+        });
+
+        test('a sum of 64 segments passes at the limit of 64', () => {
+          const atLimit = leafOf('transform', FOUR_INITIAL, atTheCap(400));
+          expect(atLimit.exceedsLimit).toBe(false);
+          expect(countsOf(atLimit.track)).toEqual([
+            IN_OUT_BOUNCE_PIECES,
+            BOUNCE_PIECES,
+            2,
+            2,
+          ]);
+        });
+
+        test('a hold segment that makes the sum 65 gives no leaves at the limit of 64', () => {
+          expect(
+            leafOf('transform', FOUR_INITIAL, atTheCap(300))
+          ).toMatchObject(REFUSED);
+          expect(
+            countsOf(
+              leafOf('transform', FOUR_INITIAL, atTheCap(300), limitOf(65))
+                .track
+            )
+          ).toEqual([IN_OUT_BOUNCE_PIECES, BOUNCE_PIECES, 2, 3]);
+        });
+
+        test('a transform with no operation takes one segment', () => {
+          expect(leafOf('transform', [], () => [], limitOf(0))).toMatchObject(
+            REFUSED
+          );
+          const atLimit = leafOf('transform', [], () => [], limitOf(1));
+          expect(atLimit.exceedsLimit).toBe(false);
+          expect(segmentCountOf(atLimit.track!)).toBe(1);
+        });
+
+        test('the hold segment of an operation timeline counts', () => {
+          expect(
+            leafOf('transform', INITIAL, withHold, limitOf(BOUNCE_PIECES + 2))
+          ).toMatchObject(REFUSED);
+          const atLimit = leafOf(
+            'transform',
+            INITIAL,
+            withHold,
+            limitOf(BOUNCE_PIECES + 3)
+          );
+          expect(atLimit.exceedsLimit).toBe(false);
+          expect(countsOf(atLimit.track)).toEqual([2, BOUNCE_PIECES + 1]);
+        });
       });
     });
 
@@ -1598,6 +1957,7 @@ describe('LayoutAnimationsManager', () => {
           key: 'originY',
           initialValue: 5,
           track: {
+            kind: 'scalar',
             delayMs: 0,
             durationMs: 0,
             segments: [{ endOffset: 1, endValue: 30 }],
@@ -1938,7 +2298,10 @@ describe('LayoutAnimationsManager', () => {
         (_, initial, animations) => {
           const { leaf } = leafOf(transformOf(initial, animations()));
           const starts = operationsOf(leaf.initialValue);
-          const ends = operationsOf(leaf.track!.segments[0].endValue);
+          const ends = timelinesOf(leaf.track)!.map(({ kind, segments }) => ({
+            kind,
+            value: segments[segments.length - 1].endValue,
+          }));
           expect(leaf.track).toMatchObject({
             durationMs: DURATION,
             delayMs: 0,
@@ -2039,10 +2402,19 @@ describe('LayoutAnimationsManager', () => {
         expect(leaf.track).toBeUndefined();
       });
 
-      test.each<[string, () => Operations]>([
+      test.each<[string, () => Operations, number, number, number[][][]]>([
         [
           'two durations',
           () => [{ rotate: move(1) }, { translateX: move(10, 200) }],
+          0,
+          400,
+          [
+            [[400, 1]],
+            [
+              [200, 10],
+              [400, 10],
+            ],
+          ],
         ],
         [
           'a delay on one operation',
@@ -2054,35 +2426,121 @@ describe('LayoutAnimationsManager', () => {
               ),
             },
           ],
-        ],
-        [
-          'a second easing',
-          () => [
-            { rotate: move(1) },
-            {
-              translateX: onUIRuntime(() =>
-                withTiming(10, { duration: DURATION, easing: Easing.ease })
-              ),
-            },
+          0,
+          500,
+          [
+            [
+              [400, 1],
+              [500, 1],
+            ],
+            [
+              [100, 0],
+              [500, 10],
+            ],
           ],
         ],
         [
           'an operation that does not change, with another duration',
           () => [{ rotate: move(1) }, { translateX: move(0, 800) }],
-        ],
-        [
-          'a spring',
-          () => [
-            { rotate: move(1) },
-            { translateX: onUIRuntime(() => withSpring(10)) },
+          0,
+          800,
+          [
+            [
+              [400, 1],
+              [800, 1],
+            ],
+            [[800, 0]],
           ],
         ],
-      ])('%s: the leaf has values and no track', (_, animations) => {
+        [
+          'a delay on each operation and two durations',
+          () => [
+            {
+              rotate: onUIRuntime(() =>
+                withDelay(50, move(1, 100) as unknown as number)
+              ),
+            },
+            {
+              translateX: onUIRuntime(() =>
+                withDelay(80, move(10, 300) as unknown as number)
+              ),
+            },
+          ],
+          50,
+          330,
+          [
+            [
+              [100, 1],
+              [330, 1],
+            ],
+            [
+              [30, 0],
+              [330, 10],
+            ],
+          ],
+        ],
+      ])(
+        '%s: each operation has its timeline in the track of the leaf',
+        (_, animations, delayMs, durationMs, keys) => {
+          const { leaf } = leafOf(
+            transformOf([{ rotate: 0 }, { translateX: 0 }], animations())
+          );
+          expect(leaf.track).toMatchObject({ delayMs, durationMs });
+          expect(
+            timelinesOf(leaf.track)!.map(({ start, segments }) => [
+              start,
+              ...segments.map(({ endOffset, endValue }) => [
+                Math.round(endOffset * durationMs * 1e6) / 1e6,
+                endValue,
+              ]),
+            ])
+          ).toEqual(keys.map((operationKeys) => [0, ...operationKeys]));
+        }
+      );
+
+      test('an operation with control points keeps them beside an operation with another easing', () => {
         const { leaf } = leafOf(
-          transformOf([{ rotate: 0 }, { translateX: 0 }], animations())
+          transformOf(
+            [{ rotate: 0 }, { translateX: 0 }],
+            [
+              { rotate: move(1) },
+              {
+                translateX: onUIRuntime(() =>
+                  withTiming(10, { duration: DURATION, easing: Easing.ease })
+                ),
+              },
+            ]
+          )
+        );
+        expect(timelinesOf(leaf.track)).toEqual([
+          {
+            kind: 'rotate',
+            start: 0,
+            segments: [{ endOffset: 1, endValue: 1 }],
+          },
+          {
+            kind: 'translateX',
+            start: 0,
+            segments: [
+              { endOffset: 1, endValue: 10, cubicBezier: [0.42, 0, 1, 1] },
+            ],
+          },
+        ]);
+      });
+
+      test('a leaf with a spring on one operation has values and no track', () => {
+        const { leaf } = leafOf(
+          transformOf(
+            [{ rotate: 0 }, { translateX: 0 }],
+            [
+              { rotate: move(1) },
+              { translateX: onUIRuntime(() => withSpring(10)) },
+            ]
+          )
         );
         expect(operationsOf(leaf.initialValue).length).toBe(2);
         expect(leaf.track).toBeUndefined();
+        expect(leaf.hasPhaseOfNoDuration).toBeUndefined();
       });
 
       test.each<[string, unknown, number | string, unknown[]]>([
