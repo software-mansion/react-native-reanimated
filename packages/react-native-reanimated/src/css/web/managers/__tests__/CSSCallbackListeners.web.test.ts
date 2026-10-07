@@ -217,7 +217,7 @@ describe('CSSCallbackListeners (web)', () => {
           EVENT_NAME,
           buildPayload
         );
-        manager.sync({ onFoo: () => {} });
+        manager.sync({ onFoo: () => undefined });
         manager.scheduleDetach();
         return new WeakRef(manager);
       };
