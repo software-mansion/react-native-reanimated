@@ -120,6 +120,37 @@ describe('LayoutAnimationsManager', () => {
     expect(globalThis.__frameTimestamp).toBeUndefined();
   });
 
+  test('does not pin a live frame timestamp after the frame ends', () => {
+    const startTimestamps: number[] = [];
+    const config = makeConfig(startTimestamps);
+    let liveFrame: number | undefined = 300;
+    let override: number | undefined;
+    Object.defineProperty(globalThis, '__frameTimestamp', {
+      configurable: true,
+      enumerable: false,
+      get: () => (override !== undefined ? override : liveFrame),
+      set: (value: number | undefined) => {
+        override = value;
+      },
+    });
+
+    try {
+      manager.start(7, LayoutAnimationType.LAYOUT, {}, config);
+
+      expect(startTimestamps).toEqual([300]);
+      // The frame has ended. A restore that wrote the live reading back would
+      // still report 300.
+      liveFrame = undefined;
+      expect(globalThis.__frameTimestamp).toBeUndefined();
+    } finally {
+      Object.defineProperty(globalThis, '__frameTimestamp', {
+        configurable: true,
+        writable: true,
+        value: undefined,
+      });
+    }
+  });
+
   test('uses the timestamp already shared by the current frame', () => {
     const startTimestamps: number[] = [];
     const config = makeConfig(startTimestamps);

@@ -2,6 +2,8 @@
 
 #include <jsi/jsi.h>
 
+#include <functional>
+
 namespace worklets {
 
 class UIRuntimeDecorator {
@@ -9,7 +11,8 @@ class UIRuntimeDecorator {
   static void decorate(
       facebook::jsi::Runtime &uiRuntime,
       const std::function<void(facebook::jsi::Runtime &rt, const facebook::jsi::Value &callback)>
-          &requestAnimationFrame);
+          &requestAnimationFrame,
+      const std::function<double()> &getCurrentFrameTimestamp);
 };
 
 } // namespace worklets
