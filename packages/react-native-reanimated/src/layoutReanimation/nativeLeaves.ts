@@ -5,6 +5,7 @@ import { withPlainValue } from '../animation/styleAnimation';
 import { recognizePrefixSuffix } from '../animation/utilCommon';
 import type {
   AnimationObject,
+  LayoutAnimationValues,
   NativeEasing,
   NativeHoldPhase,
   NativeLeafSegment,
@@ -68,6 +69,13 @@ type ValueReader<TValue> = {
   toleranceOf: (start: TValue, end: TValue) => number | undefined;
 };
 
+/**
+ * What the fit of an easing function reads. `fits` keeps the fit of each easing
+ * function. `lever` is the largest distance in points from the center of the
+ * view to a point of the view.
+ */
+export type Fitting = { fits: EasingCurveFits; lever: number };
+
 /** The easing of a timing in segments of progress from 0 to 1. */
 type ProgressSegment = Omit<NativeLeafSegment, 'endValue'> & {
   endProgress: number;
@@ -81,7 +89,14 @@ const RADIANS_IN_UNIT: Record<string, number> = {
 
 const PROGRESS_TOLERANCE = 0.001;
 const POINTS_TOLERANCE = 0.25;
-const KEYS_IN_POINTS = ['originX', 'originY', 'width', 'height'];
+const KEYS_IN_POINTS = [
+  'originX',
+  'originY',
+  'width',
+  'height',
+  'translateX',
+  'translateY',
+];
 const STRAIGHT_LINE: ProgressSegment[] = [{ endOffset: 1, endProgress: 1 }];
 const AT_REST: Timeline<number> = {
   start: 0,
@@ -440,6 +455,35 @@ function operationTimelineOf(
 }
 
 /**
+ * The largest error of a fit in the unit of a scalar key or of an operation
+ * kind: points, or the radians that move a point of the view at `lever` by that
+ * number of points. Has no result for a value with no unit.
+ */
+function unitToleranceOf(key: string, lever: number): number | undefined {
+  'worklet';
+  if (KEYS_IN_POINTS.includes(key)) {
+    return POINTS_TOLERANCE;
+  }
+  return ANGLE_KINDS.includes(key) ? POINTS_TOLERANCE / lever : undefined;
+}
+
+/**
+ * The tolerance of the fit of an easing function, as a part of the change of
+ * the value: 0.001, and no more than the tolerance of the unit of the value.
+ * Each smaller tolerance is a half of the one before it, so that one function
+ * has few fits.
+ */
+function fitToleranceOf(key: string, change: number, lever: number): number {
+  'worklet';
+  const unitTolerance = unitToleranceOf(key, lever);
+  const halvings =
+    unitTolerance === undefined
+      ? 0
+      : Math.ceil(Math.log2((change * PROGRESS_TOLERANCE) / unitTolerance));
+  return PROGRESS_TOLERANCE / 2 ** Math.max(0, halvings);
+}
+
+/**
  * The native form has one timeline for all operations: each operation that
  * changes has the phases of the others. An operation with no delay and no
  * duration has its end value from the start.
@@ -447,7 +491,7 @@ function operationTimelineOf(
 function summarizeTransformLeaf(
   initialValue: unknown,
   leaf: Record<string, unknown>[],
-  fits: EasingCurveFits
+  { fits, lever }: Fitting
 ): LeafSummary {
   'worklet';
   const kinds: string[] = [];
@@ -506,10 +550,16 @@ function summarizeTransformLeaf(
             kind,
             value: valueBetween(value, end[index].value, progress),
           })),
-        toleranceOf: (start, end) =>
-          start.some(({ value }, index) => value !== end[index].value)
-            ? PROGRESS_TOLERANCE
-            : undefined,
+        toleranceOf: (start, end) => {
+          const tolerances = start
+            .map(({ kind, value }, index) => ({
+              kind,
+              change: Math.abs(end[index].value - value),
+            }))
+            .filter(({ change }) => change > 0)
+            .map(({ kind, change }) => fitToleranceOf(kind, change, lever));
+          return tolerances.length > 0 ? Math.min(...tolerances) : undefined;
+        },
       },
       fits
     ),
@@ -517,33 +567,29 @@ function summarizeTransformLeaf(
 }
 
 /**
- * The tolerance of the fit of an easing function, as a part of the change of
- * the value: 0.001, and for a value in points no more than 0.25 pt. Each
- * smaller tolerance is a half of the one before it, so that one function has
- * few fits.
+ * The largest distance in points from the center of a view to a point of the
+ * view, before or after its layout change.
  */
-function fitToleranceOf(key: string, change: number): number {
+export function leverOf(values: Partial<LayoutAnimationValues>): number {
   'worklet';
-  const halvings = KEYS_IN_POINTS.includes(key)
-    ? Math.ceil(Math.log2((change * PROGRESS_TOLERANCE) / POINTS_TOLERANCE))
-    : 0;
-  return PROGRESS_TOLERANCE / 2 ** Math.max(0, halvings);
+  const width = Math.max(values.currentWidth ?? 0, values.targetWidth ?? 0);
+  const height = Math.max(values.currentHeight ?? 0, values.targetHeight ?? 0);
+  return Math.hypot(width, height) / 2;
 }
 
 /**
  * What the native route reads from the leaf of `key` of a builder result. A
- * scalar leaf has a track only when its values are numbers. `fits` keeps the
- * fit of each easing function.
+ * scalar leaf has a track only when its values are numbers.
  */
 export function summarizeNativeLeaf(
   key: string,
   initialValue: unknown,
   leaf: unknown,
-  fits: EasingCurveFits
+  { fits, lever }: Fitting
 ): LeafSummary {
   'worklet';
   if (Array.isArray(leaf)) {
-    return summarizeTransformLeaf(initialValue, leaf, fits);
+    return summarizeTransformLeaf(initialValue, leaf, { fits, lever });
   }
   const phases = phasesOf(leaf);
   const hasNumbers =
@@ -564,7 +610,7 @@ export function summarizeNativeLeaf(
         toleranceOf: (start, end) =>
           start === end
             ? undefined
-            : fitToleranceOf(key, Math.abs(end - start)),
+            : fitToleranceOf(key, Math.abs(end - start), lever),
       },
       fits
     ),

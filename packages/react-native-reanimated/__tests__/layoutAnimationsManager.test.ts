@@ -652,12 +652,13 @@ describe('LayoutAnimationsManager', () => {
       key: string,
       initial: unknown,
       create: () => unknown,
-      limits = LIMITS
+      limits = LIMITS,
+      size: { targetWidth?: number; targetHeight?: number } = {}
     ) => {
       const buildId = ++lastBuildId;
       const summary = manager.build(
         buildId,
-        {},
+        size,
         () =>
           ({
             initialValues: { [key]: initial },
@@ -866,6 +867,114 @@ describe('LayoutAnimationsManager', () => {
           operations(shared, Easing.out(Easing.quad))
         )
       ).toBeUndefined();
+    });
+
+    describe('the fit of an operation of a transform', () => {
+      const LIMIT_OF_64 = { ...LIMITS, segments: 64 };
+      const segmentsOfOperation = (
+        kind: string,
+        from: number | string,
+        to: number | string,
+        [targetWidth, targetHeight] = [100, 60]
+      ) =>
+        segmentsOf(
+          'transform',
+          [{ [kind]: from }],
+          () => [{ [kind]: withTiming(to, { easing: Easing.bounce }) }],
+          LIMIT_OF_64,
+          { targetWidth, targetHeight }
+        )?.map((segment) => ({
+          ...segment,
+          endValue: (segment.endValue as { value: number }[])[0].value,
+        }));
+      const largestDifference = (
+        segments: Segment[],
+        start: number,
+        end: number
+      ) => {
+        let largest = 0;
+        for (let index = 0; index <= 2000; index++) {
+          const time = index / 2000;
+          const declared = start + (end - start) * Easing.bounce(time);
+          largest = Math.max(
+            largest,
+            Math.abs(valueAt(start, segments, time) - declared)
+          );
+        }
+        return largest;
+      };
+
+      test('a translation of 393 pt is no more than 0.25 pt from its easing function', () => {
+        const segments = segmentsOfOperation('translateX', 393, 0)!;
+        expect(largestDifference(segments, 393, 0)).toBeLessThanOrEqual(0.25);
+      });
+
+      test.each([
+        [90, [100, 60]],
+        [180, [100, 60]],
+        [360, [100, 60]],
+        [90, [200, 200]],
+        [180, [200, 200]],
+        [90, [300, 300]],
+      ])(
+        'a rotation of %i degrees moves no point of a view of %j pt more than 0.25 pt from its easing function',
+        (degrees, size) => {
+          const end = (degrees * Math.PI) / 180;
+          const segments = segmentsOfOperation(
+            'rotate',
+            '0deg',
+            `${degrees}deg`,
+            size
+          )!;
+          const lever = Math.hypot(size[0], size[1]) / 2;
+          expect(
+            largestDifference(segments, 0, end) * lever
+          ).toBeLessThanOrEqual(0.25);
+        }
+      );
+
+      test.each([
+        [720, [100, 60]],
+        [360, [200, 200]],
+        [180, [300, 300]],
+        [360, [300, 300]],
+      ])(
+        'a rotation of %i degrees with Easing.bounce on a view of %j pt has no fit and no track',
+        (degrees, size) => {
+          expect(
+            segmentsOfOperation('rotate', '0deg', `${degrees}deg`, size)
+          ).toBeUndefined();
+        }
+      );
+
+      test('a rotation of a view with no size and a scale have the fit of a value with no unit', () => {
+        const pieces = (kind: string, from: number | string, to: number) =>
+          segmentsOfOperation(kind, from, to, [0, 0])?.length;
+        const ofOpacity = segmentsOf(
+          'opacity',
+          0,
+          () => withTiming(1, { easing: Easing.bounce }),
+          LIMIT_OF_64
+        )?.length;
+        expect(pieces('rotate', 0, 2 * Math.PI)).toBe(ofOpacity);
+        expect(pieces('scale', 1, 400)).toBe(ofOpacity);
+      });
+
+      test('operations of one leaf have the fit of the operation that needs the least tolerance', () => {
+        const alone = segmentsOfOperation('translateX', 393, 0)!;
+        const withScale = segmentsOf(
+          'transform',
+          [{ scale: 0 }, { translateX: 393 }],
+          () => [
+            { scale: withTiming(1, { easing: Easing.bounce }) },
+            { translateX: withTiming(0, { easing: Easing.bounce }) },
+          ],
+          LIMIT_OF_64
+        )!;
+        expect(withScale.map(({ endOffset }) => endOffset)).toEqual(
+          alone.map(({ endOffset }) => endOffset)
+        );
+      });
     });
   });
 

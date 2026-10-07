@@ -32,6 +32,7 @@ import {
   BOX_REF,
   builderCalls,
   callbacks,
+  declaredFrameChangeAt,
   endTransformOf,
   FRAME_BOX_REF,
   FRAME_MS,
@@ -40,6 +41,7 @@ import {
   layoutOf,
   mountScene,
   frameDrivenOf,
+  recordedCurveOf,
   recordedLinearOf,
   sample,
   sampleClockOffset,
@@ -287,6 +289,73 @@ describe('native layout transform', () => {
       await render(null);
     });
   }
+
+  test('a rotation of one turn with Easing.bounce of a view of 100 x 60 pt plays natively no more than 0.25 pt at its corner from its easing function, with more pieces than a quarter turn', async () => {
+    const TURN = 2 * Math.PI;
+    const SIZE = { width: 100, height: 60 };
+    const LEVER = Math.hypot(SIZE.width, SIZE.height) / 2;
+    const pieceCountOf = async (operations: Operation[]) => {
+      const { members } = await membersOf(operations, {
+        easing: Easing.bounce,
+      });
+      return members[1].values.length - 1;
+    };
+    const quarterTurn = await pieceCountOf([['rotate', '0deg', '90deg']]);
+
+    const operations: Operation[] = [['rotate', '0deg', '360deg']];
+    const layouts = {
+      ...transformPairOf(operations, { easing: Easing.bounce }),
+      frameLayout: frameDrivenOf(
+        layoutOf(
+          {},
+          {
+            name: 'frame',
+            transform: {
+              operations,
+              shared: {
+                duration: TRANSFORM_DURATION,
+                easing: recordedCurveOf(Easing.bounce, TRANSFORM_DURATION),
+              },
+            },
+          }
+        )
+      ),
+    };
+    const style = endTransformOf(operations);
+    const tag = await mountScene(pairSceneOf(layouts, style, SIZE));
+    const clock = await sampleClockOffset(tag);
+    const start = performance.now();
+    await render(pairSceneOf(layouts, style, { left: END_LEFT, ...SIZE }));
+    const rows = await sampleTransformPairAt(
+      [0.3, 0.5, 0.73, 0.9, 1.15].map(
+        (fraction) => fraction * TRANSFORM_DURATION
+      ),
+      start
+    );
+    expect(summarizeStart(await takeTraceOf(tag))).toBe(TRANSFORM_START);
+    expect(rows[0].members[1].values.length - 1 > quarterTurn).toBe(true);
+
+    const declaredAt = (timeMs: number) =>
+      TURN *
+      Easing.bounce(Math.min(1, Math.max(0, timeMs / TRANSFORM_DURATION)));
+    for (const row of rows.slice(0, 4)) {
+      const twinTime = row.readTime - clock.offset - twinStartTime.value;
+      const shown = Math.atan2(row.native[1], row.native[0]);
+      const difference = Math.abs(
+        Math.atan2(
+          Math.sin(shown - declaredAt(twinTime)),
+          Math.cos(shown - declaredAt(twinTime))
+        )
+      );
+      expect(
+        difference < 0.25 / LEVER + declaredFrameChangeAt(declaredAt, twinTime)
+      ).toBe(true);
+      expect(row.keys).toBe(1);
+    }
+    expect(rows[4].keys).toBe(0);
+    expect(callbacks.slice().sort().join()).toBe('frame:true,native:true');
+    await render(null);
+  });
 
   async function membersOf(
     operations: Operation[],

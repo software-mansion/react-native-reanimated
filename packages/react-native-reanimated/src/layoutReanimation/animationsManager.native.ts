@@ -23,6 +23,7 @@ import {
   advanceNativeLeaf,
   animatePlainLeaves,
   currentOfNativeLeaf,
+  leverOf,
   phaseEndsOf,
   relateToLiveLeaf,
   summarizeNativeLeaf,
@@ -174,13 +175,14 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         return refusal;
       }
       animatePlainLeaves(animations);
+      const fitting = { fits: easingCurveFits, lever: leverOf(yogaValues) };
       const summaries = keys.map((key) => ({
         key,
         ...summarizeNativeLeaf(
           key,
           initialValues[key],
           animations[key],
-          easingCurveFits
+          fitting
         ),
       }));
       const segmentCount = summaries.reduce(
