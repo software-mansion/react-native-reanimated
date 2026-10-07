@@ -457,9 +457,7 @@ jobs:
         run: |
           plan="$WORK_DIR/plan.json"
           {
-            echo "## Report format"
-            echo
-            echo "Start your final message with the verdict heading your instructions require. Directly under it add a \`## Summary\` section: at most three plain sentences that state the verdict in words and give the decisive evidence, or what blocked you. This section is extracted automatically and shown to maintainers on its own, so it must stand alone. The rest of your message follows after it."
+            cat "$HELPER_DIR/tester-prompt.md"
             echo
             echo "## Reproduction plan"
             echo
@@ -497,23 +495,74 @@ jobs:
           } > "$WORK_DIR/brief.md"
           cat "$WORK_DIR/brief.md"
 
-      - name: Run argent-cloud issue-repro
+      - name: Run argent-cloud
         id: repro
         env:
-          TITLE: ${{ github.event.issue.title }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
           ARGENT_BACKEND_IP: ${{ secrets.ARGENT_BACKEND_IP }}
         run: |
           mkdir -p "$WORK_DIR/output"
-          argent-cloud issue-repro \
-            --title "$TITLE" \
-            --body "$(cat "$WORK_DIR/brief.md")" \
+          argent-cloud \
+            --prompt-file "$WORK_DIR/brief.md" \
             --app-bundle "$WORK_DIR/app/repro-app.tar.gz" \
             --log-usage \
             --stream="$WORK_DIR/output/stream.md" \
             2> >(tee "$WORK_DIR/output/argent-cloud.log" >&2) \
             | tee "$WORK_DIR/output/output.md"
+
+      - name: Read the session ID
+        id: session
+        if: always()
+        run: |
+          output="$WORK_DIR/output/output.md"
+          log="$WORK_DIR/output/argent-cloud.log"
+          session_id=""
+          if [ -f "$output" ]; then
+            session_id=$(grep -oE '^session-id=[^[:space:]]+' "$output" | tail -n 1 | cut -d= -f2 || true)
+            sed -i '/^session-id=[^[:space:]]*$/d' "$output"
+          fi
+          if [ -z "$session_id" ] && [ -f "$log" ]; then
+            session_id=$(sed 's/\x1b\[[0-9;]*m//g' "$log" | grep -oE 'session created session_id=[^[:space:]]+' | head -n 1 | cut -d= -f2 || true)
+          fi
+          echo "session ID: ${session_id:-none}"
+          echo "id=$session_id" >> "$GITHUB_OUTPUT"
+
+      - name: Download the session archive
+        id: archive
+        if: always() && steps.session.outputs.id != ''
+        continue-on-error: true
+        working-directory: ${{ env.WORK_DIR }}
+        env:
+          SESSION_ID: ${{ steps.session.outputs.id }}
+          SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
+          ARGENT_BACKEND_IP: ${{ secrets.ARGENT_BACKEND_IP }}
+        run: |
+          mkdir -p archive/extracted
+          cd archive
+          argent-cloud archives download "$SESSION_ID"
+          archive=$(find . -maxdepth 1 -type f -name '*.tar.gz' | head -n 1)
+          if [ -z "$archive" ]; then
+            echo "::warning::argent-cloud downloaded no .tar.gz archive for session $SESSION_ID"
+            exit 1
+          fi
+          tar -xzf "$archive" -C extracted
+          screenshots=$(find extracted -type d -name screenshots | head -n 1)
+          if [ -z "$screenshots" ]; then
+            echo "::warning::the session archive has no screenshots directory"
+            exit 0
+          fi
+          echo "screenshots-dir=$WORK_DIR/archive/$screenshots" >> "$GITHUB_OUTPUT"
+
+      - name: Upload the screenshots
+        id: screenshots
+        if: always() && steps.archive.outputs.screenshots-dir != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: argent-cloud-screenshots-issue-${{ github.event.issue.number }}
+          path: ${{ steps.archive.outputs.screenshots-dir }}
+          if-no-files-found: warn
+          retention-days: 30
 
       - name: Read the reproduction cost
         id: repro-cost
@@ -542,7 +591,9 @@ jobs:
           BRIEF_FILE: ${{ env.WORK_DIR }}/brief.md
           OUTPUT_FILE: ${{ env.WORK_DIR }}/output/output.md
           STREAM_FILE: ${{ env.WORK_DIR }}/output/stream.md
-          FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro.outcome == 'failure' && 'Run argent-cloud issue-repro' || '' }}
+          SCREENSHOTS_DIR: ${{ steps.archive.outputs.screenshots-dir }}
+          SCREENSHOTS_URL: ${{ steps.screenshots.outputs.artifact-url }}
+          FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro.outcome == 'failure' && 'Run argent-cloud' || '' }}
           REPORT_FILE: ${{ env.WORK_DIR }}/report.md
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts report
 
@@ -595,7 +646,9 @@ jobs:
           BRIEF_FILE: ${{ env.WORK_DIR }}/brief.md
           OUTPUT_FILE: ${{ env.WORK_DIR }}/output/output.md
           STREAM_FILE: ${{ env.WORK_DIR }}/output/stream.md
-          FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro.outcome == 'failure' && 'Run argent-cloud issue-repro' || '' }}
+          SCREENSHOTS_DIR: ${{ steps.archive.outputs.screenshots-dir }}
+          SCREENSHOTS_URL: ${{ steps.screenshots.outputs.artifact-url }}
+          FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro.outcome == 'failure' && 'Run argent-cloud' || '' }}
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts publish
 
       - name: Report to Slack
@@ -614,7 +667,9 @@ jobs:
           BRIEF_FILE: ${{ env.WORK_DIR }}/brief.md
           OUTPUT_FILE: ${{ env.WORK_DIR }}/output/output.md
           STREAM_FILE: ${{ env.WORK_DIR }}/output/stream.md
-          FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro.outcome == 'failure' && 'Run argent-cloud issue-repro' || '' }}
+          SCREENSHOTS_DIR: ${{ steps.archive.outputs.screenshots-dir }}
+          SCREENSHOTS_URL: ${{ steps.screenshots.outputs.artifact-url }}
+          FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro.outcome == 'failure' && 'Run argent-cloud' || '' }}
           REPORT_URL: ${{ steps.publish.outputs.url }}
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts notify
 
@@ -625,6 +680,7 @@ jobs:
           name: argent-cloud-output-issue-${{ github.event.issue.number }}
           path: |
             ${{ env.WORK_DIR }}/output
+            ${{ env.WORK_DIR }}/archive/*.tar.gz
             ${{ env.WORK_DIR }}/report.md
           if-no-files-found: warn
           retention-days: 30
