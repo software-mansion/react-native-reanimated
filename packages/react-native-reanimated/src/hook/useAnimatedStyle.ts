@@ -147,7 +147,11 @@ function jestStyleUpdater(
     if (!state.isAnimationRunning) {
       state.isAnimationCancelled = false;
       state.isAnimationRunning = true;
-      frame(frameTimestamp!);
+      if (global.__frameTimestamp !== undefined) {
+        frame(global.__frameTimestamp);
+      } else {
+        requestAnimationFrame(frame);
+      }
     }
   } else {
     state.isAnimationCancelled = true;
