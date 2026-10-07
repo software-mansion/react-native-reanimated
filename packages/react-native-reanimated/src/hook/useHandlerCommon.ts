@@ -1,6 +1,5 @@
 'use strict';
 import type { WorkletFunction } from 'react-native-worklets';
-import { isWorkletFunction } from 'react-native-worklets';
 
 import type { UnknownRecord } from '../common';
 import type { ReanimatedEvent } from './commonTypes';
@@ -22,7 +21,10 @@ export interface UseHandlerContext<TContext extends UnknownRecord> {
   doDependenciesDiffer: boolean;
 }
 
-export function ensureWorkletHandlers(handlers: UnknownRecord) {
+export function ensureWorkletHandlers(
+  handlers: UnknownRecord,
+  isWorkletFunction: (value: unknown) => boolean
+) {
   const nonWorkletNames = Object.entries(handlers).reduce<string[]>(
     (acc, [name, handler]) => {
       if (!isWorkletFunction(handler)) acc.push(name);
