@@ -106,17 +106,18 @@ export default class AnimatedComponent<
   };
 
   _resolveComponentRef = (ref: Component | HTMLElement | null) => {
-    const componentRef = ref as AnimatedComponentRef;
+    let componentRef = ref as AnimatedComponentRef | null;
     // Component can specify ref which should be animated when animated version of the component is created.
     // Otherwise, we animate the component itself.
-    if (componentRef && componentRef.getAnimatableRef) {
-      return componentRef.getAnimatableRef();
+    if (componentRef?.getAnimatableRef) {
+      componentRef = componentRef.getAnimatableRef();
     }
     // Case for SVG components on Web
-    if (componentRef && componentRef.elementRef) {
+    if (componentRef?.elementRef) {
       this._componentDOMRef = componentRef.elementRef.current;
     } else {
-      this._componentDOMRef = ref as HTMLElement;
+      this._componentDOMRef =
+        componentRef instanceof HTMLElement ? componentRef : null;
     }
     return componentRef;
   };
