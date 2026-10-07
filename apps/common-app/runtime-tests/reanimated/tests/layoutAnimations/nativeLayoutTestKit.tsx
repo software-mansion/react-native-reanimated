@@ -50,6 +50,8 @@ export type TraceEvent = {
 export type TargetSample = {
   model: number[];
   presentation: number[];
+  /** The view is allowed to antialias its edges. */
+  edgeAntialiasing: boolean;
   /**
    * The platform key of each physical playback on the view:
    * `reanimated.<owner>.<generation>.<target>`.

@@ -322,6 +322,111 @@ id currentVisualValue(CALayer *layer, NSString *keyPath)
   return [[layer presentationLayer] valueForKeyPath:keyPath] ?: [layer valueForKeyPath:keyPath];
 }
 
+/// The value that React Native gives `allowsEdgeAntialiasing` with the transform of a view: the `transform`
+/// block of `updateProps:oldProps:` in `RCTViewComponentView.mm`.
+bool hasEdgeAntialiasingInReactNative(const CATransform3D &transform)
+{
+  return transform.m12 != 0 || transform.m21 != 0 || transform.m34 != 0;
+}
+
+/// The transform of each key of the track in the order of time. A start that the host reads from the view is
+/// not a key.
+std::vector<const AnimationTransform *> transformKeysOf(const AnimationTrack &track)
+{
+  std::vector<const AnimationTransform *> keys;
+  const auto add = [&keys](const AnimationValue &value) {
+    if (const auto *transform = std::get_if<AnimationTransform>(&value)) {
+      keys.push_back(transform);
+    }
+  };
+  if (const auto *start = std::get_if<AnimationValue>(&track.start)) {
+    add(*start);
+  }
+  for (const AnimationSegment &segment : track.segments) {
+    add(segment.endValue);
+  }
+  return keys;
+}
+
+bool hasValueOtherThanZero(const AnimationTransform &key, const TransformOperationKind kind)
+{
+  return std::ranges::any_of(key.operations, [kind](const AnimationTransformOperation &operation) {
+    return operation.kind == kind && operation.value != 0;
+  });
+}
+
+/// True when the transform has a rotation about the Z axis, a perspective, or rotations about the X and the Y
+/// axes at one time in the part of the time between two keys. The frame driver writes such a transform to the
+/// model, and React Native gives it edge antialiasing.
+bool hasEdgeAntialiasingInFrameDriver(const AnimationTransform &start, const AnimationTransform &end)
+{
+  // An operation has a value other than 0 in the part when it has one at a key of the part.
+  const auto rotatesAbout = [&start, &end](const TransformOperationKind axis) {
+    return hasValueOtherThanZero(start, axis) || hasValueOtherThanZero(end, axis);
+  };
+  const bool hasPerspective = std::ranges::any_of(end.operations, [](const AnimationTransformOperation &operation) {
+    return operation.kind == TransformOperationKind::Perspective;
+  });
+  return hasPerspective || rotatesAbout(TransformOperationKind::RotateZ) ||
+      (rotatesAbout(TransformOperationKind::RotateX) && rotatesAbout(TransformOperationKind::RotateY));
+}
+
+struct EdgeAntialiasingInFrameDriver {
+  /// The frame driver has edge antialiasing in a part of the time of the track and its delay.
+  bool isInPartOfTime{false};
+  /// The frame driver has no edge antialiasing in a part of that time.
+  bool isAbsentFromPartOfTime{false};
+};
+
+EdgeAntialiasingInFrameDriver edgeAntialiasingInFrameDriver(const AnimationTrack &track)
+{
+  const auto keys = transformKeysOf(track);
+  EdgeAntialiasingInFrameDriver result;
+  const auto addPart = [&result](const AnimationTransform &start, const AnimationTransform &end) {
+    if (hasEdgeAntialiasingInFrameDriver(start, end)) {
+      result.isInPartOfTime = true;
+    } else {
+      result.isAbsentFromPartOfTime = true;
+    }
+  };
+  if (track.delayMs > 0 && !keys.empty()) {
+    // In the delay of the track the transform has its start value.
+    addPart(*keys.front(), *keys.front());
+  }
+  for (size_t keyIndex = 1; keyIndex < keys.size(); keyIndex++) {
+    addPart(*keys[keyIndex - 1], *keys[keyIndex]);
+  }
+  return result;
+}
+
+/// A layer has one value of edge antialiasing for the time of a track and its delay, and the frame driver has
+/// one for each frame. False when the frame driver has edge antialiasing in only a part of that time: the
+/// edges of the view differ in the other part.
+bool hasEdgesOfFrameDriver(const AnimationTrack &track)
+{
+  const auto edgeAntialiasing = edgeAntialiasingInFrameDriver(track);
+  return !(edgeAntialiasing.isInPartOfTime && edgeAntialiasing.isAbsentFromPartOfTime);
+}
+
+/// The edge antialiasing that a `Transform` track gives its layer, as the frame driver has it.
+struct TrackEdgeAntialiasing {
+  /// For the time of the track and its delay.
+  bool duringTrack{false};
+  /// While the track holds its end value after that time.
+  bool atHeldEnd{false};
+};
+
+TrackEdgeAntialiasing edgeAntialiasingOf(const AnimationTrack &track)
+{
+  if (track.target != AnimationTarget::Transform) {
+    return {};
+  }
+  return {
+      .duringTrack = edgeAntialiasingInFrameDriver(track).isInPartOfTime,
+      .atHeldEnd =
+          hasEdgeAntialiasingInReactNative([objectFromValue(track.segments.back().endValue) CATransform3DValue])};
+}
+
 #ifndef NDEBUG
 std::vector<double> componentsOfValue(id value)
 {
@@ -546,7 +651,8 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
           pictureFollowsBounds(viewProps, view.layoutMetrics);
     }
     if (track.target == AnimationTarget::Transform) {
-      return playsTransform(view.componentName) && !hasSizeDependentTransform(viewProps);
+      return playsTransform(view.componentName) && !hasSizeDependentTransform(viewProps) &&
+          hasEdgesOfFrameDriver(track);
     }
     return true;
   }
@@ -599,8 +705,6 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
       return;
     }
     CALayer *layer = trackIt->second;
-    tracks_.erase(trackIt);
-
     NSString *keyPath = keyPathForTarget(track.target);
     [CATransaction begin];
     [CATransaction setDisableActions:YES];
@@ -608,6 +712,7 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     if (mode == TrackStopMode::KeepVisibleValue && mountedLayer(track.handle.tag) == layer) {
       [layer setValue:currentVisualValue(layer, keyPath) forKeyPath:keyPath];
     }
+    release(trackIt);
     [layer removeAnimationForKey:animationKeyForTrack(track)];
     [CATransaction commit];
   }
@@ -630,7 +735,8 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
         componentsOfValue([layer valueForKeyPath:keyPath]),
         componentsOfValue(currentVisualValue(layer, keyPath)),
         playbackKeys(layer),
-        playbackMembers(layer, target)};
+        playbackMembers(layer, target),
+        layer.allowsEdgeAntialiasing == YES};
   }
 #endif
 
@@ -640,25 +746,48 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     if (trackIt == tracks_.end()) {
       return;
     }
-    CALayer *layer = trackIt->second;
-    tracks_.erase(trackIt);
+    CALayer *layer = release(trackIt);
     [layer removeAnimationForKey:animationKeyForTrack(track)];
   }
 
   // A block captures a C++ reference as a reference, so the key comes by value.
-  void play(const TrackKey track, CALayer *layer, CAAnimation *animation, const bool holdsEndValue)
+  void play(
+      const TrackKey track,
+      CALayer *layer,
+      CAAnimation *animation,
+      const bool holdsEndValue,
+      const TrackEdgeAntialiasing edgeAntialiasing)
   {
     const auto weakThis = weak_from_this();
     animation.delegate = [[REANativeAnimationDelegate alloc] initWithStopHandler:^(BOOL finished) {
       if (const auto strongThis = weakThis.lock()) {
-        strongThis->onAnimationStopped(track, finished, holdsEndValue);
+        strongThis->onAnimationStopped(track, finished, holdsEndValue, edgeAntialiasing.atHeldEnd);
       }
     }];
     tracks_.emplace(track, layer);
+    if (edgeAntialiasing.duringTrack) {
+      layer.allowsEdgeAntialiasing = YES;
+    }
     [layer addAnimation:animation forKey:animationKeyForTrack(track)];
   }
 
  private:
+  using Tracks = std::unordered_map<TrackKey, __strong CALayer *, TrackKeyHash>;
+
+  /// Takes a track from its layer. A `Transform` track can show a transform with edge antialiasing on a
+  /// layer whose model transform has none, so `play` gives the layer edge antialiasing for the time of such
+  /// a track. After that time, the layer has the value of React Native for its model transform.
+  CALayer *release(const Tracks::iterator trackIt)
+  {
+    CALayer *layer = trackIt->second;
+    const bool hasTransformTarget = trackIt->first.target == AnimationTarget::Transform;
+    tracks_.erase(trackIt);
+    if (hasTransformTarget) {
+      layer.allowsEdgeAntialiasing = hasEdgeAntialiasingInReactNative(layer.transform);
+    }
+    return layer;
+  }
+
   REAUIView<RCTComponentViewProtocol> *mountedView(const Tag tag) const
   {
     return [surfacePresenter_.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
@@ -669,16 +798,24 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     return mountedView(tag).layer;
   }
 
-  void onAnimationStopped(const TrackKey &track, const bool finished, const bool holdsEndValue)
+  void onAnimationStopped(
+      const TrackKey &track,
+      const bool finished,
+      const bool holdsEndValue,
+      const bool hasEdgeAntialiasingAtHeldEnd)
   {
     RCTAssertMainQueue();
     const auto trackIt = tracks_.find(track);
     if (trackIt == tracks_.end()) {
       return;
     }
-    if (!(finished && holdsEndValue)) {
-      CALayer *layer = trackIt->second;
-      tracks_.erase(trackIt);
+    if (finished && holdsEndValue) {
+      if (track.target == AnimationTarget::Transform) {
+        // The layer shows the end value of the track until the release of the track.
+        trackIt->second.allowsEdgeAntialiasing = hasEdgeAntialiasingAtHeldEnd;
+      }
+    } else {
+      CALayer *layer = release(trackIt);
       if (holdsEndValue) {
         // Core Animation stops an animation that holds its end value but keeps it on the layer.
         [layer removeAnimationForKey:animationKeyForTrack(track)];
@@ -689,7 +826,7 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
 
   __weak RCTSurfacePresenter *surfacePresenter_;
   TrackEndListener trackEndListener_;
-  std::unordered_map<TrackKey, __strong CALayer *, TrackKeyHash> tracks_;
+  Tracks tracks_;
 };
 
 std::optional<AnimationResultReason> CoreAnimationMountedAnimation::prepare(
@@ -728,7 +865,8 @@ void CoreAnimationMountedAnimation::start(const std::vector<TrackKey> &replacedT
         {request_.handle, track.target},
         layer_,
         makeAnimation(track, startValues_[index]),
-        track.endpointPolicy == EndpointPolicy::HoldWithoutCommit);
+        track.endpointPolicy == EndpointPolicy::HoldWithoutCommit,
+        edgeAntialiasingOf(track));
   }
   [CATransaction commit];
 }

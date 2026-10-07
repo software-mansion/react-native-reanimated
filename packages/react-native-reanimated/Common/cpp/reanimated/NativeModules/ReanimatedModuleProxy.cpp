@@ -566,6 +566,7 @@ void ReanimatedModuleProxy::sampleNativeAnimationTarget(
         members.setValueAtIndex(rt, index, memberObject);
       }
       object.setProperty(rt, "members", members);
+      object.setProperty(rt, "edgeAntialiasing", sample->edgeAntialiasing);
       object.setProperty(rt, "monotonicTimeMs", sample->monotonicTimeMs);
       function->call(rt, object);
     });

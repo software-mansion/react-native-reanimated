@@ -55,6 +55,8 @@ struct TargetSample {
   std::vector<std::string> playbackKeys;
   /// The members of the playback of the target, in the order in which the platform applies them.
   std::vector<PlaybackMember> members;
+  /// The view is allowed to antialias its edges.
+  bool edgeAntialiasing{false};
   /// On the clock of the trace events. The host sets it.
   double monotonicTimeMs{0};
 };

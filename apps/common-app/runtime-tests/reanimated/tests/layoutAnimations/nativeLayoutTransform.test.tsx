@@ -8,6 +8,8 @@ import Animated, {
   setDynamicFeatureFlag,
   useAnimatedStyle,
   useSharedValue,
+  withSequence,
+  withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnUI } from 'react-native-worklets';
 
@@ -29,9 +31,11 @@ import type {
 } from './nativeLayoutTestKit';
 import {
   blockUIThread,
+  Box,
   BOX_REF,
   builderCalls,
   callbacks,
+  countedOf,
   declaredFrameChangeAt,
   endTransformOf,
   FRAME_BOX_REF,
@@ -40,6 +44,7 @@ import {
   isHostEvent,
   layoutOf,
   mountScene,
+  namedBuilderCalls,
   frameDrivenOf,
   recordedCurveOf,
   recordedLinearOf,
@@ -185,6 +190,12 @@ const summarizeStart = (events: TraceEvent[]) =>
   summarize(events.filter(isHostEvent).filter(isStartEvent));
 const summarizeAfterStart = (events: TraceEvent[]) =>
   summarize(events.filter(isHostEvent).filter((event) => !isStartEvent(event)));
+
+const buildFailures = (events: TraceEvent[]) =>
+  events
+    .filter(({ event }) => event === 'LayoutBuildFailed')
+    .map(({ buildFailure }) => buildFailure)
+    .join();
 
 /**
  * The change of a matrix cell, and of a translation, in two display frames of a
@@ -571,11 +582,6 @@ describe('native layout transform continuity', () => {
       .filter(({ event }) => event === 'TrackStarted')
       .map(({ target }) => target)
       .join();
-  const buildFailures = (events: TraceEvent[]) =>
-    events
-      .filter(({ event }) => event === 'LayoutBuildFailed')
-      .map(({ buildFailure }) => buildFailure)
-      .join();
 
   test('a new start with another end value replaces the track and agrees with the frame driver', async () => {
     const second: Operation[] = [['translateX', 50, 20]];
@@ -930,4 +936,362 @@ describe('native layout transform and the synchronous props path', () => {
       await render(null);
     });
   }
+});
+
+const FLAG_DURATION = 900;
+const FLAG_READ_MS = 300;
+const HELD_ROTATION_MS = 300;
+const HELD_OPACITY_MS = 1500;
+const HELD_OPACITY = 0.4;
+
+type ExitOperation = [
+  kind: string,
+  from: number | string,
+  ...phaseEnds: (number | string)[],
+];
+type Exit = {
+  operations: ExitOperation[];
+  /** The time of all the phases of an operation. */
+  durationMs: number;
+  /** The exit has an opacity leaf of this time. */
+  opacityMs?: number;
+};
+
+/** A callback on each operation keeps the exit frame-driven. */
+const exitOf =
+  ({ operations, durationMs, opacityMs }: Exit, isFrameDriven: boolean) =>
+  () => {
+    'worklet';
+    const timingOf = <TValue extends number | string>(
+      toValue: TValue,
+      duration: number
+    ) =>
+      withTiming(
+        toValue,
+        { duration, easing: Easing.linear },
+        isFrameDriven
+          ? () => {
+              'worklet';
+            }
+          : undefined
+      );
+    const hasOpacity = opacityMs !== undefined;
+    return {
+      initialValues: {
+        transform: operations.map(([kind, from]) => ({ [kind]: from })),
+        ...(hasOpacity && { opacity: 1 }),
+      },
+      animations: {
+        transform: operations.map(([kind, , ...phaseEnds]) => ({
+          [kind]: withSequence(
+            ...phaseEnds.map((phaseEnd) =>
+              timingOf(phaseEnd, durationMs / phaseEnds.length)
+            )
+          ),
+        })),
+        ...(hasOpacity && { opacity: timingOf(HELD_OPACITY, opacityMs) }),
+      },
+    };
+  };
+
+type ExitPairProps = { exit: Exit; isMounted: boolean };
+
+function ExitPair({ exit, isMounted }: ExitPairProps) {
+  return (
+    <View style={styles.container}>
+      {isMounted && <Box left={START_LEFT} exiting={exitOf(exit, false)} />}
+      {isMounted && (
+        <Box
+          left={START_LEFT}
+          exiting={exitOf(exit, true)}
+          refName={FRAME_BOX_REF}
+        />
+      )}
+    </View>
+  );
+}
+
+const pairTags = () =>
+  [BOX_REF, FRAME_BOX_REF].map((ref) => getTestComponent(ref).getTag());
+
+/** The edge antialiasing of the native box and of its frame-driven twin. */
+async function edgeAntialiasingAt(
+  tags: number[],
+  elapsedMs: number,
+  startMs: number
+) {
+  await wait(Math.max(0, startMs + elapsedMs - performance.now()));
+  const samples = await Promise.all(
+    tags.map((tag) => sample(tag, 'Transform'))
+  );
+  return samples.map(({ edgeAntialiasing }) => edgeAntialiasing).join();
+}
+
+const hasTransformTrack = (events: TraceEvent[]) =>
+  events.some(
+    ({ event, target }) => event === 'TrackStarted' && target === 'Transform'
+  );
+
+describe('native layout transform and the edge antialiasing of the view', () => {
+  if (!hasNativeLayoutStarts) {
+    return;
+  }
+
+  const layoutRows: [string, Operation[], boolean, boolean][] = [
+    ['a rotation to no rotation', [['rotate', '90deg', '0deg']], true, false],
+    [
+      'a rotation to the rotation of the style',
+      [['rotate', '0deg', '90deg']],
+      true,
+      true,
+    ],
+    ['a translation', [['translateX', 80, 0]], false, false],
+    ['a rotation about Y', [['rotateY', '60deg', '0deg']], false, false],
+    [
+      'rotations about X and Y',
+      [
+        ['rotateX', '60deg', '0deg'],
+        ['rotateY', '40deg', '0deg'],
+      ],
+      true,
+      false,
+    ],
+  ];
+  for (const [name, operations, during, afterEnd] of layoutRows) {
+    test(`${name}: the view and its frame-driven twin have edge antialiasing ${String(during)} during the track and ${String(afterEnd)} after its end`, async () => {
+      const layouts = transformPairOf(operations, { duration: FLAG_DURATION });
+      const style = endTransformOf(operations);
+      const tag = await mountScene(pairSceneOf(layouts, style));
+      const start = performance.now();
+      await render(pairSceneOf(layouts, style, { left: END_LEFT }));
+      const tags = pairTags();
+      expect(await edgeAntialiasingAt(tags, FLAG_READ_MS, start)).toBe(
+        `${during},${during}`
+      );
+      expect(
+        await edgeAntialiasingAt(tags, FLAG_DURATION + FLAG_READ_MS, start)
+      ).toBe(`${afterEnd},${afterEnd}`);
+      const events = await takeTraceOf(tag);
+      expect(summarizeStart(events)).toBe(TRANSFORM_START);
+      expect(summarizeAfterStart(events)).toBe(TRANSFORM_END);
+      await render(null);
+    });
+  }
+
+  const HALF = FLAG_DURATION / 2;
+  const IN_SECOND_HALF: Leaf = { delays: [HALF], duration: HALF };
+  const partRows: [string, Operation[], boolean, string][] = [
+    [
+      'a translation from 20.3 and a rotation from 0 that wait for half of the time stay frame-driven',
+      [
+        ['translateX', 20.3, 101.3, IN_SECOND_HALF],
+        ['rotate', '0deg', '90deg', IN_SECOND_HALF],
+      ],
+      false,
+      'false,false',
+    ],
+    [
+      'a translation from 0 and a rotation from 0 that wait for half of the time stay frame-driven',
+      [
+        ['translateX', 0, 80, IN_SECOND_HALF],
+        ['rotate', '0deg', '90deg', IN_SECOND_HALF],
+      ],
+      false,
+      'false,false',
+    ],
+    [
+      'a translation from 20.3 and a rotation from 30deg that wait for half of the time play natively',
+      [
+        ['translateX', 20.3, 60.6, IN_SECOND_HALF],
+        ['rotate', '30deg', '90deg', IN_SECOND_HALF],
+      ],
+      true,
+      'true,true',
+    ],
+  ];
+  for (const [name, operations, isNative, inFirstHalf] of partRows) {
+    test(`${name}: the edge antialiasing of the view and of its frame-driven twin is ${inFirstHalf} in the first half of the time and true,true in the second half`, async () => {
+      const pair = transformPairOf(operations, { duration: FLAG_DURATION });
+      const layouts = {
+        ...pair,
+        nativeLayout: countedOf('native', pair.nativeLayout),
+      };
+      const style = endTransformOf(operations);
+      const tag = await mountScene(pairSceneOf(layouts, style));
+      namedBuilderCalls.length = 0;
+      const start = performance.now();
+      await render(pairSceneOf(layouts, style, { left: END_LEFT }));
+      const tags = pairTags();
+      expect(await edgeAntialiasingAt(tags, 0.25 * FLAG_DURATION, start)).toBe(
+        inFirstHalf
+      );
+      expect(await edgeAntialiasingAt(tags, 0.75 * FLAG_DURATION, start)).toBe(
+        'true,true'
+      );
+      expect(callbacks.join()).toBe('');
+      await wait(
+        Math.max(0, start + FLAG_DURATION + FLAG_READ_MS - performance.now())
+      );
+      const events = await takeTraceOf(tag);
+      expect(hasTransformTrack(events)).toBe(isNative);
+      expect(buildFailures(events)).toBe(isNative ? '' : 'UnsupportedTarget');
+      expect(namedBuilderCalls.join()).toBe('native');
+      expect(callbacks.slice().sort().join()).toBe('frame:true,native:true');
+      await render(null);
+    });
+  }
+
+  test('an exit with a perspective: the view and its frame-driven twin have edge antialiasing during the track', async () => {
+    const exit: Exit = {
+      operations: [
+        ['perspective', 500, 500],
+        ['rotateX', '0deg', '60deg'],
+      ],
+      durationMs: FLAG_DURATION,
+    };
+    const tag = await mountScene(<ExitPair exit={exit} isMounted />);
+    const tags = pairTags();
+    const start = performance.now();
+    await render(<ExitPair exit={exit} isMounted={false} />);
+    expect(await edgeAntialiasingAt(tags, FLAG_READ_MS, start)).toBe(
+      'true,true'
+    );
+    expect(hasTransformTrack(await takeTraceOf(tag))).toBe(true);
+    await wait(FLAG_DURATION);
+    await render(null);
+  });
+
+  test('an exit with a rotation about X and then a rotation about Y: the view and its frame-driven twin have no edge antialiasing during the track', async () => {
+    const exit: Exit = {
+      operations: [
+        ['rotateX', '0deg', '50deg', '0deg', '0deg', '0deg'],
+        ['rotateY', '0deg', '0deg', '0deg', '40deg', '0deg'],
+      ],
+      durationMs: FLAG_DURATION,
+    };
+    const tag = await mountScene(<ExitPair exit={exit} isMounted />);
+    const tags = pairTags();
+    const start = performance.now();
+    await render(<ExitPair exit={exit} isMounted={false} />);
+    for (const part of [0.25, 0.75]) {
+      expect(await edgeAntialiasingAt(tags, part * FLAG_DURATION, start)).toBe(
+        'false,false'
+      );
+    }
+    expect(hasTransformTrack(await takeTraceOf(tag))).toBe(true);
+    await wait(FLAG_DURATION);
+    await render(null);
+  });
+
+  const refusedExitRows: [string, ExitOperation[], boolean, boolean][] = [
+    [
+      'a translation in two phases and a rotation that stays at 0 in the first phase',
+      [
+        ['translateX', 0, 40, 80],
+        ['rotate', '0deg', '0deg', '90deg'],
+      ],
+      false,
+      true,
+    ],
+    [
+      'a translation and a rotation that stay at 0 in the first phase',
+      [
+        ['translateX', 0, 0, 40],
+        ['rotate', '0deg', '0deg', '90deg'],
+      ],
+      false,
+      true,
+    ],
+    [
+      'a translation that stays at 20.3 and a rotation that stays at 0 in the first phase',
+      [
+        ['translateX', 20.3, 20.3, 60.6],
+        ['rotate', '0deg', '0deg', '90deg'],
+      ],
+      false,
+      true,
+    ],
+    [
+      'a translation that stays at 20.3 and a rotation that stays at 0 in the second phase',
+      [
+        ['translateX', 60.6, 20.3, 20.3],
+        ['rotate', '90deg', '0deg', '0deg'],
+      ],
+      true,
+      false,
+    ],
+  ];
+  for (const [
+    name,
+    operations,
+    inFirstPhase,
+    inSecondPhase,
+  ] of refusedExitRows) {
+    test(`an exit with ${name} stays frame-driven: the view and its frame-driven twin have edge antialiasing ${String(inFirstPhase)} in the first phase and ${String(inSecondPhase)} in the second phase`, async () => {
+      const exit: Exit = { operations, durationMs: FLAG_DURATION };
+      const tag = await mountScene(<ExitPair exit={exit} isMounted />);
+      const tags = pairTags();
+      const start = performance.now();
+      await render(<ExitPair exit={exit} isMounted={false} />);
+      expect(await edgeAntialiasingAt(tags, 0.25 * FLAG_DURATION, start)).toBe(
+        `${inFirstPhase},${inFirstPhase}`
+      );
+      expect(await edgeAntialiasingAt(tags, 0.75 * FLAG_DURATION, start)).toBe(
+        `${inSecondPhase},${inSecondPhase}`
+      );
+      const events = await takeTraceOf(tag);
+      expect(hasTransformTrack(events)).toBe(false);
+      expect(buildFailures(events)).toBe('UnsupportedTarget');
+      await wait(FLAG_DURATION);
+      await render(null);
+    });
+  }
+
+  test('an exit whose rotation ends before its opacity: the view and its frame-driven twin have edge antialiasing during the rotation and while the view holds its end', async () => {
+    const exit: Exit = {
+      operations: [['rotate', '0deg', '45deg']],
+      durationMs: HELD_ROTATION_MS,
+      opacityMs: HELD_OPACITY_MS,
+    };
+    const tag = await mountScene(<ExitPair exit={exit} isMounted />);
+    const tags = pairTags();
+    const start = performance.now();
+    await render(<ExitPair exit={exit} isMounted={false} />);
+    expect(await edgeAntialiasingAt(tags, HELD_ROTATION_MS / 2, start)).toBe(
+      'true,true'
+    );
+    expect(
+      await edgeAntialiasingAt(tags, HELD_ROTATION_MS + FLAG_READ_MS, start)
+    ).toBe('true,true');
+    const events = await takeTraceOf(tag);
+    expect(hasTransformTrack(events)).toBe(true);
+    expect(
+      events.some(
+        ({ event, target }) => event === 'TrackEnded' && target === 'Transform'
+      )
+    ).toBe(true);
+    await wait(HELD_OPACITY_MS);
+    await render(null);
+  });
+
+  test('an exit whose rotation ends at 0 before its opacity: the view and its frame-driven twin have edge antialiasing during the rotation and none while the view holds its end', async () => {
+    const exit: Exit = {
+      operations: [['rotate', '30deg', '0deg']],
+      durationMs: HELD_ROTATION_MS,
+      opacityMs: HELD_OPACITY_MS,
+    };
+    const tag = await mountScene(<ExitPair exit={exit} isMounted />);
+    const tags = pairTags();
+    const start = performance.now();
+    await render(<ExitPair exit={exit} isMounted={false} />);
+    expect(await edgeAntialiasingAt(tags, HELD_ROTATION_MS / 2, start)).toBe(
+      'true,true'
+    );
+    expect(
+      await edgeAntialiasingAt(tags, HELD_ROTATION_MS + FLAG_READ_MS, start)
+    ).toBe('false,false');
+    expect(hasTransformTrack(await takeTraceOf(tag))).toBe(true);
+    await wait(HELD_OPACITY_MS);
+    await render(null);
+  });
 });
