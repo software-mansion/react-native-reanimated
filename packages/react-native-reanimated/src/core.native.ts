@@ -1,6 +1,7 @@
 'use strict';
 import { controlEdgeToEdgeValues } from 'react-native-is-edge-to-edge';
-import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
+import type { WorkletFunction } from 'react-native-worklets';
+import { createSerializable } from 'react-native-worklets';
 
 import type {
   AnimatedKeyboardOptions,
@@ -39,9 +40,9 @@ export function registerEventHandler<TEvent>(
   emitterReactTag = -1
 ): number {
   return ReanimatedModule.registerEventHandler(
-    createEventHandlerWorklet(
-      eventHandler
-    ) as unknown as SerializableRef<WorkletFunction>,
+    createSerializable(
+      createEventHandlerWorklet(eventHandler) as WorkletFunction
+    ),
     eventName,
     emitterReactTag
   );
@@ -60,9 +61,9 @@ export function subscribeForKeyboardEvents(
   }
 
   return ReanimatedModule.subscribeForKeyboardEvents(
-    createKeyboardEventHandlerWorklet(
-      eventHandler
-    ) as unknown as SerializableRef<WorkletFunction>,
+    createSerializable(
+      createKeyboardEventHandlerWorklet(eventHandler) as WorkletFunction
+    ),
     EDGE_TO_EDGE || (options.isStatusBarTranslucentAndroid ?? false),
     EDGE_TO_EDGE || (options.isNavigationBarTranslucentAndroid ?? false)
   );
@@ -79,8 +80,6 @@ export function registerSensor(
   return getSensorContainer().registerSensor(
     sensorType,
     config,
-    eventHandler as unknown as SerializableRef<
-      (data: Value3D | ValueRotation) => void
-    >
+    createSerializable(eventHandler as WorkletFunction)
   );
 }
