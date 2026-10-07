@@ -12,6 +12,7 @@
 
 #include <memory>
 #include <mutex>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -129,7 +130,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon {
       const;
   void parseRemoveMutations(
       std::unordered_map<Tag, Tag> &movedViews,
-      ShadowViewMutationList &mutations,
+      std::span<ShadowViewMutation> mutations,
       std::vector<std::shared_ptr<MutationNode>> &roots) const;
   void handleRemovals(
       ShadowViewMutationList &filteredMutations,
@@ -140,7 +141,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon {
   void handleUpdatesAndEnterings(
       ShadowViewMutationList &filteredMutations,
       const std::unordered_map<Tag, Tag> &movedViews,
-      ShadowViewMutationList &mutations,
+      std::span<ShadowViewMutation> mutations,
       const PropsParserContext &propsParserContext) const;
   void addOngoingAnimations(ShadowViewMutationList &mutations) const;
   void dropUpdatesForDeletedViews(ShadowViewMutationList &filteredMutations) const;
