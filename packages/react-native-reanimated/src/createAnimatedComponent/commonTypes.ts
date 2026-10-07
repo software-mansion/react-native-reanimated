@@ -131,8 +131,8 @@ export interface IAnimatedComponentInternalBase {
   _viewInfo?: ViewInfo;
 
   /**
-   * Re-resolves `getAnimatableRef()` of the wrapped component and drops the
-   * cached view info when it points at a different host instance.
+   * Re-resolves `getAnimatableRef()` of the wrapped component so event
+   * registration follows the host instance it currently points at.
    */
   _refreshComponentRef: () => void;
 

@@ -121,7 +121,9 @@ export default class AnimatedComponent<
   _refreshComponentRef() {
     // A component exposing `getAnimatableRef` may point at a different host
     // instance than when its ref was set (its own child may have been replaced),
-    // while React never calls `_setComponentRef` again.
+    // while React never calls `_setComponentRef` again. Only the ref is
+    // refreshed; styles, inline props and CSS stay bound to the view they were
+    // attached to, as they are not migrated between hosts.
     const rawRef = this._rawComponentRef as AnimatedComponentRef | null;
 
     if (!rawRef?.getAnimatableRef) {
@@ -130,12 +132,9 @@ export default class AnimatedComponent<
 
     const resolved = this._resolveComponentRef(rawRef);
 
-    if (resolved === this._componentRef) {
-      return;
+    if (resolved !== this._componentRef) {
+      this._componentRef = resolved;
     }
-
-    this._componentRef = resolved;
-    this._viewInfo = undefined;
   }
 
   _resolveComponentRef = (ref: Component | HTMLElement | null) => {
