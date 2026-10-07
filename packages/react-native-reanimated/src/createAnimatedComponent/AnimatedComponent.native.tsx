@@ -276,6 +276,8 @@ export default class AnimatedComponent
   }
 
   componentDidUpdate(prevProps: AnimatedComponentProps<InitialComponentProps>) {
+    this._refreshComponentRef();
+
     // The ref callback clears the cached view info when the host view is
     // replaced; the snapshot then registered this update's configs for the old
     // tag.
