@@ -52,6 +52,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   // Keys are processed keyframes
   private attachedAnimations: Record<string, ProcessedAnimation> = {};
   private unmountCleanupCalled = false;
+  private cleanupTimeout: ReturnType<typeof setTimeout> | null = null;
 
   private readonly callbackListeners: CSSCallbackListeners<
     CSSAnimationCallbackProp,
@@ -77,6 +78,10 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     animationProperties: ExistingCSSAnimationProperties | null,
     callbacks: CSSAnimationCallbacks | null = null
   ) {
+    if (this.cleanupTimeout !== null) {
+      clearTimeout(this.cleanupTimeout);
+      this.cleanupTimeout = null;
+    }
     // Keep listeners tied to callback presence (not animation presence) so an
     // `animationcancel` emitted while detaching still reaches the user.
     this.callbackListeners.sync(callbacks ?? {});
@@ -155,7 +160,8 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       // component is unmounted (it puts the detach call at the end of the event loop)
       // We just remove the animation definition from the style sheet as there is no
       // need to clean up view props if it is removed from the DOM.
-      setTimeout(() => {
+      this.cleanupTimeout = setTimeout(() => {
+        this.cleanupTimeout = null;
         this.removeAnimationsFromStyleSheet(
           Object.values(this.attachedAnimations)
         );
