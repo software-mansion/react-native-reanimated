@@ -313,7 +313,7 @@ const EXITING: PresetRow[] = [
   [StretchOutX, 'Transform'],
   [StretchOutY, 'Transform'],
   [ZoomOut, 'Transform'],
-  [ZoomOutRotate, 'LayoutBuildFailed:UnsupportedValue'],
+  [ZoomOutRotate, 'Transform'],
   [ZoomOutLeft, 'Transform'],
   [ZoomOutRight, 'Transform'],
   [ZoomOutUp, 'Transform'],

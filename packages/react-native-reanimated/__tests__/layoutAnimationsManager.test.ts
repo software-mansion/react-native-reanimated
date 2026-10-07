@@ -14,6 +14,7 @@ import {
   withSequence,
   withSpring,
   withTiming,
+  ZoomOutRotate,
 } from '../src';
 import type {
   AnimatableValue,
@@ -591,6 +592,7 @@ describe('LayoutAnimationsManager', () => {
       ['BounceIn', new BounceIn(), { transform: 8 }],
       ['BounceInDown', new BounceInDown(), { transform: 8 }],
       ['BounceOut', new BounceOut(), { transform: 8 }],
+      ['ZoomOutRotate', new ZoomOutRotate(), { transform: 2 }],
       [
         'BounceIn with no duration',
         new BounceIn().duration(0),
@@ -1906,6 +1908,16 @@ describe('LayoutAnimationsManager', () => {
           () => [{ rotateY: move('3rad') }, { rotateZ: move('1rad') }],
         ],
         [
+          'an end angle with no unit after radians',
+          [{ rotate: '0rad' }, { scale: 1 }],
+          () => [{ rotate: move('0.3') }, { scale: move(0) }],
+        ],
+        [
+          'an end angle with no unit after degrees',
+          [{ rotateX: '10deg' }],
+          () => [{ rotateX: move('40') }],
+        ],
+        [
           'a plain value that is not the initial value',
           [{ scale: 1 }, { translateX: 0 }],
           () => [{ scale: move(2) }, { translateX: 30 }],
@@ -1979,6 +1991,26 @@ describe('LayoutAnimationsManager', () => {
           'an angle with another unit',
           [{ rotate: '0turn' }],
           () => [{ rotate: move('1turn') }],
+        ],
+        [
+          'degrees to radians',
+          [{ rotate: '0deg' }],
+          () => [{ rotate: move('1rad') }],
+        ],
+        [
+          'an initial angle with no unit',
+          [{ rotate: '0' }],
+          () => [{ rotate: move('0.3') }],
+        ],
+        [
+          'an initial angle with no unit and an end in radians',
+          [{ rotate: '0' }],
+          () => [{ rotate: move('0.3rad') }],
+        ],
+        [
+          'a length with no unit after a percent',
+          [{ translateX: '0%' }],
+          () => [{ translateX: move('50') }],
         ],
         [
           'a translation in percent',
@@ -2057,6 +2089,8 @@ describe('LayoutAnimationsManager', () => {
         ['radians to degrees', '0rad', '90deg', ['0rad', '45rad', '90rad']],
         ['degrees to a number', '0deg', 90, ['0deg', '45deg', '90deg']],
         ['a number to degrees', 0, '90deg', [null, null, '90deg']],
+        ['radians to no unit', '0rad', '0.3', ['0rad', '0.15rad', '0.3rad']],
+        ['degrees to no unit', '0deg', '90', ['0deg', '45deg', '90deg']],
       ])(
         'the frame driver gives %s the unit of the initial value',
         (_, initial, toValue, shown) => {
@@ -2222,6 +2256,27 @@ describe('LayoutAnimationsManager', () => {
           manager.releaseBuilt(T.buildId);
           buildLive(DEGREES);
           expect(leafOf(next(), [T]).needsFrameDriver).toBe(true);
+        });
+
+        test('a live angle whose end has no unit has the relations of an angle with a unit', () => {
+          const UNITLESS_END: [unknown, number | string] = ['0rad', '0.3'];
+          buildLive(UNITLESS_END);
+          expect(manager.captureLiveLeaves([T])).toEqual({
+            transform: [{ rotate: '0.075rad' }, { translateX: 25 }],
+          });
+          expect(
+            leafOf(configOf({ originY: 0 }, { originY: move(40) }), [T])
+              .needsFrameDriver
+          ).toBe(true);
+          const sameEnd = leafOf(
+            transformOf(
+              [{ rotate: '0.075rad' }, { translateX: 25 }],
+              [{ rotate: move('0.3') }, { translateX: move(50) }]
+            ),
+            [T]
+          );
+          expect(sameEnd.needsFrameDriver).toBe(false);
+          expect(sameEnd.leaf.continuesLiveLeaf).toBe(false);
         });
 
         test('a new leaf with the same angle in degrees replaces the live leaf', () => {

@@ -301,31 +301,35 @@ function valueBetween(start: number, end: number, progress: number): number {
 }
 
 /**
- * The native scalar of a value of an operation. A string has a native form only
- * as an angle in degrees or radians.
+ * The native scalar of a value of an operation whose initial value is
+ * `initialValue`. A string has a native form only as an angle in degrees or
+ * radians. The frame driver gives each value the unit of the initial value, so
+ * a string with no unit has that unit, and a value of another type or with
+ * another unit has no native form.
  */
-function nativeScalarOf(kind: string, value: unknown): number | undefined {
+function nativeScalarOf(
+  kind: string,
+  value: unknown,
+  initialValue: unknown
+): number | undefined {
   'worklet';
-  if (typeof value === 'number') {
-    return value;
+  if (typeof initialValue === 'number') {
+    return typeof value === 'number' ? value : undefined;
   }
-  if (typeof value !== 'string' || !ANGLE_KINDS.includes(kind)) {
+  const isAngle =
+    typeof initialValue === 'string' &&
+    typeof value === 'string' &&
+    ANGLE_KINDS.includes(kind);
+  if (!isAngle) {
     return undefined;
   }
+  const initial = recognizePrefixSuffix(initialValue);
   const { prefix, suffix, strippedValue } = recognizePrefixSuffix(value);
-  const radiansInUnit = RADIANS_IN_UNIT[suffix ?? ''];
-  return prefix || !radiansInUnit ? undefined : strippedValue * radiansInUnit;
-}
-
-/** The frame driver gives the end value the unit of the start value. */
-function hasSameUnit(start: unknown, end: unknown): boolean {
-  'worklet';
-  if (typeof start !== 'string' || typeof end !== 'string') {
-    return typeof start === typeof end;
-  }
-  return (
-    recognizePrefixSuffix(start).suffix === recognizePrefixSuffix(end).suffix
-  );
+  const radiansInUnit = RADIANS_IN_UNIT[initial.suffix ?? ''];
+  const hasUnitOfInitialValue = !suffix || suffix === initial.suffix;
+  return initial.prefix || prefix || !radiansInUnit || !hasUnitOfInitialValue
+    ? undefined
+    : strippedValue * radiansInUnit;
 }
 
 function isAtRest({ delayMs, phases }: Timeline<number>): boolean {
@@ -433,7 +437,7 @@ function operationTimelineOf(
   animation: unknown
 ): Timeline<number> | undefined {
   'worklet';
-  const start = nativeScalarOf(kind, initialValue);
+  const start = nativeScalarOf(kind, initialValue, initialValue);
   if (start === undefined) {
     return undefined;
   }
@@ -443,8 +447,8 @@ function operationTimelineOf(
       valuePhases.push(phase);
       continue;
     }
-    const toValue = nativeScalarOf(kind, phase.toValue);
-    if (toValue === undefined || !hasSameUnit(initialValue, phase.toValue)) {
+    const toValue = nativeScalarOf(kind, phase.toValue, initialValue);
+    if (toValue === undefined) {
       return undefined;
     }
     valuePhases.push({ ...phase, toValue });
