@@ -11,26 +11,26 @@ import { SensorType } from './commonTypes';
 import { makeMutable } from './mutables';
 import { ReanimatedModule } from './ReanimatedModule';
 
-const createValue3D = () => ({ x: 0, y: 0, z: 0, interfaceOrientation: 0 });
-
-const INITIAL_SENSOR_VALUES: {
-  [K in SensorType]: () => SensorValueMap[K];
-} = {
-  [SensorType.ACCELEROMETER]: createValue3D,
-  [SensorType.GYROSCOPE]: createValue3D,
-  [SensorType.GRAVITY]: createValue3D,
-  [SensorType.MAGNETIC_FIELD]: createValue3D,
-  [SensorType.ROTATION]: () => ({
-    qw: 0,
-    qx: 0,
-    qy: 0,
-    qz: 0,
-    yaw: 0,
-    pitch: 0,
-    roll: 0,
-    interfaceOrientation: 0,
-  }),
-};
+function createInitialSensorValue(sensorType: SensorType): SensorValue {
+  switch (sensorType) {
+    case SensorType.ACCELEROMETER:
+    case SensorType.GYROSCOPE:
+    case SensorType.GRAVITY:
+    case SensorType.MAGNETIC_FIELD:
+      return { x: 0, y: 0, z: 0, interfaceOrientation: 0 };
+    case SensorType.ROTATION:
+      return {
+        qw: 0,
+        qx: 0,
+        qy: 0,
+        qz: 0,
+        yaw: 0,
+        pitch: 0,
+        roll: 0,
+        interfaceOrientation: 0,
+      };
+  }
+}
 
 export default class Sensor<T extends SensorType = SensorType> {
   public listenersNumber = 0;
@@ -42,7 +42,9 @@ export default class Sensor<T extends SensorType = SensorType> {
   constructor(sensorType: T, config: SensorConfig) {
     this.sensorType = sensorType;
     this.config = config;
-    this.data = makeMutable(INITIAL_SENSOR_VALUES[sensorType]());
+    this.data = makeMutable(
+      createInitialSensorValue(sensorType) as SensorValueMap[T]
+    );
   }
 
   register(eventHandler: SerializableRef<(data: SensorValue) => void>) {

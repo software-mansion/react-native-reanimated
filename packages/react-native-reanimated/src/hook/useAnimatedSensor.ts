@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import type {
   AnimatedSensor,
   SensorConfig,
+  SensorValue,
   SensorValueMap,
   Value3D,
   ValueRotation,
@@ -80,15 +81,21 @@ function adjustVectorToInterfaceOrientation(data: Value3D) {
   return data;
 }
 
-const INTERFACE_ORIENTATION_ADJUSTERS: {
-  [K in SensorType]: (data: SensorValueMap[K]) => SensorValueMap[K];
-} = {
-  [SensorType.ACCELEROMETER]: adjustVectorToInterfaceOrientation,
-  [SensorType.GYROSCOPE]: adjustVectorToInterfaceOrientation,
-  [SensorType.GRAVITY]: adjustVectorToInterfaceOrientation,
-  [SensorType.MAGNETIC_FIELD]: adjustVectorToInterfaceOrientation,
-  [SensorType.ROTATION]: adjustRotationToInterfaceOrientation,
-};
+function adjustDataToInterfaceOrientation(
+  sensorType: SensorType,
+  data: SensorValue
+): SensorValue {
+  'worklet';
+  switch (sensorType) {
+    case SensorType.ACCELEROMETER:
+    case SensorType.GYROSCOPE:
+    case SensorType.GRAVITY:
+    case SensorType.MAGNETIC_FIELD:
+      return adjustVectorToInterfaceOrientation(data as Value3D);
+    case SensorType.ROTATION:
+      return adjustRotationToInterfaceOrientation(data as ValueRotation);
+  }
+}
 
 const NOOP = () => {
   // NOOP
@@ -136,7 +143,10 @@ export function useAnimatedSensor<T extends SensorType>(
     const id = registerSensor(sensorType, config, (data) => {
       'worklet';
       sensor.value = adjustToInterfaceOrientation
-        ? INTERFACE_ORIENTATION_ADJUSTERS[sensorType](data)
+        ? (adjustDataToInterfaceOrientation(
+            sensorType,
+            data
+          ) as SensorValueMap[T])
         : data;
     });
 

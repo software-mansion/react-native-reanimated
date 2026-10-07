@@ -85,6 +85,50 @@ describe('Sensors', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockNextSensorId = 1;
+    delete (globalThis as { __sensorContainer?: unknown }).__sensorContainer;
+  });
+
+  test.each([
+    SensorType.ACCELEROMETER,
+    SensorType.GYROSCOPE,
+    SensorType.GRAVITY,
+    SensorType.MAGNETIC_FIELD,
+  ])(
+    'starts 3d sensor %d at zero and adjusts its orientation',
+    (sensorType) => {
+      const { result } = renderHook(() => useAnimatedSensor(sensorType));
+
+      expect(result.current.sensor.value).toStrictEqual({
+        x: 0,
+        y: 0,
+        z: 0,
+        interfaceOrientation: 0,
+      });
+
+      act(() => eventHandler({ x: 1, y: 2, z: 3, interfaceOrientation: 90 }));
+
+      expect(result.current.sensor.value).toStrictEqual({
+        x: -2,
+        y: 1,
+        z: 3,
+        interfaceOrientation: 90,
+      });
+    }
+  );
+
+  test('starts the rotation sensor at zero', () => {
+    const { result } = renderHook(() => useAnimatedSensor(SensorType.ROTATION));
+
+    expect(result.current.sensor.value).toStrictEqual({
+      qw: 0,
+      qx: 0,
+      qy: 0,
+      qz: 0,
+      yaw: 0,
+      pitch: 0,
+      roll: 0,
+      interfaceOrientation: 0,
+    });
   });
 
   test('returns rotation sensors', () => {
