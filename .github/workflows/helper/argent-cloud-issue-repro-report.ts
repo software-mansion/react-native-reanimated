@@ -280,7 +280,10 @@ function outcomeLabel(context: Context): string {
     case 'build-failed':
       return 'build failed';
     default:
-      return context.verdict?.toLowerCase() ?? context.status;
+      return (
+        context.verdict?.toLowerCase() ??
+        (context.status === 'success' ? 'no verdict' : context.status)
+      );
   }
 }
 
@@ -301,7 +304,7 @@ function outcomeEmoji(context: Context): string {
     case 'BLOCKED':
       return '🔴';
     default:
-      return context.status === 'success' ? '🟢' : '🔴';
+      return '🔴';
   }
 }
 

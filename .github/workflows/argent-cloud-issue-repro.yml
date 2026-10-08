@@ -510,6 +510,7 @@ jobs:
           ARGENT_BACKEND_IP: ${{ secrets.ARGENT_BACKEND_IP }}
         run: |
           mkdir -p "$WORK_DIR/output"
+          set -o pipefail
           argent-cloud \
             --prompt-file "$WORK_DIR/brief.md" \
             --app-bundle "$WORK_DIR/app/repro-app.tar.gz" \
