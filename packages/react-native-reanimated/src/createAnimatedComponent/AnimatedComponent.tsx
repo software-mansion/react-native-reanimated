@@ -190,13 +190,22 @@ export default class AnimatedComponent
   }
 
   _detachStyles(viewTag: number = this.getComponentViewTag()) {
-    if (viewTag !== -1) {
-      for (const style of this._animatedStyles) {
-        style.viewDescriptors.remove(viewTag);
-      }
-      for (const animatedProp of this._animatedProps) {
-        animatedProp?.viewDescriptors?.remove(viewTag);
-      }
+    if (viewTag === -1) {
+      return;
+    }
+    // A style change in the same update has already moved the attached
+    // styles to the previous lists, so detach from both.
+    for (const style of [
+      ...this._prevAnimatedStyles,
+      ...this._animatedStyles,
+    ]) {
+      style.viewDescriptors.remove(viewTag);
+    }
+    for (const animatedProp of [
+      ...this._prevAnimatedProps,
+      ...this._animatedProps,
+    ]) {
+      animatedProp?.viewDescriptors?.remove(viewTag);
     }
   }
 
