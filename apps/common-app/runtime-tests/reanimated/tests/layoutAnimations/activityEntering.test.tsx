@@ -1,4 +1,4 @@
-import React, { Activity } from 'react';
+import React, { Activity, Fragment, StrictMode } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import Animated, {
   FadeIn,
@@ -16,6 +16,7 @@ import {
   render,
   test,
   useTestRef,
+  wait,
 } from '../../../ReJest/RuntimeTestsApi';
 
 const TARGET_REF = 'activity-entering-target';
@@ -44,18 +45,21 @@ const exiting = FadeOut.duration(DURATION_MS)
     }
   });
 
-function Fixture({ visible }: { visible: boolean }) {
+function Fixture({ visible, strict }: { visible: boolean; strict: boolean }) {
   const ref = useTestRef(TARGET_REF);
+  const Wrapper = strict ? StrictMode : Fragment;
 
   return (
-    <Activity mode={visible ? 'visible' : 'hidden'}>
-      <Animated.View
-        entering={entering}
-        exiting={exiting}
-        ref={ref}
-        style={styles.box}
-      />
-    </Activity>
+    <Wrapper>
+      <Activity mode={visible ? 'visible' : 'hidden'}>
+        <Animated.View
+          entering={entering}
+          exiting={exiting}
+          ref={ref}
+          style={styles.box}
+        />
+      </Activity>
+    </Wrapper>
   );
 }
 
@@ -63,26 +67,37 @@ async function expectUICalls(tracker: Tracker, count: number) {
   await expectEventually(() => getTrackerCallCount(tracker)).toBeCalledUI(
     count
   );
+  await wait(DURATION_MS * 3);
+  expect(await getTrackerCallCount(tracker)).toBeCalledUI(count);
 }
 
 describe('Activity entering animation', () => {
-  test('runs when Activity restores a hidden view', async () => {
-    await render(<Fixture visible />);
-    await expectUICalls(Tracker.EnteringFinished, 1);
-    const tag = getTestComponent(TARGET_REF).getTag();
+  test.each([false, true])(
+    'runs when Activity restores a hidden view, StrictMode: **%p**',
+    async (strict) => {
+      await render(<Fixture visible strict={strict} />);
+      await expectUICalls(Tracker.EnteringFinished, 1);
+      const tag = getTestComponent(TARGET_REF).getTag();
 
-    await render(<Fixture visible={false} />);
-    if (Platform.OS === 'ios') {
-      await expectUICalls(Tracker.ExitingFinished, 1);
+      await render(<Fixture visible={false} strict={strict} />);
+      if (Platform.OS === 'ios') {
+        await expectUICalls(Tracker.ExitingFinished, 1);
+      }
+
+      await render(<Fixture visible strict={strict} />);
+      await expectUICalls(
+        Tracker.EnteringFinished,
+        Platform.OS === 'ios' ? 2 : 1
+      );
+      expect(getTestComponent(TARGET_REF).getTag()).toBe(tag);
+
+      await render(null);
+      await expectUICalls(
+        Tracker.ExitingFinished,
+        Platform.OS === 'ios' ? 2 : 1
+      );
     }
-
-    await render(<Fixture visible />);
-    await expectUICalls(
-      Tracker.EnteringFinished,
-      Platform.OS === 'ios' ? 2 : 1
-    );
-    expect(getTestComponent(TARGET_REF).getTag()).toBe(tag);
-  });
+  );
 });
 
 const styles = StyleSheet.create({
