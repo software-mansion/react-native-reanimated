@@ -171,6 +171,18 @@ export function useAnimatedSensor<T extends SensorType>(
       return;
     }
 
+    const registration = {
+      sensorType,
+      config,
+      unregister: NOOP,
+      isUnregisteredByUser: false,
+    };
+    registrationRef.current = registration;
+
+    if (!isAvailable) {
+      return;
+    }
+
     const id = registerSensor(sensorType, config, (data) => {
       'worklet';
       sensor.value = adjustToInterfaceOrientation
@@ -182,20 +194,14 @@ export function useAnimatedSensor<T extends SensorType>(
     });
 
     let isRegistered = id !== -1;
-    const unregister = () => {
+    registration.unregister = () => {
       if (isRegistered) {
         isRegistered = false;
         unregisterSensor(id);
       }
     };
-    registrationRef.current = {
-      sensorType,
-      config,
-      unregister,
-      isUnregisteredByUser: false,
-    };
 
-    return unregister;
+    return registration.unregister;
   }, [sensorType, config, sensor, adjustToInterfaceOrientation, isAvailable]);
 
   return useMemo(

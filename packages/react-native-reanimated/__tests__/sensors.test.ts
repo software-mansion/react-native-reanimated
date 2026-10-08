@@ -92,9 +92,21 @@ describe('Sensors', () => {
     delete (globalThis as { __sensorContainer?: unknown }).__sensorContainer;
   });
 
+  test('starts an unavailable 3d sensor at zero', () => {
+    const { result } = renderHook(() =>
+      useAnimatedSensor(mockUnavailableSensorType)
+    );
+
+    expect(result.current.sensor.value).toStrictEqual({
+      x: 0,
+      y: 0,
+      z: 0,
+      interfaceOrientation: 0,
+    });
+  });
+
   test.each([
     SensorType.ACCELEROMETER,
-    SensorType.GYROSCOPE,
     SensorType.GRAVITY,
     SensorType.MAGNETIC_FIELD,
   ])(

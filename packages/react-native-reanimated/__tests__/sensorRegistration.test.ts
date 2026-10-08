@@ -21,6 +21,7 @@ describe('Sensor registration', () => {
     isRegistrationAccepted = true;
     nextNativeSensorId = 1;
     nativeHandler = undefined;
+    jest.spyOn(ReanimatedModule, 'isSensorAvailable').mockReturnValue(true);
     jest
       .spyOn(ReanimatedModule, 'registerSensor')
       .mockImplementation(
@@ -260,15 +261,24 @@ describe('Sensor availability', () => {
     expect(installOrder).toBeLessThan(questionOrder);
   });
 
-  test('registers again when the platform reports the sensor', () => {
-    const { result, unmount } = renderAvailability(SensorType.HINGE);
+  test.each([undefined, StrictMode])(
+    'does not ask the platform to register an unavailable sensor',
+    (wrapper) => {
+      const { unmount } = renderAvailability(SensorType.HINGE, wrapper);
+      unmount();
 
-    expect(ReanimatedModule.registerSensor).toHaveBeenCalledTimes(1);
+      expect(ReanimatedModule.registerSensor).not.toHaveBeenCalled();
+      expect(ReanimatedModule.unregisterSensor).not.toHaveBeenCalled();
+    }
+  );
+
+  test('registers when the platform reports the sensor', () => {
+    const { result, unmount } = renderAvailability(SensorType.HINGE);
 
     isHingeAvailable = true;
     act(() => availabilityHandler!(SensorType.HINGE, true));
 
-    expect(ReanimatedModule.registerSensor).toHaveBeenCalledTimes(2);
+    expect(ReanimatedModule.registerSensor).toHaveBeenCalledTimes(1);
 
     const data = {
       angle: Math.PI / 2,
@@ -296,7 +306,7 @@ describe('Sensor availability', () => {
     expect(ReanimatedModule.unregisterSensor).not.toHaveBeenCalled();
   });
 
-  test('does not register again after the user unregistered a refused sensor', () => {
+  test('does not register after the user unregistered an unavailable sensor', () => {
     const { result, renders } = renderAvailability(SensorType.HINGE);
 
     result.current.unregister();
@@ -304,22 +314,20 @@ describe('Sensor availability', () => {
     act(() => availabilityHandler!(SensorType.HINGE, true));
 
     expect(renders).toEqual([false, true]);
-    expect(ReanimatedModule.registerSensor).toHaveBeenCalledTimes(1);
+    expect(ReanimatedModule.registerSensor).not.toHaveBeenCalled();
   });
 
-  test('does not register again after the user unregistered under Strict Mode', () => {
+  test('does not register after the user unregistered under Strict Mode', () => {
     const { result } = renderAvailability(SensorType.HINGE, StrictMode);
-
-    expect(ReanimatedModule.registerSensor).toHaveBeenCalledTimes(2);
 
     result.current.unregister();
     isHingeAvailable = true;
     act(() => availabilityHandler!(SensorType.HINGE, true));
 
-    expect(ReanimatedModule.registerSensor).toHaveBeenCalledTimes(2);
+    expect(ReanimatedModule.registerSensor).not.toHaveBeenCalled();
   });
 
-  test('registers again under Strict Mode when the platform reports the sensor', () => {
+  test('registers under Strict Mode when the platform reports the sensor', () => {
     const { unmount } = renderAvailability(SensorType.HINGE, StrictMode);
 
     isHingeAvailable = true;
@@ -346,7 +354,7 @@ describe('Sensor availability', () => {
       jest
         .mocked(ReanimatedModule.registerSensor)
         .mock.calls.map(([sensorType]) => sensorType)
-    ).toEqual([SensorType.HINGE, SensorType.ACCELEROMETER]);
+    ).toEqual([SensorType.ACCELEROMETER]);
 
     unmount();
 
@@ -373,6 +381,10 @@ describe('Sensor availability', () => {
 
     rerender(200);
 
+    expect(ReanimatedModule.registerSensor).toHaveBeenCalledTimes(1);
+
+    act(() => availabilityHandler!(SensorType.ACCELEROMETER, true));
+
     expect(ReanimatedModule.registerSensor).toHaveBeenCalledTimes(2);
 
     unmount();
@@ -381,6 +393,21 @@ describe('Sensor availability', () => {
       [1],
       [2],
     ]);
+  });
+
+  test('does not register after the user unregistered a new config of an unavailable sensor', () => {
+    const { result, rerender } = renderHook(
+      (interval: number) =>
+        useAnimatedSensor(SensorType.ACCELEROMETER, { interval }),
+      { initialProps: 100 }
+    );
+
+    act(() => availabilityHandler!(SensorType.ACCELEROMETER, false));
+    rerender(200);
+    result.current.unregister();
+    act(() => availabilityHandler!(SensorType.ACCELEROMETER, true));
+
+    expect(ReanimatedModule.registerSensor).toHaveBeenCalledTimes(1);
   });
 
   test('registers the first sensor type again after the user unregistered it and the type changed back', () => {
@@ -437,6 +464,6 @@ describe('Sensor availability', () => {
       jest
         .mocked(ReanimatedModule.registerSensor)
         .mock.calls.map(([sensorType]) => sensorType)
-    ).toEqual([SensorType.ACCELEROMETER, SensorType.HINGE, SensorType.HINGE]);
+    ).toEqual([SensorType.ACCELEROMETER, SensorType.HINGE]);
   });
 });
