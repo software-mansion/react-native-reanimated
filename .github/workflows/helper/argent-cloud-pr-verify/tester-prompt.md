@@ -25,7 +25,7 @@ Pick exactly one:
 
 - `REPRODUCIBLE`: the steps produce the fail signal of the plan. A crash or a frozen screen counts when the plan names it as the fail signal. When the plan has a `Limitations` section, the verdict covers only the part that the plan can show, and your summary says so.
 - `NOT REPRODUCIBLE`: you completed the steps and saw the pass signal every time.
-- `FALSE ISSUE`: the screen shows neither signal, and the evidence on screen makes clear that the plan is wrong about the behavior. Say what the screen shows.
+- `FALSE ISSUE`: you completed the steps and the screen shows neither the pass signal nor the fail signal. Say what the screen shows.
 - `BLOCKED`: you could not complete the steps, for example the app did not install or launch, crashed for a reason unrelated to the plan, or the screen does not match the plan.
 
 ## Report format
