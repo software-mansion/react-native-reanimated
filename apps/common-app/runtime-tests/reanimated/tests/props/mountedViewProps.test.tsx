@@ -13,9 +13,12 @@ import {
   render,
   test,
   useTestRef,
+  wait,
   waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
+
+const TRANSITION_MS = 4000;
 
 const styles = StyleSheet.create({
   box: { width: 100, height: 100 },
@@ -42,6 +45,29 @@ function TransparentBox() {
 function BorderedBox() {
   const ref = useTestRef('box');
   return <Animated.View ref={ref} style={[styles.box, styles.borderedBox]} />;
+}
+
+function TransitionBox({ faded }: { faded: boolean }) {
+  const ref = useTestRef('box');
+  return (
+    <Animated.View
+      ref={ref}
+      style={[
+        styles.box,
+        {
+          opacity: faded ? 0 : 1,
+          backgroundColor: faded ? 'blue' : 'red',
+          transitionProperty: ['opacity', 'backgroundColor'],
+          transitionDuration: TRANSITION_MS,
+          transitionTimingFunction: 'linear',
+        },
+      ]}
+    />
+  );
+}
+
+function redChannel(hexColor: string) {
+  return parseInt(hexColor.slice(1, 3), 16);
 }
 
 describe('Mounted view props', () => {
@@ -74,5 +100,21 @@ describe('Mounted view props', () => {
     expect(
       (await getTestComponent('box').getMountedViewProps())?.backgroundColor
     ).toBe('transparent', ComparisonMode.COLOR);
+  });
+});
+
+describe('Presented view props', () => {
+  test('reads the props on screen while a CSS transition runs', async () => {
+    await render(<TransitionBox faded={false} />);
+    await waitForFrames();
+    await render(<TransitionBox faded />);
+    await wait(TRANSITION_MS / 2);
+
+    const presented = await getTestComponent('box').getPresentedViewProps();
+    expect(presented?.opacity).toBeWithinRange(0.2, 0.8);
+    expect(redChannel(presented?.backgroundColor ?? '')).toBeWithinRange(
+      50,
+      205
+    );
   });
 });
