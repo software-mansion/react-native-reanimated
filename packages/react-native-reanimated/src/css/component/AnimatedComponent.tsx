@@ -116,8 +116,12 @@ export default class AnimatedComponent<
     if (componentRef?.elementRef) {
       this._componentDOMRef = componentRef.elementRef.current;
     } else {
+      // `HTMLElement` does not exist off the DOM (SSR, native Jest project).
       this._componentDOMRef =
-        componentRef instanceof HTMLElement ? componentRef : null;
+        typeof HTMLElement !== 'undefined' &&
+        componentRef instanceof HTMLElement
+          ? componentRef
+          : null;
     }
     return componentRef;
   };
