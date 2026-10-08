@@ -15,6 +15,7 @@
     "appKind",
     "expoSdkVersion",
     "extraDependencies",
+    "staticFeatureFlags",
     "reproductionSteps",
     "verification",
     "limitations",
@@ -87,6 +88,46 @@
           },
           "version": {
             "type": "string"
+          }
+        }
+      }
+    },
+    "staticFeatureFlags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reanimated", "worklets"],
+      "description": "Static feature flags that the verification needs with a value that is not the default. The build job writes them to the package.json of the app for both builds. Each name must be a key of src/featureFlags/staticFlags.json of that package at the base commit and at the head commit. Both lists are empty when the verification needs the defaults.",
+      "properties": {
+        "reanimated": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "value"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "worklets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "value"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "boolean"
+              }
+            }
           }
         }
       }

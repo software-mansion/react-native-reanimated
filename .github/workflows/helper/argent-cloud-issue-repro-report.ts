@@ -14,9 +14,14 @@ import {
   readScreenshots,
   requireEnv,
   screenshotsSection,
+  staticFeatureFlagsLabel,
   summaryOfOutput,
 } from './argent-cloud-report.ts';
-import type { Screenshots, Verdict } from './argent-cloud-report.ts';
+import type {
+  Screenshots,
+  StaticFeatureFlags,
+  Verdict,
+} from './argent-cloud-report.ts';
 import { postToSlack } from './slack.ts';
 
 type Stage = 'plan-infeasible' | 'build-failed' | 'reproduce';
@@ -51,7 +56,7 @@ type Plan = {
   reanimatedVersion?: string;
   workletsVersion?: string | null;
   architecture?: string;
-  staticFeatureFlags?: Record<string, { name: string; value: boolean }[]>;
+  staticFeatureFlags?: StaticFeatureFlags;
   appKind?: string;
   reproductionSteps?: string[];
   verification?: {
@@ -160,7 +165,7 @@ function writeReport(context: Context): void {
     lines.push(`| Worklets | ${context.plan.workletsVersion ?? 'none'} |`);
     lines.push(`| Architecture | ${context.plan.architecture ?? 'unknown'} |`);
     lines.push(
-      `| Static feature flags | ${staticFeatureFlagsLabel(context.plan)} |`
+      `| Static feature flags | ${staticFeatureFlagsLabel(context.plan.staticFeatureFlags)} |`
     );
     lines.push(
       `| App | ${context.plan.appKind ?? 'unknown'} scaffold, iOS simulator, Release |`
@@ -298,14 +303,6 @@ function outcomeEmoji(context: Context): string {
     default:
       return context.status === 'success' ? '🟢' : '🔴';
   }
-}
-
-function staticFeatureFlagsLabel(plan: Plan): string {
-  const flags = Object.entries(plan.staticFeatureFlags ?? {}).flatMap(
-    ([owner, list]) =>
-      list.map(({ name, value }) => `${owner} \`${name}=${value}\``)
-  );
-  return flags.length > 0 ? flags.join(', ') : 'defaults';
 }
 
 function issueLabel(context: Context): string {

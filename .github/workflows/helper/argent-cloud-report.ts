@@ -15,6 +15,11 @@ export type Screenshots = { files: string[]; artifactUrl: string | undefined };
 
 export type Stream = { name: string; content: string };
 
+export type StaticFeatureFlags = Record<
+  string,
+  { name: string; value: boolean }[]
+>;
+
 export async function publishReportIssue({
   outcome,
   label,
@@ -172,6 +177,15 @@ export function screenshotsSection(
     ...screenshots.files.map((file) => `- \`${file}\``),
     '',
   ];
+}
+
+export function staticFeatureFlagsLabel(
+  flags: StaticFeatureFlags | undefined
+): string {
+  const labels = Object.entries(flags ?? {}).flatMap(([owner, list]) =>
+    list.map(({ name, value }) => `${owner} \`${name}=${value}\``)
+  );
+  return labels.length > 0 ? labels.join(', ') : 'defaults';
 }
 
 export function readScreenshots(

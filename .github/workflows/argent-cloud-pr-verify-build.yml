@@ -1,7 +1,7 @@
 name: Argent Cloud PR verification build
 
 # This workflow runs the code of the pull request (CocoaPods specs, the Babel plugin, native build
-# phases). The caller gives it a read-only token and no secrets. Do not add either.
+# phases). The caller gives it a read-only token, no secrets and no cache access. Do not add them.
 on:
   workflow_call:
     inputs:
@@ -27,6 +27,8 @@ on:
 
 permissions:
   contents: read
+
+cache-mode: none
 
 env:
   HELPER_DIR: .github/workflows/helper/argent-cloud-pr-verify

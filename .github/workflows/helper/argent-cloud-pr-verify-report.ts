@@ -13,9 +13,15 @@ import {
   readJsonObject,
   requireEnv,
   screenshotsSection,
+  staticFeatureFlagsLabel,
   summaryOfOutput,
 } from './argent-cloud-report.ts';
-import type { Screenshots, Stream, Verdict } from './argent-cloud-report.ts';
+import type {
+  Screenshots,
+  StaticFeatureFlags,
+  Stream,
+  Verdict,
+} from './argent-cloud-report.ts';
 import { postToSlack } from './slack.ts';
 
 type Stage = 'plan-infeasible' | 'build-failed' | 'verify';
@@ -59,6 +65,7 @@ type Plan = {
   library?: string;
   reactNativeVersion?: string;
   architecture?: string;
+  staticFeatureFlags?: StaticFeatureFlags;
   appKind?: string;
   reproductionSteps?: string[];
   verification?: {
@@ -260,6 +267,9 @@ function writeReport(context: Context): void {
       `| React Native | ${context.plan.reactNativeVersion ?? 'unknown'} |`
     );
     lines.push(`| Architecture | ${context.plan.architecture ?? 'unknown'} |`);
+    lines.push(
+      `| Static feature flags | ${staticFeatureFlagsLabel(context.plan.staticFeatureFlags)} |`
+    );
     lines.push(
       `| App | ${context.plan.appKind ?? 'unknown'} scaffold, iOS simulator, Release |`
     );

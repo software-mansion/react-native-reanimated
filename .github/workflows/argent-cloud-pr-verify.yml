@@ -6,6 +6,8 @@ on:
 
 permissions: {}
 
+cache-mode: none
+
 concurrency:
   group: argent-cloud-pr-${{ github.event.pull_request.number }}-${{ github.event.label.name }}
   cancel-in-progress: true
@@ -187,6 +189,7 @@ jobs:
     if: needs.plan.outputs.feasible == 'true'
     permissions:
       contents: read
+    cache-mode: none
     uses: ./.github/workflows/argent-cloud-pr-verify-build.yml
     with:
       variant: base
@@ -199,6 +202,7 @@ jobs:
     if: needs.plan.outputs.feasible == 'true'
     permissions:
       contents: read
+    cache-mode: none
     uses: ./.github/workflows/argent-cloud-pr-verify-build.yml
     with:
       variant: head
@@ -259,6 +263,7 @@ jobs:
             echo "- Library: $(jq -r .library "$plan")"
             echo "- react-native: $(jq -r .reactNativeVersion "$plan")"
             echo "- Architecture: $(jq -r .architecture "$plan")"
+            echo "- Static feature flags: $(jq -r '[.staticFeatureFlags // {} | to_entries[] | .key as $owner | .value[] | "\($owner) \(.name)=\(.value)"] | if length == 0 then "defaults" else join(", ") end' "$plan")"
             echo "- App: $(jq -r .appKind "$plan") scaffold, iOS simulator, Release configuration with an embedded bundle"
             echo
             echo "### Steps"

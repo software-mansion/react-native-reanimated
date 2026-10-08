@@ -30,6 +30,7 @@ The app is always scaffolded by the build job from the official React Native CLI
 1. The React Native version. Pick the newest version that exists on npm and that both `compatibility.json` files accept for the library at the head commit.
 1. The kind of app: `rn-cli` (React Native CLI, Bare) or `expo` (Expo Dev Client or Expo Go). Default to `rn-cli`. Use `expo` only when the behavior needs Expo. For `expo`, pick the Expo SDK major whose bundled React Native matches `reactNativeVersion` and put it in `expoSdkVersion`.
 1. The architecture: `fabric` unless the change is about the Legacy Architecture (Paper renderer).
+1. The static feature flags, in `staticFeatureFlags`. See the section about feature flags.
 1. Verification steps that a tester can follow on a simulator with no source access: what to tap, what to look at, how long to wait and what a pass and a fail look like. Bake any needed controls into the screen, for example a button with a visible label, and name them in the steps.
 1. How the tester tells the two builds apart, in `verification`. The fail signal is what the screen shows without the change. The pass signal is what the screen shows with the change. The signal must be on screen: render state with `<Text>` and describe the pass and the fail output. A crash or a frozen screen is also a usable signal.
 1. Where the problem comes from, in `analysis`. Read the library sources at the base branch, name the code that causes the behavior with file paths and line numbers, and say if the claims of the pull request and of the linked issues agree with that code.
@@ -53,6 +54,13 @@ Refer to code with file paths and line numbers. Separate what you read in the co
 - `cannot-tell`: you could not find the cause or could not follow the change. Say what is missing.
 
 Write `analysis`, `review` and `reviewVerdict` also when `feasible` is false. The simulator run confirms the behavior. Your review judges the code. Both go into the report.
+
+## Feature flags
+
+Some code runs only when a feature flag has a value that is not the default. Read the diff for the flags that guard the changed code, and read the pull request and the linked issues for flag names.
+
+- Static feature flags are compiled into the native code. List each flag that the verification needs in `staticFeatureFlags`, under the package that owns it, with the value that makes the changed code run. The build job writes them to `reanimated.staticFeatureFlags` and `worklets.staticFeatureFlags` in the `package.json` of the app before it installs the pods, with the same values for both builds. The valid names are the keys of `src/featureFlags/staticFlags.json` in each package. A flag must exist at the base commit and at the head commit, or the build fails. When the pull request adds the flag, the run cannot compare the two builds: set `feasible` to false and review the code. List only the flags that change the behavior on iOS. Leave both lists empty when the verification needs the defaults.
+- Dynamic feature flags need no field in the plan. Call `setDynamicFeatureFlag` in the app source before the code that depends on the flag.
 
 ## Partial verifications
 
@@ -80,6 +88,7 @@ The tester is an agent on a Mac with the app installed on an iOS simulator. It h
 - the change affects only Android, web, macOS, tvOS or a real device and cannot change what an iOS simulator shows;
 - the change affects only a Debug bundle or needs Metro, for example a `__DEV__` warning;
 - the change touches only documentation, tests, CI, tooling or example apps, or it is a refactor that changes no behavior;
+- the changed code runs only behind a static feature flag that the pull request adds;
 - triggering the changed code needs custom native code or a package outside the allowlist, and no path through the public API of Reanimated, Worklets or React Native reaches the same mechanism;
 - the effect can be observed only with a memory or CPU profiler, a debugger or system logs, and nothing the app can render on screen reflects it.
 
