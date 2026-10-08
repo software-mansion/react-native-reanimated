@@ -1,6 +1,5 @@
 #include <reanimated/NativeAnimations/NativeAnimationValue.h>
 
-#include <algorithm>
 #include <cmath>
 
 namespace reanimated::native_animation {
@@ -20,11 +19,6 @@ struct FiniteVisitor {
   bool operator()(const AnimationColor &color) const {
     return std::isfinite(color.red) && std::isfinite(color.green) && std::isfinite(color.blue) &&
         std::isfinite(color.alpha);
-  }
-  bool operator()(const AnimationTransform &transform) const {
-    return std::ranges::all_of(transform.operations, [](const AnimationTransformOperation &operation) {
-      return std::isfinite(operation.value);
-    });
   }
 };
 
@@ -76,16 +70,6 @@ struct SameValueVisitor {
     return isClose(lhs.red, rhs.red) && isClose(lhs.green, rhs.green) && isClose(lhs.blue, rhs.blue) &&
         isClose(lhs.alpha, rhs.alpha);
   }
-  bool operator()(const AnimationTransform &lhs, const AnimationTransform &rhs) const {
-    return hasSameOperationKinds(lhs, rhs) &&
-        std::ranges::equal(
-               lhs.operations,
-               rhs.operations,
-               [](const AnimationTransformOperation &left, const AnimationTransformOperation &right) {
-                 return isClose(
-                     left.value, right.value, isLength(left.kind) ? ENDPOINT_TOLERANCE : MATRIX_CELL_TOLERANCE);
-               });
-  }
   template <typename Lhs, typename Rhs>
   bool operator()(const Lhs &, const Rhs &) const {
     return false;
@@ -98,9 +82,8 @@ bool isSameValue(const AnimationValue &lhs, const AnimationValue &rhs) {
   return std::visit(SameValueVisitor{}, lhs, rhs);
 }
 
-bool hasSameOperationKinds(const AnimationTransform &lhs, const AnimationTransform &rhs) {
-  return std::ranges::equal(
-      lhs.operations, rhs.operations, {}, &AnimationTransformOperation::kind, &AnimationTransformOperation::kind);
+bool isSameOperationValue(const TransformOperationKind kind, const double lhs, const double rhs) {
+  return isClose(lhs, rhs, isLength(kind) ? ENDPOINT_TOLERANCE : MATRIX_CELL_TOLERANCE);
 }
 
 facebook::react::Transform matrixOf(const AnimationTransform &transform) {
@@ -144,7 +127,7 @@ bool valueMatchesTarget(const AnimationValue &value, const AnimationTarget targe
     case AnimationTarget::ShadowRadius:
       return std::holds_alternative<double>(value);
     case AnimationTarget::Transform:
-      return std::holds_alternative<AnimationTransform>(value);
+      return false;
   }
   return false;
 }

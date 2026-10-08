@@ -30,50 +30,93 @@ bool isValidDuration(const double durationMs) {
   return std::isfinite(durationMs) && durationMs >= 0;
 }
 
-std::optional<TrackBuildFailure> validateTransformTrack(const AnimationTrack &track) {
-  const auto *startValue = std::get_if<AnimationValue>(&track.start);
-  const auto *start = startValue == nullptr ? nullptr : std::get_if<AnimationTransform>(startValue);
-  if (start == nullptr) {
+/// `UnsupportedTrackForm` for a timeline with no segment, and for one with more than one segment and no
+/// duration.
+template <typename Value, typename IsValidValue>
+std::optional<TrackBuildFailure> validateSegments(
+    const std::vector<TimelineSegment<Value>> &segments,
+    const double durationMs,
+    const IsValidValue &isValidValue) {
+  if (segments.empty() || (durationMs == 0 && segments.size() != 1)) {
     return TrackBuildFailure::UnsupportedTrackForm;
   }
-  for (const auto &segment : track.segments) {
-    const auto &end = std::get<AnimationTransform>(segment.endValue);
-    if (!hasSameOperationKinds(*start, end)) {
-      return TrackBuildFailure::UnsupportedTrackForm;
-    }
-    for (size_t index = 0; index < end.operations.size(); ++index) {
-      const auto &operation = end.operations[index];
-      if (operation.kind == TransformOperationKind::Perspective && operation.value != start->operations[index].value) {
-        return TrackBuildFailure::UnsupportedValue;
-      }
-    }
-  }
-  return std::nullopt;
-}
-
-} // namespace
-
-std::optional<TrackBuildFailure> validateTrack(const AnimationTrack &track) {
-  if (!isValidDuration(track.delayMs) || !isValidDuration(track.durationMs) ||
-      !std::visit(ValidStartVisitor{track.target}, track.start)) {
-    return TrackBuildFailure::InvalidValue;
-  }
-  if (track.segments.empty() || (track.durationMs == 0 && track.segments.size() != 1)) {
-    return TrackBuildFailure::UnsupportedTrackForm;
-  }
-
   double previousOffset = 0;
-  for (const auto &segment : track.segments) {
-    if (!(segment.endOffset > previousOffset && segment.endOffset <= 1) ||
-        !isValidValue(segment.endValue, track.target) || !isValid(segment.timingFromPrevious)) {
+  for (const auto &segment : segments) {
+    if (!(segment.endOffset > previousOffset && segment.endOffset <= 1) || !isValidValue(segment.endValue) ||
+        !isValid(segment.timingFromPrevious)) {
       return TrackBuildFailure::InvalidValue;
     }
     previousOffset = segment.endOffset;
   }
-  if (previousOffset != 1) {
+  return previousOffset == 1 ? std::nullopt : std::optional(TrackBuildFailure::InvalidValue);
+}
+
+bool holdsOneValue(const OperationTimeline &operation) {
+  return std::ranges::all_of(operation.segments, [&operation](const TimelineSegment<double> &segment) {
+    return segment.endValue == operation.start;
+  });
+}
+
+struct BodyValidator {
+  const AnimationTrack &track;
+
+  std::optional<TrackBuildFailure> operator()(const ValueTimeline &timeline) const {
+    if (track.target == AnimationTarget::Transform) {
+      return TrackBuildFailure::UnsupportedTrackForm;
+    }
+    if (!std::visit(ValidStartVisitor{track.target}, timeline.start)) {
+      return TrackBuildFailure::InvalidValue;
+    }
+    return validateSegments(timeline.segments, track.durationMs, [this](const AnimationValue &value) {
+      return isValidValue(value, track.target);
+    });
+  }
+
+  std::optional<TrackBuildFailure> operator()(const TransformTimelines &body) const {
+    if (track.target != AnimationTarget::Transform) {
+      return TrackBuildFailure::UnsupportedTrackForm;
+    }
+    for (const auto &operation : body.operations) {
+      if (!std::isfinite(operation.start)) {
+        return TrackBuildFailure::InvalidValue;
+      }
+      const auto failure = validateSegments(
+          operation.segments, track.durationMs, [](const double value) { return std::isfinite(value); });
+      if (failure) {
+        return failure;
+      }
+    }
+    const bool changesPerspective = std::ranges::any_of(body.operations, [](const OperationTimeline &operation) {
+      return operation.kind == TransformOperationKind::Perspective && !holdsOneValue(operation);
+    });
+    return changesPerspective ? std::optional(TrackBuildFailure::UnsupportedValue) : std::nullopt;
+  }
+};
+
+struct ChangesValueVisitor {
+  bool operator()(const ValueTimeline &timeline) const {
+    const auto *start = std::get_if<AnimationValue>(&timeline.start);
+    return start == nullptr || !std::ranges::all_of(timeline.segments, [start](const AnimationSegment &segment) {
+             return isSameValue(*start, segment.endValue);
+           });
+  }
+
+  bool operator()(const TransformTimelines &body) const {
+    return std::ranges::any_of(body.operations, [](const OperationTimeline &operation) {
+      return std::ranges::any_of(operation.segments, [&operation](const TimelineSegment<double> &segment) {
+        return !isSameOperationValue(operation.kind, operation.start, segment.endValue);
+      });
+    });
+  }
+};
+
+} // namespace
+
+std::optional<TrackBuildFailure> validateTrack(const AnimationTrack &track) {
+  if (!isValidDuration(track.delayMs) || !isValidDuration(track.durationMs)) {
     return TrackBuildFailure::InvalidValue;
   }
-  return track.target == AnimationTarget::Transform ? validateTransformTrack(track) : std::nullopt;
+  return std::visit(BodyValidator{track}, track.body);
 }
 
 TrackPlayback playbackOf(const AnimationTrack &track) {
@@ -84,10 +127,18 @@ TrackPlayback playbackOf(const AnimationTrack &track) {
 }
 
 bool changesValue(const AnimationTrack &track) {
-  const auto *start = std::get_if<AnimationValue>(&track.start);
-  return start == nullptr || !std::ranges::all_of(track.segments, [start](const AnimationSegment &segment) {
-           return isSameValue(*start, segment.endValue);
-         });
+  return std::visit(ChangesValueVisitor{}, track.body);
+}
+
+TransformEndpoints endpointsOf(const TransformTimelines &body) {
+  TransformEndpoints endpoints;
+  endpoints.start.operations.reserve(body.operations.size());
+  endpoints.end.operations.reserve(body.operations.size());
+  for (const auto &operation : body.operations) {
+    endpoints.start.operations.push_back({operation.kind, operation.start});
+    endpoints.end.operations.push_back({operation.kind, operation.segments.back().endValue});
+  }
+  return endpoints;
 }
 
 } // namespace reanimated::native_animation

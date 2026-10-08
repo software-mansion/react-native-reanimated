@@ -1,0 +1,1 @@
+Fix the fit of an easing function for an operation of a `transform` leaf of a native layout animation on iOS: the fit follows the span of the operation and the size of the view, so that a translation is no more than 0.25 pt from the easing function and a rotation moves no point of the view more than 0.25 pt from it.
