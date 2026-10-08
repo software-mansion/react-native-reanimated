@@ -5,6 +5,7 @@
     "feasible",
     "reason",
     "summary",
+    "analysis",
     "library",
     "platform",
     "reactNativeVersion",
@@ -17,13 +18,14 @@
     "extraDependencies",
     "reproductionSteps",
     "verification",
+    "limitations",
     "expectedBehavior",
     "actualBehavior"
   ],
   "properties": {
     "feasible": {
       "type": "boolean",
-      "description": "false only as a last resort: the bug cannot occur on an iOS simulator, needs a Debug bundle or Metro, needs custom native code with no reachable public-API path, or the issue has no usable reproduction and is too vague to design one."
+      "description": "false only as a last resort: the behavior cannot occur on an iOS simulator, needs a Debug bundle or Metro, needs custom native code with no reachable public-API path, or the issue makes no claim about behavior that an app can show."
     },
     "reason": {
       "type": "string",
@@ -32,6 +34,10 @@
     "summary": {
       "type": "string",
       "description": "One paragraph that describes the bug in your own words."
+    },
+    "analysis": {
+      "type": "string",
+      "description": "Where the behavior comes from: the code in the library sources that causes it, with file paths and line numbers, and whether the claims of the issue agree with that code. Required also when feasible is false."
     },
     "library": {
       "type": "string",
@@ -137,6 +143,10 @@
           "description": "What the tester sees or measures when the bug reproduces."
         }
       }
+    },
+    "limitations": {
+      "type": ["string", "null"],
+      "description": "What the simulator run cannot show about the issue, when the plan covers only a part of it. null when the plan covers the whole issue."
     },
     "expectedBehavior": {
       "type": "string"
