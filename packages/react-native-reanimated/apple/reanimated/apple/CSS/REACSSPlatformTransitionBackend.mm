@@ -79,8 +79,11 @@ std::variant<AnimationTrack, TrackBuildFailure> buildTrack(const CSSPlatformTran
   }
   AnimationTrack track{
       .target = *target,
-      .start = VisualValueIfInterrupting{animationValue(run.fromValue)},
-      .segments = {{.endOffset = 1, .endValue = animationValue(run.toValue), .timingFromPrevious = *timing}},
+      .body =
+          ValueTimeline{
+              .start = VisualValueIfInterrupting{animationValue(run.fromValue)},
+              .segments = {{.endOffset = 1, .endValue = animationValue(run.toValue), .timingFromPrevious = *timing}},
+          },
       .durationMs = run.durationMs,
       .endpointPolicy = run.holdsEndValue ? EndpointPolicy::HoldWithoutCommit : EndpointPolicy::ExecutorCommitsEndpoint,
   };
