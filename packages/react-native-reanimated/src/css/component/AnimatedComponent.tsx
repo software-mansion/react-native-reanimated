@@ -43,6 +43,9 @@ export default class AnimatedComponent<
   _rawComponentRef: Component | HTMLElement | null = null;
   _componentDOMRef: HTMLElement | null = null;
   _willUnmount: boolean = false;
+  // Set when the component is pointed at a new host; consumed by
+  // `componentDidUpdate` to re-register what is keyed by the view tag.
+  _hostReplaced: boolean = false;
   _forwardedRefCleanup?: () => void;
 
   constructor(ChildComponent: AnyComponent, props: P) {
@@ -100,7 +103,12 @@ export default class AnimatedComponent<
     this._forwardedRefCleanup = assignRef(forwardedRef, ref);
     if (ref !== this._rawComponentRef) {
       this._rawComponentRef = ref;
-      this._updateComponentRef(this._resolveComponentRef(ref));
+      const resolved = this._resolveComponentRef(ref);
+      // A new raw ref (e.g. a fresh imperative handle) may still resolve to
+      // the same host, which then keeps its bindings.
+      if (resolved !== this._componentRef) {
+        this._updateComponentRef(resolved);
+      }
     }
     this._onSetLocalRef();
   };
@@ -129,6 +137,7 @@ export default class AnimatedComponent<
     // them first; the next update re-creates them for the new host.
     if (previousViewInfo !== undefined) {
       this._detachHostBindings(previousViewInfo);
+      this._hostReplaced = true;
     }
 
     this._componentRef = componentRef;

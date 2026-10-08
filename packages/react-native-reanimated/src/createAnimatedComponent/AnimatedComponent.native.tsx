@@ -181,18 +181,36 @@ export default class AnimatedComponent
   }
 
   _detachHostBindings(previousViewInfo: ViewInfo) {
-    this._detachStyles(previousViewInfo.viewTag as number);
+    const viewTag = previousViewInfo.viewTag as number;
+    this._detachStyles(viewTag);
     this._InlinePropManager.detachInlineProps();
+
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS && viewTag !== -1) {
+      PropsRegistryGarbageCollector.unregisterView(viewTag);
+    }
+
+    if (this._options?.jsProps?.length) {
+      jsPropsUpdater.unregisterComponent(this);
+    }
   }
 
   _detachStyles(viewTag: number = this.getComponentViewTag()) {
-    if (viewTag !== -1) {
-      for (const style of this._animatedStyles) {
-        style.viewDescriptors.remove(viewTag);
-      }
-      for (const animatedProp of this._animatedProps) {
-        animatedProp?.viewDescriptors?.remove(viewTag);
-      }
+    if (viewTag === -1) {
+      return;
+    }
+    // A style change in the same update has already moved the attached
+    // styles to the previous lists, so detach from both.
+    for (const style of [
+      ...this._prevAnimatedStyles,
+      ...this._animatedStyles,
+    ]) {
+      style.viewDescriptors.remove(viewTag);
+    }
+    for (const animatedProp of [
+      ...this._prevAnimatedProps,
+      ...this._animatedProps,
+    ]) {
+      animatedProp?.viewDescriptors?.remove(viewTag);
     }
   }
 
@@ -283,10 +301,11 @@ export default class AnimatedComponent
   componentDidUpdate(prevProps: AnimatedComponentProps<InitialComponentProps>) {
     this._refreshComponentRef();
 
-    // The ref callback clears the cached view info when the host view is
-    // replaced; the snapshot then registered this update's configs for the old
-    // tag.
-    if (this._viewInfo === undefined) {
+    // Everything keyed by the view tag was registered for the previous host,
+    // including this update's configs from the snapshot.
+    if (this._hostReplaced) {
+      this._hostReplaced = false;
+
       this._configureLayoutAnimation(
         LayoutAnimationType.LAYOUT,
         this.props.layout
@@ -295,9 +314,23 @@ export default class AnimatedComponent
         LayoutAnimationType.EXITING,
         this.props.exiting
       );
+
       this._sharedTransition = undefined;
       this._configureSharedTransition();
+
+      if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+        const viewTag = this.getComponentViewTag();
+
+        if (viewTag !== -1) {
+          PropsRegistryGarbageCollector.registerView(viewTag, this);
+        }
+      }
+
+      if (this._options?.jsProps?.length) {
+        jsPropsUpdater.registerComponent(this, this._options.jsProps);
+      }
     }
+
     this._NativeEventsManager?.updateEvents(prevProps);
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
