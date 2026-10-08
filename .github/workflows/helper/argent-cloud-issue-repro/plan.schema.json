@@ -16,6 +16,7 @@
     "expoSdkVersion",
     "reproductionSource",
     "extraDependencies",
+    "staticFeatureFlags",
     "reproductionSteps",
     "verification",
     "limitations",
@@ -109,6 +110,46 @@
           },
           "version": {
             "type": "string"
+          }
+        }
+      }
+    },
+    "staticFeatureFlags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reanimated", "worklets"],
+      "description": "Static feature flags that the reproduction needs with a value that is not the default. The build job writes them to the package.json of the app. Each name must be a key of src/featureFlags/staticFlags.json of that package at the chosen version. Both lists are empty when the reproduction needs the defaults.",
+      "properties": {
+        "reanimated": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "value"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "worklets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "value"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "boolean"
+              }
+            }
           }
         }
       }

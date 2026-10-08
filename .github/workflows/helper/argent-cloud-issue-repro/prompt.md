@@ -25,9 +25,19 @@ The app is always scaffolded by the build job from the official React Native CLI
 1. Exact versions. The issue form has the fields `Reanimated version`, `Worklets version` and `React Native version`. Resolve each one to an exact version that exists on npm. When a field is empty or wrong, pick the newest version that is compatible according to the two `compatibility.json` files. Reanimated 3.x has no worklets package, so `workletsVersion` is null there. When the linked repository has a `package.json`, its versions of react-native, react-native-reanimated and react-native-worklets take precedence over the form fields.
 1. The kind of app: `rn-cli` (React Native CLI, Bare) or `expo` (Expo Dev Client or Expo Go). Read the `Workflow` field and the linked repository. Default to `rn-cli`. For `expo`, pick the Expo SDK major whose bundled React Native matches `reactNativeVersion` and put it in `expoSdkVersion`.
 1. The architecture: `fabric` unless the `Architecture` field or the linked repository says Legacy Architecture (Paper renderer).
+1. The static feature flags, in `staticFeatureFlags`. See the next section.
 1. Reproduction steps that a tester can follow on a simulator with no source access: what to tap, what to look at, how long to wait and what a pass and a fail look like. Bake any needed controls into the screen, for example a button with a visible label, and name them in the steps.
 1. How the tester verifies the result, in `verification`. The signal must be on screen: render state with `<Text>` and describe the pass and the fail output. A crash or a frozen screen is also a usable signal.
 1. Where the behavior comes from, in `analysis`. Read the library sources, name the code that causes the behavior with file paths and line numbers, and say if the claims of the issue agree with that code. Write it also when `feasible` is false.
+
+## Feature flags
+
+Some behavior exists only when a feature flag has a value that is not the default. Read the issue for flag names, for example in the `Reanimated feature flags` field of the issue form, in a `package.json` snippet or in the linked repository.
+
+- Static feature flags are compiled into the native code. List each flag that the reproduction needs in `staticFeatureFlags`, under the package that owns it, with the value that triggers the behavior. The build job writes them to `reanimated.staticFeatureFlags` and `worklets.staticFeatureFlags` in the `package.json` of the app before it installs the pods. The valid names are the keys of `packages/react-native-reanimated/src/featureFlags/staticFlags.json` and `packages/react-native-worklets/src/featureFlags/staticFlags.json`. An older version of the library can have fewer flags, and a flag that the chosen version does not have fails the build. List only the flags that change the behavior on iOS. Leave both lists empty when the reproduction needs the defaults.
+- Dynamic feature flags need no field in the plan. Call `setDynamicFeatureFlag` in the app source before the code that depends on the flag.
+
+A static feature flag that the issue names is not a reason to give up.
 
 ## Questions and proposals
 

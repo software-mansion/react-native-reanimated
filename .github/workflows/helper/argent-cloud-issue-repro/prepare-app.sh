@@ -19,6 +19,7 @@ main() {
     *) fail "unknown appKind '$APP_KIND'" ;;
   esac
 
+  write_static_feature_flags
   install_pods
   print_app_dir
 }
@@ -145,6 +146,41 @@ copy_overlay() {
     (cd "$OVERLAY_DIR" && find . -type f)
     cp -R "$OVERLAY_DIR"/. "$APP_DIR"/
   fi
+}
+
+write_static_feature_flags() {
+  PLAN_FILE="$PLAN_FILE" APP_DIR="$APP_DIR" node -e '
+    const fs = require("fs");
+    const path = require("path");
+    const appDir = process.env.APP_DIR;
+    const plan = JSON.parse(fs.readFileSync(process.env.PLAN_FILE, "utf8"));
+    const appPackagePath = path.join(appDir, "package.json");
+    const appPackage = JSON.parse(fs.readFileSync(appPackagePath, "utf8"));
+    const packages = { reanimated: "react-native-reanimated", worklets: "react-native-worklets" };
+    for (const [owner, flags] of Object.entries(plan.staticFeatureFlags ?? {})) {
+      if (flags.length === 0) continue;
+      const known = JSON.parse(
+        fs.readFileSync(
+          path.join(appDir, "node_modules", packages[owner], "src/featureFlags/staticFlags.json"),
+          "utf8"
+        )
+      );
+      for (const { name, value } of flags) {
+        if (!(name in known)) {
+          throw new Error(`${packages[owner]} has no static feature flag ${name} in this version`);
+        }
+        if (typeof value !== "boolean") {
+          throw new Error(`the static feature flag ${name} must be true or false`);
+        }
+      }
+      appPackage[owner] = {
+        ...appPackage[owner],
+        staticFeatureFlags: Object.fromEntries(flags.map(({ name, value }) => [name, value])),
+      };
+      console.log(`${owner}.staticFeatureFlags:`, appPackage[owner].staticFeatureFlags);
+    }
+    fs.writeFileSync(appPackagePath, JSON.stringify(appPackage, null, 2) + "\n");
+  ' || fail "the static feature flags of the plan were rejected"
 }
 
 install_pods() {
