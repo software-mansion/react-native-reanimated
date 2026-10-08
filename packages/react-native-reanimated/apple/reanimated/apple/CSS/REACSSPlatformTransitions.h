@@ -27,7 +27,9 @@ NS_ASSUME_NONNULL_BEGIN
                        easing:(const reanimated::css::EasingConfig &)easing
                    persistent:(BOOL)persistent;
 
-- (void)stopTransitionForTag:(facebook::react::Tag)viewTag propertyName:(const std::string &)propertyName;
+- (void)stopTransitionForTag:(facebook::react::Tag)viewTag
+                propertyName:(const std::string &)propertyName
+                      settle:(BOOL)settle;
 
 @end
 

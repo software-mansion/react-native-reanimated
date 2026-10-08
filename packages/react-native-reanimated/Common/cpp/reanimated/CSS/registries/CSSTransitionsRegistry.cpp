@@ -174,10 +174,20 @@ void CSSTransitionsRegistry::TransitionObserver::onTransitionEvent(
   owner_.eventsEmitter_->emit(createCSSEvent(viewTag, type, propertyName, elapsedTimeMs));
 }
 
+void CSSTransitionsRegistry::detach(const Tag viewTag) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  removeTransition(viewTag, true);
+}
+
 void CSSTransitionsRegistry::removeTag(const Tag viewTag) {
+  // The view left the tree but may still be on screen for an exiting animation.
+  removeTransition(viewTag, false);
+}
+
+void CSSTransitionsRegistry::removeTransition(const Tag viewTag, const bool settle) {
   const auto it = registry_.find(viewTag);
   if (it != registry_.end()) {
-    it->second->cancel();
+    it->second->cancel(settle);
   }
   removeFromUpdatesRegistry(viewTag);
   registry_.erase(viewTag);

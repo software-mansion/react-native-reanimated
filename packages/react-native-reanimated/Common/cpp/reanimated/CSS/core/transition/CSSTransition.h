@@ -57,7 +57,7 @@ class CSSTransition {
   folly::dynamic run(jsi::Runtime &rt, CSSTransitionConfig &&config, const folly::dynamic &lastUpdates);
   /// Runs the loop side directly from already-computed (dynamic) diffs.
   folly::dynamic run(const PropertyValueDynamicDiffsMap &propertyDiffs, const folly::dynamic &lastUpdates);
-  void cancel();
+  void cancel(bool settle);
   /// Drops the properties from the transition, so neither the loop nor a native animation keeps
   /// writing them once their value has been evicted from the updates registry.
   void removeProperties(const std::vector<std::string> &propertyNames, double timestamp);
