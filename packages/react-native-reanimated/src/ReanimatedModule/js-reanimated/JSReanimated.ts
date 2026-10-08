@@ -88,10 +88,33 @@ class JSReanimated implements IReanimatedModule {
 
   isSensorAvailable(sensorType: SensorType): boolean {
     // the window object is unavailable when building the server portion of a site that uses SSG
-    return (
-      IS_WINDOW_AVAILABLE &&
-      isWebSensorType(sensorType) &&
-      WEB_SENSOR_NAMES[sensorType] in window
+    if (!IS_WINDOW_AVAILABLE || !isWebSensorType(sensorType)) {
+      return false;
+    }
+
+    if (WEB_SENSOR_NAMES[sensorType] in window) {
+      return true;
+    }
+
+    this.warnAboutUnavailableSensor();
+    return false;
+  }
+
+  warnAboutUnavailableSensor() {
+    if (this.platform === undefined) {
+      this.detectPlatform();
+    }
+
+    // https://w3c.github.io/sensors/#secure-context
+    logger.warnOnce(
+      'Sensor is not available.' +
+        (IS_WEB && location.protocol !== 'https:'
+          ? ' Make sure you use secure origin with `npx expo start --web --https`.'
+          : '') +
+        (this.platform === Platform.WEB_IOS
+          ? ' For iOS web, you will also have to also grant permission in the browser: https://dev.to/li/how-to-requestpermission-for-devicemotion-and-deviceorientation-events-in-ios-13-46g2.'
+          : ''),
+      0
     );
   }
 
@@ -105,32 +128,7 @@ class JSReanimated implements IReanimatedModule {
     _iosReferenceFrame: number,
     eventHandler: SerializableRef<(data: SensorValue) => void>
   ): number {
-    if (!IS_WINDOW_AVAILABLE) {
-      // the window object is unavailable when building the server portion of a site that uses SSG
-      // this check is here to ensure that the server build won't fail
-      return -1;
-    }
-
-    if (!isWebSensorType(sensorType)) {
-      return -1;
-    }
-
-    if (this.platform === undefined) {
-      this.detectPlatform();
-    }
-
-    if (!this.isSensorAvailable(sensorType)) {
-      // https://w3c.github.io/sensors/#secure-context
-      logger.warnOnce(
-        'Sensor is not available.' +
-          (IS_WEB && location.protocol !== 'https:'
-            ? ' Make sure you use secure origin with `npx expo start --web --https`.'
-            : '') +
-          (this.platform === Platform.WEB_IOS
-            ? ' For iOS web, you will also have to also grant permission in the browser: https://dev.to/li/how-to-requestpermission-for-devicemotion-and-deviceorientation-events-in-ios-13-46g2.'
-            : ''),
-        0
-      );
+    if (!isWebSensorType(sensorType) || !this.isSensorAvailable(sensorType)) {
       return -1;
     }
 

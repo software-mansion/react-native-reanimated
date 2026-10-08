@@ -48,12 +48,10 @@ describe('useAnimatedSensor', () => {
     expect(container.textContent).toBe('true');
   });
 
-  test('keeps one registration after hydration', () => {
+  test('registers the sensor one time at hydration', () => {
     hydrateSensorAvailability();
 
-    const registrations = jest.mocked(registerSensor).mock.calls.length;
-    const releases = jest.mocked(unregisterSensor).mock.calls.length;
-
-    expect(registrations - releases).toBe(1);
+    expect(registerSensor).toHaveBeenCalledTimes(1);
+    expect(unregisterSensor).not.toHaveBeenCalled();
   });
 });
