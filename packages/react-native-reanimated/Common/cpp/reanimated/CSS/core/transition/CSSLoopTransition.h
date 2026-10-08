@@ -48,6 +48,8 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
       const PropertiesSettingsMap &changedPropertiesSettings,
       const std::vector<std::string> &removedProperties,
       double timestamp);
+  /// Continues runs handed over mid-flight without advancing the properties already here.
+  void resume(const ResumedTransitionRunsMap &runs, double timestamp);
 
   /// Tracks the lifecycle of properties whose rendering is routed to the platform.
 

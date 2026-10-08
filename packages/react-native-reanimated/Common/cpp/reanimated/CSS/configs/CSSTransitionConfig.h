@@ -50,6 +50,16 @@ using PropertyValueDynamicDiffsMap = std::unordered_map<std::string, PropertyVal
 
 using PropertiesSettingsMap = std::unordered_map<std::string, CSSTransitionPropertySettings>;
 
+/// A run in flight on the platform, handed to the loop to continue on its own timeline.
+struct ResumedTransitionRun {
+  folly::dynamic fromValue;
+  folly::dynamic toValue;
+  TransitionTiming timing;
+  CSSTransitionPropertySettings settings;
+};
+
+using ResumedTransitionRunsMap = std::unordered_map<std::string, ResumedTransitionRun>;
+
 struct CSSTransitionConfig {
   PropertiesSettingsMap changedPropertiesSettings;
   PropertyValueDiffsMap changedProperties;

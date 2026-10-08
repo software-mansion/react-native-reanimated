@@ -57,6 +57,14 @@ class CSSPlatformTransitionProxy {
       bool allowPlatform,
       double timestamp);
 
+  /// Moves the view's native runs still in flight to the loop, which can report their events,
+  /// and returns them to resume there. Pseudo-locked properties stay on the platform.
+  ResumedTransitionRunsMap handOverToLoop(
+      Tag viewTag,
+      const TransitionProperties &pseudoLockedProperties,
+      CSSTransitionRouting &routing,
+      double timestamp);
+
   /// Cancels the native transition of every given property (teardown).
   void cancelAll(Tag viewTag, const TransitionProperties &properties);
 
