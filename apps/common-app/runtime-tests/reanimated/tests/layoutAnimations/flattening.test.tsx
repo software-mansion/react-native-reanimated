@@ -1,5 +1,4 @@
 import React from 'react';
-import type { ViewProps } from 'react-native';
 import { Platform, StyleSheet, View } from 'react-native';
 import Animated, { FadeOut } from 'react-native-reanimated';
 
@@ -14,6 +13,7 @@ import {
   wait,
   waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
+import { AndroidDrawerLayout } from './AndroidDrawerLayout';
 
 const styles = StyleSheet.create({
   wrapper: { opacity: 0.5 },
@@ -22,12 +22,6 @@ const styles = StyleSheet.create({
   nested: { width: 50, height: 20, backgroundColor: '#ddaa22' },
   drawer: { width: 300, height: 200 },
 });
-
-const AndroidDrawerLayout = (
-  require('react-native/Libraries/Components/DrawerAndroid/AndroidDrawerLayoutNativeComponent') as {
-    default: React.ComponentType<ViewProps & { drawerWidth?: number }>;
-  }
-).default;
 
 type DroppedKind = 'plain' | 'nested' | 'exiting';
 
