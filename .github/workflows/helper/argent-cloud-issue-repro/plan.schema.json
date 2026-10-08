@@ -33,7 +33,7 @@
     },
     "summary": {
       "type": "string",
-      "description": "One paragraph that describes the bug in your own words."
+      "description": "One paragraph that describes, in your own words, the behavior that the issue reports."
     },
     "analysis": {
       "type": "string",
@@ -42,7 +42,7 @@
     "library": {
       "type": "string",
       "enum": ["reanimated", "worklets"],
-      "description": "The package whose behaviour is wrong."
+      "description": "The package that the issue is about."
     },
     "platform": {
       "type": "string",
@@ -124,23 +124,23 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["kind", "how", "passSignal", "failSignal"],
-      "description": "How the tester decides whether the bug reproduced.",
+      "description": "How the tester decides whether the behavior that the issue reports reproduced.",
       "properties": {
         "kind": {
           "type": "string",
-          "enum": ["screen", "memory", "logs", "crash", "other"]
+          "enum": ["screen", "crash", "other"]
         },
         "how": {
           "type": "string",
-          "description": "What to observe or measure and with which tool, for example the on-screen text, ps -o rss on the app process, or xcrun simctl spawn <udid> log stream."
+          "description": "What to observe on screen, for example a text that the app renders. The tester cannot read memory, logs or the output of other tools."
         },
         "passSignal": {
           "type": "string",
-          "description": "What the tester sees or measures when the bug does NOT reproduce."
+          "description": "What the tester sees when the behavior that the issue reports does NOT show."
         },
         "failSignal": {
           "type": "string",
-          "description": "What the tester sees or measures when the bug reproduces."
+          "description": "What the tester sees when the behavior that the issue reports shows."
         }
       }
     },
