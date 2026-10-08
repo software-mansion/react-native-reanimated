@@ -1,0 +1,510 @@
+name: Argent Cloud PR verification
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+permissions: {}
+
+cache-mode: none
+
+concurrency:
+  group: argent-cloud-pr-${{ github.event.pull_request.number }}-${{ github.event.label.name }}
+  cancel-in-progress: true
+
+env:
+  TRIGGER_LABEL: argent-cloud
+  HELPER_DIR: .github/workflows/helper/argent-cloud-pr-verify
+  APP_HELPER_DIR: .github/workflows/helper/argent-cloud-issue-repro
+  WORK_DIR: argent-cloud-work
+  PR_NUMBER: ${{ github.event.pull_request.number }}
+  HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
+jobs:
+  authorize:
+    if: github.event.label.name == 'argent-cloud'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    outputs:
+      base-sha: ${{ steps.base.outputs.sha }}
+    steps:
+      - name: Check that a maintainer applied the label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SENDER: ${{ github.event.sender.login }}
+        run: |
+          role=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$SENDER/permission" --jq .role_name 2>/dev/null || echo none)
+          if [ "$role" != "admin" ] && [ "$role" != "maintain" ]; then
+            echo "::error::$SENDER ($role) is not a maintainer; removing the $TRIGGER_LABEL label."
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/labels/$TRIGGER_LABEL"
+            exit 1
+          fi
+
+      - name: Find the base commit
+        id: base
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_REF: ${{ github.event.pull_request.base.sha }}
+        run: |
+          sha=$(gh api "repos/$GITHUB_REPOSITORY/compare/$BASE_REF...$HEAD_SHA" --jq .merge_base_commit.sha)
+          echo "base commit: $sha, head commit: $HEAD_SHA"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+  plan:
+    needs: authorize
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    env:
+      BASE_SHA: ${{ needs.authorize.outputs.base-sha }}
+    outputs:
+      feasible: ${{ steps.plan.outputs.feasible }}
+      cost-usd: ${{ steps.plan-cost.outputs.cost-usd }}
+      react-native-version: ${{ steps.plan.outputs.react-native-version }}
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Write the pull request to disk
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: ${{ github.event.pull_request.title }}
+          BODY: ${{ github.event.pull_request.body }}
+          EVENT: ${{ toJSON(github.event.pull_request) }}
+        run: |
+          mkdir -p "$WORK_DIR/repro"
+          printf '# %s\n\n%s\n' "$TITLE" "$BODY" > "$WORK_DIR/pull-request.md"
+          printf '%s\n' "$EVENT" > "$WORK_DIR/pull-request.json"
+          gh api "repos/$GITHUB_REPOSITORY/compare/$BASE_SHA...$HEAD_SHA" \
+            -H 'Accept: application/vnd.github.diff' > "$WORK_DIR/pull-request.diff"
+
+      - name: Write the linked issues to disk
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          : > "$WORK_DIR/linked-issues.md"
+          gh pr view "$PR_NUMBER" -R "$GITHUB_REPOSITORY" --json closingIssuesReferences \
+            --jq ".closingIssuesReferences[] | select(\"\(.repository.owner.login)/\(.repository.name)\" == \"$GITHUB_REPOSITORY\") | .number" \
+            | while IFS= read -r number; do
+                gh issue view "$number" -R "$GITHUB_REPOSITORY" --json number,title,body \
+                  --jq '"# Issue #\(.number): \(.title)\n\n\(.body)\n"' >> "$WORK_DIR/linked-issues.md"
+              done
+          echo "Linked issues: $(grep -c '^# Issue #' "$WORK_DIR/linked-issues.md" || true)"
+
+      - name: Fetch the pull request sources read-only
+        run: |
+          target="$WORK_DIR/source/pull-request"
+          git init -q "$target"
+          git -C "$target" -c core.hooksPath=/dev/null fetch -q --depth 1 --no-tags \
+            "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" "$HEAD_SHA"
+          git -C "$target" -c core.hooksPath=/dev/null -c core.symlinks=false checkout -q FETCH_HEAD
+          rm -rf "$target/.git"
+
+      - name: Load the agent prompt and the plan schema
+        id: agent-input
+        run: |
+          {
+            echo 'prompt<<PROMPT_EOF'
+            cat "$HELPER_DIR/prompt.md"
+            echo 'PROMPT_EOF'
+            echo "schema=$(jq -c . "$HELPER_DIR/plan.schema.json")"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Review the pull request and prepare a verification plan
+        id: agent
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ github.token }}
+          prompt: ${{ steps.agent-input.outputs.prompt }}
+          claude_args: |
+            --max-turns 100
+            --allowedTools "Read,Write,Glob,Grep,Bash(npm view:*)"
+            --json-schema '${{ steps.agent-input.outputs.schema }}'
+
+      - name: Restore the trusted checkout
+        if: always()
+        run: |
+          git checkout -- .
+          git clean -fdq -e "$WORK_DIR"
+          git status --short
+
+      - name: Read the planning cost
+        id: plan-cost
+        if: always()
+        env:
+          EXECUTION_FILE: ${{ steps.agent.outputs.execution_file }}
+        run: |
+          cost=0
+          if [ -n "$EXECUTION_FILE" ] && [ -f "$EXECUTION_FILE" ]; then
+            cost=$(jq '[.. | objects | select(has("total_cost_usd")) | .total_cost_usd] | max // 0' "$EXECUTION_FILE")
+          fi
+          echo "planning cost: $cost USD"
+          echo "cost-usd=$cost" >> "$GITHUB_OUTPUT"
+
+      - name: Save the plan
+        id: plan
+        env:
+          PLAN: ${{ steps.agent.outputs.structured_output }}
+        run: |
+          if [ -z "$PLAN" ]; then
+            echo "::error::the agent produced no structured output"
+            exit 1
+          fi
+          printf '%s\n' "$PLAN" | jq . > "$WORK_DIR/plan.json"
+          jq . "$WORK_DIR/plan.json"
+          {
+            echo "feasible=$(jq -r .feasible "$WORK_DIR/plan.json")"
+            echo "react-native-version=$(jq -r .reactNativeVersion "$WORK_DIR/plan.json")"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upload the plan
+        id: upload
+        if: always() && steps.plan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: argent-cloud-plan-pr-${{ github.event.pull_request.number }}
+          path: |
+            ${{ env.WORK_DIR }}
+            !${{ env.WORK_DIR }}/source
+          if-no-files-found: error
+          retention-days: 7
+
+  build-base:
+    needs: [authorize, plan]
+    if: needs.plan.outputs.feasible == 'true'
+    permissions:
+      contents: read
+    cache-mode: none
+    uses: ./.github/workflows/argent-cloud-pr-verify-build.yml
+    with:
+      variant: base
+      commit: ${{ needs.authorize.outputs.base-sha }}
+      plan-artifact-id: ${{ needs.plan.outputs.artifact-id }}
+      react-native-version: ${{ needs.plan.outputs.react-native-version }}
+
+  build-head:
+    needs: [authorize, plan]
+    if: needs.plan.outputs.feasible == 'true'
+    permissions:
+      contents: read
+    cache-mode: none
+    uses: ./.github/workflows/argent-cloud-pr-verify-build.yml
+    with:
+      variant: head
+      commit: ${{ github.event.pull_request.head.sha }}
+      plan-artifact-id: ${{ needs.plan.outputs.artifact-id }}
+      react-native-version: ${{ needs.plan.outputs.react-native-version }}
+
+  verify:
+    needs: [plan, build-base, build-head]
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [base, head]
+    outputs:
+      output-artifact-id-base: ${{ steps.output-ids.outputs.base }}
+      output-artifact-id-head: ${{ steps.output-ids.outputs.head }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            /.github/actions/install-argent-cloud
+            /.github/workflows/helper
+          sparse-checkout-cone-mode: false
+
+      - name: Download the plan
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          artifact-ids: ${{ needs.plan.outputs.artifact-id }}
+          merge-multiple: true
+          path: ${{ env.WORK_DIR }}
+
+      - name: Download the app
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          artifact-ids: ${{ needs[format('build-{0}', matrix.variant)].outputs.artifact-id }}
+          merge-multiple: true
+          path: ${{ env.WORK_DIR }}/app
+
+      - name: Install the argent-cloud CLI
+        uses: ./.github/actions/install-argent-cloud
+
+      - name: Write the verification brief
+        run: |
+          plan="$WORK_DIR/plan.json"
+          mkdir -p "$WORK_DIR/output"
+          {
+            cat "$HELPER_DIR/tester-prompt.md"
+            echo
+            echo "## Verification plan"
+            echo
+            jq -r .summary "$plan"
+            echo
+            echo "- Library: $(jq -r .library "$plan")"
+            echo "- react-native: $(jq -r .reactNativeVersion "$plan")"
+            echo "- Architecture: $(jq -r .architecture "$plan")"
+            echo "- Static feature flags: $(jq -r '[.staticFeatureFlags // {} | to_entries[] | .key as $owner | .value[] | "\($owner) \(.name)=\(.value)"] | if length == 0 then "defaults" else join(", ") end' "$plan")"
+            echo "- App: $(jq -r .appKind "$plan") scaffold, iOS simulator, Release configuration with an embedded bundle"
+            echo
+            echo "### Steps"
+            echo
+            jq -r '.reproductionSteps | to_entries[] | "\(.key + 1). \(.value)"' "$plan"
+            echo
+            echo "### Verification"
+            echo
+            echo "- Kind: $(jq -r .verification.kind "$plan")"
+            echo "- How: $(jq -r .verification.how "$plan")"
+            echo "- Pass: $(jq -r .verification.passSignal "$plan")"
+            echo "- Fail: $(jq -r .verification.failSignal "$plan")"
+            echo
+            if [ "$(jq -r '.limitations // ""' "$plan")" != "" ]; then
+              echo "### Limitations"
+              echo
+              jq -r .limitations "$plan"
+              echo
+            fi
+          } > "$WORK_DIR/output/brief.md"
+          cat "$WORK_DIR/output/brief.md"
+
+      - name: Run argent-cloud
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
+          ARGENT_BACKEND_IP: ${{ secrets.ARGENT_BACKEND_IP }}
+        run: |
+          argent-cloud \
+            --prompt-file "$WORK_DIR/output/brief.md" \
+            --app-bundle "$WORK_DIR/app/repro-app.tar.gz" \
+            --log-usage \
+            --stream="$WORK_DIR/output/stream.md" \
+            2> >(tee "$WORK_DIR/output/argent-cloud.log" >&2) \
+            | tee "$WORK_DIR/output/output.md"
+
+      - name: Read the session ID
+        id: session
+        if: always()
+        run: |
+          output="$WORK_DIR/output/output.md"
+          log="$WORK_DIR/output/argent-cloud.log"
+          session_id=""
+          if [ -f "$output" ]; then
+            session_id=$(grep -oE '^session-id=[^[:space:]]+' "$output" | tail -n 1 | cut -d= -f2 || true)
+            sed -i '/^session-id=[^[:space:]]*$/d' "$output"
+          fi
+          if [ -z "$session_id" ] && [ -f "$log" ]; then
+            session_id=$(sed 's/\x1b\[[0-9;]*m//g' "$log" | grep -oE 'session created session_id=[^[:space:]]+' | head -n 1 | cut -d= -f2 || true)
+          fi
+          echo "session ID: ${session_id:-none}"
+          echo "id=$session_id" >> "$GITHUB_OUTPUT"
+
+      - name: Download the session archive
+        id: archive
+        if: always() && steps.session.outputs.id != ''
+        continue-on-error: true
+        working-directory: ${{ env.WORK_DIR }}
+        env:
+          SESSION_ID: ${{ steps.session.outputs.id }}
+          SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
+          ARGENT_BACKEND_IP: ${{ secrets.ARGENT_BACKEND_IP }}
+        run: |
+          mkdir -p archive/extracted
+          cd archive
+          argent-cloud archives download "$SESSION_ID"
+          archive=$(find . -maxdepth 1 -type f -name '*.tar.gz' | head -n 1)
+          if [ -z "$archive" ]; then
+            echo "::warning::argent-cloud downloaded no .tar.gz archive for session $SESSION_ID"
+            exit 1
+          fi
+          tar -xzf "$archive" -C extracted
+          screenshots=$(find extracted -type d -name screenshots | head -n 1)
+          if [ -z "$screenshots" ]; then
+            echo "::warning::the session archive has no screenshots directory"
+            exit 0
+          fi
+          echo "screenshots-dir=$WORK_DIR/archive/$screenshots" >> "$GITHUB_OUTPUT"
+
+      - name: Upload the screenshots
+        id: screenshots
+        if: always() && steps.archive.outputs.screenshots-dir != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: argent-cloud-screenshots-pr-${{ github.event.pull_request.number }}-${{ matrix.variant }}
+          path: ${{ steps.archive.outputs.screenshots-dir }}
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Write the run metadata
+        if: always()
+        env:
+          SCREENSHOTS_DIR: ${{ steps.archive.outputs.screenshots-dir }}
+          SCREENSHOTS_URL: ${{ steps.screenshots.outputs.artifact-url }}
+        run: |
+          mkdir -p "$WORK_DIR/output"
+          cost=0
+          log="$WORK_DIR/output/argent-cloud.log"
+          if [ -f "$log" ]; then
+            cost=$(sed 's/\x1b\[[0-9;]*m//g' "$log" | grep -oE 'cost_usd=[0-9.]+' | cut -d= -f2 | awk '{ sum += $1 } END { printf "%.6f", sum }')
+          fi
+          echo "verification cost: $cost USD"
+          printf '%s\n' "$cost" > "$WORK_DIR/output/cost.txt"
+          if [ -n "$SCREENSHOTS_DIR" ]; then
+            (cd "$SCREENSHOTS_DIR" && find . -type f | sed 's|^\./||' | sort) > "$WORK_DIR/output/screenshots.txt"
+            printf '%s\n' "$SCREENSHOTS_URL" > "$WORK_DIR/output/screenshots-url.txt"
+          fi
+
+      - name: Upload the verification output
+        id: upload-output
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: argent-cloud-output-pr-${{ github.event.pull_request.number }}-${{ matrix.variant }}
+          path: |
+            ${{ env.WORK_DIR }}/output
+            ${{ env.WORK_DIR }}/archive/*.tar.gz
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Pass the ID of the output artifact to the report job
+        id: output-ids
+        if: always()
+        env:
+          VARIANT: ${{ matrix.variant }}
+          ARTIFACT_ID: ${{ steps.upload-output.outputs.artifact-id }}
+        run: echo "$VARIANT=$ARTIFACT_ID" >> "$GITHUB_OUTPUT"
+
+  report:
+    needs: [authorize, plan, build-base, build-head, verify]
+    if: ${{ !cancelled() && needs.plan.outputs.feasible != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
+    env:
+      PR_TITLE: ${{ github.event.pull_request.title }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      RUN_ID: ${{ github.run_id }}
+      BASE_SHA: ${{ needs.authorize.outputs.base-sha }}
+      STAGE: ${{ needs.plan.outputs.feasible != 'true' && 'plan-infeasible' || (needs.build-base.result != 'success' || needs.build-head.result != 'success') && 'build-failed' || 'verify' }}
+      PLAN_FILE: argent-cloud-work/plan.json
+      PLAN_COST_USD: ${{ needs.plan.outputs.cost-usd }}
+      RUNS_DIR: argent-cloud-work/runs
+      REPORT_FILE: argent-cloud-work/report.md
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            /.nvmrc
+            /.github/workflows/helper
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Download the plan
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          artifact-ids: ${{ needs.plan.outputs.artifact-id }}
+          merge-multiple: true
+          path: ${{ env.WORK_DIR }}
+
+      - name: Download the output of the run without the change
+        if: needs.verify.outputs.output-artifact-id-base != ''
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          artifact-ids: ${{ needs.verify.outputs.output-artifact-id-base }}
+          merge-multiple: true
+          path: ${{ env.RUNS_DIR }}/base
+
+      - name: Download the output of the run with the change
+        if: needs.verify.outputs.output-artifact-id-head != ''
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          artifact-ids: ${{ needs.verify.outputs.output-artifact-id-head }}
+          merge-multiple: true
+          path: ${{ env.RUNS_DIR }}/head
+
+      - name: Read the failed jobs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          failed=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/jobs" --paginate \
+            --jq '[.jobs[] | select(.conclusion == "failure") | .name] | join(", ")')
+          echo "failed jobs: ${failed:-none}"
+          echo "FAILED_JOBS=$failed" >> "$GITHUB_ENV"
+
+      - name: Write the report
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-pr-verify-report.ts report
+
+      - name: Resolve the reports repository
+        env:
+          REPO: ${{ secrets.ARGENT_CLOUD_REPORTS_REPO }}
+        run: |
+          repo="${REPO#https://github.com/}"
+          repo="${repo%.git}"
+          repo="${repo%/}"
+          if [ -z "$repo" ] || [ "${repo#*/}" = "$repo" ]; then
+            echo "::error::ARGENT_CLOUD_REPORTS_REPO must be 'owner/name' or a github.com repository URL"
+            exit 1
+          fi
+          {
+            echo "REPORTS_REPO=$repo"
+            echo "REPORTS_OWNER=${repo%%/*}"
+            echo "REPORTS_NAME=${repo#*/}"
+          } >> "$GITHUB_ENV"
+
+      - name: Mint a token for the reports repository
+        id: reports-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          app-id: ${{ secrets.ARGENT_CLOUD_REPORTS_APP_ID }}
+          private-key: ${{ secrets.ARGENT_CLOUD_REPORTS_APP_PRIVATE_KEY }}
+          owner: ${{ env.REPORTS_OWNER }}
+          repositories: ${{ env.REPORTS_NAME }}
+          permission-issues: write
+
+      - name: Publish the report
+        id: publish
+        env:
+          REPORTS_TOKEN: ${{ steps.reports-token.outputs.token }}
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-pr-verify-report.ts publish
+
+      - name: Report to Slack
+        if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_ARGENT_URL }}
+          REPORT_URL: ${{ steps.publish.outputs.url }}
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-pr-verify-report.ts notify
+
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: argent-cloud-report-pr-${{ github.event.pull_request.number }}
+          path: ${{ env.REPORT_FILE }}
+          if-no-files-found: warn
+          retention-days: 30
