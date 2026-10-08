@@ -11,7 +11,8 @@ struct NativeLayoutLimits {
   size_t leaves{6};
   /// For a `transform` leaf. A cap with no cost data.
   size_t transformOperations{4};
-  /// The sum of the segments of the tracks of one animation.
+  /// The sum of the segments of the tracks of one animation. A `Transform` track counts the sum of the
+  /// segments of its operation timelines.
   size_t segments{64};
 };
 
