@@ -292,6 +292,7 @@ jobs:
           SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
           ARGENT_BACKEND_IP: ${{ secrets.ARGENT_BACKEND_IP }}
         run: |
+          set -o pipefail
           argent-cloud \
             --prompt-file "$WORK_DIR/output/brief.md" \
             --app-bundle "$WORK_DIR/app/repro-app.tar.gz" \
