@@ -113,7 +113,8 @@ export default class AnimatedComponent
       jsPropsUpdater.registerComponent(this, this._options.jsProps);
     }
 
-    if (IS_IOS && !this._isFirstRender && !this.context?.current) {
+    const skipEntering = this.context?.current;
+    if (IS_IOS && !this._isFirstRender && !skipEntering) {
       this._configureLayoutAnimation(
         LayoutAnimationType.ENTERING,
         this.props.entering
