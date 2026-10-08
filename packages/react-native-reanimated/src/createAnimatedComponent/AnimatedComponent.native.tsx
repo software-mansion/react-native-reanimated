@@ -185,7 +185,12 @@ export default class AnimatedComponent
     this._detachStyles(viewTag);
     this._InlinePropManager.detachInlineProps();
 
-    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS && viewTag !== -1) {
+    // Nested components share a tag and the collector keeps the first one,
+    // so only release the entry when it is ours.
+    if (
+      FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS &&
+      PropsRegistryGarbageCollector.viewsMap.get(viewTag) === this
+    ) {
       PropsRegistryGarbageCollector.unregisterView(viewTag);
     }
 
