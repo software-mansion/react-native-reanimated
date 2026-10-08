@@ -218,7 +218,8 @@ const OUTCOME_SENTENCES: Record<Outcome, string> = {
     'The pass signal shows without the change, so the run does not confirm the problem.',
   regression:
     'The pass signal shows without the change and the fail signal shows with it.',
-  'false issue': 'A tester found that the plan is wrong about the behavior.',
+  'false issue':
+    'A tester saw neither the pass signal nor the fail signal on one of the builds.',
   blocked: 'A tester could not complete the steps on one of the builds.',
 };
 
