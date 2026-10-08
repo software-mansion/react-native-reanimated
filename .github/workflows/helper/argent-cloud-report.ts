@@ -134,9 +134,10 @@ export function summaryOfOutput(output: string): string {
 }
 
 function extractSummary(output: string): string | null {
-  const match = /^##\s+Summary\s*\n([\s\S]*?)(?=^#{1,6}\s|(?![\s\S]))/m.exec(
-    output
-  );
+  const match =
+    /^##\s+Summary\s*\n([\s\S]*?)(?=\n\s*\n|^#{1,6}\s|(?![\s\S]))/m.exec(
+      output
+    );
   const text = match?.[1]?.trim().replace(/\s*\n\s*/g, ' ');
   return text || null;
 }

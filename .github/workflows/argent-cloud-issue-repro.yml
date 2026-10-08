@@ -9,7 +9,7 @@ permissions:
   issues: write
 
 concurrency:
-  group: argent-cloud-issue-${{ github.event.issue.number }}
+  group: argent-cloud-issue-${{ github.event.issue.number }}-${{ github.event.label.name }}
   cancel-in-progress: true
 
 env:

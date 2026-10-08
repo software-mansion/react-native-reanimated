@@ -7,7 +7,7 @@ on:
 permissions: {}
 
 concurrency:
-  group: argent-cloud-pr-${{ github.event.pull_request.number }}
+  group: argent-cloud-pr-${{ github.event.pull_request.number }}-${{ github.event.label.name }}
   cancel-in-progress: true
 
 env:
@@ -66,6 +66,7 @@ jobs:
       feasible: ${{ steps.plan.outputs.feasible }}
       cost-usd: ${{ steps.plan-cost.outputs.cost-usd }}
       react-native-version: ${{ steps.plan.outputs.react-native-version }}
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
@@ -170,6 +171,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Upload the plan
+        id: upload
         if: always() && steps.plan.outcome == 'success'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -180,72 +182,32 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  # This job runs the code of the pull request (CocoaPods specs, the Babel plugin, native build
-  # phases). It has a read-only token and no secrets. Do not add either.
-  build:
+  build-base:
     needs: [authorize, plan]
     if: needs.plan.outputs.feasible == 'true'
-    runs-on: macos-26
-    timeout-minutes: 120
     permissions:
       contents: read
-    strategy:
-      matrix:
-        variant: [base, head]
-    env:
-      APP_DIR: ${{ github.workspace }}/argent-cloud-app
-      COMMIT: ${{ matrix.variant == 'base' && needs.authorize.outputs.base-sha || github.event.pull_request.head.sha }}
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-        with:
-          persist-credentials: false
+    uses: ./.github/workflows/argent-cloud-pr-verify-build.yml
+    with:
+      variant: base
+      commit: ${{ needs.authorize.outputs.base-sha }}
+      plan-artifact-id: ${{ needs.plan.outputs.artifact-id }}
+      react-native-version: ${{ needs.plan.outputs.react-native-version }}
 
-      - name: Download the plan
-        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
-        with:
-          name: argent-cloud-plan-pr-${{ github.event.pull_request.number }}
-          path: ${{ env.WORK_DIR }}
-
-      - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with:
-          node-version-file: '.nvmrc'
-
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
-        with:
-          ruby-version: '3.3'
-
-      - name: Select Xcode for older React Native
-        env:
-          RN_VERSION: ${{ needs.plan.outputs.react-native-version }}
-        run: |
-          RN_MINOR="$(echo "$RN_VERSION" | cut -d. -f2)"
-          if [ "$RN_MINOR" -lt 83 ]; then
-            echo "React Native $RN_VERSION < 0.83, pinning Xcode 26.3"
-            echo "DEVELOPER_DIR=/Applications/Xcode_26.3.app/Contents/Developer" >> "$GITHUB_ENV"
-          fi
-
-      - name: Pack the library at the ${{ matrix.variant }} commit
-        run: '"$HELPER_DIR/pack-library.sh" "$COMMIT" "$RUNNER_TEMP/library-packages"'
-
-      - name: Prepare the app
-        id: prepare
-        run: '"$APP_HELPER_DIR/prepare-app.sh" "$WORK_DIR/plan.json" "$WORK_DIR/repro" "$APP_DIR" "$RUNNER_TEMP/library-packages"'
-
-      - name: Build the app for the iOS simulator
-        run: '"$APP_HELPER_DIR/build-app.sh" "${{ steps.prepare.outputs.app-root }}" "$WORK_DIR/app/repro-app.tar.gz"'
-
-      - name: Upload the app
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: argent-cloud-app-pr-${{ github.event.pull_request.number }}-${{ matrix.variant }}
-          path: ${{ env.WORK_DIR }}/app/repro-app.tar.gz
-          if-no-files-found: error
-          retention-days: 7
+  build-head:
+    needs: [authorize, plan]
+    if: needs.plan.outputs.feasible == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/argent-cloud-pr-verify-build.yml
+    with:
+      variant: head
+      commit: ${{ github.event.pull_request.head.sha }}
+      plan-artifact-id: ${{ needs.plan.outputs.artifact-id }}
+      react-native-version: ${{ needs.plan.outputs.react-native-version }}
 
   verify:
-    needs: [plan, build]
+    needs: [plan, build-base, build-head]
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
@@ -254,6 +216,9 @@ jobs:
       fail-fast: false
       matrix:
         variant: [base, head]
+    outputs:
+      output-artifact-id-base: ${{ steps.output-ids.outputs.base }}
+      output-artifact-id-head: ${{ steps.output-ids.outputs.head }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
@@ -266,13 +231,15 @@ jobs:
       - name: Download the plan
         uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
         with:
-          name: argent-cloud-plan-pr-${{ github.event.pull_request.number }}
+          artifact-ids: ${{ needs.plan.outputs.artifact-id }}
+          merge-multiple: true
           path: ${{ env.WORK_DIR }}
 
       - name: Download the app
         uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
         with:
-          name: argent-cloud-app-pr-${{ github.event.pull_request.number }}-${{ matrix.variant }}
+          artifact-ids: ${{ needs[format('build-{0}', matrix.variant)].outputs.artifact-id }}
+          merge-multiple: true
           path: ${{ env.WORK_DIR }}/app
 
       - name: Install the argent-cloud CLI
@@ -401,6 +368,7 @@ jobs:
           fi
 
       - name: Upload the verification output
+        id: upload-output
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -411,8 +379,16 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+      - name: Pass the ID of the output artifact to the report job
+        id: output-ids
+        if: always()
+        env:
+          VARIANT: ${{ matrix.variant }}
+          ARTIFACT_ID: ${{ steps.upload-output.outputs.artifact-id }}
+        run: echo "$VARIANT=$ARTIFACT_ID" >> "$GITHUB_OUTPUT"
+
   report:
-    needs: [authorize, plan, build, verify]
+    needs: [authorize, plan, build-base, build-head, verify]
     if: ${{ !cancelled() && needs.plan.outputs.feasible != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -425,7 +401,7 @@ jobs:
       RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       RUN_ID: ${{ github.run_id }}
       BASE_SHA: ${{ needs.authorize.outputs.base-sha }}
-      STAGE: ${{ needs.plan.outputs.feasible != 'true' && 'plan-infeasible' || needs.build.result != 'success' && 'build-failed' || 'verify' }}
+      STAGE: ${{ needs.plan.outputs.feasible != 'true' && 'plan-infeasible' || (needs.build-base.result != 'success' || needs.build-head.result != 'success') && 'build-failed' || 'verify' }}
       PLAN_FILE: argent-cloud-work/plan.json
       PLAN_COST_USD: ${{ needs.plan.outputs.cost-usd }}
       RUNS_DIR: argent-cloud-work/runs
@@ -447,23 +423,24 @@ jobs:
       - name: Download the plan
         uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
         with:
-          name: argent-cloud-plan-pr-${{ github.event.pull_request.number }}
+          artifact-ids: ${{ needs.plan.outputs.artifact-id }}
+          merge-multiple: true
           path: ${{ env.WORK_DIR }}
 
       - name: Download the output of the run without the change
-        if: needs.verify.result != 'skipped'
-        continue-on-error: true
+        if: needs.verify.outputs.output-artifact-id-base != ''
         uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
         with:
-          name: argent-cloud-output-pr-${{ github.event.pull_request.number }}-base
+          artifact-ids: ${{ needs.verify.outputs.output-artifact-id-base }}
+          merge-multiple: true
           path: ${{ env.RUNS_DIR }}/base
 
       - name: Download the output of the run with the change
-        if: needs.verify.result != 'skipped'
-        continue-on-error: true
+        if: needs.verify.outputs.output-artifact-id-head != ''
         uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
         with:
-          name: argent-cloud-output-pr-${{ github.event.pull_request.number }}-head
+          artifact-ids: ${{ needs.verify.outputs.output-artifact-id-head }}
+          merge-multiple: true
           path: ${{ env.RUNS_DIR }}/head
 
       - name: Read the failed jobs

@@ -1,0 +1,95 @@
+name: Argent Cloud PR verification build
+
+# This workflow runs the code of the pull request (CocoaPods specs, the Babel plugin, native build
+# phases). The caller gives it a read-only token and no secrets. Do not add either.
+on:
+  workflow_call:
+    inputs:
+      variant:
+        description: base or head
+        required: true
+        type: string
+      commit:
+        description: The commit of the library that the app is built with
+        required: true
+        type: string
+      plan-artifact-id:
+        description: The ID of the plan artifact that the plan job uploaded
+        required: true
+        type: string
+      react-native-version:
+        required: true
+        type: string
+    outputs:
+      artifact-id:
+        description: The ID of the app artifact
+        value: ${{ jobs.build.outputs.artifact-id }}
+
+permissions:
+  contents: read
+
+env:
+  HELPER_DIR: .github/workflows/helper/argent-cloud-pr-verify
+  APP_HELPER_DIR: .github/workflows/helper/argent-cloud-issue-repro
+  WORK_DIR: argent-cloud-work
+
+jobs:
+  build:
+    name: build (${{ inputs.variant }})
+    runs-on: macos-26
+    timeout-minutes: 120
+    env:
+      APP_DIR: ${{ github.workspace }}/argent-cloud-app
+      COMMIT: ${{ inputs.commit }}
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Download the plan
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          artifact-ids: ${{ inputs.plan-artifact-id }}
+          merge-multiple: true
+          path: ${{ env.WORK_DIR }}
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
+        with:
+          ruby-version: '3.3'
+
+      - name: Select Xcode for older React Native
+        env:
+          RN_VERSION: ${{ inputs.react-native-version }}
+        run: |
+          RN_MINOR="$(echo "$RN_VERSION" | cut -d. -f2)"
+          if [ "$RN_MINOR" -lt 83 ]; then
+            echo "React Native $RN_VERSION < 0.83, pinning Xcode 26.3"
+            echo "DEVELOPER_DIR=/Applications/Xcode_26.3.app/Contents/Developer" >> "$GITHUB_ENV"
+          fi
+
+      - name: Pack the library
+        run: '"$HELPER_DIR/pack-library.sh" "$COMMIT" "$RUNNER_TEMP/library-packages"'
+
+      - name: Prepare the app
+        id: prepare
+        run: '"$APP_HELPER_DIR/prepare-app.sh" "$WORK_DIR/plan.json" "$WORK_DIR/repro" "$APP_DIR" "$RUNNER_TEMP/library-packages"'
+
+      - name: Build the app for the iOS simulator
+        run: '"$APP_HELPER_DIR/build-app.sh" "${{ steps.prepare.outputs.app-root }}" "$WORK_DIR/app/repro-app.tar.gz"'
+
+      - name: Upload the app
+        id: upload
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: argent-cloud-app-pr-${{ github.event.pull_request.number }}-${{ inputs.variant }}
+          path: ${{ env.WORK_DIR }}/app/repro-app.tar.gz
+          if-no-files-found: error
+          retention-days: 7
