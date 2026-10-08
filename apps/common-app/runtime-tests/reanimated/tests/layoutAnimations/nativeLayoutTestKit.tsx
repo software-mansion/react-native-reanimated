@@ -49,6 +49,8 @@ export type TraceEvent = {
 export type TargetSample = {
   model: number[];
   presentation: number[];
+  /** The view is allowed to antialias its edges. */
+  edgeAntialiasing: boolean;
   /**
    * The platform key of each physical playback on the view:
    * `reanimated.<owner>.<generation>.<target>`.
@@ -57,9 +59,9 @@ export type TargetSample = {
   /**
    * The physical animations of the playback of the target, in the order in
    * which the platform applies them. Each has its value at the start and at the
-   * end of each segment.
+   * end of each segment, and the time of each value as a part of its duration.
    */
-  members: { property: string; values: number[][] }[];
+  members: { property: string; values: number[][]; keyTimes: number[] }[];
   monotonicTimeMs: number;
 };
 
@@ -387,6 +389,16 @@ export type Operation = [
   to: number | string | number[],
   leaf?: OperationLeaf,
 ];
+
+export type TransformItem = Exclude<
+  ViewStyle['transform'],
+  string | undefined
+>[number];
+
+export const transformItemOf = (kind: string, value: unknown) => {
+  'worklet';
+  return { [kind]: value } as unknown as TransformItem;
+};
 
 export type TransformLeaf = {
   operations: Operation[];

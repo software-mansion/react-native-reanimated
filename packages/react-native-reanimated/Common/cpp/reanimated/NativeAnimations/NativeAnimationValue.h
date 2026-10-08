@@ -46,13 +46,12 @@ struct AnimationTransformOperation {
   double value{0};
 };
 
-/// The operations of a style transform in the order of its array. Each operation of a track moves on its own
-/// scalar, so the path of the matrix is the product of the operations at each time.
+/// The operations of a style transform in the order of its array, at one time.
 struct AnimationTransform {
   std::vector<AnimationTransformOperation> operations;
 };
 
-using AnimationValue = std::variant<double, AnimationPoint, AnimationSize, AnimationColor, AnimationTransform>;
+using AnimationValue = std::variant<double, AnimationPoint, AnimationSize, AnimationColor>;
 
 /// The value that the view shows when the host admits the command.
 struct CurrentVisualValue {};
@@ -71,11 +70,12 @@ inline constexpr double ENDPOINT_TOLERANCE = 0.01;
 /// The tolerance for a matrix cell that is not a translation, and for an angle and a scale factor.
 inline constexpr double MATRIX_CELL_TOLERANCE = 0.0001;
 
-/// True when each component of the two values differs by at most `ENDPOINT_TOLERANCE`. Two transforms need
-/// the same operation kinds; an angle and a scale factor can differ by at most `MATRIX_CELL_TOLERANCE`.
+/// True when each component of the two values differs by at most `ENDPOINT_TOLERANCE`.
 bool isSameValue(const AnimationValue &lhs, const AnimationValue &rhs);
 
-bool hasSameOperationKinds(const AnimationTransform &lhs, const AnimationTransform &rhs);
+/// True when two scalars of an operation of `kind` differ by at most `ENDPOINT_TOLERANCE` for a length, and by
+/// at most `MATRIX_CELL_TOLERANCE` for an angle and a scale factor.
+bool isSameOperationValue(TransformOperationKind kind, double lhs, double rhs);
 
 /// The matrix that React Native gives a style transform with these operations and no transform origin.
 facebook::react::Transform matrixOf(const AnimationTransform &transform);
@@ -84,6 +84,7 @@ facebook::react::Transform matrixOf(const AnimationTransform &transform);
 /// `MATRIX_CELL_TOLERANCE`.
 bool isSameMatrix(const facebook::react::Transform &lhs, const facebook::react::Transform &rhs);
 
+/// No value matches the `Transform` target: its track has a timeline for each operation.
 bool valueMatchesTarget(const AnimationValue &value, AnimationTarget target);
 bool isFinite(const AnimationValue &value);
 
