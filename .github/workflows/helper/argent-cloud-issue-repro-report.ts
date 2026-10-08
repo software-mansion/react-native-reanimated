@@ -34,6 +34,8 @@ type Plan = {
   feasible?: boolean;
   reason?: string;
   summary?: string;
+  analysis?: string;
+  limitations?: string | null;
   library?: string;
   reactNativeVersion?: string;
   reanimatedVersion?: string;
@@ -249,6 +251,12 @@ function writeReport(context: Context): void {
     }
     if (context.plan.actualBehavior) {
       lines.push('### Actual', '', context.plan.actualBehavior, '');
+    }
+    if (context.plan.limitations) {
+      lines.push('### Limitations', '', context.plan.limitations, '');
+    }
+    if (context.plan.analysis) {
+      lines.push('### Analysis', '', context.plan.analysis, '');
     }
   }
 

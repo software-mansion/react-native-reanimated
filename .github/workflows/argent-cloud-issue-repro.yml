@@ -489,6 +489,12 @@ jobs:
             echo "- Pass: $(jq -r .verification.passSignal "$plan")"
             echo "- Fail: $(jq -r .verification.failSignal "$plan")"
             echo
+            if [ "$(jq -r '.limitations // ""' "$plan")" != "" ]; then
+              echo "### Limitations"
+              echo
+              jq -r .limitations "$plan"
+              echo
+            fi
             echo "## Original issue"
             echo
             cat "$WORK_DIR/issue.md"
