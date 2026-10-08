@@ -165,7 +165,12 @@ write_static_feature_flags() {
           "utf8"
         )
       );
+      const names = new Set();
       for (const { name, value } of flags) {
+        if (names.has(name)) {
+          throw new Error(`the static feature flag ${name} is listed two times for ${packages[owner]}`);
+        }
+        names.add(name);
         if (!(name in known)) {
           throw new Error(`${packages[owner]} has no static feature flag ${name} in this version`);
         }
