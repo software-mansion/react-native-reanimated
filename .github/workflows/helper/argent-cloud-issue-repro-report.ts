@@ -27,6 +27,7 @@ type Context = {
   verdict: Verdict | null;
   summary: string;
   costs: Costs;
+  screenshots: Screenshots | null;
 };
 
 type Plan = {
@@ -51,6 +52,8 @@ type Plan = {
 };
 
 type Costs = { plan: number; reproduction: number; total: number };
+
+type Screenshots = { files: string[]; artifactUrl: string | undefined };
 
 async function main(): Promise<void> {
   const command = process.argv[2];
@@ -98,7 +101,27 @@ function readContext(): Context {
       reproduction: reproductionCost,
       total: planCost + reproductionCost,
     },
+    screenshots: readScreenshots(
+      process.env.SCREENSHOTS_DIR,
+      process.env.SCREENSHOTS_URL
+    ),
   };
+}
+
+function readScreenshots(
+  directory: string | undefined,
+  artifactUrl: string | undefined
+): Screenshots | null {
+  if (!directory || !fs.existsSync(directory)) {
+    return null;
+  }
+  const files = fs
+    .readdirSync(directory, { recursive: true, encoding: 'utf8' })
+    .filter((file) => fs.statSync(path.join(directory, file)).isFile())
+    .sort();
+  return files.length > 0
+    ? { files, artifactUrl: artifactUrl || undefined }
+    : null;
 }
 
 function summaryText(
@@ -184,6 +207,19 @@ function writeReport(context: Context): void {
 
   if (context.output) {
     lines.push('## Reproduction result', '', context.output, '');
+  }
+
+  if (context.screenshots) {
+    lines.push(
+      '## Screenshots',
+      '',
+      context.screenshots.artifactUrl
+        ? `The tester took ${context.screenshots.files.length} screenshot(s). Download them from ${context.screenshots.artifactUrl}.`
+        : `The tester took ${context.screenshots.files.length} screenshot(s). They are in the workflow artifacts.`,
+      '',
+      ...context.screenshots.files.map((file) => `- \`${file}\``),
+      ''
+    );
   }
 
   if (context.plan) {
@@ -357,6 +393,9 @@ async function notify(context: Context): Promise<void> {
   lines.push(`Cost: ${costLine(context.costs)}`);
   if (context.reportUrl) {
     lines.push(`Report: ${context.reportUrl}`);
+  }
+  if (context.screenshots?.artifactUrl) {
+    lines.push(`Screenshots: ${context.screenshots.artifactUrl}`);
   }
   lines.push(`Issue: ${context.issueUrl}`, `Run: ${context.runUrl}`);
   await postToSlack({ text: lines.join('\n') });
