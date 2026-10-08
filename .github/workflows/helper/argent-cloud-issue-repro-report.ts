@@ -1,15 +1,25 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import {
+  clampText,
+  detailsBlock,
+  escapeSlack,
+  extractVerdict,
+  formatUsd,
+  parseCost,
+  publishReportIssue,
+  readFile,
+  readJsonObject,
+  readScreenshots,
+  requireEnv,
+  screenshotsSection,
+  summaryOfOutput,
+} from './argent-cloud-report.ts';
+import type { Screenshots, Verdict } from './argent-cloud-report.ts';
 import { postToSlack } from './slack.ts';
 
-const GITHUB_BODY_LIMIT = 60_000;
-const GITHUB_TITLE_LIMIT = 256;
-const SUMMARY_LIMIT = 600;
-
 type Stage = 'plan-infeasible' | 'build-failed' | 'reproduce';
-
-type Verdict = 'REPRODUCIBLE' | 'NOT REPRODUCIBLE' | 'FALSE ISSUE' | 'BLOCKED';
 
 type Context = {
   stage: Stage;
@@ -56,8 +66,6 @@ type Plan = {
 
 type Costs = { plan: number; reproduction: number; total: number };
 
-type Screenshots = { files: string[]; artifactUrl: string | undefined };
-
 async function main(): Promise<void> {
   const command = process.argv[2];
   switch (command) {
@@ -79,7 +87,7 @@ async function main(): Promise<void> {
 
 function readContext(): Context {
   const stage = (process.env.STAGE ?? 'reproduce') as Stage;
-  const plan = readPlan(process.env.PLAN_FILE);
+  const plan = readJsonObject<Plan>(process.env.PLAN_FILE);
   const output = readFile(process.env.OUTPUT_FILE);
   const planCost = parseCost(process.env.PLAN_COST_USD);
   const reproductionCost = parseCost(process.env.REPRO_COST_USD);
@@ -111,22 +119,6 @@ function readContext(): Context {
   };
 }
 
-function readScreenshots(
-  directory: string | undefined,
-  artifactUrl: string | undefined
-): Screenshots | null {
-  if (!directory || !fs.existsSync(directory)) {
-    return null;
-  }
-  const files = fs
-    .readdirSync(directory, { recursive: true, encoding: 'utf8' })
-    .filter((file) => fs.statSync(path.join(directory, file)).isFile())
-    .sort();
-  return files.length > 0
-    ? { files, artifactUrl: artifactUrl || undefined }
-    : null;
-}
-
 function summaryText(
   stage: Stage,
   plan: Plan | null,
@@ -143,40 +135,7 @@ function summaryText(
   if (!output) {
     return 'The reproduction agent produced no output. See the run logs.';
   }
-  return clampText(extractSummary(output) ?? fallbackSummary(output));
-}
-
-function clampText(text: string): string {
-  return text.length > SUMMARY_LIMIT
-    ? `${text.slice(0, SUMMARY_LIMIT - 1)}…`
-    : text;
-}
-
-function extractVerdict(output: string): Verdict | null {
-  const firstLine = output.split('\n')[0]?.trim() ?? '';
-  const match =
-    /^#\s+(REPRODUCIBLE|NOT REPRODUCIBLE|FALSE ISSUE|BLOCKED)\s*$/.exec(
-      firstLine
-    );
-  return match ? (match[1] as Verdict) : null;
-}
-
-function extractSummary(output: string): string | null {
-  const match = /^##\s+Summary\s*\n([\s\S]*?)(?=^#{1,6}\s|(?![\s\S]))/m.exec(
-    output
-  );
-  const text = match?.[1]?.trim().replace(/\s*\n\s*/g, ' ');
-  return text || null;
-}
-
-function fallbackSummary(output: string): string {
-  const body = output.replace(/^#[^\n]*\n/, '').trim();
-  const paragraph =
-    body
-      .split(/\n\s*\n/)[0]
-      ?.replace(/\s*\n\s*/g, ' ')
-      .trim() ?? '';
-  return paragraph || 'The report has no summary section. See the full report.';
+  return clampText(summaryOfOutput(output));
 }
 
 function writeReport(context: Context): void {
@@ -216,16 +175,7 @@ function writeReport(context: Context): void {
   }
 
   if (context.screenshots) {
-    lines.push(
-      '## Screenshots',
-      '',
-      context.screenshots.artifactUrl
-        ? `The tester took ${context.screenshots.files.length} screenshot(s). Download them from ${context.screenshots.artifactUrl}.`
-        : `The tester took ${context.screenshots.files.length} screenshot(s). They are in the workflow artifacts.`,
-      '',
-      ...context.screenshots.files.map((file) => `- \`${file}\``),
-      ''
-    );
+    lines.push(...screenshotsSection('## Screenshots', context.screenshots));
   }
 
   if (context.plan) {
@@ -268,12 +218,7 @@ function writeReport(context: Context): void {
     lines.push(
       '## Brief given to the tester',
       '',
-      '<details>',
-      '<summary>Full brief</summary>',
-      '',
-      context.brief,
-      '',
-      '</details>',
+      ...detailsBlock('Full brief', context.brief),
       ''
     );
   }
@@ -281,14 +226,10 @@ function writeReport(context: Context): void {
     lines.push(
       '## Plan JSON',
       '',
-      '<details>',
-      '<summary>plan.json</summary>',
-      '',
-      '```json',
-      JSON.stringify(context.plan, null, 2),
-      '```',
-      '',
-      '</details>',
+      ...detailsBlock(
+        'plan.json',
+        ['```json', JSON.stringify(context.plan, null, 2), '```'].join('\n')
+      ),
       ''
     );
   }
@@ -299,99 +240,13 @@ function writeReport(context: Context): void {
 }
 
 async function publish(context: Context): Promise<void> {
-  const repo = requireEnv('REPORTS_REPO');
-  const token = requireEnv('REPORTS_TOKEN');
-  const runId = requireEnv('RUN_ID');
-  const report = readFile(requireEnv('REPORT_FILE'));
-  if (!report) {
-    throw new Error('the report file is missing or empty');
-  }
-  const apiUrl = process.env.GITHUB_API_URL ?? 'https://api.github.com';
-  const headers = {
-    Accept: 'application/vnd.github+json',
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json',
-    'X-GitHub-Api-Version': '2022-11-28',
-  };
-  const prefix = `${outcomeLabel(context)}: `;
-  const suffix = ` (run ${runId})`;
-  const room = GITHUB_TITLE_LIMIT - prefix.length - suffix.length;
-  const label = issueLabel(context);
-  const title = `${prefix}${label.length > room ? `${label.slice(0, room - 1)}…` : label}${suffix}`;
-  const issue = await githubPost(`${apiUrl}/repos/${repo}/issues`, headers, {
-    title,
-    body: clampBody(
-      report,
-      'The report was truncated. The full file is in the workflow artifacts.'
-    ),
+  await publishReportIssue({
+    outcome: outcomeLabel(context),
+    label: issueLabel(context),
+    streams: context.stream
+      ? [{ name: 'Agent stream', content: context.stream }]
+      : [],
   });
-  console.log(`opened ${issue.html_url}`);
-  if (process.env.GITHUB_OUTPUT) {
-    fs.appendFileSync(process.env.GITHUB_OUTPUT, `url=${issue.html_url}\n`);
-  }
-
-  if (context.stream) {
-    const chunks = splitIntoChunks(context.stream, GITHUB_BODY_LIMIT - 200);
-    for (const [index, chunk] of chunks.entries()) {
-      const part =
-        chunks.length > 1 ? ` (part ${index + 1}/${chunks.length})` : '';
-      await githubPost(
-        `${apiUrl}/repos/${repo}/issues/${issue.number}/comments`,
-        headers,
-        {
-          body: [
-            '<details>',
-            `<summary>Agent stream${part}</summary>`,
-            '',
-            chunk,
-            '',
-            '</details>',
-          ].join('\n'),
-        }
-      );
-    }
-    console.log(`posted the stream in ${chunks.length} comment(s)`);
-  }
-}
-
-async function githubPost(
-  url: string,
-  headers: Record<string, string>,
-  body: Record<string, unknown>
-): Promise<{ number: number; html_url: string }> {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) {
-    throw new Error(
-      `GitHub API ${response.status} for ${url}: ${(await response.text()).slice(0, 400)}`
-    );
-  }
-  return (await response.json()) as { number: number; html_url: string };
-}
-
-function clampBody(text: string, note: string): string {
-  if (text.length <= GITHUB_BODY_LIMIT) {
-    return text;
-  }
-  return `${text.slice(0, GITHUB_BODY_LIMIT - note.length - 4)}\n\n_${note}_`;
-}
-
-function splitIntoChunks(content: string, limit: number): string[] {
-  const chunks: string[] = [];
-  let rest = content;
-  while (rest.length > limit) {
-    let cut = rest.lastIndexOf('\n', limit);
-    if (cut < limit / 2) {
-      cut = limit;
-    }
-    chunks.push(rest.slice(0, cut));
-    rest = rest.slice(cut).replace(/^\n/, '');
-  }
-  chunks.push(rest);
-  return chunks;
 }
 
 async function notify(context: Context): Promise<void> {
@@ -411,13 +266,6 @@ async function notify(context: Context): Promise<void> {
   }
   lines.push(`Issue: ${context.issueUrl}`, `Run: ${context.runUrl}`);
   await postToSlack({ text: lines.join('\n') });
-}
-
-function escapeSlack(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
 }
 
 function outcomeLabel(context: Context): string {
@@ -472,45 +320,6 @@ function costLine(costs: Costs): string {
     parts.push(`reproduction ${formatUsd(costs.reproduction)}`);
   }
   return `${formatUsd(costs.total)} (${parts.join(', ')})`;
-}
-
-function formatUsd(value: number): string {
-  if (value > 0 && value < 0.005) {
-    return '<$0.01';
-  }
-  return `$${value.toFixed(2)}`;
-}
-
-function parseCost(value: string | undefined): number {
-  const parsed = Number.parseFloat(value ?? '');
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
-}
-
-function readPlan(file: string | undefined): Plan | null {
-  const content = readFile(file);
-  if (!content) {
-    return null;
-  }
-  const parsed: unknown = JSON.parse(content);
-  return typeof parsed === 'object' && parsed !== null
-    ? (parsed as Plan)
-    : null;
-}
-
-function readFile(file: string | undefined): string | null {
-  if (!file || !fs.existsSync(file)) {
-    return null;
-  }
-  const content = fs.readFileSync(file, 'utf8').trim();
-  return content || null;
-}
-
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`${name} is required`);
-  }
-  return value;
 }
 
 main().catch((err: unknown) => {
