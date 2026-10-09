@@ -1,5 +1,6 @@
 /*
- * The statements of the cases of `native layout reference` that need the wall clock. A frame-driven phase
+ * The statements that need the wall clock, for the cases of `native layout reference` and for the cases of
+ * the other native layout suites in `nativeLayoutLiveClockCases.ts`. A frame-driven phase
  * starts in the first frame at or after the end of the phase before it, so phase number n of the twin
  * starts n display frames or less after its declared start, and a twin of n phases can be n display frames
  * behind its declared timeline with no late frame. The start of a phase is a computed start: the rules of
@@ -46,6 +47,10 @@
  * the frame before it. This statement and the pair statement assert on each row in each condition: no row
  * is skipped.
  *
+ * The rows cover the timelines: each phase of 100 ms or more of each track that plays to the end of the
+ * phase has a row of the native box. A suite that checks each row that it has at the time of the row, and
+ * not at a planned time, has this statement here.
+ *
  * A late frame, a late test step, or a late callback fails a statement. The suite is not in the default
  * run. Each test prints each quantity as `LIVE | test | quantity | value` before it asserts it, so the log
  * of a run under a load is a record of the quantities.
@@ -56,6 +61,7 @@ import {
   render,
   test,
 } from '../../../ReJest/RuntimeTestsApi';
+import { LIVE_CLOCK_CASES } from './nativeLayoutLiveClockCases';
 import type {
   HandOver,
   Played,
@@ -111,7 +117,10 @@ describe('native layout live clock', () => {
     return;
   }
 
-  for (const [caseName, referenceCase] of Object.entries(REFERENCE_CASES)) {
+  for (const [caseName, referenceCase] of Object.entries({
+    ...REFERENCE_CASES,
+    ...LIVE_CLOCK_CASES,
+  })) {
     test(`${caseName}: the two boxes agree on the wall clock`, async () => {
       const played = await play(referenceCase);
       const expectIn = (
@@ -145,6 +154,12 @@ describe('native layout live clock', () => {
       )) {
         console.log(`LIVE | ${caseName} | ${text}`);
         expect(isOnTrackOrInPair).toBe(true);
+      }
+      for (const [phase, rows] of rowsInPhasesOf(played)) {
+        expectIn(`rows of the native box in ${phase}`, rows, {
+          from: 1,
+          to: Infinity,
+        });
       }
       expect(played.missingCallbacks).toBe('');
       const nativeCallback = callbackTimeOf('native');
@@ -235,6 +250,37 @@ const startsWithNoDuration = ({ phases: [first] }: Timeline) =>
 
 const isIn = ({ from, to }: Band, timeMs: number) =>
   timeMs >= from && timeMs <= to;
+
+const COVERED_PHASE_MS = 100;
+
+/**
+ * The count of rows with a sample of the native box in each phase of
+ * `COVERED_PHASE_MS` or more of each track that played to the end of the
+ * phase.
+ */
+function rowsInPhasesOf({ rows, tracks }: Played) {
+  const counts = new Map<string, number>();
+  for (const track of tracks) {
+    const { timeline, origin, played, target, generation } = track;
+    const starts = declaredStartsOf(timeline);
+    timeline.phases.forEach(({ durationMs }, phase) => {
+      const startMs = middleOf(origin) + starts[phase];
+      const window = {
+        from: Math.max(startMs, played.from),
+        to: startMs + durationMs,
+      };
+      if (durationMs >= COVERED_PHASE_MS && window.to <= played.to) {
+        counts.set(
+          `phase ${phase} of ${describeLeaf(track)} of the command ${generation}`,
+          rows.filter(({ row }) =>
+            isIn(window, row.native[target].monotonicTimeMs)
+          ).length
+        );
+      }
+    });
+  }
+  return counts;
+}
 
 const pairGapOf = (native: TargetSample, twin: TargetSample) =>
   Math.abs(native.presentation[0] - twin.model[0]);
