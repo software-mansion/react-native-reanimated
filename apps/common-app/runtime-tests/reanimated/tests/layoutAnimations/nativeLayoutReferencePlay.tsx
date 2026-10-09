@@ -21,6 +21,7 @@ import type {
   Operation,
   PlayedTrack,
   ScalarKey,
+  ScalarTrack,
   TakenRow,
   TargetSample,
   TraceEvent,
@@ -35,11 +36,14 @@ import {
   endTransformOf,
   entryExitOf,
   FRAME_BOX_REF,
+  FRAME_MS,
   frameDrivenOf,
   frameRecordedOf,
   isOfCommand,
   isSameLeaf,
+  isScalarTrack,
   layoutOf,
+  middleOf,
   narrowClockOffset,
   OPACITY_TOLERANCE,
   PAIR_LEFT,
@@ -512,6 +516,63 @@ export const expectedCallbacksOf = ({ places }: ReferenceCase) =>
   (Object.keys(BOXES) as BoxName[]).flatMap((box) =>
     places.slice(1).map((_, commit) => `${box}:${commit === places.length - 2}`)
   );
+
+/** A track that the frame driver took, with its hand-over window. */
+export type HandOver = {
+  track: ScalarTrack;
+  /** The start call of the frame driver for the key on the native box. */
+  startCallMs: number;
+  /** To one display frame after the end report of the track. */
+  window: Band;
+};
+
+export function handOversOf(played: Played): HandOver[] {
+  const clock = middleOf(played.clockOffset);
+  return played.tracks.filter(isScalarTrack).flatMap((track): HandOver[] => {
+    if (track.finished !== false || isReplaced(played, track)) {
+      return [];
+    }
+    const [startCallMs] = played.frameChecks.flatMap(({ record }) =>
+      record.box === 'native' &&
+      isSameLeaf(record, track) &&
+      record.start !== undefined &&
+      record.start.timeMs + clock >= track.played.from
+        ? [record.start.timeMs + clock]
+        : []
+    );
+    return startCallMs === undefined
+      ? []
+      : [
+          {
+            track,
+            startCallMs,
+            window: { from: startCallMs, to: track.played.to + FRAME_MS },
+          },
+        ];
+  });
+}
+
+export const isReplaced = ({ tracks }: Played, track: PlayedTrack) =>
+  tracks.some(({ replaced }) => replaced === track);
+
+/**
+ * The mark of a read of a track from the start call of the frame driver for its
+ * key to its end report: Objective 12H measured that the layer can show the
+ * model plus the offset of the track there.
+ */
+export const defectMarkOf = (
+  handOvers: HandOver[],
+  track: PlayedTrack,
+  timeMs: number
+) =>
+  handOvers.some(
+    (handOver) =>
+      handOver.track === track &&
+      timeMs >= handOver.startCallMs &&
+      timeMs < track.played.to
+  )
+    ? ['defect 12H']
+    : [];
 
 const transformOf = ({ operations }: Declaration) =>
   operations && endTransformOf(operations);

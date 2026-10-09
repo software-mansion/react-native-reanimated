@@ -19,7 +19,10 @@
  * replaces a track on screen starts at the value that the route captured from the replaced track for its
  * build, and each captured value is on the timeline of its own track at its time: a `CAPTURE` row has the
  * time of the capture from the origin of the new track. An operation of a transform starts at the initial
- * value of its builder.
+ * value of its builder. A read that shows the replaced track after the origin of the new track is a property
+ * of the read and not of the screen. Measured by the hand-over measurement of Objective 12H: 62 of 62 reads
+ * after a flush of the transaction were on the new track, plain reads showed the replaced track for 11.90
+ * to 13.99 ms, and no recorded display frame was wrong in 10 of 10 replacements.
  *
  * B: each frame of the frame-driven twin wrote the value that a replay of the declared timeline has at the
  * frame time, after the start call of the record. The replay (`replayFrames`) is a copy of the start rules
@@ -42,8 +45,15 @@
  * the value of the style, up to 13.88 ms after `TrackStarted`, and the first read on the timeline came 0.48
  * to 14.30 ms after it. The 18 ms are one display frame and 1.33 ms: a choice from these data, not a bound
  * for each machine. A read off the timeline after them fails. Each run prints the reads of each such start
- * as one `GATE` row. A flash of the value before the command on screen is not tested. Another track has no
- * gate. Each checked read that is off the timeline is an `OFF` row with the state of its view.
+ * as one `GATE` row. The screen does not show the value before the command, measured by the hand-over
+ * measurement of Objective 12H on recorded display frames: no flash for a view that enters (50 of 50 starts,
+ * and 3 of 3 with a block of the main thread of 600 ms) and none for a layout animation with an initial
+ * offset (50 of 50, and 3 of 3). A view with an initial transform: not tested. Another track has no gate.
+ *
+ * Each checked read that is off the timeline is an `OFF` row with the state of its view. The row has the
+ * mark `defect 12H` when the read is in the hand-over window of its track: from the start call of the frame
+ * driver for the key to the end report of the track. Objective 12H measured that the layer can show the
+ * model plus the offset of the track there. The mark is a print: statement A is the same for each read.
  *
  * No statement here compares the two boxes at one instant. So this suite does not prove: the distance of
  * the two boxes on the wall clock, the lag of the frame driver, when a callback comes, the pixels on
@@ -64,8 +74,10 @@ import type {
   ReferenceCase,
 } from './nativeLayoutReferencePlay';
 import {
+  defectMarkOf,
   endOperationsOf,
   expectedCallbacksOf,
+  handOversOf,
   MATRIX_TOLERANCE,
   play,
   REFERENCE_CASES,
@@ -183,10 +195,9 @@ const expectNativeRows = ({ rows, tracks }: Played): RowRead[] =>
  * Each checked read that is off the timeline, with the state of its view: the
  * record of a failed statement A.
  */
-function describeReadsOffTimeline(
-  reads: RowRead[],
-  { frameChecks, clockOffset }: Played
-) {
+function describeReadsOffTimeline(reads: RowRead[], played: Played) {
+  const { frameChecks, clockOffset } = played;
+  const handOvers = handOversOf(played);
   const frameDriverStarts = frameChecks
     .filter(({ record }) => record.box === 'native')
     .flatMap(({ record }) => (record.start ? [record.start.timeMs] : []));
@@ -202,6 +213,7 @@ function describeReadsOffTimeline(
         `model ${model.join()}`,
         `playback keys ${playbackKeys.join()}`,
         `start calls of the frame driver for the box, ms after the read: ${frameDriverStarts.map((startMs) => (startMs + middleOf(clockOffset) - timeMs).toFixed(2)).join()}`,
+        ...defectMarkOf(handOvers, track, timeMs),
       ].join(', ');
     });
 }
