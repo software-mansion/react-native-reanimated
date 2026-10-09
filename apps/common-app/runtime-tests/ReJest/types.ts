@@ -132,6 +132,7 @@ export interface Operation {
   shadowNodeWrapper?: ShadowNodeWrapper;
   name: string;
   updates: OperationUpdate;
+  isAnimatedProps: boolean;
 }
 
 export type TestValue =

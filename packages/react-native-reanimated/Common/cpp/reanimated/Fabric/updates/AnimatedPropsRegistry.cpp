@@ -5,8 +5,9 @@
 
 #include <react/debug/react_native_assert.h>
 
-#include <functional>
 #include <memory>
+#include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -28,6 +29,18 @@ static void roundTextMetrics(jsi::Runtime &rt, const jsi::Value &updates) {
   }
 }
 
+static jsi::Object
+pickProps(jsi::Runtime &rt, const folly::dynamic &props, const std::unordered_set<std::string> &keys) {
+  jsi::Object pickedProps(rt);
+  for (const auto &[key, value] : props.items()) {
+    const auto &keyString = key.getString();
+    if (keys.contains(keyString)) {
+      pickedProps.setProperty(rt, keyString.c_str(), jsi::valueFromDynamic(rt, value));
+    }
+  }
+  return pickedProps;
+}
+
 void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   auto operationsArray = operations.asObject(rt).asArray(rt);
@@ -43,30 +56,58 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
       addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates);
     } else {
-      addUpdatesToBatch(shadowNode->getFamilyShared(), jsi::dynamicFromValue(rt, updates));
-    }
-
-    // When USE_ANIMATION_BACKEND is enabled, updates bypass `updatesRegistry_`,
-    // so entries added to `timestampMap_` would never be synced and thus never
-    // evicted, leaking until view unmount.
-    if constexpr (
-        StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
-        !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-      const auto tag = shadowNode->getTag();
-      timestampMap_[tag] = timestamp;
-      // If JS already has a `settledProps` snapshot for this tag, it is now
-      // stale — schedule a refresh on the next `collectSettledUpdates`.
-      if (syncedTags_.erase(tag) > 0) {
-        invalidatedTags_.insert(tag);
+      const auto dynamicUpdates = jsi::dynamicFromValue(rt, updates);
+      // With USE_ANIMATION_BACKEND, no update reaches `updatesRegistry_`, so
+      // `collectSettledUpdates` never reads `writeHistories_`.
+      if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
+        const bool isAnimatedProps = item.getProperty(rt, "isAnimatedProps").asBool();
+        trackUpdate(shadowNode->getTag(), dynamicUpdates, isAnimatedProps, timestamp);
       }
+      addUpdatesToBatch(shadowNode->getFamilyShared(), dynamicUpdates);
     }
   }
+}
+
+void AnimatedPropsRegistry::trackUpdate(
+    const Tag tag,
+    const folly::dynamic &updates,
+    const bool isAnimatedProps,
+    const double timestamp) {
+  auto &writeHistory = writeHistories_[tag];
+  writeHistory.lastWriteTimestamp = timestamp;
+
+  auto &writtenKeys = isAnimatedProps ? writeHistory.animatedPropsKeys : writeHistory.animatedStyleKeys;
+  for (const auto &key : updates.keys()) {
+    writtenKeys.insert(key.getString());
+  }
+
+  invalidateSyncedTag(tag);
+}
+
+void AnimatedPropsRegistry::invalidateSyncedTag(const Tag tag) {
+  // If JS already has a `settledProps` snapshot for this tag, it is now
+  // stale — schedule a refresh on the next `collectSettledUpdates`.
+  if (syncedTags_.erase(tag) > 0) {
+    invalidatedTags_.insert(tag);
+  }
+}
+
+jsi::Object AnimatedPropsRegistry::createSettledUpdate(
+    jsi::Runtime &rt,
+    const Tag viewTag,
+    const folly::dynamic &props,
+    const WriteHistory &writeHistory) {
+  jsi::Object settledUpdate(rt);
+  settledUpdate.setProperty(rt, "viewTag", viewTag);
+  settledUpdate.setProperty(rt, "props", pickProps(rt, props, writeHistory.animatedPropsKeys));
+  settledUpdate.setProperty(rt, "style", pickProps(rt, props, writeHistory.animatedStyleKeys));
+  return settledUpdate;
 }
 
 jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const double settledTimestamp) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
-  std::vector<std::pair<Tag, std::reference_wrapper<const folly::dynamic>>> updates;
+  std::vector<jsi::Object> settledUpdates;
 
   for (auto it = updatesRegistry_.begin(); it != updatesRegistry_.end();) {
     const auto viewTag = it->first;
@@ -77,21 +118,21 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const 
       // entry is redundant. `syncedTags_` is intentionally retained to detect
       // re-animation staleness. Note that `syncedTags_` and `invalidatedTags_`
       // are disjoint — `update()` moves tags from the former to the latter.
-      timestampMap_.erase(viewTag);
       it = updatesRegistry_.erase(it);
       continue;
     }
 
-    const auto timestampIt = timestampMap_.find(viewTag);
-    if (timestampIt == timestampMap_.end()) {
+    const auto writeHistoryIt = writeHistories_.find(viewTag);
+    if (writeHistoryIt == writeHistories_.end()) {
       ++it;
       continue;
     }
-    const bool isSettled = timestampIt->second < settledTimestamp;
+    const auto &writeHistory = writeHistoryIt->second;
+    const bool isSettled = writeHistory.lastWriteTimestamp < settledTimestamp;
     const auto invalidatedIt = invalidatedTags_.find(viewTag);
     const bool isInvalidated = invalidatedIt != invalidatedTags_.end();
     if (isSettled || isInvalidated) {
-      updates.emplace_back(viewTag, std::cref(it->second.second));
+      settledUpdates.push_back(createSettledUpdate(rt, viewTag, it->second.second, writeHistory));
       if (isSettled) {
         // Only settled-path tags are tracked as "synced" so that an ongoing
         // animation doesn't re-trigger an invalidation/sync on every GC tick.
@@ -107,13 +148,9 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const 
     ++it;
   }
 
-  const jsi::Array array(rt, updates.size());
-  size_t i = 0;
-  for (const auto &[viewTag, styleProps] : updates) {
-    const jsi::Object item(rt);
-    item.setProperty(rt, "viewTag", viewTag);
-    item.setProperty(rt, "styleProps", jsi::valueFromDynamic(rt, styleProps.get()));
-    array.setValueAtIndex(rt, i++, item);
+  const jsi::Array array(rt, settledUpdates.size());
+  for (size_t i = 0; i < settledUpdates.size(); ++i) {
+    array.setValueAtIndex(rt, i, std::move(settledUpdates[i]));
   }
 
   return jsi::Value(rt, array);
@@ -121,7 +158,7 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const 
 
 void AnimatedPropsRegistry::removeTag(const Tag tag) {
   updatesRegistry_.erase(tag);
-  timestampMap_.erase(tag);
+  writeHistories_.erase(tag);
   syncedTags_.erase(tag);
   invalidatedTags_.erase(tag);
 }
