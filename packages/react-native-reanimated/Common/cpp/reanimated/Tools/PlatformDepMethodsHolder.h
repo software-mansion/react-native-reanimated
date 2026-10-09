@@ -53,15 +53,17 @@ using ForceScreenSnapshotFunction = std::function<bool(Tag tag)>;
 using ReadMountedViewPropsFunction = std::function<Props::Shared(Tag tag)>;
 
 // A view is mounted while it is attached to the window. The frame is in points, relative to the parent and without
-// transforms.
+// transforms. The background color is ARGB.
 struct MountedViewProps {
   double x;
   double y;
   double width;
   double height;
   double opacity;
+  int backgroundColor;
 };
-using ObtainMountedViewPropsFunction = std::function<std::optional<MountedViewProps>(Tag tag)>;
+// Presented props are the ones on screen, which differ from the view's own while Core Animation animates it.
+using ObtainMountedViewPropsFunction = std::function<std::optional<MountedViewProps>(Tag tag, bool presented)>;
 
 using PlatformAttachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector, std::function<void(bool)>)>;
 using PlatformDetachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector)>;

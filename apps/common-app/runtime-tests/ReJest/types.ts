@@ -77,6 +77,7 @@ export type MountedViewProps = {
   width: number;
   height: number;
   opacity: number;
+  backgroundColor: string;
 };
 
 export type ValidPropNames =
@@ -196,7 +197,10 @@ declare global {
     value: Record<string, unknown>
   ) => void;
   var _obtainProp: (shadowNodeWrapper: unknown, propName: string) => string;
-  var _obtainMountedViewProps: (tag: number) => MountedViewProps | null;
+  var _obtainMountedViewProps: (
+    tag: number,
+    presented: boolean
+  ) => MountedViewProps | null;
   var LayoutAnimationsManager: {
     start: LayoutAnimationStartFunction;
     stop: (tag: number) => void;
