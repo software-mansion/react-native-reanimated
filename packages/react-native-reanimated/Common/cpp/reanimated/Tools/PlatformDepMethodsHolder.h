@@ -53,13 +53,14 @@ using ForceScreenSnapshotFunction = std::function<bool(Tag tag)>;
 using ReadMountedViewPropsFunction = std::function<Props::Shared(Tag tag)>;
 
 // A view is mounted while it is attached to the window. The frame is in points, relative to the parent and without
-// transforms.
+// transforms. The background color is ARGB.
 struct MountedViewProps {
   double x;
   double y;
   double width;
   double height;
   double opacity;
+  int backgroundColor;
 };
 using ObtainMountedViewPropsFunction = std::function<std::optional<MountedViewProps>(Tag tag)>;
 

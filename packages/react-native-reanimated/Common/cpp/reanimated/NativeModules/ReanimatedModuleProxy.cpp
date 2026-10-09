@@ -374,6 +374,10 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
           result.setProperty(rt, "width", props->width);
           result.setProperty(rt, "height", props->height);
           result.setProperty(rt, "opacity", props->opacity);
+          result.setProperty(
+              rt,
+              "backgroundColor",
+              jsi::String::createFromUtf8(rt, PropValueProcessor::intColorToHex(props->backgroundColor)));
           return result;
         });
   }

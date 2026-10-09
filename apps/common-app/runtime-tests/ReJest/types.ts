@@ -77,6 +77,7 @@ export type MountedViewProps = {
   width: number;
   height: number;
   opacity: number;
+  backgroundColor: string;
 };
 
 export type ValidPropNames =
