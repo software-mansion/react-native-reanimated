@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { getBundleModeMetroConfig } from '../bundleMode';
+import { bundleModeMetroConfig, getBundleModeMetroConfig } from '../bundleMode';
 
 describe('bundle mode Metro config', () => {
   test('uses existing resolver for non-bundle mode modules', () => {
@@ -87,5 +87,58 @@ describe('bundle mode Metro config', () => {
         path.join('bundleMode', 'polyfills', 'prepareBundleMode.js')
       )
     ).toBe(true);
+  });
+});
+
+describe('Bundle Mode shim dependency', () => {
+  test.each(['ios', 'android', 'web', 'windows'])(
+    'retains the default resolver on %s',
+    (platform) => {
+      const resolveRequest = jest.fn(() => ({
+        type: 'sourceFile',
+        filePath: '/platform/react-native.js',
+      }));
+      const remapper = jest.fn(() => ({
+        type: 'sourceFile',
+        filePath: '/custom/wrapper.js',
+      }));
+      const context = {
+        originModulePath: '/worklets/shims/reactNativeShim.js',
+        resolveRequest,
+      };
+      const config = getBundleModeMetroConfig({
+        resolver: { resolveRequest: remapper },
+        serializer: {},
+        transformer: {},
+      });
+      expect(
+        config.resolver.resolveRequest(
+          context,
+          'react-native-worklets/bundleMode/realReactNative',
+          platform
+        )
+      ).toEqual({ type: 'sourceFile', filePath: '/platform/react-native.js' });
+      expect(resolveRequest).toHaveBeenCalledWith(
+        context,
+        'react-native',
+        platform
+      );
+      expect(remapper).not.toHaveBeenCalled();
+    }
+  );
+  test('supports the community helper', () => {
+    const resolveRequest = jest.fn(() => ({
+      type: 'sourceFile',
+      filePath: '/native/index.js',
+    }));
+    const context = { resolveRequest };
+    expect(
+      bundleModeMetroConfig.resolver.resolveRequest(
+        context,
+        'react-native-worklets/bundleMode/realReactNative',
+        'ios'
+      )
+    ).toEqual({ type: 'sourceFile', filePath: '/native/index.js' });
+    expect(resolveRequest).toHaveBeenCalledWith(context, 'react-native', 'ios');
   });
 });
