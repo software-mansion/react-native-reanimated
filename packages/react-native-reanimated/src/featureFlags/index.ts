@@ -1,7 +1,10 @@
 'use strict';
 import { logger } from '../common';
 import { ReanimatedModule } from '../ReanimatedModule';
-import type { StaticFeatureFlagsSchema } from './staticFeatureFlags';
+import {
+  DefaultStaticFeatureFlags,
+  type StaticFeatureFlagsSchema,
+} from './staticFeatureFlags';
 
 type DynamicFlagsType = {
   EXAMPLE_DYNAMIC_FLAG: boolean;
@@ -75,7 +78,15 @@ export function getStaticFeatureFlag(
   if (name in staticFeatureFlags) {
     return staticFeatureFlags[name]!;
   }
-  const featureFlagValue = ReanimatedModule.getStaticFeatureFlag(name);
+  let featureFlagValue: boolean;
+  try {
+    featureFlagValue = ReanimatedModule.getStaticFeatureFlag(name);
+  } catch {
+    featureFlagValue = DefaultStaticFeatureFlags[name] ?? false;
+    logger.warn(
+      `Unable to read static feature flag '${name}' from native module, defaulting to ${featureFlagValue}.`
+    );
+  }
   staticFeatureFlags[name] = featureFlagValue;
   return featureFlagValue;
 }
