@@ -5,12 +5,6 @@ type Describe = (name: string, buildSuite: () => void) => void;
 
 export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
   {
-    testSuiteName: 'cssArrayKeyframes',
-    importTest: () => {
-      require('./tests/props/cssArrayKeyframes.test');
-    },
-  },
-  {
     testSuiteName: 'animations',
     importTest: () => {
       const { describe } = require('../ReJest/RuntimeTestsApi') as {
@@ -79,6 +73,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/props/boxShadow.test');
       require('./tests/props/nonLayoutPropAndRender.test');
       require('./tests/props/mountedViewProps.test');
+      require('./tests/props/cssArrayKeyframes.test');
     },
   },
   {

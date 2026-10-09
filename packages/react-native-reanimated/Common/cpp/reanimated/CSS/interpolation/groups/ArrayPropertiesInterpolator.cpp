@@ -13,7 +13,8 @@ ArrayPropertiesInterpolator::ArrayPropertiesInterpolator(
 
 folly::dynamic ArrayPropertiesInterpolator::getDefaultValue() const {
   auto result = folly::dynamic::array();
-  // One factory is a variable-length list, several are a tuple.
+  // One factory is a variable-length list (boxShadow, backgroundImage), several
+  // are a fixed tuple (transformOrigin). See InterpolatorRegistry.cpp.
   if (factories_.size() > 1) {
     for (const auto &factory : factories_) {
       result.push_back(factory->getDefaultValue().toDynamic());
@@ -22,12 +23,8 @@ folly::dynamic ArrayPropertiesInterpolator::getDefaultValue() const {
   return result;
 }
 
-folly::dynamic ArrayPropertiesInterpolator::getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const {
-  return PropertyInterpolator::getStyleValue(shadowNode);
-}
-
 folly::dynamic ArrayPropertiesInterpolator::getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const {
-  const auto value = getStyleValue(shadowNode);
+  const auto value = PropertyInterpolator::getStyleValue(shadowNode);
   return value.isArray() ? value : getDefaultValue();
 }
 

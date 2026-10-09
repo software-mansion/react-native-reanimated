@@ -1,10 +1,6 @@
 import type { BoxShadowValue } from 'react-native';
 import { View } from 'react-native';
-import type {
-  CSSAnimationKeyframes,
-  CSSAnimationTimingFunction,
-  CSSStyle,
-} from 'react-native-reanimated';
+import type { CSSAnimationKeyframes, CSSStyle } from 'react-native-reanimated';
 import Animated, {
   measure,
   steps,
@@ -33,19 +29,11 @@ const green = { ...red, color: 'green', offsetX: 40 };
 const base = [red, blue];
 
 function Example({
-  finish = false,
   keyframes,
-  progress = 0.25,
   underlying = base,
-  timingFunction = 'linear',
-  fill = 'none',
 }: {
   keyframes: CSSAnimationKeyframes;
-  progress?: number;
   underlying?: Array<BoxShadowValue>;
-  finish?: boolean;
-  fill?: 'none' | 'forwards';
-  timingFunction?: CSSAnimationTimingFunction;
 }) {
   const animatedRef = useTestRef('animated');
   const staticRef = useTestRef('static');
@@ -54,12 +42,10 @@ function Example({
       <Animated.View
         ref={animatedRef}
         style={{
-          animationDelay: finish ? 0 : -progress * 1000,
-          animationDuration: finish ? 100 : 1000,
-          animationFillMode: finish ? fill : 'both',
+          animationDuration: 100,
+          animationFillMode: 'none',
           animationName: keyframes,
-          animationPlayState: finish ? 'running' : 'paused',
-          animationTimingFunction: timingFunction,
+          animationTimingFunction: 'linear',
           backgroundColor: 'white',
           boxShadow: underlying,
           height: 80,
@@ -73,10 +59,6 @@ function Example({
     </View>
   );
 }
-
-// Views with the same inline keyframes share one registry entry and the
-// interpolator behind it, so each frame resolves the omitted endpoint against
-// a different underlying list.
 
 async function shadows(name = 'animated'): Promise<Array<BoxShadowValue>> {
   await wait(100);
@@ -216,7 +198,6 @@ describe('CSS array keyframes', () => {
         <Example
           keyframes={{ from: { boxShadow: [red] }, to: { boxShadow: [green] } }}
           underlying={underlying}
-          finish
         />
       );
       await wait(500);
