@@ -59,7 +59,10 @@ void NativeAnimationHost::runAfterMount(const std::vector<MountedOperation> &ope
   Deliveries deliveries;
   for (const auto &operation : operations) {
     if (const auto *start = std::get_if<MountedStart>(&operation)) {
-      RECORD_TRACE(.event = TraceEventType::Received, .handle = start->request.handle);
+      RECORD_TRACE(
+              .event = TraceEventType::Received,
+              .handle = start->request.handle,
+              .originTimestampMs = start->request.originTimestampMs);
       admit(start->request, start->client, deliveries);
       continue;
     }
@@ -169,7 +172,7 @@ void NativeAnimationHost::runStart(
     const std::weak_ptr<NativeAnimationClient> &client) {
   ReanimatedSystraceSection section("NativeAnimationHost::start");
   const auto &handle = request.handle;
-  RECORD_TRACE(.event = TraceEventType::Received, .handle = handle);
+  RECORD_TRACE(.event = TraceEventType::Received, .handle = handle, .originTimestampMs = request.originTimestampMs);
 
   Deliveries deliveries;
   if (platform_->isSurfaceRunning(handle.surfaceId)) {
