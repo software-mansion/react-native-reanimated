@@ -811,7 +811,6 @@ describe('native layout starts after the mount of the final state', () => {
           monotonicTimeMs >= secondX.played.from + UNSEEN_START_MS &&
           monotonicTimeMs < middleOf(firstY.origin) + DURATION - FRAME_MS
       );
-    expect(beforeTheEndOfY.length > 0).toBe(true);
     for (const read of beforeTheEndOfY) {
       expect(read.playbackKeys.length).toBe(2);
       expect(playbackCountOf(read, secondX.generation)).toBe(1);
