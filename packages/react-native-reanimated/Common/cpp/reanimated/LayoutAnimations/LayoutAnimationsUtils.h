@@ -2,6 +2,7 @@
 
 #include <folly/dynamic.h>
 #include <react/debug/react_native_assert.h>
+#include <react/featureflags/ReactNativeFeatureFlags.h>
 #include <react/renderer/components/rnreanimated/Props.h>
 #include <react/renderer/components/view/ViewProps.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
@@ -102,6 +103,16 @@ struct IndexCursors {
   IndexCursor insert;
   bool invariantChecked = false;
 };
+
+#ifdef RN_SERIALIZABLE_STATE
+// `cloneProps` keeps only the given raw props in `Props::rawProps`, unless React Native accumulates them itself.
+inline folly::dynamic withBaseRawProps(const Props::Shared &baseProps, folly::dynamic rawProps) {
+  if (ReactNativeFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid()) {
+    return rawProps;
+  }
+  return folly::dynamic::merge(baseProps->rawProps, rawProps);
+}
+#endif
 
 struct LightNode {
   ShadowView previous;
