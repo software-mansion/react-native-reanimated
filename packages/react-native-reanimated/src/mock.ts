@@ -98,7 +98,7 @@ const hook = {
   useDerivedValue: <Value>(processor: () => Value) => {
     const result = processor();
 
-    return { value: result, get: () => result };
+    return { value: result, get: () => result, _isReanimatedSharedValue: true };
   },
   useEvent: <
     Event extends object,
