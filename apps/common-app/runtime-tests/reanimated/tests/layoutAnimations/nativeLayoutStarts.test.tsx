@@ -1,10 +1,26 @@
+/*
+ * Each test that plays a case (`playCase`) has the method of the suite `native layout reference`, each box
+ * on its own clock: each sample of the native box is on the declared timeline of its key at the time of the
+ * sample from the origin of its command (statement A), each frame of the frame-driven twin and of the
+ * frame driver on the native box is on a replay of the declared timeline at its frame time (statement B),
+ * and at the end the native box shows its model and the twin has the same model. A check of a playback key
+ * count or of a held size in such a test is for each row, by the time of the row against the times of the
+ * trace. Each other test has state checks and trace checks at planned times.
+ *
+ * The method does not prove: the distance of the two boxes at one instant, the lag of the frame driver,
+ * that the two starts are in one display frame, when a callback comes or the gap of two callbacks, that a
+ * row comes in each part of a timeline, a native value in the first display frame after its origin to
+ * better than one display frame. For a frame with fractional values, statement B is to the pixel grid of
+ * the layout: the layout rounds a declared size, so the frame driver gets another number. The pixels on
+ * screen, a device, and 120 Hz are not tested.
+ *
+ * The suite `native layout live clock` has the wall-clock statements for the cases of this suite in
+ * `nativeLayoutLiveClockCases.ts`: the pair of the two boxes at one instant, the gap of the two end
+ * callbacks, and a row of the native box in each phase.
+ */
 import React from 'react';
-import { Platform, View } from 'react-native';
-import type {
-  EasingFunction,
-  EasingFunctionFactory,
-  LayoutAnimationFunction,
-} from 'react-native-reanimated';
+import { PixelRatio, Platform, View } from 'react-native';
+import type { LayoutAnimationFunction } from 'react-native-reanimated';
 import Animated, {
   Easing,
   getStaticFeatureFlag,
@@ -29,13 +45,32 @@ import {
   startSecondSurface,
   stopSecondSurface,
 } from '../../../ReJest/secondSurface';
+import {
+  CURVE_CASES,
+  curveLeavesOf,
+  HELD_SIZE_CASES,
+  HOLD_AFTER_TRACK_CASES,
+  MOVED_AND_RESIZED,
+  PAIR_END,
+  PAIR_START,
+  SIZE_DURATION,
+  SIZE_START,
+  TALL,
+  WIDE,
+} from './nativeLayoutLiveClockCases';
+import type {
+  CallbackBuilder,
+  Place,
+  Played,
+  ReferenceCase,
+} from './nativeLayoutReferencePlay';
+import { expectReference, play } from './nativeLayoutReferencePlay';
 import type {
   Key,
   Leaf,
   LayoutOptions,
   Operation,
   BoxProps,
-  Frame,
   PairLayouts,
   SizeBoxProps,
   TraceEvent,
@@ -54,9 +89,17 @@ import {
   REPEATED_STARTS,
   FIRST_FRAME_TRAVEL,
   FRAME_MS,
+  UNSEEN_START_MS,
   centerOf,
+  declaredBandOf,
+  framePairDistances,
+  middleOf,
+  PAIR_IN_ROW,
+  sampleFramePairAt,
+  SizePair,
   takeTrace,
   takeTraceOf,
+  takeTraceUntil,
   isHostEvent,
   isClientReport,
   sample,
@@ -64,8 +107,9 @@ import {
   takeTraceUntilSurfaceClosed,
   summarize,
   callbacks,
-  callbackTimes,
   builderCalls,
+  waitForBuilderCalls,
+  waitForCallbacks,
   layoutOf,
   endTransformOf,
   MALFORMED_BEZIER,
@@ -87,26 +131,46 @@ import {
   NATIVE_END,
   SORTED_START_AND_END,
   summarizeEnd,
-  FRAME_BOX_REF,
   PAIR_DURATION,
   PAIR_LEFT,
   PAIR_TOP,
-  START_OPACITY,
-  END_OPACITY,
-  OPACITY_TOLERANCE,
   Pair,
-  curveOf,
-  describeFramePairRows,
   styles,
-  SizePair,
   SizeScene,
   sampleFrame,
-  sampleFramePairAt,
-  framePairDistances,
-  frameDistance,
-  linearPairOf,
-  PAIR_IN_ROW,
 } from './nativeLayoutTestKit';
+
+const AT_START: Place = { left: START_LEFT, top: 0 };
+const AT_END: Place = { left: END_LEFT, top: 0 };
+const REST_TOLERANCE = 0.01;
+
+/**
+ * Plays a case on the native box and on its frame-driven twin, with statements
+ * A and B of `native layout reference` and the end of the two boxes.
+ */
+async function playCase(caseName: string, referenceCase: ReferenceCase) {
+  const played = await play(referenceCase);
+  const reads = expectReference(caseName, referenceCase, played);
+  expectAtRest(played);
+  return { ...played, reads };
+}
+
+/**
+ * At the end the native box shows its model, and the twin has the model of the
+ * native box.
+ */
+function expectAtRest({ end }: Played) {
+  for (const [target, { presentation, model }] of Object.entries(
+    end?.native ?? {}
+  )) {
+    model.forEach((value, index) => {
+      expect(Math.abs(presentation[index] - value) < REST_TOLERANCE).toBe(true);
+      expect(
+        Math.abs(end!.frame[target].model[index] - value) < REST_TOLERANCE
+      ).toBe(true);
+    });
+  }
+}
 
 describe('native layout starts after the mount of the final state', () => {
   if (!hasNativeLayoutStarts) {
@@ -198,17 +262,13 @@ describe('native layout starts after the mount of the final state', () => {
   ];
   for (const [easingName, easing] of supportedEasings) {
     test(`${easingName} plays natively`, async () => {
-      const layout = layoutOf({ originX: { easing }, originY: { easing } });
-      const tag = await renderBox({ layout });
-      await render(<Scene left={END_LEFT} layout={layout} />);
-      await wait(DURATION / 2);
-      expect(summarize((await takeTraceOf(tag)).filter(isHostEvent))).toBe(
-        NATIVE_START
-      );
-      const { presentation } = await sample(tag, 'PositionX');
-      expect(presentation[0] > centerOf(START_LEFT)).toBe(true);
-      expect(presentation[0] < centerOf(END_LEFT)).toBe(true);
-      await wait(DURATION);
+      const { events } = await playCase(easingName, {
+        flow: 'layout',
+        leaves: { originX: { easing }, originY: { easing } },
+        places: [AT_START, AT_END],
+        totalMs: DURATION,
+      });
+      expect(summarizeEnd(events)).toBe(SORTED_START_AND_END);
       await render(null);
     });
   }
@@ -729,43 +789,34 @@ describe('native layout starts after the mount of the final state', () => {
   });
 
   test('a second native start replaces the X track from its value at the pull and keeps the Y track', async () => {
-    const tag = await renderBox();
-    await render(<Scene left={END_LEFT} />);
-    await wait(DURATION / 2);
-    const firstPending = (await takeTraceOf(tag))[0];
-    const firstGeneration = firstPending.generation;
-
-    await render(<Scene left={2 * END_LEFT} />);
-    await wait(DURATION / 4);
-    const events = (await takeTraceOf(tag)).filter(isHostEvent);
-    expect(summarize(events)).toBe(
-      'LayoutStartPending > LayoutStartMounted > Received > TrackEnded:PositionX:false > Ended:Interrupted:None > TrackStarted:PositionX > Admitted'
+    const { events, tracks, rows } = await playCase('a second native start', {
+      flow: 'layout',
+      leaves: { originX: {}, originY: {} },
+      places: [AT_START, AT_END, { ...AT_END, left: 2 * END_LEFT }],
+      commitTimesMs: [DURATION / 2],
+      totalMs: DURATION,
+    });
+    const hostEvents = events.filter(isHostEvent);
+    expect(summarize(hostEvents)).toBe(
+      `${NATIVE_START} > LayoutStartPending > LayoutStartMounted > Received > TrackEnded:PositionX:false > Ended:Interrupted:None > TrackStarted:PositionX > Admitted > TrackEnded:PositionY:true > TrackEnded:PositionX:true > Ended:Finished:None`
     );
-    expect(events[4].generation).toBe(firstGeneration);
-    expect(events[0].generation > firstGeneration).toBe(true);
-    // The new track starts from the value that the first track showed at the second pull.
-    const secondPending = events[0];
-    const firstProgress = Math.min(
-      1,
-      (secondPending.monotonicTimeMs - firstPending.monotonicTimeMs) / DURATION
-    );
-    const startX =
-      centerOf(START_LEFT) + firstProgress * (END_LEFT - START_LEFT);
-    const replaced = await sample(tag, 'PositionX');
-    const { presentation, monotonicTimeMs } = replaced;
+    const [, firstY, secondX] = tracks;
+    expect(hostEvents[10].generation).toBe(firstY.generation);
+    expect(secondX.generation > firstY.generation).toBe(true);
     // The Y leaf has the same end value and timing, so its track stays.
-    expect(replaced.playbackKeys.length).toBe(2);
-    expect(playbackCountOf(replaced, secondPending.generation)).toBe(1);
-    expect(playbackCountOf(replaced, firstGeneration)).toBe(1);
-    const progress =
-      (monotonicTimeMs - secondPending.monotonicTimeMs) / DURATION;
-    const expectedX = startX + progress * (centerOf(2 * END_LEFT) - startX);
-    expect(Math.abs(presentation[0] - expectedX) < 2 * FIRST_FRAME_TRAVEL).toBe(
-      true
-    );
-
-    await wait(DURATION);
-    expect(summarizeEnd(await takeTraceOf(tag))).toBe(NATIVE_END);
+    const beforeTheEndOfY = rows
+      .map(({ row }) => row.native.PositionX)
+      .filter(
+        ({ monotonicTimeMs }) =>
+          monotonicTimeMs >= secondX.played.from + UNSEEN_START_MS &&
+          monotonicTimeMs < middleOf(firstY.origin) + DURATION - FRAME_MS
+      );
+    expect(beforeTheEndOfY.length > 0).toBe(true);
+    for (const read of beforeTheEndOfY) {
+      expect(read.playbackKeys.length).toBe(2);
+      expect(playbackCountOf(read, secondX.generation)).toBe(1);
+      expect(playbackCountOf(read, firstY.generation)).toBe(1);
+    }
     await render(null);
   });
 
@@ -909,64 +960,43 @@ describe('native layout starts after the mount of the final state', () => {
 
   test('a frame-driven start during native playback takes the X track at the mount of its first update', async () => {
     const xDuration = 3 * DURATION;
-    const layout = layoutOf(
+    const { events, tracks, rows, captures } = await playCase(
+      'a frame-driven start during native playback',
       {
-        originX: { duration: xDuration, onlyWhenChanged: true },
-        originY: { isSpring: true, onlyWhenChanged: true },
-      },
-      { name: 'mixed' }
+        flow: 'layout',
+        leaves: {
+          originX: { duration: xDuration, onlyWhenChanged: true },
+          originY: { isSpring: true, onlyWhenChanged: true },
+        },
+        places: [AT_START, AT_END, { ...AT_END, top: END_TOP }],
+        commitTimesMs: [DURATION],
+        totalMs: xDuration,
+      }
     );
-    const tag = await renderBox({ layout });
-    await render(<Scene left={END_LEFT} layout={layout} />);
-    await wait(DURATION);
-    const nativePending = (await takeTraceOf(tag))[0];
-    const before = await sample(tag, 'PositionX');
-    expect(before.presentation[0] < centerOf(END_LEFT)).toBe(true);
-    expect(Math.abs(before.model[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
-
-    await render(<Scene left={END_LEFT} top={END_TOP} layout={layout} />);
-    await wait(100);
-    const events = await takeTraceOf(tag);
-    expect(summarize(events)).toBe(
+    const takeOver = events.slice(
+      events.findIndex(({ event }) => event === 'LayoutLeafCaptured')
+    );
+    expect(summarize(takeOver)).toBe(
       'LayoutLeafCaptured:PositionX > LayoutBuildFailed:UnsupportedTiming > FrameUpdateMounted:PositionX > TrackEnded:PositionX:false > Ended:Cancelled:None > ClientEnded:Cancelled:None'
     );
     // The capture, the build, and the first frame-driven X value are in one transaction.
-    const [captured, failed, frameUpdate, trackEnd] = events;
+    const [captured, failed, frameUpdate, trackEnd] = takeOver;
     expect(failed.transactionNumber).toBe(captured.transactionNumber);
     expect(frameUpdate.transactionNumber).toBe(captured.transactionNumber);
     for (const event of [captured, frameUpdate, trackEnd]) {
-      expect(event.generation).toBe(nativePending.generation);
+      expect(event.generation).toBe(tracks[0].generation);
     }
-    expect(callbacks.join()).toBe('mixed:false');
+    expect(captures.length).toBe(1);
 
-    // The frame driver has the X leaf of the native build on its timeline.
-    const after = await sample(tag, 'PositionX');
-    expect(after.playbackKeys.length).toBe(0);
-    const progress =
-      (after.monotonicTimeMs - nativePending.monotonicTimeMs) / xDuration;
-    const expectedX = centerOf(START_LEFT) + progress * (END_LEFT - START_LEFT);
-    // The frame driver is at most one display frame behind the timeline of the leaf.
-    const xFrameTravel = (FRAME_MS * (END_LEFT - START_LEFT)) / xDuration;
-    expect(
-      Math.abs(after.model[0] - expectedX) < POSITION_TOLERANCE + xFrameTravel
-    ).toBe(true);
-    expect(after.model[0] > before.presentation[0]).toBe(true);
-    // The captured X is the value of the native track at the pull.
-    const capturedProgress =
-      (captured.monotonicTimeMs - nativePending.monotonicTimeMs) / xDuration;
-    expect(
-      Math.abs(
-        captured.leafValue! -
-          (START_LEFT + capturedProgress * (END_LEFT - START_LEFT))
-      ) <
-        POSITION_TOLERANCE + xFrameTravel
-    ).toBe(true);
-
-    await wait(xDuration);
-    expect(callbacks.join()).toBe('mixed:false,mixed:true');
-    const end = await sample(tag, 'PositionX');
-    expect(Math.abs(end.model[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
-    expect((await takeTraceOf(tag)).filter(isHostEvent).length).toBe(0);
+    for (const { row } of rows) {
+      const { model, playbackKeys, monotonicTimeMs } = row.native.PositionX;
+      if (monotonicTimeMs < captured.monotonicTimeMs) {
+        expect(Math.abs(model[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
+      }
+      if (monotonicTimeMs >= trackEnd.monotonicTimeMs + FRAME_MS) {
+        expect(playbackKeys.length).toBe(0);
+      }
+    }
     await render(null);
   });
 
@@ -1047,14 +1077,20 @@ describe('native layout starts after the mount of the final state', () => {
 
   test('three starts give false, false, and true', async () => {
     const layout = layoutOf({ originX: {}, originY: {} }, { name: 'chain' });
-    await renderBox({ layout });
-    await render(<Scene left={END_LEFT} layout={layout} />);
-    await wait(DURATION / 4);
-    await render(<Scene left={2 * END_LEFT} layout={layout} />);
-    await wait(DURATION / 4);
-    await render(<Scene left={START_LEFT} layout={layout} />);
-    await wait(DURATION * 1.5);
-    expect(callbacks.join()).toBe('chain:false,chain:false,chain:true');
+    const tag = await renderBox({ layout });
+    const isAdmitted = ({ event, tag: eventTag }: TraceEvent) =>
+      event === 'Admitted' && eventTag === tag;
+    let starts = 0;
+    for (const left of [END_LEFT, 2 * END_LEFT, START_LEFT]) {
+      await render(<Scene left={left} layout={layout} />);
+      starts++;
+      expect(await waitForBuilderCalls(starts)).toBe('');
+      const events = await takeTraceUntil((taken) => taken.some(isAdmitted));
+      expect(events.filter(isAdmitted).length).toBe(1);
+    }
+    const expected = ['chain:false', 'chain:false', 'chain:true'];
+    expect(await waitForCallbacks(expected)).toBe('');
+    expect(callbacks.join()).toBe(expected.join());
     expect(builderCalls).toBe(3);
     await render(null);
   });
@@ -1278,36 +1314,24 @@ describe('native layout starts with no duration', () => {
     await render(null);
   });
 
-  test('a hold that replaces a playing track goes to the frame driver, and the old value continues through its delay', async () => {
-    const first = layoutOf({
-      originX: { duration: 4 * DURATION },
-      originY: {},
+  for (const [caseName, referenceCase] of Object.entries(
+    HOLD_AFTER_TRACK_CASES
+  )) {
+    test(`${caseName} goes to the frame driver, and the old value continues through its delay`, async () => {
+      const { events, rows } = await playCase(caseName, referenceCase);
+      const trackEnd = events.find(
+        ({ event, target }) => event === 'TrackEnded' && target === 'PositionX'
+      );
+      expect(trackEnd?.finished).toBe(false);
+      for (const { row } of rows) {
+        const { playbackKeys, monotonicTimeMs } = row.native.PositionX;
+        if (monotonicTimeMs >= trackEnd!.monotonicTimeMs + FRAME_MS) {
+          expect(playbackKeys.length).toBe(0);
+        }
+      }
+      await render(null);
     });
-    const leaf = { duration: 0, delays: [DURATION] };
-    const second = layoutOf({ originX: leaf, originY: leaf }, { name: 'hold' });
-    const tag = await renderBox({ layout: first });
-    await render(<Scene left={END_LEFT} layout={first} />);
-    await wait(DURATION);
-
-    await render(<Scene left={2 * END_LEFT} layout={second} />);
-    await wait(DURATION / 4);
-    const early = await sample(tag, 'PositionX');
-    await wait(DURATION / 2);
-    const late = await sample(tag, 'PositionX');
-    expect(early.playbackKeys.length).toBe(0);
-    expect(early.model[0] > centerOf(START_LEFT)).toBe(true);
-    expect(late.model[0] > early.model[0]).toBe(true);
-    expect(late.model[0] < centerOf(END_LEFT)).toBe(true);
-    expect(callbacks.length).toBe(0);
-
-    await wait(DURATION / 2);
-    const end = await sample(tag, 'PositionX');
-    expect(Math.abs(end.presentation[0] - centerOf(2 * END_LEFT)) < 0.01).toBe(
-      true
-    );
-    expect(callbacks.join()).toBe('hold:true');
-    await render(null);
-  });
+  }
 
   test('a new Y with no duration replaces the playing Y and keeps the long X: one false, then true after X ends', async () => {
     const long = { duration: 3 * DURATION, onlyWhenChanged: true };
@@ -1441,161 +1465,9 @@ describe('native layout timing against the curve and the frame driver', () => {
     return;
   }
 
-  // X and the opacity have the curve. Y is linear in the same command, so it gives the progress of the
-  // timeline at the instant of each sample.
-  function pairLayouts(easing: Leaf['easing'], hasOpacity: boolean) {
-    return pairLayoutsOf((hasCallback) => ({
-      originX: { duration: PAIR_DURATION, easing },
-      originY: { duration: PAIR_DURATION, hasCallback },
-      ...(hasOpacity && {
-        opacity: {
-          duration: PAIR_DURATION,
-          easing,
-          initial: START_OPACITY,
-          to: END_OPACITY,
-        },
-      }),
-    }));
-  }
-
-  // The four samples are next to each other in the host queue.
-  async function samplePair() {
-    const nativeTag = getTestComponent(BOX_REF).getTag();
-    const frameTag = getTestComponent(FRAME_BOX_REF).getTag();
-    const [position, opacity, framePosition, frameOpacity] = await Promise.all([
-      sample(nativeTag, 'Position'),
-      sample(nativeTag, 'Opacity'),
-      sample(frameTag, 'Position'),
-      sample(frameTag, 'Opacity'),
-    ]);
-    return {
-      x: position.presentation[0],
-      y: position.presentation[1],
-      opacity: opacity.presentation[0],
-      frameX: framePosition.model[0],
-      frameOpacity: frameOpacity.model[0],
-      endX: position.model[0],
-      endY: position.model[1],
-      keys: position.playbackKeys.length,
-    };
-  }
-
-  async function renderPair(layouts: ReturnType<typeof pairLayouts>) {
-    await mountScene(
-      <Pair left={START_LEFT} top={0} opacity={START_OPACITY} {...layouts} />
-    );
-    return samplePair();
-  }
-
-  const isBetween = (
-    value: number,
-    first: number,
-    second: number,
-    tolerance: number
-  ) =>
-    value > Math.min(first, second) - tolerance &&
-    value < Math.max(first, second) + tolerance;
-
-  const DEFAULT_CURVE = Easing.inOut(Easing.quad);
-  const OVERSHOOT = Easing.out(Easing.back(1.7));
-
-  // The native route fits each curve after the two Bezier curves. The overshoot curve leaves the range
-  // from 0 to 1, and the presentation layer shows it.
-  const curves: [string, NonNullable<Leaf['easing']>, boolean][] = [
-    ['Easing.linear', Easing.linear, true],
-    ['the default easing', 'default', true],
-    ['Easing.sin', Easing.sin, true],
-    ['Easing.out(Easing.exp)', Easing.out(Easing.exp), true],
-    ['Easing.out(Easing.back(1.7))', OVERSHOOT, true],
-    ['Easing.bounce', Easing.bounce, true],
-    ['Easing.ease', Easing.ease, true],
-    [
-      'Easing.bezier(0.25, 0.1, 0.25, 1)',
-      Easing.bezier(0.25, 0.1, 0.25, 1),
-      true,
-    ],
-    ['Easing.bezier(0.7, 0, 0.3, 1)', Easing.bezier(0.7, 0, 0.3, 1), false],
-  ];
-  for (const [curveName, easing, hasOpacity] of curves) {
-    test(`${curveName}: the native values are on the curve and the frame driver is one frame or less from it`, async () => {
-      const layouts = pairLayouts(easing, hasOpacity);
-      const start = await renderPair(layouts);
-      const endOpacity = hasOpacity ? END_OPACITY : START_OPACITY;
-      await render(
-        <Pair
-          left={PAIR_LEFT}
-          top={PAIR_TOP}
-          opacity={endOpacity}
-          {...layouts}
-        />
-      );
-
-      const curve = easing === 'default' ? DEFAULT_CURVE : curveOf(easing);
-      const xAt = (progress: number) =>
-        start.x + curve(progress) * (PAIR_LEFT - START_LEFT);
-      const opacityAt = (progress: number) =>
-        START_OPACITY + curve(progress) * (endOpacity - START_OPACITY);
-      const frameProgress = FRAME_MS / PAIR_DURATION;
-
-      const rows: string[] = [];
-      let isOnCurve = true;
-      for (let checkpoint = 0; checkpoint < 8; checkpoint++) {
-        const { x, y, opacity, frameX, frameOpacity, endX, endY } =
-          await samplePair();
-        const progress = (y - start.y) / (endY - start.y);
-        const frameBefore = Math.max(0, progress - frameProgress);
-        const frameAfter = Math.min(1, progress + frameProgress);
-        const checks = [
-          Math.abs(endX - start.x - (PAIR_LEFT - START_LEFT)) < 0.01,
-          progress >= 0 && progress < 1,
-          Math.abs(x - xAt(progress)) < POSITION_TOLERANCE,
-          Math.abs(opacity - opacityAt(progress)) < OPACITY_TOLERANCE,
-          isBetween(
-            frameX,
-            xAt(frameBefore),
-            xAt(frameAfter),
-            POSITION_TOLERANCE
-          ),
-          isBetween(
-            frameOpacity,
-            opacityAt(frameBefore),
-            opacityAt(frameAfter),
-            OPACITY_TOLERANCE
-          ),
-        ];
-        for (const check of checks) {
-          expect(check).toBe(true);
-        }
-        isOnCurve &&= !checks.includes(false);
-        rows.push(
-          [
-            `progress ${progress.toFixed(4)}`,
-            `x ${x.toFixed(2)} curve ${xAt(progress).toFixed(2)} frame driver ${frameX.toFixed(2)} in ${xAt(frameBefore).toFixed(2)}..${xAt(frameAfter).toFixed(2)}`,
-            `opacity ${opacity.toFixed(4)} curve ${opacityAt(progress).toFixed(4)} frame driver ${frameOpacity.toFixed(4)} in ${opacityAt(frameBefore).toFixed(4)}..${opacityAt(frameAfter).toFixed(4)}`,
-            `checks ${checks.join()}`,
-          ].join(', ')
-        );
-        await wait(PAIR_DURATION / 9);
-      }
-
-      await wait(PAIR_DURATION / 4);
-      const end = await samplePair();
-      const callbackGapMs = callbackTimes.native - callbackTimes.frame;
-      const endChecks = [
-        Math.abs(end.x - end.endX) < 0.01,
-        Math.abs(end.frameX - end.endX) < 0.01,
-        Math.abs(end.opacity - endOpacity) < 0.01,
-        Math.abs(callbackGapMs) < FRAME_MS,
-      ];
-      if (!isOnCurve || endChecks.includes(false)) {
-        console.log(
-          `CURVE-PAIR | ${curveName} | ${rows.join(' | ')} | end x ${end.x.toFixed(2)} frame driver ${end.frameX.toFixed(2)} model ${end.endX.toFixed(2)}, opacity ${end.opacity.toFixed(4)}, native callback ${callbackGapMs.toFixed(1)} ms after the callback of the frame driver, checks ${endChecks.join()}`
-        );
-      }
-      for (const check of endChecks) {
-        expect(check).toBe(true);
-      }
-      expect([...callbacks].sort().join()).toBe('frame:true,native:true');
+  for (const [curveName, referenceCase] of Object.entries(CURVE_CASES)) {
+    test(`${curveName}: the native values and the frames of the frame driver are on the curve`, async () => {
+      await playCase(curveName, referenceCase);
       await render(null);
     });
   }
@@ -1604,7 +1476,6 @@ describe('native layout timing against the curve and the frame driver', () => {
     trackName: string;
     easing: Leaf['easing'];
     segments: number;
-    largestSlope: number;
     /** The part of the duration at which the replacement comes. */
     replacedAt: number;
   };
@@ -1613,76 +1484,55 @@ describe('native layout timing against the curve and the frame driver', () => {
       trackName: 'a linear track',
       easing: Easing.linear,
       segments: 1,
-      largestSlope: 1,
       replacedAt: 1 / 3,
     },
     {
       trackName: 'a track of the default easing',
       easing: 'default',
       segments: 2,
-      largestSlope: 2,
       replacedAt: 1 / 3,
     },
-    // The first part of Easing.bounce is 7.5625 t^2 to t = 1 / 2.75.
     {
       trackName: 'a track of the 22 segments of Easing.bounce',
       easing: Easing.bounce,
       segments: 22,
-      largestSlope: 5.5,
       replacedAt: 0.4,
     },
   ];
-  for (const {
-    trackName,
-    easing,
-    segments,
-    largestSlope,
-    replacedAt,
-  } of replaced) {
-    test(`a replacement during playback of ${trackName} continues both drivers from one value within the travel of one frame`, async () => {
-      const layouts = pairLayouts(easing, false);
-      await renderPair(layouts);
-      await render(
-        <Pair left={PAIR_LEFT} top={PAIR_TOP} opacity={1} {...layouts} />
-      );
-      await wait(replacedAt * PAIR_DURATION);
-      const { members } = await sample(
-        getTestComponent(BOX_REF).getTag(),
-        'PositionX'
-      );
-      expect(members[0].values.length - 1).toBe(segments);
-      await render(
-        <Pair left={PAIR_LEFT / 4} top={0} opacity={1} {...layouts} />
-      );
-
-      // The native start reads the value on screen at its admission. The frame driver has the value of its
-      // last frame before the pull.
-      const startTolerance =
-        POSITION_TOLERANCE +
-        (largestSlope * FRAME_MS * PAIR_LEFT) / PAIR_DURATION;
-      for (let checkpoint = 0; checkpoint < 4; checkpoint++) {
-        const { x, frameX } = await samplePair();
-        expect(Math.abs(x - frameX) < startTolerance).toBe(true);
-        await wait(PAIR_DURATION / 5);
+  for (const { trackName, easing, segments, replacedAt } of replaced) {
+    test(`a replacement during playback of ${trackName} continues each driver from its own value`, async () => {
+      const { rows, tracks } = await playCase(`a replacement of ${trackName}`, {
+        flow: 'layout',
+        leaves: curveLeavesOf(easing),
+        places: [PAIR_START, PAIR_END, { left: PAIR_LEFT / 4, top: 0 }],
+        commitTimesMs: [replacedAt * PAIR_DURATION],
+        totalMs: PAIR_DURATION,
+      });
+      const [firstX, , secondX] = tracks;
+      expect(secondX.replaced === firstX).toBe(true);
+      expect(secondX.captured !== undefined).toBe(true);
+      const beforeTheReplacement = rows
+        .map(({ row }) => row.native.PositionX)
+        .filter(
+          ({ monotonicTimeMs }) =>
+            monotonicTimeMs >= firstX.played.from + UNSEEN_START_MS &&
+            monotonicTimeMs < firstX.played.to
+        );
+      expect(beforeTheReplacement.length > 0).toBe(true);
+      for (const { members } of beforeTheReplacement) {
+        expect(members[0].values.length - 1).toBe(segments);
       }
-      await wait(PAIR_DURATION / 2);
-      const end = await samplePair();
-      expect(Math.abs(end.x - end.endX) < 0.01).toBe(true);
-      expect(Math.abs(end.frameX - end.endX) < 0.01).toBe(true);
-      expect(end.keys).toBe(0);
-      expect([...callbacks].sort().join()).toBe(
-        'frame:false,frame:true,native:false,native:true'
-      );
       await render(null);
     });
   }
 
   test('the removal of the views during playback gives both drivers false one time', async () => {
-    const layouts = pairLayouts(Easing.linear, false);
-    await renderPair(layouts);
-    await render(
-      <Pair left={PAIR_LEFT} top={PAIR_TOP} opacity={1} {...layouts} />
-    );
+    const layouts = pairLayoutsOf((hasCallback) => ({
+      originX: { duration: PAIR_DURATION },
+      originY: { duration: PAIR_DURATION, hasCallback },
+    }));
+    await mountScene(<Pair left={START_LEFT} top={0} {...layouts} />);
+    await render(<Pair left={PAIR_LEFT} top={PAIR_TOP} {...layouts} />);
     await wait(PAIR_DURATION / 3);
     await render(null);
     await wait(100);
@@ -1888,24 +1738,16 @@ describe('native layout starts on two surfaces', () => {
   });
 });
 
-type SizeBoxFrame = Required<
-  Pick<SizeBoxProps, 'left' | 'top' | 'width' | 'height'>
->;
-
 describe('native layout size', () => {
   if (!hasNativeLayoutStarts) {
     return;
   }
 
-  const SIZE_DURATION = 2000;
   const ROUTE_DURATION = DURATION;
-  const START: SizeBoxFrame = { left: 0, top: 0, width: 50, height: 50 };
-  const MOVED: SizeBoxFrame = { left: 120, top: 40, width: 50, height: 50 };
-  const RESIZED: SizeBoxFrame = { left: 0, top: 0, width: 150, height: 90 };
-  const MOVED_AND_RESIZED: SizeBoxFrame = {
-    ...MOVED,
-    ...{ width: 150, height: 90 },
-  };
+  const START = SIZE_START;
+  const MOVED: Place = { left: 120, top: 40, width: 50, height: 50 };
+  const RESIZED: Place = { left: 0, top: 0, width: 150, height: 90 };
+
   // 0.5 pt and the travel of one display frame at the mean speed of `travel` in `durationMs`.
   const toleranceOf = (travel: number, durationMs: number) =>
     POSITION_TOLERANCE + (FRAME_MS * travel) / durationMs;
@@ -1926,7 +1768,38 @@ describe('native layout size', () => {
 
   const linearLayout = (durationMs: number) =>
     LinearTransition.duration(durationMs).easing(Easing.linear);
-  const linearPair = linearPairOf(SIZE_DURATION);
+  const LINEAR_LEAF: Leaf = { duration: SIZE_DURATION };
+  const LINEAR: Pick<ReferenceCase, 'leaves' | 'builder'> = {
+    leaves: {
+      originX: LINEAR_LEAF,
+      originY: LINEAR_LEAF,
+      width: LINEAR_LEAF,
+      height: LINEAR_LEAF,
+    },
+    builder: () => linearLayout(SIZE_DURATION) as unknown as CallbackBuilder,
+  };
+
+  const sizeCaseOf = (
+    declaration: Pick<ReferenceCase, 'leaves' | 'builder'>,
+    start: Place,
+    end: Place,
+    options: Pick<ReferenceCase, 'box' | 'alsoSampled' | 'frameTolerance'> = {}
+  ): ReferenceCase => ({
+    flow: 'layout',
+    ...declaration,
+    places: [start, end],
+    totalMs: SIZE_DURATION,
+    ...options,
+  });
+
+  /** The samples of a target of the native box from a time of the sample clock. */
+  const shownFrom = ({ rows }: Played, target: string, fromMs: number) =>
+    rows
+      .map(({ row }) => row.native[target])
+      .filter(({ monotonicTimeMs }) => monotonicTimeMs >= fromMs);
+
+  const trackOf = ({ tracks }: Played, target: string) =>
+    tracks.find((track) => track.target === target)!;
 
   async function playPair(
     layouts: PairLayouts,
@@ -1941,166 +1814,81 @@ describe('native layout size', () => {
     return { rows, events, distances: framePairDistances(rows) };
   }
 
-  const linearCases: [string, SizeBoxFrame][] = [
+  const linearCases: [string, Place][] = [
     ['a position change', MOVED],
     ['a position change and a size change', MOVED_AND_RESIZED],
     ['a size change', RESIZED],
   ];
   for (const [caseName, end] of linearCases) {
-    test(`LinearTransition with a linear easing plays ${caseName} on four native tracks and agrees with the frame driver`, async () => {
-      const { rows, events, distances } = await playPair(
-        linearPair,
-        START,
-        end
+    test(`LinearTransition with a linear easing plays ${caseName} on four native tracks, and the native values and the frames of the frame driver are on its timeline`, async () => {
+      const { events } = await playCase(
+        caseName,
+        sizeCaseOf(LINEAR, START, end)
       );
       expect(summarizeStart(events)).toBe(FOUR_TRACKS);
       expect(summarizeResults(events)).toBe('Ended:Finished:None');
-      expect(distances.during < LINEAR_TOLERANCE).toBe(true);
-      expect(distances.atEnd < 0.01).toBe(true);
-      expect(distances.keysAtEnd).toBe(0);
-      expect(frameDistance(rows[1].native, rows[1].end) > 0.01).toBe(true);
       await render(null);
     });
   }
 
-  type TimedLeaf = {
-    dimension: keyof Frame;
-    travel: number;
-    duration: number;
-    delay: number;
-    easing: EasingFunction | EasingFunctionFactory;
-  };
-
-  // The part of the travel that the leaf shows at a time after the start.
-  const progressOf = ({ duration, delay, easing }: TimedLeaf, timeMs: number) =>
-    curveOf(easing)(Math.min(1, Math.max(0, (timeMs - delay) / duration)));
-
-  const isHeldAt = ({ delay }: TimedLeaf, timeMs: number) =>
-    timeMs + FRAME_MS <= delay;
-  const isCompleteAt = ({ delay, duration }: TimedLeaf, timeMs: number) =>
-    timeMs - FRAME_MS >= delay + duration;
-
-  // 0.5 pt and the travel of the leaf in one display frame before or after the time.
-  const leafToleranceAt = (leaf: TimedLeaf, timeMs: number) =>
-    POSITION_TOLERANCE +
-    Math.abs(leaf.travel) *
-      Math.max(
-        Math.abs(
-          progressOf(leaf, timeMs + FRAME_MS) - progressOf(leaf, timeMs)
-        ),
-        Math.abs(progressOf(leaf, timeMs) - progressOf(leaf, timeMs - FRAME_MS))
-      );
-
-  test('four leaves with different durations, delays, and easings agree with the frame driver', async () => {
-    const timedLeaves: Record<
-      'originX' | 'originY' | 'width' | 'height',
-      TimedLeaf
-    > = {
-      originX: {
-        dimension: 'x',
-        travel: MOVED_AND_RESIZED.left - START.left,
-        duration: SIZE_DURATION,
-        delay: 0,
-        easing: Easing.linear,
-      },
-      originY: {
-        dimension: 'y',
-        travel: MOVED_AND_RESIZED.top - START.top,
-        duration: SIZE_DURATION / 2,
-        delay: SIZE_DURATION / 4,
-        easing: Easing.ease,
-      },
-      width: {
-        dimension: 'width',
-        travel: MOVED_AND_RESIZED.width - START.width,
-        duration: SIZE_DURATION / 2,
-        delay: 0,
-        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-      },
-      height: {
-        dimension: 'height',
-        travel: MOVED_AND_RESIZED.height - START.height,
-        duration: 0.75 * SIZE_DURATION,
-        delay: SIZE_DURATION / 8,
-        easing: Easing.bezier(0.7, 0, 0.3, 1),
-      },
-    };
-    const leafOf = ({ duration, delay, easing }: TimedLeaf): Leaf => ({
-      duration,
-      delays: delay > 0 ? [delay] : undefined,
-      easing,
-    });
-    const layouts = pairLayoutsOf((hasCallback) => ({
-      originX: { ...leafOf(timedLeaves.originX), hasCallback },
-      originY: leafOf(timedLeaves.originY),
-      width: leafOf(timedLeaves.width),
-      height: leafOf(timedLeaves.height),
-    }));
-    const fractions = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
-    const { rows, events, distances } = await playPair(
-      layouts,
-      START,
-      MOVED_AND_RESIZED,
-      fractions
+  test('four leaves with different durations, delays, and easings are on their timelines on the native box and on the frame driver', async () => {
+    const caseName =
+      'four leaves with different durations, delays, and easings';
+    const { events, reads } = await playCase(
+      caseName,
+      HELD_SIZE_CASES[caseName]
     );
     expect(summarizeStart(events)).toBe(FOUR_TRACKS);
     expect(summarizeResults(events)).toBe('Ended:Finished:None');
-    fractions.forEach((fraction, index) => {
-      const timeMs = fraction * SIZE_DURATION;
-      const { native, frame, end } = rows[index];
-      for (const leaf of Object.values(timedLeaves)) {
-        const { dimension, travel } = leaf;
-        expect(
-          Math.abs(native[dimension] - frame[dimension]) <
-            leafToleranceAt(leaf, timeMs)
-        ).toBe(true);
-        if (isHeldAt(leaf, timeMs)) {
-          expect(
-            Math.abs(native[dimension] - (end[dimension] - travel)) < 0.01
-          ).toBe(true);
+    // A read whose display frame has one declared value shows that value.
+    for (const { checked, values, timeMs } of reads) {
+      checked.forEach((track, index) => {
+        const { from, to } = declaredBandOf(track, timeMs);
+        if (from === to) {
+          expect(Math.abs(values[index] - from) < 0.01).toBe(true);
         }
-        if (isCompleteAt(leaf, timeMs)) {
-          expect(Math.abs(native[dimension] - end[dimension]) < 0.01).toBe(
-            true
-          );
-        }
-      }
-    });
-    expect(distances.atEnd < 0.01).toBe(true);
-    expect(distances.keysAtEnd).toBe(0);
-    expect([...callbacks].sort().join()).toBe('frame:true,native:true');
+      });
+    }
     await render(null);
   });
 
-  test('position leaves on a view whose size changes in the commit play natively and agree with the frame driver', async () => {
-    const layouts = pairLayoutsOf((hasCallback) => ({
-      originX: { duration: SIZE_DURATION, hasCallback },
-      originY: { duration: SIZE_DURATION },
-    }));
-    const { rows, events, distances } = await playPair(
-      layouts,
-      START,
-      MOVED_AND_RESIZED
+  test('position leaves on a view whose size changes in the commit play natively, and the native values and the frames of the frame driver are on their timelines', async () => {
+    const played = await playCase(
+      'position leaves on a view whose size changes',
+      sizeCaseOf(
+        { leaves: { originX: LINEAR_LEAF, originY: LINEAR_LEAF } },
+        START,
+        MOVED_AND_RESIZED,
+        { alsoSampled: ['Width'] }
+      )
     );
-    expect(summarizeStart(events)).toBe(startOf('PositionX', 'PositionY'));
-    expect(summarizeResults(events)).toBe('Ended:Finished:None');
-    expect(distances.during < LINEAR_TOLERANCE).toBe(true);
-    expect(distances.atEnd < 0.01).toBe(true);
-    expect(rows[0].native.width).toBe(MOVED_AND_RESIZED.width);
+    expect(summarizeStart(played.events)).toBe(
+      startOf('PositionX', 'PositionY')
+    );
+    expect(summarizeResults(played.events)).toBe('Ended:Finished:None');
+    const { from } = trackOf(played, 'PositionX').played;
+    for (const { presentation } of shownFrom(
+      played,
+      'Width',
+      from + UNSEEN_START_MS
+    )) {
+      expect(presentation[0]).toBe(MOVED_AND_RESIZED.width);
+    }
     await render(null);
   });
 
-  test('fractional values of the frame play on four native tracks and agree with the frame driver', async () => {
-    const { events, distances } = await playPair(
-      linearPair,
-      { left: 10.4, top: 10.4, width: 50.3, height: 50.3 },
-      { left: 110.4, top: 60.4, width: 100.3, height: 100.3 }
+  test('fractional values of the frame play on four native tracks, and the frames of the frame driver are on the timeline to the pixel grid of the layout', async () => {
+    const { events } = await playCase(
+      'fractional values of the frame',
+      sizeCaseOf(
+        LINEAR,
+        { left: 10.4, top: 10.4, width: 50.3, height: 50.3 },
+        { left: 110.4, top: 60.4, width: 100.3, height: 100.3 },
+        { frameTolerance: 0.5 / PixelRatio.get() }
+      )
     );
     expect(summarizeStart(events)).toBe(FOUR_TRACKS);
     expect(summarizeResults(events)).toBe('Ended:Finished:None');
-    expect(distances.during < LINEAR_TOLERANCE).toBe(true);
-    expect(distances.atEnd < 0.01).toBe(true);
-    expect(distances.keysAtEnd).toBe(0);
     await render(null);
   });
 
@@ -2114,25 +1902,33 @@ describe('native layout size', () => {
   ];
   for (const [hostName, host] of hostsWithNoNativeSizeChange) {
     for (const [leafName, sizeLeaf] of constantSizeLeaves) {
-      test(`a position change of ${hostName} with ${leafName} size leaves that do not change plays on four native tracks and agrees with the frame driver`, async () => {
-        const layouts = pairLayoutsOf((hasCallback) => ({
-          originX: { duration: SIZE_DURATION, hasCallback },
-          originY: { duration: SIZE_DURATION },
-          width: sizeLeaf,
-          height: sizeLeaf,
-        }));
-        const { rows, events, distances } = await playPair(
-          layouts,
-          { ...START, host },
-          { ...MOVED, host }
+      test(`a position change of ${hostName} with ${leafName} size leaves that do not change plays on four native tracks, and the native values and the frames of the frame driver are on their timelines`, async () => {
+        const played = await playCase(
+          `a position change of ${hostName} with ${leafName} size leaves`,
+          sizeCaseOf(
+            {
+              leaves: {
+                originX: LINEAR_LEAF,
+                originY: LINEAR_LEAF,
+                width: sizeLeaf,
+                height: sizeLeaf,
+              },
+            },
+            START,
+            MOVED,
+            { box: { host } }
+          )
         );
-        expect(summarizeStart(events)).toBe(FOUR_TRACKS);
-        expect(summarizeResults(events)).toBe('Ended:Finished:None');
-        expect(distances.during < LINEAR_TOLERANCE).toBe(true);
-        expect(distances.atEnd < 0.01).toBe(true);
-        expect(rows[1].native.width).toBe(START.width);
-        expect(rows[1].native.height).toBe(START.height);
-        expect([...callbacks].sort().join()).toBe('frame:true,native:true');
+        expect(summarizeStart(played.events)).toBe(FOUR_TRACKS);
+        expect(summarizeResults(played.events)).toBe('Ended:Finished:None');
+        for (const [target, size] of [
+          ['Width', START.width],
+          ['Height', START.height],
+        ] as const) {
+          for (const { presentation } of shownFrom(played, target, 0)) {
+            expect(presentation[0]).toBe(size);
+          }
+        }
         await render(null);
       });
     }
@@ -2167,8 +1963,6 @@ describe('native layout size', () => {
     });
   }
 
-  const HELD: SizeBoxFrame = { left: 120, top: 0, width: 150, height: 50 };
-
   test('a delayed width with no duration holds the start width during a native X, then shows the end width', async () => {
     const layouts = pairLayoutsOf((hasCallback) => ({
       originX: { duration: SIZE_DURATION, hasCallback },
@@ -2177,7 +1971,7 @@ describe('native layout size', () => {
     const { rows, events, distances } = await playPair(
       layouts,
       START,
-      HELD,
+      WIDE,
       [0.2, 0.4, 0.6, 0.8]
     );
     expect(summarizeStart(events)).toBe(startOf('PositionX', 'Width'));
@@ -2185,12 +1979,11 @@ describe('native layout size', () => {
     expect(distances.during < LINEAR_TOLERANCE).toBe(true);
     expect(distances.atEnd < 0.01).toBe(true);
     expect(rows[1].native.width).toBe(START.width);
-    expect(rows[2].native.width).toBe(HELD.width);
+    expect(rows[2].native.width).toBe(WIDE.width);
     await render(null);
   });
 
   test('a delayed height with no duration holds the start height during a native Y, then shows the end height', async () => {
-    const tall: SizeBoxFrame = { left: 0, top: 40, width: 50, height: 130 };
     const layouts = pairLayoutsOf((hasCallback) => ({
       originY: { duration: SIZE_DURATION, hasCallback },
       height: { duration: 0, delays: [SIZE_DURATION / 2] },
@@ -2198,7 +1991,7 @@ describe('native layout size', () => {
     const { rows, events, distances } = await playPair(
       layouts,
       START,
-      tall,
+      TALL,
       [0.2, 0.4, 0.6, 0.8]
     );
     expect(summarizeStart(events)).toBe(startOf('PositionY', 'Height'));
@@ -2206,58 +1999,51 @@ describe('native layout size', () => {
     expect(distances.during < LINEAR_TOLERANCE).toBe(true);
     expect(distances.atEnd < 0.01).toBe(true);
     expect(rows[1].native.height).toBe(START.height);
-    expect(rows[2].native.height).toBe(tall.height);
+    expect(rows[2].native.height).toBe(TALL.height);
     await render(null);
   });
 
   test('a width with no duration shows the end width at once during a native X', async () => {
-    const layouts = pairLayoutsOf((hasCallback) => ({
-      originX: { duration: SIZE_DURATION, hasCallback },
-      width: { duration: 0 },
-    }));
-    const { rows, events, distances } = await playPair(
-      layouts,
-      START,
-      HELD,
-      [0.05, 0.25, 0.5, 0.75]
+    const played = await playCase(
+      'a width with no duration during a native X',
+      sizeCaseOf(
+        { leaves: { originX: LINEAR_LEAF, width: { duration: 0 } } },
+        START,
+        WIDE
+      )
     );
-    const route = summarize(events.filter(isHostEvent));
-    const checks = [
-      route.startsWith(
+    expect(
+      summarize(played.events.filter(isHostEvent)).startsWith(
         `${startOf('PositionX', 'Width')} > TrackEnded:Width:true`
-      ),
-      distances.during < LINEAR_TOLERANCE,
-      distances.atEnd < 0.01,
-    ];
-    if (checks.includes(false)) {
-      console.log(
-        `SIZE-PAIR | width with no duration | ${describeFramePairRows(rows)} | ${route} | checks ${checks.join()}`
-      );
+      )
+    ).toBe(true);
+    expect(summarizeResults(played.events)).toBe('Ended:Finished:None');
+    const { from } = trackOf(played, 'Width').played;
+    for (const { presentation } of shownFrom(
+      played,
+      'Width',
+      from + UNSEEN_START_MS
+    )) {
+      expect(presentation[0]).toBe(WIDE.width);
     }
-    for (const check of checks) {
-      expect(check).toBe(true);
-    }
-    expect(summarizeResults(events)).toBe('Ended:Finished:None');
-    expect(rows[0].native.width).toBe(HELD.width);
     await render(null);
   });
 
-  test('a delayed width agrees with the frame driver during a native X', async () => {
-    const layouts = pairLayoutsOf((hasCallback) => ({
-      originX: { duration: SIZE_DURATION, hasCallback },
-      width: { duration: SIZE_DURATION / 2, delays: [SIZE_DURATION / 3] },
-    }));
-    const { rows, events, distances } = await playPair(
-      layouts,
-      START,
-      HELD,
-      [0.15, 0.3, 0.45, 0.6, 0.75, 0.9]
-    );
-    expect(summarizeStart(events)).toBe(startOf('PositionX', 'Width'));
-    expect(summarizeResults(events)).toBe('Ended:Finished:None');
-    expect(distances.during < toleranceOf(100, SIZE_DURATION / 2)).toBe(true);
-    expect(distances.atEnd < 0.01).toBe(true);
-    expect(rows[1].native.width).toBe(START.width);
+  test('a delayed width is on its timeline during a native X on the native box and on the frame driver', async () => {
+    const caseName = 'a delayed width during a native X';
+    const played = await playCase(caseName, HELD_SIZE_CASES[caseName]);
+    expect(summarizeStart(played.events)).toBe(startOf('PositionX', 'Width'));
+    expect(summarizeResults(played.events)).toBe('Ended:Finished:None');
+    const { timeline, origin, played: band } = trackOf(played, 'Width');
+    for (const { presentation, monotonicTimeMs } of shownFrom(
+      played,
+      'Width',
+      band.from
+    )) {
+      if (monotonicTimeMs < origin.from + timeline.phases[0].durationMs) {
+        expect(presentation[0]).toBe(START.width);
+      }
+    }
     await render(null);
   });
 
@@ -2281,26 +2067,24 @@ describe('native layout size', () => {
     ['height from 0 to 100', HEIGHT_AXIS, 0, 100],
   ];
   for (const [caseName, axis, startSize, endSize] of zeroSizeCases) {
-    test(`a ${caseName} gives finite values and agrees with the frame driver`, async () => {
-      const layouts = pairLayoutsOf((hasCallback) => ({
-        [axis.origin]: { duration: SIZE_DURATION, hasCallback },
-        [axis.size]: { duration: SIZE_DURATION },
-      }));
-      const { rows, events, distances } = await playPair(
-        layouts,
-        { ...START, [axis.size]: startSize },
-        { ...START, [axis.edge]: 60, [axis.size]: endSize }
+    test(`a ${caseName} gives finite values on its timeline on the native box and on the frame driver`, async () => {
+      const { events, rows } = await playCase(
+        `a ${caseName}`,
+        sizeCaseOf(
+          { leaves: { [axis.origin]: LINEAR_LEAF, [axis.size]: LINEAR_LEAF } },
+          { ...START, [axis.size]: startSize },
+          { ...START, [axis.edge]: 60, [axis.size]: endSize }
+        )
       );
       expect(summarizeStart(events)).toBe(startOf(...axis.tracks));
       expect(summarizeResults(events)).toBe('Ended:Finished:None');
-      const values = rows.flatMap(({ native, frame }) => [
-        ...Object.values(native),
-        ...Object.values(frame),
-      ]);
+      const values = rows.flatMap(({ row: { native, frame } }) =>
+        axis.tracks.flatMap((target) => [
+          ...native[target].presentation,
+          ...frame[target].model,
+        ])
+      );
       expect(values.every(Number.isFinite)).toBe(true);
-      expect(distances.during < LINEAR_TOLERANCE).toBe(true);
-      expect(distances.atEnd < 0.01).toBe(true);
-      expect([...callbacks].sort().join()).toBe('frame:true,native:true');
       await render(null);
     });
   }
@@ -2422,9 +2206,9 @@ describe('native layout size', () => {
 
   const sizeChangesOnNativeTracks: [
     string,
-    Partial<SizeBoxProps>,
-    SizeBoxFrame,
-    SizeBoxFrame,
+    Pick<SizeBoxProps, 'style'>,
+    Place,
+    Place,
   ][] = [
     [
       'a size change of a View with a static rotation',
@@ -2470,19 +2254,26 @@ describe('native layout size', () => {
     ],
   ];
   for (const [caseName, box, start, end] of sizeChangesOnNativeTracks) {
-    test(`${caseName} plays on four native tracks and agrees with the frame driver`, async () => {
-      const { rows, events, distances } = await playPair(
-        linearPair,
-        { ...start, ...box },
-        { ...end, ...box }
+    test(`${caseName} plays on four native tracks, and the native values and the frames of the frame driver are on its timeline`, async () => {
+      const played = await playCase(
+        caseName,
+        sizeCaseOf(LINEAR, start, end, { box })
       );
-      expect(summarizeStart(events)).toBe(FOUR_TRACKS);
-      expect(summarizeResults(events)).toBe('Ended:Finished:None');
-      expect(rows[1].playbackKeys.length).toBe(4);
-      expect(frameDistance(rows[1].native, rows[1].end) > 0.01).toBe(true);
-      expect(distances.during < LINEAR_TOLERANCE).toBe(true);
-      expect(distances.atEnd < 0.01).toBe(true);
-      expect(distances.keysAtEnd).toBe(0);
+      expect(summarizeStart(played.events)).toBe(FOUR_TRACKS);
+      expect(summarizeResults(played.events)).toBe('Ended:Finished:None');
+      const { origin, played: band } = trackOf(played, 'Width');
+      const playing = shownFrom(
+        played,
+        'Width',
+        band.from + UNSEEN_START_MS
+      ).filter(
+        ({ monotonicTimeMs }) =>
+          monotonicTimeMs < middleOf(origin) + SIZE_DURATION - FRAME_MS
+      );
+      expect(playing.length > 0).toBe(true);
+      for (const { playbackKeys } of playing) {
+        expect(playbackKeys.length).toBe(4);
+      }
       await render(null);
     });
   }
