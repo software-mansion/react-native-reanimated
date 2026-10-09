@@ -524,13 +524,16 @@ export async function play(referenceCase: ReferenceCase): Promise<Played> {
   }
   const declaredKeys = builtKeys.flat().map(({ declared }) => declared);
   const tracks = tracksOf(referenceCase, builtKeys, events, clockOffset);
+  const frameChecks = frameChecksOf(declaredKeys, readFrameRecords());
   return {
     rows,
     end,
     tracks,
     events,
-    captures: capturesOf(events, tracks),
-    frameChecks: frameChecksOf(declaredKeys, readFrameRecords()),
+    captures: capturesOf(events, tracks, clockOffset, (track) =>
+      frameDriverOriginOf(track, frameChecks, clockOffset)
+    ),
+    frameChecks,
     endKeys: declaredKeys.filter(
       (key, index) =>
         !declaredKeys.slice(index + 1).some((later) => isSameLeaf(later, key))
@@ -538,6 +541,28 @@ export async function play(referenceCase: ReferenceCase): Promise<Played> {
     clockOffset,
     missingCallbacks,
   };
+}
+
+/**
+ * The origin on the sample clock of the build that gave a track to the frame
+ * driver: the start call of the record of the native box that replaced the
+ * record of the track.
+ */
+function frameDriverOriginOf(
+  track: ScalarTrack,
+  frameChecks: LeafCheck[],
+  clockOffset: Band
+) {
+  const start = frameChecks.find(
+    ({ record, replaced }) =>
+      record.box === 'native' && replaced?.declared === track.declaration
+  )?.record.start;
+  if (!start) {
+    throw new Error(
+      `The frame driver has no start call of the build that took ${describeLeaf(track)} of the command ${track.generation}.`
+    );
+  }
+  return start.timeMs + middleOf(clockOffset);
 }
 
 /**
@@ -554,7 +579,7 @@ export const expectedCallbacksOf = ({ places }: ReferenceCase) =>
  * end: each sample of the native box and each frame of the two boxes is on the
  * declared timeline, each captured value is on its track, each animation gave
  * its callbacks, and each box rests at its end values. It prints the residuals
- * as a `REFERENCE` row, each captured start as a `CAPTURE` row, each gate as a
+ * as a `REFERENCE` row, each captured value as a `CAPTURE` row, each gate as a
  * `GATE` row, and each checked read off the timeline as an `OFF` row.
  */
 export function expectReference(
@@ -574,7 +599,7 @@ export function expectReference(
   played.captures.forEach(expectCapturedStart);
   expectEnd(referenceCase, played);
   console.log(['REFERENCE', caseName, ...residuals].join(' | '));
-  for (const capture of describeCapturedStarts(played.tracks)) {
+  for (const capture of describeCaptures(played.captures)) {
     console.log(['CAPTURE', caseName, capture].join(' | '));
   }
   for (const gate of [
@@ -712,22 +737,17 @@ const describeReplacementReads = (reads: RowRead[]) =>
     });
 
 /**
- * For each track that starts at a captured value: the value, and the time of
- * the capture from the origin and from the start of the track.
+ * For each captured value: the value, the origin of its build from the origin
+ * of its track, and the steady-clock distance from that origin to the trace
+ * event of the capture.
  */
-const describeCapturedStarts = (tracks: PlayedTrack[]) =>
-  tracks.flatMap(({ captured, key, generation, origin, played }) => {
-    if (!captured) {
-      return [];
-    }
-    const { value, timeMs, track } = captured;
+const describeCaptures = (captures: Capture[]) =>
+  captures.map(({ track, value, timeMs, eventTimeMs }) => {
     const {
       distances: [distance],
       ageMs,
     } = nativeResidualOf([value], timeMs, [track]);
-    return [
-      `${key} of the command ${generation} starts at ${value.toFixed(4)}, captured ${(timeMs - middleOf(origin)).toFixed(3)} ms after its origin and ${(played.from - timeMs).toFixed(3)} ms before the start of its track, ${distance.toFixed(4)} from the replaced track at ${ageMs.toFixed(2)} ms before the capture`,
-    ];
+    return `${track.key} of the command ${track.generation}: a build took ${value.toFixed(4)} at its origin, ${(timeMs - middleOf(track.origin)).toFixed(3)} ms after the origin of the track, ${distance.toFixed(4)} from the track at ${ageMs.toFixed(2)} ms before the origin of the build, and the trace event of the capture is ${(eventTimeMs - timeMs).toFixed(3)} ms after the origin of the build on the steady clock`;
   });
 
 // The frame driver and the timeline have the value of one function of one time.
@@ -737,11 +757,10 @@ const FRAME_TOLERANCE = 1e-6;
  * Statement B, for the twin and for the frames that the frame driver gave to
  * the native box. A timing that adopts a start has the start time and the start
  * value of the timing that it replaced. A leaf that starts on screen after a
- * leaf starts at the last value that the replaced leaf wrote before the start
- * call.
+ * leaf starts at the value of `startFrameOf`.
  */
 function expectFrameRecords(
-  { frameChecks }: Played,
+  { frameChecks, tracks }: Played,
   tolerance = FRAME_TOLERANCE
 ) {
   const residuals = new Map<LeafCheck, FrameResidual>();
@@ -753,9 +772,9 @@ function expectFrameRecords(
       );
       expect(record.adoptedStart.timeMs).toBe(residuals.get(replaced)?.startMs);
     } else if (replaced && declared.startsOnScreen) {
-      expect(record.start?.value).toBe(
-        replaced.record.frames[(record.start?.replacedFrames ?? 0) - 1]?.value
-      );
+      expect(
+        describeStartOffItsFrame(check, replaced, frameChecks, tracks)
+      ).toBe('');
     }
     residuals.set(check, expectFrameTimeline(check, tolerance));
   }
@@ -766,6 +785,60 @@ function expectFrameRecords(
     `largest frame distance ${largestOf(all.map(({ distance }) => distance)).toExponential(1)}`,
     `latest computed phase start ${largestOf(all.flatMap(({ startsLateMs }) => startsLateMs)).toFixed(2)} ms after its declared start`,
   ];
+}
+
+/**
+ * The frame of a replaced record that has the start value of the record that
+ * replaced it on screen. The builder gets the values of its view from the
+ * layout animations proxy (`materializeLayoutAnimation`), `startStyle` of the
+ * layout animations manager makes them the value of the view, and `valueSetter`
+ * and `onStart` of `withTiming` start the leaf at that value. The value that a
+ * frame of the frame driver wrote comes to the proxy after the callbacks of its
+ * UI frame, and a start call in a UI frame has the time of that UI frame. So
+ * for a replaced record that the frame driver played, it is the last frame at
+ * the start call that does not have the time of the start call. For a replaced
+ * record of a native track, it is the last frame at the start call: the frame
+ * that the route gave to the record at the origin of the build.
+ */
+function startFrameOf(
+  { record }: LeafCheck,
+  replaced: LeafCheck,
+  tracks: PlayedTrack[]
+) {
+  const frames = replaced.record.frames.slice(
+    0,
+    record.start?.replacedFrames ?? 0
+  );
+  const playedNatively =
+    record.box === 'native' &&
+    tracks.some(({ declaration }) => declaration === replaced.declared);
+  return lastOf(
+    playedNatively
+      ? frames
+      : frames.filter(({ timeMs }) => timeMs !== record.start?.timeMs)
+  );
+}
+
+/** Nothing when the start value of a record is the value of `startFrameOf`. */
+function describeStartOffItsFrame(
+  check: LeafCheck,
+  replaced: LeafCheck,
+  frameChecks: LeafCheck[],
+  tracks: PlayedTrack[]
+) {
+  const { record } = check;
+  const frame = startFrameOf(check, replaced, tracks);
+  if (record.start !== undefined && record.start.value === frame?.value) {
+    return '';
+  }
+  const index = frameChecks
+    .filter(
+      (each) =>
+        each.record.box === record.box && isSameLeaf(each.record, record)
+    )
+    .indexOf(check);
+  const last = replaced.record.frames[(record.start?.replacedFrames ?? 0) - 1];
+  return `The record ${index} of ${describeLeaf(record)} of the box ${record.box} starts at ${record.start?.value} with a start call at ${record.start?.timeMs.toFixed(3)} ms, and the frame of the replaced record for its start value wrote ${frame?.value} at ${frame?.timeMs.toFixed(3)} ms. The last frame of the replaced record at the start call wrote ${last?.value} at ${last?.timeMs.toFixed(3)} ms.`;
 }
 
 /**

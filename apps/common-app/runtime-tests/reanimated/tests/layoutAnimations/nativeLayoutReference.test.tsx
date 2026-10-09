@@ -17,9 +17,11 @@
  * sample, with no other allowance: a read on neither track fails. Each read whose display frame has that
  * `TrackStarted` time is a `GATE` row with the time and the track that the check found. A track that
  * replaces a track on screen starts at the value that the route captured from the replaced track for its
- * build, and each captured value is on the timeline of its own track at its time: a `CAPTURE` row has the
- * time of the capture from the origin of the new track. An operation of a transform starts at the initial
- * value of its builder. A read that shows the replaced track after the origin of the new track is a property
+ * build. The time of a captured value is the origin of its build on the sample clock, where the product
+ * computes it: the origin of the native command of the build, or the start call of the frame driver for a
+ * build that it took. Each captured value is on the timeline of its own track at that time. A `CAPTURE` row
+ * has the steady-clock distance from that origin to the trace event of the capture. An operation of a
+ * transform starts at the initial value of its builder. A read that shows the replaced track after the origin of the new track is a property
  * of the read and not of the screen. Measured by the hand-over measurement of Objective 12H: 62 of 62 reads
  * after a flush of the transaction were on the new track, plain reads showed the replaced track for 11.90
  * to 13.99 ms, and no recorded display frame was wrong in 10 of 10 replacements.
