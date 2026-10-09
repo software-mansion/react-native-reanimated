@@ -1,9 +1,11 @@
 import React from 'react';
 import type { ViewStyle } from 'react-native';
 import { View } from 'react-native';
-import Animated, { Easing, Keyframe } from 'react-native-reanimated';
+import type Animated from 'react-native-reanimated';
+import { Easing, Keyframe } from 'react-native-reanimated';
 
 import {
+  expect,
   getTestComponent,
   render,
   useTestRef,
@@ -16,25 +18,37 @@ import type {
   DeclaredKey,
   FrameCheck,
   FrameRecord,
+  FrameResidual,
   Leaf,
   Leaves,
+  NativeRead,
   Operation,
   PlayedTrack,
   ScalarKey,
   ScalarTrack,
+  SizeBoxProps,
   TakenRow,
   TargetSample,
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
+  amountOf,
   BOX_REF,
   BOX_SIZE,
   callbackOf,
+  callbacks,
   capturesOf,
+  cellToleranceOf,
   declaredDurationOf,
+  declaredOf,
   declaredTimelineOf,
+  describeLeaf,
+  endCellsOf,
   endTransformOf,
   entryExitOf,
+  expectCapturedStart,
+  expectFrameTimeline,
+  expectNativeReads,
   FRAME_BOX_REF,
   FRAME_MS,
   frameDrivenOf,
@@ -45,7 +59,9 @@ import {
   layoutOf,
   middleOf,
   narrowClockOffset,
+  nativeResidualOf,
   OPACITY_TOLERANCE,
+  ownerAt,
   PAIR_LEFT,
   PAIR_TOP,
   playedTracksOf,
@@ -54,6 +70,8 @@ import {
   resetCallbacks,
   resetFrameRecords,
   sample,
+  shownAtRestOf,
+  SizeBox,
   START_LEFT,
   styles,
   summarize,
@@ -65,7 +83,7 @@ import {
 export type BoxName = 'native' | 'frame';
 type Flow = 'layout' | 'entering' | 'exiting';
 type Animations = Pick<React.ComponentProps<typeof Animated.View>, Flow>;
-type Place = {
+export type Place = {
   left: number;
   top: number;
   opacity?: number;
@@ -106,10 +124,20 @@ export type ReferenceCase = Declaration & {
   builder?: () => CallbackBuilder;
   /** The animation of each commit after the first, when it is another one. */
   replacement?: Declaration;
+  /** The host component and the static style of each box. */
+  box?: Pick<SizeBoxProps, 'host' | 'style'>;
+  /** Targets with no declared key that each row has a sample of. */
+  alsoSampled?: string[];
+  /**
+   * How far a frame of a box can be from the replay of its timeline. A declared
+   * value that the layout rounds to the pixel grid is not the value that the
+   * frame driver gets.
+   */
+  frameTolerance?: number;
 };
 
 // The type of a Keyframe does not show its `build`.
-type CallbackBuilder = {
+export type CallbackBuilder = {
   withCallback: (callback: (finished: boolean) => void) => AnimationSource;
 };
 
@@ -418,6 +446,8 @@ export type Played = {
   /** After the callbacks, when the boxes are mounted. */
   end?: Samples;
   tracks: PlayedTrack[];
+  /** The trace of the native box from the first commit. */
+  events: TraceEvent[];
   captures: Capture[];
   frameChecks: LeafCheck[];
   /** The last declaration of each key that has a timeline. */
@@ -448,6 +478,7 @@ export async function play(referenceCase: ReferenceCase): Promise<Played> {
       animations={animations[commit]}
       place={place}
       transform={transformOf(declarationOf(referenceCase, commit))}
+      box={referenceCase.box}
     />
   );
   const targets = targetsOf(referenceCase);
@@ -497,6 +528,7 @@ export async function play(referenceCase: ReferenceCase): Promise<Played> {
     rows,
     end,
     tracks,
+    events,
     captures: capturesOf(events, tracks),
     frameChecks: frameChecksOf(declaredKeys, readFrameRecords()),
     endKeys: declaredKeys.filter(
@@ -516,6 +548,271 @@ export const expectedCallbacksOf = ({ places }: ReferenceCase) =>
   (Object.keys(BOXES) as BoxName[]).flatMap((box) =>
     places.slice(1).map((_, commit) => `${box}:${commit === places.length - 2}`)
   );
+
+/**
+ * Statements A and B of `native layout reference` for a played case, and its
+ * end: each sample of the native box and each frame of the two boxes is on the
+ * declared timeline, each captured value is on its track, each animation gave
+ * its callbacks, and each box rests at its end values. It prints the residuals
+ * as a `REFERENCE` row, each captured start as a `CAPTURE` row, each gate as a
+ * `GATE` row, and each checked read off the timeline as an `OFF` row.
+ */
+export function expectReference(
+  caseName: string,
+  referenceCase: ReferenceCase,
+  played: Played
+) {
+  const reads = expectNativeRows(played);
+  expect(reads.some(({ isChecked }) => isChecked)).toBe(
+    !referenceCase.isFrameDriven
+  );
+  const residuals = [
+    ...describeNativeReads(reads, played),
+    ...expectFrameRecords(played, referenceCase.frameTolerance),
+    `captured values ${played.captures.length}`,
+  ];
+  played.captures.forEach(expectCapturedStart);
+  expectEnd(referenceCase, played);
+  console.log(['REFERENCE', caseName, ...residuals].join(' | '));
+  for (const capture of describeCapturedStarts(played.tracks)) {
+    console.log(['CAPTURE', caseName, capture].join(' | '));
+  }
+  for (const gate of [
+    ...describeGates(reads),
+    ...describeReplacementReads(reads),
+  ]) {
+    console.log(['GATE', caseName, gate].join(' | '));
+  }
+  for (const read of describeReadsOffTimeline(reads, played)) {
+    console.log(['OFF', caseName, read].join(' | '));
+  }
+  return reads;
+}
+
+export type RowRead = NativeRead & {
+  spacingMs?: number;
+  /** The sample of the read. */
+  sampled: TargetSample;
+};
+
+const expectNativeRows = ({ rows, tracks }: Played): RowRead[] =>
+  rows.flatMap(({ row, spacingMs }) =>
+    expectNativeReads(row.native, tracks, MATRIX_TOLERANCE).map((read) => ({
+      ...read,
+      spacingMs,
+      sampled: row.native[read.target],
+    }))
+  );
+
+/**
+ * Each checked read that is off the timeline, with the state of its view: the
+ * record of a failed statement A.
+ */
+function describeReadsOffTimeline(reads: RowRead[], played: Played) {
+  const { frameChecks, clockOffset } = played;
+  const handOvers = handOversOf(played);
+  const frameDriverStarts = frameChecks
+    .filter(({ record }) => record.box === 'native')
+    .flatMap(({ record }) => (record.start ? [record.start.timeMs] : []));
+  return reads
+    .filter(({ isChecked, residual }) => isChecked && !residual.isOnTimeline)
+    .map(({ target, tracks: [track], timeMs, sampled }) => {
+      const { presentation, model, playbackKeys } = sampled;
+      return [
+        `${target} of the command ${track.generation}: ${(timeMs - middleOf(track.origin)).toFixed(2)} ms after its origin`,
+        `${(timeMs - track.played.from).toFixed(2)} ms after the start of its track`,
+        `${(track.played.to - timeMs).toFixed(2)} ms before the end report of its track`,
+        `presentation ${presentation.join()}`,
+        `model ${model.join()}`,
+        `playback keys ${playbackKeys.join()}`,
+        `start calls of the frame driver for the box, ms after the read: ${frameDriverStarts.map((startMs) => (startMs + middleOf(clockOffset) - timeMs).toFixed(2)).join()}`,
+        ...defectMarkOf(handOvers, track, timeMs),
+      ].join(', ');
+    });
+}
+
+function describeNativeReads(reads: RowRead[], { clockOffset }: Played) {
+  const checked = reads.filter(({ isChecked }) => isChecked);
+  const distances = checked.flatMap(({ residual, checked: tracks }) =>
+    residual.distances.map(
+      (distance, track) => distance / tracks[track].tolerance
+    )
+  );
+  return [
+    `native reads ${checked.length}`,
+    `largest distance from the band ${largestOf(distances).toFixed(3)} of the tolerance`,
+    `largest age ${largestOf(checked.map(({ residual }) => residual.ageMs)).toFixed(2)} ms`,
+    `clock offset band ${(clockOffset.to - clockOffset.from).toFixed(3)} ms`,
+    describeNewValueReads(checked),
+  ];
+}
+
+/**
+ * The reads that show a value for the first time have the value of their own
+ * time: their distance from the declared value of that time, with no band.
+ */
+function describeNewValueReads(reads: RowRead[]) {
+  const fresh = reads.filter(({ spacingMs }) => spacingMs !== undefined);
+  const distances = fresh.flatMap(({ checked, values, timeMs }) =>
+    checked.map(
+      (track, index) =>
+        Math.abs(values[index] - declaredOf(track, timeMs)) / track.tolerance
+    )
+  );
+  return `reads of a new value ${fresh.length}, largest spacing ${largestOf(fresh.map(({ spacingMs }) => spacingMs!)).toFixed(2)} ms, largest distance from the value of their time ${largestOf(distances).toFixed(3)} of the tolerance`;
+}
+
+/**
+ * For each start of tracks with a gate: when the reads of its target came on
+ * the timeline, from the start of the tracks in the trace.
+ */
+function describeGates(reads: RowRead[]) {
+  const gated = reads.filter(({ tracks }) =>
+    tracks.some(({ checkedFromMs }) => checkedFromMs > -Infinity)
+  );
+  const startOf = ({ target, tracks: [{ generation }] }: RowRead) =>
+    `${target} of the command ${generation}`;
+  return [...new Set(gated.map(startOf))].map((start) => {
+    const afterStart = gated
+      .filter((read) => startOf(read) === start)
+      .map(({ tracks: [track], timeMs, residual, isChecked }) => ({
+        ms: timeMs - track.played.from,
+        isOnTimeline: residual.isOnTimeline,
+        isChecked,
+      }));
+    const off = afterStart.filter(({ isOnTimeline }) => !isOnTimeline);
+    const firstOn = afterStart.find(({ isOnTimeline }) => isOnTimeline);
+    return [
+      `${start}: reads in the gate ${afterStart.filter(({ isChecked }) => !isChecked).length}`,
+      `reads off the timeline ${off.length}`,
+      `latest read off the timeline ${off.length === 0 ? 'none' : `${largestOf(off.map(({ ms }) => ms)).toFixed(2)} ms`}`,
+      `first read on the timeline ${firstOn ? `${firstOn.ms.toFixed(2)} ms` : 'none'}`,
+      `first read ${afterStart[0].ms.toFixed(2)} ms`,
+    ].join(', ');
+  });
+}
+
+/**
+ * Each read whose display frame has the start of a track that replaced a track:
+ * the time and the track of the declared values that are nearest to it.
+ */
+const describeReplacementReads = (reads: RowRead[]) =>
+  reads
+    .filter(({ residual }) => residual.crossesReplacement)
+    .map(({ target, tracks: [track], timeMs, values, residual }) => {
+      const foundMs = timeMs - residual.ageMs;
+      const owner = ownerAt(track, foundMs);
+      return [
+        `${target} of the command ${track.generation} that replaced the command ${track.replaced?.generation}: read ${(timeMs - track.played.from).toFixed(2)} ms after the start of its track and ${(timeMs - middleOf(track.origin)).toFixed(2)} ms after its origin`,
+        `values ${values.map((value) => value.toFixed(4)).join()}`,
+        `nearest declared values: the command ${owner.generation} at ${(foundMs - track.played.from).toFixed(2)} ms after that start, ${residual.ageMs.toFixed(2)} ms before the read`,
+        `distances ${residual.distances.map((distance) => distance.toFixed(4)).join()}`,
+        residual.isOnTimeline ? 'on the timeline' : 'on NEITHER track',
+      ].join(', ');
+    });
+
+/**
+ * For each track that starts at a captured value: the value, and the time of
+ * the capture from the origin and from the start of the track.
+ */
+const describeCapturedStarts = (tracks: PlayedTrack[]) =>
+  tracks.flatMap(({ captured, key, generation, origin, played }) => {
+    if (!captured) {
+      return [];
+    }
+    const { value, timeMs, track } = captured;
+    const {
+      distances: [distance],
+      ageMs,
+    } = nativeResidualOf([value], timeMs, [track]);
+    return [
+      `${key} of the command ${generation} starts at ${value.toFixed(4)}, captured ${(timeMs - middleOf(origin)).toFixed(3)} ms after its origin and ${(played.from - timeMs).toFixed(3)} ms before the start of its track, ${distance.toFixed(4)} from the replaced track at ${ageMs.toFixed(2)} ms before the capture`,
+    ];
+  });
+
+// The frame driver and the timeline have the value of one function of one time.
+const FRAME_TOLERANCE = 1e-6;
+
+/**
+ * Statement B, for the twin and for the frames that the frame driver gave to
+ * the native box. A timing that adopts a start has the start time and the start
+ * value of the timing that it replaced. A leaf that starts on screen after a
+ * leaf starts at the last value that the replaced leaf wrote before the start
+ * call.
+ */
+function expectFrameRecords(
+  { frameChecks }: Played,
+  tolerance = FRAME_TOLERANCE
+) {
+  const residuals = new Map<LeafCheck, FrameResidual>();
+  for (const check of frameChecks) {
+    const { record, declared, replaced } = check;
+    if (record.adoptedStart && replaced) {
+      expect(amountOf(record.adoptedStart.value).amount).toBe(
+        replaced.timeline.from
+      );
+      expect(record.adoptedStart.timeMs).toBe(residuals.get(replaced)?.startMs);
+    } else if (replaced && declared.startsOnScreen) {
+      expect(record.start?.value).toBe(
+        replaced.record.frames[(record.start?.replacedFrames ?? 0) - 1]?.value
+      );
+    }
+    residuals.set(check, expectFrameTimeline(check, tolerance));
+  }
+  expect(frameChecks.some(({ record }) => record.box === 'frame')).toBe(true);
+  const all = [...residuals.values()];
+  return [
+    `frames ${frameChecks.map(({ record }) => `${record.box} ${describeLeaf(record)} ${record.frames.length}`).join()}`,
+    `largest frame distance ${largestOf(all.map(({ distance }) => distance)).toExponential(1)}`,
+    `latest computed phase start ${largestOf(all.flatMap(({ startsLateMs }) => startsLateMs)).toFixed(2)} ms after its declared start`,
+  ];
+}
+
+/**
+ * Each animation gave its callbacks, and each box that is mounted ends at the
+ * end value of each key, with no playback.
+ */
+function expectEnd(
+  referenceCase: ReferenceCase,
+  { end, endKeys, missingCallbacks }: Played
+) {
+  expect(missingCallbacks).toBe('');
+  expect([...callbacks].sort().join()).toBe(
+    expectedCallbacksOf(referenceCase).sort().join()
+  );
+  if (!end) {
+    return;
+  }
+  for (const key of endKeys) {
+    expect(end.native[key.target].playbackKeys.length).toBe(0);
+    if (key.operation === undefined) {
+      const atRest = shownAtRestOf(key, amountOf(key.to).amount);
+      for (const [shown] of [
+        end.native[key.target].presentation,
+        end.frame[key.target].model,
+      ]) {
+        expect(Math.abs(shown - atRest) <= key.tolerance).toBe(true);
+      }
+    }
+  }
+  const operations = endOperationsOf(referenceCase);
+  if (operations) {
+    const cells = endCellsOf(operations);
+    for (const shown of [
+      end.native.Transform.presentation,
+      end.frame.Transform.model,
+    ]) {
+      const distances = cells.map(
+        (cell, index) =>
+          Math.abs(shown[index] - cell) /
+          cellToleranceOf(index, MATRIX_TOLERANCE)
+      );
+      expect(largestOf(distances) <= 1).toBe(true);
+    }
+  }
+}
+
+const largestOf = (values: number[]) => Math.max(0, ...values);
 
 /** A track that the frame driver took, with its hand-over window. */
 export type HandOver = {
@@ -590,14 +887,15 @@ export const endOperationsOf = (referenceCase: ReferenceCase) =>
   declarationOf(referenceCase, referenceCase.places.length - 2).operations;
 
 export const targetsOf = (referenceCase: ReferenceCase) => [
-  ...new Set(
-    [referenceCase, referenceCase.replacement ?? referenceCase].flatMap(
+  ...new Set([
+    ...[referenceCase, referenceCase.replacement ?? referenceCase].flatMap(
       ({ leaves, operations = [] }) => [
         ...Object.keys(leaves).map((key) => READERS[key].target),
         ...operations.map(() => 'Transform'),
       ]
-    )
-  ),
+    ),
+    ...(referenceCase.alsoSampled ?? []),
+  ]),
 ];
 
 /** The keyframe animation that has the timings of an opacity leaf as its points. */
@@ -621,27 +919,32 @@ function opacityKeyframeOf(leaf: Leaf) {
   ) as unknown as CallbackBuilder;
 }
 
+type BoxOptions = Pick<ReferenceCase, 'box'> & {
+  animations: Animations;
+  place: Place;
+  transform: ViewStyle['transform'];
+};
+
 function ReferenceScene({
   animations,
   place,
-  transform,
-}: {
+  ...box
+}: Omit<BoxOptions, 'animations' | 'place'> & {
   animations: Record<BoxName, Animations>;
   place?: Place;
-  transform: ViewStyle['transform'];
 }) {
   const clockRef = useTestRef(CLOCK_REF);
   return (
     <View>
       <View ref={clockRef} collapsable={false} />
-      {(Object.keys(BOXES) as BoxName[]).map((box) => (
-        <View key={box} collapsable={false} style={styles.pairCell}>
+      {(Object.keys(BOXES) as BoxName[]).map((name) => (
+        <View key={name} collapsable={false} style={styles.pairCell}>
           {place && (
             <ReferenceBox
-              refName={BOXES[box]}
-              animations={animations[box]}
+              refName={BOXES[name]}
+              animations={animations[name]}
               place={place}
-              transform={transform}
+              {...box}
             />
           )}
         </View>
@@ -655,23 +958,19 @@ function ReferenceBox({
   animations,
   place,
   transform,
-}: {
-  refName: string;
-  animations: Animations;
-  place: Place;
-  transform: ViewStyle['transform'];
-}) {
-  const ref = useTestRef(refName);
-  const { originX, originY, ...style } = restOf(place);
+  box,
+}: BoxOptions & { refName: string }) {
+  const { originX, originY, width, height, ...style } = restOf(place);
   return (
-    <Animated.View
-      ref={ref}
+    <SizeBox
+      refName={refName}
       {...animations}
-      style={[
-        styles.box,
-        style,
-        { marginLeft: originX, marginTop: originY, transform },
-      ]}
+      {...box}
+      left={originX}
+      top={originY}
+      width={width}
+      height={height}
+      style={[style, { transform }, box?.style]}
     />
   );
 }
@@ -811,6 +1110,10 @@ function builtKeysOf(
           }
         : { from: initial!, to: leaf.to! };
       const { sizeKey, ...reader } = READERS[key];
+      // A position sample is the center of the box: with a new size and no size track, it starts at a
+      // center that the view did not show.
+      const startsWithSizeOnScreen =
+        !sizeKey || sizeKey in leaves || before?.[sizeKey] === rest[sizeKey];
       return [
         {
           declared: {
@@ -819,7 +1122,7 @@ function builtKeysOf(
             leaf,
             from,
             ...end,
-            startsOnScreen: from === before?.[key],
+            startsOnScreen: from === before?.[key] && startsWithSizeOnScreen,
             size: sizeKey ? { key: sizeKey, rest: rest[sizeKey] } : undefined,
           },
           continuesTrack: !isChanged && leaf === earlierLeaves[key],
