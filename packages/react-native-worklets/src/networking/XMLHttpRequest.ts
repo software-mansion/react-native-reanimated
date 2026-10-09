@@ -275,13 +275,16 @@ export class XMLHttpRequest extends EventTargetLite {
     this.sent = true;
 
     if (!isSupportedRequestUrl(this.url)) {
+      const token = ++this.requestToken;
       this.__dispatch('loadstart');
-      setTimeout(() =>
-        this.handleRequestError(
-          'network',
-          `Only http and https URLs are supported, got '${this.url}'.`
-        )
-      );
+      setTimeout(() => {
+        if (token === this.requestToken) {
+          this.handleRequestError(
+            'network',
+            `Only http and https URLs are supported, got '${this.url}'.`
+          );
+        }
+      });
       return;
     }
 
@@ -491,6 +494,8 @@ export class XMLHttpRequest extends EventTargetLite {
   }
 
   private terminate(): boolean {
+    // Invalidates callbacks and timers scheduled by the previous `send`.
+    this.requestToken++;
     if (this.requestId === null) {
       return this.sent;
     }
