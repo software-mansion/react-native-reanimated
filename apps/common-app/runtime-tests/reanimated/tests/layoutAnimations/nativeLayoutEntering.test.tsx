@@ -50,6 +50,7 @@ import {
   countedOf,
   CURVED_EASINGS,
   curveOf,
+  FIRST_FRAMES_MS,
   FRAME_BOX_REF,
   FRAME_MS,
   hasNativeLayoutStarts,
@@ -88,8 +89,6 @@ const WINDOW_WIDTH = Dimensions.get('window').width;
 const CUSTOM_OPACITY = 0.2;
 const CUSTOM_OFFSET = -80;
 const VALUE_TOLERANCE = 0.01;
-// The presentation layer has a new animation only after the first display frame of its commit.
-const FIRST_FRAMES_MS = 3 * FRAME_MS;
 
 const OPACITY: Track = {
   sampleTarget: 'Opacity',

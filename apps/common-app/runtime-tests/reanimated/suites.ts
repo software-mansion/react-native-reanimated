@@ -149,6 +149,20 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'native layout busy main thread',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutBusyMainThread.test');
+    },
+    skipByDefault: true,
+  },
+  {
+    testSuiteName: 'native layout busy JS thread',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutBusyJSThread.test');
+    },
+    skipByDefault: true,
+  },
+  {
     testSuiteName: 'native layout starts',
     importTest: () => {
       require('./tests/layoutAnimations/nativeLayoutStarts.test');

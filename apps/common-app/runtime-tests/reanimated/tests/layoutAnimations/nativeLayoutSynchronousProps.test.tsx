@@ -28,9 +28,9 @@ import {
   startSecondSurface,
   stopSecondSurface,
 } from '../../../ReJest/secondSurface';
+import { blockUIThread } from './nativeLayoutLoad';
 import type { Leaves, TraceEvent } from './nativeLayoutTestKit';
 import {
-  blockUIThread,
   BOX_REF,
   BOX_SIZE,
   callbacks,
@@ -243,7 +243,12 @@ function CallbackWriterScene({
           other.value = finished
             ? CALLBACK_TRUE_OPACITY
             : CALLBACK_FALSE_OPACITY;
-          scheduleOnRN(recordCallback, 'writer', finished);
+          scheduleOnRN(
+            recordCallback,
+            'writer',
+            finished,
+            global._getAnimationTimestamp()
+          );
         },
       };
     },

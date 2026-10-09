@@ -105,6 +105,7 @@ import {
   useTestRef,
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
+import { blockUIThread } from './nativeLayoutLoad';
 import type {
   FrameDriverRow,
   TargetSample,
@@ -112,7 +113,6 @@ import type {
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
-  blockUIThread,
   BOX_REF,
   callbackOf,
   callbacks,
@@ -129,6 +129,7 @@ import {
   summarize,
   takeAtFrameDriverFrame,
   takeTrace,
+  waitForCallbacks,
 } from './nativeLayoutTestKit';
 
 type Flow = 'entering' | 'exiting' | 'layout';
@@ -871,15 +872,6 @@ const SCENES: Record<Flow, { before: Scene; after: Scene }> = {
 };
 
 const PLAIN_BOX_REF = 'NativeLayoutPresetPlainBox';
-const CALLBACKS_TIMEOUT = 3000;
-
-async function waitForCallbacks(count: number) {
-  const timeoutMs = performance.now() + CALLBACKS_TIMEOUT;
-  while (callbacks.length < count && performance.now() < timeoutMs) {
-    await wait(50);
-  }
-}
-
 type Play = {
   flow: Flow;
   /** The animation of the native box and of its twin, before its callback. */
