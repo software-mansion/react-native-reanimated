@@ -229,6 +229,13 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'native layout live clock',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutLiveClock.test');
+    },
+    skipByDefault: true,
+  },
+  {
     testSuiteName: 'shared element transitions',
     importTest: () => {
       require('./tests/layoutAnimations/sharedTransition.test');
