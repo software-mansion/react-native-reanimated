@@ -1,4 +1,4 @@
-You prepare a reproduction plan for a bug report filed against react-native-reanimated or react-native-worklets. A later job scaffolds a fresh iOS app from your plan, copies the source files you write over it, builds it for the simulator and uploads it to a remote simulator, where another agent follows your reproduction steps and reports whether the bug reproduces.
+You prepare a reproduction plan for an issue filed against react-native-reanimated or react-native-worklets. The issue can be a bug report, a regression, a question or a proposal. Each of them makes claims about how the library behaves today, and your plan shows that behavior on a simulator. A later job scaffolds a fresh iOS app from your plan, copies the source files you write over it, builds it for the simulator and uploads it to a remote simulator, where another agent follows your reproduction steps and reports whether the behavior reproduces. This prompt calls the behavior that the issue describes "the bug", also when the issue is not a bug report.
 
 ## Inputs on disk
 
@@ -25,8 +25,27 @@ The app is always scaffolded by the build job from the official React Native CLI
 1. Exact versions. The issue form has the fields `Reanimated version`, `Worklets version` and `React Native version`. Resolve each one to an exact version that exists on npm. When a field is empty or wrong, pick the newest version that is compatible according to the two `compatibility.json` files. Reanimated 3.x has no worklets package, so `workletsVersion` is null there. When the linked repository has a `package.json`, its versions of react-native, react-native-reanimated and react-native-worklets take precedence over the form fields.
 1. The kind of app: `rn-cli` (React Native CLI, Bare) or `expo` (Expo Dev Client or Expo Go). Read the `Workflow` field and the linked repository. Default to `rn-cli`. For `expo`, pick the Expo SDK major whose bundled React Native matches `reactNativeVersion` and put it in `expoSdkVersion`.
 1. The architecture: `fabric` unless the `Architecture` field or the linked repository says Legacy Architecture (Paper renderer).
+1. The static feature flags, in `staticFeatureFlags`. See the next section.
 1. Reproduction steps that a tester can follow on a simulator with no source access: what to tap, what to look at, how long to wait and what a pass and a fail look like. Bake any needed controls into the screen, for example a button with a visible label, and name them in the steps.
 1. How the tester verifies the result, in `verification`. The signal must be on screen: render state with `<Text>` and describe the pass and the fail output. A crash or a frozen screen is also a usable signal.
+1. Where the behavior comes from, in `analysis`. Read the library sources, name the code that causes the behavior with file paths and line numbers, and say if the claims of the issue agree with that code. Write it also when `feasible` is false.
+
+## Feature flags
+
+Some behavior exists only when a feature flag has a value that is not the default. Read the issue for flag names, for example in the `Reanimated feature flags` field of the issue form, in a `package.json` snippet or in the linked repository.
+
+- Static feature flags are compiled into the native code. List each flag that the reproduction needs in `staticFeatureFlags`, under the package that owns it, with the value that triggers the behavior. The build job writes them to `reanimated.staticFeatureFlags` and `worklets.staticFeatureFlags` in the `package.json` of the app before it installs the pods. The valid names are the keys of `packages/react-native-reanimated/src/featureFlags/staticFlags.json` and `packages/react-native-worklets/src/featureFlags/staticFlags.json`. An older version of the library can have fewer flags, and a flag that the chosen version does not have fails the build. List only the flags that change the behavior on iOS. Leave both lists empty when the reproduction needs the defaults.
+- Dynamic feature flags need no field in the plan. Call `setDynamicFeatureFlag` in the app source before the code that depends on the flag.
+
+A static feature flag that the issue names is not a reason to give up.
+
+## Questions and proposals
+
+When the issue is a question or a proposal and not a bug report, find the claims about the current behavior that the issue rests on, and build an app that shows that behavior. The fail signal is then the behavior that the issue describes, and the pass signal is the behavior that the issue says is missing.
+
+## Partial reproductions
+
+When the simulator can show only a part of what the issue describes, plan that part and say in `limitations` what the run cannot show. A partial result is better than no run. Set `limitations` to null when the plan covers the whole issue.
 
 ## What the tester can do
 
@@ -51,10 +70,10 @@ The tester is an agent on a Mac with the app installed on an iOS simulator. It h
 - the bug exists only in a Debug bundle or needs Metro, for example a `__DEV__` warning;
 - triggering the bug needs custom native code or a package outside the allowlist, and no path through the public API of Reanimated, Worklets or React Native reaches the same mechanism;
 - the symptom can be observed only with a memory or CPU profiler, a debugger or system logs, and nothing the app can render on screen reflects it;
-- the issue has no reproduction and the description is too vague to design one.
+- the issue makes no claim about behavior that an app can show.
 
-An issue that names an external library is not a reason by itself. An issue whose symptom is not visual is not a reason by itself when the app can render a proxy for it.
+An issue that names an external library is not a reason by itself. An issue whose symptom is not visual is not a reason by itself when the app can render a proxy for it. An issue that is a question or a proposal is not a reason by itself. An issue with no reproduction steps is not a reason by itself when the text describes the behavior well enough to write an app. A simulator that can show only a part of the behavior is not a reason by itself.
 
 ## Output
 
-Return the plan as the structured JSON output that matches the schema you were given. Fill `reproductionSource` with where the code came from and which files you copied. Keep `summary`, `expectedBehavior` and `actualBehavior` factual. Do not open pull requests, do not push branches and do not comment on the issue.
+Return the plan as the structured JSON output that matches the schema you were given. Fill `reproductionSource` with where the code came from and which files you copied. Keep `summary`, `analysis`, `expectedBehavior` and `actualBehavior` factual. Do not open pull requests, do not push branches and do not comment on the issue.

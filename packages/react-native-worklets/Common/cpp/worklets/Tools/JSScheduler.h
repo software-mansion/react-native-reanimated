@@ -24,6 +24,8 @@ class JSScheduler {
 
   void invokeSyncOnJS(const std::function<void(jsi::Runtime &rt)> &job);
 
+  void runSyncOnJS(const std::function<void(jsi::Runtime &rt)> &job);
+
   bool canInvokeSyncOnJS();
 
  protected:

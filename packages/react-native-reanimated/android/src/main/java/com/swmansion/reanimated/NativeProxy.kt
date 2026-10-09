@@ -1,6 +1,7 @@
 package com.swmansion.reanimated
 
 import android.content.ContentResolver
+import android.graphics.Color
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
@@ -15,7 +16,9 @@ import com.facebook.react.common.annotations.FrameworkAPI
 import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
+import com.facebook.react.uimanager.BackgroundStyleApplicator
 import com.facebook.react.uimanager.IllegalViewOperationException
+import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.common.UIManagerType
 import com.facebook.soloader.SoLoader
@@ -33,6 +36,8 @@ import com.swmansion.reanimated.sensor.ReanimatedSensorContainer
 import com.swmansion.reanimated.sensor.ReanimatedSensorType
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.write
 
 @Suppress("KotlinJniMissingFunction")
 @OptIn(FrameworkAPI::class)
@@ -67,8 +72,8 @@ open class NativeProxy {
      */
     private val mInvalidated = AtomicBoolean(false)
 
-    /** A mount callback on the UI thread must not run native code while a different thread destroys it. */
-    private val invalidationLock = Any()
+    // Guards the C++ state that invalidateCpp() destroys against calls from the UI thread.
+    private val mNativeStateLock = ReentrantReadWriteLock()
 
     @field:DoNotStrip
     @Suppress("unused")
@@ -81,13 +86,7 @@ open class NativeProxy {
 
             override fun willMountItems(uiManager: UIManager) = Unit
 
-            override fun didMountItems(uiManager: UIManager) {
-                synchronized(invalidationLock) {
-                    if (!mInvalidated.get()) {
-                        rewriteSynchronousProps()
-                    }
-                }
-            }
+            override fun didMountItems(uiManager: UIManager) = ifNotInvalidated(Unit) { rewriteSynchronousProps() }
 
             override fun didDispatchMountItems(uiManager: UIManager) = Unit
 
@@ -147,14 +146,14 @@ open class NativeProxy {
         fabricUIManager: FabricUIManager,
     ): HybridData
 
-    external fun isAnyHandlerWaitingForEvent(
+    private external fun isAnyHandlerWaitingForEventCpp(
         eventName: String,
         emitterReactTag: Int,
     ): Boolean
 
-    external fun performOperations()
+    private external fun performOperationsCpp()
 
-    external fun performNonLayoutOperations()
+    private external fun performNonLayoutOperationsCpp()
 
     private external fun hasSynchronousWritesTracker(): Boolean
 
@@ -164,9 +163,37 @@ open class NativeProxy {
 
     private external fun invalidateCpp()
 
-    external fun toggleSlowAnimationsOnUIRuntime()
+    private external fun toggleSlowAnimationsOnUIRuntime()
 
     protected fun getHybridData(): HybridData = mHybridData
+
+    // tryLock, because the UI thread may hold the UI runtime lock, which could deadlock with invalidate()
+    private inline fun <T> ifNotInvalidated(
+        fallback: T,
+        block: () -> T,
+    ): T {
+        val readLock = mNativeStateLock.readLock()
+        if (!readLock.tryLock()) {
+            return fallback
+        }
+        try {
+            if (mInvalidated.get()) {
+                return fallback
+            }
+            return block()
+        } finally {
+            readLock.unlock()
+        }
+    }
+
+    fun isAnyHandlerWaitingForEvent(
+        eventName: String,
+        emitterReactTag: Int,
+    ): Boolean = ifNotInvalidated(false) { isAnyHandlerWaitingForEventCpp(eventName, emitterReactTag) }
+
+    fun performOperations() = ifNotInvalidated(Unit) { performOperationsCpp() }
+
+    fun performNonLayoutOperations() = ifNotInvalidated(Unit) { performNonLayoutOperationsCpp() }
 
     fun invalidate() {
         if (mInvalidated.getAndSet(true)) {
@@ -176,7 +203,7 @@ open class NativeProxy {
         mFabricUIManager.removeUIManagerEventListener(mountListener)
         pseudoSelectorManager.invalidate()
         cssPlatformTransitionsManager.invalidate()
-        synchronized(invalidationLock) {
+        mNativeStateLock.write {
             if (mHybridData.isValid) {
                 invalidateCpp()
             }
@@ -190,7 +217,7 @@ open class NativeProxy {
         }
         mNodesManager!!.enableSlowAnimations(slowAnimationsEnabled, animationsDragFactor)
         cssPlatformTransitionsManager.enableSlowAnimations(slowAnimationsEnabled, animationsDragFactor)
-        toggleSlowAnimationsOnUIRuntime()
+        ifNotInvalidated(Unit) { toggleSlowAnimationsOnUIRuntime() }
     }
 
     private fun addDevMenuOption() {
@@ -213,8 +240,12 @@ open class NativeProxy {
 
     @DoNotStrip
     fun requestRender(callback: AnimationFrameCallback) {
+        val guardedCallback =
+            object : NodesManager.OnAnimationFrame {
+                override fun onAnimationFrame(timestampMs: Double) = ifNotInvalidated(Unit) { callback.onAnimationFrame(timestampMs) }
+            }
         UiThreadUtil.assertOnUiThread()
-        mNodesManager!!.postOnAnimation(callback)
+        mNodesManager!!.postOnAnimation(guardedCallback)
     }
 
     @DoNotStrip fun getReanimatedJavaVersion(): String = BuildConfig.REANIMATED_VERSION_JAVA
@@ -239,6 +270,30 @@ open class NativeProxy {
                     "/guides/troubleshooting#mismatch-between-java-code-version-and-c-code-version for more information.",
             )
         }
+    }
+
+    @DoNotStrip
+    fun obtainMountedViewProps(tag: Int): DoubleArray? {
+        if (!UiThreadUtil.isOnUiThread()) {
+            return null
+        }
+        val view =
+            try {
+                mFabricUIManager.resolveView(tag)
+            } catch (e: IllegalViewOperationException) {
+                null
+            } ?: return null
+        if (!view.isAttachedToWindow) {
+            return null
+        }
+        return doubleArrayOf(
+            PixelUtil.toDIPFromPixel(view.left.toFloat()).toDouble(),
+            PixelUtil.toDIPFromPixel(view.top.toFloat()).toDouble(),
+            PixelUtil.toDIPFromPixel(view.width.toFloat()).toDouble(),
+            PixelUtil.toDIPFromPixel(view.height.toFloat()).toDouble(),
+            view.alpha.toDouble(),
+            (BackgroundStyleApplicator.getBackgroundColor(view) ?: Color.TRANSPARENT).toDouble(),
+        )
     }
 
     @DoNotStrip
@@ -376,6 +431,7 @@ open class NativeProxy {
     fun registerEventHandler(handler: EventHandler) {
         handler.mCustomEventNamesResolver = mNodesManager!!.getEventNameResolver()
         handler.isInDrawPassProvider = { mNodesManager!!.isInDrawPass() }
+        handler.nativeCallGuard = { receive -> ifNotInvalidated(Unit, receive) }
         mNodesManager!!.registerEventHandler(handler)
     }
 
@@ -416,12 +472,12 @@ open class NativeProxy {
     @DoNotStrip
     fun getIsReducedMotion(): Boolean {
         val mContentResolver: ContentResolver = mContext.get()!!.contentResolver
-        val rawValue =
-            Settings.Global.getString(
+        val parsedValue =
+            Settings.Global.getFloat(
                 mContentResolver,
                 Settings.Global.TRANSITION_ANIMATION_SCALE,
+                1f,
             )
-        val parsedValue = if (rawValue != null) rawValue.toFloat() else 1f
         return parsedValue == 0f
     }
 

@@ -2,12 +2,14 @@
 set -euo pipefail
 
 main() {
-  PLAN_FILE="${1:?usage: prepare-app.sh <plan.json> <overlay-dir> <app-dir>}"
-  OVERLAY_DIR="${2:?usage: prepare-app.sh <plan.json> <overlay-dir> <app-dir>}"
-  APP_DIR="${3:?usage: prepare-app.sh <plan.json> <overlay-dir> <app-dir>}"
+  PLAN_FILE="${1:?usage: prepare-app.sh <plan.json> <overlay-dir> <app-dir> [<library-packages-dir>]}"
+  OVERLAY_DIR="${2:?usage: prepare-app.sh <plan.json> <overlay-dir> <app-dir> [<library-packages-dir>]}"
+  APP_DIR="${3:?usage: prepare-app.sh <plan.json> <overlay-dir> <app-dir> [<library-packages-dir>]}"
+  LIBRARY_PACKAGES_DIR="${4:-}"
   ALLOWLIST_FILE="$(dirname "${BASH_SOURCE[0]}")/allowed-dependencies.json"
 
   read_plan
+  read_library_packages
   validate_overlay
   validate_extra_dependencies
   export RCT_NEW_ARCH_ENABLED
@@ -19,6 +21,7 @@ main() {
     *) fail "unknown appKind '$APP_KIND'" ;;
   esac
 
+  write_static_feature_flags
   install_pods
   print_app_dir
 }
@@ -28,10 +31,29 @@ read_plan() {
   APP_KIND=$(plan '.appKind')
   ARCHITECTURE=$(plan '.architecture')
   RN_VERSION=$(plan '.reactNativeVersion')
-  REANIMATED_VERSION=$(plan '.reanimatedVersion')
+  REANIMATED_VERSION=$(plan '.reanimatedVersion // empty')
   WORKLETS_VERSION=$(plan '.workletsVersion // empty')
   EXPO_SDK_VERSION=$(plan '.expoSdkVersion // empty')
   EXTRA_DEPENDENCIES=$(plan '.extraDependencies[] | "\(.name)@\(.version)"')
+}
+
+read_library_packages() {
+  if [ -z "$LIBRARY_PACKAGES_DIR" ]; then
+    LIBRARY_PACKAGES=("react-native-reanimated@$REANIMATED_VERSION")
+    if [ -n "$WORKLETS_VERSION" ]; then
+      LIBRARY_PACKAGES+=("react-native-worklets@$WORKLETS_VERSION")
+    fi
+    return
+  fi
+  LIBRARY_PACKAGES=()
+  while IFS= read -r tarball; do
+    LIBRARY_PACKAGES+=("$tarball")
+  done < <(find "$(cd "$LIBRARY_PACKAGES_DIR" && pwd)" -maxdepth 1 -name 'react-native-*.tgz' | sort)
+  [ "${#LIBRARY_PACKAGES[@]}" -gt 0 ] || fail "no library tarballs in $LIBRARY_PACKAGES_DIR"
+}
+
+uses_worklets_package() {
+  [[ " ${LIBRARY_PACKAGES[*]} " == *react-native-worklets* ]]
 }
 
 validate_overlay() {
@@ -111,10 +133,7 @@ scaffold_expo() {
 }
 
 install_library_packages() {
-  local packages=("react-native-reanimated@$REANIMATED_VERSION")
-  if [ -n "$WORKLETS_VERSION" ]; then
-    packages+=("react-native-worklets@$WORKLETS_VERSION")
-  fi
+  local packages=("${LIBRARY_PACKAGES[@]}")
   while IFS= read -r dependency; do
     [ -n "$dependency" ] && packages+=("$dependency")
   done <<< "$EXTRA_DEPENDENCIES"
@@ -128,7 +147,7 @@ write_babel_config() {
     preset="babel-preset-expo"
   fi
   local plugin="react-native-reanimated/plugin"
-  if [ -n "$WORKLETS_VERSION" ]; then
+  if uses_worklets_package; then
     plugin="react-native-worklets/plugin"
   fi
   cat > "$APP_DIR/babel.config.js" <<BABEL
@@ -145,6 +164,46 @@ copy_overlay() {
     (cd "$OVERLAY_DIR" && find . -type f)
     cp -R "$OVERLAY_DIR"/. "$APP_DIR"/
   fi
+}
+
+write_static_feature_flags() {
+  PLAN_FILE="$PLAN_FILE" APP_DIR="$APP_DIR" node -e '
+    const fs = require("fs");
+    const path = require("path");
+    const appDir = process.env.APP_DIR;
+    const plan = JSON.parse(fs.readFileSync(process.env.PLAN_FILE, "utf8"));
+    const appPackagePath = path.join(appDir, "package.json");
+    const appPackage = JSON.parse(fs.readFileSync(appPackagePath, "utf8"));
+    const packages = { reanimated: "react-native-reanimated", worklets: "react-native-worklets" };
+    for (const [owner, flags] of Object.entries(plan.staticFeatureFlags ?? {})) {
+      if (flags.length === 0) continue;
+      const known = JSON.parse(
+        fs.readFileSync(
+          path.join(appDir, "node_modules", packages[owner], "src/featureFlags/staticFlags.json"),
+          "utf8"
+        )
+      );
+      const names = new Set();
+      for (const { name, value } of flags) {
+        if (names.has(name)) {
+          throw new Error(`the static feature flag ${name} is listed two times for ${packages[owner]}`);
+        }
+        names.add(name);
+        if (!(name in known)) {
+          throw new Error(`${packages[owner]} has no static feature flag ${name} in this version`);
+        }
+        if (typeof value !== "boolean") {
+          throw new Error(`the static feature flag ${name} must be true or false`);
+        }
+      }
+      appPackage[owner] = {
+        ...appPackage[owner],
+        staticFeatureFlags: Object.fromEntries(flags.map(({ name, value }) => [name, value])),
+      };
+      console.log(`${owner}.staticFeatureFlags:`, appPackage[owner].staticFeatureFlags);
+    }
+    fs.writeFileSync(appPackagePath, JSON.stringify(appPackage, null, 2) + "\n");
+  ' || fail "the static feature flags of the plan were rejected"
 }
 
 install_pods() {
