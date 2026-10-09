@@ -12,6 +12,8 @@ export function waitForFrames(
     scheduleOnUI(() => {
       'worklet';
       let remaining = count;
+      // No 'worklet' directive: the plugin would capture `onFrame` before it is
+      // assigned, so the recursive call would get `undefined`.
       const onFrame = () => {
         remaining -= 1;
         if (remaining > 0) {
