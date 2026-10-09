@@ -53,6 +53,8 @@ struct TraceEvent {
   std::optional<AnimationResult> result;
   std::optional<TrackBuildFailure> buildFailure;
   std::optional<int64_t> transactionNumber;
+  /// The origin of the timelines of the request of a received command.
+  std::optional<double> originTimestampMs;
   /// The value of the layout animation key that a capture got.
   std::optional<double> leafValue;
   /// The name that the layout domain gives to the type of the animation of a pending start, a refused start,

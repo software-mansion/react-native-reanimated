@@ -503,6 +503,9 @@ jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent
   if (event.transactionNumber) {
     object.setProperty(rt, "transactionNumber", static_cast<double>(*event.transactionNumber));
   }
+  if (event.originTimestampMs) {
+    object.setProperty(rt, "originTimestampMs", *event.originTimestampMs);
+  }
   if (event.leafValue) {
     object.setProperty(rt, "leafValue", *event.leafValue);
   }
