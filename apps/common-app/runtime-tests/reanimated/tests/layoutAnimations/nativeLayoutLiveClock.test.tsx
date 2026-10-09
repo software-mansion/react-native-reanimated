@@ -18,8 +18,15 @@
  * `native layout reference`: the replaced track before the `TrackStarted` time of a track that replaced it.
  * A position value is the center of the box. The pair of a `Transform` target is the 16 cells of its
  * matrix: the cells that the native box shows, and the cells of the operation values of the write of the
- * twin that the model of the twin shows, in the product order of a native track that plays. Each pair that
- * is over its bound is a `LIVE` row with its sample times, its two values, its gap, and its bound.
+ * twin that the model of the twin shows, in the product order of a native track that plays.
+ *
+ * A key that replaces a track on screen has two declared timelines: the native track starts at the value
+ * that the route captured from the replaced track at the origin of its build, and the twin starts at the
+ * value of its start call at the time of its start call. The bound of its pair has one more term: the
+ * distance of these two declared timelines at the step time. The term is zero for each other key. Each
+ * pair that is over its bound is a `LIVE` row with its sample times, its two values, the generation and the
+ * origin of its track, the playback keys, the two start values, the time of the last frame of the twin
+ * before its start call, and each term of its bound.
  *
  * The hand-over window of a track that the frame driver took is from the start call of the frame driver for
  * its key on the native box to one display frame after the end report of the track. Each request step in
@@ -96,6 +103,7 @@ import {
   declaredFrameChangesAt,
   declaredOf,
   declaredStartsOf,
+  declaredValueOf,
   describeLeaf,
   FIRST_FRAMES_MS,
   FRAME_MS,
@@ -285,20 +293,79 @@ function rowsInPhasesOf({ rows, tracks }: Played) {
 const pairGapOf = (native: TargetSample, twin: TargetSample) =>
   Math.abs(native.presentation[0] - twin.model[0]);
 
-/**
- * The tolerance of the key of a track plus the declared change of the key
- * around a time of the sample clock.
- */
-function pairBoundOf(track: ScalarTrack, played: Played, timeMs: number) {
+/** The terms of the bound of the pair of a scalar key, and their sum. */
+type PairBound = {
+  tolerance: number;
+  /** The declared change of the key around the time. */
+  frameChange: number;
+  /** The distance of the declared timelines of the two boxes at the time. */
+  startValues: number;
+  total: number;
+};
+
+function pairBoundOf(
+  track: ScalarTrack,
+  played: Played,
+  timeMs: number
+): PairBound {
   const shown = shownTrackOf(track, played.tracks);
-  return (
-    track.tolerance +
-    declaredFrameChangeAt(
-      (stepTimeMs) => declaredOf(shown, stepTimeMs),
-      timeMs,
-      Math.max(1, startedPhasesOf(track, timeMs - middleOf(track.origin)))
-    )
+  const { tolerance } = track;
+  const frameChange = declaredFrameChangeAt(
+    (stepTimeMs) => declaredOf(shown, stepTimeMs),
+    timeMs,
+    Math.max(1, startedPhasesOf(track, timeMs - middleOf(track.origin)))
   );
+  const twin = twinStartOf(track, played);
+  const startValues = twin
+    ? Math.abs(
+        twin.declared(timeMs - twin.timeMs) -
+          track.declared(timeMs - middleOf(track.origin))
+      )
+    : 0;
+  return {
+    tolerance,
+    frameChange,
+    startValues,
+    total: tolerance + frameChange + startValues,
+  };
+}
+
+const describePairBound = ({
+  tolerance,
+  frameChange,
+  startValues,
+  total,
+}: PairBound) =>
+  `bound ${total.toFixed(4)}: tolerance ${tolerance}, declared change of the frames ${frameChange.toFixed(4)}, distance of the declared timelines of the two boxes ${startValues.toFixed(4)}`;
+
+/**
+ * The start of the twin of a track that starts at a captured value: the
+ * declared timeline of the twin from its start value, its start on the sample
+ * clock, and the time of its last frame before the start call.
+ */
+function twinStartOf(track: ScalarTrack, { frameChecks, clockOffset }: Played) {
+  if (!track.captured) {
+    return undefined;
+  }
+  const check = frameChecks.find(
+    ({ record, declared }) =>
+      record.box === 'frame' && declared === track.declaration
+  );
+  const start = check?.record.adoptedStart ?? check?.record.start;
+  if (!check || !start) {
+    throw new Error(
+      `The twin has no start of ${describeLeaf(track)} of the command ${track.generation}.`
+    );
+  }
+  const clock = middleOf(clockOffset);
+  const replacedFrames = check.record.start?.replacedFrames ?? 0;
+  const lastFrame = check.replaced?.record.frames[replacedFrames - 1];
+  return {
+    declared: declaredValueOf(check.timeline),
+    value: check.timeline.from,
+    timeMs: start.timeMs + clock,
+    lastFrameMs: lastFrame && lastFrame.timeMs + clock,
+  };
 }
 
 /** One row for each request step in the hand-over window of a track. */
@@ -321,7 +388,7 @@ function handOverRowsOf(handOver: HandOver, played: Played) {
       isOnTimeline,
     } = nativeResidualOf([value], timeMs, [shown]);
     const gap = pairGapOf(native, twin);
-    const bound = pairBoundOf(track, played, timeMs);
+    const bound = pairBoundOf(track, played, timeMs).total;
     const isInPair = gap <= bound;
     return [
       {
@@ -409,7 +476,24 @@ const describePairStep = (
   native: TargetSample,
   twin: TargetSample
 ) =>
-  `pair row of ${name} of the command ${generation} over its bound | native sample ${(native.monotonicTimeMs - middleOf(origin)).toFixed(2)} ms and twin sample ${(twin.monotonicTimeMs - middleOf(origin)).toFixed(2)} ms after the origin`;
+  `pair row of ${name} of the command ${generation} over its bound | native sample ${(native.monotonicTimeMs - middleOf(origin)).toFixed(2)} ms and twin sample ${(twin.monotonicTimeMs - middleOf(origin)).toFixed(2)} ms after the origin ${middleOf(origin).toFixed(2)} ms | playback keys ${native.playbackKeys.join()}`;
+
+/**
+ * Of a track that starts at a captured value: the start value of each box, and
+ * the start call of the twin and its last frame before it, from the origin of
+ * the track.
+ */
+function describeStartValues(track: ScalarTrack, played: Played) {
+  const twin = twinStartOf(track, played);
+  if (!track.captured || !twin) {
+    return [];
+  }
+  const originMs = middleOf(track.origin);
+  const { lastFrameMs } = twin;
+  return [
+    `native start value ${track.captured.value} at its origin, twin start value ${twin.value} at ${(twin.timeMs - originMs).toFixed(2)} ms after that origin, last frame of the twin before its start call at ${lastFrameMs === undefined ? 'none' : `${(lastFrameMs - originMs).toFixed(2)} ms`}`,
+  ];
+}
 
 function scalarPairOf(
   track: ScalarTrack,
@@ -421,13 +505,15 @@ function scalarPairOf(
   const bound = pairBoundOf(track, played, native.monotonicTimeMs);
   return {
     name: track.key,
-    overBound: gap - bound,
+    overBound: gap - bound.total,
     describe: () =>
       [
         describePairStep(track, track.key, native, twin),
         `native presentation ${native.presentation[0].toFixed(4)}`,
         `twin model ${twin.model[0].toFixed(4)}`,
-        `pair gap ${gap.toFixed(4)} with the bound ${bound.toFixed(4)}`,
+        `pair gap ${gap.toFixed(4)}`,
+        describePairBound(bound),
+        ...describeStartValues(track, played),
       ].join(' | '),
   };
 }
@@ -533,7 +619,8 @@ function cellsPairOf(
         describePairStep(operations[0], 'Transform', native, twin),
         `cell ${cell}: native presentation ${native.presentation[cell].toFixed(4)}`,
         `write of the twin ${twinCells[cell].toFixed(4)}`,
-        `pair gap ${Math.abs(native.presentation[cell] - twinCells[cell]).toFixed(4)} with the bound ${(toleranceOfCell(cell) + changes[cell]).toFixed(4)}`,
+        `pair gap ${Math.abs(native.presentation[cell] - twinCells[cell]).toFixed(4)}`,
+        `bound ${(toleranceOfCell(cell) + changes[cell]).toFixed(4)}: tolerance ${toleranceOfCell(cell)}, declared change of the frames ${changes[cell].toFixed(4)}`,
       ].join(' | '),
   };
 }
