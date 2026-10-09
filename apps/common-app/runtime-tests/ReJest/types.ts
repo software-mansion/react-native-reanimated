@@ -71,6 +71,15 @@ export type TestSuite = {
   decorator?: DescribeDecorator | null;
 };
 
+export type MountedViewProps = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  opacity: number;
+  backgroundColor: string;
+};
+
 export type ValidPropNames =
   | 'zIndex'
   | 'opacity'
@@ -188,6 +197,10 @@ declare global {
     value: Record<string, unknown>
   ) => void;
   var _obtainProp: (shadowNodeWrapper: unknown, propName: string) => string;
+  var _obtainMountedViewProps: (
+    tag: number,
+    presented: boolean
+  ) => MountedViewProps | null;
   var LayoutAnimationsManager: {
     start: LayoutAnimationStartFunction;
     stop: (tag: number) => void;

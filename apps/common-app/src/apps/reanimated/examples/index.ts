@@ -101,6 +101,11 @@ const DurationZeroExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DurationZero').default as React.FC
   );
+const EnteringMovedBeforeFirstPaint: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/EnteringMovedBeforeFirstPaint')
+      .default as React.FC
+  );
 const ExitingTagReuseStressExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/ExitingTagReuseStressExample')
@@ -148,8 +153,6 @@ const FlatListWithLayoutAnimations: React.FC = () =>
   );
 const FrameCallbackExample: React.FC = () =>
   React.createElement(require('./FrameCallbackExample').default as React.FC);
-const FreezeExample: React.FC = () =>
-  React.createElement(require('./FreezeExample').default as React.FC);
 const GalleryExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/Gallery').default as React.FC
@@ -377,12 +380,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Third party components',
     section: SHOW_CASES,
     screen: ThirdPartyComponentsExample,
-  },
-  ReactFreeze: {
-    icon: '❄️',
-    title: 'React freeze',
-    section: REGRESSIONS,
-    screen: FreezeExample,
   },
   CircularSliderExample: {
     icon: '🔘',
@@ -812,6 +809,11 @@ const ALL_EXAMPLES: Record<string, Example> = {
   FinalFrameAccuracyExample: {
     screen: FinalFrameAccuracyExample,
     title: '[LA] Final frame accuracy',
+  },
+  EnteringMovedBeforeFirstPaint: {
+    title: '[LA] Entering view moved before first paint',
+    screen: EnteringMovedBeforeFirstPaint,
+    disabledPlatforms: [REAPlatform.WEB],
   },
 
   // Shared Element Transitions

@@ -1,0 +1,179 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "feasible",
+    "reason",
+    "summary",
+    "analysis",
+    "review",
+    "reviewVerdict",
+    "library",
+    "platform",
+    "reactNativeVersion",
+    "architecture",
+    "appKind",
+    "expoSdkVersion",
+    "extraDependencies",
+    "staticFeatureFlags",
+    "reproductionSteps",
+    "verification",
+    "limitations",
+    "expectedBehavior",
+    "actualBehavior"
+  ],
+  "properties": {
+    "feasible": {
+      "type": "boolean",
+      "description": "false only as a last resort: the change cannot affect what an iOS simulator shows, affects only a Debug bundle or needs Metro, changes no behavior, or needs custom native code with no reachable public-API path."
+    },
+    "reason": {
+      "type": "string",
+      "description": "One or two sentences. When feasible is false, why. When feasible is true, how the plan was derived."
+    },
+    "summary": {
+      "type": "string",
+      "description": "One paragraph that describes, in your own words, the problem that the pull request solves or the behavior that it changes."
+    },
+    "analysis": {
+      "type": "string",
+      "description": "Where the problem comes from: the code at the base branch that causes it, with file paths and line numbers, and whether the claims of the pull request and of the linked issues agree with that code. Required also when feasible is false."
+    },
+    "review": {
+      "type": "string",
+      "description": "Your opinion on the change: whether it removes the cause or hides the symptom, the cases it does not cover, the other code paths it can break, and the state of its tests, with file paths and line numbers. Required also when feasible is false."
+    },
+    "reviewVerdict": {
+      "type": "string",
+      "enum": ["solves", "solves-partially", "does-not-solve", "cannot-tell"],
+      "description": "The conclusion of the review."
+    },
+    "library": {
+      "type": "string",
+      "enum": ["reanimated", "worklets"],
+      "description": "The package whose behaviour the pull request changes."
+    },
+    "platform": {
+      "type": "string",
+      "enum": ["ios"],
+      "description": "Only ios is supported by the reproduction runner."
+    },
+    "reactNativeVersion": {
+      "type": "string",
+      "description": "Exact react-native version that exists on npm and that the library at the head commit supports, for example 0.87.1."
+    },
+    "architecture": {
+      "type": "string",
+      "enum": ["fabric", "paper"]
+    },
+    "appKind": {
+      "type": "string",
+      "enum": ["rn-cli", "expo"],
+      "description": "rn-cli scaffolds with @react-native-community/cli. expo scaffolds with create-expo-app and runs expo prebuild."
+    },
+    "expoSdkVersion": {
+      "type": ["string", "null"],
+      "description": "Expo SDK major, for example 54, when appKind is expo. null otherwise."
+    },
+    "extraDependencies": {
+      "type": "array",
+      "description": "npm packages, besides react-native, react-native-reanimated and react-native-worklets, that the app needs. Only names from allowed-dependencies.json are accepted, each with an exact version that exists on npm.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "version"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "staticFeatureFlags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reanimated", "worklets"],
+      "description": "Static feature flags that the verification needs with a value that is not the default. The build job writes them to the package.json of the app for both builds. Each name must be a key of src/featureFlags/staticFlags.json of that package at the base commit and at the head commit. Both lists are empty when the verification needs the defaults.",
+      "properties": {
+        "reanimated": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "value"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "worklets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "value"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "reproductionSteps": {
+      "type": "array",
+      "description": "Ordered steps that a tester performs in the built app on a simulator. The same steps run on the build without the change and on the build with it. Each step names what to tap or do and what to look at.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "how", "passSignal", "failSignal"],
+      "description": "How the tester tells the build without the change from the build with it.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["screen", "crash", "other"]
+        },
+        "how": {
+          "type": "string",
+          "description": "What to observe on screen."
+        },
+        "passSignal": {
+          "type": "string",
+          "description": "What the tester sees with the change of the pull request."
+        },
+        "failSignal": {
+          "type": "string",
+          "description": "What the tester sees without the change of the pull request."
+        }
+      }
+    },
+    "limitations": {
+      "type": ["string", "null"],
+      "description": "What the simulator run cannot show about the change, when the plan covers only a part of it. null when the plan covers the whole change."
+    },
+    "expectedBehavior": {
+      "type": "string",
+      "description": "The behavior with the change of the pull request."
+    },
+    "actualBehavior": {
+      "type": "string",
+      "description": "The behavior without the change of the pull request."
+    }
+  }
+}
