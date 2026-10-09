@@ -22,6 +22,7 @@ import {
   useTestRef,
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
+import { blockUIThread } from './nativeLayoutLoad';
 import type {
   Leaf,
   Leaves,
@@ -30,7 +31,6 @@ import type {
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
-  blockUIThread,
   Box,
   BOX_REF,
   builderCalls,

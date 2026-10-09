@@ -33,6 +33,7 @@ import {
   countedOf,
   declaredFrameChangeAt,
   declaredValueAt,
+  FIRST_FRAMES_MS,
   FRAME_BOX_REF,
   FRAME_MS,
   frameDrivenOf,
@@ -46,6 +47,7 @@ import {
   sampleClockOffset,
   summarize,
   takeTrace,
+  waitForCallbacks,
 } from './nativeLayoutTestKit';
 
 type BoxName = 'native' | 'frame';
@@ -370,7 +372,7 @@ function animationOf(
       callback: (finished: boolean) => {
         'worklet';
         callbackTime.value = global._getAnimationTimestamp();
-        scheduleOnRN(recordCallback, name, finished);
+        scheduleOnRN(recordCallback, name, finished, callbackTime.value);
       },
     };
   };
@@ -511,9 +513,6 @@ type Row = {
   retakes: number;
   takenAtMs: number;
 };
-
-// The presentation layer has a new animation only after the first display frame of its commit.
-const FIRST_FRAMES_MS = 3 * FRAME_MS;
 
 // The frame driver writes the values of the twin in each of its frames. Samples with such a frame between them
 // are not of one instant, so they are taken again, 3 times at most. A row that is torn after that has no value of
@@ -899,13 +898,6 @@ const isNotAfterFrameOfTwin = ({ nativeCallback, twinCallback }: Completion) =>
   nativeCallback - twinCallback < FRAME_MS / 2;
 const sortedCallbacks = () => [...callbacks].sort().join();
 const sortedBuilderCalls = () => [...namedBuilderCalls].sort().join();
-
-async function waitForCallbacks(count: number, timeoutMs = 3000) {
-  const deadline = performance.now() + timeoutMs;
-  while (callbacks.length < count && performance.now() < deadline) {
-    await wait(25);
-  }
-}
 
 /** The level of each target and the playback keys of a box at rest. */
 async function readAtRest(tag: number, form: Form = 'scalars') {
@@ -1537,7 +1529,12 @@ describe('native layout sequences and a new layout of their view', () => {
         },
         callback: (finished: boolean) => {
           'worklet';
-          scheduleOnRN(recordCallback, name, finished);
+          scheduleOnRN(
+            recordCallback,
+            name,
+            finished,
+            global._getAnimationTimestamp()
+          );
         },
       };
     };
