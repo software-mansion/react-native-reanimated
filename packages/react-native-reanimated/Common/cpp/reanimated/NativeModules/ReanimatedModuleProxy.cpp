@@ -363,8 +363,8 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         uiRuntime,
         "_obtainMountedViewProps",
         [obtainMountedViewProps = platformDepMethodsHolder.obtainMountedViewProps](
-            jsi::Runtime &rt, const jsi::Value &tag) -> jsi::Value {
-          const auto props = obtainMountedViewProps(static_cast<Tag>(tag.asNumber()));
+            jsi::Runtime &rt, const jsi::Value &tag, const jsi::Value &presented) -> jsi::Value {
+          const auto props = obtainMountedViewProps(static_cast<Tag>(tag.asNumber()), presented.asBool());
           if (!props) {
             return jsi::Value::null();
           }
