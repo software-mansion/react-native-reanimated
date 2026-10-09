@@ -46,6 +46,9 @@ export default class AnimatedComponent<
   _rawComponentRef: Component | HTMLElement | null = null;
   _componentDOMRef: HTMLElement | null = null;
   _willUnmount: boolean = false;
+  // Set when the component is pointed at a new host; consumed by
+  // `componentDidUpdate` to re-register what is keyed by the view tag.
+  _hostReplaced: boolean = false;
   _forwardedRefCleanup?: () => void;
 
   constructor(ChildComponent: AnyComponent, props: P) {
@@ -111,9 +114,12 @@ export default class AnimatedComponent<
     this._forwardedRefCleanup = assignRef(forwardedRef, ref);
     if (ref !== this._rawComponentRef) {
       this._rawComponentRef = ref;
-      this._componentRef = this._resolveComponentRef(ref);
-      // if ref is changed, reset viewInfo
-      this._viewInfo = undefined;
+
+      const resolved = this._resolveComponentRef(ref);
+
+      if (resolved !== this._componentRef) {
+        this._updateComponentRef(resolved);
+      }
     }
     this._onSetLocalRef();
   };
@@ -121,9 +127,7 @@ export default class AnimatedComponent<
   _refreshComponentRef() {
     // A component exposing `getAnimatableRef` may point at a different host
     // instance than when its ref was set (its own child may have been replaced),
-    // while React never calls `_setComponentRef` again. Only the ref is
-    // refreshed; styles, inline props and CSS stay bound to the view they were
-    // attached to, as they are not migrated between hosts.
+    // while React never calls `_setComponentRef` again.
     const rawRef = this._rawComponentRef as AnimatedComponentRef | null;
 
     if (!rawRef?.getAnimatableRef) {
@@ -133,8 +137,51 @@ export default class AnimatedComponent<
     const resolved = this._resolveComponentRef(rawRef);
 
     if (resolved !== this._componentRef) {
-      this._componentRef = resolved;
+      this._updateComponentRef(resolved);
     }
+  }
+
+  _updateComponentRef(componentRef: AnimatedComponentRef | HTMLElement | null) {
+    const previousViewInfo = this._viewInfo;
+
+    // Bindings made for the previous host would keep targeting it, so release
+    // them first; the next update re-creates them for the new host.
+    if (previousViewInfo !== undefined) {
+      this._detachHostBindings(previousViewInfo);
+      this._hostReplaced = true;
+
+      // Let the native registries drop the previous host once it has left
+      // the shadow tree, as `componentWillUnmount` does.
+      const wrapper = previousViewInfo.shadowNodeWrapper;
+
+      if (wrapper) {
+        markNodeAsRemovable(wrapper);
+      }
+    }
+
+    this._componentRef = componentRef;
+    this._viewInfo = undefined;
+
+    if (previousViewInfo !== undefined && this._CSSManager) {
+      this._CSSManager.unmountCleanup();
+      this._CSSManager = this._createCSSManager();
+      this._CSSManager.update(this._cssStyle, this.props);
+    }
+  }
+
+  _detachHostBindings(_previousViewInfo: ViewInfo) {
+    // Called with the previous host's view info right before the component is
+    // pointed at a new host. Subclasses release what they bound to that view.
+  }
+
+  _createCSSManager() {
+    return new CSSManager(
+      this._getViewInfo(),
+      // `react-native-svg`'s web classes don't set `static displayName`
+      // (only the native side does), so fall back to the class `name` which
+      // matches the React `displayName` pattern used elsewhere.
+      this.ChildComponent.displayName ?? this.ChildComponent.name
+    );
   }
 
   _resolveComponentRef = (ref: Component | HTMLElement | null) => {
@@ -161,13 +208,7 @@ export default class AnimatedComponent<
       unmarkNodeAsRemovable(viewTag);
     }
 
-    this._CSSManager ??= new CSSManager(
-      this._getViewInfo(),
-      // `react-native-svg`'s web classes don't set `static displayName`
-      // (only the native side does), so fall back to the class `name` which
-      // matches the React `displayName` pattern used elsewhere.
-      this.ChildComponent.displayName ?? this.ChildComponent.name
-    );
+    this._CSSManager ??= this._createCSSManager();
     this._CSSManager?.update(this._cssStyle, this.props);
 
     this._willUnmount = false;
