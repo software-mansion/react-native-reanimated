@@ -17,7 +17,8 @@
  * `native layout reference`: the replaced track before the `TrackStarted` time of a track that replaced it.
  * A position value is the center of the box. The pair of a `Transform` target is the 16 cells of its
  * matrix: the cells that the native box shows, and the cells of the operation values of the write of the
- * twin that the model of the twin shows, in the product order of a native track that plays.
+ * twin that the model of the twin shows, in the product order of a native track that plays. Each pair that
+ * is over its bound is a `LIVE` row with its sample times, its two values, its gap, and its bound.
  *
  * The hand-over window of a track that the frame driver took is from the start call of the frame driver for
  * its key on the native box to one display frame after the end report of the track. Each request step in
@@ -26,7 +27,9 @@
  * and the values that a read of the track can show at the step. The statement of such a row: the native
  * box shows a value of its track by the rule of statement A, or the pair is inside its bound. A row that
  * shows the model value plus the offset of the track is on neither and fails. The row prints the two
- * results apart.
+ * results apart. A row from that start call to the end report of the track has the mark `defect 12H`:
+ * Objective 12H measured that the layer can show the model plus the offset of the track there. The mark is
+ * a print, and the statement is the same for each row.
  *
  * The end callback of the native box comes from n + 1 display frames before the callback of a twin of n
  * phases to two display frames after it, on the UI runtime and on the React Native runtime: the sum of the
@@ -53,8 +56,15 @@ import {
   render,
   test,
 } from '../../../ReJest/RuntimeTestsApi';
-import type { Played, ReferenceCase } from './nativeLayoutReferencePlay';
+import type {
+  HandOver,
+  Played,
+  ReferenceCase,
+} from './nativeLayoutReferencePlay';
 import {
+  defectMarkOf,
+  handOversOf,
+  isReplaced,
   MATRIX_TOLERANCE,
   play,
   REFERENCE_CASES,
@@ -117,11 +127,13 @@ describe('native layout live clock', () => {
       );
 
       const handOvers = handOversOf(played);
-      for (const [name, distance] of pairDistancesOf(
-        referenceCase,
-        played,
-        handOvers
+      const pairRows = pairRowsOf(referenceCase, played, handOvers);
+      for (const { describe } of pairRows.filter(
+        ({ overBound }) => overBound > 0
       )) {
+        console.log(`LIVE | ${caseName} | ${describe()}`);
+      }
+      for (const [name, distance] of largestOverBoundOf(pairRows)) {
         expectIn(
           `largest distance of the pair over its bound, ${name}`,
           distance,
@@ -221,40 +233,6 @@ describe('native layout live clock', () => {
 const startsWithNoDuration = ({ phases: [first] }: Timeline) =>
   first.durationMs === 0;
 
-/** A track that the frame driver took, with its hand-over window. */
-type HandOver = {
-  track: ScalarTrack;
-  /** The start call of the frame driver for the key on the native box. */
-  startCallMs: number;
-  window: Band;
-};
-
-function handOversOf(played: Played): HandOver[] {
-  const clock = middleOf(played.clockOffset);
-  return played.tracks.filter(isScalarTrack).flatMap((track): HandOver[] => {
-    if (track.finished !== false || isReplaced(played, track)) {
-      return [];
-    }
-    const [startCallMs] = played.frameChecks.flatMap(({ record }) =>
-      record.box === 'native' &&
-      isSameLeaf(record, track) &&
-      record.start !== undefined &&
-      record.start.timeMs + clock >= track.played.from
-        ? [record.start.timeMs + clock]
-        : []
-    );
-    return startCallMs === undefined
-      ? []
-      : [
-          {
-            track,
-            startCallMs,
-            window: { from: startCallMs, to: track.played.to + FRAME_MS },
-          },
-        ];
-  });
-}
-
 const isIn = ({ from, to }: Band, timeMs: number) =>
   timeMs >= from && timeMs <= to;
 
@@ -278,10 +256,8 @@ function pairBoundOf(track: ScalarTrack, played: Played, timeMs: number) {
 }
 
 /** One row for each request step in the hand-over window of a track. */
-function handOverRowsOf(
-  { track, startCallMs, window }: HandOver,
-  played: Played
-) {
+function handOverRowsOf(handOver: HandOver, played: Played) {
+  const { track, startCallMs, window } = handOver;
   const { key, generation, origin, tolerance, target } = track;
   const shown = shownTrackOf(track, played.tracks);
   const originMs = middleOf(origin);
@@ -314,6 +290,7 @@ function handOverRowsOf(
           `pair gap ${gap.toFixed(4)} with the bound ${bound.toFixed(4)}`,
           `values of the track ${band.from.toFixed(4)}..${band.to.toFixed(4)} with the tolerance ${tolerance}, distance ${distance.toFixed(4)}`,
           `${isOnTimeline ? 'on its track' : 'NOT on its track'}, ${isInPair ? 'in the pair bound' : 'NOT in the pair bound'}`,
+          ...defectMarkOf([handOver], track, timeMs),
         ].join(' | '),
         isOnTrackOrInPair: isOnTimeline || isInPair,
       },
@@ -322,25 +299,33 @@ function handOverRowsOf(
 }
 
 /**
- * For each scalar key and for the `Transform` target: the largest distance of
- * the value that the native box shows from the value of the twin in one row,
- * minus the bound of the pair at the time of the row. The rows of a hand-over
- * window are not in it: `handOverRowsOf` has them.
+ * The pair of one scalar key, or of the `Transform` target, at one request
+ * step.
  */
-function pairDistancesOf(
+type PairRow = {
+  name: string;
+  /** The distance of the two boxes minus the bound of the pair at the step. */
+  overBound: number;
+  describe: () => string;
+};
+
+/**
+ * The pair of each scalar key and of the `Transform` target in each row. The
+ * rows of a hand-over window are not in it: `handOverRowsOf` has them.
+ */
+function pairRowsOf(
   referenceCase: ReferenceCase,
   played: Played,
   handOvers: HandOver[]
 ) {
-  const distances = new Map<string, number>();
   const twinWrites = new Map<number, TwinWrite[]>();
-  for (const { row } of played.rows) {
-    for (const target of targetsOf(referenceCase)) {
+  return played.rows.flatMap(({ row }) =>
+    targetsOf(referenceCase).flatMap((target): PairRow[] => {
       const native = row.native[target];
       const twin = row.frame[target];
       const timeMs = native.monotonicTimeMs;
       const tracks = checkedTracksOf(played.tracks, target, timeMs);
-      const scalars = tracks
+      const pairs = tracks
         .filter(isScalarTrack)
         .filter(
           (track) =>
@@ -348,38 +333,57 @@ function pairDistancesOf(
               (handOver) =>
                 handOver.track === track && isIn(handOver.window, timeMs)
             )
-        );
-      const ofRow = new Map(
-        scalars.map((track) => [
-          track.key,
-          pairGapOf(native, twin) - pairBoundOf(track, played, timeMs),
-        ])
-      );
+        )
+        .map((track) => scalarPairOf(track, native, twin, played));
       if (tracks.some((track) => !isScalarTrack(track))) {
         const [{ generation }] = tracks;
         if (!twinWrites.has(generation)) {
           twinWrites.set(generation, twinWritesOf(played, tracks));
         }
-        ofRow.set(
-          target,
-          cellsDistanceOf(
-            tracks,
-            native,
-            twin,
-            twinWrites.get(generation)!,
-            played
-          )
+        pairs.push(
+          cellsPairOf(tracks, native, twin, twinWrites.get(generation)!, played)
         );
       }
-      for (const [name, distance] of ofRow) {
-        distances.set(
-          name,
-          Math.max(distances.get(name) ?? -Infinity, distance)
-        );
-      }
-    }
+      return pairs;
+    })
+  );
+}
+
+function largestOverBoundOf(pairRows: PairRow[]) {
+  const largest = new Map<string, number>();
+  for (const { name, overBound } of pairRows) {
+    largest.set(name, Math.max(largest.get(name) ?? -Infinity, overBound));
   }
-  return distances;
+  return largest;
+}
+
+const describePairStep = (
+  { generation, origin }: PlayedTrack,
+  name: string,
+  native: TargetSample,
+  twin: TargetSample
+) =>
+  `pair row of ${name} of the command ${generation} over its bound | native sample ${(native.monotonicTimeMs - middleOf(origin)).toFixed(2)} ms and twin sample ${(twin.monotonicTimeMs - middleOf(origin)).toFixed(2)} ms after the origin`;
+
+function scalarPairOf(
+  track: ScalarTrack,
+  native: TargetSample,
+  twin: TargetSample,
+  played: Played
+): PairRow {
+  const gap = pairGapOf(native, twin);
+  const bound = pairBoundOf(track, played, native.monotonicTimeMs);
+  return {
+    name: track.key,
+    overBound: gap - bound,
+    describe: () =>
+      [
+        describePairStep(track, track.key, native, twin),
+        `native presentation ${native.presentation[0].toFixed(4)}`,
+        `twin model ${twin.model[0].toFixed(4)}`,
+        `pair gap ${gap.toFixed(4)} with the bound ${bound.toFixed(4)}`,
+      ].join(' | '),
+  };
 }
 
 const startedPhasesOf = ({ timeline }: PlayedTrack, timeMs: number) =>
@@ -429,17 +433,17 @@ const toleranceOfCell = (cell: number) =>
   cellToleranceOf(cell, MATRIX_TOLERANCE);
 
 /**
- * The largest distance of a cell that the native box shows from the cell of the
- * write of the twin that the model of the twin shows, minus the bound of the
- * cell.
+ * The pair of the `Transform` target: the cell that the native box shows
+ * farthest over its bound from the cell of the write of the twin that the model
+ * of the twin shows.
  */
-function cellsDistanceOf(
+function cellsPairOf(
   operations: PlayedTrack[],
   native: TargetSample,
   twin: TargetSample,
   twinWrites: TwinWrite[],
   played: Played
-) {
+): PairRow {
   const distanceFromModel = ({ cells }: TwinWrite) =>
     Math.max(
       ...cells.map(
@@ -466,14 +470,26 @@ function cellsDistanceOf(
       ...operations.map((track) => startedPhasesOf(track, fromOriginMs))
     )
   );
-  return Math.max(
-    ...cellsOf(shown.values, 'playing').map(
-      (cell, index) =>
-        Math.abs(native.presentation[index] - cell) -
-        toleranceOfCell(index) -
-        changes[index]
-    )
+  const twinCells = cellsOf(shown.values, 'playing');
+  const overBounds = twinCells.map(
+    (cell, index) =>
+      Math.abs(native.presentation[index] - cell) -
+      toleranceOfCell(index) -
+      changes[index]
   );
+  const overBound = Math.max(...overBounds);
+  const cell = overBounds.indexOf(overBound);
+  return {
+    name: 'Transform',
+    overBound,
+    describe: () =>
+      [
+        describePairStep(operations[0], 'Transform', native, twin),
+        `cell ${cell}: native presentation ${native.presentation[cell].toFixed(4)}`,
+        `write of the twin ${twinCells[cell].toFixed(4)}`,
+        `pair gap ${Math.abs(native.presentation[cell] - twinCells[cell]).toFixed(4)} with the bound ${(toleranceOfCell(cell) + changes[cell]).toFixed(4)}`,
+      ].join(' | '),
+  };
 }
 
 /**
@@ -497,6 +513,3 @@ function endReportsOf({ tracks }: Played) {
   }
   return reports;
 }
-
-const isReplaced = ({ tracks }: Played, track: PlayedTrack) =>
-  tracks.some(({ replaced }) => replaced === track);
