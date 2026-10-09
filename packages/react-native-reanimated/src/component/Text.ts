@@ -75,11 +75,10 @@ const AnimatedTextWithRef = forwardRef<
 AnimatedTextWithRef.displayName = 'AnimatedText';
 
 // is-tree-shakable-suppress
-export const AnimatedText =
-  AnimatedTextWithRef as unknown as AnimatedComponentType<
-    Readonly<Omit<TextProps, 'children'>>,
-    ComponentRef<typeof Text>,
-    { children?: AnimatedTextChild | AnimatedTextChild[] }
-  >;
+export const AnimatedText = AnimatedTextWithRef as AnimatedComponentType<
+  Readonly<Omit<TextProps, 'children'>>,
+  ComponentRef<typeof Text>,
+  { children?: AnimatedTextChild | AnimatedTextChild[] }
+>;
 
 export type AnimatedText = typeof AnimatedText & AnimatedTextComplement;
