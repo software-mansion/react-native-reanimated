@@ -169,6 +169,9 @@ void NativeProxy::registerNatives() {
 }
 
 void NativeProxy::requestRender(std::function<void(double)> onRender) {
+  if (!javaPart_) {
+    return;
+  }
   static const auto method = getJniMethod<void(AnimationFrameCallback::javaobject)>("requestRender");
   method(javaPart_.get(), AnimationFrameCallback::newObjectCxxArgs(std::move(onRender)).get());
 }
@@ -191,6 +194,10 @@ void NativeProxy::maybeFlushUIUpdatesQueue() {
 
 std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vector<int> &tags) {
   if (tags.empty()) {
+    return {};
+  }
+
+  if (!javaPart_) {
     return {};
   }
 
@@ -227,6 +234,9 @@ std::optional<MountedViewProps> NativeProxy::obtainMountedViewProps(Tag tag, boo
 void NativeProxy::synchronouslyUpdateUIProps(
     const std::vector<int> &intBuffer,
     const std::vector<double> &doubleBuffer) {
+  if (!javaPart_) {
+    return;
+  }
   static const auto method = getJniMethod<void(jni::alias_ref<jni::JArrayInt>, jni::alias_ref<jni::JArrayDouble>)>(
       "synchronouslyUpdateUIProps");
   auto jArrayInt = jni::JArrayInt::newArray(intBuffer.size());
@@ -446,8 +456,8 @@ void NativeProxy::invalidateCpp() {
   // cleanup all animated sensors here, since the next line resets
   // the pointer and it will be too late after it
   reanimatedModuleProxy_->cleanupSensors();
-  reanimatedModuleProxy_.reset();
   javaPart_ = nullptr;
+  reanimatedModuleProxy_.reset();
 }
 
 } // namespace reanimated
