@@ -6,7 +6,7 @@ import {
   makeShareable,
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
-import { serializableMappingCache } from './memory/serializableMappingCache';
+import { serializableMappingCache as mappingCache } from './memory/serializableMappingCache';
 import type { SerializableRef } from './memory/types';
 
 /** @deprecated Use {@link SerializableRef} instead. */
@@ -28,8 +28,17 @@ export const makeShareableCloneRecursive: MakeShareableClone =
 /** @deprecated Use {@link isSerializableRef} instead. */
 export const isShareableRef = isSerializableRef;
 
-/** @deprecated Use {@link serializableMappingCache} instead. */
-export const shareableMappingCache = serializableMappingCache;
+/**
+ * @deprecated Use `setSerializableReplacement` and `hasSerializableReplacement`
+ *   instead.
+ */
+export const serializableMappingCache = mappingCache;
+
+/**
+ * @deprecated Use `setSerializableReplacement` and `hasSerializableReplacement`
+ *   instead.
+ */
+export const shareableMappingCache = mappingCache;
 
 /** @deprecated NOOP, don't use. */
 export function callMicrotasks(): void {

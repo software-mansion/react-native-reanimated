@@ -9,4 +9,7 @@ export const serializableMappingCache = {
   get(_key: object): object | symbol | SerializableRef {
     return null!;
   },
+  delete(_key: object): boolean {
+    return false;
+  },
 };
