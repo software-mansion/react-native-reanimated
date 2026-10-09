@@ -273,6 +273,8 @@ export default class AnimatedComponent
     _prevState: Readonly<unknown>,
     snapshot: DOMRect | null
   ) {
+    this._refreshComponentRef();
+
     this._configureLayoutAnimation(
       LayoutAnimationType.LAYOUT,
       this.props.layout,

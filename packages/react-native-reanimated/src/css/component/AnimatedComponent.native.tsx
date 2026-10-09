@@ -43,6 +43,7 @@ export default class AnimatedComponent<
   _viewInfo?: ViewInfo;
   _cssStyle: CSSStyle = {}; // RN style object with Reanimated CSS properties
   _componentRef: AnimatedComponentRef | HTMLElement | null = null;
+  _rawComponentRef: Component | HTMLElement | null = null;
   _componentDOMRef: HTMLElement | null = null;
   _willUnmount: boolean = false;
   _forwardedRefCleanup?: () => void;
@@ -108,13 +109,33 @@ export default class AnimatedComponent<
     }
 
     this._forwardedRefCleanup = assignRef(forwardedRef, ref);
-    if (ref !== this._componentRef) {
+    if (ref !== this._rawComponentRef) {
+      this._rawComponentRef = ref;
       this._componentRef = this._resolveComponentRef(ref);
       // if ref is changed, reset viewInfo
       this._viewInfo = undefined;
     }
     this._onSetLocalRef();
   };
+
+  _refreshComponentRef() {
+    // A component exposing `getAnimatableRef` may point at a different host
+    // instance than when its ref was set (its own child may have been replaced),
+    // while React never calls `_setComponentRef` again. Only the ref is
+    // refreshed; styles, inline props and CSS stay bound to the view they were
+    // attached to, as they are not migrated between hosts.
+    const rawRef = this._rawComponentRef as AnimatedComponentRef | null;
+
+    if (!rawRef?.getAnimatableRef) {
+      return;
+    }
+
+    const resolved = this._resolveComponentRef(rawRef);
+
+    if (resolved !== this._componentRef) {
+      this._componentRef = resolved;
+    }
+  }
 
   _resolveComponentRef = (ref: Component | HTMLElement | null) => {
     const componentRef = ref as AnimatedComponentRef;

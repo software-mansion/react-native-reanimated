@@ -131,6 +131,12 @@ export interface IAnimatedComponentInternalBase {
   _viewInfo?: ViewInfo;
 
   /**
+   * Re-resolves `getAnimatableRef()` of the wrapped component so event
+   * registration follows the host instance it currently points at.
+   */
+  _refreshComponentRef: () => void;
+
+  /**
    * Resolves the tag of the host view backing this component. Used for Layout
    * Animations, Animated Styles and event registration.
    */
