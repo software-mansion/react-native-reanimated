@@ -36,6 +36,8 @@ std::string_view toString(const TraceEventType event) {
       return "LayoutStartRefused";
     case TraceEventType::LayoutLeafCaptured:
       return "LayoutLeafCaptured";
+    case TraceEventType::LayoutMountReported:
+      return "LayoutMountReported";
   }
 }
 

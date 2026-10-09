@@ -54,14 +54,21 @@ void NativeAnimationHost::start(AnimationRequest request, std::weak_ptr<NativeAn
   });
 }
 
-void NativeAnimationHost::startAfterMount(const std::vector<MountedStart> &starts) {
-  ReanimatedSystraceSection section("NativeAnimationHost::startAfterMount");
+void NativeAnimationHost::runAfterMount(const std::vector<MountedOperation> &operations) {
+  ReanimatedSystraceSection section("NativeAnimationHost::runAfterMount");
   Deliveries deliveries;
-  for (const auto &[request, client] : starts) {
-    RECORD_TRACE(.event = TraceEventType::Received, .handle = request.handle);
-    admit(request, client, deliveries);
+  for (const auto &operation : operations) {
+    if (const auto *start = std::get_if<MountedStart>(&operation)) {
+      RECORD_TRACE(.event = TraceEventType::Received, .handle = start->request.handle);
+      admit(start->request, start->client, deliveries);
+      continue;
+    }
+    const auto commandIt = commands_.find(std::get<MountedStop>(operation).handle);
+    if (commandIt != commands_.end()) {
+      stopCommand(commandIt, TrackStopMode::SettleToModel, AnimationOutcome::Cancelled, deliveries);
+    }
   }
-  post(mountedStartReports_, [deliveries = std::move(deliveries)] {
+  post(mountReports_, [deliveries = std::move(deliveries)] {
     for (const auto &delivery : deliveries) {
       delivery();
     }
@@ -128,7 +135,7 @@ void NativeAnimationHost::enqueue(Operation operation) {
 void NativeAnimationHost::post(std::deque<Operation> &queue, Operation operation) {
   {
     const std::lock_guard lock(queueMutex_);
-    const bool hasPendingDrain = !queue_.empty() || !mountedStartReports_.empty();
+    const bool hasPendingDrain = !queue_.empty() || !mountReports_.empty();
     queue.push_back(std::move(operation));
     if (hasPendingDrain) {
       return;
@@ -146,7 +153,7 @@ void NativeAnimationHost::drain() {
     Operation operation;
     {
       const std::lock_guard lock(queueMutex_);
-      auto &queue = mountedStartReports_.empty() ? queue_ : mountedStartReports_;
+      auto &queue = mountReports_.empty() ? queue_ : mountReports_;
       if (queue.empty()) {
         break;
       }
@@ -250,8 +257,13 @@ void NativeAnimationHost::admit(
 
 void NativeAnimationHost::runCancel(const AnimationHandle &handle, const TrackStopMode mode) {
   const auto commandIt = commands_.find(handle);
-  if (commandIt != commands_.end()) {
-    stopCommand(commandIt, mode, AnimationOutcome::Cancelled);
+  if (commandIt == commands_.end()) {
+    return;
+  }
+  Deliveries deliveries;
+  stopCommand(commandIt, mode, AnimationOutcome::Cancelled, deliveries);
+  for (const auto &delivery : deliveries) {
+    delivery();
   }
 }
 
@@ -264,7 +276,11 @@ void NativeAnimationHost::runCloseSurface(const SurfaceId surfaceId) {
     }
   }
   for (const auto &handle : handles) {
-    stopCommand(commands_.find(handle), TrackStopMode::SettleToModel, AnimationOutcome::SurfaceDestroyed);
+    Deliveries deliveries;
+    stopCommand(commands_.find(handle), TrackStopMode::SettleToModel, AnimationOutcome::SurfaceDestroyed, deliveries);
+    for (const auto &delivery : deliveries) {
+      delivery();
+    }
   }
 }
 
@@ -368,12 +384,12 @@ void NativeAnimationHost::releaseReplacedTracks(const std::vector<TrackKey> &rep
 void NativeAnimationHost::stopCommand(
     const CommandMap::iterator commandIt,
     const TrackStopMode mode,
-    const AnimationOutcome outcome) {
+    const AnimationOutcome outcome,
+    Deliveries &deliveries) {
   const auto handle = commandIt->first;
   auto command = std::move(commandIt->second);
   commands_.erase(commandIt);
 
-  Deliveries deliveries;
   for (auto &track : command.tracks) {
     const TrackKey key{handle, track.target};
     platform_->stop(key, mode);
@@ -381,9 +397,6 @@ void NativeAnimationHost::stopCommand(
   }
   if (!command.hasResult) {
     endCommand(handle, command, {outcome}, deliveries);
-  }
-  for (const auto &delivery : deliveries) {
-    delivery();
   }
 }
 

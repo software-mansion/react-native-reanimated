@@ -122,8 +122,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   const std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost_;
   /// Null when layout animations have no native route, and before the start of the surface.
   std::shared_ptr<NativeLayoutGroups> nativeLayoutGroups_;
-  /// The native starts of the last pull. The mount report of that transaction takes them.
-  mutable std::vector<native_animation::MountedStart> pendingNativeStarts_;
+  /// The native starts and stops of the last pull, in the order in which the pull decided them. The mount
+  /// report of that transaction takes them.
+  mutable std::vector<native_animation::MountedOperation> pendingMountOperations_;
   /// The build ends that the pull gives to the UI runtime before it returns.
   mutable NativeLayoutBuildEnds pendingNativeBuildEnds_;
 #ifndef NDEBUG
@@ -175,6 +176,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   /// has a native opacity track. That track shows the view until it ends; a group with no opacity track
   /// continues on the hidden view.
   void hideNativeOpacityAnimation(Tag tag) const;
+  /// The mount report of the pull stops the commands, after the mount of the state that the pull gives.
+  void stopAfterMount(const std::vector<native_animation::AnimationHandle> &commands) const;
   void flushNativeBuildEnds() const;
   /// Gives the callbacks and the releases of `buildEnds` to the UI runtime. A view whose exiting animation
   /// got its result leaves in the next pull. An end with a handover gets no result when the frame driver takes

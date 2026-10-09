@@ -36,6 +36,8 @@ enum class TraceEventType : uint8_t {
   LayoutStartRefused,
   /// A layout animation build got the value of the key of a live track at the time of its batch.
   LayoutLeafCaptured,
+  /// The mount report of the transaction ran its last host operation. Each event of the report is before it.
+  LayoutMountReported,
 };
 
 struct TraceEvent {

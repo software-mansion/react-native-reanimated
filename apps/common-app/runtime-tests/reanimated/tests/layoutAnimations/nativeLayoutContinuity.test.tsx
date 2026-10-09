@@ -40,6 +40,7 @@ import {
   callbacks,
   callbackTimes,
   centerOf,
+  END_LEFT,
   END_OPACITY,
   FRAME_BOX_REF,
   FRAME_MS,
@@ -52,10 +53,14 @@ import {
   START_OPACITY,
   takeTraceUntilSurfaceClosed,
   hasNativeLayoutStarts,
+  LAYOUT_DURATION,
   layoutOf,
+  LONG_MOVE,
   mountScene,
   pairLayoutsOf,
+  renderBox,
   sample,
+  Scene,
   SECOND_BOX_REF,
   secondSurfaceSceneOf,
   setSecondSurfaceBox,
@@ -483,6 +488,65 @@ describe('native layout continuity', () => {
     await wait(PAIR_DURATION / 2);
     expect([...callbacks].sort().join()).toBe(
       'frame:false,frame:false,frame:true,native:false,native:false,native:true'
+    );
+    await render(null);
+  });
+
+  // The order of a stop that a pull decides, from the trace only. `FrameUpdateMounted` is in the first events
+  // of a mount report and `LayoutMountReported` is its last event, so a stop between them ran in the call that
+  // reports the mount of that pull. The client report comes later. A removal has no first event of its report:
+  // its case proves that the stop is not after the report, and not that it is in the report. These cases do
+  // not prove the pixels, the number of Core Animation commits, or a Release build: a screen recording with a
+  // blocked main thread proves the pixels. A hide by a shared transition has no such case.
+  async function stopOrderAfter(commit: Parameters<typeof render>[0]) {
+    const tag = await renderBox({ layout: LONG_MOVE });
+    await render(<Scene left={END_LEFT} layout={LONG_MOVE} />);
+    await wait(LAYOUT_DURATION / 4);
+    const [{ surfaceId, generation }] = (await takeTraceOf(tag)).filter(
+      ({ event }) => event === 'TrackStarted'
+    );
+    await render(commit);
+    await wait(LAYOUT_DURATION / 8);
+    const isOfCommand = (event: TraceEvent) =>
+      event.tag === tag &&
+      event.generation === generation &&
+      ['FrameUpdateMounted', 'TrackEnded', 'Ended', 'ClientEnded'].includes(
+        event.event
+      );
+    return (await takeTrace())
+      .filter(
+        (event) =>
+          event.surfaceId === surfaceId &&
+          (isOfCommand(event) || event.event === 'LayoutMountReported')
+      )
+      .map(({ event, target, finished, outcome, transactionNumber }) =>
+        [event, target, finished, outcome, transactionNumber]
+          .filter((part) => part !== undefined)
+          .join(':')
+      );
+  }
+
+  test('the mount report of the first frame-driven update of a hand-over stops the native track', async () => {
+    const frameDriven = layoutOf({
+      originX: { duration: LAYOUT_DURATION, hasCallback: true },
+    });
+    const order = await stopOrderAfter(
+      <Scene left={END_LEFT / 2} layout={frameDriven} />
+    );
+    const transaction = order[0]?.split(':')[2];
+    expect(order.join(' > ')).toBe(
+      `FrameUpdateMounted:PositionX:${transaction} > TrackEnded:PositionX:false > Ended:Cancelled > LayoutMountReported:${transaction} > ClientEnded:Cancelled`
+    );
+    await render(null);
+  });
+
+  test('the mount report of the removal of a view stops its native track', async () => {
+    const order = await stopOrderAfter(
+      <Scene left={END_LEFT} layout={LONG_MOVE} isMounted={false} />
+    );
+    const transaction = order[2]?.split(':')[1];
+    expect(order.join(' > ')).toBe(
+      `TrackEnded:PositionX:false > Ended:Cancelled > LayoutMountReported:${transaction} > ClientEnded:Cancelled`
     );
     await render(null);
   });

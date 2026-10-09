@@ -49,6 +49,57 @@ std::string_view toString(const LayoutAnimationType type) {
       return "Progress";
   }
 }
+
+/// The Debug trace of one mount report: the mounted first frame updates and starts when the report begins,
+/// and `LayoutMountReported` when it ends. A report with no such event and no host operation records nothing.
+class MountReportTrace final {
+ public:
+  MountReportTrace(
+      native_animation::TraceRecorder &trace,
+      const SurfaceId surfaceId,
+      const MountingTransaction::Number transactionNumber,
+      const std::vector<native_animation::TrackKey> &firstFrameUpdates,
+      const std::vector<native_animation::MountedOperation> &operations)
+      : trace_(trace),
+        surfaceId_(surfaceId),
+        transactionNumber_(transactionNumber),
+        hasEvents_(!firstFrameUpdates.empty() || !operations.empty()) {
+    for (const auto &track : firstFrameUpdates) {
+      trace_.record(
+          {.event = native_animation::TraceEventType::FrameUpdateMounted,
+           .handle = track.handle,
+           .target = track.target,
+           .objective = 7,
+           .transactionNumber = transactionNumber_});
+    }
+    for (const auto &operation : operations) {
+      if (const auto *start = std::get_if<native_animation::MountedStart>(&operation)) {
+        trace_.record(
+            {.event = native_animation::TraceEventType::LayoutStartMounted,
+             .handle = start->request.handle,
+             .objective = 7,
+             .transactionNumber = transactionNumber_});
+      }
+    }
+  }
+  ~MountReportTrace() {
+    if (hasEvents_) {
+      trace_.record(
+          {.event = native_animation::TraceEventType::LayoutMountReported,
+           .handle = {.surfaceId = surfaceId_},
+           .objective = 12,
+           .transactionNumber = transactionNumber_});
+    }
+  }
+  MountReportTrace(const MountReportTrace &) = delete;
+  MountReportTrace &operator=(const MountReportTrace &) = delete;
+
+ private:
+  native_animation::TraceRecorder &trace_;
+  const SurfaceId surfaceId_;
+  const MountingTransaction::Number transactionNumber_;
+  const bool hasEvents_;
+};
 #endif
 
 struct AncestorOrigin {
@@ -195,7 +246,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   const LayoutAnimationsPull pull;
   react_native_assert(surfaceId == surfaceId_ && "pull routed to the wrong surface's proxy");
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  react_native_assert(pendingNativeStarts_.empty() && "a pull came before the mount report of the last pull");
+  react_native_assert(pendingMountOperations_.empty() && "a pull came before the mount report of the last pull");
 #ifndef NDEBUG
   pulledTransactionNumber_ = transactionNumber;
 #endif
@@ -1182,7 +1233,7 @@ bool LayoutAnimationsProxy::startNativePlayback(ManagedLayoutAnimationStart &sta
   if (const auto oldGroupEnd = nativeLayoutGroups_->start(request, start.type, start.config)) {
     pendingNativeBuildEnds_.push_back(*oldGroupEnd);
   }
-  pendingNativeStarts_.push_back({std::move(request), nativeLayoutGroups_});
+  pendingMountOperations_.emplace_back(native_animation::MountedStart{std::move(request), nativeLayoutGroups_});
   return true;
 }
 
@@ -1253,8 +1304,9 @@ void LayoutAnimationsProxy::cancelNativeLayoutAnimation(const Tag tag) const {
   if (!nativeLayoutGroups_) {
     return;
   }
-  if (const auto groupEnd = nativeLayoutGroups_->cancel(tag)) {
-    pendingNativeBuildEnds_.push_back(*groupEnd);
+  if (const auto cancelled = nativeLayoutGroups_->cancel(tag)) {
+    stopAfterMount(cancelled->commandsToStop);
+    pendingNativeBuildEnds_.push_back(cancelled->end);
   }
 }
 
@@ -1268,9 +1320,20 @@ void LayoutAnimationsProxy::hideNativeOpacityAnimation(const Tag tag) const {
   if (!std::ranges::any_of(nativeLayoutGroups_->members(tag), isOpacityTrack)) {
     return;
   }
-  if (const auto groupEnd = nativeLayoutGroups_->cancelForFrameDriver(tag);
-      groupEnd && !transferToFrameDriver(*groupEnd)) {
-    pendingNativeBuildEnds_.push_back(*groupEnd);
+  const auto cancelled = nativeLayoutGroups_->cancelForFrameDriver(tag);
+  if (!cancelled) {
+    return;
+  }
+  stopAfterMount(cancelled->commandsToStop);
+  if (!transferToFrameDriver(cancelled->end)) {
+    pendingNativeBuildEnds_.push_back(cancelled->end);
+  }
+}
+
+void LayoutAnimationsProxy::stopAfterMount(const std::vector<native_animation::AnimationHandle> &commands) const {
+  react_native_assert(LayoutAnimationsPull::isRunningOnThisThread() && "only a pull has a mount report");
+  for (const auto &command : commands) {
+    pendingMountOperations_.emplace_back(native_animation::MountedStop{command});
   }
 }
 
@@ -1344,33 +1407,20 @@ void LayoutAnimationsProxy::completeNativeExits(const NativeLayoutBuildEnds &bui
 
 void LayoutAnimationsProxy::surfaceDidMount() {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  auto nativeStarts = std::exchange(pendingNativeStarts_, {});
+  const auto mountOperations = std::exchange(pendingMountOperations_, {});
 #ifndef NDEBUG
-  for (const auto &track : std::exchange(pulledFirstFrameUpdates_, {})) {
-    nativeAnimationHost_->trace().record(
-        {.event = native_animation::TraceEventType::FrameUpdateMounted,
-         .handle = track.handle,
-         .target = track.target,
-         .objective = 7,
-         .transactionNumber = pulledTransactionNumber_});
-  }
-  const auto transactionNumber = pulledTransactionNumber_;
+  const MountReportTrace reportTrace(
+      nativeAnimationHost_->trace(),
+      surfaceId_,
+      pulledTransactionNumber_,
+      std::exchange(pulledFirstFrameUpdates_, {}),
+      mountOperations);
 #endif
   lock.unlock();
 
-  if (nativeStarts.empty()) {
-    return;
+  if (!mountOperations.empty()) {
+    nativeAnimationHost_->runAfterMount(mountOperations);
   }
-#ifndef NDEBUG
-  for (const auto &nativeStart : nativeStarts) {
-    nativeAnimationHost_->trace().record(
-        {.event = native_animation::TraceEventType::LayoutStartMounted,
-         .handle = nativeStart.request.handle,
-         .objective = 7,
-         .transactionNumber = transactionNumber});
-  }
-#endif
-  nativeAnimationHost_->startAfterMount(nativeStarts);
 }
 
 #ifndef NDEBUG
@@ -1397,7 +1447,7 @@ void LayoutAnimationsProxy::shadowTreeWillCommit(const bool isSurfaceRemoval) {
 void LayoutAnimationsProxy::clearSurfaceState() const {
   LayoutAnimationsProxyCommon::clearSurfaceState();
   completedExits_.clear();
-  pendingNativeStarts_.clear();
+  pendingMountOperations_.clear();
   if (nativeLayoutGroups_) {
     scheduleOnUI(
         uiScheduler_,

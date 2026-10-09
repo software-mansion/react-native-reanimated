@@ -39,6 +39,15 @@ struct NativeLayoutBuildEnd {
 
 using NativeLayoutBuildEnds = std::vector<NativeLayoutBuildEnd>;
 
+/// The end of a removed group and its commands to stop.
+struct NativeLayoutGroupCancel {
+  NativeLayoutBuildEnd end;
+  /// The commands with a track of the group. The caller stops them: the owner of a pull in the mount report
+  /// of that pull (`NativeAnimationHost::runAfterMount`), so the mounted state and the stop reach the screen
+  /// together.
+  std::vector<native_animation::AnimationHandle> commandsToStop;
+};
+
 /// The layout client of the native animation host for one surface. Each view has at most one logical group:
 /// the physical tracks that its current layout animation needs, and the build whose callback they complete.
 /// The generation of a command is the id of its build. A build stays on the UI runtime until the host has no
@@ -70,12 +79,12 @@ class NativeLayoutGroups final : public native_animation::NativeAnimationClient 
   /// has no group, or when its group plays an entering or exiting animation: a frame change of the view does
   /// not start such an animation again.
   std::shared_ptr<worklets::Serializable> retargetConfig(facebook::react::Tag tag);
-  /// Stops each track of the group of the view. Gives the end of the group. Its callback result is `false`
-  /// when the callback has no result yet.
-  std::optional<NativeLayoutBuildEnd> cancel(facebook::react::Tag tag);
+  /// Removes the group of the view. Gives its end, whose callback result is `false` when the callback has no
+  /// result yet. In a pull only.
+  std::optional<NativeLayoutGroupCancel> cancel(facebook::react::Tag tag);
   /// `cancel` for an owner that can play the animation of the group on the frame driver: the end has
   /// `frameDriverHandover` when the callback has no result yet.
-  std::optional<NativeLayoutBuildEnd> cancelForFrameDriver(facebook::react::Tag tag);
+  std::optional<NativeLayoutGroupCancel> cancelForFrameDriver(facebook::react::Tag tag);
   /// Ends all groups and releases all builds. Each callback with no result gets `false`. The host stops the
   /// tracks when the surface closes.
   NativeLayoutBuildEnds clear();
@@ -112,11 +121,13 @@ class NativeLayoutGroups final : public native_animation::NativeAnimationClient 
   /// Gives the callback of the group `true` when the host plays none of its tracks any more. The group stays
   /// while the host holds one of its tracks. The lock is held.
   std::optional<NativeLayoutBuildEnd> finishIfPlayed(GroupMap::iterator groupIt);
-  /// Stops the tracks of the group and removes it. Gives its end. The lock is held.
-  NativeLayoutBuildEnd fail(GroupMap::iterator groupIt);
-  /// `fail` whose end has `frameDriverHandover` when the callback of the group has no result yet. The lock is
-  /// held.
-  NativeLayoutBuildEnd failForFrameDriver(GroupMap::iterator groupIt);
+  /// Removes the group. Gives its end and the commands to stop. The lock is held.
+  NativeLayoutGroupCancel remove(GroupMap::iterator groupIt);
+  /// `remove` whose end has `frameDriverHandover` when the callback of the group has no result yet. The lock
+  /// is held.
+  NativeLayoutGroupCancel removeForFrameDriver(GroupMap::iterator groupIt);
+  /// Ends a group after a host report: no mount follows, so it posts the stop of each command to the host.
+  NativeLayoutBuildEnd stop(NativeLayoutGroupCancel removed) const;
   /// The host has one track less of the build. True when it has none left. The lock is held.
   bool releaseTrack(uint64_t buildId);
 #ifndef NDEBUG
