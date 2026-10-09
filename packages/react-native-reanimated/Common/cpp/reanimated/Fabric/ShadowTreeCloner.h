@@ -1,5 +1,6 @@
 #pragma once
 
+#include <folly/dynamic.h>
 #include <react/renderer/core/PropsParserContext.h>
 #include <react/renderer/core/ShadowNodeFamily.h>
 #include <react/renderer/uimanager/UIManager.h>
@@ -13,7 +14,7 @@ using namespace react;
 
 namespace reanimated {
 
-using PropsMap = std::unordered_map<ShadowNodeFamily::Shared, std::vector<RawProps>>;
+using PropsMap = std::unordered_map<ShadowNodeFamily::Shared, std::vector<folly::dynamic>>;
 using ChildrenMap = std::unordered_map<ShadowNodeFamily::Shared, std::unordered_set<int>>;
 
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRootNode, const PropsMap &propsMap);
