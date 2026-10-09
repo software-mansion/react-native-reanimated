@@ -46,6 +46,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'core',
     importTest: () => {
       require('./tests/core/useAnimatedRef.test');
+      require('./tests/core/useAnimatedRefRetention.test');
       // TODO: update expected values
       // require('./tests/core/cancelAnimation.test');
       // TODO: speed up useSharedValue tests, they have unnecessarily long delays
