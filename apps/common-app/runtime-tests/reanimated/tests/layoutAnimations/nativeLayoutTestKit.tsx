@@ -2401,13 +2401,19 @@ export const frameDistance = (first: Frame, second: Frame) =>
 
 type SizeBoxHost = 'View' | 'Text' | 'Image' | 'ScrollView';
 
-type SizeBoxHostProps = React.PropsWithChildren<{
-  ref: ReturnType<typeof useTestRef>;
-  layout: BoxProps['layout'];
-  collapsable: boolean;
-  source?: ImageSourcePropType;
-  style: StyleProp<ViewStyle>;
-}>;
+type SizeBoxAnimations = Pick<
+  Parameters<typeof Animated.View>[0],
+  'layout' | 'entering' | 'exiting'
+>;
+
+type SizeBoxHostProps = React.PropsWithChildren<
+  SizeBoxAnimations & {
+    ref: ReturnType<typeof useTestRef>;
+    collapsable: boolean;
+    source?: ImageSourcePropType;
+    style: StyleProp<ViewStyle>;
+  }
+>;
 
 const SIZE_BOX_HOSTS: Record<
   SizeBoxHost,
@@ -2420,16 +2426,17 @@ const SIZE_BOX_HOSTS: Record<
   ScrollView: Animated.ScrollView,
 };
 
-export type SizeBoxProps = React.PropsWithChildren<{
-  left?: number;
-  top?: number;
-  width?: number;
-  height?: number;
-  host?: SizeBoxHost;
-  style?: StyleProp<ViewStyle>;
-  layout?: BoxProps['layout'];
-  refName?: string;
-}>;
+export type SizeBoxProps = React.PropsWithChildren<
+  SizeBoxAnimations & {
+    left?: number;
+    top?: number;
+    width?: number;
+    height?: number;
+    host?: SizeBoxHost;
+    style?: StyleProp<ViewStyle>;
+    refName?: string;
+  }
+>;
 
 export function SizeBox({
   left = 0,
@@ -2439,6 +2446,8 @@ export function SizeBox({
   host = 'View',
   style,
   layout,
+  entering,
+  exiting,
   refName = BOX_REF,
   children,
 }: SizeBoxProps) {
@@ -2448,6 +2457,8 @@ export function SizeBox({
     <Host
       ref={ref}
       layout={layout}
+      entering={entering}
+      exiting={exiting}
       collapsable={false}
       source={host === 'Image' ? SIZE_BOX_IMAGE : undefined}
       style={[
