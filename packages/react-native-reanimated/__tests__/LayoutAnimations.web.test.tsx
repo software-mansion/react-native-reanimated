@@ -5,7 +5,8 @@ import {
   type RenderOptions,
   type RenderResult,
 } from '@testing-library/react';
-import { type ReactElement, StrictMode, useState } from 'react';
+import { Component, type ReactElement, StrictMode, useState } from 'react';
+import type { ViewProps } from 'react-native';
 import { Button, View } from 'react-native';
 
 import type { EntryOrExitLayoutType } from '../src';
@@ -42,6 +43,15 @@ function Example({
     </View>
   );
 }
+
+// The ref of the animated component is the class instance, not a DOM element.
+class ClassHost extends Component<ViewProps> {
+  render() {
+    return <View {...this.props} />;
+  }
+}
+
+const AnimatedClassHost = Animated.createAnimatedComponent(ClassHost);
 
 describe('Layout Animations', () => {
   describe.each([
@@ -116,6 +126,18 @@ describe('Layout Animations', () => {
           jest.advanceTimersByTime(1000);
           expectBoxesVisible(screen);
         });
+      });
+    });
+
+    describe('on mount without a DOM element', () => {
+      test('view with entering does not stay hidden', () => {
+        const screen = render(
+          <AnimatedClassHost entering={FadeIn} testID="class-host" />
+        );
+
+        expect(screen.getByTestId('class-host').style.visibility).not.toBe(
+          'hidden'
+        );
       });
     });
 
