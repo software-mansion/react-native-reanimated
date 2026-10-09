@@ -118,6 +118,17 @@ UnregisterSensorFunction makeUnregisterSensorFunction(ReanimatedSensorContainer 
   return unregisterSensorFunction;
 }
 
+ObserveSensorAvailabilityFunction makeObserveSensorAvailabilityFunction(
+    ReanimatedSensorContainer *reanimatedSensorContainer)
+{
+  auto observeSensorAvailabilityFunction = [=](SensorAvailabilityListener listener) {
+    [reanimatedSensorContainer observeSensorAvailability:^(ReanimatedSensorType sensorType, bool isAvailable) {
+      listener(static_cast<int>(sensorType), isAvailable);
+    }];
+  };
+  return observeSensorAvailabilityFunction;
+}
+
 KeyboardEventSubscribeFunction makeSubscribeForKeyboardEventsFunction(REAKeyboardEventObserver *keyboardObserver)
 {
   auto subscribeForKeyboardEventsFunction =
@@ -295,6 +306,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   auto unregisterSensorFunction = makeUnregisterSensorFunction(reanimatedSensorContainer);
 
+  auto observeSensorAvailabilityFunction = makeObserveSensorAvailabilityFunction(reanimatedSensorContainer);
+
   auto setGestureStateFunction = makeSetGestureStateFunction(moduleRegistry);
 
   REAKeyboardEventObserver *keyboardObserver = [[REAKeyboardEventObserver alloc] init];
@@ -323,6 +336,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       isSensorAvailableFunction,
       registerSensorFunction,
       unregisterSensorFunction,
+      observeSensorAvailabilityFunction,
       setGestureStateFunction,
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,

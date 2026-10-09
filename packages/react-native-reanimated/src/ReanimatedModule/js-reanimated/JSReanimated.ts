@@ -26,6 +26,21 @@ import { assertWorkletsVersion } from '../../platform-specific/workletsVersion';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
 
+// The Generic Sensor API has no hinge sensor.
+const WEB_SENSOR_NAMES = {
+  [SensorType.ACCELEROMETER]: 'Accelerometer',
+  [SensorType.GRAVITY]: 'GravitySensor',
+  [SensorType.GYROSCOPE]: 'Gyroscope',
+  [SensorType.MAGNETIC_FIELD]: 'Magnetometer',
+  [SensorType.ROTATION]: 'AbsoluteOrientationSensor',
+} as const;
+
+type WebSensorType = keyof typeof WEB_SENSOR_NAMES;
+
+function isWebSensorType(sensorType: SensorType): sensorType is WebSensorType {
+  return sensorType in WEB_SENSOR_NAMES;
+}
+
 export function createJSReanimatedModule(): IReanimatedModule {
   return new JSReanimated();
 }
@@ -73,7 +88,38 @@ class JSReanimated implements IReanimatedModule {
 
   isSensorAvailable(sensorType: SensorType): boolean {
     // the window object is unavailable when building the server portion of a site that uses SSG
-    return IS_WINDOW_AVAILABLE && this.getSensorName(sensorType) in window;
+    if (!IS_WINDOW_AVAILABLE || !isWebSensorType(sensorType)) {
+      return false;
+    }
+
+    if (WEB_SENSOR_NAMES[sensorType] in window) {
+      return true;
+    }
+
+    this.warnAboutUnavailableSensor();
+    return false;
+  }
+
+  warnAboutUnavailableSensor() {
+    if (this.platform === undefined) {
+      this.detectPlatform();
+    }
+
+    // https://w3c.github.io/sensors/#secure-context
+    logger.warnOnce(
+      'Sensor is not available.' +
+        (IS_WEB && location.protocol !== 'https:'
+          ? ' Make sure you use secure origin with `npx expo start --web --https`.'
+          : '') +
+        (this.platform === Platform.WEB_IOS
+          ? ' For iOS web, you will also have to also grant permission in the browser: https://dev.to/li/how-to-requestpermission-for-devicemotion-and-deviceorientation-events-in-ios-13-46g2.'
+          : ''),
+      0
+    );
+  }
+
+  setSensorAvailabilityHandler(): void {
+    // noop
   }
 
   registerSensor(
@@ -82,27 +128,7 @@ class JSReanimated implements IReanimatedModule {
     _iosReferenceFrame: number,
     eventHandler: SerializableRef<(data: SensorValue) => void>
   ): number {
-    if (!IS_WINDOW_AVAILABLE) {
-      // the window object is unavailable when building the server portion of a site that uses SSG
-      // this check is here to ensure that the server build won't fail
-      return -1;
-    }
-
-    if (this.platform === undefined) {
-      this.detectPlatform();
-    }
-
-    if (!this.isSensorAvailable(sensorType)) {
-      // https://w3c.github.io/sensors/#secure-context
-      logger.warn(
-        'Sensor is not available.' +
-          (IS_WEB && location.protocol !== 'https:'
-            ? ' Make sure you use secure origin with `npx expo start --web --https`.'
-            : '') +
-          (this.platform === Platform.WEB_IOS
-            ? ' For iOS web, you will also have to also grant permission in the browser: https://dev.to/li/how-to-requestpermission-for-devicemotion-and-deviceorientation-events-in-ios-13-46g2.'
-            : '')
-      );
+    if (!isWebSensorType(sensorType) || !this.isSensorAvailable(sensorType)) {
       return -1;
     }
 
@@ -123,7 +149,7 @@ class JSReanimated implements IReanimatedModule {
 
   getSensorCallback = (
     sensor: WebSensor,
-    sensorType: SensorType,
+    sensorType: WebSensorType,
     eventHandler: SerializableRef<(data: SensorValue) => void>
   ) => {
     switch (sensorType) {
@@ -206,7 +232,7 @@ class JSReanimated implements IReanimatedModule {
     // noop
   }
 
-  initializeSensor(sensorType: SensorType, interval: number): WebSensor {
+  initializeSensor(sensorType: WebSensorType, interval: number): WebSensor {
     const config =
       interval <= 0
         ? { referenceFrame: 'device' }
@@ -222,21 +248,6 @@ class JSReanimated implements IReanimatedModule {
         return new window.Magnetometer(config);
       case SensorType.ROTATION:
         return new window.AbsoluteOrientationSensor(config);
-    }
-  }
-
-  getSensorName(sensorType: SensorType): string {
-    switch (sensorType) {
-      case SensorType.ACCELEROMETER:
-        return 'Accelerometer';
-      case SensorType.GRAVITY:
-        return 'GravitySensor';
-      case SensorType.GYROSCOPE:
-        return 'Gyroscope';
-      case SensorType.MAGNETIC_FIELD:
-        return 'Magnetometer';
-      case SensorType.ROTATION:
-        return 'AbsoluteOrientationSensor';
     }
   }
 

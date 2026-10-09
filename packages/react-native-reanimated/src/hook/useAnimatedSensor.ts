@@ -24,6 +24,7 @@ import {
   initializeSensor,
   isSensorAvailable,
   registerSensor,
+  subscribeToSensorAvailability,
   unregisterSensor,
 } from '../core';
 
@@ -100,14 +101,14 @@ function adjustDataToInterfaceOrientation(
       return adjustVectorToInterfaceOrientation(data as Value3D);
     case SensorType.ROTATION:
       return adjustRotationToInterfaceOrientation(data as ValueRotation);
+    case SensorType.HINGE:
+      return data;
   }
 }
 
 const NOOP = () => {
   // NOOP
 };
-
-const subscribeToSensorAvailability = () => NOOP;
 
 const getServerSensorAvailability = () => false;
 
@@ -124,7 +125,7 @@ const getServerSensorAvailability = () => false;
  */
 export function useAnimatedSensor<T extends SensorType>(
   sensorType: T,
-  userConfig?: Partial<SensorConfig>
+  userConfig?: T extends SensorType.HINGE ? never : Partial<SensorConfig>
 ): AnimatedSensor<SensorValueMap[T]> {
   const {
     interval = 'auto',
@@ -153,9 +154,35 @@ export function useAnimatedSensor<T extends SensorType>(
     [sensorType, config]
   );
 
-  const registrationRef = useRef({ sensorType, config, unregister: NOOP });
+  const registrationRef = useRef({
+    sensorType,
+    config,
+    unregister: NOOP,
+    isUnregisteredByUser: false,
+  });
 
   useEffect(() => {
+    const previousRegistration = registrationRef.current;
+    if (
+      previousRegistration.isUnregisteredByUser &&
+      previousRegistration.sensorType === sensorType &&
+      previousRegistration.config === config
+    ) {
+      return;
+    }
+
+    const registration = {
+      sensorType,
+      config,
+      unregister: NOOP,
+      isUnregisteredByUser: false,
+    };
+    registrationRef.current = registration;
+
+    if (!isAvailable) {
+      return;
+    }
+
     const id = registerSensor(sensorType, config, (data) => {
       'worklet';
       sensor.value = adjustToInterfaceOrientation
@@ -167,16 +194,15 @@ export function useAnimatedSensor<T extends SensorType>(
     });
 
     let isRegistered = id !== -1;
-    const unregister = () => {
+    registration.unregister = () => {
       if (isRegistered) {
         isRegistered = false;
         unregisterSensor(id);
       }
     };
-    registrationRef.current = { sensorType, config, unregister };
 
-    return unregister;
-  }, [sensorType, config, sensor, adjustToInterfaceOrientation]);
+    return registration.unregister;
+  }, [sensorType, config, sensor, adjustToInterfaceOrientation, isAvailable]);
 
   return useMemo(
     () => ({
@@ -189,6 +215,7 @@ export function useAnimatedSensor<T extends SensorType>(
           registration.sensorType === sensorType &&
           registration.config === config
         ) {
+          registration.isUnregisteredByUser = true;
           registration.unregister();
         }
       },

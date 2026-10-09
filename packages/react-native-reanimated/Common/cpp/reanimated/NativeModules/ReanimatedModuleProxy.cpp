@@ -165,7 +165,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       jsInvoker_(jsCallInvoker),
       eventHandlerRegistry_(std::make_unique<UIEventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
-      animatedSensorModule_(platformDepMethodsHolder),
+      animatedSensorModule_(platformDepMethodsHolder, jsCallInvoker),
       layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>()),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef __APPLE__
@@ -248,6 +248,12 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       });
     };
   }
+
+  platformDepMethodsHolder.observeSensorAvailability([weakThis = weak_from_this()](int sensorType, bool isAvailable) {
+    if (const auto strongThis = weakThis.lock()) {
+      strongThis->animatedSensorModule_.notifyAvailabilityChanged(sensorType, isAvailable);
+    }
+  });
 
   auto updateProps = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &operations) {
     auto strongThis = weakThis.lock();
@@ -527,6 +533,10 @@ jsi::Value ReanimatedModuleProxy::registerSensor(
 
 void ReanimatedModuleProxy::unregisterSensor(jsi::Runtime &, const jsi::Value &sensorId) {
   animatedSensorModule_.unregisterSensor(sensorId);
+}
+
+void ReanimatedModuleProxy::setSensorAvailabilityHandler(jsi::Runtime &rt, const jsi::Value &handler) {
+  animatedSensorModule_.setAvailabilityHandler(rt, handler);
 }
 
 void ReanimatedModuleProxy::cleanupSensors() {
@@ -1495,6 +1505,18 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
           return;
         }
         strongThis->unregisterSensor(rt, at<0>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "setSensorAvailabilityHandler",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->setSensorAvailabilityHandler(rt, at<0>(args));
       });
 
   addMethod<1>(

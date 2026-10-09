@@ -13,8 +13,19 @@ import Sensor from './Sensor';
 
 export class SensorContainer {
   private nativeSensors: Map<number, Sensor> = new Map();
-  // The sensors of a device do not change while the app runs.
   private availability: Map<SensorType, boolean> = new Map();
+  private availabilityListeners: Set<() => void> = new Set();
+
+  constructor() {
+    ReanimatedModule.setSensorAvailabilityHandler((sensorType, isAvailable) =>
+      this.setSensorAvailability(sensorType, isAvailable)
+    );
+  }
+
+  private setSensorAvailability(sensorType: SensorType, isAvailable: boolean) {
+    this.availability.set(sensorType, isAvailable);
+    this.availabilityListeners.forEach((listener) => listener());
+  }
 
   isSensorAvailable(sensorType: SensorType): boolean {
     let isAvailable = this.availability.get(sensorType);
@@ -23,6 +34,13 @@ export class SensorContainer {
       this.availability.set(sensorType, isAvailable);
     }
     return isAvailable;
+  }
+
+  subscribeToSensorAvailability(listener: () => void): () => void {
+    this.availabilityListeners.add(listener);
+    return () => {
+      this.availabilityListeners.delete(listener);
+    };
   }
 
   getSensorId(sensorType: SensorType, config: SensorConfig) {
@@ -62,11 +80,7 @@ export class SensorContainer {
     }
 
     const sensor = this.nativeSensors.get(sensorId);
-    if (
-      sensor &&
-      sensor.isAvailable() &&
-      (sensor.isRunning() || sensor.register(handler))
-    ) {
+    if (sensor && (sensor.isRunning() || sensor.register(handler))) {
       sensor.listenersNumber++;
       return sensorId;
     }

@@ -3,9 +3,11 @@
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
+#include <ReactCommon/CallInvoker.h>
 #include <jsi/jsi.h>
 
 #include <memory>
+#include <mutex>
 #include <unordered_set>
 
 namespace reanimated {
@@ -19,6 +21,7 @@ enum class SensorType : std::uint8_t {
   GRAVITY = 3,
   MAGNETIC_FIELD = 4,
   ROTATION_VECTOR = 5,
+  HINGE = 6,
 };
 
 class AnimatedSensorModule {
@@ -26,9 +29,14 @@ class AnimatedSensorModule {
   IsSensorAvailableFunction platformIsSensorAvailableFunction_;
   RegisterSensorFunction platformRegisterSensorFunction_;
   UnregisterSensorFunction platformUnregisterSensorFunction_;
+  const std::shared_ptr<react::CallInvoker> jsInvoker_;
+  std::mutex availabilityHandlerMutex_;
+  std::shared_ptr<jsi::Function> availabilityHandler_;
 
  public:
-  explicit AnimatedSensorModule(const PlatformDepMethodsHolder &platformDepMethodsHolder);
+  AnimatedSensorModule(
+      const PlatformDepMethodsHolder &platformDepMethodsHolder,
+      const std::shared_ptr<react::CallInvoker> &jsInvoker);
 
   jsi::Value isSensorAvailable(const jsi::Value &sensorType) const;
   jsi::Value registerSensor(
@@ -40,6 +48,8 @@ class AnimatedSensorModule {
       const jsi::Value &sensorDataContainer);
   void unregisterSensor(const jsi::Value &sensorId);
   void unregisterAllSensors();
+  void setAvailabilityHandler(jsi::Runtime &rnRuntime, const jsi::Value &handler);
+  void notifyAvailabilityChanged(int sensorType, bool isAvailable);
 };
 
 } // namespace reanimated

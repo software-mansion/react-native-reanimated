@@ -162,6 +162,13 @@ export function isSensorAvailable(sensorType: SensorType): boolean {
   return sensorContainer.isSensorAvailable(sensorType);
 }
 
+export function subscribeToSensorAvailability(
+  listener: () => void
+): () => void {
+  const sensorContainer = getSensorContainer();
+  return sensorContainer.subscribeToSensorAvailability(listener);
+}
+
 export function registerSensor<T extends SensorType>(
   sensorType: T,
   config: SensorConfig,

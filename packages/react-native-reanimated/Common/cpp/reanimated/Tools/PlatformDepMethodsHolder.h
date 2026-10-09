@@ -45,6 +45,8 @@ using EndLayoutAnimationFunction = std::function<void(int, bool)>;
 using IsSensorAvailableFunction = std::function<bool(int)>;
 using RegisterSensorFunction = std::function<int(int, int, int, std::function<void(double[], int)>)>;
 using UnregisterSensorFunction = std::function<void(int)>;
+using SensorAvailabilityListener = std::function<void(int sensorType, bool isAvailable)>;
+using ObserveSensorAvailabilityFunction = std::function<void(SensorAvailabilityListener)>;
 using SetGestureStateFunction = std::function<void(int, int)>;
 using KeyboardEventSubscribeFunction = std::function<int(std::function<void(int, int)>, bool, bool)>;
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
@@ -81,6 +83,7 @@ struct PlatformDepMethodsHolder {
   IsSensorAvailableFunction isSensorAvailable;
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;
+  ObserveSensorAvailabilityFunction observeSensorAvailability;
   SetGestureStateFunction setGestureStateFunction;
   KeyboardEventSubscribeFunction subscribeForKeyboardEvents;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEvents;

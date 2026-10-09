@@ -2,13 +2,17 @@ import { act, renderHook } from '@testing-library/react-native';
 import { StrictMode } from 'react';
 
 import type { SensorConfig, SensorValue, Value3D, ValueRotation } from '../src';
-import { IOSReferenceFrame, SensorType, useAnimatedSensor } from '../src';
+import {
+  HingeStatus,
+  IOSReferenceFrame,
+  SensorType,
+  useAnimatedSensor,
+} from '../src';
 import { registerSensor, unregisterSensor } from '../src/core';
 
 let eventHandler: (data: SensorValue) => void;
 let mockNextSensorId = 1;
 const mockUnavailableSensorType = SensorType.GYROSCOPE;
-
 jest.mock('../src/core', () => {
   const originalModule = jest.requireActual('../src/core');
 
@@ -88,9 +92,21 @@ describe('Sensors', () => {
     delete (globalThis as { __sensorContainer?: unknown }).__sensorContainer;
   });
 
+  test('starts an unavailable 3d sensor at zero', () => {
+    const { result } = renderHook(() =>
+      useAnimatedSensor(mockUnavailableSensorType)
+    );
+
+    expect(result.current.sensor.value).toStrictEqual({
+      x: 0,
+      y: 0,
+      z: 0,
+      interfaceOrientation: 0,
+    });
+  });
+
   test.each([
     SensorType.ACCELEROMETER,
-    SensorType.GYROSCOPE,
     SensorType.GRAVITY,
     SensorType.MAGNETIC_FIELD,
   ])(
@@ -127,6 +143,16 @@ describe('Sensors', () => {
       yaw: 0,
       pitch: 0,
       roll: 0,
+      interfaceOrientation: 0,
+    });
+  });
+
+  test('starts the hinge sensor at angle zero with an unknown status', () => {
+    const { result } = renderHook(() => useAnimatedSensor(SensorType.HINGE));
+
+    expect(result.current.sensor.value).toStrictEqual({
+      angle: 0,
+      status: HingeStatus.UNKNOWN,
       interfaceOrientation: 0,
     });
   });
@@ -333,6 +359,7 @@ describe('Sensors', () => {
     const unavailable = renderSensorHook(() =>
       useAnimatedSensor(mockUnavailableSensorType)
     );
+    const hinge = renderSensorHook(() => useAnimatedSensor(SensorType.HINGE));
 
     expect(available.renders.map((result) => result.isAvailable)).toEqual([
       true,
@@ -340,6 +367,7 @@ describe('Sensors', () => {
     expect(unavailable.renders.map((result) => result.isAvailable)).toEqual([
       false,
     ]);
+    expect(hinge.renders.map((result) => result.isAvailable)).toEqual([true]);
   });
 
   test('reports availability in the render that changes the sensor type', () => {
@@ -469,5 +497,20 @@ describe('Sensors', () => {
     stale.unregister();
 
     expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1]]);
+  });
+
+  test('leaves the hinge value as it is in every interface orientation', () => {
+    const { result } = renderHook(() => useAnimatedSensor(SensorType.HINGE));
+
+    for (const interfaceOrientation of [0, 90, 180, 270]) {
+      const data = {
+        angle: Math.PI / 2,
+        status: HingeStatus.PARTIALLY_OPEN,
+        interfaceOrientation,
+      };
+      act(() => eventHandler({ ...data }));
+
+      expect(result.current.sensor.value).toStrictEqual(data);
+    }
   });
 });

@@ -6,10 +6,13 @@
 
 namespace reanimated {
 
-AnimatedSensorModule::AnimatedSensorModule(const PlatformDepMethodsHolder &platformDepMethodsHolder)
+AnimatedSensorModule::AnimatedSensorModule(
+    const PlatformDepMethodsHolder &platformDepMethodsHolder,
+    const std::shared_ptr<react::CallInvoker> &jsInvoker)
     : platformIsSensorAvailableFunction_(platformDepMethodsHolder.isSensorAvailable),
       platformRegisterSensorFunction_(platformDepMethodsHolder.registerSensor),
-      platformUnregisterSensorFunction_(platformDepMethodsHolder.unregisterSensor) {}
+      platformUnregisterSensorFunction_(platformDepMethodsHolder.unregisterSensor),
+      jsInvoker_(jsInvoker) {}
 
 jsi::Value AnimatedSensorModule::isSensorAvailable(const jsi::Value &sensorType) const {
   return jsi::Value(platformIsSensorAvailableFunction_(static_cast<int>(sensorType.asNumber())));
@@ -54,6 +57,9 @@ jsi::Value AnimatedSensorModule::registerSensor(
           value.setProperty(uiRuntime, "yaw", newValues[4]);
           value.setProperty(uiRuntime, "pitch", newValues[5]);
           value.setProperty(uiRuntime, "roll", newValues[6]);
+        } else if (sensorType == SensorType::HINGE) {
+          value.setProperty(uiRuntime, "angle", newValues[0]);
+          value.setProperty(uiRuntime, "status", newValues[1]);
         } else {
           value.setProperty(uiRuntime, "x", newValues[0]);
           value.setProperty(uiRuntime, "y", newValues[1]);
@@ -80,6 +86,24 @@ void AnimatedSensorModule::unregisterAllSensors() {
     platformUnregisterSensorFunction_(sensorId);
   }
   sensorsIds_.clear();
+}
+
+void AnimatedSensorModule::setAvailabilityHandler(jsi::Runtime &rnRuntime, const jsi::Value &handler) {
+  std::lock_guard<std::mutex> lock(availabilityHandlerMutex_);
+  availabilityHandler_ = std::make_shared<jsi::Function>(handler.asObject(rnRuntime).asFunction(rnRuntime));
+}
+
+void AnimatedSensorModule::notifyAvailabilityChanged(int sensorType, bool isAvailable) {
+  std::weak_ptr<jsi::Function> weakHandler;
+  {
+    std::lock_guard<std::mutex> lock(availabilityHandlerMutex_);
+    weakHandler = availabilityHandler_;
+  }
+  jsInvoker_->invokeAsync([weakHandler, sensorType, isAvailable](jsi::Runtime &rnRuntime) {
+    if (const auto handler = weakHandler.lock()) {
+      handler->call(rnRuntime, sensorType, isAvailable);
+    }
+  });
 }
 
 } // namespace reanimated
