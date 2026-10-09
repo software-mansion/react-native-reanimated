@@ -546,8 +546,8 @@ export function declaredBandOf(track: TimedTrack, readTimeMs: number): Band {
 }
 
 /**
- * A value that the route took from a track at a time is a value that a read of
- * the track can show at that time.
+ * A value that the route took from a track is a value that a read of the track
+ * can show at the origin of the build that took it.
  */
 export const expectCapturedStart = ({ track, value, timeMs }: Capture) =>
   expectNativeTimeline([value], timeMs, [track]);
@@ -659,6 +659,8 @@ export const describeLeaf = ({ key, operation }: LeafPlace) =>
 
 export type PlayedTrack = DeclaredKey &
   TimedTrack & {
+    /** The key of the test that the track plays. */
+    declaration: DeclaredKey;
     generation: number;
     timeline: Timeline;
     finished?: boolean;
@@ -708,7 +710,7 @@ export function playedTracksOf(
     const replacedTrack = replaced.find((track) => isSameLeaf(track, declared));
     const captured =
       declared.startsOnScreen && replacedTrack
-        ? lastCaptureOf(events, replacedTrack, startedMs)
+        ? lastCaptureOf(events, replacedTrack, startedMs, clockOffset)
         : undefined;
     const timeline = declaredTimelineOf(
       declared.leaf,
@@ -718,6 +720,7 @@ export function playedTracksOf(
     );
     return {
       ...declared,
+      declaration: declared,
       generation: command.generation,
       origin,
       timeline,
@@ -737,19 +740,29 @@ export function playedTracksOf(
 
 /**
  * A value that the route took from a live track for the build of a commit, with
- * the track alone: the route computes the value from the timeline of that
- * track.
+ * the track alone: the route computes the value from the timeline of that track
+ * at the origin of the build.
  */
-export type Capture = { track: NativeTrack; value: number; timeMs: number };
+export type Capture = {
+  track: ScalarTrack;
+  value: number;
+  /** The origin of the build on the sample clock. */
+  timeMs: number;
+  /** The time of the trace event of the capture. */
+  eventTimeMs: number;
+};
 
 function lastCaptureOf(
   events: TraceEvent[],
   track: PlayedTrack,
-  untilMs: number
+  untilMs: number,
+  clockOffset: Band
 ) {
-  const captures = capturesOf(events, [track]).filter(
-    ({ timeMs }) => timeMs <= untilMs
-  );
+  const captures = capturesOf(events, [track], clockOffset, () => {
+    throw new Error(
+      `The build that took ${describeLeaf(track)} of the command ${track.generation} started no native command.`
+    );
+  }).filter(({ eventTimeMs }) => eventTimeMs <= untilMs);
   if (captures.length === 0) {
     throw new Error(
       `The trace has no captured value of ${describeLeaf(track)} of the command ${track.generation} before its replacement.`
@@ -760,27 +773,41 @@ function lastCaptureOf(
 
 /**
  * The captures of the tracks in the events. The capture of a `Transform` track
- * has no value.
+ * has no value. The time of a capture is the origin of its build: the origin of
+ * the native command that the build started in the transaction of the capture,
+ * or `frameDriverOriginOf` the track when the build went to the frame driver.
  */
-export const capturesOf = (events: TraceEvent[], tracks: PlayedTrack[]) =>
-  events.flatMap(
-    ({ event, target, generation, leafValue, monotonicTimeMs }): Capture[] => {
-      const track = tracks
-        .filter(isScalarTrack)
-        .find(
-          (each) => each.target === target && each.generation === generation
-        );
-      return event === 'LayoutLeafCaptured' && leafValue !== undefined && track
-        ? [
-            {
-              track: { ...track, replaced: undefined },
-              value: leafValue,
-              timeMs: monotonicTimeMs,
-            },
-          ]
-        : [];
+export const capturesOf = (
+  events: TraceEvent[],
+  tracks: PlayedTrack[],
+  clockOffset: Band,
+  frameDriverOriginOf: (track: ScalarTrack) => number
+) =>
+  events.flatMap((captured): Capture[] => {
+    const { event, target, generation, leafValue, tag } = captured;
+    const track = tracks
+      .filter(isScalarTrack)
+      .find((each) => each.target === target && each.generation === generation);
+    if (event !== 'LayoutLeafCaptured' || leafValue === undefined || !track) {
+      return [];
     }
-  );
+    const command = events.find(
+      (started) =>
+        started.event === 'LayoutStartPending' &&
+        started.tag === tag &&
+        started.transactionNumber === captured.transactionNumber
+    );
+    return [
+      {
+        track: { ...track, replaced: undefined },
+        value: leafValue,
+        timeMs: command
+          ? middleOf(nativeOriginOf(events, command, clockOffset))
+          : frameDriverOriginOf(track),
+        eventTimeMs: captured.monotonicTimeMs,
+      },
+    ];
+  });
 
 export type MatrixTolerance = { cells: number; translation: number };
 
@@ -1012,9 +1039,11 @@ export function shownTrackOf(
       ),
     edgesMs: [
       ...track.edgesMs,
-      ...(sizeTrack?.edgesMs ?? []).map(
-        (edgeMs) => middleOf(sizeTrack!.origin) + edgeMs - originMs
-      ),
+      ...(sizeTrack
+        ? sizeTrack.edgesMs.map(
+            (edgeMs) => middleOf(sizeTrack.origin) + edgeMs - originMs
+          )
+        : []),
     ],
     replaced:
       replaced && isScalarTrack(replaced)
