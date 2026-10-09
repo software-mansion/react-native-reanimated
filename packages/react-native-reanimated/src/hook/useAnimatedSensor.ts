@@ -1,9 +1,17 @@
 'use strict';
-import { useEffect, useMemo, useRef } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
 
 import type {
   AnimatedSensor,
   SensorConfig,
+  SensorValue,
+  SensorValueMap,
   Value3D,
   ValueRotation,
 } from '../commonTypes';
@@ -12,7 +20,12 @@ import {
   IOSReferenceFrame,
   SensorType,
 } from '../commonTypes';
-import { initializeSensor, registerSensor, unregisterSensor } from '../core';
+import {
+  initializeSensor,
+  isSensorAvailable,
+  registerSensor,
+  unregisterSensor,
+} from '../core';
 
 // euler angles are in order ZXY, z = yaw, x = pitch, y = roll
 // https://github.com/mrdoob/three.js/blob/dev/src/math/Quaternion.js#L237
@@ -74,6 +87,30 @@ function adjustVectorToInterfaceOrientation(data: Value3D) {
   return data;
 }
 
+function adjustDataToInterfaceOrientation(
+  sensorType: SensorType,
+  data: SensorValue
+): SensorValue {
+  'worklet';
+  switch (sensorType) {
+    case SensorType.ACCELEROMETER:
+    case SensorType.GYROSCOPE:
+    case SensorType.GRAVITY:
+    case SensorType.MAGNETIC_FIELD:
+      return adjustVectorToInterfaceOrientation(data as Value3D);
+    case SensorType.ROTATION:
+      return adjustRotationToInterfaceOrientation(data as ValueRotation);
+  }
+}
+
+const NOOP = () => {
+  // NOOP
+};
+
+const subscribeToSensorAvailability = () => NOOP;
+
+const getServerSensorAvailability = () => false;
+
 /**
  * Lets you create animations based on data from the device's sensors.
  *
@@ -85,92 +122,77 @@ function adjustVectorToInterfaceOrientation(data: Value3D) {
  *   and a function to unregister the sensor
  * @see https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedSensor
  */
-export function useAnimatedSensor(
-  sensorType: SensorType.ROTATION,
+export function useAnimatedSensor<T extends SensorType>(
+  sensorType: T,
   userConfig?: Partial<SensorConfig>
-): AnimatedSensor<ValueRotation>;
-export function useAnimatedSensor(
-  sensorType: Exclude<SensorType, SensorType.ROTATION>,
-  userConfig?: Partial<SensorConfig>
-): AnimatedSensor<Value3D>;
-export function useAnimatedSensor(
-  sensorType: SensorType,
-  userConfig?: Partial<SensorConfig>
-): AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D> {
-  const userConfigRef = useRef(userConfig);
+): AnimatedSensor<SensorValueMap[T]> {
+  const {
+    interval = 'auto',
+    adjustToInterfaceOrientation = true,
+    iosReferenceFrame = IOSReferenceFrame.Auto,
+  } = userConfig ?? {};
 
-  const hasConfigChanged =
-    userConfigRef.current?.adjustToInterfaceOrientation !==
-      userConfig?.adjustToInterfaceOrientation ||
-    userConfigRef.current?.interval !== userConfig?.interval ||
-    userConfigRef.current?.iosReferenceFrame !== userConfig?.iosReferenceFrame;
-
-  if (hasConfigChanged) {
-    userConfigRef.current = { ...userConfig };
-  }
-
-  const config: SensorConfig = useMemo(
-    () => ({
-      interval: 'auto',
-      adjustToInterfaceOrientation: true,
-      iosReferenceFrame: IOSReferenceFrame.Auto,
-      ...userConfigRef.current,
-    }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [userConfigRef.current]
+  const config = useMemo<SensorConfig>(
+    () => ({ interval, adjustToInterfaceOrientation, iosReferenceFrame }),
+    [interval, adjustToInterfaceOrientation, iosReferenceFrame]
   );
 
-  const ref = useRef<AnimatedSensor<Value3D | ValueRotation>>({
-    sensor: initializeSensor(sensorType, config),
-    unregister: () => {
-      // NOOP
-    },
-    isAvailable: false,
-    config,
-  });
+  const getSensorAvailability = useCallback(
+    () => isSensorAvailable(sensorType),
+    [sensorType]
+  );
+
+  const isAvailable = useSyncExternalStore(
+    subscribeToSensorAvailability,
+    getSensorAvailability,
+    getServerSensorAvailability
+  );
+
+  const sensor = useMemo(
+    () => initializeSensor(sensorType, config),
+    [sensorType, config]
+  );
+
+  const registrationRef = useRef({ sensorType, config, unregister: NOOP });
 
   useEffect(() => {
-    ref.current = {
-      sensor: initializeSensor(sensorType, config),
-      unregister: () => {
-        // NOOP
-      },
-      isAvailable: false,
-      config,
-    };
-
-    const sensorData = ref.current.sensor;
-    const adjustToInterfaceOrientation =
-      ref.current.config.adjustToInterfaceOrientation;
-
     const id = registerSensor(sensorType, config, (data) => {
       'worklet';
-      if (adjustToInterfaceOrientation) {
-        if (sensorType === SensorType.ROTATION) {
-          data = adjustRotationToInterfaceOrientation(data as ValueRotation);
-        } else {
-          data = adjustVectorToInterfaceOrientation(data as Value3D);
-        }
-      }
-      sensorData.value = data;
+      sensor.value = adjustToInterfaceOrientation
+        ? (adjustDataToInterfaceOrientation(
+            sensorType,
+            data
+          ) as SensorValueMap[T])
+        : data;
     });
 
-    if (id !== -1) {
-      // if sensor is available
-      ref.current.unregister = () => unregisterSensor(id);
-      ref.current.isAvailable = true;
-    } else {
-      // if sensor is unavailable
-      ref.current.unregister = () => {
-        // NOOP
-      };
-      ref.current.isAvailable = false;
-    }
-
-    return () => {
-      ref.current.unregister();
+    let isRegistered = id !== -1;
+    const unregister = () => {
+      if (isRegistered) {
+        isRegistered = false;
+        unregisterSensor(id);
+      }
     };
-  }, [sensorType, config]);
+    registrationRef.current = { sensorType, config, unregister };
 
-  return ref.current as AnimatedSensor<ValueRotation> | AnimatedSensor<Value3D>;
+    return unregister;
+  }, [sensorType, config, sensor, adjustToInterfaceOrientation]);
+
+  return useMemo(
+    () => ({
+      sensor,
+      isAvailable,
+      config,
+      unregister: () => {
+        const registration = registrationRef.current;
+        if (
+          registration.sensorType === sensorType &&
+          registration.config === config
+        ) {
+          registration.unregister();
+        }
+      },
+    }),
+    [sensorType, sensor, isAvailable, config]
+  );
 }
