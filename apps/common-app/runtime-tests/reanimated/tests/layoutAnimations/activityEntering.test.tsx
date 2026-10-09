@@ -80,9 +80,10 @@ describe('Activity entering animation', () => {
       const tag = getTestComponent(TARGET_REF).getTag();
 
       await render(<Fixture visible={false} strict={strict} />);
-      if (Platform.OS === 'ios') {
-        await expectUICalls(Tracker.ExitingFinished, 1);
-      }
+      await expectUICalls(
+        Tracker.ExitingFinished,
+        Platform.OS === 'ios' ? 1 : 0
+      );
 
       await render(<Fixture visible strict={strict} />);
       await expectUICalls(
