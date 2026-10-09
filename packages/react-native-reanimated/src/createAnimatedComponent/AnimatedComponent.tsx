@@ -424,7 +424,7 @@ export default class AnimatedComponent
       this.ChildComponent.displayName === 'Text' &&
       isSharedValue(this.props.children)
     ) {
-      filteredProps.children = normalizeTextProp(filteredProps.children);
+      filteredProps.children = normalizeTextProp(this.props.children.value);
     }
 
     // TODO: Remove need for this \/\/\/\/.

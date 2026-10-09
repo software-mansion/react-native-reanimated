@@ -4,9 +4,13 @@ import { createElement, forwardRef } from 'react';
 import type { TextProps } from 'react-native';
 import { Text } from 'react-native';
 
+import { logger } from '../common';
 import type { SharedValueDisableContravariance } from '../commonTypes';
-import type { AnimatedComponentRef } from '../createAnimatedComponent';
-import { createAnimatedComponent } from '../createAnimatedComponent';
+import {
+  type AnimatedComponentType,
+  createAnimatedComponent,
+} from '../createAnimatedComponent';
+import { getStaticFeatureFlag } from '../featureFlags';
 import type { AnimatedProps } from '../helperTypes';
 import { isSharedValue } from '../isSharedValue';
 
@@ -45,14 +49,22 @@ const AnimatedTextWithRef = forwardRef<
   AnimatedTextProps
 >(({ children, ...props }, ref) => {
   const content = (Array.isArray(children) ? children : [children]).map(
-    (child, index) =>
-      isSharedValue(child)
-        ? createElement(
-            AnimatedTextBase,
-            { key: `${getSharedValueId(child)}:${index}` },
-            child as ReactNode
-          )
-        : child
+    (child, index) => {
+      if (!isSharedValue(child)) {
+        return child;
+      }
+      if (__DEV__ && getStaticFeatureFlag('USE_ANIMATION_BACKEND')) {
+        logger.warnOnce(
+          'Animated.Text does not update shared value children when the `USE_ANIMATION_BACKEND` static feature flag is enabled.',
+          0
+        );
+      }
+      return createElement(
+        AnimatedTextBase,
+        { key: `${getSharedValueId(child)}:${index}` },
+        child as ReactNode
+      );
+    }
   );
   return createElement(
     AnimatedTextBase,
@@ -63,10 +75,11 @@ const AnimatedTextWithRef = forwardRef<
 AnimatedTextWithRef.displayName = 'AnimatedText';
 
 // is-tree-shakable-suppress
-export const AnimatedText = AnimatedTextWithRef as unknown as (
-  props: AnimatedTextProps & {
-    ref?: AnimatedComponentRef<typeof Text>;
-  }
-) => ReactNode;
+export const AnimatedText =
+  AnimatedTextWithRef as unknown as AnimatedComponentType<
+    Readonly<Omit<TextProps, 'children'>>,
+    ComponentRef<typeof Text>,
+    { children?: AnimatedTextChild | AnimatedTextChild[] }
+  >;
 
 export type AnimatedText = typeof AnimatedText & AnimatedTextComplement;

@@ -3,7 +3,6 @@
 
 #include <cstring>
 #include <memory>
-#include <optional>
 #include <ranges>
 #include <string>
 #include <utility>
@@ -16,25 +15,6 @@ bool isTextComponent(const ShadowNode &shadowNode) {
   return !strcmp(shadowNode.getComponentName(), "Paragraph") || !strcmp(shadowNode.getComponentName(), "Text");
 }
 
-std::optional<std::string> extractChildrenProp(
-    const std::vector<RawProps> &propsVector,
-    std::vector<RawProps> &strippedProps) {
-  std::optional<std::string> text;
-  for (const auto &props : propsVector) {
-    auto propsDynamic = props.toDynamic();
-    if (const auto *childrenProp = propsDynamic.get_ptr("children")) {
-      if (childrenProp->isString() || childrenProp->isNumber()) {
-        text = childrenProp->asString();
-      }
-      propsDynamic.erase("children");
-    }
-    if (!propsDynamic.empty()) {
-      strippedProps.emplace_back(std::move(propsDynamic));
-    }
-  }
-  return text;
-}
-
 std::shared_ptr<const ShadowNode> cloneRawTextWithNewText(const ShadowNode &rawTextNode, const std::string &text) {
   PropsParserContext propsParserContext{rawTextNode.getSurfaceId(), *rawTextNode.getContextContainer()};
   auto newProps = rawTextNode.getComponentDescriptor().cloneProps(
@@ -44,31 +24,33 @@ std::shared_ptr<const ShadowNode> cloneRawTextWithNewText(const ShadowNode &rawT
 
 } // namespace
 
-Props::Shared mergeProps(const ShadowNode &shadowNode, const std::vector<RawProps> &propsVector) {
+Props::Shared mergeProps(
+    const ShadowNode &shadowNode,
+    const std::vector<RawProps> &propsVector,
+    std::vector<std::shared_ptr<const ShadowNode>> &children) {
   ReanimatedSystraceSection s("ShadowTreeCloner::mergeProps");
 
-  if (propsVector.empty()) {
+  auto newPropsDynamic = propsVector.front().toDynamic();
+  for (const auto &props : propsVector | std::views::drop(1)) {
+    newPropsDynamic.update(props.toDynamic());
+  }
+
+  if (isTextComponent(shadowNode)) {
+    if (const auto *childrenProp = newPropsDynamic.get_ptr("children")) {
+      if ((childrenProp->isString() || childrenProp->isNumber()) && !children.empty()) {
+        children[0] = cloneRawTextWithNewText(*children[0], childrenProp->asString());
+      }
+      newPropsDynamic.erase("children");
+    }
+  }
+
+  if (newPropsDynamic.empty()) {
     return ShadowNodeFragment::propsPlaceholder();
   }
 
   PropsParserContext propsParserContext{shadowNode.getSurfaceId(), *shadowNode.getContextContainer()};
-  auto newProps = shadowNode.getProps();
-
-#ifdef ANDROID
-  if (propsVector.size() > 1) {
-    folly::dynamic newPropsDynamic = folly::dynamic::object;
-    for (const auto &props : propsVector) {
-      newPropsDynamic = folly::dynamic::merge(newPropsDynamic, props.operator folly::dynamic());
-    }
-    return shadowNode.getComponentDescriptor().cloneProps(propsParserContext, newProps, RawProps(newPropsDynamic));
-  }
-#endif
-
-  for (const auto &props : propsVector) {
-    newProps = shadowNode.getComponentDescriptor().cloneProps(propsParserContext, newProps, RawProps(props));
-  }
-
-  return newProps;
+  return shadowNode.getComponentDescriptor().cloneProps(
+      propsParserContext, shadowNode.getProps(), RawProps(std::move(newPropsDynamic)));
 }
 
 std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
@@ -87,17 +69,8 @@ std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
 
   Props::Shared newProps = ShadowNodeFragment::propsPlaceholder();
   const auto propsIt = propsMap.find(family);
-  if (propsIt != propsMap.end()) {
-    if (isTextComponent(shadowNode)) {
-      std::vector<RawProps> strippedProps;
-      const auto text = extractChildrenProp(propsIt->second, strippedProps);
-      if (text && !children.empty()) {
-        children[0] = cloneRawTextWithNewText(*children[0], *text);
-      }
-      newProps = mergeProps(shadowNode, strippedProps);
-    } else {
-      newProps = mergeProps(shadowNode, propsIt->second);
-    }
+  if (propsIt != propsMap.end() && !propsIt->second.empty()) {
+    newProps = mergeProps(shadowNode, propsIt->second, children);
   }
 
   return shadowNode.clone(
