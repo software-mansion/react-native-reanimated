@@ -64,6 +64,12 @@ export const _updatePropsJS = (
       createReactDOMStyle !== undefined &&
       component.style !== undefined
     ) {
+      // For Animated.Text we need to update textContent directly
+      if ('children' in rawStyles) {
+        (component as ReanimatedHTMLElement).textContent = rawStyles.children;
+        delete rawStyles.children;
+      }
+
       // React Native Web 0.19+ no longer provides setNativeProps function,
       // so we need to update DOM nodes directly.
       updatePropsDOM(component, rawStyles, isAnimatedProps);

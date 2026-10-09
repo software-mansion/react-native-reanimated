@@ -10,6 +10,7 @@ import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import { getStaticFeatureFlag } from '../featureFlags';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
+import { isSharedValue } from '../isSharedValue';
 import { SharedTransition } from '../layoutReanimation/SharedTransition';
 import { PropsRegistryGarbageCollector } from '../PropsRegistryGarbageCollector';
 import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
@@ -28,7 +29,7 @@ import { InlinePropManager } from './InlinePropManager';
 import jsPropsUpdater from './JSPropsUpdater';
 import { NativeEventsManager } from './NativeEventsManager';
 import { PropsFilter } from './PropsFilter';
-import { filterStyles, flattenArray } from './utils';
+import { filterStyles, flattenArray, normalizeTextProp } from './utils';
 
 let id = 0;
 
@@ -442,6 +443,13 @@ export default class AnimatedComponent
       };
     } else if (!skipEntering) {
       nativeID = `${this.reanimatedID}`;
+    }
+
+    if (
+      this.ChildComponent.displayName === 'Text' &&
+      isSharedValue(this.props.children)
+    ) {
+      filteredProps.children = normalizeTextProp(filteredProps.children);
     }
 
     // TODO: Remove need for this \/\/\/\/.
