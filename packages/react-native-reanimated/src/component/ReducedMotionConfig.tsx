@@ -27,6 +27,8 @@ export function ReducedMotionConfig({ mode }: { mode: ReduceMotion }) {
 
   useEffect(() => {
     const wasEnabled = ReducedMotionManager.jsValue;
+    const wasFollowingSystem = ReducedMotionManager.followsSystem;
+    ReducedMotionManager.followsSystem = mode === ReduceMotion.System;
     switch (mode) {
       case ReduceMotion.System:
         ReducedMotionManager.setEnabled(isReducedMotionEnabledInSystem());
@@ -39,7 +41,10 @@ export function ReducedMotionConfig({ mode }: { mode: ReduceMotion }) {
         break;
     }
     return () => {
-      ReducedMotionManager.setEnabled(wasEnabled);
+      ReducedMotionManager.followsSystem = wasFollowingSystem;
+      ReducedMotionManager.setEnabled(
+        wasFollowingSystem ? isReducedMotionEnabledInSystem() : wasEnabled
+      );
     };
   }, [mode]);
 
