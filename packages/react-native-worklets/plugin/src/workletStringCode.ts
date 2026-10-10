@@ -3,11 +3,13 @@ import { traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
   File as BabelFile,
+  Expression,
   Identifier,
   VariableDeclaration,
 } from '@babel/types';
 import {
   arrayPattern,
+  arrowFunctionExpression,
   assertBlockStatement,
   callExpression,
   functionExpression,
@@ -21,6 +23,7 @@ import {
   isObjectMethod,
   isProgram,
   memberExpression,
+  numericLiteral,
   thisExpression,
   variableDeclaration,
   variableDeclarator,
@@ -139,7 +142,7 @@ export function buildWorkletString(
   const transformed = workletTransformSync(code, {
     filename: state.file.opts.filename,
     extraPlugins: [
-      getClosurePlugin(closureVariables),
+      getClosurePlugin(closureVariables, parsedClasses),
       ...(state.opts.extraPlugins ?? []),
     ],
     extraPresets: state.opts.extraPresets,
@@ -212,31 +215,152 @@ function prependClosure(
   }
 }
 
-function prependRecursiveDeclaration(path: NodePath<WorkletizableFunction>) {
+function readRecursiveName(
+  path: NodePath<WorkletizableFunction>
+): string | undefined {
   if (
     isProgram(path.parent) &&
     !isArrowFunctionExpression(path.node) &&
     !isObjectMethod(path.node) &&
     path.node.id &&
-    path.scope.parent
+    path.scope.parent &&
+    path.scope.parent.bindings[path.node.id.name]?.references > 0
   ) {
-    const hasRecursiveCalls =
-      path.scope.parent.bindings[path.node.id.name]?.references > 0;
-    if (hasRecursiveCalls) {
-      path.node.body.body.unshift(
-        variableDeclaration('const', [
-          variableDeclarator(
-            identifier(path.node.id.name),
-            memberExpression(thisExpression(), identifier('_recur'))
-          ),
-        ])
-      );
-    }
+    return path.node.id.name;
+  }
+  return undefined;
+}
+
+function prependRecursiveDeclaration(path: NodePath<WorkletizableFunction>) {
+  const recursiveName = readRecursiveName(path);
+  if (recursiveName !== undefined && !isExpression(path.node.body)) {
+    path.node.body.body.unshift(
+      variableDeclaration('const', [
+        variableDeclarator(
+          identifier(recursiveName),
+          memberExpression(thisExpression(), identifier('_recur'))
+        ),
+      ])
+    );
   }
 }
 
+/**
+ * Parameter expressions run before the body, in a scope that cannot see the
+ * closure, worklet-class and recursion bindings declared at the top of the
+ * body, so they read those values from where the body takes them.
+ */
+function readBodyBindingsInParameters(
+  path: NodePath<WorkletizableFunction>,
+  closureVariables: Array<Identifier>,
+  parsedClasses: ReadonlySet<string>
+) {
+  if (!isProgram(path.parent)) {
+    return;
+  }
+
+  const readers = new Map<string, () => Expression>();
+  closureVariables.forEach((variable, index) => {
+    const readCapture = () =>
+      memberExpression(
+        memberExpression(thisExpression(), identifier('__closure')),
+        numericLiteral(index),
+        true
+      );
+    const className = variable.name.endsWith(workletClassFactorySuffix)
+      ? variable.name.slice(0, -workletClassFactorySuffix.length)
+      : undefined;
+    if (className !== undefined && parsedClasses.has(className)) {
+      readers.set(className, () => callExpression(readCapture(), []));
+    } else {
+      readers.set(variable.name, readCapture);
+    }
+  });
+  const recursiveName = readRecursiveName(path);
+  if (recursiveName !== undefined) {
+    readers.set(recursiveName, () =>
+      memberExpression(thisExpression(), identifier('_recur'))
+    );
+  }
+
+  const expressionsToWrap = new Map<
+    NodePath<Expression>,
+    Map<string, () => Expression>
+  >();
+  for (const parameter of path.get('params')) {
+    parameter.traverse({
+      ReferencedIdentifier(reference) {
+        if (!reference.isIdentifier()) {
+          return;
+        }
+        const name = reference.node.name;
+        const read = readers.get(name);
+        const binding = reference.scope.getBinding(name);
+        const readsBodyBinding = binding === undefined || binding.path === path;
+        if (read === undefined || !readsBodyBinding) {
+          return;
+        }
+        const thisBindingExpression = findOutermostThisBindingExpression(
+          reference,
+          path
+        );
+        if (thisBindingExpression === undefined) {
+          reference.replaceWith(read());
+          return;
+        }
+        const reads =
+          expressionsToWrap.get(thisBindingExpression) ??
+          new Map<string, () => Expression>();
+        reads.set(name, read);
+        expressionsToWrap.set(thisBindingExpression, reads);
+      },
+    });
+  }
+
+  for (const [expression, reads] of expressionsToWrap) {
+    expression.replaceWith(
+      callExpression(
+        arrowFunctionExpression(
+          [...reads.keys()].map((name) => identifier(name)),
+          expression.node
+        ),
+        [...reads.values()].map((read) => read())
+      )
+    );
+  }
+}
+
+/**
+ * The outermost expression between a parameter reference and the worklet that
+ * holds a function binding its own `this`, through which a read of
+ * `this.__closure` would not reach the worklet's.
+ */
+function findOutermostThisBindingExpression(
+  reference: NodePath,
+  worklet: NodePath<WorkletizableFunction>
+): NodePath<Expression> | undefined {
+  let thisBinder: NodePath | undefined;
+  for (
+    let ancestor = reference.parentPath;
+    ancestor !== null && ancestor !== worklet;
+    ancestor = ancestor.parentPath
+  ) {
+    if (
+      (ancestor.isFunction() && !ancestor.isArrowFunctionExpression()) ||
+      ancestor.isClass()
+    ) {
+      thisBinder = ancestor;
+    }
+  }
+  const expression = thisBinder?.find((ancestor) => ancestor.isExpression());
+  return expression?.isExpression() ? expression : undefined;
+}
+
 /** Prepends necessary closure variables to the worklet function. */
-function getClosurePlugin(closureVariables: Array<Identifier>): PluginItem {
+function getClosurePlugin(
+  closureVariables: Array<Identifier>,
+  parsedClasses: ReadonlySet<string>
+): PluginItem {
   const closureDeclaration = variableDeclaration('const', [
     variableDeclarator(
       arrayPattern(
@@ -250,6 +374,7 @@ function getClosurePlugin(closureVariables: Array<Identifier>): PluginItem {
     visitor: {
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod':
         (path: NodePath<WorkletizableFunction>) => {
+          readBodyBindingsInParameters(path, closureVariables, parsedClasses);
           prependClosure(path, closureVariables, closureDeclaration);
           prependRecursiveDeclaration(path);
         },
