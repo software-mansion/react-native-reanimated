@@ -9,7 +9,7 @@ import type {
 import { ReduceMotion } from '../../commonTypes';
 
 export class BaseAnimationBuilder {
-  durationV?: number;
+  durationV?: number | undefined;
   delayV?: number;
   reduceMotionV: ReduceMotion = ReduceMotion.System;
   randomizeDelay = false;

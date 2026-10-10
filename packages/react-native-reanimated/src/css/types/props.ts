@@ -26,9 +26,16 @@ type PickStyleProps<P> = Pick<
   }[keyof P]
 >;
 
-type CSSConfigProps<TStyle extends object = UnknownRecord> = Partial<
-  CSSAnimationProperties<TStyle> & CSSTransitionProperties<TStyle>
->;
+type CSSConfigProperties<TStyle extends object> =
+  CSSAnimationProperties<TStyle> & CSSTransitionProperties<TStyle>;
+
+// An explicit `undefined` removes the animation or transition, as if the
+// property were absent (see `filterCSSAndStyleProperties`).
+type CSSConfigProps<TStyle extends object = UnknownRecord> = {
+  [K in keyof CSSConfigProperties<TStyle>]?:
+    | CSSConfigProperties<TStyle>[K]
+    | undefined;
+};
 
 export type CSSCallbackProps = Partial<
   CSSAnimationCallbacks & CSSTransitionCallbacks

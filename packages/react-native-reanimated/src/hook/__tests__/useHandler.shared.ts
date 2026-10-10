@@ -30,6 +30,17 @@ const { renderHook } =
     : // eslint-disable-next-line @typescript-eslint/no-require-imports
       require('@testing-library/react-native');
 
+function assignClosure(
+  target: Worklets.WorkletFunction,
+  closure: Worklets.WorkletFunction['__closure']
+) {
+  if (closure === undefined) {
+    delete target.__closure;
+  } else {
+    target.__closure = closure;
+  }
+}
+
 export function renderUseHandler(handlers: Handlers, deps?: DependencyList) {
   return renderHook(
     ({ handlers: h, deps: d }: RenderProps) => useHandler(h, d),
@@ -168,11 +179,11 @@ export function runCommonTests() {
         },
       ])('when $name for same hash', ({ before, after }) => {
         const w = worklet();
-        w.__closure = before;
+        assignClosure(w, before);
         const { result, rerender } = renderUseHandler({ onScroll: w });
 
         const w2 = cloneWorklet(w);
-        w2.__closure = after;
+        assignClosure(w2, after);
         rerender({ handlers: { onScroll: w2 } });
 
         expect(result.current.doDependenciesDiffer).toBe(true);
@@ -187,7 +198,7 @@ export function runCommonTests() {
         'when distinct worklets have the same hash and $name',
         ({ closure }) => {
           const w = worklet();
-          w.__closure = closure;
+          assignClosure(w, closure);
           const { result, rerender } = renderUseHandler({ onScroll: w });
           const cloned = cloneWorklet(w);
 

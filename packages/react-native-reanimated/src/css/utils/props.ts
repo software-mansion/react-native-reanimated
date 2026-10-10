@@ -63,7 +63,10 @@ export function filterCSSAndStyleProperties<S extends object>(
       // and override ones from the shorthand
       if (prop === 'transition') {
         transitionProperties = {
-          transition: value as CSSTransitionProperties['transition'],
+          transition: value as Exclude<
+            CSSTransitionProperties['transition'],
+            undefined
+          >,
         };
       } else {
         (transitionProperties as UnknownRecord)[prop] = value;
