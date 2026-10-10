@@ -1689,7 +1689,7 @@ var require_workletStringCode = __commonJS({
       const transformed = (0, transform_1.workletTransformSync)(code, {
         filename: state.file.opts.filename,
         extraPlugins: [
-          getClosurePlugin(closureVariables),
+          getClosurePlugin(closureVariables, parsedClasses),
           ...(_a = state.opts.extraPlugins) !== null && _a !== void 0 ? _a : []
         ],
         extraPresets: state.opts.extraPresets,
@@ -1738,24 +1738,87 @@ var require_workletStringCode = __commonJS({
         path.node.body.body.unshift(closureDeclaration);
       }
     }
-    function prependRecursiveDeclaration(path) {
+    function readRecursiveName(path) {
       var _a;
-      if ((0, types_12.isProgram)(path.parent) && !(0, types_12.isArrowFunctionExpression)(path.node) && !(0, types_12.isObjectMethod)(path.node) && path.node.id && path.scope.parent) {
-        const hasRecursiveCalls = ((_a = path.scope.parent.bindings[path.node.id.name]) === null || _a === void 0 ? void 0 : _a.references) > 0;
-        if (hasRecursiveCalls) {
-          path.node.body.body.unshift((0, types_12.variableDeclaration)("const", [
-            (0, types_12.variableDeclarator)((0, types_12.identifier)(path.node.id.name), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("_recur")))
-          ]));
-        }
+      if ((0, types_12.isProgram)(path.parent) && !(0, types_12.isArrowFunctionExpression)(path.node) && !(0, types_12.isObjectMethod)(path.node) && path.node.id && path.scope.parent && ((_a = path.scope.parent.bindings[path.node.id.name]) === null || _a === void 0 ? void 0 : _a.references) > 0) {
+        return path.node.id.name;
+      }
+      return void 0;
+    }
+    function prependRecursiveDeclaration(path) {
+      const recursiveName = readRecursiveName(path);
+      if (recursiveName !== void 0 && !(0, types_12.isExpression)(path.node.body)) {
+        path.node.body.body.unshift((0, types_12.variableDeclaration)("const", [
+          (0, types_12.variableDeclarator)((0, types_12.identifier)(recursiveName), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("_recur")))
+        ]));
       }
     }
-    function getClosurePlugin(closureVariables) {
+    function readBodyBindingsInParameters(path, closureVariables, parsedClasses) {
+      if (!(0, types_12.isProgram)(path.parent)) {
+        return;
+      }
+      const readers = /* @__PURE__ */ new Map();
+      closureVariables.forEach((variable, index) => {
+        const readCapture = () => (0, types_12.memberExpression)((0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("__closure")), (0, types_12.numericLiteral)(index), true);
+        const className = variable.name.endsWith(types_2.workletClassFactorySuffix) ? variable.name.slice(0, -types_2.workletClassFactorySuffix.length) : void 0;
+        if (className !== void 0 && parsedClasses.has(className)) {
+          readers.set(className, () => (0, types_12.callExpression)(readCapture(), []));
+        } else {
+          readers.set(variable.name, readCapture);
+        }
+      });
+      const recursiveName = readRecursiveName(path);
+      if (recursiveName !== void 0) {
+        readers.set(recursiveName, () => (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("_recur")));
+      }
+      const expressionsToWrap = /* @__PURE__ */ new Map();
+      for (const parameter of path.get("params")) {
+        parameter.traverse({
+          ReferencedIdentifier(reference) {
+            var _a;
+            if (!reference.isIdentifier()) {
+              return;
+            }
+            const name = reference.node.name;
+            const read = readers.get(name);
+            const binding = reference.scope.getBinding(name);
+            const readsBodyBinding = binding === void 0 || binding.path === path;
+            if (read === void 0 || !readsBodyBinding) {
+              return;
+            }
+            const thisBindingExpression = findOutermostThisBindingExpression(reference, path);
+            if (thisBindingExpression === void 0) {
+              reference.replaceWith(read());
+              return;
+            }
+            const reads = (_a = expressionsToWrap.get(thisBindingExpression)) !== null && _a !== void 0 ? _a : /* @__PURE__ */ new Map();
+            reads.set(name, read);
+            expressionsToWrap.set(thisBindingExpression, reads);
+          }
+        });
+      }
+      for (const [expression, reads] of expressionsToWrap) {
+        expression.replaceWith((0, types_12.callExpression)((0, types_12.arrowFunctionExpression)([...reads.keys()].map((name) => (0, types_12.identifier)(name)), expression.node), [...reads.values()].map((read) => read())));
+      }
+    }
+    function findOutermostThisBindingExpression(reference, worklet) {
+      let thisBinder;
+      for (let ancestor = reference.parentPath; ancestor !== null && ancestor !== worklet; ancestor = ancestor.parentPath) {
+        if (ancestor.isFunction() && !ancestor.isArrowFunctionExpression() || ancestor.isClass()) {
+          thisBinder = ancestor;
+        }
+      }
+      const expression = thisBinder === null || thisBinder === void 0 ? void 0 : thisBinder.find((ancestor) => ancestor.isExpression());
+      return (expression === null || expression === void 0 ? void 0 : expression.isExpression()) ? expression : void 0;
+    }
+    function getClosurePlugin(closureVariables, parsedClasses) {
       const closureDeclaration = (0, types_12.variableDeclaration)("const", [
         (0, types_12.variableDeclarator)((0, types_12.arrayPattern)(closureVariables.map((variable) => (0, types_12.identifier)(variable.name))), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("__closure")))
       ]);
       return {
         visitor: {
           "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod": (path) => {
+            readBodyBindingsInParameters(path, closureVariables, parsedClasses);
             prependClosure(path, closureVariables, closureDeclaration);
             prependRecursiveDeclaration(path);
           }
