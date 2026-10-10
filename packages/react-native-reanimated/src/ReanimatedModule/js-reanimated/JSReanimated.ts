@@ -379,10 +379,3 @@ export enum Platform {
   WEB = 'web',
   UNKNOWN = 'unknown',
 }
-
-declare global {
-  interface Navigator {
-    userAgent: string;
-    vendor: string;
-  }
-}
