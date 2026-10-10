@@ -1663,10 +1663,6 @@ var require_workletStringCode = __commonJS({
             closureVariables.splice(index, 1);
             const workletClassFactoryName = constructorName + types_2.workletClassFactorySuffix;
             closureVariables.push((0, types_12.identifier)(workletClassFactoryName));
-            (0, types_12.assertBlockStatement)(expression.body);
-            expression.body.body.unshift((0, types_12.variableDeclaration)("const", [
-              (0, types_12.variableDeclarator)((0, types_12.identifier)(constructorName), (0, types_12.callExpression)((0, types_12.identifier)(workletClassFactoryName), []))
-            ]));
             parsedClasses.add(constructorName);
           }
         });
@@ -1689,7 +1685,7 @@ var require_workletStringCode = __commonJS({
       const transformed = (0, transform_1.workletTransformSync)(code, {
         filename: state.file.opts.filename,
         extraPlugins: [
-          getClosurePlugin(closureVariables),
+          getClosurePlugin(closureVariables, parsedClasses),
           ...(_a = state.opts.extraPlugins) !== null && _a !== void 0 ? _a : []
         ],
         extraPresets: state.opts.extraPresets,
@@ -1730,34 +1726,87 @@ var require_workletStringCode = __commonJS({
     function shouldMockSourceMap() {
       return process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP === "1";
     }
-    function prependClosure(path, closureVariables, closureDeclaration) {
-      if (closureVariables.length === 0 || !(0, types_12.isProgram)(path.parent)) {
-        return;
-      }
-      if (!(0, types_12.isExpression)(path.node.body)) {
-        path.node.body.body.unshift(closureDeclaration);
-      }
-    }
-    function prependRecursiveDeclaration(path) {
+    function getRecursiveName(path) {
       var _a;
-      if ((0, types_12.isProgram)(path.parent) && !(0, types_12.isArrowFunctionExpression)(path.node) && !(0, types_12.isObjectMethod)(path.node) && path.node.id && path.scope.parent) {
-        const hasRecursiveCalls = ((_a = path.scope.parent.bindings[path.node.id.name]) === null || _a === void 0 ? void 0 : _a.references) > 0;
-        if (hasRecursiveCalls) {
-          path.node.body.body.unshift((0, types_12.variableDeclaration)("const", [
-            (0, types_12.variableDeclarator)((0, types_12.identifier)(path.node.id.name), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("_recur")))
-          ]));
-        }
+      if (!(0, types_12.isArrowFunctionExpression)(path.node) && !(0, types_12.isObjectMethod)(path.node) && path.node.id && path.scope.parent && ((_a = path.scope.parent.bindings[path.node.id.name]) === null || _a === void 0 ? void 0 : _a.references) > 0) {
+        return path.node.id.name;
       }
+      return void 0;
     }
-    function getClosurePlugin(closureVariables) {
-      const closureDeclaration = (0, types_12.variableDeclaration)("const", [
-        (0, types_12.variableDeclarator)((0, types_12.arrayPattern)(closureVariables.map((variable) => (0, types_12.identifier)(variable.name))), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("__closure")))
+    function buildPrologue(closureVariables, parsedClasses, recursiveName) {
+      return [
+        ...recursiveName !== void 0 ? [
+          (0, types_12.variableDeclaration)("const", [
+            (0, types_12.variableDeclarator)((0, types_12.identifier)(recursiveName), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("_recur")))
+          ])
+        ] : [],
+        ...closureVariables.length > 0 ? [
+          (0, types_12.variableDeclaration)("const", [
+            (0, types_12.variableDeclarator)((0, types_12.arrayPattern)(closureVariables.map((variable) => (0, types_12.identifier)(variable.name))), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("__closure")))
+          ])
+        ] : [],
+        ...[...parsedClasses].reverse().map((className) => (0, types_12.variableDeclaration)("const", [
+          (0, types_12.variableDeclarator)((0, types_12.identifier)(className), (0, types_12.callExpression)((0, types_12.identifier)(className + types_2.workletClassFactorySuffix), []))
+        ]))
+      ];
+    }
+    function readsPrologueInParameters(path, prologueNames) {
+      let reads = false;
+      for (const parameter of path.get("params")) {
+        parameter.traverse({
+          ReferencedIdentifier(reference) {
+            if (!reference.isIdentifier()) {
+              return;
+            }
+            const name = reference.node.name;
+            const binding = reference.scope.getBinding(name);
+            if (prologueNames.has(name) && (binding === void 0 || binding.path === path)) {
+              reads = true;
+              reference.stop();
+            }
+          }
+        });
+      }
+      return reads;
+    }
+    function encloseInPrologue(path, prologue) {
+      const { node } = path;
+      (0, types_12.assertBlockStatement)(node.body);
+      const firstOptionalIndex = node.params.findIndex((parameter) => (0, types_12.isAssignmentPattern)(parameter) || (0, types_12.isRestElement)(parameter));
+      const placeholders = Array.from({
+        length: firstOptionalIndex === -1 ? node.params.length : firstOptionalIndex
+      }, () => path.scope.generateUidIdentifier("argument"));
+      const enclosed = (0, types_12.functionExpression)(null, node.params, node.body, node.generator, node.async);
+      node.params = placeholders;
+      node.generator = false;
+      node.async = false;
+      node.body = (0, types_12.blockStatement)([
+        ...prologue,
+        (0, types_12.returnStatement)((0, types_12.callExpression)((0, types_12.memberExpression)(enclosed, (0, types_12.identifier)("apply")), [
+          (0, types_12.thisExpression)(),
+          (0, types_12.identifier)("arguments")
+        ]))
       ]);
+    }
+    function getClosurePlugin(closureVariables, parsedClasses) {
       return {
         visitor: {
           "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod": (path) => {
-            prependClosure(path, closureVariables, closureDeclaration);
-            prependRecursiveDeclaration(path);
+            if (!(0, types_12.isProgram)(path.parent) || (0, types_12.isExpression)(path.node.body)) {
+              return;
+            }
+            const recursiveName = getRecursiveName(path);
+            const prologue = buildPrologue(closureVariables, parsedClasses, recursiveName);
+            const prologueNames = /* @__PURE__ */ new Set([
+              ...closureVariables.map((variable) => variable.name),
+              ...parsedClasses,
+              ...recursiveName !== void 0 ? [recursiveName] : []
+            ]);
+            if (readsPrologueInParameters(path, prologueNames)) {
+              encloseInPrologue(path, prologue);
+              return;
+            }
+            path.node.body.body.unshift(...prologue);
           }
         }
       };
