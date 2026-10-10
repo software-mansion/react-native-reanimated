@@ -28,8 +28,12 @@ function bundleModeResolveRequest(
   /** @type {any} */ platform,
   /** @type {any} */ userConfigResolveRequest
 ) {
-  if (moduleName.startsWith(workletsDirPath)) {
-    const fullModuleName = path.join(workletsPackageParentDir, moduleName);
+  const normalizedModuleName = moduleName.replace(/\\/g, '/');
+  if (normalizedModuleName.startsWith(workletsDirPath)) {
+    const fullModuleName = path.join(
+      workletsPackageParentDir,
+      normalizedModuleName
+    );
     return { type: 'sourceFile', filePath: fullModuleName };
   }
   if (
@@ -56,19 +60,7 @@ const bundleModeMetroConfig = {
       /** @type {any} */ context,
       /** @type {string} */ moduleName,
       /** @type {any} */ platform
-    ) => {
-      if (moduleName.startsWith(workletsDirPath)) {
-        const fullModuleName = path.join(workletsPackageParentDir, moduleName);
-        return { type: 'sourceFile', filePath: fullModuleName };
-      }
-      if (
-        moduleName === 'react-native' &&
-        context.originModulePath !== reactNativeShimPath
-      ) {
-        return { type: 'sourceFile', filePath: reactNativeShimPath };
-      }
-      return context.resolveRequest(context, moduleName, platform);
-    },
+    ) => bundleModeResolveRequest(context, moduleName, platform),
   },
 };
 
