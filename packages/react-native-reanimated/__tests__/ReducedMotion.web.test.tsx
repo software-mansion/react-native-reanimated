@@ -2,6 +2,7 @@ import type * as TestingLibrary from '@testing-library/react';
 
 import type * as Reanimated from '../src';
 import type { TimingAnimation } from '../src';
+import type * as ReducedMotionModule from '../src/ReducedMotion';
 
 const START = 1_000;
 
@@ -106,5 +107,30 @@ describe('ReduceMotion.System follows a prefers-reduced-motion change made while
     unmount();
 
     expect(isReducingMotion()).toBe(true);
+  });
+});
+
+describe('ReduceMotion.System without a window, as in server rendering', () => {
+  afterEach(() => {
+    reducedMotionQuery.matches = false;
+  });
+
+  test('the preference reads as off and nothing subscribes to the media', () => {
+    reducedMotionQuery.matches = true;
+    const listenerCount = reducedMotionQuery.listeners.length;
+    let reducedMotion: typeof ReducedMotionModule | undefined;
+    jest.isolateModules(() => {
+      jest.doMock('../src/common/constants/platform', () => ({
+        ...jest.requireActual<object>('../src/common/constants/platform'),
+        IS_WINDOW_AVAILABLE: false,
+      }));
+      reducedMotion = jest.requireActual<typeof ReducedMotionModule>(
+        '../src/ReducedMotion'
+      );
+    });
+
+    expect(reducedMotion?.isReducedMotionEnabledInSystem()).toBe(false);
+    expect(reducedMotion?.ReducedMotionManager.jsValue).toBe(false);
+    expect(reducedMotionQuery.listeners).toHaveLength(listenerCount);
   });
 });

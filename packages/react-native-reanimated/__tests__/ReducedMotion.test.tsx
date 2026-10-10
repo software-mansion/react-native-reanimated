@@ -86,4 +86,19 @@ describe('ReduceMotion.System follows a reduce-motion change made while the app 
 
     expect(isReducingMotion()).toBe(true);
   });
+
+  test('unmounting an override nested in another restores the outer override, which keeps ignoring the system', () => {
+    render(<ReducedMotionConfig mode={ReduceMotion.Never} />);
+    const { unmount } = render(
+      <ReducedMotionConfig mode={ReduceMotion.Always} />
+    );
+    changeSystemReduceMotion(true);
+
+    unmount();
+
+    expect(isReducingMotion()).toBe(false);
+    changeSystemReduceMotion(false);
+    changeSystemReduceMotion(true);
+    expect(isReducingMotion()).toBe(false);
+  });
 });
