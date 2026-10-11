@@ -12,7 +12,7 @@
  * with and without the weak cache marker. `cache` in the meta line reports
  * which one is installed.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   createSerializable,
@@ -360,16 +360,20 @@ async function runAll(
   onStatus(`done (cache=${cacheKind()}, gc ${gc})`);
 }
 
+// Runs share module state (pendingResolve, the measured closures), so only one
+// may be in flight across all mounted instances of this screen.
+let runInProgress = false;
+
 export default function SerializableCachePerformanceTest() {
   const [rows, setRows] = useState<Row[]>([]);
   const [status, setStatus] = useState('starting');
-  const running = useRef(false);
 
   const start = useCallback(() => {
-    if (running.current) {
+    if (runInProgress) {
+      setStatus('another run is in progress');
       return;
     }
-    running.current = true;
+    runInProgress = true;
     setRows([]);
     runAll((row) => setRows((previous) => [...previous, row]), setStatus)
       .catch((error: unknown) => {
@@ -377,7 +381,7 @@ export default function SerializableCachePerformanceTest() {
         setStatus(`error: ${String(error)}`);
       })
       .finally(() => {
-        running.current = false;
+        runInProgress = false;
       });
   }, []);
 
