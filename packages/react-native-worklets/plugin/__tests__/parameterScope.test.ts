@@ -233,6 +233,66 @@ const SHAPES = [
   },
 ] as const;
 
+const SHADOWED_SHAPES = [
+  {
+    shape: 'the body redeclares the name with const',
+    name: 'pick',
+    source: `const LIMIT = 5;
+      function pick(value = LIMIT) { 'worklet'; const LIMIT = 1; return [value, LIMIT]; }`,
+    args: [],
+  },
+  {
+    shape: 'the body redeclares the name with var',
+    name: 'pick',
+    source: `const LIMIT = 5;
+      function pick(value = LIMIT) { 'worklet'; var LIMIT = 1; return [value, LIMIT]; }`,
+    args: [],
+  },
+  {
+    shape: 'the body declares a function of the same name',
+    name: 'pick',
+    source: `const LIMIT = 5;
+      function pick(value = LIMIT) { 'worklet'; function LIMIT() { return 1; } return [value, LIMIT()]; }`,
+    args: [],
+  },
+  {
+    shape: 'a destructuring default reads the shadowed name',
+    name: 'pick',
+    source: `const LIMIT = 5;
+      function pick({ limit = LIMIT } = {}) { 'worklet'; const LIMIT = 1; return [limit, LIMIT]; }`,
+    args: [],
+  },
+  {
+    shape: 'a computed key reads the shadowed name',
+    name: 'read',
+    source: `const KEY = 'x';
+      function read({ [KEY]: value }) { 'worklet'; const KEY = 'y'; return [value, KEY]; }`,
+    args: [{ x: 7, y: 8 }],
+  },
+  {
+    shape: 'a function in a default reads the shadowed name',
+    name: 'pick',
+    source: `const LIMIT = 5;
+      function pick(read = () => LIMIT) { 'worklet'; const LIMIT = 1; return [read(), LIMIT]; }`,
+    args: [],
+  },
+  {
+    shape: 'an arrow worklet whose body shadows the name',
+    name: 'pick',
+    source: `const LIMIT = 5;
+      const pick = (value = LIMIT) => { 'worklet'; const LIMIT = 1; return [value, LIMIT]; };`,
+    args: [],
+  },
+] as const;
+
+describe('a parameter reading a module binding the body shadows', () => {
+  test.each(SHADOWED_SHAPES)('$shape', ({ source, name, args }) => {
+    expect(compileWorklet(source, name)(...args)).toEqual(
+      runNatively(source, name)(...args)
+    );
+  });
+});
+
 describe('worklet parameters', () => {
   test.each(SHAPES)('$shape', ({ source, name, args }) => {
     expect(compileWorklet(source, name)(...args)).toEqual(

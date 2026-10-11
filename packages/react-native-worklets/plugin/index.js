@@ -1326,6 +1326,14 @@ var require_closure = __commonJS({
     function toClosureIdentifier(node) {
       return (0, types_12.isJSXIdentifier)(node) ? (0, types_12.identifier)(node.name) : (0, types_12.cloneNode)(node, true);
     }
+    function isDeclaredWithin(scope, worklet) {
+      for (let current = scope; current; current = current.parent) {
+        if (current === worklet) {
+          return true;
+        }
+      }
+      return false;
+    }
     function getClosure(funPath, state) {
       const capturedNames = /* @__PURE__ */ new Set();
       const closureVariables = new Array();
@@ -1364,12 +1372,8 @@ var require_closure = __commonJS({
               return;
             }
           }
-          let scope = idPath.scope;
-          while (scope !== funPath.scope.parent) {
-            if (scope.hasOwnBinding(name)) {
-              return;
-            }
-            scope = scope.parent;
+          if (isDeclaredWithin(binding.scope, funPath.scope)) {
+            return;
           }
           if (state.opts.bundleMode && (0, imports_1.isImport)(binding)) {
             if ((0, imports_1.isImportRelative)(binding) && (0, imports_1.canForwardRelativeImport)(state.filename, state.importForwarding.relativePaths)) {

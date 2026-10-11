@@ -127,6 +127,18 @@ describe('babel plugin in bundleMode', () => {
       expect(files[0].content).toMatchSnapshot();
     });
 
+    test('captures a module binding a parameter reads when the body shadows it', () => {
+      const { code } = runPlugin(`
+        const LIMIT = 5;
+        export function pick(value = LIMIT) {
+          'worklet';
+          const LIMIT = 1;
+          return [value, LIMIT];
+        }
+      `);
+      expect(code).toContain('.default([LIMIT])');
+    });
+
     test('exports closure-free worklets without a factory call', () => {
       const { code, files } = runPlugin(`
         function factorial(n) {
