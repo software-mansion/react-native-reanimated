@@ -479,6 +479,32 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return makeSerializableWorklet(rt, at<0>(args).getObject(rt), at<1>(args).getBool());
       });
 
+  jsi_utils::addMethod<1>(
+      rt, obj, "makeWeakSerializableRef", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto serializable =
+            extractSerializableOrThrow(rt, at<0>(args), "[Worklets] makeWeakSerializableRef expects a serializable.");
+        auto marker = jsi::Object(rt);
+        marker.setNativeState(rt, std::make_shared<WeakSerializableJSRef>(serializable));
+        // Deliberately no `__serializableRef`, so a marker is never mistaken for a serializable.
+        return marker;
+      });
+
+  jsi_utils::addMethod<1>(
+      rt, obj, "derefWeakSerializableRef", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        if (!at<0>(args).isObject()) {
+          return jsi::Value::undefined();
+        }
+        auto marker = at<0>(args).getObject(rt);
+        if (!marker.hasNativeState<WeakSerializableJSRef>(rt)) {
+          return jsi::Value::undefined();
+        }
+        auto serializable = marker.getNativeState<WeakSerializableJSRef>(rt)->lock();
+        if (!serializable) {
+          return jsi::Value::undefined();
+        }
+        return jsi::Value(SerializableJSRef::newNativeStateObject(rt, serializable));
+      });
+
   jsi_utils::addMethod<2>(
       rt, obj, "createCustomSerializable", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         return makeCustomSerializable(rt, at<0>(args), at<1>(args).asNumber());

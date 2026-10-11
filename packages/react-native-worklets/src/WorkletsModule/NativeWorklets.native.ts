@@ -200,6 +200,16 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
+  makeWeakSerializableRef(serializable: SerializableRef<unknown>): object {
+    return this.#workletsModuleProxy.makeWeakSerializableRef(serializable);
+  }
+
+  derefWeakSerializableRef(
+    marker: object
+  ): SerializableRef<unknown> | undefined {
+    return this.#workletsModuleProxy.derefWeakSerializableRef(marker);
+  }
+
   createCustomSerializable(
     data: SerializableRef<unknown>,
     typeId: number
