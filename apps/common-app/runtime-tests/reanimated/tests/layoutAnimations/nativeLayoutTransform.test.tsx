@@ -1,11 +1,56 @@
+/*
+ * Each test that plays a case (`playCase`, or `play` with `expectReference`) has the method of the suite
+ * `native layout reference`, each box on its own clock: each sample of the `Transform` target of the native
+ * box has the 16 cells of the matrix of the declared values of its operations at one time of the 18 ms
+ * before the sample, from the origin of its command (statement A); each frame of the frame-driven
+ * twin and of the frame driver on the native box is on a replay of the declared timeline at its frame time
+ * (statement B); at the end the native box shows its model and the twin has the same model. A check of a
+ * playback key count or of a model value in such a test is for each row, by the time of the row against
+ * the times of the trace and the declared times. A spring has no declared timeline: its frames on the
+ * native box are the frames of the twin. Each other test has state checks, trace checks, and checks of the
+ * two boxes at rest. The tolerance of a cell is 0.005, and a translation has it too.
+ *
+ * Each test in which the frame driver takes the `Transform` track of the native box has statement M: the
+ * model of each read of the native box, from the mount of the first frame update to the last frame of the
+ * frame driver, is the matrix of the last recorded frame at or before the read, of the frame before it, or
+ * of the first frame after the read whose recorded time is at most one display frame and the clock
+ * uncertainty after the read. A cell is equal to 0.0001 and a translation to 0.01. Statement M permits a lag
+ * of one recorded frame and gives no limit of the age of the model on the wall clock. Two frames whose
+ * matrices are equal in these tolerances cannot say which write gave the value. Other display rates are not
+ * tested.
+ *
+ * The method does not prove: the distance of the two boxes at one instant, the lag of the frame driver,
+ * that the two starts are in one display frame, when a callback comes, that a row comes in each part of a
+ * timeline, a native value in the first display frame after its origin to better than one display frame, a
+ * read in the first 18 ms of a track (its operations start at the initial values of the builder, which the
+ * view did not show). After a commit of another style transform, a read from 1.78 ms before the declared
+ * end of the track is not checked: it can show the committed style. The pixels on screen, the order in
+ * which the screen shows the operations, a device, and 120 Hz are not tested.
+ *
+ * Statement A has the edge hold of `native layout reference`. Within the read band, this suite cannot
+ * distinguish the platform hold from a native segment that keeps its start value through eased progress
+ * 0.001 or shows its end value from eased progress 0.999. The frame-driven twin keeps its exact curve check
+ * without a hold allowance.
+ *
+ * The suite `native layout live clock` has the wall-clock statements for the cases of this suite in
+ * `nativeLayoutLiveClockCases.ts`: the pair of the two boxes at one instant, the gap of the two end
+ * callbacks, and a row of the native box in each phase.
+ *
+ * The tests of the synchronous props path need the static flag `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`: the
+ * default build does not run them. An animated style gives each box its transform, and each test plays a
+ * case with a write of the two animated styles. The model of the native box is a state check for each read.
+ * The test of a write between a commit and its mount prints the order that its reads show as a
+ * `WRITE-ORDER` row and asserts the statements of that order. It has no load switch, so it does not assert
+ * the order `before the mount`: a case of `native layout live clock` does. The reads cannot show a write in
+ * the interval before the first read.
+ */
 import React from 'react';
 import type { ViewStyle } from 'react-native';
 import { View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
-import Animated, {
+import {
   Easing,
   getStaticFeatureFlag,
-  setDynamicFeatureFlag,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -19,15 +64,46 @@ import {
   getTestComponent,
   render,
   test,
-  useTestRef,
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
+import {
+  BACK_AT_START,
+  COMMITTED_ROTATION,
+  COMMITTED_TRANSLATION,
+  CONTINUITY_CASES,
+  ONE_OPERATION_CASES,
+  SECOND_COMMIT_MS,
+  STYLE_COMMIT_CASES,
+  timedOperationsOf,
+  TRANSFORM_CASES,
+  TRANSFORM_DURATION,
+  TRANSFORM_PLACES,
+  transformCaseOf,
+  TRANSLATION,
+} from './nativeLayoutLiveClockCases';
 import { blockUIThread } from './nativeLayoutLoad';
+import type {
+  Played,
+  ReferenceCase,
+  RowRead,
+  WriteOrder,
+} from './nativeLayoutReferencePlay';
+import {
+  describeWriteOrder,
+  expectModelOnFrames,
+  expectNoKeyAfterTransfer,
+  expectOneKeyWhilePlaying,
+  expectReference,
+  play,
+  writeOrderOf,
+} from './nativeLayoutReferencePlay';
 import type {
   Leaf,
   Leaves,
+  MatrixTolerance,
   Operation,
   SizeBoxProps,
+  TargetSample,
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
@@ -35,75 +111,71 @@ import {
   BOX_REF,
   builderCalls,
   callbacks,
+  cellToleranceOf,
   countedOf,
-  declaredFrameChangeAt,
+  endCellsOf,
   endTransformOf,
   FRAME_BOX_REF,
-  FRAME_MS,
   hasNativeLayoutStarts,
   isHostEvent,
+  isSameLeaf,
   layoutOf,
+  middleOf,
   mountScene,
   namedBuilderCalls,
-  frameDrivenOf,
-  recordedCurveOf,
-  recordedLinearOf,
+  readFrameRecords,
   sample,
-  sampleClockOffset,
+  SizeBox,
   SizePair,
   styles,
   summarize,
   takeTraceOf,
-  twinStartTime,
+  withTracking,
 } from './nativeLayoutTestKit';
 
 type StyleTransform = ViewStyle['transform'];
 
-const TRANSFORM_DURATION = 2400;
 const START_LEFT = 60;
 const END_LEFT = 62;
 const TRANSFORM_START =
   'LayoutStartPending > LayoutStartMounted > Received > TrackStarted:Transform > Admitted';
 const TRANSFORM_END = 'TrackEnded:Transform:true > Ended:Finished:None';
 const DEGREE = Math.PI / 180;
-const TRANSLATION_CELLS = [12, 13, 14];
+const IDENTITY = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+const REST_TOLERANCE: MatrixTolerance = { cells: 0.0001, translation: 0.01 };
 
-const radiansOf = (value: number | string) =>
-  typeof value === 'string'
-    ? parseFloat(value) * (value.endsWith('deg') ? DEGREE : 1)
-    : value;
-
-/** The cells that a style of one `translateX` or one `rotate` in degrees gives. */
-function matrixOfStyle(style: StyleTransform) {
-  const [operation] = style as Record<string, number | string>[];
-  const angle = radiansOf(operation.rotate ?? 0);
-  const matrix = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-  matrix[0] = matrix[5] = Math.cos(angle);
-  matrix[1] = Math.sin(angle);
-  matrix[4] = -Math.sin(angle);
-  matrix[12] = (operation.translateX as number) ?? 0;
-  return matrix;
+/**
+ * Plays a case on the native box and on its frame-driven twin, with statements
+ * A and B of `native layout reference` and the end of the two boxes.
+ */
+async function playCase(caseName: string, referenceCase: ReferenceCase) {
+  const played = await play(referenceCase);
+  const reads = expectReference(caseName, referenceCase, played);
+  expectAtRest(played);
+  return { ...played, reads };
 }
 
-/** The scalar of the one operation of `kind` that gives `matrix`. */
-function scalarOf(kind: string, matrix: number[]) {
-  switch (kind) {
-    case 'translateX':
-      return matrix[12];
-    case 'translateY':
-      return matrix[13];
-    case 'scaleY':
-      return matrix[5];
-    case 'rotate':
-    case 'rotateZ':
-      return Math.atan2(matrix[1], matrix[0]);
-    case 'rotateX':
-      return Math.atan2(matrix[6], matrix[5]);
-    case 'rotateY':
-      return Math.atan2(matrix[8], matrix[0]);
-    default:
-      return matrix[0];
-  }
+/**
+ * At the end the native box shows its model with no playback key, and the twin
+ * has the model of the native box.
+ */
+function expectAtRest({ end }: Played) {
+  const { presentation, model, playbackKeys } = end!.native.Transform;
+  expect(playbackKeys.length).toBe(0);
+  expectCells(presentation, model);
+  expectCells(end!.frame.Transform.model, model);
+}
+
+function expectCells(
+  shown: number[],
+  expected: number[],
+  tolerance = REST_TOLERANCE
+) {
+  shown.forEach((cell, index) => {
+    expect(
+      Math.abs(cell - expected[index]) < cellToleranceOf(index, tolerance)
+    ).toBe(true);
+  });
 }
 
 /** The native box plays `operations`; a callback keeps its twin frame-driven. */
@@ -145,44 +217,11 @@ const pairSceneOf = (
   />
 );
 
-/** The largest difference of the translation cells and of the other cells. */
-function matrixDistance(first: number[], second: number[]) {
-  const distanceOf = (isTranslation: boolean) =>
-    Math.max(
-      ...first
-        .map((cell, index) => Math.abs(cell - second[index]))
-        .filter(
-          (_, index) => TRANSLATION_CELLS.includes(index) === isTranslation
-        )
-    );
-  return { translation: distanceOf(true), cells: distanceOf(false) };
-}
+const pairTags = () =>
+  [BOX_REF, FRAME_BOX_REF].map((ref) => getTestComponent(ref).getTag());
 
-async function sampleTransformPair() {
-  const [native, frame] = await Promise.all([
-    sample(getTestComponent(BOX_REF).getTag(), 'Transform'),
-    sample(getTestComponent(FRAME_BOX_REF).getTag(), 'Transform'),
-  ]);
-  return {
-    native: native.presentation,
-    end: native.model,
-    frame: frame.model,
-    keys: native.playbackKeys.length,
-    members: native.members,
-    readTime: native.monotonicTimeMs,
-  };
-}
-
-type TransformPairRow = Awaited<ReturnType<typeof sampleTransformPair>>;
-
-async function sampleTransformPairAt(elapsedMs: number[], startMs: number) {
-  const rows: TransformPairRow[] = [];
-  for (const elapsed of elapsedMs) {
-    await wait(Math.max(0, startMs + elapsed - performance.now()));
-    rows.push(await sampleTransformPair());
-  }
-  return rows;
-}
+const samplePair = () =>
+  Promise.all(pairTags().map((tag) => sample(tag, 'Transform')));
 
 const isStartEvent = ({ event }: TraceEvent) =>
   event !== 'TrackEnded' && event !== 'Ended';
@@ -197,174 +236,47 @@ const buildFailures = (events: TraceEvent[]) =>
     .map(({ buildFailure }) => buildFailure)
     .join();
 
-/**
- * The change of a matrix cell, and of a translation, in two display frames of a
- * track that moves `range` in `durationMs`: the model of the twin is its last
- * mounted frame, which can be one display frame old.
- */
-const toleranceOf = (range: number, durationMs = TRANSFORM_DURATION) =>
-  0.005 + (2 * FRAME_MS * Math.abs(range)) / durationMs;
-
-function expectSameMatrix(
-  shown: number[],
-  expected: number[],
-  cells: number,
-  translation: number
-) {
-  const distance = matrixDistance(shown, expected);
-  expect(distance.cells < cells).toBe(true);
-  expect(distance.translation < translation).toBe(true);
-}
+const pieceCountOf = ({ members }: TargetSample) =>
+  members[1].values.length - 1;
 
 describe('native layout transform', () => {
   if (!hasNativeLayoutStarts) {
     return;
   }
 
-  const oneOperation: Operation[] = [
-    ['translateX', 0, 80],
-    ['translateY', -30, 30],
-    ['scale', 0.5, 1.5],
-    ['scaleX', 0.2, 1],
-    ['scaleY', 1, 2],
-    ['rotate', '0deg', '90deg'],
-    ['rotateZ', 0, 2],
-    ['rotateX', 0, 1],
-    ['rotateY', '0rad', '1rad'],
-  ];
-  for (const operation of oneOperation) {
-    const [kind, from, to] = operation;
-    test(`${kind} from ${String(from)} to ${String(to)} plays natively and agrees with the frame driver`, async () => {
-      const layouts = {
-        ...transformPairOf([operation]),
-        frameLayout: frameDrivenOf(
-          layoutOf(
-            {},
-            {
-              name: 'frame',
-              transform: {
-                operations: [operation],
-                shared: {
-                  duration: TRANSFORM_DURATION,
-                  easing: recordedLinearOf(TRANSFORM_DURATION),
-                },
-              },
-            }
-          )
-        ),
-      };
-      const style = endTransformOf([operation]);
-      const tag = await mountScene(pairSceneOf(layouts, style));
-      const clock = await sampleClockOffset(tag);
-      const start = performance.now();
-      await render(pairSceneOf(layouts, style, { left: END_LEFT }));
-      const rows = await sampleTransformPairAt(
-        [0.25, 0.5, 0.75, 1.15].map(
-          (fraction) => fraction * TRANSFORM_DURATION
-        ),
-        start
-      );
-      const events = await takeTraceOf(tag);
+  for (const [caseName, referenceCase] of Object.entries(ONE_OPERATION_CASES)) {
+    test(`${caseName} plays natively, and the native values and the frames of the frame driver are on its timeline`, async () => {
+      const { events, reads } = await playCase(caseName, referenceCase);
       expect(summarizeStart(events)).toBe(TRANSFORM_START);
       expect(summarizeAfterStart(events)).toBe(TRANSFORM_END);
-
-      const range =
-        radiansOf(to as number | string) - radiansOf(from as number | string);
-      const isTranslation = kind.startsWith('translate');
-      for (const row of rows.slice(0, 3)) {
-        // The native value at its read time against the timeline of the twin at that time.
-        const shownProgress =
-          (scalarOf(kind, row.native) - radiansOf(from as number | string)) /
-          range;
-        const twinProgress =
-          (row.readTime - clock.offset - twinStartTime.value) /
-          TRANSFORM_DURATION;
-        expect(
-          Math.abs(shownProgress - twinProgress) * TRANSFORM_DURATION < FRAME_MS
-        ).toBe(true);
-        expectSameMatrix(
-          row.native,
-          row.frame,
-          isTranslation ? 0.005 : toleranceOf(range),
-          isTranslation ? toleranceOf(range) : 0.01
-        );
-        expect(row.keys).toBe(1);
-      }
-      const middle = matrixDistance(rows[1].native, rows[1].end);
-      expect(middle.cells + middle.translation > 0.1).toBe(true);
-      const end = rows[3];
-      expectSameMatrix(end.native, end.end, 0.0001, 0.01);
-      expectSameMatrix(end.frame, end.end, 0.0001, 0.01);
-      expect(end.keys).toBe(0);
-      expect(callbacks.slice().sort().join()).toBe('frame:true,native:true');
+      expectOneKeyWhilePlaying(reads);
       await render(null);
     });
   }
 
   test('a rotation of one turn with Easing.bounce of a view of 100 x 60 pt plays natively no more than 0.25 pt at its corner from its easing function, with more pieces than a quarter turn', async () => {
-    const TURN = 2 * Math.PI;
     const SIZE = { width: 100, height: 60 };
     const LEVER = Math.hypot(SIZE.width, SIZE.height) / 2;
-    const pieceCountOf = async (operations: Operation[]) => {
-      const { members } = await membersOf(operations, {
-        easing: Easing.bounce,
-      });
-      return members[1].values.length - 1;
-    };
-    const quarterTurn = await pieceCountOf([['rotate', '0deg', '90deg']]);
-
-    const operations: Operation[] = [['rotate', '0deg', '360deg']];
-    const layouts = {
-      ...transformPairOf(operations, { easing: Easing.bounce }),
-      frameLayout: frameDrivenOf(
-        layoutOf(
-          {},
-          {
-            name: 'frame',
-            transform: {
-              operations,
-              shared: {
-                duration: TRANSFORM_DURATION,
-                easing: recordedCurveOf(Easing.bounce, TRANSFORM_DURATION),
-              },
-            },
-          }
-        )
-      ),
-    };
-    const style = endTransformOf(operations);
-    const tag = await mountScene(pairSceneOf(layouts, style, SIZE));
-    const clock = await sampleClockOffset(tag);
-    const start = performance.now();
-    await render(pairSceneOf(layouts, style, { left: END_LEFT, ...SIZE }));
-    const rows = await sampleTransformPairAt(
-      [0.3, 0.5, 0.73, 0.9, 1.15].map(
-        (fraction) => fraction * TRANSFORM_DURATION
-      ),
-      start
+    const bounce: Leaf = { easing: Easing.bounce };
+    const quarterTurn = pieceCountOf(
+      (await membersOf([['rotate', '0deg', '90deg']], bounce)).playing
     );
-    expect(summarizeStart(await takeTraceOf(tag))).toBe(TRANSFORM_START);
-    expect(rows[0].members[1].values.length - 1 > quarterTurn).toBe(true);
 
-    const declaredAt = (timeMs: number) =>
-      TURN *
-      Easing.bounce(Math.min(1, Math.max(0, timeMs / TRANSFORM_DURATION)));
-    for (const row of rows.slice(0, 4)) {
-      const twinTime = row.readTime - clock.offset - twinStartTime.value;
-      const shown = Math.atan2(row.native[1], row.native[0]);
-      const difference = Math.abs(
-        Math.atan2(
-          Math.sin(shown - declaredAt(twinTime)),
-          Math.cos(shown - declaredAt(twinTime))
-        )
-      );
-      expect(
-        difference < 0.25 / LEVER + declaredFrameChangeAt(declaredAt, twinTime)
-      ).toBe(true);
-      expect(row.keys).toBe(1);
-    }
-    expect(rows[4].keys).toBe(0);
-    expect(callbacks.slice().sort().join()).toBe('frame:true,native:true');
+    const { events, reads } = await playCase(
+      'a rotation of one turn with Easing.bounce',
+      transformCaseOf([['rotate', '0deg', '360deg']], bounce, {
+        places: TRANSFORM_PLACES.map((place) => ({ ...place, ...SIZE })),
+        // The sine and the cosine of the rotation, each this near, put the corner 0.25 pt or less from
+        // its declared place.
+        matrixTolerance: {
+          cells: 0.25 / LEVER / Math.SQRT2,
+          translation: REST_TOLERANCE.translation,
+        },
+      })
+    );
+    expect(summarizeStart(events)).toBe(TRANSFORM_START);
+    expect(pieceCountOf(reads[0].sampled) > quarterTurn).toBe(true);
+    expectOneKeyWhilePlaying(reads);
     await render(null);
   });
 
@@ -379,12 +291,13 @@ describe('native layout transform', () => {
     await render(pairSceneOf(layouts, style, { left: END_LEFT }));
     await wait(waitMs);
     const events = await takeTraceOf(tag);
-    const { members } = await sampleTransformPair();
+    const playing = await sample(tag, 'Transform');
     await render(null);
     return {
       events,
-      members,
-      properties: members.map((each) => each.property),
+      playing,
+      members: playing.members,
+      properties: playing.members.map((each) => each.property),
     };
   }
 
@@ -443,22 +356,12 @@ describe('native layout transform', () => {
     expect(zoom.members[1].values[1].join()).toBe('1.5,1.5,1.5');
   });
 
-  test('a rotation of two turns shows one quarter turn at one eighth of its time', async () => {
-    const operations: Operation[] = [['rotate', '0deg', '720deg']];
-    const layouts = transformPairOf(operations);
-    const style = endTransformOf(operations);
-    await mountScene(pairSceneOf(layouts, style));
-    const start = performance.now();
-    await render(pairSceneOf(layouts, style, { left: END_LEFT }));
-    const [row] = await sampleTransformPairAt([TRANSFORM_DURATION / 8], start);
-    expectSameMatrix(row.native, row.frame, toleranceOf(4 * Math.PI), 0.01);
-    expect(Math.abs(row.native[1]) > 0.8).toBe(true);
-    expectSameMatrix(
-      row.end,
-      [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-      0.0001,
-      0.01
-    );
+  test('a rotation of two turns is on its timeline: it shows one quarter turn at one eighth of its time', async () => {
+    const caseName = 'a rotation of two turns';
+    const { rows } = await playCase(caseName, TRANSFORM_CASES[caseName]);
+    for (const { row } of rows) {
+      expectCells(row.native.Transform.model, IDENTITY);
+    }
     await render(null);
   });
 
@@ -482,45 +385,32 @@ describe('native layout transform', () => {
   });
 
   test('the start value stays on screen through the delay', async () => {
-    const operations: Operation[] = [['translateX', 40, 0]];
-    const layouts = transformPairOf(operations, {
-      duration: 400,
-      delays: [600],
-    });
-    const style = endTransformOf(operations);
-    await mountScene(pairSceneOf(layouts, style));
-    const start = performance.now();
-    await render(pairSceneOf(layouts, style, { left: END_LEFT }));
-    const [held, moving, end] = await sampleTransformPairAt(
-      [300, 800, 1300],
-      start
-    );
-    expect(Math.abs(held.native[12] - 40) < 0.01).toBe(true);
-    expect(Math.abs(held.frame[12] - 40) < 0.01).toBe(true);
-    expect(held.end[12]).toBe(0);
-    expectSameMatrix(moving.native, moving.frame, 0.005, toleranceOf(40, 400));
-    expect(end.keys).toBe(0);
-    expect(end.native[12]).toBe(0);
+    const caseName = 'a translation after a delay';
+    const { rows, end } = await playCase(caseName, TRANSFORM_CASES[caseName]);
+    for (const { row } of rows) {
+      expect(row.native.Transform.model[12]).toBe(0);
+    }
+    expect(end!.native.Transform.presentation[12]).toBe(0);
     await render(null);
   });
 
   test('no duration with a delay holds the start value, then the model shows', async () => {
-    const operations: Operation[] = [['scaleX', 0.5, 1]];
-    const layouts = transformPairOf(operations, { duration: 0, delays: [600] });
-    const style = endTransformOf(operations);
-    const tag = await mountScene(pairSceneOf(layouts, style));
-    const start = performance.now();
-    await render(pairSceneOf(layouts, style, { left: END_LEFT }));
-    const [held, end] = await sampleTransformPairAt([300, 900], start);
-    expect(Math.abs(held.native[0] - 0.5) < 0.0001).toBe(true);
-    expect(Math.abs(held.frame[0] - 0.5) < 0.0001).toBe(true);
-    expect(held.keys).toBe(1);
-    expect(end.native[0]).toBe(1);
-    expect(end.frame[0]).toBe(1);
-    expect(end.keys).toBe(0);
-    const events = await takeTraceOf(tag);
+    const { events, reads, end } = await playCase(
+      'no duration with a delay',
+      transformCaseOf(
+        [['scaleX', 0.5, 1]],
+        { duration: 0, delays: [600] },
+        {
+          totalMs: 600,
+          matrixTolerance: { ...REST_TOLERANCE, translation: 0.005 },
+        }
+      )
+    );
     expect(summarizeStart(events)).toBe(TRANSFORM_START);
     expect(summarizeAfterStart(events)).toBe(TRANSFORM_END);
+    expectOneKeyWhilePlaying(reads);
+    expect(end!.native.Transform.presentation[0]).toBe(1);
+    expect(end!.frame.Transform.model[0]).toBe(1);
     await render(null);
   });
 
@@ -538,9 +428,9 @@ describe('native layout transform', () => {
     expect(summarize(events.filter(isHostEvent))).toBe(
       `${TRANSFORM_START} > ${TRANSFORM_END}`
     );
-    const row = await sampleTransformPair();
-    expect(row.keys).toBe(0);
-    expectSameMatrix(row.native, row.frame, 0.0001, 0.01);
+    const [native, frame] = await samplePair();
+    expect(native.playbackKeys.length).toBe(0);
+    expectCells(native.presentation, frame.model);
     expect(callbacks.slice().sort().join()).toBe('frame:true,native:true');
     await render(null);
   });
@@ -551,31 +441,23 @@ describe('native layout transform continuity', () => {
     return;
   }
 
-  const FIRST: Operation[] = [['translateX', 0, 80]];
-  const FIRST_STYLE = endTransformOf(FIRST);
-  const AFTER_START = [0.2, 0.4, 0.75].map(
-    (fraction) => fraction * TRANSFORM_DURATION
-  );
-  const TRANSLATION_TOLERANCE = toleranceOf(80);
-
   const TWO: Operation[] = [
     ['translateX', 0, 80],
     ['scale', 1, 1.5],
   ];
 
-  /** Starts the layouts on the two boxes and waits for a part of their time. */
-  async function playFirst(
-    layouts: TransformPair,
-    style = FIRST_STYLE,
-    part = 0.4
-  ) {
-    const tag = await mountScene(pairSceneOf(layouts, style));
-    await render(pairSceneOf(layouts, style, { left: END_LEFT }));
-    await wait(part * TRANSFORM_DURATION);
-    await takeTraceOf(tag);
-    callbacks.length = 0;
-    return tag;
-  }
+  /** The frame driver takes the boxes at a second commit, which has `next`. */
+  const transferOf = (
+    first: Operation[],
+    next: Partial<ReferenceCase['replacement']>,
+    shared: Leaf = {},
+    commitMs = SECOND_COMMIT_MS
+  ) =>
+    transformCaseOf(first, shared, {
+      replacement: { leaves: {}, ...next, isFrameDriven: true },
+      places: BACK_AT_START,
+      commitTimesMs: [commitMs],
+    });
 
   const startedTargets = (events: TraceEvent[]) =>
     events
@@ -583,259 +465,273 @@ describe('native layout transform continuity', () => {
       .map(({ target }) => target)
       .join();
 
-  test('a new start with another end value replaces the track and agrees with the frame driver', async () => {
-    const second: Operation[] = [['translateX', 50, 20]];
-    const tag = await playFirst(transformPairOf(FIRST));
-    const start = performance.now();
-    await render(
-      pairSceneOf(transformPairOf(second), endTransformOf(second), {
-        left: START_LEFT,
-      })
+  /** The events from the start of the second build of the native box. */
+  const secondBuildOf = (events: TraceEvent[]) =>
+    events.slice(
+      events.findIndex(
+        ({ event }, index) =>
+          index > 0 &&
+          (event === 'LayoutStartPending' || event === 'LayoutBuildFailed')
+      )
     );
-    const rows = await sampleTransformPairAt(AFTER_START, start);
-    const events = await takeTraceOf(tag);
-    expect(summarize(events.filter(isHostEvent))).toBe(
-      'LayoutStartPending > LayoutStartMounted > Received > TrackEnded:Transform:false > Ended:Interrupted:None > TrackStarted:Transform > Admitted'
+
+  /**
+   * A spring has no declared timeline: the last record of each spring operation
+   * of the native box has the frames of the record of the twin.
+   */
+  function expectSpringFramesOfTwin({ replacement }: ReferenceCase) {
+    const records = readFrameRecords();
+    (replacement?.operations ?? []).forEach(([kind, , , leaf], operation) => {
+      if (!leaf?.isSpring) {
+        return;
+      }
+      const [native, twin] = ['native', 'frame'].map((box) =>
+        records
+          .filter(
+            (record) =>
+              record.box === box && isSameLeaf(record, { key: kind, operation })
+          )
+          .pop()!
+          .frames.map(({ timeMs, value }) => `${value} at ${timeMs}`)
+      );
+      expect(native.length > 0).toBe(true);
+      expect(native.join()).toBe(twin.join());
+    });
+  }
+
+  test('a new start with another end value replaces the track, and the native values and the frames of the frame driver are on the two timelines', async () => {
+    const { events, reads } = await playCase(
+      'a new start with another end value',
+      CONTINUITY_CASES['a new start with another end value']
     );
-    for (const row of rows) {
-      expectSameMatrix(row.native, row.frame, 0.005, TRANSLATION_TOLERANCE);
-      expect(row.keys).toBe(1);
-    }
-    expect(rows[0].native[12] < 50).toBe(true);
-    expect(callbacks.slice().sort().join()).toBe('frame:false,native:false');
+    expect(summarize(secondBuildOf(events).filter(isHostEvent))).toBe(
+      `LayoutStartPending > LayoutStartMounted > Received > TrackEnded:Transform:false > Ended:Interrupted:None > TrackStarted:Transform > Admitted > ${TRANSFORM_END}`
+    );
+    expectOneKeyWhilePlaying(reads);
     await render(null);
   });
 
-  test('a new start with the same end value and a position leaf keeps the transform track', async () => {
-    const layouts = transformPairOf(FIRST, {}, { originX: { duration: 400 } });
-    const tag = await playFirst(layouts);
-    const start = performance.now();
-    await render(pairSceneOf(layouts, FIRST_STYLE, { left: START_LEFT }));
-    const rows = await sampleTransformPairAt(
-      [0.2, 0.4].map((fraction) => fraction * TRANSFORM_DURATION),
-      start
+  test('a new start with the same end value and a position leaf keeps the transform track on its timeline', async () => {
+    const { events } = await playCase(
+      'a new start with the same end value and a position leaf',
+      CONTINUITY_CASES[
+        'a new start with the same end value and a position leaf'
+      ]
     );
-    const events = await takeTraceOf(tag);
-    expect(startedTargets(events)).toBe('PositionX');
+    const second = secondBuildOf(events);
+    expect(startedTargets(second)).toBe('PositionX');
     expect(buildFailures(events)).toBe('');
-    for (const row of rows) {
-      expectSameMatrix(row.native, row.frame, 0.005, TRANSLATION_TOLERANCE);
-    }
-    expect(rows[1].native[12] > 60).toBe(true);
     await render(null);
   });
 
-  const transfers: [
-    string,
-    Operation[],
-    Operation[] | undefined,
-    Leaves,
-    string,
-  ][] = [
+  const transfers: [string, ReferenceCase, string][] = [
     [
       'a frame-driven start with no transform leaf',
-      FIRST,
-      undefined,
-      { originX: { hasCallback: true } },
+      transferOf(TRANSLATION, { leaves: { originX: { hasCallback: true } } }),
       'UnsupportedTiming',
     ],
     [
       'a frame-driven start with a transform leaf',
-      FIRST,
-      [['translateX', 50, 20, { isSpring: true }]],
-      {},
+      transferOf(TRANSLATION, {
+        operations: [['translateX', 50, 20, { isSpring: true }]],
+      }),
       'UnsupportedTiming',
     ],
     [
       'a start that continues one operation and replaces the other',
-      TWO,
-      [
-        ['translateX', 32, 80],
-        ['scale', 1.2, 2],
-      ],
-      {},
+      transferOf(TWO, {
+        operations: timedOperationsOf([
+          ['translateX', 32, 80],
+          ['scale', 1.2, 2],
+        ]),
+      }),
       'UnsupportedContinuation',
     ],
     [
       'a start with the same end values and no other leaf',
-      TWO,
-      [
-        ['translateX', 32, 80],
-        ['scale', 1.2, 1.5],
-      ],
-      {},
+      transferOf(TWO, {
+        operations: timedOperationsOf([
+          ['translateX', 32, 80],
+          ['scale', 1.2, 1.5],
+        ]),
+      }),
       'UnsupportedContinuation',
     ],
+    [
+      'a frame-driven start in the part of a curve below its start value',
+      transferOf(
+        TRANSLATION,
+        { leaves: { originX: { hasCallback: true } } },
+        { easing: Easing.bezier(0.3, -0.4, 0.7, 1.6) },
+        0.1 * TRANSFORM_DURATION
+      ),
+      'UnsupportedTiming',
+    ],
   ];
-  for (const [caseName, first, operations, leaves, failure] of transfers) {
-    test(`${caseName} takes the view from the transform track and agrees with the frame driver`, async () => {
-      const tag = await playFirst(
-        transformPairOf(first),
-        endTransformOf(first)
-      );
-      const next = operations
-        ? transformPairOf(operations, {}, leaves)
-        : {
-            nativeLayout: layoutOf(leaves, { name: 'native' }),
-            frameLayout: layoutOf(leaves, { name: 'frame' }),
-          };
-      const start = performance.now();
-      await render(
-        pairSceneOf(next, endTransformOf(operations ?? first), {
-          left: START_LEFT,
-        })
-      );
-      const rows = await sampleTransformPairAt(AFTER_START, start);
-      const events = await takeTraceOf(tag);
-      expect(buildFailures(events)).toBe(failure);
-      expect(startedTargets(events)).toBe('');
-      for (const row of rows) {
-        expect(row.keys).toBe(0);
-        expectSameMatrix(row.end, row.frame, 0.02, TRANSLATION_TOLERANCE);
-      }
+  for (const [caseName, referenceCase, failure] of transfers) {
+    test(`${caseName} takes the view from the transform track, and the frames of the frame driver on the two boxes are on the timelines`, async () => {
+      const played = await playCase(caseName, referenceCase);
+      const second = secondBuildOf(played.events);
+      expect(buildFailures(second)).toBe(failure);
+      expect(startedTargets(second)).toBe('');
+      expectNoKeyAfterTransfer(played);
+      expectModelOnFrames(caseName, played);
+      expectSpringFramesOfTwin(referenceCase);
       await render(null);
     });
   }
 
-  test('a frame-driven start takes the view in the part of a curve below its start value', async () => {
-    const easing = Easing.bezier(0.3, -0.4, 0.7, 1.6);
-    const tag = await playFirst(
-      transformPairOf(FIRST, { easing }),
-      FIRST_STYLE,
-      0.1
-    );
-    const leaves: Leaves = { originX: { hasCallback: true } };
-    const start = performance.now();
-    await render(
-      pairSceneOf(
-        {
-          nativeLayout: layoutOf(leaves),
-          frameLayout: layoutOf(leaves),
-        },
-        FIRST_STYLE,
-        { left: START_LEFT }
-      )
-    );
-    const rows = await sampleTransformPairAt([30, 100, 500, 1500], start);
-    expect(buildFailures(await takeTraceOf(tag))).toBe('UnsupportedTiming');
-    expect(rows[0].end[12] < 0).toBe(true);
-    for (const row of rows) {
-      expect(row.keys).toBe(0);
-      expectSameMatrix(row.end, row.frame, 0.005, toleranceOf(160));
-    }
-    await render(null);
-  });
-
-  const commitCases: [string, Operation, StyleTransform, number][] = [
-    ['a number', ['translateX', 0, 80], [{ translateX: 30 }], 12],
-    [
-      'an angle in degrees',
-      ['rotate', '0deg', '90deg'],
-      [{ rotate: '30deg' }],
-      1,
-    ],
+  const commitCases: [string, Operation[], number][] = [
+    ['a number', COMMITTED_TRANSLATION, 12],
+    ['an angle in degrees', COMMITTED_ROTATION, 1],
   ];
-  for (const [caseName, operation, committed, cell] of commitCases) {
-    test(`a commit of another style transform during a track of ${caseName} keeps the track, and the committed style shows at its end`, async () => {
-      const layouts = transformPairOf([operation]);
-      const endStyle = endTransformOf([operation]);
-      const tag = await mountScene(pairSceneOf(layouts, endStyle));
-      const start = performance.now();
-      await render(pairSceneOf(layouts, endStyle, { left: END_LEFT }));
-      await wait(0.4 * TRANSFORM_DURATION);
-      await takeTraceOf(tag);
+  for (const [trackName, committed, cell] of commitCases) {
+    const caseName =
+      `a commit of another style transform during a track of ${trackName}` as keyof typeof STYLE_COMMIT_CASES;
+    test(`${caseName} keeps the track on its timeline, and the committed style shows at its end`, async () => {
+      const referenceCase = STYLE_COMMIT_CASES[caseName];
       const builderCallsBefore = builderCalls;
-      const before = await sample(tag, 'Transform');
+      const played = await play(referenceCase);
+      const reads = expectReference(caseName, referenceCase, played);
+      expect(summarize(played.events.filter(isHostEvent))).toBe(
+        `${TRANSFORM_START} > ${TRANSFORM_END}`
+      );
+      expect(builderCalls).toBe(builderCallsBefore + 2);
+      expectOneKeyWhilePlaying(reads);
 
-      await render(pairSceneOf(layouts, committed, { left: END_LEFT }));
-      const rows = await sampleTransformPairAt(
-        [0.6, 0.8].map((fraction) => fraction * TRANSFORM_DURATION),
-        start
+      const { native, frame } = played.end!;
+      expect(native.Transform.playbackKeys.length).toBe(0);
+      const shown = native.Transform.presentation[cell];
+      expect(Math.abs(shown - endCellsOf(committed)[cell]) < 0.001).toBe(true);
+      const leafEnd = endCellsOf(referenceCase.operations!)[cell];
+      expect(Math.abs(frame.Transform.model[cell] - leafEnd) < 0.001).toBe(
+        true
       );
-      const playing = await sample(tag, 'Transform');
-      expect(playing.playbackKeys.join()).toBe(before.playbackKeys.join());
-      expect(playing.playbackKeys.length).toBe(1);
-      for (const row of rows) {
-        expectSameMatrix(
-          row.native,
-          row.frame,
-          toleranceOf(Math.PI / 2),
-          toleranceOf(80)
-        );
-      }
-
-      const [end] = await sampleTransformPairAt(
-        [1.2 * TRANSFORM_DURATION],
-        start
-      );
-      expect(summarize((await takeTraceOf(tag)).filter(isHostEvent))).toBe(
-        TRANSFORM_END
-      );
-      expect(builderCalls).toBe(builderCallsBefore);
-      expect(callbacks.slice().sort().join()).toBe('frame:true,native:true');
-      expect(end.keys).toBe(0);
-      const leafEnd = matrixOfStyle(endStyle)[cell];
-      const committedValue = matrixOfStyle(committed)[cell];
-      expect(Math.abs(end.native[cell] - committedValue) < 0.001).toBe(true);
-      expect(Math.abs(end.frame[cell] - leafEnd) < 0.001).toBe(true);
       await render(null);
     });
   }
 
   const unrealizableCommits: [string, StyleTransform, SizeBoxProps['style']][] =
     [
-      ['a transform origin', FIRST_STYLE, { transformOrigin: 'top left' }],
+      ['a transform origin', undefined, { transformOrigin: 'top left' }],
       ['a translation in percent', [{ translateX: '160%' }], {}],
     ];
-  for (const [caseName, committed, style] of unrealizableCommits) {
-    test(`a commit of ${caseName} during the track gives the view to the frame driver`, async () => {
-      const layouts = transformPairOf(FIRST);
-      const tag = await playFirst(layouts);
-      const start = performance.now();
-      await render(pairSceneOf(layouts, committed, { left: END_LEFT, style }));
-      const rows = await sampleTransformPairAt(
-        [0.2, 0.4].map((fraction) => fraction * TRANSFORM_DURATION),
-        start
+  for (const [caseName, transform, style] of unrealizableCommits) {
+    test(`a commit of ${caseName} during the track gives the view to the frame driver, and its frames are on the timeline of the track`, async () => {
+      const referenceCase = transformCaseOf(
+        TRANSLATION,
+        {},
+        {
+          restyle: {
+            atMs: SECOND_COMMIT_MS,
+            transform,
+            style,
+            handsOver: true,
+          },
+        }
       );
-      const events = await takeTraceOf(tag);
-      expect(buildFailures(events)).toBe('UnsupportedTarget');
-      expect(startedTargets(events)).toBe('');
-      for (const row of rows) {
-        expect(row.keys).toBe(0);
-        expectSameMatrix(row.end, row.frame, 0.005, TRANSLATION_TOLERANCE);
-      }
+      const played = await play(referenceCase);
+      expectReference(`a commit of ${caseName}`, referenceCase, played);
+      const second = secondBuildOf(played.events);
+      expect(buildFailures(second)).toBe('UnsupportedTarget');
+      expect(startedTargets(second)).toBe('');
+      expectNoKeyAfterTransfer(played);
+      expectModelOnFrames(`a commit of ${caseName}`, played);
       await render(null);
     });
   }
 });
 
+const WRITTEN_END = 80;
+const WRITTEN_VALUE = 30;
+const WRITE_BLOCK_MS = 40;
 const offsets: Record<string, SharedValue<number>> = {};
 
-type WrittenBoxProps = {
-  left: number;
-  layout: SizeBoxProps['layout'];
-  refName?: string;
-};
-
-/** An animated style gives the box its `translateX`. */
-function WrittenBox({ left, layout, refName = BOX_REF }: WrittenBoxProps) {
-  const ref = useTestRef(refName);
+/** A `SizeBox` whose `translateX` an animated style gives. */
+function WrittenBox(box: SizeBoxProps) {
   const offset = useSharedValue(WRITTEN_END);
-  offsets[refName] = offset;
+  offsets[box.refName ?? BOX_REF] = offset;
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],
   }));
-  return (
-    <Animated.View
-      ref={ref}
-      layout={layout}
-      style={[styles.box, { marginLeft: left }, animatedStyle]}
-    />
-  );
+  // oxlint-disable-next-line reanimated/animated-style-non-animated-component -- The host of a `SizeBox` is an animated component.
+  return <SizeBox {...box} style={[box.style, animatedStyle]} />;
 }
 
-const WRITTEN_END = 80;
-const WRITTEN_VALUE = 30;
+function writePair(value: number, blockMs = 0) {
+  const targets = [offsets[BOX_REF], offsets[FRAME_BOX_REF]];
+  scheduleOnUI(() => {
+    'worklet';
+    blockUIThread(blockMs);
+    for (const target of targets) {
+      target.value = value;
+    }
+  });
+}
+
+/**
+ * The boxes go to their end place, with one write of the two transforms: at
+ * `atMs` from the commit, or before the commit after a block of the UI thread.
+ * The rows go on after the declared end of the track, so each run has reads
+ * from the removal lead of the written target.
+ */
+const writtenCaseOf = (atMs?: number): ReferenceCase =>
+  transformCaseOf([['translateX', 0, WRITTEN_END]], undefined, {
+    totalMs: 1.15 * TRANSFORM_DURATION,
+    box: { Box: WrittenBox },
+    write: {
+      atMs,
+      targets: ['Transform'],
+      run: () =>
+        writePair(WRITTEN_VALUE, atMs === undefined ? WRITE_BLOCK_MS : 0),
+    },
+  });
+
+const hasModel = (value: number) => (read: RowRead) =>
+  Math.abs(read.sampled.model[12] - value) < 0.01;
+
+const fromOriginOf = ({ timeMs, tracks: [{ origin }] }: RowRead) =>
+  timeMs - middleOf(origin);
+
+/**
+ * The reads with the model of the style come first, and each read after them
+ * has the written model: the names of what is not so.
+ */
+function modelFaultsOf(reads: RowRead[], styledReads: number) {
+  const countOf = (from: number, to: number, value: number) =>
+    reads.slice(from, to).filter((read) => !hasModel(value)(read)).length;
+  const notStyled = countOf(0, styledReads, WRITTEN_END);
+  const notWritten = countOf(styledReads, reads.length, WRITTEN_VALUE);
+  return [
+    ...(notStyled > 0
+      ? [
+          `${notStyled} of the first ${styledReads} reads do not have the model of the style`,
+        ]
+      : []),
+    ...(notWritten > 0
+      ? [
+          `${notWritten} of the ${reads.length - styledReads} reads after them do not have the written model`,
+        ]
+      : []),
+    ...(styledReads === reads.length ? ['no read has the written model'] : []),
+  ];
+}
+
+const styledReadsOf = (order: WriteOrder) =>
+  order.name === 'after the mount' ? order.reads : 0;
+
+/**
+ * The first read with the written model is before `byMs` from the origin of its
+ * track: the name of what is not so.
+ */
+function lateWriteFaultsOf(reads: RowRead[], byMs: number) {
+  const written = reads.find(hasModel(WRITTEN_VALUE));
+  return written === undefined || fromOriginOf(written) < byMs
+    ? []
+    : [
+        `the first read with the written model is ${fromOriginOf(written).toFixed(2)} ms after the origin of its track, not before ${byMs} ms`,
+      ];
+}
 
 describe('native layout transform and the synchronous props path', () => {
   if (
@@ -845,95 +741,62 @@ describe('native layout transform and the synchronous props path', () => {
     return;
   }
 
-  const layouts = transformPairOf([['translateX', 0, WRITTEN_END]]);
-  const pair = (left: number) => (
-    <View style={styles.sizeRow}>
-      <View style={[styles.sizeCell, styles.sizeRowCell]}>
-        <WrittenBox left={left} layout={layouts.nativeLayout} />
-      </View>
-      <View style={[styles.sizeCell, styles.sizeRowCell]}>
-        <WrittenBox
-          left={left}
-          layout={layouts.frameLayout}
-          refName={FRAME_BOX_REF}
-        />
-      </View>
-    </View>
-  );
-  const writePair = (value: number, blockMs = 0) => {
-    const targets = [offsets[BOX_REF], offsets[FRAME_BOX_REF]];
-    scheduleOnUI(() => {
-      'worklet';
-      blockUIThread(blockMs);
-      for (const target of targets) {
-        target.value = value;
-      }
-    });
-  };
-  /** The track plays to its end over the written model value, which shows then. */
-  async function expectTrackThenWrittenValue(
-    tag: number,
-    rows: TransformPairRow[]
-  ) {
-    const playing = rows.slice(0, -1);
-    const end = rows[rows.length - 1];
-    for (const row of playing) {
-      expect(row.keys).toBe(1);
-      expect(Math.abs(row.end[12] - WRITTEN_VALUE) < 0.01).toBe(true);
-      expectSameMatrix(row.native, row.frame, 0.005, toleranceOf(WRITTEN_END));
-    }
-    expect(summarize((await takeTraceOf(tag)).filter(isHostEvent))).toBe(
+  /**
+   * Statements A and B for a case with a write, and what the write does not
+   * change: the track plays to its end with its one key, and the written value
+   * shows then.
+   */
+  async function playWritten(testName: string, atMs?: number) {
+    const referenceCase = writtenCaseOf(atMs);
+    const played = await play(referenceCase);
+    const reads = expectReference(testName, referenceCase, played);
+    expectOneKeyWhilePlaying(reads);
+    expect(summarize(played.events.filter(isHostEvent))).toBe(
       `${TRANSFORM_START} > ${TRANSFORM_END}`
     );
-    expect(end.keys).toBe(0);
-    expect(Math.abs(end.native[12] - WRITTEN_VALUE) < 0.01).toBe(true);
+    const { playbackKeys, presentation } = played.end!.native.Transform;
+    expect(playbackKeys.length).toBe(0);
+    expect(Math.abs(presentation[12] - WRITTEN_VALUE) < 0.01).toBe(true);
     expect(callbacks.filter((each) => each.startsWith('native')).join()).toBe(
       'native:true'
     );
+    return reads;
   }
 
   for (const tracks of [false, true]) {
-    test(`a transform write during the track keeps the track, and the written value shows at its end, tracking ${tracks}`, async () => {
-      setDynamicFeatureFlag(
-        'TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS',
-        tracks
-      );
-      const tag = await mountScene(pair(START_LEFT));
-      const start = performance.now();
-      await render(pair(END_LEFT));
-      await wait(0.4 * TRANSFORM_DURATION);
-      writePair(WRITTEN_VALUE);
-      const rows = await sampleTransformPairAt(
-        [0.5, 0.75, 1.15].map((fraction) => fraction * TRANSFORM_DURATION),
-        start
-      );
-      await expectTrackThenWrittenValue(tag, rows);
-      setDynamicFeatureFlag(
-        'TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS',
-        false
-      );
-      await render(null);
+    const duringTrack = `a transform write during the track keeps the track, and the written value shows at its end, tracking ${tracks}`;
+    test(duringTrack, async () => {
+      await withTracking(tracks, async () => {
+        const reads = await playWritten(duringTrack, SECOND_COMMIT_MS);
+        const order = writeOrderOf(reads, hasModel(WRITTEN_VALUE));
+        expect(
+          [
+            ...(order.name === 'before the mount'
+              ? ['no read before the write has the model of the style']
+              : []),
+            ...modelFaultsOf(reads, styledReadsOf(order)),
+            ...lateWriteFaultsOf(reads, 0.5 * TRANSFORM_DURATION),
+          ].join()
+        ).toBe('');
+      });
     });
 
-    test(`a transform write between a commit and its mount keeps the native start, and the written value shows at the end of the track, tracking ${tracks}`, async () => {
-      setDynamicFeatureFlag(
-        'TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS',
-        tracks
-      );
-      const tag = await mountScene(pair(START_LEFT));
-      writePair(WRITTEN_VALUE, 40);
-      const start = performance.now();
-      await render(pair(END_LEFT));
-      const rows = await sampleTransformPairAt(
-        [0.25, 0.75, 1.15].map((fraction) => fraction * TRANSFORM_DURATION),
-        start
-      );
-      await expectTrackThenWrittenValue(tag, rows);
-      setDynamicFeatureFlag(
-        'TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS',
-        false
-      );
-      await render(null);
+    const beforeMount = `a transform write between a commit and its mount keeps the native start, and the written value shows at the end of the track, tracking ${tracks}`;
+    test(beforeMount, async () => {
+      await withTracking(tracks, async () => {
+        const reads = await playWritten(beforeMount);
+        const order = writeOrderOf(reads, hasModel(WRITTEN_VALUE));
+        console.log(
+          ['WRITE-ORDER', beforeMount, describeWriteOrder(order)].join(' | ')
+        );
+        expect(
+          [
+            order.name,
+            ...modelFaultsOf(reads, styledReadsOf(order)),
+            ...lateWriteFaultsOf(reads, 0.25 * TRANSFORM_DURATION),
+          ].join(': ')
+        ).toBe(order.name);
+      });
     });
   }
 });
@@ -1010,9 +873,6 @@ function ExitPair({ exit, isMounted }: ExitPairProps) {
     </View>
   );
 }
-
-const pairTags = () =>
-  [BOX_REF, FRAME_BOX_REF].map((ref) => getTestComponent(ref).getTag());
 
 /** The edge antialiasing of the native box and of its frame-driven twin. */
 async function edgeAntialiasingAt(
