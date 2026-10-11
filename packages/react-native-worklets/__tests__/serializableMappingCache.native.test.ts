@@ -54,6 +54,8 @@ interface Harness {
   holds: Map<number, boolean>;
   /** Simulates the last native owner of the serializable releasing it. */
   release(ref: FakeRef): void;
+  /** Simulates GC collecting this reference while others keep it alive. */
+  collect(ref: FakeRef): void;
   createSerializable(value: unknown, shouldPersistRemote?: boolean): FakeRef;
   createSerializableWorklet(value: unknown): FakeRef;
   makeShareable(value: object): object;
@@ -70,7 +72,11 @@ afterEach(() => {
   globalThis.WeakRef = realWeakRef;
 });
 
-function setup(): Harness {
+/**
+ * `weakRef` picks the `WeakRef` the code under test sees: a fake whose targets
+ * the test collects, the real one, or none.
+ */
+function setup(weakRef: 'fake' | 'real' | 'none' = 'fake'): Harness {
   let nextId = 1;
   const live = new Set<number>();
   const holds = new Map<number, boolean>();
@@ -105,16 +111,23 @@ function setup(): Harness {
       : undefined
   );
 
-  // A `WeakRef` whose target is collected when the test releases it.
+  // A `WeakRef` whose target is collected when the test releases or collects it.
+  const collected = new WeakSet<object>();
   class ReleasableWeakRef<T extends object> {
     constructor(private readonly referent: T) {}
     deref(): T | undefined {
-      return live.has((this.referent as unknown as FakeRef).id)
+      return live.has((this.referent as unknown as FakeRef).id) &&
+        !collected.has(this.referent)
         ? this.referent
         : undefined;
     }
   }
-  (globalThis as { WeakRef: unknown }).WeakRef = ReleasableWeakRef;
+  (globalThis as { WeakRef: unknown }).WeakRef =
+    weakRef === 'fake'
+      ? ReleasableWeakRef
+      : weakRef === 'real'
+        ? realWeakRef
+        : undefined;
 
   const registry: Registration[] = [];
   (
@@ -134,6 +147,7 @@ function setup(): Harness {
       native,
       holds,
       release: (ref) => live.delete(ref.id),
+      collect: (ref) => collected.add(ref),
       createSerializable: serializable.createSerializable,
       createSerializableWorklet: serializable.createSerializableWorklet,
       makeShareable: serializable.makeShareable,
@@ -355,9 +369,97 @@ describe('serializableMappingCache and clones that hold a JS function', () => {
     const entry = cache.get(worklet);
     expect(isMarker(entry)).toBe(true);
     expect((entry as FakeMarker).target).toBe(first.id);
-    // A hit returns a new reference to the same native serializable.
+    // `first` is alive, so the hit returns it.
+    expect(second).toBe(first);
+    expect(native.createSerializableWorklet).toHaveBeenCalledTimes(1);
+  });
+
+  test('a hit returns the live clone without a call to native', () => {
+    const { native, createSerializable } = setup();
+    const worklet = fakeWorklet({ callback: () => 1 });
+
+    const first = createSerializable(worklet);
+
+    expect(createSerializable(worklet)).toBe(first);
+    expect(createSerializable({ worklet })).toBeDefined();
+    expect(native.derefWeakSerializableRef).not.toHaveBeenCalled();
+    expect(native.createSerializableWorklet).toHaveBeenCalledTimes(1);
+  });
+
+  test('once the clone was collected, a hit asks native and remembers the new reference', () => {
+    const { native, collect, createSerializable } = setup();
+    const worklet = fakeWorklet({ callback: () => 1 });
+    const first = createSerializable(worklet);
+
+    collect(first);
+    const second = createSerializable(worklet);
+
     expect(second).not.toBe(first);
     expect(second.id).toBe(first.id);
+    expect(native.derefWeakSerializableRef).toHaveBeenCalledTimes(1);
+    expect(createSerializable(worklet)).toBe(second);
+    expect(native.derefWeakSerializableRef).toHaveBeenCalledTimes(1);
+    // The new reference is known as a clone that holds a JS function.
+    expect(createSerializable(second)).toBe(second);
+    expect(native.createSerializableWorklet).toHaveBeenCalledTimes(1);
+  });
+
+  test('once the serializable was released, a hit misses and serializes again', () => {
+    const { native, release, createSerializable } = setup();
+    const worklet = fakeWorklet({ callback: () => 1 });
+    const first = createSerializable(worklet);
+
+    release(first);
+    const second = createSerializable(worklet);
+
+    expect(native.derefWeakSerializableRef).toHaveBeenCalledTimes(1);
+    expect(native.createSerializableWorklet).toHaveBeenCalledTimes(2);
+    expect(second.id).not.toBe(first.id);
+    expect(createSerializable(worklet)).toBe(second);
+    expect(native.derefWeakSerializableRef).toHaveBeenCalledTimes(1);
+  });
+
+  test('without WeakRef, every hit asks native', () => {
+    const { native, release, createSerializable } = setup('none');
+    const worklet = fakeWorklet({ callback: () => 1 });
+    const first = createSerializable(worklet);
+
+    const second = createSerializable(worklet);
+    const third = createSerializable(worklet);
+
+    expect(second.id).toBe(first.id);
+    expect(third.id).toBe(first.id);
+    expect(native.derefWeakSerializableRef).toHaveBeenCalledTimes(2);
+    release(first);
+    expect(createSerializable(worklet).id).not.toBe(first.id);
+    expect(native.createSerializableWorklet).toHaveBeenCalledTimes(2);
+  });
+
+  test('the cache does not keep a clone alive, so GC can collect it', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('v8').setFlagsFromString('--expose-gc');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const gc = require('vm').runInNewContext('gc') as () => void;
+    const { native, release, createSerializable } = setup('real');
+    const worklet = fakeWorklet({ callback: () => 1 });
+    let clone: FakeRef | undefined = createSerializable(worklet);
+    expect(createSerializable(worklet)).toBe(clone);
+    const probe = new WeakRef(clone);
+    const id = clone.id;
+    clone = undefined;
+    // Jest mocks remember their arguments and results.
+    for (const mock of Object.values(native)) {
+      mock.mockClear();
+    }
+
+    // `WeakRef` keeps its target alive until the current job ends.
+    await new Promise((resolve) => setImmediate(resolve));
+    gc();
+
+    expect(probe.deref()).toBeUndefined();
+    // The fake native released it with its last owner.
+    release({ __serializableRef: true, id });
+    expect(createSerializable(worklet).id).not.toBe(id);
     expect(native.createSerializableWorklet).toHaveBeenCalledTimes(1);
   });
 
@@ -433,7 +535,7 @@ describe('serializableMappingCache and clones that hold a JS function', () => {
     createSerializable(outer);
 
     // `inner` was a cache hit through its marker and still marks `outer`.
-    expect(native.derefWeakSerializableRef).toHaveBeenCalled();
+    expect(native.createSerializableWorklet).toHaveBeenCalledTimes(2);
     expect(isMarker(cache.get(outer))).toBe(true);
     expect(isMarker(cache.get(outer.__closure))).toBe(true);
   });

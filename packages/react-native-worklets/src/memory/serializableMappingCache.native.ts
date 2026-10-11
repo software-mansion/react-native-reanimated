@@ -52,6 +52,14 @@ export class RemoteBearingEntry {
    */
   readonly __serializableRef = false;
 
+  /**
+   * For a `Marker`, where `WeakRef` exists, the clone that was cached or that
+   * the last call to native returned. A live clone owns its native
+   * serializable, so a hit can return it without a call to native, and the
+   * `WeakRef` does not keep it alive.
+   */
+  wrapper: WeakRef<object> | undefined = undefined;
+
   constructor(
     readonly ref: object,
     readonly kind: RemoteBearingEntryKind

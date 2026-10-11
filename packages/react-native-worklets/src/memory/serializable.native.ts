@@ -90,8 +90,9 @@ function markIfRemoteBearing<TClone extends object>(
  * Caches `value -> clone`. A clone that holds a JS function and is not
  * persisted is cached through a non-owning marker, so the cache never keeps it
  * alive on its own. While something else owns the clone, a cache hit returns
- * the same native serializable (and so the same copy on the other runtime).
- * Once it was released, `value` is serialized again.
+ * the same native serializable (and so the same copy on the other runtime),
+ * through the clone itself while it is alive. Once it was released, `value` is
+ * serialized again.
  */
 function cacheClone(
   value: object,
@@ -100,15 +101,16 @@ function cacheClone(
   shouldPersistRemote: boolean
 ) {
   if (holdsFunction) {
-    serializableMappingEntries.set(
-      value,
-      shouldPersistRemote
-        ? new RemoteBearingEntry(clone, RemoteBearingEntryKind.Strong)
-        : new RemoteBearingEntry(
-            WorkletsModule.makeWeakSerializableRef(clone),
-            RemoteBearingEntryKind.Marker
-          )
-    );
+    const entry = shouldPersistRemote
+      ? new RemoteBearingEntry(clone, RemoteBearingEntryKind.Strong)
+      : new RemoteBearingEntry(
+          WorkletsModule.makeWeakSerializableRef(clone),
+          RemoteBearingEntryKind.Marker
+        );
+    if (!shouldPersistRemote && globalThis.WeakRef) {
+      entry.wrapper = new WeakRef(clone);
+    }
+    serializableMappingEntries.set(value, entry);
     serializableMappingEntries.set(clone, remoteBearingFlag);
     return;
   }
@@ -152,9 +154,17 @@ function getFromCache(value: object) {
 
 function derefRemoteBearingEntry(entry: RemoteBearingEntry) {
   if (entry.kind === RemoteBearingEntryKind.Marker) {
+    // A clone returned before owns the native serializable while it lives.
+    const wrapper = entry.wrapper?.deref();
+    if (wrapper !== undefined) {
+      return wrapper;
+    }
     const live = WorkletsModule.derefWeakSerializableRef(entry.ref);
     if (live !== undefined) {
       serializableMappingEntries.set(live, remoteBearingFlag);
+      if (globalThis.WeakRef) {
+        entry.wrapper = new WeakRef(live);
+      }
     }
     // When the clone was released, the caller serializes `value` again and
     // `cacheClone` replaces the entry.
