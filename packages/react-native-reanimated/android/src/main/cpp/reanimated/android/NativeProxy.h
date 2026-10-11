@@ -11,6 +11,7 @@
 #include <reanimated/android/CSS/CSSPlatformTransitions.h>
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -35,6 +36,16 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
 
  private:
   friend HybridBase;
+  /**
+   * Guards `javaPart_`. `invalidateCpp()` releases the Java part on the React teardown thread
+   * while the UI thread can still call into it, e.g. from worklets that were already scheduled
+   * on the UI runtime, which is owned by Worklets and outlives this proxy's invalidation.
+   */
+  std::mutex javaPartMutex_;
+  /**
+   * Released by `invalidateCpp()`. Read it only through `lockJavaPart()`, except in the
+   * constructor, which runs before any other thread can reach this proxy.
+   */
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
   std::shared_ptr<worklets::WorkletRuntime> uiRuntime_;
@@ -51,6 +62,13 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
   std::optional<MountedViewProps> obtainMountedViewProps(Tag tag, bool presented);
   void synchronouslyUpdateUIProps(const std::vector<int> &intBuffer, const std::vector<double> &doubleBuffer);
   PlatformDepMethodsHolder getPlatformDependentMethods();
+
+  /**
+   * Returns a local reference to the Java part, or null once `invalidateCpp()` has run. The local
+   * reference keeps the Java object alive for the duration of the call even if `invalidateCpp()`
+   * runs concurrently, so check it and use it instead of reading `javaPart_` directly.
+   */
+  jni::local_ref<NativeProxy::javaobject> lockJavaPart();
 
   double getAnimationTimestamp();
   bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
@@ -110,7 +128,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
 
   template <class Signature>
   JMethod<Signature> getJniMethod(std::string const &methodName) {
-    return javaPart_->getClass()->getMethod<Signature>(methodName.c_str());
+    // Looked up on the class rather than on `javaPart_`, which may already be released.
+    return javaClassStatic()->getMethod<Signature>(methodName.c_str());
   }
 
   explicit NativeProxy(

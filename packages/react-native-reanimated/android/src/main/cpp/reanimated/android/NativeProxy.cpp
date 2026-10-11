@@ -11,7 +11,9 @@
 #include <reanimated/android/PseudoSelectorCallback.h>
 #include <reanimated/android/SensorSetter.h>
 
+#include <chrono>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -147,8 +149,12 @@ void NativeProxy::rewriteSynchronousProps() {
 }
 
 bool NativeProxy::getIsReducedMotion() {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    return false;
+  }
   static const auto method = getJniMethod<jboolean()>("getIsReducedMotion");
-  return method(javaPart_.get());
+  return method(javaPart.get());
 }
 
 void NativeProxy::toggleSlowAnimationsOnUIRuntime() {
@@ -169,24 +175,33 @@ void NativeProxy::registerNatives() {
 }
 
 void NativeProxy::requestRender(std::function<void(double)> onRender) {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    return;
+  }
   static const auto method = getJniMethod<void(AnimationFrameCallback::javaobject)>("requestRender");
-  method(javaPart_.get(), AnimationFrameCallback::newObjectCxxArgs(std::move(onRender)).get());
+  method(javaPart.get(), AnimationFrameCallback::newObjectCxxArgs(std::move(onRender)).get());
 }
 
 void NativeProxy::registerEventHandler() {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    return;
+  }
   auto eventHandler = bindThis(&NativeProxy::handleEvent);
   static const auto method = getJniMethod<void(EventHandler::javaobject)>("registerEventHandler");
-  method(javaPart_.get(), EventHandler::newObjectCxxArgs(std::move(eventHandler)).get());
+  method(javaPart.get(), EventHandler::newObjectCxxArgs(std::move(eventHandler)).get());
 }
 
 void NativeProxy::maybeFlushUIUpdatesQueue() {
   // Module might be already destroyed.
-  if (!javaPart_) {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
     return;
   }
 
   static const auto method = getJniMethod<void()>("maybeFlushUIUpdatesQueue");
-  method(javaPart_.get());
+  method(javaPart.get());
 }
 
 std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vector<int> &tags) {
@@ -194,11 +209,15 @@ std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vect
     return {};
   }
 
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    return {};
+  }
   static const auto method = getJniMethod<jboolean(jni::alias_ref<jni::JArrayInt>)>("preserveMountedTags");
   auto jArrayInt = jni::JArrayInt::newArray(tags.size());
   jArrayInt->setRegion(0, tags.size(), tags.data());
 
-  if (!method(javaPart_.get(), jArrayInt)) {
+  if (!method(javaPart.get(), jArrayInt)) {
     return {};
   }
 
@@ -208,8 +227,12 @@ std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vect
 
 // Android animators write the view on every frame, so the view's props are the presented ones.
 std::optional<MountedViewProps> NativeProxy::obtainMountedViewProps(Tag tag, bool /*presented*/) {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    return std::nullopt;
+  }
   static const auto method = getJniMethod<jni::local_ref<jni::JArrayDouble>(int)>("obtainMountedViewProps");
-  auto values = method(javaPart_.get(), tag);
+  auto values = method(javaPart.get(), tag);
   if (!values) {
     return std::nullopt;
   }
@@ -227,51 +250,79 @@ std::optional<MountedViewProps> NativeProxy::obtainMountedViewProps(Tag tag, boo
 void NativeProxy::synchronouslyUpdateUIProps(
     const std::vector<int> &intBuffer,
     const std::vector<double> &doubleBuffer) {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    return;
+  }
   static const auto method = getJniMethod<void(jni::alias_ref<jni::JArrayInt>, jni::alias_ref<jni::JArrayDouble>)>(
       "synchronouslyUpdateUIProps");
   auto jArrayInt = jni::JArrayInt::newArray(intBuffer.size());
   auto jArrayDouble = jni::JArrayDouble::newArray(doubleBuffer.size());
   jArrayInt->setRegion(0, intBuffer.size(), intBuffer.data());
   jArrayDouble->setRegion(0, doubleBuffer.size(), doubleBuffer.data());
-  method(javaPart_.get(), jArrayInt, jArrayDouble);
+  method(javaPart.get(), jArrayInt, jArrayDouble);
 }
 
 int NativeProxy::registerSensor(int sensorType, int interval, int, std::function<void(double[], int)> setter) {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    return -1;
+  }
   static const auto method = getJniMethod<int(int, int, SensorSetter::javaobject)>("registerSensor");
-  return method(javaPart_.get(), sensorType, interval, SensorSetter::newObjectCxxArgs(std::move(setter)).get());
+  return method(javaPart.get(), sensorType, interval, SensorSetter::newObjectCxxArgs(std::move(setter)).get());
 }
 void NativeProxy::unregisterSensor(int sensorId) {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    return;
+  }
   static const auto method = getJniMethod<void(int)>("unregisterSensor");
-  method(javaPart_.get(), sensorId);
+  method(javaPart.get(), sensorId);
 }
 
 void NativeProxy::setGestureState(int handlerTag, int newState) {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    return;
+  }
   static const auto method = getJniMethod<void(int, int)>("setGestureState");
-  method(javaPart_.get(), handlerTag, newState);
+  method(javaPart.get(), handlerTag, newState);
 }
 
 int NativeProxy::subscribeForKeyboardEvents(
     std::function<void(int, int)> callback,
     bool isStatusBarTranslucent,
     bool isNavigationBarTranslucent) {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    return -1;
+  }
   static const auto method =
       getJniMethod<int(KeyboardWorkletWrapper::javaobject, bool, bool)>("subscribeForKeyboardEvents");
   return method(
-      javaPart_.get(),
+      javaPart.get(),
       KeyboardWorkletWrapper::newObjectCxxArgs(std::move(callback)).get(),
       isStatusBarTranslucent,
       isNavigationBarTranslucent);
 }
 
 void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    return;
+  }
   static const auto method = getJniMethod<void(int)>("unsubscribeFromKeyboardEvents");
-  method(javaPart_.get(), listenerId);
+  method(javaPart.get(), listenerId);
 }
 
 void NativeProxy::attachPseudoSelector(Tag tag, PseudoSelector selector, std::function<void(bool)> callback) {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    return;
+  }
   static const auto method = getJniMethod<void(int, int, PseudoSelectorCallback::javaobject)>("attachPseudoSelector");
   method(
-      javaPart_.get(),
+      javaPart.get(),
       static_cast<int>(tag),
       static_cast<int>(selector),
       PseudoSelectorCallback::newObjectCxxArgs(std::move(callback)).get());
@@ -286,10 +337,14 @@ bool NativeProxy::cssAnimateTransition(
     const double startTimestampMs,
     const int easingId,
     const bool persistent) {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    return false;
+  }
   static const auto method =
       getJniMethod<jboolean(int, int, double, double, double, double, int, jboolean)>("cssAnimateTransition");
   return method(
-             javaPart_.get(),
+             javaPart.get(),
              viewTag,
              propertyId,
              fromValue,
@@ -301,8 +356,12 @@ bool NativeProxy::cssAnimateTransition(
 }
 
 void NativeProxy::cssRemoveTransition(const int viewTag, const int propertyId) {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    return;
+  }
   static const auto method = getJniMethod<void(int, int)>("cssRemoveTransition");
-  method(javaPart_.get(), viewTag, propertyId);
+  method(javaPart.get(), viewTag, propertyId);
 }
 
 void NativeProxy::cssDefineEasing(
@@ -310,6 +369,10 @@ void NativeProxy::cssDefineEasing(
     const int type,
     const std::vector<float> &pointsX,
     const std::vector<float> &pointsY) {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    return;
+  }
   static const auto method =
       getJniMethod<void(int, int, jni::alias_ref<jni::JArrayFloat>, jni::alias_ref<jni::JArrayFloat>)>(
           "cssDefineEasing");
@@ -317,22 +380,36 @@ void NativeProxy::cssDefineEasing(
   jPointsX->setRegion(0, pointsX.size(), pointsX.data());
   auto jPointsY = jni::JArrayFloat::newArray(pointsY.size());
   jPointsY->setRegion(0, pointsY.size(), pointsY.data());
-  method(javaPart_.get(), easingId, type, jPointsX, jPointsY);
+  method(javaPart.get(), easingId, type, jPointsX, jPointsY);
 }
 
 void NativeProxy::cssUndefineEasing(const int easingId) {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    return;
+  }
   static const auto method = getJniMethod<void(int)>("cssUndefineEasing");
-  method(javaPart_.get(), easingId);
+  method(javaPart.get(), easingId);
 }
 
 void NativeProxy::detachPseudoSelector(Tag tag, PseudoSelector selector) {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    return;
+  }
   static const auto method = getJniMethod<void(int, int)>("detachPseudoSelector");
-  method(javaPart_.get(), static_cast<int>(tag), static_cast<int>(selector));
+  method(javaPart.get(), static_cast<int>(tag), static_cast<int>(selector));
 }
 
 double NativeProxy::getAnimationTimestamp() {
+  const auto javaPart = lockJavaPart();
+  if (!javaPart) {
+    // Worklets already scheduled on the UI runtime can still ask for a timestamp. Read the clock
+    // behind SystemClock.uptimeMillis() so that the timestamps they see stay monotonic.
+    return std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now().time_since_epoch()).count();
+  }
   static const auto method = getJniMethod<jlong()>("getAnimationTimestamp");
-  jlong output = method(javaPart_.get());
+  jlong output = method(javaPart.get());
   return static_cast<double>(output);
 }
 
@@ -441,12 +518,21 @@ std::shared_ptr<css::CSSPlatformTransitionBackend> NativeProxy::makePlatformTran
       bindThis(&NativeProxy::cssAnimateTransition), bindThis(&NativeProxy::cssRemoveTransition), std::move(easings));
 }
 
+jni::local_ref<NativeProxy::javaobject> NativeProxy::lockJavaPart() {
+  std::lock_guard<std::mutex> lock(javaPartMutex_);
+  if (!javaPart_) {
+    return nullptr;
+  }
+  return jni::make_local(javaPart_);
+}
+
 void NativeProxy::invalidateCpp() {
   uiRuntime_.reset();
   // cleanup all animated sensors here, since the next line resets
   // the pointer and it will be too late after it
   reanimatedModuleProxy_->cleanupSensors();
   reanimatedModuleProxy_.reset();
+  std::lock_guard<std::mutex> lock(javaPartMutex_);
   javaPart_ = nullptr;
 }
 

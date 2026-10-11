@@ -1,0 +1,1 @@
+Fix an Android crash with `JNI DETECTED ERROR IN APPLICATION: obj == null` when a worklet calls into Reanimated on the UI runtime while the React host is torn down, for example on an `expo-updates` restart.
