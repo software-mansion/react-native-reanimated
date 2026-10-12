@@ -1,8 +1,24 @@
-import React from 'react';
+/*
+ * Method: a test of a preset with a native route plays the preset as a case of the player of `native layout
+ * reference`, with the leaves and the transform operations that the source of the preset declares. Each
+ * sample of the native box is on the declared timeline of its key at its own sample time (statement A), and
+ * each frame of the frame-driven twin is on a replay of the declared timeline (statement B). The busy test
+ * has the two statements and a gap in the frame record of the twin. A test of a plain number has the two
+ * statements for the opacity and a state check of the X at its planned parts. Each other statement is a
+ * trace check or a state check at the end. The boxes of a played preset have no style transform. At the
+ * end, each target of the native box is at rest and has the model of the twin, or the two views left.
+ *
+ * Not proved: the distance of the two boxes at one instant, the lag of the frame driver, the route of the
+ * twin in a played case. Pixels, a device, and 120 Hz are not tested.
+ *
+ * Not converted (the old pair comparison at the frames of the frame driver, `expectAsTwin`): the presets
+ * that stay frame-driven. FlipIn has no played case, the kit has no matrix of `skewX`, and
+ * EntryExitTransition has no leaves of the kit.
+ */
+import React, { useEffect } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import type {
   BaseAnimationBuilder,
-  EasingFunction,
   LayoutAnimation,
 } from 'react-native-reanimated';
 import Animated, {
@@ -107,32 +123,47 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 import { blockUIThread } from './nativeLayoutLoad';
 import type {
+  CallbackBuilder,
+  Played,
+  ReferenceCase,
+} from './nativeLayoutReferencePlay';
+import { expectReference, play } from './nativeLayoutReferencePlay';
+import type {
   FrameDriverRow,
+  Key,
+  Leaf,
+  LeafPart,
+  Leaves,
+  Operation,
+  SizeBoxProps,
   TargetSample,
-  TimedPart,
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
   BOX_REF,
   callbackOf,
   callbacks,
+  centerOf,
   countedOf,
-  declaredFrameChangeAt,
-  declaredValueAt,
   FRAME_BOX_REF,
   FRAME_MS,
   frameDrivenOf,
   hasNativeLayoutStarts,
   isHostEvent,
+  isNoView,
+  middleOf,
   namedBuilderCalls,
   sample,
+  SizeBox,
   summarize,
   takeAtFrameDriverFrame,
   takeTrace,
+  takeTraceUntil,
   waitForCallbacks,
 } from './nativeLayoutTestKit';
 
 type Flow = 'entering' | 'exiting' | 'layout';
+type EntryExit = Exclude<Flow, 'layout'>;
 type Builder = BaseAnimationBuilder & {
   build: () => (values: never) => LayoutAnimation;
 };
@@ -141,7 +172,7 @@ type BoxAnimations = Pick<React.ComponentProps<typeof Animated.View>, Flow>;
 type BoxFrame = { left: number; top: number; width: number; height: number };
 
 const DURATION = 1200;
-const FRACTIONS = [0.25, 0.5, 0.75];
+const DELAY = 300;
 const CELL_HEIGHT = 160;
 const REST: BoxFrame = { left: 60, top: 20, width: 50, height: 50 };
 const MOVED: BoxFrame = { left: 150, top: 60, width: 90, height: 70 };
@@ -149,61 +180,120 @@ const widerBy = (change: number): BoxFrame => ({
   ...REST,
   width: REST.width + change,
 });
-
-/** The largest speed of an easing, as a multiple of its mean speed. */
-function largestSpeedOf(easing: EasingFunction) {
-  const STEPS = 1000;
-  let largestStep = 0;
-  for (let step = 0; step < STEPS; step++) {
-    largestStep = Math.max(
-      largestStep,
-      Math.abs(easing((step + 1) / STEPS) - easing(step / STEPS))
-    );
-  }
-  return largestStep * STEPS;
-}
-
-/**
- * The part of its change that a target moves in two display frames at the
- * largest speed of its easing.
- */
-const twoFramesOf = (easing: EasingFunction) =>
-  (2 * largestSpeedOf(easing) * FRAME_MS) / DURATION;
-
-const DEFAULT_TWO_FRAMES = twoFramesOf(Easing.inOut(Easing.quad));
+const WINDOW = Dimensions.get('window');
 const AT_REST = { opacity: 0.01, points: 0.5, cells: 0.005 };
 const NATIVE_TIMING = 'UnsupportedTiming';
 
-const SCALARS = ['Opacity', 'PositionX', 'PositionY', 'Width', 'Height'];
-const TARGETS = [...SCALARS, 'Transform'];
-type BoxSample = Record<string, TargetSample>;
-
-/** The easing of each target of a preset that does not have the default easing. */
-type TargetEasings = Record<string, EasingFunction>;
+type Declared = Pick<ReferenceCase, 'leaves' | 'operations'>;
 
 /**
- * One part of the declared timeline of a target: its end value, its part of the
- * duration, and its easing when that is not the default easing. A part with no
- * duration shows its end value at once.
+ * What a preset declares when each of its timings has `timing`: the duration,
+ * the easing, and the `withDelay` wrappers.
  */
-type DeclaredPart = [to: number, fraction: number, easing?: EasingFunction];
+type Declare = (timing: Leaf) => Declared;
+type OperationEnds = [kind: string, from: number | string, to: number | string];
+type Offsets = Pick<Leaf, 'initial' | 'to'>;
 
-/** The declared timeline of one target of a preset with sequences. */
-type DeclaredTrack = {
-  name: string;
-  /** The sample whose time is the time of the value. */
-  sampleTarget: string;
-  read: (box: BoxSample) => number;
-  start: number;
-  parts: DeclaredPart[];
-  tolerance: number;
-};
+const declare =
+  ({
+    opacity,
+    originX,
+    originY,
+    operations = [],
+  }: {
+    opacity?: [from: number, to: number];
+    originX?: Offsets;
+    originY?: Offsets;
+    operations?: OperationEnds[];
+  }): Declare =>
+  (timing) => ({
+    leaves: {
+      ...(opacity && {
+        opacity: { ...timing, initial: opacity[0], to: opacity[1] },
+      }),
+      ...(originX && { originX: { ...timing, ...originX } }),
+      ...(originY && { originY: { ...timing, ...originY } }),
+    },
+    ...(operations.length > 0 && {
+      operations: operations.map(
+        ([kind, from, to]): Operation => [kind, from, to, timing]
+      ),
+    }),
+  });
 
-type PresetCurves = TargetEasings | DeclaredTrack[];
+const transformOf = (...operations: OperationEnds[]) => declare({ operations });
+const fadeInWith = (...operations: OperationEnds[]) =>
+  declare({ opacity: [0, 1], operations });
+const fadeOutWith = (...operations: OperationEnds[]) =>
+  declare({ opacity: [1, 0], operations });
+
+// The translations of a Rotate preset are the half of the width minus the half of the height: none for `REST`.
+const rotateInFrom = (angle: string) =>
+  fadeInWith(
+    ['rotate', angle, '0deg'],
+    ['translateX', 0, 0],
+    ['translateY', 0, 0]
+  );
+const rotateOutTo = (angle: string) =>
+  fadeOutWith(
+    ['rotate', '0deg', angle],
+    ['translateX', 0, 0],
+    ['translateY', 0, 0]
+  );
+const PERSPECTIVE: OperationEnds = ['perspective', 500, 500];
+
+/**
+ * One timing of a sequence: where it ends, its part of `DURATION`, and its
+ * easing when that is not the default easing. The last timing ends at the end
+ * value of the leaf.
+ */
+type SequencePart = [
+  end: Pick<LeafPart, 'to' | 'level'>,
+  fraction: number,
+  easing?: LeafPart['easing'],
+];
+
+function sequenceOf({ delays }: Leaf, parts: SequencePart[]): Leaf {
+  const timings = parts.map(
+    ([end, fraction, easing = 'default']): LeafPart => ({
+      ...end,
+      duration: fraction * DURATION,
+      easing,
+    })
+  );
+  const { duration, easing } = timings[timings.length - 1];
+  return { delays, via: timings.slice(0, -1), duration, easing };
+}
+
+const BOUNCE_IN = [0.55, 0.15, 0.15, 0.15];
+const BOUNCE_OUT = [0.15, 0.15, 0.15, 0.55];
+
+const bounceOf =
+  (kind: string, fractions: number[], [start, ...ends]: number[]): Declare =>
+  (timing) => ({
+    leaves: {},
+    operations: [
+      [
+        kind,
+        start,
+        ends[ends.length - 1],
+        sequenceOf(
+          timing,
+          ends.map((to, index): SequencePart => [{ to }, fractions[index]])
+        ),
+      ],
+    ],
+  });
+
 type PresetRow = [
   Preset,
+  /**
+   * The route of the preset with its default easing: the targets of the native
+   * tracks, or the failure that keeps the animation frame-driven.
+   */
   string,
-  PresetCurves?,
+  /** No value: the preset stays frame-driven, and its test is not converted. */
+  Declare?,
   /**
    * The animation with the duration of the rows, when `duration` does not set
    * it.
@@ -211,81 +301,81 @@ type PresetRow = [
   (() => Builder)?,
 ];
 
-const WINDOW = Dimensions.get('window');
-const BOUNCE_IN = [0.55, 0.15, 0.15, 0.15];
-const BOUNCE_OUT = [0.15, 0.15, 0.15, 0.55];
-
-function bounceOf(
-  name: string,
-  cell: number,
-  tolerance: number,
-  fractions: number[],
-  [start, ...ends]: number[]
-): DeclaredTrack[] {
-  return [
-    {
-      name,
-      sampleTarget: 'Transform',
-      read: (box) => box.Transform.presentation[cell],
-      start,
-      parts: ends.map((to, index): DeclaredPart => [to, fractions[index]]),
-      tolerance,
-    },
-  ];
-}
-
-const scaleOf = (fractions: number[], values: number[]) =>
-  bounceOf('scale', 0, AT_REST.cells, fractions, values);
-const translateXOf = (fractions: number[], values: number[]) =>
-  bounceOf('translateX', 12, AT_REST.points, fractions, values);
-const translateYOf = (fractions: number[], values: number[]) =>
-  bounceOf('translateY', 13, AT_REST.points, fractions, values);
-
-/** The parts of each Bounce preset, from its source. */
-const BOUNCES = {
-  BounceIn: scaleOf(BOUNCE_IN, [0, 1.2, 0.9, 1.1, 1]),
-  BounceInDown: translateYOf(BOUNCE_IN, [WINDOW.height, -20, 10, -10, 0]),
-  BounceInUp: translateYOf(BOUNCE_IN, [-WINDOW.height, 20, -10, 10, 0]),
-  BounceInLeft: translateXOf(BOUNCE_IN, [-WINDOW.width, 20, -10, 10, 0]),
-  BounceInRight: translateXOf(BOUNCE_IN, [WINDOW.width, -20, 10, -10, 0]),
-  BounceOut: scaleOf(BOUNCE_OUT, [1, 1.1, 0.9, 1.2, 0]),
-  BounceOutDown: translateYOf(BOUNCE_OUT, [0, -10, 10, -20, WINDOW.height]),
-  BounceOutUp: translateYOf(BOUNCE_OUT, [0, 10, -10, 20, -WINDOW.height]),
-  BounceOutLeft: translateXOf(BOUNCE_OUT, [0, 10, -10, 20, -WINDOW.width]),
-  BounceOutRight: translateXOf(BOUNCE_OUT, [0, -10, 10, -20, WINDOW.width]),
-};
-
-/**
- * The route of each preset with its default easing: the targets of the native
- * tracks, or the failure that keeps the animation frame-driven.
- */
+/** The leaves and the operations of each preset, from its source. */
 const ENTERING: PresetRow[] = [
-  [FadeIn, 'Opacity'],
-  [FadeInRight, 'Opacity+Transform'],
-  [FadeInLeft, 'Opacity+Transform'],
-  [FadeInUp, 'Opacity+Transform'],
-  [FadeInDown, 'Opacity+Transform'],
-  [SlideInRight, 'PositionX'],
-  [SlideInLeft, 'PositionX'],
-  [SlideInUp, 'PositionY'],
-  [SlideInDown, 'PositionY'],
-  [StretchInX, 'Transform'],
-  [StretchInY, 'Transform'],
-  [ZoomIn, 'Transform'],
-  [ZoomInRotate, 'Transform'],
-  [ZoomInLeft, 'Transform'],
-  [ZoomInRight, 'Transform'],
-  [ZoomInUp, 'Transform'],
-  [ZoomInDown, 'Transform'],
-  [ZoomInEasyUp, 'Transform'],
-  [ZoomInEasyDown, 'Transform'],
-  [RotateInDownLeft, 'Opacity+Transform'],
-  [RotateInDownRight, 'Opacity+Transform'],
-  [RotateInUpLeft, 'Opacity+Transform'],
-  [RotateInUpRight, 'Opacity+Transform'],
-  [RollInLeft, 'Transform'],
-  [RollInRight, 'Transform'],
-  [PinwheelIn, 'Opacity+Transform'],
+  [FadeIn, 'Opacity', fadeInWith()],
+  [FadeInRight, 'Opacity+Transform', fadeInWith(['translateX', 25, 0])],
+  [FadeInLeft, 'Opacity+Transform', fadeInWith(['translateX', -25, 0])],
+  [FadeInUp, 'Opacity+Transform', fadeInWith(['translateY', -25, 0])],
+  [FadeInDown, 'Opacity+Transform', fadeInWith(['translateY', 25, 0])],
+  [SlideInRight, 'PositionX', declare({ originX: { initial: WINDOW.width } })],
+  [SlideInLeft, 'PositionX', declare({ originX: { initial: -WINDOW.width } })],
+  [
+    SlideInUp,
+    'PositionY',
+    declare({ originY: { initial: -WINDOW.height - REST.top } }),
+  ],
+  [SlideInDown, 'PositionY', declare({ originY: { initial: WINDOW.height } })],
+  [StretchInX, 'Transform', transformOf(['scaleX', 0, 1])],
+  [StretchInY, 'Transform', transformOf(['scaleY', 0, 1])],
+  [ZoomIn, 'Transform', transformOf(['scale', 0, 1])],
+  [
+    ZoomInRotate,
+    'Transform',
+    transformOf(['scale', 0, 1], ['rotate', '0.3rad', '0rad']),
+  ],
+  [
+    ZoomInLeft,
+    'Transform',
+    transformOf(['translateX', -WINDOW.width, 0], ['scale', 0, 1]),
+  ],
+  [
+    ZoomInRight,
+    'Transform',
+    transformOf(['translateX', WINDOW.width, 0], ['scale', 0, 1]),
+  ],
+  [
+    ZoomInUp,
+    'Transform',
+    transformOf(['translateY', -WINDOW.height, 0], ['scale', 0, 1]),
+  ],
+  [
+    ZoomInDown,
+    'Transform',
+    transformOf(['translateY', WINDOW.height, 0], ['scale', 0, 1]),
+  ],
+  [
+    ZoomInEasyUp,
+    'Transform',
+    transformOf(['translateY', -REST.height, 0], ['scale', 0, 1]),
+  ],
+  [
+    ZoomInEasyDown,
+    'Transform',
+    transformOf(['translateY', REST.height, 0], ['scale', 0, 1]),
+  ],
+  [RotateInDownLeft, 'Opacity+Transform', rotateInFrom('-90deg')],
+  [RotateInDownRight, 'Opacity+Transform', rotateInFrom('90deg')],
+  [RotateInUpLeft, 'Opacity+Transform', rotateInFrom('90deg')],
+  [RotateInUpRight, 'Opacity+Transform', rotateInFrom('-90deg')],
+  [
+    RollInLeft,
+    'Transform',
+    transformOf(
+      ['translateX', -WINDOW.width, 0],
+      ['rotate', '-180deg', '0deg']
+    ),
+  ],
+  [
+    RollInRight,
+    'Transform',
+    transformOf(['translateX', WINDOW.width, 0], ['rotate', '180deg', '0deg']),
+  ],
+  [
+    PinwheelIn,
+    'Opacity+Transform',
+    fadeInWith(['scale', 0, 1], ['rotate', '5rad', '0rad']),
+  ],
   [FlipInXUp, 'LayoutBuildFailed:EndpointMismatch'],
   [FlipInXDown, 'LayoutBuildFailed:EndpointMismatch'],
   [FlipInYLeft, 'LayoutBuildFailed:EndpointMismatch'],
@@ -294,130 +384,255 @@ const ENTERING: PresetRow[] = [
   [FlipInEasyY, 'LayoutBuildFailed:EndpointMismatch'],
   [LightSpeedInRight, 'LayoutBuildFailed:UnsupportedValue'],
   [LightSpeedInLeft, 'LayoutBuildFailed:UnsupportedValue'],
-  [BounceIn, 'Transform', BOUNCES.BounceIn],
-  [BounceInDown, 'Transform', BOUNCES.BounceInDown],
-  [BounceInUp, 'Transform', BOUNCES.BounceInUp],
-  [BounceInLeft, 'Transform', BOUNCES.BounceInLeft],
-  [BounceInRight, 'Transform', BOUNCES.BounceInRight],
+  [BounceIn, 'Transform', bounceOf('scale', BOUNCE_IN, [0, 1.2, 0.9, 1.1, 1])],
+  [
+    BounceInDown,
+    'Transform',
+    bounceOf('translateY', BOUNCE_IN, [WINDOW.height, -20, 10, -10, 0]),
+  ],
+  [
+    BounceInUp,
+    'Transform',
+    bounceOf('translateY', BOUNCE_IN, [-WINDOW.height, 20, -10, 10, 0]),
+  ],
+  [
+    BounceInLeft,
+    'Transform',
+    bounceOf('translateX', BOUNCE_IN, [-WINDOW.width, 20, -10, 10, 0]),
+  ],
+  [
+    BounceInRight,
+    'Transform',
+    bounceOf('translateX', BOUNCE_IN, [WINDOW.width, -20, 10, -10, 0]),
+  ],
 ];
 
+// The end of a Slide preset that leaves is one window from the place of the view, or at the edge of the
+// window when that is farther.
 const EXITING: PresetRow[] = [
-  [FadeOut, 'Opacity'],
-  [FadeOutRight, 'Opacity+Transform'],
-  [FadeOutLeft, 'Opacity+Transform'],
-  [FadeOutUp, 'Opacity+Transform'],
-  [FadeOutDown, 'Opacity+Transform'],
-  [SlideOutRight, 'PositionX'],
-  [SlideOutLeft, 'PositionX'],
-  [SlideOutUp, 'PositionY'],
-  [SlideOutDown, 'PositionY'],
-  [StretchOutX, 'Transform'],
-  [StretchOutY, 'Transform'],
-  [ZoomOut, 'Transform'],
-  [ZoomOutRotate, 'Transform'],
-  [ZoomOutLeft, 'Transform'],
-  [ZoomOutRight, 'Transform'],
-  [ZoomOutUp, 'Transform'],
-  [ZoomOutDown, 'Transform'],
-  [ZoomOutEasyUp, 'Transform'],
-  [ZoomOutEasyDown, 'Transform'],
-  [RotateOutDownLeft, 'Opacity+Transform'],
-  [RotateOutDownRight, 'Opacity+Transform'],
-  [RotateOutUpLeft, 'Opacity+Transform'],
-  [RotateOutUpRight, 'Opacity+Transform'],
-  [RollOutLeft, 'Transform'],
-  [RollOutRight, 'Transform'],
-  [PinwheelOut, 'Opacity+Transform'],
-  [FlipOutXUp, 'Transform'],
-  [FlipOutXDown, 'Transform'],
-  [FlipOutYLeft, 'Transform'],
-  [FlipOutYRight, 'Transform'],
-  [FlipOutEasyX, 'Transform'],
-  [FlipOutEasyY, 'Transform'],
+  [FadeOut, 'Opacity', fadeOutWith()],
+  [FadeOutRight, 'Opacity+Transform', fadeOutWith(['translateX', 0, 25])],
+  [FadeOutLeft, 'Opacity+Transform', fadeOutWith(['translateX', 0, -25])],
+  [FadeOutUp, 'Opacity+Transform', fadeOutWith(['translateY', 0, -25])],
+  [FadeOutDown, 'Opacity+Transform', fadeOutWith(['translateY', 0, 25])],
+  [SlideOutRight, 'PositionX', declare({ originX: { to: WINDOW.width } })],
+  [
+    SlideOutLeft,
+    'PositionX',
+    declare({ originX: { to: -WINDOW.width - REST.left } }),
+  ],
+  [
+    SlideOutUp,
+    'PositionY',
+    declare({ originY: { to: -WINDOW.height - REST.top } }),
+  ],
+  [SlideOutDown, 'PositionY', declare({ originY: { to: WINDOW.height } })],
+  [StretchOutX, 'Transform', transformOf(['scaleX', 1, 0])],
+  [StretchOutY, 'Transform', transformOf(['scaleY', 1, 0])],
+  [ZoomOut, 'Transform', transformOf(['scale', 1, 0])],
+  // The end angle of the preset is the text '0.3'. Each frame has the unit of the start angle.
+  [
+    ZoomOutRotate,
+    'Transform',
+    transformOf(['scale', 1, 0], ['rotate', '0rad', '0.3rad']),
+  ],
+  [
+    ZoomOutLeft,
+    'Transform',
+    transformOf(['translateX', 0, -WINDOW.width], ['scale', 1, 0]),
+  ],
+  [
+    ZoomOutRight,
+    'Transform',
+    transformOf(['translateX', 0, WINDOW.width], ['scale', 1, 0]),
+  ],
+  [
+    ZoomOutUp,
+    'Transform',
+    transformOf(['translateY', 0, -WINDOW.height], ['scale', 1, 0]),
+  ],
+  [
+    ZoomOutDown,
+    'Transform',
+    transformOf(['translateY', 0, WINDOW.height], ['scale', 1, 0]),
+  ],
+  [
+    ZoomOutEasyUp,
+    'Transform',
+    transformOf(['translateY', 0, -REST.height], ['scale', 1, 0]),
+  ],
+  [
+    ZoomOutEasyDown,
+    'Transform',
+    transformOf(['translateY', 0, REST.height], ['scale', 1, 0]),
+  ],
+  [RotateOutDownLeft, 'Opacity+Transform', rotateOutTo('90deg')],
+  [RotateOutDownRight, 'Opacity+Transform', rotateOutTo('-90deg')],
+  [RotateOutUpLeft, 'Opacity+Transform', rotateOutTo('-90deg')],
+  [RotateOutUpRight, 'Opacity+Transform', rotateOutTo('90deg')],
+  [
+    RollOutLeft,
+    'Transform',
+    transformOf(
+      ['translateX', 0, -WINDOW.width],
+      ['rotate', '0deg', '-180deg']
+    ),
+  ],
+  [
+    RollOutRight,
+    'Transform',
+    transformOf(['translateX', 0, WINDOW.width], ['rotate', '0deg', '180deg']),
+  ],
+  [
+    PinwheelOut,
+    'Opacity+Transform',
+    fadeOutWith(['scale', 1, 0], ['rotate', '0rad', '5rad']),
+  ],
+  [
+    FlipOutXUp,
+    'Transform',
+    transformOf(
+      PERSPECTIVE,
+      ['rotateX', '0deg', '90deg'],
+      ['translateY', 0, -REST.height]
+    ),
+  ],
+  [
+    FlipOutXDown,
+    'Transform',
+    transformOf(
+      PERSPECTIVE,
+      ['rotateX', '0deg', '-90deg'],
+      ['translateY', 0, REST.height]
+    ),
+  ],
+  [
+    FlipOutYLeft,
+    'Transform',
+    transformOf(
+      PERSPECTIVE,
+      ['rotateY', '0deg', '-90deg'],
+      ['translateX', 0, -REST.width]
+    ),
+  ],
+  [
+    FlipOutYRight,
+    'Transform',
+    transformOf(
+      PERSPECTIVE,
+      ['rotateY', '0deg', '90deg'],
+      ['translateX', 0, REST.width]
+    ),
+  ],
+  [
+    FlipOutEasyX,
+    'Transform',
+    transformOf(PERSPECTIVE, ['rotateX', '0deg', '90deg']),
+  ],
+  [
+    FlipOutEasyY,
+    'Transform',
+    transformOf(PERSPECTIVE, ['rotateY', '0deg', '90deg']),
+  ],
   [LightSpeedOutRight, 'LayoutBuildFailed:UnsupportedValue'],
   [LightSpeedOutLeft, 'LayoutBuildFailed:UnsupportedValue'],
-  [BounceOut, 'Transform', BOUNCES.BounceOut],
-  [BounceOutDown, 'Transform', BOUNCES.BounceOutDown],
-  [BounceOutUp, 'Transform', BOUNCES.BounceOutUp],
-  [BounceOutLeft, 'Transform', BOUNCES.BounceOutLeft],
-  [BounceOutRight, 'Transform', BOUNCES.BounceOutRight],
+  [
+    BounceOut,
+    'Transform',
+    bounceOf('scale', BOUNCE_OUT, [1, 1.1, 0.9, 1.2, 0]),
+  ],
+  [
+    BounceOutDown,
+    'Transform',
+    bounceOf('translateY', BOUNCE_OUT, [0, -10, 10, -20, WINDOW.height]),
+  ],
+  [
+    BounceOutUp,
+    'Transform',
+    bounceOf('translateY', BOUNCE_OUT, [0, 10, -10, 20, -WINDOW.height]),
+  ],
+  [
+    BounceOutLeft,
+    'Transform',
+    bounceOf('translateX', BOUNCE_OUT, [0, 10, -10, 20, -WINDOW.width]),
+  ],
+  [
+    BounceOutRight,
+    'Transform',
+    bounceOf('translateX', BOUNCE_OUT, [0, -10, 10, -20, WINDOW.width]),
+  ],
 ];
 
-const CURVED_TRANSITION_EASINGS: TargetEasings = {
-  PositionX: Easing.in(Easing.ease),
-  PositionY: Easing.out(Easing.ease),
-  Width: Easing.in(Easing.exp),
-  Height: Easing.out(Easing.exp),
+const GEOMETRY: Key[] = ['originX', 'originY', 'width', 'height'];
+const GEOMETRY_ROUTE = 'PositionX+PositionY+Width+Height';
+
+const geometryOf = (leafOf: (key: Key) => Leaf): Leaves =>
+  Object.fromEntries(GEOMETRY.map((key) => [key, leafOf(key)]));
+
+const CURVED_TRANSITION_EASINGS: Partial<Record<Key, Leaf['easing']>> = {
+  originX: Easing.in(Easing.ease),
+  originY: Easing.out(Easing.ease),
+  width: Easing.in(Easing.exp),
+  height: Easing.out(Easing.exp),
 };
 
-const scalarOf =
-  (target: string): DeclaredTrack['read'] =>
-  (box) =>
-    scalarsOf(box, 'presentation')[target];
+const LINEAR: Declare = (timing) => ({ leaves: geometryOf(() => timing) });
+const CURVED: Declare = (timing) => ({
+  leaves: geometryOf((key) => ({
+    ...timing,
+    easing: CURVED_TRANSITION_EASINGS[key],
+  })),
+});
 
-/** The declared timeline of each key of a transition from `REST` to `MOVED`. */
-function geometryOf(
-  partsOf: (rest: number, moved: number, key: keyof BoxFrame) => DeclaredPart[]
-): DeclaredTrack[] {
-  const keys: [string, keyof BoxFrame][] = [
-    ['PositionX', 'left'],
-    ['PositionY', 'top'],
-    ['Width', 'width'],
-    ['Height', 'height'],
-  ];
-  return keys.map(([target, key]) => ({
-    name: target,
-    sampleTarget: target,
-    read: scalarOf(target),
-    start: REST[key],
-    parts: partsOf(REST[key], MOVED[key], key),
-    tolerance: AT_REST.points,
-  }));
-}
-
-const FADING: DeclaredTrack[] = [
-  {
-    name: 'Opacity',
-    sampleTarget: 'Opacity',
-    read: scalarOf('Opacity'),
-    start: 1,
-    parts: [
-      [0, 0.5],
-      [1, 0.5],
-    ],
-    tolerance: AT_REST.opacity,
+// The opacity goes to 0 and comes back. Each layout key has its new value from the half of the time.
+const FADING: Declare = (timing) => ({
+  leaves: {
+    opacity: {
+      ...sequenceOf(timing, [
+        [{ to: 0 }, 0.5],
+        [{}, 0.5],
+      ]),
+      initial: 1,
+      to: 1,
+    },
+    ...geometryOf(() => ({ delays: [DURATION / 2], duration: 0 })),
   },
-  ...geometryOf((rest, moved) => [
-    [rest, 0.5],
-    [moved, 0],
-  ]),
-];
+});
 
-// The X and the width move in the first half, the Y and the height in the second half.
-const SEQUENCED = geometryOf((rest, moved, key) =>
-  key === 'left' || key === 'width'
-    ? [
-        [moved, 0.5],
-        [moved, 0.5],
-      ]
-    : [
-        [rest, 0.5],
-        [moved, 0.5],
-      ]
-);
+/**
+ * The keys of `movesFirst` move in the first half, the others in the second
+ * half.
+ */
+const sequencedOf =
+  (movesFirst: Key[]): Declare =>
+  (timing) => ({
+    leaves: geometryOf((key) =>
+      sequenceOf(timing, [
+        [{ level: movesFirst.includes(key) ? 1 : 0 }, 0.5],
+        [{}, 0.5],
+      ])
+    ),
+  });
+const SEQUENCED = sequencedOf(['originX', 'width']);
+const SEQUENCED_IN_REVERSE = sequencedOf(['originY', 'height']);
 
 const JUMP_HEIGHT = Math.max(
   Math.abs(MOVED.left - REST.left),
   Math.abs(MOVED.top - REST.top)
 );
-const JUMPING = geometryOf((rest, moved, key) =>
-  key === 'top'
-    ? [
-        [Math.min(rest, moved) - JUMP_HEIGHT, 0.5, Easing.out(Easing.exp)],
-        [moved, 0.5, Easing.bounce],
-      ]
-    : [[moved, 1]]
-);
+const JUMPING: Declare = (timing) => ({
+  leaves: {
+    ...geometryOf(() => timing),
+    originY: sequenceOf(timing, [
+      [
+        { to: Math.min(REST.top, MOVED.top) - JUMP_HEIGHT - MOVED.top },
+        0.5,
+        Easing.out(Easing.exp),
+      ],
+      [{}, 0.5, Easing.bounce],
+    ]),
+  },
+});
 
 // The time of EntryExitTransition is the sum of the times of its two animations.
 const timedEntryExit = () =>
@@ -426,15 +641,11 @@ const timedEntryExit = () =>
     .exiting(new FadeOut().duration(DURATION / 2)) as Builder;
 
 const LAYOUT: PresetRow[] = [
-  [LinearTransition, 'PositionX+PositionY+Width+Height'],
-  [
-    CurvedTransition,
-    'PositionX+PositionY+Width+Height',
-    CURVED_TRANSITION_EASINGS,
-  ],
-  [FadingTransition, 'Opacity+PositionX+PositionY+Width+Height', FADING],
-  [SequencedTransition, 'PositionX+PositionY+Width+Height', SEQUENCED],
-  [JumpingTransition, 'PositionX+PositionY+Width+Height', JUMPING],
+  [LinearTransition, GEOMETRY_ROUTE, LINEAR],
+  [CurvedTransition, GEOMETRY_ROUTE, CURVED],
+  [FadingTransition, `Opacity+${GEOMETRY_ROUTE}`, FADING],
+  [SequencedTransition, GEOMETRY_ROUTE, SEQUENCED],
+  [JumpingTransition, GEOMETRY_ROUTE, JUMPING],
   [
     EntryExitTransition,
     'LayoutBuildFailed:UnsupportedTrackForm',
@@ -442,6 +653,112 @@ const LAYOUT: PresetRow[] = [
     timedEntryExit,
   ],
 ];
+
+const PLACES: Record<Flow, ReferenceCase['places']> = {
+  entering: [undefined, REST],
+  exiting: [REST, undefined],
+  layout: [REST, MOVED],
+};
+
+/** The targets of the native tracks, or the events of a start with no command. */
+function routeOf(events: TraceEvent[]) {
+  const hostEvents = events.filter(
+    (event) => isHostEvent(event) && event.event !== 'FrameUpdateMounted'
+  );
+  const targets = hostEvents
+    .filter(({ event }) => event === 'TrackStarted')
+    .map(({ target }) => target);
+  const isAdmitted = hostEvents.some(({ event }) => event === 'Admitted');
+  return isAdmitted ? targets.join('+') : summarize(hostEvents);
+}
+
+const TWIN_ROUTE = `LayoutBuildFailed:${NATIVE_TIMING}`;
+const isNativeRoute = (route: string) => !route.startsWith('Layout');
+const routeNameOf = (route: string) =>
+  isNativeRoute(route)
+    ? `plays natively (${route})`
+    : `stays frame-driven (${route})`;
+
+const hasLeft = (tag: number) =>
+  sample(tag, 'Opacity').then(() => false, isNoView);
+
+/** The removal of the native box of a played exit ends its command. */
+async function expectLeft({ events }: Played) {
+  const { tag } = events[0];
+  const isRemoved = (taken: TraceEvent[]) =>
+    taken.some((event) => event.tag === tag && event.event === 'Ended');
+  if (!isRemoved(events)) {
+    await takeTraceUntil(isRemoved);
+  }
+  expect(await hasLeft(tag)).toBe(true);
+}
+
+type TimedPreset = {
+  name: string;
+  flow: Flow;
+  route: string;
+  declare: Declare;
+  makeAnimation: () => Builder;
+  delayMs?: number;
+};
+
+const playedTags: Record<string, number> = {};
+
+/** The box of a played case, with a record of the tag of its view. */
+function TaggedBox(props: SizeBoxProps) {
+  const { refName = BOX_REF } = props;
+  useEffect(() => {
+    playedTags[refName] = getTestComponent(refName).getTag();
+  }, [refName]);
+  return <SizeBox {...props} />;
+}
+
+/** Each box of a played case has no style transform. */
+const PLAYED_BOX: ReferenceCase['box'] = {
+  Box: TaggedBox,
+  style: { transform: undefined },
+};
+
+async function playTagged(referenceCase: ReferenceCase) {
+  delete playedTags[BOX_REF];
+  delete playedTags[FRAME_BOX_REF];
+  return play(referenceCase);
+}
+
+const caseOf = ({
+  flow,
+  declare: declareFor,
+  makeAnimation,
+  delayMs,
+}: TimedPreset): ReferenceCase => ({
+  flow,
+  ...declareFor({
+    duration: DURATION,
+    easing: 'default',
+    delays: delayMs === undefined ? undefined : [delayMs],
+  }),
+  places: PLACES[flow],
+  totalMs: (delayMs ?? 0) + DURATION,
+  builder: makeAnimation as unknown as () => CallbackBuilder,
+  box: PLAYED_BOX,
+});
+
+/** Statements A and B of a preset, its route, its end, and its callbacks. */
+async function expectOnTimeline(preset: TimedPreset) {
+  const referenceCase = caseOf(preset);
+  const played = await playTagged(referenceCase);
+  expectReference(preset.name, referenceCase, played);
+  expect(routeOf(played.events)).toBe(preset.route);
+  if (preset.flow === 'exiting') {
+    await expectLeft(played);
+  }
+  await expectPlayedEndAsTwin(preset.flow, played);
+  await render(null);
+}
+
+const SCALARS = ['Opacity', 'PositionX', 'PositionY', 'Width', 'Height'];
+const TARGETS = [...SCALARS, 'Transform'];
+type BoxSample = Record<string, TargetSample>;
 
 function PresetBox({
   refName,
@@ -509,102 +826,10 @@ async function sampleBox(tag: number): Promise<BoxSample | undefined> {
   }
 }
 
-const rangeOf = (values: number[]) =>
-  values.length > 0 ? Math.max(...values) - Math.min(...values) : 0;
-
-/** The change of the value of the track of a scalar target. */
-const travelOf = ({ members }: TargetSample) =>
-  rangeOf(members[0]?.values.map(([value]) => value) ?? []);
-
-type Matrix = number[];
-
-const IDENTITY: Matrix = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-
-function multiply(first: Matrix, second: Matrix): Matrix {
-  const product = new Array<number>(16).fill(0);
-  for (let row = 0; row < 4; row++) {
-    for (let column = 0; column < 4; column++) {
-      for (let inner = 0; inner < 4; inner++) {
-        product[4 * row + column] +=
-          first[4 * row + inner] * second[4 * inner + column];
-      }
-    }
-  }
-  return product;
-}
-
-function withCells(cells: Record<number, number>): Matrix {
-  const matrix = [...IDENTITY];
-  for (const [index, value] of Object.entries(cells)) {
-    matrix[Number(index)] = value;
-  }
-  return matrix;
-}
-
-/** The matrix of the value of a member, in the cell order of a sample. */
-const MEMBER_MATRICES: Record<string, (value: number) => Matrix> = {
-  'transform.translateX': (value) => withCells({ 12: value }),
-  'transform.translateY': (value) => withCells({ 13: value }),
-  'transform.scale': (value) => withCells({ 0: value, 5: value, 10: value }),
-  'transform.scaleX': (value) => withCells({ 0: value }),
-  'transform.scaleY': (value) => withCells({ 5: value }),
-  'transform.rotateZ': (angle) =>
-    withCells({
-      0: Math.cos(angle),
-      1: Math.sin(angle),
-      4: -Math.sin(angle),
-      5: Math.cos(angle),
-    }),
-  'transform.rotateX': (angle) =>
-    withCells({
-      5: Math.cos(angle),
-      6: Math.sin(angle),
-      9: -Math.sin(angle),
-      10: Math.cos(angle),
-    }),
-  'transform.rotateY': (angle) =>
-    withCells({
-      0: Math.cos(angle),
-      2: -Math.sin(angle),
-      8: Math.sin(angle),
-      10: Math.cos(angle),
-    }),
-};
-
-type Member = TargetSample['members'][number];
-
-/** A member with no value function has a matrix that does not change. */
-function memberMatrixAt({ property, values }: Member, progress: number) {
-  const matrixOf = MEMBER_MATRICES[property];
-  if (!matrixOf) {
-    return values[0];
-  }
-  const start = values[0][0];
-  const end = values[values.length - 1][0];
-  return matrixOf(start + (end - start) * progress);
-}
-
-/**
- * The matrix of the members of a transform track at a progress of their values.
- * The screen applies the members to a point in their order. The presentation
- * layer gives the product in the other order.
- */
-function trackMatrixAt(
-  members: Member[],
-  progress: number,
-  order: 'screen' | 'presentation'
-) {
-  const matrices = members.map((member) => memberMatrixAt(member, progress));
-  return (order === 'screen' ? matrices : [...matrices].reverse()).reduce(
-    multiply,
-    IDENTITY
-  );
-}
-
 const TRANSLATION_CELLS = [12, 13, 14];
 
 /** A translation of 100 pt counts as much as 1 in each other cell. */
-const matrixDistance = (first: Matrix, second: Matrix) =>
+const matrixDistance = (first: number[], second: number[]) =>
   Math.max(
     ...first.map(
       (cell, index) =>
@@ -612,36 +837,6 @@ const matrixDistance = (first: Matrix, second: Matrix) =>
         (TRANSLATION_CELLS.includes(index) ? 100 : 1)
     )
   );
-
-/** The progress at which the members give the matrix that is nearest to `shown`. */
-function closestProgress(
-  members: Member[],
-  shown: Matrix,
-  order: 'screen' | 'presentation'
-) {
-  const distanceAt = (progress: number) =>
-    matrixDistance(trackMatrixAt(members, progress, order), shown);
-  const STEPS = 200;
-  let best = 0;
-  for (let step = 1; step <= STEPS; step++) {
-    if (distanceAt(step / STEPS) < distanceAt(best)) {
-      best = step / STEPS;
-    }
-  }
-  let low = Math.max(0, best - 1 / STEPS);
-  let high = Math.min(1, best + 1 / STEPS);
-  for (let iteration = 0; iteration < 40; iteration++) {
-    const lowThird = low + (high - low) / 3;
-    const highThird = high - (high - low) / 3;
-    if (distanceAt(lowThird) < distanceAt(highThird)) {
-      high = highThird;
-    } else {
-      low = lowThird;
-    }
-  }
-  const progress = (low + high) / 2;
-  return { progress, residual: distanceAt(progress) };
-}
 
 /** The origin of the box. A size track moves the center and not the origin. */
 function scalarsOf(box: BoxSample, layer: 'model' | 'presentation') {
@@ -658,129 +853,46 @@ function scalarsOf(box: BoxSample, layer: 'model' | 'presentation') {
 const restToleranceOf = (target: string) =>
   target === 'Opacity' ? AT_REST.opacity : AT_REST.points;
 
-/**
- * What the two boxes show for one target. For a target with a native track,
- * `difference` is a part of the change of the target, and a transform has the
- * progress of its members in place of a value. A target with no native track
- * must be equal in the two boxes: `difference` is then in the unit of the
- * target. A target of a preset with sequences has its declared value in place
- * of the value of the twin, and `difference` in the unit of the target.
- */
+/** What the two boxes show for one target, in the unit of the target. */
 type Comparison = {
   target: string;
   native: number;
   twin: number;
   difference: number;
-  hasTrack: boolean;
   isInBound: boolean;
 };
 
-function compare(
-  native: BoxSample,
-  frame: BoxSample,
-  easings: TargetEasings = {}
-): Comparison[] {
-  const twoFrames = (target: string) =>
-    target in easings ? twoFramesOf(easings[target]) : DEFAULT_TWO_FRAMES;
+/**
+ * No target of a box that stays frame-driven has a native track: the two boxes
+ * are equal.
+ */
+function compare(native: BoxSample, frame: BoxSample): Comparison[] {
   const shown = scalarsOf(native, 'presentation');
   const twin = scalarsOf(frame, 'model');
   const comparisons = SCALARS.map((target) => {
-    const distance = Math.abs(shown[target] - twin[target]);
-    const travel = travelOf(native[target]);
-    const hasTrack = travel > 0;
-    const difference = hasTrack ? distance / travel : distance;
+    const difference = Math.abs(shown[target] - twin[target]);
     return {
       target,
       native: shown[target],
       twin: twin[target],
       difference,
-      hasTrack,
-      isInBound:
-        difference < (hasTrack ? twoFrames(target) : restToleranceOf(target)),
+      isInBound: difference < restToleranceOf(target),
     };
   });
-
-  // The first member hides the model.
-  const members = native.Transform.members.slice(1);
-  if (members.length === 0) {
-    const difference = matrixDistance(
-      native.Transform.presentation,
-      frame.Transform.model
-    );
-    return [
-      ...comparisons,
-      {
-        target: 'Transform',
-        native: 0,
-        twin: 0,
-        difference,
-        hasTrack: false,
-        isInBound: difference < AT_REST.cells,
-      },
-    ];
-  }
-  const ofNative = closestProgress(
-    members,
+  const difference = matrixDistance(
     native.Transform.presentation,
-    'presentation'
+    frame.Transform.model
   );
-  const ofTwin = closestProgress(members, frame.Transform.model, 'screen');
-  const difference = Math.abs(ofNative.progress - ofTwin.progress);
   return [
     ...comparisons,
     {
       target: 'Transform',
-      native: ofNative.progress,
-      twin: ofTwin.progress,
+      native: 0,
+      twin: 0,
       difference,
-      hasTrack: true,
-      isInBound:
-        difference < twoFrames('Transform') &&
-        ofNative.residual < AT_REST.cells &&
-        ofTwin.residual < AT_REST.cells,
+      isInBound: difference < AT_REST.cells,
     },
   ];
-}
-
-/** The parts of a track with their times in an animation of `DURATION`. */
-function timedPartsOf({ parts }: DeclaredTrack): TimedPart[] {
-  let startMs = 0;
-  return parts.map(([to, fraction, curve = Easing.inOut(Easing.quad)]) => {
-    const part = { to, startMs, durationMs: fraction * DURATION, curve };
-    startMs += part.durationMs;
-    return part;
-  });
-}
-
-/**
- * The native values of a preset with sequences against its declared timeline,
- * at the time of each sample from the start of the native tracks. The bound of
- * a target is its tolerance and the largest change of its declared value in one
- * display frame around that time.
- */
-function compareWithDeclared(
-  native: BoxSample,
-  tracks: DeclaredTrack[],
-  startMs: number
-): Comparison[] {
-  return tracks.map((track) => {
-    const timeMs = native[track.sampleTarget].monotonicTimeMs - startMs;
-    const timedParts = timedPartsOf(track);
-    const valueAt = (time: number) =>
-      declaredValueAt(track.start, timedParts, time);
-    const declared = valueAt(timeMs);
-    const frameChange = declaredFrameChangeAt(valueAt, timeMs);
-    const shown = track.read(native);
-    const difference = Math.abs(shown - declared);
-    return {
-      target: track.name,
-      native: shown,
-      twin: declared,
-      difference,
-      hasTrack: true,
-      isInBound: difference < track.tolerance + frameChange,
-    };
-  });
 }
 
 type Row = FrameDriverRow<{ native: BoxSample; frame: BoxSample }>;
@@ -846,16 +958,6 @@ function isSameModel(first: BoxSample, second: BoxSample) {
   );
 }
 
-/** The targets of the native tracks, or the events of a start with no command. */
-function routeOf(events: TraceEvent[]) {
-  const hostEvents = events.filter(isHostEvent);
-  const targets = hostEvents
-    .filter(({ event }) => event === 'TrackStarted')
-    .map(({ target }) => target);
-  const isAdmitted = hostEvents.some(({ event }) => event === 'Admitted');
-  return isAdmitted ? targets.join('+') : summarize(hostEvents);
-}
-
 const SCENES: Record<Flow, { before: Scene; after: Scene }> = {
   entering: {
     before: { isMounted: false, boxFrame: REST },
@@ -884,8 +986,6 @@ type Play = {
   fractions?: number[];
   /** The frame of the box after a layout change. */
   movedTo?: BoxFrame;
-  /** The main thread is busy for this time before each row. */
-  busyMs?: number;
   /** Each call of the function of the native box and of its twin has a record. */
   countsBuilderCalls?: boolean;
 };
@@ -893,14 +993,13 @@ type Play = {
 const builderOf = (animation: Builder) =>
   animation as unknown as Parameters<typeof countedOf>[1];
 
-async function play({
+async function playScene({
   flow,
   makeAnimation,
   plain,
   durationMs,
   fractions = FRACTIONS,
   movedTo,
-  busyMs,
   countsBuilderCalls = false,
 }: Play) {
   const animationOf = (name: string) => {
@@ -944,11 +1043,6 @@ async function play({
       : fractions.map((fraction) => fraction * durationMs);
   for (const rowTime of rowTimes) {
     await wait(Math.max(0, startMs + rowTime - performance.now()));
-    if (busyMs !== undefined) {
-      scheduleOnUI(blockUIThread, busyMs);
-      // The block is on the main thread after the microtasks.
-      await Promise.resolve();
-    }
     rows.push(
       await takeAtFrameDriverFrame(async () => {
         const [native, frame] = await Promise.all([
@@ -968,11 +1062,7 @@ async function play({
   ]);
   const events = await takeTrace();
   const routeOfTag = (tag: number) =>
-    routeOf(
-      events.filter(
-        (event) => event.tag === tag && event.event !== 'FrameUpdateMounted'
-      )
-    );
+    routeOf(events.filter((event) => event.tag === tag));
   const startOf = (tag: number) =>
     events.find((event) => event.tag === tag)?.monotonicTimeMs ?? NaN;
   return {
@@ -1002,73 +1092,52 @@ function expectEndAsTwin(
   expect(isSameModel(box!, twin!)).toBe(true);
 }
 
-const TWIN_ROUTE = `LayoutBuildFailed:${NATIVE_TIMING}`;
-const isNativeRoute = (route: string) => !route.startsWith('Layout');
-const routeNameOf = (route: string) =>
-  isNativeRoute(route)
-    ? `plays natively (${route})`
-    : `stays frame-driven (${route})`;
+/** The end of the two boxes of a played case, each target against the twin. */
+async function expectPlayedEndAsTwin(flow: Flow, { events }: Played) {
+  const [nativeTag, frameTag] = [BOX_REF, FRAME_BOX_REF].map(
+    (refName) => playedTags[refName]
+  );
+  expect(nativeTag).toBe(events[0].tag);
+  expect(frameTag > 0).toBe(true);
+  await wait(300);
+  const [native, frame] = await Promise.all([
+    sampleBox(nativeTag),
+    sampleBox(frameTag),
+  ]);
+  expectEndAsTwin(flow, native, frame);
+}
 
-const FLOWS: [Flow, PresetRow[]][] = [
-  ['entering', ENTERING],
-  ['exiting', EXITING],
-  ['layout', LAYOUT],
-];
-
-type TimedPreset = {
-  name: string;
-  flow: Flow;
-  route: string;
-  curves?: PresetCurves;
-  makeAnimation: () => Builder;
-  durationMs?: number;
-  fractions?: number[];
-};
-
-const referenceOf = (curves?: PresetCurves) =>
-  Array.isArray(curves)
-    ? 'is on its declared timeline and ends as its frame-driven twin'
-    : 'agrees with its frame-driven twin';
+const FRACTIONS = [0.25, 0.5, 0.75];
 
 /**
- * The route of a preset, its rows against its declared timeline or its
+ * The route of a preset that stays frame-driven, its rows against its
  * frame-driven twin, its end, and its callbacks.
  */
-async function expectTimedPreset({
+async function expectAsTwin({
   name,
   flow,
   route,
-  curves,
   makeAnimation,
-  durationMs = DURATION,
-  fractions = FRACTIONS,
-}: TimedPreset) {
-  const declared = Array.isArray(curves) ? curves : undefined;
-  const played = await play({ flow, makeAnimation, durationMs, fractions });
+}: Omit<TimedPreset, 'declare'>) {
+  const played = await playScene({
+    flow,
+    makeAnimation,
+    durationMs: DURATION,
+    fractions: FRACTIONS,
+  });
 
   expect(played.route).toBe(route);
   expect(played.twinRoute).toBe(TWIN_ROUTE);
   const comparisons = played.rows.map(({ native, frame }) => {
-    expect(native.Opacity.playbackKeys.length > 0).toBe(isNativeRoute(route));
-    return declared
-      ? compareWithDeclared(native, declared, played.starts.native)
-      : compare(native, frame, curves as TargetEasings | undefined);
+    expect(native.Opacity.playbackKeys.length).toBe(0);
+    return compare(native, frame);
   });
-  const differences = comparisons.map((row) =>
-    Math.max(
-      0,
-      ...row
-        .filter(({ hasTrack }) => hasTrack)
-        .map(({ difference }) => difference)
-    )
-  );
   console.log(
     [
       'PRESET',
       flow,
       name,
       played.route,
-      differences.map((difference) => difference.toFixed(4)).join(' '),
       `frame of the twin late ${played.rows.map(({ lateMs }) => lateMs.toFixed(1)).join(' ')}`,
     ].join(' | ')
   );
@@ -1076,7 +1145,7 @@ async function expectTimedPreset({
   played.rows.forEach((row, index) => {
     if (!isInBound || row.lateFramesMs.length > 0) {
       console.log(
-        `PRESET-ROW | ${name} | ${fractions[index]} | ${describeRow(row, comparisons[index], played.starts)}`
+        `PRESET-ROW | ${name} | ${FRACTIONS[index]} | ${describeRow(row, comparisons[index], played.starts)}`
       );
     }
   });
@@ -1087,31 +1156,14 @@ async function expectTimedPreset({
   await render(null);
 }
 
-const DELAY = 300;
+const FLOWS: [Flow, PresetRow[]][] = [
+  ['entering', ENTERING],
+  ['exiting', EXITING],
+  ['layout', LAYOUT],
+];
 
-/** The declared timeline of a preset that starts after `DELAY`. */
-const delayed = (tracks: DeclaredTrack[]): DeclaredTrack[] =>
-  tracks.map((track) => ({
-    ...track,
-    parts: [[track.start, DELAY / DURATION], ...track.parts],
-  }));
-
-// The Y and the height move in the first half, the X and the width in the second half.
-const SEQUENCED_IN_REVERSE = geometryOf((rest, moved, key) =>
-  key === 'left' || key === 'width'
-    ? [
-        [rest, 0.5],
-        [moved, 0.5],
-      ]
-    : [
-        [moved, 0.5],
-        [moved, 0.5],
-      ]
-);
-
-// The first row of each preset with a delay is in the delay.
-const EARLY_AND_LATE = [0.1, 0.4, 0.6, 0.8];
-const SEQUENCED_ROUTE = 'PositionX+PositionY+Width+Height';
+const ON_TIMELINE =
+  'is on its declared timeline and ends as its frame-driven twin';
 
 /** Presets with sequences and one more method call. */
 const SEQUENCE_VARIANTS: TimedPreset[] = [
@@ -1119,32 +1171,32 @@ const SEQUENCE_VARIANTS: TimedPreset[] = [
     name: 'BounceIn with a delay',
     flow: 'entering',
     route: 'Transform',
-    curves: delayed(BOUNCES.BounceIn),
+    declare: ENTERING.find(([preset]) => preset === BounceIn)![2]!,
     makeAnimation: () => new BounceIn().duration(DURATION).delay(DELAY),
-    durationMs: DELAY + DURATION,
+    delayMs: DELAY,
   },
   {
     name: 'BounceOut with a delay',
     flow: 'exiting',
     route: 'Transform',
-    curves: delayed(BOUNCES.BounceOut),
+    declare: EXITING.find(([preset]) => preset === BounceOut)![2]!,
     makeAnimation: () => new BounceOut().duration(DURATION).delay(DELAY),
-    durationMs: DELAY + DURATION,
+    delayMs: DELAY,
   },
   {
     name: 'SequencedTransition with a delay',
     flow: 'layout',
-    route: SEQUENCED_ROUTE,
-    curves: delayed(SEQUENCED),
+    route: GEOMETRY_ROUTE,
+    declare: SEQUENCED,
     makeAnimation: () =>
       new SequencedTransition().duration(DURATION).delay(DELAY),
-    durationMs: DELAY + DURATION,
+    delayMs: DELAY,
   },
   {
     name: 'SequencedTransition in reverse',
     flow: 'layout',
-    route: SEQUENCED_ROUTE,
-    curves: SEQUENCED_IN_REVERSE,
+    route: GEOMETRY_ROUTE,
+    declare: SEQUENCED_IN_REVERSE,
     makeAnimation: () => new SequencedTransition().duration(DURATION).reverse(),
   },
 ];
@@ -1155,43 +1207,63 @@ describe('native layout presets with their default easing', () => {
   }
 
   for (const [flow, presets] of FLOWS) {
-    for (const [PresetClass, route, curves, makeTimed] of presets) {
-      test(`${PresetClass.name} ${routeNameOf(route)} and ${referenceOf(curves)}`, () =>
-        expectTimedPreset({
-          name: PresetClass.name,
-          flow,
-          route,
-          curves,
-          makeAnimation:
-            makeTimed ?? (() => new PresetClass().duration(DURATION)),
-        }));
+    for (const [PresetClass, route, declareFor, makeTimed] of presets) {
+      const preset = {
+        name: PresetClass.name,
+        flow,
+        route,
+        makeAnimation:
+          makeTimed ?? (() => new PresetClass().duration(DURATION)),
+      };
+      if (declareFor) {
+        test(`${preset.name} ${routeNameOf(route)} and ${ON_TIMELINE}`, () =>
+          expectOnTimeline({ ...preset, declare: declareFor }));
+      } else {
+        test(`${preset.name} ${routeNameOf(route)} and agrees with its frame-driven twin`, () =>
+          expectAsTwin(preset));
+      }
     }
   }
 
   for (const variant of SEQUENCE_VARIANTS) {
-    test(`${variant.name} ${routeNameOf(variant.route)} and ${referenceOf(variant.curves)}`, () =>
-      expectTimedPreset({ ...variant, fractions: EARLY_AND_LATE }));
+    test(`${variant.name} ${routeNameOf(variant.route)} and ${ON_TIMELINE}`, () =>
+      expectOnTimeline(variant));
   }
 
-  test('rows after a busy main thread are taken again and agree with the frame-driven twin', async () => {
+  test('a busy main thread makes a gap in the frames of the frame-driven twin, and each box stays on its declared timeline', async () => {
     const BUSY_MS = 150;
-    const played = await play({
-      flow: 'entering',
-      makeAnimation: () => new FadeIn().duration(DURATION),
-      durationMs: DURATION,
-      busyMs: BUSY_MS,
-    });
+    const caseName = 'FadeIn and a busy main thread';
+    const referenceCase: ReferenceCase = {
+      ...caseOf({
+        name: caseName,
+        flow: 'entering',
+        route: 'Opacity',
+        declare: fadeInWith(),
+        makeAnimation: () => new FadeIn().duration(DURATION),
+      }),
+      checkpoint: {
+        atMs: DURATION / 2,
+        run: () => scheduleOnUI(blockUIThread, BUSY_MS),
+      },
+    };
+    const played = await play(referenceCase);
+    expectReference(caseName, referenceCase, played);
 
-    played.rows.forEach((row, index) => {
-      const comparisons = compare(row.native, row.frame);
-      console.log(
-        `PRESET-BUSY | ${FRACTIONS[index]} | ${describeRow(row, comparisons, played.starts)}`
-      );
-      expect(row.lateFramesMs[0] > BUSY_MS - FRAME_MS).toBe(true);
-      expect(row.lateMs < FRAME_MS).toBe(true);
-      expect(comparisons.every(({ isInBound }) => isInBound)).toBe(true);
-    });
-    expect([...callbacks].sort().join()).toBe('frame:true,native:true');
+    const frames = played.frameChecks
+      .filter(({ record }) => record.box === 'frame')
+      .flatMap(({ record }) => record.frames);
+    const gaps = frames
+      .slice(1)
+      .map(({ timeMs }, index) => timeMs - frames[index].timeMs);
+    console.log(
+      `PRESET-BUSY | frames of the twin ${frames.length} | largest gap ${Math.max(...gaps).toFixed(1)} ms | gaps over one display frame and a half ${
+        gaps
+          .filter((gap) => gap > 1.5 * FRAME_MS)
+          .map((gap) => gap.toFixed(1))
+          .join(' ') || 'none'
+      }`
+    );
+    expect(Math.max(...gaps) > BUSY_MS - FRAME_MS).toBe(true);
     await render(null);
   });
 });
@@ -1205,7 +1277,7 @@ describe('native layout presets with no method call', () => {
   for (const [flow, presets] of FLOWS) {
     for (const [PresetClass, route] of presets) {
       test(`${PresetClass.name} with no method call ${routeNameOf(route)} and ends as its frame-driven twin`, async () => {
-        const played = await play({
+        const played = await playScene({
           flow,
           makeAnimation: () => new PresetClass(),
           plain: PresetClass as unknown as BoxAnimations[Flow],
@@ -1253,7 +1325,7 @@ describe('native layout transitions and a width change near 250 pt', () => {
   ];
   for (const [transitionName, makeAnimation, change, route] of transitions) {
     test(`${transitionName} over a width change of ${change} pt ${routeNameOf(route)} and ends as its frame-driven twin`, async () => {
-      const played = await play({
+      const played = await playScene({
         flow: 'layout',
         makeAnimation,
         movedTo: widerBy(change),
@@ -1351,7 +1423,7 @@ describe('native layout keyframes', () => {
     ];
   for (const [keyframeName, flow, definitionsOf, delayMs, route] of keyframes) {
     test(`a keyframe animation with ${keyframeName} ${routeNameOf(route)} and ends as its frame-driven twin`, async () => {
-      const played = await play({
+      const played = await playScene({
         flow,
         makeAnimation: () => {
           const animation = new Keyframe(
@@ -1386,7 +1458,9 @@ describe('native layout animations with a plain number', () => {
   type Values = Record<string, number>;
   type MakeAnimation = (callback?: Callback) => (values: Values) => object;
 
-  /** A builder of the animation function of `make`, for `play`. */
+  const BUILDER_CALL = 'plain number';
+
+  /** A builder of the animation function of `make`, with a record of each call. */
   function builderOfFunction(make: MakeAnimation) {
     let callback: Callback | undefined;
     const builder = {
@@ -1394,10 +1468,16 @@ describe('native layout animations with a plain number', () => {
         callback = next;
         return builder;
       },
-      build: () => make(callback),
+      build: () =>
+        countedOf(
+          BUILDER_CALL,
+          make(callback) as unknown as Parameters<typeof countedOf>[1]
+        ),
     };
-    return builder as unknown as Builder;
+    return builder as unknown as CallbackBuilder;
   }
+
+  const INITIAL_OFFSET = -60;
 
   /**
    * The opacity has an animation. The X is a plain number at `offset` from its
@@ -1409,7 +1489,10 @@ describe('native layout animations with a plain number', () => {
       return (values: Values) => {
         'worklet';
         return {
-          initialValues: { opacity: 0, originX: values.targetOriginX - 60 },
+          initialValues: {
+            opacity: 0,
+            originX: values.targetOriginX + INITIAL_OFFSET,
+          },
           animations: {
             opacity: withTiming(1, { duration: DURATION }),
             originX: values.targetOriginX + offset,
@@ -1418,64 +1501,109 @@ describe('native layout animations with a plain number', () => {
         };
       };
     };
-  const exiting: MakeAnimation = (callback) => {
-    return (values: Values) => {
-      'worklet';
-      return {
-        initialValues: { opacity: 1, originX: values.currentOriginX },
-        animations: {
-          opacity: withTiming(0, { duration: DURATION }),
-          originX: values.currentOriginX + 40,
-        },
-        callback,
+  const exitingOf =
+    (offset: number): MakeAnimation =>
+    (callback) => {
+      return (values: Values) => {
+        'worklet';
+        return {
+          initialValues: { opacity: 1, originX: values.currentOriginX },
+          animations: {
+            opacity: withTiming(0, { duration: DURATION }),
+            originX: values.currentOriginX + offset,
+          },
+          callback,
+        };
       };
     };
-  };
   const FIRST_FRAMES_AND_MIDDLE = [0.05, 0.5];
-  const plainNumbers: [string, Flow, MakeAnimation, string][] = [
+  const plainNumbers: [
+    string,
+    EntryExit,
+    (offset: number) => MakeAnimation,
+    number,
+    string,
+  ][] = [
     [
       'an entering animation with a plain number that is the mounted value',
       'entering',
-      enteringOf(0),
+      enteringOf,
+      0,
       'Opacity+PositionX',
     ],
     [
       'an entering animation with a plain number that is not the mounted value',
       'entering',
-      enteringOf(30),
+      enteringOf,
+      30,
       'LayoutBuildFailed:EndpointMismatch',
     ],
     [
       'an exiting animation with a plain number',
       'exiting',
-      exiting,
+      exitingOf,
+      40,
       'LayoutBuildFailed:UnsupportedTrackForm',
     ],
   ];
-  for (const [caseName, flow, make, route] of plainNumbers) {
-    test(`${caseName} ${routeNameOf(route)}, shows the values of its frame-driven twin in its first frames and at its middle, and ends as that twin`, async () => {
-      const played = await play({
+  for (const [caseName, flow, makeOf, offset, route] of plainNumbers) {
+    test(`${caseName} ${routeNameOf(route)}, has its opacity on its declared timeline, shows the plain number in its first frames and at its middle, and ends as its frame-driven twin`, async () => {
+      const isNative = isNativeRoute(route);
+      const [initial, to] = flow === 'entering' ? [0, 1] : [1, 0];
+      const referenceCase: ReferenceCase = {
         flow,
-        makeAnimation: () => builderOfFunction(make),
-        durationMs: DURATION,
-        fractions: FIRST_FRAMES_AND_MIDDLE,
-        countsBuilderCalls: true,
-      });
+        leaves: {
+          opacity: { duration: DURATION, easing: 'default', initial, to },
+          // The native route has a track with no duration for the plain number.
+          ...(isNative && {
+            originX: { initial: INITIAL_OFFSET, duration: 0 },
+          }),
+        },
+        alsoSampled: ['PositionX'],
+        isFrameDriven: !isNative,
+        places: PLACES[flow],
+        totalMs: DURATION,
+        builder: () => builderOfFunction(makeOf(offset)),
+        box: PLAYED_BOX,
+      };
+      namedBuilderCalls.length = 0;
+      const played = await playTagged(referenceCase);
+      expectReference(caseName, referenceCase, played);
+      expect(routeOf(played.events)).toBe(route);
+      expect(namedBuilderCalls.join()).toBe(`${BUILDER_CALL},${BUILDER_CALL}`);
 
-      const comparisons = played.rows.map(({ native, frame }) =>
-        compare(native, frame)
-      );
-      played.rows.forEach((row, index) =>
+      const plainX = centerOf(REST.left + offset);
+      const twinStart = played.frameChecks.find(
+        ({ record }) => record.box === 'frame'
+      )?.record.start;
+      const startMs = (twinStart?.timeMs ?? NaN) + middleOf(played.clockOffset);
+      for (const fraction of FIRST_FRAMES_AND_MIDDLE) {
+        const taken = played.rows.find(
+          ({ row }) =>
+            row.native.PositionX.monotonicTimeMs - startMs >=
+            fraction * DURATION
+        );
+        const shown = [
+          taken?.row.native.PositionX.presentation[0] ?? NaN,
+          taken?.row.frame.PositionX.model[0] ?? NaN,
+        ];
         console.log(
-          `PLAIN-NUMBER | ${caseName} | ${played.route} | ${FIRST_FRAMES_AND_MIDDLE[index]} | ${describeRow(row, comparisons[index], played.starts)}`
-        )
-      );
-      expect(played.route).toBe(route);
-      expect(played.twinRoute).toBe(TWIN_ROUTE);
-      expect(played.builderCalls).toBe('frame,native');
-      expect(comparisons.flat().every(({ isInBound }) => isInBound)).toBe(true);
-      expectEndAsTwin(flow, played.end.native, played.end.frame);
-      expect([...callbacks].sort().join()).toBe('frame:true,native:true');
+          `PLAIN-NUMBER | ${caseName} | ${route} | ${fraction} | ${((taken?.row.native.PositionX.monotonicTimeMs ?? NaN) - startMs).toFixed(1)} ms after the start of the twin | plain number ${plainX} | native ${shown[0]} | model of the twin ${shown[1]}`
+        );
+        for (const value of shown) {
+          expect(Math.abs(value - plainX) < AT_REST.points).toBe(true);
+        }
+      }
+      if (played.end) {
+        const { native, frame } = played.end;
+        expect(native.PositionX.playbackKeys.length).toBe(0);
+        expect(
+          Math.abs(
+            native.PositionX.presentation[0] - frame.PositionX.model[0]
+          ) < AT_REST.points
+        ).toBe(true);
+      }
+      await expectPlayedEndAsTwin(flow, played);
       await render(null);
     });
   }
