@@ -9,7 +9,7 @@ permissions:
   issues: write
 
 concurrency:
-  group: argent-cloud-issue-${{ github.event.issue.number }}
+  group: argent-cloud-issue-${{ github.event.issue.number }}-${{ github.event.label.name }}
   cancel-in-progress: true
 
 env:
@@ -468,6 +468,7 @@ jobs:
             echo "- react-native-reanimated: $(jq -r .reanimatedVersion "$plan")"
             echo "- react-native-worklets: $(jq -r '.workletsVersion // "none"' "$plan")"
             echo "- Architecture: $(jq -r .architecture "$plan")"
+            echo "- Static feature flags: $(jq -r '[.staticFeatureFlags // {} | to_entries[] | .key as $owner | .value[] | "\($owner) \(.name)=\(.value)"] | if length == 0 then "defaults" else join(", ") end' "$plan")"
             echo "- App: $(jq -r .appKind "$plan") scaffold, code from $(jq -r .reproductionSource.kind "$plan"), iOS simulator, Release configuration with an embedded bundle"
             echo
             echo "### Steps"
@@ -489,6 +490,12 @@ jobs:
             echo "- Pass: $(jq -r .verification.passSignal "$plan")"
             echo "- Fail: $(jq -r .verification.failSignal "$plan")"
             echo
+            if [ "$(jq -r '.limitations // ""' "$plan")" != "" ]; then
+              echo "### Limitations"
+              echo
+              jq -r .limitations "$plan"
+              echo
+            fi
             echo "## Original issue"
             echo
             cat "$WORK_DIR/issue.md"
@@ -503,6 +510,7 @@ jobs:
           ARGENT_BACKEND_IP: ${{ secrets.ARGENT_BACKEND_IP }}
         run: |
           mkdir -p "$WORK_DIR/output"
+          set -o pipefail
           argent-cloud \
             --prompt-file "$WORK_DIR/brief.md" \
             --app-bundle "$WORK_DIR/app/repro-app.tar.gz" \

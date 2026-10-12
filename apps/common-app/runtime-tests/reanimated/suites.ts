@@ -72,6 +72,8 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/props/syncBackToReact.test');
       require('./tests/props/boxShadow.test');
       require('./tests/props/nonLayoutPropAndRender.test');
+      require('./tests/props/mountedViewProps.test');
+      require('./tests/props/cssArrayKeyframes.test');
     },
   },
   {
@@ -79,6 +81,14 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/css/animationCancellation.test');
       require('./tests/css/backgroundImage.test');
+      require('./tests/css/transformNone.test');
+    },
+  },
+  {
+    testSuiteName: 'react-freeze',
+    importTest: () => {
+      require('./tests/reactFreeze/propDriven.test');
+      require('./tests/reactFreeze/nativeStack.test');
     },
   },
   {

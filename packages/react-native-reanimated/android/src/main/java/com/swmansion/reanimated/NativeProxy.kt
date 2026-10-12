@@ -1,6 +1,7 @@
 package com.swmansion.reanimated
 
 import android.content.ContentResolver
+import android.graphics.Color
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
@@ -15,6 +16,7 @@ import com.facebook.react.common.annotations.FrameworkAPI
 import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
+import com.facebook.react.uimanager.BackgroundStyleApplicator
 import com.facebook.react.uimanager.IllegalViewOperationException
 import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.UIManagerHelper
@@ -271,7 +273,7 @@ open class NativeProxy {
     }
 
     @DoNotStrip
-    fun obtainMountedViewProps(tag: Int): FloatArray? {
+    fun obtainMountedViewProps(tag: Int): DoubleArray? {
         if (!UiThreadUtil.isOnUiThread()) {
             return null
         }
@@ -284,12 +286,13 @@ open class NativeProxy {
         if (!view.isAttachedToWindow) {
             return null
         }
-        return floatArrayOf(
-            PixelUtil.toDIPFromPixel(view.left.toFloat()),
-            PixelUtil.toDIPFromPixel(view.top.toFloat()),
-            PixelUtil.toDIPFromPixel(view.width.toFloat()),
-            PixelUtil.toDIPFromPixel(view.height.toFloat()),
-            view.alpha,
+        return doubleArrayOf(
+            PixelUtil.toDIPFromPixel(view.left.toFloat()).toDouble(),
+            PixelUtil.toDIPFromPixel(view.top.toFloat()).toDouble(),
+            PixelUtil.toDIPFromPixel(view.width.toFloat()).toDouble(),
+            PixelUtil.toDIPFromPixel(view.height.toFloat()).toDouble(),
+            view.alpha.toDouble(),
+            (BackgroundStyleApplicator.getBackgroundColor(view) ?: Color.TRANSPARENT).toDouble(),
         )
     }
 
