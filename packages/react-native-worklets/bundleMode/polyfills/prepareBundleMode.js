@@ -21,7 +21,7 @@ if (
       : globalThis.nativeModuleProxy?.WorkletsModule;
     workletsModule?.prepareBundleMode?.();
   }
-} else if (globalThis.__DEV__) {
+} else if (__DEV__) {
   globalThis.__fbBatchedBridgeConfig = new Proxy(
     {},
     {
