@@ -1,9 +1,10 @@
 import { render } from '@testing-library/react-native';
 import type { ReactNode, Ref } from 'react';
-import { useImperativeHandle } from 'react';
+import { useContext, useEffect, useImperativeHandle, useState } from 'react';
 import { View } from 'react-native';
 
 import { LayoutAnimationConfig } from '../src';
+import { SkipEnteringContext } from '../src/component/LayoutAnimationConfig';
 
 jest.mock('../src/platformFunctions/findNodeHandle', () => ({
   findNodeHandle: jest.fn(() => 1234),
@@ -152,4 +153,112 @@ describe('LayoutAnimationConfig view tag resolution', () => {
     expect(findNodeHandle).not.toHaveBeenCalled();
     expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(42, false);
   });
+});
+
+describe('LayoutAnimationConfig skipEntering', () => {
+  const childMounts: boolean[] = [];
+
+  function ReadsSkipEntering() {
+    const skipEnteringRef = useContext(SkipEnteringContext);
+    const [skippedEntering] = useState(() => skipEnteringRef?.current === true);
+    useEffect(() => {
+      childMounts.push(skippedEntering);
+    }, [skippedEntering]);
+    return <View />;
+  }
+
+  beforeEach(() => {
+    childMounts.length = 0;
+  });
+
+  test('left out, it keeps the skipped entering of an outer LayoutAnimationConfig', () => {
+    render(
+      <LayoutAnimationConfig skipEntering>
+        <LayoutAnimationConfig>
+          <ReadsSkipEntering />
+        </LayoutAnimationConfig>
+      </LayoutAnimationConfig>
+    );
+
+    expect(childMounts).toEqual([true]);
+  });
+
+  test.each([
+    [undefined, true],
+    [undefined, false],
+    [true, undefined],
+    [false, undefined],
+  ])('changing it from %s to %s keeps the children mounted', (from, to) => {
+    const { rerender } = render(
+      <LayoutAnimationConfig skipEntering={from}>
+        <ReadsSkipEntering />
+      </LayoutAnimationConfig>
+    );
+
+    rerender(
+      <LayoutAnimationConfig skipEntering={to}>
+        <ReadsSkipEntering />
+      </LayoutAnimationConfig>
+    );
+
+    expect(childMounts).toHaveLength(1);
+  });
+});
+
+describe('LayoutAnimationConfig skipExiting', () => {
+  const childMounts = jest.fn();
+
+  function CountsMounts({ tag }: { tag: number }) {
+    useEffect(() => {
+      childMounts(tag);
+    }, [tag]);
+    return <ForwardsHostInstance tag={tag} />;
+  }
+
+  beforeEach(() => {
+    childMounts.mockClear();
+    setShouldAnimateExitingForTag.mockClear();
+  });
+
+  test.each([
+    [undefined, true],
+    [false, true],
+    [true, undefined],
+    [true, false],
+  ])(
+    'changing it from %s to %s keeps multiple children mounted',
+    (from, to) => {
+      const { rerender } = render(
+        <LayoutAnimationConfig skipExiting={from}>
+          <CountsMounts tag={42} />
+          <CountsMounts tag={43} />
+        </LayoutAnimationConfig>
+      );
+
+      rerender(
+        <LayoutAnimationConfig skipExiting={to}>
+          <CountsMounts tag={42} />
+          <CountsMounts tag={43} />
+        </LayoutAnimationConfig>
+      );
+
+      expect(childMounts).toHaveBeenCalledTimes(2);
+    }
+  );
+
+  test.each([undefined, false])(
+    '%s leaves the exiting of multiple children alone on unmount',
+    (skipExiting) => {
+      const { unmount } = render(
+        <LayoutAnimationConfig skipExiting={skipExiting}>
+          <CountsMounts tag={42} />
+          <CountsMounts tag={43} />
+        </LayoutAnimationConfig>
+      );
+
+      unmount();
+
+      expect(setShouldAnimateExitingForTag).not.toHaveBeenCalled();
+    }
+  );
 });

@@ -1,0 +1,1 @@
+Fix `skipEnteringExitingAnimations={false}` on `Animated.FlatList` still skipping the items' entering and exiting animations, and children remounting when `skipEnteringExitingAnimations`, or `LayoutAnimationConfig`'s `skipEntering` or `skipExiting`, changes after mount.

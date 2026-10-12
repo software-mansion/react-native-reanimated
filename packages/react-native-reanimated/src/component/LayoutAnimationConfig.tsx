@@ -7,6 +7,7 @@ import {
   createContext,
   Fragment,
   isValidElement,
+  useContext,
   useEffect,
   useRef,
 } from 'react';
@@ -28,15 +29,22 @@ interface LayoutAnimationConfigProps {
   children: ReactNode;
 }
 
-function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
-  const skipValueRef = useRef(props.shouldSkip);
+function SkipEntering(props: {
+  shouldSkip: boolean | undefined;
+  children: ReactNode;
+}) {
+  const inheritedSkipValueRef = useContext(SkipEnteringContext);
+  const skipValueRef = useRef(props.shouldSkip === true);
 
   useEffect(() => {
     skipValueRef.current = false;
   }, [skipValueRef]);
 
   return (
-    <SkipEnteringContext value={skipValueRef}>
+    <SkipEnteringContext
+      value={
+        props.shouldSkip === undefined ? inheritedSkipValueRef : skipValueRef
+      }>
       {props.children}
     </SkipEnteringContext>
   );
@@ -80,9 +88,12 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
   }
 
   getMaybeWrappedChildren() {
-    return Children.count(this.props.children) > 1 && this.props.skipExiting
+    return Children.count(this.props.children) > 1
       ? Children.map(this.props.children, (child) => (
-          <LayoutAnimationConfig skipExiting>{child}</LayoutAnimationConfig>
+          <LayoutAnimationConfig
+            skipExiting={this.props.skipExiting ? true : undefined}>
+            {child}
+          </LayoutAnimationConfig>
         ))
       : this.getMaybeRefTrackedChild();
   }
@@ -120,15 +131,9 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
   }
 
   render(): ReactNode {
-    const children = this.getMaybeWrappedChildren();
-
-    if (this.props.skipEntering === undefined) {
-      return children;
-    }
-
     return (
       <SkipEntering shouldSkip={this.props.skipEntering}>
-        {children}
+        {this.getMaybeWrappedChildren()}
       </SkipEntering>
     );
   }
