@@ -33,6 +33,12 @@
   },
   "overrides": [
     {
+      "files": ["**/*.ts", "**/*.tsx"],
+      "rules": {
+        "typescript/no-require-imports": "off"
+      }
+    },
+    {
       "files": ["src/**/*.ts", "src/**/*.tsx"],
       "rules": {
         "typescript/no-explicit-any": "error",
