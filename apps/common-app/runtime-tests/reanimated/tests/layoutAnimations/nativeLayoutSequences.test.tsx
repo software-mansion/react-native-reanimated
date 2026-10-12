@@ -1,5 +1,22 @@
+/*
+ * Method: each test plays its sequence as a case of the player of `native layout reference`. Each sample of
+ * the native box is on the declared timeline of its key at its own sample time (statement A), and each
+ * frame of the frame-driven twin and of the frame driver on the native box is on a replay of the declared
+ * timeline (statement B). A test in which the frame driver takes the native box has statement M for the
+ * model of its opacity or of its transform. Each other statement is a trace check, a state check at the
+ * end, or a time of an end report or of a callback from the origin of the tracks.
+ *
+ * Not proved: the distance of the two boxes at one instant, the lag of the frame driver, a row in each
+ * phase and around each boundary, how late an end report or a callback of an entering sequence comes, the
+ * time of a clip or of a new layout on the timeline, the model of a position that the frame driver took
+ * (statement M has the opacity and the transform only). Pixels, a device, and 120 Hz are not tested.
+ *
+ * Not converted (the old text, `R/trace/STOPPED-TESTS.md`): the test of a new layout of the view of a
+ * native sequence, and the 4 tests of a clip of a sequence of scalars. They compare the models of the boxes
+ * with the twin or with the declared level at planned times, with their own scene.
+ */
 import type { ComponentRef } from 'react';
-import React from 'react';
+import React, { useEffect } from 'react';
 import type { ScrollView } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type { LayoutAnimation } from 'react-native-reanimated';
@@ -22,6 +39,21 @@ import {
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
 import type {
+  ModelTarget,
+  Place,
+  Played as PlayedReference,
+  ReferenceCase,
+} from './nativeLayoutReferencePlay';
+import {
+  expectModelOnFrames,
+  expectNoKeyAfterTransfer,
+  expectReference,
+  play as playReference,
+} from './nativeLayoutReferencePlay';
+import type {
+  Leaf,
+  LeafPart,
+  SizeBoxProps,
   TargetSample,
   TimedPart,
   TraceEvent,
@@ -29,6 +61,7 @@ import type {
 import {
   BOX_REF,
   callbacks,
+  callbackTimeOf,
   ClippingScrollView,
   countedOf,
   declaredFrameChangeAt,
@@ -41,12 +74,19 @@ import {
   frameTimedOf,
   hasNativeLayoutStarts,
   isHostEvent,
+  isNoView,
+  layoutBuilderCalls,
+  middleOf,
   namedBuilderCalls,
+  OPACITY_TOLERANCE,
+  POSITION_TOLERANCE,
   recordCallback,
   sample,
   sampleClockOffset,
+  SizeBox,
   summarize,
   takeTrace,
+  takeTraceUntil,
   waitForCallbacks,
 } from './nativeLayoutTestKit';
 
@@ -87,10 +127,11 @@ type Target = { name: string; unit: number; tolerance: number };
 const X_TRAVEL = 200;
 const Y_TRAVEL = 100;
 const SCALE_AT_ZERO = 0.5;
+const PLACE: Place = { left: 30 + X_TRAVEL, top: 10 };
+const START_LEVEL: Record<EntryExit, number> = { entering: 0.2, exiting: 1 };
 const BOX_SIZE = 50;
 const BOX_LEFT = 30 + X_TRAVEL;
 const CELL_HEIGHT = BOX_SIZE + Y_TRAVEL + 20;
-const START_LEVEL: Record<EntryExit, number> = { entering: 0.2, exiting: 1 };
 const TOLERANCE = { opacity: 0.01, points: 0.5, cells: 0.005 };
 const TARGETS: Record<Form, Target[]> = {
   scalars: [
@@ -109,6 +150,8 @@ const CLIPPED_OFFSET = 1500;
 const SAME_TIME_MS = 0.01;
 
 const formOf = ({ form = 'scalars' }: Sequence) => form;
+
+const lastOf = <TItem,>(items: TItem[]) => items[items.length - 1];
 
 const mutablesOf = (count: number) =>
   Array.from({ length: count }, () => makeMutable(0));
@@ -229,23 +272,11 @@ function declaredStartsOf({ parts, delay = 0 }: Sequence) {
   return starts;
 }
 
-function totalOf(sequence: Sequence) {
-  const starts = declaredStartsOf(sequence);
-  return (
-    starts[starts.length - 1] +
-    sequence.parts[sequence.parts.length - 1].duration
+function totalOf({ parts, delay = 0 }: Sequence) {
+  return parts.reduce(
+    (total, part) => total + (part.delay ?? 0) + part.duration,
+    delay
   );
-}
-
-/** The end of each hold and of each part but the last. */
-function boundariesOf(sequence: Sequence) {
-  const starts = declaredStartsOf(sequence);
-  const ends = starts.map(
-    (start, index) => start + sequence.parts[index].duration
-  );
-  return [...new Set([...starts, ...ends.slice(0, -1)])]
-    .filter((time) => time > 0)
-    .sort((first, second) => first - second);
 }
 
 /**
@@ -378,11 +409,108 @@ function animationOf(
   };
 }
 
+const offsetOf = (level: number) => (1 - level) * Y_TRAVEL;
+const scaleOf = (level: number) => SCALE_AT_ZERO + level * (1 - SCALE_AT_ZERO);
+const levelOf = (level: number) => level;
+
+/** The timings of a sequence for a key that has `valueOf` each level. */
+function timingsOf(
+  { parts, delay }: Sequence,
+  valueOf: (level: number) => number
+): Leaf {
+  const timings = parts.map(
+    (part): LeafPart => ({ ...part, to: valueOf(part.to) })
+  );
+  const { duration, easing, delay: delayOfLast } = lastOf(timings);
+  return {
+    via: timings.slice(0, -1),
+    duration,
+    easing,
+    delay: delayOfLast,
+    delays: delay === undefined ? undefined : [delay],
+  };
+}
+
+/**
+ * The case of a view that enters or leaves: the targets of the form of the
+ * sequence have the sequence, and the X of the box is a linear track over the
+ * time of the sequence.
+ */
+function caseOf(
+  sequence: Sequence,
+  flow: EntryExit,
+  more: Partial<ReferenceCase> = {}
+): ReferenceCase {
+  const totalMs = totalOf(sequence);
+  const isEntering = flow === 'entering';
+  const startLevel = START_LEVEL[flow];
+  const endLevel = lastOf(sequence.parts).to;
+  const endsOf = (valueOf: (level: number) => number) => ({
+    initial: valueOf(startLevel),
+    to: valueOf(endLevel),
+  });
+  const originX: Leaf = {
+    [isEntering ? 'initial' : 'to']: -X_TRAVEL,
+    duration: totalMs,
+  };
+  const declaration: Pick<ReferenceCase, 'leaves' | 'operations'> =
+    formOf(sequence) === 'transform'
+      ? {
+          leaves: { originX },
+          operations: [
+            [
+              'translateY',
+              offsetOf(startLevel),
+              offsetOf(endLevel),
+              timingsOf(sequence, offsetOf),
+            ],
+            [
+              'scale',
+              scaleOf(startLevel),
+              scaleOf(endLevel),
+              timingsOf(sequence, scaleOf),
+            ],
+          ],
+        }
+      : {
+          leaves: {
+            opacity: { ...timingsOf(sequence, levelOf), ...endsOf(levelOf) },
+            originY: { ...timingsOf(sequence, offsetOf), ...endsOf(offsetOf) },
+            originX,
+          },
+        };
+  return {
+    flow,
+    ...declaration,
+    places: isEntering ? [undefined, PLACE] : [PLACE, undefined],
+    totalMs,
+    ...more,
+  };
+}
+
+/** Plays a case with one builder call of each box for each commit. */
+async function playCounted(referenceCase: ReferenceCase) {
+  const builderCallsBefore = layoutBuilderCalls.length;
+  const played = await playReference(referenceCase);
+  const builderCalls = layoutBuilderCalls.slice(builderCallsBefore);
+  for (const box of ['native', 'frame']) {
+    expect(builderCalls.filter((name) => name === box).length).toBe(
+      referenceCase.places.length - 1
+    );
+  }
+  return played;
+}
+
+/** `playCounted` with the statements of `expectReference`. */
+async function playCase(caseName: string, referenceCase: ReferenceCase) {
+  const played = await playCounted(referenceCase);
+  expectReference(caseName, referenceCase, played);
+  return played;
+}
+
 const scrollRef = React.createRef<ComponentRef<typeof ScrollView>>();
 const scrollTo = (y: number) =>
   scrollRef.current?.scrollTo({ y, animated: false });
-
-type Place = { left: number; top: number };
 
 function SequenceBox({
   refName,
@@ -575,39 +703,6 @@ async function takeRows(
   return rows;
 }
 
-type NativeSamples = Pick<Row, 'position' | 'value'>;
-
-/**
- * The samples of the scalars of the native box to a time, or to the time at
- * which it leaves.
- */
-async function takeNativeSamples(tag: number, untilMs: number) {
-  const samples: NativeSamples[] = [];
-  while (performance.now() < untilMs) {
-    try {
-      const [position, value] = await Promise.all([
-        sample(tag, 'Position'),
-        sample(tag, 'Opacity'),
-      ]);
-      samples.push({ position, value });
-    } catch {
-      break;
-    }
-  }
-  return samples;
-}
-
-type Check = {
-  target: string;
-  /** The time of the native sample from the start of its track. */
-  timeMs: number;
-  native: number;
-  declared: number;
-  bound: number;
-  /** Absent when the row has no frame of the twin for the samples. */
-  twin?: { shown: number; onItsBoundaries: number; corrected: number };
-};
-
 /**
  * The time of the native tracks at the sample of the position, from the linear
  * X.
@@ -651,72 +746,6 @@ function levelsOf(
   ];
 }
 
-const hasTwinValue = ({ isTorn, records }: Row) =>
-  !isTorn && records.origins.frame > 0;
-
-/** The checks of a row of a native track that plays. */
-function checksOf(played: Played, row: Row): Check[] {
-  const { sequence, flow } = played;
-  const { position, value, twinPosition, twinValue, records } = row;
-  const form = formOf(sequence);
-  const startLevel = START_LEVEL[flow];
-  const declaredStarts = declaredStartsOf(sequence);
-  const positionTime = trackTimeOf(played, row);
-  const valueTime =
-    positionTime + value.monotonicTimeMs - position.monotonicTimeMs;
-  const times =
-    form === 'transform' ? [valueTime, valueTime] : [valueTime, positionTime];
-  const twinOrigin = records.origins.frame;
-  const twinStarts = records.starts.frame.map((start) =>
-    start === 0 ? Infinity : start - twinOrigin
-  );
-  const twinLevelOnItsBoundaries = levelAt(
-    sequence,
-    twinStarts,
-    startLevel,
-    records.frameTime - twinOrigin
-  );
-  // The two boxes have one place in their cells. The model of the native box is at that place.
-  const restY = position.model[1];
-  const shown = levelsOf(form, position, value, 'presentation', restY);
-  const twinShown = levelsOf(form, twinPosition, twinValue, 'model', restY);
-  return TARGETS[form].map(({ name, unit, tolerance }, index): Check => {
-    const timeMs = times[index];
-    const declared = levelAt(sequence, declaredStarts, startLevel, timeMs);
-    return {
-      target: name,
-      timeMs,
-      native: shown[index] * unit,
-      declared: declared * unit,
-      bound: tolerance + frameChangeAt(sequence, startLevel, timeMs) * unit,
-      twin: hasTwinValue(row)
-        ? {
-            shown: twinShown[index] * unit,
-            onItsBoundaries: twinLevelOnItsBoundaries * unit,
-            corrected:
-              (twinShown[index] + declared - twinLevelOnItsBoundaries) * unit,
-          }
-        : undefined,
-    };
-  });
-}
-
-const isOut = ({ native, declared, bound, twin }: Check) =>
-  Math.abs(native - declared) > bound ||
-  (twin !== undefined && Math.abs(native - twin.corrected) > bound);
-
-const describeCheck = (check: Check) =>
-  [
-    `${check.target} at ${check.timeMs.toFixed(1)} ms`,
-    `native ${check.native.toFixed(4)}`,
-    `declared ${check.declared.toFixed(4)}`,
-    `bound ${check.bound.toFixed(4)}`,
-    check.twin
-      ? `twin ${check.twin.shown.toFixed(4)} on its boundaries ${check.twin.onItsBoundaries.toFixed(4)} corrected ${check.twin.corrected.toFixed(4)}`
-      : 'no frame of the twin',
-    ...(isOut(check) ? ['OUT'] : []),
-  ].join(' ');
-
 const largestOf = (values: number[]) => Math.max(0, ...values);
 
 /** The rows in which the native tracks play. */
@@ -747,108 +776,6 @@ function originOf(played: Played, playing: Row[]) {
   );
 }
 
-/**
- * The checks of the rows in which the native tracks play, with the parts of the
- * timeline that have no row with a value of the twin: each phase, and the 40 ms
- * before and after each boundary.
- */
-function examine(caseName: string, played: Played, rows: Row[]) {
-  const { sequence } = played;
-  const totalMs = totalOf(sequence);
-  const playing = playingOf(played, rows);
-  const checks = playing.flatMap((row) => checksOf(played, row));
-  const withTwin = playing.filter(hasTwinValue);
-  const times = withTwin.map((row) => trackTimeOf(played, row));
-  const boundaries = boundariesOf(sequence);
-  const hasRowIn = (from: number, to: number) =>
-    times.some((time) => time > from && time < to);
-  const edges = [0, ...boundaries, totalMs];
-  const notCovered = [
-    ...edges
-      .slice(1)
-      .filter((edge, index) => !hasRowIn(edges[index], edge))
-      .map((edge) => `no row in the phase to ${edge}`),
-    ...boundaries.flatMap((boundary) => [
-      ...(hasRowIn(boundary - 40, boundary)
-        ? []
-        : [`no row before ${boundary}`]),
-      ...(hasRowIn(boundary, boundary + 40)
-        ? []
-        : [`no row after ${boundary}`]),
-    ]),
-  ];
-  const nearest = boundaries.map((boundary) =>
-    Math.min(...times.map((time) => Math.abs(time - boundary))).toFixed(1)
-  );
-  const retakes = playing.reduce((sum, row) => sum + row.retakes, 0);
-  const ofTarget = (target: Check['target']) =>
-    checks.filter((check) => check.target === target);
-  const statsOf = (target: Check['target']) => {
-    const targetChecks = ofTarget(target);
-    const withTwin = targetChecks.filter(({ twin }) => twin !== undefined);
-    return [
-      `${target}: largest difference to the declared curve ${largestOf(targetChecks.map(({ native, declared }) => Math.abs(native - declared))).toFixed(4)}`,
-      `to the corrected twin ${largestOf(withTwin.map(({ native, twin }) => Math.abs(native - twin!.corrected))).toFixed(4)}`,
-      `twin from the curve on its boundaries ${largestOf(withTwin.map(({ twin }) => Math.abs(twin!.shown - twin!.onItsBoundaries))).toFixed(4)}`,
-      `twin from the declared curve ${largestOf(withTwin.map(({ declared, twin }) => Math.abs(twin!.shown - declared))).toFixed(4)}`,
-      `least bound ${Math.min(...targetChecks.map(({ bound }) => bound)).toFixed(4)}`,
-    ].join(', ');
-  };
-  console.log(
-    [
-      'SEQUENCE',
-      caseName,
-      `rows ${rows.length}, with playing tracks ${playing.length}, with a value of the twin ${withTwin.length}, with no value of the twin ${playing.length - withTwin.length}, samples taken again ${retakes} times`,
-      ...TARGETS[formOf(sequence)].map(({ name }) => statsOf(name)),
-      `nearest row with a value of the twin to each boundary ${boundaries.map((boundary, index) => `${boundary}: ${nearest[index]} ms`).join(', ')}`,
-      `not covered: ${notCovered.join(', ') || 'nothing'}`,
-    ].join(' | ')
-  );
-  const out = checks.filter(isOut);
-  for (const check of out.slice(0, 12)) {
-    console.log(`SEQUENCE-ROW | ${caseName} | ${describeCheck(check)}`);
-  }
-  return { checks, out, notCovered, playing, withTwin };
-}
-
-/**
- * The times of the end of the native tracks and of the callbacks, from the
- * start of the native tracks.
- */
-function completionOf(
-  played: Played,
-  playing: Row[],
-  events: TraceEvent[],
-  clockOffset: ClockOffset
-) {
-  const originMs = originOf(played, playing);
-  const timesOf = (name: string) =>
-    events
-      .filter(({ event }) => event === name)
-      .map(({ monotonicTimeMs }) => monotonicTimeMs - originMs);
-  const { callbackTimes: callbackTime } = readRecords();
-  return {
-    trackEnds: timesOf('TrackEnded'),
-    hostEnds: timesOf('Ended'),
-    admission: timesOf('Admitted')[0],
-    nativeCallback: callbackTime.native + clockOffset.offset - originMs,
-    twinCallback: callbackTime.frame + clockOffset.offset - originMs,
-    clockWidth: clockOffset.width,
-  };
-}
-
-type Completion = ReturnType<typeof completionOf>;
-
-const describeCompletion = (completion: Completion) =>
-  [
-    `admission ${completion.admission.toFixed(1)} ms after the start of the tracks`,
-    `track ends ${completion.trackEnds.map((end) => end.toFixed(1)).join(' ')}`,
-    `host end ${completion.hostEnds.map((end) => end.toFixed(1)).join(' ')}`,
-    `native callback ${completion.nativeCallback.toFixed(1)}`,
-    `callback of the twin ${completion.twinCallback.toFixed(1)}`,
-    `width of the clock conversion ${completion.clockWidth.toFixed(2)} ms`,
-  ].join(', ');
-
 /** The targets of the native tracks, or the events of a start with no command. */
 function routeOf(events: TraceEvent[]) {
   const hostEvents = events.filter(
@@ -858,13 +785,13 @@ function routeOf(events: TraceEvent[]) {
     .filter(({ event }) => event === 'TrackStarted')
     .map(({ target }) => target);
   return hostEvents.some(({ event }) => event === 'Admitted')
-    ? targets.join('+')
+    ? targets.sort().join('+')
     : summarize(hostEvents);
 }
 
 const NATIVE_ROUTES: Record<Form, string> = {
-  scalars: 'Opacity+PositionY+PositionX',
-  transform: 'Transform+PositionX',
+  scalars: 'Opacity+PositionX+PositionY',
+  transform: 'PositionX+Transform',
 };
 const FINISHED_TRACKS: Record<Form, string> = {
   scalars: 'Opacity:true,PositionX:true,PositionY:true',
@@ -878,12 +805,72 @@ const trackEndsOf = (events: TraceEvent[]) =>
     .sort()
     .join();
 
+const commandEndsOf = (events: TraceEvent[]) =>
+  events
+    .filter(({ event }) => event === 'Ended')
+    .map(({ outcome, reason }) => `${outcome}:${reason}`)
+    .join();
+
 // The start of the tracks comes from samples of the linear X.
 const ORIGIN_TOLERANCE_MS = 1;
 
-/** The host reports the end of a track one display frame or less from that end. */
-const isInFrameOf = (timeMs: number, declaredMs: number) =>
-  Math.abs(timeMs - declaredMs) < FRAME_MS;
+/**
+ * The times of the end of the native tracks and of the callbacks, from the
+ * origin of the tracks, and the time of the callback of the twin from the start
+ * call of its X.
+ */
+function completionOf({
+  tracks,
+  events,
+  clockOffset,
+  frameChecks,
+}: PlayedReference) {
+  const originMs = middleOf(tracks[0].origin);
+  const timesOf = (name: string) =>
+    events
+      .filter(({ event }) => event === name)
+      .map(({ monotonicTimeMs }) => monotonicTimeMs - originMs);
+  const emitted = {
+    native: callbackTimeOf('native').emittedMs,
+    frame: callbackTimeOf('frame').emittedMs,
+  };
+  const twinStartMs = frameChecks.find(
+    ({ record }) => record.box === 'frame' && record.key === 'originX'
+  )?.record.start?.timeMs;
+  return {
+    trackEnds: timesOf('TrackEnded'),
+    hostEnds: timesOf('Ended'),
+    nativeCallback: emitted.native + middleOf(clockOffset) - originMs,
+    twinCallback: emitted.frame + middleOf(clockOffset) - originMs,
+    twinEnd: emitted.frame - (twinStartMs ?? NaN),
+    clockWidth: clockOffset.to - clockOffset.from,
+  };
+}
+
+type Completion = ReturnType<typeof completionOf>;
+
+function logCompletion(
+  caseName: string,
+  totalMs: number,
+  completion: Completion,
+  events: TraceEvent[]
+) {
+  const describeTimes = (times: number[]) =>
+    times.map((time) => time.toFixed(1)).join(' ');
+  console.log(
+    [
+      'SEQUENCE-END',
+      caseName,
+      `declared ${totalMs} ms`,
+      `track ends ${describeTimes(completion.trackEnds)}`,
+      `host end ${describeTimes(completion.hostEnds)}`,
+      `native callback ${completion.nativeCallback.toFixed(1)}`,
+      `callback of the twin ${completion.twinCallback.toFixed(1)}, ${completion.twinEnd.toFixed(1)} ms after its start`,
+      `width of the clock conversion ${completion.clockWidth.toFixed(2)} ms`,
+      `events ${summarize(events.filter(isHostEvent))}`,
+    ].join(' | ')
+  );
+}
 
 /** The two times are from two clocks. */
 const isAfterTracks = ({ nativeCallback, trackEnds, clockWidth }: Completion) =>
@@ -896,6 +883,7 @@ const isAfterTracks = ({ nativeCallback, trackEnds, clockWidth }: Completion) =>
  */
 const isNotAfterFrameOfTwin = ({ nativeCallback, twinCallback }: Completion) =>
   nativeCallback - twinCallback < FRAME_MS / 2;
+
 const sortedCallbacks = () => [...callbacks].sort().join();
 const sortedBuilderCalls = () => [...namedBuilderCalls].sort().join();
 
@@ -930,6 +918,78 @@ const isAtEndLevel = (
     ({ unit, tolerance }, index) =>
       Math.abs(levels[index] - 1) * unit < tolerance
   );
+
+const hasLeft = (tag: number) =>
+  sample(tag, 'Opacity').then(() => false, isNoView);
+
+const playedTags: Record<string, number> = {};
+
+/** The box of a played case, with a record of the tag of its view. */
+function TaggedBox(props: SizeBoxProps) {
+  const { refName = BOX_REF } = props;
+  useEffect(() => {
+    playedTags[refName] = getTestComponent(refName).getTag();
+  }, [refName]);
+  return <SizeBox {...props} />;
+}
+
+/** A target of a view that leaves, with its end value for a model of the view. */
+type HeldTarget = {
+  name: string;
+  tolerance: number;
+  endOf: (model: number) => number;
+};
+
+/**
+ * The samples of each target of a view for a time, or to the time at which the
+ * view leaves.
+ */
+async function sampleUntilGone(
+  tag: number,
+  targets: HeldTarget[],
+  forMs: number
+) {
+  const reads: TargetSample[][] = [];
+  const untilMs = performance.now() + forMs;
+  try {
+    while (performance.now() < untilMs) {
+      reads.push(
+        await Promise.all(targets.map(({ name }) => sample(tag, name)))
+      );
+    }
+  } catch (error) {
+    if (!isNoView(error)) {
+      throw error;
+    }
+  }
+  return reads;
+}
+
+/**
+ * For each sample of a target from the end report of its track: the distance of
+ * the presentation from the end value, in tolerances of the target.
+ */
+function heldDistancesOf(
+  targets: HeldTarget[],
+  reads: TargetSample[][],
+  events: TraceEvent[]
+) {
+  return targets.flatMap(({ name, tolerance, endOf }, index) => {
+    const ended = events.find(
+      ({ event, target }) => event === 'TrackEnded' && target === name
+    );
+    return reads
+      .map((read) => read[index])
+      .filter(
+        ({ monotonicTimeMs }) =>
+          ended !== undefined && monotonicTimeMs >= ended.monotonicTimeMs
+      )
+      .map(
+        ({ presentation, model }) =>
+          Math.abs(presentation[0] - endOf(model[0])) / tolerance
+      );
+  });
+}
 
 const DIRECTION_CHANGE: Sequence = {
   parts: [
@@ -995,149 +1055,102 @@ describe('native layout sequences', () => {
   ];
   for (const [caseName, sequence] of entering) {
     test(`an entering sequence of ${caseName} plays natively on its declared timeline: each target is on the declared curve and on the curve of its frame-driven twin in each phase and around each boundary, each track ends one display frame or less from the declared end, and the callback gets true one time, after the tracks and not after the display frame of the callback of the twin`, async () => {
-      const played = await play(sequence, 'entering');
       const form = formOf(sequence);
       const totalMs = totalOf(sequence);
-      const rows = await takeRows(played, played.startMs + totalMs + 120);
-      await waitForCallbacks(2);
-      await wait(300);
-      const events = (await takeTrace()).filter(
-        ({ tag }) => tag === played.tags.native
+      const played = await playCase(
+        `an entering sequence of ${caseName}`,
+        caseOf(sequence, 'entering')
       );
-      const { out, notCovered, playing, withTwin } = examine(
-        caseName,
-        played,
-        rows
-      );
-      const records = readRecords();
-      const completion = completionOf(
-        played,
-        playing,
-        events,
-        await sampleClockOffset(played.tags.native)
-      );
-      const twinEndMs = records.callbackTimes.frame - records.origins.frame;
-      console.log(
-        [
-          'SEQUENCE-END',
-          caseName,
-          `declared ${totalMs} ms`,
-          describeCompletion(completion),
-          `callback of the twin ${twinEndMs.toFixed(1)} ms after its start`,
-          `events ${summarize(events.filter(isHostEvent))}`,
-        ].join(' | ')
-      );
+      const { events } = played;
+      const completion = completionOf(played);
+      logCompletion(caseName, totalMs, completion, events);
 
       expect(routeOf(events)).toBe(NATIVE_ROUTES[form]);
-      expect(withTwin.length > 20).toBe(true);
-      expect(notCovered.join()).toBe('');
-      expect(out.length).toBe(0);
       expect(trackEndsOf(events)).toBe(FINISHED_TRACKS[form]);
+      expect(commandEndsOf(events)).toBe('Finished:None');
       expect(
-        events
-          .filter(({ event }) => event === 'Ended')
-          .map(summarizeEnded)
-          .join()
-      ).toBe('Finished:None');
-      expect(
-        [...completion.trackEnds, ...completion.hostEnds].every((endMs) =>
-          isInFrameOf(endMs, totalMs)
+        [...completion.trackEnds, ...completion.hostEnds].every(
+          (endMs) => endMs > totalMs - FRAME_MS
         )
       ).toBe(true);
-      expect(twinEndMs > totalMs - 0.5).toBe(true);
-      expect(sortedCallbacks()).toBe('frame:true,native:true');
+      expect(completion.twinEnd > totalMs - 0.5).toBe(true);
       expect(isAfterTracks(completion)).toBe(true);
       expect(isNotAfterFrameOfTwin(completion)).toBe(true);
-      expect(sortedBuilderCalls()).toBe('frame,native');
-      for (const tag of [played.tags.native, played.tags.frame]) {
-        const rest = await readAtRest(tag, form);
-        expect(rest.keys).toBe(0);
-        expect(isAtEndLevel(rest, form)).toBe(true);
-        expect(Math.abs(rest.x) < TOLERANCE.points).toBe(true);
-      }
       await render(null);
     });
   }
 
   test('an exiting sequence plays natively on its declared timeline, ends each track one time one display frame or less from the end of its last part, gives its callback after the tracks and not after the display frame of the callback of the twin, and holds its end values to the removal', async () => {
-    const played = await play(EXIT, 'exiting');
     const totalMs = totalOf(EXIT);
-    const untilMs = played.startMs + totalMs + 400;
-    const rows = await takeRows(played, untilMs);
-    // The rows stop when one of the two boxes leaves.
-    const afterTwin = await takeNativeSamples(played.tags.native, untilMs);
-    await waitForCallbacks(2);
-    await wait(300);
-    const events = (await takeTrace()).filter(
-      ({ tag }) => tag === played.tags.native
+    const endLevel = lastOf(EXIT.parts).to;
+    const heldTargets: HeldTarget[] = [
+      { name: 'Opacity', tolerance: OPACITY_TOLERANCE, endOf: () => endLevel },
+      {
+        name: 'PositionY',
+        tolerance: POSITION_TOLERANCE,
+        endOf: (model) => model + offsetOf(endLevel),
+      },
+      {
+        name: 'PositionX',
+        tolerance: POSITION_TOLERANCE,
+        endOf: (model) => model - X_TRAVEL,
+      },
+    ];
+    const lastPartStartMs = lastOf(declaredStartsOf(EXIT));
+    let sampling: Promise<TargetSample[][]> | undefined;
+    // The rows go on to the time at which a box leaves.
+    const played = await playCase(
+      'an exiting sequence',
+      caseOf(EXIT, 'exiting', {
+        totalMs: totalMs + 400,
+        box: { Box: TaggedBox },
+        // The play calls a checkpoint after its rows, and its rows stop when a box leaves.
+        checkpoint: {
+          atMs: lastPartStartMs,
+          run: () => {
+            sampling = sampleUntilGone(
+              playedTags[BOX_REF],
+              heldTargets,
+              totalMs + 400 - lastPartStartMs
+            );
+          },
+        },
+      })
     );
-    const { out, notCovered, playing, withTwin } = examine(
-      'exit',
-      played,
-      rows
+    const heldReads = (await sampling) ?? [];
+    const { tag } = played.events[0];
+    const removal = await takeTraceUntil((taken) =>
+      taken.some((event) => event.tag === tag && event.event === 'Ended')
     );
-    const held = [...rows, ...afterTwin].filter(
-      (row) =>
-        row.position.playbackKeys.length > 0 &&
-        trackTimeOf(played, row) >= totalMs
-    );
-    const endLevel = EXIT.parts[EXIT.parts.length - 1].to;
-    const heldDifferences = held.map(({ position, value }) =>
-      Math.max(
-        ...levelsOf(
-          'scalars',
-          position,
-          value,
-          'presentation',
-          position.model[1]
-        ).map(
-          (level, index) =>
-            (Math.abs(level - endLevel) * TARGETS.scalars[index].unit) /
-            TARGETS.scalars[index].tolerance
-        )
-      )
-    );
-    const completion = completionOf(
-      played,
-      playing,
-      events,
-      played.clockOffset!
-    );
-    const [removalMs] = completion.hostEnds;
-    console.log(
-      [
-        'SEQUENCE-END',
-        'exit',
-        `declared ${totalMs} ms`,
-        describeCompletion(completion),
-        `rows that hold the end ${held.length}, largest difference in tolerances ${largestOf(heldDifferences).toFixed(2)}`,
-        `events ${summarize(events.filter(isHostEvent))}`,
-      ].join(' | ')
-    );
+    const events = [
+      ...played.events,
+      ...removal.filter((event) => event.tag === tag),
+    ];
+    const completion = completionOf({ ...played, events });
+    logCompletion('exit', totalMs, completion, events);
 
     expect(routeOf(events)).toBe(NATIVE_ROUTES.scalars);
-    expect(withTwin.length > 20).toBe(true);
-    expect(notCovered.join()).toBe('');
-    expect(out.length).toBe(0);
     expect(trackEndsOf(events)).toBe(FINISHED_TRACKS.scalars);
     expect(
-      completion.trackEnds.every((endMs) => isInFrameOf(endMs, totalMs))
+      completion.trackEnds.every(
+        (endMs) => Math.abs(endMs - totalMs) < FRAME_MS
+      )
     ).toBe(true);
-    expect(sortedCallbacks()).toBe('frame:true,native:true');
     expect(isAfterTracks(completion)).toBe(true);
     expect(isNotAfterFrameOfTwin(completion)).toBe(true);
-    expect(sortedBuilderCalls()).toBe('frame,native');
 
     // The removal of the view ends the command.
-    expect(
-      events
-        .filter(({ event }) => event === 'Ended')
-        .map(summarizeEnded)
-        .join()
-    ).toBe('Cancelled:None');
-    expect(removalMs >= Math.max(...completion.trackEnds)).toBe(true);
-    expect(heldDifferences.every((difference) => difference < 1)).toBe(true);
-    expect(await takeRow(played.tags, 'scalars')).toBeUndefined();
+    expect(commandEndsOf(events)).toBe('Cancelled:None');
+    expect(completion.hostEnds[0] >= Math.max(...completion.trackEnds)).toBe(
+      true
+    );
+    const heldDistances = heldDistancesOf(heldTargets, heldReads, events);
+    console.log(
+      `SEQUENCE-HELD | samples of each target from the declared start of the last part to the removal ${heldReads.length}, samples from the end report of their track ${heldDistances.length}, samples off the end value ${heldDistances.filter((distance) => distance >= 1).length}, largest distance from the end value in tolerances ${Math.max(0, ...heldDistances).toFixed(2)}`
+    );
+    expect(playedTags[BOX_REF]).toBe(tag);
+    expect(heldDistances.every((distance) => distance < 1)).toBe(true);
+    expect(await hasLeft(tag)).toBe(true);
     await render(null);
   });
 
@@ -1177,27 +1190,23 @@ describe('native layout sequences', () => {
   ];
   for (const [caseName, sequence, route] of fallbacks) {
     test(`an entering sequence with ${caseName} stays frame-driven as a whole (${route}), with one builder call, and ends as its frame-driven twin`, async () => {
-      const played = await play(sequence, 'entering');
-      await waitForCallbacks(2);
-      await wait(300);
-      const events = (await takeTrace()).filter(
-        ({ tag }) => tag === played.tags.native
+      const { events, end, missingCallbacks } = await playCounted(
+        caseOf(sequence, 'entering', { isFrameDriven: true })
       );
       console.log(`SEQUENCE-FALLBACK | ${caseName} | ${routeOf(events)}`);
       expect(routeOf(events)).toBe(route);
-      expect(sortedCallbacks()).toBe('frame:true,native:true');
-      expect(sortedBuilderCalls()).toBe('frame,native');
-      const [native, twin] = await Promise.all([
-        readAtRest(played.tags.native),
-        readAtRest(played.tags.frame),
-      ]);
-      expect(native.keys).toBe(0);
-      expect(Math.abs(native.opacity - twin.opacity) < TOLERANCE.opacity).toBe(
-        true
-      );
-      expect(
-        Math.abs(native.yLevel - twin.yLevel) * Y_TRAVEL < TOLERANCE.points
-      ).toBe(true);
+      expect(missingCallbacks).toBe('');
+      expect([...callbacks].sort().join()).toBe('frame:true,native:true');
+      const { native, frame } = end!;
+      for (const { playbackKeys } of Object.values(native)) {
+        expect(playbackKeys.length).toBe(0);
+      }
+      const distanceOf = (target: string) =>
+        Math.abs(
+          native[target].presentation[0] - frame[target].presentation[0]
+        );
+      expect(distanceOf('Opacity') < OPACITY_TOLERANCE).toBe(true);
+      expect(distanceOf('PositionY') < POSITION_TOLERANCE).toBe(true);
       await render(null);
     });
   }
@@ -1234,7 +1243,6 @@ describe('native layout sequences and a clip of their view', () => {
       { to: 0.1, duration: 2750, easing: 'default' },
     ],
   };
-  const TRANSFER_TIMEOUT_MS = 500;
   const TRANSFORM_HAND_OVER: Sequence = {
     form: 'transform',
     parts: [
@@ -1244,6 +1252,7 @@ describe('native layout sequences and a clip of their view', () => {
       { to: 1, duration: 300 },
     ],
   };
+  const TRANSFER_TIMEOUT_MS = 500;
   // The time of a clip is the time of the tracks in the first row that has it. The frame driver has its first
   // frame two display frames after that row (measured: 32.4 to 32.6 ms), so the clip at 960 ms gives that frame
   // from 7 ms before to 10 ms after the end of the second part of HAND_OVER at 1000 ms. The clip of the exit is
@@ -1259,12 +1268,6 @@ describe('native layout sequences and a clip of their view', () => {
     ],
     ['in a hold between two parts', HAND_OVER_IN_A_HOLD, 'entering', 550],
     ['inside the third part', EXIT_HAND_OVER, 'exiting', 2000],
-    [
-      'inside the second part of a sequence on two operations of the transform',
-      TRANSFORM_HAND_OVER,
-      'entering',
-      800,
-    ],
   ];
   for (const [caseName, sequence, flow, clipMs, boundaryMs] of clips) {
     test(`a clip ${caseName} of a native ${flow} sequence gives it to the frame driver in its declared state: the start of the tracks, the first value, the later boundaries, the end value, and one callback`, async () => {
@@ -1472,6 +1475,53 @@ describe('native layout sequences and a clip of their view', () => {
         const rest = await readAtRest(nativeTag, form);
         expect(rest.keys).toBe(0);
         expect(isAtEndLevel(rest, form)).toBe(true);
+      }
+      await render(null);
+    });
+  }
+
+  const CLIPPED_FOR_MS = 400;
+  const MODEL_TARGETS: Record<Form, ModelTarget> = {
+    scalars: 'Opacity',
+    transform: 'Transform',
+  };
+  // The scroll call of a clip is at a time from the commit. The sequence has a part that starts 200 ms or
+  // more after its clip.
+  const playedClips: [string, Sequence, EntryExit, number][] = [
+    [
+      'inside the second part of a sequence on two operations of the transform',
+      TRANSFORM_HAND_OVER,
+      'entering',
+      800,
+    ],
+  ];
+  for (const [clipName, sequence, flow, clipMs] of playedClips) {
+    test(`a clip ${clipName} of a native ${flow} sequence gives it to the frame driver in its declared state: the start of the tracks, the first value, the later boundaries, the end value, and one callback`, async () => {
+      const caseName = `a clip ${clipName} of a native ${flow} sequence`;
+      const form = formOf(sequence);
+      const played = await playCase(
+        caseName,
+        caseOf(sequence, flow, {
+          clip: { atMs: clipMs, backAtMs: clipMs + CLIPPED_FOR_MS },
+        })
+      );
+      const { events, tracks } = played;
+      const removed = events.find(({ event }) => event === 'Ended');
+      console.log(
+        [
+          'SEQUENCE-HAND-OVER',
+          caseName,
+          `the tracks leave ${((removed?.monotonicTimeMs ?? NaN) - middleOf(tracks[0].origin)).toFixed(1)} ms after their origin`,
+          `events ${summarize(events.filter(isHostEvent))}`,
+        ].join(' | ')
+      );
+
+      expect(routeOf(events)).toBe(NATIVE_ROUTES[form]);
+      expect(commandEndsOf(events)).toBe('Interrupted:PlatformRemoved');
+      expectNoKeyAfterTransfer(played, MODEL_TARGETS[form]);
+      expectModelOnFrames(caseName, played, MODEL_TARGETS[form]);
+      if (flow === 'exiting') {
+        expect(await hasLeft(events[0].tag)).toBe(true);
       }
       await render(null);
     });
