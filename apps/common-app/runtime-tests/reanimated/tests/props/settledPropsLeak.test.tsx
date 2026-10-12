@@ -31,10 +31,12 @@ import type { SingleViewSnapshot } from '../../../ReJest/TestRunner/UpdatesConta
 import { ComparisonMode } from '../../../ReJest/types';
 import { convertDecimalColor } from '../../../ReJest/utils/util';
 
-// Covers #10140 (settled values leaking into top-level props) and #10339
-// (color stuck while the text counts up, with IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS
-// on). The runtime-tests app has FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS on
-// and the synchronous props paths off. See SettledPropsLeakExample.tsx.
+// Covers #10140 (settled values leaking into top-level props) and the
+// per-frame color and text ordering from #10339. The runtime-tests app has
+// FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS on and the synchronous props paths
+// off, so the #10339 bug itself (a mount writing a stale color over a
+// synchronous update, only with IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS on) cannot
+// happen here.
 
 const BOX_REF = 'SETTLED_PROPS_LEAK_BOX';
 const FRAMES_DONE = 'SETTLED_PROPS_LEAK_FRAMES_DONE';
@@ -239,6 +241,12 @@ function expectSettledProps(props: ReceivedProps, mode: Mode) {
   expect(keysIn(style, PROP_KEYS)).toBe('');
 }
 
+// The color the platform shows, not the shadow tree.
+async function mountedColor(): Promise<string | undefined> {
+  return (await getTestComponent(BOX_REF).getMountedViewProps())
+    ?.backgroundColor;
+}
+
 const cases = [
   {
     description: 'useAnimatedStyle and useAnimatedProps, 300 ms',
@@ -274,7 +282,7 @@ const cases = [
 
 describe('settled animated style and props of a wrapped component', () => {
   test.each(cases)(
-    '${description} - the color and the text change together on every frame',
+    '${description} - the color and the text animate frame by frame and settle',
     async ({ mode, durationMs }) => {
       const { jsUpdates, nativeSnapshots } = await recordFrames(
         mode,
@@ -342,16 +350,19 @@ describe('settled animated style and props of a wrapped component', () => {
 
       expect(received.length > rendersBeforeSync).toBe(true);
       expectSettledProps(received[received.length - 1], mode);
+      expect(await mountedColor()).toBe(TO_COLOR, ComparisonMode.COLOR);
 
       const rendersBeforeRerender = received.length;
       await renderBox(1);
       expect(received.length > rendersBeforeRerender).toBe(true);
       expectSettledProps(received[received.length - 1], mode);
+      await expectEventually(mountedColor).toBe(TO_COLOR, ComparisonMode.COLOR);
       await wait(SYNC_BACK_DELAY_MS);
       expectSettledProps(received[received.length - 1], mode);
       expect(
         await getTestComponent(BOX_REF).getAnimatedStyle('backgroundColor')
       ).toBe(TO_COLOR, ComparisonMode.COLOR);
+      expect(await mountedColor()).toBe(TO_COLOR, ComparisonMode.COLOR);
 
       // Renders, over the whole test, that got a style key as a top-level prop.
       const leakingRenders = received.filter(
