@@ -230,6 +230,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       std::weak_ptr<const facebook::react::MountingOverrideDelegate> mountingOverrideDelegate) override;
   std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) override;
   std::optional<SurfaceId> onGestureCancel(int tag) override;
+  void onSharedTransitionConfigured(const std::vector<Tag> &viewTags) override;
   void shadowTreeWillCommit(bool isSurfaceRemoval) override;
   void clearSurfaceState() const override;
 

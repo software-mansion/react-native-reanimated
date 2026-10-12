@@ -591,6 +591,23 @@ std::optional<SurfaceId> LayoutAnimationsProxy::onGestureCancel(int tag) {
   return surfaceId_;
 }
 
+// A change of the shared tag alone gives no host mutations, so the pull that applies the config is requested here.
+void LayoutAnimationsProxy::onSharedTransitionConfigured(const std::vector<Tag> &viewTags) {
+  if constexpr (!StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    return;
+  }
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (sharedElements_.empty()) {
+    return;
+  }
+  const auto hiddenTags = hiddenViewTags();
+  const bool configuresHiddenView =
+      std::ranges::any_of(viewTags, [&hiddenTags](const Tag tag) { return hiddenTags.contains(tag); });
+  if (configuresHiddenView) {
+    schedulePullOnNextFrame();
+  }
+}
+
 void LayoutAnimationsProxy::insertContainers(TransactionMeta &transaction, int &rootChildCount) const {
   auto &filteredMutations = transaction.filteredMutations;
   ShadowViewMutationList currentMutations;
