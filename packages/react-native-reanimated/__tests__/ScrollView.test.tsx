@@ -52,9 +52,18 @@ describe('Animated.ScrollView scrollViewOffset', () => {
   });
 
   test('tracks the offset without a ref', () => {
-    render(<ScrollViewWithOffset />);
+    const offset = makeMutable(0);
 
+    render(<Animated.ScrollView scrollViewOffset={offset} />);
+
+    expect(registerForEvents).toHaveBeenCalledTimes(1);
     expect(registerForEvents).toHaveBeenCalledWith(SCROLL_VIEW_TAG);
+    const [handler] = registerForEvents.mock
+      .instances as WorkletEventHandler<ReanimatedScrollEvent>[];
+    handler.worklet({
+      contentOffset: { x: 0, y: 42 },
+    } as ReanimatedScrollEvent);
+    expect(offset.value).toBe(42);
   });
 
   test('tracks the offset with an animated ref, which still receives the scroll view', () => {
