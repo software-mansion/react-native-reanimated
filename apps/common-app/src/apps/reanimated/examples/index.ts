@@ -252,6 +252,10 @@ const ReducedMotionLayoutExample: React.FC = () =>
   );
 const RefExample: React.FC = () =>
   React.createElement(require('./RefExample').default as React.FC);
+const ReloadDuringWorkletsCrashExample: React.FC = () =>
+  React.createElement(
+    require('./ReloadDuringWorkletsCrashExample').default as React.FC
+  );
 const ReparentingExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/ReparentingExample').default as React.FC
@@ -334,6 +338,13 @@ const ALL_EXAMPLES: Record<string, Example> = {
     section: REGRESSIONS,
     screen: SuspenseLayoutAnimationCrashExample,
     disabledPlatforms: [REAPlatform.WEB],
+  },
+  ReloadDuringWorkletsCrashExample: {
+    icon: '♻️',
+    title: 'Reload during worklets crash',
+    section: REGRESSIONS,
+    screen: ReloadDuringWorkletsCrashExample,
+    disabledPlatforms: [REAPlatform.IOS, REAPlatform.MACOS, REAPlatform.WEB],
   },
   SettledPropsLeakExample: {
     icon: '🚿',

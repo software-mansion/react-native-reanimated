@@ -30,6 +30,12 @@ NativeProxy::NativeProxy(
     const std::shared_ptr<WorkletRuntime> &uiRuntime,
     const std::shared_ptr<UIScheduler> &uiScheduler)
     : javaPart_(jni::make_global(jThis)),
+      strongThis_(
+          this,
+          [](NativeProxy *self) {
+            // The Java part can destroy `self` as soon as it is released, so move it out first.
+            const auto javaPart = std::move(self->javaPart_);
+          }),
       rnRuntime_(rnRuntime),
       uiRuntime_(uiRuntime),
       reanimatedModuleProxy_(std::make_shared<ReanimatedModuleProxy>(
@@ -180,11 +186,6 @@ void NativeProxy::registerEventHandler() {
 }
 
 void NativeProxy::maybeFlushUIUpdatesQueue() {
-  // Module might be already destroyed.
-  if (!javaPart_) {
-    return;
-  }
-
   static const auto method = getJniMethod<void()>("maybeFlushUIUpdatesQueue");
   method(javaPart_.get());
 }
@@ -447,7 +448,8 @@ void NativeProxy::invalidateCpp() {
   // the pointer and it will be too late after it
   reanimatedModuleProxy_->cleanupSensors();
   reanimatedModuleProxy_.reset();
-  javaPart_ = nullptr;
+  // Releases `javaPart_`, but only after the calls in flight on other threads return.
+  strongThis_.reset();
 }
 
 } // namespace reanimated
