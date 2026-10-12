@@ -126,7 +126,7 @@ android {
     }
 }
 
-def runtimeTestsLibraries = ["reanimated", "worklets", "self-tests"]
+def runtimeTestsLibraries = ["reanimated", "worklets", "self-tests", "lifecycle"]
 def runtimeTestsJsDir = layout.buildDirectory.dir("generated/runtimeTestsBundles/js")
 def runtimeTestsAssetsDir = layout.buildDirectory.dir("generated/runtimeTestsBundles/assets")
 
