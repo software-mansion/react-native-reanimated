@@ -452,9 +452,13 @@ describe('serializableMappingCache and clones that hold a JS function', () => {
       mock.mockClear();
     }
 
-    // `WeakRef` keeps its target alive until the current job ends.
-    await new Promise((resolve) => setImmediate(resolve));
-    gc();
+    // `WeakRef` keeps its target alive until the current job ends, and the
+    // spec does not promise that one `gc()` collects every unreachable object,
+    // so give it a few rounds.
+    for (let round = 0; round < 10 && probe.deref() !== undefined; round++) {
+      await new Promise((resolve) => setImmediate(resolve));
+      gc();
+    }
 
     expect(probe.deref()).toBeUndefined();
     // The fake native released it with its last owner.
