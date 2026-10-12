@@ -95,7 +95,6 @@ void CSSAnimationsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   updateRegistryForRevertedAnimations();
 }
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
 void CSSAnimationsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto tags = std::exchange(updatedTags_, {});
@@ -117,7 +116,6 @@ void CSSAnimationsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch
   flush(updatesBatch);
   updateRegistryForRevertedAnimations();
 }
-#endif
 
 CSSAnimationsRegistry::AnimationObserver::AnimationObserver(CSSAnimationsRegistry &owner) : owner_(owner) {}
 

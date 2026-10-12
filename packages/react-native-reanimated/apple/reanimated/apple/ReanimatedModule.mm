@@ -10,6 +10,7 @@
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REANodesManager.h>
+#import <reanimated/apple/REASynchronousPropsRewriter.h>
 #import <reanimated/apple/ReanimatedModule.h>
 #import <reanimated/apple/native/NativeProxy.h>
 #import <reanimated/apple/native/REAJSIUtils.h>
@@ -25,6 +26,7 @@ using namespace worklets;
 @implementation ReanimatedModule {
   __weak RCTSurfacePresenter *_surfacePresenter;
   std::shared_ptr<ReanimatedModuleProxy> _reanimatedModuleProxy;
+  REASynchronousPropsRewriter *_synchronousPropsRewriter;
 #ifndef NDEBUG
   reanimated::SingleInstanceChecker<ReanimatedModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -41,6 +43,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   REAAssertTurboModuleManagerQueue();
 
   [_nodesManager invalidate];
+  _synchronousPropsRewriter = nil;
   _reanimatedModuleProxy.reset();
   [super invalidate];
 }
@@ -154,34 +157,11 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   }
 }
 
-/**
- * Currently on iOS React Native can go into a non-fatal race condition
- * on a double reload. Double reload can happen during an OTA update,
- * when an app is reloaded immediately after evaluating the bundle.
- * We need to bail on it without throwing exceptions.
- */
-- (BOOL)hasReactNativeFailedReload
-{
-  id workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
-  if (![_moduleRegistry moduleIsInitialized:[workletsModule class]]) {
-    return YES;
-  }
-
-  // On a double reload React Native can momentarily leave the surface presenter without
-  // a scheduler. This is another manifestation of the same non-fatal reload race, so we
-  // bail on it here instead of asserting on a nil scheduler later in installTurboModule.
-  if ([_surfacePresenter scheduler] == nil) {
-    return YES;
-  }
-
-  return NO;
-}
-
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
   REAAssertJavaScriptQueue();
 
-  if ([self hasReactNativeFailedReload]) {
+  if ([_surfacePresenter scheduler] == nil) {
     return @NO;
   }
 
@@ -207,6 +187,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   const auto &uiManager = scheduler.uiManager;
   react_native_assert(uiManager.get() != nil);
   _reanimatedModuleProxy->initializeFabric(uiManager);
+  if (_reanimatedModuleProxy->hasSynchronousWritesTracker()) {
+    _synchronousPropsRewriter = [[REASynchronousPropsRewriter alloc] initWithSurfacePresenter:_surfacePresenter
+                                                                        reanimatedModuleProxy:_reanimatedModuleProxy];
+  }
   [self attachReactEventListener:_reanimatedModuleProxy];
   [self registerRCTEventHandler:_reanimatedModuleProxy uiWorkletRuntime:uiWorkletRuntime];
 

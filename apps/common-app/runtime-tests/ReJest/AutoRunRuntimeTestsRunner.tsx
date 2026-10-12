@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { RuntimeTestSuite } from '../types';
+import type { TestConfiguration, TestProgress } from './types';
 import { runWithRemoteReporter } from './utils/remoteReporter';
 import { RenderLock } from './utils/RenderLock';
 
@@ -29,12 +30,6 @@ interface AutoRunRuntimeTestsRunnerProps {
   warmUp?: () => Promise<void>;
 }
 
-interface ProgressState {
-  current: number;
-  total: number;
-  currentName: string;
-}
-
 function isReanimatedLoaded() {
   const globals = globalThis as {
     _REANIMATED_VERSION_JS?: unknown;
@@ -57,7 +52,7 @@ export default function AutoRunRuntimeTestsRunner({
   const [status, setStatus] = useState<string>(
     `Connecting to ${autoRun.wsUrl}…`
   );
-  const [progress, setProgress] = useState<ProgressState | null>(null);
+  const [progress, setProgress] = useState<TestProgress | null>(null);
 
   useEffect(() => {
     if (renderLock) {
@@ -83,7 +78,7 @@ export default function AutoRunRuntimeTestsRunner({
           setStatus(message);
         }
       },
-      onStart: async ({ only }) => {
+      onStart: async ({ only, reportSuiteFinished }) => {
         const filterSet = only ? new Set(only) : null;
         const selected = tests.filter((test) => {
           if (test.disabled) {
@@ -104,10 +99,7 @@ export default function AutoRunRuntimeTestsRunner({
         }
 
         const { configure, runTests } = require('./RuntimeTestsApi') as {
-          configure: (config: {
-            render: (renderedComponent: ReactNode) => void;
-            onProgress?: (progressState: ProgressState) => void;
-          }) => RenderLock;
+          configure: (config: TestConfiguration) => RenderLock;
           runTests: () => Promise<{
             passed: number;
             failed: number;
@@ -121,6 +113,7 @@ export default function AutoRunRuntimeTestsRunner({
         renderLock = configure({
           render: setComponent,
           onProgress: setProgress,
+          onSuiteFinished: reportSuiteFinished,
         });
         if (warmUp) {
           await warmUp();

@@ -19,12 +19,35 @@ const SHOULD_CAPTURE_SCHEDULE_STACK =
 type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
   worklet: WorkletFunction<Args, ReturnValue>,
   args: Args,
-  resolve: ((value: ReturnValue) => void) | undefined,
+  resolve:
+    | ((value: ReturnValue | PromiseLike<ReturnValue>) => void)
+    | undefined,
   reject: ((reason: unknown) => void) | undefined,
   scheduleStack: string | undefined,
 ];
 
 let runOnUIQueue: UIJob[] = [];
+
+function runAsyncUIJob<Args extends unknown[], ReturnValue>(
+  workletFunction: WorkletFunction<Args, ReturnValue>,
+  workletArgs: Args,
+  resolve: (value: ReturnValue | PromiseLike<ReturnValue>) => void,
+  reject: (reason: unknown) => void
+): void {
+  'worklet';
+  try {
+    const result = workletFunction(...workletArgs);
+    const serializedResult = globalThis.__serializer(
+      result
+    ) as SerializableRef<ReturnValue>;
+    globalThis.__workletsModuleProxy.handlePromise(resolve, serializedResult);
+  } catch (error) {
+    const serializedError = globalThis.__serializer(error);
+    globalThis.__workletsModuleProxy.handlePromise(reject, serializedError);
+  }
+}
+
+let serializableRunAsyncUIJob: SerializableRef | undefined;
 
 /**
  * Lets you schedule a function to be executed on the [UI
@@ -227,9 +250,49 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
       fun,
       (args.length > 0
         ? globalThis.__serializer(args)
-        : undefined) as SerializableRef<Args>
+        : undefined) as SerializableRef<Args>,
+      SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
     );
   }
+}
+
+/**
+ * Lets you run a function synchronously on the [RN
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime)
+ * from any runtime and get its return value.
+ *
+ * - This function cannot be called from the [UI
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
+ *   or a [Worker
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
+ *   unless the [Bundle
+ *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
+ *   enabled.
+ *
+ * @param fun - A function you want to run on the RN Runtime.
+ * @param args - Arguments to pass to the function.
+ * @returns The return value of the function passed as the first argument.
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRNSync
+ */
+export function runOnRNSync<Args extends unknown[], ReturnValue>(
+  fun:
+    | ((...args: Args) => ReturnValue)
+    | RemoteFunction
+    | WorkletFunction<Args, ReturnValue>,
+  ...args: Args
+): ReturnValue {
+  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
+    return (fun as (...args: Args) => ReturnValue)(...args);
+  }
+  return globalThis.__workletsModuleProxy.runOnRNSync(
+    isWorkletFunction<Args, ReturnValue>(fun)
+      ? globalThis.__serializer(fun)
+      : fun,
+    (args.length > 0
+      ? globalThis.__serializer(args)
+      : undefined) as SerializableRef<Args>,
+    SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
+  );
 }
 
 /**
@@ -312,7 +375,7 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
 function enqueueUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   args: Args,
-  resolve?: (value: ReturnValue) => void,
+  resolve?: (value: ReturnValue | PromiseLike<ReturnValue>) => void,
   reject?: (reason: unknown) => void
 ): void {
   const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
@@ -332,40 +395,41 @@ function flushUIQueue(): void {
   queueMicrotask(() => {
     const queue = runOnUIQueue;
     runOnUIQueue = [];
-    const jobWorklets = queue.map(
-      ([workletFunction, workletArgs, resolve, reject]) =>
-        createSerializable(() => {
-          'worklet';
-          try {
-            const result = workletFunction(...workletArgs);
-            if (resolve) {
-              const serializedResult = globalThis.__serializer(result);
-              globalThis.__workletsModuleProxy.handlePromise(
-                resolve,
-                serializedResult
-              );
-            }
-          } catch (error) {
-            if (reject) {
-              const serializedError = globalThis.__serializer(error);
-              globalThis.__workletsModuleProxy.handlePromise(
-                reject,
-                serializedError
-              );
-            } else {
-              throw error;
-            }
-          }
-        })
-    );
+    const jobWorklets: SerializableRef[] = [];
+    const jobArguments: SerializableRef<unknown[]>[] = [];
+    for (const [workletFunction, workletArgs, resolve, reject] of queue) {
+      if (resolve === undefined) {
+        jobWorklets.push(createSerializable(workletFunction));
+        jobArguments.push(createSerializable(workletArgs));
+      } else {
+        serializableRunAsyncUIJob ??= createSerializable(runAsyncUIJob);
+        jobWorklets.push(serializableRunAsyncUIJob);
+        jobArguments.push(
+          createSerializable([workletFunction, workletArgs, resolve, reject!])
+        );
+      }
+    }
     const scheduleStacks = SHOULD_CAPTURE_SCHEDULE_STACK
       ? (queue.map(([, , , , scheduleStack]) => scheduleStack) as string[])
       : undefined;
     WorkletsModule.scheduleOnUI(
       WorkletsModule.createSerializableArray(jobWorklets),
+      WorkletsModule.createSerializableArray(jobArguments),
       scheduleStacks
     );
   });
+}
+
+/**
+ * Returns the id of the thread which currently executes JavaScript on the
+ * calling Runtime.
+ *
+ * @returns The id of the current thread.
+ * @see https://docs.swmansion.com/react-native-worklets/docs/utility/getCurrentThreadId
+ */
+export function getCurrentThreadId(): string {
+  'worklet';
+  return globalThis.__workletsModuleProxy.getCurrentThreadId();
 }
 
 if (__DEV__ && !isBundleModeEnabled()) {
@@ -373,6 +437,7 @@ if (__DEV__ && !isBundleModeEnabled()) {
    * QoL guards to give a meaningful error message when the user tries to call
    * these functions on Worklet Runtimes outside of the Bundle Mode.
    */
+  addNoBundleModeGuardImplementation(runOnRNSync);
   addNoBundleModeGuardImplementation(runOnUIAsync);
   addNoBundleModeGuardImplementation(runOnUISync);
   addNoBundleModeGuardImplementation(scheduleOnUI);

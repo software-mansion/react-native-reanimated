@@ -30,6 +30,23 @@ export { isShareable } from './memory/isShareable';
 export { isSynchronizable } from './memory/isSynchronizable';
 export {
   createSerializable,
+  createSerializableArray,
+  createSerializableArrayBuffer,
+  createSerializableArrayBufferView,
+  createSerializableBigInt,
+  createSerializableBoolean,
+  createSerializableError,
+  createSerializableHostObject,
+  createSerializableMap,
+  createSerializableNull,
+  createSerializableNumber,
+  createSerializableObject,
+  createSerializableRegExp,
+  createSerializableRemoteFunction,
+  createSerializableSet,
+  createSerializableString,
+  createSerializableUndefined,
+  createSerializableWorklet,
   isSerializableRef,
   registerCustomSerializable,
 } from './memory/serializable';
@@ -77,7 +94,9 @@ export {
 } from './runtimes';
 export {
   executeOnUIRuntimeSync,
+  getCurrentThreadId,
   runOnJS,
+  runOnRNSync,
   runOnUI,
   runOnUIAsync,
   runOnUISync,

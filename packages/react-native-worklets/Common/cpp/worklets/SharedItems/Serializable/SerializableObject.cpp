@@ -51,7 +51,7 @@ SerializableObject::SerializableObject(jsi::Runtime &rt, const jsi::Object &obje
 jsi::Value SerializableObject::toJSValue(jsi::Runtime &rt) {
   auto obj = jsi::Object(rt);
   for (const auto &i : data_) {
-    if (i.first == "__proto__") {
+    if (i.first == "__proto__") [[unlikely]] {
       defineOwnDataProperty(rt, obj, i.first, i.second->toJSValue(rt));
     } else {
       obj.setProperty(rt, jsi::String::createFromUtf8(rt, i.first), i.second->toJSValue(rt));

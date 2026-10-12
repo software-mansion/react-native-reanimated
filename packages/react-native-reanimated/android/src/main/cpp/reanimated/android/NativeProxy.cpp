@@ -138,6 +138,14 @@ void NativeProxy::performNonLayoutOperations() {
   reanimatedModuleProxy_->performNonLayoutOperations();
 }
 
+bool NativeProxy::hasSynchronousWritesTracker() {
+  return reanimatedModuleProxy_->hasSynchronousWritesTracker();
+}
+
+void NativeProxy::rewriteSynchronousProps() {
+  reanimatedModuleProxy_->rewriteSynchronousProps();
+}
+
 bool NativeProxy::getIsReducedMotion() {
   static const auto method = getJniMethod<jboolean()>("getIsReducedMotion");
   return method(javaPart_.get());
@@ -151,9 +159,11 @@ void NativeProxy::registerNatives() {
   registerHybrid(
       {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
        makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
-       makeNativeMethod("isAnyHandlerWaitingForEvent", NativeProxy::isAnyHandlerWaitingForEvent),
-       makeNativeMethod("performOperations", NativeProxy::performOperations),
-       makeNativeMethod("performNonLayoutOperations", NativeProxy::performNonLayoutOperations),
+       makeNativeMethod("isAnyHandlerWaitingForEventCpp", NativeProxy::isAnyHandlerWaitingForEvent),
+       makeNativeMethod("performOperationsCpp", NativeProxy::performOperations),
+       makeNativeMethod("performNonLayoutOperationsCpp", NativeProxy::performNonLayoutOperations),
+       makeNativeMethod("hasSynchronousWritesTracker", NativeProxy::hasSynchronousWritesTracker),
+       makeNativeMethod("rewriteSynchronousProps", NativeProxy::rewriteSynchronousProps),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp),
        makeNativeMethod("toggleSlowAnimationsOnUIRuntime", NativeProxy::toggleSlowAnimationsOnUIRuntime)});
 }
@@ -194,6 +204,24 @@ std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vect
 
   auto region = jArrayInt->getRegion(0, tags.size());
   return region;
+}
+
+// Android animators write the view on every frame, so the view's props are the presented ones.
+std::optional<MountedViewProps> NativeProxy::obtainMountedViewProps(Tag tag, bool /*presented*/) {
+  static const auto method = getJniMethod<jni::local_ref<jni::JArrayDouble>(int)>("obtainMountedViewProps");
+  auto values = method(javaPart_.get(), tag);
+  if (!values) {
+    return std::nullopt;
+  }
+  const auto region = values->getRegion(0, 6);
+  return MountedViewProps{
+      .x = region[0],
+      .y = region[1],
+      .width = region[2],
+      .height = region[3],
+      .opacity = region[4],
+      .backgroundColor = static_cast<int>(region[5]),
+  };
 }
 
 void NativeProxy::synchronouslyUpdateUIProps(
@@ -379,29 +407,9 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto detachPseudoSelectorFunction = bindThis(&NativeProxy::detachPseudoSelector);
 
-  // Owned by the two callbacks below rather than by NativeProxy: this runs from
-  // the constructor's member-initializer list, where a member would still be raw
-  // memory.
-  auto cssPlatformEasings = std::make_shared<CSSPlatformEasings>(
-      bindThis(&NativeProxy::cssDefineEasing), bindThis(&NativeProxy::cssUndefineEasing));
-  auto cssPlatformTransitions = std::make_shared<CSSPlatformTransitions>(
-      bindThis(&NativeProxy::cssAnimateTransition),
-      bindThis(&NativeProxy::cssRemoveTransition),
-      std::move(cssPlatformEasings));
+  auto obtainMountedViewPropsFunction = bindThis(&NativeProxy::obtainMountedViewProps);
 
-  auto cssCanRouteProperty = css::CSSCanRoutePropertyFunction(&css::canRouteCSSProperty);
-
-  auto cssApplyTransition = [transitions = cssPlatformTransitions](auto &&...args) {
-    return transitions->applyTransition(std::forward<decltype(args)>(args)...);
-  };
-
-  auto cssRemoveTransition = [transitions = cssPlatformTransitions](auto &&...args) {
-    transitions->removeTransition(std::forward<decltype(args)>(args)...);
-  };
-
-  auto cssGetPlatformValue = [transitions = cssPlatformTransitions](auto &&...args) {
-    return transitions->getCurrentValue(std::forward<decltype(args)>(args)...);
-  };
+  auto platformTransitionBackend = makePlatformTransitionBackend();
 
   return {
       requestRender,
@@ -416,11 +424,21 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       maybeFlushUiUpdatesQueueFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
-      cssCanRouteProperty,
-      cssApplyTransition,
-      cssRemoveTransition,
-      cssGetPlatformValue,
+      obtainMountedViewPropsFunction,
+      platformTransitionBackend,
   };
+}
+
+std::shared_ptr<css::CSSPlatformTransitionBackend> NativeProxy::makePlatformTransitionBackend() {
+  if constexpr (!StaticFeatureFlags::getFlag("ANDROID_CSS_PLATFORM_TRANSITIONS")) {
+    return nullptr;
+  }
+  // Not a NativeProxy member: this runs from the ctor's member-initializer list,
+  // where a member would still be raw memory.
+  auto easings = std::make_shared<CSSPlatformEasings>(
+      bindThis(&NativeProxy::cssDefineEasing), bindThis(&NativeProxy::cssUndefineEasing));
+  return std::make_shared<CSSPlatformTransitions>(
+      bindThis(&NativeProxy::cssAnimateTransition), bindThis(&NativeProxy::cssRemoveTransition), std::move(easings));
 }
 
 void NativeProxy::invalidateCpp() {

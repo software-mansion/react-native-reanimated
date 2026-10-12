@@ -1,5 +1,6 @@
 'use strict';
 
+import { splitByComma, splitByWhitespace } from '../../common';
 import {
   MILLISECONDS_REGEX,
   PERCENTAGE_REGEX,
@@ -7,6 +8,8 @@ import {
 } from '../constants';
 import type { SingleCSSTransitionConfig, TimeUnit } from '../types';
 import { isTimeUnit, smellsLikeTimingFunction } from './guards';
+
+export { splitByComma, splitByWhitespace };
 
 export const offsetOf = (selector: number | string): number | null => {
   if (selector === 'from') {
@@ -22,32 +25,6 @@ export const offsetOf = (selector: number | string): number | null => {
     ? parseFloat(`${selector}`) / 100
     : null;
 };
-
-export function splitByComma(str: string) {
-  // split by comma not enclosed in parentheses
-  const parts: string[] = [];
-  let current = '';
-  let depth = 0;
-  for (const char of str) {
-    if (char === '(') {
-      depth++;
-    } else if (char === ')') {
-      depth--;
-    } else if (char === ',' && depth === 0) {
-      parts.push(current.trim());
-      current = '';
-      continue;
-    }
-    current += char;
-  }
-  parts.push(current.trim());
-  return parts;
-}
-
-export function splitByWhitespace(str: string) {
-  // split by whitespace not enclosed in parentheses
-  return str.split(/\s+(?![^()]*\))/);
-}
 
 type ParsedShorthandSingleTransitionConfig = Omit<
   SingleCSSTransitionConfig,

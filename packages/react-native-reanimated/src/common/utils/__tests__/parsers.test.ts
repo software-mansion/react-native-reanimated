@@ -1,5 +1,5 @@
 'use strict';
-import { parseBoxShadowString } from '../parsers';
+import { getAngleInDegrees, parseBoxShadowString } from '../parsers';
 
 describe(parseBoxShadowString, () => {
   test('returns empty array for none', () => {
@@ -50,4 +50,31 @@ describe(parseBoxShadowString, () => {
       },
     ]);
   });
+});
+
+describe(getAngleInDegrees, () => {
+  test.each([
+    ['45deg', 45],
+    ['-45deg', -45],
+    ['+45deg', 45],
+    ['.5deg', 0.5],
+    ['100grad', 90],
+    ['1rad', 180 / Math.PI],
+    ['0.5turn', 180],
+    ['45DEG', 45],
+    ['100Grad', 90],
+    ['0.5TURN', 180],
+    ['1.5907e-12deg', 1.5907e-12],
+    ['-2.5e2deg', -250],
+    ['1E2grad', 90],
+  ])('converts %s to %p', (input, expected) => {
+    expect(getAngleInDegrees(input)).toBe(expected);
+  });
+
+  test.each(['45', '45px', 'deg', '', ' 45deg', '45deg ', '45 deg', 'abc'])(
+    'returns null for %p',
+    (input) => {
+      expect(getAngleInDegrees(input)).toBeNull();
+    }
+  );
 });

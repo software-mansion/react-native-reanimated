@@ -10,9 +10,22 @@
 namespace reanimated {
 
 void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
+  const std::lock_guard<std::mutex> lock(pendingConfigUpdatesMutex_);
+  pendingConfigUpdates_.insert(pendingConfigUpdates_.end(), layoutAnimationsBatch.begin(), layoutAnimationsBatch.end());
+}
+
+std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConfigUpdates() {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  std::vector<LayoutAnimationConfig> configUpdates;
+  {
+    const std::lock_guard<std::mutex> pendingLock(pendingConfigUpdatesMutex_);
+    configUpdates = std::exchange(pendingConfigUpdates_, {});
+  }
+  if (configUpdates.empty()) {
+    return lock;
+  }
   auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
-  for (const auto &layoutAnimationConfig : layoutAnimationsBatch) {
+  for (const auto &layoutAnimationConfig : configUpdates) {
     const auto &[tag, type, config, sharedTag] = layoutAnimationConfig;
 
     if (type == LayoutAnimationType::ENTERING) {
@@ -27,7 +40,7 @@ void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAn
     if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
       if (config == nullptr) {
         // TODO (future): if the view was transitioned (e.g. so we are on the second screen)
-        // and we remove the config, we should also bring back the view (probably using TransactionMeta::tagsToRestore)
+        // and we remove the config, we should also bring back the view (probably using TransactionMeta::nodesToRestore)
         sharedTransitions_.erase(tag);
         sharedTransitionManager_->tagToName_.erase(tag);
       } else {
@@ -42,6 +55,7 @@ void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAn
       getConfigsForType(type)[tag] = config;
     }
   }
+  return lock;
 }
 
 void LayoutAnimationsManager::setShouldAnimateExiting(const int tag, const bool value) {

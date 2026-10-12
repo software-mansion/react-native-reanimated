@@ -19,8 +19,8 @@ export function useAnimatedReactionBase<PreparedResult>(
 
   if (dependencies === undefined) {
     dependencies = [
-      ...Object.values(prepare.__closure ?? {}),
-      ...Object.values(react.__closure ?? {}),
+      ...(prepare.__closure ?? []),
+      ...(react.__closure ?? []),
       prepare.__workletHash,
       react.__workletHash,
     ];

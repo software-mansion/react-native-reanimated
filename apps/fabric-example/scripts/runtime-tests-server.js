@@ -2,6 +2,7 @@
 
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const net = require('net');
 const http = require('http');
 const { spawn, execFile } = require('child_process');
@@ -18,6 +19,7 @@ const projectRoot = path.resolve(__dirname, '..');
 const iosDir = path.join(projectRoot, 'ios');
 const androidDir = path.join(projectRoot, 'android');
 const SANITIZER_REPORT_DIR = path.join(projectRoot, 'sanitizer-reports');
+const CRASH_REPORT_DIR = path.join(projectRoot, 'crash-reports');
 // -enable*Sanitizer alone does not reach the Pods project on CI (the built
 // products carried no -fsanitize flags), so each build setting is also forced
 // as a command-line override, which applies to every target.
@@ -82,6 +84,8 @@ const ONLY =
     : null;
 const CONNECT_TIMEOUT_MS = Number(args['connect-timeout'] ?? 600) * 1000;
 const IDLE_TIMEOUT_MS = Number(args['idle-timeout'] ?? 600) * 1000;
+const AFTER_SUITE =
+  typeof args['after-suite'] === 'string' ? args['after-suite'] : null;
 const SHOULD_LAUNCH = args.launch === true || args.launch === '';
 const BUILD_ONLY = args['build-only'] === true || args['build-only'] === '';
 const SKIP_BUILD = args['skip-build'] === true || args['skip-build'] === '';
@@ -134,6 +138,7 @@ if (BUILD_ONLY && SHOULD_LAUNCH) {
 
 /** @type {import('ws').WebSocket | null} */
 let client = null;
+const serverStartedAt = Date.now();
 let runStartedAt = 0;
 let exitCode = 1;
 let runFinished = false;
@@ -143,6 +148,14 @@ let connectTimer = null;
 let idleTimer = null;
 /** @type {import('child_process').ChildProcess | null} */
 let metroChild = null;
+/** @type {string | null} */
+let androidSerial = null;
+/** @type {Promise<void> | null} */
+let crashDiagnosticsPromise = null;
+/** @type {Promise<void>} */
+let afterSuiteChain = Promise.resolve();
+let afterSuiteRunning = false;
+let afterSuitePending = false;
 
 /**
  * @param {unknown} error
@@ -152,9 +165,291 @@ function errorMessage(error) {
   return error instanceof Error ? error.message : String(error);
 }
 
-const wss = new WebSocketServer({ port: PORT, host: '0.0.0.0' });
+// UTF-8 payload with multi-byte characters, used by the networking runtime
+// tests to detect any Latin-1 / mojibake decoding path.
+const ECHO_TEXT = 'Zażółć gęślą jaźń — 中文字 — 🦄';
 
-wss.on('error', (error) => {
+const MAX_REQUEST_BODY_BYTES = 32 * 1024 * 1024;
+
+/**
+ * Plain-HTTP endpoints served on the same port as the WebSocket harness. The
+ * networking runtime tests fetch these instead of external services.
+ *
+ * @param {import('http').IncomingMessage} req
+ * @param {import('http').ServerResponse} res
+ */
+function handleEchoRequest(req, res) {
+  req.on('error', () => {});
+  res.on('error', () => {});
+  /** @type {Buffer[]} */
+  const chunks = [];
+  let received = 0;
+  req.on('data', (/** @type {Buffer} */ chunk) => {
+    received += chunk.length;
+    if (received > MAX_REQUEST_BODY_BYTES) {
+      res.writeHead(413, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('request body too large');
+      req.destroy();
+      return;
+    }
+    chunks.push(chunk);
+  });
+  req.on('end', () => {
+    if (res.writableEnded) {
+      return;
+    }
+    try {
+      routeEchoRequest(req, res, Buffer.concat(chunks));
+    } catch (error) {
+      if (!res.headersSent) {
+        res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+      }
+      res.end(`bad request: ${errorMessage(error)}`);
+    }
+  });
+}
+
+/**
+ * @param {import('http').IncomingMessage} req
+ * @param {import('http').ServerResponse} res
+ * @param {Buffer} body
+ */
+function routeEchoRequest(req, res, body) {
+  const url = new URL(
+    req.url ?? '/',
+    `http://${req.headers.host ?? 'localhost'}`
+  );
+  switch (url.pathname) {
+    case '/echo/text': {
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end(ECHO_TEXT);
+      return;
+    }
+    case '/echo/json': {
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+      });
+      res.end(JSON.stringify({ id: 1, title: ECHO_TEXT, completed: false }));
+      return;
+    }
+    case '/echo/binary': {
+      const size = clampInteger(
+        url.searchParams.get('size'),
+        1024,
+        0,
+        16 * 1024 * 1024
+      );
+      const bytes = Buffer.alloc(size);
+      for (let i = 0; i < size; i++) {
+        bytes[i] = i % 256;
+      }
+      res.writeHead(200, {
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': String(size),
+      });
+      res.end(bytes);
+      return;
+    }
+    case '/echo/body': {
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+      });
+      res.end(
+        JSON.stringify({
+          method: req.method,
+          contentType: req.headers['content-type'] ?? null,
+          contentLength: req.headers['content-length'] ?? null,
+          byteLength: body.byteLength,
+          body: body.toString('utf8'),
+          bytes: Array.from(body.subarray(0, 64)),
+        })
+      );
+      return;
+    }
+    case '/echo/delay': {
+      const ms = clampInteger(url.searchParams.get('ms'), 1000, 0, 60000);
+      setTimeout(() => {
+        if (res.destroyed || res.writableEnded) {
+          return;
+        }
+        res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('delayed');
+      }, ms).unref();
+      return;
+    }
+    case '/echo/slow-body': {
+      const ms = clampInteger(url.searchParams.get('ms'), 1000, 0, 60000);
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.write('start');
+      setTimeout(() => {
+        if (res.destroyed || res.writableEnded) {
+          return;
+        }
+        res.end('end');
+      }, ms).unref();
+      return;
+    }
+    case '/echo/status': {
+      const code = clampInteger(url.searchParams.get('code'), 200, 200, 599);
+      res.writeHead(code, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end(`status ${code}`);
+      return;
+    }
+    case '/echo/redirect': {
+      const to = url.searchParams.get('to') ?? '/echo/json';
+      const code = clampInteger(url.searchParams.get('code'), 302, 300, 399);
+      if (!isAllowedRedirectTarget(to)) {
+        res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('redirect target must be an /echo/ path on this server');
+        return;
+      }
+      res.writeHead(code, { Location: to });
+      res.end();
+      return;
+    }
+    case '/echo/headers': {
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'X-Dup': ['one', 'two'],
+        'X-MiXeD': 'value',
+      });
+      res.end('headers');
+      return;
+    }
+    case '/echo/set-cookie': {
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Set-Cookie': 'worklets_sid=1; Path=/',
+      });
+      res.end('cookie set');
+      return;
+    }
+    case '/echo/echo-headers': {
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+      });
+      res.end(JSON.stringify(req.headersDistinct ?? req.headers));
+      return;
+    }
+    case '/echo/utf8-cases': {
+      /** @type {Record<string, number[]>} */
+      const cases = {
+        replacement: [0x61, 0xff, 0x62],
+        'valid-prefix': [0xe1, 0x80, 0x41],
+        truncated: [0xe2, 0x9c],
+        overlong: [0xc0, 0xaf],
+        surrogate: [0xed, 0xa0, 0x80],
+        'bom-utf8': [0xef, 0xbb, 0xbf, 0x63, 0x61, 0x66, 0xc3, 0xa9],
+        'bom-utf16le': [0xff, 0xfe, 0x68, 0x00, 0x69, 0x00],
+        'bom-utf16be': [0xfe, 0xff, 0x00, 0x68, 0x00, 0x69],
+        'utf16le-surrogate-pair': [0xff, 0xfe, 0x3d, 0xd8, 0x84, 0xde],
+        'utf16le-lone-surrogate': [0xff, 0xfe, 0x3d, 0xd8, 0x69, 0x00],
+        'utf16le-odd-length': [0xff, 0xfe, 0x68, 0x00, 0x69],
+        'four-byte': [0xf0, 0x9f, 0xa6, 0x84],
+      };
+      const name = url.searchParams.get('case') ?? 'replacement';
+      const bytes = Buffer.from(cases[name] ?? cases.replacement);
+      const charset = url.searchParams.get('charset');
+      res.writeHead(200, {
+        'Content-Type': `text/plain${charset !== null ? `; charset=${charset}` : ''}`,
+        'Content-Length': String(bytes.length),
+      });
+      res.end(bytes);
+      return;
+    }
+    case '/echo/shift-jis': {
+      const malformed = url.searchParams.get('malformed') !== null;
+      const bytes = Buffer.from(
+        malformed ? [0x93, 0xfa, 0x96, 0x7b, 0x81] : [0x93, 0xfa, 0x96, 0x7b]
+      );
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=shift_jis',
+        'Content-Length': String(bytes.length),
+      });
+      res.end(bytes);
+      return;
+    }
+    case '/echo/chunked': {
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.write('chunk-one');
+      res.end('chunk-two');
+      return;
+    }
+    case '/echo/invalid-utf8': {
+      // 'a', a lone 0xFF, 'b' - decodes to "a�b" under the Encoding
+      // Standard and to "aÿb" under a Latin-1 fallback.
+      const bytes = Buffer.from([0x61, 0xff, 0x62]);
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Content-Length': String(bytes.length),
+      });
+      res.end(bytes);
+      return;
+    }
+    case '/echo/latin1': {
+      // 0x92 is U+2019 in windows-1252 and a C1 control in true ISO-8859-1.
+      const bytes = Buffer.from([0x92]);
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=iso-8859-1',
+        'Content-Length': String(bytes.length),
+      });
+      res.end(bytes);
+      return;
+    }
+    default: {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('not found');
+    }
+  }
+}
+
+/**
+ * Redirect targets are caller-supplied, so only paths on this server are
+ * allowed. A loopback alias is permitted as well, so a test can exercise a
+ * genuine cross-origin redirect against the same process.
+ *
+ * @param {string} to
+ * @returns {boolean}
+ */
+function isAllowedRedirectTarget(to) {
+  if (to.startsWith('/echo/')) {
+    return true;
+  }
+  let target;
+  try {
+    target = new URL(to);
+  } catch {
+    return false;
+  }
+  return (
+    target.protocol === 'http:' &&
+    ['localhost', '127.0.0.1'].includes(target.hostname) &&
+    target.port === String(PORT) &&
+    target.pathname.startsWith('/echo/')
+  );
+}
+
+/**
+ * @param {string | null} raw
+ * @param {number} fallback
+ * @param {number} min
+ * @param {number} max
+ * @returns {number}
+ */
+function clampInteger(raw, fallback, min, max) {
+  const value = Number(raw);
+  if (raw === null || raw === '' || !Number.isFinite(value)) {
+    return fallback;
+  }
+  return Math.min(Math.max(Math.trunc(value), min), max);
+}
+
+const HOST = typeof args.host === 'string' ? args.host : '0.0.0.0';
+
+const httpServer = http.createServer(handleEchoRequest);
+const wss = new WebSocketServer({ server: httpServer });
+
+httpServer.on('error', (error) => {
   if (/** @type {{ code?: string }} */ (error).code === 'EADDRINUSE') {
     console.error(
       `[runtime-tests] port ${PORT} is already in use — is another runtime-tests server (or Metro) running there? Stop it or pass --port.`
@@ -165,8 +460,24 @@ wss.on('error', (error) => {
   process.exit(1);
 });
 
+wss.on('error', (error) => {
+  console.error(`[runtime-tests] websocket error: ${error.message}`);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error(`[runtime-tests] uncaught exception: ${errorMessage(error)}`);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error(`[runtime-tests] unhandled rejection: ${errorMessage(reason)}`);
+  process.exit(1);
+});
+
+httpServer.listen(PORT, HOST);
+
 console.log(
-  `[runtime-tests] listening on ws://0.0.0.0:${PORT} (library: ${LIBRARY})`
+  `[runtime-tests] listening on ws://${HOST}:${PORT} (library: ${LIBRARY})`
 );
 if (ONLY) {
   console.log(`[runtime-tests] suite filter: ${ONLY.join(', ')}`);
@@ -180,7 +491,7 @@ function armConnectTimer() {
     console.error(
       `[runtime-tests] no device connected within ${CONNECT_TIMEOUT_MS / 1000}s, exiting`
     );
-    shutdown(1);
+    void failWithDiagnostics(1);
   }, CONNECT_TIMEOUT_MS);
 }
 
@@ -226,20 +537,21 @@ wss.on('connection', (socket) => {
       );
       if (PLATFORM === 'android') {
         console.error(
-          '[runtime-tests] Check `adb logcat` for crashes (grep AndroidRuntime or ReactNative)'
+          '[runtime-tests] The app most likely crashed — collecting crash diagnostics below.'
         );
       } else {
         console.error(
-          '[runtime-tests] Check the iOS simulator log for crashes (Xcode → Devices → View Device Logs)'
+          '[runtime-tests] The app most likely crashed — collecting crash reports below.'
         );
       }
       console.error(
         '[runtime-tests] or grep `[remoteReporter]` in Metro output for the WS close reason.'
       );
       console.error('========================================');
-    } else {
-      console.log('[runtime-tests] device disconnected');
+      void failWithDiagnostics(exitCode);
+      return;
     }
+    console.log('[runtime-tests] device disconnected');
     shutdown(exitCode);
   });
 
@@ -256,6 +568,9 @@ function handleMessage(msg) {
       break;
     case 'log':
       onLog(msg);
+      break;
+    case 'suiteFinished':
+      onSuiteFinished(msg);
       break;
     case 'done':
       onDone(msg);
@@ -326,6 +641,56 @@ function onLog(msg) {
 }
 
 /** @param {DeviceMessage} msg */
+function onSuiteFinished(msg) {
+  if (!AFTER_SUITE || runStartedAt === 0 || runFinished) {
+    return;
+  }
+  if (afterSuiteRunning) {
+    afterSuitePending = true;
+    return;
+  }
+  afterSuiteChain = runAfterSuiteCommand(AFTER_SUITE, String(msg.name ?? ''));
+}
+
+/**
+ * @param {string} command
+ * @param {string} suiteName
+ * @returns {Promise<void>}
+ */
+function runAfterSuiteCommand(command, suiteName) {
+  afterSuiteRunning = true;
+  afterSuitePending = false;
+  return new Promise((resolve) => {
+    let finished = false;
+    const onFinished = (/** @type {string} */ outcome) => {
+      if (finished) {
+        return;
+      }
+      finished = true;
+      afterSuiteRunning = false;
+      if (outcome) {
+        console.warn(
+          `[runtime-tests] --after-suite command ${outcome} (after suite: ${suiteName})`
+        );
+      }
+      resolve(
+        afterSuitePending ? runAfterSuiteCommand(command, suiteName) : undefined
+      );
+    };
+    const child = spawn(command, {
+      shell: true,
+      stdio: ['ignore', 'inherit', 'inherit'],
+    });
+    child.on('error', (error) =>
+      onFinished(`failed to start: ${error.message}`)
+    );
+    child.on('exit', (code, signal) =>
+      onFinished(code === 0 ? '' : `exited with ${signal ?? `code ${code}`}`)
+    );
+  });
+}
+
+/** @param {DeviceMessage} msg */
 function onDone(msg) {
   const elapsed = ((Date.now() - runStartedAt) / 1000).toFixed(1);
   console.log('');
@@ -380,7 +745,7 @@ function resetIdleTimer() {
     console.error(
       `[runtime-tests] no traffic for ${IDLE_TIMEOUT_MS / 1000}s, assuming the run is stuck`
     );
-    shutdown(1);
+    void failWithDiagnostics(1);
   }, IDLE_TIMEOUT_MS);
 }
 
@@ -418,7 +783,493 @@ function printSanitizerReports() {
 }
 
 /** @param {number} code */
+async function failWithDiagnostics(code) {
+  clearTimer('connect');
+  clearTimer('idle');
+  try {
+    await dumpCrashDiagnostics();
+  } catch (error) {
+    console.error(
+      `[runtime-tests] crash diagnostics failed: ${errorMessage(error)}`
+    );
+  } finally {
+    shutdown(code);
+  }
+}
+
+function dumpCrashDiagnostics() {
+  if (BUILD_ONLY) {
+    return Promise.resolve();
+  }
+  crashDiagnosticsPromise ??= (async () => {
+    if (PLATFORM === 'android') {
+      await dumpAndroidCrashDiagnostics();
+    } else if (PLATFORM === 'ios') {
+      await dumpIOSCrashDiagnostics();
+    }
+  })();
+  return crashDiagnosticsPromise;
+}
+
+async function dumpIOSCrashDiagnostics() {
+  if (process.platform !== 'darwin') {
+    console.error(
+      '[runtime-tests] the simulator runs on a remote host — check its ~/Library/Logs/DiagnosticReports for FabricExample crash reports'
+    );
+    return;
+  }
+  const reportsDir = path.join(
+    os.homedir(),
+    'Library',
+    'Logs',
+    'DiagnosticReports'
+  );
+  console.error(
+    `[runtime-tests] looking for FabricExample crash reports in ${reportsDir}…`
+  );
+  /** @type {{ name: string; file: string; mtimeMs: number }[]} */
+  let reports = [];
+  for (let attempt = 0; attempt < 10; attempt++) {
+    await sleep(3000);
+    reports = findFreshIOSCrashReports(reportsDir);
+    if (reports.length > 0) {
+      await sleep(3000);
+      reports = findFreshIOSCrashReports(reportsDir);
+      break;
+    }
+  }
+  if (reports.length === 0) {
+    console.error(
+      '[runtime-tests] no fresh crash reports (the app may have hung or been killed without crashing)'
+    );
+    return;
+  }
+  fs.mkdirSync(CRASH_REPORT_DIR, { recursive: true });
+  for (const report of reports.slice(0, 3)) {
+    const saved = path.join(CRASH_REPORT_DIR, report.name);
+    fs.copyFileSync(report.file, saved);
+    const text = fs.readFileSync(report.file, 'utf8');
+    console.error(
+      `[runtime-tests] crash report ${report.name} (full report saved to ${saved}):`
+    );
+    console.error(formatIOSCrashReport(text));
+  }
+}
+
+/**
+ * @param {string} reportsDir
+ * @returns {{ name: string; file: string; mtimeMs: number }[]}
+ */
+function findFreshIOSCrashReports(reportsDir) {
+  let names = [];
+  try {
+    names = fs.readdirSync(reportsDir);
+  } catch {
+    return [];
+  }
+  return names
+    .filter(
+      (name) =>
+        name.startsWith('FabricExample') &&
+        (name.endsWith('.ips') || name.endsWith('.crash'))
+    )
+    .map((name) => {
+      const file = path.join(reportsDir, name);
+      return { name, file, mtimeMs: fs.statSync(file).mtimeMs };
+    })
+    .filter(
+      (report) => report.mtimeMs >= (runStartedAt || serverStartedAt) - 60_000
+    )
+    .sort((a, b) => b.mtimeMs - a.mtimeMs);
+}
+
+/**
+ * @typedef {{
+ *   imageIndex?: number;
+ *   imageOffset?: number;
+ *   symbol?: string;
+ *   symbolLocation?: number;
+ * }} IpsFrame
+ */
+
+/**
+ * @param {string} text
+ * @returns {string}
+ */
+function formatIOSCrashReport(text) {
+  const newlineIndex = text.indexOf('\n');
+  /** @type {any} */
+  let payload;
+  try {
+    payload = JSON.parse(text.slice(newlineIndex + 1));
+  } catch {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      return headLines(text, 200);
+    }
+  }
+  const lines = [];
+  if (payload.exception) {
+    lines.push(`exception: ${JSON.stringify(payload.exception)}`);
+  }
+  if (payload.termination) {
+    lines.push(`termination: ${JSON.stringify(payload.termination)}`);
+  }
+  if (payload.asi) {
+    lines.push(`abort messages: ${JSON.stringify(payload.asi)}`);
+  }
+  const images = payload.usedImages ?? [];
+  /**
+   * @param {IpsFrame} frame
+   * @returns {string}
+   */
+  const formatFrame = (frame) => {
+    const image = images[frame.imageIndex ?? -1] ?? {};
+    const location = frame.symbol
+      ? `${frame.symbol} + ${frame.symbolLocation ?? 0}`
+      : `0x${(frame.imageOffset ?? 0).toString(16)}`;
+    return `${image.name ?? '?'}  ${location}`;
+  };
+  /** @type {IpsFrame[]} */
+  const lastExceptionBacktrace = Array.isArray(payload.lastExceptionBacktrace)
+    ? payload.lastExceptionBacktrace
+    : [];
+  if (lastExceptionBacktrace.length > 0) {
+    lines.push('last exception backtrace:');
+    lastExceptionBacktrace.forEach((frame, index) => {
+      lines.push(`  #${String(index).padStart(2)} ${formatFrame(frame)}`);
+    });
+  }
+  const faultingIndex = payload.faultingThread ?? 0;
+  const thread = (payload.threads ?? [])[faultingIndex];
+  if (thread) {
+    const threadName = thread.name ?? thread.queue ?? '';
+    lines.push(
+      `faulting thread ${faultingIndex}${threadName ? ` (${threadName})` : ''}:`
+    );
+    /** @type {IpsFrame[]} */
+    const frames = thread.frames ?? [];
+    frames.forEach((frame, index) => {
+      lines.push(`  #${String(index).padStart(2)} ${formatFrame(frame)}`);
+    });
+  }
+  if (lines.length === 0) {
+    return headLines(text, 200);
+  }
+  return lines.join('\n');
+}
+
+async function dumpAndroidCrashDiagnostics() {
+  const serial =
+    androidSerial ?? (await listAndroidDevices().catch(() => []))[0];
+  if (!serial) {
+    console.error(
+      '[runtime-tests] no adb device available for crash diagnostics'
+    );
+    return;
+  }
+  console.error(`[runtime-tests] collecting crash diagnostics from ${serial}…`);
+  fs.mkdirSync(CRASH_REPORT_DIR, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+  let crashLog = '';
+  let hasCrashLog = false;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    await sleep(3000);
+    crashLog = await readCrashBuffer(serial);
+    hasCrashLog = crashBufferHasContent(crashLog);
+    if (hasCrashLog) {
+      await sleep(3000);
+      crashLog = await readCrashBuffer(serial);
+      break;
+    }
+  }
+  if (hasCrashLog) {
+    const file = path.join(CRASH_REPORT_DIR, `logcat-crash-${stamp}.txt`);
+    fs.writeFileSync(file, crashLog);
+    console.error(`[runtime-tests] logcat crash buffer (saved to ${file}):`);
+    console.error(tailLines(crashLog, 400));
+  } else {
+    console.error(
+      '[runtime-tests] logcat crash buffer is empty (no Java or native crash was recorded)'
+    );
+  }
+  await adbDiag(serial, ['logcat', '-b', 'crash', '-c']).catch(() => {});
+
+  const tombstone = await pullLatestTombstone(serial, stamp);
+  if (tombstone) {
+    console.error(
+      `[runtime-tests] tombstone ${tombstone.name} (saved to ${tombstone.file}):`
+    );
+    console.error(headLines(tombstone.text, 200));
+  }
+
+  const nativeReport = tombstone?.text ?? (hasCrashLog ? crashLog : null);
+  if (nativeReport) {
+    await symbolizeNativeCrash(serial, nativeReport, stamp);
+  }
+}
+
+/**
+ * @param {string} serial
+ * @returns {Promise<string>}
+ */
+async function readCrashBuffer(serial) {
+  return adbDiag(serial, ['logcat', '-b', 'crash', '-d']).then(
+    ({ stdout }) => stdout,
+    (error) => {
+      console.error(
+        `[runtime-tests] failed to read logcat crash buffer: ${errorMessage(error)}`
+      );
+      return '';
+    }
+  );
+}
+
+/**
+ * @param {string} crashLog
+ * @returns {boolean}
+ */
+function crashBufferHasContent(crashLog) {
+  return crashLog
+    .split('\n')
+    .some((line) => line.trim() && !line.startsWith('---------'));
+}
+
+/**
+ * @param {string} serial
+ * @param {string} stamp
+ * @returns {Promise<{ name: string; text: string; file: string } | null>}
+ */
+async function pullLatestTombstone(serial, stamp) {
+  const rootOutput = await adbDiag(serial, ['root']).then(
+    ({ stdout, stderr }) => stdout + stderr,
+    (error) => `${errorMessage(error)}`
+  );
+  if (/cannot run as root|error/i.test(rootOutput)) {
+    console.error(
+      `[runtime-tests] adb root unavailable, skipping tombstones: ${rootOutput.trim()}`
+    );
+    return null;
+  }
+  await adbDiag(serial, ['wait-for-device']).catch(() => {});
+  const pullDir = path.join(CRASH_REPORT_DIR, `tombstones-${stamp}`);
+  const pulled = await adbDiag(serial, [
+    'pull',
+    '-a',
+    '/data/tombstones',
+    pullDir,
+  ]).then(
+    () => true,
+    () => false
+  );
+  if (!pulled) {
+    console.error('[runtime-tests] no tombstones directory on the device');
+    return null;
+  }
+  const nestedDir = path.join(pullDir, 'tombstones');
+  const tombstonesDir = fs.existsSync(nestedDir) ? nestedDir : pullDir;
+  /** @type {{ name: string; mtimeMs: number }[]} */
+  let entries = [];
+  try {
+    entries = fs
+      .readdirSync(tombstonesDir)
+      .filter((name) => !name.endsWith('.pb'))
+      .map((name) => ({
+        name,
+        mtimeMs: fs.statSync(path.join(tombstonesDir, name)).mtimeMs,
+      }))
+      .sort((a, b) => b.mtimeMs - a.mtimeMs);
+  } catch {
+    entries = [];
+  }
+  if (entries.length === 0) {
+    console.error('[runtime-tests] no tombstones on the device');
+    return null;
+  }
+  const newest = entries[0];
+  const hostBoundary = (runStartedAt || serverStartedAt) - 60_000;
+  const deviceNowMs = await adbDiag(serial, ['shell', 'date', '+%s']).then(
+    ({ stdout }) => Number(stdout.trim()) * 1000,
+    () => NaN
+  );
+  const boundary = Number.isFinite(deviceNowMs)
+    ? deviceNowMs - (Date.now() - hostBoundary)
+    : hostBoundary;
+  if (newest.mtimeMs < boundary) {
+    console.error(
+      `[runtime-tests] newest tombstone (${newest.name}) predates this run — the app died without a native crash dump`
+    );
+    return null;
+  }
+  const file = path.join(tombstonesDir, newest.name);
+  const text = fs.readFileSync(file, 'utf8');
+  await adbDiag(serial, ['shell', 'rm', '-f', '/data/tombstones/*']).catch(
+    () => {}
+  );
+  return { name: newest.name, text, file };
+}
+
+/**
+ * @param {string} serial
+ * @param {string} reportText
+ * @param {string} stamp
+ */
+async function symbolizeNativeCrash(serial, reportText, stamp) {
+  if (!reportText.includes('*** ***')) {
+    return;
+  }
+  const ndkStack = findNdkStack();
+  if (!ndkStack) {
+    console.error(
+      '[runtime-tests] ndk-stack not found (looked in ANDROID_NDK_HOME and $ANDROID_HOME/ndk), skipping symbolication'
+    );
+    return;
+  }
+  let symDir = findAndroidSymbolsDir();
+  if (!symDir) {
+    console.error(
+      '[runtime-tests] no unstripped libs under android/app/build/intermediates/merged_native_libs, skipping symbolication'
+    );
+    return;
+  }
+  const abi = await adbDiag(serial, [
+    'shell',
+    'getprop',
+    'ro.product.cpu.abi',
+  ]).then(
+    ({ stdout }) => stdout.trim(),
+    () => null
+  );
+  if (abi && fs.existsSync(path.join(symDir, abi))) {
+    symDir = path.join(symDir, abi);
+  }
+  const dumpFile = path.join(CRASH_REPORT_DIR, `native-crash-${stamp}.txt`);
+  fs.writeFileSync(dumpFile, reportText);
+  const stdout = await run(ndkStack, ['-sym', symDir, '-dump', dumpFile], {
+    timeout: 60_000,
+  }).then(
+    (result) => result.stdout,
+    (error) => {
+      printCommandFailure(error);
+      return '';
+    }
+  );
+  if (stdout.trim()) {
+    const file = path.join(
+      CRASH_REPORT_DIR,
+      `native-crash-symbolized-${stamp}.txt`
+    );
+    fs.writeFileSync(file, stdout);
+    console.error(
+      `[runtime-tests] symbolized native stack trace (saved to ${file}):`
+    );
+    console.error(headLines(stdout, 250));
+  }
+}
+
+/**
+ * @param {string} serial
+ * @param {string[]} adbArgs
+ * @returns {Promise<{ stdout: string; stderr: string }>}
+ */
+function adbDiag(serial, adbArgs) {
+  return adb(serial, adbArgs, { timeout: 30_000 });
+}
+
+/** @returns {string | null} */
+function findNdkStack() {
+  const bin = process.platform === 'win32' ? 'ndk-stack.cmd' : 'ndk-stack';
+  const candidates = [];
+  if (process.env.ANDROID_NDK_HOME) {
+    candidates.push(path.join(process.env.ANDROID_NDK_HOME, bin));
+  }
+  const sdkRoot = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
+  const ndkRoot = sdkRoot ? path.join(sdkRoot, 'ndk') : null;
+  if (ndkRoot && fs.existsSync(ndkRoot)) {
+    const versions = fs.readdirSync(ndkRoot).sort().reverse();
+    for (const version of versions) {
+      candidates.push(path.join(ndkRoot, version, bin));
+    }
+  }
+  return candidates.find((candidate) => fs.existsSync(candidate)) ?? null;
+}
+
+/** @returns {string | null} */
+function findAndroidSymbolsDir() {
+  const buildType = CONFIGURATION[0].toLowerCase() + CONFIGURATION.slice(1);
+  const root = path.join(
+    androidDir,
+    'app',
+    'build',
+    'intermediates',
+    'merged_native_libs',
+    buildType
+  );
+  if (!fs.existsSync(root)) {
+    return null;
+  }
+  const stack = [root];
+  while (stack.length > 0) {
+    const dir = stack.pop();
+    if (!dir) {
+      break;
+    }
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+      const full = path.join(dir, entry.name);
+      if (entry.name === 'lib') {
+        return full;
+      }
+      stack.push(full);
+    }
+  }
+  return null;
+}
+
+/**
+ * @param {string} text
+ * @param {number} count
+ * @returns {string}
+ */
+function headLines(text, count) {
+  const lines = text.split('\n');
+  if (lines.length <= count) {
+    return text;
+  }
+  return (
+    lines.slice(0, count).join('\n') +
+    `\n[runtime-tests] … ${lines.length - count} more lines in the saved file`
+  );
+}
+
+/**
+ * @param {string} text
+ * @param {number} count
+ * @returns {string}
+ */
+function tailLines(text, count) {
+  const lines = text.split('\n');
+  if (lines.length <= count) {
+    return text;
+  }
+  return (
+    `[runtime-tests] … ${lines.length - count} earlier lines in the saved file\n` +
+    lines.slice(-count).join('\n')
+  );
+}
+
+let shutdownStarted = false;
+
+/** @param {number} code */
 function shutdown(code) {
+  if (shutdownStarted) {
+    return;
+  }
+  shutdownStarted = true;
   printSanitizerReports();
   clearTimer('connect');
   clearTimer('idle');
@@ -433,8 +1284,16 @@ function shutdown(code) {
       }
     }
   }
+  void exitAfterSuiteCommands(code);
+}
+
+/** @param {number} code */
+async function exitAfterSuiteCommands(code) {
+  await afterSuiteChain;
   wss.close(() => {
-    process.exit(code);
+    httpServer.close(() => {
+      process.exit(code);
+    });
   });
   setTimeout(() => process.exit(code), 1000).unref();
 }
@@ -894,6 +1753,7 @@ if (SHOULD_LAUNCH) {
     }
     if (PLATFORM === 'android') {
       const serial = await resolveAndroidDevice();
+      androidSerial = serial;
       if (!SKIP_BUILD) {
         await buildAndroidApp(serial);
       }
@@ -991,6 +1851,10 @@ Build and run
   --only <a,b>              Comma separated suite names to run. Suite names come
                             from the library's suites.ts, for example
                             "run loop" or "runtimes,memory".
+  --after-suite <command>   Shell command to run each time the app finishes a
+                            describe() suite, e.g. a cloud keepalive ping.
+                            Overlapping runs are coalesced into one pending
+                            call; a failing command only logs a warning.
 
 Ports and timeouts
   --metro-port <port>       Default: 8081.

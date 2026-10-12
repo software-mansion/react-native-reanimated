@@ -1,16 +1,16 @@
 name: Install sim-remote
-description: Install the sim-remote CLI + daemon (argent cloud client) and add them to PATH
+description: Install the sim-remote CLI (argent cloud client) and add it to PATH
 
 inputs:
   release-tag:
     description: Release tag in software-mansion/sim-remote-releases to install
     required: false
-    default: 'softu'
+    default: 'latest'
 
 runs:
   using: 'composite'
   steps:
-    - name: Install sim-remote CLI + daemon
+    - name: Install sim-remote CLI
       shell: bash
       run: |
         case "$(uname -s)-$(uname -m)" in
@@ -23,11 +23,14 @@ runs:
             ;;
         esac
 
-        REL="https://github.com/software-mansion/sim-remote-releases/releases/download/${{ inputs.release-tag }}"
+        if [ "${{ inputs.release-tag }}" = "latest" ]; then
+          REL="https://github.com/software-mansion/sim-remote-releases/releases/latest/download"
+        else
+          REL="https://github.com/software-mansion/sim-remote-releases/releases/download/${{ inputs.release-tag }}"
+        fi
         mkdir -p "$HOME/.local/bin"
         curl -fsSL -o "$HOME/.local/bin/sim-remote" "$REL/sim-remote-$TARGET"
-        curl -fsSL -o "$HOME/.local/bin/sim-remote-daemon" "$REL/sim-remote-daemon-$TARGET"
-        chmod +x "$HOME/.local/bin/sim-remote" "$HOME/.local/bin/sim-remote-daemon"
+        chmod +x "$HOME/.local/bin/sim-remote"
         echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
         # smoke check: the CLI has no --version flag; --help exits 0

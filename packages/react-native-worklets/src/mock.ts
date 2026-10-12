@@ -27,6 +27,23 @@ globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
 const WorkletAPI = {
   callMicrotasks: NOOP,
   createSerializable: ID,
+  createSerializableArray: ID,
+  createSerializableArrayBuffer: ID,
+  createSerializableArrayBufferView: ID,
+  createSerializableBigInt: ID,
+  createSerializableBoolean: ID,
+  createSerializableError: ID,
+  createSerializableHostObject: ID,
+  createSerializableMap: ID,
+  createSerializableNull: ID,
+  createSerializableNumber: ID,
+  createSerializableObject: ID,
+  createSerializableRegExp: ID,
+  createSerializableRemoteFunction: ID,
+  createSerializableSet: ID,
+  createSerializableString: ID,
+  createSerializableUndefined: ID,
+  createSerializableWorklet: ID,
   createShareable<TValue>(_hostRuntimeId: number, initial: TValue) {
     let value = initial;
     const set = (next: TValue | ((prev: TValue) => TValue)) => {
@@ -73,6 +90,7 @@ const WorkletAPI = {
   },
   createWorkletRuntime: NOOP_FACTORY,
   executeOnUIRuntimeSync: ID,
+  getCurrentThreadId: () => '0',
   getDynamicFeatureFlag: () => false,
   getRuntimeKind: () => RuntimeKind.ReactNative,
   getStaticFeatureFlag: () => false,
@@ -105,6 +123,7 @@ const WorkletAPI = {
           : (fun as () => ReturnValue)
       );
   },
+  runOnRNSync: IMMEDIATE_CALLBACK_INVOCATION,
   runOnRuntime: ID,
   runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
     _workletRuntime: unknown,

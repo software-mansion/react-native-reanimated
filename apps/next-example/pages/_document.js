@@ -1,5 +1,5 @@
-import { Children } from 'react';
 import Document, { Html, Head, Main, NextScript } from 'next/document';
+import { Children } from 'react';
 import { AppRegistry } from 'react-native';
 
 // Follows the setup for react-native-web:

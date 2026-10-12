@@ -239,17 +239,28 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   scheduleOnRN<TArgs extends unknown[]>(
     fun: RemoteFunction | ((...args: TArgs) => unknown),
-    args: SerializableRef<TArgs> | undefined
+    args: SerializableRef<TArgs> | undefined,
+    scheduleStack?: string
   ): void {
-    this.#workletsModuleProxy.scheduleOnRN(fun, args);
+    this.#workletsModuleProxy.scheduleOnRN(fun, args, scheduleStack);
+  }
+
+  runOnRNSync<TArgs extends unknown[], TReturn>(
+    fun: RemoteFunction | SerializableRef | ((...args: TArgs) => unknown),
+    args: SerializableRef<TArgs> | undefined,
+    scheduleStack?: string
+  ): TReturn {
+    return this.#workletsModuleProxy.runOnRNSync(fun, args, scheduleStack);
   }
 
   scheduleOnUI<TValue>(
     serializableArrayOfWorklets: SerializableRef<TValue[]>,
+    serializableArrayOfArguments: SerializableRef<unknown[]>,
     scheduleStacks: string[] | undefined
   ) {
     return this.#workletsModuleProxy.scheduleOnUI(
       serializableArrayOfWorklets,
+      serializableArrayOfArguments,
       scheduleStacks
     );
   }
@@ -267,7 +278,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     useDefaultQueue: boolean,
     customQueue: object | undefined,
     enableEventLoop: boolean,
-    enableLocking: boolean
+    enableLocking: boolean,
+    enableNetworking: boolean
   ) {
     return this.#workletsModuleProxy.createWorkletRuntime(
       name,
@@ -275,7 +287,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       useDefaultQueue,
       customQueue,
       enableEventLoop,
-      enableLocking
+      enableLocking,
+      enableNetworking
     );
   }
 
@@ -404,6 +417,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     this.#workletsModuleProxy.setDynamicFeatureFlag(name, value);
   }
 
+  getCurrentThreadId(): string {
+    return this.#workletsModuleProxy.getCurrentThreadId();
+  }
+
   getUIRuntimeHolder(): object {
     return this.#workletsModuleProxy.getUIRuntimeHolder();
   }
@@ -466,7 +483,8 @@ function installUnpackers(workletsModuleProxy: WorkletsModuleProxy) {
       shareableGuest.sourceMap ?? '',
       remoteFunction.code!,
       remoteFunction.location ?? '',
-      remoteFunction.sourceMap ?? ''
+      remoteFunction.sourceMap ?? '',
+      __DEV__
     );
   }
 }

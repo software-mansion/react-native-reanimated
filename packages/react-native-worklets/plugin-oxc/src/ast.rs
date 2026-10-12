@@ -43,18 +43,11 @@ pub fn closure_binding_pattern<'a>(
     builder: AstBuilder<'a>,
     closure_variables: &[String],
 ) -> oxc_ast::ast::BindingPattern<'a> {
-    let mut properties = builder.vec_with_capacity(closure_variables.len());
+    let mut elements = builder.vec_with_capacity(closure_variables.len());
     for name in closure_variables {
-        let ident = builder.ident(name);
-        properties.push(builder.binding_property(
-            SPAN,
-            oxc_ast::ast::PropertyKey::StaticIdentifier(builder.alloc_identifier_name(SPAN, ident)),
-            builder.binding_pattern_binding_identifier(SPAN, ident),
-            true,
-            false,
-        ));
+        elements.push(Some(identifier_binding_pattern(builder, name)));
     }
-    builder.binding_pattern_object_pattern(SPAN, properties, NONE)
+    builder.binding_pattern_array_pattern(SPAN, elements, NONE)
 }
 
 pub fn is_object_method(prop: &oxc_ast::ast::ObjectProperty<'_>) -> bool {
