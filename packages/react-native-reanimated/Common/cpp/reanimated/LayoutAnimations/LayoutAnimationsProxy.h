@@ -61,7 +61,8 @@ struct HiddenView {
 };
 
 // A view in hiddenViews stays at opacity 0 until it is restored or removed,
-// also after the run ends. A view is in the hiddenViews of one shared tag only.
+// also after the run ends. A view is in the hiddenViews of one shared tag only,
+// and only while its node is mapped.
 struct SharedElement {
   std::vector<HiddenView> hiddenViews;
   std::optional<SharedTransitionRun> run;
@@ -256,6 +257,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   bool showHiddenView(const RestoreRequest &request) const;
   void deferRestore(const RestoreRequest &request) const;
   void forgetHiddenView(Tag tag) const;
+  std::unordered_set<Tag> hiddenViewTags() const;
   void queuePendingRestores(TransactionMeta &transaction) const;
   bool isInSharedTransition(const std::shared_ptr<LightNode> &node) const;
 

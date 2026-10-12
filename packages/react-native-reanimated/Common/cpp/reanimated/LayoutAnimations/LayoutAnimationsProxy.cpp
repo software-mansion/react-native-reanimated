@@ -310,6 +310,7 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
     return;
   }
   lightNodes_.erase(it);
+  forgetHiddenView(node->current.tag);
   snapshottedScreens_.erase(node->current.tag);
   if (node == topScreen_) {
     topScreen_ = nullptr;
@@ -825,9 +826,6 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(
   node->setExitingState(TORN_DOWN);
   unmapLightNode(node);
   cancelLayoutAnimation(node->current.tag);
-  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    forgetHiddenView(node->current.tag);
-  }
   transaction.filteredMutations.push_back(
       ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, hostIndex));
   (defersTeardown ? transaction.teardownMutations : transaction.filteredMutations)
@@ -979,9 +977,6 @@ void LayoutAnimationsProxy::endAnimationsRecursively(
 
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
-  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    forgetHiddenView(node->current.tag);
-  }
   mutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, index));
   mutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
 }
@@ -1025,9 +1020,6 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
       hasAnimatedChildren = true;
     } else if (shouldRemoveSubviewsWithoutAnimations) {
       cancelLayoutAnimation(subNode->current.tag);
-      if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-        forgetHiddenView(subNode->current.tag);
-      }
       mutations.push_back(ShadowViewMutation::RemoveMutation(node->current.tag, subNode->current, index));
       toBeRemoved.push_back(subNode);
       subNode->setExitingState(TORN_DOWN);

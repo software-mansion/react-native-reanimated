@@ -471,9 +471,7 @@ void LayoutAnimationsProxy::hideTransitioningViews(
     const auto &parentTag = transition.parentTag[indexNum];
     const auto &node = collectedTransition.nodes[indexNum];
     react_native_assert(node && "Shared transition view not found");
-    if (node) {
-      hideInSharedElement(sharedTag, node);
-    }
+    hideInSharedElement(sharedTag, node);
     auto m = ShadowViewMutation::UpdateMutation(
         shadowView, cloneViewWithoutOpacity(shadowView, propsParserContext), parentTag);
     hiddenMutations.push_back(m);
@@ -491,18 +489,13 @@ void LayoutAnimationsProxy::hideTransitioningViews(
 void LayoutAnimationsProxy::keepTransitioningViewsHidden(
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext) const {
-  std::unordered_set<Tag> hiddenViewTags;
-  for (const auto &[_, element] : sharedElements_) {
-    for (const auto &hiddenView : element.hiddenViews) {
-      hiddenViewTags.insert(hiddenView.node->current.tag);
-    }
-  }
-  if (hiddenViewTags.empty()) {
+  const auto hiddenTags = hiddenViewTags();
+  if (hiddenTags.empty()) {
     return;
   }
   for (auto &mutation : filteredMutations) {
     const bool writesProps = mutation.type == ShadowViewMutation::Update || mutation.type == ShadowViewMutation::Insert;
-    if (writesProps && hiddenViewTags.contains(mutation.newChildShadowView.tag)) {
+    if (writesProps && hiddenTags.contains(mutation.newChildShadowView.tag)) {
       mutation.newChildShadowView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
     }
   }
@@ -628,6 +621,9 @@ bool LayoutAnimationsProxy::isSharedContainer(const Tag tag) const {
 
 void LayoutAnimationsProxy::hideInSharedElement(const SharedTag &sharedTag, const std::shared_ptr<LightNode> &node)
     const {
+  if (!isLightNodeMapped(node)) {
+    return;
+  }
   forgetHiddenView(node->current.tag);
   sharedElements_[sharedTag].hiddenViews.push_back(HiddenView{.node = node});
 }
@@ -658,6 +654,17 @@ void LayoutAnimationsProxy::forgetHiddenView(const Tag tag) const {
   for (auto &[_, element] : sharedElements_) {
     std::erase_if(element.hiddenViews, [tag](const auto &hiddenView) { return hiddenView.node->current.tag == tag; });
   }
+}
+
+std::unordered_set<Tag> LayoutAnimationsProxy::hiddenViewTags() const {
+  std::unordered_set<Tag> tags;
+  for (const auto &[_, element] : sharedElements_) {
+    for (const auto &hiddenView : element.hiddenViews) {
+      react_native_assert(isLightNodeMapped(hiddenView.node) && "Hidden view is not mapped");
+      tags.insert(hiddenView.node->current.tag);
+    }
+  }
+  return tags;
 }
 
 void LayoutAnimationsProxy::queuePendingRestores(TransactionMeta &transaction) const {
