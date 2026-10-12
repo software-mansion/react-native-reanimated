@@ -12,7 +12,6 @@ module WorkletsUtils
   def find_config()
     result = {
       :feature_flags_flag => nil,
-      :fetch_preview_flag => nil,
       :is_reanimated_example_app => nil,
       :react_native_version => nil,
       :react_native_dir => nil,
@@ -43,7 +42,6 @@ module WorkletsUtils
 
     feature_flags = get_static_feature_flags()
     result[:feature_flags_flag] = get_static_feature_flags_flag(feature_flags)
-    result[:fetch_preview_flag] = get_flag_from_feature_flags(feature_flags, 'FETCH_PREVIEW_ENABLED')
 
     return result
   end
@@ -52,14 +50,6 @@ module WorkletsUtils
     validate_react_native_version_script = File.expand_path(File.join(__dir__, 'validate-react-native-version.js'))
     unless system("node \"#{validate_react_native_version_script}\" #{config[:react_native_version]}")
       raise "[Worklets] Your installed version of React Native is not compatible with installed version of Worklets. See the documentation for the list of supported versions: https://docs.swmansion.com/react-native-worklets/docs/guides/compatibility/"
-    end
-  end
-
-  def get_flag_from_feature_flags(feature_flags, flag_name)
-    if feature_flags[flag_name] == 'true'
-      return "-DWORKLETS_#{flag_name}"
-    else
-      return ''
     end
   end
 

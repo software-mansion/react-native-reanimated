@@ -124,19 +124,20 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
       }
     }
 
-    // Handle old props; for no longer allowed ones, cancel the transition
-    // immediately; for ones that are allowed but were removed, trigger a transition
-    // to undefined (to the default value for the property).
-    for (const key in oldProps) {
+    // Cancel transitions of properties that are no longer allowed. A property
+    // transitioning to or from `undefined` is a key of neither style snapshot,
+    // so the running transitions are checked instead of the old props.
+    for (const key of this.propsWithTransitions) {
       if (!isAllowedProperty(key)) {
-        if (this.propsWithTransitions.has(key)) {
-          // If a property was transitioned before but is no longer allowed,
-          // we need to clear it up immediately
-          result[key] = null;
-          this.propsWithTransitions.delete(key);
-        }
-      } else if (!(key in newProps)) {
-        // Property was removed from props but is still allowed
+        result[key] = null;
+        this.propsWithTransitions.delete(key);
+      }
+    }
+
+    // Allowed properties removed from props transition to undefined
+    // (the default value for the property).
+    for (const key in oldProps) {
+      if (isAllowedProperty(key) && !(key in newProps)) {
         triggerTransition(key);
       }
     }

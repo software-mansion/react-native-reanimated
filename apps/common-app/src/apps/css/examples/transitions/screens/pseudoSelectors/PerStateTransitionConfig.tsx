@@ -19,7 +19,7 @@ export default function PerStateTransitionConfig() {
           description="Different pseudo-selectors can drive different style properties on the same element. Use `transitionProperty` with aligned timing arrays to give each property its own speed/curve."
           title="Composing pseudo-selectors">
           <VerticalExampleCard
-            collapsedCode={`transitionDuration: '180ms'`}
+            collapsedCode="transitionDuration: '180ms'"
             description="Hover changes the background; active scales it down. Both animate with the same duration."
             title="Two selectors, two properties, shared timing"
             code={`<Animated.View

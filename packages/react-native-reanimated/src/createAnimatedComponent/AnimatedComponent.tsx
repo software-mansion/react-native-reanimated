@@ -419,8 +419,6 @@ export default class AnimatedComponent
           };
     }
 
-    let nativeID;
-
     // TODO: Remove need for this \/\/\/\/.
     // RNSVG expects Gradient elem to have stops passed as children. When we want to animate them,
     // we provide them using `gradient` prop.
@@ -434,9 +432,8 @@ export default class AnimatedComponent
       }
     }
 
-    return super.render({
-      nativeID,
-      ...filteredProps,
-    });
+    const { forwardedRef: _forwardedRef, ...childProps } = filteredProps;
+
+    return super.render(childProps);
   }
 }

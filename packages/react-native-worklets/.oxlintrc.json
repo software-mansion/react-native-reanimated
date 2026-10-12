@@ -1,0 +1,55 @@
+{
+  "$schema": "../../node_modules/oxlint/configuration_schema.json",
+  "extends": ["../../.oxlintrc.json"],
+  "jsPlugins": ["eslint-plugin-reanimated"],
+  "env": {
+    "builtin": true,
+    "es2026": true,
+    "node": true,
+    "commonjs": true,
+    "jest": true
+  },
+  "ignorePatterns": [
+    "**/lib/**",
+    "**/android/**",
+    "**/apple/**",
+    "**/.worklets/**"
+  ],
+  "rules": {
+    "reanimated/use-worklets-error": "error",
+    "reanimated/use-global-this": "error",
+    "no-bitwise": "error",
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["*.native", "*.ios", "*.android", "*.web"],
+            "message": "Don't import with platform specifier, use extensionless imports."
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["src/**/*.ts", "src/**/*.tsx"],
+      "rules": {
+        "typescript/no-explicit-any": "error",
+        "eslint-core/strict": ["error", "global"]
+      }
+    },
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx"],
+      "rules": {
+        "typescript/unbound-method": "off"
+      }
+    },
+    {
+      "files": ["__tests__/**"],
+      "rules": {
+        "reanimated/use-worklets-error": "off"
+      }
+    }
+  ]
+}

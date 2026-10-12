@@ -1,4 +1,4 @@
-/* eslint-disable camelcase */
+/* eslint-disable eslint-core/camelcase */
 import type { InternalHostInstance } from '../src/commonTypes';
 import type * as FabricUtils from '../src/fabricUtils.native';
 

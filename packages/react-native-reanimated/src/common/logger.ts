@@ -5,18 +5,19 @@ const PREFIX = '[Reanimated]';
 const DOCS_URL =
   'https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration';
 const DOCS_REFERENCE = `If you don't want to see this message, you can disable the \`strict\` mode. Refer to:\n${DOCS_URL} for more details.`;
+const loggedMessages = new Set<string>();
 
 export enum ReanimatedLogLevel {
   warn = 1,
   error = 2,
 }
 
-type LogData = {
+export type LogData = {
   level: ReanimatedLogLevel;
   message: string;
 };
 
-type LogFunction = (data: LogData) => void;
+export type LogFunction = (data: LogData) => void;
 
 export type LoggerConfig = {
   level?: ReanimatedLogLevel;
@@ -25,6 +26,7 @@ export type LoggerConfig = {
 
 export type LoggerConfigInternal = {
   logFunction: LogFunction;
+  onLog?: LogFunction;
 } & Required<LoggerConfig>;
 
 function logToConsole(data: LogData) {
@@ -67,17 +69,23 @@ export function getLoggerConfig() {
  *   - Level: The minimum log level to display.
  *   - Strict: Whether to log warnings and errors that are not strict. Defaults to
  *     false.
+ *
+ * @param onLog - An optional callback invoked for every log that passes the
+ *   `level` and `strict` filters, in addition to the default console output.
+ *   Omitting it clears a previously registered callback.
  */
 export function updateLoggerConfig(
   currentConfig: LoggerConfigInternal,
-  options?: Partial<LoggerConfig>
+  options?: Partial<LoggerConfig>,
+  onLog?: LogFunction
 ) {
   'worklet';
   global.__reanimatedLoggerConfig = {
     ...currentConfig,
-    // Don't reuse previous level and strict values from the current config
+    // Don't reuse previous level, strict and onLog values from the current config
     level: options?.level ?? DEFAULT_LOGGER_CONFIG.level,
     strict: options?.strict ?? DEFAULT_LOGGER_CONFIG.strict,
+    onLog,
   };
 }
 
@@ -106,16 +114,38 @@ function handleLog(
     message += `\n\n${DOCS_REFERENCE}`;
   }
 
-  config.logFunction({
+  const data = {
     level,
     message: `${PREFIX} ${message}`,
-  });
+  };
+
+  config.logFunction(data);
+  config.onLog?.(data);
 }
 
 export const logger = {
   warn(message: string, options: LogOptions = {}) {
     'worklet';
     handleLog(ReanimatedLogLevel.warn, message, options);
+  },
+  warnOnce(message: string, level: number) {
+    'worklet';
+    if (getLoggerConfig().level > ReanimatedLogLevel.warn) {
+      return;
+    }
+
+    const frames = new Error().stack
+      ?.split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith('at ') || line.includes('@'));
+    const frame =
+      Number.isInteger(level) && level >= 0 ? frames?.[level + 1] : undefined;
+    const key = JSON.stringify([message, frame ?? null]);
+    if (loggedMessages.has(key)) {
+      return;
+    }
+    loggedMessages.add(key);
+    handleLog(ReanimatedLogLevel.warn, message, {});
   },
   error(message: string, options: LogOptions = {}) {
     'worklet';

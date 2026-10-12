@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../node_modules/oxlint/configuration_schema.json",
+  "extends": ["../../../.oxlintrc.json"],
+  "env": {
+    "builtin": true,
+    "es2026": true,
+    "node": true,
+    "commonjs": true,
+    "jest": true
+  },
+  "rules": {
+    "no-bitwise": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.js", "**/*.jsx"],
+      "rules": {
+        "no-bitwise": "off",
+        "no-redeclare": "warn"
+      }
+    }
+  ]
+}

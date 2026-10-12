@@ -69,22 +69,13 @@ fun getReactNativeVersion(): String {
     return reactProperties.getProperty("VERSION_NAME")
 }
 
-fun getReactNativeMinorVersion(): Int {
-    val reactNativeVersion = getReactNativeVersion()
-    return if (reactNativeVersion.startsWith("0.0.0-")) 1000 else reactNativeVersion.split(".")[1].toInt()
-}
-
 fun getHermesV1Enabled(): Boolean {
     // Even though `HERMES_V1_ENABLED` is now centralized
-    // in `react-native-flags.cmake` for React Native >= 0.84
-    // that CMake file depends on definitions provided
-    // in local `externalNativeBuild` configuration of the LIBRARY.
+    // in `react-native-flags.cmake`, that CMake file depends
+    // on definitions provided in local `externalNativeBuild`
+    // configuration of the LIBRARY.
     // I hope this is only a temporary workaround.
-    return if (getReactNativeMinorVersion() >= 84) {
-        safeAppExtGet("hermesV1Enabled", true)?.toString()?.toBoolean() ?: true
-    } else {
-        safeAppExtGet("hermesV1Enabled", false)?.toString()?.toBoolean() ?: false
-    }
+    return safeAppExtGet("hermesV1Enabled", true)?.toString()?.toBoolean() ?: true
 }
 
 fun getWorkletsVersion(): String {
@@ -127,9 +118,6 @@ fun getStaticFeatureFlags(): Map<String, String> {
 fun getStaticFeatureFlagsString(featureFlags: Map<String, String>): String =
     featureFlags.entries.joinToString("") { (key, value) -> "[$key:$value]" }
 
-fun isFlagEnabled(featureFlags: Map<String, String>, flagName: String): Boolean =
-    featureFlags.containsKey(flagName) && featureFlags[flagName] == "true"
-
 if (project != rootProject) {
     apply(plugin = "com.facebook.react")
 }
@@ -141,7 +129,6 @@ val reactNativeRootDir: File = resolveReactNativeDirectory()
 val REACT_NATIVE_VERSION: String = getReactNativeVersion()
 val WORKLETS_VERSION: String = getWorkletsVersion()
 val IS_REANIMATED_EXAMPLE_APP: Boolean = safeAppExtGet("isReanimatedExampleApp", false)?.toString()?.toBoolean() ?: false
-val FETCH_PREVIEW_ENABLED: Boolean = isFlagEnabled(featureFlags, "FETCH_PREVIEW_ENABLED")
 val WORKLETS_FEATURE_FLAGS: String = getStaticFeatureFlagsString(featureFlags)
 val HERMES_V1_ENABLED: Boolean = getHermesV1Enabled()
 val WORKLETS_PROFILING: Boolean = safeAppExtGet("enableWorkletsProfiling", false)?.toString()?.toBoolean() ?: false
@@ -216,7 +203,6 @@ android {
                     "-DANDROID_TOOLCHAIN=clang",
                     "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
                     "-DIS_REANIMATED_EXAMPLE_APP=$IS_REANIMATED_EXAMPLE_APP",
-                    "-DWORKLETS_FETCH_PREVIEW_ENABLED=$FETCH_PREVIEW_ENABLED",
                     "-DWORKLETS_PROFILING=$WORKLETS_PROFILING",
                     "-DWORKLETS_VERSION=$WORKLETS_VERSION",
                     "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
@@ -284,18 +270,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    sourceSets {
-        getByName("main") {
-            kotlin {
-                if (FETCH_PREVIEW_ENABLED) {
-                    directories.add("src/networking")
-                } else {
-                    directories.add("src/no-networking")
-                }
-            }
-        }
     }
 
     if (IS_REANIMATED_EXAMPLE_APP) {

@@ -1,4 +1,8 @@
 module.exports = {
+  spm: {
+    name: 'RNReanimated',
+    dependencies: ['react-native-worklets'],
+  },
   dependency: {
     platforms: {
       android: {

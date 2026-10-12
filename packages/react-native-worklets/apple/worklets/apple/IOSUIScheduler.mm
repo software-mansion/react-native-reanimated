@@ -1,3 +1,6 @@
+#import <Foundation/Foundation.h>
+#import <dispatch/dispatch.h>
+
 #import <worklets/apple/IOSUIScheduler.h>
 
 namespace worklets {

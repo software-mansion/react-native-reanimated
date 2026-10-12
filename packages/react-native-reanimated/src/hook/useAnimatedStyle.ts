@@ -190,9 +190,7 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
 ): AnimatedStyleHandle<Style>;
 
 export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
-  updater:
-    | WorkletFunction<[], Style>
-    | ((() => Style) & Record<string, unknown>),
+  updater: WorkletFunction<[], Style>,
   dependencies?: DependencyList | null,
   adapters?: AnimatedPropsAdapterWorklet | AnimatedPropsAdapterWorklet[] | null,
   isAnimatedProps = false
@@ -200,7 +198,7 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
   | AnimatedStyleHandle<Style | AnimatedProps>
   | JestAnimatedStyleHandle<Style | AnimatedProps> {
   const animatedUpdaterData = useRef<AnimatedUpdaterData | null>(null);
-  let inputs = Object.values(updater.__closure ?? {});
+  let inputs = updater.__closure ?? [];
   if (!inputs.length && dependencies?.length) {
     // let web work without a Babel plugin
     inputs = dependencies;

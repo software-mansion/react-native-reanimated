@@ -1,6 +1,5 @@
-import { isColor, processColorNumber } from './colorUtils';
-
 import type { TestValue } from '../types';
+import { isColor, processColorNumber } from './colorUtils';
 
 const RESET_BACKGROUND = '\x1b[49m';
 const TEST_COLOR = '\x1b[38;5;242m';

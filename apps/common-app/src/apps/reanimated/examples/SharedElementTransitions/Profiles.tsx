@@ -16,16 +16,18 @@ import {
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn,
+  getDynamicFeatureFlag,
+  setDynamicFeatureFlag,
   SharedTransition,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import leavesBackground from './assets/nature/leaves.jpg';
 import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
-import { scheduleOnRN } from 'react-native-worklets';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -505,6 +507,13 @@ const HomeScreen = withSharedTransitionBoundary(HomeScreenContent);
 const DetailsScreen = withSharedTransitionBoundary(DetailsScreenContent);
 
 export default function ProfilesExample() {
+  React.useEffect(() => {
+    const flag = 'TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS';
+    const previous = getDynamicFeatureFlag(flag);
+    setDynamicFeatureFlag(flag, true);
+    return () => setDynamicFeatureFlag(flag, previous);
+  }, []);
+
   // hide header of parent stack
   const navigation = useNavigation();
   React.useLayoutEffect(() => {

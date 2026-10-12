@@ -40,6 +40,10 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     this.compoundComponentName = compoundComponentName;
   }
 
+  hasAttachedAnimations(): boolean {
+    return this.attachedAnimations.length > 0;
+  }
+
   update(
     animationProperties: ExistingCSSAnimationProperties | null,
     eventMask = 0
@@ -53,7 +57,6 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     this.registerKeyframesUsage(processedAnimations);
 
     const animationUpdates = this.getAnimationUpdates(processedAnimations);
-    this.attachedAnimations = processedAnimations;
 
     if (animationUpdates) {
       if (
@@ -64,6 +67,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
         return;
       }
 
+      this.attachedAnimations = processedAnimations;
       this.apply(animationUpdates, eventMask);
     } else if (eventMask !== this.appliedEventMask) {
       // Only the mask changed, but the native side still has to learn about it.
@@ -84,7 +88,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   }
 
   private detach() {
-    if (this.attachedAnimations.length > 0) {
+    if (this.hasAttachedAnimations()) {
       unregisterCSSAnimations(this.viewTag);
       this.unregisterKeyframesUsage();
       this.attachedAnimations = [];

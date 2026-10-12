@@ -8,7 +8,7 @@ index 22d196a55d..775eecb0a8 100644
      }
 +  },
 +  "resolutions": {
-+    "metro": "patch:metro@npm%3A0.87.0#~/.yarn/patches/metro-npm-0.87.0-1c5c005545.patch",
-+    "metro-runtime": "patch:metro-runtime@npm%3A0.87.0#~/.yarn/patches/metro-runtime-npm-0.87.0-2e4e60a54a.patch"
++    "metro": "patch:metro@npm%3A0.87.1#~/.yarn/patches/metro-npm-0.87.1-4800af9fce.patch",
++    "metro-runtime": "patch:metro-runtime@npm%3A0.87.1#~/.yarn/patches/metro-runtime-npm-0.87.1-bd2143c917.patch"
    }
  }
