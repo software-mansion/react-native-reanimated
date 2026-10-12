@@ -23,6 +23,8 @@ class PropValueProcessor {
   static std::string
   processPropValue(const std::string &propName, const std::shared_ptr<const ShadowNode> &shadowNode, jsi::Runtime &rt);
 
+  static std::string intColorToHex(const int val);
+
  private:
   static std::string processLayoutProp(const std::string &propName, const LayoutableShadowNode *layoutableShadowNode);
 
@@ -30,8 +32,6 @@ class PropValueProcessor {
   processStyleProp(const std::string &propName, const std::shared_ptr<const ViewProps> &viewProps, jsi::Runtime &rt);
 
   static std::string stringify(const jsi::Object &object, jsi::Runtime &rt);
-
-  static std::string intColorToHex(const int val);
 
   static jsi::Object boxShadowPreprocessing(const BoxShadow &boxShadow, jsi::Runtime &rt);
 

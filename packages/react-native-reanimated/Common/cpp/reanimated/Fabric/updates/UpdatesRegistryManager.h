@@ -49,6 +49,9 @@ class UpdatesRegistryManager {
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
   PropsMap collectProps();
   void mergeRegistryProps(Tag viewTag, folly::dynamic &target);
+#ifdef ANDROID
+  void mergeRegistryProps(Tag viewTag, folly::dynamic &target, PropNamePredicate isIncluded);
+#endif
 
 #ifdef ANDROID
   bool hasPropsToRevert();

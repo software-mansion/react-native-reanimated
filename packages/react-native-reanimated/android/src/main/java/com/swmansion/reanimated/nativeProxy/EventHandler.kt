@@ -14,6 +14,7 @@ class EventHandler : RCTModernEventEmitter {
 
     var mCustomEventNamesResolver: UIManagerModule.CustomEventNamesResolver? = null
     internal var isInDrawPassProvider: (() -> Boolean)? = null
+    internal var nativeCallGuard: (() -> Unit) -> Unit = { it() }
 
     @DoNotStrip
     private constructor(hybridData: HybridData) {
@@ -32,7 +33,7 @@ class EventHandler : RCTModernEventEmitter {
         category: Int,
     ) {
         val resolvedEventName = mCustomEventNamesResolver!!.resolveCustomEventName(eventName) ?: eventName
-        receiveEvent(resolvedEventName, targetTag, params, isInDrawPass())
+        nativeCallGuard { receiveEvent(resolvedEventName, targetTag, params, isInDrawPass()) }
     }
 
     override fun receiveEvent(
@@ -42,7 +43,7 @@ class EventHandler : RCTModernEventEmitter {
         params: WritableMap?,
     ) {
         val resolvedEventName = mCustomEventNamesResolver!!.resolveCustomEventName(eventName) ?: eventName
-        receiveEvent(resolvedEventName, targetTag, params, isInDrawPass())
+        nativeCallGuard { receiveEvent(resolvedEventName, targetTag, params, isInDrawPass()) }
     }
 
     override fun receiveEvent(
@@ -51,7 +52,7 @@ class EventHandler : RCTModernEventEmitter {
         params: WritableMap?,
     ) {
         val resolvedEventName = mCustomEventNamesResolver!!.resolveCustomEventName(eventName) ?: eventName
-        receiveEvent(resolvedEventName, targetTag, params, isInDrawPass())
+        nativeCallGuard { receiveEvent(resolvedEventName, targetTag, params, isInDrawPass()) }
     }
 
     override fun receiveTouches(
