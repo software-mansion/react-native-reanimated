@@ -96,8 +96,7 @@ class LayoutAnimationConfigChild extends Component<LayoutAnimationConfigChildPro
 
     if (
       !tracksRef ||
-      !isValidElement<{ ref?: Ref<InstanceWithViewTag> }>(children) ||
-      children.type === Fragment
+      !isValidElement<{ ref?: Ref<InstanceWithViewTag> }>(children)
     ) {
       return children;
     }
@@ -113,8 +112,9 @@ class LayoutAnimationConfigChild extends Component<LayoutAnimationConfigChildPro
 // we don't know if the wrapper is going to be unmounted or not.
 // That's why we need to pass the skipExiting flag to the native side
 // when the wrapper is unmounted to prevent the animation.
-// Since `ReactNode` can be a list of nodes, every child is rendered through a
-// `LayoutAnimationConfigChild`, which gives the config access to its tag.
+// Since `ReactNode` can be a list of nodes, every child, including each child of
+// a Fragment, is rendered through a `LayoutAnimationConfigChild`, which gives
+// the config access to its tag.
 // React unmounts a class component before its children, so the config reads
 // every tag before any child is gone.
 /**
@@ -152,20 +152,35 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
     }
   }
 
-  render(): ReactNode {
-    const { children, skipEntering, skipExiting } = this.props;
+  renderTrackedChildren(children: ReactNode): ReactNode {
+    return Children.map(children, (child) => {
+      if (child === null) {
+        return null;
+      }
+      if (
+        isValidElement<{ children?: ReactNode }>(child) &&
+        child.type === Fragment
+      ) {
+        return cloneElement(
+          child,
+          undefined,
+          this.renderTrackedChildren(child.props.children)
+        );
+      }
+      return (
+        <LayoutAnimationConfigChild
+          trackedChildren={this._trackedChildren}
+          tracksRef={this.props.skipExiting !== undefined}>
+          {child}
+        </LayoutAnimationConfigChild>
+      );
+    });
+  }
 
+  render(): ReactNode {
     return (
-      <SkipEntering shouldSkip={skipEntering}>
-        {Children.map(children, (child) =>
-          child === null ? null : (
-            <LayoutAnimationConfigChild
-              trackedChildren={this._trackedChildren}
-              tracksRef={skipExiting !== undefined}>
-              {child}
-            </LayoutAnimationConfigChild>
-          )
-        )}
+      <SkipEntering shouldSkip={this.props.skipEntering}>
+        {this.renderTrackedChildren(this.props.children)}
       </SkipEntering>
     );
   }

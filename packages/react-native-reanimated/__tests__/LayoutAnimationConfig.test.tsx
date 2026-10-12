@@ -128,17 +128,20 @@ describe('LayoutAnimationConfig view tag resolution', () => {
     expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(42, true);
   });
 
-  test('falls back to findNodeHandle for a fragment child', () => {
+  test('resolves each child of a fragment without findNodeHandle', () => {
     const { unmount } = renderWrapped(
       <>
-        <ForwardsHostInstance />
+        <ForwardsHostInstance tag={42} />
+        <ForwardsHostInstance tag={43} />
       </>
     );
 
     unmount();
 
-    expect(findNodeHandle).toHaveBeenCalled();
-    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(1234, false);
+    expect(findNodeHandle).not.toHaveBeenCalled();
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledTimes(2);
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(42, false);
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(43, false);
   });
 
   test('preserves a ref the child already had', () => {
