@@ -1,6 +1,6 @@
 'use strict';
 import type { ComponentProps, ComponentRef } from 'react';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ScrollView } from 'react-native';
 
 import type { SharedValue } from '../commonTypes';
@@ -10,6 +10,7 @@ import {
 } from '../createAnimatedComponent';
 import type { AnimatedRef } from '../hook';
 import { useAnimatedRef, useScrollOffset } from '../hook';
+import { mergeRefs } from '../reactUtils';
 
 // Since createAnimatedComponent return type is ComponentClass that has the props of the argument,
 // but not things like NativeMethods, etc. we need to add them manually by extending the type.
@@ -34,16 +35,11 @@ export function AnimatedScrollView({
   ref,
   ...restProps
 }: AnimatedScrollViewProps) {
-  const animatedRef =
-    ref === null
-      ? // eslint-disable-next-line react-hooks/rules-of-hooks
-        useAnimatedRef<ScrollView>()
-      : (ref as AnimatedRef<ScrollView>);
-
-  if (scrollViewOffset) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useScrollOffset(animatedRef, scrollViewOffset);
-  }
+  const offsetRef = useAnimatedRef<ScrollView>();
+  const refWithOffset = useMemo(
+    () => mergeRefs(ref, offsetRef),
+    [ref, offsetRef]
+  );
 
   // Set default scrollEventThrottle, because user expects
   // to have continuous scroll events.
@@ -53,7 +49,25 @@ export function AnimatedScrollView({
     restProps.scrollEventThrottle = 1;
   }
 
-  return <AnimatedScrollViewComponent ref={animatedRef} {...restProps} />;
+  return (
+    <>
+      <AnimatedScrollViewComponent ref={refWithOffset} {...restProps} />
+      {scrollViewOffset ? (
+        <ScrollViewOffset animatedRef={offsetRef} offset={scrollViewOffset} />
+      ) : null}
+    </>
+  );
+}
+
+function ScrollViewOffset({
+  animatedRef,
+  offset,
+}: {
+  animatedRef: AnimatedRef<ScrollView>;
+  offset: SharedValue<number>;
+}) {
+  useScrollOffset(animatedRef, offset);
+  return null;
 }
 
 export type AnimatedScrollView = AnimatedScrollViewComplement &
