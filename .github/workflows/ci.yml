@@ -294,6 +294,9 @@ jobs:
     name: Example iOS build check
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.example-ios-build-check == 'true') }}
+    permissions:
+      contents: read
+      actions: write
     uses: ./.github/workflows/example-ios-build-check.yml
 
   example-next-build-check-and-test:
@@ -332,6 +335,9 @@ jobs:
     name: Runtime tests iOS (Legacy Eval)
     needs: changes
     if: ${{ !cancelled() && github.event_name != 'push' && !github.event.pull_request.head.repo.fork && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
+    permissions:
+      contents: read
+      actions: write
     uses: ./.github/workflows/runtime-tests-ios-argent.yml
     with:
       configuration: ReleaseRuntimeTests
@@ -344,6 +350,9 @@ jobs:
     name: Runtime tests iOS (Bundle Mode)
     needs: changes
     if: ${{ !cancelled() && github.event_name != 'push' && !github.event.pull_request.head.repo.fork && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
+    permissions:
+      contents: read
+      actions: write
     uses: ./.github/workflows/runtime-tests-ios-argent.yml
     with:
       configuration: ReleaseRuntimeTests
