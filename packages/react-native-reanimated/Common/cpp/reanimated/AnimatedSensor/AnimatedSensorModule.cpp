@@ -45,25 +45,32 @@ jsi::Value AnimatedSensorModule::registerSensor(
         }
 
         jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
+        // TODO: timestamp should be provided by the platform implementation
+        // such that the native side has a chance of providing a true event
+        // timestamp
         jsi::Object value(uiRuntime);
-        if (sensorType == SensorType::ROTATION_VECTOR) {
-          // TODO: timestamp should be provided by the platform implementation
-          // such that the native side has a chance of providing a true event
-          // timestamp
-          value.setProperty(uiRuntime, "qx", newValues[0]);
-          value.setProperty(uiRuntime, "qy", newValues[1]);
-          value.setProperty(uiRuntime, "qz", newValues[2]);
-          value.setProperty(uiRuntime, "qw", newValues[3]);
-          value.setProperty(uiRuntime, "yaw", newValues[4]);
-          value.setProperty(uiRuntime, "pitch", newValues[5]);
-          value.setProperty(uiRuntime, "roll", newValues[6]);
-        } else if (sensorType == SensorType::HINGE) {
-          value.setProperty(uiRuntime, "angle", newValues[0]);
-          value.setProperty(uiRuntime, "status", newValues[1]);
-        } else {
-          value.setProperty(uiRuntime, "x", newValues[0]);
-          value.setProperty(uiRuntime, "y", newValues[1]);
-          value.setProperty(uiRuntime, "z", newValues[2]);
+        switch (sensorType) {
+          case SensorType::ACCELEROMETER:
+          case SensorType::GYROSCOPE:
+          case SensorType::GRAVITY:
+          case SensorType::MAGNETIC_FIELD:
+            value.setProperty(uiRuntime, "x", newValues[0]);
+            value.setProperty(uiRuntime, "y", newValues[1]);
+            value.setProperty(uiRuntime, "z", newValues[2]);
+            break;
+          case SensorType::ROTATION_VECTOR:
+            value.setProperty(uiRuntime, "qx", newValues[0]);
+            value.setProperty(uiRuntime, "qy", newValues[1]);
+            value.setProperty(uiRuntime, "qz", newValues[2]);
+            value.setProperty(uiRuntime, "qw", newValues[3]);
+            value.setProperty(uiRuntime, "yaw", newValues[4]);
+            value.setProperty(uiRuntime, "pitch", newValues[5]);
+            value.setProperty(uiRuntime, "roll", newValues[6]);
+            break;
+          case SensorType::HINGE:
+            value.setProperty(uiRuntime, "angle", newValues[0]);
+            value.setProperty(uiRuntime, "status", newValues[1]);
+            break;
         }
         value.setProperty(uiRuntime, "interfaceOrientation", orientationDegrees);
 
