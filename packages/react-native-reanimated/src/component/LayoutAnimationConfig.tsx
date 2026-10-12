@@ -100,33 +100,31 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
     const { children, skipExiting } = this.props;
 
     if (!isChildList(children)) {
-      return this.getMaybeRefTrackedChild();
+      return this.getMaybeRefTrackedChild(children);
     }
 
-    // The only child of a list is marked by `setShouldAnimateExiting` instead.
-    const skipEachChildExiting =
-      skipExiting && Children.count(children) > 1 ? true : undefined;
+    // A list's only child is tracked and marked here, like a single child.
+    const hasSeveralChildren = Children.count(children) > 1;
 
     return Children.map(children, (child) => (
-      <LayoutAnimationConfig skipExiting={skipEachChildExiting}>
-        {child}
+      <LayoutAnimationConfig
+        skipExiting={skipExiting && hasSeveralChildren ? true : undefined}>
+        {hasSeveralChildren ? child : this.getMaybeRefTrackedChild(child)}
       </LayoutAnimationConfig>
     ));
   }
 
-  getMaybeRefTrackedChild() {
-    const { children } = this.props;
-
+  getMaybeRefTrackedChild(child: ReactNode) {
     if (
       this.props.skipExiting === undefined ||
-      !isValidElement<{ ref?: Ref<InstanceWithViewTag> }>(children) ||
-      children.type === Fragment
+      !isValidElement<{ ref?: Ref<InstanceWithViewTag> }>(child) ||
+      child.type === Fragment
     ) {
-      return children;
+      return child;
     }
 
-    return cloneElement(children, {
-      ref: this._getMergedRef(children.props.ref),
+    return cloneElement(child, {
+      ref: this._getMergedRef(child.props.ref),
     });
   }
 

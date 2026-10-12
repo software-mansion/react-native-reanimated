@@ -217,6 +217,7 @@ describe('LayoutAnimationConfig skipExiting', () => {
 
   beforeEach(() => {
     childMounts.mockClear();
+    findNodeHandle.mockClear();
     setShouldAnimateExitingForTag.mockClear();
   });
 
@@ -285,15 +286,17 @@ describe('LayoutAnimationConfig skipExiting', () => {
   );
 
   test('true skips the exiting of the only child of a list once on unmount', () => {
-    const { unmount } = render(renderList(true, [42]));
+    const { unmount } = render(
+      <LayoutAnimationConfig skipExiting>
+        {[<ForwardsHostInstance key={42} tag={42} />]}
+      </LayoutAnimationConfig>
+    );
 
     unmount();
 
+    expect(findNodeHandle).not.toHaveBeenCalled();
     expect(setShouldAnimateExitingForTag).toHaveBeenCalledTimes(1);
-    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(
-      expect.any(Number),
-      false
-    );
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(42, false);
   });
 
   test('true leaves the exiting of the only child of a list alone when it is removed', () => {

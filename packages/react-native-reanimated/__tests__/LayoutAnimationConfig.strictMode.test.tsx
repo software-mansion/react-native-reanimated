@@ -50,6 +50,16 @@ describe('LayoutAnimationConfig findNodeHandle deprecation', () => {
     expect(strictModeWarnings()).toHaveLength(0);
   });
 
+  test('does not warn when the only child of a list forwards its ref', () => {
+    const { unmount } = renderInStrictMode([
+      <ForwardsHostInstance key="child" />,
+    ]);
+
+    unmount();
+
+    expect(strictModeWarnings()).toHaveLength(0);
+  });
+
   test('warns when the child drops its ref', () => {
     const { unmount } = renderInStrictMode(<DropsRef />);
 
