@@ -9,6 +9,7 @@ import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import { getStaticFeatureFlag } from '../featureFlags';
+import { isSharedValue } from '../isSharedValue';
 import { type BaseAnimationBuilder } from '../layoutReanimation';
 import { SharedTransition } from '../layoutReanimation/SharedTransition';
 import {
@@ -36,7 +37,7 @@ import type {
 import { InlinePropManager } from './InlinePropManager';
 import jsPropsUpdater from './JSPropsUpdater';
 import { PropsFilter } from './PropsFilter';
-import { filterStyles, flattenArray } from './utils';
+import { filterStyles, flattenArray, normalizeTextProp } from './utils';
 
 let id = 0;
 
@@ -417,6 +418,13 @@ export default class AnimatedComponent
             ...(filteredProps.style ?? {}),
             visibility: 'hidden', // Hide component until `componentDidMount` triggers
           };
+    }
+
+    if (
+      this.ChildComponent.displayName === 'Text' &&
+      isSharedValue(this.props.children)
+    ) {
+      filteredProps.children = normalizeTextProp(this.props.children.value);
     }
 
     // TODO: Remove need for this \/\/\/\/.

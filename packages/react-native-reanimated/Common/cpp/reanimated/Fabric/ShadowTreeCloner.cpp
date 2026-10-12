@@ -1,41 +1,56 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
+#include <cstring>
 #include <memory>
 #include <ranges>
+#include <string>
 #include <utility>
 
 namespace reanimated {
 
-Props::Shared
-mergeProps(const ShadowNode &shadowNode, const PropsMap &propsMap, const ShadowNodeFamily::Shared &family) {
+namespace {
+
+bool isTextComponent(const ShadowNode &shadowNode) {
+  return !strcmp(shadowNode.getComponentName(), "Paragraph") || !strcmp(shadowNode.getComponentName(), "Text");
+}
+
+std::shared_ptr<const ShadowNode> cloneRawTextWithNewText(const ShadowNode &rawTextNode, const std::string &text) {
+  PropsParserContext propsParserContext{rawTextNode.getSurfaceId(), *rawTextNode.getContextContainer()};
+  auto newProps = rawTextNode.getComponentDescriptor().cloneProps(
+      propsParserContext, rawTextNode.getProps(), RawProps(folly::dynamic::object("text", text)));
+  return rawTextNode.clone({newProps, ShadowNodeFragment::childrenPlaceholder(), rawTextNode.getState()});
+}
+
+} // namespace
+
+Props::Shared mergeProps(
+    const ShadowNode &shadowNode,
+    const std::vector<RawProps> &propsVector,
+    std::vector<std::shared_ptr<const ShadowNode>> &children) {
   ReanimatedSystraceSection s("ShadowTreeCloner::mergeProps");
 
-  const auto it = propsMap.find(family);
+  auto newPropsDynamic = propsVector.front().toDynamic();
+  for (const auto &props : propsVector | std::views::drop(1)) {
+    newPropsDynamic.update(props.toDynamic());
+  }
 
-  if (it == propsMap.end()) {
+  if (isTextComponent(shadowNode)) {
+    if (const auto *childrenProp = newPropsDynamic.get_ptr("children")) {
+      if ((childrenProp->isString() || childrenProp->isNumber()) && !children.empty()) {
+        children[0] = cloneRawTextWithNewText(*children[0], childrenProp->asString());
+      }
+      newPropsDynamic.erase("children");
+    }
+  }
+
+  if (newPropsDynamic.empty()) {
     return ShadowNodeFragment::propsPlaceholder();
   }
 
   PropsParserContext propsParserContext{shadowNode.getSurfaceId(), *shadowNode.getContextContainer()};
-  const auto &propsVector = it->second;
-  auto newProps = shadowNode.getProps();
-
-#ifdef ANDROID
-  if (propsVector.size() > 1) {
-    folly::dynamic newPropsDynamic = folly::dynamic::object;
-    for (const auto &props : propsVector) {
-      newPropsDynamic = folly::dynamic::merge(newPropsDynamic, props.operator folly::dynamic());
-    }
-    return shadowNode.getComponentDescriptor().cloneProps(propsParserContext, newProps, RawProps(newPropsDynamic));
-  }
-#endif
-
-  for (const auto &props : propsVector) {
-    newProps = shadowNode.getComponentDescriptor().cloneProps(propsParserContext, newProps, RawProps(props));
-  }
-
-  return newProps;
+  return shadowNode.getComponentDescriptor().cloneProps(
+      propsParserContext, shadowNode.getProps(), RawProps(std::move(newPropsDynamic)));
 }
 
 std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
@@ -52,8 +67,14 @@ std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
     }
   }
 
+  Props::Shared newProps = ShadowNodeFragment::propsPlaceholder();
+  const auto propsIt = propsMap.find(family);
+  if (propsIt != propsMap.end() && !propsIt->second.empty()) {
+    newProps = mergeProps(shadowNode, propsIt->second, children);
+  }
+
   return shadowNode.clone(
-      {mergeProps(shadowNode, propsMap, family),
+      {newProps,
        std::make_shared<std::vector<std::shared_ptr<const ShadowNode>>>(children),
        shadowNode.getState(),
        false});
