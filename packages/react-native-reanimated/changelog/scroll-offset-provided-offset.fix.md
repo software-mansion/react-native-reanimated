@@ -1,0 +1,1 @@
+Fix `useScrollOffset` writing to and returning the first `providedOffset` it was given after the caller passes a different one, which also kept `Animated.ScrollView` writing to its first `scrollViewOffset`.

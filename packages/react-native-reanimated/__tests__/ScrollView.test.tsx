@@ -4,7 +4,8 @@ import { createRef, useEffect } from 'react';
 import type { ScrollView } from 'react-native';
 
 import type { AnimatedScrollViewProps } from '../src';
-import Animated, { useAnimatedRef, useSharedValue } from '../src';
+import Animated, { makeMutable, useAnimatedRef, useSharedValue } from '../src';
+import type { ReanimatedScrollEvent } from '../src/hook/commonTypes';
 import { WorkletEventHandler } from '../src/WorkletEventHandler';
 
 const SCROLL_VIEW_TAG = 1234;
@@ -120,5 +121,24 @@ describe('Animated.ScrollView scrollViewOffset', () => {
     unmount();
 
     expect(unregisterFromEvents).toHaveBeenCalledWith(SCROLL_VIEW_TAG);
+  });
+
+  test('writes scroll events to a scrollViewOffset swapped after mount', () => {
+    const updateEventHandler = jest.spyOn(
+      WorkletEventHandler.prototype,
+      'updateEventHandler'
+    );
+    const first = makeMutable(0);
+    const second = makeMutable(0);
+
+    const { rerender } = render(
+      <Animated.ScrollView scrollViewOffset={first} />
+    );
+    rerender(<Animated.ScrollView scrollViewOffset={second} />);
+
+    expect(updateEventHandler).toHaveBeenCalledTimes(1);
+    const [handleScroll] = updateEventHandler.mock.calls[0];
+    handleScroll({ contentOffset: { x: 0, y: 42 } } as ReanimatedScrollEvent);
+    expect([first.value, second.value]).toEqual([0, 42]);
   });
 });
