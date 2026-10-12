@@ -30,4 +30,4 @@ Pick exactly one:
 
 ## Report format
 
-The first line of your final message is the verdict as a level-one heading, for example `# NOT REPRODUCIBLE`. Write nothing before it. Directly under it add a `## Summary` section: at most three plain sentences that state the verdict in words and give the decisive evidence, or what blocked you. This section is extracted automatically and shown to maintainers on its own, so it must stand alone. After it, list the steps you took and what the screen showed after each one, and name the screenshot that shows each decisive state.
+The first line of your final message is the verdict as a level-one heading, for example `# NOT REPRODUCIBLE`. Write nothing before it. Directly under it add a `## Summary` section: one paragraph of at most three plain sentences that state the verdict in words and give the decisive evidence, or what blocked you. This paragraph is extracted automatically and shown to maintainers on its own, so it must stand alone. After it add a `## Steps` section: list the steps you took and what the screen showed after each one, and name the screenshot that shows each decisive state.
