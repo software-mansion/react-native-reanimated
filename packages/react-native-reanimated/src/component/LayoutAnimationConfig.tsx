@@ -50,6 +50,15 @@ function SkipEntering(props: {
   );
 }
 
+// React reconciles an array or any other iterable as a keyed list of children.
+function isChildList(children: ReactNode): children is Iterable<ReactNode> {
+  return (
+    typeof children === 'object' &&
+    children !== null &&
+    Symbol.iterator in children
+  );
+}
+
 // skipExiting (unlike skipEntering) cannot be done by conditionally
 // configuring the animation in `createAnimatedComponent`, since at this stage
 // we don't know if the wrapper is going to be unmounted or not.
@@ -88,14 +97,21 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
   }
 
   getMaybeWrappedChildren() {
-    return Children.count(this.props.children) > 1
-      ? Children.map(this.props.children, (child) => (
-          <LayoutAnimationConfig
-            skipExiting={this.props.skipExiting ? true : undefined}>
-            {child}
-          </LayoutAnimationConfig>
-        ))
-      : this.getMaybeRefTrackedChild();
+    const { children, skipExiting } = this.props;
+
+    if (!isChildList(children)) {
+      return this.getMaybeRefTrackedChild();
+    }
+
+    // The only child of a list is marked by `setShouldAnimateExiting` instead.
+    const skipEachChildExiting =
+      skipExiting && Children.count(children) > 1 ? true : undefined;
+
+    return Children.map(children, (child) => (
+      <LayoutAnimationConfig skipExiting={skipEachChildExiting}>
+        {child}
+      </LayoutAnimationConfig>
+    ));
   }
 
   getMaybeRefTrackedChild() {

@@ -261,4 +261,64 @@ describe('LayoutAnimationConfig skipExiting', () => {
       expect(setShouldAnimateExitingForTag).not.toHaveBeenCalled();
     }
   );
+
+  const renderList = (skipExiting: boolean | undefined, tags: number[]) => (
+    <LayoutAnimationConfig skipExiting={skipExiting}>
+      {tags.map((tag) => (
+        <CountsMounts key={tag} tag={tag} />
+      ))}
+    </LayoutAnimationConfig>
+  );
+
+  test.each([undefined, false, true])(
+    '%s keeps a keyed child mounted while a sibling joins and leaves',
+    (skipExiting) => {
+      const { rerender } = render(renderList(skipExiting, [42]));
+
+      rerender(renderList(skipExiting, [42, 43]));
+      rerender(renderList(skipExiting, [42]));
+
+      expect(childMounts.mock.calls.filter(([tag]) => tag === 42)).toHaveLength(
+        1
+      );
+    }
+  );
+
+  test('true skips the exiting of the only child of a list once on unmount', () => {
+    const { unmount } = render(renderList(true, [42]));
+
+    unmount();
+
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledTimes(1);
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(
+      expect.any(Number),
+      false
+    );
+  });
+
+  test('true leaves the exiting of the only child of a list alone when it is removed', () => {
+    const { rerender } = render(renderList(true, [42]));
+
+    rerender(renderList(true, []));
+
+    expect(setShouldAnimateExitingForTag).not.toHaveBeenCalled();
+  });
+
+  test('true skips the exiting of each child of an iterable on unmount', () => {
+    const { unmount } = render(
+      <LayoutAnimationConfig skipExiting>
+        {
+          new Set([
+            <ForwardsHostInstance key={42} tag={42} />,
+            <ForwardsHostInstance key={43} tag={43} />,
+          ])
+        }
+      </LayoutAnimationConfig>
+    );
+
+    unmount();
+
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(42, false);
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(43, false);
+  });
 });
