@@ -123,7 +123,8 @@ UnregisterSensorFunction makeUnregisterSensorFunction(ReanimatedSensorContainer 
 ObserveSensorAvailabilityFunction makeObserveSensorAvailabilityFunction(
     ReanimatedSensorContainer *reanimatedSensorContainer)
 {
-  auto observeSensorAvailabilityFunction = [=](const SensorAvailabilityListener &listener) {
+  // NOLINTNEXTLINE(performance-unnecessary-value-param)
+  auto observeSensorAvailabilityFunction = [=](SensorAvailabilityListener listener) {
     [reanimatedSensorContainer observeSensorAvailability:^(ReanimatedSensorType sensorType, bool isAvailable) {
       listener(static_cast<int>(sensorType), isAvailable);
     }];
