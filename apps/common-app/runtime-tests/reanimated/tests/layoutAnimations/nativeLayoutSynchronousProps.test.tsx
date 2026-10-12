@@ -1,3 +1,26 @@
+/*
+ * The tests have state checks, trace checks, and checks of a value after a planned wait. Where a test had a
+ * comparison of the native box with its frame-driven twin at one instant, each sample of the opacity of the
+ * native box is on the declared timeline of its leaf at its own sample time, from the origin of its command
+ * (statement A of `native layout reference`), and each frame of the opacity leaf of the twin is on a replay of
+ * that timeline (statement B). The tolerance of an opacity sample is 0.03.
+ *
+ * The method does not prove the distance of the two boxes at one instant. The tests `a frame-driven start
+ * takes native X and opacity tracks after an opacity write, ...` play a case of `native layout reference` with
+ * a write: statements A and B, and statement M for the opacity model of the native box after the frame
+ * driver took its tracks. The write step ends when a read of the native box has the written model, and that
+ * read is before the trace event of the capture of the second build (the `WRITE-MODEL` row and the `CAPTURE`
+ * row). They do not prove the end value of the opacity after the hand-over: the leaf and the animated style
+ * both write the opacity. The end check is the native box against its model and against the model of the
+ * twin, and the tests print the end as a `WRITTEN-END` row.
+ *
+ * The two tests `... shows during a frame-driven layout animation with an opacity leaf` have state checks of
+ * the writer (no playback key, the model equal to the presentation, each presentation farther in the direction
+ * of the writer than the one before) and waits on the callbacks. The distance of the writer from its line on
+ * the wall clock is a case of `native layout live clock`.
+ *
+ * The suite needs the static flag `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`: the default build does not run it.
+ */
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type {
@@ -7,7 +30,6 @@ import type {
 import Animated, {
   Easing,
   getStaticFeatureFlag,
-  setDynamicFeatureFlag,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -29,27 +51,61 @@ import {
   stopSecondSurface,
 } from '../../../ReJest/secondSurface';
 import { blockUIThread } from './nativeLayoutLoad';
-import type { Leaves, TraceEvent } from './nativeLayoutTestKit';
+import type {
+  Place,
+  ReferenceCase,
+  Samples,
+} from './nativeLayoutReferencePlay';
+import {
+  expectModelOnFrames,
+  expectNativeRows,
+  expectNoKeyAfterTransfer,
+  expectReference,
+  expectTimelineRows,
+  FRAME_TOLERANCE,
+  MATRIX_TOLERANCE,
+  plannedReadsOf,
+  play,
+} from './nativeLayoutReferencePlay';
+import type {
+  Band,
+  DeclaredKey,
+  Leaf,
+  Leaves,
+  SizeBoxProps,
+  TakenRow,
+  TraceEvent,
+} from './nativeLayoutTestKit';
 import {
   BOX_REF,
   BOX_SIZE,
   callbacks,
+  CSSLoopBox,
+  declaredTimelineOf,
   DURATION,
   END_LEFT,
+  expectFrameTimeline,
   FRAME_BOX_REF,
   FRAME_MS,
+  frameRecordedOf,
   hasNativeLayoutStarts,
   isHostEvent,
   isNear,
   LAYOUT_DURATION,
   layoutOf,
   linearAt,
+  LOOP_DURATION,
+  opacities,
   POSITION_TOLERANCE,
   sample,
   mountScene,
+  narrowClockOffset,
   PairOf,
   pairLayoutsOf,
+  playedTracksOf,
+  readFrameRecords,
   recordCallback,
+  resetFrameRecords,
   SAMPLED_OPACITY_TOLERANCE,
   sampleOpacity,
   sampleOpacityPair,
@@ -60,14 +116,17 @@ import {
   setSecondSurfaceBox,
   START_LEFT,
   summarize,
+  takeRows,
   takeTrace,
   takeTraceOf,
   takeTraceUntilSurfaceClosed,
+  waitForCallbacks,
+  waitForModel,
+  withTracking,
+  WriterBox,
 } from './nativeLayoutTestKit';
 
 const OTHER_REF = 'NativeLayoutSynchronousOtherBox';
-const TRACKING_FLAG = 'TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS';
-const LOOP_DURATION = 6 * DURATION;
 const BLOCK_MS = 40;
 const DROP = 30;
 const REPETITIONS = 10;
@@ -92,8 +151,6 @@ const CSS_START = 'Received > TrackStarted:Opacity > Admitted';
 const GROUP_START_OVER_CSS = `${CSS_START} > LayoutStartPending > LayoutStartMounted > Received > TrackEnded:Opacity:false > Ended:Interrupted:None > TrackStarted:PositionX > TrackStarted:Opacity > Admitted`;
 
 const FRAME_DRIVEN_TAKEOVER = `LayoutBuildFailed:EndpointMismatch > FrameUpdateMounted:PositionX > FrameUpdateMounted:Opacity > ${CANCELLED_GROUP}`;
-
-const opacities: Record<string, SharedValue<number>> = {};
 
 const staleWarnings: string[] = [];
 function recordWarning(message: string) {
@@ -121,39 +178,7 @@ function recordUIWarnings() {
 
 const colors: Record<string, SharedValue<string>> = {};
 
-type WriterBoxProps = {
-  left: number;
-  top?: number;
-  width?: number;
-  layout?: LayoutAnimationFunction;
-  initialOpacity?: number;
-  refName?: string;
-};
-
-function WriterBox({
-  left,
-  top = 0,
-  width = BOX_SIZE,
-  layout,
-  initialOpacity = 0.5,
-  refName = BOX_REF,
-}: WriterBoxProps) {
-  const ref = useTestRef(refName);
-  const opacity = useSharedValue(initialOpacity);
-  opacities[refName] = opacity;
-  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
-  return (
-    <Animated.View
-      ref={ref}
-      layout={layout}
-      style={[
-        styles.box,
-        { marginLeft: left, marginTop: top, width },
-        animatedStyle,
-      ]}
-    />
-  );
-}
+type WriterBoxProps = React.ComponentProps<typeof WriterBox>;
 
 function ColorBox({
   left,
@@ -180,30 +205,6 @@ function ColorBox({
           transitionTimingFunction: 'linear',
         },
         animatedStyle,
-      ]}
-    />
-  );
-}
-
-const LOOP_KEYFRAMES = { from: { opacity: 0.2 }, to: { opacity: 0.8 } };
-
-function CSSLoopBox({ left, layout }: WriterBoxProps) {
-  const ref = useTestRef(BOX_REF);
-  return (
-    <Animated.View
-      ref={ref}
-      layout={layout}
-      style={[
-        styles.box,
-        {
-          marginLeft: left,
-          opacity: 0.2,
-          animationName: LOOP_KEYFRAMES,
-          animationDuration: LOOP_DURATION,
-          animationTimingFunction: 'linear',
-          animationIterationCount: 'infinite',
-          animationDirection: 'alternate',
-        },
       ]}
     />
   );
@@ -291,6 +292,145 @@ const shortSurfaceScene = secondSurfaceSceneOf({
   BoxComponent: WriterBox,
 });
 
+/** The key that an opacity leaf of a pair declares for the two boxes. */
+const opacityKeyOf = (leaf: Leaf, from: number, to: number): DeclaredKey => ({
+  key: 'opacity',
+  target: 'Opacity',
+  tolerance: SAMPLED_OPACITY_TOLERANCE,
+  leaf,
+  from,
+  to,
+  startsOnScreen: false,
+});
+
+async function takeOpacityPair(
+  tag: number,
+  frameTag: number
+): Promise<Samples> {
+  const [native, frame] = await Promise.all(
+    [tag, frameTag].map((each) => sample(each, 'Opacity'))
+  );
+  return { native: { Opacity: native }, frame: { Opacity: frame } };
+}
+
+/** The rows of the two boxes from now, for a time. */
+const takeOpacityRows = (tag: number, frameTag: number, forMs: number) =>
+  takeRows(
+    () => takeOpacityPair(tag, frameTag),
+    ({ native }) => native.Opacity,
+    performance.now() + forMs
+  );
+
+/** The rows from the start of the first native track of the events. */
+function playingRowsOf(rows: TakenRow<Samples>[], events: TraceEvent[]) {
+  const started = events.find(({ event }) => event === 'TrackStarted');
+  const playing = rows
+    .map(({ row }) => ({
+      native: row.native.Opacity,
+      frame: row.frame.Opacity,
+    }))
+    .filter(
+      ({ native }) =>
+        started !== undefined &&
+        native.monotonicTimeMs >= started.monotonicTimeMs
+    );
+  expect(playing.length > 0).toBe(true);
+  return playing;
+}
+
+/**
+ * Statement A of `native layout reference` for the opacity track of the one
+ * command of the events: each sample of the native box while the track plays is
+ * on the declared timeline of the key.
+ */
+function expectOpacityReads(
+  testName: string,
+  rows: TakenRow<Samples>[],
+  events: TraceEvent[],
+  clockOffset: Band,
+  key: DeclaredKey
+) {
+  const command = events.find(({ event }) => event === 'Admitted');
+  if (!command) {
+    throw new Error(`The trace has no native command: ${summarize(events)}`);
+  }
+  const tracks = playedTracksOf(events, command, clockOffset, [key]);
+  const reads = expectNativeRows({ rows, tracks }, MATRIX_TOLERANCE);
+  expectTimelineRows(testName, tracks, plannedReadsOf(rows), reads);
+  const checked = reads.filter(({ isChecked }) => isChecked);
+  const largestDistance = checked
+    .flatMap(({ residual }) => residual.distances)
+    .reduce((largest, distance) => Math.max(largest, distance), 0);
+  console.log(
+    `REFERENCE | ${testName} | opacity of the command ${command.generation} | reads ${reads.length}, checked ${checked.length}, largest distance ${largestDistance}`
+  );
+}
+
+/**
+ * Statement B of `native layout reference` for the last opacity leaf that the
+ * frame driver played on the twin.
+ */
+function expectTwinOpacityFrames({ leaf, from, to }: DeclaredKey) {
+  const record = readFrameRecords()
+    .filter(
+      ({ box, key, frames }) =>
+        box === 'frame' && key === 'opacity' && frames.length > 0
+    )
+    .pop();
+  if (!record) {
+    throw new Error('The frame driver has no opacity frame of the twin.');
+  }
+  expectFrameTimeline(
+    { record, timeline: declaredTimelineOf(leaf, from, to) },
+    FRAME_TOLERANCE
+  );
+}
+
+const HANDED_STYLE_OPACITY = 0.2;
+const HANDED_WRITTEN_OPACITY = 0.6;
+const HANDED_COMMIT_MS = LAYOUT_DURATION / 4 + 4 * FRAME_MS;
+function HandedWriterBox(box: SizeBoxProps) {
+  return <WriterBox {...box} initialOpacity={HANDED_STYLE_OPACITY} />;
+}
+
+const handedPlaceOf = (left: number, top: number): Place => ({
+  left,
+  top,
+  opacity: HANDED_STYLE_OPACITY,
+});
+
+/**
+ * The first models are `first`, and each model from the first `then` is `then`:
+ * the names of what is not so.
+ */
+function modelOrderFaultsOf(models: number[], first: number, then: number) {
+  const firstThen = models.findIndex((model) => isNear(model, then));
+  const prefix = firstThen < 0 ? models.length : firstThen;
+  const countNot = (part: number[], value: number) =>
+    part.filter((model) => !isNear(model, value)).length;
+  const notFirst = countNot(models.slice(0, prefix), first);
+  const notThen = countNot(models.slice(prefix), then);
+  return [
+    ...(firstThen < 0
+      ? [`no row of ${models.length} has the model ${then}`]
+      : []),
+    ...(notFirst > 0
+      ? [
+          `${notFirst} of the first ${prefix} rows do not have the model ${first}`,
+        ]
+      : []),
+    ...(notThen > 0
+      ? [
+          `${notThen} of the ${models.length - prefix} rows after them do not have the model ${then}`,
+        ]
+      : []),
+  ].join(', ');
+}
+
+function OpaqueWriterBox(box: SizeBoxProps) {
+  return <WriterBox {...box} initialOpacity={1} />;
+}
+
 function writeAfterBlock<TValue>(
   targets: SharedValue<TValue>[],
   value: TValue,
@@ -313,15 +453,6 @@ describe('native layout animations and the synchronous props path', () => {
     return;
   }
 
-  async function withTracking(tracks: boolean, body: () => Promise<void>) {
-    setDynamicFeatureFlag(TRACKING_FLAG, tracks);
-    try {
-      await body();
-    } finally {
-      setDynamicFeatureFlag(TRACKING_FLAG, false);
-    }
-  }
-
   const boxScene = (
     layout: LayoutAnimationFunction | undefined,
     left: number,
@@ -336,7 +467,11 @@ describe('native layout animations and the synchronous props path', () => {
   type PairBox = Pick<WriterBoxProps, 'left' | 'top' | 'initialOpacity'>;
 
   const pairOf = (leaves: (hasCallback: boolean) => Leaves) => {
-    const layouts = pairLayoutsOf(leaves);
+    const { nativeLayout, frameLayout } = pairLayoutsOf(leaves);
+    const layouts = {
+      nativeLayout,
+      frameLayout: frameRecordedOf('frame', frameLayout),
+    };
     return (box: PairBox, padding = 0) => (
       <PairOf
         BoxComponent={WriterBox}
@@ -440,18 +575,23 @@ describe('native layout animations and the synchronous props path', () => {
 
   for (const tracks of [false, true]) {
     for (const hasOpacityLeaf of [false, true]) {
-      test(`a layout change of the parent after a settled opacity write starts ${hasOpacityLeaf ? 'native X and opacity tracks' : 'a native X track'} (tracking: ${tracks})`, async () => {
+      const settledWrite = `a layout change of the parent after a settled opacity write starts ${hasOpacityLeaf ? 'native X and opacity tracks' : 'a native X track'} (tracking: ${tracks})`;
+      test(settledWrite, async () => {
         await withTracking(tracks, async () => {
+          const fade = opacityKeyOf(
+            { duration: LAYOUT_DURATION, initial: 0.9, to: 0.6 },
+            0.9,
+            0.6
+          );
           const pair = pairOf((hasCallback) => ({
             originX: { duration: LAYOUT_DURATION, hasCallback },
-            ...(hasOpacityLeaf && {
-              opacity: { duration: LAYOUT_DURATION, initial: 0.9, to: 0.6 },
-            }),
+            ...(hasOpacityLeaf && { opacity: fade.leaf }),
           }));
           const box = { left: 0, initialOpacity: 0.2 };
           recordUIWarnings();
           const tag = await mountScene(pair(box));
           const frameTag = getTestComponent(FRAME_BOX_REF).getTag();
+          const clockOffset = await narrowClockOffset(tag);
           staleWarnings.length = 0;
           writePair(0.6);
           await wait(300);
@@ -459,28 +599,32 @@ describe('native layout animations and the synchronous props path', () => {
           expect(isNear(settled.native.presentation, 0.6)).toBe(true);
           expect(isNear(settled.frame.presentation, 0.6)).toBe(true);
           await takeTrace();
+          resetFrameRecords();
 
           await render(pair(box, END_LEFT));
-          await wait(2 * FRAME_MS);
-          for (let index = 0; index < 4; index++) {
-            const { native, frame } = await sampleOpacityPair(tag, frameTag);
-            expect(native.keys).toBe(hasOpacityLeaf ? 2 : 1);
-            expect(isNear(native.model, 0.6)).toBe(true);
-            expect(
-              isNear(
-                native.presentation,
-                frame.presentation,
-                SAMPLED_OPACITY_TOLERANCE
-              )
-            ).toBe(true);
-            if (!hasOpacityLeaf) {
-              expect(isNear(native.presentation, 0.6)).toBe(true);
-            }
-            await wait(LAYOUT_DURATION / 8);
-          }
-          expect(summarize((await takeTraceOf(tag)).filter(isHostEvent))).toBe(
+          const rows = await takeOpacityRows(
+            tag,
+            frameTag,
+            LAYOUT_DURATION / 2
+          );
+          const events = (await takeTraceOf(tag)).filter(isHostEvent);
+          expect(summarize(events)).toBe(
             hasOpacityLeaf ? GROUP_START : X_START
           );
+          for (const { native, frame } of playingRowsOf(rows, events)) {
+            expect(native.playbackKeys.length).toBe(hasOpacityLeaf ? 2 : 1);
+            expect(isNear(native.model[0], 0.6)).toBe(true);
+            if (!hasOpacityLeaf) {
+              expect(isNear(native.presentation[0], 0.6)).toBe(true);
+              expect(
+                isNear(frame.presentation[0], 0.6, SAMPLED_OPACITY_TOLERANCE)
+              ).toBe(true);
+            }
+          }
+          if (hasOpacityLeaf) {
+            expectOpacityReads(settledWrite, rows, events, clockOffset, fade);
+            expectTwinOpacityFrames(fade);
+          }
           await wait(LAYOUT_DURATION);
           const end = await sampleOpacityPair(tag, frameTag);
           expect(end.native.keys).toBe(0);
@@ -525,49 +669,39 @@ describe('native layout animations and the synchronous props path', () => {
     });
   }
 
-  test('an opacity write between a commit and its mount keeps the native start', async () => {
+  const writeBeforeMount =
+    'an opacity write between a commit and its mount keeps the native start';
+  test(writeBeforeMount, async () => {
     const pair = pairOf((hasCallback) =>
       fadeLeaves(DURATION, 0.9, hasCallback)
     );
+    const fade = opacityKeyOf(fadeLeaves(DURATION, 0.9).opacity!, 0.9, 0.5);
     const tag = await mountScene(pair({ left: START_LEFT }));
     const frameTag = getTestComponent(FRAME_BOX_REF).getTag();
+    const clockOffset = await narrowClockOffset(tag);
     for (let index = 0; index < REPETITIONS; index++) {
       writePair(0.5);
       await wait(100);
       await takeTrace();
       callbacks.length = 0;
+      resetFrameRecords();
       writeAfterBlock([opacities[BOX_REF], opacities[FRAME_BOX_REF]], 0.8);
       await render(pair({ left: index % 2 === 0 ? END_LEFT : START_LEFT }));
-      await wait(3 * FRAME_MS);
-      const early = await sampleOpacityPair(tag, frameTag);
+      const rows = await takeOpacityRows(tag, frameTag, DURATION / 2);
       const startEvents = (await takeTraceOf(tag)).filter(isHostEvent);
       expect(summarize(startEvents)).toBe(GROUP_START);
-      const trackAt = linearAt(
-        0.9,
-        0.5,
-        startEvents[0].monotonicTimeMs,
-        DURATION
-      );
-      await wait(DURATION / 2);
-      const middle = await sampleOpacityPair(tag, frameTag);
-      for (const { native } of [early, middle]) {
-        expect(native.keys).toBe(2);
-        expect(isNear(native.model, 0.8)).toBe(true);
-        expect(
-          isNear(
-            native.presentation,
-            trackAt(native.time),
-            SAMPLED_OPACITY_TOLERANCE
-          )
-        ).toBe(true);
+      for (const { native } of playingRowsOf(rows, startEvents)) {
+        expect(native.playbackKeys.length).toBe(2);
+        expect(isNear(native.model[0], 0.8)).toBe(true);
       }
-      expect(
-        isNear(
-          middle.native.presentation,
-          middle.frame.presentation,
-          SAMPLED_OPACITY_TOLERANCE
-        )
-      ).toBe(true);
+      expectOpacityReads(
+        writeBeforeMount,
+        rows,
+        startEvents,
+        clockOffset,
+        fade
+      );
+      expectTwinOpacityFrames(fade);
       await wait(DURATION / 2 + 100);
       const end = await sampleOpacity(tag);
       expect(end.keys).toBe(0);
@@ -675,55 +809,100 @@ describe('native layout animations and the synchronous props path', () => {
     }
   }
 
-  for (const tracks of [false, true]) {
-    test(`a frame-driven start takes native X and opacity tracks after an opacity write, and the view agrees with a frame-driven view (tracking: ${tracks})`, async () => {
-      await withTracking(tracks, async () => {
-        const pair = pairOf((hasCallback) => ({
-          originX: {
-            duration: LAYOUT_DURATION,
-            onlyWhenChanged: true,
-            hasCallback,
-          },
-          opacity: { duration: LAYOUT_DURATION, initial: 0.9, to: 0.2 },
-          originY: { isSpring: true, onlyWhenChanged: true },
-        }));
-        const box = { initialOpacity: 0.2 };
-        const tag = await mountScene(pair({ ...box, left: START_LEFT }));
-        const frameTag = getTestComponent(FRAME_BOX_REF).getTag();
-        await render(pair({ ...box, left: END_LEFT }));
-        await wait(LAYOUT_DURATION / 4);
-        writePair(0.6);
-        await wait(4 * FRAME_MS);
-        const written = await sampleOpacityPair(tag, frameTag);
-        expect(written.native.keys).toBe(2);
-        expect(isNear(written.native.model, 0.6)).toBe(true);
-        expect(
-          isNear(written.native.presentation, written.frame.presentation)
-        ).toBe(true);
-        await takeTrace();
-
-        await render(pair({ ...box, left: END_LEFT, top: DROP }));
-        await wait(2 * FRAME_MS);
-        for (let index = 0; index < 8; index++) {
-          const { native, frame } = await sampleOpacityPair(tag, frameTag);
-          expect(native.keys).toBe(0);
-          expect(isNear(native.model, frame.model)).toBe(true);
-          expect(isNear(native.presentation, frame.presentation)).toBe(true);
-          await wait(LAYOUT_DURATION / 16);
-        }
-        expect(summarize((await takeTraceOf(tag)).filter(isHostEvent))).toBe(
-          FRAME_DRIVEN_TAKEOVER
+  /**
+   * The spring of the second commit gives the X track and the opacity track to
+   * the frame driver, after a write of the opacity during the tracks.
+   */
+  const handedWrite: ReferenceCase = {
+    flow: 'layout',
+    leaves: {
+      originX: { duration: LAYOUT_DURATION, onlyWhenChanged: true },
+      opacity: {
+        duration: LAYOUT_DURATION,
+        initial: 0.9,
+        to: HANDED_STYLE_OPACITY,
+      },
+      originY: { isSpring: true, onlyWhenChanged: true },
+    },
+    places: [
+      handedPlaceOf(START_LEFT, 0),
+      handedPlaceOf(END_LEFT, 0),
+      handedPlaceOf(END_LEFT, DROP),
+    ],
+    commitTimesMs: [HANDED_COMMIT_MS],
+    totalMs: LAYOUT_DURATION,
+    box: { Box: HandedWriterBox },
+    write: {
+      atMs: LAYOUT_DURATION / 4,
+      targets: ['Opacity'],
+      run: () => {
+        writePair(HANDED_WRITTEN_OPACITY);
+        return waitForModel(
+          getTestComponent(BOX_REF).getTag(),
+          'Opacity',
+          ([opacity]) => isNear(opacity, HANDED_WRITTEN_OPACITY)
         );
-        await wait(LAYOUT_DURATION + 1000);
-        const end = await sampleOpacityPair(tag, frameTag);
-        expect(isNear(end.native.model, end.frame.model)).toBe(true);
-        expect(isNear(end.native.presentation, end.frame.presentation)).toBe(
+      },
+    },
+  };
+
+  for (const tracks of [false, true]) {
+    const handed = `a frame-driven start takes native X and opacity tracks after an opacity write, and the opacity model of the view is on the frames of the frame driver (tracking: ${tracks})`;
+    test(handed, async () => {
+      await withTracking(tracks, async () => {
+        const played = await play(handedWrite);
+        expectReference(handed, handedWrite, played);
+        expectNoKeyAfterTransfer(played, 'Opacity');
+        expectModelOnFrames(handed, played, 'Opacity');
+        const hostEvents = played.events.filter(isHostEvent);
+        expect(summarize(hostEvents)).toBe(
+          `${GROUP_START} > ${FRAME_DRIVEN_TAKEOVER}`
+        );
+        const timeOf = (name: string) =>
+          hostEvents.find(({ event }) => event === name)?.monotonicTimeMs ??
+          NaN;
+        const [{ reads: waitReads }] = played.modelWaits;
+        const written = waitReads[waitReads.length - 1];
+        const captureTimes = played.captures.map(
+          ({ eventTimeMs }) => eventTimeMs
+        );
+        expect(
+          captureTimes.length > 0 &&
+            captureTimes.every((time) => written.monotonicTimeMs < time)
+            ? ''
+            : `the read with the written model is not before each capture of the second build: ${captureTimes.map((time) => (time - written.monotonicTimeMs).toFixed(3)).join()} ms from the read to the ${captureTimes.length} captures`
+        ).toBe('');
+        const beforeTakeover = [
+          ...played.rows.map(({ row }) => row.native.Opacity),
+          ...waitReads,
+        ]
+          .filter(
+            ({ monotonicTimeMs }) =>
+              monotonicTimeMs >= timeOf('TrackStarted') &&
+              monotonicTimeMs < timeOf('LayoutBuildFailed')
+          )
+          .sort((one, other) => one.monotonicTimeMs - other.monotonicTimeMs);
+        for (const { playbackKeys } of beforeTakeover) {
+          expect(playbackKeys.length).toBe(2);
+        }
+        expect(
+          modelOrderFaultsOf(
+            beforeTakeover.map(({ model }) => model[0]),
+            HANDED_STYLE_OPACITY,
+            HANDED_WRITTEN_OPACITY
+          )
+        ).toBe('');
+        const { native, frame } = played.end!;
+        console.log(
+          `WRITTEN-END | ${handed} | native model ${native.Opacity.model[0]}, native presentation ${native.Opacity.presentation[0]}, twin model ${frame.Opacity.model[0]}, twin presentation ${frame.Opacity.presentation[0]}`
+        );
+        expect(native.Opacity.playbackKeys.length).toBe(0);
+        expect(
+          isNear(native.Opacity.presentation[0], native.Opacity.model[0])
+        ).toBe(true);
+        expect(isNear(native.Opacity.model[0], frame.Opacity.model[0])).toBe(
           true
         );
-        expect([...callbacks].sort().join()).toBe(
-          'frame:false,frame:true,native:false,native:true'
-        );
-        await render(null);
       });
     });
   }
@@ -1189,70 +1368,83 @@ describe('native layout animations and the synchronous props path', () => {
 
   const loopWriters: {
     name: string;
-    scene: (left: number) => Parameters<typeof render>[0];
-    from: number;
-    to: number;
+    Box: React.ComponentType<SizeBoxProps>;
     startWriter?: () => void;
+    callbacks: string[];
+    /** The sign of the change of the opacity that the writer makes. */
+    direction: 1 | -1;
     end?: number;
   }[] = [
     {
       name: 'a CSS animation of the opacity',
-      scene: (left: number) => (
-        <View style={styles.container}>
-          <CSSLoopBox left={left} layout={frameLayout} />
-        </View>
-      ),
-      from: 0.2,
-      to: 0.8,
+      Box: CSSLoopBox,
+      callbacks: ['under-loop:true'],
+      direction: 1,
     },
     {
       name: 'a timing animation of an animated style',
-      scene: (left: number) => (
-        <View style={styles.container}>
-          <WriterBox left={left} layout={frameLayout} initialOpacity={1} />
-        </View>
-      ),
-      from: 1,
-      to: 0.5,
+      Box: OpaqueWriterBox,
       startWriter: () => {
-        opacities[BOX_REF].value = withTiming(0.5, {
-          duration: LOOP_DURATION,
-          easing: Easing.linear,
-        });
+        opacities[BOX_REF].value = withTiming(
+          0.5,
+          { duration: LOOP_DURATION, easing: Easing.linear },
+          (finished) => {
+            'worklet';
+            scheduleOnRN(
+              recordCallback,
+              'writer',
+              finished === true,
+              global._getAnimationTimestamp()
+            );
+          }
+        );
       },
+      callbacks: ['under-loop:true', 'writer:true'],
+      direction: -1,
       end: 0.5,
     },
   ];
 
-  for (const { name, scene, from, to, startWriter, end } of loopWriters) {
+  for (const {
+    name,
+    Box,
+    startWriter,
+    callbacks: expected,
+    direction,
+    end,
+  } of loopWriters) {
     test(`${name} shows during a frame-driven layout animation with an opacity leaf`, async () => {
+      const scene = (left: number) => (
+        <View style={styles.container}>
+          <Box left={left} layout={frameLayout} />
+        </View>
+      );
       const tag = await mountScene(scene(START_LEFT));
       startWriter?.();
       await wait(300);
-      const before = await sampleOpacity(tag);
-      const writerAt = (timeMs: number) =>
-        before.presentation +
-        ((to - from) / LOOP_DURATION) * (timeMs - before.time);
       await render(scene(END_LEFT));
       await wait(2 * FRAME_MS);
-      for (const row of await sampleRows(tag, 8, LAYOUT_DURATION / 16)) {
+      const rows = await sampleRows(tag, 8, LAYOUT_DURATION / 16);
+      for (const row of rows) {
         expect(row.keys).toBe(0);
         expect(isNear(row.model, row.presentation)).toBe(true);
-        expect(
-          isNear(
-            row.presentation,
-            writerAt(row.time),
-            SAMPLED_OPACITY_TOLERANCE
-          )
-        ).toBe(true);
       }
+      const presentations = rows.map(({ presentation }) => presentation);
+      expect(
+        presentations
+          .slice(1)
+          .every(
+            (value, index) => direction * (value - presentations[index]) > 0
+          )
+          ? ''
+          : `the presentations ${presentations.join()} do not each go on in the direction ${direction}`
+      ).toBe('');
       expect(summarize(await takeTraceOf(tag))).toBe(
         'LayoutBuildFailed:UnsupportedTiming'
       );
-      await wait(LAYOUT_DURATION);
-      expect(callbacks.join()).toBe('under-loop:true');
+      expect(await waitForCallbacks(expected)).toBe('');
+      expect(callbacks.join()).toBe(expected.join());
       if (end !== undefined) {
-        await wait(LOOP_DURATION);
         expect(isNear((await sampleOpacity(tag)).presentation, end)).toBe(true);
       }
       await render(null);
