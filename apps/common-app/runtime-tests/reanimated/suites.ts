@@ -80,6 +80,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/css/animationCancellation.test');
       require('./tests/css/backgroundImage.test');
+      require('./tests/css/transformNone.test');
     },
   },
   {
