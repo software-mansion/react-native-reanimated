@@ -3,8 +3,10 @@ import type { TransformsArray, ValueProcessor } from '../../types';
 import { isAngle, isNumber, isNumberArray, isPercentage } from '../../utils';
 
 export const ERROR_MESSAGES = {
-  invalidTransform: (transform: string) =>
-    `Invalid transform property: ${transform}`,
+  invalidTransform(transform: string) {
+    'worklet';
+    return `Invalid transform property: ${transform}`;
+  },
 };
 
 function parseValues(valueString: string): (string | number)[] {

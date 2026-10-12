@@ -10,10 +10,12 @@ import type { StyleProps } from '../../../commonTypes';
 import { IS_ANDROID, IS_IOS } from '../../constants';
 import {
   type MutuallyExclusiveUnion,
+  type ValueProcessor,
   type ValueProcessorContext,
   ValueProcessorTarget,
 } from '../../types';
 import { isRecord } from '../../utils';
+import { processStylePropInPlace } from '../processStyleValue';
 
 /**
  * Copied from:
@@ -250,14 +252,21 @@ export function unprocessColor(
   );
 }
 
+const processColorOrColors: ValueProcessor<
+  unknown,
+  ProcessedColor | ProcessedColor[]
+> = (value) => {
+  'worklet';
+  return Array.isArray(value)
+    ? value.map((color) => processColor(color))
+    : processColor(value);
+};
+
 export function processColorsInProps(props: StyleProps) {
   'worklet';
   for (const key in props) {
     if (!ColorProperties.includes(key)) continue;
-    const value = props[key];
-    props[key] = Array.isArray(value)
-      ? value.map((c) => processColor(c))
-      : processColor(value);
+    processStylePropInPlace(props, key, processColorOrColors);
   }
 }
 

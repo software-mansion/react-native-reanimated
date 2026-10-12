@@ -41,17 +41,9 @@ void ReanimatedMountHook::shadowTreeDidMount(
     synchronousWritesTracker_->onMountReport(rootShadowNode);
   }
 
-  auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
-      std::const_pointer_cast<RootShadowNode>(rootShadowNode));
+  auto reaShadowNode = std::reinterpret_pointer_cast<const ReanimatedCommitShadowNode>(rootShadowNode);
 
-  // We mark reanimated commits with ReanimatedMountTrait. We don't want other
-  // shadow nodes to use this trait, but since this rootShadowNode is Shared,
-  // we don't have that guarantee. That's why we also unset this trait in the
-  // commit hook. We remove it here mainly for the sake of cleanliness.
   const bool isReanimatedMount = reaShadowNode->hasReanimatedMountTrait();
-  if (isReanimatedMount) {
-    reaShadowNode->unsetReanimatedMountTrait();
-  }
 
   {
     auto lock = updatesRegistryManager_->lock();

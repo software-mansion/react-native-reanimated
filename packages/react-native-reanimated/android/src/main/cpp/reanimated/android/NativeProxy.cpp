@@ -159,9 +159,9 @@ void NativeProxy::registerNatives() {
   registerHybrid(
       {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
        makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
-       makeNativeMethod("isAnyHandlerWaitingForEvent", NativeProxy::isAnyHandlerWaitingForEvent),
-       makeNativeMethod("performOperations", NativeProxy::performOperations),
-       makeNativeMethod("performNonLayoutOperations", NativeProxy::performNonLayoutOperations),
+       makeNativeMethod("isAnyHandlerWaitingForEventCpp", NativeProxy::isAnyHandlerWaitingForEvent),
+       makeNativeMethod("performOperationsCpp", NativeProxy::performOperations),
+       makeNativeMethod("performNonLayoutOperationsCpp", NativeProxy::performNonLayoutOperations),
        makeNativeMethod("hasSynchronousWritesTracker", NativeProxy::hasSynchronousWritesTracker),
        makeNativeMethod("rewriteSynchronousProps", NativeProxy::rewriteSynchronousProps),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp),
@@ -204,6 +204,24 @@ std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vect
 
   auto region = jArrayInt->getRegion(0, tags.size());
   return region;
+}
+
+// Android animators write the view on every frame, so the view's props are the presented ones.
+std::optional<MountedViewProps> NativeProxy::obtainMountedViewProps(Tag tag, bool /*presented*/) {
+  static const auto method = getJniMethod<jni::local_ref<jni::JArrayDouble>(int)>("obtainMountedViewProps");
+  auto values = method(javaPart_.get(), tag);
+  if (!values) {
+    return std::nullopt;
+  }
+  const auto region = values->getRegion(0, 6);
+  return MountedViewProps{
+      .x = region[0],
+      .y = region[1],
+      .width = region[2],
+      .height = region[3],
+      .opacity = region[4],
+      .backgroundColor = static_cast<int>(region[5]),
+  };
 }
 
 void NativeProxy::synchronouslyUpdateUIProps(
@@ -389,6 +407,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto detachPseudoSelectorFunction = bindThis(&NativeProxy::detachPseudoSelector);
 
+  auto obtainMountedViewPropsFunction = bindThis(&NativeProxy::obtainMountedViewProps);
+
   auto platformTransitionBackend = makePlatformTransitionBackend();
 
   return {
@@ -404,6 +424,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       maybeFlushUiUpdatesQueueFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
+      obtainMountedViewPropsFunction,
       platformTransitionBackend,
   };
 }

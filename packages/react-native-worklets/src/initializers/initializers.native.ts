@@ -163,6 +163,7 @@ function initializeRNRuntime() {
   }
 
   registerReportFatalRemoteError();
+  setupSerializer();
 }
 
 /** A function that should be run only on Worklet runtimes. */

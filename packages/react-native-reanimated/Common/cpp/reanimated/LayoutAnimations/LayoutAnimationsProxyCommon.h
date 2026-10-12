@@ -63,6 +63,10 @@ struct LayoutAnimationCancellation {
 using LayoutAnimationOperation =
     std::variant<ManagedLayoutAnimationStart, ProgressLayoutAnimationStart, LayoutAnimationCancellation>;
 
+#ifdef ANDROID
+using SynchronousPropsReader = std::function<folly::dynamic(Tag tag)>;
+#endif
+
 struct LayoutAnimationsProxyDependencies {
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager;
   SharedComponentDescriptorRegistry componentDescriptorRegistry;
@@ -74,9 +78,11 @@ struct LayoutAnimationsProxyDependencies {
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker;
+  SynchronousPropsReader readSynchronousProps;
 #endif
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot;
+  ReadMountedViewPropsFunction readMountedViewProps;
 #endif
 };
 
@@ -95,7 +101,12 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 #ifdef ANDROID
         ,
         preserveMountedTags_(dependencies.filterUnmountedTagsFunction),
-        jsInvoker_(dependencies.jsInvoker)
+        jsInvoker_(dependencies.jsInvoker),
+        readSynchronousProps_(dependencies.readSynchronousProps)
+#endif
+#ifdef __APPLE__
+        ,
+        readMountedViewProps_(dependencies.readMountedViewProps)
 #endif
   {
   }
@@ -115,6 +126,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void flushLayoutAnimationOperations() const;
 
  protected:
+  Props::Shared propsOfMountedView(const ShadowView &view) const;
   Props::Shared mergeSynchronousProps(const ShadowView &view, const folly::dynamic &props) const;
   bool hasLayoutAnimationRecords() const;
   void applySynchronousPropsToLayoutAnimation(Tag tag, const folly::dynamic &props) const;
@@ -169,6 +181,10 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 #ifdef ANDROID
   PreserveMountedTagsFunction preserveMountedTags_;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker_;
+  SynchronousPropsReader readSynchronousProps_;
+#endif
+#ifdef __APPLE__
+  ReadMountedViewPropsFunction readMountedViewProps_;
 #endif
 
  private:

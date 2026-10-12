@@ -80,12 +80,10 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
   }
 
   auto &layoutAnimation = layoutAnimationIt->second;
-  if (newStyle.hasProperty(uiRuntime_, "opacity")) {
-    layoutAnimation.opacity.reset();
-  }
+  const bool animatesOpacity = newStyle.hasProperty(uiRuntime_, "opacity");
 
   auto rawProps = std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
-  if (layoutAnimation.opacity) {
+  if (layoutAnimation.opacity && !animatesOpacity) {
     auto props = (folly::dynamic)*rawProps;
     props["opacity"] = *layoutAnimation.opacity;
     rawProps = std::make_shared<RawProps>(std::move(props));
@@ -97,7 +95,7 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
 #endif
   auto newProps = componentDescriptorRegistry_->at(layoutAnimation.finalView.componentHandle)
                       .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(*rawProps));
-  updateMap_.insert_or_assign(tag, UpdateValues{newProps, Frame(uiRuntime_, newStyle)});
+  updateMap_.insert_or_assign(tag, UpdateValues{newProps, Frame(uiRuntime_, newStyle), animatesOpacity});
 
   return surfaceId_;
 }
@@ -154,6 +152,25 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations(std::unique_loc
     return;
   }
   flushLayoutAnimationOperationsLocked();
+}
+
+// iOS, and Android with accumulated raw props, write the props of an Insert to the view. The shadow props of a view
+// that only moves lack the values that were written synchronously.
+Props::Shared LayoutAnimationsProxyCommon::propsOfMountedView(const ShadowView &view) const {
+#ifdef __APPLE__
+  if (readMountedViewProps_) {
+    if (auto mountedProps = readMountedViewProps_(view.tag)) {
+      return mountedProps;
+    }
+  }
+#elif defined(ANDROID)
+  if (readSynchronousProps_) {
+    if (const auto synchronousProps = readSynchronousProps_(view.tag); !synchronousProps.empty()) {
+      return mergeSynchronousProps(view, synchronousProps);
+    }
+  }
+#endif
+  return view.props;
 }
 
 Props::Shared LayoutAnimationsProxyCommon::mergeSynchronousProps(const ShadowView &view, const folly::dynamic &props)
@@ -245,13 +262,12 @@ ShadowView LayoutAnimationsProxyCommon::materializeLayoutAnimation(
     const std::shared_ptr<Serializable> &config) const {
   auto currentView = before;
   const auto activeAnimationIt = layoutAnimations_.find(tag);
-  if (type == LayoutAnimationType::ENTERING) {
-    currentView = after;
-  } else if (activeAnimationIt != layoutAnimations_.end()) {
-    currentView = activeAnimationIt->second.currentView;
-  } else if (const auto completedAnimationIt = completedAnimations_.find(tag);
-             completedAnimationIt != completedAnimations_.end()) {
-    if (!completedAnimationIt->second.shouldRemove) {
+  // An entering view starts from the view that the Insert mounted.
+  if (type != LayoutAnimationType::ENTERING) {
+    if (activeAnimationIt != layoutAnimations_.end()) {
+      currentView = activeAnimationIt->second.currentView;
+    } else if (const auto completedAnimationIt = completedAnimations_.find(tag);
+               completedAnimationIt != completedAnimations_.end() && !completedAnimationIt->second.shouldRemove) {
       currentView = completedAnimationIt->second.animation.currentView;
     }
   }
