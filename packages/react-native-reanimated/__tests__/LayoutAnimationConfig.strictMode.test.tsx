@@ -21,7 +21,8 @@ const strictModeWarnings = () =>
     (call) =>
       String(call[0]).includes('is deprecated in StrictMode') &&
       String(call).includes('findNodeHandle') &&
-      call.includes('LayoutAnimationConfig')
+      (call.includes('LayoutAnimationConfig') ||
+        call.includes('LayoutAnimationConfigChild'))
   );
 
 const renderInStrictMode = (children: ReactNode) =>

@@ -247,19 +247,44 @@ describe('LayoutAnimationConfig skipExiting', () => {
     }
   );
 
-  test.each([undefined, false])(
-    '%s leaves the exiting of multiple children alone on unmount',
-    (skipExiting) => {
+  test('left out, it leaves the exiting of multiple children alone on unmount', () => {
+    const { unmount } = render(
+      <LayoutAnimationConfig>
+        <CountsMounts tag={42} />
+        <CountsMounts tag={43} />
+      </LayoutAnimationConfig>
+    );
+
+    unmount();
+
+    expect(setShouldAnimateExitingForTag).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    [true, false],
+    [false, true],
+  ])(
+    '%s marks each of multiple children with %s on unmount',
+    (skipExiting, shouldAnimate) => {
       const { unmount } = render(
         <LayoutAnimationConfig skipExiting={skipExiting}>
-          <CountsMounts tag={42} />
-          <CountsMounts tag={43} />
+          <ForwardsHostInstance tag={42} />
+          <ForwardsHostInstance tag={43} />
         </LayoutAnimationConfig>
       );
 
       unmount();
 
-      expect(setShouldAnimateExitingForTag).not.toHaveBeenCalled();
+      expect(findNodeHandle).not.toHaveBeenCalled();
+      expect(setShouldAnimateExitingForTag).toHaveBeenCalledTimes(2);
+      expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(
+        42,
+        shouldAnimate
+      );
+      expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(
+        43,
+        shouldAnimate
+      );
     }
   );
 
@@ -299,13 +324,20 @@ describe('LayoutAnimationConfig skipExiting', () => {
     expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(42, false);
   });
 
-  test('true leaves the exiting of the only child of a list alone when it is removed', () => {
-    const { rerender } = render(renderList(true, [42]));
+  test.each([
+    [[42], []],
+    [[42, 43], [42]],
+    [[42, 43], [43]],
+  ])(
+    'true leaves the exiting of a child removed from %j alone',
+    (tags, remainingTags) => {
+      const { rerender } = render(renderList(true, tags));
 
-    rerender(renderList(true, []));
+      rerender(renderList(true, remainingTags));
 
-    expect(setShouldAnimateExitingForTag).not.toHaveBeenCalled();
-  });
+      expect(setShouldAnimateExitingForTag).not.toHaveBeenCalled();
+    }
+  );
 
   test('true skips the exiting of each child of an iterable on unmount', () => {
     const { unmount } = render(
@@ -316,6 +348,24 @@ describe('LayoutAnimationConfig skipExiting', () => {
             <ForwardsHostInstance key={43} tag={43} />,
           ])
         }
+      </LayoutAnimationConfig>
+    );
+
+    unmount();
+
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(42, false);
+    expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(43, false);
+  });
+
+  test('true renders each child of a generator and skips its exiting on unmount', () => {
+    function* generateChildren() {
+      yield <ForwardsHostInstance key={42} tag={42} />;
+      yield <ForwardsHostInstance key={43} tag={43} />;
+    }
+
+    const { unmount } = render(
+      <LayoutAnimationConfig skipExiting>
+        {generateChildren()}
       </LayoutAnimationConfig>
     );
 
